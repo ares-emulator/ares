@@ -105,7 +105,6 @@ auto DD::disconnect() -> void {
     if(id.match("NDXJ")) dd.information.cic = "CIC-NUS-8401";
   }
 
-  io.status.diskChanged = 0;
   io.status.diskPresent = 0;
 
   //Deal with cases when the disk is removed while in use
@@ -142,7 +141,9 @@ auto DD::power(bool reset) -> void {
   state = {};
 
   io.status.resetState = 1;
+  io.status.diskChanged = 1;
   if(disk) io.status.diskPresent = 1;
+  
   io.id = 3;
   if(dd.information.cic.match("CIC-NUS-8401")) io.id = 4;
   
