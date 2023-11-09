@@ -123,7 +123,6 @@ auto DD::readHalf(u32 address) -> u16 {
   if(address == 36) {
   }
 
-  debugger.io(Read, address, data);
   return data;
 }
 
@@ -242,18 +241,20 @@ auto DD::writeHalf(u32 address, u16 data_) -> void {
   //ASIC_TEST_PIN_SEL
   if(address == 36) {
   }
-
-  debugger.io(Write, address, data);
 }
 
 auto DD::readWord(u32 address) -> u32 {
+  address = (address & 0x7f);
   n32 data;
   data.bit(16,31) = readHalf(address + 0);
   data.bit( 0,15) = readHalf(address + 2);
+  debugger.io(Read, address >> 2, data);
   return (u32)data;
 }
 
 auto DD::writeWord(u32 address, u32 data) -> void {
+  address = (address & 0x7f);
   writeHalf(address + 0, data >> 16);
   writeHalf(address + 2, data & 0xffff);
+  debugger.io(Write, address >> 2, data);
 }
