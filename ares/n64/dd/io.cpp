@@ -195,7 +195,7 @@ auto DD::writeHalf(u32 address, u16 data_) -> void {
 
   //ASIC_HARD_RESET
   if(address == 16) {
-    if((data >> 16) == 0xAAAA) {
+    if(data == 0xAAAA) {
       power(true);
     }
   }
