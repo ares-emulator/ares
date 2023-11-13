@@ -1,6 +1,6 @@
 struct MSX : Cartridge {
   auto name() -> string override { return "MSX"; }
-  auto extensions() -> vector<string> override { return {"msx", "wav"}; }
+  auto extensions() -> vector<string> override { return {"msx", ".rom", "wav"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
