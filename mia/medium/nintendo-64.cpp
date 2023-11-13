@@ -621,8 +621,56 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
     if(config.bit(4,7) == 5) {flash = 128_KiB;}
     if(config.bit(4,7) == 6) {sram = 128_KiB;}
     if(config.bit(0) == 1)   {rtc = true;}
-    rpak = true;
-    cpak = true;
+    
+    //Advanced Homebrew ROM Header
+    //Controllers
+    n8 controller_1 = data[0x34];
+    n8 controller_2 = data[0x35];
+    n8 controller_3 = data[0x36];
+    n8 controller_4 = data[0x37];
+    
+    auto read_controller_config = [&](n8 controller_config) 
+    { 
+        switch(controller_config) {
+            case 0x00: //default
+                rpak = true;
+                cpak = true; //TODO rumble does not work for homebrew because of that
+                break;
+            case 0x01: //N64 controller with Rumble Pak
+                rpak = true;
+                break;
+            case 0x02: //N64 controller with Controller Pak
+                cpak = true;
+                break;
+            case 0x03: //N64 controller with Transfer Pak
+                tpak = true;
+                break;
+            case 0x80: //N64 mouse
+                //not supported yet
+                break;
+            case 0x81: //VRU
+                //not supported yet
+                break;
+            case 0x82: //Gamecube controller
+                //not supported yet
+                break;
+            case 0x83: //Randnet keyboard
+                //not supported yet
+                break;
+            case 0x84: //Gamecube keyboard
+                //not supported yet
+                break;
+            case 0xFF: //Nothing attached to this port
+                //not supported yet
+                break;
+        }
+    };
+    
+    read_controller_config(controller_1);
+    //TODO ares does not differentiate for different controller setups yet in Nintendo64::load()
+    //read_controller_config(controller_2);
+    //read_controller_config(controller_3);
+    //read_controller_config(controller_4);
   }
 
   string s;
