@@ -622,7 +622,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
     if(config.bit(4,7) == 6) {sram = 128_KiB;}
     if(config.bit(0) == 1)   {rtc = true;}
     rpak = true;
-    cpak = true;
+    cpak = false;
   }
 
   string s;
