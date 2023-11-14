@@ -144,6 +144,7 @@ static sljit_u8* emit_x86_instruction(struct sljit_compiler *compiler, sljit_uw 
 		rex |= REX_B;
 
 	if ((flags & EX86_VEX_EXT) && (rex & 0x3)) {
+		SLJIT_ASSERT(size == 2);
 		size++;
 		inst_size++;
 	}
@@ -279,7 +280,7 @@ static sljit_u8* emit_x86_instruction(struct sljit_compiler *compiler, sljit_uw 
 			sljit_unaligned_store_s32(buf_ptr, (sljit_s32)imma);
 	}
 
-	return !(flags & EX86_SHIFT_INS) ? inst : (inst + 1);
+	return inst;
 }
 
 static sljit_s32 emit_vex_instruction(struct sljit_compiler *compiler, sljit_uw op,
@@ -296,14 +297,19 @@ static sljit_s32 emit_vex_instruction(struct sljit_compiler *compiler, sljit_uw 
 	SLJIT_ASSERT(((op & (EX86_PREF_F2 | EX86_PREF_F3 | EX86_PREF_66))
 			& ((op & (EX86_PREF_F2 | EX86_PREF_F3 | EX86_PREF_66)) - 1)) == 0);
 
-	op |= EX86_VEX_EXT | EX86_REX;
+	op |= EX86_REX;
 
 	if (op & VEX_OP_0F38)
 		vex_m = 0x2;
 	else if (op & VEX_OP_0F3A)
 		vex_m = 0x3;
 
-	/* Currently WIG (W ignored) is supported only. */
+	if ((op & VEX_W) || ((op & VEX_AUTO_W) && !compiler->mode32)) {
+		if (vex_m == 0)
+			vex_m = 0x1;
+
+		vex |= 0x80;
+	}
 
 	if (op & EX86_PREF_66)
 		vex |= 0x1;
@@ -1193,7 +1199,7 @@ static SLJIT_INLINE sljit_s32 sljit_emit_fop1_conv_f64_from_uw(struct sljit_comp
 
 	inst = emit_x86_instruction(compiler, 1 | EX86_SHIFT_INS, SLJIT_IMM, 1, TMP_REG1, 0);
 	FAIL_IF(!inst);
-	*inst |= SHR;
+	inst[1] |= SHR;
 
 	compiler->mode32 = 1;
 	BINARY_IMM32(AND, 1, TMP_REG2, 0);

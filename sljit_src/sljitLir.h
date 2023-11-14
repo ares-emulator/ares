@@ -322,20 +322,24 @@ extern "C" {
      arg_d must be placed in SLJIT_FR1
 
    Examples for argument processing by sljit_emit_enter:
-     SLJIT_ARGS4(VOID, P, 32_R, F32, W)
+     SLJIT_ARGS4V(P, 32_R, F32, W)
      Arguments are placed into: SLJIT_S0, SLJIT_R1, SLJIT_FR0, SLJIT_S1
+     The type of the result is void.
 
-     SLJIT_ARGS4(VOID, W, W_R, W, W_R)
+     SLJIT_ARGS4(F32, W, W_R, W, W_R)
      Arguments are placed into: SLJIT_S0, SLJIT_R1, SLJIT_S1, SLJIT_R3
+     The type of the result is sljit_f32.
 
-     SLJIT_ARGS4(VOID, F64, W, F32, P_R)
+     SLJIT_ARGS4(P, W, F32, P_R)
      Arguments are placed into: SLJIT_FR0, SLJIT_S0, SLJIT_FR1, SLJIT_R1
+     The type of the result is pointer.
 
      Note: it is recommended to pass the scratch arguments first
      followed by the saved arguments:
 
-       SLJIT_ARGS4(VOID, W_R, W_R, W, W)
+       SLJIT_ARGS4(W, W_R, W_R, W, W)
        Arguments are placed into: SLJIT_R0, SLJIT_R1, SLJIT_S0, SLJIT_S1
+       The type of the result is sljit_sw / sljit_uw.
 */
 
 /* The following flag is only allowed for the integer arguments of
@@ -343,21 +347,21 @@ extern "C" {
    stored in a scratch register instead of a saved register. */
 #define SLJIT_ARG_TYPE_SCRATCH_REG 0x8
 
-/* Void result, can only be used by SLJIT_ARG_RETURN. */
-#define SLJIT_ARG_TYPE_VOID	0
+/* No return value, only supported by SLJIT_ARG_RETURN. */
+#define SLJIT_ARG_TYPE_RET_VOID		0
 /* Machine word sized integer argument or result. */
-#define SLJIT_ARG_TYPE_W	1
+#define SLJIT_ARG_TYPE_W		1
 #define SLJIT_ARG_TYPE_W_R	(SLJIT_ARG_TYPE_W | SLJIT_ARG_TYPE_SCRATCH_REG)
 /* 32 bit integer argument or result. */
-#define SLJIT_ARG_TYPE_32	2
+#define SLJIT_ARG_TYPE_32		2
 #define SLJIT_ARG_TYPE_32_R	(SLJIT_ARG_TYPE_32 | SLJIT_ARG_TYPE_SCRATCH_REG)
 /* Pointer sized integer argument or result. */
-#define SLJIT_ARG_TYPE_P	3
+#define SLJIT_ARG_TYPE_P		3
 #define SLJIT_ARG_TYPE_P_R	(SLJIT_ARG_TYPE_P | SLJIT_ARG_TYPE_SCRATCH_REG)
 /* 64 bit floating point argument or result. */
-#define SLJIT_ARG_TYPE_F64	4
+#define SLJIT_ARG_TYPE_F64		4
 /* 32 bit floating point argument or result. */
-#define SLJIT_ARG_TYPE_F32	5
+#define SLJIT_ARG_TYPE_F32		5
 
 #define SLJIT_ARG_SHIFT 4
 #define SLJIT_ARG_RETURN(type) (type)
@@ -370,24 +374,40 @@ extern "C" {
 
    can be shortened to:
        SLJIT_ARGS1(W, F32)
+
+   Another example where no value is returned:
+       SLJIT_ARG_RETURN(SLJIT_ARG_TYPE_RET_VOID) | SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W_R, 1)
+
+   can be shortened to:
+       SLJIT_ARGS1V(W_R)
 */
 
 #define SLJIT_ARG_TO_TYPE(type) SLJIT_ARG_TYPE_ ## type
 
 #define SLJIT_ARGS0(ret) \
 	SLJIT_ARG_RETURN(SLJIT_ARG_TO_TYPE(ret))
+#define SLJIT_ARGS0V() \
+	SLJIT_ARG_RETURN(SLJIT_ARG_TYPE_RET_VOID)
 
 #define SLJIT_ARGS1(ret, arg1) \
 	(SLJIT_ARGS0(ret) | SLJIT_ARG_VALUE(SLJIT_ARG_TO_TYPE(arg1), 1))
+#define SLJIT_ARGS1V(arg1) \
+	(SLJIT_ARGS0V() | SLJIT_ARG_VALUE(SLJIT_ARG_TO_TYPE(arg1), 1))
 
 #define SLJIT_ARGS2(ret, arg1, arg2) \
 	(SLJIT_ARGS1(ret, arg1) | SLJIT_ARG_VALUE(SLJIT_ARG_TO_TYPE(arg2), 2))
+#define SLJIT_ARGS2V(arg1, arg2) \
+	(SLJIT_ARGS1V(arg1) | SLJIT_ARG_VALUE(SLJIT_ARG_TO_TYPE(arg2), 2))
 
 #define SLJIT_ARGS3(ret, arg1, arg2, arg3) \
 	(SLJIT_ARGS2(ret, arg1, arg2) | SLJIT_ARG_VALUE(SLJIT_ARG_TO_TYPE(arg3), 3))
+#define SLJIT_ARGS3V(arg1, arg2, arg3) \
+	(SLJIT_ARGS2V(arg1, arg2) | SLJIT_ARG_VALUE(SLJIT_ARG_TO_TYPE(arg3), 3))
 
 #define SLJIT_ARGS4(ret, arg1, arg2, arg3, arg4) \
 	(SLJIT_ARGS3(ret, arg1, arg2, arg3) | SLJIT_ARG_VALUE(SLJIT_ARG_TO_TYPE(arg4), 4))
+#define SLJIT_ARGS4V(arg1, arg2, arg3, arg4) \
+	(SLJIT_ARGS3V(arg1, arg2, arg3) | SLJIT_ARG_VALUE(SLJIT_ARG_TO_TYPE(arg4), 4))
 
 /* --------------------------------------------------------------------- */
 /*  Main structures and functions                                        */
@@ -678,10 +698,14 @@ static SLJIT_INLINE sljit_uw sljit_get_generated_code_size(struct sljit_compiler
    a simd operation represents the same 128 bit register, and both SLJIT_FR0
    and SLJIT_FR1 are overwritten. */
 #define SLJIT_SIMD_REGS_ARE_PAIRS	13
+/* [Not emulated] Atomic support is available (fine-grained). */
+#define SLJIT_HAS_ATOMIC      14
 
 #if (defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86)
-/* [Not emulated] SSE2 support is available on x86. */
-#define SLJIT_HAS_SSE2			100
+/* [Not emulated] AVX support is available on x86. */
+#define SLJIT_HAS_AVX			100
+/* [Not emulated] AVX2 support is available on x86. */
+#define SLJIT_HAS_AVX2			101
 #endif
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_has_cpu_feature(sljit_s32 feature_type);
