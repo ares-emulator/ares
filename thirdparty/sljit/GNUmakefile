@@ -15,8 +15,20 @@ ifndef EXTRA_LDFLAGS
 EXTRA_LDFLAGS=
 endif
 
+ifndef EXTRA_LIBS
+EXTRA_LIBS=
+endif
+
+ifndef OPT_FLAGS
+OPT_FLAGS = -O2
+endif
+
+ifndef WERROR
+WERROR = -Werror
+endif
+
 CPPFLAGS = $(EXTRA_CPPFLAGS) -Isljit_src
-CFLAGS += -O2 -Wall -Wextra -Wconversion -Wsign-compare -Werror
+CFLAGS += $(OPT_FLAGS) -Wall -Wextra -Wconversion -Wsign-compare -Wdeclaration-after-statement $(WERROR)
 REGEX_CFLAGS += $(CFLAGS) -fshort-wchar
 LDFLAGS = $(EXTRA_LDFLAGS)
 
@@ -67,33 +79,33 @@ $(BINDIR)/regexJIT.o : $(REGEXDIR)/regexJIT.c $(BINDIR)/.keep $(SLJIT_HEADERS) $
 	$(CC) $(CPPFLAGS) $(REGEX_CFLAGS) -c -o $@ $(REGEXDIR)/regexJIT.c
 
 $(BINDIR)/sljit_test: $(BINDIR)/.keep $(BINDIR)/sljitMain.o $(TESTDIR)/sljitTest.c $(SRCDIR)/sljitLir.c $(SLJIT_LIR_FILES) $(SLJIT_HEADERS) $(TESTDIR)/sljitConfigPre.h $(TESTDIR)/sljitConfigPost.h
-	$(CC) $(CPPFLAGS) -DSLJIT_HAVE_CONFIG_PRE=1 -I$(TESTDIR) $(CFLAGS) $(LDFLAGS) $(BINDIR)/sljitMain.o $(TESTDIR)/sljitTest.c $(SRCDIR)/sljitLir.c -o $@ -lm -lpthread
+	$(CC) $(CPPFLAGS) -DSLJIT_HAVE_CONFIG_PRE=1 -I$(TESTDIR) $(CFLAGS) $(LDFLAGS) $(BINDIR)/sljitMain.o $(TESTDIR)/sljitTest.c $(SRCDIR)/sljitLir.c -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/regex_test: $(BINDIR)/.keep $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o -o $@ -lm -lpthread
+	$(CC) $(CFLAGS) $(LDFLAGS) $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 examples: $(EXAMPLE_TARGET)
 
 $(BINDIR)/first_program: $(EXAMPLEDIR)/first_program.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/first_program.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread
+	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/first_program.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/branch: $(EXAMPLEDIR)/branch.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/branch.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread
+	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/branch.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/loop: $(EXAMPLEDIR)/loop.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/loop.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread
+	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/loop.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/array_access: $(EXAMPLEDIR)/array_access.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/array_access.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread
+	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/array_access.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/func_call: $(EXAMPLEDIR)/func_call.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/func_call.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread
+	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/func_call.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/struct_access: $(EXAMPLEDIR)/struct_access.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/struct_access.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread
+	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/struct_access.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/temp_var: $(EXAMPLEDIR)/temp_var.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/temp_var.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread
+	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/temp_var.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/brainfuck: $(EXAMPLEDIR)/brainfuck.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/brainfuck.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread
+	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/brainfuck.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)

@@ -1966,7 +1966,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 	}
 
 	/* Step 4.1: Generate entry. */
-	CHECK(sljit_emit_enter(compiler_common.compiler, 0, SLJIT_ARGS3(VOID, P, P, 32), 5, 5, 0, 0, 0));
+	CHECK(sljit_emit_enter(compiler_common.compiler, 0, SLJIT_ARGS3V(P, P, 32), 5, 5, 0, 0, 0));
 
 	/* Copy arguments to their place. */
 	EMIT_OP1(SLJIT_MOV, R_REGEX_MATCH, 0, SLJIT_S0, 0);
