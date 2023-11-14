@@ -30,6 +30,8 @@ struct RIOT : Thread {
     u8 counter;
     n16 interval;
     n16 reload;
+    n1 interruptEnable;
+    n1 interruptFlag;
   } timer;
 
   struct Port {

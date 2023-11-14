@@ -7,12 +7,18 @@ auto RIOT::writeRam(n8 address, n8 data) -> void {
 }
 
 auto RIOT::readIo(n8 address) -> n8 {
-  switch(address) {
+  switch(address.bit(0, 2)) {
   case 0x00: return readPortA();
   case 0x01: return port[0].direction;
   case 0x02: return readPortB();
   case 0x03: return port[1].direction;
-  case 0x04: return timer.counter;
+  case 0x04: timer.interruptFlag = address.bit(3); return timer.counter;
+  case 0x05: case 0x07: {
+    n8 output = 0;
+    output.bit(6) = 0; //TODO: PA7 IRQ Flag
+    output.bit(7) = timer.interruptFlag;
+    return output;
+  }
   }
 
   debug(unimplemented, "[RIOT] IO read ", hex(address));
@@ -25,11 +31,14 @@ auto RIOT::writeIo(n8 address, n8 data) -> void {
   case 0x01: port[0].direction = data; return;
   case 0x02: writePortB(data);         return;
   case 0x03: port[1].direction = data; return;
-  case 0x14: case 0x15: case 0x16: case 0x17: {
+  case 0x14: case 0x15: case 0x16: case 0x17:
+  case 0x1c: case 0x1d: case 0x1e: case 0x1f: {
     const n16 intervals[] = {1, 8, 64, 1024};
     timer.counter = data;
-    timer.interval = intervals[address - 0x14];
+    timer.interval = intervals[address.bit(0, 1)];
     timer.reload = timer.interval;
+    timer.interruptFlag = 0;
+    timer.interruptEnable = address.bit(3);
     return; }
   }
 

@@ -21,6 +21,7 @@ auto RIOT::unload() -> void {
 auto RIOT::main() -> void {
   if(--timer.counter == 0xff) {
     timer.interval = 1;
+    timer.interruptFlag = 1;
   }
 
   step(timer.interval);
