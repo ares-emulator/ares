@@ -37,6 +37,7 @@ struct DD : Memory::PI<DD> {
     auto tick(u32 offset) -> void;
     auto tickClock() -> void;
     auto tickSecond() -> void;
+    auto valid() -> bool;
   } rtc;
 
   auto title() const -> string { return information.title; }
