@@ -165,7 +165,7 @@ auto Emulator::setOverscan(bool value) -> bool {
 
 auto Emulator::setColorBleed(bool value) -> bool {
   if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
-    screen->setColorBleed(value);
+    screen->setColorBleed(screen->height() < 720 ? value : false);  //only apply to sub-HD content
     return true;
   }
 
