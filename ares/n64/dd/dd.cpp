@@ -24,14 +24,13 @@ auto DD::load(Node::Object parent) -> void {
   c2s.allocate(0x400);
   ds.allocate(0x100);
   ms.allocate(0x40);
-  rtc.allocate(0x10);
 
   // TODO: Detect correct CIC from ipl rom
   if(auto fp = system.pak->read("64dd.ipl.rom")) {
     iplrom.load(fp);
   }
 
-  rtcLoad();
+  rtc.load();
 
   debugger.load(parent->append<Node::Object>("Nintendo 64DD"));
 }
@@ -127,7 +126,7 @@ auto DD::save() -> void {
     disk.save(fp);
   }
   
-  rtcSave();
+  rtc.save();
 }
 
 auto DD::power(bool reset) -> void {
