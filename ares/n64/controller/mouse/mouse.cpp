@@ -49,9 +49,8 @@ auto Mouse::read() -> n32 {
   platform->input(left);
   platform->input(right);
 
-  //TODO: Deal with more reasonable values for Mouse axis
-  auto ax = x->value();
-  auto ay = -y->value();
+  auto ax = sclamp<8>(x->value());
+  auto ay = sclamp<8>(-y->value());
 
   n32 data;
   data.byte(0) = ay;
