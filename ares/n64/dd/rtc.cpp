@@ -4,10 +4,16 @@ auto DD::RTC::load() -> void {
     ram.load(fp);
   }
 
-  //byte 0 to 7 = raw rtc time (last updated)
+  //byte 0 to 7 = raw rtc time (last updated, only 6 bytes are used)
   n64 check = 0;
   for(auto n : range(8)) check.byte(n) = ram.read<Byte>(n);
   if(!~check) return;  //new save file
+
+  //check for invalid time info, if invalid, set time info to something invalid and ignore the rest
+  if (!valid()) {
+    for(auto n : range(8)) ram.write<Byte>(n, 0xff);
+    return;
+  }
 
   //byte 8 to 15 = timestamp of when the last save was made
   n64 timestamp = 0;
