@@ -1,6 +1,6 @@
 #pragma once
 
-//Zilog Z80
+//Intel 8080
 
 namespace ares {
 
