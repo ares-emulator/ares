@@ -64,6 +64,8 @@ namespace nall {
     static constexpr bool GCC       = 0;
     static constexpr bool Microsoft = 1;
   };
+  #pragma warning(disable:4804)  //unsafe use of type 'bool' in operation
+  #pragma warning(disable:4805)  //unsafe mix of type 'bool' and type 'type' in operation
   #pragma warning(disable:4996)  //libc "deprecation" warnings
 #else
   #error "unable to detect compiler"

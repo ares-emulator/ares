@@ -117,9 +117,10 @@ endif
 
 # global compiler flags
 ifeq ($(cl),true)
-  flags.c      = -nologo -W0 -Fd$(object.path)/ -TC -std:c11
-  flags.cpp    = -nologo -W0 -Fd$(object.path)/ -TP -std:c++17 -EHsc
-  options      = -nologo $(if $(findstring clang,$(compiler)),-fuse-ld=lld) -link
+  flags.c      = -TC -std:c11
+  flags.cpp    = -TP -std:c++17 -EHsc
+  flags       += -nologo -W1 -Fd$(object.path)/ 
+  options     += -nologo $(if $(findstring clang,$(compiler)),-fuse-ld=lld) -link
 else
   flags.c      = -x c -std=c11
   flags.cpp    = -x c++ -std=c++17

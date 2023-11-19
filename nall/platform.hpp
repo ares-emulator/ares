@@ -67,10 +67,6 @@ namespace Math {
   #define MSG_NOSIGNAL 0
   #define PATH_MAX 260
 
-  #if !defined(INVALID_HANDLE_VALUE)
-    #define INVALID_HANDLE_VALUE ((HANDLE)-1)
-  #endif
-
   typedef void* HANDLE;
 
   inline auto access(const char* path, int amode) -> int { return _waccess(nall::utf16_t(path), amode); }

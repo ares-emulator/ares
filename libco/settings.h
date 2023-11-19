@@ -32,7 +32,7 @@
 #endif
 
 #if defined(_MSC_VER)
-  #pragma section(".text", execute, read)
+  #pragma section(".text")
   #define section(name) __declspec(allocate(".text"))
 #elif defined(__APPLE__)
   #define section(name) __attribute__((section("__TEXT,__" #name)))
