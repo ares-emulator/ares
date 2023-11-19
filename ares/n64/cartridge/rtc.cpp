@@ -21,7 +21,6 @@ auto Cartridge::RTC::load() -> void {
       ram.write<Byte>(21, BCD::encode(tmm.tm_mon + 1));
       ram.write<Byte>(22, BCD::encode(tmm.tm_year % 100));
       ram.write<Byte>(23, BCD::encode(tmm.tm_year / 100));
-      ram.write<Byte>(21, 1);
     }
 
     timestamp = time(0) - timestamp;
