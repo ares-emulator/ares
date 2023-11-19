@@ -39,9 +39,6 @@ auto System::unserialize(serializer& s) -> bool {
 
 auto System::serialize(serializer& s, bool synchronize) -> void {
   scheduler.setSynchronize(synchronize);
-  s(io.unknown0);
-  s(io.unknown1);
-  s(io.unknown3);
   s(io.mode);
   s(eeprom);
   s(cpu);

@@ -56,12 +56,14 @@ auto Bus::map(IO* io, u16 lo, maybe<u16> hi) -> void {
 }
 
 auto Bus::readIO(n16 address) -> n8 {
+  if((address & 0x1ff) < 0x0b8) address &= 0x1ff;
   if(auto io = port[address]) return io->readIO(address);
-  if(address == 0x00ca) return 0x80;  //Mama Mitte (unknown status bit)
-  return 0x00;
+  if(address == 0x00ca) return 0x80; // Mama Mitte (unknown status bit)
+  return system.color() ? 0x00 : 0x90; // open bus
 }
 
 auto Bus::writeIO(n16 address, n8 data) -> void {
+  if((address & 0x1ff) < 0x0b8) address &= 0x1ff;
   if(auto io = port[address]) return io->writeIO(address, data);
 }
 

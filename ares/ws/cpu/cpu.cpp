@@ -42,8 +42,8 @@ auto CPU::width(n20 address) -> u32 {
 auto CPU::speed(n20 address) -> n32 {
   switch(address >> 16) {
     case 0: return 1; // internal RAM
-    case 1: return system.color() ? 1 : 3; // SRAM
-    default: return io.cartridgeRomWait ? 3 : 1; // cartridge ROM
+    case 1: return (cpu.io.cartridgeSramWait || SoC::ASWAN()) ? 2 : 1; // SRAM
+    default: return io.cartridgeRomWait ? 2 : 1; // cartridge ROM
   }
 }
 
@@ -55,12 +55,24 @@ auto CPU::write(n20 address, n8 data) -> void {
   return bus.write(address, data);
 }
 
+auto CPU::ioWidth(n16 port) -> u32 {
+  if(port >= 0xC0 && port <= 0xFF)
+    return Byte;
+  return Word;
+}
+
+auto CPU::ioSpeed(n16 port) -> n32 {
+  if(port >= 0xC0 && port <= 0xFF)
+    return (cpu.io.cartridgeIoWait || SoC::ASWAN()) ? 2 : 1;
+  return 1;
+}
+
 auto CPU::in(n16 port) -> n8 {
-  return bus.readIO(port & 0x01ff);
+  return bus.readIO(port);
 }
 
 auto CPU::out(n16 port, n8 data) -> void {
-  return bus.writeIO(port & 0x01ff, data);
+  return bus.writeIO(port, data);
 }
 
 auto CPU::power() -> void {
