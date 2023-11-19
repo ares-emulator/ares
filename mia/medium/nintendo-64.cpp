@@ -4,7 +4,83 @@ struct Nintendo64 : Cartridge {
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
+  auto ipl2checksum(u32 seed, array_view<u8> rom) -> u64;
 };
+
+auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
+  auto rotl = [](u32 value, u32 shift) -> u32 {
+    return (value << shift) | (value >> (-shift&31));
+  };
+  auto rotr = [](u32 value, u32 shift) -> u32 {
+    return (value >> shift) | (value << (-shift&31));
+  };
+
+  auto csum = [](u32 a0, u32 a1, u32 a2) -> u32 {
+    if (a1 == 0) a1 = a2;
+    u64 prod = (u64)a0 * (u64)a1;
+    u32 hi = (u32)(prod >> 32);
+    u32 lo = (u32)prod;
+    u32 diff = hi - lo;
+    return diff ? diff : a0;
+  };
+
+  // create the initialization data
+  u32 init = 0x6c078965 * (seed & 0xff) + 1;
+  u32 data = rom.readm(4);
+  init ^= data;
+
+  // copy to the state
+  u32 state[16];
+  for(auto &s : state) s = init;
+
+  u32 dataNext = data, dataLast;
+  u32 loop = 0;
+  while(1) {
+      loop++;
+      dataLast = data;
+      data = dataNext;
+
+      state[0] += csum(1007 - loop, data, loop);
+      state[1]  = csum(state[1], data, loop);
+      state[2] ^= data;
+      state[3] += csum(data + 5, 0x6c078965, loop);
+      state[9]  = (dataLast < data) ? csum(state[9], data, loop) : state[9] + data;
+      state[4] += rotr(data, dataLast & 0x1f);
+      state[7]  = csum(state[7], rotl(data, dataLast & 0x1f), loop);
+      state[6]  = (data < state[6]) ? (state[3] + state[6]) ^ (data + loop) : (state[4] + data) ^ state[6];
+      state[5] += rotl(data, dataLast >> 27);
+      state[8]  = csum(state[8], rotr(data, dataLast >> 27), loop);
+
+      if (loop == 1008) break;
+
+      dataNext   = rom.readm(4);
+      state[15]  = csum(csum(state[15], rotl(data, dataLast  >> 27), loop), rotl(dataNext, data  >> 27), loop);
+      state[14]  = csum(csum(state[14], rotr(data, dataLast & 0x1f), loop), rotr(dataNext, data & 0x1f), loop);
+      state[13] += rotr(data, data & 0x1f) + rotr(dataNext, dataNext & 0x1f);
+      state[10]  = csum(state[10] + data, dataNext, loop);
+      state[11]  = csum(state[11] ^ data, dataNext, loop);
+      state[12] += state[8] ^ data;
+  }
+
+  u32 buf[4];
+  for(auto &b : buf) b = state[0];
+
+  for(loop = 0; loop < 16; loop++) {
+      data = state[loop];
+      u32 tmp = buf[0] + rotr(data, data & 0x1f);
+      buf[0] = tmp;
+      buf[1] = data < tmp ? buf[1]+data : csum(buf[1], data, loop);
+
+      tmp = (data & 0x02) >> 1;
+      u32 tmp2 = data & 0x01;
+      buf[2] = tmp == tmp2 ? buf[2]+data : csum(buf[2], data, loop);
+      buf[3] = tmp2 == 1 ? buf[3]^data : csum(buf[3], data, loop);
+  }
+  
+  u64 checksum = (u64)csum(buf[0], buf[1], 16) << 32;
+  checksum |= buf[3] ^ buf[2];
+  return checksum & 0xffffffffffffull;
+}
 
 auto Nintendo64::load(string location) -> bool {
   vector<u8> rom;
@@ -126,24 +202,35 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   char region_code = data[0x3e];
   u8 revision = data[0x3f];
 
-  //detect the CIC used for a given gamepak based on checksumming its bootcode
-  //note: NTSC 6101 != PAL 7102; they use different bootcodes
-  //note: NTSC 6102 == PAL 7101
-  //note: NTSC 6104 / PAL 7104 was never officially used
-  //note: Except for above cases, NTSC 610x == PAL 710x
+  //detect the CIC used by calculating the IPL2 checksum with the various seeds
+  //provided by the various CICs, and checking if the checksum matches.
+  //this also works for modern IPL3s variants (proprietary or open source),
+  //as long as they are used with a CIC we know of.
   bool ntsc = region == "NTSC";
-  string cic = ntsc ? "CIC-NUS-6102" : "CIC-NUS-7101";  //fallback; most common
-  u32 crc32 = Hash::CRC32({&data[0x40], 0x9c0}).value();
-  if(crc32 == 0x1deb51a9) cic = "CIC-NUS-6101"; // Always NTSC (Star Fox 64)
-  if(crc32 == 0xec8b1325) cic = "CIC-NUS-7102"; // Always PAL (Lylat Wars)
-  if(crc32 == 0xc08e5bd6) cic = ntsc ? "CIC-NUS-6102" : "CIC-NUS-7101";
-  if(crc32 == 0x03b8376a) cic = ntsc ? "CIC-NUS-6103" : "CIC-NUS-7103";
-  if(crc32 == 0xcf7f41dc) cic = ntsc ? "CIC-NUS-6105" : "CIC-NUS-7105";
-  if(crc32 == 0xd1059c6a) cic = ntsc ? "CIC-NUS-6106" : "CIC-NUS-7106";
-  if(crc32 == 0x0c965795) cic = "CIC-NUS-8303"; // 64DD Retail IPL (Japanese)
-  if(crc32 == 0x10c68b18) cic = "CIC-NUS-8401"; // 64DD Development IPL (Japanese)
-  if(crc32 == 0x8feba21e) cic = "CIC-NUS-DDUS"; // 64DD Retail IPL (North American, unreleased)
-  if(crc32 == 0x78b6e35c) cic = "CIC-NUS-5167"; // 64DD Conversion cartridges
+  auto ipl3 = array_view<u8>(&data[0x40], 0xfc0);
+  string cic = "";
+
+  if (!cic) switch (ipl2checksum(0x3F, ipl3)) {
+    case 0x45cc73ee317aull: cic = "CIC-NUS-6101"; break; //always NTSC (Star Fox 64)
+    case 0x44160ec5d9afull: cic = "CIC-NUS-7102"; break; //always PAL (Lylat Wars)
+    case 0xa536c0f1d859ull: cic = ntsc ? "CIC-NUS-6102" : "CIC-NUS-7101"; break;
+  } 
+  if (!cic) switch (ipl2checksum(0x78, ipl3)) {
+    case 0x586fd4709867ull: cic = ntsc ? "CIC-NUS-6103" : "CIC-NUS-7103"; break;
+  }
+  if (!cic) switch (ipl2checksum(0x91, ipl3)) {
+    case 0x8618a45bc2d3ull: cic = ntsc ? "CIC-NUS-6105" : "CIC-NUS-7105"; break;
+  }
+  if (!cic) switch (ipl2checksum(0x85, ipl3)) {
+    case 0x2bbad4e6eb74ull: cic = ntsc ? "CIC-NUS-6106" : "CIC-NUS-7106"; break;
+  }
+  if (!cic) switch (ipl2checksum(0xdd, ipl3)) {
+    case 0x32b294e2ab90ull: cic = "CIC-NUS-8303"; break; //64DD Retail IPL (Japanese)
+    case 0x6ee8d9e84970ull: cic = "CIC-NUS-8401"; break; //64DD Development IPL (Japanese)
+    case 0x083c6c77e0b1ull: cic = "CIC-NUS-5167"; break; //64DD Conversion cartridges
+    case 0x05ba2ef0a5f1ull: cic = "CIC-NUS-DDUS"; break; //64DD Retail IPL (North American, unreleased)
+  }
+  if (!cic) cic = ntsc ? "CIC-NUS-6102" : "CIC-NUS-7101";  //fallback; most common
 
   //detect the save type based on the game ID
   u32 eeprom  = 0;      //512_B or 2_KiB
