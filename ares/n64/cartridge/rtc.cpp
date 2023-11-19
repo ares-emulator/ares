@@ -11,7 +11,16 @@ auto Cartridge::RTC::load() -> void {
     present = 1;
     n64 timestamp = ram.read<Dual>(24);
     if(!~timestamp) {
-      ram.fill(0);
+      time_t t = (time_t)0;
+      struct tm tmm = *localtime(&t);
+      ram.write<Byte>(16, BCD::encode(tmm.tm_sec));
+      ram.write<Byte>(17, BCD::encode(tmm.tm_min));
+      ram.write<Byte>(18, BCD::encode(tmm.tm_hour) | 0x80);
+      ram.write<Byte>(19, BCD::encode(tmm.tm_mday));
+      ram.write<Byte>(20, BCD::encode(tmm.tm_wday));
+      ram.write<Byte>(21, BCD::encode(tmm.tm_mon + 1));
+      ram.write<Byte>(22, BCD::encode(tmm.tm_year % 100));
+      ram.write<Byte>(23, BCD::encode(tmm.tm_year / 100));
       ram.write<Byte>(21, 1);
     }
 
