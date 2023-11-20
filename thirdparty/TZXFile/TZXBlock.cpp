@@ -14,7 +14,7 @@ TZXBlock::~TZXBlock()
 
 float TZXBlock::GetAudioBufferOffsetLocationInSeconds()
 {
-    float time = m_nAudioBufferOffsetLocation;
+    float time = (float)m_nAudioBufferOffsetLocation;
     time = time / (float)TZX_AUDIO_DATARATE;
     return time;
 }

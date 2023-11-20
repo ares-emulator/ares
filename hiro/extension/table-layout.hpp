@@ -77,7 +77,7 @@ private:
     f32 spacing = 5_sx;
   } state;
 
-  friend class mTableLayout;
+  friend struct mTableLayout;
 };
 
 struct mTableLayoutRow : mObject {
@@ -95,7 +95,7 @@ private:
     f32 spacing = 5_sy;
   } state;
 
-  friend class mTableLayout;
+  friend struct mTableLayout;
 };
 
 struct mTableLayoutCell : mObject {
@@ -122,7 +122,7 @@ private:
     Size size;
   } state;
 
-  friend class mTableLayout;
+  friend struct mTableLayout;
 };
 
 #endif

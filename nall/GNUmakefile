@@ -119,7 +119,7 @@ endif
 ifeq ($(cl),true)
   flags.c      = -TC -std:c11
   flags.cpp    = -TP -std:c++17 -EHsc
-  flags       += -nologo -W1 -Fd$(object.path)/ 
+  flags       += -nologo -W2 -Fd$(object.path)/ 
   options     += -nologo $(if $(findstring clang,$(compiler)),-fuse-ld=lld) -link
 else
   flags.c      = -x c -std=c11

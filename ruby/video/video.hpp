@@ -38,7 +38,7 @@ struct VideoDriver {
 
 protected:
   Video& super;
-  friend class Video;
+  friend struct Video;
 
   bool fullScreen = false;
   string monitor = "Primary";

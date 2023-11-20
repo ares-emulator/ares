@@ -41,7 +41,7 @@ private:
   //serialization.cpp
   auto serialize(serializer&, bool synchronize) -> void;
 
-  friend class Cartridge;
+  friend struct Cartridge;
 };
 
 extern Random random;
