@@ -2,7 +2,7 @@
 struct mTabFrame : mWidget {
   Declare(TabFrame)
   using mObject::remove;
-  friend class mTabFrameItem;
+  friend struct mTabFrameItem;
 
   auto append(sTabFrameItem item) -> type&;
   auto doChange() const -> void;

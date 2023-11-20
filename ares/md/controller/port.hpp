@@ -60,7 +60,7 @@ protected:
   n8 serialControl;
   n8 serialTxBuffer;
   n8 serialRxBuffer;
-  friend class Controller;
+  friend struct Controller;
 };
 
 extern ControllerPort controllerPort1;

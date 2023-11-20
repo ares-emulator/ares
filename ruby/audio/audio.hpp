@@ -39,7 +39,7 @@ struct AudioDriver {
 
 protected:
   Audio& super;
-  friend class Audio;
+  friend struct Audio;
 
   bool exclusive = false;
   uintptr context = 0;

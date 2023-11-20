@@ -20,7 +20,7 @@ struct InputDriver {
 
 protected:
   Input& super;
-  friend class Input;
+  friend struct Input;
 
   uintptr context = 0;
 };

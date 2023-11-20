@@ -77,7 +77,7 @@ private:
   function<void ()> press;
   function<void ()> release;
   s16 state = 0;
-  friend class InputManager;
+  friend struct InputManager;
 };
 
 struct InputNode {

@@ -107,7 +107,7 @@ private:
   auto saveSPC7110(Markup::Node) -> void;
   auto saveOBC1(Markup::Node) -> void;
 
-  friend class ICD;
+  friend struct ICD;
 };
 
 #include "slot.hpp"

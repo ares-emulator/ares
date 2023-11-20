@@ -64,6 +64,8 @@ namespace nall {
     static constexpr bool GCC       = 0;
     static constexpr bool Microsoft = 1;
   };
+  #pragma warning(disable:4146)  //unary minus operator applied to unsigned type, result still unsigned
+  #pragma warning(disable:4244)  //conversion from 'type1' to 'type2', possible loss of data
   #pragma warning(disable:4804)  //unsafe use of type 'bool' in operation
   #pragma warning(disable:4805)  //unsafe mix of type 'bool' and type 'type' in operation
   #pragma warning(disable:4996)  //libc "deprecation" warnings

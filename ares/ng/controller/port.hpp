@@ -20,7 +20,7 @@ struct ControllerPort {
 
 protected:
   const string name;
-  friend class Controller;
+  friend struct Controller;
 };
 
 extern ControllerPort controllerPort1;

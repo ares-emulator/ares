@@ -58,7 +58,7 @@ private:
     sSizable sizable;
   } state;
 
-  friend class mFixedLayout;
+  friend struct mFixedLayout;
 };
 
 #endif

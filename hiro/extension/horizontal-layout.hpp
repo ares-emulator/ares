@@ -75,7 +75,7 @@ private:
     f32 spacing = 5_sx;
   } state;
 
-  friend class mHorizontalLayout;
+  friend struct mHorizontalLayout;
 };
 
 #endif

@@ -75,7 +75,7 @@ private:
     f32 spacing = 5_sy;
   } state;
 
-  friend class mVerticalLayout;
+  friend struct mVerticalLayout;
 };
 
 #endif
