@@ -53,5 +53,5 @@ struct DualShock : PeripheralDevice {
   vector<u8> outputData;
   vector<n8> inputData;
 
-  bool _active;
+  bool _active = false;
 };
