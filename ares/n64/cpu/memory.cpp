@@ -150,8 +150,18 @@ inline auto CPU::busWrite(u32 address, u64 data) -> void {
 }
 
 template<u32 Size>
+inline auto CPU::busWriteBurst(u32 address, u32 *data) -> void {
+  bus.writeBurst<Size>(address, data, *this);
+}
+
+template<u32 Size>
 inline auto CPU::busRead(u32 address) -> u64 {
   return bus.read<Size>(address, *this);
+}
+
+template<u32 Size>
+inline auto CPU::busReadBurst(u32 address, u32 *data) -> void {
+  return bus.readBurst<Size>(address, data, *this);
 }
 
 auto CPU::fetch(u64 vaddr) -> maybe<u32> {

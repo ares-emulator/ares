@@ -91,6 +91,9 @@ auto CPU::instruction() -> void {
     step(1 * 2);
     return exception.nmi();
   }
+  if (scc.sysadFrozen) {
+    return;
+  }
 
   if constexpr(Accuracy::CPU::Recompiler) {
     // Fast path: attempt to lookup previously compiled blocks with devirtualizeFast
