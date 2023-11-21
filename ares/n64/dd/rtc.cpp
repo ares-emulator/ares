@@ -74,11 +74,8 @@ auto DD::RTC::tickSecond() -> void {
   ram.write<Byte>(3, 0);
 
   //day
-  u32 daysInMonth[12] = {0x31, 0x28, 0x31, 0x30, 0x31, 0x30, 0x31, 0x31, 0x30, 0x31, 0x30, 0x31};
-  if(ram.read<Byte>(0) && !(BCD::decode(ram.read<Byte>(0)) % 4)) daysInMonth[1]++;
-
   tick(2);
-  if(ram.read<Byte>(2) <= daysInMonth[BCD::decode(ram.read<Byte>(1))-1]) return;
+  if(ram.read<Byte>(2) <= daysInMonth(ram.read<Byte>(1), ram.read<Byte>(0))) return;
   ram.write<Byte>(2, 1);
 
   //month
@@ -93,11 +90,12 @@ auto DD::RTC::tickSecond() -> void {
 auto DD::RTC::valid() -> bool {
   //check validity of ram rtc data (if it's BCD valid or not)
   for(auto n : range(6)) {
-    if ((ram.read<Byte>(n) & 0x0f) >= 0x0a) return false;
-    if (ram.read<Byte>(n) >= 0xa0) return false;
+    if((ram.read<Byte>(n) & 0x0f) >= 0x0a) return false;
   }
 
   //check for valid values of each byte
+  //year
+  if(ram.read<Byte>(0) >= 0xa0) return false;
   //second
   if(ram.read<Byte>(5) >= 0x60) return false;
   //minute
@@ -109,10 +107,17 @@ auto DD::RTC::valid() -> bool {
   if(ram.read<Byte>(1) < 1) return false;
   //day
   if(ram.read<Byte>(2) < 1) return false;
-  u32 daysInMonth[12] = {0x31, 0x28, 0x31, 0x30, 0x31, 0x30, 0x31, 0x31, 0x30, 0x31, 0x30, 0x31};
-  if(ram.read<Byte>(0) && !(BCD::decode(ram.read<Byte>(0)) % 4)) daysInMonth[1]++;
-  if(ram.read<Byte>(2) > daysInMonth[BCD::decode(ram.read<Byte>(1))-1]) return false;
+  if(ram.read<Byte>(2) > daysInMonth(ram.read<Byte>(1), ram.read<Byte>(0))) return false;
 
   //everything is valid
   return true;
+}
+
+auto DD::RTC::daysInMonth(u8 month, u8 year) -> u8 {
+  year = BCD::decode(year);
+  month = BCD::decode(month);
+  u8 days = 30 + ((month + (month >> 3)) & 1);
+  if (month == 2)
+      days -= (year % 4 == 0) ? 1 : 2;
+  return BCD::encode(days);
 }
