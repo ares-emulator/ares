@@ -38,6 +38,7 @@ struct DD : Memory::PI<DD> {
     auto tickClock() -> void;
     auto tickSecond() -> void;
     auto valid() -> bool;
+    auto daysInMonth(u8 month, u8 year) -> u8;
   } rtc;
 
   auto title() const -> string { return information.title; }
