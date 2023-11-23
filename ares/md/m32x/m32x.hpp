@@ -23,7 +23,7 @@ struct M32X {
 
       //debugger.cpp
       auto load(Node::Object) -> void;
-      auto instruction() -> void;
+      auto instruction(u16 opcode) -> void;
       auto interrupt(string_view) -> void;
 
       struct Tracer {
@@ -37,6 +37,7 @@ struct M32X {
     auto unload() -> void;
 
     auto main() -> void;
+    auto instructionPrologue(u16 instruction) -> void override;
     auto step(u32 clocks) -> void override;
     auto power(bool reset) -> void;
     auto restart() -> void;

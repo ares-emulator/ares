@@ -129,6 +129,10 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   inDelaySlot = 1;  //force runtime check on first instruction
   while(true) {
     u16 instruction = instructions[index++];
+    if(callInstructionPrologue) {
+      mov32(reg(1), imm(instruction));
+      call(&SH2::instructionPrologue);
+    }
     auto branch = emitInstruction(instruction);
     inDelaySlot = branch == Branch::Slot;
     add64(CCR, CCR, imm(1));

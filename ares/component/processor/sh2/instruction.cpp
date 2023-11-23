@@ -23,6 +23,7 @@ auto SH2::instruction() -> void {
     }
     ID = 0;
     u16 opcode = readWord(PC - 4);
+    instructionPrologue(opcode);
     execute(opcode);
     instructionEpilogue();
   }

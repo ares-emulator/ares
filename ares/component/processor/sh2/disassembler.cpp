@@ -5,7 +5,7 @@ auto SH2::hint(P&&... p) const -> string {
   return {std::forward<P>(p)...};
 }
 
-auto SH2::disassembleInstruction() -> string {
+auto SH2::disassembleInstruction(u16 opcode) -> string {
   vector<string> s;
 
   auto registerName = [&](u32 r) -> string {
@@ -47,8 +47,6 @@ auto SH2::disassembleInstruction() -> string {
   auto branch12 = [&](u32 d) -> string {
     return {"0x", hex(PC + (i12)d * 2, 8L)};
   };
-
-  u16 opcode = readWord(PC - 4);
 
   #define n   (opcode >> 8 & 0x00f)
   #define m   (opcode >> 4 & 0x00f)

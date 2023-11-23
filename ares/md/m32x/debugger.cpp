@@ -13,13 +13,19 @@ auto M32X::SH7604::Debugger::load(Node::Object parent) -> void {
   tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", parent->name());
   tracer.instruction->setAddressBits(32, 1);
   tracer.instruction->setDepth(16);
+  if constexpr(SH2::Accuracy::Recompiler) {
+    tracer.instruction->setToggle([&] {
+      self->recompiler.reset();
+      self->recompiler.callInstructionPrologue = tracer.instruction->enabled();
+    });
+  }
 
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", parent->name());
 }
 
-auto M32X::SH7604::Debugger::instruction() -> void {
+auto M32X::SH7604::Debugger::instruction(u16 opcode) -> void {
   if(tracer.instruction->enabled() && tracer.instruction->address(self->regs.PC - 4)) {
-    tracer.instruction->notify(self->disassembleInstruction(), self->disassembleContext());
+    tracer.instruction->notify(self->disassembleInstruction(opcode), self->disassembleContext());
   }
 }
 

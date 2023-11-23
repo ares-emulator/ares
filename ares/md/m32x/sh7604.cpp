@@ -38,12 +38,15 @@ auto M32X::SH7604::main() -> void {
     #undef raise
   }
 
-  debugger.instruction();
   SH2::instruction();
   SH2::intc.run();
   SH2::dmac.run();
   if(m32x.shm.active()) m32x.shm.dmac.dreq[1] = 0;
   if(m32x.shs.active()) m32x.shs.dmac.dreq[1] = 0;
+}
+
+auto M32X::SH7604::instructionPrologue(u16 instruction) -> void {
+  debugger.instruction(instruction);
 }
 
 auto M32X::SH7604::step(u32 clocks) -> void {
