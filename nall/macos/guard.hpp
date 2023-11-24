@@ -3,7 +3,10 @@
 
 #define Boolean CocoaBoolean
 #define decimal CocoaDecimal
-#define DEBUG   CocoaDebug
+#ifdef DEBUG
+#undef DEBUG
+#define DEBUG CocoaDebug
+#endif
 
 #else
 #undef NALL_MACOS_GUARD_HPP

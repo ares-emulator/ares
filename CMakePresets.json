@@ -1,0 +1,196 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "baseCacheVars",
+      "hidden": true,
+      "cacheVariables": {
+        "ARES_PROFILE_ACCURACY": false,
+        "ARES_BUILD_LOCAL": true,
+        "ENABLE_CCACHE": true
+      }
+    },
+    {
+      "name": "macos",
+      "displayName": "macOS",
+      "description": "Xcode project (host architecture by default)",
+      "inherits": ["baseCacheVars"],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build_macos",
+      "cacheVariables": {
+        "CMAKE_OSX_DEPLOYMENT_TARGET": {"type": "STRING", "value": "10.13"},
+        "ARES_CODESIGN_IDENTITY": {"type": "STRING", "value": "$penv{CODESIGN_IDENT}"},
+        "ARES_CODESIGN_TEAM": {"type": "STRING", "value": "$penv{CODESIGN_TEAM}"},
+        "ARES_BUILD_OPTIONAL_TARGETS": true,
+        "ENABLE_CCACHE": true
+      }
+    },
+    {
+      "name": "windows",
+      "displayName": "Windows (Visual Studio, ClangCL)",
+      "description": "Visual Studio project using ClangCL (host architecture)",
+      "inherits": ["baseCacheVars"],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "binaryDir": "${sourceDir}/build_vsclang",
+      "generator": "Visual Studio 17 2022",
+      "toolset": "ClangCL",
+      "cacheVariables": {
+        "ENABLE_CCACHE": true
+      }
+    },
+    {
+      "name": "windows-msvc",
+      "displayName": "Windows (Visual Studio, MSVC)",
+      "description": "Visual Studio project using MSVC (host architecture)",
+      "inherits": ["baseCacheVars"],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "binaryDir": "${sourceDir}/build_msvc",
+      "generator": "Visual Studio 17 2022",
+      "cacheVariables": {
+        "ENABLE_CCACHE": true
+      }
+    },
+    {
+      "name": "macos-ci-latest",
+      "displayName": "macOS for CI",
+      "description": "Universal binary for building on Github Actions",
+      "inherits": ["baseCacheVars"],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": {"type": "STRING", "value": "x86_64;arm64"},
+        "CMAKE_OSX_DEPLOYMENT_TARGET": {"type": "STRING", "value": "10.13"},
+        "ARES_CODESIGN_IDENTITY": {"type": "STRING", "value": "$penv{MACOS_CERTIFICATE_NAME}"},
+        "ARES_CODESIGN_TEAM": {"type": "STRING", "value": "$penv{MACOS_NOTARIZATION_TEAMID}"},
+        "ENABLE_CCACHE": true,
+        "ARES_VERSION_OVERRIDE": {"type": "STRING", "value": "v199"},
+        "ARES_BUILD_LOCAL": false,
+        "ARES_BUILD_OPTIONAL_TARGETS": true
+      }
+    },
+    {
+      "name": "macos-ci-compat",
+      "displayName": "macOS for CI",
+      "description": "Universal binary for building on Github Actions",
+      "inherits": ["baseCacheVars"],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": {"type": "STRING", "value": "x86_64;arm64"},
+        "CMAKE_OSX_DEPLOYMENT_TARGET": {"type": "STRING", "value": "10.9"},
+        "ARES_CODESIGN_IDENTITY": {"type": "STRING", "value": "$penv{MACOS_CERTIFICATE_NAME}"},
+        "ARES_CODESIGN_TEAM": {"type": "STRING", "value": "$penv{MACOS_NOTARIZATION_TEAMID}"},
+        "ARES_VERSION_OVERRIDE": {"type": "STRING", "value": "v199"},
+        "ENABLE_CCACHE": true,
+        "ARES_BUILD_LOCAL": false,
+        "ARES_BUILD_OPTIONAL_TARGETS": true
+      }
+    },
+    {
+      "name": "windows-ci-base",
+      "hidden": true,
+      "inherits": ["baseCacheVars"],
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {"type": "STRING", "value": "RelWithDebInfo"},
+        "ENABLE_CCACHE": true,
+        "ARES_BUILD_LOCAL": false,
+        "ARES_BUILD_OPTIONAL_TARGETS": true,
+        "ARES_VERSION_OVERRIDE": {"type": "STRING", "value": "v199"},
+        "ARES_PRECOMPILE_HEADERS": true
+      }
+    },
+    {
+      "name": "windows-ci-mingw-native",
+      "displayName": "Windows for CI (x64 MSYS2/MinGW Clang)",
+      "description": "Single-arch binary for building on Github Actions",
+      "inherits": ["windows-ci-base"],
+      "generator": "Ninja"
+    },
+    {
+      "name": "windows-ci-mingw-cross",
+      "displayName": "Windows for CI (arm64 MSYS2/MinGW Clang)",
+      "description": "Single-arch binary for building on Github Actions",
+      "inherits": ["windows-ci-base"],
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {"type": "STRING", "value": "../cmake/windows/aarch64-cross-toolchain.cmake"}
+      }
+    },
+    {
+      "name": "windows-ci-cl-native",
+      "displayName": "Windows for CI (x64 ClangCL)",
+      "description": "Single-arch binary for building on Github Actions",
+      "generator": "Visual Studio 17 2022",
+      "inherits": ["windows-ci-base"],
+      "toolset": "ClangCL"
+    },
+    {
+      "name": "windows-ci-cl-cross",
+      "displayName": "Windows for CI (arm64 ClangCL)",
+      "description": "Single-arch binary for building on Github Actions",
+      "inherits": ["windows-ci-base"],
+      "generator": "Visual Studio 17 2022",
+      "architecture": "arm64",
+      "toolset": "ClangCL",
+      "cacheVariables": {
+        "ARES_CROSSCOMPILING": true
+      }
+    },
+    {
+      "name": "windows-ci-msvc-native",
+      "displayName": "Windows for CI (x64 MSVC)",
+      "description": "Single-arch binary for building on Github Actions",
+      "generator": "Visual Studio 17 2022",
+      "inherits": ["windows-ci-base"]
+    },
+    {
+      "name": "windows-ci-msvc-cross",
+      "displayName": "Windows for CI (arm64 MSVC)",
+      "description": "Single-arch binary for building on Github Actions",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "arm64",
+      "inherits": ["windows-ci-base"],
+      "cacheVariables": {
+        "ARES_CROSSCOMPILING": true
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows",
+      "configurePreset": "windows",
+      "displayName": "Windows build (host architecture)",
+      "description": "Windows build (host architecture)",
+      "configuration": "RelWithDebInfo"
+    }
+  ]
+}

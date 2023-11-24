@@ -123,7 +123,8 @@ inline auto decode(state* s, huffman* h) -> s32 {
 }
 
 inline auto construct(huffman* h, s16* length, s32 n) -> s32 {
-  s32 symbol, len, left;
+  s32 symbol, left;
+  u32 len;
   s16 offs[MAXBITS + 1];
 
   for(len = 0; len <= MAXBITS; len++) h->count[len] = 0;

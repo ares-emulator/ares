@@ -1,0 +1,184 @@
+name: Build (New)
+on:
+  push
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        program:
+        - ares
+        config:
+        - RelWithDebInfo
+        platform:
+        - name: windows-x64
+          os: windows-latest
+          compiler: clang++
+          shell: 'msys2 {0}'
+          msystem: clang64
+          install: mingw-w64-clang-x86_64-clang
+          target-cmake-preset: windows-ci-mingw-native
+        - name: windows-arm64
+          os: windows-latest
+          shell: 'msys2 {0}'
+          msystem: clang64
+          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-aarch64-clang mingw-w64-cross-clang-toolchain
+          target-cmake-preset: windows-ci-mingw-cross
+          native-cmake-preset: windows-ci-mingw-native
+        - name: windows-clang-cl-x64
+          os: windows-latest
+          windres: rc
+          shell: bash
+          target-cmake-preset: windows-ci-cl-native
+        - name: windows-clang-cl-arm64
+          os: windows-latest
+          windres: rc
+          shell: bash
+          target-cmake-preset: windows-ci-cl-cross
+          native-cmake-preset: windows-ci-cl-native
+#        - name: macos-compat
+#          os: macos-12
+#          compiler: clang++
+#          shell: sh
+#          install: cmake ccache
+#          target-cmake-preset: macos-ci-compat
+        - name: windows-msvc-x64
+          os: windows-latest
+          windres: rc
+          shell: bash
+          target-cmake-preset: windows-ci-msvc-native
+        - name: windows-msvc-arm64
+          os: windows-latest
+          windres: rc
+          shell: bash
+          target-cmake-preset: windows-ci-msvc-cross
+          native-cmake-preset: windows-ci-msvc-native
+        - name: macos-latest
+          os: macos-latest
+          compiler: clang++
+          shell: sh
+          install: cmake ccache xcbeautify
+          target-cmake-preset: macos-ci-latest
+    name: ${{ matrix.program }}-${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.platform.shell }}
+    steps:
+    - name: Install MSYS2 Dependencies
+      if: matrix.platform.shell == 'msys2 {0}'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.platform.msystem }}
+        install: make git cmake ccache ninja ${{ matrix.platform.install }}
+    - name: "macOS: Import Certificate"
+      if: runner.os == 'macOS'
+      uses: apple-actions/import-codesign-certs@v3
+      with:
+        p12-file-base64: ${{ secrets.MACOS_CERTIFICATE_DATA }}
+        p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSPHRASE }}
+    - name: Checkout source code
+      uses: actions/checkout@v4
+    - name: Install macOS Dependencies
+      if: runner.os == 'macOS'
+      run: |
+        brew install ${{ matrix.platform.install }}
+    - name: "Build: Windows"
+      if: runner.os != 'macOS'
+      run: .github/scripts/build_windows.sh
+      env:
+        CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
+        NATIVE_PRESET: ${{ matrix.platform.native-cmake-preset }}
+        TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
+    - name: "Build: macOS"
+      if: runner.os == 'macOS'
+      run: .github/scripts/build_macos.sh
+      env:
+        TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
+        MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
+        MACOS_NOTARIZATION_TEAMID: ${{ secrets.MACOS_NOTARIZATION_TEAMID }}
+        MACOS_KEYCHAIN_NAME: ares-macos-keychain
+        MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+    - name: "Windows: sign"
+      if: runner.os == 'Windows' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+      uses: DanaBear/code-sign-action@98c79121b376beab8d6a9484f445089db4461bca
+      with:
+        certificate: '${{ secrets.WIN_CERTIFICATE }}'
+        password: '${{ secrets.WIN_PASSWORD }}'
+        certificatesha1: '${{ secrets.WIN_CERTHASH }}'
+        certificatename: '${{ secrets.WIN_CERTNAME }}'
+        folder: 'build/desktop-ui/rundir/'
+        timestampUrl: 'http://timestamp.digicert.com'
+    - name: "macOS: notarize"
+      if: runner.os == 'macOS' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+      run: |
+        ditto -c -k --keepParent ${{ github.workspace }}/build/desktop-ui/RelWithDebInfo/ares.app /tmp/ares.zip
+        xcrun notarytool submit /tmp/ares.zip --apple-id "$MACOS_NOTARIZATION_USERNAME" --password "$MACOS_NOTARIZATION_PASSWORD" --team-id "$MACOS_NOTARIZATION_TEAMID" --wait
+        xcrun stapler staple ${{ github.workspace }}/build/desktop-ui/RelWithDebInfo/ares.app
+      env:
+        MACOS_NOTARIZATION_USERNAME: ${{ secrets.MACOS_NOTARIZATION_USERNAME }}
+        MACOS_NOTARIZATION_PASSWORD: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
+        MACOS_NOTARIZATION_TEAMID: ${{ secrets.MACOS_NOTARIZATION_TEAMID }}
+    - name: Upload Build (Windows)
+      if: runner.os != 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.program }}-${{ matrix.platform.name }}
+        path: build/desktop-ui/rundir/*
+    - name: Upload Build (macOS)
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.program }}-${{ matrix.platform.name }}
+        path: build/desktop-ui/RelWithDebInfo/
+    - name: Upload Debug Symbols (Windows)
+      if: runner.os != 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.program }}-${{ matrix.platform.name }}-PDBs
+        path: build/PDBs/*
+    - name: Upload Debug Symbols (macOS)
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.program }}-${{ matrix.platform.name }}-dSYMs
+        path: build/dSYMs/*
+        
+  release:
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs:
+    - build
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: 'src'
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: 'bin'
+    - name: Package Artifacts
+      run: src/.github/scripts/package_artifacts.sh
+    - name: Check Release Tag ☑️
+      id: check
+      run: |
+          echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          
+    - name: Create Release 🛫
+      id: create_release
+      uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191
+      with:
+        draft: true # ${{ github.ref != 'refs/heads/master' }}
+        tag_name: ${{ steps.check.outputs.version }}
+        name: ares ${{ steps.check.outputs.version }}
+        files: |
+          ${{ github.workspace }}/ares-macos-latest.zip
+          ${{ github.workspace }}/ares-macos-latest-dSYMs.zip
+          ${{ github.workspace }}/ares-windows-x64.zip
+          ${{ github.workspace }}/ares-windows-x64-PDBs.zip
+          ${{ github.workspace }}/ares-windows-clang-cl-x64.zip
+          ${{ github.workspace }}/ares-windows-clang-cl-x64-PDBs.zip
+          ${{ github.workspace }}/ares-windows-clang-cl-arm64.zip
+          ${{ github.workspace }}/ares-windows-clang-cl-arm64-PDBs.zip

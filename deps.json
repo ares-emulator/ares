@@ -1,0 +1,16 @@
+{
+    "dependencies": {
+        "prebuilt": {
+            "version": "v142",
+            "baseUrl": "https://github.com/jcm93/ares-deps/releases/download",
+            "label": "Pre-Built ares-deps",
+            "hashes": {
+                "linux-universal": "f194097b1cec6cc0b073edc800c685d3e601bc7167804379b787559b13ae3db3",
+                "macos-universal": "366b0049ead8f61db3398ec07aa33268912afde27ce9ac007ef57a6a8207eb80",
+                "windows-arm64": "e9e0746bc74bbfa48c152ffea23edc644086c7c979a70c5d49010c982cb36840",
+                "windows-x64": "c27eeb7624b34e7549305f2691a74ffea0a7985f22d37e5f13916ec0eaaea458"
+            }
+        }
+    },
+    "name": "ares"
+}
