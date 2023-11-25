@@ -116,6 +116,8 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "DebugServer/Enabled", debugServer.enabled);
   bind(boolean, "DebugServer/UseIPv4", debugServer.useIPv4);
 
+  bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
+
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};
     bind(string, name, recent.game[index]);
