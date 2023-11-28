@@ -68,6 +68,7 @@ auto Settings::process(bool load) -> void {
   bind(real,    "Video/Gamma", video.gamma);
   bind(boolean, "Video/ColorBleed", video.colorBleed);
   bind(boolean, "Video/ColorEmulation", video.colorEmulation);
+  bind(boolean, "Video/DeepBlackBoost", video.deepBlackBoost);
   bind(boolean, "Video/InterframeBlending", video.interframeBlending);
   bind(boolean, "Video/Overscan", video.overscan);
   bind(boolean, "Video/PixelAccuracy", video.pixelAccuracy);
