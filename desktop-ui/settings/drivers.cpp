@@ -4,7 +4,7 @@ auto DriverSettings::construct() -> void {
 
   videoLabel.setText("Video").setFont(Font().setBold());
   videoDriverLabel.setText("Driver:");
-  videoDriverAssign.setText("Reload").onActivate([&] {
+  videoDriverAssign.setText("Apply").onActivate([&] {
     settings.video.driver = videoDriverList.selected().text();
     videoDriverUpdate();
   });
@@ -35,7 +35,7 @@ auto DriverSettings::construct() -> void {
 
   audioLabel.setText("Audio").setFont(Font().setBold());
   audioDriverLabel.setText("Driver:");
-  audioDriverAssign.setText("Reload").onActivate([&] {
+  audioDriverAssign.setText("Apply").onActivate([&] {
     settings.audio.driver = audioDriverList.selected().text();
     audioDriverUpdate();
   });
@@ -72,7 +72,7 @@ auto DriverSettings::construct() -> void {
 
   inputLabel.setText("Input").setFont(Font().setBold());
   inputDriverLabel.setText("Driver:");
-  inputDriverAssign.setText("Reload").onActivate([&] {
+  inputDriverAssign.setText("Apply").onActivate([&] {
     settings.input.driver = inputDriverList.selected().text();
     inputDriverUpdate();
   });
