@@ -94,7 +94,7 @@ struct Program : ares::Platform {
   } message;
 
   vector<Message> messages;
-  maybe<u64> framesPerSecond;
+  maybe<u64> vblanksPerSecond;
 };
 
 extern Program program;
