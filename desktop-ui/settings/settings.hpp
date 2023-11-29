@@ -96,6 +96,10 @@ struct Settings : Markup::Node {
     bool enabled = false; // if enabled, server starts with ares
     bool useIPv4 = false; // forces IPv4 over IPv6
   } debugServer;
+
+  struct Nintendo64 {
+    bool expansionPak = true;
+  } nintendo64;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -230,18 +234,23 @@ struct EmulatorSettings : VerticalLayout {
 
 struct OptionSettings : VerticalLayout {
   auto construct() -> void;
-  HorizontalLayout rewindLayout{this, Size{~0, 0}, 5};
-    CheckLabel rewind{&rewindLayout, Size{0, 0}, 5};
-    Label rewindHint{&rewindLayout, Size{~0, 0}};
-  HorizontalLayout runAheadLayout{this, Size{~0, 0}, 5};
-    CheckLabel runAhead{&runAheadLayout, Size{0, 0}, 5};
-    Label runAheadHint{&runAheadLayout, Size{~0, 0}};
-  HorizontalLayout autoSaveMemoryLayout{this, Size{~0, 0}, 5};
-    CheckLabel autoSaveMemory{&autoSaveMemoryLayout, Size{0, 0}, 5};
-    Label autoSaveMemoryHint{&autoSaveMemoryLayout, Size{~0, 0}};
-  HorizontalLayout homebrewModeLayout{this, Size{~0, 0}, 5};
-    CheckLabel homebrewMode{&homebrewModeLayout, Size{0, 0}, 5};
-    Label homebrewModeHint{&homebrewModeLayout, Size{~0, 0}};
+  Label commonSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout rewindLayout{this, Size{~0, 0}, 5};
+      CheckLabel rewind{&rewindLayout, Size{0, 0}, 5};
+      Label rewindHint{&rewindLayout, Size{~0, 0}};
+    HorizontalLayout runAheadLayout{this, Size{~0, 0}, 5};
+      CheckLabel runAhead{&runAheadLayout, Size{0, 0}, 5};
+      Label runAheadHint{&runAheadLayout, Size{~0, 0}};
+    HorizontalLayout autoSaveMemoryLayout{this, Size{~0, 0}, 5};
+      CheckLabel autoSaveMemory{&autoSaveMemoryLayout, Size{0, 0}, 5};
+      Label autoSaveMemoryHint{&autoSaveMemoryLayout, Size{~0, 0}};
+    HorizontalLayout homebrewModeLayout{this, Size{~0, 0}, 5};
+      CheckLabel homebrewMode{&homebrewModeLayout, Size{0, 0}, 5};
+      Label homebrewModeHint{&homebrewModeLayout, Size{~0, 0}};
+  Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
+      CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
+      Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, 0}};
 };
 
 struct FirmwareSettings : VerticalLayout {
