@@ -112,7 +112,7 @@ jobs:
       run: ${MAKE:-make} -j4 -C desktop-ui build=optimized local=false compiler="${{ matrix.platform.compiler }}" windres="${{ matrix.platform.windres }}"
     - name: "macOS: Make universal app"
       if: runner.os == 'macOS'
-      run: scripts/macos-make-universal.sh
+      run: scripts/macos-make-universal.sh build=optimized local=false
       env:
         MAKEFLAGS: -j3
         MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
