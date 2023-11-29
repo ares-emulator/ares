@@ -111,14 +111,18 @@ auto CPU::instruction() -> void {
   }
 
   if constexpr(Accuracy::CPU::Interpreter) {
-    pipeline.address = ipu.pc;
     auto data = fetch(ipu.pc);
     if (!data) return;
-    pipeline.instruction = *data;
-    debugger.instruction();
+    instructionPrologue(*data);
     decoderEXECUTE();
     instructionEpilogue();
   }
+}
+
+auto CPU::instructionPrologue(u32 instruction) -> void {
+  pipeline.address = ipu.pc;
+  pipeline.instruction = instruction;
+  debugger.instruction();
 }
 
 auto CPU::instructionEpilogue() -> s32 {

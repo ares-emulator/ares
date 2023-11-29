@@ -36,6 +36,7 @@ struct CPU : Thread {
   auto synchronize() -> void;
 
   auto instruction() -> void;
+  auto instructionPrologue(u32 instruction) -> void;
   auto instructionEpilogue() -> s32;
 
   auto power(bool reset) -> void;
@@ -911,6 +912,7 @@ struct CPU : Thread {
     auto emitFPU(u32 instruction) -> bool;
     auto emitCOP2(u32 instruction) -> bool;
 
+    bool callInstructionPrologue = false;
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) == 16_MiB
   } recompiler{*this};

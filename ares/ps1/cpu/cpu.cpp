@@ -79,11 +79,10 @@ auto CPU::instruction() -> void {
       }
     }
 
-    pipeline.address = ipu.pc;
-    pipeline.instruction = fetch(ipu.pc);
+    u32 instruction = fetch(ipu.pc);
     if(exception()) return (void)instructionEpilogue();
 
-    debugger.instruction();
+    instructionPrologue(instruction);
     decoderEXECUTE();
     instructionEpilogue();
   }
@@ -92,6 +91,12 @@ auto CPU::instruction() -> void {
     auto block = recompiler.block(ipu.pc);
     block->execute(*this);
   }
+}
+
+auto CPU::instructionPrologue(u32 instruction) -> void {
+  pipeline.address = ipu.pc;
+  pipeline.instruction = instruction;
+  debugger.instruction();
 }
 
 auto CPU::instructionEpilogue() -> s32 {
