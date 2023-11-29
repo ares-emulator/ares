@@ -33,6 +33,9 @@ struct Bus {
   //bus.hpp
   template<u32 Size> auto read(u32 address, Thread& thread) -> u64;
   template<u32 Size> auto write(u32 address, u64 data, Thread& thread) -> void;
+
+  template<u32 Size> auto readBurst(u32 address, u32* data, Thread& thread) -> void;
+  template<u32 Size> auto writeBurst(u32 address, u32* data, Thread& thread) -> void;
 };
 
 extern Bus bus;
