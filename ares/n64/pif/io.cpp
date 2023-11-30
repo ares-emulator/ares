@@ -30,13 +30,13 @@ auto PIF::dmaRead(u32 address, u32 ramAddress) -> void {
   intA(Read, Size64);
   for(u32 offset = 0; offset < 64; offset += 4) {
     u32 data = readInt(address + offset);
-    rdram.ram.write<Word>(ramAddress + offset, data);
+    rdram.ram.write<Word>(ramAddress + offset, data, "SI DMA");
   }
 }
 
 auto PIF::dmaWrite(u32 address, u32 ramAddress) -> void {
   for(u32 offset = 0; offset < 64; offset += 4) {
-    u32 data = rdram.ram.read<Word>(ramAddress + offset);
+    u32 data = rdram.ram.read<Word>(ramAddress + offset, "SI DMA");
     writeInt(address + offset, data);
   }
   intA(Write, Size64);

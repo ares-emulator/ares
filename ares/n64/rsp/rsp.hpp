@@ -166,8 +166,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
   //io.cpp
   auto readWord(u32 address, Thread& thread) -> u32;
   auto writeWord(u32 address, u32 data, Thread& thread) -> void;
-  auto ioRead(u32 address) -> u32;
-  auto ioWrite(u32 address, u32 data) -> void;
+  auto ioRead(u32 address, Thread& thread) -> u32;
+  auto ioWrite(u32 address, u32 data, Thread& thread) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -180,7 +180,9 @@ struct RSP : Thread, Memory::RCP<RSP> {
       n12 length;
       n12 skip;
       n8  count;
-      
+      n64 originPc;
+      n1  originCpu;
+
       auto serialize(serializer&) -> void;
     } pending, current;
 

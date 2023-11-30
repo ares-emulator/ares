@@ -184,9 +184,11 @@ struct CPU : Thread {
       template<u32 Size> auto write(u32 address, u64 data) -> void;
 
       bool valid;
-      bool dirty;
+      u16  dirty;
       u32  tag;
       u16  index;
+      u64  fillpc;
+      u64  dirtypc;
       union {
         u8  bytes[16];
         u16 halfs[8];
