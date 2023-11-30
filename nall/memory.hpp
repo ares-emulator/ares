@@ -198,7 +198,15 @@ template<u32 size, typename T> auto writem(void* target, T data) -> void {
 inline auto jitprotect(bool executable) -> void {
   #if defined(PLATFORM_MACOS)
   if(__builtin_available(macOS 11.0, *)) {
-    pthread_jit_write_protect_np(executable);
+    static thread_local s32 depth = 0;
+    if(!executable &&   depth++ == 0
+    ||  executable && --depth   == 0) {
+      pthread_jit_write_protect_np(executable);
+    }
+    #if defined(DEBUG)
+    struct unmatched_jitprotect {};
+    if(depth < 0 || depth > 10) throw unmatched_jitprotect{};
+    #endif
   }
   #endif
 }
