@@ -250,9 +250,15 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case   4:
-    s += "  board:  HVC-TLROM\n";
-    s += "    chip type=MMC3B\n";
-    if(!iNes2) prgram = 8192;
+    if (submapper == 1) {
+      s += "  board:  HVC-HKROM\n";
+      s += "    chip type=MMC6\n";
+      prgram = 1024;
+    } else {
+      s += "  board:  HVC-TLROM\n";
+      s += "    chip type=MMC3B\n";
+      if(!iNes2) prgram = 8192;
+    }
     break;
 
   case   5:
