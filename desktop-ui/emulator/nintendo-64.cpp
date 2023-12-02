@@ -2,6 +2,7 @@ struct Nintendo64 : Emulator {
   Nintendo64();
   auto load() -> bool override;
   auto load(Menu) -> void override;
+  auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
@@ -9,7 +10,7 @@ struct Nintendo64 : Emulator {
   shared_pointer<mia::Pak> disk;
   shared_pointer<mia::Pak> gb;
   u32 regionID = 0;
-  Timer diskInsertTimer;
+  sTimer diskInsertTimer;
 };
 
 Nintendo64::Nintendo64() {
@@ -162,6 +163,8 @@ auto Nintendo64::load() -> bool {
     }
   }
 
+  diskInsertTimer = Timer{};
+
   return true;
 }
 
@@ -179,14 +182,19 @@ auto Nintendo64::load(Menu menu) -> void {
       }
 
       //give the emulator core a few seconds to notice an empty drive state before reconnecting
-      diskInsertTimer.onActivate([&] {
-        diskInsertTimer.setEnabled(false);
+      diskInsertTimer->onActivate([&] {
+        diskInsertTimer->setEnabled(false);
         auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
         drive->allocate();
         drive->connect();
       }).setInterval(3000).setEnabled();
     });
   }
+}
+
+auto Nintendo64::unload() -> void {
+  Emulator::unload();
+  diskInsertTimer.reset();
 }
 
 auto Nintendo64::save() -> bool {

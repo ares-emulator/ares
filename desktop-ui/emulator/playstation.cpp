@@ -2,12 +2,13 @@ struct PlayStation : Emulator {
   PlayStation();
   auto load() -> bool override;
   auto load(Menu) -> void override;
+  auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
   shared_pointer<mia::Pak> memoryCard;
   u32 regionID = 0;
-  Timer discTrayTimer;
+  sTimer discTrayTimer;
 };
 
 PlayStation::PlayStation() {
@@ -116,6 +117,8 @@ auto PlayStation::load() -> bool {
     port->connect();
   }
 
+  discTrayTimer = Timer{};
+
   return true;
 }
 
@@ -132,13 +135,18 @@ auto PlayStation::load(Menu menu) -> void {
     }
 
     //give the emulator core a few seconds to notice an empty drive state before reconnecting
-    discTrayTimer.onActivate([&] {
-      discTrayTimer.setEnabled(false);
+    discTrayTimer->onActivate([&] {
+      discTrayTimer->setEnabled(false);
       auto tray = root->find<ares::Node::Port>("PlayStation/Disc Tray");
       tray->allocate();
       tray->connect();
     }).setInterval(3000).setEnabled();
   });
+}
+
+auto PlayStation::unload() -> void {
+  Emulator::unload();
+  discTrayTimer.reset();
 }
 
 auto PlayStation::save() -> bool {
