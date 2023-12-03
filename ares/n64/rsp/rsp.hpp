@@ -2,7 +2,28 @@
 
 struct RSP : Thread, Memory::RCP<RSP> {
   Node::Object node;
-  Memory::Writable dmem;
+  struct Writable : public Memory::Writable {
+    RSP& self;
+
+    Writable(RSP& self) : self(self) {}
+
+    template<u32 Size>
+    auto read(u32 address) -> u64 {
+      if (system.homebrewMode) {
+        self.debugger.dmemReadWord(address, Size);
+      }
+      return Memory::Writable::read<Size>(address);
+    }
+
+    template<u32 Size>
+    auto write(u32 address, u64 value) -> void {
+      if (system.homebrewMode) {
+        self.debugger.dmemWriteWord(address, Size, value);
+      }
+      Memory::Writable::write<Size>(address, value);
+    }
+    
+  } dmem{*this};
   Memory::Writable imem;
 
   struct Debugger {
@@ -13,6 +34,21 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto instruction() -> void;
     auto ioSCC(bool mode, u32 address, u32 data) -> void;
     auto ioStatus(bool mode, u32 address, u32 data) -> void;
+
+    auto dmaReadWord(u32 rdramAddress, u32 pbusRegion, u32 pbusAddress) -> void;
+    auto dmemReadWord(u12 address, int size) -> void;
+    auto dmemWriteWord(u12 address, int size, u64 value) -> void;
+
+    struct TaintMask {
+      struct TaintWord {
+        u8  dirty;
+        u32 ctxDmaRdramAddress;
+        u64 ctxDmaOriginPc;
+        u1  ctxDmaOriginCpu;
+        u64 ctxCacheFillPc;
+        u64 ctxCacheDirtyPc;
+      } dmem[512], imem[512];
+    } taintMask;
 
     struct Memory {
       Node::Debugger::Memory dmem;

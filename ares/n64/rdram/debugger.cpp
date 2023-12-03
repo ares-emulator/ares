@@ -62,20 +62,20 @@ auto RDRAM::Debugger::io(bool mode, u32 chipID, u32 address, u32 data) -> void {
 
 auto RDRAM::Debugger::cacheErrorContext(string peripheral) -> string {
   if(peripheral == "CPU") {
-    return { "\tCurrent CPU PC: ", hex(cpu.ipu.pc, 16L), "\n" };
+    return { "\tCurrent CPU PC: 0x", hex(cpu.ipu.pc, 16L), "\n" };
   }
   if(peripheral == "RSP DMA") {
     if(rsp.dma.current.originCpu) {
-      return { "\tRSP DMA started at CPU PC: ", hex(rsp.dma.current.originPc, 16L), "\n" };
+      return { "\tRSP DMA started at CPU PC: 0x", hex(rsp.dma.current.originPc, 16L), "\n" };
     } else {
-      return { "\tRSP DMA started at RSP PC: ", hex(rsp.dma.current.originPc,  3L), "\n" };
+      return { "\tRSP DMA started at RSP PC: 0x", hex(rsp.dma.current.originPc,  3L), "\n" };
     }
   }
   if(peripheral == "PI DMA") {
-    return { "\tPI DMA started at CPU PC: ", hex(pi.io.originPc, 16L), "\n" };
+    return { "\tPI DMA started at CPU PC: 0x", hex(pi.io.originPc, 16L), "\n" };
   }
   if(peripheral == "AI DMA") {
-    return { "\tAI DMA started at CPU PC: ", hex(ai.io.dmaOriginPc[0], 16L), "\n" };
+    return { "\tAI DMA started at CPU PC: 0x", hex(ai.io.dmaOriginPc[0], 16L), "\n" };
   }
   return "";
 }
@@ -86,9 +86,9 @@ auto RDRAM::Debugger::readWord(u32 address, int size, const char *peripheral) ->
     auto& line = cpu.dcache.line(address);
     u16 dirtyMask = ((1 << size) - 1) << (address & 0xF);
     if (line.hit(address) && (line.dirty & dirtyMask)) {
-      string msg = { peripheral, " reading from RDRAM address ", hex(address), " which is modified in the cache (missing cache writeback?)\n"};
-      msg.append(string{ "\tCacheline was loaded at CPU PC: ", hex(line.fillpc, 16L), "\n" });
-      msg.append(string{ "\tCacheline was last written at CPU PC: ", hex(line.dirtypc, 16L), "\n" });
+      string msg = { peripheral, " reading from RDRAM address 0x", hex(address), " which is modified in the cache (missing cache writeback?)\n"};
+      msg.append(string{ "\tCacheline was loaded at CPU PC: 0x", hex(line.fillPc, 16L), "\n" });
+      msg.append(string{ "\tCacheline was last written at CPU PC: 0x", hex(line.dirtyPc, 16L), "\n" });
       msg.append(cacheErrorContext(peripheral));
       debug(unusual, msg);
     }
@@ -100,8 +100,8 @@ auto RDRAM::Debugger::writeWord(u32 address, int size, u64 value, const char *pe
     lastWrittenCacheline = address & ~15;
     auto& line = cpu.dcache.line(address);
     if (line.hit(address)) {
-      string msg = { peripheral, " writing to RDRAM address ", hex(address), " which is cached (missing cache invalidation?)\n"};
-      msg.append(string{ "\tCacheline was loaded at CPU PC: ", hex(line.fillpc, 16L), "\n" });
+      string msg = { peripheral, " writing to RDRAM address 0x", hex(address), " which is cached (missing cache invalidation?)\n"};
+      msg.append(string{ "\tCacheline was loaded at CPU PC: 0x", hex(line.fillPc, 16L), "\n" });
       msg.append(cacheErrorContext(peripheral));
       debug(unusual, msg);
     }

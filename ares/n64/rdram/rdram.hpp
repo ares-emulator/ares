@@ -11,14 +11,18 @@ struct RDRAM : Memory::RCP<RDRAM> {
     template<u32 Size>
     auto read(u32 address, const char *peripheral) -> u64 {
       if (address >= size) return 0;
-      if (system.homebrewMode) self.debugger.readWord(address, Size, peripheral);
+      if (peripheral && system.homebrewMode) {
+        self.debugger.readWord(address, Size, peripheral);
+      }
       return Memory::Writable::read<Size>(address);
     }
 
     template<u32 Size>
     auto write(u32 address, u64 value, const char *peripheral) -> void {
       if (address >= size) return;
-      if (system.homebrewMode) self.debugger.writeWord(address, Size, value, peripheral);
+      if (peripheral && system.homebrewMode) {
+        self.debugger.writeWord(address, Size, value, peripheral);
+      }
       Memory::Writable::write<Size>(address, value);
     }
 

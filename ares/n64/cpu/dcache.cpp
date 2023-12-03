@@ -7,7 +7,7 @@ auto CPU::DataCache::Line::fill(u32 address) -> void {
   valid  = 1;
   dirty  = 0;
   tag    = address & ~0x0000'0fff;
-  fillpc = cpu.ipu.pc;
+  fillPc = cpu.ipu.pc;
   cpu.busReadBurst<DCache>(tag | index, words);
 }
 
@@ -43,7 +43,7 @@ auto CPU::DataCache::Line::write(u32 address, u64 data) -> void {
     words[address >> 2 & 2 | 1] = data >>  0;
   }
   dirty |= ((1 << Size) - 1) << (address & 0xF);
-  dirtypc = cpu.ipu.pc;
+  dirtyPc = cpu.ipu.pc;
 }
 
 template<u32 Size>

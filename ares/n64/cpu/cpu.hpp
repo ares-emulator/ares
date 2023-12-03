@@ -187,8 +187,8 @@ struct CPU : Thread {
       u16  dirty;
       u32  tag;
       u16  index;
-      u64  fillpc;
-      u64  dirtypc;
+      u64  fillPc;
+      u64  dirtyPc;
       union {
         u8  bytes[16];
         u16 halfs[8];

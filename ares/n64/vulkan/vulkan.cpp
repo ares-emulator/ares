@@ -82,7 +82,7 @@ auto Vulkan::render() -> bool {
   };
 
   auto& command = rdp.command;
-  auto& memory = !command.source ? rdram.ram : rsp.dmem;
+  auto& memory = !command.source ? (Memory::Writable&)rdram.ram : (Memory::Writable&)rsp.dmem;
 
   u32 current = command.current & ~7;
   u32 end = command.end & ~7;
