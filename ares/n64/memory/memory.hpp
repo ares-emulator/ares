@@ -36,6 +36,10 @@ struct Bus {
 
   template<u32 Size> auto readBurst(u32 address, u32* data, Thread& thread) -> void;
   template<u32 Size> auto writeBurst(u32 address, u32* data, Thread& thread) -> void;
+
+  auto freezeUnmapped(u32 address) -> void;
+  auto freezeUncached(u32 address) -> void;
+  auto freezeDualRead(u32 address) -> void;
 };
 
 extern Bus bus;
