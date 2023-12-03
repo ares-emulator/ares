@@ -123,13 +123,13 @@ auto RSP::Debugger::dmaReadWord(u32 rdramAddress, u32 pbusRegion, u32 pbusAddres
   }
 }
 
-auto RSP::Debugger::dmemReadWord(u12 address, int size) -> void {
+auto RSP::Debugger::dmemReadWord(u12 address, int size, const char *peripheral) -> void {
   if (system.homebrewMode) {
     u8 readMask = ((1 << size) - 1) << (address & 0x7);
     auto& taintWord = taintMask.dmem[address >> 3];
     if (taintWord.dirty & readMask) {
       u32 rdramAddress = taintWord.ctxDmaRdramAddress + (address & 0x7);
-      string msg = { "RSP reading from DMEM address 0x", hex(address), " which contains a value which is not cache coherent\n"};
+      string msg = { peripheral, " reading from DMEM address 0x", hex(address), " which contains a value which is not cache coherent\n"};
       msg.append(string{ "\tCurrent RSP PC: 0x", hex(rsp.ipu.pc, 3L), "\n" });
       msg.append(string{ "\tThe value read was previously written by RSP DMA from RDRAM address 0x", hex(rdramAddress, 8L), "\n" });
       if(taintWord.ctxDmaOriginCpu) {

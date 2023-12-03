@@ -10,7 +10,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     template<u32 Size>
     auto read(u32 address) -> u64 {
       if (system.homebrewMode) {
-        self.debugger.dmemReadWord(address, Size);
+        self.debugger.dmemReadWord(address, Size, "RSP");
       }
       return Memory::Writable::read<Size>(address);
     }
@@ -36,7 +36,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto ioStatus(bool mode, u32 address, u32 data) -> void;
 
     auto dmaReadWord(u32 rdramAddress, u32 pbusRegion, u32 pbusAddress) -> void;
-    auto dmemReadWord(u12 address, int size) -> void;
+    auto dmemReadWord(u12 address, int size, const char *peripheral) -> void;
     auto dmemWriteWord(u12 address, int size, u64 value) -> void;
 
     struct TaintMask {
