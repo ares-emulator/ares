@@ -19,6 +19,8 @@ inline auto Bus::read(u32 address, Thread& thread, const char *peripheral) -> u6
   if(address <= 0x1fbf'ffff) return pi.read<Size>(address, thread);
   if(address <= 0x1fcf'ffff) return si.read<Size>(address, thread);
   if(address <= 0x7fff'ffff) return pi.read<Size>(address, thread);
+  debug(unusual, "[Bus::write] CPU frozen because of read from physical address ", hex(address, 8L), " outside of RCP mapped range");
+  cpu.scc.sysadFrozen = true;
   return unmapped;
 }
 
@@ -70,7 +72,8 @@ inline auto Bus::write(u32 address, u64 data, Thread& thread, const char *periph
   if(address <= 0x1fbf'ffff) return pi.write<Size>(address, data, thread);
   if(address <= 0x1fcf'ffff) return si.write<Size>(address, data, thread);
   if(address <= 0x7fff'ffff) return pi.write<Size>(address, data, thread);
-  return;
+  debug(unusual, "[Bus::write] CPU frozen because of write to physical address ", hex(address, 8L), " outside of RCP mapped range");
+  cpu.scc.sysadFrozen = true;
 }
 
 template<u32 Size>
