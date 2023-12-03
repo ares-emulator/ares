@@ -100,6 +100,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "General/RunAhead", general.runAhead);
   bind(boolean, "General/AutoSaveMemory", general.autoSaveMemory);
   bind(boolean, "General/HomebrewMode", general.homebrewMode);
+  bind(boolean, "General/AutoHideCursor", general.autoHideCursor);
 
   bind(natural, "Rewind/Length", rewind.length);
   bind(natural, "Rewind/Frequency", rewind.frequency);
