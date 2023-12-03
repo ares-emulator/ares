@@ -146,10 +146,38 @@ auto RSP::Debugger::dmemReadWord(u12 address, int size, const char *peripheral) 
   }
 }
 
+auto RSP::Debugger::dmemReadUnalignedWord(u12 address, int size, const char *peripheral) -> void {
+  if (system.homebrewMode) {
+    u32 addressAlignedStart = address            & ~7;
+    u32 addressAlignedEnd   = address + size - 1 & ~7;
+    if(addressAlignedStart == addressAlignedEnd) {
+      dmemReadWord(address, size, "RSP");
+    } else {
+      int sizeStart = addressAlignedEnd - address;
+      dmemReadWord(address,             sizeStart,        "RSP");
+      dmemReadWord(address + sizeStart, size - sizeStart, "RSP");
+    }
+  }
+}
+
 auto RSP::Debugger::dmemWriteWord(u12 address, int size, u64 value) -> void {
   if (system.homebrewMode) {
     auto& taintWord = taintMask.dmem[address >> 3];
     taintWord.dirty &= ~(((1 << size) - 1) << (address & 0x7));
+  }
+}
+
+auto RSP::Debugger::dmemWriteUnalignedWord(u12 address, int size, u64 value) -> void {
+  if (system.homebrewMode) {
+    u32 addressAlignedStart = address            & ~7;
+    u32 addressAlignedEnd   = address + size - 1 & ~7;
+    if(addressAlignedStart == addressAlignedEnd) {
+      dmemWriteWord(address, size, value);
+    } else {
+      int sizeStart = addressAlignedEnd - address;
+      dmemWriteWord(address,             sizeStart,        value);
+      dmemWriteWord(address + sizeStart, size - sizeStart, value);
+    }
   }
 }
 

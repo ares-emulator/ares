@@ -9,20 +9,28 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
     template<u32 Size>
     auto read(u32 address) -> u64 {
-      if (system.homebrewMode) {
-        self.debugger.dmemReadWord(address, Size, "RSP");
-      }
+      if (system.homebrewMode) self.debugger.dmemReadWord(address, Size, "RSP");
       return Memory::Writable::read<Size>(address);
     }
 
     template<u32 Size>
+    auto readUnaligned(u32 address) -> u64 {
+      if (system.homebrewMode) self.debugger.dmemReadUnalignedWord(address, Size, "RSP");
+      return Memory::Writable::readUnaligned<Size>(address);
+    }
+
+    template<u32 Size>
     auto write(u32 address, u64 value) -> void {
-      if (system.homebrewMode) {
-        self.debugger.dmemWriteWord(address, Size, value);
-      }
+      if (system.homebrewMode) self.debugger.dmemWriteWord(address, Size, value);
       Memory::Writable::write<Size>(address, value);
     }
     
+    template<u32 Size>
+    auto writeUnaligned(u32 address, u64 value) -> void {
+      if (system.homebrewMode) self.debugger.dmemWriteUnalignedWord(address, Size, value);
+      Memory::Writable::writeUnaligned<Size>(address, value);
+    }
+
   } dmem{*this};
   Memory::Writable imem;
 
@@ -38,6 +46,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto dmaReadWord(u32 rdramAddress, u32 pbusRegion, u32 pbusAddress) -> void;
     auto dmemReadWord(u12 address, int size, const char *peripheral) -> void;
     auto dmemWriteWord(u12 address, int size, u64 value) -> void;
+    auto dmemReadUnalignedWord(u12 address, int size, const char *peripheral) -> void;
+    auto dmemWriteUnalignedWord(u12 address, int size, u64 value) -> void;
 
     struct TaintMask {
       struct TaintWord {
