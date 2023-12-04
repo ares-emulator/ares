@@ -52,7 +52,8 @@ auto pApplication::run() -> void {
     //[[NSRunLoop currentRunLoop] addTimer:applicationTimer forMode:NSEventTrackingRunLoopMode];
   }
   [[NSUserDefaults standardUserDefaults] registerDefaults:@{
-    @"NSTreatUnknownArgumentsAsOpen": @NO
+    //@"NO" is not a mistake; the value really needs to be a string
+    @"NSTreatUnknownArgumentsAsOpen": @"NO"
   }];
 
   @autoreleasepool {
