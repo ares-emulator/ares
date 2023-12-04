@@ -22,7 +22,7 @@ auto pFont::family(const string& family) -> string {
   if(family == Font::Sans ) return "Tahoma";
   if(family == Font::Serif) return "Georgia";
   if(family == Font::Mono ) return "Lucida Console";
-  return family ? family : "Tahoma";
+  return family ? family : "Tahoma"_s;
 }
 
 auto pFont::create(const Font& font) -> HFONT {

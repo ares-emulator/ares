@@ -452,7 +452,7 @@ auto SuperFamicom::region() const -> string {
     if(E == 0x11) region = {"AUS"};
   }
 
-  return region ? region : "NTSC";
+  return region ? region : "NTSC"_s;
 }
 
 auto SuperFamicom::videoRegion() const -> string {
