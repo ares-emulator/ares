@@ -129,6 +129,15 @@ else
   flags.deps   = -MMD -MP -MF $(@:.o=.d)
 endif
 
+# architecture detection
+ifeq ($(arch),)
+  ifneq ($(machine),)
+    arch := $(machine)
+  else
+    $(error unknown arch, please specify manually.)
+  endif
+endif
+
 # explicit architecture flags to allow for cross-compilation on macos
 ifeq ($(platform),macos)
   ifeq ($(arch),amd64)
@@ -140,15 +149,6 @@ ifeq ($(platform),macos)
   endif
   ifneq ($(machine),$(arch))
     local = false
-  endif
-endif
-
-# architecture detection
-ifeq ($(arch),)
-  ifneq ($(machine),)
-    arch := $(machine)
-  else
-    $(error unknown arch, please specify manually.)
   endif
 endif
 
