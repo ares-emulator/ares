@@ -366,6 +366,8 @@ struct DriverSettings : VerticalLayout {
     RadioLabel inputDefocusBlock{&inputDefocusLayout, Size{0, 0}};
     RadioLabel inputDefocusAllow{&inputDefocusLayout, Size{0, 0}};
     Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
+  //
+  Label driverApplyHint{this, Size{0, 35}};
 };
 
 struct DebugSettings : VerticalLayout {
