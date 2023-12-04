@@ -13,11 +13,9 @@ auto SH2::INTC::run() -> void {
       if(self->dmac.pendingIRQ & 1) {
         self->interrupt(ipra.dmacip, self->dmac.vcrdma[0] & 0x7f);
         self->dmac.pendingIRQ &= ~1;
-print("dreq0\n");
       } else if(self->dmac.pendingIRQ & 2) {
         self->interrupt(ipra.dmacip, self->dmac.vcrdma[1] & 0x7f);
         self->dmac.pendingIRQ &= ~2;
-print("dreq1\n");
       }
     }
   }
