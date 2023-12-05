@@ -2,11 +2,12 @@ struct MegaCD : Emulator {
   MegaCD();
   auto load() -> bool override;
   auto load(Menu) -> void override;
+  auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
   u32 regionID = 0;
-  Timer discTrayTimer;
+  sTimer discTrayTimer;
 };
 
 MegaCD::MegaCD() {
@@ -101,6 +102,8 @@ auto MegaCD::load() -> bool {
     }
   }
 
+  discTrayTimer = Timer{};
+
   return true;
 }
 
@@ -117,13 +120,18 @@ auto MegaCD::load(Menu menu) -> void {
     }
 
     //give the emulator core a few seconds to notice an empty drive state before reconnecting
-    discTrayTimer.onActivate([&] {
-      discTrayTimer.setEnabled(false);
+    discTrayTimer->onActivate([&] {
+      discTrayTimer->setEnabled(false);
       auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
       tray->allocate();
       tray->connect();
     }).setInterval(3000).setEnabled();
   });
+}
+
+auto MegaCD::unload() -> void {
+  Emulator::unload();
+  discTrayTimer.reset();
 }
 
 auto MegaCD::save() -> bool {

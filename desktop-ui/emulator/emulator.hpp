@@ -13,10 +13,11 @@ struct Emulator {
   auto load(const string& location) -> bool;
   auto load(shared_pointer<mia::Pak> pak, string& path) -> string;
   auto loadFirmware(const Firmware&) -> shared_pointer<vfs::file>;
-  auto unload() -> void;
+  virtual auto unload() -> void;
   auto refresh() -> void;
   auto setBoolean(const string& name, bool value) -> bool;
   auto setOverscan(bool value) -> bool;
+  auto setColorBleed(bool value) -> bool;
   auto error(const string& text) -> void;
   auto errorFirmware(const Firmware&, string system = "") -> void;
   auto load(mia::Pak& node, string name) -> bool;
@@ -29,6 +30,7 @@ struct Emulator {
   virtual auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> = 0;
   virtual auto notify(const string& message) -> void {}
   virtual auto arcade() -> bool { return false; }
+  virtual auto group() -> string { return manufacturer; }
 
   struct Firmware {
     string type;

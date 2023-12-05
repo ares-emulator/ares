@@ -78,3 +78,18 @@ $(object.path)/TZXBlockTurboSpeedData.o: $(tzxfile.path)/TZXBlockTurboSpeedData.
 $(object.path)/TZXFile.o: $(tzxfile.path)/TZXFile.cpp
 
 flags += -I$(tzxfile.path)
+
+ymfm.objects := ymfm-src-adpcm ymfm-src-misc ymfm-src-opl ymfm-src-opm ymfm-src-opn ymfm-src-opq ymfm-src-opz
+ymfm.objects += ymfm-src-pcm ymfm-src-ssg
+ymfm.objects := $(ymfm.objects:%=$(object.path)/%.o)
+
+$(object.path)/ymfm-src-adpcm.o: $(ymfm.path)/src/ymfm_adpcm.cpp
+$(object.path)/ymfm-src-misc.o: $(ymfm.path)/src/ymfm_misc.cpp
+$(object.path)/ymfm-src-opl.o: $(ymfm.path)/src/ymfm_opl.cpp
+$(object.path)/ymfm-src-opm.o: $(ymfm.path)/src/ymfm_opm.cpp
+$(object.path)/ymfm-src-opn.o: $(ymfm.path)/src/ymfm_opn.cpp
+$(object.path)/ymfm-src-opq.o: $(ymfm.path)/src/ymfm_opq.cpp
+$(object.path)/ymfm-src-opz.o: $(ymfm.path)/src/ymfm_opz.cpp
+$(object.path)/ymfm-src-pcm.o: $(ymfm.path)/src/ymfm_pcm.cpp
+$(object.path)/ymfm-src-ssg.o: $(ymfm.path)/src/ymfm_ssg.cpp
+flags += -I$(ymfm.path)/src

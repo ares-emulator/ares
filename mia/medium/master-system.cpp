@@ -58,6 +58,13 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   //Region
   //======
 
+  //Games not containing "TMR SEGA" are only compatible with Japanese systems
+  if((rom.size() >= 0x8000 && slice((const char*)&rom[0x7ff0], 0, 8) != "TMR SEGA") &&
+     (rom.size() >= 0x4000 && slice((const char*)&rom[0x3ff0], 0, 8) != "TMR SEGA") &&
+     (rom.size() >= 0x2000 && slice((const char*)&rom[0x1ff0], 0, 8) != "TMR SEGA")) {
+    region = "NTSC-J";
+  }
+
   //BMX Trial - Alex Kidd (Japan)
   if(hash == "0fdd18f1212072bfbc0cfeaf030436d746733029ef26a8a6470c7be101cfedfb") {
     paddle = true;

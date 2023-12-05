@@ -58,7 +58,7 @@ auto NameDialog::show(string mode, string name) -> string {
   setTitle(state.title);
   if(!state.title && mode == "Create") setTitle("Create");
   if(!state.title && mode == "Rename") setTitle({"Rename ", name});
-  textLabel.setText(state.text ? state.text : "Enter a name:");
+  textLabel.setText(state.text ? state.text : "Enter a name:"_s);
   if(state.icon) {
     image icon{state.icon};
     icon.scale(16_sx, 16_sy);

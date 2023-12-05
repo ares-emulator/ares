@@ -10,6 +10,7 @@
 struct VDP : VDPBase::Implementation {
   Node::Object node;
   Node::Video::Screen screen;
+  Node::Setting::Boolean colorEmulation;
 
   auto irqLine() const -> bool override { return vdc0.irqLine() | vdc1.irqLine(); }
 

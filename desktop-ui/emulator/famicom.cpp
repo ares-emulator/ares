@@ -53,6 +53,13 @@ auto Famicom::load() -> bool {
     port->connect();
   }
 
+  if(game->pak->attribute("system") == "EPSM") {
+    if(auto port = root->find<ares::Node::Port>("Expansion Port")) {
+      port->allocate("EPSM");
+      port->connect();
+    }
+  }
+
   return true;
 }
 

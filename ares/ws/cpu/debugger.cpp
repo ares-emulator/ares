@@ -60,12 +60,24 @@ auto CPU::Debugger::ports() -> string {
   output.append("\n");
 
   output.append("NMI on Low Battery: ", self.io.nmiOnLowBattery ? "enabled" : "disabled", "\n");
-
-  output.append("Cartridge Bus: ",
-    self.io.cartridgeEnable ? "enabled" : "disabled", ", ",
-    self.io.cartridgeRomWidth ? "16-bit" : "8-bit", ", ",
-    self.io.cartridgeRomWait ? "3 wait cycles" : "1 wait cycle",
+  output.append("Boot ROM lockout: ",
+    self.io.cartridgeEnable ? "enabled" : "disabled",
     "\n");
+
+  output.append("Cartridge ROM bus: ",
+    self.io.cartridgeRomWidth ? "16-bit" : "8-bit", ", ",
+    self.io.cartridgeRomWait ? "2 cycles" : "1 cycle",
+    "\n");
+
+  if (!SoC::ASWAN()) {
+    output.append("Cartridge SRAM bus: 8-bit, ",
+      self.io.cartridgeSramWait ? "2 cycles" : "1 cycle",
+      "\n");
+
+    output.append("Cartridge I/O bus: 8-bit, ",
+      self.io.cartridgeIoWait ? "2 cycles" : "1 cycle",
+      "\n");
+  }
 
   return output;
 }

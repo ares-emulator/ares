@@ -3,6 +3,7 @@ struct NeoGeoMVS : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto group() -> string override { return "Arcade"; }
   auto arcade() -> bool override { return true; }
 };
 

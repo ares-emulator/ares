@@ -59,6 +59,9 @@ auto SI::writeWord(u32 address, u32 data, Thread& thread) -> void {
 
   if(io.ioBusy) return;
   io.ioBusy = 1;
+  io.dmaBusy = 1;
+  io.pchState = 0xb;
+  io.dmaState = 0x9;
   io.busLatch = data;
   queue.insert(Queue::SI_BUS_Write, 2150*3);
   return pif.write<Word>(address, data);
@@ -77,12 +80,14 @@ auto SI::ioWrite(u32 address, u32 data_) -> void {
     //SI_PIF_ADDRESS_READ64B
     io.readAddress = data.bit(0,31) & ~1;
     io.dmaBusy = 1;
+    io.dmaState = 1;
+    io.pchState = 4;
     int cycles = pif.estimateTiming();
     queue.insert(Queue::SI_DMA_Read, cycles*3);
   }
 
   if(address == 2) {
-    //SI_INT_ADDRESS_WRITE64B
+    //SI_INT_ADDRESS_WRITE4B
   }
 
   if(address == 3) {
@@ -93,11 +98,13 @@ auto SI::ioWrite(u32 address, u32 data_) -> void {
     //SI_PIF_ADDRESS_WRITE64B
     io.writeAddress = data.bit(0,31) & ~1;
     io.dmaBusy = 1;
+    io.dmaState = 4;
+    io.pchState = 1;
     queue.insert(Queue::SI_DMA_Write, 4065*3);
   }
 
   if(address == 5) {
-    //SI_INT_ADDRESS_READ64B
+    //SI_INT_ADDRESS_READ4B
   }
 
   if(address == 6) {
@@ -111,6 +118,11 @@ auto SI::ioWrite(u32 address, u32 data_) -> void {
 
 auto SI::writeFinished() -> void {
   io.ioBusy = 0;
+  io.dmaBusy = 0;
+  io.pchState = 0;
+  io.dmaState = 0;
+  io.interrupt = 1;
+  mi.raise(MI::IRQ::SI);
 }
 
 auto SI::writeForceFinish() -> void {

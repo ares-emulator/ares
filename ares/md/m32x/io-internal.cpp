@@ -22,6 +22,8 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
   //hcount
   if(address == 0x4004) {
     data.byte(0) = io.hperiod;
+    if(shm.active()) shm.syncOtherSh2();
+    if(shs.active()) shs.syncOtherSh2();
   }
 
   //dreq control register
@@ -67,6 +69,8 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
   //communication
   if(address >= 0x4020 && address <= 0x402f) {
     data = communication[address >> 1 & 7];
+    if(shm.active()) shm.syncOtherSh2();
+    if(shs.active()) shs.syncOtherSh2();
   }
 
   //PWM control

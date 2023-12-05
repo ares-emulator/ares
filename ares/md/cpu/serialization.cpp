@@ -10,4 +10,5 @@ auto CPU::serialize(serializer& s) -> void {
   s(refresh.external);
   s(refresh.externalEnd);
   s(state.interruptPending);
+  s(state.stolenMcycles);
 }

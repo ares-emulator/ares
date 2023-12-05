@@ -8,6 +8,7 @@ auto enumerate() -> vector<string> {
     "[Sega] SG-1000 (PAL)",
     "[Sega] SC-3000 (NTSC)",
     "[Sega] SC-3000 (PAL)",
+    "[Sega] SG-1000A",
   };
 }
 
@@ -18,7 +19,7 @@ auto load(Node::System& node, string name) -> bool {
 
 Scheduler scheduler;
 System system;
-#include "controls.cpp"
+#include "arcade-controls.cpp"
 #include "serialization.cpp"
 
 auto System::game() -> string {
@@ -31,7 +32,6 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   scheduler.enter();
-  controls.poll();
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -41,6 +41,10 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.find("SG-1000")) {
     information.name = "SG-1000";
     information.model = Model::SG1000;
+  }
+  if(name.find("SG-1000A")) {
+    information.name = "Arcade";
+    information.model = Model::SG1000A;
   }
   if(name.find("SC-3000")) {
     information.name = "SC-3000";
@@ -66,13 +70,16 @@ auto System::load(Node::System& root, string name) -> bool {
   root = node;
 
   scheduler.reset();
-  controls.load(node);
+  if(information.model == Model::SG1000A) arcadeControls.load(node);
   cpu.load(node);
   vdp.load(node);
   psg.load(node);
+  ppi.load(node);
   cartridgeSlot.load(node);
-  controllerPort1.load(node);
-  controllerPort2.load(node);
+  if(information.model != Model::SG1000A) {
+    controllerPort1.load(node);
+    controllerPort2.load(node);
+  }
   return true;
 }
 
@@ -87,9 +94,12 @@ auto System::unload() -> void {
   cpu.unload();
   vdp.unload();
   psg.unload();
+  ppi.unload();
   cartridgeSlot.unload();
-  controllerPort1.unload();
-  controllerPort2.unload();
+  if(information.model != Model::SG1000A) {
+    controllerPort1.unload();
+    controllerPort2.unload();
+  }
   node = {};
 }
 
@@ -100,6 +110,7 @@ auto System::power(bool reset) -> void {
   cpu.power();
   vdp.power();
   psg.power();
+  ppi.power();
   scheduler.power(cpu);
 }
 

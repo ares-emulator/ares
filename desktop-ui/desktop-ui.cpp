@@ -44,10 +44,8 @@ auto locate(const string& name) -> string {
 
 #include <nall/main.hpp>
 auto nall::main(Arguments arguments) -> void {
-#if defined(PLATFORM_MACOS)
   //force early allocation for better proximity to executable code
   ares::Memory::FixedAllocator::get();
-#endif
 
 #if defined(PLATFORM_WINDOWS)
   bool createTerminal = arguments.take("--terminal");

@@ -1,6 +1,6 @@
 struct MegaDrive : Cartridge {
   auto name() -> string override { return "Mega Drive"; }
-  auto extensions() -> vector<string> override { return {"md", "smd", "gen", "bin"}; }
+  auto extensions() -> vector<string> override { return {"md", "gen", "bin"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;

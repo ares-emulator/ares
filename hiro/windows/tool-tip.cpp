@@ -111,7 +111,7 @@ auto pToolTip::show() -> void {
   tracking.x = position.x, tracking.y = position.y;
 
   position.y += 18;
-  auto textSize = pFont::size(Font(), text ? text : " ");
+  auto textSize = pFont::size(Font(), text ? text : " "_s);
   size.cx = 12 + textSize.width();
   size.cy = 12 + textSize.height();
 

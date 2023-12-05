@@ -46,7 +46,6 @@ typedef sljit_u32 sljit_ins;
 #define TMP_FREG1	(SLJIT_NUMBER_OF_FLOAT_REGISTERS + 1)
 #define TMP_FREG2	(SLJIT_NUMBER_OF_FLOAT_REGISTERS + 2)
 
-
 static const sljit_u8 reg_map[SLJIT_NUMBER_OF_REGISTERS + 7] = {
 	0, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20, 22, 31, 30, 29, 28, 27, 26, 25, 24, 23, 3, 13, 1, 14, 12, 15
 };
@@ -245,6 +244,12 @@ lower parts in the instruction word, denoted by the “L” and “H” suffixes
 #define LL_D OPC_2RI14(0x22)
 #define SC_D OPC_2RI14(0x23)
 
+/* LoongArch V1.10 Instructions */
+#define AMCAS_B OPC_3R(0x70B0)
+#define AMCAS_H OPC_3R(0x70B1)
+#define AMCAS_W OPC_3R(0x70B2)
+#define AMCAS_D OPC_3R(0x70B3)
+
 /* Other instructions */
 #define BREAK OPC_3R(0x54)
 #define DBGCALL OPC_3R(0x55)
@@ -331,6 +336,19 @@ lower parts in the instruction word, denoted by the “L” and “H” suffixes
 #define S52_MAX		(0x7ffffffffffffl)
 
 #define INST(inst, type) ((sljit_ins)((type & SLJIT_32) ? inst##_W : inst##_D))
+
+/* LoongArch CPUCFG register for feature detection */
+#define LOONGARCH_CFG2				0x02
+#define LOONGARCH_FEATURE_LAMCAS	(1 << 28)
+
+sljit_u32 cpu_feature_list = 0;
+
+static SLJIT_INLINE sljit_u32 get_cpu_features(void)
+{
+	if (cpu_feature_list == 0)
+		__asm__ ("cpucfg %0, %1" : "+&r"(cpu_feature_list) : "r"(LOONGARCH_CFG2));
+	return cpu_feature_list;
+}
 
 static sljit_s32 push_inst(struct sljit_compiler *compiler, sljit_ins ins)
 {
@@ -629,11 +647,14 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_has_cpu_feature(sljit_s32 feature_type)
 	{
 	case SLJIT_HAS_FPU:
 #ifdef SLJIT_IS_FPU_AVAILABLE
-		return SLJIT_IS_FPU_AVAILABLE;
+		return (SLJIT_IS_FPU_AVAILABLE) != 0;
 #else
 		/* Available by default. */
 		return 1;
 #endif
+
+	case SLJIT_HAS_ATOMIC:
+		return (LOONGARCH_FEATURE_LAMCAS & get_cpu_features());
 
 	case SLJIT_HAS_CLZ:
 	case SLJIT_HAS_CTZ:
@@ -2475,8 +2496,10 @@ static sljit_ins get_jump_instruction(sljit_s32 type)
 {
 	switch (type) {
 	case SLJIT_EQUAL:
+	case SLJIT_ATOMIC_NOT_STORED:
 		return BNE | RJ(EQUAL_FLAG) | RD(TMP_ZERO);
 	case SLJIT_NOT_EQUAL:
+	case SLJIT_ATOMIC_STORED:
 		return BEQ | RJ(EQUAL_FLAG) | RD(TMP_ZERO);
 	case SLJIT_LESS:
 	case SLJIT_GREATER:
@@ -2760,6 +2783,12 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op_flags(struct sljit_compiler *co
 			FAIL_IF(push_inst(compiler, SLTUI | RD(dst_r) | RJ(EQUAL_FLAG) | IMM_I12(1)));
 			src_r = dst_r;
 			break;
+		case SLJIT_ATOMIC_STORED:
+		case SLJIT_ATOMIC_NOT_STORED:
+			FAIL_IF(push_inst(compiler, SLTUI | RD(dst_r) | RJ(EQUAL_FLAG) | IMM_I12(1)));
+			src_r = dst_r;
+			invert ^= 0x1;
+			break;
 		case SLJIT_OVERFLOW:
 		case SLJIT_NOT_OVERFLOW:
 			if (compiler->status_flags_state & (SLJIT_CURRENT_FLAGS_ADD | SLJIT_CURRENT_FLAGS_SUB)) {
@@ -2959,15 +2988,33 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_atomic_load(struct sljit_compiler 
 	sljit_s32 dst_reg,
 	sljit_s32 mem_reg)
 {
-	SLJIT_UNUSED_ARG(compiler);
-	SLJIT_UNUSED_ARG(op);
-	SLJIT_UNUSED_ARG(dst_reg);
-	SLJIT_UNUSED_ARG(mem_reg);
+	sljit_ins ins;
 
 	CHECK_ERROR();
 	CHECK(check_sljit_emit_atomic_load(compiler, op, dst_reg, mem_reg));
 
-	return SLJIT_ERR_UNSUPPORTED;
+	if (!(LOONGARCH_FEATURE_LAMCAS & get_cpu_features()))
+		return SLJIT_ERR_UNSUPPORTED;
+
+	switch(GET_OPCODE(op)) {
+	case SLJIT_MOV_U8:
+		ins = LD_BU;
+		break;
+	case SLJIT_MOV_U16:
+		ins = LD_HU;
+		break;
+	case SLJIT_MOV32:
+		ins = LD_W;
+		break;
+	case SLJIT_MOV_U32:
+		ins = LD_WU;
+		break;
+	default:
+		ins = LD_D;
+		break;
+	}
+
+	return push_inst(compiler, ins | RD(dst_reg) | RJ(mem_reg) | IMM_I12(0));
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_atomic_store(struct sljit_compiler *compiler,
@@ -2976,16 +3023,50 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_atomic_store(struct sljit_compiler
 	sljit_s32 mem_reg,
 	sljit_s32 temp_reg)
 {
-	SLJIT_UNUSED_ARG(compiler);
-	SLJIT_UNUSED_ARG(op);
-	SLJIT_UNUSED_ARG(src_reg);
-	SLJIT_UNUSED_ARG(mem_reg);
-	SLJIT_UNUSED_ARG(temp_reg);
+	sljit_ins ins = 0;
+	sljit_ins unsign = 0;
+	sljit_s32 tmp = temp_reg;
 
 	CHECK_ERROR();
 	CHECK(check_sljit_emit_atomic_store(compiler, op, src_reg, mem_reg, temp_reg));
 
-	return SLJIT_ERR_UNSUPPORTED;
+	if (!(LOONGARCH_FEATURE_LAMCAS & get_cpu_features()))
+		return SLJIT_ERR_UNSUPPORTED;
+
+	switch (GET_OPCODE(op)) {
+	case SLJIT_MOV_U8:
+		ins = AMCAS_B;
+		unsign = BSTRPICK_D | (7 << 16);
+		break;
+	case SLJIT_MOV_U16:
+		ins = AMCAS_H;
+		unsign = BSTRPICK_D | (15 << 16);
+		break;
+	case SLJIT_MOV32:
+		ins = AMCAS_W;
+		break;
+	case SLJIT_MOV_U32:
+		ins = AMCAS_W;
+		unsign = BSTRPICK_D | (31 << 16);
+		break;
+	default:
+		ins = AMCAS_D;
+		break;
+	}
+
+	if (op & SLJIT_SET_ATOMIC_STORED) {
+		FAIL_IF(push_inst(compiler, XOR | RD(TMP_REG1) | RJ(temp_reg) | RK(TMP_ZERO)));
+		tmp = TMP_REG1;
+	}
+	FAIL_IF(push_inst(compiler, ins | RD(tmp) | RJ(mem_reg) | RK(src_reg)));
+	if (!(op & SLJIT_SET_ATOMIC_STORED))
+		return SLJIT_SUCCESS;
+
+	if (unsign)
+		FAIL_IF(push_inst(compiler, unsign | RD(tmp) | RJ(tmp)));
+
+	FAIL_IF(push_inst(compiler, XOR | RD(EQUAL_FLAG) | RJ(tmp) | RK(temp_reg)));
+	return push_inst(compiler, SLTUI | RD(EQUAL_FLAG) | RJ(EQUAL_FLAG) | IMM_I12(1));
 }
 
 static SLJIT_INLINE sljit_s32 emit_const(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw init_value, sljit_ins last_ins)

@@ -146,7 +146,7 @@ struct MCD : M68000, Thread {
 
     Memory::Writable<n16> ram;
 
-    n4  address;
+    n5  address;
     n12 stopwatch;
 
     struct IRQ : MCD::IRQ {

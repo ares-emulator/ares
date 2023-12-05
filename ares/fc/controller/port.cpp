@@ -26,4 +26,5 @@ auto ControllerPort::allocate(string name) -> Node::Peripheral {
 }
 
 auto ControllerPort::serialize(serializer& s) -> void {
+  if(device) device->serialize(s);
 }

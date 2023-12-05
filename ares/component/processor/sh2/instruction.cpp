@@ -23,6 +23,7 @@ auto SH2::instruction() -> void {
     }
     ID = 0;
     u16 opcode = readWord(PC - 4);
+    instructionPrologue(opcode);
     execute(opcode);
     instructionEpilogue();
   }
@@ -35,7 +36,10 @@ auto SH2::instruction() -> void {
     do {
       auto block = recompiler.block(PC - 4);
       block->execute(*this);
-    } while (CCR < cyclesUntilSync);
+    } while (CCR < cyclesUntilRecompilerExit);
+
+    // Reset the count as it may have been set to 0 for an early exit
+    cyclesUntilRecompilerExit = recompilerStepCycles;
 
     step(CCR);
     CCR = 0;

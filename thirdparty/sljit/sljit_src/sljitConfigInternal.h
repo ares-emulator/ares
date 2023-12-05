@@ -203,6 +203,10 @@ extern "C" {
 /* Instruction cache flush. */
 /****************************/
 
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#endif
+
 /*
  * TODO:
  *
@@ -243,9 +247,7 @@ extern "C" {
 /* Not required to implement on archs with unified caches. */
 #define SLJIT_CACHE_FLUSH(from, to)
 
-#elif defined __APPLE__ && \
-      defined __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ && \
-      __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
+#elif defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 
 /* Supported by all macs since Mac OS 10.5.
    However, it does not work on non-jailbroken iOS devices,

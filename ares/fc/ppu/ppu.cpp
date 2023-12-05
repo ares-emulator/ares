@@ -28,11 +28,6 @@ auto PPU::load(Node::Object parent) -> void {
   });
   overscan->setDynamic(true);
 
-  colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
-    screen->resetPalette();
-  });
-  colorEmulation->setDynamic(true);
-
   debugger.load(node);
 }
 
@@ -40,7 +35,6 @@ auto PPU::unload() -> void {
   screen->quit();
   node->remove(screen);
   debugger.unload();
-  colorEmulation.reset();
   overscan.reset();
   screen.reset();
   node.reset();
@@ -79,6 +73,7 @@ auto PPU::scanline() -> void {
   if(++io.ly == vlines()) {
     io.ly = 0;
     frame();
+    io.mdr = 0; // io.mdr decays after approx 1 frame
   }
   cartridge.scanline(io.ly);
 }

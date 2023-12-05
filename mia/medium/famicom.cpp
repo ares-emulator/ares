@@ -30,6 +30,7 @@ auto Famicom::load(string location) -> bool {
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("board", document["game/board"].string());
   pak->setAttribute("mirror", document["game/board/mirror/mode"].string());
+  pak->setAttribute("system", document["game/system"].string());
   pak->setAttribute("chip", document["game/board/chip/type"].string());
   pak->setAttribute("chip/key", document["game/board/chip/key"].natural());
   pak->setAttribute("pinout/a0", document["game/board/chip/pinout/a0"].natural());
@@ -42,7 +43,11 @@ auto Famicom::load(string location) -> bool {
     pak->append("ines.rom", {view.data(), node["size"].natural()});
     view += node["size"].natural();
   }
-  if(auto node = document["game/board/memory(type=ROM,content=Program)"]) {
+  if(auto node = document["game/board/memory(type=Flash,content=Program)"]) {
+    pak->append("program.flash", {view.data(), node["size"].natural()});
+    Pak::load("program.flash", ".flash");
+    view += node["size"].natural();
+  } else if(auto node = document["game/board/memory(type=ROM,content=Program)"]) {
     pak->append("program.rom", {view.data(), node["size"].natural()});
     view += node["size"].natural();
   }
@@ -77,6 +82,9 @@ auto Famicom::save(string location) -> bool {
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
     Medium::save(node, ".eeprom");
   }
+  if(auto node = document["game/board/memory(type=Flash,content=Program)"]) {
+    Pak::save("program.flash", ".flash");
+  }
 
   return true;
 }
@@ -91,9 +99,8 @@ auto Famicom::analyze(vector<u8>& data) -> string {
   string manifest = Medium::manifestDatabase(digest);
   if(manifest) return manifest;
 
-  if(digest == "99c18490ed9002d9c6d999b9d8d15be5c051bdfa7cc7e73318053c9a994b0178"  //Nintendo Famicom Disk System (Japan)
-  || digest == "a0a9d57cbace21bf9c85c2b85e86656317f0768d7772acc90c7411ab1dbff2bf"  //Sharp Twin Famicom (Japan)
-  ) {
+  //Check for Famicom Disk System copyright string (identifies BIOS)
+  if(data.size() == 8_KiB && Hash::SHA256({data.data() + 0xd37, 224}).digest() == "0ff60f81f193b001ecccc6a280cddba4b99830755aa658c089d566046adfb034") {
     return analyzeFDS(data);
   }
 
@@ -166,7 +173,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   u32 chrram = chrrom == 0u ? 8192u : 0u;
   u32 chrnvram = 0u;
   u32 submapper = 0u;
+  string system = "Regular";
+  bool battery = (data[6] & 0x02) != 0;
   bool eepromMapper = false;
+  bool prgromFlash = false;
 
   string region = "NTSC-J, NTSC-U, PAL"; //iNES 1.0 requires database to detect region
 
@@ -174,6 +184,16 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   if(iNes2) {
     mapper |= ((data[8] & 0xf) << 8);
     submapper = data[8] >> 4;
+    u32 consoleType = data[7] & 0x3;
+    if(consoleType == 3) {
+      consoleType = data[13]& 0xf;
+    }
+
+    string types[16] = {
+      "Regular", "Vs. System", "PlayChoice-10", "BCD", "EPSM", "VT01", "VT02", "VT03",
+      "VT09", "VT32", "VT360", "UMC UM6578", "Network System", "Reserved", "Reserved", "Reserved"
+    };
+    system = types[consoleType];
 
     prgrom = calculateNes2RomSize(data[4], data[9] & 0xf, 0x4000);
     chrrom = calculateNes2RomSize(data[5], data[9] >> 4,  0x2000);
@@ -201,6 +221,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s +={"  region: ", region, "\n"};
+  s +={"  system: ", system, "\n"};
 
   switch(mapper) {
 
@@ -229,9 +250,15 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case   4:
-    s += "  board:  HVC-TLROM\n";
-    s += "    chip type=MMC3B\n";
-    if(!iNes2) prgram = 8192;
+    if (submapper == 1) {
+      s += "  board:  HVC-HKROM\n";
+      s += "    chip type=MMC6\n";
+      prgram = 1024;
+    } else {
+      s += "  board:  HVC-TLROM\n";
+      s += "    chip type=MMC3B\n";
+      if(!iNes2) prgram = 8192;
+    }
     break;
 
   case   5:
@@ -372,6 +399,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  30:
     s += "  board:  UNROM-512\n";
     s +={"    mirror mode=", mirror == 0 ? "horizontal" : (mirror == 1 ? "vertical" : (mirror == 2 ? "pcb" : "external")), "\n"};
+    prgromFlash = battery;
     break;
 
   case  31:
@@ -554,6 +582,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case 111:
     s += "  board:  GTROM\n";
+    prgromFlash = true;
     if(!iNes2) chrram = 16384;
     break;
 
@@ -676,7 +705,8 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   if(prgrom) {
     s += "    memory\n";
-    s += "      type: ROM\n";
+    if(prgromFlash) s += "      type: Flash\n";
+    else                s += "      type: ROM\n";
     s +={"      size: 0x", hex(prgrom), "\n"};
     s += "      content: Program\n";
   }

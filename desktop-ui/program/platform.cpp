@@ -121,14 +121,14 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
   }
   ruby::video.unlock();
 
-  static u64 frameCounter = 0, previous, current;
-  frameCounter++;
+  static u64 vblankCounter = 0, previous, current;
+  vblankCounter++;
 
   current = chrono::timestamp();
   if(current != previous) {
     previous = current;
-    framesPerSecond = frameCounter;
-    frameCounter = 0;
+    vblanksPerSecond = vblankCounter;
+    vblankCounter = 0;
   }
 }
 

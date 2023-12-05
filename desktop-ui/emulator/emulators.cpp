@@ -153,7 +153,11 @@ namespace ares::ZXSpectrum {
   #include "zx-spectrum-128.cpp"
 #endif
 
+#include "arcade.cpp"
+
 auto Emulator::construct() -> void {
+  emulators.append(new Arcade);
+
   #ifdef CORE_A26
   emulators.append(new Atari2600);
   #endif
@@ -245,5 +249,4 @@ auto Emulator::construct() -> void {
   emulators.append(new ZXSpectrum);
   emulators.append(new ZXSpectrum128);
   #endif
-
 }

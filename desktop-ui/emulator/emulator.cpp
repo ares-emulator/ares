@@ -58,10 +58,11 @@ auto Emulator::load(const string& location) -> bool {
   if(inode::exists(location)) locationQueue.append(location);
 
   if(!load()) return false;
-  setBoolean("Color Bleed", settings.video.colorBleed);
   setBoolean("Color Emulation", settings.video.colorEmulation);
+  setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
+  setColorBleed(settings.video.colorBleed);
 
   latch = {};
   root->power();
@@ -159,6 +160,15 @@ auto Emulator::setOverscan(bool value) -> bool {
       return true;
     }
   }
+  return false;
+}
+
+auto Emulator::setColorBleed(bool value) -> bool {
+  if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
+    screen->setColorBleed(screen->height() < 720 ? value : false);  //only apply to sub-HD content
+    return true;
+  }
+
   return false;
 }
 

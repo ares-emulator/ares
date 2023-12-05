@@ -26,7 +26,7 @@ struct CardSlot {
 
 protected:
   const string name;
-  friend class Card;
+  friend struct Card;
 };
 
 extern CardSlot cardSlot;

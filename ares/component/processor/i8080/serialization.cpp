@@ -1,0 +1,22 @@
+auto I8080::serialize(serializer& s) -> void {
+  s((u32&)prefix);
+  s(af.word);
+  s(bc.word);
+  s(de.word);
+  s(hl.word);
+  s(af_.word);
+  s(bc_.word);
+  s(de_.word);
+  s(hl_.word);
+  s(ix.word);
+  s(iy.word);
+  s(ir.word);
+  s(wz.word);
+  s(SP);
+  s(PC);
+  s(EI);
+  s(P);
+  s(Q);
+  s(HALT);
+  s(INTE);
+}

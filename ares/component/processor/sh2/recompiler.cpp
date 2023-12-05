@@ -43,6 +43,7 @@ auto SH2::Recompiler::pool(u32 address) -> Pool* {
   if(!pool) {
     pool = (Pool*)allocator.acquire(sizeof(Pool));
     memory::jitprotect(false);
+    *pool = {};
     pool->generation = generation;
     memory::jitprotect(true);
   } else if(address >> 29 == Area::Cached && pool->generation != generation) {
@@ -115,9 +116,7 @@ auto SH2::Recompiler::hash(u32 address, u8 size) -> u64 {
 auto SH2::Recompiler::emit(u32 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("SH2 allocator flush\n");
-    memory::jitprotect(false);
-    allocator.release(bump_allocator::zero_fill);
-    memory::jitprotect(true);
+    allocator.release();
     reset();
   }
 
@@ -130,6 +129,10 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   inDelaySlot = 1;  //force runtime check on first instruction
   while(true) {
     u16 instruction = instructions[index++];
+    if(callInstructionPrologue) {
+      mov32(reg(1), imm(instruction));
+      call(&SH2::instructionPrologue);
+    }
     auto branch = emitInstruction(instruction);
     inDelaySlot = branch == Branch::Slot;
     add64(CCR, CCR, imm(1));

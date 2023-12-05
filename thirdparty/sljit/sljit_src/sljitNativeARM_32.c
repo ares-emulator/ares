@@ -1005,7 +1005,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_has_cpu_feature(sljit_s32 feature_type)
 	case SLJIT_HAS_FPU:
 	case SLJIT_HAS_F64_AS_F32_PAIR:
 #ifdef SLJIT_IS_FPU_AVAILABLE
-		return SLJIT_IS_FPU_AVAILABLE;
+		return (SLJIT_IS_FPU_AVAILABLE) != 0;
 #else
 		/* Available by default. */
 		return 1;
@@ -1015,7 +1015,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_has_cpu_feature(sljit_s32 feature_type)
 		return 0;
 #else
 #ifdef SLJIT_IS_FPU_AVAILABLE
-		return SLJIT_IS_FPU_AVAILABLE;
+		return (SLJIT_IS_FPU_AVAILABLE) != 0;
 #else
 		/* Available by default. */
 		return 1;
@@ -1030,6 +1030,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_has_cpu_feature(sljit_s32 feature_type)
 	case SLJIT_HAS_PREFETCH:
 	case SLJIT_HAS_COPY_F32:
 	case SLJIT_HAS_COPY_F64:
+	case SLJIT_HAS_ATOMIC:
 		return 1;
 
 	case SLJIT_HAS_CTZ:
@@ -2010,6 +2011,7 @@ static sljit_s32 emit_op(struct sljit_compiler *compiler, sljit_s32 op, sljit_s3
 			src2_reg = (sljit_s32)get_imm((sljit_uw)src2w);
 			if (src2_reg)
 				break;
+
 			if (inp_flags & ALLOW_INV_IMM) {
 				src2_reg = (sljit_s32)get_imm(~(sljit_uw)src2w);
 				if (src2_reg) {
@@ -2017,8 +2019,9 @@ static sljit_s32 emit_op(struct sljit_compiler *compiler, sljit_s32 op, sljit_s3
 					break;
 				}
 			}
+
 			if (neg_op != 0) {
-				src2_reg = (sljit_s32)get_imm((sljit_uw)-src2w);
+				src2_reg = (sljit_s32)get_imm((neg_op == SLJIT_ADD || neg_op == SLJIT_SUB) ? (sljit_uw)-src2w : ~(sljit_uw)src2w);
 				if (src2_reg) {
 					op = neg_op | GET_ALL_FLAGS(op);
 					break;
@@ -2034,6 +2037,7 @@ static sljit_s32 emit_op(struct sljit_compiler *compiler, sljit_s32 op, sljit_s3
 				src1w = src2w;
 				break;
 			}
+
 			if (inp_flags & ALLOW_INV_IMM) {
 				src2_reg = (sljit_s32)get_imm(~(sljit_uw)src1w);
 				if (src2_reg) {
@@ -2043,8 +2047,11 @@ static sljit_s32 emit_op(struct sljit_compiler *compiler, sljit_s32 op, sljit_s3
 					break;
 				}
 			}
+
 			if (neg_op >= SLJIT_SUB) {
 				/* Note: additive operation (commutative). */
+				SLJIT_ASSERT(op == SLJIT_ADD || op == SLJIT_ADDC);
+
 				src2_reg = (sljit_s32)get_imm((sljit_uw)-src1w);
 				if (src2_reg) {
 					src1 = src2;
@@ -4189,13 +4196,14 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_extend(struct sljit_compiler 
 	sljit_s32 reg_size = SLJIT_SIMD_GET_REG_SIZE(type);
 	sljit_s32 elem_size = SLJIT_SIMD_GET_ELEM_SIZE(type);
 	sljit_s32 elem2_size = SLJIT_SIMD_GET_ELEM2_SIZE(type);
+	sljit_s32 dst_reg;
 
 	CHECK_ERROR();
 	CHECK(check_sljit_emit_simd_extend(compiler, type, freg, src, srcw));
 
 	ADJUST_LOCAL_OFFSET(src, srcw);
 
-	if (reg_size != 4)
+	if (reg_size != 3 && reg_size != 4)
 		return SLJIT_ERR_UNSUPPORTED;
 
 	if ((type & SLJIT_SIMD_FLOAT) && (elem_size != 2 || elem2_size != 3))
@@ -4204,29 +4212,36 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_extend(struct sljit_compiler 
 	if (type & SLJIT_SIMD_TEST)
 		return SLJIT_SUCCESS;
 
-	freg = simd_get_quad_reg_index(freg);
+	if (reg_size == 4)
+		freg = simd_get_quad_reg_index(freg);
 
 	if (src & SLJIT_MEM) {
 		FAIL_IF(sljit_emit_simd_mem_offset(compiler, &src, srcw));
-		if (elem2_size - elem_size == 1)
+		if (reg_size == 4 && elem2_size - elem_size == 1)
 			FAIL_IF(push_inst(compiler, VLD1 | (0x7 << 8) | VD(freg) | RN(src) | 0xf));
 		else
-			FAIL_IF(push_inst(compiler, VLD1_s | (sljit_ins)((4 - elem2_size + elem_size) << 10) | VD(freg) | RN(src) | 0xf));
+			FAIL_IF(push_inst(compiler, VLD1_s | (sljit_ins)((reg_size - elem2_size + elem_size) << 10) | VD(freg) | RN(src) | 0xf));
 		src = freg;
-	} else
+	} else if (reg_size == 4)
 		src = simd_get_quad_reg_index(src);
 
 	if (!(type & SLJIT_SIMD_FLOAT)) {
+		dst_reg = (reg_size == 4) ? freg : TMP_FREG1;
+
 		do {
 			FAIL_IF(push_inst(compiler, VSHLL | ((type & SLJIT_SIMD_EXTEND_SIGNED) ? 0 : (1 << 24))
-				| ((sljit_ins)1 << (19 + elem_size)) | VD(freg) | VM(src)));
-			src = freg;
+				| ((sljit_ins)1 << (19 + elem_size)) | VD(dst_reg) | VM(src)));
+			src = dst_reg;
 		} while (++elem_size < elem2_size);
 
+		if (dst_reg == TMP_FREG1)
+			return push_inst(compiler, VORR | VD(freg) | VN(TMP_FREG1) | VM(TMP_FREG1));
 		return SLJIT_SUCCESS;
 	}
 
 	/* No SIMD variant, must use VFP instead. */
+	SLJIT_ASSERT(reg_size == 4);
+
 	if (freg == src) {
 		freg += SLJIT_QUAD_OTHER_HALF(freg);
 		FAIL_IF(push_inst(compiler, VCVT_F64_F32 | VD(freg) | VM(src) | 0x20));

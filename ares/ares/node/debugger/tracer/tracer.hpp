@@ -12,10 +12,11 @@ struct Tracer : Debugger {
   auto file() const -> bool { return _file; }
   auto autoLineBreak() const -> bool { return _autoLineBreak; }
 
+  auto setToggle(function<void ()> toggle) -> void { _toggle = toggle; }
   auto setComponent(string component) -> void { _component = component; }
   auto setPrefix(bool prefix) -> void { _prefix = prefix; }
-  auto setTerminal(bool terminal) -> void { _terminal = terminal; }
-  auto setFile(bool file) -> void { _file = file; }
+  auto setTerminal(bool terminal) -> void { _terminal = terminal; if(_toggle) _toggle(); }
+  auto setFile(bool file) -> void { _file = file; if(_toggle) _toggle(); }
   auto setAutoLineBreak(bool autoLineBreak) -> void { _autoLineBreak = autoLineBreak; }
 
   auto serialize(string& output, string depth) -> void override {
@@ -35,6 +36,7 @@ struct Tracer : Debugger {
   }
 
 protected:
+  function<void ()> _toggle;
   string _component;
   bool _prefix = false;
   bool _terminal = false;

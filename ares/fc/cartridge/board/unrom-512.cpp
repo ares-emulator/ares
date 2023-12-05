@@ -4,12 +4,21 @@ struct UNROM512 : Interface {
     return nullptr;
   }
 
-  Memory::Readable<n8> programROM;
+  bool flashable;
+  SST39SF0x0 flash;
   Memory::Readable<n8> characterROM;
   Memory::Writable<n8> characterRAM;
 
   auto load() -> void override {
-    Interface::load(programROM, "program.rom");
+    if(auto fp = pak->read("program.flash")) {
+      flash.flash.allocate(fp->size());
+      flash.flash.load(fp);
+      flashable = true;
+    } else if(auto fp = pak->read("program.rom")) {
+      flash.flash.allocate(fp->size());
+      flash.flash.load(fp);
+      flashable = false;
+    }
     Interface::load(characterROM, "character.rom");
     Interface::load(characterRAM, "character.ram");
 
@@ -18,6 +27,12 @@ struct UNROM512 : Interface {
   }
 
   auto save() -> void override {
+    if(flashable) {
+      if (auto fp = pak->write("program.flash")) {
+        flash.flash.save(fp);
+      }
+    }
+
     Interface::save(characterRAM, "character.ram");
   }
 
@@ -28,11 +43,13 @@ struct UNROM512 : Interface {
     case 0: bank = programBank; break;
     case 1: bank = (n5)0x1f; break;
     }
-    return programROM.read(bank << 14 | (n14)address);
+    return flash.read(bank << 14 | (n14)address);
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x8000) return;
+    if(flashable && address < 0xc000)
+      return flash.write(programBank << 14 | (n14)address, data);
     programBank = data.bit(0, 4);
     characterBank = data.bit(5, 6);
     nametableBank = data.bit(7);

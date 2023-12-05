@@ -78,8 +78,13 @@ struct AudioWASAPI : AudioDriver {
     self.queue.count++;
 
     if(self.queue.count >= self.bufferSize) {
+      //this event is signaled at the device period which is no more than half of bufferSize
+      //(in shared mode) or equal to bufferSize (in double-buffered exclusive mode)
       if(WaitForSingleObject(self.eventHandle, self.blocking ? INFINITE : 0) == WAIT_OBJECT_0) {
         write();
+      } else {
+        self.queue.read++;
+        self.queue.count--;
       }
     }
   }
@@ -188,7 +193,7 @@ private:
       waveFormat = *(WAVEFORMATEXTENSIBLE*)waveFormatEx;
       CoTaskMemFree(waveFormatEx);
       if(self.audioClient->GetDevicePeriod(&self.devicePeriod, nullptr)) return false;
-      auto latency = max(self.devicePeriod, (REFERENCE_TIME)self.latency * 10'000);  //1ms to 100ns units
+      auto latency = max(self.devicePeriod * 2, (REFERENCE_TIME)self.latency * 10'000);  //1ms to 100ns units
       if(self.audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, latency, 0, &waveFormat.Format, nullptr) != S_OK) return false;
     }
 

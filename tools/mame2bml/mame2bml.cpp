@@ -13,15 +13,22 @@ private:
 
 auto Mame2BML::main(Arguments arguments) -> void {
   if(arguments.size() < 2) {
-    return print("usage: mame2bml softwarelist.xml output.bml - convert a mame software list xml to bml\n"
-                 "       mame2bml machinelist.xml output.bml driver - convert a mame machine list xml to bml\n");
+    return print("usage: mame2bml softwarelist.xml output.bml core - convert a mame software list xml to bml\n"
+                 "       mame2bml machinelist.xml output.bml core driver - convert a mame machine list xml to bml\n");
   }
 
   string markupName = arguments.take();
   string outputName = arguments.take();
   string driverName = {};
+  string systemName = {};
   if(!markupName.endsWith(".xml")) return print("error: arguments in incorrect order\n");
   if(!outputName.endsWith(".bml")) return print("error: arguments in incorrect order\n");
+
+  if(arguments.size()) {
+    systemName = arguments.take();
+  } else {
+    return print("ares core not specified\n");
+  }
 
   if(arguments.size()) {
     driverName = arguments.take();
@@ -51,6 +58,7 @@ auto Mame2BML::main(Arguments arguments) -> void {
         output.print("game\n");
         output.print("  name:  ", machine["name"].string(), "\n");
         output.print("  title: ", machine["description"].string(), "\n");
+        output.print("  board: ", systemName, "\n");
 
         string region = "";
         for(auto rom : machine) {
@@ -82,6 +90,7 @@ auto Mame2BML::main(Arguments arguments) -> void {
         output.print("game\n");
         output.print("  name:  ", software["name"].string(), "\n");
         output.print("  title: ", software["description"].string(), "\n");
+        output.print("  board: ", systemName, "\n");
 
         for(auto sub : software["part"]){
           if(sub.name() == "feature") {

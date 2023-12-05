@@ -5,7 +5,7 @@
 
 #include <component/processor/m68000/m68000.hpp>
 #include <component/processor/z80/z80.hpp>
-#include <component/audio/ym2610/ym2610.hpp>
+#include "ymfm_opn.h"
 
 namespace ares::NeoGeo {
   #include <ares/inline.hpp>

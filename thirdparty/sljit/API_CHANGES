@@ -1,5 +1,10 @@
 This file is the short summary of the API changes:
 
+01.11.2023 - Non-backward compatible
+    The SLJIT_ARG_TYPE_VOID definition is changed
+    to SLJIT_ARG_TYPE_RET_VOID to improve Windows
+    compatibility.
+
 05.9.2023 - Non-backward compatible
     Turn SLJIT_IMM from a flag to a single value.
 

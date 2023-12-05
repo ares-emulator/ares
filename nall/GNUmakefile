@@ -101,6 +101,10 @@ else
     machine := arm32
   else ifneq ($(filter powerpc64-% powerpc64le-%,$(machine_str)),)
     machine := ppc64
+  else ifneq ($(filter riscv64-%,$(machine_str)),)
+    machine := rv64
+  else ifneq ($(filter riscv32-%,$(machine_str)),)
+    machine := rv32
   endif
 
   # detect clang with msvc target
@@ -113,15 +117,25 @@ endif
 
 # global compiler flags
 ifeq ($(cl),true)
-  flags.c      = -nologo -W0 -Fd$(object.path)/ -TC -std:c11
-  flags.cpp    = -nologo -W0 -Fd$(object.path)/ -TP -std:c++17 -EHsc
-  options      = -nologo $(if $(findstring clang,$(compiler)),-fuse-ld=lld) -link
+  flags.c      = -TC -std:c11
+  flags.cpp    = -TP -std:c++17 -EHsc
+  flags       += -nologo -permissive- -W2 -Fd$(object.path)/
+  options     += -nologo $(if $(findstring clang,$(compiler)),-fuse-ld=lld) -link
 else
   flags.c      = -x c -std=c11
   flags.cpp    = -x c++ -std=c++17
   flags.objc   = -x objective-c -std=c11
   flags.objcpp = -x objective-c++ -std=c++17
   flags.deps   = -MMD -MP -MF $(@:.o=.d)
+endif
+
+# architecture detection
+ifeq ($(arch),)
+  ifneq ($(machine),)
+    arch := $(machine)
+  else
+    $(error unknown arch, please specify manually.)
+  endif
 endif
 
 # explicit architecture flags to allow for cross-compilation on macos
@@ -135,15 +149,6 @@ ifeq ($(platform),macos)
   endif
   ifneq ($(machine),$(arch))
     local = false
-  endif
-endif
-
-# architecture detection
-ifeq ($(arch),)
-  ifneq ($(machine),)
-    arch := $(machine)
-  else
-    $(error unknown arch, please specify manually.)
   endif
 endif
 
@@ -246,10 +251,6 @@ ifeq ($(findstring clang++,$(compiler)),clang++)
   ifneq ($(platform),macos)
     options += -fuse-ld=lld
   endif
-  ifeq ($(arch),arm64)
-    # work around bad interaction with alignas(n) when n >= 4096
-    flags += -mno-global-merge
-  endif
 # gcc settings
 else ifeq ($(findstring g++,$(compiler)),g++)
   flags += -fno-strict-aliasing -fwrapv -Wno-trigraphs
@@ -263,7 +264,7 @@ ifeq ($(platform),windows)
   ifeq ($(msvc),true)
     flags += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS
   endif
-  options += $(call lib,ws2_32 ole32 shell32)
+  options += $(call lib,ws2_32 ole32 shell32 shlwapi)
   options += $(if $(findstring g++,$(compiler)),-mthreads -static)
   ifeq ($(console),true)
     flags += -DSUBSYTEM_CONSOLE

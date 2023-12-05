@@ -33,7 +33,7 @@ auto VideoSettings::construct() -> void {
   emulatorSettingsLabel.setText("Emulator Settings").setFont(Font().setBold());
   colorBleedOption.setText("Color Bleed").setChecked(settings.video.colorBleed).onToggle([&] {
     settings.video.colorBleed = colorBleedOption.checked();
-    if(emulator) emulator->setBoolean("Color Bleed", settings.video.colorBleed);
+    if(emulator) emulator->setColorBleed(settings.video.colorBleed);
   });
   colorBleedLayout.setAlignment(1).setPadding(12_sx, 0);
   colorBleedHint.setText("Blurs adjacent pixels for translucency effects").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
@@ -43,6 +43,12 @@ auto VideoSettings::construct() -> void {
   });
   colorEmulationLayout.setAlignment(1).setPadding(12_sx, 0);
   colorEmulationHint.setText("Matches colors to how they look on real hardware").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  deepBlackBoostOption.setText("Deep Black Boost").setChecked(settings.video.deepBlackBoost).onToggle([&] {
+    settings.video.deepBlackBoost = deepBlackBoostOption.checked();
+    if(emulator) emulator->setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
+  });
+  deepBlackBoostLayout.setAlignment(1).setPadding(12_sx, 0);
+  deepBlackBoostHint.setText("Applies a gamma ramp to crush black levels (SNES/SFC)").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   interframeBlendingOption.setText("Interframe Blending").setChecked(settings.video.interframeBlending).onToggle([&] {
     settings.video.interframeBlending = interframeBlendingOption.checked();
     if(emulator) emulator->setBoolean("Interframe Blending", settings.video.interframeBlending);
@@ -75,7 +81,7 @@ auto VideoSettings::construct() -> void {
 
   weaveDeinterlacingOption.setText("Weave Deinterlacing").setChecked(settings.video.weaveDeinterlacing).onToggle([&] {
     settings.video.weaveDeinterlacing = weaveDeinterlacingOption.checked();
-    if(emulator) emulator->setBoolean("(Experimental) Double the perceived horizontal resolution, disabled when supersampling is used", settings.video.weaveDeinterlacing);
+    if(emulator) emulator->setBoolean("(Experimental) Double the perceived vertical resolution; disabled when supersampling is used", settings.video.weaveDeinterlacing);
     if(weaveDeinterlacingOption.checked() == true) {
       renderSupersamplingOption.setChecked(false).setEnabled(false);
       settings.video.supersampling = false;
@@ -84,7 +90,7 @@ auto VideoSettings::construct() -> void {
     }
   });
   weaveDeinterlacingLayout.setAlignment(1).setPadding(12_sx, 0);
-  weaveDeinterlacingHint.setText("Doubles the perceived horizontal resolution, incompatible with supersampling").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  weaveDeinterlacingHint.setText("Doubles the perceived vertical resolution; incompatible with supersampling").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   renderQualitySD.setText("SD Quality").onActivate([&] {
     settings.video.quality = "SD";

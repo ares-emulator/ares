@@ -416,7 +416,7 @@ auto pWindow::_statusHeight() const -> s32 {
   if(auto& statusBar = state().statusBar) {
     if(statusBar->visible()) {
       auto& text = statusBar->state.text;
-      height = statusBar->font(true).size(text ? text : " ").height();
+      height = statusBar->font(true).size(text ? text : " "_s).height();
       height = max(height, minimumStatusHeight);
     }
   }

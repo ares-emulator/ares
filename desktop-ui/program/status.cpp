@@ -8,9 +8,9 @@ auto Program::updateMessage() -> void {
     }
   }
 
-  if(framesPerSecond) {
-     presentation.statusRight.setText({framesPerSecond(), " FPS"});
-     framesPerSecond.reset();
+  if(vblanksPerSecond) {
+    presentation.statusRight.setText({vblanksPerSecond(), " VPS"});
+    vblanksPerSecond.reset();
   }
 
   if(!emulator) {

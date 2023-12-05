@@ -31,6 +31,8 @@ auto option(string name, string value) -> bool {
   if(vulkan.internalUpscale == 1) vulkan.supersampleScanout = false;
   vulkan.outputUpscale = vulkan.supersampleScanout ? 1 : vulkan.internalUpscale;
   #endif
+  if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
+  if(name == "Expansion Pak") system.expansionPak = value.boolean();
   return true;
 }
 

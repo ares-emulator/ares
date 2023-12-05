@@ -68,6 +68,7 @@ auto Settings::process(bool load) -> void {
   bind(real,    "Video/Gamma", video.gamma);
   bind(boolean, "Video/ColorBleed", video.colorBleed);
   bind(boolean, "Video/ColorEmulation", video.colorEmulation);
+  bind(boolean, "Video/DeepBlackBoost", video.deepBlackBoost);
   bind(boolean, "Video/InterframeBlending", video.interframeBlending);
   bind(boolean, "Video/Overscan", video.overscan);
   bind(boolean, "Video/PixelAccuracy", video.pixelAccuracy);
@@ -98,6 +99,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "General/Rewind", general.rewind);
   bind(boolean, "General/RunAhead", general.runAhead);
   bind(boolean, "General/AutoSaveMemory", general.autoSaveMemory);
+  bind(boolean, "General/HomebrewMode", general.homebrewMode);
 
   bind(natural, "Rewind/Length", rewind.length);
   bind(natural, "Rewind/Frequency", rewind.frequency);
@@ -114,6 +116,8 @@ auto Settings::process(bool load) -> void {
   bind(natural, "DebugServer/Port", debugServer.port);
   bind(boolean, "DebugServer/Enabled", debugServer.enabled);
   bind(boolean, "DebugServer/UseIPv4", debugServer.useIPv4);
+
+  bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
 
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};

@@ -61,7 +61,7 @@ auto System::load(Node::System& root, string name) -> bool {
     information.name = "Mega Drive";
     information.mega32X = 0;
     information.megaCD = 0;
-    cpu.minCyclesBetweenSyncs = 4; // sync approx every 7 pixels
+    cpu.minCyclesBetweenSyncs = 0; // sync every cycle
   }
   if(name.match("[Sega] Mega 32X (*)")) {
     information.name = "Mega Drive";
@@ -73,7 +73,7 @@ auto System::load(Node::System& root, string name) -> bool {
     information.name = "Mega Drive";
     information.mega32X = 0;
     information.megaCD = 1;
-    cpu.minCyclesBetweenSyncs = 4; // sync approx every 7 pixels
+    cpu.minCyclesBetweenSyncs = 0; // sync every cycle
   }
   if(name.match("[Sega] Mega CD 32X (*)")) {
     information.name = "Mega Drive";

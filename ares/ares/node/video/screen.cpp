@@ -122,6 +122,11 @@ auto Screen::setColorBleed(bool colorBleed) -> void {
   _colorBleed = colorBleed;
 }
 
+auto Screen::setColorBleedWidth(u32 width) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _colorBleedWidth = width;
+}
+
 auto Screen::setInterframeBlending(bool interframeBlending) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _interframeBlending = interframeBlending;
@@ -228,14 +233,18 @@ auto Screen::refresh() -> void {
     }
   }
 
-  if(_colorBleed) {
+  if (_colorBleed) {
     n32 mask = 1 << 24 | 1 << 16 | 1 << 8 | 1 << 0;
-    for(u32 y : range(height)) {
+    for (u32 y : range(height)) {
       auto target = output + y * width;
-      for(u32 x : range(width)) {
-        auto a = target[x];
-        auto b = target[x + (x != width - 1)];
-        target[x] = (a + b - ((a ^ b) & mask)) >> 1;
+      for (u32 x : range(0, width, _colorBleedWidth)) {
+        for (u32 offset = 0; offset < _colorBleedWidth && (x + offset) < width; ++offset) {
+          u32 next = x + _colorBleedWidth;
+          if (next + offset >= width) next = x;
+          auto a = target[x + offset];
+          auto b = target[next + offset];
+          target[x + offset] = (a + b - ((a ^ b) & mask)) >> 1;
+        }
       }
     }
   }

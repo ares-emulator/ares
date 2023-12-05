@@ -46,7 +46,7 @@ private:
 
   auto _run() -> vector<string>;
 
-  friend class BrowserDialogWindow;
+  friend struct BrowserDialogWindow;
 };
 
 #endif

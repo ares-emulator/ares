@@ -4,9 +4,9 @@ auto System::readIO(n16 address) -> n8 {
   switch(address) {
 
   case 0x0060:  //DISP_MODE
-    data.bit(0)    = io.unknown0;
-    data.bit(1)    = io.unknown1;
-    data.bit(3)    = io.unknown3;
+    data.bit(0)    = cpu.io.cartridgeClock;
+    data.bit(1)    = cpu.io.cartridgeSramWait;
+    data.bit(3)    = cpu.io.cartridgeIoWait;
     data.bit(5, 7) = io.mode.bit(0, 2);
     break;
 
@@ -39,9 +39,9 @@ auto System::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x0060:  //DISP_MODE
-    io.unknown0 = data.bit(0);
-    io.unknown1 = data.bit(1);
-    io.unknown3 = data.bit(3);
+    cpu.io.cartridgeClock = data.bit(0);
+    cpu.io.cartridgeSramWait = data.bit(1);
+    cpu.io.cartridgeIoWait = data.bit(3);
     io.mode     = data.bit(5,7);
     break;
 

@@ -24,6 +24,7 @@ struct Settings : Markup::Node {
     f64 gamma = 1.0;
     bool colorBleed = false;
     bool colorEmulation = true;
+    bool deepBlackBoost = false;
     bool interframeBlending = true;
     bool overscan = false;
     bool pixelAccuracy = false;
@@ -64,6 +65,7 @@ struct Settings : Markup::Node {
     bool rewind = false;
     bool runAhead = false;
     bool autoSaveMemory = true;
+    bool homebrewMode = false;
   } general;
 
   struct Rewind {
@@ -94,6 +96,10 @@ struct Settings : Markup::Node {
     bool enabled = false; // if enabled, server starts with ares
     bool useIPv4 = false; // forces IPv4 over IPv6
   } debugServer;
+
+  struct Nintendo64 {
+    bool expansionPak = true;
+  } nintendo64;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -119,6 +125,9 @@ struct VideoSettings : VerticalLayout {
     HorizontalLayout colorEmulationLayout{this, Size{~0, 0}, 5};
       CheckLabel colorEmulationOption{&colorEmulationLayout, Size{0, 0}, 5};
       Label colorEmulationHint{&colorEmulationLayout, Size{~0, 0}};
+    HorizontalLayout deepBlackBoostLayout{this, Size{~0, 0}, 5};
+      CheckLabel deepBlackBoostOption{&deepBlackBoostLayout, Size{0, 0}, 5};
+      Label deepBlackBoostHint{&deepBlackBoostLayout, Size{~0, 0}};
     HorizontalLayout interframeBlendingLayout{this, Size{~0, 0}, 5};
       CheckLabel interframeBlendingOption{&interframeBlendingLayout, Size{0, 0}, 5};
       Label interframeBlendingHint{&interframeBlendingLayout, Size{~0, 0}};
@@ -225,15 +234,23 @@ struct EmulatorSettings : VerticalLayout {
 
 struct OptionSettings : VerticalLayout {
   auto construct() -> void;
-  HorizontalLayout rewindLayout{this, Size{~0, 0}, 5};
-    CheckLabel rewind{&rewindLayout, Size{0, 0}, 5};
-    Label rewindHint{&rewindLayout, Size{~0, 0}};
-  HorizontalLayout runAheadLayout{this, Size{~0, 0}, 5};
-    CheckLabel runAhead{&runAheadLayout, Size{0, 0}, 5};
-    Label runAheadHint{&runAheadLayout, Size{~0, 0}};
-  HorizontalLayout autoSaveMemoryLayout{this, Size{~0, 0}, 5};
-    CheckLabel autoSaveMemory{&autoSaveMemoryLayout, Size{0, 0}, 5};
-    Label autoSaveMemoryHint{&autoSaveMemoryLayout, Size{~0, 0}};
+  Label commonSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout rewindLayout{this, Size{~0, 0}, 5};
+      CheckLabel rewind{&rewindLayout, Size{0, 0}, 5};
+      Label rewindHint{&rewindLayout, Size{~0, 0}};
+    HorizontalLayout runAheadLayout{this, Size{~0, 0}, 5};
+      CheckLabel runAhead{&runAheadLayout, Size{0, 0}, 5};
+      Label runAheadHint{&runAheadLayout, Size{~0, 0}};
+    HorizontalLayout autoSaveMemoryLayout{this, Size{~0, 0}, 5};
+      CheckLabel autoSaveMemory{&autoSaveMemoryLayout, Size{0, 0}, 5};
+      Label autoSaveMemoryHint{&autoSaveMemoryLayout, Size{~0, 0}};
+    HorizontalLayout homebrewModeLayout{this, Size{~0, 0}, 5};
+      CheckLabel homebrewMode{&homebrewModeLayout, Size{0, 0}, 5};
+      Label homebrewModeHint{&homebrewModeLayout, Size{~0, 0}};
+  Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
+      CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
+      Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, 0}};
 };
 
 struct FirmwareSettings : VerticalLayout {
@@ -349,6 +366,8 @@ struct DriverSettings : VerticalLayout {
     RadioLabel inputDefocusBlock{&inputDefocusLayout, Size{0, 0}};
     RadioLabel inputDefocusAllow{&inputDefocusLayout, Size{0, 0}};
     Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
+  //
+  Label driverApplyHint{this, Size{0, 35}};
 };
 
 struct DebugSettings : VerticalLayout {

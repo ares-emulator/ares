@@ -1,6 +1,7 @@
 namespace Media {
   vector<Database> databases;
   #include "mame.cpp"
+  #include "arcade.cpp"
   #include "atari-2600.cpp"
   #include "colecovision.cpp"
   #include "myvision.cpp"
@@ -43,6 +44,7 @@ namespace Media {
 //}
 
 auto Medium::create(string name) -> shared_pointer<Pak> {
+  if(name == "Arcade") return new Media::Arcade;
   if(name == "Atari 2600") return new Media::Atari2600;
   if(name == "ColecoVision") return new Media::ColecoVision;
   if(name == "MyVision") return new Media::MyVision;

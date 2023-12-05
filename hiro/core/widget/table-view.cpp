@@ -264,8 +264,8 @@ auto mTableView::sort() -> type& {
   }
   auto sorted = state.items;
   sorted.sort([&](auto& lhs, auto& rhs) {
-    string x = offset < lhs->cellCount() ? lhs->state.cells[offset]->state.text : "";
-    string y = offset < rhs->cellCount() ? rhs->state.cells[offset]->state.text : "";
+    string x = offset < lhs->cellCount() ? lhs->state.cells[offset]->state.text : ""_s;
+    string y = offset < rhs->cellCount() ? rhs->state.cells[offset]->state.text : ""_s;
     if(sorting == Sort::Ascending ) return string::icompare(x, y) < 0;
     if(sorting == Sort::Descending) return string::icompare(y, x) < 0;
     return false;  //unreachable

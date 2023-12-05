@@ -29,5 +29,5 @@ struct DigitalGamepad : PeripheralDevice {
     DataUpper,
   } state = State::Idle;
 
-  bool _active;
+  bool _active = false;
 };

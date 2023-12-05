@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         program:
         - ares
@@ -77,6 +78,7 @@ jobs:
         sudo apt-get install libsdl2-dev libgtk-3-dev libao-dev libopenal-dev
     - name: "macOS: Import Certificate"
       if: runner.os == 'macOS' && github.event_name != 'pull_request'
+      continue-on-error: ${{ github.repository != 'ares-emulator/ares' }}
       uses: wpilibsuite/import-signing-certificate@2ac4f44d28045073d23153256efbb4c4b2d8aa22    # Don't use rolling branch for security reasons
       with:
         certificate-data: ${{ secrets.MACOS_CERTIFICATE_DATA }}
@@ -97,6 +99,7 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         brew install make ninja sdl2
+        pip install --no-input setuptools
         echo "MAKE=gmake" >> $GITHUB_ENV
         pushd thirdparty/MoltenVK
         ./build-moltenvk.sh
@@ -111,7 +114,7 @@ jobs:
       run: ${MAKE:-make} -j4 -C desktop-ui build=optimized local=false compiler="${{ matrix.platform.compiler }}" windres="${{ matrix.platform.windres }}"
     - name: "macOS: Make universal app"
       if: runner.os == 'macOS'
-      run: scripts/macos-make-universal.sh
+      run: scripts/macos-make-universal.sh build=optimized local=false
       env:
         MAKEFLAGS: -j3
         MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
@@ -129,6 +132,7 @@ jobs:
         timestampUrl: 'http://timestamp.digicert.com' 
     - name: "macOS: notarize"
       if: runner.os == 'macOS' && github.event_name != 'pull_request'
+      continue-on-error: ${{ github.repository != 'ares-emulator/ares' }}
       run: |
         ditto -c -k --keepParent desktop-ui/out/ares.app /tmp/ares.zip
         xcrun notarytool submit /tmp/ares.zip --apple-id "$MACOS_NOTARIZATION_USERNAME" --password "$MACOS_NOTARIZATION_PASSWORD" --team-id "$MACOS_NOTARIZATION_TEAMID" --wait

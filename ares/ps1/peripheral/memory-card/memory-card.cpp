@@ -28,6 +28,7 @@ auto MemoryCard::save() -> void {
 
 auto MemoryCard::reset() -> void {
   state = State::Idle;
+  _active = false;
 }
 
 auto MemoryCard::acknowledge() -> bool {

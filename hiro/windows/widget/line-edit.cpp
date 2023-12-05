@@ -20,7 +20,7 @@ auto pLineEdit::destruct() -> void {
 }
 
 auto pLineEdit::minimumSize() const -> Size {
-  auto size = pFont::size(hfont, state().text ? state().text : " ");
+  auto size = pFont::size(hfont, state().text ? state().text : " "_s);
   return {size.width() + 12, size.height() + 10};
 }
 

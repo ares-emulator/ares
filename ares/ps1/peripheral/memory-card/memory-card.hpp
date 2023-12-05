@@ -40,5 +40,5 @@ struct MemoryCard : PeripheralDevice {
   u8  checksum = 0;
   u8  response = 0;
   u16 address = 0;
-  bool _active;
+  bool _active = false;
 };

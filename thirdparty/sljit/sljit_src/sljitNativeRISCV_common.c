@@ -536,7 +536,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_has_cpu_feature(sljit_s32 feature_type)
 	switch (feature_type) {
 	case SLJIT_HAS_FPU:
 #ifdef SLJIT_IS_FPU_AVAILABLE
-		return SLJIT_IS_FPU_AVAILABLE;
+		return (SLJIT_IS_FPU_AVAILABLE) != 0;
 #elif defined(__riscv_float_abi_soft)
 		return 0;
 #else
@@ -1068,7 +1068,7 @@ static sljit_s32 emit_clz_ctz(struct sljit_compiler *compiler, sljit_s32 op, slj
 {
 	sljit_s32 is_clz = (GET_OPCODE(op) == SLJIT_CLZ);
 #if (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64)
-	sljit_ins word = (op & SLJIT_32) >> 5;
+	sljit_ins word = (sljit_ins)(op & SLJIT_32) >> 5;
 	sljit_ins word_size = (op & SLJIT_32) ? 32 : 64;
 #else /* !SLJIT_CONFIG_RISCV_64 */
 	sljit_ins word_size = 32;
@@ -1154,7 +1154,7 @@ static sljit_s32 emit_rev(struct sljit_compiler *compiler, sljit_s32 op, sljit_s
 static sljit_s32 emit_rev16(struct sljit_compiler *compiler, sljit_s32 op, sljit_s32 dst, sljit_sw src)
 {
 #if (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64)
-	sljit_ins word = (op & SLJIT_32) >> 5;
+	sljit_ins word = (sljit_ins)(op & SLJIT_32) >> 5;
 	sljit_ins word_size = (op & SLJIT_32) ? 32 : 64;
 #else /* !SLJIT_CONFIG_RISCV_64 */
 	sljit_ins word_size = 32;
@@ -1191,7 +1191,7 @@ static SLJIT_INLINE sljit_s32 emit_single_op(struct sljit_compiler *compiler, sl
 	sljit_s32 is_overflow, is_carry, carry_src_r, is_handled;
 	sljit_ins op_imm, op_reg;
 #if (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64)
-	sljit_ins word = (op & SLJIT_32) >> 5;
+	sljit_ins word = (sljit_ins)(op & SLJIT_32) >> 5;
 #endif /* SLJIT_CONFIG_RISCV_64 */
 
 	SLJIT_ASSERT(WORD == 0 || WORD == 0x8);
@@ -1754,7 +1754,7 @@ static sljit_s32 emit_op(struct sljit_compiler *compiler, sljit_s32 op, sljit_s3
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op0(struct sljit_compiler *compiler, sljit_s32 op)
 {
 #if (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64)
-	sljit_ins word = (op & SLJIT_32) >> 5;
+	sljit_ins word = (sljit_ins)(op & SLJIT_32) >> 5;
 
 	SLJIT_ASSERT(word == 0 || word == 0x8);
 #endif /* SLJIT_CONFIG_RISCV_64 */
@@ -1950,7 +1950,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_shift_into(struct sljit_compiler *
 	sljit_s32 is_left;
 	sljit_ins ins1, ins2, ins3;
 #if (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64)
-	sljit_ins word = (op & SLJIT_32) >> 5;
+	sljit_ins word = (sljit_ins)(op & SLJIT_32) >> 5;
 	sljit_s32 inp_flags = ((op & SLJIT_32) ? INT_DATA : WORD_DATA) | LOAD_DATA;
 	sljit_sw bit_length = (op & SLJIT_32) ? 32 : 64;
 #else /* !SLJIT_CONFIG_RISCV_64 */
@@ -2095,6 +2095,8 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_register_index(sljit_s32 type, slji
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op_custom(struct sljit_compiler *compiler,
 	void *instruction, sljit_u32 size)
 {
+	SLJIT_UNUSED_ARG(size);
+
 	CHECK_ERROR();
 	CHECK(check_sljit_emit_op_custom(compiler, instruction, size));
 
@@ -2804,7 +2806,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_select(struct sljit_compiler *comp
 	sljit_ins *ptr;
 	sljit_uw size;
 #if (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64)
-	sljit_ins word = (type & SLJIT_32) >> 5;
+	sljit_ins word = (sljit_ins)(type & SLJIT_32) >> 5;
 	sljit_s32 inp_flags = ((type & SLJIT_32) ? INT_DATA : WORD_DATA) | LOAD_DATA;
 #else /* !SLJIT_CONFIG_RISCV_64 */
         sljit_s32 inp_flags = WORD_DATA | LOAD_DATA;

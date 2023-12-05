@@ -14,7 +14,7 @@ auto pLabel::destruct() -> void {
 }
 
 auto pLabel::minimumSize() const -> Size {
-  auto size = pFont::size(self().font(true), state().text ? state().text : " ");
+  auto size = pFont::size(self().font(true), state().text ? state().text : " "_s);
   return {size.width(), size.height()};
 }
 

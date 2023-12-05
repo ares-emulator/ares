@@ -32,7 +32,6 @@ alwaysinline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   if(address >= 0xa00000 && address <= 0xa0ffff) {
     if(!apu.busgrantedCPU()) return data;
-    if(cpu.active()) cpu.wait(3);  //todo: inaccurate approximation of Z80 RAM access delay
     address.bit(15) = 0;  //a080000-a0ffff mirrors a00000-a07fff
     //word reads load the even input byte into both output bytes
     auto byte = apu.read(address | !upper);  //upper==0 only on odd byte reads
@@ -94,7 +93,6 @@ alwaysinline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void 
 
   if(address >= 0xa00000 && address <= 0xa0ffff) {
     if(!apu.busgrantedCPU()) return;
-    if(cpu.active()) cpu.wait(3);  //todo: inaccurate approximation of Z80 RAM access delay
     address.bit(15) = 0;  //a08000-a0ffff mirrors a00000-a07fff
     //word writes store the upper input byte into the lower output byte
     return apu.write(address | !upper, data.byte(upper));  //upper==0 only on odd byte reads
@@ -123,47 +121,31 @@ alwaysinline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void 
 }
 
 alwaysinline auto Bus::waitRefreshExternal() -> void {
-  if(state.acquired & VDPDMA) return; // refresh is synched with VDP during DMA
-  if(cpu.refresh.external < cpu.refresh.externalLowBound) return;
-
-  if(cpu.refresh.externalEnd == 0)
-    cpu.refresh.externalEnd = min(cpu.refresh.external + cpu.refresh.externalLength, cpu.refresh.externalHighBound);
-  if(cpu.refresh.external < cpu.refresh.externalEnd) {
-    while(cpu.refresh.external < cpu.refresh.externalEnd) {
-      if(cpu.active()) cpu.wait(1);
-      if(apu.active()) apu.step(1);
-      if(scheduler.synchronizing()) return;
-      if(vdp.active()) return;
-    }
-    cpu.refresh.external -= cpu.refresh.externalEnd;
-    cpu.refresh.externalEnd = 0;
-  }
+  if(vdp.active() || state.acquired & VDPDMA) return; // refresh is synched with VDP during DMA
 
   while(cpu.refresh.external >= cpu.refresh.externalHighBound) {
     cpu.refresh.external -= cpu.refresh.externalHighBound;
-    cpu.refresh.externalEnd = 0;
   }
+
+  if(cpu.refresh.external < cpu.refresh.externalLowBound) return;
+
+  if(cpu.active()) cpu.wait(min(cpu.refresh.externalLength,cpu.refresh.externalHighBound-cpu.refresh.external));
+  if(apu.active()) apu.step(min(cpu.refresh.externalLength,cpu.refresh.externalHighBound-cpu.refresh.external));
+
+  cpu.refresh.external -= cpu.refresh.externalHighBound;
 }
 
 alwaysinline auto Bus::waitRefreshRAM() -> void {
-  if(state.acquired & VDPDMA) return; // refresh is synched with VDP during DMA
-  if(cpu.refresh.ram < cpu.refresh.ramLowBound) return;
-
-  if(cpu.refresh.ramEnd == 0)
-    cpu.refresh.ramEnd = min(cpu.refresh.ram + cpu.refresh.ramLength, cpu.refresh.ramHighBound);
-  if(cpu.refresh.ram < cpu.refresh.ramEnd) {
-    while(cpu.refresh.ram < cpu.refresh.ramEnd) {
-      if(cpu.active()) cpu.wait(1);
-      if(apu.active()) apu.step(1);
-      if(scheduler.synchronizing()) return;
-      if(vdp.active()) return;
-    }
-    cpu.refresh.ram -= cpu.refresh.ramEnd;
-    cpu.refresh.ramEnd = 0;
-  }
+  if(vdp.active() || state.acquired & VDPDMA) return; // refresh is synched with VDP during DMA
 
   while(cpu.refresh.ram >= cpu.refresh.ramHighBound) {
     cpu.refresh.ram -= cpu.refresh.ramHighBound;
-    cpu.refresh.ramEnd = 0;
   }
+
+  if(cpu.refresh.ram < cpu.refresh.ramLowBound) return;
+
+  if(cpu.active()) cpu.wait(min(cpu.refresh.ramLength,cpu.refresh.ramHighBound-cpu.refresh.ram));
+  if(apu.active()) apu.step(min(cpu.refresh.ramLength,cpu.refresh.ramHighBound-cpu.refresh.ram));
+
+  cpu.refresh.ram = 0;
 }

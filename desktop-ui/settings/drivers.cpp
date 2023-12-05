@@ -3,10 +3,16 @@ auto DriverSettings::construct() -> void {
   setVisible(false);
 
   videoLabel.setText("Video").setFont(Font().setBold());
+  videoDriverList.onChange([&] {
+    bool enabled = false;
+    if(videoDriverList.selected().text() != settings.video.driver) { enabled = true; }
+    videoDriverAssign.setEnabled(enabled);
+  });
   videoDriverLabel.setText("Driver:");
-  videoDriverAssign.setText("Reload").onActivate([&] {
+  videoDriverAssign.setText("Apply").setEnabled(false).onActivate([&] {
     settings.video.driver = videoDriverList.selected().text();
     videoDriverUpdate();
+    videoDriverAssign.setEnabled(false);
   });
   videoMonitorLabel.setText("Fullscreen monitor:");
   videoMonitorList.onChange([&] {
@@ -34,10 +40,16 @@ auto DriverSettings::construct() -> void {
   });
 
   audioLabel.setText("Audio").setFont(Font().setBold());
+  audioDriverList.onChange([&] {
+    bool enabled = false;
+    if(audioDriverList.selected().text() != settings.audio.driver) { enabled = true; }
+    audioDriverAssign.setEnabled(enabled);
+  });
   audioDriverLabel.setText("Driver:");
-  audioDriverAssign.setText("Reload").onActivate([&] {
+  audioDriverAssign.setText("Apply").setEnabled(false).onActivate([&] {
     settings.audio.driver = audioDriverList.selected().text();
     audioDriverUpdate();
+    audioDriverAssign.setEnabled(false);
   });
   audioDeviceLabel.setText("Output device:");
   audioDeviceList.onChange([&] {
@@ -71,10 +83,16 @@ auto DriverSettings::construct() -> void {
   });
 
   inputLabel.setText("Input").setFont(Font().setBold());
+  inputDriverList.onChange([&] {
+    bool enabled = false;
+    if(inputDriverList.selected().text() != settings.input.driver) { enabled = true; }
+    inputDriverAssign.setEnabled(enabled);
+  });
   inputDriverLabel.setText("Driver:");
-  inputDriverAssign.setText("Reload").onActivate([&] {
+  inputDriverAssign.setText("Apply").setEnabled(false).onActivate([&] {
     settings.input.driver = inputDriverList.selected().text();
     inputDriverUpdate();
+    inputDriverAssign.setEnabled(false);
   });
   inputDefocusLabel.setText("When focus is lost:");
   inputDefocusPause.setText("Pause emulation").onActivate([&] {
@@ -89,6 +107,8 @@ auto DriverSettings::construct() -> void {
   if(settings.input.defocus == "Pause") inputDefocusPause.setChecked();
   if(settings.input.defocus == "Block") inputDefocusBlock.setChecked();
   if(settings.input.defocus == "Allow") inputDefocusAllow.setChecked();
+
+  driverApplyHint.setText("Note: You must click on the 'Apply' button to update and save changes to driver selection.").setFont(Font().setSize(8.0)).setForegroundColor(SystemColor::Sublabel);
     
   videoDriverLayout.setPadding(12_sx, 0);
   videoPropertyLayout.setPadding(12_sx, 0);

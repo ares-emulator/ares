@@ -31,13 +31,7 @@ auto CPU::in(n16 address) -> n8 {
   }
 
   case 3: {
-    auto port1 = controllerPort1.read();
-    auto port2 = controllerPort2.read();
-    if(address.bit(0) == 0) {
-      return port1.bit(0,5) << 0 | port2.bit(0,1) << 6;
-    } else {
-      return port2.bit(2,5) << 0 | 1 << 4 | 1 << 5 | port1.bit(6) << 6 | port2.bit(6) << 7;
-    }
+    return ppi.read(address.bit(0,1));
   }
 
   }
@@ -54,6 +48,10 @@ auto CPU::out(n16 address, n8 data) -> void {
 
   case 2: {
     return !address.bit(0) ? vdp.data(data) : vdp.control(data);
+  }
+
+  case 3: {
+    return ppi.write(address.bit(0,1), data);
   }
 
   }

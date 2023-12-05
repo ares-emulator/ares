@@ -1,6 +1,8 @@
 struct System {
   Node::System node;
   VFS::Pak pak;
+  bool homebrewMode = false;
+  bool expansionPak = true;
 
   enum class Region : u32 { NTSC, PAL };
 

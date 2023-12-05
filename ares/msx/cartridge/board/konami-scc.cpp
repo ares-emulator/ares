@@ -48,6 +48,9 @@ struct KonamiSCC : Interface {
     if(address >= 0x0000 && address <= 0x1fff) data = rom.read(bank[2] << 13 | (n13)address);
     if(address >= 0x2000 && address <= 0x3fff) data = rom.read(bank[3] << 13 | (n13)address);
 
+    //scc is mapped in bank 0x3f for 98xx-98ff
+    if(bank[2].bit(0, 5) != 0x3f) return data;
+
     address.bit(8) = 0;  //SCC ignores A8
 
     if(address >= 0x9800 && address <= 0x981f) {
@@ -87,6 +90,9 @@ struct KonamiSCC : Interface {
     if(address >= 0x7000 && address <= 0x77ff) bank[1] = data;
     if(address >= 0x9000 && address <= 0x97ff) bank[2] = data;
     if(address >= 0xb000 && address <= 0xb7ff) bank[3] = data;
+
+    //scc is mapped in bank 0x3f for 98xx-98ff
+    if(bank[2].bit(0, 5) != 0x3f) return;
 
     address.bit(8) = 0;  //SCC ignores A8
 

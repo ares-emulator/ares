@@ -60,6 +60,8 @@ auto CPU::main() -> void {
 }
 
 auto CPU::step(u32 clocks) -> void {
+  clocks += state.stolenMcycles/7;
+  state.stolenMcycles -= state.stolenMcycles/7 * 7;
   refresh.ram += clocks;
   refresh.external += clocks;
   Thread::step(clocks);

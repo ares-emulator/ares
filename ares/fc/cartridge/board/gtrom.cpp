@@ -4,23 +4,27 @@ struct GTROM : Interface {
     return nullptr;
   }
 
-  Memory::Readable<n8> programROM;
+  SST39SF0x0 flash;
   Memory::Writable<n8> characterRAM;
   Memory::Writable<n8> videoRAM;
 
   auto load() -> void override {
-    Interface::load(programROM, "program.rom");
+    Interface::load(flash.flash, "program.flash");
     Interface::load(characterRAM, "character.ram");
     videoRAM.allocate(16_KiB);
   }
 
   auto save() -> void override {
+    if(auto fp = pak->write("program.flash")) {
+      flash.flash.save(fp);
+    }
+
     Interface::save(characterRAM, "character.ram");
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {
     if(address < 0x8000) return data; 
-    return programROM.read(programBank << 15 | (n15)address);
+    return flash.read(programBank << 15 | (n15)address);
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
@@ -30,6 +34,8 @@ struct GTROM : Interface {
       videoBank = data.bit(5);
       return;
     }
+    if(address < 0x8000) return;
+    flash.write(programBank << 15 | (n15)address, data);
   }
 
   auto readCHR(n32 address, n8 data) -> n8 override {

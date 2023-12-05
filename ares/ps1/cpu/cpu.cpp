@@ -79,11 +79,10 @@ auto CPU::instruction() -> void {
       }
     }
 
-    pipeline.address = ipu.pc;
-    pipeline.instruction = fetch(ipu.pc);
+    u32 instruction = fetch(ipu.pc);
     if(exception()) return (void)instructionEpilogue();
 
-    debugger.instruction();
+    instructionPrologue(instruction);
     decoderEXECUTE();
     instructionEpilogue();
   }
@@ -92,6 +91,12 @@ auto CPU::instruction() -> void {
     auto block = recompiler.block(ipu.pc);
     block->execute(*this);
   }
+}
+
+auto CPU::instructionPrologue(u32 instruction) -> void {
+  pipeline.address = ipu.pc;
+  pipeline.instruction = instruction;
+  debugger.instruction();
 }
 
 auto CPU::instructionEpilogue() -> s32 {
@@ -265,9 +270,7 @@ auto CPU::power(bool reset) -> void {
 
   if constexpr(Accuracy::CPU::Recompiler) {
     auto buffer = ares::Memory::FixedAllocator::get().tryAcquire(64_MiB);
-    memory::jitprotect(false);
-    recompiler.allocator.resize(64_MiB, bump_allocator::executable | bump_allocator::zero_fill, buffer);
-    memory::jitprotect(true);
+    recompiler.allocator.resize(64_MiB, bump_allocator::executable, buffer);
     recompiler.reset();
   }
 }

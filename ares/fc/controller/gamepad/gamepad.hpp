@@ -11,6 +11,7 @@ struct Gamepad : Controller {
   Gamepad(Node::Port);
   auto data() -> n3 override;
   auto latch(n1 data) -> void override;
+  auto serialize(serializer&) -> void override;
 
 private:
   bool latched = 0;

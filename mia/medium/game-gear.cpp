@@ -3,7 +3,7 @@ struct GameGear : Cartridge {
   auto extensions() -> vector<string> override { return {"gg"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(vector<u8>& rom, string location) -> string;
 };
 
 auto GameGear::load(string location) -> bool {
@@ -17,7 +17,7 @@ auto GameGear::load(string location) -> bool {
   }
 
   this->location = location;
-  this->manifest = analyze(rom);
+  this->manifest = analyze(rom, location);
   auto document = BML::unserialize(manifest);
   if(!document) return false;
 
@@ -46,7 +46,7 @@ auto GameGear::save(string location) -> bool {
   return true;
 }
 
-auto GameGear::analyze(vector<u8>& rom) -> string {
+auto GameGear::analyze(vector<u8>& rom, string location) -> string {
   string hash   = Hash::SHA256(rom).digest();
   string board  = "Sega";
   string region = "NTSC-J, NTSC-U";  //database required to detect region
@@ -55,6 +55,7 @@ auto GameGear::analyze(vector<u8>& rom) -> string {
 
   //Master System
   //=============
+  if(location.endsWith(".sms")) ms = 1;
 
   //Castle of Illusion Starring Mickey Mouse (USA, Europe)
   if(hash == "068fc6eaf728b3cd17c6fc5320c955deb0cd3b36343810470fe30c5a3661d0d3") {

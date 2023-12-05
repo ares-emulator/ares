@@ -6,6 +6,8 @@ auto RIOT::serialize(serializer& s) -> void {
   s(timer.counter);
   s(timer.interval);
   s(timer.reload);
+  s(timer.interruptEnable);
+  s(timer.interruptFlag);
 
   for(auto n : range(2)) {
     s(port[n].data);

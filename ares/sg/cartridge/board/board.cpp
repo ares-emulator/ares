@@ -1,5 +1,6 @@
 namespace Board {
 
+#include "arcade-rom.cpp"
 #include "linear.cpp"
 #include "taiwan-a.cpp"
 #include "taiwan-b.cpp"

@@ -33,7 +33,7 @@ auto pStatusBar::setFont(const Font&) -> void {
   SendMessage(hwnd, WM_SETFONT, (WPARAM)hfont, 0);
 
   auto& text = state().text;
-  auto height = font.size(text ? text : " ").height();
+  auto height = font.size(text ? text : " "_s).height();
   SendMessage(hwnd, SB_SETMINHEIGHT, (WPARAM)height, 0);
 
   if(auto parent = _parent()) {

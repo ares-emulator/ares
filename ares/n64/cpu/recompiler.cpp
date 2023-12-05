@@ -1,6 +1,11 @@
 auto CPU::Recompiler::pool(u32 address) -> Pool* {
   auto& pool = pools[address >> 8 & 0x1fffff];
-  if(!pool) pool = (Pool*)allocator.acquire(sizeof(Pool));
+  if(!pool) {
+    pool = (Pool*)allocator.acquire(sizeof(Pool));
+    memory::jitprotect(false);
+    *pool = {};
+    memory::jitprotect(true);
+  }
   return pool;
 }
 
@@ -21,9 +26,7 @@ auto CPU::Recompiler::fastFetchBlock(u32 address) -> Block* {
 auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
-    memory::jitprotect(false);
-    allocator.release(bump_allocator::zero_fill);
-    memory::jitprotect(true);
+    allocator.release();
     reset();
   }
 
@@ -34,6 +37,10 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
   bool hasBranched = 0;
   while(true) {
     u32 instruction = bus.read<Word>(address, thread);
+    if(callInstructionPrologue) {
+      mov32(reg(1), imm(instruction));
+      call(&CPU::instructionPrologue);
+    }
     bool branched = emitEXECUTE(instruction);
     if(unlikely(instruction == 0x1000'ffff  //beq 0,0,<pc>
              || instruction == (2 << 26 | vaddr >> 2 & 0x3ff'ffff))) {  //j <pc>

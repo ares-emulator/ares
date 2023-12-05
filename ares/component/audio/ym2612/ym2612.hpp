@@ -91,7 +91,7 @@ protected:
       Operator(Channel& channel) : channel(channel), ym2612(channel.ym2612) {}
 
       //channel.cpp
-      auto updateKeyState(bool) -> void;
+      auto updateKeyState() -> void;
 
       auto runEnvelope() -> void;
       auto runPhase() -> void;

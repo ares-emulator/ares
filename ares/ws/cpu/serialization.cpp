@@ -11,6 +11,9 @@ auto CPU::serialize(serializer& s) -> void {
   s(io.cartridgeEnable);
   s(io.cartridgeRomWidth);
   s(io.cartridgeRomWait);
+  s(io.cartridgeClock);
+  s(io.cartridgeSramWait);
+  s(io.cartridgeIoWait);
   s(io.interruptBase);
   s(io.interruptEnable);
   s(io.interruptStatus);

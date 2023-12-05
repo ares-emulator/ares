@@ -26,6 +26,7 @@ struct Controller {
 
   virtual auto data() -> n3 { return 0b000; }
   virtual auto latch(n1 data) -> void {}
+  virtual auto serialize(serializer&) -> void {}
 };
 
 #include "port.hpp"

@@ -20,8 +20,8 @@ auto MCD::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address == 0xff8004) {
-    data.bit( 0, 3) = cdc.address;
-    data.bit( 4, 7) = Unmapped;
+    data.bit( 0, 4) = cdc.address;
+    data.bit( 5, 7) = Unmapped;
     data.bit( 8,10) = cdc.transfer.destination;
     data.bit(11,13) = Unmapped;
     data.bit(14)    = cdc.transfer.ready;
@@ -208,7 +208,7 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address == 0xff8004) {
     if(lower) {
-      cdc.address = data.bit(0,3);
+      cdc.address = data.bit(0,4);
     }
     if(upper) {
       cdc.transfer.destination = data.bit(8,10);

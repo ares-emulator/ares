@@ -134,6 +134,8 @@ auto identify(const string& filename) -> string {
   for(auto& medium : media) {
     auto pak = mia::Medium::create(medium);
     if(pak->extensions().find(extension)) {
+      if(!pak->load(filename)) continue; // Skip medium that the system cannot load
+      if(pak->pak->attribute("audio").boolean()) continue; // Skip audio-only media to give the next system a chance to match
       return pak->name();
     }
   }

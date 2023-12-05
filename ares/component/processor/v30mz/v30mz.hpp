@@ -32,6 +32,8 @@ struct V30MZ {
   virtual auto write(n20 address, n8 data) -> void = 0;
   virtual auto in(n16 port) -> n8 = 0;
   virtual auto out(n16 port, n8 data) -> void = 0;
+  virtual auto ioWidth(n16 port) -> u32 = 0;
+  virtual auto ioSpeed(n16 port) -> n32 = 0;
 
   //v30mz.cpp
   auto power() -> void;
