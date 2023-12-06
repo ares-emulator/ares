@@ -1,3 +1,6 @@
+struct Cartridge;
+#include "board/board.hpp"
+
 struct Cartridge {
   Node::Peripheral node;
   VFS::Pak pak;
@@ -14,17 +17,19 @@ struct Cartridge {
   auto power() -> void;
 
   auto read(n16 address) -> n8;
+  auto write(n16 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-private:
+  unique_pointer<Board::Interface> board;
+
+//private:
   struct Information {
     string title;
     string region;
+    string board;
   } information;
-
-  Memory::Readable<n8> rom;
 };
 
 #include "slot.hpp"
