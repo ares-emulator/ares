@@ -171,7 +171,7 @@ else ifeq ($(build),optimized)
   ifeq ($(cl),true)
     flags += -O2
   else
-    flags += -O3 -fomit-frame-pointer
+    flags += -O3
   endif
   flags += -DBUILD_OPTIMIZED
 else
