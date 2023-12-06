@@ -20,9 +20,8 @@ auto Cartridge::connect() -> void {
   information.board  = pak->attribute("board");
 
   if(information.board == "xin1") board = new Board::xin1{*this};
-  else {
-	board = new Board::coleco{*this};
-  }
+  if(information.board == "coleco") board = new Board::coleco{*this};
+  if(information.board == "megacart") board = new Board::megacart{*this};
   
   
   if(!board) board = new Board::Interface{*this};

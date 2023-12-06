@@ -2,6 +2,7 @@ namespace Board {
 
 #include "coleco.cpp"
 #include "xin1.cpp"
+#include "megacart.cpp"
 
 auto Interface::load(Memory::Readable<n8>& memory, string name) -> bool {
   if(auto fp = pak->read(name)) {
