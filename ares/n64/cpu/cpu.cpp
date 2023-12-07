@@ -92,6 +92,7 @@ auto CPU::instruction() -> void {
     return exception.nmi();
   }
   if (scc.sysadFrozen) {
+    step(1 * 2);
     return;
   }
 

@@ -4,9 +4,10 @@ auto CPU::DataCache::Line::hit(u32 address) const -> bool {
 
 auto CPU::DataCache::Line::fill(u32 address) -> void {
   cpu.step(40 * 2);
-  valid = 1;
-  dirty = 0;
-  tag   = address & ~0x0000'0fff;
+  valid  = 1;
+  dirty  = 0;
+  tag    = address & ~0x0000'0fff;
+  fillPc = cpu.ipu.pc;
   cpu.busReadBurst<DCache>(tag | index, words);
 }
 
@@ -41,7 +42,8 @@ auto CPU::DataCache::Line::write(u32 address, u64 data) -> void {
     words[address >> 2 & 2 | 0] = data >> 32;
     words[address >> 2 & 2 | 1] = data >>  0;
   }
-  dirty = 1;
+  dirty |= ((1 << Size) - 1) << (address & 0xF);
+  dirtyPc = cpu.ipu.pc;
 }
 
 template<u32 Size>
@@ -60,7 +62,7 @@ auto CPU::DataCache::readDebug(u32 vaddr, u32 address) -> u8 {
   auto& line = this->line(vaddr);
   if(!line.hit(address)) {
     Thread dummyThread{};
-    return bus.read<Byte>(address, dummyThread);
+    return bus.read<Byte>(address, dummyThread, "Ares Debugger");
   }
   return line.read<Byte>(address);
 }

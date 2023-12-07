@@ -53,7 +53,7 @@ auto RDP::render() -> void {
   }
   #endif
 
-  auto& memory = !command.source ? rdram.ram : rsp.dmem;
+  auto& memory = !command.source ? (Memory::Writable&)rdram.ram : (Memory::Writable&)rsp.dmem;
 
   auto fetch = [&]() -> u64 {
     u64 op = memory.readUnaligned<Dual>(command.current);

@@ -38,6 +38,7 @@ auto AI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
     if(io.dmaCount < 2) {
       if(io.dmaCount == 0) mi.raise(MI::IRQ::AI);
       io.dmaLength[io.dmaCount] = length;
+      io.dmaOriginPc[io.dmaCount] = cpu.ipu.pc;
       io.dmaCount++;
     }
   }
