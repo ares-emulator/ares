@@ -264,8 +264,8 @@ ifeq ($(platform),windows)
   ifeq ($(msvc),true)
     flags += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS
   endif
-  options += $(call lib,ws2_32 ole32 shell32 shlwapi)
-  options += $(if $(findstring g++,$(compiler)),-mthreads -static)
+  options += $(call lib,ws2_32 ole32 shell32 shlwapi advapi32)
+  options += $(if $(findstring g++,$(compiler)),-mthreads $(if $(filter-out true,$(static)),,-static))
   ifeq ($(console),true)
     flags += -DSUBSYTEM_CONSOLE
     options += $(if $(findstring g++,$(compiler)),-mconsole)
