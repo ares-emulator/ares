@@ -7,11 +7,10 @@ ifeq ($(ruby),)
     ruby += audio.wasapi audio.xaudio2 audio.directsound audio.waveout #audio.asio
     ruby += input.windows
 
-  ifeq ($(call which,pkg-config),)
+  ifeq ($(pkg_config),)
     # TODO: Check presence of libSDL
   else
-    # If we're in a posix shell, use pkg-config/pkg-check
-    pkg_check = $(if $(shell pkg-config $1 && echo 1),$2)
+    pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
     ruby += $(call pkg_check,sdl2,input.sdl)
     ruby += $(call pkg_check,sdl2,audio.sdl)
   endif
@@ -20,7 +19,7 @@ ifeq ($(ruby),)
     ruby += audio.openal
     ruby += input.quartz #input.carbon
   else ifeq ($(platform),linux)
-    pkg_check = $(if $(shell pkg-config $1 && echo 1),$2)
+    pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
     ruby += video.glx video.glx2 video.xshm
     ruby += $(call pkg_check,xv,video.xvideo)
     ruby += audio.oss audio.alsa
@@ -33,7 +32,7 @@ ifeq ($(ruby),)
     ruby += $(call pkg_check,sdl2,input.sdl)
     ruby += $(call pkg_check,sdl2,audio.sdl)
   else ifeq ($(platform),bsd)
-    pkg_check = $(if $(shell pkg-config $1 && echo 1),$2)
+    pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
     ruby += video.glx video.glx2 video.xshm
     ruby += $(call pkg_check,xv,video.xvideo)
     ruby += audio.oss
@@ -54,11 +53,11 @@ else
 endif
 
 ruby.flags += $(foreach c,$(subst .,_,$(call strupper,$(ruby))),-D$c)
-ifeq ($(call which,pkg-config),)
+ifeq ($(pkg_config),)
   # TODO: add SDL2 cflags
 else
-  ruby.flags += $(if $(findstring input.sdl,$(ruby)),$(shell pkg-config sdl2 --cflags))
-  ruby.flags += $(if $(findstring audio.sdl,$(ruby)),$(shell pkg-config sdl2 --cflags))
+  ruby.flags += $(if $(findstring input.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --cflags))
+  ruby.flags += $(if $(findstring audio.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --cflags))
 endif
 
 ruby.options :=
@@ -79,15 +78,15 @@ ruby.options += $(if $(findstring audio.waveout,$(ruby)),$(call lib,winmm))
 ruby.options += $(if $(findstring audio.xaudio2,$(ruby)),$(call lib,ole32))
 
 ifeq ($(platform),windows)
-  ifeq ($(call which,pkg-config),)
+  ifeq ($(pkg_config),)
     # TODO: add SDL2 ldflags
   else
-    ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell pkg-config sdl2 --libs --static))
-    ruby.options += $(if $(findstring audio.sdl,$(ruby)),$(shell pkg-config sdl2 --libs --static))
+    ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --libs --static))
+    ruby.options += $(if $(findstring audio.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --libs --static))
   endif
 else
-  ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell pkg-config sdl2 --libs))
-  ruby.options += $(if $(findstring audio.sdl,$(ruby)),$(shell pkg-config sdl2 --libs))
+  ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --libs))
+  ruby.options += $(if $(findstring audio.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --libs))
 endif
 
 ruby.options += $(if $(findstring input.udev,$(ruby)),-ludev)

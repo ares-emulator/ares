@@ -318,6 +318,22 @@ ifeq ($(threaded),true)
   endif
 endif
 
+# pkg-config/pkgconf detection
+PKG_CONFIG ?= pkg-config
+ifeq ($(shell echo ^^),^)
+  PKG_CONFIG_VERSION := $(shell $(PKG_CONFIG) --version 2> NUL)
+else
+  PKG_CONFIG_VERSION := $(shell $(PKG_CONFIG) --version 2> /dev/null)
+endif
+
+pkg_config :=
+ifneq ($(PKG_CONFIG_VERSION),)
+  pkg_config := $(PKG_CONFIG)
+  ifeq ($(cl),true)
+    pkg_config += --msvc-syntax
+  endif
+endif
+
 # paths
 ifeq ($(object.path),)
   object.path := obj
