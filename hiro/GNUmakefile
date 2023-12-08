@@ -1,5 +1,3 @@
-PKG_CONFIG ?= pkg-config
-
 ifeq ($(platform),windows)
   ifeq ($(hiro),)
     hiro := windows
@@ -8,16 +6,28 @@ ifeq ($(platform),windows)
   ifeq ($(hiro),windows)
     hiro.flags   = $(flags.cpp) -DHIRO_WINDOWS
     hiro.options = $(call lib,kernel32 user32 gdi32 advapi32 ole32 comctl32 comdlg32 uxtheme msimg32 dwmapi)
-  endif
+  else
+    # require dynamic linking for all other backends
+    static ?= false
+    ifeq ($(static),true)
+      $(error hiro does not support static linking against $(hiro) on Windows)
+    endif
 
-  ifeq ($(hiro),gtk2)
-    hiro.flags   = $(flags.cpp) -DHIRO_GTK=2 $(shell pkg-config --cflags gtk+-2.0) -Wno-deprecated-declarations
-    hiro.options = $(shell pkg-config --libs gtk+-2.0)
-  endif
+    hiro.flags = $(flags.cpp) $(if $(findstring g++,$(compiler)),-Wno-deprecated-declarations)
 
-  ifeq ($(hiro),gtk3)
-    hiro.flags   = $(flags.cpp) -DHIRO_GTK=3 $(shell pkg-config --cflags gtk+-3.0) -Wno-deprecated-declarations
-    hiro.options = $(shell pkg-config --libs gtk+-3.0)
+    ifeq ($(hiro),gtk2)
+      hiro.flags  += -DHIRO_GTK=2 $(shell $(pkg_config) --cflags gtk+-2.0)
+      hiro.options = $(shell $(pkg_config) --libs gtk+-2.0)
+    else ifeq ($(hiro),gtk3)
+      hiro.flags  += -DHIRO_GTK=3 $(shell $(pkg_config) --cflags gtk+-3.0)
+      hiro.options = $(shell $(pkg_config) --libs gtk+-3.0)
+    else ifeq ($(hiro),qt5)
+      moc = $(shell $(pkg_config) --variable=host_bins Qt5Core)/moc
+      hiro.flags  += -DHIRO_QT=5 $(shell $(pkg_config) --cflags Qt5Core Qt5Gui Qt5Widgets)
+      hiro.options = $(shell $(pkg_config) --libs Qt5Core Qt5Gui Qt5Widgets)
+    else
+      $(error unrecognized hiro backend $(hiro))
+    endif
   endif
 endif
 
@@ -29,6 +39,8 @@ ifeq ($(platform),macos)
   ifeq ($(hiro),cocoa)
     hiro.flags   = $(flags.objcpp) -w -DHIRO_COCOA
     hiro.options = -framework Cocoa -framework Carbon -framework IOKit -framework Security
+  else
+    $(error unrecognized hiro backend $(hiro))
   endif
 endif
 
@@ -38,37 +50,29 @@ ifneq ($(filter $(platform),linux bsd),)
   endif
 
   ifeq ($(hiro),gtk2)
-    hiro.flags   = $(flags.cpp) -DHIRO_GTK=2 $(shell $(PKG_CONFIG) --cflags gtk+-2.0) -Wno-deprecated-declarations
-    hiro.options = -L/usr/local/lib -lX11 $(shell $(PKG_CONFIG) --libs gtk+-2.0)
-  endif
-
-  ifeq ($(hiro),gtk2-se)
+    hiro.flags   = $(flags.cpp) -DHIRO_GTK=2 $(shell $(pkg_config) --cflags gtk+-2.0) -Wno-deprecated-declarations
+    hiro.options = -L/usr/local/lib -lX11 $(shell $(pkg_config) --libs gtk+-2.0)
+  else ifeq ($(hiro),gtk2-se)
     flags       += -DHiro_SourceEdit
-    hiro.flags   = $(flags.cpp) -DHIRO_GTK=2 $(shell $(PKG_CONFIG) --cflags gtk+-2.0 gtksourceview-2.0) -Wno-deprecated-declarations
-    hiro.options = -L/usr/local/lib -lX11 $(shell $(PKG_CONFIG) --libs gtk+-2.0 gtksourceview-2.0)
-  endif
-
-  ifeq ($(hiro),gtk3)
-    hiro.flags   = $(flags.cpp) -DHIRO_GTK=3 $(shell $(PKG_CONFIG) --cflags gtk+-3.0) -Wno-deprecated-declarations
-    hiro.options = -L/usr/local/lib -lX11 $(shell $(PKG_CONFIG) --libs gtk+-3.0)
-  endif
-
-  ifeq ($(hiro),gtk3-se)
+    hiro.flags   = $(flags.cpp) -DHIRO_GTK=2 $(shell $(pkg_config) --cflags gtk+-2.0 gtksourceview-2.0) -Wno-deprecated-declarations
+    hiro.options = -L/usr/local/lib -lX11 $(shell $(pkg_config) --libs gtk+-2.0 gtksourceview-2.0)
+  else ifeq ($(hiro),gtk3)
+    hiro.flags   = $(flags.cpp) -DHIRO_GTK=3 $(shell $(pkg_config) --cflags gtk+-3.0) -Wno-deprecated-declarations
+    hiro.options = -L/usr/local/lib -lX11 $(shell $(pkg_config) --libs gtk+-3.0)
+  else ifeq ($(hiro),gtk3-se)
     flags       += -DHiro_SourceEdit
-    hiro.flags   = $(flags.cpp) -DHIRO_GTK=3 $(shell $(PKG_CONFIG) --cflags gtk+-3.0 gtksourceview-3.0) -Wno-deprecated-declarations
-    hiro.options = -L/usr/local/lib -lX11 $(shell $(PKG_CONFIG) --libs gtk+-3.0 gtksourceview-3.0)
-  endif
-
-  ifeq ($(hiro),qt4)
+    hiro.flags   = $(flags.cpp) -DHIRO_GTK=3 $(shell $(pkg_config) --cflags gtk+-3.0 gtksourceview-3.0) -Wno-deprecated-declarations
+    hiro.options = -L/usr/local/lib -lX11 $(shell $(pkg_config) --libs gtk+-3.0 gtksourceview-3.0)
+  else ifeq ($(hiro),qt4)
     moc = /usr/local/lib/qt4/bin/moc
-    hiro.flags   = $(flags.cpp) -DHIRO_QT=4 $(shell $(PKG_CONFIG) --cflags QtCore QtGui)
-    hiro.options = -L/usr/local/lib -lX11 $(shell $(PKG_CONFIG) --libs QtCore QtGui)
-  endif
-
-  ifeq ($(hiro),qt5)
-    moc = $(shell $(PKG_CONFIG) --variable=host_bins Qt5Core)/moc
-    hiro.flags   = $(flags.cpp) -DHIRO_QT=5 -fPIC $(shell $(PKG_CONFIG) --cflags Qt5Core Qt5Gui Qt5Widgets)
-    hiro.options = -L/usr/local/lib -lX11 $(shell $(PKG_CONFIG) --libs Qt5Core Qt5Gui Qt5Widgets)
+    hiro.flags   = $(flags.cpp) -DHIRO_QT=4 $(shell $(pkg_config) --cflags QtCore QtGui)
+    hiro.options = -L/usr/local/lib -lX11 $(shell $(pkg_config) --libs QtCore QtGui)
+  else ifeq ($(hiro),qt5)
+    moc = $(shell $(pkg_config) --variable=host_bins Qt5Core)/moc
+    hiro.flags   = $(flags.cpp) -DHIRO_QT=5 -fPIC $(shell $(pkg_config) --cflags Qt5Core Qt5Gui Qt5Widgets)
+    hiro.options = -L/usr/local/lib -lX11 $(shell $(pkg_config) --libs Qt5Core Qt5Gui Qt5Widgets)
+  else
+    $(error unrecognized hiro backend $(hiro))
   endif
 endif
 

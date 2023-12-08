@@ -82,7 +82,6 @@ auto Vulkan::render() -> bool {
   };
 
   auto& command = rdp.command;
-  auto& memory = !command.source ? rdram.ram : rsp.dmem;
 
   u32 current = command.current & ~7;
   u32 end = command.end & ~7;
@@ -94,11 +93,22 @@ auto Vulkan::render() -> bool {
   u32& queueOffset = implementation->queueOffset;
   if(queueSize + length >= 0x8000) return true;
 
-  do {
-    buffer[queueSize * 2 + 0] = memory.read<Word>(current); current += 4;
-    buffer[queueSize * 2 + 1] = memory.read<Word>(current); current += 4;
-    queueSize++;
-  } while(--length);
+  if(!command.source) {
+    do {
+      buffer[queueSize * 2 + 0] = rdram.ram.read<Word>(current, "RDP DMA"); current += 4;
+      buffer[queueSize * 2 + 1] = rdram.ram.read<Word>(current, "RDP DMA"); current += 4;
+      queueSize++;
+    } while(--length);
+  } else {
+    do {
+      buffer[queueSize * 2 + 0] = rsp.dmem.read<Word>(current); current += 4;
+      buffer[queueSize * 2 + 1] = rsp.dmem.read<Word>(current); current += 4;
+      if(system.homebrewMode) {
+        rsp.debugger.dmemReadWord(current - 8, 8, "RDP XBUS");
+      }
+      queueSize++;
+    } while(--length);
+  }
 
   while(queueOffset < queueSize) {
     u32 op = buffer[queueOffset * 2];

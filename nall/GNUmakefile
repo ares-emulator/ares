@@ -264,8 +264,15 @@ ifeq ($(platform),windows)
   ifeq ($(msvc),true)
     flags += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS
   endif
-  options += $(call lib,ws2_32 ole32 shell32 shlwapi)
-  options += $(if $(findstring g++,$(compiler)),-mthreads -static)
+  options += $(call lib,ws2_32 ole32 shell32 shlwapi advapi32)
+  options += $(if $(findstring g++,$(compiler)),-mthreads)
+  ifeq ($(cl),true)
+    flags += $(if $(filter-out true,$(static)),-MD,-MT)
+  else ifeq ($(msvc),true)
+    flags += -fms-runtime-lib=$(if $(filter-out true,$(static)),dll,static)
+  else
+    options += $(if $(filter-out true,$(static)),,-static)
+  endif
   ifeq ($(console),true)
     flags += -DSUBSYTEM_CONSOLE
     options += $(if $(findstring g++,$(compiler)),-mconsole)
@@ -284,7 +291,7 @@ endif
 
 # macos settings
 ifeq ($(platform),macos)
-  flags   += -stdlib=libc++ -mmacosx-version-min=10.9 -Wno-auto-var-id -fobjc-arc
+  flags   += -mmacosx-version-min=10.9 -Wno-auto-var-id -Wno-deprecated-declarations -fobjc-arc
   options += -lc++ -lobjc -mmacosx-version-min=10.9
   # allow mprotect() on dynamic recompiler code blocks
   options += -Wl,-segprot,__DATA,rwx,rw
@@ -308,6 +315,22 @@ ifeq ($(threaded),true)
   ifneq ($(filter $(platform),linux bsd),)
     flags   += -pthread
     options += -pthread -lrt
+  endif
+endif
+
+# pkg-config/pkgconf detection
+PKG_CONFIG ?= pkg-config
+ifeq ($(shell echo ^^),^)
+  PKG_CONFIG_VERSION := $(shell $(PKG_CONFIG) --version 2> NUL)
+else
+  PKG_CONFIG_VERSION := $(shell $(PKG_CONFIG) --version 2> /dev/null)
+endif
+
+pkg_config :=
+ifneq ($(PKG_CONFIG_VERSION),)
+  pkg_config := $(PKG_CONFIG)
+  ifeq ($(cl),true)
+    pkg_config += --msvc-syntax
   endif
 endif
 

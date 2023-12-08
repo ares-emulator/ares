@@ -1,9 +1,13 @@
 auto FDSTimer::clock() -> void {
-  if(enable && !--counter) {
+  if(!enable || !irq) return;
+
+  if(!counter) {
     pending = 1;
     fds.poll();
     if(repeat) counter = period;
     irq &= repeat;
+  } else {
+    counter--;
   }
 }
 
@@ -40,12 +44,16 @@ auto FDSTimer::write(n16 address, n8 data) -> void {
       counter = period;
     } else {
       pending = 0;
+      fds.poll();
     }
     return;
 
-  case 0x4025:
+  case 0x4023:
     enable = data.bit(0);
-    if(!enable) pending = 0;
+    if(!enable) {
+      pending = 0;
+      fds.poll();
+    }
     return;
 
   }

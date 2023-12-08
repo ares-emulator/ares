@@ -5,6 +5,7 @@
 #endif
 #undef foreach
 
+#if defined(DISPLAY_XORG)
 #include <nall/xorg/guard.hpp>
 #define XK_MISCELLANY
 #define XK_LATIN1
@@ -13,6 +14,7 @@
 #undef XK_MISCELLANY
 #undef XK_LATIN1
 #include <nall/xorg/guard.hpp>
+#endif
 
 //Qt 4.8.0 and earlier improperly define the QLOCATION macro
 //in C++11, it is detected as a malformed user-defined literal

@@ -146,7 +146,7 @@ auto CPU::devirtualizeDebug(u64 vaddr) -> u64 {
 
 template<u32 Size>
 inline auto CPU::busWrite(u32 address, u64 data) -> void {
-  bus.write<Size>(address, data, *this);
+  bus.write<Size>(address, data, *this, "CPU");
 }
 
 template<u32 Size>
@@ -156,7 +156,7 @@ inline auto CPU::busWriteBurst(u32 address, u32 *data) -> void {
 
 template<u32 Size>
 inline auto CPU::busRead(u32 address) -> u64 {
-  return bus.read<Size>(address, *this);
+  return bus.read<Size>(address, *this, "CPU");
 }
 
 template<u32 Size>
@@ -239,7 +239,7 @@ auto CPU::readDebug(u64 vaddr) -> u8 {
     case Context::Segment::Mapped:
       if(auto match = tlb.load(vaddr, true)) {
         if(match.cache) return dcache.readDebug(vaddr, match.address & context.physMask);
-        return bus.read<Byte>(match.address & context.physMask, dummyThread);
+        return bus.read<Byte>(match.address & context.physMask, dummyThread, "Ares Debugger");
       }
       return 0;
     case Context::Segment::Cached:
@@ -247,9 +247,9 @@ auto CPU::readDebug(u64 vaddr) -> u8 {
     case Context::Segment::Cached32:
       return dcache.readDebug(vaddr, vaddr & 0xffff'ffff);
     case Context::Segment::Direct:
-      return bus.read<Byte>(vaddr & 0x1fff'ffff, dummyThread);
+      return bus.read<Byte>(vaddr & 0x1fff'ffff, dummyThread, "Ares Debugger");
     case Context::Segment::Direct32:
-      return bus.read<Byte>(vaddr & 0xffff'ffff, dummyThread);
+      return bus.read<Byte>(vaddr & 0xffff'ffff, dummyThread, "Ares Debugger");
   }
 
   unreachable;

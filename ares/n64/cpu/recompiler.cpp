@@ -36,7 +36,7 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
   Thread thread;
   bool hasBranched = 0;
   while(true) {
-    u32 instruction = bus.read<Word>(address, thread);
+    u32 instruction = bus.read<Word>(address, thread, "Ares Recompiler");
     if(callInstructionPrologue) {
       mov32(reg(1), imm(instruction));
       call(&CPU::instructionPrologue);
