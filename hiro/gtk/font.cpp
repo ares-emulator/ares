@@ -26,12 +26,12 @@ auto pFont::family(const string& family) -> string {
   if(family == Font::Sans ) return "Tahoma";
   if(family == Font::Serif) return "Georgia";
   if(family == Font::Mono ) return "Lucida Console";
-  return family ? family : "Tahoma";
+  return family ? family : "Tahoma"_s;
   #elif defined(DISPLAY_XORG)
   if(family == Font::Sans ) return "Sans";
   if(family == Font::Serif) return "Serif";
   if(family == Font::Mono ) return "Monospace";
-  return family ? family : "Sans";
+  return family ? family : "Sans"_s;
   #else
   return family;
   #endif

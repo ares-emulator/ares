@@ -13,15 +13,17 @@ ifeq ($(platform),windows)
       $(error hiro does not support static linking against $(hiro) on Windows)
     endif
 
+    hiro.flags = $(flags.cpp) $(if $(findstring g++,$(compiler)),-Wno-deprecated-declarations)
+
     ifeq ($(hiro),gtk2)
-      hiro.flags   = $(flags.cpp) -DHIRO_GTK=2 $(shell $(pkg_config) --cflags gtk+-2.0) -Wno-deprecated-declarations
+      hiro.flags  += -DHIRO_GTK=2 $(shell $(pkg_config) --cflags gtk+-2.0)
       hiro.options = $(shell $(pkg_config) --libs gtk+-2.0)
     else ifeq ($(hiro),gtk3)
-      hiro.flags   = $(flags.cpp) -DHIRO_GTK=3 $(shell $(pkg_config) --cflags gtk+-3.0) -Wno-deprecated-declarations
+      hiro.flags  += -DHIRO_GTK=3 $(shell $(pkg_config) --cflags gtk+-3.0)
       hiro.options = $(shell $(pkg_config) --libs gtk+-3.0)
     else ifeq ($(hiro),qt5)
       moc = $(shell $(pkg_config) --variable=host_bins Qt5Core)/moc
-      hiro.flags   = $(flags.cpp) -DHIRO_QT=5 $(shell $(pkg_config) --cflags Qt5Core Qt5Gui Qt5Widgets) -Wno-deprecated-declarations
+      hiro.flags  += -DHIRO_QT=5 $(shell $(pkg_config) --cflags Qt5Core Qt5Gui Qt5Widgets)
       hiro.options = $(shell $(pkg_config) --libs Qt5Core Qt5Gui Qt5Widgets)
     else
       $(error unrecognized hiro backend $(hiro))
