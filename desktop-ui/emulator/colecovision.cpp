@@ -19,9 +19,31 @@ ColecoVision::ColecoVision() {
     device.digital("Down",  virtualPorts[id].pad.down);
     device.digital("Left",  virtualPorts[id].pad.left);
     device.digital("Right", virtualPorts[id].pad.right);
-    device.digital("L",     virtualPorts[id].pad.south);
-    device.digital("R",     virtualPorts[id].pad.east);
+    device.digital("L",     virtualPorts[id].pad.south); // F1
+    device.digital("R",     virtualPorts[id].pad.east); // F2
     device.digital("1",     virtualPorts[id].pad.west);
+    device.digital("2",     virtualPorts[id].pad.north);
+    device.digital("3",     virtualPorts[id].pad.l_bumper);
+    device.digital("4",     virtualPorts[id].pad.l_trigger);
+    device.digital("5",     virtualPorts[id].pad.r_bumper);
+    device.digital("6",     virtualPorts[id].pad.r_trigger);
+    device.digital("7",     virtualPorts[id].pad.lstick_click);
+    device.digital("8",     virtualPorts[id].pad.rstick_click);
+    device.digital("9",     virtualPorts[id].pad.rstick_down);
+    device.digital("0",     virtualPorts[id].pad.rstick_right);
+    device.digital("*",     virtualPorts[id].pad.select);
+    device.digital("#",     virtualPorts[id].pad.start);
+    port.append(device); }
+    
+  { InputDevice device{"SuperActionController"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("L",     virtualPorts[id].pad.south); // F1
+    device.digital("R",     virtualPorts[id].pad.east); // F2
+    device.digital("Y",     virtualPorts[id].pad.lstick_down); // F3
+    device.digital("X",     virtualPorts[id].pad.lstick_up); // F4
     device.digital("2",     virtualPorts[id].pad.north);
     device.digital("3",     virtualPorts[id].pad.l_bumper);
     device.digital("4",     virtualPorts[id].pad.l_trigger);
