@@ -19,7 +19,7 @@ auto pBrowserWindow::directory(BrowserWindow::State& state) -> string {
   string name;
 
   GtkWidget* dialog = gtk_file_chooser_dialog_new(
-    state.title ? state.title : "Select Directory",
+    state.title ? state.title : "Select Directory"_s,
     state.parent && state.parent->self() ? GTK_WINDOW(state.parent->self()->widget) : (GtkWindow*)nullptr,
     GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
     GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -44,7 +44,7 @@ auto pBrowserWindow::open(BrowserWindow::State& state) -> string {
   string name;
 
   GtkWidget* dialog = gtk_file_chooser_dialog_new(
-    state.title ? state.title : "Open File",
+    state.title ? state.title : "Open File"_s,
     state.parent && state.parent->self() ? GTK_WINDOW(state.parent->self()->widget) : (GtkWindow*)nullptr,
     GTK_FILE_CHOOSER_ACTION_OPEN,
     GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -69,7 +69,7 @@ auto pBrowserWindow::save(BrowserWindow::State& state) -> string {
   string name;
 
   GtkWidget* dialog = gtk_file_chooser_dialog_new(
-    state.title ? state.title : "Save File",
+    state.title ? state.title : "Save File"_s,
     state.parent && state.parent->self() ? GTK_WINDOW(state.parent->self()->widget) : (GtkWindow*)nullptr,
     GTK_FILE_CHOOSER_ACTION_SAVE,
     GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,

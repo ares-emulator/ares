@@ -417,7 +417,7 @@ auto pWindow::setResizable(bool resizable) -> void {
 }
 
 auto pWindow::setTitle(const string& title) -> void {
-  gtk_window_set_title(GTK_WINDOW(widget), title ? title : " ");
+  gtk_window_set_title(GTK_WINDOW(widget), title ? title : " "_s);
 }
 
 auto pWindow::setVisible(bool visible) -> void {
