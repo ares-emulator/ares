@@ -1,8 +1,4 @@
-#if defined(PLATFORM_MACOS)
 #define ELLIPSIS "\u2026"
-#else
-#define ELLIPSIS " ..."
-#endif
 
 auto PathSettings::construct() -> void {
   setCollapsible();
