@@ -2,11 +2,7 @@
 namespace Instances { Instance<Presentation> presentation; }
 Presentation& presentation = Instances::presentation();
 
-#if defined(PLATFORM_MACOS)
 #define ELLIPSIS "\u2026"
-#else
-#define ELLIPSIS " ..."
-#endif
 
 Presentation::Presentation() {
   loadMenu.setText("Load");
