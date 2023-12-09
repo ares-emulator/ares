@@ -18,6 +18,7 @@ ifeq ($(ruby),)
     ruby += video.cgl
     ruby += audio.openal
     ruby += input.quartz #input.carbon
+    ruby += input.sdl
   else ifeq ($(platform),linux)
     pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
     ruby += video.glx video.glx2 video.xshm
