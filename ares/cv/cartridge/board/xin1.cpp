@@ -12,7 +12,7 @@ struct xin1 : Interface {
   auto unload() -> void override {}
 
   auto read(n16 address) -> n8 override {
-	if(address >= 0x7fc0) return bank = (address - 0x7fc0) % bankCount;
+    if(address >= 0x7fc0) return bank = (address - 0x7fc0) % bankCount;
     return rom.read(address + (bank * 0x8000));
   }
 
