@@ -15,7 +15,7 @@ struct coleco : Interface {
   }
 
   auto write(n16 address, n8 data) -> void override {
-	  return;
+	return;
   }
 
   auto power() -> void override {}

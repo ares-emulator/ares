@@ -4,6 +4,7 @@ struct xin1 : Interface {
 
   auto load() -> void override {
     Interface::load(rom, "program.rom");
+    bankCount = rom.size() / 0x8000;
   }
 
   auto save() -> void override {}
@@ -11,25 +12,23 @@ struct xin1 : Interface {
   auto unload() -> void override {}
 
   auto read(n16 address) -> n8 override {
-	if (address >= 0x7fc0){
-		bank = (address - 0x7fc0) % bankcount;
-	}
-    return rom.read( address + (bank*0x8000) );
+	if(address >= 0x7fc0) return bank = (address - 0x7fc0) % bankCount;
+    return rom.read(address + (bank * 0x8000));
   }
 
   auto write(n16 address, n8 data) -> void override {
-	  return;
+    return;
   }
 
   auto power() -> void override {
-	bankcount = rom.size() / 0x8000;
-    bank = bankcount-1;
+    bank = bankCount - 1;
   }
 
   auto serialize(serializer& s) -> void override {
     s(bank);
+    s(bankCount);
   }
 
   n16 bank;
-  n16 bankcount;
+  n16 bankCount;
 };

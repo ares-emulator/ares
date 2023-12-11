@@ -40,21 +40,21 @@ auto ColecoVision::analyze(vector<u8>& rom) -> string {
   string hash   = Hash::SHA256(rom).digest();
   string board  = "coleco";
   
-  // megacart (homebrew)
-  if( rom.size() > 0x8000 ) { // aka: 32k or higher
+  //megacart (homebrew)
+  if(rom.size() > 0x8000)
     board  = "megacart";
   }
-  
-  // 31 in 1
+
+  //31 in 1
   if(hash == "8c0510916f990a69b4699d70d47e09a13e9da12a29109332964e77000a5cf875") {
     board  = "xin1";
   }
+
   // 63 in 1
   if(hash == "74138e164b0e60426a9dcc71eb37e11be60f7d8794f5aaa6e6371b2475dace1a") {
     board  = "xin1";
   }
-	
-	
+
   string s;
   s += "game\n";
   s +={"  name:  ", Medium::name(location), "\n"};
