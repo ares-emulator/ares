@@ -11,17 +11,17 @@ struct ControllerPort {
   auto connect(Node::Peripheral) -> void;
   auto disconnect() -> void { device.reset(); }
 
+  auto update() -> void;
+
   auto readControl() -> n8 { return control; }
-  auto writeControl(n8 data) -> void { control = data; }
+  auto writeControl(n8 data) -> void { control = data; update(); }
 
   auto readData() -> n8 {
-    n8 data = device ? device->readData() : n8(~0);
-    return dataLatch = dataLatch & (0x80 | control) | data & ~(0x80 | control);
+    if(device) device->poll();
+    update();
+    return dataLines;
   }
-  auto writeData(n8 data) -> void {
-    dataLatch = dataLatch & ~(0x80 | control) | data & (0x80 | control);
-    if(device) return device->writeData(dataLatch);
-  }
+  auto writeData(n8 data) -> void { dataLatch = data; update(); }
 
   // TODO: Implement working serial transfers. This code is mostly placeholder.
 
@@ -57,6 +57,7 @@ protected:
   const string name;
   n8 control;  //d0-d6 = PC0-PC6 (0 = input; 1 = output); d7 = TH-INT enable
   n8 dataLatch;
+  n8 dataLines;
   n8 serialControl;
   n8 serialTxBuffer;
   n8 serialRxBuffer;

@@ -17,9 +17,15 @@
 struct Controller {
   Node::Peripheral node;
 
+  struct Data {
+    n8 value;
+    n8 mask;
+  };
+
   virtual ~Controller() = default;
 
-  virtual auto readData() -> n8 { return 0xff; }
+  virtual auto poll() -> void {}
+  virtual auto readData() -> Data { return {0x7f, 0x7f}; }
   virtual auto writeData(n8 data) -> void {}
 };
 

@@ -23,15 +23,13 @@ FightingPad::~FightingPad() {
 
 auto FightingPad::main() -> void {
   if(timeout) {
-    timeout--;
-  } else {
-    counter = 0;
+    if(!--timeout) counter = 0;
   }
   Thread::step(1);
   Thread::synchronize(cpu);
 }
 
-auto FightingPad::readData() -> n8 {
+auto FightingPad::poll() -> void {
   platform->input(up);
   platform->input(down);
   platform->input(left);
@@ -56,7 +54,9 @@ auto FightingPad::readData() -> n8 {
   } else if(!xHold) {
     xHold = 1, swap(leftLatch, rightLatch);
   }
+}
 
+auto FightingPad::readData() -> Data {
   n6 data;
 
   if(select == 0) {
@@ -82,8 +82,6 @@ auto FightingPad::readData() -> n8 {
       data.bit(1) = downLatch;
       data.bit(2) = leftLatch;
       data.bit(3) = rightLatch;
-      data.bit(4) = b->value();
-      data.bit(5) = c->value();
     }
 
     if(counter == 3) {
@@ -91,20 +89,21 @@ auto FightingPad::readData() -> n8 {
       data.bit(1) = y->value();
       data.bit(2) = x->value();
       data.bit(3) = mode->value();
-      data.bit(4,5) = 0;
     }
+
+    data.bit(4) = b->value();
+    data.bit(5) = c->value();
   }
 
   data = ~data;
-  return latch << 7 | select << 6 | data;
+  return {data, 0x3f};
 }
 
 auto FightingPad::writeData(n8 data) -> void {
   if(!select && data.bit(6)) {  //0->1 transition
-    if(++counter == 5) counter = 0;
+    if(counter < 4) ++counter;
+    timeout = 1600;  //~1.6ms
   }
 
   select = data.bit(6);
-  latch = data.bit(7);
-  timeout = 1600;  //~1.6ms
 }
