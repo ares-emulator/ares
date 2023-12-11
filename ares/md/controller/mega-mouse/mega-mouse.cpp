@@ -38,7 +38,6 @@ MegaMouse::MegaMouse(Node::Port parent) {
   t_data = 10 * timerfreq / 1000000;
 
   Thread::create(timerfreq, {&MegaMouse::main, this});
-  Thread::synchronize(cpu);
 }
 
 MegaMouse::~MegaMouse() {
@@ -68,7 +67,7 @@ auto MegaMouse::main() -> void {
   Thread::synchronize(cpu);
 }
 
-auto MegaMouse::readData() -> n8 {
+auto MegaMouse::readData() -> Data {
   n8 data;
 
   if (th) {
@@ -81,14 +80,15 @@ auto MegaMouse::readData() -> n8 {
   }
 
   data.bit(4) = tl;
-  data.bit(5) = tr;
-  data.bit(6) = th;
-  data.bit(7) = latch;
 
-  return data;
+  return {data, 0x1f};
 }
 
 auto MegaMouse::writeData(n8 data) -> void {
+  //todo: this check wouldn't be necessary if the logic below was correct.
+  //this function should only respond to level changes.
+  if(tr == data.bit(5) && th == data.bit(6)) return;
+
   // Falling TH
   if (!data.bit(6) && th) {
     // When TH falls low, make sure the second nibble is driven. The
@@ -142,6 +142,5 @@ auto MegaMouse::writeData(n8 data) -> void {
      timeout = t_handshake;
   }
 
-  latch = data.bit(7);
   th = data.bit(6);
 }

@@ -10,14 +10,13 @@ struct MegaMouse : Controller, Thread {
   ~MegaMouse();
 
   auto main() -> void;
-  auto readData() -> n8 override;
+  auto readData() -> Data override;
   auto writeData(n8 data) -> void override;
 
 private:
   n1  th = 1;
   n1  tr = 1;
   n1  tl = 1;
-  n1  latch;
   n8  index = 0;
   n4  status[10];
   s16 maxspeed = 255;
