@@ -41,7 +41,7 @@ auto ColecoVision::analyze(vector<u8>& rom) -> string {
   string board  = "coleco";
   
   //megacart (homebrew)
-  if(rom.size() > 0x8000)
+  if(rom.size() > 0x8000) {
     board  = "megacart";
   }
 
