@@ -212,7 +212,7 @@ auto CPU::readIO(n32 address) -> n8 {
 
   //IME
   case 0x0400'0208: return irq.ime;
-  case 0x0400'0209: return 0x0;
+  case 0x0400'0209: return 0;
   
   //zero
   case 0x0400'020a: return 0;
@@ -220,7 +220,7 @@ auto CPU::readIO(n32 address) -> n8 {
 
   //POSTFLG + HALTCNT
   case 0x0400'0300: return context.booted;
-  case 0x0400'0301: return 0x0;
+  case 0x0400'0301: return 0;
   
   //zero
   case 0x0400'0302: return 0;
