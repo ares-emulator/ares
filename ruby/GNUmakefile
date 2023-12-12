@@ -11,14 +11,18 @@ ifeq ($(ruby),)
     # TODO: Check presence of libSDL
   else
     pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
-    ruby += $(call pkg_check,sdl2,input.sdl)
-    ruby += $(call pkg_check,sdl2,audio.sdl)
+    ifeq ($(sdl2),true)
+      ruby += $(call pkg_check,sdl2,input.sdl)
+      ruby += $(call pkg_check,sdl2,audio.sdl)
+    endif
   endif
   else ifeq ($(platform),macos)
     ruby += video.cgl
     ruby += audio.openal
     ruby += input.quartz #input.carbon
-    ruby += input.sdl
+    ifeq ($(sdl2),true)
+      ruby += input.sdl
+    endif
   else ifeq ($(platform),linux)
     pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
     ruby += video.glx video.glx2 video.xshm
@@ -30,8 +34,10 @@ ifeq ($(ruby),)
     ruby += $(call pkg_check,ao,audio.ao)
     ruby += input.xlib
     ruby += $(call pkg_check,libudev,input.udev)
-    ruby += $(call pkg_check,sdl2,input.sdl)
-    ruby += $(call pkg_check,sdl2,audio.sdl)
+    ifeq ($(sdl2),true)
+      ruby += $(call pkg_check,sdl2,input.sdl)
+      ruby += $(call pkg_check,sdl2,audio.sdl)
+    endif
   else ifeq ($(platform),bsd)
     pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
     ruby += video.glx video.glx2 video.xshm
@@ -42,8 +48,10 @@ ifeq ($(ruby),)
     ruby += $(call pkg_check,libpulse-simple,audio.pulseaudiosimple)
     ruby += $(call pkg_check,ao,audio.ao)
     ruby += input.uhid input.xlib
-    ruby += $(call pkg_check,sdl2,input.sdl)
-    ruby += $(call pkg_check,sdl2,audio.sdl)
+    ifeq ($(sdl2),true)
+      ruby += $(call pkg_check,sdl2,input.sdl)
+      ruby += $(call pkg_check,sdl2,audio.sdl)
+    endif
   endif
 endif
 
