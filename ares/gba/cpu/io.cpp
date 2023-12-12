@@ -144,6 +144,10 @@ auto CPU::readIO(n32 address) -> n8 {
     joybus.siIRQEnable << 0
   | joybus.mode        << 6
   );
+  
+  //zero
+  case 0x0400'0136: return 0;
+  case 0x0400'0137: return 0;
 
   //JOYCNT
   case 0x0400'0140: return (
@@ -201,14 +205,26 @@ auto CPU::readIO(n32 address) -> n8 {
   | wait.prefetch << 6
   | wait.gameType << 7
   );
+  
+  //zero
+  case 0x0400'0206: return 0;
+  case 0x0400'0207: return 0;
 
   //IME
   case 0x0400'0208: return irq.ime;
   case 0x0400'0209: return 0;
+  
+  //zero
+  case 0x0400'020a: return 0;
+  case 0x0400'020b: return 0;
 
   //POSTFLG + HALTCNT
   case 0x0400'0300: return context.booted;
   case 0x0400'0301: return 0;
+  
+  //zero
+  case 0x0400'0302: return 0;
+  case 0x0400'0303: return 0;
 
   //MEMCNT_L
   case 0x0400'0800: return (

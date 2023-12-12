@@ -126,9 +126,9 @@ auto CPU::power() -> void {
   for(u32 n = 0x100; n <= 0x10f; n++) bus.io[n] = this;  //Timers
   for(u32 n = 0x120; n <= 0x12b; n++) bus.io[n] = this;  //Serial
   for(u32 n = 0x130; n <= 0x133; n++) bus.io[n] = this;  //Keypad
-  for(u32 n = 0x134; n <= 0x159; n++) bus.io[n] = this;  //Serial
-  for(u32 n = 0x200; n <= 0x209; n++) bus.io[n] = this;  //System
-  for(u32 n = 0x300; n <= 0x301; n++) bus.io[n] = this;  //System
+  for(u32 n = 0x134; n <= 0x15b; n++) bus.io[n] = this;  //Serial
+  for(u32 n = 0x200; n <= 0x20b; n++) bus.io[n] = this;  //System
+  for(u32 n = 0x300; n <= 0x303; n++) bus.io[n] = this;  //System
   //0x080-0x083 mirrored via gba/memory/memory.cpp        //System
 }
 
