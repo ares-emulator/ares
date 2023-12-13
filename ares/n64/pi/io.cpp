@@ -1,5 +1,5 @@
 auto PI::ioRead(u32 address) -> u32 {
-  address = (address & 0xfffff) >> 2;
+  address = (address & 0x3f) >> 2;
   n32 data;
 
   if(address == 0) {
@@ -75,7 +75,7 @@ auto PI::ioRead(u32 address) -> u32 {
 }
 
 auto PI::ioWrite(u32 address, u32 data_) -> void {
-  address = (address & 0xfffff) >> 2;
+  address = (address & 0x3f) >> 2;
   n32 data = data_;
 
   //only PI_STATUS can be written while PI is busy
