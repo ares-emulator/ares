@@ -6,7 +6,8 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
     return io.busLatch;
   }
   thread.step(250 * 2);
-  return busRead<Word>(address);
+  io.busLatch = busRead<Word>(address);
+  return io.busLatch;
 }
 
 template <u32 Size>

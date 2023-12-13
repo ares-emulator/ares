@@ -70,6 +70,14 @@ auto PI::ioRead(u32 address) -> u32 {
     data.bit(0,7) = bsd2.releaseDuration;
   }
 
+  if(address == 13) {
+    data.bit(0,31) = io.busLatch;
+  }
+
+  if(address == 14) {
+    data.bit(0,31) = io.busLatch;
+  }
+
   debugger.io(Read, address, data);
   return data;
 }
