@@ -7,7 +7,7 @@ auto RSP::readWord(u32 address, Thread& thread) -> u32 {
 }
 
 auto RSP::ioRead(u32 address, Thread &thread) -> u32 {
-  address = (address & 0x3ffff) >> 2;
+  address = (address & 0x1f) >> 2;
   n32 data;
 
   if(address == 0) {
@@ -76,8 +76,7 @@ auto RSP::writeWord(u32 address, u32 data, Thread& thread) -> void {
 }
 
 auto RSP::ioWrite(u32 address, u32 data_, Thread& thread) -> void {
-
-  address = (address & 0x3ffff) >> 2;
+  address = (address & 0x1f) >> 2;
   n32 data = data_;
 
   if(address == 0) {
@@ -162,7 +161,7 @@ auto RSP::ioWrite(u32 address, u32 data_, Thread& thread) -> void {
 }
 
 auto RSP::Status::readWord(u32 address, Thread& thread) -> u32 {
-  address = (address & 0x7ffff) >> 2;
+  address = (address & 0x1f) >> 2;
   n32 data;
 
   if(address == 0) {
@@ -183,7 +182,7 @@ auto RSP::Status::readWord(u32 address, Thread& thread) -> u32 {
 }
 
 auto RSP::Status::writeWord(u32 address, u32 data_, Thread& thread) -> void {
-  address = (address & 0x7ffff) >> 2;
+  address = (address & 0x1f) >> 2;
   n32 data = data_;
 
   if(address == 0) {
