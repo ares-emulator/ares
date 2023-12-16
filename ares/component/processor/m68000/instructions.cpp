@@ -197,9 +197,9 @@ template<u32 Size> auto M68000::instructionASR(n4 count, DataRegister with) -> v
 
 template<u32 Size> auto M68000::instructionASR(DataRegister from, DataRegister with) -> void {
   auto count = read<Long>(from) & 63;
+  prefetch();
   idle((Size != Long ? 2 : 4) + count * 2);
   auto result = ASR<Size>(read<Size>(with), count);
-  prefetch();
   write<Size>(with, result);
 }
 
