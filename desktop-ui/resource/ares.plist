@@ -18,6 +18,10 @@
   <true/>
   <key>NSSupportsAutomaticGraphicsSwitching</key>
   <true/>
+  <key>LSMinimumSystemVersion</key>
+  <string>10.9</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © ares Team and Contributors.</string>
   <key>CFBundleDocumentTypes</key>
   <array>
     <dict>
