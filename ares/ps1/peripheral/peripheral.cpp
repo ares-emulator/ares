@@ -55,6 +55,11 @@ auto Peripheral::power(bool reset) -> void {
   Thread::reset();
   Memory::Interface::setWaitStates(4, 4, 4);
   io = {};
+  io.transmitStarted = 1;
+  io.transmitFinished = 1;
+  io.acknowledgeAsserted = 0;
+  io.baudrateReloadFactor = 1;
+  io.baudrateReloadValue = 0x88;
 }
 
 }

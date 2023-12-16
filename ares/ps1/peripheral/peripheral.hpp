@@ -42,9 +42,9 @@ struct Peripheral : Thread, Memory::Interface {
     n8 transmitData;
 
     //JOY_STAT
-    n1 transmitStarted = 1;
-    n1 transmitFinished = 1;
-    n1 acknowledgeAsserted = 0;
+    n1 transmitStarted;
+    n1 transmitFinished;
+    n1 acknowledgeAsserted;
     n1 parityError;
     n1 interruptRequest;
 
