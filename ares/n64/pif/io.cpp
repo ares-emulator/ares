@@ -23,7 +23,8 @@ auto PIF::readWord(u32 address) -> u32 {
 
 auto PIF::writeWord(u32 address, u32 data) -> void {
   writeInt(address, data);  
-  return intA(Write, Size4);
+  intA(Write, Size4);
+  mainHLE();
 }
 
 auto PIF::dmaRead(u32 address, u32 ramAddress) -> void {
@@ -40,4 +41,5 @@ auto PIF::dmaWrite(u32 address, u32 ramAddress) -> void {
     writeInt(address + offset, data);
   }
   intA(Write, Size64);
+  mainHLE();
 }
