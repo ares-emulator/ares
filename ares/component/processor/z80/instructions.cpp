@@ -290,6 +290,7 @@ auto Z80::instructionINDR() -> void { Q = 1;
   if(!B) return;
   wait(5);
   PC -= 2;
+  WZ = PC + 1;
   XF = PC.bit(11);
   YF = PC.bit(13);
 
@@ -327,6 +328,7 @@ auto Z80::instructionINIR() -> void { Q = 1;
   if(!B) return;
   wait(5);
   PC -= 2;
+  WZ = PC + 1;
   XF = PC.bit(11);
   YF = PC.bit(13);
 
@@ -516,6 +518,7 @@ auto Z80::instructionOTDR() -> void { Q = 1;
   if(!B) return;
   wait(5);
   PC -= 2;
+  WZ = PC + 1;
   XF = PC.bit(11);
   YF = PC.bit(13);
 
@@ -537,6 +540,7 @@ auto Z80::instructionOTIR() -> void { Q = 1;
   if(!B) return;
   wait(5);
   PC -= 2;
+  WZ = PC + 1;
   XF = PC.bit(11);
   YF = PC.bit(13);
 
