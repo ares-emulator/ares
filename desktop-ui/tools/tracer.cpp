@@ -3,8 +3,8 @@ auto TraceLogger::construct() -> void {
   setVisible(false);
 
   tracerLabel.setText("Trace Logger").setFont(Font().setBold());
-  tracerList.onToggle([&](auto cell) {
-    if(auto item = tracerList.selected()) {
+  tracerList.onToggle([&](TableViewCell cell) {
+    if(auto item = cell.parent()) {
       if(auto tracer = item.attribute<ares::Node::Debugger::Tracer::Tracer>("tracer")) {
         if(cell.offset() == 1) tracer->setPrefix(cell.checked());
         if(cell.offset() == 2) tracer->setTerminal(cell.checked());
