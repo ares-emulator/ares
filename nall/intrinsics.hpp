@@ -190,6 +190,7 @@ namespace nall {
     static constexpr bool amd64 = 0;
     static constexpr bool arm64 = 0;
     static constexpr bool arm32 = 0;
+    static constexpr bool loong64 = 0;
     static constexpr bool ppc64 = 0;
     static constexpr bool ppc32 = 0;
     static constexpr bool rv64  = 0;
@@ -205,6 +206,7 @@ namespace nall {
     static constexpr bool amd64 = 1;
     static constexpr bool arm64 = 0;
     static constexpr bool arm32 = 0;
+    static constexpr bool loong64 = 0;
     static constexpr bool ppc64 = 0;
     static constexpr bool ppc32 = 0;
     static constexpr bool rv64  = 0;
@@ -220,6 +222,7 @@ namespace nall {
     static constexpr bool amd64 = 0;
     static constexpr bool arm64 = 1;
     static constexpr bool arm32 = 0;
+    static constexpr bool loong64 = 0;
     static constexpr bool ppc64 = 0;
     static constexpr bool ppc32 = 0;
     static constexpr bool rv64  = 0;
@@ -232,6 +235,20 @@ namespace nall {
     static constexpr bool amd64 = 0;
     static constexpr bool arm64 = 0;
     static constexpr bool arm32 = 1;
+    static constexpr bool loong64 = 0;
+    static constexpr bool ppc64 = 0;
+    static constexpr bool ppc32 = 0;
+    static constexpr bool rv64  = 0;
+    static constexpr bool rv32  = 0;
+  };
+#elif defined(__loongarch64)
+  #define ARCHITECTURE_LOONG64
+  struct Architecture {
+    static constexpr bool x86   = 0;
+    static constexpr bool amd64 = 0;
+    static constexpr bool arm64 = 0;
+    static constexpr bool arm32 = 0;
+    static constexpr bool loong64 = 1;
     static constexpr bool ppc64 = 0;
     static constexpr bool ppc32 = 0;
     static constexpr bool rv64  = 0;
@@ -244,6 +261,7 @@ namespace nall {
     static constexpr bool amd64 = 0;
     static constexpr bool arm64 = 0;
     static constexpr bool arm32 = 0;
+    static constexpr bool loong64 = 0;
     static constexpr bool ppc64 = 1;
     static constexpr bool ppc32 = 0;
     static constexpr bool rv64  = 0;
@@ -256,6 +274,7 @@ namespace nall {
     static constexpr bool amd64 = 0;
     static constexpr bool arm64 = 0;
     static constexpr bool arm32 = 0;
+    static constexpr bool loong64 = 0;
     static constexpr bool ppc64 = 0;
     static constexpr bool ppc32 = 1;
     static constexpr bool rv64  = 0;
@@ -268,6 +287,7 @@ namespace nall {
     static constexpr bool amd64 = 0;
     static constexpr bool arm64 = 0;
     static constexpr bool arm32 = 0;
+    static constexpr bool loong64 = 0;
     static constexpr bool ppc64 = 0;
     static constexpr bool ppc32 = 0;
     static constexpr bool rv64  = 1;
@@ -280,6 +300,7 @@ namespace nall {
     static constexpr bool amd64 = 0;
     static constexpr bool arm64 = 0;
     static constexpr bool arm32 = 0;
+    static constexpr bool loong64 = 0;
     static constexpr bool ppc64 = 0;
     static constexpr bool ppc32 = 0;
     static constexpr bool rv64  = 0;
