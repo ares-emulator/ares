@@ -42,6 +42,8 @@ struct Cartridge {
     Memory::Writable ram;  //unserialized
     Node::Debugger::Tracer::Notification tracer;
 
+    auto enabled() -> bool { return ram.size; }
+
     //isviewer.cpp
     auto messageChar(char c) -> void;
     auto readHalf(u32 address) -> u16;
