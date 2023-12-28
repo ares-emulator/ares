@@ -22,6 +22,10 @@ ifneq ($(filter $(arch),x86 amd64),)
   endif
 endif
 
+ifeq ($(platform),macos)
+  ares.dylibs :=
+endif
+
 libco.path := ../libco
 include $(libco.path)/GNUmakefile
 

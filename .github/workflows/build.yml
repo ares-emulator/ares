@@ -87,7 +87,7 @@ jobs:
         keychain-password: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
     - name: Checkout source code
       uses: actions/checkout@v2
-    - name: "macOS: recover cache"
+    - name: "macOS: recover MoltenVK cache"
       if: runner.os == 'macOS'
       uses: actions/cache@v3
       env:
@@ -95,12 +95,23 @@ jobs:
       with:
           path: thirdparty/MoltenVK/MoltenVK
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('thirdparty/MoltenVK/HEAD') }}
+    - name: "macOS: recover SDL cache"
+      if: runner.os == 'macOS'
+      uses: actions/cache@v3
+      env:
+          cache-name: sdl
+      with:
+          path: thirdparty/SDL/SDL
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('thirdparty/SDL/HEAD') }}
     - name: Install macOS Dependencies
       if: runner.os == 'macOS'
       run: |
-        brew install make ninja sdl2
+        brew install make ninja cmake
         pip install --no-input setuptools
         echo "MAKE=gmake" >> $GITHUB_ENV
+        pushd thirdparty/SDL
+        ./build-SDL.sh
+        popd
         pushd thirdparty/MoltenVK
         ./build-moltenvk.sh
         popd
@@ -114,7 +125,7 @@ jobs:
       run: ${MAKE:-make} -j4 -C desktop-ui build=optimized local=false compiler="${{ matrix.platform.compiler }}" windres="${{ matrix.platform.windres }}"
     - name: "macOS: Make universal app"
       if: runner.os == 'macOS'
-      run: scripts/macos-make-universal.sh build=optimized local=false sdl2=false
+      run: scripts/macos-make-universal.sh build=optimized local=false
       env:
         MAKEFLAGS: -j3
         MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
