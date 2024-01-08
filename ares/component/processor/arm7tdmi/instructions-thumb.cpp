@@ -126,17 +126,23 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
 (n8 list, n3 n, n1 mode) -> void {
   n32 rn = r(n);
 
+  u32 sequential = Nonsequential;
   for(u32 m : range(8)) {
     if(!list.bit(m)) continue;
     switch(mode) {
-    case 0: write(Word | Nonsequential, rn, r(m)); break;  //STMIA
-    case 1: r(m) = read(Word | Nonsequential, rn); break;  //LDMIA
+    case 0: write(Word | sequential, rn, r(m)); break;  //STMIA
+    case 1: r(m) = read(Word | sequential, rn); break;  //LDMIA
     }
     rn += 4;
+    sequential = Sequential;
   }
 
   if(mode == 0 || !list.bit(n)) r(n) = rn;
-  if(mode == 1) idle();
+  if(mode == 1) {
+    idle();
+  } else {
+    pipeline.nonsequential = true;
+  }
 }
 
 auto ARM7TDMI::thumbInstructionMoveRegisterOffset
