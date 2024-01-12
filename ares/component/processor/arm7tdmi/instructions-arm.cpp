@@ -1,6 +1,4 @@
-auto ARM7TDMI::armALU(n4 mode, n4 d, n4 n, n32 rm) -> void {
-  n32 rn = r(n);
-
+auto ARM7TDMI::armALU(n4 mode, n4 d, n32 rn, n32 rm) -> void {
   switch(mode) {
   case  0: r(d) = BIT(rn & rm); break;  //AND
   case  1: r(d) = BIT(rn ^ rm); break;  //EOR
@@ -64,14 +62,16 @@ auto ARM7TDMI::armInstructionBranchExchangeRegister
 
 auto ARM7TDMI::armInstructionDataImmediate
 (n8 immediate, n4 shift, n4 d, n4 n, n1 save, n4 mode) -> void {
+  n32 rn = r(n);
   n32 data = immediate;
   carry = cpsr().c;
   if(shift) data = ROR(data, shift << 1);
-  armALU(mode, d, n, data);
+  armALU(mode, d, rn, data);
 }
 
 auto ARM7TDMI::armInstructionDataImmediateShift
 (n4 m, n2 type, n5 shift, n4 d, n4 n, n1 save, n4 mode) -> void {
+  n32 rn = r(n);
   n32 rm = r(m);
   carry = cpsr().c;
 
@@ -82,12 +82,13 @@ auto ARM7TDMI::armInstructionDataImmediateShift
   case 3: rm = shift ? ROR(rm, shift) : RRX(rm); break;
   }
 
-  armALU(mode, d, n, rm);
+  armALU(mode, d, rn, rm);
 }
 
 auto ARM7TDMI::armInstructionDataRegisterShift
 (n4 m, n2 type, n4 s, n4 d, n4 n, n1 save, n4 mode) -> void {
   n8  rs = r(s) + (s == 15 ? 4 : 0);
+  n32 rn = r(n) + (n == 15 ? 4 : 0);
   n32 rm = r(m) + (m == 15 ? 4 : 0);
   carry = cpsr().c;
 
@@ -98,7 +99,7 @@ auto ARM7TDMI::armInstructionDataRegisterShift
   case 3: if(rs) rm = ROR(rm, rs & 31 ? u32(rs & 31) : 32); break;
   }
 
-  armALU(mode, d, n, rm);
+  armALU(mode, d, rn, rm);
 }
 
 auto ARM7TDMI::armInstructionLoadImmediate
@@ -167,7 +168,7 @@ auto ARM7TDMI::armInstructionMoveHalfRegister
 auto ARM7TDMI::armInstructionMoveImmediateOffset
 (n12 immediate, n4 d, n4 n, n1 mode, n1 writeback, n1 byte, n1 up, n1 pre) -> void {
   n32 rn = r(n);
-  n32 rd = r(d);
+  n32 rd = r(d) + (d == 15 ? 4 : 0);
 
   if(pre == 1) rn = up ? rn + immediate : rn - immediate;
   if(mode == 1) rd = load((byte ? Byte : Word) | Nonsequential, rn);
@@ -201,7 +202,7 @@ auto ARM7TDMI::armInstructionMoveMultiple
   for(u32 m : range(16)) {
     if(!list.bit(m)) continue;
     if(mode == 1) r(m) = read(Word | sequential, rn);
-    if(mode == 0) write(Word | sequential, rn, r(m));
+    if(mode == 0) write(Word | sequential, rn, r(m) + (m == 15 ? 4 : 0));
     rn += 4;
     sequential = Sequential;
   }
