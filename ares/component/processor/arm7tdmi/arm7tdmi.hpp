@@ -62,7 +62,7 @@ struct ARM7TDMI {
   auto thumbInitialize() -> void;
 
   //instructions-arm.cpp
-  auto armALU(n4 mode, n4 target, n4 source, n32 data) -> void;
+  auto armALU(n4 mode, n4 target, n32 source, n32 data) -> void;
   auto armMoveToStatus(n4 field, n1 source, n32 data) -> void;
 
   auto armInstructionBranch(i24, n1) -> void;
