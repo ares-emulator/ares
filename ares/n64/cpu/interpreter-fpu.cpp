@@ -17,15 +17,35 @@ template<> auto CPU::fgr<s32>(u32 index) -> s32& {
   }
 }
 
+template<> auto CPU::fgr_src<s32>(u32 index) -> s32& {
+  if(scc.status.floatingPointMode) {
+    return fpu.r[index].s32;
+  } else {
+    return fpu.r[index & ~1].s32;
+  }
+}
+
+template<> auto CPU::fgr_dest<s32>(u32 index) -> s32& {
+  fpu.r[index].s32h = 0;
+  return fpu.r[index].s32;
+}
+
 template<> auto CPU::fgr<u32>(u32 index) -> u32& {
   return (u32&)fgr<s32>(index);
 }
 
 template<> auto CPU::fgr<f32>(u32 index) -> f32& {
+  return fpu.r[index].f32;
+}
+
+template<> auto CPU::fgr_dest<f32>(u32 index) -> f32& {
+  fpu.r[index].f32h = 0;
+  return fpu.r[index].f32;
+}
+
+template<> auto CPU::fgr_src<f32>(u32 index) -> f32& {
   if(scc.status.floatingPointMode) {
     return fpu.r[index].f32;
-  } else if(index & 1) {
-    return fpu.r[index & ~1].f32h;
   } else {
     return fpu.r[index & ~1].f32;
   }
@@ -39,11 +59,31 @@ template<> auto CPU::fgr<s64>(u32 index) -> s64& {
   }
 }
 
+template<> auto CPU::fgr_dest<s64>(u32 index) -> s64& {
+  return fpu.r[index].s64;
+}
+
+template<> auto CPU::fgr_src<s64>(u32 index) -> s64& {
+  return fgr<s64>(index);
+}
+
 template<> auto CPU::fgr<u64>(u32 index) -> u64& {
   return (u64&)fgr<s64>(index);
 }
 
+template<> auto CPU::fgr_src<u64>(u32 index) -> u64& {
+  return fgr<u64>(index);
+}
+
 template<> auto CPU::fgr<f64>(u32 index) -> f64& {
+  return fpu.r[index].f64;
+}
+
+template<> auto CPU::fgr_dest<f64>(u32 index) -> f64& {
+  return fgr<f64>(index);
+}
+
+template<> auto CPU::fgr_src<f64>(u32 index) -> f64& {
   if(scc.status.floatingPointMode) {
     return fpu.r[index].f64;
   } else {
@@ -364,8 +404,8 @@ auto CPU::fpuCheckInputConv<s64>(f64& f) -> bool {
 }
 
 #define CF fpu.csr.compare
-#define FD(type) fgr<type>(fd)
-#define FS(type) fgr<type>(fs)
+#define FD(type) fgr_dest<type>(fd)
+#define FS(type) fgr_src<type>(fs)
 #define FT(type) fgr<type>(ft)
 
 auto CPU::BC1(bool value, bool likely, s16 imm) -> void {
@@ -814,8 +854,7 @@ auto CPU::FFLOOR_W_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FMOV_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f32) = FS(f32);
+  return FMOV_D(fd, fs);
 }
 
 auto CPU::FMOV_D(u8 fd, u8 fs) -> void {
@@ -995,14 +1034,14 @@ auto CPU::LWC1(u8 ft, cr64& rs, s16 imm) -> void {
   if(auto data = read<Word>(rs.u64 + imm)) FT(u32) = *data;
 }
 
-auto CPU::MFC1(r64& rt, u8 fs) -> void {
+auto CPU::MFC1(r64& rt, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  rt.u64 = FS(s32);
+  rt.u64 = FT(s32);
 }
 
-auto CPU::MTC1(cr64& rt, u8 fs) -> void {
+auto CPU::MTC1(cr64& rt, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FS(s32) = rt.u32;
+  FT(s32) = rt.u32;
 }
 
 auto CPU::SDC1(u8 ft, cr64& rs, s16 imm) -> void {

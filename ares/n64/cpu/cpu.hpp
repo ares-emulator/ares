@@ -652,7 +652,7 @@ struct CPU : Thread {
 
     struct Coprocessor {
       static constexpr u8 revision = 0x00;
-      static constexpr u8 implementation = 0x0b;
+      static constexpr u8 implementation = 0x0a;
     } coprocessor;
 
     struct ControlStatus {
@@ -688,6 +688,8 @@ struct CPU : Thread {
   float_env fenv;
 
   template<typename T> auto fgr(u32) -> T&;
+  template<typename T> auto fgr_src(u32) -> T&;
+  template<typename T> auto fgr_dest(u32) -> T&;
   auto getControlRegisterFPU(n5) -> u32;
   auto setControlRegisterFPU(n5, n32) -> void;
   template<bool CVT> auto checkFPUExceptions() -> bool;
