@@ -2,6 +2,7 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
   if(address <= 0x046f'ffff) return ioRead(address);
 
   if (unlikely(io.ioBusy)) {
+    debug(unusual, "[PI::readWord] PI read to 0x", hex(address, 8L), " will not behave as expected because PI writing is in progress");
     thread.step(writeForceFinish() * 2);
     return io.busLatch;
   }
