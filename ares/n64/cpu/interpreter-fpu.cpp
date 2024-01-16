@@ -250,8 +250,9 @@ auto CPU::checkFPUExceptions() -> bool {
 
 #define CHECK_FPE_IMPL(type, res, operation, convert) \
   fenv.clearExcept(); \
-  type res = [&]() noinline -> type { return operation; }(); \
-  if (checkFPUExceptions<convert>()) return;
+  volatile type v##res = [&]() noinline -> type { return operation; }(); \
+  if (checkFPUExceptions<convert>()) return; \
+  type res = v##res;
 
 #define CHECK_FPE(type, res, operation)      CHECK_FPE_IMPL(type, res, operation, false)
 #define CHECK_FPE_CONV(type, res, operation) CHECK_FPE_IMPL(type, res, operation, true)
