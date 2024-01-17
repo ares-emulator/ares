@@ -71,16 +71,7 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
   for(auto& identifier : identifiers) {
     for(s32 n : range(rom.size() - 16)) {
       if(!memory::compare(&rom[n], identifier.data(), identifier.size())) {
-        auto p = (const char*)&rom[n + identifier.size()];
-        if(p[0] >= '0' && p[0] <= '9'
-        && p[1] >= '0' && p[1] <= '9'
-        && p[2] >= '0' && p[2] <= '9'
-        ) {
-          char text[16];
-          memory::copy(text, &rom[n], identifier.size() + 3);
-          text[identifier.size() + 3] = 0;
-          if(!list.find(text)) list.append(text);
-        }
+        if(!list.find(identifier.data())) list.append(identifier.data());
       }
     }
   }
