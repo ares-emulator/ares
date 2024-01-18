@@ -427,7 +427,6 @@ namespace nall::GDB {
 
     if(requestDisconnect) {
       requestDisconnect = false;
-      printf("GDB ending session, disconnecting client\n");
       if(!noAckMode) {
         sendText("+");
       }
@@ -500,11 +499,13 @@ namespace nall::GDB {
   }
 
   auto Server::onConnect() -> void {
+    printf("GDB client connected\n");
     resetClientData();
     hasActiveClient = true;
   }
 
   auto Server::onDisconnect() -> void {
+    printf("GDB client disconnected\n");
     hadHandshake = false;
     resetClientData();
   }

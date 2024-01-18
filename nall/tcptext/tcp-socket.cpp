@@ -212,7 +212,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
 
     while(!stopServer) 
     {
-      if(fdClient < 0) {
+      if(fdClient < 0 || wantKickClient) {
         std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
         continue;
       }
@@ -227,6 +227,13 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
 
         if constexpr(TCP_LOG_MESSAGES) {
           printf("%.4f | TCP <: [%d]: %.*s ([%d]: %.*s)\n", (f64)chrono::millisecond() / 1000.0, length, length, (char*)receiveBuffer.data(), length, length, (char*)packet);
+        }
+      } else if(length == 0) {
+        disconnectClient();
+      } else {
+        if (errno != EAGAIN) {
+          printf("TCP server: error receiving data from client: %s\n", strerror(errno));
+          disconnectClient();
         }
       }
     }
