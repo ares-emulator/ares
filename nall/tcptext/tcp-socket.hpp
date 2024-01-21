@@ -27,7 +27,7 @@ class Socket {
 
     auto disconnectClient() -> void;
 
-    auto isStarted() const -> bool { return fdServer >= 0; }
+    auto isStarted() const -> bool { return serverRunning; }
     auto hasClient() const -> bool { return fdClient >= 0; }
 
     auto getURL(u32 port, bool useIPv4) const -> string;

@@ -70,92 +70,105 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
   auto threadServer = std::thread([this, port, useIPv4]() {
     serverRunning = true;
 
-    fdServer = socket(useIPv4 ? AF_INET : AF_INET6, SOCK_STREAM, 0);  
-    if(fdServer < 0) {
-      serverRunning = false;
-      return;
-    }
+    while (!stopServer) {
+      fdServer = socket(useIPv4 ? AF_INET : AF_INET6, SOCK_STREAM, 0);  
+      if(fdServer < 0)
+        break;
 
-    {
-      s32 valueOn = 1;
-      #if defined(SO_NOSIGPIPE)  //BSD, OSX
-        setsockopt(fdServer, SOL_SOCKET, SO_NOSIGPIPE, &valueOn, sizeof(s32));
-      #endif
-
-      #if defined(SO_REUSEADDR)  //BSD, Linux, OSX
-        setsockopt(fdServer, SOL_SOCKET, SO_REUSEADDR, &valueOn, sizeof(s32));
-      #endif
-
-      #if defined(SO_REUSEPORT)  //BSD, OSX
-        setsockopt(fdServer, SOL_SOCKET, SO_REUSEPORT, &valueOn, sizeof(s32));
-      #endif
-
-      #if defined(TCP_NODELAY)
-        setsockopt(fdServer, IPPROTO_TCP, TCP_NODELAY, &valueOn, sizeof(s32));
-      #endif
-
-      if(!socketSetBlockingMode(fdServer, true)) {
-        print("TCP: failed to set to blocking mode!\n");
-      }
-
-      #if defined(SO_RCVTIMEO)
-        #if defined(PLATFORM_WINDOWS)
-          DWORD rcvTimeMs = 1000 * RECEIVE_TIMEOUT_SEC;
-          setsockopt(fdServer, SOL_SOCKET, SO_RCVTIMEO, &rcvTimeMs, sizeof(rcvTimeMs));
-        #else
-          struct timeval rcvtimeo;
-          rcvtimeo.tv_sec  = RECEIVE_TIMEOUT_SEC;
-          rcvtimeo.tv_usec = 0;
-          setsockopt(fdServer, SOL_SOCKET, SO_RCVTIMEO, &rcvtimeo, sizeof(rcvtimeo));
+      {
+        s32 valueOn = 1;
+        #if defined(SO_NOSIGPIPE)  //BSD, OSX
+          setsockopt(fdServer, SOL_SOCKET, SO_NOSIGPIPE, &valueOn, sizeof(s32));
         #endif
-      #endif
-    }
 
-    s32 bindRes;
-    if(useIPv4) {
-      sockaddr_in serverAddrV4{};
-      serverAddrV4.sin_family = AF_INET;
-      serverAddrV4.sin_addr.s_addr = htonl(INADDR_ANY);
-      serverAddrV4.sin_port = htons(port);
+        #if defined(SO_REUSEADDR)  //BSD, Linux, OSX
+          setsockopt(fdServer, SOL_SOCKET, SO_REUSEADDR, &valueOn, sizeof(s32));
+        #endif
 
-      bindRes = ::bind(fdServer, (sockaddr*)&serverAddrV4, sizeof(serverAddrV4)) < 0;
-    } else {
-      sockaddr_in6 serverAddrV6{};
-      serverAddrV6.sin6_family = AF_INET6;
-      serverAddrV6.sin6_addr = in6addr_loopback;
-      serverAddrV6.sin6_port = htons(port);
+        #if defined(SO_REUSEPORT)  //BSD, OSX
+          setsockopt(fdServer, SOL_SOCKET, SO_REUSEPORT, &valueOn, sizeof(s32));
+        #endif
 
-      bindRes = ::bind(fdServer, (sockaddr*)&serverAddrV6, sizeof(serverAddrV6)) < 0;
-    }
+        #if defined(TCP_NODELAY)
+          setsockopt(fdServer, IPPROTO_TCP, TCP_NODELAY, &valueOn, sizeof(s32));
+        #endif
 
-    if(bindRes < 0 || listen(fdServer, 1) < 0) {
+        if(!socketSetBlockingMode(fdServer, true)) {
+          print("TCP: failed to set to blocking mode!\n");
+        }
+
+        #if defined(SO_RCVTIMEO)
+          #if defined(PLATFORM_WINDOWS)
+            DWORD rcvTimeMs = 1000 * RECEIVE_TIMEOUT_SEC;
+            setsockopt(fdServer, SOL_SOCKET, SO_RCVTIMEO, &rcvTimeMs, sizeof(rcvTimeMs));
+          #else
+            struct timeval rcvtimeo;
+            rcvtimeo.tv_sec  = RECEIVE_TIMEOUT_SEC;
+            rcvtimeo.tv_usec = 0;
+            setsockopt(fdServer, SOL_SOCKET, SO_RCVTIMEO, &rcvtimeo, sizeof(rcvtimeo));
+          #endif
+        #endif
+      }
+
+      s32 bindRes;
+      if(useIPv4) {
+        sockaddr_in serverAddrV4{};
+        serverAddrV4.sin_family = AF_INET;
+        serverAddrV4.sin_addr.s_addr = htonl(INADDR_ANY);
+        serverAddrV4.sin_port = htons(port);
+
+        bindRes = ::bind(fdServer, (sockaddr*)&serverAddrV4, sizeof(serverAddrV4)) < 0;
+      } else {
+        sockaddr_in6 serverAddrV6{};
+        serverAddrV6.sin6_family = AF_INET6;
+        serverAddrV6.sin6_addr = in6addr_loopback;
+        serverAddrV6.sin6_port = htons(port);
+
+        bindRes = ::bind(fdServer, (sockaddr*)&serverAddrV6, sizeof(serverAddrV6)) < 0;
+      }
+
+      if(bindRes < 0 || listen(fdServer, 1) < 0) {
         printf("error binding socket on port %d! (%s)\n", port, strerror(errno));
-        stopServer = true;
-    }
+        break;
+      }
 
-    while(!stopServer) 
-    {
       // scan for new connections
-      if(fdClient < 0) {
+      while(fdClient < 0) {
         fdClient = ::accept(fdServer, nullptr, nullptr);
+        if(fdClient < 0) {
+          if(errno != EAGAIN) {
+            if(!stopServer)
+              printf("error accepting connection! (%s)\n", strerror(errno));
+            break;
+          }
+          std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
+        }
       }
-      
-      // Kick client if we need to
-      if(fdClient >= 0 && wantKickClient) {
-        socketClose(fdClient);
-        fdClient = -1;
-        wantKickClient = false;
-        onDisconnect();
+      if (fdClient < 0) {
+        break;
       }
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
+      // close the server socket, we only want one client
+      socketClose(fdServer);
+      fdServer = -1;
+
+      while (!stopServer && fdClient >= 0) {
+        // Kick client if we need to
+        if(wantKickClient) {
+          socketClose(fdClient);
+          fdClient = -1;
+          wantKickClient = false;
+          onDisconnect();
+          break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
+      }
     }
     
     printf("Stopping TCP-server...\n");
 
     socketClose(fdClient);
-    socketClose(fdServer);
-    fdServer = -1;
     fdClient = -1;
 
     wantKickClient = false;
