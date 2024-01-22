@@ -14,7 +14,7 @@ auto locate(const string& name) -> string {
 
   // On macOS, also check the AppBundle Resource path
   #if defined(PLATFORM_MACOS)
-    location = {Path::program(), "../Resources/", name};
+    location = {Path::resources(), name};
     if(inode::exists(location)) return location;
   #endif
 
