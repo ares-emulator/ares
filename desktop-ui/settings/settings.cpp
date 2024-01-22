@@ -105,6 +105,7 @@ auto Settings::process(bool load) -> void {
   bind(natural, "Rewind/Frequency", rewind.frequency);
 
   bind(string,  "Paths/Home", paths.home);
+  bind(string,  "Paths/Firmware", paths.firmware);
   bind(string,  "Paths/Saves", paths.saves);
   bind(string,  "Paths/Screenshots", paths.screenshots);
   bind(string,  "Paths/Debugging", paths.debugging);
