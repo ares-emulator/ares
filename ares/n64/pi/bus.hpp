@@ -98,8 +98,6 @@ inline auto PI::busWrite(u32 address, u32 data) -> void {
     if(cartridge.isviewer.enabled()) {
       writeForceFinish(); //Debugging channel for homebrew, be gentle
       return cartridge.isviewer.write<Size>(address, data);      
-    } else if (!system.homebrewMode) {
-      debug(unhandled, "[PI::busWrite] attempt to write to ISViewer: enable homebrew mode in settings to enable ISViewer emulation");
     } else {
       debug(unhandled, "[PI::busWrite] attempt to write to ISViewer: ROM is too big so ISViewer is disabled");
     }
