@@ -13,12 +13,8 @@ auto CPU::DMA::transfer() -> void {
   mode |= latch.length() == length() ? Nonsequential : Sequential;
 
   if(mode & Nonsequential) {
-    if((source() & 0x0800'0000) && (target() & 0x0800'0000)) {
-      //ROM -> ROM transfer
-    } else {
-      cpu.idle();
-      cpu.idle();
-    }
+    cpu.idle();
+    cpu.idle();
   }
 
   if(latch.source() < 0x0200'0000) {
@@ -29,6 +25,14 @@ auto CPU::DMA::transfer() -> void {
     if(mode & Half) addr &= ~1;
     cpu.dmabus.data = cpu.get(mode, addr);
     if(mode & Half) cpu.dmabus.data |= cpu.dmabus.data << 16;
+  }
+
+  if(mode & Nonsequential) {
+    if((source() & 0x0800'0000) && (target() & 0x0800'0000)) {
+      //ROM -> ROM transfer
+      mode |= Sequential;
+      mode ^= Nonsequential;
+    }
   }
 
   if(latch.target() < 0x0200'0000) {
