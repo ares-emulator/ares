@@ -7,15 +7,15 @@ ifeq ($(ruby),)
     ruby += audio.wasapi audio.xaudio2 audio.directsound audio.waveout #audio.asio
     ruby += input.windows
 
-  ifeq ($(pkg_config),)
-    # TODO: Check presence of libSDL
-  else
-    pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
-    ifeq ($(sdl2),true)
-      ruby += $(call pkg_check,sdl2,input.sdl)
-      ruby += $(call pkg_check,sdl2,audio.sdl)
+    ifeq ($(pkg_config),)
+      # TODO: Check presence of libSDL
+    else
+      pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
+      ifeq ($(sdl2),true)
+        ruby += $(call pkg_check,sdl2,input.sdl)
+        ruby += $(call pkg_check,sdl2,audio.sdl)
+      endif
     endif
-  endif
   else ifeq ($(platform),macos)
     ruby += video.cgl
     ruby += audio.openal

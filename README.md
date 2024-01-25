@@ -34,7 +34,8 @@ ares supports additional audio drivers besides the ALSA drivers included above. 
 By default, GTK3 is used, but support for GTK2 is available. You will need to install the additional package `libgtk2.0-dev` as well as specifying the command line option `hiro=gtk2` at compile time.
 
 ###### SDL2 for input
-If you would like to use SDL for input, you will need to install the following the `libsdl2-dev` and `libsdl2-0.0` packages and perform a clean build of ares. You should then be able to select SDL for input in the Settings > Drivers menu.   
+If you would like to use SDL for input (e.g. for using a controller), you will need to install the `libsdl2-dev` and `libsdl2-2.0-0` packages and perform a clean build of ares.
+You should then be able to select SDL for input in the Settings > Drivers menu.
 
 ##### Building with clang
 
