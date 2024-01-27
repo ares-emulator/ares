@@ -52,7 +52,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   //prefetch.cpp
   auto prefetchSync(n32 address) -> void;
   auto prefetchStep(u32 clocks) -> void;
-  auto prefetchWait() -> void;
+  auto prefetchReset() -> void;
   auto prefetchRead() -> n16;
 
   //bus.cpp

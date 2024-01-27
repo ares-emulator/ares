@@ -18,11 +18,9 @@ auto CPU::prefetchStep(u32 clocks) -> void {
   }
 }
 
-auto CPU::prefetchWait() -> void {
-  if(!wait.prefetch || context.dmaActive || prefetch.full()) return;
-
-  prefetchStep(prefetch.wait);
-  prefetch.wait = _wait(Half | Nonsequential, prefetch.load);
+auto CPU::prefetchReset() -> void {
+  prefetch.addr = 0;
+  prefetch.load = 0;
 }
 
 auto CPU::prefetchRead() -> n16 {
