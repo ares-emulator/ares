@@ -99,8 +99,13 @@ private:
       u32 hats = SDL_JoystickNumHats(jp.handle) * 2;
       u32 buttons = SDL_JoystickNumButtons(jp.handle);
 
-      jp.hid->setVendorID(HID::Joypad::GenericVendorID);
-      jp.hid->setProductID(HID::Joypad::GenericProductID);
+      u16 vid = SDL_JoystickGetVendor(jp.handle);
+      u16 pid = SDL_JoystickGetProduct(jp.handle);
+      if(vid == 0) vid = HID::Joypad::GenericVendorID;
+      if(pid == 0) pid = HID::Joypad::GenericProductID;
+
+      jp.hid->setVendorID(vid);
+      jp.hid->setProductID(pid);
       jp.hid->setPathID(jp.id);
       for(u32 n : range(axes)) jp.hid->axes().append(n);
       for(u32 n : range(hats)) jp.hid->hats().append(n);
