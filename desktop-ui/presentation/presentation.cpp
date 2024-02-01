@@ -263,6 +263,10 @@ Presentation::Presentation() {
   setBackgroundColor({0, 0, 0});
   setAlignment(Alignment::Center);
 
+#if !defined(PLATFORM_WINDOWS)
+  setVisible();
+#endif
+
   #if defined(PLATFORM_MACOS)
   Application::Cocoa::onAbout([&] { aboutAction.doActivate(); });
   Application::Cocoa::onActivate([&] { setFocused(); });

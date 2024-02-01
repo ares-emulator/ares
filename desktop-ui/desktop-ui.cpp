@@ -151,7 +151,9 @@ auto nall::main(Arguments arguments) -> void {
 
   program.create();
   presentation.loadEmulators();
+#if defined(PLATFORM_WINDOWS)
   presentation.setVisible(true);
+#endif
   Application::onMain({&Program::main, &program});
   Application::run();
 
