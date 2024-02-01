@@ -151,6 +151,7 @@ auto nall::main(Arguments arguments) -> void {
 
   program.create();
   presentation.loadEmulators();
+  presentation.setVisible(true);
   Application::onMain({&Program::main, &program});
   Application::run();
 

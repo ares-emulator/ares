@@ -262,7 +262,6 @@ Presentation::Presentation() {
   setAssociatedFile();
   setBackgroundColor({0, 0, 0});
   setAlignment(Alignment::Center);
-  setVisible();
 
   #if defined(PLATFORM_MACOS)
   Application::Cocoa::onAbout([&] { aboutAction.doActivate(); });
@@ -329,7 +328,7 @@ auto Presentation::loadEmulators() -> void {
     auto entry = settings.recent.game[index];
     auto system = entry.split(";", 1L)(0);
     auto location = entry.split(";", 1L)(1);
-    if(inode::exists(location)) {  //remove missing games
+    if(location.length()) {  //remove missing games
       if(!recentGames.find(entry)) {  //remove duplicate entries
         recentGames.append(entry);
       }
@@ -353,6 +352,18 @@ auto Presentation::loadEmulators() -> void {
       item.setIconForFile(location);
       item.setText({Location::base(location).trimRight("/"), " (", system, ")"});
       item.onActivate([=] {
+        if(!inode::exists(location)) {
+          MessageDialog()
+            .setTitle("Error")
+            .setText({location, " does not exist"})
+            .setAlignment(presentation)
+            .error();
+
+          //remove the entry from the recent games list
+          settings.recent.game[index] = {};
+          loadEmulators();
+          return;
+        }
         for(auto& emulator : emulators) {
           if(emulator->name == system) {
             return (void)program.load(emulator, location);
