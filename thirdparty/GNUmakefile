@@ -11,6 +11,10 @@ libchdr.objects += lzma_alloc lzma_bra86 lzma_braia64 lzma_cpuarch lzma_delta lz
 libchdr.objects += lzma_86dec lzma_dec lcma_enc lzma_sort
 libchdr.objects += zlib_adler32 zlib_compress zlib_crc32 zlib_deflate zlib_infback zlib_inffast
 libchdr.objects += zlib_inflate zlib_inftrees zlib_trees zlib_uncompr zlib_zutil
+libchdr.objects += zstd_common_debug zstd_common_entropy_common zstd_common_error_private
+libchdr.objects += zstd_common_fse_decompress zstd_common_pool zstd_common_threading
+libchdr.objects += zstd_common_xxhash zstd_common_zstd_common zstd_decompress_huf_decompress
+libchdr.objects += zstd_decompress_zstd_ddict zstd_decompress_zstd_decompress zstd_decompress_zstd_decompress_block
 
 libchdr.objects := $(libchdr.objects:%=$(object.path)/%.o)
 
@@ -20,16 +24,16 @@ $(object.path)/libchdr_chd.o: $(libchdr.path)/src/libchdr_chd.c
 $(object.path)/libchdr_flac.o: $(libchdr.path)/src/libchdr_flac.c
 $(object.path)/libchdr_huffman.o: $(libchdr.path)/src/libchdr_huffman.c
 
-$(object.path)/lzma_alloc.o: $(libchdr.path)/deps/lzma-19.00/src/Alloc.c
-$(object.path)/lzma_bra86.o: $(libchdr.path)/deps/lzma-19.00/src/Bra86.c
-$(object.path)/lzma_braia64.o: $(libchdr.path)/deps/lzma-19.00/src/BraIA64.c
-$(object.path)/lzma_cpuarch.o: $(libchdr.path)/deps/lzma-19.00/src/CpuArch.c
-$(object.path)/lzma_delta.o: $(libchdr.path)/deps/lzma-19.00/src/Delta.c
-$(object.path)/lzma_lfind.o: $(libchdr.path)/deps/lzma-19.00/src/LzFind.c
-$(object.path)/lzma_86dec.o: $(libchdr.path)/deps/lzma-19.00/src/Lzma86Dec.c
-$(object.path)/lzma_dec.o: $(libchdr.path)/deps/lzma-19.00/src/LzmaDec.c
-$(object.path)/lcma_enc.o: $(libchdr.path)/deps/lzma-19.00/src/LzmaEnc.c
-$(object.path)/lzma_sort.o: $(libchdr.path)/deps/lzma-19.00/src/Sort.c
+$(object.path)/lzma_alloc.o: $(libchdr.path)/deps/lzma-22.01/src/Alloc.c
+$(object.path)/lzma_bra86.o: $(libchdr.path)/deps/lzma-22.01/src/Bra86.c
+$(object.path)/lzma_braia64.o: $(libchdr.path)/deps/lzma-22.01/src/BraIA64.c
+$(object.path)/lzma_cpuarch.o: $(libchdr.path)/deps/lzma-22.01/src/CpuArch.c
+$(object.path)/lzma_delta.o: $(libchdr.path)/deps/lzma-22.01/src/Delta.c
+$(object.path)/lzma_lfind.o: $(libchdr.path)/deps/lzma-22.01/src/LzFind.c
+$(object.path)/lzma_86dec.o: $(libchdr.path)/deps/lzma-22.01/src/Lzma86Dec.c
+$(object.path)/lzma_dec.o: $(libchdr.path)/deps/lzma-22.01/src/LzmaDec.c
+$(object.path)/lcma_enc.o: $(libchdr.path)/deps/lzma-22.01/src/LzmaEnc.c
+$(object.path)/lzma_sort.o: $(libchdr.path)/deps/lzma-22.01/src/Sort.c
 
 $(object.path)/zlib_adler32.o: $(libchdr.path)/deps/zlib-1.2.13/adler32.c
 $(object.path)/zlib_compress.o: $(libchdr.path)/deps/zlib-1.2.13/compress.c
@@ -43,9 +47,24 @@ $(object.path)/zlib_trees.o: $(libchdr.path)/deps/zlib-1.2.13/trees.c
 $(object.path)/zlib_uncompr.o: $(libchdr.path)/deps/zlib-1.2.13/uncompr.c
 $(object.path)/zlib_zutil.o: $(libchdr.path)/deps/zlib-1.2.13/zutil.c
 
+$(object.path)/zstd_common_debug.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/debug.c
+$(object.path)/zstd_common_entropy_common.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/entropy_common.c
+$(object.path)/zstd_common_error_private.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/error_private.c
+$(object.path)/zstd_common_fse_decompress.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/fse_decompress.c
+$(object.path)/zstd_common_pool.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/pool.c
+$(object.path)/zstd_common_threading.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/threading.c
+$(object.path)/zstd_common_xxhash.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/xxhash.c
+$(object.path)/zstd_common_zstd_common.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/zstd_common.c
+$(object.path)/zstd_decompress_huf_decompress.o: $(libchdr.path)/deps/zstd-1.5.5/lib/decompress/huf_decompress.c
+$(object.path)/zstd_decompress_zstd_ddict.o: $(libchdr.path)/deps/zstd-1.5.5/lib/decompress/zstd_ddict.c
+$(object.path)/zstd_decompress_zstd_decompress.o: $(libchdr.path)/deps/zstd-1.5.5/lib/decompress/zstd_decompress.c
+$(object.path)/zstd_decompress_zstd_decompress_block.o: $(libchdr.path)/deps/zstd-1.5.5/lib/decompress/zstd_decompress_block.c
+
+
 flags += -I$(libchdr.path)/include
-flags += -I$(libchdr.path)/deps/lzma-19.00/include -D_7ZIP_ST
+flags += -I$(libchdr.path)/deps/lzma-22.01/include -D_7ZIP_ST
 flags += -I$(libchdr.path)/deps/zlib-1.2.13
+flags += -I$(libchdr.path)/deps/zstd-1.5.5/lib
 
 # instruct glibc to declare fseeko/ftello
 flags += -D_LARGEFILE_SOURCE
