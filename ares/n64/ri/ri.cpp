@@ -25,10 +25,6 @@ auto RI::power(bool reset) -> void {
     io.config  = 0x40;
     io.select  = 0x14;
     io.refresh = 0x0006'3634;
-
-    //store RDRAM size result into memory
-    rdram.ram.write<Word>(0x318, rdram.ram.size, "IPL3");  //CIC-NUS-6102
-    rdram.ram.write<Word>(0x3f0, rdram.ram.size, "IPL3");  //CIC-NUS-6105
   }
 }
 
