@@ -24,16 +24,16 @@ $(object.path)/libchdr_chd.o: $(libchdr.path)/src/libchdr_chd.c
 $(object.path)/libchdr_flac.o: $(libchdr.path)/src/libchdr_flac.c
 $(object.path)/libchdr_huffman.o: $(libchdr.path)/src/libchdr_huffman.c
 
-$(object.path)/lzma_alloc.o: $(libchdr.path)/deps/lzma-22.01/src/Alloc.c
-$(object.path)/lzma_bra86.o: $(libchdr.path)/deps/lzma-22.01/src/Bra86.c
-$(object.path)/lzma_braia64.o: $(libchdr.path)/deps/lzma-22.01/src/BraIA64.c
-$(object.path)/lzma_cpuarch.o: $(libchdr.path)/deps/lzma-22.01/src/CpuArch.c
-$(object.path)/lzma_delta.o: $(libchdr.path)/deps/lzma-22.01/src/Delta.c
-$(object.path)/lzma_lfind.o: $(libchdr.path)/deps/lzma-22.01/src/LzFind.c
-$(object.path)/lzma_86dec.o: $(libchdr.path)/deps/lzma-22.01/src/Lzma86Dec.c
-$(object.path)/lzma_dec.o: $(libchdr.path)/deps/lzma-22.01/src/LzmaDec.c
-$(object.path)/lcma_enc.o: $(libchdr.path)/deps/lzma-22.01/src/LzmaEnc.c
-$(object.path)/lzma_sort.o: $(libchdr.path)/deps/lzma-22.01/src/Sort.c
+$(object.path)/lzma_alloc.o: $(libchdr.path)/deps/lzma-19.00/src/Alloc.c
+$(object.path)/lzma_bra86.o: $(libchdr.path)/deps/lzma-19.00/src/Bra86.c
+$(object.path)/lzma_braia64.o: $(libchdr.path)/deps/lzma-19.00/src/BraIA64.c
+$(object.path)/lzma_cpuarch.o: $(libchdr.path)/deps/lzma-19.00/src/CpuArch.c
+$(object.path)/lzma_delta.o: $(libchdr.path)/deps/lzma-19.00/src/Delta.c
+$(object.path)/lzma_lfind.o: $(libchdr.path)/deps/lzma-19.00/src/LzFind.c
+$(object.path)/lzma_86dec.o: $(libchdr.path)/deps/lzma-19.00/src/Lzma86Dec.c
+$(object.path)/lzma_dec.o: $(libchdr.path)/deps/lzma-19.00/src/LzmaDec.c
+$(object.path)/lcma_enc.o: $(libchdr.path)/deps/lzma-19.00/src/LzmaEnc.c
+$(object.path)/lzma_sort.o: $(libchdr.path)/deps/lzma-19.00/src/Sort.c
 
 $(object.path)/zlib_adler32.o: $(libchdr.path)/deps/zlib-1.2.13/adler32.c
 $(object.path)/zlib_compress.o: $(libchdr.path)/deps/zlib-1.2.13/compress.c
@@ -62,7 +62,7 @@ $(object.path)/zstd_decompress_zstd_decompress_block.o: $(libchdr.path)/deps/zst
 
 
 flags += -I$(libchdr.path)/include
-flags += -I$(libchdr.path)/deps/lzma-22.01/include -D_7ZIP_ST
+flags += -I$(libchdr.path)/deps/lzma-19.00/include -D_7ZIP_ST
 flags += -I$(libchdr.path)/deps/zlib-1.2.13
 flags += -I$(libchdr.path)/deps/zstd-1.5.5/lib
 
