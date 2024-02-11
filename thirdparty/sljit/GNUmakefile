@@ -7,20 +7,18 @@ CC = gcc
 endif
 endif
 
-ifndef EXTRA_CPPFLAGS
-EXTRA_CPPFLAGS=
-endif
-
-ifndef EXTRA_LDFLAGS
-EXTRA_LDFLAGS=
-endif
-
-ifndef EXTRA_LIBS
-EXTRA_LIBS=
+ifndef COMPAT_FLAGS
+# Should be replaced by proper warning options
+#COMPAT_FLAGS = -std=c89 -pedantic -Wpedantic
+COMPAT_FLAGS =
 endif
 
 ifndef OPT_FLAGS
 OPT_FLAGS = -O2
+endif
+
+ifndef WARN_FLAGS
+WARN_FLAGS = -Wall -Wextra -Wconversion -Wsign-compare -Wdeclaration-after-statement -Wunused-function
 endif
 
 ifndef WERROR
@@ -28,7 +26,7 @@ WERROR = -Werror
 endif
 
 CPPFLAGS = $(EXTRA_CPPFLAGS) -Isljit_src
-CFLAGS += $(OPT_FLAGS) -Wall -Wextra -Wconversion -Wsign-compare -Wdeclaration-after-statement $(WERROR)
+CFLAGS += $(COMPAT_FLAGS) $(OPT_FLAGS) $(WARN_FLAGS) $(WERROR)
 REGEX_CFLAGS += $(CFLAGS) -fshort-wchar
 LDFLAGS = $(EXTRA_LDFLAGS)
 
@@ -78,34 +76,34 @@ $(BINDIR)/regexMain.o : $(REGEXDIR)/regexMain.c $(BINDIR)/.keep $(SLJIT_HEADERS)
 $(BINDIR)/regexJIT.o : $(REGEXDIR)/regexJIT.c $(BINDIR)/.keep $(SLJIT_HEADERS) $(REGEXDIR)/regexJIT.h
 	$(CC) $(CPPFLAGS) $(REGEX_CFLAGS) -c -o $@ $(REGEXDIR)/regexJIT.c
 
-$(BINDIR)/sljit_test: $(BINDIR)/.keep $(BINDIR)/sljitMain.o $(TESTDIR)/sljitTest.c $(SRCDIR)/sljitLir.c $(SLJIT_LIR_FILES) $(SLJIT_HEADERS) $(TESTDIR)/sljitConfigPre.h $(TESTDIR)/sljitConfigPost.h
+$(BINDIR)/sljit_test: $(BINDIR)/.keep $(BINDIR)/sljitMain.o $(TESTDIR)/sljitTest.c $(SRCDIR)/sljitLir.c $(SLJIT_LIR_FILES) $(SLJIT_HEADERS) $(TESTDIR)/sljitConfigPre.h $(TESTDIR)/sljitConfigPost.h $(TESTDIR)/sljitTestCall.h $(TESTDIR)/sljitTestFloat.h $(TESTDIR)/sljitTestSimd.h
 	$(CC) $(CPPFLAGS) -DSLJIT_HAVE_CONFIG_PRE=1 -I$(TESTDIR) $(CFLAGS) $(LDFLAGS) $(BINDIR)/sljitMain.o $(TESTDIR)/sljitTest.c $(SRCDIR)/sljitLir.c -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/regex_test: $(BINDIR)/.keep $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 examples: $(EXAMPLE_TARGET)
 
 $(BINDIR)/first_program: $(EXAMPLEDIR)/first_program.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/first_program.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/first_program.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/branch: $(EXAMPLEDIR)/branch.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/branch.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/branch.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/loop: $(EXAMPLEDIR)/loop.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/loop.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/loop.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/array_access: $(EXAMPLEDIR)/array_access.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/array_access.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/array_access.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/func_call: $(EXAMPLEDIR)/func_call.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/func_call.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/func_call.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/struct_access: $(EXAMPLEDIR)/struct_access.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/struct_access.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/struct_access.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/temp_var: $(EXAMPLEDIR)/temp_var.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/temp_var.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/temp_var.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
 
 $(BINDIR)/brainfuck: $(EXAMPLEDIR)/brainfuck.c $(BINDIR)/.keep $(BINDIR)/sljitLir.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/brainfuck.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(EXAMPLEDIR)/brainfuck.c $(BINDIR)/sljitLir.o -o $@ -lm -lpthread $(EXTRA_LIBS)

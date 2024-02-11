@@ -28,8 +28,6 @@ static sljit_s32 load_immediate(struct sljit_compiler *compiler, sljit_s32 dst_r
 {
 	sljit_sw high;
 
-	SLJIT_ASSERT(dst_r != tmp_r);
-
 	if (imm <= SIMM_MAX && imm >= SIMM_MIN)
 		return push_inst(compiler, ADDI | RD(dst_r) | RS1(TMP_ZERO) | IMM_I(imm));
 
@@ -80,6 +78,8 @@ static sljit_s32 load_immediate(struct sljit_compiler *compiler, sljit_s32 dst_r
 
 		return SLJIT_SUCCESS;
 	}
+
+	SLJIT_ASSERT(dst_r != tmp_r);
 
 	high = imm >> 32;
 	imm = (sljit_s32)imm;
