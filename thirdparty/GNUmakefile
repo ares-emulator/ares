@@ -65,6 +65,7 @@ flags += -I$(libchdr.path)/include
 flags += -I$(libchdr.path)/deps/lzma-19.00/include -D_7ZIP_ST
 flags += -I$(libchdr.path)/deps/zlib-1.2.13
 flags += -I$(libchdr.path)/deps/zstd-1.5.5/lib
+flags += -DZSTD_DISABLE_ASM
 
 # instruct glibc to declare fseeko/ftello
 flags += -D_LARGEFILE_SOURCE
