@@ -56,12 +56,12 @@ auto PPU::Objects::scanline(u32 y) -> void {
           }
         } else if(!buffer[bx].enable || object.priority < buffer[bx].priority) {
           buffer[bx].priority = object.priority;  //updated regardless of transparency
+          buffer[bx].mosaic = object.mosaic;  //updated regardless of transparency
           if(color) {
             if(object.colors == 0) color = object.palette * 16 + color;
             buffer[bx].enable = true;
             buffer[bx].color = ppu.pram[256 + color];
             buffer[bx].translucent = object.mode == 1;
-            buffer[bx].mosaic = object.mosaic;
           }
         }
       }
@@ -80,12 +80,15 @@ auto PPU::Objects::run(u32 x, u32 y) -> void {
   }
 
   output = buffer[x];
-
+  
   //horizontal mosaic
-  if(!output.mosaic || ++mosaicOffset >= 1 + io.mosaicWidth) {
+  if(mosaicOffset >= 1 + io.mosaicWidth) {
     mosaicOffset = 0;
     mosaic = output;
+  } else if(!mosaic.mosaic || !output.mosaic) {
+    mosaic = output;
   }
+  mosaicOffset++;
 }
 
 auto PPU::Objects::power() -> void {
