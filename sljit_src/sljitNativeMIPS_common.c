@@ -94,28 +94,25 @@ typedef sljit_u32 sljit_ins;
 #define EQUAL_FLAG	3
 #define OTHER_FLAG	1
 
-static const sljit_u8 reg_map[SLJIT_NUMBER_OF_REGISTERS + 5] = {
-	0, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 24, 23, 22, 21, 20, 19, 18, 17, 16, 29, 4, 25, 31
+static const sljit_u8 reg_map[SLJIT_NUMBER_OF_REGISTERS + 7] = {
+	0, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 24, 23, 22, 21, 20, 19, 18, 17, 16, 29, 4, 25, 31, 3, 1
 };
-
-#if (defined SLJIT_CONFIG_MIPS_32 && SLJIT_CONFIG_MIPS_32)
-
-#define TMP_FREG1	((SLJIT_NUMBER_OF_FLOAT_REGISTERS << 1) + 1)
-#define TMP_FREG2	((SLJIT_NUMBER_OF_FLOAT_REGISTERS << 1) + 2)
-#define TMP_FREG3	((SLJIT_NUMBER_OF_FLOAT_REGISTERS << 1) + 3)
-
-static const sljit_u8 freg_map[(SLJIT_NUMBER_OF_FLOAT_REGISTERS << 1) + 4] = {
-	0,
-	0, 14, 2, 4, 6, 8, 18, 30, 28, 26, 24, 22, 20,
-	1, 15, 3, 5, 7, 9, 19, 31, 29, 27, 25, 23, 21,
-	12, 10, 16,
-};
-
-#else /* !SLJIT_CONFIG_MIPS_32 */
 
 #define TMP_FREG1	(SLJIT_NUMBER_OF_FLOAT_REGISTERS + 1)
 #define TMP_FREG2	(SLJIT_NUMBER_OF_FLOAT_REGISTERS + 2)
 #define TMP_FREG3	(SLJIT_NUMBER_OF_FLOAT_REGISTERS + 3)
+
+#if (defined SLJIT_CONFIG_MIPS_32 && SLJIT_CONFIG_MIPS_32)
+
+static const sljit_u8 freg_map[((SLJIT_NUMBER_OF_FLOAT_REGISTERS + 3) << 1) + 1] = {
+	0,
+	0, 14, 2, 4, 6, 8, 18, 30, 28, 26, 24, 22, 20,
+	12, 10, 16,
+	1, 15, 3, 5, 7, 9, 19, 31, 29, 27, 25, 23, 21,
+	13, 11, 17
+};
+
+#else /* !SLJIT_CONFIG_MIPS_32 */
 
 static const sljit_u8 freg_map[SLJIT_NUMBER_OF_FLOAT_REGISTERS + 4] = {
 	0, 0, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 1, 2, 3, 4, 5, 6, 7, 8, 9, 31, 30, 29, 28, 27, 26, 25, 24, 12, 11, 10
@@ -381,11 +378,12 @@ static sljit_s32 function_check_is_freg(struct sljit_compiler *compiler, sljit_s
 	if (compiler->scratches == -1)
 		return 0;
 
-	if (is_32 && fr >= (SLJIT_FS0 + SLJIT_FR0) && fr <= (SLJIT_FS0 + SLJIT_FS0))
-		fr -= SLJIT_FS0;
+	if (is_32 && fr >= SLJIT_F64_SECOND(SLJIT_FR0))
+		fr -= SLJIT_F64_SECOND(0);
 
 	return (fr >= SLJIT_FR0 && fr < (SLJIT_FR0 + compiler->fscratches))
-		|| (fr > (SLJIT_FS0 - compiler->fsaveds) && fr <= SLJIT_FS0);
+		|| (fr > (SLJIT_FS0 - compiler->fsaveds) && fr <= SLJIT_FS0)
+		|| (fr >= SLJIT_TMP_FREGISTER_BASE && fr < (SLJIT_TMP_FREGISTER_BASE + SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS));
 }
 
 #endif /* SLJIT_CONFIG_MIPS_32 && SLJIT_ARGUMENT_CHECKS */
@@ -667,14 +665,14 @@ static SLJIT_INLINE void load_addr_to_reg(void *dst, sljit_u32 reg)
 		jump = (struct sljit_jump*)dst;
 		flags = jump->flags;
 		inst = (sljit_ins*)jump->addr;
-		addr = (flags & JUMP_LABEL) ? jump->u.label->addr : jump->u.target;
+		addr = (flags & JUMP_LABEL) ? jump->u.label->u.addr : jump->u.target;
 	} else {
 		put_label = (struct sljit_put_label*)dst;
 #if (defined SLJIT_CONFIG_MIPS_64 && SLJIT_CONFIG_MIPS_64)
 		flags = put_label->flags;
 #endif
 		inst = (sljit_ins*)put_label->addr;
-		addr = put_label->label->addr;
+		addr = put_label->label->u.addr;
 		reg = *inst;
 	}
 
@@ -753,7 +751,7 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 
 				/* These structures are ordered by their address. */
 				if (label && label->size == word_count) {
-					label->addr = (sljit_uw)SLJIT_ADD_EXEC_OFFSET(code_ptr, executable_offset);
+					label->u.addr = (sljit_uw)SLJIT_ADD_EXEC_OFFSET(code_ptr, executable_offset);
 					label->size = (sljit_uw)(code_ptr - code);
 					label = label->next;
 				}
@@ -793,7 +791,7 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 	} while (buf);
 
 	if (label && label->size == word_count) {
-		label->addr = (sljit_uw)code_ptr;
+		label->u.addr = (sljit_uw)code_ptr;
 		label->size = (sljit_uw)(code_ptr - code);
 		label = label->next;
 	}
@@ -807,7 +805,7 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 	jump = compiler->jumps;
 	while (jump) {
 		do {
-			addr = (jump->flags & JUMP_LABEL) ? jump->u.label->addr : jump->u.target;
+			addr = (jump->flags & JUMP_LABEL) ? jump->u.label->u.addr : jump->u.target;
 			buf_ptr = (sljit_ins *)jump->addr;
 
 			if (jump->flags & PATCH_B) {
@@ -2292,9 +2290,10 @@ static sljit_s32 emit_op(struct sljit_compiler *compiler, sljit_s32 op, sljit_s3
 		compiler->cache_argw = 0;
 	}
 
-	if (dst == TMP_REG2) {
+	if (dst == 0) {
 		SLJIT_ASSERT(HAS_FLAGS(op));
 		flags |= UNUSED_DEST;
+		dst = TMP_REG2;
 	}
 	else if (FAST_IS_REG(dst)) {
 		dst_r = dst;
@@ -2655,7 +2654,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op2u(struct sljit_compiler *compil
 	CHECK(check_sljit_emit_op2(compiler, op, 1, 0, 0, src1, src1w, src2, src2w));
 
 	SLJIT_SKIP_CHECKS(compiler);
-	return sljit_emit_op2(compiler, op, TMP_REG2, 0, src1, src1w, src2, src2w);
+	return sljit_emit_op2(compiler, op, 0, 0, src1, src1w, src2, src2w);
 }
 
 #if (defined SLJIT_CONFIG_MIPS_64 && SLJIT_CONFIG_MIPS_64)

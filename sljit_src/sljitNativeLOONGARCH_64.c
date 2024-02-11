@@ -26,9 +26,7 @@
 
 SLJIT_API_FUNC_ATTRIBUTE const char* sljit_get_platform_name(void)
 {
-#if (defined SLJIT_CONFIG_LOONGARCH_64 && SLJIT_CONFIG_LOONGARCH_64)
 	return "LOONGARCH" SLJIT_CPUINFO;
-#endif /* SLJIT_CONFIG_LOONGARCH_64 */
 }
 
 typedef sljit_u32 sljit_ins;
@@ -61,7 +59,7 @@ static const sljit_u8 freg_map[SLJIT_NUMBER_OF_FLOAT_REGISTERS + 3] = {
 /*
 LoongArch instructions are 32 bits wide, belonging to 9 basic instruction formats (and variants of them):
 
-| Format name  | Composition 				 |
+| Format name  | Composition                 |
 | 2R           | Opcode + Rj + Rd            |
 | 3R           | Opcode + Rk + Rj + Rd       |
 | 4R           | Opcode + Ra + Rk + Rj + Rd  |
@@ -338,10 +336,10 @@ lower parts in the instruction word, denoted by the “L” and “H” suffixes
 #define INST(inst, type) ((sljit_ins)((type & SLJIT_32) ? inst##_W : inst##_D))
 
 /* LoongArch CPUCFG register for feature detection */
-#define LOONGARCH_CFG2				0x02
+#define LOONGARCH_CFG2			0x02
 #define LOONGARCH_FEATURE_LAMCAS	(1 << 28)
 
-sljit_u32 cpu_feature_list = 0;
+static sljit_u32 cpu_feature_list = 0;
 
 static SLJIT_INLINE sljit_u32 get_cpu_features(void)
 {
@@ -1610,9 +1608,10 @@ static sljit_s32 emit_op(struct sljit_compiler *compiler, sljit_s32 op, sljit_s3
 		compiler->cache_argw = 0;
 	}
 
-	if (dst == TMP_REG2) {
+	if (dst == 0) {
 		SLJIT_ASSERT(HAS_FLAGS(op));
 		flags |= UNUSED_DEST;
+		dst = TMP_REG2;
 	}
 	else if (FAST_IS_REG(dst)) {
 		dst_r = dst;
@@ -1891,7 +1890,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op2u(struct sljit_compiler *compil
 	CHECK(check_sljit_emit_op2(compiler, op, 1, 0, 0, src1, src1w, src2, src2w));
 
 	SLJIT_SKIP_CHECKS(compiler);
-	return sljit_emit_op2(compiler, op, TMP_REG2, 0, src1, src1w, src2, src2w);
+	return sljit_emit_op2(compiler, op, 0, 0, src1, src1w, src2, src2w);
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_shift_into(struct sljit_compiler *compiler, sljit_s32 op,
@@ -2392,14 +2391,14 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2(struct sljit_compiler *compil
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2r(struct sljit_compiler *compiler, sljit_s32 op,
-	sljit_s32 dst,
+	sljit_s32 dst_freg,
 	sljit_s32 src1, sljit_sw src1w,
 	sljit_s32 src2, sljit_sw src2w)
 {
 	sljit_s32 reg;
 
 	CHECK_ERROR();
-	CHECK(check_sljit_emit_fop2r(compiler, op, dst, src1, src1w, src2, src2w));
+	CHECK(check_sljit_emit_fop2r(compiler, op, dst_freg, src1, src1w, src2, src2w));
 	ADJUST_LOCAL_OFFSET(src1, src1w);
 	ADJUST_LOCAL_OFFSET(src2, src2w);
 
@@ -2409,12 +2408,12 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2r(struct sljit_compiler *compi
 	}
 
 	if (src1 & SLJIT_MEM) {
-		reg = (dst == src2) ? TMP_FREG1 : dst;
+		reg = (dst_freg == src2) ? TMP_FREG1 : dst_freg;
 		FAIL_IF(emit_op_mem2(compiler, FLOAT_DATA(op) | LOAD_DATA, reg, src1, src1w, 0, 0));
 		src1 = reg;
 	}
 
-	return push_inst(compiler, FINST(FCOPYSIGN, op) | FRD(dst) | FRJ(src1) | FRK(src2));
+	return push_inst(compiler, FINST(FCOPYSIGN, op) | FRD(dst_freg) | FRJ(src1) | FRK(src2));
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fset32(struct sljit_compiler *compiler,

@@ -980,7 +980,7 @@ static int generate_transitions(struct compiler_common *compiler_common)
 	struct stack_item *item;
 
 	stack_init(depth);
-	compiler_common->dfa_transitions = SLJIT_MALLOC(sizeof(struct stack_item) * compiler_common->dfa_size, NULL);
+	compiler_common->dfa_transitions = (struct stack_item *)SLJIT_MALLOC(sizeof(struct stack_item) * compiler_common->dfa_size, NULL);
 	if (!compiler_common->dfa_transitions)
 		return REGEX_MEMORY_ERROR;
 
@@ -1174,7 +1174,7 @@ static int generate_search_states(struct compiler_common *compiler_common)
 
 	compiler_common->terms_size = !(compiler_common->flags & REGEX_FAKE_MATCH_END) ? 1 : 2;
 	compiler_common->longest_range_size = 0;
-	compiler_common->search_states = SLJIT_MALLOC(sizeof(struct stack_item) * compiler_common->dfa_size, NULL);
+	compiler_common->search_states = (struct stack_item *)SLJIT_MALLOC(sizeof(struct stack_item) * compiler_common->dfa_size, NULL);
 	if (!compiler_common->search_states)
 		return REGEX_MEMORY_ERROR;
 
