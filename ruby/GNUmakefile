@@ -30,7 +30,7 @@ ifeq ($(ruby),)
     endif
   else ifeq ($(platform),linux)
     pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
-    ruby += video.glx video.glx2 video.xshm
+    ruby += video.glx video.xshm
     ruby += $(call pkg_check,xv,video.xvideo)
     ruby += audio.oss audio.alsa
     ruby += $(call pkg_check,openal,audio.openal)
@@ -66,6 +66,7 @@ else
   ruby.flags := $(flags.cpp)
 endif
 
+ruby.flags += -I../thirdparty
 ruby.flags += $(foreach c,$(subst .,_,$(call strupper,$(ruby))),-D$c)
 ifeq ($(pkg_config),)
   # TODO: add SDL2 cflags

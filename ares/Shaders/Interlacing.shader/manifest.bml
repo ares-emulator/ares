@@ -1,6 +1,0 @@
-input
-  filter: nearest
-
-program
-  fragment: interlace.fs
-  modulo: 2

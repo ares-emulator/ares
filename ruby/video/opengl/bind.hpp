@@ -38,6 +38,8 @@ PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = nullptr;
 PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers = nullptr;
 PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers = nullptr;
 PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer = nullptr;
+PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer = nullptr;
+PFNGLGENERATEMIPMAPPROC glGenerateMipmap = nullptr;
 PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D = nullptr;
 #endif
 #if defined(DISPLAY_WINDOWS)
@@ -89,6 +91,8 @@ static bool OpenGLBind() {
   bind(PFNGLGENFRAMEBUFFERSPROC, glGenFramebuffers);
   bind(PFNGLDELETEFRAMEBUFFERSPROC, glDeleteFramebuffers);
   bind(PFNGLBINDFRAMEBUFFERPROC, glBindFramebuffer);
+  bind(PFNGLBLITFRAMEBUFFERPROC, glBlitFramebuffer);
+  bind(PFNGLGENERATEMIPMAPPROC, glGenerateMipmap);
   bind(PFNGLFRAMEBUFFERTEXTURE2DPROC, glFramebufferTexture2D);
   #endif
   #if defined(DISPLAY_WINDOWS)
