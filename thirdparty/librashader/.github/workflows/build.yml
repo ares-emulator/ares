@@ -1,0 +1,35 @@
+name: build librashader-capi for x86_64
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  schedule:
+    - cron: "0 0 * * 6"
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        profile: ['debug', 'release', 'optimized']
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Install nightly Rust
+      uses: actions-rs/toolchain@v1.0.6
+      with:
+        toolchain: nightly
+        override: true
+    - name: Build dynamic library
+      run: cargo run -p librashader-build-script -- --profile ${{ matrix.profile }}
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: ${{ format('build-outputs-{0}-{1}', matrix.os, matrix.profile) }}
+        path: ${{ format('target/{0}/librashader.*', matrix.profile) }}

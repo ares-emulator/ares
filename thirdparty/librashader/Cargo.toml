@@ -1,0 +1,24 @@
+[workspace]
+members = [
+    "librashader",
+    "librashader-common",
+    "librashader-presets",
+    "librashader-preprocess",
+    "librashader-reflect",
+    "librashader-runtime",
+    "librashader-runtime-d3d11",
+    "librashader-runtime-d3d12",
+    "librashader-runtime-gl",
+    "librashader-runtime-vk",
+    "librashader-cache",
+    "librashader-capi",
+    "librashader-build-script"
+, "librashader-runtime-wgpu"]
+resolver = "2"
+
+[workspace.metadata.release]
+
+[profile.optimized]
+inherits = "release"
+lto = true
+codegen-units = 1

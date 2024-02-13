@@ -1,0 +1,40 @@
+[package]
+name = "librashader-capi"
+edition = "2021"
+
+license = "MPL-2.0 OR GPL-3.0-only"
+version = "0.2.0-beta.9"
+authors = ["Ronny Chan <ronny@ronnychan.ca>"]
+repository = "https://github.com/SnowflakePowered/librashader"
+readme = "../README.md"
+categories = ["emulators", "compilers", "graphics"]
+keywords = ["shader", "retroarch", "SPIR-V"]
+description = "RetroArch shaders for all."
+
+[lib]
+crate-type = [ "cdylib", "staticlib" ]
+
+[features]
+default = ["runtime-all" ]
+runtime-all = ["runtime-opengl", "runtime-d3d11", "runtime-d3d12", "runtime-vulkan"]
+runtime-opengl = ["gl", "librashader/runtime-gl"]
+runtime-d3d11 = ["windows", "librashader/runtime-d3d11", "windows/Win32_Graphics_Direct3D11"]
+runtime-d3d12 = ["windows", "librashader/runtime-d3d12", "windows/Win32_Graphics_Direct3D12"]
+runtime-vulkan = ["ash", "librashader/runtime-vk"]
+
+[dependencies]
+librashader = { path = "../librashader", version = "0.2.0-beta.9" }
+thiserror = "1.0.37"
+paste = "1.0.9"
+gl = { version = "0.14.0", optional = true }
+rustc-hash = "1.1.0"
+ash = { version = "0.37", optional = true }
+spirv_cross = { package = "librashader-spirv-cross", version = "0.24" }
+
+[target.'cfg(windows)'.dependencies.windows]
+version = "0.48.0"
+optional = true
+
+[package.metadata.docs.rs]
+targets = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"]
+features = ["librashader/docsrs"]

@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<style>
+    pre.spirt-90c2056d-5b38-4644-824a-b4be1c82f14d {
+        /* HACK(eddyb) reset default margin to something reasonable. */
+        margin: 1ch;
+
+        /* HACK(eddyb) avoid unnecessarily small or thin text. */
+        font-size: 17px;
+        font-weight: 500;
+    }
+    pre.spirt-90c2056d-5b38-4644-824a-b4be1c82f14d a {
+        color: unset;
+        font-weight: 900;
+    }
+    pre.spirt-90c2056d-5b38-4644-824a-b4be1c82f14d a:not(:hover) {
+        text-decoration: unset;
+    }
+    pre.spirt-90c2056d-5b38-4644-824a-b4be1c82f14d sub, pre.spirt-90c2056d-5b38-4644-824a-b4be1c82f14d sup {
+        line-height: 0;
+    }
+
+    /* HACK(eddyb) using a class (instead of an inline style) so that hovering
+       over a multiversion table cell can disable its desaturation/dimming */
+    pre.spirt-90c2056d-5b38-4644-824a-b4be1c82f14d:not(:hover) .unchanged {
+        filter: saturate(0.3) opacity(0.5);
+    }
+</style>
+
+
+<script>
+    (function() {
+        var params = new URLSearchParams(document.location.search);
+        var dark = params.has("dark"), light = params.has("light");
+        if(dark || light) {
+            if(dark && !light) {
+                document.documentElement.classList.add("simple-dark-theme");
+
+                // HACK(eddyb) forcefully disable Dark Reader, for two reasons:
+                // - its own detection of websites with built-in dark themes
+                //   (https://github.com/darkreader/darkreader/pull/7995)
+                //   isn't on by default, and the combination is jarring
+                // - it interacts badly with whole-document-replacement
+                //   (as used by htmlpreview.github.io)
+                document.documentElement.removeAttribute('data-darkreader-scheme');
+                document.querySelectorAll('style.darkreader')
+                    .forEach(style => style.disabled = true);
+            }
+        } else if(matchMedia("(prefers-color-scheme: dark)").matches) {
+            // FIXME(eddyb) also use media queries in CSS directly, to ensure dark mode
+            // still works with JS disabled (sadly that likely requires CSS duplication).
+            document.location.search += (document.location.search ? "&" : "?") + "dark";
+        }
+    })();
+</script>
+
+<style>
+    /* HACK(eddyb) `[data-darkreader-scheme="dark"]` is for detecting Dark Reader,
+      to avoid transient interactions (see also comment in the `<script>`). */
+
+    html.simple-dark-theme:not([data-darkreader-scheme="dark"]) {
+        background: #16181a;
+        color: #dbd8d6;
+
+        /* Request browser UI elements to be dark-themed if possible. */
+        color-scheme: dark;
+    }
+</style>
+        
+</head>
+<body><pre class="spirt-90c2056d-5b38-4644-824a-b4be1c82f14d">
+<a id="module.dialect" href="#module.dialect">module.dialect</a><a id="module.dialect.start" href="#module.dialect.start"></a> = <span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;">Module</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">version: </span><span style="color:#cc9944;">1</span>.<span style="color:#cc9944;">0</span>, <span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">Capability.</span>{<span style="color:#4499cc;">Shader</span>, <span style="color:#4499cc;">Sampled1D</span>}, <span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">MemoryModel.</span><span style="color:#4499cc;">GLSL450</span>)
+
+<a id="module.debug_info" href="#module.debug_info">module.debug_info</a><a id="module.debug_info.start" href="#module.debug_info.start"></a> = <span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">Module.</span><span style="color:#cc7755;">DebugInfo</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">generator: </span><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;">Tool</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">id: </span><span style="color:#cc9944;">0</span>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">version: </span><span style="color:#cc9944;">28</span>))
+
+<a id="T0" href="#T0">type T<sub style="font-size:0.9em;">0</sub></a> = <a id="T0.start" href="#T0.start"></a><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpTypeImage</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">SampledType: </span><span style="color:#4466cc;">f32</span>, <span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">Dim.</span><span style="color:#4499cc;">2D</span>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">Depth: </span><span style="color:#cc9944;">0</span>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">Arrayed: </span><span style="color:#cc9944;">0</span>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">MS: </span><span style="color:#cc9944;">0</span>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">Sampled: </span><span style="color:#cc9944;">1</span>, <span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">ImageFormat.</span><span style="color:#4499cc;">Unknown</span>)
+
+<a id="GV0" href="#GV0"></a><span style="color:rgba(68,153,68,0.6);font-weight:300;">#[</span><span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">Decoration.</span><span style="color:#4499cc;">Location</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">Location: </span><span style="color:#cc9944;">0</span>)<span style="color:rgba(68,153,68,0.6);font-weight:300;">]</span>
+<a href="#GV0">global_var GV<sub style="font-size:0.9em;">0</sub></a><a id="GV0.start" href="#GV0.start"></a>(<span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">StorageClass.</span><span style="color:#4499cc;">Output</span>): <span style="color:#4466cc;">f32×4</span>
+
+<a id="GV1" href="#GV1"></a><span style="color:rgba(68,153,68,0.6);font-weight:300;">#[</span><span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">Decoration.</span><span style="color:#4499cc;">Binding</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">BindingPoint: </span><span style="color:#cc9944;">1</span>)<span style="color:rgba(68,153,68,0.6);font-weight:300;">]</span>
+<span style="color:rgba(68,153,68,0.6);font-weight:300;">#[</span><span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">Decoration.</span><span style="color:#4499cc;">DescriptorSet</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">DescriptorSet: </span><span style="color:#cc9944;">0</span>)<span style="color:rgba(68,153,68,0.6);font-weight:300;">]</span>
+<a href="#GV1">global_var GV<sub style="font-size:0.9em;">1</sub></a><a id="GV1.start" href="#GV1.start"></a>(<span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">StorageClass.</span><span style="color:#4499cc;">UniformConstant</span>): <a href="#T0">T<sub style="font-size:0.9em;">0</sub></a>
+
+<a id="GV2" href="#GV2"></a><span style="color:rgba(68,153,68,0.6);font-weight:300;">#[</span><span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">Decoration.</span><span style="color:#4499cc;">Binding</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">BindingPoint: </span><span style="color:#cc9944;">1</span>)<span style="color:rgba(68,153,68,0.6);font-weight:300;">]</span>
+<span style="color:rgba(68,153,68,0.6);font-weight:300;">#[</span><span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">Decoration.</span><span style="color:#4499cc;">DescriptorSet</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">DescriptorSet: </span><span style="color:#cc9944;">1</span>)<span style="color:rgba(68,153,68,0.6);font-weight:300;">]</span>
+<a href="#GV2">global_var GV<sub style="font-size:0.9em;">2</sub></a><a id="GV2.start" href="#GV2.start"></a>(<span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">StorageClass.</span><span style="color:#4499cc;">UniformConstant</span>): <span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpTypeSampler</span>
+
+<a id="GV3" href="#GV3">global_var GV<sub style="font-size:0.9em;">3</sub></a><a id="GV3.start" href="#GV3.start"></a>(<span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">StorageClass.</span><span style="color:#4499cc;">Private</span>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">init: </span><span style="color:#4466cc;">f32×4</span>(<span style="color:#cc9944;">0.0</span>, <span style="color:#cc9944;">0.0</span>, <span style="color:#cc9944;">0.0</span>, <span style="color:#cc9944;">0.0</span>)): <span style="color:#4466cc;">f32×4</span>
+
+<a id="F0" href="#F0">func F<sub style="font-size:0.9em;">0</sub></a><a id="F0.start" href="#F0.start"></a>() {
+<a id="F0.AA.0" href="#F0.AA.0"></a><a id="F0.AA.1" href="#F0.AA.1"></a>  <a id="F0.v0" href="#F0.v0">v<sub style="font-size:0.8em;">0</sub></a> = <a id="F0.AA.2" href="#F0.AA.2"></a><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpLoad</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">Pointer: </span>&amp;<a href="#GV1">GV<sub style="font-size:0.9em;">1</sub></a>): <a href="#T0">T<sub style="font-size:0.9em;">0</sub></a>
+  <a id="F0.v1" href="#F0.v1">v<sub style="font-size:0.8em;">1</sub></a> = <a id="F0.AA.3" href="#F0.AA.3"></a><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpLoad</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">Pointer: </span>&amp;<a href="#GV2">GV<sub style="font-size:0.9em;">2</sub></a>): <span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpTypeSampler</span>
+<a id="F0.AA.4" href="#F0.AA.4"></a>  <a id="F0.v2" href="#F0.v2">v<sub style="font-size:0.8em;">2</sub></a> = <a id="F0.AA.5" href="#F0.AA.5"></a><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpSampledImage</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">Image: </span><a href="#F0.v0">v<sub style="font-size:0.8em;">0</sub></a>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">Sampler: </span><a href="#F0.v1">v<sub style="font-size:0.8em;">1</sub></a>): <span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpTypeSampledImage</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">ImageType: </span><a href="#T0">T<sub style="font-size:0.9em;">0</sub></a>)
+  <a id="F0.v3" href="#F0.v3">v<sub style="font-size:0.8em;">3</sub></a> = <a id="F0.AA.6" href="#F0.AA.6"></a><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpImageSampleImplicitLod</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">SampledImage: </span><a href="#F0.v2">v<sub style="font-size:0.8em;">2</sub></a>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">Coordinate: </span><span style="color:#4466cc;">f32×2</span>(<span style="color:#cc9944;">0.0</span>, <span style="color:#cc9944;">0.0</span>)): <span style="color:#4466cc;">f32×4</span>
+<a id="F0.AA.7" href="#F0.AA.7"></a>  <span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpStore</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">Pointer: </span>&amp;<a href="#GV3">GV<sub style="font-size:0.9em;">3</sub></a>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">Object: </span><a href="#F0.v3">v<sub style="font-size:0.8em;">3</sub></a>)
+}
+
+<a id="F1" href="#F1"></a><span style="color:rgba(68,153,68,0.6);font-weight:300;">#[</span><span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">ExecutionMode.</span><span style="color:#4499cc;">OriginUpperLeft</span><span style="color:rgba(68,153,68,0.6);font-weight:300;">]</span>
+<a href="#F1">func F<sub style="font-size:0.9em;">1</sub></a><a id="F1.start" href="#F1.start"></a>() {
+<a id="F1.AA.0" href="#F1.AA.0"></a><a id="F1.AA.1" href="#F1.AA.1"></a>  _ = <a id="F1.AA.2" href="#F1.AA.2"></a><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpLoad</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">Pointer: </span>&amp;<a href="#GV1">GV<sub style="font-size:0.9em;">1</sub></a>): <a href="#T0">T<sub style="font-size:0.9em;">0</sub></a>
+  _ = <a id="F1.AA.3" href="#F1.AA.3"></a><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpLoad</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">Pointer: </span>&amp;<a href="#GV2">GV<sub style="font-size:0.9em;">2</sub></a>): <span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpTypeSampler</span>
+<a id="F1.AA.4" href="#F1.AA.4"></a><a id="F1.AA.5" href="#F1.AA.5"></a>  <span style="color:#4466cc;">call</span> <a href="#F0">F<sub style="font-size:0.9em;">0</sub></a>()
+  <a id="F1.v0" href="#F1.v0">v<sub style="font-size:0.8em;">0</sub></a> = <a id="F1.AA.6" href="#F1.AA.6"></a><span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpLoad</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">Pointer: </span>&amp;<a href="#GV3">GV<sub style="font-size:0.9em;">3</sub></a>): <span style="color:#4466cc;">f32×4</span>
+<a id="F1.AA.7" href="#F1.AA.7"></a>  <span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpStore</span>(<span style="color:#444444;font-size:0.5em;vertical-align:middle;">Pointer: </span>&amp;<a href="#GV0">GV<sub style="font-size:0.9em;">0</sub></a>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">Object: </span><a href="#F1.v0">v<sub style="font-size:0.8em;">0</sub></a>)
+}
+
+<span style="color:#4466cc;">export</span> {
+  <span style="color:rgba(204,119,85,0.6);font-size:0.6em;vertical-align:middle;">spv.</span><span style="color:#cc7755;font-weight:800;">OpEntryPoint</span>(<span style="color:rgba(204,119,85,0.36);font-size:0.5em;vertical-align:middle;">spv.</span><span style="color:rgba(68,102,204,0.6);font-size:0.6em;vertical-align:middle;">ExecutionModel.</span><span style="color:#4499cc;">Fragment</span>, <span style="color:#444444;font-size:0.5em;vertical-align:middle;">Name: </span><span style="color:#cc5555;">"main"</span>): <a href="#F1">F<sub style="font-size:0.9em;">1</sub></a>,
+}</pre></body>
+</html>
