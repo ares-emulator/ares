@@ -1,0 +1,6 @@
+shaders = 1
+
+shader0 = shaders/sgenpt-mix.slang
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0

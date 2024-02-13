@@ -1,0 +1,11 @@
+shaders = 2
+shader0 = shaders/linearize.slang
+shader1 = shaders/cubic-gamma-correct.slang
+scale_type1 = viewport
+
+filter_linear0 = false 
+scale_type0 = source
+scale0 = 1.0
+srgb_framebuffer0 = true
+
+filter_linear1 = false 

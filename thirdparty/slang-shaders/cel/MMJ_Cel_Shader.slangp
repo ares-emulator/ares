@@ -1,0 +1,3 @@
+shaders = 1
+
+shader0 = shaders/MMJ_Cel/MMJ_Cel_Shader.slang

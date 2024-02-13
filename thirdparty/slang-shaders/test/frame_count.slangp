@@ -1,0 +1,6 @@
+shaders = 1
+shader0 = frame_count.slang
+scale_type0 = source
+scale0 = 1.0
+filter_linear0 = false
+frame_count_mod0 = 100

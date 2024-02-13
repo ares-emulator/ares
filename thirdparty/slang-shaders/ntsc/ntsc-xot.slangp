@@ -1,0 +1,9 @@
+shaders = 2
+
+shader0 = ../stock.slang
+scale_type_x0 = absolute
+scale_x0 = "640.0"
+
+shader1 = shaders/ntsc-xot.slang
+scale1 = 1.0
+scale_type1 = source

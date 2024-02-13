@@ -1,0 +1,15 @@
+shaders = 2
+
+shader0 = shaders/bicubic-x.slang
+filter_linear0 = false
+scale_type_x0 = viewport
+scale_type_y0 = source
+scale0 = 1.0
+wrap_mode0 = "clamp_to_edge"
+
+shader1 = shaders/bicubic-y.slang
+filter_linear1 = false
+scale_type_x1 = source
+scale_type_y1 = viewport
+scale1 = 1.0
+wrap_mode1 = "clamp_to_edge"

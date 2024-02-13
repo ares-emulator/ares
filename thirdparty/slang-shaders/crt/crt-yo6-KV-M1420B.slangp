@@ -1,0 +1,28 @@
+shaders = 3
+
+shader0 = "shaders/crt-yo6/crt-yo6-native-resolution.slang"
+filter_linear0 = true
+wrap_mode0 = "clamp_to_edge"
+scale_type0 = "absolute"
+scale_x0 = 439
+scale_y0 = 233
+
+shader1 = "shaders/crt-yo6/crt-yo6-warp.slang"
+filter_linear1 = true
+wrap_mode1 = "clamp_to_edge"
+scale_type1 = "absolute"
+scale_x1 = 1684
+scale_y1 = 1329
+
+shader2 = "../interpolation/shaders/jinc2.slang"
+filter_linear2 = false
+scale_type2 = viewport
+
+textures = TEX_CRT
+TEX_CRT = "shaders/crt-yo6/KV-M1420B.png"
+TEX_CRT_linear = false
+
+parameters = "JINC2_WINDOW_SINC;JINC2_SINC;JINC2_AR_STRENGTH"
+JINC2_WINDOW_SINC = 0.44
+JINC2_SINC = 0.40
+JINC2_AR_STRENGTH = 0.0

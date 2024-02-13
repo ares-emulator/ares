@@ -1,0 +1,61 @@
+shaders = 11
+
+shader0 = ../stock.slang
+alias0 = "glow_trails_refpass"
+
+shader1 = ../crt/shaders/glow-trails/glow-trails0.slang
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+
+shader2 = "../blurs/shaders/royale/blur9fast-vertical.slang"
+filter_linear2 = "true"
+scale_type2 = "source"
+scale2 = "1.0"
+srgb_framebuffer2 = "true"
+
+shader3 = "../blurs/shaders/royale/blur9fast-horizontal.slang"
+alias3 = "TRAIL_BLUR"
+filter_linear3 = "true"
+scale_type3 = "source"
+scale3 = "1.0"
+srgb_framebuffer3 = "true"
+
+shader4 = ../crt/shaders/glow-trails/glow-trails1.slang
+
+shader5 = ../crt/shaders/crt-royale/src/crt-royale-first-pass-linearize-crt-gamma-bob-fields.slang
+srgb_framebuffer5 = true
+alias5 = "ORIG_LINEARIZED"
+
+shader6 = "../crt/shaders/crt-easymode-halation/blur_horiz.slang"
+filter_linear6 = "true"
+scale_type6 = "source"
+scale6 = "1.0"
+srgb_framebuffer6 = "true"
+
+shader7 = "../crt/shaders/crt-easymode-halation/blur_vert.slang"
+alias7 = "GlowPass"
+filter_linear7 = "true"
+scale_type7 = "source"
+scale7 = "1.0"
+srgb_framebuffer7 = "true"
+
+shader8 = "../crt/shaders/crt-easymode-halation/threshold.slang"
+srgb_framebuffer8 = "true"
+
+shader9 = "../crt/shaders/crt-lottes-multipass/bloompass-glow.slang"
+filter_linear9 = "true"
+alias9 = BloomPass
+
+shader10 = "../crt/shaders/crt-lottes-multipass/scanpass-glow.slang"
+filter_linear10 = "true"
+
+parameters = "mixfactor;threshold;trail_bright;glowFactor;DIFFUSION;maskLight;maskDark;warpX"
+mixfactor = "0.75"
+threshold = "0.90"
+trail_bright = "0.07"
+glowFactor = "0.10"
+DIFFUSION = "0.10"
+maskLight = 0.9
+maskDark = 1.1
+warpX = 0.0

@@ -1,0 +1,3 @@
+#reference "shaders/crt-sony-megatron-sdr.slangp"
+
+hcrt_crt_screen_type = "1.000000"

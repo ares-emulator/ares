@@ -1,0 +1,7 @@
+shaders = 1
+
+shader0 = shaders/feedback.slang
+scale_type0 = source
+scale0 = 1.0
+
+filter_linear0 = false

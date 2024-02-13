@@ -1,0 +1,3 @@
+I'm using jpg as a bg image to keep size low.
+RA on android has an issue with jpg loading, but fortunately i found a workaround (pushing black levels):
+https://github.com/libretro/RetroArch/issues/15337

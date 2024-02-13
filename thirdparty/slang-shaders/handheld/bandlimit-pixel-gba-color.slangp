@@ -1,0 +1,11 @@
+shaders = 3
+shader0 = shaders/color/gba-color.slang
+shader1 = ../linear/linearize.slang
+shader2 = ../pixel-art-scaling/shaders/bandlimit-pixel.slang
+
+filter_linear1 = false 
+scale_type1 = source
+scale1 = 1.0
+srgb_framebuffer1 = true
+
+filter_linear2 = true

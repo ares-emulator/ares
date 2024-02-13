@@ -1,0 +1,12 @@
+shaders = 3
+
+shader0 = ../stock.slang
+alias0 = Reference
+
+shader1 = shaders/crt-lottes-multipass/bloompass.slang
+alias1 = BloomPass
+filter_linear1 = true
+
+shader2 = shaders/crt-lottes-multipass/scanpass.slang
+filter_linear2 = true
+scale_type2 = viewport

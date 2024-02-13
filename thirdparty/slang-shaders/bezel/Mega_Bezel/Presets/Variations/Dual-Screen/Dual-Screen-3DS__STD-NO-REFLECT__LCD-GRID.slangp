@@ -1,0 +1,6 @@
+#reference "../../Base_CRT_Presets/MBZ__4__STD-NO-REFLECT__LCD-GRID.slangp"
+
+# BackgroundImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+# BackgroundVertImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+
+#reference "../../../resource/param_values/dual-screen/dual-screen-3ds.params"

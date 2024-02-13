@@ -1,0 +1,14 @@
+shaders = "2"
+
+shader0 = "../handheld/shaders/color/gbc-color.slang"
+shader1 = "../handheld/shaders/retro-v2.slang"
+
+filter_linear0 = "false"
+scale_type0 = "source"
+scale0 = "1.000000"
+
+filter_linear1 = "false"
+
+parameters = "lighten_screen;RETRO_PIXEL_SIZE"
+lighten_screen = "0.500000"
+RETRO_PIXEL_SIZE = "0.840000"

@@ -1,0 +1,28 @@
+shaders = 5
+
+shader0 = ../stock.slang
+alias0 = gristleVHS_refpass
+
+shader1 = shaders/gristleVHS/HorizontalSoften.slang
+scale_type1 = absolute
+scale_y1 = 480
+scale_x1 = 333
+frame_count_mod1 = 256
+filter_linear1 = true
+
+shader2 = ../blurs/shaders/sunset_gaussian/sunset_horz.slang
+scale_type2 = absolute
+scale_x2 = 80
+scale_y2 = 480
+filter_linear2 = true
+
+shader3 = shaders/gristleVHS/VHS.slang
+scale_type3 = absolute
+scale_y3 = 480
+scale_x3 = 333
+frame_count_mod3 = 256
+filter_linear3 = true
+
+shader4 = ../stock.slang
+filter_linear4 = true
+scale_type4 = viewport

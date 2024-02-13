@@ -1,0 +1,26 @@
+shaders = 4
+
+shader0 = shaders/metacrt/bufC.slang
+scale_type0 = viewport
+filter_linear0 = true
+float_framebuffer0 = true
+
+shader1 = shaders/metacrt/bufD.slang
+scale_type1 = viewport
+filter_linear1 = true
+float_framebuffer1 = true
+
+shader2 = shaders/metacrt/Image.slang
+scale_type2 = viewport
+filter_linear2 = true
+float_framebuffer2 = true
+
+shader3 = ../anti-aliasing/shaders/fxaa.slang
+filter_linear3 = true
+scale_type3 = viewport
+
+textures = "cubeMap;table"
+cubeMap = shaders/metacrt/basilica.png
+cubeMap_wrap_mode = repeat
+table = shaders/metacrt/woodgrain.png
+table_wrap_mode = repeat

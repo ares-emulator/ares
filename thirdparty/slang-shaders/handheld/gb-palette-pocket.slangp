@@ -1,0 +1,9 @@
+shaders = 1
+shader0 = shaders/gb-palette/gb-palette.slang
+
+scale_type0 = source
+filter_linear0 = false
+
+textures = COLOR_PALETTE
+COLOR_PALETTE = shaders/gb-palette/resources/palette-pocket.png
+COLOR_PALETTE_linear = false

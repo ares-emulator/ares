@@ -1,0 +1,21 @@
+// Lottes mask, a bit like a slot mask effect
+shadowMask = 2
+
+wp_temperature = 7400
+g_lum = "0.15"
+g_lift = "0.200000"
+g_sat = "0.10"
+
+gamma_out = "2.40000"
+
+mask_bloom = "0.200000"
+maskDark = "0.300000"
+slotmask1 = "1.000000"
+
+gamma_c = "0.750000"
+
+GDV_DECONVERGENCE_ON = "1.000000"
+
+HSM_FAKE_SCANLINE_MODE = "1.000000"
+HSM_FAKE_SCANLINE_OPACITY = "100.000000"
+HSM_FAKE_SCANLINE_RES = "176.000000"

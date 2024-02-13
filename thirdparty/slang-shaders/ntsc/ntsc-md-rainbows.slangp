@@ -1,0 +1,28 @@
+# Based on dannyld's rainbow settings
+
+shaders = 2
+
+shader0 = "../crt/shaders/mame_hlsl/shaders/mame_ntsc_encode.slang"
+filter_linear0 = "true"
+scale_type0 = "source"
+scale0 = "1.000000"
+
+shader1 = "../crt/shaders/mame_hlsl/shaders/mame_ntsc_decode.slang"
+filter_linear1 = "true"
+scale_type1 = "source"
+scale_1 = "1.000000"
+
+# ntsc parameters
+ntscsignal = "1.000000"
+avalue = "0.000000"
+bvalue = "0.000000"
+scantime = "47.900070"
+
+# optional blur
+shadowalpha = "0.100000"
+notch_width = "3.450001"
+ifreqresponse = "1.750000"
+qfreqresponse = "1.450000"
+
+# uncomment for jailbars in blue
+#pvalue = "1.100000"

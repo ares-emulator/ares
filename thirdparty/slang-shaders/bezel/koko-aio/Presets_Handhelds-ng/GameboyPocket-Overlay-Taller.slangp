@@ -1,0 +1,11 @@
+#reference "GameboyPocket-Overlay.slangp"
+
+
+BG_IMAGE_OFFY = "-0.115000"
+BG_IMAGE_ZOOM = "1.368502"
+	
+GLOBAL_OFFX = "0.002500"
+GLOBAL_OFFY = "-0.187999"
+GLOBAL_ZOOM = "0.461998"
+
+	
