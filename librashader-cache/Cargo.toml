@@ -1,0 +1,41 @@
+[package]
+name = "librashader-cache"
+edition = "2021"
+license = "MPL-2.0 OR GPL-3.0-only"
+version = "0.2.0-beta.9"
+authors = ["Ronny Chan <ronny@ronnychan.ca>"]
+repository = "https://github.com/SnowflakePowered/librashader"
+readme = "../README.md"
+categories = ["emulators", "compilers", "graphics"]
+keywords = ["shader", "retroarch", "SPIR-V"]
+description = "RetroArch shaders for all."
+
+[dependencies]
+serde = { version = "1.0" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.2.0-beta.9", features = ["serialize"] }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.0-beta.9" }
+platform-dirs = "0.3.0"
+blake3 = { version = "1.3.3" }
+thiserror = "1.0.38"
+bincode = { version = "2.0.0-rc.2", features = ["serde"] }
+rusqlite = { version = "0.28.0", features = ["bundled"] }
+
+bytemuck = "1.13.0"
+
+[target.'cfg(windows)'.dependencies.windows]
+version = "0.48.0"
+features = [
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D_Fxc",
+    "Win32_Graphics_Direct3D_Dxc",
+]
+optional = true
+
+[features]
+d3d = ["windows", "librashader-reflect/dxil"]
+
+# hack to get building on docsrs
+docsrs = ["blake3/pure", "rusqlite/in_gecko"]
+
+[package.metadata.docs.rs]
+features = ["docsrs"]

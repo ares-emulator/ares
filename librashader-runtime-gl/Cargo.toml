@@ -1,0 +1,36 @@
+[package]
+name = "librashader-runtime-gl"
+edition = "2021"
+
+license = "MPL-2.0 OR GPL-3.0-only"
+version = "0.2.0-beta.9"
+authors = ["Ronny Chan <ronny@ronnychan.ca>"]
+repository = "https://github.com/SnowflakePowered/librashader"
+readme = "../README.md"
+categories = ["emulators", "compilers", "graphics"]
+keywords = ["shader", "retroarch", "SPIR-V"]
+description = "RetroArch shaders for all."
+
+[dependencies]
+librashader-common = { path = "../librashader-common", features = ["opengl"], version = "0.2.0-beta.9" }
+librashader-presets = { path = "../librashader-presets", version = "0.2.0-beta.9" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.0-beta.9" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.2.0-beta.9" }
+librashader-runtime = { path = "../librashader-runtime" , version = "0.2.0-beta.9" }
+librashader-cache = { path = "../librashader-cache", version = "0.2.0-beta.9" }
+spirv_cross = { package = "librashader-spirv-cross", version = "0.24" }
+
+rustc-hash = "1.1.0"
+gl = "0.14.0"
+bytemuck = { version = "1.12.3", features = ["derive"] }
+thiserror = "1.0.37"
+rayon = "1.6.1"
+concat-arrays = "0.1.2"
+
+sptr = "0.3"
+
+[dev-dependencies]
+glfw = "0.47.0"
+
+[package.metadata.docs.rs]
+features = ["librashader-cache/docsrs"]
