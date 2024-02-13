@@ -11,7 +11,7 @@ auto GPU::readGP1() -> u32 {
   data.bit(12)    = io.checkMaskBit;
   data.bit(13)    = !io.field || !io.interlace;
   data.bit(14)    = io.reverseFlag;
-  data.bit(15)    = io.textureDisable;
+  data.bit(15)    = 0; // io.textureDisable only when 2MB VRAM installed?
   data.bit(16)    = io.horizontalResolution.bit(2);
   data.bit(17,18) = io.horizontalResolution.bit(0,1);
   data.bit(19)    = io.verticalResolution;
@@ -20,12 +20,20 @@ auto GPU::readGP1() -> u32 {
   data.bit(22)    = io.interlace;
   data.bit(23)    = io.displayDisable;
   data.bit(24)    = io.interrupt;
-  data.bit(25)    = io.dmaDirection > 0;  //todo
+  data.bit(25)    = 0;
   data.bit(26)    = io.pcounter == 0;  //ready to receive command
-  data.bit(27)    = io.mode != Mode::CopyToVRAM;
+  data.bit(27)    = io.mode == Mode::CopyFromVRAM;
   data.bit(28)    = io.pcounter == 0;  //ready to receive DMA block
   data.bit(29,30) = io.dmaDirection;
   data.bit(31)    = !vblank() && (interlace() ? !io.field : io.vcounter & 1);
+
+  switch(io.dmaDirection) {
+    case 0: data.bit(25) = 0; break;
+    case 1: data.bit(25) = queue.gp0.length < 16; break;
+    case 2: data.bit(25) = data.bit(28); break;
+    case 3: data.bit(25) = data.bit(27); break;
+  }
+
   return data;
 }
 

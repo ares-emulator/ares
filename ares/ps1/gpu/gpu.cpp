@@ -85,7 +85,6 @@ auto GPU::main() -> void {
 
     if(io.vcounter == vend()) {
       timer.vsync(1);
-      io.interrupt = 1;
       interrupt.raise(Interrupt::Vblank);
       blitter.queue();
     }
