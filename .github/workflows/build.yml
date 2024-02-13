@@ -87,6 +87,24 @@ jobs:
         keychain-password: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
     - name: Checkout source code
       uses: actions/checkout@v2
+    - name: Install Windows Dependencies
+      if: runner.os == 'Windows'
+      run: |
+        export PATH="/c/Users/runneradmin/.cargo/bin:$PATH" # correct on windows-latest as of 2024-02-19 
+        if [[ ${{ matrix.platform.name }} == *-arm64 ]]; then
+          rustup toolchain install nightly
+          rustup default nightly
+          rustup target add aarch64-pc-windows-msvc        
+          pushd thirdparty/librashader
+          ./build-librashader.sh aarch64-pc-windows-msvc
+          popd        
+        else
+          rustup toolchain install nightly
+          rustup default nightly
+          pushd thirdparty/librashader
+          ./build-librashader.sh
+          popd
+        fi
     - name: "macOS: recover MoltenVK cache"
       if: runner.os == 'macOS'
       uses: actions/cache@v3
@@ -108,12 +126,19 @@ jobs:
       run: |
         brew install make ninja cmake
         pip install --no-input setuptools
+        rustup toolchain install nightly
+        rustup default nightly
+        rustup target add x86_64-apple-darwin
+        rustup target add aarch64-apple-darwin
         echo "MAKE=gmake" >> $GITHUB_ENV
         pushd thirdparty/SDL
         ./build-SDL.sh
         popd
         pushd thirdparty/MoltenVK
         ./build-moltenvk.sh
+        popd
+        pushd thirdparty/librashader
+        ./build-librashader.sh
         popd
     - name: Set up MSVC environment
       if: matrix.platform.msvc-arch != ''

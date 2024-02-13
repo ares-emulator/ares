@@ -593,10 +593,16 @@ auto Presentation::loadShaders() -> void {
   auto location = locate("Shaders/");
 
   if(ruby::video.driver() == "OpenGL 3.2") {
-    for(auto shader : directory::folders(location, "*.shader")) {
-      if(shaders.objectCount() == 2) videoShaderMenu.append(MenuSeparator());
+    auto files = directory::files(location, "*.slangp");
+    for(auto dir : directory::folders(location)) {
+      for(auto file : directory::files({location, "/", dir}, "*.slangp")) {
+        files.append({dir, file});
+      }
+    }
+
+    for(auto shader : files) {
       MenuRadioItem item{&videoShaderMenu};
-      item.setText(string{shader}.trimRight(".shader/", 1L)).onActivate([=] {
+      item.setText(string{shader}.trimRight(".slangp", 1L)).onActivate([=] {
         settings.video.shader = {location, shader};
         ruby::video.setShader(settings.video.shader);
       });
@@ -609,7 +615,7 @@ auto Presentation::loadShaders() -> void {
 
     if(!program.startShader.imatch("None") &&
        !program.startShader.imatch("Blur")) {
-        settings.video.shader = {location, program.startShader, ".shader/"};
+        settings.video.shader = {location, program.startShader, ".slangp"};
     } else {
         settings.video.shader = program.startShader;
     }
@@ -631,7 +637,7 @@ auto Presentation::loadShaders() -> void {
   if(settings.video.shader.imatch("None")) {none.setChecked(); settings.video.shader = "None";}
   if(settings.video.shader.imatch("Blur")) {blur.setChecked(); settings.video.shader = "Blur";}
   for(auto item : shaders.objects<MenuRadioItem>()) {
-    string fullPath = {location, item.text(), ".shader/"};
+    string fullPath = {location, item.text(), ".slangp"};
     if(settings.video.shader.imatch(fullPath)) {
       item.setChecked();
       settings.video.shader = fullPath;
