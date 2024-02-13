@@ -1,0 +1,159 @@
+shaders = 16
+
+shader0 = ../../../shaders/guest/extras/hsm-drez-none.slang
+filter_linear0 = false
+srgb_framebuffer0 = true
+scale_type0 = source
+scale_x0 = 1
+scale_y0 = 1
+alias0 = "DerezedPass"
+
+shader1 = ../../../shaders/base/cache-info-potato-params.slang
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+alias1 = "InfoCachePass"
+
+shader2 = ../../../shaders/guest/extras/hsm-fetch-drez-output.slang
+filter_linear2 = false
+srgb_framebuffer2 = true
+scale_type2 = source
+scale_x2 = 1
+scale_y2 = 1
+
+# Color Correction with Dogway's awesome Grade shader
+# Grade is after Afterglow so that brightening the black level does not break the afterglow
+shader3 = ../../../shaders/dogway/hsm-grade.slang
+filter_linear3 = false
+scale_type3 = source
+scale3 = 1.0
+alias3 = "ColorCorrectPass"
+
+shader4 = ../../../shaders/base/stock.slang
+alias4 = "PrePass0"
+
+shader5 = ../../../shaders/guest/ntsc/hsm-ntsc-pass1.slang
+filter_linear5 = false
+float_framebuffer5 = true
+scale_type_x5 = source
+scale_type_y5 = source
+scale_x5 = 4.0
+scale_y5 = 1.0
+frame_count_mod5 = 2
+alias5 = NPass1
+
+shader6 = ../../../shaders/guest/ntsc/hsm-ntsc-pass2.slang
+float_framebuffer6 = true
+filter_linear6 = true
+scale_type6 = source
+scale_x6 = 0.5
+scale_y6 = 1.0
+
+shader7 = ../../../shaders/guest/ntsc/hsm-ntsc-pass3.slang
+filter_linear7 = true
+scale_type7 = source
+scale_x7 = 1.0
+scale_y7 = 1.0
+
+shader8 = ../../../shaders/base/stock.slang
+float_framebuffer8 = true
+alias8 = "PrePass"
+
+shader9 = ../../../shaders/guest/hsm-avg-lum.slang
+filter_linear9 = true
+scale_type9 = source
+scale9 = 1.0
+mipmap_input9 = true
+float_framebuffer9 = true
+alias9 = "AvgLumPass"
+
+# Pass referenced by subsequent blurring passes and crt pass
+shader10 = ../../../shaders/guest/hsm-interlace.slang
+filter_linear10 = true
+scale_type10 = source
+scale10 = 1.0
+float_framebuffer10 = true
+alias10 = "LinearizePass"
+feedback_pass = "0"
+
+# Sony Megatron Colour Video Monitor by Major Pain The Cactus
+shader11 = "../../../shaders/megatron/crt-sony-megatron-source-pass.slang"
+filter_linear11 = "false"
+scale_type11 = "source"
+scale11 = "1.0"
+wrap_mode11 = "clamp_to_border"
+mipmap_input11 = "false"
+alias11 = "SourceSDR"
+float_framebuffer11 = "true"
+
+shader12 = "../../../shaders/megatron/crt-sony-megatron-hdr-pass.slang"
+filter_linear12 = "false"
+scale_type12 = "source"
+scale12 = "1.0"
+wrap_mode12 = "clamp_to_border"
+mipmap_input12 = "false"
+alias12 = "SourceHDR"
+float_framebuffer12 = "true"
+
+shader13 = "../../../shaders/megatron/crt-sony-megatron-potato.slang"
+filter_linear13 = "false"
+wrap_mode13 = "clamp_to_border"
+mipmap_input13 = "false"
+scale_type13 = "viewport"
+float_framebuffer13 = "true"
+alias13 = "CRTPass"
+
+shader14 = ../../../shaders/base/post-crt-prep-potato-megatron.slang
+mipmap_input14 = true
+scale_type14 = viewport
+float_framebuffer14 = true
+alias14 = "PostCRTPass"
+
+# Combine Passes ----------------------------------------------------------------
+shader15 = ../../../shaders/base/output-hdr.slang
+alias15 = "OutputPass"
+
+# Textures Potato
+# Define textures to be used by the different passes
+textures = "SamplerLUT1;SamplerLUT2;SamplerLUT3;SamplerLUT4;ScreenPlacementImage;BackgroundImage;BackgroundVertImage"
+
+SamplerLUT1 = ../../../shaders/guest/lut/trinitron-lut.png
+SamplerLUT1_linear = true 
+SamplerLUT2 = ../../../shaders/guest/lut/inv-trinitron-lut.png
+SamplerLUT2_linear = true 
+SamplerLUT3 = ../../../shaders/guest/lut/nec-lut.png
+SamplerLUT3_linear = true
+SamplerLUT4 = ../../../shaders/guest/lut/ntsc-lut.png
+SamplerLUT4_linear = true
+
+ScreenPlacementImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+ScreenPlacementImage_linear = false
+
+BackgroundImage = ../../../shaders/textures/Baked_Frame_Carbonfiber_Background.png
+BackgroundImage_linear = true
+BackgroundImage_mipmap = 1
+
+BackgroundVertImage = ../../../shaders/textures/Baked_Frame_Carbonfiber_Background_Vert.png
+BackgroundVertImage_linear = true
+BackgroundVertImage_mipmap = 1
+
+# Parameters
+HSM_ASPECT_RATIO_MODE = 1
+
+# Use for matching vanilla GDV-Advanced
+# HSM_ASPECT_RATIO_MODE = 6
+# HSM_CURVATURE_MODE = 0
+
+# Sony Megatron Color Monitor Parameters
+hcrt_hdr = "0.000000"
+
+HSM_INT_SCALE_MODE = "1.000000"
+HSM_CRT_CURVATURE_SCALE = "0.000000"
+HSM_GLOBAL_GRAPHICS_BRIGHTNESS = "100.000000"
+HSM_REFLECT_GLOBAL_AMOUNT = "7.000000"
+
+# GDV NTSC Parameters
+GAMMA_INPUT = 2.0
+gamma_out = 1.95
+h_sharp = "15.000000"
+s_sharp = "1.500000"

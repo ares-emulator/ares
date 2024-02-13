@@ -1,0 +1,14 @@
+shaders = "1"
+shader0 = "../../crt/shaders/gizmo-crt.slang"
+filter_linear0 = "true"
+scale_type0 = viewport
+
+parameters = "BRIGHTNESS;HORIZONTAL_BLUR;VERTICAL_BLUR;BLUR_OFFSET;BGR_LCD_PATTERN;SHRINK"
+CURVATURE_X = "0.0"
+CURVATURE_Y = "0.0"
+BRIGHTNESS = "0.3"
+HORIZONTAL_BLUR = "0.0"
+VERTICAL_BLUR = "0.0"
+BLUR_OFFSET = "0.0"
+BGR_LCD_PATTERN = "0.0"
+SHRINK = "0.0"

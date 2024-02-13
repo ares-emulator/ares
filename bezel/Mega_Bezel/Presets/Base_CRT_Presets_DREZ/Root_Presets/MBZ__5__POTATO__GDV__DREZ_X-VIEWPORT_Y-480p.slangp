@@ -1,0 +1,147 @@
+shaders = 14
+
+shader0 = ../../../shaders/guest/extras/hsm-drez-g-sharp_resampler.slang
+filter_linear0 = false
+scale_type_x0 = viewport
+scale_x0 = 1.0
+scale_type_y0 = absolute
+scale_y0 = 480
+wrap_mode0 = "clamp_to_edge"
+alias0 = "DerezedPass"
+
+shader1 = ../../../shaders/base/cache-info-potato-params.slang
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+alias1 = "InfoCachePass"
+
+shader2 = ../../../shaders/guest/extras/hsm-fetch-drez-output.slang
+filter_linear2 = false
+srgb_framebuffer2 = true
+scale_type2 = source
+scale_x2 = 1
+scale_y2 = 1
+
+# Color Correction with Dogway's awesome Grade shader
+# Grade is after Afterglow so that brightening the black level does not break the afterglow
+shader3 = ../../../shaders/dogway/hsm-grade.slang
+filter_linear3 = false
+scale_type3 = source
+scale3 = 1.0
+alias3 = "ColorCorrectPass"
+
+shader4 = ../../../shaders/base/stock.slang
+filter_linear4 = true
+scale_type4 = source
+scale_x4 = 1.0
+scale_y4 = 1.0
+alias4 = "PrePass"
+mipmap_input4 = true
+
+shader5 = ../../../shaders/guest/hsm-avg-lum.slang
+filter_linear5 = true
+scale_type5 = source
+scale5 = 1.0
+mipmap_input5 = true
+alias5 = "AvgLumPass"
+
+# Pass referenced by subsequent blurring passes and crt pass
+shader6 = ../../../shaders/guest/hsm-interlace-and-linearize.slang
+filter_linear6 = true
+scale_type6 = source
+scale6 = 1.0
+float_framebuffer6 = true
+alias6 = "LinearizePass"
+
+shader7 = ../../../shaders/guest/hsm-gaussian_horizontal.slang
+filter_linear7 = true
+scale_type_x7 = absolute
+scale_x7 = 800.0
+scale_type_y7 = source
+scale_y7 = 1.0 
+float_framebuffer7 = true
+
+shader8 = ../../../shaders/guest/hsm-gaussian_vertical.slang
+filter_linear8 = true
+scale_type_x8 = absolute
+scale_x8 = 800.0
+scale_type_y8 = absolute
+scale_y8 = 600.0
+float_framebuffer8 = true
+alias8 = GlowPass
+
+shader9 = ../../../shaders/guest/hsm-bloom_horizontal.slang
+filter_linear9 = true
+scale_type_x9 = absolute
+scale_x9 = 800.0
+scale_type_y9 = absolute
+scale_y9 = 600.0 
+float_framebuffer9 = true
+
+shader10 = ../../../shaders/guest/hsm-bloom_vertical.slang
+filter_linear10 = true
+scale_type_x10 = source
+scale_x10 = 1.0
+scale_type_y10 = source
+scale_y10 = 1.0
+float_framebuffer10 = true
+alias10 = BloomPass
+
+shader11 = ../../../shaders/guest/hsm-crt-guest-advanced-potato.slang
+filter_linear11 = true
+scale_type11 = viewport
+scale_x11 = 1.0
+scale_y11 = 1.0
+float_framebuffer11 = true
+
+shader12 = ../../../shaders/guest/hsm-deconvergence-potato.slang
+filter_linear12 = true
+scale_type12 = viewport
+scale_x12 = 1.0
+scale_y12 = 1.0
+float_framebuffer12 = true
+alias12 = "CRTPass"
+
+shader13 = ../../../shaders/base/post-crt-prep-potato.slang
+mipmap_input13 = true
+scale_type13 = viewport
+float_framebuffer13 = true
+alias13 = "PostCRTPass"
+
+# Textures Potato
+# Define textures to be used by the different passes
+textures = "SamplerLUT1;SamplerLUT2;SamplerLUT3;SamplerLUT4;ScreenPlacementImage;BackgroundImage;BackgroundVertImage"
+
+SamplerLUT1 = ../../../shaders/guest/lut/trinitron-lut.png
+SamplerLUT1_linear = true 
+SamplerLUT2 = ../../../shaders/guest/lut/inv-trinitron-lut.png
+SamplerLUT2_linear = true 
+SamplerLUT3 = ../../../shaders/guest/lut/nec-lut.png
+SamplerLUT3_linear = true
+SamplerLUT4 = ../../../shaders/guest/lut/ntsc-lut.png
+SamplerLUT4_linear = true
+
+ScreenPlacementImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+ScreenPlacementImage_linear = false
+
+BackgroundImage = ../../../shaders/textures/Baked_Frame_Carbonfiber_Background.png
+BackgroundImage_linear = true
+BackgroundImage_mipmap = 1
+
+BackgroundVertImage = ../../../shaders/textures/Baked_Frame_Carbonfiber_Background_Vert.png
+BackgroundVertImage_linear = true
+BackgroundVertImage_mipmap = 1
+
+# Parameters
+HSM_ASPECT_RATIO_MODE = 1
+
+# Use for matching vanilla GDV-Advanced
+# HSM_ASPECT_RATIO_MODE = 6
+# HSM_CURVATURE_MODE = 0
+
+# DREZ Parameters
+SHARPEN = 0
+
+# Drez X Viewport Scale Parameters
+HSM_ASPECT_RATIO_ORIENTATION = 1
+HSM_ASPECT_RATIO_MODE = 0

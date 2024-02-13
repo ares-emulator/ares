@@ -1,0 +1,8 @@
+shaders = "1"
+feedback_pass = "0"
+shader0 = "../stock.slang"
+filter_linear0 = false
+scale_type_x0 = "source"
+scale_x0 = "1.0"
+scale_type_y0 = "source"
+scale_y0 = "0.5"

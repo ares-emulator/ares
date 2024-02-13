@@ -1,0 +1,6 @@
+#reference "../../Base_CRT_Presets/MBZ__5__POTATO__GDV-MINI.slangp"
+
+#reference "../../../resource/param_values/base/set-all-textures-empty.params"
+#reference "../../../resource/param_values/lightgun/sinden-border-basic.params"
+
+HSM_BG_OPACITY = 0

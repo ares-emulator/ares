@@ -1,0 +1,5 @@
+shaders = 1
+
+shader0 = shaders/bayer-matrix-dithering.slang
+filter_linear0 = false
+scale_type0 = source

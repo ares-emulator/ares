@@ -1,0 +1,3 @@
+#reference "../Base_CRT_Presets/MBZ__2__ADV-GLASS__GDV.slangp"
+
+HSM_SCREEN_REFLECTION_SCALE = "180.000000"

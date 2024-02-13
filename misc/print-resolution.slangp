@@ -1,0 +1,8 @@
+shaders = 2
+
+
+shader0 = shaders/print-resolution/print-resolution-generate-and-cache.slang
+scale_type0 = source
+
+shader1 = shaders/print-resolution/print-resolution-apply.slang
+scale_type1 = source

@@ -1,0 +1,16 @@
+shaders = 5
+
+shader0 = ../stock.slang
+alias0 = MMJ_MP_refpass
+
+shader1 = shaders/MMJ_Cel/MMJ_Cel_Shader_MP_Blur_H.slang
+alias1 = MMJ_BlurPass_H
+
+shader2 = shaders/MMJ_Cel/MMJ_Cel_Shader_MP_Blur_V.slang
+alias2 = MMJ_BlurPass_V
+
+shader3 = shaders/MMJ_Cel/MMJ_Cel_Shader_MP_Outline.slang
+alias3 = MMJ_OutlinePass
+
+shader4 = shaders/MMJ_Cel/MMJ_Cel_Shader_MP_Color.slang
+alias4 = MMJ_ColorPass

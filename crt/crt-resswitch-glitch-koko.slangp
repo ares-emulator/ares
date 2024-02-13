@@ -1,0 +1,6 @@
+shaders = 1
+
+    shader0 = shaders/crt-resswitch-glitch-koko.slang
+scale_type0 = source
+    scale_0 = 1.0
+ wrap_mode0 = "clamp_to_border"

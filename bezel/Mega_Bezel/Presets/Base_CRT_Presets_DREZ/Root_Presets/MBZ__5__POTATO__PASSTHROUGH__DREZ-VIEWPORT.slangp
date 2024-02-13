@@ -1,0 +1,97 @@
+shaders = 9
+
+shader0 = ../../../shaders/guest/extras/hsm-drez-g-sharp_resampler.slang
+filter_linear0 = false
+scale_type_x0 = viewport
+scale_x0 = 1.0
+scale_type_y0 = viewport
+scale_y0 = 1.0
+wrap_mode0 = "clamp_to_edge"
+alias0 = "DerezedPass"
+
+shader1 = ../../../shaders/base/cache-info-potato-params.slang
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+alias1 = "InfoCachePass"
+
+shader2 = ../../../shaders/guest/extras/hsm-fetch-drez-output.slang
+filter_linear2 = false
+srgb_framebuffer2 = true
+scale_type2 = source
+scale_x2 = 1
+scale_y2 = 1
+
+shader3 = ../../../shaders/fxaa/fxaa.slang
+float_framebuffer3 = "true"
+alias3 = "DeditherPass"
+
+# Color Correction with Dogway's awesome Grade shader
+# Grade is after Afterglow so that brightening the black level does not break the afterglow
+shader4 = ../../../shaders/dogway/hsm-grade.slang
+filter_linear4 = false
+scale_type4 = source
+scale4 = 1.0
+alias4 = "ColorCorrectPass"
+
+shader5 =  ../../../shaders/guest/hsm-custom-fast-sharpen.slang
+filter_linear5 = true
+scale_type5 = source
+scale_x5 = 1.0
+scale_y5 = 1.0
+
+shader6 = ../../../shaders/base/linearize.slang
+filter_linear6 = true
+scale_type6 = source
+scale6 = 1.0
+float_framebuffer6 = true
+alias6 = "LinearizePass"
+
+shader7 = ../../../shaders/guest/extras/hsm-screen-scale-g-sharp_resampler-potato.slang
+filter_linear7 = "false"
+scale_type7 = "viewport"
+scale7 = "1.0"
+float_framebuffer7 = "true"
+alias7 = "CRTPass"
+
+shader8 = ../../../shaders/base/post-crt-prep-potato.slang
+mipmap_input8 = true
+scale_type8 = viewport
+float_framebuffer8 = true
+alias8 = "PostCRTPass"
+
+# Textures Potato
+# Define textures to be used by the different passes
+textures = "SamplerLUT1;SamplerLUT2;SamplerLUT3;SamplerLUT4;ScreenPlacementImage;BackgroundImage;BackgroundVertImage"
+
+SamplerLUT1 = ../../../shaders/guest/lut/trinitron-lut.png
+SamplerLUT1_linear = true 
+SamplerLUT2 = ../../../shaders/guest/lut/inv-trinitron-lut.png
+SamplerLUT2_linear = true 
+SamplerLUT3 = ../../../shaders/guest/lut/nec-lut.png
+SamplerLUT3_linear = true
+SamplerLUT4 = ../../../shaders/guest/lut/ntsc-lut.png
+SamplerLUT4_linear = true
+
+ScreenPlacementImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+ScreenPlacementImage_linear = false
+
+BackgroundImage = ../../../shaders/textures/Baked_Frame_Carbonfiber_Background.png
+BackgroundImage_linear = true
+BackgroundImage_mipmap = 1
+
+BackgroundVertImage = ../../../shaders/textures/Baked_Frame_Carbonfiber_Background_Vert.png
+BackgroundVertImage_linear = true
+BackgroundVertImage_mipmap = 1
+
+# Parameters
+HSM_ASPECT_RATIO_MODE = 1
+
+# Use for matching vanilla GDV-Advanced
+# HSM_ASPECT_RATIO_MODE = 6
+# HSM_CURVATURE_MODE = 0
+
+# PASSTHROUGH Parameters
+HSM_FXAA_ON = 0
+HSM_SCREEN_SCALE_GSHARP_MODE = 1
+HSM_CRT_CURVATURE_SCALE = 0

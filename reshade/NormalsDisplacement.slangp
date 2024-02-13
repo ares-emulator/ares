@@ -1,0 +1,7 @@
+shaders = 1
+
+shader0 = shaders/NormalsDisplacement/NormalsDisplacement.slang
+scale_type0 = viewport
+
+textures = "displacementMap"
+displacementMap = shaders/NormalsDisplacement/CurveNormals.png

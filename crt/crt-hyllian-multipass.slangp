@@ -1,0 +1,19 @@
+shaders = 2
+
+shader0 = shaders/hyllian/crt-hyllian-multipass/crt-hyllian-pass0.slang
+filter_linear0 = false
+srgb_framebuffer0 = true
+scale_type_x0 = viewport
+scale_type_y0 = source
+scale_x0 = 1.0
+scale_y0 = 1.0
+
+shader1 = shaders/hyllian/crt-hyllian-multipass/crt-hyllian-pass1.slang
+filter_linear1 = false
+scale_type1 = viewport
+
+# Uncomment these lines for a sharper variation
+#parameters = "SHARPNESS;SCANLINES_STRENGTH;BEAM_MIN_WIDTH"
+#SHARPNESS = "2.0"
+#SCANLINES_STRENGTH = "0.50"
+#BEAM_MIN_WIDTH = "0.44"

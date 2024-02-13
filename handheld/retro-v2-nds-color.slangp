@@ -1,0 +1,9 @@
+shaders = 2
+
+shader0 = "shaders/color/nds-color.slang"
+filter_linear0 = "false"
+
+shader1 = "shaders/retro-v2.slang"
+filter_linear1 = "false"
+scale_type1 = "viewport"
+

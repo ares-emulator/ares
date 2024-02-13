@@ -1,0 +1,14 @@
+#reference "../../Base_CRT_Presets/MBZ__0__SMOOTH-ADV__GDV.slangp"
+
+# This reference adds additional parameter values
+#reference "../../../resource/param_values/scene/mega-bezel-duimon-scene.params"
+#reference "../../../resource/param_values/light/basic__night.params"
+
+#reference "../../../resource/param_values/smooth/smooth-adv-super-smooth.params"
+#reference "../../../resource/param_values/smooth/smooth-adv-super-smooth-crt-flavor.params"
+
+HSM_DOWNSAMPLE_BLUR_SCANLINE_DIR = "0.000000"
+HSM_DOWNSAMPLE_BLUR_OPPOSITE_DIR = "0.000000"
+SHARPEN = "0.000000"
+shadowMask = "-1.000000"
+GDV_DECONVERGENCE_ON = "0.000000"

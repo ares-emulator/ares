@@ -1,0 +1,14 @@
+shaders = 2
+
+shader0 = shaders/ntsc-adaptive-tate/ntsc-tate-pass1.slang
+scale_type0 = source
+scale_x0 = 1.0
+filter_linear0 = false
+scale_y0 = 4.0
+float_framebuffer0 = true
+
+shader1 = shaders/ntsc-adaptive-tate/ntsc-tate-pass2.slang
+scale_type1 = source
+scale_x1 = 1.0
+scale_y1 = 0.5
+filter_linear1 = true

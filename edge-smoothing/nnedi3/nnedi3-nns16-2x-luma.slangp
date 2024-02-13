@@ -1,0 +1,46 @@
+shaders = 7
+
+shader0 = shaders/rgb-to-yuv.slang
+filter_linear0 = false
+scale_type0 = source
+scale_x0 = 1.0
+scale_y0 = 1.0
+wrap_mode0 = "clamp_to_edge"
+
+shader1 = shaders/nnedi3-nns16-win8x4-pass1-luma.slang
+filter_linear1 = false
+scale_type1 = source
+scale_x1 = 1.0
+scale_y1 = 2.0
+wrap_mode1 = "clamp_to_edge"
+
+shader2 = shaders/nnedi3-nns16-win8x4-pass2-luma.slang
+filter_linear2 = false
+scale_type2 = source
+scale_x2 = 2.0
+scale_y2 = 1.0
+wrap_mode2 = "clamp_to_edge"
+
+shader3 = shaders/jinc2-cshift-luma.slang
+filter_linear3 = false
+scale_type3 = source
+scale_x3 = 1.0
+scale_y3 = 1.0
+wrap_mode3 = "clamp_to_edge"
+
+shader4 = shaders/jinc2-on-passoutput0.slang
+filter_linear4 = false
+scale_type4 = source
+scale_x4 = 1.0
+scale_y4 = 1.0
+wrap_mode4 = "clamp_to_edge"
+
+shader5 = shaders/yuv-to-rgb-2x.slang
+filter_linear5 = false
+scale_type5 = source
+scale_x5 = 1.0
+scale_y5 = 1.0
+
+shader6 = ../../interpolation/shaders/jinc2.slang
+filter_linear6 = false
+scale_type6 = viewport
