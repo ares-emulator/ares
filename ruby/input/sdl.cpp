@@ -1,4 +1,8 @@
+#if defined(MACOS_COMPILED_SDL)
+#include "SDL.h"
+#else
 #include <SDL2/SDL.h>
+#endif
 
 #if defined(PLATFORM_WINDOWS)
 #include "shared/rawinput.cpp"

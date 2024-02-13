@@ -10,3 +10,5 @@ obj-amd64/
 obj-arm64/
 out-amd64/
 out-arm64/
+thirdparty/SDL/SDL
+thirdparty/SDL/libSDL2-2.0.0.dylib

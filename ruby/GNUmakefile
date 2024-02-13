@@ -26,6 +26,7 @@ ifeq ($(ruby),)
       ifeq ($(wildcard $(macsdl)),)
         $(error Tried to compile ruby for macOS with SDL2 linked, but no SDL2 library was found. Compile it with thirdparty/SDL/build-sdl.sh, or disable SDL by compiling ares with sdl2=false)
       endif
+      flags += -DMACOS_COMPILED_SDL
       ruby += audio.sdl
       ruby += input.sdl
     endif
@@ -63,6 +64,9 @@ endif
 
 ifeq ($(platform),macos)
   ruby.flags := $(flags.objcpp)
+  ifeq ($(sdl2),true)
+    ruby.flags += -I ../thirdparty/SDL/SDL/include/
+  endif
 else
   ruby.flags := $(flags.cpp)
 endif
@@ -71,7 +75,7 @@ ruby.flags += -I../thirdparty
 ruby.flags += $(foreach c,$(subst .,_,$(call strupper,$(ruby))),-D$c)
 ifeq ($(pkg_config),)
   # TODO: add SDL2 cflags
-else
+else ifeq ($(wildcard $(macsdl)),)
   ruby.flags += $(if $(findstring input.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --cflags))
   ruby.flags += $(if $(findstring audio.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --cflags))
 endif
@@ -100,7 +104,7 @@ ifeq ($(platform),windows)
     ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --libs --static))
     ruby.options += $(if $(findstring audio.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --libs --static))
   endif
-else
+else ifeq ($(wildcard $(macsdl)),)
   ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --libs))
   ruby.options += $(if $(findstring audio.sdl,$(ruby)),$(shell $(pkg_config) sdl2 --libs))
 endif
@@ -116,6 +120,9 @@ endif
 ifeq ($(platform),macos)
   ruby.options += -framework IOKit
   ruby.options += $(if $(findstring audio.openal,$(ruby)),-framework OpenAL)
+  ifeq ($(sdl2),true)
+    ruby.options += -L../thirdparty/SDL/ -lSDL2-2.0.0
+  endif
 endif
 
 ifeq ($(platform),linux)
