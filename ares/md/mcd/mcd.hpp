@@ -21,6 +21,7 @@ struct MCD : M68000, Thread {
       Node::Debugger::Memory pram;
       Node::Debugger::Memory wram;
       Node::Debugger::Memory bram;
+      Node::Debugger::Memory pcmRam;
     } memory;
 
     struct Tracer {

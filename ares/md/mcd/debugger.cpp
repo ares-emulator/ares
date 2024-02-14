@@ -26,6 +26,15 @@ auto MCD::Debugger::load(Node::Object parent) -> void {
     mcd.bram[address] = data;
   });
 
+  memory.pcmRam = parent->append<Node::Debugger::Memory>("CD PCM RAM");
+  memory.pcmRam->setSize(64_KiB);
+  memory.pcmRam->setRead([&](u32 address) -> u8 {
+    return mcd.pcm.ram[address];
+  });
+  memory.bram->setWrite([&](u32 address, u8 data) -> void {
+    mcd.pcm.ram[address] = data;
+  });
+
   tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "MCD");
   tracer.instruction->setAddressBits(24);
   tracer.instruction->setDepth(16);
