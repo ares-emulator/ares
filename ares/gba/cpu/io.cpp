@@ -309,9 +309,10 @@ auto CPU::writeIO(n32 address, n8 data) -> void {
     bool enable = timer().enable;
 
     timer().frequency = data.bit(0,1);
-    timer().cascade   = data.bit(2);
     timer().irq       = data.bit(6);
     timer().enable    = data.bit(7);
+
+    if(address != 0x0400'0102) timer().cascade = data.bit(2);
 
     if(!enable && timer().enable) {  //0->1 transition
       timer().pending = true;
