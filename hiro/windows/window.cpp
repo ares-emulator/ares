@@ -422,7 +422,50 @@ auto pWindow::_statusHeight() const -> s32 {
   }
   return height;
 }
+/* Marty Shepard Borderless Beg */
 
+enum class Style : DWORD {
+	FixedStyle		= WS_SYSMENU 		| WS_CAPTION 	| WS_MINIMIZEBOX 	| WS_BORDER 		| WS_CLIPCHILDREN,
+	ResizableStyle	= WS_SYSMENU 		| WS_CAPTION 	| WS_MINIMIZEBOX 	| WS_MAXIMIZEBOX 	| WS_THICKFRAME 	| WS_CLIPCHILDREN,
+	Marty_Borderless	= WS_POPUP			| WS_VISIBLE 	| WS_CLIPSIBLINGS ,		
+};
+
+auto composition_enabled() -> bool {
+	BOOL composition_enabled = FALSE;
+    bool success = ::DwmIsCompositionEnabled(&composition_enabled) == S_OK;
+    return composition_enabled && success;
+}
+	
+auto set_shadow(HWND handle, bool enabled) -> void {
+	if (composition_enabled()) {
+		static const MARGINS shadow_state[2]{ { 0,0,0,0 },{ 1,1,1,1 } };
+        ::DwmExtendFrameIntoClientArea(handle, &shadow_state[enabled]);
+    }
+}
+	
+auto select_borderless_style() -> Style {
+	return composition_enabled() ? Style::aero_borderless : Style::basic_borderless;
+}
+	
+auto pWindow::setBorderless(bool borderless) -> void {
+	
+	bBorderLess = borderless;
+			
+	Style new_style = (borderless) ? Style::Marty_Borderless : Style::ResizableStyle;
+	Style old_style = static_cast<Style>(::GetWindowLongPtrW(hwnd, GWL_STYLE));
+	
+	if (new_style != old_style) {
+        ::SetWindowLongPtrW(hwnd, GWL_STYLE, static_cast<LONG>(new_style));
+
+        /* when switching between borderless and windowed, restore appropriate shadow state	*/
+        set_shadow(hwnd, true && (new_style != Style::ResizableStyle));
+
+        /* redraw frame */
+        ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+        ::ShowWindow(hwnd, SW_SHOW);		        	
+    }
+}
+/* Marty Shepard Borderless END */
 }
 
 #endif

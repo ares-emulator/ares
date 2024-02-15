@@ -30,6 +30,9 @@ struct Program : ares::Platform {
   //status.cpp
   auto updateMessage() -> void;
   auto showMessage(const string&) -> void;
+#if defined(PLATFORM_WINDOWS)    
+  auto UpdateBorderless() -> void;  			//------------------------- Marty Shepard Borderless  
+#endif
 
   //utility.cpp
   auto pause(bool) -> void;

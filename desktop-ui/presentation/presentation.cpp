@@ -100,6 +100,21 @@ Presentation::Presentation() {
     }
     if(visible()) resizeWindow();
   }).doToggle();
+#if defined(PLATFORM_WINDOWS)    
+   //------------------------- Marty Shepard Borderless Begin 
+  showBorderlessSetting.setText("Borderless Window").setChecked(settings.general.sBorderless).onToggle([&] {
+      settings.general.sBorderless = showBorderlessSetting.checked();
+      if (!showBorderlessSetting.checked()) {
+		Window::setBorderless(false);  	  
+      }
+      else {
+        Window::setBorderless(true);
+      }
+      if (visible()) resizeWindow();
+	  settings.save(); /* Marty Shepard Speichert aktuell die gewählten Einstellung*/	  
+      }).doToggle();
+	//------------------------- Shepard Borderless END
+#endif
   videoSettingsAction.setText("Video" ELLIPSIS).setIcon(Icon::Device::Display).onActivate([&] {
     settingsWindow.show("Video");
   });

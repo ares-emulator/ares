@@ -36,6 +36,8 @@ struct pWindow : pObject {
   auto setTitle(string text) -> void;
   auto setVisible(bool visible) -> void override;
 
+  auto setBorderless(bool borderless) -> void;		/* Marty Shepard Borderless */
+  
   auto modalIncrement() -> void;
   auto modalDecrement() -> void;
   auto windowProc(HWND, UINT, WPARAM, LPARAM) -> maybe<LRESULT>;

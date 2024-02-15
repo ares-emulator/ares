@@ -40,6 +40,9 @@ struct Presentation : Window {
       MenuSeparator groupSettingsSeparatpr{&settingsMenu};
       MenuCheckItem muteAudioSetting{&settingsMenu};
       MenuCheckItem showStatusBarSetting{&settingsMenu};
+#if defined(PLATFORM_WINDOWS)  	  
+      MenuCheckItem showBorderlessSetting{&settingsMenu};	// Marty Shepard Show/Hide Borderless 	  
+#endif	  
       MenuSeparator audioSettingsSeparator{&settingsMenu};
       MenuItem videoSettingsAction{&settingsMenu};
       MenuItem audioSettingsAction{&settingsMenu};

@@ -10,6 +10,7 @@ struct mWindow : mObject {
   auto append(sStatusBar statusBar) -> type&;
   auto backgroundColor() const -> Color;
   auto dismissable() const -> bool;
+  auto borderless() const -> bool;							/* Marty Shepard Borderless */    
   auto doClose() const -> void;
   auto doDrop(vector<string>) const -> void;
   auto doKeyPress(s32) const -> void;
@@ -43,6 +44,7 @@ struct mWindow : mObject {
   auto setAlignment(sWindow relativeTo, Alignment = Alignment::Center) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
   auto setDismissable(bool dismissable = true) -> type&;
+  auto setBorderless(bool borderless = true) -> type&;  		/* Marty Shepard Borderless */    
   auto setDroppable(bool droppable = true) -> type&;
   auto setFrameGeometry(Geometry geometry) -> type&;
   auto setFramePosition(Position position) -> type&;
@@ -65,11 +67,14 @@ struct mWindow : mObject {
   auto sizable() const -> Sizable;
   auto statusBar() const -> StatusBar;
   auto title() const -> string;
+  
+
 
 //private:
   struct State {
     Color backgroundColor;
     bool dismissable = false;
+	bool borderless = false;								/* Marty Shepard Borderless */  	
     bool droppable = false;
     bool fullScreen = false;
     Geometry geometry = {128, 128, 256, 256};

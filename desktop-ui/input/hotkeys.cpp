@@ -139,6 +139,13 @@ auto InputManager::createHotkeys() -> void {
     if(!emulator) return;
     if(settings.audio.volume >= (f64)(0.1)) settings.audio.volume -= (f64)(0.1);
   }));
+
+#if defined(PLATFORM_WINDOWS)  
+  hotkeys.append(InputHotkey("Fork Borderless Window").onPress([&] {
+      program.UpdateBorderless();
+	  settings.save(); /* Marty Shepard Speichert aktuell die gewählten Einstellung*/
+  }));  
+#endif
 }
 
 auto InputManager::pollHotkeys() -> void {

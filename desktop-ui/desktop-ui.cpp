@@ -64,6 +64,10 @@ auto nall::main(Arguments arguments) -> void {
     return settings.paths.saves;
   });
 
+#if defined(PLATFORM_WINDOWS)
+  u32 SettingsGeneralsBorderless = 0;
+#endif 
+
   if(arguments.take("--fullscreen")) {
     program.startFullScreen = true;
   }
@@ -112,11 +116,14 @@ auto nall::main(Arguments arguments) -> void {
     print("  --terminal           Create new terminal window\n");
 #endif
     print("  --fullscreen         Start in full screen mode\n");
+#if defined(PLATFORM_WINDOWS)	
+    print("  --no/--Borderless    Disable/Enable Borderless Window");
+#endif	
     print("  --system name        Specify the system name\n");
     print("  --shader name        Specify the name of the shader to use\n");
     print("  --setting name=value Specify a value for a setting\n");
     print("  --dump-all-settings  Show a list of all existing settings and exit\n");
-    print("  --no-file-prompt     Do not prompt to load (optional) additional roms (eg: 64DD)\n");
+    print("  --no-file-prompt     Do not prompt to load (optional) additional roms (eg: 64DD)\n");	
     print("\n");
     print("Available Systems:\n");
     print("  ");
@@ -126,7 +133,19 @@ auto nall::main(Arguments arguments) -> void {
     print("\n");
     return;
   }
-
+  
+#if defined(PLATFORM_WINDOWS)	
+    // Randloses Fenster Commandline --------- BEGIN
+    if (argument == "--noBorderless") {
+        settings.general.sBorderless = false;
+		SettingsGeneralsBorderless = 1;
+    }	
+    if (argument == "--Borderless") {
+        settings.general.sBorderless = true;
+		SettingsGeneralsBorderless = 2;
+    }
+#endif
+	
   if(arguments.take("--dump-all-settings")) {
     function<void(const Markup::Node&, string)> dump;
     dump = [&](const Markup::Node& node, string prefix) -> void {
@@ -144,6 +163,17 @@ auto nall::main(Arguments arguments) -> void {
     if(file::exists(argument)) program.startGameLoad.append(argument);
   }
 
+#if defined(PLATFORM_WINDOWS)	
+ /* Force and Change Settings By Commandline */
+  if ( SettingsGeneralsBorderless > 0)
+  {
+	  if ( SettingsGeneralsBorderless == 1)
+		   settings.general.sBorderless = false;
+	   
+	  if ( SettingsGeneralsBorderless == 2)	   
+		   settings.general.sBorderless = true;
+  }
+#endif  
   Instances::presentation.construct();
   Instances::settingsWindow.construct();
   Instances::toolsWindow.construct();
