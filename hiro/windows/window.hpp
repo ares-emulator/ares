@@ -36,8 +36,6 @@ struct pWindow : pObject {
   auto setTitle(string text) -> void;
   auto setVisible(bool visible) -> void override;
 
-  auto setBorderless(bool borderless) -> void;		/* Marty Shepard Borderless */
-  
   auto modalIncrement() -> void;
   auto modalDecrement() -> void;
   auto windowProc(HWND, UINT, WPARAM, LPARAM) -> maybe<LRESULT>;
@@ -54,6 +52,9 @@ struct pWindow : pObject {
   COLORREF hbrushColor = 0;
   Geometry windowedGeometry{128, 128, 256, 256};
   bool focus = false;
+  
+  auto setBorderless(bool borderless) -> void;		/* Marty Shepard Borderless */  
+  bool bBorderLess = false;						/* Marty Shepard Borderless */
 };
 
 }

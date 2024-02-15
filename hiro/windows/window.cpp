@@ -86,7 +86,13 @@ auto pWindow::frameMargin(s32 width) const -> Geometry {
     SendMessage(hwnd, WM_NCCALCSIZE, (WPARAM)false, (LPARAM)&rcTemp);
     //adjust our previous calculation to compensate for menu wrapping
     rc.bottom += rcTemp.top;
-  }
+  } else {
+  /* Marty Shephard Borderless BEG */
+    if (bBorderLess){
+	  rc.bottom = 458; // TODO Hardcoded ...
+    }
+  }  
+  /* Marty Shephard Borderless END */	  
   auto& efb = state().fullScreen ? settings.efbPopup : !state().resizable ? settings.efbFixed : settings.efbResizable;
   return {
     abs(rc.left) - efb.x,
@@ -422,9 +428,12 @@ auto pWindow::_statusHeight() const -> s32 {
   }
   return height;
 }
-/* Marty Shepard Borderless Beg */
+/* Marty Shephard Borderless Beg */
 
 enum class Style : DWORD {
+	windowed			= WS_OVERLAPPEDWINDOW	| WS_THICKFRAME	| WS_CAPTION 	| WS_SYSMENU 	| WS_MINIMIZEBOX 	| WS_MAXIMIZEBOX,
+    aero_borderless	= WS_POPUP			| WS_THICKFRAME	| WS_CAPTION 	| WS_SYSMENU 	| WS_MAXIMIZEBOX 	| WS_MINIMIZEBOX,
+    basic_borderless	= WS_POPUP			| WS_THICKFRAME	| WS_SYSMENU 	| WS_MAXIMIZEBOX 	| WS_MINIMIZEBOX,
 	FixedStyle		= WS_SYSMENU 		| WS_CAPTION 	| WS_MINIMIZEBOX 	| WS_BORDER 		| WS_CLIPCHILDREN,
 	ResizableStyle	= WS_SYSMENU 		| WS_CAPTION 	| WS_MINIMIZEBOX 	| WS_MAXIMIZEBOX 	| WS_THICKFRAME 	| WS_CLIPCHILDREN,
 	Marty_Borderless	= WS_POPUP			| WS_VISIBLE 	| WS_CLIPSIBLINGS ,		
@@ -465,7 +474,7 @@ auto pWindow::setBorderless(bool borderless) -> void {
         ::ShowWindow(hwnd, SW_SHOW);		        	
     }
 }
-/* Marty Shepard Borderless END */
+/* Marty Shephard Borderless END */
 }
 
 #endif

@@ -136,11 +136,11 @@ auto nall::main(Arguments arguments) -> void {
   
 #if defined(PLATFORM_WINDOWS)	
     // Randloses Fenster Commandline --------- BEGIN
-    if (argument == "--noBorderless") {
+    if (arguments.take("--noBorderless")) {
         settings.general.sBorderless = false;
 		SettingsGeneralsBorderless = 1;
     }	
-    if (argument == "--Borderless") {
+    if (arguments.take("--Borderless")) {
         settings.general.sBorderless = true;
 		SettingsGeneralsBorderless = 2;
     }
