@@ -78,9 +78,9 @@ auto PPU::frame() -> void {
     screen->setSize(282, displayHeight());
     screen->setViewport(0, 0, 282, displayHeight());
   } else {
-    int x = 24;
+    int x = 16;
     int y = 8;
-    int width = 282 - 48;
+    int width = 282 - 32;
     int height = displayHeight() - 16;
 
     if(Region::PAL()) height -= 48;
