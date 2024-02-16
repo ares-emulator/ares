@@ -6,6 +6,8 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     }
   }
 
+  if(auto result = platform->cheat(address)) return *result;
+
   //cartridge program ROM
   if(address <= 0x0fffff) {
     return cartridge.readP(upper, lower, address, data);

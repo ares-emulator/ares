@@ -1,4 +1,5 @@
 alwaysinline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+  if(auto result = platform->cheat(address)) return *result;
   if(address >= 0x000000 && address <= 0x3fffff) {
     waitRefreshExternal();
     if(!cpu.io.romEnable) {

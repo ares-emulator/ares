@@ -5,6 +5,7 @@ namespace ares::GameBoy {
 Bus bus;
 
 auto Bus::read(u32 cycle, n16 address, n8 data) -> n8 {
+  if(auto result = platform->cheat(address)) return *result;
   data &= cpu.readIO(cycle, address, data);
   data &= apu.readIO(cycle, address, data);
   data &= ppu.readIO(cycle, address, data);

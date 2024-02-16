@@ -184,3 +184,7 @@ auto Program::input(ares::Node::Input::Input node) -> void {
 
   emulator->input(node);
 }
+
+auto Program::cheat(u32 address) -> maybe<u32> {
+  return cheatEditor.find(address);
+}

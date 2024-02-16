@@ -1,5 +1,6 @@
 auto CPU::read(n16 address) -> n8 {
   n8 data = 0xff;
+  if(auto result = platform->cheat(address)) return *result;
   if(address >= 0x0000 && address <= 0x1fff && io.replaceBIOS) return expansion.read(address);
   if(address >= 0x2000 && address <= 0x7fff && io.replaceRAM ) return expansion.read(address);
   if(address >= 0x0000 && address <= 0x1fff) return system.bios[address & 0x1fff];

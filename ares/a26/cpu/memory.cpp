@@ -1,5 +1,7 @@
 inline auto CPU::readBus(n16 address) -> n8 {
   address &= 0x1fff;
+  if(auto result = platform->cheat(address)) return *result;
+
   n8 data = cartridge.read(address);
 
   if(address.bit(12) == 0 && address.bit(7) == 0) {

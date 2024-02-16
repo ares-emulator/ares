@@ -63,6 +63,7 @@ struct Presentation : Window {
       MenuItem reloadGame{&toolsMenu};
       MenuSeparator toolsMenuSeparatorB{&toolsMenu};
       MenuItem manifestViewerAction{&toolsMenu};
+      MenuItem cheatEditorAction{&toolsMenu};
       #if !defined(PLATFORM_MACOS)
       // Cocoa hiro is missing the hex editor widget
       MenuItem memoryEditorAction{&toolsMenu};

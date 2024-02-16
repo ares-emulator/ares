@@ -24,6 +24,9 @@ alwaysinline auto Bus::reduce(u32 address, u32 mask) -> u32 {
 }
 
 alwaysinline auto Bus::read(n24 address, n8 data) -> n8 {
+  if(!(address & 0x40e000)) address = 0x7e0000 | (address & 0x1fff);  //de-mirror WRAM
+  if(auto result = platform->cheat(address)) return *result;
+
   return reader[lookup[address]](target[address], data);
 }
 

@@ -3,6 +3,7 @@ auto CPU::mdr() const -> n8 {
 }
 
 auto CPU::read(n16 address) -> n8 {
+  if(auto result = platform->cheat(address)) return *result;
   n8 data = mdr();
   if(address >= 0xc000 && bus.ramEnable) data = ram.read(address);
   if(Device::MasterSystem() && bus.biosEnable) data = bios.read(address, data);

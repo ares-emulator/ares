@@ -1,4 +1,5 @@
 auto CPU::read(n16 address) -> n8 {
+  if(auto result = platform->cheat(address)) return *result;
 
   // VIDEO
   if (address == 0xe000) return vdp.data();

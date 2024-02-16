@@ -62,6 +62,7 @@ auto Program::load(string location) -> bool {
   presentation.showIcon(false);
   if(settings.video.adaptiveSizing) presentation.resizeWindow();
   manifestViewer.reload();
+  cheatEditor.reload();
   memoryEditor.reload();
   graphicsViewer.reload();
   streamManager.reload();
@@ -110,6 +111,7 @@ auto Program::unload() -> void {
   toolsWindow.setVisible(false);
   gameBrowserWindow.setVisible(false);
   manifestViewer.unload();
+  cheatEditor.unload();
   memoryEditor.unload();
   graphicsViewer.unload();
   streamManager.unload();

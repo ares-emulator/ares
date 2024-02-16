@@ -1,4 +1,5 @@
 #include "../desktop-ui.hpp"
+#include "cheats.cpp"
 #include "manifest.cpp"
 #include "memory.cpp"
 #include "graphics.cpp"
@@ -9,6 +10,7 @@
 namespace Instances { Instance<ToolsWindow> toolsWindow; }
 ToolsWindow& toolsWindow = Instances::toolsWindow();
 ManifestViewer& manifestViewer = toolsWindow.manifestViewer;
+CheatEditor& cheatEditor = toolsWindow.cheatEditor;
 MemoryEditor& memoryEditor = toolsWindow.memoryEditor;
 GraphicsViewer& graphicsViewer = toolsWindow.graphicsViewer;
 StreamManager& streamManager = toolsWindow.streamManager;
@@ -18,6 +20,7 @@ TraceLogger& traceLogger = toolsWindow.traceLogger;
 ToolsWindow::ToolsWindow() {
 
   panelList.append(ListViewItem().setText("Manifest").setIcon(Icon::Emblem::Binary));
+  panelList.append(ListViewItem().setText("Cheats").setIcon(Icon::Emblem::Text));
 #if !defined(PLATFORM_MACOS)
   // Cocoa hiro is missing the hex editor widget
   panelList.append(ListViewItem().setText("Memory").setIcon(Icon::Device::Storage));
@@ -31,6 +34,7 @@ ToolsWindow::ToolsWindow() {
 
   panelContainer.setPadding(5_sx, 5_sy);
   panelContainer.append(manifestViewer, Size{~0, ~0});
+  panelContainer.append(cheatEditor, Size{~0, ~0});
   panelContainer.append(memoryEditor, Size{~0, ~0});
   panelContainer.append(graphicsViewer, Size{~0, ~0});
   panelContainer.append(streamManager, Size{~0, ~0});
@@ -39,6 +43,7 @@ ToolsWindow::ToolsWindow() {
   panelContainer.append(homePanel, Size{~0, ~0});
 
   manifestViewer.construct();
+  cheatEditor.construct();
   memoryEditor.construct();
   graphicsViewer.construct();
   streamManager.construct();
@@ -68,6 +73,7 @@ auto ToolsWindow::show(const string& panel) -> void {
 
 auto ToolsWindow::eventChange() -> void {
   manifestViewer.setVisible(false);
+  cheatEditor.setVisible(false);
   memoryEditor.setVisible(false);
   graphicsViewer.setVisible(false);
   streamManager.setVisible(false);
@@ -78,6 +84,7 @@ auto ToolsWindow::eventChange() -> void {
   bool found = false;
   if(auto item = panelList.selected()) {
     if(item.text() == "Manifest"  ) found = true, manifestViewer.setVisible();
+    if(item.text() == "Cheats"    ) found = true, cheatEditor.setVisible();
     if(item.text() == "Memory"    ) found = true, memoryEditor.setVisible();
     if(item.text() == "Graphics"  ) found = true, graphicsViewer.setVisible();
     if(item.text() == "Streams"   ) found = true, streamManager.setVisible();

@@ -68,6 +68,7 @@ auto CPU::Bus::speed(u32 size, n24 address) -> n32 {
 }
 
 auto CPU::Bus::read(u32 size, n24 address) -> n32 {
+  if(auto result = platform->cheat(address)) return *result;
   n32 data;
 
   if(width == Byte) {

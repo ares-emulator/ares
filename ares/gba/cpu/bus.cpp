@@ -23,6 +23,7 @@ auto CPU::get(u32 mode, n32 address) -> n32 {
   } else {
     if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
     prefetchStep(clocks);
+    if(auto result = platform->cheat(address)) return *result;
          if(address <  0x0200'0000) word = bios.read(mode, address);
     else if(address <  0x0300'0000) word = readEWRAM(mode, address);
     else if(address <  0x0400'0000) word = readIWRAM(mode, address);

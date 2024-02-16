@@ -1,4 +1,6 @@
 auto CPU::read(n16 address) -> n8 {
+  if(auto result = platform->cheat(address)) return *result;
+
   if (address < 0x4000) {
     if (expansionPort.connected() && expansionPort.romcs()) {
       return expansionPort.read(address);

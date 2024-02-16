@@ -25,6 +25,7 @@ auto Bus::read(n20 address) -> n8 {
   if(!cpu.io.cartridgeEnable && address >= 0x100000 - system.bootROM.size()) {
     return system.bootROM.read(address);
   }
+  if(auto result = platform->cheat(address)) return *result;
   switch(address.bit(16,19)) { default:
   case 0x0:
     if(address.bit(14,15) && !system.color()) return 0x90;

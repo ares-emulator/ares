@@ -11,6 +11,41 @@ struct ManifestViewer : VerticalLayout {
   TextEdit manifestView{this, Size{~0, ~0}};
 };
 
+struct CheatEditor : VerticalLayout {
+  auto construct() -> void;
+  auto reload() -> void;
+  auto unload() -> void;
+  auto refresh() -> void;
+  auto setVisible(bool visible = true) -> CheatEditor&;
+
+  auto find(u32 address) -> maybe<u32>;
+
+  Label cheatsLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout editLayout{this, Size{~0, 0}};
+    Label descriptionLabel{&editLayout, Size{0, 0}, 2};
+    LineEdit descriptionEdit{&editLayout, Size{~0, 0}};
+    Label codeLabel{&editLayout, Size{0, 0}, 2};
+    LineEdit codeEdit{&editLayout, Size{120, 0}};
+    Button saveButton{&editLayout, Size{60, 0}};
+  TableView cheatList{this, Size{~0, ~0}};
+  HorizontalLayout deleteLayout{this, Size{~0, 0}};
+    Button deleteButton{&deleteLayout, Size{80, 0}};
+
+
+  struct Cheat {
+    Cheat() = default;
+    auto update(string description, string code, bool enabled = false) -> Cheat&;
+
+    bool enabled;
+    string description;
+    string code;
+    map<u32, u32> addressValuePairs;
+  };
+
+  string location;
+  vector<Cheat> cheats;
+};
+
 struct MemoryEditor : VerticalLayout {
   auto construct() -> void;
   auto reload() -> void;
@@ -101,6 +136,7 @@ struct ToolsWindow : Window {
     ListView panelList{&layout, Size{125_sx, ~0}};
     VerticalLayout panelContainer{&layout, Size{~0, ~0}};
       ManifestViewer manifestViewer;
+      CheatEditor cheatEditor;
       MemoryEditor memoryEditor;
       GraphicsViewer graphicsViewer;
       StreamManager streamManager;
@@ -111,6 +147,7 @@ struct ToolsWindow : Window {
 
 namespace Instances { extern Instance<ToolsWindow> toolsWindow; }
 extern ToolsWindow& toolsWindow;
+extern CheatEditor& cheatEditor;
 extern ManifestViewer& manifestViewer;
 extern MemoryEditor& memoryEditor;
 extern GraphicsViewer& graphicsViewer;

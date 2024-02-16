@@ -1,4 +1,6 @@
 auto CPU::read(n16 address) -> n8 {
+  if(auto result = platform->cheat(address)) return *result;
+
   n8 data = 0xff;
   if(auto result = cartridge.read(address)) {
     data = result();

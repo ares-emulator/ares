@@ -1,4 +1,5 @@
 auto CPU::read(n16 address) -> n8 {
+  if(auto result = platform->cheat(address)) return *result;
   n2 page = address.bit(14,15);
   n2 primary = slot[page].primary;
   

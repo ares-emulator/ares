@@ -1,4 +1,6 @@
 auto CPU::read(n8 bank, n13 address) -> n8 {
+  if(auto result = platform->cheat(bank.bit(0,1) << 13 | address)) return *result;
+
   n8 data = 0xff;
 
   //$00-7f  HuCard or PC Engine Duo
