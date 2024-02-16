@@ -101,7 +101,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "General/AutoSaveMemory", general.autoSaveMemory);
   bind(boolean, "General/HomebrewMode", general.homebrewMode);
 #if defined(PLATFORM_WINDOWS)    
-  bind(boolean, "General/Borderless", general.sBorderless);  // Marty Shepard Borderless
+  bind(boolean, "General/Borderless", general.sBorderless);
 #endif  
 
   bind(natural, "Rewind/Length", rewind.length);

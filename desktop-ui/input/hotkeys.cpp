@@ -143,7 +143,7 @@ auto InputManager::createHotkeys() -> void {
 #if defined(PLATFORM_WINDOWS)  
   hotkeys.append(InputHotkey("Fork Borderless Window").onPress([&] {
       program.UpdateBorderless();
-	  settings.save(); /* Marty Shepard Speichert aktuell die gewählten Einstellung*/
+	  settings.save();
   }));  
 #endif
 }

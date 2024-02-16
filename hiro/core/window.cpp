@@ -388,7 +388,7 @@ auto mWindow::statusBar() const -> StatusBar {
 auto mWindow::title() const -> string {
   return state.title;
 }
-/* Marty Shepard Borderless BEG */
+
 auto mWindow::borderless() const -> bool {
   return state.borderless;
 }
@@ -398,5 +398,5 @@ auto mWindow::setBorderless(bool borderless) -> type& {
   signal(setBorderless, borderless);
   return *this;
 }
-/* Marty Shepard Borderless END */
+
 #endif

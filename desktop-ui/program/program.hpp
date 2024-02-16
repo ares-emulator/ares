@@ -31,7 +31,7 @@ struct Program : ares::Platform {
   auto updateMessage() -> void;
   auto showMessage(const string&) -> void;
 #if defined(PLATFORM_WINDOWS)    
-  auto UpdateBorderless() -> void;  			//------------------------- Marty Shepard Borderless  
+  auto UpdateBorderless() -> void;
 #endif
 
   //utility.cpp

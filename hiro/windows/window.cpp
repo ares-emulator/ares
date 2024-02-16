@@ -87,12 +87,10 @@ auto pWindow::frameMargin(s32 width) const -> Geometry {
     //adjust our previous calculation to compensate for menu wrapping
     rc.bottom += rcTemp.top;
   } else {
-  /* Marty Shephard Borderless BEG */
     if (bBorderLess){
 	  rc.bottom = 458; // TODO Hardcoded ...
     }
-  }  
-  /* Marty Shephard Borderless END */	  
+  }   
   auto& efb = state().fullScreen ? settings.efbPopup : !state().resizable ? settings.efbFixed : settings.efbResizable;
   return {
     abs(rc.left) - efb.x,
@@ -428,8 +426,6 @@ auto pWindow::_statusHeight() const -> s32 {
   }
   return height;
 }
-/* Marty Shephard Borderless Beg */
-
 enum class Style : DWORD {
 	windowed			= WS_OVERLAPPEDWINDOW	| WS_THICKFRAME	| WS_CAPTION 	| WS_SYSMENU 	| WS_MINIMIZEBOX 	| WS_MAXIMIZEBOX,
     aero_borderless	= WS_POPUP			| WS_THICKFRAME	| WS_CAPTION 	| WS_SYSMENU 	| WS_MAXIMIZEBOX 	| WS_MINIMIZEBOX,
@@ -465,16 +461,13 @@ auto pWindow::setBorderless(bool borderless) -> void {
 	
 	if (new_style != old_style) {
         ::SetWindowLongPtrW(hwnd, GWL_STYLE, static_cast<LONG>(new_style));
-
-        /* when switching between borderless and windowed, restore appropriate shadow state	*/
+		
         set_shadow(hwnd, true && (new_style != Style::ResizableStyle));
-
-        /* redraw frame */
+		
         ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
         ::ShowWindow(hwnd, SW_SHOW);		        	
     }
 }
-/* Marty Shephard Borderless END */
 }
 
 #endif

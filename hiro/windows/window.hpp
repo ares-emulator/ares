@@ -20,6 +20,7 @@ struct pWindow : pObject {
   auto remove(sSizable sizable) -> void;
   auto remove(sStatusBar statusBar) -> void;
   auto setBackgroundColor(Color color) -> void;
+  auto setBorderless(bool borderless) -> void;   
   auto setDismissable(bool dismissable) -> void;
   auto setDroppable(bool droppable) -> void;
   auto setEnabled(bool enabled) -> void override;
@@ -34,8 +35,8 @@ struct pWindow : pObject {
   auto setModal(bool modal) -> void;
   auto setResizable(bool resizable) -> void;
   auto setTitle(string text) -> void;
-  auto setVisible(bool visible) -> void override;
-
+  auto setVisible(bool visible) -> void override;   
+  
   auto modalIncrement() -> void;
   auto modalDecrement() -> void;
   auto windowProc(HWND, UINT, WPARAM, LPARAM) -> maybe<LRESULT>;
@@ -51,10 +52,11 @@ struct pWindow : pObject {
   HBRUSH hbrush = nullptr;
   COLORREF hbrushColor = 0;
   Geometry windowedGeometry{128, 128, 256, 256};
+  bool bBorderLess = false;  
   bool focus = false;
   
-  auto setBorderless(bool borderless) -> void;		/* Marty Shepard Borderless */  
-  bool bBorderLess = false;						/* Marty Shepard Borderless */
+
+
 };
 
 }

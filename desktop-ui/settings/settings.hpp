@@ -67,7 +67,7 @@ struct Settings : Markup::Node {
     bool autoSaveMemory = true;
     bool homebrewMode = false;
 #if defined(PLATFORM_WINDOWS)    	
-	bool sBorderless = false;           // Marty Shepard Borderless
+	bool sBorderless = false;
 #endif
   } general;
 

@@ -41,7 +41,7 @@ struct Presentation : Window {
       MenuCheckItem muteAudioSetting{&settingsMenu};
       MenuCheckItem showStatusBarSetting{&settingsMenu};
 #if defined(PLATFORM_WINDOWS)  	  
-      MenuCheckItem showBorderlessSetting{&settingsMenu};	// Marty Shepard Show/Hide Borderless 	  
+      MenuCheckItem showBorderlessSetting{&settingsMenu};
 #endif	  
       MenuSeparator audioSettingsSeparator{&settingsMenu};
       MenuItem videoSettingsAction{&settingsMenu};
