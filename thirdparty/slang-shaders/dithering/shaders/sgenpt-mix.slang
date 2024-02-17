@@ -1,9 +1,9 @@
 #version 450
 
 /*
-   SGENPT-MIX - Sega Genesis Pseudo Transparency Mixer Shader - v8b
+   SGENPT-MIX - Sega Genesis Pseudo Transparency Mixer Shader - v9b
    
-   2011-2020 Hyllian - sergiogdb@gmail.com
+   2011-2024 Hyllian - sergiogdb@gmail.com
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -38,8 +38,8 @@ layout(push_constant) uniform Push
 	float SGPT_LINEAR_GAMMA;
 } params;
 
-#pragma parameter SGPT_BLEND_OPTION "0.OFF | 1.VL | 2.CB | 3.CB-S | 4.Both | 5.Both2 | 6.Both-S" 4.0 0.0 6.0 1.0
-#pragma parameter SGPT_BLEND_LEVEL "SGENPT-MIX Both Blend Level" 1.0 0.0 1.0 0.1
+#pragma parameter SGPT_BLEND_OPTION "0: OFF | 1: VL+CB | 2: Only VL | 3: Only CB" 1.0 0.0 3.0 1.0
+#pragma parameter SGPT_BLEND_LEVEL "SGENPT-MIX Blend Level" 0.85 0.0 1.0 0.05
 #pragma parameter SGPT_ADJUST_VIEW "SGENPT-MIX Adjust View" 0.0 0.0 1.0 1.0
 #pragma parameter SGPT_LINEAR_GAMMA "SGENPT-MIX Use Linear Gamma" 1.0 0.0 1.0 1.0
 #define SGPT_BLEND_OPTION params.SGPT_BLEND_OPTION
@@ -51,10 +51,13 @@ layout(push_constant) uniform Push
 #define GAMMA_IN(color)		pow(color, vec3(GAMMA_EXP, GAMMA_EXP, GAMMA_EXP))
 #define GAMMA_OUT(color)	pow(color, vec3(1.0 / GAMMA_EXP, 1.0 / GAMMA_EXP, 1.0 / GAMMA_EXP))
 
-const vec3 Y = vec3(.2126, .7152, .0722);
+//const vec3 Y = vec3(.2126, .7152, .0722);
+const vec3 Y = vec3( 0.299,  0.587,  0.114);
 
 vec3 min_s(vec3 central, vec3 adj1, vec3 adj2) {return min(central, max(adj1, adj2));}
 vec3 max_s(vec3 central, vec3 adj1, vec3 adj2) {return max(central, min(adj1, adj2));}
+
+//vec3 min_s(vec3 central, vec3 adj1, vec3 adj2) {return clamp(central, adj1, adj2);}
 
 layout(std140, set = 0, binding = 0) uniform UBO
 {
@@ -87,76 +90,46 @@ void main()
 	vec3 C = GAMMA_IN(texture(Source, vTexCoord    ).xyz);
 	vec3 L = GAMMA_IN(texture(Source, vTexCoord -dx).xyz);
 	vec3 R = GAMMA_IN(texture(Source, vTexCoord +dx).xyz);
-	vec3 U = GAMMA_IN(texture(Source, vTexCoord -dy).xyz);
-	vec3 D = GAMMA_IN(texture(Source, vTexCoord +dy).xyz);
-	vec3 UL = GAMMA_IN(texture(Source, vTexCoord -dx -dy).xyz);
-	vec3 UR = GAMMA_IN(texture(Source, vTexCoord +dx -dy).xyz);
-	vec3 DL = GAMMA_IN(texture(Source, vTexCoord -dx +dy).xyz);
-	vec3 DR = GAMMA_IN(texture(Source, vTexCoord +dx +dy).xyz);
-
-	vec3 color = C;
 
 	//  Get min/max samples
 	vec3 min_sample = min_s(C, L, R);
 	vec3 max_sample = max_s(C, L, R);
 
-	float diff = dot(max(max(C, L), max(C, R)) - min(min(C, L), min(C, R)), Y);
+	float contrast = dot(max(C, max(L, R)) - min(C, min(L, R)), Y);
 
-	if (SGPT_BLEND_OPTION == 1) // Only Vertical Lines
+	contrast = smoothstep(0.0, 1.0, (1.0 - SGPT_BLEND_LEVEL) * contrast);
+
+	if (SGPT_BLEND_OPTION == 2) // Only Vertical Lines
 	{
+		vec3 UL = GAMMA_IN(texture(Source, vTexCoord -dx -dy).xyz);
+		vec3 UR = GAMMA_IN(texture(Source, vTexCoord +dx -dy).xyz);
+		vec3 DL = GAMMA_IN(texture(Source, vTexCoord -dx +dy).xyz);
+		vec3 DR = GAMMA_IN(texture(Source, vTexCoord +dx +dy).xyz);
+
 		min_sample = max_s(min_sample, min_s(C, DL, DR), min_s(C, UL, UR));
 		max_sample = min_s(max_sample, max_s(C, DL, DR), max_s(C, UL, UR));
-
-		diff *= (1.0 - SGPT_BLEND_LEVEL);
-
-		color = 0.5*( 1.0 + diff )*C + 0.25*( 1.0 - diff )*(L + R);
 	}
-	else if (SGPT_BLEND_OPTION == 2) // Only Checkerboard
+	else if (SGPT_BLEND_OPTION == 3) // Only Checkerboard
 	{
+		vec3 U = GAMMA_IN(texture(Source, vTexCoord -dy).xyz);
+		vec3 D = GAMMA_IN(texture(Source, vTexCoord +dy).xyz);
+
 		min_sample = max(min_sample, min_s(C, U, D));
 		max_sample = min(max_sample, max_s(C, U, D));
-
-		diff *= (1.0 - SGPT_BLEND_LEVEL);
-
-		color = 0.5*( 1.0 + diff )*C + 0.125*( 1.0 - diff )*(L + R + U + D);
-	}
-	else if (SGPT_BLEND_OPTION == 3) // Only Checkerboard - Soft
-	{
-		min_sample = min_s(min_sample, U, D);
-		max_sample = max_s(max_sample, U, D);
-
-		diff *= (1.0 - SGPT_BLEND_LEVEL);
-
-		color = 0.5*( 1.0 + diff )*C + 0.125*( 1.0 - diff )*(L + R + U + D);
-	}
-	else if (SGPT_BLEND_OPTION == 4) // VL-CB
-	{
-		diff *= (1.0 - SGPT_BLEND_LEVEL);
-
-		color = 0.5*( 1.0 + diff )*C + 0.25*( 1.0 - diff )*(L + R);
-	}
-	else if (SGPT_BLEND_OPTION == 5) // VL-CB-2
-	{
-		min_sample = min_s(min_sample, U, D);
-		max_sample = max_s(max_sample, U, D);
-
-		diff *= (1.0 - SGPT_BLEND_LEVEL);
-
-		color = 0.5*( 1.0 + diff )*C + 0.25*( 1.0 - diff )*(L + R);
-	}
-	else if (SGPT_BLEND_OPTION == 6) // VL-CB-Soft
-	{
-		min_sample = min(min_sample, min(min_s(D, DL, DR), min_s(U, UL, UR)));
-		max_sample = max(max_sample, max(max_s(D, DL, DR), max_s(U, UL, UR)));
-
-		diff *= (1.0 - SGPT_BLEND_LEVEL);
-
-		color = 0.5*( 1.0 + diff )*C + 0.25*( 1.0 - diff )*(L + R);
 	}
 
-	color = clamp(color, min_sample, max_sample);
+	vec3 col_L = 0.5*( C + L + contrast*( C - L ));
+	vec3 col_R = 0.5*( C + R + contrast*( C - R ));
 
-	color = mix(color, vec3(dot(abs(C-color), vec3(1.0, 1.0, 1.0))), SGPT_ADJUST_VIEW);
+	float contrast_L = dot(abs(C - col_L), Y);
+	float contrast_R = dot(abs(C - col_R), Y);
+
+	// Choose smaller contrast
+	vec3 color = contrast_R < contrast_L ? col_R : col_L;
+
+	color = SGPT_BLEND_OPTION > 0.5 ? clamp(color, min_sample, max_sample) : C;
+
+	color = SGPT_ADJUST_VIEW > 0.5 ? vec3(dot(abs(C-color), vec3(1.0, 1.0, 1.0))) : color;
 
 	FragColor = vec4(GAMMA_OUT(color), 1.0);
 }
