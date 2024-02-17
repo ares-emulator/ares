@@ -115,6 +115,9 @@ jobs:
         pushd thirdparty/MoltenVK
         ./build-moltenvk.sh
         popd
+        pushd thirdparty/librashader
+        ./build-librashader.sh
+        popd
     - name: Set up MSVC environment
       if: matrix.platform.msvc-arch != ''
       uses: ilammy/msvc-dev-cmd@v1
