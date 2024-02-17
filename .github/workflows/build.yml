@@ -108,6 +108,9 @@ jobs:
       run: |
         brew install make ninja cmake
         pip install --no-input setuptools
+        rustup toolchain install nightly
+        rustup target add x86_64-apple-darwin
+        rustup target add aarch64-apple-darwin
         echo "MAKE=gmake" >> $GITHUB_ENV
         pushd thirdparty/SDL
         ./build-SDL.sh
