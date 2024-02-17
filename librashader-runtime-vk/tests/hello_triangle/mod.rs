@@ -259,6 +259,9 @@ impl VulkanWindow {
                     Some(&FrameOptionsVulkan {
                         clear_history: frame == 0,
                         frame_direction: 0,
+                        current_subframe: 1,
+                        rotation: 0,
+                        total_subframes: 1,
                     }),
                 )
                 .unwrap();

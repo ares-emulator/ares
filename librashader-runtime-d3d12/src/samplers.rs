@@ -1,7 +1,7 @@
 use crate::descriptor_heap::{D3D12DescriptorHeap, D3D12DescriptorHeapSlot, SamplerPaletteHeap};
 use crate::error;
+use librashader_common::map::FastHashMap;
 use librashader_common::{FilterMode, WrapMode};
-use rustc_hash::FxHashMap;
 use std::ops::Deref;
 use windows::Win32::Graphics::Direct3D12::{
     ID3D12Device, D3D12_COMPARISON_FUNC_NEVER, D3D12_FLOAT32_MAX, D3D12_SAMPLER_DESC,
@@ -9,7 +9,7 @@ use windows::Win32::Graphics::Direct3D12::{
 };
 
 pub struct SamplerSet {
-    samplers: FxHashMap<(WrapMode, FilterMode), D3D12DescriptorHeapSlot<SamplerPaletteHeap>>,
+    samplers: FastHashMap<(WrapMode, FilterMode), D3D12DescriptorHeapSlot<SamplerPaletteHeap>>,
     _heap: D3D12DescriptorHeap<SamplerPaletteHeap>,
 }
 
@@ -25,7 +25,7 @@ impl SamplerSet {
         unsafe { self.samplers.get(&(wrap, filter)).unwrap_unchecked() }
     }
     pub fn new(device: &ID3D12Device) -> error::Result<SamplerSet> {
-        let mut samplers = FxHashMap::default();
+        let mut samplers = FastHashMap::default();
         let wrap_modes = &[
             WrapMode::ClampToBorder,
             WrapMode::ClampToEdge,

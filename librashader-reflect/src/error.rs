@@ -125,6 +125,10 @@ pub enum ShaderReflectError {
     #[cfg(feature = "naga")]
     #[error("naga-spv")]
     NagaInputError(#[from] naga::front::spv::Error),
+    /// Error when transpiling from naga
+    #[cfg(feature = "naga")]
+    #[error("naga-spv")]
+    NagaReflectError(#[from] naga::WithSpan<naga::valid::ValidationError>),
 }
 
 #[cfg(feature = "unstable-naga")]

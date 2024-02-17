@@ -13,13 +13,15 @@ mod filter_chain;
 mod filter_pass;
 mod framebuffer;
 mod graphics_pipeline;
-mod parameters;
 mod samplers;
 mod texture;
 mod util;
 
 pub mod error;
 pub mod options;
+
+use librashader_runtime::impl_filter_chain_parameters;
+impl_filter_chain_parameters!(FilterChainD3D11);
 
 pub use filter_chain::FilterChainD3D11;
 pub use texture::D3D11InputView;

@@ -3,9 +3,10 @@ use crate::key::CacheKey;
 
 pub(crate) mod internal {
     use platform_dirs::AppDirs;
-    use rusqlite::{Connection, DatabaseName};
     use std::error::Error;
     use std::path::PathBuf;
+
+    use persy::{ByteVec, Config, Persy, ValueMode};
 
     pub(crate) fn get_cache_dir() -> Result<PathBuf, Box<dyn Error>> {
         let cache_dir = if let Some(cache_dir) =
@@ -23,46 +24,67 @@ pub(crate) mod internal {
         Ok(cache_dir)
     }
 
-    pub(crate) fn get_cache() -> Result<Connection, Box<dyn Error>> {
-        let cache_dir = get_cache_dir()?;
-        let mut conn = Connection::open(&cache_dir.join("librashader.db"))?;
+    // pub(crate) fn get_cache() -> Result<Connection, Box<dyn Error>> {
+    //     let cache_dir = get_cache_dir()?;
+    //     let mut conn = Connection::open(&cache_dir.join("librashader.db"))?;
+    //
+    //     let tx = conn.transaction()?;
+    //     tx.pragma_update(Some(DatabaseName::Main), "journal_mode", "wal2")?;
+    //     tx.execute(
+    //         r#"create table if not exists cache (
+    //     type text not null,
+    //     id blob not null,
+    //     value blob not null unique,
+    //     primary key (id, type)
+    // )"#,
+    //         [],
+    //     )?;
+    //     tx.commit()?;
+    //     Ok(conn)
+    // }
 
-        let tx = conn.transaction()?;
-        tx.pragma_update(Some(DatabaseName::Main), "journal_mode", "wal2")?;
-        tx.execute(
-            r#"create table if not exists cache (
-        type text not null,
-        id blob not null,
-        value blob not null unique,
-        primary key (id, type)
-    )"#,
-            [],
+    pub(crate) fn get_cache() -> Result<Persy, Box<dyn Error>> {
+        let cache_dir = get_cache_dir()?;
+        let conn = Persy::open_or_create_with(
+            &cache_dir.join("librashader.db.1"),
+            Config::new(),
+            |persy| {
+                let tx = persy.begin()?;
+                tx.commit()?;
+                Ok(())
+            },
         )?;
-        tx.commit()?;
         Ok(conn)
     }
 
     pub(crate) fn get_blob(
-        conn: &Connection,
+        conn: &Persy,
         index: &str,
         key: &[u8],
-    ) -> Result<Vec<u8>, Box<dyn Error>> {
-        let value = conn.query_row(
-            &*format!("select value from cache where (type = (?1) and id = (?2))"),
-            rusqlite::params![index, key],
-            |row| row.get(0),
-        )?;
-        Ok(value)
+    ) -> Result<Option<Vec<u8>>, Box<dyn Error>> {
+        if !conn.exists_index(index)? {
+            return Ok(None);
+        }
+
+        let value = conn.get::<_, ByteVec>(index, &ByteVec::from(key))?.next();
+        Ok(value.map(|v| v.to_vec()))
     }
 
-    pub(crate) fn set_blob(conn: &Connection, index: &str, key: &[u8], value: &[u8]) {
-        match conn.execute(
-            &*format!("insert or replace into cache (type, id, value) values (?1, ?2, ?3)"),
-            rusqlite::params![index, key, value],
-        ) {
-            Ok(_) => return,
-            Err(e) => println!("err: {:?}", e),
+    pub(crate) fn set_blob(
+        conn: &Persy,
+        index: &str,
+        key: &[u8],
+        value: &[u8],
+    ) -> Result<(), Box<dyn Error>> {
+        let mut tx = conn.begin()?;
+        if !tx.exists_index(index)? {
+            tx.create_index::<ByteVec, ByteVec>(index, ValueMode::Replace)?;
         }
+
+        tx.put(index, ByteVec::from(key), ByteVec::from(value))?;
+        tx.commit()?;
+
+        Ok(())
     }
 }
 
@@ -101,7 +123,7 @@ where
     };
 
     'attempt: {
-        if let Ok(blob) = internal::get_blob(&cache, index, hashkey.as_bytes()) {
+        if let Ok(Some(blob)) = internal::get_blob(&cache, index, hashkey.as_bytes()) {
             let cached = T::from_bytes(&blob).map(&load);
 
             match cached {
@@ -115,7 +137,7 @@ where
     let blob = factory(keys)?;
 
     if let Some(slice) = T::to_bytes(&blob) {
-        internal::set_blob(&cache, index, hashkey.as_bytes(), &slice);
+        let _ = internal::set_blob(&cache, index, hashkey.as_bytes(), &slice);
     }
     Ok(load(blob)?)
 }
@@ -157,7 +179,7 @@ where
     };
 
     let pipeline = 'attempt: {
-        if let Ok(blob) = internal::get_blob(&cache, index, hashkey.as_bytes()) {
+        if let Ok(Some(blob)) = internal::get_blob(&cache, index, hashkey.as_bytes()) {
             let cached = restore_pipeline(Some(blob));
             match cached {
                 Ok(res) => {
@@ -173,7 +195,8 @@ where
     // update the pso every time just in case.
     if let Ok(state) = fetch_pipeline_state(&pipeline) {
         if let Some(slice) = T::to_bytes(&state) {
-            internal::set_blob(&cache, index, hashkey.as_bytes(), &slice);
+            // We don't really care if the transaction fails, just try again next time.
+            let _ = internal::set_blob(&cache, index, hashkey.as_bytes(), &slice);
         }
     }
 

@@ -16,27 +16,20 @@ use librashader_presets::{ShaderPassConfig, ShaderPreset, TextureConfig};
 use librashader_reflect::back::glsl::GlslVersion;
 use librashader_reflect::back::targets::GLSL;
 use librashader_reflect::back::{CompileReflectShader, CompileShader};
-use librashader_reflect::front::{Glslang, SpirvCompilation};
+use librashader_reflect::front::SpirvCompilation;
 use librashader_reflect::reflect::semantics::{ShaderSemantics, UniformMeta};
 
 use librashader_cache::CachedCompilation;
+use librashader_common::map::FastHashMap;
 use librashader_reflect::reflect::cross::SpirvCross;
 use librashader_reflect::reflect::presets::{CompilePresetTarget, ShaderPassArtifact};
 use librashader_reflect::reflect::ReflectShader;
 use librashader_runtime::binding::BindingUtil;
 use librashader_runtime::framebuffer::FramebufferInit;
+use librashader_runtime::quad::QuadType;
 use librashader_runtime::render_target::RenderTarget;
 use librashader_runtime::scaling::ScaleFramebuffer;
-use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
-
-#[rustfmt::skip]
-pub static GL_MVP_DEFAULT: &[f32; 16] = &[
-    2f32, 0.0, 0.0, 0.0,
-    0.0, 2.0, 0.0, 0.0,
-    0.0, 0.0, 2.0, 0.0,
-    -1.0, -1.0, 0.0, 1.0,
-];
 
 pub(crate) struct FilterChainImpl<T: GLInterface> {
     pub(crate) common: FilterCommon,
@@ -51,7 +44,7 @@ pub(crate) struct FilterChainImpl<T: GLInterface> {
 pub(crate) struct FilterCommon {
     // semantics: ReflectSemantics,
     pub config: FilterMutable,
-    pub luts: FxHashMap<usize, InputTexture>,
+    pub luts: FastHashMap<usize, InputTexture>,
     pub samplers: SamplerSet,
     pub output_textures: Box<[InputTexture]>,
     pub feedback_textures: Box<[InputTexture]>,
@@ -61,7 +54,7 @@ pub(crate) struct FilterCommon {
 
 pub struct FilterMutable {
     pub(crate) passes_enabled: usize,
-    pub(crate) parameters: FxHashMap<String, f32>,
+    pub(crate) parameters: FastHashMap<String, f32>,
 }
 
 impl<T: GLInterface> FilterChainImpl<T> {
@@ -108,13 +101,12 @@ fn compile_passes(
 ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
     let (passes, semantics) = if !disable_cache {
         GLSL::compile_preset_passes::<
-            Glslang,
             CachedCompilation<SpirvCompilation>,
             SpirvCross,
             FilterChainError,
         >(shaders, &textures)?
     } else {
-        GLSL::compile_preset_passes::<Glslang, SpirvCompilation, SpirvCross, FilterChainError>(
+        GLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
             shaders, &textures,
         )?
     };
@@ -294,7 +286,7 @@ impl<T: GLInterface> FilterChainImpl<T> {
 
         // do not need to rebind FBO 0 here since first `draw` will
         // bind automatically.
-        self.draw_quad.bind_vertices();
+        self.draw_quad.bind_vertices(QuadType::Offscreen);
 
         let filter = passes[0].config.filter;
         let wrap_mode = passes[0].config.wrap_mode;
@@ -347,6 +339,7 @@ impl<T: GLInterface> FilterChainImpl<T> {
         let passes_len = passes.len();
         let (pass, last) = passes.split_at_mut(passes_len - 1);
 
+        self.draw_quad.bind_vertices(QuadType::Offscreen);
         for (index, pass) in pass.iter_mut().enumerate() {
             let target = &self.output_framebuffers[index];
             source.filter = pass.config.filter;
@@ -361,7 +354,7 @@ impl<T: GLInterface> FilterChainImpl<T> {
                 viewport,
                 &original,
                 &source,
-                RenderTarget::offscreen(target, viewport.mvp.unwrap_or(GL_MVP_DEFAULT)),
+                RenderTarget::identity(target),
             );
 
             let target = target.as_texture(pass.config.filter, pass.config.wrap_mode);
@@ -369,6 +362,7 @@ impl<T: GLInterface> FilterChainImpl<T> {
             source = target;
         }
 
+        self.draw_quad.bind_vertices(QuadType::Final);
         // try to hint the optimizer
         assert_eq!(last.len(), 1);
         if let Some(pass) = last.iter_mut().next() {

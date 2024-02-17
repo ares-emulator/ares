@@ -13,7 +13,6 @@ mod framebuffer;
 mod graphics_pipeline;
 mod luts;
 mod memory;
-mod parameters;
 mod queue_selection;
 mod samplers;
 mod texture;
@@ -23,6 +22,9 @@ pub use filter_chain::FilterChainVulkan;
 pub use filter_chain::VulkanInstance;
 pub use filter_chain::VulkanObjects;
 pub use texture::VulkanImage;
+
+use librashader_runtime::impl_filter_chain_parameters;
+impl_filter_chain_parameters!(FilterChainVulkan);
 
 pub mod error;
 pub mod options;

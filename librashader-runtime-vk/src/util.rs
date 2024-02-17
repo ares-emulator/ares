@@ -1,6 +1,7 @@
 use ash::vk;
 use gpu_allocator::vulkan::{Allocator, AllocatorCreateDesc};
 
+use gpu_allocator::AllocationSizes;
 use parking_lot::RwLock;
 use std::sync::Arc;
 
@@ -101,6 +102,7 @@ pub fn create_allocator(
         physical_device,
         debug_settings: Default::default(),
         buffer_device_address: false,
+        allocation_sizes: AllocationSizes::default(),
     })?;
     Ok(Arc::new(RwLock::new(alloc)))
 }

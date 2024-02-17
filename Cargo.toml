@@ -10,10 +10,11 @@ members = [
     "librashader-runtime-d3d12",
     "librashader-runtime-gl",
     "librashader-runtime-vk",
+    "librashader-runtime-mtl",
+    "librashader-runtime-wgpu",
     "librashader-cache",
     "librashader-capi",
-    "librashader-build-script"
-, "librashader-runtime-wgpu"]
+    "librashader-build-script"]
 resolver = "2"
 
 [workspace.metadata.release]

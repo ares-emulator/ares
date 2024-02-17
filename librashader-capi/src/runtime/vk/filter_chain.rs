@@ -98,7 +98,7 @@ pub struct frame_vk_opt_t {
     pub rotation: u32,
     /// The total number of subframes ran. Default is 1.
     pub total_subframes: u32,
-    // The current sub frame. Default is 1.
+    /// The current sub frame. Default is 1.
     pub current_subframe: u32,
 }
 
@@ -114,14 +114,15 @@ config_struct! {
 #[derive(Default, Debug, Clone)]
 pub struct filter_chain_vk_opt_t {
     /// The librashader API version.
-    pub version: usize,
+    pub version: LIBRASHADER_API_VERSION,
     /// The number of frames in flight to keep. If zero, defaults to three.
     pub frames_in_flight: u32,
     /// Whether or not to explicitly disable mipmap generation regardless of shader preset settings.
     pub force_no_mipmaps: bool,
-    /// Use explicit render pass objects It is recommended if possible to use dynamic rendering,
+    /// Use dynamic rendering over explicit render pass objects.
+    /// It is recommended if possible to use dynamic rendering,
     /// because render-pass mode will create new framebuffers per pass.
-    pub use_render_pass: bool,
+    pub use_dynamic_rendering: bool,
     /// Disable the shader object cache. Shaders will be
     /// recompiled rather than loaded from the cache.
     pub disable_cache: bool,
@@ -129,7 +130,7 @@ pub struct filter_chain_vk_opt_t {
 
 config_struct! {
     impl FilterChainOptions => filter_chain_vk_opt_t {
-        0 => [frames_in_flight, force_no_mipmaps, use_render_pass, disable_cache];
+        0 => [frames_in_flight, force_no_mipmaps, use_dynamic_rendering, disable_cache];
     }
 }
 
@@ -141,7 +142,7 @@ extern_fn! {
     ///
     /// ## Safety:
     /// - The handles provided in `vulkan` must be valid for the command buffers that
-    ///   `libra_vk_filter_chain_frame` will write to. Namely, the VkDevice must have been
+    ///   `libra_vk_filter_chain_frame` will write to.
     ///    created with the `VK_KHR_dynamic_rendering` extension.
     /// - `preset` must be either null, or valid and aligned.
     /// - `options` must be either null, or valid and aligned.
@@ -187,8 +188,7 @@ extern_fn! {
     ///
     /// ## Safety:
     /// - The handles provided in `vulkan` must be valid for the command buffers that
-    ///   `libra_vk_filter_chain_frame` will write to. Namely, the VkDevice must have been
-    ///    created with the `VK_KHR_dynamic_rendering` extension.
+    ///   `libra_vk_filter_chain_frame` will write to.
     /// - `preset` must be either null, or valid and aligned.
     /// - `options` must be either null, or valid and aligned.
     /// - `out` must be aligned, but may be null, invalid, or uninitialized.

@@ -4,7 +4,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.0-beta.9"
+version = "0.2.1"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -13,26 +13,33 @@ keywords = ["shader", "retroarch", "SPIR-V"]
 description = "RetroArch shaders for all."
 
 [dependencies]
-librashader-common = { path = "../librashader-common", version = "0.2.0-beta.9" }
-librashader-presets = { path = "../librashader-presets", version = "0.2.0-beta.9" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.0-beta.9" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.0-beta.9" }
-librashader-runtime  = { path = "../librashader-runtime", version = "0.2.0-beta.9" }
-librashader-runtime-d3d11  = { path = "../librashader-runtime-d3d11", version = "0.2.0-beta.9", optional = true }
-librashader-runtime-d3d12  = { path = "../librashader-runtime-d3d12", version = "0.2.0-beta.9", optional = true }
-librashader-runtime-gl = { path = "../librashader-runtime-gl", version = "0.2.0-beta.9", optional = true }
-librashader-runtime-vk = { path = "../librashader-runtime-vk", version = "0.2.0-beta.9", optional = true }
-librashader-runtime-wgpu = { path = "../librashader-runtime-wgpu", version = "0.2.0-beta.9", optional = true }
-
-librashader-cache = { path = "../librashader-cache", version = "0.2.0-beta.9" }
+librashader-common = { path = "../librashader-common", version = "0.2.1" }
+librashader-presets = { path = "../librashader-presets", version = "0.2.1" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.1" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.2.1" }
+librashader-cache = { path = "../librashader-cache", version = "0.2.1" }
+librashader-runtime  = { path = "../librashader-runtime", version = "0.2.1" }
+librashader-runtime-d3d11  = { path = "../librashader-runtime-d3d11", version = "0.2.1", optional = true }
+librashader-runtime-d3d12  = { path = "../librashader-runtime-d3d12", version = "0.2.1", optional = true }
+librashader-runtime-gl = { path = "../librashader-runtime-gl", version = "0.2.1", optional = true }
+librashader-runtime-vk = { path = "../librashader-runtime-vk", version = "0.2.1", optional = true }
+librashader-runtime-mtl = { path = "../librashader-runtime-mtl", version = "0.2.1", optional = true }
 
 ash = { version = "0.37", optional = true }
-wgpu = { version = "0.19", optional = true }
+halfbrown = "0.2.4"
+
+[target.'cfg(not(all(target_vendor="apple", docsrs)))'.dependencies]
+wgpu = { version = "0.19", default-features = false, optional = true }
+librashader-runtime-wgpu = { path = "../librashader-runtime-wgpu", version = "0.2.1", optional = true }
 wgpu-types = { version = "0.19", optional = true }
 
 [target.'cfg(windows)'.dependencies.windows]
 version = "0.48.0"
 optional = true
+
+[target.'cfg(target_vendor="apple")'.dependencies]
+icrate = { version = "0.1.0" , features = [ "Metal", "Metal_all" ], optional = true}
+objc2 = { version = "0.5.0", features = ["apple"] , optional = true }
 
 [features]
 # core features and definitions
@@ -48,13 +55,14 @@ runtime-d3d11 = [ "runtime", "reflect-cross","librashader-common/d3d11", "libras
 runtime-d3d12 = [ "runtime", "reflect-cross", "reflect-dxil", "librashader-common/d3d12", "librashader-runtime-d3d12", "windows/Win32_Graphics_Direct3D12" ]
 runtime-vk = ["runtime", "reflect-cross", "librashader-common/vulkan", "librashader-runtime-vk", "ash" ]
 runtime-wgpu = [ "runtime", "reflect-naga", "librashader-common/wgpu", "librashader-runtime-wgpu", "wgpu", "wgpu-types" ]
+runtime-metal = [ "runtime", "reflect-naga",  "reflect-cross", "librashader-common/metal", "librashader-runtime-mtl", "icrate", "objc2" ]
 
 # reflection
 reflect-cross = ["reflect", "librashader-reflect/cross"]
 reflect-dxil = ["reflect", "librashader-reflect/dxil"]
 reflect-naga = ["reflect", "librashader-reflect/naga"]
 
-runtime-all = ["runtime-gl", "runtime-d3d11", "runtime-d3d12", "runtime-vk", "runtime-wgpu"]
+runtime-all = ["runtime-gl", "runtime-d3d11", "runtime-d3d12", "runtime-vk", "runtime-wgpu", "runtime-metal"]
 reflect-all = ["reflect-cross", "reflect-dxil", "reflect-naga"]
 
 # enable all features by default
@@ -64,8 +72,15 @@ internal = []
 full = ["runtime-all", "reflect-all", "preprocess", "presets"]
 
 # cache hack
-docsrs = ["librashader-cache/docsrs"]
+docsrs = ["librashader-cache/docsrs", "objc2/unstable-docsrs"]
 
 [package.metadata.docs.rs]
-targets = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"]
-features = [ "librashader-cache/docsrs" ]
+targets = [ "x86_64-pc-windows-msvc",
+            "x86_64-unknown-linux-gnu",
+            "x86_64-apple-darwin",
+            "aarch64-apple-darwin",
+            "aarch64-apple-ios",
+            "i686-pc-windows-msvc",
+            "i686-unknown-linux-gnu", ]
+features = ["docsrs"]
+rustc-args = ["--cfg", "docsrs"]

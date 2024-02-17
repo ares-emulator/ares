@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 
 mod glslang;
 
-pub trait ShaderReflectObject: Sized {}
+pub trait ShaderReflectObject: Sized {
+    /// The compiler that produces this reflect object.
+    type Compiler;
+}
 
 pub use crate::front::glslang::Glslang;
 
@@ -15,7 +18,9 @@ pub trait ShaderInputCompiler<O: ShaderReflectObject>: Sized {
 }
 
 /// Marker trait for types that are the reflectable outputs of a shader compilation.
-impl ShaderReflectObject for SpirvCompilation {}
+impl ShaderReflectObject for SpirvCompilation {
+    type Compiler = Glslang;
+}
 
 /// A reflectable shader compilation via glslang.
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]

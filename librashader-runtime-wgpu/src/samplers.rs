@@ -1,11 +1,11 @@
+use librashader_common::map::FastHashMap;
 use librashader_common::{FilterMode, WrapMode};
-use rustc_hash::FxHashMap;
 use std::sync::Arc;
 use wgpu::{Sampler, SamplerBorderColor, SamplerDescriptor};
 
 pub struct SamplerSet {
     // todo: may need to deal with differences in mip filter.
-    samplers: FxHashMap<(WrapMode, FilterMode, FilterMode), Arc<Sampler>>,
+    samplers: FastHashMap<(WrapMode, FilterMode, FilterMode), Arc<Sampler>>,
 }
 
 impl SamplerSet {
@@ -25,7 +25,7 @@ impl SamplerSet {
     }
 
     pub fn new(device: &wgpu::Device) -> SamplerSet {
-        let mut samplers = FxHashMap::default();
+        let mut samplers = FastHashMap::default();
         let wrap_modes = &[
             WrapMode::ClampToBorder,
             WrapMode::ClampToEdge,

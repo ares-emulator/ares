@@ -77,7 +77,7 @@ pub struct frame_d3d11_opt_t {
     pub rotation: u32,
     /// The total number of subframes ran. Default is 1.
     pub total_subframes: u32,
-    // The current sub frame. Default is 1.
+    /// The current sub frame. Default is 1.
     pub current_subframe: u32,
 }
 

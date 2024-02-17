@@ -50,6 +50,7 @@ pub struct NagaMslModule {
 pub struct NagaMslContext {
     pub vertex: NagaMslModule,
     pub fragment: NagaMslModule,
+    pub next_free_binding: u32,
 }
 
 impl FromCompilation<SpirvCompilation, Naga> for MSL {

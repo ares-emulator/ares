@@ -3,7 +3,6 @@ use crate::filter_chain::inner::FilterChainDispatch;
 use crate::gl::GLInterface;
 use crate::FilterChainGL;
 use librashader_runtime::parameters::FilterChainParameters;
-use std::collections::hash_map::Iter;
 
 impl AsRef<dyn FilterChainParameters + 'static> for FilterChainDispatch {
     fn as_ref<'a>(&'a self) -> &'a (dyn FilterChainParameters + 'static) {
@@ -32,7 +31,7 @@ impl FilterChainParameters for FilterChainGL {
         self.filter.as_mut().set_enabled_pass_count(count)
     }
 
-    fn enumerate_parameters(&self) -> Iter<String, f32> {
+    fn enumerate_parameters(&self) -> ::librashader_common::map::halfbrown::Iter<String, f32> {
         self.filter.as_ref().enumerate_parameters()
     }
 
@@ -54,7 +53,7 @@ impl<T: GLInterface> FilterChainParameters for FilterChainImpl<T> {
         self.common.config.passes_enabled = count
     }
 
-    fn enumerate_parameters(&self) -> Iter<String, f32> {
+    fn enumerate_parameters(&self) -> ::librashader_common::map::halfbrown::Iter<String, f32> {
         self.common.config.parameters.iter()
     }
 

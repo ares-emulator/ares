@@ -1,10 +1,10 @@
 use gl::types::{GLenum, GLint, GLuint};
+use librashader_common::map::FastHashMap;
 use librashader_common::{FilterMode, WrapMode};
-use rustc_hash::FxHashMap;
 
 pub struct SamplerSet {
     // todo: may need to deal with differences in mip filter.
-    samplers: FxHashMap<(WrapMode, FilterMode, FilterMode), GLuint>,
+    samplers: FastHashMap<(WrapMode, FilterMode, FilterMode), GLuint>,
 }
 
 impl SamplerSet {
@@ -35,7 +35,7 @@ impl SamplerSet {
     }
 
     pub fn new() -> SamplerSet {
-        let mut samplers = FxHashMap::default();
+        let mut samplers = FastHashMap::default();
         let wrap_modes = &[
             WrapMode::ClampToBorder,
             WrapMode::ClampToEdge,

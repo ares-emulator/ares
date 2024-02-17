@@ -218,12 +218,15 @@ extern_fn! {
                 step: param.step
             })
         }
-        let (parts, len, cap) = values.into_raw_parts();
+
+        let values = values.into_boxed_slice();
+        let (parts, len) = crate::ffi::boxed_slice_into_raw_parts(values);
+
         unsafe {
             out.write(MaybeUninit::new(libra_preset_param_list_t {
                 parameters: parts,
                 length: len as u64,
-                _internal_alloc: cap as u64,
+                _internal_alloc: 0,
             }));
         }
     }
@@ -251,9 +254,9 @@ extern_fn! {
     ///   in undefined behaviour.
     fn libra_preset_free_runtime_params(preset: libra_preset_param_list_t) {
         unsafe {
-            let values = Vec::from_raw_parts(preset.parameters.cast_mut(),
-                                             preset.length as usize,
-                                            preset._internal_alloc as usize);
+            let values =
+                    crate::ffi::boxed_slice_from_raw_parts(preset.parameters.cast_mut(),
+                preset.length as usize).into_vec();
 
             for value in values {
                 let name = CString::from_raw(value.name.cast_mut());

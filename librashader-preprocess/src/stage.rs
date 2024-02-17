@@ -36,7 +36,10 @@ pub(crate) fn process_stages(source: &str) -> Result<ShaderOutput, PreprocessErr
             continue;
         }
 
-        if line.starts_with("#pragma name ") || line.starts_with("#pragma format ") {
+        if line.starts_with("#pragma name ")
+            || line.starts_with("#pragma format ")
+            || line.starts_with("#pragma parameter ")
+        {
             continue;
         }
 

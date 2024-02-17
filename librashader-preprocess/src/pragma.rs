@@ -132,4 +132,16 @@ mod test {
             step: 0.25
         }, parse_parameter_string(r#"#pragma parameter exc "orizontal correction hack (games where players stay at center)" 0.0 -10.0 10.0 0.25"#).unwrap())
     }
+
+    #[test]
+    fn parses_parameter_pragma_test() {
+        assert_eq!(ShaderParameter {
+            id: "HSM_CORE_RES_SAMPLING_MULT_SCANLINE_DIR".to_string(),
+            description: "          Scanline Dir Multiplier".to_string(),
+            initial: 100.0,
+            minimum: 25.0,
+            maximum: 1600.0,
+            step: 25.0
+        }, parse_parameter_string(r#"#pragma parameter HSM_CORE_RES_SAMPLING_MULT_SCANLINE_DIR			"          Scanline Dir Multiplier"  100 25 1600 25"#).unwrap())
+    }
 }

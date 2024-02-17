@@ -1,4 +1,4 @@
-name: build librashader-capi for x86_64
+name: build librashader-capi for x86_64 and aarch64-apple-darwin
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-14]
         profile: ['debug', 'release', 'optimized']
       fail-fast: false
     runs-on: ${{ matrix.os }}

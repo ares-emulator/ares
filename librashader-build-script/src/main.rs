@@ -35,6 +35,11 @@ pub fn main() {
         if profile == "debug" { "dev" } else { &profile }
     ));
 
+    // If we're on RUSTC_BOOTSTRAP, it's likely because we're building for a package..
+    if env::var("RUSTC_BOOTSTRAP").is_ok() {
+        cmd.arg("--ignore-rust-version");
+    }
+
     if let Some(target) = &args.target {
         cmd.arg(format!("--target={}", &target));
     }

@@ -34,28 +34,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 after_includes = """
 #if defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11)
 #include <d3d11.h>
-#else
-typedef void ID3D11Device;
-typedef void ID3D11DeviceContext;
-typedef void ID3D11RenderTargetView;
-typedef void ID3D11ShaderResourceView;
-#endif
-#if defined(LIBRA_RUNTIME_VULKAN)
-#include <vulkan\\vulkan.h>
-#else
-typedef int32_t VkFormat;
-typedef uint64_t VkImage;
-typedef void* VkPhysicalDevice;
-typedef void* VkInstance;
-typedef void* VkCommandBuffer;
 #endif
 #if defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12)
 #include <d3d12.h>
-#else
-typedef void ID3D12GraphicsCommandList;
-typedef void ID3D12Device;
-typedef void ID3D12Resource;
-typedef void D3D12_CPU_DESCRIPTOR_HANDLE;
+#endif
+#if defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__)
+#import <Metal/Metal.h>
+#endif
+#if defined(LIBRA_RUNTIME_VULKAN)
+#include <vulkan\\vulkan.h>
 #endif
 """
 
@@ -64,12 +51,19 @@ typedef void D3D12_CPU_DESCRIPTOR_HANDLE;
 "feature = runtime-vulkan" = "LIBRA_RUNTIME_VULKAN"
 "feature = runtime-d3d11" = "LIBRA_RUNTIME_D3D11"
 "feature = runtime-d3d12" = "LIBRA_RUNTIME_D3D12"
+"feature = runtime-metal" = "LIBRA_RUNTIME_METAL"
+"feature = __cbindgen_internal_objc" = "__OBJC__"
 
+"target_os = windows" = "_WIN32"
+"target_vendor = apple" = "__APPLE__"
 
 [parse]
-parse_deps = true
+parse_deps = false
 include = ["librashader"]
-expand = ["librashader-capi"]
+
+[parse.expand]
+crates = ["librashader-capi"]
+features = ["__cbindgen_internal"]
 
 [struct]
 
@@ -153,9 +147,24 @@ include = [
     "PFN_libra_d3d12_filter_chain_set_active_pass_count",
     "PFN_libra_d3d12_filter_chain_get_active_pass_count",
     "PFN_libra_d3d12_filter_chain_free",
+
+    # metal
+    "PFN_libra_mtl_filter_chain_create",
+    "PFN_libra_mtl_filter_chain_create_deferred",
+    "PFN_libra_mtl_filter_chain_frame",
+    "PFN_libra_mtl_filter_chain_set_param",
+    "PFN_libra_mtl_filter_chain_get_param",
+    "PFN_libra_mtl_filter_chain_set_active_pass_count",
+    "PFN_libra_mtl_filter_chain_get_active_pass_count",
+    "PFN_libra_mtl_filter_chain_free",
 ]
 
-exclude = ["Option_ID3D11DeviceContext"]
+exclude = [
+    "Option_ID3D11DeviceContext",
+    "PMTLCommandQueue",
+    "PMTLCommandBuffer",
+    "PMTLTexture"
+]
 
 [export.rename]
 "LibrashaderError" = "_libra_error"
@@ -167,6 +176,7 @@ exclude = ["Option_ID3D11DeviceContext"]
 "FilterChainVulkan" = "_filter_chain_vk"
 "FilterChainD3D11" = "_filter_chain_d3d11"
 "FilterChainD3D12" = "_filter_chain_d3d12"
+"FilterChainMetal" = "_filter_chain_mtl"
 
 # vulkan renames
 "PhysicalDevice" = "VkPhysicalDevice"
@@ -190,3 +200,7 @@ exclude = ["Option_ID3D11DeviceContext"]
 "ID3D12Device" = "ID3D12Device *"
 "ID3D12Resource" = "ID3D12Resource *"
 "ID3D12GraphicsCommandList" = "ID3D12GraphicsCommandList *"
+
+"PMTLCommandQueue" = "id<MTLCommandQueue>"
+"PMTLCommandBuffer" = "id<MTLCommandBuffer>"
+"PMTLTexture" = "id<MTLTexture>"

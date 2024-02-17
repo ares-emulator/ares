@@ -2,7 +2,7 @@
 name = "librashader-cache"
 edition = "2021"
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.0-beta.9"
+version = "0.2.1"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -12,13 +12,13 @@ description = "RetroArch shaders for all."
 
 [dependencies]
 serde = { version = "1.0" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.0-beta.9", features = ["serialize"] }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.0-beta.9" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.2.1", features = ["serialize"] }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.1" }
 platform-dirs = "0.3.0"
 blake3 = { version = "1.3.3" }
 thiserror = "1.0.38"
 bincode = { version = "2.0.0-rc.2", features = ["serde"] }
-rusqlite = { version = "0.28.0", features = ["bundled"] }
+persy = "1.4.7"
 
 bytemuck = "1.13.0"
 
@@ -35,7 +35,7 @@ optional = true
 d3d = ["windows", "librashader-reflect/dxil"]
 
 # hack to get building on docsrs
-docsrs = ["blake3/pure", "rusqlite/in_gecko"]
+docsrs = ["blake3/pure"]
 
 [package.metadata.docs.rs]
 features = ["docsrs"]

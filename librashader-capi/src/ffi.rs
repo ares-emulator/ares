@@ -222,5 +222,25 @@ macro_rules! extern_fn {
     };
 }
 
+pub fn boxed_slice_into_raw_parts<T>(vec: Box<[T]>) -> (*mut T, usize) {
+    let mut me = ManuallyDrop::new(vec);
+    (me.as_mut_ptr(), me.len())
+}
+
+pub unsafe fn boxed_slice_from_raw_parts<T>(ptr: *mut T, len: usize) -> Box<[T]> {
+    unsafe { Box::from_raw(std::slice::from_raw_parts_mut(ptr, len)) }
+}
+
+#[allow(unstable_name_collisions)]
+pub fn ptr_is_aligned<T: Sized>(ptr: *const T) -> bool {
+    use sptr::Strict;
+    let align = std::mem::align_of::<T>();
+    if !align.is_power_of_two() {
+        panic!("is_aligned_to: align is not a power-of-two");
+    }
+    ptr.addr() & (align - 1) == 0
+}
+
 pub(crate) use extern_fn;
 pub(crate) use ffi_body;
+use std::mem::ManuallyDrop;
