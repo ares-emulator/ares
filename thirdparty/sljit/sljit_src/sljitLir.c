@@ -706,8 +706,7 @@ static SLJIT_INLINE void reverse_buf(struct sljit_compiler *compiler)
 }
 
 /* Only used in RISC architectures where the instruction size is constant */
-#if !(defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86) \
-	&& !(defined SLJIT_CONFIG_S390X && SLJIT_CONFIG_S390X)
+#if !(defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86)
 
 static SLJIT_INLINE sljit_uw compute_next_addr(struct sljit_label *label, struct sljit_jump *jump,
 	struct sljit_const *const_, struct sljit_put_label *put_label)
@@ -729,7 +728,7 @@ static SLJIT_INLINE sljit_uw compute_next_addr(struct sljit_label *label, struct
 	return result;
 }
 
-#endif /* !SLJIT_CONFIG_X86 && !SLJIT_CONFIG_S390X */
+#endif /* !SLJIT_CONFIG_X86 */
 
 static SLJIT_INLINE void set_emit_enter(struct sljit_compiler *compiler,
 	sljit_s32 options, sljit_s32 args, sljit_s32 scratches, sljit_s32 saveds,
