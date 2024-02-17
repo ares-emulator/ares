@@ -14,10 +14,11 @@ use ash::vk;
 use librashader_common::{ImageFormat, Size, Viewport};
 
 use gpu_allocator::vulkan::Allocator;
+use librashader_common::map::FastHashMap;
 use librashader_presets::{ShaderPassConfig, ShaderPreset, TextureConfig};
 use librashader_reflect::back::targets::SPIRV;
 use librashader_reflect::back::{CompileReflectShader, CompileShader};
-use librashader_reflect::front::{Glslang, SpirvCompilation};
+use librashader_reflect::front::SpirvCompilation;
 use librashader_reflect::reflect::presets::{CompilePresetTarget, ShaderPassArtifact};
 use librashader_reflect::reflect::semantics::ShaderSemantics;
 use librashader_reflect::reflect::ReflectShader;
@@ -26,7 +27,6 @@ use librashader_runtime::image::{Image, ImageError, UVDirection, BGRA8};
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::uniforms::UniformStorage;
 use parking_lot::RwLock;
-use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 use std::convert::Infallible;
 use std::path::Path;
@@ -130,11 +130,11 @@ pub struct FilterChainVulkan {
 
 pub struct FilterMutable {
     pub(crate) passes_enabled: usize,
-    pub(crate) parameters: FxHashMap<String, f32>,
+    pub(crate) parameters: FastHashMap<String, f32>,
 }
 
 pub(crate) struct FilterCommon {
-    pub(crate) luts: FxHashMap<usize, LutTexture>,
+    pub(crate) luts: FastHashMap<usize, LutTexture>,
     pub samplers: SamplerSet,
     pub(crate) draw_quad: DrawQuad,
     pub output_textures: Box<[Option<InputImage>]>,
@@ -218,13 +218,12 @@ fn compile_passes(
 ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
     let (passes, semantics) = if !disable_cache {
         SPIRV::compile_preset_passes::<
-            Glslang,
             CachedCompilation<SpirvCompilation>,
             SpirvCross,
             FilterChainError,
         >(shaders, &textures)?
     } else {
-        SPIRV::compile_preset_passes::<Glslang, SpirvCompilation, SpirvCross, FilterChainError>(
+        SPIRV::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
             shaders, &textures,
         )?
     };
@@ -346,7 +345,7 @@ impl FilterChainVulkan {
             passes,
             &semantics,
             frames_in_flight,
-            options.map_or(false, |o| o.use_render_pass),
+            options.map_or(false, |o| o.use_dynamic_rendering),
             disable_cache,
         )?;
 
@@ -412,7 +411,7 @@ impl FilterChainVulkan {
         passes: Vec<ShaderPassMeta>,
         semantics: &ShaderSemantics,
         frames_in_flight: u32,
-        use_render_pass: bool,
+        use_dynamic_rendering: bool,
         disable_cache: bool,
     ) -> error::Result<Box<[FilterPass]>> {
         let frames_in_flight = std::cmp::max(1, frames_in_flight);
@@ -440,7 +439,7 @@ impl FilterChainVulkan {
 
                 let uniform_bindings = reflection.meta.create_binding_map(|param| param.offset());
 
-                let render_pass_format = if !use_render_pass {
+                let render_pass_format = if use_dynamic_rendering {
                     vk::Format::UNDEFINED
                 } else if let Some(format) = config.get_format_override() {
                     format.into()
@@ -483,8 +482,8 @@ impl FilterChainVulkan {
         vulkan: &VulkanObjects,
         command_buffer: vk::CommandBuffer,
         textures: &[TextureConfig],
-    ) -> error::Result<FxHashMap<usize, LutTexture>> {
-        let mut luts = FxHashMap::default();
+    ) -> error::Result<FastHashMap<usize, LutTexture>> {
+        let mut luts = FastHashMap::default();
         let images = textures
             .par_iter()
             .map(|texture| Image::load(&texture.path, UVDirection::TopLeft))

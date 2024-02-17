@@ -6,6 +6,7 @@ use crate::graphics_pipeline::WgpuGraphicsPipeline;
 use crate::options::FrameOptionsWgpu;
 use crate::samplers::SamplerSet;
 use crate::texture::InputImage;
+use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_preprocess::ShaderSource;
 use librashader_presets::ShaderPassConfig;
@@ -18,7 +19,6 @@ use librashader_runtime::filter_pass::FilterPassMeta;
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::render_target::RenderTarget;
 use librashader_runtime::uniforms::{NoUniformBinder, UniformStorage, UniformStorageAccess};
-use rustc_hash::FxHashMap;
 use std::sync::Arc;
 use wgpu::{BindGroupDescriptor, BindGroupEntry, BindingResource, BufferBinding, ShaderStages};
 
@@ -27,7 +27,7 @@ pub struct FilterPass {
     pub reflection: ShaderReflection,
     pub(crate) uniform_storage:
         UniformStorage<NoUniformBinder, Option<()>, WgpuStagedBuffer, WgpuStagedBuffer>,
-    pub uniform_bindings: FxHashMap<UniformBinding, MemberOffset>,
+    pub uniform_bindings: FastHashMap<UniformBinding, MemberOffset>,
     pub source: ShaderSource,
     pub config: ShaderPassConfig,
     pub graphics_pipeline: WgpuGraphicsPipeline,
@@ -48,8 +48,8 @@ impl BindSemantics<NoUniformBinder, Option<()>, WgpuStagedBuffer, WgpuStagedBuff
     type InputTexture = InputImage;
     type SamplerSet = SamplerSet;
     type DescriptorSet<'a> = (
-        &'a mut FxHashMap<u32, WgpuArcBinding<wgpu::TextureView>>,
-        &'a mut FxHashMap<u32, WgpuArcBinding<wgpu::Sampler>>,
+        &'a mut FastHashMap<u32, WgpuArcBinding<wgpu::TextureView>>,
+        &'a mut FastHashMap<u32, WgpuArcBinding<wgpu::Sampler>>,
     );
     type DeviceContext = Arc<wgpu::Device>;
     type UniformOffset = MemberOffset;
@@ -97,8 +97,8 @@ impl FilterPass {
         output: &RenderTarget<WgpuOutputView>,
         vbo_type: QuadType,
     ) -> error::Result<()> {
-        let mut main_heap = FxHashMap::default();
-        let mut sampler_heap = FxHashMap::default();
+        let mut main_heap = FastHashMap::default();
+        let mut sampler_heap = FastHashMap::default();
 
         self.build_semantics(
             pass_index,
@@ -204,8 +204,8 @@ impl FilterPass {
         viewport_size: Size<u32>,
         original: &InputImage,
         source: &InputImage,
-        main_heap: &'a mut FxHashMap<u32, WgpuArcBinding<wgpu::TextureView>>,
-        sampler_heap: &'a mut FxHashMap<u32, WgpuArcBinding<wgpu::Sampler>>,
+        main_heap: &'a mut FastHashMap<u32, WgpuArcBinding<wgpu::TextureView>>,
+        sampler_heap: &'a mut FastHashMap<u32, WgpuArcBinding<wgpu::Sampler>>,
     ) {
         Self::bind_semantics(
             &self.device,

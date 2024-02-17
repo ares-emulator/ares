@@ -1,11 +1,11 @@
-use rustc_hash::FxHashMap;
+use librashader_common::map::FastHashMap;
 use std::borrow::Cow;
 use std::sync::Arc;
 
 pub struct MipmapGen {
     device: Arc<wgpu::Device>,
     shader: wgpu::ShaderModule,
-    pipeline_cache: FxHashMap<wgpu::TextureFormat, wgpu::RenderPipeline>,
+    pipeline_cache: FastHashMap<wgpu::TextureFormat, wgpu::RenderPipeline>,
 }
 
 impl MipmapGen {

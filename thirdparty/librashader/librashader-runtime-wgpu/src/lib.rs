@@ -5,7 +5,6 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![feature(type_alias_impl_trait)]
 #![feature(let_chains)]
-#![feature(strict_provenance)]
 
 mod buffer;
 mod draw_quad;
@@ -25,3 +24,6 @@ pub use framebuffer::WgpuOutputView;
 
 pub mod error;
 pub mod options;
+
+use librashader_runtime::impl_filter_chain_parameters;
+impl_filter_chain_parameters!(FilterChainWgpu);

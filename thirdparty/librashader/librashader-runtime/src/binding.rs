@@ -1,13 +1,11 @@
 use crate::uniforms::{BindUniform, NoUniformBinder, UniformStorage};
+use librashader_common::map::FastHashMap;
 use librashader_common::Size;
 use librashader_preprocess::ShaderParameter;
 use librashader_reflect::reflect::semantics::{
     BindingMeta, MemberOffset, Semantic, TextureBinding, TextureSemantics, UniformBinding,
     UniformMeta, UniqueSemantics,
 };
-use rustc_hash::FxHashMap;
-use std::collections::HashMap;
-use std::hash::BuildHasher;
 use std::ops::{Deref, DerefMut};
 
 /// Trait for input textures used during uniform binding,
@@ -115,14 +113,14 @@ where
         uniform_inputs: UniformInputs<'_>,
         original: &Self::InputTexture,
         source: &Self::InputTexture,
-        uniform_bindings: &HashMap<UniformBinding, Self::UniformOffset, impl BuildHasher>,
-        texture_meta: &HashMap<Semantic<TextureSemantics>, TextureBinding, impl BuildHasher>,
+        uniform_bindings: &FastHashMap<UniformBinding, Self::UniformOffset>,
+        texture_meta: &FastHashMap<Semantic<TextureSemantics>, TextureBinding>,
         pass_outputs: impl Iterator<Item = Option<impl AsRef<Self::InputTexture>>>,
         pass_feedback: impl Iterator<Item = Option<impl AsRef<Self::InputTexture>>>,
         original_history: impl Iterator<Item = Option<impl AsRef<Self::InputTexture>>>,
         lookup_textures: impl Iterator<Item = (usize, impl AsRef<Self::InputTexture>)>,
-        parameter_defaults: &HashMap<String, ShaderParameter, impl BuildHasher>,
-        runtime_parameters: &HashMap<String, f32, impl BuildHasher>,
+        parameter_defaults: &FastHashMap<String, ShaderParameter>,
+        runtime_parameters: &FastHashMap<String, f32>,
     ) {
         // Bind MVP
         if let Some(offset) = uniform_bindings.get(&UniqueSemantics::MVP.into()) {
@@ -328,7 +326,7 @@ pub trait BindingUtil {
     fn create_binding_map<T>(
         &self,
         f: impl Fn(&dyn UniformMeta) -> T,
-    ) -> FxHashMap<UniformBinding, T>;
+    ) -> FastHashMap<UniformBinding, T>;
 
     /// Calculate the number of required images for history.
     fn calculate_required_history<'a>(pass_meta: impl Iterator<Item = &'a Self>) -> usize
@@ -340,8 +338,8 @@ impl BindingUtil for BindingMeta {
     fn create_binding_map<T>(
         &self,
         f: impl Fn(&dyn UniformMeta) -> T,
-    ) -> FxHashMap<UniformBinding, T> {
-        let mut uniform_bindings = FxHashMap::default();
+    ) -> FastHashMap<UniformBinding, T> {
+        let mut uniform_bindings = FastHashMap::default();
         for param in self.parameter_meta.values() {
             uniform_bindings.insert(UniformBinding::Parameter(param.id.clone()), f(param));
         }

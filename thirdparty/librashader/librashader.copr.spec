@@ -18,7 +18,6 @@ BuildRequires: ninja-build
 BuildRequires: patchelf
 BuildRequires: rustc
 BuildRequires: cargo
-Requires: vulkan
 
 %description
 RetroArch shader runtime

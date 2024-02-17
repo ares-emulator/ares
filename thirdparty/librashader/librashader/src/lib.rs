@@ -15,14 +15,14 @@
 //! called with appropriate input and output parameters to draw a frame with the shader effect applied.
 //!
 //! ## Runtimes
-//! Currently available runtimes are wgpu, Vulkan, OpenGL 3.3+ and 4.6 (with DSA), Direct3D 11, and Direct3D 12.
-//!
-//! The Vulkan runtime requires [`VK_KHR_dynamic_rendering`](https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_dynamic_rendering.html)
-//! by default, unless [`FilterChainOptions::use_render_pass`](crate::runtime::vk::FilterChainOptions) is explicitly set. Note that dynamic rendering
-//! will bring the best performance.
+//! librashader supports all modern graphics runtimes, including wgpu, Vulkan, OpenGL 3.3+ and 4.6 (with DSA),
+//! Direct3D 11, Direct3D 12, and Metal.
 //!
 //! The Direct3D 12 runtime requires support for [render passes](https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-render-passes), which
 //! have been available since Windows 10, version 1809.
+//!
+//! The Vulkan runtime can use [`VK_KHR_dynamic_rendering`](https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_dynamic_rendering.html)
+//! for improved performance, if the underlying hardware supports it.
 //!
 //! wgpu support is not available in the librashader C API.
 //!
@@ -34,7 +34,7 @@
 //! | Direct3D 11  | ✔        | `d3d11`                 |
 //! | Direct3D 12  | ✔        | `d3d12`                 |
 //! | wgpu        | ✔        |  `wgpu`                 |
-//! | Metal       | ❌        |                         |
+//! | Metal       | ✔        |  `metal`                |
 //!
 //! ## C API
 //! For documentation on the librashader C API, see [librashader-capi](https://docs.rs/librashader-capi/latest/librashader_capi/),
@@ -64,7 +64,10 @@ pub mod presets {
         let iters: Result<Vec<Vec<ShaderParameter>>, PreprocessError> = preset
             .shaders
             .iter()
-            .map(|s| ShaderSource::load(&s.name).map(|s| s.parameters.into_values().collect()))
+            .map(|s| {
+                ShaderSource::load(&s.name)
+                    .map(|s| s.parameters.into_iter().map(|(_, v)| v).collect())
+            })
             .collect();
         let iters = iters?;
         Ok(iters.into_iter().flatten())
@@ -100,9 +103,10 @@ pub mod preprocess {
 /// use librashader::presets::ShaderPreset;
 /// use librashader::reflect::{CompileReflectShader, FromCompilation, CompilePresetTarget, ShaderPassArtifact};
 /// use librashader::reflect::targets::SPIRV;
-/// use librashader::reflect::cross::GlslangCompilation;
 /// use librashader::reflect::semantics::ShaderSemantics;
-/// type Artifact = impl CompileReflectShader<SPIRV, GlslangCompilation>;
+/// use librashader_reflect::front::{ShaderInputCompiler, SpirvCompilation};
+/// use librashader_reflect::reflect::cross::SpirvCross;
+/// type Artifact = impl CompileReflectShader<SPIRV, SpirvCompilation, SpirvCross>;
 /// type ShaderPassMeta = ShaderPassArtifact<Artifact>;
 ///
 /// // Compile single shader
@@ -110,15 +114,15 @@ pub mod preprocess {
 ///         source: &ShaderSource,
 ///     ) -> Result<Artifact, Box<dyn Error>>
 /// {
-///     let compilation = GlslangCompilation::compile(&source)?;
-///     let spirv = SPIRV::from_compilation(artifact)?;
+///     let compilation = SpirvCompilation::compile(&source)?;
+///     let spirv = SPIRV::from_compilation(compilation)?;
 ///     Ok(spirv)
 /// }
 ///
 /// // Compile preset
 /// pub fn compile_preset(preset: ShaderPreset) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), Box<dyn Error>>
 /// {
-///     let (passes, semantics) = SPIRV::compile_preset_passes::<GlslangCompilation, Box<dyn Error>>(
+///     let (passes, semantics) = SPIRV::compile_preset_passes::<SpirvCompilation, SpirvCross, Box<dyn Error>>(
 ///     preset.shaders, &preset.textures)?;
 ///     Ok((passes, semantics))
 /// }
@@ -129,8 +133,8 @@ pub mod preprocess {
 /// [naga](https://docs.rs/naga/latest/naga/index.html), a pure-Rust shader compiler, when it has
 /// matured enough to support [the features librashader needs](https://github.com/gfx-rs/naga/issues/1012).
 ///
-/// In the meanwhile, the only supported compilation type is [GlslangCompilation](crate::reflect::cross::GlslangCompilation),
-/// which does transpilation via [glslang](https://github.com/KhronosGroup/glslang/) and [SPIRV-Cross](https://github.com/KhronosGroup/SPIRV-Cross).
+/// In the meanwhile, the only supported input compiler is [SpirvCompilation](crate::reflect::SpirvCompilation),
+/// which does compilation of GLSL to SPIR-V via [glslang](https://github.com/KhronosGroup/glslang/).
 pub mod reflect {
     /// Supported shader compiler targets.
     pub mod targets {
@@ -150,7 +154,7 @@ pub mod reflect {
         FromCompilation, ShaderCompilerOutput,
     };
 
-    pub use librashader_reflect::front::{Glslang, ShaderReflectObject, SpirvCompilation};
+    pub use librashader_reflect::front::{ShaderReflectObject, SpirvCompilation};
 
     /// Reflection via SPIRV-Cross.
     #[cfg(feature = "reflect-cross")]
@@ -278,10 +282,34 @@ pub mod runtime {
         };
     }
 
+    #[cfg(all(target_vendor = "apple", feature = "runtime-metal"))]
+    #[doc(cfg(all(target_vendor = "apple", feature = "runtime-metal")))]
+    /// Shader runtime for Metal.
+    pub mod mtl {
+        pub use librashader_runtime_mtl::{
+            error,
+            options::{
+                FilterChainOptionsMetal as FilterChainOptions, FrameOptionsMetal as FrameOptions,
+            },
+            FilterChainMetal as FilterChain, MetalTextureRef,
+        };
+    }
+
     #[cfg(feature = "runtime-wgpu")]
     #[doc(cfg(feature = "runtime-wgpu"))]
-    /// Shader runtime for wgpu
+    /// Shader runtime for wgpu.
+    #[cfg_attr(
+        all(
+            feature = "runtime-wgpu",
+            all(target_vendor = "apple", feature = "docsrs")
+        ),
+        doc = "\n\nThe wgpu runtime is available on macOS and iOS, but technical reasons prevent them from rendering on docs.rs.
+\n\n This is because wgpu on macOS and iOS link to [metal-rs](https://github.com/gfx-rs/metal-rs), which can not build on docs.rs.
+ See [SSheldon/rustc-objc-exception#13](https://github.com/SSheldon/rust-objc-exception/issues/13) for more details. 
+\n\n The wgpu runtime is identical for all supported operating systems, so please refer to documentation from another operating system."
+    )]
     pub mod wgpu {
+        #[cfg(not(all(target_vendor = "apple", feature = "docsrs")))]
         pub use librashader_runtime_wgpu::{
             error,
             options::{

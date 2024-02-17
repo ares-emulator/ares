@@ -10,43 +10,63 @@ use crate::texture::InputTexture;
 use bytemuck::{Pod, Zeroable};
 pub use framebuffer::GLFramebuffer;
 use gl::types::{GLenum, GLuint};
+use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size};
 use librashader_presets::{Scale2D, TextureConfig};
 use librashader_reflect::back::glsl::CrossGlslContext;
 use librashader_reflect::back::ShaderCompilerOutput;
 use librashader_reflect::reflect::semantics::{BufferReflection, TextureBinding};
+use librashader_runtime::quad::QuadType;
 use librashader_runtime::uniforms::UniformStorageAccess;
-use rustc_hash::FxHashMap;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default, Zeroable, Pod)]
 
 pub(crate) struct OpenGLVertex {
-    pub position: [f32; 2],
+    pub position: [f32; 4],
     pub texcoord: [f32; 2],
 }
 
-pub(crate) static FINAL_VBO_DATA: &[OpenGLVertex; 4] = &[
+static OFFSCREEN_VBO_DATA: &[OpenGLVertex; 4] = &[
     OpenGLVertex {
-        position: [0.0, 0.0],
+        position: [-1.0, -1.0, 0.0, 1.0],
         texcoord: [0.0, 0.0],
     },
     OpenGLVertex {
-        position: [1.0, 0.0],
+        position: [1.0, -1.0, 0.0, 1.0],
         texcoord: [1.0, 0.0],
     },
     OpenGLVertex {
-        position: [0.0, 1.0],
+        position: [-1.0, 1.0, 0.0, 1.0],
         texcoord: [0.0, 1.0],
     },
     OpenGLVertex {
-        position: [1.0, 1.0],
+        position: [1.0, 1.0, 0.0, 1.0],
+        texcoord: [1.0, 1.0],
+    },
+];
+
+static FINAL_VBO_DATA: &[OpenGLVertex; 4] = &[
+    OpenGLVertex {
+        position: [0.0, 0.0, 0.0, 1.0],
+        texcoord: [0.0, 0.0],
+    },
+    OpenGLVertex {
+        position: [1.0, 0.0, 0.0, 1.0],
+        texcoord: [1.0, 0.0],
+    },
+    OpenGLVertex {
+        position: [0.0, 1.0, 0.0, 1.0],
+        texcoord: [0.0, 1.0],
+    },
+    OpenGLVertex {
+        position: [1.0, 1.0, 0.0, 1.0],
         texcoord: [1.0, 1.0],
     },
 ];
 
 pub(crate) trait LoadLut {
-    fn load_luts(textures: &[TextureConfig]) -> Result<FxHashMap<usize, InputTexture>>;
+    fn load_luts(textures: &[TextureConfig]) -> Result<FastHashMap<usize, InputTexture>>;
 }
 
 pub(crate) trait CompileProgram {
@@ -58,7 +78,7 @@ pub(crate) trait CompileProgram {
 
 pub(crate) trait DrawQuad {
     fn new() -> Self;
-    fn bind_vertices(&self);
+    fn bind_vertices(&self, quad_type: QuadType);
     fn unbind_vertices(&self);
 }
 

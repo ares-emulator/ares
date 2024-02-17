@@ -6,6 +6,7 @@ use crate::graphics_pipeline::D3D12GraphicsPipeline;
 use crate::options::FrameOptionsD3D12;
 use crate::samplers::SamplerSet;
 use crate::texture::{D3D12OutputView, InputTexture};
+use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_preprocess::ShaderSource;
 use librashader_presets::ShaderPassConfig;
@@ -16,7 +17,6 @@ use librashader_runtime::filter_pass::FilterPassMeta;
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::render_target::RenderTarget;
 use librashader_runtime::uniforms::{NoUniformBinder, UniformStorage};
-use rustc_hash::FxHashMap;
 use std::ops::Deref;
 use windows::core::ComInterface;
 use windows::Win32::Foundation::RECT;
@@ -31,7 +31,7 @@ pub(crate) struct FilterPass {
     pub(crate) pipeline: D3D12GraphicsPipeline,
     pub(crate) reflection: ShaderReflection,
     pub(crate) config: ShaderPassConfig,
-    pub(crate) uniform_bindings: FxHashMap<UniformBinding, MemberOffset>,
+    pub(crate) uniform_bindings: FastHashMap<UniformBinding, MemberOffset>,
     pub uniform_storage:
         UniformStorage<NoUniformBinder, Option<()>, RawD3D12Buffer, RawD3D12Buffer>,
     pub(crate) texture_heap: [D3D12DescriptorHeapSlot<ResourceWorkHeap>; 16],

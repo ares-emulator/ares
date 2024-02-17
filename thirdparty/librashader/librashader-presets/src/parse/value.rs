@@ -10,8 +10,8 @@ use nom::IResult;
 use num_traits::cast::ToPrimitive;
 
 use crate::parse::token::do_lex;
+use librashader_common::map::FastHashMap;
 use librashader_common::{FilterMode, WrapMode};
-use rustc_hash::FxHashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -156,7 +156,7 @@ pub const SHADER_MAX_REFERENCE_DEPTH: usize = 16;
 fn load_child_reference_strings(
     root_references: Vec<PathBuf>,
     root_path: impl AsRef<Path>,
-    context: &FxHashMap<String, String>,
+    context: &FastHashMap<String, String>,
 ) -> Result<Vec<(PathBuf, String)>, ParsePresetError> {
     let root_path = root_path.as_ref();
 
@@ -238,7 +238,7 @@ pub(crate) fn parse_preset(
 pub fn parse_values(
     mut tokens: Vec<Token>,
     root_path: impl AsRef<Path>,
-    context: FxHashMap<String, String>,
+    context: FastHashMap<String, String>,
 ) -> Result<Vec<Value>, ParsePresetError> {
     let mut root_path = root_path.as_ref().to_path_buf();
     if root_path.is_relative() {

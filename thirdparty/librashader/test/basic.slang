@@ -32,5 +32,5 @@ layout(location = 0) out vec4 FragColor;
 layout(binding = 1) uniform sampler2D Source;
 void main()
 {
-   FragColor = texture(Source, vTexCoord) * params.ColorMod * ColorMod2;
+   FragColor = texture(Source, vTexCoord) * params.ColorMod;
 }

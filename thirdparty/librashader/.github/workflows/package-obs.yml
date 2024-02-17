@@ -1,14 +1,20 @@
 name: build Linux packages with Open Build Service
 
 on:
-  pull_request:
+  pull_request_target:
     branches: [ "master" ]
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  approve-obs-build: # First step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Approve
+        run: echo OBS build CI test runs need to be approved by a maintainer.
   build-obs-binary:
-    if: github.repository == 'SnowflakePowered/librashader'
+    environment:
+      name: obs-build-env
     strategy:
       matrix:
         include:
@@ -22,6 +28,7 @@ jobs:
             spec: PKGBUILD
             can_fail: false
     runs-on: ubuntu-latest
+    needs: [approve-obs-build]
     continue-on-error: ${{ matrix.can_fail }}
     container: 
       image: fedora:39

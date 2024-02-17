@@ -35,28 +35,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdlib.h>
 #if defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11)
 #include <d3d11.h>
-#else
-typedef void ID3D11Device;
-typedef void ID3D11DeviceContext;
-typedef void ID3D11RenderTargetView;
-typedef void ID3D11ShaderResourceView;
-#endif
-#if defined(LIBRA_RUNTIME_VULKAN)
-#include <vulkan\vulkan.h>
-#else
-typedef int32_t VkFormat;
-typedef uint64_t VkImage;
-typedef void *VkPhysicalDevice;
-typedef void *VkInstance;
-typedef void *VkCommandBuffer;
 #endif
 #if defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12)
 #include <d3d12.h>
-#else
-typedef void ID3D12GraphicsCommandList;
-typedef void ID3D12Device;
-typedef void ID3D12Resource;
-typedef void D3D12_CPU_DESCRIPTOR_HANDLE;
+#endif
+#if defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__)
+#import <Metal/Metal.h>
+#endif
+#if defined(LIBRA_RUNTIME_VULKAN)
+#include <vulkan\vulkan.h>
 #endif
 
 /// Error codes for librashader error types.
@@ -115,6 +102,9 @@ typedef struct _filter_chain_d3d12 _filter_chain_d3d12;
 
 /// Opaque struct for an OpenGL filter chain.
 typedef struct _filter_chain_gl _filter_chain_gl;
+
+/// Opaque struct for a Metal filter chain.
+typedef struct _filter_chain_mtl _filter_chain_mtl;
 
 /// Opaque struct for a Vulkan filter chain.
 typedef struct _filter_chain_vk _filter_chain_vk;
@@ -246,6 +236,12 @@ typedef struct frame_gl_opt_t {
     /// The direction of rendering.
     /// -1 indicates that the frames are played in reverse order.
     int32_t frame_direction;
+    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+    uint32_t rotation;
+    /// The total number of subframes ran. Default is 1.
+    uint32_t total_subframes;
+    /// The current sub frame. Default is 1.
+    uint32_t current_subframe;
 } frame_gl_opt_t;
 #endif
 
@@ -270,16 +266,16 @@ typedef struct libra_device_vk_t {
 /// Options for filter chain creation.
 typedef struct filter_chain_vk_opt_t {
     /// The librashader API version.
-    size_t version;
+    LIBRASHADER_API_VERSION version;
     /// The number of frames in flight to keep. If zero, defaults to three.
     uint32_t frames_in_flight;
     /// Whether or not to explicitly disable mipmap generation regardless of
     /// shader preset settings.
     bool force_no_mipmaps;
-    /// Use explicit render pass objects It is recommended if possible to use
-    /// dynamic rendering, because render-pass mode will create new framebuffers
-    /// per pass.
-    bool use_render_pass;
+    /// Use dynamic rendering over explicit render pass objects.
+    /// It is recommended if possible to use dynamic rendering,
+    /// because render-pass mode will create new framebuffers per pass.
+    bool use_dynamic_rendering;
     /// Disable the shader object cache. Shaders will be
     /// recompiled rather than loaded from the cache.
     bool disable_cache;
@@ -319,16 +315,22 @@ typedef struct libra_output_image_vk_t {
 /// Options for each Vulkan shader frame.
 typedef struct frame_vk_opt_t {
     /// The librashader API version.
-    size_t version;
+    LIBRASHADER_API_VERSION version;
     /// Whether or not to clear the history buffers.
     bool clear_history;
     /// The direction of rendering.
     /// -1 indicates that the frames are played in reverse order.
     int32_t frame_direction;
+    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+    uint32_t rotation;
+    /// The total number of subframes ran. Default is 1.
+    uint32_t total_subframes;
+    /// The current sub frame. Default is 1.
+    uint32_t current_subframe;
 } frame_vk_opt_t;
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Options for Direct3D 11 filter chain creation.
 typedef struct filter_chain_d3d11_opt_t {
     /// The librashader API version.
@@ -342,12 +344,12 @@ typedef struct filter_chain_d3d11_opt_t {
 } filter_chain_d3d11_opt_t;
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// A handle to a Direct3D 11 filter chain.
 typedef struct _filter_chain_d3d11 *libra_d3d11_filter_chain_t;
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Direct3D 11 parameters for the source image.
 typedef struct libra_source_image_d3d11_t {
     /// A shader resource view into the source image
@@ -359,7 +361,7 @@ typedef struct libra_source_image_d3d11_t {
 } libra_source_image_d3d11_t;
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Options for each Direct3D 11 shader frame.
 typedef struct frame_d3d11_opt_t {
     /// The librashader API version.
@@ -369,10 +371,16 @@ typedef struct frame_d3d11_opt_t {
     /// The direction of rendering.
     /// -1 indicates that the frames are played in reverse order.
     int32_t frame_direction;
+    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+    uint32_t rotation;
+    /// The total number of subframes ran. Default is 1.
+    uint32_t total_subframes;
+    /// The current sub frame. Default is 1.
+    uint32_t current_subframe;
 } frame_d3d11_opt_t;
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Options for Direct3D11 filter chain creation.
 typedef struct filter_chain_d3d12_opt_t {
     /// The librashader API version.
@@ -389,12 +397,12 @@ typedef struct filter_chain_d3d12_opt_t {
 } filter_chain_d3d12_opt_t;
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// A handle to a Direct3D 12 filter chain.
 typedef struct _filter_chain_d3d12 *libra_d3d12_filter_chain_t;
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Direct3D 12 parameters for the source image.
 typedef struct libra_source_image_d3d12_t {
     /// The resource containing the image.
@@ -410,7 +418,7 @@ typedef struct libra_source_image_d3d12_t {
 } libra_source_image_d3d12_t;
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Direct3D 12 parameters for the output image.
 typedef struct libra_output_image_d3d12_t {
     /// A CPU descriptor handle to a shader resource view of the image.
@@ -420,7 +428,7 @@ typedef struct libra_output_image_d3d12_t {
 } libra_output_image_d3d12_t;
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Options for each Direct3D 12 shader frame.
 typedef struct frame_d3d12_opt_t {
     /// The librashader API version.
@@ -430,7 +438,47 @@ typedef struct frame_d3d12_opt_t {
     /// The direction of rendering.
     /// -1 indicates that the frames are played in reverse order.
     int32_t frame_direction;
+    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+    uint32_t rotation;
+    /// The total number of subframes ran. Default is 1.
+    uint32_t total_subframes;
+    /// The current sub frame. Default is 1.
+    uint32_t current_subframe;
 } frame_d3d12_opt_t;
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Options for filter chain creation.
+typedef struct filter_chain_mtl_opt_t {
+    /// The librashader API version.
+    LIBRASHADER_API_VERSION version;
+    /// Whether or not to explicitly disable mipmap generation regardless of
+    /// shader preset settings.
+    bool force_no_mipmaps;
+} filter_chain_mtl_opt_t;
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+typedef struct _filter_chain_mtl *libra_mtl_filter_chain_t;
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Options for each Metal shader frame.
+typedef struct frame_mtl_opt_t {
+    /// The librashader API version.
+    LIBRASHADER_API_VERSION version;
+    /// Whether or not to clear the history buffers.
+    bool clear_history;
+    /// The direction of rendering.
+    /// -1 indicates that the frames are played in reverse order.
+    int32_t frame_direction;
+    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+    uint32_t rotation;
+    /// The total number of subframes ran. Default is 1.
+    uint32_t total_subframes;
+    /// The current sub frame. Default is 1.
+    uint32_t current_subframe;
+} frame_mtl_opt_t;
 #endif
 
 typedef size_t LIBRASHADER_ABI_VERSION;
@@ -674,7 +722,7 @@ typedef libra_error_t (*PFN_libra_vk_filter_chain_free)(
     libra_vk_filter_chain_t *chain);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Function pointer definition for
 /// libra_d3d11_filter_chain_create
 typedef libra_error_t (*PFN_libra_d3d11_filter_chain_create)(
@@ -683,7 +731,7 @@ typedef libra_error_t (*PFN_libra_d3d11_filter_chain_create)(
     libra_d3d11_filter_chain_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Function pointer definition for
 /// libra_d3d11_filter_chain_create_deferred
 typedef libra_error_t (*PFN_libra_d3d11_filter_chain_create_deferred)(
@@ -693,7 +741,7 @@ typedef libra_error_t (*PFN_libra_d3d11_filter_chain_create_deferred)(
     libra_d3d11_filter_chain_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Function pointer definition for
 /// libra_d3d11_filter_chain_frame
 typedef libra_error_t (*PFN_libra_d3d11_filter_chain_frame)(
@@ -703,42 +751,42 @@ typedef libra_error_t (*PFN_libra_d3d11_filter_chain_frame)(
     const float *mvp, const struct frame_d3d11_opt_t *options);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Function pointer definition for
 /// libra_d3d11_filter_chain_set_param
 typedef libra_error_t (*PFN_libra_d3d11_filter_chain_set_param)(
     libra_d3d11_filter_chain_t *chain, const char *param_name, float value);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Function pointer definition for
 /// libra_d3d11_filter_chain_get_param
 typedef libra_error_t (*PFN_libra_d3d11_filter_chain_get_param)(
     libra_d3d11_filter_chain_t *chain, const char *param_name, float *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Function pointer definition for
 /// libra_d3d11_filter_chain_set_active_pass_count
 typedef libra_error_t (*PFN_libra_d3d11_filter_chain_set_active_pass_count)(
     libra_d3d11_filter_chain_t *chain, uint32_t value);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Function pointer definition for
 /// libra_d3d11_filter_chain_get_active_pass_count
 typedef libra_error_t (*PFN_libra_d3d11_filter_chain_get_active_pass_count)(
     libra_d3d11_filter_chain_t *chain, uint32_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Function pointer definition for
 /// libra_d3d11_filter_chain_free
 typedef libra_error_t (*PFN_libra_d3d11_filter_chain_free)(
     libra_d3d11_filter_chain_t *chain);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Function pointer definition for
 /// libra_d3d12_filter_chain_create
 typedef libra_error_t (*PFN_libra_d3d12_filter_chain_create)(
@@ -747,7 +795,7 @@ typedef libra_error_t (*PFN_libra_d3d12_filter_chain_create)(
     libra_d3d12_filter_chain_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Function pointer definition for
 /// libra_d3d12_filter_chain_create_deferred
 typedef libra_error_t (*PFN_libra_d3d12_filter_chain_create_deferred)(
@@ -757,7 +805,7 @@ typedef libra_error_t (*PFN_libra_d3d12_filter_chain_create_deferred)(
     libra_d3d12_filter_chain_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Function pointer definition for
 /// libra_d3d12_filter_chain_frame
 typedef libra_error_t (*PFN_libra_d3d12_filter_chain_frame)(
@@ -767,39 +815,102 @@ typedef libra_error_t (*PFN_libra_d3d12_filter_chain_frame)(
     const float *mvp, const struct frame_d3d12_opt_t *options);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Function pointer definition for
 /// libra_d3d12_filter_chain_set_param
 typedef libra_error_t (*PFN_libra_d3d12_filter_chain_set_param)(
     libra_d3d12_filter_chain_t *chain, const char *param_name, float value);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Function pointer definition for
 /// libra_d3d12_filter_chain_get_param
 typedef libra_error_t (*PFN_libra_d3d12_filter_chain_get_param)(
     libra_d3d12_filter_chain_t *chain, const char *param_name, float *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Function pointer definition for
 /// libra_d3d12_filter_chain_set_active_pass_count
 typedef libra_error_t (*PFN_libra_d3d12_filter_chain_set_active_pass_count)(
     libra_d3d12_filter_chain_t *chain, uint32_t value);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Function pointer definition for
 /// libra_d3d12_filter_chain_get_active_pass_count
 typedef libra_error_t (*PFN_libra_d3d12_filter_chain_get_active_pass_count)(
     libra_d3d12_filter_chain_t *chain, uint32_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Function pointer definition for
 /// libra_d3d12_filter_chain_free
 typedef libra_error_t (*PFN_libra_d3d12_filter_chain_free)(
     libra_d3d12_filter_chain_t *chain);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Function pointer definition for
+/// libra_mtl_filter_chain_create
+typedef libra_error_t (*PFN_libra_mtl_filter_chain_create)(
+    libra_shader_preset_t *preset, id<MTLCommandQueue> queue,
+    const struct filter_chain_mtl_opt_t *options,
+    libra_mtl_filter_chain_t *out);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Function pointer definition for
+/// libra_mtl_filter_chain_create_deferred
+typedef libra_error_t (*PFN_libra_mtl_filter_chain_create_deferred)(
+    libra_shader_preset_t *preset, id<MTLCommandQueue> queue,
+    id<MTLCommandBuffer> command_buffer,
+    const struct filter_chain_mtl_opt_t *options,
+    libra_mtl_filter_chain_t *out);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Function pointer definition for
+/// libra_mtl_filter_chain_frame
+typedef libra_error_t (*PFN_libra_mtl_filter_chain_frame)(
+    libra_mtl_filter_chain_t *chain, id<MTLCommandBuffer> command_buffer,
+    size_t frame_count, id<MTLTexture> image, struct libra_viewport_t viewport,
+    id<MTLTexture> output, const float *mvp, const struct frame_mtl_opt_t *opt);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Function pointer definition for
+/// libra_mtl_filter_chain_set_param
+typedef libra_error_t (*PFN_libra_mtl_filter_chain_set_param)(
+    libra_mtl_filter_chain_t *chain, const char *param_name, float value);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Function pointer definition for
+/// libra_mtl_filter_chain_get_param
+typedef libra_error_t (*PFN_libra_mtl_filter_chain_get_param)(
+    libra_mtl_filter_chain_t *chain, const char *param_name, float *out);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Function pointer definition for
+/// libra_mtl_filter_chain_set_active_pass_count
+typedef libra_error_t (*PFN_libra_mtl_filter_chain_set_active_pass_count)(
+    libra_mtl_filter_chain_t *chain, uint32_t value);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Function pointer definition for
+/// libra_mtl_filter_chain_get_active_pass_count
+typedef libra_error_t (*PFN_libra_mtl_filter_chain_get_active_pass_count)(
+    libra_mtl_filter_chain_t *chain, uint32_t *out);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Function pointer definition for
+/// libra_mtl_filter_chain_free
+typedef libra_error_t (*PFN_libra_mtl_filter_chain_free)(
+    libra_mtl_filter_chain_t *chain);
 #endif
 
 /// The current version of the librashader API.
@@ -811,7 +922,11 @@ typedef libra_error_t (*PFN_libra_d3d12_filter_chain_free)(
 /// versions must remain backwards compatible.
 /// ## API Versions
 /// - API version 0: 0.1.0
-#define LIBRASHADER_CURRENT_VERSION 0
+/// - API version 1: 0.2.0
+///     - Added rotation, total_subframes, current_subframes to frame options
+///     - Added preset context API
+///     - Added Metal runtime API
+#define LIBRASHADER_CURRENT_VERSION 1
 
 /// The current version of the librashader ABI.
 /// Used by the loader to check ABI compatibility.
@@ -1106,8 +1221,7 @@ libra_error_t libra_gl_filter_chain_free(libra_gl_filter_chain_t *chain);
 /// ## Safety:
 /// - The handles provided in `vulkan` must be valid for the command buffers
 /// that
-///   `libra_vk_filter_chain_frame` will write to. Namely, the VkDevice must
-///   have been
+///   `libra_vk_filter_chain_frame` will write to.
 ///    created with the `VK_KHR_dynamic_rendering` extension.
 /// - `preset` must be either null, or valid and aligned.
 /// - `options` must be either null, or valid and aligned.
@@ -1128,9 +1242,7 @@ libra_error_t libra_vk_filter_chain_create(
 /// ## Safety:
 /// - The handles provided in `vulkan` must be valid for the command buffers
 /// that
-///   `libra_vk_filter_chain_frame` will write to. Namely, the VkDevice must
-///   have been
-///    created with the `VK_KHR_dynamic_rendering` extension.
+///   `libra_vk_filter_chain_frame` will write to.
 /// - `preset` must be either null, or valid and aligned.
 /// - `options` must be either null, or valid and aligned.
 /// - `out` must be aligned, but may be null, invalid, or uninitialized.
@@ -1235,7 +1347,7 @@ libra_error_t libra_vk_filter_chain_get_active_pass_count(
 libra_error_t libra_vk_filter_chain_free(libra_vk_filter_chain_t *chain);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Create the filter chain given the shader preset.
 ///
 /// The shader preset is immediately invalidated and must be recreated after
@@ -1252,7 +1364,7 @@ libra_error_t libra_d3d11_filter_chain_create(
     libra_d3d11_filter_chain_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Create the filter chain given the shader preset, deferring and GPU-side
 /// initialization to the caller. This function is therefore requires no
 /// external synchronization of the immediate context, as long as the immediate
@@ -1289,7 +1401,7 @@ libra_error_t libra_d3d11_filter_chain_create_deferred(
     libra_d3d11_filter_chain_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Draw a frame with the given parameters for the given filter chain.
 ///
 /// If `device_context` is null, then commands are recorded onto the immediate
@@ -1323,7 +1435,7 @@ libra_error_t libra_d3d11_filter_chain_frame(
     const float *mvp, const struct frame_d3d11_opt_t *options);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Sets a parameter for the filter chain.
 ///
 /// If the parameter does not exist, returns an error.
@@ -1335,7 +1447,7 @@ libra_error_t libra_d3d11_filter_chain_set_param(
     libra_d3d11_filter_chain_t *chain, const char *param_name, float value);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Gets a parameter for the filter chain.
 ///
 /// If the parameter does not exist, returns an error.
@@ -1347,7 +1459,7 @@ libra_error_t libra_d3d11_filter_chain_get_param(
     libra_d3d11_filter_chain_t *chain, const char *param_name, float *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Sets the number of active passes for this chain.
 ///
 /// ## Safety
@@ -1357,7 +1469,7 @@ libra_error_t libra_d3d11_filter_chain_set_active_pass_count(
     libra_d3d11_filter_chain_t *chain, uint32_t value);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Gets the number of active passes for this chain.
 ///
 /// ## Safety
@@ -1367,7 +1479,7 @@ libra_error_t libra_d3d11_filter_chain_get_active_pass_count(
     libra_d3d11_filter_chain_t *chain, uint32_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D11)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D11))
 /// Free a D3D11 filter chain.
 ///
 /// The resulting value in `chain` then becomes null.
@@ -1377,7 +1489,7 @@ libra_error_t libra_d3d11_filter_chain_get_active_pass_count(
 libra_error_t libra_d3d11_filter_chain_free(libra_d3d11_filter_chain_t *chain);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Create the filter chain given the shader preset.
 ///
 /// The shader preset is immediately invalidated and must be recreated after
@@ -1394,7 +1506,7 @@ libra_error_t libra_d3d12_filter_chain_create(
     libra_d3d12_filter_chain_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Create the filter chain given the shader preset deferring and GPU-side
 /// initialization to the caller. This function therefore requires no external
 /// synchronization of the device queue.
@@ -1420,7 +1532,7 @@ libra_error_t libra_d3d12_filter_chain_create_deferred(
     libra_d3d12_filter_chain_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Records rendering commands for a frame with the given parameters for the
 /// given filter chain to the input command list.
 ///
@@ -1460,7 +1572,7 @@ libra_error_t libra_d3d12_filter_chain_frame(
     const float *mvp, const struct frame_d3d12_opt_t *options);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Sets a parameter for the filter chain.
 ///
 /// If the parameter does not exist, returns an error.
@@ -1472,7 +1584,7 @@ libra_error_t libra_d3d12_filter_chain_set_param(
     libra_d3d12_filter_chain_t *chain, const char *param_name, float value);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Gets a parameter for the filter chain.
 ///
 /// If the parameter does not exist, returns an error.
@@ -1484,7 +1596,7 @@ libra_error_t libra_d3d12_filter_chain_get_param(
     libra_d3d12_filter_chain_t *chain, const char *param_name, float *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Sets the number of active passes for this chain.
 ///
 /// ## Safety
@@ -1494,7 +1606,7 @@ libra_error_t libra_d3d12_filter_chain_set_active_pass_count(
     libra_d3d12_filter_chain_t *chain, uint32_t value);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Gets the number of active passes for this chain.
 ///
 /// ## Safety
@@ -1504,7 +1616,7 @@ libra_error_t libra_d3d12_filter_chain_get_active_pass_count(
     libra_d3d12_filter_chain_t *chain, uint32_t *out);
 #endif
 
-#if defined(LIBRA_RUNTIME_D3D12)
+#if (defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12))
 /// Free a D3D12 filter chain.
 ///
 /// The resulting value in `chain` then becomes null.
@@ -1512,6 +1624,135 @@ libra_error_t libra_d3d12_filter_chain_get_active_pass_count(
 /// - `chain` must be either null or a valid and aligned pointer to an
 /// initialized `libra_d3d12_filter_chain_t`.
 libra_error_t libra_d3d12_filter_chain_free(libra_d3d12_filter_chain_t *chain);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Create the filter chain given the shader preset.
+///
+/// The shader preset is immediately invalidated and must be recreated after
+/// the filter chain is created.
+///
+/// ## Safety:
+/// - `queue` must be valid for the command buffers
+///     that `libra_mtl_filter_chain_frame` will write to.
+/// - `queue` must be a reference to a `id<MTLCommandQueue>`.
+/// - `preset` must be either null, or valid and aligned.
+/// - `options` must be either null, or valid and aligned.
+/// - `out` must be aligned, but may be null, invalid, or uninitialized.
+libra_error_t libra_mtl_filter_chain_create(
+    libra_shader_preset_t *preset, id<MTLCommandQueue> queue,
+    const struct filter_chain_mtl_opt_t *options,
+    libra_mtl_filter_chain_t *out);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Create the filter chain given the shader preset deferring and GPU-side
+/// initialization to the caller. This function therefore requires no external
+/// synchronization of the device queue.
+///
+/// The shader preset is immediately invalidated and must be recreated after
+/// the filter chain is created.
+///
+/// ## Safety:
+/// - `queue` must be valid for the command buffers
+///     that `libra_mtl_filter_chain_frame` will write to.
+/// - `queue` must be a reference to a `id<MTLCommandQueue>`.
+/// - `command_buffer` must be a valid reference to a `MTLCommandBuffer` that is
+/// not already encoding.
+/// - `preset` must be either null, or valid and aligned.
+/// - `options` must be either null, or valid and aligned.
+/// - `out` must be aligned, but may be null, invalid, or uninitialized.
+///
+/// The provided command buffer must be ready for recording and contain no prior
+/// commands. The caller is responsible for ending the command buffer and
+/// immediately submitting it to a graphics queue. The command buffer must be
+/// completely executed before calling `libra_mtl_filter_chain_frame`.
+libra_error_t libra_mtl_filter_chain_create_deferred(
+    libra_shader_preset_t *preset, id<MTLCommandQueue> queue,
+    id<MTLCommandBuffer> command_buffer,
+    const struct filter_chain_mtl_opt_t *options,
+    libra_mtl_filter_chain_t *out);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Records rendering commands for a frame with the given parameters for the
+/// given filter chain to the input command buffer.
+///
+/// ## Safety
+/// - `command_buffer` must be a valid reference to a `MTLCommandBuffer` that is
+/// not already encoding.
+/// - `chain` may be null, invalid, but not uninitialized. If `chain` is null or
+/// invalid, this
+///    function will return an error.
+/// - `mvp` may be null, or if it is not null, must be an aligned pointer to 16
+/// consecutive `float`
+///    values for the model view projection matrix.
+/// - `opt` may be null, or if it is not null, must be an aligned pointer to a
+/// valid `frame_mtl_opt_t`
+///    struct.
+/// - You must ensure that only one thread has access to `chain` before you call
+/// this function. Only one
+///   thread at a time may call this function.
+libra_error_t libra_mtl_filter_chain_frame(
+    libra_mtl_filter_chain_t *chain, id<MTLCommandBuffer> command_buffer,
+    size_t frame_count, id<MTLTexture> image, struct libra_viewport_t viewport,
+    id<MTLTexture> output, const float *mvp, const struct frame_mtl_opt_t *opt);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Sets a parameter for the filter chain.
+///
+/// If the parameter does not exist, returns an error.
+/// ## Safety
+/// - `chain` must be either null or a valid and aligned pointer to an
+/// initialized `libra_mtl_filter_chain_t`.
+/// - `param_name` must be either null or a null terminated string.
+libra_error_t libra_mtl_filter_chain_set_param(libra_mtl_filter_chain_t *chain,
+                                               const char *param_name,
+                                               float value);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Gets a parameter for the filter chain.
+///
+/// If the parameter does not exist, returns an error.
+/// ## Safety
+/// - `chain` must be either null or a valid and aligned pointer to an
+/// initialized `libra_mtl_filter_chain_t`.
+/// - `param_name` must be either null or a null terminated string.
+libra_error_t libra_mtl_filter_chain_get_param(libra_mtl_filter_chain_t *chain,
+                                               const char *param_name,
+                                               float *out);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Sets the number of active passes for this chain.
+///
+/// ## Safety
+/// - `chain` must be either null or a valid and aligned pointer to an
+/// initialized `libra_mtl_filter_chain_t`.
+libra_error_t libra_mtl_filter_chain_set_active_pass_count(
+    libra_mtl_filter_chain_t *chain, uint32_t value);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Gets the number of active passes for this chain.
+///
+/// ## Safety
+/// - `chain` must be either null or a valid and aligned pointer to an
+/// initialized `libra_mtl_filter_chain_t`.
+libra_error_t libra_mtl_filter_chain_get_active_pass_count(
+    libra_mtl_filter_chain_t *chain, uint32_t *out);
+#endif
+
+#if (defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__))
+/// Free a Metal filter chain.
+///
+/// The resulting value in `chain` then becomes null.
+/// ## Safety
+/// - `chain` must be either null or a valid and aligned pointer to an
+/// initialized `libra_mtl_filter_chain_t`.
+libra_error_t libra_mtl_filter_chain_free(libra_mtl_filter_chain_t *chain);
 #endif
 
 /// Get the ABI version of the loaded instance.
@@ -1594,6 +1835,7 @@ libra_error_t libra_preset_ctx_set_param(libra_preset_ctx_t *context,
 /// - GLCore
 /// - Direct3D11
 /// - Direct3D12
+/// - Metal
 ///
 /// This will also set the appropriate video driver extensions.
 ///

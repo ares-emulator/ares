@@ -5,7 +5,7 @@
 //! possible by linking against `librashader.h` as well as any static libraries used by `librashader`.
 //!
 //! ## Usage
-//! ⚠ Rust consumers use [librashader](https://docs.rs/librashader/) directly instead. ⚠
+//! ⚠ Rust consumers should use [librashader](https://docs.rs/librashader/) directly instead. ⚠
 //!
 //! The librashader C API is designed to be easy to use and safe. Most objects are only accessible behind an opaque pointer.
 //! Every allocated object can be freed with a corresponding `free` function **for that specific object type**.
@@ -54,21 +54,21 @@
 //!
 //! ## Thread safety
 //!
-//! In general, it is **safe** to create a filter chain instance from a different thread, but drawing filter passes must be
-//! synchronized externally. The exception to filter chain creation are in OpenGL, where creating the filter chain instance
-//! is safe **if and only if** the thread local OpenGL context is initialized to the same context as the drawing thread, and
-//! in Direct3D 11, where filter chain creation is unsafe if the `ID3D11Device` was created with
-//! `D3D11_CREATE_DEVICE_SINGLETHREADED`.
+//! Except for the metal runtime, it is in general, **safe** to create a filter chain instance from a different thread,
+//! but drawing filter passes must be synchronized externally. The exception to filter chain creation are in OpenGL,
+//! where creating the filter chain instance is safe **if and only if** the thread local OpenGL context is initialized
+//! to the same context as the drawing thread, and in Direct3D 11, where filter chain creation is unsafe
+//! if the `ID3D11Device` was created with `D3D11_CREATE_DEVICE_SINGLETHREADED`. Metal is entirely thread unsafe.
 //!
 //! You must ensure that only thread has access to a created filter pass **before** you call `*_frame`. `*_frame` may only be
 //! called from one thread at a time.
 
 #![allow(non_camel_case_types)]
 #![feature(try_blocks)]
-#![feature(pointer_is_aligned)]
-#![feature(vec_into_raw_parts)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![deny(deprecated)]
+
+extern crate alloc;
 
 pub mod ctypes;
 pub mod error;

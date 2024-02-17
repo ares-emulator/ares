@@ -3,8 +3,6 @@ use glslang::{CompilerOptions, ShaderInput};
 use librashader_preprocess::ShaderSource;
 
 use crate::front::{ShaderInputCompiler, SpirvCompilation};
-#[cfg(feature = "serialize")]
-use serde::{Deserialize, Serialize};
 
 /// glslang compiler
 pub struct Glslang;

@@ -136,6 +136,8 @@ impl CompileShader<MSL> for NagaReflect {
 
         let fragment = write_msl(&self.fragment, frag_options)?;
         let vertex = write_msl(&self.vertex, vert_options)?;
+
+        let vertex_binding = self.get_next_binding(0);
         Ok(ShaderCompilerOutput {
             vertex: vertex.0,
             fragment: fragment.0,
@@ -148,6 +150,7 @@ impl CompileShader<MSL> for NagaReflect {
                     translation_info: vertex.1,
                     module: self.vertex,
                 },
+                next_free_binding: vertex_binding,
             },
         })
     }

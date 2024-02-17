@@ -1,3 +1,4 @@
+use crate::draw_quad::WgpuVertex;
 use crate::framebuffer::WgpuOutputView;
 use crate::util;
 use librashader_reflect::back::wgsl::NagaWgslContext;
@@ -152,17 +153,19 @@ impl PipelineLayoutObjects {
                     module: &self.vertex,
                     entry_point: &self.vertex_entry_name,
                     buffers: &[VertexBufferLayout {
-                        array_stride: 4 * std::mem::size_of::<f32>() as wgpu::BufferAddress,
+                        array_stride: std::mem::size_of::<WgpuVertex>() as wgpu::BufferAddress,
                         step_mode: wgpu::VertexStepMode::Vertex,
                         attributes: &[
                             wgpu::VertexAttribute {
-                                format: wgpu::VertexFormat::Float32x2,
-                                offset: 0,
+                                format: wgpu::VertexFormat::Float32x4,
+                                offset: bytemuck::offset_of!(WgpuVertex, position)
+                                    as wgpu::BufferAddress,
                                 shader_location: 0,
                             },
                             wgpu::VertexAttribute {
                                 format: wgpu::VertexFormat::Float32x2,
-                                offset: (2 * std::mem::size_of::<f32>()) as wgpu::BufferAddress,
+                                offset: bytemuck::offset_of!(WgpuVertex, texcoord)
+                                    as wgpu::BufferAddress,
                                 shader_location: 1,
                             },
                         ],
@@ -173,7 +176,7 @@ impl PipelineLayoutObjects {
                     entry_point: &self.fragment_entry_name,
                     targets: &[Some(wgpu::ColorTargetState {
                         format: framebuffer_format,
-                        blend: Some(wgpu::BlendState::REPLACE),
+                        blend: None,
                         write_mask: wgpu::ColorWrites::ALL,
                     })],
                 }),
@@ -255,7 +258,7 @@ impl WgpuGraphicsPipeline {
             output.y,
             output.output.size.width as f32,
             output.output.size.height as f32,
-            1.0,
+            0.0,
             1.0,
         );
 

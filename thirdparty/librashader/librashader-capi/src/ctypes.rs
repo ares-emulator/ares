@@ -64,19 +64,30 @@ use librashader::runtime::gl::FilterChain as FilterChainGL;
 pub type libra_gl_filter_chain_t = Option<NonNull<FilterChainGL>>;
 
 /// A handle to a Direct3D 11 filter chain.
-#[cfg(all(target_os = "windows", feature = "runtime-d3d11"))]
+#[cfg(any(
+    feature = "__cbindgen_internal",
+    all(target_os = "windows", feature = "runtime-d3d11")
+))]
 use librashader::runtime::d3d11::FilterChain as FilterChainD3D11;
 
 /// A handle to a Direct3D 11 filter chain.
-#[cfg(all(target_os = "windows", feature = "runtime-d3d11"))]
 #[doc(cfg(all(target_os = "windows", feature = "runtime-d3d11")))]
+#[cfg(any(
+    feature = "__cbindgen_internal",
+    all(target_os = "windows", feature = "runtime-d3d11")
+))]
 pub type libra_d3d11_filter_chain_t = Option<NonNull<FilterChainD3D11>>;
 
-#[cfg(all(target_os = "windows", feature = "runtime-d3d12"))]
+#[cfg(any(
+    feature = "__cbindgen_internal",
+    all(target_os = "windows", feature = "runtime-d3d12")
+))]
 use librashader::runtime::d3d12::FilterChain as FilterChainD3D12;
 /// A handle to a Direct3D 12 filter chain.
-#[cfg(all(target_os = "windows", feature = "runtime-d3d12"))]
-#[doc(cfg(all(target_os = "windows", feature = "runtime-d3d12")))]
+#[cfg(any(
+    feature = "__cbindgen_internal",
+    all(target_os = "windows", feature = "runtime-d3d12")
+))]
 pub type libra_d3d12_filter_chain_t = Option<NonNull<FilterChainD3D12>>;
 
 #[cfg(feature = "runtime-vulkan")]
@@ -85,6 +96,19 @@ use librashader::runtime::vk::FilterChain as FilterChainVulkan;
 #[cfg(feature = "runtime-vulkan")]
 #[doc(cfg(feature = "runtime-vulkan"))]
 pub type libra_vk_filter_chain_t = Option<NonNull<FilterChainVulkan>>;
+
+#[cfg(all(target_os = "macos", feature = "runtime-metal"))]
+use librashader::runtime::mtl::FilterChain as FilterChainMetal;
+#[doc(cfg(all(target_vendor = "apple", feature = "runtime-metal")))]
+#[cfg(any(
+    feature = "__cbindgen_internal",
+    all(
+        target_vendor = "apple",
+        feature = "runtime-metal",
+        feature = "__cbindgen_internal_objc"
+    )
+))]
+pub type libra_mtl_filter_chain_t = Option<NonNull<FilterChainMetal>>;
 
 /// Defines the output viewport for a rendered frame.
 #[repr(C)]
@@ -170,5 +194,7 @@ mod __cbindgen_opaque_forward_declarations {
         FilterChainD3D12;
         /// Opaque struct for a Vulkan filter chain.
         FilterChainVulkan;
+        /// Opaque struct for a Metal filter chain.
+        FilterChainMetal;
     }
 }

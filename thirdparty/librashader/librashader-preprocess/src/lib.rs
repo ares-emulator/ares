@@ -15,8 +15,8 @@ mod stage;
 
 use crate::include::read_source;
 pub use error::*;
+use librashader_common::map::FastHashMap;
 use librashader_common::ImageFormat;
-use rustc_hash::FxHashMap;
 use std::path::Path;
 
 /// The source file for a single shader pass.
@@ -32,7 +32,7 @@ pub struct ShaderSource {
     pub name: Option<String>,
 
     /// The list of shader parameters found in the shader source.
-    pub parameters: FxHashMap<String, ShaderParameter>,
+    pub parameters: FastHashMap<String, ShaderParameter>,
 
     /// The image format the shader expects.
     pub format: ImageFormat,
@@ -82,7 +82,7 @@ pub(crate) fn load_shader_source(path: impl AsRef<Path>) -> Result<ShaderSource,
     let source = read_source(path)?;
     let meta = pragma::parse_pragma_meta(&source)?;
     let text = stage::process_stages(&source)?;
-    let parameters = FxHashMap::from_iter(meta.parameters.into_iter().map(|p| (p.id.clone(), p)));
+    let parameters = FastHashMap::from_iter(meta.parameters.into_iter().map(|p| (p.id.clone(), p)));
 
     Ok(ShaderSource {
         vertex: text.vertex,

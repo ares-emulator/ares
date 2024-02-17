@@ -14,11 +14,12 @@ use crate::options::{FilterChainOptionsD3D12, FrameOptionsD3D12};
 use crate::samplers::SamplerSet;
 use crate::texture::{D3D12InputImage, D3D12OutputView, InputTexture, OutputDescriptor};
 use crate::{error, util};
+use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_presets::{ShaderPassConfig, ShaderPreset, TextureConfig};
 use librashader_reflect::back::targets::{DXIL, HLSL};
 use librashader_reflect::back::{CompileReflectShader, CompileShader};
-use librashader_reflect::front::{Glslang, SpirvCompilation};
+use librashader_reflect::front::SpirvCompilation;
 use librashader_reflect::reflect::presets::{CompilePresetTarget, ShaderPassArtifact};
 use librashader_reflect::reflect::semantics::{ShaderSemantics, MAX_BINDINGS_COUNT};
 use librashader_reflect::reflect::ReflectShader;
@@ -26,7 +27,6 @@ use librashader_runtime::binding::{BindingUtil, TextureInput};
 use librashader_runtime::image::{Image, ImageError, UVDirection};
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::uniforms::UniformStorage;
-use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 use std::mem::ManuallyDrop;
 use std::path::Path;
@@ -57,7 +57,7 @@ const MIPMAP_RESERVED_WORKHEAP_DESCRIPTORS: usize = 4096;
 
 pub struct FilterMutable {
     pub(crate) passes_enabled: usize,
-    pub(crate) parameters: FxHashMap<String, f32>,
+    pub(crate) parameters: FastHashMap<String, f32>,
 }
 
 /// A Direct3D 12 filter chain.
@@ -89,7 +89,7 @@ pub(crate) struct FilterCommon {
     pub history_textures: Box<[Option<InputTexture>]>,
     pub config: FilterMutable,
     // pub disable_mipmaps: bool,
-    pub luts: FxHashMap<usize, LutTexture>,
+    pub luts: FastHashMap<usize, LutTexture>,
     pub mipmap_gen: D3D12MipmapGen,
     pub root_signature: D3D12RootSignature,
     pub draw_quad: DrawQuad,
@@ -155,13 +155,12 @@ fn compile_passes_dxil(
 ) -> Result<(Vec<DxilShaderPassMeta>, ShaderSemantics), FilterChainError> {
     let (passes, semantics) = if !disable_cache {
         DXIL::compile_preset_passes::<
-            Glslang,
             CachedCompilation<SpirvCompilation>,
             SpirvCross,
             FilterChainError,
         >(shaders, &textures)?
     } else {
-        DXIL::compile_preset_passes::<Glslang, SpirvCompilation, SpirvCross, FilterChainError>(
+        DXIL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
             shaders, &textures,
         )?
     };
@@ -177,13 +176,12 @@ fn compile_passes_hlsl(
 ) -> Result<(Vec<HlslShaderPassMeta>, ShaderSemantics), FilterChainError> {
     let (passes, semantics) = if !disable_cache {
         HLSL::compile_preset_passes::<
-            Glslang,
             CachedCompilation<SpirvCompilation>,
             SpirvCross,
             FilterChainError,
         >(shaders, &textures)?
     } else {
-        HLSL::compile_preset_passes::<Glslang, SpirvCompilation, SpirvCross, FilterChainError>(
+        HLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
             shaders, &textures,
         )?
     };
@@ -373,11 +371,11 @@ impl FilterChainD3D12 {
         mipmap_heap: &mut D3D12DescriptorHeap<ResourceWorkHeap>,
         gc: &mut FrameResiduals,
         textures: &[TextureConfig],
-    ) -> error::Result<FxHashMap<usize, LutTexture>> {
+    ) -> error::Result<FastHashMap<usize, LutTexture>> {
         // use separate mipgen to load luts.
         let mipmap_gen = D3D12MipmapGen::new(device, true)?;
 
-        let mut luts = FxHashMap::default();
+        let mut luts = FastHashMap::default();
         let images = textures
             .par_iter()
             .map(|texture| Image::load(&texture.path, UVDirection::TopLeft))

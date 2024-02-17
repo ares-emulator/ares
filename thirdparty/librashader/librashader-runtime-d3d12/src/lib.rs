@@ -12,7 +12,6 @@ mod framebuffer;
 mod graphics_pipeline;
 mod luts;
 mod mipmap;
-mod parameters;
 mod samplers;
 mod texture;
 mod util;
@@ -20,6 +19,8 @@ mod util;
 pub mod error;
 pub mod options;
 
+use librashader_runtime::impl_filter_chain_parameters;
+impl_filter_chain_parameters!(FilterChainD3D12);
 pub use filter_chain::FilterChainD3D12;
 pub use texture::D3D12InputImage;
 pub use texture::D3D12OutputView;

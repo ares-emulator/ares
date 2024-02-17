@@ -8,45 +8,45 @@ use wgpu::{Buffer, Device, RenderPass};
 // WGPU does vertex expansion
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default, Zeroable, Pod)]
-struct WgpuVertex {
-    position: [f32; 2],
-    texcoord: [f32; 2],
+pub struct WgpuVertex {
+    pub position: [f32; 4],
+    pub texcoord: [f32; 2],
 }
 
 const OFFSCREEN_VBO_DATA: [WgpuVertex; 4] = [
     WgpuVertex {
-        position: [-1.0, -1.0],
+        position: [-1.0, -1.0, 0.0, 1.0],
         texcoord: [0.0, 0.0],
     },
     WgpuVertex {
-        position: [-1.0, 1.0],
+        position: [-1.0, 1.0, 0.0, 1.0],
         texcoord: [0.0, 1.0],
     },
     WgpuVertex {
-        position: [1.0, -1.0],
+        position: [1.0, -1.0, 0.0, 1.0],
         texcoord: [1.0, 0.0],
     },
     WgpuVertex {
-        position: [1.0, 1.0],
+        position: [1.0, 1.0, 0.0, 1.0],
         texcoord: [1.0, 1.0],
     },
 ];
 
 const FINAL_VBO_DATA: [WgpuVertex; 4] = [
     WgpuVertex {
-        position: [0.0, 0.0],
+        position: [0.0, 0.0, 0.0, 1.0],
         texcoord: [0.0, 0.0],
     },
     WgpuVertex {
-        position: [0.0, 1.0],
+        position: [0.0, 1.0, 0.0, 1.0],
         texcoord: [0.0, 1.0],
     },
     WgpuVertex {
-        position: [1.0, 0.0],
+        position: [1.0, 0.0, 0.0, 1.0],
         texcoord: [1.0, 0.0],
     },
     WgpuVertex {
-        position: [1.0, 1.0],
+        position: [1.0, 1.0, 0.0, 1.0],
         texcoord: [1.0, 1.0],
     },
 ];

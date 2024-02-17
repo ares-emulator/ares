@@ -41,6 +41,10 @@ pub enum LibrashaderError {
     #[doc(cfg(feature = "runtime-vulkan"))]
     #[error("There was an error in the Vulkan filter chain.")]
     VulkanFilterError(#[from] librashader::runtime::vk::error::FilterChainError),
+    #[doc(cfg(all(target_vendor = "apple", feature = "runtime-metal")))]
+    #[cfg(all(target_vendor = "apple", feature = "runtime-metal"))]
+    #[error("There was an error in the D3D12 filter chain.")]
+    MetalFilterError(#[from] librashader::runtime::mtl::error::FilterChainError),
 }
 
 /// Error codes for librashader error types.
@@ -187,6 +191,8 @@ impl LibrashaderError {
             LibrashaderError::D3D12FilterError(_) => LIBRA_ERRNO::RUNTIME_ERROR,
             #[cfg(feature = "runtime-vulkan")]
             LibrashaderError::VulkanFilterError(_) => LIBRA_ERRNO::RUNTIME_ERROR,
+            #[cfg(all(target_vendor = "apple", feature = "runtime-metal"))]
+            LibrashaderError::MetalFilterError(_) => LIBRA_ERRNO::RUNTIME_ERROR,
         }
     }
     pub(crate) const fn ok() -> libra_error_t {
@@ -200,12 +206,12 @@ impl LibrashaderError {
 
 macro_rules! assert_non_null {
     ($value:ident) => {
-        if $value.is_null() || !$value.is_aligned() {
+        if $value.is_null() || !$crate::ffi::ptr_is_aligned($value) {
             return $crate::error::LibrashaderError::InvalidParameter(stringify!($value)).export();
         }
     };
     (noexport $value:ident) => {
-        if $value.is_null() || !$value.is_aligned() {
+        if $value.is_null() || !$crate::ffi::ptr_is_aligned($value) {
             return Err($crate::error::LibrashaderError::InvalidParameter(
                 stringify!($value),
             ));

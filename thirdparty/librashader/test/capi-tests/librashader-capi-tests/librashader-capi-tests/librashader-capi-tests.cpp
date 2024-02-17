@@ -39,7 +39,13 @@ int main()
     libra_preset_param_list_t parameters;
     error = instance.preset_get_runtime_params(&preset, &parameters);
 
-    libra_preset_param_t next = parameters.parameters[471];
+    for (int i = 0; i < parameters.length; i++) {
+        libra_preset_param_t param = parameters.parameters[i];
+
+        printf("%s\n", param.description);
+
+    }
+
 
     instance.preset_free_runtime_params(parameters);
 

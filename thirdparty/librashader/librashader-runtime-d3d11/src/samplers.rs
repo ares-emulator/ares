@@ -1,12 +1,12 @@
 use crate::error::{assume_d3d11_init, Result};
+use librashader_common::map::FastHashMap;
 use librashader_common::{FilterMode, WrapMode};
-use rustc_hash::FxHashMap;
 use windows::Win32::Graphics::Direct3D11::{
     ID3D11Device, ID3D11SamplerState, D3D11_COMPARISON_NEVER, D3D11_FLOAT32_MAX,
     D3D11_SAMPLER_DESC, D3D11_TEXTURE_ADDRESS_MODE,
 };
 pub struct SamplerSet {
-    samplers: FxHashMap<(WrapMode, FilterMode), ID3D11SamplerState>,
+    samplers: FastHashMap<(WrapMode, FilterMode), ID3D11SamplerState>,
 }
 
 impl SamplerSet {
@@ -18,7 +18,7 @@ impl SamplerSet {
     }
 
     pub fn new(device: &ID3D11Device) -> Result<SamplerSet> {
-        let mut samplers = FxHashMap::default();
+        let mut samplers = FastHashMap::default();
         let wrap_modes = &[
             WrapMode::ClampToBorder,
             WrapMode::ClampToEdge,

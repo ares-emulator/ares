@@ -6,7 +6,7 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/SnowflakePowered/librashader"
 license=('MPL-2.0')
 groups=('')
-depends=('vulkan-icd-loader' 'gcc' 'rust' 'patchelf' 'ninja')
+depends=('gcc' 'rust' 'patchelf' 'ninja')
 provides=("$pkgname=$pkgver" 'librashader.so')
 backup=('')
 source=("$pkgname-$pkgver.tar.xz" 'vendor.tar.xz' 'cargo_config')

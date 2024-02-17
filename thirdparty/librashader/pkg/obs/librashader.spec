@@ -15,7 +15,6 @@ BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: cargo
 BuildRequires: rust
-Requires: vulkan
 
 %description
 RetroArch shader runtime

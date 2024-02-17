@@ -25,15 +25,15 @@
 //!         source: &ShaderSource,
 //!     ) -> Result<Artifact, Box<dyn Error>>
 //! {
-//!     let artifact = Glslang::compile(&source)?;
-//!     let spirv = SPIRV::from_compilation(artifact)?;
+//!     let compilation = SpirvCompilation::try_from(&source);
+//!     let spirv = SPIRV::from_compilation(compilation)?;
 //!     Ok(spirv)
 //! }
 //!
 //! // Compile preset
 //! pub fn compile_preset(preset: ShaderPreset) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), Box<dyn Error>>
 //! {
-//!     let (passes, semantics) = SPIRV::compile_preset_passes::<Glslang, SpirvCompilation, Box<dyn Error>>(
+//!     let (passes, semantics) = SPIRV::compile_preset_passes::<SpirvCompilation, SpirvCross, Box<dyn Error>>(
 //!     preset.shaders, &preset.textures)?;
 //!     Ok((passes, semantics))
 //! }
@@ -46,7 +46,6 @@
 //!
 //! In the meanwhile, the only supported compilation type is [GlslangCompilation](crate::front::SpirvCompilation),
 //! which does transpilation via [glslang](https://github.com/KhronosGroup/glslang) and [SPIRV-Cross](https://github.com/KhronosGroup/SPIRV-Cross).
-#![feature(type_alias_impl_trait)]
 #![feature(impl_trait_in_assoc_type)]
 #![feature(let_chains)]
 

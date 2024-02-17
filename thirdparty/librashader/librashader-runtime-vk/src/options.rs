@@ -11,9 +11,10 @@ pub struct FilterChainOptionsVulkan {
     pub frames_in_flight: u32,
     /// Whether or not to explicitly disable mipmap generation regardless of shader preset settings.
     pub force_no_mipmaps: bool,
-    /// Use explicit render pass objects It is recommended if possible to use dynamic rendering,
+    /// Use dynamic rendering instead of explicit render pass objects.
+    /// It is recommended if possible to use dynamic rendering,
     /// because render-pass mode will create new framebuffers per pass.
-    pub use_render_pass: bool,
+    pub use_dynamic_rendering: bool,
     /// Disable the shader object cache. Shaders will be
     /// recompiled rather than loaded from the cache.
     pub disable_cache: bool,
