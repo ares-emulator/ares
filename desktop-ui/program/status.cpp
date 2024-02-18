@@ -29,7 +29,6 @@ auto Program::showMessage(const string& text) -> void {
   printf("%s\n", (const char*)text);
 }
 #if defined(PLATFORM_WINDOWS)    
-//------------------------- Marty2Life Borderless BEG
 auto Program::UpdateBorderless()  -> void {
 	    
 	if (settings.general.sBorderless == true){
@@ -44,5 +43,4 @@ auto Program::UpdateBorderless()  -> void {
     }
     if (presentation.visible()) presentation.resizeWindow();   
 }
-//------------------------- Marty2Life Borderless END
 #endif
