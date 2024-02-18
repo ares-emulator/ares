@@ -111,7 +111,10 @@ auto CheatEditor::refresh() -> void {
 }
 
 auto CheatEditor::unload() -> void {
-  if(location) {
+  bool hasCheats = cheats.size() > 0;
+  bool isCheatLocation = location.endsWith(".cheats.bml");
+
+  if(hasCheats && isCheatLocation) {
     auto fp = file::open(location, file::mode::write);
     if(fp) {
       fp.print("cheats\n");
@@ -124,6 +127,10 @@ auto CheatEditor::unload() -> void {
         fp.print("\n");
       }
     }
+  }
+
+  if(!hasCheats && isCheatLocation && file::exists(location)) {
+    file::remove(location);
   }
 
   location = "";
