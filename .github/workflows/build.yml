@@ -76,6 +76,9 @@ jobs:
       run: |
         rustup toolchain install nightly
         rustup default nightly
+        pushd thirdparty/librashader
+        ./build-librashader.sh
+        popd
     - name: Install Linux Dependencies
       if: runner.os == 'Linux'
       run: |
