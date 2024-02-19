@@ -90,6 +90,8 @@ jobs:
     - name: Install Windows Dependencies (bash)
       if: runner.os == 'Windows'
       run: |
+        # On msys, rustup does not get added to the PATH, so we need to do it manually.        
+        export PATH="$HOME/.cargo/bin:$PATH" # correct on windows-latest as of 2024-02-19 
         rustup toolchain install nightly
         rustup default nightly
         pushd thirdparty/librashader
