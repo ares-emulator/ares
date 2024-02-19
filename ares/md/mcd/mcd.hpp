@@ -307,6 +307,7 @@ struct MCD : M68000, Thread {
     auto sample() -> void;
     auto position(s32 sector) -> double;
     auto process() -> void;
+    auto readSubcode() -> void;
     auto valid() -> bool;
     auto checksum() -> void;
     auto insert() -> void;
@@ -345,12 +346,14 @@ struct MCD : M68000, Thread {
       n16 sample;   //current audio sample# within current frame
       n7  track;    //current track#
       n1  tocRead;
+      n6  subcodePosition;
     } io;
 
     n1 hostClockEnable;
     n1 statusPending;
     n4 status [10];
     n4 command[10];
+    n16 subcode[64];
   } cdd;
 
   struct Timer {

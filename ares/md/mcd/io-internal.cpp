@@ -176,8 +176,15 @@ auto MCD::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     data.bit(1,15) = gpu.vector.base.bit(3,17);
   }
 
+  if(address == 0xff8068) {
+    data.bit(0) = Unmapped;
+    data.bit(1,7) = cdd.io.subcodePosition.bit(0,6);
+    data.bit(8,15) = Unmapped;
+  }
+
   if(address >= 0xff8100 && address <= 0xff81ff) {
-    debug(unusual, "[MCD::readIO] address=0x", hex(address, 6L));
+    n6 index = address - 0xff8100 >> 1;
+    data = cdd.subcode[index];
   }
 
   return data;

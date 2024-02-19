@@ -148,11 +148,13 @@ auto MCD::CDD::serialize(serializer& s) -> void {
   s(io.sample);
   s(io.track);
   s(io.tocRead);
+  s(io.subcodePosition);
 
   s(hostClockEnable);
   s(statusPending);
   s(status);
   s(command);
+  s(subcode);
 }
 
 auto MCD::Timer::serialize(serializer& s) -> void {

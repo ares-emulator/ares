@@ -60,6 +60,7 @@ auto MCD::CDD::advance() -> void {
     io.track = track();
     io.sector++;
     io.sample = 0;
+    readSubcode();
     return;
   }
 
@@ -91,6 +92,34 @@ auto MCD::CDD::position(s32 sector) -> double {
 
   sector += session.leadIn.lba;  //convert to natural
   return sqrt(sector / sectors * (outerRadius - innerRadius) + innerRadius) / radius;
+}
+
+auto MCD::CDD::readSubcode() -> void {
+  if(!mcd.fd) return;
+
+  mcd.fd->seek(((abs(mcd.cdd.session.leadIn.lba) + io.sector) * 2448) + 2352);
+  vector<u8> subchannel;
+  subchannel.resize(96);
+  mcd.fd->read({subchannel.data(), 96});
+
+  io.subcodePosition += 49;
+  n6 index = io.subcodePosition;
+
+  //subchannel data is stored by ares as 12x8 for each channel (PQRSTUVW)
+  //we need to convert this back to the raw subchannel encoding as per EMCA-130
+  for(int i = 0; i < 96; i+= 2) {
+    n16 data = 0;
+    for(auto channel : range(8)) {
+      n8 input = subchannel[(channel * 12) + (i / 8)];
+      n2 bits = input >> (6 - (i & 6));
+      data.bit( 7 - channel) = bits.bit(0);
+      data.bit(15 - channel) = bits.bit(1);
+    }
+
+    subcode[index++] = data;
+  }
+
+  mcd.irq.subcode.raise();
 }
 
 auto MCD::CDD::process() -> void {
