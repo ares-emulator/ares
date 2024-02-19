@@ -71,14 +71,6 @@ jobs:
       with:
         msystem: ${{ matrix.platform.msystem }}
         install: make ${{ matrix.platform.install }}
-    - name: Install Windows Dependencies
-      if: runner.os == 'Windows'
-      run: |
-        rustup toolchain install nightly
-        rustup default nightly
-        pushd thirdparty/librashader
-        ./build-librashader.sh
-        popd
     - name: Install Linux Dependencies
       if: runner.os == 'Linux'
       run: |
@@ -95,6 +87,14 @@ jobs:
         keychain-password: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
     - name: Checkout source code
       uses: actions/checkout@v2
+    - name: Install Windows Dependencies (bash)
+      if: runner.os == 'Windows'
+      run: |
+        rustup toolchain install nightly
+        rustup default nightly
+        pushd thirdparty/librashader
+        ./build-librashader.sh
+        popd
     - name: "macOS: recover MoltenVK cache"
       if: runner.os == 'macOS'
       uses: actions/cache@v3
