@@ -71,6 +71,11 @@ jobs:
       with:
         msystem: ${{ matrix.platform.msystem }}
         install: make ${{ matrix.platform.install }}
+    - name: Install Windows Dependencies
+      if: runner.os == 'Windows'
+      run: |
+        rustup toolchain install nightly
+        rustup default nightly
     - name: Install Linux Dependencies
       if: runner.os == 'Linux'
       run: |
