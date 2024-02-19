@@ -67,13 +67,11 @@ struct mWindow : mObject {
   auto sizable() const -> Sizable;
   auto statusBar() const -> StatusBar;
   auto title() const -> string;
-  
-
 
 //private:
   struct State {
     Color backgroundColor;
-	bool borderless = false; 	
+    bool borderless = false;
     bool dismissable = false;	
     bool droppable = false;
     bool fullScreen = false;

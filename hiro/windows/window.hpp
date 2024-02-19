@@ -36,7 +36,7 @@ struct pWindow : pObject {
   auto setResizable(bool resizable) -> void;
   auto setTitle(string text) -> void;
   auto setVisible(bool visible) -> void override;   
-  
+
   auto modalIncrement() -> void;
   auto modalDecrement() -> void;
   auto windowProc(HWND, UINT, WPARAM, LPARAM) -> maybe<LRESULT>;
@@ -52,11 +52,7 @@ struct pWindow : pObject {
   HBRUSH hbrush = nullptr;
   COLORREF hbrushColor = 0;
   Geometry windowedGeometry{128, 128, 256, 256};
-  bool bBorderLess = false;  
   bool focus = false;
-  
-
-
 };
 
 }
