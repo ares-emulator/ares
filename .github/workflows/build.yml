@@ -94,14 +94,17 @@ jobs:
         if [[ ${{ matrix.platform.name }} == *-arm64 ]]; then
           rustup target add aarch64-pc-windows-msvc
           rustup toolchain install nightly
-          rustup default nightly-aarch64-pc-windows-msvc
+          rustup default nightly
+          pushd thirdparty/librashader
+          ./build-librashader.sh aarch64-pc-windows-msvc
+          popd        
         else
           rustup toolchain install nightly
           rustup default nightly
+          pushd thirdparty/librashader
+          ./build-librashader.sh
+          popd
         fi
-        pushd thirdparty/librashader
-        ./build-librashader.sh
-        popd
     - name: "macOS: recover MoltenVK cache"
       if: runner.os == 'macOS'
       uses: actions/cache@v3

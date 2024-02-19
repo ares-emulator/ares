@@ -38,7 +38,12 @@ if [ "$(uname)" = "Darwin" ]; then
     lipo -create -output target/optimized/librashader.dylib target/x86_64-apple-darwin/optimized/librashader.dylib target/aarch64-apple-darwin/optimized/librashader.dylib
     rm target/x86_64-apple-darwin/optimized/librashader.dylib target/aarch64-apple-darwin/optimized/librashader.dylib
 else
-    cargo +nightly run -p librashader-build-script -- --profile optimized
+    # If a parameter is passed, we build for the specified target
+    if [ $# -eq 1 ]; then
+        cargo +nightly run -p librashader-build-script -- --profile optimized --target $1
+    else
+        cargo +nightly run -p librashader-build-script -- --profile optimized
+    fi
 
     if [ "$(uname)" = "Linux" ]; then
         echo "\nlibrashader built successfully, to install, please run the following commands:"
