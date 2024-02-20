@@ -87,14 +87,14 @@ jobs:
         keychain-password: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
     - name: Checkout source code
       uses: actions/checkout@v2
-    - name: Install Windows Dependencies (bash)
+    - name: Install Windows Dependencies
       if: runner.os == 'Windows'
       run: |
         export PATH="/c/Users/runneradmin/.cargo/bin:$PATH" # correct on windows-latest as of 2024-02-19 
         if [[ ${{ matrix.platform.name }} == *-arm64 ]]; then
           rustup target add aarch64-pc-windows-msvc
           rustup toolchain install nightly
-          rustup default nightly
+          rustup default nightly-aarch64-pc-windows-msvc
           pushd thirdparty/librashader
           ./build-librashader.sh aarch64-pc-windows-msvc
           popd        
