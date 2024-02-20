@@ -700,8 +700,10 @@ struct CPU : Thread {
   auto fpeInvalidOperation() -> bool;
   auto fpeUnimplemented() -> bool;
   auto fpuCheckStart() -> bool;
-  auto fpuCheckInput(f32& f) -> bool;
-  auto fpuCheckInput(f64& f) -> bool;
+  template <typename T>
+  auto fpuCheckInput(T& f) -> bool;
+  template <typename T>
+  auto fpuCheckInputs(T& f1, T& f2) -> bool;
   auto fpuCheckOutput(f32& f) -> bool;
   auto fpuCheckOutput(f64& f) -> bool;
   auto fpuClearCause() -> void;
