@@ -281,7 +281,9 @@ auto CPU::fpuCheckStart() -> bool {
   return true;
 }
 
-auto CPU::fpuCheckInput(f32& f) -> bool {
+template <typename T>
+auto CPU::fpuCheckInput(T& f) -> bool {
+  static_assert(std::is_same_v<T, f32> || std::is_same_v<T, f64>);
   switch (fpclassify(f)) {
   case FP_SUBNORMAL:
     if(fpeUnimplemented()) return exception.floatingPoint(), false;
@@ -294,18 +296,22 @@ auto CPU::fpuCheckInput(f32& f) -> bool {
   return true;
 }
 
-auto CPU::fpuCheckInput(f64& f) -> bool {
-  switch (fpclassify(f)) {
-  case FP_SUBNORMAL:
+template <typename T>
+auto CPU::fpuCheckInputs(T& f1, T& f2) -> bool {
+  static_assert(std::is_same_v<T, f32> || std::is_same_v<T, f64>);
+  int cl1 = fpclassify(f1), cl2 = fpclassify(f2);
+  if((cl1 == FP_NAN && !qnan(f1)) || (cl2 == FP_NAN && !qnan(f2))) {
     if(fpeUnimplemented()) return exception.floatingPoint(), false;
-    return true;
-  case FP_NAN:
-    if(qnan(f) ? fpeInvalidOperation() : fpeUnimplemented())
-      return exception.floatingPoint(), false;
-    return true;
+  }
+  if(cl1 == FP_SUBNORMAL || cl2 == FP_SUBNORMAL) {
+    if(fpeUnimplemented()) return exception.floatingPoint(), false;
+  }
+  if((cl1 == FP_NAN && qnan(f1)) || (cl2 == FP_NAN && qnan(f2))) {
+    if(fpeInvalidOperation()) return exception.floatingPoint(), false;
   }
   return true;
 }
+
 
 template<typename T>
 auto fpuFlushResult(T f, u32 roundMode) -> T
@@ -457,8 +463,7 @@ auto CPU::FABS_D(u8 fd, u8 fs) -> void {
 auto CPU::FADD_S(u8 fd, u8 fs, u8 ft) -> void {
   if(!fpuCheckStart()) return;
   f32 ffs = FS(f32), fft = FT(f32);
-  if(!fpuCheckInput(ffs)) return;
-  if(!fpuCheckInput(fft)) return;
+  if(!fpuCheckInputs(ffs, fft)) return;
   CHECK_FPE(f32, ffd, FS(f32) + FT(f32));
   if(!fpuCheckOutput(ffd)) return;
   FD(f32) = ffd;
@@ -468,8 +473,7 @@ auto CPU::FADD_S(u8 fd, u8 fs, u8 ft) -> void {
 auto CPU::FADD_D(u8 fd, u8 fs, u8 ft) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(f64), fft = FT(f64);
-  if(!fpuCheckInput(ffs)) return;
-  if(!fpuCheckInput(fft)) return;
+  if(!fpuCheckInputs(ffs, fft)) return;
   CHECK_FPE(f64, ffd, ffs + fft);
   if(!fpuCheckOutput(ffd)) return;
   FD(f64) = ffd;
@@ -799,8 +803,7 @@ auto CPU::FCVT_W_D(u8 fd, u8 fs) -> void {
 auto CPU::FDIV_S(u8 fd, u8 fs, u8 ft) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(f32), fft = FT(f32);
-  if(!fpuCheckInput(ffs)) return;
-  if(!fpuCheckInput(fft)) return;
+  if(!fpuCheckInputs(ffs, fft)) return;
   CHECK_FPE(f32, ffd, ffs / fft);
   if(!fpuCheckOutput(ffd)) return;
   FD(f32) = ffd;
@@ -810,8 +813,7 @@ auto CPU::FDIV_S(u8 fd, u8 fs, u8 ft) -> void {
 auto CPU::FDIV_D(u8 fd, u8 fs, u8 ft) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(f64), fft = FT(f64);
-  if(!fpuCheckInput(ffs)) return;
-  if(!fpuCheckInput(fft)) return;
+  if(!fpuCheckInputs(ffs, fft)) return;
   CHECK_FPE(f64, ffd, ffs / fft);
   if(!fpuCheckOutput(ffd)) return;
   FD(f64) = ffd;
@@ -866,8 +868,7 @@ auto CPU::FMOV_D(u8 fd, u8 fs) -> void {
 auto CPU::FMUL_S(u8 fd, u8 fs, u8 ft) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(f32), fft = FT(f32);
-  if(!fpuCheckInput(ffs)) return;
-  if(!fpuCheckInput(fft)) return;
+  if(!fpuCheckInputs(ffs, fft)) return;
   CHECK_FPE(f32, ffd, ffs * fft);
   if(!fpuCheckOutput(ffd)) return;
   FD(f32) = ffd;
@@ -877,8 +878,7 @@ auto CPU::FMUL_S(u8 fd, u8 fs, u8 ft) -> void {
 auto CPU::FMUL_D(u8 fd, u8 fs, u8 ft) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(f64), fft = FT(f64);
-  if(!fpuCheckInput(ffs)) return;
-  if(!fpuCheckInput(fft)) return;
+  if(!fpuCheckInputs(ffs, fft)) return;
   CHECK_FPE(f64, ffd, ffs * fft);
   if(!fpuCheckOutput(ffd)) return;
   FD(f64) = ffd;
@@ -966,8 +966,7 @@ auto CPU::FSQRT_D(u8 fd, u8 fs) -> void {
 auto CPU::FSUB_S(u8 fd, u8 fs, u8 ft) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(f32), fft = FT(f32);
-  if(!fpuCheckInput(ffs)) return;
-  if(!fpuCheckInput(fft)) return;
+  if(!fpuCheckInputs(ffs, fft)) return;
   CHECK_FPE(f32, ffd, ffs - fft);
   if(!fpuCheckOutput(ffd)) return;
   FD(f32) = ffd;
@@ -977,8 +976,7 @@ auto CPU::FSUB_S(u8 fd, u8 fs, u8 ft) -> void {
 auto CPU::FSUB_D(u8 fd, u8 fs, u8 ft) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(f64), fft = FT(f64);
-  if(!fpuCheckInput(ffs)) return;
-  if(!fpuCheckInput(fft)) return;
+  if(!fpuCheckInputs(ffs, fft)) return;
   CHECK_FPE(f64, ffd, ffs - fft);
   if(!fpuCheckOutput(ffd)) return;
   FD(f64) = ffd;
