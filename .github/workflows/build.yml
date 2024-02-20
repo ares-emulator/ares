@@ -93,8 +93,8 @@ jobs:
         export PATH="/c/Users/runneradmin/.cargo/bin:$PATH" # correct on windows-latest as of 2024-02-19 
         if [[ ${{ matrix.platform.name }} == *-arm64 ]]; then
           rustup toolchain install nightly
-          rustup target add aarch64-pc-windows-msvc
           rustup default nightly
+          rustup target add aarch64-pc-windows-msvc        
           pushd thirdparty/librashader
           ./build-librashader.sh aarch64-pc-windows-msvc
           popd        
