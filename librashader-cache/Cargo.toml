@@ -2,7 +2,7 @@
 name = "librashader-cache"
 edition = "2021"
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -12,8 +12,8 @@ description = "RetroArch shaders for all."
 
 [dependencies]
 serde = { version = "1.0" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.1", features = ["serialize"] }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.1" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.2.2", features = ["serialize"] }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.2" }
 platform-dirs = "0.3.0"
 blake3 = { version = "1.3.3" }
 thiserror = "1.0.38"

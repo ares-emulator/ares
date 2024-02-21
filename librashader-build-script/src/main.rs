@@ -2,7 +2,7 @@ use clap::Parser;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, ExitCode};
 use std::{env, fs};
 
 #[derive(Parser, Debug)]
@@ -12,12 +12,14 @@ struct Args {
     profile: String,
     #[arg(long, global = true)]
     target: Option<String>,
+    #[arg(last = true)]
+    cargoflags: Vec<String>,
 }
 
-pub fn main() {
+pub fn main() -> ExitCode {
     // Do not update files on docsrs
     if env::var("DOCS_RS").is_ok() {
-        return;
+        return ExitCode::SUCCESS;
     }
 
     let args = Args::parse();
@@ -44,7 +46,14 @@ pub fn main() {
         cmd.arg(format!("--target={}", &target));
     }
 
-    Some(cmd.status().expect("Failed to build librashader-capi"));
+    if !args.cargoflags.is_empty() {
+        cmd.args(args.cargoflags);
+    }
+
+    let status = cmd.status().expect("Failed to build librashader-capi");
+    if !status.success() {
+        return ExitCode::from(status.code().unwrap_or(1) as u8);
+    }
 
     let mut output_dir = PathBuf::from(format!("target/{}", profile));
     if let Some(target) = &args.target {
@@ -110,4 +119,6 @@ pub fn main() {
             .unwrap();
         }
     }
+
+    return ExitCode::SUCCESS;
 }

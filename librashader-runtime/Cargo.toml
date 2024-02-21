@@ -3,7 +3,7 @@ name = "librashader-runtime"
 edition = "2021"
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -12,10 +12,10 @@ keywords = ["shader", "retroarch", "SPIR-V"]
 description = "RetroArch shaders for all."
 
 [dependencies]
-librashader-common = { path = "../librashader-common", version = "0.2.1" }
-librashader-presets = { path = "../librashader-presets", version = "0.2.1" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.1" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.1" }
+librashader-common = { path = "../librashader-common", version = "0.2.2" }
+librashader-presets = { path = "../librashader-presets", version = "0.2.2" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.2" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.2.2" }
 bytemuck = "1.12.3"
 num-traits = "0.2.15"
 

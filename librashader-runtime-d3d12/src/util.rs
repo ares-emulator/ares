@@ -153,6 +153,15 @@ pub fn dxc_compile_shader(
         )?;
 
         let result = result.GetResult()?;
+
+        {
+            let blob = std::slice::from_raw_parts_mut(
+                result.GetBufferPointer() as *mut u8,
+                result.GetBufferSize(),
+            );
+            mach_siegbert_vogt_dxcsa::sign_in_place(blob);
+        }
+
         Ok(result)
     }
 }

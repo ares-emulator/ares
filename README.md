@@ -166,7 +166,7 @@ Please report an issue if you run into a shader that works in RetroArch, but not
     which was released in late 2018.
   * For maximum compatibility with shaders, a shader compile pipeline based on [`spirv-to-dxil`](https://github.com/SnowflakePowered/spirv-to-dxil-rs) is used, with the SPIRV-Cross HLSL pipeline used as a fallback. 
     This brings shader compatibility beyond what the RetroArch Direct3D 12 driver provides. The HLSL pipeline fallback may be removed in the future as `spirv-to-dxil` improves.
-  * The Direct3D 12 runtime requires `dxil.dll` and `dxcompiler.dll` from the [DirectX Shader Compiler](https://github.com/microsoft/DirectXShaderCompiler).
+  * The Direct3D 12 runtime requires `dxcompiler.dll` from the [DirectX Shader Compiler](https://github.com/microsoft/DirectXShaderCompiler), which may already be installed as part of Direct3D12. `dxil.dll` is not required.
 * Metal
   * The Metal runtime uses the same VBOs as the other runtimes as well as the identity matrix MVP for intermediate passes. RetroArch's Metal driver uses only the final VBO.
 
