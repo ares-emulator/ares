@@ -3,7 +3,7 @@ name = "librashader-presets"
 edition = "2021"
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -15,7 +15,7 @@ description = "RetroArch shaders for all."
 thiserror = "1.0.37"
 nom = "7.1.1"
 nom_locate = "4.0.0"
-librashader-common = { path = "../librashader-common", version = "0.2.1" }
+librashader-common = { path = "../librashader-common", version = "0.2.2" }
 num-traits = "0.2"
 once_cell = "1"
 # we don't need unicode

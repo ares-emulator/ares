@@ -1,6 +1,5 @@
 pub mod msl;
 pub mod spirv;
-mod spirv_passes;
 pub mod wgsl;
 
 use crate::error::{SemanticsErrorKind, ShaderReflectError};
@@ -14,8 +13,8 @@ use rspirv::binary::Assemble;
 use rspirv::dr::Builder;
 use rustc_hash::FxHashSet;
 
+use crate::front::spirv_passes::lower_samplers;
 use crate::reflect::helper::{SemanticErrorBlame, TextureData, UboData};
-use crate::reflect::naga::spirv_passes::{link_input_outputs, lower_samplers};
 use crate::reflect::semantics::{
     BindingMeta, BindingStage, BufferReflection, MemberOffset, ShaderSemantics, TextureBinding,
     TextureSemanticMap, TextureSemantics, TextureSizeMeta, TypeInfo, UniformMemberBlock,
@@ -115,13 +114,6 @@ impl TryFrom<&SpirvCompilation> for NagaReflect {
     type Error = ShaderReflectError;
 
     fn try_from(compile: &SpirvCompilation) -> Result<Self, Self::Error> {
-        fn load_module(words: &[u32]) -> rspirv::dr::Module {
-            let mut loader = rspirv::dr::Loader::new();
-            rspirv::binary::parse_words(words, &mut loader).unwrap();
-            let module = loader.module();
-            module
-        }
-
         fn lower_fragment_shader(builder: &mut Builder) {
             let mut pass = lower_samplers::LowerCombinedImageSamplerPass::new(builder);
             pass.ensure_op_type_sampler();
@@ -134,20 +126,16 @@ impl TryFrom<&SpirvCompilation> for NagaReflect {
             block_ctx_dump_prefix: None,
         };
 
-        let vertex = load_module(&compile.vertex);
-        let fragment = load_module(&compile.fragment);
+        let vertex = crate::front::spirv_passes::load_module(&compile.vertex);
+        let fragment = crate::front::spirv_passes::load_module(&compile.fragment);
 
         let mut fragment = Builder::new_from_module(fragment);
         lower_fragment_shader(&mut fragment);
-
-        let mut pass = link_input_outputs::LinkInputs::new(&vertex, &mut fragment);
-        pass.do_pass();
 
         let vertex = vertex.assemble();
         let fragment = fragment.module().assemble();
 
         let vertex = naga::front::spv::parse_u8_slice(bytemuck::cast_slice(&vertex), &options)?;
-
         let fragment = naga::front::spv::parse_u8_slice(bytemuck::cast_slice(&fragment), &options)?;
 
         Ok(NagaReflect { vertex, fragment })

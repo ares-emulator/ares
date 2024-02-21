@@ -1,14 +1,13 @@
 use crate::descriptor_heap::{D3D12DescriptorHeap, D3D12DescriptorHeapSlot, ResourceWorkHeap};
-use crate::util::dxc_compile_shader;
+use crate::util::dxc_validate_shader;
 use crate::{error, util};
 use bytemuck::{Pod, Zeroable};
 use librashader_common::Size;
 use librashader_runtime::scaling::MipmapSize;
 use std::mem::ManuallyDrop;
 use std::ops::Deref;
-use widestring::u16cstr;
 use windows::Win32::Graphics::Direct3D::Dxc::{
-    CLSID_DxcCompiler, CLSID_DxcLibrary, DxcCreateInstance,
+    CLSID_DxcLibrary, CLSID_DxcValidator, DxcCreateInstance,
 };
 use windows::Win32::Graphics::Direct3D12::{
     ID3D12DescriptorHeap, ID3D12Device, ID3D12GraphicsCommandList, ID3D12PipelineState,
@@ -22,49 +21,7 @@ use windows::Win32::Graphics::Direct3D12::{
 };
 use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT;
 
-static GENERATE_MIPS_SRC: &[u8] = b"
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-//
-// http://go.microsoft.com/fwlink/?LinkID=615561
-
-#define GenerateMipsRS \\
-\"RootFlags ( DENY_VERTEX_SHADER_ROOT_ACCESS   |\" \\
-\"            DENY_DOMAIN_SHADER_ROOT_ACCESS   |\" \\
-\"            DENY_GEOMETRY_SHADER_ROOT_ACCESS |\" \\
-\"            DENY_HULL_SHADER_ROOT_ACCESS     |\" \\
-\"            DENY_PIXEL_SHADER_ROOT_ACCESS ),\" \\
-\"DescriptorTable ( SRV(t0, flags=DATA_VOLATILE|DESCRIPTORS_VOLATILE) ),\" \\
-\"DescriptorTable ( UAV(u0, flags=DATA_VOLATILE|DESCRIPTORS_VOLATILE) ),\" \\
-\"RootConstants(num32BitConstants=3, b0),\" \\
-\"StaticSampler(s0,\"\\
-\"           filter =   FILTER_MIN_MAG_LINEAR_MIP_POINT,\"\\
-\"           addressU = TEXTURE_ADDRESS_CLAMP,\"\\
-\"           addressV = TEXTURE_ADDRESS_CLAMP,\"\\
-\"           addressW = TEXTURE_ADDRESS_CLAMP )\"
-
-SamplerState Sampler       : register(s0);
-Texture2D<float4> SrcMip   : register(t0);
-RWTexture2D<float4> OutMip : register(u0);
-
-cbuffer MipConstants : register(b0)
-{
-float2 InvOutTexelSize; // texel size for OutMip (NOT SrcMip)
-uint SrcMipIndex;
-}
-
-float4 Mip(uint2 coord)
-{
-    float2 uv = (coord.xy + 0.5) * InvOutTexelSize;
-    return SrcMip.SampleLevel(Sampler, uv, SrcMipIndex);
-}
-
-[RootSignature(GenerateMipsRS)]
-[numthreads(8, 8, 1)]
-void main(uint3 DTid : SV_DispatchThreadID)
-{
-OutMip[DTid.xy] = Mip(DTid.xy);
-}\0";
+const GENERATE_MIPMAPS_CS: &[u8] = include_bytes!("../shader/mipmap.dxil");
 
 pub struct D3D12MipmapGen {
     device: ID3D12Device,
@@ -137,12 +94,13 @@ impl D3D12MipmapGen {
     pub fn new(device: &ID3D12Device, own_heaps: bool) -> error::Result<D3D12MipmapGen> {
         unsafe {
             let library = DxcCreateInstance(&CLSID_DxcLibrary)?;
-            let compiler = DxcCreateInstance(&CLSID_DxcCompiler)?;
+            let validator = DxcCreateInstance(&CLSID_DxcValidator)?;
+
+            let blob = dxc_validate_shader(&library, &validator, GENERATE_MIPMAPS_CS)?;
 
             let blob =
-                dxc_compile_shader(&library, &compiler, GENERATE_MIPS_SRC, u16cstr!("cs_6_0"))?;
-            let blob =
                 std::slice::from_raw_parts(blob.GetBufferPointer().cast(), blob.GetBufferSize());
+
             let root_signature: ID3D12RootSignature = device.CreateRootSignature(0, blob)?;
 
             let desc = D3D12_COMPUTE_PIPELINE_STATE_DESC {

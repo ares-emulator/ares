@@ -1,9 +1,11 @@
 use crate::error::ShaderCompileError;
 use librashader_preprocess::ShaderSource;
 use serde::{Deserialize, Serialize};
+pub(crate) mod spirv_passes;
 
 mod glslang;
 
+/// The output of a shader compiler that is reflectable.
 pub trait ShaderReflectObject: Sized {
     /// The compiler that produces this reflect object.
     type Compiler;

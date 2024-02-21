@@ -1,17 +1,16 @@
 use crate::back::spirv::WriteSpirV;
-use crate::back::{CompileShader, CompilerBackend, FromCompilation, ShaderCompilerOutput};
-pub use spirv_to_dxil::DxilObject;
-pub use spirv_to_dxil::ShaderModel;
-use spirv_to_dxil::{
-    PushConstantBufferConfig, RuntimeConfig, RuntimeDataBufferConfig, ShaderStage, ValidatorVersion,
-};
-
 use crate::back::targets::{OutputTarget, DXIL};
+use crate::back::{CompileShader, CompilerBackend, FromCompilation, ShaderCompilerOutput};
 use crate::error::{ShaderCompileError, ShaderReflectError};
 use crate::front::SpirvCompilation;
 use crate::reflect::cross::glsl::GlslReflect;
 use crate::reflect::cross::SpirvCross;
 use crate::reflect::ReflectShader;
+pub use spirv_to_dxil::DxilObject;
+pub use spirv_to_dxil::ShaderModel;
+use spirv_to_dxil::{
+    PushConstantBufferConfig, RuntimeConfig, RuntimeDataBufferConfig, ShaderStage, ValidatorVersion,
+};
 
 impl OutputTarget for DXIL {
     type Output = DxilObject;
@@ -28,14 +27,12 @@ impl FromCompilation<SpirvCompilation, SpirvCross> for DXIL {
         compile: SpirvCompilation,
     ) -> Result<CompilerBackend<Self::Output>, ShaderReflectError> {
         let reflect = GlslReflect::try_from(&compile)?;
-        let vertex = compile.vertex;
-        let fragment = compile.fragment;
         Ok(CompilerBackend {
             // we can just reuse WriteSpirV as the backend.
             backend: WriteSpirV {
                 reflect,
-                vertex,
-                fragment,
+                vertex: compile.vertex,
+                fragment: compile.fragment,
             },
         })
     }

@@ -3,7 +3,7 @@ name = "librashader-runtime-mtl"
 edition = "2021"
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -14,11 +14,11 @@ description = "RetroArch shaders for all."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-librashader-common = { path = "../librashader-common", features = ["metal"], version = "0.2.1" }
-librashader-presets = { path = "../librashader-presets", version = "0.2.1" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.1" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.1" }
-librashader-runtime = { path = "../librashader-runtime" , version = "0.2.1" }
+librashader-common = { path = "../librashader-common", features = ["metal"], version = "0.2.2" }
+librashader-presets = { path = "../librashader-presets", version = "0.2.2" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.2" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.2.2" }
+librashader-runtime = { path = "../librashader-runtime" , version = "0.2.2" }
 
 thiserror = "1.0"
 array-concat = "0.5.2"

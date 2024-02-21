@@ -818,10 +818,11 @@ impl<'a> LowerCombinedImageSamplerPass<'a> {
                         function_call_operands.push(operand);
                         function_call_operands.push(Operand::IdRef(op_access_chain_sampler));
 
-                        let original_type = self
-                            .find_global_instruction(original_result_type)
-                            .cloned()
-                            .expect("huh");
+                        let Some(original_type) =
+                            self.find_global_instruction(original_result_type).cloned()
+                        else {
+                            continue;
+                        };
 
                         let sampled_image = CombinedImageSampler {
                             sampler_variable: op_access_chain_sampler,

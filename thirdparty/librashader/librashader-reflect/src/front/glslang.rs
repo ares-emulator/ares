@@ -1,7 +1,10 @@
 use crate::error::ShaderCompileError;
 use glslang::{CompilerOptions, ShaderInput};
 use librashader_preprocess::ShaderSource;
+use rspirv::binary::Assemble;
+use rspirv::dr::Builder;
 
+use crate::front::spirv_passes::{link_input_outputs, load_module};
 use crate::front::{ShaderInputCompiler, SpirvCompilation};
 
 /// glslang compiler
@@ -32,8 +35,18 @@ pub(crate) fn compile_spirv(source: &ShaderSource) -> Result<SpirvCompilation, S
     let fragment = ShaderInput::new(&fragment, glslang::ShaderStage::Fragment, &options, None)?;
     let fragment = compiler.create_shader(fragment)?;
 
-    let vertex = Vec::from(vertex.compile()?);
-    let fragment = Vec::from(fragment.compile()?);
+    let vertex = vertex.compile()?;
+    let fragment = fragment.compile()?;
+
+    let vertex = load_module(&vertex);
+    let fragment = load_module(&fragment);
+    let mut fragment = Builder::new_from_module(fragment);
+
+    let mut pass = link_input_outputs::LinkInputs::new(&vertex, &mut fragment);
+    pass.do_pass();
+
+    let vertex = vertex.assemble();
+    let fragment = fragment.module().assemble();
 
     Ok(SpirvCompilation { vertex, fragment })
 }
