@@ -37,6 +37,16 @@ tzxfile.path := $(thirdparty.path)/TZXFile
 ymfm.path := $(thirdparty.path)/ymfm
 include $(thirdparty.path)/GNUmakefile
 
+ifeq ($(platform),macos)
+	librashader.path := $(thirdparty.path)/librashader/target/optimized/librashader.dylib
+else ifeq ($(platform), windows)
+  ifeq ($(wildcard $(thirdparty.path)/librashader/target/aarch64-pc-windows-msvc/optimized/librashader.dll),)
+	librashader.path := $(thirdparty.path)/librashader/aarch64-pc-windows-msvc/target/optimized/librashader.dll
+  else
+	librashader.path := $(thirdparty.path)/librashader/target/optimized/librashader.dll
+  endif
+endif
+
 ruby.path := ../ruby
 include $(ruby.path)/GNUmakefile
 
@@ -83,14 +93,14 @@ $(all.objects): | $(object.path)
 all: output
    ifeq ($(platform),macos)
       ifeq ($(librashader), true)
-        ifeq ($(wildcard $(thirdparty.path)/librashader/target/optimized/librashader.dylib),)
+        ifeq ($(wildcard $(librashader.path)),)
     	  $(error Tried to compile ares for macOS with librashader enabled, but no librashader library was found. Compile it with thirdparty/librashader/build-librashader.sh, or disable librashader by compiling ares with librashader=false)
         endif
-    	ares.dylibs += $(thirdparty.path)/librashader/target/optimized/librashader.dylib
+    	ares.dylibs += $(librashader.path)
       endif
    else ifeq ($(platform), windows)
       ifeq ($(librashader), true)
-        ifeq ($(wildcard $(thirdparty.path)/librashader/target/optimized/librashader.dll),)
+        ifeq ($(wildcard $(librashader.path)),)
           $(error Tried to compile ares for Windows with librashader enabled, but no librashader library was found. Compile it with thirdparty/librashader/build-librashader.sh, or disable librashader by compiling ares with librashader=false)
         endif
       endif
@@ -127,7 +137,7 @@ else ifeq ($(platform),windows)
 	$(call rcopy,$(thirdparty.path)/slang-shaders/*,$(output.path)/Shaders/)
 	$(call rcopy,$(mia.path)/Database/*,$(output.path)/Database/)
 ifeq ($(librashader), true)
-	$(call copy,$(thirdparty.path)/librashader/target/optimized/librashader.dll,$(output.path)/)
+	$(call copy,$(librashader.path),$(output.path)/)
 endif
 endif
 
