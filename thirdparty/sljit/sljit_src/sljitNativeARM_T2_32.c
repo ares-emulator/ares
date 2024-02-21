@@ -329,7 +329,7 @@ static SLJIT_INLINE sljit_u16* detect_jump_type(struct sljit_jump *jump, sljit_u
 			goto exit;
 		diff = (sljit_sw)jump->u.target - (sljit_sw)(code_ptr + 2) - executable_offset;
 	} else {
-		SLJIT_ASSERT(jump->flags & JUMP_LABEL);
+		SLJIT_ASSERT(jump->u.label != NULL);
 		diff = (sljit_sw)(code + jump->u.label->size) - (sljit_sw)(code_ptr + 2);
 	}
 
@@ -376,25 +376,54 @@ exit:
 	return code_ptr + 4;
 }
 
-static SLJIT_INLINE void set_jump_instruction(struct sljit_jump *jump, sljit_sw executable_offset)
+static SLJIT_INLINE sljit_sw mov_addr_get_length(struct sljit_jump *jump)
+{
+	sljit_sw diff = (sljit_sw)jump->u.label->size - (sljit_sw)jump->addr;
+
+	/* Note: ADR with imm8 does not set the last bit (Thumb2 flag). */
+
+	if (diff <= (0xffd / SSIZE_OF(u16)) && diff >= (-0xfff / SSIZE_OF(u16))) {
+		jump->flags |= PATCH_TYPE6;
+		return 1;
+	}
+
+	return 3;
+}
+
+static SLJIT_INLINE void generate_jump_or_mov_addr(struct sljit_jump *jump, sljit_sw executable_offset)
 {
 	sljit_s32 type = (jump->flags >> 4) & 0xf;
+	sljit_u16 *jump_inst = (sljit_u16*)jump->addr;
 	sljit_sw diff;
-	sljit_u16 *jump_inst;
+	sljit_ins ins;
+
+	diff = (sljit_sw)((jump->flags & JUMP_ADDR) ? jump->u.target : jump->u.label->u.addr);
 
 	if (SLJIT_UNLIKELY(type == 0)) {
-		set_imm32_const((sljit_u16*)jump->addr, RDN3(TMP_REG1), (jump->flags & JUMP_LABEL) ? jump->u.label->u.addr : jump->u.target);
+		ins = (jump->flags & JUMP_MOV_ADDR) ? *jump_inst : RDN3(TMP_REG1);
+		set_imm32_const((sljit_u16*)jump->addr, ins, (sljit_uw)diff);
 		return;
 	}
 
-	if (jump->flags & JUMP_ADDR) {
-		SLJIT_ASSERT(jump->u.target & 0x1);
-		diff = ((sljit_sw)jump->u.target - (sljit_sw)(jump->addr + sizeof(sljit_u32)) - executable_offset) >> 1;
-	} else {
-		SLJIT_ASSERT(jump->u.label->u.addr & 0x1);
-		diff = ((sljit_sw)(jump->u.label->u.addr) - (sljit_sw)(jump->addr + sizeof(sljit_u32)) - executable_offset) >> 1;
+	if (SLJIT_UNLIKELY(type == 6)) {
+		SLJIT_ASSERT(jump->flags & JUMP_MOV_ADDR);
+		diff -= ((sljit_sw)SLJIT_ADD_EXEC_OFFSET(jump_inst, executable_offset) + (2 * SSIZE_OF(u16))) & ~(sljit_sw)0x3;
+
+		SLJIT_ASSERT(diff <= 0xfff && diff >= -0xfff);
+
+		ins = ADDWI >> 16;
+		if (diff <= 0) {
+			diff = -diff;
+			ins = SUBWI >> 16;
+		}
+
+		jump_inst[1] = (sljit_u16)(jump_inst[0] | COPY_BITS(diff, 8, 12, 3) | (diff & 0xff));
+		jump_inst[0] = (sljit_u16)(ins | 0xf | COPY_BITS(diff, 11, 10, 1));
+		return;
 	}
-	jump_inst = (sljit_u16*)jump->addr;
+
+	SLJIT_ASSERT((diff & 0x1) != 0 && !(jump->flags & JUMP_MOV_ADDR));
+	diff = (diff - (sljit_sw)(jump->addr + sizeof(sljit_u32)) - executable_offset) >> 1;
 
 	switch (type) {
 	case 1:
@@ -432,32 +461,12 @@ static SLJIT_INLINE void set_jump_instruction(struct sljit_jump *jump, sljit_sw 
 		jump_inst[1] |= 0xd000;
 }
 
-static SLJIT_INLINE sljit_sw put_label_get_length(struct sljit_put_label *put_label)
-{
-	sljit_sw diff = (sljit_sw)put_label->label->size - (sljit_sw)put_label->addr;
-
-	/* Note: ADR with imm8 does not set the last bit (Thumb2 flag). */
-
-	if (diff <= (0xffd / SSIZE_OF(u16)) && diff >= (-0xfff / SSIZE_OF(u16))) {
-		put_label->flags = 0;
-		return 1;
-	}
-
-	put_label->flags = 1;
-	return 3;
-}
-
 static void reduce_code_size(struct sljit_compiler *compiler)
 {
 	struct sljit_label *label;
 	struct sljit_jump *jump;
 	struct sljit_const *const_;
-	struct sljit_put_label *put_label;
-	sljit_uw next_label_size = ~(sljit_uw)0;
-	sljit_uw next_jump_addr = ~(sljit_uw)0;
-	sljit_uw next_const_addr = ~(sljit_uw)0;
-	sljit_uw next_put_label_addr = ~(sljit_uw)0;
-	sljit_uw min;
+	SLJIT_NEXT_DEFINE_TYPES;
 	sljit_uw total_size;
 	sljit_uw size_reduce = 0;
 	sljit_sw diff;
@@ -465,38 +474,33 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 	label = compiler->labels;
 	jump = compiler->jumps;
 	const_ = compiler->consts;
-	put_label = compiler->put_labels;
-
-	if (label)
-		next_label_size = label->size;
-	if (jump)
-		next_jump_addr = jump->addr;
-	if (const_)
-		next_const_addr = const_->addr;
-	if (put_label)
-		next_put_label_addr = put_label->addr;
+	SLJIT_NEXT_INIT_TYPES();
 
 	while (1) {
-		min = next_label_size;
-		if (next_jump_addr < min)
-			min = next_jump_addr;
-		if (next_const_addr < min)
-			min = next_const_addr;
-		if (next_put_label_addr < min)
-			min = next_put_label_addr;
+		SLJIT_GET_NEXT_MIN();
 
-		if (min == ~(sljit_uw)0)
+		if (next_min_addr == SLJIT_MAX_ADDRESS)
 			break;
 
-		if (label && next_label_size <= min) {
+		if (next_min_addr == next_label_size) {
 			label->size -= size_reduce;
 
 			label = label->next;
-			next_label_size = label ? label->size : ~(sljit_uw)0;
+			next_label_size = SLJIT_GET_NEXT_SIZE(label);
 		}
 
-		if (jump && next_jump_addr <= min) {
-			jump->addr -= size_reduce;
+		if (next_min_addr == next_const_addr) {
+			const_->addr -= size_reduce;
+			const_ = const_->next;
+			next_const_addr = SLJIT_GET_NEXT_ADDRESS(const_);
+			continue;
+		}
+
+		if (next_min_addr != next_jump_addr)
+			continue;
+
+		jump->addr -= size_reduce;
+		if (!(jump->flags & JUMP_MOV_ADDR)) {
 			total_size = JUMP_MAX_SIZE;
 
 			if (!(jump->flags & (SLJIT_REWRITABLE_JUMP | JUMP_ADDR))) {
@@ -519,32 +523,20 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 			}
 
 			size_reduce += JUMP_MAX_SIZE - total_size;
-			jump->flags |= total_size << JUMP_SIZE_SHIFT;
-			jump = jump->next;
-			next_jump_addr = jump ? jump->addr : ~(sljit_uw)0;
-		}
-
-		if (const_ && next_const_addr <= min) {
-			const_->addr -= size_reduce;
-			const_ = const_->next;
-			next_const_addr = const_ ? const_->addr : ~(sljit_uw)0;
-		}
-
-		if (put_label && next_put_label_addr <= min) {
-			put_label->addr -= size_reduce;
-
+		} else {
 			/* Real size minus 1. Unit size: instruction. */
 			total_size = 3;
-			diff = (sljit_sw)put_label->label->size - (sljit_sw)put_label->addr;
+			diff = (sljit_sw)jump->u.label->size - (sljit_sw)jump->addr;
 
 			if (diff <= (0xffd / SSIZE_OF(u16)) && diff >= (-0xfff / SSIZE_OF(u16)))
 				total_size = 1;
 
 			size_reduce += 3 - total_size;
-			put_label->flags = total_size;
-			put_label = put_label->next;
-			next_put_label_addr = put_label ? put_label->addr : ~(sljit_uw)0;
 		}
+
+		jump->flags |= total_size << JUMP_SIZE_SHIFT;
+		jump = jump->next;
+		next_jump_addr = SLJIT_GET_NEXT_ADDRESS(jump);
 	}
 
 	compiler->size -= size_reduce;
@@ -558,15 +550,13 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 	sljit_u16 *buf_ptr;
 	sljit_u16 *buf_end;
 	sljit_uw half_count;
-	sljit_uw next_addr;
-	sljit_ins ins;
+	SLJIT_NEXT_DEFINE_TYPES;
 	sljit_sw addr;
 	sljit_sw executable_offset;
 
 	struct sljit_label *label;
 	struct sljit_jump *jump;
 	struct sljit_const *const_;
-	struct sljit_put_label *put_label;
 
 	CHECK_ERROR_PTR();
 	CHECK_PTR(check_sljit_generate_code(compiler));
@@ -581,52 +571,56 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 
 	code_ptr = code;
 	half_count = 0;
-	next_addr = 0;
 	executable_offset = SLJIT_EXEC_OFFSET(code);
 
 	label = compiler->labels;
 	jump = compiler->jumps;
 	const_ = compiler->consts;
-	put_label = compiler->put_labels;
+	SLJIT_NEXT_INIT_TYPES();
+	SLJIT_GET_NEXT_MIN();
 
 	do {
 		buf_ptr = (sljit_u16*)buf->memory;
 		buf_end = buf_ptr + (buf->used_size >> 1);
 		do {
 			*code_ptr = *buf_ptr++;
-			if (next_addr == half_count) {
+			if (next_min_addr == half_count) {
 				SLJIT_ASSERT(!label || label->size >= half_count);
 				SLJIT_ASSERT(!jump || jump->addr >= half_count);
 				SLJIT_ASSERT(!const_ || const_->addr >= half_count);
-				SLJIT_ASSERT(!put_label || put_label->addr >= half_count);
 
 				/* These structures are ordered by their address. */
-				if (label && label->size == half_count) {
+				if (next_min_addr == next_label_size) {
 					label->u.addr = ((sljit_uw)SLJIT_ADD_EXEC_OFFSET(code_ptr, executable_offset)) | 0x1;
 					label->size = (sljit_uw)(code_ptr - code);
 					label = label->next;
+					next_label_size = SLJIT_GET_NEXT_SIZE(label);
 				}
-				if (jump && jump->addr == half_count) {
+
+				if (next_min_addr == next_jump_addr) {
+					if (!(jump->flags & JUMP_MOV_ADDR)) {
 						half_count = half_count - 1 + (jump->flags >> JUMP_SIZE_SHIFT);
 						jump->addr = (sljit_uw)code_ptr;
 						code_ptr = detect_jump_type(jump, code_ptr, code, executable_offset);
 						SLJIT_ASSERT((sljit_uw)code_ptr - jump->addr <
 							((jump->flags >> JUMP_SIZE_SHIFT) + ((jump->flags & 0xf0) <= PATCH_TYPE2)) * sizeof(sljit_u16));
-						jump = jump->next;
-				}
-				if (const_ && const_->addr == half_count) {
+					} else {
+						SLJIT_ASSERT(jump->u.label);
+						half_count += jump->flags >> JUMP_SIZE_SHIFT;
+						addr = (sljit_sw)code_ptr;
+						code_ptr += mov_addr_get_length(jump);
+						jump->addr = (sljit_uw)addr;
+					}
+
+					jump = jump->next;
+					next_jump_addr = SLJIT_GET_NEXT_ADDRESS(jump);
+				} else if (next_min_addr == next_const_addr) {
 					const_->addr = (sljit_uw)code_ptr;
 					const_ = const_->next;
+					next_const_addr = SLJIT_GET_NEXT_ADDRESS(const_);
 				}
-				if (put_label && put_label->addr == half_count) {
-					SLJIT_ASSERT(put_label->label);
-					half_count += put_label->flags;
-					addr = (sljit_sw)code_ptr;
-					code_ptr += put_label_get_length(put_label);
-					put_label->addr = (sljit_uw)addr;
-					put_label = put_label->next;
-				}
-				next_addr = compute_next_addr(label, jump, const_, put_label);
+
+				SLJIT_GET_NEXT_MIN();
 			}
 			code_ptr++;
 			half_count++;
@@ -644,37 +638,12 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 	SLJIT_ASSERT(!label);
 	SLJIT_ASSERT(!jump);
 	SLJIT_ASSERT(!const_);
-	SLJIT_ASSERT(!put_label);
 	SLJIT_ASSERT(code_ptr - code <= (sljit_sw)compiler->size);
 
 	jump = compiler->jumps;
 	while (jump) {
-		set_jump_instruction(jump, executable_offset);
+		generate_jump_or_mov_addr(jump, executable_offset);
 		jump = jump->next;
-	}
-
-	put_label = compiler->put_labels;
-	while (put_label) {
-		buf_ptr = (sljit_u16 *)put_label->addr;
-
-		if (put_label->flags == 0) {
-			addr = ((sljit_sw)SLJIT_ADD_EXEC_OFFSET(buf_ptr, executable_offset) + (2 * SSIZE_OF(u16))) & ~(sljit_sw)0x3;
-			addr = (sljit_sw)put_label->label->u.addr - addr;
-
-			SLJIT_ASSERT(addr <= 0xfff && addr >= -0xfff);
-
-			ins = ADDWI >> 16;
-			if (addr <= 0) {
-				addr = -addr;
-				ins = SUBWI >> 16;
-			}
-
-			buf_ptr[1] = (sljit_u16)(buf_ptr[0] | COPY_BITS(addr, 8, 12, 3) | (addr & 0xff));
-			buf_ptr[0] = (sljit_u16)(ins | 0xf | COPY_BITS(addr, 11, 10, 1));
-		} else
-			set_imm32_const(buf_ptr, *buf_ptr, put_label->label->u.addr);
-
-		put_label = put_label->next;
 	}
 
 	compiler->error = SLJIT_ERR_COMPILED;
@@ -4261,18 +4230,18 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_const* sljit_emit_const(struct sljit_compi
 	return const_;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE struct sljit_put_label* sljit_emit_put_label(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw)
+SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_mov_addr(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw)
 {
-	struct sljit_put_label *put_label;
+	struct sljit_jump *jump;
 	sljit_s32 dst_r;
 
 	CHECK_ERROR_PTR();
-	CHECK_PTR(check_sljit_emit_put_label(compiler, dst, dstw));
+	CHECK_PTR(check_sljit_emit_mov_addr(compiler, dst, dstw));
 	ADJUST_LOCAL_OFFSET(dst, dstw);
 
-	put_label = (struct sljit_put_label*)ensure_abuf(compiler, sizeof(struct sljit_put_label));
-	PTR_FAIL_IF(!put_label);
-	set_put_label(put_label, compiler, 0);
+	jump = (struct sljit_jump*)ensure_abuf(compiler, sizeof(struct sljit_jump));
+	PTR_FAIL_IF(!jump);
+	set_mov_addr(jump, compiler, 0);
 
 	dst_r = FAST_IS_REG(dst) ? dst : TMP_REG1;
 	PTR_FAIL_IF(push_inst16(compiler, RDN3(dst_r)));
@@ -4280,7 +4249,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_put_label* sljit_emit_put_label(struct slj
 
 	if (dst & SLJIT_MEM)
 		PTR_FAIL_IF(emit_op_mem(compiler, WORD_SIZE | STORE, dst_r, dst, dstw, TMP_REG2));
-	return put_label;
+	return jump;
 }
 
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_jump_addr(sljit_uw addr, sljit_uw new_target, sljit_sw executable_offset)

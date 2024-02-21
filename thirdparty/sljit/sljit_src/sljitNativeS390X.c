@@ -1585,7 +1585,7 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 
 	jump = compiler->jumps;
 	while (jump != NULL) {
-		offset = (sljit_sw)((jump->flags & JUMP_LABEL) ? jump->u.label->u.addr : jump->u.target);
+		offset = (sljit_sw)((jump->flags & JUMP_ADDR) ? jump->u.target : jump->u.label->u.addr);
 		if ((jump->flags & SLJIT_REWRITABLE_JUMP) || (jump->flags & JUMP_ADDR)) {
 			/* Store jump target into pool. */
 			*(sljit_uw*)(jump->addr) = (sljit_uw)offset;

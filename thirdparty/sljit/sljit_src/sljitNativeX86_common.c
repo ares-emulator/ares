@@ -373,6 +373,11 @@ static const sljit_u8 freg_lmap[SLJIT_NUMBER_OF_FLOAT_REGISTERS + 2] = {
 #define RET()			(*inst++ = RET_near)
 #define RET_I16(n)		(*inst++ = RET_i16, *inst++ = U8(n), *inst++ = 0)
 
+#define SLJIT_INST_LABEL	255
+#define SLJIT_INST_JUMP		254
+#define SLJIT_INST_MOV_ADDR	253
+#define SLJIT_INST_CONST	252
+
 /* Multithreading does not affect these static variables, since they store
    built-in CPU features. Therefore they can be overwritten by different threads
    if they detect the CPU features in the same time. */
@@ -607,7 +612,7 @@ static sljit_u8 get_jump_code(sljit_uw type)
 static sljit_u8* detect_far_jump_type(struct sljit_jump *jump, sljit_u8 *code_ptr, sljit_sw executable_offset);
 #else /* !SLJIT_CONFIG_X86_32 */
 static sljit_u8* detect_far_jump_type(struct sljit_jump *jump, sljit_u8 *code_ptr);
-static sljit_u8* generate_put_label_code(struct sljit_put_label *put_label, sljit_u8 *code_ptr, sljit_uw max_label);
+static sljit_u8* generate_mov_addr_code(struct sljit_jump *jump, sljit_u8 *code_ptr, sljit_uw max_label);
 #endif /* SLJIT_CONFIG_X86_32 */
 
 static sljit_u8* detect_near_jump_type(struct sljit_jump *jump, sljit_u8 *code_ptr, sljit_u8 *code, sljit_sw executable_offset)
@@ -616,10 +621,10 @@ static sljit_u8* detect_near_jump_type(struct sljit_jump *jump, sljit_u8 *code_p
 	sljit_s32 short_jump;
 	sljit_uw label_addr;
 
-	if (jump->flags & JUMP_LABEL)
-		label_addr = (sljit_uw)(code + jump->u.label->size);
-	else
+	if (jump->flags & JUMP_ADDR)
 		label_addr = jump->u.target - (sljit_uw)executable_offset;
+	else
+		label_addr = (sljit_uw)(code + jump->u.label->size);
 
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
 	if ((sljit_sw)(label_addr - (sljit_uw)(code_ptr + 6)) > HALFWORD_MAX || (sljit_sw)(label_addr - (sljit_uw)(code_ptr + 5)) < HALFWORD_MIN)
@@ -656,19 +661,67 @@ static sljit_u8* detect_near_jump_type(struct sljit_jump *jump, sljit_u8 *code_p
 	return code_ptr;
 }
 
+static void generate_jump_or_mov_addr(struct sljit_jump *jump, sljit_sw executable_offset)
+{
+	sljit_uw flags = jump->flags;
+	sljit_uw addr = (flags & JUMP_ADDR) ? jump->u.target : jump->u.label->u.addr;
+	sljit_uw jump_addr = jump->addr;
+	SLJIT_UNUSED_ARG(executable_offset);
+
+	if (SLJIT_UNLIKELY(flags & JUMP_MOV_ADDR)) {
+#if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32)
+		sljit_unaligned_store_sw((void*)(jump_addr - sizeof(sljit_sw)), (sljit_sw)addr);
+#else /* SLJIT_CONFIG_X86_32 */
+		if (flags & PATCH_MD) {
+			SLJIT_ASSERT(addr > HALFWORD_MAX);
+			sljit_unaligned_store_sw((void*)(jump_addr - sizeof(sljit_sw)), (sljit_sw)addr);
+			return;
+		}
+
+		if (flags & PATCH_MW) {
+			addr -= (sljit_uw)SLJIT_ADD_EXEC_OFFSET((sljit_u8*)jump_addr, executable_offset);
+			SLJIT_ASSERT((sljit_sw)addr <= HALFWORD_MAX && (sljit_sw)addr >= HALFWORD_MIN);
+		} else {
+			SLJIT_ASSERT(addr <= HALFWORD_MAX);
+		}
+		sljit_unaligned_store_s32((void*)(jump_addr - sizeof(sljit_s32)), (sljit_s32)addr);
+#endif /* !SLJIT_CONFIG_X86_32 */
+		return;
+	}
+
+#if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
+	if (SLJIT_UNLIKELY(flags & PATCH_MD)) {
+		SLJIT_ASSERT(!(flags & JUMP_ADDR));
+		sljit_unaligned_store_sw((void*)jump_addr, (sljit_sw)addr);
+		return;
+	}
+#endif /* SLJIT_CONFIG_X86_64 */
+
+	addr -= (sljit_uw)SLJIT_ADD_EXEC_OFFSET((sljit_u8*)jump_addr, executable_offset);
+
+	if (flags & PATCH_MB) {
+		addr -= sizeof(sljit_s8);
+		SLJIT_ASSERT((sljit_sw)addr <= 0x7f && (sljit_sw)addr >= -0x80);
+		*(sljit_u8*)jump_addr = U8(addr);
+		return;
+	} else if (flags & PATCH_MW) {
+		addr -= sizeof(sljit_s32);
+#if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32)
+		sljit_unaligned_store_sw((void*)jump_addr, (sljit_sw)addr);
+#else /* !SLJIT_CONFIG_X86_32 */
+		SLJIT_ASSERT((sljit_sw)addr <= HALFWORD_MAX && (sljit_sw)addr >= HALFWORD_MIN);
+		sljit_unaligned_store_s32((void*)jump_addr, (sljit_s32)addr);
+#endif /* SLJIT_CONFIG_X86_32 */
+	}
+}
+
 static void reduce_code_size(struct sljit_compiler *compiler)
 {
 	struct sljit_label *label;
 	struct sljit_jump *jump;
-#if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
-	struct sljit_put_label *put_label;
-#endif /* SLJIT_CONFIG_X86_64 */
-	sljit_uw next_label_size = ~(sljit_uw)0;
-	sljit_uw next_jump_addr = ~(sljit_uw)0;
-#if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
-	sljit_uw next_put_label_addr = ~(sljit_uw)0;
-#endif /* SLJIT_CONFIG_X86_64 */
-	sljit_uw min;
+	sljit_uw next_label_size;
+	sljit_uw next_jump_addr;
+	sljit_uw next_min_addr;
 	sljit_uw size_reduce = 0;
 	sljit_sw diff;
 	sljit_uw type;
@@ -678,39 +731,29 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 
 	label = compiler->labels;
 	jump = compiler->jumps;
-#if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
-	put_label = compiler->put_labels;
-#endif /* SLJIT_CONFIG_X86_64 */
 
-	if (label)
-		next_label_size = label->size;
-	if (jump)
-		next_jump_addr = jump->addr;
-#if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
-	if (put_label)
-		next_put_label_addr = put_label->addr;
-#endif /* SLJIT_CONFIG_X86_64 */
+	next_label_size = SLJIT_GET_NEXT_SIZE(label);
+	next_jump_addr = SLJIT_GET_NEXT_ADDRESS(jump);
 
 	while (1) {
-		min = next_label_size;
-		if (next_jump_addr < min)
-			min = next_jump_addr;
-#if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
-		if (next_put_label_addr < min)
-			min = next_put_label_addr;
-#endif /* SLJIT_CONFIG_X86_64 */
+		next_min_addr = next_label_size;
+		if (next_jump_addr < next_min_addr)
+			next_min_addr = next_jump_addr;
 
-		if (min == ~(sljit_uw)0)
+		if (next_min_addr == SLJIT_MAX_ADDRESS)
 			break;
 
-		if (label && next_label_size <= min) {
+		if (next_min_addr == next_label_size) {
 			label->size -= size_reduce;
 
 			label = label->next;
-			next_label_size = label ? label->size : ~(sljit_uw)0;
+			next_label_size = SLJIT_GET_NEXT_SIZE(label);
 		}
 
-		if (jump && next_jump_addr <= min) {
+		if (next_min_addr != next_jump_addr)
+			continue;
+
+		if (!(jump->flags & JUMP_MOV_ADDR)) {
 #if (defined SLJIT_DEBUG && SLJIT_DEBUG)
 			size_reduce_max = size_reduce + (((jump->flags >> TYPE_SHIFT) < SLJIT_JUMP) ? CJUMP_MAX_SIZE : JUMP_MAX_SIZE);
 #endif /* SLJIT_DEBUG */
@@ -756,22 +799,17 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 #if (defined SLJIT_DEBUG && SLJIT_DEBUG)
 			jump->flags |= (size_reduce_max - size_reduce) << JUMP_SIZE_SHIFT;
 #endif /* SLJIT_DEBUG */
-
-			jump = jump->next;
-			next_jump_addr = jump ? jump->addr : ~(sljit_uw)0;
-		}
-
+		} else {
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
-		if (put_label && next_put_label_addr <= min) {
-			diff = (sljit_sw)put_label->label->size - (sljit_sw)(put_label->addr - size_reduce - 3);
+			diff = (sljit_sw)jump->u.label->size - (sljit_sw)(jump->addr - size_reduce - 3);
 
 			if (diff <= HALFWORD_MAX && diff >= HALFWORD_MIN)
 				size_reduce += 3;
-
-			put_label = put_label->next;
-			next_put_label_addr = put_label ? put_label->addr : ~(sljit_uw)0;
-		}
 #endif /* SLJIT_CONFIG_X86_64 */
+		}
+
+		jump = jump->next;
+		next_jump_addr = SLJIT_GET_NEXT_ADDRESS(jump);
 	}
 
 	compiler->size -= size_reduce;
@@ -786,12 +824,13 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 	sljit_u8 *buf_end;
 	sljit_u8 len;
 	sljit_sw executable_offset;
+#if (defined SLJIT_DEBUG && SLJIT_DEBUG)
 	sljit_uw addr;
+#endif /* SLJIT_DEBUG */
 
 	struct sljit_label *label;
 	struct sljit_jump *jump;
 	struct sljit_const *const_;
-	struct sljit_put_label *put_label;
 
 	CHECK_ERROR_PTR();
 	CHECK_PTR(check_sljit_generate_code(compiler));
@@ -809,7 +848,6 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 	label = compiler->labels;
 	jump = compiler->jumps;
 	const_ = compiler->consts;
-	put_label = compiler->put_labels;
 	executable_offset = SLJIT_EXEC_OFFSET(code);
 
 	do {
@@ -817,20 +855,20 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 		buf_end = buf_ptr + buf->used_size;
 		do {
 			len = *buf_ptr++;
-			if (len > 0) {
+			SLJIT_ASSERT(len > 0);
+			if (len < SLJIT_INST_CONST) {
 				/* The code is already generated. */
 				SLJIT_MEMCPY(code_ptr, buf_ptr, len);
 				code_ptr += len;
 				buf_ptr += len;
-			}
-			else {
-				switch (*buf_ptr) {
-				case 0:
+			} else {
+				switch (len) {
+				case SLJIT_INST_LABEL:
 					label->u.addr = (sljit_uw)SLJIT_ADD_EXEC_OFFSET(code_ptr, executable_offset);
 					label->size = (sljit_uw)(code_ptr - code);
 					label = label->next;
 					break;
-				case 1:
+				case SLJIT_INST_JUMP:
 #if (defined SLJIT_DEBUG && SLJIT_DEBUG)
 					addr = (sljit_uw)code_ptr;
 #endif /* SLJIT_DEBUG */
@@ -839,29 +877,28 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 					else {
 #if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32)
 						code_ptr = detect_far_jump_type(jump, code_ptr, executable_offset);
-#else
+#else /* !SLJIT_CONFIG_X86_32 */
 						code_ptr = detect_far_jump_type(jump, code_ptr);
-#endif
+#endif /* SLJIT_CONFIG_X86_32 */
 					}
 
 					SLJIT_ASSERT((sljit_uw)code_ptr - addr <= ((jump->flags >> JUMP_SIZE_SHIFT) & 0x1f));
 					jump = jump->next;
 					break;
-				case 2:
+				case SLJIT_INST_MOV_ADDR:
+					SLJIT_ASSERT(jump->u.label != NULL);
+#if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
+					code_ptr = generate_mov_addr_code(jump, code_ptr, (sljit_uw)SLJIT_ADD_EXEC_OFFSET(code, executable_offset));
+#endif /* SLJIT_CONFIG_X86_64 */
+					jump->addr = (sljit_uw)code_ptr;
+					jump = jump->next;
+					break;
+				default:
+					SLJIT_ASSERT(len == SLJIT_INST_CONST);
 					const_->addr = ((sljit_uw)code_ptr) - sizeof(sljit_sw);
 					const_ = const_->next;
 					break;
-				default:
-					SLJIT_ASSERT(*buf_ptr == 3);
-					SLJIT_ASSERT(put_label->label);
-#if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
-					code_ptr = generate_put_label_code(put_label, code_ptr, (sljit_uw)SLJIT_ADD_EXEC_OFFSET(code, executable_offset));
-#endif /* SLJIT_CONFIG_X86_64 */
-					put_label->addr = (sljit_uw)code_ptr;
-					put_label = put_label->next;
-					break;
 				}
-				buf_ptr++;
 			}
 		} while (buf_ptr < buf_end);
 		SLJIT_ASSERT(buf_ptr == buf_end);
@@ -871,62 +908,12 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 	SLJIT_ASSERT(!label);
 	SLJIT_ASSERT(!jump);
 	SLJIT_ASSERT(!const_);
-	SLJIT_ASSERT(!put_label);
 	SLJIT_ASSERT(code_ptr <= code + compiler->size);
 
 	jump = compiler->jumps;
 	while (jump) {
-		if (jump->flags & (PATCH_MB | PATCH_MW)) {
-			if (jump->flags & JUMP_LABEL)
-				addr = jump->u.label->u.addr;
-			else
-				addr = jump->u.target;
-
-			addr -= jump->addr + (sljit_uw)executable_offset;
-
-			if (jump->flags & PATCH_MB) {
-				addr -= sizeof(sljit_s8);
-				SLJIT_ASSERT((sljit_sw)addr <= 0x7f && (sljit_sw)addr >= -0x80);
-				*(sljit_u8*)jump->addr = U8(addr);
-			} else {
-				addr -= sizeof(sljit_s32);
-#if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32)
-				sljit_unaligned_store_sw((void*)jump->addr, (sljit_sw)addr);
-#else
-				SLJIT_ASSERT((sljit_sw)addr <= HALFWORD_MAX && (sljit_sw)addr >= HALFWORD_MIN);
-				sljit_unaligned_store_s32((void*)jump->addr, (sljit_s32)addr);
-#endif
-			}
-		}
-#if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
-		else if (jump->flags & PATCH_MD) {
-				SLJIT_ASSERT(jump->flags & JUMP_LABEL);
-				sljit_unaligned_store_sw((void*)jump->addr, (sljit_sw)jump->u.label->u.addr);
-		}
-#endif
-
+		generate_jump_or_mov_addr(jump, executable_offset);
 		jump = jump->next;
-	}
-
-	put_label = compiler->put_labels;
-	while (put_label) {
-#if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32)
-		sljit_unaligned_store_sw((void*)(put_label->addr - sizeof(sljit_sw)), (sljit_sw)put_label->label->u.addr);
-#else /* SLJIT_CONFIG_X86_32 */
-		if (put_label->flags & PATCH_MD) {
-			SLJIT_ASSERT(put_label->label->u.addr > HALFWORD_MAX);
-			sljit_unaligned_store_sw((void*)(put_label->addr - sizeof(sljit_sw)), (sljit_sw)put_label->label->u.addr);
-		} else if (put_label->flags & PATCH_MW) {
-			addr = (sljit_uw)SLJIT_ADD_EXEC_OFFSET((sljit_u8*)put_label->addr, executable_offset);
-			SLJIT_ASSERT((sljit_sw)(put_label->label->u.addr - addr) <= HALFWORD_MAX && (sljit_sw)(put_label->label->u.addr - addr) >= HALFWORD_MIN);
-			sljit_unaligned_store_s32((void*)(put_label->addr - sizeof(sljit_s32)), (sljit_s32)(put_label->label->u.addr - addr));
-		} else {
-			SLJIT_ASSERT(put_label->label->u.addr <= HALFWORD_MAX);
-			sljit_unaligned_store_s32((void*)(put_label->addr - sizeof(sljit_s32)), (sljit_s32)put_label->label->u.addr);
-		}
-#endif /* !SLJIT_CONFIG_X86_32 */
-
-		put_label = put_label->next;
 	}
 
 	compiler->error = SLJIT_ERR_COMPILED;
@@ -3328,10 +3315,9 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_label* sljit_emit_label(struct sljit_compi
 	PTR_FAIL_IF(!label);
 	set_label(label, compiler);
 
-	inst = (sljit_u8*)ensure_buf(compiler, 2);
+	inst = (sljit_u8*)ensure_buf(compiler, 1);
 	PTR_FAIL_IF(!inst);
-	inst[0] = 0;
-	inst[1] = 0;
+	inst[0] = SLJIT_INST_LABEL;
 
 	return label;
 }
@@ -3352,11 +3338,10 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_jump(struct sljit_compile
 	jump->addr = compiler->size;
 	/* Worst case size. */
 	compiler->size += (type >= SLJIT_JUMP) ? JUMP_MAX_SIZE : CJUMP_MAX_SIZE;
-	inst = (sljit_u8*)ensure_buf(compiler, 2);
+	inst = (sljit_u8*)ensure_buf(compiler, 1);
 	PTR_FAIL_IF_NULL(inst);
 
-	inst[0] = 0;
-	inst[1] = 1;
+	inst[0] = SLJIT_INST_JUMP;
 	return jump;
 }
 
@@ -3380,13 +3365,11 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_ijump(struct sljit_compiler *compi
 		jump->addr = compiler->size;
 		/* Worst case size. */
 		compiler->size += JUMP_MAX_SIZE;
-		inst = (sljit_u8*)ensure_buf(compiler, 2);
+		inst = (sljit_u8*)ensure_buf(compiler, 1);
 		FAIL_IF_NULL(inst);
 
-		inst[0] = 0;
-		inst[1] = 1;
-	}
-	else {
+		inst[0] = SLJIT_INST_JUMP;
+	} else {
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
 		/* REX_W is not necessary (src is not immediate). */
 		compiler->mode32 = 1;
@@ -4832,11 +4815,10 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_const* sljit_emit_const(struct sljit_compi
 		return NULL;
 #endif
 
-	inst = (sljit_u8*)ensure_buf(compiler, 2);
+	inst = (sljit_u8*)ensure_buf(compiler, 1);
 	PTR_FAIL_IF(!inst);
 
-	inst[0] = 0;
-	inst[1] = 2;
+	inst[0] = SLJIT_INST_CONST;
 
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
 	if (dst & SLJIT_MEM)
@@ -4847,46 +4829,45 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_const* sljit_emit_const(struct sljit_compi
 	return const_;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE struct sljit_put_label* sljit_emit_put_label(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw)
+SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_mov_addr(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw)
 {
-	struct sljit_put_label *put_label;
+	struct sljit_jump *jump;
 	sljit_u8 *inst;
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
 	sljit_s32 reg;
 #endif /* SLJIT_CONFIG_X86_64 */
 
 	CHECK_ERROR_PTR();
-	CHECK_PTR(check_sljit_emit_put_label(compiler, dst, dstw));
+	CHECK_PTR(check_sljit_emit_mov_addr(compiler, dst, dstw));
 	ADJUST_LOCAL_OFFSET(dst, dstw);
 
 	CHECK_EXTRA_REGS(dst, dstw, (void)0);
 
-	put_label = (struct sljit_put_label*)ensure_abuf(compiler, sizeof(struct sljit_put_label));
-	PTR_FAIL_IF(!put_label);
-	set_put_label(put_label, compiler, 0);
+	jump = (struct sljit_jump*)ensure_abuf(compiler, sizeof(struct sljit_jump));
+	PTR_FAIL_IF(!jump);
+	set_mov_addr(jump, compiler, 0);
 
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
 	compiler->mode32 = 0;
 	reg = FAST_IS_REG(dst) ? dst : TMP_REG1;
 
 	PTR_FAIL_IF(emit_load_imm64(compiler, reg, 0));
-	put_label->addr = compiler->size;
+	jump->addr = compiler->size;
 #else /* !SLJIT_CONFIG_X86_64 */
 	PTR_FAIL_IF(emit_mov(compiler, dst, dstw, SLJIT_IMM, 0));
 #endif /* SLJIT_CONFIG_X86_64 */
 
-	inst = (sljit_u8*)ensure_buf(compiler, 2);
+	inst = (sljit_u8*)ensure_buf(compiler, 1);
 	PTR_FAIL_IF(!inst);
 
-	inst[0] = 0;
-	inst[1] = 3;
+	inst[0] = SLJIT_INST_MOV_ADDR;
 
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
 	if (dst & SLJIT_MEM)
 		PTR_FAIL_IF(emit_mov(compiler, dst, dstw, TMP_REG1, 0));
 #endif /* SLJIT_CONFIG_X86_64 */
 
-	return put_label;
+	return jump;
 }
 
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_jump_addr(sljit_uw addr, sljit_uw new_target, sljit_sw executable_offset)
