@@ -41,7 +41,7 @@ ifeq ($(platform),macos)
 	librashader.path := $(thirdparty.path)/librashader/target/optimized/librashader.dylib
 else ifeq ($(platform), windows)
   ifneq ($(wildcard $(thirdparty.path)/librashader/target/aarch64-pc-windows-msvc/optimized/librashader.dll),)
-	librashader.path := $(thirdparty.path)/librashader/aarch64-pc-windows-msvc/target/optimized/librashader.dll
+	librashader.path := $(thirdparty.path)/librashader/target/aarch64-pc-windows-msvc/optimized/librashader.dll
   else
 	librashader.path := $(thirdparty.path)/librashader/target/optimized/librashader.dll
   endif
