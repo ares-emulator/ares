@@ -590,18 +590,20 @@ auto Presentation::loadShaders() -> void {
   auto location = locate("Shaders/");
 
   if(ruby::video.driver() == "OpenGL 3.2") {
+    auto files = directory::files(location, "*.slangp");
     for(auto dir : directory::folders(location)) {
-      auto files = directory::files({location, "/", dir}, "*.slangp");
-      if(files.size() == 0) continue;
-
-      for(auto shader : files) {
-        MenuRadioItem item{&videoShaderMenu};
-        item.setText(string{dir, shader}.trimRight(".slangp", 1L)).onActivate([=] {
-          settings.video.shader = {location, dir, shader};
-          ruby::video.setShader(settings.video.shader);
-        });
-        shaders.append(item);
+      for(auto file : directory::files({location, "/", dir}, "*.slangp")) {
+        files.append({dir, file});
       }
+    }
+
+    for(auto shader : files) {
+      MenuRadioItem item{&videoShaderMenu};
+      item.setText(string{shader}.trimRight(".slangp", 1L)).onActivate([=] {
+        settings.video.shader = {location, shader};
+        ruby::video.setShader(settings.video.shader);
+      });
+      shaders.append(item);
     }
   }
 
