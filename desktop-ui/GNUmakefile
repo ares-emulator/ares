@@ -7,7 +7,7 @@ sdl2 := true
 local := true
 lto := true
 librashader	:= true
-flags += -I. -I.. -I../ares -I../thirdparty -DMIA_LIBRARY
+flags += -I. -I.. -I../ares -I../thirdparty -I../thirdparty/librashader/include -DMIA_LIBRARY
 
 nall.path := ../nall
 include $(nall.path)/GNUmakefile
