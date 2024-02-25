@@ -101,8 +101,16 @@ auto SA1::writeIOCPU(n24 address, n8 data) -> void {
   //(CCNT) SA-1 control
   case 0x2200:
     if(io.sa1_resb && !data.bit(5)) {
-      //reset SA-1 CPU (PC bank set to 0x00)
+      //reset SA-1 CPU (PC bank and data bank set to 0x00, clear STP status)
       r.pc.d = io.crv;
+      r.b    = 0x00;
+      r.stp  = false;
+      //todo: probably needs a SA-1 CPU reset
+      //reset r.s, r.e, r.wai ...
+
+      //reset io status
+      //todo: reset timing is unknown, CIWP is set to 0 at reset
+      io.ciwp = 0x00;
     }
 
     io.smeg     = data.bit(0,3);
