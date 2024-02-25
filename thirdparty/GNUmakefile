@@ -35,17 +35,17 @@ $(object.path)/lzma_dec.o: $(libchdr.path)/deps/lzma-19.00/src/LzmaDec.c
 $(object.path)/lcma_enc.o: $(libchdr.path)/deps/lzma-19.00/src/LzmaEnc.c
 $(object.path)/lzma_sort.o: $(libchdr.path)/deps/lzma-19.00/src/Sort.c
 
-$(object.path)/zlib_adler32.o: $(libchdr.path)/deps/zlib-1.2.13/adler32.c
-$(object.path)/zlib_compress.o: $(libchdr.path)/deps/zlib-1.2.13/compress.c
-$(object.path)/zlib_crc32.o: $(libchdr.path)/deps/zlib-1.2.13/crc32.c
-$(object.path)/zlib_deflate.o: $(libchdr.path)/deps/zlib-1.2.13/deflate.c
-$(object.path)/zlib_infback.o: $(libchdr.path)/deps/zlib-1.2.13/infback.c
-$(object.path)/zlib_inffast.o: $(libchdr.path)/deps/zlib-1.2.13/inffast.c
-$(object.path)/zlib_inflate.o: $(libchdr.path)/deps/zlib-1.2.13/inflate.c
-$(object.path)/zlib_inftrees.o: $(libchdr.path)/deps/zlib-1.2.13/inftrees.c
-$(object.path)/zlib_trees.o: $(libchdr.path)/deps/zlib-1.2.13/trees.c
-$(object.path)/zlib_uncompr.o: $(libchdr.path)/deps/zlib-1.2.13/uncompr.c
-$(object.path)/zlib_zutil.o: $(libchdr.path)/deps/zlib-1.2.13/zutil.c
+$(object.path)/zlib_adler32.o: $(libchdr.path)/deps/zlib-1.3.1/adler32.c
+$(object.path)/zlib_compress.o: $(libchdr.path)/deps/zlib-1.3.1/compress.c
+$(object.path)/zlib_crc32.o: $(libchdr.path)/deps/zlib-1.3.1/crc32.c
+$(object.path)/zlib_deflate.o: $(libchdr.path)/deps/zlib-1.3.1/deflate.c
+$(object.path)/zlib_infback.o: $(libchdr.path)/deps/zlib-1.3.1/infback.c
+$(object.path)/zlib_inffast.o: $(libchdr.path)/deps/zlib-1.3.1/inffast.c
+$(object.path)/zlib_inflate.o: $(libchdr.path)/deps/zlib-1.3.1/inflate.c
+$(object.path)/zlib_inftrees.o: $(libchdr.path)/deps/zlib-1.3.1/inftrees.c
+$(object.path)/zlib_trees.o: $(libchdr.path)/deps/zlib-1.3.1/trees.c
+$(object.path)/zlib_uncompr.o: $(libchdr.path)/deps/zlib-1.3.1/uncompr.c
+$(object.path)/zlib_zutil.o: $(libchdr.path)/deps/zlib-1.3.1/zutil.c
 
 $(object.path)/zstd_common_debug.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/debug.c
 $(object.path)/zstd_common_entropy_common.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/entropy_common.c
@@ -63,7 +63,7 @@ $(object.path)/zstd_decompress_zstd_decompress_block.o: $(libchdr.path)/deps/zst
 
 flags += -I$(libchdr.path)/include
 flags += -I$(libchdr.path)/deps/lzma-19.00/include -D_7ZIP_ST
-flags += -I$(libchdr.path)/deps/zlib-1.2.13
+flags += -I$(libchdr.path)/deps/zlib-1.3.1
 flags += -I$(libchdr.path)/deps/zstd-1.5.5/lib
 flags += -DZSTD_DISABLE_ASM
 
