@@ -845,7 +845,8 @@ static chd_error huff_codec_decompress(void *codec, const uint8_t *src, uint32_t
 	}
 
 	// then decode the data
-	for (uint32_t cur = 0; cur < destlen; cur++)
+	uint32_t cur;
+	for (cur = 0; cur < destlen; cur++)
 		dest[cur] = huffman_decode_one(huff_codec->decoder, bitbuf);
 	bitstream_flush(bitbuf);
 	chd_error result = bitstream_overflow(bitbuf) ? CHDERR_DECOMPRESSION_ERROR : CHDERR_NONE;
