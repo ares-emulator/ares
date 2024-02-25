@@ -1,0 +1,47 @@
+module.dialect = spv.Module(version: 1.0, spv.Capability.{Shader, Sampled1D}, spv.MemoryModel.GLSL450)
+
+module.debug_info = spv.Module.DebugInfo(generator: spv.Tool(id: 0, version: 28))
+
+type T0 = spv.OpTypeImage(SampledType: f32, spv.Dim.2D, Depth: 0, Arrayed: 0, MS: 0, Sampled: 1, spv.ImageFormat.Unknown)
+
+#[spv.Decoration.Location(Location: 0)]
+global_var GV0(spv.StorageClass.Output): f32×4
+
+#[spv.Decoration.Binding(BindingPoint: 1)]
+#[spv.Decoration.DescriptorSet(DescriptorSet: 0)]
+global_var GV1(spv.StorageClass.UniformConstant): T0
+
+#[spv.Decoration.Binding(BindingPoint: 1)]
+#[spv.Decoration.DescriptorSet(DescriptorSet: 1)]
+global_var GV2(spv.StorageClass.UniformConstant): spv.OpTypeSampler
+
+global_var GV3(spv.StorageClass.Private, init: f32×4(0.0, 0.0, 0.0, 0.0)): f32×4
+
+func F0() {
+    v0 = spv.OpLoad(Pointer: &GV1): T0
+    v1 = spv.OpLoad(Pointer: &GV2): spv.OpTypeSampler
+  branch L0
+
+  label L0:
+    v2 = spv.OpSampledImage(Image: v0, Sampler: v1): spv.OpTypeSampledImage(ImageType: T0)
+    v3 = spv.OpImageSampleImplicitLod(SampledImage: v2, Coordinate: f32×2(0.0, 0.0)): f32×4
+    spv.OpStore(Pointer: &GV3, Object: v3)
+  return
+}
+
+#[spv.ExecutionMode.OriginUpperLeft]
+func F1() {
+    _ = spv.OpLoad(Pointer: &GV1): T0
+    _ = spv.OpLoad(Pointer: &GV2): spv.OpTypeSampler
+  branch L0
+
+  label L0:
+    call F0()
+    v0 = spv.OpLoad(Pointer: &GV3): f32×4
+    spv.OpStore(Pointer: &GV0, Object: v0)
+  return
+}
+
+export {
+  spv.OpEntryPoint(spv.ExecutionModel.Fragment, Name: "main"): F1,
+}

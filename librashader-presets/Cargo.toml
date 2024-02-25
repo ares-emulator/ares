@@ -1,0 +1,31 @@
+[package]
+name = "librashader-presets"
+edition = "2021"
+
+license = "MPL-2.0 OR GPL-3.0-only"
+version = "0.2.3"
+authors = ["Ronny Chan <ronny@ronnychan.ca>"]
+repository = "https://github.com/SnowflakePowered/librashader"
+readme = "../README.md"
+categories = ["emulators", "compilers", "graphics"]
+keywords = ["shader", "retroarch", "SPIR-V"]
+description = "RetroArch shaders for all."
+
+[dependencies]
+thiserror = "1.0.37"
+nom = "7.1.1"
+nom_locate = "4.0.0"
+librashader-common = { path = "../librashader-common", version = "0.2.3" }
+num-traits = "0.2"
+once_cell = "1"
+# we don't need unicode
+regex = {  version = "1", default-features = false, features = ["perf"] }
+
+rustversion = "1.0"
+os_str_bytes = {  version = "6", features = ["conversions"] }
+
+[features]
+parse_legacy_glsl = []
+
+[dev-dependencies]
+glob = "0.3.1"
