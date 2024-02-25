@@ -1,0 +1,12 @@
+shaders = 2
+
+shader0 = ../reshade/shaders/LUT/LUT.slang
+shader1 = shaders/film_noise.slang
+scale_type1 = viewport
+
+textures = "SamplerLUT;noise1;
+
+SamplerLUT = ../reshade/shaders/LUT/cmyk-16.png
+noise1 = resources/film_noise1.png
+SamplerLUT_linear = true
+noise1_linear = true

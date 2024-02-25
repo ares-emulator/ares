@@ -1,0 +1,3 @@
+#reference "../../../Base_CRT_Presets/MBZ__5__POTATO-SUPER-XBR__GDV.slangp"
+#reference "../../../../resource/param_values/scale/max-int-scale.params"
+#reference "../../../../resource/param_values/base/set-all-textures-empty.params"

@@ -1,0 +1,17 @@
+shaders = 4
+
+shader0 = ../../../stock.slang
+alias0 = xBR_lv1_mp_refpass
+
+shader1 = "shaders/2xBR-multipass/2xbr-lv1-c-pass0.slang"
+filter_linear1 = false
+scale_type1 = source
+
+shader2 = "shaders/2xBR-multipass/2xbr-lv1-c-pass1.slang"
+filter_linear2 = false
+scale_type2 = source
+scale2 = 2.0
+
+shader3 = ../../../interpolation/shaders/bicubic.slang
+filter_linear3 = false
+scale_type3 = viewport

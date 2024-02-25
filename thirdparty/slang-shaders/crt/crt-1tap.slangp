@@ -1,0 +1,8 @@
+shaders = 1
+
+shader0 = shaders/crt-1tap.slang
+filter_linear0 = true
+scale_type0 = viewport
+scale_x0 = 1.0
+scale_y0 = 1.0
+float_framebuffer0 = true

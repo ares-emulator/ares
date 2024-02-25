@@ -1,0 +1,6 @@
+shaders = 1
+
+shader0 = shaders/ps1dither/PS1-Undither-AntiBayer.slang
+filter_linear0 = true
+scale_type0 = source
+scale0 = 1.0

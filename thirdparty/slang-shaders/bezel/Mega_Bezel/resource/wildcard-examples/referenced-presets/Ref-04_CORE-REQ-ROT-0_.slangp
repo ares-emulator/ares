@@ -1,0 +1,3 @@
+#reference "Ref-Base.slangp"
+
+BackgroundImage = "textures/Wildcard-Success-Background.png"

@@ -1,0 +1,47 @@
+shaders = 11
+
+shader0 = shaders/cathode-retro/cathode-retro-util-copy.slang
+alias0 = g_sourceTexture
+filter_linear0 = true
+
+shader1 = shaders/cathode-retro/cathode-retro-util-downsample-2x-horz.slang
+filter_linear1 = true
+scale_x1 = 0.5
+
+shader2 = shaders/cathode-retro/cathode-retro-util-downsample-2x-vert.slang
+filter_linear2 = true
+scale_y2 = 0.5
+
+shader3 = ../stock.slang
+
+shader4 = shaders/cathode-retro/cathode-retro-util-tonemap-and-downsample-horz.slang
+filter_linear4 = true
+scale_x4 = 0.5
+
+shader5 = shaders/cathode-retro/cathode-retro-util-tonemap-and-downsample-vert.slang
+filter_linear5 = true
+scale_y5 = 0.5
+alias5 = g_sourceTex
+
+shader6 = shaders/cathode-retro/cathode-retro-util-gaussian-blur-horz.slang
+filter_linear6 = true
+
+shader7 = shaders/cathode-retro/cathode-retro-util-gaussian-blur-vert.slang
+filter_linear7 = true
+alias7 = g_diffusionTexture
+
+shader8 = shaders/cathode-retro/cathode-retro-crt-generate-masks.slang
+alias8 = g_maskTexture
+mipmap_input8 = true
+wrap_mode8 = repeat
+scale_type8 = viewport
+
+shader9 = shaders/cathode-retro/cathode-retro-crt-generate-screen-texture.slang
+alias9 = g_screenMaskTexture
+mipmap_input9 = true
+filter_linear9 = true
+wrap_mode9 = clamp
+
+shader10 = shaders/cathode-retro/cathode-retro-crt-rgb-to-crt_no-signal.slang
+mipmap_input10 = true
+filter_linear10 = true

@@ -1,0 +1,37 @@
+shaders = "6"
+
+shader0 = ../../../stock.slang
+alias0 = super4xbr3d_refpass
+
+shader1 = "shaders/super-xbr/super-4xbr-3d-pass0.slang"
+filter_linear1 = false
+scale_type_x1 = "source"
+scale_x1 = "1.000000"
+scale_type_y1 = "source"
+scale_y1 = "1.000000"
+
+shader2 = "shaders/super-xbr/super-4xbr-3d-pass1.slang"
+filter_linear2 = false
+scale_type_x2 = "source"
+scale_x2 = "1.000000"
+scale_type_y2 = "source"
+scale_y2 = "1.000000"
+
+shader3 = "shaders/super-xbr/super-4xbr-3d-pass2.slang"
+filter_linear3 = false
+scale_type_x3 = "source"
+scale_x3 = "1.000000"
+scale_type_y3 = "source"
+scale_y3 = "1.000000"
+
+shader4 = "shaders/super-xbr/super-4xbr-3d-pass3.slang"
+filter_linear4 = false
+scale_type_x4 = "source"
+scale_x4 = "1.000000"
+scale_type_y4 = "source"
+scale_y4 = "1.000000"
+
+shader5 = "shaders/super-xbr/custom-jinc2-sharper.slang"
+filter_linear5 = false
+scale_type5 = viewport
+

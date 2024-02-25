@@ -1,0 +1,43 @@
+shaders = 6
+
+shader0 = ../crt/shaders/crtsim/composite.slang
+filter_linear0 = false
+
+shader1 = ../crt/shaders/phosphorlut/scanlines-interlace-linearize.slang
+alias1 = firstPass
+scale1 = 2.0
+scale_type1 = source
+srgb_framebuffer1 = true
+filter_linear1 = false
+
+shader2 = ../blurs/shaders/royale/blur5fast-vertical.slang
+scale_type2 = source
+scale2 = 1.0
+srgb_framebuffer2 = true
+filter_linear2 = true
+alias2 = blurPassV
+
+shader3 = ../blurs/shaders/royale/blur5fast-horizontal.slang
+alias3 = blurPass
+filter_linear3 = true
+scale3 = 1.0
+scale_type3 = source
+srgb_framebuffer3 = true
+
+shader4 = ../crt/shaders/phosphorlut/phosphorlut-pass0.slang
+alias4 = phosphorPass
+filter_linear4 = true
+scale_type4 = source
+scale_x4 = 4.0
+scale_y4 = 2.0
+srgb_framebuffer4 = true
+
+shader5 = ../crt/shaders/phosphorlut/phosphorlut-pass1.slang
+filter_linear5 = true
+
+textures = "NTSCArtifactSampler;shadow;aperture;slot"
+NTSCArtifactSampler = "../crt/shaders/crtsim/artifacts.png"
+NTSCArtifactSampler_linear = true
+shadow = ../crt/shaders/phosphorlut/luts/shadowmask.png
+aperture = ../crt/shaders/phosphorlut/luts/aperture-grille.png
+slot = ../crt/shaders/phosphorlut/luts/slotmask.png

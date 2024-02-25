@@ -1,0 +1,28 @@
+shaders = 5
+
+shader0 = ../../stock.slang
+alias0 = hqx_refpass
+shader1 = shaders/pass1.slang
+shader2 = shaders/hq3x.slang
+
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+
+filter_linear2 = false
+scale_type2 = source
+scale2 = 3.0
+
+shader3 = ../../interpolation/shaders/b-spline-x.slang
+filter_linear3 = false
+scale_type_x3 = viewport
+scale_type_y3 = source
+scale3 = 1.0
+
+shader4 = ../../interpolation/shaders/b-spline-y.slang
+filter_linear4 = false
+
+
+textures = LUT
+LUT = resources/hq3x.png
+LUT_linear = false

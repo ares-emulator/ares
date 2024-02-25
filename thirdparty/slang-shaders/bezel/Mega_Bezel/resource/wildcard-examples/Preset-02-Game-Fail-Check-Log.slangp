@@ -1,0 +1,7 @@
+# Use this preset to get information about what the first subset of wildcards are
+# and what they will be replaced with
+# 
+# Set up RetroArch to output a log, then load the preset and check the log
+# This will show you what the path with the replaced wildcards look like
+
+#reference "referenced-presets/Ref-02-Fail-Check-Log_$GAME$_.slangp"

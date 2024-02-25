@@ -1,0 +1,11 @@
+shaders = 2
+
+shader0 = shaders/ps1dither/PS1-Undither-AntiBayer.slang
+filter_linear0 = true
+scale_type0 = source
+scale0 = 1.0
+
+shader1 = shaders/ps1dither/PS1-Undither-Comparison-MkII.slang
+filter_linear1 = true
+scale_type1 = source
+scale1 = 1.0

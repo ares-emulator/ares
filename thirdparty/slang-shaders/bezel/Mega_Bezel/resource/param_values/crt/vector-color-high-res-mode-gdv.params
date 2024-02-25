@@ -1,0 +1,55 @@
+// Thanks to SixWingedFreak from the Libretro forum for these settings
+post_br = "1.700000"
+post_br_affect_black_level = "0.000000"
+HSM_DOWNSAMPLE_BLUR_SCANLINE_DIR = "33.000000"
+HSM_DOWNSAMPLE_BLUR_OPPOSITE_DIR = "33.000000"
+g_lift = "0.030000"
+pre_bb = "2.000000"
+g_gamma_in = "2.800000"
+g_gamma_out = "2.200000"
+g_signal_type = "0.000000"
+g_crtgamut = "-1.000000"
+g_space_out = "-1.000000"
+g_cntrst = "0.300000"
+g_mid = "0.200000"
+g_lift = "0.010000"
+wp_temperature = "6504.000000"
+glow = "-0.150000"
+SIZEH = "40.000000"
+SIGMA_H = "10.000000"
+SIZEV = "40.000000"
+SIGMA_V = "10.000000"
+bloom = "0.000000"
+halation = "0.400000"
+blendMode = "0.000000"
+brightboost = "2.000000"
+scanline1 = "4.000000"
+scanline2 = "4.000000"
+beam_min = "1.100000"
+vertmask = "-0.500000"
+scangamma = "2.000000"
+h_sharp = "3.000000"
+shadowMask = "6.000000"
+maskstr = "0.400000"
+maskDark = "1.000000"
+slotmask = "0.500000"
+slotmask1 = "0.900000"
+slotwidth = "3.000000"
+double_slot = "2.000000"
+
+barspeed = "5.000000"
+barintensity = "0.080000"
+
+HSM_INTERLACE_TRIGGER_RES = 0
+HSM_FAKE_SCANLINE_OPACITY = 0
+HSM_BZL_HIGHLIGHT = 0.4
+HSM_REFLECT_BLUR_MIN = 0
+HSM_REFLECT_BLUR_MAX = 40
+HSM_REFLECT_GLOBAL_AMOUNT = 140
+HSM_REFLECT_GLOBAL_GAMMA_ADJUST = 1.2
+HSM_REFLECT_DIRECT_AMOUNT = "100.000000"
+HSM_REFLECT_DIFFUSED_AMOUNT = 0
+HSM_REFLECT_FULLSCREEN_GLOW = 300
+HSM_REFLECT_FULLSCREEN_GLOW_GAMMA = 1.6
+
+HSM_INTRO_WHEN_TO_SHOW = 0

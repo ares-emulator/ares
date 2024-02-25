@@ -1,0 +1,5 @@
+shaders = 1
+
+shader0 = shaders/g-sharp_resampler.slang
+scale0 = 1.0
+scale_type0 = source

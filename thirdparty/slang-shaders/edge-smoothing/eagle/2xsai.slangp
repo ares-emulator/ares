@@ -1,0 +1,18 @@
+shaders = 3
+
+shader0 = shaders/2xsai.slang
+filter_linear0 = false
+scale_type0 = source
+scale_x0 = 2.0
+scale_y0 = 2.0
+
+shader1 = ../../interpolation/shaders/bicubic-x.slang
+filter_linear1 = false
+scale_type_x1 = viewport
+scale_type_y1 = source
+scale1 = 1.0
+
+shader2 = ../../interpolation/shaders/bicubic-y.slang
+filter_linear2 = false
+scale_type2 = viewport
+

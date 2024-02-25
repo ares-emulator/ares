@@ -1,0 +1,26 @@
+shaders = 4
+
+shader0 = ../stock.slang
+alias0 = PrePass0
+
+shader1 = ../crt/shaders/guest/advanced/ntsc/ntsc-pass1.slang
+alias1 = NPass1
+scale_type_x1 = source
+scale_type_y1 = source
+scale_x1 = 4.0
+scale_y1 = 1.0
+float_framebuffer1 = true
+filter_linear1 = false
+
+shader2 = ../crt/shaders/guest/advanced/ntsc/ntsc-pass2.slang
+filter_linear2 = true
+float_framebuffer2 = true
+scale_type2 = source
+scale_x2 = 0.5
+scale_y2 = 1.0
+
+shader3 = ../crt/shaders/guest/advanced/ntsc/ntsc-pass3.slang
+filter_linear3 = true
+scale_type3 = source
+scale_x3 = 1.0
+scale_y3 = 1.0

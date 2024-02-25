@@ -1,0 +1,3 @@
+#reference "Monitor-Screen_Hmask_Wide-Core_SlotMask.slangp"
+
+PIXELGRID_Y_MASK = "0.000000"

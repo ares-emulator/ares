@@ -1,0 +1,7 @@
+#reference "Monitor-for_HiNits.slangp"
+
+
+PIXELGRID_Y_SPARK = "0.250000"
+IN_GLOW_POWER = "1.6"
+GAMMA_OUT = "0.320000"
+DO_HALO = "0.0"

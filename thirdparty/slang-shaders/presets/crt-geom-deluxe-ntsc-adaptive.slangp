@@ -1,0 +1,60 @@
+shaders = 7
+
+shader0 = ../ntsc/shaders/ntsc-adaptive/ntsc-pass1.slang
+scale_type0 = source
+scale_x0 = 4.0
+filter_linear0 = false
+scale_y0 = 1.0
+float_framebuffer0 = true
+
+shader1 = ../ntsc/shaders/ntsc-adaptive/ntsc-pass2.slang
+scale_type1 = source
+scale_x1 = 0.5
+scale_y1 = 1.0
+filter_linear1 = true
+
+shader2 = ../crt/shaders/geom-deluxe/phosphor_apply.slang
+alias2 = internal1
+
+shader3 = ../crt/shaders/geom-deluxe/phosphor_update.slang
+alias3 = phosphor
+
+shader4 = ../crt/shaders/geom-deluxe/gaussx.slang
+filter_linear4 = true
+alias4 = internal2
+
+shader5 = ../crt/shaders/geom-deluxe/gaussy.slang
+filter_linear5 = true
+alias5 = blur_texture
+
+shader6 = ../crt/shaders/geom-deluxe/crt-geom-deluxe.slang
+filter_linear6 = true
+mipmap_input6 = true
+
+# ntsc-adaptive
+# These settings are meant to get correct looking transparencies and
+# dithering when emulating systems that rely on NTSC composite artifact
+# colors (like Sega Genesis/Mega Drive) without actually introducing
+# composite motion artifacts.
+quality = -1.0
+ntsc_fields = 1.0
+ntsc_phase = "2.0"
+cust_fringing = "1.00"
+cust_artifacting = "2.30"
+
+# crt-geom-deluxe
+textures = "aperture;slot;delta"
+delta = ../crt/shaders/geom-deluxe/masks/delta_2_4x1_rgb.png
+delta_filter_linear = true
+delta_repeat_mode = repeat
+slot = ../crt/shaders/geom-deluxe/masks/slot_2_5x4_bgr.png
+slot_filter_linear = true
+slot_repeat_mode = repeat
+aperture = ../crt/shaders/geom-deluxe/masks/aperture_2_4_rgb.png
+aperture_filter_linear = true
+aperture_repeat_mode = repeat
+curvature = "0.0"
+cornersmooth = "170.0"
+scanline_weight = "0.40"
+geom_lum = "0.25"
+halation = "0.05"

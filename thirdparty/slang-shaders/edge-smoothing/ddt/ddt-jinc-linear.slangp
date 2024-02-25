@@ -1,0 +1,16 @@
+shaders = "3"
+
+shader0 = ../xbr/shaders/support/linearize.slang
+scale_type0 = "source"
+scale0 = "1.000000"
+filter_linear0 = "false"
+alias0 = XbrSource
+
+shader1 = shaders/ddt-jinc.slang
+scale_type1 = "viewport"
+scale1 = "1.000000"
+filter_linear1 = "false"
+
+shader2 = ../xbr/shaders/support/delinearize.slang
+scale_type2 = "source"
+filter_linear2 = "false"

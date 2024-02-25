@@ -1,0 +1,38 @@
+shaders = "5"
+
+shader0 = ../shaders/support/stock.slang
+scale_type0 = "source"
+scale0 = 1.0
+alias0 = REF
+
+shader1 = ../shaders/xbr-mlv4-multipass/xbr-mlv4-pass1.slang
+filter_linear1 = "false"
+float_framebuffer1 = "false"
+scale_type_x1 = "source"
+scale_x1 = "1.000000"
+scale_type_y1 = "source"
+scale_y1 = "1.000000"
+alias1 = "PASS1"
+
+shader2 = ../shaders/xbr-mlv4-multipass/xbr-mlv4-pass2.slang
+filter_linear2 = "false"
+float_framebuffer2 = "false"
+scale_type_x2 = "source"
+scale_x2 = "1.000000"
+scale_type_y2 = "source"
+scale_y2 = "1.000000"
+alias2 = "PASS2"
+
+shader3 = ../shaders/xbr-mlv4-multipass/xbr-mlv4-pass3.slang
+filter_linear3 = "false"
+float_framebuffer3 = "false"
+scale_type_x3 = "source"
+scale_x3 = "2.000000"
+scale_type_y3 = "source"
+scale_y3 = "2.000000"
+alias3 = "PASS3"
+
+shader4 = ../shaders/xbr-mlv4-multipass/xbr-mlv4-pass4.slang
+filter_linear4 = "false"
+float_framebuffer4 = "false"
+scale_type4 = viewport

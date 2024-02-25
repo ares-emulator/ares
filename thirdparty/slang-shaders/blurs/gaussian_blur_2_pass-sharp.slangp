@@ -1,0 +1,15 @@
+shaders = 2
+
+shader0 = shaders/gaussian_blur_filtering/gaussian_horizontal-sharp.slang
+filter_linear0 = false
+scale_type_x0 = viewport
+scale_x0 = 1.0
+scale_type_y0 = source
+scale_y0 = 1.0 
+
+shader1 = shaders/gaussian_blur_filtering/gaussian_vertical-sharp.slang
+filter_linear1 = false
+scale_type_x1 = viewport
+scale_x1 = 1.0
+scale_type_y1 = viewport
+scale_y1 = 1.0

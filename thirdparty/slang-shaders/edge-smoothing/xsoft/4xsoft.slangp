@@ -1,0 +1,23 @@
+shaders = 4
+
+shader0 = ../../stock.slang
+filter_linear0 = false
+scale_type0 = source
+scale_x0 = 2.0
+scale_y0 = 2.0
+
+shader1 = shaders/4xsoft.slang
+filter_linear1 = false
+scale_type1 = source
+scale_x1 = 2.0
+scale_y1 = 2.0
+
+shader2 = ../../interpolation/shaders/b-spline-x.slang
+filter_linear2 = false
+scale_type_x2 = viewport
+scale_type_y2 = source
+scale2 = 1.0
+
+shader3 = ../../interpolation/shaders/b-spline-y.slang
+filter_linear3 = false
+scale_type3 = viewport

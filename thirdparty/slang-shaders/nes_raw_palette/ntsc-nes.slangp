@@ -1,0 +1,23 @@
+shaders = 3
+shader0 = shaders/nes-color-decoder.slang
+shader1 = ../ntsc/shaders/maister/ntsc-pass1-composite-3phase.slang
+shader2 = ../ntsc/shaders/maister/ntsc-pass2-3phase.slang
+
+filter_linear0 = false
+filter_linear1 = false
+filter_linear2 = false
+
+scale_type0 = source
+scale0 = 1.0
+
+scale_type_x1 = absolute
+scale_type_y1 = source
+scale_x1 = 1024
+scale_y1 = 1.0
+frame_count_mod1 = 2
+float_framebuffer1 = true
+
+scale_type2 = source
+scale_x2 = 0.5
+scale_y2 = 1.0
+

@@ -1,0 +1,59 @@
+shaders = 10
+
+shader0 = shaders/nnedi3-nns64-win8x4-pass1-rgb.slang
+filter_linear0 = false
+scale_type0 = source
+scale_x0 = 1.0
+scale_y0 = 2.0
+
+shader1 = shaders/nnedi3-nns64-win8x4-pass2-rgb.slang
+filter_linear1 = false
+scale_type1 = source
+scale_x1 = 2.0
+scale_y1 = 1.0
+
+shader2 = shaders/jinc2-cshift-rgb.slang
+filter_linear2 = false
+scale_type2 = source
+scale_x2 = 1.0
+scale_y2 = 1.0
+
+shader3 = shaders/nnedi3-nns32-win8x4-pass1-rgb.slang
+filter_linear3 = false
+scale_type3 = source
+scale_x3 = 1.0
+scale_y3 = 2.0
+
+shader4 = shaders/nnedi3-nns32-win8x4-pass2-rgb.slang
+filter_linear4 = false
+scale_type4 = source
+scale_x4 = 2.0
+scale_y4 = 1.0
+
+shader5 = shaders/jinc2-cshift-rgb.slang
+filter_linear5 = false
+scale_type5 = source
+scale_x5 = 1.0
+scale_y5 = 1.0
+
+shader6 = shaders/nnedi3-nns16-win8x4-pass1-rgb.slang
+filter_linear6 = false
+scale_type6 = source
+scale_x6 = 1.0
+scale_y6 = 2.0
+
+shader7 = shaders/nnedi3-nns16-win8x4-pass2-rgb.slang
+filter_linear7 = false
+scale_type7 = source
+scale_x7 = 2.0
+scale_y7 = 1.0
+
+shader8 = shaders/jinc2-cshift-rgb.slang
+filter_linear8 = false
+scale_type8 = source
+scale_x8 = 1.0
+scale_y8 = 1.0
+
+shader9 = ../../interpolation/shaders/jinc2.slang
+filter_linear9 = false
+scale_type9 = viewport

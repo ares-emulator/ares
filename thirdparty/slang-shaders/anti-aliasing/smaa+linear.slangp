@@ -1,0 +1,33 @@
+shaders = 5
+
+shader0 = ../stock.slang
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+alias0 = SMAA_Input
+
+shader1 = shaders/smaa/smaa-pass0.slang
+filter_linear1 = true
+scale_type1 = source
+scale1 = 1.0
+
+shader2 = shaders/smaa/smaa-pass1.slang
+filter_linear2 = true
+scale_type2 = source
+scale2 = 1.0
+
+shader3 = shaders/smaa/smaa-pass2.slang
+filter_linear3 = true
+scale_type3 = source
+scale3 = 1.0
+
+textures = "areaTex;searchTex"
+areaTex = shaders/smaa/AreaTex.png
+searchTex = shaders/smaa/SearchTex.png
+
+shader4 = ../stock.slang
+filter_linear4 = true
+scale_type4 = viewport
+
+parameters = "SMAA_EDT"
+SMAA_EDT = 0.0

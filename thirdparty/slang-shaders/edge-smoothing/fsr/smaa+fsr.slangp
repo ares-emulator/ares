@@ -1,0 +1,50 @@
+shaders = 6
+
+shader0 = ../../stock.slang
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+alias0 = SMAA_Input
+
+shader1 = ../../anti-aliasing/shaders/smaa/smaa-pass0.slang
+filter_linear1 = true
+scale_type1 = source
+scale1 = 1.0
+
+shader2 = ../../anti-aliasing/shaders/smaa/smaa-pass1.slang
+filter_linear2 = true
+scale_type2 = source
+scale2 = 1.0
+
+shader3 = ../../anti-aliasing/shaders/smaa/smaa-pass2.slang
+filter_linear3 = true
+scale_type3 = source
+scale3 = 1.0
+
+textures = "areaTex;searchTex"
+areaTex = ../../anti-aliasing/shaders/smaa/AreaTex.png
+searchTex = ../../anti-aliasing/shaders/smaa/SearchTex.png
+
+shader4 = shaders/fsr-pass0.slang
+filter_linear4 = true
+scale_type4 = viewport
+scale4 = 1.0
+wrap_mode4 = clamp_to_edge
+
+shader5 = shaders/fsr-pass1.slang
+filter_linear5 = true
+scale_type5 = source
+scale5 = 1.0
+wrap_mode5 = clamp_to_edge
+
+parameters = "SMAA_EDT;SMAA_THRESHOLD;SMAA_MAX_SEARCH_STEPS;SMAA_MAX_SEARCH_STEPS_DIAG;SMAA_LOCAL_CONTRAST_ADAPTATION_FACTOR;SMAA_CORNER_ROUNDING;FSR_SHARPENING;FSR_FILMGRAIN;FSR_GRAINCOLOR;FSR_GRAINPDF"
+SMAA_EDT = 1.0
+SMAA_THRESHOLD = 0.05
+SMAA_MAX_SEARCH_STEPS = 40
+SMAA_MAX_SEARCH_STEPS_DIAG = 20
+SMAA_LOCAL_CONTRAST_ADAPTATION_FACTOR = 2.5
+SMAA_CORNER_ROUNDING = 50.0
+FSR_SHARPENING = 0.1
+FSR_FILMGRAIN = 0.3
+FSR_GRAINCOLOR = 1.0
+FSR_GRAINPDF = 0.3

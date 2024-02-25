@@ -1,0 +1,6 @@
+#reference "../../Base_CRT_Presets/MBZ__1__ADV__LCD-GRID.slangp"
+
+#reference "../../../resource/param_values/dual-screen/dual-screen-nds-lcd-scale.params"
+
+# BackgroundImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+# BackgroundVertImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
