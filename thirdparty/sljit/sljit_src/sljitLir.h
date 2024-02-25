@@ -446,13 +446,6 @@ struct sljit_jump {
 	} u;
 };
 
-struct sljit_put_label {
-	struct sljit_put_label *next;
-	struct sljit_label *label;
-	sljit_uw addr;
-	sljit_uw flags;
-};
-
 struct sljit_const {
 	struct sljit_const *next;
 	sljit_uw addr;
@@ -464,11 +457,9 @@ struct sljit_compiler {
 
 	struct sljit_label *labels;
 	struct sljit_jump *jumps;
-	struct sljit_put_label *put_labels;
 	struct sljit_const *consts;
 	struct sljit_label *last_label;
 	struct sljit_jump *last_jump;
-	struct sljit_put_label *last_put_label;
 	struct sljit_const *last_const;
 
 	void *allocator_data;
@@ -2156,12 +2147,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_local_base(struct sljit_compiler *c
    Flags: - (does not modify flags) */
 SLJIT_API_FUNC_ATTRIBUTE struct sljit_const* sljit_emit_const(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw, sljit_sw init_value);
 
-/* Store the value of a label (see: sljit_set_put_label)
+/* Store the value of a label (see: sljit_set_label / sljit_set_target)
    Flags: - (does not modify flags) */
-SLJIT_API_FUNC_ATTRIBUTE struct sljit_put_label* sljit_emit_put_label(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw);
-
-/* Set the value stored by put_label to this label. */
-SLJIT_API_FUNC_ATTRIBUTE void sljit_set_put_label(struct sljit_put_label *put_label, struct sljit_label *label);
+SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_mov_addr(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw);
 
 /* Provides the address of label, jump and const instructions after sljit_generate_code
    is called. The returned value is unspecified before the sljit_generate_code call.
@@ -2244,20 +2232,18 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_current_flags(struct sljit_compiler *com
 /*  Serialization functions                                              */
 /* --------------------------------------------------------------------- */
 
-/* Label/jump/const/put_label enumeration functions. The items in each
-   group are enumerated in creation order. Serialization / deserialization
-   preserves this order for each group. For example the fifth label after
-   deserialization refers to the same machine code location as the fifth
-   label before the serialization. */
+/* Label/jump/const enumeration functions. The items in each group
+   are enumerated in creation order. Serialization / deserialization
+   preserves this order for each group. For example the fifth label
+   after deserialization refers to the same machine code location as
+   the fifth label before the serialization. */
 static SLJIT_INLINE struct sljit_label *sljit_get_first_label(struct sljit_compiler *compiler) { return compiler->labels; }
 static SLJIT_INLINE struct sljit_jump *sljit_get_first_jump(struct sljit_compiler *compiler) { return compiler->jumps; }
 static SLJIT_INLINE struct sljit_const *sljit_get_first_const(struct sljit_compiler *compiler) { return compiler->consts; }
-static SLJIT_INLINE struct sljit_put_label *sljit_get_first_put_label(struct sljit_compiler *compiler) { return compiler->put_labels; }
 
 static SLJIT_INLINE struct sljit_label *sljit_get_next_label(struct sljit_label *label) { return label->next; }
 static SLJIT_INLINE struct sljit_jump *sljit_get_next_jump(struct sljit_jump *jump) { return jump->next; }
 static SLJIT_INLINE struct sljit_const *sljit_get_next_const(struct sljit_const *const_) { return const_->next; }
-static SLJIT_INLINE struct sljit_put_label *sljit_get_next_put_label(struct sljit_put_label *put_label) { return put_label->next; }
 
 /* A number starting from 0 is assigned to each label, which
 represents its creation index. The first label created by the
@@ -2274,6 +2260,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_jump_has_label(struct sljit_jump *jump)
 static SLJIT_INLINE struct sljit_label *sljit_jump_get_label(struct sljit_jump *jump) { return jump->u.label; }
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_jump_has_target(struct sljit_jump *jump);
 static SLJIT_INLINE sljit_uw sljit_jump_get_target(struct sljit_jump *jump) { return jump->u.target; }
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_jump_is_mov_addr(struct sljit_jump *jump);
 
 /* Option bits for sljit_serialize_compiler. */
 
@@ -2318,11 +2305,11 @@ compiler instance is returned. Otherwise the returned value is NULL.
     specific data similar to sljit_create_compiler()
 
 Notes:
-  - Labels assigned to jumps or put_labels are restored with
-    their corresponding label in the label set created by
-    the deserializer. Target addresses assigned to jumps are
-    also restored. Uninitialized jumps and put_labels remain
-    uninitialized.
+  - Labels assigned to jumps are restored with their
+    corresponding label in the label set created by
+    the deserializer. Target addresses assigned to
+    jumps are also restored. Uninitialized jumps
+    remain uninitialized.
   - After the deserialization, sljit_generate_code() does
     not need to be the next operation on the returned
     compiler, the code generation can be continued.

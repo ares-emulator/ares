@@ -26,12 +26,17 @@
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_jump_has_label(struct sljit_jump *jump)
 {
-	return (jump->flags & JUMP_LABEL) != 0;
+	return !(jump->flags & JUMP_ADDR) && (jump->u.label != NULL);
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_jump_has_target(struct sljit_jump *jump)
 {
 	return (jump->flags & JUMP_ADDR) != 0;
+}
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_jump_is_mov_addr(struct sljit_jump *jump)
+{
+	return (jump->flags & JUMP_MOV_ADDR) != 0;
 }
 
 #define SLJIT_SERIALIZE_DEBUG ((sljit_u16)0x1)
@@ -44,7 +49,6 @@ struct sljit_serialized_compiler {
 	sljit_uw buf_segment_count;
 	sljit_uw label_count;
 	sljit_uw jump_count;
-	sljit_uw put_label_count;
 	sljit_uw const_count;
 
 	sljit_s32 options;
@@ -96,12 +100,6 @@ struct sljit_serialized_jump {
 	sljit_uw value;
 };
 
-struct sljit_serialized_put_label {
-	sljit_uw addr;
-	sljit_uw flags;
-	sljit_uw index;
-};
-
 struct sljit_serialized_const {
 	sljit_uw addr;
 };
@@ -121,12 +119,10 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_uw* sljit_serialize_compiler(struct sljit_compile
 	struct sljit_memory_fragment *buf;
 	struct sljit_label *label;
 	struct sljit_jump *jump;
-	struct sljit_put_label *put_label;
 	struct sljit_const *const_;
 	struct sljit_serialized_compiler *serialized_compiler;
 	struct sljit_serialized_label *serialized_label;
 	struct sljit_serialized_jump *serialized_jump;
-	struct sljit_serialized_put_label *serialized_put_label;
 	struct sljit_serialized_const *serialized_const;
 #if (defined SLJIT_ARGUMENT_CHECKS && SLJIT_ARGUMENT_CHECKS) \
 		|| (defined SLJIT_DEBUG && SLJIT_DEBUG)
@@ -165,12 +161,6 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_uw* sljit_serialize_compiler(struct sljit_compile
 	while (jump != NULL) {
 		total_size += sizeof(struct sljit_serialized_jump);
 		jump = jump->next;
-	}
-
-	put_label = compiler->put_labels;
-	while (put_label != NULL) {
-		total_size += sizeof(struct sljit_serialized_put_label);
-		put_label = put_label->next;
 	}
 
 	const_ = compiler->consts;
@@ -253,35 +243,18 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_uw* sljit_serialize_compiler(struct sljit_compile
 		serialized_jump->addr = jump->addr;
 		serialized_jump->flags = jump->flags;
 
-		if (jump->flags & JUMP_LABEL)
+		if (jump->flags & JUMP_ADDR)
+			serialized_jump->value = jump->u.target;
+		else if (jump->u.label != NULL)
 			serialized_jump->value = jump->u.label->u.index;
 		else
-			serialized_jump->value = jump->u.target;
+			serialized_jump->value = SLJIT_MAX_ADDRESS;
 
 		ptr += sizeof(struct sljit_serialized_jump);
 		jump = jump->next;
 		counter++;
 	}
 	serialized_compiler->jump_count = counter;
-
-	put_label = compiler->put_labels;
-	counter = 0;
-	while (put_label != NULL) {
-		serialized_put_label = (struct sljit_serialized_put_label*)ptr;
-
-		serialized_put_label->addr = put_label->addr;
-		serialized_put_label->flags = put_label->flags;
-
-		if (put_label->label != NULL)
-			serialized_put_label->index = put_label->label->u.index;
-		else
-			serialized_put_label->index = ~(sljit_uw)0;
-
-		ptr += sizeof(struct sljit_serialized_put_label);
-		put_label = put_label->next;
-		counter++;
-	}
-	serialized_compiler->put_label_count = counter;
 
 	const_ = compiler->consts;
 	counter = 0;
@@ -319,7 +292,6 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler *sljit_deserialize_compiler(sljit
 	struct sljit_serialized_compiler *serialized_compiler;
 	struct sljit_serialized_label *serialized_label;
 	struct sljit_serialized_jump *serialized_jump;
-	struct sljit_serialized_put_label *serialized_put_label;
 	struct sljit_serialized_const *serialized_const;
 #if (defined SLJIT_ARGUMENT_CHECKS && SLJIT_ARGUMENT_CHECKS) \
 		|| (defined SLJIT_DEBUG && SLJIT_DEBUG)
@@ -332,8 +304,6 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler *sljit_deserialize_compiler(sljit
 	struct sljit_label **label_list = NULL;
 	struct sljit_jump *jump;
 	struct sljit_jump *last_jump;
-	struct sljit_put_label *put_label;
-	struct sljit_put_label *last_put_label;
 	struct sljit_const *const_;
 	struct sljit_const *last_const;
 	sljit_u8 *ptr = (sljit_u8*)buffer;
@@ -476,10 +446,13 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler *sljit_deserialize_compiler(sljit
 		jump->addr = serialized_jump->addr;
 		jump->flags = serialized_jump->flags;
 
-		if (serialized_jump->flags & JUMP_LABEL) {
-			if (serialized_jump->value >= label_count)
-				goto error;
-			jump->u.label = label_list[serialized_jump->value];
+		if (!(serialized_jump->flags & JUMP_ADDR)) {
+			if (serialized_jump->value != SLJIT_MAX_ADDRESS) {
+				if (serialized_jump->value >= label_count)
+					goto error;
+				jump->u.label = label_list[serialized_jump->value];
+			} else
+				jump->u.label = NULL;
 		} else
 			jump->u.target = serialized_jump->value;
 
@@ -493,39 +466,6 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler *sljit_deserialize_compiler(sljit
 		i--;
 	}
 	compiler->last_jump = last_jump;
-
-	last_put_label = NULL;
-	i = serialized_compiler->put_label_count;
-	if ((sljit_uw)(end - ptr) < i * sizeof(struct sljit_serialized_put_label))
-		goto error;
-
-	while (i > 0) {
-		put_label = (struct sljit_put_label*)ensure_abuf(compiler, sizeof(struct sljit_put_label));
-		if (put_label == NULL)
-			goto error;
-
-		serialized_put_label = (struct sljit_serialized_put_label*)ptr;
-		put_label->next = NULL;
-		put_label->addr = serialized_put_label->addr;
-		put_label->flags = serialized_put_label->flags;
-
-		if (serialized_put_label->index != ~(sljit_uw)0) {
-			if (serialized_put_label->index >= label_count)
-				goto error;
-			put_label->label = label_list[serialized_put_label->index];
-		} else
-			put_label->label = NULL;
-
-		if (last_put_label != NULL)
-			last_put_label->next = put_label;
-		else
-			compiler->put_labels = put_label;
-		last_put_label = put_label;
-
-		ptr += sizeof(struct sljit_serialized_put_label);
-		i--;
-	}
-	compiler->last_put_label = last_put_label;
 
 	SLJIT_FREE(label_list, allocator_data);
 	label_list = NULL;
