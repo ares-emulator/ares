@@ -298,10 +298,10 @@ static sljit_u8* detect_far_jump_type(struct sljit_jump *jump, sljit_u8 *code_pt
 
 	jump->addr = (sljit_uw)code_ptr;
 
-	if (jump->flags & JUMP_LABEL)
-		jump->flags |= PATCH_MW;
-	else
+	if (jump->flags & JUMP_ADDR)
 		sljit_unaligned_store_sw(code_ptr, (sljit_sw)(jump->u.target - (jump->addr + 4) - (sljit_uw)executable_offset));
+	else
+		jump->flags |= PATCH_MW;
 	code_ptr += 4;
 
 	return code_ptr;

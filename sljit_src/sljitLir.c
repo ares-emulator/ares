@@ -152,8 +152,8 @@
 #define SLJIT_SIMD_TYPE_MASK2(m) ((sljit_s32)0xc0000fff & ~(SLJIT_SIMD_FLOAT | SLJIT_SIMD_TEST | (m)))
 
 /* Jump flags. */
-#define JUMP_LABEL	0x1
-#define JUMP_ADDR	0x2
+#define JUMP_ADDR	0x1
+#define JUMP_MOV_ADDR	0x2
 /* SLJIT_REWRITABLE_JUMP is 0x1000. */
 
 #if (defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86)
@@ -161,6 +161,7 @@
 #	define PATCH_MW		0x08
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
 #	define PATCH_MD		0x10
+#	define MOV_ADDR_HI	0x20
 #	define JUMP_MAX_SIZE	((sljit_uw)(10 + 3))
 #	define CJUMP_MAX_SIZE	((sljit_uw)(2 + 10 + 3))
 #else /* !SLJIT_CONFIG_X86_64 */
@@ -201,6 +202,8 @@
 #	define PATCH_TYPE4	0x40
 	/* BL + imm24 */
 #	define PATCH_TYPE5	0x50
+	/* addwi/subwi */
+#	define PATCH_TYPE6	0x60
 	/* 0xf00 cc code for branches */
 #	define JUMP_SIZE_SHIFT	26
 #	define JUMP_MAX_SIZE	((sljit_uw)5)
@@ -591,7 +594,6 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_label(struct sljit_jump *jump, struct sl
 {
 	if (SLJIT_LIKELY(!!jump) && SLJIT_LIKELY(!!label)) {
 		jump->flags &= (sljit_uw)~JUMP_ADDR;
-		jump->flags |= JUMP_LABEL;
 		jump->u.label = label;
 	}
 }
@@ -599,16 +601,9 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_label(struct sljit_jump *jump, struct sl
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_target(struct sljit_jump *jump, sljit_uw target)
 {
 	if (SLJIT_LIKELY(!!jump)) {
-		jump->flags &= (sljit_uw)~JUMP_LABEL;
 		jump->flags |= JUMP_ADDR;
 		jump->u.target = target;
 	}
-}
-
-SLJIT_API_FUNC_ATTRIBUTE void sljit_set_put_label(struct sljit_put_label *put_label, struct sljit_label *label)
-{
-	if (SLJIT_LIKELY(!!put_label))
-		put_label->label = label;
 }
 
 #define SLJIT_CURRENT_FLAGS_ALL \
@@ -705,31 +700,44 @@ static SLJIT_INLINE void reverse_buf(struct sljit_compiler *compiler)
 	compiler->buf = prev;
 }
 
-/* Only used in RISC architectures where the instruction size is constant */
-#if !(defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86) \
-	&& !(defined SLJIT_CONFIG_S390X && SLJIT_CONFIG_S390X)
+#define SLJIT_MAX_ADDRESS ~(sljit_uw)0
 
-static SLJIT_INLINE sljit_uw compute_next_addr(struct sljit_label *label, struct sljit_jump *jump,
-	struct sljit_const *const_, struct sljit_put_label *put_label)
+#define SLJIT_GET_NEXT_SIZE(ptr) (ptr != NULL) ? ((ptr)->size) : SLJIT_MAX_ADDRESS
+#define SLJIT_GET_NEXT_ADDRESS(ptr) (ptr != NULL) ? ((ptr)->addr) : SLJIT_MAX_ADDRESS
+
+#if !(defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86)
+
+#define SLJIT_NEXT_DEFINE_TYPES \
+	sljit_uw next_label_size; \
+	sljit_uw next_jump_addr; \
+	sljit_uw next_const_addr; \
+	sljit_uw next_min_addr
+
+#define SLJIT_NEXT_INIT_TYPES() \
+	next_label_size = SLJIT_GET_NEXT_SIZE(label); \
+	next_jump_addr = SLJIT_GET_NEXT_ADDRESS(jump); \
+	next_const_addr = SLJIT_GET_NEXT_ADDRESS(const_);
+
+#define SLJIT_GET_NEXT_MIN() \
+	next_min_addr = sljit_get_next_min(next_label_size, next_jump_addr, next_const_addr);
+
+static SLJIT_INLINE sljit_uw sljit_get_next_min(sljit_uw next_label_size,
+	sljit_uw next_jump_addr, sljit_uw next_const_addr)
 {
-	sljit_uw result = ~(sljit_uw)0;
+	sljit_uw result = next_jump_addr;
 
-	if (label)
-		result = label->size;
+	SLJIT_ASSERT(result == SLJIT_MAX_ADDRESS || result != next_const_addr);
 
-	if (jump && jump->addr < result)
-		result = jump->addr;
+	if (next_const_addr < result)
+		result = next_const_addr;
 
-	if (const_ && const_->addr < result)
-		result = const_->addr;
-
-	if (put_label && put_label->addr < result)
-		result = put_label->addr;
+	if (next_label_size < result)
+		result = next_label_size;
 
 	return result;
 }
 
-#endif /* !SLJIT_CONFIG_X86 && !SLJIT_CONFIG_S390X */
+#endif /* !SLJIT_CONFIG_X86 */
 
 static SLJIT_INLINE void set_emit_enter(struct sljit_compiler *compiler,
 	sljit_s32 options, sljit_s32 args, sljit_s32 scratches, sljit_s32 saveds,
@@ -783,6 +791,7 @@ static SLJIT_INLINE void set_jump(struct sljit_jump *jump, struct sljit_compiler
 {
 	jump->next = NULL;
 	jump->flags = flags;
+	jump->u.label = NULL;
 	if (compiler->last_jump != NULL)
 		compiler->last_jump->next = jump;
 	else
@@ -790,17 +799,17 @@ static SLJIT_INLINE void set_jump(struct sljit_jump *jump, struct sljit_compiler
 	compiler->last_jump = jump;
 }
 
-static SLJIT_INLINE void set_put_label(struct sljit_put_label *put_label, struct sljit_compiler *compiler, sljit_uw offset)
+static SLJIT_INLINE void set_mov_addr(struct sljit_jump *jump, struct sljit_compiler *compiler, sljit_uw offset)
 {
-	put_label->next = NULL;
-	put_label->label = NULL;
-	put_label->addr = compiler->size - offset;
-	put_label->flags = 0;
-	if (compiler->last_put_label != NULL)
-		compiler->last_put_label->next = put_label;
+	jump->next = NULL;
+	jump->addr = compiler->size - offset;
+	jump->flags = JUMP_MOV_ADDR;
+	jump->u.label = NULL;
+	if (compiler->last_jump != NULL)
+		compiler->last_jump->next = jump;
 	else
-		compiler->put_labels = put_label;
-	compiler->last_put_label = put_label;
+		compiler->jumps = jump;
+	compiler->last_jump = jump;
 }
 
 static SLJIT_INLINE void set_const(struct sljit_const *const_, struct sljit_compiler *compiler)
@@ -1212,7 +1221,7 @@ static SLJIT_INLINE CHECK_RETURN_TYPE check_sljit_generate_code(struct sljit_com
 	jump = compiler->jumps;
 	while (jump) {
 		/* All jumps have target. */
-		CHECK_ARGUMENT(jump->flags & (JUMP_LABEL | JUMP_ADDR));
+		CHECK_ARGUMENT((jump->flags & JUMP_ADDR) || jump->u.label != NULL);
 		jump = jump->next;
 	}
 #endif
@@ -2952,14 +2961,14 @@ static SLJIT_INLINE CHECK_RETURN_TYPE check_sljit_emit_const(struct sljit_compil
 	CHECK_RETURN_OK;
 }
 
-static SLJIT_INLINE CHECK_RETURN_TYPE check_sljit_emit_put_label(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw)
+static SLJIT_INLINE CHECK_RETURN_TYPE check_sljit_emit_mov_addr(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw)
 {
 #if (defined SLJIT_ARGUMENT_CHECKS && SLJIT_ARGUMENT_CHECKS)
 	FUNCTION_CHECK_DST(dst, dstw);
 #endif
 #if (defined SLJIT_VERBOSE && SLJIT_VERBOSE)
 	if (SLJIT_UNLIKELY(!!compiler->verbose)) {
-		fprintf(compiler->verbose, "  put_label ");
+		fprintf(compiler->verbose, "  mov_addr ");
 		sljit_verbose_param(compiler, dst, dstw);
 		fprintf(compiler->verbose, "\n");
 	}
