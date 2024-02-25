@@ -1,0 +1,308 @@
+//DON'T DELETE THIS LINE
+
+//   KEEP A BACKUP OF THIS FILE IF YOU MODIFY IT!
+//   
+//   There yoy have a chance to boost your FPS,
+//   the more lines you insert, the more your FPS will be high.
+//   
+//   The downside of using this method is that every setting
+//   you will write here, will be static and so that 
+//   you will NOT BE ABLE RO MODIFY it "on-the-fly" in Retroarch anymore.
+//
+//   Lines have this format: #define PARAMETER VALUE
+//   where:
+//       * PARAMETER is the shader parameter as defined in config.inc
+//         (look for lines starting with #pragma there).
+//       * VALUE is the value you want to assign to that parameter.
+//         (it is the same you would assign to that within retroarch)
+//
+//   Notice, there is no equal sign, nor double quotes, so, eg:
+//       If you know that you will always use the bezel frame:
+//       #define DO_BEZEL 1.0
+//
+//       If you know you'll never alter the contrast:
+//       #define CONTRAST 0.0
+//
+//       If you know your curvature will never change:
+//       #define GEOM_WARP_X
+//
+//   You can disable a line by erasing it or,
+//   since everything after "//" is ignored,
+//   by prepending "//", eg:
+//
+//       // #define DO_BEZEL 1.0
+//   
+//   ...that's it, you just need to copy the values from the
+//   preset you like to the right setting here.
+//   
+//   
+  
+
+ 
+
+// #define DO_CCORRECTION  1.000000
+// #define IN_GLOW_POWER  1.500000
+// #define LUMINANCE  0.2
+// #define BRIGHTNESS  0.0
+// #define CONTRAST  0.0
+// #define TEMPERATURE  7700.000000
+// #define IN_GLOW_GAMMA  2.000000
+// #define GAMMA_OUT  0.4
+// #define COLOR_MONO_COLORIZE  0.0
+// #define COLOR_MONO_HUE1  0.25
+// #define COLOR_MONO_HUE2  0.3
+// #define COLOR_MONO_HUE_BIAS  0.0
+// #define SATURATION  1.0
+// #define VIBRANCE 0.0
+
+
+// #define DO_FXAA  0.0
+
+
+// #define DO_RF_NOISE  0.0
+// #define RF_NOISE_STRENGTH  0.05
+
+
+// #define DO_DEDITHER  0.0
+// #define DEDITHER_TRESHMAX  1.2
+// #define DEDITHER_STRENGTH  0.8
+// #define DEDITHER_STRENGTH2  0.0
+
+
+// #define DO_NTSC_ARTIFACTS  0.0
+// #define NTSC_MIX  0.5
+// #define NTSC_FILTER_WIDTH  17.0
+// #define NTSC_FILTER_SCF  5.30
+// #define NTSC_FILTER_FC  2.5
+// #define NTSC_PHASE_SHIFT  0.0
+// #define NTSC_ARTF_TRSH  0.1
+// #define NTSC_SHOW_ARTF_MASK  0.0
+// #define NTSC_ARTF_NOBLUR  0.0
+// #define NTSC_ARTF_NOBLEED  0.0
+// #define NTSC_ARTF_ZAP  0.0
+
+
+// #define DO_SAT_BLEED  0.0
+// #define SAT_BLEED_PAL  0.0
+// #define SAT_BLEED_STRENGTH  1.0
+// #define SAT_BLEED_SIZE  5.0
+// #define SAT_BLEED_FALLOFF  1.7
+
+
+// #define DO_PPERSISTENCE  0.0
+// #define PPERSISTENCE_START  0.9
+// #define PPERSISTENCE_END  0.5
+
+
+// #define DO_SHIFT_RGB  1.000000
+// #define OFFSET_STRENGTH  0.300000
+// #define SHIFT_R  -20.000000
+// #define SHIFT_G  0.000000
+// #define SHIFT_B  20.000000
+
+
+// #define DO_IN_GLOW  1.000000
+// #define IN_GLOW_BIAS  1.0
+// #define IN_GLOW_SPREAD  0.6
+// #define IN_GLOW_W  -0.80000
+// #define IN_GLOW_H  7.000000
+
+
+// #define TATE  1.0
+// #define RESSWITCH_GLITCH_SIZE 0.1
+
+// #define DO_PIXELGRID  1.000000
+// #define PIXELGRID_OVERMASK  1.00000
+// #define DO_PIXELGRID_W  1.0
+// #define PIXELGRID_SIZE_W  1.0
+// #define PIXELGRID_MUL_X  1.0
+// #define PIXELGRID_H_PRST  3.000000
+
+
+// #define PIXELGRID_H_COUNT  3.0
+// #define PIXELGRID_R_SHIFT  0.0
+// #define PIXELGRID_G_SHIFT  1.0
+// #define PIXELGRID_B_SHIFT  2.0
+// #define PIXELGRID_MIN_W  0.25
+// #define PIXELGRID_MAX_W  0.40
+// #define PIXELGRID_GAMMA_W  1.5
+// #define PIXELGRID_BASAL_GRID  0.02
+
+
+// #define DO_PIXELGRID_H  1.0
+// #define PIXELGRID_COREY_FAKE_SCAN  0.0
+// #define PIXELGRID_MIN_H  0.300000
+// #define PIXELGRID_MAX_H  0.700000
+// #define PIXELGRID_GAMMA_H  5.2
+// #define PIXELGRID_NO_INTERBLEED_H  0.0
+// #define PIXELGRID_H_ANTIMOIRE  0.0
+// #define PIXELGRID_OFFSET_CORE  0.00000
+// #define PIXELGRID_DECON_R_H  0.0
+// #define PIXELGRID_DECON_G_H  0.0
+// #define PIXELGRID_DECON_B_H  0.0
+// #define PIXELGRID_H_DEDOT  0.0
+
+// #define LABEL_INTERLACE  0.0
+// #define MIN_LINES_INTERLACED  380.0
+// #define PIXELGRID_INTR_DISABLE_Y  -1.0
+// #define LabelDescIntlScan1  0.0
+// #define LabelDescIntlScan2  0.0
+// #define PIXELGRID_INTR_FLICK_MODE  2.0
+// #define PIXELGRID_INTR_FLICK_POWR  0.25
+
+
+// #define PIXELGRID_Y_MASK  0.000000
+// #define PIXELGRID_Y_MASK_COORDS  0.000000
+// #define PIXELGRID_Y_MASK_HEIGHT  1.000000
+// #define PIXELGRID_Y_MASK_OFFSET  1.0
+// #define PIXELGRID_Y_MASK_SHIFT  0.150000
+// #define PIXELGRID_Y_MASK_STEEP  1.000000
+// #define PIXELGRID_Y_MASK_ON_WHITE  0.000000
+// #define PIXELGRID_Y_SPARK  1.000000
+
+// #define PIXELGRID_DO_SHADOWMASK  0.0
+// #define PIXELGRID_SHADOWMASK_H  0.0
+// #define PIXELGRID_SHADOWMASK_SHIFT 1.0
+
+// #define DO_DOT_MATRIX  0.0
+// #define DOT_M_G_STR  0.0
+// #define DOT_M_G_TRESH  1.1
+// #define DOT_M_G_BRT  0.0
+// #define DOT_M_G_SHARP  0.0
+// #define DOT_M_MBLUR_STR  0.45
+// #define DOT_M_MBLUR_MODE  0.0
+// #define DOT_M_SHADOW_STR  0.0
+// #define DOT_M_SHADOW_OFF  0.0
+// #define DOT_M_MULTIPLY  1.0
+
+
+// #define DO_HALO  1.000000
+// #define HALO_NO_PREGAIN  1.000000
+// #define HALO_POWER  0.500000
+// #define HALO_SHARPNESS  6.50000
+// #define HALO_GAMMA  2.000000
+// #define HALO_GAMMA_OUT  1.00000
+// #define HALO_VS_SCAN  0.7
+
+
+// #define DO_BLOOM  1.000000
+// #define BLOOM_MIX 0.40
+// #define BLOOM_SIZE  4.0
+// #define BLOOM_QUALITY  1.0
+// #define BLOOM_GAMMA  8.0
+// #define BLOOM_GAMMA_OUT  1.2
+// #define BLOOM_POWER  1.20
+// #define BLOOM_EYE_ADPT_SRT  0.6
+// #define BLOOM_EYE_INERTIA  750
+// #define BLOOM_OVER_WHITE  0.5
+// #define BLOOM_BYPASS  0.0
+
+
+// #define DO_CURVATURE  1.000000
+// #define GEOM_WARP_X  0.28
+// #define GEOM_WARP_Y  0.32
+// #define GEOM_CORNER_SIZE  0.010000
+// #define GEOM_CORNER_SMOOTH  200.000000
+
+
+// #define DO_BEZEL  1.0
+// #define BEZEL_USE_STRAIGHT  0.0
+// #define BEZEL_INNER_ZOOM  -0.01
+// #define BEZEL_FRAME_ZOOM  0.17
+// #define BEZEL_R  -0.3
+// #define BEZEL_G  -0.3
+// #define BEZEL_B  -0.3
+// #define BEZEL_CON  1.3
+// #define BEZEL_RFL_ZOOM  0.0
+// #define BEZEL_REFL_STRENGTH  0.65
+// #define BEZEL_RFL_BLR_SHD  -0.200000
+// #define BEZEL_ROUGHNESS  1.0
+// #define BEZEL_DIFFUSION_STR  0.0
+// #define BEZEL_SPCL_STRENGTH  0.5
+// #define BEZEL_CORNER_DARK  0.8
+
+
+// #define DO_BG_IMAGE  0.0
+// #define LABEL_WARNING1  1.0
+// #define BG_IMAGE_OVER  0.0
+// #define BG_IMAGE_OFFX  0.0
+// #define BG_IMAGE_OFFY  0.0
+// #define BG_IMAGE_ZOOM  1.0
+// #define BG_IMAGE_ROTATION  -1.0
+// #define BG_IMAGE_NIGHTIFY  0.0
+// #define BG_IMAGE_WRAP_MODE  0.0
+
+
+// #define DO_BACKDROP  0.0
+// #define BACKDROP_OFFX  0.0
+// #define BACKDROP_OFFY  0.0
+// #define BACKDROP_ZOOM  1.0
+
+
+// #define DO_AMBILIGHT  1.0
+// #define AMBI_STEPS  60.0
+// #define AMBI_FALLOFF  0.40
+// #define AMBI_POWER  1.8
+// #define AMBI_INT_OFFSET  0.07
+// #define AMBI_STRETCH  0.0
+// #define AMBI_STRETCH_VERTICAL  0.5
+// #define AMBI_GAMMA  1.3
+// #define AMBI_OVER_BEZEL  0.2
+// #define AMBI_OVER_BEZEL_SIZE  0.15
+// #define AMBI_BG_IMAGE_BLEND_MODE  0.0
+// #define AMBI_ADD_ON_BLACK  1.0
+// #define AMBI_BG_IMAGE_FORCE  0.0
+
+
+// #define DO_VIGNETTE  1.0
+// #define V_SIZE  1.08
+// #define V_POWER  1.00
+
+// #define DO_SPOT  1.0
+// #define S_POSITION_X  1.0
+// #define S_POSITION_Y  1.0
+// #define S_SIZE  0.4
+// #define S_POWER  0.05
+
+
+// #define DO_GLOBAL_SHZO  0.0
+// #define GLOBAL_OFFX  0.0
+// #define GLOBAL_OFFY  0.0
+// #define GLOBAL_ZOOM  2.0
+
+
+// #define ASPECT_X  0.0
+// #define ASPECT_Y  3.0
+
+
+// #define DO_DYNZOOM  1.0
+
+
+// #define DO_GAME_GEOM_OVERRIDE  0.0
+// #define GAME_GEOM_INT_SCALE  0.0
+// #define GAME_GEOM_INT_SCALE_MAX  10.0
+// #define GAME_GEOM_INT_SCALE_OVR 1.0
+
+
+// #define GAME_GEOM_ASPECT  0.0
+// #define GAME_GEOM_VSHIFT  0.0
+// #define GAME_GEOM_HSHIFT  0.0
+// #define GAME_GEOM_ZOOM  1.0
+// #define GAME_GEOM_OFF_FIX  0.0
+
+
+// #define DO_TILT  0.0
+// #define TILT_X  0.0
+// #define TILT_FOV  0.7
+// #define TILT_BEZEL_K  1.0
+
+
+// #define DELTA_RENDER_FORCE_REFRESH  4.0
+// #define DELTA_RENDER_CHECK_AREA  1.0
+
+
+// Developer reminder: bash script to partially convert a shader preset 
+// edit: obsolete and incomplete since it does not recur references.
+// for l in $(cat /koko/.config/retroarch/shaders/test.slangp |grep ^[A-Z] ) ; do p=$(echo $l|cut -d " " -f 1) ; v=$(echo $l | cut -d \" -f 2); echo \// #define $p $v; done
+
+//DONT DELETE THIS LINE

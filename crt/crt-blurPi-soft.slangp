@@ -1,0 +1,7 @@
+shaders = 1
+
+shader0 = shaders/crt-blurPi.slang
+filter_linear0 = true
+scale_type0 = viewport
+scale0 = 1.0
+alias0 = "PASS0"

@@ -1,0 +1,15 @@
+shaders = 3
+
+shader0 = shaders/2xsal-level2-hq.slang
+filter_linear0 = false
+scale_type0 = source
+scale0 = 4.0
+
+shader1 = shaders/2xsal-level2-pass2.slang
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+
+shader2 = ../../stock.slang
+filter_linear2 = true
+scale_type2 = viewport

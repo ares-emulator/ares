@@ -1,0 +1,52 @@
+shaders = "8"
+
+shader0 = ../shaders/support/linearize.slang
+scale_type0 = "source"
+scale0 = "1.000000"
+filter_linear0 = "false"
+alias0 = XbrSource
+
+shader1 = ../shaders/xbr-lv3-multipass/xbr-lv3-pass0.slang
+filter_linear1 = "false"
+scale_type1 = "source"
+scale1 = "1.000000"
+
+shader2 = ../shaders/xbr-lv3-multipass/xbr-lv3-pass1.slang
+filter_linear2 = "false"
+scale_type2 = "source"
+scale2 = "3.000000"
+alias2 = xbr3x
+
+shader3 = ../shaders/xbr-lv3-multipass/xbr-lv3-pass0.slang
+filter_linear3 = "false"
+scale_type3 = "source"
+scale3 = "1.000000"
+
+shader4 = ../shaders/xbr-lv3-multipass/xbr-lv3-pass1b.slang
+filter_linear4 = "false"
+scale_type4 = "source"
+scale4 = "3.000000"
+
+shader5 = ../shaders/support/b-spline-x.slang
+filter_linear5 = false
+scale_type_x5 = viewport
+scale_type_y5 = source
+scale5 = 1.0
+
+shader6 = ../shaders/support/b-spline-y.slang
+filter_linear6 = false
+scale_type6 = viewport
+scale6 = 1.0
+
+
+shader7 = ../shaders/support/delinearize.slang
+scale_type7 = "source"
+scale7 = "1.000000"
+filter_linear7 = "false"
+
+
+parameters = "SMALL_DETAILS;KA;XBR_EQ_THRESHOLD"
+
+SMALL_DETAILS = "1.0"
+KA = "0.35"
+XBR_EQ_THRESHOLD = "0.22"

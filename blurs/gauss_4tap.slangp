@@ -1,0 +1,13 @@
+shaders = 2
+
+shader0 = shaders/gauss_4tap/gauss_2tap_h.slang
+filter_linear0 = true
+scale_type0 = source
+scale0 = 1.0
+wrap_mode0 = mirrored_repeat
+
+shader1 = shaders/gauss_4tap/gauss_2tap_v.slang
+filter_linear1 = true
+scale_type1 = source
+scale1 = 1.0
+wrap_mode1 = mirrored_repeat

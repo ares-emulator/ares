@@ -1,0 +1,11 @@
+shaders = 1
+
+shader0 = shaders/crt-blurPi.slang
+filter_linear0 = false
+scale_type0 = viewport
+scale0 = 1.0
+alias0 = "PASS0"
+
+parameters = "blurGain;blurRadius"
+blurGain = "0.5"
+blurRadius = "1.5"

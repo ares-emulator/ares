@@ -1,0 +1,10 @@
+shaders = 1
+
+shader0 = shaders/imgborder.slang
+scale_type0 = viewport
+
+textures = BORDER
+BORDER = textures/pvm.png
+
+parameters = border_on_top
+border_on_top = 0.0

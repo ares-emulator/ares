@@ -1,0 +1,30 @@
+shaders = 4
+shader0 = ../shaders/imgborder-gbp.slang
+shader1 = ../../crt/shaders/tvout-tweaks.slang
+shader2 = ../../misc/shaders/image-adjustment.slang
+shader3 = ../../auto-box/box-center.slang
+
+
+scale_type_x0 = absolute
+scale_x0 = 608
+scale_type_y0 = absolute
+scale_y0 = 448
+
+scale_type_x1 = viewport
+scale_x1 = 1.000000
+scale_type_y1 = source
+scale_y1 = 1.000000
+
+filter_linear3 = false
+
+parameters = box_scale;location;in_res_x;in_res_y;TVOUT_RESOLUTION;TVOUT_COMPOSITE_CONNECTION;TVOUT_TV_COLOR_LEVELS
+box_scale = 2.000000
+location = 0.500000
+in_res_x = 240.000000
+in_res_y = 160.000000
+TVOUT_RESOLUTION = 480.000000
+TVOUT_COMPOSITE_CONNECTION = 0.000000
+TVOUT_TV_COLOR_LEVELS = 0.000000
+
+textures = BORDER
+BORDER = gameboy-player.png

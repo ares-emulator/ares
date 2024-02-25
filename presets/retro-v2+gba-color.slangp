@@ -1,0 +1,14 @@
+shaders = "2"
+
+shader0 = "../handheld/shaders/color/gba-color.slang"
+shader1 = "../handheld/shaders/retro-v2.slang"
+
+filter_linear0 = "false"
+scale_type0 = "source"
+scale0 = "1.000000"
+
+filter_linear1 = "false"
+
+parameters = "darken_screen;RETRO_PIXEL_SIZE"
+darken_screen = "1.000000"
+RETRO_PIXEL_SIZE = "0.840000"

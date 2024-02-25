@@ -1,0 +1,9 @@
+#reference "monitor-slotmask-bloom-bezel.slangp"
+
+AMBI_STEPS = "5.000000"
+AMBI_FALLOFF = "0.6"
+AMBI_POWER = "2.1"
+AMBI_BG_IMAGE_BLEND_MODE = "1.0"
+
+DO_BG_IMAGE = "1.000000"
+BG_IMAGE_OVER = "0.0"

@@ -1,0 +1,37 @@
+shaders = "7"
+
+shader0 = "shaders/support/linearize.slang"
+filter_linear0 = false
+scale_type0 = "source"
+scale0 = "1.000000"
+alias0 = XbrSource
+
+shader1 = "shaders/super-xbr/super-xbr-fast-pass0.slang"
+filter_linear1 = false
+scale_type1 = "source"
+scale1 = "1.000000"
+
+shader2 = "shaders/super-xbr/super-xbr-fast-pass1.slang"
+filter_linear2 = false
+scale_type2 = "source"
+scale2 = "2.000000"
+
+shader3 = "shaders/super-xbr/super-xbr-fast-pass2.slang"
+filter_linear3 = false
+scale_type3 = "source"
+scale3 = "1.000000"
+
+shader4 = "shaders/support/spline16-x.slang"
+filter_linear4 = false
+scale_type_x4 = "viewport"
+scale_type_y4 = "source"
+scale4 = "1.000000"
+
+shader5 = "shaders/support/spline16-y.slang"
+filter_linear5 = false
+scale_type5 = "viewport"
+scale5 = "1.000000"
+
+shader6 = "shaders/support/delinearize.slang"
+filter_linear6 = false
+

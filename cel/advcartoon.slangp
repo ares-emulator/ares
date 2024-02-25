@@ -1,0 +1,4 @@
+shaders = 1
+
+shader0 = shaders/advcartoon.slang
+filter_linear0 = false

@@ -1,0 +1,12 @@
+#reference "../Base_CRT_Presets/MBZ__1__ADV__GDV.slangp"
+
+gamma_out = "1.800001"
+post_br = "0.950000"
+
+no_scanlines = "1.000000"
+
+SHARPSMOOTHER_ON = "1.000000"
+smoot = "0.300000"
+
+g_cntrst = "-0.400000"
+g_sat = "-0.100000"

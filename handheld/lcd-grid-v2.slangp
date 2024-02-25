@@ -1,0 +1,22 @@
+shaders = 1
+
+shader0 = shaders/lcd-cgwg/lcd-grid-v2.slang
+filter_linear0 = false
+scale_type0 = "viewport"
+scale0 = "1.0"
+
+parameters = "RSUBPIX_R;RSUBPIX_G;RSUBPIX_B;GSUBPIX_R;GSUBPIX_G;GSUBPIX_B;BSUBPIX_R;BSUBPIX_G;BSUBPIX_B;gain;gamma;blacklevel;ambient;BGR"
+RSUBPIX_R = "0.750000"
+RSUBPIX_G = "0.000000"
+RSUBPIX_B = "0.000000"
+GSUBPIX_R = "0.000000"
+GSUBPIX_G = "0.750000"
+GSUBPIX_B = "0.000000"
+BSUBPIX_R = "0.000000"
+BSUBPIX_G = "0.000000"
+BSUBPIX_B = "0.750000"
+gain = "1.500000"
+gamma = "2.200000"
+blacklevel = "0.000000"
+ambient = "0.000000"
+BGR = "0.000000"

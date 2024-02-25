@@ -1,0 +1,103 @@
+shaders = 18
+
+#mipmap_input1 = true
+#mipmap_input2 = true
+#mipmap_input3 = true
+#mipmap_input4 = true
+#mipmap_input5 = true
+#mipmap_input6 = true
+#mipmap_input7 = true
+#mipmap_input8 = true
+#mipmap_input9 = true
+#mipmap_input10 = true
+#mipmap_input11 = true
+#mipmap_input12 = true
+#mipmap_input13 = true
+#mipmap_input14 = true
+#mipmap_input15 = true
+#mipmap_input16 = true
+#mipmap_input17 = true
+
+shader0 = cathode-retro-util-copy.slang
+alias0 = g_sourceTexture
+filter_linear0 = true
+
+shader1 = cathode-retro-util-downsample-2x-horz.slang
+filter_linear1 = true
+scale_x1 = 0.5
+
+shader2 = cathode-retro-util-downsample-2x-vert.slang
+filter_linear2 = true
+scale_y2 = 0.5
+
+shader3 = cathode-retro-util-tonemap-and-downsample-horz.slang
+filter_linear3 = true
+scale_x3 = 0.5
+
+shader4 = cathode-retro-util-tonemap-and-downsample-vert.slang
+filter_linear4 = true
+scale_y4 = 0.5
+alias4 = g_sourceTex
+
+shader5 = cathode-retro-util-gaussian-blur-horz.slang
+filter_linear5 = true
+
+shader6 = cathode-retro-util-gaussian-blur-vert.slang
+filter_linear6 = true
+alias6 = g_diffusionTexture
+
+shader7 = cathode-retro-generator-gen-phase.slang
+float_framebuffer7 = true
+alias7 = g_scanlinePhases
+scale_type7 = absolute
+scale_y7 = 1.0
+scale_x7 = 224.0
+filter_linear7 = true
+
+shader8 = ../../../stock.slang
+scale_type_y8 = absolute
+scale_y8 = 224.0
+
+shader9 = cathode-retro-generator-rgb-to-svideo-or-composite.slang
+float_framebuffer9 = true
+alias9 = rgb2yiq
+
+shader10 = cathode-retro-generator-apply-artifacts.slang
+filter_linear10 = true
+float_framebuffer10 = true
+alias10 = YIQ_tex
+
+shader11 = cathode-retro-decoder-composite-to-svideo.slang
+filter_linear11 = true
+float_framebuffer11 = true
+alias11 = IQ_separate
+
+shader12 = cathode-retro-decoder-svideo-to-modulated-chroma.slang
+float_framebuffer12 = true
+alias12 = g_modulatedChromaTexture
+
+shader13 = cathode-retro-decoder-svideo-to-rgb.slang
+float_framebuffer13 = true
+alias13 = yiq2rgb
+
+shader14 = cathode-retro-decoder-filter-rgb.slang
+float_framebuffer14 = true
+alias14 = g_currentFrameTexture
+
+shader15 = cathode-retro-crt-generate-masks.slang
+alias15 = g_maskTexture
+#mipmap_input15 = false
+wrap_mode15 = repeat
+scale_type15 = viewport
+float_framebuffer15 = true
+
+shader16 = cathode-retro-crt-generate-screen-texture.slang
+alias16 = g_screenMaskTexture
+#mipmap_input16 = false
+filter_linear16 = true
+wrap_mode16 = clamp_to_edge
+float_framebuffer16 = true
+
+shader17 = cathode-retro-crt-rgb-to-crt.slang
+#mipmap_input17 = false
+filter_linear17 = true

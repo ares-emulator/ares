@@ -1,0 +1,353 @@
+shaders = 29
+
+shader0 = ../../../shaders/guest/extras/hsm-drez-none.slang
+filter_linear0 = false
+srgb_framebuffer0 = true
+scale_type0 = source
+scale_x0 = 1
+scale_y0 = 1
+alias0 = "DerezedPass"
+
+shader1 = ../../../shaders/base/cache-info-glass-params.slang
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+alias1 = "InfoCachePass"
+
+shader2 = ../../../shaders/base/text-std-glass.slang
+filter_linear2 = false
+float_framebuffer2 = true
+scale_type2 = source
+scale2 = 1.0
+alias2 = "TextPass"
+
+shader3 = ../../../shaders/guest/extras/hsm-fetch-drez-output.slang
+filter_linear3 = false
+srgb_framebuffer3 = true
+scale_type3 = source
+scale_x3 = 1
+scale_y3 = 1
+
+shader4 = ../../../shaders/fxaa/fxaa.slang
+float_framebuffer4 = "true"
+alias4 = "DeditherPass"
+
+shader5 = ../../../shaders/base/intro.slang
+filter_linear5 = false
+float_framebuffer5 = true
+scale_type5 = source
+scale5 = 1.0
+alias5 = "IntroPass"
+
+shader6 = ../../../shaders/base/stock.slang
+alias6 = "PreCRTPass"
+
+shader7 = ../../../shaders/guest/hsm-afterglow0.slang
+filter_linear7 = true
+scale_type7 = source
+scale7 = 1.0
+alias7 = "AfterglowPass"
+
+shader8 = ../../../shaders/guest/hsm-pre-shaders-afterglow.slang
+filter_linear8 = true
+scale_type8 = source
+mipmap_input8 = true
+scale8 = 1.0
+
+# Color Correction with Dogway's awesome Grade shader
+# Grade is after Afterglow so that brightening the black level does not break the afterglow
+shader9 = ../../../shaders/dogway/hsm-grade.slang
+filter_linear9 = false
+scale_type9 = source
+scale9 = 1.0
+alias9 = "ColorCorrectPass"
+
+shader10 = ../../../shaders/base/stock.slang
+alias10 = "PrePass0"
+
+shader11 = ../../../shaders/guest/ntsc/hsm-ntsc-pass1.slang
+filter_linear11 = false
+float_framebuffer11 = true
+scale_type_x11 = source
+scale_type_y11 = source
+scale_x11 = 4.0
+scale_y11 = 1.0
+frame_count_mod11 = 2
+alias11 = NPass1
+
+shader12 = ../../../shaders/guest/ntsc/hsm-ntsc-pass2.slang
+float_framebuffer12 = true
+filter_linear12 = true
+scale_type12 = source
+scale_x12 = 0.5
+scale_y12 = 1.0
+
+shader13 = ../../../shaders/guest/ntsc/hsm-ntsc-pass3.slang
+filter_linear13 = true
+scale_type13 = source
+scale_x13 = 1.0
+scale_y13 = 1.0
+
+shader14 =  ../../../shaders/guest/hsm-custom-fast-sharpen-ntsc.slang
+filter_linear14 = true
+scale_type14 = source
+scale_x14 = 1.0
+scale_y14 = 1.0
+
+shader15 = ../../../shaders/base/stock.slang
+float_framebuffer15 = true
+alias15 = "PrePass"
+
+shader16 = ../../../shaders/guest/hsm-avg-lum.slang
+filter_linear16 = true
+scale_type16 = source
+scale16 = 1.0
+mipmap_input16 = true
+float_framebuffer16 = true
+alias16 = "AvgLumPass"
+
+# Pass referenced by subsequent blurring passes and crt pass
+shader17 = ../../../shaders/guest/hsm-interlace.slang
+filter_linear17 = true
+scale_type17 = source
+scale17 = 1.0
+float_framebuffer17 = true
+alias17 = "LinearizePass"
+feedback_pass = "0"
+
+# Sony Megatron Colour Video Monitor by Major Pain The Cactus
+shader18 = "../../../shaders/megatron/crt-sony-megatron-source-pass.slang"
+filter_linear18 = "false"
+scale_type18 = "source"
+scale18 = "1.0"
+wrap_mode18 = "clamp_to_border"
+mipmap_input18 = "false"
+alias18 = "SourceSDR"
+float_framebuffer18 = "true"
+
+shader19 = "../../../shaders/megatron/crt-sony-megatron-hdr-pass.slang"
+filter_linear19 = "false"
+scale_type19 = "source"
+scale19 = "1.0"
+wrap_mode19 = "clamp_to_border"
+mipmap_input19 = "false"
+alias19 = "SourceHDR"
+float_framebuffer19 = "true"
+
+shader20 = "../../../shaders/megatron/crt-sony-megatron.slang"
+filter_linear20 = "false"
+wrap_mode20 = "clamp_to_border"
+mipmap_input20 = "false"
+scale_type20 = "viewport"
+float_framebuffer20 = "true"
+alias20 = "CRTPass"
+
+shader21 = ../../../shaders/base/post-crt-prep-glass.slang
+mipmap_input21 = true
+scale_type21 = viewport
+float_framebuffer21 = true
+alias21 = "PostCRTPass"
+
+# Reduce Resolution  ----------------------------------------------------------------
+#      Reduce the resolution to a small static size regardless of final resolution
+#      Allows consistent look and faster at different final resolutions for blur
+#      Mipmap option allows downscaling without artifacts
+shader22 = ../../../shaders/base/linearize-crt-hdr.slang
+mipmap_input22 = true
+filter_linear22 = true
+scale_type22 = absolute
+# scale_x22 = 480
+# scale_y22 = 270
+# scale_x22 = 960
+# scale_y22 = 540
+scale_x22 = 800
+scale_y22 = 600
+float_framebuffer22 = true
+alias22 = "BR_MirrorLowResPass"
+
+# Add Blur for the Reflection (Horizontal) ----------------------------------------------------------------
+shader23 = ../../../shaders/base/blur-outside-screen-horiz.slang
+mipmap_input23 = true
+filter_linear23 = true
+float_framebuffer23 = true
+
+# Add Blur for the Reflection (Vertical) ----------------------------------------------------------------
+shader24 = ../../../shaders/base/blur-outside-screen-vert.slang
+filter_linear24 = true
+float_framebuffer24 = true
+alias24 = "BR_MirrorBlurredPass"
+
+# Reduce resolution ----------------------------------------------------------------
+# Reduced to a very small amount so we can create a blur which will create a glow from the screen
+#      Mipmap option allows smoother downscaling
+shader25 = ../../../../../blurs/shaders/royale/blur9x9.slang
+mipmap_input25 = true
+filter_linear25 = true
+scale_type25 = absolute
+scale_x25 = 128
+scale_y25 = 128
+float_framebuffer25 = true
+alias25 = "BR_MirrorReflectionDiffusedPass"
+
+# Add Diffused glow all around the screen ----------------------------------------------------------------
+#      Blurred so much that it's non directional
+#      Mipmap option allows downscaling without artifacts
+shader26 = ../../../../../blurs/shaders/royale/blur9x9.slang
+mipmap_input26 = true
+filter_linear26 = true
+scale_type26 = absolute
+scale_x26 = 12
+scale_y26 = 12
+float_framebuffer26 = true
+alias26 = "BR_MirrorFullscreenGlowPass"
+
+# Bezel Reflection ----------------------------------------------------------------
+shader27 = ../../../shaders/base/reflection-glass-hdr.slang
+scale_type27 = viewport
+alias27 = "ReflectionPass"
+
+# Combine Passes ----------------------------------------------------------------
+shader28 = ../../../shaders/base/output-hdr.slang
+alias28 = "OutputPass"
+
+# Textures Glass
+# Define textures to be used by the different passes
+textures = "SamplerLUT1;SamplerLUT2;SamplerLUT3;SamplerLUT4;IntroImage;ScreenPlacementImage;TubeDiffuseImage;TubeColoredGelImage;TubeShadowImage;TubeStaticReflectionImage;BackgroundImage;BackgroundVertImage;ReflectionMaskImage;FrameTextureImage;CabinetGlassImage;DeviceImage;DeviceVertImage;DeviceLEDImage;DecalImage;NightLightingImage;NightLighting2Image;LEDImage;TopLayerImage;"
+
+SamplerLUT1 = ../../../shaders/guest/lut/trinitron-lut.png
+SamplerLUT1_linear = true 
+SamplerLUT2 = ../../../shaders/guest/lut/inv-trinitron-lut.png
+SamplerLUT2_linear = true 
+SamplerLUT3 = ../../../shaders/guest/lut/nec-lut.png
+SamplerLUT3_linear = true
+SamplerLUT4 = ../../../shaders/guest/lut/ntsc-lut.png
+SamplerLUT4_linear = true
+
+IntroImage = ../../../shaders/textures/IntroImage_MegaBezelLogo.png
+IntroImage_linear = true
+IntroImage_mipmap = 1
+
+ScreenPlacementImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+ScreenPlacementImage_linear = false
+
+TubeStaticReflectionImage = ../../../shaders/textures/TubeGlassOverlayImageCropped_1440x1080.png
+TubeStaticReflectionImage_linear = true
+TubeStaticReflectionImage_mipmap = 1
+
+TubeDiffuseImage = ../../../shaders/textures/Tube_Diffuse_2390x1792.png
+TubeDiffuseImage_linear = true
+TubeDiffuseImage_mipmap = 1
+
+TubeShadowImage = ../../../shaders/textures/Tube_Shadow_1600x1200.png
+TubeShadowImage_linear = true
+TubeShadowImage_mipmap = 1
+
+TubeColoredGelImage = ../../../shaders/textures/Colored_Gel_Rainbow.png
+TubeColoredGelImage_linear = true
+TubeColoredGelImage_mipmap = 1
+
+ReflectionMaskImage = ../../../shaders/textures/Placeholder_White_16x16.png
+ReflectionMaskImage_linear = true
+ReflectionMaskImage_mipmap = 1
+
+FrameTextureImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+FrameTextureImage_linear = true
+FrameTextureImage_mipmap = 1
+
+BackgroundImage = ../../../shaders/textures/TopLayerImageGradient_3840x2160.png
+BackgroundImage_linear = true
+BackgroundImage_mipmap = 1
+
+BackgroundVertImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+BackgroundVertImage_linear = true
+BackgroundVertImage_mipmap = 1
+
+CabinetGlassImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+CabinetGlassImage_linear = true
+CabinetGlassImage_mipmap = 1
+
+DeviceImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+DeviceImage_linear = true
+DeviceImage_mipmap = 1
+
+DeviceVertImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+DeviceVertImage_linear = true
+DeviceVertImage_mipmap = 1
+
+DeviceLEDImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+DeviceLEDImage_linear = true
+DeviceLEDImage_mipmap = 1
+
+DecalImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+DecalImage_linear = true
+DecalImage_mipmap = 1
+
+NightLightingImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+NightLightingImage_linear = true
+NightLightingImage_mipmap = 1
+
+NightLighting2Image = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+NightLighting2Image_linear = true
+NightLighting2Image_mipmap = 1
+
+LEDImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+LEDImage_linear = true
+LEDImage_mipmap = 1
+
+TopLayerImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
+TopLayerImage_linear = true
+TopLayerImage_mipmap = 1
+
+# Use for matching vanilla GDV-Advanced
+# HSM_ASPECT_RATIO_MODE = 6
+# HSM_CURVATURE_MODE = 0
+
+# Parameters
+HSM_TUBE_BLACK_EDGE_SHARPNESS = "90.0000"
+HSM_TUBE_BLACK_EDGE_THICKNESS = -7
+HSM_BG_OPACITY = "1.000000"
+HSM_GLASS_BORDER_ON = "1.000000"
+HSM_BZL_WIDTH = 3000
+HSM_BZL_HEIGHT = 3000
+HSM_BZL_INNER_EDGE_THICKNESS = 350
+HSM_BZL_INNER_EDGE_SHARPNESS = 30
+HSM_BZL_INNER_CORNER_RADIUS_SCALE = "100.000000"
+HSM_BZL_INNER_EDGE_SHADOW = "0.000000"
+HSM_FRM_OPACITY = "100.000000"
+HSM_REFLECT_GLOBAL_AMOUNT = "35.00000"
+HSM_REFLECT_GLOBAL_GAMMA_ADJUST = "0.900000"
+HSM_REFLECT_BEZEL_INNER_EDGE_AMOUNT = "60.0000"
+HSM_REFLECT_BEZEL_INNER_EDGE_FULLSCREEN_GLOW = "40.0000"
+HSM_REFLECT_FULLSCREEN_GLOW = "30.000000"
+HSM_REFLECT_FULLSCREEN_GLOW_GAMMA = "1.500000"
+HSM_REFLECT_FADE_AMOUNT = "20.0000"
+HSM_REFLECT_RADIAL_FADE_WIDTH = "500.000000"
+HSM_REFLECT_RADIAL_FADE_HEIGHT = "300.000000"
+HSM_REFLECT_LATERAL_OUTER_FADE_POSITION = "500.000000"
+HSM_REFLECT_CORNER_FADE = "0.000000"
+HSM_REFLECT_BLUR_MIN = "30.0000"
+HSM_REFLECT_BLUR_MAX = "60.0000"
+HSM_REFLECT_NOISE_AMOUNT = "100.000000"
+HSM_REFLECT_NOISE_SAMPLES = "4.000000"
+HSM_REFLECT_NOISE_SAMPLE_DISTANCE = "15.0000"
+HSM_REFLECT_NOISE_SAMPLE_DISTANCE = "15.0000"
+HSM_BG_BRIGHTNESS = "0.000000"
+HSM_SCREEN_VIGNETTE_STRENGTH = "20.000000"
+HSM_SCREEN_VIGNETTE_POWER = "4.000000"
+HSM_SCREEN_VIGNETTE_IN_REFLECTION = "0.000000"
+
+g_vignette = "0.0"
+
+# Sony Megatron Color Monitor Parameters
+hcrt_hdr = "0.000000"
+
+HSM_INT_SCALE_MODE = "1.000000"
+HSM_CRT_CURVATURE_SCALE = "0.000000"
+HSM_GLOBAL_GRAPHICS_BRIGHTNESS = "100.000000"
+HSM_REFLECT_GLOBAL_AMOUNT = "7.000000"
+
+# GDV NTSC Parameters
+GAMMA_INPUT = 2.0
+gamma_out = 1.95
+h_sharp = "15.000000"
+s_sharp = "1.500000"

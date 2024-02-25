@@ -1,0 +1,98 @@
+shaders = 12
+
+shader0 = ../stock.slang
+filter_linear0 = false
+wrap_mode0 = mirrored_repeat
+scale_type0 = viewport
+scale0 = 1.0
+alias0 = "PreBloomPass"
+
+shader1 = ./shaders/magicbloom/magicbloom_blur_pass_1.slang
+filter_linear1 = true
+mipmap_input1 = true
+wrap_mode1 = mirrored_repeat
+scale_type1 = absolute
+scale_x1 = 1920
+scale_y1 = 1080
+alias1 = "tMagicBloom_1"
+
+shader2 = ./shaders/magicbloom/magicbloom_blur_pass_2.slang
+filter_linear2 = true
+mipmap_input2 = true
+wrap_mode2 = mirrored_repeat
+scale_type2 = source
+scale2 = 0.75
+alias2 = "tMagicBloom_2"
+
+shader3 = ./shaders/magicbloom/magicbloom_blur_pass_3.slang
+filter_linear3 = true
+mipmap_input3 = true
+wrap_mode3 = mirrored_repeat
+scale_type3 = source
+scale3 = 0.75
+alias3 = "tMagicBloom_3"
+
+shader4 = ./shaders/magicbloom/magicbloom_blur_pass_4.slang
+filter_linear4 = true
+mipmap_input4 = true
+wrap_mode4 = mirrored_repeat
+scale_type4 = source
+scale4 = 0.75
+alias4 = "tMagicBloom_4"
+
+shader5 = ./shaders/magicbloom/magicbloom_blur_pass_5.slang
+filter_linear5 = true
+mipmap_input5 = true
+wrap_mode5 = mirrored_repeat
+scale_type5 = source
+scale5 = 0.75
+alias5 = "tMagicBloom_5"
+
+shader6 = ./shaders/magicbloom/magicbloom_blur_pass_6.slang
+filter_linear6 = true
+mipmap_input6 = true
+wrap_mode6 = mirrored_repeat
+scale_type6 = source
+scale6 = 0.5
+alias6 = "tMagicBloom_6"
+
+shader7 = ./shaders/magicbloom/magicbloom_blur_pass_7.slang
+filter_linear7 = true
+mipmap_input7 = true
+wrap_mode7 = mirrored_repeat
+scale_type7 = source
+scale7 = 0.5
+alias7 = "tMagicBloom_7"
+
+shader8 = ./shaders/magicbloom/magicbloom_blur_pass_8.slang
+filter_linear8 = true
+mipmap_input8 = true
+wrap_mode8 = mirrored_repeat
+scale_type8 = source
+scale8 = 0.5
+alias8 = "tMagicBloom_8"
+
+shader9 = ./shaders/magicbloom/magicbloom_get_small_luma.slang
+filter_linear9 = true
+mipmap_input9 = true
+scale_type9 = absolute
+scale_x9 = 256
+scale_y9 = 256
+alias9 = "tMagicBloom_Small"
+
+shader10 = ./shaders/magicbloom/magicbloom_get_adapt.slang
+filter_linear10 = true
+mipmap_input10 = true
+scale_type10 = source
+scale10 = 1.0
+alias10 = "tMagicBloom_Adapt"
+
+shader11 = ./shaders/magicbloom/magicbloom_blend.slang
+filter_linear11 = true
+mipmap_input11 = true
+scale_type11 = viewport
+scale11 = 1.0
+
+textures = "tMagicBloom_Dirt"
+
+tMagicBloom_Dirt = "./shaders/magicbloom/MagicBloom_Dirt.png"

@@ -1,0 +1,4 @@
+shaders = 1
+
+shader0 = shaders/newpixie-mini/newpixie-mini.slang
+filter_linear1 = true

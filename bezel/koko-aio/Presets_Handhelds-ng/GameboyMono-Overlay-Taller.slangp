@@ -1,0 +1,12 @@
+#reference "GameboyMono-Overlay.slangp"
+
+BG_IMAGE_OFFY = "-0.115000"
+BG_IMAGE_ZOOM = "1.368502"
+	
+
+DO_GAME_GEOM_OVERRIDE = "1.000000"
+	GAME_GEOM_VSHIFT = "-2.869998"
+	GAME_GEOM_ZOOM = "0.660000"
+	
+
+	

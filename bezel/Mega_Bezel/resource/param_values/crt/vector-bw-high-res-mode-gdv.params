@@ -1,0 +1,4 @@
+#reference "vector-color-high-res-mode-gdv.params"
+
+shadowMask = "-1.000"
+glow = "0.150000"

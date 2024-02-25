@@ -1,0 +1,8 @@
+shaders = 2
+
+shader0 = shaders/adaptive-sharpen-pass1.slang
+filter_linear0 = false
+scale_type0 = source
+shader1 = shaders/adaptive-sharpen-pass2.slang
+filter_linear1 = false
+scale_type0 = source

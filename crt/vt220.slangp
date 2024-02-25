@@ -1,0 +1,37 @@
+shaders = 6
+
+shader0 = ../stock.slang
+alias0 = vt220_refpass
+
+shader1 = ../stock.slang
+alias1 = PrePass0
+
+shader2 = shaders/guest/advanced/ntsc/ntsc-pass1.slang
+alias2 = NPass1
+scale_type_x2 = source
+scale_type_y2 = source
+scale_x2 = 4.0
+scale_y2 = 1.0
+float_framebuffer2 = true
+filter_linear2 = false
+
+shader3 = shaders/guest/advanced/ntsc/ntsc-pass2.slang
+filter_linear3 = true
+float_framebuffer3 = true
+scale_type3 = source
+scale_x3 = 0.5
+scale_y3 = 1.0
+
+shader4 = shaders/guest/advanced/ntsc/ntsc-pass3.slang
+filter_linear4 = true
+scale_type4 = source
+scale_x4 = 1.0
+scale_y4 = 1.0
+
+shader5 = shaders/vt220/vt220.slang
+mipmap_input5 = true
+wrap_mode5 = mirrored_repeat
+scale_type5 = viewport
+
+parameters = "quality"
+quality = 1.0

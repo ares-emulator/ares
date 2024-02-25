@@ -1,0 +1,4 @@
+#reference megatron-base.params
+
+HSM_GLOBAL_GRAPHICS_BRIGHTNESS = "20.000000"
+hcrt_hdr = "1.000000"

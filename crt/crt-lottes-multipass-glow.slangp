@@ -1,0 +1,47 @@
+shaders = "7"
+
+shader0 = ../stock.slang
+alias0 = glow_trails_refpass
+
+shader1 = "shaders/crt-easymode-halation/linearize.slang"
+filter_linear1 = "true"
+srgb_framebuffer1 = "true"
+scale_type_x1 = "source"
+scale_x1 = "1.000000"
+scale_type_y1 = "source"
+scale_y1 = "1.000000"
+alias1 = ORIG_LINEARIZED
+
+shader2 = "shaders/crt-easymode-halation/blur_horiz.slang"
+filter_linear2 = "false"
+srgb_framebuffer2 = "true"
+scale_type_x2 = "source"
+scale_x2 = "1.000000"
+scale_type_y2 = "source"
+scale_y2 = "1.000000"
+
+shader3 = "shaders/crt-easymode-halation/blur_vert.slang"
+filter_linear3 = "false"
+srgb_framebuffer3 = "true"
+scale_type_x3 = "source"
+scale_x3 = "1.000000"
+scale_type_y3 = "source"
+scale_y3 = "1.000000"
+
+shader4 = "shaders/crt-easymode-halation/threshold.slang"
+filter_linear4 = "false"
+srgb_framebuffer4 = "true"
+scale_type_x4 = "source"
+scale_x4 = "1.000000"
+scale_type_y4 = "source"
+scale_y4 = "1.000000"
+alias4 = GlowPass
+
+shader5 = "shaders/crt-lottes-multipass/bloompass.slang"
+filter_linear5 = "true"
+alias5 = BloomPass
+srgb_framebuffer5 = true
+
+shader6 = "shaders/crt-lottes-multipass/scanpass-glow.slang"
+filter_linear6 = "true"
+scale_type6 = viewport

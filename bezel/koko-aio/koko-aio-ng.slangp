@@ -1,0 +1,300 @@
+#    Koko-aio shader is meant to be an all-in one crt shader.
+#    It can be configured with many parameters, so that can be
+#    scaled to run on even on modest gpus while still developed to
+#    run with heavier presets on at least Haswell+ iGpus.
+#    It is not meant to simulate the internal behaviour of CRT displays,
+#    but to give users the parameters to make their monitors to look similar.
+#    Several presets are included.
+
+#    Actually it provides emulation for:
+#        scanlines, screenlines, RGB vertical masks, horizontal slot masks,
+#        glowing, haloing, blooming, gamma and SATURATION correction,pixel_outi        
+#        black frame insertions, interlace emulation, antialiasing.
+
+#    External code by:
+#    * Nvidia (FXAA)
+
+
+
+    
+# Bezel texture contains the following infomations:
+#   - The red channel represents the luminance information
+#   - The green channel represents the highlights
+#   - The alpha channel in the inner frame represents the part of the bezel that will be filled by the game content
+#   - The blue channel represents the part of the bezel that will be filled by the game reflection.
+
+
+                textures = "monitor_body_curved;monitor_body_straight;bg_under;bg_over;backdrop"
+                
+            monitor_body_curved = "textures/monitor_body_curved.png"
+     monitor_body_curved_linear = "true"
+  # Does this work?
+  monitor_body_curved_wrap_mode = "clamp_to_edge"
+     monitor_body_curved_mipmap = "true"
+
+            monitor_body_straight = "textures/monitor_body_straight.png"
+     monitor_body_straight_linear = "true"
+  # Does this work?
+  monitor_body_straight_wrap_mode = "clamp_to_edge"
+     monitor_body_straight_mipmap = "true"
+     
+                bg_under = "textures/background_under.png"
+         bg_under_linear = "true"
+      bg_under_wrap_mode = "mirrored_repeat"
+         bg_under_mipmap = "false"
+         
+                 bg_over = "textures/background_over.png"
+          bg_over_linear = "true"
+       bg_over_wrap_mode = "mirrored_repeat"
+          bg_over_mipmap = "false"
+
+        #This is for support for arcade backdrop pictures, enable it in config.inc.
+                backdrop = "textures/boothill.jpg"
+         backdrop_linear = "true"
+      backdrop_wrap_mode = "mirrored_repeat"
+         backdrop_mipmap = "true"
+
+shaders = 17
+
+
+# The very first pass emulates:
+# Ntsc color artifacting
+# Color tools
+# Ghosting
+# Phosphor persistance
+# Also, it carries a series of debug patterns that need to be activated by modifying 
+# some #defines in the pass itself
+           shader0 = shaders-ng/colortools_and_ntsc_pass.slang
+            alias0 = "colortools_and_ntsc_pass"
+#float_framebuffer needed by phosphor persistance
+float_framebuffer0 = true
+    filter_linear0 = false
+       scale_type0 = source
+            scale0 = 1.0
+        wrap_mode0 = "clamp_to_border"
+
+
+        
+# This pass emulates the flickering observed on crts when the input signal is interlaced
+# and there is high brightness difference between adiacent scanlines.
+# This pass is able to generate mipmaps because the next pass has mipmap_input true.
+#
+# Note that the wrap_mode is set to "mirrored_repeat".
+# This allow to cheaply generate a mirrored image that will be used later on to
+# draw reflections on the bezel.
+#
+# Also, it upscales the input signal to 2X.
+# This is needed because FXAA, the glow and the halo pass works best at at least 640x480 resolution.
+# Note that this is needed only for lowres content, but if the input signal is already at that
+# size, there is no need to scale to 2x, and it is possible to gain performance by turning
+# scale_x1 and scale_y1 from 2.0 to 1.0.
+#
+# A special note for P-UAE core (Commodore Amiga), is needed, because it outputs by default to
+# 720 pixel width and about 280p; this means that for P-UAE you can use scale_x1 = 1.0
+# and only scale_y1 = 2.0 is needed.
+# As an alternative option you can configure P-UAE to always output to low resolution for x and y
+# But this way you loose the emulation for hires content (not much games uses it anyway).
+           shader1 = shaders-ng/flick_and_noise.slang
+            alias1 = "flick_and_noise_pass"
+    filter_linear1 = false
+       scale_type1 = source
+          scale_x1 = 2.0
+          scale_y1 = 2.0  
+        wrap_mode1 = "mirrored_repeat"
+
+
+
+# Nvidia fxaa pass:
+# works good for "SD" resolutions
+# FXAA don't really need any mipmap, but since mipmaps from first_pass are needed by
+# some subsequent passes, specify that FXAA_pass wants mipmaps
+# makes first_pass mipmaps available to everyone.
+# Even if theoretically not needed, texture() occurrence in FXAA_pass needed to be switched 
+# to textureLod(..,0.0) or it acts weird, don't ask me why.
+           shader2 = shaders-ng/fxaa.slang
+            alias2 = "FXAA_pass"
+    filter_linear2 = true
+       scale_type2 = source
+            scale2 = 1.0
+     mipmap_input2 = true
+      //this *has* to be clamp_to_border because  specular reflections need to turn to black
+      //if geometry content override is shifting/zooming out the image.
+        wrap_mode2 = "clamp_to_border"
+
+        
+
+# This pass emulates NTSC/PAL composite color bleeding and deconvergence
+# deconvergence should really be applied in th final pass, but it is too heavy there.
+# This pass also apply the input gamma needed for glow pass.
+           shader3 = shaders-ng/shift_and_bleed.slang
+            alias3 = "shift_and_bleed_pass"
+    filter_linear3 = true
+            scale3 = 1.0
+       scale_type3 = source
+float_framebuffer3 = true
+     mipmap_input3 = false
+        wrap_mode3 = "mirrored_repeat"
+
+        
+        
+# Blur and/or glows and/or sharpens the image as requested 
+# This passes aims to simulate the signal input power.
+           shader4 = shaders-ng/in_glow_x.slang
+            alias4 = "in_glow_pass_x"
+    filter_linear4 = true
+            scale4 = 1.0
+       scale_type4 = source    
+float_framebuffer4 = true
+//This has to be mipmap true and mirrored true
+//mipmaps and mirrored are used to emulate light diffusion from reflection blur pass
+//mipmaps are also used by deltarender
+        wrap_mode4 = "mirrored_repeat"
+     mipmap_input4 = true
+        
+           shader5 = shaders-ng/in_glow_y.slang
+            alias5 = "in_glow_pass"
+    filter_linear5 = true
+            scale5 = 1.0
+       scale_type5 = source    
+float_framebuffer5 = true
+        wrap_mode5 = "mirrored_repeat"
+            
+          
+        
+# This essentially is the same as glowing by a code point of view.
+# But the result of this pass will be added (+) to the input signal
+# in the final pass.
+           shader6 = shaders-ng/halo_pre_gamma.slang
+            alias6 = "halo_pre_gamma_pass"
+    filter_linear6 = true
+            scale6 = 1.0
+       scale_type6 = source
+float_framebuffer6 = true
+     mipmap_input6 = false
+        wrap_mode6 = "clamp_to_edge"
+        
+           shader7 = shaders-ng/halo.slang
+            alias7 = "halo_pass"
+    filter_linear7 = true
+            scale7 = 1.0
+       scale_type7 = source
+float_framebuffer7 = true
+     mipmap_input7 = false
+        wrap_mode7 = "clamp_to_edge"
+
+
+
+# Get the average luminance needed by ambilight here, because:
+#   * mipmap_input only works on "Source" texture
+#   * the following pass does not use the previous one 
+#   * the previous pass represents scene changes.
+
+#   The rgb channels of the following pass contains luminance info
+#   Used by the bezel code to light up the bezel corners.
+#   The alpha channel contains the sum/3.0 of rgb channels
+#   used to detect scene changes.
+
+# This pass computes the average luminance of the image
+# by grabbing a mipmap from first_pass.
+# It stores at:
+# alpha@coords 0.25,0.25 at reduced sampling to aid ambient light scene change detection
+# alpha@coords 0.75,0.75 temporally smoother for use with bloom exposure and dynamic zoom
+# rgb: it puts a small mipmap from first_pass that will be used to light-up the bezel highlights
+# alpha@other coords: simple continuous sampling used to modulate bezel highlights strength.
+               shader8 = shaders-ng/avglum_pass.slang
+                alias8 = "avglum_pass"
+        filter_linear8 = true
+           scale_type8 = source
+                scale8 = 0.5
+            wrap_mode8 = "mirrored_repeat"
+         mipmap_input8 = false
+
+         
+         
+# The following passes will blur the mirrored part of first_pass
+# to emulate soft bezel reflections.
+
+               shader9 = shaders-ng/reflection_blur_pre.slang
+                alias9 = "reflected_blurred_pass_pre"
+        filter_linear9 = true
+           scale_type9 = source
+                scale9 = 1.0
+            wrap_mode9 = "clamp_to_border"
+
+            
+               shader10 = shaders-ng/reflection_blur.slang
+                alias10 = "reflected_blurred_pass"
+        filter_linear10 = true
+           scale_type10 = source
+                scale10 = 1.0
+         mipmap_input10 = false
+            wrap_mode10 = "mirrored_repeat"
+
+# In the following passes we emulate bloom effect.
+# Since the radius has to be high, we sample first_pass
+# and then do other blur passes at reduced size to keep it fast.
+# Every blur pass samples radially around the center and offsets
+# the starting point in every subsequent pass.
+               shader11 = shaders-ng/bloom_pass_1.slang
+                alias11 = "bloom_pass_1"
+        filter_linear11 = true
+           scale_type11 = source
+                scale11 = 1.0
+            wrap_mode11 = "mirrored_repeat"
+    
+    
+               shader12 = shaders-ng/bloom_pass_2.slang
+                alias12 = "bloom_pass_2"
+        filter_linear12 = true
+           scale_type12 = source
+                scale12 = 0.5
+            wrap_mode12 = "clamp_to_edge"
+
+            
+               shader13 = shaders-ng/bloom_pass_3.slang
+                alias13 = "bloom_pass_3"
+        filter_linear13 = true
+           scale_type13 = source
+                scale13 = 1.0
+            wrap_mode13 = "clamp_to_edge"
+
+        
+               shader14 = shaders-ng/bloom_pass_4.slang
+                alias14 = "bloom_pass_final"
+        filter_linear14 = true
+           scale_type14 = source
+                scale14 = 1.0
+            wrap_mode14 = "mirrored_repeat"
+    float_framebuffer14 = "true"
+
+
+
+# Gather mipmaps from first_pass and use them to light virtual leds under the virtual monitor 
+# and temporally smooth led lights.
+# Extra logic makes it possible to lower the led reaction time when a scene change is detected.
+# this is achieved through average luminance sampling from avglum_pass
+               shader15 = shaders-ng/ambi_temporal_pass.slang
+                alias15 = "ambi_temporal_pass"
+        filter_linear15 = true
+           scale_type15 = viewport
+                scale15 = 0.05
+            wrap_mode15 = "clamp_to_border"
+    float_framebuffer15 = true
+    
+
+# This pass pass will do everything needed to happen at screen coordinates:
+# * The composition of the previous passes with the bloomed image, 
+# * vignette and spot light
+# * Scanlines
+# * Phosphors masks 
+# * Black frame insertions
+# * Bezel
+# * Background images
+           shader16 = shaders-ng/final_pass.slang
+            alias16 = "final_pass"
+    filter_linear16 = true
+       scale_type16 = viewport
+            scale16 = 1.0
+        wrap_mode16 = "mirrored_repeat"
+        
+

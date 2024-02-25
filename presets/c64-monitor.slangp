@@ -1,0 +1,26 @@
+shaders = 5
+
+shader0 = ../stock.slang
+scale_x0 = "640.0"
+scale_type_x0 = absolute
+alias0 = artifact_colors_refpass
+
+shader1 = ../ntsc/shaders/artifact-colors/artifact-colors0.slang
+scale1 = 1.0
+scale_type1 = source
+filter_linear1 = false
+alias1 = Pass1
+
+shader2 = ../ntsc/shaders/artifact-colors/artifact-colors1.slang
+scale2 = 1.0
+scale_type2 = source
+filter_linear2 = false
+alias2 = Pass2
+float_framebuffer2 = true
+
+shader3 = ../ntsc/shaders/artifact-colors/artifact-colors2.slang
+scale3 = 1.0
+scale_type3 = source
+filter_linear3 = false
+
+shader4 = ../crt/shaders/crt-lottes.slang

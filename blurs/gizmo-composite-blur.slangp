@@ -1,0 +1,12 @@
+shaders = "1"
+shader0 = "shaders/gizmo-blur.slang"
+filter_linear0 = "true"
+scale_type0 = viewport
+
+parameters = "HORIZONTAL_BLUR;VERTICAL_BLUR;BLUR_OFFSET;SUBPIXEL_SCALING;BGR_LCD_PATTERN;COLOUR_BLEEDING"
+HORIZONTAL_BLUR = "1.0"
+VERTICAL_BLUR = "0.0"
+BLUR_OFFSET = "0.65"
+SUBPIXEL_SCALING = "1.0"
+BGR_LCD_PATTERN = "0.0"
+COLOUR_BLEEDING = "0.2"

@@ -1,0 +1,50 @@
+shaders = 9
+
+shader0 = shaders/glow-trails/glow-trails0.slang
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+
+shader1 = "../blurs/shaders/royale/blur9fast-vertical.slang"
+filter_linear1 = "true"
+scale_type1 = "source"
+scale1 = "1.0"
+srgb_framebuffer1 = "true"
+
+shader2 = "../blurs/shaders/royale/blur9fast-horizontal.slang"
+alias2 = "TRAIL_BLUR"
+filter_linear2 = "true"
+scale_type2 = "source"
+scale2 = "1.0"
+srgb_framebuffer2 = "true"
+
+shader3 = shaders/glow-trails/glow-trails1.slang
+
+shader4 = "../anti-aliasing/shaders/advanced-aa.slang"
+alias4 = PASS1
+
+shader5 = "../blurs/shaders/royale/blur9fast-vertical.slang"
+filter_linear5 = "true"
+scale_type5 = "source"
+scale5 = "1.0"
+srgb_framebuffer5 = "true"
+
+shader6 = "../blurs/shaders/royale/blur9fast-horizontal.slang"
+filter_linear6 = "true"
+scale_type6 = "source"
+scale6 = "1.0"
+srgb_framebuffer6 = "true"
+
+shader7 = "shaders/glow-trails/combine.slang"
+
+shader8 = "../misc/shaders/image-adjustment.slang"
+scale_type8 = viewport
+
+parameters = "mixfactor;threshold;trail_bright;glowFactor;haze_strength;luminance;bright"
+mixfactor = "0.18"
+threshold = "0.90"
+trail_bright = "0.30"
+glowFactor = "0.10"
+haze_strength = "0.25"
+luminance = "1.50"
+bright = "1.0"

@@ -1,0 +1,15 @@
+shaders = 3
+
+shader0 = ../motionblur/shaders/response-time.slang
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+
+shader1 = shaders/mgba/agb001.slang
+filter_linear1 = false
+scale_type1 = source
+scale1 = 4.0
+
+shader2 = shaders/color/gba-color.slang
+filter_linear2 = true
+scale_type2 = viewport

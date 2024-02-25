@@ -1,0 +1,3 @@
+# This preset tests that the first subset of wildcards is working 
+
+#reference "referenced-presets/Ref-04_$CORE-REQ-ROT$_.slangp"

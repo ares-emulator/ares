@@ -1,0 +1,34 @@
+shaders = "5"
+
+shader0 = ../stock.slang
+alias0 = crt_interlaced_halation_refpass
+
+shader1 = shaders/crt-interlaced-halation/crt-interlaced-halation-pass0.slang
+filter_linear1 = "false"
+float_framebuffer1 = "false"
+scale_type_x1 = "source"
+scale_x1 = "1.000000"
+scale_type_y1 = "source"
+scale_y1 = "1.000000"
+
+shader2 = shaders/crt-interlaced-halation/crt-interlaced-halation-pass1.slang
+filter_linear2 = "false"
+float_framebuffer2 = "false"
+scale_type_x2 = "source"
+scale_x2 = "1.000000"
+scale_type_y2 = "source"
+scale_y2 = "1.000000"
+
+shader3 = shaders/crt-interlaced-halation/crt-interlaced-halation-pass2.slang
+filter_linear3 = "false"
+float_framebuffer3 = "false"
+scale_type_x3 = "source"
+scale_x3 = "3.000000"
+scale_type_y3 = "source"
+scale_y3 = "3.000000"
+
+shader4 = ../stock.slang
+filter_linear4 = "true"
+float_framebuffer4 = "false"
+scale_type4 = viewport
+

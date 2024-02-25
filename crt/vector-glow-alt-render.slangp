@@ -1,0 +1,29 @@
+shaders = 4
+
+shader0 = "../misc/shaders/image-adjustment.slang"
+alias0 = PASS1
+
+shader1 = "../blurs/shaders/royale/blur11fast-vertical.slang"
+filter_linear1 = "true"
+scale_type1 = "source"
+scale1 = "0.5"
+mipmap_input1 = "true"
+
+shader2 = "../blurs/shaders/royale/blur11fast-horizontal.slang"
+filter_linear2 = "true"
+scale_type2 = "source"
+scale2 = "0.5"
+mipmap_input2 = "true"
+
+shader3 = "shaders/glow-trails/combine.slang"
+scale_type3 = "viewport"
+scale3 = 1.0
+
+parameters = "mixfactor;threshold;trail_bright;glowFactor;haze_strength;luminance;screen_combine"
+mixfactor = "0.18"
+threshold = "0.90"
+trail_bright = "0.30"
+glowFactor = "0.10"
+haze_strength = "0.75"
+luminance = "1.50"
+screen_combine = "1.0"

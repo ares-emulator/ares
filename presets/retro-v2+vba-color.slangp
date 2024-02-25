@@ -1,0 +1,14 @@
+shaders = "2"
+
+shader0 = "../handheld/shaders/color/vba-color.slang"
+shader1 = "../handheld/shaders/retro-v2.slang"
+
+filter_linear0 = "false"
+scale_type0 = "source"
+scale0 = "1.000000"
+
+filter_linear1 = "false"
+
+parameters = "dark_gamma;RETRO_PIXEL_SIZE"
+dark_gamma = "2.900000"
+RETRO_PIXEL_SIZE = "0.840000"

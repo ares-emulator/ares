@@ -1,0 +1,67 @@
+shaders = 10
+
+shader0 = ../stock.slang
+alias0 = refpass
+filter_linear0 = "false"
+
+shader1 = ../edge-smoothing/scalefx/shaders/scalefx-pass0.slang
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+float_framebuffer1 = true
+alias1 = scalefx_pass0
+
+shader2 = ../edge-smoothing/scalefx/shaders/scalefx-pass1.slang
+filter_linear2 = false
+scale_type2 = source
+scale2 = 1.0
+float_framebuffer2 = true
+
+shader3 = ../edge-smoothing/scalefx/shaders/scalefx-pass2.slang
+filter_linear3 = false
+scale_type3 = source
+scale3 = 1.0
+
+shader4 = ../edge-smoothing/scalefx/shaders/scalefx-pass3.slang
+filter_linear4 = false
+scale_type4 = source
+scale4 = 1.0
+
+shader5 = ../edge-smoothing/scalefx/shaders/scalefx-pass4.slang
+filter_linear5 = false
+scale_type5 = source
+scale5 = 3.0
+
+shader6 = ../anti-aliasing/shaders/fxaa.slang
+filter_linear6 = true
+scale_type6 = source
+scale6 = 1.0
+
+shader7 = ../edge-smoothing/xsoft/shaders/4xsoft.slang
+filter_linear7 = true
+scale_type7 = source
+scale7 = 2.0
+
+shader8 = ../sharpen/shaders/fast-sharpen.slang
+filter_linear8 = true
+scale_type8 = source
+scale8 = 1.0
+
+shader9 = ../deblur/shaders/deblur.slang
+filter_linear9 = true
+scale_type9 = viewport
+scale9 = 1.0
+
+parameters = "SFX_CLR;SFX_SAA;SFX_SCN;RESOLUTION_X;RESOLUTION_Y;CONTRAST;SHARPEN;CONTR;DETAILS;OFFSET;DEBLUR;SMART"
+SFX_CLR = "0.600000"
+SFX_SAA = "1.000000"
+SFX_SCN = "0.000000"
+RESOLUTION_X = "0.000000"
+RESOLUTION_Y = "0.000000"
+CONTRAST = "3.000000"
+SHARPEN = "1.200000"
+CONTR = "0.100000"
+DETAILS = "1.000000"
+OFFSET = "1.750000"
+DEBLUR = "5.000000"
+SMART = "0.300000" 
