@@ -59,6 +59,13 @@ inline auto WDC65816::writeDirect(u32 address, n8 data) -> void {
   write(n16(D.w + address), data);
 }
 
+inline auto WDC65816::readDirectX(u32 address, u32 offset) -> n8 {
+  // The (direct,X) addressing mode has a bug in which the high byte is
+  // wrapped within the page if E = 1 and D&0xFF != 0.
+  if(EF && D.l) return read(((D.w + address) & 0xffff00) | n8(D.w + address + offset));
+  else return readDirect(address + offset);
+}
+
 inline auto WDC65816::readDirectN(u32 address) -> n8 {
   return read(n16(D.w + address));
 }

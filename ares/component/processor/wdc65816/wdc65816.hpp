@@ -64,6 +64,7 @@ struct WDC65816 {
   auto pullN() -> n8;
   auto pushN(n8 data) -> void;
   auto readDirect(u32 address) -> n8;
+  auto readDirectX(u32 address, u32 offset) -> n8;
   auto writeDirect(u32 address, n8 data) -> void;
   auto readDirectN(u32 address) -> n8;
   auto readBank(u32 address) -> n8;
