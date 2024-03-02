@@ -9,6 +9,7 @@
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
     label = &labelReference;
   }
+  self.clipsToBounds = true;
   return self;
 }
 

@@ -11,6 +11,7 @@
     ];
     [self addTrackingArea:area];
   }
+  self.clipsToBounds = true;
   return self;
 }
 

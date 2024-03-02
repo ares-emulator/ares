@@ -6,6 +6,7 @@
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
     viewport = &viewportReference;
   }
+  self.clipsToBounds = true;
   return self;
 }
 
