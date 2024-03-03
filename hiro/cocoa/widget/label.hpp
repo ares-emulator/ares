@@ -4,6 +4,7 @@
 @public
   hiro::mLabel* label;
 }
+@property BOOL clipsToBounds;
 -(id) initWith:(hiro::mLabel&)label;
 -(void) resetCursorRects;
 -(void) drawRect:(NSRect)dirtyRect;
