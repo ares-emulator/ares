@@ -105,6 +105,8 @@ auto PPU::main() -> void {
     if(io.vcoincidence) cpu.irq.flag |= CPU::Interrupt::VCoincidence;
   }
 
+  step(46);
+
   if(io.vcounter < 160) {
     u32 y = io.vcounter;
     bg0.scanline(y);
@@ -135,12 +137,10 @@ auto PPU::main() -> void {
   if(io.irqhblank) cpu.irq.flag |= CPU::Interrupt::HBlank;
   if(io.vcounter < 160) cpu.dmaHblank();
 
-  step(240);
+  step(226);
   io.hblank = 0;
-  if(io.vcounter < 160) cpu.dmaHDMA();
-
-  step(32);
   if(++io.vcounter == 228) io.vcounter = 0;
+  if(io.vcounter > 1 && io.vcounter < 162) cpu.dmaHDMA();
 }
 
 auto PPU::frame() -> void {
