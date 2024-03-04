@@ -1,14 +1,14 @@
 #include <gba/gba.hpp>
 
-//pixel:      4 cycles
+//pixel:       4 cycles
 
-//hdraw:    240 pixels ( 960 cycles)
-//hblank:    68 pixels ( 272 cycles)
-//scanline: 308 pixels (1232 cycles)
+//hdraw:      46 cycle wait period, then 240 pixels (total: 1006 cycles)
+//hblank:    226 cycles
+//scanline: 1232 cycles
 
-//vdraw:    160 scanlines (197120 cycles)
-//vblank:    68 scanlines ( 83776 cycles)
-//frame:    228 scanlines (280896 cycles)
+//vdraw:     160 scanlines (197120 cycles)
+//vblank:     68 scanlines ( 83776 cycles)
+//frame:     228 scanlines (280896 cycles)
 
 namespace ares::GameBoyAdvance {
 
@@ -105,6 +105,8 @@ auto PPU::main() -> void {
     if(io.vcoincidence) cpu.irq.flag |= CPU::Interrupt::VCoincidence;
   }
 
+  step(46);
+
   if(io.vcounter < 160) {
     u32 y = io.vcounter;
     bg0.scanline(y);
@@ -135,12 +137,10 @@ auto PPU::main() -> void {
   if(io.irqhblank) cpu.irq.flag |= CPU::Interrupt::HBlank;
   if(io.vcounter < 160) cpu.dmaHblank();
 
-  step(240);
+  step(226);
   io.hblank = 0;
-  if(io.vcounter < 160) cpu.dmaHDMA();
-
-  step(32);
   if(++io.vcounter == 228) io.vcounter = 0;
+  if(io.vcounter > 1 && io.vcounter < 162) cpu.dmaHDMA();
 }
 
 auto PPU::frame() -> void {
