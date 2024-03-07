@@ -40,6 +40,7 @@ auto MCD::CDD::clock() -> void {
   } break;
 
   case Status::Playing: {
+    readSubcode();
     if(session.tracks[io.track].isAudio()) break;
     mcd.cdc.decode(io.sector);
     advance();
@@ -60,7 +61,6 @@ auto MCD::CDD::advance() -> void {
     io.track = track();
     io.sector++;
     io.sample = 0;
-    readSubcode();
     return;
   }
 
