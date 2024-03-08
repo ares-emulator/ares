@@ -177,6 +177,7 @@ auto PCD::power() -> void {
   fader.power();
   clock = {};
   io = {};
+  sramEnable = 0;
 
   if(Model::PCEngineDuo()) {
     if(auto fp = system.pak->read("bios.rom")) {

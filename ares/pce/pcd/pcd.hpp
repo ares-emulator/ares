@@ -28,7 +28,6 @@ struct PCD : Thread {
   static auto Present() -> bool { return true; }
 
   auto title() const -> string { return information.title; }
-  auto sramEnable() const -> bool { return io.sramEnable == 0xaa55; }
   auto bramEnable() const -> bool { return io.bramEnable; }
 
   //pcd.cpp
@@ -312,6 +311,8 @@ private:
     n16 sramEnable;
     n1  bramEnable;
   } io;
+
+  n1 sramEnable;
 
 //unserialized:
   struct Information {

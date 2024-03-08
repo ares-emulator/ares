@@ -159,6 +159,7 @@ auto Settings::process(bool load) -> void {
     bind(string,  name, emulator->configuration.game);
     for(auto& firmware : emulator->firmware) {
       string name = {base, "/Firmware/", firmware.type, ".", firmware.region};
+      name.replace(" ", "-");
       bind(string, name, firmware.location);
     }
   }

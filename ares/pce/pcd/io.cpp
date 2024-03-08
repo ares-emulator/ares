@@ -3,7 +3,7 @@ auto PCD::read(n8 bank, n13 address, n8 data) -> n8 {
     return bios.read(address);
   }
 
-  if(bank >= 0x68 && bank <= 0x78 && Model::PCEngineDuo() && sramEnable()) {
+  if(bank >= 0x68 && bank <= 0x7f && Model::PCEngineDuo() && sramEnable) {
     return sram.read(bank - 0x68 << 13 | address);
   }
 
@@ -19,7 +19,7 @@ auto PCD::read(n8 bank, n13 address, n8 data) -> n8 {
 }
 
 auto PCD::write(n8 bank, n13 address, n8 data) -> void {
-  if(bank >= 0x68 && bank <= 0x7f && Model::PCEngineDuo() && sramEnable()) {
+  if(bank >= 0x68 && bank <= 0x7f && Model::PCEngineDuo() && sramEnable) {
     return sram.write(bank - 0x68 << 13 | address, data);
   }
 
@@ -146,7 +146,10 @@ auto PCD::readIO(n13 address, n8 data) -> n8 {
 }
 
 auto PCD::writeIO(n13 address, n8 data) -> void {
-  if(address == 0x18c0) io.sramEnable = io.sramEnable << 8 | data;
+  if(address == 0x18c0) {
+    io.sramEnable = io.sramEnable << 8 | data;
+    if(io.sramEnable == 0xaa55) sramEnable = 1; // Remains enabled until power cycle
+  }
   if(address >= 0x18c4) return;
 
   address = (n4)address;

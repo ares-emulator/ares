@@ -121,6 +121,12 @@ auto PCEngine::analyze(vector<u8>& data) -> string {
   //TurboGrafx Super System Card 3.00
   if(digest == "cadac2725711b3c442bcf237b02f5a5210c96f17625c35fa58f009e0ed39e4db") board = "Super System Card", region = "NTSC-U";
 
+  // Games Express (Blue)
+  if(digest == "4b86bb96a48a4ca8375fc0109631d0b1d64f255a03b01de70594d40788ba6c3d") board = "Games Express", region = "NTSC-J";
+
+  // Games Express (Green)
+  if(digest == "da173b20694c2b52087b099b8c44e471d3ee08a666c90d4afd997f8e1382add8") board = "Games Express", region = "NTSC-J";
+
   string s;
   s += "game\n";
   s +={"  sha256: ", digest, "\n"};

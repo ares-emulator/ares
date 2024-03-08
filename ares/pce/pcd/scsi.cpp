@@ -389,7 +389,7 @@ auto PCD::SCSI::commandGetDirectoryInformation() -> void {
         mode = track->control;
       }
     }
-    auto [minute, second, frame] = CD::MSF::fromLBA(150 + lba);
+    auto [minute, second, frame] = CD::MSF::fromLBA(lba);
     response.write(BCD::encode(minute));
     response.write(BCD::encode(second));
     response.write(BCD::encode(frame));
@@ -406,7 +406,7 @@ auto PCD::SCSI::commandGetDirectoryInformation() -> void {
         mode = track->control;
       }
     }
-    auto [minute, second, frame] = CD::MSF::fromLBA(150 + lba);
+    auto [minute, second, frame] = CD::MSF::fromLBA(lba);
     response.write(lba >> 16);
     response.write(lba >>  8);
     response.write(lba >>  0);

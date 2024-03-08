@@ -18,6 +18,7 @@ auto PCD::serialize(serializer& s) -> void {
   s(io.cddaSampleSelect);
   s(io.sramEnable);
   s(io.bramEnable);
+  s(sramEnable);
 }
 
 auto PCD::Drive::serialize(serializer& s) -> void {

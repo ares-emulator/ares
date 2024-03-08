@@ -32,7 +32,7 @@ auto PCD::Drive::read() -> bool {
 
 //print("* ", reading() ? "data" : "cdda", " read ", lba, " to ", end - 1, "\n");
 
-  pcd.fd->seek(2448 * (abs(session->leadIn.lba) + lba));
+  pcd.fd->seek(2448 * (abs(session->leadIn.lba) + lba + 150));
   pcd.fd->read({sector, 2448});
   if(++lba == end) setInactive();
   return true;

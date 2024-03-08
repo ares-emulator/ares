@@ -8,6 +8,7 @@ namespace Board {
 #include "super-system-card.cpp"
 #include "arcade-card-duo.cpp"
 #include "arcade-card-pro.cpp"
+#include "games-express.cpp"
 #include "debugger.cpp"
 
 auto Interface::load(Memory::Readable<n8>& memory, string name) -> bool {

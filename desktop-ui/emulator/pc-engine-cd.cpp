@@ -5,15 +5,17 @@ struct PCEngineCD : PCEngine {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
   shared_pointer<mia::Pak> bios;
-  u32 regionID = 0;
+  u32 biosID = 0;
 };
 
 PCEngineCD::PCEngineCD() {
   manufacturer = "NEC";
   name = "PC Engine CD";
 
-  firmware.append({"BIOS", "US", "cadac2725711b3c442bcf237b02f5a5210c96f17625c35fa58f009e0ed39e4db"});     //NTSC-U
-  firmware.append({"BIOS", "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});  //NTSC-J
+  firmware.append({"System-Card 1.0", "Japan", "afe9f27f91ac918348555b86298b4f984643eafa2773196f2c5441ea84f0c3bb"});
+  firmware.append({"System Card 3.0", "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});
+  firmware.append({"System Card 3.0", "US",    "cadac2725711b3c442bcf237b02f5a5210c96f17625c35fa58f009e0ed39e4db"});
+  firmware.append({"Games Express"  , "Japan", "4b86bb96a48a4ca8375fc0109631d0b1d64f255a03b01de70594d40788ba6c3d"});
 
   allocatePorts();
 }
@@ -24,18 +26,27 @@ auto PCEngineCD::load() -> bool {
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
-  if(region == "NTSC-J") regionID = 1;
-  if(region == "NTSC-U") regionID = 0;
+  if(region == "NTSC-U") biosID = 2;
+  if(region == "NTSC-J") biosID = 1;
+
+  // Some games require a specific card to be inserted into the system
+  if(auto requiredCard = game->pak->attribute("card")) {
+    if(requiredCard == "System Card 1.0") {
+      biosID = 0;
+    } else if(requiredCard == "Games Express") {
+      biosID = 3;
+    }
+  }
 
   bios = mia::Medium::create("PC Engine");
-  if(!bios->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
+  if(!bios->load(firmware[biosID].location)) return errorFirmware(firmware[biosID]), false;
 
   system = mia::System::create("PC Engine");
   if(!system->load()) return false;
 
   ares::PCEngine::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
-  auto name = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
+  auto name = region == "NTSC-J" ? "PC Engine Duo" : "TurboDuo";
   if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {

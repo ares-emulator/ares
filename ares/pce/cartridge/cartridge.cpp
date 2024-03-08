@@ -27,6 +27,7 @@ auto Cartridge::connect() -> void {
   if(information.board == "Super System Card") board = new Board::SuperSystemCard{*this};
   if(information.board == "Arcade Card Duo") board = new Board::ArcadeCardDuo{*this};
   if(information.board == "Arcade Card Pro") board = new Board::ArcadeCardPro{*this};
+  if(information.board == "Games Express") board = new Board::GamesExpress{*this};
   if(!board) board = new Board::Interface{*this};
   board->pak = pak;
   board->load();
