@@ -91,6 +91,7 @@ all.options := $(options) $(libco.options) $(sljit.options) $(libchdr.options) $
 $(all.objects): | $(object.path)
 
 all: output
+ifneq ($(MAKECMDGOALS),clean)
    ifeq ($(platform),macos)
       ifeq ($(librashader), true)
         ifeq ($(wildcard $(librashader.path)),)
@@ -105,6 +106,7 @@ all: output
         endif
       endif
    endif
+endif
 
 output: $(all.objects) | $(output.path)
 	$(info Linking $(output.path)/$(name)$(extension) ...)
