@@ -63,6 +63,31 @@ Once complete, open a CLANG64 terminal window and proceed with building ares.
 ###### Debug Symbols
 When building with clang, by default symbols will be generated for debug builds using an MSVC compatible format (CodeView) for use with Windows debugging tools. In order to generate GDB compatible symbols, specify the following option: `symformat=gdb`  
 
+###### Librashader Support
+ares has introduced support for the [librashader](https://github.com/SnowflakePowered/librashader) library, which is a preprocessor, compiler, and runtime for RetroArch 'slang' shaders. If you are not interested in working with librashaders, you can pass the following option to the `make` command to skip these requirements using: `librashader=false`
+
+Building the librashader library on Windows requires Rust. Follow these steps to prepare your system and build the librashader library:
+
+1. Download and execute the rustup-init.exe installer from: https://rustup.rs/
+2. Open a new Windows terminal and run the following commands:
+    ```
+    rustup toolchain install nightly
+    rustup default nightly
+    ```
+3. With Rust successfully installed, you will need to update your PATH environment variable within your MSYS2 environment. In an MSYS2 shell, open $HOME/.bash_profile and append something like the following (note you will need to replace both instances of %USER_NAME% with the real user name you used to install Rust):
+    ```
+    if [ -d "/C/Users/%USER_NAME%/.cargo/bin" ] ; then
+      PATH="/C/Users/%USER_NAME%/.cargo/bin:${PATH}"
+    fi
+    ```
+4. Open a new MSYS2 based shell for the compiler you are using (MinGW64|CLANG64|UCRT64), execute `rustup` to validate the path is set properly within your MSYS2 environment.
+5. In your MSYS2 compiler shell, `cd` into the `ares/thirdparty/librashader` directory
+6. Execute the build script, build should complete successfully:
+    ```
+    ./build-librashader.sh
+    ```
+
+This only needs to be done once, or anytime the librashader library is updated. Once built, ares will build with librashader support by default requiring no additional flags.
 
 Compilation
 -----------
