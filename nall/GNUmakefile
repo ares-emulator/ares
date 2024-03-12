@@ -155,6 +155,7 @@ endif
 # build optimization levels
 ifeq ($(build),debug)
   symbols = true
+  lto = false
   ifeq ($(cl),true)
     flags += -Od
   else
