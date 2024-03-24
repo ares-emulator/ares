@@ -178,24 +178,14 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     dma.io.enable    = data.bit(7);
   } break;
 
-  case 0x0064:
+  case range2(0x0064, 0x0065):
     if(!system.color()) break;
-    channel5.output.left.bit(0,7) = data;
+    channel5.output.left.byte(address - 0x64) = data;
     break;
 
-  case 0x0065:
+  case range2(0x0066, 0x0067):
     if(!system.color()) break;
-    channel5.output.left.bit(8,15) = data;
-    break;
-
-  case 0x0066:
-    if(!system.color()) break;
-    channel5.output.right.bit(0,7) = data;
-    break;
-
-  case 0x0067:
-    if(!system.color()) break;
-    channel5.output.right.bit(8,15) = data;
+    channel5.output.right.byte(address - 0x66) = data;
     break;
 
   case 0x0069:
