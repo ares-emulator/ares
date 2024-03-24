@@ -16,6 +16,9 @@ auto APU::serialize(serializer& s) -> void {
   s(io.masterVolume);
   s(state.sweepClock);
   s(state.apuClock);
+  s(state.seqOutputLeft);
+  s(state.seqOutputRight);
+  s(state.seqOutputSum);
 }
 
 auto APU::DMA::serialize(serializer& s) -> void {
@@ -97,10 +100,11 @@ auto APU::Channel5::serialize(serializer& s) -> void {
   s(io.speed);
   s(io.enable);
   s(io.unknown);
-  s(io.leftEnable);
-  s(io.rightEnable);
+  s(io.mode);
   s(state.clock);
-  s(state.data);
+  s(state.channel);
+  s(state.left);
+  s(state.right);
   s(output.left);
   s(output.right);
 }

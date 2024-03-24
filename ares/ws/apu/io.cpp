@@ -33,9 +33,9 @@ auto APU::readIO(n16 address) -> n8 {
 
   case 0x006b:  //SND_HYPER_CHAN_CTRL
     if(!system.color()) break;
-    data.bit(0,3) = channel5.io.unknown;
-    data.bit(5)   = channel5.io.leftEnable;
-    data.bit(6)   = channel5.io.rightEnable;
+    data.bit(0,3)  = channel5.io.unknown;
+    if (data.bit(4)) channel5.state.channel = 0;
+    data.bit(5,6)  = channel5.io.mode;
     break;
 
   case range2(0x0080, 0x0081):  //SND_CH1_PITCH
@@ -120,9 +120,33 @@ auto APU::readIO(n16 address) -> n8 {
     data.bit(3) = channel2.io.voiceEnableLeftFull;
     break;
 
-  case 0x0095:  //SND_HYPERVOICE
+  case 0x0095:  //TODO: SND_HYPERVOICE?
     if(!system.color()) break;
-    data = channel5.state.data;
+    data = channel5.state.left;
+    break;
+  
+  case 0x0096:
+    data = state.seqOutputRight.bit(0,7);
+    break;
+
+  case 0x0097:
+    data.bit(0,1) = state.seqOutputRight.bit(8,9);
+    break;
+  
+  case 0x0098:
+    data = state.seqOutputLeft.bit(0,7);
+    break;
+    
+  case 0x0099:
+    data.bit(0,1) = state.seqOutputLeft.bit(8,9);
+    break;
+  
+  case 0x009a:
+    data = state.seqOutputSum.bit(0,7);
+    break;
+    
+  case 0x009b:
+    data.bit(0,2) = state.seqOutputSum.bit(8,10);
     break;
 
   case 0x009e:  //SND_VOLUME
@@ -162,6 +186,36 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     dma.io.enable    = data.bit(7);
   } break;
 
+  case 0x0064:
+    if(!system.color()) break;
+    channel5.output.left.bit(0,7) = data;
+    break;
+
+  case 0x0065:
+    if(!system.color()) break;
+    channel5.output.left.bit(8,15) = data;
+    break;
+
+  case 0x0066:
+    if(!system.color()) break;
+    channel5.output.right.bit(0,7) = data;
+    break;
+
+  case 0x0067:
+    if(!system.color()) break;
+    channel5.output.right.bit(8,15) = data;
+    break;
+
+  case 0x0068:
+    if(!system.color()) break;
+    channel5.state.left = data;
+    break;
+
+  case 0x0069:
+    if(!system.color()) break;
+    channel5.state.right = data;
+    break;
+
   case 0x006a:  //SND_HYPER_CTRL
     if(!system.color()) break;
     channel5.io.volume = data.bit(0,1);
@@ -173,8 +227,7 @@ auto APU::writeIO(n16 address, n8 data) -> void {
   case 0x006b:  //SND_HYPER_CHAN_CTRL
     if(!system.color()) break;
     channel5.io.unknown     = data.bit(0,3);
-    channel5.io.leftEnable  = data.bit(5);
-    channel5.io.rightEnable = data.bit(6);
+    channel5.io.mode        = data.bit(5,6);
     break;
 
   case range2(0x0080, 0x0081):  //SND_CH1_PITCH

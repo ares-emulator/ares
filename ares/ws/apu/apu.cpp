@@ -81,20 +81,27 @@ auto APU::dacRun() -> void {
   if(channel2.io.enable || channel2.io.voice) left += channel2.output.left;
   if(channel3.io.enable)                      left += channel3.output.left;
   if(channel4.io.enable)                      left += channel4.output.left;
-  if(channel5.io.enable)                      left += channel5.output.left * io.headphonesConnected;
 
   s32 right = 0;
   if(channel1.io.enable)                      right += channel1.output.right;
   if(channel2.io.enable || channel2.io.voice) right += channel2.output.right;
   if(channel3.io.enable)                      right += channel3.output.right;
   if(channel4.io.enable)                      right += channel4.output.right;
-  if(channel5.io.enable)                      right += channel5.output.right * io.headphonesConnected;
+
+  state.seqOutputLeft = left;
+  state.seqOutputRight = right;
+  state.seqOutputSum = left + right;
 
   if(!io.headphonesConnected) {
-    left = right = sclamp<16>((((left + right) >> io.speakerShift) & 0xFF) << 7);
+    left = right = sclamp<16>(((state.seqOutputSum >> io.speakerShift) & 0xFF) << 7);
   } else {
     left = sclip<16>(left << 5);
     right = sclip<16>(right << 5);
+
+    if(channel5.io.enable) {
+      left += channel5.output.left;
+      right += channel5.output.right;
+    }
   }
 
   //ASWAN has three volume steps (0%, 50%, 100%); SPHINX and SPHINX2 have four (0%, 33%, 66%, 100%)
@@ -113,8 +120,8 @@ auto APU::power() -> void {
   bus.map(this, 0x004a, 0x004c);
   bus.map(this, 0x004e, 0x0050);
   bus.map(this, 0x0052);
-  bus.map(this, 0x006a, 0x006b);
-  bus.map(this, 0x0080, 0x0095);
+  bus.map(this, 0x0064, 0x006b);
+  bus.map(this, 0x0080, 0x009b);
   bus.map(this, 0x009e);
 
   dma.power();

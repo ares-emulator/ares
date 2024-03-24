@@ -189,6 +189,8 @@ struct APU : Thread, IO {
 
   struct Channel5 {
     //channel5.cpp
+    auto dmaWrite(n8 sample) -> void;
+    auto scale(i8 sample) -> i16;
     auto runOutput() -> void;
     auto power() -> void;
 
@@ -201,18 +203,19 @@ struct APU : Thread, IO {
       n3 speed;
       n1 enable;
       n4 unknown;
-      n1 leftEnable;
-      n1 rightEnable;
+      n2 mode;
     } io;
 
     struct State {
       n32 clock;
-      i8  data;
+      n1 channel;
+      n8 left;
+      n8 right;
     } state;
 
     struct Output {
-      i11 left;
-      i11 right;
+      i16 left;
+      i16 right;
     } output;
   } channel5;
 
@@ -228,6 +231,9 @@ struct APU : Thread, IO {
   struct State {
     n13 sweepClock;
     n7 apuClock;
+    n10 seqOutputLeft;
+    n10 seqOutputRight;
+    n11 seqOutputSum;
   } state;
 };
 
