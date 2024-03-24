@@ -33,9 +33,9 @@ auto APU::readIO(n16 address) -> n8 {
 
   case 0x006b:  //SND_HYPER_CHAN_CTRL
     if(!system.color()) break;
-    data.bit(0,3) = channel5.io.unknown;
-    data.bit(5)   = channel5.io.leftEnable;
-    data.bit(6)   = channel5.io.rightEnable;
+    data.bit(0,3)  = channel5.io.unknown;
+    if (data.bit(4)) channel5.state.channel = 0;
+    data.bit(5,6)  = channel5.io.mode;
     break;
 
   case range2(0x0080, 0x0081):  //SND_CH1_PITCH
@@ -120,10 +120,26 @@ auto APU::readIO(n16 address) -> n8 {
     data.bit(3) = channel2.io.voiceEnableLeftFull;
     break;
 
-  case 0x0095:  //SND_HYPERVOICE
-    if(!system.color()) break;
-    data = channel5.state.data;
+  case 0x0095:
+    data.bit(0)   = io.seqDbgHold;
+    data.bit(1,4) = io.seqDbgUnknown;
+    data.bit(5)   = io.seqDbgOutputForce55;
+    data.bit(6)   = io.seqDbgChForce2;
+    data.bit(7)   = io.seqDbgChForce4;
     break;
+  
+  case range2(0x0096, 0x0097):  //SND_OUT_R
+    data = io.output.right.byte(address - 0x0096);
+    break;
+
+  case range2(0x0098, 0x0099):  //SND_OUT_L
+    data = io.output.left.byte(address - 0x0098);
+    break;
+
+  case range2(0x009a, 0x009b): { //SND_OUT_M
+    n11 outputM = io.output.left + io.output.right;
+    data = outputM.byte(address - 0x009a);
+  } break;
 
   case 0x009e:  //SND_VOLUME
     if(!SoC::ASWAN()) {
@@ -162,6 +178,21 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     dma.io.enable    = data.bit(7);
   } break;
 
+  case range2(0x0064, 0x0065):
+    if(!system.color()) break;
+    channel5.output.left.byte(address - 0x64) = data;
+    break;
+
+  case range2(0x0066, 0x0067):
+    if(!system.color()) break;
+    channel5.output.right.byte(address - 0x66) = data;
+    break;
+
+  case 0x0069:
+    if(!system.color()) break;
+    channel5.manualWrite(data);
+    break;
+
   case 0x006a:  //SND_HYPER_CTRL
     if(!system.color()) break;
     channel5.io.volume = data.bit(0,1);
@@ -173,8 +204,7 @@ auto APU::writeIO(n16 address, n8 data) -> void {
   case 0x006b:  //SND_HYPER_CHAN_CTRL
     if(!system.color()) break;
     channel5.io.unknown     = data.bit(0,3);
-    channel5.io.leftEnable  = data.bit(5);
-    channel5.io.rightEnable = data.bit(6);
+    channel5.io.mode        = data.bit(5,6);
     break;
 
   case range2(0x0080, 0x0081):  //SND_CH1_PITCH
@@ -252,6 +282,14 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     channel2.io.voiceEnableRightFull = data.bit(1);
     channel2.io.voiceEnableLeftHalf  = data.bit(2);
     channel2.io.voiceEnableLeftFull  = data.bit(3);
+    break;
+
+  case 0x0095:
+    io.seqDbgHold          = data.bit(0);
+    io.seqDbgUnknown       = data.bit(1,4);
+    io.seqDbgOutputForce55 = data.bit(5);
+    io.seqDbgChForce2      = data.bit(6);
+    io.seqDbgChForce4      = data.bit(7);
     break;
 
   case 0x009e:  //SND_VOLUME

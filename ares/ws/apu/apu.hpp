@@ -12,9 +12,11 @@ struct APU : Thread, IO {
 
   auto main() -> void;
   auto sample(u32 channel, n5 index) -> n4;
-  auto dacRun() -> void;
+  auto output() -> void;
   auto step(u32 clocks) -> void;
   auto power() -> void;
+  auto sequencerClear() -> void;
+  auto sequencerHeld() -> bool;
 
   //io.cpp
   auto readIO(n16 address) -> n8;
@@ -64,8 +66,8 @@ struct APU : Thread, IO {
 
   struct Channel1 {
     //channel1.cpp
-    auto run() -> void;
-    auto runOutput() -> void;
+    auto tick() -> void;
+    auto output() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -82,17 +84,12 @@ struct APU : Thread, IO {
       n11 period;
       n5  sampleOffset;
     } state;
-
-    struct Output {
-      n8 left;
-      n8 right;
-    } output;
   } channel1;
 
   struct Channel2 {
     //channel2.cpp
-    auto run() -> void;
-    auto runOutput() -> void;
+    auto tick() -> void;
+    auto output() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -114,18 +111,13 @@ struct APU : Thread, IO {
       n11 period;
       n5  sampleOffset;
     } state;
-
-    struct Output {
-      n8 left;
-      n8 right;
-    } output;
   } channel2;
 
   struct Channel3 {
     //channel3.cpp
     auto sweep() -> void;
-    auto run() -> void;
-    auto runOutput() -> void;
+    auto tick() -> void;
+    auto output() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -146,18 +138,13 @@ struct APU : Thread, IO {
       n5  sampleOffset;
       i32 sweepCounter;
     } state;
-
-    struct Output {
-      n8 left;
-      n8 right;
-    } output;
   } channel3;
 
   struct Channel4 {
     //channel4.cpp
     auto noiseSample() -> n4;
-    auto run() -> void;
-    auto runOutput() -> void;
+    auto tick() -> void;
+    auto output() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -180,15 +167,14 @@ struct APU : Thread, IO {
       n1  noiseOutput;
       n15 noiseLFSR;
     } state;
-
-    struct Output {
-      n8 left;
-      n8 right;
-    } output;
   } channel4;
 
   struct Channel5 {
     //channel5.cpp
+    auto dmaWrite(n8 sample) -> void;
+    auto manualWrite(n8 sample) -> void;
+    auto write(n8 sample) -> void;
+    auto scale(i8 sample) -> i16;
     auto runOutput() -> void;
     auto power() -> void;
 
@@ -201,18 +187,21 @@ struct APU : Thread, IO {
       n3 speed;
       n1 enable;
       n4 unknown;
-      n1 leftEnable;
-      n1 rightEnable;
+      n2 mode;
     } io;
 
     struct State {
       n32 clock;
-      i8  data;
+      n1 channel;
+      n8 left;
+      n8 right;
+      n1 leftChanged;
+      n1 rightChanged;
     } state;
 
     struct Output {
-      i11 left;
-      i11 right;
+      i16 left;
+      i16 right;
     } output;
   } channel5;
 
@@ -223,6 +212,18 @@ struct APU : Thread, IO {
     n1 headphonesEnable;
     n1 headphonesConnected;
     n2 masterVolume;
+
+    n1 seqDbgHold;
+    n1 seqDbgOutputForce55;
+    n1 seqDbgChForce4;
+    n1 seqDbgChForce2;
+    n4 seqDbgUnknown;
+    
+    // This output covers Channels 1-4 (excluding Hyper Voice)
+    struct Output {
+      n10 left;
+      n10 right;
+    } output;
   } io;
 
   struct State {

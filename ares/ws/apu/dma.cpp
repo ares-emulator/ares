@@ -18,7 +18,7 @@ auto APU::DMA::run() -> void {
     apu.channel2.io.volumeRight = data.bit(0,3);
     apu.channel2.io.volumeLeft  = data.bit(4,7);
   } else {
-    apu.channel5.state.data = data;
+    apu.channel5.dmaWrite(data);
   }
 
   if(io.hold) return;
