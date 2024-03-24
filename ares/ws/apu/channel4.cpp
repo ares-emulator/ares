@@ -24,6 +24,7 @@ auto APU::Channel4::tick() -> void {
 }
 
 auto APU::Channel4::output() -> void {
+  if(apu.sequencerHeld()) return;
   auto sample = io.noise ? noiseSample() : apu.sample(4, state.sampleOffset);
   apu.io.output.left  += sample * io.volumeLeft;
   apu.io.output.right += sample * io.volumeRight;

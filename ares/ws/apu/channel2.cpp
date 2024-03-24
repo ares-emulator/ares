@@ -1,5 +1,5 @@
 auto APU::Channel2::tick() -> void {
-  if (!io.voice) {
+  if(!io.voice) {
     if(--state.period == io.pitch) {
       state.period = 0;
       state.sampleOffset++;
@@ -8,6 +8,7 @@ auto APU::Channel2::tick() -> void {
 }
 
 auto APU::Channel2::output() -> void {
+  if(apu.sequencerHeld()) return;
   if(io.voice) {
     n8 volume = io.volumeLeft << 4 | io.volumeRight << 0;
     apu.io.output.left  += io.voiceEnableLeftFull  ? volume : (n8)(io.voiceEnableLeftHalf  ? (volume >> 1) : 0);

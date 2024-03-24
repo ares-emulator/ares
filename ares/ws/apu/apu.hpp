@@ -15,6 +15,8 @@ struct APU : Thread, IO {
   auto output() -> void;
   auto step(u32 clocks) -> void;
   auto power() -> void;
+  auto sequencerClear() -> void;
+  auto sequencerHeld() -> bool;
 
   //io.cpp
   auto readIO(n16 address) -> n8;
@@ -210,6 +212,12 @@ struct APU : Thread, IO {
     n1 headphonesEnable;
     n1 headphonesConnected;
     n2 masterVolume;
+
+    n1 seqDbgHold;
+    n1 seqDbgOutputForce55;
+    n1 seqDbgChForce4;
+    n1 seqDbgChForce2;
+    n4 seqDbgUnknown;
     
     // This output covers Channels 1-4 (excluding Hyper Voice)
     struct Output {
@@ -221,7 +229,6 @@ struct APU : Thread, IO {
   struct State {
     n13 sweepClock;
     n7 apuClock;
-    n8 unknown95;
   } state;
 };
 

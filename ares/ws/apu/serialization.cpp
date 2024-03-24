@@ -14,11 +14,17 @@ auto APU::serialize(serializer& s) -> void {
   s(io.headphonesEnable);
   s(io.headphonesConnected);
   s(io.masterVolume);
+
+  s(io.seqDbgHold);
+  s(io.seqDbgOutputForce55);
+  s(io.seqDbgChForce4);
+  s(io.seqDbgChForce2);
+  s(io.seqDbgUnknown);
+  
   s(io.output.left);
   s(io.output.right);
   s(state.sweepClock);
   s(state.apuClock);
-  s(state.unknown95);
 }
 
 auto APU::DMA::serialize(serializer& s) -> void {

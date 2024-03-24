@@ -50,7 +50,7 @@ auto APU::main() -> void {
     case 122:
       // TODO: Sound DMA should be blocking the CPU instead.
       dma.run();
-      io.output = {};
+      apu.sequencerClear();
       break;
     case 123: if(channel5.io.enable)                      channel5.runOutput(); break; // TODO: Which cycle is this performed on?
     case 124: if(channel1.io.enable)                      channel1.output(); break;
@@ -61,7 +61,8 @@ auto APU::main() -> void {
 
     step(1);
   } else {
-    io.output = {};
+    dma.run();
+    apu.sequencerClear();
 
     for(u32 s = 0; s < 128; s++) {
       channel1.tick();
@@ -70,8 +71,6 @@ auto APU::main() -> void {
       if(++state.sweepClock == 0) channel3.sweep();
       channel4.tick();
     }
-
-    dma.run();
     
     channel5.runOutput();
     if(channel1.io.enable)                      channel1.output();
@@ -85,7 +84,22 @@ auto APU::main() -> void {
   }
 }
 
+auto APU::sequencerClear() -> void {
+  io.output = {};
+  if(io.seqDbgOutputForce55) {
+    io.output.left  = 0x55;
+    io.output.right = 0x55;
+  }
+}
+
+auto APU::sequencerHeld() -> bool {
+  return io.seqDbgHold || io.seqDbgOutputForce55;
+}
+
 auto APU::sample(u32 channel, n5 index) -> n4 {
+  if(io.seqDbgChForce4) return 4;
+  if(io.seqDbgChForce2) return 2;
+  
   n8 data = iram.read((io.waveBase << 6) + (--channel << 4) + (index >> 1));
   if(index.bit(0) == 0) return data.bit(0,3);
   if(index.bit(0) == 1) return data.bit(4,7);

@@ -13,6 +13,7 @@ auto APU::Channel3::tick() -> void {
 }
 
 auto APU::Channel3::output() -> void {
+  if(apu.sequencerHeld()) return;
   auto sample = apu.sample(3, state.sampleOffset);
   apu.io.output.left  += sample * io.volumeLeft;
   apu.io.output.right += sample * io.volumeRight;

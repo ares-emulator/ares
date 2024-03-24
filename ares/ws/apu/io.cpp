@@ -121,7 +121,11 @@ auto APU::readIO(n16 address) -> n8 {
     break;
 
   case 0x0095:
-    data = state.unknown95;
+    data.bit(0)   = io.seqDbgHold;
+    data.bit(1,4) = io.seqDbgUnknown;
+    data.bit(5)   = io.seqDbgOutputForce55;
+    data.bit(6)   = io.seqDbgChForce2;
+    data.bit(7)   = io.seqDbgChForce4;
     break;
   
   case range2(0x0096, 0x0097):  //SND_OUT_R
@@ -291,7 +295,11 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x0095:
-    state.unknown95 = data;
+    io.seqDbgHold          = data.bit(0);
+    io.seqDbgUnknown       = data.bit(1,4);
+    io.seqDbgOutputForce55 = data.bit(5);
+    io.seqDbgChForce2      = data.bit(6);
+    io.seqDbgChForce4      = data.bit(7);
     break;
 
   case 0x009e:  //SND_VOLUME
