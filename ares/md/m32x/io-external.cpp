@@ -136,6 +136,7 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   if(address == 0xa1518a) {
     data.bit( 0) = vdp.framebufferActive;
     data.bit( 1) = MegaDrive::vdp.refreshing();  //framebuffer access
+    data.bit( 2, 12) = 0;
     data.bit(13) = vdp.vblank || vdp.hblank;     //palette access
     data.bit(14) = vdp.hblank;
     data.bit(15) = vdp.vblank;
