@@ -19,6 +19,7 @@ auto APU::serialize(serializer& s) -> void {
   s(state.seqOutputLeft);
   s(state.seqOutputRight);
   s(state.seqOutputSum);
+  s(state.unknown95);
 }
 
 auto APU::DMA::serialize(serializer& s) -> void {
@@ -105,6 +106,8 @@ auto APU::Channel5::serialize(serializer& s) -> void {
   s(state.channel);
   s(state.left);
   s(state.right);
+  s(state.leftChanged);
+  s(state.rightChanged);
   s(output.left);
   s(output.right);
 }

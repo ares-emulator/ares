@@ -1,8 +1,31 @@
 auto APU::Channel5::dmaWrite(n8 sample) -> void {
-  if (io.mode == 3 || (io.mode != 1 &&  state.channel)) state.right = sample;
-  if (io.mode == 3 || (io.mode != 2 && !state.channel)) state.left = sample;
+  if (io.mode == 0) {
+    write(sample);
+    state.channel ^= 1;
+  }
+  if (io.mode == 1 || io.mode == 3) {
+    state.channel = 0;
+    write(sample);
+  }
+  if (io.mode == 2 || io.mode == 3) {
+    state.channel = 1;
+    write(sample);
+  }
+}
 
+auto APU::Channel5::manualWrite(n8 sample) -> void {
+  write(sample);
   state.channel ^= 1;
+}
+
+auto APU::Channel5::write(n8 sample) -> void {
+  if (state.channel) {
+    state.right = sample;
+    state.rightChanged = 1;
+  } else {
+    state.left = sample;
+    state.leftChanged = 1;
+  }
 }
 
 auto APU::Channel5::scale(i8 sample) -> i16 {
@@ -23,8 +46,14 @@ auto APU::Channel5::runOutput() -> void {
   if (++state.clock < divisors[io.speed]) return;
   state.clock = 0;
 
-  output.left = scale(state.left);
-  output.right = scale(state.right);
+  if (state.leftChanged) {
+    output.left = scale(state.left);
+    state.leftChanged = 0;
+  }
+  if (state.rightChanged) {
+    output.right = scale(state.right);
+    state.rightChanged = 0;
+  }
 }
 
 auto APU::Channel5::power() -> void {

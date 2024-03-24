@@ -120,9 +120,8 @@ auto APU::readIO(n16 address) -> n8 {
     data.bit(3) = channel2.io.voiceEnableLeftFull;
     break;
 
-  case 0x0095:  //TODO: SND_HYPERVOICE?
-    if(!system.color()) break;
-    data = channel5.state.left;
+  case 0x0095:
+    data = state.unknown95;
     break;
   
   case 0x0096:
@@ -206,14 +205,9 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     channel5.output.right.bit(8,15) = data;
     break;
 
-  case 0x0068:
-    if(!system.color()) break;
-    channel5.state.left = data;
-    break;
-
   case 0x0069:
     if(!system.color()) break;
-    channel5.state.right = data;
+    channel5.manualWrite(data);
     break;
 
   case 0x006a:  //SND_HYPER_CTRL
@@ -305,6 +299,10 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     channel2.io.voiceEnableRightFull = data.bit(1);
     channel2.io.voiceEnableLeftHalf  = data.bit(2);
     channel2.io.voiceEnableLeftFull  = data.bit(3);
+    break;
+
+  case 0x0095:
+    state.unknown95 = data;
     break;
 
   case 0x009e:  //SND_VOLUME
