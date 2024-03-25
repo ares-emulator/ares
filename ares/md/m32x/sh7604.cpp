@@ -60,6 +60,7 @@ auto M32X::SH7604::step(u32 clocks) -> void {
 
   Thread::step(clocks);
   cyclesUntilSh2Sync -= clocks;
+  cyclesUntilM68kSync -= clocks;
   cyclesUntilFullSync -= clocks;
 
   if(cyclesUntilFullSync <= 0) {
@@ -71,9 +72,10 @@ auto M32X::SH7604::step(u32 clocks) -> void {
 
 auto M32X::SH7604::power(bool reset) -> void {
   Thread::create(23'000'000, {&M32X::SH7604::main, this});
-  SH2::recompilerStepCycles = 20;  // Minimum cycles for recompiler to run for each batch of instructions
+  SH2::recompilerStepCycles =  20; // Minimum cycles for recompiler to run for each batch of instructions
   minCyclesBetweenFullSyncs = 200; // Minimum cycles between full sync with the M68K/MD side
-  minCyclesBetweenSh2Syncs  = 5;   // Minimum Cycles between sync with the other SH2 (syncOtherSh2)
+  minCyclesBetweenSh2Syncs  =   5; // Minimum Cycles between sync with the other SH2 (syncOtherSh2)
+  minCyclesBetweenM68kSyncs =  10; // Minimum Cycles between sync with the M68K (syncM68k)
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
@@ -92,6 +94,13 @@ auto M32X::SH7604::syncOtherSh2() -> void {
   if(m32x.shm.active()) Thread::synchronize(m32x.shs);
   if(m32x.shs.active()) Thread::synchronize(m32x.shm);
   cyclesUntilSh2Sync = minCyclesBetweenSh2Syncs;
+}
+
+auto M32X::SH7604::syncM68k() -> void {
+  // avoid synchronizing if we recently have
+  if(cyclesUntilM68kSync > 0) return;
+  Thread::synchronize(cpu);
+  cyclesUntilM68kSync = minCyclesBetweenM68kSyncs;
 }
 
 auto M32X::SH7604::busReadByte(u32 address) -> u32 {

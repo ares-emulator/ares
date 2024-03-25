@@ -1,4 +1,6 @@
 auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
+  if(shm.active()) shm.step(1); if(shs.active()) shs.step(1);
+
   //interrupt mask
   if(address == 0x4000) {
     if(shm.active()) {
@@ -69,8 +71,8 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
   //communication
   if(address >= 0x4020 && address <= 0x402f) {
     data = communication[address >> 1 & 7];
-    if(shm.active()) shm.syncOtherSh2();
-    if(shs.active()) shs.syncOtherSh2();
+    if(shm.active()) { shm.syncOtherSh2(); shm.syncM68k(); }
+    if(shs.active()) { shs.syncOtherSh2(); shs.syncM68k(); }
   }
 
   //PWM control
@@ -136,8 +138,8 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //frame buffer control
   if(address == 0x410a) {
-    if(shm.active()) shm.synchronize(cpu);
-    if(shs.active()) shs.synchronize(cpu);
+    if(shm.active()) shm.syncM68k();
+    if(shs.active()) shs.syncM68k();
     data.bit( 0) = vdp.framebufferActive;
     data.bit( 1) = MegaDrive::vdp.refreshing();  //framebuffer access
     data.bit(13) = vdp.vblank || vdp.hblank;     //palette access
@@ -147,6 +149,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //palette
   if(address >= 0x4200 && address <= 0x43ff) {
+    if(shm.active()) shm.step(4); if(shs.active()) shs.step(4);
     data = vdp.cram[address >> 1 & 0xff];
   }
 
@@ -154,6 +157,8 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 }
 
 auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
+  if(shm.active()) shm.step(1); if(shs.active()) shs.step(1);
+
   //interrupt mask
   if(address == 0x4000) {
     if(lower && shm.active()) {
@@ -220,6 +225,8 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //communication
   if(address >= 0x4020 && address <= 0x402f) {
+    if(shm.active()) { shm.syncOtherSh2(); shm.syncM68k(); }
+    if(shs.active()) { shs.syncOtherSh2(); shs.syncM68k(); }
     if(upper) communication[address >> 1 & 7].byte(1) = data.byte(1);
     if(lower) communication[address >> 1 & 7].byte(0) = data.byte(0);
   }
@@ -321,6 +328,7 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
   //palette
   if(address >= 0x4200 && address <= 0x43ff) {
     if (!vdp.framebufferAccess) return;
+    if(shm.active()) shm.step(4); if(shs.active()) shs.step(4);
     if(upper) vdp.cram[address >> 1 & 0xff].byte(1) = data.byte(1);
     if(lower) vdp.cram[address >> 1 & 0xff].byte(0) = data.byte(0);
   }

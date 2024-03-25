@@ -36,6 +36,7 @@ auto SH2::instruction() -> void {
     do {
       auto block = recompiler.block(PC - 4);
       block->execute(*this);
+      ID = 0;
     } while (CCR < cyclesUntilRecompilerExit);
 
     // Reset the count as it may have been set to 0 for an early exit
@@ -43,7 +44,6 @@ auto SH2::instruction() -> void {
 
     step(CCR);
     CCR = 0;
-    ID = 0;
   }
 }
 
