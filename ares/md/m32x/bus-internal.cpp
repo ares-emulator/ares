@@ -65,7 +65,6 @@ auto M32X::writeInternal(n1 upper, n1 lower, n32 address, n16 data) -> void {
   }
 
   if(address >= 0x0600'0000 && address <= 0x0603'ffff) {
-    if(shm.active()) shm.step(1); if(shs.active()) shs.step(1);
     if(upper) sdram[address >> 1 & 0x1ffff].byte(1) = data.byte(1);
     if(lower) sdram[address >> 1 & 0x1ffff].byte(0) = data.byte(0);
     return;
