@@ -11,8 +11,9 @@ auto DriverSettings::construct() -> void {
   videoDriverLabel.setText("Driver:");
   videoDriverAssign.setText("Apply").setEnabled(false).onActivate([&] {
     settings.video.driver = videoDriverList.selected().text();
-    videoDriverUpdate();
-    videoDriverAssign.setEnabled(false);
+    if (videoDriverUpdate()) {
+      videoDriverAssign.setEnabled(false);
+    }
   });
   videoMonitorLabel.setText("Fullscreen monitor:");
   videoMonitorList.onChange([&] {
@@ -48,8 +49,9 @@ auto DriverSettings::construct() -> void {
   audioDriverLabel.setText("Driver:");
   audioDriverAssign.setText("Apply").setEnabled(false).onActivate([&] {
     settings.audio.driver = audioDriverList.selected().text();
-    audioDriverUpdate();
-    audioDriverAssign.setEnabled(false);
+    if (audioDriverUpdate()) {
+      audioDriverAssign.setEnabled(false);
+    }
   });
   audioDeviceLabel.setText("Output device:");
   audioDeviceList.onChange([&] {
@@ -91,8 +93,9 @@ auto DriverSettings::construct() -> void {
   inputDriverLabel.setText("Driver:");
   inputDriverAssign.setText("Apply").setEnabled(false).onActivate([&] {
     settings.input.driver = inputDriverList.selected().text();
-    inputDriverUpdate();
-    inputDriverAssign.setEnabled(false);
+    if (inputDriverUpdate()) {
+      inputDriverAssign.setEnabled(false);
+    }
   });
   inputDefocusLabel.setText("When focus is lost:");
   inputDefocusPause.setText("Pause emulation").onActivate([&] {
@@ -148,13 +151,14 @@ auto DriverSettings::videoRefresh() -> void {
   VerticalLayout::resize();
 }
 
-auto DriverSettings::videoDriverUpdate() -> void {
+auto DriverSettings::videoDriverUpdate() -> bool {
   if(emulator && settings.video.driver != "None" && MessageDialog(
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
-  ).setAlignment(settingsWindow).question() != "Yes") return;
+  ).setAlignment(settingsWindow).question() != "Yes") return false;
   program.videoDriverUpdate();
   videoRefresh();
+  return true;
 }
 
 auto DriverSettings::audioRefresh() -> void {
@@ -189,13 +193,14 @@ auto DriverSettings::audioRefresh() -> void {
   VerticalLayout::resize();
 }
 
-auto DriverSettings::audioDriverUpdate() -> void {
+auto DriverSettings::audioDriverUpdate() -> bool {
   if(emulator && settings.audio.driver != "None" && MessageDialog(
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
-  ).setAlignment(settingsWindow).question() != "Yes") return;
+  ).setAlignment(settingsWindow).question() != "Yes") return false;
   program.audioDriverUpdate();
   audioRefresh();
+  return true;
 }
 
 auto DriverSettings::inputRefresh() -> void {
@@ -208,11 +213,12 @@ auto DriverSettings::inputRefresh() -> void {
   VerticalLayout::resize();
 }
 
-auto DriverSettings::inputDriverUpdate() -> void {
+auto DriverSettings::inputDriverUpdate() -> bool {
   if(emulator && settings.input.driver != "None" && MessageDialog(
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
-  ).setAlignment(settingsWindow).question() != "Yes") return;
+  ).setAlignment(settingsWindow).question() != "Yes") return false;
   program.inputDriverUpdate();
   inputRefresh();
+  return true;
 }
