@@ -1,4 +1,8 @@
+#if defined(MACOS_COMPILED_SDL)
+#include "SDL.h"
+#else
 #include <SDL2/SDL.h>
+#endif
 
 struct AudioSDL : AudioDriver {
   AudioSDL& self = *this;
