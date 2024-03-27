@@ -25,7 +25,6 @@ auto CPU::prefetchReset() -> void {
 
 auto CPU::prefetchRead() -> n16 {
   if(prefetch.empty()) prefetchStep(prefetch.wait);
-  else prefetchStep(1);
 
   if(prefetch.full()) prefetch.wait = _wait(Half | Sequential, prefetch.load);
 

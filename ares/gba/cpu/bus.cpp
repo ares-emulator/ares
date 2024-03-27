@@ -12,6 +12,7 @@ auto CPU::get(u32 mode, n32 address) -> n32 {
   } else if(address & 0x0800'0000) {
     if(mode & Prefetch && wait.prefetch) {
       prefetchSync(address);
+      prefetchStep(1);
       word = prefetchRead();
       if(mode & Word) word |= prefetchRead() << 16;
     } else {
