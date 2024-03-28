@@ -11,6 +11,11 @@ Presentation::Presentation() {
 
   settingsMenu.setText("Settings");
   videoSizeMenu.setText("Size").setIcon(Icon::Emblem::Image);
+  
+  bool hideCursorImplemented = false;
+#if defined(PLATFORM_MACOS)
+  hideCursorImplemented = true;
+#endif
 
   //generate size menu
   u32 multipliers = 5;
@@ -91,6 +96,14 @@ Presentation::Presentation() {
   muteAudioSetting.setText("Mute Audio").setChecked(settings.audio.mute).onToggle([&] {
     settings.audio.mute = muteAudioSetting.checked();
   });
+  autoHideCursorSetting.setText("Auto-Hide Cursor").setChecked(settings.general.autoHideCursor).onToggle([&] {
+    settings.general.autoHideCursor = autoHideCursorSetting.checked();
+    settingsWindow.optionSettings.autoHideCursorOption.setChecked(settings.general.autoHideCursor);
+    presentation.setHidesCursor(settings.general.autoHideCursor);
+  });
+  if(!hideCursorImplemented) {
+    autoHideCursorSetting.setVisible(false);
+  }
   showStatusBarSetting.setText("Show Status Bar").setChecked(settings.general.showStatusBar).onToggle([&] {
     settings.general.showStatusBar = showStatusBarSetting.checked();
     if(!showStatusBarSetting.checked()) {
@@ -225,6 +238,8 @@ Presentation::Presentation() {
       program.load(emulator, filename);
     }
   });
+
+  setHidesCursor(settings.general.autoHideCursor);
 
   iconLayout.setCollapsible();
 

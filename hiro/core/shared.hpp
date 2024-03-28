@@ -934,6 +934,7 @@ struct Window : sWindow {
   auto remove(sStatusBar statusBar) { return self().remove(statusBar), *this; }
   auto reset() { return self().reset(), *this; }
   auto resizable() const { return self().resizable(); }
+  auto hidesCursor() const { return self().hidesCursor(); }
   auto setAlignment(Alignment alignment = Alignment::Center) { return self().setAlignment(alignment), *this; }
   auto setAlignment(sWindow relativeTo, Alignment alignment = Alignment::Center) { return self().setAlignment(relativeTo, alignment), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
@@ -953,6 +954,7 @@ struct Window : sWindow {
   auto setPosition(Position position) { return self().setPosition(position), *this; }
   auto setPosition(sWindow relativeTo, Position position) { return self().setPosition(relativeTo, position), *this; }
   auto setResizable(bool resizable = true) { return self().setResizable(resizable), *this; }
+  auto setHidesCursor(bool hidesCursor = true) { return self().setHidesCursor(hidesCursor), *this; }
   auto setSize(Size size) { return self().setSize(size), *this; }
   auto setTitle(const string& title = "") { return self().setTitle(title), *this; }
   auto setAssociatedFile(const string& filename = "") { return self().setAssociatedFile(filename), *this; }
