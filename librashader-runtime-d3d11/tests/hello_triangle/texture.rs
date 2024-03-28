@@ -3,11 +3,11 @@ use librashader_runtime::image::Image;
 use librashader_runtime::scaling::MipmapSize;
 use windows::Win32::Graphics::Direct3D::D3D_SRV_DIMENSION_TEXTURE2D;
 use windows::Win32::Graphics::Direct3D11::{
-    ID3D11Device, ID3D11DeviceContext, ID3D11ShaderResourceView, ID3D11Texture2D, D3D11_BIND_FLAG,
-    D3D11_BIND_RENDER_TARGET, D3D11_BIND_SHADER_RESOURCE, D3D11_BOX, D3D11_CPU_ACCESS_FLAG,
-    D3D11_CPU_ACCESS_WRITE, D3D11_RESOURCE_MISC_FLAG, D3D11_RESOURCE_MISC_GENERATE_MIPS,
-    D3D11_SHADER_RESOURCE_VIEW_DESC, D3D11_SHADER_RESOURCE_VIEW_DESC_0, D3D11_SUBRESOURCE_DATA,
-    D3D11_TEX2D_SRV, D3D11_TEXTURE2D_DESC, D3D11_USAGE_DYNAMIC, D3D11_USAGE_STAGING,
+    ID3D11Device, ID3D11DeviceContext, ID3D11ShaderResourceView, ID3D11Texture2D,
+    D3D11_BIND_RENDER_TARGET, D3D11_BIND_SHADER_RESOURCE, D3D11_BOX, D3D11_CPU_ACCESS_WRITE,
+    D3D11_RESOURCE_MISC_GENERATE_MIPS, D3D11_SHADER_RESOURCE_VIEW_DESC,
+    D3D11_SHADER_RESOURCE_VIEW_DESC_0, D3D11_SUBRESOURCE_DATA, D3D11_TEX2D_SRV,
+    D3D11_TEXTURE2D_DESC, D3D11_USAGE_DYNAMIC, D3D11_USAGE_STAGING,
 };
 use windows::Win32::Graphics::Dxgi::Common::DXGI_SAMPLE_DESC;
 
@@ -64,7 +64,7 @@ impl ExampleTexture {
             Width: source.size.width,
             Height: source.size.height,
             // todo: set this to 0
-            MipLevels: if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS).0 != 0 {
+            MipLevels: if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS.0 as u32) != 0 {
                 0
             } else {
                 1
@@ -75,17 +75,17 @@ impl ExampleTexture {
                 Quality: 0,
             },
             CPUAccessFlags: if desc.Usage == D3D11_USAGE_DYNAMIC {
-                D3D11_CPU_ACCESS_WRITE
+                D3D11_CPU_ACCESS_WRITE.0 as u32
             } else {
-                D3D11_CPU_ACCESS_FLAG(0)
+                0
             },
             ..desc
         };
-        desc.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+        desc.BindFlags |= D3D11_BIND_SHADER_RESOURCE.0 as u32;
 
         // determine number of mipmaps required
-        if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS).0 != 0 {
-            desc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+        if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS.0 as u32) != 0 {
+            desc.BindFlags |= D3D11_BIND_RENDER_TARGET.0 as u32;
             desc.MipLevels = source.size.calculate_miplevels();
         }
 
@@ -102,10 +102,10 @@ impl ExampleTexture {
             device.CreateTexture2D(
                 &D3D11_TEXTURE2D_DESC {
                     MipLevels: 1,
-                    BindFlags: D3D11_BIND_FLAG(0),
-                    MiscFlags: D3D11_RESOURCE_MISC_FLAG(0),
+                    BindFlags: 0,
+                    MiscFlags: 0,
                     Usage: D3D11_USAGE_STAGING,
-                    CPUAccessFlags: D3D11_CPU_ACCESS_WRITE,
+                    CPUAccessFlags: D3D11_CPU_ACCESS_WRITE.0 as u32,
                     ..desc
                 },
                 Some(&D3D11_SUBRESOURCE_DATA {
@@ -152,7 +152,7 @@ impl ExampleTexture {
             )?;
             let srv = srv.unwrap();
 
-            if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS).0 != 0 {
+            if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS.0 as u32) != 0 {
                 context.GenerateMips(&srv)
             }
 

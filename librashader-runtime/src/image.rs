@@ -26,6 +26,11 @@ pub struct RGBA8;
 /// Every BGR with alpha pixel is represented with 32 bits.
 pub struct BGRA8;
 
+/// A8R8G8B8 pixel format.
+///
+/// Every BGR with alpha pixel is represented with 32 bits.
+pub struct ARGB8;
+
 /// Represents an image pixel format to convert images into.
 pub trait PixelFormat {
     #[doc(hidden)]
@@ -41,6 +46,16 @@ impl PixelFormat for BGRA8 {
         assert!(pixels.len() % 4 == 0);
         for [r, _g, b, _a] in ArrayChunksMut::new(pixels) {
             std::mem::swap(b, r)
+        }
+    }
+}
+
+impl PixelFormat for ARGB8 {
+    fn convert(pixels: &mut Vec<u8>) {
+        assert!(pixels.len() % 4 == 0);
+        for [r, _g, b, a] in ArrayChunksMut::new(pixels) {
+            std::mem::swap(r, a); // abgr
+            std::mem::swap(b, r); // argb
         }
     }
 }

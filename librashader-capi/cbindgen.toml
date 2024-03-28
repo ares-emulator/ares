@@ -38,6 +38,9 @@ after_includes = """
 #if defined(_WIN32) && defined(LIBRA_RUNTIME_D3D12)
 #include <d3d12.h>
 #endif
+#if defined(_WIN32) && defined(LIBRA_RUNTIME_D3D9)
+#include <D3D9.h>
+#endif
 #if defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL) && defined(__OBJC__)
 #import <Metal/Metal.h>
 #endif
@@ -51,6 +54,7 @@ after_includes = """
 "feature = runtime-vulkan" = "LIBRA_RUNTIME_VULKAN"
 "feature = runtime-d3d11" = "LIBRA_RUNTIME_D3D11"
 "feature = runtime-d3d12" = "LIBRA_RUNTIME_D3D12"
+"feature = runtime-d3d9" = "LIBRA_RUNTIME_D3D9"
 "feature = runtime-metal" = "LIBRA_RUNTIME_METAL"
 "feature = __cbindgen_internal_objc" = "__OBJC__"
 
@@ -137,6 +141,14 @@ include = [
     "PFN_libra_d3d11_filter_chain_get_active_pass_count",
     "PFN_libra_d3d11_filter_chain_free",
 
+    # d3d11
+    "PFN_libra_d3d9_filter_chain_create",
+    "PFN_libra_d3d9_filter_chain_frame",
+    "PFN_libra_d3d9_filter_chain_set_param",
+    "PFN_libra_d3d9_filter_chain_get_param",
+    "PFN_libra_d3d9_filter_chain_set_active_pass_count",
+    "PFN_libra_d3d9_filter_chain_get_active_pass_count",
+    "PFN_libra_d3d9_filter_chain_free",
 
     # d3d12
     "PFN_libra_d3d12_filter_chain_create",
@@ -176,6 +188,7 @@ exclude = [
 "FilterChainVulkan" = "_filter_chain_vk"
 "FilterChainD3D11" = "_filter_chain_d3d11"
 "FilterChainD3D12" = "_filter_chain_d3d12"
+"FilterChainD3D9" = "_filter_chain_d3d9"
 "FilterChainMetal" = "_filter_chain_mtl"
 
 # vulkan renames
@@ -192,6 +205,11 @@ exclude = [
 "ID3D11DeviceContext" = "ID3D11DeviceContext *"
 "ID3D11RenderTargetView" = "ID3D11RenderTargetView *"
 "ID3D11ShaderResourceView" = "ID3D11ShaderResourceView *"
+
+# hack to get proper pointer indirection for COM pointers
+"IDirect3DDevice9" = "IDirect3DDevice9 *"
+"IDirect3DSurface9" = "IDirect3DSurface9 *"
+"IDirect3DTexture9" = "IDirect3DTexture9 *"
 
 # hack to force cbindgen to not generate option type for nullable ID3D11DeviceContext.
 "Option_ID3D11DeviceContext" = "ID3D11DeviceContext *"

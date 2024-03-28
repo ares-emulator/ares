@@ -4,7 +4,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.3"
+version = "0.2.7"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -13,28 +13,29 @@ keywords = ["shader", "retroarch", "SPIR-V"]
 description = "RetroArch shaders for all."
 
 [dependencies]
-librashader-common = { path = "../librashader-common", version = "0.2.3" }
-librashader-presets = { path = "../librashader-presets", version = "0.2.3" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.3" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.3" }
-librashader-cache = { path = "../librashader-cache", version = "0.2.3" }
-librashader-runtime  = { path = "../librashader-runtime", version = "0.2.3" }
-librashader-runtime-d3d11  = { path = "../librashader-runtime-d3d11", version = "0.2.3", optional = true }
-librashader-runtime-d3d12  = { path = "../librashader-runtime-d3d12", version = "0.2.3", optional = true }
-librashader-runtime-gl = { path = "../librashader-runtime-gl", version = "0.2.3", optional = true }
-librashader-runtime-vk = { path = "../librashader-runtime-vk", version = "0.2.3", optional = true }
-librashader-runtime-mtl = { path = "../librashader-runtime-mtl", version = "0.2.3", optional = true }
+librashader-common = { path = "../librashader-common", version = "0.2.7" }
+librashader-presets = { path = "../librashader-presets", version = "0.2.7" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.7" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.2.7" }
+librashader-cache = { path = "../librashader-cache", version = "0.2.7" }
+librashader-runtime  = { path = "../librashader-runtime", version = "0.2.7" }
+librashader-runtime-d3d11  = { path = "../librashader-runtime-d3d11", version = "0.2.7", optional = true }
+librashader-runtime-d3d12  = { path = "../librashader-runtime-d3d12", version = "0.2.7", optional = true }
+librashader-runtime-d3d9  = { path = "../librashader-runtime-d3d9", version = "0.2.7", optional = true }
+librashader-runtime-gl = { path = "../librashader-runtime-gl", version = "0.2.7", optional = true }
+librashader-runtime-vk = { path = "../librashader-runtime-vk", version = "0.2.7", optional = true }
+librashader-runtime-mtl = { path = "../librashader-runtime-mtl", version = "0.2.7", optional = true }
 
 ash = { version = "0.37", optional = true }
 halfbrown = "0.2.4"
 
 [target.'cfg(not(all(target_vendor="apple", docsrs)))'.dependencies]
 wgpu = { version = "0.19", default-features = false, optional = true }
-librashader-runtime-wgpu = { path = "../librashader-runtime-wgpu", version = "0.2.3", optional = true }
+librashader-runtime-wgpu = { path = "../librashader-runtime-wgpu", version = "0.2.7", optional = true }
 wgpu-types = { version = "0.19", optional = true }
 
 [target.'cfg(windows)'.dependencies.windows]
-version = "0.48.0"
+workspace = true
 optional = true
 
 [target.'cfg(target_vendor="apple")'.dependencies]
@@ -53,6 +54,8 @@ presets = []
 runtime-gl = [ "runtime", "reflect-cross", "librashader-common/opengl", "librashader-runtime-gl" ]
 runtime-d3d11 = [ "runtime", "reflect-cross","librashader-common/d3d11", "librashader-runtime-d3d11", "windows/Win32_Graphics_Direct3D11" ]
 runtime-d3d12 = [ "runtime", "reflect-cross", "reflect-dxil", "librashader-common/d3d12", "librashader-runtime-d3d12", "windows/Win32_Graphics_Direct3D12" ]
+runtime-d3d9 = [ "runtime", "reflect-cross", "librashader-common/d3d9", "librashader-runtime-d3d9", "windows/Win32_Graphics_Direct3D9" ]
+
 runtime-vk = ["runtime", "reflect-cross", "librashader-common/vulkan", "librashader-runtime-vk", "ash" ]
 runtime-wgpu = [ "runtime", "reflect-naga", "librashader-common/wgpu", "librashader-runtime-wgpu", "wgpu", "wgpu-types" ]
 runtime-metal = [ "runtime", "reflect-naga",  "reflect-cross", "librashader-common/metal", "librashader-runtime-mtl", "icrate", "objc2" ]

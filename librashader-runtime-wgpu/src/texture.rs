@@ -4,6 +4,7 @@ use librashader_common::{FilterMode, ImageFormat, Size, WrapMode};
 use librashader_presets::Scale2D;
 use librashader_runtime::scaling::{MipmapSize, ScaleFramebuffer, ViewportSize};
 use std::sync::Arc;
+use wgpu::TextureFormat;
 
 pub struct OwnedImage {
     device: Arc<wgpu::Device>,
@@ -35,11 +36,8 @@ impl OwnedImage {
         device: Arc<wgpu::Device>,
         size: Size<u32>,
         max_miplevels: u32,
-        format: ImageFormat,
+        format: TextureFormat,
     ) -> Self {
-        let format: Option<wgpu::TextureFormat> = format.into();
-        let format = format.unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
-
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
             size: size.into(),
@@ -78,16 +76,13 @@ impl OwnedImage {
     pub fn scale(
         &mut self,
         scaling: Scale2D,
-        format: ImageFormat,
+        format: TextureFormat,
         viewport_size: &Size<u32>,
         source_size: &Size<u32>,
         original_size: &Size<u32>,
         mipmap: bool,
     ) -> Size<u32> {
         let size = source_size.scale_viewport(scaling, *viewport_size, *original_size);
-        let format: Option<wgpu::TextureFormat> = format.into();
-        let format = format.unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
-
         if self.size != size
             || (mipmap && self.max_miplevels == 1)
             || (!mipmap && self.max_miplevels != 1)
@@ -114,7 +109,18 @@ impl OwnedImage {
         }
     }
 
-    pub fn copy_from(&self, cmd: &mut wgpu::CommandEncoder, source: &wgpu::Texture) {
+    pub fn copy_from(&mut self, cmd: &mut wgpu::CommandEncoder, source: &wgpu::Texture) {
+        let source_size = source.size().into();
+        if source.format() != self.image.format() || self.size != source_size {
+            let mut new = OwnedImage::new(
+                Arc::clone(&self.device),
+                source_size,
+                self.max_miplevels,
+                source.format(),
+            );
+            std::mem::swap(self, &mut new);
+        }
+
         cmd.copy_texture_to_texture(
             source.as_image_copy(),
             self.image.as_image_copy(),
@@ -149,6 +155,8 @@ impl ScaleFramebuffer for OwnedImage {
         should_mipmap: bool,
         _context: &Self::Context,
     ) -> Result<Size<u32>, Self::Error> {
+        let format: Option<wgpu::TextureFormat> = format.into();
+        let format = format.unwrap_or(TextureFormat::Bgra8Unorm);
         Ok(self.scale(
             scaling,
             format,

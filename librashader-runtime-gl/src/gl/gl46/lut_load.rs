@@ -25,7 +25,7 @@ impl LoadLut for Gl46LutLoad {
 
         let images = textures
             .par_iter()
-            .map(|texture| Image::load(&texture.path, UVDirection::BottomLeft))
+            .map(|texture| Image::load(&texture.path, UVDirection::TopLeft))
             .collect::<std::result::Result<Vec<Image>, ImageError>>()?;
 
         for (index, (texture, image)) in textures.iter().zip(images).enumerate() {

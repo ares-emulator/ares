@@ -3,7 +3,7 @@ use crate::memory::VulkanImageMemory;
 use crate::{error, util};
 use ash::vk;
 use gpu_allocator::vulkan::Allocator;
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 use std::sync::Arc;
 
 use crate::error::FilterChainError;
@@ -13,7 +13,7 @@ use librashader_runtime::scaling::{MipmapSize, ScaleFramebuffer, ViewportSize};
 
 pub struct OwnedImage {
     pub device: Arc<ash::Device>,
-    pub allocator: Arc<RwLock<Allocator>>,
+    pub allocator: Arc<Mutex<Allocator>>,
     pub image_view: vk::ImageView,
     pub image: VulkanImage,
     pub memory: VulkanImageMemory,
@@ -33,7 +33,7 @@ pub struct OwnedImageLayout {
 impl OwnedImage {
     fn new_internal(
         device: Arc<ash::Device>,
-        alloc: &Arc<RwLock<Allocator>>,
+        alloc: &Arc<Mutex<Allocator>>,
         size: Size<u32>,
         mut format: ImageFormat,
         max_miplevels: u32,

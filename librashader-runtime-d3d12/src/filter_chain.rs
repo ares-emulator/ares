@@ -234,7 +234,7 @@ impl FilterChainD3D12 {
             if fence.GetCompletedValue() < 1 {
                 fence.SetEventOnCompletion(1, fence_event)?;
                 WaitForSingleObject(fence_event, INFINITE);
-                CloseHandle(fence_event);
+                CloseHandle(fence_event)?;
             }
 
             Ok(filter_chain)

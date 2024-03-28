@@ -16,18 +16,27 @@ Windows and macOS users can grab the latest binaries from [GitHub Releases](http
 
 ## Supported Render APIs
 librashader supports all modern graphics runtimes, including wgpu, Vulkan, OpenGL 3.3+ and 4.6 (with DSA), 
-Direct3D 11, Direct3D 12, and Metal. librashader does not support legacy render
-APIs such as older versions of OpenGL, or legacy versions of Direct3D.
+Direct3D 11, Direct3D 12, and Metal. 
+
+librashader does not support legacy render APIs such as older versions of OpenGL or Direct3D, except for experimental
+support for Direct3D 9.
 
 | **API**     | **Status** | **`librashader` feature** |
-|-------------|-----------|---------------------------|
-| OpenGL 3.3+ | ✔         | `gl`                      |
-| OpenGL 4.6  | ✔         | `gl`                      |
-| Vulkan      | ✔         | `vk`                      |
-| Direct3D 11 | ✔         | `d3d11`                   |
-| Direct3D 12 | ✔         | `d3d12`                   |
-| Metal       | ✔         | `metal`                   |
-| wgpu        | ✔         | `wgpu`                    |
+|-------------|------------|---------------------------|
+| OpenGL 3.3+ | ✅          | `gl`                      |
+| OpenGL 4.6  | ✅          | `gl`                      |
+| Vulkan      | ✅          | `vk`                      |
+| Direct3D 9  | ⚠️         | `d3d9`                    |
+| Direct3D 11 | ✅          | `d3d11`                   |
+| Direct3D 12 | ✅          | `d3d12`                   |
+| Metal       | ✅          | `metal`                   |
+| wgpu        | 🆗         | `wgpu`                    |
+
+✅ Full Support &mdash; 🆗 Secondary Support &mdash; ⚠️ ️Experimental Support
+
+wgpu may not support all shaders due to restrictions from WGSL. Direct3D 9 support is experimental and does not fully
+support features such as previous frame feedback or history, as well as being unable to support shaders that need Direct3D 10+
+only features. 
 
 ## Usage
 

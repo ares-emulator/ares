@@ -23,15 +23,13 @@ use librashader_runtime::uniforms::{NoUniformBinder, UniformStorage, UniformStor
 use std::sync::Arc;
 
 pub struct FilterPass {
-    pub device: Arc<ash::Device>,
     pub reflection: ShaderReflection,
-    // pub(crate) compiled: ShaderCompilerOutput<Vec<u32>>,
-    pub(crate) uniform_storage: UniformStorage<NoUniformBinder, Option<()>, RawVulkanBuffer>,
+    pub(crate) uniform_storage:
+        UniformStorage<NoUniformBinder, Option<()>, RawVulkanBuffer, Box<[u8]>, Arc<ash::Device>>,
     pub uniform_bindings: FastHashMap<UniformBinding, MemberOffset>,
     pub source: ShaderSource,
     pub config: ShaderPassConfig,
     pub graphics_pipeline: VulkanGraphicsPipeline,
-    // pub ubo_ring: VkUboRing,
     pub frames_in_flight: u32,
 }
 
@@ -123,7 +121,7 @@ impl FilterPass {
             )?;
         }
 
-        output.output.begin_pass(cmd);
+        output.output.begin_pass(&parent.device, cmd);
 
         let residual = self.graphics_pipeline.begin_rendering(output, cmd)?;
 
@@ -176,7 +174,7 @@ impl FilterPass {
             parent
                 .device
                 .cmd_set_viewport(cmd, 0, &[output.output.size.into()]);
-            parent.draw_quad.draw_quad(cmd, vbo_type);
+            parent.draw_quad.draw_quad(&parent.device, cmd, vbo_type);
             self.graphics_pipeline.end_rendering(cmd);
         }
         Ok(residual)
@@ -196,7 +194,7 @@ impl FilterPass {
         source: &InputImage,
     ) {
         Self::bind_semantics(
-            &self.device,
+            &parent.device,
             &parent.samplers,
             &mut self.uniform_storage,
             descriptor_set,

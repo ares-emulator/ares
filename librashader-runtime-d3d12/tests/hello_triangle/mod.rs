@@ -69,7 +69,7 @@ where
         cbSize: std::mem::size_of::<WNDCLASSEXA>() as u32,
         style: CS_HREDRAW | CS_VREDRAW,
         lpfnWndProc: Some(wndproc::<S>),
-        hInstance: instance,
+        hInstance: HINSTANCE::from(instance),
         hCursor: unsafe { LoadCursorW(None, IDC_ARROW)? },
         lpszClassName: s!("RustWindowClass"),
         ..Default::default()
@@ -86,7 +86,7 @@ where
         right: size.0,
         bottom: size.1,
     };
-    unsafe { AdjustWindowRect(&mut window_rect, WS_OVERLAPPEDWINDOW, false) };
+    unsafe { AdjustWindowRect(&mut window_rect, WS_OVERLAPPEDWINDOW, false)? };
 
     let mut title = sample.title();
 
@@ -190,7 +190,7 @@ fn get_hardware_adapter(factory: &IDXGIFactory4) -> Result<IDXGIAdapter1> {
         let mut desc = Default::default();
         unsafe { adapter.GetDesc1(&mut desc)? };
 
-        if (DXGI_ADAPTER_FLAG(desc.Flags) & DXGI_ADAPTER_FLAG_SOFTWARE) != DXGI_ADAPTER_FLAG_NONE {
+        if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE.0 as u32) != DXGI_ADAPTER_FLAG_NONE.0 as u32 {
             // Don't select the Basic Render Driver adapter. If you want a
             // software adapter, pass in "/warp" on the command line.
             continue;
@@ -583,12 +583,7 @@ pub mod d3d12_hello_triangle {
 
         // Record commands.
         unsafe {
-            // TODO: workaround for https://github.com/microsoft/win32metadata/issues/1006
-            command_list.ClearRenderTargetView(
-                rtv_handle,
-                &*[0.3, 0.4, 0.6, 1.0].as_ptr(),
-                Some(&[]),
-            );
+            command_list.ClearRenderTargetView(rtv_handle, &[0.3, 0.4, 0.6, 1.0], Some(&[]));
             command_list.IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
             command_list.IASetVertexBuffers(0, Some(&[resources.vbv]));
             command_list.DrawInstanced(3, 1, 0, 0);

@@ -231,7 +231,7 @@ impl OwnedImage {
 
         let rtv = self.create_render_target_view(heap)?;
 
-        unsafe { cmd.ClearRenderTargetView(*rtv.descriptor.as_ref(), CLEAR.as_ptr(), None) }
+        unsafe { cmd.ClearRenderTargetView(*rtv.descriptor.as_ref(), CLEAR, None) }
 
         util::d3d12_resource_transition(
             cmd,

@@ -79,22 +79,24 @@ impl FramebufferInterface for Gl46Framebuffer {
     }
     fn copy_from(fb: &mut GLFramebuffer, image: &GLImage) -> Result<()> {
         // todo: confirm this behaviour for unbound image.
-        if image.handle == 0 {
-            return Ok(());
-        }
-
-        // todo: may want to use a shader and draw a quad to be faster.
         if image.size != fb.size || image.format != fb.format {
             Self::init(fb, image.size, image.format)?;
         }
 
+        if image.handle == 0 {
+            return Ok(());
+        }
+
         unsafe {
             // gl::NamedFramebufferDrawBuffer(fb.handle, gl::COLOR_ATTACHMENT1);
-            gl::NamedFramebufferReadBuffer(image.handle, gl::COLOR_ATTACHMENT0);
-            gl::NamedFramebufferDrawBuffer(fb.fbo, gl::COLOR_ATTACHMENT0);
+            gl::NamedFramebufferReadBuffer(fb.fbo, gl::COLOR_ATTACHMENT0);
+            gl::NamedFramebufferDrawBuffer(fb.fbo, gl::COLOR_ATTACHMENT1);
+
+            gl::NamedFramebufferTexture(fb.fbo, gl::COLOR_ATTACHMENT0, image.handle, 0);
+            gl::NamedFramebufferTexture(fb.fbo, gl::COLOR_ATTACHMENT1, fb.image, 0);
 
             gl::BlitNamedFramebuffer(
-                image.handle,
+                fb.fbo,
                 fb.fbo,
                 0,
                 0,

@@ -90,6 +90,21 @@ use librashader::runtime::d3d12::FilterChain as FilterChainD3D12;
 ))]
 pub type libra_d3d12_filter_chain_t = Option<NonNull<FilterChainD3D12>>;
 
+/// A handle to a Direct3D 9 filter chain.
+#[cfg(any(
+    feature = "__cbindgen_internal",
+    all(target_os = "windows", feature = "runtime-d3d9")
+))]
+use librashader::runtime::d3d9::FilterChain as FilterChainD3D9;
+
+/// A handle to a Direct3D 11 filter chain.
+#[doc(cfg(all(target_os = "windows", feature = "runtime-d3d9")))]
+#[cfg(any(
+    feature = "__cbindgen_internal",
+    all(target_os = "windows", feature = "runtime-d3d9")
+))]
+pub type libra_d3d9_filter_chain_t = Option<NonNull<FilterChainD3D9>>;
+
 #[cfg(feature = "runtime-vulkan")]
 use librashader::runtime::vk::FilterChain as FilterChainVulkan;
 /// A handle to a Vulkan filter chain.
@@ -192,6 +207,8 @@ mod __cbindgen_opaque_forward_declarations {
         FilterChainD3D11;
         /// Opaque struct for a Direct3D 12 filter chain.
         FilterChainD3D12;
+        /// Opaque struct for a Direct3D 9 filter chain.
+        FilterChainD3D9;
         /// Opaque struct for a Vulkan filter chain.
         FilterChainVulkan;
         /// Opaque struct for a Metal filter chain.
