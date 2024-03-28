@@ -128,9 +128,8 @@ void main()
     /* Main color, Bleed */
     vec3 col;
 
-    float x = 0;
     float o =sin(gl_FragCoord.y*1.5)/resolution.x;
-    x+=o*0.25;
+    float x = o*0.25;
 
     col.r = tsample(Source,vec2(x+scuv.x+0.0009,scuv.y+0.0009),resolution.y/800.0, resolution ).x+0.02;
     col.g = tsample(Source,vec2(x+scuv.x+0.0000,scuv.y-0.0011),resolution.y/800.0, resolution ).y+0.02;

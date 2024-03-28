@@ -260,7 +260,10 @@ vec3 pixel_push_luminance(vec3 c, float strength) {
 	//if (strength == 0.0) return c; //lighter without the check.
 	float whiteness = max(max(c.r, c.g), c.b);
 	whiteness = clamp(whiteness, 0.0, 1.0);
-	return c * (1 + ( (1-whiteness) * strength)	);
+	//return c * (1 + ( (1-whiteness) * strength)	);
+	return fma(c,   vec3(fma(strength, -whiteness, strength)), c); //ASM PROOF: F
+	
+	
 }
 
 /*
@@ -386,22 +389,19 @@ bool vec2_similar(vec2 a, vec2 b, float threshold) {
 }
 
 
-vec2 zoom(vec2 in_coords, float zoom_factor) {
-   float off = 1.0/(zoom_factor*2.0) - 0.5;
-   return (in_coords/zoom_factor)-off;
+vec2 zoom(vec2 co, float zoom_factor) {
+	return  0.5 + (co - 0.5) / zoom_factor;
 }
 
-float zoom1D(float in_coord, float zoom_factor) {
-   float off = 1.0/(zoom_factor*2.0) - 0.5;
-   return (in_coord/zoom_factor)-off;
+float zoom1D(float co, float zoom_factor) {
+	return  0.5 + (co - 0.5) / zoom_factor;
 }
 
-vec2 zoomxy(vec2 in_coords, vec2 zoom_factor) {
-   vec2 off = 1.0/(zoom_factor*2.0) - 0.5;
-   return (in_coords/zoom_factor)-off;
+vec2 zoomxy(vec2 co, vec2 zoom_factor) {
+	return  0.5 + (co - 0.5) / zoom_factor;
 }
 
-vec2 zoomout_coords(vec2 in_coords, float zoom_out, float aspect) {
+vec2 zoomout_coords_aspect(vec2 in_coords, float zoom_out, float aspect) {
    // to convert to standard zoom:
    // zoomout_coords(x) = zoom( 1/(x+1) );
 
@@ -413,9 +413,18 @@ vec2 zoomout_coords(vec2 in_coords, float zoom_out, float aspect) {
    vec2 offset = vec2( (zoom.x-1.0) / 2.0,
                        (zoom.y-1.0) / 2.0 
                      );
+   
    return (in_coords * zoom) - offset;
 }
 
+
+vec2 zoomout_coords(vec2 in_coords, float zoom_out) {
+   // to convert to standard zoom:
+   // zoomout_coords(x) = zoom( 1/(x+1) );
+   float zoom =  1 + zoom_out;
+   float zoffset = zoom_out * 0.5;
+   return (in_coords * zoom) - zoffset;
+}
 
 
 bool need_doublescan() {
@@ -449,7 +458,7 @@ float scale_to_range(float x, float dmin, float dmax) {
 
 vec3 scale_to_range_vec3(vec3 x, float dmin, float dmax) {
     //Scales 0..1 range to a..b range
-    return ( (dmax-dmin) * x ) + dmin;
+    return ( x * (dmax-dmin)   ) + dmin; //ASM PROOF (fma slower)
 }
 
 vec3 scale_to_range_vec3(vec3 x, vec3 dmin, vec3 dmax) {
@@ -499,6 +508,7 @@ float round_step(float f, float p) {
 #define RND_C 43758.5453
 
 float random(float power, vec2 seed) {
+	if (SKIP_RANDOM == 1.0) return 0.0;
     //From pal-singlepass.slang 
     //https://github.com/svofski/CRT
     //Copyright (c) 2016, Viacheslav Slavinsky
@@ -512,8 +522,28 @@ float random(float power, vec2 seed) {
     return noise_out;
 }
 
+
+float deband_static(vec2 co, float power) {
+	#define PI_HALF 1.5707963267949
+	vec2 d = sin(co* PI_HALF * params.OutputSize.xy);
+	float r = d.x * d.y * power;
+	return r;
+}
+
+float deband_temporal(vec2 co, float power) {
+	#define PI_HALF 1.5707963267949
+	vec2 d = sin(co* PI_HALF * params.OutputSize.xy);
+	float r = d.x * d.y * power;
+	r= mix(r,-r, mod(params.FrameCount, 2.0));
+	return r;
+}
+
 //The following produces weird results when with dynamic seed like framecount.
 float random_fast(vec2 seed) {
+	if (SKIP_RANDOM == 1.0) return 0.0;
+	//return 0.0;
+	//return deband_static(seed, 0.001);
+	
 	float noise_out = fract(sin(dot(seed.xy, VEC2_RND_A_B)) * RND_C);
     return noise_out;
 }
@@ -791,18 +821,17 @@ float random_fast(vec2 seed) {
         //co = co*2.0 - vec2(0.0,0.5);
         //if (co.x > 1.0) co.x -= 1;
 		
-		//Aspect
-		//float bUse_original_aspect = float(aspect < 0.01);
-		float bUse_custom_aspect = step(0.01, aspect);
-
+		//Aspect (ASM PROOF: IFTHEN is better)
 		float scale_y;
-		/*if (aspect > 0.01) 
+		if (aspect > 0.01) 
 			scale_y = aspect/in_aspect;
 				else
 			scale_y = 1.0;
-		*/
+		
 		//Unbranched previous:
-		scale_y = mix_step(1.0, aspect/in_aspect, bUse_custom_aspect );
+		//float bUse_custom_aspect = float(aspect > 0.01);
+		//float bUse_custom_aspect = step(0.01, aspect);
+		//scale_y = mix_step(1.0, aspect/in_aspect, bUse_custom_aspect );
 		
 		float offset_y = (0.5 * scale_y ) - 0.5 ;
 		co.y = co.y*scale_y - offset_y;
@@ -1088,7 +1117,7 @@ vec3 rgb2hsv(vec3 c){
 }
 	
 float get_dyn_zoom(sampler2D tex) {
-	return 1.0 + (texture(tex, vec2(0.75,0.75)    ).a/ DYNZOOM_FACTOR) ;
+	return texture(tex, vec2(0.75,0.75)).a * DO_DYNZOOM + 1.0 ;
 }
 
 
@@ -1124,14 +1153,20 @@ vec2 tilt2D(vec2 co, float is_rotated, vec2 tilt) {
 
 }
 	
-vec2 tilt(vec2 co, float is_rotated, float tilt) {
+/*float is_rotated_fake() {
+	return params.Rotation & 1;
+}*/
 	
+vec2 tilt(vec2 co, float is_rotated, float tilt) {
+
+	//ASM PROOF: if then is worse.
 	vec2 r_tilt = vec2( mix_step(tilt, 0.0, is_rotated),
 	                    mix_step(0.0, -tilt, is_rotated)
 					);
 	
 	vec2 tilt_min = 1 - r_tilt;
 	vec2 tilt_max = 1 + r_tilt;
+
 	
 	// X Tilt
 		float tilt_x_range = scale_to_range(co.y, tilt_min.x, tilt_max.x);
@@ -1149,7 +1184,11 @@ vec2 tilt(vec2 co, float is_rotated, float tilt) {
 		float fov = mix( 1.0, TILT_FOV, abs( tilt ));
 		co = zoomxy(co, vec2(fov) );
 
-		co.xy += mix_step(  vec2(0.0, tilt),   -vec2(tilt, 0.0), is_rotated) * 0.5;
+	if (is_rotated > 0.5) //ASM PROOF
+		co.xy += -vec2(tilt, 0.0) * 0.5;
+	else
+		co.xy += vec2(0.0, tilt) * 0.5;
+	//	co.xy += mix_step(  vec2(0.0, tilt),   -vec2(tilt, 0.0), is_rotated) * 0.5;
 		
 	return co;
 }
@@ -1166,6 +1205,8 @@ bool is_first_inside_rect(vec2 point, vec4 rect) {
 			point.y >= rect.y && point.y < rect.w) ;
 }
 */
+
+//Following is faster (ASM proof)
 bool is_first_inside_rect(vec2 point, vec4 rect) {
 	vec2 bounded = clamp(point, rect.xy, rect.zw);
 	return point == bounded;
@@ -1225,6 +1266,11 @@ vec3 vibrance_set(vec3 c, float v) {
 	return pixel_out/255.0;
 	}
 
+	vec3 adaptive_black(vec3 c_in, float lum_in, float range) {
+		float luminance_adapt = mix( 1-range, 1+range, lum_in);
+		return c_in * luminance_adapt - luminance_adapt + 1;
+		return fma(c_in, vec3(luminance_adapt), vec3(-luminance_adapt + 1)); //ASM_PROOF: SAME
+	}
 
 	vec3 color_tools(vec3 pixel_out, vec3 Temperature_rgb) {
 	//Apply color corrections to input signal.
@@ -1246,9 +1292,15 @@ vec3 vibrance_set(vec3 c, float v) {
 			vec3 pixel_grayscale = vec3(dot(pixel_out.rgb, W_C_TO_GRAY));
 			vec3 pixel_in_hsv = rgb2hsv(pixel_grayscale); //FIXME needed? yes, checked.
 			float lum = pixel_in_hsv.z * pixel_in_hsv.z; //<-- looks way better!
-			vec2 bias = mix_step( vec2(0.0, COLOR_MONO_HUE_BIAS), vec2(COLOR_MONO_HUE_BIAS, 0.0), float(COLOR_MONO_HUE_BIAS > 0.0));
-			bias = abs(bias);
 
+			//vec2 bias = mix_step( vec2(0.0, abs(COLOR_MONO_HUE_BIAS)), vec2(abs(COLOR_MONO_HUE_BIAS), 0.0), float(COLOR_MONO_HUE_BIAS > 0.0));
+			//Following should be faster (ASM PROOF)
+			vec2 bias;
+			if (COLOR_MONO_HUE_BIAS > 0.0) 
+				bias = vec2(abs(COLOR_MONO_HUE_BIAS),0.0);
+			else
+				bias = vec2(0.0,abs(COLOR_MONO_HUE_BIAS));
+				
 			lum=scale_to_range(lum, 0.0-bias.x, 1.0+bias.y);
 			pixel_in_hsv.y=1.0; //sat
 
@@ -1350,4 +1402,70 @@ vec4 PG_get_hmask_preset_unfloored() {
         return vec4( vec3(0.0), 2); //WX, mask size 2
 
 }
+
+vec3 adaptive_strobe( vec3 c) {
+    #define STRENGTH 1.0; //effect strength
+    #define BRIGHT_BIAS 1.0 //brightness compensation
+    #define CONTRAST_COMPENSATION 0.5 //maximum contrast compensation
+    #define GAIN_COMPENSATION 0.5 //maximum gain compensation
+
+    vec3 c_temp = c.rgb;
+    c_temp = clamp(c_temp, vec3(0.0), vec3(1.0));
+    vec3 room = (0.5 - abs(0.5-c_temp)) * STRENGTH;
+
+    vec3 contrast_adj = mix(vec3(0.0), vec3(-CONTRAST_COMPENSATION), room);
+    vec3 gain_adj = mix(vec3(1.0), vec3(GAIN_COMPENSATION), room);
+
+     //Adjust brightness/contrast
+    c = ( (1+contrast_adj+contrast_adj)* c)-contrast_adj;
+    c *= gain_adj;
+
+    if (mod(params.FrameCount, 2.0 ) == 0.0) {
+       return c +  room / BRIGHT_BIAS;
+    }else {
+       return c -  room * BRIGHT_BIAS;
+    }
+}
+
+vec3 adaptive_strobe_checkerboard(vec3 pixel_out, vec2 co, vec2 outputsize) {
+
+	
+	float strength = 0.5;		//0.5 is good
+    float square_size = 3;      //checkerboard squares border size (1.0 = full screen blank)
+    float period_blank = 1.0;   //draw checkerboard every "period_blank" frames
+    float period_flip = 2.0 ;   //invert checkerboard colors every # frames, usually/try period_blank*2.
+    
+    
+    bool is_blank_time = (mod(params.FrameCount, period_blank) == 0.0);
+
+	if (is_blank_time) {
+		vec3 checkerboard = vec3(1.0);
+		if (mod( floor(co.x * outputsize.x), square_size) >= square_size/2.0)
+				checkerboard = vec3(1.0);
+					else
+				checkerboard = vec3(-1.0);
+
+		if (mod( floor(co.y * outputsize.y), square_size) >= square_size/2.0)
+			checkerboard = -checkerboard;
+		
+		if (mod(params.FrameCount, period_flip) >= period_flip/2.0) 
+			checkerboard = -checkerboard;
+
+		checkerboard *= min( pixel_out, 1-(pixel_out)  ) * strength;
+		
+		//#define SPLIT_SCREEN
+		#ifdef SPLIT_SCREEN
+		if (co.x > 0.5)
+			pixel_out.rgb = pixel_out.rgb+ checkerboard;
+		#else
+			pixel_out.rgb = pixel_out.rgb+ checkerboard;
+		#endif
+
+	}
+   
+    
+    return pixel_out;
+    
+}
+
 

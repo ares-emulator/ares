@@ -19,7 +19,7 @@ void main() {
    if (DO_GAME_GEOM_OVERRIDE > 0.5)
       vCoordsAdapted = content_geom_override(vCoordsAdapted, GAME_GEOM_ASPECT, get_in_aspect(), GAME_GEOM_VSHIFT, GAME_GEOM_HSHIFT, GAME_GEOM_ZOOM);
 
-   vCoordsAdapted = zoomout_coords( vCoordsAdapted, BEZEL_RFL_ZOOM, 1.0);
+   vCoordsAdapted = zoomout_coords( vCoordsAdapted, BEZEL_RFL_ZOOM);
    
    vCoords_shade = zoom(vTexCoord,1.05);
    
@@ -57,7 +57,7 @@ void main() {
    
    vec2 coords = vCoordsAdapted;
 
-   if (DO_DYNZOOM == 1.0) 
+   if (DO_DYNZOOM > 0.0)
       coords = zoom(coords, get_dyn_zoom(avglum_pass));
  
    //eventually return black pixel

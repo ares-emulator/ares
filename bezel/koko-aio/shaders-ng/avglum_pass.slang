@@ -37,7 +37,7 @@ void main() {
 
     vReduced_sample_time_is_now = mod(params.FrameCount,AMBI_AVGLUM_DIVIDER);
     
-    vAvglum_needed = DO_AMBILIGHT + DO_BEZEL + DO_DYNZOOM + DO_BLOOM;
+    vAvglum_needed = DO_AMBILIGHT + DO_BEZEL + (DO_DYNZOOM*10.0) + DO_BLOOM + (RESSWITCH_GLITCH_SIZE*10.0) ;
     vBezel_or_Bloom = DO_BEZEL + DO_BLOOM;
     
     //RESSWITCH shaking:
@@ -73,11 +73,15 @@ layout(set = 0, binding = 3) uniform sampler2D avglum_passFeedback;
 #define RGB_TO_GRAYSCALE = vec3(0.299, 0.587, 0.114)
 float get_avg_lum_from_mip() {
     vec3 mip = textureLod(flick_and_noise_pass, vec2(0.5,0.5),20.0).rgb;
-    mip = apply_fuzzy_main_pass_stage_2(mip, vFuzzy_main_pass_stage_1);
+     mip = apply_fuzzy_main_pass_stage_2(mip, vFuzzy_main_pass_stage_1);
     //return (mip.r+mip.g+mip.b)/3.0;
     return rgb_to_gray(mip);
 }
 
+float get_avg_lum_from_mip_nocc() {
+    vec3 mip = textureLod(flick_and_noise_pass, vec2(0.5,0.5),20.0).rgb;
+    return rgb_to_gray(mip);
+}
 
 //0.1 seems like a good tradeoff that works well with bloom exposire and fullscreen zoom
 //...maybe bloom exposure works best at 0.05; you may consider another zone of smooth sampling.
@@ -86,7 +90,8 @@ float get_avg_lum_from_mip() {
 float get_avglum() {
     /* avglum alpha has some zones:
      * 0.25 -> reduced sampling, used for to aid scene detection
-     * 0.75 -> smoothed_sampling, used to adapt fullscreen zoom
+     * 0.75 -> smoothed_sampling, used to adapt fullscreen zoom and adaptive black
+     * 0.50 -> smoothed_sampling, no color corrections.
      * RESSWITCH_SAMPLING_POINT (0.9) -> resolution change detection
      * 
      * anything else: continuous sampling
@@ -94,7 +99,7 @@ float get_avglum() {
             
     bool reduced_sampling_co  = is_first_inside_rect(vTexCoord, vec4(0.24,0.24 , 0.26,0.26) );
     bool smoothed_sampling_co = is_first_inside_rect(vTexCoord, vec4(0.74,0.74 , 0.76,0.76) );
-
+    bool smoothed_sampling_co_nocc = is_first_inside_rect(vTexCoord, vec4(0.49,0.49 , 0.51,0.51)) ;
     #ifndef D3D_WORKAROUND
         if (reduced_sampling_co) {
             //in the reduced sampling zone, only update at right time; else return the previous frame.
@@ -108,6 +113,10 @@ float get_avglum() {
 
         if (smoothed_sampling_co) {
             return mix(texture(avglum_passFeedback,vTexCoord).a, get_avg_lum_from_mip(), SMOOTHNESS_SPEED);
+        }
+        
+        if (smoothed_sampling_co_nocc) {
+            return mix(texture(avglum_passFeedback,vTexCoord).a, get_avg_lum_from_mip_nocc(), SMOOTHNESS_SPEED);
         }
     #endif
     
