@@ -82,8 +82,10 @@ vec4 pixel_flickering() {
    vec4 pixel_cur = texture(Source,vTexCoord);   
    vec3 flickline = texture(Source,vFlickerCoords).rgb;
    
-   float lumdiff = abs(flickline.r + flickline.g + flickline.b - pixel_cur.r - pixel_cur.g - pixel_cur.b);
-
+   //float lumdiff = abs( flickline.r + flickline.g + flickline.b - pixel_cur.r - pixel_cur.g - pixel_cur.b);
+   //float lumdiff = abs( (flickline.r + flickline.g) + (flickline.b - pixel_cur.r) - (pixel_cur.g + pixel_cur.b) ); //1687 1754 2946   ASM PROOF: FASTER
+   float lumdiff = abs( dot(flickline.rgb, vec3(1.0)) - dot(pixel_cur.rgb, vec3(1.0)));// 1685 1750 2948 //ASM PROOF: Faster on SIMD8 and SIMD16, slower on SIMD32
+      
    lumdiff = min(lumdiff * vFlickering_power, 1.0);
    return vec4( mix(pixel_cur.rgb,flickline.rgb,lumdiff),
                 pixel_cur.a); //<-- wee need to return the alpha channel because it carries ntsc artifact mask
@@ -101,8 +103,7 @@ void main() {
    
    if (DO_RF_NOISE > 0.0) {
       float anoise = random_fast(vTexCoord * vDynamicSeed);
-      anoise = scale_to_range(anoise, -RF_NOISE_STRENGTH, RF_NOISE_STRENGTH);
-      pixel_out.rgb += vec3(anoise);
+       pixel_out.rgb += scale_to_range(anoise, -RF_NOISE_STRENGTH, RF_NOISE_STRENGTH);
    }
    FragColor = pixel_out;
 }

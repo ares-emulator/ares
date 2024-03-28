@@ -101,6 +101,7 @@ float_framebuffer0 = true
           scale_x1 = 2.0
           scale_y1 = 2.0  
         wrap_mode1 = "mirrored_repeat"
+     float_framebuffer1 = true
 
 
 
@@ -208,7 +209,7 @@ float_framebuffer7 = true
                 scale8 = 0.5
             wrap_mode8 = "mirrored_repeat"
          mipmap_input8 = false
-
+    float_framebuffer8 = "true"
          
          
 # The following passes will blur the mirrored part of first_pass

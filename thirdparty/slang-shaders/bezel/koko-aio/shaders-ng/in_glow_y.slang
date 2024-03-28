@@ -120,7 +120,7 @@ void main() {
          FragColor = vec4(color, original_unchanged);
          return;
       }
-      FragColor = texture(shift_and_bleed_pass, vTexCoord) * vGlow_Gain;
+      FragColor = vec4(texture(shift_and_bleed_pass, vTexCoord).rgb * vGlow_Gain, 1.0);
       return;
    }
 

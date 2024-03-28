@@ -13,16 +13,6 @@
 // #define D3D_WORKAROUND
 
 
-
-// PERFORMANCE SETTINGS /////////////////////////////////////////////////////////
-
-//Renders only changed parts of screen, set to 1.0 to lower power consumption:
-#define DELTA_RENDER 0.0
-
-//Halve rendering refresh on bezel and ambilight set to 1.0 to spare gpu cycles:
-#define HALVE_BORDER_UPDATE 0.0
-
-
 // STATIC FEATURES ENABLE/DISABLE
 
 // Allow texture wrapping as a shader parameter, prepend // to gain some performance: 
@@ -34,18 +24,10 @@
 
 
 
-
-
-
 // APPEARANCE SETTINGS ////////////////////////////////////////////////////////
 
 // Haloing happens on a scanlined/gapped image or not
 	#define HALO_PRE_SCANLINE_GAP 0.0
-
-// The higher, the more the image will alter its size depending on the scene luminance.
-	#define DYNZOOM_FACTOR		80
-	
-	
 	
 	
 // BEZEL STATIC CONFIG ////////////////////////////////////////////////////////
@@ -64,19 +46,12 @@
 	//set it to minimum value that allows you to see reflection entirely
 #define BEZEL_REFL_SKIP_SIZE 0.08
 
-	//This is the size (in 0..1 range) of the bezel texture that does
-	//not include the center tube, including reflection area, and the shadow.
-	//It is actually used to skip drawing game content under the bezel or
-	//over its shadow.
-	//Set it to the maximum size as long as you see the full game content
-	//in the bezel.
-#define BEZEL_BORDER_SIZE vec2(0.07, 0.07)
-
-	//This is the blank area or shadow size (one side, in percent) at the sides of the bezel as defined by the bezel texture
-	//BEZEL_SHADOW_SIZE = max shadow or blank side size / bezel_texture_size.
-	//It is used to skip drawing bg/fg or ambient light over the tube, set it to a value that allow for them to be 
-	//shown over the bezel blank/shadowed sides but not on the tube (ie: value too big)
-#define BEZEL_SHADOW_SIZE 0.06
+	//This is the blank area (EXCLUDING any potential shadows) surrounding the bezel frame.
+	//Supposing a centered bezel:
+	//  BEZEL_FRAME_SURROUND_MARGIN = (left margin in px*2) / bezel_texture_size width in px.
+	//It is used to skip drawing bg/fg or ambient light over the tube.
+	//set it to the minimum value which allows you to see ambient lights and background image around the frame.
+#define BEZEL_FRAME_SURROUND_MARGIN 0.06
 
 	//to speedup things, bezel rende logic can be completely skipped in the inner tube, if we
 	//already know it is completely transparent.

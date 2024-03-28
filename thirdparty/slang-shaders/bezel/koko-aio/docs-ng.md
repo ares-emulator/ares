@@ -40,15 +40,27 @@
         This is the image used to draw the bezel.
         Read further for details.
         
-        
+Texture "sources", including the main gimp project file for the default curved and straight monitor frame
+are on the following repo:
+https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
+
         
 **Color corrections:**<br>
-    Modify luminance, saturation, contrast, brightness, color temperature and vibrance
-    of the signal, at "input" stage.<br>
-    Gamma in correction is applied at ti beginning of the chain,<br>
-    Gamma out correction is applied to the final processed picture.<br>
-    Input signal gain is applied in the chain just before the crt emulation stages.<br>
-    
+    Modify signal color at "input" stage.<br>
+
+    Luminance, brightness, contrast and temperature:
+        self explanatory.
+    Input signal gain:
+        Gain applied in the chain just before the crt emulation stages.
+    Gamma in:
+        Gamma correction applied at the beginning of the chain.
+    Gamma out:
+        Gamma correction applied to the final processed picture.
+    Adaptive black level range:
+        On old CRTs the contrast was higher on high luminosity content,
+        and lower on low luminosity content.
+        This setting modulate the range of the effect; 0.0 disables it.
+
     It is also possible to emulate a monochrome display with custom colors:
     
         Monochrome screen colorization:
@@ -314,9 +326,10 @@
             ...if you like slotmasks so much :-)
         Vertical shift (neg = auto):
             This parameter allows you to move the whole vertical mask along the Y axis.
-            * When used with screen resolution(*1), a negative value will auto-select a shift that gives the sharpest shape.
             * When used with core resolution(*1) and integer divider/multiplier(*2), it is useful to mitigate
               weird patterns from the screen when using slotmasks (*3) alongside scanline emulation (*4).
+            * The auto setting works with screen resolution(*1), and integer divider/multiplier(*2).
+              It will auto-select a shift that gives the sharpest result.
             
         Steepness: 
             The more, the thinner they will be.
@@ -534,10 +547,14 @@
         How input gain is applied to a single led, affects light wideness.
     Led saturation:
         Leds saturation post gain.      
-    Led internalness:
+    Internalness (Led position):
         The distance between the virtual led strip and the content.
         High values will move leds behind it, while lower values will move
         leds around it.
+    Internalness (Sampling point):
+        Where the leds should take their color from, highering the value will make the color
+        follow the color of what is in the center of the screen, lowering the value will
+        color the leds as the edge of the screen.
     Widen lights:
         Dumb stretch of the visible texture, operates on the whole content, instead of the
         single led.
@@ -601,6 +618,7 @@
 **Luminosity tied zoom:**<br>
     On older CRT monitors, the picture gets bigger when the image was brighter.<br>
     Please TURN THIS OFF if you want to use integer scaling, since this obstructs it.
+    The higher, the more prominent the effect.
 
 **Override content geometry:**<br>
     Contrary to the global aspect ratio control, this changes only the game geometry.<br>
@@ -645,7 +663,7 @@
     leading to a measurable power consumption reduction.<br>
     This feature can, however, produce artifacts in some cases, so the feature<br>
     is statically disabled by default by now.<br>
-    To use it, you have to manually switch, in file config-static.inc: <br>
+    To use it, you have to manually set to 1.0, in file config-user.txt: <br>
     #define DELTA_RENDER 0.0 <br>
     to <br>
     #define DELTA_RENDER 1.0 <br>
@@ -661,24 +679,3 @@
         into account.
         Power comsumption benefits will be lower.
     
-**Alternate line blanking:**<br>
-    CRT monitors \*real\* refresh was amazing, today is just "meh" in most cases.<br>
-    This emulates the low pixel persistance of CRT monitors <br>
-    and reduces the motion blur, typical of LCD displays, by blanking even/odd<br>
-    screen lines on even/odd frames, by sacrificing image brightness, ofc.<br>
-    
-    This feature is static, to use it 
-    you have to manually enable it by removing the leading: "//"
-    from "//#define ALLOW_ALT_BLANK" in config-static.inc
-    
-    Frame insertion strength:
-        How much the line will be blanked.
-    Dark lines period:
-        You can blank single line or a group of them at once.
-        See what performs better on your display.
-
-
-
-
-
-

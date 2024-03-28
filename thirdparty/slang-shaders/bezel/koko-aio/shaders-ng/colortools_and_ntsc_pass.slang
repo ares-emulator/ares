@@ -11,7 +11,7 @@
 #define CYELLOW  vec3(1.0,1.0,0.0)
 #define CCUSTOM vec3(0.3,0.5,0.1)
 
-#define DEBUG_COLOR vec3(1.0)
+#define DEBUG_COLOR vec3(1,0,0)
 #define DEBUG_BLINK_TIME 100
 #define DEBUG_GRADIENT_STEPS 64
 
@@ -20,11 +20,11 @@
 //#define DEBUG
    //#define DEBUG_COLOR_CALIB
    //#define DEBUG_TIME_FADE
-   //#define DEBUG_SOLID_COLOR
+   #define DEBUG_SOLID_COLOR
    //#define DEBUG_STEP_GRADIENT
    //#define DEBUG_STEP_GRADIENT_V
    //#define DEBUG_BLINK
-   #define DEBUG_BLINK_CIRCLE
+   //#define DEBUG_BLINK_CIRCLE
    //#define DEBUG_WALKING_CIRCLE
    //#define DEBUG_COLORWHEEL
    
@@ -117,8 +117,9 @@ layout(location = 0) out vec4 FragColor;
 
 layout(set = 0, binding = 2) uniform sampler2D Source;
 layout(set = 0, binding = 3) uniform sampler2D colortools_and_ntsc_passFeedback;
+#ifndef D3D_WORKAROUND
 layout(set = 0, binding = 4) uniform sampler2D avglum_passFeedback;
-
+#endif
 
 vec3 colorwheel(vec2 uv){
    float timeoffset = params.FrameCount / 120.0;
@@ -217,7 +218,7 @@ vec3 debug() {
    
    #elif defined DEBUG_BLINK_CIRCLE
       vec2 center = vTexCoord - vec2(0.5,0.5);
-      float radius = 0.1;
+      float radius = 0.2;
       pixel_debug = vec3(1 - step(radius, length(center)));
       pixel_debug *= float( ( mod(params.FrameCount, DEBUG_BLINK_TIME * 2) < DEBUG_BLINK_TIME));
       pixel_debug *= DEBUG_COLOR;
@@ -259,9 +260,15 @@ vec3 debug() {
 }
 
 
-bool first_in_range(float a, float lo, float hi) {
-   return (a > lo) && (a < hi);
+bool first_in_range_strict(float a, float lo, float hi) {
+   // return a inside ]lo...hi[ (lo and hi not included in range)
+   float bounded = clamp(a, lo+eps, hi-eps);
+   return a == bounded;
 }
+
+/*bool first_in_range_strict(float a, float lo, float hi) {
+   return (a >= lo) && (a <= hi);
+}*/
 
 vec3 pixel_dedither(sampler2D tex, vec2 coords, vec4 sourcesize, float tmin, float tmax, float strength1, float strength2) {
    #define DX sourcesize.z
@@ -281,7 +288,7 @@ vec3 pixel_dedither(sampler2D tex, vec2 coords, vec4 sourcesize, float tmin, flo
       vec3 pxe = texture(tex, coords + vec2(+DX*2.0,0.0)).rgb; // oxoxO
    
       float dx1= dot(abs(pxb-pxa), vec3(1.0));
-      if (first_in_range(dx1,tmin,tmax) && pxa == pxc && (pxb == pxd || pxb == pxe)) {
+      if (first_in_range_strict(dx1,tmin,tmax) && pxa == pxc && (pxb == pxd || pxb == pxe)) {
           avg_x = (pxa+pxb) /2.0;
           accum_div1 += 1.0;
        }
@@ -295,7 +302,7 @@ vec3 pixel_dedither(sampler2D tex, vec2 coords, vec4 sourcesize, float tmin, flo
       vec3 pye = texture(tex, coords + vec2(0.0, +DY*2.0)).rgb;
    
       float dy1= dot(abs(pya-pyb), vec3(1.0));
-      if (first_in_range(dy1,tmin,tmax) && pya == pyc && (pyb == pyd || pyb == pye)) {
+      if (first_in_range_strict(dy1,tmin,tmax) && pya == pyc && (pyb == pyd || pyb == pye)) {
           avg_y = (pya+pyb) /2.0;
           accum_div1 += 1.0;
        }
@@ -311,8 +318,9 @@ vec3 pixel_dedither(sampler2D tex, vec2 coords, vec4 sourcesize, float tmin, flo
       vec3 pxye = texture(tex, coords + vec2(-DX*2.0, -DY*2.0)).rgb;
 
       float dxy1= dot(abs(pxyb-pxya), vec3(1.0));
-      if (first_in_range(dxy1,tmin,tmax) && pxya == pxyc && (pxyb == pxyd || pxyb == pxye)) {
-         avg_xy = (pxya+pxyb) / 2.0;
+      if (first_in_range_strict(dxy1,tmin,tmax) && pxya == pxyc && (pxyb == pxyd || pxyb == pxye)) {
+         //avg_xy = (pxya+pxyb) / 2.0;
+         avg_xy = fma(pxya, vec3(0.5), pxyb*vec3(0.5));
          accum_div2 += 1.0;
       }
 
@@ -324,8 +332,9 @@ vec3 pixel_dedither(sampler2D tex, vec2 coords, vec4 sourcesize, float tmin, flo
 
       float dxy12= dot(abs(pxyb2-pxya2), vec3(1.0));
 
-      if (first_in_range(dxy12,tmin,tmax) && pxya2 == pxyc2 && (pxyb2 == pxyd2 || pxyb2 == pxye)) {
-         avg_yx = (pxya2+pxyb2) / 2.0;
+      if (first_in_range_strict(dxy12,tmin,tmax) && pxya2 == pxyc2 && (pxyb2 == pxyd2 || pxyb2 == pxye)) {
+         //avg_yx = (pxya2+pxyb2) / 2.0;
+         avg_yx = fma(pxya2, vec3(0.5), pxyb2*vec3(0.5));
          accum_div2 += 1.0;
       }
    }
@@ -336,11 +345,14 @@ vec3 pixel_dedither(sampler2D tex, vec2 coords, vec4 sourcesize, float tmin, flo
       //pixel_out = mix(p0, (avg_x + avg_y + avg_xy + avg_yx) / accum_div, strength1);
    //}
    vec3 pixel_out = p0;
-   if (accum_div1 > 0.0)
-      pixel_out = mix(pixel_out, (avg_x + avg_y)   / accum_div1, strength1);
-   if (accum_div2 > 0.0)
-      pixel_out = mix(pixel_out, (avg_xy + avg_yx) / accum_div2, strength2);
-
+   if (accum_div1 > 0.0) {
+      //pixel_out = mix(pixel_out, (avg_x + avg_y)   / accum_div1, strength1);
+      pixel_out = mix(pixel_out, fma(avg_x, vec3(1.0)/accum_div1, avg_y / accum_div1) , strength1); //ASM PROOF FASTER
+   }
+   if (accum_div2 > 0.0) {
+      //pixel_out = mix(pixel_out, (avg_xy + avg_yx) / accum_div2, strength2);
+      pixel_out = mix(pixel_out, fma(avg_xy, vec3(1.0)/accum_div2, avg_yx / accum_div2 ) , strength2); //ASM PROOF FASTER
+   }
 
    return pixel_out;
 }
@@ -386,12 +398,13 @@ vec3 persistence(vec3 feedback, vec3 pixel_now, float start_decay, float late_pe
    vec3 diff=(feedback - pixel_now);
 
    vec3 speed_fast = diff * start_decay;
-   vec3 speed_slow = diff / (late_persistence+eps);
+   vec3 speed_slow = diff / (late_persistence+eps); //fma() not usable pr slower. 
       
    vec3 fade_speed = mix(speed_slow, speed_fast, diff );
    
    //higher speed is needed when composing over brighter colors to avoid motion blur
    fade_speed = fade_speed + (pixel_now*motion_blur_cancel);
+   //fade_speed = fma(pixel_now, vec3(motion_blur_cancel), vec3(fade_speed)); //ASM PROOF: SLOWER
    
    //Ensure a minimum speed to reach 0.0 and clamp to 1.0 to avoid funky effects
    float min_speed = 0.05  ;
@@ -412,7 +425,8 @@ void main() {
    vec2 co = vTexCoord;
    #ifndef D3D_WORKAROUND
       float shake = texture(avglum_passFeedback, RESSWITCH_SAMPLING_POINT).a;
-      co.y += sin(shake * 2 * pi) * RESSWITCH_GLITCH_SIZE;
+      //co.y += sin(shake * 2 * pi) * RESSWITCH_GLITCH_SIZE;
+      co.y = co.y + (sin(shake * 2 * pi) * RESSWITCH_GLITCH_SIZE);
    #endif
 
    vec3 pixel_in = texture(Source, co).rgb;
@@ -425,7 +439,8 @@ void main() {
       //Get ntsc picture
          vec4 ntsc_decoded = ntscdec(co, pixel_in);
       //apply the minimum treshold to artifact mask
-         artifact_mask = smoothstep(NTSC_ARTF_TRSH, 1.0, ntsc_decoded.a);
+         artifact_mask = smoothstep_fast(NTSC_ARTF_TRSH , 1.0, ntsc_decoded.a);
+
          ntsc_decoded = clamp(ntsc_decoded, vec4(0.0), vec4(1.0));
 
       //Optionally completely cut-off artifacts under treshold:
@@ -451,8 +466,15 @@ void main() {
    #endif
       
 
-   if (DO_CCORRECTION == 1.0)
+   if (DO_CCORRECTION == 1.0) {
       pixel_out = color_tools(pixel_out, vTemperature_rgb);
+      #ifndef D3D_WORKAROUND
+         if (ADAPTIVE_BLACK > 0.0) {
+            float avglum = texture(avglum_passFeedback, vec2(0.5,0.5)).a ;
+            pixel_out = adaptive_black(pixel_out,  avglum, ADAPTIVE_BLACK);
+         }
+      #endif
+	}
 
    if (DO_DOT_MATRIX + DOT_M_MBLUR_STR > 1.0) {
       vec3 feedback = texture(colortools_and_ntsc_passFeedback, co).rgb;
@@ -464,6 +486,7 @@ void main() {
          vec3 adaption = mix_step (pixel_out - feedback,
                                    feedback - pixel_out,
                                    DOT_M_MBLUR_MODE -1);
+            
          //adaption = mix_step(adaption, -adaption, DOT_M_MBLUR_MODE -1);
          m_blur_adapted *= clamp( adaption, 0.0, 1.0 );
          m_blur_adapted = pow(m_blur_adapted, vec3(0.25));
@@ -488,24 +511,13 @@ void main() {
       pixel_out = persistence(feedback, pixel_out, PPERSISTENCE_START, PPERSISTENCE_END, motion_blur_cancel);
    }
  
-
-    //TEST adaptive strobe:
-
-    /*float range = ALT_BLANK_STRENGTH;
-    float square_wave_time = float(mod(params.FrameCount,  2.0) == 1.0);
-    square_wave_time = square_wave_time*2-1;
-    vec3 square_wave_time_vec3 = vec3(square_wave_time);
-    square_wave_time_vec3 *= min( pixel_out, 1-pixel_out) * ALT_BLANK_STRENGTH;
-    if (mod(co.y * params.OriginalSize.y, ALT_BLANK_PERIOD) >= ALT_BLANK_PERIOD / 2.0) {;
-      pixel_out = pixel_out + square_wave_time_vec3;
-    } else {
-      pixel_out = pixel_out - square_wave_time_vec3;
-    }*/
-
-    
-    
+  
+   //Clamp artifacts to 0..1
+   //Clamp RGB to 0..1000.0
+   pixel_out = max(pixel_out, vec3(0.0));
+   artifact_mask = clamp(artifact_mask, 0.0, 1.0);
    FragColor = vec4(pixel_out, artifact_mask);
-   //FragColor = vec4(artifacts);
+
 }
 
 

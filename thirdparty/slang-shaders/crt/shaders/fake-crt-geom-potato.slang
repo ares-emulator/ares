@@ -63,14 +63,15 @@ vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
   corn.x = 0.0002/corn.x;         // corners later on
 
 float y = pos.y*SourceSize.y;
-float gl2pos = floor(y) + 0.5;
-float near = gl2pos*SourceSize.w;
-float dy = y - gl2pos;
-      dy = dy*dy*dy*4.0*SourceSize.w;
-   
-vec2 p = vec2(pos.x, near+dy);
+vec2 dx = vec2(SourceSize.z*0.75,0.0);
+vec2 dy = vec2(0.0,SourceSize.w*0.5);
 
-vec3 res = texture(Source,p).rgb;
+// precalculated kaizer window filter
+vec3 res = vec3(0.0);
+res += texture(Source,pos -dx).rgb*-0.26565;
+res += texture(Source,pos -dy).rgb*-0.26565;
+res += texture(Source,pos ).rgb*1.5313;
+
 
 vec3 clean = res;
 float w = dot(vec3(0.15),res);

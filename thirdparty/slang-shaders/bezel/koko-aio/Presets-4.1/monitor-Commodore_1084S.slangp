@@ -33,7 +33,7 @@ DO_SPOT = "1.000000"
     S_POSITION_X = "-0.5"
     S_POSITION_Y = "0.5"
 	S_SIZE = "0.640000"
-	S_POWER = "0.125"
+	S_POWER = "0.07"
 
 DO_BG_IMAGE = "1.0"
 	BG_IMAGE_OVER = "1.0"
