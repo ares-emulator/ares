@@ -393,6 +393,49 @@ libra_error_t __librashader__noop_d3d12_filter_chain_get_active_pass_count(
 }
 #endif
 
+#if defined(LIBRA_RUNTIME_D3D9)
+libra_error_t __librashader__noop_d3d9_filter_chain_create(
+    libra_shader_preset_t *preset, IDirect3DDevice9 *device,
+    const struct filter_chain_d3d9_opt_t *options,
+    libra_d3d9_filter_chain_t *out) {
+    *out = NULL;
+    return NULL;
+}
+
+libra_error_t __librashader__noop_d3d9_filter_chain_frame(
+    libra_d3d9_filter_chain_t *chain, size_t frame_count,
+    IDirect3DTexture9 *image, struct libra_viewport_t viewport,
+    IDirect3DSurface9 * out, const float *mvp,
+    const struct frame_d3d9_opt_t *opt) {
+    return NULL;
+}
+
+libra_error_t __librashader__noop_d3d9_filter_chain_free(
+    libra_d3d9_filter_chain_t *chain) {
+    return NULL;
+}
+
+libra_error_t __librashader__noop_d3d9_filter_chain_set_param(
+    libra_d3d9_filter_chain_t *chain, const char *param_name, float value) {
+    return NULL;
+}
+
+libra_error_t __librashader__noop_d3d9_filter_chain_get_param(
+    libra_d3d9_filter_chain_t *chain, const char *param_name, float *out) {
+    return NULL;
+}
+
+libra_error_t __librashader__noop_d3d9_filter_chain_set_active_pass_count(
+    libra_d3d9_filter_chain_t *chain, uint32_t value) {
+    return NULL;
+}
+
+libra_error_t __librashader__noop_d3d9_filter_chain_get_active_pass_count(
+    libra_d3d9_filter_chain_t *chain, uint32_t *out) {
+    return NULL;
+}
+#endif
+
 #if defined(LIBRA_RUNTIME_METAL)
 libra_error_t __librashader__noop_mtl_filter_chain_create(
     libra_shader_preset_t *preset, id<MTLCommandQueue> queue,
@@ -419,7 +462,7 @@ libra_error_t __librashader__noop_mtl_filter_chain_frame(
     return NULL;
 }
 
-libra_error_t __librashader__mtl_filter_chain_free(
+libra_error_t __librashader__noop_mtl_filter_chain_free(
     libra_mtl_filter_chain_t *chain) {
     return NULL;
 }
@@ -1163,6 +1206,79 @@ typedef struct libra_instance_t {
     PFN_libra_d3d12_filter_chain_set_param d3d12_filter_chain_set_param;
 #endif
 
+#if defined(LIBRA_RUNTIME_D3D9)
+    /// Create the filter chain given the shader preset.
+    ///
+    /// The shader preset is immediately invalidated and must be recreated after
+    /// the filter chain is created.
+    ///
+    /// If this function is not loaded, `out` will unconditionally be set to
+    /// null. If this function returns an error, the state of `out` is
+    /// unspecified.
+    ///
+    /// ## Safety:
+    /// - `preset` must be either null, or valid and aligned.
+    /// - `options` must be either null, or valid and aligned.
+    /// - `out` must be aligned, but may be null, invalid, or uninitialized.
+    PFN_libra_d3d9_filter_chain_create d3d9_filter_chain_create;
+
+    /// Draw a frame with the given parameters for the given filter chain.
+    ///
+    /// ## Safety
+    /// - `chain` may be null, invalid, but not uninitialized. If `chain` is
+    /// null or invalid, this
+    ///    function will return an error.
+    /// - `mvp` may be null, or if it is not null, must be an aligned pointer to
+    /// 16 consecutive `float`
+    ///    values for the model view projection matrix.
+    /// - `opt` may be null, or if it is not null, must be an aligned pointer to
+    /// a valid `frame_d3d9_opt_t`
+    ///    struct.
+    PFN_libra_d3d9_filter_chain_frame d3d9_filter_chain_frame;
+
+    /// Free a D3D9 filter chain.
+    ///
+    /// The resulting value in `chain` then becomes null.
+    /// ## Safety
+    /// - `chain` must be either null or a valid and aligned pointer to an
+    /// initialized `libra_d3d9_filter_chain_t`.
+    PFN_libra_d3d9_filter_chain_free d3d9_filter_chain_free;
+
+    /// Gets the number of active passes for this chain.
+    ///
+    /// ## Safety
+    /// - `chain` must be either null or a valid and aligned pointer to an
+    /// initialized `libra_d3d9_filter_chain_t`.
+    PFN_libra_d3d9_filter_chain_get_active_pass_count
+        d3d9_filter_chain_get_active_pass_count;
+
+    /// Sets the number of active passes for this chain.
+    ///
+    /// ## Safety
+    /// - `chain` must be either null or a valid and aligned pointer to an
+    /// initialized `libra_d3d9_filter_chain_t`.
+    PFN_libra_d3d9_filter_chain_set_active_pass_count
+        d3d9_filter_chain_set_active_pass_count;
+
+    /// Gets a parameter for the filter chain.
+    ///
+    /// If the parameter does not exist, returns an error.
+    /// ## Safety
+    /// - `chain` must be either null or a valid and aligned pointer to an
+    /// initialized `libra_d3d9_filter_chain_t`.
+    /// - `param_name` must be either null or a null terminated string.
+    PFN_libra_d3d9_filter_chain_get_param d3d9_filter_chain_get_param;
+
+    /// Sets a parameter for the filter chain.
+    ///
+    /// If the parameter does not exist, returns an error.
+    /// ## Safety
+    /// - `chain` must be either null or a valid and aligned pointer to an
+    /// initialized `libra_d3d9_filter_chain_t`.
+    /// - `param_name` must be either null or a null terminated string.
+    PFN_libra_d3d9_filter_chain_set_param d3d9_filter_chain_set_param;
+#endif
+
 #if defined(LIBRA_RUNTIME_METAL)
     /// Create the filter chain given the shader preset.
     ///
@@ -1399,6 +1515,25 @@ libra_instance_t __librashader_make_null_instance(void) {
         __librashader__noop_d3d12_filter_chain_set_param;
 #endif
 
+#if defined(LIBRA_RUNTIME_D3D9)
+    instance.d3d9_filter_chain_create =
+        __librashader__noop_d3d9_filter_chain_create;
+    instance.d3d9_filter_chain_create_deferred =
+        __librashader__noop_d3d9_filter_chain_create_deferred;
+    instance.d3d9_filter_chain_frame =
+        __librashader__noop_d3d9_filter_chain_frame;
+    instance.d3d9_filter_chain_free =
+        __librashader__noop_d3d9_filter_chain_free;
+    instance.d3d9_filter_chain_get_active_pass_count =
+        __librashader__noop_d3d9_filter_chain_get_active_pass_count;
+    instance.d3d9_filter_chain_set_active_pass_count =
+        __librashader__noop_d3d9_filter_chain_set_active_pass_count;
+    instance.d3d9_filter_chain_get_param =
+        __librashader__noop_d3d9_filter_chain_get_param;
+    instance.d3d9_filter_chain_set_param =
+        __librashader__noop_d3d9_filter_chain_set_param;
+#endif
+
 #if defined(LIBRA_RUNTIME_METAL)
     instance.mtl_filter_chain_create =
         __librashader__noop_mtl_filter_chain_create;
@@ -1537,6 +1672,18 @@ libra_instance_t librashader_load_instance(void) {
                         d3d12_filter_chain_get_active_pass_count);
     _LIBRASHADER_ASSIGN(librashader, instance,
                         d3d12_filter_chain_set_active_pass_count);
+#endif
+
+#if defined(_WIN32) && defined(LIBRA_RUNTIME_D3D9)
+    _LIBRASHADER_ASSIGN(librashader, instance, d3d9_filter_chain_create);
+    _LIBRASHADER_ASSIGN(librashader, instance, d3d9_filter_chain_frame);
+    _LIBRASHADER_ASSIGN(librashader, instance, d3d9_filter_chain_free);
+    _LIBRASHADER_ASSIGN(librashader, instance, d3d9_filter_chain_get_param);
+    _LIBRASHADER_ASSIGN(librashader, instance, d3d9_filter_chain_set_param);
+    _LIBRASHADER_ASSIGN(librashader, instance,
+                        d3d9_filter_chain_get_active_pass_count);
+    _LIBRASHADER_ASSIGN(librashader, instance,
+                        d3d9_filter_chain_set_active_pass_count);
 #endif
 
 #if defined(__APPLE__) && defined(LIBRA_RUNTIME_METAL)

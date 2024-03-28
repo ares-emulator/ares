@@ -7,7 +7,7 @@ use ash::prelude::VkResult;
 use gpu_allocator::vulkan::Allocator;
 use librashader_runtime_vk::error::FilterChainError;
 use librashader_runtime_vk::VulkanObjects;
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 use std::ffi::CStr;
 use std::sync::Arc;
 
@@ -22,7 +22,7 @@ pub struct VulkanBase {
     // pub debug: VulkanDebug,
     pub physical_device: vk::PhysicalDevice,
     pub mem_props: vk::PhysicalDeviceMemoryProperties,
-    pub allocator: Arc<RwLock<Allocator>>,
+    pub allocator: Arc<Mutex<Allocator>>,
 }
 
 impl VulkanBase {

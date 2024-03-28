@@ -65,7 +65,7 @@ impl DrawQuad {
                 &D3D11_BUFFER_DESC {
                     ByteWidth: 2 * std::mem::size_of::<[VertexInput; 4]>() as u32,
                     Usage: D3D11_USAGE_IMMUTABLE,
-                    BindFlags: D3D11_BIND_VERTEX_BUFFER,
+                    BindFlags: D3D11_BIND_VERTEX_BUFFER.0 as u32,
                     CPUAccessFlags: Default::default(),
                     MiscFlags: Default::default(),
                     StructureByteStride: 0,

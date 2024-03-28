@@ -2,7 +2,7 @@ use ash::vk;
 use gpu_allocator::vulkan::{Allocator, AllocatorCreateDesc};
 
 use gpu_allocator::AllocationSizes;
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 use std::sync::Arc;
 
 #[inline(always)]
@@ -50,7 +50,7 @@ pub fn create_allocator(
     device: ash::Device,
     instance: ash::Instance,
     physical_device: vk::PhysicalDevice,
-) -> Arc<RwLock<Allocator>> {
+) -> Arc<Mutex<Allocator>> {
     let alloc = Allocator::new(&AllocatorCreateDesc {
         instance,
         device,
@@ -60,5 +60,5 @@ pub fn create_allocator(
         allocation_sizes: AllocationSizes::default(),
     })
     .unwrap();
-    Arc::new(RwLock::new(alloc))
+    Arc::new(Mutex::new(alloc))
 }

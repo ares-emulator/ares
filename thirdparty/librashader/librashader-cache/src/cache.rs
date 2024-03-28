@@ -45,7 +45,7 @@ pub(crate) mod internal {
 
     pub(crate) fn get_cache() -> Result<Persy, Box<dyn Error>> {
         let cache_dir = get_cache_dir()?;
-        let conn = Persy::open_or_create_with(
+        match Persy::open_or_create_with(
             &cache_dir.join("librashader.db.1"),
             Config::new(),
             |persy| {
@@ -53,8 +53,14 @@ pub(crate) mod internal {
                 tx.commit()?;
                 Ok(())
             },
-        )?;
-        Ok(conn)
+        ) {
+            Ok(conn) => Ok(conn),
+            Err(e) => {
+                let path = &cache_dir.join("librashader.db.1");
+                let _ = std::fs::remove_file(path).ok();
+                Err(e)?
+            }
+        }
     }
 
     pub(crate) fn get_blob(

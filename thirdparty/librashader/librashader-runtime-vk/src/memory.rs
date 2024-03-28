@@ -4,7 +4,7 @@ use ash::vk;
 use gpu_allocator::vulkan::{Allocation, AllocationCreateDesc, AllocationScheme, Allocator};
 use gpu_allocator::MemoryLocation;
 use librashader_runtime::uniforms::UniformStorageAccess;
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 
 use std::ffi::c_void;
 use std::mem::ManuallyDrop;
@@ -14,17 +14,17 @@ use std::sync::Arc;
 
 pub struct VulkanImageMemory {
     allocation: Option<Allocation>,
-    allocator: Arc<RwLock<Allocator>>,
+    allocator: Arc<Mutex<Allocator>>,
 }
 
 impl VulkanImageMemory {
     pub fn new(
         device: &Arc<ash::Device>,
-        allocator: &Arc<RwLock<Allocator>>,
+        allocator: &Arc<Mutex<Allocator>>,
         requirements: vk::MemoryRequirements,
         image: &vk::Image,
     ) -> error::Result<VulkanImageMemory> {
-        let allocation = allocator.write().allocate(&AllocationCreateDesc {
+        let allocation = allocator.lock().allocate(&AllocationCreateDesc {
             name: "imagemem",
             requirements,
             location: MemoryLocation::GpuOnly,
@@ -46,7 +46,7 @@ impl Drop for VulkanImageMemory {
     fn drop(&mut self) {
         let allocation = self.allocation.take();
         if let Some(allocation) = allocation {
-            if let Err(e) = self.allocator.write().free(allocation) {
+            if let Err(e) = self.allocator.lock().free(allocation) {
                 println!("librashader-runtime-vk: [warn] failed to deallocate image buffer {e}")
             }
         }
@@ -57,14 +57,14 @@ pub struct VulkanBuffer {
     pub handle: vk::Buffer,
     device: Arc<ash::Device>,
     memory: Option<Allocation>,
-    allocator: Arc<RwLock<Allocator>>,
+    allocator: Arc<Mutex<Allocator>>,
     size: vk::DeviceSize,
 }
 
 impl VulkanBuffer {
     pub fn new(
         device: &Arc<ash::Device>,
-        allocator: &Arc<RwLock<Allocator>>,
+        allocator: &Arc<Mutex<Allocator>>,
         usage: vk::BufferUsageFlags,
         size: usize,
     ) -> error::Result<VulkanBuffer> {
@@ -77,7 +77,7 @@ impl VulkanBuffer {
 
             let memory_reqs = device.get_buffer_memory_requirements(buffer);
 
-            let alloc = allocator.write().allocate(&AllocationCreateDesc {
+            let alloc = allocator.lock().allocate(&AllocationCreateDesc {
                 name: "buffer",
                 requirements: memory_reqs,
                 location: MemoryLocation::CpuToGpu,
@@ -113,7 +113,7 @@ impl Drop for VulkanBuffer {
     fn drop(&mut self) {
         unsafe {
             if let Some(allocation) = self.memory.take() {
-                if let Err(e) = self.allocator.write().free(allocation) {
+                if let Err(e) = self.allocator.lock().free(allocation) {
                     println!(
                         "librashader-runtime-vk: [warn] failed to deallocate buffer memory {e}"
                     )
@@ -141,7 +141,7 @@ pub struct RawVulkanBuffer {
 impl RawVulkanBuffer {
     pub fn new(
         device: &Arc<ash::Device>,
-        allocator: &Arc<RwLock<Allocator>>,
+        allocator: &Arc<Mutex<Allocator>>,
         usage: vk::BufferUsageFlags,
         size: usize,
     ) -> error::Result<Self> {

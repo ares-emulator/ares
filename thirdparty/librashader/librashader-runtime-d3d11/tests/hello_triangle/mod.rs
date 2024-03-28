@@ -104,7 +104,7 @@ where
         cbSize: std::mem::size_of::<WNDCLASSEXA>() as u32,
         style: CS_HREDRAW | CS_VREDRAW,
         lpfnWndProc: Some(wndproc::<S>),
-        hInstance: instance,
+        hInstance: HINSTANCE::from(instance),
         hCursor: unsafe { LoadCursorW(None, IDC_ARROW)? },
         lpszClassName: s!("RustWindowClass"),
         ..Default::default()
@@ -121,7 +121,7 @@ where
         right: size.0,
         bottom: size.1,
     };
-    unsafe { AdjustWindowRect(&mut window_rect, WS_OVERLAPPEDWINDOW, false) };
+    unsafe { AdjustWindowRect(&mut window_rect, WS_OVERLAPPEDWINDOW, false)? };
 
     let mut title = sample.title();
 
@@ -310,7 +310,7 @@ pub mod d3d11_hello_triangle {
                             Quality: 0,
                         },
                         Usage: D3D11_USAGE_DYNAMIC,
-                        BindFlags: D3D11_BIND_SHADER_RESOURCE,
+                        BindFlags: D3D11_BIND_SHADER_RESOURCE.0 as u32,
                         CPUAccessFlags: Default::default(),
                         MiscFlags: Default::default(),
                     },
@@ -382,7 +382,7 @@ pub mod d3d11_hello_triangle {
                 let mut desc = Default::default();
 
                 backbuffer.GetDesc(&mut desc);
-                desc.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+                desc.BindFlags |= D3D11_BIND_SHADER_RESOURCE.0 as u32;
 
                 self.device
                     .CreateTexture2D(&desc, None, Some(&mut renderbuffer))?;
@@ -501,7 +501,7 @@ pub mod d3d11_hello_triangle {
             unsafe {
                 let color = [0.3, 0.4, 0.6, 1.0];
                 self.context
-                    .ClearRenderTargetView(&resources.renderbufffer_rtv, color.as_ptr());
+                    .ClearRenderTargetView(&resources.renderbufffer_rtv, &color);
                 self.context.ClearDepthStencilView(
                     &resources.depth_stencil_view,
                     D3D11_CLEAR_DEPTH.0,
@@ -727,7 +727,7 @@ pub mod d3d11_hello_triangle {
                         Quality: 0,
                     },
                     Usage: D3D11_USAGE_DEFAULT,
-                    BindFlags: D3D11_BIND_DEPTH_STENCIL,
+                    BindFlags: D3D11_BIND_DEPTH_STENCIL.0 as u32,
                     CPUAccessFlags: Default::default(),
                     MiscFlags: Default::default(),
                 },
@@ -764,8 +764,8 @@ pub mod d3d11_hello_triangle {
                 &D3D11_BUFFER_DESC {
                     ByteWidth: (std::mem::size_of::<TriangleUniforms>()) as u32,
                     Usage: D3D11_USAGE_DYNAMIC,
-                    BindFlags: D3D11_BIND_CONSTANT_BUFFER,
-                    CPUAccessFlags: D3D11_CPU_ACCESS_WRITE,
+                    BindFlags: D3D11_BIND_CONSTANT_BUFFER.0 as u32,
+                    CPUAccessFlags: D3D11_CPU_ACCESS_WRITE.0 as u32,
                     MiscFlags: Default::default(),
                     StructureByteStride: 0,
                 },
@@ -799,7 +799,7 @@ pub mod d3d11_hello_triangle {
                 &D3D11_BUFFER_DESC {
                     ByteWidth: (std::mem::size_of::<Vertex>() * vertices.len()) as u32,
                     Usage: D3D11_USAGE_DEFAULT,
-                    BindFlags: D3D11_BIND_VERTEX_BUFFER,
+                    BindFlags: D3D11_BIND_VERTEX_BUFFER.0 as u32,
                     CPUAccessFlags: Default::default(),
                     MiscFlags: Default::default(),
                     StructureByteStride: 0,
@@ -817,7 +817,7 @@ pub mod d3d11_hello_triangle {
                 &D3D11_BUFFER_DESC {
                     ByteWidth: (std::mem::size_of::<u32>() * indices.len()) as u32,
                     Usage: D3D11_USAGE_DEFAULT,
-                    BindFlags: D3D11_BIND_INDEX_BUFFER,
+                    BindFlags: D3D11_BIND_INDEX_BUFFER.0 as u32,
                     CPUAccessFlags: Default::default(),
                     MiscFlags: Default::default(),
                     StructureByteStride: 0,

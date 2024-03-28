@@ -1,4 +1,4 @@
-use crate::texture::{D3D11InputView, InputTexture, LutTexture};
+use crate::texture::{D3D11InputView, InputTexture};
 use librashader_common::{ImageFormat, Size, Viewport};
 
 use librashader_common::map::FastHashMap;
@@ -18,6 +18,7 @@ use crate::error::{assume_d3d11_init, FilterChainError};
 use crate::filter_pass::{ConstantBufferBinding, FilterPass};
 use crate::framebuffer::OwnedImage;
 use crate::graphics_pipeline::D3D11State;
+use crate::luts::LutTexture;
 use crate::options::{FilterChainOptionsD3D11, FrameOptionsD3D11};
 use crate::samplers::SamplerSet;
 use crate::util::d3d11_compile_bound_shader;
@@ -36,9 +37,8 @@ use librashader_runtime::uniforms::UniformStorage;
 use rayon::prelude::*;
 use windows::Win32::Graphics::Direct3D11::{
     ID3D11Buffer, ID3D11Device, ID3D11DeviceContext, D3D11_BIND_CONSTANT_BUFFER, D3D11_BUFFER_DESC,
-    D3D11_CPU_ACCESS_WRITE, D3D11_CREATE_DEVICE_SINGLETHREADED, D3D11_RESOURCE_MISC_FLAG,
-    D3D11_RESOURCE_MISC_GENERATE_MIPS, D3D11_TEXTURE2D_DESC, D3D11_USAGE_DEFAULT,
-    D3D11_USAGE_DYNAMIC,
+    D3D11_CPU_ACCESS_WRITE, D3D11_CREATE_DEVICE_SINGLETHREADED, D3D11_RESOURCE_MISC_GENERATE_MIPS,
+    D3D11_TEXTURE2D_DESC, D3D11_USAGE_DEFAULT, D3D11_USAGE_DYNAMIC,
 };
 use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_R8G8B8A8_UNORM;
 
@@ -216,9 +216,9 @@ impl FilterChainD3D11 {
                 &D3D11_BUFFER_DESC {
                     ByteWidth: size,
                     Usage: D3D11_USAGE_DYNAMIC,
-                    BindFlags: D3D11_BIND_CONSTANT_BUFFER,
-                    CPUAccessFlags: D3D11_CPU_ACCESS_WRITE,
-                    MiscFlags: D3D11_RESOURCE_MISC_FLAG(0),
+                    BindFlags: D3D11_BIND_CONSTANT_BUFFER.0 as u32,
+                    CPUAccessFlags: D3D11_CPU_ACCESS_WRITE.0 as u32,
+                    MiscFlags: 0,
                     StructureByteStride: 0,
                 },
                 None,
@@ -369,9 +369,9 @@ impl FilterChainD3D11 {
                 Format: DXGI_FORMAT_R8G8B8A8_UNORM,
                 Usage: D3D11_USAGE_DEFAULT,
                 MiscFlags: if texture.mipmap {
-                    D3D11_RESOURCE_MISC_GENERATE_MIPS
+                    D3D11_RESOURCE_MISC_GENERATE_MIPS.0 as u32
                 } else {
-                    D3D11_RESOURCE_MISC_FLAG(0)
+                    0
                 },
                 ..Default::default()
             };

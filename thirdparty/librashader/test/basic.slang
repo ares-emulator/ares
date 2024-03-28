@@ -4,11 +4,12 @@
 layout(set = 0, binding = 0, std140) uniform UBO
 {
    mat4 MVP;
-    float ColorMod2;
+   float ColorMod;
+   uint FrameCount;
 };
 
 layout(push_constant) uniform Push {
-   float ColorMod;
+    float ColorMod2;
 } params;
 
 #pragma name StockShader
@@ -32,5 +33,5 @@ layout(location = 0) out vec4 FragColor;
 layout(binding = 1) uniform sampler2D Source;
 void main()
 {
-   FragColor = texture(Source, vTexCoord) * params.ColorMod;
+   FragColor = texture(Source, vTexCoord) * ColorMod * params.ColorMod2;
 }

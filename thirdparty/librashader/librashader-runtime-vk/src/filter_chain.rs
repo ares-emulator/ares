@@ -26,7 +26,7 @@ use librashader_runtime::binding::BindingUtil;
 use librashader_runtime::image::{Image, ImageError, UVDirection, BGRA8};
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::uniforms::UniformStorage;
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 use std::collections::VecDeque;
 use std::convert::Infallible;
 use std::path::Path;
@@ -43,7 +43,7 @@ use rayon::prelude::*;
 /// A Vulkan device and metadata that is required by the shader runtime.
 pub struct VulkanObjects {
     pub(crate) device: Arc<ash::Device>,
-    pub(crate) alloc: Arc<RwLock<Allocator>>,
+    pub(crate) alloc: Arc<Mutex<Allocator>>,
     queue: vk::Queue,
     // pub(crate) memory_properties: vk::PhysicalDeviceMemoryProperties,
 }
@@ -459,7 +459,6 @@ impl FilterChainVulkan {
                 )?;
 
                 Ok(FilterPass {
-                    device: vulkan.device.clone(),
                     reflection,
                     // compiled: spirv_words,
                     uniform_storage,
@@ -670,14 +669,16 @@ impl FilterChainVulkan {
 
         let options = options.unwrap_or(&self.default_options);
 
-        self.common.draw_quad.bind_vbo_for_frame(cmd);
+        self.common
+            .draw_quad
+            .bind_vbo_for_frame(&self.vulkan.device, cmd);
         for (index, pass) in pass.iter_mut().enumerate() {
             let target = &self.output_framebuffers[index];
             source.filter_mode = pass.config.filter;
             source.wrap_mode = pass.config.wrap_mode;
             source.mip_filter = pass.config.filter;
 
-            let output_image = OutputImage::new(&self.vulkan, target.image.clone())?;
+            let output_image = OutputImage::new(&self.vulkan.device, target.image.clone())?;
             let out = RenderTarget::identity(&output_image);
 
             let residual_fb = pass.draw(
@@ -696,7 +697,7 @@ impl FilterChainVulkan {
             if target.max_miplevels > 1 && !self.disable_mipmaps {
                 target.generate_mipmaps_and_end_pass(cmd);
             } else {
-                out.output.end_pass(cmd);
+                out.output.end_pass(&self.vulkan.device, cmd);
             }
 
             source = self.common.output_textures[index].clone().unwrap();
@@ -722,7 +723,7 @@ impl FilterChainVulkan {
             source.wrap_mode = pass.config.wrap_mode;
             source.mip_filter = pass.config.filter;
 
-            let output_image = OutputImage::new(&self.vulkan, viewport.output.clone())?;
+            let output_image = OutputImage::new(&self.vulkan.device, viewport.output.clone())?;
             let out = RenderTarget::viewport_with_output(&output_image, viewport);
 
             let residual_fb = pass.draw(

@@ -20,7 +20,7 @@ use std::sync::Arc;
 
 use crate::buffer::WgpuStagedBuffer;
 use crate::draw_quad::DrawQuad;
-use librashader_common::{FilterMode, ImageFormat, Size, Viewport, WrapMode};
+use librashader_common::{FilterMode, Size, Viewport, WrapMode};
 use librashader_reflect::reflect::naga::{Naga, NagaLoweringOptions};
 use librashader_runtime::framebuffer::FramebufferInit;
 use librashader_runtime::render_target::RenderTarget;
@@ -157,7 +157,7 @@ impl FilterChainWgpu {
                 Arc::clone(&device),
                 Size::new(1, 1),
                 1,
-                ImageFormat::R8G8B8A8Unorm,
+                TextureFormat::Bgra8Unorm,
             ))
         };
         let input_gen = || None;

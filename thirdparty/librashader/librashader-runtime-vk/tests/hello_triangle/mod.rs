@@ -26,8 +26,8 @@ use vulkan_base::VulkanBase;
 use librashader_common::Viewport;
 
 use librashader_runtime_vk::options::FrameOptionsVulkan;
-use winit::event::{ElementState, Event, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
+use winit::event::{Event, WindowEvent};
+use winit::event_loop::{EventLoop, EventLoopBuilder};
 use winit::platform::windows::EventLoopBuilderExtWindows;
 
 // Constants

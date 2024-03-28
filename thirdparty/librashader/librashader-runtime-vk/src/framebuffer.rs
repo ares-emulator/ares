@@ -1,20 +1,17 @@
-use crate::filter_chain::VulkanObjects;
 use crate::texture::VulkanImage;
 use crate::{error, util};
 use ash::vk;
 use librashader_common::Size;
-use std::sync::Arc;
 
 #[derive(Clone)]
 pub(crate) struct OutputImage {
     pub size: Size<u32>,
     pub image_view: vk::ImageView,
-    device: Arc<ash::Device>,
     image: vk::Image,
 }
 
 impl OutputImage {
-    pub fn new(vulkan: &VulkanObjects, image: VulkanImage) -> error::Result<OutputImage> {
+    pub fn new(device: &ash::Device, image: VulkanImage) -> error::Result<OutputImage> {
         let image_subresource = vk::ImageSubresourceRange::builder()
             .base_mip_level(0)
             .base_array_layer(0)
@@ -35,20 +32,19 @@ impl OutputImage {
             .subresource_range(*image_subresource)
             .components(*swizzle_components);
 
-        let image_view = unsafe { vulkan.device.create_image_view(&view_info, None)? };
+        let image_view = unsafe { device.create_image_view(&view_info, None)? };
 
         Ok(OutputImage {
-            device: vulkan.device.clone(),
             size: image.size,
             image: image.image,
             image_view,
         })
     }
 
-    pub fn begin_pass(&self, cmd: vk::CommandBuffer) {
+    pub fn begin_pass(&self, device: &ash::Device, cmd: vk::CommandBuffer) {
         unsafe {
             util::vulkan_image_layout_transition_levels(
-                &self.device,
+                device,
                 cmd,
                 self.image,
                 1,
@@ -64,10 +60,10 @@ impl OutputImage {
         }
     }
 
-    pub fn end_pass(&self, cmd: vk::CommandBuffer) {
+    pub fn end_pass(&self, device: &ash::Device, cmd: vk::CommandBuffer) {
         unsafe {
             util::vulkan_image_layout_transition_levels(
-                &self.device,
+                &device,
                 cmd,
                 self.image,
                 vk::REMAINING_MIP_LEVELS,

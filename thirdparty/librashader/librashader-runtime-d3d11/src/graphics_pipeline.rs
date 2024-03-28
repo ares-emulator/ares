@@ -84,7 +84,7 @@ impl D3D11State {
             let mut saved_blend_mask = 0;
             context.OMGetBlendState(
                 Some(&mut saved_blend),
-                Some(saved_blend_factor.as_mut_ptr()),
+                Some(&mut saved_blend_factor),
                 Some(&mut saved_blend_mask),
             );
             let saved_rs = context.RSGetState().ok();
@@ -113,7 +113,7 @@ impl Drop for D3D11StateSaveGuard<'_> {
             self.ctx.RSSetState(self.saved_rs.as_ref());
             self.ctx.OMSetBlendState(
                 self.saved_blend.as_ref(),
-                Some(self.saved_blend_factor.as_ptr()),
+                Some(&self.saved_blend_factor),
                 self.saved_blend_mask,
             );
         }

@@ -94,58 +94,6 @@ impl From<wgpu_types::Extent3d> for Size<u32> {
     }
 }
 
-//
-// impl From<Size<u32>> for vk::Extent2D {
-//     fn from(value: Size<u32>) -> Self {
-//         vk::Extent2D {
-//             width: value.width,
-//             height: value.height,
-//         }
-//     }
-// }
-//
-
-//
-// impl From<vk::Extent2D> for Size<u32> {
-//     fn from(value: vk::Extent2D) -> Self {
-//         Size {
-//             width: value.width,
-//             height: value.height,
-//         }
-//     }
-// }
-//
-// impl From<vk::Viewport> for Size<u32> {
-//     fn from(value: vk::Viewport) -> Self {
-//         Size {
-//             width: value.width as u32,
-//             height: value.height as u32,
-//         }
-//     }
-// }
-//
-// impl From<&vk::Viewport> for Size<u32> {
-//     fn from(value: &vk::Viewport) -> Self {
-//         Size {
-//             width: value.width as u32,
-//             height: value.height as u32,
-//         }
-//     }
-// }
-//
-// impl From<Size<u32>> for vk::Viewport {
-//     fn from(value: Size<u32>) -> Self {
-//         vk::Viewport {
-//             x: 0.0,
-//             y: 0.0,
-//             width: value.width as f32,
-//             height: value.height as f32,
-//             min_depth: 0.0,
-//             max_depth: 1.0,
-//         }
-//     }
-// }
-
 impl From<FilterMode> for wgpu_types::FilterMode {
     fn from(value: FilterMode) -> Self {
         match value {

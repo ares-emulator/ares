@@ -741,12 +741,16 @@ mod test {
     use crate::reflect::ReflectShader;
     use rustc_hash::FxHashMap;
 
+    use crate::back::hlsl::CrossHlslContext;
+    use crate::back::targets::HLSL;
+    use crate::back::{CompileShader, ShaderCompilerOutput};
     use crate::front::{Glslang, ShaderInputCompiler};
     use crate::reflect::semantics::{Semantic, ShaderSemantics, UniformSemantic, UniqueSemantics};
     use librashader_common::map::FastHashMap;
     use librashader_preprocess::ShaderSource;
-    use spirv_cross::glsl;
     use spirv_cross::glsl::{CompilerOptions, Version};
+    use spirv_cross::hlsl::ShaderModel;
+    use spirv_cross::{glsl, hlsl};
 
     #[test]
     pub fn test_into() {
@@ -763,8 +767,8 @@ mod test {
             );
         }
         let spirv = Glslang::compile(&result).unwrap();
-        let mut reflect = CrossReflect::<glsl::Target>::try_from(&spirv).unwrap();
-        let _shader_reflection = reflect
+        let mut reflect = CrossReflect::<hlsl::Target>::try_from(&spirv).unwrap();
+        let shader_reflection = reflect
             .reflect(
                 0,
                 &ShaderSemantics {
@@ -773,10 +777,20 @@ mod test {
                 },
             )
             .unwrap();
-        let mut opts = CompilerOptions::default();
-        opts.version = Version::V4_60;
-        opts.enable_420_pack_extension = false;
-        // let compiled: ShaderCompilerOutput<String, CrossWgslContext> = <CrossReflect<glsl::Target> as CompileShader<WGSL>>::compile(reflect, Version::V3_30).unwrap();
+        let mut opts = hlsl::CompilerOptions::default();
+        opts.shader_model = ShaderModel::V3_0;
+
+        let compiled: ShaderCompilerOutput<String, CrossHlslContext> =
+            <CrossReflect<hlsl::Target> as CompileShader<HLSL>>::compile(
+                reflect,
+                Some(ShaderModel::V3_0),
+            )
+            .unwrap();
+
+        println!("{:?}", shader_reflection.meta);
+        println!("{}", compiled.fragment);
+        println!("{}", compiled.vertex);
+
         // // eprintln!("{shader_reflection:#?}");
         // eprintln!("{}", compiled.fragment)
         // let mut loader = rspirv::dr::Loader::new();

@@ -4,7 +4,7 @@ use array_concat::concat_arrays;
 use ash::vk;
 use gpu_allocator::vulkan::Allocator;
 use librashader_runtime::quad::{QuadType, VertexInput};
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 use std::sync::Arc;
 
 const OFFSCREEN_VBO_DATA: [VertexInput; 4] = [
@@ -49,13 +49,12 @@ static VBO_DATA: &[VertexInput; 8] = &concat_arrays!(OFFSCREEN_VBO_DATA, FINAL_V
 
 pub struct DrawQuad {
     buffer: VulkanBuffer,
-    device: Arc<ash::Device>,
 }
 
 impl DrawQuad {
     pub fn new(
         device: &Arc<ash::Device>,
-        allocator: &Arc<RwLock<Allocator>>,
+        allocator: &Arc<Mutex<Allocator>>,
     ) -> error::Result<DrawQuad> {
         let mut buffer = VulkanBuffer::new(
             device,
@@ -69,31 +68,23 @@ impl DrawQuad {
             slice.copy_from_slice(bytemuck::cast_slice(VBO_DATA));
         }
 
-        Ok(DrawQuad {
-            buffer,
-            device: device.clone(),
-        })
+        Ok(DrawQuad { buffer })
     }
 
-    pub fn bind_vbo_for_frame(&self, cmd: vk::CommandBuffer) {
+    pub fn bind_vbo_for_frame(&self, device: &ash::Device, cmd: vk::CommandBuffer) {
         unsafe {
-            self.device.cmd_bind_vertex_buffers(
-                cmd,
-                0,
-                &[self.buffer.handle],
-                &[0 as vk::DeviceSize],
-            )
+            device.cmd_bind_vertex_buffers(cmd, 0, &[self.buffer.handle], &[0 as vk::DeviceSize])
         }
     }
 
-    pub fn draw_quad(&self, cmd: vk::CommandBuffer, vbo: QuadType) {
+    pub fn draw_quad(&self, device: &ash::Device, cmd: vk::CommandBuffer, vbo: QuadType) {
         let offset = match vbo {
             QuadType::Offscreen => 0,
             QuadType::Final => 4,
         };
 
         unsafe {
-            self.device.cmd_draw(cmd, 4, 1, offset, 0);
+            device.cmd_draw(cmd, 4, 1, offset, 0);
         }
     }
 }

@@ -15,13 +15,13 @@ pub trait TextureInput {
 }
 
 /// A uniform member offset with context that needs to be resolved.
-pub trait ContextOffset<H, C>
+pub trait ContextOffset<H, C, D = ()>
 where
-    H: BindUniform<C, f32>,
-    H: BindUniform<C, u32>,
-    H: BindUniform<C, i32>,
-    H: for<'a> BindUniform<C, &'a [f32; 4]>,
-    H: for<'a> BindUniform<C, &'a [f32; 16]>,
+    H: BindUniform<C, f32, D>,
+    H: BindUniform<C, u32, D>,
+    H: BindUniform<C, i32, D>,
+    H: for<'a> BindUniform<C, &'a [f32; 4], D>,
+    H: for<'a> BindUniform<C, &'a [f32; 16], D>,
 {
     /// Gets the `MemberOffset` part of the offset.
     fn offset(&self) -> MemberOffset;
@@ -30,13 +30,13 @@ where
     fn context(&self) -> C;
 }
 
-impl<H> ContextOffset<H, Option<()>> for MemberOffset
+impl<D, H> ContextOffset<H, Option<()>, D> for MemberOffset
 where
-    H: BindUniform<Option<()>, f32>,
-    H: BindUniform<Option<()>, u32>,
-    H: BindUniform<Option<()>, i32>,
-    H: for<'a> BindUniform<Option<()>, &'a [f32; 4]>,
-    H: for<'a> BindUniform<Option<()>, &'a [f32; 16]>,
+    H: BindUniform<Option<()>, f32, D>,
+    H: BindUniform<Option<()>, u32, D>,
+    H: BindUniform<Option<()>, i32, D>,
+    H: for<'a> BindUniform<Option<()>, &'a [f32; 4], D>,
+    H: for<'a> BindUniform<Option<()>, &'a [f32; 16], D>,
 {
     fn offset(&self) -> MemberOffset {
         *self
@@ -73,11 +73,11 @@ where
     C: Copy,
     U: Deref<Target = [u8]> + DerefMut,
     P: Deref<Target = [u8]> + DerefMut,
-    H: BindUniform<C, f32>,
-    H: BindUniform<C, u32>,
-    H: BindUniform<C, i32>,
-    H: for<'b> BindUniform<C, &'b [f32; 4]>,
-    H: for<'b> BindUniform<C, &'b [f32; 16]>,
+    H: BindUniform<C, f32, Self::DeviceContext>,
+    H: BindUniform<C, u32, Self::DeviceContext>,
+    H: BindUniform<C, i32, Self::DeviceContext>,
+    H: for<'b> BindUniform<C, &'b [f32; 4], Self::DeviceContext>,
+    H: for<'b> BindUniform<C, &'b [f32; 16], Self::DeviceContext>,
 {
     /// The type of the input texture used for semantic binding.
     type InputTexture: TextureInput;
@@ -92,7 +92,7 @@ where
     type DeviceContext;
 
     /// The type of uniform offsets to use.
-    type UniformOffset: ContextOffset<H, C>;
+    type UniformOffset: ContextOffset<H, C, Self::DeviceContext>;
 
     /// Bind a texture to the input descriptor set
     fn bind_texture<'a>(
@@ -108,7 +108,7 @@ where
     fn bind_semantics<'a>(
         device: &Self::DeviceContext,
         sampler_set: &Self::SamplerSet,
-        uniform_storage: &mut UniformStorage<H, C, U, P>,
+        uniform_storage: &mut UniformStorage<H, C, U, P, Self::DeviceContext>,
         descriptor_set: &mut Self::DescriptorSet<'a>,
         uniform_inputs: UniformInputs<'_>,
         original: &Self::InputTexture,
@@ -124,7 +124,12 @@ where
     ) {
         // Bind MVP
         if let Some(offset) = uniform_bindings.get(&UniqueSemantics::MVP.into()) {
-            uniform_storage.bind_mat4(offset.offset(), uniform_inputs.mvp, offset.context());
+            uniform_storage.bind_mat4(
+                offset.offset(),
+                uniform_inputs.mvp,
+                offset.context(),
+                device,
+            );
         }
 
         // Bind OutputSize
@@ -133,6 +138,7 @@ where
                 offset.offset(),
                 uniform_inputs.framebuffer_size,
                 offset.context(),
+                device,
             );
         }
 
@@ -142,6 +148,7 @@ where
                 offset.offset(),
                 uniform_inputs.viewport_size,
                 offset.context(),
+                device,
             );
         }
 
@@ -151,6 +158,7 @@ where
                 offset.offset(),
                 uniform_inputs.frame_count,
                 offset.context(),
+                device,
             );
         }
 
@@ -160,12 +168,18 @@ where
                 offset.offset(),
                 uniform_inputs.frame_direction,
                 offset.context(),
+                device,
             );
         }
 
         // bind Rotation
         if let Some(offset) = uniform_bindings.get(&UniqueSemantics::Rotation.into()) {
-            uniform_storage.bind_scalar(offset.offset(), uniform_inputs.rotation, offset.context());
+            uniform_storage.bind_scalar(
+                offset.offset(),
+                uniform_inputs.rotation,
+                offset.context(),
+                device,
+            );
         }
 
         // bind TotalSubFrames
@@ -174,6 +188,7 @@ where
                 offset.offset(),
                 uniform_inputs.total_subframes,
                 offset.context(),
+                device,
             );
         }
 
@@ -183,6 +198,7 @@ where
                 offset.offset(),
                 uniform_inputs.current_subframe,
                 offset.context(),
+                device,
             );
         }
 
@@ -194,7 +210,7 @@ where
         // bind OriginalSize
         if let Some(offset) = uniform_bindings.get(&TextureSemantics::Original.semantics(0).into())
         {
-            uniform_storage.bind_vec4(offset.offset(), original.size(), offset.context());
+            uniform_storage.bind_vec4(offset.offset(), original.size(), offset.context(), device);
         }
 
         // bind Source sampler
@@ -204,7 +220,7 @@ where
 
         // bind SourceSize
         if let Some(offset) = uniform_bindings.get(&TextureSemantics::Source.semantics(0).into()) {
-            uniform_storage.bind_vec4(offset.offset(), source.size(), offset.context());
+            uniform_storage.bind_vec4(offset.offset(), source.size(), offset.context(), device);
         }
 
         // OriginalHistory0 aliases OriginalHistory
@@ -218,7 +234,7 @@ where
         if let Some(offset) =
             uniform_bindings.get(&TextureSemantics::OriginalHistory.semantics(0).into())
         {
-            uniform_storage.bind_vec4(offset.offset(), original.size(), offset.context());
+            uniform_storage.bind_vec4(offset.offset(), original.size(), offset.context(), device);
         }
 
         // bind OriginalHistory1-..
@@ -240,7 +256,12 @@ where
                     .semantics(index + 1)
                     .into(),
             ) {
-                uniform_storage.bind_vec4(offset.offset(), history.size(), offset.context());
+                uniform_storage.bind_vec4(
+                    offset.offset(),
+                    history.size(),
+                    offset.context(),
+                    device,
+                );
             }
         }
 
@@ -262,7 +283,7 @@ where
             if let Some(offset) =
                 uniform_bindings.get(&TextureSemantics::PassOutput.semantics(index).into())
             {
-                uniform_storage.bind_vec4(offset.offset(), output.size(), offset.context());
+                uniform_storage.bind_vec4(offset.offset(), output.size(), offset.context(), device);
             }
         }
 
@@ -283,7 +304,12 @@ where
             if let Some(offset) =
                 uniform_bindings.get(&TextureSemantics::PassFeedback.semantics(index).into())
             {
-                uniform_storage.bind_vec4(offset.offset(), feedback.size(), offset.context());
+                uniform_storage.bind_vec4(
+                    offset.offset(),
+                    feedback.size(),
+                    offset.context(),
+                    device,
+                );
             }
         }
 
@@ -301,7 +327,7 @@ where
 
             let value = *runtime_parameters.get(id).unwrap_or(&default);
 
-            uniform_storage.bind_scalar(offset.offset(), value, offset.context());
+            uniform_storage.bind_scalar(offset.offset(), value, offset.context(), device);
         }
 
         // bind luts
@@ -314,7 +340,7 @@ where
             if let Some(offset) =
                 uniform_bindings.get(&TextureSemantics::User.semantics(index).into())
             {
-                uniform_storage.bind_vec4(offset.offset(), lut.size(), offset.context());
+                uniform_storage.bind_vec4(offset.offset(), lut.size(), offset.context(), device);
             }
         }
     }

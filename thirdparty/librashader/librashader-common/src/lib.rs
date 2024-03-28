@@ -16,6 +16,10 @@ pub mod wgpu;
 #[cfg(all(target_os = "windows", feature = "dxgi"))]
 pub mod dxgi;
 
+/// Direct3D 9 common conversions.
+#[cfg(all(target_os = "windows", feature = "d3d9"))]
+pub mod d3d9;
+
 /// Direct3D 11 common conversions.
 #[cfg(all(target_os = "windows", feature = "d3d11"))]
 pub mod d3d11;

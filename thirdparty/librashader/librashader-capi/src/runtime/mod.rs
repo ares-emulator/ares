@@ -14,6 +14,13 @@ pub mod vk;
 ))]
 pub mod d3d11;
 
+#[doc(cfg(all(target_os = "windows", feature = "runtime-d3d9")))]
+#[cfg(any(
+    feature = "__cbindgen_internal",
+    all(target_os = "windows", feature = "runtime-d3d9")
+))]
+pub mod d3d9;
+
 #[doc(cfg(all(target_os = "windows", feature = "runtime-d3d12")))]
 #[cfg(any(
     feature = "__cbindgen_internal",

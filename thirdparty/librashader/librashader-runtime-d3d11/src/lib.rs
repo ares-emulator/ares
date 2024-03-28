@@ -18,6 +18,7 @@ mod texture;
 mod util;
 
 pub mod error;
+mod luts;
 pub mod options;
 
 use librashader_runtime::impl_filter_chain_parameters;
