@@ -25,7 +25,7 @@ Screen::~Screen() {
 
 auto Screen::main(uintptr_t) -> void {
   while(!_kill) {
-    usleep(1);
+    usleep(1000);
     if(_frame) {
       refresh();
       _frame = false;
