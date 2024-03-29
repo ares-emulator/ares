@@ -576,17 +576,19 @@ auto Presentation::loadShaders() -> void {
 
   Group shaders;
 
-  MenuRadioItem none{&videoShaderMenu};
-  none.setText("None").onActivate([&] {
+  MenuCheckItem none{&videoShaderMenu};
+  none.setText("None").onToggle([&] {
     settings.video.shader = "None";
     ruby::video.setShader(settings.video.shader);
+    loadShaders();
   });
   shaders.append(none);
 
-  MenuRadioItem blur{&videoShaderMenu};
-  blur.setText("Blur").onActivate([&] {
+  MenuCheckItem blur{&videoShaderMenu};
+  blur.setText("Blur").onToggle([&] {
     settings.video.shader = "Blur";
     ruby::video.setShader(settings.video.shader);
+    loadShaders();
   });
   shaders.append(blur);
 
@@ -594,19 +596,37 @@ auto Presentation::loadShaders() -> void {
 
   if(ruby::video.driver() == "OpenGL 3.2") {
     auto files = directory::files(location, "*.slangp");
-    for(auto dir : directory::folders(location)) {
-      for(auto file : directory::files({location, "/", dir}, "*.slangp")) {
-        files.append({dir, file});
-      }
-    }
-
-    for(auto shader : files) {
-      MenuRadioItem item{&videoShaderMenu};
-      item.setText(string{shader}.trimRight(".slangp", 1L)).onActivate([=] {
-        settings.video.shader = {location, shader};
+    for(auto file : files) {
+      MenuCheckItem item{&videoShaderMenu};
+      item.setAttribute("file", {location, file});
+      item.setText(string{file}.trimRight(".slangp", 1L)).onToggle([=] {
+        settings.video.shader = {location, file};
         ruby::video.setShader(settings.video.shader);
+        loadShaders();
       });
       shaders.append(item);
+    }
+
+    for(auto dir : directory::folders(location)) {
+      bool menuAdded = false;
+      Menu folder;
+
+      for(auto file : directory::files({location, "/", dir}, "*.slangp")) {
+        if(!menuAdded) {
+          folder.setText(dir.trimRight("/", 1L));
+          menuAdded = true;
+          videoShaderMenu.append(folder);
+        }
+
+        MenuCheckItem item{&folder};
+        item.setAttribute("file", {location, dir, "/", file});
+        item.setText(string{file}.trimRight(".slangp", 1L)).onToggle([=] {
+          settings.video.shader = {location, dir, "/", file};
+          ruby::video.setShader(settings.video.shader);
+          loadShaders();
+        });
+        shaders.append(item);
+      }
     }
   }
 
@@ -624,6 +644,7 @@ auto Presentation::loadShaders() -> void {
        settings.video.shader.imatch("None") ||
        settings.video.shader.imatch("Blur")) {
         ruby::video.setShader(settings.video.shader);
+        loadShaders();
     } else {
         hiro::MessageDialog()
             .setTitle("Warning")
@@ -636,11 +657,10 @@ auto Presentation::loadShaders() -> void {
 
   if(settings.video.shader.imatch("None")) {none.setChecked(); settings.video.shader = "None";}
   if(settings.video.shader.imatch("Blur")) {blur.setChecked(); settings.video.shader = "Blur";}
-  for(auto item : shaders.objects<MenuRadioItem>()) {
-    string fullPath = {location, item.text(), ".slangp"};
-    if(settings.video.shader.imatch(fullPath)) {
+  for(auto item : shaders.objects<MenuCheckItem>()) {
+    if(settings.video.shader.imatch(item.attribute("file"))) {
       item.setChecked();
-      settings.video.shader = fullPath;
+      settings.video.shader = item.attribute("file");
     }
   }
 }
