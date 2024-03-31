@@ -30,6 +30,7 @@ auto SH2::Cache::read(u32 address) -> u32 {
   lines[index].longs[1] = bswap32(self->busReadLong(address & 0x1fff'fff0 | 0x4));
   lines[index].longs[2] = bswap32(self->busReadLong(address & 0x1fff'fff0 | 0x8));
   lines[index].longs[3] = bswap32(self->busReadLong(address & 0x1fff'fff0 | 0xc));
+  self->step(12);
   return read(lines[index]);
 }
 
