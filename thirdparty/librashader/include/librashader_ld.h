@@ -37,9 +37,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define LIBRA_RUNTIME_D3D12
 #endif
 
-// #if (defined(__APPLE__) && defined(__OBJC__))
-// #define LIBRA_RUNTIME_METAL
-// #endif
+#if (defined(__APPLE__) && defined(__OBJC__))
+#define LIBRA_RUNTIME_METAL
+#endif
 
 #if defined(_WIN32)
 #include <windows.h>

@@ -11,6 +11,7 @@ struct Settings : Markup::Node {
     string format;
     bool exclusive = false;
     bool blocking = false;
+    bool forceSRGB = false;
     bool flush = false;
     string shader = "None";
     u32 multiplier = 2;
@@ -334,6 +335,9 @@ struct DriverSettings : VerticalLayout {
     CheckLabel videoExclusiveToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoBlockingToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoFlushToggle{&videoToggleLayout, Size{0, 0}};
+#if defined(PLATFORM_MACOS)
+    CheckLabel videoColorSpaceToggle{&videoToggleLayout, Size{0, 0}};
+#endif
   //
   Label audioLabel{this, Size{~0, 0}, 5};
   HorizontalLayout audioDriverLayout{this, Size{~0, 0}};

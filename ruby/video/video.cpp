@@ -26,6 +26,10 @@
   #include <ruby/video/xvideo.cpp>
 #endif
 
+#if defined(VIDEO_METAL)
+  #include <ruby/video/metal/metal.cpp>
+#endif
+
 namespace ruby {
 
 auto Video::setFullScreen(bool fullScreen) -> bool {
@@ -65,6 +69,14 @@ auto Video::setBlocking(bool blocking) -> bool {
   if(instance->blocking == blocking) return true;
   if(!instance->hasBlocking()) return false;
   if(!instance->setBlocking(instance->blocking = blocking)) return false;
+  return true;
+}
+
+auto Video::setForceSRGB(bool forceSRGB) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
+  if(instance->forceSRGB == forceSRGB) return true;
+  if(!instance->hasForceSRGB()) return false;
+  if(!instance->setForceSRGB(instance->forceSRGB = forceSRGB)) return false;
   return true;
 }
 
@@ -179,6 +191,10 @@ auto Video::create(string driver) -> bool {
   #if defined(VIDEO_XVIDEO)
   if(driver == "XVideo") self.instance = new VideoXVideo(*this);
   #endif
+  
+  #if defined(VIDEO_METAL)
+  if(driver == "Metal") self.instance = new VideoMetal(*this);
+  #endif
 
   if(!self.instance) self.instance = new VideoDriver(*this);
 
@@ -215,6 +231,10 @@ auto Video::hasDrivers() -> vector<string> {
   #if defined(VIDEO_XSHM)
   "XShm",
   #endif
+    
+  #if defined(VIDEO_METAL)
+    "Metal",
+  #endif
 
   "None"};
 }
@@ -234,6 +254,8 @@ auto Video::optimalDriver() -> string {
   return "XVideo";
   #elif defined(VIDEO_XSHM)
   return "XShm";
+  #elif defined(VIDEO_Metal)
+  return "Metal";
   #else
   return "None";
   #endif
@@ -254,6 +276,8 @@ auto Video::safestDriver() -> string {
   return "XVideo";
   #elif defined(VIDEO_GLX)
   return "OpenGL 3.2";
+  #elif defined(VIDEO_Metal)
+  return "Metal";
   #else
   return "None";
   #endif

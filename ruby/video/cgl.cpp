@@ -36,6 +36,7 @@ struct VideoCGL : VideoDriver, OpenGL {
   auto hasFullScreen() -> bool override { return true; }
   auto hasContext() -> bool override { return true; }
   auto hasBlocking() -> bool override { return true; }
+  auto hasForceSRGB() -> bool override { return false; }
   auto hasFlush() -> bool override { return true; }
   auto hasShader() -> bool override { return true; }
 

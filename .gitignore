@@ -1,5 +1,6 @@
 *.moc
 *.user
+*.xcuserdata
 .vs/
 .vscode/
 .idea/
@@ -12,3 +13,6 @@ out-amd64/
 out-arm64/
 thirdparty/SDL/SDL
 thirdparty/SDL/libSDL2-2.0.0.dylib
+macos-xcode/
+.swiftpm
+*.xcodeproj
