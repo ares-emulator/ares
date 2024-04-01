@@ -1,0 +1,86 @@
+Accumulator
+    MAR = PC;
+
+Implied
+    MAR = PC;
+
+Immediate
+    MAR = PC++;
+
+Relative
+    MAR = PC++;
+
+ZeroPage
+    MAR = read(PC++);
+
+ZeroPageX
+    MAR = read(PC++);
+    read(MAR); // dummy read
+    MAR = (MAR + X) & 0xff;
+
+ZeroPageY
+    MAR = read(PC++);
+    read(MAR); // dummy read
+    MAR = (MAR + Y) & 0xff;
+
+Absolute
+    MAR = read(PC++);
+    MAR |= read(PC++) << 8;
+
+AbsoluteJMP
+    MAR = read(PC++);
+    L MAR |= read(PC++) << 8;
+
+AbsoluteXRead
+    TN16 = read(PC++);
+    TN16 |= read(PC++) << 8;
+    MAR = TN16 + X;
+    if (MAR >> 8  != TN16 >> 8)
+        read((TN16 & 0xff00) | (MAR & 0x00ff)); // dummy read
+
+AbsoluteXWrite
+    TN16 = read(PC++);
+    TN16 |= read(PC++) << 8;
+    MAR = TN16 + X;
+    read((TN16 & 0xff00) | (MAR & 0x00ff)); // dummy read
+    
+AbsoluteYRead
+    TN16 = read(PC++);
+    TN16 |= read(PC++) << 8;
+    MAR = TN16 + Y;
+    if (MAR >> 8  != TN16 >> 8)
+        read((TN16 & 0xff00) | (MAR & 0x00ff)); // dummy read
+
+AbsoluteYWrite
+    TN16 = read(PC++);
+    TN16 |= read(PC++) << 8;
+    MAR = TN16 + Y;
+    read((TN16 & 0xff00) | (MAR & 0x00ff)); // dummy read
+    
+Indirect
+    TN16 = read(PC++);
+    TN16 |= read(PC++) << 8;
+    MAR = read(TN16);
+    TN16.byte(0)++; // MOS6502: $00ff wraps here to $0000; not $0100
+    L MAR |= read(TN16) << 8;
+
+IndirectX
+    TN8 = read(PC++);
+    read(TN8); // dummy read
+    MAR = load(TN8 + X + 0);
+    MAR |= load(TN8 + X + 1) << 8;
+
+IndirectYRead
+    TN8 = read(PC++);
+    TN16 = load(TN8);
+    TN16 |= load(TN8 + 1) << 8;
+    MAR = TN16 + Y;
+    if (MAR >> 8  != TN16 >> 8)
+        read((TN16 & 0xff00) | (MAR & 0x00ff)); // dummy read
+
+IndirectYWrite
+    TN8 = read(PC++);
+    TN16 = load(TN8);
+    TN16 |= load(TN8 + 1) << 8;
+    MAR = TN16 + Y;
+    read((TN16 & 0xff00) | (MAR & 0x00ff)); // dummy read

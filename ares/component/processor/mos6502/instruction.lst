@@ -1,0 +1,34 @@
+Load
+    L MDR = read(MAR);
+    ALU();
+
+Store
+    ALU();
+    L write(MAR, MDR);
+
+Modify
+    MDR = read(MAR);
+    write(MAR, MDR); // dummy write
+    ALU();
+    L write(MAR, MDR);
+
+None
+    ALU();
+
+Branch
+    // a taken non-page-crossing branch ignores
+    // IRQ/NMI during its last clock, so that
+    // next instruction executes before the IRQ
+    // pass branch_delays_irq.nes
+    delayIrq();
+    ALU();
+    if (MDR == 1) {
+        MDR = read(MAR);
+        TN16 = PC + (i8)MDR;
+        if (TN16 >> 8 != PC >> 8)
+            read((PC & 0xff00) | (TN16 & 0x00ff)); // dummy read without carry
+        L read(TN16); // dummy read with carry
+        PC = TN16;
+    } else {
+        L MDR = read(MAR);  // dummy read
+    }

@@ -58,7 +58,7 @@ $(object.path)/ares-processor-huc6280.o:  $(ares.path)/component/processor/huc62
 $(object.path)/ares-processor-i8080.o:    $(ares.path)/component/processor/i8080/i8080.cpp
 $(object.path)/ares-processor-m68hc05.o:  $(ares.path)/component/processor/m68hc05/m68hc05.cpp
 $(object.path)/ares-processor-m68000.o:   $(ares.path)/component/processor/m68000/m68000.cpp
-$(object.path)/ares-processor-mos6502.o:  $(ares.path)/component/processor/mos6502/mos6502.cpp
+$(object.path)/ares-processor-mos6502.o:  $(ares.path)/component/processor/mos6502/mos6502.cpp $(ares.path)/component/processor/mos6502/instruction.cpp
 $(object.path)/ares-processor-sh2.o:      $(ares.path)/component/processor/sh2/sh2.cpp
 $(object.path)/ares-processor-sm5k.o:     $(ares.path)/component/processor/sm5k/sm5k.cpp
 $(object.path)/ares-processor-sm83.o:     $(ares.path)/component/processor/sm83/sm83.cpp
@@ -74,3 +74,7 @@ $(object.path)/ares-flash-sst39sf0x0.o:   $(ares.path)/component/flash/sst39sf0x
 
 $(object.path)/ares-video-tms9918.o:      $(ares.path)/component/video/tms9918/tms9918.cpp
 $(object.path)/ares-video-v9938.o:        $(ares.path)/component/video/v9938/v9938.cpp
+
+mos6502.path = $(ares.path)/component/processor/mos6502
+$(ares.path)/component/processor/mos6502/instruction.cpp: $(mos6502.path)/makemos6502.py $(mos6502.path)/address.lst $(mos6502.path)/algorithm.lst $(mos6502.path)/instruction.lst $(mos6502.path)/opcode.lst
+	python $(mos6502.path)/makemos6502.py $(mos6502.path)/address.lst $(mos6502.path)/algorithm.lst $(mos6502.path)/instruction.lst $(mos6502.path)/opcode.lst $(mos6502.path)/instruction.cpp

@@ -1,0 +1,588 @@
+#                                                NZCIDV
+
+# 1. ADC: A + M + C -> A, C                      NZC__V
+ADC
+    TI16 = A + MDR + C;
+    if (!BCD || !D) {
+        C = TI16.bit(8);
+        Z = n8(TI16) == 0;
+        N = TI16.bit(7);
+        V = ~(A ^ MDR) & (A ^ TI16) & 0x80;
+    } else {
+        read(PC); // dummy read
+        Z = n8(TI16) == 0;
+        TI16 = (A & 0x0f) + (MDR & 0x0f) + (C << 0);
+        if(TI16 > 0x09) TI16 += 0x06;
+        C = TI16 > 0x0f;
+        TI16 = (A & 0xf0) + (MDR & 0xf0) + (C << 4) + (TI16 & 0x0f);
+        N = TI16.bit(7);
+        V = ~(A ^ MDR) & (A ^ TI16) & 0x80;
+        if(TI16 > 0x9f) TI16 += 0x60;
+        C = TI16 > 0xff;
+    }
+    A = TI16;
+
+# 2. AND: A & M -> A                             NZ____
+AND
+    A &= MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 3. ASL_A: A <- [76543210] <- 0                 NZC___
+ASL_A
+    C = A.bit(7);
+    A <<= 1;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 3. ASL_M: C <- [76543210] <- 0                 NZC___
+ASL_M
+    C = MDR.bit(7);
+    MDR <<= 1;
+    Z = n8(MDR) == 0;
+    N = MDR.bit(7);
+
+# 4. BCC: branch on C == 0                       ______
+BCC
+    MDR = C == 0;
+
+# 5. BCS: branch on C == 1                       ______
+BCS
+    MDR = C == 1;
+
+# 6. BEQ: branch on Z == 1                       ______
+BEQ
+    MDR = Z == 1;
+
+# 7. BIT: A & M, M7 -> N, M6 -> V                NZ___V
+BIT
+    Z = n8(A & MDR) == 0;
+    N = MDR.bit(7);
+    V = MDR.bit(6);
+
+# 8. BMI: branch on N == 1                       ______
+BMI
+    MDR = N == 1;
+
+# 9. BNE: branch on Z == 0                       ______
+BNE
+    MDR = Z == 0;
+
+# 10. BPL: branch on N == 0                      ______
+BPL
+    MDR = N == 0;
+
+# 11. BRK: force break                           ______
+BRK
+    MDR = read(PC); // implied read
+    PC++;
+    push(PCH);
+    push(PCL);
+    TN16 = 0xfffe;
+    nmi(TN16);
+    push(P | 0x30);
+    I = 1;
+    PC = read(TN16);
+    L PC |= read(TN16 + 1) << 8;
+
+    cancelNmi(); // todo: is need cancel nmi?
+
+# 12. BVC: branch on V == 0                      ______
+BVC
+    MDR = V == 0;
+
+# 13. BVS: branch on V == 1                      ______
+BVS
+    MDR = V == 1;
+
+# 14. CLC: C = 0                                 __C___
+CLC
+    C = 0;
+
+# 15. CLD: D = 0                                 ____D_
+CLD
+    D = 0;
+
+# 16. CLI: I = 0                                 ___I__
+CLI
+    I = 0;
+
+# 17. CLV: V = 0                                 _____V
+CLV
+    V = 0;
+
+# 18. CMP: A - M                                 NZC___
+CMP
+    TN16 = A - MDR;
+    C = !TN16.bit(8);
+    Z = n8(TN16) == 0;
+    N = TN16.bit(7);
+
+# 19. CPX: X - M                                 NZC___
+CPX
+    TN16 = X - MDR;
+    C = !TN16.bit(8);
+    Z = n8(TN16) == 0;
+    N = TN16.bit(7);
+
+# 20. CPY: Y - M                                 NZC___
+CPY
+    TN16 = Y - MDR;
+    C = !TN16.bit(8);
+    Z = n8(TN16) == 0;
+    N = TN16.bit(7);
+
+# 21. DEC: M - 1 -> M                            NZ____
+DEC
+    MDR--;
+    Z = n8(MDR) == 0;
+    N = MDR.bit(7);
+
+# 22. DEX: X - 1 -> X                            NZ____
+DEX
+    X--;
+    Z = n8(X) == 0;
+    N = X.bit(7);
+
+# 23. DEY: Y - 1 -> Y                            NZ____
+DEY
+    Y--;
+    Z = n8(Y) == 0;
+    N = Y.bit(7);
+
+# 24. EOR: A ^ M -> A                            NZ____
+EOR
+    A ^= MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 25. INC: M + 1 -> M                            NZ____
+INC
+    MDR++;
+    Z = n8(MDR) == 0;
+    N = MDR.bit(7);
+
+# 26. INX: X + 1 -> X                            NZ____
+INX
+    X++;
+    Z = n8(X) == 0;
+    N = X.bit(7);
+
+# 27. INY: Y + 1 -> Y                            NZ____
+INY
+    Y++;
+    Z = n8(Y) == 0;
+    N = Y.bit(7);
+
+# 28. JMP: (PC + 1) -> PCL, (PC + 2) -> PCH      ______
+JMP
+    PC = MAR;
+
+# 29. JSR:                                       ______
+#       push(PC + 2)
+#       (PC + 1) -> PCL
+#       (PC + 2) -> PCH
+JSR
+    PC--;
+    push(PCH);
+    L push(PCL);
+    PC = MAR;
+
+# 30. LDA: M -> A                                NZ____
+LDA
+    A = MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 31. LDX: M -> X                                NZ____
+LDX
+    X = MDR;
+    Z = n8(X) == 0;
+    N = X.bit(7);
+
+# 32. LDY: M -> Y                                NZ____
+LDY
+    Y = MDR;
+    Z = n8(Y) == 0;
+    N = Y.bit(7);
+
+# 33. LSR_A: 0 -> [76543210] -> C                NZC___
+LSR_A
+    C = A.bit(0);
+    A >>= 1;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 34. LSR_M: M -> [76543210] -> C                NZC___
+LSR_M
+    C = MDR.bit(0);
+    MDR >>= 1;
+    Z = n8(MDR) == 0;
+    N = MDR.bit(7);
+
+# 35. NOP:                                       ______
+NOP
+
+# 36. ORA: A | M -> A                            NZ____
+ORA
+    A |= MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 37. PHA: push(A)                               ______
+PHA
+    MDR = read(MAR); // implied read
+    L push(A);
+
+# 38. PHP: push(P | 0x30)                        ______
+PHP
+    MDR = read(MAR); // implied read
+    L push(P | 0x30);
+
+# 39. PLA: A <- pop()                            NZ____
+PLA
+    MDR = read(MAR); // implied read
+    read(0x0100 | S); // dummy stack read
+    L A = pull();
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 40. PLP: P <- pop()                            NZCIDV
+PLP
+    read(MAR); // implied read
+    read(0x0100 | S); // dummy stack read
+    L P = pull();
+
+# 41. ROL_A: C <- [76543210] <- C                NZC___
+ROL_A
+    TN16 = (A << 1) | C;
+    C = A.bit(7);
+    A = TN16;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 42. ROL_M: C <- [76543210] <- C                NZC___
+ROL_M
+    TN16 = (MDR << 1) | C;
+    C = MDR.bit(7);
+    MDR = TN16;
+    Z = n8(MDR) == 0;
+    N = MDR.bit(7);
+
+# 43. ROR_A: C -> [76543210] -> C                NZC___
+ROR_A
+    TN16 = (A >> 1) | (C << 7);
+    C = A.bit(0);
+    A = TN16;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 44. ROR_M: C -> [76543210] -> C                NZC___
+ROR_M
+    TN16 = (MDR >> 1) | (C << 7);
+    C = MDR.bit(0);
+    MDR = TN16;
+    Z = n8(MDR) == 0;
+    N = MDR.bit(7);
+
+# 45. RTI:                                       NZCIDV
+#       P <- pop()
+#       PCL <- pop()
+#       PCH <- pop()
+RTI
+    MDR = read(MAR); // implied read
+    read(0x0100 | S); // dummy stack read
+    P = pull();
+    PCL = pull();
+    L PCH = pull();
+
+# 46. RTS:                                       ______
+#       PCL <- pop()
+#       PCH <- pop()
+#       PC++
+RTS
+    MDR = read(MAR); // implied read
+    read(0x0100 | S); // dummy stack read
+    PCL = pull();
+    PCH = pull();
+    L read(PC);
+    PC++;
+
+# 47. SBC: A - M - (1 - C) -> A                  NZCV__
+SBC
+    MDR = ~MDR;
+    TI16 = A + MDR + C;
+    if (!BCD || !D) {
+        C = TI16.bit(8);
+        Z = n8(TI16) == 0;
+        N = TI16.bit(7);
+        V = (A ^ TI16) & ~(A ^ MDR) & 0x80;
+    } else {
+        read(PC); // dummy read
+        Z = n8(TI16) == 0;
+        TI16 = (A & 0x0f) + (MDR & 0x0f) + C;
+        if(TI16 <= 0x0f) TI16 -= 0x06;
+        C = TI16 > 0x0f;
+        TI16 = (A & 0xf0) + (MDR & 0xf0) + (TI16 & 0x0f);
+        N = TI16.bit(7);
+        V = (A ^ TI16) & ~(A ^ MDR) & 0x80;
+        if(TI16 <= 0xff) TI16 -= 0x60;
+        C = TI16 > 0xff;
+    }
+    A = TI16;
+
+# 48. SEC: C = 1                                 __C___
+SEC
+    C = 1;
+
+# 49. SED: D = 1                                 ____D_
+SED
+    D = 1;
+
+# 50. SEI: I = 1                                 ___I__
+SEI
+    I = 1;
+
+# 51. STA: A -> M                                ______
+STA
+    MDR = A;
+
+# 52. STX: X -> M                                ______
+STX
+    MDR = X;
+
+# 53. STY: Y -> M                                ______
+STY
+    MDR = Y;
+
+# 54. TAX: A -> X                                NZ____
+TAX
+    X = A;
+    Z = n8(X) == 0;
+    N = X.bit(7);
+
+# 55. TAY: A -> Y                                NZ____
+TAY
+    Y = A;
+    Z = n8(Y) == 0;
+    N = Y.bit(7);
+
+# 56. TSX: S -> X                                NZ____
+TSX
+    X = S;
+    Z = n8(X) == 0;
+    N = X.bit(7);
+
+# 57. TXA: X -> A                                NZ____
+TXA
+    A = X;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 58. TXS: X -> S                                ______
+TXS
+    S = X;
+
+# 59. TYA: Y -> A                                NZ____
+TYA
+    A = Y;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# Illegal opcodes
+
+# 60. AAC: A & M -> A, C = N7                    NZC___
+#    AND oper + set C as ASL(ROL)
+AAC
+    A &= MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+    C = A.bit(7);
+
+# 61. AAX: A & X -> M                             ______
+AAX
+    MDR = A & X;
+
+# 62. ANE: (A | CONST) & X & M -> A               NZ____
+#   Highly unstable, do not use.
+#   A base value in A is determined based on the
+#   contets of A and a constant, which may be
+#   typically $00, $ff, $ee, etc. The value of
+#   this constant depends on temerature, the chip
+#   series, and maybe other factors, as well.
+#   In order to eliminate these uncertaincies
+#   from the equation, use either 0 as the operand
+#   or a value of $FF in the accumulator.
+ANE
+    A = (A | 0xff) & X & MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 63. ARR: A & M -> A, C -> [76543210] -> C       NZC___
+#   This operation involves the adder:
+#   V-flag is set according to (A AND oper) + oper
+#   The carry is not set, but bit 7 (sign)
+#   is exchanged with the carry
+ARR
+    A = ((A & MDR) >> 1) | (C << 7);
+    C = A.bit(6);
+    Z = A == 0;
+    N = A.bit(7);
+    V = C ^ ((A >> 5) & 0x01);
+
+# 64. ASR: A & M -> A, 0 -> [76543210] -> C       NZC___
+ASR
+    A &= MDR;
+    C = A.bit(0);
+    A >>= 1;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 65. ATX: (A | CONST) & M -> A -> X              NZ____
+ATX
+    A |= 0xff;
+    A &= MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+    X = A;
+
+# 66. AXS: (A & X) - M -> X                       NZC___
+AXS
+    X &= A;
+    TN16 = X - MDR;
+    C = !TN16.bit(8);
+    Z = n8(TN16) == 0;
+    N = TN16.bit(7);
+    X = n8(TN16);
+
+# 67. DCP: M - 1 -> M, A - M                      NZC___
+DCP
+    MDR--;
+    TN16 = A - MDR;
+    C = !TN16.bit(8);
+    Z = n8(TN16) == 0;
+    N = TN16.bit(7);
+
+# 68. ISC: M + 1 -> M, A - M - ~C -> A            NZCV__
+ISC
+    MDR++;
+    MDR = ~MDR;
+    TI16 = A + MDR + C;
+    if (!BCD || !D) {
+        C = TI16.bit(8);
+        Z = n8(TI16) == 0;
+        N = TI16.bit(7);
+        V = (A ^ TI16) & ~(A ^ MDR) & 0x80;
+    } else {
+        read(PC); // dummy read
+        Z = n8(TI16) == 0;
+        TI16 = (A & 0x0f) + (MDR & 0x0f) + C;
+        if(TI16 <= 0x0f) TI16 -= 0x06;
+        C = TI16 > 0x0f;
+        TI16 = (A & 0xf0) + (MDR & 0xf0) + (TI16 & 0x0f);
+        N = TI16.bit(7);
+        V = (A ^ TI16) & ~(A ^ MDR) & 0x80;
+        if(TI16 <= 0xff) TI16 -= 0x60;
+        C = TI16 > 0xff;
+    }
+    A = TI16;
+    MDR = ~MDR;
+
+# 69. LAS: M & SP -> A, X, SP                     NZ____
+LAS
+    A &= MDR;
+    X = A;
+    S = A;
+
+# 70. LAX: M -> A -> X                            NZ____
+LAX
+    A = MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+    X = A;
+
+# 71. RLA: C <- [76543210] <- C, A & M -> A       NZC___
+RLA
+    TN16 = (MDR << 1) | C;
+    C = MDR.bit(7);
+    MDR = TN16;
+    A &= TN16;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 72. RRA: C -> [76543210] -> C, A + M + C -> A,C NZC___
+RRA
+    TN16 = (MDR >> 1) | (C << 7);
+    C = MDR.bit(0);
+    MDR = TN16;
+    TI16 = A + MDR + C;
+    if (!BCD || !D) {
+        C = TI16.bit(8);
+        Z = n8(TI16) == 0;
+        N = TI16.bit(7);
+        V = ~(A ^ MDR) & (A ^ TI16) & 0x80;
+    } else {
+        read(PC); // dummy read
+        Z = n8(TI16) == 0;
+        TI16 = (A & 0x0f) + (MDR & 0x0f) + (C << 0);
+        if(TI16 > 0x09) TI16 += 0x06;
+        C = TI16 > 0x0f;
+        TI16 = (A & 0xf0) + (MDR & 0xf0) + (C << 4) + (TI16 & 0x0f);
+        N = TI16.bit(7);
+        V = ~(A ^ MDR) & (A ^ TI16) & 0x80;
+        if(TI16 > 0x9f) TI16 += 0x60;
+        C = TI16 > 0xff;
+    }
+    A = TI16;
+
+# 73. SLO: C <- [76543210] <- 0, A | M -> A       NZC___
+SLO
+    C = MDR.bit(7);
+    MDR <<= 1;
+    A |= MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 74. SRE: 0 -> [76543210] -> C, A ^ M -> A       NZC___
+SRE
+    C = MDR.bit(0);
+    MDR >>= 1;
+    A ^= MDR;
+    Z = n8(A) == 0;
+    N = A.bit(7);
+
+# 75. SXA: X & (H+1) -> M                         ______
+#   unstable: sometimes 'AND (H+1)' is dropped,
+#   page boundary crossings may not work (with
+#   the high-byte of the value used as the
+#   high-byte of the address)
+SXA
+    MAR = ((X & ((MAR >> 8) + 1)) << 8) | (MAR & 0xff);
+    MDR = MAR >> 8;
+
+# 76. SYA: Y & (H+1) -> M                         ______
+#   unstable: sometimes 'AND (H+1)' is dropped,
+#   page boundary crossings may not work (with
+#   the high-byte of the value used as the
+#   high-byte of the address)
+SYA
+    MAR = ((Y & ((MAR >> 8) + 1)) << 8) | (MAR & 0xff);
+    MDR = MAR >> 8;
+
+# 77. TAS: A & X -> SP, A & X & (H+1) -> M        ______
+#   unstable: sometimes 'AND (H+1)' is dropped,
+#   page boundary crossings may not work (with
+#   the high-byte of the value used as the 
+#   high-byte of the address)
+TAS
+    MDR = A & X & (((MAR - Y) >> 8) + 1);
+
+# 78. JAM:                                        ______
+#   These instructions freeze the CPU.
+#   The processor will be trapped infinitely
+#   in T1 phase with $FF on the data bus.
+#   Reset required.
+JAM
+    PC--;
+    // todo: set data bus to 0xff
+    MDR = 0xff;

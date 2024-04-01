@@ -15,22 +15,22 @@ namespace ares {
 #define L lastCycle();
 
 #include "memory.cpp"
-#include "algorithms.cpp"
 #include "instruction.cpp"
-#include "instructions.cpp"
 #include "disassembler.cpp"
 #include "serialization.cpp"
 
-#undef PCH
-#undef PCL
-#undef ALU
-#undef C
-#undef Z
-#undef I
-#undef D
-#undef V
-#undef N
-#undef L
+auto MOS6502::interrupt() -> void {
+  read(PC); // dummy read
+  read(PC); // dummy read
+  push(PCH);
+  push(PCL);
+  n16 vector = 0xfffe;
+  nmi(vector);
+  push(P | 0x20);
+  I = 1;
+  PCL = read(vector++);
+L PCH = read(vector++);
+}
 
 auto MOS6502::power(bool reset) -> void {
  if(reset) {
@@ -46,5 +46,16 @@ auto MOS6502::power(bool reset) -> void {
   P   = 0x04;
   MDR = 0x00;
 }
+
+#undef PCH
+#undef PCL
+#undef ALU
+#undef C
+#undef Z
+#undef I
+#undef D
+#undef V
+#undef N
+#undef L
 
 }
