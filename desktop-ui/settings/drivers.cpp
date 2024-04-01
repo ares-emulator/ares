@@ -39,6 +39,12 @@ auto DriverSettings::construct() -> void {
     settings.video.flush = videoFlushToggle.checked();
     ruby::video.setFlush(settings.video.flush);
   });
+#if defined(PLATFORM_MACOS)
+  videoColorSpaceToggle.setText("Force sRGB").onToggle([&] {
+    settings.video.forceSRGB = videoColorSpaceToggle.checked();
+    ruby::video.setForceSRGB(settings.video.forceSRGB);
+  });
+#endif
 
   audioLabel.setText("Audio").setFont(Font().setBold());
   audioDriverList.onChange([&] {
@@ -147,6 +153,9 @@ auto DriverSettings::videoRefresh() -> void {
   videoFormatList.setEnabled(0 && videoFormatList.itemCount() > 1);
   videoExclusiveToggle.setChecked(ruby::video.exclusive()).setEnabled(ruby::video.hasExclusive());
   videoBlockingToggle.setChecked(ruby::video.blocking()).setEnabled(ruby::video.hasBlocking());
+#if defined(PLATFORM_MACOS)
+  videoColorSpaceToggle.setChecked(ruby::video.forceSRGB()).setEnabled(ruby::video.hasForceSRGB());
+#endif
   videoFlushToggle.setChecked(ruby::video.flush()).setEnabled(ruby::video.hasFlush());
   VerticalLayout::resize();
 }

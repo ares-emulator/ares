@@ -129,6 +129,7 @@ endif
 	cp resource/$(name).plist $(output.path)/$(name).app/Contents/Info.plist
 	$(call mkdir,$(output.path)/$(name).app/Contents/Resources/Shaders/)
 	$(call mkdir,$(output.path)/$(name).app/Contents/Resources/Database/)
+	cp ../ruby/video/metal/Shaders.metal $(output.path)/$(name).app/Contents/Resources/Shaders/Shaders.metal
 	$(call rcopy,$(thirdparty.path)/slang-shaders/*,$(output.path)/$(name).app/Contents/Resources/Shaders/)
 	$(call rcopy,$(mia.path)/Database/*,$(output.path)/$(name).app/Contents/Resources/Database/)
 	sips -s format icns resource/$(name).png --out $(output.path)/$(name).app/Contents/Resources/$(name).icns
