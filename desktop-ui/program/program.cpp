@@ -51,7 +51,7 @@ auto Program::main() -> void {
   inputManager.poll();
   inputManager.pollHotkeys();
 
-  bool defocused = driverSettings.inputDefocusPause.checked() && !ruby::video.fullScreen() && !presentation.focused();
+  bool defocused = driverSettings.inputDefocusPause.checked() && !presentation.focused();
   if(emulator && defocused) message.text = "Paused";
 
   if(settings.debugServer.enabled) {

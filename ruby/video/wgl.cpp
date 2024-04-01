@@ -152,9 +152,9 @@ private:
     _monitorHeight = monitor.height;
 
     if(self.fullScreen) {
-      _context = _window = CreateWindowEx(WS_EX_TOPMOST, L"VideoOpenGL32_Window", L"", WS_VISIBLE | WS_POPUP,
+      _context = _window = CreateWindowEx(WS_EX_NOACTIVATE, L"VideoOpenGL32_Window", L"", WS_VISIBLE | WS_POPUP | WS_DISABLED,
         _monitorX, _monitorY, _monitorWidth, _monitorHeight,
-        nullptr, nullptr, GetModuleHandle(0), nullptr);
+        (HWND)self.context, nullptr, GetModuleHandle(0), nullptr);
     } else {
       _context = (HWND)self.context;
     }
