@@ -6,24 +6,12 @@
   #include <ruby/video/direct3d9.cpp>
 #endif
 
-#if defined(VIDEO_GDI)
-  #include <ruby/video/gdi.cpp>
-#endif
-
 #if defined(VIDEO_GLX)
   #include <ruby/video/glx.cpp>
 #endif
 
 #if defined(VIDEO_WGL)
   #include <ruby/video/wgl.cpp>
-#endif
-
-#if defined(VIDEO_XSHM)
-  #include <ruby/video/xshm.cpp>
-#endif
-
-#if defined(VIDEO_XVIDEO)
-  #include <ruby/video/xvideo.cpp>
 #endif
 
 #if defined(VIDEO_METAL)
@@ -172,24 +160,12 @@ auto Video::create(string driver) -> bool {
   if(driver == "Direct3D 9.0") self.instance = new VideoDirect3D9(*this);
   #endif
 
-  #if defined(VIDEO_GDI)
-  if(driver == "GDI") self.instance = new VideoGDI(*this);
-  #endif
-
   #if defined(VIDEO_GLX)
   if(driver == "OpenGL 3.2") self.instance = new VideoGLX(*this);
   #endif
 
   #if defined(VIDEO_WGL)
   if(driver == "OpenGL 3.2") self.instance = new VideoWGL(*this);
-  #endif
-
-  #if defined(VIDEO_XSHM)
-  if(driver == "XShm") self.instance = new VideoXShm(*this);
-  #endif
-
-  #if defined(VIDEO_XVIDEO)
-  if(driver == "XVideo") self.instance = new VideoXVideo(*this);
   #endif
   
   #if defined(VIDEO_METAL)
@@ -212,24 +188,12 @@ auto Video::hasDrivers() -> vector<string> {
   "Direct3D 9.0",
   #endif
 
-  #if defined(VIDEO_GDI)
-  "GDI",
-  #endif
-
   #if defined(VIDEO_CGL)
   "OpenGL 3.2",
   #endif
 
   #if defined(VIDEO_GLX)
   "OpenGL 3.2",
-  #endif
-
-  #if defined(VIDEO_XVIDEO)
-  "XVideo",
-  #endif
-
-  #if defined(VIDEO_XSHM)
-  "XShm",
   #endif
     
   #if defined(VIDEO_METAL)
@@ -244,16 +208,10 @@ auto Video::optimalDriver() -> string {
   return "OpenGL 3.2";
   #elif defined(VIDEO_DIRECT3D9)
   return "Direct3D 9.0";
-  #elif defined(VIDEO_GDI)
-  return "GDI";
   #elif defined(VIDEO_CGL)
   return "OpenGL 3.2";
   #elif defined(VIDEO_GLX)
   return "OpenGL 3.2";
-  #elif defined(VIDEO_XVIDEO)
-  return "XVideo";
-  #elif defined(VIDEO_XSHM)
-  return "XShm";
   #elif defined(VIDEO_Metal)
   return "Metal";
   #else
@@ -266,14 +224,8 @@ auto Video::safestDriver() -> string {
   return "Direct3D 9.0";
   #elif defined(VIDEO_WGL)
   return "OpenGL 3.2";
-  #elif defined(VIDEO_GDI)
-  return "GDI";
   #elif defined(VIDEO_CGL)
   return "OpenGL 3.2";
-  #elif defined(VIDEO_XSHM)
-  return "XShm";
-  #elif defined(VIDEO_XVIDEO)
-  return "XVideo";
   #elif defined(VIDEO_GLX)
   return "OpenGL 3.2";
   #elif defined(VIDEO_Metal)
