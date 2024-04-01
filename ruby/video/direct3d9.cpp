@@ -22,7 +22,7 @@ struct VideoDirect3D9 : VideoDriver {
   auto hasExclusive() -> bool override { return true; }
   auto hasContext() -> bool override { return true; }
   auto hasBlocking() -> bool override { return true; }
-  auto hasShader() -> bool override { return true; }
+  auto hasShader() -> bool override { return false; }
 
   auto setFullScreen(bool fullScreen) -> bool override { return initialize(); }
   auto setMonitor(string monitor) -> bool override { return initialize(); }
