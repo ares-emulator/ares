@@ -17,9 +17,7 @@ auto OpenGL::setShader(const string& pathname) -> void {
     _libra.preset_free(&_preset);
   }
 
-  if(pathname == "Blur") {
-    filter = GL_LINEAR;
-  } else if(file::exists(pathname)) {
+  if(file::exists(pathname)) {
     if(_libra.preset_create(pathname.data(), &_preset) != NULL) {
       print(string{"OpenGL: Failed to load shader: ", pathname, "\n"});
       setShader("");

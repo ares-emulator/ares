@@ -50,7 +50,7 @@ protected:
   bool forceSRGB = false;
   bool flush = false;
   string format = "ARGB24";
-  string shader = "Blur";
+  string shader = "None";
 };
 
 struct Video {

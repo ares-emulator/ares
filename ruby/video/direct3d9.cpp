@@ -197,9 +197,8 @@ private:
     if(!_device) return false;
     if(_lost && !recover()) return false;
 
-    auto filter = self.shader == "Blur" ? D3DTEXF_LINEAR : D3DTEXF_POINT;
-    _device->SetSamplerState(0, D3DSAMP_MINFILTER, filter);
-    _device->SetSamplerState(0, D3DSAMP_MAGFILTER, filter);
+    _device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+    _device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     return true;
   }
 

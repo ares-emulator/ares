@@ -13,7 +13,6 @@ struct VideoXVideo : VideoDriver {
 
   auto create() -> bool override {
     VideoDriver::exclusive = true;
-    VideoDriver::shader = "Blur";
     return initialize();
   }
 

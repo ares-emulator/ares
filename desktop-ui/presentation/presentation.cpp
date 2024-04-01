@@ -584,14 +584,6 @@ auto Presentation::loadShaders() -> void {
   });
   shaders.append(none);
 
-  MenuCheckItem blur{&videoShaderMenu};
-  blur.setText("Blur").onToggle([&] {
-    settings.video.shader = "Blur";
-    ruby::video.setShader(settings.video.shader);
-    loadShaders();
-  });
-  shaders.append(blur);
-
   auto location = locate("Shaders/");
 
   if(ruby::video.hasShader()) {
@@ -633,16 +625,14 @@ auto Presentation::loadShaders() -> void {
   if(program.startShader) {
     string existingShader = settings.video.shader;
 
-    if(!program.startShader.imatch("None") &&
-       !program.startShader.imatch("Blur")) {
+    if(!program.startShader.imatch("None")) {
         settings.video.shader = {location, program.startShader, ".slangp"};
     } else {
         settings.video.shader = program.startShader;
     }
 
     if(inode::exists(settings.video.shader) ||
-       settings.video.shader.imatch("None") ||
-       settings.video.shader.imatch("Blur")) {
+       settings.video.shader.imatch("None")) {
         ruby::video.setShader(settings.video.shader);
         loadShaders();
     } else {
@@ -656,7 +646,6 @@ auto Presentation::loadShaders() -> void {
   }
 
   if(settings.video.shader.imatch("None")) {none.setChecked(); settings.video.shader = "None";}
-  if(settings.video.shader.imatch("Blur")) {blur.setChecked(); settings.video.shader = "Blur";}
   for(auto item : shaders.objects<MenuCheckItem>()) {
     if(settings.video.shader.imatch(item.attribute("file"))) {
       item.setChecked();

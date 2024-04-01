@@ -120,9 +120,7 @@ struct VideoMetal : VideoDriver, Metal {
     if (_preset != NULL) {
       _libra.preset_free(&_preset);
     }
-    
-    if (pathname == "Blur") return true;
-    
+
     if (_libra.preset_create(pathname.data(), &_preset) != NULL) {
       print(string{"Metal: Failed to load shader: ", pathname, "\n"});
       return false;

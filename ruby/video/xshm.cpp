@@ -134,16 +134,9 @@ struct VideoXShm : VideoDriver {
       u32* sp = inputBuffer + (u32)ystep * _inputWidth;
       u32* dp = outputBuffer + y * _outputWidth;
 
-      if(self.shader != "Blur") {
-        for(u32 x = 0; x < width; x++) {
-          *dp++ = 255u << 24 | sp[(u32)xstep];
-          xstep += xratio;
-        }
-      } else {
-        for(u32 x = 0; x < width; x++) {
-          *dp++ = 255u << 24 | interpolate(xstep - (u32)xstep, sp[(u32)xstep], sp[(u32)xstep + 1]);
-          xstep += xratio;
-        }
+      for(u32 x = 0; x < width; x++) {
+        *dp++ = 255u << 24 | sp[(u32)xstep];
+        xstep += xratio;
       }
     }
 
