@@ -43,6 +43,7 @@ struct CPU : MOS6502, Thread {
   struct IO {
     n1  rdyLine = 1;
     n32 scanlineCycles = 0;
+    n8 openBus = 0;
   } io;
 };
 
