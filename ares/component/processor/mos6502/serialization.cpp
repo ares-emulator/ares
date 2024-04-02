@@ -11,5 +11,6 @@ auto MOS6502::serialize(serializer& s) -> void {
   s(P.v);
   s(P.n);
   s(PC);
+  s(MAR);
   s(MDR);
 }

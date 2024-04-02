@@ -5,7 +5,8 @@ namespace ares {
 
 #define PCH PC.byte(1)
 #define PCL PC.byte(0)
-#define ALU (this->*alu)
+#define ADDR (this->*mode)
+#define ALG (this->*alg)
 #define C P.c
 #define Z P.z
 #define I P.i
@@ -14,6 +15,7 @@ namespace ares {
 #define N P.n
 #define L lastCycle();
 
+#include "addresses.cpp"
 #include "memory.cpp"
 #include "algorithms.cpp"
 #include "instruction.cpp"
@@ -23,7 +25,8 @@ namespace ares {
 
 #undef PCH
 #undef PCL
-#undef ALU
+#undef ADDR
+#undef ALG
 #undef C
 #undef Z
 #undef I

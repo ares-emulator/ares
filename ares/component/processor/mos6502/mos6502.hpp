@@ -18,6 +18,7 @@ struct MOS6502 {
 
   //memory.cpp
   auto idle() -> void;
+  auto idleZeroPage(n8) -> void;
   auto idlePageCrossed(n16, n16) -> void;
   auto idlePageAlways(n16, n16) -> void;
   auto opcode() -> n8;
@@ -27,80 +28,124 @@ struct MOS6502 {
   auto push(n8 data) -> void;
   auto pull() -> n8;
 
+  //addresses.cpp
+  using addr = auto (MOS6502::*)() -> n16;
+  auto addressAbsolute() -> n16;
+  auto addressAbsoluteJMP() -> n16;
+  auto addressAbsoluteXRead() -> n16;
+  auto addressAbsoluteXWrite() -> n16;
+  auto addressAbsoluteYRead() -> n16;
+  auto addressAbsoluteYWrite() -> n16;
+  auto addressAccumulator() -> n16;
+  auto addressImmediate() -> n16;
+  auto addressImplied() -> n16;
+  auto addressIndirect() -> n16;
+  auto addressIndirectX() -> n16;
+  auto addressIndirectYRead() -> n16;
+  auto addressIndirectYWrite() -> n16;
+  auto addressRelative() -> n16;
+  auto addressZeroPage() -> n16;
+  auto addressZeroPageX() -> n16;
+  auto addressZeroPageY() -> n16;
+
   //algorithms.cpp
-  using fp = auto (MOS6502::*)(n8) -> n8;
-  auto algorithmADC(n8) -> n8;
-  auto algorithmAND(n8) -> n8;
-  auto algorithmANC(n8) -> n8;
-  auto algorithmARR(n8) -> n8;
-  auto algorithmASL(n8) -> n8;
-  auto algorithmATX(n8) -> n8;
-  auto algorithmALR(n8) -> n8;
-  auto algorithmAXS(n8) -> n8;
-  auto algorithmBIT(n8) -> n8;
-  auto algorithmCMP(n8) -> n8;
-  auto algorithmCPX(n8) -> n8;
-  auto algorithmCPY(n8) -> n8;
-  auto algorithmDEC(n8) -> n8;
-  auto algorithmDCP(n8) -> n8;
-  auto algorithmEOR(n8) -> n8;
-  auto algorithmINC(n8) -> n8;
-  auto algorithmISC(n8) -> n8;
-  auto algorithmLD (n8) -> n8;
-  auto algorithmLSR(n8) -> n8;
-  auto algorithmSRE(n8) -> n8;
-  auto algorithmORA(n8) -> n8;
-  auto algorithmROL(n8) -> n8;
-  auto algorithmRLA(n8) -> n8;
-  auto algorithmROR(n8) -> n8;
-  auto algorithmRRA(n8) -> n8;
-  auto algorithmSBC(n8) -> n8;
-  auto algorithmSLO(n8) -> n8;
+  using algorithm = auto (MOS6502::*)() -> void;
+
+  // official algorithms
+  auto algorithmADC() -> void;
+  auto algorithmAND() -> void;
+  auto algorithmASLA() -> void;
+  auto algorithmASLM() -> void;
+  auto algorithmBCC() -> void;
+  auto algorithmBCS() -> void;
+  auto algorithmBEQ() -> void;
+  auto algorithmBIT() -> void;
+  auto algorithmBMI() -> void;
+  auto algorithmBNE() -> void;
+  auto algorithmBPL() -> void;
+  auto algorithmBRK() -> void;
+  auto algorithmBVC() -> void;
+  auto algorithmBVS() -> void;
+  auto algorithmBranch(bool take) -> void;
+  auto algorithmCLC() -> void;
+  auto algorithmCLD() -> void;
+  auto algorithmCLI() -> void;
+  auto algorithmCLV() -> void;
+  auto algorithmCMP() -> void;
+  auto algorithmCPX() -> void;
+  auto algorithmCPY() -> void;
+  auto algorithmDEC() -> void;
+  auto algorithmDEX() -> void;
+  auto algorithmDEY() -> void;
+  auto algorithmEOR() -> void;
+  auto algorithmINC() -> void;
+  auto algorithmINX() -> void;
+  auto algorithmINY() -> void;
+  auto algorithmJMP() -> void;
+  auto algorithmJSR() -> void;
+  auto algorithmNOP() -> void;
+  auto algorithmLDA() -> void;
+  auto algorithmLDX() -> void;
+  auto algorithmLDY() -> void;
+  auto algorithmLSRA() -> void;
+  auto algorithmLSRM() -> void;
+  auto algorithmORA() -> void;
+  auto algorithmPHA() -> void;
+  auto algorithmPHP() -> void;
+  auto algorithmPLA() -> void;
+  auto algorithmPLP() -> void;
+  auto algorithmROLA() -> void;
+  auto algorithmROLM() -> void;
+  auto algorithmRORA() -> void;
+  auto algorithmRORM() -> void;
+  auto algorithmRTI() -> void;
+  auto algorithmRTS() -> void;
+  auto algorithmSBC() -> void;
+  auto algorithmSEC() -> void;
+  auto algorithmSED() -> void;
+  auto algorithmSEI() -> void;
+  auto algorithmSTA() -> void;
+  auto algorithmSTX() -> void;
+  auto algorithmSTY() -> void;
+  auto algorithmTAX() -> void;
+  auto algorithmTAY() -> void;
+  auto algorithmTSX() -> void;
+  auto algorithmTXA() -> void;
+  auto algorithmTXS() -> void;
+  auto algorithmTYA() -> void;
+
+  // unofficial algorithms
+  auto algorithmAAC() -> void;
+  auto algorithmAAX() -> void;
+  auto algorithmANE() -> void;
+  auto algorithmARR() -> void;
+  auto algorithmASR() -> void;
+  auto algorithmATX() -> void;
+  auto algorithmAXS() -> void;
+  auto algorithmDCP() -> void;
+  auto algorithmISC() -> void;
+  auto algorithmLAS() -> void;
+  auto algorithmLAX() -> void;
+  auto algorithmRLA() -> void;
+  auto algorithmRRA() -> void;
+  auto algorithmSLO() -> void;
+  auto algorithmSRE() -> void;
+  auto algorithmSXA() -> void;
+  auto algorithmSYA() -> void;
+  auto algorithmTAS() -> void;
+
+  // freeze algorithms: need reset
+  auto algorithmJAM() -> void;
 
   //instruction.cpp
   auto interrupt() -> void;
   auto instruction() -> void;
 
   //instructions.cpp
-  auto instructionAbsoluteModify(fp alu) -> void;
-  auto instructionAbsoluteModify(fp alu, n8 index) -> void;
-  auto instructionAbsoluteRead(fp alu, n8& data) -> void;
-  auto instructionAbsoluteRead(fp alu, n8& data, n8 index) -> void;
-  auto instructionAbsoluteWrite(n8& data) -> void;
-  auto instructionAbsoluteWrite(n8& data, n8 index) -> void;
-  auto instructionBranch(bool take) -> void;
-  auto instructionBreak() -> void;
-  auto instructionCallAbsolute() -> void;
-  auto instructionClear(bool& flag) -> void;
-  auto instructionImmediate(fp alu, n8& data) -> void;
-  auto instructionImplied(fp alu, n8& data) -> void;
-  auto instructionIndirectXRead(fp alu, n8& data) -> void;
-  auto instructionIndirectXWrite(n8& data) -> void;
-  auto instructionIndirectYRead(fp alu, n8& data) -> void;
-  auto instructionIndirectYRead(fp, n8& data, n8& data2) -> void;
-  auto instructionIndirectYWrite(n8& data) -> void;
-  auto instructionJumpAbsolute() -> void;
-  auto instructionJumpIndirect() -> void;
-  auto instructionNoOperation() -> void;
-  auto instructionNoOperationAbsolute() -> void;
-  auto instructionNoOperationAbsolute(n8 index) -> void;
-  auto instructionNoOperationImmediate() -> void;
-  auto instructionNoOperationZeroPage() -> void;
-  auto instructionNoOperationZeroPage(n8 index) -> void;
-  auto instructionPull(n8& data) -> void;
-  auto instructionPullP() -> void;
-  auto instructionPush(n8& data) -> void;
-  auto instructionPushP() -> void;
-  auto instructionReturnInterrupt() -> void;
-  auto instructionReturnSubroutine() -> void;
-  auto instructionSet(bool& flag) -> void;
-  auto instructionTransfer(n8& source, n8& target, bool flag) -> void;
-  auto instructionZeroPageModify(fp alu) -> void;
-  auto instructionZeroPageModify(fp alu, n8 index) -> void;
-  auto instructionZeroPageRead(fp alu, n8& data) -> void;
-  auto instructionZeroPageRead(fp alu, n8& data, n8 index) -> void;
-  auto instructionZeroPageWrite(n8& data) -> void;
-  auto instructionZeroPageWrite(n8& data, n8 index) -> void;
+  auto instructionNone(addr mode, algorithm alg) -> void;
+  auto instructionLoad(addr mode, algorithm alg) -> void;
+  auto instructionStore(addr mode, algorithm alg) -> void;
+  auto instructionModify(addr mode, algorithm alg) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -138,6 +183,7 @@ struct MOS6502 {
   n8  S;
   PR  P;
   n16 PC;
+  n16 MAR;
   n8  MDR;
 };
 
