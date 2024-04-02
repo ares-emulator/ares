@@ -6,17 +6,17 @@ auto CPU::read(n16 address) -> n8 {
   }
 
   while(io.rdyLine == 0) {
-    openBus = readBus(io.rdyAddressValid ? io.rdyAddressValue : address);
+    io.openBus = readBus(io.rdyAddressValid ? io.rdyAddressValue : address);
     step(rate());
   }
 
-  openBus = readBus(address);
+  io.openBus = readBus(address);
   step(rate());
-  return openBus;
+  return io.openBus;
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
-  writeBus(address, openBus = data);
+  writeBus(address, io.openBus = data);
   step(rate());
 }
 
