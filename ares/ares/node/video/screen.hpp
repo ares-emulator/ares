@@ -97,6 +97,8 @@ protected:
 //unserialized:
   nall::thread _thread;
   recursive_mutex _mutex;
+  mutex _frameMutex;
+  condition_variable _frameCondition;
   atomic<bool> _kill = false;
   atomic<bool> _frame = false;
   function<void ()> _refresh;
