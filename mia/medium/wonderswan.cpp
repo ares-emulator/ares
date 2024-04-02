@@ -84,7 +84,7 @@ auto WonderSwan::analyze(vector<u8>& rom) -> string {
   string ramType;
   u32 ramSize = 0;
   switch(metadata[11]) {
-  case 0x01: ramType = "RAM";    ramSize =    8_KiB; break;
+  case 0x01: ramType = "RAM";    ramSize =   32_KiB; break;
   case 0x02: ramType = "RAM";    ramSize =   32_KiB; break;
   case 0x03: ramType = "RAM";    ramSize =  128_KiB; break;
   case 0x04: ramType = "RAM";    ramSize =  256_KiB; break;
