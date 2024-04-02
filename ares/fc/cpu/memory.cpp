@@ -8,7 +8,7 @@
 
 inline auto CPU::readBus(n16 address) -> n8 {
   if(auto result = platform->cheat(address)) return *result;
-  n8 data = cartridge.readPRG(address, MDR);
+  n8 data = cartridge.readPRG(address, openBus);
   if(address <= 0x1fff) return ram.read(address);
   if(address <= 0x3fff) return ppu.readIO(address);
   if(address <= 0x4017) return cpu.readIO(address);
@@ -28,7 +28,7 @@ inline auto CPU::writeBus(n16 address, n8 data) -> void {
 }
 
 auto CPU::readIO(n16 address) -> n8 {
-  n8 data = MDR;
+  n8 data = openBus;
 
   switch(address) {
 
