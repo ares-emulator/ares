@@ -51,7 +51,7 @@ struct V30MZ {
   template<u32> auto setAccumulator(u32) -> void;
 
   //modrm.cpp
-  auto modRM() -> void;
+  auto modRM(bool forceAddress = false) -> void;
 
   auto getSegment() -> u16;
   auto setSegment(u16) -> void;
@@ -251,6 +251,8 @@ struct V30MZ {
 
     u16 segment;
     u16 address;
+
+    bool useAddress;
   } modrm;
 
   union { u16 AW; struct { u8 order_lsb2(AL, AH); }; };  //AX
