@@ -65,13 +65,13 @@ template<u32 size> auto V30MZ::instructionExchangeMemReg() -> void {
 
 auto V30MZ::instructionLoadEffectiveAddressRegMem() -> void {
   wait(1);
-  modRM();
+  modRM(true);
   setRegister<Word>(modrm.address);
 }
 
 auto V30MZ::instructionLoadSegmentMem(u16& segment) -> void {
   wait(4);
-  modRM();
+  modRM(true);
   setRegister<Word>(getMemory<Word>());
   segment = getMemory<Word>(2);
 }

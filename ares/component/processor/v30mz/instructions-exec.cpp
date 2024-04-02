@@ -220,8 +220,5 @@ auto V30MZ::instructionPopMem() -> void {
   wait(1);
   modRM();
   auto data = pop();
-  //NEC bug: pop into a register will adjust the stack, but fail to set the register properly
-  //in practice, this isn't an issue as assemblers will favor one-byte pop instructions,
-  //but this difference can be used to distinguish Intel x86 chips from NEC V20/V30 chips.
-  if(modrm.mod != 3) setMemory<Word>(data);
+  setMemory<Word>(data);
 }
