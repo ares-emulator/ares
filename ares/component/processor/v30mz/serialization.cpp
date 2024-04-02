@@ -11,6 +11,7 @@ auto V30MZ::serialize(serializer& s) -> void {
   s(modrm.mem);
   s(modrm.segment);
   s(modrm.address);
+  s(modrm.useAddress);
 
   s(AW);
   s(CW);
