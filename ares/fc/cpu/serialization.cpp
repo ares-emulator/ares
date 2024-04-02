@@ -12,4 +12,5 @@ auto CPU::serialize(serializer& s) -> void {
   s(io.rdyAddressValue);
   s(io.oamDMAPending);
   s(io.oamDMAPage);
+  s(io.openBus);
 }

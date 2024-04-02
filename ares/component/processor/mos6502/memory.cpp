@@ -2,6 +2,10 @@ auto MOS6502::idle() -> void {
   read(PC);
 }
 
+auto MOS6502::idleZeroPage(n8 addr) -> void {
+  read(addr);
+}
+
 auto MOS6502::idlePageCrossed(n16 x, n16 y) -> void {
   if(x >> 8 == y >> 8) return;
   read((x & 0xff00) | (y & 0x00ff));

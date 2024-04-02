@@ -67,6 +67,7 @@ struct CPU : MOS6502, Thread {
     n16 rdyAddressValue;
     n1  oamDMAPending;
     n8  oamDMAPage;
+    n8  openBus;
   } io;
 };
 
