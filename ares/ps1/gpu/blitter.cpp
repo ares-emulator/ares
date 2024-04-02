@@ -55,6 +55,15 @@ auto GPU::Blitter::queue() -> void {
   sx = self.io.displayStartX;
   sy = self.io.displayStartY;
 
+  //Refresh may be called from another thread: we need to make a copy of the display area for it to use
+  self.vram.mutex.lock();
+  auto bytesPerRow = width * (depth == 0 ? 2 : 3);
+  for(int y = 0; y < height; y++) {
+    u32 offset = (y + sy) * 1024 * 2 + sx * 2;
+    memory::copy(vram.data + offset, self.vram.data + offset, bytesPerRow);
+  }
+  self.vram.mutex.unlock();
+
   self.screen->setViewport(0, 0, width, height);
   self.screen->frame();
 }
@@ -62,7 +71,6 @@ auto GPU::Blitter::queue() -> void {
 auto GPU::Blitter::refresh() -> void {
   if(blank) return;
 
-  self.vram.mutex.lock();
   auto output = self.screen->pixels(1).data();
 
   //15bpp
@@ -72,7 +80,7 @@ auto GPU::Blitter::refresh() -> void {
       u32 source = (y + sy) * 1024 * 2 + sx * 2;
       u32 target = (y + ty) *  640 * 1 + tx * 1;
       for(u32 x : range(tw)) {
-        u16 data = self.vram.readHalf(source);
+        u16 data = vram.readHalf(source);
         output[target++] = 1 << 24 | data & 0x7fff;
         source += 2;
       }
@@ -86,15 +94,14 @@ auto GPU::Blitter::refresh() -> void {
       u32 source = (y + sy) * 1024 * 2 + sx * 2;
       u32 target = (y + ty) *  640 * 1 + tx * 1;
       for(u32 x : range(tw)) {
-        u32 data = self.vram.readWordUnaligned(source);
+        u32 data = vram.readWordUnaligned(source);
         output[target++] = data & 0xffffff;
         source += 3;
       }
     }
   }
-
-  self.vram.mutex.unlock();
 }
 
 auto GPU::Blitter::power() -> void {
+  vram.allocate(1_MiB);
 }

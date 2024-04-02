@@ -379,6 +379,7 @@ struct GPU : Thread, Memory::Interface {
     s32  ty;
     s32  tw;
     s32  th;
+    Memory::Writable vram; // Copy of vram for thread queued blit
   } blitter{*this};
 
   u16* vram2D[512];
