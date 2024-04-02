@@ -583,41 +583,48 @@ auto Presentation::loadShaders() -> void {
     loadShaders();
   });
   shaders.append(none);
+  
+  string shadersBaseDirectory = "Shaders/";
 
-  auto location = locate("Shaders/");
-
+  map<string, Menu> menuMap;
   if(ruby::video.hasShader()) {
-    auto files = directory::files(location, "*.slangp");
-    for(auto file : files) {
-      MenuCheckItem item{&videoShaderMenu};
-      item.setAttribute("file", {location, file});
-      item.setText(string{file}.trimRight(".slangp", 1L)).onToggle([=] {
-        settings.video.shader = {location, file};
-        ruby::video.setShader(settings.video.shader);
-        loadShaders();
-      });
-      shaders.append(item);
-    }
-
-    for(auto dir : directory::folders(location)) {
-      bool menuAdded = false;
-      Menu folder;
-
-      for(auto file : directory::files({location, "/", dir}, "*.slangp")) {
-        if(!menuAdded) {
-          folder.setText(dir.trimRight("/", 1L));
-          menuAdded = true;
-          videoShaderMenu.append(folder);
-        }
-
-        MenuCheckItem item{&folder};
-        item.setAttribute("file", {location, dir, "/", file});
+    vector<string> unparsedDirectories;
+    unparsedDirectories.append(shadersBaseDirectory);
+    string shadersAbsolutePath = locate(shadersBaseDirectory);
+    menuMap.insert(shadersAbsolutePath, videoShaderMenu);
+    maybe<Menu &> parent;
+    bool done = false;
+    while (!done) {
+      if (unparsedDirectories.size() <= 0) { done = true; break; }
+      bool foundSomething = false;
+      string directoryRelativePath = unparsedDirectories.takeFirst();
+      string directoryAbsolutePath = locate(directoryRelativePath);
+      parent = menuMap.find(directoryAbsolutePath);
+      vector<string> files = directory::files(directoryAbsolutePath, "*.slangp");
+      for(string file : files) {
+        foundSomething = true;
+        MenuCheckItem item{&parent};
+        item.setAttribute("file", {directoryAbsolutePath, file});
         item.setText(string{file}.trimRight(".slangp", 1L)).onToggle([=] {
-          settings.video.shader = {location, dir, "/", file};
+          settings.video.shader = {directoryAbsolutePath, file};
           ruby::video.setShader(settings.video.shader);
           loadShaders();
         });
         shaders.append(item);
+      }
+      vector<string> newDirectories = directory::folders(directoryAbsolutePath);
+      for (string dir : newDirectories) {
+        foundSomething = true;
+        string newRelativePath = {directoryRelativePath, dir};
+        string newAbsolutePath = locate(newRelativePath);
+        unparsedDirectories.append(newRelativePath);
+        Menu folder;
+        folder.setText(dir.trimRight("/", 1L));
+        parent->append(folder);
+        menuMap.insert(newAbsolutePath, folder);
+      }
+      if (!foundSomething) {
+        parent->remove();
       }
     }
   }
