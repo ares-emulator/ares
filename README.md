@@ -28,7 +28,7 @@ g++ make pkg-config libgtk-3-dev libcanberra-gtk-module libgl-dev libasound2-dev
 ```  
 ###### Additional Audio Drivers
 ares supports additional audio drivers besides the ALSA drivers included above. Installing these additional packages will allow them to be selected in Settings > Drivers:  
-`libao-dev libopenal-dev'
+`libao-dev libopenal-dev`
 
 ###### GTK2 & GTK3
 By default, GTK3 is used, but support for GTK2 is available. You will need to install the additional package `libgtk2.0-dev` as well as specifying the command line option `hiro=gtk2` at compile time.
