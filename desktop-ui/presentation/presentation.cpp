@@ -633,7 +633,7 @@ auto Presentation::loadShaders() -> void {
     string existingShader = settings.video.shader;
 
     if(!program.startShader.imatch("None")) {
-        settings.video.shader = {location, program.startShader, ".slangp"};
+        settings.video.shader = {locate(shadersBaseDirectory), program.startShader, ".slangp"};
     } else {
         settings.video.shader = program.startShader;
     }
