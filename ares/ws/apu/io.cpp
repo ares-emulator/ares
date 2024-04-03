@@ -122,7 +122,9 @@ auto APU::readIO(n16 address) -> n8 {
 
   case 0x0095:
     data.bit(0)   = io.seqDbgHold;
-    data.bit(1,4) = io.seqDbgUnknown;
+    data.bit(1)   = io.seqDbgSweepClock;
+    data.bit(2,3) = io.seqDbgNoise;
+    data.bit(4)   = io.seqDbgUnknown;
     data.bit(5)   = io.seqDbgOutputForce55;
     data.bit(6)   = io.seqDbgChForce2;
     data.bit(7)   = io.seqDbgChForce4;
@@ -286,7 +288,9 @@ auto APU::writeIO(n16 address, n8 data) -> void {
 
   case 0x0095:
     io.seqDbgHold          = data.bit(0);
-    io.seqDbgUnknown       = data.bit(1,4);
+    io.seqDbgSweepClock    = data.bit(1);
+    io.seqDbgNoise         = data.bit(2,3);
+    io.seqDbgUnknown       = data.bit(4);
     io.seqDbgOutputForce55 = data.bit(5);
     io.seqDbgChForce2      = data.bit(6);
     io.seqDbgChForce4      = data.bit(7);

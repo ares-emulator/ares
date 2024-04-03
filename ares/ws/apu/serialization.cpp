@@ -19,6 +19,8 @@ auto APU::serialize(serializer& s) -> void {
   s(io.seqDbgOutputForce55);
   s(io.seqDbgChForce4);
   s(io.seqDbgChForce2);
+  s(io.seqDbgNoise);
+  s(io.seqDbgSweepClock);
   s(io.seqDbgUnknown);
   
   s(io.output.left);
