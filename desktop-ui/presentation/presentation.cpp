@@ -260,15 +260,14 @@ Presentation::Presentation() {
     program.quit();
   });
 
+  loadEmulators();
+
   resizeWindow();
   setTitle({ares::Name, " v", ares::Version});
   setAssociatedFile();
   setBackgroundColor({0, 0, 0});
   setAlignment(Alignment::Center);
-
-#if !defined(PLATFORM_WINDOWS)
   setVisible();
-#endif
 
   #if defined(PLATFORM_MACOS)
   Application::Cocoa::onAbout([&] { aboutAction.doActivate(); });
@@ -583,48 +582,68 @@ auto Presentation::loadShaders() -> void {
     loadShaders();
   });
   shaders.append(none);
-  
-  string shadersBaseDirectory = "Shaders/";
 
-  map<string, Menu> menuMap;
+  string location = locate("Shaders/");
+
+  if(shaderDirectories.size() == 0) {
+    function<void(string)> findShaderDirectories = [&](string path) {
+      for(auto &entry: directory::folders(path)) findShaderDirectories({path, entry});
+      auto files = directory::files(path, "*.slangp");
+      if(files.size() > 0) shaderDirectories.append((string({path}).trimLeft(location, 1L)));
+    };
+    findShaderDirectories(location);
+
+    // Sort by name and depth such that child folders appear after their parents
+    shaderDirectories.sort([](const string &lhs, const string &rhs) {
+      auto lhsParts = lhs.split("/");
+      auto rhsParts = rhs.split("/");
+      for(u32 i : range(min(lhsParts.size(), rhsParts.size()))) {
+        if(lhsParts[i] != rhsParts[i]) return lhsParts[i] < rhsParts[i];
+      }
+      return lhsParts.size() < rhsParts.size();
+    });
+  }
+
   if(ruby::video.hasShader()) {
-    vector<string> unparsedDirectories;
-    unparsedDirectories.append(shadersBaseDirectory);
-    string shadersAbsolutePath = locate(shadersBaseDirectory);
-    menuMap.insert(shadersAbsolutePath, videoShaderMenu);
-    maybe<Menu &> parent;
-    bool done = false;
-    while (!done) {
-      if (unparsedDirectories.size() <= 0) { done = true; break; }
-      bool foundSomething = false;
-      string directoryRelativePath = unparsedDirectories.takeFirst();
-      string directoryAbsolutePath = locate(directoryRelativePath);
-      parent = menuMap.find(directoryAbsolutePath);
-      vector<string> files = directory::files(directoryAbsolutePath, "*.slangp");
-      for(string file : files) {
-        foundSomething = true;
+    for(auto &directory : shaderDirectories) {
+      auto parts = directory.split("/");
+      Menu parent = videoShaderMenu;
+
+      if(directory != "") {
+        for (auto &part: parts) {
+          if(part == "") continue;
+          Menu child;
+          bool found = false;
+          for(auto &action: parent.actions()) {
+            if(auto menu = action.cast<Menu>()) {
+              if(menu.text() == part) {
+                child = menu;
+                found = true;
+                break;
+              }
+            }
+          }
+
+          if(found) {
+            parent = child;
+          } else {
+            Menu newMenu{&parent};
+            newMenu.setText(part);
+            parent = newMenu;
+          }
+        }
+      }
+
+      auto files = directory::files({location, directory}, "*.slangp");
+      for(auto &file: files) {
         MenuCheckItem item{&parent};
-        item.setAttribute("file", {directoryAbsolutePath, file});
+        item.setAttribute("file", {directory, file});
         item.setText(string{file}.trimRight(".slangp", 1L)).onToggle([=] {
-          settings.video.shader = {directoryAbsolutePath, file};
-          ruby::video.setShader(settings.video.shader);
+          settings.video.shader = {directory, file};
+          ruby::video.setShader({location, settings.video.shader});
           loadShaders();
         });
         shaders.append(item);
-      }
-      vector<string> newDirectories = directory::folders(directoryAbsolutePath);
-      for (string dir : newDirectories) {
-        foundSomething = true;
-        string newRelativePath = {directoryRelativePath, dir};
-        string newAbsolutePath = locate(newRelativePath);
-        unparsedDirectories.append(newRelativePath);
-        Menu folder;
-        folder.setText(dir.trimRight("/", 1L));
-        parent->append(folder);
-        menuMap.insert(newAbsolutePath, folder);
-      }
-      if (!foundSomething) {
-        parent->remove();
       }
     }
   }
@@ -633,22 +652,24 @@ auto Presentation::loadShaders() -> void {
     string existingShader = settings.video.shader;
 
     if(!program.startShader.imatch("None")) {
-        settings.video.shader = {locate(shadersBaseDirectory), program.startShader, ".slangp"};
+      settings.video.shader = {location, program.startShader, ".slangp"};
     } else {
-        settings.video.shader = program.startShader;
+      settings.video.shader = program.startShader;
     }
 
-    if(inode::exists(settings.video.shader) ||
-       settings.video.shader.imatch("None")) {
-        ruby::video.setShader(settings.video.shader);
-        loadShaders();
+    if(inode::exists(settings.video.shader)) {
+      ruby::video.setShader({location, settings.video.shader});
+      loadShaders();
+    } else if(settings.video.shader.imatch("None")) {
+      ruby::video.setShader("None");
+      loadShaders();
     } else {
-        hiro::MessageDialog()
-            .setTitle("Warning")
-            .setAlignment(hiro::Alignment::Center)
-            .setText({ "Requested shader not found: ", settings.video.shader , "\nUsing existing defined shader: ", existingShader })
-            .warning();
-        settings.video.shader = existingShader;
+      hiro::MessageDialog()
+          .setTitle("Warning")
+          .setAlignment(hiro::Alignment::Center)
+          .setText({ "Requested shader not found: ", settings.video.shader , "\nUsing existing defined shader: ", existingShader })
+          .warning();
+      settings.video.shader = existingShader;
     }
   }
 

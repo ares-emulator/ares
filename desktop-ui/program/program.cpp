@@ -115,7 +115,6 @@ auto Program::main() -> void {
 
 auto Program::quit() -> void {
   unload();
-  presentation.setVisible(false);  //makes quitting the emulator feel more responsive
   Application::processEvents();
   Application::quit();
 

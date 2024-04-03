@@ -147,10 +147,6 @@ auto nall::main(Arguments arguments) -> void {
   Instances::gameBrowserWindow.construct();
 
   program.create();
-  presentation.loadEmulators();
-#if defined(PLATFORM_WINDOWS)
-  presentation.setVisible(true);
-#endif
   Application::onMain({&Program::main, &program});
   Application::run();
 
