@@ -13,7 +13,7 @@ auto Arcade::load(string location) -> bool {
   if(!document) return false;
 
   //Sega SG-1000 based arcade
-  if(document["game/board"].string() == "sg1000a") {
+  if(document["game/board"].string() == "sega/sg1000a") {
     vector<u8> rom = loadRoms(location, document, "maincpu");
     if(!rom) return false;
 

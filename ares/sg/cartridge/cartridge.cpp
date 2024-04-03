@@ -23,7 +23,7 @@ auto Cartridge::connect() -> void {
   if(information.board == "Linear"   ) board = new Board::Linear{*this};
   if(information.board == "Taiwan-A" ) board = new Board::TaiwanA{*this};
   if(information.board == "Taiwan-B" ) board = new Board::TaiwanB{*this};
-  if(information.board == "sg1000a"  ) board = new Board::ArcadeRom{*this};
+  if(information.board == "sega/sg1000a") board = new Board::ArcadeRom{*this};
 
   if(!board) board = new Board::Interface{*this};
   board->pak = pak;

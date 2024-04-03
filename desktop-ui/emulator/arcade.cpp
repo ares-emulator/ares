@@ -42,7 +42,7 @@ auto Arcade::load() -> bool {
 
   //Determine from the game manifest which core to use for the given arcade rom
 #ifdef CORE_SG
-  if(game->pak->attribute("board") == "sg1000a") {
+  if(game->pak->attribute("board") == "sega/sg1000a") {
     if(!ares::SG1000::load(root, {"[Sega] SG-1000A"})) return false;
     systemPakName = "SG-1000A";
     gamePakName = "Arcade Cartridge";

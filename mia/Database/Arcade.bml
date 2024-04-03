@@ -1,10 +1,10 @@
 database
-  revision: 2023-07-19
-
+  revision: 2024-04-03
+  romset: 0.258 (mame0258)
 game
-  name:  chboxing
-  title: Champion Boxing
-  board: sg1000a
+  name:    chboxing
+  title:   Champion Boxing
+  board:   sega/sg1000a
   maincpu
     rom
       name:   cb6105.bin
@@ -25,9 +25,9 @@ game
       crc:    c2f8e522
       sha1:   932276e7ad33aa9efbb4cd10bc3071d88cb082cb
 game
-  name:  chwrestl
-  title: Champion Pro Wrestling
-  board: sg1000a
+  name:    chwrestl
+  title:   Champion Pro Wrestling
+  board:   sega/sg1000a
   maincpu
     rom
       name:   5732
@@ -48,9 +48,9 @@ game
       crc:    d99b6301
       sha1:   5e762ed45cde08d5223828c6b1d3569b2240462c
 game
-  name:  dokidoki
-  title: Doki Doki Penguin Land
-  board: sg1000a
+  name:    dokidoki
+  title:   Doki Doki Penguin Land
+  board:   sega/sg1000a
   maincpu
     rom
       name:   epr-7356.ic1
@@ -70,3 +70,31 @@ game
       size:   16384
       crc:    c6f26b0b
       sha1:   3753e05b6e77159832dbe88562ba7a818120d1a3
+game
+  name:    sderby2s
+  title:   Super Derby II (satellite board)
+  board:   sega/sg1000a
+  maincpu
+    rom
+      name:   epr-6450d.ic10
+      offset: 0x0
+      size:   16384
+      crc:    e56986d3
+      sha1:   a2dbdc95128cc94a1492e080aeea402f2d4b89fe
+    rom
+      name:   epr-6504d.ic11
+      offset: 0x4000
+      size:   16384
+      crc:    7bb364b9
+      sha1:   9f93572b6d999422d93ad5f7a251b4695565651f
+game
+  name:    sderbys
+  title:   Super Derby (satellite board)
+  board:   sega/sg1000a
+  maincpu
+    rom
+      name:   v1.2.ic10
+      offset: 0x0
+      size:   16384
+      crc:    cf29b579
+      sha1:   e695da9c61167d1d30b32bd70d342ac23b29f087
