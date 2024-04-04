@@ -137,7 +137,6 @@ struct APU {
   struct FrameCounter {
     enum mode: u8 { Freq60Hz = 0, Freq48Hz = 1 };
 
-    auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
     auto getPeriod() const -> u16 {
       return Region::PAL() ? periodPAL[mode][step] : periodNTSC[mode][step];
     }
