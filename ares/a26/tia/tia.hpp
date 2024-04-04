@@ -67,7 +67,7 @@ struct TIA : Thread {
   struct {
     u9 vcounter;
     u8 hcounter;
-    u8 hmoveTriggered;
+    n1 hmoveTriggered;
 
     n1 vsync;
     n1 vblank;

@@ -37,7 +37,7 @@ auto TIA::unload() -> void {
 auto TIA::main() -> void {
   scanline();
   io.vcounter++;
-  io.hmoveTriggered = 255;
+  io.hmoveTriggered = 0;
 }
 
 auto TIA::scanline() -> void {
@@ -47,7 +47,43 @@ auto TIA::scanline() -> void {
     writeQueue.step();
     auto x = io.hcounter - 68;
     auto y = io.vcounter - voffset();
-    if(x >= 0 && y > 0 && y < vlines()) pixel(x);
+
+    n8 pixel = io.bgColor;
+    auto pf = runPlayfield(x);
+    auto bl = runBall(x);
+    auto p0 = runPlayer(x, 0);
+    auto p1 = runPlayer(x, 1);
+    auto m0 = runMissile(x, 0);
+    auto m1 = runMissile(x, 1);
+
+    if(!playfield.priority && (pf || bl)) pixel = io.fgColor;
+    if(p1 || m1)                          pixel = io.p1Color;
+    if(p0 || m0)                          pixel = io.p0Color;
+    if(playfield.priority && (pf || bl))  pixel = io.fgColor;
+
+    // Update Collision
+    if(m0 && p1) collision.M0P1 = 1;
+    if(m0 && p0) collision.M0P0 = 1;
+    if(m1 && p0) collision.M1P0 = 1;
+    if(m1 && p1) collision.M1P1 = 1;
+    if(p0 && pf) collision.P0PF = 1;
+    if(p0 && bl) collision.P0BL = 1;
+    if(p1 && pf) collision.P1PF = 1;
+    if(p1 && bl) collision.P1BL = 1;
+    if(m0 && pf) collision.M0PF = 1;
+    if(m0 && bl) collision.M0BL = 1;
+    if(m1 && pf) collision.M1PF = 1;
+    if(m1 && bl) collision.M1BL = 1;
+    if(bl && pf) collision.BLPF = 1;
+    if(p0 && p1) collision.P0P1 = 1;
+    if(m0 && m1) collision.M0M1 = 1;
+
+    if(x >= 0 && y > 0 && y < displayHeight()) {
+      if (io.vblank || (io.hmoveTriggered && x < 8)) pixel = 0;
+      auto output = screen->pixels().data() + (y * 180) + 10;
+      output[x] = pixel;
+    }
+
     runAudio();
     step();
     if(io.hcounter == 0) cpu.io.rdyLine = 1;
@@ -58,48 +94,6 @@ auto TIA::scanline() -> void {
     scheduler.exit(Event::Frame);
     io.vcounter = 0;
   }
-}
-
-auto TIA::pixel(n8 x) -> void {
-  auto y = io.vcounter - voffset();
-  auto output = screen->pixels().data() + (y * 180) + 10;
-  if(y >= displayHeight()) return;
-
-  // Output only black during vblank, or for the first 8px of a scanline where hmove was triggered
-  if (io.vblank || (io.hmoveTriggered == io.vcounter && x < 8)) {
-    output[x] = 0;
-    return;
-  }
-
-  output[x] = io.bgColor;
-  auto pf = runPlayfield(x);
-  auto bl = runBall(x);
-  auto p0 = runPlayer(x, 0);
-  auto p1 = runPlayer(x, 1);
-  auto m0 = runMissile(x, 0);
-  auto m1 = runMissile(x, 1);
-
-  if(!playfield.priority && (pf || bl)) output[x] = io.fgColor;
-  if(p1 || m1)                          output[x] = io.p1Color;
-  if(p0 || m0)                          output[x] = io.p0Color;
-  if(playfield.priority && (pf || bl))  output[x] = io.fgColor;
-
-  // Update Collision
-  if(m0 && p1) collision.M0P1 = 1;
-  if(m0 && p0) collision.M0P0 = 1;
-  if(m1 && p0) collision.M1P0 = 1;
-  if(m1 && p1) collision.M1P1 = 1;
-  if(p0 && pf) collision.P0PF = 1;
-  if(p0 && bl) collision.P0BL = 1;
-  if(p1 && pf) collision.P1PF = 1;
-  if(p1 && bl) collision.P1BL = 1;
-  if(m0 && pf) collision.M0PF = 1;
-  if(m0 && bl) collision.M0BL = 1;
-  if(m1 && pf) collision.M1PF = 1;
-  if(m1 && bl) collision.M1BL = 1;
-  if(bl && pf) collision.BLPF = 1;
-  if(p0 && p1) collision.P0P1 = 1;
-  if(m0 && m1) collision.M0M1 = 1;
 }
 
 auto TIA::runPlayfield(n8 x) -> n1 {
