@@ -9,6 +9,7 @@ APU apu;
 #include "triangle.cpp"
 #include "noise.cpp"
 #include "dmc.cpp"
+#include "framecounter.cpp"
 #include "serialization.cpp"
 
 auto APU::load(Node::Object parent) -> void {
@@ -54,7 +55,7 @@ auto APU::main() -> void {
   u32 triangleOutput = triangle.clock();
   u32 noiseOutput = noise.clock();
   u32 dmcOutput = dmc.clock();
-  clockFrameCounterDivider();
+  frame.main();
 
   s32 output = 0;
   output += pulseDAC[pulseOutput];
@@ -74,8 +75,8 @@ auto APU::power(bool reset) -> void {
   noise = {};
   dmc = {};
   dmc.periodCounter = Region::PAL() ? dmcPeriodTablePAL[0] : dmcPeriodTableNTSC[0];
-  frame = {};
   enabledChannels = 0;
+  frame.power(reset);
 
   setIRQ();
 }
@@ -262,58 +263,29 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     return;
   }
 
-  case 0x4017: {
-    frame.mode = data.bit(6,7);
-
-    frame.counter = 0;
-    if(frame.mode.bit(1)) {
-      clockFrameCounter();
-    }
-    if(frame.mode.bit(0)) {
-      frame.irqPending = false;
-      setIRQ();
-    }
-    frame.divider = FrameCounter::NtscPeriod;
-    return;
-  }
-
+  case 0x4017: return frame.write(data);
   }
 }
 
-auto APU::clockFrameCounter() -> void {
-  frame.counter++;
+auto APU::clockQuarterFrame() -> void {
+  pulse1.envelope.clock();
+  pulse2.envelope.clock();
+  triangle.clockLinearLength();
+  noise.envelope.clock();
+}
 
-  if(frame.counter.bit(0)) {
-    pulse1.clockLength();
-    pulse1.sweep.clock(0);
-    pulse2.clockLength();
-    pulse2.sweep.clock(1);
-    triangle.clockLength();
-    noise.clockLength();
-  }
+auto APU::clockHalfFrame() -> void {
+  pulse1.clockLength();
+  pulse1.sweep.clock(0);
+  pulse2.clockLength();
+  pulse2.sweep.clock(1);
+  triangle.clockLength();
+  noise.clockLength();
 
   pulse1.envelope.clock();
   pulse2.envelope.clock();
   triangle.clockLinearLength();
   noise.envelope.clock();
-
-  if(frame.counter == 0) {
-    if(frame.mode.bit(1)) {
-      frame.divider += FrameCounter::NtscPeriod;
-    }
-    if(frame.mode == 0) {
-      frame.irqPending = true;
-      setIRQ();
-    }
-  }
-}
-
-auto APU::clockFrameCounterDivider() -> void {
-  frame.divider -= 2;
-  if(frame.divider <= 0) {
-    clockFrameCounter();
-    frame.divider += FrameCounter::NtscPeriod;
-  }
 }
 
 const n8 APU::lengthCounterTable[32] = {
