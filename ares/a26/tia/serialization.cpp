@@ -30,25 +30,36 @@ auto TIA::serialize(serializer& s) -> void {
     s(player[n].reflect);
     s(player[n].size);
     s(player[n].offset);
-    s(player[n].position);
     s(player[n].delay);
+    s(player[n].counter);
+    s(player[n].startCounter);
+    s(player[n].pixelCounter);
+    s(player[n].widthCounter);
+    s(player[n].starting);
+    s(player[n].output);
+    s(player[n].copy);
   }
 
   for(auto n : range(2)) {
     s(missile[n].enable);
-    s(missile[n].reset);
+    s(missile[n].lockedToPlayer);
     s(missile[n].size);
     s(missile[n].offset);
-    s(missile[n].position);
+    s(missile[n].counter);
+    s(missile[n].startCounter);
+    s(missile[n].pixelCounter);
+    s(missile[n].widthCounter);
+    s(missile[n].starting);
+    s(missile[n].output);
   }
 
-  for(auto n : range(2)) {
-    s(ball.enable[0]);
-    s(ball.enable[1]);
-    s(ball.size);
-    s(ball.offset);
-    s(ball.position);
-  }
+  s(ball.enable[0]);
+  s(ball.enable[1]);
+  s(ball.delay);
+  s(ball.size);
+  s(ball.offset);
+  s(ball.counter);
+  s(ball.output);
 
   s(collision.M0P0);
   s(collision.M0P1);
