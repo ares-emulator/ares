@@ -163,7 +163,7 @@ struct HVC_ExROM : Interface {  //MMC5
       pulse1.envelope.clock();
       pulse2.clockLength();
       pulse2.envelope.clock();
-      frameDivider += APU::FrameCounter::NtscPeriod;
+      frameDivider += 14915; // ~(21.477MHz / 6 / 240hz)
     }
 
     i32 output = 0;

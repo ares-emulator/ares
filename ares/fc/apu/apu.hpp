@@ -135,21 +135,46 @@ struct APU {
   } dmc;
 
   struct FrameCounter {
-    static constexpr u16 NtscPeriod = 14915;  //~(21.477MHz / 6 / 240hz)
+    enum mode: u8 { Freq60Hz = 0, Freq48Hz = 1 };
+
+    auto getPeriod() const -> u16 {
+      return Region::PAL() ? periodPAL[mode][step] : periodNTSC[mode][step];
+    }
+
+    auto main() -> void;
+    auto power(bool reset) -> void;
+    auto write(n8 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    n1  irqInhibit;
+    n1  mode;
+    n1  newMode;
+
     n1  irqPending;
-    n2  mode;
-    n2  counter;
-    i32 divider = 1;
-  } frame;
+    n3  step;
+    n16 counter;
+
+    bool odd;
+    bool delay;
+    n3   delayCounter;
+
+    constexpr static u16 periodNTSC[2][6] = {
+      { 7457, 7456, 7458, 7457,    1, 1, },
+      { 7457, 7456, 7458, 7458, 7452, 1, },
+    };
+    constexpr static u16 periodPAL[2][6] = {
+      { 8313, 8314, 8312, 8313,    1, 1, },
+      { 8313, 8314, 8312, 8320, 8312, 1,},
+    };
+  };
 
   //apu.cpp
-  auto clockFrameCounter() -> void;
-  auto clockFrameCounterDivider() -> void;
+  auto clockQuarterFrame() -> void;
+  auto clockHalfFrame() -> void;
 
+  FrameCounter frame;
   n5 enabledChannels;
 
 //unserialized:
