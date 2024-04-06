@@ -159,24 +159,21 @@
 }
 
 -(NSMenu*) menuForEvent:(NSEvent*)event {
-  //macOS doesn't set focus to right-clicked items, but this is neccesary for context menus:
-  //todo: select the current column as well so that doContext(cell) works correctly
-  NSInteger row = [self rowAtPoint:[self convertPoint:event.locationInWindow fromView:nil]];
-  if(row >= 0 && ![self isRowSelected:row]) {
+  NSPoint localPoint = [self convertPoint:event.locationInWindow fromView:nil];
+  NSInteger row = [self rowAtPoint:localPoint];
+  NSInteger column = [self columnAtPoint:localPoint];
+
+
+  if (row >= 0 && ![self isRowSelected:row]) {
     [self selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
   }
 
-#if 0 // breaks the build
-  s32 row = [content clickedRow];
-  if(row >= 0 && _row < tableView->state.items.size()) {
-    s32 column = [content clickedColumn];
-    if(column >= 0 && column < tableView->state.columns.size()) {
-      auto item = tableView->state.items[row];
-      auto cell = item->cell(column);
-      tableView->doContext(cell);
-    }
+  if(column >= 0 && column < tableView->state.columns.size()) {
+    auto item = tableView->state.items[row];
+    auto cell = item->cell(column);
+    tableView->doContext(cell);
   }
-#endif
+
   return nil;
 }
 
