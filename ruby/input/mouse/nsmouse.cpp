@@ -7,17 +7,21 @@ struct InputMouseNS {
   uintptr handle = 0;
 
   shared_pointer<HID::Mouse> hid{new HID::Mouse};
+  bool hidden = false;
 
   auto acquired() -> bool {
-    // do this in intialize
-    return true;
+    return hidden;
   }
 
   auto acquire() -> bool {
+    [NSCursor hide];
+    hidden = true;
     return acquired();
   }
 
   auto release() -> bool {
+    [NSCursor unhide];
+    hidden = false;
     return true;
   }
 
