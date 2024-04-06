@@ -1,19 +1,19 @@
 #pragma once
 
-struct InputMouseGC {
+struct InputMouseNS {
   Input& input;
-  InputMouseGC(Input& input) : input(input) {}
+  InputMouseNS(Input& input) : input(input) {}
 
   uintptr handle = 0;
 
   shared_pointer<HID::Mouse> hid{new HID::Mouse};
 
   auto acquired() -> bool {
+    // do this in intialize
     return true;
   }
 
   auto acquire() -> bool {
-    // ms.mouse = [GCMouse current];
     return acquired();
   }
 
@@ -38,10 +38,10 @@ struct InputMouseGC {
     assign(HID::Mouse::GroupID::Button, 1, mouseButtons & 0x4);
     assign(HID::Mouse::GroupID::Button, 2, mouseButtons & 0x2);
 
-    assign(HID::Mouse::GroupID::Axis, 0, windowLocation.x);
-    assign(HID::Mouse::GroupID::Axis, 1, windowLocation.y);
+    assign(HID::Mouse::GroupID::Axis, 0, mouseLocation.x);
+    assign(HID::Mouse::GroupID::Axis, 1, mouseLocation.y);
 
-    NSLog(@"Mouse Location - X: %f, Y: %f", windowLocation.x, windowLocation.y);
+    // NSLog(@"Mouse Location - X: %f, Y: %f", windowLocation.x, windowLocation.y);
 
     devices.append(hid);
   }
@@ -54,13 +54,10 @@ struct InputMouseGC {
 
     hid->axes().append("X");
     hid->axes().append("Y");
-    // hid->axes().append("Z");
 
     hid->buttons().append("Left");
     hid->buttons().append("Middle");
     hid->buttons().append("Right");
-    hid->buttons().append("Up");
-    hid->buttons().append("Down");
 
     return true;
   }
