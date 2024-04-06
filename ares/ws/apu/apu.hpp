@@ -217,7 +217,9 @@ struct APU : Thread, IO {
     n1 seqDbgOutputForce55;
     n1 seqDbgChForce4;
     n1 seqDbgChForce2;
-    n4 seqDbgUnknown;
+    n1 seqDbgSweepClock;
+    n2 seqDbgNoise;
+    n1 seqDbgUnknown;
     
     // This output covers Channels 1-4 (excluding Hyper Voice)
     struct Output {

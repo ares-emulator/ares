@@ -42,7 +42,7 @@ auto APU::main() -> void {
     channel1.tick();
     channel2.tick();
     channel3.tick();
-    if(++state.sweepClock == 0) channel3.sweep(); // TODO: Is there any relationship between this clock and I/O ports?
+    if(++state.sweepClock == 0 || io.seqDbgSweepClock) channel3.sweep();
     channel4.tick();
 
     switch(state.apuClock++) {
@@ -68,7 +68,7 @@ auto APU::main() -> void {
       channel1.tick();
       channel2.tick();
       channel3.tick();
-      if(++state.sweepClock == 0) channel3.sweep();
+      if(++state.sweepClock == 0 || io.seqDbgSweepClock) channel3.sweep();
       channel4.tick();
     }
     
