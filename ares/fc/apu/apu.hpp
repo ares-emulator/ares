@@ -150,7 +150,6 @@ struct APU {
 
     n1  irqInhibit;
     n1  mode;
-    n1  newMode;
 
     n1  irqPending;
     n3  step;

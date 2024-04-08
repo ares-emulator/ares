@@ -4,9 +4,8 @@ auto APU::FrameCounter::main() -> void {
 
   if (delay && --delayCounter == 0) {
     delay = false;
-    mode = newMode;
     step = 0;
-    counter = getPeriod();
+    counter = getPeriod() + 2;
     if (mode == Freq48Hz) {
       apu.clockHalfFrame();
     }
@@ -46,13 +45,12 @@ auto APU::FrameCounter::main() -> void {
       break;
   }
 
-  counter = periodNTSC[mode][counter];
+  counter = getPeriod();
 }
 
 auto APU::FrameCounter::power(bool reset) -> void {
   irqInhibit = 0;
   if (!reset) mode = Freq60Hz;
-  newMode = mode;
 
   irqPending = 0;
   step = 0;
@@ -60,18 +58,19 @@ auto APU::FrameCounter::power(bool reset) -> void {
 
   odd = true;
   delay = true;
-  delayCounter = 3;
+  delayCounter = 1;
 }
 
 auto APU::FrameCounter::write(n8 data) -> void {
-  newMode = data.bit(7);
+  mode = data.bit(7);
   delay = true;
+
   // If the write occurs during an APU cycle,
   // the effects occur 3 CPU cycles after the
   // $4017 write cycle, and if the write occurs
   // between APU cycles, the effects occurs 4 CPU
   // cycles after the write cycle.
-  delayCounter = odd ? 4 : 3;
+  delayCounter = odd ? 1 : 2;
 
   irqInhibit = data.bit(6);
   if (irqInhibit) irqPending = 0;

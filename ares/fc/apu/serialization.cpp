@@ -78,7 +78,6 @@ auto APU::DMC::serialize(serializer& s) -> void {
 auto APU::FrameCounter::serialize(serializer& s) -> void {
   s(irqInhibit);
   s(mode);
-  s(newMode);
 
   s(irqPending);
   s(step);
