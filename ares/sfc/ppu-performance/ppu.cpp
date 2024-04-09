@@ -26,6 +26,7 @@ auto PPU::load(Node::Object parent) -> void {
   screen->setSize(564, height() * 2);
   screen->setScale(0.5, 0.5);
   Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
+  screen->refreshRateHint(system.cpuFrequency(), 1364, Region::PAL() ? 312 : 262);
 
   vramSize = node->append<Node::Setting::Natural>("VRAM", 64_KiB);
   vramSize->setAllowedValues({64_KiB, 128_KiB});

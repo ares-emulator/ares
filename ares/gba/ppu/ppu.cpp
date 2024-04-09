@@ -35,6 +35,7 @@ auto PPU::load(Node::Object parent) -> void {
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
   screen->setViewport(0, 0, 240, 160);
+  screen->refreshRateHint(system.frequency() / 4, 308, 228);
 
   colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();

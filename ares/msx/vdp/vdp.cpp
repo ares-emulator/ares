@@ -30,6 +30,8 @@ auto VDP::load(Node::Object parent) -> void {
     V9938::pram.allocate(16);
     V9938::load(screen);
   }
+
+  screen->refreshRateHint(system.colorburst(), 228, 262);
 }
 
 auto VDP::unload() -> void {

@@ -39,6 +39,7 @@ auto VDP::load(Node::Object parent) -> void {
   screen->setSize(1388, visibleHeight() * 2);
   screen->setScale(0.25, 0.5);
   Region::PAL() ? screen->setAspect(111.0, 100.0) : screen->setAspect(32.0, 35.0);
+  screen->refreshRateHint(system.frequency(), 3420, frameHeight());
 
   psg.load(node);
   debugger.load(node);

@@ -15,6 +15,7 @@ auto ULA::load(Node::Object parent) -> void {
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
   screen->setViewport(0, 0, screen->width(), screen->height());
+  screen->refreshRateHint(system.frequency(), 224, 312);
 
   stream = node->append<Node::Audio::Stream>("Audio");
   stream->setChannels(1);

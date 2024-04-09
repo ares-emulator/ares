@@ -27,6 +27,7 @@ auto PPU::load(Node::Object parent) -> void {
     screen->setSize(160, 144);
     screen->setScale(1.0, 1.0);
     screen->setAspect(1.0, 1.0);
+    screen->refreshRateHint(4 * 1024 * 1024, 456, 154);
 
     if(Model::GameBoy()) {
       screen->colors(1 << 2, {&PPU::colorGameBoy, this});

@@ -37,6 +37,7 @@ auto PPU::load(Node::Object parent) -> void {
   screen->setSize(564, height() * 2);
   screen->setScale(0.5, 0.5);
   Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
+  screen->refreshRateHint(system.cpuFrequency(), 1364, Region::PAL() ? 312 : 262);
 
   versionPPU1 = node->append<Node::Setting::Natural>("PPU1 Version", 1);
   versionPPU1->setAllowedValues({1});

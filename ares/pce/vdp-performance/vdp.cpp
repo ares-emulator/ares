@@ -28,6 +28,7 @@ auto VDP::load(Node::Object parent) -> void {
   screen->setSize(1128, 263);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
+  screen->refreshRateHint(60); // TODO: More accurate refresh rate hint
 
   colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();

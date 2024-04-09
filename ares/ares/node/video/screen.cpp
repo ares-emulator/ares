@@ -72,6 +72,10 @@ auto Screen::setRefresh(function<void ()> refresh) -> void {
   _refresh = refresh;
 }
 
+auto Screen::refreshRateHint(double pixelFrequency, int dotsPerLine, int linesPerFrame) -> void {
+  refreshRateHint(1.0f / ((double)(dotsPerLine * linesPerFrame) / pixelFrequency));
+}
+
 auto Screen::refreshRateHint(double refreshRate) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   platform->refreshRateHint(refreshRate);

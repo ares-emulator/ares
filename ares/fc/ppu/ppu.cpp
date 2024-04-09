@@ -21,6 +21,7 @@ auto PPU::load(Node::Object parent) -> void {
   screen->setSize(282, displayHeight());
   screen->setScale(1.0, 1.0);
   Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
+  screen->refreshRateHint(system.frequency() / rate(), 341, vlines());
 
   debugger.load(node);
 }

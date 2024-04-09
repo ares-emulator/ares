@@ -21,6 +21,7 @@ auto KGE::load(Node::Object parent) -> void {
   screen->setViewport(0, 0, 160, 152);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
+  screen->refreshRateHint(60); // TODO: More accurate refresh rate hint
 
   interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
     screen->setInterframeBlending(value);

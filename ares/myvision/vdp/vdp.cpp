@@ -17,6 +17,7 @@ auto VDP::load(Node::Object parent) -> void {
   screen->setViewport(0, 0, 284, 243);
   screen->setScale(1.0, 1.0);
   screen->setAspect(8.0, 7.0);
+  screen->refreshRateHint(Constants::Colorburst::NTSC, 228, 262);
 
   TMS9918::load(screen);
 }

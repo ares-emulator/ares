@@ -221,6 +221,7 @@ auto PPU::frame() -> void {
   io.vcounter = 0;
   io.field = !io.field;
   screen->setViewport(0, 0, screen->width(), screen->height());
+  screen->refreshRateHint(3'072'000, 256, io.vcounter);
   screen->frame();
   scheduler.exit(Event::Frame);
 }

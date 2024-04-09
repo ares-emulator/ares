@@ -16,6 +16,7 @@ auto LSPC::load(Node::Object parent) -> void {
   screen->setSize(320, 256);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
+  screen->refreshRateHint(6'000'000, 384, 264);
 
   vram.allocate(68_KiB >> 1);
   pram.allocate(16_KiB >> 1);

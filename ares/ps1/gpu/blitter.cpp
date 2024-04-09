@@ -1,6 +1,8 @@
 auto GPU::Blitter::queue() -> void {
   self.refreshed = true;
 
+  self.screen->refreshRateHint(self.io.videoMode ? 50 : 60); // TODO: More accurate refresh rate hint
+
   //if the display is disabled, output a black screen image
   if(blank = self.io.displayDisable) {
     self.screen->frame();

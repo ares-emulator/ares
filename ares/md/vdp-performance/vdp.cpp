@@ -25,6 +25,7 @@ auto VDP::load(Node::Object parent) -> void {
   screen->setSize(1280, 480);
   screen->setScale(0.25, 0.5);
   screen->setAspect(32, 35);
+  screen->refreshRateHint(system.frequency(), 3420, frameHeight());
 
   psg.load(node);
   debugger.load(node);

@@ -24,6 +24,7 @@ auto VDP::load(Node::Object parent) -> void {
   if((Model::MarkIII() || Model::MasterSystemI()) && Region::NTSCJ()) defaultRevision = 1;
   revision = node->append<Node::Setting::Natural>("Revision", defaultRevision);
   revision->setAllowedValues({1, 2});
+  screen->refreshRateHint(system.colorburst() * 15, 3420, Region::PAL() ? 313 : 262);
 
   if(Display::CRT()) {
     screen->colors(1 << 6, {&VDP::colorMasterSystem, this});
