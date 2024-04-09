@@ -72,6 +72,11 @@ auto Screen::setRefresh(function<void ()> refresh) -> void {
   _refresh = refresh;
 }
 
+auto Screen::refreshRateHint(double refreshRate) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  platform->refreshRateHint(refreshRate);
+}
+
 auto Screen::setViewport(u32 x, u32 y, u32 width, u32 height) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _viewportX = x;

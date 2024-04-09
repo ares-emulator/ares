@@ -79,7 +79,7 @@ struct VideoMetal : VideoDriver, Metal {
     return true;
   }
   
-  auto hintRefreshRate(double refreshRate) -> void {
+  auto refreshRateHint(double refreshRate) -> void {
     _refreshRateHint = refreshRate;
     updatePresentInterval();
   }

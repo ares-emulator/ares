@@ -92,6 +92,11 @@ auto Video::setShader(string shader) -> bool {
   return true;
 }
 
+auto Video::refreshRateHint(double refreshRate) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->refreshRateHint(refreshRate);
+}
+
 //
 
 auto Video::focused() -> bool {

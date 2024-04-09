@@ -34,6 +34,7 @@ struct Screen : Video {
 
   auto setRefresh(function<void ()> refresh) -> void;
   auto setViewport(u32 x, u32 y, u32 width, u32 height) -> void;
+  auto refreshRateHint(double refreshRate) -> void;
 
   auto setSize(u32 width, u32 height) -> void;
   auto setScale(f64 scaleX, f64 scaleY) -> void;
