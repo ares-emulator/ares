@@ -10,7 +10,7 @@
 #include "mouse/rawinput.cpp"
 #elif defined(PLATFORM_MACOS)
 #include "keyboard/quartz.cpp"
-#include "mouse/gcmouse.cpp"
+#include "mouse/nsmouse.cpp"
 #else
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -92,7 +92,7 @@ private:
   InputMouseRawInput mouse;
 #elif defined(PLATFORM_MACOS)
   InputKeyboardQuartz keyboard;
-  InputMouseGC mouse;
+  InputMouseNS mouse;
 #else
   InputKeyboardXlib keyboard;
   InputMouseXlib mouse;
