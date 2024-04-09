@@ -19,6 +19,37 @@ struct APU {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  struct Length {
+    //length.cpp
+    auto main() -> void;
+
+    auto power(bool reset, bool isTriangle) -> void;
+
+    auto setEnable(n1 value) -> void;
+    auto setHalt(bool lengthClocking, n1 value) -> void;
+    auto setCounter(bool lengthClocking, n5 index) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n8 counter;
+    n1 halt;
+    n1 enable;
+
+    bool delayHalt;
+    n1 newHalt;
+
+    bool delayCounter;
+    n5 counterIndex;
+
+    constexpr static u8 table[32] = {
+      0x0a, 0xfe, 0x14, 0x02, 0x28, 0x04, 0x50, 0x06,
+      0xa0, 0x08, 0x3c, 0x0a, 0x0e, 0x0c, 0x1a, 0x0e,
+      0x0c, 0x10, 0x18, 0x12, 0x30, 0x14, 0x60, 0x16,
+      0xc0, 0x18, 0x48, 0x1a, 0x10, 0x1c, 0x20, 0x1e,
+    };
+  };
+
   struct Envelope {
     //envelope.cpp
     auto volume() const -> u32;
@@ -54,17 +85,16 @@ struct APU {
 
   struct Pulse {
     //pulse.cpp
-    auto clockLength() -> void;
     auto checkPeriod() -> bool;
     auto clock() -> n8;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    Length length;
     Envelope envelope;
     Sweep sweep;
 
-    n16 lengthCounter;
     n16 periodCounter = 1;
     n2  duty;
     n3  dutyCounter;
@@ -73,17 +103,16 @@ struct APU {
 
   struct Triangle {
     //triangle.cpp
-    auto clockLength() -> void;
     auto clockLinearLength() -> void;
     auto clock() -> n8;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n16 lengthCounter;
+    Length length;
+
     n16 periodCounter = 1;
     n8  linearLength;
-    n1  haltLengthCounter;
     n11 period;
     n5  stepCounter = 16;
     n8  linearLengthCounter;
@@ -92,15 +121,14 @@ struct APU {
 
   struct Noise {
     //noise.cpp
-    auto clockLength() -> void;
     auto clock() -> n8;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    Length length;
     Envelope envelope;
 
-    n16 lengthCounter;
     n16 periodCounter = 1;
     n4  period;
     n1  shortMode;
@@ -140,6 +168,11 @@ struct APU {
     auto getPeriod() const -> u16 {
       return Region::PAL() ? periodPAL[mode][step] : periodNTSC[mode][step];
     }
+    auto lengthClocking() const -> bool {
+      // Because the CPU writes before the APU clock,
+      // the counter must be 1
+      return counter == 1 && (step == 1 || step == 4);
+    }
 
     auto main() -> void;
     auto power(bool reset) -> void;
@@ -150,7 +183,6 @@ struct APU {
 
     n1  irqInhibit;
     n1  mode;
-    n1  newMode;
 
     n1  irqPending;
     n3  step;
@@ -175,13 +207,11 @@ struct APU {
   auto clockHalfFrame() -> void;
 
   FrameCounter frame;
-  n5 enabledChannels;
 
 //unserialized:
   u16 pulseDAC[32];
   u16 dmcTriangleNoiseDAC[128][16][16];
 
-  static const n8  lengthCounterTable[32];
   static const n16 dmcPeriodTableNTSC[16];
   static const n16 dmcPeriodTablePAL[16];
   static const n16 noisePeriodTableNTSC[16];
