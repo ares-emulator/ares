@@ -354,7 +354,7 @@ struct HVC_ExROM : Interface {  //MMC5
       pulse1.period.bit(8,10) = data.bit(0,2);
       pulse1.dutyCounter = 0;
       pulse1.envelope.reloadDecay = 1;
-      pulse1.lengthCounter = apu.lengthCounterTable[data.bit(3,7)];
+      pulse1.lengthCounter = APU::Length::table[data.bit(3,7)];
       break;
 
     case 0x5004:
@@ -375,7 +375,7 @@ struct HVC_ExROM : Interface {  //MMC5
       pulse2.period.bit(8,10) = data.bit(0,2);
       pulse2.dutyCounter = 0;
       pulse2.envelope.reloadDecay = 1;
-      pulse2.lengthCounter = apu.lengthCounterTable[data.bit(3,7)];
+      pulse2.lengthCounter = APU::Length::table[data.bit(3,7)];
       break;
 
     case 0x5010:

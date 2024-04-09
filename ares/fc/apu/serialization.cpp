@@ -4,7 +4,18 @@ auto APU::serialize(serializer& s) -> void {
   s(triangle);
   s(dmc);
   s(frame);
-  s(enabledChannels);
+}
+
+auto APU::Length::serialize(serializer& s) -> void {
+  s(counter);
+  s(halt);
+  s(enable);
+
+  s(delayHalt);
+  s(newHalt);
+
+  s(delayCounter);
+  s(counterIndex);
 }
 
 auto APU::Envelope::serialize(serializer& s) -> void {
@@ -29,7 +40,7 @@ auto APU::Sweep::serialize(serializer& s) -> void {
 auto APU::Pulse::serialize(serializer& s) -> void {
   s(envelope);
   s(sweep);
-  s(lengthCounter);
+  s(length);
   s(periodCounter);
   s(duty);
   s(dutyCounter);
@@ -37,10 +48,9 @@ auto APU::Pulse::serialize(serializer& s) -> void {
 }
 
 auto APU::Triangle::serialize(serializer& s) -> void {
-  s(lengthCounter);
+  s(length);
   s(periodCounter);
   s(linearLength);
-  s(haltLengthCounter);
   s(period);
   s(stepCounter);
   s(linearLengthCounter);
@@ -49,7 +59,7 @@ auto APU::Triangle::serialize(serializer& s) -> void {
 
 auto APU::Noise::serialize(serializer& s) -> void {
   s(envelope);
-  s(lengthCounter);
+  s(length);
   s(periodCounter);
   s(period);
   s(shortMode);
