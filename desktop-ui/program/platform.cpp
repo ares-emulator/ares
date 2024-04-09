@@ -132,6 +132,10 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
   }
 }
 
+auto Program::refreshRateHint(double refreshRate) -> void {
+  ruby::video.refreshRateHint(refreshRate);
+}
+
 auto Program::audio(ares::Node::Audio::Stream node) -> void {
   if(!streams) return;
 
