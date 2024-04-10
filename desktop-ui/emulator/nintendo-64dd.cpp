@@ -137,6 +137,8 @@ auto Nintendo64DD::load(Menu menu) -> void {
 }
 
 auto Nintendo64DD::unload() -> void {
+  gamepad.reset();
+
   Emulator::unload();
   diskInsertTimer.reset();
 }
