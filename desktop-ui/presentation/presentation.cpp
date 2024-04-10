@@ -678,6 +678,7 @@ auto Presentation::loadShaders() -> void {
     if(settings.video.shader.imatch(item.attribute("file"))) {
       item.setChecked();
       settings.video.shader = item.attribute("file");
+      ruby::video.setShader({location, settings.video.shader});
     }
   }
 }
