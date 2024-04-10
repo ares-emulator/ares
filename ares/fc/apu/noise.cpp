@@ -18,3 +18,13 @@ auto APU::Noise::clock() -> n8 {
 
   return result;
 }
+
+auto APU::Noise::power(bool reset) -> void {
+  length.power(reset, false);
+  envelope = {};
+
+  periodCounter = 1;
+  period = 0;
+  shortMode = 0;
+  lfsr = 1;
+}

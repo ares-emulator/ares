@@ -67,3 +67,22 @@ auto APU::DMC::clock() -> n8 {
 
   return result;
 }
+
+auto APU::DMC::power(bool reset) -> void {
+  lengthCounter = 0;
+  periodCounter = Region::PAL() ? dmcPeriodTablePAL[0] : dmcPeriodTableNTSC[0];
+  dmaDelayCounter = 0;
+  irqPending = 0;
+  period = 0;
+  irqEnable = 0;
+  loopMode = 0;
+  dacLatch = 0;
+  addressLatch = 0;
+  lengthLatch = 0;
+  readAddress = 0;
+  bitCounter = 0;
+  dmaBufferValid = 0;
+  dmaBuffer = 0;
+  sampleValid = 0;
+  sample = 0;
+}

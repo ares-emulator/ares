@@ -17,7 +17,7 @@ auto APU::Length::main() -> void {
 auto APU::Length::power(bool reset, bool isTriangle) -> void {
   enable = 0;
 
-  if (!reset || isTriangle) {
+  if (!reset || !isTriangle) {
     counter = 0;
     halt = 0;
 
