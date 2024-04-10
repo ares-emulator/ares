@@ -85,8 +85,9 @@ struct APU {
 
   struct Pulse {
     //pulse.cpp
-    auto checkPeriod() -> bool;
     auto clock() -> n8;
+
+    auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -95,7 +96,7 @@ struct APU {
     Envelope envelope;
     Sweep sweep;
 
-    n16 periodCounter = 1;
+    n16 periodCounter;
     n2  duty;
     n3  dutyCounter;
     n11 period;
@@ -106,15 +107,17 @@ struct APU {
     auto clockLinearLength() -> void;
     auto clock() -> n8;
 
+    auto power(bool reset) -> void;
+
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
     Length length;
 
-    n16 periodCounter = 1;
+    n16 periodCounter;
     n8  linearLength;
     n11 period;
-    n5  stepCounter = 16;
+    n5  stepCounter;
     n8  linearLengthCounter;
     n1  reloadLinear;
   } triangle;
@@ -123,16 +126,18 @@ struct APU {
     //noise.cpp
     auto clock() -> n8;
 
+    auto power(bool reset) -> void;
+
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
     Length length;
     Envelope envelope;
 
-    n16 periodCounter = 1;
+    n16 periodCounter;
     n4  period;
     n1  shortMode;
-    n15 lfsr = 1;
+    n15 lfsr;
   } noise;
 
   struct DMC {
@@ -140,6 +145,8 @@ struct APU {
     auto start() -> void;
     auto stop() -> void;
     auto clock() -> n8;
+
+    auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;

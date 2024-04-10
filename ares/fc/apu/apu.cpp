@@ -70,17 +70,11 @@ auto APU::setIRQ() -> void {
 }
 
 auto APU::power(bool reset) -> void {
-  pulse1 = {};
-  pulse2 = {};
-  triangle = {};
-  noise = {};
-  dmc = {};
-  dmc.periodCounter = Region::PAL() ? dmcPeriodTablePAL[0] : dmcPeriodTableNTSC[0];
-
-  pulse1.length.power(reset, false);
-  pulse2.length.power(reset, false);
-  triangle.length.power(reset, true);
-  noise.length.power(reset, false);
+  pulse1.power(reset);
+  pulse2.power(reset);
+  triangle.power(reset);
+  noise.power(reset);
+  dmc.power(reset);
   frame.power(reset);
 
   setIRQ();

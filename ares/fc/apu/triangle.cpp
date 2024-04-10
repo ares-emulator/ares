@@ -20,3 +20,14 @@ auto APU::Triangle::clock() -> n8 {
 
   return result;
 }
+
+auto APU::Triangle::power(bool reset) -> void {
+  length.power(reset, true);
+
+  periodCounter = 1;
+  linearLength = 0;
+  period = 0;
+  stepCounter = 16;
+  linearLengthCounter = 0;
+  reloadLinear = 0;
+}

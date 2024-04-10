@@ -109,6 +109,14 @@ auto System::power(bool reset) -> void {
   apu.power(reset);
   ppu.power(reset);
   scheduler.power(cpu);
+
+  // The CPU takes 8 cycles before it starts executing
+  // the ROM's code after a reset/power up
+  for (auto i : range(8)) {
+    apu.main();
+    cartridge.main();
+    (cpu.Thread::step)(cpu.rate());
+  }
 }
 
 }

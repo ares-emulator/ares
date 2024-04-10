@@ -18,3 +18,14 @@ auto APU::Pulse::clock() -> n8 {
 
   return result;
 }
+
+auto APU::Pulse::power(bool reset) -> void {
+  length.power(reset, false);
+  envelope = {};
+  sweep = {};
+
+  periodCounter = 1;
+  duty = 0;
+  dutyCounter = 0;
+  period = 0;
+}
