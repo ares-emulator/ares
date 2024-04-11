@@ -197,8 +197,8 @@ private:
     if(!_device) return false;
     if(_lost && !recover()) return false;
 
-    _device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-    _device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    _device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_NEAREST);
+    _device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_NEAREST);
     return true;
   }
 
