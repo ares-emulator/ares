@@ -104,9 +104,9 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   random.entropy(Random::Entropy::Low);
-  cartridge.power();
   // The apu should run before the cpu
   apu.power(reset);
+  cartridge.power();
   cpu.power(reset);
   ppu.power(reset);
   scheduler.power(cpu);
@@ -114,7 +114,6 @@ auto System::power(bool reset) -> void {
   // The CPU takes 8 cycles before it starts executing
   // the ROM's code after a reset/power up
   for (auto i : range(8)) {
-    cartridge.main();
     (cpu.Thread::step)(cpu.rate());
   }
 }
