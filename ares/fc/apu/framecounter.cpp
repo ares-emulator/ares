@@ -35,8 +35,10 @@ auto APU::FrameCounter::main() -> void {
     case 4:
       step = 5;
       apu.clockHalfFrame();
-      if (mode == Freq60Hz && irqInhibit == 0)
+      if (mode == Freq60Hz && irqInhibit == 0) {
         irqPending = 1;
+        apu.setIRQ();
+      }
       break;
     case 5:
       step = 0;

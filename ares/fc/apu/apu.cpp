@@ -63,6 +63,9 @@ auto APU::main() -> void {
   output += dmcTriangleNoiseDAC[dmcOutput][triangleOutput][noiseOutput];
 
   stream->frame(sclamp<16>(output) / 32768.0);
+
+  Thread::step(rate());
+  Thread::synchronize(cpu);
 }
 
 auto APU::setIRQ() -> void {
@@ -78,6 +81,8 @@ auto APU::power(bool reset) -> void {
   frame.power(reset);
 
   setIRQ();
+
+  Thread::create(system.frequency(), {&APU::main, this});
 }
 
 auto APU::readIO(n16 address) -> n8 {

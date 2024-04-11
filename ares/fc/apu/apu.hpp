@@ -1,4 +1,4 @@
-struct APU {
+struct APU: Thread {
   Node::Object node;
   Node::Audio::Stream stream;
 
