@@ -28,10 +28,6 @@ auto CPU::main() -> void {
     return interrupt();
   }
 
-  if(MOS6502::resetting) {
-    MOS6502::reset();
-  }
-
   debugger.instruction();
   instruction();
 }
