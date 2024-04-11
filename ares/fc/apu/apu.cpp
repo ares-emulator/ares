@@ -87,8 +87,6 @@ auto APU::power(bool reset) -> void {
   frame.power(reset);
 
   setIRQ();
-
-  Thread::create(system.frequency(), {&APU::main, this});
 }
 
 auto APU::readIO(n16 address) -> n8 {
