@@ -47,6 +47,8 @@ struct Sunsoft5B : Interface {
       output += volume[channels[2]];
       stream->frame(sclamp<16>(output * 1.5 * 32768.0) / 32768.0);
     }
+
+    tick();
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

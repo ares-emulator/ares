@@ -1,4 +1,5 @@
 auto APU::serialize(serializer& s) -> void {
+  Thread::serialize(s);
   s(pulse1);
   s(pulse2);
   s(triangle);

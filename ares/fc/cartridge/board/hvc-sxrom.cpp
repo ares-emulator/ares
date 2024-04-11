@@ -90,6 +90,7 @@ struct HVC_SxROM : Interface {  //MMC1
 
   auto main() -> void override {
     if(writeDelay) writeDelay--;
+    tick();
   }
 
   auto addressProgramROM(n32 address) -> n32 {

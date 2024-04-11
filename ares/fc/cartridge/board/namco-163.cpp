@@ -41,6 +41,8 @@ struct Namco163 : Interface {
       double output = clockSound();
       stream->frame(output / 255.0 * 0.5);
     }
+
+    tick();
   }
 
   auto clockSound() -> double {

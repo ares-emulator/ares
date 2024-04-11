@@ -62,6 +62,7 @@ struct HVC_TxROM : Interface {  //MMC3
   auto main() -> void override {
     if(irqDelay) irqDelay--;
     cpu.irqLine(irqLine);
+    tick();
   }
 
   auto irqTest(n16 address) -> void {

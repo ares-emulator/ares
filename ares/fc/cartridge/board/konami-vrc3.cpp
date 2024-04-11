@@ -38,6 +38,7 @@ struct KonamiVRC3 : Interface {
       }
     }
     cpu.irqLine(irqLine);
+    tick();
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

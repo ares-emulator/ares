@@ -26,6 +26,7 @@ struct Sunsoft3 : Interface {
       irqEnable = 0;
       cpu.irqLine(1);
     }
+    tick();
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

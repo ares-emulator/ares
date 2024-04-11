@@ -38,6 +38,7 @@ struct KonamiVRC5 : Interface {
         cpu.irqLine(1);
       }
     }
+    tick();
   }
 
   //converts JIS X 0208 codepoint to CIRAM tile# + QTRAM bank#

@@ -28,6 +28,7 @@ struct Sunsoft4 : Interface {
 
   auto main() -> void override {
     if(optionTimer) optionTimer--;
+    tick();
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

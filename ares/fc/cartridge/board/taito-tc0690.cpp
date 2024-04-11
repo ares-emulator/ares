@@ -16,6 +16,7 @@ struct TaitoTC0690 : Interface {
     if(irqDelay) irqDelay--;
     if(irqLineDelay && --irqLineDelay == 0) irqLine = 1;
     cpu.irqLine(irqLine);
+    tick();
   }
 
   auto irqTest(n16 address) -> void {

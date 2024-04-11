@@ -22,6 +22,7 @@ struct HVC_FMR : Interface {
 
   auto main() -> void override {
     fds.main();
+    tick();
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {
