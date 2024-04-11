@@ -18,10 +18,11 @@ L PCH = read(vector++);
 auto MOS6502::reset() -> void {
   idle();
   idle();
-  read(0x0100 | S--); // Dummy push
-  read(0x0100 | S--); // Dummy push
+  read(0x0100 | S--); // Dummy push (PCH)
+  read(0x0100 | S--); // Dummy push (PCL)
   n16 vector = 0xfffc;
-  push(P);
+  read(0x0100 | S--); // Dummy push (P)
+  I = 1;
   PCL = read(vector++);
   L PCH = read(vector++);
   resetting = 0;

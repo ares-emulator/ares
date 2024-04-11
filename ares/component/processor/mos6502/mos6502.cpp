@@ -38,7 +38,6 @@ namespace ares {
 auto MOS6502::power(bool reset) -> void {
  if(reset) {
    resetting = 1;
-   P.i = 1;
    return;
  }
 

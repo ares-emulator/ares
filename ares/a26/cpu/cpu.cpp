@@ -34,9 +34,6 @@ auto CPU::power(bool reset) -> void {
   MOS6502::power();
   Thread::create(system.frequency() / 3, {&CPU::main, this});
 
-  PC.byte(0) = readBus(0xfffc);
-  PC.byte(1) = readBus(0xfffd);
-
   io = {};
 }
 
