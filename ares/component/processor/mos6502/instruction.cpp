@@ -15,7 +15,21 @@ auto MOS6502::interrupt() -> void {
 L PCH = read(vector++);
 }
 
+auto MOS6502::reset() -> void {
+  idle();
+  idle();
+  read(0x0100 | S--); // Dummy push
+  read(0x0100 | S--); // Dummy push
+  n16 vector = 0xfffc;
+  push(P);
+  PCL = read(vector++);
+  L PCH = read(vector++);
+  resetting = 0;
+}
+
 auto MOS6502::instruction() -> void {
+  if(resetting) reset();
+
   switch(opcode()) {
   op(0x00, None,   addr(Implied),        fp(BRK))
   op(0x01, Load,   addr(IndirectX),      fp(ORA))

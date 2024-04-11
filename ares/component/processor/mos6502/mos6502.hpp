@@ -139,6 +139,7 @@ struct MOS6502 {
 
   //instruction.cpp
   auto interrupt() -> void;
+  auto reset() -> void;
   auto instruction() -> void;
 
   //instructions.cpp
@@ -185,6 +186,7 @@ struct MOS6502 {
   n16 PC;
   n16 MAR;
   n8  MDR;
+  n1  resetting = 0;
 };
 
 }

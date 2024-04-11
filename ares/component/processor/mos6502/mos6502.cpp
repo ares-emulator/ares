@@ -37,7 +37,7 @@ namespace ares {
 
 auto MOS6502::power(bool reset) -> void {
  if(reset) {
-   S-=3;
+   resetting = 1;
    P.i = 1;
    return;
  }
@@ -45,9 +45,10 @@ auto MOS6502::power(bool reset) -> void {
   A   = 0x00;
   X   = 0x00;
   Y   = 0x00;
-  S   = 0xfd;
+  S   = 0x00;
   P   = 0x04;
   MDR = 0x00;
+  resetting = 1;
 }
 
 }
