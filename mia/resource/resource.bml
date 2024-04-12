@@ -35,7 +35,6 @@ namespace name=Resource
     binary name=ST011 file="../Firmware/Super Famicom/st011.rom"
     binary name=ST018 file="../Firmware/Super Famicom/st018.rom"
     binary name=S21FX file="../Firmware/Super Famicom/21fx.rom"
-    binary name=Boards file="../Database/Super Famicom Boards.bml"
   namespace name=WonderSwan
     binary name=Boot file="../Firmware/WonderSwan/boot.rom"
   namespace name=WonderSwanColor
