@@ -191,7 +191,7 @@ auto SuperFamicom::analyze(vector<u8>& rom) -> string {
   if(rom.size() < 0x8000) {
     print("[mia] Loading rom failed. Minimum expected rom size is 32768 (0x8000) bytes. Rom size: ", rom.size(), " (0x", hex(rom.size()), ") bytes.\n");
     return {};
-  }  
+  }
   data = rom;
 
   u32 LoROM   = scoreHeader(  0x7fb0);
@@ -209,6 +209,7 @@ auto SuperFamicom::analyze(vector<u8>& rom) -> string {
   string s;
   auto& output = s;
   s += "game\n";
+  s +={"  sha256:   ", sha256, "\n"};
   s +={"  name:     ", Medium::name(location), "\n"};
   s +={"  title:    ", Medium::name(location), "\n"};
   s +={"  label:    ", label(), "\n"};
