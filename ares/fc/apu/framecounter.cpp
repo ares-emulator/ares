@@ -75,5 +75,8 @@ auto APU::FrameCounter::write(n8 data) -> void {
   delayCounter = odd ? 1 : 2;
 
   irqInhibit = data.bit(6);
-  if (irqInhibit) irqPending = 0;
+  if (irqInhibit) {
+    irqPending = 0;
+    apu.setIRQ();
+  }
 }
