@@ -68,6 +68,14 @@ auto Video::setForceSRGB(bool forceSRGB) -> bool {
   return true;
 }
 
+auto Video::setThreadedRenderer(bool threadedRenderer) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
+  if(instance->threadedRenderer == threadedRenderer) return true;
+  if(!instance->hasThreadedRenderer()) return false;
+  if(!instance->setThreadedRenderer(instance->threadedRenderer = threadedRenderer)) return false;
+  return true;
+}
+
 auto Video::setFlush(bool flush) -> bool {
   lock_guard<recursive_mutex> lock(mutex);
   if(instance->flush == flush) return true;

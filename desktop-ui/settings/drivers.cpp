@@ -44,6 +44,10 @@ auto DriverSettings::construct() -> void {
     settings.video.forceSRGB = videoColorSpaceToggle.checked();
     ruby::video.setForceSRGB(settings.video.forceSRGB);
   });
+  videoThreadedRendererToggle.setText("Threaded").onToggle([&] {
+    settings.video.threadedRenderer = videoThreadedRendererToggle.checked();
+    ruby::video.setThreadedRenderer(settings.video.threadedRenderer);
+  });
 #endif
 
   audioLabel.setText("Audio").setFont(Font().setBold());
@@ -155,6 +159,7 @@ auto DriverSettings::videoRefresh() -> void {
   videoBlockingToggle.setChecked(ruby::video.blocking()).setEnabled(ruby::video.hasBlocking());
 #if defined(PLATFORM_MACOS)
   videoColorSpaceToggle.setChecked(ruby::video.forceSRGB()).setEnabled(ruby::video.hasForceSRGB());
+  videoThreadedRendererToggle.setChecked(ruby::video.threadedRenderer()).setEnabled(ruby::video.hasThreadedRenderer());
 #endif
   videoFlushToggle.setChecked(ruby::video.flush()).setEnabled(ruby::video.hasFlush());
   VerticalLayout::resize();

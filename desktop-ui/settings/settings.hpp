@@ -12,6 +12,7 @@ struct Settings : Markup::Node {
     bool exclusive = false;
     bool blocking = false;
     bool forceSRGB = false;
+    bool threadedRenderer = true;
     bool flush = false;
     string shader = "None";
     u32 multiplier = 2;
@@ -337,6 +338,7 @@ struct DriverSettings : VerticalLayout {
     CheckLabel videoFlushToggle{&videoToggleLayout, Size{0, 0}};
 #if defined(PLATFORM_MACOS)
     CheckLabel videoColorSpaceToggle{&videoToggleLayout, Size{0, 0}};
+    CheckLabel videoThreadedRendererToggle{&videoToggleLayout, Size{0, 0}};
 #endif
   //
   Label audioLabel{this, Size{~0, 0}, 5};
