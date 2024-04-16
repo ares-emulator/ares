@@ -24,6 +24,18 @@ auto CPU::lastCycle() -> void {
   io.interruptPending = ((io.irqLine | io.apuLine) & !P.i) | io.nmiPending;
 }
 
+auto CPU::cancelNmi() -> void {
+  io.interruptPending = ((io.irqLine | io.apuLine) & !P.i);
+}
+
+auto CPU::delayIrq() -> void {
+  io.interruptPending = io.nmiPending;
+}
+
+auto CPU::irqPending() -> bool {
+  return (io.irqLine | io.apuLine) & !P.i;
+}
+
 auto CPU::nmi(n16& vector) -> void {
   if(io.nmiPending) {
     io.nmiPending = false;

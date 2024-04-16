@@ -22,6 +22,16 @@ auto CPU::write(n16 address, n8 data) -> void {
 auto CPU::lastCycle() -> void {
 }
 
+auto CPU::cancelNmi() -> void {
+}
+
+auto CPU::delayIrq() -> void {
+}
+
+auto CPU::irqPending() -> bool {
+  return false;
+}
+
 auto CPU::nmi(n16& vector) -> void {
 
 }

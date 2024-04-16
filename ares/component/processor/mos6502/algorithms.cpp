@@ -84,7 +84,8 @@ auto MOS6502::algorithmBRK() -> void {
   I = 1;
 
   PCL = read(vector++);
-L PCH = read(vector++);
+  cancelNmi();
+  PCH = read(vector++);
 }
 
 auto MOS6502::algorithmBVC() -> void {
@@ -97,12 +98,31 @@ auto MOS6502::algorithmBVS() -> void {
 
 auto MOS6502::algorithmBranch(bool take) -> void {
   if(!take) {
-    MDR = read(MAR); // dummy relative read
+  L MDR = read(MAR); // dummy relative read
   } else {
-    i8 displacement = read(MAR);
-    idlePageCrossed(PC, PC + displacement); // idle page crossed without carry
-    PC = PC + displacement;
-  L idle();                                 // idle page crossed with carry
+    bool irq = irqPending();
+    MDR = read(MAR);
+    n16 newPC = PC + (i8)MDR;
+    bool pageCrossed = newPC >> 8 != PC >> 8;
+
+    // idle page crossed without carry
+    if (pageCrossed) {
+      read(PC & 0xff00 | newPC & 0x00ff);
+      PC = newPC;
+    L idle();
+    } else {
+      // a taken non-page-crossing branch ignores
+      // IRQ/NMI during its last clock, so that
+      // next instruction executes before the IRQ
+      if (!irq)
+        delayIrq();
+      else
+        lastCycle();
+
+      PC = newPC;
+      // idle page crossed with carry
+      idle();
+    }
   }
 }
 
