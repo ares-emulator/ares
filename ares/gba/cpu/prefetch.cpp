@@ -1,6 +1,8 @@
 auto CPU::prefetchSync(n32 address) -> void {
   if(address == prefetch.addr) return;
 
+  if(prefetch.wait == 1) step(1);
+
   prefetch.addr = address;
   prefetch.load = address;
   prefetch.wait = _wait(Half | Nonsequential, prefetch.load);
@@ -8,7 +10,7 @@ auto CPU::prefetchSync(n32 address) -> void {
 
 auto CPU::prefetchStep(u32 clocks) -> void {
   step(clocks);
-  if(!wait.prefetch || context.dmaActive) return;
+  if(!wait.prefetch || context.dmaActive || (prefetch.addr == 0)) return;
 
   while(!prefetch.full() && clocks--) {
     if(--prefetch.wait) continue;
@@ -19,8 +21,11 @@ auto CPU::prefetchStep(u32 clocks) -> void {
 }
 
 auto CPU::prefetchReset() -> void {
+  if(prefetch.wait == 1) step(1);
+
   prefetch.addr = 0;
   prefetch.load = 0;
+  prefetch.wait = 0;
 }
 
 auto CPU::prefetchRead() -> n16 {
