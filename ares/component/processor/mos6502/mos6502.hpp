@@ -9,11 +9,12 @@ struct MOS6502 {
 
   virtual auto read(n16 addr) -> n8 = 0;
   virtual auto write(n16 addr, n8 data) -> void = 0;
-  virtual auto lastCycle() -> void = 0;
-  virtual auto cancelNmi() -> void = 0;
-  virtual auto delayIrq() -> void = 0;
-  virtual auto irqPending() -> bool = 0;
-  virtual auto nmi(n16& vector) -> void = 0;
+
+  virtual auto lastCycle() -> void {}
+  virtual auto cancelNmi() -> void {}
+  virtual auto delayIrq() -> void {}
+  virtual auto irqPending() -> bool { return false; }
+  virtual auto nmi(n16& vector) -> void {}
   virtual auto readDebugger(n16 addr) -> n8 { return 0; }
 
   //mos6502.cpp

@@ -34,11 +34,6 @@ struct CPU : MOS6502, Thread {
   //timing.cpp
   auto read(n16 address) -> n8 override;
   auto write(n16 address, n8 data) -> void override;
-  auto lastCycle() -> void override;
-  auto cancelNmi() -> void override;
-  auto delayIrq() -> void override;
-  auto irqPending() -> bool override;
-  auto nmi(n16& vector) -> void override;
 
   auto rdyLine(bool) -> void;
 
