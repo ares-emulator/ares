@@ -19,13 +19,6 @@ auto CPU::write(n16 address, n8 data) -> void {
   writeBus(address, io.openBus = data);
 }
 
-auto CPU::lastCycle() -> void {
-}
-
-auto CPU::nmi(n16& vector) -> void {
-
-}
-
 auto CPU::rdyLine(bool line) -> void {
   io.rdyLine = line;
 }
