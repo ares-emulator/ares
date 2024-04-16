@@ -97,7 +97,7 @@ auto MOS6502::algorithmBVS() -> void {
 
 auto MOS6502::algorithmBranch(bool take) -> void {
   if(!take) {
-    MDR = read(MAR); // dummy relative read
+  L MDR = read(MAR); // dummy relative read
   } else {
     i8 displacement = read(MAR);
     idlePageCrossed(PC, PC + displacement); // idle page crossed without carry
@@ -540,4 +540,88 @@ auto MOS6502::algorithmTAS() -> void {
 // Reset required.
 auto MOS6502::algorithmJAM() -> void {
   PC--;
+}
+
+auto Ricoh2A03::algorithmBCC() -> void {
+  algorithmBranch(C == 0);
+}
+
+auto Ricoh2A03::algorithmBCS() -> void {
+  algorithmBranch(C == 1);
+}
+
+auto Ricoh2A03::algorithmBEQ() -> void {
+  algorithmBranch(Z == 1);
+}
+
+auto Ricoh2A03::algorithmBMI() -> void {
+  algorithmBranch(N == 1);
+}
+
+auto Ricoh2A03::algorithmBNE() -> void {
+  algorithmBranch(Z == 0);
+}
+
+auto Ricoh2A03::algorithmBPL() -> void {
+  algorithmBranch(N == 0);
+}
+
+auto Ricoh2A03::algorithmBRK() -> void {
+  MDR = read(MAR); // dummy implied read
+  PC++;
+  push(PCH);
+  push(PCL);
+
+  n16 vector = 0xfffe;
+  nmi(vector);
+
+  push(P | 0x30);
+  I = 1;
+
+  PCL = read(vector++);
+
+  // Ensure we don't start an NMI right after
+  // running a BRK instruction (first instruction
+  // in IRQ handler must run first - needed for
+  // nmi_and_brk test)
+  io.interruptPending = (io.irqLine & !I);
+  PCH = read(vector++);
+}
+
+auto Ricoh2A03::algorithmBVC() -> void {
+  algorithmBranch(V == 0);
+}
+
+auto Ricoh2A03::algorithmBVS() -> void {
+  algorithmBranch(V == 1);
+}
+
+auto Ricoh2A03::algorithmBranch(bool take) -> void {
+  if (!take) {
+  L MDR = read(MAR); // dummy relative read
+  } else {
+    bool irqPending = io.irqLine & !I;
+    MDR = read(MAR);
+    n16 newPC = PC + (i8)MDR;
+    bool pageCrossed = newPC >> 8 != PC >> 8;
+
+    // idle page crossed without carry
+    if (pageCrossed) {
+      read(PC & 0xff00 | newPC & 0x00ff);
+      PC = newPC;
+    L idle();
+    } else {
+      // a taken non-page-crossing branch ignores
+      // IRQ/NMI during its last clock, so that
+      // next instruction executes before the IRQ
+      if (!irqPending)
+        io.interruptPending = io.nmiPending;
+      else
+        lastCycle();
+
+      PC = newPC;
+      // idle page crossed with carry
+      idle();
+    }
+  }
 }

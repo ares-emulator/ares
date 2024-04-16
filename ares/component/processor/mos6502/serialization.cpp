@@ -15,3 +15,11 @@ auto MOS6502::serialize(serializer& s) -> void {
   s(MDR);
   s(resetting);
 }
+
+auto Ricoh2A03::serialize(serializer& s) -> void {
+  MOS6502::serialize(s);
+  s(io.irqLine);
+  s(io.nmiLine);
+  s(io.nmiPending);
+  s(io.interruptPending);
+}

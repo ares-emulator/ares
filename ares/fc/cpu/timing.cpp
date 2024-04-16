@@ -20,17 +20,6 @@ auto CPU::write(n16 address, n8 data) -> void {
   step(rate());
 }
 
-auto CPU::lastCycle() -> void {
-  io.interruptPending = ((io.irqLine | io.apuLine) & !P.i) | io.nmiPending;
-}
-
-auto CPU::nmi(n16& vector) -> void {
-  if(io.nmiPending) {
-    io.nmiPending = false;
-    vector = 0xfffa;
-  }
-}
-
 auto CPU::oamDMA() -> void {
   for(u32 n : range(256)) {
     n8 data = read(io.oamDMAPage << 8 | n);
@@ -38,20 +27,16 @@ auto CPU::oamDMA() -> void {
   }
 }
 
-auto CPU::nmiLine(bool line) -> void {
-  //edge-sensitive (0->1)
-  if(!io.nmiLine && line) io.nmiPending = true;
-  io.nmiLine = line;
-}
-
 auto CPU::irqLine(bool line) -> void {
   //level-sensitive
   io.irqLine = line;
+  Ricoh2A03::irqLine(io.irqLine | io.apuLine);
 }
 
 auto CPU::apuLine(bool line) -> void {
   //level-sensitive
   io.apuLine = line;
+  Ricoh2A03::irqLine(io.irqLine | io.apuLine);
 }
 
 auto CPU::rdyLine(bool line) -> void {

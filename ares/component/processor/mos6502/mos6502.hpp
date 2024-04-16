@@ -15,6 +15,7 @@ struct MOS6502 {
 
   //mos6502.cpp
   auto power(bool reset = false) -> void;
+  auto main() -> void;
 
   //memory.cpp
   auto idle() -> void;
@@ -140,7 +141,7 @@ struct MOS6502 {
   //instruction.cpp
   auto interrupt() -> void;
   auto reset() -> void;
-  auto instruction() -> void;
+  auto instruction(n8 code) -> void;
 
   //instructions.cpp
   auto instructionNone(addr mode, algorithm alg) -> void;
@@ -187,6 +188,43 @@ struct MOS6502 {
   n16 MAR;
   n8  MDR;
   n1  resetting = 0;
+};
+
+struct Ricoh2A03 : MOS6502 {
+  // mos6502.cpp
+  auto power(bool reset = false) -> void;
+  auto main() -> void;
+
+  // algorithms.cpp
+  auto algorithmBCC() -> void;
+  auto algorithmBCS() -> void;
+  auto algorithmBEQ() -> void;
+  auto algorithmBMI() -> void;
+  auto algorithmBNE() -> void;
+  auto algorithmBPL() -> void;
+  auto algorithmBRK() -> void;
+  auto algorithmBVC() -> void;
+  auto algorithmBVS() -> void;
+  auto algorithmBranch(bool take) -> void;
+
+  // instruction.cpp
+  auto instruction(n8 code) -> void;
+
+  // timing.cpp
+  auto lastCycle() -> void override;
+  auto nmi(n16& vector) -> void override;
+  auto irqLine(bool line) -> void;
+  auto nmiLine(bool line) -> void;
+
+  // serialization.cpp
+  auto serialize(serializer&) -> void;
+
+  struct IO {
+    n1 irqLine;
+    n1 nmiLine;
+    n1 nmiPending;
+    n1 interruptPending;
+  } io;
 };
 
 }

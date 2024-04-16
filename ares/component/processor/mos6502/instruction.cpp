@@ -28,10 +28,8 @@ auto MOS6502::reset() -> void {
   resetting = 0;
 }
 
-auto MOS6502::instruction() -> void {
-  if(resetting) reset();
-
-  switch(opcode()) {
+auto MOS6502::instruction(n8 code) -> void {
+  switch(code) {
   op(0x00, None,   addr(Implied),        fp(BRK))
   op(0x01, Load,   addr(IndirectX),      fp(ORA))
   op(0x02, None,   addr(Implied),        fp(JAM))
@@ -289,6 +287,25 @@ auto MOS6502::instruction() -> void {
   op(0xfe, Modify, addr(AbsoluteXWrite), fp(INC))
   op(0xff, Modify, addr(AbsoluteXWrite), fp(ISC))
   }
+}
+
+#undef fp
+#define fp(name) (algorithm)&Ricoh2A03::algorithm##name
+
+auto Ricoh2A03::instruction(n8 code) -> void {
+  switch (code) {
+    op(0x00, None,   addr(Implied),        fp(BRK))
+    op(0x10, None,   addr(Relative),       fp(BPL))
+    op(0x30, None,   addr(Relative),       fp(BMI))
+    op(0x50, None,   addr(Relative),       fp(BVC))
+    op(0x70, None,   addr(Relative),       fp(BVS))
+    op(0x90, None,   addr(Relative),       fp(BCC))
+    op(0xb0, None,   addr(Relative),       fp(BCS))
+    op(0xd0, None,   addr(Relative),       fp(BNE))
+    op(0xf0, None,   addr(Relative),       fp(BEQ))
+  }
+
+  MOS6502::instruction(code);
 }
 
 #undef op

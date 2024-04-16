@@ -20,7 +20,7 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   debugger.instruction();
-  instruction();
+  MOS6502::main();
 }
 
 auto CPU::step(u32 clocks) -> void {

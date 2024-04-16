@@ -23,13 +23,8 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  if(io.interruptPending) {
-    debugger.interrupt("IRQ");
-    return interrupt();
-  }
-
   debugger.instruction();
-  instruction();
+  Ricoh2A03::main();
 }
 
 auto CPU::step(u32 clocks) -> void {
@@ -39,8 +34,7 @@ auto CPU::step(u32 clocks) -> void {
 }
 
 auto CPU::power(bool reset) -> void {
-  MOS6502::BCD = 0;
-  MOS6502::power(reset);
+  Ricoh2A03::power(reset);
   Thread::create(system.frequency(), {&CPU::main, this});
 
   if(!reset) {

@@ -1,4 +1,4 @@
-struct CPU : MOS6502, Thread {
+struct CPU : Ricoh2A03, Thread {
   Node::Object node;
   Memory::Writable<n8> ram;
 
@@ -43,12 +43,8 @@ struct CPU : MOS6502, Thread {
   //timing.cpp
   auto read(n16 address) -> n8 override;
   auto write(n16 address, n8 data) -> void override;
-  auto lastCycle() -> void override;
-  auto nmi(n16& vector) -> void override;
 
   auto oamDMA() -> void;
-
-  auto nmiLine(bool) -> void;
   auto irqLine(bool) -> void;
   auto apuLine(bool) -> void;
 
@@ -57,9 +53,6 @@ struct CPU : MOS6502, Thread {
 
 //protected:
   struct IO {
-    n1  interruptPending;
-    n1  nmiPending;
-    n1  nmiLine;
     n1  irqLine;
     n1  apuLine;
     n1  rdyLine = 1;

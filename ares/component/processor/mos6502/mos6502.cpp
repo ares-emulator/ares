@@ -22,6 +22,7 @@ namespace ares {
 #include "instructions.cpp"
 #include "disassembler.cpp"
 #include "serialization.cpp"
+#include "timing.cpp"
 
 #undef PCH
 #undef PCL
@@ -48,6 +49,27 @@ auto MOS6502::power(bool reset) -> void {
   P   = 0x04;
   MDR = 0x00;
   resetting = 1;
+}
+
+auto MOS6502::main() -> void {
+  if (resetting) reset();
+
+  instruction(opcode());
+}
+
+auto Ricoh2A03::power(bool reset) -> void {
+  MOS6502::power(reset);
+  MOS6502::BCD = 0;
+
+  io = {};
+}
+
+auto Ricoh2A03::main() -> void {
+  if (resetting) reset();
+
+  instruction(opcode());
+  if (io.interruptPending)
+    interrupt();
 }
 
 }
