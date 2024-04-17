@@ -7,6 +7,9 @@ auto Cartridge::MROM::read(u32 mode, n32 address) -> n32 {
   }
 
   address &= 0x01ff'ffff;
+  if(mirror) {
+    address &= size - 1;
+  }
   if(address >= size) return (n16)(address >> 1);
 
   if(mode & Half) address &= ~1;

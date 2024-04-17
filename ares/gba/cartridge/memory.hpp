@@ -9,6 +9,7 @@ struct MROM {
   n8* data = nullptr;
   u32 size;
   u32 mask;
+  bool mirror;
 } mrom;
 
 struct SRAM {

@@ -38,6 +38,8 @@ auto Cartridge::connect() -> void {
   if(auto fp = pak->read("program.rom")) {
     mrom.size = min(32_MiB, fp->size());
     fp->read({mrom.data, mrom.size});
+    mrom.mirror = pak->attribute("mirror");
+    /*
     if(pak->attribute("mirror")) {
       // TODO: While accurate, there's much better ways of implementing this
       memory::copy(&mrom.data[1_MiB], &mrom.data[0], 1_MiB);
@@ -46,7 +48,7 @@ auto Cartridge::connect() -> void {
       memory::copy(&mrom.data[8_MiB], &mrom.data[0], 8_MiB);
       memory::copy(&mrom.data[16_MiB], &mrom.data[0], 16_MiB);
       mrom.size = 32_MiB;
-    }
+    }*/
   }
 
   if(auto fp = pak->read("save.ram")) {
