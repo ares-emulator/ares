@@ -38,6 +38,12 @@ auto GameBoyAdvance::load(string location) -> bool {
     }
   }
 
+  bool mirror = false;
+  if(auto node = document["game/board/memory(type=ROM,mirror=true)"]) {
+    mirror = true;
+  }
+  pak->setAttribute("mirror", mirror);
+
   return true;
 }
 
@@ -67,6 +73,21 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
     "FLASH1M_V",
   };
 
+  // TODO: Add remaining game codes
+  vector<string> mirrorCodes = {
+    "FSME",  // Super Mario Bros (US/EU)
+  };
+
+  string gameCode = "????";
+  memory::copy(&gameCode, &rom[0xac], 4);
+  string mirror = "false";
+
+  for(auto& code : mirrorCodes) {
+    if(!memory::compare(&gameCode, code.data(), code.size())) {
+      mirror = "true";
+    }
+  }
+
   vector<string> list;
   for(auto& identifier : identifiers) {
     for(s32 n : range(rom.size() - 16)) {
@@ -86,6 +107,7 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};
   s += "      content: Program\n";
+  s +={"      mirror: ", mirror, "\n"};
 
   if(list) {
     if(list.first().beginsWith("SRAM_V") || list.first().beginsWith("SRAM_F_V")) {
