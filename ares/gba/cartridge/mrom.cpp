@@ -11,11 +11,11 @@ auto Cartridge::MROM::read(u32 mode, n32 address) -> n32 {
 
 auto Cartridge::MROM::readBus(u32 mode, n32 address) -> n16 {
   address &= 0x01ff'ffff;
-  if(mirror) {
-    // TODO: Separate implementations for carts with and without mirroring
+
+  if(address >= size) {
+    if(!mirror) return (n16)(address >> 1);
     address &= size - 1;
   }
-  if(address >= size) return (n16)(address >> 1);
 
   if(mode & Half) address &= ~1;
   auto p = data + address;
