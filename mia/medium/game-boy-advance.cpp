@@ -38,6 +38,12 @@ auto GameBoyAdvance::load(string location) -> bool {
     }
   }
 
+  bool mirror = false;
+  if(auto node = document["game/board/memory(type=ROM,mirror=true)"]) {
+    mirror = true;
+  }
+  pak->setAttribute("mirror", mirror);
+
   return true;
 }
 
@@ -67,6 +73,56 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
     "FLASH1M_V",
   };
 
+  vector<string> mirrorCodes = {
+    "FBME",  //Classic NES Series - Bomberman (USA, Europe)
+    "FADE",  //Classic NES Series - Castlevania (USA)
+    "FDKE",  //Classic NES Series - Donkey Kong (USA, Europe)
+    "FEBE",  //Classic NES Series - Excitebike (USA, Europe)
+    "FICE",  //Classic NES Series - Ice Climber (USA, Europe)
+    "FSME",  //Classic NES Series - Super Mario Bros. (USA, Europe)
+    "FZLE",  //Classic NES Series - The Legend of Zelda (USA, Europe)
+    "FDME",  //Classic NES Series - Dr. Mario (USA, Europe)
+    "FMRE",  //Classic NES Series - Metroid (USA, Europe)
+    "FP7E",  //Classic NES Series - Pac-Man (USA, Europe)
+    "FXVE",  //Classic NES Series - Xevious (USA, Europe)
+    "FLBE",  //Classic NES Series - Zelda II - The Adventure of Link (USA, Europe)
+    "FSRJ",  //Famicom Mini - Dai-2-ji Super Robot Taisen (Japan) (Promo)
+    "FGZJ",  //Famicom Mini - Kidou Senshi Z Gundam - Hot Scramble (Japan) (Promo)
+    "FSMJ",  //Famicom Mini 01 - Super Mario Bros. (Japan) (En) (Rev 1)
+    "FDKJ",  //Famicom Mini 02 - Donkey Kong (Japan) (En)
+    "FICJ",  //Famicom Mini 03 - Ice Climber (Japan) (En)
+    "FEBJ",  //Famicom Mini 04 - Excitebike (Japan) (En)
+    "FZLJ",  //Famicom Mini 05 - Zelda no Densetsu 1 - The Hyrule Fantasy (Japan)
+    "FPMJ",  //Famicom Mini 06 - Pac-Man (Japan) (En)
+    "FXVJ",  //Famicom Mini 07 - Xevious (Japan) (En)
+    "FMPJ",  //Famicom Mini 08 - Mappy (Japan) (En)
+    "FBMJ",  //Famicom Mini 09 - Bomberman (Japan) (En)
+    "FSOJ",  //Famicom Mini 10 - Star Soldier (Japan) (En)
+    "FMBJ",  //Famicom Mini 11 - Mario Bros. (Japan)
+    "FCLJ",  //Famicom Mini 12 - Clu Clu Land (Japan)
+    "FBFJ",  //Famicom Mini 13 - Balloon Fight (Japan)
+    "FWCJ",  //Famicom Mini 14 - Wrecking Crew (Japan)
+    "FDMJ",  //Famicom Mini 15 - Dr. Mario (Japan)
+    "FDDJ",  //Famicom Mini 16 - Dig Dug (Japan)
+    "FTBJ",  //Famicom Mini 17 - Takahashi Meijin no Bouken-jima (Japan)
+    "FMKJ",  //Famicom Mini 18 - Makaimura (Japan)
+    "FTWJ",  //Famicom Mini 19 - Twin Bee (Japan)
+    "FGGJ",  //Famicom Mini 20 - Ganbare Goemon! - Karakuri Douchuu (Japan)
+    "FM2J",  //Famicom Mini 21 - Super Mario Bros. 2 (Japan)
+    "FADJ",  //Famicom Mini 29 - Akumajou Dracula (Japan)
+    "FSDJ",  //Famicom Mini 30 - SD Gundam World - Gachapon Senshi Scramble Wars (Japan)
+  };
+
+  string gameCode = "????";
+  memory::copy(&gameCode, &rom[0xac], 4);
+  string mirror = "false";
+
+  for(auto& code : mirrorCodes) {
+    if(!memory::compare(&gameCode, code.data(), code.size())) {
+      mirror = "true";
+    }
+  }
+
   vector<string> list;
   for(auto& identifier : identifiers) {
     for(s32 n : range(rom.size() - 16)) {
@@ -86,6 +142,7 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};
   s += "      content: Program\n";
+  s +={"      mirror: ", mirror, "\n"};
 
   if(list) {
     if(list.first().beginsWith("SRAM_V") || list.first().beginsWith("SRAM_F_V")) {

@@ -38,6 +38,7 @@ auto Cartridge::connect() -> void {
   if(auto fp = pak->read("program.rom")) {
     mrom.size = min(32_MiB, fp->size());
     fp->read({mrom.data, mrom.size});
+    mrom.mirror = pak->attribute("mirror").boolean();
   }
 
   if(auto fp = pak->read("save.ram")) {
