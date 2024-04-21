@@ -67,6 +67,7 @@ struct AudioOpenAL : AudioDriver {
         _queueLength--;
       }
       //wait for buffer playback to catch up to sample generation if not synchronizing
+      usleep(1000);
       if(!self.blocking || _queueLength < 3) break;
     }
 
@@ -86,6 +87,10 @@ struct AudioOpenAL : AudioDriver {
 private:
   auto initialize() -> bool {
     terminate();
+    
+#if defined(PLATFORM_WINDOWS)
+    timeBeginPeriod(1);
+#endif
 
     if(!hasDevices().find(self.device)) self.device = hasDevices().first();
     _queueLength = 0;
@@ -120,6 +125,10 @@ private:
 
   auto terminate() -> void {
     _ready = false;
+    
+#if defined(PLATFORM_WINDOWS)
+    timeEndPeriod(1);
+#endif
 
     if(alIsSource(_source) == AL_TRUE) {
       s32 playing = 0;

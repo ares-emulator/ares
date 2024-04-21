@@ -21,6 +21,8 @@ struct AudioSDL : AudioDriver {
 
   auto hasBlocking() -> bool override { return true; }
   auto hasDynamic() -> bool override { return true; }
+  
+  double bitsPerSample = 0;
 
   auto hasFrequencies() -> vector<u32> override {
     return {44100, 48000, 96000};
@@ -43,8 +45,15 @@ struct AudioSDL : AudioDriver {
     if(!ready()) return;
 
     if(self.blocking) {
-      while(SDL_GetQueuedAudioSize(_device) > _bufferSize) {
+      auto bytesRemaining = SDL_GetQueuedAudioSize(_device);
+      while(bytesRemaining > _bufferSize) {
         //wait for audio to drain
+        auto bytesToWait = bytesRemaining - _bufferSize;
+        auto bytesPerSample = bitsPerSample / 8.0;
+        auto samplesRemaining = bytesToWait / bytesPerSample;
+        auto secondsRemaining = samplesRemaining / frequency;
+        usleep(secondsRemaining * 1000000);
+        bytesRemaining = SDL_GetQueuedAudioSize(_device);
       }
     }
 
@@ -60,6 +69,10 @@ struct AudioSDL : AudioDriver {
 private:
   auto initialize() -> bool {
     terminate();
+    
+#if defined(PLATFORM_WINDOWS)
+    timeBeginPeriod(1);
+#endif
 
     SDL_InitSubSystem(SDL_INIT_AUDIO);
 
@@ -74,6 +87,7 @@ private:
     _device = SDL_OpenAudioDevice(NULL,0,&want,&have,0);
     frequency = have.freq;
     channels = have.channels;
+    bitsPerSample = SDL_AUDIO_BITSIZE(have.format);
     _bufferSize = have.size;
     SDL_PauseAudioDevice(_device, 0);
 
@@ -84,6 +98,9 @@ private:
   }
 
   auto terminate() -> void {
+#if defined(PLATFORM_WINDOWS)
+    timeEndPeriod(1);
+#endif
     _ready = false;
     SDL_CloseAudioDevice(_device);
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
