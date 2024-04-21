@@ -244,7 +244,11 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
       } else if(length == 0) {
         disconnectClient();
       } else {
+        #if defined(PLATFORM_WINDOWS)
+        if (WSAGetLastError() != WSAETIMEDOUT) {
+        #else
         if (errno != EAGAIN) {
+        #endif
           printf("TCP server: error receiving data from client: %s\n", strerror(errno));
           disconnectClient();
         }
