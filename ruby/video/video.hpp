@@ -14,6 +14,7 @@ struct VideoDriver {
   virtual auto hasContext() -> bool { return false; }
   virtual auto hasBlocking() -> bool { return false; }
   virtual auto hasForceSRGB() -> bool { return false; }
+  virtual auto hasThreadedRenderer() -> bool { return false; }
   virtual auto hasFlush() -> bool { return false; }
   virtual auto hasFormats() -> vector<string> { return {"ARGB24"}; }
   virtual auto hasShader() -> bool { return false; }
@@ -26,6 +27,7 @@ struct VideoDriver {
   virtual auto setContext(uintptr context) -> bool { return true; }
   virtual auto setBlocking(bool blocking) -> bool { return true; }
   virtual auto setForceSRGB(bool forceSRGB) -> bool { return true; }
+  virtual auto setThreadedRenderer(bool threadedRenderer) -> bool { return true; }
   virtual auto setFlush(bool flush) -> bool { return true; }
   virtual auto setFormat(string format) -> bool { return true; }
   virtual auto setShader(string shader) -> bool { return true; }
@@ -49,6 +51,7 @@ protected:
   uintptr context = 0;
   bool blocking = false;
   bool forceSRGB = false;
+  bool threadedRenderer = true;
   bool flush = false;
   string format = "ARGB24";
   string shader = "None";
@@ -90,6 +93,7 @@ struct Video {
   auto hasContext() -> bool { return instance->hasContext(); }
   auto hasBlocking() -> bool { return instance->hasBlocking(); }
   auto hasForceSRGB() -> bool { return instance->hasForceSRGB(); }
+  auto hasThreadedRenderer() -> bool { return instance->hasThreadedRenderer(); }
   auto hasFlush() -> bool { return instance->hasFlush(); }
   auto hasFormats() -> vector<string> { return instance->hasFormats(); }
   auto hasShader() -> bool { return instance->hasShader(); }
@@ -102,6 +106,7 @@ struct Video {
   auto context() -> uintptr { return instance->context; }
   auto blocking() -> bool { return instance->blocking; }
   auto forceSRGB() -> bool { return instance->forceSRGB; }
+  auto threadedRenderer() -> bool { return instance->threadedRenderer; }
   auto flush() -> bool { return instance->flush; }
   auto format() -> string { return instance->format; }
   auto shader() -> string { return instance->shader; }
@@ -112,6 +117,7 @@ struct Video {
   auto setContext(uintptr context) -> bool;
   auto setBlocking(bool blocking) -> bool;
   auto setForceSRGB(bool forceSRGB) -> bool;
+  auto setThreadedRenderer(bool threadedRenderer) -> bool;
   auto setFlush(bool flush) -> bool;
   auto setFormat(string format) -> bool;
   auto setShader(string shader) -> bool;

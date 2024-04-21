@@ -18,15 +18,6 @@ struct VideoMetal;
 -(BOOL) acceptsFirstResponder;
 @end
 
-@interface RubyWindowMetal : NSWindow <NSWindowDelegate> {
-@public
-  VideoMetal* video;
-}
--(id) initWith:(VideoMetal*)video;
--(BOOL) canBecomeKeyWindow;
--(BOOL) canBecomeMainWindow;
-@end
-
 struct VideoMetal : VideoDriver, Metal {
   VideoMetal& self = *this;
   VideoMetal(Video& super) : VideoDriver(super) {}
@@ -39,21 +30,43 @@ struct VideoMetal : VideoDriver, Metal {
   auto driver() -> string override { return "Metal"; }
   auto ready() -> bool override { return _ready; }
 
-  auto hasFullScreen() -> bool override { return false; }
+  auto hasFullScreen() -> bool override { return true; }
   auto hasContext() -> bool override { return true; }
   auto hasBlocking() -> bool override {
     if (@available(macOS 10.15.4, *)) {
-      return !isVRRSupported();
+      return true;
     } else {
       return false;
     }
   }
   auto hasForceSRGB() -> bool override { return true; }
+  auto hasThreadedRenderer() -> bool override { return true; }
   auto hasFlush() -> bool override { return true; }
   auto hasShader() -> bool override { return true; }
 
   auto setFullScreen(bool fullScreen) -> bool override {
-    return initialize();
+    /// This function implements non-idiomatic macOS fullscreen behavior that sets the window frame equal to the display's
+    /// frame size and hides the cursor. Idiomatic fullscreen is still available via the normal stoplight window controls. This
+    /// version of fullscreen is desirable because it allows us to render around the camera housing on newer Macs
+    /// (important for bezel-style shaders), has snappier entrance/exit and tabbing behavior, and functions better with
+    /// recording and capture software such as OBS and screen recorders. Hiding the mouse cursor is also essential to
+    /// rendering with appropriate frame pacing in Metal's 'direct' presentation mode.
+
+    // todo: unify with cursor auto-hide in hiro, ideally ares-wide fullscreen mode option
+
+    if (fullScreen) {
+      frameBeforeFullScreen = view.window.frame;
+      [NSApp setPresentationOptions:(NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar)];
+      [view.window setStyleMask:NSWindowStyleMaskBorderless];
+      [view.window setFrame:view.window.screen.frame display:YES];
+      [NSCursor setHiddenUntilMouseMoves:YES];
+    } else {
+      [NSApp setPresentationOptions:NSApplicationPresentationDefault];
+      [view.window setStyleMask:NSWindowStyleMaskTitled];
+      [view.window setFrame:frameBeforeFullScreen display:YES];
+    }
+    [view.window makeFirstResponder:view];
+    return true;
   }
 
   auto setContext(uintptr context) -> bool override {
@@ -72,6 +85,12 @@ struct VideoMetal : VideoDriver, Metal {
     } else {
       view.colorspace = view.window.screen.colorSpace.CGColorSpace;
     }
+    return true;
+  }
+  
+  auto setThreadedRenderer(bool threadedRenderer) -> bool override {
+    _threaded = threadedRenderer;
+    return true;
   }
 
   auto setFlush(bool flush) -> bool override {
@@ -79,7 +98,8 @@ struct VideoMetal : VideoDriver, Metal {
     return true;
   }
   
-  auto refreshRateHint(double refreshRate) -> void {
+  auto refreshRateHint(double refreshRate) -> void override {
+    if (refreshRate == _refreshRateHint) return;
     _refreshRateHint = refreshRate;
     updatePresentInterval();
   }
@@ -88,7 +108,8 @@ struct VideoMetal : VideoDriver, Metal {
     if (@available(macOS 12.0, *)) {
       NSTimeInterval minInterval = view.window.screen.minimumRefreshInterval;
       NSTimeInterval maxInterval = view.window.screen.maximumRefreshInterval;
-      return minInterval != maxInterval;
+      _vrrIsSupported = minInterval != maxInterval;
+      return _vrrIsSupported;
     } else {
       return false;
     }
@@ -105,6 +126,8 @@ struct VideoMetal : VideoDriver, Metal {
         CFTimeInterval minimumInterval = view.window.screen.minimumRefreshInterval;
         if (_refreshRateHint != 0) {
           _presentInterval = (1.0 / _refreshRateHint);
+          NSLog(@"Refresh rate hint changed to %lf", _refreshRateHint);
+          averagePresentDuration = _presentInterval;
         } else {
           _presentInterval = minimumInterval;
         }
@@ -116,20 +139,24 @@ struct VideoMetal : VideoDriver, Metal {
     if (_filterChain != NULL) {
       _libra.mtl_filter_chain_free(&_filterChain);
     }
-
+    
     if (_preset != NULL) {
       _libra.preset_free(&_preset);
     }
-
-    if (_libra.preset_create(pathname.data(), &_preset) != NULL) {
-      print(string{"Metal: Failed to load shader: ", pathname, "\n"});
+    
+    if(file::exists(pathname)) {
+      if (_libra.preset_create(pathname.data(), &_preset) != NULL) {
+        print(string{"Metal: Failed to load shader: ", pathname, "\n"});
+        return false;
+      }
+      
+      if (_libra.mtl_filter_chain_create(&_preset, _commandQueue, nil, &_filterChain) != NULL) {
+        print(string{"Metal: Failed to create filter chain for: ", pathname, "\n"});
+        return false;
+      };
+    } else {
       return false;
     }
-    
-    if (_libra.mtl_filter_chain_create(&_preset, _commandQueue, nil, &_filterChain) != NULL) {
-      print(string{"Metal: Failed to create filter chain for: ", pathname, "\n"});
-      return false;
-    };
     return true;
   }
 
@@ -137,7 +164,10 @@ struct VideoMetal : VideoDriver, Metal {
     return true;
   }
 
-  auto clear() -> void override {}
+  auto clear() -> void override {
+    //force a resize of the framebuffer to clear it, then output one pixel
+    output(1, 1);
+  }
 
   auto size(u32& width, u32& height) -> void override {
     if ((_viewWidth == width && _viewHeight == height) && (_viewWidth != 0 && _viewHeight != 0)) { return; }
@@ -168,16 +198,22 @@ struct VideoMetal : VideoDriver, Metal {
       
       buffer = new u32[width * height]();
       
-      MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor new];
-      textureDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
-      textureDescriptor.width = sourceWidth;
-      textureDescriptor.height = sourceHeight;
-      textureDescriptor.usage = MTLTextureUsageRenderTarget|MTLTextureUsageShaderRead;
-      
-      _sourceTexture = [_device newTextureWithDescriptor:textureDescriptor];
-      
       bytesPerRow = sourceWidth * sizeof(u32);
       if (bytesPerRow < 16) bytesPerRow = 16;
+        
+      for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
+        if (sourceWidth < 1 || sourceHeight < 1) {
+          _sourceTextures[i] = nullptr;
+          continue;
+        }
+        MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor new];
+        textureDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
+        textureDescriptor.width = sourceWidth;
+        textureDescriptor.height = sourceHeight;
+        textureDescriptor.usage = MTLTextureUsageRenderTarget|MTLTextureUsageShaderRead;
+        
+        _sourceTextures[i] = [_device newTextureWithDescriptor:textureDescriptor];
+      }
       
     }
     pitch = sourceWidth * sizeof(u32);
@@ -187,6 +223,7 @@ struct VideoMetal : VideoDriver, Metal {
   auto release() -> void override {}
   
   auto resizeOutputBuffers(u32 width, u32 height) {
+    NSLog(@"Resizing output buffers to %i, %i", width, height);
     outputWidth = width;
     outputHeight = height;
     
@@ -229,6 +266,52 @@ struct VideoMetal : VideoDriver, Metal {
   }
 
   auto output(u32 width, u32 height) -> void override {
+    /// Synchronously copy the current framebuffer to a Metal texture, then call into the render dispatch queue
+    /// either synchronously or asynchronously depending on whether blocking is on and VRR is supported.
+
+    if (depth >= kMaxSourceBuffersInFlight) {
+      //if we are running very behind, drop this frame
+      return;
+    }
+    
+    //can we do this outside of the output function?
+    //currently no, because in theory framebuffer size can change during runtime
+    if (width != outputWidth || height != outputHeight) {
+      resizeOutputBuffers(width, height);
+    }
+    
+    @autoreleasepool {
+      
+      frameCount++;
+      
+      auto index = frameCount % kMaxSourceBuffersInFlight;
+      
+      auto sourceTexture = _sourceTextures[index];
+      
+      [sourceTexture replaceRegion:MTLRegionMake2D(0, 0, sourceWidth, sourceHeight) mipmapLevel:0 withBytes:buffer bytesPerRow:bytesPerRow];
+      
+      if (@available(macOS 10.15.4, *)) {
+        depth++;
+      }
+      
+      /// Only block with `dispatch_sync` if blocking enabled and VRR not supported, or if the threaded renderer
+      /// is explicitly disabled. if VRR is supported, we should try to not _literally_ block, because we'll be making a best
+      /// effort to synchronize to the guest and host refresh rate at the same time. It's easier to do that if we have
+      /// assurances that we won't block the emulation thread in the worst case system conditions.
+      if ((_blocking && !_vrrIsSupported) || !_threaded) {
+        dispatch_sync(_renderQueue, ^{
+          outputHelper(width, height, sourceTexture);
+        });
+      } else {
+        dispatch_async(_renderQueue, ^{
+          outputHelper(width, height, sourceTexture);
+        });
+      }
+    }
+  }
+
+private:
+  auto outputHelper(u32 width, u32 height, id<MTLTexture> sourceTexture) -> void {
     /// Uses two render passes (plus librashader's render passes). The first render pass samples the source texture,
     /// consisting of the pixel buffer from the emulator, onto a texture the same size as our eventual output,
     /// `_renderTargetTexture`. Then it calls into librashader, which performs postprocessing onto the same
@@ -236,37 +319,59 @@ struct VideoMetal : VideoDriver, Metal {
     /// We need this last pass because librashader expects the viewport to be the same size as the output texture,
     /// which is not the case for ares.
     
-    //can we do this outside of the output function?
-    if (width != outputWidth || height != outputHeight) {
-      resizeOutputBuffers(width, height);
-    }
+    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
+
+    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     
-    @autoreleasepool {
+    if (commandBuffer != nil) {
+      __block dispatch_semaphore_t block_sema = _semaphore;
       
-      dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
+      [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+       dispatch_semaphore_signal(block_sema);
+      }];
       
-      id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+      _renderToTextureRenderPassDescriptor.colorAttachments[0].texture = _renderTargetTexture;
       
-      if (commandBuffer != nil) {
-        __block dispatch_semaphore_t block_sema = _semaphore;
+      if (_renderToTextureRenderPassDescriptor != nil) {
         
-        [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-         dispatch_semaphore_signal(block_sema);
-        }];
+        id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_renderToTextureRenderPassDescriptor];
         
-        _renderToTextureRenderPassDescriptor.colorAttachments[0].texture = _renderTargetTexture;
+        _renderToTextureRenderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
         
-        if (_renderToTextureRenderPassDescriptor != nil) {
+        [renderEncoder setRenderPipelineState:_renderToTextureRenderPipeline];
+        
+        [renderEncoder setViewport:(MTLViewport){0, 0, (double)width, (double)height, -1.0, 1.0}];
+        
+        [renderEncoder setVertexBuffer:_vertexBuffer
+                                offset:0
+                               atIndex:0];
+        
+        [renderEncoder setVertexBytes:&_viewportSize
+                               length:sizeof(_viewportSize)
+                              atIndex:MetalVertexInputIndexViewportSize];
+        
+        [renderEncoder setFragmentTexture:sourceTexture atIndex:0];
+        
+        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+        
+        [renderEncoder endEncoding];
+        
+        if (_filterChain) {
+          _libra.mtl_filter_chain_frame(&_filterChain, commandBuffer, frameCount, sourceTexture, _libraViewport, _renderTargetTexture, nil, nil);
+        }
+        
+        //this call will block the current thread/queue if a drawable is not yet available
+        MTLRenderPassDescriptor *drawableRenderPassDescriptor = view.currentRenderPassDescriptor;
+        
+        drawableRenderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+        
+        if (drawableRenderPassDescriptor != nil) {
           
-          id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_renderToTextureRenderPassDescriptor];
+          id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:drawableRenderPassDescriptor];
           
-          _renderToTextureRenderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+          [renderEncoder setRenderPipelineState:_drawableRenderPipeline];
           
-          [_sourceTexture replaceRegion:MTLRegionMake2D(0, 0, sourceWidth, sourceHeight) mipmapLevel:0 withBytes:buffer bytesPerRow:bytesPerRow];
-          
-          [renderEncoder setRenderPipelineState:_renderToTextureRenderPipeline];
-          
-          [renderEncoder setViewport:(MTLViewport){0, 0, (double)width, (double)height, -1.0, 1.0}];
+          [renderEncoder setViewport:(MTLViewport){_outputX, _outputY, (double)width, (double)height, -1.0, 1.0}];
           
           [renderEncoder setVertexBuffer:_vertexBuffer
                                   offset:0
@@ -276,85 +381,98 @@ struct VideoMetal : VideoDriver, Metal {
                                  length:sizeof(_viewportSize)
                                 atIndex:MetalVertexInputIndexViewportSize];
           
-          [renderEncoder setFragmentTexture:_sourceTexture atIndex:0];
+          [renderEncoder setFragmentTexture:_renderTargetTexture atIndex:0];
           
           [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
           
           [renderEncoder endEncoding];
           
-          if (_filterChain) {
-            _libra.mtl_filter_chain_frame(&_filterChain, commandBuffer, frameCount++, _sourceTexture, _libraViewport, _renderTargetTexture, nil, nil);
+          id<CAMetalDrawable> drawable = view.currentDrawable;
+          
+          if (@available(macOS 10.15.4, *)) {
+            [drawable addPresentedHandler:^(id<MTLDrawable> drawable) {
+             self.drawableWasPresented(drawable);
+             depth--;
+             }];
           }
           
-          MTLRenderPassDescriptor *drawableRenderPassDescriptor = view.currentRenderPassDescriptor;
+          auto targetPresentDuration = determineNextPresentDuration();
           
-          drawableRenderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-          
-          if (drawableRenderPassDescriptor != nil) {
-            
-            id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:drawableRenderPassDescriptor];
-            
-            [renderEncoder setRenderPipelineState:_drawableRenderPipeline];
-            
-            [renderEncoder setViewport:(MTLViewport){_outputX, _outputY, (double)width, (double)height, -1.0, 1.0}];
-            
-            [renderEncoder setVertexBuffer:_vertexBuffer
-                                    offset:0
-                                   atIndex:0];
-            
-            [renderEncoder setVertexBytes:&_viewportSize
-                                   length:sizeof(_viewportSize)
-                                  atIndex:MetalVertexInputIndexViewportSize];
-            
-            [renderEncoder setFragmentTexture:_renderTargetTexture atIndex:0];
-            
-            [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
-            
-            [renderEncoder endEncoding];
-            
-            id<CAMetalDrawable> drawable = view.currentDrawable;
-            
-            if (drawable != nil) {
-              
-              if (_blocking) {
-                
-                [commandBuffer presentDrawable:drawable afterMinimumDuration:_presentInterval];
-                
-              } else {
-                
-                [commandBuffer presentDrawable:drawable];
-                
-              }
-              
-              [view draw];
-              
+          if (drawable != nil) {
+            if (_blocking) {
+              //_blocking is not enabled unless 10.15.4 is available, so ignore availability warnings here
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+              [commandBuffer presentDrawable:drawable afterMinimumDuration:targetPresentDuration];
+#pragma clang diagnostic pop
+            } else {
+              [commandBuffer presentDrawable:drawable];
             }
+            [view draw];
           }
-          
-          [commandBuffer commit];
-          
-          if (_flush) {
-            [commandBuffer waitUntilCompleted];
-          }
+        }
+        
+        [commandBuffer commit];
+        
+        if (_flush) {
+          [commandBuffer waitUntilCompleted];
         }
       }
     }
   }
+  
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+  auto drawableWasPresented(id<MTLDrawable> drawable) -> void {
+    if (drawable.presentedTime == 0) { return; }
+    if (previousPresentedTime <= 0) {
+     previousPresentedTime = drawable.presentedTime;
+    }
+    CFTimeInterval presentationDuration = drawable.presentedTime - previousPresentedTime;
+    const double alpha = kPresentIntervalRollingAverageWeight;
 
-private:
+    averagePresentDuration = (presentationDuration * alpha) + (averagePresentDuration * (1.0 - alpha));
+    previousPresentedTime = drawable.presentedTime;
+  }
+#pragma clang diagnostic pop
+  
+  auto determineNextPresentDuration() -> CFTimeInterval {
+    /// We use a rolling average of the last few seconds worth of frames to determine if we are running fast or slow. If
+    /// we are running ahead, we do nothing special; it's sufficient to present at the prescribed interval and eventually
+    /// we will fall behind. When we fall behind, we need to present earlier than the target present interval. The way VRR
+    /// works on macOS, we can request an earlier present interval, but we don't always get it. So what we do in this
+    /// function is "nudge" the system to display our frame early, but not immediately, in an attempt to correct for running
+    /// behind. If in this process we get more than 3 frames behind, we start requesting immediate presents.
+    
+    CFTimeInterval targetPresentDuration = _presentInterval;
+    CFTimeInterval differenceFromTarget = _presentInterval - averagePresentDuration;
+    if (-differenceFromTarget >= (_presentInterval * kVRRCorrectiveTolerance)) {
+      targetPresentDuration = _presentInterval + (differenceFromTarget * kVRRCorrectiveForce);
+    }
+    if (depth > kVRRImmediatePresentThreshold) {
+      return 0;
+    } else {
+      return targetPresentDuration;
+    }
+  }
+  
   auto initialize() -> bool {
     terminate();
-    if (!self.fullScreen && !self.context) return false;
+    if (!self.context) return false;
 
-    auto context = self.fullScreen ? [window contentView] : (__bridge NSView*)(void *)self.context;
+    auto context = (__bridge NSView*)(void *)self.context;
     auto size = [context frame].size;
     
     NSError *error = nil;
     
+    //Put renderer on a separate queue so we can choose whether or not to block the main thread (audio) waiting on a drawable.
+    dispatch_queue_attr_t queueAttributes = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INTERACTIVE, -1);
+    _renderQueue = dispatch_queue_create("com.ares.metal-renderer", queueAttributes);
+    
     _device = MTLCreateSystemDefaultDevice();
     _commandQueue = [_device newCommandQueue];
     
-    _semaphore = dispatch_semaphore_create(kMaxBuffersInFlight);
+    _semaphore = dispatch_semaphore_create(kMaxOutputBuffersInFlight);
 
     _renderToTextureRenderPassDescriptor = [MTLRenderPassDescriptor new];
 
@@ -365,27 +483,40 @@ private:
     
     ///We compile shaders at runtime so we do not need to add the `xcrun` Metal compiler toolchain to the ares build process.
     ///Metal frame capture does not get along with runtime-compiled shaders in my testing, however. If you are debugging ares
-    ///and need GPU captures, you should compile shaders with debug symbols offline, then instantiate the shader library by
-    ///directly referencing a compiled `.metallib` file, rather than the following instantiation flow. You will also need to alter
-    ///the `desktop-ui` Makefile such that it copies the `.metallib` into the bundle, rather than only the `Shaders.metal`
-    ///source.
+    ///and need GPU captures, run `scripts/macos-metal-debug.sh` and then compile ares in debug mode.
 
-    NSString *bundleResourcePath = [NSBundle mainBundle].resourcePath;
-    const string& fileComponent = "/Shaders/Shaders.metal";
-    NSString *shaderFilePath = [bundleResourcePath stringByAppendingString: [[NSString new] initWithUTF8String:fileComponent]];
+    bool libraryCreated = false;
     
-    NSString *shaderLibrarySource = [NSString stringWithContentsOfFile:shaderFilePath encoding:NSUTF8StringEncoding error: &error];
-    
-    if (shaderLibrarySource == nil) {
-      NSLog(@"%@",error);
-      return false;
+#if defined(BUILD_DEBUG)
+    if (@available(macOS 10.13, *)) {
+      NSURL *shaderLibURL = [NSURL fileURLWithPath:@"ares.app/Contents/Resources/Shaders/shaders.metallib"];
+      _library = [_device newLibraryWithURL: shaderLibURL error:&error];
     }
-    
-    _library = [_device newLibraryWithSource: shaderLibrarySource options: [MTLCompileOptions alloc] error:&error];
-    
-    if (_library == nil) {
-      NSLog(@"%@",error);
-      return false;
+    if (_library != nil) {
+      libraryCreated = true;
+    } else {
+      NSLog(@"Compiled in debug mode, but debug .metallib not found. If you require Metal debugging, ensure you are on macOS 10.13+ and compile debug Metal shaders with scripts/macos-metal-debug.sh.");
+    }
+#endif
+
+    if (!libraryCreated) {
+      NSString *bundleResourcePath = [NSBundle mainBundle].resourcePath;
+      const string& fileComponent = "/Shaders/Shaders.metal";
+      NSString *shaderFilePath = [bundleResourcePath stringByAppendingString: [[NSString new] initWithUTF8String:fileComponent]];
+      
+      NSString *shaderLibrarySource = [NSString stringWithContentsOfFile:shaderFilePath encoding:NSUTF8StringEncoding error: &error];
+      
+      if (shaderLibrarySource == nil) {
+        NSLog(@"%@",error);
+        return false;
+      }
+      
+      _library = [_device newLibraryWithSource: shaderLibrarySource options: [MTLCompileOptions alloc] error:&error];
+      
+      if (_library == nil) {
+        NSLog(@"%@",error);
+        return false;
+      }
     }
     
     MTLRenderPipelineDescriptor *pipelineStateDescriptor = [MTLRenderPipelineDescriptor new];
@@ -423,15 +554,12 @@ private:
     bool forceSRGB = self.forceSRGB;
     self.setForceSRGB(forceSRGB);
     view.autoresizingMask = NSViewWidthSizable|NSViewHeightSizable;
-
-    _commandQueue = [_device newCommandQueue];
+    _threaded = self.threadedRenderer;
 
     _libra = librashader_load_instance();
     if (!_libra.instance_loaded) {
       print("Metal: Failed to load librashader: shaders will be disabled\n");
     }
-    
-    setShader(self.shader);
     
     _blocking = self.blocking;
     
@@ -446,7 +574,9 @@ private:
     _library = nullptr;
 
     _vertexBuffer = nullptr;
-    _sourceTexture = nullptr;
+    for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
+      _sourceTextures[i] = nullptr;
+    }
     _mtlVertexDescriptor = nullptr;
     
     _renderToTextureRenderPassDescriptor = nullptr;
@@ -464,17 +594,9 @@ private:
       [view removeFromSuperview];
       view = nil;
     }
-
-    if (window) {
-      [window toggleFullScreen:nil];
-      [window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
-      [window close];
-      window = nil;
-    }
   }
 
   RubyVideoMetal* view = nullptr;
-  RubyWindowMetal* window = nullptr;
 
   bool _ready = false;
   std::recursive_mutex mutex;
@@ -515,31 +637,6 @@ private:
 }
 
 -(void) keyUp:(NSEvent*)event {
-}
-
-@end
-
-@implementation RubyWindowMetal : NSWindow
-
--(id) initWith:(VideoMetal*)videoPointer {
-  auto primaryRect = [[[NSScreen screens] objectAtIndex:0] frame];
-  if (self = [super initWithContentRect:primaryRect styleMask:0 backing:NSBackingStoreBuffered defer:YES]) {
-    video = videoPointer;
-    [self setDelegate:self];
-    [self setReleasedWhenClosed:NO];
-    [self setAcceptsMouseMovedEvents:YES];
-    [self setTitle:@""];
-    [self makeKeyAndOrderFront:nil];
-  }
-  return self;
-}
-
--(BOOL) canBecomeKeyWindow {
-  return YES;
-}
-
--(BOOL) canBecomeMainWindow {
-  return YES;
 }
 
 @end
