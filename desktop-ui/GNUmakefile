@@ -129,6 +129,10 @@ endif
 	cp resource/$(name).plist $(output.path)/$(name).app/Contents/Info.plist
 	$(call mkdir,$(output.path)/$(name).app/Contents/Resources/Shaders/)
 	$(call mkdir,$(output.path)/$(name).app/Contents/Resources/Database/)
+ifeq ($(build),debug)
+# Try to copy the debug .metallib into the .app bundle; if we don't succeed, user will see runtime log message
+	-cp ../ruby/video/metal/shaders.metallib $(output.path)/$(name).app/Contents/Resources/Shaders/shaders.metallib
+endif
 	cp ../ruby/video/metal/Shaders.metal $(output.path)/$(name).app/Contents/Resources/Shaders/Shaders.metal
 	$(call rcopy,$(thirdparty.path)/slang-shaders/*,$(output.path)/$(name).app/Contents/Resources/Shaders/)
 	$(call rcopy,$(mia.path)/Database/*,$(output.path)/$(name).app/Contents/Resources/Database/)

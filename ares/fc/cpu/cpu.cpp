@@ -25,7 +25,7 @@ auto CPU::unload() -> void {
 auto CPU::main() -> void {
   if(io.interruptPending) {
     debugger.interrupt("IRQ");
-    return interrupt();
+    interrupt();
   }
 
   debugger.instruction();

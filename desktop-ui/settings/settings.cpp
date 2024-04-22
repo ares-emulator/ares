@@ -57,6 +57,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/Exclusive", video.exclusive);
   bind(boolean, "Video/Blocking", video.blocking);
   bind(boolean, "Video/PresentSRGB", video.forceSRGB);
+  bind(boolean, "Video/ThreadedRenderer", video.threadedRenderer);
   bind(boolean, "Video/Flush", video.flush);
   bind(string,  "Video/Shader", video.shader);
   bind(natural, "Video/Multiplier", video.multiplier);
