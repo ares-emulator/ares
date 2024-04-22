@@ -12,7 +12,7 @@ auto Cartridge::RTC::load() -> void {
     n64 timestamp = ram.read<Dual>(24);
     if(!~timestamp) {
       time_t t = (time_t)0;
-      struct tm tmm = *localtime(&t);
+      struct tm tmm = *gmtime(&t);
       ram.write<Byte>(16, BCD::encode(tmm.tm_sec));
       ram.write<Byte>(17, BCD::encode(tmm.tm_min));
       ram.write<Byte>(18, BCD::encode(tmm.tm_hour) | 0x80);
@@ -60,9 +60,12 @@ auto Cartridge::RTC::advance(int nsec) -> void {
   tmm.tm_year = BCD::decode(ram.read<Byte>(22)) + 100 * BCD::decode(ram.read<Byte>(23));
   time_t t = mktime(&tmm);
 
-  t += nsec;
+  //avoid directly operating on time_t
+  auto timepoint = std::chrono::system_clock::from_time_t(t);
+  timepoint += std::chrono::seconds(nsec);
+  t = std::chrono::system_clock::to_time_t(timepoint);
 
-  tmm = *localtime(&t);
+  tmm = *gmtime(&t);
   ram.write<Byte>(16, BCD::encode(tmm.tm_sec));
   ram.write<Byte>(17, BCD::encode(tmm.tm_min));
   ram.write<Byte>(18, BCD::encode(tmm.tm_hour) | 0x80);
