@@ -118,9 +118,12 @@ auto Cartridge::read(u32 mode, n32 address) -> n32 {
     if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.read();
     return mrom.read(mode, address);
   } else {
-    if(has.sram) return sram.read(mode, address);
-    if(has.flash) return flash.read(address);
-    return cpu.pipeline.fetch.instruction;
+    n32 word = 0xff;
+    if(has.sram) word = sram.read(address);
+    if(has.flash) word = flash.read(address);
+    word |= word <<  8;
+    word |= word << 16;
+    return word;
   }
 }
 
@@ -129,7 +132,9 @@ auto Cartridge::write(u32 mode, n32 address, n32 word) -> void {
     if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.write(word & 1);
     return mrom.write(mode, address, word);
   } else {
-    if(has.sram) return sram.write(mode, address, word);
+    if(mode & Word) word = word >> (8 * (address & 3));
+    if(mode & Half) word = word >> (8 * (address & 1));
+    if(has.sram) return sram.write(address, word);
     if(has.flash) return flash.write(address, word);
   }
 }
