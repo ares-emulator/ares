@@ -75,7 +75,7 @@ auto DD::RTC::tickSecond() -> void {
 
   //day
   tick(2);
-  if(ram.read<Byte>(2) <= daysInMonth(ram.read<Byte>(1), ram.read<Byte>(0))) return;
+  if(ram.read<Byte>(2) <= BCD::encode(chrono::daysInMonth(BCD::decode(ram.read<Byte>(1)), BCD::decode(ram.read<Byte>(0))))) return;
   ram.write<Byte>(2, 1);
 
   //month
@@ -107,17 +107,9 @@ auto DD::RTC::valid() -> bool {
   if(ram.read<Byte>(1) < 1) return false;
   //day
   if(ram.read<Byte>(2) < 1) return false;
-  if(ram.read<Byte>(2) > daysInMonth(ram.read<Byte>(1), ram.read<Byte>(0))) return false;
+  if(ram.read<Byte>(2) > BCD::encode(chrono::daysInMonth(BCD::decode(ram.read<Byte>(1)), BCD::decode(ram.read<Byte>(0))))) return false;
 
   //everything is valid
   return true;
 }
 
-auto DD::RTC::daysInMonth(u8 month, u8 year) -> u8 {
-  year = BCD::decode(year);
-  month = BCD::decode(month);
-  u8 days = 30 + ((month + (month >> 3)) & 1);
-  if (month == 2)
-      days -= (year % 4 == 0) ? 1 : 2;
-  return BCD::encode(days);
-}
