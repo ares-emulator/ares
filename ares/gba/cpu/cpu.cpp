@@ -54,16 +54,16 @@ auto CPU::main() -> void {
 auto CPU::step(u32 clocks) -> void {
   if(!clocks) return;
 
-  dma[0].waiting = max(0, dma[0].waiting - (s32)clocks);
-  dma[1].waiting = max(0, dma[1].waiting - (s32)clocks);
-  dma[2].waiting = max(0, dma[2].waiting - (s32)clocks);
-  dma[3].waiting = max(0, dma[3].waiting - (s32)clocks);
-
   if(!context.dmaActive) {
     context.dmaActive = true;
     while(dma[0].run() | dma[1].run() | dma[2].run() | dma[3].run());
     context.dmaActive = false;
   }
+
+  dma[0].waiting = max(0, dma[0].waiting - (s32)clocks);
+  dma[1].waiting = max(0, dma[1].waiting - (s32)clocks);
+  dma[2].waiting = max(0, dma[2].waiting - (s32)clocks);
+  dma[3].waiting = max(0, dma[3].waiting - (s32)clocks);
 
   for(auto _ : range(clocks)) {
     timer[0].run();
