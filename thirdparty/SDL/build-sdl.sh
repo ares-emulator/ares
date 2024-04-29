@@ -10,17 +10,21 @@ git -C SDL reset --hard "$(cat HEAD)"
 mkdir -p SDL/build
 pushd SDL/build
 
+SDLARGS=()
+SDLARGS+=("-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64")
 if [ -n "${GITHUB_ACTIONS+1}" ]; then
-    sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-    echo "Set Xcode version in order to target macOS 10.11 when building SDL."
+    if [ $ImageOS == "macos12" ]; then
+        SDLARGS+=(-DCMAKE_OSX_DEPLOYMENT_TARGET=10.11)
+        echo "Added 10.11 deployment target to SDL build arguments"
+    elif [ $ImageOS == "macos14" ]; then
+        SDLARGS+=(-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13)
+        echo "Added 10.13 deployment target to SDL build arguments"
+    fi
 fi
-cmake .. "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11
+
+cmake .. "${SDLARGS[@]}"
 cmake --build .
 
-if [ -n "${GITHUB_ACTIONS+1}" ]; then
-    sudo xcode-select -s /Applications/Xcode_14.2.app/Contents/Developer
-    echo "Set Xcode to 14.2 to continue build."
-fi
 popd
+
 cp SDL/build/libSDL2-2.0.0.dylib .
