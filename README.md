@@ -136,7 +136,7 @@ a26 fc sfc n64 sg ms md ps1 pce ng msx cv myvision gb gba ws ngp spec
 Build Output
 ------------
 
-There is a single binary produced at the end of compilation which can be found in `desktop-ui/out`. On OS's besides Linux, the `Database` & `Shader` directories are copied over here as well. On Linux, running `make install` after compilation will copy these directories and binary into suitable locations (see desktop-ui/GNUmakefile for details). Alternatively, these directories can be copied from `ares/Shaders/*` and `mia/Database/*`.
+There is a single binary produced at the end of compilation which can be found in `desktop-ui/out`. On OS's besides Linux, the `Database` & `Shader` directories are copied over here as well. On Linux, running `make install` after compilation will copy these directories and binary into suitable locations (see desktop-ui/GNUmakefile for details). Alternatively, these directories can be copied from `thirdparty/slang-shaders/*` into a `Shader` directory, and by copying `mia/Database/*`
 
 
 Command-line options
