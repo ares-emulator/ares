@@ -41,7 +41,7 @@ You should then be able to select SDL for input in the Settings > Drivers menu.
 
 clang++ is now the preferred compiler for ares. If clang is detected on Windows/macOS/BSD, it will be selected by default. On Linux and other platforms, g++ remains the default if present. To build with clang, it is necessary to install both the `clang` and `lld` packages. If you would like to manually specify a compiler, you can use the following option: `compiler=[g++|clang++]`  
 
-###### Librashader Support
+##### Librashader Support
 If you do not want to include librashader support, you can pass the following option to the `make` command to skip these requirements using: `librashader=false`
 
 Librashader requires rust in order to build. You can install it with the following command:
