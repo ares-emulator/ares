@@ -193,11 +193,12 @@ auto Nintendo64::load(Menu menu) -> void {
 }
 
 auto Nintendo64::unload() -> void {
+  Emulator::unload();
+
   gamepad.reset();
   disk.reset();
   gb.reset();
 
-  Emulator::unload();
   diskInsertTimer.reset();
 }
 
