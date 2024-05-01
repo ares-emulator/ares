@@ -24,12 +24,12 @@ fi
 if [ "$(uname)" = "Darwin" ]; then
     # Check for the presence of the x86_64 and aarch64 targets
     if ! rustup target list --installed | grep -q x86_64-apple-darwin; then
-        echo "x86_64-apple-darwin target not found. Please run 'rustup target add x86_64-apple-darwin' to install it."
+        echo "x86_64-apple-darwin target not found. Please run 'rustup target add x86_64-apple-darwin --toolchain nightly' to install it."
         exit 1
     fi
 
     if ! rustup target list --installed | grep -q aarch64-apple-darwin; then
-        echo "aarch64-apple-darwin target not found. Please run 'rustup target add aarch64-apple-darwin' to install it."
+        echo "aarch64-apple-darwin target not found. Please run 'rustup target add aarch64-apple-darwin --toolchain nightly' to install it."
         exit 1
     fi
 
