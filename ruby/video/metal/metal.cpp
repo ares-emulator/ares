@@ -165,8 +165,16 @@ struct VideoMetal : VideoDriver, Metal {
   }
 
   auto clear() -> void override {
-    //force a resize of the framebuffer to clear it, then output one pixel
-    output(1, 1);
+    dispatch_sync(_renderQueue, ^{
+      id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+      MTLRenderPassDescriptor *drawableRenderPassDescriptor = view.currentRenderPassDescriptor;
+      id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:drawableRenderPassDescriptor];
+      [renderEncoder endEncoding];
+      id<CAMetalDrawable> drawable = view.currentDrawable;
+      [commandBuffer presentDrawable:drawable];
+      [view draw];
+      [commandBuffer commit];
+    });
   }
 
   auto size(u32& width, u32& height) -> void override {
