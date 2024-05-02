@@ -28,6 +28,7 @@ auto Program::runAheadUpdate() -> void {
   if(!emulator) return;
   if(emulator->name == "Game Boy Advance") runAhead = false;  //crashes immediately
   if(emulator->name == "Nintendo 64") runAhead = false;  //too demanding
+  if(emulator->name == "Nintendo 64DD") runAhead = false;  //too demanding
   if(emulator->name == "PlayStation") runAhead = false;  //too demanding
 }
 
