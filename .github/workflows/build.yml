@@ -181,7 +181,7 @@ jobs:
         MACOS_NOTARIZATION_PASSWORD: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
         MACOS_NOTARIZATION_TEAMID: ${{ secrets.MACOS_NOTARIZATION_TEAMID }}
     - name: Upload
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.program }}-${{ matrix.platform.name }}
         path: desktop-ui/out/*
@@ -197,7 +197,7 @@ jobs:
       with:
         path: 'src'
     - name: Download Artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         path: 'bin'
     - name: Package Artifacts
