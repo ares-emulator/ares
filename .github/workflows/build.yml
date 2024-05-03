@@ -90,7 +90,7 @@ jobs:
         keychain-name: ares-macos-keychain
         keychain-password: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
     - name: Checkout source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Install Windows Dependencies
       if: runner.os == 'Windows'
       run: |
@@ -193,7 +193,7 @@ jobs:
     needs:
     - build
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         path: 'src'
     - name: Download Artifacts
