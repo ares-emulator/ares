@@ -34,6 +34,7 @@ auto CPU::main() -> void {
 
 auto CPU::step(u32 clocks) -> void {
   assert(clocks == rate());
+  io.oddCycle ^= 1;
   Thread::step(clocks);
   Thread::synchronize();
 }

@@ -2,43 +2,19 @@ auto APU::DMC::start() -> void {
   if(lengthCounter == 0) {
     readAddress = 0x4000 + (addressLatch << 6);
     lengthCounter = (lengthLatch << 4) + 1;
+
+    if (!dmaBufferValid)
+      cpu.dmcDMAPending();
   }
 }
 
 auto APU::DMC::stop() -> void {
   lengthCounter = 0;
   dmaDelayCounter = 0;
-  cpu.rdyLine(1);
-  cpu.rdyAddress(false);
 }
 
 auto APU::DMC::clock() -> n8 {
   n8 result = dacLatch;
-
-  if(dmaDelayCounter > 0) {
-    dmaDelayCounter--;
-
-    if(dmaDelayCounter == 1) {
-      cpu.rdyAddress(true, 0x8000 | readAddress);
-    } else if(dmaDelayCounter == 0) {
-      cpu.rdyLine(1);
-      cpu.rdyAddress(false);
-
-      dmaBuffer = cpu.io.openBus;
-      dmaBufferValid = true;
-      lengthCounter--;
-      readAddress++;
-
-      if(lengthCounter == 0) {
-        if(loopMode) {
-          start();
-        } else if(irqEnable) {
-          irqPending = true;
-          apu.setIRQ();
-        }
-      }
-    }
-  }
 
   if(--periodCounter == 0) {
     if(sampleValid) {
@@ -52,17 +28,15 @@ auto APU::DMC::clock() -> n8 {
         sampleValid = true;
         sample = dmaBuffer;
         dmaBufferValid = false;
+
+        if (lengthCounter > 0)
+          cpu.dmcDMAPending();
       } else {
         sampleValid = false;
       }
     }
 
     periodCounter = Region::PAL() ? dmcPeriodTablePAL[period] : dmcPeriodTableNTSC[period];
-  }
-
-  if(lengthCounter > 0 && !dmaBufferValid && dmaDelayCounter == 0) {
-    cpu.rdyLine(0);
-    dmaDelayCounter = 4;
   }
 
   return result;
@@ -85,4 +59,20 @@ auto APU::DMC::power(bool reset) -> void {
   dmaBuffer = 0;
   sampleValid = 0;
   sample = 0;
+}
+
+auto APU::DMC::setDMABuffer(n8 data) -> void {
+  dmaBuffer = data;
+  dmaBufferValid = true;
+  lengthCounter--;
+  readAddress++;
+
+  if (lengthCounter == 0) {
+    if (loopMode) {
+      start();
+    } else if (irqEnable) {
+      irqPending = true;
+      apu.setIRQ();
+    }
+  }
 }
