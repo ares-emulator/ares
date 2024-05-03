@@ -1,4 +1,4 @@
-auto APU::serialize(serializer &s) -> void {
+auto APU::serialize(serializer& s) -> void {
   Thread::serialize(s);
   s(pulse1);
   s(pulse2);
@@ -7,7 +7,7 @@ auto APU::serialize(serializer &s) -> void {
   s(frame);
 }
 
-auto APU::Length::serialize(serializer &s) -> void {
+auto APU::Length::serialize(serializer& s) -> void {
   s(counter);
   s(halt);
   s(enable);
@@ -19,7 +19,7 @@ auto APU::Length::serialize(serializer &s) -> void {
   s(counterIndex);
 }
 
-auto APU::Envelope::serialize(serializer &s) -> void {
+auto APU::Envelope::serialize(serializer& s) -> void {
   s(speed);
   s(useSpeedAsVolume);
   s(loopMode);
@@ -28,7 +28,7 @@ auto APU::Envelope::serialize(serializer &s) -> void {
   s(decayVolume);
 }
 
-auto APU::Sweep::serialize(serializer &s) -> void {
+auto APU::Sweep::serialize(serializer& s) -> void {
   s(shift);
   s(decrement);
   s(period);
@@ -38,7 +38,7 @@ auto APU::Sweep::serialize(serializer &s) -> void {
   s(pulsePeriod);
 }
 
-auto APU::Pulse::serialize(serializer &s) -> void {
+auto APU::Pulse::serialize(serializer& s) -> void {
   s(envelope);
   s(sweep);
   s(length);
@@ -48,7 +48,7 @@ auto APU::Pulse::serialize(serializer &s) -> void {
   s(period);
 }
 
-auto APU::Triangle::serialize(serializer &s) -> void {
+auto APU::Triangle::serialize(serializer& s) -> void {
   s(length);
   s(periodCounter);
   s(linearLength);
@@ -58,7 +58,7 @@ auto APU::Triangle::serialize(serializer &s) -> void {
   s(reloadLinear);
 }
 
-auto APU::Noise::serialize(serializer &s) -> void {
+auto APU::Noise::serialize(serializer& s) -> void {
   s(envelope);
   s(length);
   s(periodCounter);
@@ -67,7 +67,7 @@ auto APU::Noise::serialize(serializer &s) -> void {
   s(lfsr);
 }
 
-auto APU::DMC::serialize(serializer &s) -> void {
+auto APU::DMC::serialize(serializer& s) -> void {
   s(lengthCounter);
   s(periodCounter);
   s(irqPending);
@@ -85,7 +85,7 @@ auto APU::DMC::serialize(serializer &s) -> void {
   s(sample);
 }
 
-auto APU::FrameCounter::serialize(serializer &s) -> void {
+auto APU::FrameCounter::serialize(serializer& s) -> void {
   s(irqInhibit);
   s(mode);
 
