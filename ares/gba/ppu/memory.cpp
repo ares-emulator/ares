@@ -6,6 +6,9 @@ auto PPU::readVRAM_BG(u32 mode, n32 address) -> n32 {
 }
 
 auto PPU::readVRAM(u32 mode, n32 address) -> n32 {
+  address &= 0x1ffff;
+  if(Background::IO::mode >= 3 && address < 0x1c000 && address >= 0x18000) return 0;
+
   address &= (address & 0x10000) ? 0x17fff : 0x0ffff;
 
   if(mode & Word) {
@@ -22,6 +25,9 @@ auto PPU::readVRAM(u32 mode, n32 address) -> n32 {
 }
 
 auto PPU::writeVRAM(u32 mode, n32 address, n32 word) -> void {
+  address &= 0x1ffff;
+  if(Background::IO::mode >= 3 && address < 0x1c000 && address >= 0x18000) return;
+
   address &= (address & 0x10000) ? 0x17fff : 0x0ffff;
 
   if(mode & Word) {
