@@ -148,13 +148,14 @@ struct APU : Thread {
     auto clock() -> n8;
 
     auto power(bool reset) -> void;
+    auto setDMABuffer(n8 data) -> void;
+    auto dmaAddress() -> n16 const { return 0x8000 | readAddress; }
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
     n16 lengthCounter;
     n16 periodCounter;
-    n16 dmaDelayCounter;
     n1  irqPending;
     n4  period;
     n1  irqEnable;

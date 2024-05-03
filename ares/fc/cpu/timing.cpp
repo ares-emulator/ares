@@ -1,13 +1,6 @@
 auto CPU::read(n16 address) -> n8 {
-  if(io.oamDMAPending) {
-    io.oamDMAPending = 0;
-    read(address);
-    oamDMA();
-  }
-
-  while(io.rdyLine == 0) {
-    io.openBus = readBus(io.rdyAddressValid ? io.rdyAddressValue : address);
-    step(rate());
+  if(io.oamDMAPending || io.dmcDMAPending) {
+    dma(address);
   }
 
   io.openBus = readBus(address);
@@ -43,10 +36,63 @@ auto CPU::nmi(n16& vector) -> void {
   }
 }
 
-auto CPU::oamDMA() -> void {
-  for(u32 n : range(256)) {
-    n8 data = read(io.oamDMAPage << 8 | n);
-    write(0x2004, data);
+auto CPU::dmcDMAPending() -> void {
+  io.dmcDMAPending = 1;
+}
+
+auto CPU::dma(n16 address) -> void {
+  bool dmcReady = false;
+  bool oamWriteReady = false;
+  n8   oamCounter = 0;
+
+  // halt read
+  io.openBus = readBus(address);
+  step(rate());
+
+  while (io.dmcDMAPending || io.oamDMAPending) {
+    if (io.oddCycle) {
+      // put_cycle
+      if (io.oamDMAPending && oamWriteReady) {
+        if (io.dmcDMAPending)
+          dmcReady = true;
+
+        // oam write
+        writeBus(0x2004, io.openBus);
+        step(rate());
+
+        oamWriteReady = false;
+        if (++oamCounter == 0)
+          io.oamDMAPending = 0;
+      } else {
+        // oam (re)alignment cycle
+        // dmc alignment cycle
+        if (io.dmcDMAPending)
+          dmcReady = true;
+
+        io.openBus = readBus(address);
+        step(rate());
+      }
+    } else {
+      // get_cycle
+      if (io.dmcDMAPending && dmcReady) {
+        // dmc read
+        io.openBus = readBus(apu.dmc.dmaAddress());
+        step(rate());
+
+        apu.dmc.setDMABuffer(io.openBus);
+        io.dmcDMAPending = 0;
+        dmcReady = false;
+      } else if (io.oamDMAPending) {
+        // oam read
+        io.openBus = readBus(io.oamDMAPage << 8 | oamCounter);
+        step(rate());
+        oamWriteReady = true;
+      } else {
+        // dmc dummy read cycle
+        io.openBus = readBus(address);
+        step(rate());
+      }
+    }
   }
 }
 
@@ -64,13 +110,4 @@ auto CPU::irqLine(bool line) -> void {
 auto CPU::apuLine(bool line) -> void {
   //level-sensitive
   io.apuLine = line;
-}
-
-auto CPU::rdyLine(bool line) -> void {
-  io.rdyLine = line;
-}
-
-auto CPU::rdyAddress(bool valid, n16 value) -> void {
-  io.rdyAddressValid = valid;
-  io.rdyAddressValue = value;
 }

@@ -70,7 +70,6 @@ auto APU::Noise::serialize(serializer& s) -> void {
 auto APU::DMC::serialize(serializer& s) -> void {
   s(lengthCounter);
   s(periodCounter);
-  s(dmaDelayCounter);
   s(irqPending);
   s(period);
   s(irqEnable);
