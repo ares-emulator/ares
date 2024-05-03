@@ -10,7 +10,6 @@ auto APU::DMC::start() -> void {
 
 auto APU::DMC::stop() -> void {
   lengthCounter = 0;
-  dmaDelayCounter = 0;
 }
 
 auto APU::DMC::clock() -> n8 {
@@ -45,7 +44,6 @@ auto APU::DMC::clock() -> n8 {
 auto APU::DMC::power(bool reset) -> void {
   lengthCounter = 0;
   periodCounter = Region::PAL() ? dmcPeriodTablePAL[0] : dmcPeriodTableNTSC[0];
-  dmaDelayCounter = 0;
   irqPending = 0;
   period = 0;
   irqEnable = 0;

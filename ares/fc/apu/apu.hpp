@@ -156,7 +156,6 @@ struct APU : Thread {
 
     n16 lengthCounter;
     n16 periodCounter;
-    n16 dmaDelayCounter;
     n1  irqPending;
     n4  period;
     n1  irqEnable;
