@@ -31,7 +31,9 @@ struct VideoMetal : VideoDriver, Metal {
   auto ready() -> bool override { return _ready; }
 
   auto hasFullScreen() -> bool override { return true; }
+  auto hasMonitor() -> bool override { return !_nativeFullScreen; }
   auto hasContext() -> bool override { return true; }
+  auto hasFlush() -> bool override { return true; }
   auto hasBlocking() -> bool override {
     if (@available(macOS 10.15.4, *)) {
       return true;
@@ -41,31 +43,34 @@ struct VideoMetal : VideoDriver, Metal {
   }
   auto hasForceSRGB() -> bool override { return true; }
   auto hasThreadedRenderer() -> bool override { return true; }
-  auto hasFlush() -> bool override { return true; }
+  auto hasNativeFullScreen() -> bool override { return true; }
   auto hasShader() -> bool override { return true; }
 
   auto setFullScreen(bool fullScreen) -> bool override {
-    /// This function implements non-idiomatic macOS fullscreen behavior that sets the window frame equal to the display's
-    /// frame size and hides the cursor. Idiomatic fullscreen is still available via the normal stoplight window controls. This
-    /// version of fullscreen is desirable because it allows us to render around the camera housing on newer Macs
-    /// (important for bezel-style shaders), has snappier entrance/exit and tabbing behavior, and functions better with
-    /// recording and capture software such as OBS and screen recorders. Hiding the mouse cursor is also essential to
-    /// rendering with appropriate frame pacing in Metal's 'direct' presentation mode.
-
-    // todo: unify with cursor auto-hide in hiro, ideally ares-wide fullscreen mode option
-
-    if (fullScreen) {
-      frameBeforeFullScreen = view.window.frame;
-      [NSApp setPresentationOptions:(NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar)];
-      [view.window setStyleMask:NSWindowStyleMaskBorderless];
-      [view.window setFrame:view.window.screen.frame display:YES];
-      [NSCursor setHiddenUntilMouseMoves:YES];
+    // todo: fix/make consistent mouse cursor hide behavior
+    
+    if (_nativeFullScreen) {
+      [view.window toggleFullScreen:nil];
     } else {
-      [NSApp setPresentationOptions:NSApplicationPresentationDefault];
-      [view.window setStyleMask:NSWindowStyleMaskTitled];
-      [view.window setFrame:frameBeforeFullScreen display:YES];
+      /// This option implements non-idiomatic macOS fullscreen behavior that sets the window frame equal to the selected display's
+      /// frame size and hides the cursor. This version of fullscreen is desirable because it allows us to render around the camera
+      /// housing on newer Macs (important for bezel-style shaders), has snappier entrance/exit and tabbing behavior, and functions
+      /// better with recording and capture software such as OBS.
+      if (fullScreen) {
+        auto monitor = Video::monitor(self.monitor);
+        NSScreen *handle = (__bridge NSScreen *)(void *)monitor.nativeHandle; //eew
+        frameBeforeFullScreen = view.window.frame;
+        [NSApp setPresentationOptions:(NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar)];
+        [view.window setStyleMask:NSWindowStyleMaskBorderless];
+        [view.window setFrame:handle.frame display:YES];
+        [NSCursor setHiddenUntilMouseMoves:YES];
+      } else {
+        [NSApp setPresentationOptions:NSApplicationPresentationDefault];
+        [view.window setStyleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable | NSWindowStyleMaskClosable)];
+        [view.window setFrame:frameBeforeFullScreen display:YES];
+      }
+      [view.window makeFirstResponder:view];
     }
-    [view.window makeFirstResponder:view];
     return true;
   }
 
@@ -90,6 +95,18 @@ struct VideoMetal : VideoDriver, Metal {
   
   auto setThreadedRenderer(bool threadedRenderer) -> bool override {
     _threaded = threadedRenderer;
+    return true;
+  }
+  
+  auto setNativeFullScreen(bool nativeFullScreen) -> bool override {
+    _nativeFullScreen = nativeFullScreen;
+    if (nativeFullScreen) {
+      //maximize goes fullscreen
+      [view.window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenPrimary];
+    } else {
+      //maximize does not go fullscreen
+      [view.window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenAuxiliary];
+    }
     return true;
   }
 
@@ -562,14 +579,15 @@ private:
     bool forceSRGB = self.forceSRGB;
     self.setForceSRGB(forceSRGB);
     view.autoresizingMask = NSViewWidthSizable|NSViewHeightSizable;
+    
     _threaded = self.threadedRenderer;
+    _blocking = self.blocking;
+    setNativeFullScreen(self.nativeFullScreen);
 
     _libra = librashader_load_instance();
     if (!_libra.instance_loaded) {
       print("Metal: Failed to load librashader: shaders will be disabled\n");
     }
-    
-    _blocking = self.blocking;
     
     initialized = true;
     return _ready = true;

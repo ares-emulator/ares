@@ -13,6 +13,7 @@ struct Settings : Markup::Node {
     bool blocking = false;
     bool forceSRGB = false;
     bool threadedRenderer = true;
+    bool nativeFullScreen = false;
     bool flush = false;
     string shader = "None";
     u32 multiplier = 2;
@@ -333,12 +334,15 @@ struct DriverSettings : VerticalLayout {
     Label videoFormatLabel{&videoPropertyLayout, Size{0, 0}};
     ComboButton videoFormatList{&videoPropertyLayout, Size{0, 0}};
   HorizontalLayout videoToggleLayout{this, Size{~0, 0}};
+#if !defined(PLATFORM_MACOS)
     CheckLabel videoExclusiveToggle{&videoToggleLayout, Size{0, 0}};
+#endif
     CheckLabel videoBlockingToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoFlushToggle{&videoToggleLayout, Size{0, 0}};
 #if defined(PLATFORM_MACOS)
     CheckLabel videoColorSpaceToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoThreadedRendererToggle{&videoToggleLayout, Size{0, 0}};
+    CheckLabel videoNativeFullScreenToggle{&videoToggleLayout, Size{0, 0}};
 #endif
   //
   Label audioLabel{this, Size{~0, 0}, 5};
