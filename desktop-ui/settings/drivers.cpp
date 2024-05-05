@@ -27,10 +27,12 @@ auto DriverSettings::construct() -> void {
     program.videoFormatUpdate();
     videoRefresh();
   });
+#if !defined(PLATFORM_MACOS)
   videoExclusiveToggle.setText("Exclusive mode").onToggle([&] {
     settings.video.exclusive = videoExclusiveToggle.checked();
     ruby::video.setExclusive(settings.video.exclusive);
   });
+#endif
   videoBlockingToggle.setText("Synchronize").onToggle([&] {
     settings.video.blocking = videoBlockingToggle.checked();
     ruby::video.setBlocking(settings.video.blocking);
@@ -47,6 +49,11 @@ auto DriverSettings::construct() -> void {
   videoThreadedRendererToggle.setText("Threaded").onToggle([&] {
     settings.video.threadedRenderer = videoThreadedRendererToggle.checked();
     ruby::video.setThreadedRenderer(settings.video.threadedRenderer);
+  });
+  videoNativeFullScreenToggle.setText("Use native fullscreen").onToggle([&] {
+    settings.video.nativeFullScreen = videoNativeFullScreenToggle.checked();
+    ruby::video.setNativeFullScreen(settings.video.nativeFullScreen);
+    videoRefresh();
   });
 #endif
 
@@ -153,13 +160,16 @@ auto DriverSettings::videoRefresh() -> void {
     item.setText(format);
     if(format == ruby::video.format()) item.setSelected();
   }
-  videoMonitorList.setEnabled(videoMonitorList.itemCount() > 1);
+  videoMonitorList.setEnabled(videoMonitorList.itemCount() > 1 && ruby::video.hasMonitor());
   videoFormatList.setEnabled(0 && videoFormatList.itemCount() > 1);
+#if !defined(PLATFORM_MACOS)
   videoExclusiveToggle.setChecked(ruby::video.exclusive()).setEnabled(ruby::video.hasExclusive());
+#endif
   videoBlockingToggle.setChecked(ruby::video.blocking()).setEnabled(ruby::video.hasBlocking());
 #if defined(PLATFORM_MACOS)
   videoColorSpaceToggle.setChecked(ruby::video.forceSRGB()).setEnabled(ruby::video.hasForceSRGB());
   videoThreadedRendererToggle.setChecked(ruby::video.threadedRenderer()).setEnabled(ruby::video.hasThreadedRenderer());
+  videoNativeFullScreenToggle.setChecked(ruby::video.nativeFullScreen()).setEnabled(ruby::video.hasNativeFullScreen());
 #endif
   videoFlushToggle.setChecked(ruby::video.flush()).setEnabled(ruby::video.hasFlush());
   VerticalLayout::resize();

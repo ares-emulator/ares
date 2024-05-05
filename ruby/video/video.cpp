@@ -76,6 +76,14 @@ auto Video::setThreadedRenderer(bool threadedRenderer) -> bool {
   return true;
 }
 
+auto Video::setNativeFullScreen(bool nativeFullScreen) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
+  if(instance->nativeFullScreen == nativeFullScreen) return true;
+  if(!instance->hasNativeFullScreen()) return false;
+  if(!instance->setNativeFullScreen(instance->nativeFullScreen = nativeFullScreen)) return false;
+  return true;
+}
+
 auto Video::setFlush(bool flush) -> bool {
   lock_guard<recursive_mutex> lock(mutex);
   if(instance->flush == flush) return true;
@@ -300,28 +308,33 @@ auto Video::hasMonitors() -> vector<Monitor> {
       monitor.y = rectangle.origin.y;
       monitor.width = rectangle.size.width;
       monitor.height = rectangle.size.height;
-      //getting the name of the monitor on macOS: "Think Different"
-      auto screenDictionary = [screen deviceDescription];
-      auto screenID = [screenDictionary objectForKey:@"NSScreenNumber"];
-      auto displayID = [screenID unsignedIntValue];
-      CFUUIDRef displayUUID = CGDisplayCreateUUIDFromDisplayID(displayID);
-      io_service_t displayPort = CGDisplayGetDisplayIDFromUUID(displayUUID);
-      auto dictionary = IODisplayCreateInfoDictionary(displayPort, 0);
-      CFRetain(dictionary);
-      if(auto names = (CFDictionaryRef)CFDictionaryGetValue(dictionary, CFSTR(kDisplayProductName))) {
-        auto languageKeys = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-        CFDictionaryApplyFunction(names, MonitorKeyArrayCallback, (void*)languageKeys);
-        auto orderLanguageKeys = CFBundleCopyPreferredLocalizationsFromArray(languageKeys);
-        CFRelease(languageKeys);
-        if(orderLanguageKeys && CFArrayGetCount(orderLanguageKeys)) {
-          auto languageKey = CFArrayGetValueAtIndex(orderLanguageKeys, 0);
-          auto localName = CFDictionaryGetValue(names, languageKey);
-          monitor.name = {1 + monitors.size(), ": ", [(__bridge NSString*)localName UTF8String]};
-          CFRelease(localName);
+      monitor.nativeHandle = (uintptr)screen;
+      if (@available(macOS 10.15, *)) {
+        monitor.name = {1 + monitors.size(), ": ", screen.localizedName.UTF8String};
+      } else {
+        //getting the name of the monitor on macOS: "Think Different"
+        auto screenDictionary = [screen deviceDescription];
+        auto screenID = [screenDictionary objectForKey:@"NSScreenNumber"];
+        auto displayID = [screenID unsignedIntValue];
+        CFUUIDRef displayUUID = CGDisplayCreateUUIDFromDisplayID(displayID);
+        io_service_t displayPort = CGDisplayGetDisplayIDFromUUID(displayUUID);
+        auto dictionary = IODisplayCreateInfoDictionary(displayPort, 0);
+        CFRetain(dictionary);
+        if(auto names = (CFDictionaryRef)CFDictionaryGetValue(dictionary, CFSTR(kDisplayProductName))) {
+          auto languageKeys = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+          CFDictionaryApplyFunction(names, MonitorKeyArrayCallback, (void*)languageKeys);
+          auto orderLanguageKeys = CFBundleCopyPreferredLocalizationsFromArray(languageKeys);
+          CFRelease(languageKeys);
+          if(orderLanguageKeys && CFArrayGetCount(orderLanguageKeys)) {
+            auto languageKey = CFArrayGetValueAtIndex(orderLanguageKeys, 0);
+            auto localName = CFDictionaryGetValue(names, languageKey);
+            monitor.name = {1 + monitors.size(), ": ", [(__bridge NSString*)localName UTF8String]};
+            CFRelease(localName);
+          }
+          CFRelease(orderLanguageKeys);
         }
-        CFRelease(orderLanguageKeys);
+        CFRelease(dictionary);
       }
-      CFRelease(dictionary);
       monitors.append(monitor);
     }
   }

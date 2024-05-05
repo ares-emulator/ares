@@ -78,6 +78,7 @@ struct Metal {
   bool _flush = false;
   bool _vrrIsSupported = false;
   bool _threaded = true;
+  bool _nativeFullScreen = false;
   
   NSRect frameBeforeFullScreen = NSMakeRect(0,0,0,0);
   
