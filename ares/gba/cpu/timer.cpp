@@ -32,9 +32,7 @@ inline auto CPU::Timer::run() -> void {
     return;
   }
 
-  if(!enable || cascade) {
-    return;
-  }
+  if(!enable || cascade) return;
 
   static const u32 mask[] = {0, 63, 255, 1023};
   if((cpu.clock() & mask[frequency]) == 0) step();
