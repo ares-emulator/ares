@@ -1,3 +1,30 @@
+auto CPU::Timer::stepLatch() -> void {
+  if(latch.reloadFlags.bit(0)) {
+    reload.byte(0) = latch.reload.byte(0);
+    latch.reloadFlags.bit(0) = 0;
+  }
+  
+  if(latch.reloadFlags.bit(1)) {
+    reload.byte(1) = latch.reload.byte(1);
+    latch.reloadFlags.bit(1) = 0;
+  }
+  
+  if(latch.controlFlag) {
+    n1 wasEnabled = enable;
+
+    frequency = latch.control.bit(0,1);
+    irq       = latch.control.bit(6);
+    enable    = latch.control.bit(7);
+
+    if(id != 0) cascade = latch.control.bit(2);
+
+    if(!wasEnabled && enable) {  //0->1 transition
+      pending = true;
+    }
+    latch.controlFlag = 0;
+  }
+}
+
 inline auto CPU::Timer::run() -> void {
   if(pending) {
     pending = false;
@@ -5,7 +32,9 @@ inline auto CPU::Timer::run() -> void {
     return;
   }
 
-  if(!enable || cascade) return;
+  if(!enable || cascade) {
+    return;
+  }
 
   static const u32 mask[] = {0, 63, 255, 1023};
   if((cpu.clock() & mask[frequency]) == 0) step();
