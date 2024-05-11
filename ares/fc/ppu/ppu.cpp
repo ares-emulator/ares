@@ -7,12 +7,13 @@ PPU ppu;
 #include "render.cpp"
 #include "color.cpp"
 #include "debugger.cpp"
+#include "sprite.cpp"
 #include "serialization.cpp"
 
 auto PPU::load(Node::Object parent) -> void {
   ciram.allocate(2048);
   cgram.allocate(32);
-  oam.allocate(256);
+  spriteEvaluation.oam.allocate(256);
 
   node = parent->append<Node::Object>("PPU");
 
@@ -34,7 +35,7 @@ auto PPU::unload() -> void {
   node.reset();
   ciram.reset();
   cgram.reset();
-  oam.reset();
+  spriteEvaluation.oam.reset();
 }
 
 auto PPU::main() -> void {
@@ -45,11 +46,13 @@ auto PPU::step(u32 clocks) -> void {
   u32 L = vlines();
 
   while(clocks--) {
+    spriteEvaluation.main();
+
     if(io.ly == 240 && io.lx == 340) io.nmiHold = 1;
     if(io.ly == 241 && io.lx ==   0) io.nmiFlag = io.nmiHold;
     if(io.ly == 241 && io.lx ==   2) cpu.nmiLine(io.nmiEnable && io.nmiFlag);
 
-    if(io.ly == L-2 && io.lx == 340) io.spriteZeroHit = 0, io.spriteOverflow = 0;
+    if(io.ly == L-2 && io.lx == 340) io.spriteZeroHit = 0, spriteEvaluation.io.spriteOverflow = 0;
 
     if(io.ly == L-2 && io.lx == 340) io.nmiHold = 0;
     if(io.ly == L-1 && io.lx ==   0) io.nmiFlag = io.nmiHold;
@@ -97,11 +100,11 @@ auto PPU::frame() -> void {
 auto PPU::power(bool reset) -> void {
   Thread::create(system.frequency(), {&PPU::main, this});
   screen->power();
+  spriteEvaluation.power(reset);
 
   if(!reset) {
     ciram.fill();
     cgram.fill();
-    oam.fill();
   }
 
   io = {};

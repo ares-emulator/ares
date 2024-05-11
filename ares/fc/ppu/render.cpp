@@ -65,27 +65,6 @@ auto PPU::renderPixel() -> void {
   output[(x + 15) % 282] = io.emphasis << 6 | readCGRAM(palette);
 }
 
-auto PPU::renderSprite() -> void {
-  if(!enable()) return;
-
-  u32 n = latch.oamIterator++;
-  s32 ly = io.ly == vlines() - 1 ? -1 : (s32)io.ly;
-  u32 y = ly - oam[n * 4 + 0];
-
-  if(y >= io.spriteHeight) return;
-  if(latch.oamCounter == 8) {
-    io.spriteOverflow = 1;
-    return;
-  }
-
-  auto& o = latch.soam[latch.oamCounter++];
-  o.id   = n;
-  o.y    = oam[n * 4 + 0];
-  o.tile = oam[n * 4 + 1];
-  o.attr = oam[n * 4 + 2];
-  o.x    = oam[n * 4 + 3];
-}
-
 auto PPU::renderScanline() -> void {
   if(io.ly < screen->canvasHeight()) {
     output = screen->pixels().data() + io.ly * 282;
@@ -98,7 +77,7 @@ auto PPU::renderScanline() -> void {
   latch.oamIterator = 0;
   latch.oamCounter = 0;
 
-  for(auto n : range(8)) latch.soam[n] = {};
+  for(auto n : range(8)) spriteEvaluation.soam[n] = {};
 
   //  0
   step(1);
@@ -122,7 +101,6 @@ auto PPU::renderScanline() -> void {
     if(enable() && ++io.v.tileX == 0) io.v.nametableX++;
     if(enable() && tile == 31 && ++io.v.fineY == 0 && ++io.v.tileY == 30) io.v.nametableY++, io.v.tileY = 0;
     renderPixel();
-    renderSprite();
     step(1);
 
     u32 tiledataLo = loadCHR(tileaddr + 0);
@@ -137,7 +115,6 @@ auto PPU::renderScanline() -> void {
     step(1);
 
     renderPixel();
-    renderSprite();
     step(1);
 
     latch.nametable = latch.nametable << 8 | nametable;
@@ -146,11 +123,11 @@ auto PPU::renderScanline() -> void {
     latch.tiledataHi = latch.tiledataHi << 8 | tiledataHi;
   }
 
-  for(u32 n : range(8)) latch.oam[n] = latch.soam[n];
+  for(u32 n : range(8)) latch.oam[n] = spriteEvaluation.soam[n];
 
   //257-320
   for(u32 sprite : range(8)) {
-    if(enable()) io.oamAddress = 0;
+    if(enable()) spriteEvaluation.io.oamAddress = 0;
     u32 nametable = loadCHR(0x2000 | (n12)io.v.address);
     step(1);
 
