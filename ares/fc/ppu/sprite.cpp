@@ -1,8 +1,6 @@
 auto PPU::SpriteEvaluation::main() -> void {
-  if (!ppu.enable()) return;
-
   // skip in vblank
-  if (ppu.io.ly >= 240 && ppu.io.ly < ppu.vlines() - 2) return;
+  if (!ppu.enable()) return;
 
   n16 x = ppu.io.lx - 1;
 

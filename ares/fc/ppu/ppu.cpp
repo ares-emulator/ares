@@ -46,7 +46,10 @@ auto PPU::step(u32 clocks) -> void {
   u32 L = vlines();
 
   while(clocks--) {
-    spriteEvaluation.main();
+    // Not vblank or in pal spriteEvaluation Scanline
+    if (ppu.io.ly < 240 || ppu.io.ly == ppu.vlines() - 1 ||
+        (Region::PAL() && ppu.io.ly >= 264 && ppu.io.ly <= vlines() - 2))
+      spriteEvaluation.main();
 
     if(io.ly == 240 && io.lx == 340) io.nmiHold = 1;
     if(io.ly == 241 && io.lx ==   0) io.nmiFlag = io.nmiHold;
