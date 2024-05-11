@@ -3,7 +3,6 @@ struct PPU : Thread {
   Node::Video::Screen screen;
   Memory::Writable<n8> ciram;
   Memory::Writable<n8> cgram;
-  Memory::Writable<n8> oam;
 
   struct Debugger {
     //debugger.cpp
@@ -100,11 +99,7 @@ struct PPU : Thread {
     n3  emphasis;
 
     //$2002
-    n1  spriteOverflow;
     n1  spriteZeroHit;
-
-    //$2003
-    n8  oamAddress;
   } io;
 
   struct OAM {
@@ -112,10 +107,15 @@ struct PPU : Thread {
     auto serialize(serializer&) -> void;
 
     n8 id = 64;
-    n8 y = 0xff;
-    n8 tile = 0xff;
-    n8 attr = 0xff;
-    n8 x = 0xff;
+    union {
+      n8 data[4];
+      struct {
+        n8 y = 0xff;
+        n8 tile = 0xff;
+        n8 attr = 0xff;
+        n8 x = 0xff;
+      };
+    };
 
     n8 tiledataLo;
     n8 tiledataHi;
@@ -131,8 +131,47 @@ struct PPU : Thread {
     n16 oamCounter;
 
     OAM oam[8];   //primary
-    OAM soam[8];  //secondary
   } latch;
+
+  struct SpriteEvaluation {
+    Memory::Writable<n8> oam;
+
+    // sprite.cpp
+    auto main() -> void;
+    auto power(bool reset) -> void;
+
+    // serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct IO {
+      // $2002
+      n1 spriteOverflow;
+
+      // $2003
+      n8 oamAddress;
+
+      // $2004
+      n8 oamData;
+
+      // main oam counter
+      n8 oamMainCounter;
+      bool oamMainCounterOverflow;
+      // every sprite has 4 bytes
+      BitRange<8,0,1> oamMainCounterTiming{&oamMainCounter};
+      // main counter have 64 sprites
+      BitRange<8,2,7> oamMainCounterIndex{&oamMainCounter};
+
+      // secondary oam counter
+      n5  oamTempCounter;
+      bool oamTempCounterOverflow;
+      // every sprite has 4 bytes
+      BitRange<5,0,1> oamTempCounterTiming{&oamTempCounter};
+      // temp counter have 8 sprites
+      BitRange<5,2,4> oamTempCounterIndex{&oamTempCounter};
+    } io;
+
+    OAM soam[8]; // secondary oam
+  } spriteEvaluation;
 
   u32* output;
 };

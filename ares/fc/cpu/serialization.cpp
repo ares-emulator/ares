@@ -7,6 +7,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(io.nmiLine);
   s(io.irqLine);
   s(io.apuLine);
+  s(io.oddCycle);
   s(io.dmcDMAPending);
   s(io.oamDMAPending);
   s(io.oamDMAPage);
