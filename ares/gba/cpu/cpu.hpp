@@ -128,6 +128,7 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   struct Timer {
     //timer.cpp
+    auto stepLatch() -> void;
     auto run() -> void;
     auto step() -> void;
 
@@ -142,6 +143,13 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  cascade;
     n1  irq;
     n1  enable;
+    
+    struct Latch {
+      n16 reload;
+      n8  control;
+      n2  reloadFlags;
+      n1  controlFlag;
+    } latch;
   } timer[4];
 
   struct Serial {
@@ -229,6 +237,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  stopped;
     n1  booted;  //set to true by the GBA BIOS
     n1  dmaActive;
+    n1  timerLatched;
   } context;
 };
 

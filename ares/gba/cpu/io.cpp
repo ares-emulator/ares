@@ -301,24 +301,23 @@ auto CPU::writeIO(n32 address, n8 data) -> void {
   }
 
   //TM0CNT_L, TM1CNT_L, TM2CNT_L, TM3CNT_L
-  case 0x0400'0100: case 0x0400'0104: case 0x0400'0108: case 0x0400'010c: timer().reload.byte(0) = data; return;
-  case 0x0400'0101: case 0x0400'0105: case 0x0400'0109: case 0x0400'010d: timer().reload.byte(1) = data; return;
+  case 0x0400'0100: case 0x0400'0104: case 0x0400'0108: case 0x0400'010c:
+    timer().latch.reload.byte(0) = data;
+    timer().latch.reloadFlags.bit(0) = 1;
+    context.timerLatched = 1;
+    return;
+  case 0x0400'0101: case 0x0400'0105: case 0x0400'0109: case 0x0400'010d:
+    timer().latch.reload.byte(1) = data;
+    timer().latch.reloadFlags.bit(1) = 1;
+    context.timerLatched = 1;
+    return;
 
   //TM0CNT_H, TM1CNT_H, TM2CNT_H, TM3CNT_H
-  case 0x0400'0102: case 0x0400'0106: case 0x0400'010a: case 0x0400'010e: {
-    bool enable = timer().enable;
-
-    timer().frequency = data.bit(0,1);
-    timer().irq       = data.bit(6);
-    timer().enable    = data.bit(7);
-
-    if(address != 0x0400'0102) timer().cascade = data.bit(2);
-
-    if(!enable && timer().enable) {  //0->1 transition
-      timer().pending = true;
-    }
+  case 0x0400'0102: case 0x0400'0106: case 0x0400'010a: case 0x0400'010e:
+    timer().latch.control = data;
+    timer().latch.controlFlag = 1;
+    context.timerLatched = 1;
     return;
-  }
   case 0x0400'0103: case 0x0400'0107: case 0x0400'010b: case 0x0400'010f:
     return;
 

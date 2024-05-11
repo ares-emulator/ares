@@ -42,6 +42,10 @@ auto CPU::serialize(serializer& s) -> void {
     s(timer.cascade);
     s(timer.irq);
     s(timer.enable);
+    s(timer.latch.reload);
+    s(timer.latch.control);
+    s(timer.latch.reloadFlags);
+    s(timer.latch.controlFlag);
   }
 
   s(serial.shiftClockSelect);
@@ -104,4 +108,5 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.stopped);
   s(context.booted);
   s(context.dmaActive);
+  s(context.timerLatched);
 }
