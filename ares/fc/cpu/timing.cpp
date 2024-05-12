@@ -44,6 +44,7 @@ auto CPU::dma(n16 address) -> void {
   bool dmcReady = false;
   bool oamWriteReady = false;
   n8   oamCounter = 0;
+  bool skipDummyReads = (address == 0x4016 || address == 0x4017);
 
   // halt read
   io.openBus = readBus(address);
@@ -69,7 +70,8 @@ auto CPU::dma(n16 address) -> void {
         if (io.dmcDMAPending)
           dmcReady = true;
 
-        io.openBus = readBus(address);
+        if (!skipDummyReads)
+          io.openBus = readBus(address);
         step(rate());
       }
     } else {
@@ -89,7 +91,8 @@ auto CPU::dma(n16 address) -> void {
         oamWriteReady = true;
       } else {
         // dmc dummy read cycle
-        io.openBus = readBus(address);
+        if (!skipDummyReads)
+          io.openBus = readBus(address);
         step(rate());
       }
     }
