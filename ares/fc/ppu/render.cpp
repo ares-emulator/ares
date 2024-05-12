@@ -74,13 +74,11 @@ auto PPU::renderScanline() -> void {
   //Vblank
   if(io.ly >= 240 && io.ly <= vlines() - 2) return step(341), scanline();
 
-  latch.oamIterator = 0;
-  latch.oamCounter = 0;
-
-  for(auto n : range(8)) spriteEvaluation.soam[n] = {};
-
   //  0
   step(1);
+
+  // force clear sprite counter at start of each scanline
+  for (auto& o : spriteEvaluation.soam) o.id = 64;
 
   //  1-256
   for(u32 tile : range(32)) {
@@ -127,7 +125,6 @@ auto PPU::renderScanline() -> void {
 
   //257-320
   for(u32 sprite : range(8)) {
-    if(enable()) spriteEvaluation.io.oamAddress = 0;
     u32 nametable = loadCHR(0x2000 | (n12)io.v.address);
     step(1);
 
