@@ -58,9 +58,9 @@ auto APU::FrameCounter::power(bool reset) -> void {
   step = 0;
   counter = getPeriod();
 
-  odd = true;
-  delay = true;
-  delayCounter = 1;
+  odd = false;
+  delay = false;
+  delayCounter = 0;
 }
 
 auto APU::FrameCounter::write(n8 data) -> void {
