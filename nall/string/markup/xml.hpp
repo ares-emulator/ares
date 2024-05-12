@@ -213,7 +213,7 @@ inline auto unserialize(const string& markup) -> Markup::Node {
   } catch(const char* error) {
     node.reset();
   }
-  return (Markup::SharedNode&)node;
+  return Markup::SharedNode(node);
 }
 
 }

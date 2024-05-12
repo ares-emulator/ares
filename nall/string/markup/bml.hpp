@@ -150,7 +150,7 @@ inline auto unserialize(const string& markup, string_view spacing = {}) -> Marku
   } catch(const char* error) {
     node.reset();
   }
-  return (Markup::SharedNode&)node;
+  return Markup::SharedNode(node);
 }
 
 inline auto serialize(const Markup::Node& node, string_view spacing = {}, u32 depth = 0) -> string {
