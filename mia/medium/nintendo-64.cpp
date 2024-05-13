@@ -321,7 +321,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NSW") {eeprom = 512;}                                        //Star Wars: Shadows of the Empire [Teikoku no Kage (J)]
   if(id == "NSC") {eeprom = 512;}                                        //Starshot: Space Circus Fever
   if(id == "NSA") {eeprom = 512; rpak = true;}                           //Sonic Wings Assault (J)
-  if(id == "NB6") {eeprom = 512; cpak = true; tpak=true;}                //Super B-Daman: Battle Phoenix 64
+  if(id == "NB6") {eeprom = 512; cpak = true; tpak = true;}                //Super B-Daman: Battle Phoenix 64
   if(id == "NSS") {eeprom = 512; rpak = true;}                           //Super Robot Spirits
   if(id == "NTX") {eeprom = 512; rpak = true;}                           //Taz Express
   if(id == "NT6") {eeprom = 512;}                                        //Tetris 64
@@ -649,7 +649,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NMT") {rpak = true;}                                         //Magical Tetris Challenge
   if(id == "NM3") {rpak = true;}                                         //Monster Truck Madness 64
   if(id == "NRG") {rpak = true;}                                         //Rugrats - Scavenger Hunt [Treasure Hunt (E)]
-  if(id == "NOH") {rpak = true; tpak=true;}                              //Transformers Beast Wars - Transmetals
+  if(id == "NOH") {rpak = true; tpak = true;}                              //Transformers Beast Wars - Transmetals
   if(id == "NWF") {rpak = true;}                                         //Wheel of Fortune
 
   //Special case for save type in International Track & Field
