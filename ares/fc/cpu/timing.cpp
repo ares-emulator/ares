@@ -38,10 +38,10 @@ auto CPU::nmi(n16& vector) -> void {
 
 auto CPU::dmcDMAPending() -> void {
   io.dmcDMAPending = 1;
+  io.dmcDummyRead = 0;
 }
 
 auto CPU::dma(n16 address) -> void {
-  bool dmcReady = false;
   bool oamWriteReady = false;
   n8   oamCounter = 0;
   bool skipDummyReads = (address == 0x4016 || address == 0x4017);
@@ -54,9 +54,6 @@ auto CPU::dma(n16 address) -> void {
     if (io.oddCycle) {
       // put_cycle
       if (io.oamDMAPending && oamWriteReady) {
-        if (io.dmcDMAPending)
-          dmcReady = true;
-
         // oam write
         writeBus(0x2004, io.openBus);
         step(rate());
@@ -67,8 +64,7 @@ auto CPU::dma(n16 address) -> void {
       } else {
         // oam (re)alignment cycle
         // dmc alignment cycle
-        if (io.dmcDMAPending)
-          dmcReady = true;
+        io.dmcDummyRead = 1;
 
         if (!skipDummyReads)
           io.openBus = readBus(address);
@@ -76,20 +72,25 @@ auto CPU::dma(n16 address) -> void {
       }
     } else {
       // get_cycle
-      if (io.dmcDMAPending && dmcReady) {
+      if (io.dmcDMAPending && io.dmcDummyRead) {
         // dmc read
         io.openBus = readBus(apu.dmc.dmaAddress());
         step(rate());
 
         apu.dmc.setDMABuffer(io.openBus);
         io.dmcDMAPending = 0;
-        dmcReady = false;
       } else if (io.oamDMAPending) {
+        if (io.dmcDMAPending)
+          io.dmcDummyRead = 1;
+
         // oam read
         io.openBus = readBus(io.oamDMAPage << 8 | oamCounter);
         step(rate());
+
         oamWriteReady = true;
       } else {
+        io.dmcDummyRead = 1;
+
         // dmc dummy read cycle
         if (!skipDummyReads)
           io.openBus = readBus(address);
