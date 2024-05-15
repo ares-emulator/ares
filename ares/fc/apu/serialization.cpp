@@ -83,6 +83,7 @@ auto APU::DMC::serialize(serializer& s) -> void {
   s(dmaBuffer);
   s(sampleValid);
   s(sample);
+  s(dmaDelayCounter);
 }
 
 auto APU::FrameCounter::serialize(serializer& s) -> void {
