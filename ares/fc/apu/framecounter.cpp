@@ -58,7 +58,7 @@ auto APU::FrameCounter::power(bool reset) -> void {
   step = 0;
   counter = getPeriod();
 
-  odd = false;
+  odd = true;
   delay = false;
   delayCounter = 0;
 }
