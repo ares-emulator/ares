@@ -13,7 +13,6 @@ PPU ppu;
 auto PPU::load(Node::Object parent) -> void {
   ciram.allocate(2048);
   cgram.allocate(32);
-  for (u32 address : range(32)) cgram[address] = cgramBootValue[address];
   spriteEvaluation.oam.allocate(256);
 
   node = parent->append<Node::Object>("PPU");
@@ -106,8 +105,10 @@ auto PPU::power(bool reset) -> void {
   screen->power();
   spriteEvaluation.power(reset);
 
-  if(!reset)
+  if(!reset) {
     ciram.fill();
+    memory::copy(cgram.data(), cgramBootValue, 32);
+  }
 
   io = {};
 }
