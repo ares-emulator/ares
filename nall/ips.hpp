@@ -41,7 +41,9 @@ inline auto apply(array_view<u8> source, array_view<u8> patch, maybe<string&> re
         u32 offset = readOffset();
         u32 length = readLength();
 
-        if(target.size() < offset + length) error("Invalid IPS patch file");
+        if(target.size() < offset + length) { 
+            target.resize(target.size() + ((u64)(offset + length) - target.size()), 0); 
+        }
 
         if (length == 0) {
             length = readLength();
