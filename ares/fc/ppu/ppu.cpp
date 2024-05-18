@@ -107,7 +107,7 @@ auto PPU::power(bool reset) -> void {
 
   if(!reset) {
     ciram.fill();
-    cgram.fill();
+    memory::copy(cgram.data(), cgramBootValue, 32);
   }
 
   io = {};

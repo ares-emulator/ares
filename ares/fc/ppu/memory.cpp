@@ -7,15 +7,17 @@ auto PPU::writeCIRAM(n11 address, n8 data) -> void {
 }
 
 auto PPU::readCGRAM(n5 address) -> n8 {
-  if((address & 0x13) == 0x10) address &= ~0x10;
+  if((address & 0x3) == 0x0) address &= ~0x10;
   n8 data = cgram[address];
   if(io.grayscale) data &= 0x30;
   return data;
 }
 
 auto PPU::writeCGRAM(n5 address, n8 data) -> void {
-  if((address & 0x13) == 0x10) address &= ~0x10;
   cgram[address] = data;
+
+  if((address & 0x3) == 0x0)
+    cgram[address ^ 0x10] = data;
 }
 
 auto PPU::readIO(n16 address) -> n8 {
