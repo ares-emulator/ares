@@ -27,7 +27,7 @@ template<s32 Precision, s32 Lo, s32 Hi> struct BitRange {
     return *this;
   }
 
-  template<typename T> BitRange(T* source) : target((type&)*source) {
+  template<typename T> BitRange(T* source) : target(reinterpret_cast<type&>(*source)) {
     static_assert(sizeof(T) == sizeof(type));
   }
 

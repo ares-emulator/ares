@@ -25,7 +25,7 @@ template<s32 Precision, s32 Index> struct BitField<Precision, Index> {
     return *this;
   }
 
-  template<typename T> BitField(T* source) : target((type&)*source) {
+  template<typename T> BitField(T* source) : target(reinterpret_cast<type&>(*source)) {
     static_assert(sizeof(T) == sizeof(type));
   }
 
