@@ -40,13 +40,20 @@ inline auto apply(array_view<u8> source, array_view<u8> patch, maybe<string&> re
     while (patchOffset < patchSize - 3) {
         u32 offset = readOffset();
         u32 length = readLength();
-
-        if(target.size() < offset + length) error("Invalid IPS patch file");
+        bool rleRecord = false;
 
         if (length == 0) {
             length = readLength();
+            rleRecord = true;
+        }
+
+        if(target.size() < offset + length) { 
+            target.resize(target.size() + ((u64)(offset + length) - target.size()), 0); 
+        }
+
+        if(rleRecord) {
             u8 data = read();
-            for(u32 i : range(length)) write(offset + i, data);
+            for (u32 i : range(length)) write(offset + i, data);
         } else {
             for (u32 i : range(length)) write(offset + i, read());
         }
