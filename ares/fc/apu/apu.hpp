@@ -169,6 +169,7 @@ struct APU : Thread {
     n8  dmaBuffer;
     n1  sampleValid;
     n8  sample;
+    n8  dmaDelayCounter;
   } dmc;
 
   struct FrameCounter {

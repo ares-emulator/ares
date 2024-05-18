@@ -65,6 +65,7 @@ struct CPU : MOS6502, Thread {
     n1  apuLine;
     n1  oddCycle;
     n1  dmcDMAPending;
+    n1  dmcDummyRead;
     n1  oamDMAPending;
     n8  oamDMAPage;
     n8  openBus;

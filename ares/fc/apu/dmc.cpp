@@ -4,7 +4,7 @@ auto APU::DMC::start() -> void {
     lengthCounter = (lengthLatch << 4) + 1;
 
     if (!dmaBufferValid)
-      cpu.dmcDMAPending();
+      dmaDelayCounter = periodCounter & 1 ? 2 : 3;
   }
 }
 
@@ -38,13 +38,16 @@ auto APU::DMC::clock() -> n8 {
     periodCounter = Region::PAL() ? dmcPeriodTablePAL[period] : dmcPeriodTableNTSC[period];
   }
 
+  if (dmaDelayCounter > 0 && --dmaDelayCounter == 0)
+    cpu.dmcDMAPending();
+
   return result;
 }
 
 auto APU::DMC::power(bool reset) -> void {
   lengthCounter = 0;
   periodCounter = Region::PAL() ? dmcPeriodTablePAL[0] : dmcPeriodTableNTSC[0];
-  irqPending = 0;
+  irqPending = false;
   period = 0;
   irqEnable = 0;
   loopMode = 0;
@@ -67,7 +70,8 @@ auto APU::DMC::setDMABuffer(n8 data) -> void {
 
   if (lengthCounter == 0) {
     if (loopMode) {
-      start();
+      readAddress = 0x4000 + (addressLatch << 6);
+      lengthCounter = (lengthLatch << 4) + 1;
     } else if (irqEnable) {
       irqPending = true;
       apu.setIRQ();

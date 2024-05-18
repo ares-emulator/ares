@@ -28,8 +28,6 @@ auto PPU::serialize(serializer& s) -> void {
   s(latch.attribute);
   s(latch.tiledataLo);
   s(latch.tiledataHi);
-  s(latch.oamIterator);
-  s(latch.oamCounter);
   for(auto& o : latch.oam) s(o);
 
   s(spriteEvaluation);
@@ -50,7 +48,6 @@ auto PPU::SpriteEvaluation::serialize(serializer& s) -> void {
   s(io.spriteOverflow);
   s(io.oamAddress);
   s(io.oamData);
-  s(io.oamMainCounter);
   s(io.oamTempCounterOverflow);
   s(io.oamTempCounter);
   s(io.oamTempCounterOverflow);

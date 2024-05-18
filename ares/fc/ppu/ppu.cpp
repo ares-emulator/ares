@@ -13,7 +13,7 @@ PPU ppu;
 auto PPU::load(Node::Object parent) -> void {
   ciram.allocate(2048);
   cgram.allocate(32);
-  spriteEvaluation.oam.allocate(256);
+  spriteEvaluation.load();
 
   node = parent->append<Node::Object>("PPU");
 
@@ -35,7 +35,7 @@ auto PPU::unload() -> void {
   node.reset();
   ciram.reset();
   cgram.reset();
-  spriteEvaluation.oam.reset();
+  spriteEvaluation.unload();
 }
 
 auto PPU::main() -> void {
@@ -47,8 +47,8 @@ auto PPU::step(u32 clocks) -> void {
 
   while(clocks--) {
     // Not vblank or in pal spriteEvaluation Scanline
-    if (ppu.io.ly < 240 || ppu.io.ly == ppu.vlines() - 1 ||
-        (Region::PAL() && ppu.io.ly >= 264 && ppu.io.ly <= vlines() - 2))
+    if (io.ly < 240 || io.ly == L - 1 ||
+        (Region::PAL() && io.ly >= 264 && io.ly <= L - 2))
       spriteEvaluation.main();
 
     if(io.ly == 240 && io.lx == 340) io.nmiHold = 1;

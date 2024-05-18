@@ -1,8 +1,29 @@
+auto PPU::SpriteEvaluation::load() -> void {
+  oam.allocate(256);
+}
+
+auto PPU::SpriteEvaluation::unload() -> void {
+  oam.reset();
+}
+
 auto PPU::SpriteEvaluation::main() -> void {
   // skip in vblank
   if (!ppu.enable()) return;
 
-  n16 x = ppu.io.lx - 1;
+  if (ppu.io.ly == ppu.vlines() - 1) {
+    // In https://www.nesdev.org/wiki/PPU_sprite_evaluation,
+    // Sprite evaluation does not happen on the pre-render
+    // scanline. Because evaluation applies to the next
+    // line's sprite rendering, no sprites will be rendered
+    // on the first scanline, and this is why there is a 1
+    // line offset on a sprite's Y coordinate.
+    if (ppu.io.lx > 0 && ppu.io.lx <= 8) {
+      if (io.oamMainCounterIndex >= 2) {
+        oam[ppu.io.lx - 1] = oam[(io.oamMainCounter & 0xf8) + ppu.io.lx - 1];
+      }
+    }
+    return;
+  }
 
   if (ppu.io.lx == 0) {
     io.oamTempCounter = 0;
@@ -17,16 +38,15 @@ auto PPU::SpriteEvaluation::main() -> void {
       return;
     }
 
-    soam[io.oamTempCounterIndex].data[io.oamTempCounterTiming] = io.oamData;
+    soam[io.oamTempCounterIndex][io.oamTempCounterTiming] = io.oamData;
     ++io.oamTempCounter;
     return;
   }
 
   if (ppu.io.lx == 65) {
-    io.oamMainCounter = io.oamAddress;
     io.oamMainCounterOverflow = false;
 
-    io.oamMainCounter = 0;
+    io.oamTempCounter = 0;
     io.oamTempCounterOverflow = false;
   }
   
@@ -40,7 +60,7 @@ auto PPU::SpriteEvaluation::main() -> void {
     if (io.oamMainCounterOverflow) {
       ++io.oamMainCounterIndex;
       if (io.oamTempCounterOverflow)
-        io.oamData = soam[io.oamTempCounterIndex].data[io.oamTempCounterTiming];
+        io.oamData = soam[io.oamTempCounterIndex][io.oamTempCounterTiming];
       return;
     }
 
@@ -49,7 +69,7 @@ auto PPU::SpriteEvaluation::main() -> void {
       u32 y = ly - io.oamData;
 
       if (io.oamTempCounterOverflow) {
-        io.oamData = soam[io.oamTempCounterIndex].data[io.oamTempCounterTiming];
+        io.oamData = soam[io.oamTempCounterIndex][io.oamTempCounterTiming];
 
         if (y >= ppu.io.spriteHeight) {
           if (++io.oamMainCounterIndex == 0)
@@ -77,13 +97,13 @@ auto PPU::SpriteEvaluation::main() -> void {
       return;
     } else {
       if (io.oamTempCounterOverflow) {
-        io.oamData = soam[io.oamTempCounterIndex].data[io.oamTempCounterTiming];
+        io.oamData = soam[io.oamTempCounterIndex][io.oamTempCounterTiming];
         ++io.oamTempCounter;
         ++io.oamMainCounterTiming;
         return;
       }
 
-      soam[io.oamTempCounterIndex].data[io.oamTempCounterTiming] = io.oamData;
+      soam[io.oamTempCounterIndex][io.oamTempCounterTiming] = io.oamData;
       ++io.oamTempCounter;
       ++io.oamMainCounterTiming;
 
@@ -97,6 +117,28 @@ auto PPU::SpriteEvaluation::main() -> void {
       return;
     }
   }
+
+  if (ppu.io.lx == 257) {
+    io.oamTempCounter = 0;
+    io.oamTempCounterOverflow = false;
+  }
+
+  // (256, 320]
+  if (ppu.io.lx > 256 && ppu.io.lx <= 320) {
+    io.oamAddress = 0;
+
+    if (ppu.io.lx & 1) {
+      io.oamData = oam[io.oamMainCounter];
+      return;
+    }
+
+    io.oamData = soam[io.oamTempCounterIndex][io.oamTempCounterTiming];
+    ++io.oamTempCounter;
+  }
+
+  // (320, 336]
+  if (ppu.io.lx > 320 && ppu.io.lx <= 336)
+    io.oamData = soam[0][0];
 }
 
 auto PPU::SpriteEvaluation::power(bool reset) -> void {
