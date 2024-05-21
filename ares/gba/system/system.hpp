@@ -4,6 +4,7 @@ struct BIOS {
   //bios.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
+  auto readROM(n25 address) -> n32;
   auto read(u32 mode, n25 address) -> n32;
   auto write(u32 mode, n25 address, n32 word) -> void;
   auto serialize(serializer&) -> void;
