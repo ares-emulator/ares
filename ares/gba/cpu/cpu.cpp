@@ -81,10 +81,10 @@ auto CPU::step(u32 clocks) -> void {
   }
 
   #if defined(PROFILE_PERFORMANCE)
-  //20% speedup by only synchronizing other components every 64 clock cycles
+  //10-20% speedup by only synchronizing other components every 16 clock cycles
   static u32 counter = 0;
   counter += clocks;
-  if(counter < 64) return;
+  if(counter < 16) return;
   clocks = counter;
   counter = 0;
   #endif
