@@ -9,4 +9,4 @@ vec4 get_effective_corners(vec4 crop, vec4 input_size, float sample_size) {
                                   input_size.y - crop.z);
 }
 
-#include "crop_and_sample_common.slang"
+#include "crop_and_sample_common.inc"

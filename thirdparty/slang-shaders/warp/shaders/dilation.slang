@@ -3,7 +3,7 @@
 /*
    Hyllian's dilation Shader
    
-   Copyright (C) 2011-2015 Hyllian - sergiogdb@gmail.com
+   Copyright (C) 2011-2024 Hyllian - sergiogdb@gmail.com
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -31,14 +31,14 @@ layout(push_constant) uniform Push
 	vec4 OriginalSize;
 	vec4 OutputSize;
 	uint FrameCount;
-   float DILATION_Y_WEIGHT, DILATION_U_WEIGHT, DILATION_V_WEIGHT;
+	float DILATION_STRENGTH;
 } params;
 
-#pragma parameter DILATION_Y_WEIGHT "Dilation Y Weight" 48.0 0.0 128.0 0.5
-#pragma parameter DILATION_U_WEIGHT "Dilation U Weight" 7.0  0.0 128.0 0.5
-#pragma parameter DILATION_V_WEIGHT "Dilation V Weight" 6.0  0.0 128.0 0.5
+#pragma parameter DILATION_STRENGTH "Dilation Strength" 0.5 0.0 1.0 0.1
 
-#define mul(c,d) (d*c)
+#define DILATION_STRENGTH params.DILATION_STRENGTH
+
+const vec3 luma = vec3(0.299, 0.587, 0.114);
 
 layout(std140, set = 0, binding = 0) uniform UBO
 {
@@ -80,12 +80,9 @@ layout(location = 3) in vec4 t4;
 layout(location = 0) out vec4 FragColor;
 layout(set = 0, binding = 2) uniform sampler2D Source;
 
-const mat3 yuv = mat3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
 
 void main()
 {
-   mat3 yuv_weighted = mat3(params.DILATION_Y_WEIGHT * yuv[0], params.DILATION_U_WEIGHT * yuv[1], params.DILATION_V_WEIGHT * yuv[2]);
-
 	vec3 B  = texture(Source, t2.yw).rgb;
 	vec3 D  = texture(Source, t3.xw).rgb;
 	vec3 E  = texture(Source, t3.yw).rgb;
@@ -93,12 +90,14 @@ void main()
 
 	vec3 H  = texture(Source, t4.yw).rgb;
 
-	vec4 b = mul( mat4x3(B, D, H, F), yuv_weighted[0] );
-	vec4 e = mul( mat4x3(E, E, E, E), yuv_weighted[0] );
+	vec4 b = luma * mat4x3(B, D, H, F);
+	float e = dot(E, luma);
 
 
-	float di = max(max(b.x, b.y), max(b.z, max(b.w, e.x)));
-	vec3 res = (di==b.x) ? B : (di==b.y) ? D : (di==b.z) ? H : (di==b.w) ? F : E;
+	float di = max(max(b.x, b.y), max(b.z, max(b.w, e)));
+	vec3 color = (di==b.x) ? B : (di==b.y) ? D : (di==b.z) ? H : (di==b.w) ? F : E;
 
-	FragColor = vec4(res, 1.0);
+	color = mix(E, color, DILATION_STRENGTH);
+
+	FragColor = vec4(color, 1.0);
 }

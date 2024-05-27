@@ -1,7 +1,7 @@
 #version 450
 
 /*
-    Blur fill v1.8 by fishku
+    Blur fill v1.9 by fishku
     Copyright (C) 2023
     Public domain license (CC0)
 
@@ -40,13 +40,13 @@
 */
 
 // clang-format off
-#include "parameters.slang"
-#include "../../../blurs/shaders/dual_filter/parameters.slang"
-#include "../../../pixel-art-scaling/shaders/pixel_aa/parameters.slang"
+#include "parameters.inc"
+#include "../../../blurs/shaders/dual_filter/parameters.inc"
+#include "../../../pixel-art-scaling/shaders/pixel_aa/parameters.inc"
 // clang-format on
 
-#include "../../../misc/shaders/input_transform/input_transform.slang"
-#include "../../../pixel-art-scaling/shaders/pixel_aa/shared.slang"
+#include "../../../misc/shaders/input_transform/input_transform.inc"
+#include "../../../pixel-art-scaling/shaders/pixel_aa/shared.inc"
 
 layout(push_constant) uniform Push {
     vec4 InputSize;
@@ -105,7 +105,7 @@ void main() {
         vec2(param.FORCE_INTEGER_SCALING_H, param.FORCE_INTEGER_SCALING_V),
         param.OVERSCALE,
         /* output_size_is_final_viewport_size = */ false);
-    vec2 shift = vec2(param.SHIFT_H, param.SHIFT_V);
+    const vec2 shift = vec2(param.SHIFT_H, param.SHIFT_V);
     tx_coord = o2i(vTexCoord, param.InputSize.xy, crop, shift, param.Rotation,
                    param.CENTER_AFTER_CROPPING, scale_o2i);
     tx_per_px = scale_o2i * param.OutputSize.zw;

@@ -326,18 +326,22 @@ void main()
    //////// Draw text to show resolutions ////////// 
    if (HSM_RESOLUTION_DEBUG_ON == 1)
    {
-      vec2 ps = global.OutputSize.zw;
+      vec2 ps = global.DerezedPassSize.zw;
+		vec2 outline_offset_mult = ps;
+		outline_offset_mult.x *= max(floor(global.DerezedPassSize.x / 240 + 0.01), 1);
+		outline_offset_mult.y *= max(floor(global.DerezedPassSize.y / 200 + 0.01), 1);
+
       vec4 text_rgba = vec4(0);
       text_rgba = texture(TextPass, vTexCoord);
       text_rgba.rgb *= vec3(1, 1, 0);
-      text_rgba.a += texture(TextPass, vTexCoord + ps * vec2(1, 0)).a;
-      text_rgba.a += texture(TextPass, vTexCoord + ps * vec2(0, 1)).a;
-      text_rgba.a += texture(TextPass, vTexCoord + ps * vec2(1, 1)).a;
-      text_rgba.a += texture(TextPass, vTexCoord + ps * vec2(-1, 1)).a;
-      text_rgba.a += texture(TextPass, vTexCoord + ps * vec2(-1, 0)).a;
-      text_rgba.a += texture(TextPass, vTexCoord + ps * vec2(0, -1)).a;
-      text_rgba.a += texture(TextPass, vTexCoord + ps * vec2(-1, -1)).a;
-      text_rgba.a += texture(TextPass, vTexCoord + ps * vec2(1, -1)).a;
+      text_rgba.a += texture(TextPass, vTexCoord + outline_offset_mult * vec2(1, 0)).a;
+      text_rgba.a += texture(TextPass, vTexCoord + outline_offset_mult * vec2(0, 1)).a;
+      text_rgba.a += texture(TextPass, vTexCoord + outline_offset_mult * vec2(1, 1)).a;
+      text_rgba.a += texture(TextPass, vTexCoord + outline_offset_mult * vec2(-1, 1)).a;
+      text_rgba.a += texture(TextPass, vTexCoord + outline_offset_mult * vec2(-1, 0)).a;
+      text_rgba.a += texture(TextPass, vTexCoord + outline_offset_mult * vec2(0, -1)).a;
+      text_rgba.a += texture(TextPass, vTexCoord + outline_offset_mult * vec2(-1, -1)).a;
+      text_rgba.a += texture(TextPass, vTexCoord + outline_offset_mult * vec2(1, -1)).a;
       text_rgba = clamp(text_rgba, 0, 1);
       FragColor = HSM_PreMultAlphaBlend(FragColor, text_rgba);
    }

@@ -36,6 +36,10 @@ void main() {
         vSmpBorder_min = smp_internalness;
         vSmpBorder_max = 1.0-smp_internalness;
 
+        if (DO_GAME_GEOM_OVERRIDE > 0.5) {
+            vSmpBorder_min = content_geom_override_zoom(vec2(vSmpBorder_min), GAME_GEOM_ASPECT, get_in_aspect(), GAME_GEOM_VSHIFT, GAME_GEOM_HSHIFT, GAME_GEOM_ZOOM).x;
+            vSmpBorder_max = content_geom_override_zoom(vec2(vSmpBorder_max), GAME_GEOM_ASPECT, get_in_aspect(), GAME_GEOM_VSHIFT, GAME_GEOM_HSHIFT, GAME_GEOM_ZOOM).x;
+        }
 
     bool isrotated = is_rotated();
     vIs_rotated = float(isrotated);
@@ -45,12 +49,18 @@ void main() {
             else
         vAMBI_STRETCH = AMBI_STRETCH;
 
-    //Move virtual leds position inside to compensate for widen effect
-       float  led_internalness = AMBI_INT_OFFSET + (vAMBI_STRETCH *0.025);
+        //Keep leds in place when content geometry zoom changes
+        float ambi_int_offset = AMBI_INT_OFFSET;
+        if (DO_GAME_GEOM_OVERRIDE + DO_BEZEL > 1.5) {
+                ambi_int_offset = content_geom_override_zoom    (vec2(ambi_int_offset), GAME_GEOM_ASPECT, get_in_aspect(), GAME_GEOM_VSHIFT, GAME_GEOM_HSHIFT, GAME_GEOM_ZOOM).x;
+        }
+        
+        //Move virtual leds position inside to compensate for widen effect
+        float led_internalness = ambi_int_offset + (vAMBI_STRETCH *0.025);
 
        
     //less internalness when using bezel:
-       led_internalness -= 0.07 * DO_BEZEL;
+        led_internalness -= 0.07 * DO_BEZEL;
        
         //led_internalness = -0.18   ;
 
@@ -62,7 +72,7 @@ void main() {
     vSmp_step = (vSmpBorder_max - vSmpBorder_min)  / (leds_per_strip-1);
 
     //Calc a lod for a texture sized led_strip x led_strip
-        lod = log2(global.flick_and_noise_passSize.y / leds_per_strip);
+        lod = log2(global.flick_and_noise_passSize.y / leds_per_strip) - 1;
 
 
    //Scale to the original aspect
@@ -80,9 +90,9 @@ void main() {
     if (DO_GLOBAL_SHZO >0.5)
         pre_pass_coords = zoom(pre_pass_coords + vec2(-GLOBAL_OFFX, -GLOBAL_OFFY), GLOBAL_ZOOM );
 
-    if (DO_GAME_GEOM_OVERRIDE > 0.5)
-        pre_pass_coords = content_geom_override(pre_pass_coords, GAME_GEOM_ASPECT, get_in_aspect(), GAME_GEOM_VSHIFT, GAME_GEOM_HSHIFT, GAME_GEOM_ZOOM);
-
+    if (DO_GAME_GEOM_OVERRIDE > 0.5) {
+        pre_pass_coords = content_geom_override_zoom(pre_pass_coords, GAME_GEOM_ASPECT, get_in_aspect(), GAME_GEOM_VSHIFT, GAME_GEOM_HSHIFT, GAME_GEOM_ZOOM);
+    }
 
     if (DO_BEZEL > 0.5)
         pre_pass_coords = zoomout_coords(pre_pass_coords, -get_BEZEL_INNER_ZOOM());
@@ -118,15 +128,22 @@ layout(location = 0) out vec4 FragColor;
 layout(set = 0, binding = 1) uniform sampler2D PastSampler;
 layout(set = 0, binding = 2) uniform sampler2D avglum_pass;
 layout(set = 0, binding = 3) uniform sampler2D avglum_passFeedback;
-layout(set = 0, binding = 4) uniform sampler2D flick_and_noise_pass;
+layout(set = 0, binding = 4) uniform sampler2D colortools_and_ntsc_pass;
 
 
 
 vec3 ambi_push_pass(vec2 coords, float f_lod) {
-   vec3 pixel_out = textureLod(flick_and_noise_pass, coords, f_lod).rgb;
-   pixel_out = pow(pixel_out, vec3(AMBI_GAMMA) );
-   pixel_out = pixel_push_luminance(pixel_out, vAMBI_POWER);
-   return pixel_out;
+    vec2 smp_coords = coords;
+    if (AUTOCROP_MAX > 0.0) {
+        float autocrop_zoom = texture(avglum_pass, AUTOCROP_SAMPLING_POINT).a;
+        smp_coords = zoom(smp_coords, autocrop_zoom);
+    }
+    
+    vec3 pixel_out = textureLod(colortools_and_ntsc_pass, smp_coords, f_lod).rgb;
+    pixel_out = pow(pixel_out, vec3(AMBI_GAMMA)); 
+
+    pixel_out = pixel_push_luminance(pixel_out, vAMBI_POWER);
+    return pixel_out;
 }
 
 
@@ -145,11 +162,15 @@ vec3 ambi_pre_pass(vec2 coords) {
         coords = tilt(coords, vIs_rotated, TILT_X);
 
     //Skip coords in the rect "under the tube"
-    if (coords.x > tol_start &&
-        coords.x < tol_end   &&
-        coords.y > tol_start &&
-        coords.y < tol_end)
-    return vec3(0.0);
+   // if (is_first_inside_rect(coords, vec4(tol_start, tol_start, tol_end ,tol_end)))
+   //     return vec3(0.0);
+    vec2 skip_coords = coords;
+    
+    if (DO_GAME_GEOM_OVERRIDE > 0.5 )
+        skip_coords = content_geom_override_zoom_inv(skip_coords, GAME_GEOM_ASPECT, get_in_aspect(), GAME_GEOM_VSHIFT, GAME_GEOM_HSHIFT, GAME_GEOM_ZOOM);
+    
+    if (is_first_inside_rect(skip_coords, vec4(tol_start, tol_start, tol_end ,tol_end)))
+        return vec3(0.0);
 
     //Stretch the lights?
         float z1=distance(vec2(0.5,0.5), coords);

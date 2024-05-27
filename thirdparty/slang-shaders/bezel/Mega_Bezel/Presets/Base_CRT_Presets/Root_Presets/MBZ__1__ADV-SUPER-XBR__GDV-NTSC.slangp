@@ -106,7 +106,7 @@ scale_x18 = "1.000000"
 scale_type_y18 = "source"
 scale_y18 = "1.000000"
 
-shader19 = ../../../shaders/hyllian/crt-super-xbr/custom-bicubic-X.slang
+shader19 = ../../../shaders/hyllian/crt-super-xbr/custom-bicubic-x.slang
 filter_linear19 = "false"
 wrap_mode19 = "clamp_to_border"
 mipmap_input19 = "false"
@@ -225,7 +225,7 @@ filter_linear35 = true
 scale_type_x35 = absolute
 scale_x35 = 640.0
 scale_type_y35 = source
-scale_y35 = 1.0 
+scale_y35 = 1.0
 float_framebuffer35 = true
 
 shader36 = ../../../shaders/guest/hsm-gaussian_vertical.slang
@@ -242,7 +242,7 @@ filter_linear37 = true
 scale_type_x37 = absolute
 scale_x37 = 640.0
 scale_type_y37 = absolute
-scale_y37 = 480.0 
+scale_y37 = 480.0
 float_framebuffer37 = true
 
 shader38 = ../../../shaders/guest/hsm-bloom_vertical.slang
@@ -356,9 +356,9 @@ alias50 = "CombinePass"
 textures = "SamplerLUT1;SamplerLUT2;SamplerLUT3;SamplerLUT4;IntroImage;ScreenPlacementImage;TubeDiffuseImage;TubeColoredGelImage;TubeShadowImage;TubeStaticReflectionImage;BackgroundImage;BackgroundVertImage;ReflectionMaskImage;FrameTextureImage;CabinetGlassImage;DeviceImage;DeviceVertImage;DeviceLEDImage;DecalImage;NightLightingImage;NightLighting2Image;LEDImage;TopLayerImage;"
 
 SamplerLUT1 = ../../../shaders/guest/lut/trinitron-lut.png
-SamplerLUT1_linear = true 
+SamplerLUT1_linear = true
 SamplerLUT2 = ../../../shaders/guest/lut/inv-trinitron-lut.png
-SamplerLUT2_linear = true 
+SamplerLUT2_linear = true
 SamplerLUT3 = ../../../shaders/guest/lut/nec-lut.png
 SamplerLUT3_linear = true
 SamplerLUT4 = ../../../shaders/guest/lut/ntsc-lut.png

@@ -1,10 +1,10 @@
 #version 450
 
-// See dual_filter.slang for copyright and other information.
+// See dual_filter.inc for copyright and other information.
 
-#include "dual_filter.slang"
-#include "parameters.slang"
-#include "parameters_bloom.slang"
+#include "dual_filter.inc"
+#include "parameters.inc"
+#include "parameters_bloom.inc"
 
 layout(push_constant) uniform Push {
     vec4 SourceSize;

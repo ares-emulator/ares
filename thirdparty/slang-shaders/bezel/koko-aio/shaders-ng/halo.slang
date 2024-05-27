@@ -8,6 +8,7 @@ layout(location = 1) in vec2 TexCoord;
 layout(location = 0) out vec2 vTexCoord;
 layout(location = 1) out vec2 vHALO_SHARPNESS;
 layout(location = 2) out float vHALO_POWER;
+layout(location = 3) out float vDeltaRenderOk;
 
 vec2 radius_blur_adapt(vec2 bsize, vec4 sourcesize){
     vec2 r;
@@ -39,25 +40,30 @@ void main() {
       vHALO_POWER = HALO_POWER;
          else
       vHALO_POWER = -HALO_POWER/10.0;
+    
+    bool bIs_Interlaced = is_interlaced();
+    vDeltaRenderOk = is_deltarender_allowed(bIs_Interlaced); 
+    
 }
 
 #pragma stage fragment
 layout(location = 0) in vec2 vTexCoord;
 layout(location = 1) in vec2 vHALO_SHARPNESS;
 layout(location = 2) in float vHALO_POWER;
+layout(location = 3) in float vDeltaRenderOk;
+
 layout(location = 0) out vec4 FragColor;
 
 layout(set = 0, binding = 4) uniform sampler2D Source;
-
+layout(set = 0, binding = 5) uniform sampler2D in_glow_pass_x;
 
 void main() {
     
     if (DO_HALO == 0.0 ) return;
     
-
     //Pass the right texture unchanged for tighter blurs:
     if (HALO_SHARPNESS >= GLOW_SHARP_MAX) {
-        FragColor = vec4( pow(texture(Source, vTexCoord).rgb * vHALO_POWER,  vec3(HALO_GAMMA_OUT)), 1.0) ;
+        FragColor = vec4( pow(texture(Source, vTexCoord).rgb * vHALO_POWER,  vec3(HALO_GAMMA_OUT)), 0.0) ;
         return;
     }
     
@@ -66,6 +72,6 @@ void main() {
 
     pixel_haloed =  pow(pixel_haloed, vec3(HALO_GAMMA_OUT));
     
-    FragColor = vec4(pixel_haloed.rgb, 1.0);
+    FragColor = vec4(pixel_haloed.rgb, 0.0);
     
 }

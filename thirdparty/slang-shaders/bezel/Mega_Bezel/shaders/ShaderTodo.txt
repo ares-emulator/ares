@@ -1,19 +1,20 @@
-![Mega_Bezel_Logo|512x256, 75%](upload://6PNkvcMF9Go9Wnk6OJXfYR1opXI.png) 
+![Mega_Bezel_Logo|512x256, 75%](upload://6PNkvcMF9Go9Wnk6OJXfYR1opXI.png)
 
-Mega Bezel is updated to V1.16.1_2023-12-26
+Mega Bezel is updated to V1.17.2_2024-05-18
 
 Changes:
-  * Fixed NTSC variants
-
+  * Fixed Paths
+  * Removed presets which are set to fail
 
 ----------------------------------------------------
 --- TODO  ---------------------------------------
 ----------------------------------------------------
 
+  * Create Independent DREZ shader for main repo
+  * Create presets for drez-smooth-adv-gdv-ntsc but without ntsc
   * Update Smooth presets to have a Hires Scanlines option, and possibly horizontal source sampling for antialias look
   * Use parameters to control Text instead of custom text for each family
     * Get from Cache
-  * Implement Original Scaling Mode
   * Check why intro options are not working
   * Check Banding on Highlight on glass presets
   * Check Brightness on Megatron Glass Presets
@@ -135,7 +136,7 @@ Scene Dynamic Lighting
   * Gameboy
     * Fix DMG Shader or make new one
     * Fix Low Contrast Issue
-    * Multiple palettes including Custom for Gameboy  
+    * Multiple palettes including Custom for Gameboy
     * Add Gameboy Palettes https://www.deviantart.com/thewolfbunny/gallery/69987002/game-boy-palettes
 
   * Independent Bezel Scaling not the same as non-int scale
@@ -156,20 +157,20 @@ Scene Dynamic Lighting
   * Put Torridgristle LUT back in for blue skys?
 
 Documentation
-  Troubleshooting 
-    New install of retroarch 
-    Turn all overlays off 
+  Troubleshooting
+    New install of retroarch
+    Turn all overlays off
     I have rings, wavy distortions (Moire)
 
 Moire
   The Waves you are seeing are called a Moire effect, it’s the same effect you see through a screen door sometimes.
   It is caused by using a crt shader with scanlines and tube curvature and made worse when the resolution is limited. It is a thorny problem , and sometimes hard to get rid of at 1080, it is much less of a problem at 4k.
   Things which can help/fix the problem
-    Reducing strength of scanlines, 
+    Reducing strength of scanlines,
     Reducing or curvature or setting it to 0 will definitely fix it.
     If you keep using curvature using Integer scale in the shader parameters can sometimes help.
 
-    If making own presets reference from crt-Base presets 
+    If making own presets reference from crt-Base presets
 
 Old Megabezel https://github.com/HyperspaceMadness/shaders_slang/tree/adf6dc3c0f09db11ebf4fbcf85098ac8232acfcc
 
@@ -187,7 +188,7 @@ Old Megabezel https://github.com/HyperspaceMadness/shaders_slang/tree/adf6dc3c0f
     * game_name
     * [shadertype], [gamename], [corename], [contentdirectory]
     * Check textures and use default if not found
-    
+
 
   * Append (Prepend) Shader Preset - to add a shader preset to the beginning of the chain
   * Fix edit shader in UI - Changes are currently lost or need to apply twice
@@ -219,7 +220,7 @@ Old Megabezel https://github.com/HyperspaceMadness/shaders_slang/tree/adf6dc3c0f
       * Would avoid people crashing with internal resolution multiple
 
   * Add "Timer" uniform variable vec4(total-count, count-since-shader-load, oscillator[1,0,1,0,1,...], [unknown/undefined])
-    * Unknown could be frames since direction change, good for rewind effect 
+    * Unknown could be frames since direction change, good for rewind effect
 
   * Check for alias used multiple times appears as semantic error now
   * global.x is semantic error if x not in global
@@ -241,11 +242,11 @@ Snow + Mega Bezel Logo
   *  STANDARD-HD-CORE -             105 FPS
   *  BASIC-BORDER-WITH-REFLECTION - 175 FPS  -  Old Reflect Only Preset 165 FPS
   *  BASIC-BORDER -                 295 FPS  -  Old Screen Scale Preset 370 FPS
-  
+
 *  Performance on HD-CORE E.G. 1920x1080:
-  *  ADVANCED -                     60 FPS 
-  *  ADVANCED-HD-CORE -             70 FPS 
-  *  STANDARD -                     85 FPS 
-  *  STANDARD-HD-CORE -             100 FPS 
-  *  BASIC-BORDER-WITH-REFLECTION - 126 FPS 
-  *  BASIC-BORDER                 - 180 FPS 
+  *  ADVANCED -                     60 FPS
+  *  ADVANCED-HD-CORE -             70 FPS
+  *  STANDARD -                     85 FPS
+  *  STANDARD-HD-CORE -             100 FPS
+  *  BASIC-BORDER-WITH-REFLECTION - 126 FPS
+  *  BASIC-BORDER                 - 180 FPS

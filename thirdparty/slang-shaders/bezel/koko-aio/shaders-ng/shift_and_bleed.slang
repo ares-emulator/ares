@@ -60,9 +60,8 @@ layout(location = 6) in float vShow_artifact_mask;
 
 layout(location = 0) out vec4 FragColor;
 
-layout(set = 0, binding = 3) uniform sampler2D FXAA_pass;
-layout(set = 0, binding = 4) uniform sampler2D flick_and_noise_pass;
-layout(set = 0, binding = 5) uniform sampler2D colortools_and_ntsc_pass;
+layout(set = 0, binding = 1) uniform sampler2D FXAA_pass;
+layout(set = 0, binding = 2) uniform sampler2D flick_and_noise_pass;
 
 
 #define bandwidth_mhz_Y_ntsc 4.2
@@ -203,7 +202,6 @@ vec4 pixel_bleed(vec4 pixel_in, vec2 co, sampler2D in_texture, vec4 sourcesize2)
 }
 
 void main() {
-   float pixel_alpha_ntsc_artifacts; // <- this carries ntsc artifacts needed by glow to modulate blur there.
    vec4 pixel_out;
 
       if ( DO_FXAA == 1.0)  {

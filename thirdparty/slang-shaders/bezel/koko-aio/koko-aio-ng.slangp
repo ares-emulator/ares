@@ -62,29 +62,42 @@ shaders = 17
 # Color tools
 # Ghosting
 # Phosphor persistance
+# Geometry override shifting (so it needs clamp_to _border)
+# It generates mipmaps to be used by several passes afterwards
 # Also, it carries a series of debug patterns that need to be activated by modifying 
 # some #defines in the pass itself
+
+#ASMDEBUG GLSL27
            shader0 = shaders-ng/colortools_and_ntsc_pass.slang
             alias0 = "colortools_and_ntsc_pass"
 #float_framebuffer needed by phosphor persistance
-float_framebuffer0 = true
-    filter_linear0 = false
        scale_type0 = source
             scale0 = 1.0
-        wrap_mode0 = "clamp_to_border"
+            
+// (**Note 0)
+// Watch out for filter_linear0 and wrap_mode0
+// In retroarch, metadatas such as the followings, usually applies to the
+// previous pass (Original, in this case).
+// However it seems that those metadatas are applied to the feedback of the pass itself.
+// Now, since we need to compare colortools_and_ntsc_pass and colortools_and_ntsc_passFeedback
+// for Deltarender purposes, it is important that they share the same filtering and wrap mode.
+// Hence, we have to set the following as the same of float_framebuffer0,filter_linear0 and wrap_mode0
+float_framebuffer0 = "true"
+    filter_linear0 = "true"
+        wrap_mode0 = "mirrored_repeat"
+
 
 
         
 # This pass emulates the flickering observed on crts when the input signal is interlaced
 # and there is high brightness difference between adiacent scanlines.
-# This pass is able to generate mipmaps because the next pass has mipmap_input true.
 #
 # Note that the wrap_mode is set to "mirrored_repeat".
 # This allow to cheaply generate a mirrored image that will be used later on to
 # draw reflections on the bezel.
 #
 # Also, it upscales the input signal to 2X.
-# This is needed because FXAA, the glow and the halo pass works best at at least 640x480 resolution.
+# This is needed because FXAA, the glow and the halo pass works best with at least 640x480 resolution.
 # Note that this is needed only for lowres content, but if the input signal is already at that
 # size, there is no need to scale to 2x, and it is possible to gain performance by turning
 # scale_x1 and scale_y1 from 2.0 to 1.0.
@@ -94,14 +107,20 @@ float_framebuffer0 = true
 # and only scale_y1 = 2.0 is needed.
 # As an alternative option you can configure P-UAE to always output to low resolution for x and y
 # But this way you loose the emulation for hires content (not much games uses it anyway).
+        
+# ASMDEBUG: GLSL30
            shader1 = shaders-ng/flick_and_noise.slang
             alias1 = "flick_and_noise_pass"
-    filter_linear1 = false
        scale_type1 = source
           scale_x1 = 2.0
           scale_y1 = 2.0  
+     mipmap_input1 = "true"
+     
+//(See **Note 0)
         wrap_mode1 = "mirrored_repeat"
-     float_framebuffer1 = true
+float_framebuffer1 = "true"
+    filter_linear1 = "true"
+     
 
 
 
@@ -112,12 +131,13 @@ float_framebuffer0 = true
 # makes first_pass mipmaps available to everyone.
 # Even if theoretically not needed, texture() occurrence in FXAA_pass needed to be switched 
 # to textureLod(..,0.0) or it acts weird, don't ask me why.
+
+# ASMDEBUG: GLSL33
            shader2 = shaders-ng/fxaa.slang
             alias2 = "FXAA_pass"
     filter_linear2 = true
        scale_type2 = source
             scale2 = 1.0
-     mipmap_input2 = true
       //this *has* to be clamp_to_border because  specular reflections need to turn to black
       //if geometry content override is shifting/zooming out the image.
         wrap_mode2 = "clamp_to_border"
@@ -127,94 +147,96 @@ float_framebuffer0 = true
 # This pass emulates NTSC/PAL composite color bleeding and deconvergence
 # deconvergence should really be applied in th final pass, but it is too heavy there.
 # This pass also apply the input gamma needed for glow pass.
+        
+# ASMDEBUG: GLSL36
            shader3 = shaders-ng/shift_and_bleed.slang
             alias3 = "shift_and_bleed_pass"
     filter_linear3 = true
             scale3 = 1.0
        scale_type3 = source
 float_framebuffer3 = true
-     mipmap_input3 = false
         wrap_mode3 = "mirrored_repeat"
 
         
         
 # Blur and/or glows and/or sharpens the image as requested 
 # This passes aims to simulate the signal input power.
+        
+# ASMDEBUG: GLSL39
            shader4 = shaders-ng/in_glow_x.slang
             alias4 = "in_glow_pass_x"
     filter_linear4 = true
             scale4 = 1.0
        scale_type4 = source    
 float_framebuffer4 = true
-//This has to be mipmap true and mirrored true
-//mipmaps and mirrored are used to emulate light diffusion from reflection blur pass
-//mipmaps are also used by deltarender
-        wrap_mode4 = "mirrored_repeat"
-     mipmap_input4 = true
-        
+        wrap_mode4 = "clamp_to_edge"
+     
+# ASMDEBUG: GLSL42
            shader5 = shaders-ng/in_glow_y.slang
             alias5 = "in_glow_pass"
     filter_linear5 = true
             scale5 = 1.0
        scale_type5 = source    
 float_framebuffer5 = true
-        wrap_mode5 = "mirrored_repeat"
+        wrap_mode5 = "clamp_to_border"
             
           
         
 # This essentially is the same as glowing by a code point of view.
 # But the result of this pass will be added (+) to the input signal
 # in the final pass.
+        
+# ASMDEBUG: GLSL45
            shader6 = shaders-ng/halo_pre_gamma.slang
             alias6 = "halo_pre_gamma_pass"
     filter_linear6 = true
             scale6 = 1.0
        scale_type6 = source
 float_framebuffer6 = true
-     mipmap_input6 = false
-        wrap_mode6 = "clamp_to_edge"
+        # This has to be clamp_to_border in order for the glow pass to return a black frame
+        # around it, which is needed so that when using geometry override and zooming out the content,
+        # it will have black surrounding.
+        wrap_mode6 = "clamp_to_border"
         
+# ASMDEBUG: GLSL48
            shader7 = shaders-ng/halo.slang
             alias7 = "halo_pass"
     filter_linear7 = true
             scale7 = 1.0
        scale_type7 = source
 float_framebuffer7 = true
-     mipmap_input7 = false
-        wrap_mode7 = "clamp_to_edge"
+        wrap_mode7 = "clamp_to_border"
 
 
 
-# Get the average luminance needed by ambilight here, because:
-#   * mipmap_input only works on "Source" texture
-#   * the following pass does not use the previous one 
-#   * the previous pass represents scene changes.
-
+# Get the average luminance needed by ambilight here.
 #   The rgb channels of the following pass contains luminance info
 #   Used by the bezel code to light up the bezel corners.
 #   The alpha channel contains the sum/3.0 of rgb channels
 #   used to detect scene changes.
 
 # This pass computes the average luminance of the image
-# by grabbing a mipmap from first_pass.
+# by grabbing a mipmap from colortools_and_ntsc_pass.
 # It stores at:
 # alpha@coords 0.25,0.25 at reduced sampling to aid ambient light scene change detection
 # alpha@coords 0.75,0.75 temporally smoother for use with bloom exposure and dynamic zoom
-# rgb: it puts a small mipmap from first_pass that will be used to light-up the bezel highlights
+# rgb: it puts a small mipmap from colortools_and_ntsc_pass used to light-up the bezel highlights.
 # alpha@other coords: simple continuous sampling used to modulate bezel highlights strength.
+        
+# ASMDEBUG: GLSL51
                shader8 = shaders-ng/avglum_pass.slang
                 alias8 = "avglum_pass"
         filter_linear8 = true
            scale_type8 = source
                 scale8 = 0.5
-            wrap_mode8 = "mirrored_repeat"
-         mipmap_input8 = false
+            wrap_mode8 = "clamp_to_border"
     float_framebuffer8 = "true"
          
          
 # The following passes will blur the mirrored part of first_pass
 # to emulate soft bezel reflections.
-
+    
+# ASMDEBUG: GLSL54
                shader9 = shaders-ng/reflection_blur_pre.slang
                 alias9 = "reflected_blurred_pass_pre"
         filter_linear9 = true
@@ -222,13 +244,12 @@ float_framebuffer7 = true
                 scale9 = 1.0
             wrap_mode9 = "clamp_to_border"
 
-            
+# ASMDEBUG: GLSL57          
                shader10 = shaders-ng/reflection_blur.slang
                 alias10 = "reflected_blurred_pass"
         filter_linear10 = true
            scale_type10 = source
                 scale10 = 1.0
-         mipmap_input10 = false
             wrap_mode10 = "mirrored_repeat"
 
 # In the following passes we emulate bloom effect.
@@ -236,6 +257,8 @@ float_framebuffer7 = true
 # and then do other blur passes at reduced size to keep it fast.
 # Every blur pass samples radially around the center and offsets
 # the starting point in every subsequent pass.
+            
+# ASMDEBUG: GLSL60
                shader11 = shaders-ng/bloom_pass_1.slang
                 alias11 = "bloom_pass_1"
         filter_linear11 = true
@@ -243,15 +266,15 @@ float_framebuffer7 = true
                 scale11 = 1.0
             wrap_mode11 = "mirrored_repeat"
     
-    
+# ASMDEBUG: GLSL63
                shader12 = shaders-ng/bloom_pass_2.slang
                 alias12 = "bloom_pass_2"
         filter_linear12 = true
            scale_type12 = source
                 scale12 = 0.5
             wrap_mode12 = "clamp_to_edge"
-
             
+# ASMDEBUG: GLSL66
                shader13 = shaders-ng/bloom_pass_3.slang
                 alias13 = "bloom_pass_3"
         filter_linear13 = true
@@ -259,7 +282,7 @@ float_framebuffer7 = true
                 scale13 = 1.0
             wrap_mode13 = "clamp_to_edge"
 
-        
+# ASMDEBUG: GLSL69
                shader14 = shaders-ng/bloom_pass_4.slang
                 alias14 = "bloom_pass_final"
         filter_linear14 = true
@@ -270,10 +293,11 @@ float_framebuffer7 = true
 
 
 
-# Gather mipmaps from first_pass and use them to light virtual leds under the virtual monitor 
+# Use mipmaps from colortools_and_ntsc_pass to light virtual leds under the virtual monitor 
 # and temporally smooth led lights.
 # Extra logic makes it possible to lower the led reaction time when a scene change is detected.
 # this is achieved through average luminance sampling from avglum_pass
+# ASMDEBUG: GLSL72
                shader15 = shaders-ng/ambi_temporal_pass.slang
                 alias15 = "ambi_temporal_pass"
         filter_linear15 = true
@@ -291,6 +315,7 @@ float_framebuffer7 = true
 # * Black frame insertions
 # * Bezel
 # * Background images
+# ASMDEBUG: GLSL75
            shader16 = shaders-ng/final_pass.slang
             alias16 = "final_pass"
     filter_linear16 = true

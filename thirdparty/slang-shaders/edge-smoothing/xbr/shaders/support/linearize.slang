@@ -9,7 +9,7 @@ layout(push_constant) uniform Push
 	float InputGamma;
 } params;
 
-#pragma parameter InputGamma "INPUT GAMMA" 2.0 1.0 3.0 0.05
+#pragma parameter InputGamma "INPUT GAMMA" 1.0 1.0 3.0 0.05
 
 #define InputGamma params.InputGamma
 

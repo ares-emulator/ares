@@ -1,0 +1,52 @@
+#reference "../Base_CRT_Presets/MBZ__1__ADV__GDV.slangp"
+
+#reference "../../resource/param_values/scene/mega-bezel-duimon-scene.params"
+#reference "../../resource/param_values/tube-effect/tube-effects.params"
+#reference "../../resource/param_values/light/basic__night.params"
+
+CS = 2.000000 
+TNTC = 1.000000 
+WP = -65.000000 
+wp_saturation = 1.200000 
+GAMMA_INPUT = 3.200000 
+m_glow = 1.000000 
+SIZEH = 12.000000 
+SIGMA_H = 3.499999
+SIZEV = 12.000000 
+SIGMA_V = 3.499999 
+SIGMA_VB = 0.750000 
+glow = 0.600000 
+bloom = 0.700000 
+bloom_dist = 2.000000 
+halation = -0.250000 
+gamma_c = 1.250000 
+brightboost = 1.400001 
+brightboost1 = 1.000000 
+gsl = -1.000000 
+scanline1 = 5.500000 
+scanline2 = 7.000000 
+beam_min = 1.100000 
+beam_max = 0.950000 
+beam_size = 0.750000 
+vertmask = -0.600000 
+scans = 1.150000 
+scan_falloff = 0.650000 
+spike = 1.400000 
+h_sharp = 3.500001 
+s_sharp = 0.700000 
+sth = 0.300000 
+warpX = 0.040000 
+warpY = 0.050000 
+csize = 0.115000 
+bsize1 = 0.300000 
+shadowMask = 9.000000 
+maskstr = 1.000000 
+mask_gamma = 2.399999 
+slotmask = 0.800000 
+slotmask1 = 1.000000 
+slotwidth = 3.000000 
+double_slot = 2.000000 
+mclip = 0.350000 
+gamma_out = 3.049999 
+decons = 0.800000 
+post_br = 0.950000

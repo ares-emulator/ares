@@ -1,7 +1,10 @@
 #reference "Base.slangp"
 
 IN_GLOW_POWER = "1.600000"
-GAMMA_OUT = "0.500000"
+
+IN_GLOW_GAMMA = "2"
+GAMMA_OUT = "0.5"
+
 LUMINANCE = "0.0"
 
 DO_SHIFT_RGB = "1.000000"

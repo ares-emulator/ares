@@ -26,7 +26,7 @@ layout(std140, set = 0, binding = 0) uniform UBO
 #pragma parameter mode "Color Profile (1=sRGB, 2=DCI, 3=Rec2020)" 1.0 1.0 3.0 1.0
 int color_mode = int(global.mode);
 
-#pragma parameter lighten_screen "Lighten Screen" 1.0 0.0 1.0 0.05
+#pragma parameter lighten_screen "Lighten Screen" 1.0 0.0 2.0 0.05
 
 #define target_gamma 1.0
 #define display_gamma 1.0
@@ -88,7 +88,7 @@ void main()
 	float lum = profile[3].w;
 
 	// our adjustments need to happen in linear gamma
-	vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma + (params.lighten_screen * -1.0))).rgba;
+	vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma + (1.0 - params.lighten_screen))).rgba;
 
 	screen = clamp(screen * lum, 0.0, 1.0);
 	screen = profile * screen;

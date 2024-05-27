@@ -44,7 +44,7 @@ layout(push_constant) uniform Push
 
 #pragma parameter HSM_DREZ_GSHARP_ON 	"          G-SHARP ON" 	  1 0 1 1
 #define HSM_DREZ_GSHARP_ON params.HSM_DREZ_GSHARP_ON
-
+	
 #pragma parameter HSM_DREZ_THRESHOLD_RATIO 	"         Downsample Threshold (Original Res Vs Downsampled Res)" 	  1.5 1 4 0.1
 #define HSM_DREZ_THRESHOLD_RATIO params.HSM_DREZ_THRESHOLD_RATIO
 
@@ -96,7 +96,8 @@ float gaussian(float x, float y)
 
 void main()
 {
-	if (HSM_DREZ_GSHARP_ON == 0 || OutputSize.y / SourceSize.y < HSM_DREZ_THRESHOLD_RATIO)
+	// If the effext is disabled or the downsample ratio is below the threshold, just sample the texture
+	if (HSM_DREZ_GSHARP_ON == 0 || SourceSize.y / OutputSize.y < HSM_DREZ_THRESHOLD_RATIO)
 	{
 		FragColor = texture(Source, vTexCoord);
 		return;

@@ -2,7 +2,7 @@
     Mega Bezel - Creates a graphic treatment for the game play area to give a retro feel
     Copyright (C) 2019-2021 HyperspaceMadness - HyperspaceMadness@outlook.com
 
-    Incorporates much great feedback from the libretro forum, and thanks 
+    Incorporates much great feedback from the libretro forum, and thanks
     to Hunterk who helped me get started
 
     See more at the libretro forum
@@ -78,15 +78,15 @@ Bottom right pixel is the least significant bit.
 
  â–ˆâ–ˆâ–ˆ  |
 â–ˆ   â–ˆ |
-â–ˆ   â–ˆ |  
+â–ˆ   â–ˆ |
 â–ˆ   â–ˆ |
 â–ˆâ–ˆâ–ˆâ–ˆâ–ˆ |
 â–ˆ   â–ˆ |
 â–ˆ   â–ˆ |
 
-011100 
+011100
 100010
-100010  
+100010
 100010
 111110
 100010
@@ -94,7 +94,7 @@ Bottom right pixel is the least significant bit.
 
 011100 (upper 21 bits)
 100010 -> 011100 100010 100010 100 -> 935188
-100010  
+100010
 100
    010 (lower 21 bits)
 111110 -> 010 111110 100010 100010 -> 780450
@@ -308,7 +308,7 @@ vec2 print_pos = vec2(0);
 float extract_bit(float n, float b)
 {
     b = clamp(b,-1.0,22.0); //Fixes small artefacts on my nexus 7
-	return floor(mod(floor(n / pow(2.0,floor(b))),2.0));   
+	return floor(mod(floor(n / pow(2.0,floor(b))),2.0));
 }
 
 //Returns the pixel at uv in the given bit-packed sprite.
@@ -317,11 +317,11 @@ float sprite(vec2 spr, vec2 size, vec2 uv)
     uv = floor(uv);
     //Calculate the bit to extract (x + y * width) (flipped on x-axis)
     float bit = (size.x-uv.x-1.0) + uv.y * size.x;
-    
+
     //Clipping bound to remove garbage outside the sprite's boundaries.
     bool bounds = all(greaterThanEqual(uv,vec2(0)));
     bounds = bounds && all(lessThan(uv,size));
-    
+
     return bounds ? extract_bit(spr.x, bit - 21.0)+extract_bit(spr.y, bit) : 0.0;
 
 }
@@ -338,7 +338,7 @@ float char_px(vec2 ch, vec2 uv)
 vec2 get_digit(float d)
 {
     d = floor(d);
-    
+
     if(d == 0.0) return ch_0;
     if(d == 1.0) return ch_1;
     if(d == 2.0) return ch_2;
@@ -357,24 +357,24 @@ float print_number(float number,vec2 pos, vec2 uv)
 {
 	vec2 dec_pos = pos;
     float result = 0.0;
-    
+
 	for(int i = 3; i >= -2; i--)
     {
         float clip = float(abs(number) > pow(10.0, float(i)) || i == 0); //Clip off leading zeros.
-        
+
         float digit = mod(number / pow(10.0, float(i)),10.0);
-        
+
         if(i == -1)
         {
             result += sprite(ch_per,CHAR_SIZE, uv - dec_pos) * clip;
             dec_pos.x += CHAR_SPACING.x * clip;
         }
         result += sprite(get_digit(digit),CHAR_SIZE, uv - dec_pos) * clip;
-        
-        
+
+
         dec_pos.x += CHAR_SPACING.x * clip;
     }
-    
+
     return result;
 }
 
@@ -390,7 +390,7 @@ float print_integer(float number, int zeros, vec2 uv)
         {
         	result += char_px(get_digit(digit), uv);
         }
-    }   
+    }
     return result;
 }
 
@@ -399,7 +399,7 @@ float print_integer(float number, int zeros, vec2 uv)
 float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen_region, vec2 derezed_size, vec2 negative_crop_added_size, vec2 cropped_original_size, vec2 sampling_res, vec2 int_mult)
 {
     float col = 0.0;
-    
+
     float current_line_index = 0;
     float margin = STRHEIGHT(1);
 
@@ -408,14 +408,14 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
 
     // Viewport Resolution ----------------------------------------------------
     print_pos.x = margin;
-    print_pos.y += STRHEIGHT(1);  
+    print_pos.y += STRHEIGHT(1);
 
    TEXT_MASK = 0;
    CUR_UV = uv;
-   _V _i _e _w _p _o _r _t _spc _dsh _dsh _dsh _dsh _dsh _dsh _spc 
-   TEXT_MASK += print_integer(viewport_size.x, 0, uv); 
+   _V _i _e _w _p _o _r _t _spc _dsh _dsh _dsh _dsh _dsh _dsh _spc
+   TEXT_MASK += print_integer(viewport_size.x, 0, uv);
    _spc _x _spc
-   TEXT_MASK += print_integer(viewport_size.y, 0, uv); 
+   TEXT_MASK += print_integer(viewport_size.y, 0, uv);
 
     // Screen Region ----------------------------------------------------------
     print_pos.x = margin;
@@ -423,11 +423,11 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
 
    _S _c _r _e _e _n _spc _R _e _g _i _o _n _spc _dsh _spc
    TEXT_MASK += print_integer(screen_region.x, 0, uv);
-   _spc 
+   _spc
    TEXT_MASK += print_integer(screen_region.y, 0, uv);
-   _spc 
+   _spc
    TEXT_MASK += print_integer(screen_region.z, 0, uv);
-   _spc 
+   _spc
    TEXT_MASK += print_integer(screen_region.w, 0, uv);
 
     // Screen Resolution ----------------------------------------------------------
@@ -442,21 +442,21 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
     // Final Aspect Ratio ----------------------------------------------------------
     print_pos.x = margin;
     print_pos.y += STRHEIGHT(1);
-    
+
    _F _i _n _a _l _spc _A _s _p _e _c _t _spc _dsh _dsh _spc
    TEXT_MASK += print_number(screen_size.x/screen_size.y > 1 ? screen_size.x/screen_size.y : screen_size.y/screen_size.x, print_pos, uv);
 
     // Non-Int Scale Percent ----------------------------------------------------------
     print_pos.x = margin;
     print_pos.y += STRHEIGHT(1);
-    
+
     _N _o _n _spc _I _n _t _spc _S _c _l _spc _pct _dsh _dsh _spc
     TEXT_MASK += print_number(screen_size.y / viewport_size.y * 100, print_pos, uv);
 
     // Int Scale Vertical ----------------------------------------------------------
     print_pos.x = margin;
     print_pos.y += STRHEIGHT(1);
-    
+
    _I _n _t _spc _S _c _l _spc _V _e _r _t _spc _dsh _dsh _spc
 
     if (fract(int_mult.y) < 0.01)
@@ -467,7 +467,7 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
     // Int Scale Horizontal ----------------------------------------------------------
     print_pos.x = margin;
     print_pos.y += STRHEIGHT(1);
-    
+
    _I _n _t _spc _S _c _l _spc _H _o _r _z _spc _dsh _dsh _spc
 
     if (fract(int_mult.x) < 0.01)
@@ -480,7 +480,7 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
     {
       print_pos.x = margin;
       print_pos.y += STRHEIGHT(1);
-        
+
       _S _a _m _p _l _i _n _g _spc _R _e _s _spc _dsh _dsh _spc
 
       TEXT_MASK += print_integer(sampling_res.x, 0, uv);
@@ -494,7 +494,7 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
     {
         print_pos.x = margin;
         print_pos.y += STRHEIGHT(1);
-        
+
       _C _r _o _p _p _e _d _spc _dsh _dsh _dsh _dsh _dsh _dsh _dsh _spc
 
       TEXT_MASK += print_integer(cropped_original_size.x, 0, uv);
@@ -508,7 +508,7 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
     {
       print_pos.x = margin;
       print_pos.y += STRHEIGHT(1);
-        
+
       _N _e _g _dsh _C _r _o _p _spc _A _d _d _spc _dsh _dsh _spc
 
       TEXT_MASK += print_integer(ROTATED_CORE_PREPPED_SIZE.x, 0, uv);
@@ -522,7 +522,7 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
     {
         print_pos.x = margin;
         print_pos.y += STRHEIGHT(1);
-        
+
       _D _e _r _e _z _e _d _spc _dsh _dsh _dsh _dsh _dsh _dsh _dsh _spc
 
       TEXT_MASK += print_integer(derezed_size.x, 0, uv);
@@ -534,7 +534,7 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
     // CORE Resolution ----------------------------------------------------------
     print_pos.x = margin;
     print_pos.y += STRHEIGHT(1);
-    
+
    _C _o _r _e _spc _dsh _dsh _dsh _dsh _dsh _dsh _dsh _dsh _dsh _dsh _spc
 
    TEXT_MASK += print_integer(ROTATED_CORE_ORIGINAL_SIZE.x, 0, uv);
@@ -544,7 +544,7 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
     // Line 03 Preset Type ----------------------------------------------------------
     print_pos.x = margin;
     print_pos.y += STRHEIGHT(2);
-    
+
 #ifdef IS_ADV_PRESET
    _A _D _V _A _N _C _E _D
 #endif
@@ -569,11 +569,11 @@ float DrawResolutions(vec2 uv, vec2 viewport_size, vec2 screen_size, vec4 screen
     print_pos.x = margin;
     print_pos.y += STRHEIGHT(1);
 
-   // Text Version V1.16.1_2023-12-26
+   // Text Version V1.17.2_2024-05-18
    // Version
-   _1 _per _1 _6 _per _1 _spc
+   _1 _per _1 _7 _per _2 _spc
    // Date
-   _2 _0 _2 _3 _dsh _1 _2 _dsh _2 _6
+   _2 _0 _2 _4 _dsh _0 _5 _dsh _1 _8
 
     // Title ----------------------------------------------------------
     print_pos.x = margin;
@@ -595,7 +595,7 @@ vec2 GetIntegerScaleMult(vec2 screen_size, vec2 cropped_size)
 
 vec4 GetScreenRegion(vec2 screen_size)
 {
-    vec2 position_offset = SCREEN_POS_OFFSET * global.FinalViewportSize.xy * HSM_VIEWPORT_ZOOM + 
+    vec2 position_offset = SCREEN_POS_OFFSET * global.FinalViewportSize.xy * HSM_VIEWPORT_ZOOM +
                            vec2(-HSM_VIEWPORT_POSITION_X, HSM_VIEWPORT_POSITION_Y) * HSM_VIEWPORT_ZOOM * global.FinalViewportSize.xy;
 
     vec2 top_left = global.FinalViewportSize.xy / 2 - screen_size / 2 + position_offset;
@@ -611,21 +611,22 @@ float GetText(vec2 in_coord)
    in_coord.x = HSM_FLIP_VIEWPORT_HORIZONTAL * HSM_FLIP_CORE_HORIZONTAL * (in_coord.x - 0.5) + 0.5;
    in_coord.y = HSM_FLIP_VIEWPORT_VERTICAL * HSM_FLIP_CORE_VERTICAL * (in_coord.y - 0.5) + 0.5;
 
-   vec2 int_mult = GetIntegerScaleMult(SCREEN_SIZE, CROPPED_ROTATED_SIZE);
-   vec2 canvas_size = global.DerezedPassSize.xy;
+    vec2 int_mult = GetIntegerScaleMult(SCREEN_SIZE, CROPPED_ROTATED_SIZE);
+    vec2 canvas_size = global.DerezedPassSize.xy;
 
     in_coord = (in_coord - 0.5) * vec2(1, -1) + 0.5;
-    float downscale = 1;
-    if (canvas_size.y > 460) downscale = 2;
-    if (canvas_size.y > 1000) downscale = 3;
 
-   vec2 uv = global.OutputSize.xy * in_coord;
+    vec2 downscale = vec2(1, 1);
+    downscale.x = max(max(floor(canvas_size.x / 240), 1), 1);
+    downscale.y = max(max(ceil(canvas_size.y / 200), 1), 1);
+
+    vec2 uv = global.OutputSize.xy * in_coord;
 	vec2 downscaled_uv = floor(global.OutputSize.xy * in_coord / downscale);
 
     vec4 screen_region = GetScreenRegion(SCREEN_SIZE);
 
 	float pixel = DrawResolutions(downscaled_uv, global.FinalViewportSize.xy, SCREEN_SIZE, screen_region, ROTATED_DEREZED_SIZE, ROTATED_CORE_PREPPED_SIZE, CROPPED_ROTATED_SIZE, CROPPED_ROTATED_SIZE_WITH_RES_MULT, int_mult);
-    
+
     vec3 col = vec3(1);
     pixel *= (1 - distance(mod(uv, vec2(1.0)), vec2(0.65))) * 1.2;
     col *= mix(vec3(0), vec3(1, 1, 1), pixel);
@@ -636,10 +637,9 @@ float GetText(vec2 in_coord)
 void main()
 {
 	vec2 UNFLIPPED_VIEWPORT_COORD = vTexCoord;
-   vec2 VIEWPORT_COORD = vTexCoord;
+    vec2 VIEWPORT_COORD = vTexCoord;
 	HSM_UpdateGlobalScreenValuesFromCache(InfoCachePass, vTexCoord);
 
-   // vec4 feedback_color_test = texture(PassFeedback, vec2(0,0));
    if (!CACHE_INFO_CHANGED)
    {
       FragColor = texture(PassFeedback, UNFLIPPED_VIEWPORT_COORD);

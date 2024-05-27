@@ -2,8 +2,8 @@
 
 // See compose.slang for copyright and other information.
 
-#include "../../../misc/shaders/input_transform/input_transform.slang"
-#include "parameters.slang"
+#include "../../../misc/shaders/input_transform/input_transform.inc"
+#include "parameters.inc"
 
 layout(push_constant) uniform Push {
     vec4 InputSize;
@@ -54,7 +54,7 @@ void main() {
         vec2(param.ASPECT_H, param.ASPECT_V),
         vec2(param.FORCE_INTEGER_SCALING_H, param.FORCE_INTEGER_SCALING_V), param.OVERSCALE,
         /* output_size_is_final_viewport_size = */ true);
-    vec2 shift = vec2(param.SHIFT_H, param.SHIFT_V);
+    const vec2 shift = vec2(param.SHIFT_H, param.SHIFT_V);
     tx_coord = o2i(vTexCoord, param.InputSize.xy, crop, shift, param.Rotation,
                    param.CENTER_AFTER_CROPPING, scale_o2i);
     input_corners = get_input_corners(param.InputSize.xy, crop, param.Rotation);

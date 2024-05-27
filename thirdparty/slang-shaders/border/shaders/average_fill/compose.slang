@@ -39,12 +39,12 @@
 */
 
 // clang-format off
-#include "parameters.slang"
-#include "../../../pixel-art-scaling/shaders/pixel_aa/parameters.slang"
+#include "parameters.inc"
+#include "../../../pixel-art-scaling/shaders/pixel_aa/parameters.inc"
 // clang-format on
 
-#include "../../../misc/shaders/input_transform/input_transform.slang"
-#include "../../../pixel-art-scaling/shaders/pixel_aa/shared.slang"
+#include "../../../misc/shaders/input_transform/input_transform.inc"
+#include "../../../pixel-art-scaling/shaders/pixel_aa/shared.inc"
 
 layout(push_constant) uniform Push {
     vec4 InputSize;
