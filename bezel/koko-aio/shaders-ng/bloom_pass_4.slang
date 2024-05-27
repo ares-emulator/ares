@@ -61,7 +61,7 @@ layout(location = 0) out vec4 FragColor;
 
 layout(set = 0, binding = 1) uniform sampler2D Source;
 //layout(set = 0, binding = 2) uniform sampler2D avglum_pass;
-layout(set = 0, binding = 3) uniform sampler2D flick_and_noise_pass;
+layout(set = 0, binding = 3) uniform sampler2D colortools_and_ntsc_pass;
 layout(set = 0, binding = 4) uniform sampler2D bloom_pass_finalFeedback;
 
 
@@ -74,36 +74,43 @@ layout(set = 0, binding = 4) uniform sampler2D bloom_pass_finalFeedback;
 #define BLOOM_PUPIL_EXPOSURE_CURVE_SHOULDER 0.33
 
 //How big is the zone in which the luminance will be computed for puple temporal adaption (range 2..20)
-#define BLOOM_PUPIL_LUM_ZONE_W 7
+#define BLOOM_PUPIL_LUM_ZONE_W 6
 
 //The speed of the pupil adaption
 #define BLOOM_PUPIL_ADAPTION_SPEED 0.2
 
 
 float get_avg_lum_from_mip(sampler2D tex, vec2 co, float lod) {
-    vec3 mip = textureLod(flick_and_noise_pass, co, lod).rgb;
+    vec3 mip = textureLod(colortools_and_ntsc_pass, co, lod).rgb;
     mip = apply_fuzzy_main_pass_stage_2(mip, vFuzzy_main_pass_stage_1);
     //return (mip.r+mip.g+mip.b)/3.0;
-    float luminance_from_feedback = rgb_to_gray(mip);
+
     float luminance_first_pass = texture(bloom_pass_finalFeedback,vTexCoord).a;
     luminance_first_pass = max(luminance_first_pass, 0.0); // <- Sanitize input to avoid glitches when enabling the option runtime.
     //temporal smooth.
     //the defined emulated eye adaption speed needs to be divided 
     //by the eye adaption strength (BLOOM_EYE_ADPT_SRT)
 
-    //The following makes the adaption speed more constant:
-        float eye_adaption_speed = BLOOM_PUPIL_ADAPTION_SPEED * ( luminance_first_pass / luminance_from_feedback ) ;
+    float eye_adaption_speed;
+    float luminance_from_feedback = rgb_to_gray(mip);
+    
+    if (DELTA_RENDER == 0.0) {
+        //The following makes the adaption speed more constant:
+        eye_adaption_speed = BLOOM_PUPIL_ADAPTION_SPEED * ( luminance_first_pass / luminance_from_feedback ) ;
 
-    //The following is needed so that the speed is the same even for higher strength
+        //The following is needed so that the speed is the same even for higher strength
         eye_adaption_speed = (eye_adaption_speed / BLOOM_EYE_ADPT_SRT);
-        
-    //The following simulates pupil inertia
-    eye_adaption_speed = clamp(eye_adaption_speed, 1.0/BLOOM_EYE_INERTIA, 1.0);
-    
-    float luminance = mix(luminance_first_pass, luminance_from_feedback, eye_adaption_speed);
-    
+            
+        //The following simulates pupil inertia
+        eye_adaption_speed = clamp(eye_adaption_speed, 1.0/BLOOM_EYE_INERTIA, 1.0);
+    } else {
+        //Temporal adaption speed is no good with deltarenter.
+        eye_adaption_speed = 1.0;
+    }
 
+    float luminance = mix(luminance_first_pass, luminance_from_feedback, eye_adaption_speed);
     return luminance + eps;
+    
     
 }
 
@@ -140,9 +147,9 @@ void main() {
         //Use mipmap available in avglum_pass to identify bright areas.
         //vec3 avglum = texture(avglum_pass,vCo_avglum).rgb;
         
-        #define ZONE_LUMINANCE_LOD 5.0
+        #define ZONE_LUMINANCE_LOD 2.0 //Higher values lead to ugly glitch when panning or banding in static content.
         
-        vec3 avglum = textureLod(flick_and_noise_pass, vTexCoord, ZONE_LUMINANCE_LOD).rgb;
+        vec3 avglum = textureLod(colortools_and_ntsc_pass, vTexCoord, ZONE_LUMINANCE_LOD).rgb;
         float b_brightness = max(avglum.b,max(avglum.r,avglum.g));
         b_brightness *= 1-BLOOM_OVER_WHITE;
         over_white_correction =1- b_brightness;
@@ -153,7 +160,7 @@ void main() {
     //                                                  (Branching with (if BLOOM_EYE_ADPT_SRT == 0.0) does not gain anything.)
     // Modulate exposure over time too.
     //Smooth luminance with specified lod in this alpha channel
-    float zone_luminance = get_avg_lum_from_mip(flick_and_noise_pass, vTexCoord, BLOOM_PUPIL_LUM_ZONE_W);
+    float zone_luminance = get_avg_lum_from_mip(colortools_and_ntsc_pass, vTexCoord, BLOOM_PUPIL_LUM_ZONE_W);
     float smoothed_avglum = zone_luminance * BLOOM_EYE_ADPT_SRT;
     bloom_mix_adapted = max(0.0, BLOOM_MIX - smoothed_avglum);
     

@@ -1082,7 +1082,25 @@ vec2 HSM_ApplyOverscan(vec2 in_coord, float overscan_x, float overscan_y)
 
 float HSM_GetRasterBloomScale(float raster_bloom_overscan_mode, float raster_bloom_mult, float screen_avg_luma)
 {
-	return 1.00 + (1.0 - 0.5 * raster_bloom_overscan_mode) * raster_bloom_mult / 100 - screen_avg_luma * raster_bloom_mult / 100;
+	// Define the neutral range around the center
+	float neutral_range = HSM_OVERSCAN_RASTER_BLOOM_NEUTRAL_RANGE;
+
+	// Calculate the bloom scale based on the neutral range
+	float bloom_scale = 1.0;
+	float neutral_center = HSM_OVERSCAN_RASTER_BLOOM_NEUTRAL_RANGE_CENTER;
+	float neutral_min = neutral_center - neutral_range;
+	float neutral_max = neutral_center + neutral_range;
+	float adjusted_luma = neutral_center;
+	if (screen_avg_luma < 0.5 - neutral_range || screen_avg_luma > 0.5 + neutral_range) 
+	{
+		if (screen_avg_luma < neutral_min) 
+			adjusted_luma = neutral_center * HHLP_EasePowerIn(smoothstep(0, neutral_min, screen_avg_luma), 2);
+
+		if (screen_avg_luma > neutral_max) 
+			adjusted_luma = neutral_center + (1 - neutral_center) * HHLP_EasePowerOut(smoothstep(neutral_max, 1, screen_avg_luma), 2);
+	}
+	bloom_scale = 1.00 + raster_bloom_mult * ((1.0 - 0.5 * raster_bloom_overscan_mode) - adjusted_luma);
+	return bloom_scale;
 }
 
 // Thanks to Guest.r for this simple yet effective implementation of raster bloom

@@ -29,16 +29,21 @@
 
 layout(push_constant) uniform Push
 {
-	vec4 SourceSize;
-	vec4 OriginalSize;
-	vec4 OutputSize;
-	uint FrameCount;
+    vec4 SourceSize;
+    vec4 OriginalSize;
+    vec4 OutputSize;
+    uint FrameCount;
+    float NEDI_E;
 } params;
 
 layout(std140, set = 0, binding = 0) uniform UBO
 {
-	mat4 MVP;
+    mat4 MVP;
 } global;
+
+#pragma parameter NEDI_E "EDGE STRENGTH" 0.60 0.0 1.0 0.05
+
+#define NEDI_E      (1.0-params.NEDI_E)
 
 #define saturate(c) clamp(c, 0.0, 1.0)
 #define lerp(c) mix(c)
@@ -63,11 +68,11 @@ layout(std140, set = 0, binding = 0) uniform UBO
 
 #define s0 Source
 
-#define NEDI_WEIGHT3 2.0
+#define NEDI_WEIGHT3 4.0
 #define NEDI_N3 24.0
-#define NEDI_E3 0.0
+//#define NEDI_E3 0.0
 
-#define ITERATIONS  3
+#define ITERATIONS  4
 #define WGT   NEDI_WEIGHT3
 
 #define width  (params.SourceSize.x)
@@ -130,42 +135,42 @@ void main()
  3                                        2                        4   
 */
 
-	//Define window and directions
-	vec2 dir[4] = vec2[4](vec2(-1,-1),vec2(1,1),vec2(-1,1),vec2(1,-1));
+    //Define window and directions
+    vec2 dir[4] = vec2[4](vec2(-1,-1),vec2(1,1),vec2(-1,1),vec2(1,-1));
    mat4x2 wind1 = mat4x2(vec2(-1,-1),vec2(1,1),vec2(-1,1),vec2(1,-1));
    mat4x2 wind2 = mat4x2(vec2(-3,-1),vec2(3,1),vec2(-1,3),vec2(1,-3));
    mat4x2 wind3 = mat4x2(vec2(-3,1),vec2(3,-1),vec2(1,3),vec2(-1,-3));
    mat4x2 wind4 = mat4x2(vec2(-3,-3),vec2( 3,3),vec2(-3, 3),vec2(3,-3));
-	mat4x2 wind[4] = mat4x2[4](wind1, wind2, wind3, wind4);
+    mat4x2 wind[4] = mat4x2[4](wind1, wind2, wind3, wind4);
 
-	//Initialization
-	float2x2 R = float2x2(vec2(0.,0.),vec2(0.,0.));
-	float2 r = float2(0.,0.);
+    //Initialization
+    float2x2 R = float2x2(vec2(0.,0.),vec2(0.,0.));
+    float2 r = float2(0.,0.);
 
-	//Calculate (local) autocorrelation coefficients
-	for (int k = 0; k<ITERATIONS; k+= 1){
-		float4 y = float4(Get(wind[k][0]),Get(wind[k][1]),Get(wind[k][2]),Get(wind[k][3]));
-		float4x2 C = float4x2(Get4(wind[k][0]),Get4(wind[k][1]),Get4(wind[k][2]),Get4(wind[k][3]));
-		R += mul(transpose(C),C);
-		r += mul(y,C);
-	}
-	
-	//Normalize
-	float n = NEDI_N3;
-	R /= n; r /= n;
+    float m[4] = float[4](NEDI_WEIGHT3, 1.0, 1.0, 1.0);
 
-	//Calculate a =  R^-1 . r
-	float e = NEDI_E3;
-	float2 a = solve(R+e*e*I,r+e*e/2.0);
+    //Calculate (local) autocorrelation coefficients
+    for (int k = 0; k<ITERATIONS; k+= 1){
+        float4 y = float4(Get(wind[k][0]),Get(wind[k][1]),Get(wind[k][2]),Get(wind[k][3]));
+        float4x2 C = float4x2(Get4(wind[k][0]),Get4(wind[k][1]),Get4(wind[k][2]),Get4(wind[k][3]));
+        R += mul(transpose(C),m[k]*C);
+        r += mul(y,m[k]*C);
+    }
+    
+    //Normalize
+    float n = NEDI_N3;
+    R /= n; r /= n;
 
-	//Nomalize 'a' (prevents overshoot)
-	a = .25 + float2(.4999,-.4999)*clamp(a[0]-a[1],-1.0,1.0);
+    //Calculate a =  R^-1 . r
+    float e = NEDI_E;
+    float2 a = solve(R+e*e*I,r+e*e/2.0);
 
-	//Calculate result
-	float2x3 x = float2x3(Value(dir[0])+Value(dir[1]),Value(dir[2])+Value(dir[3])) * float2x2(a,a);
-	float3 c = float3(x[0].xyz);
+    //Nomalize 'a' (prevents overshoot)
+    a = .25 + float2(.4999,-.4999)*clamp(a[0]-a[1],-1.0,1.0);
 
-    //    float3 c = Value(dir[0]);
-	
-	FragColor = float4(c, 1.0);//+float4(0,0.5,0.5,0);
+    //Calculate result
+    float2x3 x = float2x3(Value(dir[0])+Value(dir[1]),Value(dir[2])+Value(dir[3])) * float2x2(a,a);
+    float3 c = float3(x[0].xyz);
+
+    FragColor = float4(c, 1.0);//+float4(0,0.5,0.5,0);
 }

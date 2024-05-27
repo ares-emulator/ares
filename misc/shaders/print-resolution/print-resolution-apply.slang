@@ -61,16 +61,20 @@ void main()
 	if (PRINT_RESOLUTION_TEXT_ON == 1 && vTexCoord.x > params.OutputSize.z * 2 && vTexCoord.y > params.OutputSize.w * 2)
 	{
 		vec2 ps = params.OutputSize.zw;
+		vec2 outline_offset_mult = ps;
+		outline_offset_mult.x *= max(floor(params.OutputSize.x / 240 + 0.01), 1);
+		outline_offset_mult.y *= max(floor(params.OutputSize.y / 200 + 0.01), 1);
+
 		vec4 text_rgba = vec4(FragColor.a);
 		text_rgba.rgb *= vec3(1, 1, 0);
-		text_rgba.a += texture(TextGeneratePass, vTexCoord + ps * vec2(1, 0)).a;
-		text_rgba.a += texture(TextGeneratePass, vTexCoord + ps * vec2(0, 1)).a;
-		text_rgba.a += texture(TextGeneratePass, vTexCoord + ps * vec2(1, 1)).a;
-		text_rgba.a += texture(TextGeneratePass, vTexCoord + ps * vec2(-1, 1)).a;
-		text_rgba.a += texture(TextGeneratePass, vTexCoord + ps * vec2(-1, 0)).a;
-		text_rgba.a += texture(TextGeneratePass, vTexCoord + ps * vec2(0, -1)).a;
-		text_rgba.a += texture(TextGeneratePass, vTexCoord + ps * vec2(-1, -1)).a;
-		text_rgba.a += texture(TextGeneratePass, vTexCoord + ps * vec2(1, -1)).a;
+		text_rgba.a += texture(TextGeneratePass, vTexCoord + outline_offset_mult * vec2(1, 0)).a;
+		text_rgba.a += texture(TextGeneratePass, vTexCoord + outline_offset_mult * vec2(0, 1)).a;
+		text_rgba.a += texture(TextGeneratePass, vTexCoord + outline_offset_mult * vec2(1, 1)).a;
+		text_rgba.a += texture(TextGeneratePass, vTexCoord + outline_offset_mult * vec2(-1, 1)).a;
+		text_rgba.a += texture(TextGeneratePass, vTexCoord + outline_offset_mult * vec2(-1, 0)).a;
+		text_rgba.a += texture(TextGeneratePass, vTexCoord + outline_offset_mult * vec2(0, -1)).a;
+		text_rgba.a += texture(TextGeneratePass, vTexCoord + outline_offset_mult * vec2(-1, -1)).a;
+		text_rgba.a += texture(TextGeneratePass, vTexCoord + outline_offset_mult * vec2(1, -1)).a;
 		text_rgba = clamp(text_rgba, 0, 1);
 		FragColor.rgb = PreMultAlphaBlend(FragColor, text_rgba).rgb;
 	}

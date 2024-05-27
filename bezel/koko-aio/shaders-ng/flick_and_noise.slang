@@ -79,8 +79,8 @@ vec4 pixel_flickering() {
  * to see the effect (the lcd panel would just mix the pixels by itself (meh).
  */
 
-   vec4 pixel_cur = texture(Source,vTexCoord);   
-   vec3 flickline = texture(Source,vFlickerCoords).rgb;
+   vec4 pixel_cur = texture_NEAREST(Source,vTexCoord, params.OriginalSize);   
+   vec3 flickline = texture_NEAREST(Source,vFlickerCoords, params.OriginalSize).rgb;
    
    //float lumdiff = abs( flickline.r + flickline.g + flickline.b - pixel_cur.r - pixel_cur.g - pixel_cur.b);
    //float lumdiff = abs( (flickline.r + flickline.g) + (flickline.b - pixel_cur.r) - (pixel_cur.g + pixel_cur.b) ); //1687 1754 2946   ASM PROOF: FASTER
@@ -99,7 +99,7 @@ void main() {
    if (vDo_flickering==1.0) 
       pixel_out = pixel_flickering(); //<-alpha carries ntsc artifacts mask
    else 
-      pixel_out = texture(Source, vTexCoord); //<-alpha carries ntsc artifacts mask
+      pixel_out = texture_NEAREST(Source, vTexCoord, params.OriginalSize); //<-alpha carries ntsc artifacts mask
    
    if (DO_RF_NOISE > 0.0) {
       float anoise = random_fast(vTexCoord * vDynamicSeed);

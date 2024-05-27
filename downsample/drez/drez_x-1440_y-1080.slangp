@@ -1,0 +1,9 @@
+shaders = 1
+
+shader0 = ../shaders/drez-g-sharp_resampler.slang
+filter_linear0 = false
+scale_type_x0 = absolute
+scale_x0 = 1440
+scale_type_y0 = absolute
+scale_y0 = 1080
+wrap_mode0 = "clamp_to_edge"

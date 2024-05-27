@@ -2,7 +2,7 @@
     Mega Bezel - Creates a graphic treatment for the game play area to give a retro feel
     Copyright (C) 2019-2022 HyperspaceMadness - HyperspaceMadness@outlook.com
 
-    Incorporates much great feedback from the libretro forum, and thanks 
+    Incorporates much great feedback from the libretro forum, and thanks
     to Hunterk who helped me get started
 
     See more at the libretro forum
@@ -23,7 +23,7 @@
 */
 
 // Screen Scale Required Parameters
-#pragma parameter HSM_MEGA_BEZEL_TITLE								"[ --- HSM MEGA BEZEL V1.16.1_2023-12-26 --- ]" 0 0 0.001 0.001
+#pragma parameter HSM_MEGA_BEZEL_TITLE								"[ --- HSM MEGA BEZEL V1.17.2_2024-05-18 --- ]" 0 0 0.001 0.001
 
 #pragma parameter HSM_RESOLUTION_DEBUG_ON							"          Show Resolution Info" 0 0 1 1
 float HSM_RESOLUTION_DEBUG_ON = global.HSM_RESOLUTION_DEBUG_ON;
@@ -62,7 +62,7 @@ float HSM_STATIC_LAYERS_GAMMA = global.HSM_STATIC_LAYERS_GAMMA;
 
 
 //---------------------------------------------------------------------------------------------------
-//    AMBIENT LIGHTING AKA NIGHTLIGHTING 
+//    AMBIENT LIGHTING AKA NIGHTLIGHTING
 //---------------------------------------------------------------------------------------------------
 #pragma parameter HSM_AMBIENT_EMPTY_LINE							" " 0 0 0.001 0.001
 #pragma parameter HSM_AMBIENT_TITLE                       "[ AMBIENT LIGHTING ]:" 0 0 0.001 0.001
@@ -346,10 +346,10 @@ float HSM_DOWNSAMPLE_BLUR_OPPOSITE_DIR = global.HSM_DOWNSAMPLE_BLUR_OPPOSITE_DIR
 #pragma parameter SHARPEN_EMPTY_LINE							" " 0 0 0.001 0.001
 #pragma parameter SHARPEN_TITLE  	"[ FAST SHARPEN - GUEST.R ]:"         			0.00 0.0 2.00 0.05
 #pragma parameter SHARPEN_ON  		"          FSharpen - ON"       		1 0 1 1
-#pragma parameter CSHARPEN          "          FSharpen - Sharpen strength"         0.00 0.0 5.00 0.10 
-#pragma parameter CCONTR            "          FSharpen - Sharpen Contrast/Ringing" 0.05 0.0 0.25 0.01 
-#pragma parameter CDETAILS          "          FSharpen - Details sharpened"        1.00 0.0 1.00 0.05 
-#pragma parameter DEBLUR            "          FSharpen - Deblur Strength (For NTSC Only)"          1.00 1.0 7.00 0.25 
+#pragma parameter CSHARPEN          "          FSharpen - Sharpen strength"         0.00 0.0 5.00 0.10
+#pragma parameter CCONTR            "          FSharpen - Sharpen Contrast/Ringing" 0.05 0.0 0.25 0.01
+#pragma parameter CDETAILS          "          FSharpen - Details sharpened"        1.00 0.0 1.00 0.05
+#pragma parameter DEBLUR            "          FSharpen - Deblur Strength (For NTSC Only)"          1.00 1.0 7.00 0.25
 
 
 //---------------------------------------------------------------------------------------------------
@@ -443,8 +443,13 @@ float HSM_SCANLINE_DIRECTION = global.HSM_SCANLINE_DIRECTION;
 #define HSM_OVERSCAN_RASTER_BLOOM_MODE           global.HSM_OVERSCAN_RASTER_BLOOM_MODE
 
 #pragma parameter HSM_OVERSCAN_RASTER_BLOOM_AMOUNT "          Raster Bloom %" 5.0 0.0 20.0 1.0
-#define HSM_OVERSCAN_RASTER_BLOOM_AMOUNT        global.HSM_OVERSCAN_RASTER_BLOOM_AMOUNT     // Bloom overscan percentage
+#define HSM_OVERSCAN_RASTER_BLOOM_AMOUNT        global.HSM_OVERSCAN_RASTER_BLOOM_AMOUNT / 100     // Bloom overscan percentage
 
+#pragma parameter HSM_OVERSCAN_RASTER_BLOOM_NEUTRAL_RANGE "          Raster Bloom Overscan Neutral Area" 0.3 0.0 1.0 0.05
+#define HSM_OVERSCAN_RASTER_BLOOM_NEUTRAL_RANGE           global.HSM_OVERSCAN_RASTER_BLOOM_NEUTRAL_RANGE
+
+#pragma parameter HSM_OVERSCAN_RASTER_BLOOM_NEUTRAL_RANGE_CENTER "          Raster Bloom Overscan Neutral Area Center" 0.5 0.0 1.0 0.05
+#define HSM_OVERSCAN_RASTER_BLOOM_NEUTRAL_RANGE_CENTER           global.HSM_OVERSCAN_RASTER_BLOOM_NEUTRAL_RANGE_CENTER
 
 
 //---------------------------------------------------------------------------------------------------
@@ -1075,7 +1080,7 @@ float HSM_AMBIENT2_POSITION_Y = -1 * global.HSM_AMBIENT2_POSITION_Y / -1000;
 //    BEZEL GENERAL
 //---------------------------------------------------------------------------------------------------
 #pragma parameter HSM_BEZEL_GENERAL_EMPTY_LINE							" " 0 0 0.001 0.001
-#pragma parameter HSM_BEZEL_GENERAL_TITLE							"[ BEZEL GENERAL ]:" 0 0 0.001 0.001 
+#pragma parameter HSM_BEZEL_GENERAL_TITLE							"[ BEZEL GENERAL ]:" 0 0 0.001 0.001
 
 #pragma parameter HSM_BZL_OPACITY                                   "          Opacity" 100 0 100 5
 float HSM_BZL_OPACITY = global.HSM_BZL_OPACITY / 100;

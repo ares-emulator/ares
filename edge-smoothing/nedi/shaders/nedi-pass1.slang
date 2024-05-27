@@ -29,16 +29,21 @@
 
 layout(push_constant) uniform Push
 {
-	vec4 SourceSize;
-	vec4 OriginalSize;
-	vec4 OutputSize;
-	uint FrameCount;
+    vec4 SourceSize;
+    vec4 OriginalSize;
+    vec4 OutputSize;
+    uint FrameCount;
+    float NEDI_E;
 } params;
 
 layout(std140, set = 0, binding = 0) uniform UBO
 {
-	mat4 MVP;
+    mat4 MVP;
 } global;
+
+#pragma parameter NEDI_E "EDGE STRENGTH" 0.60 0.0 1.0 0.05
+
+#define NEDI_E      (1.0-params.NEDI_E)
 
 #define saturate(c) clamp(c, 0.0, 1.0)
 #define lerp(c) mix(c)
@@ -66,10 +71,10 @@ layout(std140, set = 0, binding = 0) uniform UBO
 
 #define NEDI_WEIGHT2 4.0
 #define NEDI_N2 24.0
-#define NEDI_E2 0.0
+//#define NEDI_E2 0.0
 #define NEDI_OFFSET2 0.0
 
-#define ITERATIONS  3
+#define ITERATIONS  4
 #define WGT   2
 
 #define width  (params.SourceSize.x)
@@ -111,18 +116,15 @@ void main()
 {
 float2 tex = vTexCoord;
 
-	float4 c0 = tex2D(s0,tex);
-	
-	//Define window and directions
-  	vec2 dir[4] =  vec2[4](vec2(-1,0),vec2(1,0),vec2(0,1),vec2(0,-1));
-   mat4x2 wind1 = mat4x2(vec2(-1,0),vec2(1,0),vec2(0,1),vec2(0,-1));
-   mat4x2 wind2 = mat4x2(vec2(-2,-1),vec2(2,1),vec2(-1,2),vec2(1,-2));
-   mat4x2 wind3 = mat4x2(vec2(-3,-2),vec2(3,2),vec2(-2,3),vec2(2,-3));
-   mat4x2 wind4 = mat4x2(vec2(-2,1),vec2(2,-1),vec2(1,2),vec2(-1,-2));
-   mat4x2 wind5 = mat4x2(vec2(-3,2),vec2(3,-2),vec2(2,3),vec2(-2,-3));
-   mat4x2 wind6 = mat4x2(vec2(-4,-1),vec2(4,1),vec2(-1,4),vec2(1,-4));
-   mat4x2 wind7 = mat4x2(vec2(-4,1),vec2(4,-1),vec2(1,4),vec2(-1,-4));
-  	mat4x2 wind[7] = mat4x2[7](wind1, wind2, wind3, wind4, wind5, wind6, wind7);
+    float4 c0 = tex2D(s0,tex);
+    
+    //Define window and directions
+    vec2 dir[4] =  vec2[4](vec2(-1,0),vec2(1,0),vec2(0,1),vec2(0,-1));
+    mat4x2 wind1 = mat4x2(vec2(-1,0),vec2(1,0),vec2(0,1),vec2(0,-1));
+    mat4x2 wind2 = mat4x2(vec2(-1,2),vec2(1,-2),vec2(2,1),vec2(-2,-1));
+    mat4x2 wind3 = mat4x2(vec2(-2,-1),vec2(2,1),vec2(-1,2),vec2(1,-2));
+    mat4x2 wind4 = mat4x2(vec2(-3,0),vec2(3,0),vec2(0,3),vec2(0,-3));
+    mat4x2 wind[4] = mat4x2[4](wind1, wind2, wind3, wind4);
 
 /*
                                          wind[1]              wind[2]
@@ -146,36 +148,36 @@ float2 tex = vTexCoord;
  3                                        2                        4   
 */
 
-	//Initialization
-	float2x2 R = float2x2(0.,0.,0.,0.);
-	float2 r = float2(0.,0.);
+    //Initialization
+    float2x2 R = float2x2(0.,0.,0.,0.);
+    float2 r = float2(0.,0.);
 
-        float m[7] = float[7](NEDI_WEIGHT2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+        float m[4] = float[4](NEDI_WEIGHT2, 1.0, 1.0, 1.0);
 
-	//Calculate (local) autocorrelation coefficients
-	for (int k = 0; k<ITERATIONS; k+= 1){
-		float4 y = float4(Get(wind[k][0]),Get(wind[k][1]),Get(wind[k][2]),Get(wind[k][3]));
-		float4x2 C = float4x2(Get4(wind[k][0]),Get4(wind[k][1]),Get4(wind[k][2]),Get4(wind[k][3]));
-		R += mul(transpose(C),m[k]*C);
-		r += mul(y,m[k]*C);
-	}
-	
-	//Normalize
-	float n = NEDI_N2;
-	R /= n; r /= n;
+    //Calculate (local) autocorrelation coefficients
+    for (int k = 0; k<ITERATIONS; k+= 1){
+        float4 y = float4(Get(wind[k][0]),Get(wind[k][1]),Get(wind[k][2]),Get(wind[k][3]));
+        float4x2 C = float4x2(Get4(wind[k][0]),Get4(wind[k][1]),Get4(wind[k][2]),Get4(wind[k][3]));
+        R += mul(transpose(C),m[k]*C);
+        r += mul(y,m[k]*C);
+    }
+    
+    //Normalize
+    float n = NEDI_N2;
+    R /= n; r /= n;
 
-	//Calculate a =  R^-1 . r
-	float e = NEDI_E2;
-	float2 a = solve(R+e*e*I,r+e*e/2.0);
+    //Calculate a =  R^-1 . r
+    float e = NEDI_E;
+    float2 a = solve(R+e*e*I,r+e*e/2.0);
 
-	//Nomalize 'a' (prevents overshoot)
-	a = .25 + float2(.4999,-.4999)*clamp(a[0]-a[1],-1.0,1.0);
+    //Nomalize 'a' (prevents overshoot)
+    a = .25 + float2(.4999,-.4999)*clamp(a[0]-a[1],-1.0,1.0);
 
-	//Calculate result
-	float2x3 x = float2x3(Value(dir[0])+Value(dir[1]),Value(dir[2])+Value(dir[3])) * float2x2(a,a);
-	float3 c = float3(x[0].xyz);
-	
-	//Skip pixels on wrong grid
-	if ((frac(tex.x*width/2.0)<0.4999)&&(frac(tex.y*height)<0.4999) || (frac(tex.x*width/2.0)>0.4999)&&(frac(tex.y*height)>0.4999)) FragColor = c0;
-	else FragColor = float4(c, 1.0);//+float4(0,0.49999,0.49999,0);
+    //Calculate result
+    float2x3 x = float2x3(Value(dir[0])+Value(dir[1]),Value(dir[2])+Value(dir[3])) * float2x2(a,a);
+    float3 c = float3(x[0].xyz);
+    
+    //Skip pixels on wrong grid
+    if ((frac(tex.x*width/2.0)<0.4999)&&(frac(tex.y*height)<0.4999) || (frac(tex.x*width/2.0)>0.4999)&&(frac(tex.y*height)>0.4999)) FragColor = c0;
+    else FragColor = float4(c, 1.0);//+float4(0,0.49999,0.49999,0);
 }

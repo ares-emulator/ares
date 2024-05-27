@@ -497,16 +497,6 @@ float DrawResolutions(vec2 uv)
     _spc _x _spc
     TEXT_MASK += print_integer(params.OriginalSize.y, 0, uv);
 
-    // Empty Line ----------------------------------------------------------
-    print_pos.x = margin;
-    print_pos.y += STRHEIGHT(1);
-
-    // Resolution Debugging ----------------------------------------------------------
-    print_pos.x = margin;
-    print_pos.y += STRHEIGHT(1);
-
-     _P _r _i _n _t _spc _R _e _s _o _l _u _t _i _o _n _spc  _T _e _x _t _spc
-
     return TEXT_MASK;
 }
 
@@ -515,9 +505,10 @@ float GetText(vec2 in_coord)
     vec2 canvas_size = params.OutputSize.xy;
 
     in_coord = (in_coord - 0.5) * vec2(1, -1) + 0.5;
-    float downscale = 1;
-    if (canvas_size.y > 460) downscale = 2;
-    if (canvas_size.y > 1000) downscale = 3;
+
+    vec2 downscale = vec2(1, 1);
+    downscale.x = max(max(floor(canvas_size.x / 240), 1), 1);
+    downscale.y = max(max(ceil(canvas_size.y / 200), 1), 1);
 
     vec2 uv = params.OutputSize.xy * in_coord;
     vec2 downscaled_uv = floor(params.OutputSize.xy * in_coord / downscale);

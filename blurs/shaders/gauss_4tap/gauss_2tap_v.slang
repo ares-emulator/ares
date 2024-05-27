@@ -1,8 +1,8 @@
 #version 450
 
-// See common.slang for copyright and other information.
+// See common.inc for copyright and other information.
 
-#include "parameters.slang"
+#include "parameters.inc"
 
 layout(push_constant) uniform Push {
     vec4 SourceSize;
@@ -10,7 +10,7 @@ layout(push_constant) uniform Push {
 }
 param;
 
-#include "common.slang"
+#include "common.inc"
 
 layout(std140, set = 0, binding = 0) uniform UBO { mat4 MVP; }
 global;

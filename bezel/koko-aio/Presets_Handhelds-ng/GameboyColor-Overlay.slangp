@@ -1,0 +1,21 @@
+#reference "GameboyColor.slangp"
+
+bg_over = "../textures/overlays/gbc.jpg"
+bg_under = "../textures/overlays/gbc.jpg"
+
+DO_BG_IMAGE = "1.000000"
+	BG_IMAGE_OFFY = "-0.425000"
+	BG_IMAGE_ZOOM = "2.000000"
+	BG_IMAGE_WRAP_MODE = "2.000000"
+
+DO_GLOBAL_SHZO = "1.000000"
+	GLOBAL_OFFX = "-0.000000"
+	GLOBAL_OFFY = "-0.069000"
+	GLOBAL_ZOOM = "0.640000"
+	
+GEOM_CORNER_SIZE = "0.01"
+GEOM_CORNER_SMOOTH = "200.000000"
+
+DO_AMBILIGHT = "0.0"
+
+RESSWITCH_GLITCH_SIZE = "0.0"

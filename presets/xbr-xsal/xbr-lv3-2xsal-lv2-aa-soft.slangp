@@ -1,0 +1,43 @@
+shaders = 6
+
+shader0 = ../../edge-smoothing/xbr/shaders/support/linearize.slang
+scale_type0 = "source"
+scale0 = "1.000000"
+filter_linear0 = "false"
+alias0 = XbrSource
+
+shader1 = ../../edge-smoothing/xbr/shaders/xbr-lv3-multipass/xbr-lv3-pass0.slang
+scale_type1 = "source"
+scale1 = "1.000000"
+filter_linear1 = "false"
+
+shader2 = ../../edge-smoothing/xbr/shaders/xbr-lv3-multipass/xbr-lv3-pass1.slang
+scale_type2 = "source"
+scale2 = "4.000000"
+filter_linear2 = "false"
+
+shader3 = ../../edge-smoothing/xsal/shaders/2xsal-level2-xbr.slang
+filter_linear3 = true
+scale_type3 = source
+scale3 = 1.0
+
+shader4 = ../../anti-aliasing/shaders/aa-shader-4.0.slang
+filter_linear4 = false
+scale_type4 = viewport
+scale4 = 1.0
+
+shader5 = ../../edge-smoothing/xbr/shaders/support/delinearize.slang
+scale_type5 = "source"
+scale5 = "1.000000"
+filter_linear5 = "false"
+
+INTERNAL_RES = 2.0
+AAOFFSET = 0.675
+XBR_BLENDING = 0.0
+WP4 = "0.8"
+InputGamma = "1.000000"
+SMALL_DETAILS = "0.000000"
+KA = "0.950000"
+XBR_EQ_THRESHOLD = "0.450000"
+OutputGamma = "1.000000"
+

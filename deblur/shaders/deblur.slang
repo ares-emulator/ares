@@ -50,7 +50,7 @@ layout(location = 0) out vec2 vTexCoord;
 void main()
 {
    gl_Position = global.MVP * Position;
-   vTexCoord = TexCoord;
+   vTexCoord = TexCoord * 1.0001;
 }
 
 #pragma stage fragment

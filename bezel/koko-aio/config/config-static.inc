@@ -53,7 +53,7 @@
 	//set it to the minimum value which allows you to see ambient lights and background image around the frame.
 #define BEZEL_FRAME_SURROUND_MARGIN 0.06
 
-	//to speedup things, bezel rende logic can be completely skipped in the inner tube, if we
+	//to speedup things, bezel render logic can be completely skipped in the inner tube, if we
 	//already know it is completely transparent.
 	//Set the following to the maximum value that allow you to see 
 	//bezel borders and, if present in the source bezel texture, inner content/border shades
@@ -72,8 +72,8 @@
 
 	// Define the size and the smoothness of the rectangle 
 	// in the bezel corners that will hide and blur the reflections 
-#define BEZEL_REFL_CORNER_BLANK_SIZE 0.091
-#define BEZEL_REFL_CORNER_BLANK_SHADE 0.055  // keep it > 0.0
+#define BEZEL_REFL_CORNER_BLANK_SIZE  0.095
+#define BEZEL_REFL_CORNER_BLANK_SHADE 0.095 // keep it > 0.0
 
 
 	//When colorizing the bezel via ambient light, it is possible to choose where 
@@ -82,6 +82,11 @@
 	//same shade amount.
 #define AMBI_OVER_BEZEL_AR_CORRECTION 0.98
 
+
+	//This is used to fadeout reflection and diffusion strength
+	//It alters the start of the gradient
+	//Set it roughly to  (tube size / bezel total size)
+#define BEZEL_REFL_FADEOUT_START 0.90
 
 
 // AMBIENT LIGHT STATIC CONFIG ##########################################################################################
@@ -127,7 +132,11 @@
 #define NEW_SCALEMOD_X (global.flick_and_noise_passSize.x/(360.0*2.0) / 2.2)
 #define NEW_SCALEMOD_Y (global.flick_and_noise_passSize.y/(270.0*2.0) / 2.2)
 
-
+	// AUTOCROP
+//which coords holds the autocrop zoom value
+#define AUTOCROP_SAMPLING_POINT vec2(0.125)
+	
+	
 // RESOLUTION SWITCH GLITCH EMULATION ##########################################################################################
 	//Where to sample alpha from avglum pass to understand if resolution has changed (very internal setting) 
 #define RESSWITCH_SAMPLING_POINT vec2(0.95) 

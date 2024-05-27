@@ -213,14 +213,16 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
               The decision will be based on the ratio of output dimensions and the core.
         Phosphors height Min, Max:
             Try to keep scanline height between those values, depending on content brightness.
+        Inflation Strength:
+            Scanlines appear as inflated depending on the pixel brightness.
         Phosphors width min->max gamma:
             Since emulating phosphors with high Min-Max range changes the apparent gamma of the final image,
             it is advised, if needed, to use this option to compensate, instead of the main gamma correction.
             It is also a quick way to make the image brighter or darker.
-        Inter-line extra steepness (for integer scaling)
+        Inter-line extra steepness (good for integer scaling, nice when Phosphors height max > 1.0)
             When you set maximum height to anything > 0.5, the phosphor light will bleed over
             the adiacent (up/down) ones so that they will start to blend togheter.
-            This option will avoid the bleeding.
+            Setting this option to anything >1.0 will avoid the bleeding.
             You may want them to blend or not, depending on your preference to keep scanlines separated.
             This function is useful when you want to emulate handhelds screens using integer scaling, 
             where cells are well separated.
@@ -442,10 +444,12 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
     
     WARP X, WARP Y:
         control how much the display is curved along its axes.
-    Corner radius, Corner sharpness:
-        Control the "smoothness" of the display corners.
-    Cut curvature ears;
-        If you see weird image repetition try this.
+        
+**Corners/Edges:**<br>
+
+    Corner radius, Edge sharpness:
+        Control the "smoothness" of the display edges.
+
         
 **Bezel:**<br>
     Draws a monitor frame with simulated reflections from the game content.<br>
@@ -480,6 +484,8 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
         The amount of material roughness in reflection area
     Diffusion strength
         Mix an amount of high blurred reflection to simulate light diffusion
+    Light fadeout distance
+        Modulates the reflected and diffused light fadeout. higher numbers -> no fadeout.
     Specularity strength
         The amount of specular reflection
     Darken corners
@@ -619,6 +625,37 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
     On older CRT monitors, the picture gets bigger when the image was brighter.<br>
     Please TURN THIS OFF if you want to use integer scaling, since this obstructs it.
     The higher, the more prominent the effect.
+
+**Autocrop**: 
+    Clears solid bars around the frame.
+    
+    Autocrop maximum amount:
+        The higher, the more solid borders wil be cropped around the image.
+        0.3 means 30%
+    
+    Number of mandatory lines to crop:
+        The minimum lines to always crop; this is useful because sometimes
+        games have one or two "spurious" lines at the very edge of the screen that
+        won't allow autocrop to work at all.
+        This can be used to ignore them.
+    
+    Samples per frame:
+        Higher values makes the shader search more in a single frame for solid areas.
+        This leads to more accurate result in less time, however it will also stress the gpu more.
+        Fortunately even low/lighter values like 10 will work good if you're ok
+        in waiting 2..3 seconds for the final crop value to be found.
+        
+    Sample size:
+        Search multiple pixels at once, this provide a big performance boost, but less accuracy.
+        It means that some solid bar could remain around the image.
+    
+    Scene change treshold
+        When autocrop finds a maximum crop value, it only tries to crop more when the scene changes.
+        By lowering this value, you tell the shader to try higher the crop more often.
+        Use 0.0 is probably useful only to trigger a new search.
+        
+    Transition speed
+        This modulates the smoothness of the animation between various crop values.
 
 **Override content geometry:**<br>
     Contrary to the global aspect ratio control, this changes only the game geometry.<br>

@@ -1,6 +1,7 @@
 #reference "GameboyAdvance-Overlay.slangp"
 
 bg_under = "../textures/overlays/gba.jpg"
+bg_over = "../textures/overlays/gba.jpg"
 
 DO_AMBILIGHT = "1.0"
 BG_IMAGE_NIGHTIFY = "0.900000"

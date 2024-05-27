@@ -56,7 +56,7 @@ DO_BLOOM = "0.0"
 
 DO_CURVATURE = "1.0"	
 	GEOM_CORNER_SIZE = 0.005
-	GEOM_CORNER_SMOOTH = "400"
+	GEOM_CORNER_SMOOTH = "350"
 	
 
 	
@@ -66,7 +66,7 @@ DO_BEZEL = "0.0"
         BEZEL_B = "-0.19"
         BEZEL_CON = "2.18"
         BEZEL_FRAME_ZOOM = "0.0"
-        BEZEL_INNER_ZOOM = "-0.16"
+        BEZEL_INNER_ZOOM = "-0.163"
 		BEZEL_RFL_BLR_SHD = "-0.200000"
 
 
@@ -83,8 +83,8 @@ DO_VIGNETTE = "0.0"
 DO_SPOT = "0.0"
     S_POSITION_X = "-0.5"
     S_POSITION_Y = "0.5"
-	S_SIZE = "0.4"
-	S_POWER = "0.05"
+	S_SIZE = "0.36"
+	S_POWER = "0.06"
 	
 DO_DYNZOOM = "0.015"
 

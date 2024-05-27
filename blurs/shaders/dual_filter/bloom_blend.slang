@@ -1,11 +1,11 @@
 #version 450
 
-// See dual_filter.slang for copyright and other information.
+// See dual_filter.inc for copyright and other information.
 
-#include "dual_filter.slang"
-#include "parameters.slang"
-#include "parameters_bloom.slang"
-#include "tonemapping.slang"
+#include "dual_filter.inc"
+#include "parameters.inc"
+#include "parameters_bloom.inc"
+#include "tonemapping.inc"
 
 #pragma parameter SCALE_EMPH "Bloom scale emphasis" 1.0 0.0 5.0 0.1
 #pragma parameter SCALE_SPREAD "Bloom scale spread" 5.0 0.5 15.0 0.5

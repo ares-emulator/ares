@@ -46,9 +46,9 @@ layout(push_constant) uniform Push
 const float wp1	= 1.0;
 const float wp2	= 0.0;
 const float wp3	= 0.0;
-const float wp4	= 2.0;
-const float wp5	=-1.0;
-const float wp6	= 0.0;
+const float wp4	= 4.0;
+const float wp5	= 0.0;
+const float wp6	= 1.0;
 
 const vec3 Y = vec3(.2126, .7152, .0722);
 
@@ -175,7 +175,7 @@ void main()
 	vec3 c2 = mat4x3( P0,   E,   I,   P3 ) * fw;
 
 	/* Smoothly blends the two strongest directions. */
-	vec3 color =  mix(c1, c2, smoothstep(-limits, limits, d_edge));
+	vec3 color =  d_edge == 0.0 ? 0.5*(c1 + c2) : mix(c1, c2, smoothstep(-limits, limits, d_edge));
 
 	/* Anti-ringing code. */
 	vec3 min_sample = min4( E, F, H, I );

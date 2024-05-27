@@ -9,7 +9,7 @@ layout(push_constant) uniform Push
 	float OutputGamma;
 } params;
 
-#pragma parameter OutputGamma "OUTPUT GAMMA" 2.0 1.0 3.0 0.05
+#pragma parameter OutputGamma "OUTPUT GAMMA" 1.0 1.0 3.0 0.05
 
 #define OutputGamma params.OutputGamma
 #define GAMMA_OUT(color)    pow(color, vec3(1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma))
