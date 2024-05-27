@@ -20,8 +20,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define NOMINMAX
 #include "context.hpp"
+#include "limits.hpp"
 #include "small_vector.hpp"
+#include "environment.hpp"
 #include <vector>
 #include <mutex>
 #include <algorithm>
@@ -81,11 +84,8 @@ struct ProfileHolder
 namespace Vulkan
 {
 static constexpr ContextCreationFlags video_context_flags =
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-		CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT | CONTEXT_CREATION_ENABLE_VIDEO_ENCODE_BIT;
-#else
-		CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT;
-#endif
+	CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT |
+	CONTEXT_CREATION_ENABLE_VIDEO_ENCODE_BIT;
 
 void Context::set_instance_factory(InstanceFactory *factory)
 {
@@ -154,12 +154,13 @@ const VkApplicationInfo &CopiedApplicationInfo::get_application_info() const
 
 bool Context::init_instance(const char * const *instance_ext, uint32_t instance_ext_count, ContextCreationFlags flags)
 {
-	destroy();
+	destroy_device();
+	destroy_instance();
 
 	owned_instance = true;
 	if (!create_instance(instance_ext, instance_ext_count, flags))
 	{
-		destroy();
+		destroy_instance();
 		LOGE("Failed to create Vulkan instance.\n");
 		return false;
 	}
@@ -174,7 +175,7 @@ bool Context::init_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface_compat, co
 	VkPhysicalDeviceFeatures features = {};
 	if (!create_device(gpu_, surface_compat, device_ext, device_ext_count, &features, flags))
 	{
-		destroy();
+		destroy_device();
 		LOGE("Failed to create Vulkan device.\n");
 		return false;
 	}
@@ -214,9 +215,9 @@ bool Context::init_loader(PFN_vkGetInstanceProcAddr addr)
 		static void *module;
 		if (!module)
 		{
-			const char *vulkan_path = getenv("GRANITE_VULKAN_LIBRARY");
-			if (vulkan_path)
-				module = dlopen(vulkan_path, RTLD_LOCAL | RTLD_LAZY);
+			auto vulkan_path = Util::get_environment_string("GRANITE_VULKAN_LIBRARY", "");
+			if (!vulkan_path.empty())
+				module = dlopen(vulkan_path.c_str(), RTLD_LOCAL | RTLD_LAZY);
 #ifdef __APPLE__
 			if (!module)
 				module = dlopen("libvulkan.1.dylib", RTLD_LOCAL | RTLD_LAZY);
@@ -265,7 +266,8 @@ bool Context::init_device_from_instance(VkInstance instance_, VkPhysicalDevice g
                                         const VkPhysicalDeviceFeatures *required_features,
                                         ContextCreationFlags flags)
 {
-	destroy();
+	destroy_device();
+	destroy_instance();
 
 	instance = instance_;
 	owned_instance = false;
@@ -276,7 +278,7 @@ bool Context::init_device_from_instance(VkInstance instance_, VkPhysicalDevice g
 
 	if (!create_device(gpu_, surface, required_device_extensions, num_required_device_extensions, required_features, flags))
 	{
-		destroy();
+		destroy_device();
 		LOGE("Failed to create Vulkan device.\n");
 		return false;
 	}
@@ -284,16 +286,10 @@ bool Context::init_device_from_instance(VkInstance instance_, VkPhysicalDevice g
 	return true;
 }
 
-void Context::destroy()
+void Context::destroy_device()
 {
 	if (device != VK_NULL_HANDLE)
 		device_table.vkDeviceWaitIdle(device);
-
-#ifdef VULKAN_DEBUG
-	if (debug_messenger)
-		vkDestroyDebugUtilsMessengerEXT(instance, debug_messenger, nullptr);
-	debug_messenger = VK_NULL_HANDLE;
-#endif
 
 #if defined(ANDROID) && defined(HAVE_SWAPPY)
 	if (device != VK_NULL_HANDLE)
@@ -301,10 +297,27 @@ void Context::destroy()
 #endif
 
 	if (owned_device && device != VK_NULL_HANDLE)
+	{
 		device_table.vkDestroyDevice(device, nullptr);
+		device = VK_NULL_HANDLE;
+		owned_device = false;
+	}
+}
+
+void Context::destroy_instance()
+{
+#ifdef VULKAN_DEBUG
+	if (debug_messenger)
+		vkDestroyDebugUtilsMessengerEXT(instance, debug_messenger, nullptr);
+	debug_messenger = VK_NULL_HANDLE;
+#endif
 
 	if (owned_instance && instance != VK_NULL_HANDLE)
+	{
 		vkDestroyInstance(instance, nullptr);
+		instance = VK_NULL_HANDLE;
+		owned_instance = false;
+	}
 }
 
 Context::Context()
@@ -313,7 +326,8 @@ Context::Context()
 
 Context::~Context()
 {
-	destroy();
+	destroy_device();
+	destroy_instance();
 }
 
 const VkApplicationInfo &Context::get_application_info() const
@@ -412,17 +426,12 @@ bool Context::init_profile()
 #ifdef GRANITE_VULKAN_PROFILES
 	if (required_profile.empty())
 	{
-		if (const char *env = getenv("GRANITE_VULKAN_PROFILE"))
-		{
-			required_profile = env;
-			LOGI("Overriding profile: %s\n", env);
-		}
+		if (Util::get_environment("GRANITE_VULKAN_PROFILE", required_profile))
+			LOGI("Overriding profile: %s\n", required_profile.c_str());
 
-		if (const char *strict_env = getenv("GRANITE_VULKAN_PROFILE_STRICT"))
-		{
-			required_profile_strict = strtoul(strict_env, nullptr, 0) != 0;
-			LOGI("Overriding profile strictness: %u\n", required_profile_strict);
-		}
+		required_profile_strict = Util::get_environment_bool("GRANITE_VULKAN_PROFILE_STRICT", false);
+		if (required_profile_strict)
+			LOGI("Using profile strictness.\n");
 	}
 
 	if (required_profile.empty())
@@ -524,25 +533,30 @@ VkResult Context::create_device_from_profile(const VkDeviceCreateInfo &info, VkD
 #endif
 }
 
+VkApplicationInfo Context::get_promoted_application_info() const
+{
+	auto app_info = get_application_info();
+
+	// Granite min-req is 1.1.
+	app_info.apiVersion = std::max(VK_API_VERSION_1_1, app_info.apiVersion);
+
+	// Target Vulkan 1.3 if available.
+	app_info.apiVersion = std::max(app_info.apiVersion, std::min(VK_API_VERSION_1_3, volkGetInstanceVersion()));
+
+	return app_info;
+}
+
 bool Context::create_instance(const char * const *instance_ext, uint32_t instance_ext_count, ContextCreationFlags flags)
 {
-	uint32_t target_instance_version = user_application_info.get_application_info().apiVersion;
+	VkInstanceCreateInfo info = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
+	auto app_info = get_promoted_application_info();
 
-	// Target an instance version of at least 1.3 for FFmpeg decode.
-	if ((flags & video_context_flags) != 0)
-		if (target_instance_version < VK_API_VERSION_1_3)
-			target_instance_version = VK_API_VERSION_1_3;
-
-	if (volkGetInstanceVersion() < target_instance_version)
+	if (volkGetInstanceVersion() < app_info.apiVersion)
 	{
-		LOGE("Vulkan loader does not support target Vulkan version.\n");
+		LOGE("Vulkan loader does not support required Vulkan version.\n");
 		return false;
 	}
 
-	VkInstanceCreateInfo info = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-	auto app_info = get_application_info();
-	if (app_info.apiVersion < target_instance_version)
-		app_info.apiVersion = target_instance_version;
 	info.pApplicationInfo = &app_info;
 
 	std::vector<const char *> instance_exts;
@@ -618,8 +632,7 @@ bool Context::create_instance(const char * const *instance_ext, uint32_t instanc
 
 	VkValidationFeaturesEXT validation_features = { VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT };
 
-	if (getenv("GRANITE_VULKAN_NO_VALIDATION"))
-		force_no_validation = true;
+	force_no_validation = Util::get_environment_bool("GRANITE_VULKAN_NO_VALIDATION", false);
 
 	if (!force_no_validation && has_layer("VK_LAYER_KHRONOS_validation"))
 	{
@@ -688,6 +701,9 @@ bool Context::create_instance(const char * const *instance_ext, uint32_t instanc
 		}
 		else if (vkCreateInstance(&info, nullptr, &instance) != VK_SUCCESS)
 			return false;
+
+		// If we have a pre-existing instance, we can only assume Vulkan 1.1 in legacy interface.
+		ext.instance_api_core_version = app_info.apiVersion;
 	}
 
 	enabled_instance_extensions = std::move(instance_exts);
@@ -767,6 +783,20 @@ bool Context::physical_device_supports_surface_and_profile(VkPhysicalDevice cand
 	if (surface == VK_NULL_HANDLE)
 		return true;
 
+	VkPhysicalDeviceProperties dev_props;
+	vkGetPhysicalDeviceProperties(candidate_gpu, &dev_props);
+	if (dev_props.limits.maxUniformBufferRange < VULKAN_MAX_UBO_SIZE)
+	{
+		LOGW("Device does not support 64 KiB UBOs. Must be *ancient* mobile driver.\n");
+		return false;
+	}
+
+	if (dev_props.apiVersion < VK_API_VERSION_1_1)
+	{
+		LOGW("Device does not support Vulkan 1.1. Skipping.\n");
+		return false;
+	}
+
 	uint32_t family_count = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(candidate_gpu, &family_count, nullptr);
 	Util::SmallVector<VkQueueFamilyProperties> props(family_count);
@@ -820,13 +850,9 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 			     VK_VERSION_PATCH(props.driverVersion));
 		}
 
-		const char *gpu_index = getenv("GRANITE_VULKAN_DEVICE_INDEX");
-		if (gpu_index)
-		{
-			unsigned index = strtoul(gpu_index, nullptr, 0);
-			if (index < gpu_count)
-				gpu = gpus[index];
-		}
+		int gpu_index = Util::get_environment_int("GRANITE_VULKAN_DEVICE_INDEX", -1);
+		if (gpu_index >= 0 && gpu_index < int(gpu_count))
+			gpu = gpus[gpu_index];
 
 		if (gpu != VK_NULL_HANDLE)
 		{
@@ -898,22 +924,22 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		if (!has_extension(required_device_extensions[i]))
 			return false;
 
-	VkPhysicalDeviceProperties2 gpu_props2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
-	if (has_extension(VK_KHR_DRIVER_PROPERTIES_EXTENSION_NAME))
-	{
-		ext.supports_driver_properties = true;
-		ext.driver_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES_KHR };
-		gpu_props2.pNext = &ext.driver_properties;
-	}
+	vkGetPhysicalDeviceProperties(gpu, &gpu_props);
+	// We can use core device functionality if enabled VkInstance apiVersion and physical device supports it.
+	ext.device_api_core_version = std::min(ext.instance_api_core_version, gpu_props.apiVersion);
 
-	vkGetPhysicalDeviceProperties2(gpu, &gpu_props2);
-	gpu_props = gpu_props2.properties;
 	LOGI("Using Vulkan GPU: %s\n", gpu_props.deviceName);
 
 	// FFmpeg integration requires Vulkan 1.3 core for physical device.
-	const uint32_t minimum_api_version = (flags & video_context_flags) ? VK_API_VERSION_1_3 : VK_API_VERSION_1_1;
+	uint32_t minimum_api_version = (flags & video_context_flags) ? VK_API_VERSION_1_3 : VK_API_VERSION_1_1;
+	if (ext.device_api_core_version < minimum_api_version && (flags & video_context_flags) != 0)
+	{
+		LOGW("Requested FFmpeg-enabled context, but Vulkan 1.3 was not supported. Falling back to 1.1 without support.\n");
+		minimum_api_version = VK_API_VERSION_1_1;
+		flags &= ~video_context_flags;
+	}
 
-	if (gpu_props.apiVersion < minimum_api_version)
+	if (ext.device_api_core_version < minimum_api_version)
 	{
 		LOGE("Found no Vulkan GPU which supports Vulkan 1.%u.\n",
 		     VK_API_VERSION_MINOR(minimum_api_version));
@@ -989,22 +1015,11 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	queue_info.timestamp_valid_bits =
 			queue_props[queue_info.family_indices[QUEUE_INDEX_GRAPHICS]].queueFamilyProperties.timestampValidBits;
 
-	// Driver ends up interleaving GPU work in very bizarre ways, causing horrible GPU
-	// bubbles and completely broken pacing. Single queue works around it.
-	bool broken_async_queues =
-			ext.supports_driver_properties &&
-			ext.driver_properties.driverID == VK_DRIVER_ID_SAMSUNG_PROPRIETARY;
-
-	if (broken_async_queues)
-		LOGW("Working around broken scheduler for separate compute queues, forcing single GRAPHICS + COMPUTE queue.\n");
-
-	// Prefer another graphics queue since we can do async graphics that way.
-	// The compute queue is to be treated as high priority since we also do async graphics on it.
-	if (broken_async_queues ||
-	    (!find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_COMPUTE], queue_indices[QUEUE_INDEX_COMPUTE],
-	                        VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 1.0f) &&
-	     !find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_COMPUTE], queue_indices[QUEUE_INDEX_COMPUTE],
-	                        VK_QUEUE_COMPUTE_BIT, 0, 1.0f)))
+	// Prefer standalone compute queue. If not, fall back to another graphics queue.
+	if (!find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_COMPUTE], queue_indices[QUEUE_INDEX_COMPUTE],
+	                       VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT, 0.5f) &&
+	    !find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_COMPUTE], queue_indices[QUEUE_INDEX_COMPUTE],
+	                       VK_QUEUE_COMPUTE_BIT, 0, 0.5f))
 	{
 		// Fallback to the graphics queue if we must.
 		queue_info.family_indices[QUEUE_INDEX_COMPUTE] = queue_info.family_indices[QUEUE_INDEX_GRAPHICS];
@@ -1036,7 +1051,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 			}
 		}
 
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 		if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_ENCODE_BIT) != 0)
 		{
 			if (!find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE],
@@ -1047,7 +1061,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 				queue_indices[QUEUE_INDEX_VIDEO_ENCODE] = UINT32_MAX;
 			}
 		}
-#endif
 	}
 
 	VkDeviceCreateInfo device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
@@ -1113,12 +1126,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	}
 #endif
 
-	if (has_extension(VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME))
-	{
-		ext.supports_mirror_clamp_to_edge = true;
-		enabled_extensions.push_back(VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME);
-	}
-
 #ifdef _WIN32
 	if (ext.supports_surface_capabilities2 && has_extension(VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME))
 	{
@@ -1149,12 +1156,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	else
 		ext.supports_external = false;
 
-	if (has_extension(VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME))
-	{
-		ext.supports_draw_indirect_count = true;
-		enabled_extensions.push_back(VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME);
-	}
-
 	if (has_extension(VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME))
 	{
 		ext.supports_calibrated_timestamps = true;
@@ -1167,28 +1168,28 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		ext.supports_conservative_rasterization = true;
 	}
 
-	if (has_extension(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME))
+	if (ext.device_api_core_version < VK_API_VERSION_1_2)
 	{
-		enabled_extensions.push_back(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
-		ext.supports_image_format_list = true;
-	}
+		if (!has_extension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME))
+		{
+			LOGE("VK_KHR_create_renderpass2 is not supported.\n");
+			return false;
+		}
 
-	if (has_extension(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME);
-		ext.supports_shader_float_control = true;
-	}
-
-	if (has_extension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME))
-	{
-		ext.supports_create_renderpass2 = true;
 		enabled_extensions.push_back(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME);
+
+		if (has_extension(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME))
+		{
+			ext.supports_image_format_list = true;
+			enabled_extensions.push_back(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
+		}
 	}
 	else
-	{
-		LOGE("VK_KHR_create_renderpass2 is not supported.\n");
-		return false;
-	}
+		ext.supports_image_format_list = true;
+
+	// Physical device functionality.
+	ext.supports_format_feature_flags2 = ext.device_api_core_version >= VK_API_VERSION_1_3 ||
+	                                     has_extension(VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME);
 
 	if (has_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME))
 		ext.supports_tooling_info = true;
@@ -1230,7 +1231,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 			}
 		}
 
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 		if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_ENCODE_BIT) != 0 &&
 		    has_extension(VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME))
 		{
@@ -1238,166 +1238,97 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 			ext.supports_video_encode_queue = true;
 
 			if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_H264_BIT) != 0 &&
-			    has_extension(VK_EXT_VIDEO_ENCODE_H264_EXTENSION_NAME))
+			    has_extension(VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME))
 			{
-				enabled_extensions.push_back(VK_EXT_VIDEO_ENCODE_H264_EXTENSION_NAME);
+				enabled_extensions.push_back(VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME);
 
 				if (queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE] != VK_QUEUE_FAMILY_IGNORED)
 				{
 					ext.supports_video_encode_h264 =
 							(video_queue_props2[queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE]].videoCodecOperations &
-							 VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_EXT) != 0;
+							 VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR) != 0;
 				}
 			}
 
 			if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_H265_BIT) != 0 &&
-			    has_extension(VK_EXT_VIDEO_ENCODE_H265_EXTENSION_NAME))
+			    has_extension(VK_KHR_VIDEO_ENCODE_H265_EXTENSION_NAME))
 			{
-				enabled_extensions.push_back(VK_EXT_VIDEO_ENCODE_H265_EXTENSION_NAME);
+				enabled_extensions.push_back(VK_KHR_VIDEO_ENCODE_H265_EXTENSION_NAME);
 
 				if (queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE] != VK_QUEUE_FAMILY_IGNORED)
 				{
 					ext.supports_video_encode_h265 =
 							(video_queue_props2[queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE]].videoCodecOperations &
-							 VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_EXT) != 0;
+							 VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_KHR) != 0;
 				}
 			}
 		}
-#endif
 	}
 
 	pdf2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
-
-	ext.multiview_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES };
-	ext.sampler_ycbcr_conversion_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES };
-	ext.shader_draw_parameters_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES };
-
-	ext.storage_8bit_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES_KHR };
-	ext.storage_16bit_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES_KHR };
-	ext.float16_int8_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT16_INT8_FEATURES_KHR };
-	ext.ubo_std430_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES_KHR };
-	ext.timeline_semaphore_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR };
-	ext.sync2_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR };
-	ext.present_id_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR };
-	ext.present_wait_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR };
-	ext.performance_query_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_FEATURES_KHR };
-	ext.swapchain_maintenance1_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT };
-
-	ext.subgroup_size_control_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES_EXT };
-	ext.host_query_reset_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES_EXT };
-	ext.demote_to_helper_invocation_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES_EXT };
-	ext.scalar_block_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES_EXT };
-	ext.descriptor_indexing_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT };
-	ext.memory_priority_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT };
-	ext.astc_decode_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ASTC_DECODE_FEATURES_EXT };
-	ext.astc_hdr_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES_EXT };
-	ext.pipeline_creation_cache_control_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT };
-	ext.pageable_device_local_memory_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT };
-	ext.mesh_shader_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT };
-	ext.shader_subgroup_extended_types_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES };
-
-	ext.compute_shader_derivative_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_FEATURES_NV };
-	ext.device_generated_commands_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_FEATURES_NV };
-	ext.buffer_device_address_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_KHR };
-
 	void **ppNext = &pdf2.pNext;
 
-	*ppNext = &ext.multiview_features;
-	ppNext = &ext.multiview_features.pNext;
-	*ppNext = &ext.sampler_ycbcr_conversion_features;
-	ppNext = &ext.sampler_ycbcr_conversion_features.pNext;
-	*ppNext = &ext.shader_draw_parameters_features;
-	ppNext = &ext.shader_draw_parameters_features.pNext;
+#define ADD_CHAIN(s, type) do { \
+	s.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ ## type; \
+	s.pNext = nullptr; \
+	*ppNext = &(s); \
+	ppNext = &((s).pNext); \
+} while(0)
 
-	if (has_extension(VK_KHR_8BIT_STORAGE_EXTENSION_NAME))
+	if (ext.device_api_core_version >= VK_API_VERSION_1_2)
 	{
-		enabled_extensions.push_back(VK_KHR_8BIT_STORAGE_EXTENSION_NAME);
-		*ppNext = &ext.storage_8bit_features;
-		ppNext = &ext.storage_8bit_features.pNext;
+		ADD_CHAIN(ext.vk11_features, VULKAN_1_1_FEATURES);
+		ADD_CHAIN(ext.vk12_features, VULKAN_1_2_FEATURES);
+	}
+	else
+	{
+		if (has_extension(VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME))
+			ADD_CHAIN(ext.host_query_reset_features, HOST_QUERY_RESET_FEATURES);
+
+		if (has_extension(VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME))
+		{
+			ADD_CHAIN(ext.float16_int8_features, FLOAT16_INT8_FEATURES_KHR);
+			enabled_extensions.push_back(VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME);
+		}
+
+		if (has_extension(VK_KHR_16BIT_STORAGE_EXTENSION_NAME))
+		{
+			ADD_CHAIN(ext.storage_16bit_features, 16BIT_STORAGE_FEATURES_KHR);
+			enabled_extensions.push_back(VK_KHR_16BIT_STORAGE_EXTENSION_NAME);
+		}
+
+		if (has_extension(VK_KHR_8BIT_STORAGE_EXTENSION_NAME))
+		{
+			ADD_CHAIN(ext.storage_8bit_features, 8BIT_STORAGE_FEATURES_KHR);
+			enabled_extensions.push_back(VK_KHR_8BIT_STORAGE_EXTENSION_NAME);
+		}
+
+		if (has_extension(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME))
+		{
+			ADD_CHAIN(ext.subgroup_size_control_features, SUBGROUP_SIZE_CONTROL_FEATURES_EXT);
+			enabled_extensions.push_back(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME);
+		}
 	}
 
-	if (has_extension(VK_KHR_16BIT_STORAGE_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_KHR_16BIT_STORAGE_EXTENSION_NAME);
-		*ppNext = &ext.storage_16bit_features;
-		ppNext = &ext.storage_16bit_features.pNext;
-	}
-
-	if (has_extension(VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME);
-		*ppNext = &ext.float16_int8_features;
-		ppNext = &ext.float16_int8_features.pNext;
-	}
-
-	if (has_extension(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME);
-		*ppNext = &ext.subgroup_size_control_features;
-		ppNext = &ext.subgroup_size_control_features.pNext;
-	}
+	if (ext.device_api_core_version >= VK_API_VERSION_1_3)
+		ADD_CHAIN(ext.vk13_features, VULKAN_1_3_FEATURES);
 
 	if (has_extension(VK_NV_COMPUTE_SHADER_DERIVATIVES_EXTENSION_NAME))
 	{
 		enabled_extensions.push_back(VK_NV_COMPUTE_SHADER_DERIVATIVES_EXTENSION_NAME);
-		*ppNext = &ext.compute_shader_derivative_features;
-		ppNext = &ext.compute_shader_derivative_features.pNext;
-	}
-
-	if (has_extension(VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME);
-		*ppNext = &ext.host_query_reset_features;
-		ppNext = &ext.host_query_reset_features.pNext;
-	}
-
-	if (has_extension(VK_EXT_SHADER_DEMOTE_TO_HELPER_INVOCATION_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_EXT_SHADER_DEMOTE_TO_HELPER_INVOCATION_EXTENSION_NAME);
-		*ppNext = &ext.demote_to_helper_invocation_features;
-		ppNext = &ext.demote_to_helper_invocation_features.pNext;
-	}
-
-	if (has_extension(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME);
-		*ppNext = &ext.scalar_block_features;
-		ppNext = &ext.scalar_block_features.pNext;
-	}
-
-	if (has_extension(VK_KHR_UNIFORM_BUFFER_STANDARD_LAYOUT_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_KHR_UNIFORM_BUFFER_STANDARD_LAYOUT_EXTENSION_NAME);
-		*ppNext = &ext.ubo_std430_features;
-		ppNext = &ext.ubo_std430_features.pNext;
-	}
-
-	if (has_extension(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
-		*ppNext = &ext.timeline_semaphore_features;
-		ppNext = &ext.timeline_semaphore_features.pNext;
-	}
-
-	if (has_extension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
-		*ppNext = &ext.descriptor_indexing_features;
-		ppNext = &ext.descriptor_indexing_features.pNext;
+		ADD_CHAIN(ext.compute_shader_derivative_features, COMPUTE_SHADER_DERIVATIVES_FEATURES_NV);
 	}
 
 	if (has_extension(VK_KHR_PERFORMANCE_QUERY_EXTENSION_NAME))
 	{
 		enabled_extensions.push_back(VK_KHR_PERFORMANCE_QUERY_EXTENSION_NAME);
-		*ppNext = &ext.performance_query_features;
-		ppNext = &ext.performance_query_features.pNext;
+		ADD_CHAIN(ext.performance_query_features, PERFORMANCE_QUERY_FEATURES_KHR);
 	}
 
 	if (has_extension(VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME))
 	{
 		enabled_extensions.push_back(VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME);
-		*ppNext = &ext.memory_priority_features;
-		ppNext = &ext.memory_priority_features.pNext;
+		ADD_CHAIN(ext.memory_priority_features, MEMORY_PRIORITY_FEATURES_EXT);
 	}
 
 	if (has_extension(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME))
@@ -1410,111 +1341,96 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	{
 		ext.supports_astc_decode_mode = true;
 		enabled_extensions.push_back(VK_EXT_ASTC_DECODE_MODE_EXTENSION_NAME);
-		*ppNext = &ext.astc_decode_features;
-		ppNext = &ext.astc_decode_features.pNext;
-	}
-
-	if (has_extension(VK_EXT_TEXTURE_COMPRESSION_ASTC_HDR_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_EXT_TEXTURE_COMPRESSION_ASTC_HDR_EXTENSION_NAME);
-		*ppNext = &ext.astc_hdr_features;
-		ppNext = &ext.astc_hdr_features.pNext;
-	}
-
-	if (has_extension(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME))
-	{
-		ext.supports_sync2 = true;
-		enabled_extensions.push_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
-		*ppNext = &ext.sync2_features;
-		ppNext = &ext.sync2_features.pNext;
-	}
-
-	if (has_extension(VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME))
-	{
-		ext.supports_pipeline_creation_cache_control = true;
-		enabled_extensions.push_back(VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME);
-		*ppNext = &ext.pipeline_creation_cache_control_features;
-		ppNext = &ext.pipeline_creation_cache_control_features.pNext;
+		ADD_CHAIN(ext.astc_decode_features, ASTC_DECODE_FEATURES_EXT);
 	}
 
 	if (has_extension(VK_EXT_PAGEABLE_DEVICE_LOCAL_MEMORY_EXTENSION_NAME))
 	{
 		enabled_extensions.push_back(VK_EXT_PAGEABLE_DEVICE_LOCAL_MEMORY_EXTENSION_NAME);
-		*ppNext = &ext.pageable_device_local_memory_features;
-		ppNext = &ext.pageable_device_local_memory_features.pNext;
-	}
-
-	if (has_extension(VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME))
-	{
-		ext.supports_format_feature_flags2 = true;
-		enabled_extensions.push_back(VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME);
+		ADD_CHAIN(ext.pageable_device_local_memory_features, PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT);
 	}
 
 	if (has_extension(VK_NV_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME))
 	{
 		enabled_extensions.push_back(VK_NV_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME);
-		*ppNext = &ext.device_generated_commands_features;
-		ppNext = &ext.device_generated_commands_features.pNext;
+		ADD_CHAIN(ext.device_generated_commands_features, DEVICE_GENERATED_COMMANDS_FEATURES_NV);
 	}
 
-	if (has_extension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
+	if (has_extension(VK_NV_DEVICE_GENERATED_COMMANDS_COMPUTE_EXTENSION_NAME))
 	{
-		enabled_extensions.push_back(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
-		*ppNext = &ext.buffer_device_address_features;
-		ppNext = &ext.buffer_device_address_features.pNext;
+		enabled_extensions.push_back(VK_NV_DEVICE_GENERATED_COMMANDS_COMPUTE_EXTENSION_NAME);
+		ADD_CHAIN(ext.device_generated_commands_compute_features, DEVICE_GENERATED_COMMANDS_COMPUTE_FEATURES_NV);
 	}
 
 	if (has_extension(VK_EXT_MESH_SHADER_EXTENSION_NAME))
 	{
 		enabled_extensions.push_back(VK_EXT_MESH_SHADER_EXTENSION_NAME);
-		*ppNext = &ext.mesh_shader_features;
-		ppNext = &ext.mesh_shader_features.pNext;
+		ADD_CHAIN(ext.mesh_shader_features, MESH_SHADER_FEATURES_EXT);
 	}
 
-	if (has_extension(VK_KHR_SPIRV_1_4_EXTENSION_NAME))
+	if (has_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME))
 	{
-		enabled_extensions.push_back(VK_KHR_SPIRV_1_4_EXTENSION_NAME);
-		ext.supports_spirv_1_4 = true;
+		enabled_extensions.push_back(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
+		ADD_CHAIN(ext.index_type_uint8_features, INDEX_TYPE_UINT8_FEATURES_EXT);
 	}
 
-	if (has_extension(VK_KHR_SHADER_SUBGROUP_EXTENDED_TYPES_EXTENSION_NAME))
+	if (has_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME))
 	{
-		enabled_extensions.push_back(VK_KHR_SHADER_SUBGROUP_EXTENDED_TYPES_EXTENSION_NAME);
-		*ppNext = &ext.shader_subgroup_extended_types_features;
-		ppNext = &ext.shader_subgroup_extended_types_features.pNext;
+		ext.supports_external_memory_host = true;
+		enabled_extensions.push_back(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
+	}
+
+	if (has_extension(VK_KHR_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_KHR_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME);
+		ADD_CHAIN(ext.barycentric_features, FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR);
+	}
+
+	if (ext.supports_video_queue && has_extension(VK_KHR_VIDEO_MAINTENANCE_1_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_KHR_VIDEO_MAINTENANCE_1_EXTENSION_NAME);
+		ADD_CHAIN(ext.video_maintenance1_features, VIDEO_MAINTENANCE_1_FEATURES_KHR);
+	}
+
+	if (has_extension(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME);
+		ext.supports_push_descriptor = true;
+	}
+
+	if (ext.device_api_core_version >= VK_API_VERSION_1_3)
+	{
+		ext.supports_store_op_none = true;
+	}
+	else if (has_extension(VK_KHR_LOAD_STORE_OP_NONE_EXTENSION_NAME))
+	{
+		ext.supports_store_op_none = true;
+		enabled_extensions.push_back(VK_KHR_LOAD_STORE_OP_NONE_EXTENSION_NAME);
+	}
+	else if (has_extension(VK_EXT_LOAD_STORE_OP_NONE_EXTENSION_NAME))
+	{
+		ext.supports_store_op_none = true;
+		enabled_extensions.push_back(VK_EXT_LOAD_STORE_OP_NONE_EXTENSION_NAME);
 	}
 
 	if ((flags & CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT) != 0 && requires_swapchain)
 	{
-		bool broken_present_wait = ext.driver_properties.driverID == VK_DRIVER_ID_NVIDIA_PROPRIETARY &&
-		                           NV_DRIVER_VERSION_MAJOR(gpu_props.driverVersion) < 535;
-
-		if (broken_present_wait)
+		if (has_extension(VK_KHR_PRESENT_ID_EXTENSION_NAME))
 		{
-			LOGW("Disabling present_wait due to broken driver.\n");
+			enabled_extensions.push_back(VK_KHR_PRESENT_ID_EXTENSION_NAME);
+			ADD_CHAIN(ext.present_id_features, PRESENT_ID_FEATURES_KHR);
 		}
-		else
-		{
-			if (has_extension(VK_KHR_PRESENT_ID_EXTENSION_NAME))
-			{
-				enabled_extensions.push_back(VK_KHR_PRESENT_ID_EXTENSION_NAME);
-				*ppNext = &ext.present_id_features;
-				ppNext = &ext.present_id_features.pNext;
-			}
 
-			if (has_extension(VK_KHR_PRESENT_WAIT_EXTENSION_NAME))
-			{
-				enabled_extensions.push_back(VK_KHR_PRESENT_WAIT_EXTENSION_NAME);
-				*ppNext = &ext.present_wait_features;
-				ppNext = &ext.present_wait_features.pNext;
-			}
+		if (has_extension(VK_KHR_PRESENT_WAIT_EXTENSION_NAME))
+		{
+			enabled_extensions.push_back(VK_KHR_PRESENT_WAIT_EXTENSION_NAME);
+			ADD_CHAIN(ext.present_wait_features, PRESENT_WAIT_FEATURES_KHR);
 		}
 
 		if (ext.supports_surface_maintenance1 && has_extension(VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME))
 		{
 			enabled_extensions.push_back(VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME);
-			*ppNext = &ext.swapchain_maintenance1_features;
-			ppNext = &ext.swapchain_maintenance1_features.pNext;
+			ADD_CHAIN(ext.swapchain_maintenance1_features, SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT);
 		}
 
 		if (ext.supports_swapchain_colorspace && has_extension(VK_EXT_HDR_METADATA_EXTENSION_NAME))
@@ -1536,8 +1452,58 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		vkGetPhysicalDeviceFeatures2(gpu, &pdf2);
 	}
 
-	ext.buffer_device_address_features.bufferDeviceAddressCaptureReplay = VK_FALSE;
-	ext.buffer_device_address_features.bufferDeviceAddressMultiDevice = VK_FALSE;
+	// Promote fallback features to core structs.
+	if (ext.host_query_reset_features.hostQueryReset)
+		ext.vk12_features.hostQueryReset = VK_TRUE;
+
+	if (ext.storage_16bit_features.storageBuffer16BitAccess)
+		ext.vk11_features.storageBuffer16BitAccess = VK_TRUE;
+	if (ext.storage_16bit_features.storageInputOutput16)
+		ext.vk11_features.storageInputOutput16 = VK_TRUE;
+	if (ext.storage_16bit_features.storagePushConstant16)
+		ext.vk11_features.storagePushConstant16 = VK_TRUE;
+	if (ext.storage_16bit_features.uniformAndStorageBuffer16BitAccess)
+		ext.vk11_features.uniformAndStorageBuffer16BitAccess = VK_TRUE;
+
+	if (ext.storage_8bit_features.storageBuffer8BitAccess)
+		ext.vk12_features.storageBuffer8BitAccess = VK_TRUE;
+	if (ext.storage_8bit_features.storagePushConstant8)
+		ext.vk12_features.storagePushConstant8 = VK_TRUE;
+	if (ext.storage_8bit_features.uniformAndStorageBuffer8BitAccess)
+		ext.vk12_features.uniformAndStorageBuffer8BitAccess = VK_TRUE;
+
+	if (ext.float16_int8_features.shaderFloat16)
+		ext.vk12_features.shaderFloat16 = VK_TRUE;
+	if (ext.float16_int8_features.shaderInt8)
+		ext.vk12_features.shaderInt8 = VK_TRUE;
+
+	if (ext.subgroup_size_control_features.computeFullSubgroups)
+		ext.vk13_features.computeFullSubgroups = VK_TRUE;
+	if (ext.subgroup_size_control_features.subgroupSizeControl)
+		ext.vk13_features.subgroupSizeControl = VK_TRUE;
+	///
+
+	ext.vk11_features.multiviewGeometryShader = VK_FALSE;
+	ext.vk11_features.multiviewTessellationShader = VK_FALSE;
+	ext.vk11_features.protectedMemory = VK_FALSE;
+	ext.vk11_features.variablePointers = VK_FALSE;
+	ext.vk11_features.variablePointersStorageBuffer = VK_FALSE;
+
+	ext.vk12_features.bufferDeviceAddressCaptureReplay = VK_FALSE;
+	ext.vk12_features.bufferDeviceAddressMultiDevice = VK_FALSE;
+	ext.vk12_features.imagelessFramebuffer = VK_FALSE;
+
+	ext.vk13_features.descriptorBindingInlineUniformBlockUpdateAfterBind = VK_FALSE;
+	ext.vk13_features.inlineUniformBlock = VK_FALSE;
+	ext.vk13_features.privateData = VK_FALSE;
+
+	ext.mesh_shader_features.primitiveFragmentShadingRateMeshShader = VK_FALSE;
+	ext.mesh_shader_features.meshShaderQueries = VK_FALSE;
+	ext.mesh_shader_features.multiviewMeshShader = VK_FALSE;
+
+	ext.device_generated_commands_compute_features.deviceGeneratedComputeCaptureReplay = VK_FALSE;
+	// TODO
+	ext.device_generated_commands_compute_features.deviceGeneratedComputePipelines = VK_FALSE;
 
 	// Enable device features we might care about.
 	{
@@ -1574,6 +1540,8 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 			enabled_features.shaderStorageImageWriteWithoutFormat = VK_TRUE;
 		if (pdf2.features.shaderStorageImageReadWithoutFormat)
 			enabled_features.shaderStorageImageReadWithoutFormat = VK_TRUE;
+		if (pdf2.features.multiDrawIndirect)
+			enabled_features.multiDrawIndirect = VK_TRUE;
 
 		if (pdf2.features.shaderSampledImageArrayDynamicIndexing)
 			enabled_features.shaderSampledImageArrayDynamicIndexing = VK_TRUE;
@@ -1595,82 +1563,71 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 
 	device_info.pNext = &pdf2;
 
-	if (has_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME))
-	{
-		ext.supports_external_memory_host = true;
-		enabled_extensions.push_back(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
-	}
-
 	// Only need GetPhysicalDeviceProperties2 for Vulkan 1.1-only code, so don't bother getting KHR variant.
 	VkPhysicalDeviceProperties2 props = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
-	ext.subgroup_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES };
-	ext.multiview_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES };
-
-	ext.host_memory_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT };
-	ext.subgroup_size_control_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES_EXT };
-	ext.descriptor_indexing_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES_EXT };
-	ext.conservative_rasterization_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT };
-	ext.float_control_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES_KHR };
-	ext.id_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES };
-	ext.device_generated_commands_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_PROPERTIES_NV };
-	ext.mesh_shader_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_EXT };
-
+	// Fallback, query some important Vulkan 1.1 structs if we cannot use core 1.2 method.
+	VkPhysicalDeviceDriverProperties driver_properties = {};
+	VkPhysicalDeviceIDProperties id_properties = {};
+	VkPhysicalDeviceSubgroupProperties subgroup_properties = {};
+	VkPhysicalDeviceSubgroupSizeControlProperties size_control_props = {};
 	ppNext = &props.pNext;
 
-	*ppNext = &ext.subgroup_properties;
-	ppNext = &ext.subgroup_properties.pNext;
-	*ppNext = &ext.multiview_properties;
-	ppNext = &ext.multiview_properties.pNext;
+	if (ext.device_api_core_version >= VK_API_VERSION_1_2)
+	{
+		ADD_CHAIN(ext.vk11_props, VULKAN_1_1_PROPERTIES);
+		ADD_CHAIN(ext.vk12_props, VULKAN_1_2_PROPERTIES);
+	}
+	else
+	{
+		if (has_extension(VK_KHR_DRIVER_PROPERTIES_EXTENSION_NAME))
+			ADD_CHAIN(driver_properties, DRIVER_PROPERTIES);
+		if (has_extension(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME))
+			ADD_CHAIN(size_control_props, SUBGROUP_SIZE_CONTROL_PROPERTIES);
+		ADD_CHAIN(id_properties, ID_PROPERTIES);
+		ADD_CHAIN(subgroup_properties, SUBGROUP_PROPERTIES);
+	}
+
+	if (ext.device_api_core_version >= VK_API_VERSION_1_3)
+		ADD_CHAIN(ext.vk13_props, VULKAN_1_3_PROPERTIES);
 
 	if (ext.supports_external_memory_host)
-	{
-		*ppNext = &ext.host_memory_properties;
-		ppNext = &ext.host_memory_properties.pNext;
-	}
-
-	if (has_extension(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME))
-	{
-		*ppNext = &ext.subgroup_size_control_properties;
-		ppNext = &ext.subgroup_size_control_properties.pNext;
-	}
-
-	if (has_extension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
-	{
-		*ppNext = &ext.descriptor_indexing_properties;
-		ppNext = &ext.descriptor_indexing_properties.pNext;
-	}
+		ADD_CHAIN(ext.host_memory_properties, EXTERNAL_MEMORY_HOST_PROPERTIES_EXT);
 
 	if (has_extension(VK_NV_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME))
-	{
-		*ppNext = &ext.device_generated_commands_properties;
-		ppNext = &ext.device_generated_commands_properties.pNext;
-	}
+		ADD_CHAIN(ext.device_generated_commands_properties, DEVICE_GENERATED_COMMANDS_PROPERTIES_NV);
 
 	if (ext.supports_conservative_rasterization)
-	{
-		*ppNext = &ext.conservative_rasterization_properties;
-		ppNext = &ext.conservative_rasterization_properties.pNext;
-	}
-
-	if (ext.supports_shader_float_control)
-	{
-		*ppNext = &ext.float_control_properties;
-		ppNext = &ext.float_control_properties.pNext;
-	}
-
-	if (ext.supports_external)
-	{
-		*ppNext = &ext.id_properties;
-		ppNext = &ext.id_properties.pNext;
-	}
+		ADD_CHAIN(ext.conservative_rasterization_properties, CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT);
 
 	if (has_extension(VK_EXT_MESH_SHADER_EXTENSION_NAME))
-	{
-		*ppNext = &ext.mesh_shader_properties;
-		ppNext = &ext.mesh_shader_properties.pNext;
-	}
+		ADD_CHAIN(ext.mesh_shader_properties, MESH_SHADER_PROPERTIES_EXT);
 
 	vkGetPhysicalDeviceProperties2(gpu, &props);
+
+	if (ext.device_api_core_version < VK_API_VERSION_1_2)
+	{
+		ext.driver_id = driver_properties.driverID;
+		ext.vk12_props.driverID = ext.driver_id;
+		memcpy(ext.vk11_props.deviceUUID, id_properties.deviceUUID, sizeof(id_properties.deviceUUID));
+		memcpy(ext.vk11_props.driverUUID, id_properties.driverUUID, sizeof(id_properties.driverUUID));
+		memcpy(ext.vk11_props.deviceLUID, id_properties.deviceLUID, sizeof(id_properties.deviceLUID));
+		ext.vk11_props.deviceNodeMask = id_properties.deviceNodeMask;
+		ext.vk11_props.deviceLUIDValid = id_properties.deviceLUIDValid;
+		ext.vk11_props.subgroupQuadOperationsInAllStages = subgroup_properties.quadOperationsInAllStages;
+		ext.vk11_props.subgroupSupportedOperations = subgroup_properties.supportedOperations;
+		ext.vk11_props.subgroupSupportedStages = subgroup_properties.supportedStages;
+		ext.vk11_props.subgroupSize = subgroup_properties.subgroupSize;
+	}
+	else
+		ext.driver_id = ext.vk12_props.driverID;
+
+	if (ext.device_api_core_version < VK_API_VERSION_1_3)
+	{
+		ext.vk13_props.minSubgroupSize = size_control_props.minSubgroupSize;
+		ext.vk13_props.maxSubgroupSize = size_control_props.maxSubgroupSize;
+		ext.vk13_props.requiredSubgroupSizeStages = size_control_props.requiredSubgroupSizeStages;
+		ext.vk13_props.maxComputeWorkgroupSubgroups = size_control_props.maxComputeWorkgroupSubgroups;
+	}
 
 #ifdef GRANITE_VULKAN_PROFILES
 	// Override any properties in the profile in strict mode.
@@ -1709,7 +1666,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	ext.pdf2 = &pdf2;
 
 #ifdef GRANITE_VULKAN_FOSSILIZE
-	feature_filter.init(user_application_info.get_application_info().apiVersion,
+	feature_filter.init(ext.device_api_core_version,
 	                    enabled_device_extensions.data(),
 	                    device_info.enabledExtensionCount,
 	                    &pdf2, &props);
@@ -1717,6 +1674,11 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 #endif
 
 	volkLoadDeviceTable(&device_table, device);
+
+	if (!device_table.vkCreateRenderPass2)
+		device_table.vkCreateRenderPass2 = device_table.vkCreateRenderPass2KHR;
+	if (!device_table.vkResetQueryPool)
+		device_table.vkResetQueryPool = device_table.vkResetQueryPoolEXT;
 
 	for (int i = 0; i < QUEUE_INDEX_COUNT; i++)
 	{
@@ -1738,34 +1700,13 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	}
 
 #ifdef VULKAN_DEBUG
-
-	static const char *family_names[QUEUE_INDEX_COUNT] = { "Graphics", "Compute", "Transfer", "Video decode",
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-	                                                       "Video encode",
-#endif
-	};
-
+	static const char *family_names[QUEUE_INDEX_COUNT] = { "Graphics", "Compute", "Transfer", "Video decode", "Video encode" };
 	for (int i = 0; i < QUEUE_INDEX_COUNT; i++)
 		if (queue_info.family_indices[i] != VK_QUEUE_FAMILY_IGNORED)
 			LOGI("%s queue: family %u, index %u.\n", family_names[i], queue_info.family_indices[i], queue_indices[i]);
 #endif
 
-	check_descriptor_indexing_features();
-
 	return true;
-}
-
-void Context::check_descriptor_indexing_features()
-{
-	auto &f = ext.descriptor_indexing_features;
-	if (f.descriptorBindingSampledImageUpdateAfterBind &&
-	    f.descriptorBindingPartiallyBound &&
-		f.descriptorBindingVariableDescriptorCount &&
-	    f.runtimeDescriptorArray &&
-	    f.shaderSampledImageArrayNonUniformIndexing)
-	{
-		ext.supports_descriptor_indexing = true;
-	}
 }
 
 #ifdef GRANITE_VULKAN_FOSSILIZE

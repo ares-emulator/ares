@@ -33,6 +33,7 @@ PARALLEL_RDP_SOURCES_CXX := \
         $(PARALLEL_RDP_IMPLEMENTATION)/util/aligned_alloc.cpp \
         $(PARALLEL_RDP_IMPLEMENTATION)/util/timer.cpp \
         $(PARALLEL_RDP_IMPLEMENTATION)/util/timeline_trace_file.cpp \
+        $(PARALLEL_RDP_IMPLEMENTATION)/util/environment.cpp \
         $(PARALLEL_RDP_IMPLEMENTATION)/util/thread_name.cpp
 
 PARALLEL_RDP_SOURCES_C := \

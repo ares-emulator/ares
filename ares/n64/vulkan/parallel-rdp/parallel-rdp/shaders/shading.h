@@ -306,6 +306,14 @@ bool shade_pixel(int x, int y, uint primitive_index, out ShadedData shaded)
 		// but let's not go there ...
 		combined_inputs.texel1 = tmp_texel;
 
+		// Resample the noise at some arbitrary other offset.
+		// This only matters if both noise combiner inputs take noise (very weird).
+		if ((static_state_flags & RASTERIZATION_NEED_NOISE_DUAL_BIT) != 0)
+		{
+			reseed_noise(x + 1023, y + 7, primitive_index + global_constants.fb_info.base_primitive_index + 11);
+			combined_inputs.noise = noise_get_combiner();
+		}
+
 		combined = u8x4(combiner_cycle1(combined_inputs,
 		                                combiner_inputs_rgb1,
 		                                combiner_inputs_alpha1,
