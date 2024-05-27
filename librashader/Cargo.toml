@@ -30,9 +30,9 @@ ash = { version = "0.37", optional = true }
 halfbrown = "0.2.4"
 
 [target.'cfg(not(all(target_vendor="apple", docsrs)))'.dependencies]
-wgpu = { version = "0.19", default-features = false, optional = true }
+wgpu = { version = "0.20", default-features = false, optional = true }
 librashader-runtime-wgpu = { path = "../librashader-runtime-wgpu", version = "0.2.7", optional = true }
-wgpu-types = { version = "0.19", optional = true }
+wgpu-types = { version = "0.20", optional = true }
 
 [target.'cfg(windows)'.dependencies.windows]
 workspace = true

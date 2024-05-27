@@ -24,7 +24,7 @@ librashader-presets = { path = "../librashader-presets", version = "0.2.7" }
 
 spirv_cross = { package = "librashader-spirv-cross", version = "0.25.1", optional = true }
 
-naga = { version = "0.19.0", optional = true }
+naga = { version = "0.20.0", optional = true }
 rspirv = { version = "0.12.0", optional = true }
 spirv = { version = "0.3.0", optional = true}
 
