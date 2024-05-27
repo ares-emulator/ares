@@ -35,44 +35,39 @@ class Buffer;
 struct BufferBlockAllocation
 {
 	uint8_t *host;
+	Util::IntrusivePtr<Buffer> buffer;
 	VkDeviceSize offset;
 	VkDeviceSize padded_size;
 };
 
-struct BufferBlock
+class BufferBlock
 {
+public:
 	~BufferBlock();
-	Util::IntrusivePtr<Buffer> gpu;
-	Util::IntrusivePtr<Buffer> cpu;
+
+	BufferBlockAllocation allocate(VkDeviceSize allocate_size);
+	inline bool is_mapped() const { return mapped != nullptr; }
+	const Buffer &get_buffer() const { return *buffer; }
+	void unmap(Device &device);
+
+	inline VkDeviceSize get_offset() const { return offset; }
+	inline VkDeviceSize get_size() const { return size; }
+
+private:
+	friend class BufferPool;
+	Util::IntrusivePtr<Buffer> buffer;
 	VkDeviceSize offset = 0;
 	VkDeviceSize alignment = 0;
 	VkDeviceSize size = 0;
 	VkDeviceSize spill_size = 0;
 	uint8_t *mapped = nullptr;
-
-	BufferBlockAllocation allocate(VkDeviceSize allocate_size)
-	{
-		auto aligned_offset = (offset + alignment - 1) & ~(alignment - 1);
-		if (aligned_offset + allocate_size <= size)
-		{
-			auto *ret = mapped + aligned_offset;
-			offset = aligned_offset + allocate_size;
-
-			VkDeviceSize padded_size = std::max<VkDeviceSize>(allocate_size, spill_size);
-			padded_size = std::min<VkDeviceSize>(padded_size, size - aligned_offset);
-
-			return { ret, aligned_offset, padded_size };
-		}
-		else
-			return { nullptr, 0, 0 };
-	}
 };
 
 class BufferPool
 {
 public:
 	~BufferPool();
-	void init(Device *device, VkDeviceSize block_size, VkDeviceSize alignment, VkBufferUsageFlags usage, bool need_device_local);
+	void init(Device *device, VkDeviceSize block_size, VkDeviceSize alignment, VkBufferUsageFlags usage);
 	void reset();
 
 	// Used for allocating UBOs, where we want to specify a fixed size for range,
@@ -97,6 +92,5 @@ private:
 	size_t max_retained_blocks = 0;
 	std::vector<BufferBlock> blocks;
 	BufferBlock allocate_block(VkDeviceSize size);
-	bool need_device_local = false;
 };
 }

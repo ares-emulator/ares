@@ -807,8 +807,8 @@ Vulkan::ImageHandle VideoInterface::scale_stage(Vulkan::CommandBuffer &cmd, cons
 	{
 		if (prev_image_is_external)
 		{
-			cmd.acquire_external_image_barrier(*prev_scanout_image, prev_image_layout, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-											   VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
+			cmd.acquire_image_barrier(*prev_scanout_image, prev_image_layout, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
 		}
 		else if (prev_image_layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 		{
@@ -1396,10 +1396,10 @@ Vulkan::ImageHandle VideoInterface::scanout(VkImageLayout target_layout, const S
 			if (options.export_handle_type != Vulkan::ExternalHandle::get_opaque_memory_handle_type())
 				target_layout = VK_IMAGE_LAYOUT_GENERAL;
 
-			cmd->release_external_image_barrier(*scale_image, src_layout,
-			                                    target_layout,
-			                                    layout_to_stage(src_layout),
-			                                    layout_to_access(src_layout));
+			cmd->release_image_barrier(*scale_image, src_layout,
+			                           target_layout,
+			                           layout_to_stage(src_layout),
+			                           layout_to_access(src_layout));
 		}
 		else
 		{

@@ -290,10 +290,7 @@ public:
 		AsyncCompute = QUEUE_INDEX_COMPUTE,
 		AsyncTransfer = QUEUE_INDEX_TRANSFER,
 		VideoDecode = QUEUE_INDEX_VIDEO_DECODE,
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 		VideoEncode = QUEUE_INDEX_VIDEO_ENCODE,
-#endif
-		AsyncGraphics = QUEUE_INDEX_COUNT, // Aliases with either Generic or AsyncCompute queue
 		Count
 	};
 
@@ -393,26 +390,20 @@ public:
 	                   VkPipelineStageFlags2 src_stage, VkAccessFlags2 src_access,
 	                   VkPipelineStageFlags2 dst_stage, VkAccessFlags2 dst_access);
 
-	void image_barrier_acquire(const Image &image,
-	                           VkImageLayout old_layout, VkImageLayout new_layout,
-	                           VkPipelineStageFlags2 src_stage, uint32_t src_queue_family,
-	                           VkPipelineStageFlags2 dst_stage, VkAccessFlags2 dst_access);
-
-	void image_barrier_release(const Image &image,
-	                           VkImageLayout old_layout, VkImageLayout new_layout,
-	                           VkPipelineStageFlags2 src_stage, VkAccessFlags2 src_access,
-	                           uint32_t dst_queue_family);
-
 	void buffer_barriers(uint32_t buffer_barriers, const VkBufferMemoryBarrier2 *buffers);
 	void image_barriers(uint32_t image_barriers, const VkImageMemoryBarrier2 *images);
 
-	void release_external_buffer_barrier(const Buffer &buffer, VkPipelineStageFlags2 src_stage, VkAccessFlags2 src_access);
-	void acquire_external_buffer_barrier(const Buffer &buffer, VkPipelineStageFlags2 dst_stage, VkAccessFlags2 dst_access);
-	void release_external_image_barrier(const Image &image,
-	                                    VkImageLayout old_layout, VkImageLayout new_layout,
-	                                    VkPipelineStageFlags2 src_stage, VkAccessFlags2 src_access);
-	void acquire_external_image_barrier(const Image &image, VkImageLayout old_layout, VkImageLayout new_layout,
-	                                    VkPipelineStageFlags2 dst_stage, VkAccessFlags2 dst_access);
+	void release_buffer_barrier(const Buffer &buffer, VkPipelineStageFlags2 src_stage, VkAccessFlags2 src_access,
+	                            uint32_t dst_queue_family = VK_QUEUE_FAMILY_EXTERNAL);
+	void acquire_buffer_barrier(const Buffer &buffer, VkPipelineStageFlags2 dst_stage, VkAccessFlags2 dst_access,
+	                            uint32_t src_queue_family = VK_QUEUE_FAMILY_EXTERNAL);
+	void release_image_barrier(const Image &image,
+	                           VkImageLayout old_layout, VkImageLayout new_layout,
+	                           VkPipelineStageFlags2 src_stage, VkAccessFlags2 src_access,
+	                           uint32_t dst_queue_family = VK_QUEUE_FAMILY_EXTERNAL);
+	void acquire_image_barrier(const Image &image, VkImageLayout old_layout, VkImageLayout new_layout,
+	                           VkPipelineStageFlags2 dst_stage, VkAccessFlags2 dst_access,
+	                           uint32_t src_queue_family = VK_QUEUE_FAMILY_EXTERNAL);
 
 	void blit_image(const Image &dst,
 	                const Image &src,
@@ -496,6 +487,7 @@ public:
 	void *update_image(const Image &image, const VkOffset3D &offset, const VkExtent3D &extent, uint32_t row_length,
 	                   uint32_t image_height, const VkImageSubresourceLayers &subresource);
 	void *update_image(const Image &image, uint32_t row_length = 0, uint32_t image_height = 0);
+	BufferBlockAllocation request_scratch_buffer_memory(VkDeviceSize size);
 
 	void set_viewport(const VkViewport &viewport);
 	const VkViewport &get_viewport() const;

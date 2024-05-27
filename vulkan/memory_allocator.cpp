@@ -123,8 +123,11 @@ void DeviceAllocation::free_global(DeviceAllocator &allocator, uint32_t size_, u
 	}
 }
 
-void ClassAllocator::prepare_allocation(DeviceAllocation *alloc, MiniHeap &heap, const SuballocationResult &suballoc)
+void ClassAllocator::prepare_allocation(DeviceAllocation *alloc, Util::IntrusiveList<MiniHeap>::Iterator heap_itr,
+                                        const Util::SuballocationResult &suballoc)
 {
+	auto &heap = *heap_itr;
+	alloc->heap = heap_itr;
 	alloc->base = heap.allocation.base;
 	alloc->offset = suballoc.offset + heap.allocation.offset;
 	alloc->mask = suballoc.mask;
@@ -714,10 +717,10 @@ bool DeviceAllocator::internal_allocate(
 		info.pNext = &priority_info;
 	}
 
-	if (device->get_device_features().buffer_device_address_features.bufferDeviceAddress &&
+	if (device->get_device_features().vk12_features.bufferDeviceAddress &&
 	    allocation_mode_supports_bda(mode))
 	{
-		flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
+		flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
 		flags_info.pNext = info.pNext;
 		info.pNext = &flags_info;
 	}

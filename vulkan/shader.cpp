@@ -353,9 +353,15 @@ static void update_array_info(ResourceLayout &layout, const SPIRType &type, unsi
 					LOGE("Bindless textures can only be used with binding = 0 in a set.\n");
 
 				if (type.basetype != SPIRType::Image || type.image.dim == spv::DimBuffer)
+				{
 					LOGE("Can only use bindless for sampled images.\n");
+				}
 				else
+				{
 					layout.bindless_set_mask |= 1u << set;
+					// Ignore fp_mask for bindless since we can mix and match.
+					layout.sets[set].fp_mask = 0;
+				}
 
 				size = DescriptorSetLayout::UNSIZED_ARRAY;
 			}
@@ -559,7 +565,7 @@ Shader::Shader(Hash hash, Device *device_, const uint32_t *data, size_t size,
 		LOGE("Failed to reflect resource layout.\n");
 #endif
 
-	if (layout.bindless_set_mask != 0 && !device->get_device_features().supports_descriptor_indexing)
+	if (layout.bindless_set_mask != 0 && !device->get_device_features().vk12_features.descriptorIndexing)
 		LOGE("Sufficient features for descriptor indexing is not supported on this device.\n");
 }
 
