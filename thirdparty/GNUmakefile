@@ -24,16 +24,16 @@ $(object.path)/libchdr_chd.o: $(libchdr.path)/src/libchdr_chd.c
 $(object.path)/libchdr_flac.o: $(libchdr.path)/src/libchdr_flac.c
 $(object.path)/libchdr_huffman.o: $(libchdr.path)/src/libchdr_huffman.c
 
-$(object.path)/lzma_alloc.o: $(libchdr.path)/deps/lzma-19.00/src/Alloc.c
-$(object.path)/lzma_bra86.o: $(libchdr.path)/deps/lzma-19.00/src/Bra86.c
-$(object.path)/lzma_braia64.o: $(libchdr.path)/deps/lzma-19.00/src/BraIA64.c
-$(object.path)/lzma_cpuarch.o: $(libchdr.path)/deps/lzma-19.00/src/CpuArch.c
-$(object.path)/lzma_delta.o: $(libchdr.path)/deps/lzma-19.00/src/Delta.c
-$(object.path)/lzma_lfind.o: $(libchdr.path)/deps/lzma-19.00/src/LzFind.c
-$(object.path)/lzma_86dec.o: $(libchdr.path)/deps/lzma-19.00/src/Lzma86Dec.c
-$(object.path)/lzma_dec.o: $(libchdr.path)/deps/lzma-19.00/src/LzmaDec.c
-$(object.path)/lcma_enc.o: $(libchdr.path)/deps/lzma-19.00/src/LzmaEnc.c
-$(object.path)/lzma_sort.o: $(libchdr.path)/deps/lzma-19.00/src/Sort.c
+$(object.path)/lzma_alloc.o: $(libchdr.path)/deps/lzma-24.05/src/Alloc.c
+$(object.path)/lzma_bra86.o: $(libchdr.path)/deps/lzma-24.05/src/Bra86.c
+$(object.path)/lzma_braia64.o: $(libchdr.path)/deps/lzma-24.05/src/BraIA64.c
+$(object.path)/lzma_cpuarch.o: $(libchdr.path)/deps/lzma-24.05/src/CpuArch.c
+$(object.path)/lzma_delta.o: $(libchdr.path)/deps/lzma-24.05/src/Delta.c
+$(object.path)/lzma_lfind.o: $(libchdr.path)/deps/lzma-24.05/src/LzFind.c
+$(object.path)/lzma_86dec.o: $(libchdr.path)/deps/lzma-24.05/src/Lzma86Dec.c
+$(object.path)/lzma_dec.o: $(libchdr.path)/deps/lzma-24.05/src/LzmaDec.c
+$(object.path)/lcma_enc.o: $(libchdr.path)/deps/lzma-24.05/src/LzmaEnc.c
+$(object.path)/lzma_sort.o: $(libchdr.path)/deps/lzma-24.05/src/Sort.c
 
 $(object.path)/zlib_adler32.o: $(libchdr.path)/deps/zlib-1.3.1/adler32.c
 $(object.path)/zlib_compress.o: $(libchdr.path)/deps/zlib-1.3.1/compress.c
@@ -47,24 +47,24 @@ $(object.path)/zlib_trees.o: $(libchdr.path)/deps/zlib-1.3.1/trees.c
 $(object.path)/zlib_uncompr.o: $(libchdr.path)/deps/zlib-1.3.1/uncompr.c
 $(object.path)/zlib_zutil.o: $(libchdr.path)/deps/zlib-1.3.1/zutil.c
 
-$(object.path)/zstd_common_debug.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/debug.c
-$(object.path)/zstd_common_entropy_common.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/entropy_common.c
-$(object.path)/zstd_common_error_private.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/error_private.c
-$(object.path)/zstd_common_fse_decompress.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/fse_decompress.c
-$(object.path)/zstd_common_pool.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/pool.c
-$(object.path)/zstd_common_threading.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/threading.c
-$(object.path)/zstd_common_xxhash.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/xxhash.c
-$(object.path)/zstd_common_zstd_common.o: $(libchdr.path)/deps/zstd-1.5.5/lib/common/zstd_common.c
-$(object.path)/zstd_decompress_huf_decompress.o: $(libchdr.path)/deps/zstd-1.5.5/lib/decompress/huf_decompress.c
-$(object.path)/zstd_decompress_zstd_ddict.o: $(libchdr.path)/deps/zstd-1.5.5/lib/decompress/zstd_ddict.c
-$(object.path)/zstd_decompress_zstd_decompress.o: $(libchdr.path)/deps/zstd-1.5.5/lib/decompress/zstd_decompress.c
-$(object.path)/zstd_decompress_zstd_decompress_block.o: $(libchdr.path)/deps/zstd-1.5.5/lib/decompress/zstd_decompress_block.c
+$(object.path)/zstd_common_debug.o: $(libchdr.path)/deps/zstd-1.5.6/lib/common/debug.c
+$(object.path)/zstd_common_entropy_common.o: $(libchdr.path)/deps/zstd-1.5.6/lib/common/entropy_common.c
+$(object.path)/zstd_common_error_private.o: $(libchdr.path)/deps/zstd-1.5.6/lib/common/error_private.c
+$(object.path)/zstd_common_fse_decompress.o: $(libchdr.path)/deps/zstd-1.5.6/lib/common/fse_decompress.c
+$(object.path)/zstd_common_pool.o: $(libchdr.path)/deps/zstd-1.5.6/lib/common/pool.c
+$(object.path)/zstd_common_threading.o: $(libchdr.path)/deps/zstd-1.5.6/lib/common/threading.c
+$(object.path)/zstd_common_xxhash.o: $(libchdr.path)/deps/zstd-1.5.6/lib/common/xxhash.c
+$(object.path)/zstd_common_zstd_common.o: $(libchdr.path)/deps/zstd-1.5.6/lib/common/zstd_common.c
+$(object.path)/zstd_decompress_huf_decompress.o: $(libchdr.path)/deps/zstd-1.5.6/lib/decompress/huf_decompress.c
+$(object.path)/zstd_decompress_zstd_ddict.o: $(libchdr.path)/deps/zstd-1.5.6/lib/decompress/zstd_ddict.c
+$(object.path)/zstd_decompress_zstd_decompress.o: $(libchdr.path)/deps/zstd-1.5.6/lib/decompress/zstd_decompress.c
+$(object.path)/zstd_decompress_zstd_decompress_block.o: $(libchdr.path)/deps/zstd-1.5.6/lib/decompress/zstd_decompress_block.c
 
 
 flags += -I$(libchdr.path)/include
-flags += -I$(libchdr.path)/deps/lzma-19.00/include -D_7ZIP_ST
+flags += -I$(libchdr.path)/deps/lzma-24.05/include -D_7ZIP_ST -DZ7_ST
 flags += -I$(libchdr.path)/deps/zlib-1.3.1
-flags += -I$(libchdr.path)/deps/zstd-1.5.5/lib
+flags += -I$(libchdr.path)/deps/zstd-1.5.6/lib
 flags += -DZSTD_DISABLE_ASM
 
 # instruct glibc to declare fseeko/ftello
