@@ -115,7 +115,7 @@ struct sljit_serialized_const {
 SLJIT_API_FUNC_ATTRIBUTE sljit_uw* sljit_serialize_compiler(struct sljit_compiler *compiler,
 	sljit_s32 options, sljit_uw *size)
 {
-	sljit_uw total_size = sizeof(struct sljit_serialized_compiler);
+	sljit_uw serialized_size = sizeof(struct sljit_serialized_compiler);
 	struct sljit_memory_fragment *buf;
 	struct sljit_label *label;
 	struct sljit_jump *jump;
@@ -141,39 +141,39 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_uw* sljit_serialize_compiler(struct sljit_compile
 #if (defined SLJIT_ARGUMENT_CHECKS && SLJIT_ARGUMENT_CHECKS) \
 		|| (defined SLJIT_DEBUG && SLJIT_DEBUG)
 	if (!(options & SLJIT_SERIALIZE_IGNORE_DEBUG))
-		total_size += sizeof(struct sljit_serialized_debug_info);
+		serialized_size += sizeof(struct sljit_serialized_debug_info);
 #endif /* SLJIT_ARGUMENT_CHECKS || SLJIT_DEBUG */
 
 #if (defined SLJIT_CONFIG_ARM_V6 && SLJIT_CONFIG_ARM_V6)
-	total_size += SLJIT_SERIALIZE_ALIGN(compiler->cpool_fill * (sizeof(sljit_uw) + 1));
+	serialized_size += SLJIT_SERIALIZE_ALIGN(compiler->cpool_fill * (sizeof(sljit_uw) + 1));
 #endif /* SLJIT_CONFIG_ARM_V6 */
 
 	/* Compute the size of the data. */
 	buf = compiler->buf;
 	while (buf != NULL) {
-		total_size += sizeof(sljit_uw) + SLJIT_SERIALIZE_ALIGN(buf->used_size);
+		serialized_size += sizeof(sljit_uw) + SLJIT_SERIALIZE_ALIGN(buf->used_size);
 		buf = buf->next;
 	}
 
-	total_size += compiler->label_count * sizeof(struct sljit_serialized_label);
+	serialized_size += compiler->label_count * sizeof(struct sljit_serialized_label);
 
 	jump = compiler->jumps;
 	while (jump != NULL) {
-		total_size += sizeof(struct sljit_serialized_jump);
+		serialized_size += sizeof(struct sljit_serialized_jump);
 		jump = jump->next;
 	}
 
 	const_ = compiler->consts;
 	while (const_ != NULL) {
-		total_size += sizeof(struct sljit_serialized_const);
+		serialized_size += sizeof(struct sljit_serialized_const);
 		const_ = const_->next;
 	}
 
-	result = (sljit_u8*)SLJIT_MALLOC(total_size, compiler->allocator_data);
+	result = (sljit_u8*)SLJIT_MALLOC(serialized_size, compiler->allocator_data);
 	PTR_FAIL_IF_NULL(result);
 
 	if (size != NULL)
-		*size = total_size;
+		*size = serialized_size;
 
 	ptr = result;
 	serialized_compiler = (struct sljit_serialized_compiler*)ptr;
@@ -281,12 +281,12 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_uw* sljit_serialize_compiler(struct sljit_compile
 	}
 #endif /* SLJIT_ARGUMENT_CHECKS || SLJIT_DEBUG */
 
-	SLJIT_ASSERT((sljit_uw)(ptr - result) == total_size);
+	SLJIT_ASSERT((sljit_uw)(ptr - result) == serialized_size);
 	return (sljit_uw*)result;
 }
 
 SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler *sljit_deserialize_compiler(sljit_uw* buffer, sljit_uw size,
-	sljit_s32 options, void *allocator_data, void *exec_allocator_data)
+	sljit_s32 options, void *allocator_data)
 {
 	struct sljit_compiler *compiler;
 	struct sljit_serialized_compiler *serialized_compiler;
@@ -319,7 +319,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler *sljit_deserialize_compiler(sljit
 	if (serialized_compiler->signature != SLJIT_SERIALIZE_SIGNATURE || serialized_compiler->version != SLJIT_SERIALIZE_VERSION)
 		return NULL;
 
-	compiler = sljit_create_compiler(allocator_data, exec_allocator_data);
+	compiler = sljit_create_compiler(allocator_data);
 	PTR_FAIL_IF(compiler == NULL);
 
 	compiler->label_count = serialized_compiler->label_count;

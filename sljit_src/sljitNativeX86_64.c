@@ -365,7 +365,7 @@ static sljit_u8* detect_far_jump_type(struct sljit_jump *jump, sljit_u8 *code_pt
 	int short_addr = !(jump->flags & SLJIT_REWRITABLE_JUMP) && (jump->flags & JUMP_ADDR) && (jump->u.target <= 0xffffffff);
 
 	/* The relative jump below specialized for this case. */
-	SLJIT_ASSERT(reg_map[TMP_REG2] >= 8);
+	SLJIT_ASSERT(reg_map[TMP_REG2] >= 8 && TMP_REG2 != SLJIT_TMP_DEST_REG);
 
 	if (type < SLJIT_JUMP) {
 		/* Invert type. */
@@ -1006,6 +1006,46 @@ static sljit_s32 sljit_emit_get_return_address(struct sljit_compiler *compiler,
 /* --------------------------------------------------------------------- */
 /*  Other operations                                                     */
 /* --------------------------------------------------------------------- */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_select(struct sljit_compiler *compiler, sljit_s32 type,
+	sljit_s32 dst_reg,
+	sljit_s32 src1, sljit_sw src1w,
+	sljit_s32 src2_reg)
+{
+	CHECK_ERROR();
+	CHECK(check_sljit_emit_select(compiler, type, dst_reg, src1, src1w, src2_reg));
+
+	ADJUST_LOCAL_OFFSET(src1, src1w);
+
+	compiler->mode32 = type & SLJIT_32;
+	type &= ~SLJIT_32;
+
+	if (dst_reg != src2_reg) {
+		if (dst_reg == src1) {
+			src1 = src2_reg;
+			src1w = 0;
+			type ^= 0x1;
+		} else if (ADDRESSING_DEPENDS_ON(src1, dst_reg)) {
+			EMIT_MOV(compiler, dst_reg, 0, src1, src1w);
+			src1 = src2_reg;
+			src1w = 0;
+			type ^= 0x1;
+		} else
+			EMIT_MOV(compiler, dst_reg, 0, src2_reg, 0);
+	}
+
+	if (sljit_has_cpu_feature(SLJIT_HAS_CMOV)) {
+		if (SLJIT_UNLIKELY(src1 == SLJIT_IMM)) {
+			EMIT_MOV(compiler, TMP_REG2, 0, src1, src1w);
+			src1 = TMP_REG2;
+			src1w = 0;
+		}
+
+		return emit_groupf(compiler, U8(get_jump_code((sljit_uw)type) - 0x40), dst_reg, src1, src1w);
+	}
+
+	return emit_cmov_generic(compiler, type, dst_reg, src1, src1w);
+}
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_mem(struct sljit_compiler *compiler, sljit_s32 type,
 	sljit_s32 reg,

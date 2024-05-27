@@ -451,6 +451,12 @@ struct sljit_const {
 	sljit_uw addr;
 };
 
+struct sljit_generate_code_buffer {
+	void *buffer;
+	sljit_uw size;
+	sljit_sw executable_offset;
+};
+
 struct sljit_compiler {
 	sljit_s32 error;
 	sljit_s32 options;
@@ -463,7 +469,7 @@ struct sljit_compiler {
 	struct sljit_const *last_const;
 
 	void *allocator_data;
-	void *exec_allocator_data;
+	void *user_data;
 	struct sljit_memory_fragment *buf;
 	struct sljit_memory_fragment *abuf;
 
@@ -585,12 +591,10 @@ struct sljit_compiler {
    custom memory managers. This pointer is passed to SLJIT_MALLOC
    and SLJIT_FREE macros. Most allocators (including the default
    one) ignores this value, and it is recommended to pass NULL
-   as a dummy value for allocator_data. The exec_allocator_data
-   has the same purpose but this one is passed to SLJIT_MALLOC_EXEC /
-   SLJIT_MALLOC_FREE functions.
+   as a dummy value for allocator_data.
 
    Returns NULL if failed. */
-SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler(void *allocator_data, void *exec_allocator_data);
+SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler(void *allocator_data);
 
 /* Frees everything except the compiled machine code. */
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compiler);
@@ -621,20 +625,31 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_compiler_memory_error(struct sljit_compi
    of the compiler to out-of-memory status). */
 SLJIT_API_FUNC_ATTRIBUTE void* sljit_alloc_memory(struct sljit_compiler *compiler, sljit_s32 size);
 
-/* Returns the allocator data passed to sljit_create_compiler. These pointers
-   may contain context data even if the normal/exec allocator ignores it. */
-static SLJIT_INLINE void* sljit_get_allocator_data(struct sljit_compiler *compiler) { return compiler->allocator_data; }
-static SLJIT_INLINE void* sljit_get_exec_allocator_data(struct sljit_compiler *compiler) { return compiler->exec_allocator_data; }
+/* Returns the allocator data passed to sljit_create_compiler. */
+static SLJIT_INLINE void* sljit_compiler_get_allocator_data(struct sljit_compiler *compiler) { return compiler->allocator_data; }
+/* Sets/get the user data for a compiler. */
+static SLJIT_INLINE void sljit_compiler_set_user_data(struct sljit_compiler *compiler, void *user_data) { compiler->user_data = user_data; }
+static SLJIT_INLINE void* sljit_compiler_get_user_data(struct sljit_compiler *compiler) { return compiler->user_data; }
 
 #if (defined SLJIT_VERBOSE && SLJIT_VERBOSE)
 /* Passing NULL disables verbose. */
 SLJIT_API_FUNC_ATTRIBUTE void sljit_compiler_verbose(struct sljit_compiler *compiler, FILE* verbose);
 #endif
 
-/* Create executable code from the instruction stream. This is the final step
-   of the code generation so no more instructions can be emitted after this call. */
+/* Option bits for sljit_generate_code. */
 
-SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compiler);
+/* The exec_allocator_data points to a pre-allocated
+   buffer which type is sljit_generate_code_buffer. */
+#define SLJIT_GENERATE_CODE_BUFFER		0x1
+
+/* Create executable code from the instruction stream. This is the final step
+   of the code generation, and no more instructions can be emitted after this call.
+
+   options is the combination of SLJIT_GENERATE_CODE_* bits
+   exec_allocator_data is passed to SLJIT_MALLOC_EXEC and
+                       SLJIT_MALLOC_FREE functions */
+
+SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compiler, sljit_s32 options, void *exec_allocator_data);
 
 /* Free executable code. */
 
@@ -710,6 +725,11 @@ static SLJIT_INLINE sljit_uw sljit_get_generated_code_size(struct sljit_compiler
 #define SLJIT_HAS_AVX2			101
 #endif
 
+#if (defined SLJIT_CONFIG_LOONGARCH)
+/* [Not emulated] LASX support is available on LoongArch */
+#define SLJIT_HAS_LASX        201
+#endif
+
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_has_cpu_feature(sljit_s32 feature_type);
 
 /* If type is between SLJIT_ORDERED_EQUAL and SLJIT_ORDERED_LESS_EQUAL,
@@ -779,17 +799,22 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_cmp_info(sljit_s32 type);
    global / local context pointers) across function calls. The
    value of n must be between 1 and 3. This option is only
    supported by SLJIT_ENTER_REG_ARG calling convention. */
-#define SLJIT_ENTER_KEEP(n)	(n)
+#define SLJIT_ENTER_KEEP(n)		(n)
 
 /* The compiled function uses an SLJIT specific register argument
    calling convention. This is a lightweight function call type where
    both the caller and the called functions must be compiled by
    SLJIT. The type argument of the call must be SLJIT_CALL_REG_ARG
    and all arguments must be stored in scratch registers. */
-#define SLJIT_ENTER_REG_ARG	0x00000004
+#define SLJIT_ENTER_REG_ARG		0x00000004
 
 /* The local_size must be >= 0 and <= SLJIT_MAX_LOCAL_SIZE. */
-#define SLJIT_MAX_LOCAL_SIZE	1048576
+#define SLJIT_MAX_LOCAL_SIZE		1048576
+
+#if (defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86)
+/* Use VEX prefix for all SIMD operations on x86. */
+#define SLJIT_ENTER_USE_VEX		0x00010000
+#endif /* !SLJIT_CONFIG_X86 */
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_enter(struct sljit_compiler *compiler,
 	sljit_s32 options, sljit_s32 arg_types, sljit_s32 scratches, sljit_s32 saveds,
@@ -857,7 +882,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return_to(struct sljit_compiler *c
      int    | 4 byte (physical_address & 0x3 == 0)
      word   | 4 byte if SLJIT_32BIT_ARCHITECTURE is defined and its value is 1
             | 8 byte if SLJIT_64BIT_ARCHITECTURE is defined and its value is 1
-    pointer | size of sljit_p type (4 byte on 32 bit machines, 4 or 8 byte
+    pointer | size of sljit_up type (4 byte on 32 bit machines, 4 or 8 byte
             | on 64 bit machines)
 
    Note:   Different architectures have different addressing limitations.
@@ -1093,7 +1118,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op0(struct sljit_compiler *compile
    S16 - signed 16 bit data transfer
    U32 - unsigned int (32 bit) data transfer
    S32 - signed int (32 bit) data transfer
-   P   - pointer (sljit_p) data transfer
+   P   - pointer (sljit_up) data transfer
 */
 
 /* Flags: - (does not modify flags) */
@@ -1260,6 +1285,19 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op2u(struct sljit_compiler *compil
 	sljit_s32 src1, sljit_sw src1w,
 	sljit_s32 src2, sljit_sw src2w);
 
+/* Starting index of opcodes for sljit_emit_op2r. */
+#define SLJIT_OP2R_BASE			96
+
+/* Flags: - (may destroy flags) */
+#define SLJIT_MULADD			(SLJIT_OP2R_BASE + 0)
+#define SLJIT_MULADD32			(SLJIT_MULADD | SLJIT_32)
+
+/* Similar to sljit_emit_fop2, except the destination is always a register. */
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op2r(struct sljit_compiler *compiler, sljit_s32 op,
+	sljit_s32 dst_reg,
+	sljit_s32 src1, sljit_sw src1w,
+	sljit_s32 src2, sljit_sw src2w);
+
 /* Emit a left or right shift operation, where the bits shifted
    in comes from a separate source operand. All operands are
    interpreted as unsigned integers.
@@ -1307,7 +1345,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_shift_into(struct sljit_compiler *
 
 /* Starting index of opcodes for sljit_emit_op_src
    and sljit_emit_op_dst. */
-#define SLJIT_OP_SRC_DST_BASE		96
+#define SLJIT_OP_SRC_DST_BASE		112
 
 /* Fast return, see SLJIT_FAST_CALL for more details.
    Note: src cannot be an immedate value
@@ -1359,7 +1397,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op_dst(struct sljit_compiler *comp
 	sljit_s32 dst, sljit_sw dstw);
 
 /* Starting index of opcodes for sljit_emit_fop1. */
-#define SLJIT_FOP1_BASE			128
+#define SLJIT_FOP1_BASE			144
 
 /* Flags: - (does not modify flags) */
 #define SLJIT_MOV_F64			(SLJIT_FOP1_BASE + 0)
@@ -1404,7 +1442,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop1(struct sljit_compiler *compil
 	sljit_s32 src, sljit_sw srcw);
 
 /* Starting index of opcodes for sljit_emit_fop2. */
-#define SLJIT_FOP2_BASE			160
+#define SLJIT_FOP2_BASE			176
 
 /* Flags: - (may destroy flags) */
 #define SLJIT_ADD_F64			(SLJIT_FOP2_BASE + 0)
@@ -1425,7 +1463,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2(struct sljit_compiler *compil
 	sljit_s32 src2, sljit_sw src2w);
 
 /* Starting index of opcodes for sljit_emit_fop2r. */
-#define SLJIT_FOP2R_BASE		168
+#define SLJIT_FOP2R_BASE		192
 
 /* Flags: - (may destroy flags) */
 #define SLJIT_COPYSIGN_F64		(SLJIT_FOP2R_BASE + 0)
@@ -2301,8 +2339,8 @@ compiler instance is returned. Otherwise the returned value is NULL.
     created by sljit_serialize_compiler()
   size is the byte size of the buffer
   options must be 0
-  allocator_data and exec_allocator_data specify an allocator
-    specific data similar to sljit_create_compiler()
+  allocator_data specify an allocator specific data, see
+                 sljit_create_compiler() for further details
 
 Notes:
   - Labels assigned to jumps are restored with their
@@ -2318,7 +2356,7 @@ Notes:
     information cannot be deserialized.
 */
 SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler *sljit_deserialize_compiler(sljit_uw* buffer, sljit_uw size,
-	sljit_s32 options, void *allocator_data, void *exec_allocator_data);
+	sljit_s32 options, void *allocator_data);
 
 /* --------------------------------------------------------------------- */
 /*  Miscellaneous utility functions                                      */

@@ -49,8 +49,8 @@ extern "C" {
      sljit_s16, sljit_u16 : signed and unsigned 16 bit integer type
      sljit_s32, sljit_u32 : signed and unsigned 32 bit integer type
      sljit_sw, sljit_uw   : signed and unsigned machine word, enough to store a pointer
-     sljit_p              : unsgined pointer value (usually the same as sljit_uw, but
-                            some 64 bit ABIs may use 32 bit pointers)
+     sljit_sp, sljit_up   : signed and unsigned pointer value (usually the same as
+                            sljit_uw, but some 64 bit ABIs may use 32 bit pointers)
      sljit_f32            : 32 bit single precision floating point value
      sljit_f64            : 64 bit double precision floating point value
 
@@ -98,6 +98,10 @@ extern "C" {
      SLJIT_TMP_R(i) : accessing temporary registers
      SLJIT_TMP_FR0 .. FR9 : accessing temporary floating point registers
      SLJIT_TMP_FR(i) : accessing temporary floating point registers
+     SLJIT_TMP_DEST_REG : a temporary register for results
+     SLJIT_TMP_MEM_REG : a temporary base register for accessing memory
+                         (can be the same as SLJIT_TMP_DEST_REG)
+     SLJIT_TMP_DEST_FREG : a temporary register for float results
      SLJIT_FUNC : calling convention attribute for both calling JIT from C and C calling back from JIT
      SLJIT_W(number) : defining 64 bit constants on 64 bit architectures (platform independent helper)
      SLJIT_F64_SECOND(reg) : provides the register index of the second 32 bit part of a 64 bit
@@ -358,7 +362,8 @@ typedef long int sljit_sw;
 #endif /* _WIN32 */
 #endif
 
-typedef sljit_uw sljit_p;
+typedef sljit_sw sljit_sp;
+typedef sljit_uw sljit_up;
 
 /* Floating point types. */
 typedef float sljit_f32;
@@ -561,9 +566,9 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_unused_memory_exec(void);
 #endif /* SLJIT_FREE_EXEC */
 
 #if (defined SLJIT_PROT_EXECUTABLE_ALLOCATOR && SLJIT_PROT_EXECUTABLE_ALLOCATOR)
-SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
-#define SLJIT_EXEC_OFFSET(ptr) sljit_exec_offset(ptr)
-#endif
+SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void *code);
+#define SLJIT_EXEC_OFFSET(code) sljit_exec_offset(code)
+#endif /* SLJIT_PROT_EXECUTABLE_ALLOCATOR */
 
 #endif /* SLJIT_EXECUTABLE_ALLOCATOR */
 
@@ -583,6 +588,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_NUMBER_OF_FLOAT_REGISTERS 7
 #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 0
 #define SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS 1
+#define SLJIT_TMP_DEST_REG SLJIT_TMP_R0
+#define SLJIT_TMP_MEM_REG SLJIT_TMP_R0
+#define SLJIT_TMP_DEST_FREG SLJIT_TMP_FR0
 #define SLJIT_LOCALS_OFFSET_BASE (8 * SSIZE_OF(sw))
 #define SLJIT_PREF_SHIFT_REG SLJIT_R2
 #define SLJIT_MASKED_SHIFT 1
@@ -603,6 +611,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 10
 #define SLJIT_LOCALS_OFFSET_BASE (4 * SSIZE_OF(sw))
 #endif /* !_WIN64 */
+#define SLJIT_TMP_DEST_REG SLJIT_TMP_R0
+#define SLJIT_TMP_MEM_REG SLJIT_TMP_R0
+#define SLJIT_TMP_DEST_FREG SLJIT_TMP_FR0
 #define SLJIT_PREF_SHIFT_REG SLJIT_R3
 #define SLJIT_MASKED_SHIFT 1
 #define SLJIT_MASKED_SHIFT32 1
@@ -615,6 +626,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_NUMBER_OF_FLOAT_REGISTERS 14
 #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 8
 #define SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS 2
+#define SLJIT_TMP_DEST_REG SLJIT_TMP_R1
+#define SLJIT_TMP_MEM_REG SLJIT_TMP_R1
+#define SLJIT_TMP_DEST_FREG SLJIT_TMP_FR0
 #define SLJIT_LOCALS_OFFSET_BASE 0
 
 #elif (defined SLJIT_CONFIG_ARM_64 && SLJIT_CONFIG_ARM_64)
@@ -625,6 +639,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_NUMBER_OF_FLOAT_REGISTERS 30
 #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 8
 #define SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS 2
+#define SLJIT_TMP_DEST_REG SLJIT_TMP_R0
+#define SLJIT_TMP_MEM_REG SLJIT_TMP_R0
+#define SLJIT_TMP_DEST_FREG SLJIT_TMP_FR0
 #define SLJIT_LOCALS_OFFSET_BASE (2 * (sljit_s32)sizeof(sljit_sw))
 #define SLJIT_MASKED_SHIFT 1
 #define SLJIT_MASKED_SHIFT32 1
@@ -637,6 +654,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_NUMBER_OF_FLOAT_REGISTERS 30
 #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 18
 #define SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS 2
+#define SLJIT_TMP_DEST_REG SLJIT_TMP_R1
+#define SLJIT_TMP_MEM_REG SLJIT_TMP_R1
+#define SLJIT_TMP_DEST_FREG SLJIT_TMP_FR0
 #if (defined SLJIT_CONFIG_PPC_64 && SLJIT_CONFIG_PPC_64) || (defined _AIX)
 #define SLJIT_LOCALS_OFFSET_BASE ((6 + 8) * (sljit_s32)sizeof(sljit_sw))
 #elif (defined SLJIT_CONFIG_PPC_32 && SLJIT_CONFIG_PPC_32)
@@ -661,6 +681,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #endif
 #define SLJIT_NUMBER_OF_TEMPORARY_REGISTERS 5
 #define SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS 3
+#define SLJIT_TMP_DEST_REG SLJIT_TMP_R1
+#define SLJIT_TMP_MEM_REG SLJIT_TMP_R1
+#define SLJIT_TMP_DEST_FREG SLJIT_TMP_FR0
 #define SLJIT_MASKED_SHIFT 1
 #define SLJIT_MASKED_SHIFT32 1
 
@@ -672,6 +695,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_NUMBER_OF_FLOAT_REGISTERS 30
 #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 12
 #define SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS 2
+#define SLJIT_TMP_DEST_REG SLJIT_TMP_R1
+#define SLJIT_TMP_MEM_REG SLJIT_TMP_R1
+#define SLJIT_TMP_DEST_FREG SLJIT_TMP_FR0
 #define SLJIT_LOCALS_OFFSET_BASE 0
 #define SLJIT_MASKED_SHIFT 1
 #define SLJIT_MASKED_SHIFT32 1
@@ -705,6 +731,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_NUMBER_OF_FLOAT_REGISTERS 15
 #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 8
 #define SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS 1
+#define SLJIT_TMP_DEST_REG SLJIT_TMP_R0
+#define SLJIT_TMP_MEM_REG SLJIT_TMP_R2
+#define SLJIT_TMP_DEST_FREG SLJIT_TMP_FR0
 #define SLJIT_LOCALS_OFFSET_BASE SLJIT_S390X_DEFAULT_STACK_FRAME_SIZE
 #define SLJIT_MASKED_SHIFT 1
 
@@ -716,6 +745,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_NUMBER_OF_FLOAT_REGISTERS 30
 #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 12
 #define SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS 2
+#define SLJIT_TMP_DEST_REG SLJIT_TMP_R1
+#define SLJIT_TMP_MEM_REG SLJIT_TMP_R1
+#define SLJIT_TMP_DEST_FREG SLJIT_TMP_FR0
 #define SLJIT_LOCALS_OFFSET_BASE 0
 #define SLJIT_MASKED_SHIFT 1
 #define SLJIT_MASKED_SHIFT32 1
@@ -729,6 +761,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_NUMBER_OF_FLOAT_REGISTERS 0
 #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 0
 #define SLJIT_NUMBER_OF_TEMPORARY_FLOAT_REGISTERS 0
+#define SLJIT_TMP_DEST_REG 0
+#define SLJIT_TMP_MEM_REG 0
+#define SLJIT_TMP_DEST_FREG 0
 #define SLJIT_LOCALS_OFFSET_BASE 0
 
 #endif
