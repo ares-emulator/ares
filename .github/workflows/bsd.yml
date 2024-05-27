@@ -1,0 +1,34 @@
+name: BSD
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        operating_system: [ freebsd, netbsd, openbsd ]
+        architecture: [ arm64, x86-64 ]
+        include:
+          - operating_system: freebsd
+            version: '14.0'
+            pkginstall: sudo pkg install -y cmake git ninja pkgconf
+          - operating_system: netbsd
+            version: '10.0'
+            pkginstall: sudo pkgin update && sudo pkgin -y install cmake gcc12 git ninja-build pkgconf && export PATH=/usr/pkg/gcc12/bin:$PATH
+          - operating_system: openbsd
+            version: '7.5'
+            pkginstall: sudo pkg_add cmake git ninja pkgconf
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cross-platform-actions/action@v0.24.0
+        with:
+          operating_system: ${{ matrix.operating_system }}
+          architecture: ${{ matrix.architecture }}
+          version: ${{ matrix.version }}
+          run: |
+            ${{ matrix.pkginstall }}
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
+            cmake --build build --config Release
