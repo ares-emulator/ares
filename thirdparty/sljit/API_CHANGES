@@ -1,5 +1,15 @@
 This file is the short summary of the API changes:
 
+20.03.2024 - Non-backward compatible
+    The sljit_p type is renamed to sljit_up.
+
+26.02.2024 - Non-backward compatible
+    Arguments of sljit_create_compiler() and
+    sljit_generate_code() are changed and
+    sljit_get_exec_allocator_data() is removed.
+    The sljit_get_allocator_data() is renamed
+    to sljit_compiler_get_allocator_data().
+
 21.02.2024 - Non-backward compatible
     The sljit_set_put_label() function is renamed
     to sljit_emit_mov_addr() and sljit_put_label

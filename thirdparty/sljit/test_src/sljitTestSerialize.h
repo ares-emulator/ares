@@ -28,7 +28,7 @@ static void test_serialize1(void)
 {
 	/* Test serializing large code. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_compiler(NULL, NULL);
+	struct sljit_compiler* compiler = sljit_create_compiler(NULL);
 	struct sljit_label *label;
 	struct sljit_jump *jump1;
 	struct sljit_jump *jump2;
@@ -91,7 +91,11 @@ static void test_serialize1(void)
 	sljit_free_compiler(compiler);
 
 	/* Continue code generation. */
-	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, NULL, NULL);
+	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, (void*)&label_addr);
+	SLJIT_ASSERT(sljit_compiler_get_allocator_data(compiler) == (void*)&label_addr);
+	SLJIT_ASSERT(sljit_compiler_get_user_data(compiler) == NULL);
+	sljit_compiler_set_user_data(compiler, (void*)&jump_addr);
+	SLJIT_ASSERT(sljit_compiler_get_user_data(compiler) == (void*)&jump_addr);
 	SLJIT_FREE(serialized_buffer, NULL);
 	FAILED(!compiler, "cannot deserialize compiler\n");
 
@@ -104,7 +108,7 @@ static void test_serialize1(void)
 
 	sljit_emit_return_void(compiler);
 
-	code.code = sljit_generate_code(compiler);
+	code.code = sljit_generate_code(compiler, 0, NULL);
 	CHECK(compiler);
 	executable_offset = sljit_get_executable_offset(compiler);
 	const_addr = sljit_get_const_addr(sljit_get_first_const(compiler));
@@ -131,7 +135,7 @@ static void test_serialize2(void)
 {
 	/* Test serializing jumps/labels. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_compiler(NULL, NULL);
+	struct sljit_compiler* compiler = sljit_create_compiler(NULL);
 	struct sljit_label *label;
 	struct sljit_jump *jump;
 	sljit_uw* serialized_buffer;
@@ -166,7 +170,7 @@ static void test_serialize2(void)
 	sljit_free_compiler(compiler);
 
 	/* Continue code generation. */
-	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, NULL, NULL);
+	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, NULL);
 	SLJIT_FREE(serialized_buffer, NULL);
 	FAILED(!compiler, "cannot deserialize compiler\n");
 
@@ -192,7 +196,7 @@ static void test_serialize2(void)
 	sljit_free_compiler(compiler);
 
 	/* Continue code generation. */
-	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, NULL, NULL);
+	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, NULL);
 	SLJIT_FREE(serialized_buffer, NULL);
 	FAILED(!compiler, "cannot deserialize compiler\n");
 
@@ -226,7 +230,7 @@ static void test_serialize2(void)
 	SLJIT_ASSERT(sljit_get_label_index(label) == 3);
 	SLJIT_ASSERT(sljit_get_next_label(label) == NULL);
 
-	code.code = sljit_generate_code(compiler);
+	code.code = sljit_generate_code(compiler, 0, NULL);
 	CHECK(compiler);
 	sljit_free_compiler(compiler);
 
@@ -250,7 +254,7 @@ static void test_serialize3(void)
 {
 	/* Test serializing consts/calls. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_compiler(NULL, NULL);
+	struct sljit_compiler* compiler = sljit_create_compiler(NULL);
 	struct sljit_label *label;
 	struct sljit_jump *jump;
 	struct sljit_const *const_;
@@ -282,7 +286,7 @@ static void test_serialize3(void)
 	sljit_free_compiler(compiler);
 
 	/* Continue code generation. */
-	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, NULL, NULL);
+	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, NULL);
 	SLJIT_FREE(serialized_buffer, NULL);
 	FAILED(!compiler, "cannot deserialize compiler\n");
 
@@ -298,7 +302,7 @@ static void test_serialize3(void)
 	sljit_free_compiler(compiler);
 
 	/* Continue code generation. */
-	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, NULL, NULL);
+	compiler = sljit_deserialize_compiler(serialized_buffer, serialized_size, 0, NULL);
 	SLJIT_FREE(serialized_buffer, NULL);
 	FAILED(!compiler, "cannot deserialize compiler\n");
 
@@ -333,7 +337,7 @@ static void test_serialize3(void)
 	SLJIT_ASSERT(sljit_jump_has_target(jump) && sljit_jump_get_target(jump) == SLJIT_FUNC_UADDR(test_serialize3_f1));
 	SLJIT_ASSERT(sljit_get_next_jump(jump) == NULL);
 
-	code.code = sljit_generate_code(compiler);
+	code.code = sljit_generate_code(compiler, 0, NULL);
 	CHECK(compiler);
 	executable_offset = sljit_get_executable_offset(compiler);
 
