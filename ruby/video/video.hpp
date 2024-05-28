@@ -34,6 +34,9 @@ struct VideoDriver {
   virtual auto setFormat(string format) -> bool { return true; }
   virtual auto setShader(string shader) -> bool { return true; }
   virtual auto refreshRateHint(double refreshRate) -> void {}
+  virtual auto setScale(f64 scaleX, f64 scaleY) -> void {}
+  virtual auto setInterlace(bool interlaceField) -> void {}
+  virtual auto setProgressive(bool progressiveDouble) -> void {}
 
   virtual auto focused() -> bool { return true; }
   virtual auto clear() -> void {}
@@ -129,6 +132,9 @@ struct Video {
   auto setFormat(string format) -> bool;
   auto setShader(string shader) -> bool;
   auto refreshRateHint(double refreshRate) -> void;
+  auto setScale(f64 scaleX, f64 scaleY) -> void;
+  auto setInterlace(bool interlaceField) -> void;
+  auto setProgressive(bool progressiveDouble) -> void;
 
   auto focused() -> bool;
   auto clear() -> void;

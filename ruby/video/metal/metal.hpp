@@ -45,6 +45,10 @@ struct Metal {
   auto initialize(const string& shader) -> bool;
   auto terminate() -> void;
   auto refreshRateHint(double refreshRate) -> void;
+  auto setScale(f64 scaleX, f64 scaleY) -> void;
+  auto setInterlace(bool interlaceField) -> void;
+  auto setProgressive(bool progressiveDouble) -> void;
+  auto resizeSourceBuffers() -> void;
   
   auto size(u32 width, u32 height) -> void;
   auto release() -> void;
@@ -54,6 +58,8 @@ struct Metal {
   
   u32 sourceWidth = 0;
   u32 sourceHeight = 0;
+  f64 _scaleX = 1;
+  f64 _scaleY = 1;
   u32 bytesPerRow = 0;
   
   u32 outputWidth = 0;
@@ -61,6 +67,9 @@ struct Metal {
   double _outputX = 0;
   double _outputY = 0;
   u32 depth = 0;
+  
+  bool _interlace = false;
+  bool _progressive = false;
   
   dispatch_queue_t _renderQueue = nullptr;
   
@@ -89,6 +98,7 @@ struct Metal {
   
   id<MTLBuffer> _vertexBuffer;
   id<MTLTexture> _sourceTextures[kMaxSourceBuffersInFlight];
+  id<MTLTexture> _finalSourceTextures[kMaxSourceBuffersInFlight];
   MTLVertexDescriptor *_mtlVertexDescriptor;
   
   MTLRenderPassDescriptor *_renderToTextureRenderPassDescriptor;
