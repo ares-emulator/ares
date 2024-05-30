@@ -100,7 +100,9 @@ auto InternalEEPROM::read(u32 port) -> n8 {
 auto InternalEEPROM::canWrite(n16 command) -> bool {
   // TODO: This is a guess that gets the basic cases (read, write, write lock/unlock) correct.
   // More testing is required for full accuracy.
-  return !io.protect || !(command & 0xC00) || ((command & 0x3FF) < 0x30);
+  if(!io.protect) return true;
+  if(SoC::ASWAN()) return !(command & 0xC0) || ((command & 0x3F) < 0x30);
+  return !(command & 0xC00) || ((command & 0x3FF) < 0x30);
 }
 
 auto InternalEEPROM::padCommand(n16 command) -> n16 {
