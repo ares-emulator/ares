@@ -104,7 +104,7 @@ struct System : IO {
   } information;
 
   Memory::Readable<n8> bootROM;
-  EEPROM eeprom;
+  InternalEEPROM eeprom;
 
 private:
   struct IO {
