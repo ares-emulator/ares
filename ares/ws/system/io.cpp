@@ -18,12 +18,12 @@ auto System::readIO(n16 address) -> n8 {
     data = eeprom.read(EEPROM::DataHi);
     break;
 
-  case 0x00bc:  //IEEP_ADDRLO
-    data = eeprom.read(EEPROM::AddressLo);
+  case 0x00bc:  //IEEP_CMDLO
+    data = eeprom.read(EEPROM::CommandLo);
     break;
 
-  case 0x00bd:  //IEEP_ADDRHI
-    data = eeprom.read(EEPROM::AddressHi);
+  case 0x00bd:  //IEEP_CMDHI
+    data = eeprom.read(EEPROM::CommandHi);
     break;
 
   case 0x00be:  //IEEP_STATUS
@@ -53,16 +53,16 @@ auto System::writeIO(n16 address, n8 data) -> void {
     eeprom.write(EEPROM::DataHi, data);
     break;
 
-  case 0x00bc:  //IEEP_ADDRLO
-    eeprom.write(EEPROM::AddressLo, data);
+  case 0x00bc:  //IEEP_CMDLO
+    eeprom.write(EEPROM::CommandLo, data);
     break;
 
-  case 0x00bd:  //IEEP_ADDRHI
-    eeprom.write(EEPROM::AddressHi, data);
+  case 0x00bd:  //IEEP_CMDHI
+    eeprom.write(EEPROM::CommandHi, data);
     break;
 
-  case 0x00be:  //IEEP_CMD
-    eeprom.write(EEPROM::Command, data);
+  case 0x00be:  //IEEP_CTRL
+    eeprom.write(EEPROM::Control, data);
     break;
 
   }

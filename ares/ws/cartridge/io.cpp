@@ -43,12 +43,12 @@ auto Cartridge::readIO(n16 address) -> n8 {
     data = eeprom.read(EEPROM::DataHi);
     break;
 
-  case 0x00c6:  //EEP_ADDRLO
-    data = eeprom.read(EEPROM::AddressLo);
+  case 0x00c6:  //EEP_CMDLO
+    data = eeprom.read(EEPROM::CommandLo);
     break;
 
-  case 0x00c7:  //EEP_ADDRHI
-    data = eeprom.read(EEPROM::AddressHi);
+  case 0x00c7:  //EEP_CMDHI
+    data = eeprom.read(EEPROM::CommandHi);
     break;
 
   case 0x00c8:  //EEP_STATUS
@@ -138,16 +138,16 @@ auto Cartridge::writeIO(n16 address, n8 data) -> void {
     eeprom.write(EEPROM::DataHi, data);
     break;
 
-  case 0x00c6:  //EEP_ADDRLO
-    eeprom.write(EEPROM::AddressLo, data);
+  case 0x00c6:  //EEP_CMDLO
+    eeprom.write(EEPROM::CommandLo, data);
     break;
 
-  case 0x00c7:  //EEP_ADDRHI
-    eeprom.write(EEPROM::AddressHi, data);
+  case 0x00c7:  //EEP_CMDHI
+    eeprom.write(EEPROM::CommandHi, data);
     break;
 
-  case 0x00c8:  //EEP_CMD
-    eeprom.write(EEPROM::Command, data);
+  case 0x00c8:  //EEP_CTRL
+    eeprom.write(EEPROM::Control, data);
     break;
 
   case 0x00ca:  //RTC_CMD

@@ -165,6 +165,8 @@ auto M93LCx6::ShiftRegister::read() -> n1 {
 }
 
 auto M93LCx6::ShiftRegister::write(n1 bit) -> void {
+  // wait for start bit
+  if(!bit && !count) return;
   value <<= 1;
   value.bit(0) = bit;
   count++;
