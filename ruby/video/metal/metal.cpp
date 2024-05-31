@@ -251,7 +251,9 @@ struct VideoMetal : VideoDriver, Metal {
     if (scaleX != _scaleX || scaleY != scaleY) {
       _scaleX = scaleX;
       _scaleY = scaleY;
-      resizeSourceBuffers();
+      dispatch_async(_renderQueue, ^{
+        resizeSourceBuffers();
+      });
     }
   }
   
@@ -259,14 +261,18 @@ struct VideoMetal : VideoDriver, Metal {
     if (_interlace) return;
     _interlace = true;
     _progressive = false;
-    resizeSourceBuffers();
+    dispatch_async(_renderQueue, ^{
+      resizeSourceBuffers();
+    });
   }
   
   auto setProgressive(bool progressiveDouble) -> void override {
     if (_progressive) return;
     _interlace = false;
     _progressive = true;
-    resizeSourceBuffers();
+    dispatch_async(_renderQueue, ^{
+      resizeSourceBuffers();
+    });
   }
 
   auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
@@ -283,8 +289,10 @@ struct VideoMetal : VideoDriver, Metal {
       
       bytesPerRow = sourceWidth * sizeof(u32);
       if (bytesPerRow < 16) bytesPerRow = 16;
-        
-      resizeSourceBuffers();
+      
+      dispatch_async(_renderQueue, ^{
+        resizeSourceBuffers();
+      });
     }
     pitch = sourceWidth * sizeof(u32);
     return data = buffer;
