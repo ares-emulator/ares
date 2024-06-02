@@ -505,7 +505,8 @@ namespace nall::GDB {
   }
 
   auto Server::onDisconnect() -> void {
-    printf("GDB client disconnected\n");
+    if (hasActiveClient)
+      printf("GDB client disconnected\n");
     hadHandshake = false;
     resetClientData();
   }
