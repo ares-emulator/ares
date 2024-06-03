@@ -3105,9 +3105,9 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_jump(struct sljit_compile
 	if (type >= SLJIT_FAST_CALL)
 		PTR_FAIL_IF(prepare_blx(compiler));
 
-	jump->addr = compiler->size;
 	PTR_FAIL_IF(push_inst_with_unique_literal(compiler, ((EMIT_DATA_TRANSFER(WORD_SIZE | LOAD_DATA, 1,
 		type <= SLJIT_JUMP ? TMP_PC : TMP_REG1, TMP_PC, 0)) & ~COND_MASK) | get_cc(compiler, type), 0));
+	jump->addr = compiler->size - 1;
 
 	if (jump->flags & SLJIT_REWRITABLE_JUMP)
 		compiler->patches++;
