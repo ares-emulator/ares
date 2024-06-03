@@ -576,13 +576,9 @@ private:
     view = [[RubyVideoMetal alloc] initWith:this frame:frame device:_device];
     [context addSubview:view];
     [[view window] makeFirstResponder:view];
-    bool forceSRGB = self.forceSRGB;
-    self.setForceSRGB(forceSRGB);
     view.autoresizingMask = NSViewWidthSizable|NSViewHeightSizable;
     
-    _threaded = self.threadedRenderer;
-    _blocking = self.blocking;
-    setNativeFullScreen(self.nativeFullScreen);
+    //driver settings like sync, flush, threaded renderer, etc. will be initialized later
 
     _libra = librashader_load_instance();
     if (!_libra.instance_loaded) {
