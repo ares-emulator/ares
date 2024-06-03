@@ -38,7 +38,8 @@ void swap(inout uint a, inout uint b)
     b = tmp;
 }
 
-uint median3(uint left, uint center, uint right)
+// Workaround Metal using median3.
+uint Median3(uint left, uint center, uint right)
 {
     if (left < center)
         swap(left, center);
@@ -65,9 +66,9 @@ void main()
     else
     {
         // Median filter. TODO: Optimize with mid3?
-        uint r = median3(left.r, mid.r, right.r);
-        uint g = median3(left.g, mid.g, right.g);
-        uint b = median3(left.b, mid.b, right.b);
+        uint r = Median3(left.r, mid.r, right.r);
+        uint g = Median3(left.g, mid.g, right.g);
+        uint b = Median3(left.b, mid.b, right.b);
         FragColor = uvec4(r, g, b, mid.a);
     }
 
@@ -83,9 +84,9 @@ void main()
     else
     {
         // Median filter. TODO: Optimize with mid3?
-        uint r = median3(left.r, mid.r, right.r);
-        uint g = median3(left.g, mid.g, right.g);
-        uint b = median3(left.b, mid.b, right.b);
+        uint r = Median3(left.r, mid.r, right.r);
+        uint g = Median3(left.g, mid.g, right.g);
+        uint b = Median3(left.b, mid.b, right.b);
         FragColorFetchBug = uvec4(r, g, b, mid.a);
     }
 #endif
