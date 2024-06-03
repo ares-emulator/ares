@@ -29,14 +29,14 @@ layout(push_constant) uniform Push
 	vec4 OutputSize;
 	uint FrameCount;
 	float CS_SHARPNESS;
-	float CS_RADIUS;
+	float IR_SCALE;
 } params;
 
 #pragma parameter CS_SHARPNESS "Sharpness" 0.4 0.0 1.0 0.1  
-#pragma parameter CS_RADIUS "Sharpness Radius" 1.0 1.0 8.0 1.0
+#pragma parameter IR_SCALE "INTERNAL RESOLUTION SCALE" 1.0 1.0 8.0 1.0
 
 #define CS_SHARPNESS params.CS_SHARPNESS
-#define CS_RADIUS params.CS_RADIUS
+#define IR_SCALE params.IR_SCALE
 
 layout(std140, set = 0, binding = 0) uniform UBO
 {
@@ -54,8 +54,8 @@ void main()
 {
 	gl_Position = global.MVP * Position;
 	vTexCoord = TexCoord * 1.0001;
-	float dx = params.SourceSize.z * CS_RADIUS;
-	float dy = params.SourceSize.w * CS_RADIUS;
+	float dx = params.SourceSize.z * IR_SCALE;
+	float dy = params.SourceSize.w * IR_SCALE;
 
 	t1 = vTexCoord.xyyy + vec4( 0.0, -dy, 0.0,  dy); //  B E H
 	t2 = vTexCoord.xxxy + vec4( -dx, 0.0,  dx, 0.0); //  D E F

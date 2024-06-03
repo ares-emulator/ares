@@ -22,27 +22,26 @@ scale_x1 = "1.000000"
 scale_type_y1 = "source"
 scale_y1 = "1.000000"
 
-shader2 = "../../shaders/mixed-res/blur-gauss-h.slang"
-filter_linear2 = true
-scale_type_x2 = source
-scale_x2 = 1.0
-scale_type_y2 = source
-scale_y2 = 1.0 
+shader2 = "../../shaders/mixed-res/support/fxaa-plus-alpha.slang"
+filter_linear2 = "true"
+alias2 = "HiresSource"
+wrap_mode2 = "clamp_to_edge"
+srgb_framebuffer2 = true
+scale_type2 = "source"
+scale2 = "1.000000"
 
-shader3 = "../../shaders/mixed-res/blur-gauss-v.slang"
+shader3 = "../../shaders/mixed-res/blur-gauss-h.slang"
 filter_linear3 = true
-alias3 = "HiresSource"
-scale_type_x3 = source
-scale_x3 = 1.0
-scale_type_y3 = source
-scale_y3 = 1.0
+scale_type3 = source
+scale3 = 0.5
 
-shader4 = "../../shaders/mixed-res/cheap-sharpen-tweaked.slang"
+shader4 = "../../shaders/mixed-res/blur-gauss-v.slang"
 filter_linear4 = true
-alias4 = ""
-wrap_mode4 = "clamp_to_edge"
-scale_type4 = source
-scale4 = 0.5
+alias4 = "BlurSource"
+scale_type_x4 = source
+scale_x4 = 1.0 
+scale_type_y4 = source
+scale_y4 = 1.0
 
 shader5 = "../../../film/shaders/film-grain.slang"
 filter_linear5 = false
@@ -97,7 +96,7 @@ scale9 = 1.0
 
 shader10 = "../../../deblur/shaders/deblur.slang"
 filter_linear10 = "true"
-wrap_mode10 = "clamp_to_border"
+wrap_mode10 = "clamp_to_edge"
 srgb_framebuffer10 = "true"
 scale_type10 = "source"
 scale10 = "1.000000"
@@ -116,12 +115,11 @@ scale_y11 =  "1.000000"
 
 
 IR_SCALE = "2.0"
-B_TRESH = "0.20"
-CS_RADIUS = "2.0"
+B_TRESH = "0.30"
 XBR_WEIGHT = "1.000000"
 XBR_EDGE_STR_P1 = "5.000000"
 B = "0.330000"
-C = "0.330000"
+C = "0.500000"
 CS_SHARPNESS = "0.200000"
 OFFSET = "3.000000"
 DEBLUR = "3.000000"

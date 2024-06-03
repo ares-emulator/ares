@@ -9,23 +9,28 @@ filter_linear1 = "true"
 scale_type1 = "source"
 scale1 = "1.000000"
 
-shader2 = "../../shaders/mixed-res/blur-gauss-h.slang"
-filter_linear2 = true
-scale_type2 = source
-scale2 = 1.0 
+shader2 = "../../shaders/mixed-res/support/fxaa-plus-alpha.slang"
+filter_linear2 = "true"
+alias2 = "HiresSource"
+wrap_mode2 = "clamp_to_edge"
+srgb_framebuffer2 = true
+scale_type2 = "source"
+scale2 = "1.000000"
 
-shader3 = "../../shaders/mixed-res/blur-gauss-v.slang"
+shader3 = "../../shaders/mixed-res/blur-gauss-h.slang"
 filter_linear3 = true
-alias3 = "HiresSource"
-scale_type3 = source
-scale3 = 1.0
+scale_type_x3 = source
+scale_x3 = 0.25
+scale_type_y3 = source
+scale_y3 = 0.25
 
-shader4 = "../../../interpolation/shaders/b-spline-4-taps.slang"
+shader4 = "../../shaders/mixed-res/blur-gauss-v.slang"
 filter_linear4 = true
-wrap_mode4 = "clamp_to_edge"
-srgb_framebuffer4 = "true"
-scale_type4 = source
-scale4 = 0.25
+alias4 = "BlurSource"
+scale_type_x4 = source
+scale_x4 = 1.0 
+scale_type_y4 = source
+scale_y4 = 1.0
 
 shader5 = "../../../denoisers/shaders/bilateral-horizontal.slang"
 filter_linear5 = false
@@ -109,7 +114,7 @@ scale15 =  "1.000000"
 
 
 IR_SCALE = "4.0"
-B_TRESH = "0.10"
+B_TRESH = "0.30"
 FRANGE = "2.000000"
 FBSMOOTH = "0.150000"
 FSIGMA = "1.000000"
