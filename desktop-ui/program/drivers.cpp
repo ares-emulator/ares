@@ -7,6 +7,9 @@ auto Program::videoDriverUpdate() -> void {
   ruby::video.setBlocking(settings.video.blocking);
   ruby::video.setFlush(settings.video.flush);
   ruby::video.setShader(settings.video.shader);
+  ruby::video.setForceSRGB(settings.video.forceSRGB);
+  ruby::video.setThreadedRenderer(settings.video.threadedRenderer);
+  ruby::video.setNativeFullScreen(settings.video.nativeFullScreen);
 
   if(!ruby::video.ready()) {
     MessageDialog().setText({"Failed to initialize ", settings.video.driver, " video driver."}).setAlignment(presentation).error();
