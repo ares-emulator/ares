@@ -3,6 +3,8 @@ struct PPU : Thread {
   Node::Video::Screen screen;
   Memory::Writable<n8> ciram;
   Memory::Writable<n8> cgram;
+  Memory::Writable<n8> oam;
+  Memory::Writable<n8> soam;
 
   struct Debugger {
     //debugger.cpp
@@ -13,6 +15,7 @@ struct PPU : Thread {
       Node::Debugger::Memory ciram;
       Node::Debugger::Memory cgram;
       Node::Debugger::Memory oam;
+      Node::Debugger::Memory soam;
     } memory;
   } debugger;
 
@@ -55,6 +58,9 @@ struct PPU : Thread {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  // sprite.cpp
+  template<u32> auto cycleSpriteEvaluation() -> void;
 
   struct IO {
     //internal
@@ -112,16 +118,6 @@ struct PPU : Thread {
     n8 attr = 0xff;
     n8 x = 0xff;
 
-    auto operator[](n2 timing) -> n8& {
-      switch(timing) {
-      case 0: return y;
-      case 1: return tile;
-      case 2: return attr;
-      case 3: return x;
-      }
-      return y;
-    }
-
     n8 tiledataLo;
     n8 tiledataHi;
   };
@@ -132,18 +128,13 @@ struct PPU : Thread {
     n16 tiledataLo;
     n16 tiledataHi;
 
+    n8  oamId[8];
     OAM oam[8];   //primary
   } latch;
 
   struct SpriteEvaluation {
-    Memory::Writable<n8> oam;
-
     // sprite.cpp
-    auto load() -> void;
-    auto unload() -> void;
-
     auto main() -> void;
-    auto power(bool reset) -> void;
 
     // memory.cpp
     auto oamData() -> n8 const;
@@ -178,9 +169,7 @@ struct PPU : Thread {
       // temp counter have 8 sprites
       BitRange<5,2,4> oamTempCounterIndex{&oamTempCounter};
     } io;
-
-    OAM soam[8]; // secondary oam
-  } spriteEvaluation;
+  } sprite;
 
   u32* output;
 

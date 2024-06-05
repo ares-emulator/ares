@@ -78,7 +78,7 @@ auto PPU::renderScanline() -> void {
   step(1);
 
   // force clear sprite counter at start of each scanline
-  for (auto& o : spriteEvaluation.soam) o.id = 64;
+  for (auto& id : latch.oamId) id = 64;
 
   //  1-256
   for(u32 tile : range(32)) {
@@ -121,7 +121,13 @@ auto PPU::renderScanline() -> void {
     latch.tiledataHi = latch.tiledataHi << 8 | tiledataHi;
   }
 
-  for(u32 n : range(8)) latch.oam[n] = spriteEvaluation.soam[n];
+  for(u32 n : range(8)) {
+    latch.oam[n].id   = latch.oamId[n];
+    latch.oam[n].y    = soam[4 * n + 0];
+    latch.oam[n].tile = soam[4 * n + 1];
+    latch.oam[n].attr = soam[4 * n + 2];
+    latch.oam[n].x    = soam[4 * n + 3];
+  }
 
   //257-320
   for(u32 sprite : range(8)) {

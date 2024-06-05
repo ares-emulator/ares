@@ -13,7 +13,8 @@ PPU ppu;
 auto PPU::load(Node::Object parent) -> void {
   ciram.allocate(2048);
   cgram.allocate(32);
-  spriteEvaluation.load();
+  oam.allocate(256);
+  soam.allocate(32);
 
   node = parent->append<Node::Object>("PPU");
 
@@ -35,7 +36,8 @@ auto PPU::unload() -> void {
   node.reset();
   ciram.reset();
   cgram.reset();
-  spriteEvaluation.unload();
+  oam.reset();
+  soam.reset();
 }
 
 auto PPU::main() -> void {
@@ -46,16 +48,16 @@ auto PPU::step(u32 clocks) -> void {
   u32 L = vlines();
 
   while(clocks--) {
-    // Not vblank or in pal spriteEvaluation Scanline
+    // Not vblank or in pal sprite Scanline
     if (io.ly < 240 || io.ly == L - 1 ||
         (Region::PAL() && io.ly >= 264 && io.ly <= L - 2))
-      spriteEvaluation.main();
+      sprite.main();
 
     if(io.ly == 240 && io.lx == 340) io.nmiHold = 1;
     if(io.ly == 241 && io.lx ==   0) io.nmiFlag = io.nmiHold;
     if(io.ly == 241 && io.lx ==   2) cpu.nmiLine(io.nmiEnable && io.nmiFlag);
 
-    if(io.ly == L-2 && io.lx == 340) io.spriteZeroHit = 0, spriteEvaluation.io.spriteOverflow = 0;
+    if(io.ly == L-2 && io.lx == 340) io.spriteZeroHit = 0, sprite.io.spriteOverflow = 0;
 
     if(io.ly == L-2 && io.lx == 340) io.nmiHold = 0;
     if(io.ly == L-1 && io.lx ==   0) io.nmiFlag = io.nmiHold;
@@ -103,14 +105,16 @@ auto PPU::frame() -> void {
 auto PPU::power(bool reset) -> void {
   Thread::create(system.frequency(), {&PPU::main, this});
   screen->power();
-  spriteEvaluation.power(reset);
 
   if(!reset) {
     ciram.fill();
+    oam.fill();
+    soam.fill();
     memory::copy(cgram.data(), cgramBootValue, 32);
   }
 
   io = {};
+  sprite.io = {};
 }
 
 }

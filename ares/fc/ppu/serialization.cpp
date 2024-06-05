@@ -2,6 +2,8 @@ auto PPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
   s(ciram);
   s(cgram);
+  s(oam);
+  s(soam);
   s(io.mdr);
   s(io.field);
   s(io.lx);
@@ -28,9 +30,10 @@ auto PPU::serialize(serializer& s) -> void {
   s(latch.attribute);
   s(latch.tiledataLo);
   s(latch.tiledataHi);
+  s(latch.oamId);
   for(auto& o : latch.oam) s(o);
 
-  s(spriteEvaluation);
+  s(sprite);
 }
 
 auto PPU::OAM::serialize(serializer& s) -> void {
@@ -44,13 +47,10 @@ auto PPU::OAM::serialize(serializer& s) -> void {
 }
 
 auto PPU::SpriteEvaluation::serialize(serializer& s) -> void {
-  s(oam);
   s(io.spriteOverflow);
   s(io.oamAddress);
   s(io.oamData);
   s(io.oamTempCounterOverflow);
   s(io.oamTempCounter);
   s(io.oamTempCounterOverflow);
-
-  for(auto& o : soam) s(o);
 }

@@ -27,7 +27,7 @@ auto PPU::readIO(n16 address) -> n8 {
 
   //PPUSTATUS
   case 2:
-    result.bit(5) = spriteEvaluation.io.spriteOverflow;
+    result.bit(5) = sprite.io.spriteOverflow;
     result.bit(6) = io.spriteZeroHit;
     result.bit(7) = io.nmiFlag;
     io.v.latch = 0;
@@ -37,7 +37,7 @@ auto PPU::readIO(n16 address) -> n8 {
 
   //OAMDATA
   case 4:
-    result = spriteEvaluation.oamData();
+    result = sprite.oamData();
     break;
 
   //PPUDATA
@@ -95,12 +95,12 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 
   //OAMADDR
   case 3:
-    spriteEvaluation.io.oamAddress = data;
+    sprite.io.oamAddress = data;
     break;
 
   //OAMDATA
   case 4:
-    spriteEvaluation.oamData(data);
+    sprite.oamData(data);
     break;
 
   //PPUSCROLL
@@ -143,7 +143,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 }
 
 auto PPU::SpriteEvaluation::oamData() -> n8 const {
-  n8 data = oam[io.oamAddress];
+  n8 data = ppu.oam[io.oamAddress];
 
   if (ppu.io.ly < 240 || ppu.io.ly == ppu.vlines() - 1 ||
       (Region::PAL() && ppu.io.ly >= 264 && ppu.io.ly <= ppu.vlines() - 2))
@@ -174,6 +174,6 @@ auto PPU::SpriteEvaluation::oamData(n8 data) -> void {
   if (io.oamMainCounterTiming == 2)
     data.bit(2,4) = 0;
 
-  oam[io.oamAddress] = data;
+  ppu.oam[io.oamAddress] = data;
   ++io.oamMainCounter;
 }
