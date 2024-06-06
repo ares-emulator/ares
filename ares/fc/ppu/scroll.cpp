@@ -98,3 +98,29 @@ auto PPU::cycleScroll() -> void {
 #undef s
 }
 
+auto PPU::scrollTransferDelay() -> void {
+  if (!scroll.transferDelay || --scroll.transferDelay)
+    return;
+
+  bool isRendering = rendering();
+  bool isTransferX = isRendering && io.lx != 0 && (io.lx & 7) == 0 && (io.lx <= 256 || io.lx > 320);
+  bool isTransferY = isRendering && io.lx == 256;
+
+  if (isTransferX) {
+    scroll.tileX = var.tileX & scroll.tileX;
+    scroll.nametableX = var.nametableX & scroll.nametableX;
+  }
+
+  if (isTransferY) {
+    scroll.tileY = var.tileY & scroll.tileY;
+    scroll.fineY = var.fineY & scroll.fineY;
+    scroll.nametableY = var.nametableY & scroll.nametableY;
+  }
+
+  transferScrollX();
+  transferScrollY();
+
+  if (!isRendering) {
+    // TODO: trigger a12 changed
+  }
+}

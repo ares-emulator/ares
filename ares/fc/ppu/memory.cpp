@@ -120,7 +120,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
       scroll.addressHi = data.bit(0,5);
     } else {
       scroll.addressLo = data.bit(0,7);
-      var.address = scroll.address;
+      scroll.transferDelay = 3;
     }
     break;
 

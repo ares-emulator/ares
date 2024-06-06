@@ -47,6 +47,7 @@ struct PPU : Thread {
 
   //render.cpp
   auto enable() const -> bool;
+  auto rendering() const -> bool;
   auto loadCHR(n16 address) -> n8;
 
   auto renderPixel() -> void;
@@ -68,6 +69,8 @@ struct PPU : Thread {
   template<u32> auto cycleScroll() -> void;
   auto cycleScroll() -> void;
 
+  auto scrollTransferDelay() -> void;
+
   // sprite.cpp
   template<u32> auto cycleSpriteEvaluation() -> void;
 
@@ -86,6 +89,8 @@ struct PPU : Thread {
     BitRange<15, 0,14> address   {&data};
     BitRange<15, 0, 7> addressLo {&data};
     BitRange<15, 8,14> addressHi {&data};
+
+    n8 transferDelay;
   } scroll;
 
   struct VRAMAddressRegisters {

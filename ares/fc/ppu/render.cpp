@@ -2,6 +2,10 @@ auto PPU::enable() const -> bool {
   return io.bgEnable || io.spriteEnable;
 }
 
+auto PPU::rendering() const -> bool {
+  return enable() && (io.ly < 240 || io.ly == vlines() - 1);
+}
+
 auto PPU::loadCHR(n16 address) -> n8 {
   return enable() ? cartridge.readCHR(address) : (n8)0x00;
 }

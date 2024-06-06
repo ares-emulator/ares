@@ -49,6 +49,8 @@ auto PPU::step(u32 clocks) -> void {
   u32 L = vlines();
 
   while(clocks--) {
+    scrollTransferDelay();
+
     // Not vblank or in pal sprite Scanline
     if (io.ly < 240 || io.ly == L - 1 ||
         (Region::PAL() && io.ly >= 264 && io.ly <= L - 2))
