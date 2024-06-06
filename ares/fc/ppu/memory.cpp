@@ -30,7 +30,7 @@ auto PPU::readIO(n16 address) -> n8 {
     result.bit(5) = sprite.io.spriteOverflow;
     result.bit(6) = io.spriteZeroHit;
     result.bit(7) = io.nmiFlag;
-    io.v.latch = 0;
+    scroll.latch = 0;
     io.nmiHold = 0;
     cpu.nmiLine(io.nmiFlag = 0);
     break;
@@ -44,7 +44,7 @@ auto PPU::readIO(n16 address) -> n8 {
   case 7:
     if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) break;
 
-    address = (n14)io.v.address;
+    address = (n14)var.address;
     if(address <= 0x1fff) {
       result = io.busData;
       io.busData = cartridge.readCHR(address);
@@ -55,7 +55,7 @@ auto PPU::readIO(n16 address) -> n8 {
       result.bit(0, 5) = readCGRAM(address);
       io.busData = cartridge.readCHR(address);
     }
-    io.v.address += io.vramIncrement;
+    var.address += io.vramIncrement;
     break;
   }
 
@@ -69,7 +69,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 
   //PPUCTRL
   case 0:
-    io.t.nametable   = data.bit(0,1);
+    scroll.nametable   = data.bit(0,1);
     io.vramIncrement = data.bit(2) ? 32 : 1;
     io.spriteAddress = data.bit(3) ? 0x1000 : 0x0000;
     io.bgAddress     = data.bit(4) ? 0x1000 : 0x0000;
@@ -105,22 +105,22 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 
   //PPUSCROLL
   case 5:
-    if(io.v.latch++ == 0) {
-      io.v.fineX = data.bit(0,2);
-      io.t.tileX = data.bit(3,7);
+    if(scroll.latch++ == 0) {
+      scroll.fineX = data.bit(0,2);
+      scroll.tileX = data.bit(3,7);
     } else {
-      io.t.fineY = data.bit(0,2);
-      io.t.tileY = data.bit(3,7);
+      scroll.fineY = data.bit(0,2);
+      scroll.tileY = data.bit(3,7);
     }
     break;
 
   //PPUADDR
   case 6:
-    if(io.v.latch++ == 0) {
-      io.t.addressHi = data.bit(0,5);
+    if(scroll.latch++ == 0) {
+      scroll.addressHi = data.bit(0,5);
     } else {
-      io.t.addressLo = data.bit(0,7);
-      io.v.address = io.t.address;
+      scroll.addressLo = data.bit(0,7);
+      var.address = scroll.address;
     }
     break;
 
@@ -128,7 +128,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
   case 7:
     if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) return;
 
-    address = (n14)io.v.address;
+    address = (n14)var.address;
     if(address <= 0x1fff) {
       cartridge.writeCHR(address, data);
     } else if(address <= 0x3eff) {
@@ -136,7 +136,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
     } else if(address <= 0x3fff) {
       writeCGRAM(address, data);
     }
-    io.v.address += io.vramIncrement;
+    var.address += io.vramIncrement;
     break;
 
   }

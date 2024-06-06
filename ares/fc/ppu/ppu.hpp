@@ -59,8 +59,47 @@ struct PPU : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  // scroll.cpp
+  auto incrementVRAMAddressX() -> void;
+  auto incrementVRAMAddressY() -> void;
+  auto transferScrollX() -> void;
+  auto transferScrollY() -> void;
+
+  template<u32> auto cycleScroll() -> void;
+  auto cycleScroll() -> void;
+
   // sprite.cpp
   template<u32> auto cycleSpriteEvaluation() -> void;
+
+  struct ScrollRegisters {
+    n15 data;
+
+    BitRange<15, 0, 4> tileX     {&data};
+    BitRange<15, 5, 9> tileY     {&data};
+    BitRange<15,10,10> nametableX{&data};
+    BitRange<15,11,11> nametableY{&data};
+    BitRange<15,12,14> fineY     {&data};
+    n1 latch;
+    n3 fineX;
+
+    BitRange<15,10,11> nametable {&data};
+    BitRange<15, 0,14> address   {&data};
+    BitRange<15, 0, 7> addressLo {&data};
+    BitRange<15, 8,14> addressHi {&data};
+  } scroll;
+
+  struct VRAMAddressRegisters {
+    n15 data;
+
+    BitRange<15, 0, 4> tileX     {&data};
+    BitRange<15, 5, 9> tileY     {&data};
+    BitRange<15,10,10> nametableX{&data};
+    BitRange<15,11,11> nametableY{&data};
+    BitRange<15,12,14> fineY     {&data};
+
+    BitRange<15,10,11> nametable {&data};
+    BitRange<15, 0,14> address   {&data};
+  } var;
 
   struct IO {
     //internal
@@ -69,21 +108,6 @@ struct PPU : Thread {
     n16 lx;
     n16 ly;
     n8  busData;
-
-    struct Union {
-      n19 data;
-      BitRange<19, 0, 4> tileX     {&data};
-      BitRange<19, 5, 9> tileY     {&data};
-      BitRange<19,10,11> nametable {&data};
-      BitRange<19,10,10> nametableX{&data};
-      BitRange<19,11,11> nametableY{&data};
-      BitRange<19,12,14> fineY     {&data};
-      BitRange<19, 0,14> address   {&data};
-      BitRange<19, 0, 7> addressLo {&data};
-      BitRange<19, 8,14> addressHi {&data};
-      BitRange<19,15,15> latch     {&data};
-      BitRange<19,16,18> fineX     {&data};
-    } v, t;
 
     n1  nmiHold;
     n1  nmiFlag;

@@ -10,7 +10,7 @@ auto PPU::renderPixel() -> void {
   if(io.ly >= screen->canvasHeight()) return;
 
   u32  x = io.lx - 1;
-  u32  mask = 0x8000 >> (io.v.fineX + (x & 7));
+  u32  mask = 0x8000 >> (scroll.fineX + (x & 7));
   u32  palette = 0;
   u32  objectPalette = 0;
   bool objectPriority = 0;
@@ -82,22 +82,20 @@ auto PPU::renderScanline() -> void {
 
   //  1-256
   for(u32 tile : range(32)) {
-    u32 nametable = loadCHR(0x2000 | (n12)io.v.address);
-    u32 tileaddr = io.bgAddress | nametable << 4 | io.v.fineY;
+    u32 nametable = loadCHR(0x2000 | (n12)var.address);
+    u32 tileaddr = io.bgAddress | nametable << 4 | var.fineY;
     renderPixel();
     step(1);
 
     renderPixel();
     step(1);
 
-    u32 attribute = loadCHR(0x23c0 | io.v.nametable << 10 | (io.v.tileY >> 2) << 3 | io.v.tileX >> 2);
-    if(io.v.tileY & 2) attribute >>= 4;
-    if(io.v.tileX & 2) attribute >>= 2;
+    u32 attribute = loadCHR(0x23c0 | var.nametable << 10 | (var.tileY >> 2) << 3 | var.tileX >> 2);
+    if(var.tileY & 2) attribute >>= 4;
+    if(var.tileX & 2) attribute >>= 2;
     renderPixel();
     step(1);
 
-    if(enable() && ++io.v.tileX == 0) io.v.nametableX++;
-    if(enable() && tile == 31 && ++io.v.fineY == 0 && ++io.v.tileY == 30) io.v.nametableY++, io.v.tileY = 0;
     renderPixel();
     step(1);
 
@@ -131,17 +129,12 @@ auto PPU::renderScanline() -> void {
 
   //257-320
   for(u32 sprite : range(8)) {
-    u32 nametable = loadCHR(0x2000 | (n12)io.v.address);
+    u32 nametable = loadCHR(0x2000 | (n12)var.address);
     step(1);
 
-    if(enable() && sprite == 0) {
-      //258
-      io.v.nametableX = io.t.nametableX;
-      io.v.tileX = io.t.tileX;
-    }
     step(1);
 
-    u32 attribute = loadCHR(0x23c0 | io.v.nametable << 10 | (io.v.tileY >> 2) << 3 | io.v.tileX >> 2);
+    u32 attribute = loadCHR(0x23c0 | var.nametable << 10 | (var.tileY >> 2) << 3 | var.tileX >> 2);
     u32 tileaddr = io.spriteHeight == 8
     ? io.spriteAddress + latch.oam[sprite].tile * 16
     : (latch.oam[sprite].tile & ~1) * 16 + (latch.oam[sprite].tile & 1) * 0x1000;
@@ -156,25 +149,19 @@ auto PPU::renderScanline() -> void {
 
     latch.oam[sprite].tiledataHi = loadCHR(tileaddr + 8);
     step(2);
-
-    if(enable() && sprite == 6 && io.ly == vlines() - 1) {
-      //305
-      io.v.address = io.t.address;
-    }
   }
 
   //321-336
   for(u32 tile : range(2)) {
-    u32 nametable = loadCHR(0x2000 | (n12)io.v.address);
-    u32 tileaddr = io.bgAddress | nametable << 4 | io.v.fineY;
+    u32 nametable = loadCHR(0x2000 | (n12)var.address);
+    u32 tileaddr = io.bgAddress | nametable << 4 | var.fineY;
     step(2);
 
-    u32 attribute = loadCHR(0x23c0 | io.v.nametable << 10 | (io.v.tileY >> 2) << 3 | io.v.tileX >> 2);
-    if(io.v.tileY & 2) attribute >>= 4;
-    if(io.v.tileX & 2) attribute >>= 2;
+    u32 attribute = loadCHR(0x23c0 | var.nametable << 10 | (var.tileY >> 2) << 3 | var.tileX >> 2);
+    if(var.tileY & 2) attribute >>= 4;
+    if(var.tileX & 2) attribute >>= 2;
     step(1);
 
-    if(enable() && ++io.v.tileX == 0) io.v.nametableX++;
     step(1);
 
     u32 tiledataLo = loadCHR(tileaddr + 0);
@@ -190,12 +177,12 @@ auto PPU::renderScanline() -> void {
   }
 
   //337-338
-  loadCHR(0x2000 | (n12)io.v.address);
+  loadCHR(0x2000 | (n12)var.address);
   bool skip = !Region::PAL() && enable() && io.field == 1 && io.ly == vlines() - 1;
   step(2);
 
   //339
-  loadCHR(0x2000 | (n12)io.v.address);
+  loadCHR(0x2000 | (n12)var.address);
   step(1);
 
   //340

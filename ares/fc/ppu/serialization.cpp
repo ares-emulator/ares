@@ -4,13 +4,15 @@ auto PPU::serialize(serializer& s) -> void {
   s(cgram);
   s(oam);
   s(soam);
+  s(var.data);
+  s(scroll.data);
+  s(scroll.fineX);
+  s(scroll.latch);
   s(io.mdr);
   s(io.field);
   s(io.lx);
   s(io.ly);
   s(io.busData);
-  s(io.v.data);
-  s(io.t.data);
   s(io.nmiHold);
   s(io.nmiFlag);
   s(io.vramIncrement);

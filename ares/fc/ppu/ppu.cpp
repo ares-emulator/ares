@@ -8,6 +8,7 @@ PPU ppu;
 #include "color.cpp"
 #include "debugger.cpp"
 #include "sprite.cpp"
+#include "scroll.cpp"
 #include "serialization.cpp"
 
 auto PPU::load(Node::Object parent) -> void {
@@ -52,6 +53,9 @@ auto PPU::step(u32 clocks) -> void {
     if (io.ly < 240 || io.ly == L - 1 ||
         (Region::PAL() && io.ly >= 264 && io.ly <= L - 2))
       sprite.main();
+
+    if (enable() && (io.ly < 240 || io.ly == L - 1))
+      cycleScroll();
 
     if(io.ly == 240 && io.lx == 340) io.nmiHold = 1;
     if(io.ly == 241 && io.lx ==   0) io.nmiFlag = io.nmiHold;
