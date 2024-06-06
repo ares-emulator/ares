@@ -12,7 +12,6 @@ auto PPU::serialize(serializer& s) -> void {
   s(io.field);
   s(io.lx);
   s(io.ly);
-  s(io.busData);
   s(io.nmiHold);
   s(io.nmiFlag);
   s(io.vramIncrement);

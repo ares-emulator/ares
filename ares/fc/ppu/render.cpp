@@ -7,7 +7,13 @@ auto PPU::rendering() const -> bool {
 }
 
 auto PPU::loadCHR(n16 address) -> n8 {
-  return enable() ? cartridge.readCHR(address) : (n8)0x00;
+  if (enable()) {
+    io.busAddress = (n14)address;
+    cartridge.ppuAddressBus(address);
+    return cartridge.readCHR(address);
+  } else {
+    return 0x00;
+  }
 }
 
 auto PPU::renderPixel() -> void {

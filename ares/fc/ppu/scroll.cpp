@@ -15,8 +15,8 @@ auto PPU::transferScrollX() -> void {
 
 auto PPU::transferScrollY() -> void {
   var.tileY = scroll.tileY;
-  var.fineY = scroll.fineY;
   var.nametableY = scroll.nametableY;
+  var.fineY = scroll.fineY;
 }
 
 #if 1
@@ -113,14 +113,15 @@ auto PPU::scrollTransferDelay() -> void {
 
   if (isTransferY) {
     scroll.tileY = var.tileY & scroll.tileY;
-    scroll.fineY = var.fineY & scroll.fineY;
     scroll.nametableY = var.nametableY & scroll.nametableY;
+    scroll.fineY = var.fineY & scroll.fineY;
   }
 
   transferScrollX();
   transferScrollY();
 
   if (!isRendering) {
-    // TODO: trigger a12 changed
+    io.busAddress = var.address;
+    cartridge.ppuAddressBus(io.busAddress);
   }
 }

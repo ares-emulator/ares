@@ -24,6 +24,8 @@ struct Interface {
 
   virtual auto power() -> void {}
 
+  virtual auto ppuAddressBus(n14 address) -> void {}
+
   virtual auto serialize(serializer&) -> void {}
 
 protected:

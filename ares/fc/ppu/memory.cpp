@@ -42,20 +42,27 @@ auto PPU::readIO(n16 address) -> n8 {
 
   //PPUDATA
   case 7:
-    if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) break;
-
-    address = (n14)var.address;
-    if(address <= 0x1fff) {
-      result = io.busData;
-      io.busData = cartridge.readCHR(address);
-    } else if(address <= 0x3eff) {
-      result = io.busData;
-      io.busData = cartridge.readCHR(address);
-    } else if(address <= 0x3fff) {
-      result.bit(0, 5) = readCGRAM(address);
-      io.busData = cartridge.readCHR(address);
+    if (var.blockingRead) {
+      result = io.mdr;
+      break;
     }
-    var.address += io.vramIncrement;
+
+    address = io.busAddress;
+    result = var.latchData;
+    var.latchData = cartridge.readCHR(address);
+    if (address >= 0x3f00)
+      result = readCGRAM(address) | (io.mdr & 0xc0);
+
+    if (rendering()) {
+      incrementVRAMAddressX();
+      incrementVRAMAddressY();
+    } else {
+      var.address += io.vramIncrement;
+      io.busAddress = var.address;
+      cartridge.ppuAddressBus(io.busAddress);
+    }
+    
+    var.blockingRead = 6;
     break;
   }
 
@@ -126,17 +133,20 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 
   //PPUDATA
   case 7:
-    if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) return;
-
-    address = (n14)var.address;
-    if(address <= 0x1fff) {
-      cartridge.writeCHR(address, data);
-    } else if(address <= 0x3eff) {
-      cartridge.writeCHR(address, data);
-    } else if(address <= 0x3fff) {
+    address = io.busAddress;
+    if (address >= 0x3f00)
       writeCGRAM(address, data);
+    else
+      cartridge.writeCHR(address, data);
+
+    if (rendering()) {
+      incrementVRAMAddressX();
+      incrementVRAMAddressY();
+    } else {
+      var.address += io.vramIncrement;
+      io.busAddress = var.address;
+      cartridge.ppuAddressBus(io.busAddress);
     }
-    var.address += io.vramIncrement;
     break;
 
   }

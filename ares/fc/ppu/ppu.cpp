@@ -49,6 +49,7 @@ auto PPU::step(u32 clocks) -> void {
   u32 L = vlines();
 
   while(clocks--) {
+    if (var.blockingRead) --var.blockingRead;
     scrollTransferDelay();
 
     // Not vblank or in pal sprite Scanline
@@ -59,6 +60,7 @@ auto PPU::step(u32 clocks) -> void {
     if (enable() && (io.ly < 240 || io.ly == L - 1))
       cycleScroll();
 
+    if(io.ly == 240 && io.lx ==   1) io.busAddress = var.address, cartridge.ppuAddressBus(io.busAddress);
     if(io.ly == 240 && io.lx == 340) io.nmiHold = 1;
     if(io.ly == 241 && io.lx ==   0) io.nmiFlag = io.nmiHold;
     if(io.ly == 241 && io.lx ==   2) cpu.nmiLine(io.nmiEnable && io.nmiFlag);

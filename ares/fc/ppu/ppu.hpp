@@ -104,15 +104,19 @@ struct PPU : Thread {
 
     BitRange<15,10,11> nametable {&data};
     BitRange<15, 0,14> address   {&data};
+
+    n8 latchData;
+    n8 blockingRead;
   } var;
 
   struct IO {
+    n14 busAddress;
+
     //internal
     n8  mdr;
     n1  field;
     n16 lx;
     n16 ly;
-    n8  busData;
 
     n1  nmiHold;
     n1  nmiFlag;
