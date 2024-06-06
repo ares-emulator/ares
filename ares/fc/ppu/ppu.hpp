@@ -51,7 +51,6 @@ struct PPU : Thread {
   auto loadCHR(n16 address) -> n8;
 
   auto renderPixel() -> void;
-  auto renderSprite() -> void;
   auto renderScanline() -> void;
 
   //color.cpp
@@ -65,14 +64,12 @@ struct PPU : Thread {
   auto incrementVRAMAddressY() -> void;
   auto transferScrollX() -> void;
   auto transferScrollY() -> void;
-
-  template<u32> auto cycleScroll() -> void;
   auto cycleScroll() -> void;
-
   auto scrollTransferDelay() -> void;
 
   // sprite.cpp
-  template<u32> auto cycleSpriteEvaluation() -> void;
+  auto cycleSpriteEvaluation() -> void;
+  auto cyclePrepareSpriteEvaluation() -> void;
 
   struct ScrollRegisters {
     n15 data;

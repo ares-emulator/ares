@@ -52,10 +52,11 @@ auto PPU::step(u32 clocks) -> void {
     if (var.blockingRead) --var.blockingRead;
     scrollTransferDelay();
 
-    // Not vblank or in pal sprite Scanline
-    if (io.ly < 240 || io.ly == L - 1 ||
-        (Region::PAL() && io.ly >= 264 && io.ly <= L - 2))
-      sprite.main();
+    if (enable() && io.ly == L - 1)
+      cyclePrepareSpriteEvaluation();
+
+    if (enable() && (io.ly < 240 || (Region::PAL() && io.ly >= 264 && io.ly <= L - 2)))
+      cycleSpriteEvaluation();
 
     if (enable() && (io.ly < 240 || io.ly == L - 1))
       cycleScroll();
