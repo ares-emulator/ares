@@ -35,6 +35,8 @@ struct CPU : Thread {
   auto main() -> void;
   auto synchronize() -> void;
 
+  auto gdbPoll() -> void;
+
   auto instruction() -> void;
   auto instructionPrologue(u32 instruction) -> void;
   auto instructionEpilogue() -> s32;

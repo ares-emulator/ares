@@ -37,6 +37,17 @@ auto CPU::main() -> void {
   }
 
   vi.refreshed = false;
+  queue.remove(Queue::GDB_Poll);
+  if(GDB::server.hasClient()) {
+    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+  }
+}
+
+auto CPU::gdbPoll() -> void {
+  if(GDB::server.hasClient()) {
+    GDB::server.updateLoop();
+    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+  }
 }
 
 auto CPU::synchronize() -> void {
@@ -68,6 +79,7 @@ auto CPU::synchronize() -> void {
     case Queue::DD_MECHA_Response:  return dd.mechaResponse();
     case Queue::DD_BM_Request:  return dd.bmRequest();
     case Queue::DD_Motor_Mode:  return dd.motorChange();
+    case Queue::GDB_Poll:      return cpu.gdbPoll();
     }
   });
 
