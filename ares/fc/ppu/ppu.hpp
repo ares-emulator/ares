@@ -102,6 +102,9 @@ struct PPU : Thread {
     BitRange<15,10,11> nametable {&data};
     BitRange<15, 0,14> address   {&data};
 
+    BitRange<15, 2, 4> attrX     {&data};
+    BitRange<15, 7, 9> attrY     {&data};
+
     n8 latchData;
     n8 blockingRead;
   } var;

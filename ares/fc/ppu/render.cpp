@@ -40,45 +40,49 @@ auto PPU::renderPixel() -> void {
   if(!io.bgEdgeEnable && x < 8) palette = 0;
 
   if(io.spriteEnable)
-  for(i32 sprite = 7; sprite >= 0; sprite--) {
-    if(!io.spriteEdgeEnable && x < 8) continue;
-    if(latch.oam[sprite].id == 64) continue;
+    for(i32 sprite = 7; sprite >= 0; sprite--) {
+      if(!io.spriteEdgeEnable && x < 8) continue;
+      if(latch.oam[sprite].id == 64) continue;
 
-    u32 spriteX = x - latch.oam[sprite].x;
-    if(spriteX >= 8) continue;
+      u32 spriteX = x - latch.oam[sprite].x;
+      if(spriteX >= 8) continue;
 
-    if(latch.oam[sprite].attr & 0x40) spriteX ^= 7;
-    u32 mask = 0x80 >> spriteX;
-    u32 spritePalette = 0;
-    spritePalette |= latch.oam[sprite].tiledataLo & mask ? 1 : 0;
-    spritePalette |= latch.oam[sprite].tiledataHi & mask ? 2 : 0;
-    if(spritePalette == 0) continue;
+      if(latch.oam[sprite].attr & 0x40) spriteX ^= 7;
+      u32 mask = 0x80 >> spriteX;
+      u32 spritePalette = 0;
+      spritePalette |= latch.oam[sprite].tiledataLo & mask ? 1 : 0;
+      spritePalette |= latch.oam[sprite].tiledataHi & mask ? 2 : 0;
+      if(spritePalette == 0) continue;
 
-    if(latch.oam[sprite].id == 0 && palette && x != 255) io.spriteZeroHit = 1;
-    spritePalette |= (latch.oam[sprite].attr & 3) << 2;
+      if(latch.oam[sprite].id == 0 && palette && x != 255) io.spriteZeroHit = 1;
+      spritePalette |= (latch.oam[sprite].attr & 3) << 2;
 
-    objectPriority = latch.oam[sprite].attr & 0x20;
-    objectPalette = 16 + spritePalette;
-  }
+      objectPriority = latch.oam[sprite].attr & 0x20;
+      objectPalette = 16 + spritePalette;
+    }
 
   if(objectPalette) {
     if(palette == 0 || objectPriority == 0) palette = objectPalette;
   }
 
-  if(!enable()) palette = 0;
-
-  if(Region::PAL()) {
-    output[(x + 18) % 282] = io.emphasis << 6 | readCGRAM(palette);
-    return;
+  u32 color = 0;
+  if (enable() || (n14)var.address < 0x3f00) {
+    color = io.emphasis << 6 | readCGRAM(palette);
+  } else {
+    color = io.emphasis << 6 | readCGRAM((n5)var.address);
   }
 
-  output[(x + 15) % 282] = io.emphasis << 6 | readCGRAM(palette);
+  if(Region::PAL())
+    output[(x + 18) % 283] = color;
+  else
+    output[(x + 16) % 283] = color;
 }
 
 auto PPU::renderScanline() -> void {
   if(io.ly < screen->canvasHeight()) {
-    output = screen->pixels().data() + io.ly * 282;
-    for(auto n : range(282)) output[n] = Region::PAL() ? 0x3f : (io.emphasis << 6 | readCGRAM(0));
+    output = screen->pixels().data() + io.ly * 283;
+    for (auto n : range(283))
+      output[n] = Region::PAL() ? 0x3f : io.emphasis << 6 | readCGRAM(0);
   }
 
   //Vblank
@@ -100,7 +104,7 @@ auto PPU::renderScanline() -> void {
     renderPixel();
     step(1);
 
-    u32 attribute = loadCHR(0x23c0 | var.nametable << 10 | (var.tileY >> 2) << 3 | var.tileX >> 2);
+    u32 attribute = loadCHR(0x23c0 | var.nametable << 10 | var.attrY << 3 | var.attrX);
     if(var.tileY & 2) attribute >>= 4;
     if(var.tileX & 2) attribute >>= 2;
     renderPixel();
@@ -140,9 +144,7 @@ auto PPU::renderScanline() -> void {
   //257-320
   for(u32 sprite : range(8)) {
     u32 nametable = loadCHR(0x2000 | (n12)var.address);
-    step(1);
-
-    step(1);
+    step(2);
 
     u32 attribute = loadCHR(0x23c0 | var.nametable << 10 | (var.tileY >> 2) << 3 | var.tileX >> 2);
     u32 tileaddr = io.spriteHeight == 8
@@ -170,9 +172,7 @@ auto PPU::renderScanline() -> void {
     u32 attribute = loadCHR(0x23c0 | var.nametable << 10 | (var.tileY >> 2) << 3 | var.tileX >> 2);
     if(var.tileY & 2) attribute >>= 4;
     if(var.tileX & 2) attribute >>= 2;
-    step(1);
-
-    step(1);
+    step(2);
 
     u32 tiledataLo = loadCHR(tileaddr + 0);
     step(2);

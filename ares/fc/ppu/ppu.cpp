@@ -19,9 +19,9 @@ auto PPU::load(Node::Object parent) -> void {
 
   node = parent->append<Node::Object>("PPU");
 
-  screen = node->append<Node::Video::Screen>("Screen", 282, displayHeight());
+  screen = node->append<Node::Video::Screen>("Screen", 283, displayHeight());
   screen->colors(1 << 9, {&PPU::color, this});
-  screen->setSize(282, displayHeight());
+  screen->setSize(283, displayHeight());
   screen->setScale(1.0, 1.0);
   Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
   screen->refreshRateHint(system.frequency() / rate(), 341, vlines());
@@ -93,12 +93,12 @@ auto PPU::frame() -> void {
   io.field++;
 
   if(screen->overscan()) {
-    screen->setSize(282, displayHeight());
-    screen->setViewport(0, 0, 282, displayHeight());
+    screen->setSize(283, displayHeight());
+    screen->setViewport(0, 0, 283, displayHeight());
   } else {
     int x = 16;
     int y = 8;
-    int width = 282 - 32;
+    int width = 283 - 33;
     int height = displayHeight() - 16;
 
     if(Region::PAL()) height -= 48;
