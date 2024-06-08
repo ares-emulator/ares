@@ -18,12 +18,21 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
   });
 
   memory.oam = parent->append<Node::Debugger::Memory>("PPU OAM");
-  memory.oam->setSize(ppu.spriteEvaluation.oam.size());
+  memory.oam->setSize(ppu.oam.size());
   memory.oam->setRead([&](u32 address) -> u8 {
-    return ppu.spriteEvaluation.oam[address];
+    return ppu.oam[address];
   });
   memory.oam->setWrite([&](u32 address, u8 data) -> void {
-    ppu.spriteEvaluation.oam[address] = data;
+    ppu.oam[address] = data;
+  });
+
+  memory.soam = parent->append<Node::Debugger::Memory>("PPU SOAM");
+  memory.soam->setSize(ppu.soam.size());
+  memory.soam->setRead([&](u32 address) -> u8 {
+    return ppu.soam[address];
+  });
+  memory.soam->setWrite([&](u32 address, u8 data) -> void {
+    ppu.soam[address] = data;
   });
 }
 

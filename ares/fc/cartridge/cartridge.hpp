@@ -35,6 +35,8 @@ struct Cartridge : Thread {
   auto readCHR(n32 address, n8 data = 0x00) -> n8;
   auto writeCHR(n32 address, n8 data) -> void;
 
+  auto ppuAddressBus(n14 address) -> void;
+
   //scanline() is for debugging purposes only:
   //boards must detect scanline edges on their own
   auto scanline(n32 y) -> void;

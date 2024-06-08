@@ -3,6 +3,8 @@ struct PPU : Thread {
   Node::Video::Screen screen;
   Memory::Writable<n8> ciram;
   Memory::Writable<n8> cgram;
+  Memory::Writable<n8> oam;
+  Memory::Writable<n8> soam;
 
   struct Debugger {
     //debugger.cpp
@@ -13,6 +15,7 @@ struct PPU : Thread {
       Node::Debugger::Memory ciram;
       Node::Debugger::Memory cgram;
       Node::Debugger::Memory oam;
+      Node::Debugger::Memory soam;
     } memory;
   } debugger;
 
@@ -44,10 +47,10 @@ struct PPU : Thread {
 
   //render.cpp
   auto enable() const -> bool;
+  auto rendering() const -> bool;
   auto loadCHR(n16 address) -> n8;
 
   auto renderPixel() -> void;
-  auto renderSprite() -> void;
   auto renderScanline() -> void;
 
   //color.cpp
@@ -56,28 +59,64 @@ struct PPU : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  // scroll.cpp
+  auto incrementVRAMAddressX() -> void;
+  auto incrementVRAMAddressY() -> void;
+  auto transferScrollX() -> void;
+  auto transferScrollY() -> void;
+  auto cycleScroll() -> void;
+  auto scrollTransferDelay() -> void;
+
+  // sprite.cpp
+  auto cycleSpriteEvaluation() -> void;
+  auto cyclePrepareSpriteEvaluation() -> void;
+
+  struct ScrollRegisters {
+    n15 data;
+
+    BitRange<15, 0, 4> tileX     {&data};
+    BitRange<15, 5, 9> tileY     {&data};
+    BitRange<15,10,10> nametableX{&data};
+    BitRange<15,11,11> nametableY{&data};
+    BitRange<15,12,14> fineY     {&data};
+    n1 latch;
+    n3 fineX;
+
+    BitRange<15,10,11> nametable {&data};
+    BitRange<15, 0,14> address   {&data};
+    BitRange<15, 0, 7> addressLo {&data};
+    BitRange<15, 8,14> addressHi {&data};
+
+    n8 transferDelay;
+  } scroll;
+
+  struct VRAMAddressRegisters {
+    n15 data;
+
+    BitRange<15, 0, 4> tileX     {&data};
+    BitRange<15, 5, 9> tileY     {&data};
+    BitRange<15,10,10> nametableX{&data};
+    BitRange<15,11,11> nametableY{&data};
+    BitRange<15,12,14> fineY     {&data};
+
+    BitRange<15,10,11> nametable {&data};
+    BitRange<15, 0,14> address   {&data};
+
+    BitRange<15, 2, 4> attrX     {&data};
+    BitRange<15, 7, 9> attrY     {&data};
+
+    n8 latchData;
+    n8 blockingRead;
+  } var;
+
   struct IO {
+    n14 busAddress;
+
     //internal
     n8  mdr;
     n1  field;
     n16 lx;
     n16 ly;
-    n8  busData;
-
-    struct Union {
-      n19 data;
-      BitRange<19, 0, 4> tileX     {&data};
-      BitRange<19, 5, 9> tileY     {&data};
-      BitRange<19,10,11> nametable {&data};
-      BitRange<19,10,10> nametableX{&data};
-      BitRange<19,11,11> nametableY{&data};
-      BitRange<19,12,14> fineY     {&data};
-      BitRange<19, 0,14> address   {&data};
-      BitRange<19, 0, 7> addressLo {&data};
-      BitRange<19, 8,14> addressHi {&data};
-      BitRange<19,15,15> latch     {&data};
-      BitRange<19,16,18> fineX     {&data};
-    } v, t;
 
     n1  nmiHold;
     n1  nmiFlag;
@@ -112,16 +151,6 @@ struct PPU : Thread {
     n8 attr = 0xff;
     n8 x = 0xff;
 
-    auto operator[](n2 timing) -> n8& {
-      switch(timing) {
-      case 0: return y;
-      case 1: return tile;
-      case 2: return attr;
-      case 3: return x;
-      }
-      return y;
-    }
-
     n8 tiledataLo;
     n8 tiledataHi;
   };
@@ -132,55 +161,36 @@ struct PPU : Thread {
     n16 tiledataLo;
     n16 tiledataHi;
 
+    n8  oamId[8];
     OAM oam[8];   //primary
   } latch;
 
   struct SpriteEvaluation {
-    Memory::Writable<n8> oam;
+    // $2002 bit5
+    n1 spriteOverflow;
 
-    // sprite.cpp
-    auto load() -> void;
-    auto unload() -> void;
+    // $2003
+    n8 oamAddress;
 
-    auto main() -> void;
-    auto power(bool reset) -> void;
+    // $2004
+    n8 oamData;
 
-    // memory.cpp
-    auto oamData() -> n8 const;
-    auto oamData(n8 data) -> void;
+    // main oam counter (oamAddress)
+    BitRange<8,0,7> oamMainCounter{&oamAddress};
+    bool oamMainCounterOverflow;
+    // every sprite has 4 bytes
+    BitRange<8,0,1> oamMainCounterTiming{&oamAddress};
+    // main counter have 64 sprites
+    BitRange<8,2,7> oamMainCounterIndex{&oamAddress};
 
-    // serialization.cpp
-    auto serialize(serializer&) -> void;
-
-    struct IO {
-      // $2002 bit5
-      n1 spriteOverflow;
-
-      // $2003
-      n8 oamAddress;
-
-      // $2004
-      n8 oamData;
-
-      // main oam counter (oamAddress)
-      BitRange<8,0,7> oamMainCounter{&oamAddress};
-      bool oamMainCounterOverflow;
-      // every sprite has 4 bytes
-      BitRange<8,0,1> oamMainCounterTiming{&oamAddress};
-      // main counter have 64 sprites
-      BitRange<8,2,7> oamMainCounterIndex{&oamAddress};
-
-      // secondary oam counter
-      n5  oamTempCounter;
-      bool oamTempCounterOverflow;
-      // every sprite has 4 bytes
-      BitRange<5,0,1> oamTempCounterTiming{&oamTempCounter};
-      // temp counter have 8 sprites
-      BitRange<5,2,4> oamTempCounterIndex{&oamTempCounter};
-    } io;
-
-    OAM soam[8]; // secondary oam
-  } spriteEvaluation;
+    // secondary oam counter
+    n5  oamTempCounter;
+    bool oamTempCounterOverflow;
+    // every sprite has 4 bytes
+    BitRange<5,0,1> oamTempCounterTiming{&oamTempCounter};
+    // temp counter have 8 sprites
+    BitRange<5,2,4> oamTempCounterIndex{&oamTempCounter};
+  } sprite;
 
   u32* output;
 

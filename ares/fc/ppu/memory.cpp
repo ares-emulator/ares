@@ -27,35 +27,47 @@ auto PPU::readIO(n16 address) -> n8 {
 
   //PPUSTATUS
   case 2:
-    result.bit(5) = spriteEvaluation.io.spriteOverflow;
+    result.bit(5) = sprite.spriteOverflow;
     result.bit(6) = io.spriteZeroHit;
     result.bit(7) = io.nmiFlag;
-    io.v.latch = 0;
+    scroll.latch = 0;
     io.nmiHold = 0;
     cpu.nmiLine(io.nmiFlag = 0);
     break;
 
   //OAMDATA
   case 4:
-    result = spriteEvaluation.oamData();
+    result = oam[sprite.oamAddress];
+
+    if (io.ly < 240 || io.ly == vlines() - 1 ||
+        (Region::PAL() && io.ly >= 264 && io.ly <= vlines() - 2))
+      if (enable())
+        result = sprite.oamData;
     break;
 
   //PPUDATA
   case 7:
-    if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) break;
-
-    address = (n14)io.v.address;
-    if(address <= 0x1fff) {
-      result = io.busData;
-      io.busData = cartridge.readCHR(address);
-    } else if(address <= 0x3eff) {
-      result = io.busData;
-      io.busData = cartridge.readCHR(address);
-    } else if(address <= 0x3fff) {
-      result.bit(0, 5) = readCGRAM(address);
-      io.busData = cartridge.readCHR(address);
+    if (var.blockingRead) {
+      result = io.mdr;
+      break;
     }
-    io.v.address += io.vramIncrement;
+
+    address = io.busAddress;
+    result = var.latchData;
+    var.latchData = cartridge.readCHR(address);
+    if (address >= 0x3f00)
+      result = readCGRAM(address) | (io.mdr & 0xc0);
+
+    if (rendering()) {
+      incrementVRAMAddressX();
+      incrementVRAMAddressY();
+    } else {
+      var.address += io.vramIncrement;
+      io.busAddress = var.address;
+      cartridge.ppuAddressBus(io.busAddress);
+    }
+    
+    var.blockingRead = 6;
     break;
   }
 
@@ -69,7 +81,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 
   //PPUCTRL
   case 0:
-    io.t.nametable   = data.bit(0,1);
+    scroll.nametable   = data.bit(0,1);
     io.vramIncrement = data.bit(2) ? 32 : 1;
     io.spriteAddress = data.bit(3) ? 0x1000 : 0x0000;
     io.bgAddress     = data.bit(4) ? 0x1000 : 0x0000;
@@ -95,85 +107,73 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 
   //OAMADDR
   case 3:
-    spriteEvaluation.io.oamAddress = data;
+    sprite.oamAddress = data;
     break;
 
   //OAMDATA
   case 4:
-    spriteEvaluation.oamData(data);
+    // Writes to OAMDATA during rendering (on the pre-render
+    // line and the visible lines 0-239, provided either
+    // sprite or background rendering is enabled) do not
+    // modify values in OAM, but do perform a glitchy
+    // increment of OAMADDR, bumping only the high 6 bits
+    if (io.ly < 240 || io.ly == vlines() - 1 ||
+        (Region::PAL() && io.ly >= 264 && io.ly <= vlines() - 2)) {
+      if (enable()) {
+        ++sprite.oamMainCounterIndex;
+        return;
+      }
+    }
+
+    // The three unimplemented bits of each sprite's byte 2
+    // do not exist in the PPU and always read back as 0 on
+    // PPU revisions that allow reading PPU OAM through
+    // OAMDATA ($2004)
+    if (sprite.oamMainCounterTiming == 2)
+      data.bit(2,4) = 0;
+
+    oam[sprite.oamAddress] = data;
+    ++sprite.oamMainCounter;
     break;
 
   //PPUSCROLL
   case 5:
-    if(io.v.latch++ == 0) {
-      io.v.fineX = data.bit(0,2);
-      io.t.tileX = data.bit(3,7);
+    if(scroll.latch++ == 0) {
+      scroll.fineX = data.bit(0,2);
+      scroll.tileX = data.bit(3,7);
     } else {
-      io.t.fineY = data.bit(0,2);
-      io.t.tileY = data.bit(3,7);
+      scroll.fineY = data.bit(0,2);
+      scroll.tileY = data.bit(3,7);
     }
     break;
 
   //PPUADDR
   case 6:
-    if(io.v.latch++ == 0) {
-      io.t.addressHi = data.bit(0,5);
+    if(scroll.latch++ == 0) {
+      scroll.addressHi = data.bit(0,5);
     } else {
-      io.t.addressLo = data.bit(0,7);
-      io.v.address = io.t.address;
+      scroll.addressLo = data.bit(0,7);
+      scroll.transferDelay = 3;
     }
     break;
 
   //PPUDATA
   case 7:
-    if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) return;
-
-    address = (n14)io.v.address;
-    if(address <= 0x1fff) {
-      cartridge.writeCHR(address, data);
-    } else if(address <= 0x3eff) {
-      cartridge.writeCHR(address, data);
-    } else if(address <= 0x3fff) {
+    address = io.busAddress;
+    if (address >= 0x3f00)
       writeCGRAM(address, data);
+    else
+      cartridge.writeCHR(address, data);
+
+    if (rendering()) {
+      incrementVRAMAddressX();
+      incrementVRAMAddressY();
+    } else {
+      var.address += io.vramIncrement;
+      io.busAddress = var.address;
+      cartridge.ppuAddressBus(io.busAddress);
     }
-    io.v.address += io.vramIncrement;
     break;
 
   }
-}
-
-auto PPU::SpriteEvaluation::oamData() -> n8 const {
-  n8 data = oam[io.oamAddress];
-
-  if (ppu.io.ly < 240 || ppu.io.ly == ppu.vlines() - 1 ||
-      (Region::PAL() && ppu.io.ly >= 264 && ppu.io.ly <= ppu.vlines() - 2))
-    if (ppu.enable())
-      return io.oamData;
-
-  return data;
-}
-
-auto PPU::SpriteEvaluation::oamData(n8 data) -> void {
-  // Writes to OAMDATA during rendering (on the pre-render
-  // line and the visible lines 0-239, provided either
-  // sprite or background rendering is enabled) do not
-  // modify values in OAM, but do perform a glitchy
-  // increment of OAMADDR, bumping only the high 6 bits
-  if (ppu.io.ly < 240 || ppu.io.ly == ppu.vlines() - 1 ||
-      (Region::PAL() && ppu.io.ly >= 264 && ppu.io.ly <= ppu.vlines() - 2)) {
-    if (ppu.enable()) {
-      ++io.oamMainCounterIndex;
-      return;
-    }
-  }
-
-  // The three unimplemented bits of each sprite's byte 2
-  // do not exist in the PPU and always read back as 0 on
-  // PPU revisions that allow reading PPU OAM through
-  // OAMDATA ($2004)
-  if (io.oamMainCounterTiming == 2)
-    data.bit(2,4) = 0;
-
-  oam[io.oamAddress] = data;
-  ++io.oamMainCounter;
 }

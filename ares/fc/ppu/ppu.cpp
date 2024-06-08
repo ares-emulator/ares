@@ -8,18 +8,20 @@ PPU ppu;
 #include "color.cpp"
 #include "debugger.cpp"
 #include "sprite.cpp"
+#include "scroll.cpp"
 #include "serialization.cpp"
 
 auto PPU::load(Node::Object parent) -> void {
   ciram.allocate(2048);
   cgram.allocate(32);
-  spriteEvaluation.load();
+  oam.allocate(256);
+  soam.allocate(32);
 
   node = parent->append<Node::Object>("PPU");
 
-  screen = node->append<Node::Video::Screen>("Screen", 282, displayHeight());
+  screen = node->append<Node::Video::Screen>("Screen", 283, displayHeight());
   screen->colors(1 << 9, {&PPU::color, this});
-  screen->setSize(282, displayHeight());
+  screen->setSize(283, displayHeight());
   screen->setScale(1.0, 1.0);
   Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
   screen->refreshRateHint(system.frequency() / rate(), 341, vlines());
@@ -35,7 +37,8 @@ auto PPU::unload() -> void {
   node.reset();
   ciram.reset();
   cgram.reset();
-  spriteEvaluation.unload();
+  oam.reset();
+  soam.reset();
 }
 
 auto PPU::main() -> void {
@@ -46,16 +49,24 @@ auto PPU::step(u32 clocks) -> void {
   u32 L = vlines();
 
   while(clocks--) {
-    // Not vblank or in pal spriteEvaluation Scanline
-    if (io.ly < 240 || io.ly == L - 1 ||
-        (Region::PAL() && io.ly >= 264 && io.ly <= L - 2))
-      spriteEvaluation.main();
+    if (var.blockingRead) --var.blockingRead;
+    scrollTransferDelay();
 
+    if (enable() && io.ly == L - 1)
+      cyclePrepareSpriteEvaluation();
+
+    if (enable() && (io.ly < 240 || (Region::PAL() && io.ly >= 264 && io.ly <= L - 2)))
+      cycleSpriteEvaluation();
+
+    if (enable() && (io.ly < 240 || io.ly == L - 1))
+      cycleScroll();
+
+    if(io.ly == 240 && io.lx ==   1) io.busAddress = var.address, cartridge.ppuAddressBus(io.busAddress);
     if(io.ly == 240 && io.lx == 340) io.nmiHold = 1;
     if(io.ly == 241 && io.lx ==   0) io.nmiFlag = io.nmiHold;
     if(io.ly == 241 && io.lx ==   2) cpu.nmiLine(io.nmiEnable && io.nmiFlag);
 
-    if(io.ly == L-2 && io.lx == 340) io.spriteZeroHit = 0, spriteEvaluation.io.spriteOverflow = 0;
+    if(io.ly == L-2 && io.lx == 340) io.spriteZeroHit = 0, sprite.spriteOverflow = 0;
 
     if(io.ly == L-2 && io.lx == 340) io.nmiHold = 0;
     if(io.ly == L-1 && io.lx ==   0) io.nmiFlag = io.nmiHold;
@@ -82,12 +93,12 @@ auto PPU::frame() -> void {
   io.field++;
 
   if(screen->overscan()) {
-    screen->setSize(282, displayHeight());
-    screen->setViewport(0, 0, 282, displayHeight());
+    screen->setSize(283, displayHeight());
+    screen->setViewport(0, 0, 283, displayHeight());
   } else {
     int x = 16;
     int y = 8;
-    int width = 282 - 32;
+    int width = 283 - 33;
     int height = displayHeight() - 16;
 
     if(Region::PAL()) height -= 48;
@@ -103,14 +114,19 @@ auto PPU::frame() -> void {
 auto PPU::power(bool reset) -> void {
   Thread::create(system.frequency(), {&PPU::main, this});
   screen->power();
-  spriteEvaluation.power(reset);
 
   if(!reset) {
     ciram.fill();
+    oam.fill();
+    soam.fill();
     memory::copy(cgram.data(), cgramBootValue, 32);
   }
 
+  scroll = {};
+  var = {};
   io = {};
+  latch = {};
+  sprite = {};
 }
 
 }

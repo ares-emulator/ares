@@ -71,6 +71,10 @@ auto Cartridge::writeCHR(n32 address, n8 data) -> void {
   return board->writeCHR(address, data);
 }
 
+auto Cartridge::ppuAddressBus(n14 address) -> void {
+  return board->ppuAddressBus(address);
+}
+
 auto Cartridge::scanline(n32 y) -> void {
   return board->scanline(y);
 }
