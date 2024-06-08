@@ -27,7 +27,7 @@ auto PPU::readIO(n16 address) -> n8 {
 
   //PPUSTATUS
   case 2:
-    result.bit(5) = sprite.io.spriteOverflow;
+    result.bit(5) = sprite.spriteOverflow;
     result.bit(6) = io.spriteZeroHit;
     result.bit(7) = io.nmiFlag;
     scroll.latch = 0;
@@ -37,7 +37,12 @@ auto PPU::readIO(n16 address) -> n8 {
 
   //OAMDATA
   case 4:
-    result = sprite.oamData();
+    result = oam[sprite.oamAddress];
+
+    if (io.ly < 240 || io.ly == vlines() - 1 ||
+        (Region::PAL() && io.ly >= 264 && io.ly <= vlines() - 2))
+      if (enable())
+        result = sprite.oamData;
     break;
 
   //PPUDATA
@@ -102,12 +107,33 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 
   //OAMADDR
   case 3:
-    sprite.io.oamAddress = data;
+    sprite.oamAddress = data;
     break;
 
   //OAMDATA
   case 4:
-    sprite.oamData(data);
+    // Writes to OAMDATA during rendering (on the pre-render
+    // line and the visible lines 0-239, provided either
+    // sprite or background rendering is enabled) do not
+    // modify values in OAM, but do perform a glitchy
+    // increment of OAMADDR, bumping only the high 6 bits
+    if (io.ly < 240 || io.ly == vlines() - 1 ||
+        (Region::PAL() && io.ly >= 264 && io.ly <= vlines() - 2)) {
+      if (enable()) {
+        ++sprite.oamMainCounterIndex;
+        return;
+      }
+    }
+
+    // The three unimplemented bits of each sprite's byte 2
+    // do not exist in the PPU and always read back as 0 on
+    // PPU revisions that allow reading PPU OAM through
+    // OAMDATA ($2004)
+    if (sprite.oamMainCounterTiming == 2)
+      data.bit(2,4) = 0;
+
+    oam[sprite.oamAddress] = data;
+    ++sprite.oamMainCounter;
     break;
 
   //PPUSCROLL
@@ -150,40 +176,4 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
     break;
 
   }
-}
-
-auto PPU::SpriteEvaluation::oamData() -> n8 const {
-  n8 data = ppu.oam[io.oamAddress];
-
-  if (ppu.io.ly < 240 || ppu.io.ly == ppu.vlines() - 1 ||
-      (Region::PAL() && ppu.io.ly >= 264 && ppu.io.ly <= ppu.vlines() - 2))
-    if (ppu.enable())
-      return io.oamData;
-
-  return data;
-}
-
-auto PPU::SpriteEvaluation::oamData(n8 data) -> void {
-  // Writes to OAMDATA during rendering (on the pre-render
-  // line and the visible lines 0-239, provided either
-  // sprite or background rendering is enabled) do not
-  // modify values in OAM, but do perform a glitchy
-  // increment of OAMADDR, bumping only the high 6 bits
-  if (ppu.io.ly < 240 || ppu.io.ly == ppu.vlines() - 1 ||
-      (Region::PAL() && ppu.io.ly >= 264 && ppu.io.ly <= ppu.vlines() - 2)) {
-    if (ppu.enable()) {
-      ++io.oamMainCounterIndex;
-      return;
-    }
-  }
-
-  // The three unimplemented bits of each sprite's byte 2
-  // do not exist in the PPU and always read back as 0 on
-  // PPU revisions that allow reading PPU OAM through
-  // OAMDATA ($2004)
-  if (io.oamMainCounterTiming == 2)
-    data.bit(2,4) = 0;
-
-  ppu.oam[io.oamAddress] = data;
-  ++io.oamMainCounter;
 }

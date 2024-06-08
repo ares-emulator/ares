@@ -166,42 +166,30 @@ struct PPU : Thread {
   } latch;
 
   struct SpriteEvaluation {
-    // sprite.cpp
-    auto main() -> void;
+    // $2002 bit5
+    n1 spriteOverflow;
 
-    // memory.cpp
-    auto oamData() -> n8 const;
-    auto oamData(n8 data) -> void;
+    // $2003
+    n8 oamAddress;
 
-    // serialization.cpp
-    auto serialize(serializer&) -> void;
+    // $2004
+    n8 oamData;
 
-    struct IO {
-      // $2002 bit5
-      n1 spriteOverflow;
+    // main oam counter (oamAddress)
+    BitRange<8,0,7> oamMainCounter{&oamAddress};
+    bool oamMainCounterOverflow;
+    // every sprite has 4 bytes
+    BitRange<8,0,1> oamMainCounterTiming{&oamAddress};
+    // main counter have 64 sprites
+    BitRange<8,2,7> oamMainCounterIndex{&oamAddress};
 
-      // $2003
-      n8 oamAddress;
-
-      // $2004
-      n8 oamData;
-
-      // main oam counter (oamAddress)
-      BitRange<8,0,7> oamMainCounter{&oamAddress};
-      bool oamMainCounterOverflow;
-      // every sprite has 4 bytes
-      BitRange<8,0,1> oamMainCounterTiming{&oamAddress};
-      // main counter have 64 sprites
-      BitRange<8,2,7> oamMainCounterIndex{&oamAddress};
-
-      // secondary oam counter
-      n5  oamTempCounter;
-      bool oamTempCounterOverflow;
-      // every sprite has 4 bytes
-      BitRange<5,0,1> oamTempCounterTiming{&oamTempCounter};
-      // temp counter have 8 sprites
-      BitRange<5,2,4> oamTempCounterIndex{&oamTempCounter};
-    } io;
+    // secondary oam counter
+    n5  oamTempCounter;
+    bool oamTempCounterOverflow;
+    // every sprite has 4 bytes
+    BitRange<5,0,1> oamTempCounterTiming{&oamTempCounter};
+    // temp counter have 8 sprites
+    BitRange<5,2,4> oamTempCounterIndex{&oamTempCounter};
   } sprite;
 
   u32* output;

@@ -66,7 +66,7 @@ auto PPU::step(u32 clocks) -> void {
     if(io.ly == 241 && io.lx ==   0) io.nmiFlag = io.nmiHold;
     if(io.ly == 241 && io.lx ==   2) cpu.nmiLine(io.nmiEnable && io.nmiFlag);
 
-    if(io.ly == L-2 && io.lx == 340) io.spriteZeroHit = 0, sprite.io.spriteOverflow = 0;
+    if(io.ly == L-2 && io.lx == 340) io.spriteZeroHit = 0, sprite.spriteOverflow = 0;
 
     if(io.ly == L-2 && io.lx == 340) io.nmiHold = 0;
     if(io.ly == L-1 && io.lx ==   0) io.nmiFlag = io.nmiHold;
@@ -122,8 +122,11 @@ auto PPU::power(bool reset) -> void {
     memory::copy(cgram.data(), cgramBootValue, 32);
   }
 
+  scroll = {};
+  var = {};
   io = {};
-  sprite.io = {};
+  latch = {};
+  sprite = {};
 }
 
 }
