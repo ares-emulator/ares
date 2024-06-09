@@ -1,11 +1,11 @@
 #include <fc/fc.hpp>
+#include <iostream>
 
 namespace ares::Famicom {
 
 auto enumerate() -> vector<string> {
   return {
-    "[Nintendo] Famicom (NTSC-J)",
-    "[Nintendo] Famicom (NTSC-U)",
+    "[Nintendo] Famicom (NTSC)",
     "[Nintendo] Famicom (PAL)",
   };
 }
@@ -44,14 +44,9 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name.find("NTSC-J")) {
+  if(name.find("NTSC")) {
     information.name = "Famicom";
-    information.region = Region::NTSCJ;
-    information.frequency = Constants::Colorburst::NTSC * 6.0;
-  }
-  if(name.find("NTSC-U")) {
-    information.name = "Famicom";
-    information.region = Region::NTSCU;
+    information.region = Region::NTSC;
     information.frequency = Constants::Colorburst::NTSC * 6.0;
   }
   if(name.find("PAL")) {

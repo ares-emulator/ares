@@ -122,7 +122,7 @@ auto Famicom::analyzeFDS(vector<u8>& data) -> string {
   s += "game\n";
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
-  s += "  region: NTSC-J\n";
+  s += "  region: NTSC\n";
   s += "  board:  HVC-FMR\n";
   s += "    memory\n";
   s += "      type: ROM\n";
@@ -178,7 +178,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   bool eepromMapper = false;
   bool prgromFlash = false;
 
-  string region = "NTSC-J, NTSC-U, PAL"; //iNES 1.0 requires database to detect region
+  string region = "NTSC, PAL"; //iNES 1.0 requires database to detect region
 
   bool iNes2 = (data[7] & 0xc) == 0x8;
   if(iNes2) {
@@ -210,9 +210,9 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     u32 timing = data[12] & 3;
 
     // TODO: add DENDY (pirate famiclone) timing
-    if(timing == 0) region = "NTSC-J, NTSC-U";
+    if(timing == 0) region = "NTSC";
     if(timing == 1) region = "PAL";
-    if(timing == 2) region = "NTSC-J, NTSC-U, PAL";
+    if(timing == 2) region = "NTSC, PAL";
   }
 
   string s;
@@ -603,6 +603,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case 150:
+    s += "  board:  UNL-Sachen-74LS374N\n";
+    break;
+
   case 152:
     s += "  board:  BANDAI-74161A\n";
     break;
@@ -684,6 +688,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case 228:
     s += "  board:  MLT-ACTION52\n";
+    break;
+
+  case 243:
+    s += "  board:  UNL-Sachen-74LS374NA\n";
     break;
   }
 

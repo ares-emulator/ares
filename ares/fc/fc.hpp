@@ -16,8 +16,7 @@ namespace ares::Famicom {
   auto load(Node::System& node, string name) -> bool;
 
   struct Region {
-    static inline auto NTSCJ() -> bool;
-    static inline auto NTSCU() -> bool;
+    static inline auto NTSC() -> bool;
     static inline auto PAL() -> bool;
   };
 
