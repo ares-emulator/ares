@@ -255,6 +255,8 @@ private:
     i16 pc;
     i16 pd;
   } objectParam[32];
+  
+  n1 videoCapture = 0;
 };
 
 extern PPU ppu;

@@ -16,6 +16,8 @@ auto PPU::serialize(serializer& s) -> void {
   s(io.vcompare);
   s(io.vcounter);
 
+  s(videoCapture);
+
   s(Background::IO::mode);
   s(Background::IO::frame);
   s(Background::IO::mosaicWidth);
