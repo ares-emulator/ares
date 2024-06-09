@@ -7,10 +7,11 @@
 #include <functiondiscoverykeys_devpkey.h>
 
 #if defined(_MSC_VER)
-  #define CLSID_MMDeviceEnumerator __uuidof(MMDeviceEnumerator)
-  #define IID_IMMDeviceEnumerator  __uuidof(IMMDeviceEnumerator)
-  #define IID_IAudioClient         __uuidof(IAudioClient)
-  #define IID_IAudioRenderClient   __uuidof(IAudioRenderClient)
+  #define CLSID_MMDeviceEnumerator                     __uuidof(MMDeviceEnumerator)
+  #define IID_IMMDeviceEnumerator                      __uuidof(IMMDeviceEnumerator)
+  #define IID_IAudioClient                             __uuidof(IAudioClient)
+  #define IID_IAudioRenderClient                       __uuidof(IAudioRenderClient)
+  #define IID_IActivateAudioInterfaceCompletionHandler __uuidof(IActivateAudioInterfaceCompletionHandler)
 #endif
 
 struct ActivateAudioInterfaceHandler : public IActivateAudioInterfaceCompletionHandler {
