@@ -13,7 +13,7 @@ struct System {
     auto poll() -> void;
   } controls;
 
-  enum class Region : u32 { NTSC, PAL };
+  enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
   auto name() const -> string { return information.name; }
   auto region() const -> Region { return information.region; }
@@ -35,7 +35,7 @@ struct System {
 private:
   struct Information {
     string name = "Famicom";
-    Region region = Region::NTSC;
+    Region region = Region::NTSCJ;
     f64 frequency = Constants::Colorburst::NTSC * 6.0;
   } information;
 
@@ -45,5 +45,6 @@ private:
 
 extern System system;
 
-auto Region::NTSC() -> bool { return system.region() == System::Region::NTSC; }
+auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }
+auto Region::NTSCU() -> bool { return system.region() == System::Region::NTSCU; }
 auto Region::PAL() -> bool { return system.region() == System::Region::PAL; }

@@ -122,7 +122,7 @@ auto Famicom::analyzeFDS(vector<u8>& data) -> string {
   s += "game\n";
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
-  s += "  region: NTSC\n";
+  s += "  region: NTSC-J\n";
   s += "  board:  HVC-FMR\n";
   s += "    memory\n";
   s += "      type: ROM\n";
@@ -178,7 +178,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   bool eepromMapper = false;
   bool prgromFlash = false;
 
-  string region = "NTSC, PAL"; //iNES 1.0 requires database to detect region
+  string region = "NTSC-J, NTSC-U, PAL"; //iNES 1.0 requires database to detect region
 
   bool iNes2 = (data[7] & 0xc) == 0x8;
   if(iNes2) {
@@ -210,9 +210,9 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     u32 timing = data[12] & 3;
 
     // TODO: add DENDY (pirate famiclone) timing
-    if(timing == 0) region = "NTSC";
+    if(timing == 0) region = "NTSC-J, NTSC-U";
     if(timing == 1) region = "PAL";
-    if(timing == 2) region = "NTSC, PAL";
+    if(timing == 2) region = "NTSC-J, NTSC-U, PAL";
   }
 
   string s;
@@ -753,7 +753,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
 auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
   string board;
-  string region = "NTSC";  //fallback
+  string region = "NTSC-J, NTSC-U";  //fallback
   bool battery = false;
   string mirroring;
   vector<u8> programROMs[8];
@@ -782,9 +782,9 @@ auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
 
     if(type == "TVCI" && size > 0) {
       u8 byte = data[offset + 8];
-      if(byte == 0x00) region = "NTSC";
+      if(byte == 0x00) region = "NTSC-J, NTSC-U";
       if(byte == 0x01) region = "PAL";
-      if(byte == 0x02) region = "NTSC, PAL";
+      if(byte == 0x02) region = "NTSC-J, NTSC-U, PAL";
     }
 
     if(type == "BATR" && size > 0) {
