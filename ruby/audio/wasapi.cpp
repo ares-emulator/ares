@@ -7,10 +7,11 @@
 #include <functiondiscoverykeys_devpkey.h>
 
 #if defined(_MSC_VER)
-  #define CLSID_MMDeviceEnumerator __uuidof(MMDeviceEnumerator)
-  #define IID_IMMDeviceEnumerator  __uuidof(IMMDeviceEnumerator)
-  #define IID_IAudioClient         __uuidof(IAudioClient)
-  #define IID_IAudioRenderClient   __uuidof(IAudioRenderClient)
+  #define CLSID_MMDeviceEnumerator                     __uuidof(MMDeviceEnumerator)
+  #define IID_IMMDeviceEnumerator                      __uuidof(IMMDeviceEnumerator)
+  #define IID_IAudioClient                             __uuidof(IAudioClient)
+  #define IID_IAudioRenderClient                       __uuidof(IAudioRenderClient)
+  #define IID_IActivateAudioInterfaceCompletionHandler __uuidof(IActivateAudioInterfaceCompletionHandler)
 #endif
 
 struct ActivateAudioInterfaceHandler : public IActivateAudioInterfaceCompletionHandler {
@@ -156,7 +157,7 @@ private:
     }
   }
 
-  using PActivateAudioInterfaceAsync = HRESULT __stdcall(*)(LPCWSTR, REFIID, PROPVARIANT*, IActivateAudioInterfaceCompletionHandler*, IActivateAudioInterfaceAsyncOperation**);
+  using PActivateAudioInterfaceAsync = HRESULT(__stdcall *)(LPCWSTR, REFIID, PROPVARIANT*, IActivateAudioInterfaceCompletionHandler*, IActivateAudioInterfaceAsyncOperation**);
   maybe<bool> defaultDeviceSupported;
   PActivateAudioInterfaceAsync activateAudioInterfaceAsync;
 
@@ -165,11 +166,13 @@ private:
       return *self.defaultDeviceSupported;
     }
 
-    OSVERSIONINFO info = { 
-      .dwOSVersionInfoSize = sizeof(info)
-    };
+    OSVERSIONINFOEX info{};
+    info.dwOSVersionInfoSize = sizeof(info);
+    info.dwBuildNumber = 14393;
 
-    if(GetVersionEx(&info) && info.dwBuildNumber >= 14393) {
+    DWORDLONG conditionMask = 0;
+    VER_SET_CONDITION(conditionMask, VER_BUILDNUMBER, VER_GREATER_EQUAL);
+    if(VerifyVersionInfo(&info, VER_BUILDNUMBER, conditionMask)) {
       auto audioLib = LoadLibrary(L"mmdevapi");
       self.activateAudioInterfaceAsync = (PActivateAudioInterfaceAsync)GetProcAddress(audioLib, "ActivateAudioInterfaceAsync");
       self.defaultDeviceSupported = true;
@@ -184,13 +187,14 @@ private:
     if(self.isDefaultDeviceSupported()) {
       PWSTR defaultDeviceString;
       if(StringFromIID(DEVINTERFACE_AUDIO_RENDER, &defaultDeviceString) != S_OK) return false;
-      Device defaultDevice = {
-        .id = (const char*)utf8_t(defaultDeviceString),
-        .name = "Default",
-        .isDefault = true
-      };
+
+      Device defaultDevice{};
+      defaultDevice.id = (const char*)utf8_t(defaultDeviceString);
+      defaultDevice.name = "Default";
+      defaultDevice.isDefault = true;
 
       self.devices.append(defaultDevice);
+      CoTaskMemFree(defaultDeviceString);
     }
 
     if(CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&self.enumerator) != S_OK) return false;

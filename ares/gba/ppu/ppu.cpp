@@ -141,7 +141,11 @@ auto PPU::main() -> void {
   step(226);
   io.hblank = 0;
   if(++io.vcounter == 228) io.vcounter = 0;
-  if(io.vcounter > 1 && io.vcounter < 162) cpu.dmaHDMA();
+  if(io.vcounter == 162) {
+    if(videoCapture) cpu.dma[3].enable = 0;
+    videoCapture = !videoCapture && cpu.dma[3].timingMode == 3 && cpu.dma[3].enable;
+  }
+  if(io.vcounter >= 2 && io.vcounter < 162 && videoCapture) cpu.dmaHDMA();
 }
 
 auto PPU::frame() -> void {
