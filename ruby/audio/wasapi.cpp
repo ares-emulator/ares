@@ -166,10 +166,13 @@ private:
       return *self.defaultDeviceSupported;
     }
 
-    OSVERSIONINFO info{};
+    OSVERSIONINFOEX info{};
     info.dwOSVersionInfoSize = sizeof(info);
+    info.dwBuildNumber = 14393;
 
-    if(GetVersionEx(&info) && info.dwBuildNumber >= 14393) {
+    DWORDLONG conditionMask = 0;
+    VER_SET_CONDITION(conditionMask, VER_BUILDNUMBER, VER_GREATER_EQUAL);
+    if(VerifyVersionInfo(&info, VER_BUILDNUMBER, conditionMask)) {
       auto audioLib = LoadLibrary(L"mmdevapi");
       self.activateAudioInterfaceAsync = (PActivateAudioInterfaceAsync)GetProcAddress(audioLib, "ActivateAudioInterfaceAsync");
       self.defaultDeviceSupported = true;
