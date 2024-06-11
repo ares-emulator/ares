@@ -14,10 +14,10 @@ struct BMC31In1 : Interface {
 
   auto readPRG(n32 address, n8 data) -> n8 override {
     if (address < 0x8000) return data;
-    if (prgMode == 1)
+    if (mode == 1)
       address = (n15)address;
     else
-      address = prgBank << 14 | (n14)address;
+      address = bank << 14 | (n14)address;
 
     return programROM.read(address);
   }
@@ -25,9 +25,8 @@ struct BMC31In1 : Interface {
   auto writePRG(n32 address, n8 data) -> void override {
     if (address < 0x8000) return;
 
-    chrBank = address.bit(0, 4);
-    prgMode = (address & 0x1e) == 0;
-    prgBank = address.bit(0, 4);
+    mode = (address & 0x1e) == 0;
+    bank = address.bit(0, 4);
     mirror = address.bit(5);
   }
 
@@ -37,7 +36,7 @@ struct BMC31In1 : Interface {
       return ppu.readCIRAM(address);
     }
 
-    return characterROM.read(chrBank << 13 | (n13)address);
+    return characterROM.read(bank << 13 | (n13)address);
   }
 
   auto writeCHR(n32 address, n8 data) -> void override {
@@ -51,8 +50,13 @@ struct BMC31In1 : Interface {
     writePRG(0x8000, 0);
   }
 
+  auto serialize(serializer& s) -> void override {
+    s(mirror);
+    s(mode);
+    s(bank);
+  }
+
   n1 mirror;
-  n1 prgMode;
-  n5 prgBank;
-  n8 chrBank;
+  n1 mode;
+  n5 bank;
 };
