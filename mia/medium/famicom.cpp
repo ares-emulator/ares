@@ -603,6 +603,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case 150:
+    s += "  board:  UNL-Sachen-74LS374N\n";
+    break;
+
   case 152:
     s += "  board:  BANDAI-74161A\n";
     break;
@@ -685,6 +689,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case 228:
     s += "  board:  MLT-ACTION52\n";
     break;
+
+  case 243:
+    s += "  board:  UNL-Sachen-74LS374NA\n";
+    break;
   }
 
   u32 eeprom = 0u;
@@ -745,7 +753,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
 auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
   string board;
-  string region = "NTSC";  //fallback
+  string region = "NTSC-J, NTSC-U";  //fallback
   bool battery = false;
   string mirroring;
   vector<u8> programROMs[8];
@@ -774,9 +782,9 @@ auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
 
     if(type == "TVCI" && size > 0) {
       u8 byte = data[offset + 8];
-      if(byte == 0x00) region = "NTSC";
+      if(byte == 0x00) region = "NTSC-J, NTSC-U";
       if(byte == 0x01) region = "PAL";
-      if(byte == 0x02) region = "NTSC, PAL";
+      if(byte == 0x02) region = "NTSC-J, NTSC-U, PAL";
     }
 
     if(type == "BATR" && size > 0) {
