@@ -690,9 +690,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "  board:  MLT-ACTION52\n";
     break;
 
+  case 229:
+    s += "  board:  UNL-BMC-31-IN-1\n";
+    break;
+
   case 243:
     s += "  board:  UNL-Sachen-74LS374NA\n";
-    break;
   }
 
   u32 eeprom = 0u;

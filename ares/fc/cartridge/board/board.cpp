@@ -45,7 +45,6 @@ namespace Board {
 #include "namco-118.cpp"
 #include "namco-163.cpp"
 #include "namco-340.cpp"
-#include "unl-sachen-74ls374n.cpp"
 #include "sunsoft-1.cpp"
 #include "sunsoft-2.cpp"
 #include "sunsoft-3.cpp"
@@ -56,6 +55,9 @@ namespace Board {
 #include "taito-x1-005.cpp"
 #include "taito-x1-017.cpp"
 #include "unrom-512.cpp"
+
+#include "unl-bmc-31-in-1.cpp"
+#include "unl-sachen-74ls374n.cpp"
 
 auto Interface::create(string board) -> Interface* {
   Interface* p = nullptr;
@@ -104,7 +106,6 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = Namco118::create(board);
   if(!p) p = Namco163::create(board);
   if(!p) p = Namco340::create(board);
-  if(!p) p = Sachen74LS374N::create(board);
   if(!p) p = Sunsoft1::create(board);
   if(!p) p = Sunsoft2::create(board);
   if(!p) p = Sunsoft3::create(board);
@@ -115,6 +116,10 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = TaitoX1005::create(board);
   if(!p) p = TaitoX1017::create(board);
   if(!p) p = UNROM512::create(board);
+
+  if(!p) p = BMC31In1::create(board);
+  if(!p) p = Sachen74LS374N::create(board);
+
   if(!p) p = new Interface;
   return p;
 }
