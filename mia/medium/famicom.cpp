@@ -690,8 +690,13 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "  board:  MLT-ACTION52\n";
     break;
 
+  case 225:
+  case 255:
+    s += "  board:  UNL-BMC-128\n";
+    break;
+
   case 229:
-    s += "  board:  UNL-BMC-31-IN-1\n";
+    s += "  board:  UNL-BMC-32\n";
     break;
 
   case 243:
