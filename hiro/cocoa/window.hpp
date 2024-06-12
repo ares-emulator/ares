@@ -3,10 +3,14 @@
 @interface CocoaWindow : NSWindow <NSWindowDelegate> {
 @public
   hiro::mWindow* window;
+  bool hidesCursor;
+  bool cursorIsInWindow;
+  NSTimer* hideCursorTimer;
   NSMenu* menuBar;
   NSMenu* rootMenu;
   NSMenuItem* disableGatekeeper;
   NSTextField* statusBar;
+  NSTrackingArea* trackingArea;
 }
 -(id) initWith:(hiro::mWindow&)window;
 -(BOOL) canBecomeKeyWindow;
@@ -14,6 +18,9 @@
 -(void) windowDidBecomeMain:(NSNotification*)notification;
 -(void) windowDidMove:(NSNotification*)notification;
 -(void) windowDidResize:(NSNotification*)notification;
+-(void) mouseEntered:(NSEvent*)theEvent;
+-(void) mouseExited:(NSEvent*)theEvent;
+-(void) setHidesCursor:(bool)hidesCursor;
 -(BOOL) windowShouldClose:(id)sender;
 -(NSDragOperation) draggingEntered:(id<NSDraggingInfo>)sender;
 -(BOOL) performDragOperation:(id<NSDraggingInfo>)sender;
@@ -23,6 +30,7 @@
 -(void) menuDisableGatekeeper;
 -(void) menuQuit;
 -(NSTextField*) statusBar;
+-(void) hideCursor:(NSTimer*)timer;
 @end
 
 namespace hiro {
@@ -55,7 +63,8 @@ struct pWindow : pObject {
   auto setTitle(const string& text) -> void;
   auto setAssociatedFile(const string& filename) -> void;
   auto setVisible(bool visible) -> void;
-
+  auto setHidesCursor(bool hidesCursor) -> void;
+  
   auto moveEvent() -> void;
   auto sizeEvent() -> void;
   auto statusBarHeight() -> u32;

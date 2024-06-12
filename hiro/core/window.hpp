@@ -39,6 +39,7 @@ struct mWindow : mObject {
   auto remove(sStatusBar statusBar) -> type&;
   auto reset() -> type& override;
   auto resizable() const -> bool;
+  auto hidesCursor() const -> bool;
   auto setAlignment(Alignment = Alignment::Center) -> type&;
   auto setAlignment(sWindow relativeTo, Alignment = Alignment::Center) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
@@ -58,6 +59,7 @@ struct mWindow : mObject {
   auto setPosition(Position) -> type&;
   auto setPosition(sWindow relativeTo, Position) -> type&;
   auto setResizable(bool resizable = true) -> type&;
+  auto setHidesCursor(bool hidesCursor = true) -> type&;
   auto setSize(Size size) -> type&;
   auto setTitle(const string& title = "") -> type&;
   auto setAssociatedFile(const string& filename = "") -> type&;
@@ -89,6 +91,7 @@ struct mWindow : mObject {
     sSizable sizable;
     sStatusBar statusBar;
     string title;
+    bool hidesCursor;
   } state;
 
   auto destruct() -> void override;

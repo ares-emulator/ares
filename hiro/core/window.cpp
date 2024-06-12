@@ -187,6 +187,10 @@ auto mWindow::resizable() const -> bool {
   return state.resizable;
 }
 
+auto mWindow::hidesCursor() const -> bool {
+  return state.hidesCursor;
+}
+
 auto mWindow::setAlignment(Alignment alignment) -> type& {
   auto workspace = Monitor::workspace();
   auto geometry = frameGeometry();
@@ -346,6 +350,12 @@ auto mWindow::setPosition(sWindow relativeTo, Position position) -> type& {
 auto mWindow::setResizable(bool resizable) -> type& {
   state.resizable = resizable;
   signal(setResizable, resizable);
+  return *this;
+}
+
+auto mWindow::setHidesCursor(bool hidesCursor) -> type& {
+  state.hidesCursor = hidesCursor;
+  signal(setHidesCursor, hidesCursor);
   return *this;
 }
 
