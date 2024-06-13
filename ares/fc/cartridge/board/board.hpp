@@ -1,4 +1,5 @@
 namespace Board {
+#include "jv001.hpp"
 
 struct Interface {
   VFS::Pak pak;
