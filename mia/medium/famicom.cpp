@@ -644,6 +644,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     eepromMapper = true;
     break;
 
+  case 172:
+    s += "  board:  TXC-22211B\n";
+    break;
+
   case 180:
     s += "  board:  HVC-UNROMA\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
