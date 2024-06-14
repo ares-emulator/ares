@@ -14,6 +14,8 @@ struct M32X {
     } memory;
   } debugger;
 
+  static auto frequency() -> u32 { return Region::PAL() ? 22'801'467 : 23'011'361; }
+
   struct SH7604 : SH2, Thread {
     Node::Object node;
     Memory::Readable<n16> bootROM;

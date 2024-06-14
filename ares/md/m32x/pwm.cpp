@@ -46,7 +46,7 @@ auto M32X::PWM::step(u32 clocks) -> void {
 }
 
 auto M32X::PWM::power(bool reset) -> void {
-  Thread::create(23'020'200, {&M32X::PWM::main, this});
+  Thread::create(M32X::frequency(), {&M32X::PWM::main, this});
   lmode = 0;
   rmode = 0;
   mono = 0;
