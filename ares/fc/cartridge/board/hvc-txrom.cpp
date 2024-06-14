@@ -17,6 +17,7 @@ struct HVC_TxROM : Interface {  //MMC3
     if(id == "HVC-TVROM" ) return new HVC_TxROM(Revision::TVROM);
     if(id == "NES-QJ"    ) return new HVC_TxROM(Revision::NESQJ);
     if(id == "PAL-ZZ"    ) return new HVC_TxROM(Revision::PALZZ);
+    if(id == "MC-ACC"    ) return new HVC_TxROM(Revision::MCACC);
     return nullptr;
   }
 
@@ -43,6 +44,7 @@ struct HVC_TxROM : Interface {  //MMC3
     TVROM,
     NESQJ,
     PALZZ,
+    MCACC,
   } revision;
 
   HVC_TxROM(Revision revision) : revision(revision) {}
@@ -228,13 +230,21 @@ struct HVC_TxROM : Interface {  //MMC3
   }
 
   auto ppuAddressBus(n14 address) -> void override {
-    if(!(characterAddress & 0x1000) && (address & 0x1000)) {
-      if(irqDelay == 0) {
-        if(irqCounter == 0) {
+    bool clocking = false;
+    if (revision != Revision::MCACC) {
+      clocking = !(characterAddress & 0x1000) && (address & 0x1000);
+    } else {
+      clocking = (characterAddress & 0x1000) && !(address & 0x1000);
+    }
+
+    if (clocking) {
+      if (irqDelay == 0) {
+        if (irqCounter == 0) {
           irqCounter = irqLatch + 1;
         }
-        if(--irqCounter == 0) {
-          if(irqEnable) irqLine = 1;
+
+        if (--irqCounter == 0) {
+          if (irqEnable) irqLine = 1;
         }
       }
       irqDelay = 6;

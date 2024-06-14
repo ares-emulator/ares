@@ -16620,9 +16620,9 @@ game
   name:   Incredible Crash Dummies, The (USA)
   title:  Incredible Crash Dummies, The (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -22753,9 +22753,9 @@ game
   name:   Mickey's Safari in Letterland (USA)
   title:  Mickey's Safari in Letterland (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
