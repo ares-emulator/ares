@@ -254,6 +254,9 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
       s += "  board:  HVC-HKROM\n";
       s += "    chip type=MMC6\n";
       prgram = 1024;
+    } else if (submapper == 3) {
+      s += "  board:  MC-ACC\n";
+      s += "    chip type=ACCLAIM-MC-ACC\n";
     } else {
       s += "  board:  HVC-TLROM\n";
       s += "    chip type=MMC3B\n";
