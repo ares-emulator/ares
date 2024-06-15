@@ -180,6 +180,7 @@ static const sljit_u8 freg_ebit_map[((SLJIT_NUMBER_OF_FLOAT_REGISTERS + 2) << 1)
 #define VST1_s		0xf4800000
 #define VSTR_F32	0xed000a00
 #define VSUB_F32	0xee300a40
+#define VTBL		0xf3b00800
 
 #if (defined SLJIT_CONFIG_ARM_V7 && SLJIT_CONFIG_ARM_V7)
 /* Arm v7 specific instructions. */
@@ -4468,20 +4469,25 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_sign(struct sljit_compiler *c
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *compiler, sljit_s32 type,
-	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2_freg)
+	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2, sljit_sw src2w)
 {
 	sljit_s32 reg_size = SLJIT_SIMD_GET_REG_SIZE(type);
 	sljit_s32 elem_size = SLJIT_SIMD_GET_ELEM_SIZE(type);
-	sljit_ins ins = 0;
+	sljit_s32 alignment;
+	sljit_ins ins = 0, load_ins;
 
 	CHECK_ERROR();
-	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2_freg));
+	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2, src2w));
+	ADJUST_LOCAL_OFFSET(src2, src2w);
 
 	if (reg_size != 3 && reg_size != 4)
 		return SLJIT_ERR_UNSUPPORTED;
 
 	if ((type & SLJIT_SIMD_FLOAT) && (elem_size < 2 || elem_size > 3))
 		return SLJIT_ERR_UNSUPPORTED;
+
+	if (type & SLJIT_SIMD_TEST)
+		return SLJIT_SUCCESS;
 
 	switch (SLJIT_SIMD_GET_OPCODE(type)) {
 	case SLJIT_SIMD_OP2_AND:
@@ -4493,19 +4499,51 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *co
 	case SLJIT_SIMD_OP2_XOR:
 		ins = VEOR;
 		break;
+	case SLJIT_SIMD_OP2_SHUFFLE:
+		ins = VTBL;
+		break;
 	}
 
-	if (type & SLJIT_SIMD_TEST)
-		return SLJIT_SUCCESS;
+	if (src2 & SLJIT_MEM) {
+		if (elem_size > 3)
+			elem_size = 3;
+
+		load_ins = VLD1 | (sljit_ins)((reg_size == 3) ? (0x7 << 8) : (0xa << 8));
+		alignment = SLJIT_SIMD_GET_ELEM2_SIZE(type);
+
+		SLJIT_ASSERT(reg_size >= alignment);
+
+		if (alignment == 3)
+			load_ins |= 0x10;
+		else if (alignment >= 4)
+			load_ins |= 0x20;
+
+		FAIL_IF(sljit_emit_simd_mem_offset(compiler, &src2, src2w));
+		FAIL_IF(push_inst(compiler, load_ins | VD(TMP_FREG2) | RN(src2) | ((sljit_ins)elem_size) << 6 | 0xf));
+		src2 = TMP_FREG2;
+	}
 
 	if (reg_size == 4) {
 		dst_freg = simd_get_quad_reg_index(dst_freg);
 		src1_freg = simd_get_quad_reg_index(src1_freg);
-		src2_freg = simd_get_quad_reg_index(src2_freg);
+		src2 = simd_get_quad_reg_index(src2);
+
+		if (SLJIT_SIMD_GET_OPCODE(type) == SLJIT_SIMD_OP2_SHUFFLE) {
+			ins |= (sljit_ins)1 << 8;
+
+			FAIL_IF(push_inst(compiler, ins | VD(dst_freg != src1_freg ? dst_freg : TMP_FREG2) | VN(src1_freg) | VM(src2)));
+			src2 += SLJIT_QUAD_OTHER_HALF(src2);
+			FAIL_IF(push_inst(compiler, ins | VD(dst_freg + SLJIT_QUAD_OTHER_HALF(dst_freg)) | VN(src1_freg) | VM(src2)));
+
+			if (dst_freg == src1_freg)
+				return push_inst(compiler, VORR | VD(dst_freg) | VN(TMP_FREG2) | VM(TMP_FREG2));
+			return SLJIT_SUCCESS;
+		}
+
 		ins |= (sljit_ins)1 << 6;
 	}
 
-	return push_inst(compiler, ins | VD(dst_freg) | VN(src1_freg) | VM(src2_freg));
+	return push_inst(compiler, ins | VD(dst_freg) | VN(src1_freg) | VM(src2));
 }
 
 #undef FPU_LOAD

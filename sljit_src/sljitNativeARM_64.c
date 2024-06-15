@@ -171,6 +171,7 @@ static const sljit_u8 freg_map[SLJIT_NUMBER_OF_FLOAT_REGISTERS + 3] = {
 #define SUBI		0xd1000000
 #define SUBS		0xeb000000
 #define TBZ		0x36000000
+#define TBL_v		0x0e000000
 #define UBFM		0xd3400000
 #define UCVTF		0x9e630000
 #define UDIV		0x9ac00800
@@ -3224,20 +3225,24 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_sign(struct sljit_compiler *c
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *compiler, sljit_s32 type,
-	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2_freg)
+	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2, sljit_sw src2w)
 {
 	sljit_s32 reg_size = SLJIT_SIMD_GET_REG_SIZE(type);
 	sljit_s32 elem_size = SLJIT_SIMD_GET_ELEM_SIZE(type);
 	sljit_ins ins = 0;
 
 	CHECK_ERROR();
-	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2_freg));
+	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2, src2w));
+	ADJUST_LOCAL_OFFSET(src2, src2w);
 
 	if (reg_size != 3 && reg_size != 4)
 		return SLJIT_ERR_UNSUPPORTED;
 
 	if ((type & SLJIT_SIMD_FLOAT) && (elem_size < 2 || elem_size > 3))
 		return SLJIT_ERR_UNSUPPORTED;
+
+	if (type & SLJIT_SIMD_TEST)
+		return SLJIT_SUCCESS;
 
 	switch (SLJIT_SIMD_GET_OPCODE(type)) {
 	case SLJIT_SIMD_OP2_AND:
@@ -3249,15 +3254,24 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *co
 	case SLJIT_SIMD_OP2_XOR:
 		ins = EOR_v;
 		break;
+	case SLJIT_SIMD_OP2_SHUFFLE:
+		ins = TBL_v;
+		break;
 	}
 
-	if (type & SLJIT_SIMD_TEST)
-		return SLJIT_SUCCESS;
+	if (src2 & SLJIT_MEM) {
+		if (elem_size > 3)
+			elem_size = 3;
+
+		FAIL_IF(sljit_emit_simd_mem_offset(compiler, &src2, src2w));
+		push_inst(compiler,  LD1 | (reg_size == 4 ? (1 << 30) : 0) | ((sljit_ins)elem_size << 10) | RN(src2) | VT(TMP_FREG1));
+		src2 = TMP_FREG1;
+	}
 
 	if (reg_size == 4)
 		ins |= (sljit_ins)1 << 30;
 
-	return push_inst(compiler, ins | VD(dst_freg) | VN(src1_freg) | VM(src2_freg));
+	return push_inst(compiler, ins | VD(dst_freg) | VN(src1_freg) | VM(src2));
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_atomic_load(struct sljit_compiler *compiler, sljit_s32 op,

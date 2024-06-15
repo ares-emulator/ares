@@ -1,5 +1,9 @@
 This file is the short summary of the API changes:
 
+10.06.2024 - Non-backward compatible
+    The sljit_emit_simd_op2() has a generic
+    second operand.
+
 20.03.2024 - Non-backward compatible
     The sljit_p type is renamed to sljit_up.
 
