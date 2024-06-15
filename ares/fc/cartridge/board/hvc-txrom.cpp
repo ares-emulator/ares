@@ -135,6 +135,7 @@ struct HVC_TxROM : Interface {  //MMC3
       break;
     case 0xc001:
       irqCounter = 0;
+      mcAccPluseCounter = 0;
       break;
     case 0xe000:
       irqEnable = 0;
@@ -230,24 +231,24 @@ struct HVC_TxROM : Interface {  //MMC3
   }
 
   auto ppuAddressBus(n14 address) -> void override {
-    bool clocking = false;
-    if (revision != Revision::MCACC) {
-      clocking = !(characterAddress & 0x1000) && (address & 0x1000);
-    } else {
-      clocking = (characterAddress & 0x1000) && !(address & 0x1000);
-    }
+    if (!(characterAddress & 0x1000) && (address & 0x1000)) {
+      bool clocking = false;
 
-    if (clocking) {
-      if (irqDelay == 0) {
-        if (irqCounter == 0) {
+      if (revision == Revision::MCACC) {
+        clocking = ++mcAccPluseCounter == 1;
+      } else {
+        clocking = irqDelay == 0;
+        irqDelay = 6;
+      }
+
+      if (clocking) {
+        if (irqCounter == 0)
           irqCounter = irqLatch + 1;
-        }
 
         if (--irqCounter == 0) {
           if (irqEnable) irqLine = 1;
         }
       }
-      irqDelay = 6;
     }
     characterAddress = address;
   }
@@ -271,6 +272,8 @@ struct HVC_TxROM : Interface {  //MMC3
     s(irqLine);
     s(characterLatch);
     s(characterAddress);
+    if (revision == Revision::MCACC)
+      s(mcAccPluseCounter);
   }
 
   n1  characterMode;
@@ -289,4 +292,5 @@ struct HVC_TxROM : Interface {  //MMC3
   n1  irqLine;
   n1  characterLatch;
   n16 characterAddress;
+  n3  mcAccPluseCounter;
 };
