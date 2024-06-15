@@ -34,7 +34,9 @@ auto M32X::PWM::main() -> void {
   counter += max(1, clocks);
   while(counter >= 522) {
     counter -= 522;
-    stream->frame(lsample / 2047.0, rsample / 2047.0);
+    auto left = cycle > 0 ? lsample / (f32)cycle : 0;
+    auto right = cycle > 0 ? lsample / (f32)cycle : 0;
+    stream->frame(left, right);
   }
 
   step(clocks);
@@ -46,7 +48,7 @@ auto M32X::PWM::step(u32 clocks) -> void {
 }
 
 auto M32X::PWM::power(bool reset) -> void {
-  Thread::create(23'020'200, {&M32X::PWM::main, this});
+  Thread::create((system.frequency() / 7.0) * 3.0, {&M32X::PWM::main, this});
   lmode = 0;
   rmode = 0;
   mono = 0;

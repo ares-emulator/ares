@@ -601,6 +601,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     if(!iNes2) chrram = 8192;
     break;
 
+  case  132:
+    s += "  board:  TXC-22211A\n";
+    break;
+
   case  140:
     s += "  board:  JALECO-JF-11\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
@@ -649,6 +653,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case 172:
     s += "  board:  TXC-22211B\n";
+    break;
+
+  case 173:
+    s += "  board:  TXC-22211C\n";
     break;
 
   case 180:
