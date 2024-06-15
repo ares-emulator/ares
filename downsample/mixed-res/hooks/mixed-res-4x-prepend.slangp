@@ -1,0 +1,59 @@
+shaders = "7"
+feedback_pass = "0"
+
+shader0 = "../../shaders/mixed-res/multiLUT-modified.slang"
+scale_type0 = "source"
+scale0 = "1.000000"
+
+
+SamplerLUT1 = "../../../reshade/shaders/LUT/grade-composite.png"
+SamplerLUT1_linear = true
+SamplerLUT2 = "../../../reshade/shaders/LUT/grade-rgb.png"
+SamplerLUT2_linear = true
+
+shader1 = "../../shaders/mixed-res/coder.slang"
+scale_type1 = "source"
+scale1 = "1.000000"
+
+shader2 = "../../shaders/mixed-res/hires-tagger.slang"
+filter_linear2 = "true"
+alias2 = "HiresSource"
+scale_type2 = "source"
+scale2 = "1.000000"
+
+shader3 = "../../shaders/mixed-res/blur-gauss-h.slang"
+filter_linear3 = true
+scale_type3 = source
+scale3 = 0.25
+
+shader4 = "../../shaders/mixed-res/blur-gauss-v.slang"
+filter_linear4 = true
+alias4 = "BlurSource"
+scale_type4 = source
+scale4 = 1.0 
+
+shader5 = "../../../denoisers/shaders/bilateral-horizontal.slang"
+filter_linear5 = false
+wrap_mode5 = "clamp_to_border"
+scale_type5 = source
+scale5 = 1.0
+
+shader6 = "../../../denoisers/shaders/bilateral-vertical.slang"
+filter_linear6 = false
+wrap_mode6 = "clamp_to_border"
+scale_type6 = source
+scale6 = 1.0
+
+
+LUT_selector_param = "2.000000"
+
+IR_SCALE = "4.0"
+B_TRESH = "0.30"
+B_HL = "0.0"
+FRANGE = "2.000000"
+FBSMOOTH = "0.150000"
+FSIGMA = "1.000000"
+
+
+textures = "SamplerLUT1;SamplerLUT2"
+

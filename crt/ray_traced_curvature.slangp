@@ -1,0 +1,10 @@
+shaders = 2
+
+shader0 = ../stock.slang
+filter_linear0 = false
+scale_type0 = source
+
+shader1 = shaders/rt_curvature/rt_curvature.slang
+filter_linear1 = true
+scale_type1 = viewport
+mipmap_input1 = true

@@ -1,0 +1,9 @@
+shaders = 1
+
+shader0 = shaders/rt_curvature/rt_curvature.slang
+filter_linear0 = true
+scale_type0 = viewport
+mipmap_input0 = true
+
+parameters = "RT_CURV_APPEND"
+RT_CURV_APPEND = 1.0
