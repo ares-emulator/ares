@@ -63,28 +63,33 @@ pub struct FilterChainD3D9 {
     default_options: FrameOptionsD3D9,
 }
 
-type ShaderPassMeta =
-    ShaderPassArtifact<impl CompileReflectShader<HLSL, SpirvCompilation, SpirvCross> + Send>;
+mod compile {
+    use super::*;
+    pub type ShaderPassMeta =
+        ShaderPassArtifact<impl CompileReflectShader<HLSL, SpirvCompilation, SpirvCross> + Send>;
 
-fn compile_passes(
-    shaders: Vec<ShaderPassConfig>,
-    textures: &[TextureConfig],
-    disable_cache: bool,
-) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
-    let (passes, semantics) = if !disable_cache {
-        HLSL::compile_preset_passes::<
-            CachedCompilation<SpirvCompilation>,
-            SpirvCross,
-            FilterChainError,
-        >(shaders, &textures)?
-    } else {
-        HLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
-            shaders, &textures,
-        )?
-    };
+    pub fn compile_passes(
+        shaders: Vec<ShaderPassConfig>,
+        textures: &[TextureConfig],
+        disable_cache: bool,
+    ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
+        let (passes, semantics) = if !disable_cache {
+            HLSL::compile_preset_passes::<
+                CachedCompilation<SpirvCompilation>,
+                SpirvCross,
+                FilterChainError,
+            >(shaders, &textures)?
+        } else {
+            HLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
+                shaders, &textures,
+            )?
+        };
 
-    Ok((passes, semantics))
+        Ok((passes, semantics))
+    }
 }
+
+use compile::{compile_passes, ShaderPassMeta};
 
 impl FilterChainD3D9 {
     fn init_passes(

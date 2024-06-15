@@ -38,18 +38,24 @@ use crate::options::{FilterChainOptionsWgpu, FrameOptionsWgpu};
 use crate::samplers::SamplerSet;
 use crate::texture::{InputImage, OwnedImage};
 
-type ShaderPassMeta =
-    ShaderPassArtifact<impl CompileReflectShader<WGSL, SpirvCompilation, Naga> + Send>;
-fn compile_passes(
-    shaders: Vec<ShaderPassConfig>,
-    textures: &[TextureConfig],
-) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
-    let (passes, semantics) =
-        WGSL::compile_preset_passes::<SpirvCompilation, Naga, FilterChainError>(
-            shaders, &textures,
-        )?;
-    Ok((passes, semantics))
+mod compile {
+    use super::*;
+    pub type ShaderPassMeta =
+        ShaderPassArtifact<impl CompileReflectShader<WGSL, SpirvCompilation, Naga> + Send>;
+
+    pub fn compile_passes(
+        shaders: Vec<ShaderPassConfig>,
+        textures: &[TextureConfig],
+    ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
+        let (passes, semantics) =
+            WGSL::compile_preset_passes::<SpirvCompilation, Naga, FilterChainError>(
+                shaders, &textures,
+            )?;
+        Ok((passes, semantics))
+    }
 }
+
+use compile::{compile_passes, ShaderPassMeta};
 
 /// A wgpu filter chain.
 pub struct FilterChainWgpu {

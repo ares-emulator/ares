@@ -40,18 +40,24 @@ use std::collections::VecDeque;
 use std::fmt::{Debug, Formatter};
 use std::path::Path;
 
-type ShaderPassMeta =
-    ShaderPassArtifact<impl CompileReflectShader<MSL, SpirvCompilation, SpirvCross> + Send>;
-fn compile_passes(
-    shaders: Vec<ShaderPassConfig>,
-    textures: &[TextureConfig],
-) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
-    let (passes, semantics) =
-        MSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
-            shaders, &textures,
-        )?;
-    Ok((passes, semantics))
+mod compile {
+    use super::*;
+    pub type ShaderPassMeta =
+        ShaderPassArtifact<impl CompileReflectShader<MSL, SpirvCompilation, SpirvCross> + Send>;
+
+    pub fn compile_passes(
+        shaders: Vec<ShaderPassConfig>,
+        textures: &[TextureConfig],
+    ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
+        let (passes, semantics) =
+            MSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
+                shaders, &textures,
+            )?;
+        Ok((passes, semantics))
+    }
 }
+
+use compile::{compile_passes, ShaderPassMeta};
 
 /// A Metal filter chain.
 pub struct FilterChainMetal {

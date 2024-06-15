@@ -21,7 +21,7 @@ librashader-reflect = { path = "../librashader-reflect", version = "0.2.7", feat
 librashader-runtime = { path = "../librashader-runtime" , version = "0.2.7" }
 
 wgpu = { version = "0.20.0", default-features = false, features = ["wgsl"] }
-image = "0.24.7"
+image = "0.25.1"
 thiserror = "1.0.50"
 bytemuck = { version = "1.14.0", features = ["derive"] }
 array-concat = "0.5.2"
