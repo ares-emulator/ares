@@ -90,6 +90,7 @@ auto Atari2600::analyze(vector<u8>& rom, string location) -> string {
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s +={"  region: ", region, "\n"};  //database required to detect region
+  s +={"  sha256: ", sha256, "\n"};
   s +={"  board:  ", board, "\n"};
   s += "    memory\n";
   s += "      type: ROM\n";

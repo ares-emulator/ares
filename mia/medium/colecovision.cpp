@@ -60,6 +60,7 @@ auto ColecoVision::analyze(vector<u8>& rom) -> string {
   s +={"  name:  ", Medium::name(location), "\n"};
   s +={"  title: ", Medium::name(location), "\n"};
   s += "  region: NTSC, PAL\n";  //database required to detect region
+  s +={"  sha256: ", hash, "\n"};
   s +={"  board:  ", board, "\n"};
   s += "    memory\n";
   s += "      type: ROM\n";
