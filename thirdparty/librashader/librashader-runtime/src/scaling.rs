@@ -5,24 +5,27 @@ use librashader_presets::{Scale2D, ScaleFactor, ScaleType, Scaling};
 use num_traits::AsPrimitive;
 use std::ops::Mul;
 
+pub const MAX_TEXEL_SIZE: f32 = 16384f32;
+
 /// Trait for size scaling relative to the viewport.
 pub trait ViewportSize<T>
 where
-    T: Mul<ScaleFactor, Output = f32> + Copy + 'static,
+    T: Mul<ScaleFactor, Output = f32> + Copy + Ord + 'static,
     f32: AsPrimitive<T>,
 {
     /// Produce a `Size<T>` scaled with the input scaling options.
+    /// The size will at minimum be 1x1, and at a maximum 16384x16384.
     fn scale_viewport(self, scaling: Scale2D, viewport: Size<T>, original: Size<T>) -> Size<T>;
 }
 
 impl<T> ViewportSize<T> for Size<T>
 where
-    T: Mul<ScaleFactor, Output = f32> + Copy + 'static,
+    T: Mul<ScaleFactor, Output = f32> + Copy + Ord + 'static,
     f32: AsPrimitive<T>,
 {
     fn scale_viewport(self, scaling: Scale2D, viewport: Size<T>, original: Size<T>) -> Size<T>
     where
-        T: Mul<ScaleFactor, Output = f32> + Copy + 'static,
+        T: Mul<ScaleFactor, Output = f32> + Copy + Ord + 'static,
         f32: AsPrimitive<T>,
     {
         scaling::scale(scaling, self, viewport, original)
@@ -35,6 +38,7 @@ pub trait MipmapSize<T> {
     fn calculate_miplevels(self) -> T;
 
     /// Scale the size according to the given mipmap level.
+    /// The size will at minimum be 1x1, and at a maximum 16384x16384.
     fn scale_mipmap(self, miplevel: T) -> Size<T>;
 }
 
@@ -59,7 +63,7 @@ impl MipmapSize<u32> for Size<u32> {
 
 fn scale<T>(scaling: Scale2D, source: Size<T>, viewport: Size<T>, original: Size<T>) -> Size<T>
 where
-    T: Mul<ScaleFactor, Output = f32> + Copy + 'static,
+    T: Mul<ScaleFactor, Output = f32> + Copy + Ord + 'static,
     f32: AsPrimitive<T>,
 {
     let width = match scaling.x {
@@ -101,8 +105,14 @@ where
     };
 
     Size {
-        width: width.round().as_(),
-        height: height.round().as_(),
+        width: std::cmp::min(
+            std::cmp::max(width.round().as_(), 1f32.as_()),
+            MAX_TEXEL_SIZE.as_(),
+        ),
+        height: std::cmp::min(
+            std::cmp::max(height.round().as_(), 1f32.as_()),
+            MAX_TEXEL_SIZE.as_(),
+        ),
     }
 }
 

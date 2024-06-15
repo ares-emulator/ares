@@ -23,7 +23,7 @@ array-concat = "0.5.2"
 tinymap = "0.4.0"
 
 [dependencies.image]
-version = "0.24.5"
+version = "0.25.1"
 features = [
     "gif", "jpeg", "png",
     "tga", "pnm", "tiff",

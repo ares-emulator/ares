@@ -209,27 +209,33 @@ impl Drop for FrameResiduals {
     }
 }
 
-type ShaderPassMeta =
-    ShaderPassArtifact<impl CompileReflectShader<SPIRV, SpirvCompilation, SpirvCross> + Send>;
-fn compile_passes(
-    shaders: Vec<ShaderPassConfig>,
-    textures: &[TextureConfig],
-    disable_cache: bool,
-) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
-    let (passes, semantics) = if !disable_cache {
-        SPIRV::compile_preset_passes::<
-            CachedCompilation<SpirvCompilation>,
-            SpirvCross,
-            FilterChainError,
-        >(shaders, &textures)?
-    } else {
-        SPIRV::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
-            shaders, &textures,
-        )?
-    };
+mod compile {
+    use super::*;
+    pub type ShaderPassMeta =
+        ShaderPassArtifact<impl CompileReflectShader<SPIRV, SpirvCompilation, SpirvCross> + Send>;
 
-    Ok((passes, semantics))
+    pub fn compile_passes(
+        shaders: Vec<ShaderPassConfig>,
+        textures: &[TextureConfig],
+        disable_cache: bool,
+    ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
+        let (passes, semantics) = if !disable_cache {
+            SPIRV::compile_preset_passes::<
+                CachedCompilation<SpirvCompilation>,
+                SpirvCross,
+                FilterChainError,
+            >(shaders, &textures)?
+        } else {
+            SPIRV::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
+                shaders, &textures,
+            )?
+        };
+
+        Ok((passes, semantics))
+    }
 }
+
+use compile::{compile_passes, ShaderPassMeta};
 
 impl FilterChainVulkan {
     /// Load the shader preset at the given path into a filter chain.

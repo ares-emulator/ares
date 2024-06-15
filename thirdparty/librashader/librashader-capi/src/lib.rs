@@ -66,7 +66,6 @@
 #![allow(non_camel_case_types)]
 #![feature(try_blocks)]
 #![deny(unsafe_op_in_unsafe_fn)]
-#![deny(deprecated)]
 
 extern crate alloc;
 

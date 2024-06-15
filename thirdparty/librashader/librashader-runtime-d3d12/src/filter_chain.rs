@@ -146,48 +146,56 @@ impl Drop for FrameResiduals {
     }
 }
 
-type DxilShaderPassMeta =
-    ShaderPassArtifact<impl CompileReflectShader<DXIL, SpirvCompilation, SpirvCross> + Send>;
-fn compile_passes_dxil(
-    shaders: Vec<ShaderPassConfig>,
-    textures: &[TextureConfig],
-    disable_cache: bool,
-) -> Result<(Vec<DxilShaderPassMeta>, ShaderSemantics), FilterChainError> {
-    let (passes, semantics) = if !disable_cache {
-        DXIL::compile_preset_passes::<
-            CachedCompilation<SpirvCompilation>,
-            SpirvCross,
-            FilterChainError,
-        >(shaders, &textures)?
-    } else {
-        DXIL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
-            shaders, &textures,
-        )?
-    };
+mod compile {
+    use super::*;
+    pub type DxilShaderPassMeta =
+        ShaderPassArtifact<impl CompileReflectShader<DXIL, SpirvCompilation, SpirvCross> + Send>;
 
-    Ok((passes, semantics))
-}
-type HlslShaderPassMeta =
-    ShaderPassArtifact<impl CompileReflectShader<HLSL, SpirvCompilation, SpirvCross> + Send>;
-fn compile_passes_hlsl(
-    shaders: Vec<ShaderPassConfig>,
-    textures: &[TextureConfig],
-    disable_cache: bool,
-) -> Result<(Vec<HlslShaderPassMeta>, ShaderSemantics), FilterChainError> {
-    let (passes, semantics) = if !disable_cache {
-        HLSL::compile_preset_passes::<
-            CachedCompilation<SpirvCompilation>,
-            SpirvCross,
-            FilterChainError,
-        >(shaders, &textures)?
-    } else {
-        HLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
-            shaders, &textures,
-        )?
-    };
+    pub fn compile_passes_dxil(
+        shaders: Vec<ShaderPassConfig>,
+        textures: &[TextureConfig],
+        disable_cache: bool,
+    ) -> Result<(Vec<DxilShaderPassMeta>, ShaderSemantics), FilterChainError> {
+        let (passes, semantics) = if !disable_cache {
+            DXIL::compile_preset_passes::<
+                CachedCompilation<SpirvCompilation>,
+                SpirvCross,
+                FilterChainError,
+            >(shaders, &textures)?
+        } else {
+            DXIL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
+                shaders, &textures,
+            )?
+        };
 
-    Ok((passes, semantics))
+        Ok((passes, semantics))
+    }
+
+    pub type HlslShaderPassMeta =
+        ShaderPassArtifact<impl CompileReflectShader<HLSL, SpirvCompilation, SpirvCross> + Send>;
+
+    pub fn compile_passes_hlsl(
+        shaders: Vec<ShaderPassConfig>,
+        textures: &[TextureConfig],
+        disable_cache: bool,
+    ) -> Result<(Vec<HlslShaderPassMeta>, ShaderSemantics), FilterChainError> {
+        let (passes, semantics) = if !disable_cache {
+            HLSL::compile_preset_passes::<
+                CachedCompilation<SpirvCompilation>,
+                SpirvCross,
+                FilterChainError,
+            >(shaders, &textures)?
+        } else {
+            HLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
+                shaders, &textures,
+            )?
+        };
+
+        Ok((passes, semantics))
+    }
 }
+
+use compile::{compile_passes_dxil, compile_passes_hlsl, DxilShaderPassMeta, HlslShaderPassMeta};
 
 impl FilterChainD3D12 {
     /// Load the shader preset at the given path into a filter chain.

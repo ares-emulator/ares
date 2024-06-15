@@ -181,7 +181,6 @@ pub(crate) use config_struct;
 pub(crate) use config_version_set;
 
 #[doc(hidden)]
-#[deny(deprecated)]
 #[deprecated = "Forward declarations for cbindgen, do not use."]
 mod __cbindgen_opaque_forward_declarations {
     macro_rules! typedef_struct {
@@ -189,7 +188,6 @@ mod __cbindgen_opaque_forward_declarations {
             $($(#[$($attrss)*])*
                 #[allow(unused)]
                 #[doc(hidden)]
-                #[deny(deprecated)]
                 #[deprecated]
                 pub struct $name;
             )*

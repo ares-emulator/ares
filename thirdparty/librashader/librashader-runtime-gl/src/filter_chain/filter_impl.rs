@@ -92,27 +92,33 @@ impl<T: GLInterface> FilterChainImpl<T> {
     }
 }
 
-type ShaderPassMeta =
-    ShaderPassArtifact<impl CompileReflectShader<GLSL, SpirvCompilation, SpirvCross>>;
-fn compile_passes(
-    shaders: Vec<ShaderPassConfig>,
-    textures: &[TextureConfig],
-    disable_cache: bool,
-) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
-    let (passes, semantics) = if !disable_cache {
-        GLSL::compile_preset_passes::<
-            CachedCompilation<SpirvCompilation>,
-            SpirvCross,
-            FilterChainError,
-        >(shaders, &textures)?
-    } else {
-        GLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
-            shaders, &textures,
-        )?
-    };
+mod compile {
+    use super::*;
+    pub type ShaderPassMeta =
+        ShaderPassArtifact<impl CompileReflectShader<GLSL, SpirvCompilation, SpirvCross>>;
 
-    Ok((passes, semantics))
+    pub fn compile_passes(
+        shaders: Vec<ShaderPassConfig>,
+        textures: &[TextureConfig],
+        disable_cache: bool,
+    ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
+        let (passes, semantics) = if !disable_cache {
+            GLSL::compile_preset_passes::<
+                CachedCompilation<SpirvCompilation>,
+                SpirvCross,
+                FilterChainError,
+            >(shaders, &textures)?
+        } else {
+            GLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
+                shaders, &textures,
+            )?
+        };
+
+        Ok((passes, semantics))
+    }
 }
+
+use compile::{compile_passes, ShaderPassMeta};
 
 impl<T: GLInterface> FilterChainImpl<T> {
     /// Load a filter chain from a pre-parsed `ShaderPreset`.
