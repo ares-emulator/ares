@@ -1440,9 +1440,9 @@ game
   name:   Alien 3 (USA)
   title:  Alien 3 (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -13347,9 +13347,9 @@ game
   name:   George Foreman's KO Boxing (USA)
   title:  George Foreman's KO Boxing (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -29280,9 +29280,9 @@ game
   name:   Roger Clemens' MVP Baseball (USA)
   title:  Roger Clemens' MVP Baseball (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -29297,9 +29297,9 @@ game
   name:   Roger Clemens' MVP Baseball (USA) (Rev 1)
   title:  Roger Clemens' MVP Baseball (USA) (Rev 1)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -29386,9 +29386,9 @@ game
   name:   Rollerblade Racer (USA)
   title:  Rollerblade Racer (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -31636,9 +31636,9 @@ game
   name:   Simpsons, The - Bart vs. the World (USA)
   title:  Simpsons, The - Bart vs. the World (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x40000
@@ -31670,9 +31670,9 @@ game
   name:   Simpsons, The - Bartman Meets Radioactive Man (USA)
   title:  Simpsons, The - Bartman Meets Radioactive Man (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x40000
@@ -32595,9 +32595,9 @@ game
   name:   Spider-Man - Return of the Sinister Six (USA)
   title:  Spider-Man - Return of the Sinister Six (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -35861,9 +35861,9 @@ game
   name:   Terminator 2 - Judgment Day (USA)
   title:  Terminator 2 - Judgment Day (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -37137,9 +37137,9 @@ game
   name:   Town & Country Surf Designs - Thrilla's Surfari (USA)
   title:  Town & Country Surf Designs - Thrilla's Surfari (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -39403,9 +39403,9 @@ game
   name:   WWF King of the Ring (USA)
   title:  WWF King of the Ring (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
@@ -39469,9 +39469,9 @@ game
   name:   WWF Wrestlemania - Steel Cage Challenge (USA)
   title:  WWF Wrestlemania - Steel Cage Challenge (USA)
   region: NTSC-U
-  board:  HVC-TLROM
+  board:  MC-ACC
     chip
-      type: MMC3B
+      type: ACCLAIM-MC-ACC
     memory
       type: ROM
       size: 0x20000
