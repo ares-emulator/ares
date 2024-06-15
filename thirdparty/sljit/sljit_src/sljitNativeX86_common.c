@@ -239,6 +239,7 @@ static const sljit_u8 freg_lmap[SLJIT_NUMBER_OF_FLOAT_REGISTERS + 2] = {
 #define MOVDDUP_x_xm		0x12
 #define MOVDQA_x_xm		0x6f
 #define MOVDQA_xm_x		0x7f
+#define MOVDQU_x_xm		0x6f
 #define MOVHLPS_x_x		0x12
 #define MOVHPD_m_x		0x17
 #define MOVHPD_x_m		0x16
@@ -4089,8 +4090,8 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_lane_mov(struct sljit_compile
 		} else if (type & SLJIT_SIMD_STORE) {
 			if (lane_index == 0) {
 				if (use_vex)
-					return emit_vex_instruction(compiler, ((srcdst & SLJIT_MEM) ? MOVSD_xm_x : MOVSD_x_xm) | EX86_PREF_F3 | EX86_SSE2
-						| ((srcdst & SLJIT_MEM) ? 0 : VEX_SSE2_OPV), freg, ((srcdst & SLJIT_MEM) ? 0 : freg), srcdst, srcdstw);
+					return emit_vex_instruction(compiler, MOVSD_xm_x | EX86_PREF_F3 | EX86_SSE2 | ((srcdst & SLJIT_MEM) ? 0 : VEX_SSE2_OPV),
+						freg, ((srcdst & SLJIT_MEM) ? 0 : srcdst), srcdst, srcdstw);
 				return emit_sse2_store(compiler, 1, srcdst, srcdstw, freg);
 			}
 
@@ -4689,14 +4690,17 @@ static sljit_s32 emit_simd_mov(struct sljit_compiler *compiler, sljit_s32 type,
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *compiler, sljit_s32 type,
-	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2_freg)
+	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2, sljit_sw src2w)
 {
 	sljit_s32 reg_size = SLJIT_SIMD_GET_REG_SIZE(type);
 	sljit_s32 elem_size = SLJIT_SIMD_GET_ELEM_SIZE(type);
+	sljit_s32 use_vex = (cpu_feature_list & CPU_FEATURE_AVX) && (compiler->options & SLJIT_ENTER_USE_VEX);
 	sljit_uw op = 0;
+	sljit_uw mov_op = 0;
 
 	CHECK_ERROR();
-	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2_freg));
+	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2, src2w));
+	ADJUST_LOCAL_OFFSET(src2, src2w);
 
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
 	compiler->mode32 = 1;
@@ -4730,27 +4734,52 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *co
 		if (!(type & SLJIT_SIMD_FLOAT) || elem_size == 3)
 			op |= EX86_PREF_66;
 		break;
+
+	case SLJIT_SIMD_OP2_SHUFFLE:
+		if (reg_size != 4)
+			return SLJIT_ERR_UNSUPPORTED;
+
+		op = PSHUFB_x_xm | EX86_PREF_66 | VEX_OP_0F38;
+		break;
 	}
 
 	if (type & SLJIT_SIMD_TEST)
 		return SLJIT_SUCCESS;
 
-	if (reg_size == 5 || ((cpu_feature_list & CPU_FEATURE_AVX) && (compiler->options & SLJIT_ENTER_USE_VEX))) {
+	if ((src2 & SLJIT_MEM) && SLJIT_SIMD_GET_ELEM2_SIZE(type) < reg_size) {
+		mov_op = ((type & SLJIT_SIMD_FLOAT) ? (MOVUPS_x_xm | (elem_size == 3 ? EX86_PREF_66 : 0)) : (MOVDQU_x_xm | EX86_PREF_F3)) | EX86_SSE2;
+		if (use_vex)
+			FAIL_IF(emit_vex_instruction(compiler, mov_op, TMP_FREG, 0, src2, src2w));
+		else
+			FAIL_IF(emit_groupf(compiler, mov_op, TMP_FREG, src2, src2w));
+
+		src2 = TMP_FREG;
+		src2w = 0;
+	}
+
+	if (reg_size == 5 || use_vex) {
 		if (reg_size == 5)
 			op |= VEX_256;
 
-		return emit_vex_instruction(compiler, op | EX86_SSE2 | VEX_SSE2_OPV, dst_freg, src1_freg, src2_freg, 0);
+		return emit_vex_instruction(compiler, op | EX86_SSE2 | VEX_SSE2_OPV, dst_freg, src1_freg, src2, src2w);
 	}
 
 	if (dst_freg != src1_freg) {
-		if (dst_freg == src2_freg)
-			src2_freg = src1_freg;
-		else
+		if (dst_freg == src2) {
+			if (SLJIT_SIMD_GET_OPCODE(type) == SLJIT_SIMD_OP2_SHUFFLE) {
+				FAIL_IF(emit_simd_mov(compiler, type, TMP_FREG, src2));
+				FAIL_IF(emit_simd_mov(compiler, type, dst_freg, src1_freg));
+				src2 = TMP_FREG;
+				src2w = 0;
+			} else
+				src2 = src1_freg;
+		} else
 			FAIL_IF(emit_simd_mov(compiler, type, dst_freg, src1_freg));
 	}
 
-	FAIL_IF(emit_groupf(compiler, op | EX86_SSE2, dst_freg, src2_freg, 0));
-	return SLJIT_SUCCESS;
+	if (op & (VEX_OP_0F38 | VEX_OP_0F3A))
+		return emit_groupf_ext(compiler, op | EX86_SSE2, dst_freg, src2, src2w);
+	return emit_groupf(compiler, op | EX86_SSE2, dst_freg, src2, src2w);
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_atomic_load(struct sljit_compiler *compiler, sljit_s32 op,

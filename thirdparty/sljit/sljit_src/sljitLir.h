@@ -1919,7 +1919,8 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fmem_update(struct sljit_compiler 
 /* Element size is 256 bit long */
 #define SLJIT_SIMD_ELEM_256		(5 << 18)
 
-/* The following options are used by sljit_emit_simd_mov(). */
+/* The following options are used by sljit_emit_simd_mov()
+   and sljit_emit_simd_op2(). */
 
 /* Memory address is unaligned (this is the default) */
 #define SLJIT_SIMD_MEM_UNALIGNED	(0 << 24)
@@ -2096,6 +2097,8 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_sign(struct sljit_compiler *c
 #define SLJIT_SIMD_OP2_OR		0x000002
 /* Binary 'xor' operation */
 #define SLJIT_SIMD_OP2_XOR		0x000003
+/* Shuffle bytes of src1 using the indicies in src2 */
+#define SLJIT_SIMD_OP2_SHUFFLE		0x000004
 
 /* Perform simd operations using simd registers.
 
@@ -2103,16 +2106,17 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_sign(struct sljit_compiler *c
    SLJIT_ERR_UNSUPPORTED. If SLJIT_SIMD_TEST is passed,
    it does not emit any instructions.
 
-   type must be a combination of SLJIT_SIMD_* and SLJIT_SIMD_OP2_
-     options except SLJIT_SIMD_LOAD and SLJIT_SIMD_STORE
+   type must be a combination of SLJIT_SIMD_*, SLJIT_SIMD_MEM_*
+     and SLJIT_SIMD_OP2_* options except SLJIT_SIMD_LOAD
+     and SLJIT_SIMD_STORE
    dst_freg is the destination register of the operation
    src1_freg is the first source register of the operation
-   src1_freg is the second source register of the operation
+   src2 is the second source operand of the operation
 
    Flags: - (does not modify flags) */
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *compiler, sljit_s32 type,
-	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2_freg);
+	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2, sljit_sw src2w);
 
 /* The sljit_emit_atomic_load and sljit_emit_atomic_store operation pair
    can perform an atomic read-modify-write operation. First, an unsigned

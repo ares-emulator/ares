@@ -8822,10 +8822,11 @@ int sljit_test(int argc, char* argv[])
 		test_simd7();
 		test_simd8();
 		test_simd9();
+		test_simd10();
 	} else {
 		if (verbose)
 			printf("no simd available, simd tests are skipped\n");
-		successful_tests += 9;
+		successful_tests += 10;
 	}
 
 	if (verbose)
@@ -8839,7 +8840,7 @@ int sljit_test(int argc, char* argv[])
 	sljit_free_unused_memory_exec();
 #endif
 
-#	define TEST_COUNT 121
+#	define TEST_COUNT 122
 
 	printf("SLJIT tests: ");
 	if (successful_tests == TEST_COUNT)

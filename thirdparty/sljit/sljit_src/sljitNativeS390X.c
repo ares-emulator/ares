@@ -4337,14 +4337,17 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_sign(struct sljit_compiler *c
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *compiler, sljit_s32 type,
-	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2_freg)
+	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2, sljit_sw src2w)
 {
 	sljit_s32 reg_size = SLJIT_SIMD_GET_REG_SIZE(type);
 	sljit_s32 elem_size = SLJIT_SIMD_GET_ELEM_SIZE(type);
-	sljit_ins ins = 0;
+	sljit_s32 alignment;
+	struct addr addr;
+	sljit_ins ins = 0, load_ins;
 
 	CHECK_ERROR();
-	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2_freg));
+	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2, src2w));
+	ADJUST_LOCAL_OFFSET(src2, src2w);
 
 	if (reg_size != 4)
 		return SLJIT_ERR_UNSUPPORTED;
@@ -4365,12 +4368,29 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *co
 	case SLJIT_SIMD_OP2_XOR:
 		ins = 0xe7000000006d /* vx */;
 		break;
+	case SLJIT_SIMD_OP2_SHUFFLE:
+		ins = 0xe7000000008c /* vperm */;
+		break;
 	}
 
-	if (type & SLJIT_SIMD_TEST)
-		return SLJIT_SUCCESS;
+	if (src2 & SLJIT_MEM) {
+		FAIL_IF(make_addr_bx(compiler, &addr, src2, src2w, tmp1));
+		load_ins = 0xe70000000006 /* vl */ | F36(TMP_FREG1) | R32A(addr.index) | R28A(addr.base) | disp_s20(addr.offset);
+		alignment = SLJIT_SIMD_GET_ELEM2_SIZE(type);
 
-	return push_inst(compiler, ins | F36(dst_freg) | F32(src1_freg) | F28(src2_freg));
+		if (alignment >= 4)
+			load_ins |= 4 << 12;
+		else if (alignment == 3)
+			load_ins |= 3 << 12;
+
+		FAIL_IF(push_inst(compiler, load_ins));
+		src2 = TMP_FREG1;
+	}
+
+	if (SLJIT_SIMD_GET_OPCODE(type) == SLJIT_SIMD_OP2_SHUFFLE)
+		return push_inst(compiler, ins | F36(dst_freg) | F32(src1_freg) | F28(src1_freg) | F12(src2));
+
+	return push_inst(compiler, ins | F36(dst_freg) | F32(src1_freg) | F28(src2));
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_atomic_load(struct sljit_compiler *compiler, sljit_s32 op,

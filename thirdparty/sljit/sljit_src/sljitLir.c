@@ -1184,7 +1184,7 @@ static const char* fop2r_names[] = {
 };
 
 static const char* simd_op2_names[] = {
-	"and", "or", "xor"
+	"and", "or", "xor", "shuffle"
 };
 
 static const char* jump_names[] = {
@@ -2953,37 +2953,43 @@ static SLJIT_INLINE CHECK_RETURN_TYPE check_sljit_emit_simd_sign(struct sljit_co
 }
 
 static SLJIT_INLINE CHECK_RETURN_TYPE check_sljit_emit_simd_op2(struct sljit_compiler *compiler, sljit_s32 type,
-	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2_freg)
+	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2, sljit_sw src2w)
 {
 #if (defined SLJIT_ARGUMENT_CHECKS && SLJIT_ARGUMENT_CHECKS)
 	CHECK_ARGUMENT(sljit_has_cpu_feature(SLJIT_HAS_SIMD));
-	CHECK_ARGUMENT((type & SLJIT_SIMD_TYPE_MASK(0)) >= SLJIT_SIMD_OP2_AND && (type & SLJIT_SIMD_TYPE_MASK(0)) <= SLJIT_SIMD_OP2_XOR);
+	CHECK_ARGUMENT((type & SLJIT_SIMD_TYPE_MASK2(0)) >= SLJIT_SIMD_OP2_AND && (type & SLJIT_SIMD_TYPE_MASK2(0)) <= SLJIT_SIMD_OP2_SHUFFLE);
 	CHECK_ARGUMENT(SLJIT_SIMD_CHECK_REG(type));
 	CHECK_ARGUMENT(SLJIT_SIMD_GET_ELEM_SIZE(type) <= SLJIT_SIMD_GET_REG_SIZE(type));
+	CHECK_ARGUMENT(SLJIT_SIMD_GET_OPCODE(type) != SLJIT_SIMD_OP2_SHUFFLE || (SLJIT_SIMD_GET_ELEM_SIZE(type) == 0 && !(type & SLJIT_SIMD_FLOAT)));
+	CHECK_ARGUMENT(SLJIT_SIMD_GET_ELEM2_SIZE(type) <= (src2 & SLJIT_MEM) ? SLJIT_SIMD_GET_REG_SIZE(type) : 0);
 	CHECK_ARGUMENT(FUNCTION_CHECK_IS_FREG(dst_freg, 0));
 	CHECK_ARGUMENT(FUNCTION_CHECK_IS_FREG(src1_freg, 0));
-	CHECK_ARGUMENT(FUNCTION_CHECK_IS_FREG(src2_freg, 0));
+	FUNCTION_FCHECK(src2, src2w, 0);
 #endif
 #if (defined SLJIT_VERBOSE && SLJIT_VERBOSE)
 	if (SLJIT_UNLIKELY(!!compiler->verbose)) {
 		if (type & SLJIT_SIMD_TEST)
 			CHECK_RETURN_OK;
-		if (sljit_emit_simd_op2(compiler, type | SLJIT_SIMD_TEST, dst_freg, src1_freg, src2_freg) == SLJIT_ERR_UNSUPPORTED) {
+		if (sljit_emit_simd_op2(compiler, type | SLJIT_SIMD_TEST, dst_freg, src1_freg, src2, src2w) == SLJIT_ERR_UNSUPPORTED) {
 			fprintf(compiler->verbose, "    # simd_op2: unsupported form, no instructions are emitted\n");
 			CHECK_RETURN_OK;
 		}
 
-		fprintf(compiler->verbose, "  simd_%s.%d.%s%d ",
+		fprintf(compiler->verbose, "  simd_%s.%d.%s%d",
 			simd_op2_names[SLJIT_SIMD_GET_OPCODE(type) - 1],
 			(8 << SLJIT_SIMD_GET_REG_SIZE(type)),
 			(type & SLJIT_SIMD_FLOAT) ? "f" : "",
 			(8 << SLJIT_SIMD_GET_ELEM_SIZE(type)));
 
+		if ((type & 0x3f000000) != SLJIT_SIMD_MEM_UNALIGNED)
+			fprintf(compiler->verbose, ".al%d", (8 << SLJIT_SIMD_GET_ELEM2_SIZE(type)));
+
+		fprintf(compiler->verbose, " ");
 		sljit_verbose_freg(compiler, dst_freg);
 		fprintf(compiler->verbose, ", ");
 		sljit_verbose_freg(compiler, src1_freg);
 		fprintf(compiler->verbose, ", ");
-		sljit_verbose_freg(compiler, src2_freg);
+		sljit_verbose_fparam(compiler, src2, src2w);
 		fprintf(compiler->verbose, "\n");
 	}
 #endif
@@ -3483,15 +3489,16 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_sign(struct sljit_compiler *c
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_op2(struct sljit_compiler *compiler, sljit_s32 type,
-	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2_freg)
+	sljit_s32 dst_freg, sljit_s32 src1_freg, sljit_s32 src2, sljit_sw src2w)
 {
 	CHECK_ERROR();
-	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2_freg));
+	CHECK(check_sljit_emit_simd_op2(compiler, type, dst_freg, src1_freg, src2, src2w));
 	SLJIT_UNUSED_ARG(compiler);
 	SLJIT_UNUSED_ARG(type);
 	SLJIT_UNUSED_ARG(dst_freg);
 	SLJIT_UNUSED_ARG(src1_freg);
-	SLJIT_UNUSED_ARG(src2_freg);
+	SLJIT_UNUSED_ARG(src2);
+	SLJIT_UNUSED_ARG(src2w);
 
 	return SLJIT_ERR_UNSUPPORTED;
 }
