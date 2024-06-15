@@ -1,0 +1,20 @@
+shaders = 3
+
+shader0 = ../stock.slang
+scale_type0 = source
+scale0 = 1.0
+filter_linear0 = false
+alias0 = bfiRefPass
+
+shader1 = shaders/120hz-smart-BFI/calculations.slang
+scale_type1 = source
+scale1 = 1.0
+filter_linear1 = false
+wrap_mode1 = mirrored_repeat
+mipmap_input1 = true
+alias1 = calcPass
+
+shader2 = shaders/120hz-smart-BFI/bfi_flicker.slang
+scale_type2 = source
+scale2 = 1.0
+filter_linear2 = false
