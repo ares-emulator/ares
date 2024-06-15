@@ -135,7 +135,7 @@ struct HVC_TxROM : Interface {  //MMC3
       break;
     case 0xc001:
       irqCounter = 0;
-      mcAccPluseCounter = 0;
+      mcAccPulseCounter = 0;
       break;
     case 0xe000:
       irqEnable = 0;
@@ -235,7 +235,7 @@ struct HVC_TxROM : Interface {  //MMC3
       bool clocking = false;
 
       if (revision == Revision::MCACC) {
-        clocking = ++mcAccPluseCounter == 1;
+        clocking = ++mcAccPulseCounter == 1;
       } else {
         clocking = irqDelay == 0;
         irqDelay = 6;
@@ -273,7 +273,7 @@ struct HVC_TxROM : Interface {  //MMC3
     s(characterLatch);
     s(characterAddress);
     if (revision == Revision::MCACC)
-      s(mcAccPluseCounter);
+      s(mcAccPulseCounter);
   }
 
   n1  characterMode;
@@ -292,5 +292,5 @@ struct HVC_TxROM : Interface {  //MMC3
   n1  irqLine;
   n1  characterLatch;
   n16 characterAddress;
-  n3  mcAccPluseCounter;
+  n3  mcAccPulseCounter;
 };
