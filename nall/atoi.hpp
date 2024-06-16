@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/stdint.hpp>
+#include <clocale>
 
 namespace nall {
 
@@ -81,7 +82,11 @@ constexpr inline auto toInteger(const char* s) -> s64 {
 //
 
 inline auto toReal(const char* s) -> f64 {
-  return atof(s);
+  const char* locale = setlocale(LC_NUMERIC, NULL);
+  setlocale(LC_NUMERIC, "C");
+  auto result = atof(s);
+  setlocale(LC_NUMERIC, locale);
+  return result;
 }
 
 }
