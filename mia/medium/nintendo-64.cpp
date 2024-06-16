@@ -91,6 +91,8 @@ auto Nintendo64::load(string location) -> bool {
   }
   if(!rom) return false;
 
+
+  this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
@@ -764,6 +766,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   s += "game\n";
   s +={"  name:     ", Medium::name(location), "\n"};
   s +={"  title:    ", Medium::name(location), "\n"};
+  s +={"  sha256:   ", sha256, "\n"};
   s +={"  region:   ", region, "\n"};
   s +={"  id:       ", id, region_code, "\n"};
   if(cpak)
