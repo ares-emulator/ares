@@ -131,8 +131,9 @@ auto SG1000::analyze(vector<u8>& rom) -> string {
 
   string s;
   s += "game\n";
-  s +={"  name:  ", Medium::name(location), "\n"};
-  s +={"  title: ", Medium::name(location), "\n"};
+  s +={"  name:   ", Medium::name(location), "\n"};
+  s +={"  title:  ", Medium::name(location), "\n"};
+  s +={"  sha256: ", hash, "\n"};
   s += "  region: NTSC, PAL\n";  //database required to detect region
   s +={"  board:  ", board, "\n"};
   s += "    memory\n";

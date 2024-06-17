@@ -18,6 +18,7 @@ auto MyVision::load(string location) -> bool {
   }
   if(!rom) return false;
 
+  this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
@@ -40,8 +41,9 @@ auto MyVision::save(string location) -> bool {
 auto MyVision::analyze(vector<u8>& rom) -> string {
   string s;
   s += "game\n";
-  s +={"  name:  ", Medium::name(location), "\n"};
-  s +={"  title: ", Medium::name(location), "\n"};
+  s +={"  name:   ", Medium::name(location), "\n"};
+  s +={"  title:  ", Medium::name(location), "\n"};
+  s +={"  sha256: ", sha256, "\n"};
   s += "  board\n";
   s += "    memory\n";
   s += "      type: ROM\n";
