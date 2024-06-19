@@ -23,6 +23,21 @@ Famicom::Famicom() {
     device.digital("Start",      virtualPorts[id].pad.start);
     device.digital("Microphone", virtualPorts[id].pad.north);
     port.append(device); }
+    
+  { InputDevice device{"Super Famicom Gamepad"};
+    device.digital("Up",     virtualPorts[id].pad.up);
+    device.digital("Down",   virtualPorts[id].pad.down);
+    device.digital("Left",   virtualPorts[id].pad.left);
+    device.digital("Right",  virtualPorts[id].pad.right);
+    device.digital("B",      virtualPorts[id].pad.south);
+    device.digital("A",      virtualPorts[id].pad.east);
+    device.digital("Y",      virtualPorts[id].pad.west);
+    device.digital("X",      virtualPorts[id].pad.north);
+    device.digital("L",      virtualPorts[id].pad.l_bumper);
+    device.digital("R",      virtualPorts[id].pad.r_bumper);
+    device.digital("Select", virtualPorts[id].pad.select);
+    device.digital("Start",  virtualPorts[id].pad.start);
+    port.append(device); }
 
     ports.append(port);
   }
