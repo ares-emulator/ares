@@ -158,9 +158,6 @@ template<typename T> inline auto fromHex(char* result, T value) -> char* {
 //a double to a string ... but attempting to parse a double by
 //hand, digit-by-digit, results in subtle rounding errors.
 template<typename T> inline auto fromReal(char* result, T value) -> u32 {
-  const char* locale = setlocale(LC_NUMERIC, NULL);
-  setlocale(LC_NUMERIC, "C");
-
   char buffer[256];
   #ifdef _WIN32
   //Windows C-runtime does not support long double via sprintf()
@@ -168,8 +165,6 @@ template<typename T> inline auto fromReal(char* result, T value) -> u32 {
   #else
   snprintf(buffer, sizeof(buffer), "%Lf", (long double)value);
   #endif
-
-  setlocale(LC_NUMERIC, locale);
 
   for(char* p = buffer; *p; p++) {
     //remove excess 0's in fraction (2.500000 -> 2.5)

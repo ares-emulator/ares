@@ -82,11 +82,7 @@ constexpr inline auto toInteger(const char* s) -> s64 {
 //
 
 inline auto toReal(const char* s) -> f64 {
-  const char* locale = setlocale(LC_NUMERIC, NULL);
-  setlocale(LC_NUMERIC, "C");
-  auto result = atof(s);
-  setlocale(LC_NUMERIC, locale);
-  return result;
+  return atof(s);
 }
 
 }
