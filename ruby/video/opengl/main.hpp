@@ -1,9 +1,9 @@
 #if defined(PLATFORM_MACOS)
 #import <mach-o/dyld.h>
 #endif
-auto OpenGL::setShader(const string& pathname) -> void {
-  settings.reset();
 
+auto OpenGL::setShader(const string& pathname) -> void {
+#if !defined(NO_LIBRASHADER)
   format = inputFormat;
   filter = GL_NEAREST;
   wrap = GL_CLAMP_TO_BORDER;
@@ -31,6 +31,7 @@ auto OpenGL::setShader(const string& pathname) -> void {
       return;
     }
   }
+#endif
 }
 
 auto OpenGL::clear() -> void {
@@ -66,7 +67,7 @@ auto OpenGL::output() -> void {
   u32 x = (outputWidth - targetWidth) / 2;
   u32 y = (outputHeight - targetHeight) / 2;
 
-  if(_chain != NULL) {
+  if(has_shader()) {
     // Shader path: our intermediate framebuffer matches the output size
     if(!framebuffer || framebufferWidth != outputWidth || framebufferHeight != outputHeight) {
       if(framebuffer) {
@@ -122,6 +123,7 @@ auto OpenGL::initialize(const string& shader) -> bool {
   glDisable(GL_STENCIL_TEST);
   glEnable(GL_DITHER);
 
+#if !defined(NO_LIBRASHADER)
   _libra = librashader_load_instance();
   if(!_libra.instance_loaded) {
     print("OpenGL: Failed to load librashader: shaders will be disabled\n");
@@ -130,6 +132,7 @@ auto OpenGL::initialize(const string& shader) -> bool {
   if(_libra.gl_init_context(resolveSymbol) != NULL) {
     print("OpenGL: Failed to initialize librashader context: shaders will be disabled\n");
   };
+#endif
 
   setShader(shader);
   return initialized = true;

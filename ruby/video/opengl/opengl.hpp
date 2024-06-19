@@ -18,7 +18,10 @@
 
 #include "bind.hpp"
 #include "utility.hpp"
-#include "librashader_ld.h"
+
+#if !defined(NO_LIBRASHADER)
+  #include "librashader_ld.h"
+#endif
 
 struct OpenGL;
 
@@ -46,9 +49,14 @@ struct OpenGLSurface : OpenGLTexture {
   GLuint framebufferHeight = 0;
   u32* buffer = nullptr;
 
+#if !defined(NO_LIBRASHADER)
   libra_instance_t _libra;
   libra_shader_preset_t _preset = NULL;
   libra_gl_filter_chain_t  _chain = NULL;
+  auto has_shader() { return _chain != NULL; };
+#else
+  auto has_shader() const { return false; };
+#endif
   u32 frameCount = 0;
 };
 
@@ -68,16 +76,6 @@ struct OpenGL : OpenGLSurface {
   u32 outputY = 0;
   u32 outputWidth = 0;
   u32 outputHeight = 0;
-  struct Setting {
-    string name;
-    string value;
-    bool operator< (const Setting& source) const { return name <  source.name; }
-    bool operator==(const Setting& source) const { return name == source.name; }
-    Setting() = default;
-    Setting(const string& name) : name(name) {}
-    Setting(const string& name, const string& value) : name(name), value(value) {}
-  };
-  set<Setting> settings;
   bool initialized = false;
 };
 

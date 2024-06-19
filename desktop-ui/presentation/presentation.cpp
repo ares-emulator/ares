@@ -570,8 +570,13 @@ auto Presentation::showIcon(bool visible) -> void {
 
 auto Presentation::loadShaders() -> void {
   videoShaderMenu.reset();
-  videoShaderMenu.setEnabled(ruby::video.hasShader());
-  if(!ruby::video.hasShader()) return;
+#if !defined(NO_LIBRASHADER)
+  const auto hasShader = ruby::video.hasShader();
+#else
+  const auto hasShader = false;
+#endif
+  videoShaderMenu.setEnabled(hasShader);
+  if(!hasShader) return;
 
   Group shaders;
 

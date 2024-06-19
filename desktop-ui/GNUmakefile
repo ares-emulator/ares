@@ -7,7 +7,13 @@ sdl2 := true
 local := true
 lto := true
 librashader	:= true
-flags += -I. -I.. -I../ares -I../thirdparty -I../thirdparty/librashader/include -DMIA_LIBRARY
+flags += -I. -I.. -I../ares -I../thirdparty -DMIA_LIBRARY
+
+ifeq ($(librashader), true)
+  flags += -I../thirdparty/librashader/include
+else
+  flags += -DNO_LIBRASHADER
+endif
 
 nall.path := ../nall
 include $(nall.path)/GNUmakefile
@@ -37,13 +43,15 @@ tzxfile.path := $(thirdparty.path)/TZXFile
 ymfm.path := $(thirdparty.path)/ymfm
 include $(thirdparty.path)/GNUmakefile
 
-ifeq ($(platform),macos)
-	librashader.path := $(thirdparty.path)/librashader/target/optimized/librashader.dylib
-else ifeq ($(platform), windows)
-  ifneq ($(wildcard $(thirdparty.path)/librashader/target/aarch64-pc-windows-msvc/optimized/librashader.dll),)
-	librashader.path := $(thirdparty.path)/librashader/target/aarch64-pc-windows-msvc/optimized/librashader.dll
-  else
-	librashader.path := $(thirdparty.path)/librashader/target/optimized/librashader.dll
+ifeq ($(librashader), true)
+  ifeq ($(platform),macos)
+    librashader.path := $(thirdparty.path)/librashader/target/optimized/librashader.dylib
+  else ifeq ($(platform), windows)
+    ifneq ($(wildcard $(thirdparty.path)/librashader/target/aarch64-pc-windows-msvc/optimized/librashader.dll),)
+      librashader.path := $(thirdparty.path)/librashader/target/aarch64-pc-windows-msvc/optimized/librashader.dll
+    else
+      librashader.path := $(thirdparty.path)/librashader/target/optimized/librashader.dll
+    endif
   endif
 endif
 
@@ -92,20 +100,18 @@ $(all.objects): | $(object.path)
 
 all: output
 ifneq ($(MAKECMDGOALS),clean)
-   ifeq ($(platform),macos)
-      ifeq ($(librashader), true)
-        ifeq ($(wildcard $(librashader.path)),)
-    	  $(error Tried to compile ares for macOS with librashader enabled, but no librashader library was found. Compile it with thirdparty/librashader/build-librashader.sh, or disable librashader by compiling ares with librashader=false)
-        endif
-    	ares.dylibs += $(librashader.path)
+  ifeq ($(librashader), true)
+    ifeq ($(platform),macos)
+      ifeq ($(wildcard $(librashader.path)),)
+        $(error Tried to compile ares for macOS with librashader enabled, but no librashader library was found. Compile it with thirdparty/librashader/build-librashader.sh, or disable librashader by compiling ares with librashader=false)
       endif
-   else ifeq ($(platform), windows)
-      ifeq ($(librashader), true)
-        ifeq ($(wildcard $(librashader.path)),)
-          $(error Tried to compile ares for Windows with librashader enabled, but no librashader library was found. Compile it with thirdparty/librashader/build-librashader.sh, or disable librashader by compiling ares with librashader=false)
-        endif
+      ares.dylibs += $(librashader.path)
+    else ifeq ($(platform), windows)
+      ifeq ($(wildcard $(librashader.path)),)
+        $(error Tried to compile ares for Windows with librashader enabled, but no librashader library was found. Compile it with thirdparty/librashader/build-librashader.sh, or disable librashader by compiling ares with librashader=false)
       endif
-   endif
+    endif
+  endif
 endif
 
 output: $(all.objects) | $(output.path)
