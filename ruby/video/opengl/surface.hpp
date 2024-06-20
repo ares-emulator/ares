@@ -22,7 +22,8 @@ auto OpenGLSurface::render(u32 sourceWidth, u32 sourceHeight, u32 targetX, u32 t
   glBindTexture(GL_TEXTURE_2D, texture);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  if(_chain != NULL) {
+  if(has_shader()) {
+#if !defined(NO_LIBRASHADER)
     libra_source_image_gl_t input = {texture, format, sourceWidth, sourceHeight};
     libra_viewport_t viewport{(float)targetX, (float)targetY, targetWidth, targetHeight};
     libra_output_framebuffer_gl_t output = {framebuffer, framebufferTexture, framebufferFormat};
@@ -35,6 +36,7 @@ auto OpenGLSurface::render(u32 sourceWidth, u32 sourceHeight, u32 targetX, u32 t
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, framebufferHeight, framebufferWidth, 0, 0, 0, framebufferWidth, framebufferHeight, GL_COLOR_BUFFER_BIT, filter);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#endif
   } else {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
