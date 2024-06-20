@@ -124,6 +124,11 @@ auto pApplication::initialize() -> void {
   static char** argvp = argv;
   qtApplication = new QApplication(argc, argvp);
 
+  // Creating the QApplication causes Qt to set the locale from the environment.
+  // Set the locale for LC_NUMERIC back to "C". It is expected to be "C" for
+  // the purpose of various string formatting and parsing operations.
+  setlocale(LC_NUMERIC, "C");
+
   pKeyboard::initialize();
 }
 
