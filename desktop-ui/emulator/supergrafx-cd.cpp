@@ -12,7 +12,7 @@ SuperGrafxCD::SuperGrafxCD() {
   manufacturer = "NEC";
   name = "SuperGrafx CD";
 
-  firmware.append({"System Card 3.0", "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});  //NTSC-J
+  firmware.append({"Arcade Card", "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});
 
   allocatePorts();
 }
