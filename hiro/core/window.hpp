@@ -9,6 +9,7 @@ struct mWindow : mObject {
   auto append(sSizable sizable) -> type&;
   auto append(sStatusBar statusBar) -> type&;
   auto backgroundColor() const -> Color;
+  auto borderless() const -> bool;  
   auto dismissable() const -> bool;
   auto doClose() const -> void;
   auto doDrop(vector<string>) const -> void;
@@ -42,6 +43,7 @@ struct mWindow : mObject {
   auto setAlignment(Alignment = Alignment::Center) -> type&;
   auto setAlignment(sWindow relativeTo, Alignment = Alignment::Center) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
+  auto setBorderless(bool borderless = true) -> type&;  
   auto setDismissable(bool dismissable = true) -> type&;
   auto setDroppable(bool droppable = true) -> type&;
   auto setFrameGeometry(Geometry geometry) -> type&;
@@ -69,7 +71,8 @@ struct mWindow : mObject {
 //private:
   struct State {
     Color backgroundColor;
-    bool dismissable = false;
+    bool borderless = false;
+    bool dismissable = false;	
     bool droppable = false;
     bool fullScreen = false;
     Geometry geometry = {128, 128, 256, 256};

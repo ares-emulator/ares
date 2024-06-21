@@ -19,6 +19,7 @@ static auto CALLBACK Window_windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
 static constexpr u32 PopupStyle = WS_POPUP | WS_CLIPCHILDREN;
 static constexpr u32 FixedStyle = WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_BORDER | WS_CLIPCHILDREN;
 static constexpr u32 ResizableStyle = WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN;
+static constexpr u32 BorderlessStyle = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS;
 
 u32 pWindow::minimumStatusHeight = 0;
 
@@ -423,6 +424,15 @@ auto pWindow::_statusHeight() const -> s32 {
   return height;
 }
 
+auto pWindow::setBorderless(bool borderless) -> void {
+  DWORD newframeStyle = (borderless) ? BorderlessStyle : ResizableStyle;
+  DWORD oldframeStyle = static_cast<LONG>(GetWindowLongPtrW(hwnd, GWL_STYLE));
+  if (newframeStyle != oldframeStyle) {
+    SetWindowLongPtrW(hwnd, GWL_STYLE, static_cast<LONG>(newframeStyle));
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+    ShowWindow(hwnd, SW_SHOW);
+  }
+}
 }
 
 #endif
