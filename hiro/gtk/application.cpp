@@ -145,6 +145,12 @@ auto pApplication::initialize() -> void {
   char** argvp = argv;
 
   gtk_init(&argc, &argvp);
+
+  // gtk_init causes GTK to set the locale from the environment.
+  // Set the locale for LC_NUMERIC back to "C". It is expected to be "C" for
+  // the purpose of various string formatting and parsing operations.
+  setlocale(LC_NUMERIC, "C");
+
   GtkSettings* gtkSettings = gtk_settings_get_default();
 
   //allow buttons to show icons

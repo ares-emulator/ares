@@ -19,8 +19,6 @@ auto main(int argc, char** argv) -> int {
   _setmode(_fileno(stderr), O_BINARY);
   #endif
 
-  setlocale(LC_NUMERIC, "C"); // Enforce 'standard' locale for numeric formatting
-
   main(Arguments{argc, argv});
 
   #if !defined(PLATFORM_WINDOWS)
