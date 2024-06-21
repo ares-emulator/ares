@@ -586,6 +586,7 @@ private:
     }
     
     initialized = true;
+    setNativeFullScreen(self.nativeFullScreen);
     return _ready = true;
   }
 

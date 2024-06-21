@@ -12,15 +12,6 @@ struct VideoCGL;
 -(BOOL) acceptsFirstResponder;
 @end
 
-@interface RubyWindowCGL : NSWindow <NSWindowDelegate> {
-@public
-  VideoCGL* video;
-}
--(id) initWith:(VideoCGL*)video;
--(BOOL) canBecomeKeyWindow;
--(BOOL) canBecomeMainWindow;
-@end
-
 struct VideoCGL : VideoDriver, OpenGL {
   VideoCGL& self = *this;
   VideoCGL(Video& super) : VideoDriver(super) {}
@@ -34,6 +25,8 @@ struct VideoCGL : VideoDriver, OpenGL {
   auto ready() -> bool override { return _ready; }
 
   auto hasFullScreen() -> bool override { return true; }
+  auto hasNativeFullScreen() -> bool override { return true; }
+  auto hasMonitor() -> bool override { return !_nativeFullScreen; }
   auto hasContext() -> bool override { return true; }
   auto hasBlocking() -> bool override { return true; }
   auto hasForceSRGB() -> bool override { return false; }
@@ -41,7 +34,43 @@ struct VideoCGL : VideoDriver, OpenGL {
   auto hasShader() -> bool override { return true; }
 
   auto setFullScreen(bool fullScreen) -> bool override {
-    return initialize();
+    // todo: fix/make consistent mouse cursor hide behavior
+    
+    if (_nativeFullScreen) {
+      [view.window toggleFullScreen:nil];
+    } else {
+      /// This option implements non-idiomatic macOS fullscreen behavior that sets the window frame equal to the selected display's
+      /// frame size and hides the cursor. This version of fullscreen is desirable because it allows us to render around the camera
+      /// housing on newer Macs (important for bezel-style shaders), has snappier entrance/exit and tabbing behavior, and functions
+      /// better with recording and capture software such as OBS.
+      if (fullScreen) {
+        auto monitor = Video::monitor(self.monitor);
+        NSScreen *handle = (__bridge NSScreen *)(void *)monitor.nativeHandle; //eew
+        frameBeforeFullScreen = view.window.frame;
+        [NSApp setPresentationOptions:(NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar)];
+        [view.window setStyleMask:NSWindowStyleMaskBorderless];
+        [view.window setFrame:handle.frame display:YES];
+        [NSCursor setHiddenUntilMouseMoves:YES];
+      } else {
+        [NSApp setPresentationOptions:NSApplicationPresentationDefault];
+        [view.window setStyleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable | NSWindowStyleMaskClosable)];
+        [view.window setFrame:frameBeforeFullScreen display:YES];
+      }
+      [view.window makeFirstResponder:view];
+    }
+    return true;
+  }
+  
+  auto setNativeFullScreen(bool nativeFullScreen) -> bool override {
+    _nativeFullScreen = nativeFullScreen;
+    if (nativeFullScreen) {
+      //maximize goes fullscreen
+      [view.window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenPrimary];
+    } else {
+      //maximize does not go fullscreen
+      [view.window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenAuxiliary];
+    }
+    return true;
   }
 
   auto setContext(uintptr context) -> bool override {
@@ -135,13 +164,6 @@ private:
     terminate();
     if(!self.fullScreen && !self.context) return false;
 
-    if(self.fullScreen) {
-      window = [[RubyWindowCGL alloc] initWith:this];
-      [window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-      [window toggleFullScreen:nil];
-    //[NSApp setPresentationOptions:NSApplicationPresentationFullScreen];
-    }
-
     NSOpenGLPixelFormatAttribute attributeList[] = {
       NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
       NSOpenGLPFAColorSize, 24,
@@ -150,7 +172,7 @@ private:
       0
     };
 
-    auto context = self.fullScreen ? [window contentView] : (__bridge NSView*)(void *)self.context;
+    auto context = (__bridge NSView*)(void *)self.context;
     auto size = [context frame].size;
     auto format = [[NSOpenGLPixelFormat alloc] initWithAttributes:attributeList];
     auto openGLContext = [[NSOpenGLContext alloc] initWithFormat:format shareContext:nil];
@@ -176,6 +198,7 @@ private:
 
     releaseContext();
     clear();
+    setNativeFullScreen(_nativeFullScreen);
     return _ready = true;
   }
 
@@ -188,19 +211,12 @@ private:
       [view removeFromSuperview];
       view = nil;
     }
-
-    if(window) {
-    //[NSApp setPresentationOptions:NSApplicationPresentationDefault];
-      [window toggleFullScreen:nil];
-      [window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
-      [window close];
-      window = nil;
-    }
   }
 
   RubyVideoCGL* view = nullptr;
-  RubyWindowCGL* window = nullptr;
 
+  bool _nativeFullScreen = false;
+  NSRect frameBeforeFullScreen = NSMakeRect(0,0,0,0);
   bool _ready = false;
   std::recursive_mutex mutex;
 };
@@ -216,7 +232,6 @@ private:
 
 -(void) reshape {
   [super reshape];
-  video->output(0, 0);
 }
 
 -(BOOL) acceptsFirstResponder {
@@ -227,31 +242,6 @@ private:
 }
 
 -(void) keyUp:(NSEvent*)event {
-}
-
-@end
-
-@implementation RubyWindowCGL : NSWindow
-
--(id) initWith:(VideoCGL*)videoPointer {
-  auto primaryRect = [[[NSScreen screens] objectAtIndex:0] frame];
-  if(self = [super initWithContentRect:primaryRect styleMask:0 backing:NSBackingStoreBuffered defer:YES]) {
-    video = videoPointer;
-    [self setDelegate:self];
-    [self setReleasedWhenClosed:NO];
-    [self setAcceptsMouseMovedEvents:YES];
-    [self setTitle:@""];
-    [self makeKeyAndOrderFront:nil];
-  }
-  return self;
-}
-
--(BOOL) canBecomeKeyWindow {
-  return YES;
-}
-
--(BOOL) canBecomeMainWindow {
-  return YES;
 }
 
 @end

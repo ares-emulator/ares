@@ -67,8 +67,8 @@ auto OpenGL::output() -> void {
   u32 y = (outputHeight - targetHeight) / 2;
 
   if(_chain != NULL) {
-    // Shader path: our intermediate framebuffer matches the output size
-    if(!framebuffer || framebufferWidth != outputWidth || framebufferHeight != outputHeight) {
+    // Shader path: our intermediate framebuffer matches the target size (final composited game area size)
+    if(!framebuffer || framebufferWidth != targetWidth || framebufferHeight != targetHeight) {
       if(framebuffer) {
         glDeleteFramebuffers(1, &framebuffer);
         framebuffer = 0;
@@ -78,7 +78,7 @@ auto OpenGL::output() -> void {
         framebufferTexture = 0;
       }
 
-      framebufferWidth = outputWidth, framebufferHeight = outputHeight;
+      framebufferWidth = targetWidth, framebufferHeight = targetHeight;
       glGenFramebuffers(1, &framebuffer);
       glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
       glGenTextures(1, &framebufferTexture);
