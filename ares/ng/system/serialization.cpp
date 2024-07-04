@@ -1,4 +1,4 @@
-static const string SerializerVersion = "v133.2";
+static const string SerializerVersion = "v134";
 
 auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);

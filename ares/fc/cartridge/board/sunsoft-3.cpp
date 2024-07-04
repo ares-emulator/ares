@@ -105,6 +105,8 @@ struct Sunsoft3 : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
+    s(programRAM);
+    s(characterRAM);
     s(programBank);
     s(characterBank);
     s(mirror);

@@ -65,6 +65,7 @@ struct Sunsoft1 : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
+    s(characterRAM);
     s(characterBank);
   }
 

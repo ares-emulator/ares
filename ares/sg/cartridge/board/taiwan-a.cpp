@@ -44,6 +44,6 @@ struct TaiwanA : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-
+    s(ram);
   }
 };
