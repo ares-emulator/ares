@@ -59,6 +59,7 @@ struct HVC_NROM : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
+    s(programRAM);
     s(characterRAM);
     s(mirror);
   }

@@ -61,5 +61,9 @@ struct JockeyGP : Interface {
 
   auto power() -> void override {
   }
+
+  auto serialize(serializer& s) -> void override {
+    s(ram);
+  }
 };
 
