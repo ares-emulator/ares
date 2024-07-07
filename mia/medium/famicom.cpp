@@ -446,6 +446,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "    chip type=TC0690\n";
     break;
 
+  case  64:
+    s += "  board:  TENGEN-800032\n";
+    s += "    chip type=RAMBO-1\n";
+    break;
+
   case  65:
     s += "  board:  IREM-H3001\n";
     s += "    chip type=H3001\n";
@@ -651,6 +656,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "    chip type=LZ93D50\n";
     prgnvram = 256;
     eepromMapper = true;
+    break;
+
+  case 158:
+    s += "  board:  TENGEN-800037\n";
+    s += "    chip type=RAMBO-1\n";
     break;
 
   case 159:
