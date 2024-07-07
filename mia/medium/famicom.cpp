@@ -476,6 +476,15 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case  71:
+    if(submapper == 1) {
+      s += "  board:  CAMERICA-BF9097\n";
+    } else {
+      s += "  board:  CAMERICA-BF9093\n";
+      s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    }
+    break;
+
   case  72:
     s += "  board:  JALECO-JF-17\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
@@ -712,6 +721,16 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case 229:
     s += "  board:  UNL-BMC-32\n";
+    break;
+
+  case 232:
+    if(submapper == 1) {
+      s += "  board:  CAMERICA-BF9096A\n";
+      s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    } else {
+      s += "  board:  CAMERICA-BF9096\n";
+      s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    }
     break;
 
   case 243:
