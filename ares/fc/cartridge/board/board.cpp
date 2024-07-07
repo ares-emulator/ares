@@ -54,6 +54,7 @@ namespace Board {
 #include "taito-tc0690.cpp"
 #include "taito-x1-005.cpp"
 #include "taito-x1-017.cpp"
+#include "tengen-80003x.cpp"
 #include "unrom-512.cpp"
 
 #include "unl-bmc.cpp"
@@ -116,6 +117,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = TaitoTC0690::create(board);
   if(!p) p = TaitoX1005::create(board);
   if(!p) p = TaitoX1017::create(board);
+  if(!p) p = Tengen80003x::create(board);
   if(!p) p = UNROM512::create(board);
 
   if(!p) p = BMC::create(board);
