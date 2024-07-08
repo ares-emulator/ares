@@ -624,6 +624,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case 148:
+    s += "  board:  UNL-SA-0037\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case 150:
     s += "  board:  UNL-Sachen-74LS374N\n";
     break;

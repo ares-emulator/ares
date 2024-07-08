@@ -60,6 +60,7 @@ namespace Board {
 
 #include "unl-bmc.cpp"
 #include "unl-sachen-74ls374n.cpp"
+#include "unl-sachen-sa0037.cpp"
 #include "unl-txc.cpp"
 
 auto Interface::create(string board) -> Interface* {
@@ -124,6 +125,7 @@ auto Interface::create(string board) -> Interface* {
 
   if(!p) p = BMC::create(board);
   if(!p) p = Sachen74LS374N::create(board);
+  if(!p) p = SachenSA0037::create(board);
   if(!p) p = TXC::create(board);
 
   if(!p) p = new Interface;
