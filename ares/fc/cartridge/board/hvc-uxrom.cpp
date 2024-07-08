@@ -8,6 +8,7 @@ struct HVC_UxROM : Interface {
   }
 
   Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
   Memory::Readable<n8> characterROM;
   Memory::Writable<n8> characterRAM;
 
@@ -22,17 +23,21 @@ struct HVC_UxROM : Interface {
 
   auto load() -> void override {
     Interface::load(programROM, "program.rom");
+    Interface::load(programRAM, "save.ram");
     Interface::load(characterROM, "character.rom");
     Interface::load(characterRAM, "character.ram");
     mirror = pak->attribute("mirror") == "vertical";
   }
 
   auto save() -> void override {
+    Interface::save(programRAM, "save.ram");
     Interface::save(characterRAM, "character.ram");
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {
-    if(address < 0x8000) return data;
+    if(address < 0x6000) return data;
+    if(address < 0x8000 && !programRAM) return data;
+    if(address < 0x8000) return programRAM.read(address);
     n8 bank;
     switch(address >> 14 & 1) {
     case 0: bank = (revision == Revision::UNROMA ? (n8)0x00 : programBank); break;
@@ -42,7 +47,9 @@ struct HVC_UxROM : Interface {
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
-    if(address < 0x8000) return;
+    if(address < 0x6000) return;
+    if(address < 0x8000 && !programRAM) return;
+    if(address < 0x8000) return programRAM.write(address, data);
     programBank = data;
     if(revision == Revision::UN1ROM) programBank >>= 2;
   }
@@ -69,6 +76,7 @@ struct HVC_UxROM : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
+    s(programRAM);
     s(characterRAM);
     s(mirror);
     s(programBank);
