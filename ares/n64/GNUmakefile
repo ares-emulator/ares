@@ -39,9 +39,6 @@ $(object.path)/ares-n64-rsp.o:        $(ares.path)/n64/rsp/rsp.cpp
 $(object.path)/ares-n64-rdp.o:        $(ares.path)/n64/rdp/rdp.cpp
 
 ifeq ($(vulkan),true)
-  ifeq ($(filter shortest-stem,${.FEATURES}),)
-    $(error Compiling Ares N64 Vulkan backend requires GNU Make 3.82 or later)
-  endif
   ifeq ($(platform),macos)
     molten = $(ares.path)/../thirdparty/MoltenVK/libMoltenVK.dylib
     ifeq ($(wildcard $(molten)),)  
@@ -59,14 +56,42 @@ ifeq ($(vulkan),true)
   ares.objects += $(PARALLEL_RDP_SOURCES_CXX:$(PARALLEL_RDP_IMPLEMENTATION)/%.cpp=ares-n64-parallel-rdp/%)
   ares.objects += $(PARALLEL_RDP_SOURCES_C:$(PARALLEL_RDP_IMPLEMENTATION)/%.c=ares-n64-parallel-rdp/%)
   flags += $(PARALLEL_RDP_INCLUDE_DIRS) $(PARALLEL_RDP_CXXFLAGS) $(PARALLEL_RDP_CFLAGS)
-  $(object.path)/ares-n64-parallel-rdp/%.o: $(PARALLEL_RDP_IMPLEMENTATION)/%.cpp
-	$(info Compiling $(subst ../,,$<) ...)
-	$(call mkdir,$(dir $@))
-	@$(call compile)
-  $(object.path)/ares-n64-parallel-rdp/%.o: $(PARALLEL_RDP_IMPLEMENTATION)/%.c
-	$(info Compiling $(subst ../,,$<) ...)
-	$(call mkdir,$(dir $@))
-	@$(call compile)
+  $(object.path)/ares-n64-parallel-rdp/volk/volk.o:                     $(PARALLEL_RDP_IMPLEMENTATION)/volk/volk.c
+  $(object.path)/ares-n64-parallel-rdp/parallel-rdp/video_interface.o:  $(PARALLEL_RDP_IMPLEMENTATION)/parallel-rdp/video_interface.cpp
+  $(object.path)/ares-n64-parallel-rdp/parallel-rdp/command_ring.o:     $(PARALLEL_RDP_IMPLEMENTATION)/parallel-rdp/command_ring.cpp
+  $(object.path)/ares-n64-parallel-rdp/parallel-rdp/rdp_device.o:       $(PARALLEL_RDP_IMPLEMENTATION)/parallel-rdp/rdp_device.cpp
+  $(object.path)/ares-n64-parallel-rdp/parallel-rdp/rdp_dump_write.o:   $(PARALLEL_RDP_IMPLEMENTATION)/parallel-rdp/rdp_dump_write.cpp
+  $(object.path)/ares-n64-parallel-rdp/parallel-rdp/rdp_renderer.o:     $(PARALLEL_RDP_IMPLEMENTATION)/parallel-rdp/rdp_renderer.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/buffer.o:                 $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/buffer.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/buffer_pool.o:            $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/buffer_pool.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/command_buffer.o:         $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/command_buffer.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/command_pool.o:           $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/command_pool.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/context.o:                $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/context.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/cookie.o:                 $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/cookie.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/descriptor_set.o:         $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/descriptor_set.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/device.o:                 $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/device.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/event_manager.o:          $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/event_manager.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/fence.o:                  $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/fence.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/fence_manager.o:          $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/fence_manager.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/image.o:                  $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/image.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/indirect_layout.o:        $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/indirect_layout.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/memory_allocator.o:       $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/memory_allocator.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/pipeline_event.o:         $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/pipeline_event.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/query_pool.o:             $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/query_pool.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/render_pass.o:            $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/render_pass.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/sampler.o:                $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/sampler.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/semaphore.o:              $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/semaphore.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/semaphore_manager.o:      $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/semaphore_manager.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/shader.o:                 $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/shader.cpp
+  $(object.path)/ares-n64-parallel-rdp/vulkan/texture/texture_format.o: $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/texture/texture_format.cpp
+  $(object.path)/ares-n64-parallel-rdp/util/arena_allocator.o:          $(PARALLEL_RDP_IMPLEMENTATION)/util/arena_allocator.cpp
+  $(object.path)/ares-n64-parallel-rdp/util/logging.o:                  $(PARALLEL_RDP_IMPLEMENTATION)/util/logging.cpp
+  $(object.path)/ares-n64-parallel-rdp/util/thread_id.o:                $(PARALLEL_RDP_IMPLEMENTATION)/util/thread_id.cpp
+  $(object.path)/ares-n64-parallel-rdp/util/aligned_alloc.o:            $(PARALLEL_RDP_IMPLEMENTATION)/util/aligned_alloc.cpp
+  $(object.path)/ares-n64-parallel-rdp/util/timer.o:                    $(PARALLEL_RDP_IMPLEMENTATION)/util/timer.cpp
+  $(object.path)/ares-n64-parallel-rdp/util/timeline_trace_file.o:      $(PARALLEL_RDP_IMPLEMENTATION)/util/timeline_trace_file.cpp
+  $(object.path)/ares-n64-parallel-rdp/util/environment.o:              $(PARALLEL_RDP_IMPLEMENTATION)/util/environment.cpp
+  $(object.path)/ares-n64-parallel-rdp/util/thread_name.o:              $(PARALLEL_RDP_IMPLEMENTATION)/util/thread_name.cpp
 else
   $(warning Ares n64 core requires Vulkan for RDP emulation, only titles using Software Rendering will function)
 endif

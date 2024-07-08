@@ -357,6 +357,7 @@ nall.verbose:
 
 %.o: $<
 	$(info Compiling $(subst ../,,$<) ...)
+	$(call mkdir,$(dir $@))
 	@$(call compile)
 
 $(object.path):
