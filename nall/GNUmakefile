@@ -88,9 +88,20 @@ endif
 ifneq ($(filter cl clang-cl,$(compiler)),)
   cl := true
   msvc := true
-  machine := amd64
+endif
+
+ifneq ($(filter cl,$(compiler)),)
+  machine_str := $(shell $(compiler) 2>&1 1>NUL)
+  ifneq ($(filter x86,$(machine_str)),)
+    machine := x86
+  else ifneq ($(filter x64,$(machine_str)),)
+    machine := amd64
+  else ifneq ($(filter ARM64,$(machine_str)),)
+    machine := arm64
+  endif
 else
-  machine_str := $(shell $(compiler) -dumpmachine)
+  machine_opt := $(if $(findstring clang,$(compiler)),-print-target-triple,-dumpmachine)
+  machine_str := $(shell $(compiler) $(machine_opt))
   ifneq ($(filter i686-%,$(machine_str)),)
     machine := x86
   else ifneq ($(filter amd64-% x86_64-%,$(machine_str)),)
@@ -286,6 +297,13 @@ ifeq ($(platform),windows)
       windres := $(if $(findstring clang,$(compiler)),llvm-rc,rc)
     else
       windres := windres
+    endif
+  endif
+  ifneq ($(filter cl,$(compiler)),)
+    ifeq ($(arch),arm64)
+      # work around optimizer bug in MSVC 19.39+
+      # https://developercommunity.microsoft.com/t/ARM64-code-generation-regression/10686742#T-N10699503
+      flags += -d2lowered-bit-liveness-
     endif
   endif
 endif
