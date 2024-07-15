@@ -20,6 +20,7 @@ struct ARM7TDMI {
   virtual auto step(u32 clocks) -> void = 0;
   virtual auto sleep() -> void = 0;
   virtual auto get(u32 mode, n32 address) -> n32 = 0;
+  virtual auto getDebugger(u32 mode, n32 address) -> n32 { return get(mode, address); }
   virtual auto set(u32 mode, n32 address, n32 word) -> void = 0;
 
   //arm7tdmi.cpp
