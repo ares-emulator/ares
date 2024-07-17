@@ -93,6 +93,11 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
 #define n26 u32(instruction & 0x03ff'ffff)
 
 auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
+  //SLL r0, r0, 0
+  if (instruction == 0) {
+    return 0;
+  }
+
   switch(instruction >> 26) {
 
   //SPECIAL
