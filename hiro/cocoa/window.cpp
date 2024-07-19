@@ -6,7 +6,10 @@
   window = &windowReference;
 
   NSUInteger style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask;
+  hidesCursor = false;
+  cursorIsInWindow = false;
   if(window->state.resizable) style |= NSResizableWindowMask;
+  hideCursorTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(hideCursor:) userInfo:nil repeats:YES];
 
   if(self = [super initWithContentRect:NSMakeRect(0, 0, 640, 480) styleMask:style backing:NSBackingStoreBuffered defer:YES]) {
     [self setDelegate:self];
@@ -137,6 +140,13 @@
   return YES;
 }
 
+-(void) hideCursor:(NSTimer*)timer {
+  CFTimeInterval secondsSinceCursorMoved = CGEventSourceSecondsSinceLastEventType(kCGEventSourceStateCombinedSessionState, kCGEventMouseMoved);
+  if(secondsSinceCursorMoved >= 2.0 && hidesCursor && cursorIsInWindow) {
+    [NSCursor setHiddenUntilMouseMoves:YES];
+  }
+}
+
 -(NSMenu*) menuBar {
   return menuBar;
 }
@@ -203,6 +213,18 @@
 
 -(void)windowDidEnterFullScreen:(NSNotification *)notification {
   window->state.fullScreen = true;
+}
+
+-(void)mouseEntered:(NSEvent *)theEvent {
+  cursorIsInWindow = true;
+}
+
+-(void)mouseExited:(NSEvent *)theEvent {
+  cursorIsInWindow = false;
+}
+
+-(void)setHidesCursor:(bool)hides {
+  hidesCursor = hides;
 }
 
 -(void)windowDidExitFullScreen:(NSNotification *)notification {
@@ -368,6 +390,10 @@ auto pWindow::setResizable(bool resizable) -> void {
   [cocoaWindow setStyleMask:style];
 }
 
+auto pWindow::setHidesCursor(bool hidesCursor) -> void {
+  [cocoaWindow setHidesCursor:hidesCursor];
+}
+
 auto pWindow::setTitle(const string& text) -> void {
   [cocoaWindow setTitle:[NSString stringWithUTF8String:text]];
 }
@@ -405,6 +431,18 @@ auto pWindow::sizeEvent() -> void {
   }
 
   statusBarReposition();
+  
+  NSView* theView = [cocoaWindow contentView];
+  NSArray* trackingAreas = theView.trackingAreas;
+  for (NSTrackingArea* oldArea in trackingAreas) {
+    [theView removeTrackingArea:oldArea];
+  }
+  NSTrackingArea *area = [[NSTrackingArea alloc] initWithRect: theView.bounds
+                           options:(NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways)
+                           owner:cocoaWindow
+                           userInfo:nil];
+  [theView addTrackingArea:area];
+  
 
   if(!locked()) self().doSize();
 }

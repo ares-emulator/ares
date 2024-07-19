@@ -69,6 +69,7 @@ struct Settings : Markup::Node {
     bool runAhead = false;
     bool autoSaveMemory = true;
     bool homebrewMode = false;
+    bool autoHideCursor = true;
   } general;
 
   struct Rewind {
@@ -254,6 +255,10 @@ struct OptionSettings : VerticalLayout {
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, 0}};
+  Label miscellaneousSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout autoHideCursorLayout{this, Size{~0, 0}, 5};
+      CheckLabel autoHideCursorOption{&autoHideCursorLayout, Size{0, 0}, 5};
+      Label autoHideCursorHint{&autoHideCursorLayout, Size{0,0}};
 };
 
 struct FirmwareSettings : VerticalLayout {
