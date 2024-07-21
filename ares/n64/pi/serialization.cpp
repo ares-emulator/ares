@@ -8,6 +8,7 @@ auto PI::serialize(serializer& s) -> void {
   s(io.readLength);
   s(io.writeLength);
   s(io.busLatch);
+  s(io.originPc);
 
   s(bsd1.latency);
   s(bsd1.pulseWidth);
