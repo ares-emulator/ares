@@ -325,7 +325,6 @@ endif
 ifeq ($(platform),bsd)
   flags   += -I/usr/local/include
   options += -Wl,-rpath=/usr/local/lib
-  options += -Wl,-rpath=/usr/local/lib/gcc8
   options += -lstdc++ -lm
 endif
 
