@@ -57,6 +57,7 @@ ifeq ($(ruby),)
     ruby += $(call pkg_check,libpulse-simple,audio.pulseaudiosimple)
     ruby += $(call pkg_check,ao,audio.ao)
     ruby += input.uhid input.xlib
+    ruby += $(call pkg_check,libudev,input.udev)
     ifeq ($(sdl2),true)
       ruby += $(call pkg_check,sdl2,input.sdl)
       ruby += $(call pkg_check,sdl2,audio.sdl)
