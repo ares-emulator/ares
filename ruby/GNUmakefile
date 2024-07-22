@@ -51,6 +51,7 @@ ifeq ($(ruby),)
     ruby += video.glx
     ruby += $(call pkg_check,xv,video.xvideo)
     ruby += audio.oss
+    ruby += $(call pkg_check,alsa,audio.alsa)
     ruby += $(call pkg_check,openal,audio.openal)
     ruby += $(call pkg_check,libpulse,audio.pulseaudio)
     ruby += $(call pkg_check,libpulse-simple,audio.pulseaudiosimple)
