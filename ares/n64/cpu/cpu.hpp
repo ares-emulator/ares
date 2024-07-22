@@ -7,7 +7,7 @@ struct CPU : Thread {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload() -> void;
-    auto instruction() -> void;
+    auto instruction(u64 address, u32 instruction) -> void;
     auto exception(u8 code) -> void;
     auto interrupt(u8 mask) -> void;
     auto nmi() -> void;
@@ -38,46 +38,28 @@ struct CPU : Thread {
   auto gdbPoll() -> void;
 
   auto instruction() -> void;
-  auto instructionPrologue(u32 instruction) -> void;
+  auto instructionPrologue(u64 address, u32 instruction) -> void;
   auto instructionEpilogue() -> s32;
 
   auto power(bool reset) -> void;
 
   struct Pipeline {
-    u64 address;
-    u32 instruction;
+    u64 pc;
+    u64 nextpc;
+    bool wasDelaySlot;
+    bool delaySlot;
 
-    struct InstructionCache {
-    } ic;
-
-    struct RegisterFile {
-    } rf;
-
-    struct Execution {
-    } ex;
-
-    struct DataCache {
-    } dc;
-
-    struct WriteBack {
-    } wb;
+    auto setPc(u64 address) -> void { pc = address; nextpc = address + 4; }
+    auto branch(u64 address) -> void { nextpc = address; delaySlot = true; }
+    auto noBranch() -> void { delaySlot = true; }
+    auto skip() -> void { pc += 4; nextpc = pc+4; }
+    auto tick() -> void { 
+      wasDelaySlot = delaySlot;
+      delaySlot = false;
+      pc = nextpc;
+      nextpc += 4;
+    }
   } pipeline;
-
-  struct Branch {
-    enum : u32 { Step, Take, NotTaken, DelaySlotTaken, DelaySlotNotTaken, Exception, Discard };
-
-    auto inDelaySlot() const -> bool { return state == DelaySlotTaken || state == DelaySlotNotTaken; }
-    auto inDelaySlotTaken() const -> bool { return state == DelaySlotTaken; }
-    auto reset() -> void { state = Step; }
-    auto take(u64 address) -> void { state = Take; pc = address; }
-    auto notTaken() -> void { state = NotTaken; }
-    auto delaySlot(bool taken) -> void { state = taken ? DelaySlotTaken : DelaySlotNotTaken; }
-    auto exception() -> void { state = Exception; }
-    auto discard() -> void { state = Discard; }
-
-    u64 pc = 0;
-    u32 state = Step;
-  } branch;
 
   //context.cpp
   struct Context {
@@ -837,12 +819,12 @@ struct CPU : Thread {
   auto COP2INVALID() -> void;
 
   //decoder.cpp
-  auto decoderEXECUTE() -> void;
-  auto decoderSPECIAL() -> void;
-  auto decoderREGIMM() -> void;
-  auto decoderSCC() -> void;
-  auto decoderFPU() -> void;
-  auto decoderCOP2() -> void;
+  auto decoderEXECUTE(u32 instruction) -> void;
+  auto decoderSPECIAL(u32 instruction) -> void;
+  auto decoderREGIMM(u32 instruction) -> void;
+  auto decoderSCC(u32 instruction) -> void;
+  auto decoderFPU(u32 instruction) -> void;
+  auto decoderCOP2(u32 instruction) -> void;
 
   auto COP3() -> void;
   auto INVALID() -> void;

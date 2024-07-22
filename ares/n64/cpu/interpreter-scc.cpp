@@ -288,12 +288,11 @@ auto CPU::ERET() -> void {
   if(!context.kernelMode()) {
     if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
   }
-  branch.exception();
   if(scc.status.errorLevel) {
-    ipu.pc = scc.epcError;
+    pipeline.setPc(scc.epcError);
     scc.status.errorLevel = 0;
   } else {
-    ipu.pc = scc.epc;
+    pipeline.setPc(scc.epc);
     scc.status.exceptionLevel = 0;
   }
   scc.llbit = 0;

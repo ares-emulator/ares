@@ -3,7 +3,7 @@ struct Accuracy {
   static constexpr bool Reference = 0;
 
   struct CPU {
-    static constexpr bool Interpreter = 0 | Reference | !recompiler::generic::supported;
+    static constexpr bool Interpreter = 1 | Reference | !recompiler::generic::supported;
     static constexpr bool Recompiler = !Interpreter;
 
     //exceptions when the CPU accesses unaligned memory addresses
@@ -11,7 +11,7 @@ struct Accuracy {
   };
 
   struct RSP {
-    static constexpr bool Interpreter = 0 | Reference | !recompiler::generic::supported;
+    static constexpr bool Interpreter = 1 | Reference | !recompiler::generic::supported;
     static constexpr bool Recompiler = !Interpreter;
 
     //VU instructions

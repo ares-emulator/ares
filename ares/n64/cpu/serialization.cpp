@@ -1,11 +1,9 @@
 auto CPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s(pipeline.address);
-  s(pipeline.instruction);
-
-  s(branch.pc);
-  s(branch.state);
+  s(pipeline.pc);
+  s(pipeline.nextpc);
+  s(ipu.pc);
 
   s(context.endian);
   s(context.physMask);
@@ -48,7 +46,6 @@ auto CPU::serialize(serializer& s) -> void {
   for(auto& r : ipu.r) s(r.u64);
   s(ipu.lo.u64);
   s(ipu.hi.u64);
-  s(ipu.pc);
 
   s(scc.index.tlbEntry);
   s(scc.index.probeFailure);
