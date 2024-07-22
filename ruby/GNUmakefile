@@ -31,32 +31,24 @@ ifeq ($(ruby),)
       ruby += audio.sdl
       ruby += input.sdl
     endif
-  else ifeq ($(platform),linux)
+  else ifneq ($(findstring $(platform),linux bsd),)
     pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
     ruby += video.glx
     ruby += $(call pkg_check,xv,video.xvideo)
-    ruby += audio.oss audio.alsa
+    ruby += audio.oss
+    ifeq ($(platform),linux)
+      ruby += audio.alsa
+    else
+      ruby += $(call pkg_check,alsa,audio.alsa)
+    endif
     ruby += $(call pkg_check,openal,audio.openal)
     ruby += $(call pkg_check,libpulse,audio.pulseaudio)
     ruby += $(call pkg_check,libpulse-simple,audio.pulseaudiosimple)
     ruby += $(call pkg_check,ao,audio.ao)
     ruby += input.xlib
-    ruby += $(call pkg_check,libudev,input.udev)
-    ifeq ($(sdl2),true)
-      ruby += $(call pkg_check,sdl2,input.sdl)
-      ruby += $(call pkg_check,sdl2,audio.sdl)
+    ifeq ($(platform),bsd)
+      ruby += input.uhid
     endif
-  else ifeq ($(platform),bsd)
-    pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
-    ruby += video.glx
-    ruby += $(call pkg_check,xv,video.xvideo)
-    ruby += audio.oss
-    ruby += $(call pkg_check,alsa,audio.alsa)
-    ruby += $(call pkg_check,openal,audio.openal)
-    ruby += $(call pkg_check,libpulse,audio.pulseaudio)
-    ruby += $(call pkg_check,libpulse-simple,audio.pulseaudiosimple)
-    ruby += $(call pkg_check,ao,audio.ao)
-    ruby += input.uhid input.xlib
     ruby += $(call pkg_check,libudev,input.udev)
     ifeq ($(sdl2),true)
       ruby += $(call pkg_check,sdl2,input.sdl)
