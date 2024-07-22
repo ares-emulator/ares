@@ -33,7 +33,7 @@ ifeq ($(ruby),)
     endif
   else ifeq ($(platform),linux)
     pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
-    ruby += video.glx video.xshm
+    ruby += video.glx
     ruby += $(call pkg_check,xv,video.xvideo)
     ruby += audio.oss audio.alsa
     ruby += $(call pkg_check,openal,audio.openal)
@@ -48,7 +48,7 @@ ifeq ($(ruby),)
     endif
   else ifeq ($(platform),bsd)
     pkg_check = $(if $(shell $(pkg_config) $1 && echo 1),$2)
-    ruby += video.glx video.glx2 video.xshm
+    ruby += video.glx
     ruby += $(call pkg_check,xv,video.xvideo)
     ruby += audio.oss
     ruby += $(call pkg_check,openal,audio.openal)
