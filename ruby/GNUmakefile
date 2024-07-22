@@ -135,8 +135,7 @@ endif
 
 ifeq ($(platform),bsd)
   ruby.options += -lX11 -lXext -lXrandr
-  ruby.options += $(if $(findstring audio.openal,$(ruby)),-lopenal -fuse-ld=bfd)
-  # -fuse-ld=bfd: see FreeBSD bug 219089
+  ruby.options += $(if $(findstring audio.openal,$(ruby)),-lopenal)
 endif
 
 ruby.objects := $(object.path)/ruby.o
