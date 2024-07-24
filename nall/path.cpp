@@ -1,4 +1,5 @@
 #include <nall/path.hpp>
+#include <nall/stringize.hpp>
 
 #if defined(PLATFORM_WINDOWS)
   #include <shlobj.h>
@@ -143,7 +144,7 @@ NALL_HEADER_INLINE auto sharedData() -> string {
   #elif defined(PLATFORM_MACOS)
   string result = "/Library/Application Support/";
   #else
-  string result = "/usr/share/";
+  string result = stringize(ARES_PREFIX/share/);
   #endif
   if(!result) result = ".";
   if(!result.endsWith("/")) result.append("/");
