@@ -471,6 +471,7 @@ ifeq ($(platform),windows)
   prefix := $(subst $([space]),\$([space]),$(strip $(call strtr,$(LOCALAPPDATA),\,/)))
 else
   prefix := $(HOME)/.local
+  flags += -DARES_PREFIX="$(prefix)"
 endif
 
 # objects
