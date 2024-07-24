@@ -5,8 +5,12 @@
 #include <sys/poll.h>
 #include <fcntl.h>
 #include <libudev.h>
+#ifdef __FreeBSD__
+#include <dev/evdev/input.h>
+#else
 #include <linux/types.h>
 #include <linux/input.h>
+#endif
 
 #include "keyboard/xlib.cpp"
 #include "mouse/xlib.cpp"
