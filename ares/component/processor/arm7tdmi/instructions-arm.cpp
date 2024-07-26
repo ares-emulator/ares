@@ -249,11 +249,7 @@ auto ARM7TDMI::armInstructionMoveRegisterOffset
 
 auto ARM7TDMI::armInstructionMoveToRegisterFromStatus
 (n4 d, n1 mode) -> void {
-  if(mode && (cpsr().m == PSR::USR || cpsr().m == PSR::SYS)) {
-    r(d) = cpsr();
-  } else {
-    r(d) = mode ? spsr() : cpsr();
-  }
+  r(d) = (mode && cpsr().m != PSR::USR && cpsr().m != PSR::SYS) ? spsr() : cpsr();
 }
 
 auto ARM7TDMI::armInstructionMoveToStatusFromImmediate
