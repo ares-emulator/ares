@@ -145,9 +145,12 @@ auto CPU::instructionEpilogue() -> s32 {
   if constexpr(Accuracy::CPU::Recompiler) {
     //simulates timings without performing actual icache loads
     icache.step(ipu.pc, devirtualizeFast(ipu.pc));
+    assert(ipu.r[0].u64 == 0);
   }
 
-  ipu.r[0].u64 = 0;
+  if constexpr(Accuracy::CPU::Interpreter) {
+    ipu.r[0].u64 = 0;
+  }
 
   switch(branch.state) {
   case Branch::Step: ipu.pc += 4; return 0;
