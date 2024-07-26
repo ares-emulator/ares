@@ -468,6 +468,7 @@ auto Disc::commandSeekData() -> void {
   if(event.invocation == 1) {
     drive.lba.current = drive.lba.request;
     ssr.playingCDDA = 0;
+    ssr.reading = 0;
 
     fifo.response.write(status());
 
