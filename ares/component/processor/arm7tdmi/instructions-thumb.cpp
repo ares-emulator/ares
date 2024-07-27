@@ -125,23 +125,29 @@ auto ARM7TDMI::thumbInstructionMoveHalfImmediate
 auto ARM7TDMI::thumbInstructionMoveMultiple
 (n8 list, n3 n, n1 mode) -> void {
   n32 rn = r(n);
+  n32 bitCount = list ? bit::count(list) : 16;
+
+  if(mode == 1 && !list.bit(n)) r(n) = r(n) + bitCount * 4;
 
   u32 sequential = Nonsequential;
-  for(u32 m : range(8)) {
-    if(!list.bit(m)) continue;
-    switch(mode) {
-    case 0: write(Word | sequential, rn, r(m)); break;  //STMIA
-    case 1: r(m) = read(Word | sequential, rn); break;  //LDMIA
+  if(!list) {
+    if(mode == 1) r(15) = read(Word | sequential, rn);
+    if(mode == 0) write(Word | sequential, rn, r(15) + 2);
+  } else {
+    for(u32 m : range(8)) {
+      if(!list.bit(m)) continue;
+      if(mode == 1) r(m) = read(Word | sequential, rn);  //LDMIA
+      if(mode == 0) write(Word | sequential, rn, r(m));  //STMIA
+      rn += 4;
+      sequential = Sequential;
     }
-    rn += 4;
-    sequential = Sequential;
   }
 
-  if(mode == 0 || !list.bit(n)) r(n) = rn;
-  if(mode == 1) {
+  if(mode) {
     idle();
   } else {
     pipeline.nonsequential = true;
+    r(n) = r(n) + bitCount * 4;
   }
 }
 
@@ -191,37 +197,35 @@ auto ARM7TDMI::thumbInstructionSoftwareInterrupt
 
 auto ARM7TDMI::thumbInstructionStackMultiple
 (n8 list, n1 lrpc, n1 mode) -> void {
-  n32 sp;
-  switch(mode) {
-  case 0: sp = r(13) - (bit::count(list) + lrpc) * 4; break;  //PUSH
-  case 1: sp = r(13);  //POP
-  }
+  n32 sp = r(13);
+  n32 bitCount = (list | lrpc) ? (bit::count(list) + lrpc) : 16;
+  if(mode == 1) r(13) = r(13) + bitCount * 4;  //POP
+  if(mode == 0) sp = sp - bitCount * 4 + 0;    //PUSH
 
   u32 sequential = Nonsequential;
-  for(u32 m : range(8)) {
-    if(!list.bit(m)) continue;
-    switch(mode) {
-    case 0: write(Word | sequential, sp, r(m)); break;  //PUSH
-    case 1: r(m) = read(Word | sequential, sp); break;  //POP
+  if(bitCount == 16) {
+    if(mode == 1) r(15) = read(Word | sequential, sp);      //POP
+    if(mode == 0) write(Word | sequential, sp, r(15) + 2);  //PUSH
+  } else {
+    for(u32 m : range(8)) {
+      if(!list.bit(m)) continue;
+      if(mode == 1) r(m) = read(Word | sequential, sp);  //POP
+      if(mode == 0) write(Word | sequential, sp, r(m));  //PUSH
+      sp += 4;
+      sequential = Sequential;
     }
-    sp += 4;
-    sequential = Sequential;
   }
-
   if(lrpc) {
-    switch(mode) {
-    case 0: write(Word | sequential, sp, r(14)); break;  //PUSH
-    case 1: r(15) = read(Word | sequential, sp); break;  //POP
-    }
+    if(mode == 1) r(15) = read(Word | sequential, sp);  //POP
+    if(mode == 0) write(Word | sequential, sp, r(14));  //PUSH
     sp += 4;
   }
 
-  if(mode == 1) {
+  if(mode) {
     idle();
-    r(13) = r(13) + (bit::count(list) + lrpc) * 4;  //POP
   } else {
     pipeline.nonsequential = true;
-    r(13) = r(13) - (bit::count(list) + lrpc) * 4;  //PUSH
+    r(13) = r(13) - bitCount * 4;  //PUSH
   }
 }
 
