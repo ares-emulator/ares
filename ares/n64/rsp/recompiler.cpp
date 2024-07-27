@@ -58,6 +58,10 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
   throw;  //should never occur
 }
 
+#define IpuReg(r) sreg(1), offsetof(IPU, r)
+#define VuReg(r)  sreg(2), offsetof(VU, r)
+#define R0        IpuReg(r[0])
+
 auto RSP::Recompiler::emit(u12 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("RSP allocator flush\n");
@@ -82,6 +86,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     OpInfo op0 = self.decoderEXECUTE(instruction);
     pipeline.issue(op0);
     bool branched = emitEXECUTE(instruction);
+    if(op0.r.def & 1) mov32(mem(R0), imm(0));
 
     if(!pipeline.singleIssue && !branched && u12(address + 4) != start) {
       u32 instruction = self.imem.read<Word>(address + 4);
@@ -97,6 +102,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
         address += 4;
         pipeline.issue(op1);
         branched = emitEXECUTE(instruction);
+        if(op1.r.def & 1) mov32(mem(R0), imm(0));
       }
     }
 
@@ -129,12 +135,12 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 #define Vdn (instruction >>  6 & 31)
 #define Vsn (instruction >> 11 & 31)
 #define Vtn (instruction >> 16 & 31)
-#define Rd  sreg(1), offsetof(IPU, r) + Rdn * sizeof(r32)
-#define Rt  sreg(1), offsetof(IPU, r) + Rtn * sizeof(r32)
-#define Rs  sreg(1), offsetof(IPU, r) + Rsn * sizeof(r32)
-#define Vd  sreg(2), offsetof(VU, r) + Vdn * sizeof(r128)
-#define Vs  sreg(2), offsetof(VU, r) + Vsn * sizeof(r128)
-#define Vt  sreg(2), offsetof(VU, r) + Vtn * sizeof(r128)
+#define Rd  IpuReg(r[0]) + Rdn * sizeof(r32)
+#define Rt  IpuReg(r[0]) + Rtn * sizeof(r32)
+#define Rs  IpuReg(r[0]) + Rsn * sizeof(r32)
+#define Vd  VuReg(r[0]) + Vdn * sizeof(r128)
+#define Vs  VuReg(r[0]) + Vsn * sizeof(r128)
+#define Vt  VuReg(r[0]) + Vtn * sizeof(r128)
 #define i16 s16(instruction)
 #define n16 u16(instruction)
 #define n26 u32(instruction & 0x03ff'ffff)
@@ -1473,6 +1479,9 @@ auto RSP::Recompiler::isTerminal(u32 instruction) -> bool {
   return 0;
 }
 
+#undef IpuReg
+#undef VuReg
+#undef R0
 #undef Sa
 #undef Rdn
 #undef Rtn

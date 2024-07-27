@@ -80,9 +80,13 @@ auto RSP::instructionPrologue(u32 instruction) -> void {
 auto RSP::instructionEpilogue(u32 clocks) -> s32 {
   if constexpr(Accuracy::RSP::Recompiler) {
     step(clocks);
+
+    assert(ipu.r[0].u32 == 0);
   }
 
-  ipu.r[0].u32 = 0;
+  if constexpr(Accuracy::RSP::Interpreter) {
+    ipu.r[0].u32 = 0;
+  }
 
   switch(branch.state) {
   case Branch::Step: ipu.pc += 4; return status.halted;

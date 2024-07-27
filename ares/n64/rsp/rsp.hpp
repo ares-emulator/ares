@@ -90,6 +90,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
       Branch    = 1 << 2,
       Vector    = 1 << 3,
       VNopGroup = 1 << 4,  //dual issue conflicts with VNOP
+      Bypass    = 1 << 5,
     };
 
     u32 flags;
@@ -102,6 +103,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto store() const -> bool { return flags & Store; }
     auto branch() const -> bool { return flags & Branch; }
     auto vector() const -> bool { return flags & Vector; }
+    auto bypass() const -> bool { return flags & Bypass; }
   };
 
   static auto canDualIssue(const OpInfo& op0, const OpInfo& op1) -> bool {
@@ -169,7 +171,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
     auto issue(const OpInfo& op) -> void {
       current.rRead |= op.r.use;
-      current.rWrite |= op.r.def & ~1;  //zero register can't be written
+      if(!op.bypass()) current.rWrite |= op.r.def & ~1;  //zero register can't be written
       current.vRead |= op.v.use;
       current.vWrite |= op.v.def;
       current.load |= op.load();
