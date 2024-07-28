@@ -182,14 +182,15 @@ auto ARM7TDMI::armInstructionMoveImmediateOffset
 auto ARM7TDMI::armInstructionMoveMultiple
 (n16 list, n4 n, n1 mode, n1 writeback, n1 type, n1 up, n1 pre) -> void {
   n32 rn = r(n);
+  n32 bitCount = list ? bit::count(list) : 16;
   if(pre == 0 && up == 1) rn = rn + 0;  //IA
   if(pre == 1 && up == 1) rn = rn + 4;  //IB
-  if(pre == 1 && up == 0) rn = rn - bit::count(list) * 4 + 0;  //DB
-  if(pre == 0 && up == 0) rn = rn - bit::count(list) * 4 + 4;  //DA
+  if(pre == 1 && up == 0) rn = rn - bitCount * 4 + 0;  //DB
+  if(pre == 0 && up == 0) rn = rn - bitCount * 4 + 4;  //DA
 
-  if(writeback && mode == 1) {
-    if(up == 1) r(n) = r(n) + bit::count(list) * 4;  //IA,IB
-    if(up == 0) r(n) = r(n) - bit::count(list) * 4;  //DA,DB
+  if(writeback && mode == 1 && !list.bit(n)) {
+    if(up == 1) r(n) = r(n) + bitCount * 4;  //IA,IB
+    if(up == 0) r(n) = r(n) - bitCount * 4;  //DA,DB
   }
 
   auto cpsrMode = cpsr().m;
@@ -199,12 +200,17 @@ auto ARM7TDMI::armInstructionMoveMultiple
   if(usr) cpsr().m = PSR::USR;
 
   u32 sequential = Nonsequential;
-  for(u32 m : range(16)) {
-    if(!list.bit(m)) continue;
-    if(mode == 1) r(m) = read(Word | sequential, rn);
-    if(mode == 0) write(Word | sequential, rn, r(m) + (m == 15 ? 4 : 0));
-    rn += 4;
-    sequential = Sequential;
+  if(!list) {
+    if(mode == 1) r(15) = read(Word | sequential, rn);
+    if(mode == 0) write(Word | sequential, rn, r(15) + 4);
+  } else {
+    for(u32 m : range(16)) {
+      if(!list.bit(m)) continue;
+      if(mode == 1) r(m) = read(Word | sequential, rn);
+      if(mode == 0) write(Word | sequential, rn, r(m) + (m == 15 ? 4 : 0));
+      rn += 4;
+      sequential = Sequential;
+    }
   }
 
   if(usr) cpsr().m = cpsrMode;
@@ -219,8 +225,8 @@ auto ARM7TDMI::armInstructionMoveMultiple
   }
 
   if(writeback && mode == 0) {
-    if(up == 1) r(n) = r(n) + bit::count(list) * 4;  //IA,IB
-    if(up == 0) r(n) = r(n) - bit::count(list) * 4;  //DA,DB
+    if(up == 1) r(n) = r(n) + bitCount * 4;  //IA,IB
+    if(up == 0) r(n) = r(n) - bitCount * 4;  //DA,DB
   }
 }
 
