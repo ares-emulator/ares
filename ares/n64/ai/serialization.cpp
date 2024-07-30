@@ -15,4 +15,8 @@ auto AI::serialize(serializer& s) -> void {
   s(dac.frequency);
   s(dac.precision);
   s(dac.period);
+
+  if(s.reading() && stream->frequency() != dac.frequency) {
+    stream->setFrequency(dac.frequency);
+  }
 }
