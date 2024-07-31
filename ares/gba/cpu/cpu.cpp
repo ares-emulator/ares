@@ -51,14 +51,18 @@ auto CPU::main() -> void {
   instruction();
 }
 
-auto CPU::step(u32 clocks) -> void {
-  if(!clocks) return;
-
-  if(!context.dmaActive) {
+auto CPU::dmaRun() -> void {
+  if(!context.dmaActive && !context.prefetchActive) {
     context.dmaActive = true;
     while(dma[0].run() | dma[1].run() | dma[2].run() | dma[3].run());
     context.dmaActive = false;
   }
+}
+
+auto CPU::step(u32 clocks) -> void {
+  if(!clocks) return;
+
+  dmaRun();
 
   dma[0].waiting = max(0, dma[0].waiting - (s32)clocks);
   dma[1].waiting = max(0, dma[1].waiting - (s32)clocks);

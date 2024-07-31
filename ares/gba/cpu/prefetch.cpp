@@ -28,12 +28,27 @@ auto CPU::prefetchReset() -> void {
   prefetch.wait = 0;
 }
 
-auto CPU::prefetchRead() -> n16 {
-  if(prefetch.empty()) prefetchStep(prefetch.wait);
+auto CPU::prefetchRead(u32 mode) -> n32 {
+  //run prefetcher for 1 cycle or until buffer contains an instruction, blocking DMA
+  context.prefetchActive = 1;
+  if(prefetch.empty() && (mode & Word)) {
+    prefetchStep(prefetch.wait + _wait(Half | Sequential, prefetch.load + 2));
+  } else if(prefetch.empty() && (mode & Half)) {
+    prefetchStep(prefetch.wait);
+  } else if((prefetch.size() == 1) && (mode & Word)) {
+    prefetchStep(prefetch.wait);
+  } else {
+    prefetchStep(1);
+  }
+  context.prefetchActive = 0;
 
   if(prefetch.full()) prefetch.wait = _wait(Half | Sequential, prefetch.load);
 
-  n16 half = prefetch.slot[prefetch.addr >> 1 & 7];
+  n32 word = prefetch.slot[prefetch.addr >> 1 & 7];
   prefetch.addr += 2;
-  return half;
+  if(mode & Word) {
+    word |= prefetch.slot[prefetch.addr >> 1 & 7] << 16;
+    prefetch.addr += 2;
+  }
+  return word;
 }
