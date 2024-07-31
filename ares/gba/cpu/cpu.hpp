@@ -46,6 +46,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto unload() -> void;
 
   auto main() -> void;
+  auto dmaRun() -> void;
   auto step(u32 clocks) -> void override;
   auto power() -> void;
 

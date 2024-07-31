@@ -12,6 +12,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     if constexpr(!UseDebugger) prefetchStep(clocks);
   } else if(address & 0x0800'0000) {
     if(mode & Prefetch && wait.prefetch) {
+      dmaRun();
       prefetchSync(address);
       word = prefetchRead(mode);
     } else {
