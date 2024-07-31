@@ -13,11 +13,9 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
   } else if(address & 0x0800'0000) {
     if(mode & Prefetch && wait.prefetch) {
       prefetchSync(address);
-      prefetchStep(1);
-      word = prefetchRead();
-      if(mode & Word) word |= prefetchRead() << 16;
+      word = prefetchRead(mode);
     } else {
-      if constexpr(!UseDebugger) if(!context.dmaActive) prefetchReset();  //todo: Prefetch buffer should also be reset when DMA accesses ROM
+      if constexpr(!UseDebugger) prefetchReset();
       if constexpr(!UseDebugger) step(clocks - 1);
       word = cartridge.read(mode, address);
       if constexpr(!UseDebugger) step(1);
@@ -53,7 +51,7 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
   if(address >= 0x1000'0000) {
     prefetchStep(clocks);
   } else if(address & 0x0800'0000) {
-    if(!context.dmaActive) prefetchReset();  //todo: Prefetch buffer should also be reset when DMA accesses ROM
+    prefetchReset();
     step(clocks);
     cartridge.write(mode, address, word);
   } else {
