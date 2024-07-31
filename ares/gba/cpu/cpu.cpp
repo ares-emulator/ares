@@ -54,7 +54,7 @@ auto CPU::main() -> void {
 auto CPU::step(u32 clocks) -> void {
   if(!clocks) return;
 
-  if(!context.dmaActive) {
+  if(!context.dmaActive && !context.prefetchActive) {
     context.dmaActive = true;
     while(dma[0].run() | dma[1].run() | dma[2].run() | dma[3].run());
     context.dmaActive = false;

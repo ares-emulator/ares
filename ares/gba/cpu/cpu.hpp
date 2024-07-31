@@ -240,6 +240,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  stopped;
     n1  booted;  //set to true by the GBA BIOS
     n1  dmaActive;
+    n1  prefetchActive;
     n1  timerLatched;
   } context;
 };

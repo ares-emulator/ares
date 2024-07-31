@@ -29,6 +29,8 @@ auto CPU::prefetchReset() -> void {
 }
 
 auto CPU::prefetchRead(u32 mode) -> n32 {
+  //run prefetcher for 1 cycle or until buffer contains an instruction, blocking DMA
+  context.prefetchActive = 1;
   if(prefetch.empty() && (mode & Word)) {
     prefetchStep(prefetch.wait + _wait(Half | Sequential, prefetch.load + 2));
   } else if(prefetch.empty() && (mode & Half)) {
@@ -38,6 +40,7 @@ auto CPU::prefetchRead(u32 mode) -> n32 {
   } else {
     prefetchStep(1);
   }
+  context.prefetchActive = 0;
 
   if(prefetch.full()) prefetch.wait = _wait(Half | Sequential, prefetch.load);
 
