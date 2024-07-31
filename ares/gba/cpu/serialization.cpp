@@ -108,5 +108,6 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.stopped);
   s(context.booted);
   s(context.dmaActive);
+  s(context.prefetchActive);
   s(context.timerLatched);
 }
