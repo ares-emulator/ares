@@ -3,7 +3,7 @@
 namespace hiro {
 
 auto pMonitor::count() -> u32 {
-  return QApplication::desktop()->screenCount();
+  return QApplication::screens().count();
 }
 
 auto pMonitor::dpi(u32 monitor) -> Position {
@@ -15,12 +15,12 @@ auto pMonitor::dpi(u32 monitor) -> Position {
 }
 
 auto pMonitor::geometry(u32 monitor) -> Geometry {
-  QRect rectangle = QApplication::desktop()->screenGeometry(monitor);
+  QRect rectangle = QApplication::screens()[monitor]->geometry();
   return {rectangle.x(), rectangle.y(), rectangle.width(), rectangle.height()};
 }
 
 auto pMonitor::primary() -> u32 {
-  return QApplication::desktop()->primaryScreen();
+  return max(QApplication::screens().indexOf(QApplication::primaryScreen()), 0);
 }
 
 auto pMonitor::workspace(u32 monitor) -> Geometry {
