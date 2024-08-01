@@ -3,7 +3,7 @@
 namespace hiro {
 
 auto pMonitor::count() -> u32 {
-  return QApplication::desktop()->screenCount();
+  return QApplication::screens().count();
 }
 
 auto pMonitor::dpi(u32 monitor) -> Position {
