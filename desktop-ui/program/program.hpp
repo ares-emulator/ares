@@ -12,6 +12,9 @@ struct Program : ares::Platform {
   auto status(string_view message) -> void override;
   auto video(ares::Node::Video::Screen, const u32* data, u32 pitch, u32 width, u32 height) -> void override;
   auto refreshRateHint(double refreshRate) -> void override;
+  auto setScale(f64 scaleX, f64 scaleY) -> void override;
+  auto setInterlace(bool interlaceField) -> void override;
+  auto setProgressive(bool progressiveDouble) -> void override;
   auto audio(ares::Node::Audio::Stream) -> void override;
   auto input(ares::Node::Input::Input) -> void override;
   auto cheat(u32 address) -> maybe<u32> override;

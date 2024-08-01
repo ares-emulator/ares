@@ -136,6 +136,18 @@ auto Program::refreshRateHint(double refreshRate) -> void {
   ruby::video.refreshRateHint(refreshRate);
 }
 
+auto Program::setScale(f64 scaleX, f64 scaleY) -> void {
+  ruby::video.setScale(scaleX, scaleY);
+}
+
+auto Program::setInterlace(bool interlaceField) -> void {
+  ruby::video.setInterlace(interlaceField);
+}
+
+auto Program::setProgressive(bool progressiveDouble) -> void {
+  ruby::video.setProgressive(progressiveDouble);
+}
+
 auto Program::audio(ares::Node::Audio::Stream node) -> void {
   if(!streams) return;
 

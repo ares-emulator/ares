@@ -19,6 +19,9 @@ struct Platform {
   virtual auto status(string_view message) -> void {}
   virtual auto video(Node::Video::Screen, const u32* data, u32 pitch, u32 width, u32 height) -> void {}
   virtual auto refreshRateHint(double refreshRate) -> void {}
+  virtual auto setScale(f64 scaleX, f64 scaleY) -> void {}
+  virtual auto setInterlace(bool interlaceField) -> void {}
+  virtual auto setProgressive(bool progressivedouble) -> void {}
   virtual auto audio(Node::Audio::Stream) -> void {}
   virtual auto input(Node::Input::Input) -> void {}
   virtual auto cheat(u32 addr) -> maybe<u32> { return nothing; }
