@@ -15,7 +15,7 @@ auto pMonitor::dpi(u32 monitor) -> Position {
 }
 
 auto pMonitor::geometry(u32 monitor) -> Geometry {
-  QRect rectangle = QApplication::desktop()->screenGeometry(monitor);
+  QRect rectangle = QApplication::screens()[monitor]->geometry();
   return {rectangle.x(), rectangle.y(), rectangle.width(), rectangle.height()};
 }
 
