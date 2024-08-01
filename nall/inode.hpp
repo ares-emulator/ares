@@ -95,7 +95,7 @@ struct inode {
     //the best that can be done in this case is to return st_mtime if it's older
     case time::create: return min((u32)data.st_birthtime, (u32)data.st_mtime);
     #else
-    //Linux simply doesn't support file creation time at all
+    //Linux doesn't support file creation time through stat(), but does through statx()
     //this is also our fallback case for unsupported operating systems
     case time::create: return data.st_mtime;
     #endif
