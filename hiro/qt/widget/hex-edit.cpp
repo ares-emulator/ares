@@ -271,8 +271,9 @@ auto QtHexEdit::keyPressEventAcknowledge(QKeyEvent* event) -> void {
 }
 
 auto QtHexEdit::wheelEvent(QWheelEvent* event) -> void {
-  if(event->orientation() == Qt::Vertical) {
-    s32 offset = event->delta() < 0 ? +1 : -1;
+  auto delta = event->angleDelta().y();
+  if(delta) {
+    s32 offset = delta < 0 ? +1 : -1;
     p._scrollTo(p.qtScrollBar->sliderPosition() + offset);
     event->accept();
   }
@@ -281,8 +282,9 @@ auto QtHexEdit::wheelEvent(QWheelEvent* event) -> void {
 auto QtHexEditScrollBar::event(QEvent* event) -> bool {
   if(event->type() == QEvent::Wheel) {
     auto wheelEvent = (QWheelEvent*)event;
-    if(wheelEvent->orientation() == Qt::Vertical) {
-      s32 offset = wheelEvent->delta() < 0 ? +1 : -1;
+    auto delta = wheelEvent->angleDelta().y();
+    if(delta) {
+      s32 offset = delta < 0 ? +1 : -1;
       p._scrollTo(sliderPosition() + offset);
       return true;
     }
