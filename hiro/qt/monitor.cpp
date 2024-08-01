@@ -20,7 +20,7 @@ auto pMonitor::geometry(u32 monitor) -> Geometry {
 }
 
 auto pMonitor::primary() -> u32 {
-  return QApplication::desktop()->primaryScreen();
+  return max(QApplication::screens().indexOf(QApplication::primaryScreen()), 0);
 }
 
 auto pMonitor::workspace(u32 monitor) -> Geometry {
