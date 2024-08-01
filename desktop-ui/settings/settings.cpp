@@ -222,7 +222,7 @@ SettingsWindow::SettingsWindow() {
 
   setDismissable();
   setTitle("Configuration");
-  setSize({700_sx, 405_sy});
+  setSize({700_sx, 425_sy});
   setAlignment({0.0, 1.0});
   setResizable(false);
 }
