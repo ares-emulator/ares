@@ -23,7 +23,7 @@ struct AudioOSS : AudioDriver {
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(3);
-    buffer.resize(64);
+    buffer.resize(_bufferSize);
     return initialize();
   }
 
@@ -59,7 +59,7 @@ struct AudioOSS : AudioDriver {
   auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
-    buffer.resize(64);
+    buffer.resize(_bufferSize);
   }
 
   auto level() -> double override {
@@ -119,6 +119,8 @@ private:
     fcntl(_fd, F_SETFL, flags);
     return true;
   }
+
+  static const u32 _bufferSize = 64;
 
   s32 _fd = -1;
   s32 _format = AFMT_S16_LE;
