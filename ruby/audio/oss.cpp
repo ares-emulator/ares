@@ -65,7 +65,7 @@ struct AudioOSS : AudioDriver {
   auto level() -> double override {
     audio_buf_info info;
     ioctl(_fd, SNDCTL_DSP_GETOSPACE, &info);
-    return (double)(_bufferSize - info.bytes) / _bufferSize;
+    return (double)(_nBlkBytes - info.bytes) / _nBlkBytes;
   }
 
   auto output(const double samples[]) -> void override {
@@ -100,7 +100,7 @@ private:
     updateBlocking();
     audio_buf_info info;
     ioctl(_fd, SNDCTL_DSP_GETOSPACE, &info);
-    _bufferSize = info.bytes;
+    _nBlkBytes = info.bytes;
 
     return true;
   }
@@ -122,7 +122,7 @@ private:
 
   s32 _fd = -1;
   s32 _format = AFMT_S16_LE;
-  s32 _bufferSize = 1;
+  s32 _nBlkBytes = 1;
 
   queue<s16> buffer;
 };
