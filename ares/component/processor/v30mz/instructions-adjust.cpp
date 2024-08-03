@@ -14,7 +14,7 @@ auto V30MZ::instructionDecimalAdjust(bool negate) -> void {
     al = AL;
     AL += negate ? -0x60 : 0x60;
     PSW.CY = 1;
-    if(negate) PSW.V |= (al ^ 0x06) & (al ^ AL) & 0x80; // undefined
+    if(negate) PSW.V |= (al ^ 0x60) & (al ^ AL) & 0x80; // undefined
     else PSW.V |= (AL ^ al) & (AL ^ 0x60) & 0x80; // undefined
   } else {
     PSW.CY = 0;
