@@ -1,18 +1,8 @@
-auto V30MZ::repeat() -> u8 {
-  for(auto prefix : prefixes) {
-    if(prefix == RepeatWhileZeroLo) return prefix;
-    if(prefix == RepeatWhileZeroHi) return prefix;
-  }
-  return 0;
-}
-
 auto V30MZ::segment(u16 segment) -> u16 {
-  for(auto prefix : prefixes) {
-    if(prefix == SegmentOverrideDS1) return DS1;
-    if(prefix == SegmentOverridePS ) return PS;
-    if(prefix == SegmentOverrideSS ) return SS;
-    if(prefix == SegmentOverrideDS0) return DS0;
-  }
+  if(prefix.segment == SegmentOverrideDS1) return DS1;
+  if(prefix.segment == SegmentOverridePS ) return PS;
+  if(prefix.segment == SegmentOverrideSS ) return SS;
+  if(prefix.segment == SegmentOverrideDS0) return DS0;
   return segment;
 }
 
