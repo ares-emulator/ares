@@ -93,13 +93,13 @@ private:
     int policy = min(10, self.latency);
     ioctl(_fd, SNDCTL_DSP_POLICY, &policy);
     int channels = self.channels;
-    ioctl(_fd, SNDCTL_DSP_CHANNELS, &channels);
-    ioctl(_fd, SNDCTL_DSP_SETFMT, &_format);
+    if(ioctl(_fd, SNDCTL_DSP_CHANNELS, &channels) == -1) return terminate(), false;
+    if(ioctl(_fd, SNDCTL_DSP_SETFMT, &_format) == -1) return terminate(), false;
     int frequency = self.frequency;
-    ioctl(_fd, SNDCTL_DSP_SPEED, &frequency);
-    updateBlocking();
+    if(ioctl(_fd, SNDCTL_DSP_SPEED, &frequency) == -1) return terminate(), false;
+    if(!updateBlocking()) return terminate(), false;
     audio_buf_info info;
-    ioctl(_fd, SNDCTL_DSP_GETOSPACE, &info);
+    if(ioctl(_fd, SNDCTL_DSP_GETOSPACE, &info) == -1) return terminate(), false;
     _nonBlockBytes = info.bytes;
 
     return true;
