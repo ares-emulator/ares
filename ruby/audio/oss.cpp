@@ -23,7 +23,7 @@ struct AudioOSS : AudioDriver {
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(3);
-    buffer.resize(64);
+    _buffer.resize(64);
     return initialize();
   }
 
@@ -59,7 +59,7 @@ struct AudioOSS : AudioDriver {
   auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
-    buffer.resize(64);
+    _buffer.resize(64);
   }
 
   auto level() -> double override {
@@ -70,10 +70,10 @@ struct AudioOSS : AudioDriver {
 
   auto output(const double samples[]) -> void override {
     for(u32 n : range(self.channels)) {
-      buffer.write(sclamp<16>(samples[n] * 32767.0));
-      if(buffer.full()) {
-        write(_fd, buffer.data(), buffer.capacity<u8>());
-        buffer.flush();
+      _buffer.write(sclamp<16>(samples[n] * 32767.0));
+      if(_buffer.full()) {
+        write(_fd, _buffer.data(), _buffer.capacity<u8>());
+        _buffer.flush();
       }
     }
   }
@@ -124,5 +124,5 @@ private:
   s32 _format = AFMT_S16_LE;
   s32 _bufferSize = 1;
 
-  queue<s16> buffer;
+  queue<s16> _buffer;
 };
