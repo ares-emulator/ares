@@ -12,15 +12,15 @@ auto V30MZ::interrupt(u8 vector, InterruptSource source) -> bool {
 
   state.halt = 0;
   state.poll = 1;
-  state.prefix = 0;
 
   //if an IRQ fires during a rep string instruction;
   //flush prefix queue and seek back to first prefix.
   //this allows the transfer to resume after the IRQ.
-  if(prefix.count) {
+  if(state.prefix) {
+    state.prefix = 0;
     PC -= prefix.count;
-    prefixFlush();
   }
+  prefixFlush();
 
   auto pc = read<Word>(0x0000, vector * 4 + 0);
   auto ps = read<Word>(0x0000, vector * 4 + 2);
