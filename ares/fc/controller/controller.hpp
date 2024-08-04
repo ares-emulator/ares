@@ -31,3 +31,4 @@ struct Controller {
 
 #include "port.hpp"
 #include "gamepad/gamepad.hpp"
+#include "zapper/zapper.hpp"

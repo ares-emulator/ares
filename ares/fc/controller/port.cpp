@@ -11,7 +11,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setDisconnect([&] { device.reset(); });
-  port->setSupported({"Gamepad"});
+  port->setSupported({"Gamepad", "Zapper"});
 }
 
 auto ControllerPort::unload() -> void {
@@ -21,6 +21,7 @@ auto ControllerPort::unload() -> void {
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
   if(name == "Gamepad") device = new Gamepad(port);
+  if(name == "Zapper") device = new Zapper(port);
   if(device) return device->node;
   return {};
 }
