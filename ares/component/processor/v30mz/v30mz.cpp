@@ -28,7 +28,7 @@ auto V30MZ::power() -> void {
   state.prefix = 0;
 
   opcode = 0;
-  prefixes.flush();
+  prefixFlush();
   modrm.mod = 0;
   modrm.reg = 0;
   modrm.mem = 0;

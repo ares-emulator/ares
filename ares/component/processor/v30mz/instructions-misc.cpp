@@ -1,21 +1,21 @@
 auto V30MZ::instructionSegment(n16 segment) -> void {
-  if(prefixes.full()) prefixes.read(0);
-  prefixes.write(opcode);
+  prefix.segment = opcode;
+  prefix.count++;
   state.prefix = 1;
   state.poll = 0;
 }
 
 auto V30MZ::instructionRepeat() -> void {
-  if(prefixes.full()) prefixes.read(0);
-  prefixes.write(opcode);
+  prefix.repeat = opcode;
+  prefix.count++;
   wait(4);
   state.prefix = 1;
   state.poll = 0;
 }
 
 auto V30MZ::instructionLock() -> void {
-  if(prefixes.full()) prefixes.read(0);
-  prefixes.write(opcode);
+  prefix.lock = opcode;
+  prefix.count++;
   state.prefix = 1;
   state.poll = 0;
 }

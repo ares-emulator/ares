@@ -39,6 +39,7 @@ struct V30MZ {
   auto power() -> void;
 
   //instruction.cpp
+  auto prefixFlush() -> void;
   auto interrupt(u8 vector) -> bool;
   auto nonMaskableInterrupt() -> bool;
   auto instruction() -> void;
@@ -242,7 +243,12 @@ struct V30MZ {
   } state;
 
   u8 opcode;
-  queue<u8[7]> prefixes;
+  struct Prefix {
+    u16 count;
+    u8 lock;
+    u8 repeat;
+    u8 segment;
+  } prefix;
 
   struct ModRM {
     u2 mod;
