@@ -12,8 +12,8 @@ auto CPU::DMA::transfer() -> void {
   u32 mode = size ? Word : Half;
   mode |= latch.length() == length() ? Nonsequential : Sequential;
 
-  if(mode & Nonsequential) {
-    cpu.idle();
+  if(!cpu.context.dmaRan) {
+    cpu.context.dmaRan = true;
     cpu.idle();
   }
 
