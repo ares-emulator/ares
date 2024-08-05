@@ -44,7 +44,7 @@ struct AudioOSS : AudioDriver {
   }
 
   auto hasFrequencies() -> vector<u32> override {
-    return {44100, 48000, 96000};
+    return {22050, 44100, 48000, 96000, 192000};
   }
 
   auto hasLatencies() -> vector<u32> override {
