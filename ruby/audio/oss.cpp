@@ -73,7 +73,13 @@ struct AudioOSS : AudioDriver {
   auto output(const double samples[]) -> void override {
     if(!_buffer) return;
     for(u32 n : range(self.channels)) {
-      *(s16*)(&_buffer[_offset]) = sclamp<16>(samples[n] * 32767.0);
+      switch(_format) {
+        case AFMT_S8: *(s8*)(&_buffer[_offset]) = sclamp<8>(samples[n] * 127.0); break;
+        case AFMT_S16_LE: *(s16*)(&_buffer[_offset]) = sclamp<16>(samples[n] * 32767.0); break;
+        case AFMT_S24_LE: *(s32*)(&_buffer[_offset]) = sclamp<24>(samples[n] * 8388607.0); break;
+        case AFMT_S32_LE: *(s32*)(&_buffer[_offset]) = sclamp<32>(samples[n] * 2147483647.0); break;
+        default: return;
+      }
       _offset += _formatSize;
       if(_offset >= _bufferSize) {
         write(_fd, _buffer, _bufferSize);
@@ -97,7 +103,7 @@ private:
     int policy = min(10, self.latency);
     ioctl(_fd, SNDCTL_DSP_POLICY, &policy);
     if(!updateChannels()) return terminate(), false;
-    if(ioctl(_fd, SNDCTL_DSP_SETFMT, &_format) == -1) return terminate(), false;
+    if(!updateFormat()) return terminate(), false;
     if(!updateFrequency()) return terminate(), false;
     if(!updateBlocking()) return terminate(), false;
     if(!updateNonBlockBytes()) return terminate(), false;
@@ -133,6 +139,18 @@ private:
     return true;
   }
 
+  auto updateFormat() -> bool {
+    if(ioctl(_fd, SNDCTL_DSP_SETFMT, &_format) == -1) return false;
+    switch(_format) {
+      case AFMT_S8: _formatSize = sizeof(s8); break;
+      case AFMT_S16_LE: _formatSize = sizeof(s16); break;
+      case AFMT_S24_LE: _formatSize = sizeof(s32); break; // OSS uses 32 bits for 24bit
+      case AFMT_S32_LE: _formatSize = sizeof(s32); break;
+      default: return false;
+    }
+    return true;
+  }
+
   auto updateFrequency() -> bool {
     int frequency = self.frequency;
     if(ioctl(_fd, SNDCTL_DSP_SPEED, &frequency) == -1) return false;
@@ -161,7 +179,7 @@ private:
 
   s32 _fd = -1;
   s32 _format = AFMT_S16_LE;
-  static constexpr u32 _formatSize = sizeof(s16);
+  u32 _formatSize = 0;
   static constexpr u32 _frames = 32;
   s32 _nonBlockBytes = 1;
 
