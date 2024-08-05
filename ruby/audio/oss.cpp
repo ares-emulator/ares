@@ -59,7 +59,7 @@ struct AudioOSS : AudioDriver {
 
   auto clear() -> void override {
     if(_buffer) {
-      memory::fill<s16>(_buffer, _bufferSize);
+      memory::fill(_buffer, _bufferSize);
       _offset = 0;
     }
   }
@@ -73,10 +73,10 @@ struct AudioOSS : AudioDriver {
   auto output(const double samples[]) -> void override {
     if(!_buffer) return;
     for(u32 n : range(self.channels)) {
-      _buffer[_offset] = sclamp<16>(samples[n] * 32767.0);
-      _offset++;
+      *(s16*)(&_buffer[_offset]) = sclamp<16>(samples[n] * 32767.0);
+      _offset += _formatSize;
       if(_offset >= _bufferSize) {
-        write(_fd, _buffer, _bufferSize * _formatSize);
+        write(_fd, _buffer, _bufferSize);
         _offset = 0;
       }
     }
@@ -102,8 +102,8 @@ private:
     if(!updateBlocking()) return terminate(), false;
     if(!updateNonBlockBytes()) return terminate(), false;
 
-    _bufferSize = _frames * self.channels;
-    _buffer = memory::allocate<s16>(_bufferSize);
+    _bufferSize = _frames * self.channels * _formatSize;
+    _buffer = memory::allocate(_bufferSize);
     if(!_buffer) return terminate(), false;
     _offset = 0;
 
@@ -114,7 +114,7 @@ private:
     if(!ready()) return;
 
     if(_buffer) {
-      memory::free<s16>(_buffer);
+      memory::free(_buffer);
       _buffer = nullptr;
       _bufferSize = 0;
       _offset = 0;
@@ -165,7 +165,7 @@ private:
   static constexpr u32 _frames = 32;
   s32 _nonBlockBytes = 1;
 
-  s16* _buffer = nullptr;
+  u8* _buffer = nullptr;
   u32 _bufferSize = 0;
   u32 _offset = 0;
 };
