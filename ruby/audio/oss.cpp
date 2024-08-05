@@ -40,7 +40,7 @@ struct AudioOSS : AudioDriver {
   }
 
   auto hasChannels() -> vector<u32> override {
-    return {1, 2};
+    return {1, 2, 3, 4, 5, 6, 7, 8};
   }
 
   auto hasFrequencies() -> vector<u32> override {
