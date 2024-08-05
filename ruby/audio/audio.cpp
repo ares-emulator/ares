@@ -85,12 +85,7 @@ auto Audio::setDynamic(bool dynamic) -> bool {
 }
 
 auto Audio::setChannels(u32 channels) -> bool {
-  if(resamplers.size() != channels) {
-    resamplers.reset();
-    resamplers.resize(channels);
-    for(auto& resampler : resamplers) resampler.reset(instance->frequency);
-    resampleBuffer.resize(channels);
-  }
+  updateResampleChannels(channels);
   if(instance->channels == channels) return true;
   if(!instance->hasChannels(channels)) return false;
   if(!instance->setChannels(instance->channels = channels)) return false;
@@ -110,6 +105,17 @@ auto Audio::setLatency(u32 latency) -> bool {
   if(!instance->hasLatency(latency)) return false;
   if(!instance->setLatency(instance->latency = latency)) return false;
   return true;
+}
+
+//
+
+auto Audio::updateResampleChannels(u32 channels) -> void {
+  if(resamplers.size() != channels) {
+    resamplers.reset();
+    resamplers.resize(channels);
+    for(auto& resampler : resamplers) resampler.reset(instance->frequency);
+    resampleBuffer.resize(channels);
+  }
 }
 
 //
