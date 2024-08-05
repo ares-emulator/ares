@@ -92,8 +92,7 @@ private:
     //policy: 0 = minimum latency (higher CPU usage); 10 = maximum latency (lower CPU usage)
     int policy = min(10, self.latency);
     ioctl(_fd, SNDCTL_DSP_POLICY, &policy);
-    int channels = self.channels;
-    if(ioctl(_fd, SNDCTL_DSP_CHANNELS, &channels) == -1) return terminate(), false;
+    if(!updateChannels()) return terminate(), false;
     if(ioctl(_fd, SNDCTL_DSP_SETFMT, &_format) == -1) return terminate(), false;
     int frequency = self.frequency;
     if(ioctl(_fd, SNDCTL_DSP_SPEED, &frequency) == -1) return terminate(), false;
@@ -107,6 +106,15 @@ private:
     if(!ready()) return;
     close(_fd);
     _fd = -1;
+  }
+
+  auto updateChannels() -> bool {
+    int channels = self.channels;
+    if(ioctl(_fd, SNDCTL_DSP_CHANNELS, &channels) == -1) return false;
+    if(!super.hasChannels(channels)) return false;
+    super.updateResampleChannels(channels);
+    self.channels = channels;
+    return true;
   }
 
   auto updateBlocking() -> bool {
