@@ -94,8 +94,7 @@ private:
     ioctl(_fd, SNDCTL_DSP_POLICY, &policy);
     if(!updateChannels()) return terminate(), false;
     if(ioctl(_fd, SNDCTL_DSP_SETFMT, &_format) == -1) return terminate(), false;
-    int frequency = self.frequency;
-    if(ioctl(_fd, SNDCTL_DSP_SPEED, &frequency) == -1) return terminate(), false;
+    if(!updateFrequency()) return terminate(), false;
     if(!updateBlocking()) return terminate(), false;
     if(!updateNonBlockBytes()) return terminate(), false;
 
@@ -120,6 +119,15 @@ private:
     if(!super.hasChannels(channels)) return false;
     super.updateResampleChannels(channels);
     self.channels = channels;
+    return true;
+  }
+
+  auto updateFrequency() -> bool {
+    int frequency = self.frequency;
+    if(ioctl(_fd, SNDCTL_DSP_SPEED, &frequency) == -1) return false;
+    if(!super.hasFrequency(frequency)) return false;
+    super.updateResampleFrequency(frequency);
+    self.frequency = frequency;
     return true;
   }
 
