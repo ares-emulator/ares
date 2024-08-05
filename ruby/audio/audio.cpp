@@ -73,7 +73,7 @@ auto Audio::setBlocking(bool blocking) -> bool {
   if(instance->blocking == blocking) return true;
   if(!instance->hasBlocking()) return false;
   if(!instance->setBlocking(instance->blocking = blocking)) return false;
-  for(auto& resampler : resamplers) resampler.reset(instance->frequency);
+  updateResampleFrequency(instance->frequency);
   return true;
 }
 
@@ -96,7 +96,7 @@ auto Audio::setFrequency(u32 frequency) -> bool {
   if(instance->frequency == frequency) return true;
   if(!instance->hasFrequency(frequency)) return false;
   if(!instance->setFrequency(instance->frequency = frequency)) return false;
-  for(auto& resampler : resamplers) resampler.reset(instance->frequency);
+  updateResampleFrequency(instance->frequency);
   return true;
 }
 
@@ -113,15 +113,19 @@ auto Audio::updateResampleChannels(u32 channels) -> void {
   if(resamplers.size() != channels) {
     resamplers.reset();
     resamplers.resize(channels);
-    for(auto& resampler : resamplers) resampler.reset(instance->frequency);
+    updateResampleFrequency(instance->frequency);
     resampleBuffer.resize(channels);
   }
+}
+
+auto Audio::updateResampleFrequency(u32 frequency) -> void {
+  for(auto& resampler : resamplers) resampler.reset(frequency);
 }
 
 //
 
 auto Audio::clear() -> void {
-  for(auto& resampler : resamplers) resampler.reset(instance->frequency);
+  updateResampleFrequency(instance->frequency);
   return instance->clear();
 }
 

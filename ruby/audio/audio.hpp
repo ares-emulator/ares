@@ -97,6 +97,7 @@ struct Audio {
   auto setLatency(u32 latency) -> bool;
 
   auto updateResampleChannels(u32 channels) -> void;
+  auto updateResampleFrequency(u32 frequency) -> void;
 
   auto clear() -> void;
   auto level() -> double;
