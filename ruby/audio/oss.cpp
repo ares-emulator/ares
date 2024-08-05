@@ -58,7 +58,10 @@ struct AudioOSS : AudioDriver {
   auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
-    _buffer.fill();
+    if(_buffer) {
+      memory::fill<s16>(_buffer, _bufferSize);
+      _offset = 0;
+    }
   }
 
   auto level() -> double override {
@@ -68,12 +71,13 @@ struct AudioOSS : AudioDriver {
   }
 
   auto output(const double samples[]) -> void override {
-    if(!_buffer.capacity<u8>()) return;
+    if(!_buffer) return;
     for(u32 n : range(self.channels)) {
-      _buffer.write(sclamp<16>(samples[n] * 32767.0));
-      if(_buffer.full()) {
-        write(_fd, _buffer.data(), _buffer.capacity<u8>());
-        _buffer.flush();
+      _buffer[_offset] = sclamp<16>(samples[n] * 32767.0);
+      _offset++;
+      if(_offset >= _bufferSize) {
+        write(_fd, _buffer, _bufferSize * _formatSize);
+        _offset = 0;
       }
     }
   }
@@ -99,7 +103,9 @@ private:
     if(!updateNonBlockBytes()) return terminate(), false;
 
     _bufferSize = _frames * self.channels;
-    _buffer.resize(_bufferSize);
+    _buffer = memory::allocate<s16>(_bufferSize);
+    if(!_buffer) return terminate(), false;
+    _offset = 0;
 
     return true;
   }
@@ -107,7 +113,12 @@ private:
   auto terminate() -> void {
     if(!ready()) return;
 
-    _buffer.reset();
+    if(_buffer) {
+      memory::free<s16>(_buffer);
+      _buffer = nullptr;
+      _bufferSize = 0;
+      _offset = 0;
+    }
 
     close(_fd);
     _fd = -1;
@@ -150,9 +161,11 @@ private:
 
   s32 _fd = -1;
   s32 _format = AFMT_S16_LE;
+  static constexpr u32 _formatSize = sizeof(s16);
   static constexpr u32 _frames = 32;
   s32 _nonBlockBytes = 1;
 
-  queue<s16> _buffer;
+  s16* _buffer = nullptr;
   u32 _bufferSize = 0;
+  u32 _offset = 0;
 };
