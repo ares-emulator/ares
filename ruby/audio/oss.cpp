@@ -98,9 +98,7 @@ private:
     int frequency = self.frequency;
     if(ioctl(_fd, SNDCTL_DSP_SPEED, &frequency) == -1) return terminate(), false;
     if(!updateBlocking()) return terminate(), false;
-    audio_buf_info info;
-    if(ioctl(_fd, SNDCTL_DSP_GETOSPACE, &info) == -1) return terminate(), false;
-    _nonBlockBytes = info.bytes;
+    if(!updateNonBlockBytes()) return terminate(), false;
 
     return true;
   }
@@ -117,6 +115,14 @@ private:
     if(flags < 0) return false;
     self.blocking ? flags &=~ O_NONBLOCK : flags |= O_NONBLOCK;
     fcntl(_fd, F_SETFL, flags);
+    return true;
+  }
+
+  auto updateNonBlockBytes() -> bool {
+    audio_buf_info info;
+    if(ioctl(_fd, SNDCTL_DSP_GETOSPACE, &info) == -1) return false;
+    if(info.bytes < 1) return false;
+    _nonBlockBytes = info.bytes;
     return true;
   }
 
