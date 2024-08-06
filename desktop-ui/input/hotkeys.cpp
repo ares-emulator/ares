@@ -3,6 +3,10 @@ auto InputManager::createHotkeys() -> void {
   static bool fastForwardAudioBlocking;
   static bool fastForwardAudioDynamic;
 
+  hotkeys.append(InputHotkey("Prefix").onPress([&] {
+    program.setPrefix(!program.prefixed);
+  }));
+
   hotkeys.append(InputHotkey("Toggle Fullscreen").onPress([&] {
     program.videoFullScreenToggle();
   }));
@@ -51,7 +55,7 @@ auto InputManager::createHotkeys() -> void {
       ruby::audio.setBlocking(false);
       ruby::audio.setDynamic(false);
       return;
-    } 
+    }
 
     ruby::video.setBlocking(fastForwardVideoBlocking);
     ruby::audio.setBlocking(fastForwardAudioBlocking);
