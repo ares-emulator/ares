@@ -3,7 +3,9 @@ auto InputManager::createHotkeys() -> void {
   static bool fastForwardAudioBlocking;
   static bool fastForwardAudioDynamic;
 
-  hotkeys.append(InputHotkey("Prefix").onPress([&] {
+  InputHotkey prefix("Prefix");
+  prefix.isPrefix = true;
+  hotkeys.append(prefix.onPress([&] {
     program.setPrefix(!program.prefixed);
   }));
 

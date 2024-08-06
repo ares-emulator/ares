@@ -73,6 +73,8 @@ struct InputHotkey : InputDigital {
 
   const string name;
 
+  bool isPrefix = false;
+
 private:
   function<void ()> press;
   function<void ()> release;
