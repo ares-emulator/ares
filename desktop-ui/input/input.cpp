@@ -516,7 +516,14 @@ auto InputManager::bind() -> void {
     for(auto& input : port.pad.inputs) input.mapping->bind();
     for(auto& input : port.mouse.inputs) input.mapping->bind();
   }
-  for(auto& mapping : hotkeys) mapping.bind();
+  for(auto& mapping : hotkeys) {
+    mapping.bind();
+
+    if(mapping.isPrefix) {
+      hasPrefix = mapping.countAssignments() > 0;
+      if(!hasPrefix) program.setPrefix(false);
+    }
+  }
 }
 
 auto InputManager::poll(bool force) -> void {
