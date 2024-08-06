@@ -47,6 +47,14 @@ auto InputMapping::unbind(u32 binding) -> void {
   assignments[binding] = {};
 }
 
+auto InputMapping::countAssignments() -> u32 {
+  u32 count = 0;
+  for(auto& assignment : assignments) {
+    if(assignment.length() > 0) count++;
+  }
+  return count;
+}
+
 auto InputMapping::Binding::icon() -> multiFactorImage {
   if(!device && deviceID) return Icon::Device::Joypad;
   if(!device) return {};
@@ -169,6 +177,23 @@ auto InputDigital::pressed() -> bool {
 }
 
 
+auto InputHotkey::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+  u32 oldCount = 0;
+  if(isPrefix) oldCount = countAssignments();
+
+  bool bindResult = InputDigital::bind(binding, device, groupID, inputID, oldValue, newValue);
+
+  if(bindResult && isPrefix) {
+    inputManager.hasPrefix = countAssignments() > 0;
+    if(inputManager.hasPrefix && oldCount == 0) {
+      inputManager.showPrefixMessage();
+    }
+  }
+
+  return bindResult;
+}
+
+
 auto InputHotkey::value() -> s16 {
   s16 result = 0;
 
@@ -253,7 +278,7 @@ auto InputAnalog::value() -> s16 {
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
     auto& qualifier = binding.qualifier;
-    if (device->isKeyboard() && program.keyboardCaptured) continue;    
+    if (device->isKeyboard() && program.keyboardCaptured) continue;
     s16 value = device->group(groupID).input(inputID).value();
 
     if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
@@ -504,4 +529,10 @@ auto InputManager::poll(bool force) -> void {
 auto InputManager::eventInput(shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
   inputSettings.eventInput(device, groupID, inputID, oldValue, newValue);
   hotkeySettings.eventInput(device, groupID, inputID, oldValue, newValue);
+}
+
+auto InputManager::showPrefixMessage() -> void {
+  MessageDialog().setTitle("Prefix").setText(
+    {"Mode ", hasPrefix ? "ON" : "OFF"}
+  ).setAlignment(settingsWindow).information();
 }
