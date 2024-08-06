@@ -155,6 +155,9 @@ auto InputManager::pollHotkeys() -> void {
   }
 
   for(auto& hotkey : hotkeys) {
+    if(hasPrefix && !hotkey.isPrefix && !program.prefixed) {
+      continue;
+    }
     auto state = hotkey.value();
     if(hotkey.state == 0 && state == 1 && hotkey.press) hotkey.press();
     if(hotkey.state == 1 && state == 0 && hotkey.release) hotkey.release();
