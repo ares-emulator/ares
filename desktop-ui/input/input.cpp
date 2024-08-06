@@ -193,6 +193,21 @@ auto InputHotkey::bind(u32 binding, shared_pointer<HID::Device> device, u32 grou
   return bindResult;
 }
 
+auto InputHotkey::unbind(u32 binding) -> void {
+  u32 oldCount = 0;
+  if(isPrefix) oldCount = countAssignments();
+
+  InputDigital::unbind(binding);
+
+  if(isPrefix) {
+    inputManager.hasPrefix = countAssignments() > 0;
+    if(!inputManager.hasPrefix) {
+      if(oldCount == 1) inputManager.showPrefixMessage();
+      program.setPrefix(false);
+    }
+  }
+}
+
 
 auto InputHotkey::value() -> s16 {
   s16 result = 0;
