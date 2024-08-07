@@ -100,6 +100,17 @@ Presentation::Presentation() {
     }
     if(visible()) resizeWindow();
   }).doToggle();
+#if defined(PLATFORM_WINDOWS)    
+  showBorderlessSetting.setText("Borderless Window").setChecked(settings.general.borderless).onToggle([&] {
+    settings.general.borderless = showBorderlessSetting.checked();
+    if(!showBorderlessSetting.checked()) {
+      Window::setBorderless(false);
+    }else{
+      Window::setBorderless(true);
+    }
+    if(visible()) resizeWindow();
+  }).doToggle();
+#endif
   videoSettingsAction.setText("Video" ELLIPSIS).setIcon(Icon::Device::Display).onActivate([&] {
     settingsWindow.show("Video");
   });

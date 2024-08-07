@@ -69,6 +69,9 @@ struct Settings : Markup::Node {
     bool runAhead = false;
     bool autoSaveMemory = true;
     bool homebrewMode = false;
+#if defined(PLATFORM_WINDOWS)
+    bool borderless = false;
+#endif
   } general;
 
   struct Rewind {

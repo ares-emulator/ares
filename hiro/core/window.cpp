@@ -389,4 +389,14 @@ auto mWindow::title() const -> string {
   return state.title;
 }
 
+auto mWindow::borderless() const -> bool {
+  return state.borderless;
+}
+
+auto mWindow::setBorderless(bool borderless) -> type& {
+  state.borderless = borderless;
+  signal(setBorderless, borderless);
+  return *this;
+}
+
 #endif

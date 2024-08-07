@@ -904,6 +904,7 @@ struct Window : sWindow {
   auto append(sSizable sizable) { return self().append(sizable), *this; }
   auto append(sStatusBar statusBar) { return self().append(statusBar), *this; }
   auto backgroundColor() const { return self().backgroundColor(); }
+  auto borderless() const { return self().borderless(); }  
   auto dismissable() const { return self().dismissable(); }
   auto doClose() const { return self().doClose(); }
   auto doDrop(vector<string> names) const { return self().doDrop(names); }
@@ -937,6 +938,7 @@ struct Window : sWindow {
   auto setAlignment(Alignment alignment = Alignment::Center) { return self().setAlignment(alignment), *this; }
   auto setAlignment(sWindow relativeTo, Alignment alignment = Alignment::Center) { return self().setAlignment(relativeTo, alignment), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
+  auto setBorderless(bool borderless = true) { return self().setBorderless(borderless), *this; }
   auto setDismissable(bool dismissable = true) { return self().setDismissable(dismissable), *this; }
   auto setDroppable(bool droppable = true) { return self().setDroppable(droppable), *this; }
   auto setFrameGeometry(Geometry geometry) { return self().setFrameGeometry(geometry), *this; }
