@@ -44,7 +44,7 @@ struct Metal {
   auto output() -> void;
   auto initialize(const string& shader) -> bool;
   auto terminate() -> void;
-  auto refreshRateHint(double refreshRate) -> void;
+  auto refreshRateHint(ares::Node::Video::Screen node, double refreshRate) -> void;
   
   auto size(u32 width, u32 height) -> void;
   auto release() -> void;
