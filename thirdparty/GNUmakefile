@@ -7,8 +7,8 @@ $(object.path)/sljitAllocator.o: $(thirdparty.path)/sljitAllocator.cpp
 flags += -DSLJIT_HAVE_CONFIG_PRE=1 -DSLJIT_HAVE_CONFIG_POST=1
 
 libchdr.objects := libchdr_bitstream libchdr_cdrom libchdr_chd libchdr_flac libchdr_huffman
-libchdr.objects += lzma_alloc lzma_bra86 lzma_braia64 lzma_cpuarch lzma_delta lzma_lfind
-libchdr.objects += lzma_86dec lzma_dec lcma_enc lzma_sort
+libchdr.objects += lzma_alloc lzma_bra86 lzma_braia64 lzma_cpuarch lzma_delta lzma_lzfind
+libchdr.objects += lzma_86dec lzma_dec lzma_enc lzma_sort
 libchdr.objects += zlib_adler32 zlib_compress zlib_crc32 zlib_deflate zlib_infback zlib_inffast
 libchdr.objects += zlib_inflate zlib_inftrees zlib_trees zlib_uncompr zlib_zutil
 libchdr.objects += zstd_common_debug zstd_common_entropy_common zstd_common_error_private
@@ -29,10 +29,10 @@ $(object.path)/lzma_bra86.o: $(libchdr.path)/deps/lzma-24.05/src/Bra86.c
 $(object.path)/lzma_braia64.o: $(libchdr.path)/deps/lzma-24.05/src/BraIA64.c
 $(object.path)/lzma_cpuarch.o: $(libchdr.path)/deps/lzma-24.05/src/CpuArch.c
 $(object.path)/lzma_delta.o: $(libchdr.path)/deps/lzma-24.05/src/Delta.c
-$(object.path)/lzma_lfind.o: $(libchdr.path)/deps/lzma-24.05/src/LzFind.c
+$(object.path)/lzma_lzfind.o: $(libchdr.path)/deps/lzma-24.05/src/LzFind.c
 $(object.path)/lzma_86dec.o: $(libchdr.path)/deps/lzma-24.05/src/Lzma86Dec.c
 $(object.path)/lzma_dec.o: $(libchdr.path)/deps/lzma-24.05/src/LzmaDec.c
-$(object.path)/lcma_enc.o: $(libchdr.path)/deps/lzma-24.05/src/LzmaEnc.c
+$(object.path)/lzma_enc.o: $(libchdr.path)/deps/lzma-24.05/src/LzmaEnc.c
 $(object.path)/lzma_sort.o: $(libchdr.path)/deps/lzma-24.05/src/Sort.c
 
 $(object.path)/zlib_adler32.o: $(libchdr.path)/deps/zlib-1.3.1/adler32.c
