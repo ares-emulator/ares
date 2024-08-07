@@ -96,6 +96,9 @@ struct Audio {
   auto setFrequency(u32 frequency) -> bool;
   auto setLatency(u32 latency) -> bool;
 
+  auto updateResampleChannels(u32 channels) -> void;
+  auto updateResampleFrequency(u32 frequency) -> void;
+
   auto clear() -> void;
   auto level() -> double;
   auto output(const f64 samples[]) -> void;

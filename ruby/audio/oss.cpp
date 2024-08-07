@@ -23,7 +23,6 @@ struct AudioOSS : AudioDriver {
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(3);
-    buffer.resize(64);
     return initialize();
   }
 
@@ -41,11 +40,11 @@ struct AudioOSS : AudioDriver {
   }
 
   auto hasChannels() -> vector<u32> override {
-    return {1, 2};
+    return {1, 2, 3, 4, 5, 6, 7, 8};
   }
 
   auto hasFrequencies() -> vector<u32> override {
-    return {44100, 48000, 96000};
+    return {22050, 44100, 48000, 96000, 192000};
   }
 
   auto hasLatencies() -> vector<u32> override {
@@ -59,21 +58,32 @@ struct AudioOSS : AudioDriver {
   auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
-    buffer.resize(64);
+    if(_buffer) {
+      memory::fill(_buffer, _bufferSize);
+      _offset = 0;
+    }
   }
 
   auto level() -> double override {
     audio_buf_info info;
     ioctl(_fd, SNDCTL_DSP_GETOSPACE, &info);
-    return (double)(_bufferSize - info.bytes) / _bufferSize;
+    return (double)(_nonBlockBytes - info.bytes) / _nonBlockBytes;
   }
 
   auto output(const double samples[]) -> void override {
+    if(!_buffer) return;
     for(u32 n : range(self.channels)) {
-      buffer.write(sclamp<16>(samples[n] * 32767.0));
-      if(buffer.full()) {
-        write(_fd, buffer.data(), buffer.capacity<u8>());
-        buffer.flush();
+      switch(_format) {
+        case AFMT_S8: *(s8*)(&_buffer[_offset]) = sclamp<8>(samples[n] * 127.0); break;
+        case AFMT_S16_LE: *(s16*)(&_buffer[_offset]) = sclamp<16>(samples[n] * 32767.0); break;
+        case AFMT_S24_LE: *(s32*)(&_buffer[_offset]) = sclamp<24>(samples[n] * 8388607.0); break;
+        case AFMT_S32_LE: *(s32*)(&_buffer[_offset]) = sclamp<32>(samples[n] * 2147483647.0); break;
+        default: return;
+      }
+      _offset += _formatSize;
+      if(_offset >= _bufferSize) {
+        write(_fd, _buffer, _bufferSize);
+        _offset = 0;
       }
     }
   }
@@ -92,23 +102,62 @@ private:
     //policy: 0 = minimum latency (higher CPU usage); 10 = maximum latency (lower CPU usage)
     int policy = min(10, self.latency);
     ioctl(_fd, SNDCTL_DSP_POLICY, &policy);
-    int channels = self.channels;
-    ioctl(_fd, SNDCTL_DSP_CHANNELS, &channels);
-    ioctl(_fd, SNDCTL_DSP_SETFMT, &_format);
-    int frequency = self.frequency;
-    ioctl(_fd, SNDCTL_DSP_SPEED, &frequency);
-    updateBlocking();
-    audio_buf_info info;
-    ioctl(_fd, SNDCTL_DSP_GETOSPACE, &info);
-    _bufferSize = info.bytes;
+    if(!updateChannels()) return terminate(), false;
+    if(!updateFormat()) return terminate(), false;
+    if(!updateFrequency()) return terminate(), false;
+    if(!updateBlocking()) return terminate(), false;
+    if(!updateNonBlockBytes()) return terminate(), false;
+
+    _bufferSize = _frames * self.channels * _formatSize;
+    _buffer = memory::allocate(_bufferSize);
+    if(!_buffer) return terminate(), false;
+    _offset = 0;
 
     return true;
   }
 
   auto terminate() -> void {
     if(!ready()) return;
+
+    if(_buffer) {
+      memory::free(_buffer);
+      _buffer = nullptr;
+      _bufferSize = 0;
+      _offset = 0;
+    }
+
     close(_fd);
     _fd = -1;
+  }
+
+  auto updateChannels() -> bool {
+    int channels = self.channels;
+    if(ioctl(_fd, SNDCTL_DSP_CHANNELS, &channels) == -1) return false;
+    if(!super.hasChannels(channels)) return false;
+    super.updateResampleChannels(channels);
+    self.channels = channels;
+    return true;
+  }
+
+  auto updateFormat() -> bool {
+    if(ioctl(_fd, SNDCTL_DSP_SETFMT, &_format) == -1) return false;
+    switch(_format) {
+      case AFMT_S8: _formatSize = sizeof(s8); break;
+      case AFMT_S16_LE: _formatSize = sizeof(s16); break;
+      case AFMT_S24_LE: _formatSize = sizeof(s32); break; // OSS uses 32 bits for 24bit
+      case AFMT_S32_LE: _formatSize = sizeof(s32); break;
+      default: return false;
+    }
+    return true;
+  }
+
+  auto updateFrequency() -> bool {
+    int frequency = self.frequency;
+    if(ioctl(_fd, SNDCTL_DSP_SPEED, &frequency) == -1) return false;
+    if(!super.hasFrequency(frequency)) return false;
+    super.updateResampleFrequency(frequency);
+    self.frequency = frequency;
+    return true;
   }
 
   auto updateBlocking() -> bool {
@@ -120,9 +169,21 @@ private:
     return true;
   }
 
+  auto updateNonBlockBytes() -> bool {
+    audio_buf_info info;
+    if(ioctl(_fd, SNDCTL_DSP_GETOSPACE, &info) == -1) return false;
+    if(info.bytes < 1) return false;
+    _nonBlockBytes = info.bytes;
+    return true;
+  }
+
   s32 _fd = -1;
   s32 _format = AFMT_S16_LE;
-  s32 _bufferSize = 1;
+  u32 _formatSize = 0;
+  static constexpr u32 _frames = 32;
+  s32 _nonBlockBytes = 1;
 
-  queue<s16> buffer;
+  u8* _buffer = nullptr;
+  u32 _bufferSize = 0;
+  u32 _offset = 0;
 };
