@@ -76,8 +76,12 @@ struct AudioOSS : AudioDriver {
       switch(_format) {
         case AFMT_S8: *(s8*)(&_buffer[_offset]) = sclamp<8>(samples[n] * 127.0); break;
         case AFMT_S16_LE: *(s16*)(&_buffer[_offset]) = sclamp<16>(samples[n] * 32767.0); break;
+#if defined(AFMT_S24_LE)
         case AFMT_S24_LE: *(s32*)(&_buffer[_offset]) = sclamp<24>(samples[n] * 8388607.0); break;
+#endif
+#if defined(AFMT_S32_LE)
         case AFMT_S32_LE: *(s32*)(&_buffer[_offset]) = sclamp<32>(samples[n] * 2147483647.0); break;
+#endif
         default: return;
       }
       _offset += _formatSize;
@@ -144,8 +148,12 @@ private:
     switch(_format) {
       case AFMT_S8: _formatSize = sizeof(s8); break;
       case AFMT_S16_LE: _formatSize = sizeof(s16); break;
+#if defined(AFMT_S24_LE)
       case AFMT_S24_LE: _formatSize = sizeof(s32); break; // OSS uses 32 bits for 24bit
+#endif
+#if defined(AFMT_S32_LE)
       case AFMT_S32_LE: _formatSize = sizeof(s32); break;
+#endif
       default: return false;
     }
     return true;
