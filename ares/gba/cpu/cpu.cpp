@@ -58,6 +58,7 @@ auto CPU::dmaRun() -> void {
     if(context.dmaRan) {
       idle();
       context.dmaRan = false;
+      context.dmaRomAccess = false;
     }
     context.dmaActive = false;
   }
