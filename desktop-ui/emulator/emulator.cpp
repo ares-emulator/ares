@@ -200,7 +200,9 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
 
   auto port = ares::Node::parent(device);
   if(!port) return;
-  
+
+  bool disabledInput = inputManager.hasPrefix && program.prefixed;
+
   for(auto& inputPort : ports) {
     if(inputPort.name != port->name()) continue;
     for(auto& inputDevice : inputPort.devices) {
@@ -208,10 +210,12 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
       for(auto& inputNode : inputDevice.inputs) {
         if(inputNode.name != input->name()) continue;
         if(auto button = input->cast<ares::Node::Input::Button>()) {
+          if(disabledInput) return;
           auto pressed = inputNode.mapping->pressed();
           return button->setValue(pressed);
         }
         if(auto axis = input->cast<ares::Node::Input::Axis>()) {
+          if(disabledInput) return;
           auto value = inputNode.mapping->value();
           return axis->setValue(value);
         }
@@ -221,6 +225,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
           }
         }
       }
+      if(disabledInput) return;
       for(auto& inputPair : inputDevice.pairs) {
         if(inputPair.name != input->name()) continue;
         if(auto axis = input->cast<ares::Node::Input::Axis>()) {

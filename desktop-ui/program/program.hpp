@@ -41,6 +41,7 @@ struct Program : ares::Platform {
   auto captureScreenshot(const u32* data, u32 pitch, u32 width, u32 height) -> void;
   auto openFile(BrowserDialog&) -> string;
   auto selectFolder(BrowserDialog&) -> string;
+  auto setPrefix(bool) -> void;
 
   //drivers.cpp
   auto videoDriverUpdate() -> void;
@@ -65,6 +66,7 @@ struct Program : ares::Platform {
   vector<ares::Node::Video::Screen> screens;
   vector<ares::Node::Audio::Stream> streams;
 
+  bool prefixed = false;
   bool paused = false;
   bool fastForwarding = false;
   bool rewinding = false;

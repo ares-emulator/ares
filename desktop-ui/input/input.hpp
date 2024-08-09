@@ -6,9 +6,10 @@ struct InputMapping {
   auto bind() -> void;
   auto bind(u32 binding, string assignment) -> void;
   auto unbind() -> void;
-  auto unbind(u32 binding) -> void;
+  auto countAssignments() -> u32;
 
   virtual auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool = 0;
+  virtual auto unbind(u32 binding) -> void;
   virtual auto value() -> s16 = 0;
   virtual auto pressed() -> bool { return false; }
 
@@ -66,12 +67,18 @@ struct InputRumble : InputMapping {
 };
 
 struct InputHotkey : InputDigital {
+  using InputDigital::bind;
+  using InputDigital::unbind;
   InputHotkey(string name) : name(name) {}
+  auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
+  auto unbind(u32 binding) -> void override;
   auto& onPress(function<void ()> press) { return this->press = press, *this; }
   auto& onRelease(function<void ()> release) { return this->release = release, *this; }
   auto value() -> s16 override;
 
   const string name;
+
+  bool isPrefix = false;
 
 private:
   function<void ()> press;
@@ -185,6 +192,7 @@ struct InputManager {
   auto bind() -> void;
   auto poll(bool force = false) -> void;
   auto eventInput(shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
+  auto showPrefixMessage() -> void;
 
   //hotkeys.cpp
   auto createHotkeys() -> void;
@@ -195,6 +203,8 @@ struct InputManager {
 
   u64 pollFrequency = 5;
   u64 lastPoll = 0;
+
+  bool hasPrefix = false;
 };
 
 extern VirtualPort virtualPorts[5];

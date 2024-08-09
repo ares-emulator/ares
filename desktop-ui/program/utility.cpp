@@ -59,3 +59,9 @@ auto Program::selectFolder(BrowserDialog& dialog) -> string {
   window.setParent(dialog.alignmentWindow());
   return window.directory();
 }
+
+auto Program::setPrefix(bool state) -> void {
+  if(prefixed == state) return;
+  prefixed = state;
+  showMessage({"Prefix ", prefixed ? "ON" : "OFF"});
+}

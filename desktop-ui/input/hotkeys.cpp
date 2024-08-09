@@ -3,6 +3,12 @@ auto InputManager::createHotkeys() -> void {
   static bool fastForwardAudioBlocking;
   static bool fastForwardAudioDynamic;
 
+  InputHotkey prefix("Prefix");
+  prefix.isPrefix = true;
+  hotkeys.append(prefix.onPress([&] {
+    program.setPrefix(!program.prefixed);
+  }));
+
   hotkeys.append(InputHotkey("Toggle Fullscreen").onPress([&] {
     program.videoFullScreenToggle();
   }));
@@ -51,7 +57,7 @@ auto InputManager::createHotkeys() -> void {
       ruby::audio.setBlocking(false);
       ruby::audio.setDynamic(false);
       return;
-    } 
+    }
 
     ruby::video.setBlocking(fastForwardVideoBlocking);
     ruby::audio.setBlocking(fastForwardAudioBlocking);
@@ -149,6 +155,9 @@ auto InputManager::pollHotkeys() -> void {
   }
 
   for(auto& hotkey : hotkeys) {
+    if(hasPrefix && !hotkey.isPrefix && !program.prefixed) {
+      continue;
+    }
     auto state = hotkey.value();
     if(hotkey.state == 0 && state == 1 && hotkey.press) hotkey.press();
     if(hotkey.state == 1 && state == 0 && hotkey.release) hotkey.release();
