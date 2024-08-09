@@ -24,6 +24,13 @@ Famicom::Famicom() {
     device.digital("Microphone", virtualPorts[id].pad.north);
     port.append(device); }
 
+  { InputDevice device{"Zapper"};
+    device.relative("X",         virtualPorts[id].mouse.x);
+    device.relative("Y",         virtualPorts[id].mouse.y);
+    device.digital ("Trigger",   virtualPorts[id].mouse.left);
+    port.append(device);
+    }
+
     ports.append(port);
   }
 }
