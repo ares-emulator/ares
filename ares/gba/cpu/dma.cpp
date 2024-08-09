@@ -23,6 +23,7 @@ auto CPU::DMA::transfer() -> void {
     n32 addr = latch.source();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
+    if(addr & 0x0800'0000) cpu.context.dmaRomAccess = true;
     cpu.dmabus.data = cpu.get(mode, addr);
     if(mode & Half) cpu.dmabus.data |= cpu.dmabus.data << 16;
   }
@@ -41,6 +42,7 @@ auto CPU::DMA::transfer() -> void {
     n32 addr = latch.target();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
+    if(addr & 0x0800'0000) cpu.context.dmaRomAccess = true;
     cpu.set(mode, addr, cpu.dmabus.data);
   }
 
