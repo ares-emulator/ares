@@ -9,6 +9,7 @@ auto AI::serialize(serializer& s) -> void {
   s(io.dmaAddressCarry);
   s(io.dmaLength);
   s(io.dmaCount);
+  s(io.dmaOriginPc);
   s(io.dacRate);
   s(io.bitRate);
 
