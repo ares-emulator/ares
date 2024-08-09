@@ -14,7 +14,7 @@
 
 #define RUse(n)   info.r.use |= 1 << n
 #define RDef(n)   info.r.def |= 1 << n
-#define RDefB(n)  (void)0  //bypassable
+#define RDefB(n)  RDef(n), info.flags |= OpInfo::Bypass
 #define VUse(n)   info.v.use |= 1 << n
 #define VDef(n)   info.v.def |= 1 << n
 #define VGUse(n)  info.v.use |= 0xff << (n & ~7)
@@ -34,7 +34,7 @@ auto RSP::decoderEXECUTE(u32 instruction) const -> OpInfo {
   jp(0x00, SPECIAL);
   jp(0x01, REGIMM);
   op(0x02, J, Branch);
-  op(0x03, JAL, Branch);
+  op(0x03, JAL, RDefB(31), Branch);
   op(0x04, BEQ, RUse(RS), RUse(RT), Branch);
   op(0x05, BNE, RUse(RS), RUse(RT), Branch);
   op(0x06, BLEZ, RUse(RS), Branch);
@@ -187,8 +187,8 @@ auto RSP::decoderREGIMM(u32 instruction) const -> OpInfo {
   op(0x0d, INVALID);
   op(0x0e, INVALID);  //TNEI
   op(0x0f, INVALID);
-  op(0x10, BLTZAL, RUse(RS), Branch);
-  op(0x11, BGEZAL, RUse(RS), Branch);
+  op(0x10, BLTZAL, RDefB(31), RUse(RS), Branch);
+  op(0x11, BGEZAL, RDefB(31), RUse(RS), Branch);
   op(0x12, INVALID);  //BLTZALL
   op(0x13, INVALID);  //BGEZALL
   op(0x14, INVALID);
