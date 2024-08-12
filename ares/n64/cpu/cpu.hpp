@@ -39,27 +39,38 @@ struct CPU : Thread {
 
   auto instruction() -> void;
   auto instructionPrologue(u64 address, u32 instruction) -> void;
-  auto instructionEpilogue() -> s32;
+  auto instructionEpilogue() -> void;
 
   auto power(bool reset) -> void;
 
   struct Pipeline {
-    u64 pc;
-    u64 nextpc;
-    bool wasDelaySlot;
-    bool delaySlot;
+    CPU& self;
+    u64 pc     = 0;  //pc after current instruction
+    u64 nextpc = 0;  //pc after next instruction
+    u32 state  = 0;  //current branch state
+    u32 nstate = 0;  //next branch state
 
-    auto setPc(u64 address) -> void { pc = address; nextpc = address + 4; }
-    auto branch(u64 address) -> void { nextpc = address; delaySlot = true; }
-    auto noBranch() -> void { delaySlot = true; }
-    auto skip() -> void { pc += 4; nextpc = pc+4; }
-    auto tick() -> void { 
-      wasDelaySlot = delaySlot;
-      delaySlot = false;
+    enum : u32 {
+      EndBlock  = 1 << 0,
+      DelaySlot = 1 << 1,
+    };
+
+    auto inDelaySlot() const -> bool { return state & DelaySlot; }
+    auto setPc(u64 address) -> void { self.ipu.pc = pc = address; nextpc = address + 4; state = nstate = 0; }
+    auto branch(u64 address) -> void { nextpc = address; nstate |= DelaySlot | EndBlock; }
+    auto noBranch() -> void { nstate |= DelaySlot; }
+    auto exception() -> void { state |= EndBlock; }
+    auto skip() -> void { pc += 4; nextpc = pc + 4; state |= EndBlock; }
+    auto begin() -> void {
+      nstate = 0;
       pc = nextpc;
       nextpc += 4;
     }
-  } pipeline;
+    auto end() -> void {
+      state = nstate;
+      self.ipu.pc = pc;
+    }
+  } pipeline{*this};
 
   //context.cpp
   struct Context {

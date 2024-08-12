@@ -3,7 +3,8 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(pipeline.pc);
   s(pipeline.nextpc);
-  s(ipu.pc);
+  s(pipeline.state);
+  s(pipeline.nstate);
 
   s(context.endian);
   s(context.physMask);
@@ -46,6 +47,7 @@ auto CPU::serialize(serializer& s) -> void {
   for(auto& r : ipu.r) s(r.u64);
   s(ipu.lo.u64);
   s(ipu.hi.u64);
+  s(ipu.pc);
 
   s(scc.index.tlbEntry);
   s(scc.index.probeFailure);

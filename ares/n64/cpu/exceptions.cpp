@@ -22,13 +22,14 @@ auto CPU::Exception::trigger(u32 code, u32 coprocessor, bool tlbMiss) -> void {
     self.scc.status.exceptionLevel = 1;
     self.scc.cause.exceptionCode = code;
     self.scc.cause.coprocessorError = coprocessor;
-    if(self.scc.cause.branchDelay = self.pipeline.wasDelaySlot) self.scc.epc -= 4;
+    if(self.scc.cause.branchDelay = self.pipeline.inDelaySlot()) self.scc.epc -= 4;
   } else {
     self.scc.cause.exceptionCode = code;
     self.scc.cause.coprocessorError = coprocessor;
   }
 
   self.pipeline.setPc(vectorBase + vectorOffset);
+  self.pipeline.exception();  //todo: only call this between instruction prologue/epilogue
   self.context.setMode();
 }
 

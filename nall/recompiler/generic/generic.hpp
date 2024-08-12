@@ -46,8 +46,8 @@ namespace nall::recompiler {
       sljit_set_label(sljit_emit_cmp(compiler, SLJIT_NOT_EQUAL | SLJIT_32, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0), epilogue);
     }
 
-    auto jumpEpilog() -> void {
-      sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), epilogue);
+    auto jumpEpilog(sljit_s32 flags = SLJIT_JUMP) -> void {
+      sljit_set_label(sljit_emit_jump(compiler, flags), epilogue);
     }
 
     auto setLabel(sljit_jump* jump) -> void {

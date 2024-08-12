@@ -295,6 +295,7 @@ auto CPU::ERET() -> void {
     pipeline.setPc(scc.epc);
     scc.status.exceptionLevel = 0;
   }
+  pipeline.exception();
   scc.llbit = 0;
   context.setMode();
 }

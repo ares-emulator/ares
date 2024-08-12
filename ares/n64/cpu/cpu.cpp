@@ -91,10 +91,6 @@ auto CPU::synchronize() -> void {
 }
 
 auto CPU::instruction() -> void {
-  if constexpr(Accuracy::CPU::Interpreter) {
-    ipu.pc = pipeline.pc;
-    pipeline.tick();
-  }
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
       debugger.interrupt(scc.cause.interruptPending);
@@ -133,9 +129,11 @@ auto CPU::instruction() -> void {
   if constexpr(Accuracy::CPU::Interpreter) {
     auto data = fetch(ipu.pc);
     if (!data) return;
+    pipeline.begin();
     instructionPrologue(ipu.pc, *data);
     decoderEXECUTE(*data);
     instructionEpilogue();
+    pipeline.end();
   }
 }
 
@@ -143,7 +141,7 @@ auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
   debugger.instruction(address, instruction);
 }
 
-auto CPU::instructionEpilogue() -> s32 {
+auto CPU::instructionEpilogue() -> void {
   if constexpr(Accuracy::CPU::Recompiler) {
     //simulates timings without performing actual icache loads
     icache.step(ipu.pc, devirtualizeFast(ipu.pc));
@@ -153,8 +151,6 @@ auto CPU::instructionEpilogue() -> s32 {
   if constexpr(Accuracy::CPU::Interpreter) {
     ipu.r[0].u64 = 0;
   }
-
-  return 0;
 }
 
 auto CPU::power(bool reset) -> void {

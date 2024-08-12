@@ -3,7 +3,7 @@
 #define RT ipu.r[RTn]
 #define RS ipu.r[RSn]
 
-#define jp(id, name, ...) case id: return decoder##name(instruction, ##__VA_ARGS__)
+#define jp(id, name, ...) case id: return decoder##name(instruction, __VA_ARGS__)
 #define op(id, name, ...) case id: return name(__VA_ARGS__)
 #define br(id, name, ...) case id: return name(__VA_ARGS__)
 
@@ -221,7 +221,7 @@ auto CPU::decoderSCC(u32 instruction) -> void {
   br(0x18, ERET);
   }
 
-  //undefined instructions do not throw a reserv32 instruction exception
+  //undefined instructions do not throw a reserved instruction exception
 }
 
 auto CPU::decoderFPU(u32 instruction) -> void {
@@ -356,7 +356,7 @@ auto CPU::decoderFPU(u32 instruction) -> void {
   op(0x25, FCVT_L_L, FD, FS);
   }
 
-  //undefined instructions do not throw a reserv32 instruction exception
+  //undefined instructions do not throw a reserved instruction exception
 }
 
 auto CPU::decoderCOP2(u32 instruction) -> void {
