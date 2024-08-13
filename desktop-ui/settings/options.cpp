@@ -1,6 +1,10 @@
 auto OptionSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
+  bool hideCursorImplemented = false;
+#if defined(PLATFORM_MACOS)
+  hideCursorImplemented = true;
+#endif
 
   commonSettingsLabel.setText("Emulator Options").setFont(Font().setBold());
 
@@ -37,5 +41,15 @@ auto OptionSettings::construct() -> void {
   });
   nintendo64ExpansionPakLayout.setAlignment(1).setPadding(12_sx, 0);
       nintendo64ExpansionPakHint.setText("Enable/Disable the 4MB Expansion Pak").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+      
+  miscellaneousSettingsLabel.setVisible(hideCursorImplemented).setText("Miscellaneous").setFont(Font().setBold());
+  
+  autoHideCursorOption.setText("Auto-Hide Cursor").setVisible(hideCursorImplemented).setChecked(settings.general.autoHideCursor).onToggle([&] {
+    settings.general.autoHideCursor = autoHideCursorOption.checked();
+    presentation.setHidesCursor(settings.general.autoHideCursor);
+    presentation.autoHideCursorSetting.setChecked(settings.general.autoHideCursor);
+  });
+  autoHideCursorLayout.setAlignment(1).setPadding(12_sx, 0);
+      autoHideCursorHint.setVisible(hideCursorImplemented).setText("Hide the mouse cursor when idle over the game window").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   
 }

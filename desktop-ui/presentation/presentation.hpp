@@ -41,6 +41,7 @@ struct Presentation : Window {
         Group preferRegionGroup{&preferNTSCU, &preferNTSCJ, &preferPAL};
       MenuSeparator groupSettingsSeparatpr{&settingsMenu};
       MenuCheckItem muteAudioSetting{&settingsMenu};
+      MenuCheckItem autoHideCursorSetting{&settingsMenu};
       MenuCheckItem showStatusBarSetting{&settingsMenu};
       MenuSeparator audioSettingsSeparator{&settingsMenu};
       MenuItem videoSettingsAction{&settingsMenu};
