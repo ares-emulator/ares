@@ -176,6 +176,7 @@ struct CPU : Thread {
     auto power(bool reset) -> void;
 
     auto readDebug(u32 vaddr, u32 address) -> u8;
+    auto writeDebug(u32 vaddr, u32 address, u8 value) -> void;
 
     //8KB
     struct Line {

@@ -79,6 +79,15 @@ auto CPU::DataCache::write(u32 vaddr, u32 address, u64 data) -> void {
   line.write<Size>(address, data);
 }
 
+auto CPU::DataCache::writeDebug(u32 vaddr, u32 address, u8 data) -> void {
+  auto& line = this->line(vaddr);
+  if(!line.hit(address)) {
+    Thread dummyThread{};
+    return bus.write<Byte>(address, data, dummyThread, "Ares Debugger");
+  }
+  line.write<Byte>(address, data);
+}
+
 auto CPU::DataCache::power(bool reset) -> void {
   u32 index = 0;
   for(auto& line : lines) {
