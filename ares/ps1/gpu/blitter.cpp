@@ -61,9 +61,23 @@ auto GPU::Blitter::queue() -> void {
   self.vram.mutex.lock();
   auto bytesPerRow = width * (depth == 0 ? 2 : 3);
   for(int y = 0; y < height; y++) {
-    u32 offset = (y + sy) * 1024 * 2 + sx * 2;
-    memory::copy(vram.data + offset, self.vram.data + offset, bytesPerRow);
+    u32 wrappedY = (y + sy) % 512;
+    u32 startOffset = wrappedY * 1024 * 2 + sx * 2;
+    u32 remainingInRow = 1024 * 2 - (startOffset % (1024 * 2));
+
+    if(bytesPerRow > remainingInRow) {
+      memory::copy(vram.data + startOffset, self.vram.data + startOffset, remainingInRow);
+
+      u32 remainder = bytesPerRow - remainingInRow;
+      memory::copy(vram.data + (startOffset + remainingInRow) % (1024 * 512 * 2),
+                   self.vram.data + (startOffset + remainingInRow) % (1024 * 512 * 2),
+                   remainder);
+      continue;
+    }
+
+    memory::copy(vram.data + startOffset, self.vram.data + startOffset, bytesPerRow);
   }
+
   self.vram.mutex.unlock();
 
   self.screen->setViewport(0, 0, width, height);
