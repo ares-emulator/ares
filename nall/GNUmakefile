@@ -102,7 +102,7 @@ ifneq ($(filter cl,$(compiler)),)
 else
   machine_opt := $(if $(findstring clang,$(compiler)),-print-target-triple,-dumpmachine)
   machine_str := $(shell $(compiler) $(machine_opt))
-  ifneq ($(filter i686-%,$(machine_str)),)
+  ifneq ($(filter i386-% i486-% i586-% i686-%,$(machine_str)),)
     machine := x86
   else ifneq ($(filter amd64-% x86_64-%,$(machine_str)),)
     machine := amd64
