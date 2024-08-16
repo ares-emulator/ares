@@ -1,6 +1,6 @@
 #if defined(Hiro_Window)
 
-@implementation CocoaWindow : NSWindow
+@implementation CocoaWindow
 
 -(id) initWith:(hiro::mWindow&)windowReference {
   window = &windowReference;

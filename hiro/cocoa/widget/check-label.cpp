@@ -1,6 +1,6 @@
 #if defined(Hiro_CheckLabel)
 
-@implementation CocoaCheckLabel : NSButton
+@implementation CocoaCheckLabel
 
 -(id) initWith:(hiro::mCheckLabel&)checkLabelReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

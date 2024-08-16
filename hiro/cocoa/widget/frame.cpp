@@ -1,6 +1,6 @@
 #if defined(Hiro_Frame)
 
-@implementation CocoaFrame : NSBox
+@implementation CocoaFrame
 
 -(id) initWith:(hiro::mFrame&)frameReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

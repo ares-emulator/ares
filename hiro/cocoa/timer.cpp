@@ -1,6 +1,6 @@
 #if defined(Hiro_Timer)
 
-@implementation CocoaTimer : NSObject
+@implementation CocoaTimer
 
 -(id) initWith:(hiro::mTimer&)timerReference {
   if(self = [super init]) {

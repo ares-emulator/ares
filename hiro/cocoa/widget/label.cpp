@@ -1,6 +1,6 @@
 #if defined(Hiro_Label)
 
-@implementation CocoaLabel : NSView
+@implementation CocoaLabel
 {
   NSColor *_foregroundColor;
 }

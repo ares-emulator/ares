@@ -1,6 +1,6 @@
 #if defined(Hiro_TextEdit)
 
-@implementation CocoaTextEdit : NSScrollView
+@implementation CocoaTextEdit
 
 -(id) initWith:(hiro::mTextEdit&)textEditReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

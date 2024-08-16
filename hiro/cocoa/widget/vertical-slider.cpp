@@ -1,6 +1,6 @@
 #if defined(Hiro_VerticalSlider)
 
-@implementation CocoaVerticalSlider : NSSlider
+@implementation CocoaVerticalSlider 
 
 -(id) initWith:(hiro::mVerticalSlider&)verticalSliderReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 1)]) {

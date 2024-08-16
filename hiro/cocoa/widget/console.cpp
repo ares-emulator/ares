@@ -1,6 +1,6 @@
 #if defined(Hiro_Console)
 
-@implementation CocoaConsole : NSScrollView
+@implementation CocoaConsole
 
 -(id) initWith:(phoenix::Console&)consoleReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

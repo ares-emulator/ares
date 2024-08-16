@@ -1,6 +1,6 @@
 #if defined(Hiro_TableView)
 
-@implementation CocoaTableView : NSScrollView
+@implementation CocoaTableView
 
 -(id) initWith:(hiro::mTableView&)tableViewReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

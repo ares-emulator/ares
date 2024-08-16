@@ -1,6 +1,6 @@
 #if defined(Hiro_ComboButton)
 
-@implementation CocoaComboButton : NSPopUpButton
+@implementation CocoaComboButton
 
 -(id) initWith:(hiro::mComboButton&)comboButtonReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0) pullsDown:NO]) {

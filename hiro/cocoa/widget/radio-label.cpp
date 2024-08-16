@@ -1,6 +1,6 @@
 #if defined(Hiro_RadioLabel)
 
-@implementation CocoaRadioLabel : NSButton
+@implementation CocoaRadioLabel
 
 -(id) initWith:(hiro::mRadioLabel&)radioLabelReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

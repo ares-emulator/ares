@@ -1,6 +1,6 @@
 #if defined(Hiro_LineEdit)
 
-@implementation CocoaLineEdit : NSTextField
+@implementation CocoaLineEdit
 
 -(id) initWith:(hiro::mLineEdit&)lineEditReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

@@ -1,6 +1,6 @@
 #if defined(Hiro_Button)
 
-@implementation CocoaButton : NSButton
+@implementation CocoaButton
 
 -(id) initWith:(hiro::mButton&)buttonReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

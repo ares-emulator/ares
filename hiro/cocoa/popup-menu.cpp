@@ -1,6 +1,6 @@
 #if defined(Hiro_PopupMenu)
 
-@implementation CocoaPopupMenu : NSMenuItem
+@implementation CocoaPopupMenu
 
 -(id) initWith:(hiro::mPopupMenu&)popupMenuReference {
   if(self = [super initWithTitle:@"" action:nil keyEquivalent:@""]) {
