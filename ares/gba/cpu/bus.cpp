@@ -17,9 +17,8 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
       word = prefetchRead(mode);
     } else {
       if constexpr(!UseDebugger) prefetchReset();
-      if constexpr(!UseDebugger) step(clocks - 1);
+      if constexpr(!UseDebugger) step(clocks);
       word = cartridge.read(mode, address);
-      if constexpr(!UseDebugger) step(1);
     }
   } else {
     if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
