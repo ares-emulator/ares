@@ -1,6 +1,6 @@
 #if defined(Hiro_HorizontalScrollBar)
 
-@implementation CocoaHorizontalScrollBar : NSScroller
+@implementation CocoaHorizontalScrollBar
 
 -(id) initWith:(hiro::mHorizontalScrollBar&)horizontalScrollBarReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 1, 0)]) {

@@ -16,7 +16,7 @@ namespace hiro {
 struct pTimer : pObject {
   Declare(Timer, Object)
 
-  auto setEnabled(bool enabled) -> void;
+  auto setEnabled(bool enabled) -> void override;
   auto setInterval(u32 interval) -> void;
 
   CocoaTimer* cocoaTimer = nullptr;

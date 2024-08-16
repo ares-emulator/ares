@@ -3,7 +3,8 @@
 namespace hiro {
 
 auto pMenuSeparator::construct() -> void {
-  cocoaAction = cocoaSeparator = [NSMenuItem separatorItem];
+  cocoaSeparator = [NSMenuItem separatorItem];
+  cocoaAction = (NSMenuItem<CocoaMenu> *)cocoaSeparator;
   pAction::construct();
 }
 

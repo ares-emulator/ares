@@ -15,6 +15,10 @@
   return self;
 }
 
+-(BOOL) clipsToBounds {
+  return true;
+}
+
 -(void) resetCursorRects {
   if(auto mouseCursor = NSMakeCursor(canvas->mouseCursor())) {
     [self addCursorRect:self.bounds cursor:mouseCursor];

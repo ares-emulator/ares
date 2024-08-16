@@ -4,7 +4,7 @@
 @public
   hiro::mCanvas* canvas;
 }
-@property BOOL clipsToBounds;
+-(BOOL) clipsToBounds;
 -(id) initWith:(hiro::mCanvas&)canvas;
 -(void) resetCursorRects;
 -(NSDragOperation) draggingEntered:(id<NSDraggingInfo>)sender;
@@ -29,7 +29,7 @@ namespace hiro {
 struct pCanvas : pWidget {
   Declare(Canvas, Widget)
 
-  auto minimumSize() const -> Size;
+  auto minimumSize() const -> Size override;
   auto setAlignment(Alignment) -> void;
   auto setColor(Color color) -> void;
   auto setDroppable(bool droppable) -> void override;

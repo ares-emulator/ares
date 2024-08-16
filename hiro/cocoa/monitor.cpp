@@ -35,7 +35,6 @@ auto pMonitor::primary() -> u32 {
 }
 
 auto pMonitor::workspace(u32 monitor) -> Geometry {
-  NSRect size = [[[NSScreen screens] objectAtIndex:monitor] frame];
   NSRect area = [[[NSScreen screens] objectAtIndex:monitor] visibleFrame];
   return {
     (s32)area.origin.x,

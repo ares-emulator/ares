@@ -5,7 +5,7 @@ namespace hiro {
 struct pWidget : pSizable {
   Declare(Widget, Sizable)
 
-  auto focused() const -> bool;
+  auto focused() const -> bool override;
   virtual auto setDroppable(bool droppable) -> void;
   auto setEnabled(bool enabled) -> void override;
   virtual auto setFocusable(bool focusable) -> void;

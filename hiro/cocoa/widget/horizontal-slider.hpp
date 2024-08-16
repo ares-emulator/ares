@@ -14,7 +14,7 @@ struct pHorizontalSlider : pWidget {
   Declare(HorizontalSlider, Widget)
 
   auto minimumSize() const -> Size override;
-  auto setGeometry(Geometry geometry) -> void;
+  auto setGeometry(Geometry geometry) -> void override;
   auto setLength(u32 length) -> void;
   auto setPosition(u32 position) -> void;
 

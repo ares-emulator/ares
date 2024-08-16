@@ -166,5 +166,9 @@ auto pLabel::setText(const string& text) -> void {
 
 }
 
+- (BOOL)clipsToBounds {
+  return true;
+}
+
 @end
 #endif

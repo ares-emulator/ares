@@ -9,7 +9,6 @@
   NSFont* font;
 }
 -(id) initWith:(hiro::mTableView&)tableViewReference;
--(void) dealloc;
 -(CocoaTableViewContent*) content;
 -(NSFont*) font;
 -(void) setFont:(NSFont*)font;

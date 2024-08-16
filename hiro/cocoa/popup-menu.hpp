@@ -16,7 +16,7 @@ struct pPopupMenu : pObject {
 
   auto append(sAction action) -> void;
   auto remove(sAction action) -> void;
-  auto setVisible(bool visible) -> void;
+  auto setVisible(bool visible) -> void override;
 
   CocoaPopupMenu* cocoaPopupMenu = nullptr;
 };

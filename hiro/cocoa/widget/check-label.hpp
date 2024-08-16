@@ -15,7 +15,7 @@ struct pCheckLabel : pWidget {
 
   auto minimumSize() const -> Size override;
   auto setChecked(bool checked) -> void;
-  auto setGeometry(Geometry geometry) -> void;
+  auto setGeometry(Geometry geometry) -> void override;
   auto setText(const string& text) -> void;
 
   CocoaCheckLabel* cocoaCheckLabel = nullptr;

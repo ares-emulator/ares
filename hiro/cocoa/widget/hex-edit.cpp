@@ -1,6 +1,6 @@
 #if defined(Hiro_HexEdit)
 
-@implementation CocoaHexEdit : NSScrollView
+@implementation CocoaHexEdit
 
 -(id) initWith:(hiro::mHexEdit&)hexEditReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
