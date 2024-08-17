@@ -81,10 +81,10 @@ auto CPU::readIO(n32 address) -> n8 {
       result.bit(7) = !system.controls.downLatch;
     }
     if(ppu.rotation->value() == "90°") {
-      result.bit(4) = !system.controls.downLatch;
-      result.bit(5) = !system.controls.upLatch;
-      result.bit(6) = !system.controls.rightLatch;
-      result.bit(7) = !system.controls.leftLatch;
+      result.bit(4) = !system.controls.upLatch;
+      result.bit(5) = !system.controls.downLatch;
+      result.bit(6) = !system.controls.leftLatch;
+      result.bit(7) = !system.controls.rightLatch;
     }
     if(ppu.rotation->value() == "180°") {
       result.bit(4) = !system.controls.leftLatch;
@@ -93,10 +93,10 @@ auto CPU::readIO(n32 address) -> n8 {
       result.bit(7) = !system.controls.upLatch;
     }
     if(ppu.rotation->value() == "270°") {
-      result.bit(4) = !system.controls.upLatch;
-      result.bit(5) = !system.controls.downLatch;
-      result.bit(6) = !system.controls.leftLatch;
-      result.bit(7) = !system.controls.rightLatch;
+      result.bit(4) = !system.controls.downLatch;
+      result.bit(5) = !system.controls.upLatch;
+      result.bit(6) = !system.controls.rightLatch;
+      result.bit(7) = !system.controls.leftLatch;
     }
     return result;
   }
