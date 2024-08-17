@@ -144,20 +144,20 @@ auto System::initDebugHooks() -> void {
     return res;
   };
 
-  GDB::server.hooks.write = [](u64 address, string data) {
+  GDB::server.hooks.write = [](u64 address, vector<u8> data) {
     u64 value;
     address |= 0xffffffff'00000000ull;
     switch(data.size()) {
       case Byte: 
-        value = data[0];
+        value = (u64)data[0];
         cpu.write<Byte>(address, value, false);
         break;
       case Half: 
-        value = (data[0]<<8) | (data[1]<<0);
+        value = ((u64)data[0]<<8) | ((u64)data[1]<<0);
         cpu.write<Half>(address, value, false);
         break;
       case Word: 
-        value = (data[0]<<24) | (data[1]<<16) | (data[2]<<8) | (data[3]<<0);
+        value = ((u64)data[0]<<24) | ((u64)data[1]<<16) | ((u64)data[2]<<8) | ((u64)data[3]<<0);
         cpu.write<Word>(address, value, false);
         break;
       case Dual:
