@@ -47,8 +47,8 @@ auto Bus::write(n20 address, n8 data) -> void {
     return iram.write(address, data);
   case 0x1: return cartridge.writeRAM(address, data);
   case range14(0x2, 0xf):
-    if(!cpu.io.cartridgeRomWidth) address &= ~(0x1);
-    return cartridge.writeROM(address, data);
+    // The SoC blocks any write attempts to the ROM region.
+    return;
   }
 }
 
@@ -57,15 +57,18 @@ auto Bus::map(IO* io, u16 lo, maybe<u16> hi) -> void {
 }
 
 auto Bus::readIO(n16 address) -> n8 {
-  if((address & 0x1ff) < 0x0b8) address &= 0x1ff;
-  if(auto io = port[address]) return io->readIO(address);
-  if(address == 0x00ca) return 0x80; // Mama Mitte (unknown status bit)
+  if(!(address & 0x100) && (address < 0x100 || (address & 0xff) < 0xb8)) {
+    address &= 0xff;
+    if(auto io = port[address]) return io->readIO(address);
+  }
   return system.color() ? 0x00 : 0x90; // open bus
 }
 
 auto Bus::writeIO(n16 address, n8 data) -> void {
-  if((address & 0x1ff) < 0x0b8) address &= 0x1ff;
-  if(auto io = port[address]) return io->writeIO(address, data);
+  if(!(address & 0x100) && (address < 0x100 || (address & 0xff) < 0xb8)) {
+    address &= 0xff;
+    if(auto io = port[address]) return io->writeIO(address, data);
+  }
 }
 
 }

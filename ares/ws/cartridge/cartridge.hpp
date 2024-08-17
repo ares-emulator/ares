@@ -50,8 +50,6 @@ struct Cartridge : IO, Thread {
 
   //memory.cpp
   auto readROM(n20 address) -> n8;
-  auto writeROM(n20 address, n8 data) -> void;
-
   auto readRAM(n20 address) -> n8;
   auto writeRAM(n20 address, n8 data) -> void;
 
@@ -150,6 +148,8 @@ struct Cartridge : IO, Thread {
     n8 gpoData;
     n1 flashEnable;
   } io;
+
+  n16 openbus;
 };
 
 #include "slot.hpp"

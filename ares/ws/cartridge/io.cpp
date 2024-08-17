@@ -92,10 +92,13 @@ auto Cartridge::readIO(n16 address) -> n8 {
 
   }
 
+  openbus.byte(0) = data;
   return data;
 }
 
 auto Cartridge::writeIO(n16 address, n8 data) -> void {
+  openbus.byte(0) = data;
+  
   switch(address) {
 
   case 0x00c0:  //BANK_ROM2
