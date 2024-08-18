@@ -1,6 +1,6 @@
 #if defined(Hiro_ProgressBar)
 
-@implementation CocoaProgressBar : NSProgressIndicator
+@implementation CocoaProgressBar
 
 -(id) initWith:(hiro::mProgressBar&)progressBarReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

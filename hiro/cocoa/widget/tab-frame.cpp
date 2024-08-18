@@ -1,6 +1,6 @@
 #if defined(Hiro_TabFrame)
 
-@implementation CocoaTabFrame : NSTabView
+@implementation CocoaTabFrame
 
 -(id) initWith:(hiro::mTabFrame&)tabFrameReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

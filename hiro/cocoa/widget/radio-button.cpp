@@ -1,6 +1,6 @@
 #if defined(Hiro_RadioButton)
 
-@implementation CocoaRadioButton : NSButton
+@implementation CocoaRadioButton
 
 -(id) initWith:(hiro::mRadioButton&)radioButtonReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

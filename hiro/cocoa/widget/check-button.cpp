@@ -1,6 +1,6 @@
 #if defined(Hiro_CheckButton)
 
-@implementation CocoaCheckButton : NSButton
+@implementation CocoaCheckButton
 
 -(id) initWith:(hiro::mCheckButton&)checkButtonReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {

@@ -1,6 +1,6 @@
 #if defined(Hiro_Canvas)
 
-@implementation CocoaCanvas : NSView
+@implementation CocoaCanvas
 
 -(id) initWith:(hiro::mCanvas&)canvasReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
@@ -13,6 +13,10 @@
   }
   self.clipsToBounds = true;
   return self;
+}
+
+-(BOOL) clipsToBounds {
+  return true;
 }
 
 -(void) resetCursorRects {

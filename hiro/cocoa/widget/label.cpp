@@ -1,6 +1,6 @@
 #if defined(Hiro_Label)
 
-@implementation CocoaLabel : NSView
+@implementation CocoaLabel
 {
   NSColor *_foregroundColor;
 }
@@ -164,6 +164,10 @@ auto pLabel::setText(const string& text) -> void {
   [cocoaView setNeedsDisplay:YES];
 }
 
+}
+
+- (BOOL)clipsToBounds {
+  return true;
 }
 
 @end

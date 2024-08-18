@@ -1,6 +1,6 @@
 #if defined(Hiro_VerticalScrollBar)
 
-@implementation CocoaVerticalScrollBar : NSScroller
+@implementation CocoaVerticalScrollBar
 
 -(id) initWith:(hiro::mVerticalScrollBar&)verticalScrollBarReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 1)]) {

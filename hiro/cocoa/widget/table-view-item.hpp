@@ -9,7 +9,7 @@ struct pTableViewItem : pObject {
   auto remove(sTableViewCell cell) -> void;
   auto setAlignment(Alignment alignment) -> void;
   auto setBackgroundColor(Color color) -> void;
-  auto setFocused() -> void;
+  auto setFocused() -> void override;
   auto setForegroundColor(Color color) -> void;
   auto setSelected(bool selected) -> void;
 

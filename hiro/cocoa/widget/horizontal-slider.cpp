@@ -1,6 +1,6 @@
 #if defined(Hiro_HorizontalSlider)
 
-@implementation CocoaHorizontalSlider : NSSlider
+@implementation CocoaHorizontalSlider
 
 -(id) initWith:(hiro::mHorizontalSlider&)horizontalSliderReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 1, 0)]) {

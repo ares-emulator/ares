@@ -54,7 +54,7 @@ struct pWindow : pObject {
   auto setResizable(bool resizable) -> void;
   auto setTitle(const string& text) -> void;
   auto setAssociatedFile(const string& filename) -> void;
-  auto setVisible(bool visible) -> void;
+  auto setVisible(bool visible) -> void override;
 
   auto moveEvent() -> void;
   auto sizeEvent() -> void;

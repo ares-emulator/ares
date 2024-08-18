@@ -1,6 +1,6 @@
 #if defined(Hiro_PopupMenu)
 
-@implementation CocoaPopupMenu : NSMenuItem
+@implementation CocoaPopupMenu
 
 -(id) initWith:(hiro::mPopupMenu&)popupMenuReference {
   if(self = [super initWithTitle:@"" action:nil keyEquivalent:@""]) {
@@ -44,7 +44,7 @@ auto pPopupMenu::remove(sAction action) -> void {
 auto pPopupMenu::setVisible(bool visible) -> void {
   if(!visible) return;
   NSEvent* event = [[NSApplication sharedApplication] currentEvent];
-  [NSMenu popUpContextMenu:[cocoaPopupMenu cocoaPopupMenu] withEvent:event forView:nil];
+  [NSMenu popUpContextMenu:[cocoaPopupMenu cocoaPopupMenu] withEvent:event forView:[cocoaPopupMenu view]];
 }
 
 }

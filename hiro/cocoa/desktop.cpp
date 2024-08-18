@@ -11,7 +11,6 @@ auto pDesktop::size() -> Size {
 }
 
 auto pDesktop::workspace() -> Geometry {
-  auto screen = Desktop::size();
   NSRect area = [[[NSScreen screens] objectAtIndex:0] visibleFrame];
   return {
     (s32)area.origin.x,

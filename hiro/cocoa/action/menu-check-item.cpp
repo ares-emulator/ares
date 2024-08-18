@@ -1,6 +1,6 @@
 #if defined(Hiro_MenuCheckItem)
 
-@implementation CocoaMenuCheckItem : NSMenuItem
+@implementation CocoaMenuCheckItem
 
 -(id) initWith:(hiro::mMenuCheckItem&)menuCheckItemReference {
   if(self = [super initWithTitle:@"" action:@selector(activate) keyEquivalent:@""]) {

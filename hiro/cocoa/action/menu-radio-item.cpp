@@ -1,6 +1,6 @@
 #if defined(Hiro_MenuRadioItem)
 
-@implementation CocoaMenuRadioItem : NSMenuItem
+@implementation CocoaMenuRadioItem
 
 -(id) initWith:(hiro::mMenuRadioItem&)menuRadioItemReference {
   if(self = [super initWithTitle:@"" action:@selector(activate) keyEquivalent:@""]) {

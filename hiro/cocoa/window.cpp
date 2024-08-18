@@ -1,6 +1,6 @@
 #if defined(Hiro_Window)
 
-@implementation CocoaWindow : NSWindow
+@implementation CocoaWindow
 
 -(id) initWith:(hiro::mWindow&)windowReference {
   window = &windowReference;
@@ -150,6 +150,8 @@
 }
 
 //to hell with gatekeepers
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wwritable-strings"
 -(void) menuDisableGatekeeper {
   NSAlert* alert = [[NSAlert alloc] init];
   [alert setMessageText:@"Disable Gatekeeper"];
@@ -192,6 +194,7 @@
   [alert addButtonWithTitle:@"Ok"];
   [alert runModal];
 }
+#pragma clang diagnostic pop
 
 -(void) menuQuit {
   hiro::Application::Cocoa::doQuit();

@@ -42,6 +42,10 @@
 -(void) keyUp:(NSEvent*)event {
 }
 
+- (BOOL)clipsToBounds {
+  return true;
+}
+
 @end
 
 namespace hiro {
