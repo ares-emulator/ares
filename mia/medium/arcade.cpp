@@ -35,4 +35,3 @@ auto Arcade::load(string location) -> bool {
 auto Arcade::save(string location) -> bool {
   return true;
 }
-
