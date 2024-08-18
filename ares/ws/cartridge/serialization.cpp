@@ -31,6 +31,8 @@ auto Cartridge::serialize(serializer& s) -> void {
   if(has.karnak) {
     karnak.serialize(s);
   }
+
+  s(openbus);
 }
 
 auto Cartridge::RTC::serialize(serializer& s) -> void {

@@ -54,7 +54,7 @@ struct Bus {
   auto writeIO(n16 address, n8 data) -> void;
 
 private:
-  IO* port[64 * 1024] = {nullptr};
+  IO* port[256] = {nullptr};
 };
 
 extern InternalRAM iram;
