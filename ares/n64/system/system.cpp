@@ -168,13 +168,13 @@ auto System::initDebugHooks() -> void {
       default:
         // Handle writes of different sizes only within the RDRAM area, where
         // we are sure that the write size does not really matter
-        if(address >= 0xffff'ffff'8000'0000ull && address <= 0xffff'ffff'803e'ffffull) {
+        if(address >= 0xffff'ffff'8000'0000ull && address <= 0xffff'ffff'83ef'ffffull) {
           for(auto b : data) {
             cpu.dcache.writeDebug(address, address & 0x1fff'ffff, b);
             address++;
           }
         }
-        if(address >= 0xffff'ffff'a000'0000ull && address <= 0xffff'ffff'a03e'ffffull) {
+        if(address >= 0xffff'ffff'a000'0000ull && address <= 0xffff'ffff'a3ef'ffffull) {
           Thread dummyThread{};
           for(auto b : data) {
             bus.write<Byte>(address & 0x1fff'ffff, b, dummyThread, "Ares Debugger");
