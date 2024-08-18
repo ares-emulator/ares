@@ -15,10 +15,6 @@
   return self;
 }
 
--(BOOL) clipsToBounds {
-  return true;
-}
-
 -(void) resetCursorRects {
   if(auto mouseCursor = NSMakeCursor(canvas->mouseCursor())) {
     [self addCursorRect:self.bounds cursor:mouseCursor];
@@ -120,7 +116,7 @@
     [NSMakeImage(fill) drawInRect:frame];
   } else {
     [NSMakeColor(canvas->state.color) set];
-    NSRectFill(dirtyRect);
+    NSRectFill(frame);
   }
 }
 
