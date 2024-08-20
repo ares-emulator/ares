@@ -25,13 +25,14 @@ auto CPU::Timer::stepLatch() -> void {
   }
 }
 
-inline auto CPU::Timer::run() -> void {
+inline auto CPU::Timer::reloadLatch() -> void {
   if(pending) {
+    period = reload;
     pending = false;
-    if(enable) period = reload;
-    return;
   }
+}
 
+inline auto CPU::Timer::run() -> void {
   if(!enable || cascade) return;
 
   static const u32 mask[] = {0, 63, 255, 1023};
