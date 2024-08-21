@@ -60,7 +60,7 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
-  debugger = {};
+  debugger.unload(node);
   colorEmulation.reset();
   interframeBlending.reset();
   rotation.reset();

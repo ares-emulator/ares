@@ -16,4 +16,31 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
   memory.pram->setWrite([&](u32 address, u8 data) -> void {
     ppu.pram[address >> 1].byte(address & 1) = data;
   });
+
+  graphics.mode3 = parent->append<Node::Debugger::Graphics>("Mode 3");
+  graphics.mode3->setSize(240, 160);
+  graphics.mode3->setCapture([&]() -> vector<u32> {
+    vector<u32> output;
+    output.resize(240 * 160);
+    for(u32 y : range(160)) {
+      for(u32 x : range(240)) {
+        n15 pixel = ppu.readVRAM_BG(Half, y * 480 + x * 2);
+        n8 r = pixel >>  0 & 31; r = r << 3 | r >> 2;
+        n8 g = pixel >>  5 & 31; g = g << 3 | g >> 2;
+        n8 b = pixel >> 10 & 31; b = b << 3 | b >> 2;
+        n8 a = 255;
+        output[y * 240 + x] = a << 24 | r << 16 | g << 8 | b << 0;
+      }
+    }
+    return output;
+  });
+}
+
+auto PPU::Debugger::unload(Node::Object parent) -> void {
+  parent->remove(memory.vram);
+  parent->remove(memory.pram);
+  parent->remove(graphics.mode3);
+  memory.vram.reset();
+  memory.pram.reset();
+  graphics.mode3.reset();
 }
