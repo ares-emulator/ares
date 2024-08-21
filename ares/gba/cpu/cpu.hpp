@@ -132,6 +132,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   struct Timer {
     //timer.cpp
     auto stepLatch() -> void;
+    auto reloadLatch() -> void;
     auto run() -> void;
     auto step() -> void;
 

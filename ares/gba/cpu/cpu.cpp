@@ -79,6 +79,10 @@ auto CPU::step(u32 clocks) -> void {
     timer[1].run();
     timer[2].run();
     timer[3].run();
+    timer[0].reloadLatch();
+    timer[1].reloadLatch();
+    timer[2].reloadLatch();
+    timer[3].reloadLatch();
     if(context.timerLatched) {
       timer[0].stepLatch();
       timer[1].stepLatch();
