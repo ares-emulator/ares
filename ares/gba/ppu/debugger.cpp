@@ -24,12 +24,42 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
     output.resize(240 * 160);
     for(u32 y : range(160)) {
       for(u32 x : range(240)) {
-        n15 pixel = ppu.readVRAM_BG(Half, y * 480 + x * 2);
+        n15 pixel = ppu.vram[y * 480 + x * 2 + 1] << 8 | ppu.vram[y * 480 + x * 2] << 0;
         n8 r = pixel >>  0 & 31; r = r << 3 | r >> 2;
         n8 g = pixel >>  5 & 31; g = g << 3 | g >> 2;
         n8 b = pixel >> 10 & 31; b = b << 3 | b >> 2;
         n8 a = 255;
         output[y * 240 + x] = a << 24 | r << 16 | g << 8 | b << 0;
+      }
+    }
+    return output;
+  });
+
+  graphics.mode4 = parent->append<Node::Debugger::Graphics>("Mode 4");
+  graphics.mode4->setSize(240, 320);
+  graphics.mode4->setCapture([&]() -> vector<u32> {
+    vector<u32> output;
+    output.resize(240 * 320);
+    for(u32 y : range(160)) {
+      for(u32 x : range(240)) {
+        n8 color = ppu.vram[y * 240 + x];
+        n15 pixel = ppu.pram[color];
+        n8 r = pixel >>  0 & 31; r = r << 3 | r >> 2;
+        n8 g = pixel >>  5 & 31; g = g << 3 | g >> 2;
+        n8 b = pixel >> 10 & 31; b = b << 3 | b >> 2;
+        n8 a = 255;
+        output[y * 240 + x] = a << 24 | r << 16 | g << 8 | b << 0;
+      }
+    }
+    for(u32 y : range(160)) {
+      for(u32 x : range(240)) {
+        n8 color = ppu.vram[0xa000 + y * 240 + x];
+        n15 pixel = ppu.pram[color];
+        n8 r = pixel >>  0 & 31; r = r << 3 | r >> 2;
+        n8 g = pixel >>  5 & 31; g = g << 3 | g >> 2;
+        n8 b = pixel >> 10 & 31; b = b << 3 | b >> 2;
+        n8 a = 255;
+        output[(y + 160) * 240 + x] = a << 24 | r << 16 | g << 8 | b << 0;
       }
     }
     return output;
@@ -42,7 +72,7 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
     output.resize(160 * 256);
     for(u32 y : range(256)) {
       for(u32 x : range(160)) {
-        n15 pixel = ppu.readVRAM_BG(Half, y * 320 + x * 2);
+        n15 pixel = ppu.vram[y * 320 + x * 2 + 1] << 8 | ppu.vram[y * 320 + x * 2] << 0;
         n8 r = pixel >>  0 & 31; r = r << 3 | r >> 2;
         n8 g = pixel >>  5 & 31; g = g << 3 | g >> 2;
         n8 b = pixel >> 10 & 31; b = b << 3 | b >> 2;
@@ -58,9 +88,11 @@ auto PPU::Debugger::unload(Node::Object parent) -> void {
   parent->remove(memory.vram);
   parent->remove(memory.pram);
   parent->remove(graphics.mode3);
+  parent->remove(graphics.mode4);
   parent->remove(graphics.mode5);
   memory.vram.reset();
   memory.pram.reset();
   graphics.mode3.reset();
+  graphics.mode4.reset();
   graphics.mode5.reset();
 }
