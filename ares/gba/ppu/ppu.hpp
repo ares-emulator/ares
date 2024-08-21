@@ -19,6 +19,7 @@ struct PPU : Thread, IO {
 
     struct Graphics {
       Node::Debugger::Graphics mode3;
+      Node::Debugger::Graphics mode5;
     } graphics;
   } debugger;
 
