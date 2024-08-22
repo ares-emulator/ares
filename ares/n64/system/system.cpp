@@ -129,7 +129,7 @@ auto System::initDebugHooks() -> void {
   };
 
   GDB::server.hooks.read = [](u64 address, u32 byteCount) -> string {
-    address |= 0xffffffff'00000000ull;
+    address = (s32)address;
 
     string res{};
     res.resize(byteCount * 2);
@@ -146,7 +146,7 @@ auto System::initDebugHooks() -> void {
 
   GDB::server.hooks.write = [](u64 address, vector<u8> data) {
     u64 value;
-    address |= 0xffffffff'00000000ull;
+    address = (s32)address;
     switch(data.size()) {
       case Byte: 
         value = (u64)data[0];
