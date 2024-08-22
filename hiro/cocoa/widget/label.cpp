@@ -9,7 +9,6 @@
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
     label = &labelReference;
   }
-  self.clipsToBounds = true;
   return self;
 }
 
@@ -23,7 +22,8 @@
   if(auto backgroundColor = label->backgroundColor()) {
     NSColor* color = NSMakeColor(backgroundColor);
     [color setFill];
-    NSRectFill(dirtyRect);
+    NSRect frame = self.bounds;
+    NSRectFill(frame);
   }
 
   NSFont* font = hiro::pFont::create(label->font(true));
@@ -164,10 +164,6 @@ auto pLabel::setText(const string& text) -> void {
   [cocoaView setNeedsDisplay:YES];
 }
 
-}
-
-- (BOOL)clipsToBounds {
-  return true;
 }
 
 @end

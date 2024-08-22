@@ -243,7 +243,6 @@ auto CPU::readIO(n32 address) -> n8 {
 
   }
 
-  if(cpu.context.dmaActive) return cpu.dmabus.data.byte(address & 3);
   return cpu.pipeline.fetch.instruction.byte(address & 1);
 }
 

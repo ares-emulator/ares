@@ -4,7 +4,6 @@
 @public
   hiro::mViewport* viewport;
 }
--(BOOL) clipsToBounds;
 -(id) initWith:(hiro::mViewport&)viewport;
 -(void) resetCursorRects;
 -(void) drawRect:(NSRect)rect;

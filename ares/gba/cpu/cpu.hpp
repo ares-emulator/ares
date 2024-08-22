@@ -94,11 +94,6 @@ struct CPU : ARM7TDMI, Thread, IO {
     n32 mask;
   };
 
-  //DMA data bus shared between all DMA channels
-  struct DMABus {
-    n32 data;
-  } dmabus;
-
   struct DMA {
     //dma.cpp
     auto run() -> bool;
@@ -126,6 +121,7 @@ struct CPU : ARM7TDMI, Thread, IO {
       uintVN source;
       uintVN target;
       uintVN length;
+      u32 data;
     } latch;
   } dma[4];
 

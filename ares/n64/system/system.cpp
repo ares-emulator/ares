@@ -71,7 +71,7 @@ auto System::load(Node::System& root, string name) -> bool {
 
   if(name.find("NTSC")) {
     information.region = Region::NTSC;
-    information.videoFrequency = 48'681'812;
+    information.videoFrequency = 48'681'818;
   }
   if(name.find("PAL")) {
     information.region = Region::PAL;
@@ -199,7 +199,7 @@ auto System::initDebugHooks() -> void {
       case 36: return true; // COP0 cause (ignore write)
       case 37: { // PC
         if(!GDB::server.getPcOverride()) {
-          cpu.ipu.pc = regValue;
+          cpu.pipeline.setPc(regValue);
         }
         return true;
       }

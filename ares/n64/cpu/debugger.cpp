@@ -21,10 +21,8 @@ auto CPU::Debugger::unload() -> void {
   tracer.tlb.reset();
 }
 
-auto CPU::Debugger::instruction() -> void {
+auto CPU::Debugger::instruction(u64 address, u32 instruction) -> void {
   if(unlikely(tracer.instruction->enabled())) {
-    u64 address = cpu.pipeline.address;
-    u32 instruction = cpu.pipeline.instruction;
     if(tracer.instruction->address(address)) {
       cpu.disassembler.showColors = 0;
       tracer.instruction->notify(cpu.disassembler.disassemble(address, instruction), {});

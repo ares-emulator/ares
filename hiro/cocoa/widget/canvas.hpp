@@ -4,7 +4,6 @@
 @public
   hiro::mCanvas* canvas;
 }
--(BOOL) clipsToBounds;
 -(id) initWith:(hiro::mCanvas&)canvas;
 -(void) resetCursorRects;
 -(NSDragOperation) draggingEntered:(id<NSDraggingInfo>)sender;

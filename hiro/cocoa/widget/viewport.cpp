@@ -6,7 +6,6 @@
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
     viewport = &viewportReference;
   }
-  self.clipsToBounds = true;
   return self;
 }
 
@@ -18,7 +17,8 @@
 
 -(void) drawRect:(NSRect)rect {
   [[NSColor blackColor] setFill];
-  NSRectFillUsingOperation(rect, NSCompositeSourceOver);
+  NSRect frame = self.bounds;
+  NSRectFillUsingOperation(frame, NSCompositeSourceOver);
 }
 
 -(BOOL) acceptsFirstResponder {
@@ -40,10 +40,6 @@
 }
 
 -(void) keyUp:(NSEvent*)event {
-}
-
-- (BOOL)clipsToBounds {
-  return true;
 }
 
 @end

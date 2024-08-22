@@ -124,8 +124,6 @@ auto CPU::power() -> void {
   prefetch = {};
   context = {};
 
-  dmabus = {};
-
   dma[0].source.setBits(27); dma[0].latch.source.setBits(27);
   dma[0].target.setBits(27); dma[0].latch.target.setBits(27);
   dma[0].length.setBits(14); dma[0].latch.length.setBits(14);

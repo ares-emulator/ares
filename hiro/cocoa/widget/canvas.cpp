@@ -11,12 +11,7 @@
     ];
     [self addTrackingArea:area];
   }
-  self.clipsToBounds = true;
   return self;
-}
-
--(BOOL) clipsToBounds {
-  return true;
 }
 
 -(void) resetCursorRects {
@@ -120,7 +115,7 @@
     [NSMakeImage(fill) drawInRect:frame];
   } else {
     [NSMakeColor(canvas->state.color) set];
-    NSRectFill(dirtyRect);
+    NSRectFill(frame);
   }
 }
 
