@@ -32,6 +32,9 @@ struct Program : ares::Platform {
   //status.cpp
   auto updateMessage() -> void;
   auto showMessage(const string&) -> void;
+#if defined(PLATFORM_WINDOWS)    
+  auto updateBorderless() -> void;
+#endif
 
   //utility.cpp
   auto pause(bool) -> void;

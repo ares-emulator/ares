@@ -139,6 +139,12 @@ auto InputManager::createHotkeys() -> void {
     if(!emulator) return;
     if(settings.audio.volume >= (f64)(0.1)) settings.audio.volume -= (f64)(0.1);
   }));
+
+#if defined(PLATFORM_WINDOWS)
+  hotkeys.append(InputHotkey("Toggle Borderless Window").onPress([&] {
+    program.updateBorderless();
+  }));
+#endif
 }
 
 auto InputManager::pollHotkeys() -> void {

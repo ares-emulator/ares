@@ -109,6 +109,9 @@ auto nall::main(Arguments arguments) -> void {
     print("  --terminal           Create new terminal window\n");
 #endif
     print("  --fullscreen         Start in full screen mode\n");
+#if defined(PLATFORM_WINDOWS)	
+    print("  --no/--Borderless    Disable/Enable Borderless Window");
+#endif	
     print("  --system name        Specify the system name\n");
     print("  --shader name        Specify the name of the shader to use\n");
     print("  --setting name=value Specify a value for a setting\n");
@@ -123,6 +126,15 @@ auto nall::main(Arguments arguments) -> void {
     print("\n");
     return;
   }
+  
+#if defined(PLATFORM_WINDOWS)	
+    if(arguments.take("--noBorderless")) {
+        settings.general.borderless = false;
+    }
+    if(arguments.take("--Borderless")) {
+        settings.general.borderless = true;
+    }
+#endif
 
   if(arguments.take("--dump-all-settings")) {
     function<void(const Markup::Node&, string)> dump;
