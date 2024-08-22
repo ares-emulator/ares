@@ -23,6 +23,10 @@ auto CPU::Recompiler::fastFetchBlock(u32 address) -> Block* {
   return nullptr;
 }
 
+#define IpuBase        offsetof(IPU, r[16])
+#define IpuReg(r)      sreg(1), offsetof(IPU, r) - IpuBase
+#define PipelineReg(x) mem(sreg(0), offsetof(CPU, pipeline) + offsetof(Pipeline, x))
+
 auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
@@ -37,6 +41,10 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
   bool hasBranched = 0;
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, "Ares Recompiler");
+    mov32(PipelineReg(nstate), imm(0));
+    mov64(reg(0), PipelineReg(nextpc));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
     if(callInstructionPrologue) {
       mov32(reg(1), imm(instruction));
       call(&CPU::instructionPrologue);
@@ -49,11 +57,15 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
       call(&CPU::step);
     }
     call(&CPU::instructionEpilogue);
+    test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
+    mov32(PipelineReg(state), PipelineReg(nstate));
+    mov64(mem(IpuReg(pc)), PipelineReg(pc));
+
     vaddr += 4;
     address += 4;
     if(hasBranched || (address & 0xfc) == 0 || singleInstruction) break;  //block boundary
     hasBranched = branched;
-    testJumpEpilog();
+    jumpEpilog(flag_nz);
   }
   jumpEpilog();
 
@@ -72,8 +84,6 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
 #define Fsn (instruction >> 11 & 31)
 #define Ftn (instruction >> 16 & 31)
 
-#define IpuBase   offsetof(IPU, r[16])
-#define IpuReg(r) sreg(1), offsetof(IPU, r) - IpuBase
 #define Rd        IpuReg(r[0]) + Rdn * sizeof(r64)
 #define Rt        IpuReg(r[0]) + Rtn * sizeof(r64)
 #define Rt32      IpuReg(r[0].u32) + Rtn * sizeof(r64)
@@ -2159,6 +2169,9 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
   return 0;
 }
 
+#undef IpuBase
+#undef IpuReg
+#undef PipelineReg
 #undef Sa
 #undef Rdn
 #undef Rtn
@@ -2166,8 +2179,6 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
 #undef Fdn
 #undef Fsn
 #undef Ftn
-#undef IpuBase
-#undef IpuReg
 #undef Rd
 #undef Rt
 #undef Rt32

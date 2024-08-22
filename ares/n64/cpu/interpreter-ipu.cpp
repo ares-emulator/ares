@@ -1,4 +1,4 @@
-#define PC ipu.pc
+#define PC pipeline.pc
 #define RA ipu.r[31]
 #define LO ipu.lo
 #define HI ipu.hi
@@ -30,88 +30,87 @@ auto CPU::ANDI(r64& rt, cr64& rs, u16 imm) -> void {
 }
 
 auto CPU::BEQ(cr64& rs, cr64& rt, s16 imm) -> void {
-  if(rs.u64 == rt.u64) branch.take(PC + 4 + (imm << 2));
-  else branch.notTaken();
+  if(rs.u64 == rt.u64) pipeline.branch(PC + (imm << 2));
+  else pipeline.noBranch();
 }
 
 auto CPU::BEQL(cr64& rs, cr64& rt, s16 imm) -> void {
-  if(rs.u64 == rt.u64) branch.take(PC + 4 + (imm << 2));
-  else branch.discard();
+  if(rs.u64 == rt.u64) pipeline.branch(PC + (imm << 2));
+  else pipeline.skip();
 }
 
 auto CPU::BGEZ(cr64& rs, s16 imm) -> void {
-  if(rs.s64 >= 0) branch.take(PC + 4 + (imm << 2));
-  else branch.notTaken();
+  if(rs.s64 >= 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.noBranch();
 }
 
 auto CPU::BGEZAL(cr64& rs, s16 imm) -> void {
-  bool inDelaySlot = branch.inDelaySlot();
-  if(rs.s64 >= 0) branch.take(PC + 4 + (imm << 2));
-  else branch.notTaken();
-  RA.u64 = s32(inDelaySlot ? branch.pc+4 : PC+8);
+  if(rs.s64 >= 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.noBranch();
+  RA.u64 = s32(PC + 4);
 }
 
 auto CPU::BGEZALL(cr64& rs, s16 imm) -> void {
-  if(rs.s64 >= 0) branch.take(PC + 4 + (imm << 2));
-  else branch.discard();
-  RA.u64 = s32(PC + 8);
+  RA.u64 = s32(PC + 4);
+  if(rs.s64 >= 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.skip();
 }
 
 auto CPU::BGEZL(cr64& rs, s16 imm) -> void {
-  if(rs.s64 >= 0) branch.take(PC + 4 + (imm << 2));
-  else branch.discard();
+  if(rs.s64 >= 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.skip();
 }
 
 auto CPU::BGTZ(cr64& rs, s16 imm) -> void {
-  if(rs.s64 > 0) branch.take(PC + 4 + (imm << 2));
-  else branch.notTaken();
+  if(rs.s64 > 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.noBranch();
 }
 
 auto CPU::BGTZL(cr64& rs, s16 imm) -> void {
-  if(rs.s64 > 0) branch.take(PC + 4 + (imm << 2));
-  else branch.discard();
+  if(rs.s64 > 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.skip();
 }
 
 auto CPU::BLEZ(cr64& rs, s16 imm) -> void {
-  if(rs.s64 <= 0) branch.take(PC + 4 + (imm << 2));
-  else branch.notTaken();
+  if(rs.s64 <= 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.noBranch();
 }
 
 auto CPU::BLEZL(cr64& rs, s16 imm) -> void {
-  if(rs.s64 <= 0) branch.take(PC + 4 + (imm << 2));
-  else branch.discard();
+  if(rs.s64 <= 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.skip();
 }
 
 auto CPU::BLTZ(cr64& rs, s16 imm) -> void {
-  if(rs.s64 < 0) branch.take(PC + 4 + (imm << 2));
-  else branch.notTaken();
+  if(rs.s64 < 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.noBranch();
 }
 
 auto CPU::BLTZAL(cr64& rs, s16 imm) -> void {
-  RA.u64 = s32(PC + 8);
-  if(rs.s64 < 0) branch.take(PC + 4 + (imm << 2));
-  else branch.notTaken();
+  RA.u64 = s32(PC + 4);
+  if(rs.s64 < 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.noBranch();
 }
 
 auto CPU::BLTZALL(cr64& rs, s16 imm) -> void {
-  RA.u64 = s32(PC + 8);
-  if(rs.s64 < 0) branch.take(PC + 4 + (imm << 2));
-  else branch.discard();
+  RA.u64 = s32(PC + 4);
+  if(rs.s64 < 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.skip();
 }
 
 auto CPU::BLTZL(cr64& rs, s16 imm) -> void {
-  if(rs.s64 < 0) branch.take(PC + 4 + (imm << 2));
-  else branch.discard();
+  if(rs.s64 < 0) pipeline.branch(PC + (imm << 2));
+  else pipeline.skip();
 }
 
 auto CPU::BNE(cr64& rs, cr64& rt, s16 imm) -> void {
-  if(rs.u64 != rt.u64) branch.take(PC + 4 + (imm << 2));
-  else branch.notTaken();
+  if(rs.u64 != rt.u64) pipeline.branch(PC + (imm << 2));
+  else pipeline.noBranch();
 }
 
 auto CPU::BNEL(cr64& rs, cr64& rt, s16 imm) -> void {
-  if(rs.u64 != rt.u64) branch.take(PC + 4 + (imm << 2));
-  else branch.discard();
+  if(rs.u64 != rt.u64) pipeline.branch(PC + (imm << 2));
+  else pipeline.skip();
 }
 
 auto CPU::BREAK() -> void {
@@ -391,26 +390,22 @@ auto CPU::DSUBU(r64& rd, cr64& rs, cr64& rt) -> void {
 }
 
 auto CPU::J(u32 imm) -> void {
-  if (branch.inDelaySlotTaken()) return;
-  branch.take((PC + 4 & 0xffff'ffff'f000'0000) | (imm << 2));
+  pipeline.branch((PC & 0xffff'ffff'f000'0000) | (imm << 2));
 }
 
 auto CPU::JAL(u32 imm) -> void {
-  RA.u64 = branch.inDelaySlotTaken() ? branch.pc+4 : PC+8;
-  if (!branch.inDelaySlotTaken()) branch.take((PC + 4 & 0xffff'ffff'f000'0000) | (imm << 2));
-  else if (!branch.inDelaySlot()) branch.notTaken();
+  RA.u64 = PC+4;
+  pipeline.branch((PC & 0xffff'ffff'f000'0000) | (imm << 2));
 }
 
 auto CPU::JALR(r64& rd, cr64& rs) -> void {
   u64 tgt = rs.u64;
-  rd.u64 = branch.inDelaySlotTaken() ? branch.pc+4 : PC+8;
-  if (!branch.inDelaySlotTaken()) branch.take(tgt);
-  else if (!branch.inDelaySlot()) branch.notTaken();
+  rd.u64 = PC+4;
+  pipeline.branch(tgt);
 }
 
 auto CPU::JR(cr64& rs) -> void {
-  if (!branch.inDelaySlotTaken()) branch.take(rs.u64);
-  else if (!branch.inDelaySlot()) branch.notTaken();
+  pipeline.branch(rs.u64);
 }
 
 auto CPU::LB(r64& rt, cr64& rs, s16 imm) -> void {

@@ -7,7 +7,7 @@ struct CPU : Thread {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload() -> void;
-    auto instruction() -> void;
+    auto instruction(u64 address, u32 instruction) -> void;
     auto exception(u8 code) -> void;
     auto interrupt(u8 mask) -> void;
     auto nmi() -> void;
@@ -38,46 +38,39 @@ struct CPU : Thread {
   auto gdbPoll() -> void;
 
   auto instruction() -> void;
-  auto instructionPrologue(u32 instruction) -> void;
-  auto instructionEpilogue() -> s32;
+  auto instructionPrologue(u64 address, u32 instruction) -> void;
+  auto instructionEpilogue() -> void;
 
   auto power(bool reset) -> void;
 
   struct Pipeline {
-    u64 address;
-    u32 instruction;
+    CPU& self;
+    u64 pc     = 0;  //pc after current instruction
+    u64 nextpc = 0;  //pc after next instruction
+    u32 state  = 0;  //current branch state
+    u32 nstate = 0;  //next branch state
 
-    struct InstructionCache {
-    } ic;
+    enum : u32 {
+      EndBlock  = 1 << 0,
+      DelaySlot = 1 << 1,
+    };
 
-    struct RegisterFile {
-    } rf;
-
-    struct Execution {
-    } ex;
-
-    struct DataCache {
-    } dc;
-
-    struct WriteBack {
-    } wb;
-  } pipeline;
-
-  struct Branch {
-    enum : u32 { Step, Take, NotTaken, DelaySlotTaken, DelaySlotNotTaken, Exception, Discard };
-
-    auto inDelaySlot() const -> bool { return state == DelaySlotTaken || state == DelaySlotNotTaken; }
-    auto inDelaySlotTaken() const -> bool { return state == DelaySlotTaken; }
-    auto reset() -> void { state = Step; }
-    auto take(u64 address) -> void { state = Take; pc = address; }
-    auto notTaken() -> void { state = NotTaken; }
-    auto delaySlot(bool taken) -> void { state = taken ? DelaySlotTaken : DelaySlotNotTaken; }
-    auto exception() -> void { state = Exception; }
-    auto discard() -> void { state = Discard; }
-
-    u64 pc = 0;
-    u32 state = Step;
-  } branch;
+    auto inDelaySlot() const -> bool { return state & DelaySlot; }
+    auto setPc(u64 address) -> void { self.ipu.pc = pc = address; nextpc = address + 4; state = nstate = 0; }
+    auto branch(u64 address) -> void { nextpc = address; nstate |= DelaySlot | EndBlock; }
+    auto noBranch() -> void { nstate |= DelaySlot; }
+    auto exception() -> void { state |= EndBlock; }
+    auto skip() -> void { pc += 4; nextpc = pc + 4; state |= EndBlock; }
+    auto begin() -> void {
+      nstate = 0;
+      pc = nextpc;
+      nextpc += 4;
+    }
+    auto end() -> void {
+      state = nstate;
+      self.ipu.pc = pc;
+    }
+  } pipeline{*this};
 
   //context.cpp
   struct Context {
@@ -837,12 +830,12 @@ struct CPU : Thread {
   auto COP2INVALID() -> void;
 
   //decoder.cpp
-  auto decoderEXECUTE() -> void;
-  auto decoderSPECIAL() -> void;
-  auto decoderREGIMM() -> void;
-  auto decoderSCC() -> void;
-  auto decoderFPU() -> void;
-  auto decoderCOP2() -> void;
+  auto decoderEXECUTE(u32 instruction) -> void;
+  auto decoderSPECIAL(u32 instruction) -> void;
+  auto decoderREGIMM(u32 instruction) -> void;
+  auto decoderSCC(u32 instruction) -> void;
+  auto decoderFPU(u32 instruction) -> void;
+  auto decoderCOP2(u32 instruction) -> void;
 
   auto COP3() -> void;
   auto INVALID() -> void;

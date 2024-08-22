@@ -1,9 +1,9 @@
-#define OP pipeline.instruction
+#define OP instruction
 #define RD ipu.r[RDn]
 #define RT ipu.r[RTn]
 #define RS ipu.r[RSn]
 
-#define jp(id, name, ...) case id: return decoder##name(__VA_ARGS__)
+#define jp(id, name, ...) case id: return decoder##name(instruction, __VA_ARGS__)
 #define op(id, name, ...) case id: return name(__VA_ARGS__)
 #define br(id, name, ...) case id: return name(__VA_ARGS__)
 
@@ -18,7 +18,7 @@
 #define IMMu16 u16(OP)
 #define IMMu26 (OP & 0x03ff'ffff)
 
-auto CPU::decoderEXECUTE() -> void {
+auto CPU::decoderEXECUTE(u32 instruction) -> void {
   switch(OP >> 26) {
   jp(0x00, SPECIAL);
   jp(0x01, REGIMM);
@@ -87,7 +87,7 @@ auto CPU::decoderEXECUTE() -> void {
   }
 }
 
-auto CPU::decoderSPECIAL() -> void {
+auto CPU::decoderSPECIAL(u32 instruction) -> void {
   switch(OP & 0x3f) {
   op(0x00, SLL, RD, RT, SA);
   br(0x01, INVALID);
@@ -156,7 +156,7 @@ auto CPU::decoderSPECIAL() -> void {
   }
 }
 
-auto CPU::decoderREGIMM() -> void {
+auto CPU::decoderREGIMM(u32 instruction) -> void {
   switch(OP >> 16 & 0x1f) {
   br(0x00, BLTZ, RS, IMMi16);
   br(0x01, BGEZ, RS, IMMi16);
@@ -193,7 +193,7 @@ auto CPU::decoderREGIMM() -> void {
   }
 }
 
-auto CPU::decoderSCC() -> void {
+auto CPU::decoderSCC(u32 instruction) -> void {
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC0, RT, RDn);
   op(0x01, DMFC0, RT, RDn);
@@ -224,7 +224,7 @@ auto CPU::decoderSCC() -> void {
   //undefined instructions do not throw a reserved instruction exception
 }
 
-auto CPU::decoderFPU() -> void {
+auto CPU::decoderFPU(u32 instruction) -> void {
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC1, RT, FS);
   op(0x01, DMFC1, RT, FS);
@@ -359,7 +359,7 @@ auto CPU::decoderFPU() -> void {
   //undefined instructions do not throw a reserved instruction exception
 }
 
-auto CPU::decoderCOP2() -> void {
+auto CPU::decoderCOP2(u32 instruction) -> void {
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC2, RT, RDn);
   op(0x01, DMFC2, RT, RDn);

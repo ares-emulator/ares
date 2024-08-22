@@ -1,11 +1,10 @@
 auto CPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s(pipeline.address);
-  s(pipeline.instruction);
-
-  s(branch.pc);
-  s(branch.state);
+  s(pipeline.pc);
+  s(pipeline.nextpc);
+  s(pipeline.state);
+  s(pipeline.nstate);
 
   s(context.endian);
   s(context.physMask);

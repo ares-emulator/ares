@@ -29,7 +29,7 @@ private:
     string name = "Nintendo 64";
     Region region = Region::NTSC;
     u32 frequency = 93'750'000 * 2;
-    u32 videoFrequency = 48'681'812;
+    u32 videoFrequency = 48'681'818;
     bool dd = false;
   } information;
 

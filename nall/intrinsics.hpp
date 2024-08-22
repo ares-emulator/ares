@@ -39,6 +39,7 @@ namespace nall {
   #pragma clang diagnostic ignored "-Wabsolute-value"
   #pragma clang diagnostic ignored "-Wtrigraphs"
   #pragma clang diagnostic ignored "-Wattributes"
+  #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #elif defined(__GNUC__)
   #define COMPILER_GCC
   struct Compiler {
@@ -56,6 +57,7 @@ namespace nall {
   #pragma GCC diagnostic ignored "-Wtrigraphs"
   #pragma GCC diagnostic ignored "-Wattributes"
   #pragma GCC diagnostic ignored "-Wstringop-overflow"  //GCC 10.2 warning heuristic is buggy
+  #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #elif defined(_MSC_VER)
   #define COMPILER_MICROSOFT
   struct Compiler {
