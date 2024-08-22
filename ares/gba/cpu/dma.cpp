@@ -24,8 +24,8 @@ auto CPU::DMA::transfer() -> void {
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
     if(addr & 0x0800'0000) cpu.context.dmaRomAccess = true;
-    cpu.dmabus.data = cpu.get(mode, addr);
-    if(mode & Half) cpu.dmabus.data |= cpu.dmabus.data << 16;
+    latch.data = cpu.get(mode, addr);
+    if(mode & Half) latch.data |= latch.data << 16;
   }
 
   if(mode & Nonsequential) {
@@ -43,7 +43,7 @@ auto CPU::DMA::transfer() -> void {
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
     if(addr & 0x0800'0000) cpu.context.dmaRomAccess = true;
-    cpu.set(mode, addr, cpu.dmabus.data);
+    cpu.set(mode, addr, latch.data >> (addr & 2) * 8);
   }
 
   switch(sourceMode) {
