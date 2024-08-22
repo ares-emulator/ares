@@ -6,7 +6,6 @@ template <bool UseDebugger>
 inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
   u32 clocks = _wait(mode, address);
   u32 word = pipeline.fetch.instruction;
-  if(context.dmaActive) word = dmabus.data;
 
   if(address >= 0x1000'0000) {
     if constexpr(!UseDebugger) prefetchStep(clocks);
