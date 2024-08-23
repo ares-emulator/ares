@@ -75,9 +75,9 @@ auto RSP::instructionPrologue(u32 instruction) -> void {
   debugger.instruction();
 }
 
-template<bool Recompiler>
+template<bool Recompiled>
 auto RSP::instructionEpilogue(u32 clocks) -> s32 {
-  if constexpr(Recompiler) {
+  if constexpr(Recompiled) {
     step(clocks);
 
     assert(ipu.r[0].u32 == 0);

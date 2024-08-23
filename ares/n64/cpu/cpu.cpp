@@ -139,9 +139,9 @@ auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
   debugger.instruction(address, instruction);
 }
 
-template<bool Recompiler>
+template<bool Recompiled>
 auto CPU::instructionEpilogue() -> void {
-  if constexpr(Recompiler) {
+  if constexpr(Recompiled) {
     //simulates timings without performing actual icache loads
     icache.step(ipu.pc, devirtualizeFast(ipu.pc));
     assert(ipu.r[0].u64 == 0);
