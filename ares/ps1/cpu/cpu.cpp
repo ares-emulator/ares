@@ -97,9 +97,9 @@ auto CPU::instructionPrologue(u32 instruction) -> void {
   debugger.instruction();
 }
 
-template<bool Recompiler>
+template<bool Recompiled>
 auto CPU::instructionEpilogue() -> s32 {
-  if constexpr(Recompiler) {
+  if constexpr(Recompiled) {
     icache.step(ipu.pc);  //simulates timings without performing actual icache loads
   }
 

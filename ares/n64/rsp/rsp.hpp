@@ -79,7 +79,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
   auto instruction() -> void;
   auto instructionPrologue(u32 instruction) -> void;
-  template<bool Recompiler> auto instructionEpilogue(u32 clocks) -> s32;
+  template<bool Recompiled> auto instructionEpilogue(u32 clocks) -> s32;
 
   auto power(bool reset) -> void;
 

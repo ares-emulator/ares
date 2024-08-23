@@ -46,7 +46,7 @@ struct CPU : Thread {
 
   auto instruction() -> void;
   auto instructionPrologue(u32 instruction) -> void;
-  template<bool Recompiler> auto instructionEpilogue() -> s32;
+  template<bool Recompiled> auto instructionEpilogue() -> s32;
   auto instructionHook() -> void;
 
   auto power(bool reset) -> void;
