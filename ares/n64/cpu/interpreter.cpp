@@ -3,7 +3,7 @@
 #define RT ipu.r[RTn]
 #define RS ipu.r[RSn]
 
-#define jp(id, name, ...) case id: return decoder##name(instruction)
+#define jp(id, name)      case id: return decoder##name(instruction)
 #define op(id, name, ...) case id: return name(__VA_ARGS__)
 #define br(id, name, ...) case id: return name(__VA_ARGS__)
 
