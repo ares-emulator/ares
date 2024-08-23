@@ -39,7 +39,7 @@ struct CPU : Thread {
 
   auto instruction() -> void;
   auto instructionPrologue(u64 address, u32 instruction) -> void;
-  auto instructionEpilogue() -> void;
+  template<bool Recompiler> auto instructionEpilogue() -> void;
 
   auto power(bool reset) -> void;
 
@@ -902,6 +902,7 @@ struct CPU : Thread {
     auto emitFPU(u32 instruction) -> bool;
     auto emitCOP2(u32 instruction) -> bool;
 
+    bool enabled = false;
     bool callInstructionPrologue = false;
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) == 16_MiB

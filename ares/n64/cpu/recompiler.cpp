@@ -56,7 +56,7 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
       mov32(reg(1), imm(64 * 2));
       call(&CPU::step);
     }
-    call(&CPU::instructionEpilogue);
+    call(&CPU::instructionEpilogue<1>);
     test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
     mov32(PipelineReg(state), PipelineReg(nstate));
     mov64(mem(IpuReg(pc)), PipelineReg(pc));

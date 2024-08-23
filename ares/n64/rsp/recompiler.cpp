@@ -94,7 +94,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
       if(RSP::canDualIssue(op0, op1)) {
         mov32(reg(1), imm(0));
-        call(&RSP::instructionEpilogue);
+        call(&RSP::instructionEpilogue<1>);
         if(callInstructionPrologue) {
           mov32(reg(1), imm(instruction));
           call(&RSP::instructionPrologue);
@@ -108,7 +108,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
     pipeline.end();
     mov32(reg(1), imm(pipeline.clocks));
-    call(&RSP::instructionEpilogue);
+    call(&RSP::instructionEpilogue<1>);
     address += 4;
     if(hasBranched || address == start) break;
     hasBranched = branched;

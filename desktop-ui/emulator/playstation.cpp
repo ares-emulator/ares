@@ -88,6 +88,8 @@ auto PlayStation::load() -> bool {
   system = mia::System::create("PlayStation");
   if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
 
+  ares::PlayStation::option("Recompiler", !settings.general.forceInterpreter);
+
   if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return false;
 
   if(auto fastBoot = root->find<ares::Node::Setting::Boolean>("Fast Boot")) {

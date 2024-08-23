@@ -79,7 +79,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
   auto instruction() -> void;
   auto instructionPrologue(u32 instruction) -> void;
-  auto instructionEpilogue(u32 clocks) -> s32;
+  template<bool Recompiler> auto instructionEpilogue(u32 clocks) -> s32;
 
   auto power(bool reset) -> void;
 
@@ -563,6 +563,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
       return s <= e ? smask & emask : smask | emask;
     }
 
+    bool enabled = false;
     bool callInstructionPrologue = false;
     Pipeline pipeline;
     bump_allocator allocator;

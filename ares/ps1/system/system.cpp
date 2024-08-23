@@ -15,6 +15,15 @@ auto load(Node::System& node, string name) -> bool {
   return system.load(node, name);
 }
 
+auto option(string name, string value) -> bool {
+  if(name == "Recompiler") {
+    if constexpr(Accuracy::CPU::Recompiler) {
+      cpu.recompiler.enabled = value.boolean();
+    }
+  }
+  return true;
+}
+
 System system;
 #include "serialization.cpp"
 

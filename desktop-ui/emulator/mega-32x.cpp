@@ -73,6 +73,8 @@ auto Mega32X::load() -> bool {
     if(!system->load()) return false;
   }
 
+  ares::MegaDrive::option("Recompiler", !settings.general.forceInterpreter);
+
   if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {

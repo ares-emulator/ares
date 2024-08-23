@@ -300,6 +300,7 @@ struct SH2 {
 
     static auto mask(u8 address, u8 size) -> u64;
 
+    bool enabled = false;
     bool callInstructionPrologue = false;
     bool inDelaySlot;
     u32 generation;
