@@ -167,8 +167,10 @@ alwaysinline auto bits(Pair value) -> u32 {
   }
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Winfinite-recursion"
+#if defined(__clang__)
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Winfinite-recursion"
+#endif
 //Bits * Bits => Bits
 inline auto square(const Pair& lhs) -> Pair {
   static const Type Mask = (Type(0) - 1) >> HalfBits;
@@ -183,7 +185,9 @@ inline auto square(const Pair& lhs) -> Pair {
 
   return {(r3.lo & Mask) << HalfBits | (r2.lo & Mask), (r1.lo & Mask) << HalfBits | (r0.lo & Mask)};
 }
-#pragma clang diagnostic pop
+#if defined(__clang__)
+  #pragma clang diagnostic pop
+#endif
 
 //Bits * Bits => 2 * Bits
 inline auto square(const Pair& lhs, Pair& hi, Pair& lo) -> void {
