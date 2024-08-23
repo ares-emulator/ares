@@ -65,6 +65,8 @@ auto MegaCD32X::load() -> bool {
   system = mia::System::create("Mega CD 32X");
   if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID], "Mega CD"), false;
 
+  ares::MegaDrive::option("Recompiler", !settings.general.forceInterpreter);
+
   if(!ares::MegaDrive::load(root, {"[Sega] Mega CD 32X (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {

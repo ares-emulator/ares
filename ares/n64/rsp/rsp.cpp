@@ -37,12 +37,10 @@ auto RSP::main() -> void {
 }
 
 auto RSP::instruction() -> void {
-  if constexpr(Accuracy::RSP::Recompiler) {
+  if(Accuracy::RSP::Recompiler && recompiler.enabled) {
     auto block = recompiler.block(ipu.pc);
     block->execute(*this);
-  }
-
-  if constexpr(Accuracy::RSP::Interpreter) {
+  } else {
     u32 instruction = imem.read<Word>(ipu.pc);
     instructionPrologue(instruction);
     pipeline.begin();
@@ -55,7 +53,7 @@ auto RSP::instruction() -> void {
       OpInfo op1 = decoderEXECUTE(instruction);
 
       if(canDualIssue(op0, op1)) {
-        instructionEpilogue(0);
+        instructionEpilogue<0>(0);
         instructionPrologue(instruction);
         pipeline.issue(op1);
         interpreterEXECUTE();
@@ -63,7 +61,7 @@ auto RSP::instruction() -> void {
     }
 
     pipeline.end();
-    instructionEpilogue(0);
+    instructionEpilogue<0>(0);
   }
 
   //this handles all stepping for the interpreter
@@ -77,14 +75,13 @@ auto RSP::instructionPrologue(u32 instruction) -> void {
   debugger.instruction();
 }
 
+template<bool Recompiler>
 auto RSP::instructionEpilogue(u32 clocks) -> s32 {
-  if constexpr(Accuracy::RSP::Recompiler) {
+  if constexpr(Recompiler) {
     step(clocks);
 
     assert(ipu.r[0].u32 == 0);
-  }
-
-  if constexpr(Accuracy::RSP::Interpreter) {
+  } else {
     ipu.r[0].u32 = 0;
   }
 

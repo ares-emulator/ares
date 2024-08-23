@@ -14,7 +14,7 @@ auto SH2::delaySlot(u32 pc) -> void {
 }
 
 auto SH2::instruction() -> void {
-  if constexpr(Accuracy::Interpreter) {
+  if(Accuracy::Interpreter || !recompiler.enabled) {
     step(1);
     exceptionHandler();
     if constexpr(Accuracy::AddressErrors) {
@@ -26,9 +26,7 @@ auto SH2::instruction() -> void {
     instructionPrologue(opcode);
     execute(opcode);
     instructionEpilogue();
-  }
-
-  if constexpr(Accuracy::Recompiler) {
+  } else {
     exceptionHandler();
 
     // Recompiled blocks may be very small, negating the impact
