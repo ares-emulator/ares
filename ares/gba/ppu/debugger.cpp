@@ -17,6 +17,30 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
     ppu.pram[address >> 1].byte(address & 1) = data;
   });
 
+  graphics.tiles8bpp = parent->append<Node::Debugger::Graphics>("8 BPP Tiles");
+  graphics.tiles8bpp->setSize(384, 256);
+  graphics.tiles8bpp->setCapture([&]() -> vector<u32> {
+    vector<u32> output;
+    output.resize(384 * 256);
+    for(u32 tileY : range(32)) {
+      for(u32 tileX : range(48)) {
+        n32 address = tileY * 48 + tileX << 6;
+        for(u32 y : range(8)) {
+          for(u32 x : range(8)) {
+            n8 color = ppu.vram[address + y * 8 + x];
+            n15 pixel = ppu.pram[color];
+            n8 r = pixel >>  0 & 31; r = r << 3 | r >> 2;
+            n8 g = pixel >>  5 & 31; g = g << 3 | g >> 2;
+            n8 b = pixel >> 10 & 31; b = b << 3 | b >> 2;
+            n8 a = 255;
+            output[(tileY * 8 + y) * 384 + (tileX * 8 + x)] = a << 24 | r << 16 | g << 8 | b << 0;
+          }
+        }
+      }
+    }
+    return output;
+  });
+
   graphics.mode3 = parent->append<Node::Debugger::Graphics>("Mode 3");
   graphics.mode3->setSize(240, 160);
   graphics.mode3->setCapture([&]() -> vector<u32> {
@@ -87,11 +111,13 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 auto PPU::Debugger::unload(Node::Object parent) -> void {
   parent->remove(memory.vram);
   parent->remove(memory.pram);
+  parent->remove(graphics.tiles8bpp);
   parent->remove(graphics.mode3);
   parent->remove(graphics.mode4);
   parent->remove(graphics.mode5);
   memory.vram.reset();
   memory.pram.reset();
+  graphics.tiles8bpp.reset();
   graphics.mode3.reset();
   graphics.mode4.reset();
   graphics.mode5.reset();
