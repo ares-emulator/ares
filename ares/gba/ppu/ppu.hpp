@@ -18,6 +18,7 @@ struct PPU : Thread, IO {
     } memory;
 
     struct Graphics {
+      Node::Debugger::Graphics tiles4bpp;
       Node::Debugger::Graphics tiles8bpp;
       Node::Debugger::Graphics mode3;
       Node::Debugger::Graphics mode4;
