@@ -40,13 +40,13 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
   });
 
   graphics.tiles8bpp = parent->append<Node::Debugger::Graphics>("8 BPP Tiles");
-  graphics.tiles8bpp->setSize(384, 256);
+  graphics.tiles8bpp->setSize(256, 384);
   graphics.tiles8bpp->setCapture([&]() -> vector<u32> {
     vector<u32> output;
-    output.resize(384 * 256);
-    for(u32 tileY : range(32)) {
-      for(u32 tileX : range(48)) {
-        n32 address = tileY * 48 + tileX << 6;
+    output.resize(256 * 384);
+    for(u32 tileY : range(48)) {
+      for(u32 tileX : range(32)) {
+        n32 address = tileY * 32 + tileX << 6;
         for(u32 y : range(8)) {
           for(u32 x : range(8)) {
             n8 color = ppu.vram[address + y * 8 + x];
@@ -55,7 +55,7 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
             n8 g = pixel >>  5 & 31; g = g << 3 | g >> 2;
             n8 b = pixel >> 10 & 31; b = b << 3 | b >> 2;
             n8 a = 255;
-            output[(tileY * 8 + y) * 384 + (tileX * 8 + x)] = a << 24 | r << 16 | g << 8 | b << 0;
+            output[(tileY * 8 + y) * 256 + (tileX * 8 + x)] = a << 24 | r << 16 | g << 8 | b << 0;
           }
         }
       }
