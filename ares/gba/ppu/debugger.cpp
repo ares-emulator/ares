@@ -28,8 +28,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
         for(u32 y : range(8)) {
           for(u32 x : range(4)) {
             n8 colors = ppu.vram[address + y * 4 + x];
-            n4 pixel1 = ppu.pram[colors & 0xf];
-            n4 pixel2 = ppu.pram[colors >> 4];
+            n4 pixel1 = colors & 0xf;
+            n4 pixel2 = colors >> 4;
             output[(tileY * 8 + y) * 512 + (tileX * 8 + (x << 1))]     = pixel1 * 0x111111;
             output[(tileY * 8 + y) * 512 + (tileX * 8 + (x << 1)) + 1] = pixel2 * 0x111111;
           }
@@ -49,7 +49,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
         n32 address = tileY * 32 + tileX << 6;
         for(u32 y : range(8)) {
           for(u32 x : range(8)) {
-            n8 color = ppu.vram[address + y * 8 + x];
+            n9 color = ppu.vram[address + y * 8 + x];
+            if(tileY >= 32) color += 0x100;  //bottom 1/3 of tile viewer uses OBJ palettes
             n15 pixel = ppu.pram[color];
             n8 r = pixel >>  0 & 31; r = r << 3 | r >> 2;
             n8 g = pixel >>  5 & 31; g = g << 3 | g >> 2;
