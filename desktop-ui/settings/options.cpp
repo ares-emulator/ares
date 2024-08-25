@@ -30,7 +30,7 @@ auto OptionSettings::construct() -> void {
   homebrewModeLayout.setAlignment(1).setPadding(12_sx, 0);
       homebrewModeHint.setText("Activate core-specific features to help homebrew developers").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  forceInterpreter.setText("Force Intepreter").setChecked(settings.general.forceInterpreter).onToggle([&] {
+  forceInterpreter.setText("Force Interpreter").setChecked(settings.general.forceInterpreter).onToggle([&] {
     settings.general.forceInterpreter = forceInterpreter.checked();
   });
   forceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
