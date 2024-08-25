@@ -9,6 +9,7 @@
 namespace ares::PlayStation {
   auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;
+  auto option(string name, string value) -> bool;
 
   enum : bool { Read = 0, Write = 1 };
   enum : u32  { Byte = 1, Half = 2, Word = 4 };

@@ -10,11 +10,20 @@ struct PPU : Thread, IO {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
 
     struct Memory {
       Node::Debugger::Memory vram;
       Node::Debugger::Memory pram;
     } memory;
+
+    struct Graphics {
+      Node::Debugger::Graphics tiles4bpp;
+      Node::Debugger::Graphics tiles8bpp;
+      Node::Debugger::Graphics mode3;
+      Node::Debugger::Graphics mode4;
+      Node::Debugger::Graphics mode5;
+    } graphics;
   } debugger;
 
   //ppu.cpp

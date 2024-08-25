@@ -30,6 +30,12 @@ auto OptionSettings::construct() -> void {
   homebrewModeLayout.setAlignment(1).setPadding(12_sx, 0);
       homebrewModeHint.setText("Activate core-specific features to help homebrew developers").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  forceInterpreter.setText("Force Interpreter").setChecked(settings.general.forceInterpreter).onToggle([&] {
+    settings.general.forceInterpreter = forceInterpreter.checked();
+  });
+  forceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
+      forceInterpreterHint.setText("(Slow) Enable interpreter for cores that default to a recompiler").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
   nintendo64SettingsLabel.setText("Nintendo 64 Settings").setFont(Font().setBold());
 
   nintendo64ExpansionPakOption.setText("4MB Expansion Pak").setChecked(settings.nintendo64.expansionPak).onToggle([&] {

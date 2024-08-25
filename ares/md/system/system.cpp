@@ -28,6 +28,16 @@ auto load(Node::System& node, string name) -> bool {
   return system.load(node, name);
 }
 
+auto option(string name, string value) -> bool {
+  if(name == "Recompiler") {
+    if constexpr(SH2::Accuracy::Recompiler) {
+      m32x.shm.recompiler.enabled = value.boolean();
+      m32x.shs.recompiler.enabled = value.boolean();
+    }
+  }
+  return true;
+}
+
 Random random;
 Scheduler scheduler;
 System system;

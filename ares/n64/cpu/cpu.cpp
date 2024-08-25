@@ -108,7 +108,7 @@ auto CPU::instruction() -> void {
     return;
   }
 
-  if constexpr(Accuracy::CPU::Recompiler) {
+  if(Accuracy::CPU::Recompiler && recompiler.enabled) {
     // Fast path: attempt to lookup previously compiled blocks with devirtualizeFast
     // and fastFetchBlock, this skips exception handling, error checking, and
     // code emitting pathways for maximum lookup performance.
@@ -124,15 +124,13 @@ auto CPU::instruction() -> void {
       auto block = recompiler.block(ipu.pc, *address, GDB::server.hasBreakpoints());
       block->execute(*this);
     }
-  }
-
-  if constexpr(Accuracy::CPU::Interpreter) {
+  } else {
     auto data = fetch(ipu.pc);
     if (!data) return;
     pipeline.begin();
     instructionPrologue(ipu.pc, *data);
     decoderEXECUTE(*data);
-    instructionEpilogue();
+    instructionEpilogue<0>();
     pipeline.end();
   }
 }
@@ -141,14 +139,13 @@ auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
   debugger.instruction(address, instruction);
 }
 
+template<bool Recompiled>
 auto CPU::instructionEpilogue() -> void {
-  if constexpr(Accuracy::CPU::Recompiler) {
+  if constexpr(Recompiled) {
     //simulates timings without performing actual icache loads
     icache.step(ipu.pc, devirtualizeFast(ipu.pc));
     assert(ipu.r[0].u64 == 0);
-  }
-
-  if constexpr(Accuracy::CPU::Interpreter) {
+  } else {
     ipu.r[0].u64 = 0;
   }
 }
