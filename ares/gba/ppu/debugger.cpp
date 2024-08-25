@@ -28,10 +28,10 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
         for(u32 y : range(8)) {
           for(u32 x : range(4)) {
             n8 colors = ppu.vram[address + y * 4 + x];
-            n4 pixel1 = colors & 0xf;
-            n4 pixel2 = colors >> 4;
-            output[(tileY * 8 + y) * 512 + (tileX * 8 + (x << 1))]     = pixel1 * 0x111111;
-            output[(tileY * 8 + y) * 512 + (tileX * 8 + (x << 1)) + 1] = pixel2 * 0x111111;
+            n4 leftPixel = colors & 0xf;
+            n4 rightPixel = colors >> 4;
+            output[(tileY * 8 + y) * 512 + (tileX * 8 + (x << 1))]     =  leftPixel * 0x111111;
+            output[(tileY * 8 + y) * 512 + (tileX * 8 + (x << 1)) + 1] = rightPixel * 0x111111;
           }
         }
       }
