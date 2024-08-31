@@ -890,10 +890,10 @@ struct CPU : Thread {
     }
 
     auto pool(u32 address) -> Pool*;
-    auto block(u32 vaddr, u32 address, bool singleInstruction = false) -> Block*;
+    auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
     auto fastFetchBlock(u32 address) -> Block*;
 
-    auto emit(u32 vaddr, u32 address, bool singleInstruction = false) -> Block*;
+    auto emit(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
     auto emitZeroClear(u32 n) -> void;
     auto emitEXECUTE(u32 instruction) -> bool;
     auto emitSPECIAL(u32 instruction) -> bool;
