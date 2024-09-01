@@ -47,6 +47,8 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   auto main() -> void;
   auto dmaRun() -> void;
+  auto raiseIRQ(u32 source) -> void;
+  auto stepIRQ() -> void;
   auto step(u32 clocks) -> void override;
   auto power() -> void;
 
@@ -201,8 +203,8 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   struct IRQ {
     n1  ime;
-    n16 enable;
-    n16 flag;
+    n16 enable[2];
+    n16 flag[2];
   } irq;
 
   struct Wait {

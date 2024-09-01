@@ -98,12 +98,12 @@ auto PPU::main() -> void {
   }
 
   if(io.vcounter == 160) {
-    if(io.irqvblank) cpu.irq.flag |= CPU::Interrupt::VBlank;
+    if(io.irqvblank) cpu.raiseIRQ(CPU::Interrupt::VBlank);
     cpu.dmaVblank();
   }
 
   if(io.irqvcoincidence) {
-    if(io.vcoincidence) cpu.irq.flag |= CPU::Interrupt::VCoincidence;
+    if(io.vcoincidence) cpu.raiseIRQ(CPU::Interrupt::VCoincidence);
   }
 
   step(46);
@@ -135,7 +135,7 @@ auto PPU::main() -> void {
   }
 
   io.hblank = 1;
-  if(io.irqhblank) cpu.irq.flag |= CPU::Interrupt::HBlank;
+  if(io.irqhblank) cpu.raiseIRQ(CPU::Interrupt::HBlank);
   if(io.vcounter < 160) cpu.dmaHblank();
 
   step(226);

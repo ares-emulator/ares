@@ -43,7 +43,7 @@ auto CPU::Timer::step() -> void {
   if(++period == 0) {
     period = reload;
 
-    if(irq) cpu.irq.flag |= CPU::Interrupt::Timer0 << id;
+    if(irq) cpu.raiseIRQ(CPU::Interrupt::Timer0 << id);
 
     if(apu.fifo[0].timer == id) cpu.runFIFO(0);
     if(apu.fifo[1].timer == id) cpu.runFIFO(1);

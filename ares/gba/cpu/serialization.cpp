@@ -82,8 +82,8 @@ auto CPU::serialize(serializer& s) -> void {
   s(joybus.generalFlag);
 
   s(irq.ime);
-  s(irq.enable);
-  s(irq.flag);
+  for(auto& flag : irq.enable) s(flag);
+  for(auto& flag : irq.flag) s(flag);
 
   for(auto& flag : wait.nwait) s(flag);
   for(auto& flag : wait.swait) s(flag);
