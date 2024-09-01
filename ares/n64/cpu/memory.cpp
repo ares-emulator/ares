@@ -88,23 +88,27 @@ auto CPU::segment(u64 vaddr) -> Context::Segment {
   unreachable;
 }
 
-auto CPU::devirtualize(u64 vaddr) -> maybe<u64> {
-  if(vaddrAlignedError<Word>(vaddr, false)) return nothing;
+auto CPU::devirtualize(u64 vaddr, bool raiseExceptions) -> PhysAccess {
+  if(raiseExceptions && vaddrAlignedError<Word>(vaddr, false)) return PhysAccess{false};
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
-    addressException(vaddr);
-    exception.addressLoad();
-    return nothing;
+    if(raiseExceptions) {
+      addressException(vaddr);
+      exception.addressLoad();
+    }
+    return PhysAccess{false};
   case Context::Segment::Mapped:
-    if(auto match = tlb.load(vaddr)) return match.address & context.physMask;
-    addressException(vaddr);
-    return nothing;
+    if(auto match = tlb.load(vaddr)) return match;
+    if(raiseExceptions) addressException(vaddr);
+    return PhysAccess{false};
   case Context::Segment::Cached:
+    return PhysAccess{true, true,  (u32)(vaddr & 0x1fff'ffff), vaddr};
   case Context::Segment::Direct:
-    return vaddr & 0x1fff'ffff;
+    return PhysAccess{true, false, (u32)(vaddr & 0x1fff'ffff), vaddr};
   case Context::Segment::Cached32:
+    return PhysAccess{true, true,  (u32)(vaddr & 0xffff'ffff), vaddr};
   case Context::Segment::Direct32:
-    return vaddr & 0xffff'ffff;
+    return PhysAccess{true, true,  (u32)(vaddr & 0xffff'ffff), vaddr};
   }
   unreachable;
 }
@@ -128,7 +132,7 @@ auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
   switch(segment(vaddr)) {
   case Context::Segment::Mapped: {
     auto match = tlb.loadFast(vaddr);
-    return devirtualizeCache.pbase = match.address & context.physMask;
+    return devirtualizeCache.pbase = match.paddr & context.physMask;
   }
   case Context::Segment::Cached:
   case Context::Segment::Direct:
@@ -174,9 +178,9 @@ auto CPU::fetch(u64 vaddr) -> maybe<u32> {
     return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(vaddr)) {
-      if(match.cache) return icache.fetch(vaddr, match.address & context.physMask, cpu);
+      if(match.cache) return icache.fetch(vaddr, match.paddr & context.physMask, cpu);
       step(1 * 2);
-      return busRead<Word>(match.address & context.physMask);
+      return busRead<Word>(match.paddr & context.physMask);
     }
     step(1 * 2);
     addressException(vaddr);
@@ -209,9 +213,9 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
     return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(vaddr)) {
-      if(match.cache) return dcache.read<Size>(vaddr, match.address & context.physMask);
+      if(match.cache) return dcache.read<Size>(vaddr, match.paddr & context.physMask);
       step(1 * 2);
-      return busRead<Size>(match.address & context.physMask);
+      return busRead<Size>(match.paddr & context.physMask);
     }
     step(1 * 2);
     addressException(vaddr);
@@ -238,8 +242,8 @@ auto CPU::readDebug(u64 vaddr) -> u8 {
     case Context::Segment::Unused: return 0;
     case Context::Segment::Mapped:
       if(auto match = tlb.load(vaddr, true)) {
-        if(match.cache) return dcache.readDebug(vaddr, match.address & context.physMask);
-        return bus.read<Byte>(match.address & context.physMask, dummyThread, "Ares Debugger");
+        if(match.cache) return dcache.readDebug(vaddr, match.paddr & context.physMask);
+        return bus.read<Byte>(match.paddr & context.physMask, dummyThread, "Ares Debugger");
       }
       return 0;
     case Context::Segment::Cached:
@@ -270,9 +274,9 @@ auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
     return false;
   case Context::Segment::Mapped:
     if(auto match = tlb.store(vaddr)) {
-      if(match.cache) return dcache.write<Size>(vaddr, match.address & context.physMask, data), true;
+      if(match.cache) return dcache.write<Size>(vaddr, match.paddr & context.physMask, data), true;
       step(1 * 2);
-      return busWrite<Size>(match.address & context.physMask, data), true;
+      return busWrite<Size>(match.paddr & context.physMask, data), true;
     }
     step(1 * 2);
     addressException(vaddr0);

@@ -72,6 +72,15 @@ struct CPU : Thread {
     }
   } pipeline{*this};
 
+  struct PhysAccess {
+    explicit operator bool() const { return found; }
+
+    bool found;   //this is a valid physical access
+    bool cache;   //access must go through cache
+    u32  paddr;   //physical address on 32-bit MIPS bus
+    u64  vaddr;   //virtual address used on the CPU (64-bit)
+  };
+
   //context.cpp
   struct Context {
     CPU& self;
@@ -199,14 +208,6 @@ struct CPU : Thread {
     TLB(CPU& self) : self(self) {}
     static constexpr u32 Entries = 32;
 
-    struct Match {
-      explicit operator bool() const { return found; }
-
-      bool found;
-      bool cache;
-      u32  address;
-    };
-
     struct Entry {
       //scc-tlb.cpp
       auto synchronize() -> void;
@@ -228,12 +229,12 @@ struct CPU : Thread {
     } entry[TLB::Entries];
 
     //tlb.cpp
-    auto load(u64 vaddr, bool noExceptions = false) -> Match;
-    auto load(u64 vaddr, const Entry& entry, bool noExceptions = false) -> maybe<Match>;
+    auto load(u64 vaddr, bool noExceptions = false) -> PhysAccess;
+    auto load(u64 vaddr, const Entry& entry, bool noExceptions = false) -> maybe<PhysAccess>;
     
-    auto loadFast(u64 vaddr) -> Match;
-    auto store(u64 vaddr) -> Match;
-    auto store(u64 vaddr, const Entry& entry) -> maybe<Match>;
+    auto loadFast(u64 vaddr) -> PhysAccess;
+    auto store(u64 vaddr) -> PhysAccess;
+    auto store(u64 vaddr, const Entry& entry) -> maybe<PhysAccess>;
 
     struct TlbCache { ;
       static constexpr int entries = 4;
@@ -277,7 +278,7 @@ struct CPU : Thread {
   auto userSegment64(u64 vaddr) const -> Context::Segment;
 
   auto segment(u64 vaddr) -> Context::Segment;
-  auto devirtualize(u64 vaddr) -> maybe<u64>;
+  auto devirtualize(u64 vaddr, bool raiseExceptions = true) -> PhysAccess;
   alwaysinline auto devirtualizeFast(u64 vaddr) -> u64;
   auto devirtualizeDebug(u64 vaddr) -> u64;
 

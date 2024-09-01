@@ -108,11 +108,12 @@ auto CPU::instruction() -> void {
     return;
   }
 
+  auto access = devirtualize(ipu.pc);
+  if(!access) return;
+
   if(Accuracy::CPU::Recompiler && recompiler.enabled) {
-    if (auto address = devirtualize(ipu.pc)) {
-      auto block = recompiler.block(ipu.pc, *address, GDB::server.hasBreakpoints());
-      block->execute(*this);
-    }
+    auto block = recompiler.block(ipu.pc, access.paddr, GDB::server.hasBreakpoints());
+    block->execute(*this);
   } else {
     auto data = fetch(ipu.pc);
     if (!data) return;
