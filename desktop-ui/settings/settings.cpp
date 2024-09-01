@@ -124,6 +124,8 @@ auto Settings::process(bool load) -> void {
 
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
 
+  bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
+
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};
     bind(string, name, recent.game[index]);

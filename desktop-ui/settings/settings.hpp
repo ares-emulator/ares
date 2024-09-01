@@ -104,6 +104,10 @@ struct Settings : Markup::Node {
   struct Nintendo64 {
     bool expansionPak = true;
   } nintendo64;
+
+  struct MegaDrive {
+    bool tmss = false;
+  } megadrive;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -258,6 +262,10 @@ struct OptionSettings : VerticalLayout {
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, 0}};
+  Label megaDriveSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};
+      CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};
+      Label megaDriveTmssHint{&megaDriveTmssLayout, Size{0, 0}};
 };
 
 struct FirmwareSettings : VerticalLayout {
