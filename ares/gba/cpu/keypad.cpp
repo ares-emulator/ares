@@ -1,6 +1,4 @@
 auto CPU::Keypad::run() -> void {
-  system.controls.poll();
-
   const bool lookup[] = {
     system.controls.a->value(),
     system.controls.b->value(),

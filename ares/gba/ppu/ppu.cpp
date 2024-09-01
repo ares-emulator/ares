@@ -149,6 +149,7 @@ auto PPU::main() -> void {
 }
 
 auto PPU::frame() -> void {
+  system.controls.poll();
   screen->frame();
   scheduler.exit(Event::Frame);
 }
