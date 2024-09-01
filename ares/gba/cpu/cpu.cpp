@@ -33,7 +33,7 @@ auto CPU::main() -> void {
   ARM7TDMI::irq = irq.ime && (irq.enable[0] & irq.flag[0]);
 
   if(stopped()) {
-    if(!(irq.enable[0] & irq.flag[0] & Interrupt::Keypad)) {
+    if(!keypad.conditionMet) {
       stepIRQ();
       Thread::step(16);
       Thread::synchronize();

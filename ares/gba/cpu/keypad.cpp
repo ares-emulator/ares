@@ -1,5 +1,4 @@
 auto CPU::Keypad::run() -> void {
-  if(!enable) return;
   system.controls.poll();
 
   const bool lookup[] = {
@@ -15,12 +14,13 @@ auto CPU::Keypad::run() -> void {
     system.controls.l->value(),
   };
 
-  bool test = condition;  //0 = OR, 1 = AND
+  conditionMet = condition;  //0 = OR, 1 = AND
   for(u32 index : range(10)) {
     if(!flag[index]) continue;
-    bool input = lookup[index];
-    if(condition == 0) test |= input;
-    if(condition == 1) test &= input;
+    n1 input = lookup[index];
+    if(condition == 0) conditionMet |= input;
+    if(condition == 1) conditionMet &= input;
   }
-  if(test) cpu.setInterruptFlag(CPU::Interrupt::Keypad);
+  
+  if(conditionMet && enable) cpu.setInterruptFlag(CPU::Interrupt::Keypad);
 }
