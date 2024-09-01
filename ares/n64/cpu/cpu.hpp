@@ -110,29 +110,29 @@ struct CPU : Thread {
   struct InstructionCache {
     CPU& self;
     struct Line;
-    auto line(u32 vaddr) -> Line& { return lines[vaddr >> 5 & 0x1ff]; }
+    auto line(u64 vaddr) -> Line& { return lines[vaddr >> 5 & 0x1ff]; }
 
     //used by the recompiler to simulate instruction cache fetch timing
-    auto step(u32 vaddr, u32 address) -> void {
+    auto step(u64 vaddr, u32 paddr) -> void {
       auto& line = this->line(vaddr);
-      if(!line.hit(address)) {
+      if(!line.hit(paddr)) {
         self.step(48 * 2);
         line.valid = 1;
-        line.tag   = address & ~0x0000'0fff;
+        line.tag   = paddr & ~0x0000'0fff;
       } else {
         self.step(1 * 2);
       }
     }
 
     //used by the interpreter to fully emulate the instruction cache
-    auto fetch(u32 vaddr, u32 address, CPU& cpu) -> u32 {
+    auto fetch(u64 vaddr, u32 paddr, CPU& cpu) -> u32 {
       auto& line = this->line(vaddr);
-      if(!line.hit(address)) {
-        line.fill(address, cpu);
+      if(!line.hit(paddr)) {
+        line.fill(paddr, cpu);
       } else {
         cpu.step(1 * 2);
       }
-      return line.read(address);
+      return line.read(paddr);
     }
 
     auto power(bool reset) -> void {
@@ -147,11 +147,11 @@ struct CPU : Thread {
 
     //16KB
     struct Line {
-      auto hit(u32 address) const -> bool { return valid && tag == (address & ~0x0000'0fff); }
-      auto fill(u32 address, CPU& cpu) -> void {
+      auto hit(u32 paddr) const -> bool { return valid && tag == (paddr & ~0x0000'0fff); }
+      auto fill(u32 paddr, CPU& cpu) -> void {
         cpu.step(48 * 2);
         valid = 1;
-        tag   = address & ~0x0000'0fff;
+        tag   = paddr & ~0x0000'0fff;
         cpu.busReadBurst<ICache>(tag | index, words);
       }
 
@@ -160,7 +160,7 @@ struct CPU : Thread {
         cpu.busWriteBurst<ICache>(tag | index, words);
       }
 
-      auto read(u32 address) const -> u32 { return words[address >> 2 & 7]; }
+      auto read(u32 paddr) const -> u32 { return words[paddr >> 2 & 7]; }
 
       bool valid;
       u32  tag;
@@ -172,21 +172,21 @@ struct CPU : Thread {
   //dcache.cpp
   struct DataCache {
     struct Line;
-    auto line(u32 vaddr) -> Line&;
-    template<u32 Size> auto read(u32 vaddr, u32 address) -> u64;
-    template<u32 Size> auto write(u32 vaddr, u32 address, u64 data) -> void;
+    auto line(u64 vaddr) -> Line&;
+    template<u32 Size> auto read(u64 vaddr, u32 paddr) -> u64;
+    template<u32 Size> auto write(u64 vaddr, u32 paddr, u64 data) -> void;
     auto power(bool reset) -> void;
 
-    auto readDebug(u32 vaddr, u32 address) -> u8;
-    auto writeDebug(u32 vaddr, u32 address, u8 value) -> void;
+    auto readDebug(u64 vaddr, u32 paddr) -> u8;
+    auto writeDebug(u64 vaddr, u32 paddr, u8 value) -> void;
 
     //8KB
     struct Line {
-      auto hit(u32 address) const -> bool;
-      auto fill(u32 address) -> void;
+      auto hit(u32 paddr) const -> bool;
+      auto fill(u32 paddr) -> void;
       auto writeBack() -> void;
-      template<u32 Size> auto read(u32 address) const -> u64;
-      template<u32 Size> auto write(u32 address, u64 data) -> void;
+      template<u32 Size> auto read(u32 paddr) const -> u64;
+      template<u32 Size> auto write(u32 paddr, u64 data) -> void;
 
       bool valid;
       u16  dirty;
