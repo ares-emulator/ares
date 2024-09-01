@@ -66,7 +66,7 @@ auto CPU::dmaRun() -> void {
   }
 }
 
-auto CPU::raiseIRQ(u32 source) -> void {
+auto CPU::setInterruptFlag(u32 source) -> void {
   irq.flag[1] |= source;
 }
 

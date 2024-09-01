@@ -2,8 +2,8 @@ inline auto CPU::DMA::run() -> bool {
   if(!active || waiting) return false;
 
   transfer();
-  if(irq) cpu.raiseIRQ(CPU::Interrupt::DMA0 << id);
-  if(drq && id == 3) cpu.raiseIRQ(CPU::Interrupt::Cartridge);
+  if(irq) cpu.setInterruptFlag(CPU::Interrupt::DMA0 << id);
+  if(drq && id == 3) cpu.setInterruptFlag(CPU::Interrupt::Cartridge);
   return true;
 }
 

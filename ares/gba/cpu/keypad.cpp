@@ -22,5 +22,5 @@ auto CPU::Keypad::run() -> void {
     if(condition == 0) test |= input;
     if(condition == 1) test &= input;
   }
-  if(test) cpu.raiseIRQ(CPU::Interrupt::Keypad);
+  if(test) cpu.setInterruptFlag(CPU::Interrupt::Keypad);
 }
