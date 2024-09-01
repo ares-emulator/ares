@@ -183,12 +183,12 @@ auto CPU::readIO(n32 address) -> n8 {
   case 0x0400'015b: return 0;
 
   //IE
-  case 0x0400'0200: return irq.enable.byte(0);
-  case 0x0400'0201: return irq.enable.byte(1);
+  case 0x0400'0200: return irq.enable[0].byte(0);
+  case 0x0400'0201: return irq.enable[0].byte(1);
 
   //IF
-  case 0x0400'0202: return irq.flag.byte(0);
-  case 0x0400'0203: return irq.flag.byte(1);
+  case 0x0400'0202: return irq.flag[0].byte(0);
+  case 0x0400'0203: return irq.flag[0].byte(1);
 
   //WAITCNT
   case 0x0400'0204: return (
@@ -415,12 +415,12 @@ auto CPU::writeIO(n32 address, n8 data) -> void {
   case 0x0400'0159: return;
 
   //IE
-  case 0x0400'0200: irq.enable.byte(0) = data; return;
-  case 0x0400'0201: irq.enable.byte(1) = data; return;
+  case 0x0400'0200: irq.enable[1].byte(0) = data; return;
+  case 0x0400'0201: irq.enable[1].byte(1) = data; return;
 
   //IF
-  case 0x0400'0202: irq.flag.byte(0) = irq.flag.byte(0) & ~data; return;
-  case 0x0400'0203: irq.flag.byte(1) = irq.flag.byte(1) & ~data; return;
+  case 0x0400'0202: irq.flag[1].byte(0) = irq.flag[1].byte(0) & ~data; return;
+  case 0x0400'0203: irq.flag[1].byte(1) = irq.flag[1].byte(1) & ~data; return;
 
   //WAITCNT
   case 0x0400'0204:

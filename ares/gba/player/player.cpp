@@ -86,7 +86,7 @@ auto Player::frame() -> void {
     case 15: status.send = 0x30000003; break;
     case 16: status.send = 0x30000003; break;
     }
-    cpu.irq.flag |= CPU::Interrupt::Serial;
+    cpu.setInterruptFlag(CPU::Interrupt::Serial);
   }
 }
 
