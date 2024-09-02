@@ -109,17 +109,6 @@ auto CPU::instruction() -> void {
   }
 
   if(Accuracy::CPU::Recompiler && recompiler.enabled) {
-    // Fast path: attempt to lookup previously compiled blocks with devirtualizeFast
-    // and fastFetchBlock, this skips exception handling, error checking, and
-    // code emitting pathways for maximum lookup performance.
-    // As memory writes cause recompiler block invalidation, this shouldn't be detectable.
-    if (auto address = devirtualizeFast(ipu.pc)) {
-      if(auto block = recompiler.fastFetchBlock(address)) {
-        block->execute(*this);
-        return;
-      }
-    }
-
     if (auto address = devirtualize(ipu.pc)) {
       auto block = recompiler.block(ipu.pc, *address, GDB::server.hasBreakpoints());
       block->execute(*this);
