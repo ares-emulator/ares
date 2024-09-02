@@ -93,7 +93,7 @@ auto CPU::power(bool reset) -> void {
   M68000::power();
   Thread::create(system.frequency() / 7.0, {&CPU::main, this});
 
-  tmssEnable = system.tmss->value();
+  tmssEnable = system.tmss;
   if(!reset) ram.fill();
 
   io = {};
