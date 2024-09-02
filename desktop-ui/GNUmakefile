@@ -138,13 +138,15 @@ endif
 	$(call rcopy,$(mia.path)/Database/*,$(output.path)/$(name).app/Contents/Resources/Database/)
 	sips -s format icns resource/$(name).png --out $(output.path)/$(name).app/Contents/Resources/$(name).icns
 	codesign --force --deep --options runtime --entitlements resource/$(name).selfsigned.entitlements --sign - $(output.path)/$(name).app
-else ifeq ($(platform),windows)
+else ifneq ($(filter $(platform),windows linux bsd),)
 	$(call mkdir,$(output.path)/Shaders/)
 	$(call mkdir,$(output.path)/Database/)
 	$(call rcopy,$(thirdparty.path)/slang-shaders/*,$(output.path)/Shaders/)
 	$(call rcopy,$(mia.path)/Database/*,$(output.path)/Database/)
 ifeq ($(librashader), true)
+ifdef librashader.path
 	$(call copy,$(librashader.path),$(output.path)/)
+endif
 endif
 endif
 

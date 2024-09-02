@@ -43,5 +43,13 @@ auto OptionSettings::construct() -> void {
   });
   nintendo64ExpansionPakLayout.setAlignment(1).setPadding(12_sx, 0);
       nintendo64ExpansionPakHint.setText("Enable/Disable the 4MB Expansion Pak").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-  
+
+  megaDriveSettingsLabel.setText("Mega Drive Settings").setFont(Font().setBold());
+
+  megaDriveTmssOption.setText("TMSS Boot Rom").setChecked(settings.megadrive.tmss).onToggle([&] {
+    settings.megadrive.tmss = megaDriveTmssOption.checked();
+  });
+  megaDriveTmssLayout.setAlignment(1).setPadding(12_sx, 0);
+    megaDriveTmssHint.setText("Enable/Disable the TMSS Boot Rom at system initialization").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
 }

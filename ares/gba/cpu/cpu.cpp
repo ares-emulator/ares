@@ -30,18 +30,20 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  ARM7TDMI::irq = irq.ime && (irq.enable & irq.flag);
+  ARM7TDMI::irq = irq.ime && (irq.enable[0] & irq.flag[0]);
 
   if(stopped()) {
-    if(!(irq.enable & irq.flag & Interrupt::Keypad)) {
+    if(!keypad.conditionMet) {
+      stepIRQ();
       Thread::step(16);
       Thread::synchronize();
+      return;
     }
     context.stopped = false;
   }
 
   if(halted()) {
-    if(!(irq.enable & irq.flag)) {
+    if(!(irq.enable[0] & irq.flag[0])) {
       return step(16);
     }
     context.halted = false;
@@ -64,6 +66,15 @@ auto CPU::dmaRun() -> void {
   }
 }
 
+auto CPU::setInterruptFlag(u32 source) -> void {
+  irq.flag[1] |= source;
+}
+
+inline auto CPU::stepIRQ() -> void {
+  irq.enable[0] = irq.enable[1];
+  irq.flag[0] = irq.flag[1];
+}
+
 auto CPU::step(u32 clocks) -> void {
   if(!clocks) return;
 
@@ -75,6 +86,7 @@ auto CPU::step(u32 clocks) -> void {
   dma[3].waiting = max(0, dma[3].waiting - (s32)clocks);
 
   for(auto _ : range(clocks)) {
+    stepIRQ();
     timer[0].run();
     timer[1].run();
     timer[2].run();

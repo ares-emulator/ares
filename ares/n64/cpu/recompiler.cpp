@@ -17,12 +17,6 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
   return block;
 }
 
-auto CPU::Recompiler::fastFetchBlock(u32 address) -> Block* {
-  auto& pool = pools[address >> 8 & 0x1fffff];
-  if(pool) return pool->blocks[address >> 2 & 0x3f];
-  return nullptr;
-}
-
 #define IpuBase        offsetof(IPU, r[16])
 #define IpuReg(r)      sreg(1), offsetof(IPU, r) - IpuBase
 #define PipelineReg(x) mem(sreg(0), offsetof(CPU, pipeline) + offsetof(Pipeline, x))
