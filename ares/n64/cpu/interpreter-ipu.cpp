@@ -118,7 +118,7 @@ auto CPU::BREAK() -> void {
 }
 
 auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
-  auto access = devirtualize(rs.u64 + imm);
+  auto access = devirtualize<Read, Word>(rs.u64 + imm);
   if (!access) return;
 
   switch(operation) {
@@ -609,7 +609,7 @@ auto CPU::LHU(r64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::LL(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto access = devirtualize(rs.u64 + imm)) {
+  if(auto access = devirtualize<Read, Word>(rs.u64 + imm)) {
     if (auto data = read<Word>(access.vaddr)) {
       rt.u64 = s32(*data);
       scc.ll = access.paddr >> 4;
@@ -620,7 +620,7 @@ auto CPU::LL(r64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::LLD(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  if(auto access = devirtualize(rs.u64 + imm)) {
+  if(auto access = devirtualize<Read, Word>(rs.u64 + imm)) {
     if (auto data = read<Dual>(access.vaddr)) {
       rt.u64 = *data;
       scc.ll = access.paddr >> 4;

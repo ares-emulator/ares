@@ -73,6 +73,8 @@ struct CPU : Thread {
   } pipeline{*this};
 
   struct PhysAccess {
+    enum Direction : u32 { Read, Write };
+
     explicit operator bool() const { return found; }
 
     bool found;   //this is a valid physical access
@@ -129,8 +131,6 @@ struct CPU : Thread {
       auto& line = this->line(vaddr);
       if(!line.hit(paddr)) {
         line.fill(paddr, cpu);
-      } else {
-        cpu.step(1 * 2);
       }
       return line.read(paddr);
     }
@@ -233,8 +233,8 @@ struct CPU : Thread {
     auto load(u64 vaddr, const Entry& entry, bool noExceptions = false) -> maybe<PhysAccess>;
     
     auto loadFast(u64 vaddr) -> PhysAccess;
-    auto store(u64 vaddr) -> PhysAccess;
-    auto store(u64 vaddr, const Entry& entry) -> maybe<PhysAccess>;
+    auto store(u64 vaddr, bool noExceptions = false) -> PhysAccess;
+    auto store(u64 vaddr, const Entry& entry, bool noExceptions = false) -> maybe<PhysAccess>;
 
     struct TlbCache { ;
       static constexpr int entries = 4;
@@ -278,21 +278,28 @@ struct CPU : Thread {
   auto userSegment64(u64 vaddr) const -> Context::Segment;
 
   auto segment(u64 vaddr) -> Context::Segment;
-  auto devirtualize(u64 vaddr, bool raiseExceptions = true) -> PhysAccess;
+  template<u32 Dir, u32 Size> auto devirtualize(u64 vaddr, bool raiseAlignedError = true, bool raiseExceptions = true) -> PhysAccess;
   alwaysinline auto devirtualizeFast(u64 vaddr) -> u64;
   auto devirtualizeDebug(u64 vaddr) -> u64;
 
-  auto fetch(u64 vaddr) -> maybe<u32>;
+  auto fetch(PhysAccess access) -> maybe<u32>;
   template<u32 Size> auto busWrite(u32 address, u64 data) -> void;
   template<u32 Size> auto busRead(u32 address) -> u64;
   template<u32 Size> auto busWriteBurst(u32 address, u32 *data) -> void;
   template<u32 Size> auto busReadBurst(u32 address, u32 *data) -> void;
-  template<u32 Size> auto read(u64 vaddr) -> maybe<u64>;
-  template<u32 Size> auto write(u64 vaddr, u64 data, bool alignedError=true) -> bool;
+  template<u32 Size> auto read(PhysAccess access) -> maybe<u64>;
+  template<u32 Size> auto write(PhysAccess access, u64 data) -> bool;
+  template<u32 Size> auto read(u64 vaddr) -> maybe<u64> {
+    return read<Size>(devirtualize<Read, Size>(vaddr));
+  }
+  template<u32 Size> auto write(u64 vaddr, u64 data, bool alignedError = true) -> bool {
+    return write<Size>(devirtualize<Write, Size>(vaddr, alignedError), data);
+  }
   template<u32 Size> auto vaddrAlignedError(u64 vaddr, bool write) -> bool;
   auto addressException(u64 vaddr) -> void;
 
   auto readDebug(u64 vaddr) -> u8;
+  template <u32 Size> auto writeDebug(u64 vaddr, u64 data) -> bool;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

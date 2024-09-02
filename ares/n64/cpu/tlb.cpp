@@ -57,21 +57,25 @@ auto CPU::TLB::loadFast(u64 vaddr) -> PhysAccess {
   return {false, 0, 0};
 }
 
-auto CPU::TLB::store(u64 vaddr, const Entry& entry) -> maybe<PhysAccess> {
+auto CPU::TLB::store(u64 vaddr, const Entry& entry, bool noExceptions) -> maybe<PhysAccess> {
   if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) return nothing;
   if((vaddr & entry.addressMaskHi) != entry.virtualAddress) return nothing;
   if(vaddr >> 62 != entry.region) return nothing;
   bool lo = vaddr & entry.addressSelect;
   if(!entry.valid[lo]) {
-    self.addressException(vaddr);
-    self.debugger.tlbStoreInvalid(vaddr);
-    self.exception.tlbStoreInvalid();
+    if(!noExceptions) {
+      self.addressException(vaddr);
+      self.debugger.tlbStoreInvalid(vaddr);
+      self.exception.tlbStoreInvalid();
+    }
     return PhysAccess{false};
   }
   if(!entry.dirty[lo]) {
-    self.addressException(vaddr);
-    self.debugger.tlbModification(vaddr);
-    self.exception.tlbModification();
+    if(!noExceptions) {
+      self.addressException(vaddr);
+      self.debugger.tlbModification(vaddr);
+      self.exception.tlbModification();
+    }
     return PhysAccess{false};
   }
   physicalAddress = entry.physicalAddress[lo] + (vaddr & entry.addressMaskLo);
@@ -79,7 +83,7 @@ auto CPU::TLB::store(u64 vaddr, const Entry& entry) -> maybe<PhysAccess> {
   return PhysAccess{true, entry.cacheAlgorithm[lo] != 2, physicalAddress, vaddr};
 }
 
-auto CPU::TLB::store(u64 vaddr) -> PhysAccess {
+auto CPU::TLB::store(u64 vaddr, bool noExceptions) -> PhysAccess {
   for(auto& entry : this->tlbCache.entry) {
     if(!entry.entry) continue;
     if(auto match = store(vaddr, *entry.entry)) {
@@ -89,15 +93,17 @@ auto CPU::TLB::store(u64 vaddr) -> PhysAccess {
   }
 
   for(auto& entry : this->entry) {
-    if(auto match = store(vaddr, entry)) {
+    if(auto match = store(vaddr, entry, noExceptions)) {
       this->tlbCache.insert(entry);
       return *match;
     }
   }
 
-  self.addressException(vaddr);
-  self.debugger.tlbStoreMiss(vaddr);
-  self.exception.tlbStoreMiss();
+  if(!noExceptions) {
+    self.addressException(vaddr);
+    self.debugger.tlbStoreMiss(vaddr);
+    self.exception.tlbStoreMiss();
+  }
   return {false};
 }
 
