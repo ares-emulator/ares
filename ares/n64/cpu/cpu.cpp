@@ -111,7 +111,7 @@ auto CPU::instruction() -> void {
   auto access = devirtualize<Read, Word>(ipu.pc);
   if(!access) return;
 
-  if(Accuracy::CPU::Recompiler && recompiler.enabled) {
+  if(Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
     if(vaddrAlignedError<Word>(access.vaddr, false)) return;
     auto block = recompiler.block(ipu.pc, access.paddr, GDB::server.hasBreakpoints());
     block->execute(*this);
