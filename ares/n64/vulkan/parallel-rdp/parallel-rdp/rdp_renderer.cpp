@@ -716,7 +716,7 @@ static int normalize_dzpix(int dz)
 	else if (dz == 0)
 		return 1;
 
-	unsigned bit = 31 - leading_zeroes(dz);
+	unsigned bit = 31 - Util::leading_zeroes(dz);
 	return 1 << (bit + 1);
 }
 
@@ -1680,7 +1680,7 @@ void Renderer::submit_span_setup_jobs(Vulkan::CommandBuffer &cmd, bool upscale)
 	cmd.set_buffer_view(1, 0, *instance.gpu.span_info_jobs_view);
 	cmd.set_specialization_constant_mask(3);
 	cmd.set_specialization_constant(0, (upscale ? caps.upscaling : 1) * ImplementationConstants::DefaultWorkgroupSize);
-	cmd.set_specialization_constant(1, upscale ? trailing_zeroes(caps.upscaling) : 0u);
+	cmd.set_specialization_constant(1, upscale ? Util::trailing_zeroes(caps.upscaling) : 0u);
 
 	Vulkan::QueryPoolHandle begin_ts, end_ts;
 	if (caps.timestamp >= 2)
@@ -1780,7 +1780,7 @@ void Renderer::submit_rasterization(Vulkan::CommandBuffer &cmd, Vulkan::Buffer &
 	if (caps.timestamp >= 2)
 		start_ts = cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
-	uint32_t scale_log2_bit = (upscaling ? trailing_zeroes(caps.upscaling) : 0u) << RASTERIZATION_UPSCALING_LOG2_BIT_OFFSET;
+	uint32_t scale_log2_bit = (upscaling ? Util::trailing_zeroes(caps.upscaling) : 0u) << RASTERIZATION_UPSCALING_LOG2_BIT_OFFSET;
 
 	for (size_t i = 0; i < stream.static_raster_state_cache.size(); i++)
 	{
@@ -1891,7 +1891,7 @@ void Renderer::submit_tile_binning_combined(Vulkan::CommandBuffer &cmd, bool ups
 		if (supports_subgroup_size_control(32, subgroup_size))
 		{
 			cmd.enable_subgroup_size_control(true);
-			cmd.set_subgroup_size_log2(true, 5, trailing_zeroes(subgroup_size));
+			cmd.set_subgroup_size_log2(true, 5, Util::trailing_zeroes(subgroup_size));
 		}
 	}
 	else
@@ -2092,7 +2092,7 @@ void Renderer::submit_depth_blend(Vulkan::CommandBuffer &cmd, Vulkan::Buffer &tm
 	cmd.set_specialization_constant(5, Limits::MaxPrimitives);
 	cmd.set_specialization_constant(6, upscaled ? caps.max_width : Limits::MaxWidth);
 	cmd.set_specialization_constant(7, uint32_t(force_write_mask || (!is_host_coherent && !upscaled)) |
-	                                   ((upscaled ? trailing_zeroes(caps.upscaling) : 0u) << 1u));
+	                                   ((upscaled ? Util::trailing_zeroes(caps.upscaling) : 0u) << 1u));
 
 	if (upscaled)
 		cmd.set_storage_buffer(0, 0, *upscaling_multisampled_rdram);
