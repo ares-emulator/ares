@@ -93,6 +93,11 @@ auto CPU::devirtualize(u64 vaddr, bool raiseAlignedError, bool raiseExceptions) 
   if (raiseAlignedError && vaddrAlignedError<Size>(vaddr, Dir == Write)) {
     return PhysAccess{false};
   }
+  //fast path for RDRAM, which is by far the most accessed memory region
+  if (vaddr >= 0xffff'ffff'8000'0000ull && vaddr <= 0xffff'ffff'83ef'ffffull) {
+    if constexpr(Dir == Read)  return PhysAccess{true, true, (u32)vaddr & 0x3eff'ffff, vaddr};
+    if constexpr(Dir == Write) return PhysAccess{true, true, (u32)vaddr & 0x3eff'ffff, vaddr};
+  }
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
     if(raiseExceptions) {
