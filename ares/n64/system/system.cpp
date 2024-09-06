@@ -153,43 +153,43 @@ auto System::initDebugHooks() -> void {
   };
 
   GDB::server.hooks.write = [](u64 address, vector<u8> data) {
-    u64 value;
     address = (s32)address;
-    switch(data.size()) {
-      case Byte: 
-        value = (u64)data[0];
-        cpu.writeDebug<Byte>(address, value);
-        break;
-      case Half: 
-        value = ((u64)data[0]<<8) | ((u64)data[1]<<0);
-        cpu.writeDebug<Half>(address, value);
-        break;
-      case Word: 
-        value = ((u64)data[0]<<24) | ((u64)data[1]<<16) | ((u64)data[2]<<8) | ((u64)data[3]<<0);
-        cpu.writeDebug<Word>(address, value);
-        break;
-      case Dual:
-        value  = ((u64)data[0]<<56) | ((u64)data[1]<<48) | ((u64)data[2]<<40) | ((u64)data[3]<<32);
-        value |= ((u64)data[4]<<24) | ((u64)data[5]<<16) | ((u64)data[6]<< 8) | ((u64)data[7]<< 0);
-        cpu.writeDebug<Dual>(address, value);
-        break;
-      default:
-        // Handle writes of different sizes only within the RDRAM area, where
-        // we are sure that the write size does not really matter
-        if(address >= 0xffff'ffff'8000'0000ull && address <= 0xffff'ffff'83ef'ffffull) {
-          for(auto b : data) {
-            cpu.dcache.writeDebug(address, address & 0x1fff'ffff, b);
-            address++;
-          }
-        }
-        if(address >= 0xffff'ffff'a000'0000ull && address <= 0xffff'ffff'a3ef'ffffull) {
-          Thread dummyThread{};
-          for(auto b : data) {
-            bus.write<Byte>(address & 0x1fff'ffff, b, dummyThread, "Ares Debugger");
-            address++;
-          }
-        }
-        break;
+
+    // Handle writes of different/unaligned sizes only within the RDRAM area,
+    // where we are sure that the write size does not really matter
+    if(address >= 0xffff'ffff'8000'0000ull && address <= 0xffff'ffff'83ef'ffffull) {
+      for(auto b : data) {
+        cpu.dcache.writeDebug(address, address & 0x1fff'ffff, b);
+        address++;
+      }
+    } else if (address >= 0xffff'ffff'a000'0000ull && address <= 0xffff'ffff'a3ef'ffffull) {
+      Thread dummyThread{};
+      for(auto b : data) {
+        bus.write<Byte>(address & 0x1fff'ffff, b, dummyThread, "Ares Debugger");
+        address++;
+      }
+    } else {
+      // Otherwise, the write is expected to be of a set size to an aligned address.
+      u64 value;
+      switch(data.size()) {
+        case Byte: 
+          value = (u64)data[0];
+          cpu.write<Byte>(address, value, false);
+          break;
+        case Half: 
+          value = ((u64)data[0]<<8) | ((u64)data[1]<<0);
+          cpu.write<Half>(address, value, false);
+          break;
+        case Word: 
+          value = ((u64)data[0]<<24) | ((u64)data[1]<<16) | ((u64)data[2]<<8) | ((u64)data[3]<<0);
+          cpu.write<Word>(address, value, false);
+          break;
+        case Dual:
+          value  = ((u64)data[0]<<56) | ((u64)data[1]<<48) | ((u64)data[2]<<40) | ((u64)data[3]<<32);
+          value |= ((u64)data[4]<<24) | ((u64)data[5]<<16) | ((u64)data[6]<< 8) | ((u64)data[7]<< 0);
+          cpu.write<Dual>(address, value, false);
+          break;
+      }
     }
   };
 
