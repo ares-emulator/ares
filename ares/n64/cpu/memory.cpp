@@ -88,23 +88,36 @@ auto CPU::segment(u64 vaddr) -> Context::Segment {
   unreachable;
 }
 
-auto CPU::devirtualize(u64 vaddr) -> maybe<u64> {
-  if(vaddrAlignedError<Word>(vaddr, false)) return nothing;
+template <u32 Dir, u32 Size>
+auto CPU::devirtualize(u64 vaddr, bool raiseAlignedError, bool raiseExceptions) -> PhysAccess {
+  if (raiseAlignedError && vaddrAlignedError<Size>(vaddr, Dir == Write)) {
+    return PhysAccess{false};
+  }
+  //fast path for RDRAM, which is by far the most accessed memory region
+  if (vaddr >= 0xffff'ffff'8000'0000ull && vaddr <= 0xffff'ffff'83ef'ffffull) {
+    if constexpr(Dir == Read)  return PhysAccess{true, true, (u32)vaddr & 0x3eff'ffff, vaddr};
+    if constexpr(Dir == Write) return PhysAccess{true, true, (u32)vaddr & 0x3eff'ffff, vaddr};
+  }
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
-    addressException(vaddr);
-    exception.addressLoad();
-    return nothing;
+    if(raiseExceptions) {
+      addressException(vaddr);
+      if constexpr(Dir == Read)  exception.addressLoad();
+      if constexpr(Dir == Write) exception.addressStore();
+    }
+    return PhysAccess{false};
   case Context::Segment::Mapped:
-    if(auto match = tlb.load(vaddr)) return match.address & context.physMask;
-    addressException(vaddr);
-    return nothing;
+    if constexpr(Dir == Read)  if(auto access = tlb.load (vaddr, !raiseExceptions)) return access;
+    if constexpr(Dir == Write) if(auto access = tlb.store(vaddr, !raiseExceptions)) return access;
+    return PhysAccess{false};
   case Context::Segment::Cached:
+    return PhysAccess{true, true,  (u32)(vaddr & 0x1fff'ffff), vaddr};
   case Context::Segment::Direct:
-    return vaddr & 0x1fff'ffff;
+    return PhysAccess{true, false, (u32)(vaddr & 0x1fff'ffff), vaddr};
   case Context::Segment::Cached32:
+    return PhysAccess{true, true,  (u32)(vaddr & 0xffff'ffff), vaddr};
   case Context::Segment::Direct32:
-    return vaddr & 0xffff'ffff;
+    return PhysAccess{true, false,  (u32)(vaddr & 0xffff'ffff), vaddr};
   }
   unreachable;
 }
@@ -128,7 +141,7 @@ auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
   switch(segment(vaddr)) {
   case Context::Segment::Mapped: {
     auto match = tlb.loadFast(vaddr);
-    return devirtualizeCache.pbase = match.address & context.physMask;
+    return devirtualizeCache.pbase = match.paddr & context.physMask;
   }
   case Context::Segment::Cached:
   case Context::Segment::Direct:
@@ -164,132 +177,45 @@ inline auto CPU::busReadBurst(u32 address, u32 *data) -> void {
   return bus.readBurst<Size>(address, data, *this);
 }
 
-auto CPU::fetch(u64 vaddr) -> maybe<u32> {
-  if(vaddrAlignedError<Word>(vaddr, false)) return nothing;
-  switch(segment(vaddr)) {
-  case Context::Segment::Unused:
-    step(1 * 2);
-    addressException(vaddr);
-    exception.addressLoad();
-    return nothing;
-  case Context::Segment::Mapped:
-    if(auto match = tlb.load(vaddr)) {
-      if(match.cache) return icache.fetch(vaddr, match.address & context.physMask, cpu);
-      step(1 * 2);
-      return busRead<Word>(match.address & context.physMask);
-    }
-    step(1 * 2);
-    addressException(vaddr);
-    return nothing;
-  case Context::Segment::Cached:
-    return icache.fetch(vaddr, vaddr & 0x1fff'ffff, cpu);
-  case Context::Segment::Cached32:
-    return icache.fetch(vaddr, vaddr & 0xffff'ffff, cpu);
-  case Context::Segment::Direct:
-    step(1 * 2);
-    return busRead<Word>(vaddr & 0x1fff'ffff);
-  case Context::Segment::Direct32:
-    step(1 * 2);
-    return busRead<Word>(vaddr & 0xffff'ffff);
-  }
-
-  unreachable;
+auto CPU::fetch(PhysAccess access) -> maybe<u32> {
+  step(1 * 2);
+  if(!access) return nothing;
+  if(access.cache) return icache.fetch(access.vaddr, access.paddr, cpu);
+  return busRead<Word>(access.paddr);
 }
 
 template<u32 Size>
-auto CPU::read(u64 vaddr) -> maybe<u64> {
-  if(vaddrAlignedError<Size>(vaddr, false)) return nothing;
-  GDB::server.reportMemRead(vaddr, Size);
-  
-  switch(segment(vaddr)) {
-  case Context::Segment::Unused:
-    step(1 * 2);
-    addressException(vaddr);
-    exception.addressLoad();
-    return nothing;
-  case Context::Segment::Mapped:
-    if(auto match = tlb.load(vaddr)) {
-      if(match.cache) return dcache.read<Size>(vaddr, match.address & context.physMask);
-      step(1 * 2);
-      return busRead<Size>(match.address & context.physMask);
-    }
-    step(1 * 2);
-    addressException(vaddr);
-    return nothing;
-  case Context::Segment::Cached:
-    return dcache.read<Size>(vaddr, vaddr & 0x1fff'ffff);
-  case Context::Segment::Cached32:
-    return dcache.read<Size>(vaddr, vaddr & 0xffff'ffff);
-  case Context::Segment::Direct:
-    step(1 * 2);
-    return busRead<Size>(vaddr & 0x1fff'ffff);
-  case Context::Segment::Direct32:
-    step(1 * 2);
-    return busRead<Size>(vaddr & 0xffff'ffff);
-  }
-
-  unreachable;
+auto CPU::read(PhysAccess access) -> maybe<u64> {
+  if(!access) return nothing;
+  GDB::server.reportMemRead(access.vaddr, Size);
+  if(access.cache) return dcache.read<Size>(access.vaddr, access.paddr);
+  return busRead<Size>(access.paddr);
 }
 
 auto CPU::readDebug(u64 vaddr) -> u8 {
   Thread dummyThread{};
+  auto access = devirtualize<Read, Byte>(vaddr, false, false);
+  if(!access) return 0;
+  if(access.cache) return dcache.readDebug(access.vaddr, access.paddr);
+  return bus.read<Byte>(access.paddr, dummyThread, "Ares Debugger");
+}
 
-  switch(segment(vaddr)) {
-    case Context::Segment::Unused: return 0;
-    case Context::Segment::Mapped:
-      if(auto match = tlb.load(vaddr, true)) {
-        if(match.cache) return dcache.readDebug(vaddr, match.address & context.physMask);
-        return bus.read<Byte>(match.address & context.physMask, dummyThread, "Ares Debugger");
-      }
-      return 0;
-    case Context::Segment::Cached:
-      return dcache.readDebug(vaddr, vaddr & 0x1fff'ffff);
-    case Context::Segment::Cached32:
-      return dcache.readDebug(vaddr, vaddr & 0xffff'ffff);
-    case Context::Segment::Direct:
-      return bus.read<Byte>(vaddr & 0x1fff'ffff, dummyThread, "Ares Debugger");
-    case Context::Segment::Direct32:
-      return bus.read<Byte>(vaddr & 0xffff'ffff, dummyThread, "Ares Debugger");
-  }
 
-  unreachable;
+template<u32 Size>
+auto CPU::write(PhysAccess access, u64 data) -> bool {
+  if(!access) return false;
+  GDB::server.reportMemWrite(access.vaddr, Size);
+  if(access.cache) return dcache.write<Size>(access.vaddr, access.paddr, data), true;
+  return busWrite<Size>(access.paddr, data), true;
 }
 
 template<u32 Size>
-auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
-  if(alignedError && vaddrAlignedError<Size>(vaddr0, true)) return false;
-  u64 vaddr = vaddr0 & ~((u64)Size - 1);
-
-  GDB::server.reportMemWrite(vaddr0, Size);
-
-  switch(segment(vaddr)) {
-  case Context::Segment::Unused:
-    step(1 * 2);
-    addressException(vaddr0);
-    exception.addressStore();
-    return false;
-  case Context::Segment::Mapped:
-    if(auto match = tlb.store(vaddr)) {
-      if(match.cache) return dcache.write<Size>(vaddr, match.address & context.physMask, data), true;
-      step(1 * 2);
-      return busWrite<Size>(match.address & context.physMask, data), true;
-    }
-    step(1 * 2);
-    addressException(vaddr0);
-    return false;
-  case Context::Segment::Cached:
-    return dcache.write<Size>(vaddr, vaddr & 0x1fff'ffff, data), true;
-  case Context::Segment::Cached32:
-    return dcache.write<Size>(vaddr, vaddr & 0xffff'ffff, data), true;
-  case Context::Segment::Direct:
-    step(1 * 2);
-    return busWrite<Size>(vaddr & 0x1fff'ffff, data), true;
-  case Context::Segment::Direct32:
-    step(1 * 2);
-    return busWrite<Size>(vaddr & 0xffff'ffff, data), true;
-  }
-
-  unreachable;
+auto CPU::writeDebug(u64 vaddr, u64 data) -> bool {
+  auto access = devirtualize<Write, Size>(vaddr, false, false);
+  if(!access) return false;
+  GDB::server.reportMemWrite(access.vaddr, Size);
+  if(access.cache) return dcache.write<Size>(access.vaddr, access.paddr, data), true;
+  return busWrite<Size>(access.paddr, data), true;
 }
 
 template<u32 Size>
@@ -321,3 +247,8 @@ auto CPU::addressException(u64 vaddr) -> void {
   scc.xcontext.badVirtualAddress = vaddr >> 13;
   scc.xcontext.region = vaddr >> 62;
 }
+
+template auto CPU::writeDebug<Byte>(u64, u64) -> bool;
+template auto CPU::writeDebug<Half>(u64, u64) -> bool;
+template auto CPU::writeDebug<Word>(u64, u64) -> bool;
+template auto CPU::writeDebug<Dual>(u64, u64) -> bool;

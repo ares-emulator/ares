@@ -193,7 +193,7 @@ namespace nall::GDB {
 
           u64 address = cmdName.slice(1, sepIdx-1).hex();
           u64 byteSize = cmdName.slice(sepIdx+1, 1).hex();
-          string hexvalue = cmdParts.size() > 1 ? cmdParts[1] : "";
+          string hexvalue = cmdParts.size() > 1 ? cmdParts[1] : string{};
           vector<u8> value;
           string hexbyte;
           for (int i=0; i<hexvalue.size(); i+=2) {

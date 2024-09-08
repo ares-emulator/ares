@@ -108,13 +108,15 @@ auto CPU::instruction() -> void {
     return;
   }
 
-  if(Accuracy::CPU::Recompiler && recompiler.enabled) {
-    if (auto address = devirtualize(ipu.pc)) {
-      auto block = recompiler.block(ipu.pc, *address, GDB::server.hasBreakpoints());
-      block->execute(*this);
-    }
+  auto access = devirtualize<Read, Word>(ipu.pc);
+  if(!access) return;
+
+  if(Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
+    if(vaddrAlignedError<Word>(access.vaddr, false)) return;
+    auto block = recompiler.block(ipu.pc, access.paddr, GDB::server.hasBreakpoints());
+    block->execute(*this);
   } else {
-    auto data = fetch(ipu.pc);
+    auto data = fetch(access);
     if (!data) return;
     pipeline.begin();
     instructionPrologue(ipu.pc, *data);

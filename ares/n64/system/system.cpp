@@ -158,20 +158,20 @@ auto System::initDebugHooks() -> void {
     switch(data.size()) {
       case Byte: 
         value = (u64)data[0];
-        cpu.write<Byte>(address, value, false);
+        cpu.writeDebug<Byte>(address, value);
         break;
       case Half: 
         value = ((u64)data[0]<<8) | ((u64)data[1]<<0);
-        cpu.write<Half>(address, value, false);
+        cpu.writeDebug<Half>(address, value);
         break;
       case Word: 
         value = ((u64)data[0]<<24) | ((u64)data[1]<<16) | ((u64)data[2]<<8) | ((u64)data[3]<<0);
-        cpu.write<Word>(address, value, false);
+        cpu.writeDebug<Word>(address, value);
         break;
       case Dual:
         value  = ((u64)data[0]<<56) | ((u64)data[1]<<48) | ((u64)data[2]<<40) | ((u64)data[3]<<32);
         value |= ((u64)data[4]<<24) | ((u64)data[5]<<16) | ((u64)data[6]<< 8) | ((u64)data[7]<< 0);
-        cpu.write<Dual>(address, value, false);
+        cpu.writeDebug<Dual>(address, value);
         break;
       default:
         // Handle writes of different sizes only within the RDRAM area, where
