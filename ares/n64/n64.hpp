@@ -11,6 +11,7 @@
 #include <nall/recompiler/generic/generic.hpp>
 #include <component/processor/sm5k/sm5k.hpp>
 #include <vector>
+#include <unordered_map>
 
 #if defined(ARCHITECTURE_AMD64)
 #include <nmmintrin.h>
