@@ -8,17 +8,17 @@ auto PPU::readIO(n32 address) -> n8 {
   | Background::IO::frame << 4
   | objects.io.hblank     << 5
   | objects.io.mapping    << 6
-  | io.forceBlank         << 7
+  | io.forceBlank[3]      << 7
   );
   case 0x0400'0001: return (
-    bg0.io.enable     << 0
-  | bg1.io.enable     << 1
-  | bg2.io.enable     << 2
-  | bg3.io.enable     << 3
-  | objects.io.enable << 4
-  | window0.io.enable << 5
-  | window1.io.enable << 6
-  | window2.io.enable << 7
+    bg0.io.enable[3]     << 0
+  | bg1.io.enable[3]     << 1
+  | bg2.io.enable[3]     << 2
+  | bg3.io.enable[3]     << 3
+  | objects.io.enable[3] << 4
+  | window0.io.enable    << 5
+  | window1.io.enable    << 6
+  | window2.io.enable    << 7
   );
 
   //GRSWP
@@ -112,14 +112,15 @@ auto PPU::writeIO(n32 address, n8 data) -> void {
     Background::IO::frame = data.bit(4);
     objects.io.hblank     = data.bit(5);
     objects.io.mapping    = data.bit(6);
-    io.forceBlank         = data.bit(7);
+    io.forceBlank[3]      = data.bit(7);
+    for(auto& flag : io.forceBlank) flag |= data.bit(7);
     return;
   case 0x0400'0001:
-    bg0.io.enable     = data.bit(0);
-    bg1.io.enable     = data.bit(1);
-    bg2.io.enable     = data.bit(2);
-    bg3.io.enable     = data.bit(3);
-    objects.io.enable = data.bit(4);
+    bg0.setEnable(data.bit(0));
+    bg1.setEnable(data.bit(1));
+    bg2.setEnable(data.bit(2));
+    bg3.setEnable(data.bit(3));
+    objects.setEnable(data.bit(4));
     window0.io.enable = data.bit(5);
     window1.io.enable = data.bit(6);
     window2.io.enable = data.bit(7);
