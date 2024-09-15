@@ -201,6 +201,11 @@ bool Renderer::init_caps()
 			LOGW("Current proprietary Intel Windows driver is tested to perform much better without 8/16-bit integer support.\n");
 			allow_small_types = false;
 		}
+		else if (features.driver_id == VK_DRIVER_ID_QUALCOMM_PROPRIETARY_KHR)
+		{
+			LOGW("Current proprietary Qcom driver is known to be buggy with 8/16-bit integer arithmetic, disabling support for time being.\n");
+			allow_small_types = false;
+		}
 
 		// Intel ANV *must* use small integer arithmetic, or it doesn't pass test suite.
 	}
