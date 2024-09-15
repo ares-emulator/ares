@@ -484,7 +484,7 @@ Vulkan::ImageHandle VideoInterface::vram_fetch_stage(const Registers &regs, unsi
 	async_cmd->set_specialization_constant_mask(7);
 	async_cmd->set_specialization_constant(0, uint32_t(rdram_size));
 	async_cmd->set_specialization_constant(1, regs.status & (VI_CONTROL_TYPE_MASK | VI_CONTROL_META_AA_BIT));
-	async_cmd->set_specialization_constant(2, trailing_zeroes(scaling_factor));
+	async_cmd->set_specialization_constant(2, Util::trailing_zeroes(scaling_factor));
 
 	async_cmd->push_constants(&push, 0, sizeof(push));
 	async_cmd->dispatch((extract_width + 15) / 16,

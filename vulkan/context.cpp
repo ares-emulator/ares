@@ -203,10 +203,10 @@ PFN_vkGetInstanceProcAddr Context::get_instance_proc_addr()
 	return instance_proc_addr;
 }
 
-bool Context::init_loader(PFN_vkGetInstanceProcAddr addr)
+bool Context::init_loader(PFN_vkGetInstanceProcAddr addr, bool force_reload)
 {
 	std::lock_guard<std::mutex> holder(loader_init_lock);
-	if (loader_init_once && !addr)
+	if (loader_init_once && !force_reload && !addr)
 		return true;
 
 	if (!addr)
@@ -608,12 +608,6 @@ bool Context::create_instance(const char * const *instance_ext, uint32_t instanc
 		ext.supports_surface_capabilities2 = true;
 	}
 
-	if (ext.supports_surface_capabilities2 && has_extension(VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME))
-	{
-		instance_exts.push_back(VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME);
-		ext.supports_surface_maintenance1 = true;
-	}
-
 	if ((flags & CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT) != 0 &&
 	    has_surface_extension &&
 	    has_extension(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME))
@@ -630,8 +624,6 @@ bool Context::create_instance(const char * const *instance_ext, uint32_t instanc
 		return layer_itr != end(queried_layers);
 	};
 
-	VkValidationFeaturesEXT validation_features = { VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT };
-
 	force_no_validation = Util::get_environment_bool("GRANITE_VULKAN_NO_VALIDATION", false);
 
 	if (!force_no_validation && has_layer("VK_LAYER_KHRONOS_validation"))
@@ -644,6 +636,10 @@ bool Context::create_instance(const char * const *instance_ext, uint32_t instanc
 		std::vector<VkExtensionProperties> layer_exts(layer_ext_count);
 		vkEnumerateInstanceExtensionProperties("VK_LAYER_KHRONOS_validation", &layer_ext_count, layer_exts.data());
 
+#if 0
+		VkValidationFeaturesEXT validation_features = { VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT };
+
+		// Tons of false positives around timeline semaphores atm, so don't bother.
 		if (find_if(begin(layer_exts), end(layer_exts), [](const VkExtensionProperties &e) {
 			return strcmp(e.extensionName, VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME) == 0;
 		}) != end(layer_exts))
@@ -657,6 +653,7 @@ bool Context::create_instance(const char * const *instance_ext, uint32_t instanc
 			validation_features.pEnabledValidationFeatures = validation_sync_features;
 			info.pNext = &validation_features;
 		}
+#endif
 
 		if (!ext.supports_debug_utils &&
 		    find_if(begin(layer_exts), end(layer_exts), [](const VkExtensionProperties &e) {
@@ -668,6 +665,22 @@ bool Context::create_instance(const char * const *instance_ext, uint32_t instanc
 		}
 	}
 #endif
+
+	if (ext.supports_surface_capabilities2 && has_extension(VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME))
+	{
+#ifdef VULKAN_DEBUG
+		// It seems like there are some bugs with EXT_swapchain_maint1 in VVL atm.
+		const bool support_maint1 = force_no_validation;
+#else
+		constexpr bool support_maint1 = true;
+#endif
+
+		if (support_maint1)
+		{
+			instance_exts.push_back(VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME);
+			ext.supports_surface_maintenance1 = true;
+		}
+	}
 
 	info.enabledExtensionCount = instance_exts.size();
 	info.ppEnabledExtensionNames = instance_exts.empty() ? nullptr : instance_exts.data();
@@ -1302,16 +1315,20 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 			ADD_CHAIN(ext.storage_8bit_features, 8BIT_STORAGE_FEATURES_KHR);
 			enabled_extensions.push_back(VK_KHR_8BIT_STORAGE_EXTENSION_NAME);
 		}
+	}
 
+	if (ext.device_api_core_version >= VK_API_VERSION_1_3)
+	{
+		ADD_CHAIN(ext.vk13_features, VULKAN_1_3_FEATURES);
+	}
+	else
+	{
 		if (has_extension(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME))
 		{
 			ADD_CHAIN(ext.subgroup_size_control_features, SUBGROUP_SIZE_CONTROL_FEATURES_EXT);
 			enabled_extensions.push_back(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME);
 		}
 	}
-
-	if (ext.device_api_core_version >= VK_API_VERSION_1_3)
-		ADD_CHAIN(ext.vk13_features, VULKAN_1_3_FEATURES);
 
 	if (has_extension(VK_NV_COMPUTE_SHADER_DERIVATIVES_EXTENSION_NAME))
 	{
@@ -1362,6 +1379,12 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		ADD_CHAIN(ext.device_generated_commands_compute_features, DEVICE_GENERATED_COMMANDS_COMPUTE_FEATURES_NV);
 	}
 
+	if (has_extension(VK_NV_DESCRIPTOR_POOL_OVERALLOCATION_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_NV_DESCRIPTOR_POOL_OVERALLOCATION_EXTENSION_NAME);
+		ADD_CHAIN(ext.descriptor_pool_overallocation_features, DESCRIPTOR_POOL_OVERALLOCATION_FEATURES_NV);
+	}
+
 	if (has_extension(VK_EXT_MESH_SHADER_EXTENSION_NAME))
 	{
 		enabled_extensions.push_back(VK_EXT_MESH_SHADER_EXTENSION_NAME);
@@ -1372,6 +1395,12 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	{
 		enabled_extensions.push_back(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
 		ADD_CHAIN(ext.index_type_uint8_features, INDEX_TYPE_UINT8_FEATURES_EXT);
+	}
+
+	if (has_extension(VK_EXT_RGBA10X6_FORMATS_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_EXT_RGBA10X6_FORMATS_EXTENSION_NAME);
+		ADD_CHAIN(ext.rgba10x6_formats_features, RGBA10X6_FORMATS_FEATURES_EXT);
 	}
 
 	if (has_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME))
@@ -1396,6 +1425,18 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	{
 		enabled_extensions.push_back(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME);
 		ext.supports_push_descriptor = true;
+	}
+
+	if (has_extension(VK_EXT_IMAGE_COMPRESSION_CONTROL_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_EXT_IMAGE_COMPRESSION_CONTROL_EXTENSION_NAME);
+		ADD_CHAIN(ext.image_compression_control_features, IMAGE_COMPRESSION_CONTROL_FEATURES_EXT);
+	}
+
+	if (has_extension(VK_EXT_IMAGE_COMPRESSION_CONTROL_SWAPCHAIN_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_EXT_IMAGE_COMPRESSION_CONTROL_SWAPCHAIN_EXTENSION_NAME);
+		ADD_CHAIN(ext.image_compression_control_swapchain_features, IMAGE_COMPRESSION_CONTROL_SWAPCHAIN_FEATURES_EXT);
 	}
 
 	if (ext.device_api_core_version >= VK_API_VERSION_1_3)
@@ -1581,14 +1622,14 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	{
 		if (has_extension(VK_KHR_DRIVER_PROPERTIES_EXTENSION_NAME))
 			ADD_CHAIN(driver_properties, DRIVER_PROPERTIES);
-		if (has_extension(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME))
-			ADD_CHAIN(size_control_props, SUBGROUP_SIZE_CONTROL_PROPERTIES);
 		ADD_CHAIN(id_properties, ID_PROPERTIES);
 		ADD_CHAIN(subgroup_properties, SUBGROUP_PROPERTIES);
 	}
 
 	if (ext.device_api_core_version >= VK_API_VERSION_1_3)
 		ADD_CHAIN(ext.vk13_props, VULKAN_1_3_PROPERTIES);
+	else if (has_extension(VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME))
+		ADD_CHAIN(size_control_props, SUBGROUP_SIZE_CONTROL_PROPERTIES);
 
 	if (ext.supports_external_memory_host)
 		ADD_CHAIN(ext.host_memory_properties, EXTERNAL_MEMORY_HOST_PROPERTIES_EXT);
