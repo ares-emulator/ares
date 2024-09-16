@@ -152,7 +152,7 @@ auto SDD1::Decompressor::PEM::getBit(n8 context) -> n8 {
   const State& s = SDD1::Decompressor::PEM::evolutionTable[currentStatus];
 
   n8 bit;
-  bool endOfRun;
+  bool endOfRun = false;
   switch(s.codeNumber) {
   case 0: bit = self.bg0.getBit(endOfRun); break;
   case 1: bit = self.bg1.getBit(endOfRun); break;

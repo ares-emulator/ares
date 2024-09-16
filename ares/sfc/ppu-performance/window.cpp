@@ -38,7 +38,8 @@ auto PPU::Window::render(Layer& layer, bool enable, bool output[448]) -> void {
 }
 
 auto PPU::Window::render(Color& color, u32 mask, bool output[448]) -> void {
-  bool set, clear;
+  bool set = 0;
+  bool clear = 0;
   switch(mask) {
   case 0: memory::fill<bool>(output, 256, 1); return;  //always
   case 1: set = 1, clear = 0; break;  //inside
