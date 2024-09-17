@@ -4,13 +4,19 @@ n1 PPU::Background::IO::frame;
 n5 PPU::Background::IO::mosaicWidth;
 n5 PPU::Background::IO::mosaicHeight;
 
+auto PPU::Background::setEnable(n1 status) -> void {
+  io.enable[3] = status;
+  for(auto& flag : io.enable) flag &= status;
+}
+
 auto PPU::Background::scanline(u32 y) -> void {
+  memory::move(io.enable, io.enable + 1, sizeof(io.enable) - 1);
   mosaicOffset = 0;
 }
 
 auto PPU::Background::run(u32 x, u32 y) -> void {
   output = {};
-  if(ppu.blank() || !io.enable) {
+  if(ppu.blank() || !io.enable[0]) {
     mosaic = {};
     return;
   }

@@ -73,7 +73,7 @@ auto PPU::unload() -> void {
 }
 
 inline auto PPU::blank() -> bool {
-  return io.forceBlank || cpu.stopped();
+  return io.forceBlank[0] || cpu.stopped();
 }
 
 auto PPU::step(u32 clocks) -> void {
@@ -108,13 +108,14 @@ auto PPU::main() -> void {
 
   step(46);
 
-  if(io.vcounter < 160) {
-    u32 y = io.vcounter;
-    bg0.scanline(y);
-    bg1.scanline(y);
-    bg2.scanline(y);
-    bg3.scanline(y);
-    objects.scanline(y);
+  u32 y = io.vcounter;
+  memory::move(io.forceBlank, io.forceBlank + 1, sizeof(io.forceBlank) - 1);
+  bg0.scanline(y);
+  bg1.scanline(y);
+  bg2.scanline(y);
+  bg3.scanline(y);
+  objects.scanline(y);
+  if(y < 160) {
     auto line = screen->pixels().data() + y * 240;
     for(u32 x : range(240)) {
       bg0.run(x, y);
