@@ -12127,6 +12127,33 @@ game
       content: Program
 
 game
+  sha256:   5443a97e9c40e25821a8fb8c91b63c7bd8c3060d9ff888ee6c573b87b53935f4
+  title:    PowerFest '94
+  name:     PowerFest '94
+  region:   USA
+  revision: 1.0
+  board: EVENT-PF94
+  memory type=RAM content=Save
+    map address=30-3f,b0-bf:6000-7fff mask=0xe000
+  processor manufacturer=NEC architecture=uPD78214
+    identifier: PowerFest '94
+    map address=10,20:6000
+    mcu
+      map address=00-3f,80-bf:8000-ffff
+      map address=c0-ff:0000-ffff
+      memory type=ROM content=Program
+      memory type=ROM content=Level-1
+      memory type=ROM content=Level-2
+      memory type=ROM content=Level-3
+    dip
+  processor manufacturer=NEC architecture=uPD7725
+    map address=00-0f,80-8f:6000-7fff mask=0xfff
+    memory type=ROM content=Program architecture=uPD7725
+    memory type=ROM content=Data architecture=uPD7725
+    memory type=RAM content=Data architecture=uPD7725
+    oscillator
+	
+game
   sha256:   06c8fc466805f97c9147711b2d8370d4f4d05d9fa3a916f17aa1682f73c9a63b
   title:    Power Instinct
   name:     Power Instinct
