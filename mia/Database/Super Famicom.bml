@@ -288,6 +288,32 @@ game
       content: Download
 
 game
+   sha256:   67c1a4917f4cd0fd704b83330a7e91763736c2d2a10a7e12318fdac54cd9c6c6
+   title:    Campus Challenge '92
+   name:     Super Nintendo Campus Challenge 1992
+   region:   Japan
+   revision:    1.0
+   board: EVENT-CC92
+     memory type=RAM content=Save
+       map address=70-7d,f0-ff:0000-7fff mask=0x8000
+     processor manufacturer=NEC architecture=uPD78214
+       identifier: Campus Challenge '92
+       map address=c0,e0:0000
+       mcu
+         map address=00-1f,80-9f:8000-ffff
+         memory type=ROM content=Program
+         memory type=ROM content=Level-1
+         memory type=ROM content=Level-2
+         memory type=ROM content=Level-3
+       dip
+     processor manufacturer=NEC architecture=uPD7725
+       map address=20-3f,a0-bf:8000-ffff mask=0x7fff
+       memory type=ROM content=Program architecture=uPD7725
+       memory type=ROM content=Data architecture=uPD7725
+       memory type=RAM content=Data architecture=uPD7725
+       oscillator
+
+game
   sha256:   6e7dcbb4df32903d6ff5da1e308342c0a72f5af3f11479cf49391dc3a17d5d7b
   title:    キャプテンコマンドー
   name:     Captain Commando
