@@ -664,7 +664,7 @@ board: BS-SA1-RAM
 
 board: EVENT-CC92
   memory type=RAM content=Save
-    map address=70-7d,f0-ff:0000-7fff mask=0x8000
+    map address=70-7d,f0-ff:0000-7fff mask=0x3fff
   processor manufacturer=NEC architecture=uPD78214
     identifier: Campus Challenge '92
     map address=c0,e0:0000
