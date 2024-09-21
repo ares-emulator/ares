@@ -12200,7 +12200,7 @@ game
       content: Level-2
     memory
       type: ROM
-      size: 0x80000
+      size: 0x100000
       content: Level-3
     memory
       type: RAM
