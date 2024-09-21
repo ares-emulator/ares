@@ -338,7 +338,7 @@ game
       identifier: DSP1
       volatile
     oscillator
-      frequency: 7600000
+      frequency: 8000000
 
 game
   sha256:   6e7dcbb4df32903d6ff5da1e308342c0a72f5af3f11479cf49391dc3a17d5d7b
@@ -12230,7 +12230,7 @@ game
       identifier: DSP1
       volatile
     oscillator
-      frequency: 7600000
+      frequency: 8000000
 
 game
   sha256:   06c8fc466805f97c9147711b2d8370d4f4d05d9fa3a916f17aa1682f73c9a63b
