@@ -162,13 +162,15 @@ struct VideoMetal : VideoDriver, Metal {
     }
     
     if(file::exists(pathname)) {
-      if (_libra.preset_create(pathname.data(), &_preset) != NULL) {
+      if (auto error = _libra.preset_create(pathname.data(), &_preset)) {
         print(string{"Metal: Failed to load shader: ", pathname, "\n"});
+        _libra.error_print(error);
         return false;
       }
       
-      if (_libra.mtl_filter_chain_create(&_preset, _commandQueue, nil, &_filterChain) != NULL) {
+      if (auto error = _libra.mtl_filter_chain_create(&_preset, _commandQueue, nil, &_filterChain)) {
         print(string{"Metal: Failed to create filter chain for: ", pathname, "\n"});
+        _libra.error_print(error);
         return false;
       };
     } else {
