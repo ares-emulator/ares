@@ -30,24 +30,35 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  ARM7TDMI::irq = irq.ime && (irq.enable[0] & irq.flag[0]);
+  ARM7TDMI::irq = irq.synchronizer[0];
 
   if(stopped()) {
     if(!keypad.conditionMet) {
       stepIRQ();
-      Thread::step(16);
+      Thread::step(1);
       Thread::synchronize();
       return;
     }
+    Thread::step(2);
+    Thread::synchronize();
     context.stopped = false;
   }
 
+  #if defined(PROFILE_PERFORMANCE)
+    #define HALT_STEP 16
+  #else
+    #define HALT_STEP 1
+  #endif
+
   if(halted()) {
     if(!(irq.enable[0] & irq.flag[0])) {
-      return step(16);
+      return step(HALT_STEP);
     }
+    step(2);
     context.halted = false;
   }
+
+  #undef HALT_STEP
 
   debugger.instruction();
   instruction();
@@ -71,6 +82,8 @@ auto CPU::setInterruptFlag(u32 source) -> void {
 }
 
 inline auto CPU::stepIRQ() -> void {
+  irq.synchronizer[0] = irq.synchronizer[1];
+  irq.synchronizer[1] = irq.ime && (irq.enable[0] & irq.flag[0]);
   irq.enable[0] = irq.enable[1];
   irq.flag[0] = irq.flag[1];
 }

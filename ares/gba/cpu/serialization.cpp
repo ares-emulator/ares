@@ -83,6 +83,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(joybus.generalFlag);
 
   s(irq.ime);
+  for(auto& flag : irq.synchronizer) s(flag);
   for(auto& flag : irq.enable) s(flag);
   for(auto& flag : irq.flag) s(flag);
 
