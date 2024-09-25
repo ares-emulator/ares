@@ -162,7 +162,10 @@
   NSPoint localPoint = [self convertPoint:event.locationInWindow fromView:nil];
   NSInteger row = [self rowAtPoint:localPoint];
   NSInteger column = [self columnAtPoint:localPoint];
-
+  
+  if (row < 0 || row >= tableView->state.items.size()) {
+    return nil;
+  }
 
   if (row >= 0 && ![self isRowSelected:row]) {
     [self selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
