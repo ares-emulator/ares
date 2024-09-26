@@ -44,21 +44,13 @@ auto CPU::main() -> void {
     context.stopped = false;
   }
 
-  #if defined(PROFILE_PERFORMANCE)
-    #define HALT_STEP 16
-  #else
-    #define HALT_STEP 1
-  #endif
-
   if(halted()) {
     if(!(irq.enable[0] & irq.flag[0])) {
-      return step(HALT_STEP);
+      return step(4);
     }
     step(2);
     context.halted = false;
   }
-
-  #undef HALT_STEP
 
   debugger.instruction();
   instruction();
