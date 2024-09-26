@@ -205,6 +205,7 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   struct IRQ {
     n1  ime;
+    n1  synchronizer[2];
     n16 enable[2];
     n16 flag[2];
   } irq;
