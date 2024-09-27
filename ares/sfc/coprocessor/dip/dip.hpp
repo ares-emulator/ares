@@ -8,7 +8,7 @@ struct DIP {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  n8 value = 0x00;
+  n8 value = 0x03; // default game time used for the competition is 6 minutes
 };
 
 extern DIP dip;
