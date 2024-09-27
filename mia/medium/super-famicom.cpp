@@ -36,19 +36,9 @@ protected:
 auto SuperFamicom::load(string location) -> bool {
   vector<u8> rom;
   string directory = location;
-  if(directory::exists(location)) {
-    auto files = directory::files(location, "*.rom");
-    append(rom, {location, "program.rom"  });
-    append(rom, {location, "data.rom"     });
-    append(rom, {location, "expansion.rom"});
-    for(auto& file : files.match("*.program.rom")) append(rom, {location, file});
-    for(auto& file : files.match("*.data.rom"   )) append(rom, {location, file});
-    for(auto& file : files.match("*.boot.rom"   )) append(rom, {location, file});
-  } else if(rom = Medium::read(location)) {
-    directory = Location::dir(location);
-    //append firmware to the ROM if it is missing
-    auto manifest = analyze(rom);
-    auto document = BML::unserialize(manifest);
+  
+  auto append_missing_firmware = [&](auto document)
+  {
     if(auto identifier = document["game/board/memory/identifier"]) {
       if(!firmwareRomSize()) {
         auto id = identifier.string();
@@ -66,15 +56,33 @@ auto SuperFamicom::load(string location) -> bool {
         if(id == "ST018") view = Resource::SuperFamicom::ST018;
         while(view) rom.append(*view++);
       }
-    }
+	}
+  };
+  
+  if(directory::exists(location)) {
+    auto files = directory::files(location, "*.rom");
+    append(rom, {location, "program.rom"  });
+    append(rom, {location, "data.rom"     });
+    append(rom, {location, "expansion.rom"});
+    for(auto& file : files.match("*.program.rom")) append(rom, {location, file});
+    for(auto& file : files.match("*.data.rom"   )) append(rom, {location, file});
+    for(auto& file : files.match("*.boot.rom"   )) append(rom, {location, file});
+  } else if(rom = Medium::read(location)) {
+    directory = Location::dir(location);
+    //append firmware to the ROM if it is missing
+    auto manifest = analyze(rom);
+    auto document = BML::unserialize(manifest);
+    append_missing_firmware(document);
   }
   if(!rom) return false;
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   this->manifest = Medium::manifestDatabase(sha256);
-  if(!manifest) manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
+  append_missing_firmware(document);
+  if(!manifest) manifest = analyze(rom);
+  document = BML::unserialize(manifest);
   if(!document) return false;
 
   pak = new vfs::directory;
