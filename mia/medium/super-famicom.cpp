@@ -73,6 +73,14 @@ auto SuperFamicom::load(string location) -> bool {
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   this->manifest = Medium::manifestDatabase(sha256);
+  
+  if(!manifest) {
+    auto local_manifest = location.replace({".", location.split(".").last()}, ".bml");
+    if(file::exists(local_manifest)) {
+      manifest = file::read(local_manifest);
+    }
+  }
+  
   if(!manifest) manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
   if(!document) return false;
