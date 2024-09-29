@@ -138,7 +138,7 @@ auto nall::main(Arguments arguments) -> void {
 
   program.startGameLoad.reset();
   for(auto argument : arguments) {
-    if(file::exists(argument)) program.startGameLoad.append(argument);
+    if(file::exists(argument) || directory::exists(argument)) program.startGameLoad.append(argument);
   }
 
   Instances::presentation.construct();
