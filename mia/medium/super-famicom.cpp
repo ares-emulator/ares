@@ -65,7 +65,7 @@ auto SuperFamicom::load(string location) -> bool {
     append(rom, {location, "program.rom"  });
     append(rom, {location, "data.rom"     });
     append(rom, {location, "expansion.rom"});
-	for(auto& file : files.match("slot-*.rom"   )) { append(rom, {location, file});                        }
+    for(auto& file : files.match("slot-*.rom"   )) { append(rom, {location, file});                        }
     for(auto& file : files.match("*.program.rom")) { append(rom, {location, file}); local_firmware = true; }
     for(auto& file : files.match("*.data.rom"   )) { append(rom, {location, file}); local_firmware = true; }
     for(auto& file : files.match("*.boot.rom"   )) { append(rom, {location, file});                        }
