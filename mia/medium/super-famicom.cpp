@@ -36,11 +36,12 @@ protected:
 auto SuperFamicom::load(string location) -> bool {
   vector<u8> rom;
   string directory = location;
+  bool local_firmware = false;
   
   auto append_missing_firmware = [&](auto document)
   {
     if(auto identifier = document["game/board/memory/identifier"]) {
-      if(!firmwareRomSize()) {
+      if(!firmwareRomSize() && !local_firmware) {
         auto id = identifier.string();
         array_view<u8> view;
         if(id == "Cx4"  ) view = Resource::SuperFamicom::Cx4;
@@ -62,7 +63,12 @@ auto SuperFamicom::load(string location) -> bool {
   if(directory::exists(location)) {
     auto files = directory::files(location, "*.rom");
     append(rom, {location, "program.rom"  });
-	for(auto& file : files.match("slot-*.rom")) append(rom, {location, file});
+    append(rom, {location, "data.rom"     });
+    append(rom, {location, "expansion.rom"});
+	for(auto& file : files.match("slot-*.rom"   )) { append(rom, {location, file});                        }
+    for(auto& file : files.match("*.program.rom")) { append(rom, {location, file}); local_firmware = true; }
+    for(auto& file : files.match("*.data.rom"   )) { append(rom, {location, file}); local_firmware = true; }
+    for(auto& file : files.match("*.boot.rom"   )) { append(rom, {location, file});                        }
   } else if(rom = Medium::read(location)) {
     directory = Location::dir(location);
   }
