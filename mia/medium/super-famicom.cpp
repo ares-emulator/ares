@@ -37,6 +37,7 @@ auto SuperFamicom::load(string location) -> bool {
   vector<u8> rom;
   string directory = location;
   bool local_firmware = false;
+  bool folder = false;
   
   auto append_missing_firmware = [&](auto document)
   {
@@ -69,6 +70,7 @@ auto SuperFamicom::load(string location) -> bool {
     for(auto& file : files.match("*.program.rom")) { append(rom, {location, file}); local_firmware = true; }
     for(auto& file : files.match("*.data.rom"   )) { append(rom, {location, file}); local_firmware = true; }
     for(auto& file : files.match("*.boot.rom"   )) { append(rom, {location, file});                        }
+	folder = true;
   } else if(rom = Medium::read(location)) {
     directory = Location::dir(location);
   }
@@ -83,6 +85,16 @@ auto SuperFamicom::load(string location) -> bool {
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   this->manifest = Medium::manifestDatabase(sha256);
+  
+  if(!manifest) {
+    auto local_manifest = location.replace({".", location.split(".").last()}, ".bml");
+    if (folder)
+      local_manifest = directory.append("manifest.bml");
+    if(file::exists(local_manifest)) {
+      manifest = file::read(local_manifest);
+    }
+  }  
+  
   document = BML::unserialize(manifest);
   append_missing_firmware(document); // if auto-detect failed, use chips from the manifest
   
