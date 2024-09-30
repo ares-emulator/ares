@@ -113,6 +113,21 @@ auto Video::refreshRateHint(double refreshRate) -> void {
   instance->refreshRateHint(refreshRate);
 }
 
+auto Video::setScale(f64 scaleX, f64 scaleY) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setScale(scaleX, scaleY);
+}
+
+auto Video::setInterlace(bool interlaceField) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setInterlace(interlaceField);
+}
+
+auto Video::setProgressive(bool progressiveDouble) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setProgressive(progressiveDouble);
+}
+
 //
 
 auto Video::focused() -> bool {

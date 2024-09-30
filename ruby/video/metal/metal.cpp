@@ -212,6 +212,70 @@ struct VideoMetal : VideoDriver, Metal {
     _outputX = (width - outputWidth) / 2;
     _outputY = (height - outputHeight) / 2;
   }
+  
+  auto resizeSourceBuffers() {
+    for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
+      if (sourceWidth < 1 || sourceHeight < 1) {
+        _sourceTextures[i] = nullptr;
+        continue;
+      }
+      MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor new];
+      textureDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
+      textureDescriptor.width = sourceWidth;
+      textureDescriptor.height = sourceHeight;
+      textureDescriptor.usage = MTLTextureUsageRenderTarget|MTLTextureUsageShaderRead;
+      
+      _sourceTextures[i] = [_device newTextureWithDescriptor:textureDescriptor];
+    }
+    
+    f64 newWidth = sourceWidth * _scaleX;
+    f64 newHeight = sourceHeight * _scaleY;
+    if (_interlace) {
+      newHeight = sourceHeight;
+    }
+    for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
+      if (newWidth < 1 || newHeight < 1) {
+        _finalSourceTextures[i] = nullptr;
+        continue;
+      }
+      MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor new];
+      textureDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
+      textureDescriptor.width = newWidth;
+      textureDescriptor.height = newHeight;
+      textureDescriptor.usage = MTLTextureUsageRenderTarget|MTLTextureUsageShaderRead;
+      
+      _finalSourceTextures[i] = [_device newTextureWithDescriptor:textureDescriptor];
+    }
+    NSLog(@"Resized final source textures to %lf, %lf", newWidth, newHeight);
+  }
+	
+  auto setScale(f64 scaleX, f64 scaleY) -> void override {
+    if (scaleX != _scaleX || scaleY != scaleY) {
+      _scaleX = scaleX;
+      _scaleY = scaleY;
+      dispatch_async(_renderQueue, ^{
+        resizeSourceBuffers();
+      });
+    }
+  }
+  
+  auto setInterlace(bool interlaceField) -> void override {
+    if (_interlace) return;
+    _interlace = true;
+    _progressive = false;
+    dispatch_async(_renderQueue, ^{
+      resizeSourceBuffers();
+    });
+  }
+  
+  auto setProgressive(bool progressiveDouble) -> void override {
+    if (_progressive) return;
+    _interlace = false;
+    _progressive = true;
+    dispatch_async(_renderQueue, ^{
+      resizeSourceBuffers();
+    });
+  }
 
   auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     if (sourceWidth != width || sourceHeight != height) {
@@ -227,21 +291,10 @@ struct VideoMetal : VideoDriver, Metal {
       
       bytesPerRow = sourceWidth * sizeof(u32);
       if (bytesPerRow < 16) bytesPerRow = 16;
-        
-      for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
-        if (sourceWidth < 1 || sourceHeight < 1) {
-          _sourceTextures[i] = nullptr;
-          continue;
-        }
-        MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor new];
-        textureDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
-        textureDescriptor.width = sourceWidth;
-        textureDescriptor.height = sourceHeight;
-        textureDescriptor.usage = MTLTextureUsageRenderTarget|MTLTextureUsageShaderRead;
-        
-        _sourceTextures[i] = [_device newTextureWithDescriptor:textureDescriptor];
-      }
       
+      dispatch_async(_renderQueue, ^{
+        resizeSourceBuffers();
+      });
     }
     pitch = sourceWidth * sizeof(u32);
     return data = buffer;
@@ -314,6 +367,7 @@ struct VideoMetal : VideoDriver, Metal {
       auto index = frameCount % kMaxSourceBuffersInFlight;
       
       auto sourceTexture = _sourceTextures[index];
+      auto finalSourceTexture = _finalSourceTextures[index];
       
       [sourceTexture replaceRegion:MTLRegionMake2D(0, 0, sourceWidth, sourceHeight) mipmapLevel:0 withBytes:buffer bytesPerRow:bytesPerRow];
       
@@ -327,18 +381,18 @@ struct VideoMetal : VideoDriver, Metal {
       /// assurances that we won't block the emulation thread in the worst case system conditions.
       if ((_blocking && !_vrrIsSupported) || !_threaded) {
         dispatch_sync(_renderQueue, ^{
-          outputHelper(width, height, sourceTexture);
+          outputHelper(width, height, sourceTexture, finalSourceTexture);
         });
       } else {
         dispatch_async(_renderQueue, ^{
-          outputHelper(width, height, sourceTexture);
+          outputHelper(width, height, sourceTexture, finalSourceTexture);
         });
       }
     }
   }
 
 private:
-  auto outputHelper(u32 width, u32 height, id<MTLTexture> sourceTexture) -> void {
+  auto outputHelper(u32 width, u32 height, id<MTLTexture> sourceTexture, id<MTLTexture> finalSourceTexture) -> void {
     /// Uses two render passes (plus librashader's render passes). The first render pass samples the source texture,
     /// consisting of the pixel buffer from the emulator, onto a texture the same size as our eventual output,
     /// `_renderTargetTexture`. Then it calls into librashader, which performs postprocessing onto the same
@@ -357,7 +411,7 @@ private:
        dispatch_semaphore_signal(block_sema);
       }];
       
-      _renderToTextureRenderPassDescriptor.colorAttachments[0].texture = _renderTargetTexture;
+      _renderToTextureRenderPassDescriptor.colorAttachments[0].texture = finalSourceTexture;
       
       if (_renderToTextureRenderPassDescriptor != nil) {
         
@@ -367,7 +421,7 @@ private:
         
         [renderEncoder setRenderPipelineState:_renderToTextureRenderPipeline];
         
-        [renderEncoder setViewport:(MTLViewport){0, 0, (double)width, (double)height, -1.0, 1.0}];
+        [renderEncoder setViewport:(MTLViewport){0, 0, (double)finalSourceTexture.width, (double)finalSourceTexture.height, -1.0, 1.0}];
         
         [renderEncoder setVertexBuffer:_vertexBuffer
                                 offset:0
@@ -384,7 +438,36 @@ private:
         [renderEncoder endEncoding];
         
         if (_filterChain) {
-          _libra.mtl_filter_chain_frame(&_filterChain, commandBuffer, frameCount, sourceTexture, _libraViewport, _renderTargetTexture, nil, nil);
+          _libra.mtl_filter_chain_frame(&_filterChain, commandBuffer, frameCount, finalSourceTexture, _libraViewport, _renderTargetTexture, nil, nil);
+        } else {
+          
+          _renderToTextureRenderPassDescriptor.colorAttachments[0].texture = _renderTargetTexture;
+          
+          if (_renderToTextureRenderPassDescriptor != nil) {
+            
+            id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_renderToTextureRenderPassDescriptor];
+            
+            _renderToTextureRenderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+            
+            [renderEncoder setRenderPipelineState:_renderToTextureRenderPipeline];
+            
+            [renderEncoder setViewport:(MTLViewport){0, 0, (double)width, (double)height, -1.0, 1.0}];
+            
+            [renderEncoder setVertexBuffer:_vertexBuffer
+                                    offset:0
+                                   atIndex:0];
+            
+            [renderEncoder setVertexBytes:&_viewportSize
+                                   length:sizeof(_viewportSize)
+                                  atIndex:MetalVertexInputIndexViewportSize];
+            
+            [renderEncoder setFragmentTexture:finalSourceTexture atIndex:0];
+            
+            [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+            
+            [renderEncoder endEncoding];
+            
+          }
         }
         
         //this call will block the current thread/queue if a drawable is not yet available

@@ -104,6 +104,7 @@ auto Screen::setScale(f64 scaleX, f64 scaleY) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _scaleX = scaleX;
   _scaleY = scaleY;
+  platform->setScale(scaleX, scaleY);
 }
 
 auto Screen::setAspect(f64 aspectX, f64 aspectY) -> void {
@@ -160,6 +161,7 @@ auto Screen::setProgressive(bool progressiveDouble) -> void {
   _interlace = false;
   _progressive = true;
   _progressiveDouble = progressiveDouble;
+  platform->setProgressive(progressiveDouble);
 }
 
 auto Screen::setInterlace(bool interlaceField) -> void {
@@ -167,6 +169,7 @@ auto Screen::setInterlace(bool interlaceField) -> void {
   _progressive = false;
   _interlace = true;
   _interlaceField = interlaceField;
+  platform->setInterlace(interlaceField);
 }
 
 auto Screen::attach(Node::Video::Sprite sprite) -> void {
