@@ -73,16 +73,16 @@ auto SuperFamicom::load(string location) -> bool {
     directory = Location::dir(location);
   }
   
+  if(!rom) return false;
+  
   //append firmware to the ROM if it is missing
   auto tmp_manifest = analyze(rom);
   auto document = BML::unserialize(tmp_manifest);
   append_missing_firmware(document);
   
-  if(!rom) return false;
-
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
-  this->manifest = Medium::manifestDatabase(sha256); 
+  this->manifest = Medium::manifestDatabase(sha256);
   document = BML::unserialize(manifest);
   append_missing_firmware(document); // if auto-detect failed, use chips from the manifest
   
