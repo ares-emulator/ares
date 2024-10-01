@@ -36,21 +36,13 @@ protected:
 auto SuperFamicom::load(string location) -> bool {
   vector<u8> rom;
   string directory = location;
-  if(directory::exists(location)) {
-    auto files = directory::files(location, "*.rom");
-    append(rom, {location, "program.rom"  });
-    append(rom, {location, "data.rom"     });
-    append(rom, {location, "expansion.rom"});
-    for(auto& file : files.match("*.program.rom")) append(rom, {location, file});
-    for(auto& file : files.match("*.data.rom"   )) append(rom, {location, file});
-    for(auto& file : files.match("*.boot.rom"   )) append(rom, {location, file});
-  } else if(rom = Medium::read(location)) {
-    directory = Location::dir(location);
-    //append firmware to the ROM if it is missing
-    auto manifest = analyze(rom);
-    auto document = BML::unserialize(manifest);
+  bool local_firmware = false;
+  bool folder = false;
+  
+  auto append_missing_firmware = [&](auto document)
+  {
     if(auto identifier = document["game/board/memory/identifier"]) {
-      if(!firmwareRomSize()) {
+      if(!firmwareRomSize() && !local_firmware) {
         auto id = identifier.string();
         array_view<u8> view;
         if(id == "Cx4"  ) view = Resource::SuperFamicom::Cx4;
@@ -66,15 +58,48 @@ auto SuperFamicom::load(string location) -> bool {
         if(id == "ST018") view = Resource::SuperFamicom::ST018;
         while(view) rom.append(*view++);
       }
-    }
+	}
+  };
+  
+  if(directory::exists(location)) {
+    auto files = directory::files(location, "*.rom");
+    append(rom, {location, "program.rom"  });
+    append(rom, {location, "data.rom"     });
+    append(rom, {location, "expansion.rom"});
+    for(auto& file : files.match("slot-*.rom"   )) { append(rom, {location, file});                        }
+    for(auto& file : files.match("*.program.rom")) { append(rom, {location, file}); local_firmware = true; }
+    for(auto& file : files.match("*.data.rom"   )) { append(rom, {location, file}); local_firmware = true; }
+    for(auto& file : files.match("*.boot.rom"   )) { append(rom, {location, file});                        }
+	folder = true;
+  } else if(rom = Medium::read(location)) {
+    directory = Location::dir(location);
   }
+  
   if(!rom) return false;
-
+  
+  //append firmware to the ROM if it is missing
+  auto tmp_manifest = analyze(rom);
+  auto document = BML::unserialize(tmp_manifest);
+  append_missing_firmware(document);
+  
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   this->manifest = Medium::manifestDatabase(sha256);
+  
+  if(!manifest) {
+    auto local_manifest = location.replace({".", location.split(".").last()}, ".bml");
+    if (folder)
+      local_manifest = directory.append("manifest.bml");
+    if(file::exists(local_manifest)) {
+      manifest = file::read(local_manifest);
+    }
+  }  
+  
+  document = BML::unserialize(manifest);
+  append_missing_firmware(document); // if auto-detect failed, use chips from the manifest
+  
   if(!manifest) manifest = analyze(rom);
-  auto document = BML::unserialize(manifest);
+  document = BML::unserialize(manifest);
   if(!document) return false;
 
   pak = new vfs::directory;
