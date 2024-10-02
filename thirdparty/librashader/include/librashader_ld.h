@@ -32,10 +32,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define LIBRA_RUNTIME_OPENGL
 // #define LIBRA_RUNTIME_VULKAN
 
-#if defined(_WIN32)
-#define LIBRA_RUNTIME_D3D11
-#define LIBRA_RUNTIME_D3D12
-#define LIBRA_RUNTIME_D3D9
+// #if defined(_WIN32)
+// #define LIBRA_RUNTIME_D3D11
+// #define LIBRA_RUNTIME_D3D12
 // #endif
 
 #if (defined(__APPLE__) && defined(__OBJC__))
