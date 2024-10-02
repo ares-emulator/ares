@@ -49,7 +49,7 @@ else
         echo "\nlibrashader built successfully, to install, please run the following commands:"
         echo "!IMPORTANT!: Make sure to substitute the correct target paths for your system"
         echo "sudo cp target/optimized/librashader.so /usr/local/lib/"
-        echo "sudo cp target/optimized/librashader.so /usr/local/lib/librashader.so.1"
+        echo "sudo cp target/optimized/librashader.so /usr/local/lib/librashader.so.2"
         echo "sudo cp pkg/librashader.pc /usr/local/lib/pkgconfig/"
     fi
 fi
