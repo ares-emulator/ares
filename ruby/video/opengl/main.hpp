@@ -24,7 +24,7 @@ auto OpenGL::setShader(const string& pathname) -> void {
       return;
     }
 
-    if(auto error = _libra.gl_filter_chain_create(&_preset, NULL, &_chain)) {
+    if(auto error = _libra.gl_filter_chain_create(&_preset, resolveSymbol, NULL, &_chain)) {
       print(string{"OpenGL: Failed to create filter chain for: ", pathname, "\n"});
       _libra.error_print(error);
       setShader("");
@@ -126,10 +126,6 @@ auto OpenGL::initialize(const string& shader) -> bool {
   if(!_libra.instance_loaded) {
     print("OpenGL: Failed to load librashader: shaders will be disabled\n");
   }
-
-  if(_libra.gl_init_context(resolveSymbol) != NULL) {
-    print("OpenGL: Failed to initialize librashader context: shaders will be disabled\n");
-  };
 
   setShader(shader);
   return initialized = true;

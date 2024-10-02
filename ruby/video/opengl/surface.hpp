@@ -23,11 +23,10 @@ auto OpenGLSurface::render(u32 sourceWidth, u32 sourceHeight, u32 targetX, u32 t
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   if(_chain != NULL) {
-    libra_source_image_gl_t input = {texture, format, sourceWidth, sourceHeight};
-    libra_viewport_t viewport{0, 0, targetWidth, targetHeight};
-    libra_output_framebuffer_gl_t output = {framebuffer, framebufferTexture, framebufferFormat};
+    libra_image_gl_t input = {texture, format, sourceWidth, sourceHeight};
+    libra_image_gl_t output = {framebufferTexture, framebufferFormat, targetWidth, targetHeight};
 
-    if (auto error = _libra.gl_filter_chain_frame(&_chain, frameCount++, input, viewport, output, NULL, NULL)) {
+    if (auto error = _libra.gl_filter_chain_frame(&_chain, frameCount++, input, output, NULL, NULL, NULL)) {
       _libra.error_print(error);
     }
 
