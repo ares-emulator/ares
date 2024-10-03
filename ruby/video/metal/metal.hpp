@@ -99,6 +99,5 @@ struct Metal {
   libra_instance_t _libra;
   libra_shader_preset_t _preset;
   libra_mtl_filter_chain_t _filterChain;
-  libra_viewport_t _libraViewport;
   bool initialized = false;
 };
