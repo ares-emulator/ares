@@ -108,24 +108,15 @@ auto CPU::instruction() -> void {
     return;
   }
 
-  if(Accuracy::CPU::Recompiler && recompiler.enabled) {
-    // Fast path: attempt to lookup previously compiled blocks with devirtualizeFast
-    // and fastFetchBlock, this skips exception handling, error checking, and
-    // code emitting pathways for maximum lookup performance.
-    // As memory writes cause recompiler block invalidation, this shouldn't be detectable.
-    if (auto address = devirtualizeFast(ipu.pc)) {
-      if(auto block = recompiler.fastFetchBlock(address)) {
-        block->execute(*this);
-        return;
-      }
-    }
+  auto access = devirtualize<Read, Word>(ipu.pc);
+  if(!access) return;
 
-    if (auto address = devirtualize(ipu.pc)) {
-      auto block = recompiler.block(ipu.pc, *address, GDB::server.hasBreakpoints());
-      block->execute(*this);
-    }
+  if(Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
+    if(vaddrAlignedError<Word>(access.vaddr, false)) return;
+    auto block = recompiler.block(ipu.pc, access.paddr, GDB::server.hasBreakpoints());
+    block->execute(*this);
   } else {
-    auto data = fetch(ipu.pc);
+    auto data = fetch(access);
     if (!data) return;
     pipeline.begin();
     instructionPrologue(ipu.pc, *data);

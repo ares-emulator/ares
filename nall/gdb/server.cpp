@@ -192,10 +192,15 @@ namespace nall::GDB {
           u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
 
           u64 address = cmdName.slice(1, sepIdx-1).hex();
-          u64 unitSize = cmdName.slice(sepIdx+1, 1).hex();
-          u64 value = cmdParts.size() > 1 ? cmdParts[1].hex() : 0;
-
-          hooks.write(address, unitSize, value);
+          u64 byteSize = cmdName.slice(sepIdx+1, 1).hex();
+          string hexvalue = cmdParts.size() > 1 ? cmdParts[1] : string{};
+          vector<u8> value;
+          string hexbyte;
+          for (int i=0; i<hexvalue.size(); i+=2) {
+            hexbyte = hexvalue.slice(i, 2);
+            value.append((u8)toHex(hexbyte.data()));
+          }
+          hooks.write(address, value);
           return "OK";
         }
 

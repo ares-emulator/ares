@@ -2,7 +2,7 @@ extern Random random;
 
 struct System {
   Node::System node;
-  Node::Setting::Boolean tmss;
+  bool tmss;
   VFS::Pak pak;
 
   struct Controls {

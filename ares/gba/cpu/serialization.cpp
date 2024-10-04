@@ -60,6 +60,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(keypad.enable);
   s(keypad.condition);
   for(auto& flag : keypad.flag) s(flag);
+  s(keypad.conditionMet);
 
   s(joybus.sc);
   s(joybus.sd);
@@ -82,8 +83,9 @@ auto CPU::serialize(serializer& s) -> void {
   s(joybus.generalFlag);
 
   s(irq.ime);
-  s(irq.enable);
-  s(irq.flag);
+  for(auto& flag : irq.synchronizer) s(flag);
+  for(auto& flag : irq.enable) s(flag);
+  for(auto& flag : irq.flag) s(flag);
 
   for(auto& flag : wait.nwait) s(flag);
   for(auto& flag : wait.swait) s(flag);

@@ -73,7 +73,7 @@ auto PPU::unload() -> void {
 }
 
 inline auto PPU::blank() -> bool {
-  return io.forceBlank || cpu.stopped();
+  return io.forceBlank[0] || cpu.stopped();
 }
 
 auto PPU::step(u32 clocks) -> void {
@@ -98,23 +98,24 @@ auto PPU::main() -> void {
   }
 
   if(io.vcounter == 160) {
-    if(io.irqvblank) cpu.irq.flag |= CPU::Interrupt::VBlank;
+    if(io.irqvblank) cpu.setInterruptFlag(CPU::Interrupt::VBlank);
     cpu.dmaVblank();
   }
 
   if(io.irqvcoincidence) {
-    if(io.vcoincidence) cpu.irq.flag |= CPU::Interrupt::VCoincidence;
+    if(io.vcoincidence) cpu.setInterruptFlag(CPU::Interrupt::VCoincidence);
   }
 
   step(46);
 
-  if(io.vcounter < 160) {
-    u32 y = io.vcounter;
-    bg0.scanline(y);
-    bg1.scanline(y);
-    bg2.scanline(y);
-    bg3.scanline(y);
-    objects.scanline(y);
+  u32 y = io.vcounter;
+  memory::move(io.forceBlank, io.forceBlank + 1, sizeof(io.forceBlank) - 1);
+  bg0.scanline(y);
+  bg1.scanline(y);
+  bg2.scanline(y);
+  bg3.scanline(y);
+  objects.scanline(y);
+  if(y < 160) {
     auto line = screen->pixels().data() + y * 240;
     for(u32 x : range(240)) {
       bg0.run(x, y);
@@ -135,7 +136,7 @@ auto PPU::main() -> void {
   }
 
   io.hblank = 1;
-  if(io.irqhblank) cpu.irq.flag |= CPU::Interrupt::HBlank;
+  if(io.irqhblank) cpu.setInterruptFlag(CPU::Interrupt::HBlank);
   if(io.vcounter < 160) cpu.dmaHblank();
 
   step(226);
@@ -149,6 +150,7 @@ auto PPU::main() -> void {
 }
 
 auto PPU::frame() -> void {
+  system.controls.poll();
   screen->frame();
   scheduler.exit(Event::Frame);
 }

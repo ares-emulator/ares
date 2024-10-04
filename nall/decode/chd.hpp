@@ -84,8 +84,8 @@ inline auto CHD::load(const string& location) -> bool {
 
     int track_no;
     int frames;
-    int pregap_frames;
-    int postgap_frames;
+    int pregap_frames = 0;
+    int postgap_frames = 0;
 
     // First, attempt to fetch CDROMv2 metadata
     err = chd_get_metadata(chd, CDROM_TRACK_METADATA2_TAG, tracks.size(), metadata, sizeof(metadata), &metadata_size, nullptr, nullptr);

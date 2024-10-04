@@ -35,6 +35,9 @@ auto option(string name, string value) -> bool {
       m32x.shs.recompiler.enabled = value.boolean();
     }
   }
+  if(name == "TMSS") {
+    system.tmss = value.boolean();
+  }
   return true;
 }
 
@@ -114,8 +117,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setUnserialize({&System::unserialize, this});
   root = node;
   if(!node->setPak(pak = platform->pak(node))) return false;
-
-  tmss = node->append<Node::Setting::Boolean>("TMSS", false);
 
   scheduler.reset();
   controls.load(node);

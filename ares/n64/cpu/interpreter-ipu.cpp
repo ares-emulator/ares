@@ -118,27 +118,26 @@ auto CPU::BREAK() -> void {
 }
 
 auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
-  u32 address;
-  if (auto phys = devirtualize(rs.u64 + imm)) address = *phys;
-  else return;
+  auto access = devirtualize<Read, Word>(rs.u64 + imm);
+  if (!access) return;
 
   switch(operation) {
 
   case 0x00: {  //icache index invalidate
-    auto& line = icache.line(address);
+    auto& line = icache.line(access.vaddr);
     line.valid = 0;
     break;
   }
 
   case 0x04: {  //icache load tag
-    auto& line = icache.line(address);
+    auto& line = icache.line(access.vaddr);
     scc.tagLo.primaryCacheState = line.valid << 1;
     scc.tagLo.physicalAddress   = line.tag;
     break;
   }
 
   case 0x08: {  //icache store tag
-    auto& line = icache.line(address);
+    auto& line = icache.line(access.vaddr);
     line.valid = scc.tagLo.primaryCacheState.bit(1);
     line.tag   = scc.tagLo.physicalAddress;
     if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE CPCS=1");
@@ -147,39 +146,39 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
   }
 
   case 0x10: {  //icache hit invalidate
-    auto& line = icache.line(address);
-    if(line.hit(address)) line.valid = 0;
+    auto& line = icache.line(access.vaddr);
+    if(line.hit(access.paddr)) line.valid = 0;
     break;
   }
 
   case 0x14: {  //icache fill
-    auto& line = icache.line(address);
-    line.fill(address, cpu);
+    auto& line = icache.line(access.vaddr);
+    line.fill(access.paddr, cpu);
     break;
   }
 
   case 0x18: {  //icache hit write back
-    auto& line = icache.line(address);
-    if(line.hit(address)) line.writeBack(cpu);
+    auto& line = icache.line(access.vaddr);
+    if(line.hit(access.paddr)) line.writeBack(cpu);
     break;
   }
 
   case 0x01: {  //dcache index write back invalidate
-    auto& line = dcache.line(address);
+    auto& line = dcache.line(access.vaddr);
     if(line.valid && line.dirty) line.writeBack();
     line.valid = 0;
     break;
   }
 
   case 0x05: {  //dcache index load tag
-    auto& line = dcache.line(address);
+    auto& line = dcache.line(access.vaddr);
     scc.tagLo.primaryCacheState = line.valid << 1 | line.dirty << 0;
     scc.tagLo.physicalAddress   = line.tag;
     break;
   }
 
   case 0x09: {  //dcache index store tag
-    auto& line = dcache.line(address);
+    auto& line = dcache.line(access.vaddr);
     line.valid = scc.tagLo.primaryCacheState.bit(1);
     line.dirty = scc.tagLo.primaryCacheState.bit(0);
     line.tag   = scc.tagLo.physicalAddress;
@@ -189,17 +188,17 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
   }
 
   case 0x0d: {  //dcache create dirty exclusive
-    auto& line = dcache.line(address);
-    if(!line.hit(address) && line.dirty) line.writeBack();
-    line.tag   = address & ~0xfff;
+    auto& line = dcache.line(access.vaddr);
+    if(!line.hit(access.paddr) && line.dirty) line.writeBack();
+    line.tag   = access.paddr & ~0xfff;
     line.valid = 1;
     line.dirty = 1;
     break;
   }
 
   case 0x11: {  //dcache hit invalidate
-    auto& line = dcache.line(address);
-    if(line.hit(address)) {
+    auto& line = dcache.line(access.vaddr);
+    if(line.hit(access.paddr)) {
       line.valid = 0;
       line.dirty = 0;
     }
@@ -207,8 +206,8 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
   }
 
   case 0x15: {  //dcache hit write back invalidate
-    auto& line = dcache.line(address);
-    if(line.hit(address)) {
+    auto& line = dcache.line(access.vaddr);
+    if(line.hit(access.paddr)) {
       if(line.dirty) line.writeBack();
       line.valid = 0;
     }
@@ -216,8 +215,8 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
   }
 
   case 0x19: {  //dcache hit write back
-    auto& line = dcache.line(address);
-    if(line.hit(address)) {
+    auto& line = dcache.line(access.vaddr);
+    if(line.hit(access.paddr)) {
       if(line.dirty) line.writeBack();
     }
     break;
@@ -610,10 +609,10 @@ auto CPU::LHU(r64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::LL(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto address = devirtualize(rs.u64 + imm)) {
-    if (auto data = read<Word>(rs.u64 + imm)) {
+  if(auto access = devirtualize<Read, Word>(rs.u64 + imm)) {
+    if (auto data = read<Word>(access.vaddr)) {
       rt.u64 = s32(*data);
-      scc.ll = *address >> 4;
+      scc.ll = access.paddr >> 4;
       scc.llbit = 1;
     }
   }
@@ -621,10 +620,10 @@ auto CPU::LL(r64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::LLD(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  if(auto address = devirtualize(rs.u64 + imm)) {
-    if (auto data = read<Dual>(rs.u64 + imm)) {
+  if(auto access = devirtualize<Read, Word>(rs.u64 + imm)) {
+    if (auto data = read<Dual>(access.vaddr)) {
       rt.u64 = *data;
-      scc.ll = *address >> 4;
+      scc.ll = access.paddr >> 4;
       scc.llbit = 1;
     }
   }

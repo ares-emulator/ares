@@ -10,7 +10,7 @@ Platform* platform = nullptr;
 bool _runAhead = false;
 
 const string Name       = "ares";
-const string Version    = "139";
+const string Version    = "140";
 const string Copyright  = "ares team, Near";
 const string License    = "ISC";
 const string LicenseURI = "https://opensource.org/licenses/ISC";

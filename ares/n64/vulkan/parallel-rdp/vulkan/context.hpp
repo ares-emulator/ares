@@ -100,12 +100,16 @@ struct DeviceFeatures
 	VkPhysicalDeviceMeshShaderFeaturesEXT mesh_shader_features = {};
 	VkPhysicalDeviceMeshShaderPropertiesEXT mesh_shader_properties = {};
 	VkPhysicalDeviceIndexTypeUint8FeaturesEXT index_type_uint8_features = {};
+	VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT rgba10x6_formats_features = {};
+	VkPhysicalDeviceImageCompressionControlFeaturesEXT image_compression_control_features = {};
+	VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT image_compression_control_swapchain_features = {};
 
 	// Vendor
 	VkPhysicalDeviceComputeShaderDerivativesFeaturesNV compute_shader_derivative_features = {};
 	VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV device_generated_commands_features = {};
 	VkPhysicalDeviceDeviceGeneratedCommandsComputeFeaturesNV device_generated_commands_compute_features = {};
 	VkPhysicalDeviceDeviceGeneratedCommandsPropertiesNV device_generated_commands_properties = {};
+	VkPhysicalDeviceDescriptorPoolOverallocationFeaturesNV descriptor_pool_overallocation_features = {};
 
 	// Fallback feature structs (Vulkan 1.1)
 	VkPhysicalDeviceHostQueryResetFeatures host_query_reset_features = {};
@@ -239,7 +243,7 @@ public:
 	Context();
 	Context(const Context &) = delete;
 	void operator=(const Context &) = delete;
-	static bool init_loader(PFN_vkGetInstanceProcAddr addr);
+	static bool init_loader(PFN_vkGetInstanceProcAddr addr, bool force_reload = false);
 	static PFN_vkGetInstanceProcAddr get_instance_proc_addr();
 
 	~Context();

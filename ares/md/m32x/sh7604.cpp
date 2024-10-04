@@ -73,7 +73,7 @@ auto M32X::SH7604::step(u32 clocks) -> void {
 auto M32X::SH7604::power(bool reset) -> void {
   Thread::create((system.frequency() / 7.0) * 3.0, {&M32X::SH7604::main, this});
   SH2::recompilerStepCycles =  20; // Minimum cycles for recompiler to run for each batch of instructions
-  minCyclesBetweenFullSyncs = 100; // Minimum cycles between full sync with the M68K/MD side
+  minCyclesBetweenFullSyncs =  50; // Minimum cycles between full sync with the M68K/MD side
   minCyclesBetweenSh2Syncs  =   5; // Minimum Cycles between sync with the other SH2 (syncOtherSh2)
   minCyclesBetweenM68kSyncs =  10; // Minimum Cycles between sync with the M68K (syncM68k)
   SH2::power(reset);
