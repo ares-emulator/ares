@@ -55,7 +55,7 @@ auto CPU::readIO(n32 address) -> n8 {
   | serial.startBit              << 7
   );
   case 0x0400'0129: return (
-    serial.unused    << 0
+    serial.uartFlags << 0
   | serial.mode      << 4
   | serial.irqEnable << 6
   );
@@ -340,7 +340,7 @@ auto CPU::writeIO(n32 address, n8 data) -> void {
     serial.startBit              = data.bit(7);
     return;
   case 0x0400'0129:
-    serial.unused    = data.bit(0,3);
+    serial.uartFlags = data.bit(0,3);
     serial.mode      = data.bit(4,5);
     serial.irqEnable = data.bit(6);
     return;

@@ -160,7 +160,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  transferEnableReceive;
     n1  transferEnableSend;
     n1  startBit;
-    n4  unused;
+    n4  uartFlags;
     n2  mode;
     n1  irqEnable;
 

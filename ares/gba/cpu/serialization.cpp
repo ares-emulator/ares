@@ -52,7 +52,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(serial.transferEnableReceive);
   s(serial.transferEnableSend);
   s(serial.startBit);
-  s(serial.unused);
+  s(serial.uartFlags);
   s(serial.mode);
   s(serial.irqEnable);
   for(auto& value : serial.data) s(value);
