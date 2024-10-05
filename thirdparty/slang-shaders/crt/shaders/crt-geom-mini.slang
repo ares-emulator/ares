@@ -14,36 +14,34 @@ layout(push_constant) uniform Push
     vec4 OutputSize;
     uint FrameCount;
   float CURV;
-  float SCAN;
+  float scanlines;
   float MASK;
-  float LUM;
   float INTERL;
-  float SAT, LANC;
+  float SAT;
 } params;
 
 // Parameter lines go here:
 
 #pragma parameter CURV "CRT-Geom Curvature" 1.0 0.0 1.0 1.0
-#pragma parameter SCAN "CRT-Geom Scanline Weight" 0.25 0.2 0.6 0.05
-#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.15 0.0 0.5 0.05
-#pragma parameter LUM "CRT-Geom Luminance" 0.05 0.0 0.5 0.01
+#pragma parameter scanlines "CRT-Geom Scanline Weight" 0.5 0.0 0.5 0.05
+#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.2 0.0 0.5 0.05
 #pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
-#pragma parameter SAT "CRT-Geom Saturation" 1.1 0.0 2.0 0.01
-#pragma parameter LANC "Filter profile: Accurate/Fast" 0.0 0.0 1.0 1.0
+#pragma parameter SAT "CRT-Geom Saturation" 1.0 0.0 2.0 0.05
 
 #define PI 3.1415926535897932384626433
+#define tau 6.2831852
+
 #define SourceSize params.SourceSize
 #define OriginalSize params.OriginalSize
 #define OutputSize params.OutputSize
 #define FrameCount params.FrameCount
 
 #define CURV params.CURV
-#define SCAN params.SCAN
+#define scanlines params.scanlines
 #define MASK params.MASK
-#define LUM params.LUM
 #define INTERL params.INTERL
 #define SAT params.SAT
-#define LANC params.LANC
+
 layout(std140, set = 0, binding = 0) uniform UBO
 {
     mat4 MVP;
@@ -53,115 +51,96 @@ layout(std140, set = 0, binding = 0) uniform UBO
 layout(location = 0) in vec4 Position;
 layout(location = 1) in vec2 TexCoord;
 layout(location = 0) out vec2 vTexCoord;
-layout(location = 1) out vec2 scale;
-layout(location = 2) out vec2 warpp;
-layout(location = 3) out vec2 warp;
-layout(location = 4) out float fragpos;
+layout(location = 1) out float maskpos;
 
 void main()
 {
     gl_Position = global.MVP * Position;
     vTexCoord = TexCoord * 1.0001;
-    scale = SourceSize.xy/OriginalSize.xy;
-    warpp = vTexCoord.xy*scale;   
-    fragpos = warpp.x*OutputSize.x*PI;
-    warp = warpp*2.0-1.0;   
+    maskpos = vTexCoord.x*OutputSize.x*PI;
 }
 
 #pragma stage fragment
 layout(location = 0) in vec2 vTexCoord;
 layout(location = 0) out vec4 FragColor;
-layout(location = 1) in vec2 scale;
-layout(location = 2) in vec2 warpp;
-layout(location = 3) in vec2 warp;
-layout(location = 4) in float fragpos;
+layout(location = 1) in float maskpos;
 
 layout(set = 0, binding = 1) uniform sampler2D Source;
 
-float scan(float pos, vec3 color)
-    {
-    float wid = SCAN + 0.1 * max(max(color.r,color.g),color.b);
-    float weight = pos / wid;
-    return  LUM + (0.1 + SCAN) * exp(-weight * weight ) / wid;
-    }
 
-vec2 Warp(vec2 pos)
+// Configuration.
+
+float kaizer_x (float p)
 {
-    pos = warp;
-    pos *= vec2(1.0+pos.y*pos.y*0.031, 1.0+pos.x*pos.x*0.05);
-    pos = pos*0.5+0.5;
-    return pos;
+    // Compute sinc filter.
+    float k = sin(1.3* ((p - 1.0) / 2.0));
+    return k;
 }
 
+vec2 Warp(vec2 coord)
+{
+        vec2 CURVATURE_DISTORTION = vec2(0.12, 0.25);
+        // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+        vec2 barrelScale = vec2(0.97,0.945);
+        coord -= vec2(0.5);
+        float rsq = coord.x*coord.x + coord.y*coord.y;
+        coord += coord * (CURVATURE_DISTORTION * rsq);
+        coord *= barrelScale;
+        if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
+                coord = vec2(-1.0);             // If out of bounds, return an invalid value.
+        else
+        {
+                coord += vec2(0.5);
+        }
+
+        return coord;
+}
 void main()
 {
-    vec2 pos;
-    if (CURV == 1.0) pos = Warp(warpp);
-    else pos = vTexCoord;
+vec3 res = vec3(0.0);
+vec2 dx = vec2(SourceSize.z*0.5,0.0); //sharpness
+vec2 pos, corn;
+if(CURV == 1.0){
+ pos = Warp(vTexCoord);
+ corn = min(pos, 1.0-pos);    // This is used to mask the rounded
+     corn.x = 0.0001/corn.x;      // corners later on
+}
+else pos = vTexCoord;
 
-    vec2 corn   = min(pos,1.0-pos); // This is used to mask the rounded
-         corn.x = 0.0001/corn.x;  // corners later on
+vec2 xy = pos;
+xy -= dx*2.0;
+vec2 near = floor(pos*SourceSize.xy)+0.5;
+vec2 f = pos*SourceSize.xy - near;
 
-    if (CURV == 1.0) pos /= scale;
+xy.y = (near.y + 16.0*f.y*f.y*f.y*f.y*f.y)*SourceSize.w;    
 
-// Lanczos 2
-    // Source position in fractions of a texel
-    vec2 src_pos = pos*SourceSize.xy;
-    // Source bottom left texel centre
-    vec2 src_centre = floor(src_pos - 0.5) + 0.5;
-    // f is position. f.x runs left to right, y bottom to top, z right to left, w top to bottom
-    vec4 f; 
-    f.xy = src_pos - src_centre;
-    f.zw = 1.0 - f.xy;
-    // Calculate weights in x and y in parallel.
-    // These polynomials are piecewise approximation of Lanczos kernel
-    // Calculator here: https://gist.github.com/going-digital/752271db735a07da7617079482394543
- vec4 l2_w0_o3, l2_w1_o3;
-    if (LANC == 0.0)
-     {l2_w0_o3 = (((1.5672) * f - 2.6445) * f + 0.0837) * f + 0.9976;
-      l2_w1_o3 = (((-0.7389) * f + 1.3652) * f - 0.6295) * f - 0.0004;}
-    else  {l2_w0_o3 = (-1.1828) * f + 1.1298;
-           l2_w1_o3 = (0.0858) * f - 0.0792;}
-
-
-    vec4 w1_2  = l2_w0_o3;
-    vec2 w12   = w1_2.xy + w1_2.zw;
-    vec4 wedge = l2_w1_o3 * vec4 (w12.yx, w12.yx);
-
-    // Calculate texture read positions. tc12 uses bilinear interpolation to do 4 reads in 1.
-    vec2 tc12 = SourceSize.zw * (src_centre + w1_2.zw / w12);
-    vec2 tc0  = SourceSize.zw * (src_centre - 1.0);
-    vec2 tc3  = SourceSize.zw * (src_centre + 2.0);
+//kaizer precalculated
+res += texture(Source,xy).rgb*-1.6;
+res += texture(Source,xy+2.0*dx).rgb*3.3;
+res += texture(Source,xy+3.0*dx).rgb*5.6;
+res += texture(Source,xy+4.0*dx).rgb*-1.5;
     
-    // Sharpening adjustment
-    float sum = wedge.x + wedge.y + wedge.z + wedge.w + w12.x * w12.y;    
-    wedge /= sum;
+res /= 5.8;
+    float a = dot(vec3(0.25),res);
+    float s = mix(scanlines,scanlines*0.6,a);
 
-    vec3 res = vec3(
-        texture(Source, vec2(tc12.x, tc0.y)).rgb * wedge.y +
-        texture(Source, vec2(tc0.x, tc12.y)).rgb * wedge.x +
-        texture(Source, tc12.xy).rgb * (w12.x * w12.y) +
-        texture(Source, vec2(tc3.x, tc12.y)).rgb * wedge.z +
-        texture(Source, vec2(tc12.x, tc3.y)).rgb * wedge.w
-    );
-
-
-    float fp = fract(src_pos.y-0.5);
-    if (OriginalSize.y > 400.0) fp = fract(src_pos.y/2.0-0.5);
+    float texsize = 1.0;
+    float fp = 0.25;
+    if (OriginalSize.y > 400.0) texsize = 0.5;
 
     if (INTERL == 1.0 && OriginalSize.y > 400.0) 
     {
-    fp = mod(float(FrameCount),2.0) <1.0 ? 0.5+fp:fp;
+    fp = mod(float(FrameCount),2.0) <1.0 ? 0.5+fp :fp;
     }
 
-    float scn  = scan(fp,res) + scan(1.0-fp,res);
-    float msk  = MASK*sin(fragpos)+1.0-MASK;
-    res *= sqrt(scn*msk);
 
+    float scan = s*sin((pos.y*SourceSize.y*texsize-fp)*tau)+1.0-s;
+    float mask = MASK*sin(maskpos)+1.0-MASK;
+    res *= scan*mask;
+    res *= mix(1.45,1.05,a);
     float l = dot(vec3(0.29, 0.6, 0.11), res);
     res  = mix(vec3(l), res, SAT);
-
-if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 ) res = vec3(0.0);
-
-    FragColor = vec4(res,1.0);
+    res = clamp(res,0.0,1.0);
+    if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV ==1.0 )res = vec3(0.0);
+    FragColor.rgb = sqrt(res);
 }

@@ -190,6 +190,18 @@
     #define IN_GLOW_H				global.IN_GLOW_H
 #endif
 
+#ifndef	IN_GLOW_WARPSHARP_X
+	#define IN_GLOW_WARPSHARP_X global.IN_GLOW_WARPSHARP_X
+#endif
+
+#ifndef	IN_GLOW_WARPSHARP_Y
+	#define IN_GLOW_WARPSHARP_Y global.IN_GLOW_WARPSHARP_Y
+#endif
+
+#ifndef	IN_GLOW_WARPSHARP_GAMMA
+	#define IN_GLOW_WARPSHARP_GAMMA global.IN_GLOW_WARPSHARP_GAMMA
+#endif
+
 #ifndef IN_GLOW_POWER
     #define IN_GLOW_POWER			global.IN_GLOW_POWER
 #endif
@@ -656,10 +668,6 @@
     #define DOT_M_MBLUR_MODE	global.DOT_M_MBLUR_MODE
 #endif
 
-#ifndef DOT_M_MULTIPLY
-    #define DOT_M_MULTIPLY  	global.DOT_M_MULTIPLY
-#endif
-
 #ifndef DOT_M_SHADOW_STR
     #define DOT_M_SHADOW_STR	global.DOT_M_SHADOW_STR
 #endif
@@ -698,10 +706,6 @@
 
 #ifndef PIXELGRID_DOUBLESCAN
     #define PIXELGRID_DOUBLESCAN 	global.PIXELGRID_DOUBLESCAN
-#endif
-
-#ifndef	PIXELGRID_INFLATION
-	#define PIXELGRID_INFLATION global.PIXELGRID_INFLATION
 #endif
 
 #ifndef PIXELGRID_MIN_H
@@ -834,6 +838,10 @@
 
 #ifndef PIXELGRID_INTR_DISABLE_Y
     #define PIXELGRID_INTR_DISABLE_Y  global.PIXELGRID_INTR_DISABLE_Y
+#endif
+
+#ifndef PIXELGRID_INTR_GAMMA_ADJ
+    #define PIXELGRID_INTR_GAMMA_ADJ global.PIXELGRID_INTR_GAMMA_ADJ
 #endif
 
 #ifndef PIXELGRID_GAMMA_W

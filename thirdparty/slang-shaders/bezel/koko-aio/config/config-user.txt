@@ -3,30 +3,37 @@
 //   KEEP A BACKUP OF THIS FILE IF YOU MODIFY IT!
 //   
 //   There yoy have a chance to boost your FPS,
-//   the more lines you insert, the more your FPS will be high.
+//   the more lines you insert (or uncomment), the more your FPS will be high.
 //   
 //   The downside of using this method is that every setting
 //   you will write here, will be static and so that 
 //   you will NOT BE ABLE RO MODIFY it "on-the-fly" in Retroarch anymore.
 //
-//   Lines have this format: #define PARAMETER VALUE
+//   Lines have this format: //#define PARAMETER VALUE //DESCRIPTION
 //   where:
+//       "//" means a comment; read: Everything after "//" is simply ignored.
 //       * PARAMETER is the shader parameter as defined in config.inc
 //         (look for lines starting with #pragma there).
 //       * VALUE is the value you want to assign to that parameter.
 //         (it is the same you would assign to that within retroarch)
+//       * DESCRIPTION is the associated label in retroarch menu, reported here just for convenience 
+//         (not needed nor taken into account, so if they differ a bit, it don't mind)
+//
+//   Almost if not all of the parameters are reported here but commented (prepended with the double slash //)
+//   Since a double slash means that everything after it is ignored, 
+//   then you have to remove the leadings "//"
 //
 //   Notice, there is no equal sign, nor double quotes, so, eg:
-//       If you know that you will always use the bezel frame:
-//       #define DO_BEZEL 1.0
+//       If you know that you will always use the bezel frame, you will have:
+//       #define DO_BEZEL 1.0  //Bezel enable?
 //
 //       If you know you'll never alter the contrast:
-//       #define CONTRAST 0.0
+//       #define CONTRAST 0.0 //Contrast in
 //
-//       If you know your curvature will never change:
-//       #define GEOM_WARP_X
+//       If you know your curvature // will never change:
+//       #define GEOM_WARP_X //Warp X
 //
-//   You can disable a line by erasing it or,
+//   As said, you can disable a line by erasing it or,
 //   since everything after "//" is ignored,
 //   by prepending "//", eg:
 //
@@ -38,279 +45,277 @@
 //   
   
 
- 
 
-// #define DO_CCORRECTION  1.000000
-// #define IN_GLOW_POWER  1.500000
-// #define LUMINANCE  0.2
-// #define BRIGHTNESS  0.0
-// #define CONTRAST  0.0
-// #define ADAPTIVE_BLACK 0.1
-// #define TEMPERATURE  7700.000000
-// #define IN_GLOW_GAMMA  2.000000
-// #define GAMMA_OUT  0.4
-// #define COLOR_MONO_COLORIZE  0.0
-// #define COLOR_MONO_HUE1  0.25
-// #define COLOR_MONO_HUE2  0.3
-// #define COLOR_MONO_HUE_BIAS  0.0
-// #define SATURATION  1.0
-// #define VIBRANCE 0.0
-
-
-// #define DO_FXAA  0.0
+// #define DO_CCORRECTION 1.0           // ★ Color corrections enable?
+// #define IN_GLOW_POWER 1.5            //        Input signal gain
+// #define LUMINANCE  0.2               //        Luminance push
+// #define BRIGHTNESS  0.0              //        Brightness in
+// #define CONTRAST  0.0                //        Contrast in
+// #define ADAPTIVE_BLACK 0.1           //        Adaptive Black level range
+// #define TEMPERATURE  7700.0          //        Temperature in (6500=off)
+// #define IN_GLOW_GAMMA  2.0           //        Gamma In  (applied at the beginning)
+// #define GAMMA_OUT 0.4                //        Gamma out (applied at the end)
+// #define COLOR_MONO_COLORIZE  0.0     //        Monochrome screen colorization
+// #define COLOR_MONO_HUE1  0.25        //        . Hue bright
+// #define COLOR_MONO_HUE2  0.3         //        . Hue dark
+// #define COLOR_MONO_HUE_BIAS  0.0     //        . Hue bright-dark bias
+// #define SATURATION  1.0              //        Saturation in   (1.0=off)
+// #define VIBRANCE 0.0                 //        Vibrance in   (0.0=off)
 
 
-// #define DO_RF_NOISE  0.0
-// #define RF_NOISE_STRENGTH  0.05
+// #define DO_FXAA  0.0                 // ★ FXAA enable? 
 
 
-// #define DO_DEDITHER  0.0
-// #define DEDITHER_TRESHMAX  1.2
-// #define DEDITHER_STRENGTH  0.8
-// #define DEDITHER_STRENGTH2  0.0
+// #define DO_RF_NOISE  0.0             // ★ RF Noise enable?
+// #define RF_NOISE_STRENGTH  0.05      //         Strength
 
 
-// #define DO_NTSC_ARTIFACTS  0.0
-// #define NTSC_MIX  0.5
-// #define NTSC_FILTER_WIDTH  17.0
-// #define NTSC_FILTER_SCF  5.30
-// #define NTSC_FILTER_FC  2.5
-// #define NTSC_PHASE_SHIFT  0.0
-// #define NTSC_ARTF_TRSH  0.1
-// #define NTSC_SHOW_ARTF_MASK  0.0
-// #define NTSC_ARTF_NOBLUR  0.0
-// #define NTSC_ARTF_NOBLEED  0.0
-// #define NTSC_ARTF_ZAP  0.0
+// #define DO_DEDITHER  0.0             // ★ Dedither enable? (not with NTSC artifacts) 
+// #define DEDITHER_TRESHMAX  1.2       //         Sensitivity
+// #define DEDITHER_STRENGTH  0.8       //         Basic search strength
+// #define DEDITHER_STRENGTH2  0.0      //         Extensive search strength
 
 
-// #define DO_SAT_BLEED  0.0
-// #define SAT_BLEED_PAL  0.0
-// #define SAT_BLEED_STRENGTH  1.0
-// #define SAT_BLEED_SIZE  5.0
-// #define SAT_BLEED_FALLOFF  1.7
+// #define DO_NTSC_ARTIFACTS  0.0       // ★ CVBS: NTSC color artifacts enable? 
+// #define NTSC_MIX  0.5                //         Strength
+// #define NTSC_FILTER_WIDTH  17.0      //         Filter width
+// #define NTSC_FILTER_SCF  5.30        //         Subcarrier Frequency mul
+// #define NTSC_FILTER_FC  2.5          //         Frequency cutoff
+// #define NTSC_PHASE_SHIFT  0.0        //         Phase shift
+// #define NTSC_ARTF_TRSH  0.1          //       . Consider artifacts above this treshold
+// #define NTSC_SHOW_ARTF_MASK  0.0     //          . Show the mask of selected artifacts (debug)
+// #define NTSC_ARTF_NOBLUR  0.0        //          . 1* Under treshold: Cancel blur (Glow)
+// #define NTSC_ARTF_NOBLEED  0.0       //          . 2* Under treshold: Cancel Bandwidth limited chroma" 
+// #define NTSC_ARTF_ZAP  0.0           //          . 3* Under treshold: Cancel artifacts"				
 
 
-// #define DO_PPERSISTENCE  0.0
-// #define PPERSISTENCE_START  0.9
-// #define PPERSISTENCE_END  0.5
+// #define DO_SAT_BLEED  0.0            // ★ CVBS: Bandwidth limited chroma enable?
+// #define SAT_BLEED_PAL  0.0           //         Use PAL colorspace, not NTSC
+// #define SAT_BLEED_STRENGTH  1.0      //         Strength
+// #define SAT_BLEED_SIZE  5.0          //         Size (capped to 5.0 in d3d)
+// #define SAT_BLEED_FALLOFF  1.7       //         Falloff
 
 
-// #define DO_SHIFT_RGB  1.000000
-// #define OFFSET_STRENGTH  0.300000
-// #define SHIFT_R  -20.000000
-// #define SHIFT_G  0.000000
-// #define SHIFT_B  20.000000
+// #define DO_PPERSISTENCE  0.0         // ★ Persistence of phosphors enable?
+// #define PPERSISTENCE_START  0.9      //         Early decay
+// #define PPERSISTENCE_END  0.5        //         Late Persistence
 
 
-// #define DO_IN_GLOW  1.000000
-// #define IN_GLOW_BIAS  1.0
-// #define IN_GLOW_SPREAD  0.6
-// #define IN_GLOW_W  -0.80000
-// #define IN_GLOW_H  7.000000
+// #define DO_SHIFT_RGB  1.0           // ★ Deconvergence enable?
+// #define OFFSET_STRENGTH  0.3        //         Strength
+// #define SHIFT_R  -20.0              //         Red offset
+// #define SHIFT_G  0.0                //         Green offset
+// #define SHIFT_B  20.0               //         Blue offset
 
 
-// #define TATE  1.0
-// #define RESSWITCH_GLITCH_SIZE 0.1
-
-// #define DO_PIXELGRID  1.000000
-// #define PIXELGRID_OVERMASK  1.00000
-// #define DO_PIXELGRID_W  1.0
-// #define PIXELGRID_SIZE_W  1.0
-// #define PIXELGRID_MUL_X  1.0
-// #define PIXELGRID_H_PRST  3.000000
-
-
-// #define PIXELGRID_H_COUNT  3.0
-// #define PIXELGRID_R_SHIFT  0.0
-// #define PIXELGRID_G_SHIFT  1.0
-// #define PIXELGRID_B_SHIFT  2.0
-// #define PIXELGRID_MIN_W  0.25
-// #define PIXELGRID_MAX_W  0.40
-// #define PIXELGRID_GAMMA_W  1.5
-// #define PIXELGRID_BASAL_GRID  0.02
+// #define DO_IN_GLOW  1.0             // ★ Glow/Blur enable?
+// #define IN_GLOW_BIAS  1.0           //         Glow to blur bias
+// #define IN_GLOW_SPREAD  0.6         //         Glow light gain
+// #define IN_GLOW_SPREAD_SHARPNESS    //         Glow light sharpness
+// #define IN_GLOW_W  -0.80000         //         Sharp X (neg=use BOX unsharp)
+// #define IN_GLOW_H  7.0              //         Sharp Y (neg=use BOX unsharp)
+// #define IN_GLOW_WARPSHARP_X 0.4     //         Warped glow (X)
+// #define IN_GLOW_WARPSHARP_Y 0.4     //         Warped glow (Y)
+// #define IN_GLOW_WARPSHARP_GAMMA 1.0 //         Warped glow dynamics (1.0=linear)
 
 
-// #define DO_PIXELGRID_H  1.0
-// #define PIXELGRID_COREY_FAKE_SCAN  0.0
-// #define PIXELGRID_DOUBLESCAN 0.0
-// #define PIXELGRID_MIN_H  0.300000
-// #define PIXELGRID_MAX_H  0.700000
-// #define PIXELGRID_INFLATION 0.5
-// #define PIXELGRID_GAMMA_H  5.2
-// #define PIXELGRID_NO_INTERBLEED_H  1.0
-// #define PIXELGRID_H_ANTIMOIRE  0.0
-// #define PIXELGRID_OFFSET_CORE  0.00000
-// #define PIXELGRID_DECON_R_H  0.0
-// #define PIXELGRID_DECON_G_H  0.0
-// #define PIXELGRID_DECON_B_H  0.0
-// #define PIXELGRID_H_DEDOT  0.0
-
-// #define LABEL_INTERLACE  0.0
-// #define MIN_LINES_INTERLACED  380.0
-// #define PIXELGRID_INTR_DISABLE_Y  -1.0
-// #define LabelDescIntlScan1  0.0
-// #define LabelDescIntlScan2  0.0
-// #define PIXELGRID_INTR_FLICK_MODE  2.0
-// #define PIXELGRID_INTR_FLICK_POWR  0.25
+// #define TATE  1.0                   // ★ Tate mode (0:disabled 1:auto 2:forced)
 
 
-// #define PIXELGRID_Y_MASK  0.000000
-// #define PIXELGRID_Y_MASK_COORDS  0.000000
-// #define PIXELGRID_Y_MASK_HEIGHT  1.000000
-// #define PIXELGRID_Y_MASK_OFFSET  1.0
-// #define PIXELGRID_Y_MASK_SHIFT  0.150000
-// #define PIXELGRID_Y_MASK_STEEP  1.000000
-// #define PIXELGRID_Y_MASK_ON_WHITE  0.000000
-// #define PIXELGRID_Y_SPARK  1.000000
-
-// #define PIXELGRID_DO_SHADOWMASK  0.0
-// #define PIXELGRID_SHADOWMASK_H  0.0
-// #define PIXELGRID_SHADOWMASK_SHIFT 1.0
-
-// #define DO_DOT_MATRIX  0.0
-// #define DOT_M_G_STR  0.0
-// #define DOT_M_G_TRESH  1.1
-// #define DOT_M_G_BRT  0.0
-// #define DOT_M_G_SHARP  0.0
-// #define DOT_M_MBLUR_STR  0.45
-// #define DOT_M_MBLUR_MODE  0.0
-// #define DOT_M_SHADOW_STR  0.0
-// #define DOT_M_SHADOW_OFF  0.0
-// #define DOT_M_MULTIPLY  1.0
+// #define RESSWITCH_GLITCH_SIZE 0.1   // ★ Glitch amount if vertical resolution changes
 
 
-// #define DO_HALO  1.000000
-// #define HALO_NO_PREGAIN  1.000000
-// #define HALO_POWER  0.500000
-// #define HALO_SHARPNESS  6.50000
-// #define HALO_GAMMA  2.000000
-// #define HALO_GAMMA_OUT  1.00000
-// #define HALO_VS_SCAN  0.7
+// #define MIN_LINES_INTERLACED  380.0     //     . Consider Hi-Resolution above # lines (0=never):
+// #define PIXELGRID_INTR_DISABLE_Y  -1.0  //     . Hi-Res scanlines type (read docs):
+// #define PIXELGRID_INTR_GAMMA_ADJ 0.9    //     . Interlaced brighness push (less is more, not for OLEDs)
+// #define PIXELGRID_INTR_FLICK_MODE  2.0  //     . Scanlines flicker (0=off,1=on,2=if Hi-Res)
+// #define PIXELGRID_INTR_FLICK_POWR  0.25 //         . Flicker power
 
 
-// #define DO_BLOOM  1.000000
-// #define BLOOM_MIX 0.40
-// #define BLOOM_SIZE  4.0
-// #define BLOOM_QUALITY  1.0
-// #define BLOOM_GAMMA  8.0
-// #define BLOOM_GAMMA_OUT  1.2
-// #define BLOOM_POWER  1.20
-// #define BLOOM_EYE_ADPT_SRT  0.6
-// #define BLOOM_EYE_INERTIA  750
-// #define BLOOM_OVER_WHITE  0.5
-// #define BLOOM_BYPASS  0.0
+// #define DO_PIXELGRID  1.0           // ★  Low level Phosphor grid enable?
+// #define PIXELGRID_OVERMASK  1.0     //       Overmask (1.0 = neutral)
+
+// #define DO_PIXELGRID_H  1.0             //       ★ Scanlines (0 to disable)
+// #define PIXELGRID_DOUBLESCAN 0.0        //          . Double-scan low input resolutions 
+// #define PIXELGRID_COREY_FAKE_SCAN  0.0  // 
+// #define PIXELGRID_MIN_H  0.3            //          . Fake integer scanlines (-1=auto)
+// #define PIXELGRID_MAX_H  0.7            //          . Phosphors height Max
+// #define PIXELGRID_GAMMA_H  5.2          //          . Phosphors height min->max gamma:
+// #define PIXELGRID_NO_INTERBLEED_H  1.0  //          . Inter line extra steepness (1.0 to disable)
+// #define PIXELGRID_H_ANTIMOIRE  0.0      //          . Anti-moire sweet spot (disables Y deconvergence)
+// #define PIXELGRID_OFFSET_CORE  0.0      //          . Slotmask(fake) offset (not with anti-moire) 
+// #define PIXELGRID_DECON_R_H  0.0        //          . Deconvergence Y: R phosphor
+// #define PIXELGRID_DECON_G_H  0.0        //          . Deconvergence Y: G phosphor
+// #define PIXELGRID_DECON_B_H  0.0        //          . Deconvergence Y: B phosphor
+// #define PIXELGRID_H_DEDOT  0.0          //          . Dedot mask between scanlines (use only if needed!)
+
+// #define DO_PIXELGRID_W  1.0         //       ★ Horizontal mask (0 to disable)
+// #define PIXELGRID_SIZE_W  1.0       //            . Resolution: (core or screen)
+// #define PIXELGRID_MUL_X  1.0        //            . Cell size multiplier x (neg=divider):
+// #define PIXELGRID_H_PRST  3.0       //            . Mask type preset (0: for manual)
+// #define PIXELGRID_H_COUNT  3.0      //                 . 0: Phosphors+gap count (mask size) 
+// #define PIXELGRID_R_SHIFT  0.0      //                 . 0: R phospor position
+// #define PIXELGRID_G_SHIFT  1.0      //                 . 0: G phospor position 
+// #define PIXELGRID_B_SHIFT  2.0      //                 . 0: B phospor position
+// #define PIXELGRID_MIN_W  0.25       //            . Phosphors width Min
+// #define PIXELGRID_MAX_W  0.40       //            . Phosphors width Max
+// #define PIXELGRID_GAMMA_W  1.5      //            . Phosphors width min->max gamma:
+// #define PIXELGRID_BASAL_GRID  0.02  //            . Black level of the unexcided phosphor grid
+
+// #define PIXELGRID_Y_MASK  0.0           //       ★ Vertical cell Mask (aperturegrille/slotmask)
+// #define PIXELGRID_Y_MASK_COORDS  0.0    //            . Resolution: (core or screen)
+// #define PIXELGRID_Y_MASK_HEIGHT  1.0    //            . Height divider (neg = multiplier):
+// #define PIXELGRID_Y_MASK_OFFSET  1.0    //            . Even/odd Y offset (slotmask)
+// #define PIXELGRID_Y_MASK_SHIFT  0.15    //            . Vertical shift (neg = auto)
+// #define PIXELGRID_Y_MASK_STEEP  1.0     //            . Steepness
+// #define PIXELGRID_Y_MASK_ON_WHITE  0.0  //            . Fadeout under light
+// #define PIXELGRID_Y_SPARK  1.0          //            . Sparkling look punch
+
+// #define PIXELGRID_DO_SHADOWMASK  0.0    //       ★ Shadowmask 
+// #define PIXELGRID_SHADOWMASK_H  0.0     //            . X staggering    
+// #define PIXELGRID_SHADOWMASK_SHIFT 1.0  //            . Phosphor height 
 
 
-// #define DO_CURVATURE  1.000000
-// #define GEOM_WARP_X  0.28
-// #define GEOM_WARP_Y  0.32
-// #define GEOM_CORNER_SIZE  0.010000
-// #define GEOM_CORNER_SMOOTH  200.000000
+// #define DO_DOT_MATRIX  0.0     // ★  Dot matrix emulation enable? (NOT with scanlines!)
+// #define DOT_M_G_STR  0.0       //         Grid strength	
+// #define DOT_M_G_TRESH  1.1     //            . Paint on bright (<0 on black)
+// #define DOT_M_G_BRT  0.0       //            . Grid brightness
+// #define DOT_M_G_SHARP  0.0     //            . Grid sharpness (0.0 for auto)
+// #define DOT_M_MBLUR_STR  0.45  //         Refresh inertia
+// #define DOT_M_MBLUR_MODE  0.0  //            . Inertia on: both,white,black
+// #define DOT_M_SHADOW_STR  0.0  //         Shadow strength (disables deconvergence)
+// #define DOT_M_SHADOW_OFF  0.0  //            . Shadow offset
 
 
-// #define DO_BEZEL  1.0
-// #define BEZEL_USE_STRAIGHT  0.0
-// #define BEZEL_INNER_ZOOM  -0.01
-// #define BEZEL_FRAME_ZOOM  0.17
-// #define BEZEL_R  -0.35
-// #define BEZEL_G  -0.35
-// #define BEZEL_B  -0.35
-// #define BEZEL_CON  1.3
-// #define BEZEL_RFL_ZOOM  0.0
-// #define BEZEL_REFL_STRENGTH  0.5
-// #define BEZEL_RFL_BLR_SHD  -0.200000
-// #define BEZEL_ROUGHNESS  1.0
-// #define BEZEL_DIFFUSION_STR  0.2
-// #define BEZEL_LIGHT_NO_FADEOUT 0.5
-// #define BEZEL_SPCL_STRENGTH  0.5
-// #define BEZEL_CORNER_DARK  0.8
+// #define DO_HALO  1.0           // ★ Halo enable?
+// #define HALO_NO_PREGAIN  1.0   //         Pre-attenuate input signal gain to 1x
+// #define HALO_POWER  0.5        //         Strength (negative = 10x precision)
+// #define HALO_SHARPNESS  6.5    //         Sharpness
+// #define HALO_GAMMA  2.0        //         Gamma in, the higher, the less the halo on dark colors
+// #define HALO_GAMMA_OUT  1.0    //         Gamma out
+// #define HALO_VS_SCAN  0.7      //         Light up scanline gaps and dot grid gaps too
 
 
-// #define DO_BG_IMAGE  0.0
-// #define LABEL_WARNING1  1.0
-// #define BG_IMAGE_OVER  0.0
-// #define BG_IMAGE_OFFX  0.0
-// #define BG_IMAGE_OFFY  0.0
-// #define BG_IMAGE_ZOOM  1.0
-// #define BG_IMAGE_ROTATION  -1.0
-// #define BG_IMAGE_NIGHTIFY  0.0
-// #define BG_IMAGE_WRAP_MODE  0.0
+// #define DO_BLOOM  1.0             // ★ Bloom enable?
+// #define BLOOM_MIX 0.40            //         Final mix, (0.0=off)
+// #define BLOOM_SIZE  4.0           //         Radius
+// #define BLOOM_QUALITY  1.0        //         Quality: more is better but slower
+// #define BLOOM_GAMMA  8.0          //         Gamma in (threshold)
+// #define BLOOM_GAMMA_OUT  1.2      //         Gamma out (contour smoothness)
+// #define BLOOM_POWER  1.20         //         Power multiplier
+// #define BLOOM_EYE_ADPT_SRT  0.6   //         Modulate: Local exposure eye adaption strength
+// #define BLOOM_EYE_INERTIA  750    //         Modulate: Time before eye adaption starts
+// #define BLOOM_OVER_WHITE  0.5     //         Modulate: Strength on bright areas (0 = aura)
+// #define BLOOM_BYPASS  0.0         //         Bypass/Solo (1=Unmodulated, 2=Modulated)
 
 
-// #define DO_BACKDROP  0.0
-// #define BACKDROP_OFFX  0.0
-// #define BACKDROP_OFFY  0.0
-// #define BACKDROP_ZOOM  1.0
+// #define DO_CURVATURE  1.0          // ★ Curvature/Corners/Edges enable?
+// #define GEOM_WARP_X  0.28          //         Warp X
+// #define GEOM_WARP_Y  0.32          //         Warp Y
+// #define GEOM_CORNER_SIZE  0.01     //         Corners radius
+// #define GEOM_CORNER_SMOOTH  200.0  //         Edges sharpness
 
 
-// #define DO_AMBILIGHT  1.0
-// #define AMBI_STEPS  60.0
-// #define AMBI_FALLOFF  0.40
-// #define AMBI_POWER  1.8
-// #define AMBI_INT_OFFSET  0.07
-// #define AMBI_SMP_INT_OFFSET 0.07
-// #define AMBI_STRETCH  0.0
-// #define AMBI_STRETCH_VERTICAL  0.5
-// #define AMBI_GAMMA  1.3
-// #define AMBI_OVER_BEZEL  0.2
-// #define AMBI_OVER_BEZEL_SIZE  0.15
-// #define AMBI_BG_IMAGE_BLEND_MODE  0.0
-// #define AMBI_ADD_ON_BLACK  1.0
-// #define AMBI_BG_IMAGE_FORCE  0.0
+// #define DO_BEZEL  1.0              // ★ Bezel enable? 
+// #define BEZEL_USE_STRAIGHT  0.0    //         Straight
+// #define BEZEL_INNER_ZOOM  -0.01    //         Inner zoom (ignored with integer scaling)
+// #define BEZEL_FRAME_ZOOM  0.17     //         Frame zoom
+// #define BEZEL_R  -0.35             //         Color: Red
+// #define BEZEL_G  -0.35             //         Color: Green
+// #define BEZEL_B  -0.35             //         Color: Blue	
+// #define BEZEL_CON  1.3             //         Contrast
+// #define BEZEL_RFL_ZOOM  0.0        //         Reflections zoom
+// #define BEZEL_REFL_STRENGTH  0.5   //         Reflections strength
+// #define BEZEL_RFL_BLR_SHD  -0.2    //         Reflections sharpness
+// #define BEZEL_ROUGHNESS  1.0       //         Reflections roughness
+// #define BEZEL_DIFFUSION_STR  0.2   //         Diffusion strength
+// #define BEZEL_LIGHT_NO_FADEOUT 0.5 //         Specularity strength
+// #define BEZEL_SPCL_STRENGTH  0.5   //         Light fadeout distance
+// #define BEZEL_CORNER_DARK  0.8     //         Darken corners
 
 
-// #define DO_VIGNETTE  1.0
-// #define V_SIZE  1.08
-// #define V_POWER  1.00
-
-// #define DO_SPOT  1.0
-// #define S_POSITION_X  1.0
-// #define S_POSITION_Y  1.0
-// #define S_SIZE  0.4
-// #define S_POWER  0.05
-
-
-// #define DO_GLOBAL_SHZO  0.0
-// #define GLOBAL_OFFX  0.0
-// #define GLOBAL_OFFY  0.0
-// #define GLOBAL_ZOOM  2.0
+// #define DO_BG_IMAGE  0.0           // ★ Back/Foreground image enable?
+// #define BG_IMAGE_OVER  0.0         //       Image over content (alpha channel driven)?
+// #define BG_IMAGE_OFFX  0.0         //       Shift Image over X axis
+// #define BG_IMAGE_OFFY  0.0         //       Shift Image over Y axis
+// #define BG_IMAGE_ZOOM  1.0         //       Zoom Image
+// #define BG_IMAGE_ROTATION  -1.0    //       Rotate/flip (0=auto,1/-1=no change,<0 for rotated games)
+// #define BG_IMAGE_NIGHTIFY  0.0     //       Nightify image
+// #define BG_IMAGE_WRAP_MODE  0.0    //       Wrap mode: default, clamp to border, edge, repeat
 
 
-// #define ASPECT_X  0.0
-// #define ASPECT_Y  3.0
+// #define DO_BACKDROP  0.0           // ★ Backdrop mirrored image enable?
+// #define BACKDROP_OFFX  0.0         //         Shift backdrop over X axis
+// #define BACKDROP_OFFY  0.0         //         Shift backdrop over Y axis
+// #define BACKDROP_ZOOM  1.0         //         Zoom backdrop
 
 
-// #define DO_DYNZOOM  0.015
+// #define DO_AMBILIGHT  1.0              // ★ Ambient light leds enable? (am)
+// #define AMBI_STEPS  60.0               //         Slowness
+// #define AMBI_FALLOFF  0.40             //         Led power/falloff
+// #define AMBI_POWER  1.8                //         Led Saturation
+// #define AMBI_INT_OFFSET  0.07          //         Internalness (Led position) 
+// #define AMBI_SMP_INT_OFFSET 0.07       //         Internalness (Sampling point) 
+// #define AMBI_STRETCH  0.0              //         Widen lights (horizontal games)
+// #define AMBI_STRETCH_VERTICAL  0.5     //         Widen lights (vertical games)
+// #define AMBI_GAMMA  1.3                //         Output Gamma
+// #define AMBI_OVER_BEZEL  0.2           //         Bezel Colorization intensity
+// #define AMBI_OVER_BEZEL_SIZE  0.15     //         Bezel Colorization size
+// #define AMBI_BG_IMAGE_BLEND_MODE  0.0  //         Back/Foreground image alpha blend (0=mix, 1=add)
+// #define AMBI_ADD_ON_BLACK  1.0         //         Foggy (power on dark colors, add mode only)
+// #define AMBI_BG_IMAGE_FORCE  0.0       //         Always colorize Back/Foreground image (add mode only)
 
 
-// #define AUTOCROP_MAX 0.0
-// #define AUTOCROP_MIN 1.0
-// #define AUTOCROP_SAMPLES 10
-// #define AUTOCROP_SAMPLE_SIZE 2.0
-// #define AUTOCROP_STEADINESS 0.01
-// #define AUTOCROP_SAMPLES 0.02
+// #define DO_VIGNETTE  1.0     // ★ Vignette enable?
+// #define V_SIZE  1.08         //         Size
+// #define V_POWER  1.00        //         Power
 
-// #define DO_GAME_GEOM_OVERRIDE  0.0
-// #define GAME_GEOM_INT_SCALE  0.0
-// #define GAME_GEOM_INT_SCALE_MAX  10.0
-// #define GAME_GEOM_INT_SCALE_OVR 1.0
+// #define DO_SPOT  1.0         // ★ Spot enable? 
+// #define S_POSITION_X  1.0    //         X Position
+// #define S_POSITION_Y  1.0    //         Y Position
+// #define S_SIZE  0.4          //         Size
+// #define S_POWER  0.05        //         Power
 
 
-// #define GAME_GEOM_ASPECT  0.0
-// #define GAME_GEOM_VSHIFT  0.0
-// #define GAME_GEOM_HSHIFT  0.0
-// #define GAME_GEOM_ZOOM  1.0
-// #define GAME_GEOM_OFF_FIX  0.0
+// #define DO_GLOBAL_SHZO  0.0  // ★ Global shift/zoom enable?
+// #define GLOBAL_OFFX  0.0     //         X axis shift 
+// #define GLOBAL_OFFY  0.0     //         Y axis shift 
+// #define GLOBAL_ZOOM  2.0     //         Zoom
 
 
-// #define DO_TILT  0.0
-// #define TILT_X  0.0
-// #define TILT_FOV  0.7
-// #define TILT_BEZEL_K  1.0
+// #define DO_TILT  0.0  // ★ Tilt enable? 
+// #define TILT_X  0.25  //         Tilt along X axis
 
 
-// #define DELTA_RENDER_FORCE_REFRESH  4.0
-// #define DELTA_RENDER_CHECK_AREA  1.0
+// #define ASPECT_X  0.0    //         Aspect Ratio Numerator (<=0 for a preset)
+// #define ASPECT_Y  3.0    //         Aspect Ratio Denominator
+
+
+// #define DO_DYNZOOM  0.015    // ★ Luminosity tied zoom (!!OBSTRUCTS integer scale!!)
+
+
+// #define AUTOCROP_MAX 0.0            //★ Autocrop: maximum amount (!!OBSTRUCTS integer scale!!) 
+// #define AUTOCROP_MIN 1.0            //        Number of mandatory lines to crop
+// #define AUTOCROP_SAMPLES 10         //        Samples per frame (faster response, higher gpu use)
+// #define AUTOCROP_SAMPLE_SIZE 2.0    //        Sample size (big speedup, less accurate)
+// #define AUTOCROP_STEADINESS 0.01    //         Scene change treshold (0 = continuous cropping) 
+// #define AUTOCROP_SAMPLES 0.02       //        Transition speed 
+
+// #define DO_GAME_GEOM_OVERRIDE  0.0     // ★ Override content geometry enable?
+// #define GAME_GEOM_INT_SCALE  0.0       //         Integer scale (disables inner zoom) 2=No keep aspect
+// #define GAME_GEOM_INT_SCALE_MAX  10.0  //         .    Maximum integer scale
+// #define GAME_GEOM_INT_SCALE_OVR 1.0    //         .    Permit integer overscale by
+
+
+// #define GAME_GEOM_ASPECT  0.0   //         Aspect (0 = unchanged)
+// #define GAME_GEOM_VSHIFT  0.0   //         Vertical position
+// #define GAME_GEOM_HSHIFT  0.0   //         Horizontal position	
+// #define GAME_GEOM_ZOOM  1.0     //         Zoom	
+// #define GAME_GEOM_OFF_FIX  0.0  //         Sharp hack through offset (0.0=disable)
+
+
+// #define DELTA_RENDER_FORCE_REFRESH  4.0  // 
+// #define DELTA_RENDER_CHECK_AREA  1.0     // 
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -322,7 +327,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-//Renders only changed parts of screen, set to 1.0 to lower power consumption:
+//Renders only changed parts of screen, set to 1.0 to lower power consumption / mitigate throttling:
 #define DELTA_RENDER 0.0 
 
 //Halve rendering refresh on bezel and ambilight set to 1.0 to spare gpu cycles:
@@ -330,8 +335,18 @@
 
 //Skip random() function used for noise/debanding/bezel roughness, 
 //set to 1.0 to spare gpu cycles:
-// #define SKIP_RANDOM 1.0
+#define SKIP_RANDOM 0.0
 
+
+//Set this to 1.0 is the only way to statically disable Warped Glow (X) and
+//spare a lookup in the final pass;
+//When the screen is rotated, skipping SKIP_WARPEDGLOW_X means skipping SKIP_WARPEDGLOW_Y
+#define SKIP_WARPEDGLOW_X 0.0
+
+//Set this to 1.0 is the only way to statically disable Warped Glow (X) and
+//spare a lookup in the final pass.
+//When the screen is rotated, skipping SKIP_WARPEDGLOW_Y means skipping SKIP_WARPEDGLOW_X
+#define SKIP_WARPEDGLOW_Y 0.0
 
 // Developer reminder: bash script to partially convert a shader preset 
 // edit: obsolete and incomplete since it does not recur references.

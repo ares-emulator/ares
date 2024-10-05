@@ -48,15 +48,24 @@ void main() {
     vTexCoord = TexCoord;
     const vec4 crop = vec4(param.OS_CROP_TOP, param.OS_CROP_LEFT,
                            param.OS_CROP_BOTTOM, param.OS_CROP_RIGHT);
-    const vec2 scale_o2i = get_scale_o2i(
-        param.InputSize.xy, param.FinalViewportSize.xy, crop, param.Rotation,
+    // Because RA "rotates" the final viewport size on rotated cores, we need to
+    // undo that rotation so that the math checks out. The 0 and 180 degree
+    // rotations and the 90 and 270 rotations are symmetric for 2D sizes, which
+    // is why we can use param.Rotation directly here.
+    const vec2 final_viewport_size_rotated =
+        get_rotated_size(param.FinalViewportSize.xy, param.Rotation);
+    const vec2 scale_i2o = get_scale_i2o(
+        param.InputSize.xy, final_viewport_size_rotated, crop, param.Rotation,
         param.CENTER_AFTER_CROPPING, param.FORCE_ASPECT_RATIO,
         vec2(param.ASPECT_H, param.ASPECT_V),
-        vec2(param.FORCE_INTEGER_SCALING_H, param.FORCE_INTEGER_SCALING_V), param.OVERSCALE,
-        /* output_size_is_final_viewport_size = */ true);
+        vec2(param.FORCE_INTEGER_SCALING_H, param.FORCE_INTEGER_SCALING_V),
+        param.OVERSCALE);
     const vec2 shift = vec2(param.SHIFT_H, param.SHIFT_V);
-    tx_coord = o2i(vTexCoord, param.InputSize.xy, crop, shift, param.Rotation,
-                   param.CENTER_AFTER_CROPPING, scale_o2i);
+    const vec2 input_center = get_input_center(
+        param.InputSize.xy, final_viewport_size_rotated, scale_i2o, crop, shift,
+        param.Rotation, param.CENTER_AFTER_CROPPING);
+    tx_coord = transform(TexCoord, vec2(0.5),
+                         final_viewport_size_rotated / scale_i2o, input_center);
     input_corners = get_input_corners(param.InputSize.xy, crop, param.Rotation);
 }
 

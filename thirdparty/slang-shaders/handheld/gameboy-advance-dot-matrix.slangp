@@ -35,13 +35,6 @@ scale_type4 = source
 scale4 = 1.0
 alias4 = "PASS4"
 
-shader4 = shaders/gameboy/shader-files/gb-pass5.slang
-filter_linear4 = false
-scale_type4 = source
-scale4 = 1.0
-alias4 = "PASS5"
-
-
 textures = COLOR_PALETTE;BACKGROUND
 COLOR_PALETTE = shaders/gameboy/resources/sample-palettes/b-w-palette.png
 COLOR_PALETTE_linear = false

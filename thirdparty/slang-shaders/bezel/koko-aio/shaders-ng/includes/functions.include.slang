@@ -415,10 +415,14 @@ vec3 apply_fuzzy_main_pass_stage_2(vec3 pixel_in, vec2 stage1 ) {
 }
 
 vec2 offsets_from_float(float in_param, int range){
-    return vec2(  
-                  (int(in_param) % range) - range*0.5,
-                  floor(in_param / range) - range*0.5 
+	vec2 mul_factor = vec2(0.5);
+	//mul_factor.x = NEW_SCALEMOD_X * 2;
+    vec2 offsets = vec2(  
+                  (int(in_param) % range) - range* 0.5,
+                  floor(in_param / range) - range* 0.5
 	        );
+	offsets *= params.OutputSize.xy/vec2(NEW_SCALEMOD_REF_X, NEW_SCALEMOD_REF_Y)*0.5;
+	return offsets;
 }
 
 /*vec2 circles(float param, float c_radius, float aspect, float directions) {
@@ -499,6 +503,10 @@ bool is_interlaced() {
 bool scanline_have_to_flicker(bool is_interlaced) {
 	float scanline_flickering = PIXELGRID_INTR_FLICK_MODE;	
     return ((scanline_flickering == 1.0) || ((scanline_flickering==2.0) && is_interlaced ));
+}
+
+bool scanlines_will_alternate(bool is_interlaced) {
+	return is_interlaced && PIXELGRID_INTR_DISABLE_Y != 2.0;
 }
 
 bool pixelgrid_h_needed() {
@@ -617,11 +625,16 @@ float random_fast(vec2 seed) {
 	
 	#define corner_aspect vec2(1.0,  0.75)
 	float fn_border(vec2 coord) {	
-		coord = min(coord, vec2(1.0) - coord) ; //* corner_aspect;
-		coord = GEOM_CORNER_SIZE - min(coord, GEOM_CORNER_SIZE);
-		float dist = length(coord);
-		return clamp(   ((GEOM_CORNER_SIZE - dist) + 0.75/GEOM_CORNER_SMOOTH )  *   GEOM_CORNER_SMOOTH, 0.0, 1.0);
+		//SIMD8 shader: 1271 instructions. 0 loops. 20568 cycles. 0:0 spills:fills, 23 sends, scheduled with mode top-down. Promoted 19 constants. Compacted 20336 to 15040 bytes (26%)
+		//SIMD16 shader: 1271 instructions. 0 loops. 22328 cycles. 0:0 spills:fills, 23 sends, scheduled with mode top-down. Promoted 19 constants. Compacted 20336 to 15040 bytes (26%)
+		coord = min(coord, vec2(1.0) - coord) * corner_aspect;
+		vec2 delta = GEOM_CORNER_SIZE - coord;
+		float dist = length(max(delta, vec2(0.0)));
+		float o = clamp( (GEOM_CORNER_SIZE - dist) * GEOM_CORNER_SMOOTH + 0.75, 0.0, 1.0);
+		return o;
 	}
+
+
 	
 	float border(vec2 coord) {
 		coord = (coord - vec2(0.5)) + vec2(0.5, 0.5);
@@ -755,8 +768,9 @@ float random_fast(vec2 seed) {
 		return  abs(pixel.a - alpha_mark) < 0.05; //<-- 0.05 allow about 20 alpha levels (1*0.05)
 	}
 
-	#define ar_tolerance 0.1 //To compensate when comparing different A/R 
+	//#define ar_tolerance 0.005 //To compensate when comparing different A/R 
 	bool is_rotated() {
+		return params.Rotation != 0.0;
 		/*
 			For some reason, probably retroarch rotates the view only on final viewport stage, transparent to the shader passes,
 			The OutputSize of a pass that scales to viewport will have different aspect from the real final viewport.
@@ -764,7 +778,7 @@ float random_fast(vec2 seed) {
 			-->> This function only works if the calling pass scales to viewport.
 			This will fail for very particular cases, eg: when output window is extremely tall 
 		*/
-		return (abs((params.OutputSize.x/params.OutputSize.y) - (global.FinalViewportSize.x/global.FinalViewportSize.y)) > ar_tolerance);
+		//return (abs((params.OutputSize.x/params.OutputSize.y) - (global.FinalViewportSize.x/global.FinalViewportSize.y)) > ar_tolerance);
 	}
 
 	float get_in_aspect() {
@@ -779,48 +793,72 @@ float random_fast(vec2 seed) {
 	}
 
 	vec2 get_scaled_coords_aspect(vec2 pTexCoord, vec4 destsize, float in_aspect , bool is_rotated){
+		
 		if (!border_needed()) return pTexCoord;
-			//else
-		float scale_x = 1.0;
-		float scale_y = 1.0;
-		float offset_x = 0.0 ;
-		float offset_y = 0.0 ;
-		if (is_rotated) {
-			scale_y = destsize.x/(destsize.y / in_aspect );
-			offset_y = (0.5 * scale_y ) - 0.5 ;
-		} else {
-			//to fit width, use this:
-				scale_x = destsize.x/(destsize.y * in_aspect);
-				offset_x = (0.5 * scale_x ) - 0.5 ;
-				
-			//to fit height, use this:
-				//scale_y = destsize.y/(destsize.x / in_aspect);
-				//offset_y = (0.5 * scale_y ) - 0.5 ;
-		}
 
-		vec2 scale_coord=vec2(pTexCoord.x*scale_x - offset_x , pTexCoord.y*scale_y - offset_y);
-		return scale_coord;
-	}
+		vec2 scale = vec2(1.0);
+		vec2 offst = vec2(0.0);
 	
-	vec2 get_scaled_coords(vec2 pTexCoord, vec4 destsize, bool is_rotated){
-		if (!border_needed()) return pTexCoord;
-			//else
-		float scale_x = 1.0;
-		float scale_y = 1.0;
-		float offset_x = 0.0 ;
-		float offset_y = 0.0 ;
-		float in_aspect = get_in_aspect();
-		if (is_rotated) {
-			scale_y = destsize.x/(destsize.y / in_aspect );			
-			offset_y = (0.5 * scale_y ) - 0.5 ;
-		} else {
-			scale_x = destsize.x/(destsize.y * in_aspect);
-			offset_x = (0.5 * scale_x ) - 0.5 ;
-		}
+	
+		if (is_rotated)
+			destsize.xy=destsize.yx;
 
-		vec2 scale_coord=vec2(pTexCoord.x*scale_x - offset_x , pTexCoord.y*scale_y - offset_y);
+		if (destsize.x > destsize.y*in_aspect) {
+			// fit width
+			scale.x = destsize.x/(destsize.y * in_aspect);
+		} else {
+			// fit height
+			scale.y = destsize.y/(destsize.x / in_aspect);
+		}	
+
+	
+		offst = 0.5 * scale - 0.5;
+		vec2 scale_coord = pTexCoord * scale - offst;
 		return scale_coord;
 	}
+
+	
+	vec2 get_scaled_coords_aspect_fgbg(vec2 pTexCoord, vec4 destsize, float aspect_image , bool is_rotated, float aspect_content){
+		
+		if (!border_needed()) return pTexCoord;
+
+		vec2 scale = vec2(1.0);
+		vec2 offst = vec2(0.0);
+	
+		if (is_rotated)
+			destsize.xy=destsize.yx;
+
+		vec2 off_adj = vec2(0.0);
+		
+		if (destsize.x > destsize.y*aspect_content) {
+			// fit width
+			scale.x = destsize.x/(destsize.y * aspect_image);
+						
+			off_adj.x = -BG_IMAGE_OFFX *
+						 (1 - destsize.x/destsize.y) /
+						 aspect_image /
+						 BG_IMAGE_ZOOM;
+		} else {
+			// fit height
+			scale.x = aspect_content * (1.0/aspect_image);
+			scale.y = (destsize.y/destsize.x) * aspect_content ;			  
+			
+			off_adj.x = -BG_IMAGE_OFFX *
+						(1-aspect_content) /
+						aspect_image /
+						BG_IMAGE_ZOOM;
+			
+			off_adj.y = -BG_IMAGE_OFFY *
+			             (1 - (destsize.y*aspect_content)/destsize.x) /
+			             BG_IMAGE_ZOOM;
+		}	
+		
+		offst = 0.5 * scale + off_adj - 0.5;
+
+		vec2 scale_coord = pTexCoord * scale - offst;
+		return scale_coord;
+	}
+
 	
 	vec2 integer_scale(vec2 in_coords, float target_aspect, bool is_rotated, float do_tate, float uncorrected_aspect) {
 
@@ -847,14 +885,14 @@ float random_fast(vec2 seed) {
 			//This is 1X integer zoom:
 			izoom = params.OriginalSize.xy / global.FinalViewportSize.xy;
 			//Find the maximum zoom allowed
-			float int_zoom = floor(global.FinalViewportSize.y / (params.OriginalSize.y/GAME_GEOM_INT_SCALE_OVR ));
+			vec2 int_zoom = floor(global.FinalViewportSize.yx / (params.OriginalSize.yx/(GAME_GEOM_INT_SCALE_OVR) ));
 			int_zoom = clamp(int_zoom, 1.0, GAME_GEOM_INT_SCALE_MAX);
-			izoom *= int_zoom;
+			izoom *= min(int_zoom.x, int_zoom.y/adapted_aspect);
 		} else {
 			izoom = params.OriginalSize.xy / global.FinalViewportSize.yx;
-			float int_zoom = floor(global.FinalViewportSize.y / (  (params.OriginalSize.x*adapted_aspect)/GAME_GEOM_INT_SCALE_OVR ));
+			vec2 int_zoom = floor(global.FinalViewportSize.yx / (  (params.OriginalSize.xy*adapted_aspect)/(GAME_GEOM_INT_SCALE_OVR) ));
 			int_zoom = clamp(int_zoom, 1.0, GAME_GEOM_INT_SCALE_MAX);
-			izoom *= int_zoom;
+			izoom *= min(int_zoom.x, int_zoom.y*adapted_aspect);
 		}
 		return zoomxy(in_coords, izoom);
 	}
@@ -1207,7 +1245,7 @@ vec2 rgb2hv(vec3 c) {
 	
 float get_dyn_zoom(sampler2D tex) {
 	if (DELTA_RENDER == 0.0)
-		return texture(tex, vec2(0.75,0.75)).a * DO_DYNZOOM + 1.0 ;
+		return texture(tex, DYN_ZOOM_SAMPLING_POINT ).a * DO_DYNZOOM + 1.0 ;
 	else
 		return 1.0;
 }
@@ -1242,10 +1280,6 @@ vec2 tilt2D(vec2 co, float is_rotated, vec2 tilt) {
 		           zoom1D(co.y, tilt_y_range)
 			);
 	
-	// Aply FOV;
-		vec2 fov = mix(vec2(1.0), vec2(TILT_FOV), abs( tilt.xy ));
-		co = zoomxy(co, mix_step(fov.yx, fov.xy, is_rotated));
-
 		co.xy += mix_step(tilt.yx, -tilt.xy, is_rotated) * 0.5;
 		
 	return co;
@@ -1279,10 +1313,6 @@ vec2 tilt(vec2 co, float is_rotated, float tilt) {
 		           zoom1D(co.y, tilt_y_range)
 			);
 	
-	// Aply FOV;
-		float fov = mix( 1.0, TILT_FOV, abs( tilt ));
-		co = zoomxy(co, vec2(fov) );
-
 	if (is_rotated > 0.5) //ASM PROOF
 		co.xy += -vec2(tilt, 0.0) * 0.5;
 	else
@@ -1292,8 +1322,41 @@ vec2 tilt(vec2 co, float is_rotated, float tilt) {
 	return co;
 }
 	
+vec2 tilt_bezel(vec2 co, float is_rotated, float tilt ) {
+
+	tilt*=BEZEL_TILT_MULTIPLIER;
+	
+	//ASM PROOF: if then is worse.
+	vec2 r_tilt = vec2( mix_step(tilt, 0.0, is_rotated),
+	                    mix_step(0.0, -tilt, is_rotated)
+					);
+	
+	vec2 tilt_min = 1 - r_tilt;
+	vec2 tilt_max = 1 + r_tilt;
 
 	
+	// X Tilt
+		float tilt_x_range = scale_to_range(co.y, tilt_min.x, tilt_max.x);
+		co = vec2( zoom1D(co.x, tilt_x_range),
+		           zoom1D(co.y, tilt_x_range)
+			);
+
+	// Y Tilt
+		float tilt_y_range = scale_to_range(co.x, tilt_min.y, tilt_max.y);
+		co = vec2( zoom1D(co.x, tilt_y_range),
+		           zoom1D(co.y, tilt_y_range)
+			);
+	
+	if (is_rotated > 0.5) { //ASM PROOF
+		co.xy += -vec2( (tilt - tilt*BEZEL_TILT_Y_SHIFT)*0.5 , 0.0);
+	} else {
+		co.xy += vec2(0.0, (tilt-tilt*BEZEL_TILT_Y_SHIFT)*0.5);
+	}
+	
+	return co;
+}
+	
+
 /*bool is_first_outside_rect(vec2 point, vec4 rect) {
 	return (point.x < rect.x || point.x > rect.z ||
 			point.y < rect.y || point.y > rect.w) ;
@@ -1502,8 +1565,19 @@ vec4 PG_get_hmask_preset_unfloored() {
 
 }
 
+vec3 strobe( vec3 c) {
+    #define STRENGTH_1 0.075 //effect strength
+
+    if (mod(params.FrameCount, 2.0 ) == 0.0) {
+       return c * (1+STRENGTH_1);
+    }else {
+       return c * (1-STRENGTH_1);
+    }
+}
+
+
 vec3 adaptive_strobe( vec3 c) {
-    #define STRENGTH 1.0; //effect strength
+    #define STRENGTH 0.1375; //effect strength
     #define BRIGHT_BIAS 1.0 //brightness compensation
     #define CONTRAST_COMPENSATION 0.5 //maximum contrast compensation
     #define GAIN_COMPENSATION 0.5 //maximum gain compensation

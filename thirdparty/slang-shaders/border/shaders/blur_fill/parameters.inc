@@ -1,7 +1,7 @@
 // See compose.slang for copyright and other information.
 
 // clang-format off
-#pragma parameter BLUR_FILL_SETTINGS "=== Blur fill v1.9 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter BLUR_FILL_SETTINGS "=== Blur fill v1.10 settings ===" 0.0 0.0 1.0 1.0
 
 #include "../../../misc/shaders/input_transform/parameters.inc"
 

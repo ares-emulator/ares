@@ -15,7 +15,7 @@
 #pragma parameter OS_CROP_RIGHT "Overscan crop right" 0.0 0.0 1024.0 1.0
 
 #pragma parameter MOVING_SETTINGS "= Moving parameters =" 0.0 0.0 1.0 1.0
-#pragma parameter SHIFT_H "Horizontal shift" 0.0 -1024.0 1024.0 0.5
-#pragma parameter SHIFT_V "Vertical shift" 0.0 -1024.0 1024.0 0.5
+#pragma parameter SHIFT_H "Horizontal shift" 0.0 -2048.0 2048.0 1.0
+#pragma parameter SHIFT_V "Vertical shift" 0.0 -2048.0 2048.0 1.0
 #pragma parameter CENTER_AFTER_CROPPING "Center cropped area" 1.0 0.0 1.0 1.0
 // clang-format on

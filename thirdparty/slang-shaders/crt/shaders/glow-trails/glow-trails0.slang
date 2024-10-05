@@ -51,14 +51,14 @@ void main()
 layout(location = 0) in vec2 vTexCoord;
 layout(location = 0) out vec4 FragColor;
 layout(set = 0, binding = 2) uniform sampler2D Source;
-layout(set = 0, binding = 3) uniform sampler2D PassFeedback1;
+layout(set = 0, binding = 3) uniform sampler2D Trails0Feedback;
 
 void main()
 {
 	vec3 frame   = texture(Source, vTexCoord).rgb;
 	float luma   = (frame.rrr * yiq_mat).r;
     float trails = clamp(luma - params.threshold, 0.0, 1.0);
-    vec4 fdback  = pow(texture(PassFeedback1, vTexCoord), vec4(2.2));
+    vec4 fdback  = pow(texture(Trails0Feedback, vTexCoord), vec4(2.2));
     vec4 mixed   = clamp((1.0 - params.mixfactor) * vec4(trails) - params.mixfactor * fdback, 0.0, 1.0) + params.mixfactor * fdback;
 //	vec4 current = pow(texture(Source, vTexCoord), vec4(2.2));
     

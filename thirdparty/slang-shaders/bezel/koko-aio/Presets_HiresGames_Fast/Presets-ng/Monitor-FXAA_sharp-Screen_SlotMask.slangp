@@ -1,0 +1,9 @@
+#reference "Monitor-FXAA_sharp-aperturegrille.slangp"
+
+PIXELGRID_Y_MASK = "1.0"
+PIXELGRID_Y_MASK_COORDS = "1.000000"
+PIXELGRID_Y_MASK_SHIFT = "-0.010000"
+
+DO_DEDITHER = "1.0"
+
+PIXELGRID_Y_SPARK = "4.000000"

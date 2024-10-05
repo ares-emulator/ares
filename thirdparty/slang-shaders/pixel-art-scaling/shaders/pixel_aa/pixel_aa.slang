@@ -1,8 +1,8 @@
 #version 450
 
 /*
-    Pixel AA v1.5 by fishku
-    Copyright (C) 2023
+    Pixel AA v1.6 by fishku
+    Copyright (C) 2023-2024
     Public domain license (CC0)
 
     Features:
@@ -24,6 +24,7 @@
     subpixel anti-aliasing, results are identical to the "pixellate" shader.
 
     Changelog:
+    v1.6: Update input transform library.
     v1.5: Upstream optimizations from GLSL port. Add free transform preset.
     v1.4: Enable subpixel sampling for all four pixel layout orientations,
           including rotated screens.

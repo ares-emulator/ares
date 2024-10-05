@@ -1,0 +1,143 @@
+# NTSC version
+
+shaders = "12"
+
+textures = "mask_grille_texture_small;mask_slot_texture_small;mask_shadow_texture_small"
+mask_grille_texture_small = "../../crt/shaders/crt-royale/TileableLinearApertureGrille15Wide8And5d5SpacingResizeTo64BGR.png"
+mask_slot_texture_small = "../../crt/shaders/crt-royale/TileableLinearSlotMaskTall15Wide9And4d5Horizontal9d14VerticalSpacingResizeTo64BGRshifted.png"
+mask_shadow_texture_small = "../../crt/shaders/crt-royale/TileableLinearShadowMaskEDPResizeTo64.png"
+mask_grille_texture_small_wrap_mode = "repeat"
+mask_slot_texture_small_wrap_mode = "repeat"
+mask_shadow_texture_small_wrap_mode = "repeat"
+mask_grille_texture_small_linear = "true"
+mask_slot_texture_small_linear = "true"
+mask_shadow_texture_small_linear = "true"
+mask_grille_texture_small_mipmap = "false"  # Mipmapping causes artifacts with manually resized masks without tex2Dlod
+mask_slot_texture_small_mipmap = "false"    # Mipmapping causes artifacts with manually resized masks without tex2Dlod
+mask_shadow_texture_small_mipmap = "false"  # Mipmapping causes artifacts with manually resized masks without tex2Dlod
+
+shader0 = "../../film/shaders/film-grain.slang"
+filter_linear0 = "false"
+alias0 = PrePass0
+scale_type3 = source
+scale3 = 1.0
+
+shader1 = "../../crt/shaders/guest/advanced/ntsc/ntsc-pass1.slang"
+alias1 = NPass1
+scale_type_x1 = source
+scale_type_y1 = source
+scale_x1 = 4.0
+scale_y1 = 1.0
+float_framebuffer1 = true
+filter_linear1 = false
+
+shader2 = "../../crt/shaders/guest/advanced/ntsc/ntsc-pass2.slang"
+filter_linear2 = true
+float_framebuffer2 = true
+scale_type2 = source
+scale_x2 = 0.5
+scale_y2 = 1.0
+
+shader3 = "../../crt/shaders/guest/advanced/ntsc/ntsc-pass3.slang"
+filter_linear3 = true
+scale_type3 = source
+scale_x3 = 1.0
+scale_y3 = 1.0
+
+# Linearize the input based on CRT gamma and bob interlaced fields.
+# (Bobbing ensures we can immediately blur without getting artifacts.)
+shader4 = "../../crt/shaders/crt-royale/src-fast/crt-royale-first-pass-linearize-crt-gamma-bob-fields.slang"
+alias4 = "ORIG_LINEARIZED"
+filter_linear4 = "false"
+scale_type4 = "source"
+scale4 = "1.0"
+srgb_framebuffer4 = "true"
+
+
+# Resample interlaced (and misconverged) scanlines vertically.
+# Separating vertical/horizontal scanline sampling is faster: It lets us
+# consider more scanlines while calculating weights for fewer pixels, and
+# it reduces our samples from vertical*horizontal to vertical+horizontal.
+# This has to come right after ORIG_LINEARIZED, because there's no
+# "original_source" scale_type we can use later.
+shader5 = "../../crt/shaders/crt-royale/src-fast/crt-royale-scanlines-vertical-interlacing.slang"
+alias5 = "VERTICAL_SCANLINES"
+filter_linear5 = "true"
+scale_type_x5 = "source"
+scale_x5 = "1.0"
+scale_type_y5 = "viewport"
+scale_y5 = "1.0"
+srgb_framebuffer5 = "true"
+
+
+shader6 = "../../crt/shaders/crt-royale/src-fast/crt-royale-mask-resize-vertical.slang"
+filter_linear6 = "true"
+scale_type_x6 = "absolute"
+scale_x6 = "64"
+scale_type_y6 = "viewport"
+scale_y6 = "0.0625" # Safe for >= 341.333 horizontal triads at viewport size
+#srgb_framebuffer6 = "false" # mask_texture is already assumed linear
+
+# Lanczos-resize the phosphor mask horizontally.  scale_x7 = scale_y5.
+shader7 = "../../crt/shaders/crt-royale/src-fast/crt-royale-mask-resize-horizontal.slang"
+alias7 = "MASK_RESIZE"
+filter_linear7 = "false"
+scale_type_x7 = "viewport"
+scale_x7 = "0.0625"
+scale_type_y7 = "source"
+scale_y7 = "1.0"
+#srgb_framebuffer7 = "false" # mask_texture is already assumed linear
+
+# Resample (misconverged) scanlines horizontally, apply halation, and
+# apply the phosphor mask.
+shader8 = "../../crt/shaders/crt-royale/src-fast/crt-royale-scanlines-horizontal-apply-mask.slang"
+alias8 = "MASKED_SCANLINES"
+filter_linear8 = "true" # This could just as easily be nearest neighbor.
+scale_type8 = "viewport"
+scale8 = "1.0"
+srgb_framebuffer8 = "true"
+
+# Compute a brightpass.  This will require reading the final mask.
+shader9 = "../../crt/shaders/crt-royale/src-fast/crt-royale-brightpass.slang"
+alias9 = "BRIGHTPASS"
+filter_linear9 = "true" # This could just as easily be nearest neighbor.
+scale_type9 = "viewport"
+scale9 = "1.0"
+srgb_framebuffer9 = "true"
+
+# Blur the brightpass vertically
+shader10 = "../../crt/shaders/crt-royale/src-fast/crt-royale-bloom-vertical.slang"
+filter_linear10 = "true" # This could just as easily be nearest neighbor.
+scale_type10 = "source"
+scale10 = "1.0"
+srgb_framebuffer10 = "true"
+
+# Blur the brightpass horizontally and combine it with the dimpass:
+shader11 = "../../crt/shaders/crt-royale/src-fast/crt-royale-bloom-horizontal-reconstitute.slang"
+filter_linear11 = "true"
+scale_type11 = "source"
+scale11 = "1.0"
+srgb_framebuffer11 = "true"
+wrap_mode11 = "clamp_to_edge"
+
+GRAIN_AMOUNT = "0.020000"
+GRAIN_SIZE = "1.500000"
+COLOR_AMOUNT = "0.000000"
+
+cust_artifacting = "1.000000"
+cust_fringing = "1.500000"
+ntsc_taps = "24.000000"
+ntsc_cscale = "0.750000"
+ntsc_cscale1 = "0.500000"
+ntsc_sharp = "0.000000"
+ntsc_shape = "0.750000"
+
+beam_horiz_filter = "3.000000"
+
+lcd_gamma = "2.400000"
+bloom_underestimate_levels = "1.000000"
+beam_min_sigma = "0.150000"
+beam_max_sigma = "0.270000"
+mask_type = "1.000000"
+mask_triad_size_desired = "3.000000"
+

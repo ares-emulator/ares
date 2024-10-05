@@ -12,7 +12,7 @@ layout(location = 3) out float vDeltaRenderOk;
 
 vec2 radius_blur_adapt(vec2 bsize, vec4 sourcesize){
     vec2 r;
-    r.x = bsize.x / SCALEMOD_X;
+    r.x = bsize.x / BLOOM_AND_HALO_SCALE_FACTOR;
     r.y = r.x *  get_in_aspect();
     
 	float aspect = (sourcesize.x/sourcesize.y);
@@ -63,7 +63,7 @@ void main() {
     
     //Pass the right texture unchanged for tighter blurs:
     if (HALO_SHARPNESS >= GLOW_SHARP_MAX) {
-        FragColor = vec4( pow(texture(Source, vTexCoord).rgb * vHALO_POWER,  vec3(HALO_GAMMA_OUT)), 0.0) ;
+        FragColor.rgb = pow(texture(Source, vTexCoord).rgb * vHALO_POWER,  vec3(HALO_GAMMA_OUT));
         return;
     }
     
@@ -72,6 +72,6 @@ void main() {
 
     pixel_haloed =  pow(pixel_haloed, vec3(HALO_GAMMA_OUT));
     
-    FragColor = vec4(pixel_haloed.rgb, 0.0);
+    FragColor.rgb = pixel_haloed;
     
 }

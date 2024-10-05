@@ -29,13 +29,12 @@ layout(push_constant) uniform Push
 	uint FrameCount;
 	float SIZEHB;
 	float SIGMA_HB;
-	float BLOOMCUT_H;
 	float FINE_BLOOM;
 } params;
 
 #pragma parameter bogus_bloom "[ BLOOM/HALATION/(GLOW) PASS SETTINGS ]:" 0.0 0.0 1.0 1.0
 
-#pragma parameter FINE_BLOOM "          Fine Bloom/Halation Sampling" 1.0 1.0 4.0 1.0 
+#pragma parameter FINE_BLOOM "          Fine Bloom/Halation Sampling" 1.0 1.0 5.0 1.0 
 #define FINE_BLOOM params.FINE_BLOOM
 
 #pragma parameter SIZEHB "          Horizontal Bloom/Halation Radius" 3.0 1.0 50.0 1.0 
@@ -43,9 +42,6 @@ layout(push_constant) uniform Push
 
 #pragma parameter SIGMA_HB "          Horizontal Bloom/Halation Sigma" 0.75 0.25 15.0 0.025
 #define SIGMA_HB params.SIGMA_HB
-
-#pragma parameter BLOOMCUT_H "          Horizontal Bloom/Halation Substract" 0.0 -0.5 0.5 0.05
-#define BLOOMCUT_H params.BLOOMCUT_H
 
 layout(std140, set = 0, binding = 0) uniform UBO
 {
@@ -95,7 +91,6 @@ void main()
 	{
 		pixel  = COMPAT_TEXTURE(LinearizePass, tex + n*dx);
 		w = gaussian(n+f);
-		w      = (BLOOMCUT_H >= 0.0) ? max(w - BLOOMCUT_H, 0.0) : (max(w + BLOOMCUT_H, 0.0)/(1.0 + BLOOMCUT_H));
 		pixel.a = max(max(pixel.r, pixel.g),pixel.b);
 		pixel.a*=pixel.a*pixel.a;
 		color  = color + w * pixel;

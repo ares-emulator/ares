@@ -1,0 +1,3 @@
+#reference "tv-slotmask.slangp"
+
+DO_BLOOM = "1.0"

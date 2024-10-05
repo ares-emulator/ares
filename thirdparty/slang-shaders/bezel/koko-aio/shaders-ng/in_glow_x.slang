@@ -14,6 +14,8 @@ layout(location = 1) out float glow_h_and_w_outside_interval;
 layout(location = 2) out float glow_w_inside_interval;
 layout(location = 3) out float vSharp_sub;
 layout(location = 4) out float vShowArtifactsMask;
+layout(location = 12) out float vWarpedglow_scale_tated;
+layout(location = 13) out vec2 vWarpedglow_offsets;
 
 void main() {
    gl_Position = global.MVP * Position;
@@ -40,6 +42,15 @@ void main() {
       
    vShowArtifactsMask = float(DO_NTSC_ARTIFACTS + NTSC_SHOW_ARTF_MASK > 1.5);
    
+   float warpedglow_delta = params.OriginalSize.z * 0.5;
+   vWarpedglow_offsets = vec2(+warpedglow_delta, 0.0); 
+      
+   vWarpedglow_scale_tated = IN_GLOW_WARPSHARP_X;
+   if (need_tate(is_rotated()) == 1.0)
+      vWarpedglow_scale_tated = IN_GLOW_WARPSHARP_Y;
+   
+   vWarpedglow_scale_tated = vWarpedglow_scale_tated * 0.6 / 1400.0 * 3.0;
+
 }
 
 
@@ -50,7 +61,8 @@ layout(location = 1) in float glow_h_and_w_outside_interval;
 layout(location = 2) in float glow_w_inside_interval;
 layout(location = 3) in float vSharp_sub;
 layout(location = 4) in float vShowArtifactsMask;
-layout(location = 5) in float vDeltaRenderOk;
+layout(location = 12) in float vWarpedglow_scale_tated;
+layout(location = 13) in vec2 vWarpedglow_offsets;
 
 layout(location = 0) out vec4 FragColor;
 
@@ -70,21 +82,39 @@ vec3 blur_select_wrap(sampler2D texture_in, vec2 co, vec4 sourcesize, float shar
 
 void main() { 
 
+   
+   //Warped Glow X
+   //The result will be stored in the alpha channel to be consumed by final pass.
+   float warpedglow_x = 0.0;
+   if (SKIP_WARPEDGLOW_X == 0.0) {
+      if (DO_IN_GLOW == 1.0) {
+         float max_inLum = max( 1.0, DO_CCORRECTION * apply_contrast_brightness(1.0, CONTRAST, BRIGHTNESS));
+         vec3 gx = texture(shift_and_bleed_pass, vTexCoord + vWarpedglow_offsets).rgb
+               - texture(shift_and_bleed_pass, vTexCoord - vWarpedglow_offsets).rgb;
+               
+         gx /=max_inLum;
+
+         
+         warpedglow_x = (gx.x+gx.y+gx.z) / 3.0 ;
+         warpedglow_x = pow( abs(warpedglow_x), IN_GLOW_WARPSHARP_GAMMA) * sign(warpedglow_x);
+      
+         warpedglow_x =  warpedglow_x * vWarpedglow_scale_tated;
+      }
+   }
    //Modulate glow power via ntsc artifact mask:
       float ntsc_artifacts = texture(shift_and_bleed_pass, vTexCoord).a; //compiler is smart enough to reuse this lookup, no need to branch.
       
       //To debug ntsc artifacts mask:
       if (vShowArtifactsMask == 1.0) {
-         FragColor = vec4(ntsc_artifacts);
+         FragColor = vec4(vec3(ntsc_artifacts), warpedglow_x);
          return;
       }
    
    //Don't do anything if IN_GLOW_H is are over the upper limit
    //and IN_GLOW_W is outside the allowed interval;
       if ( glow_h_and_w_outside_interval == 1.0) {
-         vec4 passthrough = texture(shift_and_bleed_pass, vTexCoord);
-         //Delta render?
-         FragColor = passthrough;
+         //passthrough
+         FragColor =vec4(texture(shift_and_bleed_pass, vTexCoord).rgb, warpedglow_x);
          return;
       }
       
@@ -114,12 +144,15 @@ void main() {
       in_glow_w_adapted = in_glow_w_adapted / NEW_SCALEMOD_X;
       
 
+   //Also, a little hacky adaption for when flick_and_noise_pass does not scale to 2X
+      if (params.OutputSize.xy == params.OriginalSize.xy)
+         in_glow_w_adapted*=1.5;
+      
    //Finally blur horizontally 
    if (glow_w_inside_interval == 1.0)  {
-         FragColor = vec4(blur_select_wrap(shift_and_bleed_pass, vTexCoord, global.flick_and_noise_passSize, in_glow_w_adapted, (IN_GLOW_W >= 0.0) ), 
-                          0.0);
+      FragColor = vec4(blur_select_wrap(shift_and_bleed_pass, vTexCoord, global.flick_and_noise_passSize, in_glow_w_adapted, (IN_GLOW_W >= 0.0)), warpedglow_x);
    } else {
-      FragColor = vec4(texture(shift_and_bleed_pass, vTexCoord).rgb, 0.0);
+      FragColor = vec4(texture(shift_and_bleed_pass, vTexCoord).rgb, warpedglow_x);
    }
 
    

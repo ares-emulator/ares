@@ -1,8 +1,8 @@
 #version 450
 
 /*
-    Average fill v1.8 by fishku
-    Copyright (C) 2023
+    Average fill v1.9 by fishku
+    Copyright (C) 2023-2024
     Public domain license (CC0)
 
     This shader preset allows cropping the image on any side, and filling the
@@ -27,6 +27,7 @@
     3 = Smooth angle-based blending
 
     Changelog:
+    v1.9: Update input transform library.
     v1.8: Add shift option from input transform library.
     v1.7: Add overscale option from crop and scale library.
     v1.6: Refactor for new scaling library. Add rotation support.
@@ -85,32 +86,33 @@ global;
 #pragma stage vertex
 layout(location = 0) in vec4 Position;
 layout(location = 1) in vec2 TexCoord;
-layout(location = 0) out vec2 vTexCoord;
-layout(location = 1) out vec2 scale_o2i;
-layout(location = 2) out vec4 crop;
-layout(location = 3) out vec2 shift;
+layout(location = 0) out vec4 input_corners;
+layout(location = 1) out vec2 vTexCoord;
+layout(location = 2) out vec2 scale_i2o;
+layout(location = 3) out vec2 input_center;
 layout(location = 4) out vec2 tx_coord;
 layout(location = 5) out vec2 tx_per_px;
 layout(location = 6) out vec2 tx_to_uv;
-layout(location = 7) out vec4 input_corners;
-layout(location = 8) out vec2 cropped_input_size;
+layout(location = 7) out vec2 cropped_input_size;
 
 void main() {
     gl_Position = global.MVP * Position;
     vTexCoord = TexCoord;
-    crop = vec4(param.OS_CROP_TOP, param.OS_CROP_LEFT, param.OS_CROP_BOTTOM,
-                param.OS_CROP_RIGHT);
-    scale_o2i = get_scale_o2i(
+    const vec4 crop = vec4(param.OS_CROP_TOP, param.OS_CROP_LEFT,
+                           param.OS_CROP_BOTTOM, param.OS_CROP_RIGHT);
+    scale_i2o = get_scale_i2o(
         param.InputSize.xy, param.OutputSize.xy, crop, param.Rotation,
         param.CENTER_AFTER_CROPPING, param.FORCE_ASPECT_RATIO,
         vec2(param.ASPECT_H, param.ASPECT_V),
         vec2(param.FORCE_INTEGER_SCALING_H, param.FORCE_INTEGER_SCALING_V),
-        param.OVERSCALE,
-        /* output_size_is_final_viewport_size = */ false);
-    shift = vec2(param.SHIFT_H, param.SHIFT_V);
-    tx_coord = o2i(vTexCoord, param.InputSize.xy, crop, shift, param.Rotation,
-                   param.CENTER_AFTER_CROPPING, scale_o2i);
-    tx_per_px = scale_o2i * param.OutputSize.zw;
+        param.OVERSCALE);
+    const vec2 shift = vec2(param.SHIFT_H, param.SHIFT_V);
+    input_center = get_input_center(param.InputSize.xy, param.OutputSize.xy,
+                                    scale_i2o, crop, shift, param.Rotation,
+                                    param.CENTER_AFTER_CROPPING);
+    tx_coord = transform(TexCoord, vec2(0.5), param.OutputSize.xy / scale_i2o,
+                         input_center);
+    tx_per_px = 1.0 / scale_i2o;
     tx_to_uv = param.InputSize.zw;
 
     input_corners = get_input_corners(param.InputSize.xy, crop, param.Rotation);
@@ -121,15 +123,14 @@ void main() {
 }
 
 #pragma stage fragment
-layout(location = 0) in vec2 vTexCoord;
-layout(location = 1) in vec2 scale_o2i;
-layout(location = 2) in vec4 crop;
-layout(location = 3) in vec2 shift;
+layout(location = 0) in vec4 input_corners;
+layout(location = 1) in vec2 vTexCoord;
+layout(location = 2) in vec2 scale_i2o;
+layout(location = 3) in vec2 input_center;
 layout(location = 4) in vec2 tx_coord;
 layout(location = 5) in vec2 tx_per_px;
 layout(location = 6) in vec2 tx_to_uv;
-layout(location = 7) in vec4 input_corners;
-layout(location = 8) in vec2 cropped_input_size;
+layout(location = 7) in vec2 cropped_input_size;
 layout(location = 0) out vec4 FragColor;
 layout(set = 0, binding = 2) uniform sampler2D Input;
 layout(set = 0, binding = 3) uniform sampler2D Top;
@@ -192,8 +193,8 @@ void main() {
             // Top left corner
             const vec3 top = textureLod(Top, vec2(0.5), BIG_NUMBER).rgb;
             const vec2 content_corner =
-                i2o(input_corners.xy, param.InputSize.xy, crop, shift,
-                    param.Rotation, param.CENTER_AFTER_CROPPING, scale_o2i);
+                transform(input_corners.xy, input_center,
+                          scale_i2o / param.OutputSize.xy, vec2(0.5));
             const vec2 viewport_corner = vec2(0.0, 0.0);
             FragColor = vec4(
                 blend_corner(left, top, cropped_input_size.y,
@@ -212,8 +213,8 @@ void main() {
             // Bottom left corner
             const vec3 bottom = textureLod(Bottom, vec2(0.5), BIG_NUMBER).rgb;
             const vec2 content_corner =
-                i2o(input_corners.xw, param.InputSize.xy, crop, shift,
-                    param.Rotation, param.CENTER_AFTER_CROPPING, scale_o2i);
+                transform(input_corners.xw, input_center,
+                          scale_i2o / param.OutputSize.xy, vec2(0.5));
             const vec2 viewport_corner = vec2(0.0, 1.0);
             FragColor = vec4(
                 blend_corner(left, bottom, cropped_input_size.y,
@@ -273,8 +274,8 @@ void main() {
             // Top right corner
             const vec3 top = textureLod(Top, vec2(0.5), BIG_NUMBER).rgb;
             const vec2 content_corner =
-                i2o(input_corners.zy, param.InputSize.xy, crop, shift,
-                    param.Rotation, param.CENTER_AFTER_CROPPING, scale_o2i);
+                transform(input_corners.zy, input_center,
+                          scale_i2o / param.OutputSize.xy, vec2(0.5));
             const vec2 viewport_corner = vec2(1.0, 0.0);
             FragColor = vec4(
                 blend_corner(right, top, cropped_input_size.y,
@@ -293,8 +294,8 @@ void main() {
             // Bottom right corner
             const vec3 bottom = textureLod(Bottom, vec2(0.5), BIG_NUMBER).rgb;
             const vec2 content_corner =
-                i2o(input_corners.zw, param.InputSize.xy, crop, shift,
-                    param.Rotation, param.CENTER_AFTER_CROPPING, scale_o2i);
+                transform(input_corners.zw, input_center,
+                          scale_i2o / param.OutputSize.xy, vec2(0.5));
             const vec2 viewport_corner = vec2(1.0, 1.0);
             FragColor = vec4(
                 blend_corner(right, bottom, cropped_input_size.y,

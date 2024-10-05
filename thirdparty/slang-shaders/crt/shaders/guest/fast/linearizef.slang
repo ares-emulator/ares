@@ -116,7 +116,7 @@ void main()
 		
 	float yres_div = 1.0; if (intres > 1.25) yres_div = intres;
 		
-	if (inter <= params.OriginalSize.y/yres_div && interm > 0.5 && intres != 1.0 && intres != 0.5) 
+	if (inter <= params.OriginalSize.y/yres_div && interm > 0.5 && intres != 0.5) 
 	{
 		intera = 0.25;
 		float line_no  = clamp(floor(mod(params.OriginalSize.y*vTexCoord.y, 2.0)), 0.0, 1.0);

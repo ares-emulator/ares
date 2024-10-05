@@ -1,13 +1,13 @@
 #version 450
 
 #include "config.inc"
+
 #pragma stage vertex
 layout(location = 0) in vec4 Position;
 layout(location = 1) in vec2 TexCoord;
 
 layout(location = 0) out vec2 vTexCoord;
 layout(location = 1) out float vDynamicSeed;
-layout(location = 2) out float vFlickering_power;
 layout(location = 3) out float vDo_flickering;
 layout(location = 4) out vec2  vFlickerCoords;
 
@@ -21,7 +21,7 @@ void main() {
    //Generate a seed that changes over time for temporal random noise
       vDynamicSeed = mod(params.FrameCount, 120.0001);
       
-   vDo_flickering  = float ( scanline_have_to_flicker(is_interlaced()) ) ; 
+   vDo_flickering  = float ( scanline_have_to_flicker(is_interlaced()) || FLICKER_IN_MOTION == 1.0  ) ; 
    
    if (vDo_flickering == 1.0) {
       //Flicker one over 3 frames:
@@ -34,11 +34,8 @@ void main() {
             FlickerOffset = params.OriginalSize.w/line_tick;
          else if (ModFlicker == 2.0)
             FlickerOffset = -params.OriginalSize.w/line_tick;
-      
       //Export flicker coords for Fragment shader here:
          vFlickerCoords =  vec2(TexCoord.x, TexCoord.y + FlickerOffset);
-         
-      vFlickering_power = PIXELGRID_INTR_FLICK_POWR;
    }
 
 }
@@ -47,13 +44,15 @@ void main() {
 #pragma stage fragment
 layout(location = 0) in vec2 vTexCoord;
 layout(location = 1) in float vDynamicSeed;
-layout(location = 2) in float vFlickering_power;
 layout(location = 3) in float vDo_flickering;
 layout(location = 4) in vec2  vFlickerCoords;
 
 layout(location = 0) out vec4 FragColor;  
 
 layout(set = 0, binding = 2) uniform sampler2D Source;
+
+layout(set = 0, binding = 3) uniform sampler2D colortools_and_ntsc_pass;
+layout(set = 0, binding = 4) uniform sampler2D colortools_and_ntsc_passFeedback;
 
 #include "includes/functions.include.slang"
 
@@ -85,8 +84,17 @@ vec4 pixel_flickering() {
    //float lumdiff = abs( flickline.r + flickline.g + flickline.b - pixel_cur.r - pixel_cur.g - pixel_cur.b);
    //float lumdiff = abs( (flickline.r + flickline.g) + (flickline.b - pixel_cur.r) - (pixel_cur.g + pixel_cur.b) ); //1687 1754 2946   ASM PROOF: FASTER
    float lumdiff = abs( dot(flickline.rgb, vec3(1.0)) - dot(pixel_cur.rgb, vec3(1.0)));// 1685 1750 2948 //ASM PROOF: Faster on SIMD8 and SIMD16, slower on SIMD32
-      
-   lumdiff = min(lumdiff * vFlickering_power, 1.0);
+
+   lumdiff = min(lumdiff * PIXELGRID_INTR_FLICK_POWR, 1.0);
+   
+   if (FLICKER_IN_MOTION == 1.0) {
+      lumdiff = 0.4;
+      vec3 prev_frame = texture(colortools_and_ntsc_passFeedback, vTexCoord).rgb;
+      vec3 cur_frame = texture(colortools_and_ntsc_pass, vTexCoord).rgb;
+      float is_moving = float(prev_frame != cur_frame);
+      lumdiff *= is_moving;
+   }
+   
    return vec4( mix(pixel_cur.rgb,flickline.rgb,lumdiff),
                 pixel_cur.a); //<-- wee need to return the alpha channel because it carries ntsc artifact mask
 }
@@ -105,6 +113,7 @@ void main() {
       float anoise = random_fast(vTexCoord * vDynamicSeed);
        pixel_out.rgb += scale_to_range(anoise, -RF_NOISE_STRENGTH, RF_NOISE_STRENGTH);
    }
+     
    FragColor = pixel_out;
 }
 

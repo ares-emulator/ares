@@ -52,7 +52,7 @@ void main() {
     if (DO_HALO == 0.0 ) return;
     
     
-    vec4 pixel_haloed = texture(in_glow_pass, vTexCoord);
+    vec3 pixel_haloed = texture(in_glow_pass, vTexCoord).rgb;
     
 /*    if (DELTA_RENDER == 1.0) {
          if (vDeltaRenderOk == 1.0) {
@@ -63,19 +63,19 @@ void main() {
          }
     }
 */  
-    if (HALO_NO_PREGAIN == 1.0)  pixel_haloed.rgb/= vHALO_UNGAIN_FACTOR;
+    if (HALO_NO_PREGAIN == 1.0)  pixel_haloed/= vHALO_UNGAIN_FACTOR;
     
-    pixel_haloed.rgb = pow(pixel_haloed.rgb, vHALO_GAMMA);
+    pixel_haloed = pow(pixel_haloed, vHALO_GAMMA);
     
     //Prepaint scanlines gaps?
     if (HALO_PRE_SCANLINE_GAP == 1.0) {
         if (vDo_pixelgrid_h == 1.0) {
             if (mod( vTexCoord_mul_sourcesizey, 2.0) < 1.0) {
                 //Scanline gap fades away for high luminosity pixels
-                pixel_haloed.rgb = pixel_haloed.rgb * vScanline_gap;
+                pixel_haloed = pixel_haloed * vScanline_gap;
             }
         }
     }
-    FragColor = vec4(pixel_haloed.rgb, 1.0);
+    FragColor.rgb = pixel_haloed;
 
 }

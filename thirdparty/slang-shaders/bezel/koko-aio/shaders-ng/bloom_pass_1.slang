@@ -45,5 +45,5 @@ void main() {
         0.0
     );
     bloomed = apply_fuzzy_main_pass_stage_2(bloomed, vFuzzy_main_pass_stage_1);
-    FragColor = vec4(bloomed, 1.0);
+    FragColor.rgb = bloomed;
 }

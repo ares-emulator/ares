@@ -4,21 +4,29 @@
 // based on Themaister's NTSC shader
 
 
-layout(std140, set = 0, binding = 0) uniform UBO
+layout(push_constant) uniform Push
 {
-   mat4 MVP;
    vec4 OutputSize;
    vec4 OriginalSize;
    vec4 SourceSize;
    float auto_res;
    float ntsc_sharp;
    float ntsc_shape;
-   float blendMode;    
+   float ntsc_gamma;
+} params;
+
+layout(std140, set = 0, binding = 0) uniform UBO
+{
+	mat4 MVP;
 } global;
+
+#pragma parameter auto_res "          SNES/Amiga Hi-Res Auto Mode" 0.0 0.0 1.0 1.0
+float auto_rez = mix(1.0, 0.5, clamp(params.auto_res * round(params.OriginalSize.x/300.0)-1.0, 0.0, 1.0));
 
 #pragma parameter ntsc_sharp "NTSC Sharpness (negative: Adaptive)" 0.0 -10.0 10.0 0.50
 #pragma parameter ntsc_shape "NTSC Sharpness Shape" 0.75 0.5 1.0 0.05
-#pragma parameter blendMode "NTSC Blend Mode (Main Mode Control)" 1.0 0.0 1.0 1.0 
+#pragma parameter ntsc_gamma "NTSC Filtering Gamma Correction" 1.0 0.25 2.5 0.025
+#pragma parameter ntsc-row5 "------------------------------------------------" 0.0 0.0 0.0 1.0
 
 #pragma stage vertex
 layout(location = 0) in vec4 Position;
@@ -28,7 +36,7 @@ layout(location = 0) out vec2 vTexCoord;
 void main()
 {
    gl_Position = global.MVP * Position;
-   vTexCoord = TexCoord - vec2(0.25 / global.SourceSize.x, 0.0); // Compensate for decimate-by-2.
+   vTexCoord = TexCoord - vec2(0.25 * (params.OriginalSize.z/auto_rez)/4.0, 0.0); // Compensate for decimate-by-2.
 }
 
 #pragma stage fragment
@@ -36,12 +44,7 @@ layout(location = 0) in vec2 vTexCoord;
 layout(location = 0) out vec4 FragColor;
 layout(set = 0, binding = 2) uniform sampler2D Source;
 layout(set = 0, binding = 3) uniform sampler2D NPass1;
-layout(set = 0, binding = 4) uniform sampler2D PrePass0;
 
-float fetch_offset(float offset, float one_x)
-{
-   return texture(NPass1, vTexCoord + vec2((offset) * (one_x), 0.0)).x;
-}
 
 const mat3 yiq2rgb_mat = mat3(
    1.0, 0.956, 0.6210,
@@ -67,8 +70,8 @@ vec3 rgb2yiq(vec3 col)
 
 void main()
 {
-   vec2 offsetx = vec2(0.5 * global.OriginalSize.z, 0.0);
-   vec2 dx = vec2(0.25 * global.SourceSize.z, 0.0);
+   vec2 offsetx = vec2(0.5 * params.OriginalSize.z/auto_rez, 0.0);
+   vec2 dx = vec2(0.25 * params.OriginalSize.z/auto_rez, 0.0)/4.0;
    vec2 texcoord = vTexCoord + dx;
    
    vec3 l1  = texture(Source, texcoord +      offsetx).xyz;
@@ -89,11 +92,11 @@ void main()
    
    vec3 signal = ref;
 
-   if (abs(global.ntsc_sharp) > -0.1)
+   if (abs(params.ntsc_sharp) > -0.1)
    {
-	  float lummix = mix(lum2, lum1, 0.1*abs(global.ntsc_sharp));
-      float lm1 =  mix(lum2*lum2, lum1*lum1, 0.1*abs(global.ntsc_sharp)); lm1 = sqrt(lm1);
-      float lm2 =  mix(sqrt(lum2), sqrt(lum1), 0.1*abs(global.ntsc_sharp)); lm2 = lm2*lm2;
+	  float lummix = mix(lum2, lum1, 0.1*abs(params.ntsc_sharp));
+      float lm1 =  mix(lum2*lum2, lum1*lum1, 0.1*abs(params.ntsc_sharp)); lm1 = sqrt(lm1);
+      float lm2 =  mix(sqrt(lum2), sqrt(lum1), 0.1*abs(params.ntsc_sharp)); lm2 = lm2*lm2;
 	  
 	  float k1 = abs(lummix - lm1) + 0.00001;
 	  float k2 = abs(lummix - lm2) + 0.00001;
@@ -101,23 +104,18 @@ void main()
 	  lummix = min((k2*lm1 + k1*lm2)/(k1+k2), 1.0);
 	  
 	  signal.x = mix(lum2, lummix, smoothstep(0.25, 0.4, pow(dff, 0.125)));
-	  signal.x = min(signal.x, max(global.ntsc_shape*signal.x, lum2)); 	  
+	  signal.x = min(signal.x, max(params.ntsc_shape*signal.x, lum2)); 	  
    }   
-   else    signal.x = clamp(signal.x, -1.0, 1.0);
+   else    signal.x = clamp(signal.x, 0.0, 1.0);
 
    vec3 rgb = signal;	
-   if (global.ntsc_sharp < -0.1)
+   if (params.ntsc_sharp < -0.1)
    {
       rgb.x = mix(ref.x, rgb.x, sweight);
    }
   
-   rgb = clamp(yiq2rgb(rgb), 0.0, 1.0);  
-  
-   if (global.blendMode < 0.5)
-   {
-      vec3 orig = texture(PrePass0, vTexCoord).rgb;
-      rgb = normalize(rgb + 0.00001) * min(length(rgb), length(orig));    
-   }
+   rgb.x = pow(rgb.x, 1.0/params.ntsc_gamma);
+   rgb = clamp(yiq2rgb(rgb), 0.0, 1.0);
    
    FragColor = vec4(rgb, 1.0);
 }  

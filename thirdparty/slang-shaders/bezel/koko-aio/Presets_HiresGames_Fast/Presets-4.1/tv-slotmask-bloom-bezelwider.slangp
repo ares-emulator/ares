@@ -1,0 +1,12 @@
+#reference "tv-slotmask-bloom-bezel.slangp"
+
+DO_SHIFT_RGB = "1.0"
+
+
+BEZEL_FRAME_ZOOM = "0.17"
+BEZEL_INNER_ZOOM = "-0.011"
+BEZEL_IMAGE_BORDER = "1.02"
+BEZEL_RFL_BLR_SHD = "-0.200000"
+
+DO_VIGNETTE = "1.0"
+DO_SPOT = "1.0"

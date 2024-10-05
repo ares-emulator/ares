@@ -2,7 +2,7 @@
 
 vec2 radius_blur_adapt(vec2 bsize){
     vec2 r;
-    r.x = bsize.x / SCALEMOD_X;
+    r.x = bsize.x / BLOOM_AND_HALO_SCALE_FACTOR;
     r.y = r.x *  get_in_aspect();
     return r;
 }

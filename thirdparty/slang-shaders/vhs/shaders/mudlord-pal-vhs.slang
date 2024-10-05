@@ -2,18 +2,18 @@
 
 layout(push_constant) uniform Push
 {
-	vec4 SourceSize;
-	vec4 OriginalSize;
-	vec4 OutputSize;
-	uint FrameCount;
+   vec4 SourceSize;
+   vec4 OriginalSize;
+   vec4 OutputSize;
+   uint FrameCount;
 
-    float frameShape;
-	float frameLimit;
-	float frameSharpness;
-    float TVNoise;
-    float PALSignal;
-    float phosphors;
-    float border;
+   float frameShape;
+   float frameLimit;
+   float frameSharpness;
+   float TVNoise;
+   float PALSignal;
+   float phosphors;
+   float border;
 } params;
 
 #pragma parameter frameShape "Border mask shape" 0.35 0.0 1.0 0.01
@@ -26,7 +26,7 @@ layout(push_constant) uniform Push
 
 layout(std140, set = 0, binding = 0) uniform UBO
 {
-	mat4 MVP;
+   mat4 MVP;
 } global;
 
 #pragma stage vertex
@@ -57,10 +57,20 @@ float rand(float x)
     return fract(sin(sn) * c);
 }
 
+vec2 crt(vec2 s,float e)
+{
+   vec2 tempvar = (s - 0.5) * 2.;
+   tempvar *= 0.5;
+   tempvar.x *= 1.+pow(abs(tempvar.y)/e,2.);
+   tempvar.y *= 1.+pow(abs(tempvar.x)/e,2.);
+   tempvar = tempvar + .5, tempvar;
+   return tempvar;
+}
+
 void main()
 {
     vec4 col = vec4(0.0);
-    vec2 q = vTexCoord.xy * TextureSize.xy / InputSize.xy;
+    vec2 q = vTexCoord.xy;
     vec2 uv = q;
     vec2 uv_q = uv;
 
@@ -100,9 +110,7 @@ else
 {
  col.rgb = texture(Source,uv_n).rgb;
 }
-    
-
-   
+     
 if(params.phosphors==1.0)
 {
     float mod_factor = uv.y * params.OutputSize.y * params.OutputSize.y / params.OutputSize.y;
@@ -110,7 +118,6 @@ if(params.phosphors==1.0)
     col.rgb*= dotMaskWeights;
 }
  
-
 if(params.border ==1.0)
 {
     vec2 p=-1.0+2.0*crt(uv, 2.0);
@@ -118,7 +125,5 @@ if(params.border ==1.0)
 	float frame = clamp(params.frameSharpness * (pow(f, params.frameShape) - params.frameLimit), 0.0, 1.0);
 	col.rgb*=frame;
 }
-
-
     FragColor = vec4(col.rgb, 1.0);
 }

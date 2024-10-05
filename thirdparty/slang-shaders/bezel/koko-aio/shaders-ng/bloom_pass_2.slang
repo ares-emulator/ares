@@ -39,5 +39,5 @@ void main() {
     );
 
 
-    FragColor = vec4(bloomed.rgb, 1.0); //FragColor = texture(Source, vTexCoord);
+    FragColor.rgb = bloomed; //FragColor = texture(Source, vTexCoord);
 }

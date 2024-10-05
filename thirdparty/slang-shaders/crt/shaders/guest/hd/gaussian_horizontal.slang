@@ -29,17 +29,22 @@ layout(push_constant) uniform Push
 	uint FrameCount;
 	float SIZEH;
 	float SIGMA_H;
+	float FINE_GLOW;	
 	float m_glow;
 	float m_glow_cutoff;
 	float m_glow_low;
 	float m_glow_high;
 	float m_glow_dist;
 	float m_glow_mask;
+	float auto_res;
 } params;
 
 #pragma parameter bogus_mglow "[ MAGIC GLOW SETTINGS ]:" 0.0 0.0 1.0 1.0
 
-#pragma parameter m_glow "          Ordinary Glow / Magic Glow" 0.0 0.0 1.0 1.0 
+#pragma parameter auto_res "          SNES/Amiga Hi-Res Auto Mode" 0.0 0.0 1.0 1.0
+float auto_rez = mix(1.0, 2.0, clamp(params.auto_res*round(params.OriginalSize.x/300.0)-1.0, 0.0, 1.0));
+
+#pragma parameter m_glow "          Ordinary Glow / Magic Glow" 0.0 0.0 2.0 1.0 
 #define m_glow params.m_glow
 
 #pragma parameter m_glow_cutoff "          Magic Glow Cutoff" 0.12 0.0 0.4 0.01 
@@ -53,7 +58,10 @@ layout(push_constant) uniform Push
 
 #pragma parameter m_glow_mask "          Magic Glow Mask Strength" 1.0 0.0 2.0 0.025 
 
-#pragma parameter bogus_glow1 "[ GLOW PASS SETTINGS ]:" 0.0 0.0 1.0 1.0
+#pragma parameter bogus_glow "[ GLOW PASS SETTINGS ]:" 0.0 0.0 1.0 1.0
+
+#pragma parameter FINE_GLOW "          Fine Glow/M.Glow Sampling" 1.0 1.0 5.0 1.0 
+#define FINE_GLOW params.FINE_GLOW
 
 #pragma parameter SIZEH "          Horizontal Glow Radius" 6.0 1.0 50.0 1.0 
 #define SIZEH params.SIZEH
@@ -85,7 +93,7 @@ layout(set = 0, binding = 2) uniform sampler2D LinearizePass;
 
 #define COMPAT_TEXTURE(c,d) texture(c,d)
 
-float invsqrsigma = 1.0/(2.0*SIGMA_H*SIGMA_H);
+float invsqrsigma = 1.0/(2.0*SIGMA_H*SIGMA_H*auto_rez*auto_rez);
 
 float gaussian(float x)
 {
@@ -100,7 +108,7 @@ vec3 plant (vec3 tar, float r)
 
 void main()
 {
-	vec4 SourceSize1 = params.OriginalSize;
+	vec4 SourceSize1 = params.OriginalSize*mix(1.0.xxxx, vec4(FINE_GLOW, FINE_GLOW, 1.0/FINE_GLOW, 1.0/FINE_GLOW), min(FINE_GLOW-1.0,1.0));
 	float f = fract(SourceSize1.x * vTexCoord.x);
 	f = 0.5 - f;
 	vec2 tex = floor(SourceSize1.xy * vTexCoord)*SourceSize1.zw + 0.5*SourceSize1.zw;
@@ -110,7 +118,7 @@ void main()
 	float w;
 	float wsum = 0.0;
 	vec3 pixel;
-	float n = -SIZEH;
+	float n = -SIZEH * auto_rez;
 
 	do
 	{
@@ -125,7 +133,7 @@ void main()
 		wsum   = wsum + w;
 		n = n + 1.0;
 		
-	} while (n <= SIZEH);
+	} while (n <= SIZEH * auto_rez);
 
 	color = color / wsum;
 	

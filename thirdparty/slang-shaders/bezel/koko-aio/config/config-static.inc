@@ -23,7 +23,6 @@
 	#define LCD_ANTIGHOSTING 0.0
 
 
-
 // APPEARANCE SETTINGS ////////////////////////////////////////////////////////
 
 // Haloing happens on a scanlined/gapped image or not
@@ -88,6 +87,11 @@
 	//Set it roughly to  (tube size / bezel total size)
 #define BEZEL_REFL_FADEOUT_START 0.90
 
+	//Values to adapt bezel tilting to content tilting.
+	//I'm not sure what they depends on; works fine on standard bezel tho.
+#define BEZEL_TILT_MULTIPLIER 1.23
+#define BEZEL_TILT_Y_SHIFT 0.32
+
 
 // AMBIENT LIGHT STATIC CONFIG ##########################################################################################
 
@@ -127,19 +131,24 @@
 #define IN_GLOW_BIAS_MAX 1.0
 
 	//Try to keep blur sizes consistent across input resolutions
-#define SCALEMOD_X 360
-#define SCALEMOD_Y 270
-#define NEW_SCALEMOD_X (global.flick_and_noise_passSize.x/(360.0*2.0) / 2.2)
-#define NEW_SCALEMOD_Y (global.flick_and_noise_passSize.y/(270.0*2.0) / 2.2)
+#define NEW_SCALEMOD_REF_X 360.0
+#define NEW_SCALEMOD_REF_Y 270.0
+#define NEW_SCALEMOD_X (global.flick_and_noise_passSize.x/(NEW_SCALEMOD_REF_X*2.0) / 2.2)
+#define NEW_SCALEMOD_Y (global.flick_and_noise_passSize.y/(NEW_SCALEMOD_REF_Y*2.0) / 2.2)
+
+	//Hardcoded radius scale factor used by bloom and halo.
+#define BLOOM_AND_HALO_SCALE_FACTOR 360.0
 
 	// AUTOCROP
 //which coords holds the autocrop zoom value
 #define AUTOCROP_SAMPLING_POINT vec2(0.125)
-	
+
+	// Luminosity tied zoom sampling point
+#define DYN_ZOOM_SAMPLING_POINT vec2(0.75)
 	
 // RESOLUTION SWITCH GLITCH EMULATION ##########################################################################################
 	//Where to sample alpha from avglum pass to understand if resolution has changed (very internal setting) 
-#define RESSWITCH_SAMPLING_POINT vec2(0.95) 
+#define RESSWITCH_SAMPLING_POINT vec2(0.9) 
 	//How much the resolution have to change for shake to be activated (in relation to the old size).
 #define RESSWITCH_GLITCH_TRESHOLD 0.1
 	//How fast is the shake [0.01 -> 1]
@@ -152,6 +161,8 @@
 	//Temporal noise strength applied on green channel when green is dark over ambient lights (multiplied by NOISEPOWER)
 #define NOISEPOWER_AMBI_MUL 3.0
 
+// This is an attempt to improve preceived motion clarity by flickering the moving part of the game
+#define FLICKER_IN_MOTION 0.0
 
 
 // STATIC CONFIG ENDS HERE ##########################################################################################

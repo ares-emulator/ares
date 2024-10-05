@@ -110,13 +110,14 @@ void main()
 
 	float idiv = clamp(SourceSize.x / 400.0, 1.0, 2.0);	
 	float fdivider = max(min(prescalex.x, 2.0), idiv*float(interb));
+	fdivider = 1.0/max(fdivider, 1.0);
 	
-	float wl3 = (2.0 + fpx)/fdivider;
-	float wl2 = (1.0 + fpx)/fdivider;
-	float wl1 = (      fpx)/fdivider;
-	float wr1 = (1.0 - fpx)/fdivider;
-	float wr2 = (2.0 - fpx)/fdivider;
-	float wr3 = (3.0 - fpx)/fdivider;
+	float wl3 = (2.0 + fpx)*fdivider;
+	float wl2 = (1.0 + fpx)*fdivider;
+	float wl1 = (      fpx)*fdivider;
+	float wr1 = (1.0 - fpx)*fdivider;
+	float wr2 = (2.0 - fpx)*fdivider;
+	float wr3 = (3.0 - fpx)*fdivider;
 
 	wl3*=wl3; wl3 = exp2(-h_sharp*wl3);
 	wl2*=wl2; wl2 = exp2(-h_sharp*wl2);

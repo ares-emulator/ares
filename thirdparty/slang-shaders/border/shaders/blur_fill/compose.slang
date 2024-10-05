@@ -2,7 +2,7 @@
 
 /*
     Blur fill v1.9 by fishku
-    Copyright (C) 2023
+    Copyright (C) 2023-2024
     Public domain license (CC0)
 
     This shader preset allows cropping the image on any side, and filling the
@@ -27,6 +27,7 @@
     strength of the blur.
 
     Changelog:
+    v1.10: Update input transform library.
     v1.9: Add shift option from input transform library.
     v1.8: Add overscale option from crop and scale library.
     v1.7: Refactor for new scaling library. Add rotation support.
@@ -98,17 +99,19 @@ void main() {
     vTexCoord = TexCoord;
     const vec4 crop = vec4(param.OS_CROP_TOP, param.OS_CROP_LEFT,
                            param.OS_CROP_BOTTOM, param.OS_CROP_RIGHT);
-    const vec2 scale_o2i = get_scale_o2i(
+    const vec2 scale_i2o = get_scale_i2o(
         param.InputSize.xy, param.OutputSize.xy, crop, param.Rotation,
         param.CENTER_AFTER_CROPPING, param.FORCE_ASPECT_RATIO,
         vec2(param.ASPECT_H, param.ASPECT_V),
         vec2(param.FORCE_INTEGER_SCALING_H, param.FORCE_INTEGER_SCALING_V),
-        param.OVERSCALE,
-        /* output_size_is_final_viewport_size = */ false);
+        param.OVERSCALE);
     const vec2 shift = vec2(param.SHIFT_H, param.SHIFT_V);
-    tx_coord = o2i(vTexCoord, param.InputSize.xy, crop, shift, param.Rotation,
-                   param.CENTER_AFTER_CROPPING, scale_o2i);
-    tx_per_px = scale_o2i * param.OutputSize.zw;
+    const vec2 input_center = get_input_center(
+        param.InputSize.xy, param.OutputSize.xy, scale_i2o, crop, shift,
+        param.Rotation, param.CENTER_AFTER_CROPPING);
+    tx_coord = transform(TexCoord, vec2(0.5), param.OutputSize.xy / scale_i2o,
+                         input_center);
+    tx_per_px = 1.0 / scale_i2o;
     tx_to_uv = param.InputSize.zw;
     input_corners = get_input_corners(param.InputSize.xy, crop, param.Rotation);
 }

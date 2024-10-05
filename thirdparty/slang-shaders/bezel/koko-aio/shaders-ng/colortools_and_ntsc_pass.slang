@@ -11,7 +11,7 @@
 #define CYELLOW  vec3(1.0,1.0,0.0)
 #define CCUSTOM vec3(0.3,0.5,0.1)
 
-#define DEBUG_COLOR vec3(1,1,1)
+#define DEBUG_COLOR vec3(0.1)
 #define DEBUG_BLINK_TIME 100
 #define DEBUG_GRADIENT_STEPS 64
 
@@ -19,8 +19,8 @@
 
 //#define DEBUG
    //#define DEBUG_COLOR_CALIB
-   //#define DEBUG_TIME_FADE
-   #define DEBUG_SOLID_COLOR
+   #define DEBUG_TIME_FADE
+   //#define DEBUG_SOLID_COLOR
    //#define DEBUG_STEP_GRADIENT
    //#define DEBUG_STEP_GRADIENT_V
    //#define DEBUG_BLINK
@@ -46,8 +46,9 @@ layout(location = 1) out vec3 vTemperature_rgb;
 layout(location = 0) out vec2 vTexCoord;
 layout(location = 2) out float vNTSC_FILTER_FC;
 layout(location = 3) out float vSubcarrierFrequency_mul_size_mul_TAU;
-layout(location = 4) out float vNTSC_weights[NTSC_FILTER_WIDTH_MAX];
-  
+layout(location = 4) out float vPixelgrid_intr_gamma_adj;
+layout(location = 5) out float vNTSC_weights[NTSC_FILTER_WIDTH_MAX];
+
 
 #include "includes/functions.include.slang"
 
@@ -75,7 +76,12 @@ float sinc(float x) {
 
 void main() {
    gl_Position = global.MVP * Position;
-   vTexCoord = TexCoord * 1.0001;
+   //vTexCoord = TexCoord * 1.0001;
+   //Since we are using linear filtering versus the previous (Original) pass, we whould not use *1.0001,
+   //and we *need* linear filtering for deltarender purposes (see koko-aio-ng.slangp comments)
+   //Or else the picture will be slightly blurred (visible only when output gamma is low).
+   //Let's hope this will not break anything (classic diagonally broken screen).
+   vTexCoord = TexCoord;
 
    if (DO_GAME_GEOM_OVERRIDE > 0.5) {
       vec2 shift = vec2(GAME_GEOM_HSHIFT,GAME_GEOM_VSHIFT);
@@ -105,6 +111,12 @@ void main() {
    }
    if (TEMPERATURE != 6500)
       vTemperature_rgb = kelvin2rgb(TEMPERATURE);
+   
+   //interlaced scanline brightness compensation
+      vPixelgrid_intr_gamma_adj = 1.0;
+      if (pixelgrid_h_needed() && scanlines_will_alternate(is_interlaced()))
+          vPixelgrid_intr_gamma_adj = PIXELGRID_INTR_GAMMA_ADJ;
+   
 }
 
 
@@ -116,7 +128,8 @@ layout(location = 0) in vec2 vTexCoord;
 layout(location = 1) in vec3 vTemperature_rgb;
 layout(location = 2) in float vNTSC_FILTER_FC;
 layout(location = 3) in float vSubcarrierFrequency_mul_size_mul_TAU;
-layout(location = 4) in float vNTSC_weights[NTSC_FILTER_WIDTH_MAX];
+layout(location = 4) in float vPixelgrid_intr_gamma_adj;
+layout(location = 5) in float vNTSC_weights[NTSC_FILTER_WIDTH_MAX];
 
 
 layout(location = 0) out vec4 FragColor;
@@ -411,7 +424,7 @@ void main() {
 
    if (DO_NTSC_ARTIFACTS > 0.5) {
       //Get ntsc picture
-         vec4 ntsc_decoded = ntscdec(co, pixel_in);
+         vec4 ntsc_decoded = ntscdec(co * 1.0001, pixel_in);
       //apply the minimum treshold to artifact mask
          artifact_mask = smoothstep_fast(NTSC_ARTF_TRSH , 1.0, ntsc_decoded.a);
 
@@ -490,6 +503,10 @@ void main() {
    //Clamp artifacts to 0..1
    //Clamp RGB to 0..1000.0
    pixel_out = max(pixel_out, vec3(0.0));
+   
+
+   pixel_out.rgb = pow(pixel_out.rgb, vec3(vPixelgrid_intr_gamma_adj));
+        
    artifact_mask = clamp(artifact_mask, 0.0, 1.0);
    FragColor = vec4(pixel_out, artifact_mask);
 
