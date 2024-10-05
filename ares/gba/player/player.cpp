@@ -63,7 +63,7 @@ auto Player::frame() -> void {
   && !cpu.serial.transferEnableReceive
   &&  cpu.serial.transferEnableSend
   &&  cpu.serial.startBit
-  &&  cpu.serial.transferLength
+  &&  cpu.serial.mode == 0x1
   &&  cpu.serial.irqEnable
   ) {
     status.packet = (status.packet + 1) % 17;
