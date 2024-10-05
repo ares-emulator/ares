@@ -460,6 +460,28 @@ static void lzma_allocator_free(void* p )
 }
 
 /*-------------------------------------------------
+ *  lzma_allocator_free_unused
+ *  free unused buffers only
+ *-------------------------------------------------
+ */
+
+static void lzma_allocator_free_unused(lzma_allocator *codec)
+{
+	int i;
+
+	for (i = 0; i < MAX_LZMA_ALLOCS; i++)
+	{
+		uint32_t *ptr = codec->allocptr[i];
+		if (ptr && (*ptr & 1) == 0)
+		{
+			free(codec->allocptr[i]);
+			codec->allocptr[i] = NULL;
+			codec->allocptr2[i] = NULL;
+		}
+	}
+}
+
+/*-------------------------------------------------
  *  lzma_fast_alloc - fast malloc for lzma, which
  *  allocates and frees memory frequently
  *-------------------------------------------------
@@ -600,6 +622,7 @@ static chd_error lzma_codec_init(void* codec, uint32_t hunkbytes)
 		return CHDERR_DECOMPRESSION_ERROR;
 	}
 	LzmaEnc_Destroy(enc, (ISzAlloc*)alloc, (ISzAlloc*)alloc);
+	lzma_allocator_free_unused(alloc);
 
 	/* do memory allocations */
 	if (LzmaDec_Allocate(&lzma_codec->decoder, decoder_props, LZMA_PROPS_SIZE, (ISzAlloc*)alloc) != SZ_OK)
