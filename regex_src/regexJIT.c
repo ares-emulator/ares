@@ -1966,7 +1966,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 	}
 
 	/* Step 4.1: Generate entry. */
-	CHECK(sljit_emit_enter(compiler_common.compiler, 0, SLJIT_ARGS3V(P, P, 32), 5, 5, 0, 0, 0));
+	CHECK(sljit_emit_enter(compiler_common.compiler, 0, SLJIT_ARGS3V(P, P, 32), 5, 5, 0));
 
 	/* Copy arguments to their place. */
 	EMIT_OP1(SLJIT_MOV, R_REGEX_MATCH, 0, SLJIT_S0, 0);
@@ -2238,7 +2238,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 	if (ind == (sljit_sw)compiler_common.dfa_size - 1) {
 		/* Generate an init stub function. */
 		EMIT_LABEL(label);
-		CHECK(sljit_emit_enter(compiler_common.compiler, 0, SLJIT_ARGS2(W, P, P), 3, 3, 0, 0, 0));
+		CHECK(sljit_emit_enter(compiler_common.compiler, 0, SLJIT_ARGS2(W, P, P), 3, 3, 0));
 
 		if (empty_match_id == -1) {
 			EMIT_OP1(SLJIT_MOV, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(struct regex_match, best_begin), SLJIT_IMM, -1);

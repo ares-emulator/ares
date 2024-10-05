@@ -50,7 +50,7 @@ static void test_serialize1(void)
 	buf[1] = 0;
 	buf[2] = 0;
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 3, 2, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 3, 2, 0);
 
 	jump1 = sljit_emit_jump(compiler, SLJIT_JUMP);
 	label = sljit_emit_label(compiler);
@@ -150,7 +150,7 @@ static void test_serialize2(void)
 	buf[1] = 0;
 	buf[2] = 0;
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS2V(P, W), 3, 3, 0, 0, 32);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS2V(P, W), 3, 3, 32);
 	sljit_emit_cmp(compiler, SLJIT_EQUAL, SLJIT_S1, 0, SLJIT_IMM, 37);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R0), 0);
@@ -272,7 +272,7 @@ static void test_serialize3(void)
 	for (i = 0; i < 6 ; i++)
 		buf[i] = 0;
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 3, 3, 0, 0, 32);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 3, 3, 32);
 
 	sljit_emit_mov_addr(compiler, SLJIT_R0, 0);
 	sljit_emit_const(compiler, SLJIT_R1, 0, 0);

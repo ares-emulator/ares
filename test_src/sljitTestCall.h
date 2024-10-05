@@ -57,7 +57,7 @@ static void test_call1(void)
 	buf[7] = 0;
 	buf[8] = SLJIT_FUNC_ADDR(func);
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, P), 4, 2, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, P), 4, 2, 0);
 
 	/* buf[0] */
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 5);
@@ -169,7 +169,7 @@ static void test_call2(void)
 	FAILED(!compiler, "cannot create compiler\n");
 
 	entry = sljit_emit_label(compiler);
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS2(W, W, W), 3, 2, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS2(W, W, W), 3, 2, 0);
 	/* If x == 0. */
 	sljit_emit_op2u(compiler, SLJIT_SUB | SLJIT_SET_Z, SLJIT_S0, 0, SLJIT_IMM, 0);
 	jump1 = sljit_emit_jump(compiler, SLJIT_EQUAL);
@@ -254,7 +254,7 @@ static void test_call3(void)
 {
 	/* Check function calls with floating point arguments. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_compiler(NULL);
+	struct sljit_compiler* compiler;
 	struct sljit_jump* jump = NULL;
 	sljit_f64 dbuf[7];
 	sljit_f32 sbuf[7];
@@ -270,6 +270,7 @@ static void test_call3(void)
 		return;
 	}
 
+	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
 	dbuf[0] = 5.25;
@@ -289,7 +290,7 @@ static void test_call3(void)
 	wbuf[0] = 0;
 	wbuf[1] = 0;
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS3V(P, P, P), 3, 3, 4, 0, sizeof(sljit_sw));
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS3V(P, P, P), 3 | SLJIT_ENTER_FLOAT(4), 3, sizeof(sljit_sw));
 
 	sljit_emit_fop1(compiler, SLJIT_MOV_F32, SLJIT_FR0, 0, SLJIT_MEM1(SLJIT_S1), 0);
 	sljit_emit_fop1(compiler, SLJIT_MOV_F32, SLJIT_FR1, 0, SLJIT_MEM1(SLJIT_S1), sizeof(sljit_f32));
@@ -425,7 +426,7 @@ static void test_call4(void)
 
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS3V(P, P, P), 4, 3, 4, 0, sizeof(sljit_sw));
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS3V(P, P, P), 4 | SLJIT_ENTER_FLOAT(4), 3, sizeof(sljit_sw));
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 33);
 	sljit_emit_op1(compiler, SLJIT_MOV32, SLJIT_R1, 0, SLJIT_IMM, -20);
@@ -541,7 +542,7 @@ static void test_call5(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, W), 4, 4, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, W), 4, 4, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_S0, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R2, 0, SLJIT_IMM, 0);
@@ -568,7 +569,7 @@ static void test_call5(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, W), 1, 4, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, W), 1, 4, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_S0, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S0, 0, SLJIT_IMM, -1);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S1, 0, SLJIT_IMM, -1);
@@ -598,7 +599,7 @@ static void test_call5(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 4, 2, 0, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 4, 2, SLJIT_MAX_LOCAL_SIZE);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_SP), 0, SLJIT_IMM, SLJIT_FUNC_ADDR(test_call5_f2));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 0x28000000);
 	sljit_emit_op1(compiler, SLJIT_MOV32, SLJIT_R1, 0, SLJIT_IMM, 0x00140000);
@@ -623,7 +624,7 @@ static void test_call5(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 4, 4, 0, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 4, 4, SLJIT_MAX_LOCAL_SIZE);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S3, 0, SLJIT_IMM, SLJIT_FUNC_ADDR(test_call5_f2));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw)0x81000000);
 	sljit_emit_op1(compiler, SLJIT_MOV32, SLJIT_R1, 0, SLJIT_IMM, 0x00480000);
@@ -649,7 +650,7 @@ static void test_call5(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 4, 0, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 4, 0, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, SLJIT_FUNC_ADDR(test_call5_f3));
 	sljit_emit_op1(compiler, SLJIT_MOV32, SLJIT_R1, 0, SLJIT_IMM, 0x342);
 	sljit_emit_op1(compiler, SLJIT_MOV32, SLJIT_R2, 0, SLJIT_IMM, 0x451000);
@@ -671,7 +672,7 @@ static void test_call5(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 1, 0, 0, 0, 9);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 1, 0, 9);
 	sljit_emit_icall(compiler, SLJIT_CALL | SLJIT_CALL_RETURN, SLJIT_ARGS0(W), SLJIT_IMM, SLJIT_FUNC_ADDR(test_call5_f4));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
 
@@ -729,7 +730,7 @@ static void test_call6(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS2(W, F32, F64), 1, 1, 4, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS2(W, F32, F64), 1 | SLJIT_ENTER_FLOAT(4), 1, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw)&dbuf);
 	sljit_emit_fop1(compiler, SLJIT_CONV_F64_FROM_F32, SLJIT_FR0, 0, SLJIT_FR0, 0);
 	sljit_emit_fop1(compiler, SLJIT_MOV_F64, SLJIT_FR2, 0, SLJIT_MEM1(SLJIT_R0), 0);
@@ -753,7 +754,7 @@ static void test_call6(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS4(W, F64, F64, F64, F64), 1, 0, 4, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS4(W, F64, F64, F64, F64), 1 | SLJIT_ENTER_FLOAT(4), 0, 0);
 	sljit_emit_icall(compiler, SLJIT_CALL | SLJIT_CALL_RETURN, SLJIT_ARGS4(W, F64, F64, F64, F64), SLJIT_MEM0(), (sljit_sw)wbuf);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
 
@@ -771,7 +772,7 @@ static void test_call6(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS3(W, F64, F64, F64), 1, 0, 4, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS3(W, F64, F64, F64), 1 | SLJIT_ENTER_FLOAT(4), 0, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 1706);
 	jump = sljit_emit_call(compiler, SLJIT_CALL | SLJIT_CALL_RETURN, SLJIT_ARGS4(W, F64, F64, F64, W));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
@@ -792,7 +793,7 @@ static void test_call6(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS3(W, F64, F64, F64), SLJIT_NUMBER_OF_SCRATCH_REGISTERS + 1, 0, 4, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS3(W, F64, F64, F64), (SLJIT_NUMBER_OF_SCRATCH_REGISTERS + 1)  | SLJIT_ENTER_FLOAT(4), 0, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 1706);
 	jump = sljit_emit_call(compiler, SLJIT_CALL | SLJIT_CALL_RETURN, SLJIT_ARGS4(W, F64, F64, F64, W));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
@@ -813,7 +814,7 @@ static void test_call6(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS3(W, F64, F64, F64), SLJIT_NUMBER_OF_SCRATCH_REGISTERS + 1, 1, 3, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS3(W, F64, F64, F64), (SLJIT_NUMBER_OF_SCRATCH_REGISTERS + 1) | SLJIT_ENTER_FLOAT(3), 1, SLJIT_MAX_LOCAL_SIZE);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 1706);
 	jump = sljit_emit_call(compiler, SLJIT_CALL | SLJIT_CALL_RETURN, SLJIT_ARGS4(W, F64, F64, F64, W));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
@@ -849,7 +850,7 @@ static void test_call7(void)
 
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 4, 2, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 4, 2, 0);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 7945);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, -9267);
@@ -871,7 +872,7 @@ static void test_call7(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 4, 2, 0, 0, 32);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 4, 2, 32);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S0, 0, SLJIT_IMM, (sljit_sw)&buf);
 	/* buf[3-6] */
@@ -909,7 +910,7 @@ static void test_call7(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 4, 2, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 4, 2, 0);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, -2608);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, 4751);
@@ -931,8 +932,8 @@ static void test_call7(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(1), SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 6, 2, 0, 0, SLJIT_MAX_LOCAL_SIZE);
-	sljit_set_context(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(1), SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 6, 2, 0, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(1), SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 6, 2, SLJIT_MAX_LOCAL_SIZE);
+	sljit_set_context(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(1), SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 6, 2, SLJIT_MAX_LOCAL_SIZE);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S1, 0, SLJIT_IMM, (sljit_sw)&buf);
 	/* buf[3-7] */
@@ -973,7 +974,7 @@ static void test_call7(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 4, 2, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 4, 2, 0);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 8653);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, 7245);
@@ -993,7 +994,7 @@ static void test_call7(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 4, 3, 0, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 4, 3, SLJIT_MAX_LOCAL_SIZE);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S2, 0, SLJIT_IMM, (sljit_sw)&buf);
 	/* buf[2-7] */
@@ -1034,7 +1035,7 @@ static void test_call7(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2, 3, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2, 3, 0);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S0, 0, SLJIT_IMM, 6071);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S1, 0, SLJIT_IMM, -3817);
@@ -1054,7 +1055,7 @@ static void test_call7(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS0(W), 4, 3, 0, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS0(W), 4, 3, SLJIT_MAX_LOCAL_SIZE);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw)&buf);
 	/* buf[4] */
@@ -1075,7 +1076,7 @@ static void test_call7(void)
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 4, 2, 0, 0, 256);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS4(W, W_R, W_R, W_R, W_R), 4, 2, 256);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S0, 0, SLJIT_IMM, (sljit_sw)&buf);
 	/* buf[6] */
@@ -1145,7 +1146,7 @@ static void test_call8(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2, 3, 3, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2 | SLJIT_ENTER_FLOAT(3), 3, 0);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw)&dbuf);
 	/* dbuf[0] */
@@ -1174,7 +1175,7 @@ static void test_call8(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(1), SLJIT_ARGS4(W, F64, F64, F64, W_R), 1, 3, 3, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(1), SLJIT_ARGS4(W, F64, F64, F64, W_R), 1 | SLJIT_ENTER_FLOAT(3), 3, SLJIT_MAX_LOCAL_SIZE);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S1, 0, SLJIT_IMM, (sljit_sw)&buf);
 	/* buf[4] */
@@ -1225,7 +1226,7 @@ static void test_call8(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 3, 3, 1, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 3 | SLJIT_ENTER_FLOAT(1), 3, 0);
 
 	sljit_emit_fop1(compiler, SLJIT_MOV_F64, SLJIT_FR0, 0, SLJIT_MEM0(), (sljit_sw)&dbuf);
 
@@ -1248,7 +1249,7 @@ static void test_call8(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS4V(F64, W_R, W_R, W_R), 3, 3, 3, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS4V(F64, W_R, W_R, W_R), 3 | SLJIT_ENTER_FLOAT(3), 3, SLJIT_MAX_LOCAL_SIZE);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S2, 0, SLJIT_IMM, (sljit_sw)&buf);
 	/* buf[3] */
@@ -1300,7 +1301,7 @@ static void test_call8(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2, 3, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2, 3, 0);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S0, 0, SLJIT_IMM, 7869);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S1, 0, SLJIT_IMM, -5406);
@@ -1320,7 +1321,7 @@ static void test_call8(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS0(W), 1, 3, 3, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS0(W), 1 | SLJIT_ENTER_FLOAT(3), 3, SLJIT_MAX_LOCAL_SIZE);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw)&buf);
 	/* buf[4] */
@@ -1346,7 +1347,7 @@ static void test_call8(void)
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS4(W, F64, F64, F64, W_R), 1, 0, 3, 0, 256);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS4(W, F64, F64, F64, W_R), 1 | SLJIT_ENTER_FLOAT(3), 0, 256);
 
 	/* buf[6] */
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM0(), (sljit_sw)&buf[6], SLJIT_R0, 0);
@@ -1397,7 +1398,7 @@ static void test_call9(void)
 
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), SLJIT_NUMBER_OF_REGISTERS - 3, 3, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), SLJIT_NUMBER_OF_REGISTERS - 3, 3, 0);
 
 	for (i = 0; i < SLJIT_NUMBER_OF_REGISTERS - 3; i++)
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R(i), 0, SLJIT_IMM, 8469 + 1805 * i);
@@ -1422,8 +1423,8 @@ static void test_call9(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(3), SLJIT_ARGS4V(W_R, W_R, W_R, W_R), 4, 3, 0, 0, SLJIT_MAX_LOCAL_SIZE);
-	sljit_set_context(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(3), SLJIT_ARGS4V(W_R, W_R, W_R, W_R), 4, 3, 0, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(3), SLJIT_ARGS4V(W_R, W_R, W_R, W_R), 4, 3, SLJIT_MAX_LOCAL_SIZE);
+	sljit_set_context(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(3), SLJIT_ARGS4V(W_R, W_R, W_R, W_R), 4, 3, SLJIT_MAX_LOCAL_SIZE);
 
 	/* buf[0] */
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM0(), (sljit_sw)(buf + 0), SLJIT_S0, 0);
@@ -1440,7 +1441,7 @@ static void test_call9(void)
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S0, 0, SLJIT_MEM0(), 0);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(3), SLJIT_ARGS0V(), 4, 3, 0, 0, SLJIT_MAX_LOCAL_SIZE / 2);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(3), SLJIT_ARGS0V(), 4, 3, SLJIT_MAX_LOCAL_SIZE / 2);
 	sljit_emit_return_void(compiler);
 
 	code.code = sljit_generate_code(compiler, 0, NULL);
@@ -1488,7 +1489,7 @@ static void test_call10(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(F64, W), 0, 1, 3, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(F64, W), 0 | SLJIT_ENTER_FLOAT(3), 1, 0);
 	sljit_emit_fop1(compiler, SLJIT_MOV_F64, SLJIT_FR2, 0, SLJIT_MEM1(SLJIT_S0), 0);
 	sljit_emit_return(compiler, SLJIT_MOV_F64, SLJIT_FR2, 0);
 
@@ -1507,7 +1508,7 @@ static void test_call10(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(F32, W), 0, 1, 1, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(F32, W), 0 | SLJIT_ENTER_FLOAT(1), 1, 0);
 	sljit_emit_fop1(compiler, SLJIT_MOV_F32, SLJIT_RETURN_FREG, 0, SLJIT_MEM1(SLJIT_S0), 0);
 	sljit_emit_return(compiler, SLJIT_MOV_F32, SLJIT_RETURN_FREG, 0);
 
@@ -1526,7 +1527,7 @@ static void test_call10(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(F32, W), 0, 1, 1, 0, sizeof(sljit_f32));
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(F32, W), 0 | SLJIT_ENTER_FLOAT(1), 1, sizeof(sljit_f32));
 	sljit_emit_fop1(compiler, SLJIT_MOV_F32, SLJIT_MEM1(SLJIT_SP), 0, SLJIT_MEM1(SLJIT_S0), 0);
 	sljit_emit_return(compiler, SLJIT_MOV_F32, SLJIT_MEM1(SLJIT_SP), 0);
 
@@ -1545,7 +1546,7 @@ static void test_call10(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(F64, W), 0, 1, 1, 0, 2 * sizeof(sljit_f64));
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(F64, W), 0 | SLJIT_ENTER_FLOAT(1), 1, 2 * sizeof(sljit_f64));
 	sljit_emit_fop1(compiler, SLJIT_MOV_F64, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_f64), SLJIT_MEM1(SLJIT_S0), 0);
 	sljit_emit_return(compiler, SLJIT_MOV_F64, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_f64));
 
@@ -1564,7 +1565,7 @@ static void test_call10(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 1, 0, 1, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 1 | SLJIT_ENTER_FLOAT(1), 0, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw)dbuf - 33);
 	jump = sljit_emit_call(compiler, SLJIT_CALL_REG_ARG, SLJIT_ARGS1(F64, W));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw)dbuf);
@@ -1572,7 +1573,7 @@ static void test_call10(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS1(F64, W_R), 1, 0, 1, 0, 0);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS1(F64, W_R), 1 | SLJIT_ENTER_FLOAT(1), 0, 0);
 	sljit_emit_return(compiler, SLJIT_MOV_F64, SLJIT_MEM1(SLJIT_R0), 33);
 
 	code.code = sljit_generate_code(compiler, 0, NULL);
@@ -1591,14 +1592,14 @@ static void test_call10(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 1, 0, 1, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 1 | SLJIT_ENTER_FLOAT(1), 0, 0);
 	jump = sljit_emit_call(compiler, SLJIT_CALL_REG_ARG, SLJIT_ARGS0(F32));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw)sbuf);
 	sljit_emit_fop1(compiler, SLJIT_MOV_F32, SLJIT_MEM1(SLJIT_R0), sizeof(sljit_f32), SLJIT_RETURN_FREG, 0);
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS0(F32), 0, 0, 1, 0, 0);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS0(F32), 0 | SLJIT_ENTER_FLOAT(1), 0, 0);
 	sljit_emit_fop1(compiler, SLJIT_MOV_F32, SLJIT_RETURN_FREG, 0, SLJIT_MEM0(), (sljit_sw)sbuf);
 	sljit_emit_return(compiler, SLJIT_MOV_F32, SLJIT_RETURN_FREG, 0);
 
@@ -1634,7 +1635,7 @@ static void test_call11(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 2, 1, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 2, 1, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, -7602);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_S0, 0);
 	jump = sljit_emit_call(compiler, SLJIT_CALL, SLJIT_ARGS2(W, W, W));
@@ -1646,7 +1647,7 @@ static void test_call11(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS2V(W_R, W_R), 2, 0, 0, 0, 256);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS2V(W_R, W_R), 2, 0, 256);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_SP), 0, SLJIT_IMM, -1);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_SP), 256 - sizeof(sljit_sw), SLJIT_IMM, -1);
 	/* buf[1] */
@@ -1673,7 +1674,7 @@ static void test_call11(void)
 		compiler = sljit_create_compiler(NULL);
 		FAILED(!compiler, "cannot create compiler\n");
 
-		sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 2, 1, 0, 0, 0);
+		sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 2, 1, 0);
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 6032);
 		jump = sljit_emit_call(compiler, SLJIT_CALL_REG_ARG, SLJIT_ARGS1(W, W));
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
@@ -1687,7 +1688,7 @@ static void test_call11(void)
 		sljit_emit_return_void(compiler);
 
 		sljit_set_label(jump, sljit_emit_label(compiler));
-		sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(1), SLJIT_ARGS1V(W_R), 2, i == 1 ? 2 : 1, 0, 0, SLJIT_MAX_LOCAL_SIZE);
+		sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(1), SLJIT_ARGS1V(W_R), 2, i == 1 ? 2 : 1, SLJIT_MAX_LOCAL_SIZE);
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_SP), 0, SLJIT_IMM, -1);
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw), SLJIT_R0, 0);
 		/* buf[1] */
@@ -1729,7 +1730,7 @@ static void test_call11(void)
 		compiler = sljit_create_compiler(NULL);
 		FAILED(!compiler, "cannot create compiler\n");
 
-		sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P_R), 2, 1, 0, 0, 0);
+		sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P_R), 2, 1, 0);
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S0, 0, SLJIT_R0, 0);
 		jump = sljit_emit_call(compiler, SLJIT_CALL, SLJIT_ARGS1(W, W));
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
@@ -1742,7 +1743,7 @@ static void test_call11(void)
 		sljit_emit_return_void(compiler);
 
 		sljit_set_label(jump, sljit_emit_label(compiler));
-		sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W_R), 2, 1, 0, 0, (i == 0) ? 0 : (i == 1) ? 512 : 32768);
+		sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W_R), 2, 1, (i == 0) ? 0 : (i == 1) ? 512 : 32768);
 		/* buf[1] */
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_R0), sizeof(sljit_sw), SLJIT_R0, 0);
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S0, 0, SLJIT_IMM, -1);
@@ -1776,7 +1777,7 @@ static void test_call11(void)
 	i = SLJIT_S(SLJIT_NUMBER_OF_SAVED_REGISTERS - 1);
 #endif
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 2, SLJIT_NUMBER_OF_SAVED_REGISTERS, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(P), 2, SLJIT_NUMBER_OF_SAVED_REGISTERS, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, i, 0, SLJIT_IMM, 2 * sizeof(sljit_sw));
 	jump = sljit_emit_call(compiler, SLJIT_CALL, SLJIT_ARGS0(W));
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), 0);
@@ -1787,7 +1788,7 @@ static void test_call11(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2, SLJIT_NUMBER_OF_SAVED_REGISTERS, 0, 0, 16);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2, SLJIT_NUMBER_OF_SAVED_REGISTERS, 16);
 	for (i = 0; i < SLJIT_NUMBER_OF_SAVED_REGISTERS; i++)
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S(i), 0, SLJIT_IMM, -1);
 
@@ -1814,7 +1815,7 @@ static void test_call11(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS2V(P_R, P), 2, SLJIT_NUMBER_OF_SAVED_REGISTERS, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS2V(P_R, P), 2, SLJIT_NUMBER_OF_SAVED_REGISTERS, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S2, 0, SLJIT_S0, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S0, 0, SLJIT_IMM, 586000);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S1, 0, SLJIT_IMM, 392);
@@ -1838,7 +1839,7 @@ static void test_call11(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS0V(), 2, SLJIT_NUMBER_OF_SAVED_REGISTERS, 0, 0, 16);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(2), SLJIT_ARGS0V(), 2, SLJIT_NUMBER_OF_SAVED_REGISTERS, 16);
 	for (i = 2; i < SLJIT_NUMBER_OF_SAVED_REGISTERS; i++)
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S(i), 0, SLJIT_IMM, -1);
 	/* buf[2] */
@@ -1888,14 +1889,14 @@ static void test_call12(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W), 1, 1, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W), 1, 1, 0);
 	jump = sljit_emit_call(compiler, SLJIT_CALL, SLJIT_ARGS0(W));
 	label = sljit_emit_label(compiler);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_S0), 0, SLJIT_RETURN_REG, 0);
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 1, 0, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 1, 0, 0);
 	sljit_emit_op_dst(compiler, SLJIT_GET_RETURN_ADDRESS, SLJIT_RETURN_REG, 0);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
@@ -1916,7 +1917,7 @@ static void test_call12(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2, 0, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 2, 0, 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, -1);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, -1);
 	jump = sljit_emit_call(compiler, SLJIT_CALL, SLJIT_ARGS2V(W, W));
@@ -1924,7 +1925,7 @@ static void test_call12(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS2V(W, W), 1, SLJIT_NUMBER_OF_SAVED_REGISTERS - 2, 0, 0, SLJIT_MAX_LOCAL_SIZE);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS2V(W, W), 1, SLJIT_NUMBER_OF_SAVED_REGISTERS - 2, SLJIT_MAX_LOCAL_SIZE);
 	sljit_emit_op_dst(compiler, SLJIT_GET_RETURN_ADDRESS, SLJIT_MEM0(), (sljit_sw)buf);
 	sljit_emit_return_void(compiler);
 
@@ -1945,7 +1946,7 @@ static void test_call12(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W), 1, 3, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W), 1, 3, 0);
 	sljit_emit_op2(compiler, SLJIT_SUB, SLJIT_S2, 0, SLJIT_S0, 0, SLJIT_IMM, 16);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 8);
 	jump = sljit_emit_call(compiler, SLJIT_CALL_REG_ARG, SLJIT_ARGS1V(W));
@@ -1953,7 +1954,7 @@ static void test_call12(void)
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(3), SLJIT_ARGS1V(W_R), 1, SLJIT_NUMBER_OF_SAVED_REGISTERS, 0, 0, SLJIT_MAX_LOCAL_SIZE >> 1);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG | SLJIT_ENTER_KEEP(3), SLJIT_ARGS1V(W_R), 1, SLJIT_NUMBER_OF_SAVED_REGISTERS, SLJIT_MAX_LOCAL_SIZE >> 1);
 	sljit_emit_op_dst(compiler, SLJIT_GET_RETURN_ADDRESS, SLJIT_MEM2(SLJIT_S2, SLJIT_R0), 1);
 	sljit_emit_return_void(compiler);
 
@@ -1974,13 +1975,13 @@ static void test_call12(void)
 	compiler = sljit_create_compiler(NULL);
 	FAILED(!compiler, "cannot create compiler\n");
 
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W_R), 1, 0, 0, 0, 0);
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W_R), 1, 0, 0);
 	jump = sljit_emit_call(compiler, SLJIT_CALL_REG_ARG, SLJIT_ARGS1V(W));
 	label = sljit_emit_label(compiler);
 	sljit_emit_return_void(compiler);
 
 	sljit_set_label(jump, sljit_emit_label(compiler));
-	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS1V(W_R), 1, SLJIT_NUMBER_OF_SAVED_REGISTERS >> 1, 0, 0, 64);
+	sljit_emit_enter(compiler, SLJIT_ENTER_REG_ARG, SLJIT_ARGS1V(W_R), 1, SLJIT_NUMBER_OF_SAVED_REGISTERS >> 1, 64);
 	sljit_emit_op_dst(compiler, SLJIT_GET_RETURN_ADDRESS, SLJIT_MEM1(SLJIT_SP), 0);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_R0), 0, SLJIT_MEM1(SLJIT_SP), 0);
 	sljit_emit_return_void(compiler);
@@ -2003,14 +2004,14 @@ static void test_call12(void)
 		compiler = sljit_create_compiler(NULL);
 		FAILED(!compiler, "cannot create compiler\n");
 
-		sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W), 1, 1, 0, 0, 0);
+		sljit_emit_enter(compiler, 0, SLJIT_ARGS1V(W), 1, 1, 0);
 		jump = sljit_emit_call(compiler, SLJIT_CALL, SLJIT_ARGS0(W));
 		label = sljit_emit_label(compiler);
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_S0), 0, SLJIT_RETURN_REG, 0);
 		sljit_emit_return_void(compiler);
 
 		sljit_set_label(jump, sljit_emit_label(compiler));
-		sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 1, 3, 0, SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS, 64);
+		sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 1, 3 | SLJIT_ENTER_FLOAT(SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS), 64);
 		sljit_emit_op_dst(compiler, SLJIT_GET_RETURN_ADDRESS, SLJIT_RETURN_REG, 0);
 		sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 

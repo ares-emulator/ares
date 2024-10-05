@@ -3,18 +3,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef long (SLJIT_FUNC *func3_t)(long a, long b, long c);
+typedef sljit_sw (SLJIT_FUNC *func3_t)(sljit_sw a, sljit_sw b, sljit_sw c);
 
-static long SLJIT_FUNC print_num(long a)
+static sljit_sw SLJIT_FUNC print_num(sljit_sw a)
 {
-	printf("a = %ld\n", a);
+	printf("a = %ld\n", (long)a);
 	return a + 1;
 }
 
 /*
   This example, we generate a function like this:
 
-long func(long a, long b, long c)
+sljit_sw func(sljit_sw a, sljit_sw b, sljit_sw c)
 {
 	if ((a & 1) == 0) 
 		return print_num(c);
@@ -22,19 +22,19 @@ long func(long a, long b, long c)
 }
 */
 
-static int func_call(long a, long b, long c)
+static int func_call(sljit_sw a, sljit_sw b, sljit_sw c)
 {
 	void *code;
-	unsigned long len;
+	sljit_uw len;
 	func3_t func;
 
 	struct sljit_jump *out;
 	struct sljit_jump *print_c;
 
 	/* Create a SLJIT compiler */
-	struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);
+	struct sljit_compiler *C = sljit_create_compiler(NULL);
 
-	sljit_emit_enter(C, 0, SLJIT_ARGS3(W, W, W, W), 3, 3, 0, 0, 0);
+	sljit_emit_enter(C, 0, SLJIT_ARGS3(W, W, W, W), 3, 3, 0);
 
 	/*  a & 1 --> R0 */
 	sljit_emit_op2(C, SLJIT_AND, SLJIT_R0, 0, SLJIT_S0, 0, SLJIT_IMM, 1);
@@ -59,12 +59,12 @@ static int func_call(long a, long b, long c)
 	sljit_emit_return(C, SLJIT_MOV, SLJIT_R0, 0);
 
 	/* Generate machine code */
-	code = sljit_generate_code(C);
+	code = sljit_generate_code(C, 0, NULL);
 	len = sljit_get_generated_code_size(C);
 
 	/* Execute code */
 	func = (func3_t)code;
-	printf("func return %ld\n", func(a, b, c));
+	printf("func return %ld\n", (long)func(a, b, c));
 
 	/* dump_code(code, len); */
 

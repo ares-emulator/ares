@@ -1,5 +1,13 @@
 This file is the short summary of the API changes:
 
+17.07.2024 - Non-backward compatible
+    Passing float scratch or saved register count
+    to emit_enter / set_context is reworked.
+
+21.06.2024 - Non-backward compatible
+    Atomic instructions are reworked.
+    Different forms are optional now.
+
 10.06.2024 - Non-backward compatible
     The sljit_emit_simd_op2() has a generic
     second operand.
