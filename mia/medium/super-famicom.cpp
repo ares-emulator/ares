@@ -781,8 +781,8 @@ auto SuperFamicom::firmwareRomSize() const -> u32 {
 }
 
 auto SuperFamicom::ramSize() const -> u32 {
-  auto ramSize = data[headerAddress + 0x28] & 7;
-  if(ramSize) return 1024 << ramSize;
+  auto ramSize = data[headerAddress + 0x28];
+  if (ramSize) return (1 << (((ramSize - 1) & 7) + 1)) << 10;
   return 0;
 }
 
