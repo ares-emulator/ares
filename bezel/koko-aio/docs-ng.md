@@ -1,7 +1,10 @@
 **koko-aio-slang documentation**
 
+**REQUIREMENT***
+    koko-aio needs at least retroarch 1.16
+
 **RETROARCH OUTPUT DRIVERS**
-    koko-aio does not work by on d3d12 and glitches on d3d11.<br>
+    koko-aio does not work by default on d3d12 and d3d11.<br>
     If you absolutely need it (Xbox?), you can edit the file 
     config\config-static.inc<br>
     and turn the line:
@@ -14,7 +17,15 @@
     <br>
     d3d10 is completely unsupported.
     <br>
-
+    Be warned that some functions does not work if you enable the workaround: <br>
+        * CRT glitch on resolution changes <br>
+        * Adaptive Black <br>
+        * CVBS Bleed size is limited to 5.0
+        * Ambientlight scene change detection
+        * Halving border updates refresh
+        * Lcd antighosting
+        * Delta render
+    
 **USEFUL LOCATIONS/FILES:**
 
     config/config-static.inc:
@@ -66,7 +77,12 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
         Monochrome screen colorization:
             The amount of (de) colorization applied.
         Hue bright, Hue dark:
-            Set the hue for bright and dark colors.
+            Set the hue for bright and dark colors. in [0..1] range.
+            To emulate different monochrome models, the process is quite easy:
+            . Provided you have screenshots, use a color picker tool with hue expressed in 1…360
+              range and identify the hue of the original naked background hue1
+            . Do the same for the darkest pixel on the screen, hue2
+            . Then report them in the shader with the formula hue1/360 and hue2/360.
         Hue bright-dark bias:
             Controls the distribution of dark and bright hues.
     
@@ -102,9 +118,10 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
 
     Consider artifacts above this treshold:
         Tune this to select more or less artifacts, depending on their strength.
-    Show the mask of selected artifacts (debug)
+    Show selected artifacts mask (need glow/blur enabled)
         This will show only the part of the image that contains artifacts.
-        Use it to for a better visual feedback of the following parameters
+        Use it to for a better visual feedback of the following parameters.
+        Please, enable "glow" to s
 
     1* Under treshold: Cancel blur (Glow)
         How much the glow/blur function will skip blurring "unartifacted" areas.
@@ -125,18 +142,18 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
 
     Early decay: is the immediate light cut after the phosphor is no more/less excited.
     Late persistence: modulates the time the residual light will stay on screen
-    
-    
+
+
 **Deconvergence:**<br>
     Shift R,G,B components separately to mimic channel deconvergence.<br>
     By varying Red, Green and Blue offsets, the relative component will be<br>
     shifted column by column, row by row.<br>
-    
+
 **Glow/Blur:**<br>
     Emulate the CRT glowing "feature", so that the brighter areas of<br>
     the image will light their surroundings,<br>
     with options to switch to classic blur.<br>
-    
+
     Glow to blur bias:
         Higher negative values -> more glow : brighter colors expands over darker ones.
         Higher positive values -> means blur: all the colors are blurred.
@@ -145,13 +162,24 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
         The higher, the more the bright colors will smoothly expand.
         It emulates the natural antialiasing you see on CRTs on bright areas.
         More pronunced as "Glow to blur bias" approaches 0.
-        
+
     Sharpness (horizontal, vertical):
         Modulates the sharpness of the image.
         - Max (actually 7.0) will not alter the image sharpness.
         - More than 0: will use gauss blur
         - Less than 0: will use box blur and will progressively
           add visual sharpness to image when approaching lower values.
+
+    Warped glow (X,Y):
+        Embolden bright pixels near dark ones using a warpsharp like algorithm.
+        This is a cheap way to emulate phosphor glowing.
+        The Y parameter will also allow scanlines to be higher.
+        It will also help (if coupled with) FXAA to stay sharp.
+
+    Warped Dynamics:
+        Change the amount of warpsharp applied based on the contrast between 
+        nearby pixels, thereby altering their "Warped" shape.
+
 
 **Tate mode:**<br>
     Rotates mask and scanlines by 90°<br>
@@ -171,12 +199,21 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
         With values > 1.0, it will consider a frame as Hi-resolution if the lines number is above the configured value.
 
     Hi-Res scanlines type
-      -1: Use a number of scanlines that perfectly fits the screen, a good glitches/moire free tradeoff.
-      -2: As above, but tighter (~1.5x), another good glitches/moire free tradeoff.
-       0: Use interlaced scanlines, may need >1080p screen to avoid moire or weavy glitches
-       1: Avoid drawing scanlines gaps at all.
-       2: Use scanlines, but don't interlace them (bad for 1080p and lower resolutions)
-
+       -1: Use a number of scanlines that perfectly fits the screen, a good glitches/moire free tradeoff.
+       -2: As above, but tighter (~1.5x), another good glitches/moire free tradeoff.
+        0: Use interlaced scanlines, may need >1080p screen to avoid moire or weavy glitches
+        1: Avoid drawing scanlines gaps at all.
+        2: Use scanlines, but don't interlace them (bad for 1080p and low resolutions)
+        
+    Interlaced brighness push
+        When emulating interlaced scanlines (see above modes: -1, -2, 0),
+        the resulting brightness is usually diminished.
+        This is due to the latency some panels have when changing open/close state.
+        *Lowering* this parameter compensates that and usually
+        Values around 0.8 to 0.95 usually work good, for affected monitors.
+        On low latency panels such as OLEDs, microleds, this is not an issue,
+        so you should keep it to 1.0, possibly locking its value too in config-user.txt
+         
     Scanlines flicker (0=off,1=on,2=if Hi-res):
         This setting emulates the flickering issues present on crt interlaced screens
         where the brighter lines flickers when they are near dark ones.
@@ -213,8 +250,6 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
               The decision will be based on the ratio of output dimensions and the core.
         Phosphors height Min, Max:
             Try to keep scanline height between those values, depending on content brightness.
-        Inflation Strength:
-            Scanlines appear as inflated depending on the pixel brightness.
         Phosphors width min->max gamma:
             Since emulating phosphors with high Min-Max range changes the apparent gamma of the final image,
             it is advised, if needed, to use this option to compensate, instead of the main gamma correction.
@@ -697,7 +732,8 @@ https://github.com/kokoko3k/koko-aio-slang-misc/tree/main
         
 **Delta Render:**
     Koko-aio can render only the part of the screen that has been changed,<br>
-    leading to a measurable power consumption reduction.<br>
+    leading to a measurable power consumption reduction and mitigate throttling
+    on mobile devices and laptops.<br>
     This feature can, however, produce artifacts in some cases, so the feature<br>
     is statically disabled by default by now.<br>
     To use it, you have to manually set to 1.0, in file config-user.txt: <br>

@@ -1,0 +1,9 @@
+#reference "tv-aperturegrille-bloom-bezel.slangp"
+
+DO_SHIFT_RGB = "1.0"
+
+
+BEZEL_FRAME_ZOOM = "0.17"
+BEZEL_INNER_ZOOM = "-0.011"
+BEZEL_IMAGE_BORDER = "1.02"
+

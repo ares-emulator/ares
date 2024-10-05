@@ -35,6 +35,8 @@ layout(push_constant) uniform Push
 	float downsample_levelx;
 	float downsample_levely;
 	float gamma_out;
+	float vga_mode;
+	float hiscan;
 } params;
 
 
@@ -55,7 +57,7 @@ layout(std140, set = 0, binding = 0) uniform UBO
 
 #pragma parameter bogus_interlacing "[ INTERLACING OPTIONS ]: " 0.0 0.0 0.0 1.0
 
-#pragma parameter inter "          Interlace Trigger Resolution :" 400.0 0.0 800.0 25.0
+#pragma parameter inter "          Interlace Trigger Resolution/VGA Trigger:" 375.0 0.0 800.0 25.0
 #define inter         params.inter     // interlace resolution
 
 #pragma parameter interm "          Interlace Mode: OFF, Normal 1-3, Interpolation 4-5" 1.0 0.0 5.0 1.0
@@ -64,7 +66,9 @@ layout(std140, set = 0, binding = 0) uniform UBO
 #pragma parameter iscan "          Interlacing Scanline Effect ('Laced brightness)" 0.20 0.0 1.0 0.05
 #define iscan  params.iscan     // interlacing effect scanlining
 
-#pragma parameter intres "          Internal Resolution Y: 0.5...y-dowsample" 0.0 0.0 6.0 0.5 // Joint parameter with main pass, values must match
+#pragma parameter info02 "INFO --> Internal Resolution Y: 1.0 - Smart Scanline Mode" 0.0 0.0 1.0 1.0
+
+#pragma parameter intres "          Internal Resolution Y: 0.5...y-dowsample divider" 0.0 0.0 6.0 0.5 // Joint parameter with main pass, values must match
 
 #define intres         params.intres     // interlace resolution
 
@@ -76,6 +80,13 @@ layout(std140, set = 0, binding = 0) uniform UBO
 
 #pragma parameter iscans "          Interlacing (Scanline) Saturation" 0.25 0.0 1.0 0.05
 #define iscans        params.iscans     // interlace saturation
+
+#pragma parameter vga_mode "          VGA Single/Double Scan mode" 0.0 0.0 1.0 1.0
+#define vga_mode        params.vga_mode     // interlace saturation
+
+#pragma parameter hiscan "          High Resolution Scanlines (prepend a scaler...)" 0.0 0.0 1.0 1.0
+#define hiscan        params.hiscan
+
 
 #pragma stage vertex
 layout(location = 0) in vec4 Position;
@@ -151,8 +162,10 @@ void main()
 	float r = m1;
 
 	float yres_div = 1.0; if (intres > 1.25) yres_div = intres;
+
+	bool hscan = (hiscan > 0.5);
 		
-	if (inter <= params.OriginalSize.y/yres_div && interm > 0.5 && intres != 1.0 && intres != 0.5) 
+	if (inter <= params.OriginalSize.y/yres_div && interm > 0.5 && intres != 1.0  && intres != 0.5 && vga_mode < 0.5)
 	{
 		intera = 0.25;
 		float line_no  = clamp(floor(mod(params.OriginalSize.y*vTexCoord.y, 2.0)), 0.0, 1.0);
@@ -168,7 +181,16 @@ void main()
 		}
 		if (interm == 4.0) { c = plant(mix(c, c*c, 0.5*iscans), max(max(c.r,c.g),c.b)) * (1.0-0.5*iscan); }
 		if (interm == 5.0) { c = mix(c2, c1, 0.5); c = plant(mix(c, c*c, 0.5*iscans), max(max(c.r,c.g),c.b)) * (1.0-0.5*iscan); }
+
+		if (hscan) c = c1;
 	}
+	
+	if (vga_mode > 0.5)
+	{
+		c = c1;
+		if (inter <= params.OriginalSize.y) intera = 0.75; else intera = 0.5;
+	}	
+	
 	c = pow(c, vec3(gamma_in));
 	
 	if (vTexCoord.x > 0.5) gamma_in = intera; else gamma_in = 1.0/gamma_in;

@@ -12,7 +12,6 @@ layout(push_constant) uniform Push {
 	vec4 avglum_passFeedbackSize;
 	uint FrameCount;
 	uint Rotation;
-	
 	float HALO_SHARPNESS ;
 	float HALO_NO_PREGAIN;
 	float HALO_POWER ;
@@ -26,7 +25,6 @@ layout(push_constant) uniform Push {
 	float AMBI_STRETCH_VERTICAL;
 	float AMBI_INT_OFFSET ;
 	float AMBI_SMP_INT_OFFSET ;
-	
 } params;
 
 layout(std140, set = 0, binding = 0) uniform UBO {
@@ -174,9 +172,9 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 	
 	float DO_TILT;
 	float TILT_X;
-	float TILT_BEZEL_K;
-	float TILT_FOV;
-	
+		
+	float PIXELGRID_INTR_GAMMA_ADJ;
+
 	float AUTOCROP_MAX;
 	float AUTOCROP_MIN;
 	float AUTOCROP_SAMPLES;
@@ -219,7 +217,6 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 	float PIXELGRID_MAX_H;
 	float PIXELGRID_MAX_W;
 	float PIXELGRID_SIZE_W;
-	float PIXELGRID_INFLATION;
 	
 	float BEZEL_LIGHT_NO_FADEOUT;
 	float IN_GLOW_SPREAD_SHARPNESS;
@@ -285,7 +282,9 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 	
 	float SERVICE1;
 	
-
+	float IN_GLOW_WARPSHARP_X;
+	float IN_GLOW_WARPSHARP_Y;
+	float IN_GLOW_WARPSHARP_GAMMA;
 	
 } global;
 
@@ -341,10 +340,10 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 #pragma parameter NTSC_PHASE_SHIFT  "        Phase shift"			0.0	0.0 1.0  1.0
 #pragma parameter label_blut_ntsc   "        1 and 2 need Glow or Bandwidth Limited chroma" 0.0 0.0 0.0 0.0
 #pragma parameter NTSC_ARTF_TRSH      "      . Consider artifacts above this treshold"			0.1	0.0 1.0 0.01
-#pragma parameter NTSC_SHOW_ARTF_MASK "         . Show the mask of selected artifacts (debug)"				0.0	0.0 1.0 1.0
-#pragma parameter NTSC_ARTF_NOBLUR    "         . 1* Under treshold: Cancel blur (Glow)"				0.0	0.0 8.0 0.01
-#pragma parameter NTSC_ARTF_NOBLEED   "         . 2* Under treshold: Cancel Bandwidth limited chroma"	0.0	0.0 1.0 0.01
-#pragma parameter NTSC_ARTF_ZAP       "         . 3* Under treshold: Cancel artifacts"					0.0	0.0 1.0 0.01
+#pragma parameter NTSC_SHOW_ARTF_MASK "        . Show selected artifacts mask (need glow/blur enabled)"				0.0	0.0 1.0 1.0
+#pragma parameter NTSC_ARTF_NOBLUR    "        . 1* Under treshold: Cancel blur (Glow)"				0.0	0.0 8.0 0.01
+#pragma parameter NTSC_ARTF_NOBLEED   "        . 2* Under treshold: Cancel Bandwidth limited chroma"	0.0	0.0 1.0 0.01
+#pragma parameter NTSC_ARTF_ZAP       "        . 3* Under treshold: Cancel artifacts"					0.0	0.0 1.0 0.01
 
 #pragma parameter LABEL0007 " " 0.0 0.0 0.0 0.0
 
@@ -364,6 +363,7 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 #pragma parameter PPERSISTENCE_END      "        Late Persistence"		0.5 	 0.0 2.0 0.05
 #pragma parameter LABEL0009 " " 0.0 0.0 0.0 0.0
 
+
 //Deconvergence
 #pragma parameter DO_SHIFT_RGB       "★ Deconvergence enable? (de) ==>"	0.0	 0.0 1.0 1.0
 #pragma parameter OFFSET_STRENGTH "        Strength"			0.6 	 0.0 1.0 0.05
@@ -381,22 +381,26 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 #pragma parameter IN_GLOW_SPREAD_SHARPNESS "        Glow light sharpness"	2.0 	0.01 2.0 0.01
 #pragma parameter IN_GLOW_W                "        Sharp X (neg=use BOX unsharp)"		2.5	-2.0 7.0 0.05
 #pragma parameter IN_GLOW_H                "        Sharp Y (neg=use BOX unsharp)"		2.5	-2.0 7.0 0.05
+#pragma parameter IN_GLOW_WARPSHARP_X      "        Warped glow (X)"               0.4  0.0 2.0 0.01
+#pragma parameter IN_GLOW_WARPSHARP_Y      "        Warped glow (Y)"               0.4  0.0  2.0 0.01
+#pragma parameter IN_GLOW_WARPSHARP_GAMMA  "        Warped glow dynamics (1.0=linear)"  1.0  0.01 1.0 0.01
 #pragma parameter LABEL0011 " " 0.0 0.0 0.0 0.0
 
 
 #pragma parameter TATE                     "★ Tate mode (0:disabled 1:auto 2:forced)"		1.0 	0.0 2.0 1.0
 #pragma parameter LABEL0012 " " 0.0 0.0 0.0 0.0
 
-#pragma parameter RESSWITCH_GLITCH_SIZE		"★ Glitch if vertical resolution changes"		0.1		0.0 0.5 0.05
+#pragma parameter RESSWITCH_GLITCH_SIZE		"★ Glitch amount if vertical resolution changes"		0.1		0.0 0.5 0.05
 #pragma parameter LABEL0013 " " 0.0 0.0 0.0 0.0
 
 #pragma parameter LABEL_INTERLACE           "★ Hi-resolution scanlines handling" 1.0 1.0 1.0 0.0
 #pragma parameter MIN_LINES_INTERLACED      "    . Consider Hi-Resolution above # lines (0=never):"		380.0 	0.0 1024 1.0
 #pragma parameter PIXELGRID_INTR_DISABLE_Y  "    . Hi-Res scanlines type (read docs):"   -1.0 -2.0 2.0 1.0
-#pragma parameter LABEL0036        "      (-2: Faker-Interlaced, -1: Fake-Interlaced)"          0.0 0.0 0.0 0.0
-#pragma parameter LABEL0037        "      ( 0: Interlaced, 1: No scanlines, 2: Don't interlace)" 0.0 0.0 0.0 0.0
-#pragma parameter PIXELGRID_INTR_FLICK_MODE "      . Scanlines flicker (0=off,1=on,2=if Hi-Res)"			2.0 	0.0 2.0 1.0
-#pragma parameter PIXELGRID_INTR_FLICK_POWR "          . Flicker power"		  		0.25 	0.0 8.0 0.01
+#pragma parameter LABEL0036                 "      (-2: Faker-Interlaced, -1: Fake-Interlaced)"          0.0 0.0 0.0 0.0
+#pragma parameter LABEL0037                 "      ( 0: Interlaced, 1: No scanlines, 2: Don't interlace)" 0.0 0.0 0.0 0.0
+#pragma parameter PIXELGRID_INTR_GAMMA_ADJ  "    . Interlaced brighness push (less is more, not for OLEDs)" 0.9 0.5 1.0 0.01
+#pragma parameter PIXELGRID_INTR_FLICK_MODE "    . Scanlines flicker (0=off,1=on,2=if Hi-Res)"			2.0 	0.0 2.0 1.0
+#pragma parameter PIXELGRID_INTR_FLICK_POWR "        . Flicker power"		  		0.12 	0.0 8.0 0.01
 
 #pragma parameter LABEL0014 " " 0.0 0.0 0.0 0.0
 
@@ -411,7 +415,6 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 #pragma parameter PIXELGRID_COREY_FAKE_SCAN "         . Fake integer scanlines (-1=auto)"  -1.0 -1.0 1.0 1.0
 #pragma parameter PIXELGRID_MIN_H	        "         . Phosphors height Min"           0.2 0.00 1.0 0.05
 #pragma parameter PIXELGRID_MAX_H           "         . Phosphors height Max"           0.6 0.05 1.0 0.05
-#pragma parameter PIXELGRID_INFLATION       "         . Inflation Strength"              0.75  0.0 2.0 0.01
 
 #pragma parameter PIXELGRID_GAMMA_H         "         . Phosphors height min->max gamma:"	4.2 1.0 8.00 0.1
 #pragma parameter PIXELGRID_NO_INTERBLEED_H	"         . Inter line extra steepness (1.0 to disable)"	1.0 1.0 11.0 0.1
@@ -470,7 +473,6 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 #pragma parameter DOT_M_MBLUR_MODE  "           . Inertia on: both,white,black"	0.0  0.0 2.0 1.0
 #pragma parameter DOT_M_SHADOW_STR  "        Shadow strength (disables deconvergence)"	0.0  0.0 1.0 0.01
 #pragma parameter DOT_M_SHADOW_OFF  "           . Shadow offset"								0.0  -1.0 1.0 0.01
-#pragma parameter DOT_M_MULTIPLY	"        Multiply factor (debug)"		1.0  1.0 50.0 1.0
 #pragma parameter LABEL0020 " " 0.0 0.0 0.0 0.0
 
 
@@ -505,13 +507,9 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 
 
 //Curvature parameters:
-#pragma parameter DO_CURVATURE	     "★ Curvature enable? (cu) ==>"			0.0   0.0 1.0 1.0
+#pragma parameter DO_CURVATURE	     "★ Curvature/Corners/Edges enable? (cu) ==>"			0.0   0.0 1.0 1.0
 #pragma parameter GEOM_WARP_X        "        Warp X"				0.28   0.0 6.0 0.01
 #pragma parameter GEOM_WARP_Y        "        Warp Y"				0.32   0.0 6.0 0.01
-#pragma parameter LABEL0054 " " 0.0 0.0 0.0 0.0
-
-
-#pragma parameter LABEL_0055   "★ Corners/Edges"			1.0   1.0 1.0 0.0
 #pragma parameter GEOM_CORNER_SIZE   "        Corners radius"			0.005  0.002 0.1 0.001
 #pragma parameter GEOM_CORNER_SMOOTH "        Edges sharpness"			200.0 50.0 1000.0 10.0
 #pragma parameter LABEL0023 " " 0.0 0.0 0.0 0.0
@@ -520,7 +518,7 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 //Bezel related
 #pragma parameter DO_BEZEL	      "★ Bezel enable? (be) ==>"				0.0   0.0 1.0 1.0
 #pragma parameter BEZEL_USE_STRAIGHT  "        Straight"				0.0	0.0 1.0  1.0 
-#pragma parameter BEZEL_INNER_ZOOM    "        Inner zoom (ignored if integer scaled)"	-0.18   -1.5 0.5 0.001
+#pragma parameter BEZEL_INNER_ZOOM    "        Inner zoom (ignored with integer scaling)"	-0.18   -1.5 0.5 0.001
 #pragma parameter BEZEL_FRAME_ZOOM    "        Frame zoom"				0.0   -1.5 0.5 0.001
 #pragma parameter BEZEL_R             "        Color: Red"				-0.35   -1.0 1.0  0.005
 #pragma parameter BEZEL_G             "        Color: Green"				-0.35  -1.0 1.0  0.005
@@ -555,7 +553,7 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 //Backdrop image
 #pragma parameter DO_BACKDROP		"★ Backdrop mirrored image enable? ==>"		 0.0  0.0  1.0     1.0
 #pragma parameter BACKDROP_OFFX		"        Shift backdrop over X axis"				 0.0  -1.0  1.0    0.0005
-#pragma parameter BACKDROP_OFFY 	"        Shift backdrop over X axis"				 0.0  -1.0  1.0    0.0005
+#pragma parameter BACKDROP_OFFY 	"        Shift backdrop over Y axis"				 0.0  -1.0  1.0    0.0005
 #pragma parameter BACKDROP_ZOOM 	"        Zoom backdrop"					 1.0  -1.0  3.0    0.0005
 #pragma parameter LABEL0026 " " 0.0 0.0 0.0 0.0
 
@@ -590,7 +588,7 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 #pragma parameter S_POSITION_X 	"        X Position"	   -0.5   -2.0 2.0 0.05
 #pragma parameter S_POSITION_Y 	"        Y Position"		0.5   -2.0 2.0 0.05
 #pragma parameter S_SIZE	"        Size"			0.36    0.0   3.0 0.01
-#pragma parameter S_POWER	"        Power" 		0.11   0.01  1.0 0.01
+#pragma parameter S_POWER	"        Power" 		0.12   0.01  1.0 0.01
 #pragma parameter LABEL0028 " " 0.0 0.0 1.0 1.0
 
 
@@ -599,10 +597,13 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 #pragma parameter DO_GLOBAL_SHZO	 "★ Global shift/zoom enable? (zo) ==>"	0.0   0.0  1.0 	  1.0
 #pragma parameter GLOBAL_OFFX	 "        X axis shift "			0.0  -1.0  1.0    0.0005
 #pragma parameter GLOBAL_OFFY	 "        Y axis shift "			0.0  -1.0  1.0    0.0005
-#pragma parameter GLOBAL_ZOOM	 "        Zoom"					2.0   0.0  3.0    0.0005
+#pragma parameter GLOBAL_ZOOM	 "        Zoom"					1.2   0.0  3.0    0.0005
 #pragma parameter LABEL0029 " " 0.0 0.0 1.0 1.0
 
-
+//Tilt
+#pragma parameter DO_TILT	  	"★ Tilt enable? (ti) ==>"				0.0   0.0  1.0 	  1.0
+#pragma parameter TILT_X	  	"        Tilt along X axis"				0.25    -0.5  0.5  0.01
+#pragma parameter LABEL0035 " " 0.0 0.0 0.0 0.0
 
 //Aspect Ratio
 #pragma parameter label_ar	 "★ Aspect Ratio (as) "							1.0  1.0  1.0     0.0
@@ -645,13 +646,6 @@ layout(std140, set = 0, binding = 0) uniform UBO {
 #pragma parameter GAME_GEOM_OFF_FIX	  "        Sharp hack through offset (0.0=disable)"	0.0    0.0  100.0  1
 #pragma parameter LABEL0034 " " 0.0 0.0 0.0 0.0
 
-
-//Tilt
-#pragma parameter DO_TILT	  	"★ Tilt enable? (ti) ==>"				0.0   0.0  1.0 	  1.0
-#pragma parameter TILT_X	  	"        Tilt along X axis"		0.0    -0.5  0.5  0.01
-#pragma parameter TILT_FOV	  	"        Fov"					0.7    0.1	1.5   0.05
-#pragma parameter TILT_BEZEL_K	"        Bezel multiplier"		1.0    0.0  1.5  0.01
-#pragma parameter LABEL0035 " " 0.0 0.0 0.0 0.0
 
 //Delta render
 #pragma parameter LABEL0053    "  !THE FOLLOWING FEATURES ARE STATIC, SEE docs-ng.md TO ENABLE"    1.0 1.0 1.0 1.0

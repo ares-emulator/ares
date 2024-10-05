@@ -1,0 +1,5 @@
+shaders = 2
+
+shader0 = shaders/ntsc-simple/tiny_ntsc.slang
+
+shader1 = shaders/ntsc-simple/kaizer-lp-small.slang

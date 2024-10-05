@@ -1,0 +1,3 @@
+#reference "monitor-BASE.slangp"
+
+PIXELGRID_OFFSET_CORE = "0.210000"

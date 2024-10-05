@@ -128,7 +128,7 @@ vec4 deconvergence_shadow_wrap(vec2 coord, vec4 source_pixel) {
 #define SIDE_RIGHT 1
 #define SIDE_LEFT -1
 
-vec3 pixel_bleed_side_NTSC(vec4 pixel_in, vec2 co, float size, sampler2D in_texture, vec4 sourcesize2) {
+vec3 pixel_bleed_side_NTSC(vec4 pixel_in, vec2 co, float size, sampler2D in_texture, float sourcesize_z) {
    //apply strength modifier to blur ntsc artifacts more.
    
    float strength_modifier = mix(1.0, pixel_in.a, DO_NTSC_ARTIFACTS); 
@@ -138,8 +138,8 @@ vec3 pixel_bleed_side_NTSC(vec4 pixel_in, vec2 co, float size, sampler2D in_text
 
    if (vShow_artifact_mask == 1.0) return vec3(strength_modifier);
    
-   vec2 off_l = vec2(SIDE_LEFT  * sourcesize2.z,0.0);
-   vec2 off_r = vec2(SIDE_RIGHT * sourcesize2.z,0.0);
+   vec2 off_l = vec2(SIDE_LEFT  * sourcesize_z,0.0);
+   vec2 off_r = vec2(SIDE_RIGHT * sourcesize_z,0.0);
    
    for ( float i=1 ; i <= size ; i++ ){
       w=w/SAT_BLEED_FALLOFF;  //w = w * exp(i*i*(1-SAT_BLEED_FALLOFF)*0.1);
@@ -158,16 +158,16 @@ vec3 pixel_bleed_side_NTSC(vec4 pixel_in, vec2 co, float size, sampler2D in_text
    return max(mix(blur_RGB_l,blur_RGB_r,0.5), 0.0);
 }
 
-vec3 pixel_bleed_side_PAL(vec3 pixel_in, vec2 co, float size, sampler2D in_texture, vec4 sourcesize2) {
+vec3 pixel_bleed_side_PAL(vec3 pixel_in, vec2 co, float size, sampler2D in_texture, float sourcesize_z) {
    float w = SAT_BLEED_STRENGTH;
    vec3 blur_YUV_l = pixel_in * mat3_RGB2YUV;    //Work in YIQ space
    vec3 blur_YUV_r = blur_YUV_l;
    
-   vec2 off_l = vec2(SIDE_LEFT  * sourcesize2.z,0.0);
-   vec2 off_r = vec2(SIDE_RIGHT * sourcesize2.z,0.0);   
+   vec2 off_l = vec2(SIDE_LEFT  * sourcesize_z,0.0);
+   vec2 off_r = vec2(SIDE_RIGHT * sourcesize_z,0.0);   
    for ( float i=1 ; i <= size ; i++ ){
       w=w/SAT_BLEED_FALLOFF;
-      vec2 off = vec2(sourcesize2.z*i,0.0);
+      vec2 off = vec2(sourcesize_z*i,0.0);
       vec3 smp_YUV = texture(in_texture, co - i*off_l ).rgb * mat3_RGB2YUV;
       //Blur Y, U, V
       blur_YUV_l = mix(blur_YUV_l.xyz, smp_YUV.xyz, w/vec3( bandwidth_mhz_Y_pal, bandwidth_mhz_U, bandwidth_mhz_V));
@@ -184,7 +184,7 @@ vec3 pixel_bleed_side_PAL(vec3 pixel_in, vec2 co, float size, sampler2D in_textu
 
 }
 
-vec4 pixel_bleed(vec4 pixel_in, vec2 co, sampler2D in_texture, vec4 sourcesize2) {
+vec4 pixel_bleed(vec4 pixel_in, vec2 co, sampler2D in_texture, float sourcesize_z) {
    float size = SAT_BLEED_SIZE;
    #ifdef D3D_WORKAROUND
       // d3d11 compiler complains it is unable to unroll the loop because it is
@@ -195,9 +195,9 @@ vec4 pixel_bleed(vec4 pixel_in, vec2 co, sampler2D in_texture, vec4 sourcesize2)
    #endif
    
    if (SAT_BLEED_PAL == 1.0) {
-         return vec4 ( pixel_bleed_side_PAL(pixel_in.rgb, co, size, in_texture, sourcesize2), pixel_in.a);
+         return vec4 ( pixel_bleed_side_PAL(pixel_in.rgb, co, size, in_texture, sourcesize_z), pixel_in.a);
    } else {
-         return vec4 ( pixel_bleed_side_NTSC(pixel_in.rgba, co, size, in_texture, sourcesize2), pixel_in.a);
+         return vec4 ( pixel_bleed_side_NTSC(pixel_in.rgba, co, size, in_texture, sourcesize_z), pixel_in.a);
    }
 }
 
@@ -217,7 +217,7 @@ void main() {
    
    //..and bleed
    if (DO_SAT_BLEED > 0.0)
-      pixel_out = pixel_bleed(pixel_out, vTexCoord, flick_and_noise_pass, global.flick_and_noise_passSize);
+      pixel_out = pixel_bleed(pixel_out, vTexCoord, flick_and_noise_pass, params.OriginalSize.z*0.5);
 
    
    //pre-gamma if needed by glow.

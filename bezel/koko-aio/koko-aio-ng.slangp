@@ -80,8 +80,14 @@ shaders = 17
 // previous pass (Original, in this case).
 // However it seems that those metadatas are applied to the feedback of the pass itself.
 // Now, since we need to compare colortools_and_ntsc_pass and colortools_and_ntsc_passFeedback
-// for Deltarender purposes, it is important that they share the same filtering and wrap mode.
-// Hence, we have to set the following as the same of float_framebuffer0,filter_linear0 and wrap_mode0
+// for Deltarender purposes, it is important that they share the same filtering and wrap mode:
+
+// colortools_and_ntsc_pass wrap_mode and filter_linear_mode 
+//      are set by flick_and_noise_pass (the next one)
+// colortools_and_ntsc_passFeedback wrap_mode and filter_linear_mode 
+//      are set by colortools_and_ntsc_pass (the this pass)
+
+// Hence, we have to set colortools_and_ntsc_pass and flick_and_noise_pass with the same filter and wrap_mode
 float_framebuffer0 = "true"
     filter_linear0 = "true"
         wrap_mode0 = "mirrored_repeat"

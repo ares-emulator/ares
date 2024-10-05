@@ -52,8 +52,8 @@ float_framebuffer4 = true
 float_framebuffer5 = true
 
 scale_type5 = source
-scale_x5 = 0.5
-scale_y5 = 1.0
+scale_x5 = 0.50
+scale_y5 = 1.00
 
 shader6 = shaders/guest/advanced/ntsc/ntsc-pass3.slang
 filter_linear6 = true
@@ -99,7 +99,7 @@ scale_y11 = 1.0
 float_framebuffer11 = true
 alias11 = Pass1
 
-shader12 = shaders/guest/advanced/gaussian_horizontal.slang
+shader12 = shaders/guest/hd/gaussian_horizontal.slang
 filter_linear12 = true
 scale_type_x12 = absolute
 scale_x12 = 800.0
@@ -116,7 +116,7 @@ scale_y13 = 600.0
 float_framebuffer13 = true
 alias13 = GlowPass
 
-shader14 = shaders/guest/advanced/bloom_horizontal.slang
+shader14 = shaders/guest/hd/bloom_horizontal.slang
 filter_linear14 = true
 scale_type_x14 = absolute
 scale_x14 = 800.0

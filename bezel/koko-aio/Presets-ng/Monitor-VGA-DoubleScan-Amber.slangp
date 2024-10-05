@@ -1,0 +1,4 @@
+#reference "Monitor-VGA-DoubleScan-Green.slangp"
+COLOR_MONO_HUE1 = "0.110000"
+COLOR_MONO_HUE2 = "0.110000"
+

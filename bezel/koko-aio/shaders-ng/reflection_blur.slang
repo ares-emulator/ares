@@ -35,7 +35,6 @@ layout(location = 3) in float vDo_Curvature;
 layout(location = 0) out vec4 FragColor;
 
 layout(set = 0, binding = 1) uniform sampler2D Source;
-layout(set = 0, binding = 2) uniform sampler2D reflected_blurred_passFeedback;
 layout(set = 0, binding = 3) uniform sampler2D colortools_and_ntsc_pass;
 
 #include "includes/functions.include.slang"
@@ -57,7 +56,7 @@ void main() {
       float skip_border = BEZEL_REFL_SKIP_SIZE;
       if (vCoords_zoomout.x > skip_border && vCoords_zoomout.x < 1.0 - skip_border &&
          vCoords_zoomout.y > skip_border && vCoords_zoomout.y < 1.0 - skip_border ) {
-         FragColor = vec4(0.0);
+         FragColor.rgb = vec3(0.0);
          return;
       }
 
@@ -95,14 +94,7 @@ void main() {
       }
       
 
-   
-   
-  // vec3 pixel_out_fb =  texture(reflected_blurred_passFeedback, vTexCoord).rgb;
-  // pixel_out = mix(pixel_out_fb.rgb, pixel_out, 0.5 );
-   
-
-   
-   FragColor = vec4(pixel_out, 1.0); 
+   FragColor.rgb = pixel_out;
  
    //FragColor = vec4(shade_sharp_blur);
    

@@ -4,29 +4,39 @@
 // based on Themaister's NTSC shader
 
 
-layout(std140, set = 0, binding = 0) uniform UBO
+layout(push_constant) uniform Push
 {
-   mat4 MVP;
    vec4 OutputSize;
    vec4 OriginalSize;
    vec4 SourceSize;
    uint FrameCount;
-   float quality, ntsc_sat, cust_fringing, cust_artifacting, ntsc_bright, ntsc_scale, ntsc_fields, ntsc_phase, ntsc_cscale;
+   float quality, ntsc_sat, cust_fringing, cust_artifacting, ntsc_bright, ntsc_scale, ntsc_fields, ntsc_phase, ntsc_gamma, ntsc_rainbow1, ntsc_taps, auto_res;
+} params;
+
+layout(std140, set = 0, binding = 0) uniform UBO
+{
+	mat4 MVP;
 } global;
 
-#pragma parameter ntsc-row1 "------------------------------------------------" 0.0 0.0 1.0 1.0
-#pragma parameter quality "Values: Svideo = 0.0 | Composite = 1.0 | RF = 2.0" 0.0 0.0 1.0 1.0
-#pragma parameter cust_fringing "NTSC Fringing Value" 1.0 0.0 5.0 0.1
+#pragma parameter ntsc-row0 "------------------------------------------------" 0.0 0.0 0.0 1.0
+#pragma parameter auto_res "          SNES/Amiga Hi-Res Auto Mode" 0.0 0.0 1.0 1.0
+#pragma parameter ntsc-row1 "------------------------------------------------" 0.0 0.0 0.0 1.0
+#pragma parameter quality "INFO --> A&F Values: Svideo = 0.0 | Composite = 1.0 | RF = 2.0" 0.0 0.0 0.0 1.0
 #pragma parameter cust_artifacting "NTSC Artifacting Value" 1.0 0.0 5.0 0.1
-#pragma parameter ntsc-row2 "------------------------------------------------" 0.0 0.0 1.0 1.0
+#pragma parameter cust_fringing "NTSC Fringing Value" 1.0 0.0 5.0 0.1
+#pragma parameter ntsc-row2 "------------------------------------------------" 0.0 0.0 0.0 1.0
 #pragma parameter ntsc_fields "NTSC Merge Fields: Auto | NO | YES" -1.0 -1.0 1.0 1.0
 #pragma parameter ntsc_phase "NTSC Phase: Auto | 2 phase | 3 phase | Mixed" 1.0 1.0 4.0 1.0
 #pragma parameter ntsc_scale "NTSC Resolution Scaling" 1.0 0.20 2.5 0.025
-#pragma parameter ntsc_cscale "NTSC Chroma Scaling / Bleeding" 1.0 0.20 2.25 0.05
 #pragma parameter ntsc_sat "NTSC Color Saturation" 1.0 0.0 2.0 0.01
 #pragma parameter ntsc_bright "NTSC Brightness" 1.0 0.0 1.5 0.01
+#pragma parameter ntsc_gamma "NTSC Filtering Gamma Correction" 1.0 0.25 2.5 0.025
+#pragma parameter ntsc_rainbow1 "NTSC Coloring/Rainbow Effect" 0.0 -1.0 1.0 0.10
+#pragma parameter ntsc-row3 "------------------------------------------------" 0.0 0.0 0.0 1.0
+#pragma parameter ntsc_taps    "NTSC # of Taps (Filter Width)" 32.0 6.0 32.0 1.0
 
-
+float auto_rez = mix(1.0, 0.5, clamp(params.auto_res * round(params.OriginalSize.x/300.0)-1.0, 0.0, 1.0));
+#define ntsc_scale params.ntsc_scale * auto_rez
 
 #define PI 3.14159265
 
@@ -45,23 +55,23 @@ layout(location = 8) out float MERGE;
 
 void main()
 {
-	float res = min(global.ntsc_scale, 1.0);
-	float OriginalSize = global.OriginalSize.x;
+	float res = min(ntsc_scale, 1.0);
+	float OriginalSize = params.OriginalSize.x * auto_rez;
 	gl_Position = global.MVP * Position;
 	vTexCoord = TexCoord;
-	pix_no = TexCoord * global.SourceSize.xy * (res * global.OutputSize.xy / global.SourceSize.xy);
-	phase = (global.ntsc_phase < 1.5) ? ((OriginalSize > 300.0) ? 2.0 : 3.0) : ((global.ntsc_phase > 2.5) ? 3.0 : 2.0);
-	if (global.ntsc_phase == 4.0) phase = 3.0;
+	pix_no = TexCoord * params.OriginalSize.xy * vec2(res, res/auto_rez) * vec2(4.0,1.0);
+	phase = (params.ntsc_phase < 1.5) ? ((OriginalSize > 300.0) ? 2.0 : 3.0) : ((params.ntsc_phase > 2.5) ? 3.0 : 2.0);
+	if (params.ntsc_phase == 4.0) phase = 3.0;
 	
 	CHROMA_MOD_FREQ = (phase < 2.5) ? (4.0 * PI / 15.0) : (PI / 3.0);
-	ARTIFACTING = global.cust_artifacting;
-	FRINGING = global.cust_fringing;
-	SATURATION = global.ntsc_sat;
-	BRIGHTNESS = global.ntsc_bright;
+	ARTIFACTING = params.cust_artifacting;
+	FRINGING = params.cust_fringing;
+	SATURATION = params.ntsc_sat;
+	BRIGHTNESS = params.ntsc_bright;
 	MERGE = 0.0;
-	if (global.ntsc_fields == -1.0 && phase == 3.0) MERGE = 1.0;
-	else if (global.ntsc_fields ==  0.0) MERGE = 0.0;
-	else if (global.ntsc_fields ==  1.0) MERGE = 1.0;	
+	if (params.ntsc_fields == -1.0 && phase == 3.0) MERGE = 1.0;
+	else if (params.ntsc_fields ==  0.0) MERGE = 0.0;
+	else if (params.ntsc_fields ==  1.0) MERGE = 1.0;	
 }
 
 #pragma stage fragment
@@ -100,22 +110,57 @@ vec3 rgb2yiq(vec3 col)
    return col * yiq_mat;
 }
 
+float get_luma(vec3 c)
+{
+	return dot(c, vec3(0.2989, 0.5870, 0.1140));
+}
+
+
 void main()
 {
-   float res = global.ntsc_scale;
+   float res = ntsc_scale;
+   float tap_compensate = 1.0 + step(params.ntsc_taps, 15.5);
+   
    vec3 col = texture(Source, vTexCoord).rgb;
  
-   vec3 yiq = rgb2yiq(col);
+   vec3 yiq = rgb2yiq(col); float c3 = yiq.x;
+   yiq.x = pow(yiq.x, params.ntsc_gamma);
    float lum = yiq.x;
 
-if (global.ntsc_phase == 4.0) 
-{
-   vec2 dx = vec2(global.OriginalSize.z, 0.0);
+   float mix02 = 0.0;
+   float mix03 = 0.0;   
+   vec2 dx = vec2(params.OriginalSize.z/auto_rez, 0.0);
    vec3 c1 = texture(Source, vTexCoord - dx).rgb;
    vec3 c2 = texture(Source, vTexCoord + dx).rgb;
-   c1 = rgb2yiq(c1);
-   c2 = rgb2yiq(c2);  
-   yiq.x = mix(min(0.5*(yiq.x + max(c1.x,c2.x)), max(yiq.x , min(c1.x,c2.x))), yiq.x, 5.0*min(abs(c1.x-c2.x),1.0));
+   
+if(abs(params.ntsc_rainbow1) > 0.025)
+{ 
+   vec2 dy = vec2(0.0, params.OriginalSize.w);
+   vec3 c4 = texture(Source, vTexCoord + dy).rgb;  
+   vec3 c5 = texture(Source, vTexCoord + dx +dy).rgb;
+   vec3 c6 = texture(Source, vTexCoord + dx +dx).rgb;
+   vec3 c7 = texture(Source, vTexCoord + 3.0*dx).rgb;
+   
+   c1.x = get_luma(c1);
+   c2.x = get_luma(c2);
+   c4.x = get_luma(c4);
+   c5.x = get_luma(c5);
+   c6.x = get_luma(c6);
+   c7.x = get_luma(c7);
+   
+   float mix00 = min(5.0*min(min(abs(c3-c1.x),abs(c3-c2.x)),min(abs(c2.x-c6.x),abs(c6.x-c7.x))),1.0);
+   float bar1  = 1.0 - min(7.0*min(max(max(c3,c4.x)-0.15,0.0), max(max(c2.x,c5.x)-0.15,0.0)),1.0);
+   float bar2  = step(abs(c1.x-c2.x)+abs(c3-c6.x)+abs(c2.x-c7.x), 0.325);
+   mix02 = bar1 * bar2 * mix00 * (1.0 - min(10.0*min(abs(c3-c4.x), abs(c2.x-c5.x)),1.0));
+   mix02 = mix02*params.ntsc_rainbow1;
+}
+
+if (params.ntsc_phase == 4.0) 
+{
+   float mix01 = min(5.0*abs(c1.x-c2.x),1.0);
+   c1.x = pow(c1.x, params.ntsc_gamma);
+   c2.x = pow(c2.x, params.ntsc_gamma);
+   yiq.x = mix(min(0.5*(yiq.x + max(c1.x,c2.x)), max(yiq.x , min(c1.x,c2.x))), yiq.x, mix01);
 }   
    vec3 yiq2 = yiq;	
    vec3 yiqs = yiq;
@@ -126,8 +171,8 @@ if (global.ntsc_phase == 4.0)
 
 if (MERGE > 0.5)
 {
-   float chroma_phase2 = (phase < 2.5) ? PI * (mod(pix_no.y, mod1) + mod(global.FrameCount+1, 2.)) : 0.6667 * PI * (mod(pix_no.y, mod2) + mod(global.FrameCount+1, 2.));
-   float mod_phase2 = chroma_phase2 + pix_no.x * CHROMA_MOD_FREQ;
+   float chroma_phase2 = (phase < 2.5) ? PI * (mod(pix_no.y, mod1) + mod(params.FrameCount+1, 2.)) : 0.6667 * PI * (mod(pix_no.y, mod2) + mod(params.FrameCount+1, 2.));
+   float mod_phase2 = chroma_phase2 * (1.0-mix02) + pix_no.x * CHROMA_MOD_FREQ * tap_compensate;
    float i_mod2 = cos(mod_phase2);
    float q_mod2 = sin(mod_phase2);
    yiq2.yz *= vec2(i_mod2, q_mod2); // Modulate.
@@ -136,7 +181,7 @@ if (MERGE > 0.5)
 
    if (res > 1.025)
    {
-      mod_phase2 = chroma_phase2 + pix_no.x * CHROMA_MOD_FREQ * res;
+      mod_phase2 = chroma_phase2 * (1.0-mix02) + pix_no.x * CHROMA_MOD_FREQ * res * tap_compensate;
       i_mod2 = cos(mod_phase2);
       q_mod2 = sin(mod_phase2);
       yiqs.yz *= vec2(i_mod2, q_mod2); // Modulate.
@@ -144,8 +189,8 @@ if (MERGE > 0.5)
    }
 }
    
-   float chroma_phase = (phase < 2.5) ? PI * (mod(pix_no.y, mod1) + mod(global.FrameCount, 2.)) : 0.6667 * PI * (mod(pix_no.y, mod2) + mod(global.FrameCount, 2.));
-   float mod_phase = chroma_phase + pix_no.x * CHROMA_MOD_FREQ;
+   float chroma_phase = (phase < 2.5) ? PI * (mod(pix_no.y, mod1) + mod(params.FrameCount, 2.)) : 0.6667 * PI * (mod(pix_no.y, mod2) + mod(params.FrameCount, 2.));
+   float mod_phase = chroma_phase * (1.0-mix02) + pix_no.x * CHROMA_MOD_FREQ * tap_compensate;
 
    float i_mod = cos(mod_phase);
    float q_mod = sin(mod_phase);
@@ -156,14 +201,14 @@ if (MERGE > 0.5)
    
     if (res > 1.025)
    {
-      mod_phase = chroma_phase + pix_no.x * CHROMA_MOD_FREQ * res;
+      mod_phase = chroma_phase * (1.0-mix02) + pix_no.x * CHROMA_MOD_FREQ * res * tap_compensate;
       i_mod = cos(mod_phase); 
       q_mod = sin(mod_phase);
       yiqz.yz *= vec2(i_mod, q_mod); // Modulate.
       yiq.x = dot(yiqz, mix_mat[0]); // Cross-talk.
    }
       
-if (global.ntsc_phase == 4.0)
+if (params.ntsc_phase == 4.0)
 {
 	yiq.x = lum; yiq2.x = lum;
 }

@@ -1,0 +1,5 @@
+shaders = 1
+
+shader0 = shaders/box_filter_aa/box_filter_aa_xform.slang
+filter_linear0 = false
+scale_type0 = viewport

@@ -44,37 +44,39 @@ global;
 #pragma stage vertex
 layout(location = 0) in vec4 Position;
 layout(location = 1) in vec2 TexCoord;
-layout(location = 0) out vec2 tx_coord;
-layout(location = 1) out vec2 tx_per_px;
-layout(location = 2) out vec2 tx_to_uv;
-layout(location = 3) out vec4 input_corners;
+layout(location = 0) out vec4 input_corners;
+layout(location = 1) out vec2 tx_coord;
+layout(location = 2) out vec2 tx_per_px;
+layout(location = 3) out vec2 tx_to_uv;
 
 void main() {
     gl_Position = global.MVP * Position;
 
     const vec4 crop = vec4(param.OS_CROP_TOP, param.OS_CROP_LEFT,
                            param.OS_CROP_BOTTOM, param.OS_CROP_RIGHT);
-    const vec2 scale_o2i = get_scale_o2i(
+    const vec2 scale_i2o = get_scale_i2o(
         param.SourceSize.xy, param.OutputSize.xy, crop, param.Rotation,
         param.CENTER_AFTER_CROPPING, param.FORCE_ASPECT_RATIO,
         vec2(param.ASPECT_H, param.ASPECT_V),
         vec2(param.FORCE_INTEGER_SCALING_H, param.FORCE_INTEGER_SCALING_V),
-        param.OVERSCALE,
-        /* output_size_is_final_viewport_size = */ false);
+        param.OVERSCALE);
     const vec2 shift = vec2(param.SHIFT_H, param.SHIFT_V);
-    tx_coord = o2i(TexCoord, param.SourceSize.xy, crop, shift, param.Rotation,
-                   param.CENTER_AFTER_CROPPING, scale_o2i);
-    tx_per_px = scale_o2i * param.OutputSize.zw;
+    const vec2 input_center = get_input_center(
+        param.SourceSize.xy, param.OutputSize.xy, scale_i2o, crop, shift,
+        param.Rotation, param.CENTER_AFTER_CROPPING);
+    tx_coord = transform(TexCoord, vec2(0.5), param.OutputSize.xy / scale_i2o,
+                         input_center);
+    tx_per_px = 1.0 / scale_i2o;
     tx_to_uv = param.SourceSize.zw;
     input_corners =
         get_input_corners(param.SourceSize.xy, crop, param.Rotation);
 }
 
 #pragma stage fragment
-layout(location = 0) in vec2 tx_coord;
-layout(location = 1) in vec2 tx_per_px;
-layout(location = 2) in vec2 tx_to_uv;
-layout(location = 3) in vec4 input_corners;
+layout(location = 0) in vec4 input_corners;
+layout(location = 1) in vec2 tx_coord;
+layout(location = 2) in vec2 tx_per_px;
+layout(location = 3) in vec2 tx_to_uv;
 layout(location = 0) out vec4 FragColor;
 layout(set = 0, binding = 2) uniform sampler2D Source;
 

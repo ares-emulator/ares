@@ -38,10 +38,7 @@ layout(push_constant) uniform Push
 	float spike;
 	float SIGMA_VER;
 	float VSHARPNESS;
-	float S_SHARPV;
-	float VARNG;
-	float VSHARP;
-	float internal_res;
+	float internal_res, auto_res;
 	float MAXS;
 } params;
 
@@ -53,8 +50,11 @@ layout(std140, set = 0, binding = 0) uniform UBO
 
 #pragma parameter bogus_filtering "[ FILTERING OPTIONS ]: " 0.0 0.0 1.0 1.0
 
+#pragma parameter auto_res "          SNES/Amiga Hi-Res Auto Mode" 0.0 0.0 1.0 1.0
+#define auto_res params.auto_res
+
 #pragma parameter internal_res "          Internal Resolution" 1.0 1.0 8.0 0.10
-#define internal_res params.internal_res
+float internal_res = mix(params.internal_res, 1.75*params.internal_res, clamp(auto_res * round(params.OriginalSize.x/300.0)-1.0, 0.0, 1.0));
 
 #pragma parameter HSHARPNESS "          Horizontal Filter Range" 1.0 1.0 8.0 0.05
 #define HSHARPNESS params.HSHARPNESS
@@ -81,15 +81,6 @@ layout(std140, set = 0, binding = 0) uniform UBO
 
 #pragma parameter SIGMA_VER "          Vertical Blur Sigma" 0.50 0.1 7.0 0.025
 #define SIGMA_VER global.SIGMA_VER
-
-#pragma parameter S_SHARPV "          Vert. Substractive Sharpness" 1.0 0.0 2.0 0.10
-#define S_SHARPV global.S_SHARPV
-
-#pragma parameter VSHARP "          Vert. Sharpness Definition" 1.20 0.0 2.0 0.10
-#define VSHARP global.VSHARP
-
-#pragma parameter VARNG "          Substractive Sharpness Ringing" 0.2 0.0 4.0 0.10
-#define VARNG params.VARNG
 
 #pragma parameter spike "          Scanline Spike Removal" 1.0 0.0 2.0 0.10
 #define spike params.spike
@@ -148,35 +139,35 @@ void main()
 	float sharp = gaussian(hsharpness) * S_SHARP;
 	float maxsharp = MAXS;
 	float FPR = hsharpness;
+	float FPRi = 1.0/hsharpness;
 	float fpx = 0.0;
 	float sp = 0.0;
 	float sw = 0.0;
 
 	float ts = 0.025;
 	vec3 luma = vec3(0.2126, 0.7152, 0.0722); 
-
 	float LOOPSIZE = ceil(2.0*FPR);
-	float CLAMPSIZE = round(2.0*LOOPSIZE/3.0);
 	
 	float n = -LOOPSIZE;
 	
 	do
 	{
 		pixel  = COMPAT_TEXTURE(LinearizePass, tex + n*dx).rgb;
-		sp = max(max(pixel.r,pixel.g),pixel.b);
 		
 		w = gaussian(n+f) - sharp;
-		fpx = abs(n+f-sign(n)*FPR)/FPR;
-		if (abs(n) <= CLAMPSIZE) { cmax = max(cmax, pixel); cmin = min(cmin, pixel); }
-		if (w < 0.0) w = clamp(w, mix(-maxsharp, 0.0, pow(clamp(fpx,0.0,1.0), HSHARP)), 0.0);
-	
+		fpx = (abs(n+f)-FPR)*FPRi;
+		if (w < 0.0) w = max(w, mix(-maxsharp, 0.0, pow(clamp(fpx,0.0,1.0), HSHARP)));
+		else
+		{
+			cmax = max(cmax, pixel); cmin = min(cmin, pixel);
+			sw = w * (dot(pixel,luma) + ts); 
+			sp = max(max(pixel.r,pixel.g),pixel.b);
+			scolor = scolor + sw * sp;
+			swsum = swsum + sw;			
+		}
 		color = color + w * pixel;
 		wsum  = wsum + w;
 
-		sw = max(w, 0.0) * (dot(pixel,luma) + ts); 
-		scolor = scolor + sw * sp;
-		swsum = swsum + sw;
-		
 		n = n + 1.0;
 			
 	} while (n <= LOOPSIZE);

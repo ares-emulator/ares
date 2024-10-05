@@ -1,0 +1,34 @@
+#reference "tv-slotmask-bloom-bezelwider.slangp"
+
+
+LUMINANCE = "0.000000"
+
+DO_BLOOM = "1.0"
+DO_FXAA = "1.0"
+DO_AMBILIGHT = "1.0"
+DO_CURVATURE = "1.0"
+DO_BEZEL = "1.0"
+
+DO_PIXELGRID = "0.000000"
+
+DO_IN_GLOW = "1.0"
+	IN_GLOW_W = "7.0"
+	IN_GLOW_H = "7.0"
+	IN_GLOW_POWER = "1.0"
+	IN_GLOW_GAMMA = "2.200000"
+
+DO_CCORRECTION = "1.0"
+	GAMMA_OUT = "0.5"
+
+
+DO_VMASK_AND_DARKLINES = "0.0"
+DO_HALO = "0.0"
+
+DO_ALT_BLANK = "0.0"
+DO_SAT_BLEED = "0.0"
+DO_NTSC_ARTIFACTS = "0.0"
+DO_SPOT = "0.0"
+DO_VIGNETTE = "0.0"
+DO_DYNZOOM = "0.015"
+DO_BG_IMAGE = "0.0"
+DO_SHIFT_RGB = "0.0"

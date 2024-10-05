@@ -29,11 +29,10 @@ layout(push_constant) uniform Push
 	uint FrameCount;
 	float SIZEVB;
 	float SIGMA_VB;
-	float BLOOMCUT_V;
 	float FINE_BLOOM;
 } params;
 
-#pragma parameter FINE_BLOOM "          Fine Bloom/Halation Sampling" 1.0 1.0 4.0 1.0 
+#pragma parameter FINE_BLOOM "          Fine Bloom/Halation Sampling" 1.0 1.0 5.0 1.0 
 #define FINE_BLOOM params.FINE_BLOOM
 
 #pragma parameter SIZEVB "          Vertical Bloom/Halation Radius" 3.0 1.0 50.0 1.0 
@@ -42,8 +41,6 @@ layout(push_constant) uniform Push
 #pragma parameter SIGMA_VB "          Vertical Bloom/Halation Sigma" 0.60 0.25 15.0 0.025
 #define SIGMA_VB params.SIGMA_VB
 
-#pragma parameter BLOOMCUT_V "          Vertical Bloom/Halation Substract" 0.0 -0.5 0.5 0.05
-#define BLOOMCUT_V params.BLOOMCUT_V
 
 layout(std140, set = 0, binding = 0) uniform UBO
 {
@@ -96,7 +93,6 @@ void main()
 	{
 		pixel  = COMPAT_TEXTURE(Source, tex + n*dy);
 		w = gaussian(n+f);
-		w      = (BLOOMCUT_V >= 0.0) ? max(w - BLOOMCUT_V, 0.0) : (max(w + BLOOMCUT_V, 0.0)/(1.0 + BLOOMCUT_V));
 		pixel.a*=pixel.a*pixel.a;
 		color  = color + w * pixel;
 		wsum   = wsum + w;

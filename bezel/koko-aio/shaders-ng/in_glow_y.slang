@@ -14,8 +14,8 @@ layout(location = 2) out float vDoInGlowBias;
 layout(location = 3) out float vGlow_Gain;
 layout(location = 4) out float vSharp_sub;
 layout(location = 11) out float vDeltaRenderOk;
-layout(location = 12) out float vInflation;
-layout(location = 13) out vec2 vInflation_offsets;
+layout(location = 12) out float vWarpedglow;
+layout(location = 13) out vec2 vWarpedglow_offsets;
 
 void main() {
    gl_Position = global.MVP * Position;
@@ -48,19 +48,19 @@ void main() {
    bool bIs_Interlaced = is_interlaced();
    vDeltaRenderOk = is_deltarender_allowed(bIs_Interlaced); //carries DR mandatory conditions, including forced refreshed frames
 
-   //FIXME check for d3d compatibility.
-   bool rotated = (abs((global.final_passFeedbackSize.x/global.final_passFeedbackSize.y) - (global.FinalViewportSize.x/global.FinalViewportSize.y)) > ar_tolerance);
+   float warpedglow_scale = 1.0;
+   if (DO_PIXELGRID > 0.0 && DO_PIXELGRID_H > 0.0)
+      warpedglow_scale = PIXELGRID_MAX_H;
    
-   float Inflation_delta;
-   if ( need_tate(rotated) == 1.0 ) {
-      Inflation_delta = params.OriginalSize.z * 0.5;
-      vInflation_offsets = vec2(+Inflation_delta, 0.0);
-   } else {
-      Inflation_delta = params.OriginalSize.w * 0.5;
-      vInflation_offsets = vec2(0.0, +Inflation_delta); 
-   }
-   vInflation = (PIXELGRID_INFLATION * PIXELGRID_MAX_H * 0.25) * Inflation_delta;
-   
+   float IN_GLOW_WARPSHARP_TATED = IN_GLOW_WARPSHARP_Y;
+   if (need_tate(is_rotated()) == 1.0)
+      IN_GLOW_WARPSHARP_TATED = IN_GLOW_WARPSHARP_X;
+
+   vWarpedglow = (IN_GLOW_WARPSHARP_TATED * warpedglow_scale) * 0.6 / 1400.0 * 3.0;   //*3.0 needed because we scale to 0->1 to use pow in the fragment.
+
+   float warpedglow_delta = params.OriginalSize.w * 0.5;
+   vWarpedglow_offsets = vec2(0.0, +warpedglow_delta); 
+      
 }
 
 
@@ -72,8 +72,8 @@ layout(location = 2) in float vDoInGlowBias;
 layout(location = 3) in float vGlow_Gain;
 layout(location = 4) in float vSharp_sub;
 layout(location = 11) in float vDeltaRenderOk;
-layout(location = 12) in float vInflation;
-layout(location = 13) in vec2 vInflation_offsets;
+layout(location = 12) in float vWarpedglow;
+layout(location = 13) in vec2 vWarpedglow_offsets;
 
 layout(location = 0) out vec4 FragColor;
 layout(set = 0, binding = 5) uniform sampler2D shift_and_bleed_pass;
@@ -103,38 +103,6 @@ vec3 blur_select_wrap(sampler2D texture_in, vec2 co, vec4 sourcesize, float shar
 
 void main() { 
 
-/*   warpsharp experiment
-   vec2 d = params.OriginalSize.zw*2.0;
-
-   vec2 sharpness = d*SERVICE1;
-   
-   vec3 gx = texture(Original, vec2(vTexCoord.x + d.x, vTexCoord.y)).rgb - 
-             texture(Original, vec2(vTexCoord.x - d.x, vTexCoord.y)).rgb;
-
-   vec3 gy = texture(Original, vec2(vTexCoord.x, vTexCoord.y + d.y)).rgb - 
-             texture(Original, vec2(vTexCoord.x, vTexCoord.y - d.y)).rgb;
-      
-  
-   vec3 color = texture(Original, vTexCoord).rgb;
-   
-   float fgx = +(gx.x+gx.y+gx.z)/3.0;
-   float fgy = +(gy.x+gy.y+gy.z)/3.0;
-   
-
-   fgx = clamp(fgx, -SERVICE1, SERVICE1);
-   fgy = clamp(fgy, -SERVICE1, SERVICE1);
-   
-    vec2 warp = vec2(fgx, fgy) * sharpness;
-    vec2 warpedTexCoord = vTexCoord + warp;
-    
-    vec4 warpedColor = texture(Original, warpedTexCoord);
-    
-    FragColor = vec4(fgx*fgy);
-    
-    //FragColor = warpedColor;
-    
-    return;
-*/   
 
    //Delta render?
    float DR_changed = 1.0;
@@ -145,29 +113,37 @@ void main() {
 
      }
    }
-   float max_inLum = max( 1.0, DO_CCORRECTION * apply_contrast_brightness(1.0, CONTRAST, BRIGHTNESS));
-   //Scanlines (over)inflation.
+   
+   //Warped Glow Y
    //The result will be stored in the alpha channel to be consumed by final pass.
-  
-      vec3 gy = texture(Source, vTexCoord + vInflation_offsets).rgb
-              - texture(Source, vTexCoord - vInflation_offsets).rgb;
-              
-      gy /=max_inLum;
-              
-      float scanline_inflation = (gy.x+gy.y+gy.z) * (vInflation * global.FinalViewportSize.y) 
-      + (eps * DELTA_RENDER); 
-      //This eps is needed because we multiplex deltarender and inflection and we NEED to have dr = 0.0 (and not a positive number)
-      //To reuse old pixels, only that way (using 0.0 to reuse pixels) multiplexing is possible.
-      
+   float warpedglow_y = eps; //see down note: (**)
+   if (SKIP_WARPEDGLOW_Y == 0.0) {
+      if (DO_IN_GLOW == 1.0) {
+         float max_inLum = max( 1.0, DO_CCORRECTION * apply_contrast_brightness(1.0, CONTRAST, BRIGHTNESS));
+         vec3 gy = texture(Source, vTexCoord + vWarpedglow_offsets).rgb
+               - texture(Source, vTexCoord - vWarpedglow_offsets).rgb;
+               
+         gy /=max_inLum;
+               
+         warpedglow_y = (gy.x+gy.y+gy.z) / 3.0;
+                                 
+         warpedglow_y = pow( abs(warpedglow_y), IN_GLOW_WARPSHARP_GAMMA) * sign(warpedglow_y);
+         
+         warpedglow_y = warpedglow_y *  vWarpedglow + (eps * DELTA_RENDER); 
+                                 
+         // (**) This eps is needed because we multiplex deltarender and warpedglow and we NEED to have dr = 0.0 (and not a positive number)
+         //To reuse old pixels, only that way (using 0.0 to reuse pixels) multiplexing is possible.
+      }
+   }
 
 
-   float inflation_or_DR = scanline_inflation;
+   float warpedglow_or_DR = warpedglow_y;
    if (DR_changed == 0.0) {
-      inflation_or_DR = DR_changed;
+      warpedglow_or_DR = DR_changed;
    }
    
    if (DO_IN_GLOW == 0.0) {
-      FragColor = vec4(texture(shift_and_bleed_pass, vTexCoord).rgb * vGlow_Gain, inflation_or_DR);
+      FragColor = vec4(texture(shift_and_bleed_pass, vTexCoord).rgb * vGlow_Gain, warpedglow_or_DR);
       return;
    }
 
@@ -186,10 +162,12 @@ void main() {
 
    //Make it resolution independent.
       IN_GLOW_H_ADAPTED = IN_GLOW_H_ADAPTED / NEW_SCALEMOD_Y;
-   
-   
-   
-   //It over the max sharp, then just passthrough, else do the blur.
+
+   //Also, a little hacky adaption for when flick_and_noise_pass does not scale to 2X
+      if (params.OutputSize.xy == params.OriginalSize.xy)
+         IN_GLOW_H_ADAPTED*=1.5;
+      
+   //If over the max sharp, then just passthrough, else do the blur.
       if (glow_h_inside_interval == 1.0) {
          pixel_glowed = blur_select_wrap(Source, vTexCoord, global.flick_and_noise_passSize, IN_GLOW_H_ADAPTED, (IN_GLOW_H >= 0.0) );
          //pixel_glowed = blur9_y(Source, vTexCoord, params.SourceSize.xy, IN_GLOW_H_ADAPTED);
@@ -198,6 +176,8 @@ void main() {
       }
    
    
+
+   
    //Series of conditions to do in glow bias done in vertex shader:
       if (vDoInGlowBias == 1.0) {
             pixel_glowed = glow_blur_bias(shift_and_bleed_pass, vTexCoord, pixel_glowed, IN_GLOW_BIAS);
@@ -205,7 +185,7 @@ void main() {
       }
    
 
-   FragColor = vec4(pixel_glowed * vGlow_Gain, inflation_or_DR);
+   FragColor = vec4(pixel_glowed * vGlow_Gain, warpedglow_or_DR);
    
 }
 

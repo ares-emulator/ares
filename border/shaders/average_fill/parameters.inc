@@ -1,7 +1,7 @@
 // See compose.slang for copyright and other information.
 
 // clang-format off
-#pragma parameter AVERAGE_FILL_SETTINGS "=== Average fill v1.8 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter AVERAGE_FILL_SETTINGS "=== Average fill v1.9 settings ===" 0.0 0.0 1.0 1.0
 
 #include "../../../misc/shaders/input_transform/parameters.inc"
 

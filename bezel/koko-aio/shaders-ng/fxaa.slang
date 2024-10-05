@@ -272,8 +272,8 @@ void main() {
     if ( DO_FXAA == 0.0 ) return;
     
     //Here lies the blur modifier from ntsc pass to glow.
-    //I'm not expecting any performance hit, since the lookup should have been cached alreadyl
+    //I'm not expecting any performance hit, since the lookup should have been already cached
         float pixel_alpha = texture(flick_and_noise_pass, vTexCoord).a;
     
-   FragColor = vec4(FxaaPixelShader(vTexCoord, flick_and_noise_pass, vec2(global.flick_and_noise_passSize.z, global.flick_and_noise_passSize.w)),pixel_alpha);
+   FragColor = vec4(FxaaPixelShader(vTexCoord, flick_and_noise_pass, global.flick_and_noise_passSize.zw),pixel_alpha);
 }

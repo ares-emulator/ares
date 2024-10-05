@@ -1,0 +1,15 @@
+shaders = 1
+
+shader0 = "shaders/crt-yo6/crt-yo6-flat-trinitron-tv.slang"
+filter_linear0 = true
+wrap_mode0 = "clamp_to_edge"
+scale_type0 = viewport
+
+textures = "TEX"
+TEX = "shaders/crt-yo6/phosphor-flat-trinitron-tv.png"
+TEX_linear = false
+
+parameters = "TVL;VSIZE;GAMMA"
+TVL = 487.0
+VSIZE = 240.0
+GAMMA = 2.2

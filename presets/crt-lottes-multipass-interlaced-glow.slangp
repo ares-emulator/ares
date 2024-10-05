@@ -7,6 +7,7 @@ shader1 = ../crt/shaders/glow-trails/glow-trails0.slang
 filter_linear1 = false
 scale_type1 = source
 scale1 = 1.0
+alias1 = Trails0
 
 shader2 = "../blurs/shaders/royale/blur9fast-vertical.slang"
 filter_linear2 = "true"

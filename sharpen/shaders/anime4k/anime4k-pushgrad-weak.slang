@@ -57,10 +57,10 @@ layout(set = 0, binding = 2) uniform sampler2D Source;
 
 //#define strength 0.7
 
-float min3(vec4 a, vec4 b, vec4 c) {
+float min_3(vec4 a, vec4 b, vec4 c) {
 	return min(min(a.a, b.a), c.a);
 }
-float max3(vec4 a, vec4 b, vec4 c) {
+float max_3(vec4 a, vec4 b, vec4 c) {
 	return max(max(a.a, b.a), c.a);
 }
 
@@ -90,15 +90,15 @@ void main()
 	vec4 lightestColor = cc;
 
 	//Kernel 0 and 4
-	float maxDark  = max3(br, b, bl);
-	float minLight = min3(tl, t, tr);
+	float maxDark  = max_3(br, b, bl);
+	float minLight = min_3(tl, t, tr);
 	
 	if (minLight > cc.a && minLight > maxDark) {
 		FragColor = getAverage(cc, tl, t, tr);
       return;
 	} else {
-		maxDark  = max3(tl, t, tr);
-		minLight = min3(br, b, bl);
+		maxDark  = max_3(tl, t, tr);
+		minLight = min_3(br, b, bl);
 		if (minLight > cc.a && minLight > maxDark) {
 			FragColor = getAverage(cc, br, b, bl);
          return;
@@ -106,15 +106,15 @@ void main()
 	}
 	
 	//Kernel 1 and 5
-	maxDark  = max3(cc, l, b);
-	minLight = min3(r, t, tr);
+	maxDark  = max_3(cc, l, b);
+	minLight = min_3(r, t, tr);
 	
 	if (minLight > maxDark) {
 		FragColor = getAverage(cc, r, t, tr);
          return;
 	} else {
-		maxDark  = max3(cc, r, t);
-		minLight = min3(bl, l, b);
+		maxDark  = max_3(cc, r, t);
+		minLight = min_3(bl, l, b);
 		if (minLight > maxDark) {
 			FragColor = getAverage(cc, bl, l, b);
          return;
@@ -122,15 +122,15 @@ void main()
 	}
 	
 	//Kernel 2 and 6
-	maxDark  = max3(l, tl, bl);
-	minLight = min3(r, br, tr);
+	maxDark  = max_3(l, tl, bl);
+	minLight = min_3(r, br, tr);
 	
 	if (minLight > cc.a && minLight > maxDark) {
 		FragColor = getAverage(cc, r, br, tr);
          return;
 	} else {
-		maxDark  = max3(r, br, tr);
-		minLight = min3(l, tl, bl);
+		maxDark  = max_3(r, br, tr);
+		minLight = min_3(l, tl, bl);
 		if (minLight > cc.a && minLight > maxDark) {
 			FragColor = getAverage(cc, l, tl, bl);
          return;
@@ -138,15 +138,15 @@ void main()
 	}
 	
 	//Kernel 3 and 7
-	maxDark  = max3(cc, l, t);
-	minLight = min3(r, br, b);
+	maxDark  = max_3(cc, l, t);
+	minLight = min_3(r, br, b);
 	
 	if (minLight > maxDark) {
 		FragColor = getAverage(cc, r, br, b);
          return;
 	} else {
-		maxDark  = max3(cc, r, b);
-		minLight = min3(t, l, tl);
+		maxDark  = max_3(cc, r, b);
+		minLight = min_3(t, l, tl);
 		if (minLight > maxDark) {
 			FragColor = getAverage(cc, t, l, tl);
          return;

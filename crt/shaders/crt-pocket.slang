@@ -1,4 +1,5 @@
 #version 450
+
 /*
 
    This program is free software; you can redistribute it and/or
@@ -402,7 +403,11 @@ if (OriginalSize.y > 400.0 && interlace == 0.0 && progress == 1.0)
 
     
     vec3 res = Lanczos3(pos,InvResolution);
-    if (ntsc == 1.0) res = NTSCtoSRGB(res);
+    if (ntsc == 1.0) {
+    
+        res = NTSCtoSRGB(res);
+        res = clamp(res,0.0,1.0);
+    }
     res *= ColorTemp(TEMP);
 
     float lumscan = max(max(res.r,res.g),res.b);
