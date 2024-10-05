@@ -212,10 +212,10 @@ where
     while let Some((index, pass)) = iterator.next() {
         let should_mipmap = iterator
             .peek()
-            .map_or(false, |(_, p)| p.config().mipmap_input);
+            .map_or(false, |(_, p)| p.meta().mipmap_input);
 
         let next_size = output[index].scale(
-            pass.config().scaling.clone(),
+            pass.meta().scaling.clone(),
             pass.get_format(),
             &viewport_size,
             &target_size,
@@ -225,7 +225,7 @@ where
         )?;
 
         feedback[index].scale(
-            pass.config().scaling.clone(),
+            pass.meta().scaling.clone(),
             pass.get_format(),
             &viewport_size,
             &target_size,

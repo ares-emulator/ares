@@ -26,7 +26,7 @@ build() {
 package() {
   mkdir -p $pkgdir/usr/lib
   mkdir -p $pkgdir/usr/include/librashader
-  patchelf --set-soname librashader.so.1 $srcdir/$pkgname-$pkgver/target/$profile/librashader.so
+  patchelf --set-soname librashader.so.2 $srcdir/$pkgname-$pkgver/target/$profile/librashader.so
   install -m 0755 $srcdir/$pkgname-$pkgver/target/${profile}/librashader.so $pkgdir/usr/lib/librashader.so
   cp $srcdir/$pkgname-$pkgver/target/${profile}/librashader.h $pkgdir/usr/include/librashader/librashader.h
   cp $srcdir/$pkgname-$pkgver/include/librashader_ld.h $pkgdir/usr/include/librashader/librashader_ld.h

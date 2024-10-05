@@ -1,72 +1,71 @@
 use crate::binding::UniformLocation;
+use crate::error;
 use crate::error::FilterChainError;
 use crate::gl::CompileProgram;
 use crate::util;
-use gl::types::{GLint, GLuint};
+use glow::HasContext;
 use librashader_reflect::back::glsl::CrossGlslContext;
 use librashader_reflect::back::ShaderCompilerOutput;
-use spirv_cross::spirv::Decoration;
+use spirv_cross2::reflect::ResourceType;
+use spirv_cross2::spirv::Decoration;
 
 pub struct Gl3CompileProgram;
 
 impl CompileProgram for Gl3CompileProgram {
     fn compile_program(
+        ctx: &glow::Context,
         glsl: ShaderCompilerOutput<String, CrossGlslContext>,
         _cache: bool,
-    ) -> crate::error::Result<(GLuint, UniformLocation<GLuint>)> {
-        let vertex_resources = glsl.context.artifact.vertex.get_shader_resources()?;
+    ) -> error::Result<(glow::Program, UniformLocation<Option<u32>>)> {
+        let vertex_resources = glsl.context.artifact.vertex.shader_resources()?;
 
         let (program, ubo_location) = unsafe {
-            let vertex = util::gl_compile_shader(gl::VERTEX_SHADER, glsl.vertex.as_str())?;
-            let fragment = util::gl_compile_shader(gl::FRAGMENT_SHADER, glsl.fragment.as_str())?;
+            let vertex = util::gl_compile_shader(ctx, glow::VERTEX_SHADER, glsl.vertex.as_str())?;
+            let fragment =
+                util::gl_compile_shader(ctx, glow::FRAGMENT_SHADER, glsl.fragment.as_str())?;
 
-            let program = gl::CreateProgram();
-            gl::AttachShader(program, vertex);
-            gl::AttachShader(program, fragment);
+            let program = ctx.create_program().map_err(FilterChainError::GlError)?;
+            ctx.attach_shader(program, vertex);
+            ctx.attach_shader(program, fragment);
 
-            for res in vertex_resources.stage_inputs {
-                let loc = glsl
+            for res in vertex_resources.resources_for_type(ResourceType::StageInput)? {
+                let Some(loc) = glsl
                     .context
                     .artifact
                     .vertex
-                    .get_decoration(res.id, Decoration::Location)?;
-                let mut name = res.name;
-                name.push('\0');
+                    .decoration(res.id, Decoration::Location)?
+                    .and_then(|d| d.as_literal())
+                else {
+                    continue;
+                };
 
-                gl::BindAttribLocation(program, loc, name.as_str().as_ptr().cast())
+                ctx.bind_attrib_location(program, loc, &res.name.as_ref());
             }
-            gl::LinkProgram(program);
-            gl::DeleteShader(vertex);
-            gl::DeleteShader(fragment);
 
-            let mut status = 0;
-            gl::GetProgramiv(program, gl::LINK_STATUS, &mut status);
-            if status != 1 {
+            ctx.link_program(program);
+            ctx.delete_shader(vertex);
+            ctx.delete_shader(fragment);
+
+            if !ctx.get_program_link_status(program) {
                 return Err(FilterChainError::GLLinkError);
             }
 
-            gl::UseProgram(program);
+            ctx.use_program(Some(program));
 
             for (name, binding) in &glsl.context.sampler_bindings {
-                let location = gl::GetUniformLocation(program, name.as_str().as_ptr().cast());
-                if location >= 0 {
+                let location = ctx.get_uniform_location(program, name);
+                if let Some(location) = location {
                     // eprintln!("setting sampler {location} to sample from {binding}");
-                    gl::Uniform1i(location, *binding as GLint);
+                    ctx.uniform_1_i32(Some(&location), *binding as i32);
                 }
             }
 
-            gl::UseProgram(0);
+            ctx.use_program(None);
             (
                 program,
                 UniformLocation {
-                    vertex: gl::GetUniformBlockIndex(
-                        program,
-                        b"LIBRA_UBO_VERTEX\0".as_ptr().cast(),
-                    ),
-                    fragment: gl::GetUniformBlockIndex(
-                        program,
-                        b"LIBRA_UBO_FRAGMENT\0".as_ptr().cast(),
-                    ),
+                    vertex: ctx.get_uniform_block_index(program, "LIBRA_UBO_VERTEX"),
+                    fragment: ctx.get_uniform_block_index(program, "LIBRA_UBO_FRAGMENT"),
                 },
             )
         };

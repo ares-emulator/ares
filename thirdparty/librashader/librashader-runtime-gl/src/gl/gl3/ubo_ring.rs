@@ -1,58 +1,62 @@
 use crate::binding::UniformLocation;
+use crate::error;
+use crate::error::FilterChainError;
 use crate::gl::UboRing;
-use gl::types::{GLsizei, GLsizeiptr, GLuint};
+use glow::HasContext;
 use librashader_reflect::reflect::semantics::BufferReflection;
 use librashader_runtime::ringbuffer::InlineRingBuffer;
 use librashader_runtime::ringbuffer::RingBuffer;
 use librashader_runtime::uniforms::UniformStorageAccess;
 
 pub struct Gl3UboRing<const SIZE: usize> {
-    ring: InlineRingBuffer<GLuint, SIZE>,
+    ring: InlineRingBuffer<glow::Buffer, SIZE>,
 }
 
 impl<const SIZE: usize> UboRing<SIZE> for Gl3UboRing<SIZE> {
-    fn new(buffer_size: u32) -> Self {
-        let mut ring: InlineRingBuffer<GLuint, SIZE> = InlineRingBuffer::new();
-        unsafe {
-            gl::GenBuffers(SIZE as GLsizei, ring.items_mut().as_mut_ptr());
-            for buffer in ring.items() {
-                gl::BindBuffer(gl::UNIFORM_BUFFER, *buffer);
-                gl::BufferData(
-                    gl::UNIFORM_BUFFER,
-                    buffer_size as GLsizeiptr,
-                    std::ptr::null(),
-                    gl::STREAM_DRAW,
-                );
-            }
-            gl::BindBuffer(gl::UNIFORM_BUFFER, 0);
-        }
-        Gl3UboRing { ring }
+    fn new(ctx: &glow::Context, buffer_size: u32) -> error::Result<Self> {
+        let items: [glow::Buffer; SIZE] = array_init::try_array_init(|_| unsafe {
+            ctx.create_buffer().map(|buffer| {
+                ctx.bind_buffer(glow::UNIFORM_BUFFER, Some(buffer));
+                ctx.buffer_data_size(glow::UNIFORM_BUFFER, buffer_size as i32, glow::STREAM_DRAW);
+                ctx.bind_buffer(glow::UNIFORM_BUFFER, None);
+                buffer
+            })
+        })
+        .map_err(FilterChainError::GlError)?;
+
+        let ring: InlineRingBuffer<glow::Buffer, SIZE> = InlineRingBuffer::from_array(items);
+        Ok(Gl3UboRing { ring })
     }
 
     fn bind_for_frame(
         &mut self,
+        ctx: &glow::Context,
         ubo: &BufferReflection<u32>,
-        ubo_location: &UniformLocation<GLuint>,
+        ubo_location: &UniformLocation<Option<u32>>,
         storage: &impl UniformStorageAccess,
     ) {
-        let size = ubo.size;
-        let buffer = self.ring.current();
+        let buffer = *self.ring.current();
 
         unsafe {
-            gl::BindBuffer(gl::UNIFORM_BUFFER, *buffer);
-            gl::BufferSubData(
-                gl::UNIFORM_BUFFER,
+            ctx.bind_buffer(glow::UNIFORM_BUFFER, Some(buffer));
+            ctx.buffer_sub_data_u8_slice(
+                glow::UNIFORM_BUFFER,
                 0,
-                size as GLsizeiptr,
-                storage.ubo_pointer().cast(),
+                &storage.ubo_slice()[0..ubo.size as usize],
             );
-            gl::BindBuffer(gl::UNIFORM_BUFFER, 0);
+            ctx.bind_buffer(glow::UNIFORM_BUFFER, None);
 
-            if ubo_location.vertex != gl::INVALID_INDEX {
-                gl::BindBufferBase(gl::UNIFORM_BUFFER, ubo_location.vertex, *buffer);
+            if let Some(vertex) = ubo_location
+                .vertex
+                .filter(|vertex| *vertex != glow::INVALID_INDEX)
+            {
+                ctx.bind_buffer_base(glow::UNIFORM_BUFFER, vertex, Some(buffer));
             }
-            if ubo_location.fragment != gl::INVALID_INDEX {
-                gl::BindBufferBase(gl::UNIFORM_BUFFER, ubo_location.fragment, *buffer);
+            if let Some(fragment) = ubo_location
+                .fragment
+                .filter(|fragment| *fragment != glow::INVALID_INDEX)
+            {
+                ctx.bind_buffer_base(glow::UNIFORM_BUFFER, fragment, Some(buffer));
             }
         }
         self.ring.next()

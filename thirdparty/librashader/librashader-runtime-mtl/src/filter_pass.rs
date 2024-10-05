@@ -5,11 +5,10 @@ use crate::graphics_pipeline::MetalGraphicsPipeline;
 use crate::options::FrameOptionsMetal;
 use crate::samplers::SamplerSet;
 use crate::texture::{get_texture_size, InputTexture};
-use icrate::Metal::{MTLCommandBuffer, MTLCommandEncoder, MTLRenderCommandEncoder, MTLTexture};
 use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_preprocess::ShaderSource;
-use librashader_presets::ShaderPassConfig;
+use librashader_presets::PassMeta;
 use librashader_reflect::reflect::semantics::{MemberOffset, TextureBinding, UniformBinding};
 use librashader_reflect::reflect::ShaderReflection;
 use librashader_runtime::binding::{BindSemantics, TextureInput, UniformInputs};
@@ -18,6 +17,7 @@ use librashader_runtime::quad::QuadType;
 use librashader_runtime::render_target::RenderTarget;
 use librashader_runtime::uniforms::{NoUniformBinder, UniformStorage};
 use objc2::runtime::ProtocolObject;
+use objc2_metal::{MTLCommandBuffer, MTLCommandEncoder, MTLRenderCommandEncoder, MTLTexture};
 
 impl TextureInput for InputTexture {
     fn size(&self) -> Size<u32> {
@@ -55,7 +55,7 @@ pub struct FilterPass {
         UniformStorage<NoUniformBinder, Option<()>, MetalBuffer, MetalBuffer>,
     pub uniform_bindings: FastHashMap<UniformBinding, MemberOffset>,
     pub source: ShaderSource,
-    pub config: ShaderPassConfig,
+    pub meta: PassMeta,
     pub graphics_pipeline: MetalGraphicsPipeline,
 }
 
@@ -163,7 +163,7 @@ impl FilterPass {
             parent.history_textures.iter().map(|o| o.as_ref()),
             parent.luts.iter().map(|(u, i)| (*u, i.as_ref())),
             &self.source.parameters,
-            &parent.config.parameters,
+            &parent.config,
         );
 
         // flush to buffers
@@ -177,7 +177,7 @@ impl FilterPassMeta for FilterPass {
         self.source.format
     }
 
-    fn config(&self) -> &ShaderPassConfig {
-        &self.config
+    fn meta(&self) -> &PassMeta {
+        &self.meta
     }
 }

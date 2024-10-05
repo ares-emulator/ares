@@ -6,8 +6,8 @@ use crate::ffi::extern_fn;
 use librashader::runtime::vk::{
     FilterChain, FilterChainOptions, FrameOptions, VulkanImage, VulkanInstance,
 };
+use std::ffi::c_char;
 use std::ffi::CStr;
-use std::ffi::{c_char, c_void};
 use std::mem::MaybeUninit;
 use std::ptr::NonNull;
 use std::slice;
@@ -15,35 +15,24 @@ use std::slice;
 use librashader::runtime::FilterChainParameters;
 use librashader::runtime::{Size, Viewport};
 
-use ash::vk;
-
 use crate::LIBRASHADER_API_VERSION;
+use ash::vk;
+use ash::vk::Handle;
+
+///	A Vulkan instance function loader that the Vulkan filter chain needs to be initialized with.
 pub use ash::vk::PFN_vkGetInstanceProcAddr;
 
-/// A Vulkan instance function loader that the Vulkan filter chain needs to be initialized with.
-pub type libra_PFN_vkGetInstanceProcAddr =
-    unsafe extern "system" fn(instance: *mut c_void, p_name: *const c_char);
-
-/// Vulkan parameters for the source image.
+/// Vulkan parameters for an image.
 #[repr(C)]
-pub struct libra_source_image_vk_t {
-    /// A raw `VkImage` handle to the source image.
+pub struct libra_image_vk_t {
+    /// A raw `VkImage` handle.
     pub handle: vk::Image,
-    /// The `VkFormat` of the source image.
+    /// The `VkFormat` of the `VkImage`.
     pub format: vk::Format,
-    /// The width of the source image.
+    /// The width of the `VkImage`.
     pub width: u32,
-    /// The height of the source image.
+    /// The height of the `VkImage`.
     pub height: u32,
-}
-
-/// Vulkan parameters for the output image.
-#[repr(C)]
-pub struct libra_output_image_vk_t {
-    /// A raw `VkImage` handle to the output image.
-    pub handle: vk::Image,
-    /// The `VkFormat` of the output image.
-    pub format: vk::Format,
 }
 
 /// Handles required to instantiate vulkan
@@ -58,12 +47,15 @@ pub struct libra_device_vk_t {
     /// A raw `VkDevice` handle
     /// for the device attached to the instance that will perform rendering.
     pub device: vk::Device,
+    /// The queue to use, if this is `NULL`, then
+    /// a suitable queue will be chosen. This must be a graphics queue.
+    pub queue: vk::Queue,
     /// The entry loader for the Vulkan library.
-    pub entry: vk::PFN_vkGetInstanceProcAddr,
+    pub entry: Option<vk::PFN_vkGetInstanceProcAddr>,
 }
 
-impl From<libra_source_image_vk_t> for VulkanImage {
-    fn from(value: libra_source_image_vk_t) -> Self {
+impl From<libra_image_vk_t> for VulkanImage {
+    fn from(value: libra_image_vk_t) -> Self {
         VulkanImage {
             size: Size::new(value.width, value.height),
             image: value.handle,
@@ -74,11 +66,18 @@ impl From<libra_source_image_vk_t> for VulkanImage {
 
 impl From<libra_device_vk_t> for VulkanInstance {
     fn from(value: libra_device_vk_t) -> Self {
+        let queue = if value.queue.is_null() {
+            None
+        } else {
+            Some(value.queue)
+        };
+
         VulkanInstance {
             device: value.device,
             instance: value.instance,
             physical_device: value.physical_device,
             get_instance_proc_addr: value.entry,
+            queue,
         }
     }
 }
@@ -94,7 +93,7 @@ pub struct frame_vk_opt_t {
     /// The direction of rendering.
     /// -1 indicates that the frames are played in reverse order.
     pub frame_direction: i32,
-    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 3 = 270deg.
     pub rotation: u32,
     /// The total number of subframes ran. Default is 1.
     pub total_subframes: u32,
@@ -236,12 +235,30 @@ extern_fn! {
     /// Records rendering commands for a frame with the given parameters for the given filter chain
     /// to the input command buffer.
     ///
-    /// * The input image must be in the `VK_SHADER_READ_ONLY_OPTIMAL` layout.
-    /// * The output image must be in `VK_COLOR_ATTACHMENT_OPTIMAL` layout.
-    ///
-    /// librashader **will not** create a pipeline barrier for the final pass. The output image will
-    /// remain in `VK_COLOR_ATTACHMENT_OPTIMAL` after all shader passes. The caller must transition
+    /// A pipeline barrier **will not** be created for the final pass. The output image must be
+    /// in `VK_COLOR_ATTACHMENT_OPTIMAL`, and will remain so after all shader passes. The caller must transition
     /// the output image to the final layout.
+    ///
+    /// ## Parameters
+    ///
+    /// - `chain` is a handle to the filter chain.
+    /// - `command_buffer` is a `VkCommandBuffer` handle to record draw commands to.
+    ///    The provided command buffer must be ready for recording and contain no prior commands
+    /// - `frame_count` is the number of frames passed to the shader
+    /// - `image` is a `libra_image_vk_t`, containing a `VkImage` handle, it's format and size information,
+    ///    to an image that will serve as the source image for the frame. The input image must be in
+    ///    the `VK_SHADER_READ_ONLY_OPTIMAL` layout.
+    /// - `out` is a `libra_image_vk_t`, containing a `VkImage` handle, it's format and size information,
+    ///    for the render target of the frame. The output image must be in `VK_COLOR_ATTACHMENT_OPTIMAL` layout.
+    ///    The output image will remain in `VK_COLOR_ATTACHMENT_OPTIMAL` after all shader passes.
+    ///
+    /// - `viewport` is a pointer to a `libra_viewport_t` that specifies the area onto which scissor and viewport
+    ///    will be applied to the render target. It may be null, in which case a default viewport spanning the
+    ///    entire render target will be used.
+    /// - `mvp` is a pointer to an array of 16 `float` values to specify the model view projection matrix to
+    ///    be passed to the shader.
+    /// - `options` is a pointer to options for the frame. Valid options are dependent on the `LIBRASHADER_API_VERSION`
+    ///    passed in. It may be null, in which case default options for the filter chain are used.
     ///
     /// ## Safety
     /// - `libra_vk_filter_chain_frame` **must not be called within a RenderPass**.
@@ -258,9 +275,9 @@ extern_fn! {
         chain: *mut libra_vk_filter_chain_t,
         command_buffer: vk::CommandBuffer,
         frame_count: usize,
-        image: libra_source_image_vk_t,
-        viewport: libra_viewport_t,
-        out: libra_output_image_vk_t,
+        image: libra_image_vk_t,
+        out: libra_image_vk_t,
+        viewport: *const libra_viewport_t,
         mvp: *const f32,
         opt: *const MaybeUninit<frame_vk_opt_t>
     ) mut |chain| {
@@ -268,7 +285,7 @@ extern_fn! {
         let image: VulkanImage = image.into();
         let output = VulkanImage {
             image: out.handle,
-            size: Size::new(viewport.width, viewport.height),
+            size: Size::new(out.width, out.height),
             format: out.format
         };
         let mvp = if mvp.is_null() {
@@ -282,11 +299,21 @@ extern_fn! {
             Some(unsafe { opt.read() })
         };
         let opt = opt.map(FromUninit::from_uninit);
-        let viewport = Viewport {
-            x: viewport.x,
-            y: viewport.y,
-            output,
-            mvp,
+
+        let viewport = if viewport.is_null() {
+            Viewport::new_render_target_sized_origin(output, mvp)?
+        } else {
+            let viewport = unsafe { viewport.read() };
+            Viewport {
+                x: viewport.x,
+                y: viewport.y,
+                output,
+                size: Size {
+                    height: viewport.height,
+                    width: viewport.width
+                },
+                mvp,
+            }
         };
 
         unsafe {
@@ -306,15 +333,15 @@ extern_fn! {
         chain: *mut libra_vk_filter_chain_t,
         param_name: *const c_char,
         value: f32
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
+    ) |chain| {
+        assert_some_ptr!(chain);
         assert_non_null!(param_name);
         unsafe {
             let name = CStr::from_ptr(param_name);
             let name = name.to_str()?;
 
-            if chain.set_parameter(name, value).is_none() {
-                return LibrashaderError::UnknownShaderParameter(param_name).export()
+            if chain.parameters().set_parameter_value(name, value).is_none() {
+                return Err(LibrashaderError::UnknownShaderParameter(param_name))
             }
         }
     }
@@ -328,18 +355,18 @@ extern_fn! {
     /// - `chain` must be either null or a valid and aligned pointer to an initialized `libra_vk_filter_chain_t`.
     /// - `param_name` must be either null or a null terminated string.
     fn libra_vk_filter_chain_get_param(
-        chain: *mut libra_vk_filter_chain_t,
+        chain: *const libra_vk_filter_chain_t,
         param_name: *const c_char,
         out: *mut MaybeUninit<f32>
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
+    ) |chain| {
+        assert_some_ptr!(chain);
         assert_non_null!(param_name);
         unsafe {
             let name = CStr::from_ptr(param_name);
             let name = name.to_str()?;
 
-            let Some(value) = chain.get_parameter(name) else {
-                return LibrashaderError::UnknownShaderParameter(param_name).export()
+            let Some(value) = chain.parameters().parameter_value(name) else {
+                return Err(LibrashaderError::UnknownShaderParameter(param_name))
             };
 
             out.write(MaybeUninit::new(value));
@@ -355,9 +382,9 @@ extern_fn! {
     fn libra_vk_filter_chain_set_active_pass_count(
         chain: *mut libra_vk_filter_chain_t,
         value: u32
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
-        chain.set_enabled_pass_count(value as usize);
+    ) |chain| {
+        assert_some_ptr!(chain);
+        chain.parameters().set_passes_enabled(value as usize);
     }
 }
 
@@ -367,11 +394,11 @@ extern_fn! {
     /// ## Safety
     /// - `chain` must be either null or a valid and aligned pointer to an initialized `libra_vk_filter_chain_t`.
     fn libra_vk_filter_chain_get_active_pass_count(
-        chain: *mut libra_vk_filter_chain_t,
+        chain: *const libra_vk_filter_chain_t,
         out: *mut MaybeUninit<u32>
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
-        let value = chain.get_enabled_pass_count();
+    ) |chain| {
+        assert_some_ptr!(chain);
+        let value = chain.parameters().passes_enabled();
         unsafe {
             out.write(MaybeUninit::new(value as u32))
         }

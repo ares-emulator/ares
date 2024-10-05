@@ -1,4 +1,4 @@
-use crate::binding::BindingUtil;
+use crate::binding::{BindingRequirements, BindingUtil};
 use librashader_reflect::reflect::semantics::BindingMeta;
 use std::collections::VecDeque;
 
@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 pub struct FramebufferInit<'a, F, I, E> {
     owned_generator: &'a dyn Fn() -> Result<F, E>,
     input_generator: &'a dyn Fn() -> I,
-    required_history: usize,
+    requirements: BindingRequirements,
     filters_count: usize,
 }
 
@@ -19,19 +19,20 @@ impl<'a, F, I, E> FramebufferInit<'a, F, I, E> {
         input_generator: &'a dyn Fn() -> I,
     ) -> Self {
         let filters_count = filters.len();
-        let required_history = BindingMeta::calculate_required_history(filters);
+        let requirements = BindingMeta::calculate_requirements(filters);
+
         Self {
             owned_generator,
             input_generator,
             filters_count,
-            required_history,
+            requirements,
         }
     }
 
     /// Initialize history framebuffers and views.
     pub fn init_history(&self) -> Result<(VecDeque<F>, Box<[I]>), E> {
         init_history(
-            self.required_history,
+            self.requirements.required_history,
             self.owned_generator,
             self.input_generator,
         )
@@ -44,6 +45,11 @@ impl<'a, F, I, E> FramebufferInit<'a, F, I, E> {
             self.owned_generator,
             self.input_generator,
         )
+    }
+
+    /// Get if the final pass is used as feedback.
+    pub const fn uses_final_pass_as_feedback(&self) -> bool {
+        self.requirements.uses_final_pass_as_feedback
     }
 }
 

@@ -1,71 +1,71 @@
 use crate::{FilterMode, ImageFormat, WrapMode};
 
-impl From<ImageFormat> for gl::types::GLenum {
+impl From<ImageFormat> for u32 {
     fn from(format: ImageFormat) -> Self {
         match format {
-            ImageFormat::Unknown => 0 as gl::types::GLenum,
-            ImageFormat::R8Unorm => gl::R8,
-            ImageFormat::R8Uint => gl::R8UI,
-            ImageFormat::R8Sint => gl::R8I,
-            ImageFormat::R8G8Unorm => gl::RG8,
-            ImageFormat::R8G8Uint => gl::RG8UI,
-            ImageFormat::R8G8Sint => gl::RG8I,
-            ImageFormat::R8G8B8A8Unorm => gl::RGBA8,
-            ImageFormat::R8G8B8A8Uint => gl::RGBA8UI,
-            ImageFormat::R8G8B8A8Sint => gl::RGBA8I,
-            ImageFormat::R8G8B8A8Srgb => gl::SRGB8_ALPHA8,
-            ImageFormat::A2B10G10R10UnormPack32 => gl::RGB10_A2,
-            ImageFormat::A2B10G10R10UintPack32 => gl::RGB10_A2UI,
-            ImageFormat::R16Uint => gl::R16UI,
-            ImageFormat::R16Sint => gl::R16I,
-            ImageFormat::R16Sfloat => gl::R16F,
-            ImageFormat::R16G16Uint => gl::RG16UI,
-            ImageFormat::R16G16Sint => gl::RG16I,
-            ImageFormat::R16G16Sfloat => gl::RG16F,
-            ImageFormat::R16G16B16A16Uint => gl::RGBA16UI,
-            ImageFormat::R16G16B16A16Sint => gl::RGBA16I,
-            ImageFormat::R16G16B16A16Sfloat => gl::RGBA16F,
-            ImageFormat::R32Uint => gl::R32UI,
-            ImageFormat::R32Sint => gl::R32I,
-            ImageFormat::R32Sfloat => gl::R32F,
-            ImageFormat::R32G32Uint => gl::RG32UI,
-            ImageFormat::R32G32Sint => gl::RG32I,
-            ImageFormat::R32G32Sfloat => gl::RG32F,
-            ImageFormat::R32G32B32A32Uint => gl::RGBA32UI,
-            ImageFormat::R32G32B32A32Sint => gl::RGBA32I,
-            ImageFormat::R32G32B32A32Sfloat => gl::RGBA32F,
+            ImageFormat::Unknown => 0,
+            ImageFormat::R8Unorm => glow::R8,
+            ImageFormat::R8Uint => glow::R8UI,
+            ImageFormat::R8Sint => glow::R8I,
+            ImageFormat::R8G8Unorm => glow::RG8,
+            ImageFormat::R8G8Uint => glow::RG8UI,
+            ImageFormat::R8G8Sint => glow::RG8I,
+            ImageFormat::R8G8B8A8Unorm => glow::RGBA8,
+            ImageFormat::R8G8B8A8Uint => glow::RGBA8UI,
+            ImageFormat::R8G8B8A8Sint => glow::RGBA8I,
+            ImageFormat::R8G8B8A8Srgb => glow::SRGB8_ALPHA8,
+            ImageFormat::A2B10G10R10UnormPack32 => glow::RGB10_A2,
+            ImageFormat::A2B10G10R10UintPack32 => glow::RGB10_A2UI,
+            ImageFormat::R16Uint => glow::R16UI,
+            ImageFormat::R16Sint => glow::R16I,
+            ImageFormat::R16Sfloat => glow::R16F,
+            ImageFormat::R16G16Uint => glow::RG16UI,
+            ImageFormat::R16G16Sint => glow::RG16I,
+            ImageFormat::R16G16Sfloat => glow::RG16F,
+            ImageFormat::R16G16B16A16Uint => glow::RGBA16UI,
+            ImageFormat::R16G16B16A16Sint => glow::RGBA16I,
+            ImageFormat::R16G16B16A16Sfloat => glow::RGBA16F,
+            ImageFormat::R32Uint => glow::R32UI,
+            ImageFormat::R32Sint => glow::R32I,
+            ImageFormat::R32Sfloat => glow::R32F,
+            ImageFormat::R32G32Uint => glow::RG32UI,
+            ImageFormat::R32G32Sint => glow::RG32I,
+            ImageFormat::R32G32Sfloat => glow::RG32F,
+            ImageFormat::R32G32B32A32Uint => glow::RGBA32UI,
+            ImageFormat::R32G32B32A32Sint => glow::RGBA32I,
+            ImageFormat::R32G32B32A32Sfloat => glow::RGBA32F,
         }
     }
 }
 
-impl From<WrapMode> for gl::types::GLenum {
+impl From<WrapMode> for i32 {
     fn from(value: WrapMode) -> Self {
         match value {
-            WrapMode::ClampToBorder => gl::CLAMP_TO_BORDER,
-            WrapMode::ClampToEdge => gl::CLAMP_TO_EDGE,
-            WrapMode::Repeat => gl::REPEAT,
-            WrapMode::MirroredRepeat => gl::MIRRORED_REPEAT,
+            WrapMode::ClampToBorder => glow::CLAMP_TO_BORDER as i32,
+            WrapMode::ClampToEdge => glow::CLAMP_TO_EDGE as i32,
+            WrapMode::Repeat => glow::REPEAT as i32,
+            WrapMode::MirroredRepeat => glow::MIRRORED_REPEAT as i32,
         }
     }
 }
 
-impl From<FilterMode> for gl::types::GLenum {
+impl From<FilterMode> for i32 {
     fn from(value: FilterMode) -> Self {
         match value {
-            FilterMode::Linear => gl::LINEAR,
-            _ => gl::NEAREST,
+            FilterMode::Linear => glow::LINEAR as i32,
+            _ => glow::NEAREST as i32,
         }
     }
 }
 
 impl FilterMode {
     /// Get the mipmap filtering mode for the given combination.
-    pub fn gl_mip(&self, mip: FilterMode) -> gl::types::GLenum {
+    pub fn gl_mip(&self, mip: FilterMode) -> u32 {
         match (self, mip) {
-            (FilterMode::Linear, FilterMode::Linear) => gl::LINEAR_MIPMAP_LINEAR,
-            (FilterMode::Linear, FilterMode::Nearest) => gl::LINEAR_MIPMAP_NEAREST,
-            (FilterMode::Nearest, FilterMode::Linear) => gl::NEAREST_MIPMAP_LINEAR,
-            _ => gl::NEAREST_MIPMAP_NEAREST,
+            (FilterMode::Linear, FilterMode::Linear) => glow::LINEAR_MIPMAP_LINEAR,
+            (FilterMode::Linear, FilterMode::Nearest) => glow::LINEAR_MIPMAP_NEAREST,
+            (FilterMode::Nearest, FilterMode::Linear) => glow::NEAREST_MIPMAP_LINEAR,
+            _ => glow::NEAREST_MIPMAP_NEAREST,
         }
     }
 }

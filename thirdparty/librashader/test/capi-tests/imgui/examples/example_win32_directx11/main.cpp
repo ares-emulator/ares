@@ -174,11 +174,6 @@ int main(int, char**)
         g_pFramebufferCopy->GetDesc(&framebufferTextureDesc);
 
 
-        libra_source_image_d3d11_t input = {g_framebufferCopySRV,
-                                            framebufferTextureDesc.Width,
-                                            framebufferTextureDesc.Height};
-
-
         libra_viewport_t vp = {
             0,
             0,
@@ -191,8 +186,9 @@ int main(int, char**)
             .frame_direction = -1
         };
 
-        libra.d3d11_filter_chain_frame(&filter_chain, NULL, frameCount, input, vp,
-                                       g_mainRenderTargetView, NULL, &frame_opt);
+        libra.d3d11_filter_chain_frame(
+            &filter_chain, NULL, frameCount, g_framebufferCopySRV,
+            g_mainRenderTargetView, NULL, NULL, &frame_opt);
 
 
         g_pSwapChain->Present(1, 0); // Present with vsync

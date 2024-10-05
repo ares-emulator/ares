@@ -1,4 +1,4 @@
-use crate::filter_chain::filter_impl::FilterChainImpl;
+use crate::filter_chain::chain::FilterChainImpl;
 
 pub(in crate::filter_chain) enum FilterChainDispatch {
     DirectStateAccess(FilterChainImpl<crate::gl::gl46::DirectStateAccessGL>),

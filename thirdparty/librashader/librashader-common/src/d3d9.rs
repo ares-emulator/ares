@@ -1,4 +1,4 @@
-use crate::{FilterMode, ImageFormat, WrapMode};
+use crate::{FilterMode, GetSize, ImageFormat, Size, WrapMode};
 use windows::Win32::Graphics::Direct3D9;
 //
 impl From<ImageFormat> for Direct3D9::D3DFORMAT {
@@ -61,6 +61,52 @@ impl From<FilterMode> for Direct3D9::D3DTEXTUREFILTER {
             FilterMode::Linear => Direct3D9::D3DFILTER_LINEAR,
             FilterMode::Nearest => Direct3D9::D3DFILTER_NEAREST,
         }
+    }
+}
+
+impl GetSize<u32> for &Direct3D9::IDirect3DSurface9 {
+    type Error = windows::core::Error;
+
+    fn size(&self) -> Result<Size<u32>, Self::Error> {
+        let mut desc = Default::default();
+        unsafe {
+            self.GetDesc(&mut desc)?;
+        }
+
+        Ok(Size {
+            height: desc.Height,
+            width: desc.Width,
+        })
+    }
+}
+
+impl GetSize<u32> for Direct3D9::IDirect3DSurface9 {
+    type Error = windows::core::Error;
+    fn size(&self) -> Result<Size<u32>, Self::Error> {
+        <&Self as GetSize<u32>>::size(&self)
+    }
+}
+
+impl GetSize<u32> for &Direct3D9::IDirect3DTexture9 {
+    type Error = windows::core::Error;
+
+    fn size(&self) -> Result<Size<u32>, Self::Error> {
+        let mut desc = Default::default();
+        unsafe {
+            self.GetLevelDesc(0, &mut desc)?;
+        }
+
+        Ok(Size {
+            height: desc.Height,
+            width: desc.Width,
+        })
+    }
+}
+
+impl GetSize<u32> for Direct3D9::IDirect3DTexture9 {
+    type Error = windows::core::Error;
+    fn size(&self) -> Result<Size<u32>, Self::Error> {
+        <&Self as GetSize<u32>>::size(&self)
     }
 }
 

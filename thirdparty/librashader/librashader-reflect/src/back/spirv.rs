@@ -1,5 +1,7 @@
 use crate::back::targets::SPIRV;
-use crate::back::{CompileShader, CompilerBackend, FromCompilation, ShaderCompilerOutput};
+use crate::back::{
+    CompileReflectShader, CompileShader, CompilerBackend, FromCompilation, ShaderCompilerOutput,
+};
 use crate::error::{ShaderCompileError, ShaderReflectError};
 use crate::front::SpirvCompilation;
 use crate::reflect::cross::glsl::GlslReflect;
@@ -16,12 +18,12 @@ pub(crate) struct WriteSpirV {
     pub(crate) fragment: Vec<u32>,
 }
 
+#[cfg(not(feature = "stable"))]
 impl FromCompilation<SpirvCompilation, SpirvCross> for SPIRV {
     type Target = SPIRV;
     type Options = Option<()>;
     type Context = ();
-    type Output = impl CompileShader<Self::Target, Options = Self::Options, Context = Self::Context>
-        + ReflectShader;
+    type Output = impl CompileReflectShader<Self::Target, SpirvCompilation, SpirvCross>;
 
     fn from_compilation(
         compile: SpirvCompilation,
@@ -39,6 +41,29 @@ impl FromCompilation<SpirvCompilation, SpirvCross> for SPIRV {
     }
 }
 
+#[cfg(feature = "stable")]
+impl FromCompilation<SpirvCompilation, SpirvCross> for SPIRV {
+    type Target = SPIRV;
+    type Options = Option<()>;
+    type Context = ();
+    type Output = Box<dyn CompileReflectShader<Self::Target, SpirvCompilation, SpirvCross> + Send>;
+
+    fn from_compilation(
+        compile: SpirvCompilation,
+    ) -> Result<CompilerBackend<Self::Output>, ShaderReflectError> {
+        let reflect = GlslReflect::try_from(&compile)?;
+        let vertex = compile.vertex;
+        let fragment = compile.fragment;
+        Ok(CompilerBackend {
+            backend: Box::new(WriteSpirV {
+                reflect,
+                vertex,
+                fragment,
+            }),
+        })
+    }
+}
+
 impl ReflectShader for WriteSpirV {
     fn reflect(
         &mut self,
@@ -46,6 +71,10 @@ impl ReflectShader for WriteSpirV {
         semantics: &ShaderSemantics,
     ) -> Result<ShaderReflection, ShaderReflectError> {
         self.reflect.reflect(pass_number, semantics)
+    }
+
+    fn validate(&mut self) -> Result<(), ShaderReflectError> {
+        self.reflect.validate()
     }
 }
 
@@ -63,6 +92,17 @@ impl CompileShader<SPIRV> for WriteSpirV {
             context: (),
         })
     }
+
+    fn compile_boxed(
+        self: Box<Self>,
+        _options: Self::Options,
+    ) -> Result<ShaderCompilerOutput<Vec<u32>, Self::Context>, ShaderCompileError> {
+        Ok(ShaderCompilerOutput {
+            vertex: self.vertex,
+            fragment: self.fragment,
+            context: (),
+        })
+    }
 }
 
 /// The context for a SPIRV compilation via Naga
@@ -71,18 +111,34 @@ pub struct NagaSpirvContext {
     pub vertex: Module,
 }
 
+#[cfg(not(feature = "stable"))]
 impl FromCompilation<SpirvCompilation, Naga> for SPIRV {
     type Target = SPIRV;
     type Options = NagaSpirvOptions;
     type Context = NagaSpirvContext;
-    type Output = impl CompileShader<Self::Target, Options = Self::Options, Context = Self::Context>
-        + ReflectShader;
+    type Output = impl CompileReflectShader<Self::Target, SpirvCompilation, Naga>;
 
     fn from_compilation(
         compile: SpirvCompilation,
     ) -> Result<CompilerBackend<Self::Output>, ShaderReflectError> {
         Ok(CompilerBackend {
             backend: NagaReflect::try_from(&compile)?,
+        })
+    }
+}
+
+#[cfg(feature = "stable")]
+impl FromCompilation<SpirvCompilation, Naga> for SPIRV {
+    type Target = SPIRV;
+    type Options = NagaSpirvOptions;
+    type Context = NagaSpirvContext;
+    type Output = Box<dyn CompileReflectShader<Self::Target, SpirvCompilation, Naga> + Send>;
+
+    fn from_compilation(
+        compile: SpirvCompilation,
+    ) -> Result<CompilerBackend<Self::Output>, ShaderReflectError> {
+        Ok(CompilerBackend {
+            backend: Box::new(NagaReflect::try_from(&compile)?),
         })
     }
 }

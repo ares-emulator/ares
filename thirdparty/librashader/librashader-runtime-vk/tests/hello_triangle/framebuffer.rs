@@ -14,7 +14,7 @@ impl VulkanFramebuffer {
         height: u32,
     ) -> VkResult<VulkanFramebuffer> {
         let attachments = &[*image_view];
-        let framebuffer_info = vk::FramebufferCreateInfo::builder()
+        let framebuffer_info = vk::FramebufferCreateInfo::default()
             .render_pass(*render_pass)
             .attachments(attachments)
             .width(width)

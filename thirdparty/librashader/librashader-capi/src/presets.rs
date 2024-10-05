@@ -14,11 +14,10 @@ const _: () = crate::assert_thread_safe::<ShaderPreset>();
 pub struct libra_preset_param_list_t {
     /// A pointer to the parameter
     pub parameters: *const libra_preset_param_t,
-    /// The number of parameters in the list.
+    /// The number of parameters in the list. This field
+    /// is readonly, and changing it will lead to undefined
+    /// behaviour on free.
     pub length: u64,
-    /// For internal use only.
-    /// Changing this causes immediate undefined behaviour on freeing this parameter list.
-    pub _internal_alloc: u64,
 }
 
 /// A preset parameter.
@@ -158,7 +157,7 @@ extern_fn! {
     /// - `name` must be null or a valid and aligned pointer to a string.
     /// - `value` may be a pointer to a uninitialized `float`.
     fn libra_preset_get_param(
-        preset: *mut libra_shader_preset_t,
+        preset: *const libra_shader_preset_t,
         name: *const c_char,
         value: *mut MaybeUninit<f32>
     ) |name, preset| {
@@ -196,7 +195,7 @@ extern_fn! {
     /// - It is safe to call `libra_preset_get_runtime_params` multiple times, however
     ///   the output struct must only be freed once per call.
     fn libra_preset_get_runtime_params(
-        preset: *mut libra_shader_preset_t,
+        preset: *const libra_shader_preset_t,
         out: *mut MaybeUninit<libra_preset_param_list_t>
     ) |preset| {
         assert_some_ptr!(preset);
@@ -205,7 +204,7 @@ extern_fn! {
         let iter = librashader::presets::get_parameter_meta(preset)?;
         let mut values = Vec::new();
         for param in iter {
-            let name = CString::new(param.id)
+            let name = CString::new(param.id.to_string())
             .map_err(|err| LibrashaderError::UnknownError(Box::new(err)))?;
             let description = CString::new(param.description)
             .map_err(|err| LibrashaderError::UnknownError(Box::new(err)))?;
@@ -226,7 +225,6 @@ extern_fn! {
             out.write(MaybeUninit::new(libra_preset_param_list_t {
                 parameters: parts,
                 length: len as u64,
-                _internal_alloc: 0,
             }));
         }
     }

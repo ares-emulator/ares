@@ -478,18 +478,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
         deviceContext->CopyResource(framebufferCopy, framebufferTexture);
 
-        libra_source_image_d3d11_t input = {framebufferCopySRV,
-                                            framebufferVP.Width,
-                                            framebufferVP.Height
-        };
-
-        libra_viewport_t vp = {0, 0, framebufferVP.Width, framebufferVP.Height,};
         frame_d3d11_opt_t frame_opt = {.clear_history = false,
                                    .frame_direction = -1};
 
-        libra.d3d11_filter_chain_frame(&filter_chain, deferredContext, frameCount, input,
-                                       vp,
-                                       framebufferRTV, NULL, &frame_opt);
+        libra.d3d11_filter_chain_frame(&filter_chain, deferredContext,
+                                       frameCount, framebufferCopySRV,
+                                       framebufferRTV, NULL, 
+                                        NULL, &frame_opt);
 
         ID3D11CommandList* commandList;
         deferredContext->FinishCommandList(false, &commandList);

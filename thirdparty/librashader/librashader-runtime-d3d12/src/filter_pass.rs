@@ -1,15 +1,16 @@
 use crate::buffer::RawD3D12Buffer;
-use crate::descriptor_heap::{D3D12DescriptorHeapSlot, ResourceWorkHeap, SamplerWorkHeap};
+use crate::descriptor_heap::{ResourceWorkHeap, SamplerWorkHeap};
 use crate::error;
 use crate::filter_chain::FilterCommon;
 use crate::graphics_pipeline::D3D12GraphicsPipeline;
 use crate::options::FrameOptionsD3D12;
 use crate::samplers::SamplerSet;
 use crate::texture::{D3D12OutputView, InputTexture};
+use d3d12_descriptor_heap::D3D12DescriptorHeapSlot;
 use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_preprocess::ShaderSource;
-use librashader_presets::ShaderPassConfig;
+use librashader_presets::PassMeta;
 use librashader_reflect::reflect::semantics::{MemberOffset, TextureBinding, UniformBinding};
 use librashader_reflect::reflect::ShaderReflection;
 use librashader_runtime::binding::{BindSemantics, TextureInput, UniformInputs};
@@ -17,8 +18,7 @@ use librashader_runtime::filter_pass::FilterPassMeta;
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::render_target::RenderTarget;
 use librashader_runtime::uniforms::{NoUniformBinder, UniformStorage};
-use std::ops::Deref;
-use windows::core::ComInterface;
+use windows::core::Interface;
 use windows::Win32::Foundation::RECT;
 use windows::Win32::Graphics::Direct3D12::{
     ID3D12GraphicsCommandList, ID3D12GraphicsCommandList4, D3D12_RENDER_PASS_BEGINNING_ACCESS,
@@ -30,7 +30,7 @@ use windows::Win32::Graphics::Direct3D12::{
 pub(crate) struct FilterPass {
     pub(crate) pipeline: D3D12GraphicsPipeline,
     pub(crate) reflection: ShaderReflection,
-    pub(crate) config: ShaderPassConfig,
+    pub(crate) meta: PassMeta,
     pub(crate) uniform_bindings: FastHashMap<UniformBinding, MemberOffset>,
     pub uniform_storage:
         UniformStorage<NoUniformBinder, Option<()>, RawD3D12Buffer, RawD3D12Buffer>,
@@ -66,12 +66,8 @@ impl BindSemantics<NoUniformBinder, Option<()>, RawD3D12Buffer, RawD3D12Buffer> 
 
         unsafe {
             texture_binding[binding.binding as usize].copy_descriptor(*texture.descriptor.as_ref());
-            sampler_binding[binding.binding as usize].copy_descriptor(
-                *samplers
-                    .get(texture.wrap_mode, texture.filter)
-                    .deref()
-                    .as_ref(),
-            )
+            sampler_binding[binding.binding as usize]
+                .copy_descriptor(*samplers.get(texture.wrap_mode, texture.filter).as_ref())
         }
     }
 }
@@ -81,8 +77,8 @@ impl FilterPassMeta for FilterPass {
         self.source.format
     }
 
-    fn config(&self) -> &ShaderPassConfig {
-        &self.config
+    fn meta(&self) -> &PassMeta {
+        &self.meta
     }
 }
 
@@ -126,7 +122,7 @@ impl FilterPass {
             parent.history_textures.iter().map(|o| o.as_ref()),
             parent.luts.iter().map(|(u, i)| (*u, i.as_ref())),
             &self.source.parameters,
-            &parent.config.parameters,
+            &parent.config,
         );
     }
 
@@ -149,7 +145,7 @@ impl FilterPass {
         vbo_type: QuadType,
     ) -> error::Result<()> {
         unsafe {
-            cmd.SetPipelineState(&self.pipeline.handle);
+            cmd.SetPipelineState(self.pipeline.pipeline_state(output.output.format));
         }
 
         self.build_semantics(
@@ -164,21 +160,27 @@ impl FilterPass {
             source,
         );
 
-        if let Some(ubo) = &self.reflection.ubo
-            && ubo.size != 0
+        if self
+            .reflection
+            .ubo
+            .as_ref()
+            .is_some_and(|ubo| ubo.size != 0)
         {
             self.uniform_storage.inner_ubo().bind_cbv(2, cmd);
         }
 
-        if let Some(push) = &self.reflection.push_constant
-            && push.size != 0
+        if self
+            .reflection
+            .push_constant
+            .as_ref()
+            .is_some_and(|push| push.size != 0)
         {
             self.uniform_storage.inner_push().bind_cbv(3, cmd);
         }
 
         unsafe {
-            cmd.SetGraphicsRootDescriptorTable(0, *self.texture_heap[0].deref().as_ref());
-            cmd.SetGraphicsRootDescriptorTable(1, *self.sampler_heap[0].deref().as_ref());
+            cmd.SetGraphicsRootDescriptorTable(0, *self.texture_heap[0].as_ref());
+            cmd.SetGraphicsRootDescriptorTable(1, *self.sampler_heap[0].as_ref());
         }
 
         // todo: check for non-renderpass.
@@ -204,17 +206,17 @@ impl FilterPass {
             cmd.RSSetViewports(&[D3D12_VIEWPORT {
                 TopLeftX: output.x,
                 TopLeftY: output.y,
-                Width: output.output.size.width as f32,
-                Height: output.output.size.height as f32,
+                Width: output.size.width as f32,
+                Height: output.size.height as f32,
                 MinDepth: 0.0,
                 MaxDepth: 1.0,
             }]);
 
             cmd.RSSetScissorRects(&[RECT {
-                left: 0,
-                top: 0,
-                right: output.output.size.width as i32,
-                bottom: output.output.size.height as i32,
+                left: output.x as i32,
+                top: output.y as i32,
+                right: output.size.width as i32,
+                bottom: output.size.height as i32,
             }]);
 
             parent.draw_quad.draw_quad(&cmd, vbo_type)

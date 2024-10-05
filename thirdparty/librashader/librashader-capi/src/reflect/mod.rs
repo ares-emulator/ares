@@ -1,6 +1,6 @@
 use crate::error;
 
-use librashader::presets::{ShaderPassConfig, ShaderPreset};
+use librashader::presets::{PassConfig, ShaderPreset};
 use librashader::reflect::semantics::ShaderSemantics;
 use librashader::reflect::targets::SPIRV;
 use librashader::reflect::{CompileShader, ReflectShader, ShaderCompilerOutput, ShaderReflection};
@@ -21,7 +21,7 @@ pub(crate) struct LookupTexture {
 
 pub(crate) struct PassReflection {
     reflection: ShaderReflection,
-    config: ShaderPassConfig,
+    config: PassConfig,
     spirv: ShaderCompilerOutput<Vec<u32>>,
 }
 pub(crate) struct FilterReflection {
@@ -35,7 +35,7 @@ impl FilterReflection {
         preset: ShaderPreset,
         direction: UVDirection,
     ) -> Result<FilterReflection, error::LibrashaderError> {
-        let (passes, textures) = (preset.shaders, preset.textures);
+        let (passes, textures) = (preset.passes, preset.textures);
 
         let (passes, semantics) = librashader::reflect::helper::compile_preset_passes::<
             Glslang,

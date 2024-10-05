@@ -13,7 +13,7 @@ pub(crate) struct InputTexture {
 /// An OpenGL texture bound as a shader resource.
 impl InputTexture {
     pub fn is_bound(&self) -> bool {
-        self.image.handle != 0
+        self.image.handle.is_some()
     }
 
     /// Returns a reference to itself if the texture is bound.

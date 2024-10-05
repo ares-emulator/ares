@@ -1,17 +1,19 @@
-use crate::descriptor_heap::{D3D12DescriptorHeap, D3D12DescriptorHeapSlot, ResourceWorkHeap};
+use crate::descriptor_heap::ResourceWorkHeap;
+use crate::resource::{ObtainResourceHandle, ResourceHandleStrategy};
 use crate::util::dxc_validate_shader;
 use crate::{error, util};
 use bytemuck::{Pod, Zeroable};
+use d3d12_descriptor_heap::{D3D12DescriptorHeap, D3D12DescriptorHeapSlot};
 use librashader_common::Size;
 use librashader_runtime::scaling::MipmapSize;
 use std::mem::ManuallyDrop;
-use std::ops::Deref;
+
 use windows::Win32::Graphics::Direct3D::Dxc::{
     CLSID_DxcLibrary, CLSID_DxcValidator, DxcCreateInstance,
 };
 use windows::Win32::Graphics::Direct3D12::{
     ID3D12DescriptorHeap, ID3D12Device, ID3D12GraphicsCommandList, ID3D12PipelineState,
-    ID3D12Resource, ID3D12RootSignature, D3D12_COMPUTE_PIPELINE_STATE_DESC,
+    ID3D12RootSignature, D3D12_COMPUTE_PIPELINE_STATE_DESC,
     D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING, D3D12_RESOURCE_BARRIER, D3D12_RESOURCE_BARRIER_0,
     D3D12_RESOURCE_BARRIER_TYPE_UAV, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
     D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_UAV_BARRIER, D3D12_SHADER_BYTECODE,
@@ -42,7 +44,7 @@ pub struct MipmapGenContext<'a> {
     cmd: &'a ID3D12GraphicsCommandList,
     heap: &'a mut D3D12DescriptorHeap<ResourceWorkHeap>,
     residuals: Vec<D3D12DescriptorHeapSlot<ResourceWorkHeap>>,
-    residual_uav_descs: Vec<D3D12_RESOURCE_UAV_BARRIER>,
+    residual_barriers: Vec<D3D12_RESOURCE_BARRIER>,
 }
 
 impl<'a> MipmapGenContext<'a> {
@@ -56,15 +58,15 @@ impl<'a> MipmapGenContext<'a> {
             cmd,
             heap,
             residuals: Vec::new(),
-            residual_uav_descs: Vec::new(),
+            residual_barriers: Vec::new(),
         }
     }
 
     /// Generate a set of mipmaps for the resource.
     /// This is a "cheap" action and only dispatches a compute shader.
-    pub fn generate_mipmaps(
+    pub fn generate_mipmaps<S: ResourceHandleStrategy<T>, T: ObtainResourceHandle>(
         &mut self,
-        resource: &ID3D12Resource,
+        resource: &T,
         miplevels: u16,
         size: Size<u32>,
         format: DXGI_FORMAT,
@@ -72,9 +74,13 @@ impl<'a> MipmapGenContext<'a> {
         unsafe {
             let (residuals_heap, residual_barriers) = self
                 .gen
-                .generate_mipmaps(self.cmd, resource, miplevels, size, format, self.heap)?;
+                .generate_mipmaps::<S, T>(self.cmd, resource, miplevels, size, format, self.heap)?;
+
+            // heap slots always need to be disposed
             self.residuals.extend(residuals_heap);
-            self.residual_uav_descs.extend(residual_barriers);
+
+            // barriers need to be disposed if the handle strategy is incrementref
+            S::cleanup_handler(|| self.residual_barriers.extend(residual_barriers));
         }
 
         Ok(())
@@ -84,9 +90,9 @@ impl<'a> MipmapGenContext<'a> {
         self,
     ) -> (
         Vec<D3D12DescriptorHeapSlot<ResourceWorkHeap>>,
-        Vec<D3D12_RESOURCE_UAV_BARRIER>,
+        Vec<D3D12_RESOURCE_BARRIER>,
     ) {
-        (self.residuals, self.residual_uav_descs)
+        (self.residuals, self.residual_barriers)
     }
 }
 
@@ -153,7 +159,7 @@ impl D3D12MipmapGen {
     ) -> Result<
         (
             Vec<D3D12DescriptorHeapSlot<ResourceWorkHeap>>,
-            Vec<D3D12_RESOURCE_UAV_BARRIER>,
+            Vec<D3D12_RESOURCE_BARRIER>,
         ),
         E,
     >
@@ -178,20 +184,20 @@ impl D3D12MipmapGen {
     /// SAFETY:
     ///   - handle must be a CPU handle to an SRV
     ///   - work_heap must have enough descriptors to fit all miplevels.
-    unsafe fn generate_mipmaps(
+    unsafe fn generate_mipmaps<S: ResourceHandleStrategy<T>, T: ObtainResourceHandle>(
         &self,
         cmd: &ID3D12GraphicsCommandList,
-        resource: &ID3D12Resource,
+        resource: &T,
         miplevels: u16,
         size: Size<u32>,
         format: DXGI_FORMAT,
         work_heap: &mut D3D12DescriptorHeap<ResourceWorkHeap>,
     ) -> error::Result<(
         Vec<D3D12DescriptorHeapSlot<ResourceWorkHeap>>,
-        Vec<D3D12_RESOURCE_UAV_BARRIER>,
+        Vec<D3D12_RESOURCE_BARRIER>,
     )> {
         // create views for mipmap generation
-        let srv = work_heap.alloc_slot()?;
+        let srv = work_heap.allocate_descriptor()?;
         unsafe {
             let srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC {
                 Format: format,
@@ -206,14 +212,14 @@ impl D3D12MipmapGen {
             };
 
             self.device
-                .CreateShaderResourceView(resource, Some(&srv_desc), *srv.deref().as_ref());
+                .CreateShaderResourceView(resource.handle(), Some(&srv_desc), *srv.as_ref());
         }
 
         let mut heap_slots = Vec::with_capacity(miplevels as usize);
         heap_slots.push(srv);
 
         for i in 1..miplevels {
-            let descriptor = work_heap.alloc_slot()?;
+            let descriptor = work_heap.allocate_descriptor()?;
             let desc = D3D12_UNORDERED_ACCESS_VIEW_DESC {
                 Format: format,
                 ViewDimension: D3D12_UAV_DIMENSION_TEXTURE2D,
@@ -227,20 +233,20 @@ impl D3D12MipmapGen {
 
             unsafe {
                 self.device.CreateUnorderedAccessView(
-                    resource,
+                    resource.handle(),
                     None,
                     Some(&desc),
-                    *descriptor.deref().as_ref(),
+                    *descriptor.as_ref(),
                 );
             }
             heap_slots.push(descriptor);
         }
 
         unsafe {
-            cmd.SetComputeRootDescriptorTable(0, *heap_slots[0].deref().as_ref());
+            cmd.SetComputeRootDescriptorTable(0, *heap_slots[0].as_ref());
         }
 
-        let mut residual_uavs = Vec::new();
+        let mut residual_barriers = Vec::new();
         for i in 1..miplevels as u32 {
             let scaled = size.scale_mipmap(i);
             let mipmap_params = MipConstants {
@@ -251,13 +257,13 @@ impl D3D12MipmapGen {
             let mipmap_params = bytemuck::bytes_of(&mipmap_params);
 
             let barriers = [
-                util::d3d12_get_resource_transition_subresource(
+                util::d3d12_get_resource_transition_subresource::<S, _>(
                     resource,
                     D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                     i - 1,
                 ),
-                util::d3d12_get_resource_transition_subresource(
+                util::d3d12_get_resource_transition_subresource::<S, _>(
                     resource,
                     D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
@@ -268,7 +274,9 @@ impl D3D12MipmapGen {
             unsafe {
                 cmd.ResourceBarrier(&barriers);
 
-                cmd.SetComputeRootDescriptorTable(1, *heap_slots[i as usize].deref().as_ref());
+                S::cleanup_handler(|| residual_barriers.extend(barriers));
+
+                cmd.SetComputeRootDescriptorTable(1, *heap_slots[i as usize].as_ref());
                 cmd.SetComputeRoot32BitConstants(
                     2,
                     (std::mem::size_of::<MipConstants>() / std::mem::size_of::<u32>()) as u32,
@@ -284,7 +292,7 @@ impl D3D12MipmapGen {
             }
 
             let uav_barrier = ManuallyDrop::new(D3D12_RESOURCE_UAV_BARRIER {
-                pResource: ManuallyDrop::new(Some(resource.clone())),
+                pResource: unsafe { S::obtain(resource) },
             });
 
             let barriers = [
@@ -293,13 +301,13 @@ impl D3D12MipmapGen {
                     Anonymous: D3D12_RESOURCE_BARRIER_0 { UAV: uav_barrier },
                     ..Default::default()
                 },
-                util::d3d12_get_resource_transition_subresource(
+                util::d3d12_get_resource_transition_subresource::<S, _>(
                     resource,
                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                     D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                     i,
                 ),
-                util::d3d12_get_resource_transition_subresource(
+                util::d3d12_get_resource_transition_subresource::<S, _>(
                     resource,
                     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                     D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
@@ -311,14 +319,9 @@ impl D3D12MipmapGen {
                 cmd.ResourceBarrier(&barriers);
             }
 
-            let uav = unsafe {
-                let [barrier, ..] = barriers;
-                barrier.Anonymous.UAV
-            };
-
-            residual_uavs.push(ManuallyDrop::into_inner(uav))
+            S::cleanup_handler(|| residual_barriers.extend(barriers));
         }
 
-        Ok((heap_slots, residual_uavs))
+        Ok((heap_slots, residual_barriers))
     }
 }

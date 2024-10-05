@@ -1,19 +1,20 @@
-use icrate::Metal::{
-    MTLCompareFunctionNever, MTLDevice, MTLSamplerAddressMode,
-    MTLSamplerBorderColorTransparentBlack, MTLSamplerDescriptor, MTLSamplerMinMagFilter,
-    MTLSamplerState,
-};
 use librashader_common::map::FastHashMap;
 use librashader_common::{FilterMode, WrapMode};
-use objc2::rc::Id;
+use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
+use objc2_metal::{
+    MTLCompareFunction, MTLDevice, MTLSamplerAddressMode, MTLSamplerBorderColor,
+    MTLSamplerDescriptor, MTLSamplerMinMagFilter, MTLSamplerState,
+};
 
 use crate::error::{FilterChainError, Result};
 
 pub struct SamplerSet {
     // todo: may need to deal with differences in mip filter.
-    samplers:
-        FastHashMap<(WrapMode, FilterMode, FilterMode), Id<ProtocolObject<dyn MTLSamplerState>>>,
+    samplers: FastHashMap<
+        (WrapMode, FilterMode, FilterMode),
+        Retained<ProtocolObject<dyn MTLSamplerState>>,
+    >,
 }
 
 impl SamplerSet {
@@ -27,7 +28,7 @@ impl SamplerSet {
         // eprintln!("{wrap}, {filter}, {mip}");
         // SAFETY: the sampler set is complete for the matrix
         // wrap x filter x mipmap
-        let id: &Id<ProtocolObject<dyn MTLSamplerState>> = unsafe {
+        let id: &Retained<ProtocolObject<dyn MTLSamplerState>> = unsafe {
             self.samplers
                 .get(&(wrap, filter, mipmap))
                 .unwrap_unchecked()
@@ -53,14 +54,14 @@ impl SamplerSet {
                     descriptor.setTAddressMode(MTLSamplerAddressMode::from(*wrap_mode));
 
                     descriptor.setMagFilter(MTLSamplerMinMagFilter::from(*filter_mode));
-
                     descriptor.setMinFilter(MTLSamplerMinMagFilter::from(*filter_mode));
                     descriptor.setMipFilter(filter_mode.mtl_mip(*mipmap_filter));
+
                     descriptor.setLodMinClamp(0.0);
-                    descriptor.setLodMaxClamp(1000.0);
-                    descriptor.setCompareFunction(MTLCompareFunctionNever);
+                    descriptor.setLodMaxClamp(f32::MAX);
+                    descriptor.setCompareFunction(MTLCompareFunction::Never);
                     descriptor.setMaxAnisotropy(1);
-                    descriptor.setBorderColor(MTLSamplerBorderColorTransparentBlack);
+                    descriptor.setBorderColor(MTLSamplerBorderColor::TransparentBlack);
                     descriptor.setNormalizedCoordinates(true);
 
                     let Some(sampler_state) = device.newSamplerStateWithDescriptor(&descriptor)

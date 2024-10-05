@@ -1,5 +1,5 @@
 use crate::error::ShaderCompileError;
-use glslang::{CompilerOptions, ShaderInput};
+use glslang::{CompilerOptions, ShaderInput, ShaderMessage};
 use librashader_preprocess::ShaderSource;
 use rspirv::binary::Assemble;
 use rspirv::dr::Builder;
@@ -25,14 +25,21 @@ pub(crate) fn compile_spirv(source: &ShaderSource) -> Result<SpirvCompilation, S
             spirv_version: glslang::SpirvVersion::SPIRV1_0,
         },
         version_profile: None,
+        messages: ShaderMessage::DEFAULT,
     };
 
     let vertex = glslang::ShaderSource::from(source.vertex.as_str());
-    let vertex = ShaderInput::new(&vertex, glslang::ShaderStage::Vertex, &options, None)?;
+    let vertex = ShaderInput::new(&vertex, glslang::ShaderStage::Vertex, &options, None, None)?;
     let vertex = compiler.create_shader(vertex)?;
 
     let fragment = glslang::ShaderSource::from(source.fragment.as_str());
-    let fragment = ShaderInput::new(&fragment, glslang::ShaderStage::Fragment, &options, None)?;
+    let fragment = ShaderInput::new(
+        &fragment,
+        glslang::ShaderStage::Fragment,
+        &options,
+        None,
+        None,
+    )?;
     let fragment = compiler.create_shader(fragment)?;
 
     let vertex = vertex.compile()?;
@@ -41,11 +48,12 @@ pub(crate) fn compile_spirv(source: &ShaderSource) -> Result<SpirvCompilation, S
     let vertex = load_module(&vertex);
     let fragment = load_module(&fragment);
     let mut fragment = Builder::new_from_module(fragment);
+    let mut vertex = Builder::new_from_module(vertex);
 
-    let mut pass = link_input_outputs::LinkInputs::new(&vertex, &mut fragment);
+    let mut pass = link_input_outputs::LinkInputs::new(&mut vertex, &mut fragment, false);
     pass.do_pass();
 
-    let vertex = vertex.assemble();
+    let vertex = vertex.module().assemble();
     let fragment = fragment.module().assemble();
 
     Ok(SpirvCompilation { vertex, fragment })

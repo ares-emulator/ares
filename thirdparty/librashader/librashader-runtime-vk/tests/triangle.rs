@@ -11,15 +11,15 @@ fn triangle_vk() {
 
     unsafe {
         let filter = FilterChainVulkan::load_from_path(
-            "../test/shaders_slang/bezel/Mega_Bezel/Presets/MBZ__0__SMOOTH-ADV.slangp",
+            "../test/shaders_slang/test/feedback.slangp",
+            // "../test/shaders_slang/bezel/Mega_Bezel/Presets/MBZ__0__SMOOTH-ADV.slangp",
             // "../test/Mega_Bezel_Packs/Duimon-Mega-Bezel/Presets/Advanced/Nintendo_GBA_SP/GBA_SP-[ADV]-[LCD-GRID]-[Night].slangp",
             &base,
-            // "../test/slang-shaders/test/feedback.slancargogp",
             // "../test/basic.slangp",
             Some(&FilterChainOptionsVulkan {
                 frames_in_flight: 3,
                 force_no_mipmaps: false,
-                use_dynamic_rendering: true,
+                use_dynamic_rendering: false,
                 disable_cache: true,
             }),
         )

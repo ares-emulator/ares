@@ -3,8 +3,7 @@
 //! This crate should not be used directly.
 //! See [`librashader::runtime::vk`](https://docs.rs/librashader/latest/librashader/runtime/vk/index.html) instead.
 #![deny(unsafe_op_in_unsafe_fn)]
-#![feature(type_alias_impl_trait)]
-#![feature(let_chains)]
+#![cfg_attr(not(feature = "stable"), feature(type_alias_impl_trait))]
 
 mod draw_quad;
 mod filter_chain;

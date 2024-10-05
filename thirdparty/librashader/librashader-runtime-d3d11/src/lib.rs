@@ -5,8 +5,7 @@
 //! This crate should not be used directly.
 //! See [`librashader::runtime::d3d11`](https://docs.rs/librashader/latest/librashader/runtime/d3d11/index.html) instead.
 
-#![feature(type_alias_impl_trait)]
-#![feature(let_chains)]
+#![cfg_attr(not(feature = "stable"), feature(type_alias_impl_trait))]
 
 mod draw_quad;
 mod filter_chain;
@@ -25,5 +24,3 @@ use librashader_runtime::impl_filter_chain_parameters;
 impl_filter_chain_parameters!(FilterChainD3D11);
 
 pub use filter_chain::FilterChainD3D11;
-pub use texture::D3D11InputView;
-pub use texture::D3D11OutputView;

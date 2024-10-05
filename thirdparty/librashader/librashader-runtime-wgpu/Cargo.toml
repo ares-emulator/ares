@@ -2,7 +2,7 @@
 name = "librashader-runtime-wgpu"
 edition = "2021"
 
-version = "0.2.7"
+version = "0.5.0-rc.1"
 license = "MPL-2.0 OR GPL-3.0-only"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
@@ -14,14 +14,15 @@ description = "RetroArch shaders for all."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-librashader-common = { path = "../librashader-common", features = ["wgpu"], version = "0.2.7" }
-librashader-presets = { path = "../librashader-presets", version = "0.2.7" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.7" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.7", features = ["wgsl"], default-features = false }
-librashader-runtime = { path = "../librashader-runtime" , version = "0.2.7" }
+librashader-common = { path = "../librashader-common", features = ["wgpu"], version = "0.5.0-rc.1" }
+librashader-presets = { path = "../librashader-presets", version = "0.5.0-rc.1" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.0-rc.1" }
+librashader-pack = { path = "../librashader-pack", version = "0.5.0-rc.1" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.5.0-rc.1", features = ["wgsl"], default-features = false }
+librashader-runtime = { path = "../librashader-runtime" , version = "0.5.0-rc.1" }
+librashader-cache = { path = "../librashader-cache", version = "0.5.0-rc.1" }
 
-wgpu = { version = "0.20.0", default-features = false, features = ["wgsl"] }
-image = "0.25.1"
+wgpu = { workspace = true, default-features = false, features = ["wgsl"] }
 thiserror = "1.0.50"
 bytemuck = { version = "1.14.0", features = ["derive"] }
 array-concat = "0.5.2"
@@ -32,8 +33,10 @@ wgpu_dx12 = ["wgpu/dx12"]
 wgpu_metal = ["wgpu/metal"]
 wgpu_webgpu = ["wgpu/webgpu"]
 
+stable = ["librashader-reflect/stable"]
+
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
-rayon = "1.8.1"
+rayon = { workspace = true }
 
 [dev-dependencies]
 config = { version = "0.13.4", features = [] }

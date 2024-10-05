@@ -38,4 +38,11 @@ impl CompileShader<WGSL> for NagaReflect {
             },
         })
     }
+
+    fn compile_boxed(
+        self: Box<Self>,
+        options: Self::Options,
+    ) -> Result<ShaderCompilerOutput<String, Self::Context>, ShaderCompileError> {
+        <NagaReflect as CompileShader<WGSL>>::compile(*self, options)
+    }
 }

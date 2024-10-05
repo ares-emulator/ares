@@ -1,17 +1,16 @@
 use crate::error::{FilterChainError, Result};
 use crate::select_optimal_pixel_format;
-use icrate::Metal::{
-    MTLBlitCommandEncoder, MTLCommandBuffer, MTLCommandEncoder, MTLDevice, MTLPixelFormat,
-    MTLStorageModePrivate, MTLTexture, MTLTextureDescriptor, MTLTextureUsageRenderTarget,
-    MTLTextureUsageShaderRead, MTLTextureUsageShaderWrite,
-};
 use librashader_common::{FilterMode, ImageFormat, Size, WrapMode};
 use librashader_presets::Scale2D;
 use librashader_runtime::scaling::{MipmapSize, ScaleFramebuffer, ViewportSize};
-use objc2::rc::Id;
+use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
+use objc2_metal::{
+    MTLBlitCommandEncoder, MTLCommandBuffer, MTLCommandEncoder, MTLDevice, MTLPixelFormat,
+    MTLTexture, MTLTextureDescriptor, MTLTextureUsage,
+};
 
-pub type MetalTexture = Id<ProtocolObject<dyn MTLTexture>>;
+pub type MetalTexture = Retained<ProtocolObject<dyn MTLTexture>>;
 
 /// Alias to an `id<MTLTexture>`.
 pub type MetalTextureRef<'a> = &'a ProtocolObject<dyn MTLTexture>;
@@ -71,11 +70,11 @@ impl OwnedTexture {
                 1
             });
 
-            descriptor.setStorageMode(MTLStorageModePrivate);
             descriptor.setUsage(
-                MTLTextureUsageShaderRead
-                    | MTLTextureUsageShaderWrite
-                    | MTLTextureUsageRenderTarget,
+                MTLTextureUsage::ShaderRead
+                    | MTLTextureUsage::ShaderWrite
+                    | MTLTextureUsage::RenderTarget
+                    | MTLTextureUsage::PixelFormatView,
             );
 
             descriptor
@@ -105,9 +104,14 @@ impl OwnedTexture {
         if self.size != size
             || (mipmap && self.max_miplevels == 1)
             || (!mipmap && self.max_miplevels != 1)
-            || format != select_optimal_pixel_format(format)
+            || self.texture.pixelFormat() != select_optimal_pixel_format(format)
         {
-            let mut new = OwnedTexture::new(device, size, self.max_miplevels, format)?;
+            let mut new = OwnedTexture::new(
+                device,
+                size,
+                self.max_miplevels,
+                select_optimal_pixel_format(format),
+            )?;
             std::mem::swap(self, &mut new);
         }
         Ok(size)

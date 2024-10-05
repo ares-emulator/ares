@@ -2,7 +2,7 @@ use crate::mipmap::MipmapGen;
 use crate::samplers::SamplerSet;
 use crate::texture::InputImage;
 use librashader_common::{Size, WrapMode};
-use librashader_presets::TextureConfig;
+use librashader_presets::TextureMeta;
 use librashader_runtime::image::Image;
 use librashader_runtime::scaling::MipmapSize;
 use std::sync::Arc;
@@ -21,7 +21,7 @@ impl LutTexture {
         queue: &wgpu::Queue,
         cmd: &mut wgpu::CommandEncoder,
         image: Image,
-        config: &TextureConfig,
+        config: &TextureMeta,
         mipmapper: &mut MipmapGen,
         sampler_set: &SamplerSet,
     ) -> LutTexture {

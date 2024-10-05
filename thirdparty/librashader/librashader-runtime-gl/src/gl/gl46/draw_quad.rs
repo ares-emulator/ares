@@ -1,104 +1,95 @@
+use crate::error;
+use crate::error::FilterChainError;
 use crate::gl::DrawQuad;
 use crate::gl::{FINAL_VBO_DATA, OFFSCREEN_VBO_DATA};
 use bytemuck::offset_of;
-use gl::types::{GLint, GLsizeiptr, GLuint};
+use glow::HasContext;
 use librashader_runtime::quad::{QuadType, VertexInput};
 
 pub struct Gl46DrawQuad {
-    vbo: [GLuint; 2],
-    vao: GLuint,
+    vbo: [glow::Buffer; 2],
+    vao: glow::VertexArray,
 }
 
 impl DrawQuad for Gl46DrawQuad {
-    fn new() -> Self {
-        let mut vbo = [0, 0];
-        let mut vao = 0;
+    fn new(context: &glow::Context) -> error::Result<Self> {
+        let vbo;
+        let vao;
 
         unsafe {
-            gl::CreateBuffers(2, vbo.as_mut_ptr());
-            gl::NamedBufferData(
+            vbo = [
+                context
+                    .create_named_buffer()
+                    .map_err(FilterChainError::GlError)?,
+                context
+                    .create_named_buffer()
+                    .map_err(FilterChainError::GlError)?,
+            ];
+
+            context.named_buffer_data_u8_slice(
                 vbo[0],
-                std::mem::size_of_val(OFFSCREEN_VBO_DATA) as GLsizeiptr,
-                OFFSCREEN_VBO_DATA.as_ptr().cast(),
-                gl::STATIC_DRAW,
+                bytemuck::cast_slice(OFFSCREEN_VBO_DATA),
+                glow::STATIC_DRAW,
             );
 
-            gl::NamedBufferData(
+            context.named_buffer_data_u8_slice(
                 vbo[1],
-                std::mem::size_of_val(FINAL_VBO_DATA) as GLsizeiptr,
-                FINAL_VBO_DATA.as_ptr().cast(),
-                gl::STATIC_DRAW,
+                bytemuck::cast_slice(FINAL_VBO_DATA),
+                glow::STATIC_DRAW,
             );
 
-            gl::CreateVertexArrays(1, &mut vao);
+            vao = context
+                .create_named_vertex_array()
+                .map_err(FilterChainError::GlError)?;
+            context.enable_vertex_array_attrib(vao, 0);
+            context.enable_vertex_array_attrib(vao, 1);
 
-            gl::EnableVertexArrayAttrib(vao, 0);
-            gl::EnableVertexArrayAttrib(vao, 1);
-
-            gl::VertexArrayAttribFormat(
+            context.vertex_array_attrib_format_f32(
                 vao,
                 0,
                 4,
-                gl::FLOAT,
-                gl::FALSE,
-                offset_of!(VertexInput, position) as GLuint,
+                glow::FLOAT,
+                false,
+                offset_of!(VertexInput, position) as u32,
             );
-            gl::VertexArrayAttribFormat(
+            context.vertex_array_attrib_format_f32(
                 vao,
                 1,
                 2,
-                gl::FLOAT,
-                gl::FALSE,
-                offset_of!(VertexInput, texcoord) as GLuint,
+                glow::FLOAT,
+                false,
+                offset_of!(VertexInput, texcoord) as u32,
             );
 
-            gl::VertexArrayAttribBinding(vao, 0, 0);
-            gl::VertexArrayAttribBinding(vao, 1, 0);
+            context.vertex_array_attrib_binding_f32(vao, 0, 0);
+            context.vertex_array_attrib_binding_f32(vao, 1, 0);
         }
 
-        Self { vbo, vao }
+        Ok(Self { vbo, vao })
     }
 
-    fn bind_vertices(&self, quad_type: QuadType) {
+    fn bind_vertices(&self, context: &glow::Context, quad_type: QuadType) {
         let buffer_index = match quad_type {
             QuadType::Offscreen => 0,
             QuadType::Final => 1,
         };
 
         unsafe {
-            gl::VertexArrayVertexBuffer(
+            context.vertex_array_vertex_buffer(
                 self.vao,
                 0,
-                self.vbo[buffer_index],
+                Some(self.vbo[buffer_index]),
                 0,
-                std::mem::size_of::<VertexInput>() as GLint,
+                std::mem::size_of::<VertexInput>() as i32,
             );
 
-            gl::BindVertexArray(self.vao);
+            context.bind_vertex_array(Some(self.vao))
         }
     }
 
-    fn unbind_vertices(&self) {
+    fn unbind_vertices(&self, context: &glow::Context) {
         unsafe {
-            gl::BindVertexArray(0);
-        }
-    }
-}
-
-impl Drop for Gl46DrawQuad {
-    fn drop(&mut self) {
-        unsafe {
-            if self.vbo[0] != 0 {
-                gl::DeleteBuffers(1, &self.vbo[0]);
-            }
-
-            if self.vbo[1] != 0 {
-                gl::DeleteBuffers(1, &self.vbo[1]);
-            }
-
-            if self.vao != 0 {
-                gl::DeleteVertexArrays(1, &self.vao)
-            }
+            context.bind_vertex_array(None);
         }
     }
 }

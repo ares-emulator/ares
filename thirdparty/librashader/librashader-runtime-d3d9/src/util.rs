@@ -6,11 +6,9 @@ use std::mem::MaybeUninit;
 use crate::binding::{ConstantDescriptor, RegisterAssignment, RegisterSet};
 use crate::d3dx::{ID3DXConstantTable, D3DXCONSTANT_DESC, D3DXREGISTER_SET};
 use librashader_common::map::FastHashMap;
-use librashader_common::Size;
 use windows::core::PCSTR;
 use windows::Win32::Graphics::Direct3D::Fxc::{D3DCompile, D3DCOMPILE_AVOID_FLOW_CONTROL};
 use windows::Win32::Graphics::Direct3D::ID3DBlob;
-use windows::Win32::Graphics::Direct3D9::{IDirect3DSurface9, IDirect3DTexture9};
 
 // const fn d3d9_format_fallback_list(format: D3DFORMAT) -> Option<&'static [D3DFORMAT]> {
 //     match format {
@@ -209,37 +207,5 @@ pub fn d3d_reflect_shader(
             }
         }
         Ok(assignments)
-    }
-}
-
-pub(crate) trait GetSize {
-    fn size(&self) -> error::Result<Size<u32>>;
-}
-
-impl GetSize for IDirect3DSurface9 {
-    fn size(&self) -> error::Result<Size<u32>> {
-        let mut desc = Default::default();
-        unsafe {
-            self.GetDesc(&mut desc)?;
-        }
-
-        Ok(Size {
-            height: desc.Height,
-            width: desc.Width,
-        })
-    }
-}
-
-impl GetSize for IDirect3DTexture9 {
-    fn size(&self) -> error::Result<Size<u32>> {
-        let mut desc = Default::default();
-        unsafe {
-            self.GetLevelDesc(0, &mut desc)?;
-        }
-
-        Ok(Size {
-            height: desc.Height,
-            width: desc.Width,
-        })
     }
 }

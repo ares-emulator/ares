@@ -3,7 +3,7 @@ name = "librashader-runtime-mtl"
 edition = "2021"
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.7"
+version = "0.5.0-rc.1"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -14,16 +14,17 @@ description = "RetroArch shaders for all."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-librashader-common = { path = "../librashader-common", features = ["metal"], version = "0.2.7" }
-librashader-presets = { path = "../librashader-presets", version = "0.2.7" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.7" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.7" }
-librashader-runtime = { path = "../librashader-runtime" , version = "0.2.7" }
+librashader-common = { path = "../librashader-common", features = ["metal"], version = "0.5.0-rc.1" }
+librashader-presets = { path = "../librashader-presets", version = "0.5.0-rc.1" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.0-rc.1" }
+librashader-pack = { path = "../librashader-pack", version = "0.5.0-rc.1" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.5.0-rc.1" }
+librashader-runtime = { path = "../librashader-runtime" , version = "0.5.0-rc.1" }
 
 thiserror = "1.0"
 array-concat = "0.5.2"
 bytemuck = { version = "1.12.3", features = ["derive"] }
-rayon = "1.8.1"
+rayon = { workspace = true }
 
 [[test]]
 name = "triangle"
@@ -34,12 +35,17 @@ harness = false
 targets = ["x86_64-apple-darwin", "aarch64-apple-darwin", "aarch64-apple-ios"]
 
 [target.'cfg(target_vendor="apple")'.dependencies]
-icrate = { version = "0.1.0" , features = [ "Metal", "Metal_all" ] }
-objc2 = { version = "0.5.0", features = ["apple"] }
+objc2-foundation = { version = "0.2", features = ["NSError"] }
+objc2-metal = { workspace = true, features = ["all"] }
+objc2 = { workspace = true, features = ["apple"] }
 
 [features]
+stable = ["librashader-reflect/stable"]
 
-run_test = ["icrate/AppKit", "icrate/AppKit_all", "icrate/Foundation", "icrate/Foundation_all", "icrate/MetalKit", "icrate/MetalKit_all"]
-
+[target.'cfg(target_vendor="apple")'.dev-dependencies]
+objc2-metal-kit = { version = "0.2", features = ["all"]}
+objc2-foundation = { version = "0.2", features = ["all"] }
+objc2-app-kit = { version = "0.2", features = ["all"] }
+objc2-quartz-core = { version = "0.2", features = ["CAMetalLayer", "objc2-metal"]}
 #[lib]
 #crate-type = ["lib", "staticlib"]

@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 use windows::core::imp::BOOL;
-use windows::core::{IntoParam, HRESULT, PCSTR};
+use windows::core::{Param, HRESULT, PCSTR};
 use windows::Win32::Graphics::Direct3D::{ID3DBlob, ID3DInclude, D3D_SHADER_MACRO};
 
 const D3DERR_INVALIDCALL: u32 = 0x8876086c;
@@ -49,17 +49,17 @@ pub unsafe fn D3DXCompileShader<P1, P2, P3>(
     ppconstanttable: Option<*mut Option<ID3DXConstantTable>>,
 ) -> ::windows::core::Result<()>
 where
-    P1: IntoParam<ID3DInclude>,
-    P2: IntoParam<PCSTR>,
-    P3: IntoParam<PCSTR>,
+    P1: Param<ID3DInclude>,
+    P2: Param<PCSTR>,
+    P3: Param<PCSTR>,
 {
     raw::D3DXCompileShader(
         psrcdata,
         srcdatasize,
         ::core::mem::transmute(pdefines.unwrap_or(::std::ptr::null())),
-        pinclude.into_param().abi(),
-        pfunctioname.into_param().abi(),
-        pprofile.into_param().abi(),
+        pinclude.param().abi(),
+        pfunctioname.param().abi(),
+        pprofile.param().abi(),
         flags,
         ::core::mem::transmute(ppcode),
         ::core::mem::transmute(pperrormsgs.unwrap_or(::std::ptr::null_mut())),
@@ -68,9 +68,11 @@ where
     .ok()
 }
 
-#[repr(transparent)]
-#[derive(PartialEq, Eq, Debug, Clone)]
-pub struct ID3DXConstantTable(windows::core::IUnknown);
+windows::core::imp::define_interface!(
+    ID3DXConstantTable,
+    ID3DXConstantTable_Vtbl,
+    0xab3c758f_93e_4356_b7_62_4d_b1_8f_1b_3a1
+);
 
 #[allow(dead_code)]
 impl ID3DXConstantTable {
@@ -79,7 +81,8 @@ impl ID3DXConstantTable {
         p_function: *const c_void,
     ) -> windows::core::Result<ID3DXConstantTable> {
         let mut result__ = ::std::mem::zeroed();
-        raw::D3DXGetShaderConstantTable(p_function, &mut result__).from_abi(result__)
+        raw::D3DXGetShaderConstantTable(p_function, &mut result__)
+            .and_then(|| windows::core::Type::from_abi(result__))
     }
 
     #[allow(non_snake_case)]
@@ -150,12 +153,12 @@ impl ID3DXConstantTable {
         pname: P,
     ) -> windows::core::Result<D3DXHANDLE>
     where
-        P: IntoParam<PCSTR>,
+        P: Param<PCSTR>,
     {
         let handle = (windows::core::Interface::vtable(self).GetConstantByName)(
             windows::core::Interface::as_raw(self),
             hconstant.unwrap_or(D3DXHANDLE(std::ptr::null())),
-            pname.into_param().abi(),
+            pname.param().abi(),
         );
 
         if handle.0 as u32 == D3DERR_INVALIDCALL {
@@ -191,11 +194,6 @@ impl ID3DXConstantTable {
             hconstant.unwrap_or(D3DXHANDLE(std::ptr::null())),
         )
     }
-}
-
-impl windows::core::CanInto<windows::core::IUnknown> for ID3DXConstantTable {}
-unsafe impl windows::core::Interface for ID3DXConstantTable {
-    type Vtable = ID3DXConstantTable_Vtbl;
 }
 
 #[repr(C)]
@@ -430,8 +428,3 @@ pub enum D3DXPARAMETER_TYPE {
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct D3DXHANDLE(pub *const c_void);
-
-unsafe impl windows::core::ComInterface for ID3DXConstantTable {
-    const IID: windows::core::GUID =
-        windows::core::GUID::from_u128(0xab3c758f_93e_4356_b7_62_4d_b1_8f_1b_3a1);
-}

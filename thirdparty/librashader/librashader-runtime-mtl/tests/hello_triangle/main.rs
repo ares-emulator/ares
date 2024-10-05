@@ -1,32 +1,29 @@
-#![deny(unsafe_op_in_unsafe_fn)]
-
 use core::{cell::OnceCell, ptr::NonNull};
 use std::sync::RwLock;
 
-use icrate::Metal::{
-    MTLBlitCommandEncoder, MTLClearColor, MTLTexture, MTLTextureDescriptor,
-    MTLTextureUsageRenderTarget,
+use objc2_app_kit::{
+    NSApplication, NSApplicationActivationPolicy, NSApplicationDelegate, NSBackingStoreType,
+    NSWindow, NSWindowStyleMask,
 };
-use icrate::{
-    AppKit::{
-        NSApplication, NSApplicationActivationPolicyRegular, NSApplicationDelegate,
-        NSBackingStoreBuffered, NSWindow, NSWindowStyleMaskClosable, NSWindowStyleMaskResizable,
-        NSWindowStyleMaskTitled,
-    },
-    Foundation::{
-        ns_string, MainThreadMarker, NSDate, NSNotification, NSObject, NSObjectProtocol, NSPoint,
-        NSRect, NSSize,
-    },
-    Metal::{
-        MTLCommandBuffer, MTLCommandEncoder, MTLCommandQueue, MTLCreateSystemDefaultDevice,
-        MTLDevice, MTLDrawable, MTLLibrary, MTLPrimitiveTypeTriangle, MTLRenderCommandEncoder,
-        MTLRenderPipelineDescriptor, MTLRenderPipelineState,
-    },
-    MetalKit::{MTKView, MTKViewDelegate},
+use objc2_metal::{
+    MTLBlitCommandEncoder, MTLClearColor, MTLTexture, MTLTextureDescriptor, MTLTextureUsage,
 };
+
+use objc2_foundation::{
+    ns_string, MainThreadMarker, NSDate, NSNotification, NSObject, NSObjectProtocol, NSPoint,
+    NSRect, NSSize,
+};
+
+use objc2_metal::{
+    MTLCommandBuffer, MTLCommandEncoder, MTLCommandQueue, MTLCreateSystemDefaultDevice, MTLDevice,
+    MTLDrawable, MTLLibrary, MTLPrimitiveType, MTLRenderCommandEncoder,
+    MTLRenderPipelineDescriptor, MTLRenderPipelineState,
+};
+use objc2_metal_kit::{MTKView, MTKViewDelegate};
+
 use librashader_common::Viewport;
 use librashader_presets::ShaderPreset;
-use librashader_runtime_metal::FilterChainMetal;
+use librashader_runtime_mtl::FilterChainMetal;
 use objc2::{
     declare_class, msg_send_id, mutability::MainThreadOnly, rc::Id, runtime::ProtocolObject,
     ClassType, DeclaredClass,
@@ -161,10 +158,10 @@ declare_class!(
             // create the app window
             let window = {
                 let content_rect = NSRect::new(NSPoint::new(0., 0.), NSSize::new(768., 768.));
-                let style = NSWindowStyleMaskClosable
-                    | NSWindowStyleMaskResizable
-                    | NSWindowStyleMaskTitled;
-                let backing_store_type = NSBackingStoreBuffered;
+                let style = NSWindowStyleMask::Closable
+                    | NSWindowStyleMask::Resizable
+                    | NSWindowStyleMask::Titled;
+                let backing_store_type = NSBackingStoreType::NSBackingStoreBuffered;
                 let flag = false;
                 unsafe {
                     NSWindow::initWithContentRect_styleMask_backing_defer(
@@ -223,7 +220,7 @@ declare_class!(
                 .expect("Failed to create a pipeline state.");
 
            let preset =
-            ShaderPreset::try_parse("../test/shaders_slang/crt/crt-royale.slangp").unwrap();
+            ShaderPreset::try_parse("../test/shaders_slang/test/feedback.slangp").unwrap();
 
         let filter_chain = FilterChainMetal::load_from_preset(
             preset,
@@ -362,7 +359,7 @@ declare_class!(
             // configure the encoder with the pipeline and draw the triangle
             encoder.setRenderPipelineState(pipeline_state);
             unsafe {
-                encoder.drawPrimitives_vertexStart_vertexCount(MTLPrimitiveTypeTriangle, 0, 3)
+                encoder.drawPrimitives_vertexStart_vertexCount(MTLPrimitiveType::Triangle, 0, 3)
             };
             encoder.endEncoding();
 
@@ -382,7 +379,7 @@ declare_class!(
                     false
                 );
 
-                tex_desc.setUsage(MTLTextureUsageRenderTarget);
+                tex_desc.setUsage(MTLTextureUsage::RenderTarget);
                 //  let frontbuffer = command_queue
                 // .device()
                 // .newTextureWithDescriptor(&tex_desc)
@@ -400,12 +397,7 @@ declare_class!(
                 // blit.endEncoding();
 
                 filter_chain.frame(&texture,
-                    &Viewport {
-                        x: 0.0,
-                        y: 0.0,
-                        mvp: None,
-                        output: &backbuffer
-                    }, &command_buffer, 1, None)
+                    &Viewport::new_render_target_sized_origin(backbuffer.as_ref(), None).expect("viewport"), &command_buffer, 1, None)
                 .expect("frame");
 
                 let blit = command_buffer
@@ -447,7 +439,7 @@ fn main() {
     let mtm = MainThreadMarker::new().unwrap();
     // configure the app
     let app = NSApplication::sharedApplication(mtm);
-    app.setActivationPolicy(NSApplicationActivationPolicyRegular);
+    app.setActivationPolicy(NSApplicationActivationPolicy::Regular);
 
     // configure the application delegate
     let delegate = Delegate::new(mtm);

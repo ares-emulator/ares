@@ -1,15 +1,17 @@
-use gl::types::{GLenum, GLint, GLuint};
+use crate::error;
+use crate::error::FilterChainError;
+use glow::HasContext;
 use librashader_common::map::FastHashMap;
 use librashader_common::{FilterMode, WrapMode};
 
 pub struct SamplerSet {
     // todo: may need to deal with differences in mip filter.
-    samplers: FastHashMap<(WrapMode, FilterMode, FilterMode), GLuint>,
+    samplers: FastHashMap<(WrapMode, FilterMode, FilterMode), glow::Sampler>,
 }
 
 impl SamplerSet {
     #[inline(always)]
-    pub fn get(&self, wrap: WrapMode, filter: FilterMode, mipmap: FilterMode) -> GLuint {
+    pub fn get(&self, wrap: WrapMode, filter: FilterMode, mipmap: FilterMode) -> glow::Sampler {
         // SAFETY: the sampler set is complete for the matrix
         // wrap x filter x mipmap
         unsafe {
@@ -20,21 +22,26 @@ impl SamplerSet {
         }
     }
 
-    fn make_sampler(sampler: GLuint, wrap: WrapMode, filter: FilterMode, mip: FilterMode) {
+    fn make_sampler(
+        context: &glow::Context,
+        sampler: glow::Sampler,
+        wrap: WrapMode,
+        filter: FilterMode,
+        mip: FilterMode,
+    ) {
         unsafe {
-            gl::SamplerParameteri(sampler, gl::TEXTURE_WRAP_S, GLenum::from(wrap) as GLint);
-            gl::SamplerParameteri(sampler, gl::TEXTURE_WRAP_T, GLenum::from(wrap) as GLint);
-            gl::SamplerParameteri(
+            context.sampler_parameter_i32(sampler, glow::TEXTURE_WRAP_S, wrap.into());
+            context.sampler_parameter_i32(sampler, glow::TEXTURE_WRAP_T, wrap.into());
+            context.sampler_parameter_i32(sampler, glow::TEXTURE_MAG_FILTER, filter.into());
+            context.sampler_parameter_i32(
                 sampler,
-                gl::TEXTURE_MAG_FILTER,
-                GLenum::from(filter) as GLint,
+                glow::TEXTURE_MIN_FILTER,
+                filter.gl_mip(mip) as i32,
             );
-
-            gl::SamplerParameteri(sampler, gl::TEXTURE_MIN_FILTER, filter.gl_mip(mip) as GLint);
         }
     }
 
-    pub fn new() -> SamplerSet {
+    pub fn new(context: &glow::Context) -> error::Result<SamplerSet> {
         let mut samplers = FastHashMap::default();
         let wrap_modes = &[
             WrapMode::ClampToBorder,
@@ -45,10 +52,18 @@ impl SamplerSet {
         for wrap_mode in wrap_modes {
             for filter_mode in &[FilterMode::Linear, FilterMode::Nearest] {
                 for mip_filter in &[FilterMode::Linear, FilterMode::Nearest] {
-                    let mut sampler = 0;
                     unsafe {
-                        gl::GenSamplers(1, &mut sampler);
-                        SamplerSet::make_sampler(sampler, *wrap_mode, *filter_mode, *mip_filter);
+                        let sampler = context
+                            .create_sampler()
+                            .map_err(|_| FilterChainError::GlSamplerError)?;
+
+                        SamplerSet::make_sampler(
+                            context,
+                            sampler,
+                            *wrap_mode,
+                            *filter_mode,
+                            *mip_filter,
+                        );
 
                         samplers.insert((*wrap_mode, *filter_mode, *mip_filter), sampler);
                     }
@@ -58,6 +73,6 @@ impl SamplerSet {
 
         // assert all samplers were created.
         assert_eq!(samplers.len(), wrap_modes.len() * 2 * 2);
-        SamplerSet { samplers }
+        Ok(SamplerSet { samplers })
     }
 }

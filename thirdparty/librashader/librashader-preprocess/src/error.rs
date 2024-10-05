@@ -1,3 +1,4 @@
+use librashader_common::map::ShortString;
 use std::convert::Infallible;
 use std::path::PathBuf;
 use thiserror::Error;
@@ -27,7 +28,7 @@ pub enum PreprocessError {
     PragmaParseError(String),
     /// The given pragma was declared multiple times with differing values.
     #[error("duplicate pragma found")]
-    DuplicatePragmaError(String),
+    DuplicatePragmaError(ShortString),
     /// The image format requested by the shader was unknown or not supported.
     #[error("shader format is unknown or not found")]
     UnknownImageFormat,

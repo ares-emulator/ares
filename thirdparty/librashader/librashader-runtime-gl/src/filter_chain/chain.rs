@@ -2,25 +2,26 @@ use crate::binding::{GlUniformStorage, UniformLocation, VariableLocation};
 use crate::error::FilterChainError;
 use crate::filter_pass::{FilterPass, UniformOffset};
 use crate::gl::{
-    CompileProgram, DrawQuad, FramebufferInterface, GLFramebuffer, GLInterface, LoadLut, UboRing,
+    CompileProgram, DrawQuad, FramebufferInterface, GLFramebuffer, GLInterface, LoadLut,
+    OutputFramebuffer, UboRing,
 };
 use crate::options::{FilterChainOptionsGL, FrameOptionsGL};
 use crate::samplers::SamplerSet;
 use crate::texture::InputTexture;
 use crate::util::{gl_get_version, gl_u16_to_version};
 use crate::{error, GLImage};
-use gl::types::GLuint;
 use librashader_common::Viewport;
 
-use librashader_presets::{ShaderPassConfig, ShaderPreset, TextureConfig};
 use librashader_reflect::back::glsl::GlslVersion;
 use librashader_reflect::back::targets::GLSL;
 use librashader_reflect::back::{CompileReflectShader, CompileShader};
 use librashader_reflect::front::SpirvCompilation;
 use librashader_reflect::reflect::semantics::{ShaderSemantics, UniformMeta};
 
+use glow::HasContext;
 use librashader_cache::CachedCompilation;
 use librashader_common::map::FastHashMap;
+use librashader_pack::{PassResource, ShaderPresetPack, TextureResource};
 use librashader_reflect::reflect::cross::SpirvCross;
 use librashader_reflect::reflect::presets::{CompilePresetTarget, ShaderPassArtifact};
 use librashader_reflect::reflect::ReflectShader;
@@ -29,7 +30,9 @@ use librashader_runtime::framebuffer::FramebufferInit;
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::render_target::RenderTarget;
 use librashader_runtime::scaling::ScaleFramebuffer;
+
 use std::collections::VecDeque;
+use std::sync::Arc;
 
 pub(crate) struct FilterChainImpl<T: GLInterface> {
     pub(crate) common: FilterCommon,
@@ -38,27 +41,29 @@ pub(crate) struct FilterChainImpl<T: GLInterface> {
     output_framebuffers: Box<[GLFramebuffer]>,
     feedback_framebuffers: Box<[GLFramebuffer]>,
     history_framebuffers: VecDeque<GLFramebuffer>,
+    render_target: OutputFramebuffer,
     default_options: FrameOptionsGL,
+    draw_last_pass_feedback: bool,
 }
 
 pub(crate) struct FilterCommon {
     // semantics: ReflectSemantics,
-    pub config: FilterMutable,
+    pub config: RuntimeParameters,
     pub luts: FastHashMap<usize, InputTexture>,
     pub samplers: SamplerSet,
     pub output_textures: Box<[InputTexture]>,
     pub feedback_textures: Box<[InputTexture]>,
     pub history_textures: Box<[InputTexture]>,
     pub disable_mipmaps: bool,
-}
-
-pub struct FilterMutable {
-    pub(crate) passes_enabled: usize,
-    pub(crate) parameters: FastHashMap<String, f32>,
+    pub context: Arc<glow::Context>,
 }
 
 impl<T: GLInterface> FilterChainImpl<T> {
-    fn reflect_uniform_location(pipeline: GLuint, meta: &dyn UniformMeta) -> VariableLocation {
+    fn reflect_uniform_location(
+        ctx: &glow::Context,
+        pipeline: glow::Program,
+        meta: &dyn UniformMeta,
+    ) -> VariableLocation {
         let mut location = VariableLocation {
             ubo: None,
             push: None,
@@ -67,23 +72,21 @@ impl<T: GLInterface> FilterChainImpl<T> {
         let offset = meta.offset();
 
         if offset.ubo.is_some() {
-            let vert_name = format!("LIBRA_UBO_VERTEX_INSTANCE.{}\0", meta.id());
-            let frag_name = format!("LIBRA_UBO_FRAGMENT_INSTANCE.{}\0", meta.id());
+            let vert_name = format!("LIBRA_UBO_VERTEX_INSTANCE.{}", meta.id());
+            let frag_name = format!("LIBRA_UBO_FRAGMENT_INSTANCE.{}", meta.id());
             unsafe {
-                let vertex = gl::GetUniformLocation(pipeline, vert_name.as_ptr().cast());
-                let fragment = gl::GetUniformLocation(pipeline, frag_name.as_ptr().cast());
-
+                let vertex = ctx.get_uniform_location(pipeline, &vert_name);
+                let fragment = ctx.get_uniform_location(pipeline, &frag_name);
                 location.ubo = Some(UniformLocation { vertex, fragment })
             }
         }
 
         if offset.push.is_some() {
-            let vert_name = format!("LIBRA_PUSH_VERTEX_INSTANCE.{}\0", meta.id());
-            let frag_name = format!("LIBRA_PUSH_FRAGMENT_INSTANCE.{}\0", meta.id());
+            let vert_name = format!("LIBRA_PUSH_VERTEX_INSTANCE.{}", meta.id());
+            let frag_name = format!("LIBRA_PUSH_FRAGMENT_INSTANCE.{}", meta.id());
             unsafe {
-                let vertex = gl::GetUniformLocation(pipeline, vert_name.as_ptr().cast());
-                let fragment = gl::GetUniformLocation(pipeline, frag_name.as_ptr().cast());
-
+                let vertex = ctx.get_uniform_location(pipeline, &vert_name);
+                let fragment = ctx.get_uniform_location(pipeline, &frag_name);
                 location.push = Some(UniformLocation { vertex, fragment })
             }
         }
@@ -94,12 +97,19 @@ impl<T: GLInterface> FilterChainImpl<T> {
 
 mod compile {
     use super::*;
+
+    #[cfg(not(feature = "stable"))]
     pub type ShaderPassMeta =
         ShaderPassArtifact<impl CompileReflectShader<GLSL, SpirvCompilation, SpirvCross>>;
 
+    #[cfg(feature = "stable")]
+    pub type ShaderPassMeta = ShaderPassArtifact<
+        Box<dyn CompileReflectShader<GLSL, SpirvCompilation, SpirvCross> + Send>,
+    >;
+
     pub fn compile_passes(
-        shaders: Vec<ShaderPassConfig>,
-        textures: &[TextureConfig],
+        shaders: Vec<PassResource>,
+        textures: &[TextureResource],
         disable_cache: bool,
     ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
         let (passes, semantics) = if !disable_cache {
@@ -107,10 +117,11 @@ mod compile {
                 CachedCompilation<SpirvCompilation>,
                 SpirvCross,
                 FilterChainError,
-            >(shaders, &textures)?
+            >(shaders, textures.iter().map(|t| &t.meta))?
         } else {
             GLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
-                shaders, &textures,
+                shaders,
+                textures.iter().map(|t| &t.meta),
             )?
         };
 
@@ -119,32 +130,37 @@ mod compile {
 }
 
 use compile::{compile_passes, ShaderPassMeta};
+use librashader_runtime::parameters::RuntimeParameters;
 
 impl<T: GLInterface> FilterChainImpl<T> {
     /// Load a filter chain from a pre-parsed `ShaderPreset`.
-    pub(crate) unsafe fn load_from_preset(
-        preset: ShaderPreset,
+    pub(crate) unsafe fn load_from_pack(
+        preset: ShaderPresetPack,
+        context: Arc<glow::Context>,
         options: Option<&FilterChainOptionsGL>,
     ) -> error::Result<Self> {
         let disable_cache = options.map_or(false, |o| o.disable_cache);
-        let (passes, semantics) = compile_passes(preset.shaders, &preset.textures, disable_cache)?;
-        let version = options.map_or_else(gl_get_version, |o| gl_u16_to_version(o.glsl_version));
+        let (passes, semantics) = compile_passes(preset.passes, &preset.textures, disable_cache)?;
+        let version = options.map_or_else(
+            || gl_get_version(&context),
+            |o| gl_u16_to_version(&context, o.glsl_version),
+        );
 
         // initialize passes
-        let filters = Self::init_passes(version, passes, &semantics, disable_cache)?;
+        let filters = Self::init_passes(&context, version, passes, &semantics, disable_cache)?;
 
-        let default_filter = filters.first().map(|f| f.config.filter).unwrap_or_default();
+        let default_filter = filters.first().map(|f| f.meta.filter).unwrap_or_default();
         let default_wrap = filters
             .first()
-            .map(|f| f.config.wrap_mode)
+            .map(|f| f.meta.wrap_mode)
             .unwrap_or_default();
 
-        let samplers = SamplerSet::new();
+        let samplers = SamplerSet::new(&context)?;
 
         // load luts
-        let luts = T::LoadLut::load_luts(&preset.textures)?;
+        let luts = T::LoadLut::load_luts(&context, preset.textures)?;
 
-        let framebuffer_gen = || Ok::<_, FilterChainError>(T::FramebufferInterface::new(1));
+        let framebuffer_gen = || T::FramebufferInterface::new(&context, 1);
         let input_gen = || InputTexture {
             image: Default::default(),
             filter: default_filter,
@@ -169,35 +185,34 @@ impl<T: GLInterface> FilterChainImpl<T> {
         let (history_framebuffers, history_textures) = framebuffer_init.init_history()?;
 
         // create vertex objects
-        let draw_quad = T::DrawQuad::new();
+        let draw_quad = T::DrawQuad::new(&context)?;
+
+        let output = OutputFramebuffer::new(&context);
 
         Ok(FilterChainImpl {
+            draw_last_pass_feedback: framebuffer_init.uses_final_pass_as_feedback(),
             passes: filters,
             output_framebuffers,
             feedback_framebuffers,
             history_framebuffers,
             draw_quad,
             common: FilterCommon {
-                config: FilterMutable {
-                    passes_enabled: preset.shader_count as usize,
-                    parameters: preset
-                        .parameters
-                        .into_iter()
-                        .map(|param| (param.name, param.value))
-                        .collect(),
-                },
+                config: RuntimeParameters::new(preset.pass_count as usize, preset.parameters),
                 disable_mipmaps: options.map_or(false, |o| o.force_no_mipmaps),
                 luts,
                 samplers,
                 output_textures,
                 feedback_textures,
                 history_textures,
+                context,
             },
             default_options: Default::default(),
+            render_target: output,
         })
     }
 
     fn init_passes(
+        context: &glow::Context,
         version: GlslVersion,
         passes: Vec<ShaderPassMeta>,
         semantics: &ShaderSemantics,
@@ -206,14 +221,15 @@ impl<T: GLInterface> FilterChainImpl<T> {
         let mut filters = Vec::new();
 
         // initialize passes
-        for (index, (config, source, mut reflect)) in passes.into_iter().enumerate() {
+        for (index, (config, mut reflect)) in passes.into_iter().enumerate() {
             let reflection = reflect.reflect(index, semantics)?;
             let glsl = reflect.compile(version)?;
 
-            let (program, ubo_location) = T::CompileShader::compile_program(glsl, !disable_cache)?;
+            let (program, ubo_location) =
+                T::CompileShader::compile_program(context, glsl, !disable_cache)?;
 
             let ubo_ring = if let Some(ubo) = &reflection.ubo {
-                let ring = UboRing::new(ubo.size);
+                let ring = T::UboRing::new(&context, ubo.size)?;
                 Some(ring)
             } else {
                 None
@@ -229,7 +245,7 @@ impl<T: GLInterface> FilterChainImpl<T> {
 
             let uniform_bindings = reflection.meta.create_binding_map(|param| {
                 UniformOffset::new(
-                    Self::reflect_uniform_location(program, param),
+                    Self::reflect_uniform_location(&context, program, param),
                     param.offset(),
                 )
             });
@@ -241,8 +257,8 @@ impl<T: GLInterface> FilterChainImpl<T> {
                 ubo_ring,
                 uniform_storage,
                 uniform_bindings,
-                source,
-                config,
+                source: config.data,
+                meta: config.meta,
             });
         }
 
@@ -269,12 +285,12 @@ impl<T: GLInterface> FilterChainImpl<T> {
     pub unsafe fn frame(
         &mut self,
         frame_count: usize,
-        viewport: &Viewport<&GLFramebuffer>,
+        viewport: &Viewport<&GLImage>,
         input: &GLImage,
         options: Option<&FrameOptionsGL>,
     ) -> error::Result<()> {
         // limit number of passes to those enabled.
-        let max = std::cmp::min(self.passes.len(), self.common.config.passes_enabled);
+        let max = std::cmp::min(self.passes.len(), self.common.config.passes_enabled());
         let passes = &mut self.passes[0..max];
 
         if let Some(options) = options {
@@ -292,10 +308,11 @@ impl<T: GLInterface> FilterChainImpl<T> {
 
         // do not need to rebind FBO 0 here since first `draw` will
         // bind automatically.
-        self.draw_quad.bind_vertices(QuadType::Offscreen);
+        self.draw_quad
+            .bind_vertices(&self.common.context, QuadType::Offscreen);
 
-        let filter = passes[0].config.filter;
-        let wrap_mode = passes[0].config.wrap_mode;
+        let filter = passes[0].meta.filter;
+        let wrap_mode = passes[0].meta.wrap_mode;
 
         // update history
         for (texture, fbo) in self
@@ -337,58 +354,77 @@ impl<T: GLInterface> FilterChainImpl<T> {
             .zip(self.feedback_framebuffers.iter())
             .zip(passes.iter())
         {
-            texture.image = fbo
-                .as_texture(pass.config.filter, pass.config.wrap_mode)
-                .image;
+            texture.image = fbo.as_texture(pass.meta.filter, pass.meta.wrap_mode).image;
         }
 
         let passes_len = passes.len();
         let (pass, last) = passes.split_at_mut(passes_len - 1);
 
-        self.draw_quad.bind_vertices(QuadType::Offscreen);
+        self.draw_quad
+            .bind_vertices(&self.common.context, QuadType::Offscreen);
         for (index, pass) in pass.iter_mut().enumerate() {
             let target = &self.output_framebuffers[index];
-            source.filter = pass.config.filter;
-            source.mip_filter = pass.config.filter;
-            source.wrap_mode = pass.config.wrap_mode;
+            source.filter = pass.meta.filter;
+            source.mip_filter = pass.meta.filter;
+            source.wrap_mode = pass.meta.wrap_mode;
 
             pass.draw(
                 index,
                 &self.common,
-                pass.config.get_frame_count(frame_count),
+                pass.meta.get_frame_count(frame_count),
                 options,
                 viewport,
                 &original,
                 &source,
-                RenderTarget::identity(target),
-            );
+                RenderTarget::identity(target)?,
+            )?;
 
-            let target = target.as_texture(pass.config.filter, pass.config.wrap_mode);
+            let target = target.as_texture(pass.meta.filter, pass.meta.wrap_mode);
             self.common.output_textures[index] = target;
             source = target;
         }
 
-        self.draw_quad.bind_vertices(QuadType::Final);
+        self.draw_quad
+            .bind_vertices(&self.common.context, QuadType::Final);
         // try to hint the optimizer
         assert_eq!(last.len(), 1);
         if let Some(pass) = last.iter_mut().next() {
-            source.filter = pass.config.filter;
-            source.mip_filter = pass.config.filter;
-            source.wrap_mode = pass.config.wrap_mode;
+            let index = passes_len - 1;
+            let final_viewport = self
+                .render_target
+                .ensure::<T::FramebufferInterface>(viewport.output)?;
+
+            source.filter = pass.meta.filter;
+            source.mip_filter = pass.meta.filter;
+            source.wrap_mode = pass.meta.wrap_mode;
+
+            if self.draw_last_pass_feedback {
+                let target = &self.output_framebuffers[index];
+                pass.draw(
+                    index,
+                    &self.common,
+                    pass.meta.get_frame_count(frame_count),
+                    options,
+                    viewport,
+                    &original,
+                    &source,
+                    RenderTarget::viewport_with_output(target, viewport),
+                )?;
+            }
 
             pass.draw(
-                passes_len - 1,
+                index,
                 &self.common,
-                pass.config.get_frame_count(frame_count),
+                pass.meta.get_frame_count(frame_count),
                 options,
                 viewport,
                 &original,
                 &source,
-                RenderTarget::viewport(viewport),
-            );
+                RenderTarget::viewport_with_output(final_viewport, viewport),
+            )?;
             self.common.output_textures[passes_len - 1] = viewport
                 .output
-                .as_texture(pass.config.filter, pass.config.wrap_mode);
+                .as_texture(pass.meta.filter, pass.meta.wrap_mode);
         }
 
         // swap feedback framebuffers with output
@@ -399,7 +435,7 @@ impl<T: GLInterface> FilterChainImpl<T> {
 
         self.push_history(input)?;
 
-        self.draw_quad.unbind_vertices();
+        self.draw_quad.unbind_vertices(&self.common.context);
 
         Ok(())
     }

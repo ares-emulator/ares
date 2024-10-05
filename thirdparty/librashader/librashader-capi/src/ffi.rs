@@ -1,9 +1,15 @@
+macro_rules! wrap_ok {
+    ($e:expr) => {
+        ::core::iter::empty().try_fold($e, |_, __x: ::core::convert::Infallible| match __x {})
+    };
+}
+
 macro_rules! ffi_body {
     (nopanic $body:block) => {
         {
-            let result: Result<(), $crate::error::LibrashaderError> = try {
+            let result: Result<(), $crate::error::LibrashaderError> = (|| $crate::ffi::wrap_ok!({
                 $body
-            };
+            }))();
 
             let Err(e) = result else {
                 return $crate::error::LibrashaderError::ok()
@@ -22,13 +28,13 @@ macro_rules! ffi_body {
     };
     (nopanic |$($ref_capture:ident),*|; mut |$($mut_capture:ident),*| $body:block) => {
         {
-            $($crate::error::assert_non_null!($ref_capture);)*
+            $($crate::error::assert_non_null!(@EXPORT $ref_capture);)*
             $(let $ref_capture = unsafe { &*$ref_capture };)*
-            $($crate::error::assert_non_null!($mut_capture);)*
+            $($crate::error::assert_non_null!(@EXPORT $mut_capture);)*
             $(let $mut_capture = unsafe { &mut *$mut_capture };)*
-            let result: Result<(), $crate::error::LibrashaderError> = try {
+            let result: Result<(), $crate::error::LibrashaderError> = (|| $crate::ffi::wrap_ok!({
                 $body
-            };
+            }))();
 
             let Err(e) = result else {
                 return $crate::error::LibrashaderError::ok()
@@ -47,11 +53,11 @@ macro_rules! ffi_body {
     };
     (nopanic mut |$($mut_capture:ident),*| $body:block) => {
         {
-            $($crate::error::assert_non_null!($mut_capture);)*
+            $($crate::error::assert_non_null!(@EXPORT $mut_capture);)*
             $(let $mut_capture = unsafe { &mut *$mut_capture };)*
-            let result: Result<(), $crate::error::LibrashaderError> = try {
+            let result: Result<(), $crate::error::LibrashaderError> = (|| $crate::ffi::wrap_ok!({
                 $body
-            };
+            }))();
 
             let Err(e) = result else {
                 return $crate::error::LibrashaderError::ok()
@@ -70,11 +76,11 @@ macro_rules! ffi_body {
     };
     (nopanic |$($ref_capture:ident),*| $body:block) => {
         {
-            $($crate::error::assert_non_null!($ref_capture);)*
+            $($crate::error::assert_non_null!(@EXPORT $ref_capture);)*
             $(let $ref_capture = unsafe { &*$ref_capture };)*
-            let result: Result<(), $crate::error::LibrashaderError> = try {
+            let result: Result<(), $crate::error::LibrashaderError> = (|| $crate::ffi::wrap_ok!({
                 $body
-            };
+            }))();
 
             let Err(e) = result else {
                 return $crate::error::LibrashaderError::ok()
@@ -231,16 +237,16 @@ pub unsafe fn boxed_slice_from_raw_parts<T>(ptr: *mut T, len: usize) -> Box<[T]>
     unsafe { Box::from_raw(std::slice::from_raw_parts_mut(ptr, len)) }
 }
 
-#[allow(unstable_name_collisions)]
 pub fn ptr_is_aligned<T: Sized>(ptr: *const T) -> bool {
-    use sptr::Strict;
     let align = std::mem::align_of::<T>();
     if !align.is_power_of_two() {
         panic!("is_aligned_to: align is not a power-of-two");
     }
-    ptr.addr() & (align - 1) == 0
+    sptr::Strict::addr(ptr) & (align - 1) == 0
 }
 
 pub(crate) use extern_fn;
 pub(crate) use ffi_body;
+pub(crate) use wrap_ok;
+
 use std::mem::ManuallyDrop;

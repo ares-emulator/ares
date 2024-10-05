@@ -23,7 +23,7 @@ use swapchain::VulkanSwapchain;
 use syncobjects::SyncObjects;
 use vulkan_base::VulkanBase;
 
-use librashader_common::Viewport;
+use librashader_common::{Size, Viewport};
 
 use librashader_runtime_vk::options::FrameOptionsVulkan;
 use winit::event::{Event, WindowEvent};
@@ -91,7 +91,7 @@ impl VulkanWindow {
             },
         }];
 
-        let render_pass_begin = vk::RenderPassBeginInfo::builder()
+        let render_pass_begin = vk::RenderPassBeginInfo::default()
             .render_pass(vulkan.pipeline.renderpass)
             .framebuffer(framebuffer)
             .render_area(vk::Rect2D {
@@ -237,6 +237,16 @@ impl VulkanWindow {
             //     vk::QUEUE_FAMILY_IGNORED
             // );
 
+            let viewport = Viewport::new_render_target_sized_origin(
+                VulkanImage {
+                    size: vulkan.swapchain.extent.into(),
+                    image: swapchain_image,
+                    format: vulkan.swapchain.format.format,
+                },
+                None,
+            )
+            .unwrap();
+
             filter
                 .frame(
                     &VulkanImage {
@@ -244,16 +254,7 @@ impl VulkanWindow {
                         image: framebuffer_image,
                         format: vulkan.swapchain.format.format,
                     },
-                    &Viewport {
-                        x: 0.0,
-                        y: 0.0,
-                        output: VulkanImage {
-                            size: vulkan.swapchain.extent.into(),
-                            image: swapchain_image,
-                            format: vulkan.swapchain.format.format,
-                        },
-                        mvp: None,
-                    },
+                    &viewport,
                     cmd,
                     frame,
                     Some(&FrameOptionsVulkan {
@@ -284,7 +285,7 @@ impl VulkanWindow {
             //     vk::QUEUE_FAMILY_IGNORED,
             // );
             //
-            // let blit_subresource = vk::ImageSubresourceLayers::builder()
+            // let blit_subresource = vk::ImageSubresourceLayers::default()
             //     .layer_count(1)
             //     .aspect_mask(vk::ImageAspectFlags::COLOR)
             //     ;
@@ -344,7 +345,7 @@ impl VulkanWindow {
 
             let stage_mask = [vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
             let cmd = [cmd];
-            let submit_info = [*vk::SubmitInfo::builder()
+            let submit_info = [vk::SubmitInfo::default()
                 .wait_dst_stage_mask(&stage_mask)
                 .wait_semaphores(&image_available)
                 .signal_semaphores(&render_finished)
@@ -358,7 +359,7 @@ impl VulkanWindow {
 
             let swapchain_index = [swapchain_index];
             let swapchain = [vulkan.swapchain.swapchain];
-            let present_info = vk::PresentInfoKHR::builder()
+            let present_info = vk::PresentInfoKHR::default()
                 .wait_semaphores(&render_finished)
                 .swapchains(&swapchain)
                 .image_indices(&swapchain_index);

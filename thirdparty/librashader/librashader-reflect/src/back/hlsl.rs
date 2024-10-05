@@ -1,13 +1,12 @@
 use crate::back::targets::HLSL;
-use crate::back::{CompileShader, CompilerBackend, FromCompilation};
+use crate::back::{CompileReflectShader, CompilerBackend, FromCompilation};
 use crate::error::ShaderReflectError;
 use crate::front::SpirvCompilation;
 use crate::reflect::cross::hlsl::HlslReflect;
 use crate::reflect::cross::{CompiledProgram, SpirvCross};
-use crate::reflect::ReflectShader;
 
 /// The HLSL shader model version to target.
-pub use spirv_cross::hlsl::ShaderModel as HlslShaderModel;
+pub use spirv_cross2::compile::hlsl::HlslShaderModel;
 
 /// Buffer assignment information
 #[derive(Debug, Clone)]
@@ -47,7 +46,7 @@ impl HlslBufferAssignments {
         {
             return true;
         }
-        return false;
+        false
     }
 
     // Check if the mangled name matches.
@@ -87,30 +86,51 @@ impl HlslBufferAssignments {
             }
         }
 
-        return false;
+        // Sometimes SPIRV-cross will assign variables to "global"
+        if Self::find_mangled_name("global", uniform_name, mangled_name) {
+            return true;
+        }
+
+        false
     }
 }
 
 /// The context for a HLSL compilation via spirv-cross.
 pub struct CrossHlslContext {
     /// The compiled HLSL program.
-    pub artifact: CompiledProgram<spirv_cross::hlsl::Target>,
+    pub artifact: CompiledProgram<spirv_cross2::targets::Hlsl>,
     pub vertex_buffers: HlslBufferAssignments,
     pub fragment_buffers: HlslBufferAssignments,
 }
 
+#[cfg(not(feature = "stable"))]
 impl FromCompilation<SpirvCompilation, SpirvCross> for HLSL {
     type Target = HLSL;
     type Options = Option<HlslShaderModel>;
     type Context = CrossHlslContext;
-    type Output = impl CompileShader<Self::Target, Options = Self::Options, Context = Self::Context>
-        + ReflectShader;
+    type Output = impl CompileReflectShader<Self::Target, SpirvCompilation, SpirvCross>;
 
     fn from_compilation(
         compile: SpirvCompilation,
     ) -> Result<CompilerBackend<Self::Output>, ShaderReflectError> {
         Ok(CompilerBackend {
             backend: HlslReflect::try_from(&compile)?,
+        })
+    }
+}
+
+#[cfg(feature = "stable")]
+impl FromCompilation<SpirvCompilation, SpirvCross> for HLSL {
+    type Target = HLSL;
+    type Options = Option<HlslShaderModel>;
+    type Context = CrossHlslContext;
+    type Output = Box<dyn CompileReflectShader<Self::Target, SpirvCompilation, SpirvCross> + Send>;
+
+    fn from_compilation(
+        compile: SpirvCompilation,
+    ) -> Result<CompilerBackend<Self::Output>, ShaderReflectError> {
+        Ok(CompilerBackend {
+            backend: Box::new(HlslReflect::try_from(&compile)?),
         })
     }
 }

@@ -1,14 +1,13 @@
 use crate::error::{FilterChainError, Result};
 use crate::texture::InputTexture;
-use icrate::Metal::{
-    MTLBlitCommandEncoder, MTLDevice, MTLOrigin, MTLPixelFormatBGRA8Unorm, MTLRegion,
-    MTLResourceStorageModeManaged, MTLResourceStorageModeShared, MTLSize, MTLTexture,
-    MTLTextureDescriptor, MTLTextureUsageShaderRead,
-};
-use librashader_presets::TextureConfig;
+use librashader_presets::TextureMeta;
 use librashader_runtime::image::{Image, BGRA8};
 use librashader_runtime::scaling::MipmapSize;
 use objc2::runtime::ProtocolObject;
+use objc2_metal::{
+    MTLBlitCommandEncoder, MTLDevice, MTLOrigin, MTLPixelFormat, MTLRegion, MTLSize,
+    MTLStorageMode, MTLTexture, MTLTextureDescriptor, MTLTextureUsage,
+};
 use std::ffi::c_void;
 use std::ptr::NonNull;
 
@@ -24,13 +23,13 @@ impl LutTexture {
     pub fn new(
         device: &ProtocolObject<dyn MTLDevice>,
         image: Image<BGRA8>,
-        config: &TextureConfig,
+        config: &TextureMeta,
         mipmapper: &ProtocolObject<dyn MTLBlitCommandEncoder>,
     ) -> Result<Self> {
         let descriptor = unsafe {
             let descriptor =
                 MTLTextureDescriptor::texture2DDescriptorWithPixelFormat_width_height_mipmapped(
-                    MTLPixelFormatBGRA8Unorm,
+                    MTLPixelFormat::BGRA8Unorm,
                     image.size.width as usize,
                     image.size.height as usize,
                     config.mipmap,
@@ -45,13 +44,13 @@ impl LutTexture {
 
             descriptor.setStorageMode(
                 if cfg!(all(target_arch = "aarch64", target_vendor = "apple")) {
-                    MTLResourceStorageModeShared
+                    MTLStorageMode::Shared
                 } else {
-                    MTLResourceStorageModeManaged
+                    MTLStorageMode::Managed
                 },
             );
 
-            descriptor.setUsage(MTLTextureUsageShaderRead);
+            descriptor.setUsage(MTLTextureUsage::ShaderRead);
 
             descriptor
         };

@@ -1,5 +1,5 @@
 use librashader_common::map::FastHashMap;
-use librashader_presets::{ShaderPassConfig, ShaderPreset, TextureConfig};
+use librashader_presets::ShaderPreset;
 use librashader_reflect::back::targets::WGSL;
 use librashader_reflect::back::{CompileReflectShader, CompileShader};
 use librashader_reflect::front::SpirvCompilation;
@@ -7,7 +7,7 @@ use librashader_reflect::reflect::presets::{CompilePresetTarget, ShaderPassArtif
 use librashader_reflect::reflect::semantics::ShaderSemantics;
 use librashader_reflect::reflect::ReflectShader;
 use librashader_runtime::binding::BindingUtil;
-use librashader_runtime::image::{Image, ImageError, UVDirection};
+use librashader_runtime::image::{ImageError, LoadedTexture, UVDirection};
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::uniforms::UniformStorage;
 #[cfg(not(target_arch = "wasm32"))]
@@ -40,22 +40,32 @@ use crate::texture::{InputImage, OwnedImage};
 
 mod compile {
     use super::*;
+    use librashader_pack::{PassResource, TextureResource};
+
+    #[cfg(not(feature = "stable"))]
     pub type ShaderPassMeta =
         ShaderPassArtifact<impl CompileReflectShader<WGSL, SpirvCompilation, Naga> + Send>;
 
+    #[cfg(feature = "stable")]
+    pub type ShaderPassMeta =
+        ShaderPassArtifact<Box<dyn CompileReflectShader<WGSL, SpirvCompilation, Naga> + Send>>;
+
     pub fn compile_passes(
-        shaders: Vec<ShaderPassConfig>,
-        textures: &[TextureConfig],
+        shaders: Vec<PassResource>,
+        textures: &[TextureResource],
     ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
-        let (passes, semantics) =
-            WGSL::compile_preset_passes::<SpirvCompilation, Naga, FilterChainError>(
-                shaders, &textures,
-            )?;
+        let (passes, semantics) = WGSL::compile_preset_passes::<
+            SpirvCompilation,
+            Naga,
+            FilterChainError,
+        >(shaders, textures.iter().map(|t| &t.meta))?;
         Ok((passes, semantics))
     }
 }
 
 use compile::{compile_passes, ShaderPassMeta};
+use librashader_pack::{ShaderPresetPack, TextureResource};
+use librashader_runtime::parameters::RuntimeParameters;
 
 /// A wgpu filter chain.
 pub struct FilterChainWgpu {
@@ -67,11 +77,7 @@ pub struct FilterChainWgpu {
     disable_mipmaps: bool,
     mipmapper: MipmapGen,
     default_frame_options: FrameOptionsWgpu,
-}
-
-pub struct FilterMutable {
-    pub passes_enabled: usize,
-    pub(crate) parameters: FastHashMap<String, f32>,
+    draw_last_pass_feedback: bool,
 }
 
 pub(crate) struct FilterCommon {
@@ -80,8 +86,7 @@ pub(crate) struct FilterCommon {
     pub history_textures: Box<[Option<InputImage>]>,
     pub luts: FastHashMap<usize, LutTexture>,
     pub samplers: SamplerSet,
-    pub config: FilterMutable,
-    pub internal_frame_count: i32,
+    pub config: RuntimeParameters,
     pub(crate) draw_quad: DrawQuad,
     device: Arc<Device>,
     pub(crate) queue: Arc<wgpu::Queue>,
@@ -108,10 +113,21 @@ impl FilterChainWgpu {
         queue: Arc<wgpu::Queue>,
         options: Option<&FilterChainOptionsWgpu>,
     ) -> error::Result<FilterChainWgpu> {
+        let preset = ShaderPresetPack::load_from_preset::<FilterChainError>(preset)?;
+        Self::load_from_pack(preset, device, queue, options)
+    }
+
+    /// Load a filter chain from a pre-parsed and loaded `ShaderPresetPack`.
+    pub fn load_from_pack(
+        preset: ShaderPresetPack,
+        device: Arc<Device>,
+        queue: Arc<wgpu::Queue>,
+        options: Option<&FilterChainOptionsWgpu>,
+    ) -> error::Result<FilterChainWgpu> {
         let mut cmd = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("librashader load cmd"),
         });
-        let filter_chain = Self::load_from_preset_deferred(
+        let filter_chain = Self::load_from_pack_deferred(
             preset,
             Arc::clone(&device),
             Arc::clone(&queue),
@@ -142,10 +158,37 @@ impl FilterChainWgpu {
         cmd: &mut wgpu::CommandEncoder,
         options: Option<&FilterChainOptionsWgpu>,
     ) -> error::Result<FilterChainWgpu> {
-        let (passes, semantics) = compile_passes(preset.shaders, &preset.textures)?;
+        let preset = ShaderPresetPack::load_from_preset::<FilterChainError>(preset)?;
+        Self::load_from_pack_deferred(preset, device, queue, cmd, options)
+    }
 
-        // // initialize passes
-        let filters = Self::init_passes(Arc::clone(&device), passes, &semantics)?;
+    /// Load a filter chain from a pre-parsed `ShaderPreset`, deferring and GPU-side initialization
+    /// to the caller. This function therefore requires no external synchronization of the device queue.
+    ///
+    /// ## Safety
+    /// The provided command buffer must be ready for recording and contain no prior commands.
+    /// The caller is responsible for ending the command buffer and immediately submitting it to a
+    /// graphics queue. The command buffer must be completely executed before calling [`frame`](Self::frame).
+    pub fn load_from_pack_deferred(
+        preset: ShaderPresetPack,
+        device: Arc<Device>,
+        queue: Arc<wgpu::Queue>,
+        cmd: &mut wgpu::CommandEncoder,
+        options: Option<&FilterChainOptionsWgpu>,
+    ) -> error::Result<FilterChainWgpu> {
+        let (passes, semantics) = compile_passes(preset.passes, &preset.textures)?;
+
+        // cache is opt-in for wgpu, not opt-out because of feature requirements.
+        let disable_cache = options.map_or(true, |o| !o.enable_cache);
+
+        // initialize passes
+        let filters = Self::init_passes(
+            Arc::clone(&device),
+            passes,
+            &semantics,
+            options.and_then(|o| o.adapter_info.as_ref()),
+            disable_cache,
+        )?;
 
         let samplers = SamplerSet::new(&device);
         let mut mipmapper = MipmapGen::new(Arc::clone(&device));
@@ -155,7 +198,7 @@ impl FilterChainWgpu {
             cmd,
             &mut mipmapper,
             &samplers,
-            &preset.textures,
+            preset.textures,
         )?;
         //
         let framebuffer_gen = || {
@@ -187,24 +230,17 @@ impl FilterChainWgpu {
         let draw_quad = DrawQuad::new(&device);
 
         Ok(FilterChainWgpu {
+            draw_last_pass_feedback: framebuffer_init.uses_final_pass_as_feedback(),
             common: FilterCommon {
                 luts,
                 samplers,
-                config: FilterMutable {
-                    passes_enabled: preset.shader_count as usize,
-                    parameters: preset
-                        .parameters
-                        .into_iter()
-                        .map(|param| (param.name, param.value))
-                        .collect(),
-                },
+                config: RuntimeParameters::new(preset.pass_count as usize, preset.parameters),
                 draw_quad,
                 device,
                 queue,
                 output_textures,
                 feedback_textures,
                 history_textures,
-                internal_frame_count: 0,
             },
             passes: filters,
             output_framebuffers,
@@ -222,22 +258,21 @@ impl FilterChainWgpu {
         cmd: &mut wgpu::CommandEncoder,
         mipmapper: &mut MipmapGen,
         sampler_set: &SamplerSet,
-        textures: &[TextureConfig],
+        textures: Vec<TextureResource>,
     ) -> error::Result<FastHashMap<usize, LutTexture>> {
         let mut luts = FastHashMap::default();
 
         #[cfg(not(target_arch = "wasm32"))]
-        let images_iter = textures.par_iter();
+        let images_iter = textures.into_par_iter();
 
         #[cfg(target_arch = "wasm32")]
-        let images_iter = textures.iter();
+        let images_iter = textures.into_iter();
 
-        let images = images_iter
-            .map(|texture| Image::load(&texture.path, UVDirection::TopLeft))
-            .collect::<Result<Vec<Image>, ImageError>>()?;
-        for (index, (texture, image)) in textures.iter().zip(images).enumerate() {
-            let texture =
-                LutTexture::new(device, queue, cmd, image, texture, mipmapper, sampler_set);
+        let textures = images_iter
+            .map(|texture| LoadedTexture::from_texture(texture, UVDirection::TopLeft))
+            .collect::<Result<Vec<LoadedTexture>, ImageError>>()?;
+        for (index, LoadedTexture { meta, image }) in textures.into_iter().enumerate() {
+            let texture = LutTexture::new(device, queue, cmd, image, &meta, mipmapper, sampler_set);
             luts.insert(index, texture);
         }
         Ok(luts)
@@ -268,6 +303,8 @@ impl FilterChainWgpu {
         device: Arc<Device>,
         passes: Vec<ShaderPassMeta>,
         semantics: &ShaderSemantics,
+        adapter_info: Option<&wgpu::AdapterInfo>,
+        disable_cache: bool,
     ) -> error::Result<Box<[FilterPass]>> {
         #[cfg(not(target_arch = "wasm32"))]
         let filter_creation_fn = || {
@@ -277,7 +314,7 @@ impl FilterChainWgpu {
 
             let filters: Vec<error::Result<FilterPass>> = passes_iter
                 .enumerate()
-                .map(|(index, (config, source, mut reflect))| {
+                .map(|(index, (config, mut reflect))| {
                     let reflection = reflect.reflect(index, semantics)?;
                     let wgsl = reflect.compile(NagaLoweringOptions {
                         write_pcb_as_ubo: true,
@@ -309,10 +346,10 @@ impl FilterChainWgpu {
                         reflection.meta.create_binding_map(|param| param.offset());
 
                     let render_pass_format: Option<TextureFormat> =
-                        if let Some(format) = config.get_format_override() {
+                        if let Some(format) = config.meta.get_format_override() {
                             format.into()
                         } else {
-                            source.format.into()
+                            config.data.format.into()
                         };
 
                     let graphics_pipeline = WgpuGraphicsPipeline::new(
@@ -320,6 +357,8 @@ impl FilterChainWgpu {
                         &wgsl,
                         &reflection,
                         render_pass_format.unwrap_or(TextureFormat::Rgba8Unorm),
+                        adapter_info,
+                        disable_cache,
                     );
 
                     Ok(FilterPass {
@@ -327,8 +366,8 @@ impl FilterChainWgpu {
                         reflection,
                         uniform_storage,
                         uniform_bindings,
-                        source,
-                        config,
+                        source: config.data,
+                        meta: config.meta,
                         graphics_pipeline,
                     })
                 })
@@ -364,7 +403,7 @@ impl FilterChainWgpu {
         frame_count: usize,
         options: Option<&FrameOptionsWgpu>,
     ) -> error::Result<()> {
-        let max = std::cmp::min(self.passes.len(), self.common.config.passes_enabled);
+        let max = std::cmp::min(self.passes.len(), self.common.config.passes_enabled());
         let passes = &mut self.passes[0..max];
 
         if let Some(options) = &options {
@@ -381,8 +420,8 @@ impl FilterChainWgpu {
 
         let original_image_view = input.create_view(&wgpu::TextureViewDescriptor::default());
 
-        let filter = passes[0].config.filter;
-        let wrap_mode = passes[0].config.wrap_mode;
+        let filter = passes[0].meta.filter;
+        let wrap_mode = passes[0].meta.wrap_mode;
 
         // update history
         for (texture, image) in self
@@ -425,9 +464,9 @@ impl FilterChainWgpu {
                        feedback: &OwnedImage| {
                 // refresh inputs
                 self.common.feedback_textures[index] =
-                    Some(feedback.as_input(pass.config.filter, pass.config.wrap_mode));
+                    Some(feedback.as_input(pass.meta.filter, pass.meta.wrap_mode));
                 self.common.output_textures[index] =
-                    Some(output.as_input(pass.config.filter, pass.config.wrap_mode));
+                    Some(output.as_input(pass.meta.filter, pass.meta.wrap_mode));
                 Ok(())
             }),
         )?;
@@ -438,19 +477,19 @@ impl FilterChainWgpu {
         let options = options.unwrap_or(&self.default_frame_options);
 
         for (index, pass) in pass.iter_mut().enumerate() {
-            let target = &self.output_framebuffers[index];
-            source.filter_mode = pass.config.filter;
-            source.wrap_mode = pass.config.wrap_mode;
-            source.mip_filter = pass.config.filter;
+            source.filter_mode = pass.meta.filter;
+            source.wrap_mode = pass.meta.wrap_mode;
+            source.mip_filter = pass.meta.filter;
 
+            let target = &self.output_framebuffers[index];
             let output_image = WgpuOutputView::from(target);
-            let out = RenderTarget::identity(&output_image);
+            let out = RenderTarget::identity(&output_image)?;
 
             pass.draw(
                 cmd,
                 index,
                 &self.common,
-                pass.config.get_frame_count(frame_count),
+                pass.meta.get_frame_count(frame_count),
                 options,
                 viewport,
                 &original,
@@ -476,20 +515,41 @@ impl FilterChainWgpu {
         assert_eq!(last.len(), 1);
 
         if let Some(pass) = last.iter_mut().next() {
-            if pass.graphics_pipeline.format != viewport.output.format {
+            let index = passes_len - 1;
+            if !pass.graphics_pipeline.has_format(viewport.output.format) {
                 // need to recompile
                 pass.graphics_pipeline.recompile(viewport.output.format);
             }
-            source.filter_mode = pass.config.filter;
-            source.wrap_mode = pass.config.wrap_mode;
-            source.mip_filter = pass.config.filter;
-            let output_image = &viewport.output;
-            let out = RenderTarget::viewport_with_output(output_image, viewport);
+
+            source.filter_mode = pass.meta.filter;
+            source.wrap_mode = pass.meta.wrap_mode;
+            source.mip_filter = pass.meta.filter;
+
+            if self.draw_last_pass_feedback {
+                let target = &self.output_framebuffers[index];
+                let output_image = WgpuOutputView::from(target);
+                let out = RenderTarget::viewport_with_output(&output_image, viewport);
+
+                pass.draw(
+                    cmd,
+                    index,
+                    &self.common,
+                    pass.meta.get_frame_count(frame_count),
+                    options,
+                    viewport,
+                    &original,
+                    &source,
+                    &out,
+                    QuadType::Final,
+                )?;
+            }
+
+            let out = RenderTarget::viewport(viewport);
             pass.draw(
                 cmd,
-                passes_len - 1,
+                index,
                 &self.common,
-                pass.config.get_frame_count(frame_count),
+                pass.meta.get_frame_count(frame_count),
                 options,
                 viewport,
                 &original,
@@ -500,7 +560,6 @@ impl FilterChainWgpu {
         }
 
         self.push_history(&input, cmd);
-        self.common.internal_frame_count = self.common.internal_frame_count.wrapping_add(1);
         Ok(())
     }
 }

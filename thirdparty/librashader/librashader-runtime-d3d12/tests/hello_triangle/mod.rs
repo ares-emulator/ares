@@ -109,7 +109,8 @@ where
         )
     };
 
-    sample.bind_to_window(&hwnd)?;
+    let hwnd = hwnd?;
+    sample.bind_to_window(&hwnd).unwrap();
     unsafe { ShowWindow(hwnd, SW_SHOW) };
 
     loop {
@@ -187,8 +188,7 @@ fn get_hardware_adapter(factory: &IDXGIFactory4) -> Result<IDXGIAdapter1> {
     for i in 0.. {
         let adapter = unsafe { factory.EnumAdapters1(i)? };
 
-        let mut desc = Default::default();
-        unsafe { adapter.GetDesc1(&mut desc)? };
+        let desc = unsafe { adapter.GetDesc1()? };
 
         if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE.0 as u32) != DXGI_ADAPTER_FLAG_NONE.0 as u32 {
             // Don't select the Basic Render Driver adapter. If you want a
@@ -229,7 +229,8 @@ unsafe extern "system" fn debug_log(
 
 pub mod d3d12_hello_triangle {
     use super::*;
-    use crate::hello_triangle::descriptor_heap::{CpuStagingHeap, D3D12DescriptorHeap};
+    use crate::hello_triangle::descriptor_heap::CpuStagingHeap;
+    use d3d12_descriptor_heap::D3D12DescriptorHeap;
     use librashader_common::{Size, Viewport};
     use librashader_runtime_d3d12::{D3D12InputImage, D3D12OutputView, FilterChainD3D12};
     use std::mem::ManuallyDrop;
@@ -250,7 +251,7 @@ pub mod d3d12_hello_triangle {
         command_queue: ID3D12CommandQueue,
         swap_chain: IDXGISwapChain3,
         frame_index: u32,
-        render_targets: [ID3D12Resource; FRAME_COUNT as usize],
+        render_targets: [ManuallyDrop<ID3D12Resource>; FRAME_COUNT as usize],
         rtv_heap: ID3D12DescriptorHeap,
         rtv_descriptor_size: usize,
         viewport: D3D12_VIEWPORT,
@@ -259,7 +260,7 @@ pub mod d3d12_hello_triangle {
         root_signature: ID3D12RootSignature,
         pso: ID3D12PipelineState,
         command_list: ID3D12GraphicsCommandList,
-        framebuffer: ID3D12Resource,
+        framebuffer: ManuallyDrop<ID3D12Resource>,
         // we need to keep this around to keep the reference alive, even though
         // nothing reads from it
         #[allow(dead_code)]
@@ -376,8 +377,8 @@ pub mod d3d12_hello_triangle {
             } as usize;
             let rtv_handle = unsafe { rtv_heap.GetCPUDescriptorHandleForHeapStart() };
 
-            let render_targets: [ID3D12Resource; FRAME_COUNT as usize] =
-                array_init::try_array_init(|i: usize| -> Result<ID3D12Resource> {
+            let render_targets: [ManuallyDrop<ID3D12Resource>; FRAME_COUNT as usize] =
+                array_init::try_array_init(|i: usize| -> Result<ManuallyDrop<ID3D12Resource>> {
                     let render_target: ID3D12Resource = unsafe { swap_chain.GetBuffer(i as u32) }?;
                     unsafe {
                         self.device.CreateRenderTargetView(
@@ -388,7 +389,7 @@ pub mod d3d12_hello_triangle {
                             },
                         )
                     };
-                    Ok(render_target)
+                    Ok(ManuallyDrop::new(render_target))
                 })?;
 
             let framebuffer: ID3D12Resource = unsafe {
@@ -474,13 +475,13 @@ pub mod d3d12_hello_triangle {
                 root_signature,
                 pso,
                 command_list,
-                framebuffer,
+                framebuffer: ManuallyDrop::new(framebuffer),
                 vertex_buffer,
                 vbv,
                 fence,
                 fence_value,
                 fence_event,
-                frambuffer_heap: D3D12DescriptorHeap::new(&self.device, 1024).unwrap(),
+                frambuffer_heap: unsafe { D3D12DescriptorHeap::new(&self.device, 1024).unwrap() },
             });
 
             Ok(())
@@ -496,11 +497,11 @@ pub mod d3d12_hello_triangle {
 
         fn render(&mut self) {
             if let Some(resources) = &mut self.resources {
-                let srv = resources.frambuffer_heap.alloc_slot();
+                let srv = resources.frambuffer_heap.allocate_descriptor().unwrap();
 
                 unsafe {
                     self.device.CreateShaderResourceView(
-                        &resources.framebuffer,
+                        resources.framebuffer.deref(),
                         Some(&D3D12_SHADER_RESOURCE_VIEW_DESC {
                             Format: DXGI_FORMAT_R8G8B8A8_UNORM,
                             ViewDimension: D3D12_SRV_DIMENSION_TEXTURE2D,
@@ -512,24 +513,21 @@ pub mod d3d12_hello_triangle {
                                 },
                             },
                         }),
-                        *srv.deref().as_ref(),
+                        *srv.as_ref(),
                     )
                 }
 
-                populate_command_list(
-                    resources,
-                    &mut self.filter,
-                    self.framecount,
-                    *srv.deref().as_ref(),
-                )
-                .unwrap();
+                populate_command_list(resources, &mut self.filter, self.framecount, *srv.as_ref())
+                    .unwrap();
 
                 // Execute the command list.
                 let command_list: Option<ID3D12CommandList> = resources.command_list.cast().ok();
                 unsafe { resources.command_queue.ExecuteCommandLists(&[command_list]) };
 
                 // Present the frame.
-                unsafe { resources.swap_chain.Present(1, 0) }.ok().unwrap();
+                unsafe { resources.swap_chain.Present(1, DXGI_PRESENT::default()) }
+                    .ok()
+                    .unwrap();
 
                 wait_for_previous_frame(resources);
                 self.framecount += 1;
@@ -603,8 +601,8 @@ pub mod d3d12_hello_triangle {
 
         unsafe {
             command_list.CopyResource(
-                &resources.framebuffer,
-                &resources.render_targets[resources.frame_index as usize],
+                &*resources.framebuffer,
+                &*resources.render_targets[resources.frame_index as usize],
             );
             command_list.ResourceBarrier(&[transition_barrier(
                 &resources.framebuffer,
@@ -621,14 +619,9 @@ pub mod d3d12_hello_triangle {
             filter
                 .frame(
                     command_list,
-                    D3D12InputImage {
+                    D3D12InputImage::External {
                         resource: resources.framebuffer.clone(),
                         descriptor: framebuffer,
-                        size: Size::new(
-                            resources.viewport.Width as u32,
-                            resources.viewport.Height as u32,
-                        ),
-                        format: DXGI_FORMAT_R8G8B8A8_UNORM,
                     },
                     &Viewport {
                         x: 0.0,
@@ -641,6 +634,10 @@ pub mod d3d12_hello_triangle {
                                 resources.viewport.Height as u32,
                             ),
                             DXGI_FORMAT_R8G8B8A8_UNORM,
+                        ),
+                        size: Size::new(
+                            resources.viewport.Width as u32,
+                            resources.viewport.Height as u32,
                         ),
                     },
                     frame_count,
@@ -659,7 +656,7 @@ pub mod d3d12_hello_triangle {
     }
 
     fn transition_barrier(
-        resource: &ID3D12Resource,
+        resource: &ManuallyDrop<ID3D12Resource>,
         state_before: D3D12_RESOURCE_STATES,
         state_after: D3D12_RESOURCE_STATES,
     ) -> D3D12_RESOURCE_BARRIER {
@@ -668,7 +665,7 @@ pub mod d3d12_hello_triangle {
             Flags: D3D12_RESOURCE_BARRIER_FLAG_NONE,
             Anonymous: D3D12_RESOURCE_BARRIER_0 {
                 Transition: ManuallyDrop::new(D3D12_RESOURCE_TRANSITION_BARRIER {
-                    pResource: ManuallyDrop::new(Some(resource.clone())),
+                    pResource: unsafe { std::mem::transmute_copy(resource) },
                     StateBefore: state_before,
                     StateAfter: state_after,
                     Subresource: D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
@@ -697,7 +694,7 @@ pub mod d3d12_hello_triangle {
         }?;
 
         let mut device: Option<ID3D12Device> = None;
-        unsafe { D3D12CreateDevice(&adapter, D3D_FEATURE_LEVEL_12_2, &mut device) }?;
+        unsafe { D3D12CreateDevice(&adapter, D3D_FEATURE_LEVEL_12_1, &mut device) }?;
         Ok((dxgi_factory, device.unwrap()))
     }
 

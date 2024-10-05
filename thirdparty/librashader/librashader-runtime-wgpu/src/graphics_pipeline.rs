@@ -1,11 +1,14 @@
 use crate::framebuffer::WgpuOutputView;
 use crate::util;
+use librashader_cache::cache_pipeline;
+use librashader_common::map::FastHashMap;
 use librashader_reflect::back::wgsl::NagaWgslContext;
 use librashader_reflect::back::ShaderCompilerOutput;
 use librashader_reflect::reflect::ShaderReflection;
 use librashader_runtime::quad::VertexInput;
 use librashader_runtime::render_target::RenderTarget;
 use std::borrow::Cow;
+use std::convert::Infallible;
 use std::sync::Arc;
 use wgpu::{
     BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType,
@@ -17,8 +20,8 @@ use wgpu::{
 
 pub struct WgpuGraphicsPipeline {
     pub layout: PipelineLayoutObjects,
-    render_pipeline: wgpu::RenderPipeline,
-    pub format: wgpu::TextureFormat,
+    cache: Option<wgpu::PipelineCache>,
+    render_pipelines: FastHashMap<wgpu::TextureFormat, wgpu::RenderPipeline>,
 }
 
 pub struct PipelineLayoutObjects {
@@ -53,8 +56,10 @@ impl PipelineLayoutObjects {
 
         let mut push_constant_range = Vec::new();
 
-        if let Some(push_meta) = reflection.push_constant.as_ref()
-            && !push_meta.stage_mask.is_empty()
+        if let Some(push_meta) = reflection
+            .push_constant
+            .as_ref()
+            .filter(|push_meta| !push_meta.stage_mask.is_empty())
         {
             let push_mask = util::binding_stage_to_wgpu_stage(push_meta.stage_mask);
 
@@ -77,8 +82,10 @@ impl PipelineLayoutObjects {
             }
         }
 
-        if let Some(ubo_meta) = reflection.ubo.as_ref()
-            && !ubo_meta.stage_mask.is_empty()
+        if let Some(ubo_meta) = reflection
+            .ubo
+            .as_ref()
+            .filter(|ubo_meta| !ubo_meta.stage_mask.is_empty())
         {
             let ubo_mask = util::binding_stage_to_wgpu_stage(ubo_meta.stage_mask);
             main_bindings.push(BindGroupLayoutEntry {
@@ -144,7 +151,11 @@ impl PipelineLayoutObjects {
         }
     }
 
-    pub fn create_pipeline(&self, framebuffer_format: TextureFormat) -> wgpu::RenderPipeline {
+    pub fn create_pipeline(
+        &self,
+        framebuffer_format: TextureFormat,
+        cache: Option<&wgpu::PipelineCache>,
+    ) -> wgpu::RenderPipeline {
         self.device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some("Render Pipeline"),
@@ -198,6 +209,7 @@ impl PipelineLayoutObjects {
                     alpha_to_coverage_enabled: false,
                 },
                 multiview: None,
+                cache,
             })
     }
 }
@@ -208,19 +220,58 @@ impl WgpuGraphicsPipeline {
         shader_assembly: &ShaderCompilerOutput<String, NagaWgslContext>,
         reflection: &ShaderReflection,
         render_pass_format: TextureFormat,
+        adapter_info: Option<&wgpu::AdapterInfo>,
+        bypass_cache: bool,
     ) -> Self {
+        let cache = if bypass_cache {
+            None
+        } else {
+            let name = adapter_info
+                .and_then(|o| wgpu::util::pipeline_cache_key(o))
+                .unwrap_or_else(|| String::from("wgpu"));
+
+            cache_pipeline(
+                &name,
+                &[
+                    &shader_assembly.vertex.as_str(),
+                    &shader_assembly.fragment.as_str(),
+                ],
+                |pipeline_data| {
+                    let descriptor = wgpu::PipelineCacheDescriptor {
+                        label: Some("librashader-wgpu"),
+                        data: pipeline_data.as_deref(),
+                        fallback: true,
+                    };
+
+                    let cache = unsafe { device.create_pipeline_cache(&descriptor) };
+                    Ok::<_, Infallible>(cache)
+                },
+                |cache| Ok(cache.get_data()),
+                bypass_cache,
+            )
+            .ok()
+        };
+
         let layout = PipelineLayoutObjects::new(reflection, shader_assembly, device);
-        let render_pipeline = layout.create_pipeline(render_pass_format);
+        let mut render_pipelines = FastHashMap::default();
+        render_pipelines.insert(
+            render_pass_format,
+            layout.create_pipeline(render_pass_format, cache.as_ref()),
+        );
         Self {
             layout,
-            render_pipeline,
-            format: render_pass_format,
+            render_pipelines,
+            cache,
         }
     }
 
+    pub fn has_format(&self, format: TextureFormat) -> bool {
+        self.render_pipelines.contains_key(&format)
+    }
+
     pub fn recompile(&mut self, format: TextureFormat) {
-        let render_pipeline = self.layout.create_pipeline(format);
-        self.render_pipeline = render_pipeline;
+        let render_pipeline = self.layout.create_pipeline(format, self.cache.as_ref());
+        self.render_pipelines.insert(format, render_pipeline);
     }
 
     pub(crate) fn begin_rendering<'pass>(
@@ -228,6 +279,14 @@ impl WgpuGraphicsPipeline {
         output: &RenderTarget<'pass, WgpuOutputView>,
         cmd: &'pass mut CommandEncoder,
     ) -> RenderPass<'pass> {
+        let Some(pipeline) = self
+            .render_pipelines
+            .get(&output.output.format)
+            .or_else(|| self.render_pipelines.values().next())
+        else {
+            panic!("No available render pipelines found")
+        };
+
         let mut render_pass = cmd.begin_render_pass(&RenderPassDescriptor {
             label: Some("librashader"),
             color_attachments: &[Some(RenderPassColorAttachment {
@@ -251,20 +310,20 @@ impl WgpuGraphicsPipeline {
         render_pass.set_scissor_rect(
             output.x as u32,
             output.y as u32,
-            output.output.size.width,
-            output.output.size.height,
+            output.size.width,
+            output.size.height,
         );
 
         render_pass.set_viewport(
             output.x,
             output.y,
-            output.output.size.width as f32,
-            output.output.size.height as f32,
+            output.size.width as f32,
+            output.size.height as f32,
             0.0,
             1.0,
         );
 
-        render_pass.set_pipeline(&self.render_pipeline);
+        render_pass.set_pipeline(pipeline);
         render_pass
     }
 }

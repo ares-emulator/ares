@@ -9,7 +9,7 @@ use crate::texture::InputImage;
 use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_preprocess::ShaderSource;
-use librashader_presets::ShaderPassConfig;
+use librashader_presets::PassMeta;
 use librashader_reflect::reflect::semantics::{
     BindingStage, MemberOffset, TextureBinding, UniformBinding,
 };
@@ -34,7 +34,7 @@ pub struct FilterPass {
     >,
     pub uniform_bindings: FastHashMap<UniformBinding, MemberOffset>,
     pub source: ShaderSource,
-    pub config: ShaderPassConfig,
+    pub meta: PassMeta,
     pub graphics_pipeline: WgpuGraphicsPipeline,
 }
 
@@ -180,8 +180,11 @@ impl FilterPass {
 
         render_pass.set_bind_group(1, &sampler_bind_group, &[]);
 
-        if let Some(push) = &self.reflection.push_constant
-            && !has_pcb_buffer
+        if let Some(push) = &self
+            .reflection
+            .push_constant
+            .as_ref()
+            .filter(|_| !has_pcb_buffer)
         {
             let mut stage_mask = ShaderStages::empty();
             if push.stage_mask.contains(BindingStage::FRAGMENT) {
@@ -238,7 +241,7 @@ impl FilterPass {
             parent.history_textures.iter().map(|o| o.as_ref()),
             parent.luts.iter().map(|(u, i)| (*u, i.as_ref())),
             &self.source.parameters,
-            &parent.config.parameters,
+            &parent.config,
         );
 
         // flush to buffers
@@ -252,7 +255,7 @@ impl FilterPassMeta for FilterPass {
         self.source.format
     }
 
-    fn config(&self) -> &ShaderPassConfig {
-        &self.config
+    fn meta(&self) -> &PassMeta {
+        &self.meta
     }
 }

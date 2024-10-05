@@ -4,7 +4,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use librashader_common::Viewport;
+use librashader_common::{Size, Viewport};
 use librashader_presets::ShaderPreset;
 use librashader_runtime_wgpu::FilterChainWgpu;
 use wgpu::util::DeviceExt;
@@ -93,9 +93,13 @@ impl<'a> State<'a> {
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
-                    required_features: wgpu::Features::ADDRESS_MODE_CLAMP_TO_BORDER,
+                    required_features: wgpu::Features::ADDRESS_MODE_CLAMP_TO_BORDER
+                        | wgpu::Features::PIPELINE_CACHE
+                        | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
+                        | wgpu::Features::FLOAT32_FILTERABLE,
                     required_limits: wgpu::Limits::default(),
                     label: None,
+                    memory_hints: Default::default(),
                 },
                 None,
             )
@@ -118,17 +122,13 @@ impl<'a> State<'a> {
         let device = Arc::new(device);
         let queue = Arc::new(queue);
         //
-        // let preset = ShaderPreset::try_parse(
-        //     "../test/basic.slangp",
-        // )
-        // .unwrap();
+        // let preset = ShaderPreset::try_parse("../test/basic.slangp").unwrap();
         //
-        let preset = ShaderPreset::try_parse("../test/shaders_slang/test/history.slangp").unwrap();
+        let preset =
+            ShaderPreset::try_parse("../test/shaders_slang/crt/crt-royale.slangp").unwrap();
 
-        // let preset = ShaderPreset::try_parse(
-        //     "../test/shaders_slang/bezel/Mega_Bezel/Presets/MBZ__0__SMOOTH-ADV.slangp",
-        // )
-        // .unwrap();
+        // let preset =
+        //     ShaderPreset::try_parse("../test/shaders_slang/crt/crt-royale.slangp").unwrap();
 
         let chain = FilterChainWgpu::load_from_preset(
             preset,
@@ -154,11 +154,13 @@ impl<'a> State<'a> {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
+                compilation_options: Default::default(),
                 buffers: &[Vertex::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
                 entry_point: "fs_main",
+                compilation_options: Default::default(),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
                     blend: Some(wgpu::BlendState::REPLACE),
@@ -181,6 +183,7 @@ impl<'a> State<'a> {
                 alpha_to_coverage_enabled: false,
             },
             multiview: None,
+            cache: None,
         });
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -287,14 +290,15 @@ impl<'a> State<'a> {
             .frame(
                 Arc::clone(&render_output),
                 &Viewport {
-                    x: 0.0,
-                    y: 0.0,
+                    x: 100.0,
+                    y: 100.0,
                     mvp: None,
                     output: librashader_runtime_wgpu::WgpuOutputView::new_from_raw(
                         &filter_view,
                         filter_output.size().into(),
                         filter_output.format(),
                     ),
+                    size: (Size::from(filter_output.size())) - 200,
                 },
                 &mut encoder,
                 self.frame_count,

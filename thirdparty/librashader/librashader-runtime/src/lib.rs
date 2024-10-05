@@ -36,6 +36,3 @@ pub mod render_target;
 
 /// Helpers for handling framebuffers.
 pub mod framebuffer;
-
-/// array_chunks_mut polyfill
-mod array_chunks_mut;

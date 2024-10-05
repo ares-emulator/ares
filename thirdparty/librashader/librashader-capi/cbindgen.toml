@@ -45,7 +45,7 @@ after_includes = """
 #import <Metal/Metal.h>
 #endif
 #if defined(LIBRA_RUNTIME_VULKAN)
-#include <vulkan\\vulkan.h>
+#include <vulkan/vulkan.h>
 #endif
 """
 
@@ -173,6 +173,7 @@ include = [
 
 exclude = [
     "Option_ID3D11DeviceContext",
+    "Option_PFN_vkGetInstanceProcAddr",
     "PMTLCommandQueue",
     "PMTLCommandBuffer",
     "PMTLTexture"
@@ -198,6 +199,7 @@ exclude = [
 "CommandBuffer" = "VkCommandBuffer"
 "Format" = "VkFormat"
 "Image" = "VkImage"
+"Queue" = "VkQueue"
 
 # hack to get proper pointer indirection for COM pointers
 # we don't need one for ID3D11DeviceContext.
@@ -213,6 +215,9 @@ exclude = [
 
 # hack to force cbindgen to not generate option type for nullable ID3D11DeviceContext.
 "Option_ID3D11DeviceContext" = "ID3D11DeviceContext *"
+
+# hack to force cbindgen to not generate option type for nullable PFN_vkGetInstanceProcAddr.
+"Option_PFN_vkGetInstanceProcAddr" = "PFN_vkGetInstanceProcAddr"
 
 # hack to get proper pointer indirection for COM pointers
 "ID3D12Device" = "ID3D12Device *"

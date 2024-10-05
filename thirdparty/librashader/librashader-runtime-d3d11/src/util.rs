@@ -96,8 +96,11 @@ pub fn d3d11_get_closest_format(
 
     for supported in format_support_list {
         unsafe {
-            if let Ok(supported_format) = device.CheckFormatSupport(*supported)
-                && (supported_format & format_support_mask) == format_support_mask
+            if device
+                .CheckFormatSupport(*supported)
+                .is_ok_and(|supported_format| {
+                    (supported_format & format_support_mask) == format_support_mask
+                })
             {
                 return *supported;
             }
@@ -146,7 +149,7 @@ pub fn d3d11_compile_bound_shader<'a, T, L>(
     factory: ShaderFactory<'a, L, T>,
 ) -> error::Result<T>
 where
-    L: windows::core::IntoParam<ID3D11ClassLinkage>,
+    L: windows::core::Param<ID3D11ClassLinkage>,
 {
     unsafe {
         // SAFETY: slice as valid for as long as vs_blob is alive.

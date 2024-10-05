@@ -2,11 +2,14 @@ use crate::buffer::D3D12Buffer;
 use crate::error;
 use array_concat::concat_arrays;
 use bytemuck::offset_of;
+use gpu_allocator::d3d12::Allocator;
 use librashader_runtime::quad::{QuadType, VertexInput};
+use parking_lot::Mutex;
+use std::sync::Arc;
 use windows::core::PCSTR;
 use windows::Win32::Graphics::Direct3D::D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 use windows::Win32::Graphics::Direct3D12::{
-    ID3D12Device, ID3D12GraphicsCommandList, ID3D12GraphicsCommandList4, ID3D12Resource,
+    ID3D12GraphicsCommandList, ID3D12GraphicsCommandList4,
     D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, D3D12_INPUT_ELEMENT_DESC, D3D12_VERTEX_BUFFER_VIEW,
 };
 use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_R32G32_FLOAT;
@@ -52,15 +55,15 @@ const FINAL_VBO_DATA: [VertexInput; 4] = [
 static VBO_DATA: &[VertexInput; 8] = &concat_arrays!(OFFSCREEN_VBO_DATA, FINAL_VBO_DATA);
 
 pub(crate) struct DrawQuad {
-    _buffer: ID3D12Resource,
+    _buffer: D3D12Buffer,
     view: D3D12_VERTEX_BUFFER_VIEW,
 }
 
 impl DrawQuad {
-    pub fn new(device: &ID3D12Device) -> error::Result<DrawQuad> {
+    pub fn new(allocator: &Arc<Mutex<Allocator>>) -> error::Result<DrawQuad> {
         let stride = std::mem::size_of::<VertexInput>() as u32;
         let size = 2 * std::mem::size_of::<[VertexInput; 4]>() as u32;
-        let mut buffer = D3D12Buffer::new(device, size as usize)?;
+        let mut buffer = D3D12Buffer::new(allocator, size as usize)?;
         buffer
             .map(None)?
             .slice
@@ -72,7 +75,6 @@ impl DrawQuad {
             StrideInBytes: stride,
         };
 
-        let buffer = buffer.into_raw();
         Ok(DrawQuad {
             _buffer: buffer,
             view,

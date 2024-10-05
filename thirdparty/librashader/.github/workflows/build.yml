@@ -38,10 +38,24 @@ jobs:
     - name: Build dynamic library
       run: cargo run -p librashader-build-script -- --profile ${{ matrix.profile }}
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: ${{ format('librashader-{0}-{1}-{2}', matrix.output, github.sha, matrix.profile) }}
         path: ${{ format('target/{0}/librashader.*', matrix.profile) }}
+    - name: Install Ubuntu librashader CLI build dependencies
+      if: matrix.profile == 'release' && matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update || true
+        sudo apt-get -y install xorg-dev
+    - name: Build librashader CLI
+      if: matrix.profile == 'release'
+      run: cargo build -p librashader-cli --release
+    - name: Upload librashader-cli
+      uses: actions/upload-artifact@v4.4.0
+      if: matrix.profile == 'release'
+      with:
+        name: ${{ format('librashader-cli-{0}-{1}', matrix.output, github.sha) }}
+        path: ${{ format('target/{0}/librashader-cli*', matrix.profile) }}
   build-ubuntu-arm64:
     strategy:
       matrix:
@@ -65,14 +79,23 @@ jobs:
         echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted" | sudo tee -a /etc/apt/sources.list
         echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted" | sudo tee -a /etc/apt/sources.list
         sudo apt-get update || true
-        sudo apt-get -y install g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+        sudo apt-get -y install g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu xorg-dev libx11-dev:arm64 libxrandr-dev:arm64
     - name: Build dynamic library
       run: CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc cargo run -p librashader-build-script -- --profile ${{ matrix.profile }} --target aarch64-unknown-linux-gnu
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: ${{ format('librashader-aarch64-ubuntu-{0}-{1}', github.sha, matrix.profile) }}
         path: ${{ format('target/aarch64-unknown-linux-gnu/{0}/librashader.*', matrix.profile) }}
+    - name: Build librashader CLI
+      if: matrix.profile == 'release'
+      run: CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc  cargo build -p librashader-cli --release --target aarch64-unknown-linux-gnu
+    - name: Upload librashader-cli
+      uses: actions/upload-artifact@v4.4.0
+      if: matrix.profile == 'release'
+      with:
+        name: ${{ format('librashader-cli-aarch64-ubuntu-{0}', github.sha) }}
+        path: ${{ format('target/aarch64-unknown-linux-gnu/{0}/librashader-cli', matrix.profile) }}
   build-windows-arm64:
     strategy:
       matrix:
@@ -86,13 +109,43 @@ jobs:
       - name: Install nightly Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-2024-01-15 # pinned because it seems like there's a segfault on nightly
-          override: true
+          toolchain: nightly
           targets: aarch64-pc-windows-msvc
       - name: Build dynamic library
         run: cargo run -p librashader-build-script -- --profile ${{ matrix.profile }} --target aarch64-pc-windows-msvc
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: ${{ format('librashader-aarch64-windows-{0}-{1}', github.sha, matrix.profile) }}
           path: ${{ format('target/aarch64-pc-windows-msvc/{0}/librashader.*', matrix.profile) }}
+      - name: Build librashader CLI
+        if: matrix.profile == 'release'
+        run: cargo build -p librashader-cli --release --target aarch64-pc-windows-msvc
+      - name: Upload librashader-cli
+        uses: actions/upload-artifact@v4.4.0
+        if: matrix.profile == 'release'
+        with:
+          name: ${{ format('librashader-cli-aarch64-pc-windows-msvc-{0}', github.sha) }}
+          path: ${{ format('target/aarch64-pc-windows-msvc/{0}/librashader-cli.exe', matrix.profile) }}
+  build-windows-7:
+    strategy:
+      matrix:
+        profile: ['release', 'optimized']
+      fail-fast: false
+    runs-on: windows-latest
+    name: x86_64-win7-windows
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install nightly Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: rust-src
+      - name: Build dynamic library
+        run: cargo run -p librashader-build-script -- --profile ${{ matrix.profile }} --target x86_64-win7-windows-msvc -- -Zbuild-std
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: ${{ format('librashader-x86_64-win7-windows-{0}-{1}', github.sha, matrix.profile) }}
+          path: ${{ format('target/x86_64-win7-windows-msvc/{0}/librashader.*', matrix.profile) }}

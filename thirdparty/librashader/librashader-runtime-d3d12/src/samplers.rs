@@ -1,8 +1,8 @@
-use crate::descriptor_heap::{D3D12DescriptorHeap, D3D12DescriptorHeapSlot, SamplerPaletteHeap};
+use crate::descriptor_heap::SamplerPaletteHeap;
 use crate::error;
+use d3d12_descriptor_heap::{D3D12DescriptorHeap, D3D12DescriptorHeapSlot};
 use librashader_common::map::FastHashMap;
 use librashader_common::{FilterMode, WrapMode};
-use std::ops::Deref;
 use windows::Win32::Graphics::Direct3D12::{
     ID3D12Device, D3D12_COMPARISON_FUNC_NEVER, D3D12_FLOAT32_MAX, D3D12_SAMPLER_DESC,
     D3D12_TEXTURE_ADDRESS_MODE,
@@ -33,12 +33,12 @@ impl SamplerSet {
             WrapMode::MirroredRepeat,
         ];
 
-        let mut heap = D3D12DescriptorHeap::new(device, 2 * wrap_modes.len())?;
+        let mut heap = unsafe { D3D12DescriptorHeap::new(device, 2 * wrap_modes.len())? };
 
         for wrap_mode in wrap_modes {
             for filter_mode in &[FilterMode::Linear, FilterMode::Nearest] {
                 unsafe {
-                    let sampler = heap.alloc_slot()?;
+                    let sampler = heap.allocate_descriptor()?;
                     device.CreateSampler(
                         &D3D12_SAMPLER_DESC {
                             Filter: (*filter_mode).into(),
@@ -52,7 +52,7 @@ impl SamplerSet {
                             MinLOD: -D3D12_FLOAT32_MAX,
                             MaxLOD: D3D12_FLOAT32_MAX,
                         },
-                        *sampler.deref().as_ref(),
+                        *sampler.as_ref(),
                     );
                     samplers.insert((*wrap_mode, *filter_mode), sampler);
                 }

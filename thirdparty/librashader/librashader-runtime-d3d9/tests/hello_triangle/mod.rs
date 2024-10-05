@@ -89,6 +89,7 @@ where
         )
     };
 
+    let hwnd = hwnd?;
     sample.bind_to_window(&hwnd).unwrap();
     unsafe { ShowWindow(hwnd, SW_SHOW) };
 
@@ -193,8 +194,8 @@ pub mod d3d9_hello_triangle {
 
     use std::path::{Path, PathBuf};
 
-    use librashader_common::Viewport;
-    use librashader_runtime::quad::IDENTITY_MVP;
+    use librashader_common::{GetSize, Viewport};
+    use librashader_runtime::image::{Image, UVDirection, ARGB8, BGRA8, RGBA8};
     use librashader_runtime_d3d9::options::FilterChainOptionsD3D9;
     use librashader_runtime_d3d9::FilterChainD3D9;
     use std::time::Instant;
@@ -229,6 +230,7 @@ pub mod d3d9_hello_triangle {
         // pub deferred_context: ID3D11DeviceContext,
         pub vbo: IDirect3DVertexBuffer9,
         pub vao: IDirect3DVertexDeclaration9,
+        pub texture: IDirect3DTexture9,
     }
 
     impl Sample {
@@ -283,6 +285,38 @@ pub mod d3d9_hello_triangle {
                 tex.unwrap()
             };
 
+            const IMAGE_PATH: &str = "../triangle.png";
+
+            let image = Image::<BGRA8>::load(IMAGE_PATH, UVDirection::TopLeft)
+                .expect("triangle.png not found");
+
+            let texture = unsafe {
+                let mut texture = None;
+                device.CreateTexture(
+                    image.size.width,
+                    image.size.height,
+                    1,
+                    0,
+                    D3DFMT_A8R8G8B8,
+                    D3DPOOL_MANAGED,
+                    &mut texture,
+                    std::ptr::null_mut(),
+                )?;
+
+                texture.unwrap()
+            };
+
+            unsafe {
+                let mut lock = D3DLOCKED_RECT::default();
+                texture.LockRect(0, &mut lock, std::ptr::null_mut(), 0)?;
+                std::ptr::copy_nonoverlapping(
+                    image.bytes.as_ptr(),
+                    lock.pBits.cast(),
+                    image.bytes.len(),
+                );
+                texture.UnlockRect(0)?;
+            }
+
             self.resources = Some(Resources {
                 device,
                 filter,
@@ -291,18 +325,7 @@ pub mod d3d9_hello_triangle {
                 frame_end: Instant::now(),
                 frame_start: Instant::now(),
                 elapsed: 0f32,
-                // renderbuffer,
-                // renderbufffer_rtv: render_rtv,
-                // deferred_context: context,
-                // viewport: D3D11_VIEWPORT {
-                //     TopLeftX: 0.0,
-                //     TopLeftY: 0.0,
-                //     Width: WIDTH as f32,
-                //     Height: HEIGHT as f32,
-                //     MinDepth: D3D11_MIN_DEPTH,
-                //     MaxDepth: D3D11_MAX_DEPTH,
-                // },
-                // shader_output: None,
+                texture,
                 frame_count: 0usize,
                 renderbuffer,
             });
@@ -347,73 +370,74 @@ pub mod d3d9_hello_triangle {
 
             // resources.triangle_uniform_values.model_matrix = Mat4::rotate(Quaternion::axis_angle(Vec3::new(0.0, 0.0, 1.0), resources.elapsed));
             unsafe {
-                resources
-                    .device
-                    .SetTransform(D3DTS_PROJECTION, IDENTITY_MVP.as_ptr().cast())?;
-                resources
-                    .device
-                    .SetTransform(D3DTS_VIEW, IDENTITY_MVP.as_ptr().cast())?;
-                resources
-                    .device
-                    .SetTransform(D3DTRANSFORMSTATETYPE(256), IDENTITY_MVP.as_ptr().cast())?;
-
-                let rendertarget = resources.renderbuffer.GetSurfaceLevel(0).unwrap();
-
+                // resources
+                //     .device
+                //     .SetTransform(D3DTS_PROJECTION, IDENTITY_MVP.as_ptr().cast())?;
+                // resources
+                //     .device
+                //     .SetTransform(D3DTS_VIEW, IDENTITY_MVP.as_ptr().cast())?;
+                // resources
+                //     .device
+                //     .SetTransform(D3DTRANSFORMSTATETYPE(256), IDENTITY_MVP.as_ptr().cast())?;
+                //
+                // let rendertarget = resources.renderbuffer.GetSurfaceLevel(0).unwrap();
+                //
                 let backbuffer = resources
                     .device
                     .GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO)?;
+                //
+                // resources.device.SetRenderTarget(0, &rendertarget)?;
 
-                resources.device.SetRenderTarget(0, &rendertarget)?;
+                // resources.device.Clear(
+                //     0,
+                //     std::ptr::null_mut(),
+                //     D3DCLEAR_TARGET as u32,
+                //     0xFF4d6699,
+                //     0.0,
+                //     0,
+                // )?;
 
-                resources.device.Clear(
-                    0,
-                    std::ptr::null_mut(),
-                    D3DCLEAR_TARGET as u32,
-                    0xFF4d6699,
-                    0.0,
-                    0,
-                )?;
-
-                resources.device.BeginScene()?;
-
-                resources.device.SetStreamSource(
-                    0,
-                    &resources.vbo,
-                    0,
-                    std::mem::size_of::<Vertex>() as u32,
-                )?;
-                resources.device.SetVertexDeclaration(&resources.vao)?;
-
-                resources
-                    .device
-                    .SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE.0 as u32)?;
-                resources
-                    .device
-                    .SetRenderState(D3DRS_CLIPPING, FALSE.0 as u32)?;
-                resources
-                    .device
-                    .SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS.0 as u32)?;
-
-                resources
-                    .device
-                    .SetRenderState(D3DRS_ZENABLE, FALSE.0 as u32)?;
-                resources
-                    .device
-                    .SetRenderState(D3DRS_LIGHTING, FALSE.0 as u32)?;
-
-                resources.device.DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1)?;
-
-                resources.device.EndScene()?;
+                // resources.device.BeginScene()?;
+                //
+                // resources.device.SetStreamSource(
+                //     0,
+                //     &resources.vbo,
+                //     0,
+                //     std::mem::size_of::<Vertex>() as u32,
+                // )?;
+                // resources.device.SetVertexDeclaration(&resources.vao)?;
+                //
+                // resources
+                //     .device
+                //     .SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE.0 as u32)?;
+                // resources
+                //     .device
+                //     .SetRenderState(D3DRS_CLIPPING, FALSE.0 as u32)?;
+                // resources
+                //     .device
+                //     .SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS.0 as u32)?;
+                //
+                // resources
+                //     .device
+                //     .SetRenderState(D3DRS_ZENABLE, FALSE.0 as u32)?;
+                // resources
+                //     .device
+                //     .SetRenderState(D3DRS_LIGHTING, FALSE.0 as u32)?;
+                //
+                // resources.device.DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1)?;
+                //
+                // resources.device.EndScene()?;
 
                 resources
                     .filter
                     .frame(
-                        resources.renderbuffer.clone(),
+                        &resources.texture,
                         &Viewport {
                             x: 0.0,
                             y: 0.0,
                             mvp: None,
-                            output: backbuffer.clone(),
+                            output: &backbuffer,
+                            size: backbuffer.size()?,
                         },
                         0,
                         None,

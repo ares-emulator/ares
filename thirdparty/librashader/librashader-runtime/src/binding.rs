@@ -1,5 +1,6 @@
+use crate::parameters::RuntimeParameters;
 use crate::uniforms::{BindUniform, NoUniformBinder, UniformStorage};
-use librashader_common::map::FastHashMap;
+use librashader_common::map::{FastHashMap, ShortString};
 use librashader_common::Size;
 use librashader_preprocess::ShaderParameter;
 use librashader_reflect::reflect::semantics::{
@@ -119,9 +120,10 @@ where
         pass_feedback: impl Iterator<Item = Option<impl AsRef<Self::InputTexture>>>,
         original_history: impl Iterator<Item = Option<impl AsRef<Self::InputTexture>>>,
         lookup_textures: impl Iterator<Item = (usize, impl AsRef<Self::InputTexture>)>,
-        parameter_defaults: &FastHashMap<String, ShaderParameter>,
-        runtime_parameters: &FastHashMap<String, f32>,
+        parameter_defaults: &FastHashMap<ShortString, ShaderParameter>,
+        runtime_parameters: &RuntimeParameters,
     ) {
+        let runtime_parameters = runtime_parameters.parameters.load();
         // Bind MVP
         if let Some(offset) = uniform_bindings.get(&UniqueSemantics::MVP.into()) {
             uniform_storage.bind_mat4(
@@ -346,6 +348,11 @@ where
     }
 }
 
+pub struct BindingRequirements {
+    pub(crate) required_history: usize,
+    pub(crate) uses_final_pass_as_feedback: bool,
+}
+
 /// Trait for objects that can be used to create a binding map.
 pub trait BindingUtil {
     /// Create the uniform binding map with the given reflection information.
@@ -355,7 +362,7 @@ pub trait BindingUtil {
     ) -> FastHashMap<UniformBinding, T>;
 
     /// Calculate the number of required images for history.
-    fn calculate_required_history<'a>(pass_meta: impl Iterator<Item = &'a Self>) -> usize
+    fn calculate_requirements<'a>(pass_meta: impl Iterator<Item = &'a Self>) -> BindingRequirements
     where
         Self: 'a;
 }
@@ -381,32 +388,65 @@ impl BindingUtil for BindingMeta {
         uniform_bindings
     }
 
-    fn calculate_required_history<'a>(pass_meta: impl Iterator<Item = &'a Self>) -> usize
+    fn calculate_requirements<'a>(pass_meta: impl Iterator<Item = &'a Self>) -> BindingRequirements
     where
         Self: 'a,
     {
         let mut required_images = 0;
 
+        let mut len: i64 = 0;
+        let mut latest_feedback_pass: i64 = -1;
+
         for pass in pass_meta {
+            len += 1;
+
             // If a shader uses history size, but not history, we still need to keep the texture.
-            let texture_max_index = pass
+            let history_texture_max_index = pass
                 .texture_meta
                 .iter()
                 .filter(|(semantics, _)| semantics.semantics == TextureSemantics::OriginalHistory)
                 .map(|(semantic, _)| semantic.index)
                 .fold(0, std::cmp::max);
-            let texture_size_max_index = pass
+            let history_texture_size_max_index = pass
                 .texture_size_meta
                 .iter()
                 .filter(|(semantics, _)| semantics.semantics == TextureSemantics::OriginalHistory)
                 .map(|(semantic, _)| semantic.index)
                 .fold(0, std::cmp::max);
 
-            required_images = std::cmp::max(required_images, texture_max_index);
-            required_images = std::cmp::max(required_images, texture_size_max_index);
+            let feedback_max_index = pass
+                .texture_meta
+                .iter()
+                .filter(|(semantics, _)| semantics.semantics == TextureSemantics::PassFeedback)
+                .map(|(semantic, _)| semantic.index as i64)
+                .fold(-1, std::cmp::max);
+            let feedback_max_size_index = pass
+                .texture_size_meta
+                .iter()
+                .filter(|(semantics, _)| semantics.semantics == TextureSemantics::PassFeedback)
+                .map(|(semantic, _)| semantic.index as i64)
+                .fold(-1, std::cmp::max);
+
+            latest_feedback_pass = std::cmp::max(latest_feedback_pass, feedback_max_index);
+            latest_feedback_pass = std::cmp::max(latest_feedback_pass, feedback_max_size_index);
+
+            required_images = std::cmp::max(required_images, history_texture_max_index);
+            required_images = std::cmp::max(required_images, history_texture_size_max_index);
         }
 
-        required_images
+        let uses_feedback = if latest_feedback_pass.is_negative() {
+            false
+        } else {
+            // Technically = but we can be permissive here
+
+            // account for off by 1
+            latest_feedback_pass + 1 >= len
+        };
+
+        BindingRequirements {
+            required_history: required_images,
+            uses_final_pass_as_feedback: uses_feedback,
+        }
     }
 }
 
@@ -422,11 +462,11 @@ macro_rules! impl_default_frame_options {
             /// The direction of rendering.
             /// -1 indicates that the frames are played in reverse order.
             pub frame_direction: i32,
-            /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+            /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 3 = 270deg.
             pub rotation: u32,
             /// The total number of subframes ran. Default is 1.
             pub total_subframes: u32,
-            // The current sub frame. Default is 1.
+            /// The current sub frame. Default is 1.
             pub current_subframe: u32,
         }
 

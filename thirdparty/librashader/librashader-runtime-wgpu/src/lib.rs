@@ -3,8 +3,7 @@
 //! This crate should not be used directly.
 //! See [`librashader::runtime::wgpu`](https://docs.rs/librashader/latest/librashader/runtime/wgpu/index.html) instead.
 #![deny(unsafe_op_in_unsafe_fn)]
-#![feature(type_alias_impl_trait)]
-#![feature(let_chains)]
+#![cfg_attr(not(feature = "stable"), feature(type_alias_impl_trait))]
 
 mod buffer;
 mod draw_quad;

@@ -4,7 +4,7 @@ use ash::vk;
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 
 pub struct VulkanSurface {
-    surface_loader: ash::extensions::khr::Surface,
+    surface_loader: ash::khr::surface::Instance,
     pub surface: vk::SurfaceKHR,
     pub present_queue: vk::Queue,
 }
@@ -15,13 +15,13 @@ impl VulkanSurface {
             ash_window::create_surface(
                 &base.entry,
                 &base.instance,
-                window.raw_display_handle(),
-                window.raw_window_handle(),
+                window.raw_display_handle().unwrap(),
+                window.raw_window_handle().unwrap(),
                 None,
             )?
         };
 
-        let surface_loader = ash::extensions::khr::Surface::new(&base.entry, &base.instance);
+        let surface_loader = ash::khr::surface::Instance::new(&base.entry, &base.instance);
 
         let present_queue = unsafe {
             let queue_family = base

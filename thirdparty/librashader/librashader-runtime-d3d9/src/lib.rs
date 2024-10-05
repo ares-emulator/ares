@@ -1,6 +1,6 @@
 #![cfg(target_os = "windows")]
-#![feature(type_alias_impl_trait)]
-#![feature(error_generic_member_access)]
+#![cfg_attr(not(feature = "stable"), feature(type_alias_impl_trait))]
+
 mod binding;
 mod d3dx;
 mod draw_quad;

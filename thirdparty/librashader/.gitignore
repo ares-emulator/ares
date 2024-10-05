@@ -13,3 +13,4 @@ librashader_runtime_*.exe
 /test/capi-tests/librashader-capi-tests/**/*.so
 /test/capi-tests/librashader-capi-tests/**/*.out
 /test/Mega_Bezel_Packs/Duimon-Mega-Bezel/
+.DS_Store

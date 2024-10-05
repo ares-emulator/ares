@@ -2,8 +2,8 @@ use crate::error;
 use crate::error::assume_d3d_init;
 use crate::texture::D3D9InputTexture;
 
-use librashader_presets::TextureConfig;
-use librashader_runtime::image::{Image, ARGB8};
+use librashader_presets::TextureMeta;
+use librashader_runtime::image::{Image, BGRA8};
 
 use windows::Win32::Graphics::Direct3D9::{
     IDirect3DDevice9, D3DFMT_A8R8G8B8, D3DLOCKED_RECT, D3DPOOL_MANAGED,
@@ -21,8 +21,8 @@ impl AsRef<D3D9InputTexture> for LutTexture {
 impl LutTexture {
     pub fn new(
         device: &IDirect3DDevice9,
-        source: &Image<ARGB8>,
-        config: &TextureConfig,
+        source: &Image<BGRA8>,
+        config: &TextureMeta,
     ) -> error::Result<LutTexture> {
         let mut texture = None;
         unsafe {

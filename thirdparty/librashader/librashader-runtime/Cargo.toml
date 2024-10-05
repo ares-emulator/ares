@@ -3,7 +3,7 @@ name = "librashader-runtime"
 edition = "2021"
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.7"
+version = "0.5.0-rc.1"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -12,21 +12,15 @@ keywords = ["shader", "retroarch", "SPIR-V"]
 description = "RetroArch shaders for all."
 
 [dependencies]
-librashader-common = { path = "../librashader-common", version = "0.2.7" }
-librashader-presets = { path = "../librashader-presets", version = "0.2.7" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.7" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.7" }
+librashader-common = { path = "../librashader-common", version = "0.5.0-rc.1" }
+librashader-presets = { path = "../librashader-presets", version = "0.5.0-rc.1" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.0-rc.1" }
+librashader-pack = { path = "../librashader-pack", version = "0.5.0-rc.1" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.5.0-rc.1" }
 bytemuck = {  version = "1.12.3", features = ["derive"] }
 num-traits = "0.2.15"
 array-concat = "0.5.2"
+arc-swap = "1.7.1"
 
-tinymap = "0.4.0"
+image = { workspace = true }
 
-[dependencies.image]
-version = "0.25.1"
-features = [
-    "gif", "jpeg", "png",
-    "tga", "pnm", "tiff",
-    "webp", "bmp", "dds",
-]
-default-features = false

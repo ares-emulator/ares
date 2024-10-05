@@ -3,50 +3,42 @@ use crate::ctypes::{
 };
 use crate::error::{assert_non_null, assert_some_ptr, LibrashaderError};
 use crate::ffi::extern_fn;
-use librashader::runtime::gl::{
-    FilterChain, FilterChainOptions, FrameOptions, GLFramebuffer, GLImage,
-};
-use std::ffi::CStr;
-use std::ffi::{c_char, c_void, CString};
-use std::mem::MaybeUninit;
-use std::ptr::NonNull;
-use std::slice;
-
 use crate::LIBRASHADER_API_VERSION;
+use librashader::runtime::gl::{FilterChain, FilterChainOptions, FrameOptions, GLImage};
 use librashader::runtime::FilterChainParameters;
 use librashader::runtime::{Size, Viewport};
+use std::ffi::CStr;
+use std::ffi::{c_char, c_void};
+use std::mem::MaybeUninit;
+use std::num::NonZeroU32;
+use std::ptr::NonNull;
+use std::slice;
+use std::sync::Arc;
 
 /// A GL function loader that librashader needs to be initialized with.
 pub type libra_gl_loader_t = unsafe extern "system" fn(*const c_char) -> *const c_void;
 
-/// OpenGL parameters for the source image.
+/// OpenGL parameters for an image.
 #[repr(C)]
-pub struct libra_source_image_gl_t {
-    /// A texture GLuint to the source image.
+pub struct libra_image_gl_t {
+    /// A texture GLuint to the texture.
     pub handle: u32,
-    /// The format of the source image.
+    /// The format of the texture.
     pub format: u32,
-    /// The width of the source image.
+    /// The width of the texture.
     pub width: u32,
-    /// The height of the source image.
+    /// The height of the texture.
     pub height: u32,
 }
 
-/// OpenGL parameters for the output framebuffer.
-#[repr(C)]
-pub struct libra_output_framebuffer_gl_t {
-    /// A framebuffer GLuint to the output framebuffer.
-    pub fbo: u32,
-    /// A texture GLuint to the logical buffer of the output framebuffer.
-    pub texture: u32,
-    /// The format of the output framebuffer.
-    pub format: u32,
-}
+impl From<libra_image_gl_t> for GLImage {
+    fn from(value: libra_image_gl_t) -> Self {
+        let handle = NonZeroU32::try_from(value.handle)
+            .ok()
+            .map(glow::NativeTexture);
 
-impl From<libra_source_image_gl_t> for GLImage {
-    fn from(value: libra_source_image_gl_t) -> Self {
         GLImage {
-            handle: value.handle,
+            handle,
             format: value.format,
             size: Size::new(value.width, value.height),
         }
@@ -64,7 +56,7 @@ pub struct frame_gl_opt_t {
     /// The direction of rendering.
     /// -1 indicates that the frames are played in reverse order.
     pub frame_direction: i32,
-    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 3 = 270deg.
     pub rotation: u32,
     /// The total number of subframes ran. Default is 1.
     pub total_subframes: u32,
@@ -105,27 +97,6 @@ config_struct! {
 }
 
 extern_fn! {
-    /// Initialize the OpenGL Context for librashader.
-    ///
-    /// This only has to be done once throughout the lifetime of the application,
-    /// unless for whatever reason you switch OpenGL loaders mid-flight.
-    ///
-    /// ## Safety
-    /// Attempting to create a filter chain will fail if the GL context is not initialized.
-    ///
-    /// Reinitializing the OpenGL context with a different loader immediately invalidates previous filter
-    /// chain objects, and drawing with them causes immediate undefined behaviour.
-    raw fn libra_gl_init_context(loader: libra_gl_loader_t) {
-        gl::load_with(|s| unsafe {
-            let proc_name = CString::new(s).unwrap_unchecked();
-            loader(proc_name.as_ptr())
-        });
-
-        LibrashaderError::ok()
-    }
-}
-
-extern_fn! {
     /// Create the filter chain given the shader preset.
     ///
     /// The shader preset is immediately invalidated and must be recreated after
@@ -137,6 +108,7 @@ extern_fn! {
     /// - `out` must be aligned, but may be null, invalid, or uninitialized.
     fn libra_gl_filter_chain_create(
         preset: *mut libra_shader_preset_t,
+        loader: libra_gl_loader_t,
         options: *const MaybeUninit<filter_chain_gl_opt_t>,
         out: *mut MaybeUninit<libra_gl_filter_chain_t>
     ) {
@@ -156,7 +128,11 @@ extern_fn! {
         let options = options.map(FromUninit::from_uninit);
 
         unsafe {
-            let chain = FilterChain::load_from_preset(*preset, options.as_ref())?;
+            let context = glow::Context::from_loader_function_cstr(
+                |proc_name| loader(proc_name.as_ptr()));
+
+            let chain = FilterChain::load_from_preset(*preset,
+                Arc::new(context), options.as_ref())?;
 
             out.write(MaybeUninit::new(NonNull::new(Box::into_raw(Box::new(
                 chain,
@@ -167,6 +143,23 @@ extern_fn! {
 
 extern_fn! {
     /// Draw a frame with the given parameters for the given filter chain.
+    ///
+    /// ## Parameters
+    ///
+    /// - `chain` is a handle to the filter chain.
+    /// - `frame_count` is the number of frames passed to the shader
+    /// - `image` is a `libra_image_gl_t`, containing the name of a Texture, format, and size information to
+    ///    to an image that will serve as the source image for the frame.
+    /// - `out` is a `libra_output_framebuffer_gl_t`, containing the name of a Framebuffer, the name of a Texture, format,
+    ///    and size information for the render target of the frame.
+    ///
+    /// - `viewport` is a pointer to a `libra_viewport_t` that specifies the area onto which scissor and viewport
+    ///    will be applied to the render target. It may be null, in which case a default viewport spanning the
+    ///    entire render target will be used.
+    /// - `mvp` is a pointer to an array of 16 `float` values to specify the model view projection matrix to
+    ///    be passed to the shader.
+    /// - `options` is a pointer to options for the frame. Valid options are dependent on the `LIBRASHADER_API_VERSION`
+    ///    passed in. It may be null, in which case default options for the filter chain are used.
     ///
     /// ## Safety
     /// - `chain` may be null, invalid, but not uninitialized. If `chain` is null or invalid, this
@@ -182,14 +175,16 @@ extern_fn! {
     nopanic fn libra_gl_filter_chain_frame(
         chain: *mut libra_gl_filter_chain_t,
         frame_count: usize,
-        image: libra_source_image_gl_t,
-        viewport: libra_viewport_t,
-        out: libra_output_framebuffer_gl_t,
+        image: libra_image_gl_t,
+        out: libra_image_gl_t,
+        viewport: *const libra_viewport_t,
         mvp: *const f32,
         opt: *const MaybeUninit<frame_gl_opt_t>,
     ) mut |chain| {
         assert_some_ptr!(mut chain);
         let image: GLImage = image.into();
+        let out: GLImage = out.into();
+
         let mvp = if mvp.is_null() {
             None
         } else {
@@ -202,12 +197,21 @@ extern_fn! {
         };
 
         let opt = opt.map(FromUninit::from_uninit);
-        let framebuffer = GLFramebuffer::new_from_raw(out.texture, out.fbo, out.format, Size::new(viewport.width, viewport.height), 1);
-        let viewport = Viewport {
-            x: viewport.x,
-            y: viewport.y,
-            output: &framebuffer,
-            mvp,
+
+         let viewport = if viewport.is_null() {
+            Viewport::new_render_target_sized_origin(&out, mvp)?
+        } else {
+            let viewport = unsafe { viewport.read() };
+            Viewport {
+                x: viewport.x,
+                y: viewport.y,
+                output: &out,
+                size: Size {
+                    height: viewport.height,
+                    width: viewport.width
+                },
+                mvp,
+            }
         };
 
         unsafe {
@@ -227,15 +231,15 @@ extern_fn! {
         chain: *mut libra_gl_filter_chain_t,
         param_name: *const c_char,
         value: f32
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
+    ) |chain| {
+        assert_some_ptr!(chain);
         assert_non_null!(param_name);
         unsafe {
             let name = CStr::from_ptr(param_name);
             let name = name.to_str()?;
 
-            if chain.set_parameter(name, value).is_none() {
-                return LibrashaderError::UnknownShaderParameter(param_name).export()
+            if chain.parameters().set_parameter_value(name, value).is_none() {
+                return Err(LibrashaderError::UnknownShaderParameter(param_name))
             }
         }
     }
@@ -249,18 +253,18 @@ extern_fn! {
     /// - `chain` must be either null or a valid and aligned pointer to an initialized `libra_gl_filter_chain_t`.
     /// - `param_name` must be either null or a null terminated string.
     fn libra_gl_filter_chain_get_param(
-        chain: *mut libra_gl_filter_chain_t,
+        chain: *const libra_gl_filter_chain_t,
         param_name: *const c_char,
         out: *mut MaybeUninit<f32>
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
+    ) |chain| {
+        assert_some_ptr!(chain);
         assert_non_null!(param_name);
         unsafe {
             let name = CStr::from_ptr(param_name);
             let name = name.to_str()?;
 
-            let Some(value) = chain.get_parameter(name) else {
-                return LibrashaderError::UnknownShaderParameter(param_name).export()
+            let Some(value) = chain.parameters().parameter_value(name) else {
+                return Err(LibrashaderError::UnknownShaderParameter(param_name))
             };
 
             out.write(MaybeUninit::new(value));
@@ -276,9 +280,9 @@ extern_fn! {
     fn libra_gl_filter_chain_set_active_pass_count(
         chain: *mut libra_gl_filter_chain_t,
         value: u32
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
-        chain.set_enabled_pass_count(value as usize);
+    ) |chain| {
+        assert_some_ptr!(chain);
+        chain.parameters().set_passes_enabled(value as usize);
     }
 }
 
@@ -288,11 +292,11 @@ extern_fn! {
     /// ## Safety
     /// - `chain` must be either null or a valid and aligned pointer to an initialized `libra_gl_filter_chain_t`.
     fn libra_gl_filter_chain_get_active_pass_count(
-        chain: *mut libra_gl_filter_chain_t,
+        chain: *const libra_gl_filter_chain_t,
         out: *mut MaybeUninit<u32>
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
-        let value = chain.get_enabled_pass_count();
+    ) |chain| {
+        assert_some_ptr!(chain);
+        let value = chain.parameters().passes_enabled();
         unsafe {
             out.write(MaybeUninit::new(value as u32))
         }
@@ -305,6 +309,7 @@ extern_fn! {
     /// The resulting value in `chain` then becomes null.
     /// ## Safety
     /// - `chain` must be either null or a valid and aligned pointer to an initialized `libra_gl_filter_chain_t`.
+    /// - The context that the filter chain was initialized with **must be current** before freeing the filter chain.
     fn libra_gl_filter_chain_free(
         chain: *mut libra_gl_filter_chain_t
     ) {

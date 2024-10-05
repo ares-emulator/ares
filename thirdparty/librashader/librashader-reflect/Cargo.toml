@@ -3,7 +3,7 @@ name = "librashader-reflect"
 edition = "2021"
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.7"
+version = "0.5.0-rc.1"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -12,37 +12,39 @@ keywords = ["shader", "retroarch", "SPIR-V"]
 description = "RetroArch shaders for all."
 
 [dependencies]
-glslang = "0.3"
+glslang = "0.6.0"
 bytemuck = "1.13.0"
 
 thiserror = "1.0.37"
 bitflags = "2.4.2"
 
-librashader-common = { path = "../librashader-common", version = "0.2.7" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.7" }
-librashader-presets = { path = "../librashader-presets", version = "0.2.7" }
+librashader-common = { path = "../librashader-common", version = "0.5.0-rc.1" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.0-rc.1" }
+librashader-presets = { path = "../librashader-presets", version = "0.5.0-rc.1" }
+librashader-pack = { path = "../librashader-pack", version = "0.5.0-rc.1" }
 
-spirv_cross = { package = "librashader-spirv-cross", version = "0.25.1", optional = true }
+spirv-cross2 = { workspace = true, optional = true }
 
-naga = { version = "0.20.0", optional = true }
+naga = { version = "22", optional = true }
 rspirv = { version = "0.12.0", optional = true }
 spirv = { version = "0.3.0", optional = true}
 
 serde = { version = "1.0", features = ["derive"], optional = true }
-
-indexmap = { version = "2.1.0", features = [] }
-matches = { version = "0.1.10", features = [] }
-rustc-hash = "1.1.0"
+rustc-hash = "2.0.0"
 
 [target.'cfg(windows)'.dependencies.spirv-to-dxil]
 version = "0.4.7"
 optional = true
 
 [features]
-default = ["cross", "naga", "serialize", "wgsl", "msl"]
-dxil = ["spirv_cross/hlsl", "spirv-to-dxil"]
-wgsl = ["cross", "naga/wgsl-out", "spirv", "rspirv"]
-cross = [ "spirv_cross", "spirv_cross/glsl", "spirv_cross/hlsl", "spirv_cross/msl" ]
-naga = [ "rspirv", "spirv", "naga/spv-in", "naga/spv-out", "naga/wgsl-out", "naga/msl-out" ]
-serialize = [ "serde" ]
-msl = [ "spirv_cross/msl", "naga/msl-out" ]
+default = ["cross", "naga", "wgsl", "msl"]
+dxil = ["spirv-cross2/hlsl", "dep:spirv-to-dxil"]
+wgsl = ["cross", "naga/wgsl-out", "dep:spirv", "dep:rspirv"]
+cross = [ "dep:spirv-cross2", "spirv-cross2/glsl", "spirv-cross2/hlsl", "spirv-cross2/msl" ]
+naga = [ "dep:rspirv", "dep:spirv", "naga/spv-in", "naga/spv-out", "naga/wgsl-out", "naga/msl-out" ]
+serde = ["dep:serde", "serde/derive", "librashader-common/serde", "bitflags/serde"]
+
+msl = [ "spirv-cross2/msl", "naga/msl-out" ]
+stable = []
+
+unstable-naga-in = ["naga/glsl-in"]

@@ -1,11 +1,12 @@
 use crate::filter_chain::FilterCommon;
 use crate::options::FrameOptionsD3D11;
 use crate::texture::InputTexture;
+use windows::Win32::Foundation::RECT;
 
 use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_preprocess::ShaderSource;
-use librashader_presets::ShaderPassConfig;
+use librashader_presets::PassMeta;
 use librashader_reflect::reflect::semantics::{
     BindingStage, MemberOffset, TextureBinding, UniformBinding,
 };
@@ -16,13 +17,14 @@ use librashader_runtime::filter_pass::FilterPassMeta;
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::render_target::RenderTarget;
 use windows::Win32::Graphics::Direct3D11::{
-    ID3D11Buffer, ID3D11DeviceContext, ID3D11InputLayout, ID3D11PixelShader, ID3D11SamplerState,
-    ID3D11ShaderResourceView, ID3D11VertexShader, D3D11_MAPPED_SUBRESOURCE,
-    D3D11_MAP_WRITE_DISCARD, D3D11_VIEWPORT,
+    ID3D11Buffer, ID3D11DeviceContext, ID3D11InputLayout, ID3D11PixelShader,
+    ID3D11RenderTargetView, ID3D11SamplerState, ID3D11ShaderResourceView, ID3D11VertexShader,
+    D3D11_MAPPED_SUBRESOURCE, D3D11_MAP_WRITE_DISCARD, D3D11_VIEWPORT,
 };
 
+use crate::error;
 use crate::samplers::SamplerSet;
-use crate::{error, D3D11OutputView};
+use librashader_common::GetSize;
 use librashader_runtime::uniforms::{UniformStorage, UniformStorageAccess};
 
 pub struct ConstantBufferBinding {
@@ -45,7 +47,7 @@ pub struct FilterPass {
     pub uniform_buffer: Option<ConstantBufferBinding>,
     pub push_buffer: Option<ConstantBufferBinding>,
     pub source: ShaderSource,
-    pub config: ShaderPassConfig,
+    pub meta: PassMeta,
 }
 
 // https://doc.rust-lang.org/nightly/core/array/fn.from_fn.html is not ~const :(
@@ -55,7 +57,7 @@ const NULL_TEXTURES: &[Option<ID3D11ShaderResourceView>; 16] = &[
 
 impl TextureInput for InputTexture {
     fn size(&self) -> Size<u32> {
-        self.view.size
+        self.view.size().unwrap_or(Size::default())
     }
 }
 
@@ -77,7 +79,7 @@ impl BindSemantics for FilterPass {
         _device: &Self::DeviceContext,
     ) {
         let (texture_binding, sampler_binding) = descriptors;
-        texture_binding[binding.binding as usize] = Some(texture.view.handle.clone());
+        texture_binding[binding.binding as usize] = Some(texture.view.clone());
         sampler_binding[binding.binding as usize] =
             Some(samplers.get(texture.wrap_mode, texture.filter).clone());
     }
@@ -88,8 +90,8 @@ impl FilterPassMeta for FilterPass {
         self.source.format
     }
 
-    fn config(&self) -> &ShaderPassConfig {
-        &self.config
+    fn meta(&self) -> &PassMeta {
+        &self.meta
     }
 }
 
@@ -138,7 +140,7 @@ impl FilterPass {
             parent.history_textures.iter().map(|o| o.as_ref()),
             parent.luts.iter().map(|(u, i)| (*u, i.as_ref())),
             &self.source.parameters,
-            &parent.config.parameters,
+            &parent.config,
         );
     }
 
@@ -149,15 +151,15 @@ impl FilterPass {
         parent: &FilterCommon,
         frame_count: u32,
         options: &FrameOptionsD3D11,
-        viewport: &Viewport<D3D11OutputView>,
+        viewport: &Viewport<&ID3D11RenderTargetView>,
         original: &InputTexture,
         source: &InputTexture,
-        output: RenderTarget<D3D11OutputView>,
+        output: RenderTarget<ID3D11RenderTargetView>,
         vbo_type: QuadType,
     ) -> error::Result<()> {
-        if self.config.mipmap_input && !parent.disable_mipmaps {
+        if self.meta.mipmap_input && !parent.disable_mipmaps {
             unsafe {
-                ctx.GenerateMips(&source.view.handle);
+                ctx.GenerateMips(&source.view);
             }
         }
         unsafe {
@@ -170,14 +172,17 @@ impl FilterPass {
         let mut samplers: [Option<ID3D11SamplerState>; 16] = std::array::from_fn(|_| None);
         let descriptors = (&mut textures, &mut samplers);
 
+        let output_size = output.output.size()?;
+        let viewport_size = viewport.output.size()?;
+
         self.build_semantics(
             pass_index,
             parent,
             output.mvp,
             frame_count,
             options,
-            output.output.size,
-            viewport.output.size,
+            output_size,
+            viewport_size,
             descriptors,
             original,
             source,
@@ -235,31 +240,31 @@ impl FilterPass {
         }
 
         unsafe {
-            // SAFETY: Niche optimization for Option<NonNull<T>>
-            // Assumes that IUnknown is defined as IUnknown(std::ptr::NonNull<std::ffi::c_void>)
-            const _: () = assert!(
-                std::mem::size_of::<Option<windows::core::IUnknown>>()
-                    == std::mem::size_of::<windows::core::IUnknown>()
-            );
-            ctx.PSSetShaderResources(0, Some(std::mem::transmute(textures.as_ref())));
-            ctx.PSSetSamplers(0, Some(std::mem::transmute(samplers.as_ref())));
+            ctx.PSSetShaderResources(0, Some(&textures));
+            ctx.PSSetSamplers(0, Some(&samplers));
 
-            ctx.OMSetRenderTargets(Some(&[Some(output.output.handle.clone())]), None);
+            ctx.OMSetRenderTargets(Some(&[Some(output.output.clone())]), None);
             ctx.RSSetViewports(Some(&[D3D11_VIEWPORT {
                 TopLeftX: output.x,
                 TopLeftY: output.y,
-                Width: output.output.size.width as f32,
-                Height: output.output.size.height as f32,
+                Width: output.size.width as f32,
+                Height: output.size.height as f32,
                 MinDepth: 0.0,
                 MaxDepth: 1.0,
-            }]))
+            }]));
+            ctx.RSSetScissorRects(Some(&[RECT {
+                left: output.x as i32,
+                top: output.y as i32,
+                right: output.size.width as i32,
+                bottom: output.size.height as i32,
+            }]));
         }
 
         parent.draw_quad.draw_quad(ctx, vbo_type);
 
         unsafe {
             // unbind resources.
-            ctx.PSSetShaderResources(0, Some(std::mem::transmute(NULL_TEXTURES.as_ref())));
+            ctx.PSSetShaderResources(0, Some(NULL_TEXTURES));
             ctx.OMSetRenderTargets(None, None);
         }
         Ok(())
