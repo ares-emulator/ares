@@ -116,12 +116,12 @@ static void *SLJIT_FUNC my_alloc(size_t size, size_t n)
 	return calloc(size, n);
 }
 
-static void SLJIT_FUNC my_putchar(long c)
+static void SLJIT_FUNC my_putchar(sljit_sw c)
 {
-	putchar(c);
+	putchar((int)c);
 }
 
-static long SLJIT_FUNC my_getchar(void)
+static sljit_sw SLJIT_FUNC my_getchar(void)
 {
 	return getchar();
 }
@@ -134,13 +134,13 @@ static void SLJIT_FUNC my_free(void *mem)
 #define loop_empty()		(loop_sp == 0)
 
 /* compile bf source to a void func() */
-static void *compile(FILE *src, unsigned long *lcode)
+static void *compile(FILE *src, sljit_uw *lcode)
 {
 	void *code = NULL;
 	int chr;
 	int nchr;
 
-	struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);
+	struct sljit_compiler *C = sljit_create_compiler(NULL);
 	struct sljit_jump *end;
 	struct sljit_label *loop_start;
 	struct sljit_jump *loop_end;
@@ -148,8 +148,8 @@ static void *compile(FILE *src, unsigned long *lcode)
 	int SP = SLJIT_S0;			/* bf SP */
 	int CELLS = SLJIT_S1;		/* bf array */
 
-	sljit_emit_enter(C, 0, SLJIT_ARGS2V(W, W), 2, 2, 0, 0, 0);
-	/*                  opt arg                R  S  FR FS local_size */
+	sljit_emit_enter(C, 0, SLJIT_ARGS2V(W, W), 2, 2, 0);
+	/*                  opt arg                R  S  local_size */
 
 	/* SP = 0 */
 	sljit_emit_op2(C, SLJIT_XOR, SP, 0, SP, 0, SP, 0);
@@ -217,7 +217,7 @@ static void *compile(FILE *src, unsigned long *lcode)
 	sljit_set_label(end, sljit_emit_label(C));
 	sljit_emit_return_void(C);
 
-	code = sljit_generate_code(C);
+	code = sljit_generate_code(C, 0, NULL);
 	if (lcode)
 		*lcode = sljit_get_generated_code_size(C);
 

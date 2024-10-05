@@ -86,14 +86,14 @@ static int add3(sljit_sw a, sljit_sw b, sljit_sw c)<br>
 {<br>
    <ul>
     void *code;<br>
-    sljit_sw len;<br>
+    sljit_uw len;<br>
     func3_t func;<br>
    <br>
     /* Create a SLJIT compiler */<br>
-    struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);<br>
+    struct sljit_compiler *C = sljit_create_compiler(NULL);<br>
    <br>
     /* Start a context(function entry), has 3 arguments, discuss later */<br>
-    sljit_emit_enter(C, 0, SLJIT_ARGS3(W, W, W, W), 1, 3, 0, 0, 0);<br>
+    sljit_emit_enter(C, 0, SLJIT_ARGS3(W, W, W, W), 1, 3, 0);<br>
    <br>
     /* The first arguments of function is register SLJIT_S0, 2nd, SLJIT_S1, etc.  */<br>
     /* R0 = first */<br>
@@ -110,12 +110,12 @@ static int add3(sljit_sw a, sljit_sw b, sljit_sw c)<br>
     sljit_emit_return(C, SLJIT_MOV, SLJIT_R0, 0);<br>
    <br>
     /* Generate machine code */<br>
-    code = sljit_generate_code(C);<br>
+    code = sljit_generate_code(C, 0, NULL);<br>
     len = sljit_get_generated_code_size(C);<br>
    <br>
     /* Execute code */<br>
     func = (func3_t)code;<br>
-    printf("func return %ld\n", func(a, b, c));<br>
+    printf("func return %ld\n", (long)func(a, b, c));<br>
    <br>
     /* dump_code(code, len); */<br>
    <br>
@@ -212,10 +212,10 @@ static int branch(sljit_sw a, sljit_sw b, sljit_sw c)<br>
     struct sljit_jump *out;<br>
    <br>
     /* Create a SLJIT compiler */<br>
-    struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);<br>
+    struct sljit_compiler *C = sljit_create_compiler(NULL);<br>
    <br>
     /* 3 arg, 1 temp reg, 3 save reg */<br>
-    sljit_emit_enter(C, 0, SLJIT_ARGS3(W, W, W, W), 1, 3, 0, 0, 0);<br>
+    sljit_emit_enter(C, 0, SLJIT_ARGS3(W, W, W, W), 1, 3, 0);<br>
    <br>
     /* R0 = a & 1, S0 is argument a */<br>
     sljit_emit_op2(C, SLJIT_AND, SLJIT_R0, 0, SLJIT_S0, 0, SLJIT_IMM, 1);<br>
@@ -242,12 +242,12 @@ static int branch(sljit_sw a, sljit_sw b, sljit_sw c)<br>
     sljit_emit_return(C, SLJIT_MOV, SLJIT_RETURN_REG, 0);<br>
    <br>
     /* Generate machine code */<br>
-    code = sljit_generate_code(C);<br>
+    code = sljit_generate_code(C, 0, NULL);<br>
     len = sljit_get_generated_code_size(C);<br>
    <br>
     /* Execute code */<br>
     func = (func3_t)code;<br>
-    printf("func return %ld\n", func(a, b, c));<br>
+    printf("func return %ld\n", (long)func(a, b, c));<br>
    <br>
     /* dump_code(code, len); */<br>
    <br>
@@ -327,7 +327,7 @@ sljit_sw func(sljit_sw a, sljit_sw b)<br>
 <br>
 <ul>
     /* 2 arg, 2 temp reg, 2 saved reg */<br>
-    sljit_emit_enter(C, 0, SLJIT_ARGS2(W, W, W), 2, 2, 0, 0, 0);<br>
+    sljit_emit_enter(C, 0, SLJIT_ARGS2(W, W, W), 2, 2, 0);<br>
     <br>
     /* R0 = 0 */<br>
     sljit_emit_op2(C, SLJIT_XOR, SLJIT_R1, 0, SLJIT_R1, 0, SLJIT_R1, 0);<br>
@@ -404,9 +404,9 @@ SLJIT use SLJIT_MEM1 to implement [Reg + offset] memory access.<br>
 struct point_st {<br>
     <ul>
     sljit_sw x;<br>
-    int y;<br>
-    short z;<br>
-    char d;<br>
+    sljit_s32 y;<br>
+    sljit_s16 z;<br>
+    sljit_s8 d;<br>
     </ul>
 };<br>
 <br>
@@ -467,8 +467,8 @@ is the only choice.<br>
 <div style='font-family:Courier New;font-size:11px'>
 <ul>
     /* reserved space in stack for sljit_sw arr[3] */<br>
-    sljit_emit_enter(C, 0, SLJIT_ARGS3(W, W, W, W), 2, 3, 0, 0, 3 * sizeof(sljit_sw));<br>
-    /*                  opt arg R  S  FR FS local_size */<br>
+    sljit_emit_enter(C, 0, SLJIT_ARGS3(W, W, W, W), 2, 3, 3 * sizeof(sljit_sw));<br>
+    /*                  opt arg                     R  S  local_size */<br>
    <br>
     /* arr[0] = S0, SLJIT_SP is the init address of local var */<br>
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_SP), 0, SLJIT_S0, 0);<br>

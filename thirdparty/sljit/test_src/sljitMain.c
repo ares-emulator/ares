@@ -60,7 +60,7 @@ void devel(void)
 #if (defined SLJIT_VERBOSE && SLJIT_VERBOSE)
 	sljit_compiler_verbose(compiler, stdout);
 #endif
-	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, P), 4, 5, 4, 0, 2 * sizeof(sljit_sw));
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, P), 4 | SLJIT_ENTER_FLOAT(4), 5, 2 * sizeof(sljit_sw));
 
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
