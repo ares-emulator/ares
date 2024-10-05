@@ -162,6 +162,21 @@ struct VirtualPad : InputDevice {
   InputAnalog  rstick_left;
   InputAnalog  rstick_right;
   InputRumble  rumble;
+  InputDigital one;
+  InputDigital two;
+  InputDigital three;
+  InputDigital four;
+  InputDigital five;
+  InputDigital six;
+  InputDigital seven;
+  InputDigital eight;
+  InputDigital nine;
+  InputDigital zero;
+  InputDigital star;
+  InputDigital clear;
+  InputDigital pound;
+  InputDigital point;
+  InputDigital end;
 };
 
 struct VirtualMouse : InputDevice {

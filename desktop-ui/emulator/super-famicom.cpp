@@ -43,6 +43,36 @@ SuperFamicom::SuperFamicom() {
     device.digital ("Right", virtualPorts[id].mouse.right);
     port.append(device); }
 
+  { InputDevice device{"NTT Data Keypad"};
+    device.digital("Up", virtualPorts[id].pad.up);
+    device.digital("Down", virtualPorts[id].pad.down);
+    device.digital("Left", virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("B", virtualPorts[id].pad.south);
+    device.digital("A", virtualPorts[id].pad.east);
+    device.digital("Y", virtualPorts[id].pad.west);
+    device.digital("X", virtualPorts[id].pad.north);
+    device.digital("L", virtualPorts[id].pad.l_bumper);
+    device.digital("R", virtualPorts[id].pad.r_bumper);
+    device.digital("Back", virtualPorts[id].pad.select);
+    device.digital("Next", virtualPorts[id].pad.start);
+    device.digital("1", virtualPorts[id].pad.one);
+    device.digital("2", virtualPorts[id].pad.two);
+    device.digital("3", virtualPorts[id].pad.three);
+    device.digital("4", virtualPorts[id].pad.four);
+    device.digital("5", virtualPorts[id].pad.five);
+    device.digital("6", virtualPorts[id].pad.six);
+    device.digital("7", virtualPorts[id].pad.seven);
+    device.digital("8", virtualPorts[id].pad.eight);
+    device.digital("9", virtualPorts[id].pad.nine);
+    device.digital("0", virtualPorts[id].pad.zero);
+    device.digital("*", virtualPorts[id].pad.star);
+    device.digital("C", virtualPorts[id].pad.clear);
+    device.digital("#", virtualPorts[id].pad.pound);
+    device.digital(".", virtualPorts[id].pad.point);
+    device.digital("End", virtualPorts[id].pad.end);
+    port.append(device); }
+
   { InputDevice device{"Super Scope"};
     device.relative("X",       virtualPorts[id].mouse.x);
     device.relative("Y",       virtualPorts[id].mouse.y);
@@ -60,7 +90,7 @@ SuperFamicom::SuperFamicom() {
     ports.append(port);
   }
 
-  inputBlacklist = {"Justifiers", "NTT Data Keypad", "Super Multitap"};
+  inputBlacklist = {"Justifiers", "Super Multitap"};
 }
 
 auto SuperFamicom::load() -> bool {

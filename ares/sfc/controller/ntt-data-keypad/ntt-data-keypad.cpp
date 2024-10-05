@@ -50,10 +50,10 @@ auto NTTDataKeypad::data() -> n2 {
   case 10: return l->value();
   case 11: return r->value();
 
-  case 12: return 1;  //4-bit device signature
-  case 13: return 0;
-  case 14: return 1;
-  case 15: return 1;
+  case 12: return 0;  //4-bit device signature
+  case 13: return 1;
+  case 14: return 0;
+  case 15: return 0;
 
   case 16: return zero->value();
   case 17: return one->value();
