@@ -13,8 +13,8 @@ use std::slice;
 use librashader::runtime::FilterChainParameters;
 use librashader::runtime::{Size, Viewport};
 
-use icrate::Metal::{MTLCommandBuffer, MTLCommandQueue, MTLTexture};
 use objc2::runtime::ProtocolObject;
+use objc2_metal::{MTLCommandBuffer, MTLCommandQueue, MTLTexture};
 
 use crate::LIBRASHADER_API_VERSION;
 
@@ -38,7 +38,7 @@ pub struct frame_mtl_opt_t {
     /// The direction of rendering.
     /// -1 indicates that the frames are played in reverse order.
     pub frame_direction: i32,
-    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 3 = 270deg.
     pub rotation: u32,
     /// The total number of subframes ran. Default is 1.
     pub total_subframes: u32,
@@ -173,6 +173,22 @@ extern_fn! {
 extern_fn! {
     /// Records rendering commands for a frame with the given parameters for the given filter chain
     /// to the input command buffer.
+    /// ## Parameters
+    ///
+    /// - `chain` is a handle to the filter chain.
+    /// - `command_buffer` is a `MTLCommandBuffer` handle to record draw commands to.
+    ///    The provided command buffer must be ready for encoding and contain no prior commands
+    /// - `frame_count` is the number of frames passed to the shader
+    /// - `image` is a `id<MTLTexture>` that will serve as the source image for the frame.
+    /// - `out` is a `id<MTLTexture>` that is the render target of the frame.
+    ///
+    /// - `viewport` is a pointer to a `libra_viewport_t` that specifies the area onto which scissor and viewport
+    ///    will be applied to the render target. It may be null, in which case a default viewport spanning the
+    ///    entire render target will be used.
+    /// - `mvp` is a pointer to an array of 16 `float` values to specify the model view projection matrix to
+    ///    be passed to the shader.
+    /// - `options` is a pointer to options for the frame. Valid options are dependent on the `LIBRASHADER_API_VERSION`
+    ///    passed in. It may be null, in which case default options for the filter chain are used.
     ///
     /// ## Safety
     /// - `command_buffer` must be a valid reference to a `MTLCommandBuffer` that is not already encoding.
@@ -189,8 +205,8 @@ extern_fn! {
         command_buffer: PMTLCommandBuffer,
         frame_count: usize,
         image: PMTLTexture,
-        viewport: libra_viewport_t,
         output: PMTLTexture,
+        viewport: *const libra_viewport_t,
         mvp: *const f32,
         opt: *const MaybeUninit<frame_mtl_opt_t>
     ) |command_buffer, image, output|; mut |chain|  {
@@ -207,11 +223,21 @@ extern_fn! {
             Some(unsafe { opt.read() })
         };
         let opt = opt.map(FromUninit::from_uninit);
-        let viewport = Viewport {
-            x: viewport.x,
-            y: viewport.y,
-            output,
-            mvp,
+
+        let viewport = if viewport.is_null() {
+            Viewport::new_render_target_sized_origin(output, mvp)?
+        } else {
+            let viewport = unsafe { viewport.read() };
+            Viewport {
+                x: viewport.x,
+                y: viewport.y,
+                output,
+                size: Size {
+                    height: viewport.height,
+                    width: viewport.width
+                },
+                mvp,
+            }
         };
 
         chain.frame(&image, &viewport, command_buffer, frame_count, opt.as_ref())?;
@@ -229,14 +255,14 @@ extern_fn! {
         chain: *mut libra_mtl_filter_chain_t,
         param_name: *const c_char,
         value: f32
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
+    ) |chain| {
+        assert_some_ptr!(chain);
         unsafe {
             let name = CStr::from_ptr(param_name);
             let name = name.to_str()?;
 
-            if chain.set_parameter(name, value).is_none() {
-                return LibrashaderError::UnknownShaderParameter(param_name).export()
+            if chain.parameters().set_parameter_value(name, value).is_none() {
+                return Err(LibrashaderError::UnknownShaderParameter(param_name))
             }
         }
     }
@@ -250,18 +276,18 @@ extern_fn! {
     /// - `chain` must be either null or a valid and aligned pointer to an initialized `libra_mtl_filter_chain_t`.
     /// - `param_name` must be either null or a null terminated string.
     fn libra_mtl_filter_chain_get_param(
-        chain: *mut libra_mtl_filter_chain_t,
+        chain: *const libra_mtl_filter_chain_t,
         param_name: *const c_char,
         out: *mut MaybeUninit<f32>
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
+    ) |chain| {
+        assert_some_ptr!(chain);
 
         unsafe {
             let name = CStr::from_ptr(param_name);
             let name = name.to_str()?;
 
-            let Some(value) = chain.get_parameter(name) else {
-                return LibrashaderError::UnknownShaderParameter(param_name).export()
+            let Some(value) = chain.parameters().parameter_value(name) else {
+                return Err(LibrashaderError::UnknownShaderParameter(param_name))
             };
 
             out.write(MaybeUninit::new(value));
@@ -277,9 +303,9 @@ extern_fn! {
     fn libra_mtl_filter_chain_set_active_pass_count(
         chain: *mut libra_mtl_filter_chain_t,
         value: u32
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
-        chain.set_enabled_pass_count(value as usize);
+    ) |chain| {
+        assert_some_ptr!(chain);
+        chain.parameters().set_passes_enabled(value as usize);
     }
 }
 
@@ -289,11 +315,11 @@ extern_fn! {
     /// ## Safety
     /// - `chain` must be either null or a valid and aligned pointer to an initialized `libra_mtl_filter_chain_t`.
     fn libra_mtl_filter_chain_get_active_pass_count(
-        chain: *mut libra_mtl_filter_chain_t,
+        chain: *const libra_mtl_filter_chain_t,
         out: *mut MaybeUninit<u32>
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
-        let value = chain.get_enabled_pass_count();
+    ) |chain| {
+        assert_some_ptr!(chain);
+        let value = chain.parameters().passes_enabled();
         unsafe {
             out.write(MaybeUninit::new(value as u32))
         }

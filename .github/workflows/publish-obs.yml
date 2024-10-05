@@ -7,59 +7,13 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-obs-binary:
-    if: github.repository == 'SnowflakePowered/librashader'
-    strategy:
-      matrix:
-        include:
-          - repo: Fedora_39
-            spec: librashader.spec
-            can_fail: true
-          - repo: xUbuntu_23.10
-            spec: librashader.spec
-            can_fail: true
-          - repo: Arch
-            spec: PKGBUILD
-            can_fail: false
-    runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.can_fail }}
-    container:
-      image: fedora:39
-      options: --privileged
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install OSC and dependencies
-        env:
-          OBS_CONFIG: ${{ secrets.OBS_CONFIG }}
-        run: |
-          sudo dnf install -y osc obs-service-obs_scm obs-service-cargo_vendor cargo python3-zstandard
-          mkdir -p ~/.config/osc
-          echo "$OBS_CONFIG" > ~/.config/osc/oscrc
-      - name: Checkout Open Build Service repository
-        run: |
-          osc co home:chyyran:librashader/librashader
-      - name: Copy spec from repository
-        run: |
-          cp -r ./pkg/obs/ home:chyyran:librashader/librashader/
-          sed -r -i 's/(<param name="revision">)(.+)(<\/param>)/<param name="revision">${{ github.sha }}<\/param>/g' home:chyyran:librashader/librashader/_service
-      - name: Vendor sources for Open Build Service
-        run: |
-          cd home:chyyran:librashader/librashader/
-          rm *.obscpio
-          osc service mr
-      - name: Build package
-        run: |
-          cd home:chyyran:librashader/librashader/
-          osc build --no-verify --trust-all-projects ${{ matrix.repo }} x86_64 ${{ matrix.spec }}
   publish-obs:
-    needs: build-obs-binary
     if: github.repository == 'SnowflakePowered/librashader'
     runs-on: ubuntu-latest
     container: fedora:39
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install OSC and dependencies
         env:
           OBS_CONFIG: ${{ secrets.OBS_CONFIG }}

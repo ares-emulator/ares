@@ -38,12 +38,14 @@ pub mod map;
 
 pub use viewport::Viewport;
 
-use num_traits::AsPrimitive;
+use num_traits::{AsPrimitive, Num};
 use std::convert::Infallible;
+use std::ops::{Add, Sub};
 use std::str::FromStr;
 
 #[repr(u32)]
 #[derive(Default, Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// Supported image formats for textures.
 pub enum ImageFormat {
     #[default]
@@ -90,6 +92,7 @@ pub enum ImageFormat {
 
 #[repr(i32)]
 #[derive(Copy, Clone, Default, Debug, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// The filtering mode for a texture sampler.
 pub enum FilterMode {
     /// Linear filtering.
@@ -128,6 +131,7 @@ impl FromStr for FilterMode {
 
 #[repr(i32)]
 #[derive(Copy, Clone, Default, Debug, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// The wrapping (address) mode for a texture sampler.
 pub enum WrapMode {
     #[default]
@@ -188,6 +192,7 @@ impl FromStr for ImageFormat {
 
 /// A size with a width and height.
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Size<T> {
     pub width: T,
     pub height: T,
@@ -197,6 +202,50 @@ impl<T> Size<T> {
     /// Create a new `Size<T>` with the given width and height.
     pub fn new(width: T, height: T) -> Self {
         Size { width, height }
+    }
+}
+
+impl<T: Sub<Output = T>> Sub for Size<T> {
+    type Output = Size<T>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            width: self.width - rhs.width,
+            height: self.height - rhs.height,
+        }
+    }
+}
+
+impl<T: Sub<T, Output = T> + Copy> Sub<T> for Size<T> {
+    type Output = Size<T>;
+
+    fn sub(self, rhs: T) -> Self::Output {
+        Self {
+            width: self.width - rhs,
+            height: self.height - rhs,
+        }
+    }
+}
+
+impl<T: Add<Output = T>> Add for Size<T> {
+    type Output = Size<T>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            width: self.width + rhs.width,
+            height: self.height + rhs.height,
+        }
+    }
+}
+
+impl<T: Add<T, Output = T> + Copy> Add<T> for Size<T> {
+    type Output = Size<T>;
+
+    fn add(self, rhs: T) -> Self::Output {
+        Self {
+            width: self.width + rhs,
+            height: self.height + rhs,
+        }
     }
 }
 
@@ -212,5 +261,24 @@ where
             1.0 / value.width.as_(),
             1.0 / value.height.as_(),
         ]
+    }
+}
+
+/// Trait for surface or texture objects that can fetch size.
+pub trait GetSize<C: Num> {
+    type Error;
+    /// Fetch the size of the object
+    fn size(&self) -> Result<Size<C>, Self::Error>;
+}
+
+impl<T: GetSize<u32>> GetSize<f32> for T {
+    type Error = T::Error;
+
+    fn size(&self) -> Result<Size<f32>, Self::Error> {
+        let size = <T as GetSize<u32>>::size(self)?;
+        Ok(Size {
+            width: size.width as f32,
+            height: size.height as f32,
+        })
     }
 }

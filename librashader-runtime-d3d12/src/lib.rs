@@ -1,7 +1,6 @@
 #![cfg(target_os = "windows")]
 #![deny(unsafe_op_in_unsafe_fn)]
-#![feature(let_chains)]
-#![feature(type_alias_impl_trait)]
+#![cfg_attr(not(feature = "stable"), feature(type_alias_impl_trait))]
 
 mod buffer;
 mod descriptor_heap;
@@ -18,6 +17,7 @@ mod util;
 
 pub mod error;
 pub mod options;
+mod resource;
 
 use librashader_runtime::impl_filter_chain_parameters;
 impl_filter_chain_parameters!(FilterChainD3D12);

@@ -1,18 +1,34 @@
 use crate::error::ParsePresetError;
+use librashader_common::map::ShortString;
 use librashader_common::{FilterMode, ImageFormat, WrapMode};
 use std::ops::Mul;
 use std::path::PathBuf;
 use std::str::FromStr;
 
 /// The configuration for a single shader pass.
+pub type PassConfig = PathReference<PassMeta>;
+
+/// Configuration options for a lookup texture used in the shader.
+pub type TextureConfig = PathReference<TextureMeta>;
+
+/// A reference to a resource on disk.
 #[derive(Debug, Clone)]
-pub struct ShaderPassConfig {
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct PathReference<M> {
+    /// The fully qualified path to the resource, often a shader source file or a texture.
+    pub path: PathBuf,
+    /// Meta information about the resource.
+    pub meta: M,
+}
+
+/// Meta information about a shader pass.
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct PassMeta {
     /// The index of the shader pass relative to its parent preset.
     pub id: i32,
-    /// The fully qualified path to the shader pass source file.
-    pub name: PathBuf,
     /// The alias of the shader pass if available.
-    pub alias: Option<String>,
+    pub alias: Option<ShortString>,
     /// The filtering mode that this shader pass should expect.
     pub filter: FilterMode,
     /// The texture addressing (wrap) mode that this shader pass expects.
@@ -29,7 +45,7 @@ pub struct ShaderPassConfig {
     pub scaling: Scale2D,
 }
 
-impl ShaderPassConfig {
+impl PassMeta {
     /// If the framebuffer expects a different format than what was defined in the
     /// shader source, returns such format.
     #[inline(always)]
@@ -54,6 +70,7 @@ impl ShaderPassConfig {
 
 #[repr(i32)]
 #[derive(Default, Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// The scaling type for the shader pass.
 pub enum ScaleType {
     #[default]
@@ -69,6 +86,7 @@ pub enum ScaleType {
 
 /// The scaling factor for framebuffer scaling.
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ScaleFactor {
     /// Scale by a fractional float factor.
     Float(f32),
@@ -129,6 +147,7 @@ impl FromStr for ScaleType {
 
 /// Framebuffer scaling parameters.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Scaling {
     /// The method to scale the framebuffer with.
     pub scale_type: ScaleType,
@@ -138,6 +157,7 @@ pub struct Scaling {
 
 /// 2D quad scaling parameters.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Scale2D {
     /// Whether or not this combination of scaling factors is valid.
     pub valid: bool,
@@ -149,24 +169,24 @@ pub struct Scale2D {
 
 /// Configuration options for a lookup texture used in the shader.
 #[derive(Debug, Clone)]
-pub struct TextureConfig {
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct TextureMeta {
     /// The name of the texture.
-    pub name: String,
-    /// The fully qualified path to the texture.
-    pub path: PathBuf,
+    pub name: ShortString,
     /// The wrap (addressing) mode to use when sampling the texture.
     pub wrap_mode: WrapMode,
     /// The filter mode to use when sampling the texture.
     pub filter_mode: FilterMode,
-    /// Whether or not to generate mipmaps for this texture.
+    /// Whether to generate mipmaps for this texture.
     pub mipmap: bool,
 }
 
 /// Configuration options for a shader parameter.
 #[derive(Debug, Clone)]
-pub struct ParameterConfig {
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ParameterMeta {
     /// The name of the parameter.
-    pub name: String,
+    pub name: ShortString,
     /// The value it is set to in the preset.
     pub value: f32,
 }
@@ -176,6 +196,7 @@ pub struct ParameterConfig {
 /// A shader preset can be used to create a filter chain runtime instance, or reflected to get
 /// parameter metadata.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ShaderPreset {
     /// Used in legacy GLSL shader semantics. If < 0, no feedback pass is used.
     /// Otherwise, the FBO after pass #N is passed a texture to next frame
@@ -183,14 +204,14 @@ pub struct ShaderPreset {
     pub feedback_pass: i32,
 
     /// The number of shaders enabled in the filter chain.
-    pub shader_count: i32,
+    pub pass_count: i32,
     // Everything is in Vecs because the expect number of values is well below 64.
     /// Preset information for each shader.
-    pub shaders: Vec<ShaderPassConfig>,
+    pub passes: Vec<PassConfig>,
 
     /// Preset information for each texture.
     pub textures: Vec<TextureConfig>,
 
     /// Preset information for each user parameter.
-    pub parameters: Vec<ParameterConfig>,
+    pub parameters: Vec<ParameterMeta>,
 }

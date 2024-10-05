@@ -398,14 +398,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/,
 
         assert(copySrv != nullptr);
 
-        libra_source_image_d3d11_t input = {copySrv,
-                                            viewport.Width,
-                                            viewport.Height,};
 
-        libra_viewport_t vp = {0, 0, viewport.Width, viewport.Height, };
-
-        libra.d3d11_filter_chain_frame(&filter_chain, NULL, frameCount, input, vp,
-                                       d3d11FrameBufferView, NULL, NULL);
+        libra.d3d11_filter_chain_frame(&filter_chain, NULL, frameCount, copySrv,
+                                      
+                                       d3d11FrameBufferView, NULL, NULL, NULL);
 
         copySrv->Release();
         framebufferCopy->Release();

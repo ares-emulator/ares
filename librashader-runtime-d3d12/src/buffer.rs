@@ -1,19 +1,25 @@
 use crate::error;
-use crate::error::assume_d3d12_init;
+use gpu_allocator::d3d12::{
+    Allocator, Resource, ResourceCategory, ResourceCreateDesc, ResourceStateOrBarrierLayout,
+    ResourceType,
+};
+use gpu_allocator::MemoryLocation;
+use parking_lot::Mutex;
 use std::ffi::c_void;
 use std::mem::ManuallyDrop;
 use std::ops::{Deref, DerefMut, Range};
 use std::ptr::NonNull;
+use std::sync::Arc;
 use windows::Win32::Graphics::Direct3D12::{
-    ID3D12Device, ID3D12GraphicsCommandList, ID3D12Resource, D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
-    D3D12_HEAP_FLAG_NONE, D3D12_HEAP_PROPERTIES, D3D12_HEAP_TYPE_UPLOAD, D3D12_MEMORY_POOL_UNKNOWN,
-    D3D12_RANGE, D3D12_RESOURCE_DESC, D3D12_RESOURCE_DIMENSION_BUFFER,
-    D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+    ID3D12GraphicsCommandList, ID3D12Resource, D3D12_RANGE, D3D12_RESOURCE_DESC,
+    D3D12_RESOURCE_DIMENSION_BUFFER, D3D12_RESOURCE_STATE_GENERIC_READ,
+    D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
 };
 use windows::Win32::Graphics::Dxgi::Common::DXGI_SAMPLE_DESC;
 
 pub struct D3D12Buffer {
-    handle: ID3D12Resource,
+    resource: ManuallyDrop<Resource>,
+    allocator: Arc<Mutex<Allocator>>,
     size: usize,
 }
 
@@ -28,51 +34,51 @@ impl<'a> Drop for D3D12BufferMapHandle<'a> {
     }
 }
 
-impl D3D12Buffer {
-    pub fn new(device: &ID3D12Device, size: usize) -> error::Result<D3D12Buffer> {
-        unsafe {
-            let mut buffer: Option<ID3D12Resource> = None;
-            device.CreateCommittedResource(
-                &D3D12_HEAP_PROPERTIES {
-                    Type: D3D12_HEAP_TYPE_UPLOAD,
-                    CPUPageProperty: D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
-                    MemoryPoolPreference: D3D12_MEMORY_POOL_UNKNOWN,
-                    ..Default::default()
-                },
-                D3D12_HEAP_FLAG_NONE,
-                &D3D12_RESOURCE_DESC {
-                    Dimension: D3D12_RESOURCE_DIMENSION_BUFFER,
-                    Width: size as u64,
-                    Height: 1,
-                    DepthOrArraySize: 1,
-                    MipLevels: 1,
-                    Layout: D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-                    SampleDesc: DXGI_SAMPLE_DESC {
-                        Count: 1,
-                        Quality: 0,
-                    },
-                    ..Default::default()
-                },
-                D3D12_RESOURCE_STATE_GENERIC_READ,
-                None,
-                &mut buffer,
-            )?;
-
-            assume_d3d12_init!(buffer, "CreateCommittedResource");
-
-            Ok(D3D12Buffer {
-                handle: buffer,
-                size,
-            })
+impl Drop for D3D12Buffer {
+    fn drop(&mut self) {
+        let resource = unsafe { ManuallyDrop::take(&mut self.resource) };
+        if let Err(e) = self.allocator.lock().free_resource(resource) {
+            println!("librashader-runtime-d3d12: [warn] failed to deallocate buffer memory {e}")
         }
+    }
+}
+
+impl D3D12Buffer {
+    pub fn new(allocator: &Arc<Mutex<Allocator>>, size: usize) -> error::Result<D3D12Buffer> {
+        let resource = allocator.lock().create_resource(&ResourceCreateDesc {
+            name: "d3d12buffer",
+            memory_location: MemoryLocation::CpuToGpu,
+            resource_category: ResourceCategory::Buffer,
+            resource_desc: &D3D12_RESOURCE_DESC {
+                Dimension: D3D12_RESOURCE_DIMENSION_BUFFER,
+                Width: size as u64,
+                Height: 1,
+                DepthOrArraySize: 1,
+                MipLevels: 1,
+                Layout: D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+                SampleDesc: DXGI_SAMPLE_DESC {
+                    Count: 1,
+                    Quality: 0,
+                },
+                ..Default::default()
+            },
+            castable_formats: &[],
+            clear_value: None,
+            initial_state_or_layout: ResourceStateOrBarrierLayout::ResourceState(
+                D3D12_RESOURCE_STATE_GENERIC_READ,
+            ),
+            resource_type: &ResourceType::Placed,
+        })?;
+
+        Ok(Self {
+            resource: ManuallyDrop::new(resource),
+            size,
+            allocator: Arc::clone(&allocator),
+        })
     }
 
     pub fn gpu_address(&self) -> u64 {
-        unsafe { self.handle.GetGPUVirtualAddress() }
-    }
-
-    pub fn into_raw(self) -> ID3D12Resource {
-        self.handle
+        unsafe { self.resource.resource().GetGPUVirtualAddress() }
     }
 
     pub fn map(&mut self, range: Option<Range<usize>>) -> error::Result<D3D12BufferMapHandle> {
@@ -88,10 +94,12 @@ impl D3D12Buffer {
 
         unsafe {
             let mut ptr = std::ptr::null_mut();
-            self.handle.Map(0, Some(&range), Some(&mut ptr))?;
+            self.resource
+                .resource()
+                .Map(0, Some(&range), Some(&mut ptr))?;
             let slice = std::slice::from_raw_parts_mut(ptr.cast(), size);
             Ok(D3D12BufferMapHandle {
-                handle: &self.handle,
+                handle: &self.resource.resource(),
                 slice,
             })
         }
@@ -115,7 +123,10 @@ impl RawD3D12Buffer {
         let range = D3D12_RANGE { Begin: 0, End: 0 };
         let mut ptr = std::ptr::null_mut();
         unsafe {
-            buffer.handle.Map(0, Some(&range), Some(&mut ptr))?;
+            buffer
+                .resource
+                .resource()
+                .Map(0, Some(&range), Some(&mut ptr))?;
         }
 
         // panic-safety: If Map returns Ok then ptr is not null
@@ -134,7 +145,7 @@ impl RawD3D12Buffer {
 impl Drop for RawD3D12Buffer {
     fn drop(&mut self) {
         unsafe {
-            self.buffer.handle.Unmap(0, None);
+            self.buffer.resource.resource().Unmap(0, None);
             ManuallyDrop::drop(&mut self.buffer);
         }
     }

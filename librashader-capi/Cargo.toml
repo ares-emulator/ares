@@ -3,7 +3,7 @@ name = "librashader-capi"
 edition = "2021"
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.7"
+version = "0.5.0-rc.1"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -17,7 +17,7 @@ crate-type = [ "cdylib", "staticlib" ]
 [features]
 default = ["runtime-all" ]
 runtime-all = ["runtime-opengl", "runtime-d3d9", "runtime-d3d11", "runtime-d3d12", "runtime-vulkan", "runtime-metal"]
-runtime-opengl = ["gl", "librashader/runtime-gl"]
+runtime-opengl = ["glow", "librashader/runtime-gl"]
 runtime-d3d11 = ["windows", "librashader/runtime-d3d11", "windows/Win32_Graphics_Direct3D11"]
 runtime-d3d12 = ["windows", "librashader/runtime-d3d12", "windows/Win32_Graphics_Direct3D12"]
 runtime-d3d9 = ["windows", "librashader/runtime-d3d9", "windows/Win32_Graphics_Direct3D9"]
@@ -25,24 +25,29 @@ runtime-d3d9 = ["windows", "librashader/runtime-d3d9", "windows/Win32_Graphics_D
 runtime-vulkan = ["ash", "librashader/runtime-vk"]
 runtime-metal = ["__cbindgen_internal_objc", "librashader/runtime-metal"]
 
+reflect-unstable = []
+stable = ["librashader/stable"]
+docsrs = []
+
 __cbindgen_internal = ["runtime-all"]
 
 # make runtime-metal depend on this, so its automatically implied.
 # this will make cbindgen generate __OBJC__ ifdefs for metal functions.
-__cbindgen_internal_objc = ["icrate", "objc2"]
+__cbindgen_internal_objc = ["objc2-metal", "objc2"]
 
 [dependencies]
 thiserror = "1.0.37"
 paste = "1.0.9"
-gl = { version = "0.14.0", optional = true }
-rustc-hash = "1.1.0"
-ash = { version = "0.37", optional = true }
-spirv_cross = { package = "librashader-spirv-cross", version = "0.25.1" }
+rustc-hash = "2.0.0"
+
 sptr = "0.3.2"
+
+glow = { workspace = true, optional = true }
+ash = { workspace = true, optional = true }
 
 [dependencies.librashader]
 path = "../librashader"
-version = "0.2.7"
+version = "0.5.0-rc.1"
 default-features = false
 features = ["reflect", "presets", "preprocess"]
 
@@ -51,7 +56,7 @@ workspace = true
 optional = true
 
 [target.'cfg(target_vendor="apple")'.dependencies]
-icrate = { version = "0.1.0" , features = [ "Metal", "Metal_all" ], optional = true }
+objc2-metal = { version = "0.2.0" , features = [ "all" ], optional = true }
 objc2 = { version = "0.5.0", features = ["apple"] , optional = true }
 
 [package.metadata.docs.rs]
@@ -62,4 +67,4 @@ targets = [ "x86_64-pc-windows-msvc",
     "aarch64-apple-ios",
     "i686-pc-windows-msvc",
     "i686-unknown-linux-gnu", ]
-features = ["librashader/docsrs"]
+features = ["docsrs", "librashader/docsrs"]

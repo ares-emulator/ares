@@ -1,6 +1,5 @@
 use crate::error::ShaderCompileError;
 use librashader_preprocess::ShaderSource;
-use serde::{Deserialize, Serialize};
 pub(crate) mod spirv_passes;
 
 mod glslang;
@@ -25,18 +24,11 @@ impl ShaderReflectObject for SpirvCompilation {
 }
 
 /// A reflectable shader compilation via glslang.
-#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SpirvCompilation {
     pub(crate) vertex: Vec<u32>,
     pub(crate) fragment: Vec<u32>,
-}
-
-impl SpirvCompilation {
-    /// Tries to compile SPIR-V from the provided shader source.
-    pub fn compile(source: &ShaderSource) -> Result<Self, ShaderCompileError> {
-        glslang::compile_spirv(source)
-    }
 }
 
 impl TryFrom<&ShaderSource> for SpirvCompilation {

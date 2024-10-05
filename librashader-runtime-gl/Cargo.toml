@@ -3,7 +3,7 @@ name = "librashader-runtime-gl"
 edition = "2021"
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.2.7"
+version = "0.5.0-rc.1"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -12,23 +12,26 @@ keywords = ["shader", "retroarch", "SPIR-V"]
 description = "RetroArch shaders for all."
 
 [dependencies]
-librashader-common = { path = "../librashader-common", features = ["opengl"], version = "0.2.7" }
-librashader-presets = { path = "../librashader-presets", version = "0.2.7" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.2.7" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.2.7" }
-librashader-runtime = { path = "../librashader-runtime" , version = "0.2.7" }
-librashader-cache = { path = "../librashader-cache", version = "0.2.7" }
-spirv_cross = { package = "librashader-spirv-cross", version = "0.25.1" }
+librashader-common = { path = "../librashader-common", features = ["opengl"], version = "0.5.0-rc.1" }
+librashader-presets = { path = "../librashader-presets", version = "0.5.0-rc.1" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.0-rc.1" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.5.0-rc.1" }
+librashader-pack = { path = "../librashader-pack", version = "0.5.0-rc.1" }
+librashader-runtime = { path = "../librashader-runtime" , version = "0.5.0-rc.1" }
+librashader-cache = { path = "../librashader-cache", version = "0.5.0-rc.1" }
 
-gl = "0.14.0"
+spirv-cross2 = { workspace = true, features = ["glsl"] }
+glow = { workspace = true}
 bytemuck = { version = "1.12.3", features = ["derive"] }
 thiserror = "1.0.37"
-rayon = "1.6.1"
+rayon = { workspace = true }
+array-init = "2.1.0"
 
-sptr = "0.3"
+[features]
+stable = ["librashader-reflect/stable"]
 
 [dev-dependencies]
-glfw = "0.47.0"
+glfw = { workspace = true }
 
 [package.metadata.docs.rs]
 features = ["librashader-cache/docsrs"]

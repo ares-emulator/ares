@@ -207,6 +207,7 @@ impl ContextItem {
         }
     }
 
+    /// The wildcard key associated with the context item.
     pub fn key(&self) -> &str {
         match self {
             ContextItem::ContentDirectory(_) => "CONTENT-DIR",
@@ -326,7 +327,11 @@ impl WildcardContext {
         }
     }
 
-    pub fn to_hashmap(mut self) -> FastHashMap<String, String> {
+    /// Convert the context into a string hashmap.
+    ///
+    /// This is a one way conversion, and will normalize rotation context items
+    /// into `VID-FINAL-ROT`.
+    pub fn into_hashmap(mut self) -> FastHashMap<String, String> {
         let mut map = FastHashMap::default();
         let last_user_rot = self
             .0
@@ -360,7 +365,6 @@ impl WildcardContext {
     }
 }
 
-#[rustversion::since(1.74)]
 pub(crate) fn apply_context(path: &mut PathBuf, context: &FastHashMap<String, String>) {
     use std::ffi::{OsStr, OsString};
 
@@ -397,56 +401,6 @@ pub(crate) fn apply_context(path: &mut PathBuf, context: &FastHashMap<String, St
                 // SAFETY: The original source is valid encoded bytes, and our replacement is
                 // valid encoded bytes. This upholds the safety requirements of `from_encoded_bytes_unchecked`.
                 new_path.push(unsafe { OsStr::from_encoded_bytes_unchecked(&replaced.as_ref()) })
-            }
-            _ => new_path.push(component),
-        }
-    }
-
-    // If no wildcards are found within the path, or the path after replacing the wildcards does not exist on disk, the path returned will be unaffected.
-    if let Ok(true) = new_path.try_exists() {
-        *path = new_path;
-    }
-}
-
-#[rustversion::before(1.74)]
-pub(crate) fn apply_context(path: &mut PathBuf, context: &FastHashMap<String, String>) {
-    use os_str_bytes::RawOsStr;
-    static WILDCARD_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("\\$([A-Z-_]+)\\$").unwrap());
-    if context.is_empty() {
-        return;
-    }
-    let path_str = RawOsStr::new(path.as_os_str());
-    let path_bytes = path_str.to_raw_bytes();
-    // Don't want to do any extra work if there's no match.
-    if !WILDCARD_REGEX.is_match(&path_bytes) {
-        return;
-    }
-
-    let mut new_path = PathBuf::with_capacity(path.capacity());
-    for component in path.components() {
-        match component {
-            Component::Normal(path) => {
-                let haystack = RawOsStr::new(path);
-                let haystack = haystack.to_raw_bytes();
-
-                let replaced =
-                    WILDCARD_REGEX.replace_all(&haystack, |caps: &regex::bytes::Captures| {
-                        let Some(name) = caps.get(1) else {
-                            return caps[0].to_vec();
-                        };
-
-                        let Ok(key) = std::str::from_utf8(name.as_bytes()) else {
-                            return caps[0].to_vec();
-                        };
-                        if let Some(replacement) = context.get(key) {
-                            return RawOsStr::from_str(replacement).to_raw_bytes().to_vec();
-                        }
-                        return caps[0].to_vec();
-                    });
-
-                // SAFETY: The original source is valid encoded bytes, and our replacement is
-                // valid encoded bytes. This upholds the safety requirements of `from_encoded_bytes_unchecked`.
-                new_path.push(RawOsStr::assert_cow_from_raw_bytes(&replaced.as_ref()).to_os_str())
             }
             _ => new_path.push(component),
         }

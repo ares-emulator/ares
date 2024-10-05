@@ -27,7 +27,7 @@ pub struct VulkanBase {
 
 impl VulkanBase {
     pub fn new(entry: ash::Entry) -> VkResult<VulkanBase> {
-        let app_info = vk::ApplicationInfo::builder()
+        let app_info = vk::ApplicationInfo::default()
             .application_name(unsafe { CStr::from_bytes_with_nul_unchecked(WINDOW_TITLE) })
             .engine_name(unsafe { CStr::from_bytes_with_nul_unchecked(WINDOW_TITLE) })
             .engine_version(0)
@@ -37,14 +37,14 @@ impl VulkanBase {
         dbg!("entry");
         // todo: make this xplat
         let extensions = [
-            ash::extensions::khr::Surface::name().as_ptr(),
-            ash::extensions::khr::Win32Surface::name().as_ptr(),
-            ash::extensions::ext::DebugUtils::name().as_ptr(),
+            ash::khr::surface::NAME.as_ptr(),
+            ash::khr::win32_surface::NAME.as_ptr(),
+            ash::ext::debug_utils::NAME.as_ptr(),
         ];
 
         let layers = [KHRONOS_VALIDATION.as_ptr().cast()];
 
-        let create_info = vk::InstanceCreateInfo::builder()
+        let create_info = vk::InstanceCreateInfo::default()
             .application_info(&app_info)
             .enabled_layer_names(&layers)
             .enabled_extension_names(&extensions);
@@ -84,25 +84,25 @@ impl VulkanBase {
         let _debug = [unsafe { CStr::from_bytes_with_nul_unchecked(KHRONOS_VALIDATION).as_ptr() }];
 
         let indices = find_queue_family(instance, *physical_device);
-        let queue_info = [*vk::DeviceQueueCreateInfo::builder()
+        let queue_info = [vk::DeviceQueueCreateInfo::default()
             .queue_family_index(indices.graphics_family())
             .queue_priorities(&[1.0f32])];
 
         // let physical_device_features = vk::PhysicalDeviceFeatures::default();
 
         let mut physical_device_features =
-            vk::PhysicalDeviceVulkan13Features::builder().dynamic_rendering(true);
+            vk::PhysicalDeviceVulkan13Features::default().dynamic_rendering(true);
 
         // let mut physical_device_features =
-        //     vk::PhysicalDeviceFeatures2::builder().push_next(&mut physical_device_features)
+        //     vk::PhysicalDeviceFeatures2::default().push_next(&mut physical_device_features)
         //         ;
 
         let extensions = [
-            ash::extensions::khr::Swapchain::name().as_ptr(),
-            ash::extensions::khr::DynamicRendering::name().as_ptr(),
+            ash::khr::swapchain::NAME.as_ptr(),
+            ash::khr::dynamic_rendering::NAME.as_ptr(),
         ];
 
-        let device_create_info = vk::DeviceCreateInfo::builder()
+        let device_create_info = vk::DeviceCreateInfo::default()
             .queue_create_infos(&queue_info)
             // .enabled_layer_names(&debug)
             .enabled_extension_names(&extensions)

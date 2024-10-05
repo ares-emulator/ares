@@ -12,7 +12,7 @@ impl UniformScalar for u32 {}
 pub trait BindUniform<C, T, D> {
     /// Bind the given value to the shader uniforms given the input context.
     ///
-    /// A `BindUniform` implementation should not write to a backing buffer from a [`UniformStorage`](crate::uniforms::UniformStorage).
+    /// A `BindUniform` implementation should not write to a backing buffer from a [`UniformStorage`].
     /// If the binding is successful and no writes to a backing buffer is necessary, this function should return `Some(())`.
     /// If this function returns `None`, then the value will instead be written to the backing buffer.
     fn bind_uniform(block: UniformMemberBlock, value: T, ctx: C, device: &D) -> Option<()>;

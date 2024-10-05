@@ -62,7 +62,7 @@ impl ConstantRegister {
             .iter()
             .find_map(|(mangled_name, register)| {
                 if context
-                    .fragment_buffers
+                    .vertex_buffers
                     .contains_uniform(uniform_name, mangled_name)
                 {
                     Some(register)
@@ -98,15 +98,17 @@ impl ContextOffset<D3D9UniformBinder, ConstantRegister, IDirect3DDevice9> for Co
 pub(crate) type D3D9UniformStorage =
     UniformStorage<D3D9UniformBinder, ConstantRegister, Box<[u8]>, Box<[u8]>, IDirect3DDevice9>;
 
+/// Trait for uniform scalars that can be converted to f32 as required by SM3.0
+/// Mostly used to get around orphan rule.
+#[allow(unused)]
 trait D3D9UniformScalar: UniformScalar + AsPrimitive<f32> + Copy {}
 impl D3D9UniformScalar for u32 {}
 impl D3D9UniformScalar for i32 {}
 impl D3D9UniformScalar for f32 {}
 
 pub(crate) struct D3D9UniformBinder;
-impl<T> BindUniform<ConstantRegister, T, IDirect3DDevice9> for D3D9UniformBinder
-where
-    T: D3D9UniformScalar,
+impl<T: D3D9UniformScalar> BindUniform<ConstantRegister, T, IDirect3DDevice9>
+    for D3D9UniformBinder
 {
     fn bind_uniform(
         _block: UniformMemberBlock,

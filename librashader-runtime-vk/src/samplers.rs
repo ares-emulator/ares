@@ -16,7 +16,7 @@ impl VulkanSampler {
         filter: FilterMode,
         mipmap: FilterMode,
     ) -> error::Result<VulkanSampler> {
-        let create_info = vk::SamplerCreateInfo::builder()
+        let create_info = vk::SamplerCreateInfo::default()
             .mip_lod_bias(0.0)
             .max_anisotropy(1.0)
             .compare_enable(false)

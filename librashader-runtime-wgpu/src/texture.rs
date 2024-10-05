@@ -1,6 +1,7 @@
 use crate::error::FilterChainError;
 use crate::mipmap::MipmapGen;
-use librashader_common::{FilterMode, ImageFormat, Size, WrapMode};
+use crate::WgpuOutputView;
+use librashader_common::{FilterMode, GetSize, ImageFormat, Size, WrapMode};
 use librashader_presets::Scale2D;
 use librashader_runtime::scaling::{MipmapSize, ScaleFramebuffer, ViewportSize};
 use std::sync::Arc;
@@ -17,7 +18,6 @@ pub struct OwnedImage {
 
 #[derive(Clone)]
 pub struct InputImage {
-    /// A handle to the `VkImage`.
     pub image: Arc<wgpu::Texture>,
     pub view: Arc<wgpu::TextureView>,
     pub wrap_mode: WrapMode,
@@ -165,5 +165,13 @@ impl ScaleFramebuffer for OwnedImage {
             original_size,
             should_mipmap,
         ))
+    }
+}
+
+impl GetSize<u32> for WgpuOutputView<'_> {
+    type Error = std::convert::Infallible;
+
+    fn size(&self) -> Result<Size<u32>, Self::Error> {
+        Ok(self.size)
     }
 }

@@ -5,9 +5,10 @@ use crate::options::FrameOptionsD3D9;
 use crate::samplers::SamplerSet;
 use crate::texture::D3D9InputTexture;
 use librashader_common::map::FastHashMap;
+use librashader_common::GetSize;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_preprocess::ShaderSource;
-use librashader_presets::ShaderPassConfig;
+use librashader_presets::PassMeta;
 use librashader_reflect::reflect::semantics::{TextureBinding, UniformBinding};
 use librashader_reflect::reflect::ShaderReflection;
 use librashader_runtime::binding::{BindSemantics, UniformInputs};
@@ -16,7 +17,6 @@ use librashader_runtime::quad::QuadType;
 use librashader_runtime::render_target::RenderTarget;
 use windows::Win32::Foundation::{FALSE, TRUE};
 
-use crate::util::GetSize;
 use windows::Win32::Graphics::Direct3D9::{
     IDirect3DDevice9, IDirect3DPixelShader9, IDirect3DSurface9, IDirect3DVertexShader9,
     D3DCLEAR_TARGET, D3DRS_SRGBWRITEENABLE, D3DSAMP_SRGBTEXTURE, D3DVIEWPORT9,
@@ -28,7 +28,7 @@ pub struct FilterPass {
     pub pixel_shader: IDirect3DPixelShader9,
     pub uniform_bindings: FastHashMap<UniformBinding, ConstantRegister>,
     pub source: ShaderSource,
-    pub config: ShaderPassConfig,
+    pub meta: PassMeta,
     pub uniform_storage: D3D9UniformStorage,
     pub gl_halfpixel: Option<RegisterAssignment>,
 }
@@ -38,8 +38,8 @@ impl FilterPassMeta for FilterPass {
         self.source.format
     }
 
-    fn config(&self) -> &ShaderPassConfig {
-        &self.config
+    fn meta(&self) -> &PassMeta {
+        &self.meta
     }
 }
 
@@ -133,7 +133,7 @@ impl FilterPass {
             parent.history_textures.iter().map(|o| o.as_ref()),
             parent.luts.iter().map(|(u, i)| (*u, i.as_ref())),
             &self.source.parameters,
-            &parent.config.parameters,
+            &parent.config,
         );
     }
 
@@ -144,13 +144,13 @@ impl FilterPass {
         parent: &FilterCommon,
         frame_count: u32,
         options: &FrameOptionsD3D9,
-        viewport: &Viewport<IDirect3DSurface9>,
+        viewport: &Viewport<&IDirect3DSurface9>,
         original: &D3D9InputTexture,
         source: &D3D9InputTexture,
         output: RenderTarget<IDirect3DSurface9>,
         vbo_type: QuadType,
     ) -> error::Result<()> {
-        if self.config.mipmap_input && !parent.disable_mipmaps {
+        if self.meta.mipmap_input && !parent.disable_mipmaps {
             unsafe {
                 source.handle.GenerateMipSubLevels();
             }
@@ -193,8 +193,8 @@ impl FilterPass {
             device.SetViewport(&D3DVIEWPORT9 {
                 X: output.x as u32,
                 Y: output.y as u32,
-                Width: output_size.width,
-                Height: output_size.height,
+                Width: output.size.width,
+                Height: output.size.height,
                 MinZ: 0.0,
                 MaxZ: 1.0,
             })?;

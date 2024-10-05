@@ -1,6 +1,6 @@
+use crate::error;
 use crate::error::assume_d3d11_init;
 use crate::texture::InputTexture;
-use crate::{error, D3D11InputView};
 use librashader_common::{FilterMode, WrapMode};
 use librashader_runtime::image::Image;
 use librashader_runtime::scaling::MipmapSize;
@@ -139,10 +139,7 @@ impl LutTexture {
                 handle,
                 desc,
                 image: InputTexture {
-                    view: D3D11InputView {
-                        handle: srv,
-                        size: source.size,
-                    },
+                    view: srv,
                     filter,
                     wrap_mode,
                 },

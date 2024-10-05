@@ -1,0 +1,82 @@
+[package]
+name = "librashader-cli"
+edition = "2021"
+license = "MPL-2.0 OR GPL-3.0-only"
+version = "0.5.0-rc.1"
+authors = ["Ronny Chan <ronny@ronnychan.ca>"]
+repository = "https://github.com/SnowflakePowered/librashader"
+readme = "../README.md"
+categories = ["emulators", "compilers", "graphics"]
+keywords = ["shader", "retroarch", "SPIR-V"]
+description = "RetroArch shaders for all."
+
+[lib]
+name = "librashader_test"
+path = "src/lib.rs"
+
+[[bin]]
+name = "librashader-cli"
+path = "src/cli/main.rs"
+
+[dependencies]
+librashader = { version = "0.5.0-rc.1", path = "../librashader", features = ["presets", "preprocess", "serde"], default-features = false }
+librashader-runtime = { version = "0.5.0-rc.1", path = "../librashader-runtime"}
+wgpu = { version = "22", default-features = false, optional = true  }
+wgpu-types = { version = "22", optional = true }
+anyhow = "1.0.86"
+image = { workspace = true }
+gfx-maths = "0.2.8"
+
+pollster = "0.3.0"
+parking_lot = "0.12.3"
+image-compare = "0.4.1"
+gpu-allocator = "0.27.0"
+bitvec = "1.0.1"
+d3d12-descriptor-heap = { version = "0.2", optional = true }
+glow = {  workspace = true, optional = true }
+glfw = { workspace = true, optional = true }
+ash = { workspace = true, optional = true }
+
+clap = { workspace = true }
+serde = "1.0"
+serde_json = "1.0"
+spq-spvasm = "0.1.4"
+
+rmp-serde = "1.3.0"
+
+[features]
+default = ["full"]
+
+full = ["vulkan", "opengl", "wgpu", "d3d9", "d3d11", "d3d12", "metal"]
+vulkan = ["librashader/runtime-vk", "dep:ash"]
+opengl = ["librashader/runtime-gl", "dep:glow", "dep:glfw"]
+wgpu = ["librashader/runtime-wgpu", "dep:wgpu", "dep:wgpu-types"]
+
+d3d11 = ["librashader/runtime-d3d11", "dep:windows"]
+d3d12 = ["librashader/runtime-d3d12", "dep:windows", "dep:d3d12-descriptor-heap"]
+d3d9 = ["librashader/runtime-d3d9", "dep:windows"]
+
+metal = ["librashader/runtime-metal", "dep:objc2", "dep:objc2-metal"]
+
+vulkan-debug = ["vulkan"]
+
+[target.'cfg(windows)'.dependencies.windows]
+workspace = true
+optional = true
+features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Dxgi_Common",
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D11",
+    "Win32_Graphics_Direct3D_Fxc",
+    "Win32_Graphics_Gdi",
+    "Win32_Security",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI",
+]
+
+[target.'cfg(target_vendor="apple")'.dependencies]
+objc2-metal = { version = "0.2.0" , features = [ "all" ], optional = true }
+objc2 = { version = "0.5.0", features = ["apple"], optional = true }

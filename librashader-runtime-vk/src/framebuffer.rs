@@ -1,7 +1,7 @@
 use crate::texture::VulkanImage;
 use crate::{error, util};
 use ash::vk;
-use librashader_common::Size;
+use librashader_common::{GetSize, Size};
 
 #[derive(Clone)]
 pub(crate) struct OutputImage {
@@ -12,25 +12,25 @@ pub(crate) struct OutputImage {
 
 impl OutputImage {
     pub fn new(device: &ash::Device, image: VulkanImage) -> error::Result<OutputImage> {
-        let image_subresource = vk::ImageSubresourceRange::builder()
+        let image_subresource = vk::ImageSubresourceRange::default()
             .base_mip_level(0)
             .base_array_layer(0)
             .level_count(1)
             .layer_count(1)
             .aspect_mask(vk::ImageAspectFlags::COLOR);
 
-        let swizzle_components = vk::ComponentMapping::builder()
+        let swizzle_components = vk::ComponentMapping::default()
             .r(vk::ComponentSwizzle::R)
             .g(vk::ComponentSwizzle::G)
             .b(vk::ComponentSwizzle::B)
             .a(vk::ComponentSwizzle::A);
 
-        let view_info = vk::ImageViewCreateInfo::builder()
+        let view_info = vk::ImageViewCreateInfo::default()
             .view_type(vk::ImageViewType::TYPE_2D)
             .format(image.format)
             .image(image.image)
-            .subresource_range(*image_subresource)
-            .components(*swizzle_components);
+            .subresource_range(image_subresource)
+            .components(swizzle_components);
 
         let image_view = unsafe { device.create_image_view(&view_info, None)? };
 
@@ -77,5 +77,13 @@ impl OutputImage {
                 vk::QUEUE_FAMILY_IGNORED,
             )
         }
+    }
+}
+
+impl GetSize<u32> for OutputImage {
+    type Error = std::convert::Infallible;
+
+    fn size(&self) -> Result<Size<u32>, Self::Error> {
+        Ok(self.size)
     }
 }

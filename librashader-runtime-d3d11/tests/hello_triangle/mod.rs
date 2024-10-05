@@ -144,6 +144,7 @@ where
         )
     };
 
+    let hwnd = hwnd?;
     sample.bind_to_window(&hwnd).unwrap();
     unsafe { ShowWindow(hwnd, SW_SHOW) };
 
@@ -242,11 +243,10 @@ pub mod d3d11_hello_triangle {
     use super::*;
     use std::path::Path;
 
-    use librashader_common::{FilterMode, ImageFormat, Size, Viewport, WrapMode};
+    use librashader_common::{FilterMode, GetSize, ImageFormat, Size, Viewport, WrapMode};
     use librashader_runtime::image::Image;
     use librashader_runtime_d3d11::options::FilterChainOptionsD3D11;
     use librashader_runtime_d3d11::FilterChainD3D11;
-    use librashader_runtime_d3d11::{D3D11InputView, D3D11OutputView};
     use std::slice;
     use std::time::Instant;
     use texture::ExampleTexture;
@@ -437,7 +437,7 @@ pub mod d3d11_hello_triangle {
                     drop(resources.backbuffer.take());
                     resources
                         .swapchain
-                        .ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0)
+                        .ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG(0))
                         .unwrap_or_else(|f| eprintln!("{f:?}"));
                     let (rtv, backbuffer) = create_rtv(&self.device, &resources.swapchain)?;
 
@@ -569,27 +569,21 @@ pub mod d3d11_hello_triangle {
                 let srv = input_srv.unwrap();
 
                 // eprintln!("w: {} h: {}", backbuffer_desc.Width, backbuffer_desc.Height);
+                let output = resources.backbuffer_rtv.as_ref().unwrap();
+                let size: Size<u32> = output.size().unwrap();
                 self.filter
                     .frame(
                         None,
-                        D3D11InputView {
-                            handle: srv,
-                            size: Size {
-                                width: tex2d_desc.Width,
-                                height: tex2d_desc.Height,
-                            },
-                        },
+                        &srv,
                         &Viewport {
-                            x: 0f32,
-                            y: 0f32,
-                            output: D3D11OutputView {
-                                size: Size {
-                                    width: backbuffer_desc.Width,
-                                    height: backbuffer_desc.Height,
-                                },
-                                handle: resources.backbuffer_rtv.as_ref().unwrap().clone(),
-                            },
+                            x: 100f32,
+                            y: 100f32,
+                            output,
                             mvp: None,
+                            size: Size {
+                                width: size.width - 200,
+                                height: size.height - 200,
+                            },
                         },
                         resources.frame_count,
                         None,
@@ -606,7 +600,10 @@ pub mod d3d11_hello_triangle {
             }
 
             unsafe {
-                resources.swapchain.Present(0, 0).ok()?;
+                resources
+                    .swapchain
+                    .Present(0, DXGI_PRESENT::default())
+                    .ok()?;
             }
             resources.frame_count += 1;
             Ok(())

@@ -6,7 +6,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum ShaderCompileError {
     /// Compile error from naga.
-    #[cfg(feature = "unstable-naga")]
+    #[cfg(feature = "unstable-naga-in")]
     #[error("shader")]
     NagaCompileError(Vec<naga::front::glsl::Error>),
 
@@ -20,7 +20,7 @@ pub enum ShaderCompileError {
 
     /// Error when transpiling from spirv-cross.
     #[error("spirv-cross error: {0:?}")]
-    SpirvCrossCompileError(#[from] spirv_cross::ErrorCode),
+    SpirvCrossCompileError(#[from] spirv_cross2::SpirvCrossError),
 
     /// Error when transpiling from spirv-to-dxil
     #[cfg(all(target_os = "windows", feature = "dxil"))]
@@ -87,7 +87,7 @@ pub enum SemanticsErrorKind {
 pub enum ShaderReflectError {
     /// Reflection error from spirv-cross.
     #[error("spirv cross error: {0}")]
-    SpirvCrossError(#[from] spirv_cross::ErrorCode),
+    SpirvCrossError(#[from] spirv_cross2::SpirvCrossError),
     /// Error when validating vertex shader semantics.
     #[error("error when verifying vertex semantics: {0:?}")]
     VertexSemanticError(SemanticsErrorKind),
@@ -131,7 +131,7 @@ pub enum ShaderReflectError {
     NagaReflectError(#[from] naga::WithSpan<naga::valid::ValidationError>),
 }
 
-#[cfg(feature = "unstable-naga")]
+#[cfg(feature = "unstable-naga-in")]
 impl From<Vec<naga::front::glsl::Error>> for ShaderCompileError {
     fn from(err: Vec<naga::front::glsl::Error>) -> Self {
         ShaderCompileError::NagaCompileError(err)

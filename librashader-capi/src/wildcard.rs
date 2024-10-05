@@ -25,7 +25,7 @@ extern_fn! {
     ///
     /// These automatically inferred variables, as well as all other variables can be overridden with
     /// `libra_preset_ctx_set_param`, but the expected string values must be provided.
-    /// See https://github.com/libretro/RetroArch/pull/15023 for a list of expected string values.
+    /// See <https://github.com/libretro/RetroArch/pull/15023> for a list of expected string values.
     ///
     /// No variables can be removed once added to the context, however subsequent calls to set the same
     /// variable will overwrite the expected variable.
@@ -144,6 +144,8 @@ extern_fn! {
     /// - GLCore
     /// - Direct3D11
     /// - Direct3D12
+    /// - Metal
+    /// - Direct3D9 (HLSL)
     ///
     /// This will also set the appropriate video driver extensions.
     ///

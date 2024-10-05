@@ -10,7 +10,7 @@ use nom::IResult;
 use num_traits::cast::ToPrimitive;
 
 use crate::parse::token::do_lex;
-use librashader_common::map::FastHashMap;
+use librashader_common::map::{FastHashMap, ShortString};
 use librashader_common::{FilterMode, WrapMode};
 use std::fs::File;
 use std::io::Read;
@@ -18,12 +18,12 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use crate::context::{apply_context, WildcardContext};
-use crate::extract_if::MakeExtractIf;
+use vec_extract_if_polyfill::MakeExtractIf;
 
 #[derive(Debug)]
 pub enum Value {
     ShaderCount(i32),
-    FeedbackPass(i32),
+    FeedbackPass(#[allow(unused)] i32),
     Shader(i32, PathBuf),
     ScaleX(i32, ScaleFactor),
     ScaleY(i32, ScaleFactor),
@@ -37,10 +37,10 @@ pub enum Value {
     FloatFramebuffer(i32, bool),
     SrgbFramebuffer(i32, bool),
     MipmapInput(i32, bool),
-    Alias(i32, String),
-    Parameter(String, f32),
+    Alias(i32, ShortString),
+    Parameter(ShortString, f32),
     Texture {
-        name: String,
+        name: ShortString,
         filter_mode: FilterMode,
         wrap_mode: WrapMode,
         mipmap: bool,
@@ -195,8 +195,10 @@ fn load_child_reference_strings(
                 .map_err(|e| ParsePresetError::IOError(path.clone(), e))?;
 
             let mut new_tokens = do_lex(&reference_contents)?;
-            let new_references: Vec<PathBuf> = new_tokens
-                .extract_if(|token| *token.key.fragment() == "#reference")
+            let new_references: Vec<PathBuf> =
+                MakeExtractIf::extract_if(&mut new_tokens, |token| {
+                    *token.key.fragment() == "#reference"
+                })
                 .map(|value| PathBuf::from(*value.value.fragment()))
                 .collect();
 
@@ -217,7 +219,7 @@ pub(crate) fn parse_preset(
 ) -> Result<Vec<Value>, ParsePresetError> {
     let path = path.as_ref();
     let mut path = path.to_path_buf();
-    let context = context.to_hashmap();
+    let context = context.into_hashmap();
 
     apply_context(&mut path, &context);
 
@@ -250,10 +252,10 @@ pub fn parse_values(
         root_path.pop();
     }
 
-    let references: Vec<PathBuf> = tokens
-        .extract_if(|token| *token.key.fragment() == "#reference")
-        .map(|value| PathBuf::from(*value.value.fragment()))
-        .collect();
+    let references: Vec<PathBuf> =
+        MakeExtractIf::extract_if(&mut tokens, |token| *token.key.fragment() == "#reference")
+            .map(|value| PathBuf::from(*value.value.fragment()))
+            .collect();
 
     // unfortunately we need to lex twice because there's no way to know the references ahead of time.
     // the returned references should have context applied
@@ -275,10 +277,12 @@ pub fn parse_values(
     // collect all possible parameter names.
     let mut parameter_names: Vec<&str> = Vec::new();
     for (_, tokens) in all_tokens.iter_mut() {
-        for token in tokens.extract_if(|token| *token.key.fragment() == "parameters") {
+        for token in
+            MakeExtractIf::extract_if(tokens, |token| *token.key.fragment() == "parameters")
+        {
             let parameter_name_string: &str = token.value.fragment();
             for parameter_name in parameter_name_string.split(';') {
-                parameter_names.push(parameter_name);
+                parameter_names.push(parameter_name.trim());
             }
         }
     }
@@ -286,10 +290,11 @@ pub fn parse_values(
     // collect all possible texture names.
     let mut texture_names: Vec<&str> = Vec::new();
     for (_, tokens) in all_tokens.iter_mut() {
-        for token in tokens.extract_if(|token| *token.key.fragment() == "textures") {
+        for token in MakeExtractIf::extract_if(tokens, |token| *token.key.fragment() == "textures")
+        {
             let texture_name_string: &str = token.value.fragment();
             for texture_name in texture_name_string.split(';') {
-                texture_names.push(texture_name);
+                texture_names.push(texture_name.trim());
             }
         }
     }
@@ -297,7 +302,9 @@ pub fn parse_values(
     let mut values = Vec::new();
     // resolve shader paths.
     for (path, tokens) in all_tokens.iter_mut() {
-        for token in tokens.extract_if(|token| parse_indexed_key("shader", token.key).is_ok()) {
+        for token in MakeExtractIf::extract_if(tokens, |token| {
+            parse_indexed_key("shader", token.key).is_ok()
+        }) {
             let (_, index) = parse_indexed_key("shader", token.key).map_err(|e| match e {
                 nom::Err::Error(e) | nom::Err::Failure(e) => {
                     let input: Span = e.input;
@@ -328,8 +335,11 @@ pub fn parse_values(
     // resolve texture paths
     let mut textures = Vec::new();
     for (path, tokens) in all_tokens.iter_mut() {
-        for token in tokens.extract_if(|token| texture_names.contains(token.key.fragment())) {
+        for token in
+            MakeExtractIf::extract_if(tokens, |token| texture_names.contains(token.key.fragment()))
+        {
             let mut relative_path = path.to_path_buf();
+            // Don't trim paths
             relative_path.push(*token.value.fragment());
             relative_path
                 .canonicalize()
@@ -380,7 +390,7 @@ pub fn parse_values(
         .map_or(None, |(_, v)| Some(FilterMode::from_str(&v.value).unwrap()));
 
         values.push(Value::Texture {
-            name: texture.to_string(),
+            name: ShortString::from(*texture.fragment()),
             filter_mode: filter.unwrap_or(if linear {
                 FilterMode::Linear
             } else {
@@ -395,7 +405,7 @@ pub fn parse_values(
     let mut rest_tokens = Vec::new();
     // hopefully no more textures left in the token tree
     for (p, token) in tokens {
-        if parameter_names.contains(token.key.fragment()) {
+        if parameter_names.contains(&token.key.fragment().trim()) {
             let param_val = from_float(token.value)
                 // This is literally just to work around BEAM_PROFILE in crt-hyllian-sinc-glow.slangp
                 // which has ""0'.000000". This somehow works in RA because it defaults to 0, probably.
@@ -403,7 +413,7 @@ pub fn parse_values(
                 // params (god help me), it would be pretty bad because we lose texture path fallback.
                 .unwrap_or(0.0);
             values.push(Value::Parameter(
-                token.key.fragment().to_string(),
+                ShortString::from(token.key.fragment().trim()),
                 param_val,
             ));
             continue;
@@ -484,7 +494,10 @@ pub fn parse_values(
         }
 
         if let Ok((_, idx)) = parse_indexed_key("alias", token.key) {
-            values.push(Value::Alias(idx, token.value.to_string()));
+            values.push(Value::Alias(
+                idx,
+                ShortString::from(token.value.fragment().trim()),
+            ));
             continue;
         }
         if let Ok((_, idx)) = parse_indexed_key("scale_type", token.key) {
@@ -547,7 +560,7 @@ pub fn parse_values(
         // handle undeclared parameters after parsing everything else as a last resort.
         if let Ok(param_val) = from_float(token.value) {
             values.push(Value::Parameter(
-                token.key.fragment().to_string(),
+                ShortString::from(token.key.fragment().trim()),
                 param_val,
             ));
         }
@@ -558,6 +571,7 @@ pub fn parse_values(
                 .all(|k| !token.key.ends_with(k))
         {
             let mut relative_path = path.to_path_buf();
+            // Don't trim paths.
             relative_path.push(*token.value.fragment());
             relative_path
                 .canonicalize()
@@ -596,7 +610,7 @@ pub fn parse_values(
         });
 
         values.push(Value::Texture {
-            name: texture.to_string(),
+            name: ShortString::from(*texture.fragment()),
             filter_mode: if linear {
                 FilterMode::Linear
             } else {
@@ -621,7 +635,7 @@ mod test {
     #[test]
     pub fn parse_basic() {
         let root =
-            PathBuf::from("../test/slang-shaders/bezel/Mega_Bezel/Presets/Base_CRT_Presets/MBZ__3__STD__MEGATRON-NTSC.slangp");
+            PathBuf::from("../test/shaders_slang/bezel/Mega_Bezel/Presets/Base_CRT_Presets/MBZ__3__STD__MEGATRON-NTSC.slangp");
         let basic = parse_preset(root, WildcardContext::new());
         eprintln!("{basic:?}");
         assert!(basic.is_ok());

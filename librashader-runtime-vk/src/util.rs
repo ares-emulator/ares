@@ -1,12 +1,4 @@
 use ash::vk;
-use gpu_allocator::vulkan::{Allocator, AllocatorCreateDesc};
-
-use gpu_allocator::AllocationSizes;
-use parking_lot::Mutex;
-use std::sync::Arc;
-
-use crate::error;
-use crate::error::FilterChainError;
 use librashader_reflect::reflect::semantics::BindingStage;
 
 pub fn binding_stage_to_vulkan_stage(stage_mask: BindingStage) -> vk::ShaderStageFlags {
@@ -20,31 +12,6 @@ pub fn binding_stage_to_vulkan_stage(stage_mask: BindingStage) -> vk::ShaderStag
     }
 
     mask
-}
-
-#[allow(unused)]
-pub fn find_vulkan_memory_type(
-    props: &vk::PhysicalDeviceMemoryProperties,
-    device_reqs: u32,
-    host_reqs: vk::MemoryPropertyFlags,
-) -> error::Result<u32> {
-    for i in 0..vk::MAX_MEMORY_TYPES {
-        if device_reqs & (1 << i) != 0
-            && props.memory_types[i].property_flags & host_reqs == host_reqs
-        {
-            return Ok(i as u32);
-        }
-    }
-
-    if host_reqs == vk::MemoryPropertyFlags::empty() {
-        Err(FilterChainError::VulkanMemoryError(device_reqs))
-    } else {
-        Ok(find_vulkan_memory_type(
-            props,
-            device_reqs,
-            vk::MemoryPropertyFlags::empty(),
-        )?)
-    }
 }
 
 #[inline(always)]
@@ -89,20 +56,4 @@ pub unsafe fn vulkan_image_layout_transition_levels(
             &[barrier],
         )
     }
-}
-
-pub fn create_allocator(
-    device: ash::Device,
-    instance: ash::Instance,
-    physical_device: vk::PhysicalDevice,
-) -> error::Result<Arc<Mutex<Allocator>>> {
-    let alloc = Allocator::new(&AllocatorCreateDesc {
-        instance,
-        device,
-        physical_device,
-        debug_settings: Default::default(),
-        buffer_device_address: false,
-        allocation_sizes: AllocationSizes::default(),
-    })?;
-    Ok(Arc::new(Mutex::new(alloc)))
 }

@@ -1,11 +1,10 @@
+use crate::error;
 use crate::error::{assume_d3d11_init, FilterChainError};
-use crate::texture::D3D11InputView;
 use crate::util::d3d11_get_closest_format;
-use crate::{error, D3D11OutputView};
 use librashader_common::{ImageFormat, Size};
 use librashader_presets::Scale2D;
 use librashader_runtime::scaling::{MipmapSize, ScaleFramebuffer, ViewportSize};
-use windows::core::ComInterface;
+use windows::core::Interface;
 use windows::Win32::Graphics::Direct3D::D3D_SRV_DIMENSION_TEXTURE2D;
 use windows::Win32::Graphics::Direct3D11::{
     ID3D11Device, ID3D11DeviceContext, ID3D11RenderTargetView, ID3D11ShaderResourceView,
@@ -171,33 +170,25 @@ impl OwnedImage {
         Ok(rtv)
     }
 
-    pub fn as_output(&self) -> error::Result<D3D11OutputView> {
-        let rtv = self.create_render_target_view()?;
-        Ok(D3D11OutputView {
-            handle: rtv,
-            size: self.size,
-        })
-    }
-
     pub fn copy_from(
         &mut self,
         ctx: &ID3D11DeviceContext,
-        image: &D3D11InputView,
+        image: &ID3D11ShaderResourceView,
     ) -> error::Result<()> {
         let original_resource: ID3D11Texture2D = unsafe {
-            let resource = image.handle.GetResource()?;
+            let resource = image.GetResource()?;
             resource.cast()?
         };
 
-        let format = unsafe {
+        let (format, image_size) = unsafe {
             let mut desc = Default::default();
             original_resource.GetDesc(&mut desc);
-            desc.Format
+            (desc.Format, Size::new(desc.Width, desc.Height))
         };
 
-        if self.size != image.size || format != self.format {
+        if self.size != image_size || format != self.format {
             // eprintln!("[history] resizing");
-            self.init(image.size, ImageFormat::from(format))?;
+            self.init(image_size, ImageFormat::from(format))?;
         }
 
         unsafe {

@@ -50,6 +50,15 @@ where
             index: 0,
         }
     }
+}
+
+impl<T, const SIZE: usize> InlineRingBuffer<T, SIZE>
+where
+    T: Copy,
+{
+    pub fn from_array(items: [T; SIZE]) -> Self {
+        Self { items, index: 0 }
+    }
 
     /// Get a borrow to all the items in this ring buffer.
     pub fn items(&self) -> &[T; SIZE] {

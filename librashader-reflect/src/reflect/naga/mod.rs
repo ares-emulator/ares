@@ -1,20 +1,17 @@
+#[doc(hidden)]
 pub mod msl;
+
+#[doc(hidden)]
 pub mod spirv;
+
+#[doc(hidden)]
 pub mod wgsl;
 
 use crate::error::{SemanticsErrorKind, ShaderReflectError};
 use std::fmt::Debug;
 
-use crate::front::SpirvCompilation;
-use naga::{
-    AddressSpace, Binding, Expression, GlobalVariable, Handle, ImageClass, Module, ResourceBinding,
-    Scalar, ScalarKind, StructMember, TypeInner, VectorSize,
-};
-use rspirv::binary::Assemble;
-use rspirv::dr::Builder;
-use rustc_hash::FxHashSet;
-
 use crate::front::spirv_passes::lower_samplers;
+use crate::front::SpirvCompilation;
 use crate::reflect::helper::{SemanticErrorBlame, TextureData, UboData};
 use crate::reflect::semantics::{
     BindingMeta, BindingStage, BufferReflection, MemberOffset, ShaderSemantics, TextureBinding,
@@ -23,11 +20,21 @@ use crate::reflect::semantics::{
     MAX_PUSH_BUFFER_SIZE,
 };
 use crate::reflect::{align_uniform_size, ReflectShader, ShaderReflection};
+use librashader_common::map::ShortString;
+use naga::{
+    AddressSpace, Binding, Expression, GlobalVariable, Handle, ImageClass, Module, ResourceBinding,
+    Scalar, ScalarKind, StructMember, TypeInner, VectorSize,
+};
+use rspirv::binary::Assemble;
+use rspirv::dr::Builder;
+use rustc_hash::FxHashSet;
 
 /// Reflect under Naga semantics
 ///
 /// The Naga reflector will lower combined image samplers to split,
 /// with the same bind point on descriptor group 1.
+///
+/// Naga supports WGSL, SPIR-V, and MSL targets.
 #[derive(Debug)]
 pub struct Naga;
 #[derive(Debug)]
@@ -205,7 +212,7 @@ impl ValidateTypeSemantics<&TypeInner> for UniqueSemantics {
             }
         };
 
-        return None;
+        None
     }
 }
 
@@ -232,7 +239,7 @@ impl ValidateTypeSemantics<&TypeInner> for TextureSemantics {
 
 impl NagaReflect {
     fn reflect_ubos(
-        &mut self,
+        &self,
         vertex_ubo: Option<Handle<GlobalVariable>>,
         fragment_ubo: Option<Handle<GlobalVariable>>,
     ) -> Result<Option<BufferReflection<u32>>, ShaderReflectError> {
@@ -422,7 +429,7 @@ impl NagaReflect {
         }
     }
 
-    fn validate(&self) -> Result<(), ShaderReflectError> {
+    fn validate_semantics(&self) -> Result<(), ShaderReflectError> {
         // Verify types
         if self.vertex.global_variables.iter().any(|(_, gv)| {
             let ty = &self.vertex.types[gv.ty];
@@ -559,7 +566,7 @@ impl NagaReflect {
             };
 
             let &Some(Binding::Location { location, .. }) = &frag_output.binding else {
-                return Err(ShaderReflectError::VertexSemanticError(
+                return Err(ShaderReflectError::FragmentSemanticError(
                     SemanticsErrorKind::MissingBinding,
                 ));
             };
@@ -663,7 +670,7 @@ impl NagaReflect {
 
             let member_type = &module.types[member.ty].inner;
 
-            if let Some(parameter) = semantics.uniform_semantics.get_unique_semantic(&name) {
+            if let Some(parameter) = semantics.uniform_semantics.unique_semantic(&name) {
                 let Some(typeinfo) = parameter.semantics.validate_type(&member_type) else {
                     return Err(blame.error(SemanticsErrorKind::InvalidTypeForSemantic(name)));
                 };
@@ -671,9 +678,11 @@ impl NagaReflect {
                 match &parameter.semantics {
                     UniqueSemantics::FloatParameter => {
                         let offset = member.offset;
-                        if let Some(meta) = meta.parameter_meta.get_mut(&name) {
-                            if let Some(expected) = meta.offset.offset(offset_type)
-                                && expected != offset as usize
+                        if let Some(meta) = meta.parameter_meta.get_mut::<str>(name.as_ref()) {
+                            if let Some(expected) = meta
+                                .offset
+                                .offset(offset_type)
+                                .filter(|expected| *expected != offset as usize)
                             {
                                 return Err(ShaderReflectError::MismatchedOffset {
                                     semantic: name,
@@ -694,6 +703,7 @@ impl NagaReflect {
 
                             *meta.offset.offset_mut(offset_type) = Some(offset as usize);
                         } else {
+                            let name = ShortString::from(name);
                             meta.parameter_meta.insert(
                                 name.clone(),
                                 VariableMeta {
@@ -707,8 +717,10 @@ impl NagaReflect {
                     semantics => {
                         let offset = member.offset;
                         if let Some(meta) = meta.unique_meta.get_mut(semantics) {
-                            if let Some(expected) = meta.offset.offset(offset_type)
-                                && expected != offset as usize
+                            if let Some(expected) = meta
+                                .offset
+                                .offset(offset_type)
+                                .filter(|expected| *expected != offset as usize)
                             {
                                 return Err(ShaderReflectError::MismatchedOffset {
                                     semantic: name,
@@ -732,7 +744,7 @@ impl NagaReflect {
                             meta.unique_meta.insert(
                                 *semantics,
                                 VariableMeta {
-                                    id: name,
+                                    id: ShortString::from(name),
                                     offset: MemberOffset::new(offset as usize, offset_type),
                                     size: typeinfo.size * typeinfo.columns,
                                 },
@@ -740,7 +752,7 @@ impl NagaReflect {
                         }
                     }
                 }
-            } else if let Some(texture) = semantics.uniform_semantics.get_texture_semantic(&name) {
+            } else if let Some(texture) = semantics.uniform_semantics.texture_semantic(&name) {
                 let Some(_typeinfo) = texture.semantics.validate_type(&member_type) else {
                     return Err(blame.error(SemanticsErrorKind::InvalidTypeForSemantic(name)));
                 };
@@ -756,8 +768,10 @@ impl NagaReflect {
 
                 let offset = member.offset;
                 if let Some(meta) = meta.texture_size_meta.get_mut(&texture) {
-                    if let Some(expected) = meta.offset.offset(offset_type)
-                        && expected != offset as usize
+                    if let Some(expected) = meta
+                        .offset
+                        .offset(offset_type)
+                        .filter(|expected| *expected != offset as usize)
                     {
                         return Err(ShaderReflectError::MismatchedOffset {
                             semantic: name,
@@ -783,7 +797,7 @@ impl NagaReflect {
                                 SemanticErrorBlame::Vertex => BindingStage::VERTEX,
                                 SemanticErrorBlame::Fragment => BindingStage::FRAGMENT,
                             },
-                            id: name,
+                            id: ShortString::from(name),
                         },
                     );
                 }
@@ -837,10 +851,7 @@ impl NagaReflect {
         semantics: &ShaderSemantics,
         meta: &mut BindingMeta,
     ) -> Result<(), ShaderReflectError> {
-        let Some(semantic) = semantics
-            .texture_semantics
-            .get_texture_semantic(texture.name)
-        else {
+        let Some(semantic) = semantics.texture_semantics.texture_semantic(texture.name) else {
             return Err(
                 SemanticErrorBlame::Fragment.error(SemanticsErrorKind::UnknownSemantics(
                     texture.name.to_string(),
@@ -871,7 +882,7 @@ impl ReflectShader for NagaReflect {
         pass_number: usize,
         semantics: &ShaderSemantics,
     ) -> Result<ShaderReflection, ShaderReflectError> {
-        self.validate()?;
+        self.validate_semantics()?;
 
         // Validate verifies that there's only one uniform block.
         let vertex_ubo = self
@@ -1000,6 +1011,36 @@ impl ReflectShader for NagaReflect {
             push_constant,
             meta,
         })
+    }
+
+    fn validate(&mut self) -> Result<(), ShaderReflectError> {
+        self.validate_semantics()?;
+        let vertex_push = self
+            .vertex
+            .global_variables
+            .iter()
+            .find_map(|(handle, gv)| {
+                if gv.space == AddressSpace::PushConstant {
+                    Some(handle)
+                } else {
+                    None
+                }
+            });
+
+        let fragment_push = self
+            .fragment
+            .global_variables
+            .iter()
+            .find_map(|(handle, gv)| {
+                if gv.space == AddressSpace::PushConstant {
+                    Some(handle)
+                } else {
+                    None
+                }
+            });
+
+        self.reflect_push_constant_buffer(vertex_push, fragment_push)?;
+        Ok(())
     }
 }
 

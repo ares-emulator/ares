@@ -1,6 +1,6 @@
 mod hello_triangle;
 
-const FILTER_PATH: &str = "../test/shaders_slang/test/feedback.slangp";
+const FILTER_PATH: &str = "../test/shaders_slang/crt/crt-geom.slangp";
 
 #[test]
 fn triangle_d3d9() {

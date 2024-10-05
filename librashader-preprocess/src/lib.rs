@@ -2,9 +2,9 @@
 //!
 //! This crate contains facilities and types for resolving `#include` directives in `.slang`
 //! into a single compilation unit. `#pragma` directives are also parsed and resolved as
-//! [`ShaderParameter`](crate::ShaderParameter) structs.
+//! [`ShaderParameter`] structs.
 //!
-//! The resulting [`ShaderSource`](crate::ShaderSource) can then be passed into a
+//! The resulting [`ShaderSource`]can then be passed into a
 //! reflection target for reflection and compilation into the target shader format.
 //!
 //! Re-exported as [`librashader::preprocess`](https://docs.rs/librashader/latest/librashader/preprocess/index.html).
@@ -15,12 +15,13 @@ mod stage;
 
 use crate::include::read_source;
 pub use error::*;
-use librashader_common::map::FastHashMap;
+use librashader_common::map::{FastHashMap, ShortString};
 use librashader_common::ImageFormat;
 use std::path::Path;
 
 /// The source file for a single shader pass.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ShaderSource {
     /// The source contents for the vertex shader.
     pub vertex: String,
@@ -29,10 +30,10 @@ pub struct ShaderSource {
     pub fragment: String,
 
     /// The alias of the shader if available.
-    pub name: Option<String>,
+    pub name: Option<ShortString>,
 
     /// The list of shader parameters found in the shader source.
-    pub parameters: FastHashMap<String, ShaderParameter>,
+    pub parameters: FastHashMap<ShortString, ShaderParameter>,
 
     /// The image format the shader expects.
     pub format: ImageFormat,
@@ -40,9 +41,10 @@ pub struct ShaderSource {
 
 /// A user tweakable parameter for the shader as declared in source.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ShaderParameter {
     /// The name of the parameter.
-    pub id: String,
+    pub id: ShortString,
     /// The description of the parameter.
     pub description: String,
     /// The initial value the parameter is set to.
@@ -81,6 +83,7 @@ impl SourceOutput for String {
 pub(crate) fn load_shader_source(path: impl AsRef<Path>) -> Result<ShaderSource, PreprocessError> {
     let source = read_source(path)?;
     let meta = pragma::parse_pragma_meta(&source)?;
+
     let text = stage::process_stages(&source)?;
     let parameters = FastHashMap::from_iter(meta.parameters.into_iter().map(|p| (p.id.clone(), p)));
 

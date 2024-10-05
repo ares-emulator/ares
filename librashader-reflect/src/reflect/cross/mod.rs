@@ -1,9 +1,15 @@
+#[doc(hidden)]
 pub mod glsl;
+
+#[doc(hidden)]
 pub mod hlsl;
+
+#[doc(hidden)]
 pub mod msl;
 
 use crate::error::{SemanticsErrorKind, ShaderReflectError};
 use crate::front::SpirvCompilation;
+use crate::reflect::helper::{SemanticErrorBlame, TextureData, UboData};
 use crate::reflect::semantics::{
     BindingMeta, BindingStage, BufferReflection, MemberOffset, ShaderReflection, ShaderSemantics,
     TextureBinding, TextureSemanticMap, TextureSemantics, TextureSizeMeta, TypeInfo,
@@ -11,147 +17,131 @@ use crate::reflect::semantics::{
     MAX_BINDINGS_COUNT, MAX_PUSH_BUFFER_SIZE,
 };
 use crate::reflect::{align_uniform_size, ReflectShader};
+use librashader_common::map::ShortString;
+use spirv_cross2::compile::CompiledArtifact;
+use spirv_cross2::reflect::{
+    AllResources, BitWidth, DecorationValue, Resource, Scalar, ScalarKind, TypeInner,
+};
+use spirv_cross2::spirv::Decoration;
+use spirv_cross2::Compiler;
+use spirv_cross2::Module;
 use std::fmt::Debug;
-use std::ops::Deref;
-
-use spirv_cross::spirv::{Ast, Decoration, Module, Resource, ShaderResources, Type};
-use spirv_cross::ErrorCode;
-
-use crate::reflect::helper::{SemanticErrorBlame, TextureData, UboData};
 
 /// Reflect shaders under SPIRV-Cross semantics.
+///
+/// SPIRV-Cross supports GLSL, HLSL, SPIR-V, and MSL targets.
 #[derive(Debug)]
 pub struct SpirvCross;
 
-// This is "probably" OK.
-unsafe impl<T: Send + spirv_cross::spirv::Target> Send for CrossReflect<T>
-where
-    Ast<T>: spirv_cross::spirv::Compile<T>,
-    Ast<T>: spirv_cross::spirv::Parse<T>,
-{
-}
-
+// todo: make this under a mutex
 pub(crate) struct CrossReflect<T>
 where
-    T: spirv_cross::spirv::Target,
-    Ast<T>: spirv_cross::spirv::Compile<T>,
-    Ast<T>: spirv_cross::spirv::Parse<T>,
+    T: spirv_cross2::compile::CompilableTarget,
 {
-    vertex: Ast<T>,
-    fragment: Ast<T>,
-}
-
-///The output of the SPIR-V AST after compilation.
-///
-/// This output is immutable and can not be recompiled later.
-pub struct CompiledAst<T: spirv_cross::spirv::Target>(Ast<T>);
-impl<T: spirv_cross::spirv::Target> Deref for CompiledAst<T> {
-    type Target = Ast<T>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    vertex: Compiler<T>,
+    fragment: Compiler<T>,
 }
 
 /// The compiled SPIR-V program after compilation.
 pub struct CompiledProgram<T>
 where
-    T: spirv_cross::spirv::Target,
+    T: spirv_cross2::compile::CompilableTarget,
 {
-    pub vertex: CompiledAst<T>,
-    pub fragment: CompiledAst<T>,
+    pub vertex: CompiledArtifact<T>,
+    pub fragment: CompiledArtifact<T>,
 }
 
-impl ValidateTypeSemantics<Type> for UniqueSemantics {
-    fn validate_type(&self, ty: &Type) -> Option<TypeInfo> {
-        let (Type::Float {
-            ref array,
-            vecsize,
-            columns,
-            ..
-        }
-        | Type::Int {
-            ref array,
-            vecsize,
-            columns,
-            ..
-        }
-        | Type::UInt {
-            ref array,
-            vecsize,
-            columns,
-            ..
-        }) = *ty
+impl ValidateTypeSemantics<TypeInner<'_>> for UniqueSemantics {
+    fn validate_type(&self, ty: &TypeInner) -> Option<TypeInfo> {
+        let (TypeInner::Vector { .. } | TypeInner::Scalar { .. } | TypeInner::Matrix { .. }) = *ty
         else {
             return None;
         };
 
-        if !array.is_empty() {
-            return None;
-        }
-
-        let valid = match self {
+        match self {
             UniqueSemantics::MVP => {
-                matches!(ty, Type::Float { .. }) && vecsize == 4 && columns == 4
+                if matches!(ty, TypeInner::Matrix { columns, rows, scalar: Scalar { size, .. } } if *columns == 4
+                    && *rows == 4 && *size == BitWidth::Word)
+                {
+                    return Some(TypeInfo {
+                        size: 4,
+                        columns: 4,
+                    });
+                }
             }
             UniqueSemantics::FrameCount
             | UniqueSemantics::Rotation
-            | UniqueSemantics::TotalSubFrames
-            | UniqueSemantics::CurrentSubFrame => {
-                matches!(ty, Type::UInt { .. }) && vecsize == 1 && columns == 1
+            | UniqueSemantics::CurrentSubFrame
+            | UniqueSemantics::TotalSubFrames => {
+                // Uint32 == width 4
+                if matches!(ty, TypeInner::Scalar( Scalar { kind, size }) if *kind == ScalarKind::Uint && *size == BitWidth::Word)
+                {
+                    return Some(TypeInfo {
+                        size: 1,
+                        columns: 1,
+                    });
+                }
             }
             UniqueSemantics::FrameDirection => {
-                matches!(ty, Type::Int { .. }) && vecsize == 1 && columns == 1
+                // iint32 == width 4
+                if matches!(ty, TypeInner::Scalar( Scalar { kind, size }) if *kind == ScalarKind::Int && *size == BitWidth::Word)
+                {
+                    return Some(TypeInfo {
+                        size: 1,
+                        columns: 1,
+                    });
+                }
             }
             UniqueSemantics::FloatParameter => {
-                matches!(ty, Type::Float { .. }) && vecsize == 1 && columns == 1
+                // Float32 == width 4
+                if matches!(ty, TypeInner::Scalar( Scalar { kind, size }) if *kind == ScalarKind::Float && *size == BitWidth::Word)
+                {
+                    return Some(TypeInfo {
+                        size: 1,
+                        columns: 1,
+                    });
+                }
             }
-            _ => matches!(ty, Type::Float { .. }) && vecsize == 4 && columns == 1,
+            _ => {
+                if matches!(ty, TypeInner::Vector { scalar: Scalar { size, kind }, width: vecwidth, .. }
+                    if *kind == ScalarKind::Float && *size == BitWidth::Word && *vecwidth == 4)
+                {
+                    return Some(TypeInfo {
+                        size: 4,
+                        columns: 1,
+                    });
+                }
+            }
         };
 
-        if valid {
-            Some(TypeInfo {
-                size: vecsize,
-                columns,
-            })
-        } else {
-            None
-        }
+        None
     }
 }
 
-impl ValidateTypeSemantics<Type> for TextureSemantics {
-    fn validate_type(&self, ty: &Type) -> Option<TypeInfo> {
-        let Type::Float {
-            ref array,
-            vecsize,
-            columns,
-            ..
-        } = *ty
+impl ValidateTypeSemantics<TypeInner<'_>> for TextureSemantics {
+    fn validate_type(&self, ty: &TypeInner) -> Option<TypeInfo> {
+        let TypeInner::Vector {
+            scalar: Scalar { size, kind },
+            width: vecwidth,
+        } = ty
         else {
             return None;
         };
 
-        if !array.is_empty() {
-            return None;
+        if *kind == ScalarKind::Float && *size == BitWidth::Word && *vecwidth == 4 {
+            return Some(TypeInfo {
+                size: 4,
+                columns: 1,
+            });
         }
 
-        if vecsize == 4 && columns == 1 {
-            Some(TypeInfo {
-                size: vecsize,
-                columns,
-            })
-        } else {
-            None
-        }
+        None
     }
 }
 
 impl<T> TryFrom<&SpirvCompilation> for CrossReflect<T>
 where
-    T: spirv_cross::spirv::Target,
-    Ast<T>: spirv_cross::spirv::Compile<T>,
-    Ast<T>: spirv_cross::spirv::Parse<T>,
+    T: spirv_cross2::compile::CompilableTarget,
 {
     type Error = ShaderReflectError;
 
@@ -159,8 +149,8 @@ where
         let vertex_module = Module::from_words(&value.vertex);
         let fragment_module = Module::from_words(&value.fragment);
 
-        let vertex = Ast::parse(&vertex_module)?;
-        let fragment = Ast::parse(&fragment_module)?;
+        let vertex = Compiler::new(vertex_module)?;
+        let fragment = Compiler::new(fragment_module)?;
 
         Ok(CrossReflect { vertex, fragment })
     }
@@ -168,14 +158,12 @@ where
 
 impl<T> CrossReflect<T>
 where
-    T: spirv_cross::spirv::Target,
-    Ast<T>: spirv_cross::spirv::Compile<T>,
-    Ast<T>: spirv_cross::spirv::Parse<T>,
+    T: spirv_cross2::compile::CompilableTarget,
 {
-    fn validate(
+    fn validate_semantics(
         &self,
-        vertex_res: &ShaderResources,
-        fragment_res: &ShaderResources,
+        vertex_res: &AllResources,
+        fragment_res: &AllResources,
     ) -> Result<(), ShaderReflectError> {
         if !vertex_res.sampled_images.is_empty()
             || !vertex_res.storage_buffers.is_empty()
@@ -212,9 +200,15 @@ where
             ));
         }
 
-        let fragment_location = self
+        let Some(DecorationValue::Literal(fragment_location)) = self
             .fragment
-            .get_decoration(fragment_res.stage_outputs[0].id, Decoration::Location)?;
+            .decoration(fragment_res.stage_outputs[0].id, Decoration::Location)?
+        else {
+            return Err(ShaderReflectError::FragmentSemanticError(
+                SemanticsErrorKind::MissingBinding,
+            ));
+        };
+
         if fragment_location != 0 {
             return Err(ShaderReflectError::FragmentSemanticError(
                 SemanticsErrorKind::InvalidLocation(fragment_location),
@@ -222,15 +216,54 @@ where
         }
 
         // Ensure that vertex attributes use location 0 and 1
-        let vert_mask = vertex_res.stage_inputs.iter().try_fold(0, |mask, input| {
-            Ok::<u32, ErrorCode>(
-                mask | 1 << self.vertex.get_decoration(input.id, Decoration::Location)?,
-            )
-        })?;
-        if vert_mask != 0x3 {
-            return Err(ShaderReflectError::VertexSemanticError(
-                SemanticsErrorKind::InvalidLocation(vert_mask),
-            ));
+        // Verify Vertex inputs
+        'vertex: {
+            let entry_points = self.vertex.entry_points()?;
+            if entry_points.len() != 1 {
+                return Err(ShaderReflectError::VertexSemanticError(
+                    SemanticsErrorKind::InvalidEntryPointCount(entry_points.len()),
+                ));
+            }
+
+            let vert_inputs = vertex_res.stage_inputs.len();
+            if vert_inputs != 2 {
+                return Err(ShaderReflectError::VertexSemanticError(
+                    SemanticsErrorKind::InvalidInputCount(vert_inputs),
+                ));
+            }
+
+            for input in &vertex_res.stage_inputs {
+                let location = self.vertex.decoration(input.id, Decoration::Location)?;
+                let Some(DecorationValue::Literal(location)) = location else {
+                    return Err(ShaderReflectError::VertexSemanticError(
+                        SemanticsErrorKind::MissingBinding,
+                    ));
+                };
+
+                if location == 0 {
+                    let pos_type = &self.vertex.type_description(input.base_type_id)?;
+                    if !matches!(pos_type.inner, TypeInner::Vector { width, ..} if width == 4) {
+                        return Err(ShaderReflectError::VertexSemanticError(
+                            SemanticsErrorKind::InvalidLocation(location),
+                        ));
+                    }
+                    break 'vertex;
+                }
+
+                if location == 1 {
+                    let coord_type = &self.vertex.type_description(input.base_type_id)?;
+                    if !matches!(coord_type.inner, TypeInner::Vector { width, ..} if width == 2) {
+                        return Err(ShaderReflectError::VertexSemanticError(
+                            SemanticsErrorKind::InvalidLocation(location),
+                        ));
+                    }
+                    break 'vertex;
+                }
+
+                return Err(ShaderReflectError::VertexSemanticError(
+                    SemanticsErrorKind::InvalidLocation(location),
+                ));
+            }
         }
 
         if vertex_res.uniform_buffers.len() > 1 {
@@ -264,17 +297,27 @@ where
 
 impl<T> CrossReflect<T>
 where
-    T: spirv_cross::spirv::Target,
-    Ast<T>: spirv_cross::spirv::Compile<T>,
-    Ast<T>: spirv_cross::spirv::Parse<T>,
+    T: spirv_cross2::compile::CompilableTarget,
 {
     fn get_ubo_data(
-        ast: &Ast<T>,
+        ast: &Compiler<T>,
         ubo: &Resource,
         blame: SemanticErrorBlame,
     ) -> Result<UboData, ShaderReflectError> {
-        let descriptor_set = ast.get_decoration(ubo.id, Decoration::DescriptorSet)?;
-        let binding = ast.get_decoration(ubo.id, Decoration::Binding)?;
+        let Some(descriptor_set) = ast
+            .decoration(ubo.id, Decoration::DescriptorSet)?
+            .and_then(|l| l.as_literal())
+        else {
+            return Err(blame.error(SemanticsErrorKind::MissingBinding));
+        };
+
+        let Some(binding) = ast
+            .decoration(ubo.id, Decoration::Binding)?
+            .and_then(|l| l.as_literal())
+        else {
+            return Err(blame.error(SemanticsErrorKind::MissingBinding));
+        };
+
         if binding >= MAX_BINDINGS_COUNT {
             return Err(blame.error(SemanticsErrorKind::InvalidBinding(binding)));
         }
@@ -282,21 +325,19 @@ where
             return Err(blame.error(SemanticsErrorKind::InvalidDescriptorSet(descriptor_set)));
         }
 
-        let size = ast.get_declared_struct_size(ubo.base_type_id)?;
-        Ok(UboData {
-            // descriptor_set,
-            // id: ubo.id,
-            binding,
-            size,
-        })
+        let size = ast.type_description(ubo.base_type_id)?.size_hint.declared() as u32;
+        Ok(UboData { binding, size })
     }
 
     fn get_push_size(
-        ast: &Ast<T>,
+        ast: &Compiler<T>,
         push: &Resource,
         blame: SemanticErrorBlame,
     ) -> Result<u32, ShaderReflectError> {
-        let size = ast.get_declared_struct_size(push.base_type_id)?;
+        let size = ast
+            .type_description(push.base_type_id)?
+            .size_hint
+            .declared() as u32;
         if size > MAX_PUSH_BUFFER_SIZE {
             return Err(blame.error(SemanticsErrorKind::InvalidPushBufferSize(size)));
         }
@@ -304,7 +345,7 @@ where
     }
 
     fn reflect_buffer_range_metas(
-        ast: &Ast<T>,
+        ast: &Compiler<T>,
         resource: &Resource,
         pass_number: usize,
         semantics: &ShaderSemantics,
@@ -312,35 +353,43 @@ where
         offset_type: UniformMemberBlock,
         blame: SemanticErrorBlame,
     ) -> Result<(), ShaderReflectError> {
-        let ranges = ast.get_active_buffer_ranges(resource.id)?;
+        let ranges = ast.active_buffer_ranges(resource.id)?;
         for range in ranges {
-            let name = ast.get_member_name(resource.base_type_id, range.index)?;
-            let ubo_type = ast.get_type(resource.base_type_id)?;
-            let range_type = match ubo_type {
-                Type::Struct { member_types, .. } => {
-                    let range_type = member_types
+            let Some(name) = ast.member_name(resource.base_type_id, range.index)? else {
+                // member has no name!
+                return Err(blame.error(SemanticsErrorKind::InvalidRange(range.index)));
+            };
+
+            let ubo_type = ast.type_description(resource.base_type_id)?;
+            let range_type = match ubo_type.inner {
+                TypeInner::Struct(struct_def) => {
+                    let range_type = struct_def
+                        .members
                         .get(range.index as usize)
-                        .cloned()
                         .ok_or(blame.error(SemanticsErrorKind::InvalidRange(range.index)))?;
-                    ast.get_type(range_type)?
+                    ast.type_description(range_type.id)?
                 }
                 _ => return Err(blame.error(SemanticsErrorKind::InvalidResourceType)),
             };
 
-            if let Some(parameter) = semantics.uniform_semantics.get_unique_semantic(&name) {
-                let Some(typeinfo) = parameter.semantics.validate_type(&range_type) else {
-                    return Err(blame.error(SemanticsErrorKind::InvalidTypeForSemantic(name)));
+            if let Some(parameter) = semantics.uniform_semantics.unique_semantic(&name) {
+                let Some(typeinfo) = parameter.semantics.validate_type(&range_type.inner) else {
+                    return Err(
+                        blame.error(SemanticsErrorKind::InvalidTypeForSemantic(name.to_string()))
+                    );
                 };
 
                 match &parameter.semantics {
                     UniqueSemantics::FloatParameter => {
                         let offset = range.offset;
-                        if let Some(meta) = meta.parameter_meta.get_mut(&name) {
-                            if let Some(expected) = meta.offset.offset(offset_type)
-                                && expected != offset
+                        if let Some(meta) = meta.parameter_meta.get_mut::<str>(&name.as_ref()) {
+                            if let Some(expected) = meta
+                                .offset
+                                .offset(offset_type)
+                                .filter(|expected| *expected != offset)
                             {
                                 return Err(ShaderReflectError::MismatchedOffset {
-                                    semantic: name,
+                                    semantic: name.to_string(),
                                     expected,
                                     received: offset,
                                     ty: offset_type,
@@ -349,7 +398,7 @@ where
                             }
                             if meta.size != typeinfo.size {
                                 return Err(ShaderReflectError::MismatchedSize {
-                                    semantic: name,
+                                    semantic: name.to_string(),
                                     vertex: meta.size,
                                     fragment: typeinfo.size,
                                     pass: pass_number,
@@ -358,6 +407,7 @@ where
 
                             *meta.offset.offset_mut(offset_type) = Some(offset);
                         } else {
+                            let name = ShortString::from(name.as_ref());
                             meta.parameter_meta.insert(
                                 name.clone(),
                                 VariableMeta {
@@ -371,11 +421,13 @@ where
                     semantics => {
                         let offset = range.offset;
                         if let Some(meta) = meta.unique_meta.get_mut(semantics) {
-                            if let Some(expected) = meta.offset.offset(offset_type)
-                                && expected != offset
+                            if let Some(expected) = meta
+                                .offset
+                                .offset(offset_type)
+                                .filter(|expected| *expected != offset)
                             {
                                 return Err(ShaderReflectError::MismatchedOffset {
-                                    semantic: name,
+                                    semantic: name.to_string(),
                                     expected,
                                     received: offset,
                                     ty: offset_type,
@@ -384,7 +436,7 @@ where
                             }
                             if meta.size != typeinfo.size * typeinfo.columns {
                                 return Err(ShaderReflectError::MismatchedSize {
-                                    semantic: name,
+                                    semantic: name.to_string(),
                                     vertex: meta.size,
                                     fragment: typeinfo.size,
                                     pass: pass_number,
@@ -396,7 +448,7 @@ where
                             meta.unique_meta.insert(
                                 *semantics,
                                 VariableMeta {
-                                    id: name,
+                                    id: ShortString::from(name.as_ref()),
                                     offset: MemberOffset::new(offset, offset_type),
                                     size: typeinfo.size * typeinfo.columns,
                                 },
@@ -404,9 +456,11 @@ where
                         }
                     }
                 }
-            } else if let Some(texture) = semantics.uniform_semantics.get_texture_semantic(&name) {
-                let Some(_typeinfo) = texture.semantics.validate_type(&range_type) else {
-                    return Err(blame.error(SemanticsErrorKind::InvalidTypeForSemantic(name)));
+            } else if let Some(texture) = semantics.uniform_semantics.texture_semantic(&name) {
+                let Some(_typeinfo) = texture.semantics.validate_type(&range_type.inner) else {
+                    return Err(
+                        blame.error(SemanticsErrorKind::InvalidTypeForSemantic(name.to_string()))
+                    );
                 };
 
                 if let TextureSemantics::PassOutput = texture.semantics {
@@ -420,11 +474,13 @@ where
 
                 let offset = range.offset;
                 if let Some(meta) = meta.texture_size_meta.get_mut(&texture) {
-                    if let Some(expected) = meta.offset.offset(offset_type)
-                        && expected != offset
+                    if let Some(expected) = meta
+                        .offset
+                        .offset(offset_type)
+                        .filter(|expected| *expected != offset)
                     {
                         return Err(ShaderReflectError::MismatchedOffset {
-                            semantic: name,
+                            semantic: name.to_string(),
                             expected,
                             received: offset,
                             ty: offset_type,
@@ -447,12 +503,12 @@ where
                                 SemanticErrorBlame::Vertex => BindingStage::VERTEX,
                                 SemanticErrorBlame::Fragment => BindingStage::FRAGMENT,
                             },
-                            id: name,
+                            id: ShortString::from(name.as_ref()),
                         },
                     );
                 }
             } else {
-                return Err(blame.error(SemanticsErrorKind::UnknownSemantics(name)));
+                return Err(blame.error(SemanticsErrorKind::UnknownSemantics(name.to_string())));
             }
         }
         Ok(())
@@ -465,12 +521,12 @@ where
     ) -> Result<Option<BufferReflection<u32>>, ShaderReflectError> {
         if let Some(vertex_ubo) = vertex_ubo {
             self.vertex
-                .set_decoration(vertex_ubo.id, Decoration::Binding, 0)?;
+                .set_decoration(vertex_ubo.id, Decoration::Binding, Some(0))?;
         }
 
         if let Some(fragment_ubo) = fragment_ubo {
             self.fragment
-                .set_decoration(fragment_ubo.id, Decoration::Binding, 0)?;
+                .set_decoration(fragment_ubo.id, Decoration::Binding, Some(0))?;
         }
 
         match (vertex_ubo, fragment_ubo) {
@@ -522,10 +578,7 @@ where
         semantics: &ShaderSemantics,
         meta: &mut BindingMeta,
     ) -> Result<(), ShaderReflectError> {
-        let Some(semantic) = semantics
-            .texture_semantics
-            .get_texture_semantic(texture.name)
-        else {
+        let Some(semantic) = semantics.texture_semantics.texture_semantic(texture.name) else {
             return Err(
                 SemanticErrorBlame::Fragment.error(SemanticsErrorKind::UnknownSemantics(
                     texture.name.to_string(),
@@ -553,12 +606,25 @@ where
         &'a self,
         texture: &'a Resource,
     ) -> Result<TextureData<'a>, ShaderReflectError> {
-        let descriptor_set = self
+        let Some(descriptor_set) = self
             .fragment
-            .get_decoration(texture.id, Decoration::DescriptorSet)?;
-        let binding = self
+            .decoration(texture.id, Decoration::DescriptorSet)?
+            .and_then(|l| l.as_literal())
+        else {
+            return Err(ShaderReflectError::FragmentSemanticError(
+                SemanticsErrorKind::MissingBinding,
+            ));
+        };
+        let Some(binding) = self
             .fragment
-            .get_decoration(texture.id, Decoration::Binding)?;
+            .decoration(texture.id, Decoration::Binding)?
+            .and_then(|l| l.as_literal())
+        else {
+            return Err(ShaderReflectError::FragmentSemanticError(
+                SemanticsErrorKind::MissingBinding,
+            ));
+        };
+
         if descriptor_set != 0 {
             return Err(ShaderReflectError::FragmentSemanticError(
                 SemanticsErrorKind::InvalidDescriptorSet(descriptor_set),
@@ -585,12 +651,12 @@ where
     ) -> Result<Option<BufferReflection<Option<u32>>>, ShaderReflectError> {
         if let Some(vertex_pcb) = vertex_pcb {
             self.vertex
-                .set_decoration(vertex_pcb.id, Decoration::Binding, 1)?;
+                .set_decoration(vertex_pcb.id, Decoration::Binding, Some(1))?;
         }
 
         if let Some(fragment_pcb) = fragment_pcb {
             self.fragment
-                .set_decoration(fragment_pcb.id, Decoration::Binding, 1)?;
+                .set_decoration(fragment_pcb.id, Decoration::Binding, Some(1))?;
         }
 
         match (vertex_pcb, fragment_pcb) {
@@ -639,18 +705,16 @@ where
 
 impl<T> ReflectShader for CrossReflect<T>
 where
-    T: spirv_cross::spirv::Target,
-    Ast<T>: spirv_cross::spirv::Compile<T>,
-    Ast<T>: spirv_cross::spirv::Parse<T>,
+    T: spirv_cross2::compile::CompilableTarget,
 {
     fn reflect(
         &mut self,
         pass_number: usize,
         semantics: &ShaderSemantics,
     ) -> Result<ShaderReflection, ShaderReflectError> {
-        let vertex_res = self.vertex.get_shader_resources()?;
-        let fragment_res = self.fragment.get_shader_resources()?;
-        self.validate(&vertex_res, &fragment_res)?;
+        let vertex_res = self.vertex.shader_resources()?.all_resources()?;
+        let fragment_res = self.fragment.shader_resources()?.all_resources()?;
+        self.validate_semantics(&vertex_res, &fragment_res)?;
 
         let vertex_ubo = vertex_res.uniform_buffers.first();
         let fragment_ubo = fragment_res.uniform_buffers.first();
@@ -733,6 +797,23 @@ where
             meta,
         })
     }
+
+    fn validate(&mut self) -> Result<(), ShaderReflectError> {
+        let vertex_res = self.vertex.shader_resources()?.all_resources()?;
+        let fragment_res = self.fragment.shader_resources()?.all_resources()?;
+        self.validate_semantics(&vertex_res, &fragment_res)?;
+        let vertex_ubo = vertex_res.uniform_buffers.first();
+        let fragment_ubo = fragment_res.uniform_buffers.first();
+
+        self.reflect_ubos(vertex_ubo, fragment_ubo)?;
+
+        let vertex_push = vertex_res.push_constant_buffers.first();
+        let fragment_push = fragment_res.push_constant_buffers.first();
+
+        self.reflect_push_constant_buffer(vertex_push, fragment_push)?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -746,7 +827,7 @@ mod test {
     use crate::back::{CompileShader, ShaderCompilerOutput};
     use crate::front::{Glslang, ShaderInputCompiler};
     use crate::reflect::semantics::{Semantic, ShaderSemantics, UniformSemantic, UniqueSemantics};
-    use librashader_common::map::FastHashMap;
+    use librashader_common::map::{FastHashMap, ShortString};
     use librashader_preprocess::ShaderSource;
     use spirv_cross::glsl::{CompilerOptions, Version};
     use spirv_cross::hlsl::ShaderModel;
@@ -755,7 +836,7 @@ mod test {
     #[test]
     pub fn test_into() {
         let result = ShaderSource::load("../test/basic.slang").unwrap();
-        let mut uniform_semantics: FastHashMap<String, UniformSemantic> = Default::default();
+        let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
 
         for (_index, param) in result.parameters.iter().enumerate() {
             uniform_semantics.insert(

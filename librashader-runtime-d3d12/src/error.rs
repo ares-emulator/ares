@@ -1,11 +1,15 @@
 //! Direct3D 12 shader runtime errors.
 //!
+
+use d3d12_descriptor_heap::D3D12DescriptorHeapError;
 use thiserror::Error;
+use windows::Win32::Graphics::Direct3D12::D3D12_RESOURCE_DIMENSION;
 
 /// Cumulative error type for Direct3D12 filter chains.
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum FilterChainError {
-    #[error("invariant assumption about d3d11 did not hold. report this as an issue.")]
+    #[error("invariant assumption about d3d12 did not hold. report this as an issue.")]
     Direct3DOperationError(&'static str),
     #[error("direct3d driver error")]
     Direct3DError(#[from] windows::core::Error),
@@ -19,8 +23,14 @@ pub enum FilterChainError {
     ShaderReflectError(#[from] ShaderReflectError),
     #[error("lut loading error")]
     LutLoadError(#[from] ImageError),
-    #[error("heap overflow")]
-    DescriptorHeapOverflow(usize),
+    #[error("heap error")]
+    HeapError(#[from] D3D12DescriptorHeapError),
+    #[error("allocation error")]
+    AllocationError(#[from] gpu_allocator::AllocationError),
+    #[error("invalid resource dimension {0:?}")]
+    InvalidDimensionError(D3D12_RESOURCE_DIMENSION),
+    #[error("unreachable")]
+    Infallible(#[from] std::convert::Infallible),
 }
 
 /// Result type for Direct3D 12 filter chains.

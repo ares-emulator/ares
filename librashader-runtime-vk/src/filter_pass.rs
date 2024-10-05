@@ -10,7 +10,7 @@ use ash::vk;
 use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_preprocess::ShaderSource;
-use librashader_presets::ShaderPassConfig;
+use librashader_presets::PassMeta;
 use librashader_reflect::reflect::semantics::{
     BindingStage, MemberOffset, TextureBinding, UniformBinding,
 };
@@ -28,7 +28,7 @@ pub struct FilterPass {
         UniformStorage<NoUniformBinder, Option<()>, RawVulkanBuffer, Box<[u8]>, Arc<ash::Device>>,
     pub uniform_bindings: FastHashMap<UniformBinding, MemberOffset>,
     pub source: ShaderSource,
-    pub config: ShaderPassConfig,
+    pub meta: PassMeta,
     pub graphics_pipeline: VulkanGraphicsPipeline,
     pub frames_in_flight: u32,
 }
@@ -55,20 +55,20 @@ impl BindSemantics<NoUniformBinder, Option<()>, RawVulkanBuffer> for FilterPass 
         device: &Self::DeviceContext,
     ) {
         let sampler = samplers.get(texture.wrap_mode, texture.filter_mode, texture.mip_filter);
-        let image_info = vk::DescriptorImageInfo::builder()
+        let image_info = vk::DescriptorImageInfo::default()
             .sampler(sampler.handle)
             .image_view(texture.image_view)
             .image_layout(vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL);
 
-        let image_info = [*image_info];
-        let write_desc = vk::WriteDescriptorSet::builder()
+        let image_info = [image_info];
+        let write_desc = vk::WriteDescriptorSet::default()
             .dst_set(*descriptors)
             .dst_binding(binding.binding)
             .dst_array_element(0)
             .descriptor_type(vk::DescriptorType::COMBINED_IMAGE_SAMPLER)
             .image_info(&image_info);
         unsafe {
-            device.update_descriptor_sets(&[*write_desc], &[]);
+            device.update_descriptor_sets(&[write_desc], &[]);
         }
     }
 }
@@ -78,8 +78,8 @@ impl FilterPassMeta for FilterPass {
         self.source.format
     }
 
-    fn config(&self) -> &ShaderPassConfig {
-        &self.config
+    fn meta(&self) -> &PassMeta {
+        &self.meta
     }
 }
 
@@ -87,6 +87,7 @@ impl FilterPass {
     pub(crate) fn draw(
         &mut self,
         cmd: vk::CommandBuffer,
+        format: vk::Format,
         pass_index: usize,
         parent: &FilterCommon,
         frame_count: u32,
@@ -96,9 +97,15 @@ impl FilterPass {
         source: &InputImage,
         output: &RenderTarget<OutputImage>,
         vbo_type: QuadType,
+        use_alt_descriptors: bool,
     ) -> error::Result<Option<vk::Framebuffer>> {
-        let mut descriptor = self.graphics_pipeline.layout.descriptor_sets
-            [parent.internal_frame_count % self.frames_in_flight as usize];
+        let mut descriptor = if use_alt_descriptors {
+            self.graphics_pipeline.layout.descriptor_sets_alt
+                [parent.internal_frame_count % self.frames_in_flight as usize]
+        } else {
+            self.graphics_pipeline.layout.descriptor_sets
+                [parent.internal_frame_count % self.frames_in_flight as usize]
+        };
 
         self.build_semantics(
             pass_index,
@@ -113,6 +120,15 @@ impl FilterPass {
             source,
         );
 
+        let Some(pipeline) = self
+            .graphics_pipeline
+            .pipelines
+            .get(&format)
+            .or_else(|| self.graphics_pipeline.pipelines.values().next())
+        else {
+            panic!("No available render pipelines found")
+        };
+
         if let Some(ubo) = &self.reflection.ubo {
             self.uniform_storage.inner_ubo().bind_to_descriptor_set(
                 descriptor,
@@ -123,14 +139,14 @@ impl FilterPass {
 
         output.output.begin_pass(&parent.device, cmd);
 
-        let residual = self.graphics_pipeline.begin_rendering(output, cmd)?;
+        let residual = self
+            .graphics_pipeline
+            .begin_rendering(output, format, cmd)?;
 
         unsafe {
-            parent.device.cmd_bind_pipeline(
-                cmd,
-                vk::PipelineBindPoint::GRAPHICS,
-                self.graphics_pipeline.pipeline,
-            );
+            parent
+                .device
+                .cmd_bind_pipeline(cmd, vk::PipelineBindPoint::GRAPHICS, *pipeline);
 
             parent.device.cmd_bind_descriptor_sets(
                 cmd,
@@ -167,13 +183,13 @@ impl FilterPass {
                         x: output.x as i32,
                         y: output.y as i32,
                     },
-                    extent: output.output.size.into(),
+                    extent: output.size.into(),
                 }],
             );
 
             parent
                 .device
-                .cmd_set_viewport(cmd, 0, &[output.output.size.into()]);
+                .cmd_set_viewport(cmd, 0, &[output.size.into()]);
             parent.draw_quad.draw_quad(&parent.device, cmd, vbo_type);
             self.graphics_pipeline.end_rendering(cmd);
         }
@@ -219,7 +235,7 @@ impl FilterPass {
             parent.history_textures.iter().map(|o| o.as_ref()),
             parent.luts.iter().map(|(u, i)| (*u, i.as_ref())),
             &self.source.parameters,
-            &parent.config.parameters,
+            &parent.config,
         );
     }
 }

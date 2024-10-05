@@ -33,15 +33,9 @@ libra_gl_filter_chain_t load_gl_filter_chain(libra_gl_loader_t opengl, const cha
     std::cout << "Could not load preset\n";
     return NULL;
   }
-
-  // OpenGL runtime needs to be initialized.
-  if (librashader.gl_init_context(opengl) != NULL) {
-    std::cout << "Could not initialize OpenGL context\n";
-    return NULL;
-  }
   
   libra_gl_filter_chain_t chain;
-  if (librashader.gl_filter_chain_create(&preset, NULL, &chain) {
+  if (librashader.gl_filter_chain_create(&preset, opengl, NULL, &chain) {
     std::cout << "Could not create OpenGL filter chain\n";
   }
   return chain;

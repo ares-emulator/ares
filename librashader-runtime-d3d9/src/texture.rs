@@ -1,8 +1,7 @@
 use crate::error;
 use crate::error::{assume_d3d_init, FilterChainError};
 
-use crate::util::GetSize;
-use librashader_common::{FilterMode, ImageFormat, Size, WrapMode};
+use librashader_common::{FilterMode, GetSize, ImageFormat, Size, WrapMode};
 use librashader_presets::Scale2D;
 use librashader_runtime::binding::TextureInput;
 use librashader_runtime::scaling::{ScaleFramebuffer, ViewportSize};

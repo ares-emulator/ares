@@ -51,4 +51,11 @@ impl CompileShader<SPIRV> for NagaReflect {
             },
         })
     }
+
+    fn compile_boxed(
+        self: Box<Self>,
+        options: Self::Options,
+    ) -> Result<ShaderCompilerOutput<Vec<u32>, Self::Context>, ShaderCompileError> {
+        <NagaReflect as CompileShader<SPIRV>>::compile(*self, options)
+    }
 }

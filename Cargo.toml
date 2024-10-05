@@ -8,17 +8,41 @@ members = [
     "librashader-runtime",
     "librashader-runtime-d3d11",
     "librashader-runtime-d3d12",
+    "librashader-runtime-d3d9",
     "librashader-runtime-gl",
     "librashader-runtime-vk",
     "librashader-runtime-mtl",
     "librashader-runtime-wgpu",
     "librashader-cache",
     "librashader-capi",
-    "librashader-build-script", "librashader-runtime-d3d9"]
+    "librashader-build-script",
+    "librashader-cli", "librashader-pack"]
 resolver = "2"
 
 [workspace.dependencies]
-windows = "0.52.0"
+windows = "0.58.0"
+ash = "0.38"
+spirv-cross2 = { version = "0.4", default-features = false }
+objc2-metal = { version = "0.2" }
+objc2 = { version = "0.5.0" }
+glow = { version = "0.14.1" }
+glfw = { version = "0.58.0"}
+
+wgpu = { version = "22", default-features = false }
+wgpu-types = { version = "22" }
+
+clap = { version = "=4.3.0", features = ["derive"] }
+rayon = { version = "1.10.0"}
+
+
+[workspace.dependencies.image]
+version = "0.25.2"
+features = [
+    "gif", "jpeg", "png",
+    "tga", "pnm", "tiff",
+    "webp", "bmp", "dds",
+]
+default-features = false
 
 [workspace.metadata.release]
 

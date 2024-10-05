@@ -25,7 +25,7 @@ pub enum ParsePresetError {
     #[error("shader presets must be resolved against an absolute path")]
     RootPathWasNotAbsolute,
     /// An IO error occurred when reading the shader preset.
-    #[error("the file was not found during resolution")]
+    #[error("io error on file {0:?}: {1}")]
     IOError(PathBuf, std::io::Error),
     /// The shader preset did not contain valid UTF-8 bytes.
     #[error("expected utf8 bytes but got invalid utf8")]

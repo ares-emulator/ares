@@ -1,8 +1,10 @@
 use crate::error;
 use crate::error::FilterChainError;
 use ash::vk;
-use gpu_allocator::vulkan::{Allocation, AllocationCreateDesc, AllocationScheme, Allocator};
-use gpu_allocator::MemoryLocation;
+use gpu_allocator::vulkan::{
+    Allocation, AllocationCreateDesc, AllocationScheme, Allocator, AllocatorCreateDesc,
+};
+use gpu_allocator::{AllocationSizes, MemoryLocation};
 use librashader_runtime::uniforms::UniformStorageAccess;
 use parking_lot::Mutex;
 
@@ -56,7 +58,7 @@ impl Drop for VulkanImageMemory {
 pub struct VulkanBuffer {
     pub handle: vk::Buffer,
     device: Arc<ash::Device>,
-    memory: Option<Allocation>,
+    allocation: ManuallyDrop<Allocation>,
     allocator: Arc<Mutex<Allocator>>,
     size: vk::DeviceSize,
 }
@@ -69,7 +71,7 @@ impl VulkanBuffer {
         size: usize,
     ) -> error::Result<VulkanBuffer> {
         unsafe {
-            let buffer_info = vk::BufferCreateInfo::builder()
+            let buffer_info = vk::BufferCreateInfo::default()
                 .size(size as vk::DeviceSize)
                 .usage(usage)
                 .sharing_mode(vk::SharingMode::EXCLUSIVE);
@@ -85,12 +87,11 @@ impl VulkanBuffer {
                 allocation_scheme: AllocationScheme::DedicatedBuffer(buffer),
             })?;
 
-            // let alloc = device.allocate_memory(&alloc_info, None)?;
             device.bind_buffer_memory(buffer, alloc.memory(), 0)?;
 
             Ok(VulkanBuffer {
                 handle: buffer,
-                memory: Some(alloc),
+                allocation: ManuallyDrop::new(alloc),
                 allocator: Arc::clone(allocator),
                 size: size as vk::DeviceSize,
                 device: device.clone(),
@@ -99,10 +100,7 @@ impl VulkanBuffer {
     }
 
     pub fn as_mut_slice(&mut self) -> error::Result<&mut [u8]> {
-        let Some(allocation) = self.memory.as_mut() else {
-            return Err(FilterChainError::AllocationDoesNotExist);
-        };
-        let Some(allocation) = allocation.mapped_slice_mut() else {
+        let Some(allocation) = self.allocation.mapped_slice_mut() else {
             return Err(FilterChainError::AllocationDoesNotExist);
         };
         Ok(allocation)
@@ -112,12 +110,10 @@ impl VulkanBuffer {
 impl Drop for VulkanBuffer {
     fn drop(&mut self) {
         unsafe {
-            if let Some(allocation) = self.memory.take() {
-                if let Err(e) = self.allocator.lock().free(allocation) {
-                    println!(
-                        "librashader-runtime-vk: [warn] failed to deallocate buffer memory {e}"
-                    )
-                }
+            // SAFETY: things can not be double dropped.
+            let allocation = ManuallyDrop::take(&mut self.allocation);
+            if let Err(e) = self.allocator.lock().free(allocation) {
+                println!("librashader-runtime-vk: [warn] failed to deallocate buffer memory {e}")
             }
 
             if self.handle != vk::Buffer::null() {
@@ -147,7 +143,7 @@ impl RawVulkanBuffer {
     ) -> error::Result<Self> {
         let buffer = ManuallyDrop::new(VulkanBuffer::new(device, allocator, usage, size)?);
 
-        let Some(ptr) = buffer.memory.as_ref().map(|m| m.mapped_ptr()).flatten() else {
+        let Some(ptr) = buffer.allocation.mapped_ptr() else {
             return Err(FilterChainError::AllocationDoesNotExist);
         };
 
@@ -161,13 +157,12 @@ impl RawVulkanBuffer {
         storage: &impl UniformStorageAccess,
     ) -> error::Result<()> {
         unsafe {
-            let buffer_info = vk::DescriptorBufferInfo::builder()
+            let buffer_info = [vk::DescriptorBufferInfo::default()
                 .buffer(self.buffer.handle)
                 .offset(0)
-                .range(storage.ubo_slice().len() as vk::DeviceSize);
+                .range(storage.ubo_slice().len() as vk::DeviceSize)];
 
-            let buffer_info = [*buffer_info];
-            let write_info = vk::WriteDescriptorSet::builder()
+            let write_info = vk::WriteDescriptorSet::default()
                 .descriptor_type(vk::DescriptorType::UNIFORM_BUFFER)
                 .dst_set(descriptor_set)
                 .dst_binding(binding)
@@ -176,7 +171,7 @@ impl RawVulkanBuffer {
 
             self.buffer
                 .device
-                .update_descriptor_sets(&[*write_info], &[])
+                .update_descriptor_sets(&[write_info], &[])
         }
         Ok(())
     }
@@ -204,4 +199,45 @@ impl DerefMut for RawVulkanBuffer {
             std::slice::from_raw_parts_mut(self.ptr.as_ptr().cast(), self.buffer.size as usize)
         }
     }
+}
+
+#[allow(unused)]
+pub fn find_vulkan_memory_type(
+    props: &vk::PhysicalDeviceMemoryProperties,
+    device_reqs: u32,
+    host_reqs: vk::MemoryPropertyFlags,
+) -> error::Result<u32> {
+    for i in 0..vk::MAX_MEMORY_TYPES {
+        if device_reqs & (1 << i) != 0
+            && props.memory_types[i].property_flags & host_reqs == host_reqs
+        {
+            return Ok(i as u32);
+        }
+    }
+
+    if host_reqs == vk::MemoryPropertyFlags::empty() {
+        Err(FilterChainError::VulkanMemoryError(device_reqs))
+    } else {
+        Ok(find_vulkan_memory_type(
+            props,
+            device_reqs,
+            vk::MemoryPropertyFlags::empty(),
+        )?)
+    }
+}
+
+pub fn create_allocator(
+    device: ash::Device,
+    instance: ash::Instance,
+    physical_device: vk::PhysicalDevice,
+) -> error::Result<Arc<Mutex<Allocator>>> {
+    let alloc = Allocator::new(&AllocatorCreateDesc {
+        instance,
+        device,
+        physical_device,
+        debug_settings: Default::default(),
+        buffer_device_address: false,
+        allocation_sizes: AllocationSizes::default(),
+    })?;
+    Ok(Arc::new(Mutex::new(alloc)))
 }

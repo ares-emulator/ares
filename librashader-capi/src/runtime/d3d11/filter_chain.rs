@@ -3,12 +3,11 @@ use crate::ctypes::{
 };
 use crate::error::{assert_non_null, assert_some_ptr, LibrashaderError};
 use crate::ffi::extern_fn;
-use librashader::runtime::d3d11::{
-    D3D11InputView, D3D11OutputView, FilterChain, FilterChainOptions, FrameOptions,
-};
+use librashader::runtime::d3d11::{FilterChain, FilterChainOptions, FrameOptions};
 use std::ffi::c_char;
 use std::ffi::CStr;
 use std::mem::{ManuallyDrop, MaybeUninit};
+use std::ops::Deref;
 use std::ptr::NonNull;
 use std::slice;
 use windows::Win32::Graphics::Direct3D11::{
@@ -16,31 +15,8 @@ use windows::Win32::Graphics::Direct3D11::{
 };
 
 use crate::LIBRASHADER_API_VERSION;
+use librashader::runtime::d3d11::error::FilterChainError;
 use librashader::runtime::{FilterChainParameters, Size, Viewport};
-
-/// Direct3D 11 parameters for the source image.
-#[repr(C)]
-pub struct libra_source_image_d3d11_t {
-    /// A shader resource view into the source image
-    pub handle: ManuallyDrop<ID3D11ShaderResourceView>,
-    /// The width of the source image.
-    pub width: u32,
-    /// The height of the source image.
-    pub height: u32,
-}
-
-impl TryFrom<libra_source_image_d3d11_t> for D3D11InputView {
-    type Error = LibrashaderError;
-
-    fn try_from(value: libra_source_image_d3d11_t) -> Result<Self, Self::Error> {
-        let handle = value.handle.clone();
-
-        Ok(D3D11InputView {
-            handle: ManuallyDrop::into_inner(handle),
-            size: Size::new(value.width, value.height),
-        })
-    }
-}
 
 /// Options for Direct3D 11 filter chain creation.
 #[repr(C)]
@@ -73,7 +49,7 @@ pub struct frame_d3d11_opt_t {
     /// The direction of rendering.
     /// -1 indicates that the frames are played in reverse order.
     pub frame_direction: i32,
-    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 4 = 270deg.
+    /// The rotation of the output. 0 = 0deg, 1 = 90deg, 2 = 180deg, 3 = 270deg.
     pub rotation: u32,
     /// The total number of subframes ran. Default is 1.
     pub total_subframes: u32,
@@ -203,10 +179,26 @@ const _: () = assert!(
 extern_fn! {
     /// Draw a frame with the given parameters for the given filter chain.
     ///
-    /// If `device_context` is null, then commands are recorded onto the immediate context. Otherwise,
-    /// it will record commands onto the provided context. If the context is deferred, librashader
-    /// will not finalize command lists. The context must otherwise be associated with the `ID3D11Device`
-    //  the filter chain was created with.
+    /// ## Parameters
+    ///
+    /// - `chain` is a handle to the filter chain.
+    /// - `device_context` is the ID3D11DeviceContext used to record draw commands to.
+    ///    If `device_context` is null, then commands are recorded onto the immediate context. Otherwise,
+    ///    it will record commands onto the provided context. If the context is deferred, librashader
+    ///    will not finalize command lists. The context must otherwise be associated with the `ID3D11Device`
+    ///    the filter chain was created with.
+    ///
+    /// - `frame_count` is the number of frames passed to the shader
+    /// - `image` is a pointer to a `ID3D11ShaderResourceView` that will serve as the source image for the frame.
+    /// - `out` is a pointer to a `ID3D11RenderTargetView` that will serve as the render target for the frame.
+    ///
+    /// - `viewport` is a pointer to a `libra_viewport_t` that specifies the area onto which scissor and viewport
+    ///    will be applied to the render target. It may be null, in which case a default viewport spanning the
+    ///    entire render target will be used.
+    /// - `mvp` is a pointer to an array of 16 `float` values to specify the model view projection matrix to
+    ///    be passed to the shader.
+    /// - `options` is a pointer to options for the frame. Valid options are dependent on the `LIBRASHADER_API_VERSION`
+    ///    passed in. It may be null, in which case default options for the filter chain are used.
     ///
     /// ## Safety
     /// - `chain` may be null, invalid, but not uninitialized. If `chain` is null or invalid, this
@@ -228,9 +220,9 @@ extern_fn! {
         // so ManuallyDrop<Option<ID3D11DeviceContext>> doesn't generate correct bindings.
         device_context: Option<ManuallyDrop<ID3D11DeviceContext>>,
         frame_count: usize,
-        image: libra_source_image_d3d11_t,
-        viewport: libra_viewport_t,
+        image: ManuallyDrop<ID3D11ShaderResourceView>,
         out: ManuallyDrop<ID3D11RenderTargetView>,
+        viewport: *const libra_viewport_t,
         mvp: *const f32,
         options: *const MaybeUninit<frame_d3d11_opt_t>
     ) mut |chain| {
@@ -248,22 +240,27 @@ extern_fn! {
             Some(unsafe { options.read() })
         };
 
-        let viewport = Viewport {
-            x: viewport.x,
-            y: viewport.y,
-            output: D3D11OutputView {
-                size: Size::new(viewport.width, viewport.height),
-                handle: ManuallyDrop::into_inner(out.clone()),
-            },
-            mvp,
+        let viewport = if viewport.is_null() {
+            Viewport::new_render_target_sized_origin(out.deref(), mvp)
+                .map_err(|e| LibrashaderError::D3D11FilterError(FilterChainError::Direct3DError(e)))?
+        } else {
+            let viewport = unsafe { viewport.read() };
+            Viewport {
+                x: viewport.x,
+                y: viewport.y,
+                output: out.deref(),
+                size: Size {
+                    height: viewport.height,
+                    width: viewport.width
+                },
+                mvp,
+            }
         };
 
         let options = options.map(FromUninit::from_uninit);
 
-        let image = image.try_into()?;
-
         unsafe {
-            chain.frame(device_context.as_deref(), image, &viewport, frame_count, options.as_ref())?;
+            chain.frame(device_context.as_deref(), image.deref(), &viewport, frame_count, options.as_ref())?;
         }
     }
 }
@@ -279,15 +276,15 @@ extern_fn! {
         chain: *mut libra_d3d11_filter_chain_t,
         param_name: *const c_char,
         value: f32
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
+    ) |chain| {
+        assert_some_ptr!(chain);
         assert_non_null!(param_name);
         unsafe {
             let name = CStr::from_ptr(param_name);
             let name = name.to_str()?;
 
-            if chain.set_parameter(name, value).is_none() {
-                return LibrashaderError::UnknownShaderParameter(param_name).export()
+            if chain.parameters().set_parameter_value(name, value).is_none() {
+                return Err(LibrashaderError::UnknownShaderParameter(param_name))
             }
         }
     }
@@ -301,18 +298,18 @@ extern_fn! {
     /// - `chain` must be either null or a valid and aligned pointer to an initialized `libra_d3d11_filter_chain_t`.
     /// - `param_name` must be either null or a null terminated string.
     fn libra_d3d11_filter_chain_get_param(
-        chain: *mut libra_d3d11_filter_chain_t,
+        chain: *const libra_d3d11_filter_chain_t,
         param_name: *const c_char,
         out: *mut MaybeUninit<f32>
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
+    ) |chain| {
+        assert_some_ptr!(chain);
         assert_non_null!(param_name);
         unsafe {
             let name = CStr::from_ptr(param_name);
             let name = name.to_str()?;
 
-            let Some(value) = chain.get_parameter(name) else {
-                return LibrashaderError::UnknownShaderParameter(param_name).export()
+            let Some(value) = chain.parameters().parameter_value(name) else {
+                return Err(LibrashaderError::UnknownShaderParameter(param_name))
             };
 
             out.write(MaybeUninit::new(value));
@@ -328,9 +325,9 @@ extern_fn! {
     fn libra_d3d11_filter_chain_set_active_pass_count(
         chain: *mut libra_d3d11_filter_chain_t,
         value: u32
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
-        chain.set_enabled_pass_count(value as usize);
+    ) |chain| {
+        assert_some_ptr!(chain);
+        chain.parameters().set_passes_enabled(value as usize);
     }
 }
 
@@ -340,12 +337,12 @@ extern_fn! {
     /// ## Safety
     /// - `chain` must be either null or a valid and aligned pointer to an initialized `libra_d3d11_filter_chain_t`.
     fn libra_d3d11_filter_chain_get_active_pass_count(
-        chain: *mut libra_d3d11_filter_chain_t,
+        chain: *const libra_d3d11_filter_chain_t,
         out: *mut MaybeUninit<u32>
-    ) mut |chain| {
-        assert_some_ptr!(mut chain);
+    ) |chain| {
+        assert_some_ptr!(chain);
         unsafe {
-            let value = chain.get_enabled_pass_count();
+            let value = chain.parameters().passes_enabled();
             out.write(MaybeUninit::new(value as u32))
         }
     }

@@ -1,113 +1,27 @@
-use std::convert::TryInto;
-use std::ffi::{c_void, CStr};
 use std::sync::mpsc::Receiver;
+use std::sync::Arc;
 
-use glfw::{Context, Glfw, Window, WindowEvent};
+use glfw::{fail_on_errors, Context, Glfw, GlfwReceiver, PWindow, Window, WindowEvent};
 
-use gl::types::{GLchar, GLenum, GLint, GLsizei, GLuint};
-use librashader_common::{Size, Viewport};
+use glow::HasContext;
+use librashader_common::{GetSize, Size, Viewport};
 
-use librashader_runtime_gl::{FilterChainGL, GLFramebuffer, GLImage};
+use librashader_runtime_gl::{FilterChainGL, GLImage};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
 const TITLE: &str = "librashader OpenGL 4.6";
 
-pub fn compile_program(vertex: &str, fragment: &str) -> GLuint {
-    let vertex_shader = unsafe { gl::CreateShader(gl::VERTEX_SHADER) };
-    unsafe {
-        gl::ShaderSource(
-            vertex_shader,
-            1,
-            &vertex.as_bytes().as_ptr().cast(),
-            &vertex.len().try_into().unwrap(),
-        );
-        gl::CompileShader(vertex_shader);
-
-        let mut success = 0;
-        gl::GetShaderiv(vertex_shader, gl::COMPILE_STATUS, &mut success);
-        if success == 0 {
-            let mut log_len = 0_i32;
-            // gl::GetShaderiv(vertex_shader, gl::INFO_LOG_LENGTH, &mut log_len);
-            // let mut v: Vec<u8> = Vec::with_capacity(log_len as usize);
-            // gl::GetShaderInfoLog(vertex_shader, log_len, &mut log_len, v.as_mut_ptr().cast());
-            let mut v: Vec<u8> = Vec::with_capacity(1024);
-            gl::GetShaderInfoLog(vertex_shader, 1024, &mut log_len, v.as_mut_ptr().cast());
-            v.set_len(log_len.try_into().unwrap());
-            panic!(
-                "Vertex Shader Compile Error: {}",
-                String::from_utf8_lossy(&v)
-            );
-        }
-    }
-
-    let fragment_shader = unsafe { gl::CreateShader(gl::FRAGMENT_SHADER) };
-    unsafe {
-        gl::ShaderSource(
-            fragment_shader,
-            1,
-            &fragment.as_bytes().as_ptr().cast(),
-            &fragment.len().try_into().unwrap(),
-        );
-        gl::CompileShader(fragment_shader);
-
-        let mut success = 0;
-        gl::GetShaderiv(fragment_shader, gl::COMPILE_STATUS, &mut success);
-        if success == 0 {
-            let mut v: Vec<u8> = Vec::with_capacity(1024);
-            let mut log_len = 0_i32;
-            gl::GetShaderInfoLog(fragment_shader, 1024, &mut log_len, v.as_mut_ptr().cast());
-            v.set_len(log_len.try_into().unwrap());
-            panic!(
-                "Fragment Shader Compile Error: {}",
-                String::from_utf8_lossy(&v)
-            );
-        }
-    }
-
-    let shader_program = unsafe { gl::CreateProgram() };
-    unsafe {
-        gl::AttachShader(shader_program, vertex_shader);
-        gl::AttachShader(shader_program, fragment_shader);
-        gl::LinkProgram(shader_program);
-
-        let mut success = 0;
-        gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut success);
-        if success == 0 {
-            let mut v: Vec<u8> = Vec::with_capacity(1024);
-            let mut log_len = 0_i32;
-            gl::GetProgramInfoLog(shader_program, 1024, &mut log_len, v.as_mut_ptr().cast());
-            v.set_len(log_len.try_into().unwrap());
-            panic!("Program Link Error: {}", String::from_utf8_lossy(&v));
-        }
-
-        gl::DetachShader(shader_program, vertex_shader);
-        gl::DetachShader(shader_program, fragment_shader);
-        gl::DeleteShader(vertex_shader);
-        gl::DeleteShader(fragment_shader);
-    }
-
-    shader_program
-}
-
-extern "system" fn debug_callback(
-    _source: GLenum,
-    _err_type: GLenum,
-    _id: GLuint,
-    _severity: GLenum,
-    _length: GLsizei,
-    message: *const GLchar,
-    _user: *mut c_void,
+pub fn setup() -> (
+    Glfw,
+    PWindow,
+    GlfwReceiver<(f64, WindowEvent)>,
+    glow::Program,
+    glow::VertexArray,
+    Arc<glow::Context>,
 ) {
-    unsafe {
-        let message = CStr::from_ptr(message);
-        println!("[gl] {message:?}");
-    }
-}
-
-pub fn setup() -> (Glfw, Window, Receiver<(f64, WindowEvent)>, GLuint, GLuint) {
-    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
-    glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
+    let mut glfw = glfw::init(fail_on_errors!()).unwrap();
+    glfw.window_hint(glfw::WindowHint::ContextVersion(4, 6));
     glfw.window_hint(glfw::WindowHint::OpenGlProfile(
         glfw::OpenGlProfileHint::Core,
     ));
@@ -122,26 +36,20 @@ pub fn setup() -> (Glfw, Window, Receiver<(f64, WindowEvent)>, GLuint, GLuint) {
 
     window.make_current();
     window.set_key_polling(true);
-    gl::load_with(|ptr| window.get_proc_address(ptr) as *const _);
+    let mut gl = unsafe { glow::Context::from_loader_function(|ptr| window.get_proc_address(ptr)) };
 
     unsafe {
-        gl::Enable(gl::DEBUG_OUTPUT);
-        gl::Enable(gl::DEBUG_OUTPUT_SYNCHRONOUS);
+        gl.enable(glow::DEBUG_OUTPUT);
+        gl.enable(glow::DEBUG_OUTPUT_SYNCHRONOUS);
 
-        gl::DebugMessageCallback(Some(debug_callback), std::ptr::null_mut());
-        gl::DebugMessageControl(
-            gl::DONT_CARE,
-            gl::DONT_CARE,
-            gl::DONT_CARE,
-            0,
-            std::ptr::null(),
-            gl::TRUE,
-        );
+        gl.debug_message_callback(super::debug_callback);
+
+        gl.debug_message_control(glow::DONT_CARE, glow::DONT_CARE, glow::DONT_CARE, &[], true);
     }
 
     unsafe {
-        gl::Viewport(0, 0, screen_width, screen_height);
-        clear_color(Color(0.4, 0.4, 0.4, 1.0));
+        gl.viewport(0, 0, screen_width, screen_height);
+        gl.clear_color(0.4, 0.4, 0.4, 1.0);
     }
     // -------------------------------------------
 
@@ -172,15 +80,10 @@ void main()
 {
     Color = vec4(IN.Color, 1.0f);
 }";
-    let shader_program = compile_program(VERT_SHADER, FRAG_SHADER);
+    let shader_program = super::compile_program(&gl, VERT_SHADER, FRAG_SHADER);
 
     unsafe {
-        gl::ObjectLabel(
-            gl::SHADER,
-            shader_program,
-            -1,
-            b"color_shader\0".as_ptr().cast(),
-        );
+        gl.object_label(glow::SHADER, shader_program.0.get(), Some("color_shader"));
     }
 
     let vertices = &[
@@ -189,146 +92,143 @@ void main()
         -0.5, -0.5, 0.0, 0.0, 1.0, 0.0, // bottom left
         0.0, 0.5, 0.0, 0.0, 0.0, 1.0, // top
     ];
-    let mut vbo: gl::types::GLuint = 0;
+    let vbo = unsafe { gl.create_named_buffer().unwrap() };
+
     unsafe {
-        gl::CreateBuffers(1, &mut vbo);
-        gl::ObjectLabel(gl::BUFFER, vbo, -1, b"triangle_vbo\0".as_ptr().cast());
+        gl.object_label(glow::BUFFER, vbo.0.get(), Some("triangle_vbo"));
     }
 
     unsafe {
-        gl::NamedBufferData(
+        gl.named_buffer_data_u8_slice(
             vbo,
-            (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, // size of data in bytes
-            vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
-            gl::STATIC_DRAW,                               // usage
+            bytemuck::cast_slice(vertices),
+            glow::STATIC_DRAW, // usage
         );
     }
 
     // set up vertex array object
 
-    let mut vao: gl::types::GLuint = 0;
+    let vao = unsafe { gl.create_named_vertex_array().unwrap() };
 
     // todo: figure this shit out
     unsafe {
-        gl::CreateVertexArrays(1, &mut vao);
-        gl::ObjectLabel(gl::VERTEX_ARRAY, vao, -1, b"triangle_vao\0".as_ptr().cast());
+        // gl.object_label(glow::VERTEX_ARRAY, vao.0.get(), Some("triangle_vao"));
 
-        gl::VertexArrayVertexBuffer(vao, 0, vbo, 0, 6 * std::mem::size_of::<f32>() as GLint);
+        gl.vertex_array_vertex_buffer(vao, 0, Some(vbo), 0, 6 * std::mem::size_of::<f32>() as i32);
 
-        gl::EnableVertexArrayAttrib(vao, 0); // this is "layout (location = 0)" in vertex shader
-        gl::VertexArrayAttribFormat(vao, 0, 3, gl::FLOAT, gl::FALSE, 0);
+        gl.enable_vertex_array_attrib(vao, 0); // this is "layout (location = 0)" in vertex shader
+        gl.vertex_array_attrib_format_f32(vao, 0, 3, glow::FLOAT, false, 0);
 
-        gl::EnableVertexArrayAttrib(vao, 1);
-        gl::VertexArrayAttribFormat(
+        gl.enable_vertex_array_attrib(vao, 1);
+        gl.vertex_array_attrib_format_f32(
             vao,
             1,
             3,
-            gl::FLOAT,
-            gl::FALSE,
-            3 * std::mem::size_of::<f32>() as GLuint,
+            glow::FLOAT,
+            false,
+            3 * std::mem::size_of::<f32>() as u32,
         );
 
-        gl::VertexArrayAttribBinding(vao, 0, 0);
-        gl::VertexArrayAttribBinding(vao, 1, 0);
+        gl.vertex_array_attrib_binding_f32(vao, 0, 0);
+        gl.vertex_array_attrib_binding_f32(vao, 1, 0);
     }
 
     // set up shared state for window
 
     unsafe {
-        gl::Viewport(0, 0, 900, 700);
-        gl::ClearColor(0.3, 0.3, 0.5, 1.0);
+        gl.viewport(0, 0, 900, 700);
+        gl.clear_color(0.3, 0.3, 0.5, 1.0);
     }
 
-    // -------------------------------------------
-    println!("OpenGL version: {}", gl_get_string(gl::VERSION));
-    println!(
-        "GLSL version: {}",
-        gl_get_string(gl::SHADING_LANGUAGE_VERSION)
-    );
+    unsafe {
+        // -------------------------------------------
+        println!("OpenGL version: {}", gl.get_parameter_string(glow::VERSION));
+        println!(
+            "GLSL version: {}",
+            gl.get_parameter_string(glow::SHADING_LANGUAGE_VERSION)
+        );
+    }
 
-    (glfw, window, events, shader_program, vao)
+    (glfw, window, events, shader_program, vao, Arc::new(gl))
 }
 
 pub fn do_loop(
+    gl: &Arc<glow::Context>,
     mut glfw: Glfw,
-    mut window: Window,
-    events: Receiver<(f64, WindowEvent)>,
-    triangle_program: GLuint,
-    triangle_vao: GLuint,
+    mut window: PWindow,
+    events: GlfwReceiver<(f64, WindowEvent)>,
+    triangle_program: glow::Program,
+    triangle_vao: glow::VertexArray,
     filter: &mut FilterChainGL,
 ) {
     let mut framecount = 0;
-    let mut rendered_framebuffer = 0;
-    let mut rendered_texture = 0;
-    let mut quad_vbuf = 0;
+    let rendered_framebuffer;
+    let rendered_texture;
+    let quad_vbuf;
 
-    let mut output_texture = 0;
-    let mut output_framebuffer_handle = 0;
-    let mut output_quad_vbuf = 0;
+    let output_texture;
+    let output_framebuffer_handle;
+    let output_quad_vbuf;
 
     unsafe {
         // do frmaebuffer
-        gl::CreateFramebuffers(1, &mut rendered_framebuffer);
-
-        gl::ObjectLabel(
-            gl::FRAMEBUFFER,
-            rendered_framebuffer,
-            -1,
-            b"rendered_framebuffer\0".as_ptr().cast(),
+        rendered_framebuffer = gl.create_named_framebuffer().unwrap();
+        gl.object_label(
+            glow::FRAMEBUFFER,
+            rendered_framebuffer.0.get(),
+            Some("rendered_framebuffer"),
         );
 
-        // make tetxure
-        gl::CreateTextures(gl::TEXTURE_2D, 1, &mut rendered_texture);
-
-        gl::ObjectLabel(
-            gl::TEXTURE,
-            rendered_texture,
-            -1,
-            b"rendered_texture\0".as_ptr().cast(),
+        rendered_texture = gl.create_named_texture(glow::TEXTURE_2D).unwrap();
+        gl.object_label(
+            glow::TEXTURE,
+            rendered_texture.0.get(),
+            Some("rendered_texture"),
         );
 
         // empty image
-        gl::TextureStorage2D(
+        gl.texture_storage_2d(
             rendered_texture,
             1,
-            gl::RGBA8,
-            WIDTH as GLsizei,
-            HEIGHT as GLsizei,
+            glow::RGBA8,
+            WIDTH as i32,
+            HEIGHT as i32,
         );
 
-        gl::TextureParameteri(
+        gl.texture_parameter_i32(
             rendered_texture,
-            gl::TEXTURE_MAG_FILTER,
-            gl::NEAREST as GLint,
+            glow::TEXTURE_MAG_FILTER,
+            glow::NEAREST as i32,
         );
-        gl::TextureParameteri(
+        gl.texture_parameter_i32(
             rendered_texture,
-            gl::TEXTURE_MIN_FILTER,
-            gl::NEAREST as GLint,
+            glow::TEXTURE_MIN_FILTER,
+            glow::NEAREST as i32,
         );
-        gl::TextureParameteri(
+        gl.texture_parameter_i32(
             rendered_texture,
-            gl::TEXTURE_WRAP_S,
-            gl::CLAMP_TO_EDGE as GLint,
+            glow::TEXTURE_WRAP_S,
+            glow::CLAMP_TO_EDGE as i32,
         );
-        gl::TextureParameteri(
+        gl.texture_parameter_i32(
             rendered_texture,
-            gl::TEXTURE_WRAP_T,
-            gl::CLAMP_TO_EDGE as GLint,
+            glow::TEXTURE_WRAP_T,
+            glow::CLAMP_TO_EDGE as i32,
         );
 
         // set color attachment
-        gl::NamedFramebufferTexture(
-            rendered_framebuffer,
-            gl::COLOR_ATTACHMENT0,
-            rendered_texture,
+        gl.named_framebuffer_texture(
+            Some(rendered_framebuffer),
+            glow::COLOR_ATTACHMENT0,
+            Some(rendered_texture),
             0,
         );
 
-        let buffers = [gl::COLOR_ATTACHMENT0];
-        gl::NamedFramebufferDrawBuffers(rendered_framebuffer, 1, buffers.as_ptr());
+        gl.named_framebuffer_draw_buffer(Some(rendered_framebuffer), glow::COLOR_ATTACHMENT0);
 
-        if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
+        if gl.check_named_framebuffer_status(Some(rendered_framebuffer), glow::FRAMEBUFFER)
+            != glow::FRAMEBUFFER_COMPLETE
+        {
             panic!("failed to create fbo")
         }
 
@@ -337,70 +237,70 @@ pub fn do_loop(
             1.0, 1.0, 0.0,
         ];
 
-        gl::CreateBuffers(1, &mut quad_vbuf);
-        gl::NamedBufferData(
-            quad_vbuf,                                                                    // target
-            (fullscreen_fbo.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, // size of data in bytes
-            fullscreen_fbo.as_ptr() as *const gl::types::GLvoid, // pointer to data
-            gl::STATIC_DRAW,                                     // usage
+        quad_vbuf = gl.create_named_buffer().unwrap();
+
+        gl.named_buffer_data_u8_slice(
+            quad_vbuf,
+            bytemuck::cast_slice(&fullscreen_fbo),
+            glow::STATIC_DRAW,
         );
     }
 
     unsafe {
         // do frmaebuffer
-        gl::CreateFramebuffers(1, &mut output_framebuffer_handle);
+        output_framebuffer_handle = gl.create_named_framebuffer().unwrap();
 
-        gl::ObjectLabel(
-            gl::FRAMEBUFFER,
-            output_framebuffer_handle,
-            -1,
-            b"output_framebuffer\0".as_ptr().cast(),
+        gl.object_label(
+            glow::FRAMEBUFFER,
+            output_framebuffer_handle.0.get(),
+            Some("output_framebuffer"),
         );
 
         // make tetxure
-        gl::CreateTextures(gl::TEXTURE_2D, 1, &mut output_texture);
-
-        gl::ObjectLabel(
-            gl::TEXTURE,
-            output_texture,
-            -1,
-            b"output_texture\0".as_ptr().cast(),
+        output_texture = gl.create_named_texture(glow::TEXTURE_2D).unwrap();
+        //
+        gl.object_label(
+            glow::TEXTURE,
+            output_texture.0.get(),
+            Some("output_texture"),
         );
 
-        // empty image
-        gl::TextureStorage2D(
-            output_texture,
-            1,
-            gl::RGBA8,
-            WIDTH as GLsizei,
-            HEIGHT as GLsizei,
-        );
+        gl.texture_storage_2d(output_texture, 1, glow::RGBA8, WIDTH as i32, HEIGHT as i32);
 
-        gl::TextureParameteri(output_texture, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
-        gl::TextureParameteri(output_texture, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
-        gl::TextureParameteri(
+        gl.texture_parameter_i32(
             output_texture,
-            gl::TEXTURE_WRAP_S,
-            gl::CLAMP_TO_EDGE as GLint,
+            glow::TEXTURE_MAG_FILTER,
+            glow::NEAREST as i32,
         );
-        gl::TextureParameteri(
+        gl.texture_parameter_i32(
             output_texture,
-            gl::TEXTURE_WRAP_T,
-            gl::CLAMP_TO_EDGE as GLint,
+            glow::TEXTURE_MIN_FILTER,
+            glow::NEAREST as i32,
+        );
+        gl.texture_parameter_i32(
+            output_texture,
+            glow::TEXTURE_WRAP_S,
+            glow::CLAMP_TO_EDGE as i32,
+        );
+        gl.texture_parameter_i32(
+            output_texture,
+            glow::TEXTURE_WRAP_T,
+            glow::CLAMP_TO_EDGE as i32,
         );
 
         // set color attachment
-        gl::NamedFramebufferTexture(
-            output_framebuffer_handle,
-            gl::COLOR_ATTACHMENT0,
-            output_texture,
+        gl.named_framebuffer_texture(
+            Some(output_framebuffer_handle),
+            glow::COLOR_ATTACHMENT0,
+            Some(output_texture),
             0,
         );
 
-        let buffers = [gl::COLOR_ATTACHMENT0];
-        gl::NamedFramebufferDrawBuffers(output_framebuffer_handle, 1, buffers.as_ptr());
+        gl.named_framebuffer_draw_buffer(Some(output_framebuffer_handle), glow::COLOR_ATTACHMENT0);
 
-        if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
+        if gl.check_named_framebuffer_status(Some(output_framebuffer_handle), glow::FRAMEBUFFER)
+            != glow::FRAMEBUFFER_COMPLETE
+        {
             panic!("failed to create fbo")
         }
 
@@ -409,12 +309,11 @@ pub fn do_loop(
             1.0, 1.0, 0.0,
         ];
 
-        gl::CreateBuffers(1, &mut output_quad_vbuf);
-        gl::NamedBufferData(
+        output_quad_vbuf = gl.create_named_buffer().unwrap();
+        gl.named_buffer_data_u8_slice(
             output_quad_vbuf,
-            (fullscreen_fbo.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, // size of data in bytes
-            fullscreen_fbo.as_ptr() as *const gl::types::GLvoid, // pointer to data
-            gl::STATIC_DRAW,                                     // usage
+            bytemuck::cast_slice(&fullscreen_fbo),
+            glow::STATIC_DRAW,
         );
     }
 
@@ -443,22 +342,17 @@ void main()
     color=texture(texSampler, v_tex);
 }";
 
-    let quad_programid = compile_program(VERT_SHADER, FRAG_SHADER);
-    let mut quad_vao = 0;
-    unsafe {
-        gl::CreateVertexArrays(1, &mut quad_vao);
-    }
+    let quad_programid = super::compile_program(gl, VERT_SHADER, FRAG_SHADER);
+    let quad_vao = unsafe { gl.create_named_vertex_array().unwrap() };
 
     let (fb_width, fb_height) = window.get_framebuffer_size();
     let (vp_width, vp_height) = window.get_size();
 
-    let output = GLFramebuffer::new_from_raw(
-        output_texture,
-        output_framebuffer_handle,
-        gl::RGBA8,
-        Size::new(vp_width as u32, vp_height as u32),
-        1,
-    );
+    let output = GLImage {
+        handle: Some(output_texture),
+        format: glow::RGBA8,
+        size: Size::new(vp_width as u32, vp_height as u32),
+    };
 
     while !window.should_close() {
         glfw.poll_events();
@@ -469,28 +363,28 @@ void main()
         unsafe {
             // render to fb
 
-            gl::ClearNamedFramebufferfv(
-                rendered_framebuffer,
-                gl::COLOR,
+            gl.clear_named_framebuffer_f32_slice(
+                Some(rendered_framebuffer),
+                glow::COLOR,
                 0,
-                [0.3f32, 0.4, 0.6, 1.0].as_ptr().cast(),
+                &[0.3f32, 0.4, 0.6, 1.0],
             );
-            gl::BindFramebuffer(gl::FRAMEBUFFER, rendered_framebuffer);
-            gl::Viewport(0, 0, vp_width, vp_height);
+            gl.bind_framebuffer(glow::FRAMEBUFFER, Some(rendered_framebuffer));
+            gl.viewport(0, 0, vp_width, vp_height);
 
             // do the drawing
-            gl::UseProgram(triangle_program);
+            gl.use_program(Some(triangle_program));
             // select vertices
-            gl::BindVertexArray(triangle_vao);
+            gl.bind_vertex_array(Some(triangle_vao));
 
             // draw to bound target
-            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+            gl.draw_arrays(glow::TRIANGLES, 0, 3);
 
             // unselect vertices
-            gl::BindVertexArray(0);
+            gl.bind_vertex_array(None);
 
             // unselect fbo
-            gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
 
         let viewport = Viewport {
@@ -498,11 +392,12 @@ void main()
             y: 0f32,
             output: &output,
             mvp: None,
+            size: output.size().unwrap(),
         };
 
         let rendered = GLImage {
-            handle: rendered_texture,
-            format: gl::RGBA8,
+            handle: Some(rendered_texture),
+            format: glow::RGBA8,
             size: Size {
                 width: fb_width as u32,
                 height: fb_height as u32,
@@ -518,31 +413,18 @@ void main()
         unsafe {
             // texture is done now.
             // draw quad to screen
-            gl::UseProgram(quad_programid);
+            gl.use_program(Some(quad_programid));
 
-            gl::BindTextureUnit(0, output_texture);
+            gl.bind_texture_unit(0, Some(output_texture));
 
-            gl::BindVertexArray(quad_vao);
-            gl::DrawArrays(gl::TRIANGLE_STRIP, 0, 4);
+            gl.bind_vertex_array(Some(quad_vao));
+            gl.draw_arrays(glow::TRIANGLE_STRIP, 0, 4);
         }
 
         framecount += 1;
         window.swap_buffers();
     }
 }
-
-pub struct Color(f32, f32, f32, f32);
-
-pub fn clear_color(c: Color) {
-    unsafe { gl::ClearColor(c.0, c.1, c.2, c.3) }
-}
-
-pub fn gl_get_string<'a>(name: gl::types::GLenum) -> &'a str {
-    let v = unsafe { gl::GetString(name) };
-    let v: &std::ffi::CStr = unsafe { std::ffi::CStr::from_ptr(v as *const i8) };
-    v.to_str().unwrap()
-}
-
 fn glfw_handle_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
     use glfw::Action;
     use glfw::Key;

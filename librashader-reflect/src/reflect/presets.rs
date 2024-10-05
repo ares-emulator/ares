@@ -5,9 +5,10 @@ use crate::front::{ShaderInputCompiler, ShaderReflectObject};
 use crate::reflect::semantics::{
     Semantic, ShaderSemantics, TextureSemantics, UniformSemantic, UniqueSemantics,
 };
-use librashader_common::map::FastHashMap;
+use librashader_common::map::{FastHashMap, ShortString};
+use librashader_pack::PassResource;
 use librashader_preprocess::{PreprocessError, ShaderSource};
-use librashader_presets::{ShaderPassConfig, TextureConfig};
+use librashader_presets::{ShaderPreset, TextureMeta};
 
 /// Artifacts of a reflected and compiled shader pass.
 ///
@@ -27,7 +28,7 @@ use librashader_presets::{ShaderPassConfig, TextureConfig};
 /// ```
 ///
 /// This allows a runtime to not name the backing type of the compiled artifact if not necessary.
-pub type ShaderPassArtifact<T> = (ShaderPassConfig, ShaderSource, CompilerBackend<T>);
+pub type ShaderPassArtifact<T> = (PassResource, CompilerBackend<T>);
 
 impl<T: OutputTarget> CompilePresetTarget for T {}
 
@@ -36,9 +37,9 @@ impl<T: OutputTarget> CompilePresetTarget for T {}
 pub trait CompilePresetTarget: OutputTarget {
     /// Compile passes of a shader preset given the applicable
     /// shader output target, compilation type, and resulting error.
-    fn compile_preset_passes<I, R, E>(
-        passes: Vec<ShaderPassConfig>,
-        textures: &[TextureConfig],
+    fn compile_preset_passes<'a, I, R, E>(
+        passes: impl IntoIterator<Item = PassResource>,
+        textures: impl Iterator<Item = &'a TextureMeta>,
     ) -> Result<
         (
             Vec<ShaderPassArtifact<<Self as FromCompilation<I, R>>::Output>>,
@@ -61,9 +62,9 @@ pub trait CompilePresetTarget: OutputTarget {
 
 /// Compile passes of a shader preset given the applicable
 /// shader output target, compilation type, and resulting error.
-fn compile_preset_passes<T, I, R, E>(
-    passes: Vec<ShaderPassConfig>,
-    textures: &[TextureConfig],
+fn compile_preset_passes<'a, T, I, R, E>(
+    passes: impl IntoIterator<Item = PassResource>,
+    textures: impl Iterator<Item = &'a TextureMeta>,
 ) -> Result<
     (
         Vec<ShaderPassArtifact<<T as FromCompilation<I, R>>::Output>>,
@@ -80,15 +81,15 @@ where
     E: From<ShaderReflectError>,
     E: From<ShaderCompileError>,
 {
-    let mut uniform_semantics: FastHashMap<String, UniformSemantic> = Default::default();
-    let mut texture_semantics: FastHashMap<String, Semantic<TextureSemantics>> = Default::default();
+    let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
+    let mut texture_semantics: FastHashMap<ShortString, Semantic<TextureSemantics>> =
+        Default::default();
 
-    let passes = passes
+    let artifacts = passes
         .into_iter()
         .map(|shader| {
-            let source: ShaderSource = ShaderSource::load(&shader.name)?;
-
-            let compiled = I::Compiler::compile(&source)?;
+            let source = &shader.data;
+            let compiled = I::Compiler::compile(source)?;
             let reflect = T::from_compilation(compiled)?;
 
             for parameter in source.parameters.values() {
@@ -100,13 +101,25 @@ where
                     }),
                 );
             }
-            Ok::<_, E>((shader, source, reflect))
+            Ok::<_, E>((shader, reflect))
         })
-        .collect::<Result<Vec<(ShaderPassConfig, ShaderSource, CompilerBackend<_>)>, E>>()?;
+        .collect::<Result<Vec<(PassResource, CompilerBackend<_>)>, E>>()?;
 
-    for details in &passes {
-        insert_pass_semantics(&mut uniform_semantics, &mut texture_semantics, &details.0)
+    for (pass, _) in artifacts.iter() {
+        insert_pass_semantics(
+            &mut uniform_semantics,
+            &mut texture_semantics,
+            pass.meta.alias.as_ref(),
+            pass.meta.id as usize,
+        );
+        insert_pass_semantics(
+            &mut uniform_semantics,
+            &mut texture_semantics,
+            pass.data.name.as_ref(),
+            pass.meta.id as usize,
+        );
     }
+
     insert_lut_semantics(textures, &mut uniform_semantics, &mut texture_semantics);
 
     let semantics = ShaderSemantics {
@@ -114,16 +127,17 @@ where
         texture_semantics,
     };
 
-    Ok((passes, semantics))
+    Ok((artifacts, semantics))
 }
 
 /// Insert the available semantics for the input pass config into the provided semantic maps.
 fn insert_pass_semantics(
-    uniform_semantics: &mut FastHashMap<String, UniformSemantic>,
-    texture_semantics: &mut FastHashMap<String, Semantic<TextureSemantics>>,
-    config: &ShaderPassConfig,
+    uniform_semantics: &mut FastHashMap<ShortString, UniformSemantic>,
+    texture_semantics: &mut FastHashMap<ShortString, Semantic<TextureSemantics>>,
+    alias: Option<&ShortString>,
+    index: usize,
 ) {
-    let Some(alias) = &config.alias else {
+    let Some(alias) = alias else {
         return;
     };
 
@@ -131,8 +145,6 @@ fn insert_pass_semantics(
     if alias.trim().is_empty() {
         return;
     }
-
-    let index = config.id as usize;
 
     // PassOutput
     texture_semantics.insert(
@@ -142,24 +154,32 @@ fn insert_pass_semantics(
             index,
         },
     );
+
+    let mut alias_size = alias.clone();
+    alias_size.push_str("Size");
     uniform_semantics.insert(
-        format!("{alias}Size"),
+        alias_size,
         UniformSemantic::Texture(Semantic {
             semantics: TextureSemantics::PassOutput,
             index,
         }),
     );
 
+    let mut alias_feedback = alias.clone();
+    alias_feedback.push_str("Feedback");
     // PassFeedback
     texture_semantics.insert(
-        format!("{alias}Feedback"),
+        alias_feedback,
         Semantic {
             semantics: TextureSemantics::PassFeedback,
             index,
         },
     );
+
+    let mut alias_feedback_size = alias.clone();
+    alias_feedback_size.push_str("FeedbackSize");
     uniform_semantics.insert(
-        format!("{alias}FeedbackSize"),
+        alias_feedback_size,
         UniformSemantic::Texture(Semantic {
             semantics: TextureSemantics::PassFeedback,
             index,
@@ -168,12 +188,15 @@ fn insert_pass_semantics(
 }
 
 /// Insert the available semantics for the input texture config into the provided semantic maps.
-fn insert_lut_semantics(
-    textures: &[TextureConfig],
-    uniform_semantics: &mut FastHashMap<String, UniformSemantic>,
-    texture_semantics: &mut FastHashMap<String, Semantic<TextureSemantics>>,
+fn insert_lut_semantics<'a>(
+    textures: impl Iterator<Item = &'a TextureMeta>,
+    uniform_semantics: &mut FastHashMap<ShortString, UniformSemantic>,
+    texture_semantics: &mut FastHashMap<ShortString, Semantic<TextureSemantics>>,
 ) {
-    for (index, texture) in textures.iter().enumerate() {
+    for (index, texture) in textures.enumerate() {
+        let mut size_semantic = texture.name.clone();
+        size_semantic.push_str("Size");
+
         texture_semantics.insert(
             texture.name.clone(),
             Semantic {
@@ -183,11 +206,69 @@ fn insert_lut_semantics(
         );
 
         uniform_semantics.insert(
-            format!("{}Size", texture.name),
+            size_semantic,
             UniformSemantic::Texture(Semantic {
                 semantics: TextureSemantics::User,
                 index,
             }),
         );
+    }
+}
+
+impl ShaderSemantics {
+    /// Create pass semantics for a single pass in the given shader preset.
+    ///
+    /// This is meant as a convenience function for reflection use only.
+    pub fn create_pass_semantics<E>(
+        preset: &ShaderPreset,
+        index: usize,
+    ) -> Result<ShaderSemantics, E>
+    where
+        E: From<ShaderReflectError>,
+        E: From<PreprocessError>,
+    {
+        let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
+        let mut texture_semantics: FastHashMap<ShortString, Semantic<TextureSemantics>> =
+            Default::default();
+
+        let config = preset
+            .passes
+            .get(index)
+            .ok_or_else(|| PreprocessError::InvalidStage)?;
+
+        let source = ShaderSource::load(&config.path)?;
+
+        for parameter in source.parameters.values() {
+            uniform_semantics.insert(
+                parameter.id.clone(),
+                UniformSemantic::Unique(Semantic {
+                    semantics: UniqueSemantics::FloatParameter,
+                    index: (),
+                }),
+            );
+        }
+
+        insert_pass_semantics(
+            &mut uniform_semantics,
+            &mut texture_semantics,
+            config.meta.alias.as_ref(),
+            config.meta.id as usize,
+        );
+        insert_pass_semantics(
+            &mut uniform_semantics,
+            &mut texture_semantics,
+            source.name.as_ref(),
+            config.meta.id as usize,
+        );
+        insert_lut_semantics(
+            preset.textures.iter().map(|t| &t.meta),
+            &mut uniform_semantics,
+            &mut texture_semantics,
+        );
+
+        Ok(ShaderSemantics {
+            uniform_semantics,
+            texture_semantics,
+        })
     }
 }

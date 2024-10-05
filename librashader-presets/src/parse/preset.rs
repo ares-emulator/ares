@@ -1,42 +1,46 @@
-use crate::extract_if::MakeExtractIf;
 use crate::parse::remove_if;
 use crate::parse::value::Value;
-use crate::{ParameterConfig, Scale2D, Scaling, ShaderPassConfig, ShaderPreset, TextureConfig};
+use crate::{
+    ParameterMeta, PassConfig, PassMeta, Scale2D, Scaling, ShaderPreset, TextureConfig, TextureMeta,
+};
+use vec_extract_if_polyfill::MakeExtractIf;
 
 pub fn resolve_values(mut values: Vec<Value>) -> ShaderPreset {
-    let textures: Vec<TextureConfig> = values
-        .extract_if(|f| matches!(*f, Value::Texture { .. }))
-        .map(|value| {
-            if let Value::Texture {
-                name,
-                filter_mode,
-                wrap_mode,
-                mipmap,
-                path,
-            } = value
-            {
-                TextureConfig {
+    let textures: Vec<TextureConfig> =
+        MakeExtractIf::extract_if(&mut values, |f| matches!(*f, Value::Texture { .. }))
+            .map(|value| {
+                if let Value::Texture {
                     name,
-                    path,
-                    wrap_mode,
                     filter_mode,
+                    wrap_mode,
                     mipmap,
+                    path,
+                } = value
+                {
+                    TextureConfig {
+                        path,
+                        meta: TextureMeta {
+                            name,
+                            wrap_mode,
+                            filter_mode,
+                            mipmap,
+                        },
+                    }
+                } else {
+                    unreachable!("values should all be of type Texture")
                 }
-            } else {
-                unreachable!("values should all be of type Texture")
-            }
-        })
-        .collect();
-    let parameters: Vec<ParameterConfig> = values
-        .extract_if(|f| matches!(*f, Value::Parameter { .. }))
-        .map(|value| {
-            if let Value::Parameter(name, value) = value {
-                ParameterConfig { name, value }
-            } else {
-                unreachable!("values should be all of type parameters")
-            }
-        })
-        .collect();
+            })
+            .collect();
+    let parameters: Vec<ParameterMeta> =
+        MakeExtractIf::extract_if(&mut values, |f| matches!(*f, Value::Parameter { .. }))
+            .map(|value| {
+                if let Value::Parameter(name, value) = value {
+                    ParameterMeta { name, value }
+                } else {
+                    unreachable!("values should be all of type parameters")
+                }
+            })
+            .collect();
 
     let mut shaders = Vec::new();
     let shader_count =
@@ -64,9 +68,9 @@ pub fn resolve_values(mut values: Vec<Value>) -> ShaderPreset {
             &mut values,
             |v| matches!(*v, Value::Shader(shader_index, _) if shader_index == shader),
         ) {
-            let shader_values: Vec<Value> = values
-                .extract_if(|v| v.shader_index() == Some(shader))
-                .collect();
+            let shader_values: Vec<Value> =
+                MakeExtractIf::extract_if(&mut values, |v| v.shader_index() == Some(shader))
+                    .collect();
             let scale_type = shader_values.iter().find_map(|f| match f {
                 Value::ScaleType(_, value) => Some(*value),
                 _ => None,
@@ -113,64 +117,66 @@ pub fn resolve_values(mut values: Vec<Value>) -> ShaderPreset {
                 scale_y = scale;
             }
 
-            let shader = ShaderPassConfig {
-                id,
-                name,
-                alias: shader_values.iter().find_map(|f| match f {
-                    Value::Alias(_, value) => Some(value.to_string()),
-                    _ => None,
-                }),
-                filter: shader_values
-                    .iter()
-                    .find_map(|f| match f {
-                        Value::FilterMode(_, value) => Some(*value),
+            let shader = PassConfig {
+                path: name,
+                meta: PassMeta {
+                    id,
+                    alias: shader_values.iter().find_map(|f| match f {
+                        Value::Alias(_, value) => Some(value.clone()),
                         _ => None,
-                    })
-                    .unwrap_or_default(),
-                wrap_mode: shader_values
-                    .iter()
-                    .find_map(|f| match f {
-                        Value::WrapMode(_, value) => Some(*value),
-                        _ => None,
-                    })
-                    .unwrap_or_default(),
-                frame_count_mod: shader_values
-                    .iter()
-                    .find_map(|f| match f {
-                        Value::FrameCountMod(_, value) => Some(*value),
-                        _ => None,
-                    })
-                    .unwrap_or(0),
-                srgb_framebuffer: shader_values
-                    .iter()
-                    .find_map(|f| match f {
-                        Value::SrgbFramebuffer(_, value) => Some(*value),
-                        _ => None,
-                    })
-                    .unwrap_or(false),
-                float_framebuffer: shader_values
-                    .iter()
-                    .find_map(|f| match f {
-                        Value::FloatFramebuffer(_, value) => Some(*value),
-                        _ => None,
-                    })
-                    .unwrap_or(false),
-                mipmap_input: shader_values
-                    .iter()
-                    .find_map(|f| match f {
-                        Value::MipmapInput(_, value) => Some(*value),
-                        _ => None,
-                    })
-                    .unwrap_or(false),
-                scaling: Scale2D {
-                    valid: scale_valid,
-                    x: Scaling {
-                        scale_type: scale_type_x.unwrap_or_default(),
-                        factor: scale_x.unwrap_or_default(),
-                    },
-                    y: Scaling {
-                        scale_type: scale_type_y.unwrap_or_default(),
-                        factor: scale_y.unwrap_or_default(),
+                    }),
+                    filter: shader_values
+                        .iter()
+                        .find_map(|f| match f {
+                            Value::FilterMode(_, value) => Some(*value),
+                            _ => None,
+                        })
+                        .unwrap_or_default(),
+                    wrap_mode: shader_values
+                        .iter()
+                        .find_map(|f| match f {
+                            Value::WrapMode(_, value) => Some(*value),
+                            _ => None,
+                        })
+                        .unwrap_or_default(),
+                    frame_count_mod: shader_values
+                        .iter()
+                        .find_map(|f| match f {
+                            Value::FrameCountMod(_, value) => Some(*value),
+                            _ => None,
+                        })
+                        .unwrap_or(0),
+                    srgb_framebuffer: shader_values
+                        .iter()
+                        .find_map(|f| match f {
+                            Value::SrgbFramebuffer(_, value) => Some(*value),
+                            _ => None,
+                        })
+                        .unwrap_or(false),
+                    float_framebuffer: shader_values
+                        .iter()
+                        .find_map(|f| match f {
+                            Value::FloatFramebuffer(_, value) => Some(*value),
+                            _ => None,
+                        })
+                        .unwrap_or(false),
+                    mipmap_input: shader_values
+                        .iter()
+                        .find_map(|f| match f {
+                            Value::MipmapInput(_, value) => Some(*value),
+                            _ => None,
+                        })
+                        .unwrap_or(false),
+                    scaling: Scale2D {
+                        valid: scale_valid,
+                        x: Scaling {
+                            scale_type: scale_type_x.unwrap_or_default(),
+                            factor: scale_x.unwrap_or_default(),
+                        },
+                        y: Scaling {
+                            scale_type: scale_type_y.unwrap_or_default(),
+                            factor: scale_y.unwrap_or_default(),
+                        },
                     },
                 },
             };
@@ -182,8 +188,8 @@ pub fn resolve_values(mut values: Vec<Value>) -> ShaderPreset {
     ShaderPreset {
         #[cfg(feature = "parse_legacy_glsl")]
         feedback_pass,
-        shader_count,
-        shaders,
+        pass_count: shader_count,
+        passes: shaders,
         textures,
         parameters,
     }

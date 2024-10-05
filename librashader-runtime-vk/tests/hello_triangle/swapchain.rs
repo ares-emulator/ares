@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 pub struct VulkanSwapchain {
     pub swapchain: vk::SwapchainKHR,
-    pub loader: ash::extensions::khr::Swapchain,
+    pub loader: ash::khr::swapchain::Device,
     pub format: vk::SurfaceFormatKHR,
     pub extent: vk::Extent2D,
     pub mode: vk::PresentModeKHR,
@@ -44,7 +44,7 @@ impl VulkanSwapchain {
             panic!("exclusive mode only")
         }
 
-        let create_info = vk::SwapchainCreateInfoKHR::builder()
+        let create_info = vk::SwapchainCreateInfoKHR::default()
             .surface(surface.surface)
             .present_mode(mode)
             .min_image_count(image_count)
@@ -59,7 +59,7 @@ impl VulkanSwapchain {
             // todo: switch to IMAGE_USAGE_TRANSFER_DST
             .image_usage(vk::ImageUsageFlags::COLOR_ATTACHMENT);
 
-        let loader = ash::extensions::khr::Swapchain::new(&base.instance, &base.device);
+        let loader = ash::khr::swapchain::Device::new(&base.instance, &base.device);
 
         let swapchain = unsafe { loader.create_swapchain(&create_info, None)? };
 
@@ -69,7 +69,7 @@ impl VulkanSwapchain {
 
         // create render imaghes
         for _ in 0..swapchain_images.len() {
-            let create_info = vk::ImageCreateInfo::builder()
+            let create_info = vk::ImageCreateInfo::default()
                 .extent(Extent3D {
                     width,
                     height,
@@ -104,7 +104,7 @@ impl VulkanSwapchain {
         let swapchain_image_views: VkResult<Vec<vk::ImageView>> = swapchain_images
             .iter()
             .map(|image| {
-                let create_info = vk::ImageViewCreateInfo::builder()
+                let create_info = vk::ImageViewCreateInfo::default()
                     .view_type(vk::ImageViewType::TYPE_2D)
                     .format(format.format)
                     .components(vk::ComponentMapping {
@@ -128,7 +128,7 @@ impl VulkanSwapchain {
                 //         .loader
                 //         .set_debug_utils_object_name(
                 //             base.device.handle(),
-                //             &vk::DebugUtilsObjectNameInfoEXT::builder()
+                //             &vk::DebugUtilsObjectNameInfoEXT::default()
                 //                 .object_handle(image.as_raw())
                 //                 .object_name(CStr::from_bytes_with_nul_unchecked(
                 //                     b"SwapchainImage\0",
@@ -141,7 +141,7 @@ impl VulkanSwapchain {
                 //         .loader
                 //         .set_debug_utils_object_name(
                 //             base.device.handle(),
-                //             &vk::DebugUtilsObjectNameInfoEXT::builder()
+                //             &vk::DebugUtilsObjectNameInfoEXT::default()
                 //                 .object_handle(view.as_raw())
                 //                 .object_name(CStr::from_bytes_with_nul_unchecked(
                 //                     b"SwapchainImageView\0",
@@ -158,7 +158,7 @@ impl VulkanSwapchain {
         let render_image_views: VkResult<Vec<vk::ImageView>> = render_images
             .iter()
             .map(|(image, _)| {
-                let create_info = vk::ImageViewCreateInfo::builder()
+                let create_info = vk::ImageViewCreateInfo::default()
                     .view_type(vk::ImageViewType::TYPE_2D)
                     .format(format.format)
                     .components(vk::ComponentMapping {
@@ -182,7 +182,7 @@ impl VulkanSwapchain {
                 //         .loader
                 //         .set_debug_utils_object_name(
                 //             base.device.handle(),
-                //             &vk::DebugUtilsObjectNameInfoEXT::builder()
+                //             &vk::DebugUtilsObjectNameInfoEXT::default()
                 //                 .object_handle(view.as_raw())
                 //                 .object_name(CStr::from_bytes_with_nul_unchecked(
                 //                     b"RenderImageView\0",

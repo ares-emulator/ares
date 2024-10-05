@@ -1,5 +1,5 @@
 #![forbid(missing_docs)]
-#![feature(doc_cfg)]
+#![cfg_attr(feature = "docsrs", feature(doc_cfg))]
 //! RetroArch shader preset compiler and runtime.
 //!
 //! librashader provides convenient and safe access to RetroArch ['slang' shaders](https://github.com/libretro/slang-shaders).
@@ -15,8 +15,8 @@
 //! called with appropriate input and output parameters to draw a frame with the shader effect applied.
 //!
 //! ## Runtimes
-//! librashader supports all modern graphics runtimes, including wgpu, Vulkan, OpenGL 3.3+ and 4.6 (with DSA),
-//! Direct3D 11, Direct3D 12, and Metal.
+//! librashader supports most modern graphics runtimes, including Vulkan, OpenGL 3.3+ and 4.6 (with DSA),
+//! Direct3D 11, Direct3D 12, and Metal. Secondary support is available for wgpu and Direct3D 9.
 //!
 //! The Direct3D 12 runtime requires support for [render passes](https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-render-passes), which
 //! have been available since Windows 10, version 1809.
@@ -24,8 +24,11 @@
 //! The Vulkan runtime can use [`VK_KHR_dynamic_rendering`](https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_dynamic_rendering.html)
 //! for improved performance, if the underlying hardware supports it.
 //!
-//! Direct3D 9 support is experimental and is not guaranteed to work with all shaders. In particular, history and feedback is currently not supported.
-//! Many shaders will also fail to compile due to missing or insufficient features in Direct3D 9.
+//! Shader compatibility is not guaranteed on render APIs with secondary support.
+//!
+//! wgpu has restrictions on shaders that can not be converted to WGSL, such as those that use `inverse`.
+//! Direct3D 9 does not support shaders that need Direct3D 10+ only features, or shaders that can not be
+//! compiled to [Shader Model 3.0](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/shader-model-3).
 //!
 //! wgpu support is not available in the librashader C API.
 //!
@@ -34,20 +37,23 @@
 //! | OpenGL 3.3+ | ✅        | `gl`                      |
 //! | OpenGL 4.6  | ✅        | `gl`                      |
 //! | Vulkan      | ✅        | `vk`                      |
-//! | Direct3D 9  | ⚠️        | `d3d9`                   |
+//! | Direct3D 9  | 🆗️        | `d3d9`                   |
 //! | Direct3D 11 | ✅        | `d3d11`                   |
 //! | Direct3D 12 | ✅        | `d3d12`                   |
 //! | Metal       | ✅        | `metal`                   |
 //! | wgpu        | 🆗         | `wgpu`                    |
 //!
-//! ✅ Full Support &mdash; 🆗 Secondary Support &mdash; ⚠️ ️Experimental Support
+//! ✅ Full Support &mdash; 🆗 Secondary Support
 //!
 //! ## C API
 //! For documentation on the librashader C API, see [librashader-capi](https://docs.rs/librashader-capi/latest/librashader_capi/),
 //! or [`librashader.h`](https://github.com/SnowflakePowered/librashader/blob/master/include/librashader.h).
 
+pub use librashader_common::map::FastHashMap;
+pub use librashader_common::map::ShortString;
+
 #[cfg(feature = "presets")]
-#[doc(cfg(feature = "presets"))]
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "presets")))]
 /// Parsing and usage of shader presets.
 ///
 /// This module contains facilities and types for parsing `.slangp` shader presets files.
@@ -63,15 +69,18 @@
 pub mod presets {
     use librashader_preprocess::{PreprocessError, ShaderParameter, ShaderSource};
     pub use librashader_presets::*;
+
+    pub use librashader_pack::*;
+
     /// Get full parameter metadata from a shader preset.
     pub fn get_parameter_meta(
         preset: &ShaderPreset,
     ) -> Result<impl Iterator<Item = ShaderParameter>, PreprocessError> {
         let iters: Result<Vec<Vec<ShaderParameter>>, PreprocessError> = preset
-            .shaders
+            .passes
             .iter()
             .map(|s| {
-                ShaderSource::load(&s.name)
+                ShaderSource::load(&s.path)
                     .map(|s| s.parameters.into_iter().map(|(_, v)| v).collect())
             })
             .collect();
@@ -81,7 +90,7 @@ pub mod presets {
 }
 
 #[cfg(feature = "preprocess")]
-#[doc(cfg(feature = "preprocess"))]
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "preprocess")))]
 /// Loading and preprocessing of 'slang' shader source files.
 ///
 /// This module contains facilities and types for resolving `#include` directives in `.slang`
@@ -95,52 +104,56 @@ pub mod preprocess {
 }
 
 #[cfg(feature = "reflect")]
-#[doc(cfg(feature = "reflect"))]
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "reflect")))]
 /// Shader reflection and cross-compilation.
 ///
-/// The `type_alias_impl_trait` nightly feature is required. You should choose your
-/// target shading language, and a compilation type.
+/// Without the `stable` crate feature, the `type_alias_impl_trait` nightly feature is required.
+///
+/// You should choose your target shading language, and a compilation type.
 ///
 /// ```rust
 /// #![feature(type_alias_impl_trait)]
+/// mod compile {
+///     use std::error::Error;
+///     use librashader::preprocess::ShaderSource;
+///     use librashader::presets::ShaderPreset;
+///     use librashader::reflect::{CompileReflectShader, FromCompilation, CompilePresetTarget, ShaderPassArtifact};
+///     use librashader::reflect::targets::SPIRV;
+///     use librashader::reflect::SpirvCompilation;
+///     use librashader::reflect::cross::SpirvCross;
+///     use librashader::reflect::semantics::ShaderSemantics;
 ///
-/// use std::error::Error;
-/// use librashader::preprocess::ShaderSource;
-/// use librashader::presets::ShaderPreset;
-/// use librashader::reflect::{CompileReflectShader, FromCompilation, CompilePresetTarget, ShaderPassArtifact};
-/// use librashader::reflect::targets::SPIRV;
-/// use librashader::reflect::semantics::ShaderSemantics;
-/// use librashader_reflect::front::{ShaderInputCompiler, SpirvCompilation};
-/// use librashader_reflect::reflect::cross::SpirvCross;
-/// type Artifact = impl CompileReflectShader<SPIRV, SpirvCompilation, SpirvCross>;
-/// type ShaderPassMeta = ShaderPassArtifact<Artifact>;
+///     type Artifact = impl CompileReflectShader<SPIRV, SpirvCompilation, SpirvCross>;
+///     type ShaderPassMeta = ShaderPassArtifact<Artifact>;
 ///
-/// // Compile single shader
-/// pub fn compile_spirv(
-///         source: &ShaderSource,
-///     ) -> Result<Artifact, Box<dyn Error>>
-/// {
-///     let compilation = SpirvCompilation::compile(&source)?;
-///     let spirv = SPIRV::from_compilation(compilation)?;
-///     Ok(spirv)
-/// }
-///
-/// // Compile preset
-/// pub fn compile_preset(preset: ShaderPreset) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), Box<dyn Error>>
-/// {
-///     let (passes, semantics) = SPIRV::compile_preset_passes::<SpirvCompilation, SpirvCross, Box<dyn Error>>(
-///     preset.shaders, &preset.textures)?;
-///     Ok((passes, semantics))
+///      // Compile preset
+///     pub fn compile_preset(preset: ShaderPreset) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), Box<dyn Error>>
+///     {
+///         let (passes, semantics) = SPIRV::compile_preset_passes::<SpirvCompilation, SpirvCross, Box<dyn Error>>(
+///         preset.passes, &preset.textures)?;
+///         Ok((passes, semantics))
+///     }
 /// }
 /// ```
 ///
-/// ## What's with all the traits?
-/// librashader-reflect is designed to be compiler-agnostic. In the future, we will allow usage of
-/// [naga](https://docs.rs/naga/latest/naga/index.html), a pure-Rust shader compiler, when it has
-/// matured enough to support [the features librashader needs](https://github.com/gfx-rs/naga/issues/1012).
+/// With the `stable` crate feature, a trait object can be used instead. Note the `Send` bound
+/// on `Artifact` is required.
 ///
-/// In the meanwhile, the only supported input compiler is [SpirvCompilation](crate::reflect::SpirvCompilation),
-/// which does compilation of GLSL to SPIR-V via [glslang](https://github.com/KhronosGroup/glslang/).
+/// ```
+/// use librashader::reflect::CompileReflectShader;
+/// use librashader::reflect::targets::SPIRV;
+/// use librashader::reflect::SpirvCompilation;
+/// use librashader::reflect::cross::SpirvCross;
+/// use librashader::reflect::ShaderPassArtifact;
+///
+/// type Artifact = Box<dyn CompileReflectShader<SPIRV, SpirvCompilation, SpirvCross> + Send>;
+/// type ShaderPassMeta = ShaderPassArtifact<Artifact>;
+/// ```
+///
+/// ## What's with all the traits?
+/// librashader-reflect is designed to be compiler-agnostic. [naga](https://docs.rs/naga/latest/naga/index.html),
+/// a pure-Rust shader compiler, as well as SPIRV-Cross via [SpirvCompilation](crate::front::SpirvCompilation)
+/// is supported.
 pub mod reflect {
     /// Supported shader compiler targets.
     pub mod targets {
@@ -165,7 +178,7 @@ pub mod reflect {
 
     /// Reflection via SPIRV-Cross.
     #[cfg(feature = "reflect-cross")]
-    #[doc(cfg(feature = "reflect-cross"))]
+    #[cfg_attr(feature = "docsrs", doc(cfg(feature = "reflect-cross")))]
     pub mod cross {
         pub use librashader_reflect::reflect::cross::SpirvCross;
 
@@ -187,14 +200,15 @@ pub mod reflect {
 
         pub use librashader_reflect::back::msl::CrossMslContext;
 
-        pub use librashader_reflect::reflect::cross::CompiledAst;
-
         pub use librashader_reflect::reflect::cross::CompiledProgram;
     }
 
     /// DXIL reflection via spirv-to-dxil.
     #[cfg(all(target_os = "windows", feature = "reflect-dxil"))]
-    #[doc(cfg(all(target_os = "windows", feature = "reflect-dxil")))]
+    #[cfg_attr(
+        feature = "docsrs",
+        doc(cfg(all(target_os = "windows", feature = "reflect-dxil")))
+    )]
     pub mod dxil {
         /// The maximum shader model to use when compiling the DXIL blob.
         pub use librashader_reflect::back::dxil::ShaderModel;
@@ -205,7 +219,7 @@ pub mod reflect {
 
     /// Reflection via Naga
     #[cfg(feature = "reflect-naga")]
-    #[doc(cfg(feature = "reflect-naga"))]
+    #[cfg_attr(feature = "docsrs", doc(cfg(feature = "reflect-naga")))]
     pub mod naga {
         pub use librashader_reflect::back::wgsl::NagaWgslContext;
         pub use librashader_reflect::reflect::naga::Naga;
@@ -217,6 +231,7 @@ pub mod reflect {
     pub use librashader_reflect::reflect::presets::{CompilePresetTarget, ShaderPassArtifact};
 
     pub use librashader_reflect::front::ShaderInputCompiler;
+
     #[doc(hidden)]
     #[cfg(feature = "internal")]
     /// Helper methods for runtimes.
@@ -229,29 +244,30 @@ pub mod reflect {
 
 /// Shader runtimes to execute a filter chain on a GPU surface.
 #[cfg(feature = "runtime")]
-#[doc(cfg(feature = "runtime"))]
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "runtime")))]
 pub mod runtime {
     pub use librashader_common::{Size, Viewport};
     pub use librashader_runtime::parameters::FilterChainParameters;
+    pub use librashader_runtime::parameters::RuntimeParameters;
 
     #[cfg(feature = "runtime-gl")]
-    #[doc(cfg(feature = "runtime-gl"))]
+    #[cfg_attr(feature = "docsrs", doc(cfg(feature = "runtime-gl")))]
     /// Shader runtime for OpenGL 3.3+.
     ///
     /// DSA support requires OpenGL 4.6.
-    ///
-    /// The OpenGL runtime requires `gl` to be
-    /// initialized with [`gl::load_with`](https://docs.rs/gl/0.14.0/gl/fn.load_with.html).
     pub mod gl {
         pub use librashader_runtime_gl::{
             error,
             options::{FilterChainOptionsGL as FilterChainOptions, FrameOptionsGL as FrameOptions},
-            FilterChainGL as FilterChain, GLFramebuffer, GLImage,
+            FilterChainGL as FilterChain, GLImage,
         };
     }
 
     #[cfg(all(target_os = "windows", feature = "runtime-d3d11"))]
-    #[doc(cfg(all(target_os = "windows", feature = "runtime-d3d11")))]
+    #[cfg_attr(
+        feature = "docsrs",
+        doc(cfg(all(target_os = "windows", feature = "runtime-d3d11")))
+    )]
     /// Shader runtime for Direct3D 11.
     pub mod d3d11 {
         pub use librashader_runtime_d3d11::{
@@ -259,12 +275,15 @@ pub mod runtime {
             options::{
                 FilterChainOptionsD3D11 as FilterChainOptions, FrameOptionsD3D11 as FrameOptions,
             },
-            D3D11InputView, D3D11OutputView, FilterChainD3D11 as FilterChain,
+            FilterChainD3D11 as FilterChain,
         };
     }
 
     #[cfg(all(target_os = "windows", feature = "runtime-d3d12"))]
-    #[doc(cfg(all(target_os = "windows", feature = "runtime-d3d12")))]
+    #[cfg_attr(
+        feature = "docsrs",
+        doc(cfg(all(target_os = "windows", feature = "runtime-d3d12")))
+    )]
     /// Shader runtime for Direct3D 12.
     pub mod d3d12 {
         pub use librashader_runtime_d3d12::{
@@ -277,7 +296,10 @@ pub mod runtime {
     }
 
     #[cfg(all(target_os = "windows", feature = "runtime-d3d9"))]
-    #[doc(cfg(all(target_os = "windows", feature = "runtime-d3d9")))]
+    #[cfg_attr(
+        feature = "docsrs",
+        doc(cfg(all(target_os = "windows", feature = "runtime-d3d9")))
+    )]
     /// Shader runtime for Direct3D 9.
     pub mod d3d9 {
         pub use librashader_runtime_d3d9::{
@@ -290,7 +312,7 @@ pub mod runtime {
     }
 
     #[cfg(feature = "runtime-vk")]
-    #[doc(cfg(feature = "runtime-vk"))]
+    #[cfg_attr(feature = "docsrs", doc(cfg(feature = "runtime-vk")))]
     /// Shader runtime for Vulkan.
     pub mod vk {
         pub use librashader_runtime_vk::{
@@ -303,7 +325,10 @@ pub mod runtime {
     }
 
     #[cfg(all(target_vendor = "apple", feature = "runtime-metal"))]
-    #[doc(cfg(all(target_vendor = "apple", feature = "runtime-metal")))]
+    #[cfg_attr(
+        feature = "docsrs",
+        doc(cfg(all(target_vendor = "apple", feature = "runtime-metal")))
+    )]
     /// Shader runtime for Metal.
     pub mod mtl {
         pub use librashader_runtime_mtl::{
@@ -316,20 +341,9 @@ pub mod runtime {
     }
 
     #[cfg(feature = "runtime-wgpu")]
-    #[doc(cfg(feature = "runtime-wgpu"))]
+    #[cfg_attr(feature = "docsrs", doc(cfg(feature = "runtime-wgpu")))]
     /// Shader runtime for wgpu.
-    #[cfg_attr(
-        all(
-            feature = "runtime-wgpu",
-            all(target_vendor = "apple", feature = "docsrs")
-        ),
-        doc = "\n\nThe wgpu runtime is available on macOS and iOS, but technical reasons prevent them from rendering on docs.rs.
-\n\n This is because wgpu on macOS and iOS link to [metal-rs](https://github.com/gfx-rs/metal-rs), which can not build on docs.rs.
- See [SSheldon/rustc-objc-exception#13](https://github.com/SSheldon/rust-objc-exception/issues/13) for more details. 
-\n\n The wgpu runtime is identical for all supported operating systems, so please refer to documentation from another operating system."
-    )]
     pub mod wgpu {
-        #[cfg(not(all(target_vendor = "apple", feature = "docsrs")))]
         pub use librashader_runtime_wgpu::{
             error,
             options::{

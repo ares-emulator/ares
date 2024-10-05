@@ -1,6 +1,6 @@
 # librashader
 
-![Mega Bezel SMOOTH-ADV](shader_triangle.png)
+![Mega Bezel SMOOTH-ADV](https://raw.githubusercontent.com/SnowflakePowered/librashader/master/shader_triangle.png)
 
 <small>*Mega Bezel SMOOTH-ADV on DirectX 11*</small>
 
@@ -8,7 +8,7 @@ librashader (*/ˈli:brəʃeɪdɚ/*) is a preprocessor, compiler, and runtime for
 
 [![Latest Version](https://img.shields.io/crates/v/librashader.svg)](https://crates.io/crates/librashader) [![Docs](https://docs.rs/librashader/badge.svg)](https://docs.rs/librashader) [![build result](https://build.opensuse.org/projects/home:chyyran:librashader/packages/librashader/badge.svg)](https://software.opensuse.org//download.html?project=home%3Achyyran%3Alibrashader&package=librashader)
 ![License](https://img.shields.io/crates/l/librashader)
-![Nightly rust](https://img.shields.io/badge/rust-nightly-orange.svg) 
+![Nightly rust](https://img.shields.io/badge/rust-nightly-orange.svg) ![Stable rust](https://img.shields.io/badge/rust-1.77-blue.svg)
 
 ## Installation
 For end-users, librashader is available from the [Open Build Service](https://software.opensuse.org//download.html?project=home%3Achyyran%3Alibrashader&package=librashader) for a variety of Linux distributions and platforms.
@@ -18,25 +18,26 @@ Windows and macOS users can grab the latest binaries from [GitHub Releases](http
 librashader supports all modern graphics runtimes, including wgpu, Vulkan, OpenGL 3.3+ and 4.6 (with DSA), 
 Direct3D 11, Direct3D 12, and Metal. 
 
-librashader does not support legacy render APIs such as older versions of OpenGL or Direct3D, except for experimental
+librashader does not support legacy render APIs such as older versions of OpenGL or Direct3D, except for limited
 support for Direct3D 9.
 
 | **API**     | **Status** | **`librashader` feature** |
-|-------------|------------|---------------------------|
-| OpenGL 3.3+ | ✅          | `gl`                      |
-| OpenGL 4.6  | ✅          | `gl`                      |
-| Vulkan      | ✅          | `vk`                      |
-| Direct3D 9  | ⚠️         | `d3d9`                    |
-| Direct3D 11 | ✅          | `d3d11`                   |
-| Direct3D 12 | ✅          | `d3d12`                   |
-| Metal       | ✅          | `metal`                   |
-| wgpu        | 🆗         | `wgpu`                    |
+|-------------|------------|--------------------------|
+| OpenGL 3.3+ | ✅         | `gl`                     |
+| OpenGL 4.6  | ✅         | `gl`                     |
+| Vulkan      | ✅         | `vk`                     |
+| Direct3D 9  | 🆗️         |`d3d9`                    |
+| Direct3D 11 | ✅         | `d3d11`                  |
+| Direct3D 12 | ✅         | `d3d12`                  |
+| Metal       | ✅         | `metal`                  |
+| wgpu        | 🆗         | `wgpu`                   |
 
-✅ Full Support &mdash; 🆗 Secondary Support &mdash; ⚠️ ️Experimental Support
+✅ Full Support &mdash; 🆗 Secondary Support 
 
-wgpu may not support all shaders due to restrictions from WGSL. Direct3D 9 support is experimental and does not fully
-support features such as previous frame feedback or history, as well as being unable to support shaders that need Direct3D 10+
-only features. 
+Shader compatibility is not guaranteed on render APIs with secondary support. 
+
+wgpu has restrictions on shaders that can not be converted to WGSL, such as those that use `inverse`. Direct3D 9 does not support
+shaders that need Direct3D 10+ only features, or shaders that can not be compiled to [Shader Model 3.0](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/shader-model-3).
 
 ## Usage
 
@@ -46,7 +47,6 @@ of the internals if you wish to use parts of librashader piecemeal.
 
 The librashader C API is best used by including `librashader_ld.h` in your project, which implements a loader that dynamically
 loads the librashader (`librashader.so`, `librashader.dll`, or `librashader.dylib`) implementation in the search path. 
-
 
 ### C compatibility
 The recommended way of integrating `librashader` is by the `librashader_ld` single header library which implements
@@ -74,6 +74,8 @@ is not available to OpenGL.
 The Metal runtime is **not thread safe**. However you can still defer submission of GPU resource initialization through the
 `filter_chain_create_deferred` function.
 
+The Direct3D 9 API is not thread safe, unless `D3DCREATE_MULTITHREADED` is enabled at device creation.
+
 ### Quad vertices and rotations
 All runtimes render intermediate passes with an identity matrix MVP and a VBO for with range `[-1, 1]`. The final pass uses a
 Quad VBO with range `[0, 1]` and the following projection matrix by default.
@@ -90,7 +92,38 @@ static DEFAULT_MVP: &[f32; 16] = &[
 As with RetroArch, a rotation on this MVP will be applied only on the final pass for these runtimes. This is the only way to
 pass orientation information to shaders.
 
-### Building
+### Writing a librashader Runtime
+
+If you wish to contribute a runtime implementation not already available, see the [librashader-runtime](https://docs.rs/librashader-runtime/latest/librashader_runtime/)
+crate for helpers and shared logic used across all librashader runtime implementations. Using these helpers and traits will
+ensure that your runtime has consistent behaviour for uniform and texture semantics bindings with the existing librashader runtimes.
+
+These types should not be exposed to the end user in the runtime's public API, and should be kept internal to the implementation of
+the runtime.
+
+## Command-line interface
+librashader provides a command-line interface to reflect and debug 'slang' shaders and presets.
+
+``` 
+Usage: librashader-cli <COMMAND>
+
+Commands:
+  render      Render a shader preset against an image
+  compare     Compare two runtimes and get a similarity score between the two runtimes rendering the same frame
+  parse       Parse a preset and get a JSON representation of the data
+  preprocess  Get the raw GLSL output of a preprocessed shader
+  transpile   Transpile a shader in a given preset to the given format
+  reflect     Reflect the shader relative to a preset, giving information about semantics used in a slang shader
+  help        Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+For more information, see [`CLI.md`](https://github.com/SnowflakePowered/librashader/blob/master/CLI.md).
+
+## Building
 
 For Rust projects, simply add the crate to your `Cargo.toml`. 
 
@@ -110,14 +143,28 @@ This will output a `librashader.dll` or `librashader.so` in the target folder. P
 While librashader has no build-time dependencies, using `librashader_ld.h` may require headers from
 the relevant runtime graphics API.
 
-### Writing a librashader Runtime
 
-If you wish to contribute a runtime implementation not already available, see the [librashader-runtime](https://docs.rs/librashader-runtime/latest/librashader_runtime/)
-crate for helpers and shared logic used across all librashader runtime implementations. Using these helpers and traits will
-ensure that your runtime has consistent behaviour for uniform and texture semantics bindings with the existing librashader runtimes.
+### Building against stable Rust
+While librashader is intended to be used with nightly Rust until [required features](https://github.com/SnowflakePowered/librashader/issues/55) are stabilized, it supports being
+built with stable Rust with the `stable` feature.
 
-These types should not be exposed to the end user in the runtime's public API, and should be kept internal to the implementation of
-the runtime.
+```toml 
+librashader = { features = ["stable"] }
+```
+
+If building the C API, the `--stable` flag in the build script will enable the `stable` feature.
+
+```
+cargo +stable run -p librashader-build-script -- --profile optimized --stable 
+```
+
+There are some caveats when building against stable Rust, such that building librashader against nightly Rust is still highly encouraged.
+
+* C headers will not be regenerated when building with the `stable` feature.
+* There is a minor performance hit in initial shader compilation when building against stable Rust. This is due to boxed trait objects being used instead of `impl Trait`.
+* A higher MSRV is required when building against stable Rust.
+
+When the `trait_alias_impl_trait` feature is stabilized, the `stable` feature will be removed. 
 
 ## Examples
 
@@ -127,6 +174,7 @@ The following Rust examples show how to use each librashader runtime.
 * [Direct3D 11](https://github.com/SnowflakePowered/librashader/blob/master/librashader-runtime-d3d11/tests/triangle.rs)
 * [Direct3D 12](https://github.com/SnowflakePowered/librashader/blob/master/librashader-runtime-d3d12/tests/triangle.rs)
 * [wgpu](https://github.com/SnowflakePowered/librashader/blob/master/librashader-runtime-wgpu/tests/hello_triangle.rs)
+* [Direct3D 9](https://github.com/SnowflakePowered/librashader/blob/master/librashader-runtime-d3d9/tests/triangle.rs)
 
 Some basic examples on using the C API are also provided.
 
@@ -151,6 +199,9 @@ Please report an issue if you run into a shader that works in RetroArch, but not
   `mipmap_input0 = "true"`.
 * The preset parser is a substantially stricter implementation that the one in RetroArch. Not all shader presets may be
   compatible. If you find this is the case, please file an issue so a workaround can be added.
+* Shaders are [pre-linked at the SPIR-V level](https://github.com/SnowflakePowered/librashader/blob/master/librashader-reflect/src/front/spirv_passes/link_input_outputs.rs) before being
+  passed to the driver. Unused inputs in the fragment shader are removed, and the corresponding input in the vertex shader
+  is downgraded to a global variable. 
 ### Runtime specific differences
 * OpenGL
   * Copying of in-flight framebuffer contents to history is done via `glBlitFramebuffer` rather than drawing a quad into an intermediate FBO.
@@ -184,7 +235,7 @@ and are more a heads-up for integrating librashader into your project.
 
 ## Versioning
 [![Latest Version](https://img.shields.io/crates/v/librashader.svg)](https://crates.io/crates/librashader)
-![C ABI](https://img.shields.io/badge/ABI%20version-1-yellowgreen)
+![C ABI](https://img.shields.io/badge/ABI%20version-2-yellowgreen)
 ![C API](https://img.shields.io/badge/API%20version-1-blue)
 
 
@@ -217,14 +268,23 @@ The `SONAME` of `librashader.so` when installed via package manager is set to `L
 The above does not apply to releases of librashader prior to `0.1.0`, which were allowed to break API and ABI compatibility
 in both the Rust and C API without an increase to either `LIBRASHADER_CURRENT_VERSION` or `LIBRASHADER_CURRENT_ABI`.
 
+The ABI version was bumped from `1` to `2` with librashader `0.5.0`. See [`MIGRATION-ABI2.md`](https://github.com/SnowflakePowered/librashader/blob/master/MIGRATION-ABI2.md)
+for migration instructions.
+
 ### MSRV Policy
 
-While librashader requires nightly Rust, the following MSRV policy is enforced for unstable library features.
+When building against nightly Rust, the following MSRV policy is enforced for unstable library features.
 
 * Windows and macOS: **latest** nightly
-* Linux: **1.70**
+* Linux: **1.76**
 
-A CI job runs weekly to ensure librashader continues to build on nightly. Note that the MSRV is only intended to ease distribution on Linux and is allowed to change any time. It generally tracks the latest version of Rust available in the latest version of Ubuntu, but this may change with no warning in a patch release.
+A CI job runs weekly to ensure librashader continues to build on nightly. 
+
+Building against stable Rust requires a higher MSRV.
+* All platforms: **1.77**
+
+Note that the MSRV is only intended to ease distribution on Linux when building against nightly Rust or with `RUSTC_BOOTSTRAP=1`, and is allowed to change any time. 
+It generally tracks the latest version of Rust available in the latest version of Ubuntu, but this may change with no warning in a patch release.
 
 ## License
 The core parts of librashader such as the preprocessor, the preset parser, 

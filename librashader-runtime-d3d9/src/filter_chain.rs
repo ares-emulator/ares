@@ -12,7 +12,7 @@ use librashader_cache::{cache_shader_object, CachedCompilation};
 use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_presets::context::VideoDriver;
-use librashader_presets::{ShaderPassConfig, ShaderPreset, TextureConfig};
+use librashader_presets::ShaderPreset;
 use librashader_reflect::back::hlsl::HlslShaderModel;
 use librashader_reflect::back::targets::HLSL;
 use librashader_reflect::back::{CompileReflectShader, CompileShader};
@@ -23,23 +23,20 @@ use librashader_reflect::reflect::semantics::ShaderSemantics;
 use librashader_reflect::reflect::ReflectShader;
 use librashader_runtime::binding::{BindingUtil, TextureInput};
 use librashader_runtime::framebuffer::FramebufferInit;
-use librashader_runtime::image::{Image, ImageError, UVDirection, ARGB8};
+use librashader_runtime::image::{ImageError, LoadedTexture, UVDirection, BGRA8};
 use librashader_runtime::quad::QuadType;
 use librashader_runtime::render_target::RenderTarget;
 use librashader_runtime::scaling::ScaleFramebuffer;
 use librashader_runtime::uniforms::UniformStorage;
 use std::collections::VecDeque;
 
+use librashader_common::GetSize;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
+
 use std::path::Path;
 
-use crate::util::GetSize;
-
 use windows::Win32::Graphics::Direct3D9::{IDirect3DDevice9, IDirect3DSurface9, IDirect3DTexture9};
-
-pub struct FilterMutable {
-    pub(crate) passes_enabled: usize,
-    pub(crate) parameters: FastHashMap<String, f32>,
-}
 
 pub(crate) struct FilterCommon {
     pub(crate) d3d9: IDirect3DDevice9,
@@ -48,7 +45,7 @@ pub(crate) struct FilterCommon {
     pub output_textures: Box<[Option<D3D9InputTexture>]>,
     pub feedback_textures: Box<[Option<D3D9InputTexture>]>,
     pub history_textures: Box<[Option<D3D9InputTexture>]>,
-    pub config: FilterMutable,
+    pub config: RuntimeParameters,
     pub disable_mipmaps: bool,
     pub(crate) draw_quad: DrawQuad,
 }
@@ -61,16 +58,25 @@ pub struct FilterChainD3D9 {
     feedback_framebuffers: Box<[D3D9Texture]>,
     history_framebuffers: VecDeque<D3D9Texture>,
     default_options: FrameOptionsD3D9,
+    draw_last_pass_feedback: bool,
 }
 
 mod compile {
     use super::*;
+    use librashader_pack::{PassResource, TextureResource};
+
+    #[cfg(not(feature = "stable"))]
     pub type ShaderPassMeta =
         ShaderPassArtifact<impl CompileReflectShader<HLSL, SpirvCompilation, SpirvCross> + Send>;
 
+    #[cfg(feature = "stable")]
+    pub type ShaderPassMeta = ShaderPassArtifact<
+        Box<dyn CompileReflectShader<HLSL, SpirvCompilation, SpirvCross> + Send>,
+    >;
+
     pub fn compile_passes(
-        shaders: Vec<ShaderPassConfig>,
-        textures: &[TextureConfig],
+        shaders: Vec<PassResource>,
+        textures: &[TextureResource],
         disable_cache: bool,
     ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
         let (passes, semantics) = if !disable_cache {
@@ -78,10 +84,11 @@ mod compile {
                 CachedCompilation<SpirvCompilation>,
                 SpirvCross,
                 FilterChainError,
-            >(shaders, &textures)?
+            >(shaders, textures.iter().map(|t| &t.meta))?
         } else {
             HLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
-                shaders, &textures,
+                shaders,
+                textures.iter().map(|t| &t.meta),
             )?
         };
 
@@ -90,6 +97,8 @@ mod compile {
 }
 
 use compile::{compile_passes, ShaderPassMeta};
+use librashader_pack::{ShaderPresetPack, TextureResource};
+use librashader_runtime::parameters::RuntimeParameters;
 
 impl FilterChainD3D9 {
     fn init_passes(
@@ -98,9 +107,9 @@ impl FilterChainD3D9 {
         semantics: &ShaderSemantics,
         disable_cache: bool,
     ) -> error::Result<Vec<FilterPass>> {
-        let builder_fn = |(index, (config, source, mut reflect)): (usize, ShaderPassMeta)| {
+        let builder_fn = |(index, (config, mut reflect)): (usize, ShaderPassMeta)| {
             let mut reflection = reflect.reflect(index, semantics)?;
-            let hlsl = reflect.compile(Some(HlslShaderModel::V3_0))?;
+            let hlsl = reflect.compile(Some(HlslShaderModel::ShaderModel3_0))?;
 
             // eprintln!("===vs===\n{}", hlsl.vertex);
 
@@ -165,8 +174,8 @@ impl FilterChainD3D9 {
                 uniform_bindings,
                 uniform_storage,
                 gl_halfpixel,
-                source,
-                config,
+                source: config.data,
+                meta: config.meta,
             })
         };
 
@@ -180,16 +189,16 @@ impl FilterChainD3D9 {
 
     fn load_luts(
         device: &IDirect3DDevice9,
-        textures: &[TextureConfig],
+        textures: Vec<TextureResource>,
     ) -> error::Result<FastHashMap<usize, LutTexture>> {
         let mut luts = FastHashMap::default();
         let images = textures
-            .iter()
-            .map(|texture| Image::load(&texture.path, UVDirection::TopLeft))
-            .collect::<Result<Vec<Image<ARGB8>>, ImageError>>()?;
+            .into_par_iter()
+            .map(|texture| LoadedTexture::from_texture(texture, UVDirection::TopLeft))
+            .collect::<Result<Vec<LoadedTexture<BGRA8>>, ImageError>>()?;
 
-        for (index, (texture, image)) in textures.iter().zip(images).enumerate() {
-            let texture = LutTexture::new(device, &image, &texture)?;
+        for (index, LoadedTexture { meta, image }) in images.iter().enumerate() {
+            let texture = LutTexture::new(device, &image, &meta)?;
             luts.insert(index, texture);
         }
         Ok(luts)
@@ -209,15 +218,25 @@ impl FilterChainD3D9 {
         unsafe { Self::load_from_preset(preset, device, options) }
     }
 
-    /// Load a filter chain from a pre-parsed `ShaderPreset`.
+    /// Load a filter chain from a pre-parsed and loaded `ShaderPresetPack`.
     pub unsafe fn load_from_preset(
         preset: ShaderPreset,
         device: &IDirect3DDevice9,
         options: Option<&FilterChainOptionsD3D9>,
     ) -> error::Result<FilterChainD3D9> {
+        let preset = ShaderPresetPack::load_from_preset::<FilterChainError>(preset)?;
+        unsafe { Self::load_from_pack(preset, device, options) }
+    }
+
+    /// Load a filter chain from a pre-parsed `ShaderPreset`.
+    pub unsafe fn load_from_pack(
+        preset: ShaderPresetPack,
+        device: &IDirect3DDevice9,
+        options: Option<&FilterChainOptionsD3D9>,
+    ) -> error::Result<FilterChainD3D9> {
         let disable_cache = options.map_or(false, |o| o.disable_cache);
 
-        let (passes, semantics) = compile_passes(preset.shaders, &preset.textures, disable_cache)?;
+        let (passes, semantics) = compile_passes(preset.passes, &preset.textures, disable_cache)?;
 
         let samplers = SamplerSet::new()?;
 
@@ -225,7 +244,7 @@ impl FilterChainD3D9 {
         let filters = FilterChainD3D9::init_passes(device, passes, &semantics, disable_cache)?;
 
         // load luts
-        let luts = FilterChainD3D9::load_luts(device, &preset.textures)?;
+        let luts = FilterChainD3D9::load_luts(device, preset.textures)?;
 
         let framebuffer_gen =
             || D3D9Texture::new(device, Size::new(1, 1), ImageFormat::R8G8B8A8Unorm, false);
@@ -249,20 +268,14 @@ impl FilterChainD3D9 {
         let draw_quad = DrawQuad::new(device)?;
 
         Ok(FilterChainD3D9 {
+            draw_last_pass_feedback: framebuffer_init.uses_final_pass_as_feedback(),
             passes: filters,
             output_framebuffers,
             feedback_framebuffers,
             history_framebuffers,
             common: FilterCommon {
                 d3d9: device.clone(),
-                config: FilterMutable {
-                    passes_enabled: preset.shader_count as usize,
-                    parameters: preset
-                        .parameters
-                        .into_iter()
-                        .map(|param| (param.name, param.value))
-                        .collect(),
-                },
+                config: RuntimeParameters::new(preset.pass_count as usize, preset.parameters),
                 disable_mipmaps: options.map_or(false, |o| o.force_no_mipmaps),
                 luts,
                 samplers,
@@ -290,12 +303,13 @@ impl FilterChainD3D9 {
     ///   * `input` must be in `D3DPOOL_DEFAULT`.
     pub unsafe fn frame(
         &mut self,
-        input: IDirect3DTexture9,
-        viewport: &Viewport<IDirect3DSurface9>,
+        input: &IDirect3DTexture9,
+        viewport: &Viewport<&IDirect3DSurface9>,
         frame_count: usize,
         options: Option<&FrameOptionsD3D9>,
     ) -> error::Result<()> {
-        let max = std::cmp::min(self.passes.len(), self.common.config.passes_enabled);
+        let max = std::cmp::min(self.passes.len(), self.common.config.passes_enabled());
+
         let passes = &mut self.passes[0..max];
         if let Some(options) = options {
             if options.clear_history {
@@ -310,8 +324,8 @@ impl FilterChainD3D9 {
         }
 
         let options = options.unwrap_or(&self.default_options);
-        let filter = passes[0].config.filter;
-        let wrap_mode = passes[0].config.wrap_mode;
+        let filter = passes[0].meta.filter;
+        let wrap_mode = passes[0].meta.wrap_mode;
 
         for (texture, fbo) in self
             .common
@@ -352,11 +366,7 @@ impl FilterChainD3D9 {
             .zip(self.feedback_framebuffers.iter())
             .zip(passes.iter())
         {
-            *texture = Some(fbo.as_input(
-                pass.config.filter,
-                pass.config.filter,
-                pass.config.wrap_mode,
-            ));
+            *texture = Some(fbo.as_input(pass.meta.filter, pass.meta.filter, pass.meta.wrap_mode));
         }
 
         let passes_len = passes.len();
@@ -364,30 +374,30 @@ impl FilterChainD3D9 {
         let state_guard = D3D9State::new(&self.common.d3d9)?;
 
         for (index, pass) in pass.iter_mut().enumerate() {
-            source.filter = pass.config.filter;
-            source.wrap = pass.config.wrap_mode;
-            source.is_srgb = pass.config.srgb_framebuffer;
+            source.filter = pass.meta.filter;
+            source.wrap = pass.meta.wrap_mode;
+            source.is_srgb = pass.meta.srgb_framebuffer;
             let target = &self.output_framebuffers[index];
             let target_rtv = target.as_output()?;
             pass.draw(
                 &self.common.d3d9,
                 index,
                 &self.common,
-                pass.config.get_frame_count(frame_count),
+                pass.meta.get_frame_count(frame_count),
                 options,
                 viewport,
                 &original,
                 &source,
-                RenderTarget::identity(&target_rtv),
+                RenderTarget::identity(&target_rtv)?,
                 QuadType::Offscreen,
             )?;
 
             source = D3D9InputTexture {
                 handle: target.handle.clone(),
-                filter: pass.config.filter,
-                wrap: pass.config.wrap_mode,
-                mipmode: pass.config.filter,
-                is_srgb: pass.config.srgb_framebuffer,
+                filter: pass.meta.filter,
+                wrap: pass.meta.wrap_mode,
+                mipmode: pass.meta.filter,
+                is_srgb: pass.meta.srgb_framebuffer,
             };
             self.common.output_textures[index] = Some(source.clone());
         }
@@ -395,15 +405,34 @@ impl FilterChainD3D9 {
         // try to hint the optimizer
         assert_eq!(last.len(), 1);
         if let Some(pass) = last.iter_mut().next() {
-            source.filter = pass.config.filter;
-            source.wrap = pass.config.wrap_mode;
-            source.is_srgb = pass.config.srgb_framebuffer;
+            let index = passes_len - 1;
+            source.filter = pass.meta.filter;
+            source.wrap = pass.meta.wrap_mode;
+            source.is_srgb = pass.meta.srgb_framebuffer;
+
+            if self.draw_last_pass_feedback {
+                let feedback_target = &self.output_framebuffers[index];
+                let feedback_target_rtv = feedback_target.as_output()?;
+
+                pass.draw(
+                    &self.common.d3d9,
+                    index,
+                    &self.common,
+                    pass.meta.get_frame_count(frame_count),
+                    options,
+                    viewport,
+                    &original,
+                    &source,
+                    RenderTarget::viewport_with_output(&feedback_target_rtv, viewport),
+                    QuadType::Final,
+                )?;
+            }
 
             pass.draw(
                 &self.common.d3d9,
-                passes_len - 1,
+                index,
                 &self.common,
-                pass.config.get_frame_count(frame_count),
+                pass.meta.get_frame_count(frame_count),
                 options,
                 viewport,
                 &original,

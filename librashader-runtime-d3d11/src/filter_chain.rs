@@ -1,14 +1,14 @@
-use crate::texture::{D3D11InputView, InputTexture};
+use crate::texture::InputTexture;
 use librashader_common::{ImageFormat, Size, Viewport};
 
 use librashader_common::map::FastHashMap;
-use librashader_presets::{ShaderPassConfig, ShaderPreset, TextureConfig};
+use librashader_presets::ShaderPreset;
 use librashader_reflect::back::targets::HLSL;
 use librashader_reflect::back::{CompileReflectShader, CompileShader};
 use librashader_reflect::front::SpirvCompilation;
 use librashader_reflect::reflect::semantics::ShaderSemantics;
 use librashader_reflect::reflect::ReflectShader;
-use librashader_runtime::image::{Image, ImageError, UVDirection};
+use librashader_runtime::image::{ImageError, LoadedTexture, UVDirection, RGBA8};
 use std::collections::VecDeque;
 
 use std::path::Path;
@@ -22,9 +22,10 @@ use crate::luts::LutTexture;
 use crate::options::{FilterChainOptionsD3D11, FrameOptionsD3D11};
 use crate::samplers::SamplerSet;
 use crate::util::d3d11_compile_bound_shader;
-use crate::{error, util, D3D11OutputView};
+use crate::{error, util};
 use librashader_cache::cache_shader_object;
 use librashader_cache::CachedCompilation;
+use librashader_common::GetSize;
 use librashader_presets::context::VideoDriver;
 use librashader_reflect::reflect::cross::SpirvCross;
 use librashader_reflect::reflect::presets::{CompilePresetTarget, ShaderPassArtifact};
@@ -36,16 +37,12 @@ use librashader_runtime::scaling::ScaleFramebuffer;
 use librashader_runtime::uniforms::UniformStorage;
 use rayon::prelude::*;
 use windows::Win32::Graphics::Direct3D11::{
-    ID3D11Buffer, ID3D11Device, ID3D11DeviceContext, D3D11_BIND_CONSTANT_BUFFER, D3D11_BUFFER_DESC,
+    ID3D11Buffer, ID3D11Device, ID3D11DeviceContext, ID3D11RenderTargetView,
+    ID3D11ShaderResourceView, D3D11_BIND_CONSTANT_BUFFER, D3D11_BUFFER_DESC,
     D3D11_CPU_ACCESS_WRITE, D3D11_CREATE_DEVICE_SINGLETHREADED, D3D11_RESOURCE_MISC_GENERATE_MIPS,
     D3D11_TEXTURE2D_DESC, D3D11_USAGE_DEFAULT, D3D11_USAGE_DYNAMIC,
 };
 use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_R8G8B8A8_UNORM;
-
-pub struct FilterMutable {
-    pub(crate) passes_enabled: usize,
-    pub(crate) parameters: FastHashMap<String, f32>,
-}
 
 /// A Direct3D 11 filter chain.
 pub struct FilterChainD3D11 {
@@ -56,6 +53,7 @@ pub struct FilterChainD3D11 {
     history_framebuffers: VecDeque<OwnedImage>,
     state: D3D11State,
     default_options: FrameOptionsD3D11,
+    draw_last_pass_feedback: bool,
 }
 
 pub(crate) struct Direct3D11 {
@@ -70,19 +68,27 @@ pub(crate) struct FilterCommon {
     pub output_textures: Box<[Option<InputTexture>]>,
     pub feedback_textures: Box<[Option<InputTexture>]>,
     pub history_textures: Box<[Option<InputTexture>]>,
-    pub config: FilterMutable,
+    pub config: RuntimeParameters,
     pub disable_mipmaps: bool,
     pub(crate) draw_quad: DrawQuad,
 }
 
 mod compile {
     use super::*;
+    use librashader_pack::{PassResource, TextureResource};
+
+    #[cfg(not(feature = "stable"))]
     pub type ShaderPassMeta =
         ShaderPassArtifact<impl CompileReflectShader<HLSL, SpirvCompilation, SpirvCross> + Send>;
 
+    #[cfg(feature = "stable")]
+    pub type ShaderPassMeta = ShaderPassArtifact<
+        Box<dyn CompileReflectShader<HLSL, SpirvCompilation, SpirvCross> + Send>,
+    >;
+
     pub fn compile_passes(
-        shaders: Vec<ShaderPassConfig>,
-        textures: &[TextureConfig],
+        shaders: Vec<PassResource>,
+        textures: &[TextureResource],
         disable_cache: bool,
     ) -> Result<(Vec<ShaderPassMeta>, ShaderSemantics), FilterChainError> {
         let (passes, semantics) = if !disable_cache {
@@ -90,10 +96,11 @@ mod compile {
                 CachedCompilation<SpirvCompilation>,
                 SpirvCross,
                 FilterChainError,
-            >(shaders, &textures)?
+            >(shaders, textures.iter().map(|t| &t.meta))?
         } else {
             HLSL::compile_preset_passes::<SpirvCompilation, SpirvCross, FilterChainError>(
-                shaders, &textures,
+                shaders,
+                textures.iter().map(|t| &t.meta),
             )?
         };
 
@@ -102,6 +109,8 @@ mod compile {
 }
 
 use compile::{compile_passes, ShaderPassMeta};
+use librashader_pack::{ShaderPresetPack, TextureResource};
+use librashader_runtime::parameters::RuntimeParameters;
 
 impl FilterChainD3D11 {
     /// Load the shader preset at the given path into a filter chain.
@@ -126,6 +135,16 @@ impl FilterChainD3D11 {
         unsafe { Self::load_from_preset_deferred(preset, device, &immediate_context, options) }
     }
 
+    /// Load a filter chain from a pre-parsed and loaded `ShaderPresetPack`.
+    pub unsafe fn load_from_pack(
+        preset: ShaderPresetPack,
+        device: &ID3D11Device,
+        options: Option<&FilterChainOptionsD3D11>,
+    ) -> error::Result<FilterChainD3D11> {
+        let immediate_context = unsafe { device.GetImmediateContext()? };
+        unsafe { Self::load_from_pack_deferred(preset, device, &immediate_context, options) }
+    }
+
     /// Load a filter chain from a pre-parsed `ShaderPreset`, deferring and GPU-side initialization
     /// to the caller. This function is therefore requires no external synchronization of the
     /// immediate context, as long as the immediate context is not used as the input context,
@@ -147,9 +166,34 @@ impl FilterChainD3D11 {
         ctx: &ID3D11DeviceContext,
         options: Option<&FilterChainOptionsD3D11>,
     ) -> error::Result<FilterChainD3D11> {
+        let preset = ShaderPresetPack::load_from_preset::<FilterChainError>(preset)?;
+        unsafe { Self::load_from_pack_deferred(preset, device, ctx, options) }
+    }
+
+    /// Load a filter chain from a pre-parsed and loaded `ShaderPresetPack`, deferring and GPU-side initialization
+    /// to the caller. This function is therefore requires no external synchronization of the
+    /// immediate context, as long as the immediate context is not used as the input context,
+    /// nor of the device, as long as the device is not single-threaded only.
+    ///
+    /// ## Safety
+    /// The provided context must either be immediate, or immediately submitted after this function
+    /// returns, **before drawing frames**, or lookup textures will fail to load and the filter chain
+    /// will be in an invalid state.
+    ///
+    /// If the context is deferred, it must be ready for command recording, and have no prior commands
+    /// recorded. No commands shall be recorded after, the caller must immediately call [`FinishCommandList`](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-finishcommandlist)
+    /// and execute the command list on the immediate context after this function returns.
+    ///
+    /// If the context is immediate, then access to the immediate context requires external synchronization.
+    pub unsafe fn load_from_pack_deferred(
+        preset: ShaderPresetPack,
+        device: &ID3D11Device,
+        ctx: &ID3D11DeviceContext,
+        options: Option<&FilterChainOptionsD3D11>,
+    ) -> error::Result<FilterChainD3D11> {
         let disable_cache = options.map_or(false, |o| o.disable_cache);
 
-        let (passes, semantics) = compile_passes(preset.shaders, &preset.textures, disable_cache)?;
+        let (passes, semantics) = compile_passes(preset.passes, &preset.textures, disable_cache)?;
 
         let samplers = SamplerSet::new(device)?;
 
@@ -159,7 +203,7 @@ impl FilterChainD3D11 {
         let immediate_context = unsafe { device.GetImmediateContext()? };
 
         // load luts
-        let luts = FilterChainD3D11::load_luts(device, &ctx, &preset.textures)?;
+        let luts = FilterChainD3D11::load_luts(device, &ctx, preset.textures)?;
 
         let framebuffer_gen =
             || OwnedImage::new(device, Size::new(1, 1), ImageFormat::R8G8B8A8Unorm, false);
@@ -183,6 +227,7 @@ impl FilterChainD3D11 {
         let draw_quad = DrawQuad::new(device)?;
         let state = D3D11State::new(device)?;
         Ok(FilterChainD3D11 {
+            draw_last_pass_feedback: framebuffer_init.uses_final_pass_as_feedback(),
             passes: filters,
             output_framebuffers,
             feedback_framebuffers,
@@ -192,14 +237,7 @@ impl FilterChainD3D11 {
                     _device: device.clone(),
                     immediate_context,
                 },
-                config: FilterMutable {
-                    passes_enabled: preset.shader_count as usize,
-                    parameters: preset
-                        .parameters
-                        .into_iter()
-                        .map(|param| (param.name, param.value))
-                        .collect(),
-                },
+                config: RuntimeParameters::new(preset.pass_count as usize, preset.parameters),
                 disable_mipmaps: options.map_or(false, |o| o.force_no_mipmaps),
                 luts,
                 samplers,
@@ -244,7 +282,7 @@ impl FilterChainD3D11 {
         let device_is_singlethreaded =
             unsafe { (device.GetCreationFlags() & D3D11_CREATE_DEVICE_SINGLETHREADED.0) == 1 };
 
-        let builder_fn = |(index, (config, source, mut reflect)): (usize, ShaderPassMeta)| {
+        let builder_fn = |(index, (config, mut reflect)): (usize, ShaderPassMeta)| {
             let reflection = reflect.reflect(index, semantics)?;
             let hlsl = reflect.compile(None)?;
 
@@ -279,22 +317,23 @@ impl FilterChainD3D11 {
                 disable_cache,
             )?;
 
-            let ubo_cbuffer = if let Some(ubo) = &reflection.ubo
-                && ubo.size != 0
-            {
-                let buffer = FilterChainD3D11::create_constant_buffer(device, ubo.size)?;
-                Some(ConstantBufferBinding {
-                    binding: ubo.binding,
-                    size: ubo.size,
-                    stage_mask: ubo.stage_mask,
-                    buffer,
-                })
-            } else {
-                None
-            };
+            let ubo_cbuffer =
+                if let Some(ubo) = &reflection.ubo.as_ref().filter(|ubo| ubo.size != 0) {
+                    let buffer = FilterChainD3D11::create_constant_buffer(device, ubo.size)?;
+                    Some(ConstantBufferBinding {
+                        binding: ubo.binding,
+                        size: ubo.size,
+                        stage_mask: ubo.stage_mask,
+                        buffer,
+                    })
+                } else {
+                    None
+                };
 
-            let push_cbuffer = if let Some(push) = &reflection.push_constant
-                && push.size != 0
+            let push_cbuffer = if let Some(push) = &reflection
+                .push_constant
+                .as_ref()
+                .filter(|push| push.size != 0)
             {
                 let buffer = FilterChainD3D11::create_constant_buffer(device, push.size)?;
                 Some(ConstantBufferBinding {
@@ -326,8 +365,8 @@ impl FilterChainD3D11 {
                 uniform_storage,
                 uniform_buffer: ubo_cbuffer,
                 push_buffer: push_cbuffer,
-                source,
-                config,
+                source: config.data,
+                meta: config.meta,
             })
         };
 
@@ -347,7 +386,7 @@ impl FilterChainD3D11 {
     fn push_history(
         &mut self,
         ctx: &ID3D11DeviceContext,
-        input: &D3D11InputView,
+        input: &ID3D11ShaderResourceView,
     ) -> error::Result<()> {
         if let Some(mut back) = self.history_framebuffers.pop_back() {
             back.copy_from(ctx, input)?;
@@ -360,21 +399,21 @@ impl FilterChainD3D11 {
     fn load_luts(
         device: &ID3D11Device,
         context: &ID3D11DeviceContext,
-        textures: &[TextureConfig],
+        textures: Vec<TextureResource>,
     ) -> error::Result<FastHashMap<usize, LutTexture>> {
         let mut luts = FastHashMap::default();
-        let images = textures
-            .par_iter()
-            .map(|texture| Image::load(&texture.path, UVDirection::TopLeft))
-            .collect::<Result<Vec<Image>, ImageError>>()?;
+        let textures = textures
+            .into_par_iter()
+            .map(|texture| LoadedTexture::from_texture(texture, UVDirection::TopLeft))
+            .collect::<Result<Vec<LoadedTexture<RGBA8>>, ImageError>>()?;
 
-        for (index, (texture, image)) in textures.iter().zip(images).enumerate() {
+        for (index, LoadedTexture { meta, image }) in textures.iter().enumerate() {
             let desc = D3D11_TEXTURE2D_DESC {
                 Width: image.size.width,
                 Height: image.size.height,
                 Format: DXGI_FORMAT_R8G8B8A8_UNORM,
                 Usage: D3D11_USAGE_DEFAULT,
-                MiscFlags: if texture.mipmap {
+                MiscFlags: if meta.mipmap {
                     D3D11_RESOURCE_MISC_GENERATE_MIPS.0 as u32
                 } else {
                     0
@@ -387,8 +426,8 @@ impl FilterChainD3D11 {
                 context,
                 &image,
                 desc,
-                texture.filter_mode,
-                texture.wrap_mode,
+                meta.filter_mode,
+                meta.wrap_mode,
             )?;
             luts.insert(index, texture);
         }
@@ -399,12 +438,12 @@ impl FilterChainD3D11 {
     pub unsafe fn frame(
         &mut self,
         ctx: Option<&ID3D11DeviceContext>,
-        input: D3D11InputView,
-        viewport: &Viewport<D3D11OutputView>,
+        input: &ID3D11ShaderResourceView,
+        viewport: &Viewport<&ID3D11RenderTargetView>,
         frame_count: usize,
         options: Option<&FrameOptionsD3D11>,
     ) -> error::Result<()> {
-        let max = std::cmp::min(self.passes.len(), self.common.config.passes_enabled);
+        let max = std::cmp::min(self.passes.len(), self.common.config.passes_enabled());
 
         // Need to clone this because pushing history needs a mutable borrow.
         let immediate_context = &self.common.d3d11.immediate_context.clone();
@@ -424,8 +463,8 @@ impl FilterChainD3D11 {
         }
 
         let options = options.unwrap_or(&self.default_options);
-        let filter = passes[0].config.filter;
-        let wrap_mode = passes[0].config.wrap_mode;
+        let filter = passes[0].meta.filter;
+        let wrap_mode = passes[0].meta.wrap_mode;
 
         for (texture, fbo) in self
             .common
@@ -447,8 +486,8 @@ impl FilterChainD3D11 {
         // rescale render buffers to ensure all bindings are valid.
         OwnedImage::scale_framebuffers(
             source.size(),
-            viewport.output.size,
-            original.view.size,
+            viewport.output.size()?,
+            original.view.size()?,
             &mut self.output_framebuffers,
             &mut self.feedback_framebuffers,
             passes,
@@ -466,8 +505,8 @@ impl FilterChainD3D11 {
         {
             *texture = Some(InputTexture::from_framebuffer(
                 fbo,
-                pass.config.wrap_mode,
-                pass.config.filter,
+                pass.meta.wrap_mode,
+                pass.meta.filter,
             )?);
         }
 
@@ -478,30 +517,26 @@ impl FilterChainD3D11 {
         self.common.draw_quad.bind_vbo_for_frame(ctx);
 
         for (index, pass) in pass.iter_mut().enumerate() {
-            source.filter = pass.config.filter;
-            source.wrap_mode = pass.config.wrap_mode;
+            source.filter = pass.meta.filter;
+            source.wrap_mode = pass.meta.wrap_mode;
             let target = &self.output_framebuffers[index];
-            let size = target.size;
             pass.draw(
                 ctx,
                 index,
                 &self.common,
-                pass.config.get_frame_count(frame_count),
+                pass.meta.get_frame_count(frame_count),
                 options,
                 viewport,
                 &original,
                 &source,
-                RenderTarget::identity(&target.as_output()?),
+                RenderTarget::identity(&target.create_render_target_view()?)?,
                 QuadType::Offscreen,
             )?;
 
             source = InputTexture {
-                view: D3D11InputView {
-                    handle: target.create_shader_resource_view()?,
-                    size,
-                },
-                filter: pass.config.filter,
-                wrap_mode: pass.config.wrap_mode,
+                view: target.create_shader_resource_view()?,
+                filter: pass.meta.filter,
+                wrap_mode: pass.meta.wrap_mode,
             };
             self.common.output_textures[index] = Some(source.clone());
         }
@@ -509,13 +544,36 @@ impl FilterChainD3D11 {
         // try to hint the optimizer
         assert_eq!(last.len(), 1);
         if let Some(pass) = last.iter_mut().next() {
-            source.filter = pass.config.filter;
-            source.wrap_mode = pass.config.wrap_mode;
+            let index = passes_len - 1;
+            source.filter = pass.meta.filter;
+            source.wrap_mode = pass.meta.wrap_mode;
+
+            // Draw to output_framebuffers for proper handling of feedback.
+
+            let feedback_target = &self.output_framebuffers[index];
+            if self.draw_last_pass_feedback {
+                pass.draw(
+                    &ctx,
+                    index,
+                    &self.common,
+                    pass.meta.get_frame_count(frame_count),
+                    options,
+                    viewport,
+                    &original,
+                    &source,
+                    RenderTarget::viewport_with_output(
+                        &feedback_target.create_render_target_view()?,
+                        viewport,
+                    ),
+                    QuadType::Final,
+                )?;
+            }
+
             pass.draw(
                 &ctx,
-                passes_len - 1,
+                index,
                 &self.common,
-                pass.config.get_frame_count(frame_count),
+                pass.meta.get_frame_count(frame_count),
                 options,
                 viewport,
                 &original,

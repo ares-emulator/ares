@@ -32,8 +32,21 @@ pub trait CompileShader<T: OutputTarget> {
     type Context;
 
     /// Consume the object and return the compiled output of the shader.
+    ///
+    /// The shader should either be reflected or validated as
+    /// [ReflectShader] before being compiled, or the results may not be valid.
     fn compile(
         self,
+        options: Self::Options,
+    ) -> Result<ShaderCompilerOutput<T::Output, Self::Context>, ShaderCompileError>;
+
+    /// Consume the object and return the compiled output of the shader.
+    ///
+    /// This is an internal implementation detail for stable building without TAIT,
+    /// to allow delegation when Self is unsized (i.e. dyn CompileReflectShader).
+    #[doc(hidden)]
+    fn compile_boxed(
+        self: Box<Self>,
         options: Self::Options,
     ) -> Result<ShaderCompilerOutput<T::Output, Self::Context>, ShaderCompileError>;
 }
@@ -41,8 +54,8 @@ pub trait CompileShader<T: OutputTarget> {
 /// Marker trait for combinations of targets and compilations that can be reflected and compiled
 /// successfully.
 ///
-/// This trait is automatically implemented for reflected outputs that have [`FromCompilation`](crate::back::FromCompilation) implement
-/// for a given target that also implement [`CompileShader`](crate::back::CompileShader) for that target.
+/// This trait is automatically implemented for reflected outputs that have [`FromCompilation`] implement
+/// for a given target that also implement [`CompileShader`] for that target.
 pub trait CompileReflectShader<T: OutputTarget, C, S>:
     CompileShader<
         T,
@@ -77,6 +90,13 @@ where
 
     fn compile(
         self,
+        options: Self::Options,
+    ) -> Result<ShaderCompilerOutput<E::Output, Self::Context>, ShaderCompileError> {
+        self.backend.compile(options)
+    }
+
+    fn compile_boxed(
+        self: Box<Self>,
         options: Self::Options,
     ) -> Result<ShaderCompilerOutput<E::Output, Self::Context>, ShaderCompileError> {
         self.backend.compile(options)
@@ -121,6 +141,47 @@ where
         semantics: &ShaderSemantics,
     ) -> Result<ShaderReflection, ShaderReflectError> {
         self.backend.reflect(pass_number, semantics)
+    }
+
+    fn validate(&mut self) -> Result<(), ShaderReflectError> {
+        self.backend.validate()
+    }
+}
+
+impl<T: ReflectShader + ?Sized> ReflectShader for Box<T> {
+    fn reflect(
+        &mut self,
+        pass_number: usize,
+        semantics: &ShaderSemantics,
+    ) -> Result<ShaderReflection, ShaderReflectError> {
+        (**self).reflect(pass_number, semantics)
+    }
+
+    fn validate(&mut self) -> Result<(), ShaderReflectError> {
+        (**self).validate()
+    }
+}
+
+impl<O, T> CompileShader<T> for Box<O>
+where
+    O: CompileShader<T> + ?Sized,
+    T: OutputTarget,
+{
+    type Options = O::Options;
+    type Context = O::Context;
+
+    fn compile(
+        self,
+        options: Self::Options,
+    ) -> Result<ShaderCompilerOutput<T::Output, Self::Context>, ShaderCompileError> {
+        O::compile_boxed(self, options)
+    }
+
+    fn compile_boxed(
+        self: Box<Self>,
+        options: Self::Options,
+    ) -> Result<ShaderCompilerOutput<T::Output, Self::Context>, ShaderCompileError> {
+        self.compile(options)
     }
 }
 

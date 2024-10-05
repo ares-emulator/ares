@@ -14,7 +14,11 @@ use librashader::reflect::FromCompilation;
 use librashader::reflect::OutputTarget;
 use librashader::reflect::SpirvCompilation;
 
+use librashader_pack::{LoadableResource, PassResource};
+use librashader_preprocess::PreprocessError;
+use librashader_presets::PassMeta;
 use once_cell::sync::Lazy;
+
 static ALL_SLANG_PRESETS: Lazy<RwLock<Vec<(PathBuf, ShaderPreset)>>> =
     Lazy::new(|| RwLock::new(collect_all_loadable_slang_presets()));
 
@@ -53,9 +57,9 @@ fn collect_all_loadable_slang_presets() -> Vec<(PathBuf, ShaderPreset)> {
     let mut presets = collect_all_slang_presets(false);
     presets.retain(|(_, preset)| {
         !preset
-            .shaders
+            .passes
             .par_iter()
-            .any(|shader| ShaderSource::load(&shader.name).is_err())
+            .any(|shader| ShaderSource::load(&shader.path).is_err())
     });
 
     presets
@@ -66,12 +70,12 @@ pub fn preprocess_all_slang_presets_parsed() {
     let presets = collect_all_slang_presets(true);
 
     for (path, preset) in presets {
-        preset.shaders.into_par_iter().for_each(|shader| {
-            if let Err(e) = ShaderSource::load(&shader.name) {
+        preset.passes.into_par_iter().for_each(|shader| {
+            if let Err(e) = ShaderSource::load(&shader.path) {
                 #[cfg(not(feature = "github-ci"))]
                 eprintln!(
                     "[ERROR] Failed to preprocess shader {} from preset {}: {:?}",
-                    shader.name.display(),
+                    shader.path.display(),
                     path.display(),
                     e
                 );
@@ -137,9 +141,43 @@ where
             O::DEBUG,
             R::DEBUG
         );
+
+        let shader_pass_data = preset
+            .passes
+            .par_iter()
+            .map(|p| {
+                (
+                    PassMeta::load(&p.path).map(|data| PassResource {
+                        meta: p.meta.clone(),
+                        data,
+                    }),
+                    &p.path,
+                )
+            })
+            .map(|(e, path)| {
+                if let Err(e) = e.as_ref() {
+                    #[cfg(not(feature = "github-ci"))]
+                    eprintln!("[ERROR] {:?} ({path:?})", e);
+
+                    #[cfg(feature = "github-ci")]
+                    println!(
+                        "::error title=Failed to load shader {} with {}::{e:?} ({})",
+                        O::DEBUG,
+                        R::DEBUG,
+                        path.display()
+                    );
+                };
+                e
+            })
+            .collect::<Result<Vec<PassResource>, PreprocessError>>();
+
+        let Ok(shader_pass_data) = shader_pass_data else {
+            return;
+        };
+
         if let Err(e) = O::compile_preset_passes::<SpirvCompilation, R, Box<dyn Error>>(
-            preset.shaders.clone(),
-            &preset.textures,
+            shader_pass_data,
+            preset.textures.iter().map(|t| &t.meta),
         ) {
             #[cfg(not(feature = "github-ci"))]
             eprintln!("[ERROR] {:?} ({path:?})", e);

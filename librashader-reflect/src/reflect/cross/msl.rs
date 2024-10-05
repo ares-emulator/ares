@@ -2,102 +2,111 @@ use crate::back::msl::CrossMslContext;
 use crate::back::targets::MSL;
 use crate::back::{CompileShader, ShaderCompilerOutput};
 use crate::error::ShaderCompileError;
-use crate::reflect::cross::{CompiledAst, CompiledProgram, CrossReflect};
-use spirv_cross::msl;
-use spirv_cross::msl::{ResourceBinding, ResourceBindingLocation};
-use spirv_cross::spirv::{Ast, Decoration, ExecutionModel};
-use std::collections::BTreeMap;
+use crate::reflect::cross::{CompiledProgram, CrossReflect};
 
-pub(crate) type MslReflect = CrossReflect<spirv_cross::msl::Target>;
+use spirv::Decoration;
+use spirv_cross2::compile::msl::{BindTarget, ResourceBinding};
+use spirv_cross2::compile::{msl, CompilableTarget};
+use spirv_cross2::reflect::{DecorationValue, ResourceType};
+use spirv_cross2::{targets, Compiler};
 
-impl CompileShader<MSL> for CrossReflect<spirv_cross::msl::Target> {
-    type Options = Option<spirv_cross::msl::Version>;
+pub(crate) type MslReflect = CrossReflect<targets::Msl>;
+
+impl CompileShader<MSL> for CrossReflect<targets::Msl> {
+    type Options = Option<msl::MslVersion>;
     type Context = CrossMslContext;
 
     fn compile(
         mut self,
         options: Self::Options,
     ) -> Result<ShaderCompilerOutput<String, CrossMslContext>, ShaderCompileError> {
-        let version = options.unwrap_or(msl::Version::V2_0);
-        let mut vert_options = spirv_cross::msl::CompilerOptions::default();
-        let mut frag_options = spirv_cross::msl::CompilerOptions::default();
-
-        vert_options.version = version;
-        frag_options.version = version;
+        let version = options.unwrap_or(msl::MslVersion::new(2, 0, 0));
+        let mut options = targets::Msl::options();
+        options.version = version;
 
         fn set_bindings(
-            ast: &Ast<msl::Target>,
-            stage: ExecutionModel,
-            binding_map: &mut BTreeMap<ResourceBindingLocation, ResourceBinding>,
+            ast: &mut Compiler<targets::Msl>,
+            stage: spirv::ExecutionModel,
         ) -> Result<(), ShaderCompileError> {
-            let resources = ast.get_shader_resources()?;
-            for resource in &resources.push_constant_buffers {
-                let location = ResourceBindingLocation {
-                    stage,
-                    desc_set: msl::PUSH_CONSTANT_DESCRIPTOR_SET,
-                    binding: msl::PUSH_CONSTANT_BINDING,
-                };
-                let overridden = ResourceBinding {
-                    buffer_id: ast.get_decoration(resource.id, Decoration::Binding)?,
-                    texture_id: 0,
-                    sampler_id: 0,
-                    base_type: None,
-                    count: 0, // no arrays allowed in slang shaders, otherwise we'd have to get the type and get the array length
+            let resources = ast.shader_resources()?;
+            for resource in resources.resources_for_type(ResourceType::PushConstant)? {
+                let Some(DecorationValue::Literal(buffer)) =
+                    ast.decoration(resource.id, Decoration::Binding)?
+                else {
+                    continue;
                 };
 
-                binding_map.insert(location, overridden);
+                ast.add_resource_binding(
+                    stage,
+                    ResourceBinding::PushConstantBuffer,
+                    &BindTarget {
+                        buffer,
+                        texture: 0,
+                        sampler: 0,
+                        count: None,
+                    },
+                )?
             }
 
-            for resource in resources
-                .uniform_buffers
-                .iter()
-                .chain(resources.sampled_images.iter())
-            {
-                let binding = ast.get_decoration(resource.id, Decoration::Binding)?;
-                let location = ResourceBindingLocation {
+            let ubos = resources.resources_for_type(ResourceType::UniformBuffer)?;
+            let sampled = resources.resources_for_type(ResourceType::SampledImage)?;
+
+            for resource in ubos.chain(sampled) {
+                let Some(DecorationValue::Literal(binding)) =
+                    ast.decoration(resource.id, Decoration::Binding)?
+                else {
+                    continue;
+                };
+
+                let Some(DecorationValue::Literal(desc_set)) =
+                    ast.decoration(resource.id, Decoration::DescriptorSet)?
+                else {
+                    continue;
+                };
+
+                let overridden = BindTarget {
+                    buffer: binding,
+                    texture: binding,
+                    sampler: binding,
+                    count: None,
+                };
+
+                ast.add_resource_binding(
                     stage,
-                    desc_set: ast.get_decoration(resource.id, Decoration::DescriptorSet)?,
-                    binding,
-                };
-
-                let overridden = ResourceBinding {
-                    buffer_id: binding,
-                    texture_id: binding,
-                    sampler_id: binding,
-                    base_type: None,
-                    count: 0, // no arrays allowed in slang shaders, otherwise we'd have to get the type and get the array length
-                };
-
-                binding_map.insert(location, overridden);
+                    ResourceBinding::Qualified {
+                        set: desc_set,
+                        binding,
+                    },
+                    &overridden,
+                )?
             }
 
             Ok(())
         }
-        set_bindings(
-            &self.vertex,
-            ExecutionModel::Vertex,
-            &mut vert_options.resource_binding_overrides,
-        )?;
+        set_bindings(&mut self.vertex, spirv::ExecutionModel::Vertex)?;
 
-        set_bindings(
-            &self.fragment,
-            ExecutionModel::Fragment,
-            &mut frag_options.resource_binding_overrides,
-        )?;
+        set_bindings(&mut self.fragment, spirv::ExecutionModel::Fragment)?;
 
-        self.vertex.set_compiler_options(&vert_options)?;
-        self.fragment.set_compiler_options(&frag_options)?;
+        let vertex_compiled = self.vertex.compile(&options)?;
+        let fragment_compiled = self.fragment.compile(&options)?;
 
         Ok(ShaderCompilerOutput {
-            vertex: self.vertex.compile()?,
-            fragment: self.fragment.compile()?,
+            vertex: vertex_compiled.to_string(),
+            fragment: fragment_compiled.to_string(),
             context: CrossMslContext {
                 artifact: CompiledProgram {
-                    vertex: CompiledAst(self.vertex),
-                    fragment: CompiledAst(self.fragment),
+                    vertex: vertex_compiled,
+                    fragment: fragment_compiled,
                 },
             },
         })
+    }
+
+    fn compile_boxed(
+        self: Box<Self>,
+        options: Self::Options,
+    ) -> Result<ShaderCompilerOutput<String, Self::Context>, ShaderCompileError> {
+        <CrossReflect<targets::Msl> as CompileShader<MSL>>::compile(*self, options)
     }
 }
 
@@ -106,15 +115,13 @@ mod test {
     use crate::back::targets::{MSL, WGSL};
     use crate::back::{CompileShader, FromCompilation};
     use crate::reflect::cross::SpirvCross;
-    use crate::reflect::naga::{Naga, NagaLoweringOptions};
     use crate::reflect::semantics::{Semantic, ShaderSemantics, UniformSemantic, UniqueSemantics};
     use crate::reflect::ReflectShader;
     use bitflags::Flags;
-    use librashader_common::map::FastHashMap;
+    use librashader_common::map::{FastHashMap, ShortString};
     use librashader_preprocess::ShaderSource;
-    use rustc_hash::FxHashMap;
-    use spirv_cross::msl;
-    use std::io::Write;
+
+    use spirv_cross2::compile::msl::MslVersion;
 
     #[test]
     pub fn test_into() {
@@ -122,7 +129,7 @@ mod test {
         // let result = ShaderSource::load("../test/shaders_slang/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask.slang").unwrap();
         let result = ShaderSource::load("../test/basic.slang").unwrap();
 
-        let mut uniform_semantics: FastHashMap<String, UniformSemantic> = Default::default();
+        let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
 
         for (_index, param) in result.parameters.iter().enumerate() {
             uniform_semantics.insert(
@@ -148,7 +155,7 @@ mod test {
         )
         .expect("");
 
-        let compiled = msl.compile(Some(msl::Version::V2_0)).unwrap();
+        let compiled = msl.compile(Some(MslVersion::new(2, 0, 0))).unwrap();
 
         println!("{}", compiled.vertex);
     }

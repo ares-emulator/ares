@@ -1,10 +1,10 @@
-use ash::extensions::ext::DebugUtils;
+use ash::ext::debug_utils::Instance;
 use ash::prelude::VkResult;
 use ash::vk;
 use ash::vk::{DebugUtilsMessengerEXT, PFN_vkDebugUtilsMessengerCallbackEXT};
 
 pub struct VulkanDebug {
-    pub loader: DebugUtils,
+    pub loader: Instance,
     messenger: DebugUtilsMessengerEXT,
 }
 
@@ -15,7 +15,7 @@ impl VulkanDebug {
         instance: &ash::Instance,
         callback: PFN_vkDebugUtilsMessengerCallbackEXT,
     ) -> VkResult<VulkanDebug> {
-        let debug_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
+        let debug_info = vk::DebugUtilsMessengerCreateInfoEXT::default()
             .message_severity(
                 vk::DebugUtilsMessageSeverityFlagsEXT::ERROR
                     | vk::DebugUtilsMessageSeverityFlagsEXT::WARNING
@@ -28,7 +28,7 @@ impl VulkanDebug {
             )
             .pfn_user_callback(callback);
 
-        let debug_utils_loader = DebugUtils::new(entry, instance);
+        let debug_utils_loader = Instance::new(entry, instance);
 
         dbg!("got to dbg");
         unsafe {

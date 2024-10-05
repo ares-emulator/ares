@@ -1,10 +1,10 @@
-use gl::types::{GLint, GLsizei, GLuint};
+use glow::HasContext;
 use librashader_reflect::reflect::ShaderReflection;
 
 use librashader_common::map::FastHashMap;
 use librashader_common::{ImageFormat, Size, Viewport};
 use librashader_preprocess::ShaderSource;
-use librashader_presets::ShaderPassConfig;
+use librashader_presets::PassMeta;
 use librashader_reflect::reflect::semantics::{MemberOffset, TextureBinding, UniformBinding};
 use librashader_runtime::binding::{BindSemantics, ContextOffset, TextureInput, UniformInputs};
 use librashader_runtime::filter_pass::FilterPassMeta;
@@ -12,10 +12,10 @@ use librashader_runtime::render_target::RenderTarget;
 
 use crate::binding::{GlUniformBinder, GlUniformStorage, UniformLocation, VariableLocation};
 use crate::filter_chain::FilterCommon;
-use crate::gl::{BindTexture, GLInterface, UboRing};
+use crate::gl::{BindTexture, GLFramebuffer, GLInterface, UboRing};
 use crate::options::FrameOptionsGL;
 use crate::samplers::SamplerSet;
-use crate::GLFramebuffer;
+use crate::{error, GLImage};
 
 use crate::texture::InputTexture;
 
@@ -32,13 +32,13 @@ impl UniformOffset {
 
 pub(crate) struct FilterPass<T: GLInterface> {
     pub reflection: ShaderReflection,
-    pub program: GLuint,
-    pub ubo_location: UniformLocation<GLuint>,
+    pub program: glow::Program,
+    pub ubo_location: UniformLocation<Option<u32>>,
     pub ubo_ring: Option<T::UboRing>,
     pub(crate) uniform_storage: GlUniformStorage,
     pub uniform_bindings: FastHashMap<UniformBinding, UniformOffset>,
     pub source: ShaderSource,
-    pub config: ShaderPassConfig,
+    pub meta: PassMeta,
 }
 
 impl TextureInput for InputTexture {
@@ -47,7 +47,7 @@ impl TextureInput for InputTexture {
     }
 }
 
-impl ContextOffset<GlUniformBinder, VariableLocation> for UniformOffset {
+impl ContextOffset<GlUniformBinder, VariableLocation, glow::Context> for UniformOffset {
     fn offset(&self) -> MemberOffset {
         self.offset
     }
@@ -61,7 +61,7 @@ impl<T: GLInterface> BindSemantics<GlUniformBinder, VariableLocation> for Filter
     type InputTexture = InputTexture;
     type SamplerSet = SamplerSet;
     type DescriptorSet<'a> = ();
-    type DeviceContext = ();
+    type DeviceContext = glow::Context;
     type UniformOffset = UniformOffset;
 
     fn bind_texture<'a>(
@@ -69,9 +69,9 @@ impl<T: GLInterface> BindSemantics<GlUniformBinder, VariableLocation> for Filter
         samplers: &Self::SamplerSet,
         binding: &TextureBinding,
         texture: &Self::InputTexture,
-        _device: &Self::DeviceContext,
+        device: &Self::DeviceContext,
     ) {
-        T::BindTexture::bind_texture(samplers, binding, texture);
+        T::BindTexture::bind_texture(device, samplers, binding, texture);
     }
 }
 
@@ -82,20 +82,20 @@ impl<T: GLInterface> FilterPass<T> {
         parent: &FilterCommon,
         frame_count: u32,
         options: &FrameOptionsGL,
-        viewport: &Viewport<&GLFramebuffer>,
+        viewport: &Viewport<&GLImage>,
         original: &InputTexture,
         source: &InputTexture,
-        output: RenderTarget<GLFramebuffer, GLint>,
-    ) {
+        output: RenderTarget<GLFramebuffer, i32>,
+    ) -> error::Result<()> {
         let framebuffer = output.output;
 
-        if self.config.mipmap_input && !parent.disable_mipmaps {
-            T::BindTexture::gen_mipmaps(source);
+        if self.meta.mipmap_input && !parent.disable_mipmaps {
+            T::BindTexture::gen_mipmaps(&parent.context, source);
         }
 
         unsafe {
-            gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer.fbo);
-            gl::UseProgram(self.program);
+            framebuffer.bind::<T::FramebufferInterface>()?;
+            parent.context.use_program(Some(self.program));
         }
 
         self.build_semantics(
@@ -110,39 +110,50 @@ impl<T: GLInterface> FilterPass<T> {
             source,
         );
 
-        if self.ubo_location.vertex != gl::INVALID_INDEX
-            && self.ubo_location.fragment != gl::INVALID_INDEX
+        if self
+            .ubo_location
+            .vertex
+            .is_some_and(|index| index != glow::INVALID_INDEX)
+            && self
+                .ubo_location
+                .fragment
+                .is_some_and(|index| index != glow::INVALID_INDEX)
         {
             if let (Some(ubo), Some(ring)) = (&self.reflection.ubo, &mut self.ubo_ring) {
-                ring.bind_for_frame(ubo, &self.ubo_location, &self.uniform_storage)
+                ring.bind_for_frame(
+                    &parent.context,
+                    ubo,
+                    &self.ubo_location,
+                    &self.uniform_storage,
+                )
             }
         }
 
         unsafe {
             framebuffer.clear::<T::FramebufferInterface, false>();
-
-            let framebuffer_size = framebuffer.size;
-            gl::Viewport(
+            parent.context.viewport(
                 output.x,
                 output.y,
-                framebuffer_size.width as GLsizei,
-                framebuffer_size.height as GLsizei,
+                output.size.width as i32,
+                output.size.height as i32,
             );
 
-            if framebuffer.format == gl::SRGB8_ALPHA8 {
-                gl::Enable(gl::FRAMEBUFFER_SRGB);
+            if framebuffer.format == glow::SRGB8_ALPHA8 {
+                parent.context.enable(glow::FRAMEBUFFER_SRGB);
             } else {
-                gl::Disable(gl::FRAMEBUFFER_SRGB);
+                parent.context.disable(glow::FRAMEBUFFER_SRGB);
             }
 
-            gl::Disable(gl::CULL_FACE);
-            gl::Disable(gl::BLEND);
-            gl::Disable(gl::DEPTH_TEST);
+            parent.context.disable(glow::CULL_FACE);
+            parent.context.disable(glow::BLEND);
+            parent.context.disable(glow::DEPTH_TEST);
 
-            gl::DrawArrays(gl::TRIANGLE_STRIP, 0, 4);
-            gl::Disable(gl::FRAMEBUFFER_SRGB);
-            gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+            parent.context.draw_arrays(glow::TRIANGLE_STRIP, 0, 4);
+            parent.context.disable(glow::FRAMEBUFFER_SRGB);
+            parent.context.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
+
+        Ok(())
     }
 }
 
@@ -151,8 +162,8 @@ impl<T: GLInterface> FilterPassMeta for FilterPass<T> {
         self.source.format
     }
 
-    fn config(&self) -> &ShaderPassConfig {
-        &self.config
+    fn meta(&self) -> &PassMeta {
+        &self.meta
     }
 }
 
@@ -166,12 +177,12 @@ impl<T: GLInterface> FilterPass<T> {
         frame_count: u32,
         options: &FrameOptionsGL,
         fb_size: Size<u32>,
-        viewport: &Viewport<&GLFramebuffer>,
+        viewport: &Viewport<&GLImage>,
         original: &InputTexture,
         source: &InputTexture,
     ) {
         Self::bind_semantics(
-            &(),
+            &parent.context,
             &parent.samplers,
             &mut self.uniform_storage,
             &mut (),
@@ -196,7 +207,7 @@ impl<T: GLInterface> FilterPass<T> {
             parent.history_textures.iter().map(|o| o.bound()),
             parent.luts.iter().map(|(u, i)| (*u, i)),
             &self.source.parameters,
-            &parent.config.parameters,
+            &parent.config,
         );
     }
 }

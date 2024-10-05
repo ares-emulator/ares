@@ -1,24 +1,26 @@
+use crate::error;
 use crate::error::{FilterChainError, Result};
 use crate::framebuffer::GLImage;
 use crate::gl::framebuffer::GLFramebuffer;
 use crate::gl::FramebufferInterface;
-use gl::types::{GLenum, GLint, GLsizei};
+use glow::HasContext;
 use librashader_common::{ImageFormat, Size};
-use librashader_presets::Scale2D;
-use librashader_runtime::scaling::{MipmapSize, ViewportSize};
+use librashader_runtime::scaling::MipmapSize;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Gl46Framebuffer;
 
 impl FramebufferInterface for Gl46Framebuffer {
-    fn new(max_levels: u32) -> GLFramebuffer {
-        let mut framebuffer = 0;
-        unsafe {
-            gl::CreateFramebuffers(1, &mut framebuffer);
-        }
+    fn new(context: &Arc<glow::Context>, max_levels: u32) -> error::Result<GLFramebuffer> {
+        let framebuffer = unsafe {
+            context
+                .create_named_framebuffer()
+                .map_err(FilterChainError::GlError)?
+        };
 
-        GLFramebuffer {
-            image: 0,
+        Ok(GLFramebuffer {
+            image: None,
             size: Size {
                 width: 1,
                 height: 1,
@@ -27,94 +29,117 @@ impl FramebufferInterface for Gl46Framebuffer {
             max_levels,
             mip_levels: 0,
             fbo: framebuffer,
-            is_raw: false,
-        }
+            is_extern_image: false,
+            ctx: Arc::clone(&context),
+        })
     }
 
-    fn scale(
-        fb: &mut GLFramebuffer,
-        scaling: Scale2D,
-        format: ImageFormat,
-        viewport_size: &Size<u32>,
-        source_size: &Size<u32>,
-        original_size: &Size<u32>,
-        mipmap: bool,
-    ) -> Result<Size<u32>> {
-        if fb.is_raw {
-            return Ok(fb.size);
+    fn new_raw(
+        ctx: &Arc<glow::Context>,
+        image: Option<glow::Texture>,
+        mut size: Size<u32>,
+        format: u32,
+        miplevels: u32,
+    ) -> Result<GLFramebuffer> {
+        let framebuffer = unsafe {
+            ctx.create_named_framebuffer()
+                .map_err(FilterChainError::GlError)?
+        };
+
+        if size.width == 0 {
+            size.width = 1;
+        }
+        if size.height == 0 {
+            size.height = 1;
         }
 
-        let size = source_size.scale_viewport(scaling, *viewport_size, *original_size);
-
-        if fb.size != size || (mipmap && fb.max_levels == 1) || (!mipmap && fb.max_levels != 1) {
-            fb.size = size;
-
-            if mipmap {
-                fb.max_levels = u32::MAX;
-            } else {
-                fb.max_levels = 1
-            }
-
-            Self::init(
-                fb,
-                size,
-                if format == ImageFormat::Unknown {
-                    ImageFormat::R8G8B8A8Unorm
-                } else {
-                    format
-                },
-            )?;
+        if size.width > librashader_runtime::scaling::MAX_TEXEL_SIZE as u32 {
+            size.width = librashader_runtime::scaling::MAX_TEXEL_SIZE as u32 - 1;
         }
-        Ok(size)
+
+        if size.height > librashader_runtime::scaling::MAX_TEXEL_SIZE as u32 {
+            size.height = librashader_runtime::scaling::MAX_TEXEL_SIZE as u32 - 1;
+        }
+
+        let status = unsafe {
+            ctx.named_framebuffer_texture(Some(framebuffer), glow::COLOR_ATTACHMENT0, image, 0);
+
+            ctx.check_named_framebuffer_status(Some(framebuffer), glow::FRAMEBUFFER)
+        };
+
+        if status != glow::FRAMEBUFFER_COMPLETE {
+            return Err(FilterChainError::FramebufferInit(status));
+        }
+
+        Ok(GLFramebuffer {
+            image,
+            size,
+            format,
+            max_levels: miplevels,
+            mip_levels: miplevels,
+            fbo: framebuffer,
+            is_extern_image: true,
+            ctx: Arc::clone(&ctx),
+        })
     }
+
     fn clear<const REBIND: bool>(fb: &GLFramebuffer) {
         unsafe {
-            gl::ClearNamedFramebufferfv(
-                fb.fbo,
-                gl::COLOR,
+            fb.ctx.clear_named_framebuffer_f32_slice(
+                Some(fb.fbo),
+                glow::COLOR,
                 0,
-                [0.0f32, 0.0, 0.0, 0.0].as_ptr().cast(),
+                &[0.0f32, 0.0, 0.0, 0.0],
             );
         }
     }
     fn copy_from(fb: &mut GLFramebuffer, image: &GLImage) -> Result<()> {
         // todo: confirm this behaviour for unbound image.
+        if image.handle == None {
+            return Ok(());
+        }
+
+        // todo: may want to use a shader and draw a quad to be faster.
         if image.size != fb.size || image.format != fb.format {
             Self::init(fb, image.size, image.format)?;
         }
 
-        if image.handle == 0 {
-            return Ok(());
-        }
-
         unsafe {
-            // gl::NamedFramebufferDrawBuffer(fb.handle, gl::COLOR_ATTACHMENT1);
-            gl::NamedFramebufferReadBuffer(fb.fbo, gl::COLOR_ATTACHMENT0);
-            gl::NamedFramebufferDrawBuffer(fb.fbo, gl::COLOR_ATTACHMENT1);
+            // glow::NamedFramebufferDrawBuffer(fb.handle, glow::COLOR_ATTACHMENT1);
+            fb.ctx
+                .named_framebuffer_read_buffer(Some(fb.fbo), glow::COLOR_ATTACHMENT0);
+            fb.ctx
+                .named_framebuffer_draw_buffer(Some(fb.fbo), glow::COLOR_ATTACHMENT1);
 
-            gl::NamedFramebufferTexture(fb.fbo, gl::COLOR_ATTACHMENT0, image.handle, 0);
-            gl::NamedFramebufferTexture(fb.fbo, gl::COLOR_ATTACHMENT1, fb.image, 0);
+            fb.ctx.named_framebuffer_texture(
+                Some(fb.fbo),
+                glow::COLOR_ATTACHMENT0,
+                image.handle,
+                0,
+            );
+            fb.ctx
+                .named_framebuffer_texture(Some(fb.fbo), glow::COLOR_ATTACHMENT1, fb.image, 0);
 
-            gl::BlitNamedFramebuffer(
-                fb.fbo,
-                fb.fbo,
+            fb.ctx.blit_named_framebuffer(
+                Some(fb.fbo),
+                Some(fb.fbo),
                 0,
                 0,
-                image.size.width as GLint,
-                image.size.height as GLint,
+                image.size.width as i32,
+                image.size.height as i32,
                 0,
                 0,
-                fb.size.width as GLint,
-                fb.size.height as GLint,
-                gl::COLOR_BUFFER_BIT,
-                gl::NEAREST,
+                fb.size.width as i32,
+                fb.size.height as i32,
+                glow::COLOR_BUFFER_BIT,
+                glow::NEAREST,
             );
         }
 
         Ok(())
     }
-    fn init(fb: &mut GLFramebuffer, mut size: Size<u32>, format: impl Into<GLenum>) -> Result<()> {
-        if fb.is_raw {
+    fn init(fb: &mut GLFramebuffer, mut size: Size<u32>, format: impl Into<u32>) -> Result<()> {
+        if fb.is_extern_image {
             return Ok(());
         }
         fb.format = format.into();
@@ -122,12 +147,16 @@ impl FramebufferInterface for Gl46Framebuffer {
 
         unsafe {
             // reset the framebuffer image
-            if fb.image != 0 {
-                gl::NamedFramebufferTexture(fb.fbo, gl::COLOR_ATTACHMENT0, 0, 0);
-                gl::DeleteTextures(1, &fb.image);
+            if let Some(image) = fb.image {
+                fb.ctx
+                    .named_framebuffer_texture(Some(fb.fbo), glow::COLOR_ATTACHMENT0, None, 0);
+                fb.ctx.delete_texture(image);
             }
 
-            gl::CreateTextures(gl::TEXTURE_2D, 1, &mut fb.image);
+            let image = fb
+                .ctx
+                .create_named_texture(glow::TEXTURE_2D)
+                .map_err(FilterChainError::GlError)?;
 
             if size.width == 0 {
                 size.width = 1;
@@ -144,23 +173,37 @@ impl FramebufferInterface for Gl46Framebuffer {
                 fb.mip_levels = 1;
             }
 
-            gl::TextureStorage2D(
-                fb.image,
-                fb.mip_levels as GLsizei,
+            fb.ctx.texture_storage_2d(
+                image,
+                fb.mip_levels as i32,
                 fb.format,
-                size.width as GLsizei,
-                size.height as GLsizei,
+                size.width as i32,
+                size.height as i32,
             );
 
-            gl::NamedFramebufferTexture(fb.fbo, gl::COLOR_ATTACHMENT0, fb.image, 0);
+            fb.image = Some(image);
 
-            let status = gl::CheckFramebufferStatus(gl::FRAMEBUFFER);
-            if status != gl::FRAMEBUFFER_COMPLETE {
+            fb.ctx
+                .named_framebuffer_texture(Some(fb.fbo), glow::COLOR_ATTACHMENT0, fb.image, 0);
+
+            let status = fb
+                .ctx
+                .check_named_framebuffer_status(Some(fb.fbo), glow::FRAMEBUFFER);
+            if status != glow::FRAMEBUFFER_COMPLETE {
                 match status {
-                    gl::FRAMEBUFFER_UNSUPPORTED => {
-                        gl::NamedFramebufferTexture(fb.fbo, gl::COLOR_ATTACHMENT0, 0, 0);
-                        gl::DeleteTextures(1, &fb.image);
-                        gl::CreateTextures(gl::TEXTURE_2D, 1, &mut fb.image);
+                    glow::FRAMEBUFFER_UNSUPPORTED => {
+                        fb.ctx.named_framebuffer_texture(
+                            Some(fb.fbo),
+                            glow::COLOR_ATTACHMENT0,
+                            None,
+                            0,
+                        );
+                        fb.ctx.delete_texture(image);
+
+                        let image = fb
+                            .ctx
+                            .create_named_texture(glow::TEXTURE_2D)
+                            .map_err(FilterChainError::GlError)?;
 
                         fb.mip_levels = size.calculate_miplevels();
                         if fb.mip_levels > fb.max_levels {
@@ -170,21 +213,39 @@ impl FramebufferInterface for Gl46Framebuffer {
                             fb.mip_levels = 1;
                         }
 
-                        gl::TextureStorage2D(
-                            fb.image,
-                            fb.mip_levels as GLsizei,
+                        fb.ctx.texture_storage_2d(
+                            image,
+                            fb.mip_levels as i32,
                             ImageFormat::R8G8B8A8Unorm.into(),
-                            size.width as GLsizei,
-                            size.height as GLsizei,
+                            size.width as i32,
+                            size.height as i32,
                         );
-                        gl::NamedFramebufferTexture(fb.fbo, gl::COLOR_ATTACHMENT0, fb.image, 0);
-                        // fb.init =
-                        //     gl::CheckFramebufferStatus(gl::FRAMEBUFFER) == gl::FRAMEBUFFER_COMPLETE;
+
+                        fb.image = Some(image);
+
+                        fb.ctx.named_framebuffer_texture(
+                            Some(fb.fbo),
+                            glow::COLOR_ATTACHMENT0,
+                            fb.image,
+                            0,
+                        );
                     }
                     _ => return Err(FilterChainError::FramebufferInit(status)),
                 }
             }
         }
+        Ok(())
+    }
+
+    fn bind(fb: &GLFramebuffer) -> Result<()> {
+        unsafe {
+            fb.ctx.bind_framebuffer(glow::FRAMEBUFFER, Some(fb.fbo));
+            let status = fb.ctx.check_framebuffer_status(glow::FRAMEBUFFER);
+            if status != glow::FRAMEBUFFER_COMPLETE {
+                return Err(FilterChainError::FramebufferInit(status));
+            }
+        }
+
         Ok(())
     }
 }

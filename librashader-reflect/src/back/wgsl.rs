@@ -1,9 +1,8 @@
 use crate::back::targets::WGSL;
-use crate::back::{CompileShader, CompilerBackend, FromCompilation};
+use crate::back::{CompileReflectShader, CompilerBackend, FromCompilation};
 use crate::error::ShaderReflectError;
 use crate::front::SpirvCompilation;
 use crate::reflect::naga::{Naga, NagaLoweringOptions, NagaReflect};
-use crate::reflect::ReflectShader;
 use naga::Module;
 
 /// The context for a WGSL compilation via Naga
@@ -12,18 +11,34 @@ pub struct NagaWgslContext {
     pub vertex: Module,
 }
 
+#[cfg(not(feature = "stable"))]
 impl FromCompilation<SpirvCompilation, Naga> for WGSL {
     type Target = WGSL;
     type Options = NagaLoweringOptions;
     type Context = NagaWgslContext;
-    type Output = impl CompileShader<Self::Target, Options = Self::Options, Context = Self::Context>
-        + ReflectShader;
+    type Output = impl CompileReflectShader<Self::Target, SpirvCompilation, Naga>;
 
     fn from_compilation(
         compile: SpirvCompilation,
     ) -> Result<CompilerBackend<Self::Output>, ShaderReflectError> {
         Ok(CompilerBackend {
             backend: NagaReflect::try_from(&compile)?,
+        })
+    }
+}
+
+#[cfg(feature = "stable")]
+impl FromCompilation<SpirvCompilation, Naga> for WGSL {
+    type Target = WGSL;
+    type Options = NagaLoweringOptions;
+    type Context = NagaWgslContext;
+    type Output = Box<dyn CompileReflectShader<Self::Target, SpirvCompilation, Naga> + Send>;
+
+    fn from_compilation(
+        compile: SpirvCompilation,
+    ) -> Result<CompilerBackend<Self::Output>, ShaderReflectError> {
+        Ok(CompilerBackend {
+            backend: Box::new(NagaReflect::try_from(&compile)?),
         })
     }
 }
@@ -36,7 +51,7 @@ mod test {
     use crate::reflect::semantics::{Semantic, ShaderSemantics, UniformSemantic, UniqueSemantics};
     use crate::reflect::ReflectShader;
     use bitflags::Flags;
-    use librashader_common::map::FastHashMap;
+    use librashader_common::map::{FastHashMap, ShortString};
     use librashader_preprocess::ShaderSource;
 
     #[test]
@@ -45,7 +60,7 @@ mod test {
         // let result = ShaderSource::load("../test/shaders_slang/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask.slang").unwrap();
         let result = ShaderSource::load("../test/basic.slang").unwrap();
 
-        let mut uniform_semantics: FastHashMap<String, UniformSemantic> = Default::default();
+        let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
 
         for (_index, param) in result.parameters.iter().enumerate() {
             uniform_semantics.insert(

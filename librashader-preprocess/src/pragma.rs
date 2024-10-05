@@ -2,7 +2,9 @@ use crate::{PreprocessError, ShaderParameter};
 use librashader_common::ImageFormat;
 use nom::bytes::complete::{is_not, tag, take_while};
 
-use nom::character::complete::multispace1;
+use librashader_common::map::ShortString;
+use nom::character::complete::{multispace0, multispace1};
+use nom::combinator::opt;
 use nom::number::complete::float;
 use nom::sequence::delimited;
 use nom::IResult;
@@ -12,7 +14,7 @@ use std::str::FromStr;
 pub(crate) struct ShaderMeta {
     pub(crate) format: ImageFormat,
     pub(crate) parameters: Vec<ShaderParameter>,
-    pub(crate) name: Option<String>,
+    pub(crate) name: Option<ShortString>,
 }
 
 fn parse_parameter_string(input: &str) -> Result<ShaderParameter, PreprocessError> {
@@ -35,17 +37,25 @@ fn parse_parameter_string(input: &str) -> Result<ShaderParameter, PreprocessErro
         let (input, minimum) = float(input)?;
         let (input, _) = multispace1(input)?;
         let (input, maximum) = float(input)?;
-        let (input, _) = multispace1(input)?;
-        let (input, step) = float(input)?;
+
+        // Step is actually optional and defaults to 0.02
+        // This behaviour can be seen in shaders like
+        // crt/crt-slangtest-cubic.slangp
+        // which doesn't have a step argument
+        // #pragma parameter OUT_GAMMA "Monitor Output Gamma" 2.2 1.8 2.4
+
+        // https://github.com/libretro/slang-shaders/blob/0e2939787076e4a8a83be89175557fde23abe837/crt/shaders/crt-slangtest/parameters.inc#L1
+        let (input, _) = multispace0(input)?;
+        let (input, step) = opt(float)(input)?;
         Ok((
             input,
             ShaderParameter {
-                id: name.to_string(),
+                id: name.into(),
                 description: description.to_string(),
                 initial,
                 minimum,
                 maximum,
-                step,
+                step: step.unwrap_or(0.02),
             },
         ))
     }
@@ -60,7 +70,7 @@ fn parse_parameter_string(input: &str) -> Result<ShaderParameter, PreprocessErro
         Ok(param)
     } else {
         Ok(ShaderParameter {
-            id: name.to_string(),
+            id: name.into(),
             description: description.to_string(),
             initial: 0f32,
             minimum: 0f32,
@@ -89,7 +99,7 @@ pub(crate) fn parse_pragma_meta(source: impl AsRef<str>) -> Result<ShaderMeta, P
 
         if let Some(format_string) = line.strip_prefix("#pragma format ") {
             if format != ImageFormat::Unknown {
-                return Err(PreprocessError::DuplicatePragmaError(line.to_string()));
+                return Err(PreprocessError::DuplicatePragmaError(line.into()));
             }
 
             let format_string = format_string.trim();
@@ -100,12 +110,12 @@ pub(crate) fn parse_pragma_meta(source: impl AsRef<str>) -> Result<ShaderMeta, P
             }
         }
 
-        if line.starts_with("#pragma name ") {
+        if let Some(pragma_name) = line.strip_prefix("#pragma name ") {
             if name.is_some() {
-                return Err(PreprocessError::DuplicatePragmaError(line.to_string()));
+                return Err(PreprocessError::DuplicatePragmaError(line.into()));
             }
 
-            name = Some(line.trim().to_string())
+            name = Some(ShortString::from(pragma_name.trim()))
         }
     }
 
@@ -124,7 +134,7 @@ mod test {
     #[test]
     fn parses_parameter_pragma() {
         assert_eq!(ShaderParameter {
-            id: "exc".to_string(),
+            id: "exc".into(),
             description: "orizontal correction hack (games where players stay at center)".to_string(),
             initial: 0.0,
             minimum: -10.0,
@@ -136,12 +146,30 @@ mod test {
     #[test]
     fn parses_parameter_pragma_test() {
         assert_eq!(ShaderParameter {
-            id: "HSM_CORE_RES_SAMPLING_MULT_SCANLINE_DIR".to_string(),
+            id: "HSM_CORE_RES_SAMPLING_MULT_SCANLINE_DIR".into(),
             description: "          Scanline Dir Multiplier".to_string(),
             initial: 100.0,
             minimum: 25.0,
             maximum: 1600.0,
             step: 25.0
         }, parse_parameter_string(r#"#pragma parameter HSM_CORE_RES_SAMPLING_MULT_SCANLINE_DIR			"          Scanline Dir Multiplier"  100 25 1600 25"#).unwrap())
+    }
+
+    #[test]
+    fn parses_parameter_pragma_with_no_step() {
+        assert_eq!(
+            ShaderParameter {
+                id: "OUT_GAMMA".into(),
+                description: "Monitor Output Gamma".to_string(),
+                initial: 2.2,
+                minimum: 1.8,
+                maximum: 2.4,
+                step: 0.02
+            },
+            parse_parameter_string(
+                r#"#pragma parameter OUT_GAMMA "Monitor Output Gamma" 2.2 1.8 2.4"#
+            )
+            .unwrap()
+        )
     }
 }

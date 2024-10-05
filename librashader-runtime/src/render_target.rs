@@ -1,5 +1,5 @@
 use crate::quad::{DEFAULT_MVP, IDENTITY_MVP};
-use librashader_common::Viewport;
+use librashader_common::{GetSize, Size, Viewport};
 use num_traits::{zero, AsPrimitive, Num};
 use std::borrow::Borrow;
 
@@ -17,21 +17,30 @@ where
     pub mvp: &'a [f32; 16],
     /// The output surface for the pass.
     pub output: &'a T,
+    /// The extent of the render target, starting from the origin defined
+    /// by x and y.
+    pub size: Size<u32>,
 }
 
-impl<'a, T, C: Num> RenderTarget<'a, T, C> {
+impl<'a, T: GetSize<u32>, C: Num> RenderTarget<'a, T, C> {
     /// Create a new render target.
-    pub fn new(output: &'a T, mvp: &'a [f32; 16], x: C, y: C) -> Self {
-        RenderTarget { output, mvp, x, y }
+    pub fn new(output: &'a T, mvp: &'a [f32; 16], x: C, y: C) -> Result<Self, T::Error> {
+        Ok(RenderTarget {
+            output,
+            mvp,
+            x,
+            y,
+            size: output.size()?,
+        })
     }
 
     /// Create a render target with the identity MVP.
-    pub fn identity(output: &'a T) -> Self {
+    pub fn identity(output: &'a T) -> Result<Self, T::Error> {
         Self::offscreen(output, IDENTITY_MVP)
     }
 
     /// Create an offscreen render target with the given MVP.
-    pub fn offscreen(output: &'a T, mvp: &'a [f32; 16]) -> Self {
+    pub fn offscreen(output: &'a T, mvp: &'a [f32; 16]) -> Result<Self, T::Error> {
         Self::new(output, mvp, zero(), zero())
     }
 }
@@ -42,21 +51,23 @@ where
 {
     /// Create a viewport render target.
     pub fn viewport(viewport: &'a Viewport<'a, impl Borrow<T>>) -> Self {
-        Self::new(
-            viewport.output.borrow(),
-            viewport.mvp.unwrap_or(DEFAULT_MVP),
-            viewport.x.as_(),
-            viewport.y.as_(),
-        )
+        RenderTarget {
+            output: viewport.output.borrow(),
+            mvp: viewport.mvp.unwrap_or(DEFAULT_MVP),
+            x: viewport.x.as_(),
+            y: viewport.y.as_(),
+            size: viewport.size,
+        }
     }
 
     /// Create a viewport render target with the given output.
     pub fn viewport_with_output<S>(output: &'a T, viewport: &'a Viewport<'a, S>) -> Self {
-        Self::new(
+        RenderTarget {
             output,
-            viewport.mvp.unwrap_or(DEFAULT_MVP),
-            viewport.x.as_(),
-            viewport.y.as_(),
-        )
+            mvp: viewport.mvp.unwrap_or(DEFAULT_MVP),
+            x: viewport.x.as_(),
+            y: viewport.y.as_(),
+            size: viewport.size,
+        }
     }
 }

@@ -1,4 +1,4 @@
-#![feature(doc_cfg)]
+#![forbid(missing_docs)]
 //! The C API for [librashader](https://docs.rs/librashader/).
 //!
 //! The librashader C API is designed to be loaded dynamically via `librashader_ld.h`, but static usage is also
@@ -60,12 +60,15 @@
 //! to the same context as the drawing thread, and in Direct3D 11, where filter chain creation is unsafe
 //! if the `ID3D11Device` was created with `D3D11_CREATE_DEVICE_SINGLETHREADED`. Metal is entirely thread unsafe.
 //!
+//! Setting and retrieving filter parameters from any thread, regardless of the lack of other thread safety-guarantees
+//! of the runtime, is always thread safe.
+//!
 //! You must ensure that only thread has access to a created filter pass **before** you call `*_frame`. `*_frame` may only be
 //! called from one thread at a time.
-
+#![cfg_attr(feature = "docsrs", feature(doc_cfg))]
 #![allow(non_camel_case_types)]
-#![feature(try_blocks)]
 #![deny(unsafe_op_in_unsafe_fn)]
+#![deny(deprecated)]
 
 extern crate alloc;
 
@@ -74,7 +77,7 @@ pub mod error;
 mod ffi;
 pub mod presets;
 
-#[cfg(feature = "reflect")]
+#[cfg(feature = "reflect-unstable")]
 #[doc(hidden)]
 pub mod reflect;
 

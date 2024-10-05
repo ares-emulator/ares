@@ -29,7 +29,7 @@ impl VulkanPipeline {
     pub unsafe fn new(base: &VulkanBase, swapchain: &VulkanSwapchain) -> VkResult<VulkanPipeline> {
         // upload buffers
         let index_buffer_data = [0u32, 1, 2];
-        let index_buffer_info = vk::BufferCreateInfo::builder()
+        let index_buffer_info = vk::BufferCreateInfo::default()
             .size(std::mem::size_of_val(&index_buffer_data) as u64)
             .usage(vk::BufferUsageFlags::INDEX_BUFFER)
             .sharing_mode(vk::SharingMode::EXCLUSIVE);
@@ -150,7 +150,7 @@ impl VulkanPipeline {
         let vertex_code =
             read_spv(&mut vertex_spv_file).expect("Failed to read vertex shader spv file");
         let vertex_shader_info = ShaderModule::new(&base.device, vertex_code)?;
-        let vertex_stage_info = vk::PipelineShaderStageCreateInfo::builder()
+        let vertex_stage_info = vk::PipelineShaderStageCreateInfo::default()
             .module(vertex_shader_info.module)
             .stage(vk::ShaderStageFlags::VERTEX)
             .name(ENTRY_POINT);
@@ -160,16 +160,16 @@ impl VulkanPipeline {
         let frag_code =
             read_spv(&mut frag_spv_file).expect("Failed to read fragment shader spv file");
         let frag_shader_info = ShaderModule::new(&base.device, frag_code)?;
-        let frag_stage_info = vk::PipelineShaderStageCreateInfo::builder()
+        let frag_stage_info = vk::PipelineShaderStageCreateInfo::default()
             .module(frag_shader_info.module)
             .stage(vk::ShaderStageFlags::FRAGMENT)
             .name(ENTRY_POINT);
 
-        let vertex_input_state_info = vk::PipelineVertexInputStateCreateInfo::builder()
+        let vertex_input_state_info = vk::PipelineVertexInputStateCreateInfo::default()
             .vertex_attribute_descriptions(&[])
             .vertex_binding_descriptions(&[]);
 
-        let vertex_input_assembly_state_info = vk::PipelineInputAssemblyStateCreateInfo::builder()
+        let vertex_input_assembly_state_info = vk::PipelineInputAssemblyStateCreateInfo::default()
             .primitive_restart_enable(false)
             .topology(vk::PrimitiveTopology::TRIANGLE_LIST);
 
@@ -194,13 +194,13 @@ impl VulkanPipeline {
             .unwrap();
 
         let states = [vk::DynamicState::VIEWPORT, vk::DynamicState::SCISSOR];
-        let dynamic_state = vk::PipelineDynamicStateCreateInfo::builder().dynamic_states(&states);
+        let dynamic_state = vk::PipelineDynamicStateCreateInfo::default().dynamic_states(&states);
 
-        let viewport_state_info = vk::PipelineViewportStateCreateInfo::builder()
+        let viewport_state_info = vk::PipelineViewportStateCreateInfo::default()
             .scissors(&scissors)
             .viewports(&viewports);
 
-        let rs_state_info = vk::PipelineRasterizationStateCreateInfo::builder()
+        let rs_state_info = vk::PipelineRasterizationStateCreateInfo::default()
             .depth_clamp_enable(false)
             .depth_bias_enable(false)
             .rasterizer_discard_enable(false)
@@ -209,12 +209,12 @@ impl VulkanPipeline {
             .cull_mode(vk::CullModeFlags::BACK)
             .front_face(vk::FrontFace::CLOCKWISE);
 
-        let multisample = vk::PipelineMultisampleStateCreateInfo::builder()
+        let multisample = vk::PipelineMultisampleStateCreateInfo::default()
             .rasterization_samples(vk::SampleCountFlags::TYPE_1)
             .min_sample_shading(1.0f32)
             .sample_shading_enable(false);
 
-        let color_blend_attachment = [*vk::PipelineColorBlendAttachmentState::builder()
+        let color_blend_attachment = [vk::PipelineColorBlendAttachmentState::default()
             .blend_enable(false)
             .color_write_mask(vk::ColorComponentFlags::RGBA)
             .src_color_blend_factor(vk::BlendFactor::ONE)
@@ -224,7 +224,7 @@ impl VulkanPipeline {
             .dst_alpha_blend_factor(vk::BlendFactor::ZERO)
             .alpha_blend_op(vk::BlendOp::ADD)];
 
-        let color_blend_state = vk::PipelineColorBlendStateCreateInfo::builder()
+        let color_blend_state = vk::PipelineColorBlendStateCreateInfo::default()
             .logic_op(vk::LogicOp::COPY)
             .attachments(&color_blend_attachment);
 
@@ -252,11 +252,11 @@ impl VulkanPipeline {
         //     ..Default::default()
         // }];
 
-        let subpass = vk::SubpassDescription::builder()
+        let subpass = vk::SubpassDescription::default()
             .color_attachments(&color_attachment_refs)
             .pipeline_bind_point(vk::PipelineBindPoint::GRAPHICS);
 
-        let renderpass_create_info = vk::RenderPassCreateInfo::builder()
+        let renderpass_create_info = vk::RenderPassCreateInfo::default()
             .attachments(&renderpass_attachments)
             .subpasses(std::slice::from_ref(&subpass))
             .dependencies(&[]);
@@ -266,8 +266,8 @@ impl VulkanPipeline {
             .create_render_pass(&renderpass_create_info, None)
             .unwrap();
 
-        let infos = [*vertex_stage_info, *frag_stage_info];
-        let graphic_pipeline_info = vk::GraphicsPipelineCreateInfo::builder()
+        let infos = [vertex_stage_info, frag_stage_info];
+        let graphic_pipeline_info = vk::GraphicsPipelineCreateInfo::default()
             .stages(&infos)
             .vertex_input_state(&vertex_input_state_info)
             .input_assembly_state(&vertex_input_assembly_state_info)
@@ -278,7 +278,7 @@ impl VulkanPipeline {
             .dynamic_state(&dynamic_state)
             .layout(pipeline_layout)
             .render_pass(renderpass);
-        let graphic_pipeline_info = [*graphic_pipeline_info];
+        let graphic_pipeline_info = [graphic_pipeline_info];
 
         let graphics_pipelines = base
             .device
@@ -302,7 +302,7 @@ pub struct ShaderModule {
 
 impl ShaderModule {
     pub fn new(device: &ash::Device, spirv: Vec<u32>) -> VkResult<ShaderModule> {
-        let create_info = vk::ShaderModuleCreateInfo::builder().code(&spirv);
+        let create_info = vk::ShaderModuleCreateInfo::default().code(&spirv);
 
         let module = unsafe { device.create_shader_module(&create_info, None)? };
 
