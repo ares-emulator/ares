@@ -41,22 +41,6 @@ auto CPU::TLB::load(u64 vaddr, bool noExceptions) -> PhysAccess {
   return {false};
 }
 
-// Fast(er) version of load for recompiler icache lookups
-// avoids exceptions/debug checks
-auto CPU::TLB::loadFast(u64 vaddr) -> PhysAccess {
-  for(auto& entry : this->entry) {
-    if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
-    if((vaddr & entry.addressMaskHi) != entry.virtualAddress) continue;
-    if(vaddr >> 62 != entry.region) continue;
-    bool lo = vaddr & entry.addressSelect;
-    if(!entry.valid[lo]) return { false, 0, 0 };
-    physicalAddress = entry.physicalAddress[lo] + (vaddr & entry.addressMaskLo);
-    return {true, entry.cacheAlgorithm[lo] != 2, physicalAddress, vaddr};
-  }
-
-  return {false, 0, 0};
-}
-
 auto CPU::TLB::store(u64 vaddr, const Entry& entry, bool noExceptions) -> maybe<PhysAccess> {
   if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) return nothing;
   if((vaddr & entry.addressMaskHi) != entry.virtualAddress) return nothing;
