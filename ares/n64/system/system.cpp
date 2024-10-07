@@ -42,6 +42,21 @@ auto option(string name, string value) -> bool {
     }
   }
   if(Model::Nintendo64() && name == "Expansion Pak") system.expansionPak = value.boolean();
+  if(Model::Nintendo64() && name == "Controller Pak Banks") {
+    if (value == "32KiB (Default)") {
+      system.configuredControllerPakBankCount = 1;
+      system.controllerPakBankCount = 1;
+    } else if (value == "128KiB (Datel 1Meg)") {
+      system.configuredControllerPakBankCount = 4;
+      system.controllerPakBankCount = 4;
+    } else if (value == "512KiB (Datel 4Meg)") {
+      system.configuredControllerPakBankCount = 16;
+      system.controllerPakBankCount = 16;
+    } else if (value == "1984KiB (Maximum)") {
+      system.configuredControllerPakBankCount = 62;
+      system.controllerPakBankCount = 62;
+    }
+  }  
   return true;
 }
 
