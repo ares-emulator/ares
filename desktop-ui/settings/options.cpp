@@ -44,6 +44,44 @@ auto OptionSettings::construct() -> void {
   nintendo64ExpansionPakLayout.setAlignment(1).setPadding(12_sx, 0);
       nintendo64ExpansionPakHint.setText("Enable/Disable the 4MB Expansion Pak").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  for (auto& opt : array<string[4]>{"32KiB (Default)", "128KiB (Datel 1Meg)", "512KiB (Datel 4Meg)", "1984KiB (Maximum)"}) {
+    ComboButtonItem item{&nintendo64ControllerPakBankOption};
+    item.setText(opt);
+    if (opt == settings.nintendo64.controllerPakBankString) {
+      item.setSelected();
+
+      if (opt == "32KiB (Default)") {
+        settings.nintendo64.controllerPakBankCount = 1;
+      } else if (opt == "128KiB (Datel 1Meg)") {
+        settings.nintendo64.controllerPakBankCount = 4;
+      } else if (opt == "512KiB (Datel 4Meg)") {
+        settings.nintendo64.controllerPakBankCount = 16;
+      } else if (opt == "1984KiB (Maximum)") {
+        settings.nintendo64.controllerPakBankCount = 62;
+      }
+    }
+  }
+  nintendo64ControllerPakBankOption.onChange([&] {
+    auto idx = nintendo64ControllerPakBankOption.selected();
+    auto value = idx.text();
+    if (value != settings.nintendo64.controllerPakBankString) {
+      settings.nintendo64.controllerPakBankString = value;
+      
+      if (value == "32KiB (Default)") {
+        settings.nintendo64.controllerPakBankCount = 1;
+      } else if (value == "128KiB (Datel 1Meg)") {
+        settings.nintendo64.controllerPakBankCount = 4;
+      } else if (value == "512KiB (Datel 4Meg)") {
+        settings.nintendo64.controllerPakBankCount = 16;
+      } else if (value == "1984KiB (Maximum)") {
+        settings.nintendo64.controllerPakBankCount = 62;
+      }
+    }
+  });
+  nintendo64ControllerPakBankLayout.setAlignment(1).setPadding(12_sx, 0);
+      nintendo64ControllerPakBankLabel.setText("Controller Pak Size:");
+      nintendo64ControllerPakBankHint.setText("Sets the size of a newly created Controller Pak's available memory").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
   megaDriveSettingsLabel.setText("Mega Drive Settings").setFont(Font().setBold());
 
   megaDriveTmssOption.setText("TMSS Boot Rom").setChecked(settings.megadrive.tmss).onToggle([&] {
