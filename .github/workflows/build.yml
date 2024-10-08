@@ -83,7 +83,7 @@ jobs:
     - name: "macOS: Import Certificate"
       if: runner.os == 'macOS' && github.event_name != 'pull_request'
       continue-on-error: ${{ github.repository != 'ares-emulator/ares' }}
-      uses: wpilibsuite/import-signing-certificate@2ac4f44d28045073d23153256efbb4c4b2d8aa22    # Don't use rolling branch for security reasons
+      uses: wpilibsuite/import-signing-certificate@9e858a4e87d254c4f1d39632ff810d78ee061302    # Don't use rolling branch for security reasons
       with:
         certificate-data: ${{ secrets.MACOS_CERTIFICATE_DATA }}
         certificate-passphrase: ${{ secrets.MACOS_CERTIFICATE_PASSPHRASE }}
