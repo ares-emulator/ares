@@ -1,6 +1,6 @@
 [package]
 name = "librashader-pack"
-version = "0.5.0-rc.1"
+version = "0.5.1"
 edition = "2021"
 license = "MPL-2.0 OR GPL-3.0-only"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
@@ -11,8 +11,8 @@ keywords = ["shader", "retroarch", "SPIR-V"]
 description = "RetroArch shaders for all."
 
 [dependencies]
-librashader-presets = { path = "../librashader-presets", version = "0.5.0-rc.1", features = ["serde"] }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.0-rc.1", features = ["serde"] }
+librashader-presets = { path = "../librashader-presets", version = "0.5.1", features = ["serde"] }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.1", features = ["serde"] }
 
 thiserror = "1.0.64"
 serde = { version = "1.0", features = ["derive"], optional = true }

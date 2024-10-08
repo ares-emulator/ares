@@ -8,7 +8,7 @@ librashader (*/ˈli:brəʃeɪdɚ/*) is a preprocessor, compiler, and runtime for
 
 [![Latest Version](https://img.shields.io/crates/v/librashader.svg)](https://crates.io/crates/librashader) [![Docs](https://docs.rs/librashader/badge.svg)](https://docs.rs/librashader) [![build result](https://build.opensuse.org/projects/home:chyyran:librashader/packages/librashader/badge.svg)](https://software.opensuse.org//download.html?project=home%3Achyyran%3Alibrashader&package=librashader)
 ![License](https://img.shields.io/crates/l/librashader)
-![Nightly rust](https://img.shields.io/badge/rust-nightly-orange.svg) ![Stable rust](https://img.shields.io/badge/rust-1.77-blue.svg)
+![Stable rust](https://img.shields.io/badge/rust-1.78-blue.svg) ![Nightly rust](https://img.shields.io/badge/rust-nightly-orange.svg)
 
 ## Installation
 For end-users, librashader is available from the [Open Build Service](https://software.opensuse.org//download.html?project=home%3Achyyran%3Alibrashader&package=librashader) for a variety of Linux distributions and platforms.
@@ -111,6 +111,7 @@ Commands:
   render      Render a shader preset against an image
   compare     Compare two runtimes and get a similarity score between the two runtimes rendering the same frame
   parse       Parse a preset and get a JSON representation of the data
+  pack        Create a serialized preset pack from a shader preset
   preprocess  Get the raw GLSL output of a preprocessed shader
   transpile   Transpile a shader in a given preset to the given format
   reflect     Reflect the shader relative to a preset, giving information about semantics used in a slang shader
@@ -273,15 +274,15 @@ for migration instructions.
 
 ### MSRV Policy
 
+Building against stable Rust requires the following MSRV.
+
+* All platforms: **1.78**
+
 When building against nightly Rust, the following MSRV policy is enforced for unstable library features.
 
-* Windows and macOS: **latest** nightly
-* Linux: **1.76**
+* All platforms: **1.78**
 
-A CI job runs weekly to ensure librashader continues to build on nightly. 
-
-Building against stable Rust requires a higher MSRV.
-* All platforms: **1.77**
+A CI job runs weekly to ensure librashader continues to build on nightly.
 
 Note that the MSRV is only intended to ease distribution on Linux when building against nightly Rust or with `RUSTC_BOOTSTRAP=1`, and is allowed to change any time. 
 It generally tracks the latest version of Rust available in the latest version of Ubuntu, but this may change with no warning in a patch release.

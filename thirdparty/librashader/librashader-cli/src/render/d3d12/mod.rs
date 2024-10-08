@@ -8,8 +8,8 @@ use d3d12_descriptor_heap::{D3D12DescriptorHeap, D3D12DescriptorHeapSlot};
 use image::RgbaImage;
 use librashader::presets::ShaderPreset;
 use librashader::runtime::d3d12::{D3D12OutputView, FilterChain, FilterChainOptions, FrameOptions};
-use librashader::runtime::Viewport;
 use librashader::runtime::{FilterChainParameters, RuntimeParameters};
+use librashader::runtime::{Size, Viewport};
 use librashader_runtime::image::{Image, PixelFormat, UVDirection, BGRA8};
 use std::path::Path;
 use windows::core::Interface;
@@ -58,10 +58,14 @@ impl RenderTest for Direct3D12 {
         Direct3D12::new(path)
     }
 
+    fn image_size(&self) -> Size<u32> {
+        self.image.size
+    }
     fn render_with_preset_and_params(
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         param_setter: Option<&dyn Fn(&RuntimeParameters)>,
         frame_options: Option<CommonFrameOptions>,
     ) -> anyhow::Result<image::RgbaImage> {
@@ -92,12 +96,13 @@ impl RenderTest for Direct3D12 {
                 setter(filter_chain.parameters());
             }
 
+            let output_size = output_size.unwrap_or(self.image.size);
             let mut output_texture = None;
             let desc = D3D12_RESOURCE_DESC {
                 Dimension: D3D12_RESOURCE_DIMENSION_TEXTURE2D,
                 Alignment: 0,
-                Width: self.image.size.width as u64,
-                Height: self.image.size.height,
+                Width: output_size.width as u64,
+                Height: output_size.height,
                 DepthOrArraySize: 1,
                 MipLevels: 1,
                 Format: DXGI_FORMAT_B8G8R8A8_UNORM,
@@ -135,7 +140,7 @@ impl RenderTest for Direct3D12 {
             let viewport = Viewport::new_render_target_sized_origin(
                 D3D12OutputView::new_from_raw(
                     *descriptor.as_ref(),
-                    self.image.size,
+                    output_size,
                     DXGI_FORMAT_B8G8R8A8_UNORM,
                 ),
                 None,
@@ -165,11 +170,11 @@ impl RenderTest for Direct3D12 {
                 CloseHandle(fence_event)?;
             };
 
-            let mut buffer = vec![0u8; self.image.bytes.len()];
+            let mut buffer = vec![0u8; (output_size.height * output_size.width) as usize * 4];
 
             output_texture.ReadFromSubresource(
                 buffer.as_mut_ptr().cast(),
-                4 * self.image.size.width,
+                4 * output_size.width,
                 0,
                 0,
                 None,
@@ -177,12 +182,9 @@ impl RenderTest for Direct3D12 {
 
             BGRA8::convert(&mut buffer);
 
-            let image = RgbaImage::from_raw(
-                self.image.size.width,
-                self.image.size.height,
-                Vec::from(buffer),
-            )
-            .ok_or(anyhow!("Unable to create image from data"))?;
+            let image =
+                RgbaImage::from_raw(output_size.width, output_size.height, Vec::from(buffer))
+                    .ok_or(anyhow!("Unable to create image from data"))?;
 
             Ok(image)
         }

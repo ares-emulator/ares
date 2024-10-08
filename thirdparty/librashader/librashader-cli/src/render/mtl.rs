@@ -3,8 +3,8 @@ use anyhow::anyhow;
 use image::RgbaImage;
 use librashader::presets::ShaderPreset;
 use librashader::runtime::mtl::{FilterChain, FilterChainOptions, FrameOptions};
-use librashader::runtime::Viewport;
 use librashader::runtime::{FilterChainParameters, RuntimeParameters};
+use librashader::runtime::{Size, Viewport};
 use librashader_runtime::image::{Image, PixelFormat, UVDirection, BGRA8};
 use objc2::ffi::NSUInteger;
 use objc2::rc::Retained;
@@ -31,10 +31,15 @@ impl RenderTest for Metal {
         Metal::new(path)
     }
 
+    fn image_size(&self) -> Size<u32> {
+        self.image_bytes.size
+    }
+
     fn render_with_preset_and_params(
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         param_setter: Option<&dyn Fn(&RuntimeParameters)>,
         frame_options: Option<CommonFrameOptions>,
     ) -> anyhow::Result<image::RgbaImage> {
@@ -59,12 +64,14 @@ impl RenderTest for Metal {
             setter(filter_chain.parameters());
         }
 
+        let output_size = output_size.unwrap_or(self.image_bytes.size);
+
         let render_texture = unsafe {
             let texture_descriptor =
                 MTLTextureDescriptor::texture2DDescriptorWithPixelFormat_width_height_mipmapped(
                     MTLPixelFormat::BGRA8Unorm,
-                    self.image_bytes.size.width as NSUInteger,
-                    self.image_bytes.size.height as NSUInteger,
+                    output_size.width as NSUInteger,
+                    output_size.height as NSUInteger,
                     false,
                 );
 
@@ -113,18 +120,19 @@ impl RenderTest for Metal {
         let region = MTLRegion {
             origin: MTLOrigin { x: 0, y: 0, z: 0 },
             size: MTLSize {
-                width: self.image_bytes.size.width as usize,
-                height: self.image_bytes.size.height as usize,
+                width: output_size.width as usize,
+                height: output_size.height as usize,
                 depth: 1,
             },
         };
 
         unsafe {
             // should be the same size
-            let mut buffer = vec![0u8; self.image_bytes.bytes.len()];
+            let mut buffer =
+                vec![0u8; output_size.width as usize * output_size.height as usize * 4];
             render_texture.getBytes_bytesPerRow_fromRegion_mipmapLevel(
                 NonNull::new(buffer.as_mut_ptr().cast()).unwrap(),
-                4 * self.image_bytes.size.width as usize,
+                4 * output_size.width as usize,
                 region,
                 0,
             );

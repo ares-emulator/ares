@@ -7,8 +7,8 @@ use gpu_allocator::MemoryLocation;
 use image::RgbaImage;
 use librashader::presets::ShaderPreset;
 use librashader::runtime::vk::{FilterChain, FilterChainOptions, FrameOptions, VulkanImage};
-use librashader::runtime::Viewport;
 use librashader::runtime::{FilterChainParameters, RuntimeParameters};
+use librashader::runtime::{Size, Viewport};
 use librashader_runtime::image::{Image, UVDirection, BGRA8};
 use std::path::Path;
 
@@ -32,10 +32,15 @@ impl RenderTest for Vulkan {
         Vulkan::new(path)
     }
 
+    fn image_size(&self) -> Size<u32> {
+        self.image_bytes.size
+    }
+
     fn render_with_preset_and_params(
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         param_setter: Option<&dyn Fn(&RuntimeParameters)>,
         frame_options: Option<CommonFrameOptions>,
     ) -> anyhow::Result<image::RgbaImage> {
@@ -58,7 +63,7 @@ impl RenderTest for Vulkan {
             let image_info = vk::ImageCreateInfo::default()
                 .image_type(vk::ImageType::TYPE_2D)
                 .format(vk::Format::B8G8R8A8_UNORM)
-                .extent(self.image_bytes.size.into())
+                .extent(output_size.map_or(self.image_bytes.size.into(), |size| size.into()))
                 .mip_levels(1)
                 .array_layers(1)
                 .samples(vk::SampleCountFlags::TYPE_1)

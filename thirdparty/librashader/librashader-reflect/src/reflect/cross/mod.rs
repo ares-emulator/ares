@@ -829,54 +829,51 @@ mod test {
     use crate::reflect::semantics::{Semantic, ShaderSemantics, UniformSemantic, UniqueSemantics};
     use librashader_common::map::{FastHashMap, ShortString};
     use librashader_preprocess::ShaderSource;
-    use spirv_cross::glsl::{CompilerOptions, Version};
-    use spirv_cross::hlsl::ShaderModel;
-    use spirv_cross::{glsl, hlsl};
 
-    #[test]
-    pub fn test_into() {
-        let result = ShaderSource::load("../test/basic.slang").unwrap();
-        let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
-
-        for (_index, param) in result.parameters.iter().enumerate() {
-            uniform_semantics.insert(
-                param.1.id.clone(),
-                UniformSemantic::Unique(Semantic {
-                    semantics: UniqueSemantics::FloatParameter,
-                    index: (),
-                }),
-            );
-        }
-        let spirv = Glslang::compile(&result).unwrap();
-        let mut reflect = CrossReflect::<hlsl::Target>::try_from(&spirv).unwrap();
-        let shader_reflection = reflect
-            .reflect(
-                0,
-                &ShaderSemantics {
-                    uniform_semantics,
-                    texture_semantics: Default::default(),
-                },
-            )
-            .unwrap();
-        let mut opts = hlsl::CompilerOptions::default();
-        opts.shader_model = ShaderModel::V3_0;
-
-        let compiled: ShaderCompilerOutput<String, CrossHlslContext> =
-            <CrossReflect<hlsl::Target> as CompileShader<HLSL>>::compile(
-                reflect,
-                Some(ShaderModel::V3_0),
-            )
-            .unwrap();
-
-        println!("{:?}", shader_reflection.meta);
-        println!("{}", compiled.fragment);
-        println!("{}", compiled.vertex);
-
-        // // eprintln!("{shader_reflection:#?}");
-        // eprintln!("{}", compiled.fragment)
-        // let mut loader = rspirv::dr::Loader::new();
-        // rspirv::binary::parse_words(spirv.fragment.as_binary(), &mut loader).unwrap();
-        // let module = loader.module();
-        // println!("{:#}", module.disassemble());
-    }
+    // #[test]
+    // pub fn test_into() {
+    //     let result = ShaderSource::load("../test/basic.slang").unwrap();
+    //     let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
+    //
+    //     for (_index, param) in result.parameters.iter().enumerate() {
+    //         uniform_semantics.insert(
+    //             param.1.id.clone(),
+    //             UniformSemantic::Unique(Semantic {
+    //                 semantics: UniqueSemantics::FloatParameter,
+    //                 index: (),
+    //             }),
+    //         );
+    //     }
+    //     let spirv = Glslang::compile(&result).unwrap();
+    //     let mut reflect = CrossReflect::<hlsl::Target>::try_from(&spirv).unwrap();
+    //     let shader_reflection = reflect
+    //         .reflect(
+    //             0,
+    //             &ShaderSemantics {
+    //                 uniform_semantics,
+    //                 texture_semantics: Default::default(),
+    //             },
+    //         )
+    //         .unwrap();
+    //     let mut opts = hlsl::CompilerOptions::default();
+    //     opts.shader_model = ShaderModel::V3_0;
+    //
+    //     let compiled: ShaderCompilerOutput<String, CrossHlslContext> =
+    //         <CrossReflect<hlsl::Target> as CompileShader<HLSL>>::compile(
+    //             reflect,
+    //             Some(ShaderModel::V3_0),
+    //         )
+    //         .unwrap();
+    //
+    //     println!("{:?}", shader_reflection.meta);
+    //     println!("{}", compiled.fragment);
+    //     println!("{}", compiled.vertex);
+    //
+    //     // // eprintln!("{shader_reflection:#?}");
+    //     // eprintln!("{}", compiled.fragment)
+    //     // let mut loader = rspirv::dr::Loader::new();
+    //     // rspirv::binary::parse_words(spirv.fragment.as_binary(), &mut loader).unwrap();
+    //     // let module = loader.module();
+    //     // println!("{:#}", module.disassemble());
+    // }
 }

@@ -165,42 +165,42 @@ mod test {
     use bitflags::Flags;
     use librashader_common::map::{FastHashMap, ShortString};
     use librashader_preprocess::ShaderSource;
-    use spirv_cross::msl;
+    // use spirv_cross::msl;
 
-    #[test]
-    pub fn test_into() {
-        let result = ShaderSource::load("../test/basic.slang").unwrap();
-
-        let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
-
-        for (_index, param) in result.parameters.iter().enumerate() {
-            uniform_semantics.insert(
-                param.1.id.clone(),
-                UniformSemantic::Unique(Semantic {
-                    semantics: UniqueSemantics::FloatParameter,
-                    index: (),
-                }),
-            );
-        }
-
-        let compilation = crate::front::SpirvCompilation::try_from(&result).unwrap();
-
-        let mut msl = <MSL as FromCompilation<_, Naga>>::from_compilation(compilation).unwrap();
-
-        msl.reflect(
-            0,
-            &ShaderSemantics {
-                uniform_semantics,
-                texture_semantics: Default::default(),
-            },
-        )
-        .expect("");
-
-        let compiled = msl.compile(Some(msl::Version::V2_0)).unwrap();
-
-        println!(
-            "{:?}",
-            compiled.context.fragment.translation_info.entry_point_names
-        );
-    }
+    // #[test]
+    // pub fn test_into() {
+    //     let result = ShaderSource::load("../test/basic.slang").unwrap();
+    //
+    //     let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
+    //
+    //     for (_index, param) in result.parameters.iter().enumerate() {
+    //         uniform_semantics.insert(
+    //             param.1.id.clone(),
+    //             UniformSemantic::Unique(Semantic {
+    //                 semantics: UniqueSemantics::FloatParameter,
+    //                 index: (),
+    //             }),
+    //         );
+    //     }
+    //
+    //     let compilation = crate::front::SpirvCompilation::try_from(&result).unwrap();
+    //
+    //     let mut msl = <MSL as FromCompilation<_, Naga>>::from_compilation(compilation).unwrap();
+    //
+    //     msl.reflect(
+    //         0,
+    //         &ShaderSemantics {
+    //             uniform_semantics,
+    //             texture_semantics: Default::default(),
+    //         },
+    //     )
+    //     .expect("");
+    //
+    //     let compiled = msl.compile(Some(msl::Version::V2_0)).unwrap();
+    //
+    //     println!(
+    //         "{:?}",
+    //         compiled.context.fragment.translation_info.entry_point_names
+    //     );
+    // }
 }

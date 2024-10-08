@@ -2,7 +2,7 @@
 name = "librashader-cli"
 edition = "2021"
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.5.0-rc.1"
+version = "0.5.1"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -19,8 +19,8 @@ name = "librashader-cli"
 path = "src/cli/main.rs"
 
 [dependencies]
-librashader = { version = "0.5.0-rc.1", path = "../librashader", features = ["presets", "preprocess", "serde"], default-features = false }
-librashader-runtime = { version = "0.5.0-rc.1", path = "../librashader-runtime"}
+librashader = { version = "0.5.1", path = "../librashader", features = ["presets", "preprocess", "serde"], default-features = false }
+librashader-runtime = { version = "0.5.1", path = "../librashader-runtime"}
 wgpu = { version = "22", default-features = false, optional = true  }
 wgpu-types = { version = "22", optional = true }
 anyhow = "1.0.86"

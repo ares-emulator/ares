@@ -4,6 +4,8 @@ use image::RgbaImage;
 use librashader::runtime::d3d11::*;
 use librashader::runtime::{FilterChainParameters, RuntimeParameters};
 use librashader::runtime::{Size, Viewport};
+use std::io::{Cursor, Write};
+use std::ops::DerefMut;
 use std::path::Path;
 
 impl RenderTest for Direct3D11 {
@@ -14,14 +16,20 @@ impl RenderTest for Direct3D11 {
         Direct3D11::new(path)
     }
 
+    fn image_size(&self) -> Size<u32> {
+        self.image_bytes.size
+    }
+
     fn render_with_preset_and_params(
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         param_setter: Option<&dyn Fn(&RuntimeParameters)>,
         frame_options: Option<CommonFrameOptions>,
     ) -> anyhow::Result<image::RgbaImage> {
-        let (renderbuffer, rtv) = self.create_renderbuffer(self.image_bytes.size)?;
+        let output_size = output_size.unwrap_or(self.image_bytes.size);
+        let (renderbuffer, rtv) = self.create_renderbuffer(output_size)?;
 
         unsafe {
             let mut filter_chain = FilterChain::load_from_preset(
@@ -50,10 +58,10 @@ impl RenderTest for Direct3D11 {
             }
 
             let mut renderbuffer_desc = Default::default();
+            self.immediate_context.Flush();
             renderbuffer.GetDesc(&mut renderbuffer_desc);
 
-            self.immediate_context.Flush();
-
+            eprintln!("{:?}", renderbuffer_desc);
             let mut staging = None;
             self.device.CreateTexture2D(
                 &D3D11_TEXTURE2D_DESC {
@@ -72,6 +80,8 @@ impl RenderTest for Direct3D11 {
 
             self.immediate_context.CopyResource(&staging, &renderbuffer);
 
+            let mut pixels: Vec<u8> = Vec::new();
+
             let mut map_info = Default::default();
             self.immediate_context
                 .Map(&staging, 0, D3D11_MAP_READ, 0, Some(&mut map_info))?;
@@ -80,13 +90,18 @@ impl RenderTest for Direct3D11 {
                 map_info.pData as *const u8,
                 (renderbuffer_desc.Height * map_info.RowPitch) as usize,
             );
+            pixels.resize(
+                (renderbuffer_desc.Height * renderbuffer_desc.Width * 4) as usize,
+                0,
+            );
 
-            let image = RgbaImage::from_raw(
-                renderbuffer_desc.Width,
-                renderbuffer_desc.Height,
-                Vec::from(slice),
-            )
-            .ok_or(anyhow!("Unable to create image from data"))?;
+            let mut cursor = Cursor::new(pixels.deref_mut());
+            for chunk in slice.chunks(map_info.RowPitch as usize) {
+                cursor.write_all(&chunk[..(renderbuffer_desc.Width * 4) as usize])?
+            }
+
+            let image = RgbaImage::from_raw(output_size.width, output_size.height, pixels)
+                .ok_or(anyhow!("Unable to create image from data"))?;
             self.immediate_context.Unmap(&staging, 0);
 
             Ok(image)

@@ -7,8 +7,8 @@ use glow::{HasContext, PixelPackData, PixelUnpackData};
 use image::RgbaImage;
 use librashader::presets::ShaderPreset;
 use librashader::runtime::gl::{FilterChain, FilterChainOptions, FrameOptions, GLImage};
-use librashader::runtime::Viewport;
 use librashader::runtime::{FilterChainParameters, RuntimeParameters};
+use librashader::runtime::{Size, Viewport};
 use librashader_runtime::image::{Image, UVDirection, RGBA8};
 use std::path::Path;
 use std::sync::Arc;
@@ -30,10 +30,15 @@ impl RenderTest for OpenGl3 {
         OpenGl3::new(path)
     }
 
+    fn image_size(&self) -> Size<u32> {
+        self.0.image_bytes.size
+    }
+
     fn render_with_preset_and_params(
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         param_setter: Option<&dyn Fn(&RuntimeParameters)>,
         frame_options: Option<CommonFrameOptions>,
     ) -> anyhow::Result<image::RgbaImage> {
@@ -57,6 +62,7 @@ impl RenderTest for OpenGl3 {
         Ok(self.0.render(
             &mut filter_chain,
             frame_count,
+            output_size,
             frame_options
                 .map(|options| FrameOptions {
                     clear_history: options.clear_history,
@@ -78,10 +84,15 @@ impl RenderTest for OpenGl4 {
         OpenGl4::new(path)
     }
 
+    fn image_size(&self) -> Size<u32> {
+        self.0.image_bytes.size
+    }
+
     fn render_with_preset_and_params(
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         param_setter: Option<&dyn Fn(&RuntimeParameters)>,
         frame_options: Option<CommonFrameOptions>,
     ) -> anyhow::Result<image::RgbaImage> {
@@ -105,6 +116,7 @@ impl RenderTest for OpenGl4 {
         Ok(self.0.render(
             &mut filter_chain,
             frame_count,
+            output_size,
             frame_options
                 .map(|options| FrameOptions {
                     clear_history: options.clear_history,
@@ -189,8 +201,11 @@ impl OpenGl {
         &self,
         chain: &mut FilterChain,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         options: Option<&FrameOptions>,
     ) -> Result<RgbaImage, anyhow::Error> {
+        let output_size = output_size.unwrap_or(self.image_bytes.size);
+
         let render_texture = unsafe {
             let tex = self
                 .context
@@ -202,8 +217,8 @@ impl OpenGl {
                 glow::TEXTURE_2D,
                 1,
                 glow::RGBA8,
-                self.image_bytes.size.width as i32,
-                self.image_bytes.size.height as i32,
+                output_size.width as i32,
+                output_size.height as i32,
             );
             self.context.gl.bind_texture(glow::TEXTURE_2D, None);
             tex
@@ -212,7 +227,7 @@ impl OpenGl {
         let output = GLImage {
             handle: Some(render_texture),
             format: glow::RGBA8,
-            size: self.image_bytes.size,
+            size: output_size,
         };
 
         let viewport = Viewport::new_render_target_sized_origin(&output, None)?;
@@ -222,8 +237,7 @@ impl OpenGl {
             }
         }
 
-        // should be the same size as the input image
-        let mut data = vec![0u8; self.image_bytes.bytes.len()];
+        let mut data = vec![0u8; output_size.width as usize * output_size.height as usize * 4];
 
         unsafe {
             self.context
@@ -237,11 +251,9 @@ impl OpenGl {
                 PixelPackData::Slice(&mut data),
             )
         }
-        Ok(RgbaImage::from_raw(
-            self.image_bytes.size.width,
-            self.image_bytes.size.height,
-            data,
+        Ok(
+            RgbaImage::from_raw(output_size.width, output_size.height, data)
+                .ok_or(anyhow!("failed to create image from slice"))?,
         )
-        .ok_or(anyhow!("failed to create image from slice"))?)
     }
 }

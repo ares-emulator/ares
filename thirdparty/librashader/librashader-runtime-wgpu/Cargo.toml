@@ -2,7 +2,7 @@
 name = "librashader-runtime-wgpu"
 edition = "2021"
 
-version = "0.5.0-rc.1"
+version = "0.5.1"
 license = "MPL-2.0 OR GPL-3.0-only"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
@@ -14,13 +14,13 @@ description = "RetroArch shaders for all."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-librashader-common = { path = "../librashader-common", features = ["wgpu"], version = "0.5.0-rc.1" }
-librashader-presets = { path = "../librashader-presets", version = "0.5.0-rc.1" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.0-rc.1" }
-librashader-pack = { path = "../librashader-pack", version = "0.5.0-rc.1" }
-librashader-reflect = { path = "../librashader-reflect", version = "0.5.0-rc.1", features = ["wgsl"], default-features = false }
-librashader-runtime = { path = "../librashader-runtime" , version = "0.5.0-rc.1" }
-librashader-cache = { path = "../librashader-cache", version = "0.5.0-rc.1" }
+librashader-common = { path = "../librashader-common", features = ["wgpu"], version = "0.5.1" }
+librashader-presets = { path = "../librashader-presets", version = "0.5.1" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.1" }
+librashader-pack = { path = "../librashader-pack", version = "0.5.1" }
+librashader-reflect = { path = "../librashader-reflect", version = "0.5.1", features = ["wgsl"], default-features = false }
+librashader-runtime = { path = "../librashader-runtime" , version = "0.5.1" }
+librashader-cache = { path = "../librashader-cache", version = "0.5.1" }
 
 wgpu = { workspace = true, default-features = false, features = ["wgsl"] }
 thiserror = "1.0.50"
