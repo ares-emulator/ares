@@ -56,9 +56,12 @@ mod test {
 
     #[test]
     pub fn test_into() {
+        let result =
+            ShaderSource::load("../test/shaders_slang/crt/shaders/slotmask.slang").unwrap();
+
         // let result = ShaderSource::load("../test/shaders_slang/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask.slang").unwrap();
         // let result = ShaderSource::load("../test/shaders_slang/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask.slang").unwrap();
-        let result = ShaderSource::load("../test/basic.slang").unwrap();
+        // let result = ShaderSource::load("../test/basic.slang").unwrap();
 
         let mut uniform_semantics: FastHashMap<ShortString, UniformSemantic> = Default::default();
 

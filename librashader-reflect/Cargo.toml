@@ -3,7 +3,7 @@ name = "librashader-reflect"
 edition = "2021"
 
 license = "MPL-2.0 OR GPL-3.0-only"
-version = "0.5.0-rc.1"
+version = "0.5.1"
 authors = ["Ronny Chan <ronny@ronnychan.ca>"]
 repository = "https://github.com/SnowflakePowered/librashader"
 readme = "../README.md"
@@ -18,10 +18,10 @@ bytemuck = "1.13.0"
 thiserror = "1.0.37"
 bitflags = "2.4.2"
 
-librashader-common = { path = "../librashader-common", version = "0.5.0-rc.1" }
-librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.0-rc.1" }
-librashader-presets = { path = "../librashader-presets", version = "0.5.0-rc.1" }
-librashader-pack = { path = "../librashader-pack", version = "0.5.0-rc.1" }
+librashader-common = { path = "../librashader-common", version = "0.5.1" }
+librashader-preprocess = { path = "../librashader-preprocess", version = "0.5.1" }
+librashader-presets = { path = "../librashader-presets", version = "0.5.1" }
+librashader-pack = { path = "../librashader-pack", version = "0.5.1" }
 
 spirv-cross2 = { workspace = true, optional = true }
 
@@ -38,13 +38,13 @@ optional = true
 
 [features]
 default = ["cross", "naga", "wgsl", "msl"]
-dxil = ["spirv-cross2/hlsl", "dep:spirv-to-dxil"]
-wgsl = ["cross", "naga/wgsl-out", "dep:spirv", "dep:rspirv"]
-cross = [ "dep:spirv-cross2", "spirv-cross2/glsl", "spirv-cross2/hlsl", "spirv-cross2/msl" ]
-naga = [ "dep:rspirv", "dep:spirv", "naga/spv-in", "naga/spv-out", "naga/wgsl-out", "naga/msl-out" ]
+dxil = [ "spirv-cross2?/hlsl", "dep:spirv-to-dxil" ]
+wgsl = [ "cross", "naga", "naga/wgsl-out", "dep:spirv", "dep:rspirv"]
+cross = [ "spirv-cross2", "spirv-cross2/glsl", "spirv-cross2/hlsl", "spirv-cross2/msl" ]
+naga = [ "dep:rspirv", "dep:spirv", "dep:naga", "naga/spv-in", "naga/spv-out", "naga/wgsl-out", "naga/msl-out" ]
 serde = ["dep:serde", "serde/derive", "librashader-common/serde", "bitflags/serde"]
+msl = [ "cross", "spirv-cross2/msl", "naga?/msl-out" ]
 
-msl = [ "spirv-cross2/msl", "naga/msl-out" ]
 stable = []
 
 unstable-naga-in = ["naga/glsl-in"]

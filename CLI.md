@@ -9,11 +9,12 @@ Commands:
   render      Render a shader preset against an image
   compare     Compare two runtimes and get a similarity score between the two runtimes rendering the same frame
   parse       Parse a preset and get a JSON representation of the data
+  pack        Create a serialized preset pack from a shader preset
   preprocess  Get the raw GLSL output of a preprocessed shader
   transpile   Transpile a shader in a given preset to the given format
   reflect     Reflect the shader relative to a preset, giving information about semantics used in a slang shader
   help        Print this message or the help of the given subcommand(s)
-
+    
 Options:
   -h, --help     Print help
   -V, --version  Print version
@@ -52,6 +53,11 @@ Options:
           The renderer will run up to the number of frames specified here to ensure feedback and history.
 
           [default: 0]
+          
+  -d, --dimensions <DIMENSIONS>
+          The dimensions of the image.
+
+          This is given in either explicit dimensions `WIDTHxHEIGHT`, or a percentage of the input image in `SCALE%`.
 
       --params <PARAMS>...
           Parameters to pass to the shader preset, comma separated with equals signs.
@@ -136,6 +142,11 @@ Options:
           The renderer will run up to the number of frames specified here to ensure feedback and history.
 
           [default: 0]
+          
+  -d, --dimensions <DIMENSIONS>
+          The dimensions of the image.
+
+          This is given in either explicit dimensions `WIDTHxHEIGHT`, or a percentage of the input image in `SCALE%`.
 
       --params <PARAMS>...
           Parameters to pass to the shader preset, comma separated with equals signs.

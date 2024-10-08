@@ -2,7 +2,7 @@ use crate::render::{CommonFrameOptions, RenderTest};
 use anyhow::anyhow;
 use image::RgbaImage;
 use librashader::runtime::wgpu::*;
-use librashader::runtime::Viewport;
+use librashader::runtime::{Size, Viewport};
 use librashader_runtime::image::{Image, UVDirection};
 use std::io::{Cursor, Write};
 use std::ops::DerefMut;
@@ -23,7 +23,7 @@ pub struct Wgpu {
     _adapter: Adapter,
     device: Arc<Device>,
     queue: Arc<Queue>,
-    _image: Image,
+    image: Image,
     texture: Arc<Texture>,
 }
 
@@ -35,7 +35,7 @@ struct BufferDimensions {
 
 impl BufferDimensions {
     fn new(width: usize, height: usize) -> Self {
-        let bytes_per_pixel = size_of::<u32>();
+        let bytes_per_pixel = std::mem::size_of::<u32>();
         let unpadded_bytes_per_row = width * bytes_per_pixel;
         let align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT as usize;
         let padded_bytes_per_row_padding = (align - unpadded_bytes_per_row % align) % align;
@@ -56,10 +56,15 @@ impl RenderTest for Wgpu {
         Wgpu::new(path)
     }
 
+    fn image_size(&self) -> Size<u32> {
+        self.image.size
+    }
+
     fn render_with_preset_and_params(
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         param_setter: Option<&dyn Fn(&RuntimeParameters)>,
         frame_options: Option<CommonFrameOptions>,
     ) -> anyhow::Result<image::RgbaImage> {
@@ -82,7 +87,7 @@ impl RenderTest for Wgpu {
 
         let output_tex = self.device.create_texture(&TextureDescriptor {
             label: None,
-            size: self.texture.size(),
+            size: output_size.map_or(self.texture.size(), |size| size.into()),
             mip_level_count: 1,
             sample_count: 1,
             dimension: TextureDimension::D2,
@@ -219,7 +224,7 @@ impl Wgpu {
                 _adapter: adapter,
                 device: Arc::new(device),
                 queue: Arc::new(queue),
-                _image: image,
+                image: image,
                 texture: Arc::new(texture),
             })
         })

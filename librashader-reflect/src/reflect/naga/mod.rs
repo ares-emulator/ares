@@ -1046,6 +1046,7 @@ impl ReflectShader for NagaReflect {
 
 #[cfg(test)]
 mod test {
+    use crate::front::ShaderInputCompiler;
     use crate::reflect::semantics::{Semantic, TextureSemantics, UniformSemantic};
     use librashader_common::map::FastHashMap;
     use librashader_preprocess::ShaderSource;
@@ -1053,18 +1054,19 @@ mod test {
 
     // #[test]
     // pub fn test_into() {
-    //     let result = ShaderSource::load("../test/slang-shaders/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask.slang").unwrap();
-    //     let compilation = crate::front::GlslangCompilation::try_from(&result).unwrap();
+    //     let result = ShaderSource::load("../test/slang-shaders/misc/shaders/simple_color_controls.slang").unwrap();
+    //     let compilation = crate::front::Glslang::compile(&result).unwrap();
     //
-    //     let mut loader = rspirv::dr::Loader::new();
-    //     rspirv::binary::parse_words(compilation.vertex.as_binary(), &mut loader).unwrap();
-    //     let module = loader.module();
-    //
-    //     let outputs: Vec<&Instruction> = module
-    //         .types_global_values
-    //         .iter()
-    //         .filter(|i| i.class.opcode == Op::Variable)
-    //         .collect();
+    //     crate::front::n
+    //     // let mut loader = rspirv::dr::Loader::new();
+    //     // rspirv::binary::parse_words(compilation.vertex.as_binary(), &mut loader).unwrap();
+    //     // let module = loader.module();
+    //     //
+    //     // let outputs: Vec<&Instruction> = module
+    //     //     .types_global_values
+    //     //     .iter()
+    //     //     .filter(|i| i.class.opcode == Op::Variable)
+    //     //     .collect();
     //
     //     println!("{outputs:#?}");
     // }

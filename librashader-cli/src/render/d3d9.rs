@@ -3,8 +3,8 @@ use anyhow::anyhow;
 use image::RgbaImage;
 use librashader::presets::ShaderPreset;
 use librashader::runtime::d3d9::{FilterChain, FilterChainOptions, FrameOptions};
-use librashader::runtime::Viewport;
 use librashader::runtime::{FilterChainParameters, RuntimeParameters};
+use librashader::runtime::{Size, Viewport};
 use librashader_runtime::image::{Image, PixelFormat, UVDirection, BGRA8};
 use std::path::Path;
 use windows::Win32::Foundation::{HWND, TRUE};
@@ -31,10 +31,15 @@ impl RenderTest for Direct3D9 {
         Direct3D9::new(path)
     }
 
+    fn image_size(&self) -> Size<u32> {
+        self.image.size
+    }
+
     fn render_with_preset_and_params(
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         param_setter: Option<&dyn Fn(&RuntimeParameters)>,
         frame_options: Option<CommonFrameOptions>,
     ) -> anyhow::Result<image::RgbaImage> {
@@ -54,9 +59,10 @@ impl RenderTest for Direct3D9 {
 
             let mut render_texture = None;
 
+            let output_size = output_size.unwrap_or(self.image.size);
             self.device.CreateTexture(
-                self.image.size.width,
-                self.image.size.height,
+                output_size.width,
+                output_size.height,
                 1,
                 D3DUSAGE_RENDERTARGET as u32,
                 D3DFMT_A8R8G8B8,
@@ -71,8 +77,8 @@ impl RenderTest for Direct3D9 {
             let mut copy_texture = None;
 
             self.device.CreateOffscreenPlainSurface(
-                self.image.size.width,
-                self.image.size.height,
+                output_size.width,
+                output_size.height,
                 D3DFMT_A8R8G8B8,
                 D3DPOOL_SYSTEMMEM,
                 &mut copy_texture,
@@ -112,7 +118,7 @@ impl RenderTest for Direct3D9 {
 
             BGRA8::convert(&mut buffer);
 
-            let image = RgbaImage::from_raw(self.image.size.width, self.image.size.height, buffer)
+            let image = RgbaImage::from_raw(output_size.width, output_size.height, buffer)
                 .ok_or(anyhow!("Unable to create image from data"))?;
 
             Ok(image)

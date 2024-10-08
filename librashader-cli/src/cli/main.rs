@@ -7,6 +7,7 @@ use librashader::reflect::cross::{GlslVersion, HlslShaderModel, MslVersion, Spir
 use librashader::reflect::naga::{Naga, NagaLoweringOptions};
 use librashader::reflect::semantics::ShaderSemantics;
 use librashader::reflect::{CompileShader, FromCompilation, ReflectShader, SpirvCompilation};
+use librashader::runtime::Size;
 use librashader::{FastHashMap, ShortString};
 use librashader_runtime::parameters::RuntimeParameters;
 use librashader_test::render::{CommonFrameOptions, RenderTest};
@@ -43,6 +44,12 @@ struct RenderArgs {
     /// to ensure feedback and history.
     #[arg(short, long, default_value_t = 0)]
     frame: usize,
+    /// The dimensions of the image.
+    ///
+    /// This is given in either explicit dimensions `WIDTHxHEIGHT`, or a
+    /// percentage of the input image in `SCALE%`.
+    #[arg(short, long)]
+    dimensions: Option<String>,
     /// Parameters to pass to the shader preset, comma separated with equals signs.
     ///
     /// For example, crt_gamma=2.5,halation_weight=0.001
@@ -175,6 +182,7 @@ enum Commands {
         /// For MSL, this is the shader language version as an integer in format
         /// <MMmmpp>(30100), or a version in the format MAJ_MIN (3_1), or MAJ.MIN (3.1).
         ///
+        /// For SPIR-V, if this is the string "raw-id", then shows raw ID values instead of friendly names.
         #[arg(short, long)]
         version: Option<String>,
     },
@@ -313,6 +321,7 @@ pub fn main() -> Result<(), anyhow::Error> {
             let PresetArgs { preset, wildcards } = preset;
             let RenderArgs {
                 frame,
+                dimensions,
                 params,
                 passes_enabled,
                 image,
@@ -320,13 +329,14 @@ pub fn main() -> Result<(), anyhow::Error> {
             } = render;
 
             let test: &mut dyn RenderTest = get_runtime!(runtime, image);
-
+            let dimensions = parse_dimension(dimensions, test.image_size())?;
             let preset = get_shader_preset(preset, wildcards)?;
             let params = parse_params(params)?;
 
             let image = test.render_with_preset_and_params(
                 preset,
                 frame,
+                Some(dimensions),
                 Some(&|rp| set_params(rp, &params, passes_enabled)),
                 options.map(CommonFrameOptions::from),
             )?;
@@ -348,6 +358,7 @@ pub fn main() -> Result<(), anyhow::Error> {
             let PresetArgs { preset, wildcards } = preset;
             let RenderArgs {
                 frame,
+                dimensions,
                 params,
                 passes_enabled,
                 image,
@@ -357,12 +368,14 @@ pub fn main() -> Result<(), anyhow::Error> {
             let left: &mut dyn RenderTest = get_runtime!(left, image);
             let right: &mut dyn RenderTest = get_runtime!(right, image);
 
+            let dimensions = parse_dimension(dimensions, left.image_size())?;
             let params = parse_params(params)?;
 
             let left_preset = get_shader_preset(preset.clone(), wildcards.clone())?;
             let left_image = left.render_with_preset_and_params(
                 left_preset,
                 frame,
+                Some(dimensions),
                 Some(&|rp| set_params(rp, &params, passes_enabled)),
                 None,
             )?;
@@ -371,6 +384,7 @@ pub fn main() -> Result<(), anyhow::Error> {
             let right_image = right.render_with_preset_and_params(
                 right_preset,
                 frame,
+                Some(dimensions),
                 Some(&|rp| set_params(rp, &params, passes_enabled)),
                 options.map(CommonFrameOptions::from),
             )?;
@@ -487,9 +501,10 @@ pub fn main() -> Result<(), anyhow::Error> {
                     compilation.validate()?;
                     let output = compilation.compile(None)?;
 
+                    let raw = version.is_some_and(|s| s == "raw-id");
                     TranspileOutput {
-                        vertex: spirv_to_dis(output.vertex)?,
-                        fragment: spirv_to_dis(output.fragment)?,
+                        vertex: spirv_to_dis(output.vertex, raw)?,
+                        fragment: spirv_to_dis(output.fragment, raw)?,
                     }
                 }
             };
@@ -636,13 +651,13 @@ fn set_params(
     });
 }
 
-fn spirv_to_dis(spirv: Vec<u32>) -> anyhow::Result<String> {
+fn spirv_to_dis(spirv: Vec<u32>, raw: bool) -> anyhow::Result<String> {
     let binary = spq_spvasm::SpirvBinary::from(spirv);
     spq_spvasm::Disassembler::new()
         .print_header(true)
-        .name_ids(true)
-        .name_type_ids(true)
-        .name_const_ids(true)
+        .name_ids(!raw)
+        .name_type_ids(!raw)
+        .name_const_ids(!raw)
         .indent(true)
         .disassemble(&binary)
 }
@@ -741,4 +756,48 @@ fn parse_msl_version(version_str: &str) -> anyhow::Result<MslVersion> {
         }
         _ => return Err(anyhow!("Unknown MSL version")),
     })
+}
+
+fn parse_dimension(dimstr: Option<String>, image_dim: Size<u32>) -> anyhow::Result<Size<u32>> {
+    let Some(dimstr) = dimstr else {
+        return Ok(image_dim);
+    };
+
+    if dimstr.contains("x") {
+        if let Some((Ok(width), Ok(height))) = dimstr
+            .split_once("x")
+            .map(|(width, height)| (width.parse::<u32>(), height.parse::<u32>()))
+        {
+            if width < 1 || height < 1 {
+                return Err(anyhow!("Dimensions must be larger than 1x1"));
+            }
+
+            if width > 16384 || height > 16384 {
+                return Err(anyhow!("Dimensions must not be larger than 16384x16384"));
+            }
+            return Ok(Size::new(width, height));
+        }
+    }
+
+    if dimstr.ends_with("%") && dimstr.len() > 1 {
+        if let Ok(percent) = dimstr.trim_end_matches("%").parse::<u32>() {
+            let percent = percent as f32 / 100f32;
+            let width = (image_dim.width as f32 * percent) as u32;
+            let height = (image_dim.height as f32 * percent) as u32;
+
+            if width < 1 || height < 1 {
+                return Err(anyhow!("Dimensions must be larger than 1x1"));
+            }
+
+            if width > 16384 || height > 16384 {
+                return Err(anyhow!("Dimensions must not be larger than 16384x16384"));
+            }
+
+            return Ok(Size { width, height });
+        }
+    }
+
+    Err(anyhow!(
+        "Invalid dimension syntax, must either in form WIDTHxHEIGHT or SCALE%"
+    ))
 }

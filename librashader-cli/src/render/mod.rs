@@ -20,6 +20,7 @@ pub mod wgpu;
 pub mod mtl;
 
 use librashader::presets::ShaderPreset;
+use librashader::runtime::Size;
 use librashader_runtime::impl_default_frame_options;
 use librashader_runtime::parameters::RuntimeParameters;
 use std::path::Path;
@@ -31,6 +32,9 @@ pub trait RenderTest {
     where
         Self: Sized;
 
+    /// Get the size of the image loaded.
+    fn image_size(&self) -> Size<u32>;
+
     /// Render a shader onto an image buffer, applying the provided shader.
     ///
     /// The test should render in linear colour space for proper comparison against
@@ -39,9 +43,14 @@ pub trait RenderTest {
     /// For testing purposes, it is often that a single image will be reused with multiple
     /// shader presets, so the actual image that a shader will be applied to
     /// will often be part of the test harness object.
-    fn render(&mut self, path: &Path, frame_count: usize) -> anyhow::Result<image::RgbaImage> {
+    fn render(
+        &mut self,
+        path: &Path,
+        frame_count: usize,
+        output_size: Option<Size<u32>>,
+    ) -> anyhow::Result<image::RgbaImage> {
         let preset = ShaderPreset::try_parse(path)?;
-        self.render_with_preset(preset, frame_count)
+        self.render_with_preset(preset, frame_count, output_size)
     }
 
     /// Render a shader onto an image buffer, applying the provided shader.
@@ -56,8 +65,9 @@ pub trait RenderTest {
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
     ) -> anyhow::Result<image::RgbaImage> {
-        self.render_with_preset_and_params(preset, frame_count, None, None)
+        self.render_with_preset_and_params(preset, frame_count, output_size, None, None)
     }
 
     /// Render a shader onto an image buffer, applying the provided shader.
@@ -72,6 +82,7 @@ pub trait RenderTest {
         &mut self,
         preset: ShaderPreset,
         frame_count: usize,
+        output_size: Option<Size<u32>>,
         param_setter: Option<&dyn Fn(&RuntimeParameters)>,
         frame_options: Option<CommonFrameOptions>,
     ) -> anyhow::Result<image::RgbaImage>;

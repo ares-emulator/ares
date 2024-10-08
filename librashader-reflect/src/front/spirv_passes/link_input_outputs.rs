@@ -98,6 +98,30 @@ impl<'a> LinkInputs<'a> {
     pub fn do_pass(&mut self) {
         self.trim_inputs();
         self.downgrade_outputs();
+        self.put_vertex_variables_to_end();
+    }
+
+    fn put_vertex_variables_to_end(&mut self) {
+        // this is easier than doing proper topo sort.
+        // we need it so that all type definitions are valid before
+        // being referred to by a variable.
+        let mut vars = Vec::new();
+
+        self.vert_builder
+            .module_mut()
+            .types_global_values
+            .retain(|instr| {
+                if instr.class.opcode == spirv::Op::Variable {
+                    vars.push(instr.clone());
+                    return false;
+                };
+                true
+            });
+
+        self.vert_builder
+            .module_mut()
+            .types_global_values
+            .append(&mut vars);
     }
 
     /// Downgrade dead inputs corresponding to outputs to global variables, keeping existing mappings.
@@ -111,7 +135,7 @@ impl<'a> LinkInputs<'a> {
         let mut pointer_types_to_downgrade = FxHashSet::default();
 
         // Map from Pointer type to pointee
-        let mut pointer_type_pointee = Vec::new();
+        let mut pointer_type_pointee = FxHashMap::default();
 
         // Map from StorageClass Output to StorageClass Private
         let mut downgraded_pointer_types = FxHashMap::default();
@@ -152,18 +176,18 @@ impl<'a> LinkInputs<'a> {
                     continue;
                 };
 
-                pointer_type_pointee.push((id, pointee_type));
+                pointer_type_pointee.insert(id, pointee_type);
             }
         }
 
         // Create pointer types for everything we saw above with Private storage class.
         // We don't have to deal with OpTypeForwardPointer, because PhysicalStorageBuffer
         // is not valid in slang shaders, and we're only working with Vulkan inputs.
-        for (pointer_type, pointee_type) in pointer_type_pointee.into_iter() {
+        for (pointer_type, pointee_type) in pointer_type_pointee.iter() {
             // Create a new private type
             let private_pointer_type =
                 self.vert_builder
-                    .type_pointer(None, StorageClass::Private, pointee_type);
+                    .type_pointer(None, StorageClass::Private, *pointee_type);
 
             // Add it to the mapping
             downgraded_pointer_types.insert(pointer_type, private_pointer_type);
@@ -196,7 +220,7 @@ impl<'a> LinkInputs<'a> {
                     continue;
                 };
 
-                let Some(new_type) = downgraded_pointer_types.get(&result_type) else {
+                let Some(new_type) = downgraded_pointer_types.get(&*result_type) else {
                     // We should have created one above.
                     continue;
                 };
