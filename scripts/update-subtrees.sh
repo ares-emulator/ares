@@ -15,3 +15,4 @@ git subtree pull --prefix=thirdparty/sljit https://github.com/zherczeg/sljit.git
 git subtree pull --prefix=thirdparty/libchdr https://github.com/rtissera/libchdr master --squash
 git subtree pull --prefix=thirdparty/librashader https://github.com/SnowflakePowered/librashader master --squash
 git subtree pull --prefix=thirdparty/slang-shaders https://github.com/libretro/slang-shaders master --squash
+git subtree pull --prefix=thirdparty/ymfm https://github.com/aaronsgiles/ymfm main --squash
