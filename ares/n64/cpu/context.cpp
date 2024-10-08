@@ -18,6 +18,9 @@ auto CPU::Context::setMode() -> void {
     break;
   }
 
+  jit.update(*this, self);
+  jitBits = jit.toBits();
+
   if(bits == 32) {
     physMask = 0x1fff'ffff;
     segment[0] = Segment::Mapped;
@@ -62,4 +65,23 @@ auto CPU::Context::setMode() -> void {
       break;
     }
   }
+}
+
+auto CPU::Context::JIT::update(const Context& ctx, const CPU& cpu) -> void {
+  singleInstruction = GDB::server.hasBreakpoints();
+  endian = Context::Endian(ctx.endian);
+  mode = Context::Mode(ctx.mode);
+  cop1Enabled = cpu.scc.status.enable.coprocessor1 > 0;
+  floatingPointMode = cpu.scc.status.floatingPointMode > 0;
+  is64bit = ctx.bits == 64;
+}
+
+auto CPU::Context::JIT::toBits() const -> u32 {
+  u32 bits = singleInstruction ? 1 << 6 : 0;
+  bits |= endian ? 1 << 7 : 0;
+  bits |= (mode & 0x03) << 9;
+  bits |= cop1Enabled ? 1 << 10 : 0;
+  bits |= floatingPointMode ? 1 << 11 : 0;
+  bits |= is64bit ? 1 << 12 : 0;
+  return bits;
 }
