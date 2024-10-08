@@ -126,6 +126,13 @@ struct CPU : Thread {
       }
     }
 
+    auto jitFetch(u64 vaddr, u32 paddr, CPU& cpu) -> void {
+      auto& line = this->line(vaddr);
+      if(!line.hit(paddr)) {
+        line.fill(paddr, cpu);
+      }
+    }
+
     //used by the interpreter to fully emulate the instruction cache
     auto fetch(u64 vaddr, u32 paddr, CPU& cpu) -> u32 {
       auto& line = this->line(vaddr);
@@ -133,6 +140,18 @@ struct CPU : Thread {
         line.fill(paddr, cpu);
       }
       return line.read(paddr);
+    }
+
+    auto coherent(u64 vaddr, u32 paddr) -> bool {
+      auto& line = this->line(vaddr);
+      if(!line.hit(paddr))
+        return true;
+      u32 ram[8];
+      self.busReadBurst<ICache>(paddr & ~0x0000'0fff | line.index, ram);
+      for (int i=0; i<8; i++)
+        if (ram[i] != line.words[i])
+          return false;
+      return true;
     }
 
     auto power(bool reset) -> void {
@@ -232,7 +251,6 @@ struct CPU : Thread {
     auto load(u64 vaddr, bool noExceptions = false) -> PhysAccess;
     auto load(u64 vaddr, const Entry& entry, bool noExceptions = false) -> maybe<PhysAccess>;
     
-    auto loadFast(u64 vaddr) -> PhysAccess;
     auto store(u64 vaddr, bool noExceptions = false) -> PhysAccess;
     auto store(u64 vaddr, const Entry& entry, bool noExceptions = false) -> maybe<PhysAccess>;
 
@@ -279,10 +297,12 @@ struct CPU : Thread {
 
   auto segment(u64 vaddr) -> Context::Segment;
   template<u32 Dir, u32 Size> auto devirtualize(u64 vaddr, bool raiseAlignedError = true, bool raiseExceptions = true) -> PhysAccess;
-  alwaysinline auto devirtualizeFast(u64 vaddr) -> u64;
   auto devirtualizeDebug(u64 vaddr) -> u64;
 
   auto fetch(PhysAccess access) -> maybe<u32>;
+  auto jitFetch(u64 vaddr, u32 addr) -> void {
+    icache.jitFetch(vaddr, addr, *this);
+  }
   template<u32 Size> auto busWrite(u32 address, u64 data) -> void;
   template<u32 Size> auto busRead(u32 address) -> u64;
   template<u32 Size> auto busWriteBurst(u32 address, u32 *data) -> void;
