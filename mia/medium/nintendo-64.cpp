@@ -182,18 +182,25 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   string region = "NTSC";
   switch(data[0x3e]) {
   case 'A': region = "NTSC"; break;  //North America + Japan
+  case 'B': region = "NTSC"; break;  //Brazil
+  case 'C': region = "NTSC"; break;  //China
   case 'D': region = "PAL";  break;  //Germany
   case 'E': region = "NTSC"; break;  //North America
   case 'F': region = "PAL";  break;  //France
   case 'G': region = "NTSC"; break;  //Gateway 64 (NTSC)
+  case 'H': region = "PAL";  break;  //Netherlands
   case 'I': region = "PAL";  break;  //Italy
   case 'J': region = "NTSC"; break;  //Japan
+  case 'K': region = "NTSC"; break;  //Korea
   case 'L': region = "PAL";  break;  //Gateway 64 (PAL)
+  case 'N': region = "NTSC"; break;  //Canada
   case 'P': region = "PAL";  break;  //Europe
   case 'S': region = "PAL";  break;  //Spain
   case 'U': region = "PAL";  break;  //Australia
+  case 'W': region = "PAL";  break;  //Scandinavia
   case 'X': region = "PAL";  break;  //Europe
   case 'Y': region = "PAL";  break;  //Europe
+  case 'Z': region = "PAL";  break;  //Europe
   }
 
   string id;
@@ -431,6 +438,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NDP") {flash = 128_KiB;}                                       //Dinosaur Planet (Unlicensed)
 
   //Controller Pak
+  if(id == "N4W") {cpak = true; rpak = true;}                              //40 Winks (Aftermarket)
   if(id == "NO7") {cpak = true; rpak = true;}                              //The World Is Not Enough
   if(id == "NAY") {cpak = true;}                                           //Aidyn Chronicles - The First Mage
   if(id == "NBS") {cpak = true; rpak = true;}                              //All-Star Baseball '99
