@@ -1,10 +1,6 @@
 auto CPU::Exception::trigger(u32 code, u32 coprocessor, bool tlbMiss) -> void {
   self.debugger.exception(code);
-
-  if(code != 0) {
-    auto sig = (code == 2 || code == 3) ? GDB::Signal::SEGV : GDB::Signal::TRAP;
-    GDB::server.reportSignal(sig, self.ipu.pc); 
-  }
+  reportGDBException(code, self.ipu.pc); 
 
   u64 vectorBase = !self.scc.status.vectorLocation ? (s32)0x8000'0000 : (s32)0xbfc0'0200;
 
@@ -63,4 +59,25 @@ auto CPU::Exception::nmi() -> void {
   self.scc.status.errorLevel = 1;
   self.scc.epcError = self.ipu.pc;
   self.pipeline.setPc(0xffff'ffff'bfc0'0000);
+}
+
+auto CPU::Exception::reportGDBException(int code, u64 pc) -> void {
+  switch(code) {
+  case 0:  GDB::server.reportSignal(GDB::Signal::WINCH, pc); break; // ignored by default
+  case 1:  GDB::server.reportSignal(GDB::Signal::SEGV,  pc); break;
+  case 2:  GDB::server.reportSignal(GDB::Signal::SEGV,  pc); break;
+  case 3:  GDB::server.reportSignal(GDB::Signal::SEGV,  pc); break;
+  case 4:  GDB::server.reportSignal(GDB::Signal::BUS,   pc); break;
+  case 5:  GDB::server.reportSignal(GDB::Signal::BUS,   pc); break;
+  case 6:  GDB::server.reportSignal(GDB::Signal::ABORT, pc); break;
+  case 7:  GDB::server.reportSignal(GDB::Signal::ABORT, pc); break;
+  case 8:  GDB::server.reportSignal(GDB::Signal::SYS,   pc); break;
+  case 9:  GDB::server.reportSignal(GDB::Signal::STOP,  pc); break;
+  case 10: GDB::server.reportSignal(GDB::Signal::ILL,   pc); break;
+  case 11: GDB::server.reportSignal(GDB::Signal::URG,   pc); break; // ignored by default
+  case 12: GDB::server.reportSignal(GDB::Signal::FPE,   pc); break;
+  case 13: GDB::server.reportSignal(GDB::Signal::TRAP,  pc); break;
+  case 15: GDB::server.reportSignal(GDB::Signal::FPE,   pc); break;
+  case 23: GDB::server.reportSignal(GDB::Signal::LOST,  pc); break;
+  }
 }

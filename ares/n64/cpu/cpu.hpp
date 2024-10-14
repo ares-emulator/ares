@@ -310,6 +310,7 @@ struct CPU : Thread {
     Exception(CPU& self) : self(self) {}
 
     auto trigger(u32 code, u32 coprocessor = 0, bool tlbMiss = 0) -> void;
+    auto reportGDBException(int code, u64 pc) -> void;
 
     auto interrupt() -> void;
     auto tlbModification() -> void;
