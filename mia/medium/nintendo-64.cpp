@@ -650,6 +650,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "N8W") {cpak = true;}                                           //World Cup '98
   if(id == "NWO") {cpak = true; rpak = true;}                              //World Driver Championship
   if(id == "NXF") {cpak = true; rpak = true;}                              //Xena Warrior Princess - The Talisman of Fate
+  if(id == "NXC") {cpak = true; rpak = true;}                              //Xeno Crisis (Aftermarket)
 
   //Rumble Pak
   if(id == "NJQ") {rpak = true;}                                           //Batman Beyond - Return of the Joker [Batman of the Future - Return of the Joker (E)]
