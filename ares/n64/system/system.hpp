@@ -3,6 +3,8 @@ struct System {
   VFS::Pak pak;
   bool homebrewMode = false;
   bool expansionPak = true;
+  u8 configuredControllerPakBankCount = 1;
+  u8 controllerPakBankCount = 1;
 
   enum class Region : u32 { NTSC, PAL };
 
