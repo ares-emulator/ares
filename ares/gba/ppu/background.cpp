@@ -43,10 +43,11 @@ auto PPU::Background::run(u32 x, u32 y) -> void {
   }
 
   //horizontal mosaic
-  if(!io.mosaic || ++mosaicOffset >= 1 + io.mosaicWidth) {
+  if(!io.mosaic || mosaicOffset >= 1 + io.mosaicWidth) {
     mosaicOffset = 0;
     mosaic = output;
   }
+  mosaicOffset++;
 }
 
 auto PPU::Background::linear(u32 x, u32 y) -> void {
