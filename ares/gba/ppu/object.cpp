@@ -91,7 +91,7 @@ auto PPU::Objects::run(u32 x, u32 y) -> void {
   
   //horizontal mosaic
   if(!mosaicOffset) {
-    mosaicOffset = io.mosaicWidth;
+    mosaicOffset = 1 + io.mosaicWidth;
     mosaic = output;
   } else if(!mosaic.mosaic || !output.mosaic) {
     mosaic = output;
