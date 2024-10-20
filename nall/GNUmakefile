@@ -128,13 +128,13 @@ endif
 
 # global compiler flags
 ifeq ($(cl),true)
-  flags.c      = -TC -std:c11
-  flags.cpp    = -TP -std:c++17 -EHsc
+  flags.c      = -TC -std:c11 $(CFLAGS)
+  flags.cpp    = -TP -std:c++17 -EHsc $(CXXFLAGS)
   flags       += -nologo -permissive- -utf-8 -W2 -Fd$(object.path)/
   options     += -nologo $(if $(findstring clang,$(compiler)),-fuse-ld=lld) -link
 else
-  flags.c      = -x c -std=c11
-  flags.cpp    = -x c++ -std=c++17
+  flags.c      = -x c -std=c11 $(CFLAGS)
+  flags.cpp    = -x c++ -std=c++17 $(CXXFLAGS)
   flags.objc   = -x objective-c -std=c11
   flags.objcpp = -x objective-c++ -std=c++17
   flags.deps   = -MMD -MP -MF $(@:.o=.d)
