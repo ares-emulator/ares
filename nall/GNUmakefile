@@ -261,7 +261,7 @@ endif
 ifeq ($(findstring clang++,$(compiler)),clang++)
   flags += -fno-strict-aliasing -fwrapv
   ifneq ($(platform),macos)
-    options += -fuse-ld=lld
+    options += -fuse-ld=lld$(subst clang++,,$(compiler))
   endif
 # gcc settings
 else ifeq ($(findstring g++,$(compiler)),g++)
