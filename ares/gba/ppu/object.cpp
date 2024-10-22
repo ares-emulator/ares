@@ -90,13 +90,13 @@ auto PPU::Objects::run(u32 x, u32 y) -> void {
   output = buffer[x];
   
   //horizontal mosaic
-  if(mosaicOffset >= 1 + io.mosaicWidth) {
-    mosaicOffset = 0;
+  if(!mosaicOffset) {
+    mosaicOffset = 1 + io.mosaicWidth;
     mosaic = output;
   } else if(!mosaic.mosaic || !output.mosaic) {
     mosaic = output;
   }
-  mosaicOffset++;
+  mosaicOffset--;
 }
 
 auto PPU::Objects::power() -> void {
