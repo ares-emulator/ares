@@ -532,6 +532,115 @@ auto Presentation::refreshSystemMenu() -> void {
         if(peripheralItem.text() == connected->name()) peripheralItem.setChecked();
       }
     }
+
+    // Allow for additional paks for N64 gamepads
+    if((emulator->name == "Nintendo 64" || emulator->name == "Nintendo 64DD") 
+        && port->type() == "Controller") {
+      const string portNum = port->name()[port->name().length() - 1];    
+      
+      // remove this check to enable pak menu option for all 4 controllers
+      if(portNum == "1") {
+
+        if(portMenu.actionCount() > 0) portMenu.append(MenuSeparator());
+        Menu pakMenu{&portMenu};
+        pakMenu.setText("Pak");
+        Group pakGroup;
+        MenuRadioItem nothing{&pakMenu};;
+        nothing.setText("Nothing");
+        nothing.setAttribute<ares::Node::Port>("port", port);
+        nothing.onActivate([=] { 
+          auto port = nothing.attribute<ares::Node::Port>("port");
+          const string portName = port->name();
+          if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+            port->disconnect();
+            auto peripheral = port->allocate("Gamepad");
+            port->connect();
+          }
+        });
+        pakGroup.append(nothing);
+
+        MenuRadioItem cpak{&pakMenu};
+        cpak.setAttribute<ares::Node::Port>("port", port);
+        cpak.setText("Controller Pak");
+        cpak.onActivate([=] {  
+          auto port = cpak.attribute<ares::Node::Port>("port");
+          const string portName = port->name();
+          if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+            port->disconnect();
+            auto peripheral = port->allocate("Gamepad");
+            port->connect();
+            if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+              emulator->gamepad = mia::Pak::create("Nintendo 64");
+              emulator->gamepad->pak->append("save.pak", 32_KiB);
+              string pakExt = ".pak";
+              if(portNum != "1") { pakExt = string(".", portNum, ".pak");}
+              emulator->gamepad->load("save.pak", pakExt, emulator->game->location);
+              port->allocate("Controller Pak");
+              port->connect();
+            }
+          }
+        });
+        pakGroup.append(cpak);
+
+        MenuRadioItem rpak{&pakMenu};
+        rpak.setAttribute<ares::Node::Port>("port", port);
+        rpak.setText("Rumble Pak");
+        rpak.onActivate([=] { 
+          auto port = rpak.attribute<ares::Node::Port>("port");
+          const string portName = port->name();
+          if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+            port->disconnect();
+            auto peripheral = port->allocate("Gamepad");
+            port->connect();
+            if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+              port->allocate("Rumble Pak");
+              port->connect();
+            }
+          }
+        });
+        pakGroup.append(rpak);
+
+        MenuRadioItem tpak{&pakMenu};
+        tpak.setAttribute<ares::Node::Port>("port", port);
+        tpak.setText("Transfer Pak");
+        tpak.onActivate([=] { 
+          auto port = tpak.attribute<ares::Node::Port>("port");
+          const string portName = port->name();
+          if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+            port->disconnect();
+            auto peripheral = port->allocate("Gamepad");
+            port->connect();
+            if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+              #if defined(CORE_GB)
+              emulator->gb.reset();
+              auto transferPak = port->allocate("Transfer Pak");
+              port->connect();
+              
+              if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
+                emulator->gb = mia::Medium::create("Game Boy");
+                string tmpPath;
+                if(emulator->gb->load(emulator->load(emulator->gb, tmpPath))) {
+                  slot->allocate();
+                  slot->connect();
+                } else {
+                  port->disconnect();
+                  emulator->gb.reset();
+                }
+              }
+              #endif
+            }
+          }
+        });
+        pakGroup.append(tpak);
+
+        // set currently enabled pak 
+        // Note: based on initialization routine in desktop-ui/emulator/nintendo-64.cpp & nintedo-64dd.cpp
+        if(emulator->game->pak->attribute("tpak").boolean() && portNum == "1") tpak.setChecked();
+        else if(emulator->game->pak->attribute("cpak").boolean() && portNum == "1") cpak.setChecked();
+        else if(emulator->game->pak->attribute("rpak").boolean()) rpak.setChecked();
+        else nothing.setChecked();
+      }
+    }
   }
 
   if(portsFound > 0) systemMenu.append(MenuSeparator());

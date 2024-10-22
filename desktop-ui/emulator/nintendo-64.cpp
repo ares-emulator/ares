@@ -6,9 +6,7 @@ struct Nintendo64 : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
-  shared_pointer<mia::Pak> gamepad;
   shared_pointer<mia::Pak> disk;
-  shared_pointer<mia::Pak> gb;
   u32 regionID = 0;
   sTimer diskInsertTimer;
 };
