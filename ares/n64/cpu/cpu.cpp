@@ -114,16 +114,19 @@ auto CPU::instruction() -> void {
   if(Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
     if(vaddrAlignedError<Word>(access.vaddr, false)) return;
     auto block = recompiler.block(ipu.pc, access.paddr, GDB::server.hasBreakpoints());
-    block->execute(*this);
-  } else {
-    auto data = fetch(access);
-    if (!data) return;
-    pipeline.begin();
-    instructionPrologue(ipu.pc, *data);
-    decoderEXECUTE(*data);
-    instructionEpilogue<0>();
-    pipeline.end();
+    if(block) {
+      block->execute(*this);
+      return;
+    } 
   }
+
+  auto data = fetch(access);
+  if (!data) return;
+  pipeline.begin();
+  instructionPrologue(ipu.pc, *data);
+  decoderEXECUTE(*data);
+  instructionEpilogue<0>();
+  pipeline.end();
 }
 
 auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
@@ -132,11 +135,7 @@ auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
 
 template<bool Recompiled>
 auto CPU::instructionEpilogue() -> void {
-  if constexpr(Recompiled) {
-    //simulates timings without performing actual icache loads
-    icache.step(ipu.pc, devirtualizeFast(ipu.pc));
-    assert(ipu.r[0].u64 == 0);
-  } else {
+  if constexpr(!Recompiled) {
     ipu.r[0].u64 = 0;
   }
 }
