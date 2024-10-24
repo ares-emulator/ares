@@ -75,8 +75,8 @@ struct GSU {
   auto serialize(serializer&) -> void;
 
   //disassembler.cpp
-  noinline auto disassembleInstruction() -> string;
-  noinline auto disassembleContext() -> string;
+  NALL_NOINLINE auto disassembleInstruction() -> string;
+  NALL_NOINLINE auto disassembleContext() -> string;
 
   auto disassembleOpcode(char* output) -> void;
   auto disassembleALT0(char* output) -> void;

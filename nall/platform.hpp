@@ -161,15 +161,15 @@ namespace nall {
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
   #define no_optimize __attribute__((optnone))
-  #define noinline __attribute__((noinline))
+  #define NALL_NOINLINE __attribute__((noinline))
   #define alwaysinline inline __attribute__((always_inline))
 #elif defined(COMPILER_MICROSOFT)
   #define no_optimize
-  #define noinline __declspec(noinline)
+  #define NALL_NOINLINE __declspec(noinline)
   #define alwaysinline inline __forceinline
 #else
   #define no_optimize
-  #define noinline
+  #define NALL_NOINLINE
   #define alwaysinline inline
 #endif
 

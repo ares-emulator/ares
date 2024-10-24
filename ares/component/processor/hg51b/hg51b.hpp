@@ -111,8 +111,8 @@ struct HG51B {
   auto writeRegister(n7 address, n24 data) -> void;
 
   //disassembler.cpp
-  noinline auto disassembleInstruction(maybe<n15> pb = {}, maybe<n8> pc = {}) -> string;
-  noinline auto disassembleContext() -> string;
+  NALL_NOINLINE auto disassembleInstruction(maybe<n15> pb = {}, maybe<n8> pc = {}) -> string;
+  NALL_NOINLINE auto disassembleContext() -> string;
 
 protected:
   struct Registers {

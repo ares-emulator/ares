@@ -235,9 +235,9 @@ struct WDC65816 {
   auto serialize(serializer&) -> void;
 
   //disassembler.cpp
-  noinline auto disassembleInstruction(n24 address, bool e, bool m, bool x) -> string;
-  noinline auto disassembleInstruction() -> string;
-  noinline auto disassembleContext(maybe<bool> e = {}) -> string;
+  NALL_NOINLINE auto disassembleInstruction(n24 address, bool e, bool m, bool x) -> string;
+  NALL_NOINLINE auto disassembleInstruction() -> string;
+  NALL_NOINLINE auto disassembleContext(maybe<bool> e = {}) -> string;
 
   struct f8 {
     bool c = 0;  //carry

@@ -29,8 +29,8 @@ struct SM83 {
 
   //disassembler.cpp
   virtual auto readDebugger(n16 address) -> n8 { return 0; }
-  noinline auto disassembleInstruction(maybe<n16> pc = {}) -> string;
-  noinline auto disassembleContext() -> string;
+  NALL_NOINLINE auto disassembleInstruction(maybe<n16> pc = {}) -> string;
+  NALL_NOINLINE auto disassembleContext() -> string;
 
   //memory.cpp
   auto operand() -> n8;

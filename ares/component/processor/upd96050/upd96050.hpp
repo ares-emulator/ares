@@ -25,8 +25,8 @@ struct uPD96050 {
   auto writeDP(n12 address, n8 data) -> void;
 
   //disassembler.cpp
-  noinline auto disassembleInstruction(maybe<n14> ip = {}) -> string;
-  noinline auto disassembleContext() -> string;
+  NALL_NOINLINE auto disassembleInstruction(maybe<n14> ip = {}) -> string;
+  NALL_NOINLINE auto disassembleContext() -> string;
 
   enum class Revision : u32 { uPD7725, uPD96050 } revision;
   n24 programROM[16384];

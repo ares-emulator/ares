@@ -156,8 +156,8 @@ struct MOS6502 {
   auto serialize(serializer&) -> void;
 
   //disassembler.cpp
-  noinline auto disassembleInstruction(maybe<n16> pc = {}) -> string;
-  noinline auto disassembleContext() -> string;
+  NALL_NOINLINE auto disassembleInstruction(maybe<n16> pc = {}) -> string;
+  NALL_NOINLINE auto disassembleContext() -> string;
 
   struct PR {
     bool c;  //carry
