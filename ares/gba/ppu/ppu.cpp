@@ -114,7 +114,7 @@ auto PPU::main() -> void {
   bg1.scanline(y);
   bg2.scanline(y);
   bg3.scanline(y);
-  objects.scanline(y);
+  objects.scanline((y + 1) % 228);
   if(y < 160) {
     auto line = screen->pixels().data() + y * 240;
     for(u32 x : range(240)) {
