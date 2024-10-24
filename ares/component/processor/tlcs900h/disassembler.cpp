@@ -1,4 +1,4 @@
-noinline auto TLCS900H::disassembleInstruction() -> string {
+NALL_NOINLINE auto TLCS900H::disassembleInstruction() -> string {
   string output;
 
   auto pc = load(PC);
@@ -636,7 +636,7 @@ noinline auto TLCS900H::disassembleInstruction() -> string {
   return pad(output, -48);
 }
 
-noinline auto TLCS900H::disassembleContext() -> string {
+NALL_NOINLINE auto TLCS900H::disassembleContext() -> string {
   string output;
   output.append("XWA:", hex(r.xwa[RFP].l.l0, 8L), " ");
   output.append("XBC:", hex(r.xbc[RFP].l.l0, 8L), " ");

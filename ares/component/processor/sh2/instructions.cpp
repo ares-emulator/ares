@@ -513,19 +513,19 @@ auto SH2::MOVI(u32 i, u32 n) -> void {
 }
 
 //MOV.W @(disp,PC),Rn
-noinline auto SH2::MOVWI(u32 d, u32 n) -> void {
+NALL_NOINLINE auto SH2::MOVWI(u32 d, u32 n) -> void {
   u32 pc = inDelaySlot() ? PPC - 2 : PC;
   R[n] = (s16)readWord(pc + d * 2);
 }
 
 //MOV.L @(disp,PC),Rn
-noinline auto SH2::MOVLI(u32 d, u32 n) -> void {
+NALL_NOINLINE auto SH2::MOVLI(u32 d, u32 n) -> void {
   u32 pc = inDelaySlot() ? PPC - 2 : PC;
   R[n] = readLong((pc & ~3) + d * 4);
 }
 
 //MOVA @(disp,PC),R0
-noinline auto SH2::MOVA(u32 d) -> void {
+NALL_NOINLINE auto SH2::MOVA(u32 d) -> void {
   u32 pc = inDelaySlot() ? PPC - 2 : PC;
   R[0] = (pc & ~3) + d * 4;
 }

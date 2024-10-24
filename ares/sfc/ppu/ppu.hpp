@@ -90,12 +90,12 @@ struct PPU : PPUBase::Implementation, PPUcounter {
 
   //main.cpp
   auto main() -> void;
-  noinline auto cycleObjectEvaluate() -> void;
-  template<u32 Cycle> noinline auto cycleBackgroundFetch() -> void;
-  noinline auto cycleBackgroundBegin() -> void;
-  noinline auto cycleBackgroundBelow() -> void;
-  noinline auto cycleBackgroundAbove() -> void;
-  noinline auto cycleRenderPixel() -> void;
+  NALL_NOINLINE auto cycleObjectEvaluate() -> void;
+  template<u32 Cycle> NALL_NOINLINE auto cycleBackgroundFetch() -> void;
+  NALL_NOINLINE auto cycleBackgroundBegin() -> void;
+  NALL_NOINLINE auto cycleBackgroundBelow() -> void;
+  NALL_NOINLINE auto cycleBackgroundAbove() -> void;
+  NALL_NOINLINE auto cycleRenderPixel() -> void;
   template<u32> auto cycle() -> void;
 
   //io.cpp
