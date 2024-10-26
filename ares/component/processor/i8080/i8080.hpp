@@ -124,8 +124,8 @@ struct I8080 {
   auto serialize(serializer&) -> void;
 
   //disassembler.cpp
-  noinline auto disassembleInstruction(maybe<n16> pc = {}) -> string;
-  noinline auto disassembleContext() -> string;
+  NALL_NOINLINE auto disassembleInstruction(maybe<n16> pc = {}) -> string;
+  NALL_NOINLINE auto disassembleContext() -> string;
 
   auto disassemble(n16 pc, n8 prefix, n8 code) -> string;
 
