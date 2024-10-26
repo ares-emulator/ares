@@ -180,7 +180,7 @@ private:
       n5 mosaicHeight;
     } io;
 
-    Pixel buffer[240];
+    Pixel lineBuffers[2][240];
     Pixel output;
     Pixel mosaic;
     u32 mosaicOffset;

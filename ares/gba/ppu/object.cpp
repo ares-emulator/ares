@@ -8,8 +8,9 @@ auto PPU::Objects::scanline(u32 y) -> void {
   if(y >= 160) return;
 
   mosaicOffset = 0;
+  auto& buffer = lineBuffers[y & 1];
   for(auto& pixel : buffer) pixel = {};
-  if(ppu.blank() || !io.enable[0]) return;
+  if(ppu.io.forceBlank[1] || cpu.stopped() || !io.enable[1]) return;  //checks if display conditions will be met next scanline
 
   for(auto& object : ppu.object) {
     n8 py = y - object.y;
@@ -68,7 +69,7 @@ auto PPU::Objects::scanline(u32 y) -> void {
           if(color) {
             if(object.colors == 0) color = object.palette * 16 + color;
             buffer[bx].enable = true;
-            buffer[bx].color = ppu.pram[256 + color];
+            buffer[bx].color = 256 + color;
             buffer[bx].translucent = object.mode == 1;
           }
         }
@@ -87,7 +88,9 @@ auto PPU::Objects::run(u32 x, u32 y) -> void {
     return;
   }
 
+  auto& buffer = lineBuffers[y & 1];
   output = buffer[x];
+  output.color = ppu.pram[output.color];
   
   //horizontal mosaic
   if(!mosaicOffset) {
@@ -101,7 +104,9 @@ auto PPU::Objects::run(u32 x, u32 y) -> void {
 
 auto PPU::Objects::power() -> void {
   io = {};
-  for(auto& pixel : buffer) pixel = {};
+  for(auto& buffer : lineBuffers) {
+    for(auto& pixel : buffer) pixel = {};
+  }
   output = {};
   mosaic = {};
   mosaicOffset = 0;
