@@ -89,7 +89,6 @@ auto PPU::main() -> void {
   cpu.keypad.run();
 
   io.vblank = io.vcounter >= 160 && io.vcounter <= 226;
-  io.vcoincidence = io.vcounter == io.vcompare;
 
   if(io.vcounter == 0) {
     frame();
@@ -101,16 +100,33 @@ auto PPU::main() -> void {
     bg3.io.ly = bg3.io.y;
   }
 
+  step(1);
+
+  io.vcoincidence = io.vcounter == io.vcompare;
+
   if(io.vcounter == 160) {
     if(io.irqvblank) cpu.setInterruptFlag(CPU::Interrupt::VBlank);
-    cpu.dmaVblank();
   }
+
+  step(1);
 
   if(io.irqvcoincidence) {
     if(io.vcoincidence) cpu.setInterruptFlag(CPU::Interrupt::VCoincidence);
   }
 
-  step(46);
+  if(io.vcounter == 160) {
+    cpu.dmaVblank();
+  }
+
+  step(3);
+
+  if(io.vcounter == 162) {
+    if(videoCapture) cpu.dma[3].enable = 0;
+    videoCapture = !videoCapture && cpu.dma[3].timingMode == 3 && cpu.dma[3].enable;
+  }
+  if(io.vcounter >= 2 && io.vcounter < 162 && videoCapture) cpu.dmaHDMA();
+
+  step(41);
 
   u32 y = io.vcounter;
   memory::move(io.forceBlank, io.forceBlank + 1, sizeof(io.forceBlank) - 1);
@@ -140,18 +156,18 @@ auto PPU::main() -> void {
     step(960);
   }
 
+  step(1);
   io.hblank = 1;
+
+  step(1);
   if(io.irqhblank) cpu.setInterruptFlag(CPU::Interrupt::HBlank);
+
+  step(1);
   if(io.vcounter < 160) cpu.dmaHblank();
 
-  step(226);
+  step(223);
   io.hblank = 0;
   if(++io.vcounter == 228) io.vcounter = 0;
-  if(io.vcounter == 162) {
-    if(videoCapture) cpu.dma[3].enable = 0;
-    videoCapture = !videoCapture && cpu.dma[3].timingMode == 3 && cpu.dma[3].enable;
-  }
-  if(io.vcounter >= 2 && io.vcounter < 162 && videoCapture) cpu.dmaHDMA();
 }
 
 auto PPU::frame() -> void {
