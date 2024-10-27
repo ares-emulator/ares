@@ -92,6 +92,18 @@ struct CPU : Thread {
     enum Mode : u32 { Kernel, Supervisor, User };
     enum Segment : u32 { Unused, Mapped, Cached, Direct, Cached32, Direct32, Kernel64, Supervisor64, User64 };
 
+    struct JIT {
+      bool singleInstruction;
+      Endian endian;
+      Mode mode;
+      bool cop1Enabled;
+      bool floatingPointMode;
+      bool is64bit;
+
+      auto update(const Context& ctx, const CPU& cpu) -> void;
+      auto toBits() const -> u32;
+    };
+
     auto littleEndian() const -> bool { return endian == Endian::Little; }
     auto bigEndian() const -> bool { return endian == Endian::Big; }
 
@@ -106,6 +118,8 @@ struct CPU : Thread {
     u32  mode;
     u32  bits;
     u32  segment[8];  //512_MiB chunks
+    u32  jitBits;
+    Context::JIT jit;
   } context{*this};
 
   //icache.cpp
@@ -864,7 +878,11 @@ struct CPU : Thread {
     };
 
     struct Pool {
-      Block* blocks[1 << 6];
+      struct Row {
+        Block* block;
+        u32 tag;
+      };
+      Row rows[1 << 6];
     };
 
     auto reset() -> void {
@@ -900,12 +918,16 @@ struct CPU : Thread {
     }
 
     auto pool(u32 address) -> Pool*;
-    auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
+    auto computePoolKey(u32 address, u32 ctxHash) -> u32;
+    auto computePoolRow(u32 key) -> u32;
+    auto block(u64 vaddr, u32 address, const Context& ctx) -> Block*;
 
-    auto emit(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
+    auto emit(u64 vaddr, u32 address, Context::JIT ctx) -> Block*;
+    auto emitOverflowCheck(reg temp) -> sljit_jump*;
     auto emitZeroClear(u32 n) -> void;
-    auto emitEXECUTE(u32 instruction) -> bool;
-    auto emitSPECIAL(u32 instruction) -> bool;
+    auto checkDualAllowed(const Context::JIT& ctx) -> bool;
+    auto emitEXECUTE(u32 instruction, Context::JIT ctx) -> bool;
+    auto emitSPECIAL(u32 instruction, Context::JIT ctx) -> bool;
     auto emitREGIMM(u32 instruction) -> bool;
     auto emitSCC(u32 instruction) -> bool;
     auto emitFPU(u32 instruction) -> bool;
