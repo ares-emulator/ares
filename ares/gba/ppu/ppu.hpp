@@ -7,6 +7,8 @@ struct PPU : Thread, IO {
   Memory::Writable<n8 > vram;  //96KB
   Memory::Writable<n16> pram;
 
+  bool accurate;
+
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
@@ -27,6 +29,8 @@ struct PPU : Thread, IO {
   } debugger;
 
   //ppu.cpp
+  auto setAccurate(bool value) -> void;
+
   auto load(Node::Object) -> void;
   auto unload() -> void;
 

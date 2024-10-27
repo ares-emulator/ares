@@ -23,6 +23,10 @@ PPU ppu;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
+auto PPU::setAccurate(bool value) -> void {
+  accurate = value;
+}
+
 auto PPU::load(Node::Object parent) -> void {
   vram.allocate(96_KiB);
   pram.allocate(512);
@@ -129,8 +133,9 @@ auto PPU::main() -> void {
       window3.output = true;
       n15 color = dac.run(x, y);
       line[x] = color;
-      step(4);
+      if(accurate) step(4);
     }
+    if(!accurate) step(960);
   } else {
     step(960);
   }

@@ -39,6 +39,7 @@ namespace ares::Atari2600 {
 #ifdef CORE_GBA
   namespace ares::GameBoyAdvance {
     auto load(Node::System& node, string name) -> bool;
+    auto option(string name, string value) -> bool;
   }
   #include "game-boy-advance.cpp"
 #endif
