@@ -21,9 +21,9 @@ auto DMA::unload() -> void {
 
 auto DMA::main() -> void {
   for(u32 id : channelsByPriority) {
-    if(channels[id].step(16)) break;
+    if(channels[id].step(32)) break;
   }
-  step(16);
+  step(32);
 }
 
 auto DMA::step(u32 clocks) -> void {
