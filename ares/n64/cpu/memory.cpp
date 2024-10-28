@@ -122,39 +122,8 @@ auto CPU::devirtualize(u64 vaddr, bool raiseAlignedError, bool raiseExceptions) 
   unreachable;
 }
 
-// Fast(er) version of devirtualize for icache lookups
-// avoids handling unmapped regions/exceptions as these should have already
-// been handled by instruction fetch, also ignores tlb match failure
-auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
-  // Assume address space is mapped into pages that are 4kb in size
-  // If we have a cached physical address for this page, use it
-  // This cache is purged on any writes to the TLB so should never become stale
-  auto vbase = vaddr >> 12;
-  if(devirtualizeCache.vbase == vbase && devirtualizeCache.pbase) {
-    auto offset = vaddr & 0xfff;
-    return (devirtualizeCache.pbase & ~0xfff) + offset;
-  }
-
-  // Cache the physical address of this page for the next call
-  devirtualizeCache.vbase = vaddr >> 12;
-
-  switch(segment(vaddr)) {
-  case Context::Segment::Mapped: {
-    auto match = tlb.loadFast(vaddr);
-    return devirtualizeCache.pbase = match.paddr & context.physMask;
-  }
-  case Context::Segment::Cached:
-  case Context::Segment::Direct:
-    return devirtualizeCache.pbase =  vaddr & 0x1fff'ffff;
-  case Context::Segment::Cached32:
-  case Context::Segment::Direct32:
-    return devirtualizeCache.pbase =  vaddr & 0xffff'ffff;
-  }
-  return devirtualizeCache.pbase = 0;
-}
-
 auto CPU::devirtualizeDebug(u64 vaddr) -> u64 {
-  return devirtualizeFast(vaddr); // this wrapper preserves the inlining of 'devirtualizeFast'
+  return devirtualize<Read, Byte>(vaddr, false).paddr; // this wrapper preserves the inlining of 'devirtualizeFast'
 }
 
 template<u32 Size>
