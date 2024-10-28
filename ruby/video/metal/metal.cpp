@@ -122,10 +122,14 @@ struct VideoMetal : VideoDriver, Metal {
   }
   
   auto isVRRSupported() -> bool {
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000
     if (@available(macOS 12.0, *)) {
       NSTimeInterval minInterval = view.window.screen.minimumRefreshInterval;
       NSTimeInterval maxInterval = view.window.screen.maximumRefreshInterval;
       _vrrIsSupported = minInterval != maxInterval;
+#else
+      _vrrIsSupported = false;
+#endif
       return _vrrIsSupported;
     } else {
       return false;
@@ -139,6 +143,7 @@ struct VideoMetal : VideoDriver, Metal {
       CFTimeInterval refreshRate = CGDisplayModeGetRefreshRate(displayMode);
       _presentInterval = (1.0 / refreshRate);
     } else {
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 120000
       if (@available(macOS 12.0, *)) {
         CFTimeInterval minimumInterval = view.window.screen.minimumRefreshInterval;
         if (_refreshRateHint != 0) {
@@ -149,6 +154,7 @@ struct VideoMetal : VideoDriver, Metal {
           _presentInterval = minimumInterval;
         }
       }
+#endif
     }
   }
 
