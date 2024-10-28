@@ -110,17 +110,16 @@ auto CPU::step(u32 clocks) -> void {
     context.clock++;
   }
 
-  #if defined(PROFILE_PERFORMANCE)
-  //10-20% speedup by only synchronizing other components every 16 clock cycles
+  Thread::step(clocks);
+  Thread::synchronize(ppu, player);
+
+  //occasionally synchronize with APU in case CPU has not recently interacted with it
   static u32 counter = 0;
   counter += clocks;
-  if(counter < 16) return;
-  clocks = counter;
-  counter = 0;
-  #endif
-
-  Thread::step(clocks);
-  Thread::synchronize();
+  if(counter >= 1024) {
+    Thread::synchronize(apu);
+    counter = 0;
+  }
 }
 
 auto CPU::power() -> void {

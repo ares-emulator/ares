@@ -1,4 +1,6 @@
 auto APU::readIO(n32 address) -> n8 {
+  cpu.synchronize(apu);
+
   switch(address) {
 
   //NR10
@@ -144,6 +146,8 @@ auto APU::readIO(n32 address) -> n8 {
 }
 
 auto APU::writeIO(n32 address, n8 data) -> void {
+  cpu.synchronize(apu);
+
   switch(address) {
 
   //NR10

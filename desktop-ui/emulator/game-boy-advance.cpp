@@ -57,6 +57,8 @@ auto GameBoyAdvance::load() -> bool {
   system = mia::System::create("Game Boy Advance");
   if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
 
+  ares::GameBoyAdvance::option("Pixel Accuracy", settings.video.pixelAccuracy);
+
   if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Advance")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
