@@ -122,9 +122,11 @@ jobs:
       run: |
         if [ $ImageOS == "macos14" ]; then
             sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+            export MACOSX_DEPLOYMENT_TARGET=10.13
             echo "Set Xcode version to 15.2 for macos-latest build."
         elif [ $ImageOS == "macos12" ]; then
             sudo xcode-select -s /Applications/Xcode_13.4.app/Contents/Developer
+            export MACOSX_DEPLOYMENT_TARGET=10.9
             echo "Set Xcode version to 13.4 for macos-compat build."
         fi
         brew install make ninja cmake
@@ -140,6 +142,7 @@ jobs:
         pushd thirdparty/MoltenVK
         ./build-moltenvk.sh
         popd
+        export MACOSX_DEPLOYMENT_TARGET=10.15
         pushd thirdparty/librashader
         ./build-librashader.sh
         popd
