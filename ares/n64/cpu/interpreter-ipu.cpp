@@ -120,6 +120,9 @@ auto CPU::BREAK() -> void {
 auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
   auto access = devirtualize<Read, Word>(rs.u64 + imm);
   if (!access) return;
+  if(!access.cache) {
+    debug(unusual, "[CPU] CACHE access to non-cacheable address ", hex(access.vaddr, 8L), " at PC ", hex(PC, 16L));
+  }
 
   switch(operation) {
 
