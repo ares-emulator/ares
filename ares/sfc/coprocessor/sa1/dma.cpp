@@ -3,7 +3,7 @@ auto SA1::dmaNormal() -> void {
   while(io.dtc--) {
     n8  data = r.mdr;
     n24 source = io.dsa++;
-    n16 target = io.dda++;
+    n24 target = io.dda++;
 
     if(io.sd == DMA::SourceROM && io.dd == DMA::DestBWRAM) {
       step();
