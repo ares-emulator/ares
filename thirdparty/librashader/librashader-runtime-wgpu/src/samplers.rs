@@ -1,7 +1,7 @@
 use librashader_common::map::FastHashMap;
 use librashader_common::{FilterMode, WrapMode};
 use std::sync::Arc;
-use wgpu::{Sampler, SamplerBorderColor, SamplerDescriptor};
+use wgpu::{AddressMode, Features, Sampler, SamplerBorderColor, SamplerDescriptor};
 
 pub struct SamplerSet {
     // todo: may need to deal with differences in mip filter.
@@ -32,16 +32,28 @@ impl SamplerSet {
             WrapMode::Repeat,
             WrapMode::MirroredRepeat,
         ];
+
+        let has_clamp_to_border = device
+            .features()
+            .contains(Features::ADDRESS_MODE_CLAMP_TO_BORDER);
+
         for wrap_mode in wrap_modes {
             for filter_mode in &[FilterMode::Linear, FilterMode::Nearest] {
                 for mipmap_filter in &[FilterMode::Linear, FilterMode::Nearest] {
+                    let mut address_mode = (*wrap_mode).into();
+                    // if the device doesn't have clap to border support,
+                    // approximate it with clamp to edge.
+                    if !has_clamp_to_border && address_mode == AddressMode::ClampToBorder {
+                        address_mode = AddressMode::ClampToEdge;
+                    }
+
                     samplers.insert(
                         (*wrap_mode, *filter_mode, *mipmap_filter),
                         Arc::new(device.create_sampler(&SamplerDescriptor {
                             label: None,
-                            address_mode_u: (*wrap_mode).into(),
-                            address_mode_v: (*wrap_mode).into(),
-                            address_mode_w: (*wrap_mode).into(),
+                            address_mode_u: address_mode,
+                            address_mode_v: address_mode,
+                            address_mode_w: address_mode,
                             mag_filter: (*filter_mode).into(),
                             min_filter: (*filter_mode).into(),
                             mipmap_filter: (*mipmap_filter).into(),

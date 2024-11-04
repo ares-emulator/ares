@@ -25,7 +25,7 @@ ash = "0.38"
 spirv-cross2 = { version = "0.4", default-features = false }
 objc2-metal = { version = "0.2" }
 objc2 = { version = "0.5.0" }
-glow = { version = "0.14.1" }
+glow = { version = "0.15.0" }
 glfw = { version = "0.58.0"}
 
 wgpu = { version = "22", default-features = false }

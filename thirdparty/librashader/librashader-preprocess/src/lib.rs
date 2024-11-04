@@ -104,7 +104,7 @@ mod test {
     #[test]
     pub fn load_file() {
         let result = load_shader_source(
-            "../test/slang-shaders/blurs/shaders/royale/blur3x3-last-pass.slang",
+            "../test/shaders_slang/blurs/shaders/royale/blur3x3-last-pass.slang",
         )
         .unwrap();
         eprintln!("{:#}", result.vertex)
@@ -127,5 +127,15 @@ mod test {
 
         let params = pragma::parse_pragma_meta(result).unwrap();
         eprintln!("{params:?}")
+    }
+
+    #[test]
+    pub fn include_optional() {
+        let result = read_source(
+            "../test/include_optional/pass.slang",
+        )
+            .unwrap();
+
+        eprintln!("{result}")
     }
 }

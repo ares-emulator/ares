@@ -1,5 +1,5 @@
+use librashader_common::map::FastHashMap;
 use rspirv::dr::{Builder, Module, Operand};
-use rustc_hash::{FxHashMap, FxHashSet};
 use spirv::{Decoration, Op, StorageClass};
 
 /// Do DCE on inputs of the fragment shader, then
@@ -10,9 +10,9 @@ pub struct LinkInputs<'a> {
     pub vert_builder: &'a mut Builder,
 
     // binding -> ID
-    pub outputs: FxHashMap<u32, spirv::Word>,
+    pub outputs: FastHashMap<u32, spirv::Word>,
     // id -> binding
-    pub inputs_to_remove: FxHashMap<spirv::Word, u32>,
+    pub inputs_to_remove: FastHashMap<spirv::Word, u32>,
 }
 
 impl<'a> LinkInputs<'a> {
@@ -43,9 +43,9 @@ impl<'a> LinkInputs<'a> {
     }
 
     pub fn new(vert: &'a mut Builder, frag: &'a mut Builder, keep_if_bound: bool) -> Self {
-        let mut outputs = FxHashMap::default();
-        let mut inputs_to_remove = FxHashMap::default();
-        let mut inputs = FxHashMap::default();
+        let mut outputs = FastHashMap::default();
+        let mut inputs_to_remove = FastHashMap::default();
+        let mut inputs = FastHashMap::default();
 
         for global in frag.module_ref().types_global_values.iter() {
             if global.class.opcode == spirv::Op::Variable
@@ -129,16 +129,16 @@ impl<'a> LinkInputs<'a> {
         let dead_outputs = self
             .inputs_to_remove
             .values()
-            .filter_map(|i| self.outputs.get(i).cloned())
-            .collect::<FxHashSet<spirv::Word>>();
+            .filter_map(|i| self.outputs.get(i).cloned().map(|w| (w, ())))
+            .collect::<FastHashMap<spirv::Word, ()>>();
 
-        let mut pointer_types_to_downgrade = FxHashSet::default();
+        let mut pointer_types_to_downgrade = FastHashMap::default();
 
         // Map from Pointer type to pointee
-        let mut pointer_type_pointee = FxHashMap::default();
+        let mut pointer_type_pointee = FastHashMap::default();
 
         // Map from StorageClass Output to StorageClass Private
-        let mut downgraded_pointer_types = FxHashMap::default();
+        let mut downgraded_pointer_types = FastHashMap::default();
 
         // First collect all the pointer types that are needed for dead outputs.
         for global in self.vert_builder.module_ref().types_global_values.iter() {
@@ -149,12 +149,12 @@ impl<'a> LinkInputs<'a> {
             }
 
             if let Some(id) = global.result_id {
-                if !dead_outputs.contains(&id) {
+                if !dead_outputs.contains_key(&id) {
                     continue;
                 }
 
                 if let Some(result_type) = global.result_type {
-                    pointer_types_to_downgrade.insert(result_type);
+                    pointer_types_to_downgrade.insert(result_type, ());
                 }
             }
         }
@@ -168,7 +168,7 @@ impl<'a> LinkInputs<'a> {
             }
 
             if let Some(id) = global.result_id {
-                if !pointer_types_to_downgrade.contains(&id) {
+                if !pointer_types_to_downgrade.contains_key(&id) {
                     continue;
                 }
 
@@ -207,7 +207,7 @@ impl<'a> LinkInputs<'a> {
             }
 
             if let Some(id) = global.result_id {
-                if !dead_outputs.contains(&id) {
+                if !dead_outputs.contains_key(&id) {
                     continue;
                 }
 
@@ -245,7 +245,7 @@ impl<'a> LinkInputs<'a> {
             };
 
             // If target is in dead outputs, then don't keep it.
-            !dead_outputs.contains(&target)
+            !dead_outputs.contains_key(&target)
         });
 
         for entry_point in self.vert_builder.module_mut().entry_points.iter_mut() {
@@ -265,7 +265,7 @@ impl<'a> LinkInputs<'a> {
                 };
 
                 // If the entry point contains a dead outputs, remove it from the interface.
-                !dead_outputs.contains(id_ref)
+                !dead_outputs.contains_key(id_ref)
             });
         }
     }
