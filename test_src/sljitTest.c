@@ -9135,6 +9135,7 @@ int sljit_test(int argc, char* argv[])
 	test_call10();
 	test_call11();
 	test_call12();
+	test_call13();
 
 	if (sljit_has_cpu_feature(SLJIT_HAS_FPU)) {
 		if (verbose)
@@ -9198,7 +9199,7 @@ int sljit_test(int argc, char* argv[])
 	sljit_free_unused_memory_exec();
 #endif
 
-#	define TEST_COUNT 123
+#	define TEST_COUNT 124
 
 	printf("SLJIT tests: ");
 	if (successful_tests == TEST_COUNT)

@@ -680,18 +680,23 @@ static sljit_u8* detect_near_jump_type(struct sljit_jump *jump, sljit_u8 *code_p
 	sljit_uw type = jump->flags >> TYPE_SHIFT;
 	sljit_s32 short_jump;
 	sljit_uw label_addr;
+	sljit_uw jump_addr;
 
-	if (jump->flags & JUMP_ADDR)
-		label_addr = jump->u.target - (sljit_uw)executable_offset;
-	else
+	jump_addr = (sljit_uw)code_ptr;
+	if (!(jump->flags & JUMP_ADDR)) {
 		label_addr = (sljit_uw)(code + jump->u.label->size);
 
+		if (jump->u.label->size > jump->addr)
+			jump_addr = (sljit_uw)(code + jump->addr);
+	} else
+		label_addr = jump->u.target - (sljit_uw)executable_offset;
+
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
-	if ((sljit_sw)(label_addr - (sljit_uw)(code_ptr + 6)) > HALFWORD_MAX || (sljit_sw)(label_addr - (sljit_uw)(code_ptr + 5)) < HALFWORD_MIN)
+	if ((sljit_sw)(label_addr - (jump_addr + 6)) > HALFWORD_MAX || (sljit_sw)(label_addr - (jump_addr + 5)) < HALFWORD_MIN)
 		return detect_far_jump_type(jump, code_ptr);
 #endif /* SLJIT_CONFIG_X86_64 */
 
-	short_jump = (sljit_sw)(label_addr - (sljit_uw)(code_ptr + 2)) >= -0x80 && (sljit_sw)(label_addr - (sljit_uw)(code_ptr + 2)) <= 0x7f;
+	short_jump = (sljit_sw)(label_addr - (jump_addr + 2)) >= -0x80 && (sljit_sw)(label_addr - (jump_addr + 2)) <= 0x7f;
 
 	if (type == SLJIT_JUMP) {
 		if (short_jump)
@@ -813,6 +818,7 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 		if (next_min_addr != next_jump_addr)
 			continue;
 
+		jump->addr -= size_reduce;
 		if (!(jump->flags & JUMP_MOV_ADDR)) {
 #if (defined SLJIT_DEBUG && SLJIT_DEBUG)
 			size_reduce_max = size_reduce + (((jump->flags >> TYPE_SHIFT) < SLJIT_JUMP) ? CJUMP_MAX_SIZE : JUMP_MAX_SIZE);
@@ -826,7 +832,11 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 #endif /* SLJIT_CONFIG_X86_64 */
 				} else {
 					/* Unit size: instruction. */
-					diff = (sljit_sw)jump->u.label->size - (sljit_sw)(jump->addr - size_reduce);
+					diff = (sljit_sw)jump->u.label->size - (sljit_sw)jump->addr;
+					if (jump->u.label->size > jump->addr) {
+						SLJIT_ASSERT(jump->u.label->size - size_reduce >= jump->addr);
+						diff -= (sljit_sw)size_reduce;
+					}
 					type = jump->flags >> TYPE_SHIFT;
 
 #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
@@ -866,7 +876,7 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 #endif /* SLJIT_DEBUG */
 
 			if (!(jump->flags & JUMP_ADDR)) {
-				diff = (sljit_sw)jump->u.label->size - (sljit_sw)(jump->addr - size_reduce - 3);
+				diff = (sljit_sw)jump->u.label->size - (sljit_sw)(jump->addr - 3);
 
 				if (diff <= HALFWORD_MAX && diff >= HALFWORD_MIN)
 					size_reduce += 3;
