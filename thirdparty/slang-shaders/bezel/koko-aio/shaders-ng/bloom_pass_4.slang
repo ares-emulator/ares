@@ -144,9 +144,7 @@ void main() {
         
 
     //Apply other content coords modifiers        
-        //Use mipmap available in avglum_pass to identify bright areas.
-        //vec3 avglum = texture(avglum_pass,vCo_avglum).rgb;
-        
+        //Use mipmap available in colortools_and_ntsc_pass to identify bright areas.
         #define ZONE_LUMINANCE_LOD 2.0 //Higher values lead to ugly glitch when panning or banding in static content.
         
         vec3 avglum = textureLod(colortools_and_ntsc_pass, vTexCoord, ZONE_LUMINANCE_LOD).rgb;

@@ -3,11 +3,13 @@
 DO_BLOOM = "1.0"
 
 DO_BEZEL = "1.0"
-		BEZEL_FRAME_ZOOM = "0.04"
-        BEZEL_INNER_ZOOM = "-0.17"
+	BEZEL_FRAME_ZOOM = "0.179000"
 
-# Since SCANLINE_SM_TYPE ="1.0" mitigates moiree, 
-# but is not used in this preset, use the following to mitigate, instead:
+DO_GLOBAL_SHZO = "1.000000"
+	GLOBAL_ZOOM = "0.857"
+	
+	
+#mitigates moire:
 	PIXELGRID_MIN_H = "0.250000"
 	PIXELGRID_MAX_H = "0.700000"
 

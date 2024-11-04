@@ -16,13 +16,12 @@ layout(location = 7) out float vDeltaRenderOk;
 void main() {
     gl_Position = global.MVP * Position;
     vTexCoord = TexCoord;
+
+    //Shift texel coord to optimize blurring.
+    //will invert the shift in the second pass.
+        float m = map_range(HALO_SHARPNESS, 0.0, GLOW_SHARP_MAX, 0.0, 1.0);
+        vTexCoord -= mix( params.SourceSize.zw*0.5, vec2(0.0), m);
     
-    if (HALO_PRE_SCANLINE_GAP == 1.0) {
-        vScanline_gap = 1-DO_PIXELGRID_H;
-        vScanline_gap = mix( vScanline_gap, 1.0, HALO_VS_SCAN);
-        vScanline_gap = clamp(vScanline_gap, 0.0,1.0);
-    } 
-                    
     
     vDo_pixelgrid_h = float(pixelgrid_h_needed());
     vTexCoord_mul_sourcesizey = vTexCoord.y * global.in_glow_passSize.y;
@@ -50,32 +49,13 @@ layout(set = 0, binding = 4) uniform sampler2D in_glow_pass;
 
 void main() {
     if (DO_HALO == 0.0 ) return;
-    
-    
+        
     vec3 pixel_haloed = texture(in_glow_pass, vTexCoord).rgb;
-    
-/*    if (DELTA_RENDER == 1.0) {
-         if (vDeltaRenderOk == 1.0) {
-             //No need to process halo if we're using deltarender and content did not change.
-             //Produces glitches; disable by now.
-             if (pixel_haloed.a > 3.0)
-                 return;
-         }
-    }
-*/  
+
     if (HALO_NO_PREGAIN == 1.0)  pixel_haloed/= vHALO_UNGAIN_FACTOR;
     
     pixel_haloed = pow(pixel_haloed, vHALO_GAMMA);
     
-    //Prepaint scanlines gaps?
-    if (HALO_PRE_SCANLINE_GAP == 1.0) {
-        if (vDo_pixelgrid_h == 1.0) {
-            if (mod( vTexCoord_mul_sourcesizey, 2.0) < 1.0) {
-                //Scanline gap fades away for high luminosity pixels
-                pixel_haloed = pixel_haloed * vScanline_gap;
-            }
-        }
-    }
     FragColor.rgb = pixel_haloed;
 
 }

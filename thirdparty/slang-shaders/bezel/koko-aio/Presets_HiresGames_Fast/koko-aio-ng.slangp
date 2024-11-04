@@ -24,7 +24,7 @@
 #   - The blue channel represents the part of the bezel that will be filled by the game reflection.
 
 
-                textures = "monitor_body_curved;monitor_body_straight;bg_under;bg_over;backdrop"
+                textures = "monitor_body_curved;monitor_body_straight;bg_under;bg_over;backdrop;sideshade"
                 
             monitor_body_curved = "../textures/monitor_body_curved.png"
      monitor_body_curved_linear = "true"
@@ -48,11 +48,15 @@
        bg_over_wrap_mode = "mirrored_repeat"
           bg_over_mipmap = "false"
 
-        #This is for support for arcade backdrop pictures, enable it in config.inc.
                 backdrop = "../textures/boothill.jpg"
          backdrop_linear = "true"
       backdrop_wrap_mode = "mirrored_repeat"
-         backdrop_mipmap = "true"
+         backdrop_mipmap = "false"
+         
+                sideshade = "../textures/side_shade-helper.png"
+         sideshade_linear = "true"
+      sideshade_wrap_mode = "mirrored_repeat"
+         sideshade_mipmap = "false"
 
 shaders = 17
 
@@ -80,8 +84,14 @@ shaders = 17
 // previous pass (Original, in this case).
 // However it seems that those metadatas are applied to the feedback of the pass itself.
 // Now, since we need to compare colortools_and_ntsc_pass and colortools_and_ntsc_passFeedback
-// for Deltarender purposes, it is important that they share the same filtering and wrap mode.
-// Hence, we have to set the following as the same of float_framebuffer0,filter_linear0 and wrap_mode0
+// for Deltarender purposes, it is important that they share the same filtering and wrap mode:
+
+// colortools_and_ntsc_pass wrap_mode and filter_linear_mode 
+//      are set by flick_and_noise_pass (the next one)
+// colortools_and_ntsc_passFeedback wrap_mode and filter_linear_mode 
+//      are set by colortools_and_ntsc_pass (the this pass)
+
+// Hence, we have to set colortools_and_ntsc_pass and flick_and_noise_pass with the same filter and wrap_mode
 float_framebuffer0 = "true"
     filter_linear0 = "true"
         wrap_mode0 = "mirrored_repeat"
@@ -91,16 +101,12 @@ float_framebuffer0 = "true"
         
 # This pass emulates the flickering observed on crts when the input signal is interlaced
 # and there is high brightness difference between adiacent scanlines.
+# It also emulates the RF noise.
 #
-# Note that the wrap_mode is set to "mirrored_repeat".
-# This allow to cheaply generate a mirrored image that will be used later on to
-# draw reflections on the bezel.
-#
-# Also, it upscales the input signal to 2X.
-# This is needed because FXAA, the glow and the halo pass works best with at least 640x480 resolution.
-# Note that this is needed only for lowres content, but if the input signal is already at that
-# size, there is no need to scale to 2x, and it is possible to gain performance by turning
-# scale_x1 and scale_y1 from 2.0 to 1.0.
+# Also, it upscales the input signal to 2X and optionally applies an edge smoothing algorithm.
+# Koko-aio will then work internally at 2X, which is needed by several following filters.
+# However, if the input signal is already at sufficient resolution, there is no need to scale to 2x
+# and it is possible to gain performance by turning the scale to 1x.
 #
 # A special note for P-UAE core (Commodore Amiga), is needed, because it outputs by default to
 # 720 pixel width and about 280p; this means that for P-UAE you can use scale_x1 = 1.0
@@ -109,76 +115,53 @@ float_framebuffer0 = "true"
 # But this way you loose the emulation for hires content (not much games uses it anyway).
         
 # ASMDEBUG: GLSL30
-           shader1 = ../shaders-ng/flick_and_noise.slang
-            alias1 = "flick_and_noise_pass"
+           shader1 = ../shaders-ng/fxaa.slang
+            alias1 = "upscale_pass"
        scale_type1 = source
-          scale_x1 = 1.0
-          scale_y1 = 1.0  
+            scale1 = 1.0
      mipmap_input1 = "true"
-     
-//(See **Note 0)
+        // This *has* to be mirrored repeat so that avglum mipmap sampling that samplese from previous
+        // pass will not pick black.
         wrap_mode1 = "mirrored_repeat"
 float_framebuffer1 = "true"
     filter_linear1 = "true"
-     
-
-
-
-# Nvidia fxaa pass:
-# works good for "SD" resolutions
-# FXAA don't really need any mipmap, but since mipmaps from first_pass are needed by
-# some subsequent passes, specify that FXAA_pass wants mipmaps
-# makes first_pass mipmaps available to everyone.
-# Even if theoretically not needed, texture() occurrence in FXAA_pass needed to be switched 
-# to textureLod(..,0.0) or it acts weird, don't ask me why.
-
-# ASMDEBUG: GLSL33
-           shader2 = ../shaders-ng/fxaa.slang
-            alias2 = "FXAA_pass"
-    filter_linear2 = true
-       scale_type2 = source
-            scale2 = 1.0
-      //this *has* to be clamp_to_border because  specular reflections need to turn to black
-      //if geometry content override is shifting/zooming out the image.
-        wrap_mode2 = "clamp_to_border"
-
         
 
 # This pass emulates NTSC/PAL composite color bleeding and deconvergence
 # deconvergence should really be applied in th final pass, but it is too heavy there.
-# This pass also apply the input gamma needed for glow pass.
+# This pass also applies the input gamma needed for glow pass.
         
-# ASMDEBUG: GLSL36
-           shader3 = ../shaders-ng/shift_and_bleed.slang
-            alias3 = "shift_and_bleed_pass"
-    filter_linear3 = true
-            scale3 = 1.0
-       scale_type3 = source
-float_framebuffer3 = true
-        wrap_mode3 = "mirrored_repeat"
+# ASMDEBUG: GLSL33
+           shader2 = ../shaders-ng/shift_and_bleed.slang
+            alias2 = "shift_and_bleed_pass"
+    filter_linear2 = true
+            scale2 = 1.0
+       scale_type2 = source
+float_framebuffer2 = true
+        wrap_mode2 = "mirrored_repeat"
 
         
         
 # Blur and/or glows and/or sharpens the image as requested 
 # This passes aims to simulate the signal input power.
         
+# ASMDEBUG: GLSL36
+           shader3 = ../shaders-ng/in_glow_x.slang
+            alias3 = "in_glow_pass_x"
+    filter_linear3 = true
+            scale3 = 1.0
+       scale_type3 = source    
+float_framebuffer3 = true
+        wrap_mode3 = "clamp_to_edge"
+     
 # ASMDEBUG: GLSL39
-           shader4 = ../shaders-ng/in_glow_x.slang
-            alias4 = "in_glow_pass_x"
+           shader4 = ../shaders-ng/in_glow_y.slang
+            alias4 = "in_glow_pass"
     filter_linear4 = true
             scale4 = 1.0
        scale_type4 = source    
 float_framebuffer4 = true
-        wrap_mode4 = "clamp_to_edge"
-     
-# ASMDEBUG: GLSL42
-           shader5 = ../shaders-ng/in_glow_y.slang
-            alias5 = "in_glow_pass"
-    filter_linear5 = true
-            scale5 = 1.0
-       scale_type5 = source    
-float_framebuffer5 = true
-        wrap_mode5 = "clamp_to_border"
+        wrap_mode4 = "clamp_to_border"
             
           
         
@@ -186,26 +169,26 @@ float_framebuffer5 = true
 # But the result of this pass will be added (+) to the input signal
 # in the final pass.
         
+# ASMDEBUG: GLSL42
+           shader5 = ../shaders-ng/halo_pre_gamma.slang
+            alias5 = "halo_pre_gamma_pass"
+    filter_linear5 = true
+            scale5 = 1.0
+       scale_type5 = source
+float_framebuffer5 = true
+        # This has to be clamp_to_border in order for the glow pass to return a black frame
+        # around it, which is needed so that when using geometry override and zooming out the content,
+        # it will have black surrounding.
+        wrap_mode5 = "clamp_to_border"
+        
 # ASMDEBUG: GLSL45
-           shader6 = ../shaders-ng/halo_pre_gamma.slang
-            alias6 = "halo_pre_gamma_pass"
+           shader6 = ../shaders-ng/halo.slang
+            alias6 = "halo_pass"
     filter_linear6 = true
             scale6 = 1.0
        scale_type6 = source
 float_framebuffer6 = true
-        # This has to be clamp_to_border in order for the glow pass to return a black frame
-        # around it, which is needed so that when using geometry override and zooming out the content,
-        # it will have black surrounding.
         wrap_mode6 = "clamp_to_border"
-        
-# ASMDEBUG: GLSL48
-           shader7 = ../shaders-ng/halo.slang
-            alias7 = "halo_pass"
-    filter_linear7 = true
-            scale7 = 1.0
-       scale_type7 = source
-float_framebuffer7 = true
-        wrap_mode7 = "clamp_to_border"
 
 
 
@@ -223,34 +206,34 @@ float_framebuffer7 = true
 # rgb: it puts a small mipmap from colortools_and_ntsc_pass used to light-up the bezel highlights.
 # alpha@other coords: simple continuous sampling used to modulate bezel highlights strength.
         
+# ASMDEBUG: GLSL48
+               shader7 = ../shaders-ng/avglum_pass.slang
+                alias7 = "avglum_pass"
+        filter_linear7 = true
+           scale_type7 = source
+                scale7 = 0.5
+            wrap_mode7 = "clamp_to_border"
+    float_framebuffer7 = "true"
+         
+         
+# The following passes emulates soft bezel reflections.
+    
 # ASMDEBUG: GLSL51
-               shader8 = ../shaders-ng/avglum_pass.slang
-                alias8 = "avglum_pass"
+               shader8 = ../shaders-ng/reflection_blur_pre.slang
+                alias8 = "reflected_blurred_pass_pre"
         filter_linear8 = true
            scale_type8 = source
-                scale8 = 0.5
+                scale8 = 1.0
             wrap_mode8 = "clamp_to_border"
-    float_framebuffer8 = "true"
-         
-         
-# The following passes will blur the mirrored part of first_pass
-# to emulate soft bezel reflections.
-    
-# ASMDEBUG: GLSL54
-               shader9 = ../shaders-ng/reflection_blur_pre.slang
-                alias9 = "reflected_blurred_pass_pre"
+
+# ASMDEBUG: GLSL54          
+               shader9 = ../shaders-ng/reflection_blur.slang
+                alias9 = "reflected_blurred_pass"
         filter_linear9 = true
            scale_type9 = source
                 scale9 = 1.0
-            wrap_mode9 = "clamp_to_border"
-
-# ASMDEBUG: GLSL57          
-               shader10 = ../shaders-ng/reflection_blur.slang
-                alias10 = "reflected_blurred_pass"
-        filter_linear10 = true
-           scale_type10 = source
-                scale10 = 1.0
-            wrap_mode10 = "mirrored_repeat"
+    float_framebuffer9 = true
+            wrap_mode9 = "mirrored_repeat"
 
 # In the following passes we emulate bloom effect.
 # Since the radius has to be high, we sample first_pass
@@ -258,38 +241,38 @@ float_framebuffer7 = true
 # Every blur pass samples radially around the center and offsets
 # the starting point in every subsequent pass.
             
-# ASMDEBUG: GLSL60
-               shader11 = ../shaders-ng/bloom_pass_1.slang
-                alias11 = "bloom_pass_1"
+# ASMDEBUG: GLSL57
+               shader10 = ../shaders-ng/bloom_pass_1.slang
+                alias10 = "bloom_pass_1"
+        filter_linear10 = true
+           scale_type10 = source
+                scale10 = 1.0
+            wrap_mode10 = "mirrored_repeat"
+    
+# ASMDEBUG: GLSL54
+               shader11 = ../shaders-ng/bloom_pass_2.slang
+                alias11 = "bloom_pass_2"
         filter_linear11 = true
            scale_type11 = source
-                scale11 = 1.0
-            wrap_mode11 = "mirrored_repeat"
-    
+                scale11 = 0.5
+            wrap_mode11 = "clamp_to_edge"
+            
 # ASMDEBUG: GLSL63
-               shader12 = ../shaders-ng/bloom_pass_2.slang
-                alias12 = "bloom_pass_2"
+               shader12 = ../shaders-ng/bloom_pass_3.slang
+                alias12 = "bloom_pass_3"
         filter_linear12 = true
            scale_type12 = source
-                scale12 = 0.5
+                scale12 = 1.0
             wrap_mode12 = "clamp_to_edge"
-            
+
 # ASMDEBUG: GLSL66
-               shader13 = ../shaders-ng/bloom_pass_3.slang
-                alias13 = "bloom_pass_3"
+               shader13 = ../shaders-ng/bloom_pass_4.slang
+                alias13 = "bloom_pass_final"
         filter_linear13 = true
            scale_type13 = source
                 scale13 = 1.0
-            wrap_mode13 = "clamp_to_edge"
-
-# ASMDEBUG: GLSL69
-               shader14 = ../shaders-ng/bloom_pass_4.slang
-                alias14 = "bloom_pass_final"
-        filter_linear14 = true
-           scale_type14 = source
-                scale14 = 1.0
-            wrap_mode14 = "mirrored_repeat"
-    float_framebuffer14 = "true"
+            wrap_mode13 = "mirrored_repeat"
+    float_framebuffer13 = "true"
 
 
 
@@ -297,14 +280,24 @@ float_framebuffer7 = true
 # and temporally smooth led lights.
 # Extra logic makes it possible to lower the led reaction time when a scene change is detected.
 # this is achieved through average luminance sampling from avglum_pass
+# ASMDEBUG: GLSL69
+               shader14 = ../shaders-ng/ambi_temporal_pass.slang
+                alias14 = "ambi_temporal_pass"
+        filter_linear14 = true
+           scale_type14 = viewport
+                scale14 = 0.05
+            wrap_mode14 = "clamp_to_border"
+    float_framebuffer14 = true
+    
+# This is a small helper pass i can use to store values and things
+# that don't need high resolution like noise and vignette.
 # ASMDEBUG: GLSL72
-               shader15 = ../shaders-ng/ambi_temporal_pass.slang
-                alias15 = "ambi_temporal_pass"
-        filter_linear15 = true
-           scale_type15 = viewport
-                scale15 = 0.05
-            wrap_mode15 = "clamp_to_border"
-    float_framebuffer15 = true
+           shader15 = ../shaders-ng/helper_pass.slang
+            alias15 = "helper_pass"
+       scale_type15 = absolute
+            scale15 = 128
+    filter_linear15 = true    
+        wrap_mode15 = "mirrored_repeat"
     
 
 # This pass pass will do everything needed to happen at screen coordinates:
@@ -321,6 +314,7 @@ float_framebuffer7 = true
     filter_linear16 = true
        scale_type16 = viewport
             scale16 = 1.0
-        wrap_mode16 = "mirrored_repeat"
+        //This needs to be clamp_to_edge or displacing vignette would dark screen borders
+        wrap_mode16 = "clamp_to_edge" 
         
 

@@ -7,8 +7,7 @@ DO_BEZEL = "1.0"
         BEZEL_G = "-0.3"
         BEZEL_B = "-0.3"
         BEZEL_CON = "1.3"
-        BEZEL_FRAME_ZOOM = "0.04"
-        BEZEL_INNER_ZOOM = "-0.17"
+        BEZEL_FRAME_ZOOM = "0.179000"
         BEZEL_IMAGE_BORDER = "1.02"
 
 DO_CURVATURE = 1.0
@@ -18,3 +17,5 @@ DO_CURVATURE = 1.0
 DO_VIGNETTE = "1.0"
 DO_SPOT = "1.0"
 
+DO_GLOBAL_SHZO = "1.000000"
+	GLOBAL_ZOOM = "0.857"

@@ -45,6 +45,8 @@
 //   
   
 
+// #define IN_GLOW_GAMMA  2.0           //        Gamma In
+// #define GAMMA_OUT 0.4                //        Gamma out
 
 // #define DO_CCORRECTION 1.0           // ★ Color corrections enable?
 // #define IN_GLOW_POWER 1.5            //        Input signal gain
@@ -53,8 +55,6 @@
 // #define CONTRAST  0.0                //        Contrast in
 // #define ADAPTIVE_BLACK 0.1           //        Adaptive Black level range
 // #define TEMPERATURE  7700.0          //        Temperature in (6500=off)
-// #define IN_GLOW_GAMMA  2.0           //        Gamma In  (applied at the beginning)
-// #define GAMMA_OUT 0.4                //        Gamma out (applied at the end)
 // #define COLOR_MONO_COLORIZE  0.0     //        Monochrome screen colorization
 // #define COLOR_MONO_HUE1  0.25        //        . Hue bright
 // #define COLOR_MONO_HUE2  0.3         //        . Hue dark
@@ -63,7 +63,7 @@
 // #define VIBRANCE 0.0                 //        Vibrance in   (0.0=off)
 
 
-// #define DO_FXAA  0.0                 // ★ FXAA enable? 
+// #define DO_FXAA  0.0                 // ★ Antialiasing enable ? 
 
 
 // #define DO_RF_NOISE  0.0             // ★ RF Noise enable?
@@ -90,11 +90,14 @@
 
 
 // #define DO_SAT_BLEED  0.0            // ★ CVBS: Bandwidth limited chroma enable?
-// #define SAT_BLEED_PAL  0.0           //         Use PAL colorspace, not NTSC
+// #define SAT_BLEED_PAL  0.0           //         Colorspace (NTSC, PAL)
 // #define SAT_BLEED_STRENGTH  1.0      //         Strength
 // #define SAT_BLEED_SIZE  5.0          //         Size (capped to 5.0 in d3d)
 // #define SAT_BLEED_FALLOFF  1.7       //         Falloff
 
+// #define DOT_C 0.0                    // ★ CVBS: Dot crawl
+// #define DOT_C_YUV 0.0                //         Colorspace (NTSC, PAL)
+// #define DOT_C_SPEED 8.0				//         Speed
 
 // #define DO_PPERSISTENCE  0.0         // ★ Persistence of phosphors enable?
 // #define PPERSISTENCE_START  0.9      //         Early decay
@@ -103,6 +106,17 @@
 
 // #define DO_SHIFT_RGB  1.0           // ★ Deconvergence enable?
 // #define OFFSET_STRENGTH  0.3        //         Strength
+
+// #define DECON_RX 0.0                   // Red x offset
+// #define DECON_RY -1.0                  // Red y offset
+// #define DECON_GX 1.0                   // Green x offset
+// #define DECON_GY 0.0                   // Green y offset
+// #define DECON_BX 0.0                   // Blue x offset
+// #define DECON_BY 1.0                   // Blue y offset
+// #define EDGE_DEFOCUS 2.0               // Deconvergence increases near edges
+// #define EDGE_DEFOCUS_DO_BLUR 0.0       // Blur increases near edges when glow/blur is enabled
+// #define EDGE_DEFOCUS_AREA_INV 0.4      // Focused Area
+
 // #define SHIFT_R  -20.0              //         Red offset
 // #define SHIFT_G  0.0                //         Green offset
 // #define SHIFT_B  20.0               //         Blue offset
@@ -187,13 +201,14 @@
 // #define DOT_M_SHADOW_OFF  0.0  //            . Shadow offset
 
 
-// #define DO_HALO  1.0           // ★ Halo enable?
-// #define HALO_NO_PREGAIN  1.0   //         Pre-attenuate input signal gain to 1x
-// #define HALO_POWER  0.5        //         Strength (negative = 10x precision)
-// #define HALO_SHARPNESS  6.5    //         Sharpness
-// #define HALO_GAMMA  2.0        //         Gamma in, the higher, the less the halo on dark colors
-// #define HALO_GAMMA_OUT  1.0    //         Gamma out
-// #define HALO_VS_SCAN  0.7      //         Light up scanline gaps and dot grid gaps too
+// #define DO_HALO  1.0            // ★ Halo or mask helper enable?
+// #define HALO_NO_PREGAIN  1.0    //         Halo: Pre-attenuate input signal gain to 1x
+// #define HALO_POWER  0.5         //         Halo: Strength (negative = 10x precision)
+// #define HALO_SHARPNESS  6.5     //         Halo: Sharpness
+// #define HALO_GAMMA  2.0         //         Halo: Gamma in: Higher -> less halo on dark colors
+// #define HALO_GAMMA_OUT  1.0     //         Halo: Gamma out
+// #define HALO_DO_MASK_HELPER 0.0 //         Additional brighness if horizontal mask clips
+// #define HALO_VS_SCAN  0.7       //         Light up scanline gaps and dot grid gaps too
 
 
 // #define DO_BLOOM  1.0             // ★ Bloom enable?
@@ -218,21 +233,25 @@
 
 // #define DO_BEZEL  1.0              // ★ Bezel enable? 
 // #define BEZEL_USE_STRAIGHT  0.0    //         Straight
-// #define BEZEL_INNER_ZOOM  -0.01    //         Inner zoom (ignored with integer scaling)
-// #define BEZEL_FRAME_ZOOM  0.17     //         Frame zoom
+// #define BEZEL_FRAME_ZOOM  0.179    //         Frame Alignment
 // #define BEZEL_R  -0.35             //         Color: Red
 // #define BEZEL_G  -0.35             //         Color: Green
 // #define BEZEL_B  -0.35             //         Color: Blue	
 // #define BEZEL_CON  1.3             //         Contrast
 // #define BEZEL_RFL_ZOOM  0.0        //         Reflections zoom
 // #define BEZEL_REFL_STRENGTH  0.5   //         Reflections strength
+// #define BEZEL_CORNER_DARK  0.8     //         Less reflections in corners
 // #define BEZEL_RFL_BLR_SHD  -0.2    //         Reflections sharpness
-// #define BEZEL_ROUGHNESS  1.0       //         Reflections roughness
+// #define BEZEL_ROUGHNESS  1.0       //         Surface roughness
 // #define BEZEL_DIFFUSION_STR  0.2   //         Diffusion strength
 // #define BEZEL_LIGHT_NO_FADEOUT 0.5 //         Specularity strength
 // #define BEZEL_SPCL_STRENGTH  0.5   //         Light fadeout distance
-// #define BEZEL_CORNER_DARK  0.8     //         Darken corners
 
+
+// #define DO_GLOBAL_SHZO  0.0  // ★ Global shift/zoom enable?
+// #define GLOBAL_OFFX  0.0     //         X axis shift 
+// #define GLOBAL_OFFY  0.0     //         Y axis shift 
+// #define GLOBAL_ZOOM  2.0     //         Zoom
 
 // #define DO_BG_IMAGE  0.0           // ★ Back/Foreground image enable?
 // #define BG_IMAGE_OVER  0.0         //       Image over content (alpha channel driven)?
@@ -277,12 +296,6 @@
 // #define S_POWER  0.05        //         Power
 
 
-// #define DO_GLOBAL_SHZO  0.0  // ★ Global shift/zoom enable?
-// #define GLOBAL_OFFX  0.0     //         X axis shift 
-// #define GLOBAL_OFFY  0.0     //         Y axis shift 
-// #define GLOBAL_ZOOM  2.0     //         Zoom
-
-
 // #define DO_TILT  0.0  // ★ Tilt enable? 
 // #define TILT_X  0.25  //         Tilt along X axis
 
@@ -302,7 +315,7 @@
 // #define AUTOCROP_SAMPLES 0.02       //        Transition speed 
 
 // #define DO_GAME_GEOM_OVERRIDE  0.0     // ★ Override content geometry enable?
-// #define GAME_GEOM_INT_SCALE  0.0       //         Integer scale (disables inner zoom) 2=No keep aspect
+// #define GAME_GEOM_INT_SCALE  0.0       //         Integer scale 2=No keep aspect
 // #define GAME_GEOM_INT_SCALE_MAX  10.0  //         .    Maximum integer scale
 // #define GAME_GEOM_INT_SCALE_OVR 1.0    //         .    Permit integer overscale by
 
@@ -314,8 +327,7 @@
 // #define GAME_GEOM_OFF_FIX  0.0  //         Sharp hack through offset (0.0=disable)
 
 
-// #define DELTA_RENDER_FORCE_REFRESH  4.0  // 
-// #define DELTA_RENDER_CHECK_AREA  1.0     // 
+
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -329,6 +341,20 @@
 
 //Renders only changed parts of screen, set to 1.0 to lower power consumption / mitigate throttling:
 #define DELTA_RENDER 0.0 
+
+// #define DELTA_RENDER_FORCE_REFRESH  4.0  //  Delta render force refresh interval
+// #define DELTA_RENDER_CHECK_AREA  1.0     //  Delta render area size
+
+
+// Use higher quality deconvergence flattering rgb scanlines when deconvergence is high
+// and by syncing them to the deconvergence settings
+// To enable high quality deconvergence, remove leading "//"
+// #define HQ_DECON
+
+
+// Allow texture wrapping as a shader parameter, set to 0.0 to gain some performance.
+// But in that case the wrap mode has to be defined in the preset file.
+#define ALLOW_BG_IMAGE_TEXTURE_WRAP_IN_SHADER 1.0
 
 //Halve rendering refresh on bezel and ambilight set to 1.0 to spare gpu cycles:
 #define HALVE_BORDER_UPDATE 0.0
