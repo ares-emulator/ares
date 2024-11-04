@@ -440,7 +440,15 @@ layout(push_constant) uniform Push {
 } registers;
 #pragma parameter DummyVariable "This is a dummy variable" 1.0 0.2 2.0 0.1
 ```
+#### `#pragma include_optional`
 
+Acts like the common preprocessor #include directive,
+but does not generate an error if the specified file cannot be located.
+
+The format is:
+```
+#pragma include_optional "path/to/file_to_include"
+```
 ### I/O interface variables
 
 The slang shader spec specifies two vertex inputs and one fragment output.

@@ -21,10 +21,13 @@ layout(location = 1) out float lod;
 layout(location = 2) out vec2 vFuzzy_main_pass_stage_1;
 layout(location = 3) out float vReduced_sample_time_is_now;
 layout(location = 4) out float vAvglum_needed;
-layout(location = 5) out float vBezel_or_Bloom;
+
 layout(location = 6) out float vResSwitch_res_changed;
 layout(location = 7) out float vResChanged;
 layout(location = 8) out vec2 vTexCoord_unscaled;
+layout(location = 9) out float vDo_autocrop;
+layout(location = 10) out float vDo_dynzoom;
+
 //layout(location = 9) out vec2 vLods;
 #include "includes/functions.include.slang"
 
@@ -42,8 +45,7 @@ void main() {
 
     vReduced_sample_time_is_now = mod(params.FrameCount,AMBI_AVGLUM_DIVIDER);
     
-    vAvglum_needed = DO_AMBILIGHT + DO_BEZEL + (DO_DYNZOOM*10.0) + DO_BLOOM + (RESSWITCH_GLITCH_SIZE*10.0) + AUTOCROP_MAX ;
-    vBezel_or_Bloom = DO_BEZEL + DO_BLOOM;
+    vAvglum_needed = DO_AMBILIGHT + DO_BEZEL + (DO_DYNZOOM*10.0) + (RESSWITCH_GLITCH_SIZE*10.0) + AUTOCROP_MAX ;
     
     //RESSWITCH shaking:
         vResSwitch_res_changed = 0.0;
@@ -56,6 +58,12 @@ void main() {
         //float lod_max = lodmax(params.OriginalSize.xy);
         //vLods.x = lod_max/2.0;
         //vLods.y = vLods.x/2.0;
+        
+    //Disable Autocrop and dynamic zoom when integer scaling is requested. 
+        bool Autocrop_disabled = AUTOCROP_MAX == 0.0 || need_integer_scale();
+        bool Dynzoom_disabled = DO_DYNZOOM == 0.0 || need_integer_scale();
+        vDo_autocrop = float(!Autocrop_disabled);
+        vDo_dynzoom = float(!Dynzoom_disabled);
 }
 
 #pragma stage fragment
@@ -64,11 +72,12 @@ layout(location = 1) in float lod;
 layout(location = 2) in vec2 vFuzzy_main_pass_stage_1;
 layout(location = 3) in float vReduced_sample_time_is_now;
 layout(location = 4) in float vAvglum_needed;
-layout(location = 5) in float vBezel_or_Bloom;
+
 layout(location = 6) in float vResSwitch_res_changed;
 layout(location = 7) in float vResChanged;
 layout(location = 8) in vec2 vTexCoord_unscaled;
-//layout(location = 9) in vec2 vLods;
+layout(location = 9) in float vDo_autocrop;
+layout(location = 10) in float vDo_dynzoom;
 
 layout(location = 0) out vec4 FragColor;
 layout(set = 0, binding = 1) uniform sampler2D  colortools_and_ntsc_passFeedback;
@@ -98,8 +107,8 @@ float get_avg_lum_from_mip_nocc() {
     return rgb_to_gray(mip);
 }
 
-//0.1 seems like a good tradeoff that works well with bloom exposire and fullscreen zoom
-//...maybe bloom exposure works best at 0.05; you may consider another zone of smooth sampling.
+// 0.1 seems like a good tradeoff that works well with exposure and fullscreen zoom
+// ...maybe exposure works best at 0.05; you may consider another zone of smooth sampling.
 #define SMOOTHNESS_SPEED 0.1
 
 float get_avglum() {
@@ -113,7 +122,8 @@ float get_avglum() {
      */
             
     bool reduced_sampling_co  = is_first_inside_rect(vTexCoord, vec4(0.24,0.24 , 0.26,0.26) );
-    bool smoothed_sampling_co = is_first_inside_rect(vTexCoord, vec4(0.74,0.74 , 0.76,0.76) );
+    //WARNING: Use this for dynamic zoom only, since it returns 0.0 when dynzoom is disabled or when integer scaling is requested.
+    bool smoothed_sampling_co_dynzoom = is_first_inside_rect(vTexCoord, vec4(0.74,0.74 , 0.76,0.76) );
     bool smoothed_sampling_co_nocc = is_first_inside_rect(vTexCoord, vec4(0.49,0.49 , 0.51,0.51)) ;
     #ifndef D3D_WORKAROUND
         if (reduced_sampling_co) {
@@ -126,8 +136,8 @@ float get_avglum() {
             return avglum_feedback;
         }
 
-        if (smoothed_sampling_co) {
-            return mix(texture(avglum_passFeedback,vTexCoord).a, get_avg_lum_from_mip(), SMOOTHNESS_SPEED);
+        if (smoothed_sampling_co_dynzoom) {
+            return mix(texture(avglum_passFeedback,vTexCoord).a, get_avg_lum_from_mip(), SMOOTHNESS_SPEED) * vDo_dynzoom;
         }
         
         if (smoothed_sampling_co_nocc) {
@@ -328,7 +338,7 @@ float get_autocrop() {
 
 
 void main() {
-    /*Grab a mipmap from the flick_and_noise_pass.
+    /*Grab a mipmap from the colortools_and_ntsc_pass.
       Calculate the average luminance from the smallest mipmap and put into the alpha channel
       So that can be used:
       1 - continuously at coordinate 0.5,0.5
@@ -339,8 +349,7 @@ void main() {
     if ( vAvglum_needed == 0.0) return;
     
     vec4 pixel_out;
-    
-    
+    pixel_out.a = 1.0;
     
     //We also reserve a sampling point in alpha channel to store if the resolution has changed.
     //The value stored will be used by the first pass as an argument to sin() to shake the image.
@@ -357,7 +366,7 @@ void main() {
         
 
     } else if (is_first_inside_rect(vTexCoord_unscaled, vec4(AUTOCROP_SAMPLING_POINT-0.01, AUTOCROP_SAMPLING_POINT+0.01) ))  {
-        if (AUTOCROP_MAX > 0.001)
+        if (vDo_autocrop == 1.0)
             pixel_out.a = get_autocrop();
         
     } else {
@@ -368,7 +377,7 @@ void main() {
     
     //Create a small mipmap to be used to light the bezel corners
     //and by the bloom pass to identify bright areas.
-    if (vBezel_or_Bloom > 0.0) 
+    if (DO_BEZEL > 0.0) 
         pixel_out.rgb = textureLod(colortools_and_ntsc_pass, vTexCoord, mip_lod).rgb;
 
 

@@ -1,8 +1,7 @@
 #reference "monitor-slotmask-bloom.slangp"
 
 DO_BEZEL = "1.0"
-        BEZEL_FRAME_ZOOM = "0.04"
-        BEZEL_INNER_ZOOM = "-0.17"
+	BEZEL_FRAME_ZOOM = "0.179000"
 
 DO_CURVATURE = 1.0
 
@@ -12,3 +11,6 @@ DO_SPOT = "1.0"
 
 GEOM_CORNER_SIZE = 0.005
 GEOM_CORNER_SMOOTH = "150"
+
+DO_GLOBAL_SHZO = "1.000000"
+	GLOBAL_ZOOM = "0.857"

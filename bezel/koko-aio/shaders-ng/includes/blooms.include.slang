@@ -1,12 +1,5 @@
 #define bdirections 8
 
-vec2 radius_blur_adapt(vec2 bsize){
-    vec2 r;
-    r.x = bsize.x / BLOOM_AND_HALO_SCALE_FACTOR;
-    r.y = r.x *  get_in_aspect();
-    return r;
-}
-
 vec3 bloom_gamma_power(sampler2D smp, vec2 uv, vec4 smpsize, vec2 bsize, float quality, float gamma, float power, float start_offset, float lod) {
     vec2 r = radius_blur_adapt(bsize) ;
     vec3 lookup;

@@ -72,30 +72,28 @@ void main() {
     vSmp_step = (vSmpBorder_max - vSmpBorder_min)  / (leds_per_strip-1);
 
     //Calc a lod for a texture sized led_strip x led_strip
-        lod = log2(global.flick_and_noise_passSize.y / leds_per_strip) - 1;
+        lod = log2(global.upscale_passSize.y / leds_per_strip) - 1;
 
 
-   //Scale to the original aspect
+   //Scale to the original aspect, then scale according to zoom modifiers.
     float in_aspect = get_in_aspect();
 
     float Do_Tate = need_tate(isrotated);
-
     
-    if ( need_NO_integer_scale() )
+    bool bNeed_NO_integer_scale = need_NO_integer_scale();
+    
+    if (bNeed_NO_integer_scale)
         pre_pass_coords = get_scaled_coords_aspect(TexCoord,global.FinalViewportSize, in_aspect, isrotated) + vec2(0.00001);
             else
         pre_pass_coords = integer_scale(TexCoord, in_aspect, isrotated, Do_Tate, GAME_GEOM_INT_SCALE-1.0 ) ;
 
+    if (bNeed_NO_integer_scale) {
+        if (DO_GLOBAL_SHZO >0.5)
+            pre_pass_coords = zoom(pre_pass_coords + vec2(-GLOBAL_OFFX, -GLOBAL_OFFY), GLOBAL_ZOOM );
 
-    if (DO_GLOBAL_SHZO >0.5)
-        pre_pass_coords = zoom(pre_pass_coords + vec2(-GLOBAL_OFFX, -GLOBAL_OFFY), GLOBAL_ZOOM );
-
-    if (DO_GAME_GEOM_OVERRIDE > 0.5) {
-        pre_pass_coords = content_geom_override_zoom(pre_pass_coords, GAME_GEOM_ASPECT, get_in_aspect(), GAME_GEOM_VSHIFT, GAME_GEOM_HSHIFT, GAME_GEOM_ZOOM);
+        if (DO_GAME_GEOM_OVERRIDE > 0.5)
+            pre_pass_coords = content_geom_override_zoom(pre_pass_coords, GAME_GEOM_ASPECT, get_in_aspect(), GAME_GEOM_VSHIFT, GAME_GEOM_HSHIFT, GAME_GEOM_ZOOM);
     }
-
-    if (DO_BEZEL > 0.5)
-        pre_pass_coords = zoomout_coords(pre_pass_coords, -get_BEZEL_INNER_ZOOM());
 
 
     //Every cycle counts!
