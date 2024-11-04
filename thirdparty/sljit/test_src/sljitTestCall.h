@@ -2028,3 +2028,67 @@ static void test_call12(void)
 
 	successful_tests++;
 }
+
+static void test_call13(void)
+{
+	/* Test get return address. */
+	executable_code code;
+	struct sljit_compiler* compiler;
+	struct sljit_jump *jump;
+	void *simple_func;
+	sljit_s32 i;
+
+	if (verbose)
+		printf("Run test_call13\n");
+
+	compiler = sljit_create_compiler(NULL);
+	FAILED(!compiler, "cannot create compiler\n");
+
+	/* This tests expects that the two compiled codes are very close
+	to each other, and above the 4GByte address space on 64 bit. */
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0V(), 0, 0, 0);
+	sljit_emit_op2(compiler, SLJIT_ADD32, SLJIT_MEM0(), (sljit_sw)&i, SLJIT_MEM0(), (sljit_sw)&i, SLJIT_IMM, 1);
+	sljit_emit_return_void(compiler);
+
+	simple_func = sljit_generate_code(compiler, 0, NULL);
+	sljit_free_compiler(compiler);
+
+	compiler = sljit_create_compiler(NULL);
+	if (compiler == NULL) {
+		sljit_free_code(simple_func, NULL);
+		FAILED(!compiler, "cannot create compiler\n");
+	}
+
+	sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 1, 0, 0);
+
+	for (i = 0; i < 65536; i++)
+		sljit_emit_icall(compiler, SLJIT_CALL, SLJIT_ARGS0V(), SLJIT_IMM, SLJIT_FUNC_ADDR(simple_func));
+
+	/* Forward jump. */
+	jump = sljit_emit_jump(compiler, SLJIT_JUMP);
+	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 1);
+	sljit_set_label(jump, sljit_emit_label(compiler));
+
+	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 5);
+	jump = sljit_emit_cmp(compiler, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 5);
+	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 1);
+	sljit_set_label(jump, sljit_emit_label(compiler));
+
+	/* Forward label. */
+	jump = sljit_emit_mov_addr(compiler,  SLJIT_R0, 0);
+	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, 1);
+	sljit_set_label(jump, sljit_emit_label(compiler));
+
+	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_IMM, 0x12345678);
+
+	code.code = sljit_generate_code(compiler, 0, NULL);
+	CHECK(compiler);
+	sljit_free_compiler(compiler);
+
+	i = 0;
+	FAILED(code.func0() != 0x12345678, "test_call13 case 1 failed\n");
+	FAILED(i != 65536, "test_call13 case 2 failed\n");
+
+	sljit_free_code(code.code, NULL);
+	successful_tests++;
+}

@@ -322,7 +322,12 @@ static SLJIT_INLINE void modify_imm32_const(sljit_u16 *inst, sljit_uw new_imm)
 static SLJIT_INLINE sljit_u16* detect_jump_type(struct sljit_jump *jump, sljit_u16 *code_ptr, sljit_u16 *code, sljit_sw executable_offset)
 {
 	sljit_sw diff;
+	sljit_uw target_addr;
+	sljit_uw jump_addr = (sljit_uw)code_ptr;
+	sljit_uw orig_addr = jump->addr;
+	SLJIT_UNUSED_ARG(executable_offset);
 
+	jump->addr = jump_addr;
 	if (jump->flags & SLJIT_REWRITABLE_JUMP)
 		goto exit;
 
@@ -330,11 +335,16 @@ static SLJIT_INLINE sljit_u16* detect_jump_type(struct sljit_jump *jump, sljit_u
 		/* Branch to ARM code is not optimized yet. */
 		if (!(jump->u.target & 0x1))
 			goto exit;
-		diff = (sljit_sw)jump->u.target - (sljit_sw)(code_ptr + 2) - executable_offset;
+		target_addr = jump->u.target;
 	} else {
 		SLJIT_ASSERT(jump->u.label != NULL);
-		diff = (sljit_sw)(code + jump->u.label->size) - (sljit_sw)(code_ptr + 2);
+		target_addr = (sljit_uw)SLJIT_ADD_EXEC_OFFSET(code + jump->u.label->size, executable_offset);
+
+		if (jump->u.label->size > orig_addr)
+			jump_addr = (sljit_uw)(code + orig_addr);
 	}
+
+	diff = (sljit_sw)target_addr - (sljit_sw)SLJIT_ADD_EXEC_OFFSET(jump_addr + 4, executable_offset);
 
 	if (jump->flags & IS_COND) {
 		SLJIT_ASSERT(!(jump->flags & IS_BL));
@@ -382,16 +392,21 @@ exit:
 static SLJIT_INLINE sljit_sw mov_addr_get_length(struct sljit_jump *jump, sljit_u16 *code_ptr, sljit_u16 *code, sljit_sw executable_offset)
 {
 	sljit_uw addr;
+	sljit_uw jump_addr = (sljit_uw)code_ptr;
 	sljit_sw diff;
 	SLJIT_UNUSED_ARG(executable_offset);
 
 	if (jump->flags & JUMP_ADDR)
 		addr = jump->u.target;
-	else
+	else {
 		addr = (sljit_uw)SLJIT_ADD_EXEC_OFFSET(code + jump->u.label->size, executable_offset);
 
+		if (jump->u.label->size > jump->addr)
+			jump_addr = (sljit_uw)(code + jump->addr);
+	}
+
 	/* The pc+4 offset is represented by the 2 * SSIZE_OF(sljit_u16) below. */
-	diff = (sljit_sw)addr - (sljit_sw)SLJIT_ADD_EXEC_OFFSET(code_ptr, executable_offset);
+	diff = (sljit_sw)addr - (sljit_sw)SLJIT_ADD_EXEC_OFFSET(jump_addr, executable_offset);
 
 	/* Note: ADR with imm8 does not set the last bit (Thumb2 flag). */
 
@@ -519,6 +534,10 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 			if (!(jump->flags & (SLJIT_REWRITABLE_JUMP | JUMP_ADDR))) {
 				/* Unit size: instruction. */
 				diff = (sljit_sw)jump->u.label->size - (sljit_sw)jump->addr - 2;
+				if (jump->u.label->size > jump->addr) {
+					SLJIT_ASSERT(jump->u.label->size - size_reduce >= jump->addr);
+					diff -= (sljit_sw)size_reduce;
+				}
 
 				if (jump->flags & IS_COND) {
 					diff++;
@@ -542,6 +561,10 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 
 			if (!(jump->flags & JUMP_ADDR)) {
 				diff = (sljit_sw)jump->u.label->size - (sljit_sw)jump->addr;
+				if (jump->u.label->size > jump->addr) {
+					SLJIT_ASSERT(jump->u.label->size - size_reduce >= jump->addr);
+					diff -= (sljit_sw)size_reduce;
+				}
 
 				if (diff <= (0xffd / SSIZE_OF(u16)) && diff >= (-0xfff / SSIZE_OF(u16)))
 					total_size = 1;
@@ -614,7 +637,6 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 				if (next_min_addr == next_jump_addr) {
 					if (!(jump->flags & JUMP_MOV_ADDR)) {
 						half_count = half_count - 1 + (jump->flags >> JUMP_SIZE_SHIFT);
-						jump->addr = (sljit_uw)code_ptr;
 						code_ptr = detect_jump_type(jump, code_ptr, code, executable_offset);
 						SLJIT_ASSERT((sljit_uw)code_ptr - jump->addr <
 							((jump->flags >> JUMP_SIZE_SHIFT) + ((jump->flags & 0xf0) <= PATCH_TYPE2)) * sizeof(sljit_u16));

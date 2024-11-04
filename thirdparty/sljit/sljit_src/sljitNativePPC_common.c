@@ -319,7 +319,11 @@ static SLJIT_INLINE sljit_ins* detect_jump_type(struct sljit_jump *jump, sljit_i
 {
 	sljit_sw diff;
 	sljit_uw target_addr;
+	sljit_uw jump_addr = (sljit_uw)code_ptr;
+	sljit_uw orig_addr = jump->addr;
+	SLJIT_UNUSED_ARG(executable_offset);
 
+	jump->addr = jump_addr;
 #if (defined SLJIT_PASS_ENTRY_ADDR_TO_CALL && SLJIT_PASS_ENTRY_ADDR_TO_CALL) && (defined SLJIT_CONFIG_PPC_32 && SLJIT_CONFIG_PPC_32)
 	if (jump->flags & (SLJIT_REWRITABLE_JUMP | IS_CALL))
 		goto exit;
@@ -333,6 +337,9 @@ static SLJIT_INLINE sljit_ins* detect_jump_type(struct sljit_jump *jump, sljit_i
 	else {
 		SLJIT_ASSERT(jump->u.label != NULL);
 		target_addr = (sljit_uw)(code + jump->u.label->size) + (sljit_uw)executable_offset;
+
+		if (jump->u.label->size > orig_addr)
+			jump_addr = (sljit_uw)(code + orig_addr);
 	}
 
 #if (defined SLJIT_PASS_ENTRY_ADDR_TO_CALL && SLJIT_PASS_ENTRY_ADDR_TO_CALL) && (defined SLJIT_CONFIG_PPC_64 && SLJIT_CONFIG_PPC_64)
@@ -340,7 +347,7 @@ static SLJIT_INLINE sljit_ins* detect_jump_type(struct sljit_jump *jump, sljit_i
 		goto keep_address;
 #endif
 
-	diff = (sljit_sw)target_addr - (sljit_sw)code_ptr - executable_offset;
+	diff = (sljit_sw)target_addr - (sljit_sw)SLJIT_ADD_EXEC_OFFSET(jump_addr, executable_offset);
 
 	if (jump->flags & IS_COND) {
 		if (diff <= 0x7fff && diff >= -0x8000) {
@@ -552,6 +559,10 @@ static void reduce_code_size(struct sljit_compiler *compiler)
 				} else {
 					/* Unit size: instruction. */
 					diff = (sljit_sw)jump->u.label->size - (sljit_sw)jump->addr;
+					if (jump->u.label->size > jump->addr) {
+						SLJIT_ASSERT(jump->u.label->size - size_reduce >= jump->addr);
+						diff -= (sljit_sw)size_reduce;
+					}
 
 					if (jump->flags & IS_COND) {
 						if (diff <= (0x7fff / SSIZE_OF(ins)) && diff >= (-0x8000 / SSIZE_OF(ins)))
@@ -597,6 +608,9 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 	sljit_ins *buf_ptr;
 	sljit_ins *buf_end;
 	sljit_uw word_count;
+#if (defined SLJIT_DEBUG && SLJIT_DEBUG)
+	sljit_uw jump_addr;
+#endif
 	SLJIT_NEXT_DEFINE_TYPES;
 	sljit_sw executable_offset;
 
@@ -653,9 +667,11 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 				if (next_min_addr == next_jump_addr) {
 					if (!(jump->flags & JUMP_MOV_ADDR)) {
 						word_count += jump->flags >> JUMP_SIZE_SHIFT;
-						jump->addr = (sljit_uw)code_ptr;
+#if (defined SLJIT_DEBUG && SLJIT_DEBUG)
+						jump_addr = (sljit_uw)code_ptr;
+#endif
 						code_ptr = detect_jump_type(jump, code_ptr, code, executable_offset);
-						SLJIT_ASSERT(((sljit_uw)code_ptr - jump->addr <= (jump->flags >> JUMP_SIZE_SHIFT) * sizeof(sljit_ins)));
+						SLJIT_ASSERT(((sljit_uw)code_ptr - jump_addr <= (jump->flags >> JUMP_SIZE_SHIFT) * sizeof(sljit_ins)));
 					} else {
 						jump->addr = (sljit_uw)code_ptr;
 #if (defined SLJIT_CONFIG_PPC_64 && SLJIT_CONFIG_PPC_64)
