@@ -435,6 +435,17 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     }
   }
 
+  // QuackShot Starring Donald Duck (World) (Rev A)
+  // 512KiB ROM with non-standard wiring
+  // A18 and A19 not connected, A20 wired as A19
+  //   $000000-$0fffff : lower 256KiB mirrored 4 times
+  //   $100000-$1fffff : upper 256KiB mirrored 4 times
+  if(hash == "44c96f106b966d55131473ea6554522279953c73cf33e2ad34abc73f1bcc465d") {
+    rom.resize(2_MiB);
+    for(auto n : range(4)) memory::copy(&rom[1_MiB + (n * 256_KiB)], &rom[256_KiB], 256_KiB);
+    for(auto n : range(4)) memory::copy(&rom[(n * 256_KiB)], &rom[0], 256_KiB);
+  }
+
   //M28C16
   //======
 
