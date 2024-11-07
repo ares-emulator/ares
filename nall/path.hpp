@@ -38,19 +38,19 @@ auto root() -> string;
 // c:/users/username/
 auto user() -> string;
 
-// /home/username/Desktop/
+// ~/Desktop/
 // c:/users/username/Desktop/
 auto desktop(string_view name = {}) -> string;
 
 //todo: MacOS uses the same location for userData() and userSettings()
 //... is there a better option here?
 
-// /home/username/.config/
+// ~/.config/
 // ~/Library/Application Support/
 // c:/users/username/appdata/roaming/
 auto userSettings() -> string;
 
-// /home/username/.local/share/
+// ~/.local/share/
 // ~/Library/Application Support/
 // c:/users/username/appdata/local/
 auto userData() -> string;
@@ -59,6 +59,15 @@ auto userData() -> string;
 // /Library/Application Support/
 // c:/ProgramData/
 auto sharedData() -> string;
+
+#if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
+// ARES_PREFIX/share
+auto prefixSharedData() -> string;
+
+// /usr/local/share
+auto localSharedData() -> string;
+#endif
+
 
 // /tmp
 // c:/users/username/AppData/Local/Temp/
