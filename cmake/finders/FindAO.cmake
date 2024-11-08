@@ -1,29 +1,29 @@
 #[=======================================================================[.rst:
-FindSDL
+FindAO
 -------
 
-Finds the SDL library.
+Finds the AO library.
 
 Imported Targets
 ^^^^^^^^^^^^^^^^
 
 This module provides the following imported targets, if found:
 
-``GTK::GTK``
+``AO::AO``
 
 Result Variables
 ^^^^^^^^^^^^^^^^
 
 This will define the following variables:
 
-``GTK_FOUND``
-  True if the system has GTK 3.
-``GTK_VERSION``
-  The version of GTK3 which was found.
-``GTK_INCLUDE_DIRS``
-  Include directories needed to use GTK3.
-``GTK_LIBRARIES``
-  Libraries needed to link to GTK3.
+``AO_FOUND``
+  True if the system has AO.
+``AO_VERSION``
+  The version of AO which was found.
+``AO_INCLUDE_DIR``
+  Include directories needed to use AO.
+``AO_LIBRARIES``
+  Libraries needed to link to AO.
 
 #]=======================================================================]
 
@@ -34,27 +34,26 @@ if(PKG_CONFIG_FOUND)
   pkg_check_modules(PC_AO QUIET ao)
 endif()
 
-message(AUTHOR_WARNING "pc ao include dirs ${PC_AO_INCLUDE_DIR}")
-
 find_path(
   AO_INCLUDE_DIR
   NAMES ao/ao.h
-  HINTS ${PC_AO_INCLUDE_DIR}
+  HINTS ${PC_AO_INCLUDE_DIRS}
   PATHS /usr/include /usr/local/include /usr/include/ao /usr/local/include/ao
   DOC "AO include directory"
 )
 
 find_library(AO_LIBRARIES NAMES ao HINTS ${PC_AO_LIBRARY_DIRS} PATHS /usr/lib /usr/local/lib DOC "SDL location")
 
-set(GTK_ERROR_REASON "Ensure AO libraries are available in local library paths.")
+set(AO_VERSION ${PC_AO_VERSION})
+set(AO_ERROR_REASON "Ensure AO libraries are available in local library paths.")
 
 find_package_handle_standard_args(
   AO
   REQUIRED_VARS AO_LIBRARIES AO_INCLUDE_DIR
   REASON_FAILURE_MESSAGE "${AO_ERROR_REASON}"
 )
-mark_as_advanced(GTK_INCLUDE_DIRS GTK_LIBRARY)
-unset(GTK_ERROR_REASON)
+mark_as_advanced(AO_INCLUDE_DIR AO_LIBRARIES)
+unset(AO_ERROR_REASON)
 
 if(AO_FOUND)
   if(NOT TARGET AO::AO)
@@ -67,6 +66,7 @@ if(AO_FOUND)
         INTERFACE_COMPILE_OPTIONS "${PC_AO_CFLAGS_OTHER}"
         INTERFACE_INCLUDE_DIRECTORIES "${PC_AO_INCLUDE_DIR}"
         INTERFACE_LINK_LIBRARIES "${PC_AO_LINK_LIBRARIES}"
+        VERSION ${AO_VERSION}
     )
   endif()
 endif()

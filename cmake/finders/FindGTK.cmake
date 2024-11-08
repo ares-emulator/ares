@@ -1,8 +1,8 @@
 #[=======================================================================[.rst:
-FindSDL
+FindGTK
 -------
 
-Finds the SDL library.
+Finds the GTK library.
 
 Imported Targets
 ^^^^^^^^^^^^^^^^
@@ -31,7 +31,7 @@ Cache Variables
 The following cache variables may also be set:
 .
 ``GTK_LIBRARY``
-  The path to the SDL library.
+  The path to the GTK library.
 
 #]=======================================================================]
 
@@ -50,7 +50,15 @@ find_path(
   DOC "GTK include directory"
 )
 
-find_library(GTK_LIBRARY NAMES gtk-3 HINTS ${PC_GTK_LIBRARY_DIRS} PATHS /usr/lib /usr/local/lib DOC "GTK location")
+find_library(
+  GTK_LIBRARY
+  NAMES gtk-3
+  HINTS ${PC_GTK_LIBRARY_DIRS}
+  PATHS /usr/lib /usr/local/lib
+  DOC "GTK location"
+)
+
+set(GTK_VERSION ${PC_GTK_VERSION})
 
 set(GTK_ERROR_REASON "Ensure GTK libraries are available in local library paths.")
 
@@ -79,6 +87,7 @@ if(GTK_FOUND)
         INTERFACE_COMPILE_OPTIONS "${PC_GTK_CFLAGS_OTHER}"
         INTERFACE_INCLUDE_DIRECTORIES "${PC_GTK_INCLUDE_DIRS}"
         INTERFACE_LINK_LIBRARIES "${PC_GTK_LINK_LIBRARIES}"
+        VERSION ${GTK_VERSION}
     )
   endif()
 endif()

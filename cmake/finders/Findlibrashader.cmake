@@ -21,10 +21,10 @@ This will define the following variables:
   True if the system has the libarashader library.
 ``librashader_VERSION``
   The version of the SDL library which was found.
-``librashader_INCLUDE_DIRS``
-  Include directories needed to use SDL.
+``librashader_INCLUDE_DIR``
+  Include directories needed to use librashader.
 ``librashader_LIBRARIES``
-  Libraries needed to link to SDL.
+  Libraries needed to link to librashader.
 
 Cache Variables
 ^^^^^^^^^^^^^^^
