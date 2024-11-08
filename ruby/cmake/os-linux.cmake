@@ -77,7 +77,7 @@ else()
   target_disable_feature(ruby "OSS audio driver")
 endif()
 
-option(ARES_ENABLE_ALSA "Enable the ALSA audio driver")
+option(ARES_ENABLE_ALSA "Enable the ALSA audio driver" ON)
 if(ARES_ENABLE_ALSA)
   find_package(ALSA)
 endif()
