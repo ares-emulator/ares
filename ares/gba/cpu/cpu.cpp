@@ -30,6 +30,8 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
+  ARM7TDMI::irq = irq.synchronizer[0];
+
   if(stopped()) {
     if(!keypad.conditionMet) {
       stepIRQ();
@@ -73,7 +75,6 @@ auto CPU::setInterruptFlag(u32 source) -> void {
 }
 
 inline auto CPU::stepIRQ() -> void {
-  ARM7TDMI::irq = irq.synchronizer[0];
   irq.synchronizer[0] = irq.synchronizer[1];
   irq.synchronizer[1] = irq.ime && (irq.enable[0] & irq.flag[0]);
   irq.enable[0] = irq.enable[1];
