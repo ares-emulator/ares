@@ -30,8 +30,6 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  ARM7TDMI::irq = irq.synchronizer[0];
-
   if(stopped()) {
     if(!keypad.conditionMet) {
       stepIRQ();
@@ -45,6 +43,7 @@ auto CPU::main() -> void {
   }
 
   if(halted()) {
+    dmaRun();
     if(!(irq.enable[0] & irq.flag[0])) {
       return step(4);
     }
@@ -57,7 +56,7 @@ auto CPU::main() -> void {
 }
 
 auto CPU::dmaRun() -> void {
-  if(!context.dmaActive && !context.prefetchActive) {
+  if(!context.dmaActive) {
     context.dmaActive = true;
     while(dma[0].run() | dma[1].run() | dma[2].run() | dma[3].run());
     if(context.dmaRan) {
@@ -74,6 +73,7 @@ auto CPU::setInterruptFlag(u32 source) -> void {
 }
 
 inline auto CPU::stepIRQ() -> void {
+  ARM7TDMI::irq = irq.synchronizer[0];
   irq.synchronizer[0] = irq.synchronizer[1];
   irq.synchronizer[1] = irq.ime && (irq.enable[0] & irq.flag[0]);
   irq.enable[0] = irq.enable[1];
@@ -82,8 +82,6 @@ inline auto CPU::stepIRQ() -> void {
 
 auto CPU::step(u32 clocks) -> void {
   if(!clocks) return;
-
-  dmaRun();
 
   dma[0].waiting = max(0, dma[0].waiting - (s32)clocks);
   dma[1].waiting = max(0, dma[1].waiting - (s32)clocks);

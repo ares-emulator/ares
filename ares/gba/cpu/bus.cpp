@@ -1,4 +1,5 @@
 auto CPU::sleep() -> void {
+  dmaRun();
   prefetchStep(1);
 }
 
@@ -11,9 +12,10 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     if constexpr(!UseDebugger) prefetchStep(clocks);
   } else if(address & 0x0800'0000) {
     if(mode & Prefetch && wait.prefetch) {
-      dmaRun();
       prefetchSync(address);
-      word = prefetchRead(mode);
+      prefetchStep(1);
+      word = prefetchRead();
+      if(mode & Word) word |= prefetchRead() << 16;
     } else {
       if constexpr(!UseDebugger) prefetchReset();
       if constexpr(!UseDebugger) step(clocks);
@@ -37,6 +39,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 }
 
 auto CPU::get(u32 mode, n32 address) -> n32 {
+  dmaRun();
   return getBus<false>(mode, address);
 }
 
@@ -45,6 +48,7 @@ auto CPU::getDebugger(u32 mode, n32 address) -> n32 {
 }
 
 auto CPU::set(u32 mode, n32 address, n32 word) -> void {
+  dmaRun();
   u32 clocks = _wait(mode, address);
 
   if(address >= 0x1000'0000) {

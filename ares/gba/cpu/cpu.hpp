@@ -56,7 +56,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto prefetchSync(n32 address) -> void;
   auto prefetchStep(u32 clocks) -> void;
   auto prefetchReset() -> void;
-  auto prefetchRead(u32 mode) -> n32;
+  auto prefetchRead() -> n16;
 
   //bus.cpp
   auto sleep() -> void override;
@@ -236,6 +236,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n32 addr;       //read location of slot buffer
     n32 load;       //write location of slot buffer
     i32 wait = 1;  //number of clocks before next slot load
+    n1  stopped = 1;
   } prefetch;
 
   struct Context {
@@ -246,7 +247,6 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  dmaRan;
     n1  dmaRomAccess;
     n1  dmaActive;
-    n1  prefetchActive;
     n1  timerLatched;
   } context;
 };

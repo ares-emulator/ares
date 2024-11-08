@@ -104,6 +104,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(prefetch.addr);
   s(prefetch.load);
   s(prefetch.wait);
+  s(prefetch.stopped);
 
   s(context.clock);
   s(context.halted);
@@ -112,6 +113,5 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.dmaRan);
   s(context.dmaRomAccess);
   s(context.dmaActive);
-  s(context.prefetchActive);
   s(context.timerLatched);
 }
