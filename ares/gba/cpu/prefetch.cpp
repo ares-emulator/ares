@@ -3,6 +3,7 @@ auto CPU::prefetchSync(n32 address) -> void {
 
   if(prefetch.wait == 1) step(1);
 
+  prefetch.stopped = false;
   prefetch.addr = address;
   prefetch.load = address;
   prefetch.wait = _wait(Half | Nonsequential, prefetch.load);
@@ -10,7 +11,7 @@ auto CPU::prefetchSync(n32 address) -> void {
 
 auto CPU::prefetchStep(u32 clocks) -> void {
   step(clocks);
-  if(!wait.prefetch || context.dmaRomAccess || (prefetch.addr == 0)) return;
+  if(!wait.prefetch || context.dmaRomAccess || prefetch.stopped) return;
 
   while(!prefetch.full() && clocks--) {
     if(--prefetch.wait) continue;
@@ -18,37 +19,29 @@ auto CPU::prefetchStep(u32 clocks) -> void {
     prefetch.load += 2;
     prefetch.wait = _wait(Half | Sequential, prefetch.load);
   }
+
+  if(prefetch.full()) prefetch.stopped = true;
 }
 
 auto CPU::prefetchReset() -> void {
   if(prefetch.wait == 1) step(1);
 
+  prefetch.stopped = true;
+  prefetch.wait = 0;
   prefetch.addr = 0;
   prefetch.load = 0;
-  prefetch.wait = 0;
 }
 
-auto CPU::prefetchRead(u32 mode) -> n32 {
-  //run prefetcher for 1 cycle or until buffer contains an instruction, blocking DMA
-  context.prefetchActive = 1;
-  if(prefetch.empty() && (mode & Word)) {
-    prefetchStep(prefetch.wait + _wait(Half | Sequential, prefetch.load + 2));
-  } else if(prefetch.empty() && (mode & Half)) {
-    prefetchStep(prefetch.wait);
-  } else if((prefetch.size() == 1) && (mode & Word)) {
-    prefetchStep(prefetch.wait);
-  } else {
-    prefetchStep(1);
-  }
-  context.prefetchActive = 0;
+auto CPU::prefetchRead() -> n16 {
+  if(prefetch.empty()) prefetchStep(prefetch.wait);
 
-  if(prefetch.full()) prefetch.wait = _wait(Half | Sequential, prefetch.load);
-
-  n32 word = prefetch.slot[prefetch.addr >> 1 & 7];
+  n16 word = prefetch.slot[prefetch.addr >> 1 & 7];
   prefetch.addr += 2;
-  if(mode & Word) {
-    word |= prefetch.slot[prefetch.addr >> 1 & 7] << 16;
-    prefetch.addr += 2;
+
+  if(prefetch.stopped && prefetch.empty()) {
+    prefetch.stopped = false;
+    prefetch.wait = _wait(Half | Nonsequential, prefetch.load);
   }
+
   return word;
 }

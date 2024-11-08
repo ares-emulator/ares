@@ -45,6 +45,7 @@ auto CPU::main() -> void {
   }
 
   if(halted()) {
+    dmaRun();
     if(!(irq.enable[0] & irq.flag[0])) {
       return step(4);
     }
@@ -57,7 +58,7 @@ auto CPU::main() -> void {
 }
 
 auto CPU::dmaRun() -> void {
-  if(!context.dmaActive && !context.prefetchActive) {
+  if(!context.dmaActive) {
     context.dmaActive = true;
     while(dma[0].run() | dma[1].run() | dma[2].run() | dma[3].run());
     if(context.dmaRan) {
@@ -82,8 +83,6 @@ inline auto CPU::stepIRQ() -> void {
 
 auto CPU::step(u32 clocks) -> void {
   if(!clocks) return;
-
-  dmaRun();
 
   dma[0].waiting = max(0, dma[0].waiting - (s32)clocks);
   dma[1].waiting = max(0, dma[1].waiting - (s32)clocks);
