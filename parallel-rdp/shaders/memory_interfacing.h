@@ -202,9 +202,10 @@ void store_vram_color(uint index, uint slice)
 		{
 			index &= RDRAM_MASK_8;
 			index += slice * RDRAM_SIZE;
-			vram8.data[index ^ 3u] = mem_u8(current_color.r);
+			uint col = (index & 1) != 0 ? current_color.g : current_color.r;
+			vram8.data[index ^ 3u] = mem_u8(col);
 			if ((index & 1u) != 0u)
-				hidden_vram.data[index >> 1u] = mem_u8((current_color.r & 1) * 3);
+				hidden_vram.data[index >> 1u] = mem_u8((col & 1) * 3);
 			break;
 		}
 
