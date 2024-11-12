@@ -144,7 +144,7 @@ NALL_HEADER_INLINE auto sharedData() -> string {
   #elif defined(PLATFORM_MACOS)
   string result = "/Library/Application Support/";
   #else
-  string result = stringize(ARES_PREFIX/share/);
+  string result = "/usr/share/";
   #endif
   if(!result) result = ".";
   if(!result.endsWith("/")) result.append("/");
@@ -153,9 +153,10 @@ NALL_HEADER_INLINE auto sharedData() -> string {
 
 #if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
 NALL_HEADER_INLINE auto prefixSharedData() -> string {
-  string result;
   #if defined(ARES_PREFIX)
   string result = stringize(ARES_PREFIX/share/);
+  #else
+  string result;
   #endif
   if(!result) result = ".";
   if(!result.endsWith("/")) result.append("/");
