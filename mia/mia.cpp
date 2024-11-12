@@ -21,6 +21,18 @@ auto locate(const string &name) -> string {
   if (inode::exists(location)) return location;
 
   // 3. The shared data directory
+#if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
+  /// Unix-like systems have multiple notions of a 'shared data' directory. First, check for
+  /// an install prefix, as would be used by package managers that do not use `/usr/share`.
+  /// Secondly, look in `/usr/local/share` to cover software compiled by the user.
+  /// Lastly, look in the 'global' shared data directory, `/usr/share`.
+  location = {Path::prefixSharedData(), "ares/", name};
+  if (inode::exists(location)) return location;
+  
+  location = {Path::localSharedData(), "ares/", name};
+  if (inode::exists(location)) return location;
+#endif
+  
   location = {Path::sharedData(), "ares/", name};
   if (inode::exists(location)) return location;
 

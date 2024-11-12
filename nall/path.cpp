@@ -151,6 +151,23 @@ NALL_HEADER_INLINE auto sharedData() -> string {
   return result;
 }
 
+#if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
+NALL_HEADER_INLINE auto prefixSharedData() -> string {
+  string result;
+  #if defined(ARES_PREFIX)
+  string result = stringize(ARES_PREFIX/share/);
+  #endif
+  if(!result) result = ".";
+  if(!result.endsWith("/")) result.append("/");
+  return result;
+}
+
+NALL_HEADER_INLINE auto localSharedData() -> string {
+  string result = "/usr/local/share/";
+  return result;
+}
+#endif
+
 NALL_HEADER_INLINE auto temporary() -> string {
   #if defined(PLATFORM_WINDOWS)
   wchar_t path[PATH_MAX] = L"";
