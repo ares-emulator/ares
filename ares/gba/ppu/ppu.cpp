@@ -147,9 +147,15 @@ auto PPU::main() -> void {
       window1.run(x, y);
       window2.output = objects.output.window;
       window3.output = true;
-      n15 color = dac.run(x, y);
-      line[x] = color;
-      if(accurate) step(4);
+      bool blending = dac.upperLayer();
+      if(blending) {
+        if(accurate) step(2);
+        dac.lowerLayer();
+        if(accurate) step(2);
+      } else {
+        if(accurate) step(4);
+      }
+      line[x] = dac.color;
     }
     if(!accurate) step(960);
   } else {

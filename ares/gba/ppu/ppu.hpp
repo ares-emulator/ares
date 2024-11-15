@@ -93,6 +93,9 @@ private:
     n2  priority;
     n15 color;
 
+    //BG2 only
+    n1 directColor;
+
     //OBJ only
     n1  translucent;
     n1  mosaic;
@@ -216,7 +219,9 @@ private:
 
   struct DAC {
     //dac.cpp
-    auto run(u32 x, u32 y) -> n15;
+    auto upperLayer() -> bool;
+    auto lowerLayer() -> void;
+    auto pramLookup(Pixel& layer) -> n15;
     auto blend(n15 above, u32 eva, n15 below, u32 evb) -> n15;
     auto power() -> void;
 
@@ -232,6 +237,12 @@ private:
       n5 blendEVB;
       n5 blendEVY;
     } io;
+
+    u32 aboveLayer;
+    u32 belowLayer;
+    n15 color;
+
+    Pixel layers[6];
   } dac;
 
   struct Object {

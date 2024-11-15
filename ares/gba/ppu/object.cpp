@@ -90,7 +90,6 @@ auto PPU::Objects::run(u32 x, u32 y) -> void {
 
   auto& buffer = lineBuffers[y & 1];
   output = buffer[x];
-  output.color = ppu.pram[output.color];
   
   //horizontal mosaic
   if(!mosaicOffset) {

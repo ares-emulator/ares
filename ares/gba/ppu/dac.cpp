@@ -1,5 +1,8 @@
-auto PPU::DAC::run(u32 x, u32 y) -> n15 {
-  if(ppu.blank()) return 0x7fff;
+auto PPU::DAC::upperLayer() -> bool {
+  if(ppu.blank()) {
+    color = 0x7fff;
+    return false;
+  }
 
   //determine active window
   n1 active[6] = {true, true, true, true, true, true};  //enable all layers if no windows are enabled
@@ -11,16 +14,15 @@ auto PPU::DAC::run(u32 x, u32 y) -> n15 {
   }
 
   //priority sorting: find topmost two pixels
-  Pixel layers[6] = {
-    ppu.objects.mosaic,
-    ppu.bg0.mosaic,
-    ppu.bg1.mosaic,
-    ppu.bg2.mosaic,
-    ppu.bg3.mosaic,
-    {true, 3, ppu.pram[0]},
-  };
+  layers[OBJ] = ppu.objects.mosaic;
+  layers[BG0] = ppu.bg0.mosaic;
+  layers[BG1] = ppu.bg1.mosaic;
+  layers[BG2] = ppu.bg2.mosaic;
+  layers[BG3] = ppu.bg3.mosaic;
+  layers[SFX] = {true, 3, 0};
 
-  u32 aboveLayer = 5, belowLayer = 5;
+  aboveLayer = 5;
+  belowLayer = 5;
   for(s32 priority = 3; priority >= 0; priority--) {
     for(s32 layer = 5; layer >= 0; layer--) {
       if(layers[layer].enable && layers[layer].priority == priority && active[layer]) {
@@ -31,26 +33,35 @@ auto PPU::DAC::run(u32 x, u32 y) -> n15 {
   }
 
   auto above = layers[aboveLayer];
-  auto below = layers[belowLayer];
-  auto eva = min(16u, (u32)io.blendEVA);
-  auto evb = min(16u, (u32)io.blendEVB);
-  auto evy = min(16u, (u32)io.blendEVY);
-  n15 color = above.color;
+  color = pramLookup(above);
 
   //color blending
-  if(active[SFX] || (above.translucent && io.blendBelow[belowLayer])) {
-    if(above.translucent && io.blendBelow[belowLayer]) {
-      color = blend(above.color, eva, below.color, evb);
-    } else if(io.blendMode == 1 && io.blendAbove[aboveLayer] && io.blendBelow[belowLayer]) {
-      color = blend(above.color, eva, below.color, evb);
+  if(above.translucent && io.blendBelow[belowLayer]) return true;
+  if(active[SFX]) {
+    auto evy = min(16u, (u32)io.blendEVY);
+    if(io.blendMode == 1 && io.blendAbove[aboveLayer] && io.blendBelow[belowLayer]) {
+      return true;
     } else if(io.blendMode == 2 && io.blendAbove[aboveLayer]) {
-      color = blend(above.color, 16 - evy, 0x7fff, evy);
+      color = blend(color, 16 - evy, 0x7fff, evy);
     } else if(io.blendMode == 3 && io.blendAbove[aboveLayer]) {
-      color = blend(above.color, 16 - evy, 0x0000, evy);
+      color = blend(color, 16 - evy, 0x0000, evy);
     }
   }
 
-  return color;
+  return false;
+}
+
+auto PPU::DAC::lowerLayer() -> void {
+  auto below = layers[belowLayer];
+  auto eva = min(16u, (u32)io.blendEVA);
+  auto evb = min(16u, (u32)io.blendEVB);
+
+  color = blend(color, eva, pramLookup(below), evb);
+}
+
+inline auto PPU::DAC::pramLookup(Pixel& layer) -> n15 {
+  if(layer.directColor) return layer.color;
+  return ppu.pram[layer.color];
 }
 
 auto PPU::DAC::blend(n15 above, u32 eva, n15 below, u32 evb) -> n15 {
