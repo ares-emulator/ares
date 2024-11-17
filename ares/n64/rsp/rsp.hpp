@@ -334,6 +334,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
   auto SW(cr32& rt, cr32& rs, s16 imm) -> void;
   auto XOR(r32& rd, cr32& rs, cr32& rt) -> void;
   auto XORI(r32& rt, cr32& rs, u16 imm) -> void;
+  auto SPECIAL_INVALID(r32& rd, cr32& rt, cr32& rs) -> void;
 
   //scc.cpp: System Control Coprocessor
   auto MFC0(r32& rt, u8 rd) -> void;

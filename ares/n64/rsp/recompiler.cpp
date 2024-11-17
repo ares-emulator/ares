@@ -426,6 +426,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case 0x01: {
+    mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
@@ -449,6 +450,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case 0x05: {
+    mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
@@ -481,6 +483,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case range3(0x0a, 0x0c): {
+    mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
@@ -492,6 +495,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case range18(0x0e, 0x1f): {
+    mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
@@ -535,6 +539,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case range2(0x28, 0x29): {
+    mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
@@ -554,6 +559,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case range20(0x2c, 0x3f): {
+    mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
