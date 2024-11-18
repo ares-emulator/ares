@@ -113,37 +113,37 @@ auto RSP::interpreterEXECUTE() -> void {
 auto RSP::interpreterSPECIAL() -> void {
   switch(OP & 0x3f) {
   op(0x00, SLL, RD, RT, SA);
-  op(0x01, INVALID);
+  op(0x01, SPECIAL_INVALID, RD, RT, RS);
   op(0x02, SRL, RD, RT, SA);
   op(0x03, SRA, RD, RT, SA);
   op(0x04, SLLV, RD, RT, RS);
-  op(0x05, INVALID);
+  op(0x05, SPECIAL_INVALID, RD, RT, RS);
   op(0x06, SRLV, RD, RT, RS);
   op(0x07, SRAV, RD, RT, RS);
   br(0x08, JR, RS);
   br(0x09, JALR, RD, RS);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
-  op(0x0c, INVALID);  //SYSCALL
+  op(0x0a, SPECIAL_INVALID, RD, RT, RS);
+  op(0x0b, SPECIAL_INVALID, RD, RT, RS);
+  op(0x0c, SPECIAL_INVALID, RD, RT, RS);  //SYSCALL
   br(0x0d, BREAK);
-  op(0x0e, INVALID);
-  op(0x0f, INVALID);  //SYNC
-  op(0x10, INVALID);  //MFHI
-  op(0x11, INVALID);  //MTHI
-  op(0x12, INVALID);  //MFLO
-  op(0x13, INVALID);  //MTLO
-  op(0x14, INVALID);  //DSLLV
-  op(0x15, INVALID);
-  op(0x16, INVALID);  //DSRLV
-  op(0x17, INVALID);  //DSRAV
-  op(0x18, INVALID);  //MULT
-  op(0x19, INVALID);  //MULTU
-  op(0x1a, INVALID);  //DIV
-  op(0x1b, INVALID);  //DIVU
-  op(0x1c, INVALID);  //DMULT
-  op(0x1d, INVALID);  //DMULTU
-  op(0x1e, INVALID);  //DDIV
-  op(0x1f, INVALID);  //DDIVU
+  op(0x0e, SPECIAL_INVALID, RD, RT, RS);
+  op(0x0f, SPECIAL_INVALID, RD, RT, RS);  //SYNC
+  op(0x10, SPECIAL_INVALID, RD, RT, RS);  //MFHI
+  op(0x11, SPECIAL_INVALID, RD, RT, RS);  //MTHI
+  op(0x12, SPECIAL_INVALID, RD, RT, RS);  //MFLO
+  op(0x13, SPECIAL_INVALID, RD, RT, RS);  //MTLO
+  op(0x14, SPECIAL_INVALID, RD, RT, RS);  //DSLLV
+  op(0x15, SPECIAL_INVALID, RD, RT, RS);
+  op(0x16, SPECIAL_INVALID, RD, RT, RS);  //DSRLV
+  op(0x17, SPECIAL_INVALID, RD, RT, RS);  //DSRAV
+  op(0x18, SPECIAL_INVALID, RD, RT, RS);  //MULT
+  op(0x19, SPECIAL_INVALID, RD, RT, RS);  //MULTU
+  op(0x1a, SPECIAL_INVALID, RD, RT, RS);  //DIV
+  op(0x1b, SPECIAL_INVALID, RD, RT, RS);  //DIVU
+  op(0x1c, SPECIAL_INVALID, RD, RT, RS);  //DMULT
+  op(0x1d, SPECIAL_INVALID, RD, RT, RS);  //DMULTU
+  op(0x1e, SPECIAL_INVALID, RD, RT, RS);  //DDIV
+  op(0x1f, SPECIAL_INVALID, RD, RT, RS);  //DDIVU
   op(0x20, ADDU, RD, RS, RT);  //ADD
   op(0x21, ADDU, RD, RS, RT);
   op(0x22, SUBU, RD, RS, RT);  //SUB
@@ -152,30 +152,30 @@ auto RSP::interpreterSPECIAL() -> void {
   op(0x25, OR, RD, RS, RT);
   op(0x26, XOR, RD, RS, RT);
   op(0x27, NOR, RD, RS, RT);
-  op(0x28, INVALID);
-  op(0x29, INVALID);
+  op(0x28, SPECIAL_INVALID, RD, RT, RS);
+  op(0x29, SPECIAL_INVALID, RD, RT, RS);
   op(0x2a, SLT, RD, RS, RT);
   op(0x2b, SLTU, RD, RS, RT);
-  op(0x2c, INVALID);  //DADD
-  op(0x2d, INVALID);  //DADDU
-  op(0x2e, INVALID);  //DSUB
-  op(0x2f, INVALID);  //DSUBU
-  op(0x30, INVALID);  //TGE
-  op(0x31, INVALID);  //TGEU
-  op(0x32, INVALID);  //TLT
-  op(0x33, INVALID);  //TLTU
-  op(0x34, INVALID);  //TEQ
-  op(0x35, INVALID);
-  op(0x36, INVALID);  //TNE
-  op(0x37, INVALID);
-  op(0x38, INVALID);  //DSLL
-  op(0x39, INVALID);
-  op(0x3a, INVALID);  //DSRL
-  op(0x3b, INVALID);  //DSRA
-  op(0x3c, INVALID);  //DSLL32
-  op(0x3d, INVALID);
-  op(0x3e, INVALID);  //DSRL32
-  op(0x3f, INVALID);  //DSRA32
+  op(0x2c, SPECIAL_INVALID, RD, RT, RS);  //DADD
+  op(0x2d, SPECIAL_INVALID, RD, RT, RS);  //DADDU
+  op(0x2e, SPECIAL_INVALID, RD, RT, RS);  //DSUB
+  op(0x2f, SPECIAL_INVALID, RD, RT, RS);  //DSUBU
+  op(0x30, SPECIAL_INVALID, RD, RT, RS);  //TGE
+  op(0x31, SPECIAL_INVALID, RD, RT, RS);  //TGEU
+  op(0x32, SPECIAL_INVALID, RD, RT, RS);  //TLT
+  op(0x33, SPECIAL_INVALID, RD, RT, RS);  //TLTU
+  op(0x34, SPECIAL_INVALID, RD, RT, RS);  //TEQ
+  op(0x35, SPECIAL_INVALID, RD, RT, RS);
+  op(0x36, SPECIAL_INVALID, RD, RT, RS);  //TNE
+  op(0x37, SPECIAL_INVALID, RD, RT, RS);
+  op(0x38, SPECIAL_INVALID, RD, RT, RS);  //DSLL
+  op(0x39, SPECIAL_INVALID, RD, RT, RS);
+  op(0x3a, SPECIAL_INVALID, RD, RT, RS);  //DSRL
+  op(0x3b, SPECIAL_INVALID, RD, RT, RS);  //DSRA
+  op(0x3c, SPECIAL_INVALID, RD, RT, RS);  //DSLL32
+  op(0x3d, SPECIAL_INVALID, RD, RT, RS);
+  op(0x3e, SPECIAL_INVALID, RD, RT, RS);  //DSRL32
+  op(0x3f, SPECIAL_INVALID, RD, RT, RS);  //DSRA32
   }
 }
 

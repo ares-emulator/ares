@@ -179,5 +179,9 @@ auto RSP::XORI(r32& rt, cr32& rs, u16 imm) -> void {
   rt.u32 = rs.u32 ^ imm;
 }
 
+auto RSP::SPECIAL_INVALID(r32& rd, cr32& rt, cr32& rs) -> void {
+  SRLV(rd, rs, rs);
+}
+
 #undef PC
 #undef RA
