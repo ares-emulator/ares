@@ -1,5 +1,4 @@
 #include <nall/path.hpp>
-#include <nall/stringize.hpp>
 
 #if defined(PLATFORM_WINDOWS)
   #include <shlobj.h>
@@ -153,13 +152,7 @@ NALL_HEADER_INLINE auto sharedData() -> string {
 
 #if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
 NALL_HEADER_INLINE auto prefixSharedData() -> string {
-  #if defined(ARES_PREFIX)
-  string result = stringize(ARES_PREFIX/share/);
-  #else
-  string result;
-  #endif
-  if(!result) result = ".";
-  if(!result.endsWith("/")) result.append("/");
+  string result = program().append("../share/");
   return result;
 }
 
