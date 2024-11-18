@@ -287,10 +287,12 @@ auto CPU::DDIVU(cr64& rs, cr64& rt) -> void {
 
 auto CPU::DIV(cr64& rs, cr64& rt) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  if(rt.s32) {
-    //cast to s64 to prevent exception on INT32_MIN / -1
-    LO.u64 = s32(s64(rs.s32) / s64(rt.s32));
-    HI.u64 = s32(s64(rs.s32) % s64(rt.s32));
+  if(rt.s64) {
+    //using s64 to match hardware behavior when input operands are not properly sign-extended
+    //note: this does not give correct results when sgn(rt.s32) != sgn(rt.s64); on hardware this
+    //results in a meaningless quotient, it's not clear how the result is reached in that case
+    LO.u64 = s32(s64(rs.s32) / rt.s64);
+    HI.u64 = s32(s64(rs.s32) % rt.s64);
   } else {
     LO.u64 = rs.s32 < 0 ? +1 : -1;
     HI.u64 = rs.s32;
@@ -780,7 +782,9 @@ auto CPU::MTLO(cr64& rs) -> void {
 }
 
 auto CPU::MULT(cr64& rs, cr64& rt) -> void {
-  u64 result = s64(rs.s32) * s64(rt.s32);
+  //using s64 to match hardware behavior when input operands are not properly sign-extended,
+  //the hardware behavior appears to be a signed 64-bit by 35-bit multiplication
+  u64 result = rs.s64 * (rt.s64 << 29 >> 29);
   LO.u64 = s32(result >>  0);
   HI.u64 = s32(result >> 32);
   step((5 - 1) * 2);
