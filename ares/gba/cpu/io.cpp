@@ -212,7 +212,7 @@ auto CPU::readIO(n32 address) -> n8 {
   case 0x0400'0207: return 0;
 
   //IME
-  case 0x0400'0208: return irq.ime;
+  case 0x0400'0208: return irq.ime[0];
   case 0x0400'0209: return 0;
   
   //zero
@@ -442,7 +442,7 @@ auto CPU::writeIO(n32 address, n8 data) -> void {
     return;
 
   //IME
-  case 0x0400'0208: irq.ime = data.bit(0); return;
+  case 0x0400'0208: irq.ime[1] = data.bit(0); return;
   case 0x0400'0209: return;
 
   //POSTFLG, HALTCNT
