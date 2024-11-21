@@ -28,9 +28,11 @@ auto ARM7TDMI::instruction() -> void {
     pipeline.fetch.instruction = read(Prefetch | size | Nonsequential, pipeline.fetch.address);
     fetch();
   }
+
+  n1 irqRaised = irq;
   fetch();
 
-  if(irq && !cpsr().i) {
+  if(irqRaised && !cpsr().i) {
     exception(PSR::IRQ, 0x18);
     if(pipeline.execute.thumb) r(14).data += 2;
     return;
