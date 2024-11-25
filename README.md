@@ -1,4 +1,5 @@
 ![ares logo](https://github.com/ares-emulator/ares/blob/master/ares/ares/resource/logo.png)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fares-emulator%2Fares.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fares-emulator%2Fares?ref=badge_shield)
 
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://github.com/higan-emu/ares/blob/master/LICENSE)
 
@@ -189,3 +190,7 @@ Contributing
 ------------
 
 Please join our discord to chat with other ares developers: https://discord.com/invite/gz2quhk2kv
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fares-emulator%2Fares.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fares-emulator%2Fares?ref=badge_large)
