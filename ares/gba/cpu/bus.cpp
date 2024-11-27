@@ -10,7 +10,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 
   if(address >= 0x1000'0000) {
     if constexpr(!UseDebugger) prefetchStep(clocks);
-    return openBus.get();
+    return openBus.get(mode, address);
   } else if(address & 0x0800'0000) {
     if(mode & Prefetch && wait.prefetch) {
       prefetchSync(address);
@@ -34,7 +34,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     else if(address >= 0x0500'0000) word = ppu.readPRAM(mode, address);
     else if((address & 0xffff'fc00) == 0x0400'0000) word = bus.io[address & 0x3ff]->readIO(mode, address);
     else if((address & 0xff00'ffff) == 0x0400'0800) word = ((IO*)this)->readIO(mode, 0x0400'0800 | (address & 3));
-    else return openBus.get();
+    else return openBus.get(mode, address);
   }
 
   openBus.set(mode, address, word);
@@ -104,8 +104,10 @@ auto CPU::_wait(u32 mode, n32 address) -> u32 {
   return clocks;
 }
 
-auto CPU::OpenBus::get() -> n32 {
-  return data;
+auto CPU::OpenBus::get(u32 mode, n32 address) -> n32 {
+  if(mode & Word) address &= ~3;
+  if(mode & Half) address &= ~1;
+  return data >> (8 * (address & 3));
 }
 
 auto CPU::OpenBus::set(u32 mode, n32 address, n32 word) -> void {

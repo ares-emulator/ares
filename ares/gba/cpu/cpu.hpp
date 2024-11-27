@@ -228,7 +228,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   } memory;
 
   struct OpenBus {
-    auto get() -> n32;
+    auto get(u32 mode, n32 address) -> n32;
     auto set(u32 mode, n32 address, n32 word) -> void;
     n32 data;
     n32 iwramData;
