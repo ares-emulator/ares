@@ -17,7 +17,7 @@ auto BIOS::readROM(n25 address) -> n32 {
 auto BIOS::read(u32 mode, n25 address) -> n32 {
   //unmapped memory
   if(address >= 0x0000'4000) {
-    return cpu.pipeline.fetch.instruction;  //0000'4000-01ff'ffff
+    return cpu.getOpenBus();  //0000'4000-01ff'ffff
   }
 
   //GBA BIOS is read-protected; only the BIOS itself can read its own memory

@@ -3,13 +3,18 @@ auto CPU::sleep() -> void {
   prefetchStep(1);
 }
 
+auto CPU::getOpenBus() -> n32 {
+  return openBus.data;
+}
+
 template <bool UseDebugger>
 inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
   u32 clocks = _wait(mode, address);
-  u32 word = pipeline.fetch.instruction;
+  u32 word;
 
   if(address >= 0x1000'0000) {
     if constexpr(!UseDebugger) prefetchStep(clocks);
+    return getOpenBus();
   } else if(address & 0x0800'0000) {
     if(mode & Prefetch && wait.prefetch) {
       prefetchSync(address);
@@ -33,7 +38,10 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     else if(address >= 0x0500'0000) word = ppu.readPRAM(mode, address);
     else if((address & 0xffff'fc00) == 0x0400'0000) word = bus.io[address & 0x3ff]->readIO(mode, address);
     else if((address & 0xff00'ffff) == 0x0400'0800) word = ((IO*)this)->readIO(mode, 0x0400'0800 | (address & 3));
+    else return getOpenBus();
   }
+
+  setOpenBus(mode, address, word);
 
   return word;
 }
@@ -45,6 +53,36 @@ auto CPU::get(u32 mode, n32 address) -> n32 {
 
 auto CPU::getDebugger(u32 mode, n32 address) -> n32 {
   return getBus<true>(mode, address);
+}
+
+auto CPU::setOpenBus(u32 mode, n32 address, n32 word) -> void {
+  if(address >> 24 == 0x3) {
+    //open bus from IWRAM has unique behaviour
+    if(mode & Word) {
+      openBus.iwramData = word;
+    } else if(mode & Half) {
+      word &= 0xffff;
+      n32 mask = 0x0000ffff;
+      n32 shift = 8 * (address & 2);
+      mask = ~(mask << shift);
+      word <<= shift;
+      openBus.iwramData &= mask;
+      openBus.iwramData |= word;
+    } else if(mode & Byte) {
+      word &= 0xff;
+      n32 mask = 0x000000ff;
+      n32 shift = 8 * (address & 3);
+      mask = ~(mask << shift);
+      word <<= shift;
+      openBus.iwramData &= mask;
+      openBus.iwramData |= word;
+    }
+    openBus.data = openBus.iwramData;
+  } else {
+    if(mode & Byte) word = (word & 0xff) * 0x01010101;
+    if(mode & Half) word = (word & 0xffff) * 0x00010001;
+    openBus.data = word;
+  }
 }
 
 auto CPU::set(u32 mode, n32 address, n32 word) -> void {
@@ -69,6 +107,8 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
     else if((address & 0xffff'fc00) == 0x0400'0000) bus.io[address & 0x3ff]->writeIO(mode, address, word);
     else if((address & 0xff00'ffff) == 0x0400'0800) ((IO*)this)->writeIO(mode, 0x0400'0800 | (address & 3), word);
   }
+
+  setOpenBus(mode, address, word);
 }
 
 auto CPU::_wait(u32 mode, n32 address) -> u32 {

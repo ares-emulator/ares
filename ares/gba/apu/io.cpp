@@ -142,7 +142,7 @@ auto APU::readIO(n32 address) -> n8 {
 
   }
 
-  return cpu.pipeline.fetch.instruction.byte(address & 1);
+  return cpu.getOpenBus().byte(address & 1);
 }
 
 auto APU::writeIO(n32 address, n8 data) -> void {
