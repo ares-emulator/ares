@@ -78,4 +78,3 @@ namespace ares {
 #include <ares/memory/fixed-allocator.hpp>
 #include <ares/memory/readable.hpp>
 #include <ares/memory/writable.hpp>
-#include <ares/resource/resource.hpp>
