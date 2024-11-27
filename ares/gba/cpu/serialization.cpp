@@ -100,6 +100,9 @@ auto CPU::serialize(serializer& s) -> void {
   s(memory.ewramWait);
   s(memory.unknown2);
 
+  s(openBus.data);
+  s(openBus.iwramData);
+
   s(prefetch.slot);
   s(prefetch.addr);
   s(prefetch.load);
