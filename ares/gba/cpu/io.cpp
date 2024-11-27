@@ -244,7 +244,7 @@ auto CPU::readIO(n32 address) -> n8 {
 
   }
 
-  return cpu.getOpenBus().byte(address & 1);
+  return cpu.openBus.get().byte(address & 1);
 }
 
 auto CPU::writeIO(n32 address, n8 data) -> void {

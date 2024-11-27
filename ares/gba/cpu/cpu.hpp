@@ -60,11 +60,9 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   //bus.cpp
   auto sleep() -> void override;
-  auto getOpenBus() -> n32;
   template<bool UseDebugger> auto getBus(u32 mode, n32 address) -> n32;
   auto get(u32 mode, n32 address) -> n32 override;
   auto getDebugger(u32 mode, n32 address) -> n32 override;
-  auto setOpenBus(u32 mode, n32 address, n32 word) -> void;
   auto set(u32 mode, n32 address, n32 word) -> void override;
   auto _wait(u32 mode, n32 address) -> u32;
 
@@ -230,6 +228,8 @@ struct CPU : ARM7TDMI, Thread, IO {
   } memory;
 
   struct OpenBus {
+    auto get() -> n32;
+    auto set(u32 mode, n32 address, n32 word) -> void;
     n32 data;
     n32 iwramData;
   } openBus;

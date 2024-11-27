@@ -42,7 +42,7 @@ auto IO::writeIO(u32 mode, n32 address, n32 word) -> void {
 
 struct UnmappedIO : IO {
   auto readIO(n32 address) -> n8 override {
-    return cpu.getOpenBus().byte(address & 1);
+    return cpu.openBus.get().byte(address & 1);
   }
 
   auto writeIO(n32 address, n8 byte) -> void override {
