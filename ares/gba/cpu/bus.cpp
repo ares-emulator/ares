@@ -112,25 +112,17 @@ auto CPU::OpenBus::get(u32 mode, n32 address) -> n32 {
 
 auto CPU::OpenBus::set(u32 mode, n32 address, n32 word) -> void {
   if(address >> 24 == 0x3) {
-    //open bus from IWRAM has unique behaviour
+    //open bus from IWRAM only overwrites part of the last IWRAM value accessed
     if(mode & Word) {
       iwramData = word;
     } else if(mode & Half) {
-      word &= 0xffff;
-      n32 mask = 0x0000ffff;
-      n32 shift = 8 * (address & 2);
-      mask = ~(mask << shift);
-      word <<= shift;
-      iwramData &= mask;
-      iwramData |= word;
+      if(address & 2) {
+        iwramData.bit(16,31) = (n16)word;
+      } else {
+        iwramData.bit( 0,15) = (n16)word;
+      }
     } else if(mode & Byte) {
-      word &= 0xff;
-      n32 mask = 0x000000ff;
-      n32 shift = 8 * (address & 3);
-      mask = ~(mask << shift);
-      word <<= shift;
-      iwramData &= mask;
-      iwramData |= word;
+      iwramData.byte(address & 3) = (n8)word;
     }
     data = iwramData;
   } else {
