@@ -227,6 +227,13 @@ struct CPU : ARM7TDMI, Thread, IO {
     n4 unknown2;
   } memory;
 
+  struct OpenBus {
+    auto get(u32 mode, n32 address) -> n32;
+    auto set(u32 mode, n32 address, n32 word) -> void;
+    n32 data;
+    n32 iwramData;
+  } openBus;
+
   struct {
     auto empty() const { return addr == load; }
     auto full() const { return load - addr == 16; }
