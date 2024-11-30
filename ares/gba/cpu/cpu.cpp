@@ -73,7 +73,6 @@ auto CPU::setInterruptFlag(u32 source) -> void {
 }
 
 inline auto CPU::stepIRQ() -> void {
-  ARM7TDMI::irq = irq.synchronizer;
   irq.synchronizer = irq.ime[0] && (irq.enable[0] & irq.flag[0]);
   irq.enable[0] = irq.enable[1];
   irq.flag[0] = irq.flag[1];

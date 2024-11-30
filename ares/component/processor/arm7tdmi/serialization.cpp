@@ -62,10 +62,13 @@ auto ARM7TDMI::Pipeline::serialize(serializer& s) -> void {
   s(fetch.address);
   s(fetch.instruction);
   s(fetch.thumb);
+  s(fetch.irq);
   s(decode.address);
   s(decode.instruction);
   s(decode.thumb);
+  s(decode.irq);
   s(execute.address);
   s(execute.instruction);
   s(execute.thumb);
+  s(execute.irq);
 }
