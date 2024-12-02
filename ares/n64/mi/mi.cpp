@@ -100,6 +100,11 @@ auto MI::power(bool reset) -> void {
     rom.load(fp);
   }
 
+  if (system._BB()) {
+    revision.io = 0xB0;
+    revision.rac = 0xB0;
+  }
+
   ram.fill();
   scratch.fill();
   irq = {};
