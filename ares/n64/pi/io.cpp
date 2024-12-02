@@ -1,5 +1,6 @@
 auto PI::ioRead(u32 address) -> u32 {
-  address = (address & 0x3f) >> 2;
+  if(system._BB()) address = (address & 0x7f) >> 2;
+  else             address = (address & 0x3f) >> 2;
   n32 data;
 
   if(address == 0) {
@@ -78,12 +79,29 @@ auto PI::ioRead(u32 address) -> u32 {
     data.bit(0,31) = io.busLatch;
   }
 
+
+
+  if(address == 18) {
+    data.bit(0) = bb_gpio.power.data;
+    data.bit(1) = bb_gpio.led.data;
+    data.bit(2) = bb_gpio.rtc_clock.data;
+    data.bit(3) = bb_gpio.rtc_data.data;
+    data.bit(4) = bb_gpio.power.mask;
+    data.bit(5) = bb_gpio.led.mask;
+    data.bit(6) = bb_gpio.rtc_clock.mask;
+    data.bit(7) = bb_gpio.rtc_data.mask;
+    data.bit(22,24) = box_id.unk;
+    data.bit(25,26) = box_id.clock;
+    data.bit(30,31) = box_id.model;
+  }
+
   debugger.io(Read, address, data);
   return data;
 }
 
 auto PI::ioWrite(u32 address, u32 data_) -> void {
-  address = (address & 0x3f) >> 2;
+  if(system._BB()) address = (address & 0x7f) >> 2;
+  else             address = (address & 0x3f) >> 2;
   n32 data = data_;
 
   //only PI_STATUS can be written while PI is busy
@@ -172,6 +190,22 @@ auto PI::ioWrite(u32 address, u32 data_) -> void {
   if(address == 12) {
     //PI_BSD_DOM2_RLS
     bsd2.releaseDuration = data.bit(0,7);
+  }
+
+
+
+  if(address == 18) {
+    bb_gpio.power.data = data.bit(0);
+    bb_gpio.led.data = data.bit(1);
+    bb_gpio.rtc_clock.data = data.bit(2);
+    bb_gpio.rtc_data.data = data.bit(3);
+    bb_gpio.power.mask = data.bit(4);
+    bb_gpio.led.mask = data.bit(5);
+    bb_gpio.rtc_clock.mask = data.bit(6);
+    bb_gpio.rtc_data.mask = data.bit(7);
+
+    string display = {"[PI::ioWrite] gpio", string{bb_gpio.led.data}, " ", string{bb_gpio.power.data}};
+    debug(unimplemented, display);
   }
 
   debugger.io(Write, address, data);

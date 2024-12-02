@@ -60,6 +60,24 @@ struct PI : Memory::RCP<PI> {
     n4 pageSize;
     n2 releaseDuration;
   } bsd1, bsd2;
+
+  struct TriState {
+    n1 data;
+    n1 mask;
+  };
+
+  struct BoxID {
+    static constexpr u8 model = 0x01;  //model identifier
+    static constexpr u8 clock = 0x02;  //clock speed
+    static constexpr u8 unk = 0x01;
+  } box_id;
+
+  struct BBGPIO {
+    TriState power;
+    TriState led;
+    TriState rtc_clock;
+    TriState rtc_data;
+  } bb_gpio;
 };
 
 extern PI pi;

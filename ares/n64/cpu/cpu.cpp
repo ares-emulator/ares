@@ -58,12 +58,12 @@ auto CPU::synchronize() -> void {
    ai.clock -= clocks;
   rsp.clock -= clocks;
   rdp.clock -= clocks;
-  pif.clock -= clocks;
+  if(!system._BB()) pif.clock -= clocks;
   vi.main();
   ai.main();
   rsp.main();
   rdp.main();
-  pif.main();
+  if(!system._BB()) pif.main();
 
   queue.step(clocks, [](u32 event) {
     switch(event) {

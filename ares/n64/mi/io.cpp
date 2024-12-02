@@ -5,8 +5,8 @@ auto MI::readWord(u32 address_, Thread& thread) -> u32 {
   if(address <= 0x1fcb'ffff) {
     if(address <= 0x1fc3'ffff) {
       //bootrom/secure ram
-      auto read_rom = ~address.bit(17) ^ bb_exc.boot_swap;
-      auto read_ram =  address.bit(17) ^ bb_exc.boot_swap;
+      auto read_rom = ~address.bit(17) ^ ~bb_exc.boot_swap;
+      auto read_ram =  address.bit(17) ^ ~bb_exc.boot_swap;
       auto fetching = (address == 0x1fc0'0000)
                         & bb_exc.boot_swap
                         & cpu.pipeline.fetch;
@@ -23,7 +23,8 @@ auto MI::readWord(u32 address_, Thread& thread) -> u32 {
       return 0;
     }
     //virage
-    debug(unimplemented, "[MI::readWord] virage");
+    string display = {"[MI::readWord] virage ", hex(cpu.pipeline.pc)};
+    debug(unimplemented, display);
     return 0;
   }
   debug(unimplemented, "[MI::readWord] 0x1fcc'xxxx");
@@ -159,7 +160,8 @@ auto MI::writeWord(u32 address_, u32 data, Thread& thread) -> void {
       return;
     }
     //virage
-    debug(unimplemented, "[MI::writeWord] virage");
+    string display = {"[MI::writeWord] virage ", cpu.pipeline.pc};
+    debug(unimplemented, display);
     return;
   }
 }

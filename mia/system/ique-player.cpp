@@ -1,5 +1,6 @@
 struct iQuePlayer : System {
   auto name() -> string override { return "iQue Player"; }
+  auto extensions() -> vector<string> override { return {"flash"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
 };

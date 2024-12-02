@@ -19,4 +19,13 @@ auto PI::serialize(serializer& s) -> void {
   s(bsd2.pulseWidth);
   s(bsd2.pageSize);
   s(bsd2.releaseDuration);
+
+  s(bb_gpio.power.data);
+  s(bb_gpio.power.mask);
+  s(bb_gpio.led.data);
+  s(bb_gpio.led.mask);
+  s(bb_gpio.rtc_clock.data);
+  s(bb_gpio.rtc_clock.mask);
+  s(bb_gpio.rtc_data.data);
+  s(bb_gpio.rtc_data.mask);
 }

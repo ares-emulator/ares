@@ -89,8 +89,8 @@ auto errorWriteable(string name) -> void {
 }
 
 auto iQuePlayer::load() -> bool {
-  //game = mia::Medium::create("iQue Player");
-  //if(!game->load(Emulator::load(game, configuration.game))) return false;
+  game = mia::Medium::create("iQue Player");
+  if(!game->load("[system]")) return false;
 
   system = mia::System::create("iQue Player");
   if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
