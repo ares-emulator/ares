@@ -22,6 +22,18 @@ auto MI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "MI_VERSION",
     "MI_INTR",
     "MI_INTR_MASK",
+    "MI_UNKNOWN",
+    "MI_BB_SECURE_EXCEPTION"
+    "MI_UNKNOWN",
+    "MI_UNKNOWN",
+    "MI_UNKNOWN",
+    "MI_UNKNOWN",
+    "MI_UNKNOWN",
+    "MI_BB_RANDOM"
+    "MI_UNKNOWN",
+    "MI_UNKNOWN",
+    "MI_BB_INTERRUPT"
+    "MI_BB_MASK"
   };
 
   if(unlikely(tracer.io->enabled())) {

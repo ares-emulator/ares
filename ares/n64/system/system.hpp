@@ -1,3 +1,5 @@
+extern Random random;
+
 struct System {
   Node::System node;
   VFS::Pak pak;
@@ -9,6 +11,7 @@ struct System {
   auto name() const -> string { return information.name; }
   auto region() const -> Region { return information.region; }
   auto _DD() const -> bool { return information.dd; }
+  auto _BB() const -> bool { return information.bb; }
   auto frequency() const -> u32 { return information.frequency; }
   auto videoFrequency() const -> u32 { return information.videoFrequency; }
 
@@ -31,6 +34,7 @@ private:
     u32 frequency = 93'750'000 * 2;
     u32 videoFrequency = 48'681'818;
     bool dd = false;
+    bool bb = false;
   } information;
 
   auto initDebugHooks() -> void;
@@ -44,3 +48,5 @@ extern System system;
 auto Region::NTSC() -> bool { return system.region() == System::Region::NTSC; }
 auto Region::PAL() -> bool { return system.region() == System::Region::PAL; }
 auto _DD() -> bool { return system._DD(); }
+//auto _BB() -> bool { return system._BB(); }
+//auto frequency() -> u32 { return system.frequency(); }

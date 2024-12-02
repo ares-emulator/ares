@@ -39,14 +39,14 @@ auto CPU::main() -> void {
   vi.refreshed = false;
   queue.remove(Queue::GDB_Poll);
   if(GDB::server.hasClient()) {
-    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+    queue.insert(Queue::GDB_Poll, system.frequency()/60/240);
   }
 }
 
 auto CPU::gdbPoll() -> void {
   if(GDB::server.hasClient()) {
     GDB::server.updateLoop();
-    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+    queue.insert(Queue::GDB_Poll, system.frequency()/60/240);
   }
 }
 

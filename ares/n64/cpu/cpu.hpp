@@ -49,6 +49,7 @@ struct CPU : Thread {
     u64 nextpc = 0;  //pc after next instruction
     u32 state  = 0;  //current branch state
     u32 nstate = 0;  //next branch state
+    n1 fetch   = 0;  //currently fetching an instruction?
 
     enum : u32 {
       EndBlock  = 1 << 0,

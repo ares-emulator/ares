@@ -11,6 +11,7 @@ auto enumerate() -> vector<string> {
     "[Nintendo] Nintendo 64DD (NTSC-U)",
     "[Nintendo] Nintendo 64DD (NTSC-J)",
     "[Nintendo] Nintendo 64DD (NTSC-DEV)",
+    "[iQue] iQue Player"
   };
 }
 
@@ -44,6 +45,7 @@ auto option(string name, string value) -> bool {
   return true;
 }
 
+Random random;
 System system;
 Queue queue;
 #include "serialization.cpp"
@@ -71,10 +73,21 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.match("[Nintendo] Nintendo 64 (*)")) {
     information.name = "Nintendo 64";
     information.dd = 0;
+    information.bb = 0;
   }
   if(name.match("[Nintendo] Nintendo 64DD (*)")) {
     information.name = "Nintendo 64";
     information.dd = 1;
+    information.bb = 0;
+  }
+  if(name.match("[iQue] iQue Player")) {
+    information.name = "iQue Player";
+    information.dd = 0;
+    information.bb = 1;
+
+    information.region = Region::NTSC;
+    information.frequency = 144'000'000 * 2;
+    information.videoFrequency = 48'681'818;
   }
 
   if(name.find("NTSC")) {
@@ -97,7 +110,7 @@ auto System::load(Node::System& root, string name) -> bool {
   root = node;
   if(!node->setPak(pak = platform->pak(node))) return false;
 
-  cartridgeSlot.load(node);
+  if(!_BB()) cartridgeSlot.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
   controllerPort3.load(node);
@@ -107,13 +120,14 @@ auto System::load(Node::System& root, string name) -> bool {
   vi.load(node);
   ai.load(node);
   pi.load(node);
-  pif.load(node);
+  if(!_BB()) pif.load(node);
   ri.load(node);
   si.load(node);
   cpu.load(node);
   rsp.load(node);
   rdp.load(node);
   if(_DD()) dd.load(node);
+
   #if defined(VULKAN)
   vulkan.load(node);
   #endif
@@ -288,7 +302,7 @@ auto System::unload() -> void {
   #if defined(VULKAN)
   vulkan.unload();
   #endif
-  cartridgeSlot.unload();
+  if(!_BB()) cartridgeSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   controllerPort3.unload();
@@ -298,7 +312,7 @@ auto System::unload() -> void {
   vi.unload();
   ai.unload();
   pi.unload();
-  pif.unload();
+  if(!_BB()) pif.unload();
   ri.unload();
   si.unload();
   cpu.unload();
@@ -322,6 +336,8 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
+  random.entropy(Random::Entropy::None);
+
   if constexpr(Accuracy::CPU::Recompiler || Accuracy::RSP::Recompiler) {
     ares::Memory::FixedAllocator::get().release();
   }
@@ -333,7 +349,7 @@ auto System::power(bool reset) -> void {
   vi.power(reset);
   ai.power(reset);
   pi.power(reset);
-  pif.power(reset);
+  if(!_BB()) pif.power(reset);
   cic.power(reset);
   ri.power(reset);
   si.power(reset);

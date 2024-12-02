@@ -7,6 +7,7 @@ namespace Systems {
   #include "game-boy.cpp"
   #include "game-boy-color.cpp"
   #include "game-boy-advance.cpp"
+  #include "ique-player.cpp"
   #include "master-system.cpp"
   #include "game-gear.cpp"
   #include "mega-drive.cpp"
@@ -58,6 +59,7 @@ auto System::create(string name) -> shared_pointer<Pak> {
   if(name == "Neo Geo Pocket Color") return new Systems::NeoGeoPocketColor;
   if(name == "Nintendo 64") return new Systems::Nintendo64;
   if(name == "Nintendo 64DD") return new Systems::Nintendo64DD;
+  if(name == "iQue Player") return new Systems::iQuePlayer;
   if(name == "PC Engine") return new Systems::PCEngine;
   if(name == "Saturn") return new Systems::Saturn;
   if(name == "SuperGrafx") return new Systems::SuperGrafx;
