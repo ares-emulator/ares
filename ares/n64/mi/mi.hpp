@@ -39,6 +39,34 @@ struct MI : Memory::RCP<MI> {
   auto readWord(u32 address_, Thread& thread) -> u32;
   auto writeWord(u32 address_, u32 data, Thread& thread) -> void;
 
+  template<u32 Size>
+  inline auto writeBurst(u32 address, u32 *value, Thread& thread, const char *peripheral) -> void {
+    mi.writeWord(address | 0x00, value[0], thread);
+    mi.writeWord(address | 0x04, value[1], thread);
+    mi.writeWord(address | 0x08, value[2], thread);
+    mi.writeWord(address | 0x0c, value[3], thread);
+    if (Size == ICache) {
+      mi.writeWord(address | 0x10, value[4], thread);
+      mi.writeWord(address | 0x14, value[5], thread);
+      mi.writeWord(address | 0x18, value[6], thread);
+      mi.writeWord(address | 0x1c, value[7], thread);
+    }
+  }
+
+  template<u32 Size>
+  inline auto readBurst(u32 address, u32 *value, Thread& thread, const char *peripheral) -> void {
+    value[0] = mi.readWord(address | 0x00, thread);
+    value[1] = mi.readWord(address | 0x04, thread);
+    value[2] = mi.readWord(address | 0x08, thread);
+    value[3] = mi.readWord(address | 0x0c, thread);
+    if (Size == ICache) {
+      value[4] = mi.readWord(address | 0x10, thread);
+      value[5] = mi.readWord(address | 0x14, thread);
+      value[6] = mi.readWord(address | 0x18, thread);
+      value[7] = mi.readWord(address | 0x1c, thread);
+    }
+  }
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 

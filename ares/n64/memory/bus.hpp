@@ -50,6 +50,10 @@ inline auto Bus::readBurst(u32 address, u32 *data, Thread& thread) -> void {
     return;
   }
 
+  if(address >= 0x1fc0'0000 && address <= 0x1fc8'0000) {
+    return mi.readBurst<Size>(address, data, thread, "CPU");
+  }
+
   return freezeUncached(address);
 }
 
@@ -95,6 +99,10 @@ inline auto Bus::writeBurst(u32 address, u32 *data, Thread& thread) -> void {
     // FIXME: not hardware validated, but a good guess
     rdram.writeWord(address | 0x0, data[0], thread);
     return;
+  }
+
+  if(address >= 0x1fc0'0000 && address <= 0x1fc8'0000) {
+    return mi.writeBurst<Size>(address, data, thread, "CPU");
   }
 
   return freezeUncached(address);
