@@ -166,6 +166,14 @@ auto CPU::power(bool reset) -> void {
   fenv.setRound(float_env::toNearest);
   context.setMode();
 
+  if (system._BB()) {
+    //Note: iQue divmode is still 1:1.5 but the value reported is different
+    scc.configuration.systemClockRatio = 1;
+
+    scc.coprocessor.revision = 0x40;
+    scc.coprocessor.implementation = 0x0B;
+  }
+
   if constexpr(Accuracy::CPU::Recompiler) {
     auto buffer = ares::Memory::FixedAllocator::get().tryAcquire(64_MiB);
     recompiler.allocator.resize(64_MiB, bump_allocator::executable, buffer);
