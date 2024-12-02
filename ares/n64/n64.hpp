@@ -75,6 +75,9 @@ namespace ares::Nintendo64 {
       SI_DMA_Read,
       SI_DMA_Write,
       SI_BUS_Write,
+      VIRAGE0_Command,
+      VIRAGE1_Command,
+      VIRAGE2_Command,
       RTC_Tick,
       DD_Clock_Tick,
       DD_MECHA_Response,
@@ -110,4 +113,5 @@ namespace ares::Nintendo64 {
   #include <n64/rdp/rdp.hpp>
   #include <n64/memory/bus.hpp>
   #include <n64/pi/bus.hpp>
+  #include <n64/virage/virage.hpp>
 }

@@ -17,6 +17,7 @@ ares.objects += ares-n64-rdram
 ares.objects += ares-n64-cpu
 ares.objects += ares-n64-rsp
 ares.objects += ares-n64-rdp
+ares.objects += ares-iqueplayer-virage
 
 $(object.path)/ares-n64-memory.o:     $(ares.path)/n64/memory/memory.cpp
 $(object.path)/ares-n64-system.o:     $(ares.path)/n64/system/system.cpp
@@ -37,6 +38,8 @@ $(object.path)/ares-n64-rdram.o:      $(ares.path)/n64/rdram/rdram.cpp
 $(object.path)/ares-n64-cpu.o:        $(ares.path)/n64/cpu/cpu.cpp
 $(object.path)/ares-n64-rsp.o:        $(ares.path)/n64/rsp/rsp.cpp
 $(object.path)/ares-n64-rdp.o:        $(ares.path)/n64/rdp/rdp.cpp
+
+$(object.path)/ares-iqueplayer-virage.o: $(ares.path)/n64/virage/virage.cpp
 
 ifeq ($(vulkan),true)
   ifeq ($(platform),macos)

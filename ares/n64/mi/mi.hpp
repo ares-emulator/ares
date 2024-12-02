@@ -18,6 +18,10 @@ struct MI : Memory::RCP<MI> {
     } tracer;
   } debugger;
 
+  inline auto inSecureMode() -> bool {
+    return bool(bb_exc.secure);
+  }
+
   //mi.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;

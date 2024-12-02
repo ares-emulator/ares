@@ -22,9 +22,6 @@ auto MI::readWord(u32 address_, Thread& thread) -> u32 {
         return scratch.read<Word>(address & 0x7fff);
       return 0;
     }
-    //virage
-    string display = {"[MI::readWord] virage ", hex(cpu.pipeline.pc)};
-    debug(unimplemented, display);
     return 0;
   }
   debug(unimplemented, "[MI::readWord] 0x1fcc'xxxx");

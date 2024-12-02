@@ -1,0 +1,105 @@
+auto Virage::commandFinished() -> void {
+  u8 operation = io.command.bit(24,31);
+  switch(operation) {
+    case 2: { //Save sram to flash
+      //TODO delay
+      for (auto i : range(flash.size))
+        flash.data[i] = sram.data[i];
+      io.storeDone = 1;
+    } break;
+
+    case 3: { //Reload sram from flash
+      //TODO delay
+      for (auto i : range(flash.size))
+        sram.data[i] = flash.data[i];
+      io.loadDone = 1;
+    } break;
+
+    default:
+      debug(unimplemented, "[Virage::command] command=%08X", io.command);
+  }
+  io.busy = 0;
+}
+
+auto Virage::command(u32 command) -> void {
+  if (io.busy) {
+    debug(unusual, "[Virage::command] Sent command %08X while busy with last command %08X", command, io.command);
+    return;
+  }
+  io.busy = 1;
+  io.command = command;
+  queue.insert(queueID, 200); //TODO: cycles
+}
+
+auto Virage::readWord(u32 address, Thread& thread) -> u32 {
+  if (!mi.inSecureMode()) {
+    debug(unusual, "[Virage::readWord] Attempted read from Virage address space outside of secure mode");
+    return 0;
+  }
+
+  address &= 0xFFFF;
+  n32 data;
+
+  if(address < 0x8000)
+  { //sram
+    data = sram.read<Word>(address);
+    debugger.ioSRAM(Read, address, data);
+  }
+  else if(address < 0xC000)
+  { //configuration registers?
+    address = (address & 0x1F) >> 2;
+
+    if(address == 6 || address == 7)
+      debug(unimplemented, "[Virage::readWord] Uncaught read from Virage config register %d", address);
+
+    data = io.configReg[address];
+    debugger.ioConfigReg(Read, address, data);
+  }
+  else if(address < 0xE000)
+  { //control/status register
+    data.bit(0) = io.busy;
+    data.bit(23) = io.loadDone;
+    data.bit(29) = io.storeDone;
+    debugger.ioStatusReg(Read, data);
+  }
+  else
+  { //command register
+    debug(unimplemented, "[Virage::readWord] Read from Virage command register");
+  }
+  return data;
+}
+
+auto Virage::writeWord(u32 address, u32 data, Thread& thread) -> void {
+  if (!mi.inSecureMode()) {
+    debug(unusual, "[Virage::writeWord] Attempted write to Virage address space outside of secure mode");
+    return;
+  }
+
+  address &= 0xFFFF;
+
+  if(address < 0x8000)
+  { // sram
+    sram.write<Word>(address, data);
+    debugger.ioSRAM(Write, address, data);
+  }
+  else if(address < 0xC000)
+  { // configuration registers?
+    address = (address & 0x1F) >> 2;
+
+    if(address == 6 || address == 7)
+      debug(unimplemented, "[Virage::writeWord] Uncaught write to Virage config register %d", address);
+
+    io.configReg[address] = data;
+    debugger.ioConfigReg(Write, address, data);
+  }
+  else if(address < 0xE000)
+  { // control/status register
+    //TODO
+    debugger.ioStatusReg(Write, data);
+  }
+  else
+  { //command register
+    command(data);
+    debugger.ioControlReg(Write, data);
+  }
+}

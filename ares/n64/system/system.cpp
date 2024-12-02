@@ -127,6 +127,11 @@ auto System::load(Node::System& root, string name) -> bool {
   rsp.load(node);
   rdp.load(node);
   if(_DD()) dd.load(node);
+  if(_BB()) {
+    virage0.load(node);
+    virage1.load(node);
+    virage2.load(node);
+  }
 
   #if defined(VULKAN)
   vulkan.load(node);
@@ -319,6 +324,11 @@ auto System::unload() -> void {
   rsp.unload();
   rdp.unload();
   if(_DD()) dd.unload();
+  if(_BB()) {
+    virage0.unload();
+    virage1.unload();
+    virage2.unload();
+  }
   pak.reset();
   node.reset();
 }
@@ -331,6 +341,11 @@ auto System::save() -> void {
   controllerPort3.save();
   controllerPort4.save();
   if(_DD()) dd.save();
+  if(_BB()) {
+    virage0.save();
+    virage1.save();
+    virage2.save();
+  }
 }
 
 auto System::power(bool reset) -> void {
@@ -356,6 +371,11 @@ auto System::power(bool reset) -> void {
   cpu.power(reset);
   rsp.power(reset);
   rdp.power(reset);
+  if(_BB()) {
+    virage0.power(reset);
+    virage1.power(reset);
+    virage2.power(reset);
+  }
 }
 
 }

@@ -18,9 +18,14 @@ inline auto Bus::read(u32 address, Thread& thread, const char *peripheral) -> u6
   if(address <= 0x048f'ffff) return si.read<Size>(address, thread);
   if(address <= 0x04ff'ffff) return freezeUnmapped(address), 0;
   if(address <= 0x1fbf'ffff) return pi.read<Size>(address, thread);
-  if(address <= 0x1fcf'ffff)
-    if(system._BB()) return mi.read<Size>(address, thread);
-    else             return si.read<Size>(address, thread);
+  if(system._BB()) {
+    if(address <= 0x1fc7'ffff) return mi.read<Size>(address, thread);
+    if(address <= 0x1fc8'ffff) return virage0.read<Size>(address, thread);
+    if(address <= 0x1fc9'ffff) return virage1.read<Size>(address, thread);
+    if(address <= 0x1fcf'ffff) return virage2.read<Size>(address, thread);
+  } else {
+    if(address <= 0x1fcf'ffff) return si.read<Size>(address, thread);
+  }
   if(address <= 0x7fff'ffff) return pi.read<Size>(address, thread);
   return freezeUnmapped(address), 0;
 }

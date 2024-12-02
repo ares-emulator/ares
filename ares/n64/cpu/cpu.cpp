@@ -74,6 +74,9 @@ auto CPU::synchronize() -> void {
     case Queue::SI_DMA_Read:   return si.dmaRead();
     case Queue::SI_DMA_Write:  return si.dmaWrite();
     case Queue::SI_BUS_Write:  return si.writeFinished();
+    case Queue::VIRAGE0_Command: return virage0.commandFinished();
+    case Queue::VIRAGE1_Command: return virage1.commandFinished();
+    case Queue::VIRAGE2_Command: return virage2.commandFinished();
     case Queue::RTC_Tick:      return cartridge.rtc.tick();
     case Queue::DD_Clock_Tick:  return dd.rtc.tickClock();
     case Queue::DD_MECHA_Response:  return dd.mechaResponse();
