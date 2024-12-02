@@ -7,18 +7,17 @@ auto MI::readWord(u32 address_, Thread& thread) -> u32 {
       //bootrom/secure ram
       auto read_rom = ~address.bit(17) ^ ~bb_exc.boot_swap;
       auto read_ram =  address.bit(17) ^ ~bb_exc.boot_swap;
-      auto fetching = (address == 0x1fc0'0000)
-                        & bb_exc.boot_swap
-                        & cpu.pipeline.fetch;
-      if(fetching) bb_exc.secure = 1;
+      
+      auto fetching = (address == 0x1fc0'0000) & cpu.pipeline.fetch;
+      if(fetching & (bb_exc.boot_swap | enter_secure_mode())) bb_exc.secure = 1;
 
-      if(read_rom & bb_exc.secure) return rom.read<Word>(address & 0x1fff);
-      if(read_ram & bb_exc.secure) return ram.read<Word>(address & 0xffff);
+      if(read_rom & secure()) return rom.read<Word>(address & 0x1fff);
+      if(read_ram & secure()) return ram.read<Word>(address & 0xffff);
       return 0; // TODO mirroring?
     }
     if(address <= 0x1fc7'ffff) {
       //scratch ram
-      if(bb_exc.secure | bb_exc.sk_ram_access)
+      if(secure() | bb_exc.sk_ram_access)
         return scratch.read<Word>(address & 0x7fff);
       return 0;
     }
@@ -83,7 +82,7 @@ auto MI::ioRead(u32 address) -> u32 {
     data.bit( 7) = bb_exc.md;
     data.bit(24) = bb_exc.sk_ram_access;
 
-    if(!bb_exc.secure) bb_exc.application = 1;
+    if(!secure()) bb_exc.application = 1;
     poll();
   }
 
@@ -146,13 +145,13 @@ auto MI::writeWord(u32 address_, u32 data, Thread& thread) -> void {
       auto write_rom = ~address.bit(17) ^ bb_exc.boot_swap;
       auto write_ram =  address.bit(17) ^ bb_exc.boot_swap;
 
-      if(write_rom & bb_exc.secure) return rom.write<Word>(address & 0x1fff, data);
-      if(write_ram & bb_exc.secure) return ram.write<Word>(address & 0xffff, data);
+      if(write_rom & secure()) return rom.write<Word>(address & 0x1fff, data);
+      if(write_ram & secure()) return ram.write<Word>(address & 0xffff, data);
       return; // TODO mirroring?
     }
     if(address <= 0x1fc7'ffff) {
       //scratch ram
-      if(bb_exc.secure | bb_exc.sk_ram_access)
+      if(secure() | bb_exc.sk_ram_access)
         return scratch.write<Word>(address & 0x7fff, data);
       return;
     }
@@ -212,7 +211,7 @@ auto MI::ioWrite(u32 address, u32 data_) -> void {
 
   if(address == 5) {
     //MI_BB_SECURE_EXCEPTION
-    if(bb_exc.secure) {
+    if(secure()) {
       bb_exc.secure        = data.bit( 0);
       bb_exc.boot_swap     = data.bit( 1);
       bb_exc.application   = data.bit( 2);

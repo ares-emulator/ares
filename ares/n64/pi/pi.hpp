@@ -3,6 +3,8 @@
 struct PI : Memory::RCP<PI> {
   Node::Object node;
 
+  struct BBAccess;
+
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
@@ -17,6 +19,7 @@ struct PI : Memory::RCP<PI> {
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto power(bool reset) -> void;
+  auto access() -> BBAccess;
 
   //dma.cpp
   auto dmaRead() -> void;
@@ -25,7 +28,15 @@ struct PI : Memory::RCP<PI> {
   auto dmaDuration(bool read) -> u32;
 
   //io.cpp
+  auto regsRead(u32 address) -> u32;
+  auto bufRead(u32 address) -> u32;
+  auto atbRead(u32 address) -> u32;
+  auto ideRead(u32 address) -> u32;
   auto ioRead(u32 address) -> u32;
+  auto regsWrite(u32 address, u32 data) -> void;
+  auto bufWrite(u32 address, u32 data) -> void;
+  auto atbWrite(u32 address, u32 data) -> void;
+  auto ideWrite(u32 address, u32 data) -> void;
   auto ioWrite(u32 address, u32 data) -> void;
 
   //bus.hpp
@@ -73,11 +84,26 @@ struct PI : Memory::RCP<PI> {
   } box_id;
 
   struct BBGPIO {
-    TriState power;
-    TriState led;
+    TriState power = { .mask = 1 };
+    TriState led = { .mask = 1 };
     TriState rtc_clock;
     TriState rtc_data;
   } bb_gpio;
+
+  struct BBAccess {
+    n1 buf;
+    n1 flash;
+    n1 atb;
+    n1 aes;
+    n1 dma;
+    n1 gpio;
+    n1 ide;
+    n1 err;
+  };
+
+  BBAccess bb_allowed;
+
+  n16 bb_ide[4];
 };
 
 extern PI pi;

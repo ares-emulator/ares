@@ -32,7 +32,7 @@ auto Virage::command(u32 command) -> void {
 }
 
 auto Virage::readWord(u32 address, Thread& thread) -> u32 {
-  if (!mi.inSecureMode()) {
+  if (!mi.secure()) {
     debug(unusual, "[Virage::readWord] Attempted read from Virage address space outside of secure mode");
     return 0;
   }
@@ -70,7 +70,7 @@ auto Virage::readWord(u32 address, Thread& thread) -> u32 {
 }
 
 auto Virage::writeWord(u32 address, u32 data, Thread& thread) -> void {
-  if (!mi.inSecureMode()) {
+  if (!mi.secure()) {
     debug(unusual, "[Virage::writeWord] Attempted write to Virage address space outside of secure mode");
     return;
   }

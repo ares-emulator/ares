@@ -1,4 +1,4 @@
-auto PI::ioRead(u32 address) -> u32 {
+auto PI::regsRead(u32 address) -> u32 {
   if(system._BB()) address = (address & 0x7f) >> 2;
   else             address = (address & 0x3f) >> 2;
   n32 data;
@@ -81,25 +81,81 @@ auto PI::ioRead(u32 address) -> u32 {
 
 
 
-  if(address == 18) {
-    data.bit(0) = bb_gpio.power.data;
-    data.bit(1) = bb_gpio.led.data;
-    data.bit(2) = bb_gpio.rtc_clock.data;
-    data.bit(3) = bb_gpio.rtc_data.data;
-    data.bit(4) = bb_gpio.power.mask;
-    data.bit(5) = bb_gpio.led.mask;
-    data.bit(6) = bb_gpio.rtc_clock.mask;
-    data.bit(7) = bb_gpio.rtc_data.mask;
-    data.bit(22,24) = box_id.unk;
-    data.bit(25,26) = box_id.clock;
-    data.bit(30,31) = box_id.model;
+  if(address == 24) {
+    if(access().gpio) {
+      data.bit(0) = bb_gpio.power.data;
+      data.bit(1) = bb_gpio.led.data;
+      data.bit(2) = bb_gpio.rtc_clock.data;
+      data.bit(3) = bb_gpio.rtc_data.data;
+      data.bit(4) = bb_gpio.power.mask;
+      data.bit(5) = bb_gpio.led.mask;
+      data.bit(6) = bb_gpio.rtc_clock.mask;
+      data.bit(7) = bb_gpio.rtc_data.mask;
+      data.bit(22,24) = box_id.unk;
+      data.bit(25,26) = box_id.clock;
+      data.bit(30,31) = box_id.model;
+    }
   }
 
   debugger.io(Read, address, data);
   return data;
 }
 
-auto PI::ioWrite(u32 address, u32 data_) -> void {
+auto PI::bufRead(u32 address) -> u32 {
+  auto data = 0;
+  debugger.io(Read, address, data);
+  return data;
+}
+
+auto PI::atbRead(u32 address) -> u32 {
+  auto data = 0;
+  debugger.io(Read, address, data);
+  return data;
+}
+
+auto PI::ideRead(u32 address_) -> u32 {
+  if(!access().ide) return 0;
+
+  n32 address = address_;
+
+  n32 data;
+
+  auto device = address.bit(17,19);
+  switch(device) {
+    case 1: {
+      data.bit(0,31) = 0;
+      if(unlikely(debugger.tracer.io->enabled())) {
+        string message = {"IDE3: ", hex(bb_ide[3])};
+        debugger.tracer.io->notify(message);
+      }
+    } break;
+    case 4: {
+      data.bit(16,31) = bb_ide[0];
+    } break;
+    case 5: {
+      data.bit(16,31) = bb_ide[1];
+    } break;
+    case 6: {
+      data.bit(16,31) = bb_ide[2];
+    } break;
+    case 7: {
+      data.bit(16,31) = bb_ide[3];
+    } break;
+  }
+
+  debugger.io(Read, address, data);
+  return data;
+}
+
+auto PI::ioRead(u32 address) -> u32 {
+  if(address <= 0x0460'ffff) return regsRead(address);
+  if(address <= 0x0461'04ff) return bufRead(address);
+  if(address <= 0x0461'07ff) return atbRead(address);
+  if(address <= 0x0461'ffff) return 0; //unmapped
+  return ideRead(address);
+}
+
+auto PI::regsWrite(u32 address, u32 data_) -> void {
   if(system._BB()) address = (address & 0x7f) >> 2;
   else             address = (address & 0x3f) >> 2;
   n32 data = data_;
@@ -194,19 +250,66 @@ auto PI::ioWrite(u32 address, u32 data_) -> void {
 
 
 
-  if(address == 18) {
-    bb_gpio.power.data = data.bit(0);
-    bb_gpio.led.data = data.bit(1);
-    bb_gpio.rtc_clock.data = data.bit(2);
-    bb_gpio.rtc_data.data = data.bit(3);
-    bb_gpio.power.mask = data.bit(4);
-    bb_gpio.led.mask = data.bit(5);
-    bb_gpio.rtc_clock.mask = data.bit(6);
-    bb_gpio.rtc_data.mask = data.bit(7);
+  if(address == 24) {
+    if(access().gpio) {
+      bb_gpio.power.data = data.bit(0);
+      bb_gpio.led.data = data.bit(1);
+      bb_gpio.rtc_clock.data = data.bit(2);
+      bb_gpio.rtc_data.data = data.bit(3);
+      bb_gpio.power.mask = data.bit(4);
+      bb_gpio.led.mask = data.bit(5);
+      bb_gpio.rtc_clock.mask = data.bit(6);
+      bb_gpio.rtc_data.mask = data.bit(7);
 
-    string display = {"[PI::ioWrite] gpio", string{bb_gpio.led.data}, " ", string{bb_gpio.power.data}};
-    debug(unimplemented, display);
+      string display = {"[PI::ioWrite] gpio ", string{bb_gpio.led.data}, " ", string{bb_gpio.power.data}};
+      debug(unimplemented, display);
+    }
   }
+}
 
+auto PI::bufWrite(u32 address, u32 data_) -> void {
+  return;
+}
+
+auto PI::atbWrite(u32 address, u32 data_) -> void {
+  return;
+}
+
+auto PI::ideWrite(u32 address_, u32 data_) -> void {
+  if(!access().ide) return;
+
+  n32 address = address_;
+  n32 data = data_;
+
+  auto device = address.bit(17,19);
+  switch(device) {
+    case 1: {
+      if(unlikely(debugger.tracer.io->enabled())) {
+        string message = {"IDE3: ", hex(bb_ide[3])};
+        debugger.tracer.io->notify(message);
+      }
+    } break;
+    case 4: {
+      bb_ide[0] = data.bit(16,31);
+    } break;
+    case 5: {
+      bb_ide[1] = data.bit(16,31);
+    } break;
+    case 6: {
+      bb_ide[2] = data.bit(16,31);
+    } break;
+    case 7: {
+      bb_ide[3] = data.bit(16,31);
+    } break;
+  }
+}
+
+auto PI::ioWrite(u32 address, u32 data) -> void {
   debugger.io(Write, address, data);
+
+  if(address <= 0x0460'ffff) return regsWrite(address, data);
+  if(address <= 0x0461'04ff) return bufWrite(address, data);
+  if(address <= 0x0461'07ff) return atbWrite(address, data);
+  if(address <= 0x0461'ffff) return; //unmapped
+  return ideWrite(address, data);
 }

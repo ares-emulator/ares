@@ -82,17 +82,20 @@ auto MI::poll() -> void {
     line |= bb_irq.btn   .line & bb_irq.btn   .mask;
     line |= bb_irq.md    .line & bb_irq.md    .mask;
 
-    bool trap = 0;
-    trap |= bb_exc.application;
-    trap |= bb_exc.timer;
-    trap |= bb_exc.pi_error;
-    trap |= bb_exc.mi_error;
-    trap |= bb_exc.button;
-    trap |= bb_exc.md;
-
-    cpu.scc.nmiPending |= trap;
+    cpu.scc.nmiPending |= enter_secure_mode();
   }
   cpu.scc.cause.interruptPending.bit(2) = line;
+}
+
+auto MI::enter_secure_mode() const -> bool {
+  bool enter = 0;
+  enter |= bb_exc.application;
+  enter |= bb_exc.timer;
+  enter |= bb_exc.pi_error;
+  enter |= bb_exc.mi_error;
+  enter |= bb_exc.button;
+  enter |= bb_exc.md;
+  return enter;
 }
 
 auto MI::power(bool reset) -> void {

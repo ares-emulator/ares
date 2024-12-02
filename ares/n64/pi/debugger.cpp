@@ -17,11 +17,27 @@ auto PI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "PI_BSD_DOM2_PWD",
     "PI_BSD_DOM2_PGS",
     "PI_BSD_DOM2_RLS",
+    "PI_UNKNOWN",
+    "PI_UNKNOWN",
+    "PI_UNKNOWN",
+    "PI_BB_ATB_UPPER",
+    "PI_UNKNOWN",
+    "PI_BB_NAND_CTRL",
+    "PI_BB_NAND_CFG",
+    "PI_UNKNOWN",
+    "PI_UNKNOWN",
+    "PI_BB_RD_LEN",
+    "PI_BB_WR_LEN",
+    "PI_BB_GPIO",
+    "PI_UNKNOWN",
+    "PI_UNKNOWN",
+    "PI_UNKNOWN",
+    "PI_BB_NAND_ADDR",
   };
 
   if(unlikely(tracer.io->enabled())) {
     string message;
-    string name = registerNames(address, "PI_UNKNOWN");
+    string name = registerNames(address, {"PI_UNKNOWN(", hex(address), ")"});
     if(mode == Read) {
       message = {name.split("|").first(), " => ", hex(data, 8L)};
     }

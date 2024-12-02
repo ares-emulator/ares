@@ -28,4 +28,15 @@ auto PI::serialize(serializer& s) -> void {
   s(bb_gpio.rtc_clock.mask);
   s(bb_gpio.rtc_data.data);
   s(bb_gpio.rtc_data.mask);
+
+  s(bb_allowed.buf);
+  s(bb_allowed.flash);
+  s(bb_allowed.atb);
+  s(bb_allowed.aes);
+  s(bb_allowed.dma);
+  s(bb_allowed.gpio);
+  s(bb_allowed.ide);
+  s(bb_allowed.err);
+
+  s(bb_ide);
 }

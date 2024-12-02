@@ -111,7 +111,7 @@ namespace ares::Nintendo64 {
   #include <n64/rdram/rdram.hpp>
   #include <n64/rsp/rsp.hpp>
   #include <n64/rdp/rdp.hpp>
+  #include <n64/virage/virage.hpp>
   #include <n64/memory/bus.hpp>
   #include <n64/pi/bus.hpp>
-  #include <n64/virage/virage.hpp>
 }
