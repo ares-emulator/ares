@@ -14,6 +14,7 @@ using namespace hiro;
 #endif
 
 #include <ares/ares.hpp>
+#include <ares/resource/resource.hpp>
 #include <mia/resource/resource.hpp>
 
 namespace mia {

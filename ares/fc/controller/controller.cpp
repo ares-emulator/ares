@@ -1,4 +1,5 @@
 #include <fc/fc.hpp>
+#include <ares/resource/resource.hpp>
 
 namespace ares::Famicom {
 

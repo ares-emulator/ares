@@ -1,4 +1,5 @@
 #include <ms/ms.hpp>
+#include <ares/resource/resource.hpp>
 
 namespace ares::MasterSystem {
 

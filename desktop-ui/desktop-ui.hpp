@@ -5,6 +5,7 @@
 using namespace hiro;
 
 #include <ares/ares.hpp>
+#include <ares/resource/resource.hpp>
 #include <nall/gdb/server.hpp>
 #include <mia/mia.hpp>
 

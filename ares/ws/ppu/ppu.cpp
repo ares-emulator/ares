@@ -1,4 +1,5 @@
 #include <ws/ws.hpp>
+#include <ares/resource/resource.hpp>
 
 namespace ares::WonderSwan {
 
