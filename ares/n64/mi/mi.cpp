@@ -9,17 +9,21 @@ MI mi;
 
 auto MI::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("MI");
-  rom.allocate(0x2000);
-  ram.allocate(0x10000);
-  scratch.allocate(0x8000);
+  if (system._BB()) {
+    rom.allocate(0x2000);
+    ram.allocate(0x10000);
+    scratch.allocate(0x8000);
+  }
 
   debugger.load(node);
 }
 
 auto MI::unload() -> void {
   node.reset();
-  rom.reset();
-  ram.reset();
+  if (system._BB()) {
+    rom.reset();
+    ram.reset();
+  }
   debugger = {};
 }
 
@@ -99,22 +103,22 @@ auto MI::enter_secure_mode() const -> bool {
 }
 
 auto MI::power(bool reset) -> void {
-  if(auto fp = system.pak->read("boot.rom")) {
-    rom.load(fp);
-  }
+  irq = {};
+  io = {};
 
   if (system._BB()) {
     revision.io = 0xB0;
     revision.rac = 0xB0;
+    if(auto fp = system.pak->read("boot.rom")) {
+      rom.load(fp);
+    }
+    ram.fill();
+    scratch.fill();
+    bb = {};
+    bb_exc = {};
+    bb_exc.boot_swap = 1;
   }
 
-  ram.fill();
-  scratch.fill();
-  irq = {};
-  io = {};
-  bb = {};
-  bb_exc = {};
-  bb_exc.boot_swap = 1;
 }
 
 }
