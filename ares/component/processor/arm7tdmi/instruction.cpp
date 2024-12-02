@@ -1,7 +1,9 @@
 auto ARM7TDMI::fetch() -> void {
   pipeline.execute = pipeline.decode;
+  pipeline.execute.irq = pipeline.execute.irq & irq;
   pipeline.decode = pipeline.fetch;
   pipeline.decode.thumb = cpsr().t;
+  pipeline.decode.irq = !cpsr().i;
 
   u32 sequential = Sequential;
   if(pipeline.nonsequential) {
@@ -28,11 +30,9 @@ auto ARM7TDMI::instruction() -> void {
     pipeline.fetch.instruction = read(Prefetch | size | Nonsequential, pipeline.fetch.address);
     fetch();
   }
-
-  n1 irqRaised = irq;
   fetch();
 
-  if(irqRaised && !cpsr().i) {
+  if(pipeline.execute.irq) {
     exception(PSR::IRQ, 0x18);
     if(pipeline.execute.thumb) r(14).data += 2;
     return;

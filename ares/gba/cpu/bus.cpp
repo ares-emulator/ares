@@ -1,5 +1,6 @@
 auto CPU::sleep() -> void {
   dmaRun();
+  ARM7TDMI::irq = irq.synchronizer;
   prefetchStep(1);
 }
 
@@ -44,6 +45,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 
 auto CPU::get(u32 mode, n32 address) -> n32 {
   dmaRun();
+  ARM7TDMI::irq = irq.synchronizer;
   return getBus<false>(mode, address);
 }
 
@@ -53,6 +55,7 @@ auto CPU::getDebugger(u32 mode, n32 address) -> n32 {
 
 auto CPU::set(u32 mode, n32 address, n32 word) -> void {
   dmaRun();
+  ARM7TDMI::irq = irq.synchronizer;
   u32 clocks = _wait(mode, address);
 
   if(address >= 0x1000'0000) {

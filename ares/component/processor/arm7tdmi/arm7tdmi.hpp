@@ -214,6 +214,7 @@ struct ARM7TDMI {
       n32 address;
       n32 instruction;
       b1  thumb;  //not used by fetch stage
+      b1  irq;  //not used by fetch stage
     };
 
     n1 reload = 1;
