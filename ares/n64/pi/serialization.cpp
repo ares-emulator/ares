@@ -38,5 +38,12 @@ auto PI::serialize(serializer& s) -> void {
   s(bb_allowed.ide);
   s(bb_allowed.err);
 
-  s(bb_ide);
+  s(bb_ide[0].data);
+  s(bb_ide[0].dirty);
+  s(bb_ide[1].data);
+  s(bb_ide[1].dirty);
+  s(bb_ide[2].data);
+  s(bb_ide[2].dirty);
+  s(bb_ide[3].data);
+  s(bb_ide[3].dirty);
 }

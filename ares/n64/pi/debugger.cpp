@@ -1,5 +1,11 @@
 auto PI::Debugger::load(Node::Object parent) -> void {
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "PI");
+  if(system._BB()) {
+    tracer.ide[0] = parent->append<Node::Debugger::Tracer::Notification>("IDE0", "PI");
+    tracer.ide[1] = parent->append<Node::Debugger::Tracer::Notification>("IDE1", "PI");
+    tracer.ide[2] = parent->append<Node::Debugger::Tracer::Notification>("IDE2", "PI");
+    tracer.ide[3] = parent->append<Node::Debugger::Tracer::Notification>("IDE3", "PI");
+  }
 }
 
 auto PI::Debugger::io(bool mode, u32 address, u32 data) -> void {
@@ -45,5 +51,27 @@ auto PI::Debugger::io(bool mode, u32 address, u32 data) -> void {
       message = {name.split("|").last(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
+  }
+}
+
+auto PI::Debugger::ide(bool mode, u2 which, u16 data) -> void {
+  Node::Debugger::Tracer::Notification ide;
+  switch(which) {
+    case 0: { ide = tracer.ide[0]; } break;
+    case 1: { ide = tracer.ide[1]; } break;
+    case 2: { ide = tracer.ide[2]; } break;
+    case 3: { ide = tracer.ide[3]; } break;
+  }
+
+  if(unlikely(ide->enabled())) {
+    string message;
+    string name = {"IDE", which};
+    if(mode == Read) {
+      message = {name, " => ", hex(data, 4L)};
+    }
+    if(mode == Write) {
+      message = {name, " <= ", hex(data, 4L)};
+    }
+    ide->notify(message);
   }
 }

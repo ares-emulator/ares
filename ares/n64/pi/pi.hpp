@@ -9,9 +9,11 @@ struct PI : Memory::RCP<PI> {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto io(bool mode, u32 address, u32 data) -> void;
+    auto ide(bool mode, u2 which, u16 data) -> void;
 
     struct Tracer {
       Node::Debugger::Tracer::Notification io;
+      Node::Debugger::Tracer::Notification ide[4];
     } tracer;
   } debugger;
 
@@ -38,6 +40,7 @@ struct PI : Memory::RCP<PI> {
   auto atbWrite(u32 address, u32 data) -> void;
   auto ideWrite(u32 address, u32 data) -> void;
   auto ioWrite(u32 address, u32 data) -> void;
+  auto flushIDE() -> void;
 
   //bus.hpp
   auto readWord(u32 address, Thread& thread) -> u32;
@@ -103,7 +106,12 @@ struct PI : Memory::RCP<PI> {
 
   BBAccess bb_allowed;
 
-  n16 bb_ide[4];
+  struct BBIDE {
+    n16 data;
+    n1 dirty;
+  };
+
+  BBIDE bb_ide[4];
 };
 
 extern PI pi;

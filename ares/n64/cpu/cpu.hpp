@@ -367,6 +367,8 @@ struct CPU : Thread {
     ReadRDB   = 5,
     WriteRDB  = 6,
     Timer     = 7,
+
+    BB        = 3,
   };
 
   //ipu.cpp

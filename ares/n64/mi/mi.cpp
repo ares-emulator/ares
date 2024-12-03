@@ -76,7 +76,10 @@ auto MI::poll() -> void {
   line |= irq.vi.line & irq.vi.mask;
   line |= irq.pi.line & irq.pi.mask;
   line |= irq.dp.line & irq.dp.mask;
+  cpu.scc.cause.interruptPending.bit(CPU::Interrupt::RCP) = line;
+
   if(system._BB()) {
+    bool line = 0;
     line |= bb_irq.flash .line & bb_irq.flash .mask;
     line |= bb_irq.aes   .line & bb_irq.aes   .mask;
     line |= bb_irq.ide   .line & bb_irq.ide   .mask;
@@ -86,9 +89,10 @@ auto MI::poll() -> void {
     line |= bb_irq.btn   .line & bb_irq.btn   .mask;
     line |= bb_irq.md    .line & bb_irq.md    .mask;
 
+    cpu.scc.cause.interruptPending.bit(CPU::Interrupt::BB) = line;
+    
     cpu.scc.nmiPending |= enter_secure_mode();
   }
-  cpu.scc.cause.interruptPending.bit(2) = line;
 }
 
 auto MI::enter_secure_mode() const -> bool {

@@ -23,14 +23,16 @@ auto PI::power(bool reset) -> void {
   io = {};
   bsd1 = {};
   bsd2 = {};
-  bb_gpio = {};
-  bb_gpio.power.mask = 1;
-  bb_gpio.led.mask = 1;
-  bb_allowed = {};
-  bb_ide[0] = 0;
-  bb_ide[1] = 0;
-  bb_ide[2] = 0;
-  bb_ide[3] = 0;
+  if(system._BB()) {
+    bb_gpio = {};
+    bb_gpio.power.mask = 1;
+    bb_gpio.led.mask = 1;
+    bb_allowed = {};
+    bb_ide[0] = {};
+    bb_ide[1] = {};
+    bb_ide[2] = {};
+    bb_ide[3] = {};
+  }
 }
 
 auto PI::access() -> BBAccess {

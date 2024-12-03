@@ -81,7 +81,22 @@ auto PI::regsRead(u32 address) -> u32 {
 
 
 
+  if(address == 15) {
+    //PI_ALLOWED_IO
+    data.bit(0) = bb_allowed.buf;
+    data.bit(1) = bb_allowed.flash;
+    data.bit(2) = bb_allowed.atb;
+    data.bit(3) = bb_allowed.aes;
+    data.bit(4) = bb_allowed.dma;
+    data.bit(5) = bb_allowed.gpio;
+    data.bit(6) = bb_allowed.ide;
+    data.bit(7) = bb_allowed.err;
+  }
+
+
+
   if(address == 24) {
+    //PI_BB_GPIO
     if(access().gpio) {
       data.bit(0) = bb_gpio.power.data;
       data.bit(1) = bb_gpio.led.data;
@@ -116,6 +131,8 @@ auto PI::atbRead(u32 address) -> u32 {
 auto PI::ideRead(u32 address_) -> u32 {
   if(!access().ide) return 0;
 
+  flushIDE();
+
   n32 address = address_;
 
   n32 data;
@@ -124,22 +141,18 @@ auto PI::ideRead(u32 address_) -> u32 {
   switch(device) {
     case 1: {
       data.bit(0,31) = 0;
-      if(unlikely(debugger.tracer.io->enabled())) {
-        string message = {"IDE3: ", hex(bb_ide[3])};
-        debugger.tracer.io->notify(message);
-      }
     } break;
     case 4: {
-      data.bit(16,31) = bb_ide[0];
+      data.bit(16,31) = bb_ide[0].data;
     } break;
     case 5: {
-      data.bit(16,31) = bb_ide[1];
+      data.bit(16,31) = bb_ide[1].data;
     } break;
     case 6: {
-      data.bit(16,31) = bb_ide[2];
+      data.bit(16,31) = bb_ide[2].data;
     } break;
     case 7: {
-      data.bit(16,31) = bb_ide[3];
+      data.bit(16,31) = bb_ide[3].data;
     } break;
   }
 
@@ -250,7 +263,22 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
 
 
 
+  if(address == 15) {
+    //PI_ALLOWED_IO
+    bb_allowed.buf   = data.bit(0) & access().buf;
+    bb_allowed.flash = data.bit(1) & access().flash;
+    bb_allowed.atb   = data.bit(2) & access().atb;
+    bb_allowed.aes   = data.bit(3) & access().aes;
+    bb_allowed.dma   = data.bit(4) & access().dma;
+    bb_allowed.gpio  = data.bit(5) & access().gpio;
+    bb_allowed.ide   = data.bit(6) & access().ide;
+    bb_allowed.err   = data.bit(7) & access().err;
+  }
+
+
+
   if(address == 24) {
+    //PI_BB_GPIO
     if(access().gpio) {
       bb_gpio.power.data = data.bit(0);
       bb_gpio.led.data = data.bit(1);
@@ -278,28 +306,29 @@ auto PI::atbWrite(u32 address, u32 data_) -> void {
 auto PI::ideWrite(u32 address_, u32 data_) -> void {
   if(!access().ide) return;
 
+  flushIDE();
+
   n32 address = address_;
   n32 data = data_;
 
   auto device = address.bit(17,19);
   switch(device) {
-    case 1: {
-      if(unlikely(debugger.tracer.io->enabled())) {
-        string message = {"IDE3: ", hex(bb_ide[3])};
-        debugger.tracer.io->notify(message);
-      }
-    } break;
+    case 1: {} break;
     case 4: {
-      bb_ide[0] = data.bit(16,31);
+      bb_ide[0].data = data.bit(16,31);
+      bb_ide[0].dirty = 1;
     } break;
     case 5: {
-      bb_ide[1] = data.bit(16,31);
+      bb_ide[1].data = data.bit(16,31);
+      bb_ide[1].dirty = 1;
     } break;
     case 6: {
-      bb_ide[2] = data.bit(16,31);
+      bb_ide[2].data = data.bit(16,31);
+      bb_ide[2].dirty = 1;
     } break;
     case 7: {
-      bb_ide[3] = data.bit(16,31);
+      bb_ide[3].data = data.bit(16,31);
+      bb_ide[3].dirty = 1;
     } break;
   }
 }
@@ -312,4 +341,13 @@ auto PI::ioWrite(u32 address, u32 data) -> void {
   if(address <= 0x0461'07ff) return atbWrite(address, data);
   if(address <= 0x0461'ffff) return; //unmapped
   return ideWrite(address, data);
+}
+
+auto PI::flushIDE() -> void {
+  for(n2 which : range(4)) {
+    if(bb_ide[which].dirty) {
+      debugger.ide(Write, which, bb_ide[which].data);
+      bb_ide[which].dirty = 0;
+    }
+  }
 }
