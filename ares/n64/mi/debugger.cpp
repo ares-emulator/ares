@@ -6,12 +6,20 @@ auto MI::Debugger::load(Node::Object parent) -> void {
 auto MI::Debugger::interrupt(u8 source) -> void {
   if(unlikely(tracer.interrupt->enabled())) {
     string type = "unknown";
-    if(source == (u32)MI::IRQ::SP) type = "SP";
-    if(source == (u32)MI::IRQ::SI) type = "SI";
-    if(source == (u32)MI::IRQ::AI) type = "AI";
-    if(source == (u32)MI::IRQ::VI) type = "VI";
-    if(source == (u32)MI::IRQ::PI) type = "PI";
-    if(source == (u32)MI::IRQ::DP) type = "DP";
+    if(source == (u32)MI::IRQ::SP)     type = "SP";
+    if(source == (u32)MI::IRQ::SI)     type = "SI";
+    if(source == (u32)MI::IRQ::AI)     type = "AI";
+    if(source == (u32)MI::IRQ::VI)     type = "VI";
+    if(source == (u32)MI::IRQ::PI)     type = "PI";
+    if(source == (u32)MI::IRQ::DP)     type = "DP";
+    if(source == (u32)MI::IRQ::FLASH)  type = "Flash";
+    if(source == (u32)MI::IRQ::AES)    type = "AES";
+    if(source == (u32)MI::IRQ::IDE)    type = "IDE";
+    if(source == (u32)MI::IRQ::PI_ERR) type = "PI error";
+    if(source == (u32)MI::IRQ::USB0)   type = "USB0";
+    if(source == (u32)MI::IRQ::USB1)   type = "USB1";
+    if(source == (u32)MI::IRQ::BTN)    type = "Button";
+    if(source == (u32)MI::IRQ::MD)     type = "Module";
     tracer.interrupt->notify(type);
   }
 }
