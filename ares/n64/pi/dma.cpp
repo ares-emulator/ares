@@ -1,20 +1,16 @@
 auto PI::bufferDMARead() -> void {
-  Memory::Writable& buffer = io.pbusAddress.bit(9) ? bb_nand.buffer1 : bb_nand.buffer0;
-
   for (auto i : range(io.readLength)) {
-    buffer.write<Byte>(io.pbusAddress++, rdram.ram.read<Byte>(io.dramAddress++, "PI Buffer DMA"));
+    bb_nand.buffer.write<Byte>(io.pbusAddress++, rdram.ram.read<Byte>(io.dramAddress++, "PI Buffer DMA"));
   }
 }
 
 auto PI::bufferDMAWrite() -> void {
-  Memory::Writable& buffer = io.pbusAddress.bit(9) ? bb_nand.buffer1 : bb_nand.buffer0;
-
   if constexpr(Accuracy::CPU::Recompiler) {
     cpu.recompiler.invalidateRange(io.dramAddress, io.writeLength);
   }
 
   for (auto i : range(io.writeLength)) {
-    rdram.ram.write<Byte>(io.dramAddress++, buffer.read<Byte>(io.pbusAddress++), "PI Buffer DMA");
+    rdram.ram.write<Byte>(io.dramAddress++, bb_nand.buffer.read<Byte>(io.pbusAddress++), "PI Buffer DMA");
   }
 }
 

@@ -21,12 +21,12 @@ public:
   inline auto setKey(Memory::Writable& key) -> void {
     if constexpr(Accuracy::AES::SIMD) {
       for (auto i : range(0xB0 / 0x10))
-        mvKey[i] = read128(key, i * 0x10);
+        mvKey[i] = read128(key, 0x420 + i * 0x10);
     }
 
     if constexpr(Accuracy::AES::SISD) {
       for (auto i : range(0xB0 / 4))
-        mKey[i] = key.read<Word>(i * 4);
+        mKey[i] = key.read<Word>(0x420 + i * 4);
     }
   }
 

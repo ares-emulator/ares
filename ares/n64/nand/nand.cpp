@@ -21,7 +21,7 @@ auto NAND::load(Node::Object parent) -> void {
 }
 
 auto NAND::unload() -> void {
-  debugger = {};
+  debugger = { .num = debugger.num, };
   node.reset();
   
   data.reset();
@@ -63,30 +63,30 @@ auto NAND::power(bool reset) -> void {
   writeBufferSpare.fill();
 }
 
-auto NAND::read(Memory::Writable& dest, Memory::Writable& spareDest, n27 pageNum, n10 length) -> void {
+auto NAND::read(Memory::Writable& dest, b1 which, n27 pageNum, n10 length) -> void {
   for (auto i : range(min(length, 0x200))) {
-    dest.write<Byte>(i, data.read<Byte>(pageNum + pageOffset + i));
+    dest.write<Byte>(i + which * 0x200, data.read<Byte>(pageNum + pageOffset + i));
   }
 
   if (length > 0x200) {
-    for (auto i : range(length - 0x200))
-      spareDest.write<Byte>(i, spare.read<Byte>((pageNum >> 10) + i));
+    for (auto i : range(length - 0x200)) // TODO: page spares
+      dest.write<Byte>(i + which * 0x10 + 0x400, spare.read<Byte>(((pageNum >> 14) << 4) + i));
   }
 }
 
-auto NAND::readId(Memory::Writable& dest, n10 length) -> void {
+auto NAND::readId(Memory::Writable& dest, b1 which, n10 length) -> void {
   for (auto i : range(length))
-    dest.write<Byte>(i, (i > 4) ? 0 : ID[i]);
+    dest.write<Byte>(i + which * 0x200, (i > 4) ? 0 : ID[i]);
 }
 
-auto NAND::writeToBuffer(Memory::Writable& src, Memory::Writable& spareSrc, n27 pageNum, n10 length) -> void {
+auto NAND::writeToBuffer(Memory::Writable& src, b1 which, n27 pageNum, n10 length) -> void {
   // transfers data from PI buffer to the internal write buffer
   for (auto i : range(min(length, 0x200)))
-    writeBuffer.write<Byte>(pageOffset + i, src.read<Byte>(i));
+    writeBuffer.write<Byte>(pageOffset + i, src.read<Byte>(i + which * 0x200));
 
   if (length > 0x200) {
     for (auto i : range(length - 0x200))
-      writeBufferSpare.write<Byte>(i, spareSrc.read<Byte>(i));
+      writeBufferSpare.write<Byte>(i, src.read<Byte>(i + which * 0x10 + 0x400));
   }
   
   //TODO: If writeBufferSpare is all FF, calculate ecc
@@ -97,8 +97,8 @@ auto NAND::commitWriteBuffer(n27 pageNum) -> void {
   for (auto i : range(0x200))
     data.write<Byte>(pageNum + i, data.read<Byte>(pageNum + i) & writeBuffer.read<Byte>(i));
 
-  for (auto i : range(0x10))
-    spare.write<Byte>((pageNum >> 10) + i, writeBufferSpare.read<Byte>(i));
+  for (auto i : range(0x10)) // TODO: page spares
+    spare.write<Byte>(((pageNum >> 14) << 4) + i, writeBufferSpare.read<Byte>(i));
 }
 
 auto NAND::queueErasure(n27 pageNum) -> void {
@@ -124,7 +124,7 @@ auto NAND::execErasure() -> void {
   }
 }
 
-auto NAND::readStatus(Memory::Writable& dest, n10 length, bool multiplane) -> void {
+auto NAND::readStatus(Memory::Writable& dest, b1 which, n10 length, bool multiplane) -> void {
   n8 status;
 
   bool fail = 0;
@@ -145,7 +145,7 @@ auto NAND::readStatus(Memory::Writable& dest, n10 length, bool multiplane) -> vo
   status.bit(7) = write_protect_disabled;
 
   for (auto i : range(length))
-    dest.write<Byte>(i, (i == 0) ? u8(status) : 0);
+    dest.write<Byte>(i + which * 0x200, (i == 0) ? u8(status) : 0);
 }
 
 }

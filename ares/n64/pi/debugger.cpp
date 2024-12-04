@@ -5,6 +5,15 @@ auto PI::Debugger::load(Node::Object parent) -> void {
     tracer.ide[1] = parent->append<Node::Debugger::Tracer::Notification>("IDE1", "PI");
     tracer.ide[2] = parent->append<Node::Debugger::Tracer::Notification>("IDE2", "PI");
     tracer.ide[3] = parent->append<Node::Debugger::Tracer::Notification>("IDE3", "PI");
+
+    memory.buffer = parent->append<Node::Debugger::Memory>("PI Buffer");
+    memory.buffer->setSize(0x4e0);
+    memory.buffer->setRead([&](u32 address) -> u8 {
+      return pi.bb_nand.buffer.read<Byte>(address);
+    });
+    memory.buffer->setWrite([&](u32 address, u8 data) -> void {
+      return pi.bb_nand.buffer.write<Byte>(address, data);
+    });
   }
 }
 

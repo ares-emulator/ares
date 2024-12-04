@@ -1,6 +1,6 @@
 auto PI::aesCommandFinished() -> void {
-  if(!bb_aes.chainIV) aes.setIV(bb_aes.iv, 0); //TODO ivOffset should be used here
-  aes.decodeCBC((bb_aes.bufferSel) ? bb_nand.buffer1 : bb_nand.buffer0, bb_aes.bufferOffset, bb_aes.dataSize + 1);
+  if(!bb_aes.chainIV) aes.setIV(bb_nand.buffer, bb_aes.ivOffset * AES::AES_BLOCK_SIZE);
+  aes.decodeCBC(bb_nand.buffer, bb_aes.bufferOffset * AES::AES_BLOCK_SIZE, bb_aes.dataSize + 1);
   bb_aes.busy = 0;
   if (bb_aes.intrDone)
     mi.raise(MI::IRQ::AES);
@@ -8,18 +8,16 @@ auto PI::aesCommandFinished() -> void {
 
 auto PI::nandCommandFinished() -> void {
   NAND *nand = bb_nand.nand[bb_nand.io.deviceSel];
-  Memory::Writable& buffer = (bb_nand.io.bufferSel) ? bb_nand.buffer1 : bb_nand.buffer0;
-  Memory::Writable& spare = (bb_nand.io.bufferSel) ? bb_nand.spare1 : bb_nand.spare0;
 
   switch (bb_nand.io.command) {
     case NAND::Command::Read0: { // read 1 (offset 0)
       nand->pageOffset = 0x000;
-      nand->read(buffer, spare, bb_nand.io.pageNumber, bb_nand.io.xferLen);
+      nand->read(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.pageNumber, bb_nand.io.xferLen);
     } break;
 
     case NAND::Command::Read1: { // read 1 (offset 256)
       nand->pageOffset = 0x100;
-      nand->read(buffer, spare, bb_nand.io.pageNumber, bb_nand.io.xferLen);
+      nand->read(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.pageNumber, bb_nand.io.xferLen);
     } break;
 
     case NAND::Command::ReadSpare: {
@@ -28,7 +26,7 @@ auto PI::nandCommandFinished() -> void {
     } break;
 
     case NAND::Command::ReadID: {
-      nand->readId(buffer, bb_nand.io.xferLen);
+      nand->readId(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.xferLen);
     } break;
 
     case NAND::Command::Reset: {
@@ -36,7 +34,7 @@ auto PI::nandCommandFinished() -> void {
     } break;
 
     case NAND::Command::PageProgramC1: {
-      nand->writeToBuffer(buffer, spare, bb_nand.io.pageNumber, bb_nand.io.xferLen);
+      nand->writeToBuffer(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.pageNumber, bb_nand.io.xferLen);
     } break;
 
     case NAND::Command::PageProgramC2: {
@@ -64,11 +62,11 @@ auto PI::nandCommandFinished() -> void {
     } break;
 
     case NAND::Command::ReadStatus: {
-      nand->readStatus(buffer, bb_nand.io.xferLen, false);
+      nand->readStatus(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.xferLen, false);
     } break;
 
     case NAND::Command::ReadStatusMultiplane: {
-      nand->readStatus(buffer, bb_nand.io.xferLen, true);
+      nand->readStatus(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.xferLen, true);
     } break;
 
     default:
@@ -201,8 +199,7 @@ auto PI::regsRead(u32 address) -> u32 {
       data.bit(31) = bb_aes.busy;
       data.bit(30) = bb_aes.intrPending;
       data.bit(16,21) = bb_aes.dataSize;
-      data.bit(14) = bb_aes.bufferSel;
-      data.bit(8,13) = bb_aes.bufferOffset;
+      data.bit(9,15) = bb_aes.bufferOffset;
       data.bit(1,7) = bb_aes.ivOffset;
       data.bit(0) = bb_aes.chainIV;
     }
@@ -294,35 +291,21 @@ auto PI::bufRead(u32 address) -> u32 {
 
   address &= 0x7ff;
 
-  if(address < 0x200)
-  {
-    data = bb_nand.buffer0.read<Word>(address);
-    buffer = "NAND Buffer0";
-  }
-  else if(address < 0x400)
-  {
-    data = bb_nand.buffer1.read<Word>(address);
-    buffer = "NAND Buffer1";
-  }
-  else if(address < 0x410)
-  {
-    data = bb_nand.spare0.read<Word>(address);
-    buffer = "NAND Spare0";
-  }
-  else if(address < 0x420)
-  {
-    data = bb_nand.spare1.read<Word>(address);
-    buffer = "NAND Spare1";
-  }
-  else if(address < 0x4d0)
-  {
-    data = bb_aes.ekey.read<Word>(address);
-    buffer = "AES Expanded Key";
-  }
-  else if(address < 0x4e0)
-  {
-    data = bb_aes.iv.read<Word>(address);
-    buffer = "AES IV";
+  if(address < 0x4e0) {
+    data = bb_nand.buffer.read<Word>(address);
+
+    if(address < 0x200)
+      buffer = "NAND Buffer0";
+    else if(address < 0x400)
+      buffer = "NAND Buffer1";
+    else if(address < 0x410)
+      buffer = "NAND Spare0";
+    else if(address < 0x420)
+      buffer = "NAND Spare1";
+    else if(address < 0x4d0)
+      buffer = "AES Expanded Key";
+    else if(address < 0x4e0)
+      buffer = "AES IV";
   }
   else
   {
@@ -524,8 +507,7 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
     if(access().aes) {
       bb_aes.intrDone = data.bit(30);
       bb_aes.dataSize = data.bit(16,21);
-      bb_aes.bufferSel = data.bit(14);
-      bb_aes.bufferOffset = data.bit(8,13);
+      bb_aes.bufferOffset = data.bit(9,15);
       bb_aes.ivOffset = data.bit(1,7);
       bb_aes.chainIV = data.bit(0);
 
@@ -628,38 +610,25 @@ auto PI::bufWrite(u32 address, u32 data_) -> void {
 
   address &= 0x7ff;
 
-  if(address < 0x200)
-  {
-    bb_nand.buffer0.write<Word>(address, data);
-    buffer = "NAND Buffer0";
-  }
-  else if(address < 0x400)
-  {
-    bb_nand.buffer1.write<Word>(address - 0x200, data);
-    buffer = "NAND Buffer1";
-  }
-  else if(address < 0x410)
-  {
-    bb_nand.spare0.write<Word>(address - 0x400, data);
-    buffer = "NAND Spare0";
-  }
-  else if(address < 0x420)
-  {
-    bb_nand.spare1.write<Word>(address - 0x410, data);
-    buffer = "NAND Spare1";
-  }
-  else if(address < 0x4d0)
-  {
-    bb_aes.ekey.write<Word>(address - 0x420, data);
-    if (bb_aes.busy)
-      debug(unusual, "AES key memory changed while AES is busy");
-    aes.setKey(bb_aes.ekey);
-    buffer = "AES Expanded Key";
-  }
-  else if(address < 0x4e0)
-  {
-    bb_aes.iv.write<Word>(address - 0x4d0, data);
-    buffer = "AES IV";
+  if(address < 0x4e0) {
+    bb_nand.buffer.write<Word>(address, data);
+
+    if(address < 0x200)
+      buffer = "NAND Buffer0";
+    else if(address < 0x400)
+      buffer = "NAND Buffer1";
+    else if(address < 0x410)
+      buffer = "NAND Spare0";
+    else if(address < 0x420)
+      buffer = "NAND Spare1";
+    else if(address < 0x4d0) {
+      buffer = "AES Expanded Key";
+      if (bb_aes.busy)
+        debug(unusual, "AES key memory changed while AES is busy");
+      aes.setKey(bb_nand.buffer);
+    }
+    else if(address < 0x4e0)
+      buffer = "AES IV";
   }
   else
   {

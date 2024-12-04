@@ -23,7 +23,7 @@ auto Virage::unload() -> void {
   node.reset();
   sram.reset();
   flash.reset();
-  debugger = {};
+  debugger = { .num = debugger.num, };
 }
 
 auto Virage::save() -> void {

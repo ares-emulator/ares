@@ -1,6 +1,8 @@
 auto MI::Debugger::load(Node::Object parent) -> void {
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "RCP");
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "MI");
+  if(system._BB())
+    tracer.ioMem = parent->append<Node::Debugger::Tracer::Notification>("I/O Mem", "MI");
 
   memory.rom = parent->append<Node::Debugger::Memory>("Boot ROM");
   memory.rom->setSize(0x2000);
@@ -58,17 +60,17 @@ auto MI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "MI_INTR",
     "MI_INTR_MASK",
     "MI_UNKNOWN",
-    "MI_BB_SECURE_EXCEPTION"
+    "MI_BB_SECURE_EXCEPTION",
     "MI_UNKNOWN",
     "MI_UNKNOWN",
     "MI_UNKNOWN",
     "MI_UNKNOWN",
     "MI_UNKNOWN",
-    "MI_BB_RANDOM"
+    "MI_BB_RANDOM",
     "MI_UNKNOWN",
     "MI_UNKNOWN",
-    "MI_BB_INTERRUPT"
-    "MI_BB_MASK"
+    "MI_BB_INTERRUPT",
+    "MI_BB_MASK",
   };
 
   if(unlikely(tracer.io->enabled())) {
@@ -85,7 +87,7 @@ auto MI::Debugger::io(bool mode, u32 address, u32 data) -> void {
 }
 
 auto MI::Debugger::ioMem(bool mode, u32 address, u32 data, const char *name) -> void {
-  if(unlikely(tracer.io->enabled())) {
+  if(unlikely(tracer.ioMem->enabled())) {
     string message;
     if(mode == Read) {
       message = {name, "[", hex(address, 8L), "]", " => ", hex(data, 8L)};
@@ -93,6 +95,6 @@ auto MI::Debugger::ioMem(bool mode, u32 address, u32 data, const char *name) -> 
     if(mode == Write) {
       message = {name, "[", hex(address, 8L), "]", " <= ", hex(data, 8L)};
     }
-    tracer.io->notify(message);
+    tracer.ioMem->notify(message);
   }
 }

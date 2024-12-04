@@ -30,6 +30,11 @@ struct NAND : Memory::RCP<NAND> {
     auto load(Node::Object) -> void;
     auto command(Command cmd, n27 pageNumber, n10 length) -> void;
 
+    struct Memory {
+      Node::Debugger::Memory nand;
+      Node::Debugger::Memory spare;
+    } memory;
+
     struct Tracer {
       Node::Debugger::Tracer::Notification io;
     } tracer;
@@ -48,11 +53,11 @@ struct NAND : Memory::RCP<NAND> {
   auto unload() -> void;
   auto save() -> void;
   auto power(bool reset) -> void;
-  auto read(Memory::Writable& dest, Memory::Writable& spareDest, n27 pageNum, n10 length) -> void;
-  auto readId(Memory::Writable& dest, n10 length) -> void;
-  auto writeToBuffer(Memory::Writable& src, Memory::Writable& spareSrc, n27 pageNum, n10 length) -> void;
+  auto read(Memory::Writable& dest, b1 which, n27 pageNum, n10 length) -> void;
+  auto readId(Memory::Writable& dest, b1 which, n10 length) -> void;
+  auto writeToBuffer(Memory::Writable& src, b1 which, n27 pageNum, n10 length) -> void;
   auto commitWriteBuffer(n27 pageNum) -> void;
-  auto readStatus(Memory::Writable& dest, n10 length, bool multiplane) -> void;
+  auto readStatus(Memory::Writable& dest, b1 which, n10 length, bool multiplane) -> void;
   auto queueErasure(n27 pageNum) -> void;
   auto execErasure() -> void;
 

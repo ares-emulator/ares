@@ -12,6 +12,10 @@ struct PI : Memory::RCP<PI> {
     auto io(bool mode, u32 address, u32 data) -> void;
     auto ide(bool mode, u2 which, u16 data) -> void;
 
+    struct Memory {
+      Node::Debugger::Memory buffer;
+    } memory;
+
     struct Tracer {
       Node::Debugger::Tracer::Notification io;
       Node::Debugger::Tracer::Notification ide[4];
@@ -117,10 +121,7 @@ struct PI : Memory::RCP<PI> {
   BBIDE bb_ide[4];
 
   struct BB_NAND {
-    Memory::Writable buffer0;
-    Memory::Writable buffer1;
-    Memory::Writable spare0;
-    Memory::Writable spare1;
+    Memory::Writable buffer;
 
     struct {
       //BB_NAND_CTRL: read
@@ -147,15 +148,11 @@ struct PI : Memory::RCP<PI> {
   } bb_nand;
 
   struct BB_AES {
-    Memory::Writable ekey;
-    Memory::Writable iv;
-
     n1 intrPending;
     n1 intrDone;
     n1 busy;
     n1 chainIV;
-    n1 bufferSel;
-    n6 bufferOffset;
+    n7 bufferOffset;
     n6 dataSize;
     n7 ivOffset;
   } bb_aes;

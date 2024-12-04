@@ -11,18 +11,12 @@ PI pi;
 auto PI::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PI");
 
-  bb_nand.buffer0.allocate(0x200);
-  bb_nand.buffer1.allocate(0x200);
-  bb_nand.spare0.allocate(0x10);
-  bb_nand.spare1.allocate(0x10);
+  bb_nand.buffer.allocate((0x200 + 0x10) * 2 + 0xB0 + 0x10);
 
   bb_nand.nand[0] = &nand0;
   bb_nand.nand[1] = &nand1;
   bb_nand.nand[2] = &nand2;
   bb_nand.nand[3] = &nand3;
-
-  bb_aes.ekey.allocate(0xB0);
-  bb_aes.iv.allocate(0x10);
 
   debugger.load(node);
 }
@@ -31,12 +25,7 @@ auto PI::unload() -> void {
   debugger = {};
   node.reset();
 
-  bb_nand.buffer0.reset();
-  bb_nand.buffer1.reset();
-  bb_nand.spare0.reset();
-  bb_nand.spare1.reset();
-  bb_aes.ekey.reset();
-  bb_aes.iv.reset();
+  bb_nand.buffer.reset();
 }
 
 auto PI::power(bool reset) -> void {
@@ -53,12 +42,7 @@ auto PI::power(bool reset) -> void {
     bb_ide[2] = {};
     bb_ide[3] = {};
     bb_nand.io = {};
-    bb_nand.buffer0.fill();
-    bb_nand.buffer1.fill();
-    bb_nand.spare0.fill();
-    bb_nand.spare1.fill();
-    bb_aes.ekey.fill();
-    bb_aes.iv.fill();
+    bb_nand.buffer.fill();
   }
 }
 

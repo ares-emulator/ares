@@ -22,6 +22,7 @@ struct MI : Memory::RCP<MI> {
     struct Tracer {
       Node::Debugger::Tracer::Notification interrupt;
       Node::Debugger::Tracer::Notification io;
+      Node::Debugger::Tracer::Notification ioMem;
     } tracer;
   } debugger;
 
