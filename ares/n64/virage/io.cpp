@@ -18,6 +18,7 @@ auto Virage::commandFinished() -> void {
     default:
       debug(unimplemented, "[Virage::command] command=%08X", io.command);
   }
+  io.unk30 = 1;
   io.busy = 0;
 }
 
@@ -28,7 +29,7 @@ auto Virage::command(u32 command) -> void {
   }
   io.busy = 1;
   io.command = command;
-  queue.insert(queueID, 200); //TODO: cycles
+  queue.insert(queueID, 2000); //TODO: cycles
 }
 
 auto Virage::readWord(u32 address, Thread& thread) -> u32 {
@@ -60,6 +61,7 @@ auto Virage::readWord(u32 address, Thread& thread) -> u32 {
     data.bit(0) = io.busy;
     data.bit(23) = io.loadDone;
     data.bit(29) = io.storeDone;
+    data.bit(30) = io.unk30;
     debugger.ioStatusReg(Read, data);
   }
   else
@@ -94,11 +96,13 @@ auto Virage::writeWord(u32 address, u32 data, Thread& thread) -> void {
   }
   else if(address < 0xE000)
   { // control/status register
-    //TODO
+    // Guess
+    io.unk30 = 1;
     debugger.ioStatusReg(Write, data);
   }
   else
   { //command register
+    io.unk30 = 0;
     command(data);
     debugger.ioControlReg(Write, data);
   }

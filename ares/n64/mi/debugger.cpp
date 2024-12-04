@@ -1,6 +1,33 @@
 auto MI::Debugger::load(Node::Object parent) -> void {
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "RCP");
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "MI");
+
+  memory.rom = parent->append<Node::Debugger::Memory>("Boot ROM");
+  memory.rom->setSize(0x2000);
+  memory.rom->setRead([&](u32 address) -> u8 {
+    return mi.rom.read<Byte>(address);
+  });
+  memory.rom->setWrite([&](u32 address, u8 data) -> void {
+    return;
+  });
+
+  memory.ram = parent->append<Node::Debugger::Memory>("SK RAM");
+  memory.ram->setSize(0x10000);
+  memory.ram->setRead([&](u32 address) -> u8 {
+    return mi.ram.read<Byte>(address);
+  });
+  memory.ram->setWrite([&](u32 address, u8 data) -> void {
+    return mi.ram.write<Byte>(address, data);
+  });
+
+  memory.scratch = parent->append<Node::Debugger::Memory>("Secure Scratch");
+  memory.scratch->setSize(0x8000);
+  memory.scratch->setRead([&](u32 address) -> u8 {
+    return mi.scratch.read<Byte>(address);
+  });
+  memory.scratch->setWrite([&](u32 address, u8 data) -> void {
+    return mi.scratch.write<Byte>(address, data);
+  });
 }
 
 auto MI::Debugger::interrupt(u8 source) -> void {
@@ -52,6 +79,19 @@ auto MI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     }
     if(mode == Write) {
       message = {name.split("|").last(), " <= ", hex(data, 8L)};
+    }
+    tracer.io->notify(message);
+  }
+}
+
+auto MI::Debugger::ioMem(bool mode, u32 address, u32 data, const char *name) -> void {
+  if(unlikely(tracer.io->enabled())) {
+    string message;
+    if(mode == Read) {
+      message = {name, "[", hex(address, 8L), "]", " => ", hex(data, 8L)};
+    }
+    if(mode == Write) {
+      message = {name, "[", hex(address, 8L), "]", " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }

@@ -8,6 +8,19 @@ auto PI::Debugger::load(Node::Object parent) -> void {
   }
 }
 
+auto PI::Debugger::ioBuffers(bool mode, u32 address, u32 data, const char *buffer) -> void {
+  if(unlikely(tracer.io->enabled())) {
+    string message;
+    if(mode == Read) {
+      message = {buffer, "[", hex(address, 8L), "]", " => ", hex(data, 8L)};
+    }
+    if(mode == Write) {
+      message = {buffer, "[", hex(address, 8L), "]", " <= ", hex(data, 8L)};
+    }
+    tracer.io->notify(message);
+  }
+}
+
 auto PI::Debugger::io(bool mode, u32 address, u32 data) -> void {
   static const vector<string> registerNames = {
     "PI_DRAM_ADDRESS",
@@ -23,21 +36,21 @@ auto PI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "PI_BSD_DOM2_PWD",
     "PI_BSD_DOM2_PGS",
     "PI_BSD_DOM2_RLS",
-    "PI_UNKNOWN",
-    "PI_UNKNOWN",
-    "PI_UNKNOWN",
+    "PI_UNKNOWN_34",
+    "PI_UNKNOWN_38",
+    "PI_UNKNOWN_3C",
     "PI_BB_ATB_UPPER",
-    "PI_UNKNOWN",
+    "PI_BB_ALLOWED_IO",
     "PI_BB_NAND_CTRL",
     "PI_BB_NAND_CFG",
-    "PI_UNKNOWN",
-    "PI_UNKNOWN",
+    "PI_BB_AES_CTRL",
+    "PI_UNKNOWN_54",
     "PI_BB_RD_LEN",
     "PI_BB_WR_LEN",
     "PI_BB_GPIO",
-    "PI_UNKNOWN",
-    "PI_UNKNOWN",
-    "PI_UNKNOWN",
+    "PI_UNKNOWN_64",
+    "PI_UNKNOWN_68",
+    "PI_UNKNOWN_6C",
     "PI_BB_NAND_ADDR",
   };
 

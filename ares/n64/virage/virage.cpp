@@ -40,6 +40,7 @@ auto Virage::power(bool reset) -> void {
   if(auto fp = system.pak->write(fileName)) {
     flash.load(fp);
   }
+  io.unk30 = 1;
   io.busy = 0;
 
   //Load flash -> sram

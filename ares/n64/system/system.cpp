@@ -131,6 +131,10 @@ auto System::load(Node::System& root, string name) -> bool {
     virage0.load(node);
     virage1.load(node);
     virage2.load(node);
+    nand0.load(node);
+    nand1.load(node);
+    nand2.load(node);
+    nand3.load(node);
   }
 
   #if defined(VULKAN)
@@ -328,6 +332,10 @@ auto System::unload() -> void {
     virage0.unload();
     virage1.unload();
     virage2.unload();
+    nand0.unload();
+    nand1.unload();
+    nand2.unload();
+    nand3.unload();
   }
   pak.reset();
   node.reset();
@@ -375,6 +383,10 @@ auto System::power(bool reset) -> void {
     virage0.power(reset);
     virage1.power(reset);
     virage2.power(reset);
+    nand0.power(reset);
+    nand1.power(reset);
+    nand2.power(reset);
+    nand3.power(reset);
   }
 }
 

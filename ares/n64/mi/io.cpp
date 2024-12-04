@@ -1,30 +1,35 @@
 auto MI::readWord(u32 address_, Thread& thread) -> u32 {
   if(address_ <= 0x043f'ffff) return ioRead(address_);
   n32 address = address_;
+  u32 data = 0;
+  const char *name = "<None>";
 
-  if(address <= 0x1fcb'ffff) {
-    if(address <= 0x1fc3'ffff) {
-      //bootrom/secure ram
-      auto read_rom = ~address.bit(17) ^ ~bb_exc.boot_swap;
-      auto read_ram =  address.bit(17) ^ ~bb_exc.boot_swap;
-      
-      auto fetching = (address == 0x1fc0'0000) & cpu.pipeline.fetch;
-      if(fetching & (bb_exc.boot_swap | enter_secure_mode())) bb_exc.secure = 1;
+  if(address <= 0x1fc3'ffff) {
+    //bootrom/secure ram
+    auto read_rom = ~address.bit(17) ^ ~bb_exc.boot_swap;
+    auto read_ram =  address.bit(17) ^ ~bb_exc.boot_swap;
 
-      if(read_rom & secure()) return rom.read<Word>(address & 0x1fff);
-      if(read_ram & secure()) return ram.read<Word>(address & 0xffff);
-      return 0; // TODO mirroring?
+    auto fetching = (address == 0x1fc0'0000) & cpu.pipeline.fetch;
+    if(fetching & (bb_exc.boot_swap | enter_secure_mode())) bb_exc.secure = 1;
+
+    if(read_rom & secure()) {
+      name = "Boot ROM";
+      data = rom.read<Word>(address);
+    } else if(read_ram & secure()) {
+      name = "SK RAM";
+      data = ram.read<Word>(address);
     }
-    if(address <= 0x1fc7'ffff) {
-      //scratch ram
-      if(secure() | bb_exc.sk_ram_access)
-        return scratch.read<Word>(address & 0x7fff);
-      return 0;
+  } else if(address <= 0x1fc7'ffff) {
+    //scratch ram
+    if(secure() | bb_exc.sk_ram_access) {
+      name = "Scratch RAM";
+      data = scratch.read<Word>(address);
     }
-    return 0;
   }
-  debug(unimplemented, "[MI::readWord] 0x1fcc'xxxx");
-  return 0;
+
+  if (!cpu.pipeline.fetch)
+    debugger.ioMem(Read, address, data, name);
+  return data;
 }
 
 auto MI::ioRead(u32 address) -> u32 {
@@ -138,28 +143,29 @@ auto MI::ioRead(u32 address) -> u32 {
 auto MI::writeWord(u32 address_, u32 data, Thread& thread) -> void {
   if(address_ <= 0x043f'ffff) return ioWrite(address_, data);
   n32 address = address_;
+  const char *name = "<None>";
 
-  if(address <= 0x1fcb'ffff) {
-    if(address <= 0x1fc3'ffff) {
-      //bootrom/secure ram
-      auto write_rom = ~address.bit(17) ^ bb_exc.boot_swap;
-      auto write_ram =  address.bit(17) ^ bb_exc.boot_swap;
+  if(address <= 0x1fc3'ffff) {
+    //bootrom/secure ram
+    auto write_rom = ~address.bit(17) ^ ~bb_exc.boot_swap;
+    auto write_ram =  address.bit(17) ^ ~bb_exc.boot_swap;
 
-      if(write_rom & secure()) return rom.write<Word>(address & 0x1fff, data);
-      if(write_ram & secure()) return ram.write<Word>(address & 0xffff, data);
-      return; // TODO mirroring?
+    if(write_rom & secure()) {
+      name = "Boot ROM";
+      rom.write<Word>(address, data);
+    } else if(write_ram & secure()) {
+      name = "SK RAM";
+      ram.write<Word>(address, data);
     }
-    if(address <= 0x1fc7'ffff) {
-      //scratch ram
-      if(secure() | bb_exc.sk_ram_access)
-        return scratch.write<Word>(address & 0x7fff, data);
-      return;
+  } else if(address <= 0x1fc7'ffff) {
+    //scratch ram
+    if(secure() | bb_exc.sk_ram_access) {
+      name = "Scratch RAM";
+      scratch.write<Word>(address, data);
     }
-    //virage
-    string display = {"[MI::writeWord] virage ", cpu.pipeline.pc};
-    debug(unimplemented, display);
-    return;
   }
+
+  debugger.ioMem(Write, address, data, name);
 }
 
 auto MI::ioWrite(u32 address, u32 data_) -> void {

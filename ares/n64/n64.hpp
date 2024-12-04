@@ -78,6 +78,8 @@ namespace ares::Nintendo64 {
       VIRAGE0_Command,
       VIRAGE1_Command,
       VIRAGE2_Command,
+      NAND_Command,
+      AES_Command,
       RTC_Tick,
       DD_Clock_Tick,
       DD_MECHA_Response,
@@ -103,6 +105,8 @@ namespace ares::Nintendo64 {
   #include <n64/mi/mi.hpp>
   #include <n64/vi/vi.hpp>
   #include <n64/ai/ai.hpp>
+  #include <n64/aes/aes.hpp>
+  #include <n64/nand/nand.hpp>
   #include <n64/pi/pi.hpp>
   #include <n64/pif/pif.hpp>
   #include <n64/ri/ri.hpp>

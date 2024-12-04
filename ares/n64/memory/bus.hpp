@@ -80,9 +80,14 @@ inline auto Bus::write(u32 address, u64 data, Thread& thread, const char *periph
   if(address <= 0x048f'ffff) return si.write<Size>(address, data, thread);
   if(address <= 0x04ff'ffff) return freezeUnmapped(address);
   if(address <= 0x1fbf'ffff) return pi.write<Size>(address, data, thread);
-  if(address <= 0x1fcf'ffff)
-    if(system._BB()) return mi.write<Size>(address, data, thread);
-    else             return si.write<Size>(address, data, thread);
+  if(system._BB()) {
+    if(address <= 0x1fc7'ffff) return mi.write<Size>(address, data, thread);
+    if(address <= 0x1fc8'ffff) return virage0.write<Size>(address, data, thread);
+    if(address <= 0x1fc9'ffff) return virage1.write<Size>(address, data, thread);
+    if(address <= 0x1fcf'ffff) return virage2.write<Size>(address, data, thread);
+  } else {
+    if(address <= 0x1fcf'ffff) return si.write<Size>(address, data, thread);
+  }
   if(address <= 0x7fff'ffff) return pi.write<Size>(address, data, thread);
   return freezeUnmapped(address);
 }

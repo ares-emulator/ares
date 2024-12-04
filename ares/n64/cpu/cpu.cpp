@@ -77,6 +77,8 @@ auto CPU::synchronize() -> void {
     case Queue::VIRAGE0_Command: return virage0.commandFinished();
     case Queue::VIRAGE1_Command: return virage1.commandFinished();
     case Queue::VIRAGE2_Command: return virage2.commandFinished();
+    case Queue::NAND_Command: return pi.nandCommandFinished();
+    case Queue::AES_Command: return pi.aesCommandFinished();
     case Queue::RTC_Tick:      return cartridge.rtc.tick();
     case Queue::DD_Clock_Tick:  return dd.rtc.tickClock();
     case Queue::DD_MECHA_Response:  return dd.mechaResponse();

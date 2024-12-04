@@ -1,0 +1,151 @@
+#include <n64/n64.hpp>
+
+namespace ares::Nintendo64 {
+
+NAND nand0(0);
+NAND nand1(1);
+NAND nand2(2);
+NAND nand3(3);
+#include "debugger.cpp"
+#include "serialization.cpp"
+
+auto NAND::load(Node::Object parent) -> void {
+  node = parent->append<Node::Object>("NAND");
+
+  data.allocate(0x4000000);
+  spare.allocate(0x10000);
+  writeBuffer.allocate(0x200);
+  writeBufferSpare.allocate(0x10);
+
+  debugger.load(node);
+}
+
+auto NAND::unload() -> void {
+  debugger = {};
+  node.reset();
+  
+  data.reset();
+  spare.reset();
+  writeBuffer.reset();
+  writeBufferSpare.reset();
+}
+
+auto NAND::save() -> void {
+  if(!node) return;
+
+  if (debugger.num != 0) return; //TODO: multi-NAND
+
+  // save NAND image
+  string dataName = "nand.flash";
+  if(auto fp = system.pak->write(dataName)) {
+    data.save(fp);
+  }
+  string spareName = "spare.flash";
+  if(auto fp = system.pak->write(spareName)) {
+    spare.save(fp);
+  }
+}
+
+auto NAND::power(bool reset) -> void {
+  if (debugger.num != 0) return; //TODO: multi-NAND
+
+  // open NAND image
+  string dataName = "nand.flash";
+  if(auto fp = system.pak->write(dataName)) {
+    data.load(fp);
+  }
+  string spareName = "spare.flash";
+  if(auto fp = system.pak->write(spareName)) {
+    spare.load(fp);
+  }
+
+  writeBuffer.fill();
+  writeBufferSpare.fill();
+}
+
+auto NAND::read(Memory::Writable& dest, Memory::Writable& spareDest, n27 pageNum, n10 length) -> void {
+  for (auto i : range(min(length, 0x200))) {
+    dest.write<Byte>(i, data.read<Byte>(pageNum + pageOffset + i));
+  }
+
+  if (length > 0x200) {
+    for (auto i : range(length - 0x200))
+      spareDest.write<Byte>(i, spare.read<Byte>((pageNum >> 10) + i));
+  }
+}
+
+auto NAND::readId(Memory::Writable& dest, n10 length) -> void {
+  for (auto i : range(length))
+    dest.write<Byte>(i, (i > 4) ? 0 : ID[i]);
+}
+
+auto NAND::writeToBuffer(Memory::Writable& src, Memory::Writable& spareSrc, n27 pageNum, n10 length) -> void {
+  // transfers data from PI buffer to the internal write buffer
+  for (auto i : range(min(length, 0x200)))
+    writeBuffer.write<Byte>(pageOffset + i, src.read<Byte>(i));
+
+  if (length > 0x200) {
+    for (auto i : range(length - 0x200))
+      writeBufferSpare.write<Byte>(i, spareSrc.read<Byte>(i));
+  }
+  
+  //TODO: If writeBufferSpare is all FF, calculate ecc
+}
+
+auto NAND::commitWriteBuffer(n27 pageNum) -> void {
+  // transfers the write buffer to the NAND flash itself, only flips 1 -> 0, 0 remains 0
+  for (auto i : range(0x200))
+    data.write<Byte>(pageNum + i, data.read<Byte>(pageNum + i) & writeBuffer.read<Byte>(i));
+
+  for (auto i : range(0x10))
+    spare.write<Byte>((pageNum >> 10) + i, writeBufferSpare.read<Byte>(i));
+}
+
+auto NAND::queueErasure(n27 pageNum) -> void {
+  // queue erasure of page number
+
+  // TODO these should be indexed by plane, as in you can queue 1 page per different plane
+  auto i = 0;
+
+  eraseQueuePage[i] = pageNum;
+  eraseQueueOccupied = (1 << i);
+}
+
+auto NAND::execErasure() -> void {
+  for (auto i : range(4))
+  {
+    if (!(eraseQueueOccupied & (1 << i)))
+      continue;
+
+    for (auto j : range(0x200)) // TODO erase spare
+      data.write<Byte>(eraseQueuePage[i] * 0x200 + j, 0xFF);
+
+    eraseQueueOccupied &= ~(1 << i);
+  }
+}
+
+auto NAND::readStatus(Memory::Writable& dest, n10 length, bool multiplane) -> void {
+  n8 status;
+
+  bool fail = 0;
+  bool fail_plane0 = 0;
+  bool fail_plane1 = 0;
+  bool fail_plane2 = 0;
+  bool fail_plane3 = 0;
+  bool ready_bit = 1;
+  bool write_protect_disabled = 1;
+
+  status.bit(0) = fail;
+  status.bit(1) = multiplane ? fail_plane0 : 0;
+  status.bit(2) = multiplane ? fail_plane1 : 0;
+  status.bit(3) = multiplane ? fail_plane2 : 0;
+  status.bit(4) = multiplane ? fail_plane3 : 0;
+  status.bit(5) = 0;
+  status.bit(6) = ready_bit;
+  status.bit(7) = write_protect_disabled;
+
+  for (auto i : range(length))
+    dest.write<Byte>(i, (i == 0) ? u8(status) : 0);
+}
+
+}

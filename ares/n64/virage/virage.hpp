@@ -57,6 +57,7 @@ private:
     n1 busy;
     n1 loadDone;
     n1 storeDone;
+    n1 unk30;
 
     n32 command;
   } io;

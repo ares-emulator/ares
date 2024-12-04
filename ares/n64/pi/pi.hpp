@@ -8,6 +8,7 @@ struct PI : Memory::RCP<PI> {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto ioBuffers(bool mode, u32 address, u32 data, const char *buffer) -> void;
     auto io(bool mode, u32 address, u32 data) -> void;
     auto ide(bool mode, u2 which, u16 data) -> void;
 
@@ -24,12 +25,16 @@ struct PI : Memory::RCP<PI> {
   auto access() -> BBAccess;
 
   //dma.cpp
+  auto bufferDMARead() -> void;
+  auto bufferDMAWrite() -> void;
   auto dmaRead() -> void;
   auto dmaWrite() -> void;
   auto dmaFinished() -> void;
   auto dmaDuration(bool read) -> u32;
 
   //io.cpp
+  auto aesCommandFinished() -> void;
+  auto nandCommandFinished() -> void;
   auto regsRead(u32 address) -> u32;
   auto bufRead(u32 address) -> u32;
   auto atbRead(u32 address) -> u32;
@@ -102,9 +107,7 @@ struct PI : Memory::RCP<PI> {
     n1 gpio;
     n1 ide;
     n1 err;
-  };
-
-  BBAccess bb_allowed;
+  } bb_allowed;
 
   struct BBIDE {
     n16 data;
@@ -112,6 +115,50 @@ struct PI : Memory::RCP<PI> {
   };
 
   BBIDE bb_ide[4];
+
+  struct BB_NAND {
+    Memory::Writable buffer0;
+    Memory::Writable buffer1;
+    Memory::Writable spare0;
+    Memory::Writable spare1;
+
+    struct {
+      //BB_NAND_CTRL: read
+      n1 busy;
+      n1 sbErr;
+      n1 dbErr;
+
+      //BB_NAND_CTRL: write
+      n1 intrDone;
+      n6 unk24_29;
+      NAND::Command command;
+      n1 unk15;
+      n1 bufferSel;
+      n2 deviceSel;
+      n1 ecc;
+      n1 multiCycle;
+      n10 xferLen;
+
+      //BB_NAND_ADDR
+      n27 pageNumber;
+    } io;
+
+    NAND* nand[4];
+  } bb_nand;
+
+  struct BB_AES {
+    Memory::Writable ekey;
+    Memory::Writable iv;
+
+    n1 intrPending;
+    n1 intrDone;
+    n1 busy;
+    n1 chainIV;
+    n1 bufferSel;
+    n6 bufferOffset;
+    n6 dataSize;
+    n7 ivOffset;
+  } bb_aes;
 };
 
 extern PI pi;

@@ -11,6 +11,13 @@ struct MI : Memory::RCP<MI> {
     auto load(Node::Object) -> void;
     auto interrupt(u8 source) -> void;
     auto io(bool mode, u32 address, u32 data) -> void;
+    auto ioMem(bool mode, u32 address, u32 data, const char *name) -> void;
+
+    struct Memory {
+      Node::Debugger::Memory rom;
+      Node::Debugger::Memory ram;
+      Node::Debugger::Memory scratch;
+    } memory;
 
     struct Tracer {
       Node::Debugger::Tracer::Notification interrupt;

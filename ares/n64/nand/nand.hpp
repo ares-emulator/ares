@@ -1,0 +1,70 @@
+//NAND
+
+struct NAND : Memory::RCP<NAND> {
+  enum Command : u8 {
+    Read0                  = 0x00,
+    Read1                  = 0x01,
+    ReadSpare              = 0x50,
+    ReadID                 = 0x90,
+    Reset                  = 0xFF,
+    PageProgramC1          = 0x80,
+    PageProgramC2          = 0x10,
+    PageProgramDummyC2     = 0x11,
+    CopyBackProgramC2      = 0x8A,
+    CopyBackProgramDummyC1 = 0x03,
+    BlockEraseC1           = 0x60,
+    BlockEraseC2           = 0xD0,
+    ReadStatus             = 0x70,
+    ReadStatusMultiplane   = 0x71,
+  };
+
+  Node::Object node;
+
+  Memory::Writable data = {};
+  Memory::Writable spare = {};
+  Memory::Writable writeBuffer = {};
+  Memory::Writable writeBufferSpare = {};
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto command(Command cmd, n27 pageNumber, n10 length) -> void;
+
+    struct Tracer {
+      Node::Debugger::Tracer::Notification io;
+    } tracer;
+
+    u32 num;
+  } debugger;
+
+  NAND(u32 n) {
+    debugger.num = n;
+  }
+
+  static constexpr u8 ID[4] = { 0xEC, 0x76, 0xA5, 0xC0 };
+
+  //nand.cpp
+  auto load(Node::Object) -> void;
+  auto unload() -> void;
+  auto save() -> void;
+  auto power(bool reset) -> void;
+  auto read(Memory::Writable& dest, Memory::Writable& spareDest, n27 pageNum, n10 length) -> void;
+  auto readId(Memory::Writable& dest, n10 length) -> void;
+  auto writeToBuffer(Memory::Writable& src, Memory::Writable& spareSrc, n27 pageNum, n10 length) -> void;
+  auto commitWriteBuffer(n27 pageNum) -> void;
+  auto readStatus(Memory::Writable& dest, n10 length, bool multiplane) -> void;
+  auto queueErasure(n27 pageNum) -> void;
+  auto execErasure() -> void;
+
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
+  n10 pageOffset = 0;
+  u8 eraseQueueOccupied = 0;
+  n27 eraseQueuePage[4] = {};
+};
+
+extern NAND nand0;
+extern NAND nand1;
+extern NAND nand2;
+extern NAND nand3;
