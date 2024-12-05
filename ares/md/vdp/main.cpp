@@ -21,7 +21,6 @@ template<bool _h40> auto VDP::tick() -> void {
   }
 
   irq.poll();
-  vram.refreshing = 0;
 }
 
 auto VDP::vblankcheck() -> void {
@@ -91,8 +90,8 @@ auto VDP::slot() -> void {
   dma.run();
 }
 
-auto VDP::refresh() -> void {
-  vram.refreshing = 1;
+auto VDP::refresh(bool active) -> void {
+  vram.refreshing = active;
 }
 
 auto VDP::main() -> void {
@@ -150,8 +149,8 @@ auto VDP::mainH32() -> void {
   window.attributesFetch(-1);
 
   tick<false>(); layerA.mappingFetch(-1);
-  tick<false>(); !displayEnable() ? refresh() : sprite.patternFetch(30);
-  tick<false>(); layerA.patternFetch( 0);
+  tick<false>(); !displayEnable() ? refresh(true) : sprite.patternFetch(30);
+  tick<false>(); layerA.patternFetch( 0); refresh(false);
   tick<false>(); layerA.patternFetch( 1);
   tick<false>(); layerB.mappingFetch(-1);
   tick<false>(); sprite.patternFetch(31);
@@ -199,8 +198,8 @@ auto VDP::mainH40() -> void {
   window.attributesFetch(-1);
 
   tick<true>(); layerA.mappingFetch(-1);
-  tick<true>(); !displayEnable() ? refresh() : sprite.patternFetch(38);
-  tick<true>(); layerA.patternFetch( 0);
+  tick<true>(); !displayEnable() ? refresh(true) : sprite.patternFetch(38);
+  tick<true>(); layerA.patternFetch( 0); refresh(false);
   tick<true>(); layerA.patternFetch( 1);
   tick<true>(); layerB.mappingFetch(-1);
   tick<true>(); sprite.patternFetch(39);
@@ -217,8 +216,8 @@ template<bool _h40, bool _pixels> auto VDP::blocks() -> void {
     layerB.attributesFetch();
     window.attributesFetch(block);
     tick<_h40>(); layerA.mappingFetch(block);
-    tick<_h40>(); (block & 3) != 3 ? slot() : refresh();
-    tick<_h40>(); layerA.patternFetch(block * 2 + 2);
+    tick<_h40>(); (block & 3) != 3 ? slot() : refresh(true);
+    tick<_h40>(); layerA.patternFetch(block * 2 + 2); refresh(false);
     tick<_h40>(); layerA.patternFetch(block * 2 + 3);
     tick<_h40>(); layerB.mappingFetch(block);
     tick<_h40>(); sprite.mappingFetch(block);

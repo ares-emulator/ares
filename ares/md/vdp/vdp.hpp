@@ -70,7 +70,7 @@ struct VDP : Thread {
   auto vblankcheck() -> void;
   auto vedge() -> void;
   auto slot() -> void;
-  auto refresh() -> void;
+  auto refresh(bool active) -> void;
   auto main() -> void;
   auto render() -> void;
   auto mainH32() -> void;
