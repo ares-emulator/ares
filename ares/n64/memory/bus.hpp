@@ -4,7 +4,7 @@ inline auto Bus::read(u32 address, Thread& thread, const char *peripheral) -> u6
 
   if(address <= 0x03ef'ffff) return rdram.ram.read<Size>(address, peripheral);
   if(address <= 0x03ff'ffff) return rdram.read<Size>(address, thread);
-  if(Size == Dual)           return freezeDualRead(address), 0;
+  if((!system._BB() || !(address >= 0x1fc0'0000 && address <= 0x1fc7'ffff)) && Size == Dual)           return freezeDualRead(address), 0;
   if(address <= 0x0407'ffff) return rsp.read<Size>(address, thread);
   if(address <= 0x040b'ffff) return rsp.status.read<Size>(address, thread);
   if(address <= 0x040f'ffff) return freezeUnmapped(address), 0;
@@ -16,6 +16,10 @@ inline auto Bus::read(u32 address, Thread& thread, const char *peripheral) -> u6
   if(address <= 0x046f'ffff) return pi.read<Size>(address, thread);
   if(address <= 0x047f'ffff) return ri.read<Size>(address, thread);
   if(address <= 0x048f'ffff) return si.read<Size>(address, thread);
+  if(system._BB()) {
+    if(address <= 0x049f'ffff) return usb0.read<Size>(address, thread);
+    if(address <= 0x04af'ffff) return usb1.read<Size>(address, thread);
+  }
   if(address <= 0x04ff'ffff) return freezeUnmapped(address), 0;
   if(address <= 0x1fbf'ffff) return pi.read<Size>(address, thread);
   if(system._BB()) {
@@ -78,6 +82,10 @@ inline auto Bus::write(u32 address, u64 data, Thread& thread, const char *periph
   if(address <= 0x046f'ffff) return pi.write<Size>(address, data, thread);
   if(address <= 0x047f'ffff) return ri.write<Size>(address, data, thread);
   if(address <= 0x048f'ffff) return si.write<Size>(address, data, thread);
+  if(system._BB()) {
+    if(address <= 0x049f'ffff) return usb0.write<Size>(address, data, thread);
+    if(address <= 0x04af'ffff) return usb1.write<Size>(address, data, thread);
+  }
   if(address <= 0x04ff'ffff) return freezeUnmapped(address);
   if(address <= 0x1fbf'ffff) return pi.write<Size>(address, data, thread);
   if(system._BB()) {

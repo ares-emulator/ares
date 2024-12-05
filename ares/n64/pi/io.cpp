@@ -206,7 +206,15 @@ auto PI::regsRead(u32 address) -> u32 {
   }
 
   if(address == 21) {
-    debug(unimplemented, "[PI::regsRead] Read from reg 21");
+    //PI_ALLOWED_IO
+    data.bit(0) = bb_allowed.buf;
+    data.bit(1) = bb_allowed.flash;
+    data.bit(2) = bb_allowed.atb;
+    data.bit(3) = bb_allowed.aes;
+    data.bit(4) = bb_allowed.dma;
+    data.bit(5) = bb_allowed.gpio;
+    data.bit(6) = bb_allowed.ide;
+    data.bit(7) = bb_allowed.err;
   }
 
   if(address == 22) {
@@ -219,18 +227,6 @@ auto PI::regsRead(u32 address) -> u32 {
     //BB_WR_LEN
     if(access().dma)
       data.bit(0,8) = io.writeLength;
-  }
-
-  if(address == 15) {
-    //PI_ALLOWED_IO
-    data.bit(0) = bb_allowed.buf;
-    data.bit(1) = bb_allowed.flash;
-    data.bit(2) = bb_allowed.atb;
-    data.bit(3) = bb_allowed.aes;
-    data.bit(4) = bb_allowed.dma;
-    data.bit(5) = bb_allowed.gpio;
-    data.bit(6) = bb_allowed.ide;
-    data.bit(7) = bb_allowed.err;
   }
 
 
@@ -494,13 +490,17 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
         if (data.bit(31)) { //Execute command
           bb_nand.io.busy = 1;
           queue.insert(Queue::NAND_Command, 200); //TODO cycles, depending on command type
+        } else {
+          // TODO: which bit actually does this?
+          mi.lower(MI::IRQ::FLASH);
         }
       }
     }
   }
 
   if(address == 19) {
-    debug(unimplemented, "[PI::regsWrite] Write to reg 19");
+    if(access().flash)
+      bb_nand.io.config = data.bit(0,31);
   }
 
   if(address == 20) {
@@ -514,12 +514,23 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
       if(data.bit(31)) { //Execute
         bb_aes.busy = 1;
         queue.insert(Queue::AES_Command, 200); // TODO cycles, proportional to data size
+      } else {
+        // TODO: which bit actually does this?
+        mi.lower(MI::IRQ::AES);
       }
     }
   }
 
   if(address == 21) {
-    debug(unimplemented, "[PI::regsWrite] Write to reg 21");
+    //PI_ALLOWED_IO
+    bb_allowed.buf   = data.bit(0) & access().buf;
+    bb_allowed.flash = data.bit(1) & access().flash;
+    bb_allowed.atb   = data.bit(2) & access().atb;
+    bb_allowed.aes   = data.bit(3) & access().aes;
+    bb_allowed.dma   = data.bit(4) & access().dma;
+    bb_allowed.gpio  = data.bit(5) & access().gpio;
+    bb_allowed.ide   = data.bit(6) & access().ide;
+    bb_allowed.err   = data.bit(7) & access().err;
   }
 
   if(address == 22) {
@@ -541,20 +552,6 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
       bufferDMAWrite();
     }
   }
-
-  if(address == 15) {
-    //PI_ALLOWED_IO
-    bb_allowed.buf   = data.bit(0) & access().buf;
-    bb_allowed.flash = data.bit(1) & access().flash;
-    bb_allowed.atb   = data.bit(2) & access().atb;
-    bb_allowed.aes   = data.bit(3) & access().aes;
-    bb_allowed.dma   = data.bit(4) & access().dma;
-    bb_allowed.gpio  = data.bit(5) & access().gpio;
-    bb_allowed.ide   = data.bit(6) & access().ide;
-    bb_allowed.err   = data.bit(7) & access().err;
-  }
-
-
 
   if(address == 24) {
     //PI_BB_GPIO

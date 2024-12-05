@@ -77,18 +77,23 @@ auto MI::ioRead(u32 address) -> u32 {
 
   if(address == 5) {
     //MI_BB_SECURE_EXCEPTION
-    data.bit( 0) = bb_exc.secure;
-    data.bit( 1) = bb_exc.boot_swap;
-    data.bit( 2) = bb_exc.application;
-    data.bit( 3) = bb_exc.timer;
-    data.bit( 4) = bb_exc.pi_error;
-    data.bit( 5) = bb_exc.mi_error;
-    data.bit( 6) = bb_exc.button;
-    data.bit( 7) = bb_exc.md;
-    data.bit(24) = bb_exc.sk_ram_access;
-
-    if(!secure()) bb_trap.application = 1;
-    poll();
+    if(!secure()) {
+      printf("SKC %016llX\n", cpu.ipu.r[CPU::IPU::V0].u64);
+      bb_trap.application = 1;
+      cpu.scc.nmiStrobe = 1;
+      cpu.pipeline.exception();
+      data = 0; //TODO guess, what actually happens to the register writeback?
+    } else {
+      data.bit( 0) = bb_exc.secure;
+      data.bit( 1) = bb_exc.boot_swap;
+      data.bit( 2) = bb_exc.application;
+      data.bit( 3) = bb_exc.timer;
+      data.bit( 4) = bb_exc.pi_error;
+      data.bit( 5) = bb_exc.mi_error;
+      data.bit( 6) = bb_exc.button;
+      data.bit( 7) = bb_exc.md;
+      data.bit(24) = bb_exc.sk_ram_access;
+    }
   }
 
 

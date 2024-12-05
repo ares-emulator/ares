@@ -20,6 +20,7 @@ ares.objects += ares-n64-rdp
 ares.objects += ares-iqueplayer-virage
 ares.objects += ares-iqueplayer-nand
 ares.objects += ares-iqueplayer-aes
+ares.objects += ares-iqueplayer-usb
 
 $(object.path)/ares-n64-memory.o:     $(ares.path)/n64/memory/memory.cpp
 $(object.path)/ares-n64-system.o:     $(ares.path)/n64/system/system.cpp
@@ -44,6 +45,7 @@ $(object.path)/ares-n64-rdp.o:        $(ares.path)/n64/rdp/rdp.cpp
 $(object.path)/ares-iqueplayer-virage.o: $(ares.path)/n64/virage/virage.cpp
 $(object.path)/ares-iqueplayer-nand.o: $(ares.path)/n64/nand/nand.cpp
 $(object.path)/ares-iqueplayer-aes.o: $(ares.path)/n64/aes/aes.cpp
+$(object.path)/ares-iqueplayer-usb.o: $(ares.path)/n64/usb/usb.cpp
 
 ifeq ($(vulkan),true)
   ifeq ($(platform),macos)

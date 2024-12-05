@@ -100,8 +100,10 @@ auto MI::poll() -> void {
 
     //this isn't right, but the behaviour is the same
     bb_trap.application = 0;
-    
-    cpu.scc.nmiPending = enter_secure_mode();
+
+    cpu.scc.nmiStrobe = enter_secure_mode();
+    if (cpu.scc.nmiStrobe)
+      cpu.pipeline.exception();
   }
 }
 

@@ -116,6 +116,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.tagLo.physicalAddress);
   s(scc.epcError);
   s(scc.latch);
+  s(scc.nmiStrobe);
   s(scc.nmiPending);
   s(scc.sysadFrozen);
 

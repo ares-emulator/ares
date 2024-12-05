@@ -103,7 +103,8 @@ auto CPU::instruction() -> void {
       return exception.interrupt();
     }
   }
-  if (scc.nmiPending) {
+  if (scc.nmiPending || scc.nmiStrobe) {
+    scc.nmiStrobe = 0;
     debugger.nmi();
     step(1 * 2);
     return exception.nmi();

@@ -655,6 +655,7 @@ struct CPU : Thread {
     //other
     n64 latch;
     n1 nmiPending;
+    n1 nmiStrobe;
     n1 sysadFrozen;
   } scc;
 
@@ -680,7 +681,7 @@ struct CPU : Thread {
 
     struct Coprocessor {
       static constexpr u8 revision = 0x00;
-      static constexpr u8 implementation = 0x0a;
+      static constexpr u8 implementation = 0x0b;
     } coprocessor;
 
     struct ControlStatus {

@@ -140,6 +140,8 @@ struct PI : Memory::RCP<PI> {
       n1 multiCycle;
       n10 xferLen;
 
+      n32 config;
+
       //BB_NAND_ADDR
       n27 pageNumber;
     } io;

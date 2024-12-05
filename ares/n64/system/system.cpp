@@ -135,6 +135,8 @@ auto System::load(Node::System& root, string name) -> bool {
     nand1.load(node);
     nand2.load(node);
     nand3.load(node);
+    usb0.load(node);
+    usb1.load(node);
   }
 
   #if defined(VULKAN)
@@ -336,6 +338,8 @@ auto System::unload() -> void {
     nand1.unload();
     nand2.unload();
     nand3.unload();
+    usb0.unload();
+    usb1.unload();
   }
   pak.reset();
   node.reset();
@@ -387,6 +391,8 @@ auto System::power(bool reset) -> void {
     nand1.power(reset);
     nand2.power(reset);
     nand3.power(reset);
+    usb0.power(reset);
+    usb1.power(reset);
   }
 }
 
