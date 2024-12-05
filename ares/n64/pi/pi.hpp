@@ -16,6 +16,10 @@ struct PI : Memory::RCP<PI> {
       Node::Debugger::Memory buffer;
     } memory;
 
+    struct Properties {
+      Node::Debugger::Properties atb;
+    } properties;
+
     struct Tracer {
       Node::Debugger::Tracer::Notification io;
       Node::Debugger::Tracer::Notification ide[4];
@@ -56,6 +60,7 @@ struct PI : Memory::RCP<PI> {
   auto writeWord(u32 address, u32 data, Thread& thread) -> void;
   auto writeFinished() -> void;
   auto writeForceFinish() -> u32;
+  auto atbMatch(u32 address, u32 i) -> bool;
   template <u32 Size>
   auto busRead(u32 address) -> u32;
   template <u32 Size>
@@ -158,6 +163,28 @@ struct PI : Memory::RCP<PI> {
     n6 dataSize;
     n7 ivOffset;
   } bb_aes;
+
+  struct BB_ATB {
+    static constexpr u32 MaxEntries = 192;
+    struct {
+      n1 ivSource;
+      n1 dmaEnable;
+      n1 cpuEnable;
+      n16 numBlocks;
+    } upper;
+    struct Entry {
+      n1 ivSource;
+      n1 dmaEnable;
+      n1 cpuEnable;
+      n16 numBlocks;
+      u32 nandAddr;
+    } entries[MaxEntries];
+    u32 pbusAddresses[MaxEntries];
+    u32 addressMasks[MaxEntries];
+
+    u32 entryCached;
+    u32 pageCached;
+  } bb_atb;
 };
 
 extern PI pi;

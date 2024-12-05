@@ -101,9 +101,13 @@ auto MI::poll() -> void {
     //this isn't right, but the behaviour is the same
     bb_trap.application = 0;
 
-    cpu.scc.nmiStrobe = enter_secure_mode();
-    if (cpu.scc.nmiStrobe)
+    cpu.scc.nmiStrobe = !bb_exc.secure && enter_secure_mode();
+    if (cpu.scc.nmiStrobe) {
+      if constexpr(Accuracy::CPU::Recompiler) {
+        cpu.recompiler.invalidateRange(0x1fc0'0000, 0x80000);
+      }
       cpu.pipeline.exception();
+    }
   }
 }
 

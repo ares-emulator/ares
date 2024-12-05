@@ -14,6 +14,23 @@ auto PI::Debugger::load(Node::Object parent) -> void {
     memory.buffer->setWrite([&](u32 address, u8 data) -> void {
       return pi.bb_nand.buffer.write<Byte>(address, data);
     });
+
+    properties.atb = parent->append<Node::Debugger::Properties>("PI ATB Config");
+    properties.atb->setQuery([&] {
+      string output;
+      output.append("ATB Configuration\n");
+      for (auto i : range(PI::BB_ATB::MaxEntries)) {
+        output.append("ATB [", i,"]\n");
+        output.append("    ivSource    : ", boolean(pi.bb_atb.entries[i].ivSource), "\n");
+        output.append("    dmaEnable   : ", boolean(pi.bb_atb.entries[i].dmaEnable), "\n");
+        output.append("    cpuEnable   : ", boolean(pi.bb_atb.entries[i].cpuEnable), "\n");
+        output.append("    numBlocks   : ", pi.bb_atb.entries[i].numBlocks, "\n");
+        output.append("    nandAddr    : ", pi.bb_atb.entries[i].nandAddr, "\n");
+        output.append("    pbusAddress : ", hex(pi.bb_atb.pbusAddresses[i], 8L), "\n");
+        output.append("    mask        : ", hex(pi.bb_atb.addressMasks[i], 8L), "\n");
+      }
+      return output;
+    });
   }
 }
 

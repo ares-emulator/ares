@@ -23,7 +23,11 @@ inline auto Bus::read(u32 address, Thread& thread, const char *peripheral) -> u6
   if(address <= 0x04ff'ffff) return freezeUnmapped(address), 0;
   if(address <= 0x1fbf'ffff) return pi.read<Size>(address, thread);
   if(system._BB()) {
-    if(address <= 0x1fc7'ffff) return mi.read<Size>(address, thread);
+    if(address <= 0x1fc7'ffff) {
+      if constexpr(Size == Dual) {
+        return ((u64)mi.readWord(address, thread) << 32) | (u64)mi.readWord(address + 4, thread);
+      } else return mi.read<Size>(address, thread);
+    }
     if(address <= 0x1fc8'ffff) return virage0.read<Size>(address, thread);
     if(address <= 0x1fc9'ffff) return virage1.read<Size>(address, thread);
     if(address <= 0x1fcf'ffff) return virage2.read<Size>(address, thread);
@@ -54,7 +58,7 @@ inline auto Bus::readBurst(u32 address, u32 *data, Thread& thread) -> void {
     return;
   }
 
-  if(address >= 0x1fc0'0000 && address <= 0x1fc8'0000) {
+  if(address >= 0x1fc0'0000 && address < 0x1fc8'0000) {
     return mi.readBurst<Size>(address, data, thread, "CPU");
   }
 
@@ -89,7 +93,13 @@ inline auto Bus::write(u32 address, u64 data, Thread& thread, const char *periph
   if(address <= 0x04ff'ffff) return freezeUnmapped(address);
   if(address <= 0x1fbf'ffff) return pi.write<Size>(address, data, thread);
   if(system._BB()) {
-    if(address <= 0x1fc7'ffff) return mi.write<Size>(address, data, thread);
+    if(address <= 0x1fc7'ffff) {
+      if constexpr(Size == Dual) {
+        mi.writeWord(address, data >> 32, thread);
+        mi.writeWord(address + 4, data, thread);
+        return;
+      } else return mi.write<Size>(address, data, thread);
+    }
     if(address <= 0x1fc8'ffff) return virage0.write<Size>(address, data, thread);
     if(address <= 0x1fc9'ffff) return virage1.write<Size>(address, data, thread);
     if(address <= 0x1fcf'ffff) return virage2.write<Size>(address, data, thread);
@@ -114,7 +124,7 @@ inline auto Bus::writeBurst(u32 address, u32 *data, Thread& thread) -> void {
     return;
   }
 
-  if(address >= 0x1fc0'0000 && address <= 0x1fc8'0000) {
+  if(address >= 0x1fc0'0000 && address < 0x1fc8'0000) {
     return mi.writeBurst<Size>(address, data, thread, "CPU");
   }
 
@@ -127,7 +137,7 @@ inline auto Bus::freezeUnmapped(u32 address) -> void {
 }
 
 inline auto Bus::freezeUncached(u32 address) -> void {
-  debug(unusual, "[Bus::freezeUncached] CPU frozen because of cached access to non-RDRAM area: 0x", hex(address, 8L));
+  debug(unusual, "[Bus::freezeUncached] CPU frozen because of cached access to non-RDRAM area: 0x", hex(address, 8L), " @PC=0x", hex(cpu.ipu.pc, 8L));
   cpu.scc.sysadFrozen = true;
 }
 

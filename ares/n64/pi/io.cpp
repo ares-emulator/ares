@@ -314,6 +314,7 @@ auto PI::bufRead(u32 address) -> u32 {
 
 auto PI::atbRead(u32 address) -> u32 {
   auto data = 0;
+  debug(unimplemented, "[PI::atbRead] Read from ATB entries");
   debugger.io(Read, address, data);
   return data;
 }
@@ -467,7 +468,10 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
   }
 
   if(address == 16) {
-    debug(unimplemented, "[PI::regsWrite] Write to reg 16");
+    bb_atb.upper.ivSource = data.bit(8);
+    bb_atb.upper.dmaEnable = data.bit(5);
+    bb_atb.upper.cpuEnable = data.bit(4);
+    bb_atb.upper.numBlocks = 1 << data.bit(0,3);
   }
 
   if(address == 17) {
@@ -636,7 +640,19 @@ auto PI::bufWrite(u32 address, u32 data_) -> void {
 }
 
 auto PI::atbWrite(u32 address, u32 data_) -> void {
-  return;
+  n32 data = data_;
+  address = (address - 0x10500) >> 2;
+
+  bb_atb.entries[address].ivSource = bb_atb.upper.ivSource;
+  bb_atb.entries[address].dmaEnable = bb_atb.upper.dmaEnable;
+  bb_atb.entries[address].cpuEnable = bb_atb.upper.cpuEnable;
+  bb_atb.entries[address].numBlocks = bb_atb.upper.numBlocks;
+  bb_atb.entries[address].nandAddr = 0x4000 * data.bit(16,31);
+  bb_atb.pbusAddresses[address] = data.bit(0,15) << 14;
+
+  bb_atb.addressMasks[address] = 0x4000 * bb_atb.upper.numBlocks - 1;
+  bb_atb.pageCached = -1u;
+  bb_atb.entryCached = -1u;
 }
 
 auto PI::ideWrite(u32 address_, u32 data_) -> void {

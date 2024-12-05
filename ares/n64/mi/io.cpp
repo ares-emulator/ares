@@ -18,12 +18,16 @@ auto MI::readWord(u32 address_, Thread& thread) -> u32 {
     } else if(read_ram & secure()) {
       name = "SK RAM";
       data = ram.read<Word>(address);
+    } else {
+      debug(unusual, "Read of SK RAM outside of secure mode @ PC=", hex(cpu.ipu.pc, 8L));
     }
   } else if(address <= 0x1fc7'ffff) {
     //scratch ram
     if(secure() | bb_exc.sk_ram_access) {
       name = "Scratch RAM";
       data = scratch.read<Word>(address);
+    } else {
+      debug(unusual, "Read of secure scratch without access @ PC=", hex(cpu.ipu.pc, 8L));
     }
   }
 
@@ -159,12 +163,16 @@ auto MI::writeWord(u32 address_, u32 data, Thread& thread) -> void {
     } else if(write_ram & secure()) {
       name = "SK RAM";
       ram.write<Word>(address, data);
+    } else {
+      debug(unusual, "Writing SK RAM outside of secure mode @ PC=", hex(cpu.ipu.pc, 8L));
     }
   } else if(address <= 0x1fc7'ffff) {
     //scratch ram
     if(secure() | bb_exc.sk_ram_access) {
       name = "Scratch RAM";
       scratch.write<Word>(address, data);
+    } else {
+      debug(unusual, "Writing secure scratch without access @ PC=", hex(cpu.ipu.pc, 8L));
     }
   }
 
@@ -231,6 +239,12 @@ auto MI::ioWrite(u32 address, u32 data_) -> void {
       bb_exc.md            = data.bit( 7) ? bb_exc.md          : bb_trap.md;
       bb_exc.sk_ram_access = data.bit(24);
       poll();
+      if (!bb_exc.secure) {
+        if constexpr(Accuracy::CPU::Recompiler) {
+          cpu.recompiler.invalidateRange(0x1fc0'0000, 0x80000);
+        }
+        printf("Exit secure mode @ PC=%016llX\n", cpu.ipu.pc);
+      }
     }
   }
 

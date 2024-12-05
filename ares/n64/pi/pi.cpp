@@ -43,6 +43,7 @@ auto PI::power(bool reset) -> void {
     bb_ide[3] = {};
     bb_nand.io = {};
     bb_nand.buffer.fill();
+    bb_atb = {};
   }
 }
 

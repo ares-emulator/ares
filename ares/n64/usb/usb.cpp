@@ -24,7 +24,8 @@ auto USB::unload() -> void {
 
 auto USB::power(bool reset) -> void {
   io = {};
-  io.otgStatus.id = 1;
+  io.otgStatus.id = 1; // B device or nothing connected
+  io.otgStatus.lineStateStable = 1; // Line is considered stable when disconnected (?)
 
   bdt.fill();
 }

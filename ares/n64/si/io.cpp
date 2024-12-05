@@ -1,11 +1,14 @@
 auto SI::readWord(u32 address, Thread& thread) -> u32 {
   if(address <= 0x048f'ffff) return ioRead(address);
 
-  if (unlikely(io.ioBusy)) {
-    writeForceFinish(); //technically, we should wait until Queue::SI_BUS_Write
-    return io.busLatch;
+  if(!system._BB()) { // Should be unreachable on iQue
+    if (unlikely(io.ioBusy)) {
+        writeForceFinish(); //technically, we should wait until Queue::SI_BUS_Write
+        return io.busLatch;
+    }
+    return pif.read<Word>(address);
   }
-  return pif.read<Word>(address);
+  return 0;
 }
 
 auto SI::ioRead(u32 address) -> u32 {
@@ -57,14 +60,16 @@ auto SI::ioRead(u32 address) -> u32 {
 auto SI::writeWord(u32 address, u32 data, Thread& thread) -> void {
   if(address <= 0x048f'ffff) return ioWrite(address, data);
 
-  if(io.ioBusy) return;
-  io.ioBusy = 1;
-  io.dmaBusy = 1;
-  io.pchState = 0xb;
-  io.dmaState = 0x9;
-  io.busLatch = data;
-  queue.insert(Queue::SI_BUS_Write, 2150*3);
-  return pif.write<Word>(address, data);
+  if(!system._BB()) { // Should be unreachable on iQue
+    if(io.ioBusy) return;
+    io.ioBusy = 1;
+    io.dmaBusy = 1;
+    io.pchState = 0xb;
+    io.dmaState = 0x9;
+    io.busLatch = data;
+    queue.insert(Queue::SI_BUS_Write, 2150*3);
+    return pif.write<Word>(address, data);
+  }
 }
 
 auto SI::ioWrite(u32 address, u32 data_) -> void {
@@ -82,7 +87,7 @@ auto SI::ioWrite(u32 address, u32 data_) -> void {
     io.dmaBusy = 1;
     io.dmaState = 1;
     io.pchState = 4;
-    int cycles = pif.estimateTiming();
+    int cycles = (!system._BB()) ? pif.estimateTiming() : 2000; //TODO: iQue cycles
     queue.insert(Queue::SI_DMA_Read, cycles*3);
   }
 

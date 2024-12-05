@@ -1,5 +1,9 @@
 auto SI::dmaRead() -> void {
-  pif.dmaRead(io.readAddress, io.dramAddress);
+  if(system._BB()) {
+    debug(unimplemented, "[SI::dmaRead] BBPlayer SI");
+  } else {
+    pif.dmaRead(io.readAddress, io.dramAddress);
+  }
   io.dmaBusy = 0;
   io.pchState = 0;
   io.dmaState = 0;
@@ -8,7 +12,11 @@ auto SI::dmaRead() -> void {
 }
 
 auto SI::dmaWrite() -> void {
-  pif.dmaWrite(io.writeAddress, io.dramAddress);
+  if(system._BB()) {
+    debug(unimplemented, "[SI::dmaWrite] BBPlayer SI");
+  } else {
+    pif.dmaWrite(io.writeAddress, io.dramAddress);
+  }
   io.dmaBusy = 0;
   io.pchState = 0;
   io.dmaState = 0;
