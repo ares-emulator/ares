@@ -90,8 +90,18 @@ auto MI::poll() -> void {
     line |= bb_irq.md    .line & bb_irq.md    .mask;
 
     cpu.scc.cause.interruptPending.bit(CPU::Interrupt::BB) = line;
+
+    bb_exc.application |= bb_trap.application;
+    bb_exc.timer       |= bb_trap.timer;
+    bb_exc.pi_error    |= bb_trap.pi_error;
+    bb_exc.mi_error    |= bb_trap.mi_error;
+    bb_exc.button      |= bb_trap.button;
+    bb_exc.md          |= bb_trap.md;
+
+    //this isn't right, but the behaviour is the same
+    bb_trap.application = 0;
     
-    cpu.scc.nmiPending |= enter_secure_mode();
+    cpu.scc.nmiPending = enter_secure_mode();
   }
 }
 

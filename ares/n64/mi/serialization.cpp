@@ -36,8 +36,18 @@ auto MI::serialize(serializer& s) -> void {
   s(io.ebusTestMode);
   s(io.rdramRegisterSelect);
 
+  s(revision.io);
+  s(revision.rac);
+
   s(bb.button);
   s(bb.card);
+
+  s(bb_trap.application);
+  s(bb_trap.timer);
+  s(bb_trap.pi_error);
+  s(bb_trap.mi_error);
+  s(bb_trap.button);
+  s(bb_trap.md);
 
   s(bb_exc.secure);
   s(bb_exc.boot_swap);

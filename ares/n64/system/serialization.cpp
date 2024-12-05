@@ -56,4 +56,12 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(rdp);
   s(rsp);
   s(dd);
+  s(virage0);
+  s(virage1);
+  s(virage2);
+  s(nand0);
+  s(nand1);
+  s(nand2);
+  s(nand3);
+  s(aes);
 }

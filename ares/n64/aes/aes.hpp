@@ -43,6 +43,9 @@ public:
 
   auto decodeCBC(Memory::Writable& mem, u32 pos, u32 numBlocks) -> void;
 
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
 private:
   u32 D[4][256];
   union {

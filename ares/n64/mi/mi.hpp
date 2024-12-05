@@ -124,6 +124,15 @@ private:
     n1 card;
   } bb;
 
+  struct BBTrapCause {
+    n1 application;
+    n1 timer;
+    n1 pi_error;
+    n1 mi_error;
+    n1 button;
+    n1 md;
+  } bb_trap;
+
   struct BBException {
     n1 secure;
     n1 boot_swap = 1;

@@ -87,7 +87,7 @@ auto MI::ioRead(u32 address) -> u32 {
     data.bit( 7) = bb_exc.md;
     data.bit(24) = bb_exc.sk_ram_access;
 
-    if(!secure()) bb_exc.application = 1;
+    if(!secure()) bb_trap.application = 1;
     poll();
   }
 
@@ -220,13 +220,14 @@ auto MI::ioWrite(u32 address, u32 data_) -> void {
     if(secure()) {
       bb_exc.secure        = data.bit( 0);
       bb_exc.boot_swap     = data.bit( 1);
-      bb_exc.application   = data.bit( 2);
-      bb_exc.timer         = data.bit( 3);
-      bb_exc.pi_error      = data.bit( 4);
-      bb_exc.mi_error      = data.bit( 5);
-      bb_exc.button        = data.bit( 6);
-      bb_exc.md            = data.bit( 7);
+      bb_exc.application   = data.bit( 2) ? bb_exc.application : bb_trap.application;
+      bb_exc.timer         = data.bit( 3) ? bb_exc.timer       : bb_trap.timer;
+      bb_exc.pi_error      = data.bit( 4) ? bb_exc.pi_error    : bb_trap.pi_error;
+      bb_exc.mi_error      = data.bit( 5) ? bb_exc.mi_error    : bb_trap.mi_error;
+      bb_exc.button        = data.bit( 6) ? bb_exc.button      : bb_trap.button;
+      bb_exc.md            = data.bit( 7) ? bb_exc.md          : bb_trap.md;
       bb_exc.sk_ram_access = data.bit(24);
+      poll();
     }
   }
 

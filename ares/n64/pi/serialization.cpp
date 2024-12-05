@@ -46,4 +46,19 @@ auto PI::serialize(serializer& s) -> void {
   s(bb_ide[2].dirty);
   s(bb_ide[3].data);
   s(bb_ide[3].dirty);
+
+  s(bb_nand.buffer);
+  s(bb_nand.io.busy);
+  s(bb_nand.io.sbErr);
+  s(bb_nand.io.dbErr);
+  s(bb_nand.io.intrDone);
+  s(bb_nand.io.unk24_29);
+  s(bb_nand.io.command);
+  s(bb_nand.io.unk15);
+  s(bb_nand.io.bufferSel);
+  s(bb_nand.io.deviceSel);
+  s(bb_nand.io.ecc);
+  s(bb_nand.io.multiCycle);
+  s(bb_nand.io.xferLen);
+  s(bb_nand.io.pageNumber);
 }

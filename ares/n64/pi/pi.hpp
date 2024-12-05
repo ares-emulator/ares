@@ -132,7 +132,7 @@ struct PI : Memory::RCP<PI> {
       //BB_NAND_CTRL: write
       n1 intrDone;
       n6 unk24_29;
-      NAND::Command command;
+      u8 command;
       n1 unk15;
       n1 bufferSel;
       n2 deviceSel;
