@@ -80,9 +80,7 @@ auto MI::ioRead(u32 address) -> u32 {
     if(!secure()) {
       printf("SKC %016llX\n", cpu.ipu.r[CPU::IPU::V0].u64);
       bb_trap.application = 1;
-      cpu.scc.nmiStrobe = 1;
-      cpu.pipeline.exception();
-      data = 0; //TODO guess, what actually happens to the register writeback?
+      poll();
     } else {
       data.bit( 0) = bb_exc.secure;
       data.bit( 1) = bb_exc.boot_swap;
