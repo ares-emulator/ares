@@ -36,11 +36,6 @@ auto DriverSettings::construct() -> void {
   videoBlockingToggle.setText("Synchronize").onToggle([&] {
     settings.video.blocking = videoBlockingToggle.checked();
     ruby::video.setBlocking(settings.video.blocking);
-    if(settings.video.flush) {
-      videoFlushToggle.setChecked(false);
-      settings.video.flush = false;
-      ruby::video.setFlush(settings.video.flush);
-    }
     if(settings.audio.blocking) {
       audioBlockingToggle.setChecked(false);
       settings.audio.blocking = false;
@@ -50,11 +45,6 @@ auto DriverSettings::construct() -> void {
   videoFlushToggle.setText("GPU sync").onToggle([&] {
     settings.video.flush = videoFlushToggle.checked();
     ruby::video.setFlush(settings.video.flush);
-    if(settings.video.blocking) {
-      videoBlockingToggle.setChecked(false);
-      settings.video.blocking = false;
-      ruby::video.setBlocking(settings.video.blocking);
-    }
     if(settings.audio.blocking) {
       audioBlockingToggle.setChecked(false);
       settings.audio.blocking = false;
