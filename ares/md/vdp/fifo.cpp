@@ -24,6 +24,29 @@ auto VDP::FIFO::run() -> bool {
     }
   }
 
+  // If the target is VRAM read, there is assumed to be no effect.
+  // However, fifo timing must account for VRAM byte access (as above).
+  if(slots[0].target == 0 && vdp.vram.mode == 0) {
+    debug(unusual, "[VDP::FIFO] write target = 0 (VRAM read)");
+    if(slots[0].lower) {
+      slots[0].lower = 0;
+      // null action
+      return true;
+    }
+    if(slots[0].upper) {
+      slots[0].upper = 0;
+      // null action
+      if(vdp.command.pending && vdp.dma.mode == 2) {
+        // trigger action here is speculative/untested
+        // but it follows from the (normal) write case
+        debug(unusual, "[VDP::FIFO] dma fill start");
+        vdp.dma.data = slots[0].data;
+        vdp.dma.wait = 0; // start pending DMA
+      }
+      return advance(), true;
+    }
+  }
+
   if(slots[0].target == 1 && vdp.vram.mode == 1)
     vdp.vram.writeByte(slots[0].address | 1, slots[0].data.byte(0));
   else if(slots[0].target == 3)

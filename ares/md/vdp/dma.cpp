@@ -25,6 +25,7 @@ auto VDP::DMA::run() -> bool {
 auto VDP::DMA::load() -> void {
   if(delay > 0) { delay--; return; }
   auto address = mode.bit(0) << 23 | source << 1;
+  if(vdp.refreshing()) return; // bus not available
   auto data = bus.read(1, 1, address);
   vdp.writeDataPort(data);
   vdp.debugger.dmaLoad(address, vdp.command.target, vdp.command.address, data);
