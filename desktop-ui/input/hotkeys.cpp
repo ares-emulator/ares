@@ -7,6 +7,10 @@ auto InputManager::createHotkeys() -> void {
     program.videoFullScreenToggle();
   }));
 
+  hotkeys.append(InputHotkey("Toggle Pseudo-Fullscreen").onPress([&] {
+    program.videoPseudoFullScreenToggle();
+  }));
+
   hotkeys.append(InputHotkey("Toggle Mouse Capture").onPress([&] {
     if(!emulator) return;
     if(!ruby::input.acquired()) {

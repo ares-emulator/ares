@@ -47,6 +47,7 @@ struct Program : ares::Platform {
   auto videoMonitorUpdate() -> void;
   auto videoFormatUpdate() -> void;
   auto videoFullScreenToggle() -> void;
+  auto videoPseudoFullScreenToggle() -> void;
 
   auto audioDriverUpdate() -> void;
   auto audioDeviceUpdate() -> void;
