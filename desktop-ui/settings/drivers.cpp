@@ -36,10 +36,30 @@ auto DriverSettings::construct() -> void {
   videoBlockingToggle.setText("Synchronize").onToggle([&] {
     settings.video.blocking = videoBlockingToggle.checked();
     ruby::video.setBlocking(settings.video.blocking);
+    if(settings.video.flush) {
+      videoFlushToggle.setChecked(false);
+      settings.video.flush = false;
+      ruby::video.setFlush(settings.video.flush);
+    }
+    if(settings.audio.blocking) {
+      audioBlockingToggle.setChecked(false);
+      settings.audio.blocking = false;
+      ruby::audio.setBlocking(settings.audio.blocking);
+    }
   });
   videoFlushToggle.setText("GPU sync").onToggle([&] {
     settings.video.flush = videoFlushToggle.checked();
     ruby::video.setFlush(settings.video.flush);
+    if(settings.video.blocking) {
+      videoBlockingToggle.setChecked(false);
+      settings.video.blocking = false;
+      ruby::video.setBlocking(settings.video.blocking);
+    }
+    if(settings.audio.blocking) {
+      audioBlockingToggle.setChecked(false);
+      settings.audio.blocking = false;
+      ruby::audio.setBlocking(settings.audio.blocking);
+    }
   });
 #if defined(PLATFORM_MACOS)
   videoColorSpaceToggle.setText("Force sRGB").onToggle([&] {
@@ -95,6 +115,16 @@ auto DriverSettings::construct() -> void {
   audioBlockingToggle.setText("Synchronize").onToggle([&] {
     settings.audio.blocking = audioBlockingToggle.checked();
     ruby::audio.setBlocking(settings.audio.blocking);
+    if(settings.video.blocking) {
+      videoBlockingToggle.setChecked(false);
+      settings.video.blocking = false;
+      ruby::video.setBlocking(settings.video.blocking);
+    }
+    if(settings.video.flush) {
+      videoFlushToggle.setChecked(false);
+      settings.video.flush = false;
+      ruby::video.setFlush(settings.video.flush);
+    }
   });
   audioDynamicToggle.setText("Dynamic rate").onToggle([&] {
     settings.audio.dynamic = audioDynamicToggle.checked();
@@ -147,6 +177,9 @@ auto DriverSettings::videoRefresh() -> void {
     ComboButtonItem item{&videoDriverList};
     item.setText(driver);
     if(driver == ruby::video.driver()) item.setSelected();
+    if (settings.video.driver == ruby::video.driver()) {
+      videoDriverAssign.setEnabled(false);
+    }
   }
   videoMonitorList.reset();
   for(auto& monitor : ruby::video.hasMonitors()) {
@@ -191,6 +224,9 @@ auto DriverSettings::audioRefresh() -> void {
     ComboButtonItem item{&audioDriverList};
     item.setText(driver);
     if(driver == ruby::audio.driver()) item.setSelected();
+    if (settings.audio.driver == ruby::audio.driver()) {
+      audioDriverAssign.setEnabled(false);
+    }
   }
   audioDeviceList.reset();
   for(auto& device : ruby::audio.hasDevices()) {
@@ -233,6 +269,9 @@ auto DriverSettings::inputRefresh() -> void {
     ComboButtonItem item{&inputDriverList};
     item.setText(driver);
     if(driver == ruby::input.driver()) item.setSelected();
+    if (settings.input.driver == ruby::input.driver()) {
+      inputDriverAssign.setEnabled(false);
+    }
   }
   VerticalLayout::resize();
 }
