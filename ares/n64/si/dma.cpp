@@ -18,7 +18,7 @@ auto SI::dmaReadBB() -> void {
     rdram.ram.write<Byte>(io.dramAddress + channel * 8 + 0, 0xFF, "SI DMA");
 
     // The tx length is the input tx length & 0x3F
-    rdram.ram.write<Byte>(io.dramAddress + channel * 8 + 1, 1, "SI DMA");
+    rdram.ram.write<Byte>(io.dramAddress + channel * 8 + 1, bbio.ch[channel].txlen, "SI DMA");
 
     // Fill first 4 rx bytes with input data
     n8 output[8];
@@ -27,10 +27,10 @@ auto SI::dmaReadBB() -> void {
     output[2].bit(0,7) = bbio.ch[channel].data[3].bit(0,7);
     output[3].bit(0,7) = bbio.ch[channel].data[4].bit(0,7);
 
-    // Query the controller
+    // Query the controller, if tx length is 0 the controller isn't sent anything
     n8 rx;
     rx.bit(0,2) = bbio.ch[channel].rxlen;
-    if (controllers[channel]->device) {
+    if (bbio.ch[channel].txlen != 0 && controllers[channel]->device) {
       n2 status = controllers[channel]->device->comm(bbio.ch[channel].txlen, bbio.ch[channel].rxlen, bbio.ch[channel].data, output);
       rx.bit(7) = !status.bit(0);
       rx.bit(6)  = status.bit(1);
@@ -45,7 +45,7 @@ auto SI::dmaReadBB() -> void {
     // This is the first byte of tx data, always.
     rdram.ram.write<Byte>(io.dramAddress + channel * 8 + 3, u8(bbio.ch[channel].data[0]), "SI DMA");
 
-    // The last 4 bytes are the first 4 bytes of rx data, if less than 4 bytes of rx data are received the data stays as it was
+    // The last 4 bytes are the first 4 bytes of rx data, which may contain input data if there was less than 4 rx bytes received
     rdram.ram.write<Byte>(io.dramAddress + channel * 8 + 4, u8(output[0]), "SI DMA");
     rdram.ram.write<Byte>(io.dramAddress + channel * 8 + 5, u8(output[1]), "SI DMA");
     rdram.ram.write<Byte>(io.dramAddress + channel * 8 + 6, u8(output[2]), "SI DMA");
@@ -83,7 +83,7 @@ auto SI::dmaWriteBB() -> void {
 
     //tx data consists of up to 5 bytes of data and then the last byte is repeated for the remainder
     //[FF] [TX] [RX] [__] [__] [__] [__] [__]
-    //we copy all 5 bytes so we can echo them back out of rx is less than 4
+    //we copy all 5 bytes so we can echo them back out if rx is less than 4
     u32 i = 0;
     for(; i < 5; i++)
       bbio.ch[channel].data[i].bit(0,7) = rdram.ram.read<Byte>(io.dramAddress + channel * 8 + 3 + i, "SI DMA");
