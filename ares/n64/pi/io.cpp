@@ -652,7 +652,7 @@ auto PI::atbWrite(u32 address, u32 data_) -> void {
   bb_atb.entries[address].nandAddr = 0x4000 * data.bit(16,31);
   bb_atb.pbusAddresses[address] = data.bit(0,15) << 14;
 
-  bb_atb.addressMasks[address] = 0x4000 * bb_atb.upper.numBlocks - 1;
+  bb_atb.addressMasks[address] = (1 << __builtin_ctz(bb_atb.pbusAddresses[address])) - 1;
   bb_atb.pageCached = -1u;
   bb_atb.entryCached = -1u;
 }

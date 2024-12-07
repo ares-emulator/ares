@@ -52,7 +52,7 @@ inline auto PI::busRead(u32 address) -> u32 {
 
       // Check for a miss if no entry was found
       if (i == -1u) {
-        printf("!! ATB MISS !!\n");
+        printf("!! ATB MISS !! 0x%08X\n", address);
         cpu.exception.busData();
         cpu.pipeline.exception();
         return 0;
@@ -78,16 +78,17 @@ inline auto PI::busRead(u32 address) -> u32 {
     u32 pageNum = (entry.nandAddr + offset) & ~(0x200-1);
     u32 pageOffset = offset & (0x200-1);
 
+    bb_nand.io.xferLen = 0x210;
+    bb_aes.chainIV = true;
+    bb_aes.dataSize = 0x200/0x10 - 1;
+    bb_aes.bufferOffset = 0;
+
     // This is a huge guess but there's surely no way there isn't something that at least resembles this
     if(pageNum != bb_atb.pageCached) {
       // Read the page into the PI buffer
 
-      bb_nand.io.xferLen = 0x210;
-      bb_aes.chainIV = true;
 
       // IV determination logic
-      // TODO this is probably missing setting the IV in some situations, like when starting a DMA
-      // in the middle of a page
       if (((address - 0x10) & ~bb_atb.addressMasks[i]) != bb_atb.pbusAddresses[i]) {
         BB_ATB::Entry &prevEntry = bb_atb.entries[i - 1];
 
@@ -100,6 +101,12 @@ inline auto PI::busRead(u32 address) -> u32 {
           nandCommandFinished();
           aes.setIV(bb_nand.buffer, 0x200 - 0x10);
         }
+      } else {
+        // same atb entry, read IV
+        // TODO this is awful, there's surely no way two pages are read back to back this often?
+        bb_nand.io.pageNumber = (pageNum - 0x10) & ~(0x200-1);
+        nandCommandFinished();
+        aes.setIV(bb_nand.buffer, (pageOffset - 0x10) & 0x1F0);
       }
 
       // Read and decode the page
