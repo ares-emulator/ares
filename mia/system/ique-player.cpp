@@ -13,11 +13,11 @@ auto iQuePlayer::load(string location) -> bool {
   pak = new vfs::directory;
   pak->append("boot.rom", boot);
   pak->append("time.rtc", 0x10);
-  pak->append("nand.flash", 0);
-  pak->append("spare.flash", 0);
+  pak->append("nand.flash", 0x4000000);
+  pak->append("spare.flash", 0x10000);
   pak->append("virage0.flash", 0x40);
   pak->append("virage1.flash", 0x40);
-  pak->append("virage2.flash", 0);
+  pak->append("virage2.flash", 0x100);
 
   if(auto fp = pak->write("time.rtc")) {
     for(auto address : range(fp->size())) fp->write(0xff);

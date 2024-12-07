@@ -87,7 +87,7 @@ auto SI::ioWrite(u32 address, u32 data_) -> void {
     io.dmaBusy = 1;
     io.dmaState = 1;
     io.pchState = 4;
-    int cycles = (!system._BB()) ? pif.estimateTiming() : 2000; //TODO: iQue cycles
+    int cycles = (!system._BB()) ? pif.estimateTiming() : 7040;
     queue.insert(Queue::SI_DMA_Read, cycles*3);
   }
 
@@ -105,7 +105,7 @@ auto SI::ioWrite(u32 address, u32 data_) -> void {
     io.dmaBusy = 1;
     io.dmaState = 4;
     io.pchState = 1;
-    queue.insert(Queue::SI_DMA_Write, 4065*3);
+    queue.insert(Queue::SI_DMA_Write, system._BB() ? 42*3 : 4065*3);
   }
 
   if(address == 5) {

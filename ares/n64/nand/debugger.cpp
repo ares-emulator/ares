@@ -22,6 +22,28 @@ auto NAND::Debugger::load(Node::Object parent) -> void {
   });
 }
 
-auto NAND::Debugger::command(Command cmd, n27 pageNumber, n10 length) -> void {
-  
+auto NAND::Debugger::command(Command cmd, string desc) -> void {
+  static const vector<string> cmdNames = {
+    "Read0",
+    "Read1",
+    "ReadSpare",
+    "ReadID",
+    "Reset",
+    "PageProgramC1",
+    "PageProgramC2",
+    "PageProgramDummyC2",
+    "CopyBackProgramC2",
+    "CopyBackProgramDummyC1",
+    "BlockEraseC1",
+    "BlockEraseC2",
+    "ReadStatus",
+    "ReadStatusMultiplane",
+  };
+
+  if(unlikely(tracer.io->enabled())) {
+    string nand_name = {"NAND", num};
+    string name = cmdNames(u8(cmd), {"CMD(0x", hex(u8(cmd), 2L), ")"});
+    string message = {nand_name, " Command=", name, ", ", desc};
+    tracer.io->notify(message);
+  }
 }

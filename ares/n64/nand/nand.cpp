@@ -72,11 +72,17 @@ auto NAND::read(Memory::Writable& dest, b1 which, n27 pageNum, n10 length) -> vo
     for (auto i : range(length - 0x200)) // TODO: page spares
       dest.write<Byte>(i + which * 0x10 + 0x400, spare.read<Byte>(((pageNum >> 14) << 4) + i));
   }
+
+  string message = { "Buffer=", which, ", PageAddr=0x", hex(pageNum), ", Length=0x", hex(length) };
+  debugger.command(NAND::Command::Read0, message);
 }
 
 auto NAND::readId(Memory::Writable& dest, b1 which, n10 length) -> void {
   for (auto i : range(length))
     dest.write<Byte>(i + which * 0x200, (i > 4) ? 0 : ID[i]);
+
+  string message = { "Buffer=", which, ", Length=0x", hex(length) };
+  debugger.command(NAND::Command::ReadID, message);
 }
 
 auto NAND::writeToBuffer(Memory::Writable& src, b1 which, n27 pageNum, n10 length) -> void {
@@ -90,6 +96,9 @@ auto NAND::writeToBuffer(Memory::Writable& src, b1 which, n27 pageNum, n10 lengt
   }
   
   //TODO: If writeBufferSpare is all FF, calculate ecc
+
+  string message = { "Buffer=", which, ", PageAddr=0x", hex(pageNum), ", Length=0x", hex(length) };
+  debugger.command(NAND::Command::PageProgramC1, message);
 }
 
 auto NAND::commitWriteBuffer(n27 pageNum) -> void {
@@ -99,6 +108,9 @@ auto NAND::commitWriteBuffer(n27 pageNum) -> void {
 
   for (auto i : range(0x10)) // TODO: page spares
     spare.write<Byte>(((pageNum >> 14) << 4) + i, writeBufferSpare.read<Byte>(i));
+
+  string message = { "PageAddr=0x", hex(pageNum) };
+  debugger.command(NAND::Command::PageProgramC2, message);
 }
 
 auto NAND::queueErasure(n27 pageNum) -> void {
@@ -109,6 +121,9 @@ auto NAND::queueErasure(n27 pageNum) -> void {
 
   eraseQueuePage[i] = pageNum;
   eraseQueueOccupied = (1 << i);
+
+  string message = { "PageAddr=0x", hex(pageNum) };
+  debugger.command(NAND::Command::BlockEraseC1, message);
 }
 
 auto NAND::execErasure() -> void {
@@ -122,6 +137,8 @@ auto NAND::execErasure() -> void {
 
     eraseQueueOccupied &= ~(1 << i);
   }
+
+  debugger.command(NAND::Command::BlockEraseC2, "");
 }
 
 auto NAND::readStatus(Memory::Writable& dest, b1 which, n10 length, bool multiplane) -> void {
@@ -146,6 +163,9 @@ auto NAND::readStatus(Memory::Writable& dest, b1 which, n10 length, bool multipl
 
   for (auto i : range(length))
     dest.write<Byte>(i + which * 0x200, (i == 0) ? u8(status) : 0);
+
+  string message = { "Buffer=", which, ", Length=0x", hex(length), ", Multiplane=", boolean(multiplane) };
+  debugger.command(NAND::Command::ReadStatus, message);
 }
 
 }

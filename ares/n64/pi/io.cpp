@@ -234,14 +234,14 @@ auto PI::regsRead(u32 address) -> u32 {
   if(address == 24) {
     //PI_BB_GPIO
     if(access().gpio) {
-      data.bit(0) = bb_gpio.power.data;
-      data.bit(1) = bb_gpio.led.data;
-      data.bit(2) = bb_gpio.rtc_clock.data;
-      data.bit(3) = bb_gpio.rtc_data.data;
-      data.bit(4) = bb_gpio.power.mask;
-      data.bit(5) = bb_gpio.led.mask;
-      data.bit(6) = bb_gpio.rtc_clock.mask;
-      data.bit(7) = bb_gpio.rtc_data.mask;
+      data.bit(0) = (bb_gpio.power.outputEnable) ? bb_gpio.power.lineOut : bb_gpio.power.lineIn;
+      data.bit(1) = (bb_gpio.led.outputEnable) ? bb_gpio.led.lineOut : bb_gpio.led.lineIn;
+      data.bit(2) = (bb_gpio.rtc_clock.outputEnable) ? bb_gpio.rtc_clock.lineOut : bb_gpio.rtc_clock.lineIn;
+      data.bit(3) = (bb_gpio.rtc_data.outputEnable) ? bb_gpio.rtc_data.lineOut : bb_gpio.rtc_data.lineIn;
+      data.bit(4) = bb_gpio.power.outputEnable;
+      data.bit(5) = bb_gpio.led.outputEnable;
+      data.bit(6) = bb_gpio.rtc_clock.outputEnable;
+      data.bit(7) = bb_gpio.rtc_data.outputEnable;
       data.bit(22,24) = box_id.unk;
       data.bit(25,26) = box_id.clock;
       data.bit(30,31) = box_id.model;
@@ -484,7 +484,9 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
         debug(unusual, "[PI::regsWrite] Write to NAND command register while busy");
       } else {
         bb_nand.io.intrDone = data.bit(30);
+        bb_nand.io.unk24_29 = data.bit(24,29);
         bb_nand.io.command = (NAND::Command)u8(data.bit(16,23));
+        bb_nand.io.unk15 = data.bit(15);
         bb_nand.io.bufferSel = data.bit(14);
         bb_nand.io.deviceSel = data.bit(12,13);
         bb_nand.io.ecc = data.bit(11);
@@ -560,16 +562,16 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
   if(address == 24) {
     //PI_BB_GPIO
     if(access().gpio) {
-      bb_gpio.power.data = data.bit(0);
-      bb_gpio.led.data = data.bit(1);
-      bb_gpio.rtc_clock.data = data.bit(2);
-      bb_gpio.rtc_data.data = data.bit(3);
-      bb_gpio.power.mask = data.bit(4);
-      bb_gpio.led.mask = data.bit(5);
-      bb_gpio.rtc_clock.mask = data.bit(6);
-      bb_gpio.rtc_data.mask = data.bit(7);
+      bb_gpio.power.lineOut = data.bit(0);
+      bb_gpio.led.lineOut = data.bit(1);
+      bb_gpio.rtc_clock.lineOut = data.bit(2);
+      bb_gpio.rtc_data.lineOut = data.bit(3);
+      bb_gpio.power.outputEnable = data.bit(4);
+      bb_gpio.led.outputEnable = data.bit(5);
+      bb_gpio.rtc_clock.outputEnable = data.bit(6);
+      bb_gpio.rtc_data.outputEnable = data.bit(7);
 
-      string display = {"[PI::ioWrite] gpio ", string{bb_gpio.led.data}, " ", string{bb_gpio.power.data}};
+      string display = {"[PI::ioWrite] gpio ", string{bb_gpio.led.lineOut}, " ", string{bb_gpio.power.lineOut}};
       debug(unimplemented, display);
     }
   }

@@ -28,7 +28,7 @@ struct NAND : Memory::RCP<NAND> {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
-    auto command(Command cmd, n27 pageNumber, n10 length) -> void;
+    auto command(Command cmd, string desc) -> void;
 
     struct Memory {
       Node::Debugger::Memory nand;

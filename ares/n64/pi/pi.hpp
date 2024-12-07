@@ -90,8 +90,9 @@ struct PI : Memory::RCP<PI> {
   } bsd1, bsd2;
 
   struct TriState {
-    n1 data;
-    n1 mask;
+    n1 lineOut;
+    n1 lineIn;
+    n1 outputEnable;
   };
 
   struct BoxID {
@@ -101,8 +102,8 @@ struct PI : Memory::RCP<PI> {
   } box_id;
 
   struct BBGPIO {
-    TriState power = { .mask = 1 };
-    TriState led = { .mask = 1 };
+    TriState power = { .outputEnable = 1 };
+    TriState led = { .outputEnable = 1 };
     TriState rtc_clock;
     TriState rtc_data;
   } bb_gpio;

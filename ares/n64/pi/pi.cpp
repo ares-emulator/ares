@@ -34,8 +34,8 @@ auto PI::power(bool reset) -> void {
   bsd2 = {};
   if(system._BB()) {
     bb_gpio = {};
-    bb_gpio.power.mask = 1;
-    bb_gpio.led.mask = 1;
+    bb_gpio.power.outputEnable = 1;
+    bb_gpio.led.outputEnable = 1;
     bb_allowed = {};
     bb_ide[0] = {};
     bb_ide[1] = {};

@@ -20,14 +20,18 @@ auto PI::serialize(serializer& s) -> void {
   s(bsd2.pageSize);
   s(bsd2.releaseDuration);
 
-  s(bb_gpio.power.data);
-  s(bb_gpio.power.mask);
-  s(bb_gpio.led.data);
-  s(bb_gpio.led.mask);
-  s(bb_gpio.rtc_clock.data);
-  s(bb_gpio.rtc_clock.mask);
-  s(bb_gpio.rtc_data.data);
-  s(bb_gpio.rtc_data.mask);
+  s(bb_gpio.power.lineIn);
+  s(bb_gpio.power.lineOut);
+  s(bb_gpio.power.outputEnable);
+  s(bb_gpio.led.lineIn);
+  s(bb_gpio.led.lineOut);
+  s(bb_gpio.led.outputEnable);
+  s(bb_gpio.rtc_clock.lineIn);
+  s(bb_gpio.rtc_clock.lineOut);
+  s(bb_gpio.rtc_clock.outputEnable);
+  s(bb_gpio.rtc_data.lineIn);
+  s(bb_gpio.rtc_data.lineOut);
+  s(bb_gpio.rtc_data.outputEnable);
 
   s(bb_allowed.buf);
   s(bb_allowed.flash);

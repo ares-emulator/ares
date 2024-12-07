@@ -82,7 +82,7 @@ auto MI::ioRead(u32 address) -> u32 {
   if(address == 5) {
     //MI_BB_SECURE_EXCEPTION
     if(!secure()) {
-      printf("SKC %016llX\n", cpu.ipu.r[CPU::IPU::V0].u64);
+      //printf("SKC %016llX\n", cpu.ipu.r[CPU::IPU::V0].u64);
       bb_trap.application = 1;
       poll();
     } else {
@@ -243,7 +243,7 @@ auto MI::ioWrite(u32 address, u32 data_) -> void {
         if constexpr(Accuracy::CPU::Recompiler) {
           cpu.recompiler.invalidateRange(0x1fc0'0000, 0x80000);
         }
-        printf("Exit secure mode @ PC=%016llX\n", cpu.ipu.pc);
+        //printf("Exit secure mode @ PC=%016llX\n", cpu.ipu.pc);
       }
     }
   }
