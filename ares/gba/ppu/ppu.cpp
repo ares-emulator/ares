@@ -85,6 +85,29 @@ auto PPU::step(u32 clocks) -> void {
   Thread::synchronize(cpu);
 }
 
+auto PPU::cycleRenderBG(u32 x, u32 y) -> void {
+  bg0.run(x, y);
+  bg1.run(x, y);
+  bg2.run(x, y);
+  bg3.run(x, y);
+}
+
+auto PPU::cycleUpperLayer(u32 x, u32 y) -> void {
+  window0.run(x, y);
+  window1.run(x, y);
+  window2.output = objects.output.window;
+  window3.output = true;
+  dac.upperLayer(x, y);
+}
+
+template<u32 Cycle>
+auto PPU::cycle(u32 y) -> void {
+  if constexpr(Cycle >= 31 && Cycle <= 1005 && (Cycle - 31) % 4 == 3) cycleRenderBG((Cycle - 31) / 4, y);
+  if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 0) cycleUpperLayer((Cycle - 46) / 4, y);
+  if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 2) dac.lowerLayer((Cycle - 46) / 4, y);
+  step(1);
+}
+
 auto PPU::main() -> void {
   cpu.keypad.run();
 
@@ -126,40 +149,71 @@ auto PPU::main() -> void {
   }
   if(io.vcounter >= 2 && io.vcounter < 162 && videoCapture) cpu.dmaHDMA();
 
-  step(41);
+  step(26);
 
   u32 y = io.vcounter;
   memory::move(io.forceBlank, io.forceBlank + 1, sizeof(io.forceBlank) - 1);
+  memory::move(bg0.io.enable, bg0.io.enable + 1, sizeof(bg0.io.enable) - 1);
+  memory::move(bg1.io.enable, bg1.io.enable + 1, sizeof(bg1.io.enable) - 1);
+  memory::move(bg2.io.enable, bg2.io.enable + 1, sizeof(bg2.io.enable) - 1);
+  memory::move(bg3.io.enable, bg3.io.enable + 1, sizeof(bg3.io.enable) - 1);
+  memory::move(objects.io.enable, objects.io.enable + 1, sizeof(objects.io.enable) - 1);
   bg0.scanline(y);
   bg1.scanline(y);
   bg2.scanline(y);
   bg3.scanline(y);
   objects.scanline((y + 1) % 228);
+  dac.scanline(y);
+
   if(y < 160) {
-    auto line = screen->pixels().data() + y * 240;
-    for(u32 x : range(240)) {
-      bg0.run(x, y);
-      bg1.run(x, y);
-      bg2.run(x, y);
-      bg3.run(x, y);
-      objects.run(x, y);
-      window0.run(x, y);
-      window1.run(x, y);
-      window2.output = objects.output.window;
-      window3.output = true;
-      bool blending = dac.upperLayer();
-      if(blending) {
-        if(accurate) step(2);
-        dac.lowerLayer();
-        if(accurate) step(2);
-      } else {
-        if(accurate) step(4);
+    if(accurate) {
+      #define cycles01(index) cycle<index>(y)
+      #define cycles02(index) cycles01(index); cycles01(index +  1)
+      #define cycles04(index) cycles02(index); cycles02(index +  2)
+      #define cycles08(index) cycles04(index); cycles04(index +  4)
+      #define cycles16(index) cycles08(index); cycles08(index +  8)
+      #define cycles32(index) cycles16(index); cycles16(index + 16)
+      #define cycles64(index) cycles32(index); cycles32(index + 32)
+
+      //cycle 31 - start rendering backgrounds
+      cycles01( 31);
+      cycles02( 32);
+      cycles04( 34);
+      cycles08( 38);
+
+      //cycle 46 - start pixel output
+      cycles64( 46);
+      cycles64(110);
+      cycles64(174);
+      cycles64(238);
+      cycles64(302);
+      cycles64(366);
+      cycles64(430);
+      cycles64(494);
+      cycles64(558);
+      cycles64(622);
+      cycles64(686);
+      cycles64(750);
+      cycles64(814);
+      cycles64(878);
+      cycles64(942);
+
+      #undef cycles02
+      #undef cycles04
+      #undef cycles08
+      #undef cycles16
+      #undef cycles32
+      #undef cycles64
+    } else {
+      for(u32 x : range(240)) {
+        cycleRenderBG(x, y);
+        cycleUpperLayer(x, y);
+        dac.lowerLayer(x, y);
       }
-      line[x] = dac.color;
+      step(975);
     }
-    if(!accurate) step(960);
   } else {
-    step(960);
+    step(975);
   }
 
   step(1);

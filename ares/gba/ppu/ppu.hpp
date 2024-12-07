@@ -37,6 +37,9 @@ struct PPU : Thread, IO {
   auto blank() -> bool;
 
   auto step(u32 clocks) -> void;
+  auto cycleRenderBG(u32 x, u32 y) -> void;
+  auto cycleUpperLayer(u32 x, u32 y) -> void;
+  template<u32> auto cycle(u32 y) -> void;
   auto main() -> void;
 
   auto frame() -> void;
@@ -106,6 +109,7 @@ private:
     //background.cpp
     auto setEnable(n1 status) -> void;
     auto scanline(u32 y) -> void;
+    auto outputPixel(u32 x, u32 y) -> void;
     auto run(u32 x, u32 y) -> void;
     auto linear(u32 x, u32 y) -> void;
     auto affine(u32 x, u32 y) -> void;
@@ -157,7 +161,7 @@ private:
       n4 palette;
     } latch;
 
-    Pixel output;
+    Pixel output[240];
     Pixel mosaic;
     u32 mosaicOffset;
 
@@ -172,7 +176,7 @@ private:
     //object.cpp
     auto setEnable(n1 status) -> void;
     auto scanline(u32 y) -> void;
-    auto run(u32 x, u32 y) -> void;
+    auto outputPixel(u32 x, u32 y) -> void;
     auto power() -> void;
 
     //object.cpp
@@ -219,8 +223,9 @@ private:
 
   struct DAC {
     //dac.cpp
-    auto upperLayer() -> bool;
-    auto lowerLayer() -> void;
+    auto scanline(u32 y) -> void;
+    auto upperLayer(u32 x, u32 y) -> void;
+    auto lowerLayer(u32 x, u32 y) -> void;
     auto pramLookup(Pixel& layer) -> n15;
     auto blend(n15 above, u32 eva, n15 below, u32 evb) -> n15;
     auto power() -> void;
@@ -241,8 +246,11 @@ private:
     u32 aboveLayer;
     u32 belowLayer;
     n15 color;
+    n1  blending;
 
     Pixel layers[6];
+
+    u32* line = nullptr;
   } dac;
 
   struct Object {

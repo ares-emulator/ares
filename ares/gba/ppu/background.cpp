@@ -10,16 +10,22 @@ auto PPU::Background::setEnable(n1 status) -> void {
 }
 
 auto PPU::Background::scanline(u32 y) -> void {
-  memory::move(io.enable, io.enable + 1, sizeof(io.enable) - 1);
   mosaicOffset = 0;
+  for(auto& pixel : output) pixel = {};
+}
+
+auto PPU::Background::outputPixel(u32 x, u32 y) -> void {
+  //horizontal mosaic
+  if(!io.mosaic || !mosaicOffset) {
+    mosaicOffset = 1 + io.mosaicWidth;
+    mosaic = output[x];
+  }
+  mosaicOffset--;
 }
 
 auto PPU::Background::run(u32 x, u32 y) -> void {
-  output = {};
-  if(ppu.blank() || !io.enable[0]) {
-    mosaic = {};
-    return;
-  }
+  if(x > 239) return;
+  if(ppu.blank() || !io.enable[0]) return;
 
   switch(id) {
   case PPU::BG0:
@@ -41,13 +47,6 @@ auto PPU::Background::run(u32 x, u32 y) -> void {
     if(io.mode == 2) { affine(x, y); break; }
     break;
   }
-
-  //horizontal mosaic
-  if(!io.mosaic || !mosaicOffset) {
-    mosaicOffset = 1 + io.mosaicWidth;
-    mosaic = output;
-  }
-  mosaicOffset--;
 }
 
 auto PPU::Background::linear(u32 x, u32 y) -> void {
@@ -84,16 +83,16 @@ auto PPU::Background::linear(u32 x, u32 y) -> void {
   if(io.colorMode == 0) {
     u32 offset = (io.characterBase << 14) + (latch.character << 5) + (py << 2) + (px >> 1);
     if(n4 color = ppu.readVRAM_BG(Byte, offset) >> (px & 1 ? 4 : 0)) {
-      output.enable = true;
-      output.priority = io.priority;
-      output.color = latch.palette << 4 | color;
+      output[x].enable = true;
+      output[x].priority = io.priority;
+      output[x].color = latch.palette << 4 | color;
     }
   } else {
     u32 offset = (io.characterBase << 14) + (latch.character << 6) + (py << 3) + (px);
     if(n8 color = ppu.readVRAM_BG(Byte, offset)) {
-      output.enable = true;
-      output.priority = io.priority;
-      output.color = color;
+      output[x].enable = true;
+      output[x].priority = io.priority;
+      output[x].color = color;
     }
   }
 
@@ -125,9 +124,9 @@ auto PPU::Background::affine(u32 x, u32 y) -> void {
   if(tx < screenSize && ty < screenSize) {
     n8 character = ppu.readVRAM(Byte, (io.screenBase << 11) + ty * screenSize + tx);
     if(n8 color = ppu.readVRAM_BG(Byte, (io.characterBase << 14) + (character << 6) + (py << 3) + px)) {
-      output.enable = true;
-      output.priority = io.priority;
-      output.color = color;
+      output[x].enable = true;
+      output[x].priority = io.priority;
+      output[x].color = color;
     }
   }
 
@@ -165,10 +164,10 @@ auto PPU::Background::bitmap(u32 x, u32 y) -> void {
     n15 color = ppu.readVRAM_BG(mode, baseAddress + (offset << depth));
 
     if(depth || color) {  //8bpp color 0 is transparent; 15bpp color is always opaque
-      if(depth) output.directColor = true;
-      output.enable = true;
-      output.priority = io.priority;
-      output.color = color;
+      if(depth) output[x].directColor = true;
+      output[x].enable = true;
+      output[x].priority = io.priority;
+      output[x].color = color;
     }
   }
 
@@ -186,7 +185,7 @@ auto PPU::Background::power(u32 id) -> void {
 
   io = {};
   latch = {};
-  output = {};
+  for(auto& pixel : output) pixel = {};
   mosaic = {};
   mosaicOffset = 0;
   hmosaic = 0;

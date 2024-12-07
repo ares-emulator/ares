@@ -1,7 +1,12 @@
-auto PPU::DAC::upperLayer() -> bool {
+auto PPU::DAC::scanline(u32 y) -> void {
+  line = ppu.screen->pixels().data() + y * 240;
+}
+
+auto PPU::DAC::upperLayer(u32 x, u32 y) -> void {
   if(ppu.blank()) {
     color = 0x7fff;
-    return false;
+    blending = false;
+    return;
   }
 
   //determine active window
@@ -12,6 +17,13 @@ auto PPU::DAC::upperLayer() -> bool {
     if(ppu.window1.io.enable && ppu.window1.output) memory::copy(&active, &ppu.window1.io.active, sizeof(active));
     if(ppu.window0.io.enable && ppu.window0.output) memory::copy(&active, &ppu.window0.io.active, sizeof(active));
   }
+
+  //get background and object pixels
+  ppu.objects.outputPixel(x, y);
+  ppu.bg0.outputPixel(x, y);
+  ppu.bg1.outputPixel(x, y);
+  ppu.bg2.outputPixel(x, y);
+  ppu.bg3.outputPixel(x, y);
 
   //priority sorting: find topmost two pixels
   layers[OBJ] = ppu.objects.mosaic;
@@ -36,11 +48,15 @@ auto PPU::DAC::upperLayer() -> bool {
   color = pramLookup(above);
 
   //color blending
-  if(above.translucent && io.blendBelow[belowLayer]) return true;
+  if(above.translucent && io.blendBelow[belowLayer]) {
+    blending = true;
+    return;
+  }
   if(active[SFX]) {
     auto evy = min(16u, (u32)io.blendEVY);
     if(io.blendMode == 1 && io.blendAbove[aboveLayer] && io.blendBelow[belowLayer]) {
-      return true;
+      blending = true;
+      return;
     } else if(io.blendMode == 2 && io.blendAbove[aboveLayer]) {
       color = blend(color, 16 - evy, 0x7fff, evy);
     } else if(io.blendMode == 3 && io.blendAbove[aboveLayer]) {
@@ -48,15 +64,19 @@ auto PPU::DAC::upperLayer() -> bool {
     }
   }
 
-  return false;
+  blending = false;
 }
 
-auto PPU::DAC::lowerLayer() -> void {
-  auto below = layers[belowLayer];
-  auto eva = min(16u, (u32)io.blendEVA);
-  auto evb = min(16u, (u32)io.blendEVB);
+auto PPU::DAC::lowerLayer(u32 x, u32 y) -> void {
+  if(blending) {
+    auto below = layers[belowLayer];
+    auto eva = min(16u, (u32)io.blendEVA);
+    auto evb = min(16u, (u32)io.blendEVB);
 
-  color = blend(color, eva, pramLookup(below), evb);
+    color = blend(color, eva, pramLookup(below), evb);
+  }
+
+  line[x] = color;
 }
 
 inline auto PPU::DAC::pramLookup(Pixel& layer) -> n15 {
