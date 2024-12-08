@@ -47,7 +47,7 @@ auto PI::atbLookup(u32 address) -> u32 {
         i = m;
         break;
       }
-      if((address & ~bb_atb.addressMasks[m]) < bb_atb.pbusAddresses[m])
+      if(address < bb_atb.pbusAddresses[m])
         r = m - 1;
       else
         l = m + 1;
