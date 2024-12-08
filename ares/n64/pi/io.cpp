@@ -471,7 +471,7 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
     bb_atb.upper.ivSource = data.bit(8);
     bb_atb.upper.dmaEnable = data.bit(5);
     bb_atb.upper.cpuEnable = data.bit(4);
-    bb_atb.upper.numBlocks = 1 << data.bit(0,3);
+    bb_atb.upper.maxOffset = 0x4000 * (1 << data.bit(0,3));
   }
 
   if(address == 17) {
@@ -648,12 +648,11 @@ auto PI::atbWrite(u32 address, u32 data_) -> void {
   bb_atb.entries[address].ivSource = bb_atb.upper.ivSource;
   bb_atb.entries[address].dmaEnable = bb_atb.upper.dmaEnable;
   bb_atb.entries[address].cpuEnable = bb_atb.upper.cpuEnable;
-  bb_atb.entries[address].numBlocks = bb_atb.upper.numBlocks;
+  bb_atb.entries[address].maxOffset = bb_atb.upper.maxOffset;
   bb_atb.entries[address].nandAddr = 0x4000 * data.bit(16,31);
   bb_atb.pbusAddresses[address] = data.bit(0,15) << 14;
 
-  bb_atb.addressMasks[address] = (1 << __builtin_ctz(bb_atb.pbusAddresses[address])) - 1;
-  bb_atb.pageCached = -1u;
+  bb_atb.addressMasks[address] = bb_atb.upper.maxOffset - 1;
   bb_atb.entryCached = -1u;
 }
 
