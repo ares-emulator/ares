@@ -18,13 +18,6 @@ auto PPU::DAC::upperLayer(u32 x, u32 y) -> void {
     if(ppu.window0.io.enable && ppu.window0.output) memory::copy(&active, &ppu.window0.io.active, sizeof(active));
   }
 
-  //get background and object pixels
-  ppu.objects.outputPixel(x, y);
-  ppu.bg0.outputPixel(x, y);
-  ppu.bg1.outputPixel(x, y);
-  ppu.bg2.outputPixel(x, y);
-  ppu.bg3.outputPixel(x, y);
-
   //priority sorting: find topmost two pixels
   layers[OBJ] = ppu.objects.mosaic;
   layers[BG0] = ppu.bg0.mosaic;

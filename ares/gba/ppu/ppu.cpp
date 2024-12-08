@@ -93,6 +93,11 @@ auto PPU::cycleRenderBG(u32 x, u32 y) -> void {
 }
 
 auto PPU::cycleUpperLayer(u32 x, u32 y) -> void {
+  ppu.bg0.outputPixel(x, y);
+  ppu.bg1.outputPixel(x, y);
+  ppu.bg2.outputPixel(x, y);
+  ppu.bg3.outputPixel(x, y);
+  ppu.objects.outputPixel(x, y);
   window0.run(x, y);
   window1.run(x, y);
   window2.output = objects.output.window;
