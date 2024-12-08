@@ -71,6 +71,7 @@ auto System::load(Node::System& root, string name) -> bool {
   cpu.load(node);
   ppu.load(node);
   apu.load(node);
+  display.load(node);
   cartridgeSlot.load(node);
   return true;
 }
@@ -87,6 +88,7 @@ auto System::unload() -> void {
   cpu.unload();
   ppu.unload();
   apu.unload();
+  display.unload();
   cartridgeSlot.unload();
   pak.reset();
   node.reset();
@@ -100,6 +102,7 @@ auto System::power(bool reset) -> void {
   cpu.power();
   ppu.power();
   apu.power();
+  display.power();
   cartridge.power();
   scheduler.power(cpu);
 }

@@ -35,4 +35,5 @@ namespace ares::GameBoyAdvance {
   #include <gba/cpu/cpu.hpp>
   #include <gba/ppu/ppu.hpp>
   #include <gba/apu/apu.hpp>
+  #include <gba/display/display.hpp>
 }

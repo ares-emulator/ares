@@ -79,16 +79,6 @@ private:
     n1  gameBoyColorMode;
     n1  forceBlank[4];
     n1  greenSwap;
-
-    n1  vblank;
-    n1  hblank;
-    n1  vcoincidence;
-    n1  irqvblank;
-    n1  irqhblank;
-    n1  irqvcoincidence;
-    n8  vcompare;
-
-    n16 vcounter;
   } io;
 
   struct Pixel {

@@ -1,15 +1,5 @@
 #include <gba/gba.hpp>
 
-//pixel:       4 cycles
-
-//hdraw:      46 cycle wait period, then 240 pixels (total: 1006 cycles)
-//hblank:    226 cycles
-//scanline: 1232 cycles
-
-//vdraw:     160 scanlines (197120 cycles)
-//vblank:     68 scanlines ( 83776 cycles)
-//frame:     228 scanlines (280896 cycles)
-
 namespace ares::GameBoyAdvance {
 
 PPU ppu;
@@ -82,7 +72,7 @@ inline auto PPU::blank() -> bool {
 
 auto PPU::step(u32 clocks) -> void {
   Thread::step(clocks);
-  Thread::synchronize(cpu);
+  Thread::synchronize(cpu, display);
 }
 
 auto PPU::cycleRenderBG(u32 x, u32 y) -> void {
@@ -114,11 +104,7 @@ auto PPU::cycle(u32 y) -> void {
 }
 
 auto PPU::main() -> void {
-  cpu.keypad.run();
-
-  io.vblank = io.vcounter >= 160 && io.vcounter <= 226;
-
-  if(io.vcounter == 0) {
+  if(display.io.vcounter == 0) {
     frame();
 
     bg2.io.lx = bg2.io.x;
@@ -128,35 +114,9 @@ auto PPU::main() -> void {
     bg3.io.ly = bg3.io.y;
   }
 
-  step(1);
+  step(31);
 
-  io.vcoincidence = io.vcounter == io.vcompare;
-
-  if(io.vcounter == 160) {
-    if(io.irqvblank) cpu.setInterruptFlag(CPU::Interrupt::VBlank);
-  }
-
-  step(1);
-
-  if(io.irqvcoincidence) {
-    if(io.vcoincidence) cpu.setInterruptFlag(CPU::Interrupt::VCoincidence);
-  }
-
-  if(io.vcounter == 160) {
-    cpu.dmaVblank();
-  }
-
-  step(3);
-
-  if(io.vcounter == 162) {
-    if(videoCapture) cpu.dma[3].enable = 0;
-    videoCapture = !videoCapture && cpu.dma[3].timingMode == 3 && cpu.dma[3].enable;
-  }
-  if(io.vcounter >= 2 && io.vcounter < 162 && videoCapture) cpu.dmaHDMA();
-
-  step(26);
-
-  u32 y = io.vcounter;
+  u32 y = display.io.vcounter;
   memory::move(io.forceBlank, io.forceBlank + 1, sizeof(io.forceBlank) - 1);
   memory::move(bg0.io.enable, bg0.io.enable + 1, sizeof(bg0.io.enable) - 1);
   memory::move(bg1.io.enable, bg1.io.enable + 1, sizeof(bg1.io.enable) - 1);
@@ -221,18 +181,7 @@ auto PPU::main() -> void {
     step(975);
   }
 
-  step(1);
-  io.hblank = 1;
-
-  step(1);
-  if(io.irqhblank) cpu.setInterruptFlag(CPU::Interrupt::HBlank);
-
-  step(1);
-  if(io.vcounter < 160) cpu.dmaHblank();
-
-  step(223);
-  io.hblank = 0;
-  if(++io.vcounter == 228) io.vcounter = 0;
+  step(226);
 }
 
 auto PPU::frame() -> void {
