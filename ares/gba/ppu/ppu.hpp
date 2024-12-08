@@ -37,7 +37,9 @@ struct PPU : Thread, IO {
   auto blank() -> bool;
 
   auto step(u32 clocks) -> void;
-  auto cycleRenderBG(u32 x, u32 y) -> void;
+  template<u32> auto cycleLinear(u32 x, u32 y) -> void;;
+  template<u32> auto cycleAffine(u32 x, u32 y) -> void;
+  auto cycleBitmap(u32 x, u32 y) -> void;
   auto cycleUpperLayer(u32 x, u32 y) -> void;
   template<u32> auto cycle(u32 y) -> void;
   auto main() -> void;
@@ -102,7 +104,8 @@ private:
     auto outputPixel(u32 x, u32 y) -> void;
     auto run(u32 x, u32 y) -> void;
     auto linear(u32 x, u32 y) -> void;
-    auto affine(u32 x, u32 y) -> void;
+    auto affineFetchTileMap(u32 x, u32 y) -> void;
+    auto affineFetchTileData(u32 x, u32 y) -> void;
     auto bitmap(u32 x, u32 y) -> void;
     auto power(u32 id) -> void;
 
@@ -150,6 +153,16 @@ private:
       n1 vflip;
       n4 palette;
     } latch;
+
+    struct Affine {
+      u32 screenSize;
+      u32 screenWrap;
+      u32 cx;
+      u32 cy;
+      u32 tx;
+      u32 ty;
+      n8  character;
+    } affine;
 
     Pixel output[240];
     Pixel mosaic;

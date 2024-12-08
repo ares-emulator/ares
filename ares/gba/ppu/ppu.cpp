@@ -75,11 +75,27 @@ auto PPU::step(u32 clocks) -> void {
   Thread::synchronize(cpu, display);
 }
 
-auto PPU::cycleRenderBG(u32 x, u32 y) -> void {
-  bg0.run(x, y);
-  bg1.run(x, y);
-  bg2.run(x, y);
-  bg3.run(x, y);
+template<u32 Cycle>
+auto PPU::cycleLinear(u32 x, u32 y) -> void {
+  n3 mode = PPU::Background::IO::mode;
+  if constexpr(Cycle == 0) if(mode <= 1) bg0.linear(x, y);
+  if constexpr(Cycle == 1) if(mode <= 1) bg1.linear(x, y);
+  if constexpr(Cycle == 2) if(mode == 0) bg2.linear(x, y);
+  if constexpr(Cycle == 3) if(mode == 0) bg3.linear(x, y);
+}
+
+template<u32 Cycle>
+auto PPU::cycleAffine(u32 x, u32 y) -> void {
+  n3 mode = PPU::Background::IO::mode;
+  if constexpr(Cycle == 0) if(             mode == 2) bg3.affineFetchTileMap(x, y);
+  if constexpr(Cycle == 1) if(             mode == 2) bg3.affineFetchTileData(x, y);
+  if constexpr(Cycle == 2) if(mode == 1 || mode == 2) bg2.affineFetchTileMap(x, y);
+  if constexpr(Cycle == 3) if(mode == 1 || mode == 2) bg2.affineFetchTileData(x, y);
+}
+
+auto PPU::cycleBitmap(u32 x, u32 y) -> void {
+  n3 mode = PPU::Background::IO::mode;
+  if(mode >= 3 && mode <= 5) bg2.bitmap(x, y);
 }
 
 auto PPU::cycleUpperLayer(u32 x, u32 y) -> void {
@@ -97,7 +113,9 @@ auto PPU::cycleUpperLayer(u32 x, u32 y) -> void {
 
 template<u32 Cycle>
 auto PPU::cycle(u32 y) -> void {
-  if constexpr(Cycle >= 31 && Cycle <= 1005 && (Cycle - 31) % 4 == 3) cycleRenderBG((Cycle - 31) / 4, y);
+  if constexpr(Cycle >= 31 && Cycle <= 1005                         ) cycleLinear<(Cycle - 31) & 3>((Cycle - 31) / 4, y);
+  if constexpr(Cycle >= 31 && Cycle <= 1005                         ) cycleAffine<(Cycle - 31) & 3>((Cycle - 31) / 4, y);
+  if constexpr(Cycle >= 31 && Cycle <= 1005 && (Cycle - 31) % 4 == 3) cycleBitmap((Cycle - 31) / 4, y);
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 0) cycleUpperLayer((Cycle - 46) / 4, y);
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 2) dac.lowerLayer((Cycle - 46) / 4, y);
   step(1);
@@ -171,7 +189,10 @@ auto PPU::main() -> void {
       #undef cycles64
     } else {
       for(u32 x : range(240)) {
-        cycleRenderBG(x, y);
+        bg0.run(x, y);
+        bg1.run(x, y);
+        bg2.run(x, y);
+        bg3.run(x, y);
         cycleUpperLayer(x, y);
         dac.lowerLayer(x, y);
       }
