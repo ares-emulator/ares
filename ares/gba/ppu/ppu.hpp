@@ -37,7 +37,7 @@ struct PPU : Thread, IO {
   auto blank() -> bool;
 
   auto step(u32 clocks) -> void;
-  template<u32> auto cycleLinear(u32 x, u32 y) -> void;;
+  template<u32> auto cycleLinear(u32 x, u32 y) -> void;
   template<u32> auto cycleAffine(u32 x, u32 y) -> void;
   auto cycleBitmap(u32 x, u32 y) -> void;
   auto cycleUpperLayer(u32 x, u32 y) -> void;
