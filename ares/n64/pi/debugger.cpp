@@ -24,8 +24,8 @@ auto PI::Debugger::load(Node::Object parent) -> void {
         output.append("    ivSource    : ", boolean(pi.bb_atb.entries[i].ivSource), "\n");
         output.append("    dmaEnable   : ", boolean(pi.bb_atb.entries[i].dmaEnable), "\n");
         output.append("    cpuEnable   : ", boolean(pi.bb_atb.entries[i].cpuEnable), "\n");
-        output.append("    nandAddr    : ", pi.bb_atb.entries[i].nandAddr, "\n");
-        output.append("    maxOffset   : ", pi.bb_atb.entries[i].maxOffset, "\n");
+        output.append("    nandAddr    : ", hex(pi.bb_atb.entries[i].nandAddr, 8L), "\n");
+        output.append("    maxOffset   : ", hex(pi.bb_atb.entries[i].maxOffset, 8L), "\n");
         output.append("    pbusAddress : ", hex(pi.bb_atb.pbusAddresses[i], 8L), "\n");
         output.append("    mask        : ", hex(pi.bb_atb.addressMasks[i], 8L), "\n");
       }

@@ -46,6 +46,11 @@ struct NAND : Memory::RCP<NAND> {
     debugger.num = n;
   }
 
+  //K9F1208U0M 64M Flash
+  //First byte:  Manufacturer
+  //Second byte: Device Identifier
+  //Third byte:  Nothing
+  //Fourth byte: Multiplane Flag
   static constexpr u8 ID[4] = { 0xEC, 0x76, 0xA5, 0xC0 };
 
   //nand.cpp
@@ -65,7 +70,7 @@ struct NAND : Memory::RCP<NAND> {
   auto serialize(serializer&) -> void;
 
   n10 pageOffset = 0;
-  u8 eraseQueueOccupied = 0;
+  n4 eraseQueueOccupied = 0;
   n27 eraseQueuePage[4] = {};
 };
 

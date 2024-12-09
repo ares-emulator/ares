@@ -10,7 +10,7 @@ Virage virage2(2, 0x100);
 #include "serialization.cpp"
 
 auto Virage::load(Node::Object parent) -> void {
-  string name = {"Virage", debugger.num};
+  string name = {"Virage", num};
   node = parent->append<Node::Object>(name);
 
   sram.allocate(memSize);
@@ -20,26 +20,27 @@ auto Virage::load(Node::Object parent) -> void {
 }
 
 auto Virage::unload() -> void {
-  node.reset();
+  debugger.unload(node);
   sram.reset();
   flash.reset();
-  debugger = { .num = debugger.num, };
+  node.reset();
 }
 
 auto Virage::save() -> void {
   if(!node) return;
 
-  string fileName = { "virage", debugger.num, ".flash" };
-  if(auto fp = system.pak->write(fileName)) {
+  string fileName = { "virage", num, ".flash" };
+  if(auto fp = system.pak->write(fileName))
     flash.save(fp);
-  }
 }
 
 auto Virage::power(bool reset) -> void {
-  string fileName = { "virage", debugger.num, ".flash" };
-  if(auto fp = system.pak->write(fileName)) {
+  string fileName = { "virage", num, ".flash" };
+  if(auto fp = system.pak->write(fileName))
     flash.load(fp);
-  }
+
+  printf("virage power\n");
+
   io.unk30 = 1;
   io.busy = 0;
 

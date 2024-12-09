@@ -2,7 +2,7 @@ auto Virage::serialize(serializer& s) -> void {
   s(flash);
   s(sram);
 
-  s(debugger.num);
+  s(num);
   s(queueID);
   s(memSize);
 
@@ -15,5 +15,6 @@ auto Virage::serialize(serializer& s) -> void {
   s(io.busy);
   s(io.loadDone);
   s(io.storeDone);
+  s(io.unk30);
   s(io.command);
 }

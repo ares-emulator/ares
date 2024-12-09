@@ -1,6 +1,6 @@
 //MIPS Interface
 
-struct MI : Memory::RCP<MI> {
+struct MI : Thread, Memory::RCP<MI> {
   Node::Object node;
   Memory::Readable rom;
   Memory::Writable ram;
@@ -33,6 +33,8 @@ struct MI : Memory::RCP<MI> {
   //mi.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
+  auto stepBBTimer(u32 clocks) -> void;
+  auto main() -> void;
 
   enum class IRQ : u32 { SP, SI, AI, VI, PI, DP, FLASH, AES, IDE, PI_ERR, USB0, USB1, BTN, MD };
   auto raise(IRQ) -> void;
@@ -123,6 +125,15 @@ private:
     n1 button;
     n1 card;
   } bb;
+
+  struct BBTimer {
+    // decrs by 1 when rate underflows
+    s32 count;
+    u16 countStore;
+    // decrs by 1 at the RCP frequency
+    s32 rate;
+    u16 rateStore;
+  } bb_timer;
 
   struct BBTrapCause {
     n1 application;

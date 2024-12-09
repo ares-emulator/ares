@@ -55,11 +55,6 @@ auto PI::atbLookup(u32 address) -> u32 {
     // Cache this result
     bb_atb.entryCached = i;
   }
-  // Set parameters
-  bb_nand.io.xferLen = 0x210;
-  bb_aes.chainIV = true;
-  bb_aes.dataSize = 0x200/0x10 - 1;
-  bb_aes.bufferOffset = 0;
   return i;
 }
 
@@ -74,6 +69,7 @@ auto PI::dmaWrite() -> void {
   }
 
   if (system._BB()) {
+    bb_aes.chainIV = true;
     // First, the ATB searches for the entry corresponding to the current address - 0x10,
     // in order to obtain the AES IV.
     u32 index = atbLookup(io.pbusAddress - 0x10);
@@ -91,6 +87,8 @@ auto PI::dmaWrite() -> void {
     // It is also the difference between the target and base NAND addresses.
     u32 offset = (io.pbusAddress - 0x10) & bb_atb.addressMasks[index];
 
+    u32 endAlign = (io.pbusAddress + length + 0xF) & ~0xF;
+
     u32 curPageAddr = -1u;
 
     if (entry->ivSource) {
@@ -103,16 +101,27 @@ auto PI::dmaWrite() -> void {
         cpu.pipeline.exception();
         return;
       }
+      u32 pageOffset = offset & (0x200-1) & ~(0x10-1);
+
       // Convert the offset to page address + offset
       bb_nand.io.pageNumber = curPageAddr = (entry->nandAddr + offset) & ~(0x200-1);
+      bb_nand.io.command = (pageOffset >= 0x100) ? NAND::Command::Read1 : NAND::Command::Read0;
+      bb_nand.io.xferLen = (pageOffset >= 0x100) ? 0x110 : 0x210;
+      bb_nand.io.bufferSel = (bb_nand.io.pageNumber & 0x200) >> 9;
       // Read the page for the IV
       nandCommandFinished();
       // Set the IV at the offset
-      aes.setIV(bb_nand.buffer, offset & (0x200-1) & ~(0x10-1));
-      aesCommandFinished();
+      aes.setIV(bb_nand.buffer, bb_nand.io.bufferSel * 0x200 + pageOffset);
+
+      pageOffset += 0x10;
+      if (pageOffset != 0x200) {
+        bb_aes.dataSize = min(endAlign - (io.pbusAddress & ~0xF), 0x200 - pageOffset) / 0x10 - 1;
+        bb_aes.bufferOffset = bb_nand.io.bufferSel * 0x20 + pageOffset / 0x10;
+        aesCommandFinished();
+      }
     }
 
-    offset = io.pbusAddress & bb_atb.addressMasks[index];
+    offset += 0x10;
 
     while (length > 0) {
       i32 misalign = io.dramAddress & 7;
@@ -121,7 +130,7 @@ auto PI::dmaWrite() -> void {
       i32 curLen = min(length, blockLen);
 
       for (int i=0; i<curLen; i+=2) {
-        if ((io.pbusAddress & ~bb_atb.addressMasks[index]) != bb_atb.pbusAddresses[index]) {
+        if (offset >= entry->maxOffset) {
           // ATB entry has changed, if it is to be valid at all the next address
           // must be contained inside the next entry as they are sorted by pbusAddress.
           index++;
@@ -129,13 +138,12 @@ auto PI::dmaWrite() -> void {
 
           // Get the new address offset
           offset = io.pbusAddress & bb_atb.addressMasks[index];
-        }
-
-        if (offset >= entry->maxOffset) {
-          // Out of range of this entry, raise bus error on data
-          cpu.exception.busData();
-          cpu.pipeline.exception();
-          return;
+          // If it's oob again, raise bus error on data
+          if (offset >= entry->maxOffset) {
+            cpu.exception.busData();
+            cpu.pipeline.exception();
+            return;
+          }
         }
 
         // Compute new page info
@@ -145,12 +153,28 @@ auto PI::dmaWrite() -> void {
         if (curPageAddr != newPageAddr) {
           // Page has changed, read and decrypt it
           bb_nand.io.pageNumber = curPageAddr = newPageAddr;
+          bb_nand.io.command = (curPageOffset >= 0x100) ? NAND::Command::Read1 : NAND::Command::Read0;
+          bb_nand.io.xferLen = (curPageOffset >= 0x100) ? 0x110 : 0x210;
+          bb_nand.io.bufferSel = (bb_nand.io.pageNumber & 0x200) >> 9;
           nandCommandFinished();
+          bb_aes.dataSize = min(endAlign - (io.pbusAddress & ~0xF), 0x200 - (curPageOffset & ~(0x10-1))) / 0x10 - 1;
+          bb_aes.bufferOffset = bb_nand.io.bufferSel * 0x20 + curPageOffset / 0x10;
           aesCommandFinished();
         }
 
         // Read the data into RAM
         u16 data = bb_nand.buffer.read<Half>(bb_nand.io.bufferSel * 0x200 + curPageOffset);
+#if 0
+        if (bb_atb.entries[1].nandAddr == 0x02900000) {
+          u16 dataCompare = gameROM.read<Half>(io.pbusAddress);
+
+          if (data != dataCompare) {
+            printf("Data comparison failed @ 0x%08X (Got 0x%04X expected 0x%04X)\n", u32(io.pbusAddress), data, dataCompare);
+            printf("ATB Entry was %u\n", index);
+            assert(false);
+          }
+        }
+#endif
         mem[i+0] = data >> 8;
         mem[i+1] = data >> 0;
 

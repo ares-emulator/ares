@@ -54,11 +54,13 @@ auto CPU::synchronize() -> void {
   auto clocks = Thread::clock;
   Thread::clock = 0;
 
+   mi.clock -= clocks;
    vi.clock -= clocks;
    ai.clock -= clocks;
   rsp.clock -= clocks;
   rdp.clock -= clocks;
   if(!system._BB()) pif.clock -= clocks;
+  mi.main();
   vi.main();
   ai.main();
   rsp.main();

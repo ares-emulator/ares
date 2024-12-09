@@ -9,6 +9,8 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
   if (system._BB()) {
     thread.step(1000 * 2);
 
+    bb_nand.io.xferLen = 0x210;
+    bb_aes.chainIV = true;
     u32 index = atbLookup(address - 0x10);
     if (index == -1u) {
       debug(unusual, "[PI::readWord] ATB MISS!");
@@ -38,16 +40,16 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
       }
       // Convert the offset to page address + offset
       bb_nand.io.pageNumber = curPageAddr = (entry->nandAddr + offset) & ~(0x200-1);
+      bb_nand.io.bufferSel = (bb_nand.io.pageNumber & 0x200) >> 9;
       // Read the page for the IV
       nandCommandFinished();
       // Set the IV at the offset
-      aes.setIV(bb_nand.buffer, offset & (0x200-1) & ~(0x10-1));
-      aesCommandFinished();
+      aes.setIV(bb_nand.buffer, bb_nand.io.bufferSel * 0x200 + offset & (0x200-1) & ~(0x10-1));
     }
 
-    offset = address & bb_atb.addressMasks[index];
+    offset += 0x10;
 
-    if ((address & ~bb_atb.addressMasks[index]) != bb_atb.pbusAddresses[index]) {
+    if (offset >= entry->maxOffset) {
       // ATB entry has changed, if it is to be valid at all the next address
       // must be contained inside the next entry as they are sorted by pbusAddress.
       index++;
@@ -55,13 +57,12 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
 
       // Get the new address offset
       offset = address & bb_atb.addressMasks[index];
-    }
-
-    if (offset >= entry->maxOffset) {
-      // Out of range of this entry, raise bus error on data
-      cpu.exception.busData();
-      cpu.pipeline.exception();
-      return 0;
+      // If it's oob again, raise bus error on data
+      if (offset >= entry->maxOffset) {
+        cpu.exception.busData();
+        cpu.pipeline.exception();
+        return 0;
+      }
     }
 
     // Compute new page info
@@ -69,11 +70,16 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
     u32 curPageOffset = offset & (0x200-1);
 
     if (curPageAddr != newPageAddr) {
-      // Page has changed, read and decrypt it
+      // Page has changed, read it
       bb_nand.io.pageNumber = curPageAddr = newPageAddr;
+      bb_nand.io.bufferSel = (bb_nand.io.pageNumber & 0x200) >> 9;
       nandCommandFinished();
-      aesCommandFinished();
     }
+
+    // Decrypt just 0x10 bytes at the location we're going to read
+    bb_aes.dataSize = 0; // 0x10
+    bb_aes.bufferOffset = bb_nand.io.bufferSel * 0x20 + curPageOffset / 0x10;
+    aesCommandFinished();
 
     io.busLatch = bb_nand.buffer.read<Word>(bb_nand.io.bufferSel * 0x200 + curPageOffset);
   } else {

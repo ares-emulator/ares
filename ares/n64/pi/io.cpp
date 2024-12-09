@@ -22,7 +22,7 @@ auto PI::nandCommandFinished() -> void {
 
     case NAND::Command::ReadSpare: {
       nand->pageOffset = 0x200;
-      debug(unimplemented, "NAND Command 0x%02X unimplemented", u8(bb_nand.io.command));
+      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
     } break;
 
     case NAND::Command::ReadID: {
@@ -42,15 +42,15 @@ auto PI::nandCommandFinished() -> void {
     } break;
 
     case NAND::Command::PageProgramDummyC2: {
-      debug(unimplemented, "NAND Command 0x%02X unimplemented", u8(bb_nand.io.command));
+      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
     } break;
 
     case NAND::Command::CopyBackProgramC2: {
-      debug(unimplemented, "NAND Command 0x%02X unimplemented", u8(bb_nand.io.command));
+      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
     } break;
 
     case NAND::Command::CopyBackProgramDummyC1: {
-      debug(unimplemented, "NAND Command 0x%02X unimplemented", u8(bb_nand.io.command));
+      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
     } break;
 
     case NAND::Command::BlockEraseC1: {
@@ -69,8 +69,9 @@ auto PI::nandCommandFinished() -> void {
       nand->readStatus(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.xferLen, true);
     } break;
 
-    default:
-      debug(unimplemented, "NAND Command 0x%02X unimplemented", u8(bb_nand.io.command));
+    default: {
+      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
+    } break;
   }
   bb_nand.io.busy = 0;
   if (bb_nand.io.intrDone)
@@ -242,10 +243,10 @@ auto PI::regsRead(u32 address) -> u32 {
       data.bit(5) = bb_gpio.led.outputEnable;
       data.bit(6) = bb_gpio.rtc_clock.outputEnable;
       data.bit(7) = bb_gpio.rtc_data.outputEnable;
-      data.bit(22,24) = box_id.unk;
-      data.bit(25,26) = box_id.clock;
-      data.bit(30,31) = box_id.model;
     }
+    data.bit(22,24) = box_id.unk;
+    data.bit(25,26) = box_id.clock;
+    data.bit(30,31) = box_id.model;
   }
 
   if(address == 25) {

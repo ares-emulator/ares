@@ -64,13 +64,17 @@ auto NAND::power(bool reset) -> void {
 }
 
 auto NAND::read(Memory::Writable& dest, b1 which, n27 pageNum, n10 length) -> void {
-  for (auto i : range(min(length, 0x200))) {
-    dest.write<Byte>(i + which * 0x200, data.read<Byte>(pageNum + pageOffset + i));
-  }
+  for (u32 i = 0; i < pageOffset; i++)
+    dest.write<Byte>(i + which * 0x200, 0);
 
-  if (length > 0x200) {
-    for (auto i : range(length - 0x200)) // TODO: page spares
+  for (u32 i = pageOffset; i < min(pageOffset + length, 0x200); i++)
+    dest.write<Byte>(i + which * 0x200, data.read<Byte>(pageNum + i));
+
+  if (pageOffset + length > 0x200) {
+    for (auto i : range(pageOffset + length - 0x200)) // TODO: move to page spares
       dest.write<Byte>(i + which * 0x10 + 0x400, spare.read<Byte>(((pageNum >> 14) << 4) + i));
+
+    // TODO: if ecc, do verification + correction here
   }
 
   string message = { "Buffer=", which, ", PageAddr=0x", hex(pageNum), ", Length=0x", hex(length) };
@@ -116,26 +120,26 @@ auto NAND::commitWriteBuffer(n27 pageNum) -> void {
 auto NAND::queueErasure(n27 pageNum) -> void {
   // queue erasure of page number
 
-  // TODO these should be indexed by plane, as in you can queue 1 page per different plane
-  auto i = 0;
-
-  eraseQueuePage[i] = pageNum;
-  eraseQueueOccupied = (1 << i);
+  // Index by plane. plane = block % 4
+  auto i = pageNum & 0xC000 >> 14;
+  // Add block number to erase
+  eraseQueuePage[i] = pageNum & ~(0x4000-1);
+  eraseQueueOccupied.bit(i) = 1;
 
   string message = { "PageAddr=0x", hex(pageNum) };
   debugger.command(NAND::Command::BlockEraseC1, message);
 }
 
 auto NAND::execErasure() -> void {
-  for (auto i : range(4))
-  {
-    if (!(eraseQueueOccupied & (1 << i)))
+  for (auto i : range(4)) {
+    if (!eraseQueueOccupied.bit(i))
       continue;
 
-    for (auto j : range(0x200)) // TODO erase spare
-      data.write<Byte>(eraseQueuePage[i] * 0x200 + j, 0xFF);
+    // Erase the block
+    for (auto j : range(0x4000/4)) // TODO erase spare
+      data.write<Word>(eraseQueuePage[i] + j * 4, 0xFFFFFFFF);
 
-    eraseQueueOccupied &= ~(1 << i);
+    eraseQueueOccupied.bit(i) = 0;
   }
 
   debugger.command(NAND::Command::BlockEraseC2, "");

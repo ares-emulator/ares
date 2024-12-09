@@ -1,35 +1,36 @@
 auto MI::Debugger::load(Node::Object parent) -> void {
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "RCP");
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "MI");
-  if(system._BB())
+  if(system._BB()) {
     tracer.ioMem = parent->append<Node::Debugger::Tracer::Notification>("I/O Mem", "MI");
 
-  memory.rom = parent->append<Node::Debugger::Memory>("Boot ROM");
-  memory.rom->setSize(0x2000);
-  memory.rom->setRead([&](u32 address) -> u8 {
-    return mi.rom.read<Byte>(address);
-  });
-  memory.rom->setWrite([&](u32 address, u8 data) -> void {
-    return;
-  });
+    memory.rom = parent->append<Node::Debugger::Memory>("Boot ROM");
+    memory.rom->setSize(0x2000);
+    memory.rom->setRead([&](u32 address) -> u8 {
+      return mi.rom.read<Byte>(address);
+    });
+    memory.rom->setWrite([&](u32 address, u8 data) -> void {
+      return;
+    });
 
-  memory.ram = parent->append<Node::Debugger::Memory>("SK RAM");
-  memory.ram->setSize(0x10000);
-  memory.ram->setRead([&](u32 address) -> u8 {
-    return mi.ram.read<Byte>(address);
-  });
-  memory.ram->setWrite([&](u32 address, u8 data) -> void {
-    return mi.ram.write<Byte>(address, data);
-  });
+    memory.ram = parent->append<Node::Debugger::Memory>("SK RAM");
+    memory.ram->setSize(0x10000);
+    memory.ram->setRead([&](u32 address) -> u8 {
+      return mi.ram.read<Byte>(address);
+    });
+    memory.ram->setWrite([&](u32 address, u8 data) -> void {
+      return mi.ram.write<Byte>(address, data);
+    });
 
-  memory.scratch = parent->append<Node::Debugger::Memory>("Secure Scratch");
-  memory.scratch->setSize(0x8000);
-  memory.scratch->setRead([&](u32 address) -> u8 {
-    return mi.scratch.read<Byte>(address);
-  });
-  memory.scratch->setWrite([&](u32 address, u8 data) -> void {
-    return mi.scratch.write<Byte>(address, data);
-  });
+    memory.scratch = parent->append<Node::Debugger::Memory>("Secure Scratch");
+    memory.scratch->setSize(0x8000);
+    memory.scratch->setRead([&](u32 address) -> u8 {
+      return mi.scratch.read<Byte>(address);
+    });
+    memory.scratch->setWrite([&](u32 address, u8 data) -> void {
+      return mi.scratch.write<Byte>(address, data);
+    });
+  }
 }
 
 auto MI::Debugger::interrupt(u8 source) -> void {

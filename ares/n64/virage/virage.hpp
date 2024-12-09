@@ -7,8 +7,13 @@ struct Virage : Memory::RCP<Virage> {
   Memory::Writable flash;
 
   struct Debugger {
+    Virage& self;
+
+    Debugger(Virage& self) : self(self) {}
+
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
     auto io(bool mode, u32 address, u32 data) -> void;
 
     auto ioSRAM(bool mode, u32 address, u32 data) -> void;
@@ -16,15 +21,19 @@ struct Virage : Memory::RCP<Virage> {
     auto ioStatusReg(bool mode, u32 data) -> void;
     auto ioControlReg(bool mode, u32 data) -> void;
 
+    struct Memory {
+      Node::Debugger::Memory sram;
+      Node::Debugger::Memory flash;
+    } memory;
+
     struct Tracer {
       Node::Debugger::Tracer::Notification io;
+      Node::Debugger::Tracer::Notification ioMem;
     } tracer;
-
-    u32 num;
-  } debugger;
+  } debugger{*this};
 
   Virage(u32 n, u32 size) {
-    debugger.num = n;
+    num = n;
     memSize = size;
 
     queueID = (n == 0) ? Queue::VIRAGE0_Command :
@@ -48,6 +57,7 @@ struct Virage : Memory::RCP<Virage> {
   auto serialize(serializer&) -> void;
 
 private:
+  u32 num;
   u32 queueID;
   u32 memSize;
 

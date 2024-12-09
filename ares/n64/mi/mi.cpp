@@ -27,6 +27,48 @@ auto MI::unload() -> void {
   debugger = {};
 }
 
+inline auto MI::stepBBTimer(u32 clocks) -> void {
+  if(bb_timer.rateStore == 0) return; // Timer is frozen
+
+  // Timer is enabled, tick rate down at the RCP clock rate
+  bb_timer.rate -= clocks / 3;
+
+  if (bb_timer.rate >= 0) return;
+
+  // On rate underflow, reload rate to rateStore and decr count
+
+  s32 n = 0;
+  while (bb_timer.rate < 0) {
+    bb_timer.rate += bb_timer.rateStore;
+    n++;
+  }
+  bb_timer.count -= n;
+
+  if (bb_timer.count >= 0) return;
+
+  // When count runs out, reload count to countStore
+  // and trigger NMI if we aren't in secure mode
+
+  while (bb_timer.count < 0) {
+    bb_timer.count += bb_timer.countStore;
+  }
+
+  if (!secure()) {
+    bb_trap.timer = 1;
+    poll();
+  }
+}
+
+auto MI::main() -> void {
+  if (!system._BB()) return;
+
+  const u32 clocks = system.frequency();
+  while(Thread::clock < 0) {
+    step(clocks);
+    stepBBTimer(clocks);
+  }
+}
+
 auto MI::raise(IRQ source) -> void {
   debugger.interrupt((u32)source);
   switch(source) {
@@ -100,6 +142,7 @@ auto MI::poll() -> void {
 
     //this isn't right, but the behaviour is the same
     bb_trap.application = 0;
+    bb_trap.timer = 0;
 
     cpu.scc.nmiStrobe = !bb_exc.secure && enter_secure_mode();
     if (cpu.scc.nmiStrobe) {
@@ -135,6 +178,7 @@ auto MI::power(bool reset) -> void {
     ram.fill();
     scratch.fill();
     bb = {};
+    bb_timer = {};
     bb_exc = {};
     bb_exc.boot_swap = 1;
   }

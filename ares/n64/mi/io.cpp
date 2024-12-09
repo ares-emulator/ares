@@ -79,6 +79,10 @@ auto MI::ioRead(u32 address) -> u32 {
 
 
 
+  if(address == 4) {
+    debug(unimplemented, "[MI::ioRead] Read from MI + 0x10");
+  }
+
   if(address == 5) {
     //MI_BB_SECURE_EXCEPTION
     if(!secure()) {
@@ -98,11 +102,38 @@ auto MI::ioRead(u32 address) -> u32 {
     }
   }
 
+  if(address == 6) {
+    data.bit(16,31) = u16(bb_timer.count);
+    data.bit(0,15) = bb_timer.countStore;
+  }
 
+  if(address == 7) {
+    debug(unimplemented, "[MI::ioRead] Read from MI + 0x1C");
+  }
+
+  if(address == 8) {
+    debug(unimplemented, "[MI::ioRead] Read from MI + 0x20");
+  }
+
+  if(address == 9) {
+    debug(unimplemented, "[MI::ioRead] Read from MI + 0x24");
+  }
+
+  if(address == 10) {
+    debug(unimplemented, "[MI::ioRead] Read from MI + 0x28");
+  }
 
   if(address == 11) {
     //MI_BB_RANDOM
     data.bit(0) = random();
+  }
+
+  if(address == 12) {
+    debug(unimplemented, "[MI::ioRead] Read from MI + 0x30");
+  }
+
+  if(address == 13) {
+    debug(unimplemented, "[MI::ioWrite] Write to MI + 0x34");
   }
 
   if(address == 14) {
@@ -226,6 +257,10 @@ auto MI::ioWrite(u32 address, u32 data_) -> void {
 
 
 
+  if(address == 4) {
+    debug(unimplemented, "[MI::ioWrite] Write to MI + 0x10");
+  }
+
   if(address == 5) {
     //MI_BB_SECURE_EXCEPTION
     if(secure()) {
@@ -248,14 +283,43 @@ auto MI::ioWrite(u32 address, u32 data_) -> void {
     }
   }
 
+  if(address == 6) {
+    bb_timer.rate = bb_timer.rateStore = data.bit(16,31);
+    bb_timer.count = bb_timer.countStore = data.bit(0,15);
+  }
 
+  if(address == 7) {
+    debug(unimplemented, "[MI::ioWrite] Write to MI + 0x1C");
+  }
+
+  if(address == 8) {
+    debug(unimplemented, "[MI::ioWrite] Write to MI + 0x20");
+  }
+
+  if(address == 9) {
+    debug(unimplemented, "[MI::ioWrite] Write to MI + 0x24");
+  }
+
+  if(address == 10) {
+    debug(unimplemented, "[MI::ioWrite] Write to MI + 0x28");
+  }
 
   if(address == 11) {
     //MI_BB_RANDOM (read-only)
+    debug(unusual, "[MI::ioWrite] Write to MI_BB_RANDOM");
+  }
+
+  if(address == 12) {
+    debug(unimplemented, "[MI::ioWrite] Write to MI + 0x30");
+  }
+
+  if(address == 13) {
+    debug(unimplemented, "[MI::ioWrite] Write to MI + 0x34");
   }
 
   if(address == 14) {
     //MI_BB_INTERRUPT (read-only)
+    debug(unusual, "[MI::ioWrite] Write to MI_BB_INTERRUPT");
   }
 
   if(address == 15) {
