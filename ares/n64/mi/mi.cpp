@@ -27,45 +27,39 @@ auto MI::unload() -> void {
   debugger = {};
 }
 
-inline auto MI::stepBBTimer(u32 clocks) -> void {
-  if(bb_timer.rateStore == 0) return; // Timer is frozen
-
-  // Timer is enabled, tick rate down at the RCP clock rate
-  bb_timer.rate -= clocks / 3;
-
-  if (bb_timer.rate >= 0) return;
+inline auto MI::stepBBTimer() -> bool {
+  // Tick rate down at the RCP clock rate
+  if((bb_timer.rate == 0) || (bb_timer.written))
+    bb_timer.rate = bb_timer.rateStore;
+  else if(bb_timer.rateStore != 0)
+    bb_timer.rate -= 1;
 
   // On rate underflow, reload rate to rateStore and decr count
 
-  s32 n = 0;
-  while (bb_timer.rate < 0) {
-    bb_timer.rate += bb_timer.rateStore;
-    n++;
-  }
-  bb_timer.count -= n;
+  b1 do_tick = (bb_timer.rateStore != 0) && (bb_timer.rate == 0);
+  b1 underflow = do_tick && (bb_timer.count == 0);
+  if(underflow || bb_timer.written)
+    bb_timer.count = bb_timer.countStore;
+  else if(do_tick)
+    bb_timer.count -= 1;
 
-  if (bb_timer.count >= 0) return;
+  // When count runs out trigger NMI if we aren't in secure mode
 
-  // When count runs out, reload count to countStore
-  // and trigger NMI if we aren't in secure mode
+  bb_timer.written = 0;
 
-  while (bb_timer.count < 0) {
-    bb_timer.count += bb_timer.countStore;
-  }
-
-  if (!secure()) {
-    bb_trap.timer = 1;
-    poll();
-  }
+  return (!secure() && underflow);
 }
 
 auto MI::main() -> void {
   if (!system._BB()) return;
 
-  const u32 clocks = system.frequency();
   while(Thread::clock < 0) {
-    step(clocks);
-    stepBBTimer(clocks);
+    step(1 * 3);
+    if(stepBBTimer()) {
+      bb_trap.timer = 1;
+      poll();
+      break;
+    }
   }
 }
 
@@ -144,11 +138,11 @@ auto MI::poll() -> void {
     bb_trap.application = 0;
     bb_trap.timer = 0;
 
-    cpu.scc.nmiStrobe = !bb_exc.secure && enter_secure_mode();
-    if (cpu.scc.nmiStrobe) {
+    if (enter_secure_mode() && !secure()) {
       if constexpr(Accuracy::CPU::Recompiler) {
         cpu.recompiler.invalidateRange(0x1fc0'0000, 0x80000);
       }
+      cpu.scc.nmiStrobe |= 1;
       cpu.pipeline.exception();
     }
   }

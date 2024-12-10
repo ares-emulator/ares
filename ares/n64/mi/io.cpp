@@ -9,13 +9,13 @@ auto MI::readWord(u32 address_, Thread& thread) -> u32 {
     auto read_rom = ~address.bit(17) ^ ~bb_exc.boot_swap;
     auto read_ram =  address.bit(17) ^ ~bb_exc.boot_swap;
 
-    auto fetching = (address == 0x1fc0'0000) & cpu.pipeline.fetch;
-    if(fetching & (bb_exc.boot_swap | enter_secure_mode())) bb_exc.secure = 1;
+    auto fetching = (address == 0x1fc0'0000) && cpu.pipeline.fetch;
+    if(fetching && (bb_exc.boot_swap || enter_secure_mode())) bb_exc.secure = 1;
 
-    if(read_rom & secure()) {
+    if(read_rom && secure()) {
       name = "Boot ROM";
       data = rom.read<Word>(address);
-    } else if(read_ram & secure()) {
+    } else if(read_ram && secure()) {
       name = "SK RAM";
       data = ram.read<Word>(address);
     } else {
@@ -284,8 +284,9 @@ auto MI::ioWrite(u32 address, u32 data_) -> void {
   }
 
   if(address == 6) {
-    bb_timer.rate = bb_timer.rateStore = data.bit(16,31);
-    bb_timer.count = bb_timer.countStore = data.bit(0,15);
+    bb_timer.rateStore = data.bit(16,31);
+    bb_timer.countStore = data.bit(0,15);
+    bb_timer.written = 1;
   }
 
   if(address == 7) {

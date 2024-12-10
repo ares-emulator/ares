@@ -33,7 +33,7 @@ struct MI : Thread, Memory::RCP<MI> {
   //mi.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
-  auto stepBBTimer(u32 clocks) -> void;
+  auto stepBBTimer() -> bool;
   auto main() -> void;
 
   enum class IRQ : u32 { SP, SI, AI, VI, PI, DP, FLASH, AES, IDE, PI_ERR, USB0, USB1, BTN, MD };
@@ -128,11 +128,13 @@ private:
 
   struct BBTimer {
     // decrs by 1 when rate underflows
-    s32 count;
-    u16 countStore;
+    u16 count = 0;
+    u16 countStore = 0;
     // decrs by 1 at the RCP frequency
-    s32 rate;
-    u16 rateStore;
+    u16 rate = 0;
+    u16 rateStore = 0;
+    // has the timer just been written?
+    n1 written;
   } bb_timer;
 
   struct BBTrapCause {

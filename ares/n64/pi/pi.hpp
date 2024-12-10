@@ -80,7 +80,7 @@ struct PI : Memory::RCP<PI> {
     n32 readLength;
     n32 writeLength;
     n32 busLatch;
-    u64 originPc;
+    u64 originPc = 0;
   } io;
 
   struct BSD {
@@ -184,7 +184,7 @@ struct PI : Memory::RCP<PI> {
     u32 pbusAddresses[MaxEntries];
     u32 addressMasks[MaxEntries];
 
-    u32 entryCached;
+    u32 entryCached = -1u;
   } bb_atb;
 };
 
