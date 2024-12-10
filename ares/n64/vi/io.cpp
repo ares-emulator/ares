@@ -32,7 +32,7 @@ auto VI::readWord(u32 address, Thread& thread) -> u32 {
 
   if(address == 4) {
     //VI_V_CURRENT_LINE
-    data.bit(0)   = io.field & io.serrate;
+    data.bit(0)   = io.field;
     data.bit(1,9) = io.vcounter;
   }
 
@@ -52,7 +52,7 @@ auto VI::readWord(u32 address, Thread& thread) -> u32 {
   if(address == 7) {
     //VI_H_SYNC
     data.bit( 0,11) = io.quarterLineDuration;
-    data.bit(16,20) = io.palLeapPattern;
+    data.bit(16,20) = io.leapPattern;
   }
 
   if(address == 8) {
@@ -145,14 +145,14 @@ auto VI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
   }
 
   if(address == 6) {
-    //VI_V_SYNC
+    //VI_V_TOTAL
     io.halfLinesPerField = data.bit(0,9);
   }
 
   if(address == 7) {
-    //VI_H_SYNC
+    //VI_H_TOTAL
     io.quarterLineDuration = data.bit( 0,11);
-    io.palLeapPattern      = data.bit(16,20);
+    io.leapPattern         = data.bit(16,20);
   }
 
   if(address == 8) {

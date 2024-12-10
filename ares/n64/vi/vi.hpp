@@ -17,10 +17,12 @@ struct VI : Thread, Memory::RCP<VI> {
   //vi.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
+  auto step(u32 clocks) -> void;
 
   auto main() -> void;
   auto refresh() -> void;
   auto power(bool reset) -> void;
+  auto active() -> bool { return io.colorDepth != 0; }
 
   //io.cpp
   auto readWord(u32 address, Thread& thread) -> u32;
@@ -46,7 +48,7 @@ struct VI : Thread, Memory::RCP<VI> {
     n10 colorBurstHsync;
     n10 halfLinesPerField;
     n12 quarterLineDuration;
-    n5  palLeapPattern;
+    n5  leapPattern;
     n12 hsyncLeap[2];
     n10 hend;
     n10 hstart;
@@ -62,7 +64,10 @@ struct VI : Thread, Memory::RCP<VI> {
   //internal:
     n9  vcounter;
     n1  field;
+    n3  leapCounter;
   } io;
+
+  u32 clockFraction;
 
 //unserialized:
   bool refreshed;
