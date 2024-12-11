@@ -243,10 +243,11 @@ auto PI::regsRead(u32 address) -> u32 {
       data.bit(5) = bb_gpio.led.outputEnable;
       data.bit(6) = bb_gpio.rtc_clock.outputEnable;
       data.bit(7) = bb_gpio.rtc_data.outputEnable;
+      
+      data.bit(22,24) = box_id.unk;
+      data.bit(25,26) = box_id.clock;
+      data.bit(30,31) = box_id.model;
     }
-    data.bit(22,24) = box_id.unk;
-    data.bit(25,26) = box_id.clock;
-    data.bit(30,31) = box_id.model;
   }
 
   if(address == 25) {
@@ -572,8 +573,7 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
       bb_gpio.rtc_clock.outputEnable = data.bit(6);
       bb_gpio.rtc_data.outputEnable = data.bit(7);
 
-      string display = {"[PI::ioWrite] gpio ", string{bb_gpio.led.lineOut}, " ", string{bb_gpio.power.lineOut}};
-      debug(unimplemented, display);
+      bb_rtc.tick();
     }
   }
 

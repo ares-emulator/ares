@@ -80,6 +80,7 @@ namespace ares::Nintendo64 {
       VIRAGE2_Command,
       NAND_Command,
       AES_Command,
+      BB_RTC_Tick,
       RTC_Tick,
       DD_Clock_Tick,
       DD_MECHA_Response,

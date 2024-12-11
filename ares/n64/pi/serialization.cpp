@@ -1,4 +1,6 @@
 auto PI::serialize(serializer& s) -> void {
+  s(bb_rtc);
+
   s(io.dmaBusy);
   s(io.ioBusy);
   s(io.error);

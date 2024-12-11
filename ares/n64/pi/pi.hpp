@@ -26,8 +26,41 @@ struct PI : Memory::RCP<PI> {
     } tracer;
   } debugger;
 
+  struct BBRTC {
+    enum State : u8 {
+      Address,
+      Read,
+      Write,
+    };
+
+    Memory::Writable ram;
+
+    n2 prev_linestate = 0b11;
+
+    n7 addr = 0;
+    n8 data_addr = 0;
+    n4 bit_count = 0;
+    n4 byte_count = 0;
+    b1 read = 0;
+    b1 enabled = 0;
+
+    u8 state;
+
+    //rtc.cpp
+    auto load() -> void;
+    auto reset() -> void;
+    auto save() -> void;
+    auto serialize(serializer& s) -> void;
+    auto tick() -> void;
+    auto tickClock() -> void;
+    auto tickSecond() -> void;
+    auto valid() -> bool;
+    auto daysInMonth(u8 month, u8 year) -> u8;
+  } bb_rtc;
+
   //pi.cpp
   auto load(Node::Object) -> void;
+  auto save() -> void;
   auto unload() -> void;
   auto power(bool reset) -> void;
   auto access() -> BBAccess;
@@ -105,8 +138,8 @@ struct PI : Memory::RCP<PI> {
   struct BBGPIO {
     TriState power = { .outputEnable = 1 };
     TriState led = { .outputEnable = 1 };
-    TriState rtc_clock;
-    TriState rtc_data;
+    TriState rtc_clock = { .lineOut = 1, .lineIn = 1 }; //pullup resistors
+    TriState rtc_data = { .lineOut = 1, .lineIn = 1 };
   } bb_gpio;
 
   struct BBAccess {
