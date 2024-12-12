@@ -40,7 +40,7 @@ struct PI : Memory::RCP<PI> {
 
     Memory::Writable ram;
 
-    n2 prev_linestate = 0b11;
+    n2 stored_linestate = 0b11;
 
     n7 addr = 0;
     n8 data_addr = 0;

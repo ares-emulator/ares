@@ -41,7 +41,7 @@ auto PI::BBRTC::save() -> void {
 auto PI::BBRTC::serialize(serializer& s) -> void {
   s(ram);
 
-  s(prev_linestate);
+  s(stored_linestate);
 
   s(addr);
   s(data_addr);
@@ -50,6 +50,7 @@ auto PI::BBRTC::serialize(serializer& s) -> void {
   s(read);
   s(enabled);
 
+  s(phase);
   s(state);
 }
 
@@ -67,19 +68,20 @@ auto PI::BBRTC::tick() -> void {
   linestate.bit(0) = new_data;
   linestate.bit(1) = new_clock;
 
+  n2 prev_linestate = stored_linestate;
+  stored_linestate = linestate;
+
   auto clock_high = [](n2 line) -> b1 { return line.bit(1); };
   auto clock_pos_edge = [&](n2 prev, n2 line) { return !clock_high(prev) & clock_high(line); };
   auto clock_neg_edge = [&](n2 prev, n2 line) { return clock_high(prev) & !clock_high(line); };
   auto clock_edge = [&](n2 prev, n2 line) { return clock_pos_edge(prev, line) | clock_neg_edge(prev, line); };
 
   auto data_high = [](n2 line) -> b1 { return line.bit(0); };
-  auto start_bit = [&](n2 prev, n2 line) { return (clock_high(prev) & data_high(prev)) & (clock_high(line) & !data_high(line)); };
+  //this isn't how start bits work in most versions of I²C, but libultra expects this behaviour
+  auto start_bit = [&](n2 prev, n2 line) { return (data_high(prev)) & (clock_high(line) & !data_high(line)); };
   auto stop_bit = [&](n2 prev, n2 line) { return (clock_high(prev) & !data_high(prev)) & (clock_high(line) & data_high(line)); };
 
-  printf("linestate: %d%d\n", (u32)clock_high(linestate), (u32)data_high(linestate));
-
   if(start_bit(prev_linestate, linestate)) {
-    printf("Start bit\n");
     bit_count = 0;
     byte_count = 0;
     state = State::Address;
@@ -88,7 +90,6 @@ auto PI::BBRTC::tick() -> void {
   }
 
   if(stop_bit(prev_linestate, linestate)) {
-    printf("Stop bit\n");
     bit_count = 0;
     byte_count = 0;
     state = State::Address;
@@ -106,7 +107,7 @@ auto PI::BBRTC::tick() -> void {
       case State::Address: {
         switch(phase) {
           case Phase::Setup: {
-            printf("Transmitting ack\n");
+            //transmit ack
             pi.bb_gpio.rtc_data.lineIn = 0;
           } break;
           case Phase::Sample: {
@@ -114,11 +115,10 @@ auto PI::BBRTC::tick() -> void {
               addr.bit(7 - bit_count - 1) = data_high(linestate);
               bit_count += 1;
             } else if(bit_count == 7) {
-              printf("read: %d %d\n", (u32)linestate, (u32)data_high(linestate));
               read = data_high(linestate);
               bit_count += 1;
             } else {
-              printf("%s device addr: 0x%02x\n", read ? "read from" : "write to", (u32)addr);
+              //ack
               bit_count = 0;
               state = read ? State::Read : State::Write;
             }
@@ -129,12 +129,7 @@ auto PI::BBRTC::tick() -> void {
         switch(phase) {
           case Phase::Setup: {
             if(bit_count < 8) {
-              printf("read from address %d bit %d\n", (u32)data_addr.bit(0,2), (u32)bit_count);
-              auto byte = ram.read<Byte>(data_addr.bit(0,2));
-              printf("byte = %02X\n", (u32)byte);
-              auto bit = ((n8)byte).bit(8 - bit_count - 1);
-              printf("transmitting bit: %d\n", (u8)bit);
-              pi.bb_gpio.rtc_data.lineIn = bit;
+              pi.bb_gpio.rtc_data.lineIn = ((n8)ram.read<Byte>(data_addr.bit(0,2))).bit(8 - bit_count - 1);
               bit_count += 1;
             } else {
               //ack
@@ -144,7 +139,7 @@ auto PI::BBRTC::tick() -> void {
           } break;
           case Phase::Sample: {
             if(bit_count == 8) {
-              printf("receiving ack bit\n");
+              //receive ack
             }
           } break;
         }
@@ -152,7 +147,7 @@ auto PI::BBRTC::tick() -> void {
       case State::Write: {
         switch(phase) {
           case Phase::Setup: {
-            printf("transmitting ack bit\n");
+            //transmit ack
             pi.bb_gpio.rtc_data.lineIn = 0;
           } break;
           case Phase::Sample: {
@@ -182,8 +177,6 @@ auto PI::BBRTC::tick() -> void {
       } break;
     }
   }
-
-  prev_linestate = linestate;
 }
 
 auto PI::BBRTC::tickClock() -> void {

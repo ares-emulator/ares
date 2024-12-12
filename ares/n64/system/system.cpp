@@ -357,6 +357,7 @@ auto System::save() -> void {
     virage0.save();
     virage1.save();
     virage2.save();
+    pi.save();
   }
 }
 
