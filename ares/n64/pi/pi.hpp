@@ -33,6 +33,11 @@ struct PI : Memory::RCP<PI> {
       Write,
     };
 
+    enum Phase : u8 {
+      Sample,
+      Setup,
+    };
+
     Memory::Writable ram;
 
     n2 prev_linestate = 0b11;
@@ -44,6 +49,7 @@ struct PI : Memory::RCP<PI> {
     b1 read = 0;
     b1 enabled = 0;
 
+    u8 phase;
     u8 state;
 
     //rtc.cpp

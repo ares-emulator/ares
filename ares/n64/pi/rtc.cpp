@@ -54,6 +54,12 @@ auto PI::BBRTC::serialize(serializer& s) -> void {
 }
 
 auto PI::BBRTC::tick() -> void {
+  //I²C lines have pullups
+  if(!pi.bb_gpio.rtc_clock.outputEnable)
+    pi.bb_gpio.rtc_clock.lineOut = 1;
+  if(!pi.bb_gpio.rtc_data.outputEnable)
+    pi.bb_gpio.rtc_data.lineOut = 1;
+
   auto new_clock = pi.bb_gpio.rtc_clock.lineOut;
   auto new_data = pi.bb_gpio.rtc_data.lineOut;
 
@@ -63,15 +69,21 @@ auto PI::BBRTC::tick() -> void {
 
   auto clock_high = [](n2 line) -> b1 { return line.bit(1); };
   auto clock_pos_edge = [&](n2 prev, n2 line) { return !clock_high(prev) & clock_high(line); };
+  auto clock_neg_edge = [&](n2 prev, n2 line) { return clock_high(prev) & !clock_high(line); };
+  auto clock_edge = [&](n2 prev, n2 line) { return clock_pos_edge(prev, line) | clock_neg_edge(prev, line); };
 
   auto data_high = [](n2 line) -> b1 { return line.bit(0); };
   auto start_bit = [&](n2 prev, n2 line) { return (clock_high(prev) & data_high(prev)) & (clock_high(line) & !data_high(line)); };
   auto stop_bit = [&](n2 prev, n2 line) { return (clock_high(prev) & !data_high(prev)) & (clock_high(line) & data_high(line)); };
 
+  printf("linestate: %d%d\n", (u32)clock_high(linestate), (u32)data_high(linestate));
+
   if(start_bit(prev_linestate, linestate)) {
     printf("Start bit\n");
-    enabled = 1;
+    bit_count = 0;
+    byte_count = 0;
     state = State::Address;
+    enabled = 1;
     return;
   }
 
@@ -79,69 +91,93 @@ auto PI::BBRTC::tick() -> void {
     printf("Stop bit\n");
     bit_count = 0;
     byte_count = 0;
+    state = State::Address;
     enabled = 0;
   }
 
-  if(enabled & clock_pos_edge(prev_linestate, linestate)) {
+  if(clock_pos_edge(prev_linestate, linestate)) {
+    phase = Phase::Sample;
+  } else if(clock_neg_edge(prev_linestate, linestate)) {
+    phase = Phase::Setup;
+  }
+
+  if(enabled & clock_edge(prev_linestate, linestate)) {
     switch(state) {
       case State::Address: {
-        if(bit_count < 7) {
-          addr.bit(7 - bit_count - 1) = data_high(linestate);
-          bit_count += 1;
-        } else if(bit_count == 7) {
-          printf("read: %d %d (%d)\n", (u32)linestate, (u32)data_high(linestate), (u32)!data_high(linestate));
-          read = !data_high(linestate);
-          bit_count += 1;
-        } else {
-          //ack
-          printf("Transmitting ack\n");
-          pi.bb_gpio.rtc_data.lineIn = 0;
-          printf("%s device addr: 0x%02x\n", read ? "read from" : "write to", (u32)addr);
-          bit_count = 0;
-          state = read ? State::Read : State::Write;
+        switch(phase) {
+          case Phase::Setup: {
+            printf("Transmitting ack\n");
+            pi.bb_gpio.rtc_data.lineIn = 0;
+          } break;
+          case Phase::Sample: {
+            if(bit_count < 7) {
+              addr.bit(7 - bit_count - 1) = data_high(linestate);
+              bit_count += 1;
+            } else if(bit_count == 7) {
+              printf("read: %d %d\n", (u32)linestate, (u32)data_high(linestate));
+              read = data_high(linestate);
+              bit_count += 1;
+            } else {
+              printf("%s device addr: 0x%02x\n", read ? "read from" : "write to", (u32)addr);
+              bit_count = 0;
+              state = read ? State::Read : State::Write;
+            }
+          } break;
         }
       } break;
       case State::Read: {
-        if(bit_count < 8) {
-          printf("read from address %d bit %d\n", (u32)data_addr.bit(0,2), (u32)bit_count);
-          auto byte = ram.read<Byte>(data_addr.bit(0,2));
-          printf("byte = %02X\n", (u32)byte);
-          auto bit = ((n8)byte).bit(8 - bit_count - 1);
-          printf("transmitting bit: %d\n", (u8)bit);
-          pi.bb_gpio.rtc_data.lineIn = bit;
-          bit_count += 1;
-        } else {
-          //ack
-          printf("transmitting ack bit\n");
-          pi.bb_gpio.rtc_data.lineIn = 0;
-          data_addr += 1;
-          bit_count = 0;
+        switch(phase) {
+          case Phase::Setup: {
+            if(bit_count < 8) {
+              printf("read from address %d bit %d\n", (u32)data_addr.bit(0,2), (u32)bit_count);
+              auto byte = ram.read<Byte>(data_addr.bit(0,2));
+              printf("byte = %02X\n", (u32)byte);
+              auto bit = ((n8)byte).bit(8 - bit_count - 1);
+              printf("transmitting bit: %d\n", (u8)bit);
+              pi.bb_gpio.rtc_data.lineIn = bit;
+              bit_count += 1;
+            } else {
+              //ack
+              data_addr += 1;
+              bit_count = 0;
+            }
+          } break;
+          case Phase::Sample: {
+            if(bit_count == 8) {
+              printf("receiving ack bit\n");
+            }
+          } break;
         }
       } break;
       case State::Write: {
-        if(byte_count == 0) {
-          if(bit_count < 8) {
-            data_addr.bit(8 - bit_count - 1) = data_high(linestate);
-            bit_count += 1;
-          } else {
-            //ack
+        switch(phase) {
+          case Phase::Setup: {
             printf("transmitting ack bit\n");
             pi.bb_gpio.rtc_data.lineIn = 0;
-            bit_count = 0;
-            byte_count += 1;
-          }
-        } else {
-          if(bit_count < 8) {
-            n8 byte = ram.read<Byte>(data_addr.bit(0,2));
-            byte.bit(8 - bit_count - 1) = data_high(linestate);
-            ram.write<Byte>(data_addr.bit(0,2), byte);
-            bit_count += 1;
-          } else {
-            printf("transmitting ack bit\n");
-            data_addr += 1;
-            bit_count = 0;
-            byte_count += 1;
-          }
+          } break;
+          case Phase::Sample: {
+            if(byte_count == 0) {
+              if(bit_count < 8) {
+                data_addr.bit(8 - bit_count - 1) = data_high(linestate);
+                bit_count += 1;
+              } else {
+                //ack
+                bit_count = 0;
+                byte_count += 1;
+              }
+            } else {
+              if(bit_count < 8) {
+                n8 byte = ram.read<Byte>(data_addr.bit(0,2));
+                byte.bit(8 - bit_count - 1) = data_high(linestate);
+                ram.write<Byte>(data_addr.bit(0,2), byte);
+                bit_count += 1;
+              } else {
+                data_addr += 1;
+                bit_count = 0;
+                byte_count += 1;
+              }
+            }
+          } break;
         }
       } break;
     }
@@ -157,7 +193,6 @@ auto PI::BBRTC::tickClock() -> void {
 }
 
 auto PI::BBRTC::tickSecond() -> void {
-  printf("tick second\n");
   /*if (!valid()) return;
 
   //second
@@ -190,7 +225,7 @@ auto PI::BBRTC::tickSecond() -> void {
 }
 
 auto PI::BBRTC::valid() -> bool {
-  //check validity of ram rtc data (if it's BCD valid or not)
+  /*//check validity of ram rtc data (if it's BCD valid or not)
   for(auto n : range(6)) {
     if((ram.read<Byte>(n) & 0x0f) >= 0x0a) return false;
   }
@@ -209,7 +244,7 @@ auto PI::BBRTC::valid() -> bool {
   if(ram.read<Byte>(1) < 1) return false;
   //day
   if(ram.read<Byte>(2) < 1) return false;
-  if(ram.read<Byte>(2) > BCD::encode(chrono::daysInMonth(BCD::decode(ram.read<Byte>(1)), BCD::decode(ram.read<Byte>(0))))) return false;
+  if(ram.read<Byte>(2) > BCD::encode(chrono::daysInMonth(BCD::decode(ram.read<Byte>(1)), BCD::decode(ram.read<Byte>(0))))) return false;*/
 
   //everything is valid
   return true;
