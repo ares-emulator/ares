@@ -9,9 +9,9 @@ srcdir="${GITHUB_WORKSPACE}/src"
 bindir="${GITHUB_WORKSPACE}/bin"
 
 # Hack: Workaround for GitHub artifacts losing attributes.
-chmod +x ${bindir}/ares-macos-latest/ares.app/Contents/MacOS/ares
+chmod +x ${bindir}/ares-macos-universal/ares.app/Contents/MacOS/ares
 
-for package in macos-latest
+for package in macos-universal
 do
   mkdir "${package}"
   cd "${package}"

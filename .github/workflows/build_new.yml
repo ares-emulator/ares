@@ -38,12 +38,6 @@ jobs:
           shell: bash
           target-cmake-preset: windows-ci-cl-cross
           native-cmake-preset: windows-ci-cl-native
-#        - name: macos-compat
-#          os: macos-12
-#          compiler: clang++
-#          shell: sh
-#          install: cmake ccache
-#          target-cmake-preset: macos-ci-compat
         - name: windows-msvc-x64
           os: windows-latest
           windres: rc
@@ -55,12 +49,12 @@ jobs:
           shell: bash
           target-cmake-preset: windows-ci-msvc-cross
           native-cmake-preset: windows-ci-msvc-native
-        - name: macos-latest
-          os: macos-latest
+        - name: macos-universal
+          os: macos-15
           compiler: clang++
           shell: sh
           install: cmake ccache xcbeautify
-          target-cmake-preset: macos-ci-latest
+          target-cmake-preset: macos-ci-universal
     name: ${{ matrix.program }}-${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.os }}
     defaults:
@@ -174,8 +168,8 @@ jobs:
         tag_name: ${{ steps.check.outputs.version }}
         name: ares ${{ steps.check.outputs.version }}
         files: |
-          ${{ github.workspace }}/ares-macos-latest.zip
-          ${{ github.workspace }}/ares-macos-latest-dSYMs.zip
+          ${{ github.workspace }}/ares-macos-universal.zip
+          ${{ github.workspace }}/ares-macos-universal-dSYMs.zip
           ${{ github.workspace }}/ares-windows-x64.zip
           ${{ github.workspace }}/ares-windows-x64-PDBs.zip
           ${{ github.workspace }}/ares-windows-clang-cl-x64.zip
