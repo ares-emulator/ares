@@ -12,15 +12,7 @@ pushd SDL/build
 
 SDLARGS=()
 SDLARGS+=("-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64")
-if [ -n "${GITHUB_ACTIONS+1}" ]; then
-    if [ $ImageOS == "macos12" ]; then
-        SDLARGS+=(-DCMAKE_OSX_DEPLOYMENT_TARGET=10.11)
-        echo "Added 10.11 deployment target to SDL build arguments"
-    elif [ $ImageOS == "macos14" ]; then
-        SDLARGS+=(-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13)
-        echo "Added 10.13 deployment target to SDL build arguments"
-    fi
-fi
+SDLARGS+=("-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13")
 
 cmake .. "${SDLARGS[@]}"
 cmake --build .

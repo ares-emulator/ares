@@ -15,10 +15,10 @@ fi
 cd "$(dirname "$0")"/.. || exit 1
 
 echo "Building for amd64..."
-gmake arch=amd64 object.path=obj-amd64 output.path=out-amd64 "$@"
+make arch=amd64 object.path=obj-amd64 output.path=out-amd64 "$@"
 
 echo "Building for arm64..."
-gmake arch=arm64 object.path=obj-arm64 output.path=out-arm64 "$@"
+make arch=arm64 object.path=obj-arm64 output.path=out-arm64 "$@"
 
 echo "Assembling universal binary"
 rm -rf desktop-ui/out

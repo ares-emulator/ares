@@ -51,12 +51,8 @@ jobs:
           windres: rc
           shell: bash
           msvc-arch: x64_arm64
-        - name: macos-compat
-          os: macos-12
-          compiler: clang++
-          shell: sh
-        - name: macos-latest
-          os: macos-latest
+        - name: macos-universal
+          os: macos-15
           compiler: clang++
           shell: sh
         - name: ubuntu
@@ -120,22 +116,14 @@ jobs:
     - name: Install macOS Dependencies
       if: runner.os == 'macOS'
       run: |
-        if [ $ImageOS == "macos14" ]; then
-            sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
-            export MACOSX_DEPLOYMENT_TARGET=10.13
-            echo "Set Xcode version to 15.2 for macos-latest build."
-        elif [ $ImageOS == "macos12" ]; then
-            sudo xcode-select -s /Applications/Xcode_13.4.app/Contents/Developer
-            export MACOSX_DEPLOYMENT_TARGET=10.9
-            echo "Set Xcode version to 13.4 for macos-compat build."
-        fi
-        brew install make ninja cmake
+        sudo xcode-select -s /Applications/Xcode_16.1.0.app/Contents/Developer
+        export MACOSX_DEPLOYMENT_TARGET=10.13
+        brew install ninja cmake
         pip install --no-input setuptools
         rustup toolchain install nightly
         rustup default nightly
         rustup target add x86_64-apple-darwin
         rustup target add aarch64-apple-darwin
-        echo "MAKE=gmake" >> $GITHUB_ENV
         pushd thirdparty/SDL
         ./build-SDL.sh
         popd
@@ -216,10 +204,9 @@ jobs:
         bindir="${GITHUB_WORKSPACE}/bin"
 
         # Hack: Workaround for GitHub artifacts losing attributes.
-        chmod +x ${bindir}/ares-macos-latest/ares.app/Contents/MacOS/ares
-        chmod +x ${bindir}/ares-macos-compat/ares.app/Contents/MacOS/ares
+        chmod +x ${bindir}/ares-macos-universal/ares.app/Contents/MacOS/ares
 
-        for package in windows windows-msvc-arm64 macos-latest macos-compat
+        for package in windows windows-msvc-arm64 macos-universal
         do
           mkdir "${package}"
           cd "${package}"
@@ -319,14 +306,10 @@ jobs:
       uses: actions/upload-release-asset@v1
       env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
       with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-windows-msvc-arm64.zip', asset_name: 'ares-windows-msvc-arm64.zip', asset_content_type: 'application/zip' }      
-    - name: Upload ares-macos-latest
+    - name: Upload ares-macos-universal
       uses: actions/upload-release-asset@v1
       env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
-      with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-macos-latest.zip', asset_name: 'ares-macos-latest.zip', asset_content_type: 'application/zip' }
-    - name: Upload ares-macos-compat
-      uses: actions/upload-release-asset@v1
-      env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
-      with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-macos-compat.zip', asset_name: 'ares-macos-compat.zip', asset_content_type: 'application/zip' }
+      with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-macos-universal.zip', asset_name: 'ares-macos-universal.zip', asset_content_type: 'application/zip' }
 #  - name: Upload ares-ubuntu
 #      uses: actions/upload-release-asset@v1
 #      env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
