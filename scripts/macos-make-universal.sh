@@ -6,11 +6,6 @@ if ! command -v lipo >/dev/null; then
     exit 1
 fi
 
-if ! command -v gmake >/dev/null; then
-    echo "Please install make via Homebrew (brew install make)"
-    exit 1
-fi
-
 # Change to parent directory (top-level)
 cd "$(dirname "$0")"/.. || exit 1
 
