@@ -17,7 +17,7 @@ auto FirmwareSettings::construct() -> void {
 auto FirmwareSettings::refresh() -> void {
   firmwareList.reset();
   firmwareList.append(TableViewColumn().setText("Emulator"));
-  firmwareList.append(TableViewColumn().setText("Type").setVisible(false));
+  firmwareList.append(TableViewColumn().setText("Type"));
   firmwareList.append(TableViewColumn().setText("Region"));
   firmwareList.append(TableViewColumn().setText("Location").setExpandable());
 
