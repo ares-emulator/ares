@@ -21,10 +21,10 @@ ToolsWindow::ToolsWindow() {
 
   panelList.append(ListViewItem().setText("Manifest").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Cheats").setIcon(Icon::Emblem::Text));
-#if !defined(PLATFORM_MACOS)
+
   // Cocoa hiro is missing the hex editor widget
   panelList.append(ListViewItem().setText("Memory").setIcon(Icon::Device::Storage));
-#endif
+
   panelList.append(ListViewItem().setText("Graphics").setIcon(Icon::Emblem::Image));
   panelList.append(ListViewItem().setText("Streams").setIcon(Icon::Emblem::Audio));
   panelList.append(ListViewItem().setText("Properties").setIcon(Icon::Emblem::Text));

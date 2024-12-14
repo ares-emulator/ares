@@ -1,10 +1,13 @@
 #if defined(Hiro_HexEdit)
 
-@interface CocoaHexEdit : NSScrollView {
+@interface CocoaHexEdit : NSScrollView <NSTableViewDataSource>  {
+  // Not an NSTableViewDelegate because the table is cell-based, not view-based
 @public
-  hiro::mHexEdit* hexEdit;
+  hiro::mHexEdit* hexEdit; // this will be the data source for tableView.
+  NSTableView* tableView;
 }
 -(id) initWith:(hiro::mHexEdit&)hexEdit;
+-(NSTableView*) tableView; // helper function used in update()
 @end
 
 namespace hiro {
