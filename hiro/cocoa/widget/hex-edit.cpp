@@ -45,15 +45,21 @@
   return tableView;
 }
 
+- (hiro::mHexEdit *) hexEdit {
+  return hexEdit;
+}
+
+
 - (NSInteger) numberOfRowsInTableView:(NSTableView *)tableView {
-  return hexEdit->rows();
+  return (max(1, hexEdit->length()) + hexEdit->columns() - 1) / hexEdit->columns();
 }
 
 -(id) tableView:(NSTableView *) tableView
 objectValueForTableColumn:(NSTableColumn *) tableColumn
             row:(NSInteger) row {
   // return a string with the content of (row, column)
-  u32 address = hexEdit->address() + row * hexEdit->columns();
+  // u32 address = hexEdit->address() + row * hexEdit->columns();
+  u32 address = row * hexEdit->columns();
   // address only
   if ([[tableColumn identifier] isEqualToString:@"Address"]) {
     return [NSString stringWithUTF8String:hex(address, 8L).data()];
@@ -126,10 +132,10 @@ namespace hiro {
     [cocoaView removeFromSuperview];
   }
   
-  // these helper functions are unneeded, we can just reload the table data and
-  // it will automatically reflect the contents of hexEdit!
   auto pHexEdit::setAddress(u32 offset) -> void {
-    update();
+    mHexEdit* hexEdit = [cocoaHexEdit hexEdit];
+    int row = offset / hexEdit->columns();
+    [[cocoaHexEdit tableView] scrollRowToVisible:row];
   }
   
   auto pHexEdit::setBackgroundColor(Color color) -> void {

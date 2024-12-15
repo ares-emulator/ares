@@ -8,6 +8,7 @@
 }
 -(id) initWith:(hiro::mHexEdit&)hexEdit;
 -(NSTableView*) tableView; // helper function used in update()
+-(hiro::mHexEdit*) hexEdit;
 @end
 
 namespace hiro {
