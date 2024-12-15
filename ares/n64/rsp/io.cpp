@@ -100,7 +100,7 @@ auto RSP::ioWrite(u32 address, u32 data_, Thread& thread) -> void {
     dma.full.read  = 1;
     dma.full.write = 0;
     // printf("RSP DMA Read: %08x => %08x %08x\n", dma.pending.dramAddress, dma.pending.pbusAddress, dma.pending.length);
-    dmaTransferStart();
+    dmaTransferStart(thread);
   }
 
   if(address == 3) {
@@ -112,7 +112,7 @@ auto RSP::ioWrite(u32 address, u32 data_, Thread& thread) -> void {
     dma.pending.originPc = dma.pending.originCpu ? cpu.ipu.pc : (u64)rsp.ipu.r[31].u32;
     dma.full.write = 1;
     dma.full.read  = 0;
-    dmaTransferStart();
+    dmaTransferStart(thread);
   }
 
   if(address == 4) {

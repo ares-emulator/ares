@@ -67,7 +67,6 @@ auto CPU::synchronize() -> void {
 
   queue.step(clocks, [](u32 event) {
     switch(event) {
-    case Queue::RSP_DMA:       return rsp.dmaTransferStep();
     case Queue::PI_DMA_Read:   return pi.dmaFinished();
     case Queue::PI_DMA_Write:  return pi.dmaFinished();
     case Queue::PI_BUS_Write:  return pi.writeFinished();

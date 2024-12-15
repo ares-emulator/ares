@@ -68,7 +68,6 @@ namespace ares::Nintendo64 {
 
   struct Queue : priority_queue<u32[512]> {
     enum : u32 {
-      RSP_DMA,
       PI_DMA_Read,
       PI_DMA_Write,
       PI_BUS_Write,
