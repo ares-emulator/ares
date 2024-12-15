@@ -7,35 +7,35 @@
     hexEdit = &hexEditReference;
     if (tableView = [[NSTableView alloc] initWithFrame:[self bounds]]) {
       [tableView setDataSource:self];
-      [tableView setHeaderView:nil];
+      // [tableView setHeaderView:nil];
+      [tableView setUsesAlternatingRowBackgroundColors:true];
       
       // remove padding and stuff to fit all 16 columns
       [tableView setIntercellSpacing:NSMakeSize(0, 0)];
-      [tableView setStyle:NSTableViewStylePlain];
+      // [tableView setStyle:NSTableViewStylePlain];
       NSTableColumn* addressCol = [[NSTableColumn alloc] initWithIdentifier:@"Address"];
       addressCol.editable = NO;
+      addressCol.title = @"  Address";
       [tableView addTableColumn:addressCol];
+      addressCol.width = 60;
       
       for (int i = 0; i < hexEdit->columns(); i++) {
         NSTableColumn* col = [[NSTableColumn alloc] initWithIdentifier:[NSString stringWithFormat:@"%d",
                                                                         i]];
-        col.width = 20;
-        col.title = @"";
+        col.title = [NSString stringWithFormat:@"0%x", i];
+        col.width = 21;
         [tableView addTableColumn:col];
       }
-      /*
-       NSTableColumn* hexCol = [[NSTableColumn alloc] initWithIdentifier:@"Hex"];
-       [hexCol setTitle:@"Hex"];
-       [tableView addTableColumn:hexCol];
-       */
       
-      NSTableColumn* ansiCol = [[NSTableColumn alloc] initWithIdentifier:@"ANSI"];
-      ansiCol.editable = NO;
-      [tableView addTableColumn:ansiCol];
+      NSTableColumn* charCol = [[NSTableColumn alloc] initWithIdentifier:@"Char"];
+      charCol.title = @"  Plain Text";
+      charCol.editable = NO;
+      [tableView addTableColumn:charCol];
       
       // must programmatically do this so the table shows up.
       [self setDocumentView:tableView];
       [self setHasVerticalScroller:YES];
+      [self setHasHorizontalScroller:YES];
     }
   }
   return self;
@@ -63,8 +63,8 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
   // address only
   if ([[tableColumn identifier] isEqualToString:@"Address"]) {
     return [NSString stringWithUTF8String:hex(address, 8L).data()];
-  } else if ([[tableColumn identifier] isEqualToString:@"ANSI"]){
-    // create the ansi string by concatenating
+  } else if ([[tableColumn identifier] isEqualToString:@"Char"]){
+    // create the char string by concatenating
     NSMutableString *output = [NSMutableString stringWithCapacity:hexEdit->columns()];
     for (auto column : range(hexEdit->columns())) {
       if (address < hexEdit->length()) {
@@ -93,7 +93,7 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
               row:(NSInteger) row {
   // when table is edited, modify underlying data source
   NSInteger colNumber = [tableColumn.identifier integerValue];
-  u32 address = hexEdit->address() + row * hexEdit->columns() + colNumber;
+  u32 address = row * hexEdit->columns() + colNumber;
   
   // unclear if this is needed, but just to make sure the cast is safe
   if ([object isKindOfClass:[NSString class]]) {
@@ -119,11 +119,15 @@ namespace hiro {
   auto pHexEdit::construct() -> void {
     cocoaView = cocoaHexEdit = [[CocoaHexEdit alloc] initWith:self()];
     pWidget::construct();
+
     for (NSTableColumn *column in cocoaHexEdit.tableView.tableColumns) {
-      NSTextFieldCell *cell = column.dataCell;
-      
-      // Set the font for the data cell.
-      cell.font = [NSFont monospacedSystemFontOfSize:10 weight:NSFontWeightRegular];
+        if (@available(macOS 10.15, *)) {
+        NSTextFieldCell *cell = column.dataCell;
+          NSTableHeaderCell *headerCell = column.headerCell;
+        
+        // Set the font for the data cell.
+        cell.font = [NSFont monospacedSystemFontOfSize:10 weight:NSFontWeightRegular];
+      }
     }
     update();
   }

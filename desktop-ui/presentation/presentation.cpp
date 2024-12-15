@@ -179,12 +179,9 @@ Presentation::Presentation() {
   cheatEditorAction.setText("Cheats").setIcon(Icon::Emblem::File).onActivate([&] {
     toolsWindow.show("Cheats");
   });
-  #if !defined(PLATFORM_MACOS)
-  // Cocoa hiro is missing the hex editor widget
   memoryEditorAction.setText("Memory").setIcon(Icon::Device::Storage).onActivate([&] {
     toolsWindow.show("Memory");
   });
-  #endif
   graphicsViewerAction.setText("Graphics").setIcon(Icon::Emblem::Image).onActivate([&] {
     toolsWindow.show("Graphics");
   });
