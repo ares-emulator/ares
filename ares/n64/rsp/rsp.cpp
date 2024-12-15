@@ -31,8 +31,15 @@ auto RSP::unload() -> void {
 
 auto RSP::main() -> void {
   while(Thread::clock < 0) {
-    if(status.halted) return step(128);
-    instruction();
+    auto clock = Thread::clock;
+
+    if(status.halted) {
+      step(128);
+    } else {
+      instruction();
+    }
+
+    dmaStep(Thread::clock - clock);
   }
 }
 

@@ -208,7 +208,9 @@ struct RSP : Thread, Memory::RCP<RSP> {
   } pipeline;
 
   //dma.cpp
-  auto dmaTransferStart() -> void;
+  auto dmaQueue(u32 clocks, Thread& thread) -> void;
+  auto dmaStep(u32 clocks) -> void;
+  auto dmaTransferStart(Thread& thread) -> void;
   auto dmaTransferStep() -> void;
 
   //io.cpp
@@ -240,6 +242,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
       auto any() -> n1 { return read | write; }
     } busy, full;
+
+    s64 clock;
   } dma;
 
   struct Status : Memory::RCP<Status> {
