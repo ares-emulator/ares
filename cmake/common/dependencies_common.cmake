@@ -36,6 +36,9 @@ function(_check_dependencies)
 
     set(skip FALSE)
     if(ARES_DEPENDENCY_${dependency}_${arch}_HASH STREQUAL ${hash})
+      if(EXISTS "${dependencies_dir}/${destination}")
+        set(found TRUE)
+      endif()
       if(found)
         set(skip TRUE)
       endif()
@@ -43,7 +46,10 @@ function(_check_dependencies)
 
     if(skip)
       message(STATUS "Setting up ${label} (${arch}) - skipped")
+      list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
       continue()
+    else()
+      file(REMOVE "${dependencies_dir}/${file}")
     endif()
 
     set(url ${url}/${version}/${file})
@@ -65,6 +71,7 @@ function(_check_dependencies)
 
     if(NOT ARES_DEPENDENCY_${dependency}_${arch}_HASH STREQUAL ${hash})
       file(REMOVE_RECURSE "${dependencies_dir}/${destination}")
+      message(STATUS "Removing outdated deps directory")
     endif()
 
     if(NOT EXISTS "${dependencies_dir}/${destination}")
