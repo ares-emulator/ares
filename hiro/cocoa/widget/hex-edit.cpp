@@ -9,6 +9,8 @@
       [tableView setDataSource:self];
       // [tableView setHeaderView:nil];
       [tableView setUsesAlternatingRowBackgroundColors:true];
+      [tableView setGridStyleMask:(NSTableViewDashedHorizontalGridLineMask | NSTableViewSolidVerticalGridLineMask)];
+      [tableView setRowHeight:14.0];
       
       // remove padding and stuff to fit all 16 columns
       [tableView setIntercellSpacing:NSMakeSize(0, 0)];
@@ -95,19 +97,15 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
   NSInteger colNumber = [tableColumn.identifier integerValue];
   u32 address = row * hexEdit->columns() + colNumber;
   
-  // unclear if this is needed, but just to make sure the cast is safe
-  if ([object isKindOfClass:[NSString class]]) {
-    if (address < hexEdit->length()) {
-      // only get the first 2 characters
-      NSString* newVal = [(NSString *)object substringToIndex:2];
-      NSScanner* hexScanner = [NSScanner scannerWithString:newVal];
-      unsigned int data = 0;
-      if ([hexScanner scanHexInt:&data]) {
-        // this.......is probably ok....???
-        hexEdit->doWrite(address, (u8)data);
-      }
+  if (address < hexEdit->length()) {
+    // only get the first 2 characters
+    NSString* newVal = [(NSString *)object substringToIndex:2];
+    NSScanner* hexScanner = [NSScanner scannerWithString:newVal];
+    unsigned int data = 0;
+    if ([hexScanner scanHexInt:&data]) {
+      // this.......is probably ok....???
+      hexEdit->doWrite(address, (u8)data);
     }
-    
   }
   [tableView reloadData];
 }
@@ -121,10 +119,10 @@ namespace hiro {
     pWidget::construct();
 
     for (NSTableColumn *column in cocoaHexEdit.tableView.tableColumns) {
-        if (@available(macOS 10.15, *)) {
+      if (@available(macOS 10.15, *)) {
         NSTextFieldCell *cell = column.dataCell;
-          NSTableHeaderCell *headerCell = column.headerCell;
-        
+        NSTableHeaderCell *headerCell = column.headerCell;
+      
         // Set the font for the data cell.
         cell.font = [NSFont monospacedSystemFontOfSize:10 weight:NSFontWeightRegular];
       }
