@@ -5,6 +5,9 @@ struct System {
   VFS::Pak pak;
   bool homebrewMode = false;
   bool expansionPak = true;
+  u8 nand64[4] = { 0 };
+  u8 nand128[4] = { 0 };
+  bool is_128 = false;
 
   enum class Region : u32 { NTSC, PAL };
 

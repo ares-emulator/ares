@@ -42,6 +42,14 @@ auto option(string name, string value) -> bool {
     }
   }
   if(name == "Expansion Pak") system.expansionPak = value.boolean();
+  if(name.beginsWith("NAND")) {
+    auto which = name.slice(-1).integer();
+    if(name.beginsWith("NAND64"))
+      system.nand64[which] = value.integer();
+    else if(name.beginsWith("NAND128"))
+      system.nand128[which] = value.integer();
+  }
+  if(name == "Is 128") system.is_128 = value.boolean();
   return true;
 }
 

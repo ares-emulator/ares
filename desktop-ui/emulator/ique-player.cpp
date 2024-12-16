@@ -97,11 +97,34 @@ auto iQuePlayer::load() -> bool {
 
   string bb_dir = Path::desktop();
   
-  if(system->pak->read("nand.flash")->attribute("loaded") != "true") {
+  while(true) {
+    bool loaded = system->pak->read("nand.flash")->attribute("loaded") == "true";
+    if(loaded) {
+      auto size = system->pak->read("nand.flash")->size();
+
+      if((size != 64_MiB) && (size != 128_MiB))
+        loaded = false;
+    }
+    
+    if(loaded)
+      break;
+
     if(!loadSystem(system, "nand.flash", ".flash", bb_dir)) return errorWriteable("nand.flash"), false;
   }
 
-  if(system->pak->read("spare.flash")->attribute("loaded") != "true") {
+  while(true) {
+    bool loaded = system->pak->read("spare.flash")->attribute("loaded") == "true";
+    if(loaded) {
+      auto size = system->pak->read("spare.flash")->size();
+      auto nand_size = system->pak->read("nand.flash")->size();
+
+      if(((size / 16) != (nand_size / 16384)) && ((size / 16) != (nand_size / 512)))
+        loaded = false;
+    }
+
+    if(loaded)
+      break;
+
     if(!loadSystem(system, "spare.flash", ".flash", bb_dir)) return errorWriteable("spare.flash"), false;
   }
 
@@ -122,6 +145,15 @@ auto iQuePlayer::load() -> bool {
   ares::Nintendo64::option("Weave Deinterlacing", settings.video.weaveDeinterlacing);
   ares::Nintendo64::option("Homebrew Mode", settings.general.homebrewMode);
   ares::Nintendo64::option("Recompiler", !settings.general.forceInterpreter);
+  ares::Nintendo64::option("NAND64 0", settings.nintendo64.nand64[0]);
+  ares::Nintendo64::option("NAND64 1", settings.nintendo64.nand64[1]);
+  ares::Nintendo64::option("NAND64 2", settings.nintendo64.nand64[2]);
+  ares::Nintendo64::option("NAND64 3", settings.nintendo64.nand64[3]);
+  ares::Nintendo64::option("NAND128 0", settings.nintendo64.nand128[0]);
+  ares::Nintendo64::option("NAND128 1", settings.nintendo64.nand128[1]);
+  ares::Nintendo64::option("NAND128 2", settings.nintendo64.nand128[2]);
+  ares::Nintendo64::option("NAND128 3", settings.nintendo64.nand128[3]);
+  ares::Nintendo64::option("Is 128", system->pak->read("nand.flash")->size() == 128_MiB);
 
   if(!ares::Nintendo64::load(root, "[iQue] iQue Player")) return false;
 

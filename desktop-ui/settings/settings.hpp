@@ -103,6 +103,13 @@ struct Settings : Markup::Node {
 
   struct Nintendo64 {
     bool expansionPak = true;
+    //First byte:  Manufacturer
+    //Second byte: Device Identifier
+    //Third byte:  Nothing
+    //Fourth byte: Multiplane Flag
+    //default: Samsung K9F1208U0M/K9K1G08U0M
+    u8 nand64[4] = { 0xec, 0x76, 0xa5, 0xc0 };
+    u8 nand128[4] = { 0xec, 0x79, 0xa5, 0xc0 };
   } nintendo64;
 
   struct MegaDrive {
@@ -262,6 +269,25 @@ struct OptionSettings : VerticalLayout {
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, 0}};
+    HorizontalLayout iQuePlayer64MiBNANDLayout{this, Size{~0, 0}, 5};
+      ComboButton iQuePlayer64MiBNANDPresets{&iQuePlayer64MiBNANDLayout, Size{0, 0}, 5};
+      LineEdit iQuePlayer64MiBNANDID[4] = {
+        {&iQuePlayer64MiBNANDLayout, Size{0, 0}},
+        {&iQuePlayer64MiBNANDLayout, Size{0, 0}},
+        {&iQuePlayer64MiBNANDLayout, Size{0, 0}},
+        {&iQuePlayer64MiBNANDLayout, Size{0, 0}},
+      };
+      Label iQuePlayer64MiBNANDHint{&iQuePlayer64MiBNANDLayout, Size{0, 0}};
+    HorizontalLayout iQuePlayer128MiBNANDLayout{this, Size{~0, 0}, 5};
+      ComboButton iQuePlayer128MiBNANDPresets{&iQuePlayer128MiBNANDLayout, Size{0, 0}, 5};
+      LineEdit iQuePlayer128MiBNANDID[4] = {
+        {&iQuePlayer128MiBNANDLayout, Size{0, 0}},
+        {&iQuePlayer128MiBNANDLayout, Size{0, 0}},
+        {&iQuePlayer128MiBNANDLayout, Size{0, 0}},
+        {&iQuePlayer128MiBNANDLayout, Size{0, 0}},
+      };
+      Label iQuePlayer128MiBNANDHint{&iQuePlayer128MiBNANDLayout, Size{0, 0}};
+
   Label megaDriveSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};
       CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};

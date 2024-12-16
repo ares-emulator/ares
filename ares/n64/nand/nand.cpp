@@ -12,8 +12,8 @@ NAND nand3(3);
 auto NAND::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("NAND");
 
-  data.allocate(0x4000000);
-  spare.allocate(0x10000);
+  data.allocate(system.is_128 ? 128_MiB : 64_MiB);
+  spare.allocate(system.is_128 ? 128_KiB : 64_KiB);
   writeBuffer.allocate(0x200);
   writeBufferSpare.allocate(0x10);
 
@@ -83,7 +83,7 @@ auto NAND::read(Memory::Writable& dest, b1 which, n27 pageNum, n10 length) -> vo
 
 auto NAND::readId(Memory::Writable& dest, b1 which, n10 length) -> void {
   for (auto i : range(length))
-    dest.write<Byte>(i + which * 0x200, (i > 4) ? 0 : ID[i]);
+    dest.write<Byte>(i + which * 0x200, (i > 4) ? 0 : (system.is_128 ? system.nand128[i] : system.nand64[i]));
 
   string message = { "Buffer=", which, ", Length=0x", hex(length) };
   debugger.command(NAND::Command::ReadID, message);
