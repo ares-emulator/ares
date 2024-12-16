@@ -4,14 +4,11 @@ auto PI::BBRTC::load() -> void {
     ram.load(fp);
   }
 
-  //byte 0 to 7 = raw rtc data
-  n64 check = 0;
-  for(auto n : range(8)) check.byte(n) = ram.read<Byte>(n);
-  if(!~check) return;  //new save file
-
   //check for invalid time info, if invalid, set time info to something invalid and ignore the rest
   if (!valid()) {
-    for(auto n : range(8)) ram.write<Byte>(n, 0xff);
+    for(auto n : range(8)) ram.write<Byte>(n, 0x00);
+    set_of(1);
+    set_out(1);
     return;
   }
 
@@ -163,7 +160,13 @@ auto PI::BBRTC::tick() -> void {
             } else {
               if(bit_count < 8) {
                 n8 byte = ram.read<Byte>(data_addr.bit(0,2));
-                byte.bit(8 - bit_count - 1) = data_high(linestate);
+
+                //byte 7 bit 6 is hardcoded to 0
+                if((data_addr.bit(0,2) != 7) || (bit_count != 1))
+                  byte.bit(8 - bit_count - 1) = data_high(linestate);
+                else
+                  byte.bit(8 - bit_count - 1) = 0;
+
                 ram.write<Byte>(data_addr.bit(0,2), byte);
                 bit_count += 1;
               } else {
@@ -186,58 +189,219 @@ auto PI::BBRTC::tickClock() -> void {
 }
 
 auto PI::BBRTC::tickSecond() -> void {
-  /*if (!valid()) return;
+  if(!valid()) return;
+  if(st()) return;
 
-  //second
-  tick(5);
-  if(ram.read<Byte>(5) < 0x60) return;
-  ram.write<Byte>(5, 0);
+  //seconds
+  set_seconds(BCD::encode(BCD::decode(seconds()) + 1));
+  if(seconds() <= 0x59) return;
+  set_seconds(0);
 
-  //minute
-  tick(4);
-  if(ram.read<Byte>(4) < 0x60) return;
-  ram.write<Byte>(4, 0);
+  //minutes
+  set_minutes(BCD::encode(BCD::decode(minutes()) + 1));
+  if(minutes() <= 0x59) return;
+  set_minutes(0);
 
-  //hour
-  tick(3);
-  if(ram.read<Byte>(3) < 0x24) return;
-  ram.write<Byte>(3, 0);
+  //hours
+  set_hours(BCD::encode(BCD::decode(hours()) + 1));
+  if(hours() <= 0x23) return;
+  set_hours(0);
 
-  //day
-  tick(2);
-  if(ram.read<Byte>(2) <= BCD::encode(chrono::daysInMonth(BCD::decode(ram.read<Byte>(1)), BCD::decode(ram.read<Byte>(0))))) return;
-  ram.write<Byte>(2, 1);
+  //date
+  set_day(day() + 1);
+  set_date(BCD::encode(BCD::decode(date()) + 1));
+  if(day() == 0) set_day(1);
+  if(date() < BCD::encode(chrono::daysInMonth(month(), years()))) return;
+  set_date(1);
 
   //month
-  tick(1);
-  if(ram.read<Byte>(1) <= 0x12) return;
-  ram.write<Byte>(1, 1);
+  set_month(BCD::encode(BCD::decode(month()) + 1));
+  if(month() <= 0x11) return;
+  set_month(1);
 
-  //year
-  tick(0);*/
+  //years
+  set_years(BCD::encode(BCD::decode(years()) + 1));
+  if(years() <= 0x99) return;
+  set_years(0);
+  
+  //century
+  if(!ceb()) return;
+  set_cb(!cb());
+}
+
+inline auto PI::BBRTC::seconds() -> n7 {
+  return ((n8)ram.read<Byte>(0)).bit(0,6);
+}
+
+inline auto PI::BBRTC::minutes() -> n7 {
+  return ((n8)ram.read<Byte>(1)).bit(0,6);
+}
+
+inline auto PI::BBRTC::hours() -> n6 {
+  return ((n8)ram.read<Byte>(2)).bit(0,5);
+}
+
+inline auto PI::BBRTC::day() -> n3 {
+  return ((n8)ram.read<Byte>(3)).bit(0,2);
+}
+
+inline auto PI::BBRTC::date() -> n6 {
+  return ((n8)ram.read<Byte>(4)).bit(0,5);
+}
+
+inline auto PI::BBRTC::month() -> n5 {
+  return ((n8)ram.read<Byte>(5)).bit(0,4);
+}
+
+inline auto PI::BBRTC::years() -> n8 {
+  return ((n8)ram.read<Byte>(6)).bit(0,7);
+}
+
+inline auto PI::BBRTC::st() -> n1 {
+  return ((n8)ram.read<Byte>(0)).bit(7);
+}
+
+inline auto PI::BBRTC::of() -> n1 {
+  return ((n8)ram.read<Byte>(1)).bit(7);
+}
+
+inline auto PI::BBRTC::ceb() -> n1 {
+  return ((n8)ram.read<Byte>(2)).bit(7);
+}
+
+inline auto PI::BBRTC::cb() -> n1 {
+  return ((n8)ram.read<Byte>(2)).bit(6);
+}
+
+inline auto PI::BBRTC::out() -> n1 {
+  return ((n8)ram.read<Byte>(7)).bit(7);
+}
+
+inline auto PI::BBRTC::set_seconds(n7 value) -> void {
+  n8 byte = ram.read<Byte>(0);
+  byte.bit(0,6) = value;
+  return ram.write<Byte>(0, byte);
+}
+
+inline auto PI::BBRTC::set_minutes(n7 value) -> void {
+  n8 byte = ram.read<Byte>(0);
+  byte.bit(0,6) = value;
+  return ram.write<Byte>(1, byte);
+}
+
+inline auto PI::BBRTC::set_hours(n6 value) -> void {
+  n8 byte = ram.read<Byte>(0);
+  byte.bit(0,5) = value;
+  return ram.write<Byte>(2, byte);
+}
+
+inline auto PI::BBRTC::set_day(n3 value) -> void {
+  n8 byte = ram.read<Byte>(0);
+  byte.bit(0,2) = value;
+  return ram.write<Byte>(3, byte);
+}
+
+inline auto PI::BBRTC::set_date(n6 value) -> void {
+  n8 byte = ram.read<Byte>(0);
+  byte.bit(0,5) = value;
+  return ram.write<Byte>(4, byte);
+}
+
+inline auto PI::BBRTC::set_month(n5 value) -> void {
+  n8 byte = ram.read<Byte>(0);
+  byte.bit(0,4) = value;
+  return ram.write<Byte>(5, byte);
+}
+
+inline auto PI::BBRTC::set_years(n8 value) -> void {
+  n8 byte = ram.read<Byte>(0);
+  byte.bit(0,7) = value;
+  return ram.write<Byte>(6, byte);
+}
+
+inline auto PI::BBRTC::set_st(n1 value) -> void {
+  n8 byte = ram.read<Byte>(0);
+  byte.bit(7) = value;
+  return ram.write<Byte>(0, byte);
+}
+
+inline auto PI::BBRTC::set_of(n1 value) -> void {
+  n8 byte = ram.read<Byte>(1);
+  byte.bit(7) = value;
+  return ram.write<Byte>(1, byte);
+}
+
+inline auto PI::BBRTC::set_ceb(n1 value) -> void {
+  n8 byte = ram.read<Byte>(2);
+  byte.bit(7) = value;
+  return ram.write<Byte>(2, byte);
+}
+
+inline auto PI::BBRTC::set_cb(n1 value) -> void {
+  n8 byte = ram.read<Byte>(2);
+  byte.bit(6) = value;
+  return ram.write<Byte>(2, byte);
+}
+
+inline auto PI::BBRTC::set_out(n1 value) -> void {
+  n8 byte = ram.read<Byte>(7);
+  byte.bit(7) = value;
+  return ram.write<Byte>(7, byte);
 }
 
 auto PI::BBRTC::valid() -> bool {
-  /*//check validity of ram rtc data (if it's BCD valid or not)
-  for(auto n : range(6)) {
-    if((ram.read<Byte>(n) & 0x0f) >= 0x0a) return false;
+  //check validity of ram rtc data (if it's BCD valid or not)
+  const struct {
+    n4 mask;
+    n4 min;
+    n4 max;
+  } nibbles[][2] = {
+    { { 0b0111, 0, 5 }, { 0b1111, 0, 9 } },
+    { { 0b0111, 0, 5 }, { 0b1111, 0, 9 } },
+    { { 0b0011, 0, 2 }, { 0b1111, 0, 9 } },
+    { { 0b0000, 0, 0 }, { 0b0111, 1, 7 } },
+    { { 0b0011, 0, 3 }, { 0b1111, 0, 9 } },
+    { { 0b0001, 0, 1 }, { 0b1111, 0, 9 } },
+    { { 0b1111, 0, 9 }, { 0b1111, 0, 9 } },
+    { { 0b0100, 0, 0 }, { 0b0000, 0, 0 } },
+  };
+
+  for(auto n : range(8)) {
+    n8 byte = ram.read<Byte>(n);
+
+    for(auto h : range(2)) {
+      n4 nibble = byte >> ((1 - h) * 4);
+
+      auto& entry = nibbles[n][h];
+
+      auto masked = nibble & entry.mask;
+
+      if((masked < entry.min) || (masked > entry.max)) return false;
+    }
   }
 
   //check for valid values of each byte
-  //year
-  if(ram.read<Byte>(0) >= 0xa0) return false;
-  //second
-  if(ram.read<Byte>(5) >= 0x60) return false;
-  //minute
-  if(ram.read<Byte>(4) >= 0x60) return false;
-  //hour
-  if(ram.read<Byte>(3) >= 0x24) return false;
+  //seconds
+  if(seconds() > 0x59) return false;
+  //minutes
+  if(minutes() > 0x59) return false;
+  //hours
+  if(hours() > 0x23) return false;
+  //byte 3 is checked already above
+  //date
+  if(date() > 0x31) return false;
+  if(date() < 0x01) return false;
   //month
-  if(ram.read<Byte>(1) > 0x12) return false;
-  if(ram.read<Byte>(1) < 1) return false;
-  //day
-  if(ram.read<Byte>(2) < 1) return false;
-  if(ram.read<Byte>(2) > BCD::encode(chrono::daysInMonth(BCD::decode(ram.read<Byte>(1)), BCD::decode(ram.read<Byte>(0))))) return false;*/
+  if(month() > 0x12) return false;
+  if(month() < 0x01) return false;
+  //years
+  if(years() > 0x99) return false;
+
+  auto day = date();
+  auto month = this->month();
+  auto year = years();
+
+  if(day > BCD::encode(chrono::daysInMonth(BCD::decode(month), BCD::decode(year)))) return false;
 
   //everything is valid
   return true;
