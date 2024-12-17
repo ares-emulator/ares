@@ -17,7 +17,7 @@ auto VI::serialize(serializer& s) -> void {
   s(io.colorBurstHsync);
   s(io.halfLinesPerField);
   s(io.quarterLineDuration);
-  s(io.palLeapPattern);
+  s(io.leapPattern);
   s(io.hsyncLeap);
   s(io.hend);
   s(io.hstart);
@@ -31,4 +31,7 @@ auto VI::serialize(serializer& s) -> void {
   s(io.ysubpixel);
   s(io.vcounter);
   s(io.field);
+  s(io.leapCounter);
+
+  s(clockFraction);
 }

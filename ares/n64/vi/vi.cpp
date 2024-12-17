@@ -7,6 +7,12 @@ VI vi;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
+auto VI::step(u32 clocks) -> void {
+  auto scaled = (u64)clocks * system.frequency() + clockFraction;
+  Thread::clock += scaled / system.videoFrequency();
+  clockFraction = scaled % system.videoFrequency();
+}
+
 auto VI::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VI");
 
@@ -63,26 +69,52 @@ auto VI::unload() -> void {
 
 auto VI::main() -> void {
   while(Thread::clock < 0) {
-    if(++io.vcounter >= (Region::NTSC() ? 262 : 312) + io.field) {
-      io.vcounter = 0;
-      io.field = io.field + 1 & io.serrate;
-      #if defined(VULKAN)
-      if (vulkan.enable) {
-        gpuOutputValid = vulkan.scanoutAsync(io.field);
-        vulkan.frame();
+    if(active()) {
+      ++io.vcounter;
+      int halfline = io.vcounter << 1 | io.field;
+      if(halfline >= io.halfLinesPerField+1) {
+        io.vcounter = 0;
+        io.field += !io.halfLinesPerField.bit(0);
+        if(++io.leapCounter == 5) io.leapCounter = 0;
+        #if defined(VULKAN)
+        if (vulkan.enable) {
+          gpuOutputValid = vulkan.scanoutAsync(io.field);
+          vulkan.frame();
+        }
+        #endif
+        refreshed = true;
+        screen->frame();
       }
-      #endif
-      refreshed = true;
-      screen->frame();
-    }
 
-    //field is not compared
-    if(io.vcounter << 1 == io.coincidence) {
-      mi.raise(MI::IRQ::VI);
-    }
+      if(io.halfLinesPerField.bit(0)) { // progressive
+        if(io.vcounter == io.coincidence >> 1) {
+          mi.raise(MI::IRQ::VI);
+        }
+      } else { // interlaced
+        if(io.coincidence.bit(0)) {
+          if(io.vcounter == io.coincidence >> 1)
+            mi.raise(MI::IRQ::VI);
+        }
+        if(!io.coincidence.bit(0)) {
+          int halfline = io.vcounter << 1 | io.field;
+          if(!io.field && halfline == io.coincidence)
+            mi.raise(MI::IRQ::VI);
+          if(io.field && halfline+1 == io.coincidence)
+            mi.raise(MI::IRQ::VI);
+          if(!io.field && halfline == io.halfLinesPerField && io.coincidence == 0)
+            mi.raise(MI::IRQ::VI);
+        }
+      }
 
-    if(Region::NTSC()) step(system.frequency() / 60 / 262);
-    if(Region::PAL ()) step(system.frequency() / 50 / 312);
+      u32 lineDuration = io.quarterLineDuration;
+      if(io.vcounter == 1)
+        lineDuration = io.hsyncLeap[io.leapPattern.bit(io.leapCounter)];      
+      step(io.quarterLineDuration);
+    } else {
+      Thread::clock = 0;
+      io.vcounter = 0;
+      break;
+    }
   }
 }
 
@@ -184,6 +216,7 @@ auto VI::power(bool reset) -> void {
   screen->power();
   io = {};
   refreshed = false;
+  clockFraction = 0;
 
   #if defined(VULKAN)
   gpuOutputValid = false;
