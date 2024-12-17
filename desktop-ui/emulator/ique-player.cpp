@@ -1,3 +1,5 @@
+#include "../../ares/n64/nand/ecc.hpp"
+
 struct iQuePlayer : Emulator {
   iQuePlayer();
   auto load() -> bool override;
@@ -126,6 +128,47 @@ auto iQuePlayer::load() -> bool {
       break;
 
     if(!loadSystem(system, "spare.flash", ".flash", bb_dir)) return errorWriteable("spare.flash"), false;
+  }
+
+  auto spareSize = system->pak->read("spare.flash")->size();
+  auto nandSize = system->pak->read("nand.flash")->size();
+
+  if (spareSize * 0x4000 == nandSize * 0x10) {
+    //We got block spares, convert to page spares
+    if (auto fpSpare = system->pak->write("spare.flash")) {
+      if (auto fpNand = system->pak->read("nand.flash")) {
+        auto targetSize = 0x10 * nandSize / 0x200;
+        //Read block spares
+        vector<u8> blockSpare;
+        blockSpare.reserve(spareSize);
+        blockSpare.resize(spareSize);
+        fpSpare->read({blockSpare.data(), blockSpare.size()});
+        //Compute page spares
+        vector<u8> pageSpare;
+        pageSpare.reserve(targetSize);
+        pageSpare.resize(targetSize);
+        //For each block:
+        for (auto blockNum : range(nandSize / 0x4000)) {
+          printf("computing page spares for block %u\n", u32(blockNum));
+          //For each page:
+          for (auto i : range(32)) {
+            auto pageNum = blockNum * 32 + i;
+            //First 8 bytes are copied from the block spare verbatim
+            memcpy(&pageSpare[pageNum * 0x10], &blockSpare[blockNum * 0x10], 8);
+            //Last 8 bytes are the computed ecc over this page
+            u8 page[0x200];
+            fpNand->read(page);
+            u8 ecc[8];
+            ECC::computePageECC(page, &pageSpare[pageNum * 0x10 + 8]);
+          }
+        }
+        //Resize file
+        fpSpare->seek(0);
+        fpSpare->resize(targetSize);
+        //Write page spares
+        fpSpare->write(pageSpare);
+      }
+    }
   }
 
   if(system->pak->read("virage2.flash")->attribute("loaded") != "true") {

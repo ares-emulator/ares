@@ -1,5 +1,8 @@
 //NAND
 
+#define MEM_ECC 1
+#include "ecc.hpp"
+
 struct NAND : Memory::RCP<NAND> {
   enum Command : u8 {
     Read0                  = 0x00,
@@ -17,17 +20,18 @@ struct NAND : Memory::RCP<NAND> {
     ReadStatus             = 0x70,
     ReadStatusMultiplane   = 0x71,
   };
+  static constexpr u8 NUM_PLANES = 4;
 
   Node::Object node;
 
-  Memory::Writable data = {};
-  Memory::Writable spare = {};
-  Memory::Writable writeBuffer = {};
-  Memory::Writable writeBufferSpare = {};
-
   struct Debugger {
+    NAND& self;
+
+    Debugger(NAND& self) : self(self) {}
+
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto unload(Node::Object parent) -> void;
     auto command(Command cmd, string desc) -> void;
 
     struct Memory {
@@ -39,11 +43,12 @@ struct NAND : Memory::RCP<NAND> {
       Node::Debugger::Tracer::Notification io;
     } tracer;
 
-    u32 num;
-  } debugger;
+  } debugger{*this};
 
-  NAND(u32 n) {
-    debugger.num = n;
+  NAND(u32 n) : num(n) {}
+
+  inline auto setPageOffset(n10 newPageOffset) {
+    pageOffset = newPageOffset;
   }
 
   //nand.cpp
@@ -51,9 +56,10 @@ struct NAND : Memory::RCP<NAND> {
   auto unload() -> void;
   auto save() -> void;
   auto power(bool reset) -> void;
-  auto read(Memory::Writable& dest, b1 which, n27 pageNum, n10 length) -> void;
+  auto read(Memory::Writable& dest, b1 which, n27 pageNum, n10 length, b1 ecc) -> n2;
   auto readId(Memory::Writable& dest, b1 which, n10 length) -> void;
   auto writeToBuffer(Memory::Writable& src, b1 which, n27 pageNum, n10 length) -> void;
+  auto queueWriteBuffer(n27 pageNum, bool commit = false) -> void;
   auto commitWriteBuffer(n27 pageNum) -> void;
   auto readStatus(Memory::Writable& dest, b1 which, n10 length, bool multiplane) -> void;
   auto queueErasure(n27 pageNum) -> void;
@@ -62,9 +68,19 @@ struct NAND : Memory::RCP<NAND> {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+private:
+  u32 num;
   n10 pageOffset = 0;
+
+  Memory::Writable data = {};
+  Memory::Writable spare = {};
+  Memory::Writable writeBuffers[NUM_PLANES] = {};
+  Memory::Writable writeBufferSpares[NUM_PLANES] = {};
+
   n4 eraseQueueOccupied = 0;
-  n27 eraseQueuePage[4] = {};
+  n27 eraseQueueAddrs[NUM_PLANES] = {};
+  n4 writeBuffersOccupied = 0;
+  n27 writeBufferAddrs[NUM_PLANES] = {};
 };
 
 extern NAND nand0;

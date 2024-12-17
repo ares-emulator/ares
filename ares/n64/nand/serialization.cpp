@@ -1,10 +1,12 @@
 auto NAND::serialize(serializer& s) -> void {
+  s(num);
+  s(pageOffset);
   s(data);
   s(spare);
-  s(writeBuffer);
-  s(writeBufferSpare);
-
-  s(pageOffset);
+  s(writeBuffers);
+  s(writeBufferSpares);
   s(eraseQueueOccupied);
-  s(eraseQueuePage);
+  s(eraseQueueAddrs);
+  s(writeBuffersOccupied);
+  s(writeBufferAddrs);
 }

@@ -11,18 +11,22 @@ auto PI::nandCommandFinished() -> void {
 
   switch (bb_nand.io.command) {
     case NAND::Command::Read0: { // read 1 (offset 0)
-      nand->pageOffset = 0x000;
-      nand->read(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.pageNumber, bb_nand.io.xferLen);
+      nand->setPageOffset(0x000);
+      n2 result = nand->read(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.pageNumber, bb_nand.io.xferLen, bb_nand.io.ecc);
+      bb_nand.io.dbErr = result.bit(0);
+      bb_nand.io.sbErr = result.bit(1);
     } break;
 
     case NAND::Command::Read1: { // read 1 (offset 256)
-      nand->pageOffset = 0x100;
-      nand->read(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.pageNumber, bb_nand.io.xferLen);
+      nand->setPageOffset(0x100);
+      n2 result = nand->read(bb_nand.buffer, bb_nand.io.bufferSel, bb_nand.io.pageNumber, bb_nand.io.xferLen, bb_nand.io.ecc);
+      bb_nand.io.dbErr = result.bit(0);
+      bb_nand.io.sbErr = result.bit(1);
     } break;
 
     case NAND::Command::ReadSpare: {
-      nand->pageOffset = 0x200;
-      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
+      nand->setPageOffset(0x200);
+      debug(unimplemented, "NAND Command 0x", hex(u8(bb_nand.io.command), 2L), " unimplemented");
     } break;
 
     case NAND::Command::ReadID: {
@@ -42,15 +46,15 @@ auto PI::nandCommandFinished() -> void {
     } break;
 
     case NAND::Command::PageProgramDummyC2: {
-      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
+      nand->queueWriteBuffer(bb_nand.io.pageNumber);
     } break;
 
     case NAND::Command::CopyBackProgramC2: {
-      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
+      debug(unimplemented, "NAND Command 0x", hex(u8(bb_nand.io.command), 2L), " unimplemented");
     } break;
 
     case NAND::Command::CopyBackProgramDummyC1: {
-      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
+      debug(unimplemented, "NAND Command 0x", hex(u8(bb_nand.io.command), 2L), " unimplemented");
     } break;
 
     case NAND::Command::BlockEraseC1: {
@@ -70,7 +74,7 @@ auto PI::nandCommandFinished() -> void {
     } break;
 
     default: {
-      debug(unimplemented, "NAND Command 0x,", hex(u8(bb_nand.io.command), 2L), ", unimplemented");
+      debug(unimplemented, "NAND Command 0x", hex(u8(bb_nand.io.command), 2L), " unimplemented");
     } break;
   }
   bb_nand.io.busy = 0;

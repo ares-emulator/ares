@@ -39,8 +39,6 @@ auto Virage::power(bool reset) -> void {
   if(auto fp = system.pak->write(fileName))
     flash.load(fp);
 
-  printf("virage power\n");
-
   io.unk30 = 1;
   io.busy = 0;
 
