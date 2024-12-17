@@ -1,4 +1,6 @@
 auto PPU::readIO(n32 address) -> n8 {
+  cpu.synchronize(ppu);
+
   switch(address) {
 
   //DISPCNT
@@ -24,23 +26,6 @@ auto PPU::readIO(n32 address) -> n8 {
   //GRSWP
   case 0x0400'0002: return io.greenSwap;
   case 0x0400'0003: return 0;
-
-  //DISPSTAT
-  case 0x0400'0004: return (
-    io.vblank          << 0
-  | io.hblank          << 1
-  | io.vcoincidence    << 2
-  | io.irqvblank       << 3
-  | io.irqhblank       << 4
-  | io.irqvcoincidence << 5
-  );
-  case 0x0400'0005: return (
-    io.vcompare
-  );
-
-  //VCOUNT
-  case 0x0400'0006: return io.vcounter.byte(0);
-  case 0x0400'0007: return io.vcounter.byte(1);
 
   //BG0CNT
   case 0x0400'0008: return bg0.io.priority << 0 | bg0.io.characterBase << 2 | bg0.io.unused << 4 | bg0.io.mosaic << 6 | bg0.io.colorMode << 7;
@@ -103,6 +88,8 @@ auto PPU::readIO(n32 address) -> n8 {
 }
 
 auto PPU::writeIO(n32 address, n8 data) -> void {
+  cpu.synchronize(ppu);
+
   switch(address) {
 
   //DISPCNT
@@ -133,16 +120,6 @@ auto PPU::writeIO(n32 address, n8 data) -> void {
     io.greenSwap = data.bit(0);
     return;
   case 0x0400'0003:
-    return;
-
-  //DISPSTAT
-  case 0x0400'0004:
-    io.irqvblank       = data.bit(3);
-    io.irqhblank       = data.bit(4);
-    io.irqvcoincidence = data.bit(5);
-    return;
-  case 0x0400'0005:
-    io.vcompare = data;
     return;
 
   //BG0CNT

@@ -70,9 +70,9 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
          if(address  < 0x0200'0000) bios.write(mode, address, word);
     else if(address  < 0x0300'0000) writeEWRAM(mode, address, word);
     else if(address  < 0x0400'0000) writeIWRAM(mode, address, word);
-    else if(address >= 0x0700'0000) ppu.writeOAM(mode, address, word);
-    else if(address >= 0x0600'0000) ppu.writeVRAM(mode, address, word);
-    else if(address >= 0x0500'0000) ppu.writePRAM(mode, address, word);
+    else if(address >= 0x0700'0000) { synchronize(ppu); ppu.writeOAM(mode, address, word); }
+    else if(address >= 0x0600'0000) { synchronize(ppu); ppu.writeVRAM(mode, address, word); }
+    else if(address >= 0x0500'0000) { synchronize(ppu); ppu.writePRAM(mode, address, word); }
     else if((address & 0xffff'fc00) == 0x0400'0000) bus.io[address & 0x3ff]->writeIO(mode, address, word);
     else if((address & 0xff00'ffff) == 0x0400'0800) ((IO*)this)->writeIO(mode, 0x0400'0800 | (address & 3), word);
   }

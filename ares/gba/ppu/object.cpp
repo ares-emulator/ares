@@ -4,7 +4,6 @@ auto PPU::Objects::setEnable(n1 status) -> void {
 }
 
 auto PPU::Objects::scanline(u32 y) -> void {
-  memory::move(io.enable, io.enable + 1, sizeof(io.enable) - 1);
   if(y >= 160) return;
 
   mosaicOffset = 0;
@@ -81,7 +80,7 @@ auto PPU::Objects::scanline(u32 y) -> void {
   }
 }
 
-auto PPU::Objects::run(u32 x, u32 y) -> void {
+auto PPU::Objects::outputPixel(u32 x, u32 y) -> void {
   output = {};
   if(ppu.blank() || !io.enable[0]) {
     mosaic = {};

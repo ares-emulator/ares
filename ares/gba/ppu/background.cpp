@@ -10,17 +10,20 @@ auto PPU::Background::setEnable(n1 status) -> void {
 }
 
 auto PPU::Background::scanline(u32 y) -> void {
-  memory::move(io.enable, io.enable + 1, sizeof(io.enable) - 1);
   mosaicOffset = 0;
+  for(auto& pixel : output) pixel = {};
+}
+
+auto PPU::Background::outputPixel(u32 x, u32 y) -> void {
+  //horizontal mosaic
+  if(!io.mosaic || !mosaicOffset) {
+    mosaicOffset = 1 + io.mosaicWidth;
+    mosaic = output[x];
+  }
+  mosaicOffset--;
 }
 
 auto PPU::Background::run(u32 x, u32 y) -> void {
-  output = {};
-  if(ppu.blank() || !io.enable[0]) {
-    mosaic = {};
-    return;
-  }
-
   switch(id) {
   case PPU::BG0:
     if(io.mode <= 1) { linear(x, y); break; }
@@ -32,25 +35,21 @@ auto PPU::Background::run(u32 x, u32 y) -> void {
 
   case PPU::BG2:
     if(io.mode == 0) { linear(x, y); break; }
-    if(io.mode <= 2) { affine(x, y); break; }
+    if(io.mode <= 2) { affineFetchTileMap(x, y); affineFetchTileData(x, y); break; }
     if(io.mode <= 5) { bitmap(x, y); break; }
     break;
 
   case PPU::BG3:
     if(io.mode == 0) { linear(x, y); break; }
-    if(io.mode == 2) { affine(x, y); break; }
+    if(io.mode == 2) { affineFetchTileMap(x, y); affineFetchTileData(x, y); break; }
     break;
   }
-
-  //horizontal mosaic
-  if(!io.mosaic || !mosaicOffset) {
-    mosaicOffset = 1 + io.mosaicWidth;
-    mosaic = output;
-  }
-  mosaicOffset--;
 }
 
 auto PPU::Background::linear(u32 x, u32 y) -> void {
+  if(x > 239) return;
+  if(ppu.blank() || !io.enable[0]) return;
+
   if(x == 0) {
     if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
       vmosaic = y;
@@ -84,23 +83,26 @@ auto PPU::Background::linear(u32 x, u32 y) -> void {
   if(io.colorMode == 0) {
     u32 offset = (io.characterBase << 14) + (latch.character << 5) + (py << 2) + (px >> 1);
     if(n4 color = ppu.readVRAM_BG(Byte, offset) >> (px & 1 ? 4 : 0)) {
-      output.enable = true;
-      output.priority = io.priority;
-      output.color = latch.palette << 4 | color;
+      output[x].enable = true;
+      output[x].priority = io.priority;
+      output[x].color = latch.palette << 4 | color;
     }
   } else {
     u32 offset = (io.characterBase << 14) + (latch.character << 6) + (py << 3) + (px);
     if(n8 color = ppu.readVRAM_BG(Byte, offset)) {
-      output.enable = true;
-      output.priority = io.priority;
-      output.color = color;
+      output[x].enable = true;
+      output[x].priority = io.priority;
+      output[x].color = color;
     }
   }
 
   fx++;
 }
 
-auto PPU::Background::affine(u32 x, u32 y) -> void {
+auto PPU::Background::affineFetchTileMap(u32 x, u32 y) -> void {
+  if(x > 239) return;
+  if(ppu.blank() || !io.enable[0]) return;
+
   if(x == 0) {
     if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
       hmosaic = io.lx;
@@ -110,24 +112,29 @@ auto PPU::Background::affine(u32 x, u32 y) -> void {
     fy = vmosaic;
   }
 
-  u32 screenSize = 16 << io.screenSize;
-  u32 screenWrap = (1 << (io.affineWrap ? 7 + io.screenSize : 20)) - 1;
+  affine.screenSize = 16 << io.screenSize;
+  affine.screenWrap = (1 << (io.affineWrap ? 7 + io.screenSize : 20)) - 1;
 
-  u32 cx = (fx >> 8) & screenWrap;
-  u32 cy = (fy >> 8) & screenWrap;
+  affine.cx = (fx >> 8) & affine.screenWrap;
+  affine.cy = (fy >> 8) & affine.screenWrap;
 
-  u32 tx = cx >> 3;
-  u32 ty = cy >> 3;
+  affine.tx = affine.cx >> 3;
+  affine.ty = affine.cy >> 3;
 
-  n3 px = cx;
-  n3 py = cy;
+  affine.character = ppu.readVRAM(Byte, (io.screenBase << 11) + affine.ty * affine.screenSize + affine.tx);
+}
 
-  if(tx < screenSize && ty < screenSize) {
-    n8 character = ppu.readVRAM(Byte, (io.screenBase << 11) + ty * screenSize + tx);
-    if(n8 color = ppu.readVRAM_BG(Byte, (io.characterBase << 14) + (character << 6) + (py << 3) + px)) {
-      output.enable = true;
-      output.priority = io.priority;
-      output.color = color;
+auto PPU::Background::affineFetchTileData(u32 x, u32 y) -> void {
+  if(x > 239) return;
+  if(ppu.blank() || !io.enable[0]) return;
+
+  if(affine.tx < affine.screenSize && affine.ty < affine.screenSize) {
+    n3 px = affine.cx;
+    n3 py = affine.cy;
+    if(n8 color = ppu.readVRAM_BG(Byte, (io.characterBase << 14) + (affine.character << 6) + (py << 3) + px)) {
+      output[x].enable = true;
+      output[x].priority = io.priority;
+      output[x].color = color;
     }
   }
 
@@ -141,6 +148,9 @@ auto PPU::Background::affine(u32 x, u32 y) -> void {
 }
 
 auto PPU::Background::bitmap(u32 x, u32 y) -> void {
+  if(x > 239) return;
+  if(ppu.blank() || !io.enable[0]) return;
+
   if(x == 0) {
     if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
       hmosaic = io.lx;
@@ -165,10 +175,10 @@ auto PPU::Background::bitmap(u32 x, u32 y) -> void {
     n15 color = ppu.readVRAM_BG(mode, baseAddress + (offset << depth));
 
     if(depth || color) {  //8bpp color 0 is transparent; 15bpp color is always opaque
-      if(depth) output.directColor = true;
-      output.enable = true;
-      output.priority = io.priority;
-      output.color = color;
+      if(depth) output[x].directColor = true;
+      output[x].enable = true;
+      output[x].priority = io.priority;
+      output[x].color = color;
     }
   }
 
@@ -186,7 +196,7 @@ auto PPU::Background::power(u32 id) -> void {
 
   io = {};
   latch = {};
-  output = {};
+  for(auto& pixel : output) pixel = {};
   mosaic = {};
   mosaicOffset = 0;
   hmosaic = 0;

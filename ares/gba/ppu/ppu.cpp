@@ -1,15 +1,5 @@
 #include <gba/gba.hpp>
 
-//pixel:       4 cycles
-
-//hdraw:      46 cycle wait period, then 240 pixels (total: 1006 cycles)
-//hblank:    226 cycles
-//scanline: 1232 cycles
-
-//vdraw:     160 scanlines (197120 cycles)
-//vblank:     68 scanlines ( 83776 cycles)
-//frame:     228 scanlines (280896 cycles)
-
 namespace ares::GameBoyAdvance {
 
 PPU ppu;
@@ -82,15 +72,57 @@ inline auto PPU::blank() -> bool {
 
 auto PPU::step(u32 clocks) -> void {
   Thread::step(clocks);
-  Thread::synchronize(cpu);
+  Thread::synchronize(cpu, display);
+}
+
+template<u32 Cycle>
+auto PPU::cycleLinear(u32 x, u32 y) -> void {
+  n3 mode = PPU::Background::IO::mode;
+  if constexpr(Cycle == 0) if(mode <= 1) bg0.linear(x, y);
+  if constexpr(Cycle == 1) if(mode <= 1) bg1.linear(x, y);
+  if constexpr(Cycle == 2) if(mode == 0) bg2.linear(x, y);
+  if constexpr(Cycle == 3) if(mode == 0) bg3.linear(x, y);
+}
+
+template<u32 Cycle>
+auto PPU::cycleAffine(u32 x, u32 y) -> void {
+  n3 mode = PPU::Background::IO::mode;
+  if constexpr(Cycle == 0) if(             mode == 2) bg3.affineFetchTileMap(x, y);
+  if constexpr(Cycle == 1) if(             mode == 2) bg3.affineFetchTileData(x, y);
+  if constexpr(Cycle == 2) if(mode == 1 || mode == 2) bg2.affineFetchTileMap(x, y);
+  if constexpr(Cycle == 3) if(mode == 1 || mode == 2) bg2.affineFetchTileData(x, y);
+}
+
+auto PPU::cycleBitmap(u32 x, u32 y) -> void {
+  n3 mode = PPU::Background::IO::mode;
+  if(mode >= 3 && mode <= 5) bg2.bitmap(x, y);
+}
+
+auto PPU::cycleUpperLayer(u32 x, u32 y) -> void {
+  ppu.bg0.outputPixel(x, y);
+  ppu.bg1.outputPixel(x, y);
+  ppu.bg2.outputPixel(x, y);
+  ppu.bg3.outputPixel(x, y);
+  ppu.objects.outputPixel(x, y);
+  window0.run(x, y);
+  window1.run(x, y);
+  window2.output = objects.output.window;
+  window3.output = true;
+  dac.upperLayer(x, y);
+}
+
+template<u32 Cycle>
+auto PPU::cycle(u32 y) -> void {
+  if constexpr(Cycle >= 31 && Cycle <= 1005                         ) cycleLinear<(Cycle - 31) & 3>((Cycle - 31) / 4, y);
+  if constexpr(Cycle >= 31 && Cycle <= 1005                         ) cycleAffine<(Cycle - 31) & 3>((Cycle - 31) / 4, y);
+  if constexpr(Cycle >= 31 && Cycle <= 1005 && (Cycle - 31) % 4 == 3) cycleBitmap((Cycle - 31) / 4, y);
+  if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 0) cycleUpperLayer((Cycle - 46) / 4, y);
+  if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 2) dac.lowerLayer((Cycle - 46) / 4, y);
+  step(1);
 }
 
 auto PPU::main() -> void {
-  cpu.keypad.run();
-
-  io.vblank = io.vcounter >= 160 && io.vcounter <= 226;
-
-  if(io.vcounter == 0) {
+  if(display.io.vcounter == 0) {
     frame();
 
     bg2.io.lx = bg2.io.x;
@@ -100,80 +132,77 @@ auto PPU::main() -> void {
     bg3.io.ly = bg3.io.y;
   }
 
-  step(1);
+  step(31);
 
-  io.vcoincidence = io.vcounter == io.vcompare;
-
-  if(io.vcounter == 160) {
-    if(io.irqvblank) cpu.setInterruptFlag(CPU::Interrupt::VBlank);
-  }
-
-  step(1);
-
-  if(io.irqvcoincidence) {
-    if(io.vcoincidence) cpu.setInterruptFlag(CPU::Interrupt::VCoincidence);
-  }
-
-  if(io.vcounter == 160) {
-    cpu.dmaVblank();
-  }
-
-  step(3);
-
-  if(io.vcounter == 162) {
-    if(videoCapture) cpu.dma[3].enable = 0;
-    videoCapture = !videoCapture && cpu.dma[3].timingMode == 3 && cpu.dma[3].enable;
-  }
-  if(io.vcounter >= 2 && io.vcounter < 162 && videoCapture) cpu.dmaHDMA();
-
-  step(41);
-
-  u32 y = io.vcounter;
+  u32 y = display.io.vcounter;
   memory::move(io.forceBlank, io.forceBlank + 1, sizeof(io.forceBlank) - 1);
+  memory::move(bg0.io.enable, bg0.io.enable + 1, sizeof(bg0.io.enable) - 1);
+  memory::move(bg1.io.enable, bg1.io.enable + 1, sizeof(bg1.io.enable) - 1);
+  memory::move(bg2.io.enable, bg2.io.enable + 1, sizeof(bg2.io.enable) - 1);
+  memory::move(bg3.io.enable, bg3.io.enable + 1, sizeof(bg3.io.enable) - 1);
+  memory::move(objects.io.enable, objects.io.enable + 1, sizeof(objects.io.enable) - 1);
   bg0.scanline(y);
   bg1.scanline(y);
   bg2.scanline(y);
   bg3.scanline(y);
   objects.scanline((y + 1) % 228);
+  dac.scanline(y);
+
   if(y < 160) {
-    auto line = screen->pixels().data() + y * 240;
-    for(u32 x : range(240)) {
-      bg0.run(x, y);
-      bg1.run(x, y);
-      bg2.run(x, y);
-      bg3.run(x, y);
-      objects.run(x, y);
-      window0.run(x, y);
-      window1.run(x, y);
-      window2.output = objects.output.window;
-      window3.output = true;
-      bool blending = dac.upperLayer();
-      if(blending) {
-        if(accurate) step(2);
-        dac.lowerLayer();
-        if(accurate) step(2);
-      } else {
-        if(accurate) step(4);
+    if(accurate) {
+      #define cycles01(index) cycle<index>(y)
+      #define cycles02(index) cycles01(index); cycles01(index +  1)
+      #define cycles04(index) cycles02(index); cycles02(index +  2)
+      #define cycles08(index) cycles04(index); cycles04(index +  4)
+      #define cycles16(index) cycles08(index); cycles08(index +  8)
+      #define cycles32(index) cycles16(index); cycles16(index + 16)
+      #define cycles64(index) cycles32(index); cycles32(index + 32)
+
+      //cycle 31 - start rendering backgrounds
+      cycles01( 31);
+      cycles02( 32);
+      cycles04( 34);
+      cycles08( 38);
+
+      //cycle 46 - start pixel output
+      cycles64( 46);
+      cycles64(110);
+      cycles64(174);
+      cycles64(238);
+      cycles64(302);
+      cycles64(366);
+      cycles64(430);
+      cycles64(494);
+      cycles64(558);
+      cycles64(622);
+      cycles64(686);
+      cycles64(750);
+      cycles64(814);
+      cycles64(878);
+      cycles64(942);
+
+      #undef cycles02
+      #undef cycles04
+      #undef cycles08
+      #undef cycles16
+      #undef cycles32
+      #undef cycles64
+    } else {
+      for(u32 x : range(240)) {
+        bg0.run(x, y);
+        bg1.run(x, y);
+        bg2.run(x, y);
+        bg3.run(x, y);
+        cycleUpperLayer(x, y);
+        dac.lowerLayer(x, y);
       }
-      line[x] = dac.color;
+      step(975);
     }
-    if(!accurate) step(960);
   } else {
-    step(960);
+    step(975);
   }
 
-  step(1);
-  io.hblank = 1;
-
-  step(1);
-  if(io.irqhblank) cpu.setInterruptFlag(CPU::Interrupt::HBlank);
-
-  step(1);
-  if(io.vcounter < 160) cpu.dmaHblank();
-
-  step(223);
-  io.hblank = 0;
-  if(++io.vcounter == 228) io.vcounter = 0;
+  step(226);
 }
 
 auto PPU::frame() -> void {
