@@ -85,6 +85,7 @@ auto System::load(Node::System& root, string name) -> bool {
 auto System::save() -> void {
   if(!node) return;
   cartridge.save();
+  if(fds.present) fds.save();
 }
 
 auto System::unload() -> void {

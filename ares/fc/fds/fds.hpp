@@ -34,6 +34,7 @@ struct FDS {
   auto change(string value) -> void;
   auto change() -> void;
 
+  auto save() -> void;
   auto poll() -> void;
   auto main() -> void;
   auto power() -> void;
