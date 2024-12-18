@@ -81,6 +81,12 @@ auto FDS::connect() -> void {
 auto FDS::disconnect() -> void {
   if(!node) return;
 
+  save();
+  pak.reset();
+  node.reset();
+}
+
+auto FDS::save() -> void {
   if(disk1.sideA)
   if(auto fp = pak->write("disk1.sideA")) {
     disk1.sideA.save(fp);
@@ -100,9 +106,6 @@ auto FDS::disconnect() -> void {
   if(auto fp = pak->write("disk2.sideB")) {
     disk2.sideB.save(fp);
   }
-
-  pak.reset();
-  node.reset();
 }
 
 auto FDS::change(string value) -> void {
