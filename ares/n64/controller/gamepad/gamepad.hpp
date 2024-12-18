@@ -21,6 +21,7 @@ struct Gamepad : Controller {
   Node::Input::Button r;
   Node::Input::Button z;
   Node::Input::Button start;
+  Node::Input::Button bb_button;
 
   Gamepad(Node::Port);
   ~Gamepad();

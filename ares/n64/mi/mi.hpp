@@ -34,6 +34,7 @@ struct MI : Thread, Memory::RCP<MI> {
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto stepBBTimer() -> bool;
+  auto stepBBButtonTimer() -> bool;
   auto main() -> void;
 
   enum class IRQ : u32 { SP, SI, AI, VI, PI, DP, FLASH, AES, IDE, PI_ERR, USB0, USB1, BTN, MD };
@@ -137,6 +138,12 @@ private:
     n1 written;
   } bb_timer;
 
+  struct BBButtonTimer {
+    n5 div = 0;
+    n1 enable = 0;
+    n21 count = 0;
+  } bb_button_timer;
+
   struct BBTrapCause {
     n1 application;
     n1 timer;
@@ -156,6 +163,7 @@ private:
     n1 button;
     n1 md;
     n1 sk_ram_access;
+    n1 enable_button;
   } bb_exc;
 };
 

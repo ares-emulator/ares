@@ -42,6 +42,16 @@ auto MI::serialize(serializer& s) -> void {
   s(bb.button);
   s(bb.card);
 
+  s(bb_timer.count);
+  s(bb_timer.countStore);
+  s(bb_timer.rate);
+  s(bb_timer.rateStore);
+  s(bb_timer.written);
+
+  s(bb_button_timer.div);
+  s(bb_button_timer.enable);
+  s(bb_button_timer.count);
+
   s(bb_trap.application);
   s(bb_trap.timer);
   s(bb_trap.pi_error);
@@ -58,4 +68,5 @@ auto MI::serialize(serializer& s) -> void {
   s(bb_exc.button);
   s(bb_exc.md);
   s(bb_exc.sk_ram_access);
+  s(bb_exc.enable_button);
 }

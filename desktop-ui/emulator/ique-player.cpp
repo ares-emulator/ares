@@ -44,6 +44,9 @@ iQuePlayer::iQuePlayer() {
     device.rumble ("Rumble",  virtualPorts[id].pad.rumble);
     device.analog ("X-Axis",  virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
     device.analog ("Y-Axis",  virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
+
+    if(id == 0)
+      device.digital("Power", virtualPorts[id].pad.select);
     port.append(device); }
 
   { InputDevice device{"Mouse"};

@@ -50,17 +50,51 @@ inline auto MI::stepBBTimer() -> bool {
   return (!secure() && underflow);
 }
 
+inline auto MI::stepBBButtonTimer() -> bool {
+  auto cont = (Gamepad*)controllerPort1.device.data();
+
+  if(cont)
+    bb.button = cont->bb_button->value();
+
+  bb_button_timer.enable = (bb_button_timer.enable | bb.button) & bb_irq.btn.mask;
+
+  cpu.scc.cause.interruptPending.bit(CPU::Interrupt::Reset) = bb_button_timer.enable;
+
+  if(!bb_exc.enable_button || (bb_button_timer.count >= 0x100000))
+    bb_button_timer.count = 0;
+
+  bb_button_timer.div += 1;
+
+  if(bb_button_timer.div == 0) {
+    if(cont)
+      platform->input(cont->bb_button);
+
+    if(bb_button_timer.enable)
+      bb_button_timer.count += 1;
+  }
+
+  return (bb_button_timer.count >= 0x100000);
+}
+
 auto MI::main() -> void {
   if (!system._BB()) return;
 
-  while(Thread::clock < 0) {
+  bool trap = false;
+
+  while((Thread::clock < 0) && !trap) {
     step(1 * 3);
     if(stepBBTimer()) {
       bb_trap.timer = 1;
-      poll();
-      break;
+      trap = true;
+    }
+    if(stepBBButtonTimer()) {
+      bb_trap.button = 1;
+      trap = true;
     }
   }
+
+  if(trap)
+    poll();
 }
 
 auto MI::raise(IRQ source) -> void {
@@ -137,6 +171,7 @@ auto MI::poll() -> void {
     //this isn't right, but the behaviour is the same
     bb_trap.application = 0;
     bb_trap.timer = 0;
+    bb_trap.button = 0;
 
     if (enter_secure_mode() && !secure()) {
       if constexpr(Accuracy::CPU::Recompiler) {
@@ -173,6 +208,7 @@ auto MI::power(bool reset) -> void {
     scratch.fill();
     bb = {};
     bb_timer = {};
+    bb_button_timer = {};
     bb_exc = {};
     bb_exc.boot_swap = 1;
   }

@@ -99,6 +99,7 @@ auto MI::ioRead(u32 address) -> u32 {
       data.bit( 6) = bb_exc.button;
       data.bit( 7) = bb_exc.md;
       data.bit(24) = bb_exc.sk_ram_access;
+      data.bit(25) = bb_exc.enable_button;
     }
   }
 
@@ -273,6 +274,7 @@ auto MI::ioWrite(u32 address, u32 data_) -> void {
       bb_exc.button        = data.bit( 6) ? bb_exc.button      : bb_trap.button;
       bb_exc.md            = data.bit( 7) ? bb_exc.md          : bb_trap.md;
       bb_exc.sk_ram_access = data.bit(24);
+      bb_exc.enable_button = data.bit(25);
       poll();
       if (!bb_exc.secure) {
         if constexpr(Accuracy::CPU::Recompiler) {

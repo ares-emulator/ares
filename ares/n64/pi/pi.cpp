@@ -62,6 +62,8 @@ auto PI::power(bool reset) -> void {
     bb_nand.io = {};
     bb_nand.buffer.fill();
     bb_atb = {};
+    bb_rtc.ram.fill();
+    bb_rtc.stored_linestate = 0b11;
     queue.insert(Queue::BB_RTC_Tick, system.frequency());
   }
 }
