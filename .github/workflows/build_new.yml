@@ -5,6 +5,7 @@ permissions:
   contents: write
 jobs:
   build:
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -158,15 +159,24 @@ jobs:
     - name: Check Release Tag ☑️
       id: check
       run: |
-          echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          if [[ ${GITHUB_REF_NAME} == master ]];
+          then
+            echo "tag=nightly" >> $GITHUB_OUTPUT
+            now=$(date +'%Y-%m-%d')
+            versionName="nightly ${now}"
+            echo "versionName=${versionName}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            echo "versionName=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
           
     - name: Create Release 🛫
       id: create_release
       uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191
       with:
-        draft: true # ${{ github.ref != 'refs/heads/master' }}
-        tag_name: ${{ steps.check.outputs.version }}
-        name: ares ${{ steps.check.outputs.version }}
+        draft: ${{ github.ref != 'refs/heads/master' }}
+        tag_name: ${{ steps.check.outputs.tag }}
+        name: ares ${{ steps.check.outputs.versionName }}
         files: |
           ${{ github.workspace }}/ares-macos-universal.zip
           ${{ github.workspace }}/ares-macos-universal-dSYMs.zip

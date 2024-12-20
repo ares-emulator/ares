@@ -90,7 +90,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # generate PDBs rather than embed debug symbols
     set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT ProgramDatabase)
     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${_ares_msvc_cxx_options}>")
-    add_link_options($<$<NOT:$<CONFIG:Debug>>:/LTCG> $<$<NOT:$<CONFIG:Debug>>:/INCREMENTAL:NO> /Debug)
+    add_link_options(
+      $<$<NOT:$<CONFIG:Debug>>:/LTCG>
+      $<$<NOT:$<CONFIG:Debug>>:/INCREMENTAL:NO>
+      /Debug
+    )
   endif()
 
   # optimizations
