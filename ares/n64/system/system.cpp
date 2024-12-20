@@ -372,7 +372,10 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  random.entropy(Random::Entropy::None);
+  if(_BB())
+    random.entropy(Random::Entropy::High);
+  else
+    random.entropy(Random::Entropy::None);
 
   if constexpr(Accuracy::CPU::Recompiler || Accuracy::RSP::Recompiler) {
     ares::Memory::FixedAllocator::get().release();
