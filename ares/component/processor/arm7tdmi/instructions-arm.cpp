@@ -131,9 +131,11 @@ auto ARM7TDMI::armInstructionLoadRegister
 
 auto ARM7TDMI::armInstructionMemorySwap
 (n4 m, n4 d, n4 n, n1 byte) -> void {
+  lock = 1;
   n32 word = load((byte ? Byte : Word) | Nonsequential, r(n));
   store((byte ? Byte : Word) | Nonsequential, r(n), r(m));
   r(d) = word;
+  lock = 0;
 }
 
 auto ARM7TDMI::armInstructionMoveHalfImmediate

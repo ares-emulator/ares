@@ -227,6 +227,7 @@ struct ARM7TDMI {
   n32 opcode;
   b1  carry;
   b1  irq;
+  b1  lock;
 
   function<void (n32 opcode)> armInstruction[4096];
   function<void ()> thumbInstruction[65536];

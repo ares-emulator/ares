@@ -56,7 +56,7 @@ auto CPU::main() -> void {
 }
 
 auto CPU::dmaRun() -> void {
-  if(!context.dmaActive) {
+  if(!context.dmaActive && !ARM7TDMI::lock) {
     context.dmaActive = true;
     while(dma[0].run() | dma[1].run() | dma[2].run() | dma[3].run());
     if(context.dmaRan) {
