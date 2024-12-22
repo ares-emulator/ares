@@ -3,7 +3,6 @@ auto ARM7TDMI::serialize(serializer& s) -> void {
   s(pipeline);
   s(carry);
   s(irq);
-  s(lock);
 }
 
 auto ARM7TDMI::Processor::serialize(serializer& s) -> void {

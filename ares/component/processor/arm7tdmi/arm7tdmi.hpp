@@ -22,6 +22,8 @@ struct ARM7TDMI {
   virtual auto get(u32 mode, n32 address) -> n32 = 0;
   virtual auto getDebugger(u32 mode, n32 address) -> n32 { return get(mode, address); }
   virtual auto set(u32 mode, n32 address, n32 word) -> void = 0;
+  virtual auto lock() -> void = 0;
+  virtual auto unlock() -> void = 0;
 
   //arm7tdmi.cpp
   ARM7TDMI();
@@ -227,7 +229,6 @@ struct ARM7TDMI {
   n32 opcode;
   b1  carry;
   b1  irq;
-  b1  lock;
 
   function<void (n32 opcode)> armInstruction[4096];
   function<void ()> thumbInstruction[65536];

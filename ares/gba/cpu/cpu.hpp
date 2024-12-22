@@ -64,6 +64,8 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto get(u32 mode, n32 address) -> n32 override;
   auto getDebugger(u32 mode, n32 address) -> n32 override;
   auto set(u32 mode, n32 address, n32 word) -> void override;
+  auto lock() -> void override;
+  auto unlock() -> void override;
   auto _wait(u32 mode, n32 address) -> u32;
 
   //io.cpp
@@ -255,6 +257,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  dmaRomAccess;
     n1  dmaActive;
     n1  timerLatched;
+    n1  busLocked;
   } context;
 };
 
