@@ -1,4 +1,6 @@
 auto Display::serialize(serializer& s) -> void {
+  Thread::serialize(s);
+
   s(io.vblank);
   s(io.hblank);
   s(io.vcoincidence);
