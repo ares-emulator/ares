@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 set -euo pipefail
 
+cd "$(dirname "$0")"/.. || exit 1
+
 otherArgs=()
 
 if [ "${MACOS_CERTIFICATE_NAME:-}" != "" ]; then
