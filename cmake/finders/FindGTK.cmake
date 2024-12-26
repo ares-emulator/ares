@@ -50,13 +50,7 @@ find_path(
   DOC "GTK include directory"
 )
 
-find_library(
-  GTK_LIBRARY
-  NAMES gtk-3
-  HINTS ${PC_GTK_LIBRARY_DIRS}
-  PATHS /usr/lib /usr/local/lib
-  DOC "GTK location"
-)
+find_library(GTK_LIBRARY NAMES gtk-3 HINTS ${PC_GTK_LIBRARY_DIRS} PATHS /usr/lib /usr/local/lib DOC "GTK location")
 
 set(GTK_VERSION ${PC_GTK_VERSION})
 
