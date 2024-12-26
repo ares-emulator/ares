@@ -94,6 +94,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       $<$<NOT:$<CONFIG:Debug>>:/LTCG>
       $<$<NOT:$<CONFIG:Debug>>:/INCREMENTAL:NO>
       /Debug
+      $<$<NOT:$<CONFIG:Debug>>:/OPT:REF>
+      $<$<NOT:$<CONFIG:Debug>>:/OPT:ICF>
     )
   endif()
 
