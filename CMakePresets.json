@@ -113,16 +113,6 @@
       "generator": "Ninja"
     },
     {
-      "name": "windows-ci-mingw-cross",
-      "displayName": "Windows for CI (arm64 MSYS2/MinGW Clang)",
-      "description": "Single-arch binary for building on Github Actions",
-      "inherits": ["windows-ci-base"],
-      "generator": "Ninja",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": {"type": "STRING", "value": "../cmake/windows/aarch64-cross-toolchain.cmake"}
-      }
-    },
-    {
       "name": "windows-ci-cl-native",
       "displayName": "Windows for CI (x64 ClangCL)",
       "description": "Single-arch binary for building on Github Actions",

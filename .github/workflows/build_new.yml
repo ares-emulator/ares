@@ -5,7 +5,6 @@ permissions:
   contents: write
 jobs:
   build:
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -21,13 +20,6 @@ jobs:
           msystem: clang64
           install: mingw-w64-clang-x86_64-clang
           target-cmake-preset: windows-ci-mingw-native
-        - name: windows-arm64
-          os: windows-latest
-          shell: 'msys2 {0}'
-          msystem: clang64
-          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-aarch64-clang mingw-w64-cross-clang-toolchain
-          target-cmake-preset: windows-ci-mingw-cross
-          native-cmake-preset: windows-ci-mingw-native
         - name: windows-clang-cl-x64
           os: windows-latest
           windres: rc
