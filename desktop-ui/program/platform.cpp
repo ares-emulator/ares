@@ -192,3 +192,11 @@ auto Program::input(ares::Node::Input::Input node) -> void {
 auto Program::cheat(u32 address) -> maybe<u32> {
   return cheatEditor.find(address);
 }
+
+auto Program::showLED(b1 show) -> void {
+  led.show = show;
+}
+
+auto Program::setLED(b1 on) -> void {
+  led.on = on;
+}

@@ -247,6 +247,8 @@ Presentation::Presentation() {
   });
 
   spacerLeft .setBackgroundColor({32, 32, 32});
+  spacer2Left.setBackgroundColor({32, 32, 32});
+  ledLeft    .setBackgroundColor({32, 32, 32}).setForegroundColor({32, 32, 32});
   statusLeft .setBackgroundColor({32, 32, 32}).setForegroundColor({255, 255, 255});
   statusDebug.setBackgroundColor({32, 32, 32}).setForegroundColor({255, 255, 255});
   statusRight.setBackgroundColor({32, 32, 32}).setForegroundColor({255, 255, 255});
