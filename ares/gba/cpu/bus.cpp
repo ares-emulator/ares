@@ -80,6 +80,15 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
   openBus.set(mode, address, word);
 }
 
+auto CPU::lock() -> void {
+  dmaRun();
+  context.busLocked = true;
+}
+
+auto CPU::unlock() -> void {
+  context.busLocked = false;
+}
+
 auto CPU::_wait(u32 mode, n32 address) -> u32 {
   if(address >= 0x1000'0000) return 1;  //unmapped
   if(address <  0x0200'0000) return 1;
