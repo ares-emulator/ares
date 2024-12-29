@@ -131,7 +131,7 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
     u16 instruction = instructions[index++];
     if(callInstructionPrologue) {
       mov32(reg(1), imm(instruction));
-      call(&SH2::instructionPrologue);
+      call(&SH2::instructionPrologueTrampoline);
     }
     auto branch = emitInstruction(instruction);
     inDelaySlot = branch == Branch::Slot;

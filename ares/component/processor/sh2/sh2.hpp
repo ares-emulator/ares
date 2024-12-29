@@ -249,6 +249,10 @@ struct SH2 {
   s32 cyclesUntilRecompilerExit = 0;
   s32 recompilerStepCycles = 0;
 
+  auto instructionPrologueTrampoline(u16 instruction) -> void {
+    return instructionPrologue(instruction);  //virtual function call
+  }
+
   struct Recompiler : recompiler::generic {
     SH2& self;
     Recompiler(SH2& self) : self(self), generic(allocator) {}
