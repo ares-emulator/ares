@@ -1,2 +1,4 @@
+#ifndef EXCLUDE_MANIFEST_FROM_RC
 1 24 "mia.Manifest"
+#endif
 2 ICON DISCARDABLE "mia.ico"

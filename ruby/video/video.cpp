@@ -314,7 +314,7 @@ auto Video::hasMonitors() -> vector<Monitor> {
       } else {
         //getting the name of the monitor on macOS: "Think Different"
         auto screenDictionary = [screen deviceDescription];
-        auto screenID = [screenDictionary objectForKey:@"NSScreenNumber"];
+        id screenID = [screenDictionary objectForKey:@"NSScreenNumber"];
         auto displayID = [screenID unsignedIntValue];
         CFUUIDRef displayUUID = CGDisplayCreateUUIDFromDisplayID(displayID);
         io_service_t displayPort = CGDisplayGetDisplayIDFromUUID(displayUUID);

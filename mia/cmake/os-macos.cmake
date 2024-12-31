@@ -1,0 +1,28 @@
+set_target_properties(
+  ${target}
+  PROPERTIES
+    OUTPUT_NAME mia
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resource/mia.plist"
+    XCODE_EMBED_FRAMEWORKS_REMOVE_HEADERS_ON_COPY YES
+    XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY YES
+    XCODE_EMBED_PLUGINS_REMOVE_HEADERS_ON_COPY YES
+    XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY YES
+)
+
+# cmake-format: off
+set_target_xcode_properties(
+  ${target}
+  PROPERTIES PRODUCT_BUNDLE_IDENTIFIER com.ares-emulator.mia
+             PRODUCT_NAME mia
+             ASSETCATALOG_COMPILER_APPICON_NAME AppIcon
+             CURRENT_PROJECT_VERSION ${ARES_BUILD_NUMBER}
+             MARKETING_VERSION ${ARES_VERSION}
+             GENERATE_INFOPLIST_FILE YES
+             COPY_PHASE_STRIP NO
+             CLANG_ENABLE_OBJC_ARC YES
+             SKIP_INSTALL NO
+             INSTALL_PATH "$(LOCAL_APPS_DIR)"
+             INFOPLIST_KEY_CFBundleDisplayName "mia"
+             INFOPLIST_KEY_NSHumanReadableCopyright "(c) 2004-${CURRENT_YEAR} ares team, Near et. al."
+)

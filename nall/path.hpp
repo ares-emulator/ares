@@ -61,7 +61,7 @@ auto userData() -> string;
 auto sharedData() -> string;
 
 #if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
-// ARES_PREFIX/share
+// ../share
 auto prefixSharedData() -> string;
 
 // /usr/local/share

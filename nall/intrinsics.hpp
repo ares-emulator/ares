@@ -25,6 +25,7 @@ namespace nall {
     static constexpr bool GCC       = 0;
     static constexpr bool Microsoft = 0;
   };
+#if !defined(CMAKE)
   #pragma clang diagnostic error   "-Wgnu-case-range"
   #pragma clang diagnostic error   "-Wgnu-statement-expression"
   #pragma clang diagnostic error   "-Wvla"
@@ -40,6 +41,7 @@ namespace nall {
   #pragma clang diagnostic ignored "-Wtrigraphs"
   #pragma clang diagnostic ignored "-Wattributes"
   #pragma clang diagnostic ignored "-Winvalid-offsetof"
+#endif
 #elif defined(__GNUC__)
   #define COMPILER_GCC
   struct Compiler {
@@ -47,6 +49,7 @@ namespace nall {
     static constexpr bool GCC       = 1;
     static constexpr bool Microsoft = 0;
   };
+#if !defined(CMAKE)
   #pragma GCC diagnostic error   "-Wvla"
   #pragma GCC diagnostic warning "-Wimplicit-fallthrough"
   #pragma GCC diagnostic warning "-Wreturn-type"
@@ -57,7 +60,7 @@ namespace nall {
   #pragma GCC diagnostic ignored "-Wtrigraphs"
   #pragma GCC diagnostic ignored "-Wattributes"
   #pragma GCC diagnostic ignored "-Wstringop-overflow"  //GCC 10.2 warning heuristic is buggy
-  #pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#endif
 #elif defined(_MSC_VER)
   #define COMPILER_MICROSOFT
   struct Compiler {
@@ -65,11 +68,13 @@ namespace nall {
     static constexpr bool GCC       = 0;
     static constexpr bool Microsoft = 1;
   };
+#if !defined(CMAKE)
   #pragma warning(disable:4146)  //unary minus operator applied to unsigned type, result still unsigned
   #pragma warning(disable:4244)  //conversion from 'type1' to 'type2', possible loss of data
   #pragma warning(disable:4804)  //unsafe use of type 'bool' in operation
   #pragma warning(disable:4805)  //unsafe mix of type 'bool' and type 'type' in operation
   #pragma warning(disable:4996)  //libc "deprecation" warnings
+#endif
 #else
   #error "unable to detect compiler"
 #endif
@@ -77,7 +82,9 @@ namespace nall {
 /* Platform detection */
 
 #if defined(_WIN32)
-  #define PLATFORM_WINDOWS
+  #if !defined(CMAKE)
+    #define PLATFORM_WINDOWS
+  #endif
   struct Platform {
     static constexpr bool Windows = 1;
     static constexpr bool MacOS   = 0;
@@ -86,7 +93,9 @@ namespace nall {
     static constexpr bool BSD     = 0;
   };
 #elif defined(__APPLE__)
-  #define PLATFORM_MACOS
+  #if !defined(CMAKE)
+    #define PLATFORM_MACOS
+  #endif
   struct Platform {
     static constexpr bool Windows = 0;
     static constexpr bool MacOS   = 1;
@@ -95,7 +104,9 @@ namespace nall {
     static constexpr bool BSD     = 0;
   };
 #elif defined(__ANDROID__)
-  #define PLATFORM_ANDROID
+  #if !defined(CMAKE)
+    #define PLATFORM_ANDROID
+  #endif
   struct Platform {
     static constexpr bool Windows = 0;
     static constexpr bool MacOS   = 0;
@@ -104,7 +115,9 @@ namespace nall {
     static constexpr bool BSD     = 0;
   };
 #elif defined(linux) || defined(__linux__)
-  #define PLATFORM_LINUX
+  #if !defined(CMAKE)
+    #define PLATFORM_LINUX
+  #endif
   struct Platform {
     static constexpr bool Windows = 0;
     static constexpr bool MacOS   = 0;
@@ -113,7 +126,9 @@ namespace nall {
     static constexpr bool BSD     = 0;
   };
 #elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__NetBSD__) || defined(__OpenBSD__)
-  #define PLATFORM_BSD
+  #if !defined(CMAKE)
+    #define PLATFORM_BSD
+  #endif
   struct Platform {
     static constexpr bool Windows = 0;
     static constexpr bool MacOS   = 0;

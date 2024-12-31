@@ -49,7 +49,7 @@ auto SuperFX::rpix(n8 x, n8 y) -> n8 {
   flushPixelCache(pixelcache[1]);
   flushPixelCache(pixelcache[0]);
 
-  u32 cn = 0; //character number
+  u32 cn = 0;  //character number
   switch(regs.por.obj ? 3 : regs.scmr.ht) {
   case 0: cn = ((x & 0xf8) << 1) + ((y & 0xf8) >> 3); break;
   case 1: cn = ((x & 0xf8) << 1) + ((x & 0xf8) >> 1) + ((y & 0xf8) >> 3); break;
@@ -76,7 +76,7 @@ auto SuperFX::flushPixelCache(PixelCache& cache) -> void {
   n8 x = cache.offset << 3;
   n8 y = cache.offset >> 5;
 
-  u32 cn = 0; //character number
+  u32 cn = 0;  //character number
   switch(regs.por.obj ? 3 : regs.scmr.ht) {
   case 0: cn = ((x & 0xf8) << 1) + ((y & 0xf8) >> 3); break;
   case 1: cn = ((x & 0xf8) << 1) + ((x & 0xf8) >> 1) + ((y & 0xf8) >> 3); break;

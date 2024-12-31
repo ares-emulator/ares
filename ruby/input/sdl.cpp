@@ -1,7 +1,7 @@
-#if defined(MACOS_COMPILED_SDL)
-#include "SDL.h"
-#else
+#if !defined(MACOS_COMPILED_SDL)
 #include <SDL2/SDL.h>
+#else
+#include "SDL.h"
 #endif
 
 #if defined(PLATFORM_WINDOWS)
