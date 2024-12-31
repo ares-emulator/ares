@@ -690,6 +690,10 @@ auto Presentation::loadShaders() -> void {
   shaders.append(none);
 
   string location = locate("Shaders/");
+  #if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
+  // In some Linux or BSD distro shaders may not be bundled with ares, so try to locate them at a different path
+  if(not inode::exists(location)) location = locate("../libretro/shaders/shaders_slang/");
+  #endif
 
   if(shaderDirectories.size() == 0) {
     function<void(string)> findShaderDirectories = [&](string path) {
