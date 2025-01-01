@@ -46,6 +46,7 @@ auto VDP::serialize(serializer& s) -> void {
   s(latch.overscan);
   s(latch.displayWidth);
   s(latch.clockSelect);
+  s(latch.displayEnable);
 
   s(state.counterLatchValue);
   s(state.hcounter);
@@ -54,6 +55,10 @@ auto VDP::serialize(serializer& s) -> void {
   s(state.hblank);
   s(state.vblank);
   s(state.refreshing);
+  s(state.rambusy);
+  s(state.edclkPos);
+  s(state.topline);
+  s(state.bottomline);
 }
 
 auto VDP::PSG::serialize(serializer& s) -> void {
@@ -83,6 +88,7 @@ auto VDP::Slot::serialize(serializer& s) -> void {
   s(data);
   s(upper);
   s(lower);
+  s(latency);
 }
 
 auto VDP::Prefetch::serialize(serializer& s) -> void {
@@ -102,7 +108,7 @@ auto VDP::DMA::serialize(serializer& s) -> void {
   s(wait);
   s(read);
   s(enable);
-  s(delay);
+  s(preload);
 }
 
 auto VDP::Pixel::serialize(serializer& s) -> void {
@@ -217,5 +223,7 @@ auto VDP::VSRAM::serialize(serializer& s) -> void {
 }
 
 auto VDP::CRAM::serialize(serializer& s) -> void {
+  s(bus.active);
+  s(bus.data);
   s(memory);
 }

@@ -50,4 +50,6 @@ auto VDP::CRAM::read(n6 address) const -> n16 {
 auto VDP::CRAM::write(n6 address, n16 data) -> void {
   data = data.bit(1,3) << 0 | data.bit(5,7) << 3 | data.bit(9,11) << 6;
   memory[address] = data;
+  bus.data = data;
+  bus.active = 1;
 }

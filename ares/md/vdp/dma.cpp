@@ -9,13 +9,21 @@ auto VDP::DMA::synchronize() -> void {
   }
 }
 
+auto VDP::DMA::fetch() -> void {
+  if(active && !read) {
+    auto address = mode.bit(0) << 23 | source << 1;
+    data = bus.read(1, 1, address);
+    read = 1;
+  }
+}
+
 auto VDP::DMA::run() -> bool {
   if(vdp.command.pending && !wait) {
-    if(mode <= 1 && !vdp.fifo.full()) {
+    if(mode <= 1 && !vdp.fifo.full() && read) {
       return load(), true;
-    } else if(mode == 2 && vdp.fifo.empty()) {
+    } else if(mode == 2 && vdp.fifo.empty() && !vdp.state.rambusy) {
       return fill(), true;
-    } else if(mode == 3) {
+    } else if(mode == 3 && !vdp.state.rambusy) {
       return copy(), true;
     }
   }
@@ -23,16 +31,16 @@ auto VDP::DMA::run() -> bool {
 }
 
 auto VDP::DMA::load() -> void {
-  if(delay > 0) { delay--; return; }
+  read = 0;
+  vdp.fifo.write(vdp.command.target, vdp.command.address, data);
+
   auto address = mode.bit(0) << 23 | source << 1;
-  if(vdp.refreshing()) return; // bus not available
-  auto data = bus.read(1, 1, address);
-  vdp.writeDataPort(data);
   vdp.debugger.dmaLoad(address, vdp.command.target, vdp.command.address, data);
 
   source.bit(0,15)++;
+  vdp.command.address += vdp.command.increment;
   if(--length == 0) {
-    vdp.command.pending = 0;
+    vdp.command.pending = 0; wait = 1; preload = 0;
     synchronize();
   }
 }
@@ -43,12 +51,14 @@ auto VDP::DMA::fill() -> void {
   case 3: vdp.cram.write(vdp.command.address >> 1, data); break;
   case 5: vdp.vsram.write(vdp.command.address >> 1, data); break;
   }
+  vdp.state.rambusy = 1;
+
   vdp.debugger.dmaFill(vdp.command.target, vdp.command.address, data);
 
   source.bit(0,15)++;
   vdp.command.address += vdp.command.increment;
   if(--length == 0) {
-    vdp.command.pending = 0;
+    vdp.command.pending = 0; wait = 1;
     synchronize();
   }
 }
@@ -58,17 +68,20 @@ auto VDP::DMA::copy() -> void {
   if(!read) {
     read = 1;
     data = vdp.vram.readByte(source ^ 1);
+    vdp.state.rambusy = 1;
     return;
   }
 
   read = 0;
   vdp.vram.writeByte(vdp.command.address ^ 1, data);
+  vdp.state.rambusy = 1;
+
   vdp.debugger.dmaCopy(source, vdp.command.target, vdp.command.address ^ 1, data);
 
   source.bit(0,15)++;
   vdp.command.address += vdp.command.increment;
   if(--length == 0) {
-    vdp.command.pending = 0;
+    vdp.command.pending = 0; wait = 1;
     synchronize();
   }
 }

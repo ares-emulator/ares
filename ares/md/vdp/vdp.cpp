@@ -34,17 +34,15 @@ VDP vdp;
 auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
 
-  screen = node->append<Node::Video::Screen>("Screen", 1388, visibleHeight() * 2);
+  screen = node->append<Node::Video::Screen>("Screen", 1415, visibleHeight() * 2);
   screen->colors(1 << 16, {&VDP::color, this});
-  screen->setSize(1388, visibleHeight() * 2);
+  screen->setSize(1415, visibleHeight() * 2);
   screen->setScale(0.25, 0.5);
-  Region::PAL() ? screen->setAspect(111.0, 100.0) : screen->setAspect(32.0, 35.0);
+  Region::PAL() ? screen->setAspect(41.0, 37.0) : screen->setAspect(32.0, 35.0);
   screen->refreshRateHint(system.frequency(), 3420, frameHeight());
 
   psg.load(node);
   debugger.load(node);
-
-  generateCycleTimings();
 }
 
 auto VDP::unload() -> void {
@@ -56,32 +54,44 @@ auto VDP::unload() -> void {
   node.reset();
 }
 
+auto VDP::updateScreenParams() -> void {
+  if(Region::NTSC() && v28()) { state.topline = 0x1e5; state.bottomline = 0x0ea; }
+  if(Region::NTSC() && v30()) { state.topline = 0x000; state.bottomline = 0x1ff; }
+  if(Region::PAL()  && v28()) { state.topline = 0x1ca; state.bottomline = 0x102; }
+  if(Region::PAL()  && v30()) { state.topline = 0x1d2; state.bottomline = 0x10a; }
+}
+
 auto VDP::pixels() -> u32* {
-  //TODO: vcounter values of top border may not be correct here
-
   u32* output = nullptr;
-  if(Region::NTSC() && vcounter() >= 0x1ed) return nullptr;
-  if(Region::PAL()  && vcounter() >= 0x1f0) return nullptr;
-
-  //account for vcounter jumps during blanking periods
   n9 y = vcounter();
-  if(Region::NTSC() && v28() && vcounter() >= 0x1e5) y -= 250;
-  if(Region::PAL()  && v28() && vcounter() >= 0x1ca) y -= 201;
-  if(v30() && Region::PAL()  && vcounter() >= 0x1d2) y -= 201;
 
-  auto offset = Region::PAL() ? 38 : 11;
-  if(latch.overscan) offset -= 8;
+  // disregard blanked lines
+  if(Region::NTSC() &&                    y >= 0x0e8 && y < 0x1f5) return nullptr;
+  if(Region::PAL()  &&  latch.overscan && y >= 0x108 && y < 0x1e2) return nullptr;
+  if(Region::PAL()  && !latch.overscan && y >= 0x100 && y < 0x1da) return nullptr;
 
-  y = (y + offset) % visibleHeight();
+  // adjust vcounter to account for vsync period & vcounter jump
+  if(Region::NTSC() && y >= 0x0e8) y -= (0x1f5 - 0x0e8);
+  if(Region::PAL()  && y >= 0x108) y -= (0x1e2 - 0x108);
 
-  output = screen->pixels().data() + y * 2 * 1388;
-  if(latch.interlace) output += field() * 1388;
+  // adjust for top border
+  if(Region::NTSC()) y += 11;
+  if(Region::PAL() ) y += 38 - 8 * latch.overscan;
+  y = y % visibleHeight();
 
-  //TODO: this should probably be handled in DAC
-  n32 bg = 1 << 11 | 1 << 9 | cram.color(io.backgroundColor);
-  for(auto n: range(1388)) output[n] = bg;
+  output = screen->pixels().data() + y * 2 * 1415;
+  if(latch.interlace) output += field() * 1415;
 
-  return output + 52;
+  if(h40()) {
+    // H40 mode has slightly shorter lines, so sides are blanked.
+    // Left side would be 13 wide, but we'll realign to whole pixel (3*4) for sanity.
+    for(auto n: range(12)) output[        n] = 0b101 << 9;
+    for(auto n: range(15)) output[1415-15+n] = 0b101 << 9;
+
+    return output+12;
+  }
+
+  return output;
 }
 
 auto VDP::frame() -> void {
@@ -89,26 +99,16 @@ auto VDP::frame() -> void {
   if(latch.interlace == 1) screen->setInterlace(field());
 
   if(screen->overscan()) {
-    screen->setSize(1388, visibleHeight() * 2);
+    screen->setSize(1415, visibleHeight() * 2);
     screen->setViewport(0, 0, screen->width(), screen->height());
   } else {
-    int x = 14 * 4;
-    int y = 12 * 2;
-    int width = 1388 - (28 * 4);
-    int height = (visibleHeight() * 2) - (24 * 2);
+    int x = 13 * 5;
+    int y = Region::PAL() ? 30 + 8 * v28() : 11;
+    int width = 1280;
+    int height = screenHeight();
 
-    if(Region::PAL()) {
-      y += 28 * 2;
-      height -= 48 * 2;
-
-      if(v30()) {
-        y -= 8 * 2;
-        height += 16 * 2;
-      }
-    }
-
-    screen->setSize(width, height);
-    screen->setViewport(x, y, width, height);
+    screen->setSize(width, height * 2);
+    screen->setViewport(x, y * 2, width, height * 2);
   }
 
   screen->frame();
@@ -127,6 +127,8 @@ auto VDP::power(bool reset) -> void {
 
   vram.mode = 0;
   vram.refreshing = 0;
+  cram.bus.active = 0;
+  cram.bus.data = 0;
   command = {};
   io = {};
   test = {};

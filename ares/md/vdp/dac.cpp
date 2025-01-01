@@ -55,16 +55,61 @@ template<bool _h40, bool draw> auto VDP::DAC::pixel(u32 x) -> void {
   output<_h40>(pixel.backdrop << 11 | mode << 9 | color);
 }
 
+auto pixelIndex(n9 hpos) -> maybe<u32> {
+  if(vdp.h40()) {
+    if(hpos < 0x00d || hpos > 0x167) return nothing;
+    return (hpos-0x00d)*4;
+  } else {
+    if(hpos < 0x00b || hpos > 0x125) return nothing;
+    return (hpos-0x00b)*5;
+  }
+}
+
+template<u8 _size, u16 _h32Pos, u16 _h40Pos> inline auto VDP::DAC::fillBorder(n8 ofst) -> void {
+  if(!pixels) return;
+  if(ofst >= _size) return;
+
+  u32 hpos = (vdp.h40() ? _h40Pos : _h32Pos) + ofst;
+  u32 idx = pixelIndex(hpos)();
+  n32 px = 0b101 << 9 | vdp.cram.color(vdp.io.backgroundColor);
+  for(auto n : range((_size-ofst)*(vdp.h40()?4:5)))
+    pixels[idx+n] = px;
+}
+
+auto VDP::DAC::fillLeftBorder(n8 ofst) -> void {
+  fillBorder<13,0x00b,0x00d>(ofst);
+}
+
+auto VDP::DAC::fillRightBorder(n8 ofst) -> void {
+  fillBorder<14,0x118,0x15a>(ofst);
+}
+
+auto VDP::DAC::dot(n9 hpos, n9 color) -> void {
+  if(!pixels) return;
+
+  if(auto i = pixelIndex(hpos)) {
+    u32 index = i();
+    n32 px = 0b101 << 9 | color;
+    pixels[index++] = px;
+    pixels[index++] = px;
+    pixels[index++] = px;
+    pixels[index++] = px;
+    if(vdp.h40()) return;
+    pixels[index++] = px;
+  }
+}
+
 template<bool _h40> auto VDP::DAC::output(n32 color) -> void {
-  *pixels++ = color;
-  *pixels++ = color;
-  *pixels++ = color;
-  *pixels++ = color;
+  *active++ = color;
+  *active++ = color;
+  *active++ = color;
+  *active++ = color;
   if(_h40) return;
-  *pixels++ = color;
+  *active++ = color;
 }
 
 auto VDP::DAC::power(bool reset) -> void {
   test = {};
   pixels = nullptr;
+  active = nullptr;
 }

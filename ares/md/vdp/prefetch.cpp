@@ -2,12 +2,17 @@ auto VDP::Prefetch::run() -> bool {
   if(full()) return false;
 
   if(vdp.command.target == 0 && vdp.vram.mode == 0) {
-    slot.lower = 1;
-    slot.upper = 1;
-    slot.data.byte(0) = vdp.vram.readByte(vdp.command.address & ~1 | 1);
-    slot.data.byte(1) = vdp.vram.readByte(vdp.command.address & ~1 | 0);
-    vdp.command.ready = 1;
-    return true;
+    if(!slot.lower) {
+      slot.lower = 1;
+      slot.data.byte(0) = vdp.vram.readByte(vdp.command.address & ~1 | 1);
+      return true;
+    }
+    if(!slot.upper) {
+      slot.data.byte(1) = vdp.vram.readByte(vdp.command.address & ~1 | 0);
+      slot.upper = 1;
+      vdp.command.ready = 1;
+      return true;
+    }
   }
 
   if(vdp.command.target == 0 && vdp.vram.mode == 1) {
