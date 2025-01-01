@@ -86,7 +86,6 @@
         "ARES_CODESIGN_IDENTITY": {"type": "STRING", "value": "$penv{MACOS_CERTIFICATE_NAME}"},
         "ARES_CODESIGN_TEAM": {"type": "STRING", "value": "$penv{MACOS_NOTARIZATION_TEAMID}"},
         "ENABLE_CCACHE": true,
-        "ARES_VERSION_OVERRIDE": {"type": "STRING", "value": "v199"},
         "ARES_BUILD_LOCAL": false,
         "ARES_BUILD_OPTIONAL_TARGETS": true
       }
@@ -101,7 +100,6 @@
         "ENABLE_CCACHE": true,
         "ARES_BUILD_LOCAL": false,
         "ARES_BUILD_OPTIONAL_TARGETS": true,
-        "ARES_VERSION_OVERRIDE": {"type": "STRING", "value": "v199"},
         "ARES_PRECOMPILE_HEADERS": true
       }
     },
