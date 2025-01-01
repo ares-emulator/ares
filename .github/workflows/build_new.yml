@@ -68,6 +68,8 @@ jobs:
         p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSPHRASE }}
     - name: Checkout source code
       uses: actions/checkout@v4
+      with:
+        fetch-tags: true
     - name: Install macOS Dependencies
       if: runner.os == 'macOS'
       run: |
