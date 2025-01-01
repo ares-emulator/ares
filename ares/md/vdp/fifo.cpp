@@ -1,4 +1,19 @@
+auto VDP::FIFO::tick() -> void {
+  for(auto& slot : slots)
+    if(!slot.empty() && slot.latency > 0)
+      slot.latency--;
+}
+
 auto VDP::FIFO::advance() -> void {
+  if(vdp.command.pending && vdp.dma.mode == 2) {
+    if(slots[0].target == 1)
+      vdp.dma.data = slots[0].data;
+    else
+      vdp.dma.data = slots[1].data; // fill data taken from next fifo slot (late fetch)
+    vdp.dma.read = 1;
+    vdp.dma.wait = 0; // start pending DMA if necessary
+  }
+
   swap(slots[0], slots[1]);
   swap(slots[1], slots[2]);
   swap(slots[2], slots[3]);
@@ -6,6 +21,8 @@ auto VDP::FIFO::advance() -> void {
 
 auto VDP::FIFO::run() -> bool {
   if(empty()) return false;
+  if(slots[0].latency > 0) return false;
+  if(vdp.dma.active && vdp.dma.preload > 0) return false;
 
   if(slots[0].target == 1 && vdp.vram.mode == 0) {
     if(slots[0].lower) {
@@ -16,10 +33,6 @@ auto VDP::FIFO::run() -> bool {
     if(slots[0].upper) {
       slots[0].upper = 0;
       vdp.vram.writeByte(slots[0].address, slots[0].data.byte(1));
-      if(vdp.command.pending && vdp.dma.mode == 2) {
-        vdp.dma.data = slots[0].data;
-        vdp.dma.wait = 0; // start pending DMA
-      }
       return advance(), true;
     }
   }
@@ -36,13 +49,6 @@ auto VDP::FIFO::run() -> bool {
     if(slots[0].upper) {
       slots[0].upper = 0;
       // null action
-      if(vdp.command.pending && vdp.dma.mode == 2) {
-        // trigger action here is speculative/untested
-        // but it follows from the (normal) write case
-        debug(unusual, "[VDP::FIFO] dma fill start");
-        vdp.dma.data = slots[0].data;
-        vdp.dma.wait = 0; // start pending DMA
-      }
       return advance(), true;
     }
   }
@@ -55,11 +61,6 @@ auto VDP::FIFO::run() -> bool {
     vdp.vsram.write(slots[0].address >> 1, slots[0].data);
   else
     debug(unusual, "[VDP::FIFO] write target = 0x", hex(slots[0].target));
-
-  if(vdp.command.pending && vdp.dma.mode == 2) {
-    vdp.dma.data = slots[1].data; // fill data taken from next fifo slot (late fetch)
-    vdp.dma.wait = 0; // start pending DMA
-  }
 
   slots[0].lower = 0;
   slots[0].upper = 0;
@@ -83,6 +84,7 @@ auto VDP::FIFO::write(n4 target, n17 address, n16 data) -> void {
       slot.data    = data;
       slot.upper   = 1;
       slot.lower   = 1;
+      slot.latency = 2;
       return;
     }
   }

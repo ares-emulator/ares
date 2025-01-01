@@ -154,7 +154,7 @@ auto VDP::readControlPort() -> n16 {
   result.bit( 0)    = Region::PAL();
   result.bit( 1)    = command.pending;
   result.bit( 2)    = hblank();
-  result.bit( 3)    = vblank() || !io.displayEnable;
+  result.bit( 3)    = vblank() || !displayEnable();
   result.bit( 4)    = io.interlaceMode.bit(0) && field();
   result.bit( 5)    = sprite.collision;
   result.bit( 6)    = sprite.overflow;
@@ -187,8 +187,13 @@ auto VDP::writeControlPort(n16 data) -> void {
 
     prefetch.read(command.target, command.address);
 
-    if(command.pending && dma.mode == 1) dma.delay = 4; // based on measurement noted by Mask of Destiny
-    dma.wait = dma.mode == 2;
+    if(command.pending && dma.mode != 2) {
+      // dma preload init is tuned based on Direct Color DMA demos; lower values lead to instability
+      if(dma.mode < 2) dma.preload = 7;
+      dma.read = 0;
+      dma.wait = 0;
+    }
+
     dma.synchronize();
     return;
   }

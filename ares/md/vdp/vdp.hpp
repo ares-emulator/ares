@@ -38,7 +38,7 @@ struct VDP : Thread {
   auto hblank() const -> bool { return state.hblank; }
   auto vblank() const -> bool { return state.vblank; }
   auto refreshing() const -> bool { return vram.refreshing; }
-  auto displayEnable() const -> bool { return io.displayEnable && !state.vblank; }
+  auto displayEnable() const -> bool { return latch.displayEnable && !state.vblank; }
 
   auto h32() const -> bool { return latch.displayWidth == 0; }  //256-width
   auto h40() const -> bool { return latch.displayWidth == 1; }  //320-width
@@ -51,32 +51,33 @@ struct VDP : Thread {
 
   auto screenWidth() const -> u32 { return latch.displayWidth ? 320 : 256; }
   auto screenHeight() const -> u32 { return io.overscan ? 240 : 224; }
-  auto frameHeight() const -> u32 { return Region::PAL() ? 312 : 262; }
+  auto frameHeight() const -> u32 { return Region::PAL() ? 313 : 262; }
   auto visibleHeight() const -> u32 { return Region::PAL() ? 294 : 243; }
 
   //vdp.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
+  auto updateScreenParams() -> void;
   auto pixels() -> u32*;
   auto frame() -> void;
   auto power(bool reset) -> void;
 
   //main.cpp
   auto step(u32 clocks) -> void;
-  template<bool _h40> auto tick() -> void;
+  template<bool _h40> auto fullslotStep() -> void;
+  template<bool _h40, bool _refresh=false> auto tick() -> void;
+  template<bool _h40> auto htick() -> void;
   auto vtick() -> void;
   auto hblank(bool line) -> void;
   auto vblank(bool line) -> void;
   auto vblankcheck() -> void;
   auto vedge() -> void;
   auto slot() -> void;
-  auto refresh(bool active) -> void;
   auto main() -> void;
   auto render() -> void;
   auto mainH32() -> void;
   auto mainH40() -> void;
   template<bool _h40, bool _pixels> auto blocks() -> void;
-  auto generateCycleTimings() -> void;
 
   //io.cpp
   auto read(n1 upper, n1 lower, n24 address, n16 data) -> n16;
@@ -156,6 +157,7 @@ struct VDP : Thread {
     n16 data;     //write data
     n1  upper;    //1 = data.byte(1) valid
     n1  lower;    //1 = data.byte(0) valid
+    u8  latency;
   };
 
   struct Prefetch {
@@ -178,6 +180,7 @@ struct VDP : Thread {
     auto full() const -> bool { return !slots[3].empty(); }
 
     //fifo.cpp
+    auto tick() -> void;
     auto advance() -> void;
     auto run() -> bool;
     auto write(n4 target, n17 address, n16 data) -> void;
@@ -192,6 +195,7 @@ struct VDP : Thread {
   struct DMA {
     //dma.cpp
     auto synchronize() -> void;
+    auto fetch() -> void;
     auto run() -> bool;
     auto load() -> void;
     auto fill() -> void;
@@ -209,7 +213,7 @@ struct VDP : Thread {
     n1  wait;
     n1  read;
     n1  enable;
-    n4  delay;
+    n4  preload;
   } dma;
 
   struct Pixel {
@@ -328,6 +332,7 @@ struct VDP : Thread {
     auto end() -> void;
     auto mappingFetch(u32) -> void;
     auto patternFetch(u32) -> void;
+    auto scan() -> void;
     auto pixel(u32 x) -> Pixel;
     auto power(bool reset) -> void;
 
@@ -390,6 +395,10 @@ struct VDP : Thread {
     //dac.cpp
     template<bool _h40, bool draw> auto pixel(u32 x) -> void;
     template<bool _h40> auto output(n32 color) -> void;
+    template<u8 _size, u16 _h32Pos, u16 _h40Pos> inline auto fillBorder(n8 ofst) -> void;
+    auto fillLeftBorder(n8 ofst = 0) -> void;
+    auto fillRightBorder(n8 ofst = 0) -> void;
+    auto dot(n9 hpos, n9 color) -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -401,6 +410,7 @@ struct VDP : Thread {
     } test;
 
     u32* pixels = nullptr;
+    u32* active = nullptr;
   } dac;
 
   //color.cpp
@@ -452,6 +462,11 @@ private:
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    struct Bus {
+      n1 active;
+      n9 data;
+    } bus;
+
     n9 memory[64];
   } cram;
 
@@ -502,6 +517,7 @@ private:
     //per-scanline
     n1 displayWidth;
     n1 clockSelect;
+    n1 displayEnable;
   } latch;
 
   struct State {
@@ -512,12 +528,11 @@ private:
     n1 hblank;
     n1 vblank;
     n1 refreshing;
+    n1 rambusy;
+    n8 edclkPos;
+    n9 topline;
+    n9 bottomline;
   } state;
-
-//unserialized:
-  u8 cyclesH32[2][342], halvesH32[2][171], extrasH32[2][171];
-  u8 cyclesH40[2][420], halvesH40[2][210], extrasH40[2][210];
-  u8* cycles = nullptr;
 };
 
 extern VDP vdp;

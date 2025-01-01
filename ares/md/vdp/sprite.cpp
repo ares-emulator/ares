@@ -85,8 +85,6 @@ auto VDP::Sprite::patternFetch(u32) -> void {
   if(test.disablePhase3) mappings[patternIndex].valid = 0;
 
   auto interlace = vdp.io.interlaceMode == 3;
-  auto y = 129 + (i9)vdp.vcounter();
-  if(interlace) y = y << 1 | vdp.field();
 
   if(mappings[patternIndex].valid) {
     auto& object = mappings[patternIndex];
@@ -134,6 +132,14 @@ auto VDP::Sprite::patternFetch(u32) -> void {
   } else {
     maskCheck = 0;
   }
+}
+
+auto VDP::Sprite::scan() -> void {
+  if(!vdp.displayEnable()) return;
+
+  auto interlace = vdp.io.interlaceMode == 3;
+  auto y = 129 + (i9)vdp.vcounter();
+  if(interlace) y = y << 1 | vdp.field();
 
   if(test.disablePhase1) visibleStop = 1;
 
