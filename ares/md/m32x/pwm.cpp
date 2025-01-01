@@ -35,7 +35,7 @@ auto M32X::PWM::main() -> void {
   while(counter >= 522) {
     counter -= 522;
     auto left = cycle > 0 ? lsample / (f32)cycle : 0;
-    auto right = cycle > 0 ? lsample / (f32)cycle : 0;
+    auto right = cycle > 0 ? rsample / (f32)cycle : 0;
     stream->frame(left, right);
   }
 
