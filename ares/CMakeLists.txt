@@ -5,10 +5,10 @@ add_library(ares::ares ALIAS ares)
 option(ARES_PROFILE_ACCURACY "Build to prefer emulation accuracy over performance in certain specific areas" OFF)
 option(ARES_PRECOMPILE_HEADERS "Precompile ares/ares.hpp header for performance" OFF)
 option(
-  ARES_COMPILE_CORES_AS_SINGLE_UNIT
+  ARES_UNITY_CORES
   "\
-Build each core as one translation unit. slightly improves performance and cold build times, but reduces \
-incremental build performance.\
+Build each core as one translation unit. Decreases cold build times but increases incremental build times. Slightly \
+increases performance.
 "
   OFF
 )
@@ -110,14 +110,6 @@ macro(ares_components)
   set(ares.components ${ares.components} PARENT_SCOPE)
 endmacro()
 
-macro(ares_add_header_sources core)
-  foreach(arg IN ITEMS ${ARGN})
-    list(APPEND ARES_HEADER_SOURCES "${core}/${arg}")
-  endforeach()
-  target_sources(ares PRIVATE ${ARGV})
-  set(ARES_HEADER_SOURCES ${ARES_HEADER_SOURCES} PARENT_SCOPE)
-endmacro()
-
 macro(ares_add_sources)
   set(options "")
   set(oneValueArgs CORE)
@@ -126,7 +118,7 @@ macro(ares_add_sources)
 
   target_sources(ares PRIVATE ${AAS_INCLUDED} ${AAS_PRIMARY})
 
-  if(ARES_COMPILE_CORES_AS_SINGLE_UNIT)
+  if(ARES_UNITY_CORES)
     list(APPEND AAS_INCLUDED ${AAS_PRIMARY})
     target_sources(ares PRIVATE ${AAS_UNITY})
   endif()

@@ -5,6 +5,7 @@ namespace ares::SuperFamicom {
 PPUBase ppu;
 PPU ppuImpl;
 
+#undef ppu
 #define ppu ppuImpl
 
 #include "main.cpp"

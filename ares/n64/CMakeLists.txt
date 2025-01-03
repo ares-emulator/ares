@@ -266,55 +266,64 @@ ares_add_sources(
 
 target_compile_definitions(ares PRIVATE VULKAN)
 
-ares_add_sources(
-  CORE #
-    n64
-  PRIMARY #
-    vulkan/vulkan.cpp
-    vulkan/vulkan.hpp
+set(
+  _parallel_rdp_sources
+  vulkan/vulkan.cpp
+  vulkan/vulkan.hpp
+  vulkan/parallel-rdp/parallel-rdp/command_ring.cpp
+  vulkan/parallel-rdp/parallel-rdp/rdp_device.cpp
+  vulkan/parallel-rdp/parallel-rdp/rdp_dump_write.cpp
+  vulkan/parallel-rdp/parallel-rdp/rdp_renderer.cpp
+  vulkan/parallel-rdp/parallel-rdp/video_interface.cpp
+  vulkan/parallel-rdp/vulkan/buffer.cpp
+  vulkan/parallel-rdp/vulkan/buffer_pool.cpp
+  vulkan/parallel-rdp/vulkan/command_buffer.cpp
+  vulkan/parallel-rdp/vulkan/command_pool.cpp
+  vulkan/parallel-rdp/vulkan/context.cpp
+  vulkan/parallel-rdp/vulkan/cookie.cpp
+  vulkan/parallel-rdp/vulkan/descriptor_set.cpp
+  vulkan/parallel-rdp/vulkan/device.cpp
+  vulkan/parallel-rdp/vulkan/event_manager.cpp
+  vulkan/parallel-rdp/vulkan/fence.cpp
+  vulkan/parallel-rdp/vulkan/fence_manager.cpp
+  vulkan/parallel-rdp/vulkan/image.cpp
+  vulkan/parallel-rdp/vulkan/indirect_layout.cpp
+  vulkan/parallel-rdp/vulkan/memory_allocator.cpp
+  vulkan/parallel-rdp/vulkan/pipeline_event.cpp
+  vulkan/parallel-rdp/vulkan/query_pool.cpp
+  vulkan/parallel-rdp/vulkan/render_pass.cpp
+  vulkan/parallel-rdp/vulkan/sampler.cpp
+  vulkan/parallel-rdp/vulkan/semaphore.cpp
+  vulkan/parallel-rdp/vulkan/semaphore_manager.cpp
+  vulkan/parallel-rdp/vulkan/shader.cpp
+  vulkan/parallel-rdp/vulkan/texture/texture_format.cpp
+  vulkan/parallel-rdp/util/arena_allocator.cpp
+  vulkan/parallel-rdp/util/logging.cpp
+  vulkan/parallel-rdp/util/thread_id.cpp
+  vulkan/parallel-rdp/util/aligned_alloc.cpp
+  vulkan/parallel-rdp/util/timer.cpp
+  vulkan/parallel-rdp/util/timeline_trace_file.cpp
+  vulkan/parallel-rdp/util/thread_name.cpp
+  vulkan/parallel-rdp/util/environment.cpp
+  vulkan/parallel-rdp/volk/volk.c
 )
 
-ares_add_sources(
-  CORE #
-    n64
-  PRIMARY #
-    vulkan/parallel-rdp/parallel-rdp/command_ring.cpp
-    vulkan/parallel-rdp/parallel-rdp/rdp_device.cpp
-    vulkan/parallel-rdp/parallel-rdp/rdp_dump_write.cpp
-    vulkan/parallel-rdp/parallel-rdp/rdp_renderer.cpp
-    vulkan/parallel-rdp/parallel-rdp/video_interface.cpp
-    vulkan/parallel-rdp/vulkan/buffer.cpp
-    vulkan/parallel-rdp/vulkan/buffer_pool.cpp
-    vulkan/parallel-rdp/vulkan/command_buffer.cpp
-    vulkan/parallel-rdp/vulkan/command_pool.cpp
-    vulkan/parallel-rdp/vulkan/context.cpp
-    vulkan/parallel-rdp/vulkan/cookie.cpp
-    vulkan/parallel-rdp/vulkan/descriptor_set.cpp
-    vulkan/parallel-rdp/vulkan/device.cpp
-    vulkan/parallel-rdp/vulkan/event_manager.cpp
-    vulkan/parallel-rdp/vulkan/fence.cpp
-    vulkan/parallel-rdp/vulkan/fence_manager.cpp
-    vulkan/parallel-rdp/vulkan/image.cpp
-    vulkan/parallel-rdp/vulkan/indirect_layout.cpp
-    vulkan/parallel-rdp/vulkan/memory_allocator.cpp
-    vulkan/parallel-rdp/vulkan/pipeline_event.cpp
-    vulkan/parallel-rdp/vulkan/query_pool.cpp
-    vulkan/parallel-rdp/vulkan/render_pass.cpp
-    vulkan/parallel-rdp/vulkan/sampler.cpp
-    vulkan/parallel-rdp/vulkan/semaphore.cpp
-    vulkan/parallel-rdp/vulkan/semaphore_manager.cpp
-    vulkan/parallel-rdp/vulkan/shader.cpp
-    vulkan/parallel-rdp/vulkan/texture/texture_format.cpp
-    vulkan/parallel-rdp/util/arena_allocator.cpp
-    vulkan/parallel-rdp/util/logging.cpp
-    vulkan/parallel-rdp/util/thread_id.cpp
-    vulkan/parallel-rdp/util/aligned_alloc.cpp
-    vulkan/parallel-rdp/util/timer.cpp
-    vulkan/parallel-rdp/util/timeline_trace_file.cpp
-    vulkan/parallel-rdp/util/thread_name.cpp
-    vulkan/parallel-rdp/util/environment.cpp
-    vulkan/parallel-rdp/volk/volk.c
-)
+if(ARES_UNITY_CORES)
+  ares_add_sources(
+    CORE #
+      n64
+    UNITY #
+      ${_parallel_rdp_sources}
+  )
+else()
+  ares_add_sources(
+    CORE #
+      n64
+    PRIMARY #
+      ${_parallel_rdp_sources}
+  )
+endif()
+
 ares_add_sources(
   CORE #
     n64
@@ -354,7 +363,6 @@ ares_add_sources(
     vulkan/parallel-rdp/util/timeline_trace_file.hpp
     vulkan/parallel-rdp/util/thread_name.hpp
     vulkan/parallel-rdp/util/environment.hpp
-    vulkan/parallel-rdp/volk/volk.c
 )
 
 target_include_directories(

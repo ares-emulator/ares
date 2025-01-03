@@ -87,6 +87,7 @@
         "ARES_CODESIGN_TEAM": {"type": "STRING", "value": "$penv{MACOS_NOTARIZATION_TEAMID}"},
         "ENABLE_CCACHE": true,
         "ARES_BUILD_LOCAL": false,
+        "ARES_UNITY_CORES": true,
         "ARES_BUILD_OPTIONAL_TARGETS": true
       }
     },
@@ -100,6 +101,7 @@
         "ENABLE_CCACHE": true,
         "ARES_BUILD_LOCAL": false,
         "ARES_BUILD_OPTIONAL_TARGETS": true,
+        "ARES_UNITY_CORES": true,
         "ARES_PRECOMPILE_HEADERS": true
       }
     },

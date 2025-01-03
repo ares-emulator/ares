@@ -1,5 +1,6 @@
 #include <sfc/sfc.hpp>
 
+#undef ppu
 #define PPU PPUPerformance
 #define ppu ppuPerformanceImpl
 
