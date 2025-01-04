@@ -15,6 +15,7 @@
 #include <nmmintrin.h>
 using v128 = __m128i;
 #elif defined(ARCHITECTURE_ARM64) && !defined(COMPILER_MICROSOFT)
+#define SSE2NEON_SUPPRESS_WARNINGS
 #include <sse2neon.h>
 using v128 = __m128i;
 #endif
