@@ -20,6 +20,13 @@ jobs:
           msystem: clang64
           install: mingw-w64-clang-x86_64-clang
           target-cmake-preset: windows-ci-mingw-native
+        - name: windows-x64-gcc
+          os: windows-latest
+          compiler: g++
+          shell: 'msys2 {0}'
+          msystem: mingw64
+          install: mingw-w64-x86_64-toolchain
+          target-cmake-preset: windows-ci-mingw-native
         - name: windows-clang-cl-x64
           os: windows-latest
           windres: rc
@@ -48,6 +55,12 @@ jobs:
           shell: sh
           install: cmake ccache xcbeautify
           target-cmake-preset: macos-ci-universal
+        - name: ubuntu
+          os: ubuntu-latest
+          compiler: g++
+          shell: bash
+          install: cmake ccache ninja-build libsdl2-dev libgtk-3-dev libao-dev libopenal-dev
+          target-cmake-preset: ubuntu-ci
     name: ${{ matrix.program }}-${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.os }}
     defaults:
@@ -71,12 +84,22 @@ jobs:
       with:
         fetch-tags: true
         fetch-depth: 0
+    - name: Install Linux Dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y -qq
+        sudo apt-get install ${{ matrix.platform.install }}
     - name: Install macOS Dependencies
       if: runner.os == 'macOS'
       run: |
         brew install ${{ matrix.platform.install }}
+    - name: "Build: Linux"
+      if: runner.os == 'Linux'
+      run: .github/scripts/build_ubuntu.sh
+      env:
+        TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
     - name: "Build: Windows"
-      if: runner.os != 'macOS'
+      if: runner.os != 'macOS' && runner.os != 'Linux'
       run: .github/scripts/build_windows.sh
       env:
         CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
@@ -112,7 +135,7 @@ jobs:
         MACOS_NOTARIZATION_PASSWORD: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
         MACOS_NOTARIZATION_TEAMID: ${{ secrets.MACOS_NOTARIZATION_TEAMID }}
     - name: Upload Build (Windows)
-      if: runner.os != 'macOS'
+      if: runner.os != 'macOS' && runner.os != 'Linux'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.program }}-${{ matrix.platform.name }}
@@ -124,7 +147,7 @@ jobs:
         name: ${{ matrix.program }}-${{ matrix.platform.name }}
         path: build/desktop-ui/RelWithDebInfo/
     - name: Upload Debug Symbols (Windows)
-      if: runner.os != 'macOS'
+      if: runner.os != 'macOS' && runner.os != 'Linux'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.program }}-${{ matrix.platform.name }}-PDBs

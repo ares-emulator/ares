@@ -147,6 +147,20 @@
       "cacheVariables": {
         "ARES_CROSSCOMPILING": true
       }
+    },
+    {
+      "name": "ubuntu-ci",
+      "displayName": "Ubuntu CI (x64 gcc)",
+      "description": "Single-arch binary for building on Github Actions",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {"type": "STRING", "value": "RelWithDebInfo"},
+        "ENABLE_CCACHE": true,
+        "ARES_BUILD_LOCAL": false,
+        "ARES_BUILD_OPTIONAL_TARGETS": true,
+        "ARES_PRECOMPILE_HEADERS": false
+      }
     }
   ],
   "buildPresets": [
