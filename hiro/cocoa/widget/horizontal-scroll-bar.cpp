@@ -9,7 +9,7 @@
     [self setTarget:self];
     [self setAction:@selector(scroll:)];
 
-    [self setControlSize:NSRegularControlSize];
+    [self setControlSize:NSControlSizeRegular];
     [self setScrollerStyle:NSScrollerStyleLegacy];
     [self setEnabled:YES];
 
@@ -67,7 +67,7 @@ auto pHorizontalScrollBar::destruct() -> void {
 }
 
 auto pHorizontalScrollBar::minimumSize() const -> Size {
-  return {32, (s32)[NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy]};
+  return {32, (s32)[NSScroller scrollerWidthForControlSize:NSControlSizeRegular scrollerStyle:NSScrollerStyleLegacy]};
 }
 
 auto pHorizontalScrollBar::setLength(u32 length) -> void {

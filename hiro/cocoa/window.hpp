@@ -20,7 +20,6 @@
 -(NSMenu*) menuBar;
 -(void) menuAbout;
 -(void) menuPreferences;
--(void) menuDisableGatekeeper;
 -(void) menuQuit;
 -(NSTextField*) statusBar;
 @end

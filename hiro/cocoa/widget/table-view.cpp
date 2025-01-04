@@ -203,7 +203,7 @@
     tableView = &tableViewReference;
     buttonCell = [[NSButtonCell alloc] initTextCell:@""];
     [buttonCell setButtonType:NSSwitchButton];
-    [buttonCell setControlSize:NSSmallControlSize];
+    [buttonCell setControlSize:NSControlSizeSmall];
     [buttonCell setRefusesFirstResponder:YES];
     [buttonCell setTarget:self];
     textCell = [[NSTextFieldCell alloc] init];
@@ -236,7 +236,7 @@
         NSRect targetRect = NSMakeRect(frame.origin.x + 2, frame.origin.y + (frame.size.height - image.size.height) / 2,
                                        image.size.width, image.size.height);
         NSRect sourceRect = NSMakeRect(0, 0, image.size.width, image.size.height);
-        [image drawInRect:targetRect fromRect:sourceRect operation:NSCompositeSourceOver fraction:1.0 respectFlipped:YES hints:nil];
+        [image drawInRect:targetRect fromRect:sourceRect operation:NSCompositingOperationSourceOver fraction:1.0 respectFlipped:YES hints:nil];
         [[NSGraphicsContext currentContext] restoreGraphicsState];
         frame.origin.x += image.size.width + 4;
         frame.size.width -= image.size.width + 4;
@@ -276,11 +276,11 @@
 //so instead, I have to run a modal loop on events until the mouse button is released
 -(BOOL) trackMouse:(NSEvent*)event inRect:(NSRect)frame ofView:(NSView*)_view untilMouseUp:(BOOL)flag {
   NSTableView* view = (NSTableView*)_view;
-  if([event type] == NSLeftMouseDown) {
+  if([event type] == NSEventTypeLeftMouseDown) {
     NSWindow* window = [view window];
     NSEvent* nextEvent;
-    while((nextEvent = [window nextEventMatchingMask:(NSLeftMouseDragged | NSLeftMouseUp)])) {
-      if([nextEvent type] == NSLeftMouseUp) {
+    while((nextEvent = [window nextEventMatchingMask:(NSEventTypeLeftMouseDragged | NSEventTypeLeftMouseUp)])) {
+      if([nextEvent type] == NSEventTypeLeftMouseUp) {
         NSPoint point = [view convertPoint:[nextEvent locationInWindow] fromView:nil];
         NSRect rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.height, frame.size.height);
         if(NSMouseInRect(point, rect, [view isFlipped])) {

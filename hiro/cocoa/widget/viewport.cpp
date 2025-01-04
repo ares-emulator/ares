@@ -18,7 +18,7 @@
 -(void) drawRect:(NSRect)rect {
   [[NSColor blackColor] setFill];
   NSRect frame = self.bounds;
-  NSRectFillUsingOperation(frame, NSCompositeSourceOver);
+  NSRectFillUsingOperation(frame, NSCompositingOperationSourceOver);
 }
 
 -(BOOL) acceptsFirstResponder {
