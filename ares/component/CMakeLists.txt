@@ -1,6 +1,6 @@
 list(REMOVE_DUPLICATES ares.components)
 
-ares_add_header_sources("" CMakeLists.txt)
+ares_add_sources(INCLUDED CMakeLists.txt)
 
 macro(component_sources)
   set(options "")

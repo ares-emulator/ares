@@ -7,14 +7,30 @@ ares_add_sources(
     pce.cpp
   PRIMARY #
     cpu/cpu.cpp
-    vdp/vdp.cpp
-    vdp-performance/vdp.cpp
     psg/psg.cpp
     pcd/pcd.cpp
     system/system.cpp
     cartridge/cartridge.cpp
     controller/controller.cpp
 )
+
+if(ARES_UNITY_CORES)
+  ares_add_sources(
+    CORE #
+      pce
+    UNITY #
+      vdp/vdp.cpp
+      vdp-performance/vdp.cpp
+  )
+else()
+  ares_add_sources(
+    CORE #
+      pce
+    PRIMARY #
+      vdp/vdp.cpp
+      vdp-performance/vdp.cpp
+  )
+endif()
 
 ares_add_sources(
   CORE #
