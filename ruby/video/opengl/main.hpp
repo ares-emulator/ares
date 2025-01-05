@@ -131,6 +131,8 @@ auto OpenGL::initialize(const string& shader) -> bool {
   return initialized = true;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 auto OpenGL::resolveSymbol(const char* name) -> const void * {
 #if defined(PLATFORM_MACOS)
   NSSymbol symbol;
@@ -153,6 +155,7 @@ auto OpenGL::resolveSymbol(const char* name) -> const void * {
     }
   #endif
 #endif
+#pragma clang diagnostic pop
 
   return symbol;
 }

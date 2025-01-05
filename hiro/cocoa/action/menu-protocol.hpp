@@ -1,3 +1,3 @@
-@protocol CocoaMenu<NSObject>
+@protocol CocoaMenuProtocol <NSObject>
 -(NSMenu*) cocoaMenu;
 @end

@@ -5,8 +5,8 @@
 -(id) initWith:(hiro::mWindow&)windowReference {
   window = &windowReference;
 
-  NSUInteger style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask;
-  if(window->state.resizable) style |= NSResizableWindowMask;
+  NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
+  if(window->state.resizable) style |= NSWindowStyleMaskResizable;
 
   if(self = [super initWithContentRect:NSMakeRect(0, 0, 640, 480) styleMask:style backing:NSBackingStoreBuffered defer:YES]) {
     [self setDelegate:self];
@@ -37,16 +37,9 @@
 
     item = [[NSMenuItem alloc] initWithTitle:@"Preferences…" action:@selector(menuPreferences) keyEquivalent:@""];
     [item setTarget:self];
-    item.keyEquivalentModifierMask = NSCommandKeyMask;
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
     item.keyEquivalent = @",";
     [rootMenu addItem:item];
-
-    string result = nall::execute("spctl", "--status").output.strip();
-    if(result != "assessments disabled") {
-      disableGatekeeper = [[NSMenuItem alloc] initWithTitle:@"Disable Gatekeeper" action:@selector(menuDisableGatekeeper) keyEquivalent:@""];
-      [disableGatekeeper setTarget:self];
-      [rootMenu addItem:disableGatekeeper];
-    }
 
     [rootMenu addItem:[NSMenuItem separatorItem]];
 
@@ -60,14 +53,14 @@
 
     item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Hide %@", applicationName] action:@selector(hide:) keyEquivalent:@""];
     [item setTarget:NSApp];
-    item.keyEquivalentModifierMask = NSCommandKeyMask;
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
     item.keyEquivalent = @"h";
     [rootMenu addItem:item];
 
     item = [[NSMenuItem alloc] initWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@""];
     [item setTarget:NSApp];
     [item setTarget:NSApp];
-    item.keyEquivalentModifierMask = NSCommandKeyMask | NSAlternateKeyMask;
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
     item.keyEquivalent = @"h";
     [rootMenu addItem:item];
 
@@ -79,12 +72,12 @@
 
     item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Quit %@", applicationName] action:@selector(menuQuit) keyEquivalent:@""];
     [item setTarget:self];
-    item.keyEquivalentModifierMask = NSCommandKeyMask;
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
     item.keyEquivalent = @"q";
     [rootMenu addItem:item];
 
     statusBar = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)];
-    [statusBar setAlignment:NSLeftTextAlignment];
+    [statusBar setAlignment:NSTextAlignmentLeft];
     [statusBar setBordered:YES];
     [statusBar setBezeled:YES];
     [statusBar setBezelStyle:NSTextFieldSquareBezel];
@@ -148,53 +141,6 @@
 -(void) menuPreferences {
   hiro::Application::Cocoa::doPreferences();
 }
-
-//to hell with gatekeepers
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wwritable-strings"
--(void) menuDisableGatekeeper {
-  NSAlert* alert = [[NSAlert alloc] init];
-  [alert setMessageText:@"Disable Gatekeeper"];
-
-  AuthorizationRef authorization;
-  OSStatus status = AuthorizationCreate(nullptr, kAuthorizationEmptyEnvironment, kAuthorizationFlagDefaults, &authorization);
-  if(status == errAuthorizationSuccess) {
-    AuthorizationItem items = {kAuthorizationRightExecute, 0, nullptr, 0};
-    AuthorizationRights rights = {1, &items};
-    status = AuthorizationCopyRights(authorization, &rights, nullptr,
-      kAuthorizationFlagDefaults
-    | kAuthorizationFlagInteractionAllowed
-    | kAuthorizationFlagPreAuthorize
-    | kAuthorizationFlagExtendRights, nullptr);
-    if(status == errAuthorizationSuccess) {
-      { char program[] = "/usr/sbin/spctl";
-        char* arguments[] = {"--master-disable", nullptr};
-        FILE* pipe = nullptr;
-        AuthorizationExecuteWithPrivileges(authorization, program, kAuthorizationFlagDefaults, arguments, &pipe);
-      }
-      { char program[] = "/usr/bin/defaults";
-        char* arguments[] = {"write /Library/Preferences/com.apple.security GKAutoRearm -bool NO"};
-        FILE* pipe = nullptr;
-        AuthorizationExecuteWithPrivileges(authorization, program, kAuthorizationFlagDefaults, arguments, &pipe);
-      }
-    }
-    AuthorizationFree(authorization, kAuthorizationFlagDefaults);
-  }
-
-  string result = nall::execute("spctl", "--status").output.strip();
-  if(result == "assessments disabled") {
-    [alert setAlertStyle:NSInformationalAlertStyle];
-    [alert setInformativeText:@"Gatekeeper has been successfully disabled."];
-    [disableGatekeeper setHidden:YES];
-  } else {
-    [alert setAlertStyle:NSWarningAlertStyle];
-    [alert setInformativeText:@"Error: failed to disable Gatekeeper."];
-  }
-
-  [alert addButtonWithTitle:@"Ok"];
-  [alert runModal];
-}
-#pragma clang diagnostic pop
 
 -(void) menuQuit {
   hiro::Application::Cocoa::doQuit();
@@ -360,14 +306,14 @@ auto pWindow::setModal(bool modal) -> void {
     [NSApp runModalForWindow:cocoaWindow];
   } else {
     [NSApp stopModal];
-    NSEvent* event = [NSEvent otherEventWithType:NSApplicationDefined location:NSMakePoint(0, 0) modifierFlags:0 timestamp:0.0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
+    NSEvent* event = [NSEvent otherEventWithType:NSEventTypeApplicationDefined location:NSMakePoint(0, 0) modifierFlags:0 timestamp:0.0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
     [NSApp postEvent:event atStart:true];
   }
 }
 
 auto pWindow::setResizable(bool resizable) -> void {
-  NSUInteger style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask;
-  if(resizable) style |= NSResizableWindowMask;
+  NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
+  if(resizable) style |= NSWindowStyleMaskResizable;
   [cocoaWindow setStyleMask:style];
 }
 

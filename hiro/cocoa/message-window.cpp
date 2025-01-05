@@ -30,10 +30,10 @@ auto MessageWindow_dialog(MessageWindow::State& state, MessageWindowType type) -
     }
 
     switch(type) {
-    case MessageWindowType::Error: [alert setAlertStyle:NSCriticalAlertStyle]; break;
-    case MessageWindowType::Information: [alert setAlertStyle:NSInformationalAlertStyle]; break;
-    case MessageWindowType::Question: [alert setAlertStyle:NSInformationalAlertStyle]; break;
-    case MessageWindowType::Warning: [alert setAlertStyle:NSWarningAlertStyle]; break;
+      case MessageWindowType::Error: [alert setAlertStyle:NSAlertStyleCritical]; break;
+      case MessageWindowType::Information: [alert setAlertStyle:NSAlertStyleInformational]; break;
+      case MessageWindowType::Question: [alert setAlertStyle:NSAlertStyleInformational]; break;
+      case MessageWindowType::Warning: [alert setAlertStyle:NSAlertStyleWarning]; break;
     }
 
     NSInteger response = [alert runModal];

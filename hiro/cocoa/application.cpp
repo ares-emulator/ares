@@ -64,7 +64,7 @@ auto pApplication::run() -> void {
 auto pApplication::pendingEvents() -> bool {
   bool result = false;
   @autoreleasepool {
-    NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:NO];
+    NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:NO];
     if(event != nil) result = true;
   }
   return result;
@@ -73,7 +73,7 @@ auto pApplication::pendingEvents() -> bool {
 auto pApplication::processEvents() -> void {
   @autoreleasepool {
     while(!Application::state().quit) {
-      NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
+      NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
       if(event == nil) break;
       [NSApp sendEvent:event];
     }
@@ -84,7 +84,7 @@ auto pApplication::quit() -> void {
   @autoreleasepool {
     [applicationTimer invalidate];
     [NSApp stop:nil];
-    NSEvent* event = [NSEvent otherEventWithType:NSApplicationDefined location:NSMakePoint(0, 0) modifierFlags:0 timestamp:0.0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
+    NSEvent* event = [NSEvent otherEventWithType:NSEventTypeApplicationDefined location:NSMakePoint(0, 0) modifierFlags:0 timestamp:0.0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
     [NSApp postEvent:event atStart:true];
   }
 }
