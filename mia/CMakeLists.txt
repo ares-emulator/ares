@@ -127,6 +127,15 @@ if(ARES_BUILD_OPTIONAL_TARGETS)
     target_sources(mia-ui PRIVATE resource/mia.rc resource/mia.Manifest)
   endif()
 
+  if(OS_WINDOWS)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      target_link_libraries(
+        mia-ui
+        PRIVATE nall
+      )
+    endif()
+  endif()
+
   set_target_properties(
     mia-ui
     PROPERTIES
