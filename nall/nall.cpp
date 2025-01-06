@@ -10,6 +10,7 @@
 #include <nall/dl.cpp>
 #include <nall/file-map.cpp>
 #include <nall/inode.cpp>
+#include <nall/instruction-set.cpp>
 #include <nall/memory.cpp>
 #include <nall/path.cpp>
 #include <nall/platform.cpp>
