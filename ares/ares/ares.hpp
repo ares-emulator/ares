@@ -15,6 +15,7 @@
 #include <nall/endian.hpp>
 #include <nall/hashset.hpp>
 #include <nall/image.hpp>
+#include <nall/instruction-set.hpp>
 #include <nall/literals.hpp>
 #include <nall/priority-queue.hpp>
 #include <nall/queue.hpp>
