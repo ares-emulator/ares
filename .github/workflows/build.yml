@@ -161,7 +161,7 @@ jobs:
         folder: 'desktop-ui/out'
         timestampUrl: 'http://timestamp.digicert.com' 
     - name: "macOS: notarize"
-      if: runner.os == 'macOS' && github.event_name != 'pull_request'
+      if: false
       continue-on-error: ${{ github.repository != 'ares-emulator/ares' }}
       run: |
         ditto -c -k --keepParent desktop-ui/out/ares.app /tmp/ares.zip
