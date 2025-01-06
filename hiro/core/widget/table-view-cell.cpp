@@ -123,7 +123,7 @@ auto mTableViewCell::setForegroundColor(Color color) -> type& {
 }
 
 auto mTableViewCell::setForegroundColor(SystemColor color) -> type& {
-    state.foregroundColor = color;
+    state.foregroundColor = Color(color);
     state.foregroundSystemColor = color;
     signal(setForegroundColor, color);
     return *this;
