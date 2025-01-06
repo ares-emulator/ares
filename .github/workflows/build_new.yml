@@ -63,6 +63,7 @@ jobs:
     - name: "macOS: Import Certificate"
       if: runner.os == 'macOS'
       uses: apple-actions/import-codesign-certs@v3
+      continue-on-error: ${{ github.repository != 'ares-emulator/ares' }}
       with:
         p12-file-base64: ${{ secrets.MACOS_CERTIFICATE_DATA }}
         p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSPHRASE }}
@@ -103,6 +104,7 @@ jobs:
         timestampUrl: 'http://timestamp.digicert.com'
     - name: "macOS: notarize"
       if: runner.os == 'macOS' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+      continue-on-error: ${{ github.repository != 'ares-emulator/ares' }}
       run: |
         ditto -c -k --keepParent ${{ github.workspace }}/build/desktop-ui/RelWithDebInfo/ares.app /tmp/ares.zip
         xcrun notarytool submit /tmp/ares.zip --apple-id "$MACOS_NOTARIZATION_USERNAME" --password "$MACOS_NOTARIZATION_PASSWORD" --team-id "$MACOS_NOTARIZATION_TEAMID" --wait
