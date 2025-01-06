@@ -5,7 +5,7 @@ namespace hiro {
 auto pComboButton::construct() -> void {
   hwnd = CreateWindow(
     L"COMBOBOX", L"",
-    WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,
+    WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS,
     0, 0, 0, 0,
     _parentHandle(), nullptr, GetModuleHandle(0), 0
   );

@@ -43,14 +43,15 @@ auto locate(const string &name) -> string {
 #endif
 
   // If the file was not found in any of the above locations, we may be intending to create it
-  // We must return a path to a user writable directory; on Windows, this is the executable directory
 #if defined(PLATFORM_WINDOWS)
+  // We must return a path to a user writable directory; on Windows, this is the executable directory
   return {Path::program(), name};
-#endif
-
+#else
   // On other platforms, this is the "user data" directory
   directory::create({Path::userData(), "ares/"});
   return {Path::userData(), "ares/", name};
+#endif
+
 }
 
 auto operator+=(string& lhs, const string& rhs) -> string& {
