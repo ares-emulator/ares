@@ -35,6 +35,11 @@ auto Mame2BML::main(Arguments arguments) -> void {
 
   output.print("database\n");
   output.print("  revision: ", chrono::local::date(), "\n");
+  output.print("  drivers: ");
+  for(auto driver : driverNames) {
+    output.print(driver, ", ");
+  }
+  output.print("\n");
 
   pathname = Location::path(markupName);
   auto document = XML::unserialize(markup);
