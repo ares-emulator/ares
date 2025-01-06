@@ -79,18 +79,21 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     "$<$<COMPILE_LANGUAGE:C,CXX>:${_ares_clang_cl_c_cxx_options}>"
   )
   if(NOT MSVC)
-    # statically link libstdc++ if compiling under msys2/mingw
+    # we are on msys2 clang
+    # statically link libc++
     add_link_options(-static-libstdc++)
     # msys2/mingw-specific invocations to make clang emit debug symbols
     set(_ares_mingw_clang_debug_compile_options -g -gcodeview)
     set(_ares_mingw_clang_debug_link_options -fuse-ld=lld -g -Wl,--pdb=)
     add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_clang_debug_compile_options}>")
     add_link_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_clang_debug_link_options}>")
+    # clang-cl does not understand -fwrapv, but we do want it on msys2 clang
+    add_compile_options(-fwrapv)
   else()
     # generate PDBs rather than embed debug symbols
     set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT ProgramDatabase)
     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${_ares_msvc_cxx_options}>")
-    # kill
+    # work around https://gitlab.kitware.com/cmake/cmake/-/issues/26559
     add_compile_options($<$<AND:$<BOOL:${ENABLE_IPO}>,$<NOT:$<CONFIG:Debug>>>:-flto=thin>)
     add_link_options(
       $<$<AND:$<BOOL:${ENABLE_IPO}>,$<NOT:$<CONFIG:Debug>>>:-flto=thin>
@@ -98,6 +101,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       /Debug
       $<$<NOT:$<CONFIG:Debug>>:/OPT:REF>
       $<$<NOT:$<CONFIG:Debug>>:/OPT:ICF>
+    )
+    # add -fwrapv
+    add_compile_options(
+      "$<$<COMPILE_LANGUAGE:C,CXX>:/clang:-fwrapv>"
     )
   endif()
 
@@ -114,6 +121,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   if(CMAKE_COMPILE_WARNING_AS_ERROR)
     add_link_options(/WX)
   endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options(
+    ${_ares_gcc_common_options}
+  )
 endif()
 
 if(NOT MINGW)

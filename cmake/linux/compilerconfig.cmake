@@ -11,5 +11,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:C>:${_ares_clang_c_options}>"
     "$<$<COMPILE_LANGUAGE:CXX>:${_ares_clang_cxx_options}>"
+    -fwrapv
+  )
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options(
+    ${_ares_gcc_common_options}
   )
 endif()
