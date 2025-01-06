@@ -43,6 +43,7 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 # clang options for C, C++, ObjC, and ObjC++
 set(
   _ares_clang_common_options
+  -fno-strict-aliasing
   -Wblock-capture-autoreleasing
   # -Wswitch
   -Wdeprecated
@@ -97,6 +98,12 @@ set(
   -Wmove
   -Winvalid-offsetof
   -Wno-delete-non-abstract-non-virtual-dtor
+)
+
+set(
+  _ares_gcc_common_options
+  -fwrapv
+  -fno-strict-aliasing
 )
 
 if(NOT DEFINED CMAKE_COMPILE_WARNING_AS_ERROR)

@@ -47,6 +47,7 @@ if(NOT XCODE)
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:C>:${_ares_clang_c_options}>"
     "$<$<COMPILE_LANGUAGE:CXX>:${_ares_clang_cxx_options}>"
+    -fwrapv
     -mmacos-version-min=10.13
   )
 endif()
