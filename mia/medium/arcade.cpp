@@ -29,6 +29,31 @@ auto Arcade::load(string location) -> bool {
     return true;
   }
 
+  //Aleck 64
+  if(document["game/board"].string() == "nintendo/aleck64") {
+    vector<u8> rom = loadRoms(location, document, "user2");
+    if(!rom) return false;
+
+    //MAME stores roms in Byte-Swapped (v64) format, but we need them in their native Big-Endian (z64)
+    endianSwap(rom);
+
+    vector<u8> pif = loadRoms(location, document, "user1");
+    if(!pif) return false;
+
+    this->location = location;
+
+    pak = new vfs::directory;
+    pak->setAttribute("board",  document["game/board" ].string());
+    pak->setAttribute("title",  document["game/title"].string());
+    pak->setAttribute("region", document["game/region"].string());
+    pak->setAttribute("cic",    "CIC-NUS-5101");
+    pak->append("manifest.bml", manifest);
+    pak->append("program.rom",  rom);
+    pak->append("pif.rom", pif);
+
+    return true;
+  }
+
   return false;
 }
 
