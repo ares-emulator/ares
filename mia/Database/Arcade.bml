@@ -1,6 +1,64 @@
 database
-  revision: 2024-04-03
-  romset: 0.258 (mame0258)
+  revision: 2025-01-06
+  drivers: sega/sg1000a.cpp, nintendo/aleck64.cpp,
+  romset: 0.273 (mame0273)
+game
+  name:    11beat
+  title:   Eleven Beat
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   nus-zhaj.u3
+      offset: 0x0
+      size:   8388608
+      crc:    02faa8a7
+      sha1:   824911452639cedf6a8186c05cd046e61fc98896
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    aleck64
+  title:   Aleck64 PIF BIOS
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
 game
   name:    chboxing
   title:   Champion Boxing
@@ -71,6 +129,264 @@ game
       crc:    c6f26b0b
       sha1:   3753e05b6e77159832dbe88562ba7a818120d1a3
 game
+  name:    doncdoon
+  title:   Hanabi de Doon! - Don-chan Puzzle
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   ua3003-all01.u3
+      offset: 0x0
+      size:   16777216
+      crc:    f362fa82
+      sha1:   4f41ee23edc18110be1218ba333d1c58376ab175
+    rom
+      name:   ua3003-alh01.u4
+      offset: 0x1000000
+      size:   16777216
+      crc:    47c56387
+      sha1:   c8cc6c0a456b593aef711d0a75b2342ba2f8203f
+  user3
+    rom
+      name:   nus-zsij-0.u1
+      offset: 0x0
+      size:   8388608
+      crc:    547d8122
+      sha1:   347f0785767265acb0f0c21646e06cbe6f561821
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    hipai
+  title:   Hi Pai Paradise
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   ua2011-all02.u3
+      offset: 0x0
+      size:   16777216
+      crc:    eb4b96d0
+      sha1:   e909ea5b71b81087da07821c4f57244576363678
+    rom
+      name:   ua2011-alh02.u4
+      offset: 0x1000000
+      size:   16777216
+      crc:    b8e35ddf
+      sha1:   7c3e59f6520dc3f0aa592e682fa82e30ffd1f4d0
+  user3
+    rom
+      name:   nus-nsij-0.u1
+      offset: 0x0
+      size:   8388608
+      crc:    94cf9f8d
+      sha1:   cd624d1f5de2be3bec3ece06556a2e39bef66d77
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    hipai2
+  title:   Hi Pai Paradise 2
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   ua3029-all01.u3
+      offset: 0x0
+      size:   16777216
+      crc:    88b83e93
+      sha1:   279a006436069232383b2065e7416d8ccc76e3ca
+    rom
+      name:   ua3029-alh01.u4
+      offset: 0x1000000
+      size:   16777216
+      crc:    4f79fa94
+      sha1:   a6d2d805f96f0ad7294ebf41b13573320154b2a4
+  user3
+    rom
+      name:   nus-zsij-0.u1
+      offset: 0x0
+      size:   8388608
+      crc:    2389576f
+      sha1:   dc22b2eab4d7a02cb918827a62e6c120b3a84e6c
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    kurufev
+  title:   Kurukuru Fever
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   ua3088-all01.u3
+      offset: 0x0
+      size:   16777216
+      crc:    00db4dbc
+      sha1:   824fdce01fffdfcbcc9b1fbda4ab389a10b2b418
+    rom
+      name:   ua3088-alh04.u4
+      offset: 0x1000000
+      size:   16777216
+      crc:    c96bc7c0
+      sha1:   2b6ca1a769dee74e112c2b287dacd0bf46dda091
+  user3
+    rom
+      name:   nus-zsij-0.u1
+      offset: 0x0
+      size:   8388608
+      crc:    2389576f
+      sha1:   dc22b2eab4d7a02cb918827a62e6c120b3a84e6c
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    mayjin3
+  title:   Mayjinsen 3
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   nus-zscj-0.u3
+      offset: 0x0
+      size:   8388608
+      crc:    52a37340
+      sha1:   b5834bfde5b8a7e20415b2593abd76ec95ab27c7
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    mtetrisc
+  title:   Magical Tetris Challenge (981009 Japan)
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   nus-zcaj.u4
+      offset: 0x0
+      size:   16777216
+      crc:    c9de64db
+      sha1:   59932c70b43ff8e9264c670f37b3abbe939b7f95
+  user3
+    rom
+      name:   tet-01m.u5
+      offset: 0x0
+      size:   1048576
+      crc:    f78f859b
+      sha1:   b07c85e0453869fe43792f42081f64a5327e58e6
+  user4
+    rom
+      name:   at24c01.u34
+      offset: 0x0
+      size:   128
+      crc:    ba7e503f
+      sha1:   454aa4fdde7d8694d1affaf25cd750fa678686bb
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
   name:    sderby2s
   title:   Super Derby II (satellite board)
   board:   sega/sg1000a
@@ -98,3 +414,170 @@ game
       size:   16384
       crc:    cf29b579
       sha1:   e695da9c61167d1d30b32bd70d342ac23b29f087
+game
+  name:    srmvs
+  title:   Super Real Mahjong VS (Rev A)
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   nus-zsej-1.u2
+      offset: 0x0
+      size:   33554432
+      crc:    dd7dd81f
+      sha1:   ff020fa957a11bf0f18819d16a010f51b4a4cda4
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    srmvsa
+  title:   Super Real Mahjong VS
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   nus-zsej-0.u2
+      offset: 0x0
+      size:   33554432
+      crc:    44f40102
+      sha1:   a78de955f2fcd99dda14e782984368b320eb5415
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    starsldr
+  title:   Star Soldier: Vanishing Earth
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   nus-zhbj-0.u3
+      offset: 0x0
+      size:   12582912
+      crc:    a4edac93
+      sha1:   3794606c008fb69f5d16dcccece94d03da23bf8a
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    twrshaft
+  title:   Tower & Shaft
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   ua3012-all02.u3
+      offset: 0x0
+      size:   16777216
+      crc:    904a91a7
+      sha1:   7dfa3447d2c489c0448c4004dc12d3037c05a0f3
+  user3
+    rom
+      name:   nus-zsij-0.u1
+      offset: 0x0
+      size:   8388608
+      crc:    2389576f
+      sha1:   dc22b2eab4d7a02cb918827a62e6c120b3a84e6c
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
+game
+  name:    vivdolls
+  title:   Vivid Dolls
+  board:   nintendo/aleck64
+  user1
+    rom
+      name:   pifdata.bin
+      offset: 0x0
+      size:   2048
+      crc:    5ec82be9
+      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
+  user2
+    rom
+      name:   nus-zsaj-0.u3
+      offset: 0x0
+      size:   8388608
+      crc:    f3220e29
+      sha1:   06d8b808cc19378b046803f4dc75c7d791b7767f
+  normpoint
+    rom
+      name:   normpnt.rom
+      offset: 0x0
+      size:   128
+      crc:    e7f2a005
+      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
+  normslope
+    rom
+      name:   normslp.rom
+      offset: 0x0
+      size:   128
+      crc:    4f2ae525
+      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
