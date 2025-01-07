@@ -36,7 +36,7 @@ auto GameBrowserWindow::show(shared_pointer<Emulator> emulator) -> void {
     path = {path, "/", node["name"].string(), ".zip"};
 
     if(inode::exists(path)) {
-      games.append({node["title"].string(), node["name"].string(), path});
+      games.append({node["title"].string(), node["name"].string(), node["board"].string(), path});
     }
   }
 
@@ -50,11 +50,13 @@ auto GameBrowserWindow::show(shared_pointer<Emulator> emulator) -> void {
   gameList.reset();
 
   gameList.append(TableViewColumn().setText("Game Title").setExpandable());
+  gameList.append(TableViewColumn().setText("Board").setExpandable());
   gameList.append(TableViewColumn().setText("MAME Name"));
 
   for(auto& game : games) {
     TableViewItem item{&gameList};
     item.append(TableViewCell().setText(game.title));
+    item.append(TableViewCell().setText(game.board));
     item.append(TableViewCell().setText(game.name));
   }
 
