@@ -6,7 +6,7 @@
 
 namespace ares::Memory {
 
-constexpr u32 fixedBufferSize = 128_MiB;
+constexpr u32 fixedBufferSize = 64_MiB;
 
 #if defined(STATIC_ALLOCATION)
 u8 fixedBuffer[fixedBufferSize + 64_KiB];

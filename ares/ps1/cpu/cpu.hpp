@@ -525,7 +525,8 @@ struct CPU : Thread {
     };
 
     auto reset() -> void {
-      for(u32 index : range(1 << 21)) pools[index] = nullptr;
+      pools.reallocate(1 << 21);  //2_MiB * sizeof(void*) = 16_MiB
+      pools.fill();
     }
 
     auto invalidate(u32 address) -> void {
@@ -549,7 +550,7 @@ struct CPU : Thread {
     bool enabled = false;
     bool callInstructionPrologue = false;
     bump_allocator allocator;
-    Pool* pools[1 << 21];  //2_MiB * sizeof(void*) = 16_MiB
+    vector<Pool*> pools;
   } recompiler{*this};
 
   struct Disassembler {

@@ -283,7 +283,8 @@ struct SH2 {
     auto reset() -> void {
       generation = 0;
       blocks.reset();
-      for(u32 index : range(1 << 24)) pools[index] = nullptr;
+      pools.reallocate(1 << 24);
+      pools.fill();
     }
 
     auto invalidateCached() -> void {
@@ -311,7 +312,7 @@ struct SH2 {
     bump_allocator allocator;
     hashset<BlockHashPair> blocks;
     u16 instructions[1 << 7];
-    Pool* pools[1 << 24];
+    vector<Pool*> pools;
   } recompiler{*this};
 
   #include "sh7604/sh7604.hpp"
