@@ -1,6 +1,6 @@
 database
-  revision: 2025-01-06
-  drivers: sega/sg1000a.cpp, nintendo/aleck64.cpp,
+  revision: 2025-01-08
+  drivers: sega/sg1000a.cpp, nintendo/aleck64.cpp, 
   romset: 0.273 (mame0273)
 game
   name:    11beat
@@ -20,31 +20,6 @@ game
       size:   8388608
       crc:    02faa8a7
       sha1:   824911452639cedf6a8186c05cd046e61fc98896
-  normpoint
-    rom
-      name:   normpnt.rom
-      offset: 0x0
-      size:   128
-      crc:    e7f2a005
-      sha1:   c27b4a364a24daeee6e99fd286753fd6216362b4
-  normslope
-    rom
-      name:   normslp.rom
-      offset: 0x0
-      size:   128
-      crc:    4f2ae525
-      sha1:   eab43f8cc52c8551d9cff6fced18ef80eaba6f05
-game
-  name:    aleck64
-  title:   Aleck64 PIF BIOS
-  board:   nintendo/aleck64
-  user1
-    rom
-      name:   pifdata.bin
-      offset: 0x0
-      size:   2048
-      crc:    5ec82be9
-      sha1:   9174eadc0f0ea2654c95fd941406ab46b9dc9bdd
   normpoint
     rom
       name:   normpnt.rom
