@@ -6,35 +6,35 @@ struct starsldr : Aleck64::GameConfig {
     service = 21;
   }
 
-  auto controllerButton(int playerIndex, string button) -> Node::Input::Button {
+  auto controllerButton(int playerIndex, string button) -> bool {
     if(playerIndex == 1) {
-      if(button == "Up"     ) return aleck64.controls.p1up;
-      if(button == "Down"   ) return aleck64.controls.p1down;
-      if(button == "Left"   ) return aleck64.controls.p1left;
-      if(button == "Right"  ) return aleck64.controls.p1right;
-      if(button == "Start"  ) return aleck64.controls.p1start;
-      if(button == "A"      ) return aleck64.controls.p1[0];
-      if(button == "B"      ) return aleck64.controls.p1[1];
-      if(button == "R"      ) return aleck64.controls.p1[2];
-      if(button == "C-Right") return aleck64.controls.p1[3];
+      if(button == "Up"     ) return aleck64.controls.p1up->value();
+      if(button == "Down"   ) return aleck64.controls.p1down->value();
+      if(button == "Left"   ) return aleck64.controls.p1left->value();
+      if(button == "Right"  ) return aleck64.controls.p1right->value();
+      if(button == "Start"  ) return aleck64.controls.p1start->value();
+      if(button == "A"      ) return aleck64.controls.p1[0]->value();
+      if(button == "B"      ) return aleck64.controls.p1[1]->value();
+      if(button == "R"      ) return aleck64.controls.p1[2]->value();
+      if(button == "C-Right") return aleck64.controls.p1[3]->value();
     }
 
     if(playerIndex == 2) {
-      if(button == "Up"     ) return aleck64.controls.p2up;
-      if(button == "Down"   ) return aleck64.controls.p2down;
-      if(button == "Left"   ) return aleck64.controls.p2left;
-      if(button == "Right"  ) return aleck64.controls.p2right;
-      if(button == "Start"  ) return aleck64.controls.p2start;
-      if(button == "A"      ) return aleck64.controls.p2[0];
-      if(button == "B"      ) return aleck64.controls.p2[1];
-      if(button == "R"      ) return aleck64.controls.p2[2];
-      if(button == "C-Right") return aleck64.controls.p2[3];
+      if(button == "Up"     ) return aleck64.controls.p2up->value();
+      if(button == "Down"   ) return aleck64.controls.p2down->value();
+      if(button == "Left"   ) return aleck64.controls.p2left->value();
+      if(button == "Right"  ) return aleck64.controls.p2right->value();
+      if(button == "Start"  ) return aleck64.controls.p2start->value();
+      if(button == "A"      ) return aleck64.controls.p2[0]->value();
+      if(button == "B"      ) return aleck64.controls.p2[1]->value();
+      if(button == "R"      ) return aleck64.controls.p2[2]->value();
+      if(button == "C-Right") return aleck64.controls.p2[3]->value();
     }
 
     return {};
   }
 
-  auto controllerAxis(int playerIndex, string axis) -> Node::Input::Axis {
+  auto controllerAxis(int playerIndex, string axis) -> s64 {
     return {};
   }
 

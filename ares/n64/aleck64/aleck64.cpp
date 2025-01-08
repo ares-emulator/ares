@@ -5,6 +5,8 @@ namespace ares::Nintendo64 {
 
   #include "io.cpp"
   #include "controls.cpp"
+
+  #include "game-config/11beat.hpp"
   #include "game-config/starsldr.hpp"
 
   auto Aleck64::load(Node::Object parent) -> void {
@@ -29,7 +31,10 @@ namespace ares::Nintendo64 {
 
       //NOTE: We can't do this at 'load' time because cartridges are not attached yet...
       auto name = cartridge.pak->attribute("name");
+
+      if(name == "11beat") gameConfig = new _11beat();
       if(name == "starsldr") gameConfig = new starsldr();
+
       gameConfig->dipSwitches(dipSwitchNode);
 
       sdram.fill();

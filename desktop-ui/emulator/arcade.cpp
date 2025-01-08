@@ -36,12 +36,12 @@ Arcade::Arcade() {
       device.digital({"Player ", n + 1, " Button 9"}, virtualPorts[n].pad.lstick_click);
       device.digital({"Player ", n + 1, " Start"   }, virtualPorts[n].pad.start);
       device.digital({"Player ", n + 1, " Coin"    }, virtualPorts[n].pad.select);
-      device.analog ({"Player ", n + 1,  "Y-Axis " }, virtualPorts[n].pad.lstick_up);
-      device.analog ({"Player ", n + 1,  "Y-Axis +"}, virtualPorts[n].pad.lstick_down);
-      device.analog ({"Player ", n + 1,  "X-Axis -"}, virtualPorts[n].pad.lstick_left);
-      device.analog ({"Player ", n + 1,  "X-Axis +"}, virtualPorts[n].pad.lstick_right);
-      device.analog ({"Player ", n + 1,  "X-Axis"  }, virtualPorts[n].pad.lstick_left, virtualPorts[n].pad.lstick_right);
-      device.analog ({"Player ", n + 1,  "Y-Axis"  }, virtualPorts[n].pad.lstick_up,   virtualPorts[n].pad.lstick_down);
+      device.analog ({"Player ", n + 1, " Y-Axis -"}, virtualPorts[n].pad.lstick_up);
+      device.analog ({"Player ", n + 1, " Y-Axis +"}, virtualPorts[n].pad.lstick_down);
+      device.analog ({"Player ", n + 1, " X-Axis -"}, virtualPorts[n].pad.lstick_left);
+      device.analog ({"Player ", n + 1, " X-Axis +"}, virtualPorts[n].pad.lstick_right);
+      device.analog ({"Player ", n + 1, " X-Axis"  }, virtualPorts[n].pad.lstick_left, virtualPorts[n].pad.lstick_right);
+      device.analog ({"Player ", n + 1, " Y-Axis"  }, virtualPorts[n].pad.lstick_up,   virtualPorts[n].pad.lstick_down);
     }
     port.append(device); }
 
