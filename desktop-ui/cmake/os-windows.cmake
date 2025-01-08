@@ -3,10 +3,7 @@ target_sources(desktop-ui PRIVATE resource/ares.rc resource/ares.Manifest)
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT desktop-ui)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_link_libraries(
-    desktop-ui
-    PRIVATE mingw32
-  )
+  target_link_libraries(desktop-ui PRIVATE mingw32)
 endif()
 
 if(ARES_ENABLE_LIBRASHADER)

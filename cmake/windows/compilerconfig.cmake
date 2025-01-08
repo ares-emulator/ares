@@ -4,6 +4,12 @@ endif()
 
 include_guard(GLOBAL)
 
+option(
+  ARES_BUILD_LOCAL
+  "Allows the compiler to generate code optimized for the target machine; increases performance."
+  ON
+)
+
 include(ccache)
 include(compiler_common)
 
@@ -53,7 +59,6 @@ set(
 
 set(
   _ares_clang_cl_c_cxx_options
-  -Wno-unused-function
   -Wno-reorder-ctor
   -Wno-missing-braces
   -Wno-char-subscripts
@@ -69,30 +74,36 @@ if(MSVC)
   string(REPLACE "/Ob1" "/Ob2" CMAKE_C_FLAGS_RELWITHDEBINFO ${CMAKE_C_FLAGS_RELWITHDEBINFO})
 endif()
 
-# add compiler flags
+# add general compiler flags and optimizations
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # we are on either msys2/mingw clang, or clang-cl
   # add common options
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:C>:${_ares_clang_c_options}>"
     "$<$<COMPILE_LANGUAGE:CXX>:${_ares_clang_cxx_options}>"
-    "$<$<COMPILE_LANGUAGE:C,CXX>:${_ares_clang_cl_c_cxx_options}>"
   )
   if(NOT MSVC)
     # we are on msys2 clang
     # statically link libc++
     add_link_options(-static-libstdc++)
+
     # msys2/mingw-specific invocations to make clang emit debug symbols
     set(_ares_mingw_clang_debug_compile_options -g -gcodeview)
     set(_ares_mingw_clang_debug_link_options -fuse-ld=lld -g -Wl,--pdb=)
     add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_clang_debug_compile_options}>")
     add_link_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_clang_debug_link_options}>")
-    # clang-cl does not understand -fwrapv, but we do want it on msys2 clang
+
     add_compile_options(-fwrapv)
   else()
+    # we are on clang-cl
     # generate PDBs rather than embed debug symbols
     set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT ProgramDatabase)
-    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${_ares_msvc_cxx_options}>")
+
+    add_compile_options(
+      "$<$<COMPILE_LANGUAGE:CXX>:${_ares_msvc_cxx_options}>"
+      "$<$<COMPILE_LANGUAGE:C,CXX>:${_ares_clang_cl_c_cxx_options}>"
+    )
+
     # work around https://gitlab.kitware.com/cmake/cmake/-/issues/26559
     add_compile_options($<$<AND:$<BOOL:${ENABLE_IPO}>,$<NOT:$<CONFIG:Debug>>>:-flto=thin>)
     add_link_options(
@@ -102,19 +113,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       $<$<NOT:$<CONFIG:Debug>>:/OPT:REF>
       $<$<NOT:$<CONFIG:Debug>>:/OPT:ICF>
     )
-    # add -fwrapv
-    add_compile_options(
-      "$<$<COMPILE_LANGUAGE:C,CXX>:/clang:-fwrapv>"
-    )
-  endif()
 
-  # optimizations
-  if(ARES_BUILD_LOCAL)
-    add_compile_options(-march=native)
-  else()
-    if(${arch} STREQUAL x64)
-      add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-march=x86-64-v2>")
-    endif()
+    # add -fwrapv
+    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:/clang:-fwrapv>")
   endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:${_ares_msvc_cxx_options}>")
@@ -122,9 +123,24 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_link_options(/WX)
   endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  add_compile_options(
-    ${_ares_gcc_common_options}
-  )
+  add_compile_options(${_ares_gcc_common_options})
+endif()
+
+# arch/machine-specific optimizations
+if(ARES_BUILD_LOCAL)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options($<$<NOT:$<CONFIG:Debug>>:-march=native>)
+  else()
+    # todo: arch optimizations on msvc
+  endif()
+else()
+  if(${arch} STREQUAL x64)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-march=x86-64-v2>")
+    endif()
+  else()
+    # todo: arm64 arch baseline
+  endif()
 endif()
 
 if(NOT MINGW)

@@ -2,6 +2,7 @@
 
 include_guard(GLOBAL)
 
+# Required to avoid us finding a system SDL2.framework before our provided SDL2.dylib
 set(CMAKE_FIND_FRAMEWORK LAST)
 
 # Set empty codesigning team if not specified as cache variable
