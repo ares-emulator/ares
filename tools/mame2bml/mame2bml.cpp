@@ -48,6 +48,8 @@ auto Mame2BML::main(Arguments arguments) -> void {
         if(machine.name() != "machine") continue;
         string driverName = machine["sourcefile"].string();
         if(!driverNames.find(driverName)) continue;
+        string IsBIOS = machine["isbios"].string();
+        if(IsBIOS == "yes") continue;
 
         print("found game: ", machine["name"].string(), " (", machine["description"].string(), ")\n");
 
