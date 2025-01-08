@@ -35,6 +35,8 @@ auto Aleck64::Controls::load(Node::Object parent) -> void {
 auto Aleck64::Controls::poll() -> void {
   platform->input(service);
 
+  platform->input(p1x);
+  platform->input(p1y);
   platform->input(p1up);
   platform->input(p1down);
   platform->input(p1left);
@@ -46,6 +48,8 @@ auto Aleck64::Controls::poll() -> void {
     platform->input(p1[n]);
   }
 
+  platform->input(p2x);
+  platform->input(p2y);
   platform->input(p2up);
   platform->input(p2down);
   platform->input(p2left);
@@ -60,14 +64,14 @@ auto Aleck64::Controls::poll() -> void {
 
 auto Aleck64::Controls::controllerButton(int playerIndex, string button) -> bool {
   if(auto input = self.gameConfig->controllerButton(playerIndex, button)) {
-    return input->value();
+    return input;
   }
   return 0;
 }
 
 auto Aleck64::Controls::controllerAxis(int playerIndex, string axis) -> s64 {
   if(auto input = self.gameConfig->controllerAxis(playerIndex, axis)) {
-    return input->value();
+    return input;
   }
 
   return 0;

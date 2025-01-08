@@ -101,8 +101,8 @@ struct Aleck64 : Memory::RCP<Aleck64> {
     maybe<int> p2coin;
     maybe<int> service;
 
-    virtual auto controllerButton(int playerIndex, string button) -> Node::Input::Button = 0;
-    virtual auto controllerAxis(int playerIndex, string axis) -> Node::Input::Axis = 0;
+    virtual auto controllerButton(int playerIndex, string button) -> bool = 0;
+    virtual auto controllerAxis(int playerIndex, string axis) -> s64 = 0;
   };
 
   shared_pointer<GameConfig> gameConfig;
