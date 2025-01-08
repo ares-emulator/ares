@@ -481,6 +481,43 @@ auto Presentation::refreshSystemMenu() -> void {
   emulator->load(systemMenu);
   if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
 
+  //Build the Dip Switch menu if the emulator core has a DIP Switches node
+  if(auto dipSwitches = ares::Node::find<ares::Node::Object>(emulator->root, "DIP Switches")) {
+    Menu dipSwitchMenu;
+    dipSwitchMenu.setText("DIP Switches");
+    
+    for(auto dip : ares::Node::enumerate<ares::Node::Setting::Boolean>(emulator->root)) {
+      MenuCheckItem item{&dipSwitchMenu};
+      item.setText(dip->name());
+	    item.setAttribute<ares::Node::Setting::Boolean>("dip", dip);
+      item.setChecked(dip->value());
+      item.onToggle([=] {
+		    auto dip = item.attribute<ares::Node::Setting::Boolean>("dip");
+        dip->setValue(item.checked());
+      });
+    }
+
+    for(auto& dip : ares::Node::enumerate<ares::Node::Setting::String>(emulator->root)) {
+      Group group;
+      Menu item{&dipSwitchMenu};
+      item.setAttribute<ares::Node::Setting::String>("dip", dip);
+      item.setText(dip->name());
+      for(auto option : dip->readAllowedValues()) {
+        MenuRadioItem optionItem{&item};
+        optionItem.setText(option);
+        group.append(optionItem);
+        if(dip->value() == option) optionItem.setChecked();
+        optionItem.onActivate([=] {
+		      auto dip = item.attribute<ares::Node::Setting::String>("dip");
+		      dip->setValue(optionItem.text());
+        });
+      }
+    }
+
+    if(dipSwitchMenu.actionCount() > 0) systemMenu.append(dipSwitchMenu);
+  }
+  if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
+
   u32 portsFound = 0;
   for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {
     //do not add unsupported ports to the port menu
