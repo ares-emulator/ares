@@ -1,4 +1,4 @@
-struct Nintendo64DD : Emulator {
+struct Nintendo64DD : Nintendo64 {
   Nintendo64DD();
   auto load() -> bool override;
   auto load(Menu) -> void override;

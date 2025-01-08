@@ -31,6 +31,7 @@ struct Emulator {
   virtual auto notify(const string& message) -> void {}
   virtual auto arcade() -> bool { return false; }
   virtual auto group() -> string { return manufacturer; }
+  virtual auto portMenu(Menu& portMenu, ares::Node::Port port) -> void {}
 
   struct Firmware {
     string type;
