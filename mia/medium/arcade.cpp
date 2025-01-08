@@ -21,6 +21,7 @@ auto Arcade::load(string location) -> bool {
 
     pak = new vfs::directory;
     pak->setAttribute("board",  document["game/board" ].string());
+    pak->setAttribute("name",   document["game/name" ].string());
     pak->setAttribute("title",  document["game/title"].string());
     pak->setAttribute("region", document["game/region"].string());
     pak->append("manifest.bml", manifest);
@@ -44,6 +45,7 @@ auto Arcade::load(string location) -> bool {
 
     pak = new vfs::directory;
     pak->setAttribute("board",  document["game/board" ].string());
+    pak->setAttribute("name",   document["game/name" ].string());
     pak->setAttribute("title",  document["game/title"].string());
     pak->setAttribute("region", document["game/region"].string());
     pak->setAttribute("cic",    "CIC-NUS-5101");

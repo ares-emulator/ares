@@ -10,10 +10,17 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port = parent->append<Node::Port>(name);
   port->setFamily("Nintendo 64");
   port->setType("Controller");
-  port->setHotSwappable(true);
+
+  if(Model::Aleck64()) {
+    port->setHotSwappable(false);
+    port->setSupported({"Aleck64"});
+  } else {
+    port->setHotSwappable(true);
+    port->setSupported({"Gamepad", "Mouse"});
+  }
+
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setDisconnect([&] { device.reset(); });
-  port->setSupported({"Gamepad", "Mouse"});
 }
 
 auto ControllerPort::unload() -> void {
@@ -28,6 +35,7 @@ auto ControllerPort::save() -> void {
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
   if(name == "Gamepad") device = new Gamepad(port);
   if(name == "Mouse"  ) device = new Mouse(port);
+  if(name == "Aleck64") device = new Aleck64Controls(port);
   if(device) return device->node;
   return {};
 }

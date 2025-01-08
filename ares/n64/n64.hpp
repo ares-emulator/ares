@@ -44,6 +44,11 @@ namespace ares::Nintendo64 {
   enum : u32 { Read, Write };
   enum : u32 { Byte = 1, Half = 2, Word = 4, Dual = 8, DCache = 16, ICache = 32 };
 
+  struct Model {
+    inline static auto Nintendo64() -> bool;
+    inline static auto Aleck64() -> bool;
+  };
+
   struct Region {
     static inline auto NTSC() -> bool;
     static inline auto PAL() -> bool;
@@ -97,6 +102,7 @@ namespace ares::Nintendo64 {
   #include <n64/cic/cic.hpp>
   #include <n64/controller/controller.hpp>
   #include <n64/dd/dd.hpp>
+  #include <n64/aleck64/aleck64.hpp>
   #include <n64/mi/mi.hpp>
   #include <n64/vi/vi.hpp>
   #include <n64/ai/ai.hpp>
