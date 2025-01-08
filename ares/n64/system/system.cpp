@@ -66,14 +66,12 @@ auto System::run() -> void {
 }
 
 auto System::load(Node::System& root, string name) -> bool {
-  print("[N64::load] name: ", name, "\n");
   if(node) unload();
 
   information = {};
   information.name = "Nintendo 64";
 
   if(name == "[SETA] Aleck 64") {
-    print("[N64::load] Aleck 64\n");
     information.name = "Arcade";
     information.model = Model::Aleck64;
     information.region = Region::NTSC;
@@ -92,7 +90,6 @@ auto System::load(Node::System& root, string name) -> bool {
     information.videoFrequency = 49'656'530;
   }
 
-  print("Creating system node for ", information.name, "\n");
   node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
@@ -103,8 +100,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setUnserialize({&System::unserialize, this});
   root = node;
   if(!node->setPak(pak = platform->pak(node))) return false;
-
-  print("[N64::load] pak: ", pak->name(), "\n");
 
   cartridgeSlot.load(node);
   controllerPort1.load(node);
