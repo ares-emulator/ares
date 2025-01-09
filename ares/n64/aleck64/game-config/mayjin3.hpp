@@ -1,11 +1,10 @@
-struct _11beat : Aleck64::GameConfig {
+struct mayjin3 : Aleck64::GameConfig {
   auto controllerButton(int playerIndex, string button) -> bool {
-    //NOTE: D-Pad must be disconnected (high) for this game to boot
     if(playerIndex == 1) {
-      if(button == "Up"     ) return 1;
-      if(button == "Down"   ) return 1;
-      if(button == "Left"   ) return 1;
-      if(button == "Right"  ) return 1;
+      if(button == "Up"     ) return aleck64.controls.p1up->value();
+      if(button == "Down"   ) return aleck64.controls.p1down->value();
+      if(button == "Left"   ) return aleck64.controls.p1left->value();
+      if(button == "Right"  ) return aleck64.controls.p1right->value();
       if(button == "Start"  ) return aleck64.controls.p1start->value();
       if(button == "A"      ) return aleck64.controls.p1[0]->value();
       if(button == "B"      ) return aleck64.controls.p1[1]->value();
@@ -14,10 +13,10 @@ struct _11beat : Aleck64::GameConfig {
     }
 
     if(playerIndex == 2) {
-      if(button == "Up"     ) return 1;
-      if(button == "Down"   ) return 1;
-      if(button == "Left"   ) return 1;
-      if(button == "Right"  ) return 1;
+      if(button == "Up"     ) return aleck64.controls.p2up->value();
+      if(button == "Down"   ) return aleck64.controls.p2down->value();
+      if(button == "Left"   ) return aleck64.controls.p2left->value();
+      if(button == "Right"  ) return aleck64.controls.p2right->value();
       if(button == "Start"  ) return aleck64.controls.p2start->value();
       if(button == "A"      ) return aleck64.controls.p2[0]->value();
       if(button == "B"      ) return aleck64.controls.p2[1]->value();
@@ -29,16 +28,6 @@ struct _11beat : Aleck64::GameConfig {
   }
 
   auto controllerAxis(int playerIndex, string axis) -> s64 {
-    if(playerIndex == 1) {
-      if(axis == "X") return aleck64.controls.p1x->value();
-      if(axis == "Y") return aleck64.controls.p1y->value();
-    }
-
-    if(playerIndex == 2) {
-      if(axis == "X") return aleck64.controls.p2x->value();
-      if(axis == "Y") return aleck64.controls.p2y->value();
-    }
-
     return {};
   }
 

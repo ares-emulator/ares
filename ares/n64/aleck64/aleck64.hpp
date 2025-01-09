@@ -60,6 +60,7 @@ struct Aleck64 : Memory::RCP<Aleck64> {
     Node::Object node;
 
     Node::Input::Button service;
+    Node::Input::Button test;
 
     Node::Input::Axis p1x;
     Node::Input::Axis p1y;
@@ -87,6 +88,7 @@ struct Aleck64 : Memory::RCP<Aleck64> {
 
     auto controllerButton(int playerIndex, string button) -> bool;
     auto controllerAxis(int playerIndex, string axis) -> s64;
+    auto ioPortControls(int port) -> n32;
 
   } controls{*this};
 
@@ -96,13 +98,9 @@ struct Aleck64 : Memory::RCP<Aleck64> {
     virtual ~GameConfig() = default;
     virtual auto dipSwitches(Node::Object parent) -> void = 0;
 
-    //'Special' input bit indices
-    maybe<int> p1coin;
-    maybe<int> p2coin;
-    maybe<int> service;
-
-    virtual auto controllerButton(int playerIndex, string button) -> bool = 0;
-    virtual auto controllerAxis(int playerIndex, string axis) -> s64 = 0;
+    virtual auto controllerButton(int playerIndex, string button) -> bool { return 0; }
+    virtual auto controllerAxis(int playerIndex, string axis) -> s64 { return 0; };
+    virtual auto ioPortControls(int port) -> n32 { return 0xffff'ffff; }
   };
 
   shared_pointer<GameConfig> gameConfig;

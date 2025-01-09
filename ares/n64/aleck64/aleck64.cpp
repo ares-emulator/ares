@@ -8,6 +8,11 @@ namespace ares::Nintendo64 {
 
   #include "game-config/11beat.hpp"
   #include "game-config/starsldr.hpp"
+  #include "game-config/doncdoon.hpp"
+  #include "game-config/kurufev.hpp"
+  #include "game-config/mayjin3.hpp"
+  #include "game-config/vivdolls.hpp"
+  #include "game-config/twrshaft.hpp"
 
   auto Aleck64::load(Node::Object parent) -> void {
     sdram.allocate(4_MiB);
@@ -32,10 +37,15 @@ namespace ares::Nintendo64 {
       //NOTE: We can't do this at 'load' time because cartridges are not attached yet...
       auto name = cartridge.pak->attribute("name");
 
-      if(name == "11beat") gameConfig = new _11beat();
+      if(name == "11beat"  ) gameConfig = new _11beat();
       if(name == "starsldr") gameConfig = new starsldr();
+      if(name == "doncdoon") gameConfig = new doncdoon();
+      if(name == "kurufev" ) gameConfig = new kurufev();
+      if(name == "mayjin3" ) gameConfig = new mayjin3();
+      if(name == "vivdolls") gameConfig = new vivdolls();
+      if(name == "twrshaft") gameConfig = new twrshaft();
 
-      gameConfig->dipSwitches(dipSwitchNode);
+      if(gameConfig) gameConfig->dipSwitches(dipSwitchNode);
 
       sdram.fill();
     }
