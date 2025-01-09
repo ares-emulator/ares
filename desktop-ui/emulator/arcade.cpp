@@ -49,6 +49,8 @@ Arcade::Arcade() {
 }
 
 auto Arcade::load() -> bool {
+  systemPakName = "Arcade";
+
   game = mia::Medium::create("Arcade");
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
