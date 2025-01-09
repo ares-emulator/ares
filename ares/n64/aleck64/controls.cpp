@@ -2,6 +2,7 @@ auto Aleck64::Controls::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Controls");
 
   service = node->append<Node::Input::Button>("Service");
+  test    = node->append<Node::Input::Button>("Test");
 
   p1x     = node->append<Node::Input::Axis>  ("Player 1 X-Axis");
   p1y     = node->append<Node::Input::Axis>  ("Player 1 Y-Axis");
@@ -34,6 +35,7 @@ auto Aleck64::Controls::load(Node::Object parent) -> void {
 
 auto Aleck64::Controls::poll() -> void {
   platform->input(service);
+  platform->input(test);
 
   platform->input(p1x);
   platform->input(p1y);
@@ -63,6 +65,7 @@ auto Aleck64::Controls::poll() -> void {
 }
 
 auto Aleck64::Controls::controllerButton(int playerIndex, string button) -> bool {
+  if(!self.gameConfig) return 0;
   if(auto input = self.gameConfig->controllerButton(playerIndex, button)) {
     return input;
   }
@@ -70,9 +73,19 @@ auto Aleck64::Controls::controllerButton(int playerIndex, string button) -> bool
 }
 
 auto Aleck64::Controls::controllerAxis(int playerIndex, string axis) -> s64 {
+  if(!self.gameConfig) return 0;
   if(auto input = self.gameConfig->controllerAxis(playerIndex, axis)) {
     return input;
   }
 
   return 0;
+}
+
+auto Aleck64::Controls::ioPortControls(int port) -> n32 {
+  if(!self.gameConfig) return 0xffff'ffff;
+  if(auto input = self.gameConfig->ioPortControls(port)) {
+    return input;
+  }
+
+  return 0xffff'ffff;
 }

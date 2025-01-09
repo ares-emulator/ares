@@ -1,11 +1,4 @@
 struct starsldr : Aleck64::GameConfig {
-  starsldr() {
-    //Define port bit indexes for special inputs
-    p1coin = 18;
-    p2coin = 19;
-    service = 21;
-  }
-
   auto controllerButton(int playerIndex, string button) -> bool {
     if(playerIndex == 1) {
       if(button == "Up"     ) return aleck64.controls.p1up->value();
@@ -36,6 +29,19 @@ struct starsldr : Aleck64::GameConfig {
 
   auto controllerAxis(int playerIndex, string axis) -> s64 {
     return {};
+  }
+
+  auto ioPortControls(int port) -> n32 {
+    n32 value = 0xffff'ffff;
+
+    if(port == 2) {
+      value.bit(18) = !aleck64.controls.p1coin->value();
+      value.bit(19) = !aleck64.controls.p2coin->value();
+      value.bit(20) = !aleck64.controls.service->value();
+      value.bit(21) = !aleck64.controls.test->value();
+    }
+
+    return value;
   }
 
   auto dipSwitches(Node::Object parent) -> void {

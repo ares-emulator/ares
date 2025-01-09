@@ -18,7 +18,8 @@ Arcade::Arcade() {
   { InputPort port{string{"Arcade"}};
 
   { InputDevice device{"Controls"} ;
-    device.digital("Service", virtualPorts[0].pad.rstick_click);
+    device.digital("Service", virtualPorts[0].pad.lstick_click);
+    device.digital("Test",    virtualPorts[0].pad.rstick_click);
     for(auto n : range(2)) {
       device.digital({"Player ", n + 1, " Up"      }, virtualPorts[n].pad.up);
       device.digital({"Player ", n + 1, " Down"    }, virtualPorts[n].pad.down);
@@ -30,10 +31,8 @@ Arcade::Arcade() {
       device.digital({"Player ", n + 1, " Button 4"}, virtualPorts[n].pad.north);
       device.digital({"Player ", n + 1, " Button 5"}, virtualPorts[n].pad.l_bumper);
       device.digital({"Player ", n + 1, " Button 6"}, virtualPorts[n].pad.r_bumper);
-      device.digital({"Player ", n + 1, " Button 7"}, virtualPorts[n].pad.l_trigger)
-      ;
+      device.digital({"Player ", n + 1, " Button 7"}, virtualPorts[n].pad.l_trigger);
       device.digital({"Player ", n + 1, " Button 8"}, virtualPorts[n].pad.r_trigger);
-      device.digital({"Player ", n + 1, " Button 9"}, virtualPorts[n].pad.lstick_click);
       device.digital({"Player ", n + 1, " Start"   }, virtualPorts[n].pad.start);
       device.digital({"Player ", n + 1, " Coin"    }, virtualPorts[n].pad.select);
       device.analog ({"Player ", n + 1, " Y-Axis -"}, virtualPorts[n].pad.lstick_up);

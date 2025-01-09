@@ -7,7 +7,9 @@ auto Aleck64::readWord(u32 address, Thread& thread) -> u32 {
   if(address <= 0xc080'0fff) {
     switch (address) {
       case 0xc080'0000: return readPort1();
+      case 0xc080'0002: return readPort1();
       case 0xc080'0004: return readPort2();
+      case 0xc080'0006: return readPort2();
     }
   }
 
@@ -32,8 +34,7 @@ auto Aleck64::writeWord(u32 address, u32 data, Thread& thread) -> void {
 auto Aleck64::readPort1() -> u32 {
   n32 value = 0xffffffff;
 
-  //TODO: Bits 0-15 are inputs for games that lack 'standard' inputs
-
+  value.bit( 0, 15) = controls.ioPortControls(1);
   value.bit(16, 23) = dipSwitch[1];
   value.bit(24, 31) = dipSwitch[0];
 
@@ -41,11 +42,5 @@ auto Aleck64::readPort1() -> u32 {
 }
 
 auto Aleck64::readPort2() -> u32 {
-  n32 value = 0xffffffff;
-
-  if(gameConfig->p1coin)  value.bit(*gameConfig->p1coin ) = !controls.p1coin->value();
-  if(gameConfig->p2coin ) value.bit(*gameConfig->p2coin ) = !controls.p2coin->value();
-  if(gameConfig->service) value.bit(*gameConfig->service) = !controls.service->value();
-
-  return value;
+  return controls.ioPortControls(2);
 }
