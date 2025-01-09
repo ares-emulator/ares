@@ -49,6 +49,7 @@ Arcade::Arcade() {
 }
 
 auto Arcade::load() -> LoadResult {
+  systemPakName = "Arcade";
   game = mia::Medium::create("Arcade");
   string location = Emulator::load(game, configuration.game);
   if(!location) return noFileSelected;

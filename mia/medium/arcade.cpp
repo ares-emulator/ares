@@ -53,7 +53,7 @@ auto Arcade::load(string location) -> LoadResult {
     pak->setAttribute("cic",    "CIC-NUS-5101");
     pak->append("manifest.bml", manifest);
     pak->append("program.rom",  rom);
-    pak->append("pif.rom", pif);
+    pak->append("pif.aleck64.rom", pif);
 
     return true;
   }

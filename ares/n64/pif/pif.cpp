@@ -33,7 +33,7 @@ auto PIF::power(bool reset) -> void {
   Thread::reset();
 
   if(Model::Aleck64()) {
-    string pifrom = "pif.rom";
+    string pifrom = "pif.aleck64.rom";
     if (auto fp = cartridge.pak->read(pifrom)) {
       rom.load(fp);
     }
