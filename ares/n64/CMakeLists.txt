@@ -57,6 +57,22 @@ ares_add_sources(
 
 ares_add_sources(
   CORE #
+  n64
+  INCLUDED #
+  aleck64/aleck64.hpp
+  aleck64/controls.cpp
+  aleck64/io.cpp
+  aleck64/game-config/11beat.hpp
+  aleck64/game-config/doncdoon.hpp
+  aleck64/game-config/kurufev.hpp
+  aleck64/game-config/mayjin3.hpp
+  aleck64/game-config/starsldr.hpp
+  aleck64/game-config/twrshaft.hpp
+  aleck64/game-config/vivdolls.hpp
+)
+
+ares_add_sources(
+  CORE #
     n64
   INCLUDED #
     cartridge/cartridge.hpp
@@ -87,6 +103,14 @@ ares_add_sources(
     controller/controller.hpp
     controller/port.cpp
     controller/port.hpp
+)
+
+ares_add_sources(
+  CORE #
+  n64
+  INCLUDED #
+  controller/aleck64/aleck64.cpp
+  controller/aleck64/aleck64.hpp
 )
 
 ares_add_sources(
