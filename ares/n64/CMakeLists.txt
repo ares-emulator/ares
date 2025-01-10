@@ -69,6 +69,9 @@ ares_add_sources(
   aleck64/game-config/starsldr.hpp
   aleck64/game-config/twrshaft.hpp
   aleck64/game-config/vivdolls.hpp
+  aleck64/game-config/hipai.hpp
+  aleck64/game-config/hipai2.hpp
+  aleck64/game-config/srmvs.hpp
 )
 
 ares_add_sources(

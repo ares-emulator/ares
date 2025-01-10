@@ -5,6 +5,7 @@ struct Arcade : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto group() -> string override { return "Arcade"; }
   auto arcade() -> bool override { return true; }
+  auto input(ares::Node::Input::Input) -> void override;
   string systemPakName = "Arcade";
   string gamePakName = "Arcade";
 };
@@ -128,4 +129,38 @@ auto Arcade::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == systemPakName) return system->pak;
   if(node->name() == gamePakName) return game->pak;
   return {};
+}
+
+auto Arcade::input(ares::Node::Input::Input input) -> void {
+  if(input->name().beginsWith("Mahjong")) {
+    auto button = input->cast<ares::Node::Input::Button>();
+    if(input->name() == "Mahjong A")    return button->setValue(inputKeyboard("A"));
+    if(input->name() == "Mahjong B")    return button->setValue(inputKeyboard("B"));
+    if(input->name() == "Mahjong C")    return button->setValue(inputKeyboard("C"));
+    if(input->name() == "Mahjong D")    return button->setValue(inputKeyboard("D"));
+    if(input->name() == "Mahjong E")    return button->setValue(inputKeyboard("E"));
+    if(input->name() == "Mahjong F")    return button->setValue(inputKeyboard("F"));
+    if(input->name() == "Mahjong G")    return button->setValue(inputKeyboard("G"));
+    if(input->name() == "Mahjong H")    return button->setValue(inputKeyboard("H"));
+    if(input->name() == "Mahjong I")    return button->setValue(inputKeyboard("I"));
+    if(input->name() == "Mahjong J")    return button->setValue(inputKeyboard("J"));
+    if(input->name() == "Mahjong K")    return button->setValue(inputKeyboard("K"));
+    if(input->name() == "Mahjong L")    return button->setValue(inputKeyboard("L"));
+    if(input->name() == "Mahjong M")    return button->setValue(inputKeyboard("M"));
+    if(input->name() == "Mahjong N")    return button->setValue(inputKeyboard("N"));
+    if(input->name() == "Mahjong カン")  return button->setValue(inputKeyboard("T"));
+    if(input->name() == "Mahjong ポン")  return button->setValue(inputKeyboard("Y"));
+    if(input->name() == "Mahjong チー")  return button->setValue(inputKeyboard("U"));
+    if(input->name() == "Mahjong リーチ") return button->setValue(inputKeyboard("O"));
+    if(input->name() == "Mahjong ロン")  return button->setValue(inputKeyboard("P"));
+  }
+
+  auto device = ares::Node::parent(input);
+  if(!device) return;
+
+  auto port = ares::Node::parent(device);
+  if(!port) return;
+
+  return Emulator::input(input);
+
 }

@@ -13,6 +13,9 @@ namespace ares::Nintendo64 {
   #include "game-config/mayjin3.hpp"
   #include "game-config/vivdolls.hpp"
   #include "game-config/twrshaft.hpp"
+  #include "game-config/hipai.hpp"
+  #include "game-config/hipai2.hpp"
+  #include "game-config/srmvs.hpp"
 
   auto Aleck64::load(Node::Object parent) -> void {
     sdram.allocate(4_MiB);
@@ -44,6 +47,10 @@ namespace ares::Nintendo64 {
       if(name == "mayjin3" ) gameConfig = new mayjin3();
       if(name == "vivdolls") gameConfig = new vivdolls();
       if(name == "twrshaft") gameConfig = new twrshaft();
+      if(name == "hipai"   ) gameConfig = new hipai();
+      if(name == "hipai2"  ) gameConfig = new hipai2();
+      if(name == "srmvs"   ) gameConfig = new srmvs();
+      if(name == "srmvsa"  ) gameConfig = new srmvs();
 
       if(gameConfig) gameConfig->dipSwitches(dipSwitchNode);
 

@@ -52,18 +52,18 @@ struct vivdolls : Aleck64::GameConfig {
     testMode->modify(testMode->value());
 
     Node::Setting::String coinage = parent->append<Node::Setting::String>("Coinage", "1 Coin 1 Credit", [&](auto value) {
-      if(value == "1 Coin 1 Credit"  ) aleck64.dipSwitch[0].bit(0,2) = 7;
-      if(value == "1 Coin 2 Credits" ) aleck64.dipSwitch[0].bit(0,2) = 3;
-      if(value == "1 Coin 3 Credits" ) aleck64.dipSwitch[0].bit(0,2) = 5;
-      if(value == "1 Coin 4 Credits" ) aleck64.dipSwitch[0].bit(0,2) = 1;
-      if(value == "2 Coins 1 Credit" ) aleck64.dipSwitch[0].bit(0,2) = 6;
-      if(value == "3 Coins 1 Credits") aleck64.dipSwitch[0].bit(0,2) = 2;
-      if(value == "4 Coins 1 Credits") aleck64.dipSwitch[0].bit(0,2) = 4;
-      if(value == "5 Coins 1 Credits") aleck64.dipSwitch[0].bit(0,2) = 0;
+      if(value == "1 Coin 1 Credit" ) aleck64.dipSwitch[0].bit(0,2) = 7;
+      if(value == "1 Coin 2 Credits") aleck64.dipSwitch[0].bit(0,2) = 3;
+      if(value == "1 Coin 3 Credits") aleck64.dipSwitch[0].bit(0,2) = 5;
+      if(value == "1 Coin 4 Credits") aleck64.dipSwitch[0].bit(0,2) = 1;
+      if(value == "2 Coins 1 Credit") aleck64.dipSwitch[0].bit(0,2) = 6;
+      if(value == "3 Coins 1 Credit") aleck64.dipSwitch[0].bit(0,2) = 2;
+      if(value == "4 Coins 1 Credit") aleck64.dipSwitch[0].bit(0,2) = 4;
+      if(value == "5 Coins 1 Credit") aleck64.dipSwitch[0].bit(0,2) = 0;
     });
 
     coinage->setAllowedValues({ "1 Coin 1 Credit",  "1 Coin 2 Credits",  "1 Coin 3 Credits",  "1 Coin 4 Credits",
-                                "2 Coins 1 Credit", "3 Coins 1 Credits", "4 Coins 1 Credits", "5 Coins 1 Credits" });
+                                "2 Coins 1 Credit", "3 Coins 1 Credit", "4 Coins 1 Credit", "5 Coins 1 Credit" });
     coinage->setDynamic(true);
     coinage->modify(coinage->value());
 
