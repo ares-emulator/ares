@@ -5,11 +5,10 @@ auto Aleck64::readWord(u32 address, Thread& thread) -> u32 {
 
   controls.poll();
   if(address <= 0xc080'0fff) {
-    switch (address) {
+    switch (address & 0xffff'fffc) {
       case 0xc080'0000: return readPort1();
-      case 0xc080'0002: return readPort1();
       case 0xc080'0004: return readPort2();
-      case 0xc080'0006: return readPort2();
+      case 0xc080'0008: return readPort3();
     }
   }
 
@@ -23,12 +22,13 @@ auto Aleck64::writeWord(u32 address, u32 data, Thread& thread) -> void {
   }
 
   if(address <= 0xc080'0fff) {
-    switch (address) {
-
+    switch (address & 0xffff'fffc) {
+      case 0xc080'0008: return writePort3(data);
     }
   }
 
-  debug(unusual, "[Aleck64::writeWord] ", hex(address, 8L), " = ", hex(data, 8L));
+  print("[Aleck64::writeWord] Unmapped address: 0x", hex(address, 8L), " = 0x", hex(data, 8L), "\n");
+  //debug(unusual, "[Aleck64::writeWord] ", hex(address, 8L), " = ", hex(data, 8L));
 }
 
 auto Aleck64::readPort1() -> u32 {
@@ -43,4 +43,17 @@ auto Aleck64::readPort1() -> u32 {
 
 auto Aleck64::readPort2() -> u32 {
   return controls.ioPortControls(2);
+}
+
+auto Aleck64::readPort3() -> u32 {
+  if(gameConfig) return gameConfig->readExpansionPort();
+  //debug(unusual, "[Aleck64::readPort3]");
+  print("[Aleck64::readPort3]\n");
+  return 0xffff'ffff;
+}
+
+auto Aleck64::writePort3(n32 data) -> void {
+  if(gameConfig) return gameConfig->writeExpansionPort(data);
+  //debug(unusual, "[Aleck64::writePort3] ", hex(data, 8L));
+  print("[Aleck64::writePort3] ", hex(data, 8L), "\n");
 }

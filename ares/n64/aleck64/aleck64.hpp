@@ -54,6 +54,8 @@ struct Aleck64 : Memory::RCP<Aleck64> {
 
   auto readPort1() -> u32;
   auto readPort2() -> u32;
+  auto readPort3() -> u32;
+  auto writePort3(n32 data) -> void;
 
   struct Controls {
     Aleck64& self;
@@ -82,6 +84,26 @@ struct Aleck64 : Memory::RCP<Aleck64> {
     Node::Input::Button p2start;
     Node::Input::Button p2coin;
 
+    Node::Input::Button mahjongA;
+    Node::Input::Button mahjongB;
+    Node::Input::Button mahjongC;
+    Node::Input::Button mahjongD;
+    Node::Input::Button mahjongE;
+    Node::Input::Button mahjongF;
+    Node::Input::Button mahjongG;
+    Node::Input::Button mahjongH;
+    Node::Input::Button mahjongI;
+    Node::Input::Button mahjongJ;
+    Node::Input::Button mahjongK;
+    Node::Input::Button mahjongL;
+    Node::Input::Button mahjongM;
+    Node::Input::Button mahjongN;
+    Node::Input::Button mahjongKan;
+    Node::Input::Button mahjongPon;
+    Node::Input::Button mahjongChi;
+    Node::Input::Button mahjongReach;
+    Node::Input::Button mahjongRon;
+
     //controls.cpp
     auto load(Node::Object) -> void;
     auto poll() -> void;
@@ -89,6 +111,7 @@ struct Aleck64 : Memory::RCP<Aleck64> {
     auto controllerButton(int playerIndex, string button) -> bool;
     auto controllerAxis(int playerIndex, string axis) -> s64;
     auto ioPortControls(int port) -> n32;
+    auto mahjong(n8 row) -> n8;
 
   } controls{*this};
 
@@ -101,6 +124,8 @@ struct Aleck64 : Memory::RCP<Aleck64> {
     virtual auto controllerButton(int playerIndex, string button) -> bool { return 0; }
     virtual auto controllerAxis(int playerIndex, string axis) -> s64 { return 0; };
     virtual auto ioPortControls(int port) -> n32 { return 0xffff'ffff; }
+    virtual auto readExpansionPort() -> u32 { return 0xffff'ffff; }
+    virtual auto writeExpansionPort(n32 data) -> void {};
   };
 
   shared_pointer<GameConfig> gameConfig;
