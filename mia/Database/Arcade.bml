@@ -41,7 +41,6 @@ game
   title:   Aleck64 PIF BIOS
   board:   nintendo/aleck64
   type:    bios
-  parent:  
   user1
     rom
       name:   pifdata.bin
@@ -68,7 +67,6 @@ game
   title:   Champion Boxing
   board:   sega/sg1000a
   type:    game
-  parent:  
   maincpu
     rom
       name:   cb6105.bin
@@ -93,7 +91,6 @@ game
   title:   Champion Pro Wrestling
   board:   sega/sg1000a
   type:    game
-  parent:  
   maincpu
     rom
       name:   5732
@@ -118,7 +115,6 @@ game
   title:   Doki Doki Penguin Land
   board:   sega/sg1000a
   type:    game
-  parent:  
   maincpu
     rom
       name:   epr-7356.ic1
@@ -413,7 +409,6 @@ game
   title:   Super Derby II (satellite board)
   board:   sega/sg1000a
   type:    game
-  parent:  
   maincpu
     rom
       name:   epr-6450d.ic10
@@ -432,7 +427,6 @@ game
   title:   Super Derby (satellite board)
   board:   sega/sg1000a
   type:    game
-  parent:  
   maincpu
     rom
       name:   v1.2.ic10
