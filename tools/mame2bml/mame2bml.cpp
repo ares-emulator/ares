@@ -53,15 +53,18 @@ auto Mame2BML::main(Arguments arguments) -> void {
         if(machine.name() != "machine") continue;
         string driverName = machine["sourcefile"].string();
         if(!driverNames.find(driverName)) continue;
+        string type = "game";
         string IsBIOS = machine["isbios"].string();
-        if(IsBIOS == "yes") continue;
+        if(IsBIOS == "yes") type = "bios";
 
-        print("found game: ", machine["name"].string(), " (", machine["description"].string(), ")\n");
+        print("found ", type, ": ", machine["name"].string(), " (", machine["description"].string(), ")\n");
 
         output.print("game\n");
         output.print("  name:    ", machine["name"].string(), "\n");
         output.print("  title:   ", machine["description"].string(), "\n");
         output.print("  board:   ", driverName.trimRight(".cpp"), "\n");
+        output.print("  type:    ", type, "\n");
+        output.print("  parent:  ", machine["romof"].string(), "\n");
 
         string region = "";
         for(auto rom : machine) {

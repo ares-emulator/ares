@@ -31,8 +31,10 @@ auto GameBrowserWindow::show(shared_pointer<Emulator> emulator) -> void {
 
   auto db = tmp->database();
   for(auto node : db.list) {
+    if(node["type"].string() != "game") continue;
     auto path = settings.paths.arcadeRoms;
     if(!path) path = {mia::homeLocation(), "Arcade"};
+
     path = {path, "/", node["name"].string(), ".zip"};
 
     if(inode::exists(path)) {
