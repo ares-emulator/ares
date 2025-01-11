@@ -1,6 +1,6 @@
 auto Aleck64::readWord(u32 address, Thread& thread) -> u32 {
   if(address <= 0xc07f'ffff) {
-    return sdram.read<Word>(address);
+    return sdram.read<Word>(address & 0x00ff'ffff);
   }
 
   controls.poll();
@@ -9,6 +9,7 @@ auto Aleck64::readWord(u32 address, Thread& thread) -> u32 {
       case 0xc080'0000: return readPort1();
       case 0xc080'0004: return readPort2();
       case 0xc080'0008: return readPort3();
+      case 0xc080'0100: return readPort4(); // can just be a stub for now, game is happy without it
     }
   }
 
@@ -18,12 +19,13 @@ auto Aleck64::readWord(u32 address, Thread& thread) -> u32 {
 
 auto Aleck64::writeWord(u32 address, u32 data, Thread& thread) -> void {
   if(address <= 0xc07f'ffff) {
-    return sdram.write<Word>(address, data);
+    return sdram.write<Word>(address & 0x00ff'ffff, data);
   }
 
   if(address <= 0xc080'0fff) {
     switch (address & 0xffff'fffc) {
       case 0xc080'0008: return writePort3(data);
+      case 0xc080'0100: return writePort4(data);
     }
   }
 
@@ -56,4 +58,15 @@ auto Aleck64::writePort3(n32 data) -> void {
   if(gameConfig) return gameConfig->writeExpansionPort(data);
   //debug(unusual, "[Aleck64::writePort3] ", hex(data, 8L));
   print("[Aleck64::writePort3] ", hex(data, 8L), "\n");
+}
+
+auto Aleck64::readPort4() -> u32 {
+  //debug(unimplemented, "[Aleck64::readPort4]");
+  print("[Aleck64::readPort4]\n");
+  return 0x0;
+}
+
+auto Aleck64::writePort4(n32 data) -> void {
+  // debug(unimplemented, "[Aleck64::writePort3] ", hex(data, 8L));
+  print("[Aleck64::writePort4] ", hex(data, 8L), "\n");
 }

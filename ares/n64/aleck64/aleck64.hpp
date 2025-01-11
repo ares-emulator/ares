@@ -8,6 +8,7 @@ struct Aleck64 : Memory::RCP<Aleck64> {
 
     template<u32 Size>
     auto writeBurst(u32 address, u32 *value, const char *peripheral) -> void {
+      address = address & 0x00ff'ffff;
       if (address >= size) return;
       Memory::Writable::write<Word>(address | 0x00, value[0]);
       Memory::Writable::write<Word>(address | 0x04, value[1]);
@@ -23,6 +24,7 @@ struct Aleck64 : Memory::RCP<Aleck64> {
 
     template<u32 Size>
     auto readBurst(u32 address, u32 *value, const char *peripheral) -> void {
+      address = address & 0x00ff'ffff
       if (address >= size) {
         value[0] = value[1] = value[2] = value[3] = 0;
         if (Size == ICache)
