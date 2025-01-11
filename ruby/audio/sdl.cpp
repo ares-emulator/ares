@@ -12,7 +12,7 @@ struct AudioSDL : AudioDriver {
   auto create() -> bool override {
     super.setChannels(2);
     super.setFrequency(48000);
-    super.setLatency(0);
+    super.setLatency(20);
     return initialize();
   }
 
