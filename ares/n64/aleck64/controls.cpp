@@ -2,55 +2,55 @@ auto Aleck64::Controls::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Controls");
 
   service = node->append<Node::Input::Button>("Service");
-  test = node->append<Node::Input::Button>("Test");
+  test    = node->append<Node::Input::Button>("Test");
 
-  p1x = node->append<Node::Input::Axis>("Player 1 X-Axis");
-  p1y = node->append<Node::Input::Axis>("Player 1 Y-Axis");
-  p1up = node->append<Node::Input::Button>("Player 1 Up");
-  p1down = node->append<Node::Input::Button>("Player 1 Down");
-  p1left = node->append<Node::Input::Button>("Player 1 Left");
+  p1x     = node->append<Node::Input::Axis>("Player 1 X-Axis");
+  p1y     = node->append<Node::Input::Axis>("Player 1 Y-Axis");
+  p1up    = node->append<Node::Input::Button>("Player 1 Up");
+  p1down  = node->append<Node::Input::Button>("Player 1 Down");
+  p1left  = node->append<Node::Input::Button>("Player 1 Left");
   p1right = node->append<Node::Input::Button>("Player 1 Right");
   p1start = node->append<Node::Input::Button>("Player 1 Start");
-  p1coin = node->append<Node::Input::Button>("Player 1 Coin");
+  p1coin  = node->append<Node::Input::Button>("Player 1 Coin");
 
-  for (auto n: range(9)) {
+  for(auto n: range(9)) {
     string name = {"Player 1 Button ", 1 + n};
     p1[n] = node->append<Node::Input::Button>(name);
   }
 
-  p2x = node->append<Node::Input::Axis>("Player 2 X-Axis");
-  p2y = node->append<Node::Input::Axis>("Player 2 Y-Axis");
-  p2up = node->append<Node::Input::Button>("Player 2 Up");
-  p2down = node->append<Node::Input::Button>("Player 2 Down");
-  p2left = node->append<Node::Input::Button>("Player 2 Left");
+  p2x     = node->append<Node::Input::Axis>("Player 2 X-Axis");
+  p2y     = node->append<Node::Input::Axis>("Player 2 Y-Axis");
+  p2up    = node->append<Node::Input::Button>("Player 2 Up");
+  p2down  = node->append<Node::Input::Button>("Player 2 Down");
+  p2left  = node->append<Node::Input::Button>("Player 2 Left");
   p2right = node->append<Node::Input::Button>("Player 2 Right");
   p2start = node->append<Node::Input::Button>("Player 2 Start");
-  p2coin = node->append<Node::Input::Button>("Player 2 Coin");
+  p2coin  = node->append<Node::Input::Button>("Player 2 Coin");
 
-  for (auto n: range(9)) {
+  for(auto n: range(9)) {
     string name = {"Player 2 Button ", 1 + n};
     p2[n] = node->append<Node::Input::Button>(name);
   }
 
-  mahjongA = node->append<Node::Input::Button>("Mahjong A");
-  mahjongB = node->append<Node::Input::Button>("Mahjong B");
-  mahjongC = node->append<Node::Input::Button>("Mahjong C");
-  mahjongD = node->append<Node::Input::Button>("Mahjong D");
-  mahjongE = node->append<Node::Input::Button>("Mahjong E");
-  mahjongF = node->append<Node::Input::Button>("Mahjong F");
-  mahjongG = node->append<Node::Input::Button>("Mahjong G");
-  mahjongH = node->append<Node::Input::Button>("Mahjong H");
-  mahjongI = node->append<Node::Input::Button>("Mahjong I");
-  mahjongJ = node->append<Node::Input::Button>("Mahjong J");
-  mahjongK = node->append<Node::Input::Button>("Mahjong K");
-  mahjongL = node->append<Node::Input::Button>("Mahjong L");
-  mahjongM = node->append<Node::Input::Button>("Mahjong M");
-  mahjongN = node->append<Node::Input::Button>("Mahjong N");
-  mahjongKan = node->append<Node::Input::Button>("Mahjong カン");
-  mahjongPon = node->append<Node::Input::Button>("Mahjong ポン");
-  mahjongChi = node->append<Node::Input::Button>("Mahjong チー");
+  mahjongA     = node->append<Node::Input::Button>("Mahjong A");
+  mahjongB     = node->append<Node::Input::Button>("Mahjong B");
+  mahjongC     = node->append<Node::Input::Button>("Mahjong C");
+  mahjongD     = node->append<Node::Input::Button>("Mahjong D");
+  mahjongE     = node->append<Node::Input::Button>("Mahjong E");
+  mahjongF     = node->append<Node::Input::Button>("Mahjong F");
+  mahjongG     = node->append<Node::Input::Button>("Mahjong G");
+  mahjongH     = node->append<Node::Input::Button>("Mahjong H");
+  mahjongI     = node->append<Node::Input::Button>("Mahjong I");
+  mahjongJ     = node->append<Node::Input::Button>("Mahjong J");
+  mahjongK     = node->append<Node::Input::Button>("Mahjong K");
+  mahjongL     = node->append<Node::Input::Button>("Mahjong L");
+  mahjongM     = node->append<Node::Input::Button>("Mahjong M");
+  mahjongN     = node->append<Node::Input::Button>("Mahjong N");
+  mahjongKan   = node->append<Node::Input::Button>("Mahjong カン");
+  mahjongPon   = node->append<Node::Input::Button>("Mahjong ポン");
+  mahjongChi   = node->append<Node::Input::Button>("Mahjong チー");
   mahjongReach = node->append<Node::Input::Button>("Mahjong リーチ");
-  mahjongRon = node->append<Node::Input::Button>("Mahjong ロン");
+  mahjongRon   = node->append<Node::Input::Button>("Mahjong ロン");
 }
 
 auto Aleck64::Controls::poll() -> void {
