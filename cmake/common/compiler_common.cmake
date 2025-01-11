@@ -100,11 +100,7 @@ set(
   -Wno-delete-non-abstract-non-virtual-dtor
 )
 
-set(
-  _ares_gcc_common_options
-  -fwrapv
-  -fno-strict-aliasing
-)
+set(_ares_gcc_common_options -fwrapv -fno-strict-aliasing -Wno-unused-result)
 
 if(NOT DEFINED CMAKE_COMPILE_WARNING_AS_ERROR)
   set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)

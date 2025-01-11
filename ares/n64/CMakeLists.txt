@@ -36,13 +36,6 @@ elseif(OS_LINUX OR OS_FREEBSD OR OS_OPENBSD)
   include(cmake/os-linux.cmake)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  message(WARNING "
-Building N64 with optimizations under GCC currently results in broken graphical output, see \
-https://github.com/ares-emulator/ares/issues/1737 . Building with clang instead will work around this issue. \
-")
-endif()
-
 ares_add_sources(
   CORE #
     n64

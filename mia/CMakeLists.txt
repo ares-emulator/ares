@@ -129,10 +129,7 @@ if(ARES_BUILD_OPTIONAL_TARGETS)
 
   if(OS_WINDOWS)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      target_link_libraries(
-        mia-ui
-        PRIVATE nall
-      )
+      target_link_libraries(mia-ui PRIVATE nall)
     endif()
   endif()
 
