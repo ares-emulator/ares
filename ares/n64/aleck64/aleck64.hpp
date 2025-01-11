@@ -24,7 +24,7 @@ struct Aleck64 : Memory::RCP<Aleck64> {
 
     template<u32 Size>
     auto readBurst(u32 address, u32 *value, const char *peripheral) -> void {
-      address = address & 0x00ff'ffff
+      address = address & 0x00ff'ffff;
       if (address >= size) {
         value[0] = value[1] = value[2] = value[3] = 0;
         if (Size == ICache)
@@ -57,7 +57,9 @@ struct Aleck64 : Memory::RCP<Aleck64> {
   auto readPort1() -> u32;
   auto readPort2() -> u32;
   auto readPort3() -> u32;
+  auto readPort4() -> u32;
   auto writePort3(n32 data) -> void;
+  auto writePort4(n32 data) -> void;
 
   struct Controls {
     Aleck64& self;
