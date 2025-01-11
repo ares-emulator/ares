@@ -9,7 +9,7 @@ auto Aleck64::readWord(u32 address, Thread& thread) -> u32 {
       case 0xc080'0000: return readPort1();
       case 0xc080'0004: return readPort2();
       case 0xc080'0008: return readPort3();
-      case 0xc080'0100: return readPort4(); // can just be a stub for now, game is happy without it
+      case 0xc080'0100: return readPort4();
     }
   }
 
