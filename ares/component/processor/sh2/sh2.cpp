@@ -65,8 +65,8 @@ auto SH2::power(bool reset) -> void {
 
   if constexpr(Accuracy::Recompiler) {
     if(!reset) {
-      auto buffer = ares::Memory::FixedAllocator::get().tryAcquire(64_MiB);
-      recompiler.allocator.resize(64_MiB, bump_allocator::executable, buffer);
+      auto buffer = ares::Memory::FixedAllocator::get().tryAcquire(32_MiB);
+      recompiler.allocator.resize(32_MiB, bump_allocator::executable, buffer);
     }
     recompiler.reset();
   }

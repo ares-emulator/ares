@@ -105,8 +105,6 @@ auto SH2::Cache::purge() -> void {
 }
 
 auto SH2::Cache::power() -> void {
-  purge(4 * 256);
-
   for(n6 n : range(64)) {
     if(n.bit(5) == 1 && n.bit(4) == 1 && n.bit(3) == 1) { lruSelect[n] = 0; continue; }
     if(n.bit(5) == 0 && n.bit(2) == 1 && n.bit(1) == 1) { lruSelect[n] = 1; continue; }
