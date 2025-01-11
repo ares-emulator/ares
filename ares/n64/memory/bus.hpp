@@ -20,7 +20,10 @@ inline auto Bus::read(u32 address, Thread& thread, const char *peripheral) -> u6
   if(address <= 0x1fbf'ffff) return pi.read<Size>(address, thread);
   if(address <= 0x1fcf'ffff) return si.read<Size>(address, thread);
   if(address <= 0x7fff'ffff) return pi.read<Size>(address, thread);
-  if(Model::Aleck64())       return aleck64.read<Size>(address, thread);
+  if(Model::Aleck64()) {
+    if(address <= 0xbfff'ffff) return freezeUnmapped(address), 0;
+    if(address <= 0xc0800'fff) return aleck64.read<Size>(address, thread);
+  }
   return freezeUnmapped(address), 0;
 }
 
@@ -46,7 +49,7 @@ inline auto Bus::readBurst(u32 address, u32 *data, Thread& thread) -> void {
 
   if(Model::Aleck64()) {
     if(address <= 0xbfff'ffff) return freezeUncached(address);
-    if(address <= 0xc07f'ffff) return aleck64.sdram.writeBurst<Size>(address, data, "CPU");
+    if(address <= 0xc07f'ffff) return aleck64.sdram.readBurst<Size>(address, data, "CPU");
   }
 
   return freezeUncached(address);
@@ -77,7 +80,10 @@ inline auto Bus::write(u32 address, u64 data, Thread& thread, const char *periph
   if(address <= 0x1fbf'ffff) return pi.write<Size>(address, data, thread);
   if(address <= 0x1fcf'ffff) return si.write<Size>(address, data, thread);
   if(address <= 0x7fff'ffff) return pi.write<Size>(address, data, thread);
-  if(Model::Aleck64())       return aleck64.write<Size>(address, data, thread);
+  if(Model::Aleck64()) {
+    if(address <= 0xbfff'ffff) return freezeUnmapped(address);
+    if(address <= 0xc0800'fff) return aleck64.write<Size>(address, data, thread);
+  }
   return freezeUnmapped(address);
 }
 
