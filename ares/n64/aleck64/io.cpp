@@ -29,8 +29,7 @@ auto Aleck64::writeWord(u32 address, u32 data, Thread& thread) -> void {
     }
   }
 
-  print("[Aleck64::writeWord] Unmapped address: 0x", hex(address, 8L), " = 0x", hex(data, 8L), "\n");
-  //debug(unusual, "[Aleck64::writeWord] ", hex(address, 8L), " = ", hex(data, 8L));
+  debug(unusual, "[Aleck64::writeWord] ", hex(address, 8L), " = ", hex(data, 8L));
 }
 
 auto Aleck64::readPort1() -> u32 {
@@ -49,24 +48,20 @@ auto Aleck64::readPort2() -> u32 {
 
 auto Aleck64::readPort3() -> u32 {
   if(gameConfig) return gameConfig->readExpansionPort();
-  //debug(unusual, "[Aleck64::readPort3]");
-  print("[Aleck64::readPort3]\n");
+  debug(unusual, "[Aleck64::readPort3]");
   return 0xffff'ffff;
 }
 
 auto Aleck64::writePort3(n32 data) -> void {
   if(gameConfig) return gameConfig->writeExpansionPort(data);
-  //debug(unusual, "[Aleck64::writePort3] ", hex(data, 8L));
-  print("[Aleck64::writePort3] ", hex(data, 8L), "\n");
+  debug(unusual, "[Aleck64::writePort3] ", hex(data, 8L));
 }
 
 auto Aleck64::readPort4() -> u32 {
-  //debug(unimplemented, "[Aleck64::readPort4]");
-  print("[Aleck64::readPort4]\n");
+  debug(unimplemented, "[Aleck64::readPort4]");
   return 0x0;
 }
 
 auto Aleck64::writePort4(n32 data) -> void {
-  // debug(unimplemented, "[Aleck64::writePort3] ", hex(data, 8L));
-  print("[Aleck64::writePort4] ", hex(data, 8L), "\n");
+  debug(unimplemented, "[Aleck64::writePort3] ", hex(data, 8L));
 }
