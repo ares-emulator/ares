@@ -227,14 +227,14 @@ auto Video::hasDrivers() -> vector<string> {
 auto Video::optimalDriver() -> string {
   #if defined(VIDEO_WGL)
   return "OpenGL 3.2";
+  #elif defined(VIDEO_METAL)
+  return "Metal";
+  #elif defined(VIDEO_GLX)
+  return "OpenGL 3.2";
   #elif defined(VIDEO_DIRECT3D9)
   return "Direct3D 9.0";
   #elif defined(VIDEO_CGL)
   return "OpenGL 3.2";
-  #elif defined(VIDEO_GLX)
-  return "OpenGL 3.2";
-  #elif defined(VIDEO_Metal)
-  return "Metal";
   #else
   return "None";
   #endif
@@ -249,7 +249,7 @@ auto Video::safestDriver() -> string {
   return "OpenGL 3.2";
   #elif defined(VIDEO_GLX)
   return "OpenGL 3.2";
-  #elif defined(VIDEO_Metal)
+  #elif defined(VIDEO_METAL)
   return "Metal";
   #else
   return "None";
