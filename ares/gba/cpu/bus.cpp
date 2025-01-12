@@ -6,13 +6,44 @@ auto CPU::sleep() -> void {
 
 template <bool UseDebugger>
 inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
-  u32 clocks = _wait(mode, address);
   u32 word;
 
-  if(address >= 0x1000'0000) {
-    if constexpr(!UseDebugger) prefetchStep(clocks);
-    return openBus.get(mode, address);
-  } else if(address & 0x0800'0000) {
+  if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
+
+  switch(address >> 24) {
+
+  case 0x00 ... 0x01:
+    if constexpr(!UseDebugger) prefetchStep(1);
+    word = bios.read(mode, address);
+    break;
+
+  case 0x02:
+    if constexpr(!UseDebugger) prefetchStep(waitEWRAM(mode));
+    word = readEWRAM(mode, address);
+    break;
+
+  case 0x03:
+    if constexpr(!UseDebugger) prefetchStep(1);
+    word = readIWRAM(mode, address);
+    break;
+
+  case 0x04:
+    if constexpr(!UseDebugger) prefetchStep(1);
+         if((address & 0xffff'fc00) == 0x0400'0000) word = bus.io[address & 0x3ff]->readIO(mode, address);
+    else if((address & 0xff00'ffff) == 0x0400'0800) word = ((IO*)this)->readIO(mode, 0x0400'0800 | (address & 3));
+    else return openBus.get(mode, address);
+    break;
+
+  //timings for VRAM and PRAM are handled in memory.cpp
+  case 0x05: word = readPRAM<UseDebugger>(mode, address); break;
+  case 0x06: word = readVRAM<UseDebugger>(mode, address); break;
+
+  case 0x07:
+    if constexpr(!UseDebugger) prefetchStep(1);
+    word = ppu.readOAM(mode, address);
+    break;
+
+  case 0x08 ... 0x0f:
     if(mode & Prefetch && wait.prefetch) {
       prefetchSync(address);
       prefetchStep(1);
@@ -20,26 +51,20 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
       if(mode & Word) word |= prefetchRead() << 16;
     } else {
       if constexpr(!UseDebugger) prefetchReset();
-      if constexpr(!UseDebugger) step(clocks);
+      if constexpr(!UseDebugger) step(waitCart(mode, address));
       word = cartridge.read(mode, address);
     }
-  } else {
-    if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
-    if constexpr(!UseDebugger) prefetchStep(clocks);
-    if(auto result = platform->cheat(address)) return *result;
-         if(address <  0x0200'0000) word = bios.read(mode, address);
-    else if(address <  0x0300'0000) word = readEWRAM(mode, address);
-    else if(address <  0x0400'0000) word = readIWRAM(mode, address);
-    else if(address >= 0x0700'0000) word = ppu.readOAM(mode, address);
-    else if(address >= 0x0600'0000) word = ppu.readVRAM(mode, address);
-    else if(address >= 0x0500'0000) word = ppu.readPRAM(mode, address);
-    else if((address & 0xffff'fc00) == 0x0400'0000) word = bus.io[address & 0x3ff]->readIO(mode, address);
-    else if((address & 0xff00'ffff) == 0x0400'0800) word = ((IO*)this)->readIO(mode, 0x0400'0800 | (address & 3));
-    else return openBus.get(mode, address);
+    break;
+
+  default:
+    if constexpr(!UseDebugger) prefetchStep(1);
+    return openBus.get(mode, address);
+
   }
 
   openBus.set(mode, address, word);
 
+  if(auto result = platform->cheat(address)) return *result;
   return word;
 }
 
@@ -56,25 +81,53 @@ auto CPU::getDebugger(u32 mode, n32 address) -> n32 {
 auto CPU::set(u32 mode, n32 address, n32 word) -> void {
   dmaRun();
   ARM7TDMI::irq = irq.synchronizer;
-  u32 clocks = _wait(mode, address);
+  u32 clocks = waitCart(mode, address);
 
-  if(address >= 0x1000'0000) {
-    prefetchStep(clocks);
-  } else if(address & 0x0800'0000) {
+  if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
+
+  switch(address >> 24) {
+
+  case 0x00 ... 0x01:
+    prefetchStep(1);
+    bios.write(mode, address, word);
+    break;
+
+  case 0x02:
+    prefetchStep(waitEWRAM(mode));
+    writeEWRAM(mode, address, word);
+    break;
+
+  case 0x03:
+    prefetchStep(1);
+    writeIWRAM(mode, address, word);
+    break;
+
+  case 0x04:
+    prefetchStep(1);
+         if((address & 0xffff'fc00) == 0x0400'0000) bus.io[address & 0x3ff]->writeIO(mode, address, word);
+    else if((address & 0xff00'ffff) == 0x0400'0800) ((IO*)this)->writeIO(mode, 0x0400'0800 | (address & 3), word);
+    break;
+
+  //timings for VRAM and PRAM are handled in memory.cpp
+  case 0x05: writePRAM(mode, address, word); break;
+  case 0x06: writeVRAM(mode, address, word); break;
+
+  case 0x07:
+    prefetchStep(1);
+    synchronize(ppu);
+    ppu.writeOAM(mode, address, word);
+    break;
+
+  case 0x08 ... 0x0f:
     prefetchReset();
     step(clocks);
     cartridge.write(mode, address, word);
-  } else {
-    if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
-    prefetchStep(clocks);
-         if(address  < 0x0200'0000) bios.write(mode, address, word);
-    else if(address  < 0x0300'0000) writeEWRAM(mode, address, word);
-    else if(address  < 0x0400'0000) writeIWRAM(mode, address, word);
-    else if(address >= 0x0700'0000) { synchronize(ppu); ppu.writeOAM(mode, address, word); }
-    else if(address >= 0x0600'0000) { synchronize(ppu); ppu.writeVRAM(mode, address, word); }
-    else if(address >= 0x0500'0000) { synchronize(ppu); ppu.writePRAM(mode, address, word); }
-    else if((address & 0xffff'fc00) == 0x0400'0000) bus.io[address & 0x3ff]->writeIO(mode, address, word);
-    else if((address & 0xff00'ffff) == 0x0400'0800) ((IO*)this)->writeIO(mode, 0x0400'0800 | (address & 3), word);
+    break;
+
+  default:
+    prefetchStep(1);
+    break;
+
   }
 
   openBus.set(mode, address, word);
@@ -89,14 +142,11 @@ auto CPU::unlock() -> void {
   context.busLocked = false;
 }
 
-auto CPU::_wait(u32 mode, n32 address) -> u32 {
-  if(address >= 0x1000'0000) return 1;  //unmapped
-  if(address <  0x0200'0000) return 1;
-  if(address <  0x0300'0000) return (16 - memory.ewramWait) * (mode & Word ? 2 : 1);
-  if(address <  0x0500'0000) return 1;
-  if(address <  0x0700'0000) return mode & Word ? 2 : 1;
-  if(address <  0x0800'0000) return 1;
+auto CPU::waitEWRAM(u32 mode) -> u32 {
+  return (16 - memory.ewramWait) * (mode & Word ? 2 : 1);
+}
 
+auto CPU::waitCart(u32 mode, n32 address) -> u32 {
   static u32 timings[] = {5, 4, 3, 9};
   u32 n = timings[wait.nwait[address >> 25 & 3]];
   u32 s = wait.swait[address >> 25 & 3];
