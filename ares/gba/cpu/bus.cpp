@@ -51,7 +51,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
       if(mode & Word) word |= prefetchRead() << 16;
     } else {
       if constexpr(!UseDebugger) prefetchReset();
-      if constexpr(!UseDebugger) step(waitCart(mode, address));
+      if constexpr(!UseDebugger) step(waitCartridge(mode, address));
       word = cartridge.read(mode, address);
     }
     break;
@@ -81,7 +81,6 @@ auto CPU::getDebugger(u32 mode, n32 address) -> n32 {
 auto CPU::set(u32 mode, n32 address, n32 word) -> void {
   dmaRun();
   ARM7TDMI::irq = irq.synchronizer;
-  u32 clocks = waitCart(mode, address);
 
   if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
 
@@ -120,7 +119,7 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
 
   case 0x08 ... 0x0f:
     prefetchReset();
-    step(clocks);
+    step(waitCartridge(mode, address));
     cartridge.write(mode, address, word);
     break;
 
@@ -146,7 +145,7 @@ auto CPU::waitEWRAM(u32 mode) -> u32 {
   return (16 - memory.ewramWait) * (mode & Word ? 2 : 1);
 }
 
-auto CPU::waitCart(u32 mode, n32 address) -> u32 {
+auto CPU::waitCartridge(u32 mode, n32 address) -> u32 {
   static u32 timings[] = {5, 4, 3, 9};
   u32 n = timings[wait.nwait[address >> 25 & 3]];
   u32 s = wait.swait[address >> 25 & 3];

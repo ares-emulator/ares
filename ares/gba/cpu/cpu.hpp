@@ -67,7 +67,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto lock() -> void override;
   auto unlock() -> void override;
   auto waitEWRAM(u32 mode) -> u32;
-  auto waitCart(u32 mode, n32 address) -> u32;
+  auto waitCartridge(u32 mode, n32 address) -> u32;
 
   //io.cpp
   auto readIO(n32 address) -> n8 override;
