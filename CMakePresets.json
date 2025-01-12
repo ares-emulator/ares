@@ -28,7 +28,6 @@
       "generator": "Xcode",
       "binaryDir": "${sourceDir}/build_macos",
       "cacheVariables": {
-        "CMAKE_OSX_DEPLOYMENT_TARGET": {"type": "STRING", "value": "10.13"},
         "ARES_CODESIGN_IDENTITY": {"type": "STRING", "value": "$penv{CODESIGN_IDENT}"},
         "ARES_CODESIGN_TEAM": {"type": "STRING", "value": "$penv{CODESIGN_TEAM}"},
         "ARES_BUILD_OPTIONAL_TARGETS": true,
