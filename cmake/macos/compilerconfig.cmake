@@ -24,7 +24,7 @@ set_property(CACHE CMAKE_OSX_ARCHITECTURES PROPERTY STRINGS arm64 x86_64)
 set(_ares_macos_minimum_sdk 11.1) # Minimum tested SDK
 set(_ares_macos_minimum_xcode 12.4) # Sync with SDK
 message(DEBUG "macOS SDK Path: ${CMAKE_OSX_SYSROOT}")
-string(REGEX MATCH ".+/MacOSX.platform/Developer/SDKs/MacOSX([0-9]+\\.[0-9])+\\.sdk$" _ ${CMAKE_OSX_SYSROOT})
+string(REGEX MATCH ".+/SDKs/MacOSX([0-9]+\\.[0-9])+\\.sdk$" _ ${CMAKE_OSX_SYSROOT})
 set(_ares_macos_current_sdk ${CMAKE_MATCH_1})
 message(DEBUG "macOS SDK version: ${_ares_macos_current_sdk}")
 if(_ares_macos_current_sdk VERSION_LESS _ares_macos_minimum_sdk)
