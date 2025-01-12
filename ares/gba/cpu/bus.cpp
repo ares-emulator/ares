@@ -12,7 +12,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 
   switch(address >> 24) {
 
-  case 0x00 ... 0x01:
+  case 0x00: case 0x01:
     if constexpr(!UseDebugger) prefetchStep(1);
     word = bios.read(mode, address);
     break;
@@ -43,7 +43,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     word = ppu.readOAM(mode, address);
     break;
 
-  case 0x08 ... 0x0f:
+  case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d: case 0x0e: case 0x0f:
     if(mode & Prefetch && wait.prefetch) {
       prefetchSync(address);
       prefetchStep(1);
@@ -86,7 +86,7 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
 
   switch(address >> 24) {
 
-  case 0x00 ... 0x01:
+  case 0x00: case 0x01:
     prefetchStep(1);
     bios.write(mode, address, word);
     break;
@@ -117,7 +117,7 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
     ppu.writeOAM(mode, address, word);
     break;
 
-  case 0x08 ... 0x0f:
+  case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d: case 0x0e: case 0x0f:
     prefetchReset();
     step(waitCartridge(mode, address));
     cartridge.write(mode, address, word);
