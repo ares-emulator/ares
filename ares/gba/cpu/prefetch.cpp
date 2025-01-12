@@ -6,7 +6,7 @@ auto CPU::prefetchSync(n32 address) -> void {
   prefetch.stopped = false;
   prefetch.addr = address;
   prefetch.load = address;
-  prefetch.wait = _wait(Half | Nonsequential, prefetch.load);
+  prefetch.wait = waitCartridge(Half | Nonsequential, prefetch.load);
 }
 
 auto CPU::prefetchStep(u32 clocks) -> void {
@@ -17,7 +17,7 @@ auto CPU::prefetchStep(u32 clocks) -> void {
     if(--prefetch.wait) continue;
     prefetch.slot[prefetch.load >> 1 & 7] = cartridge.read(Half, prefetch.load);
     prefetch.load += 2;
-    prefetch.wait = _wait(Half | Sequential, prefetch.load);
+    prefetch.wait = waitCartridge(Half | Sequential, prefetch.load);
   }
 
   if(prefetch.full()) prefetch.stopped = true;
@@ -40,7 +40,7 @@ auto CPU::prefetchRead() -> n16 {
 
   if(prefetch.stopped && prefetch.empty()) {
     prefetch.stopped = false;
-    prefetch.wait = _wait(Half | Nonsequential, prefetch.load);
+    prefetch.wait = waitCartridge(Half | Nonsequential, prefetch.load);
   }
 
   return word;

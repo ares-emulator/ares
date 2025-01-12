@@ -47,3 +47,61 @@ auto CPU::writeEWRAM(u32 mode, n32 address, n32 word) -> void {
 
   ewram[address & 0x3ffff] = word;
 }
+
+template <bool UseDebugger>
+auto CPU::readPRAM(u32 mode, n32 address) -> n32 {
+  if(mode & Word) return readPRAM<UseDebugger>(Half, address & ~2) << 0 | readPRAM<UseDebugger>(Half, address | 2) << 16;
+
+  //stall until PPU is no longer accessing PRAM (minimum 1 cycle)
+  do {
+    prefetchStep(1);
+    synchronize(ppu);
+  } while(ppu.pramContention());
+
+  return ppu.readPRAM(mode, address);
+}
+
+auto CPU::writePRAM(u32 mode, n32 address, n32 word) -> void {
+  if(mode & Word) {
+    writePRAM(Half, address & ~2, word >>  0);
+    writePRAM(Half, address |  2, word >> 16);
+    return;
+  }
+
+  //stall until PPU is no longer accessing PRAM (minimum 1 cycle)
+  do {
+    prefetchStep(1);
+    synchronize(ppu);
+  } while(ppu.pramContention());
+
+  ppu.writePRAM(mode, address, word);
+}
+
+template <bool UseDebugger>
+auto CPU::readVRAM(u32 mode, n32 address) -> n32 {
+  if(mode & Word) return readVRAM<UseDebugger>(Half, address & ~2) << 0 | readVRAM<UseDebugger>(Half, address | 2) << 16;
+
+  //stall until PPU is no longer accessing VRAM (minimum 1 cycle)
+  do {
+    prefetchStep(1);
+    synchronize(ppu);
+  } while(ppu.vramContention(address));
+
+  return ppu.readVRAM(mode, address);
+}
+
+auto CPU::writeVRAM(u32 mode, n32 address, n32 word) -> void {
+  if(mode & Word) {
+    writeVRAM(Half, address & ~2, word >>  0);
+    writeVRAM(Half, address |  2, word >> 16);
+    return;
+  }
+
+  //stall until PPU is no longer accessing VRAM (minimum 1 cycle)
+  do {
+    prefetchStep(1);
+    synchronize(ppu);
+  } while(ppu.vramContention(address));
+
+  ppu.writeVRAM(mode, address, word);
+}

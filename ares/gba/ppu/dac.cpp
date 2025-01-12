@@ -74,6 +74,7 @@ auto PPU::DAC::lowerLayer(u32 x, u32 y) -> void {
 
 inline auto PPU::DAC::pramLookup(Pixel& layer) -> n15 {
   if(layer.directColor) return layer.color;
+  ppu.pramAccessed = true;
   return ppu.pram[layer.color];
 }
 

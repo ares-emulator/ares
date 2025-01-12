@@ -119,6 +119,7 @@ auto PPU::cycle(u32 y) -> void {
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 0) cycleUpperLayer((Cycle - 46) / 4, y);
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 2) dac.lowerLayer((Cycle - 46) / 4, y);
   step(1);
+  releaseBus();
 }
 
 auto PPU::main() -> void {
@@ -196,6 +197,7 @@ auto PPU::main() -> void {
         cycleUpperLayer(x, y);
         dac.lowerLayer(x, y);
       }
+      releaseBus();
       step(975);
     }
   } else {
@@ -218,8 +220,8 @@ auto PPU::power() -> void {
   for(u32 n = 0x000; n <= 0x055; n++) bus.io[n] = this;
 
   for(u32 n = 0; n < 96 * 1024; n++) vram[n] = 0x00;
-  for(u32 n = 0; n < 1024; n += 2) writePRAM(n, Half, 0x0000);
-  for(u32 n = 0; n < 1024; n += 2) writeOAM(n, Half, 0x0000);
+  for(u32 n = 0; n < 1024; n += 2) writePRAM(Half, n, 0x0000);
+  for(u32 n = 0; n < 1024; n += 2) writeOAM(Half, n, 0x0000);
 
   io = {};
   for(auto& object : this->object) object = {};

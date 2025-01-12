@@ -53,12 +53,16 @@ struct PPU : Thread, IO {
   auto writeIO(n32 address, n8 byte) -> void;
 
   //memory.cpp
-  auto readVRAM(u32 mode, n32 address) -> n32;
-  auto readVRAM_BG(u32 mode, n32 address) -> n32;
-  auto writeVRAM(u32 mode, n32 address, n32 word) -> void;
+  auto releaseBus() -> void;
+  auto pramContention() -> bool;
+  auto vramContention(n32 address) -> bool;
 
-  auto readPRAM(u32 mode, n32 address) -> n32;
-  auto writePRAM(u32 mode, n32 address, n32 word) -> void;
+  auto readVRAM(u32 mode, n32 address) -> n16;
+  auto readVRAM_BG(u32 mode, n32 address) -> n16;
+  auto writeVRAM(u32 mode, n32 address, n16 half) -> void;
+
+  auto readPRAM(u32 mode, n32 address) -> n16;
+  auto writePRAM(u32 mode, n32 address, n16 half) -> void;
 
   auto readOAM(u32 mode, n32 address) -> n32;
   auto writeOAM(u32 mode, n32 address, n32 word) -> void;
@@ -103,6 +107,8 @@ private:
     auto scanline(u32 y) -> void;
     auto outputPixel(u32 x, u32 y) -> void;
     auto run(u32 x, u32 y) -> void;
+    auto linearFetchTileMap() -> void;
+    auto linearFetchTileData() -> void;
     auto linear(u32 x, u32 y) -> void;
     auto affineFetchTileMap(u32 x, u32 y) -> void;
     auto affineFetchTileData(u32 x, u32 y) -> void;
@@ -152,6 +158,8 @@ private:
       n1 hflip;
       n1 vflip;
       n4 palette;
+
+      n16 data;
     } latch;
 
     struct Affine {
@@ -292,6 +300,9 @@ private:
     i16 pc;
     i16 pd;
   } objectParam[32];
+
+  bool pramAccessed;
+  bool vramAccessedBG;
 };
 
 extern PPU ppu;

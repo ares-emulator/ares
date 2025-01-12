@@ -66,7 +66,8 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto set(u32 mode, n32 address, n32 word) -> void override;
   auto lock() -> void override;
   auto unlock() -> void override;
-  auto _wait(u32 mode, n32 address) -> u32;
+  auto waitEWRAM(u32 mode) -> u32;
+  auto waitCartridge(u32 mode, n32 address) -> u32;
 
   //io.cpp
   auto readIO(n32 address) -> n8 override;
@@ -77,6 +78,12 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   auto readEWRAM(u32 mode, n32 address) -> n32;
   auto writeEWRAM(u32 mode, n32 address, n32 word) -> void;
+
+  template<bool UseDebugger> auto readPRAM(u32 mode, n32 address) -> n32;
+  auto writePRAM(u32 mode, n32 address, n32 word) -> void;
+
+  template<bool UseDebugger> auto readVRAM(u32 mode, n32 address) -> n32;
+  auto writeVRAM(u32 mode, n32 address, n32 word) -> void;
 
   //dma.cpp
   auto dmaVblank() -> void;

@@ -24,6 +24,9 @@ auto PPU::serialize(serializer& s) -> void {
   s(dac);
   for(auto& object : this->object) s(object);
   for(auto& param : this->objectParam) s(param);
+
+  s(pramAccessed);
+  s(vramAccessedBG);
 }
 
 auto PPU::Background::serialize(serializer& s) -> void {

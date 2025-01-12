@@ -1,20 +1,34 @@
-auto PPU::readVRAM_BG(u32 mode, n32 address) -> n32 {
+auto PPU::releaseBus() -> void {
+  pramAccessed = false;
+  vramAccessedBG = false;
+}
+
+auto PPU::pramContention() -> bool {
+  return pramAccessed;
+}
+
+auto PPU::vramContention(n32 address) -> bool {
+  address &= 0x1ffff;
+  if(Background::IO::mode < 3 && address >= 0x10000) return false;
+  else if(address >= 0x14000) return false;
+  return vramAccessedBG;
+}
+
+auto PPU::readVRAM_BG(u32 mode, n32 address) -> n16 {
   if(Background::IO::mode < 3 && address >= 0x10000) return 0;
   else if(address >= 0x14000) return 0;
+  vramAccessedBG = true;
 
   return readVRAM(mode, address);
 }
 
-auto PPU::readVRAM(u32 mode, n32 address) -> n32 {
+auto PPU::readVRAM(u32 mode, n32 address) -> n16 {
   address &= 0x1ffff;
   if(Background::IO::mode >= 3 && address < 0x1c000 && address >= 0x18000) return 0;
 
   address &= (address & 0x10000) ? 0x17fff : 0x0ffff;
 
-  if(mode & Word) {
-    address &= ~3;
-    return vram[address + 0] << 0 | vram[address + 1] << 8 | vram[address + 2] << 16 | vram[address + 3] << 24;
-  } else if(mode & Half) {
+  if(mode & Half) {
     address &= ~1;
     return vram[address + 0] << 0 | vram[address + 1] << 8;
   } else if(mode & Byte) {
@@ -24,52 +38,39 @@ auto PPU::readVRAM(u32 mode, n32 address) -> n32 {
   unreachable;
 }
 
-auto PPU::writeVRAM(u32 mode, n32 address, n32 word) -> void {
+auto PPU::writeVRAM(u32 mode, n32 address, n16 half) -> void {
   address &= 0x1ffff;
   if(Background::IO::mode >= 3 && address < 0x1c000 && address >= 0x18000) return;
 
   address &= (address & 0x10000) ? 0x17fff : 0x0ffff;
 
-  if(mode & Word) {
-    address &= ~3;
-    vram[address + 0] = word >>  0;
-    vram[address + 1] = word >>  8;
-    vram[address + 2] = word >> 16;
-    vram[address + 3] = word >> 24;
-  } else if(mode & Half) {
+  if(mode & Half) {
     address &= ~1;
-    vram[address + 0] = word >>  0;
-    vram[address + 1] = word >>  8;
+    vram[address + 0] = half >>  0;
+    vram[address + 1] = half >>  8;
   } else if(mode & Byte) {
     //8-bit writes to OBJ section of VRAM are ignored
     if(Background::IO::mode <= 2 && address >= 0x10000) return;
     if(Background::IO::mode <= 5 && address >= 0x14000) return;
 
     address &= ~1;
-    vram[address + 0] = (n8)word;
-    vram[address + 1] = (n8)word;
+    vram[address + 0] = (n8)half;
+    vram[address + 1] = (n8)half;
   }
 }
 
-auto PPU::readPRAM(u32 mode, n32 address) -> n32 {
-  if(mode & Word) return readPRAM(Half, address & ~2) << 0 | readPRAM(Half, address | 2) << 16;
+auto PPU::readPRAM(u32 mode, n32 address) -> n16 {
   if(mode & Byte) return readPRAM(Half, address) >> ((address & 1) * 8);
   return pram[address >> 1 & 511];
 }
 
-auto PPU::writePRAM(u32 mode, n32 address, n32 word) -> void {
-  if(mode & Word) {
-    writePRAM(Half, address & ~2, word >>  0);
-    writePRAM(Half, address |  2, word >> 16);
-    return;
-  }
-
+auto PPU::writePRAM(u32 mode, n32 address, n16 half) -> void {
   if(mode & Byte) {
-    word = (n8)word;
-    return writePRAM(Half, address, word << 8 | word << 0);
+    half = (n8)half;
+    return writePRAM(Half, address, half << 8 | half << 0);
   }
 
-  pram[address >> 1 & 511] = (n16)word;
+  pram[address >> 1 & 511] = (n16)half;
 }
 
 auto PPU::readOAM(u32 mode, n32 address) -> n32 {
