@@ -4,20 +4,20 @@ auto PPU::releaseBus() -> void {
 }
 
 auto PPU::pramContention() -> bool {
-  return ppu.pramAccessed;
+  return pramAccessed;
 }
 
 auto PPU::vramContention(n32 address) -> bool {
   address &= 0x1ffff;
   if(Background::IO::mode < 3 && address >= 0x10000) return false;
   else if(address >= 0x14000) return false;
-  return ppu.vramAccessedBG;
+  return vramAccessedBG;
 }
 
 auto PPU::readVRAM_BG(u32 mode, n32 address) -> n16 {
   if(Background::IO::mode < 3 && address >= 0x10000) return 0;
   else if(address >= 0x14000) return 0;
-  ppu.vramAccessedBG = true;
+  vramAccessedBG = true;
 
   return readVRAM(mode, address);
 }
