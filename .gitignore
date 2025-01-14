@@ -12,7 +12,7 @@
 !/nall
 !/ruby
 !/scripts
-!/tests/i8080
+!/tests
 !/thirdparty
 !/tools
 !/GNUMakefile
@@ -38,3 +38,4 @@ hiro/resource/resource.cpp
 hiro/resource/resource.hpp
 desktop-ui/resource/resource.cpp
 desktop-ui/resource/resource.hpp
+tests/m68000/tests
