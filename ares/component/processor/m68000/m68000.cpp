@@ -43,7 +43,6 @@ auto M68000::power() -> void {
 auto M68000::supervisor() -> bool {
   if(r.s) return true;
 
-  r.pc -= 4;
   exception(Exception::Unprivileged, Vector::Unprivileged);
   return false;
 }
