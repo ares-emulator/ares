@@ -1,4 +1,4 @@
-add_executable(m68000 m68000.cpp ../../ares/component/processor/m68000/m68000.cpp)
+add_executable(m68000 m68000.cpp)
 
 target_include_directories(m68000 PRIVATE ${CMAKE_SOURCE_DIR})
 
