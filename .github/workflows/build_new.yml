@@ -1,6 +1,10 @@
 name: Build (New)
 on:
-  push
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+    types: [ opened, synchronize, reopened ]
 permissions:
   contents: write
 jobs:
