@@ -96,6 +96,8 @@ auto Famicom::analyze(vector<u8>& data) -> string {
   }
 
   string digest = Hash::SHA256(data).digest();
+  auto foundDatabase = Medium::loadDatabase();
+  if(!foundDatabase) return {};
   string manifest = Medium::manifestDatabase(digest);
   if(manifest) return manifest;
 

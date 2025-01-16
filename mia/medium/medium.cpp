@@ -82,19 +82,22 @@ auto Medium::create(string name) -> shared_pointer<Pak> {
   return {};
 }
 
-auto Medium::loadDatabase() -> void {
+auto Medium::loadDatabase() -> bool {
   //load the database on the first time it's needed for a given media type
-  bool found = false;
   for(auto& database : Media::databases) {
-    if(database.name == name()) found = true;
+    if(database.name == name()) return true;
   }
 
-  if(!found) {
-    Database database;
-    database.name = name();
-    database.list = BML::unserialize(file::read(locate({"Database/", name(), ".bml"})));
+  Database database;
+  database.name = name();
+  auto databaseFile = locate({"Database/", name(), ".bml"});
+  if(inode::exists(databaseFile)) {
+    database.list = BML::unserialize(file::read(databaseFile));
     Media::databases.append(std::move(database));
+    return true;
   }
+
+  return false;
 }
 
 //Retrieve all entries in game database
