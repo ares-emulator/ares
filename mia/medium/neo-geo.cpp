@@ -66,6 +66,8 @@ auto NeoGeo::load(string location) -> bool {
   vector<u8> voiceAROM;     //V ROM (ADPCM-A voice samples)
   vector<u8> voiceBROM;     //V ROM (ADPCM-B voice samples)
 
+  auto foundDatabase = Medium::loadDatabase();
+  if(!foundDatabase) return false;
   this->info = BML::unserialize(manifestDatabaseArcade(Medium::name(location)));
 
   if(file::exists(location)) {

@@ -57,7 +57,11 @@ auto Emulator::region() -> string {
 auto Emulator::load(const string& location) -> bool {
   if(inode::exists(location)) locationQueue.append(location);
 
-  if(!load()) return false;
+  if(!load()) {
+    error("Failed to load system! Database files may have been incorrectly \n"
+          "installed. Make sure you have packaged or installed ares correctly.");
+    return false;
+  }
   setBoolean("Color Emulation", settings.video.colorEmulation);
   setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
   setBoolean("Interframe Blending", settings.video.interframeBlending);

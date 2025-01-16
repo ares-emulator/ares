@@ -6,6 +6,8 @@ struct Arcade : Mame {
 };
 
 auto Arcade::load(string location) -> bool {
+  auto foundDatabase = Medium::loadDatabase();
+  if(!foundDatabase) return false;
   manifest = manifestDatabaseArcade(Medium::name(location));
   if(!manifest) return false;
 
