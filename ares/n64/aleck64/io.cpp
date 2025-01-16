@@ -1,41 +1,40 @@
-auto Aleck64::readWord(u32 address, Thread& thread) -> u32 {
-  if(address <= 0xc07f'ffff) {
-    return sdram.read<Word>(address & 0x00ff'ffff);
-  }
-
-  controls.poll();
-  if(address <= 0xc080'0fff) {
-    switch (address & 0xffff'fffc) {
-      case 0xc080'0000: return readPort1();
-      case 0xc080'0004: return readPort2();
-      case 0xc080'0008: return readPort3();
-      case 0xc080'0100: return readPort4();
-    }
-  }
-
-  debug(unusual, "[Aleck64::readWord] Unmapped address: 0x", hex(address, 8L));
-  return 0xffffffff;
-}
-
-auto Aleck64::writeWord(u32 address, u32 data, Thread& thread) -> void {
-  if(address <= 0xc07f'ffff) {
-    return sdram.write<Word>(address & 0x00ff'ffff, data);
-  }
-
-  if(address <= 0xc080'0fff) {
-    switch (address & 0xffff'fffc) {
-      case 0xc080'0008: return writePort3(data);
-      case 0xc080'0100: return writePort4(data);
-    }
-  }
-
-  debug(unusual, "[Aleck64::writeWord] ", hex(address, 8L), " = ", hex(data, 8L));
-}
-
 auto Aleck64::readPort1() -> u32 {
-  n32 value = 0xffffffff;
+  n32 value = 0xffff'ffff;
 
-  value.bit( 0, 15) = controls.ioPortControls(1);
+  if(gameConfig->type() == BoardType::E92) {
+    value.bit(0)  = !aleck64.controls.p1up->value();
+    value.bit(1)  = !aleck64.controls.p1down->value();
+    value.bit(2)  = !aleck64.controls.p1left->value();
+    value.bit(3)  = !aleck64.controls.p1right->value();
+    value.bit(4)  = !aleck64.controls.p1[0]->value();
+    value.bit(5)  = !aleck64.controls.p1[1]->value();
+    value.bit(6)  = !aleck64.controls.p1[2]->value();
+    value.bit(7)  = !aleck64.controls.p1[3]->value();
+    value.bit(8)  = !aleck64.controls.p2up->value();
+    value.bit(9)  = !aleck64.controls.p2down->value();
+    value.bit(10) = !aleck64.controls.p2left->value();
+    value.bit(11) = !aleck64.controls.p2right->value();
+    value.bit(12) = !aleck64.controls.p2[0]->value();
+    value.bit(13) = !aleck64.controls.p2[1]->value();
+    value.bit(14) = !aleck64.controls.p2[2]->value();
+    value.bit(15) = !aleck64.controls.p2[3]->value();
+  } else if(gameConfig->type() == BoardType::E90) {
+    value.bit( 0) = !aleck64.controls.p1up->value();
+    value.bit( 1) = !aleck64.controls.p1down->value();
+    value.bit( 2) = !aleck64.controls.p1left->value();
+    value.bit( 3) = !aleck64.controls.p1right->value();
+    value.bit( 4) = !aleck64.controls.p1[0]->value();
+    value.bit( 5) = !aleck64.controls.p1[1]->value();
+    value.bit( 7) = !aleck64.controls.p1start->value();
+    value.bit( 8) = !aleck64.controls.p2up->value();
+    value.bit( 9) = !aleck64.controls.p2down->value();
+    value.bit(10) = !aleck64.controls.p2left->value();
+    value.bit(11) = !aleck64.controls.p2right->value();
+    value.bit(12) = !aleck64.controls.p2[0]->value();
+    value.bit(13) = !aleck64.controls.p2[1]->value();
+    value.bit(15) = !aleck64.controls.p2start->value();
+  }
+
   value.bit(16, 23) = dipSwitch[1];
   value.bit(24, 31) = dipSwitch[0];
 
@@ -43,18 +42,31 @@ auto Aleck64::readPort1() -> u32 {
 }
 
 auto Aleck64::readPort2() -> u32 {
-  return controls.ioPortControls(2);
+  n32 value = 0xffff'ffff;
+
+  if(gameConfig->type() == BoardType::E92) {
+    value.bit(16) = !aleck64.controls.p1start->value();
+    value.bit(17) = !aleck64.controls.p2start->value();
+    value.bit(18) = !aleck64.controls.p1coin->value();
+    value.bit(19) = !aleck64.controls.p2coin->value();
+    value.bit(20) = !aleck64.controls.service->value();
+    value.bit(21) = !aleck64.controls.test->value();
+  } else if(gameConfig->type() == BoardType::E90) {
+    value.bit (0) = !aleck64.controls.p1coin->value();
+    value.bit( 1) = !aleck64.controls.p2coin->value();
+    value.bit( 4) = !aleck64.controls.service->value();
+    value.bit( 5) = !aleck64.controls.test->value();
+  }
+
+  return value;
 }
 
 auto Aleck64::readPort3() -> u32 {
-  if(gameConfig) return gameConfig->readExpansionPort();
-  debug(unusual, "[Aleck64::readPort3]");
-  return 0xffff'ffff;
+  return gameConfig->readExpansionPort();
 }
 
 auto Aleck64::writePort3(n32 data) -> void {
-  if(gameConfig) return gameConfig->writeExpansionPort(data);
-  debug(unusual, "[Aleck64::writePort3] ", hex(data, 8L));
+  return gameConfig->writeExpansionPort(data);
 }
 
 auto Aleck64::readPort4() -> u32 {

@@ -233,6 +233,9 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if (!cic) switch (ipl2checksum(0x85, ipl3)) {
     case 0x2bbad4e6eb74ull: cic = ntsc ? "CIC-NUS-6106" : "CIC-NUS-7106"; break;
   }
+  if (!cic) switch (ipl2checksum(0xac, ipl3)) {
+    case 0x93e983a8f152ull: cic = "CIC-NUS-5101"; break; //Aleck64 (and conversion hacks)
+  }
   if (!cic) switch (ipl2checksum(0xdd, ipl3)) {
     case 0x32b294e2ab90ull: cic = "CIC-NUS-8303"; break; //64DD Retail IPL (Japanese)
     case 0x6ee8d9e84970ull: cic = "CIC-NUS-8401"; break; //64DD Development IPL (Japanese)

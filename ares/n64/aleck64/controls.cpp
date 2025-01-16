@@ -105,29 +105,45 @@ auto Aleck64::Controls::poll() -> void {
 }
 
 auto Aleck64::Controls::controllerButton(int playerIndex, string button) -> bool {
-  if(!self.gameConfig) return 0;
-  if(auto input = self.gameConfig->controllerButton(playerIndex, button)) {
-    return input;
+  if(playerIndex == 1) {
+    if(button == "Up"     ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1up->value();
+    if(button == "Down"   ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1down->value();
+    if(button == "Left"   ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1left->value();
+    if(button == "Right"  ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1right->value();
+    if(button == "Start"  ) return aleck64.controls.p1start->value();
+    if(button == "A"      ) return aleck64.controls.p1[0]->value();
+    if(button == "B"      ) return aleck64.controls.p1[1]->value();
+    if(button == "R"      ) return aleck64.controls.p1[2]->value();
+    if(button == "C-Right") return aleck64.controls.p1[3]->value();
   }
+
+  if(playerIndex == 2) {
+    if(button == "Up"     ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2up->value();
+    if(button == "Down"   ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2down->value();
+    if(button == "Left"   ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2left->value();
+    if(button == "Right"  ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2right->value();
+    if(button == "Start"  ) return aleck64.controls.p2start->value();
+    if(button == "A"      ) return aleck64.controls.p2[0]->value();
+    if(button == "B"      ) return aleck64.controls.p2[1]->value();
+    if(button == "R"      ) return aleck64.controls.p2[2]->value();
+    if(button == "C-Right") return aleck64.controls.p2[3]->value();
+  }
+
   return 0;
 }
 
 auto Aleck64::Controls::controllerAxis(int playerIndex, string axis) -> s64 {
-  if(!self.gameConfig) return 0;
-  if(auto input = self.gameConfig->controllerAxis(playerIndex, axis)) {
-    return input;
+  if(playerIndex == 1) {
+    if(axis == "X") return aleck64.controls.p1x->value();
+    if(axis == "Y") return aleck64.controls.p1y->value();
+  }
+
+  if(playerIndex == 2) {
+    if(axis == "X") return aleck64.controls.p2x->value();
+    if(axis == "Y") return aleck64.controls.p2y->value();
   }
 
   return 0;
-}
-
-auto Aleck64::Controls::ioPortControls(int port) -> n32 {
-  if(!self.gameConfig) return 0xffff'ffff;
-  if(auto input = self.gameConfig->ioPortControls(port)) {
-    return input;
-  }
-
-  return 0xffff'ffff;
 }
 
 auto Aleck64::Controls::mahjong(n8 row) -> n8 {
