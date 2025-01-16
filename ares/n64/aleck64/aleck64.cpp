@@ -5,6 +5,8 @@ namespace ares::Nintendo64 {
 
   #include "io.cpp"
   #include "controls.cpp"
+  #include "debugger.cpp"
+  #include "vdp.cpp"
 
   #include "game-config/11beat.hpp"
   #include "game-config/starsldr.hpp"
@@ -16,16 +18,22 @@ namespace ares::Nintendo64 {
   #include "game-config/hipai.hpp"
   #include "game-config/hipai2.hpp"
   #include "game-config/srmvs.hpp"
+  #include "game-config/mtetrisc.hpp"
 
   auto Aleck64::load(Node::Object parent) -> void {
     sdram.allocate(4_MiB);
+    vram.allocate(4_KiB);
+    pram.allocate(4_KiB);
     controls.load(parent);
     gameConfig.reset();
     dipSwitchNode = parent->append<Node::Object>("DIP Switches");
+
+    debugger.load(parent);
   }
 
   auto Aleck64::unload() -> void {
     sdram.reset();
+    debugger.unload();
   }
 
   auto Aleck64::save() -> void {
@@ -51,10 +59,14 @@ namespace ares::Nintendo64 {
       if(name == "hipai2"  ) gameConfig = new hipai2();
       if(name == "srmvs"   ) gameConfig = new srmvs();
       if(name == "srmvsa"  ) gameConfig = new srmvs();
+      if(name == "mtetrisc") gameConfig = new mtetrisc();
+      if(!gameConfig) gameConfig = new GameConfig(); //Fallback to default implementation
 
-      if(gameConfig) gameConfig->dipSwitches(dipSwitchNode);
+      gameConfig->dipSwitches(dipSwitchNode);
 
       sdram.fill();
+      vram.fill();
+      pram.fill();
     }
   }
 }
