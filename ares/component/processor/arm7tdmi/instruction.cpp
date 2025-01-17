@@ -421,9 +421,9 @@ auto ARM7TDMI::thumbInitialize() -> void {
     bind(opcode, AdjustStack, immediate, mode);
   }
 
-  for(n3 _ : range(8))
+  for(n4 d : range(16))
   for(n4 m : range(16)) {
-    auto opcode = pattern("0100 0111 0??? ?---") | _ << 0 | m << 3;
+    auto opcode = pattern("0100 0111 ???? ?---") | d.bit(0,2) << 0 | m << 3 | d.bit(3) << 7;
     bind(opcode, BranchExchange, m);
   }
 
