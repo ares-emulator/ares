@@ -13,6 +13,25 @@ auto YM2612::clock() -> array<i16[2]> {
   s32 left  = 0;
   s32 right = 0;
 
+  timerA.run();
+  timerB.run();
+
+  if(++envelope.divider == 3) {
+    envelope.divider = 0;
+    if(!++envelope.clock) ++envelope.clock; // 12-bit counter: 1..4095 - zero-value is skipped (confirmed behavior)
+  }
+
+  if(lfo.enable && ++lfo.divider >= lfoDividers[lfo.rate]) {
+    lfo.divider = 0;
+    lfo.clock++;
+    for(auto& channel : channels) {
+      for(auto& op : channel.operators) {
+        op.updatePhase();  //due to vibrato
+        op.updateLevel();  //due to tremolo
+      }
+    }
+  }
+
   for(auto& channel : channels) {
     auto& op = channel.operators;
 
@@ -30,11 +49,17 @@ auto YM2612::clock() -> array<i16[2]> {
       return y < 0x1a00 ? pow2[y & 0x1ff] << 2 >> (y >> 9) : 0; // -78 dB floor
     };
 
-    s32 feedback = modMask & op[0].prior + op[0].priorBuffer >> 9 - channel.feedback;
-    s32 accumulator = 0;
-
     op[0].priorBuffer = op[0].prior; // only need to buffer the output for feedback
     for(auto n : range(4)) op[n].prior = op[n].output;
+
+    for(auto& op : channel.operators) {
+      op.runPhase();
+      if(envelope.divider) continue;
+      op.runEnvelope();
+    }
+
+    s32 feedback = modMask & op[0].prior + op[0].priorBuffer >> 9 - channel.feedback;
+    s32 accumulator = 0;
 
     op[0].output = wave(0, feedback * (channel.feedback > 0));
 
@@ -120,33 +145,6 @@ auto YM2612::clock() -> array<i16[2]> {
     // DAC output (ym3438 fix)
     //if(channel.leftEnable ) left  += voiceData;
     //if(channel.rightEnable) right += voiceData;
-  }
-
-  timerA.run();
-  timerB.run();
-
-  if(lfo.enable && ++lfo.divider == lfoDividers[lfo.rate]) {
-    lfo.divider = 0;
-    lfo.clock++;
-    for(auto& channel : channels) {
-      for(auto& op : channel.operators) {
-        op.updatePhase();  //due to vibrato
-        op.updateLevel();  //due to tremolo
-      }
-    }
-  }
-
-  if(++envelope.divider == 3) {
-    envelope.divider = 0;
-    if(!++envelope.clock) ++envelope.clock; // 12-bit counter: 1..4095 - zero-value is skipped (confirmed behavior)
-  }
-
-  for(auto& channel : channels) {
-    for(auto& op : channel.operators) {
-      op.runPhase();
-      if(envelope.divider) continue;
-      op.runEnvelope();
-    }
   }
 
   return {sclamp<16>(left), sclamp<16>(right)};

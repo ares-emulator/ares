@@ -29,24 +29,25 @@ auto YM2612::Channel::Operator::updateKeyState() -> void {
 auto YM2612::Channel::Operator::runEnvelope() -> void {
   if(ym2612.envelope.clock & (1 << envelope.divider) - 1) return;
 
+  if(envelope.state == Attack && envelope.value == 0) {
+    envelope.state = Decay;
+    updateEnvelope();
+  }
+
+  u32 sustain = envelope.sustainLevel < 15 ? envelope.sustainLevel << 5 : 0x1f << 5;
+  if(envelope.state == Decay && envelope.value >= sustain) {
+    envelope.state = Sustain;
+    updateEnvelope();
+  }
+
   u32 value = ym2612.envelope.clock >> envelope.divider;
   u32 step = envelope.steps >> ((~value & 7) << 2) & 0xf;
-  u32 sustain = envelope.sustainLevel < 15 ? envelope.sustainLevel << 5 : 0x1f << 5;
 
   if(envelope.state == Attack) {
-    if(envelope.value == 0) {
-      envelope.state = Decay;
-      updateEnvelope();
-    } else if(envelope.rate < 62) {
-      // will stop updating if attack rate is increased to upper threshold during attack phase (confirmed behavior)
-      envelope.value += ~u16(envelope.value) * step >> 4;
-    }
+    // will stop updating if attack rate is increased to upper threshold during attack phase (confirmed behavior)
+    if(envelope.rate < 62) envelope.value += ~u16(envelope.value) * step >> 4;
   }
   if(envelope.state != Attack) {
-    if(envelope.state == Decay && envelope.value >= sustain) {
-      envelope.state = Sustain;
-      updateEnvelope();
-    }
     if(ssg.enable) step = envelope.value < 0x200 ? step << 2 : 0;  //SSG results in a 4x faster envelope
     envelope.value = min(envelope.value + step, 0x3ff);
   }
@@ -82,8 +83,6 @@ auto YM2612::Channel::Operator::runPhase() -> void {
 }
 
 auto YM2612::Channel::Operator::updateEnvelope() -> void {
-  u32 key = min(max((u32)pitch.value, 0x300), 0x4ff);
-  u32 ksr = (octave.value << 2) + ((key - 0x300) >> 7);
   u32 rate = 0;
 
   if(envelope.state == Attack)  rate += (envelope.attackRate  << 1);
@@ -91,7 +90,7 @@ auto YM2612::Channel::Operator::updateEnvelope() -> void {
   if(envelope.state == Sustain) rate += (envelope.sustainRate << 1);
   if(envelope.state == Release) rate += (envelope.releaseRate << 1);
 
-  rate += (ksr >> 3 - envelope.keyScale) * (rate > 0);
+  rate += (keyScale >> 3 - envelope.rateScaling) * (rate > 0);
   rate  = min(rate, 63);
 
   auto& entry = envelopeRates[rate >> 2];
@@ -107,15 +106,15 @@ auto YM2612::Channel::Operator::updatePitch() -> void {
   pitch.value = channel.mode ? pitch.reload : channel[3].pitch.reload;
   octave.value = channel.mode ? octave.reload : channel[3].octave.reload;
 
+  u32 key = min(max((u32)pitch.value, 0x300), 0x4ff);
+  keyScale = (octave.value << 2) + ((key - 0x300) >> 7);
+
   updatePhase();
   updateEnvelope();  //due to key scaling
 }
 
 auto YM2612::Channel::Operator::updatePhase() -> void {
-  u32 key = min(max((u32)pitch.value, 0x300), 0x4ff);
-  u32 ksr = (octave.value << 2) + ((key - 0x300) >> 7);
-  u32 tuning = detune & 3 ? detunes[(detune & 3) - 1][ksr & 7] >> (3 - (ksr >> 3)) : 0;
-
+  u32 tuning = detune & 3 ? detunes[(detune & 3) - 1][keyScale & 7] >> (3 - (keyScale >> 3)) : 0;
   u32 lfo = ym2612.lfo.clock >> 2 & 0x1f;
   s32 pm = (pitch.value * vibratos[channel.vibrato][lfo & 15] >> 9) * (lfo > 15 ? -1 : 1);
 
@@ -131,7 +130,7 @@ auto YM2612::Channel::Operator::updateLevel() -> void {
   bool invert = ssg.attack != ssg.invert && envelope.state != Release;
   n10 value = ssg.enable && invert ? 0x200 - envelope.value : 0 + envelope.value;
 
-  outputLevel = ((totalLevel << 3) + value + (lfoEnable ? lfo << 1 >> depth : 0)) << 3;
+  outputLevel = (totalLevel << 3) + value + (lfo << 1 >> depth) << 3;
 }
 
 auto YM2612::Channel::power() -> void {
@@ -149,6 +148,7 @@ auto YM2612::Channel::power() -> void {
     op.keyOn = 0;
     op.keyLine = 0;
     op.lfoEnable = 0;
+    op.keyScale = 0;
     op.detune = 0;
     op.multiple = 0;
     op.totalLevel = 0;
@@ -175,7 +175,7 @@ auto YM2612::Channel::power() -> void {
     op.envelope.steps = 0;
     op.envelope.value = 0x3ff;
 
-    op.envelope.keyScale = 0;
+    op.envelope.rateScaling = 0;
     op.envelope.attackRate = 0;
     op.envelope.decayRate = 0;
     op.envelope.sustainRate = 0;
