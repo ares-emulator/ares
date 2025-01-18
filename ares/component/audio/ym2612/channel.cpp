@@ -29,24 +29,25 @@ auto YM2612::Channel::Operator::updateKeyState() -> void {
 auto YM2612::Channel::Operator::runEnvelope() -> void {
   if(ym2612.envelope.clock & (1 << envelope.divider) - 1) return;
 
+  if(envelope.state == Attack && envelope.value == 0) {
+    envelope.state = Decay;
+    updateEnvelope();
+  }
+
+  u32 sustain = envelope.sustainLevel < 15 ? envelope.sustainLevel << 5 : 0x1f << 5;
+  if(envelope.state == Decay && envelope.value >= sustain) {
+    envelope.state = Sustain;
+    updateEnvelope();
+  }
+
   u32 value = ym2612.envelope.clock >> envelope.divider;
   u32 step = envelope.steps >> ((~value & 7) << 2) & 0xf;
-  u32 sustain = envelope.sustainLevel < 15 ? envelope.sustainLevel << 5 : 0x1f << 5;
 
   if(envelope.state == Attack) {
-    if(envelope.value == 0) {
-      envelope.state = Decay;
-      updateEnvelope();
-    } else if(envelope.rate < 62) {
-      // will stop updating if attack rate is increased to upper threshold during attack phase (confirmed behavior)
-      envelope.value += ~u16(envelope.value) * step >> 4;
-    }
+    // will stop updating if attack rate is increased to upper threshold during attack phase (confirmed behavior)
+    if(envelope.rate < 62) envelope.value += ~u16(envelope.value) * step >> 4;
   }
   if(envelope.state != Attack) {
-    if(envelope.state == Decay && envelope.value >= sustain) {
-      envelope.state = Sustain;
-      updateEnvelope();
-    }
     if(ssg.enable) step = envelope.value < 0x200 ? step << 2 : 0;  //SSG results in a 4x faster envelope
     envelope.value = min(envelope.value + step, 0x3ff);
   }
