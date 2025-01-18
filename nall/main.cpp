@@ -1,3 +1,4 @@
+#define NALL_MAIN_IMPL
 #include <nall/main.hpp>
 
 #if defined(PLATFORM_WINDOWS)
@@ -40,17 +41,4 @@ auto main(int argc, char** argv) -> int {
 
 }
 
-#if defined(PLATFORM_WINDOWS) && defined(SUBSYTEM_WINDOWS)
-
-auto WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nCmdShow) -> int {
-  //arguments are retrieved later via GetCommandLineW()
-  return nall::main(0, nullptr);
-}
-
-#else
-
-auto main(int argc, char** argv) -> int {
-  return nall::main(argc, argv);
-}
-
-#endif
+#undef NALL_MAIN_IMPL

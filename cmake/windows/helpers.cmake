@@ -4,7 +4,13 @@ include(helpers_common)
 
 # ares_configure_executable: Bundle entitlements, dependencies, resources to prepare macOS app bundle
 function(ares_configure_executable target)
-  set_target_properties(${target} PROPERTIES WIN32_EXECUTABLE TRUE)
+  if(CONSOLE)
+    target_compile_definitions(${target} PRIVATE SUBSYTEM_CONSOLE)
+    set_target_properties(${target} PROPERTIES WIN32_EXECUTABLE FALSE)
+  else()
+    target_compile_definitions(${target} PRIVATE SUBSYTEM_WINDOWS)
+    set_target_properties(${target} PROPERTIES WIN32_EXECUTABLE TRUE)
+  endif()
   set_target_properties(
     ${target}
     PROPERTIES

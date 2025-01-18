@@ -247,11 +247,6 @@ auto addDirectory(vector<string>& files, string location) -> void {
 }
 
 auto nall::main(Arguments arguments) -> void {
-#if defined(PLATFORM_WINDOWS)
-  //todo: always compile as console application
-  terminal::redirectStdioToTerminal(false);
-#endif
-
   vector<string> files;
 
   if(arguments) {
