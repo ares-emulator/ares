@@ -302,8 +302,8 @@ auto ARM7TDMI::armInstructionMultiplyLong
   n64 rd = rm * rs;
   if(accumulate) rd += (n64)r(h) << 32 | (n64)r(l) << 0;
 
-  r(h) = rd >> 32;
   r(l) = rd >>  0;
+  r(h) = rd >> 32;
 
   if(save) {
     cpsr().z = rd == 0;
