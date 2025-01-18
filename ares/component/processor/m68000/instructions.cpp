@@ -338,28 +338,27 @@ template<u32 Size> auto M68000::instructionBTST(EffectiveAddress with) -> void {
 }
 
 auto M68000::instructionCHK(DataRegister compare, EffectiveAddress maximum) -> void {
-  auto source = read<Word>(maximum);
-  auto target = read<Word>(compare);
-  auto result = (n64)target - source;
-  r.c = sign<Word>(result >> 1) < 0;
-  r.v = sign<Word>((target ^ source) & (target ^ result)) < 0;
-  r.z = clip<Word>(result) == 0;
-  r.n = sign<Word>(result) < 0;
-  r.n ^= r.v;
-  prefetch();
+  auto source = read<Word>(compare);
+  auto target = read<Word>(maximum);
+  CMP<Word>(source, target);
+  idle(2);
+  bool bound = r.n || r.v;
+  CMP<Word>(0, source);
+  idle(2);
 
-  if(!r.n && !r.z) {
+  if(bound) {
+    prefetched();
     return exception(Exception::BoundsCheck, Vector::BoundsCheck);
   }
 
-  r.z = clip<Word>(target) == 0;
-  r.n = sign<Word>(target) < 0;
+  idle(2);
+
   if(r.n) {
-    idle(2);
+    prefetched();
     return exception(Exception::BoundsCheck, Vector::BoundsCheck);
   }
 
-  idle(6);
+  prefetch();
 }
 
 template<u32 Size> auto M68000::instructionCLR(EffectiveAddress with) -> void {
