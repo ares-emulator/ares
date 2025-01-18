@@ -6,6 +6,7 @@ if(NOT (CMAKE_CROSSCOMPILING OR ARES_CROSSCOMPILING))
 
   target_link_libraries(sourcery PRIVATE nall "$<$<PLATFORM_ID:Darwin>:$<LINK_LIBRARY:FRAMEWORK,Cocoa.framework>>")
 
+  set(CONSOLE TRUE)
   ares_configure_executable(sourcery)
 
   target_enable_subproject(sourcery "sourcery (resource compiler)")

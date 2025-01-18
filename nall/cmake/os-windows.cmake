@@ -26,11 +26,6 @@ target_link_libraries(nall PUBLIC ws2_32 ole32 shell32 shlwapi)
 if(MINGW)
   target_link_options(nall PUBLIC -mthreads -static)
 endif()
-if(CONSOLE)
-  target_compile_definitions(nall PUBLIC SUBSYTEM_CONSOLE)
-else()
-  target_compile_definitions(nall PUBLIC SUBSYTEM_WINDOWS)
-endif()
 target_link_libraries(nall PUBLIC ws2_32 ole32 shell32 shlwapi)
 
 set_source_files_properties(

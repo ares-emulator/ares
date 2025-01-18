@@ -15,4 +15,5 @@ endif()
 
 set_target_properties(i8080 PROPERTIES FOLDER tests PREFIX "")
 target_enable_subproject(i8080 "i8080 processor test harness")
+set(CONSOLE TRUE)
 ares_configure_executable(i8080)
