@@ -132,7 +132,7 @@ auto YM2612::Channel::Operator::updateLevel() -> void {
   bool invert = ssg.attack != ssg.invert && envelope.state != Release;
   n10 value = ssg.enable && invert ? 0x200 - envelope.value : 0 + envelope.value;
 
-  outputLevel = ((totalLevel << 3) + value + (lfoEnable ? lfo << 1 >> depth : 0)) << 3;
+  outputLevel = (totalLevel << 3) + value + (lfo << 1 >> depth) << 3;
 }
 
 auto YM2612::Channel::power() -> void {

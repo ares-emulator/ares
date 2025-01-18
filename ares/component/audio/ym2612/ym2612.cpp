@@ -21,7 +21,7 @@ auto YM2612::clock() -> array<i16[2]> {
     if(!++envelope.clock) ++envelope.clock; // 12-bit counter: 1..4095 - zero-value is skipped (confirmed behavior)
   }
 
-  if(lfo.enable && ++lfo.divider == lfoDividers[lfo.rate]) {
+  if(lfo.enable && ++lfo.divider >= lfoDividers[lfo.rate]) {
     lfo.divider = 0;
     lfo.clock++;
     for(auto& channel : channels) {

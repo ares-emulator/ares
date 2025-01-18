@@ -14,8 +14,10 @@ auto YM2612::writeData(n8 data) -> void {
   case 0x022: {
     lfo.rate = data.bit(0,2);
     lfo.enable = data.bit(3);
-    lfo.clock = 0;
-    lfo.divider = 0;
+    if(!lfo.enable) {
+      lfo.clock = 0;
+      lfo.divider = 0;
+    }
     break;
   }
 
