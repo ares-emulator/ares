@@ -44,6 +44,7 @@ auto YM2612::Channel::Operator::serialize(serializer& s) -> void {
   s(keyOn);
   s(keyLine);
   s(lfoEnable);
+  s(keyScale);
   s(detune);
   s(multiple);
   s(totalLevel);
@@ -68,7 +69,7 @@ auto YM2612::Channel::Operator::serialize(serializer& s) -> void {
   s(envelope.divider);
   s(envelope.steps);
   s(envelope.value);
-  s(envelope.keyScale);
+  s(envelope.rateScaling);
   s(envelope.attackRate);
   s(envelope.decayRate);
   s(envelope.sustainRate);

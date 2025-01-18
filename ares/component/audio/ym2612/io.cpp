@@ -116,10 +116,10 @@ auto YM2612::writeData(n8 data) -> void {
     break;
   }
 
-  //key scaling, attack rate
+  //rate scaling, attack rate
   case 0x050: {
     op.envelope.attackRate = data.bit(0,4);
-    op.envelope.keyScale = data.bit(6,7);
+    op.envelope.rateScaling = data.bit(6,7);
     channel[index].updateEnvelope();
     channel[index].updatePhase();
     break;
