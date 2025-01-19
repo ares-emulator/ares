@@ -149,7 +149,7 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
     regions.append("PAL");
   }
 
-  //Shadow Squadron - Stellar Assualt is missing NTSC-U region
+  //Shadow Squadron - Stellar Assault is missing NTSC-U region in header
   if(hash == "2f9b6017258fbb1c37d81df07c68d5255495d3bf76d9c7b680ff66bccf665750") {
     regions.append("NTSC-U");
   }
