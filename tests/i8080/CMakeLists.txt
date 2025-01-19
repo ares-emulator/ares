@@ -4,15 +4,6 @@ target_include_directories(i8080 PRIVATE ${CMAKE_SOURCE_DIR})
 
 target_link_libraries(i8080 PRIVATE ares::ares)
 
-if(OS_WINDOWS)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(
-      i8080
-      PRIVATE nall
-    )
-  endif()
-endif()
-
 set_target_properties(i8080 PROPERTIES FOLDER tests PREFIX "")
 target_enable_subproject(i8080 "i8080 processor test harness")
 set(CONSOLE TRUE)
