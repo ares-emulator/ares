@@ -7,6 +7,7 @@ namespace ares::Nintendo64 {
   #include "controls.cpp"
   #include "debugger.cpp"
   #include "vdp.cpp"
+  #include "serialization.cpp"
 
   #include "game-config/11beat.hpp"
   #include "game-config/starsldr.hpp"

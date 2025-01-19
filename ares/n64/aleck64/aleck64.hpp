@@ -154,6 +154,9 @@ struct Aleck64 {
   auto writePort3(n32 data) -> void;
   auto writePort4(n32 data) -> void;
 
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
   struct Controls {
     Aleck64& self;
     Node::Object node;
@@ -222,7 +225,6 @@ struct Aleck64 {
   } vdp;
 
   n8 dipSwitch[2];
-
 
   struct GameConfig {
     virtual ~GameConfig() = default;

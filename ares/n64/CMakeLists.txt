@@ -62,6 +62,7 @@ ares_add_sources(
   aleck64/aleck64.hpp
   aleck64/controls.cpp
   aleck64/debugger.cpp
+  aleck64/serialization.cpp
   aleck64/io.cpp
   aleck64/vdp.cpp
   aleck64/game-config/11beat.hpp
