@@ -280,8 +280,8 @@ auto MegaDrive::analyzeRegion(vector<u8>& rom, string hash) -> void {
     regions.append("NTSC-J", "NTSC-U", "PAL");
   }
 
-  //Alisia Dragoon (Europe)
-  if(hash == "0930b77d0474e99c10690245cac12a6618b6c16420e3575379aba6e715ea797a") {
+  // Many PAL games have incorrect headers, so force PAL based on name
+  if(location.ifind("(Europe)") || location.ifind("(PAL)")) {
     regions.reset();
     regions.append("PAL");
   }
