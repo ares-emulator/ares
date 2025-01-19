@@ -143,13 +143,14 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
     regions.append("NTSC-J", "NTSC-U", "PAL");
   }
 
-  // FIFA Soccer 96 and Mortal Kombat II have an incorrect header, so force PAL based on name
-  if(location.ifind("(Europe)") || location.ifind("(PAL)")) {
-    regions.reset();
-    regions.append("PAL");
+  //Change region for games with incorrect headers
+  if(hash == "6641801d0266a5e795c467c6e66d055f70ff15e53b35accc0f537b19cc25850a" ||   //FIFA International Soccer 96 (Europe)
+     hash == "c1d827dba5d315499cb2e6271522daf4928af2b682df30f223db6e52e0b8a31a") {   //Mortal Kombat II (Europe)
+        regions.reset();
+        regions.append("PAL");
   }
 
-  //Shadow Squadron - Stellar Assault is missing NTSC-U region in header
+  //Shadow Squadron - Stellar Assault (USA,Europe) is missing NTSC-U region in header
   if(hash == "2f9b6017258fbb1c37d81df07c68d5255495d3bf76d9c7b680ff66bccf665750") {
     regions.append("NTSC-U");
   }
