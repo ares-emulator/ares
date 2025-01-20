@@ -126,6 +126,11 @@ auto MI::ioRead(u32 address) -> u32 {
 
   if(address == 11) {
     //MI_BB_RANDOM
+    //the randomness on hardware does not appear to be a LFSR
+    //it produces mostly 0s with sporadic 1s, with longer strings
+    //of 1s being rare
+    //the system seems to accept this type of randomness, so
+    //for now this works
     data.bit(0) = random();
   }
 
