@@ -216,6 +216,7 @@ auto iQuePlayer::load() -> bool {
     }
   }
 
+  program.showLED(true);
   return true;
 }
 
@@ -225,6 +226,7 @@ auto iQuePlayer::load() -> bool {
 
 auto iQuePlayer::unload() -> void {
   Emulator::unload();
+  program.showLED(false);
 
   gamepad.reset();
 }

@@ -577,6 +577,7 @@ auto PI::regsWrite(u32 address, u32 data_) -> void {
       bb_gpio.rtc_clock.outputEnable = data.bit(6);
       bb_gpio.rtc_data.outputEnable = data.bit(7);
 
+      platform->setLED(bb_gpio.led.outputEnable & ~bb_gpio.led.lineOut);
       bb_rtc.tick();
     }
   }

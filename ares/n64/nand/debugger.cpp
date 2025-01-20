@@ -31,28 +31,27 @@ auto NAND::Debugger::unload(Node::Object parent) -> void {
   memory.spare.reset();
 }
 
-auto NAND::Debugger::command(Command cmd, string desc) -> void {
-  static const vector<string> cmdNames = {
-    "Read0",
-    "Read1",
-    "ReadSpare",
-    "ReadID",
-    "Reset",
-    "PageProgramC1",
-    "PageProgramC2",
-    "PageProgramDummyC2",
-    "CopyBackProgramC2",
-    "CopyBackProgramDummyC1",
-    "BlockEraseC1",
-    "BlockEraseC2",
-    "ReadStatus",
-    "ReadStatusMultiplane",
-  };
-
+auto NAND::Debugger::command(NAND::Command cmd, string desc) -> void {
   if(unlikely(tracer.io->enabled())) {
-    string nand_name = {"NAND", self.num};
-    string name = cmdNames(u8(cmd), {"CMD(0x", hex(u8(cmd), 2L), ")"});
-    string message = {nand_name, " Command=", name, ", ", desc};
+    string name;
+    switch(cmd) {
+      case NAND::Command::Read0: name = "Read0"; break;
+      case NAND::Command::Read1: name = "Read1"; break;
+      case NAND::Command::ReadSpare: name = "ReadSpare"; break;
+      case NAND::Command::ReadID: name = "ReadID"; break;
+      case NAND::Command::Reset: name = "Reset"; break;
+      case NAND::Command::PageProgramC1: name = "PageProgramC1"; break;
+      case NAND::Command::PageProgramC2: name = "PageProgramC2"; break;
+      case NAND::Command::PageProgramDummyC2: name = "PageProgramDummyC2"; break;
+      case NAND::Command::CopyBackProgramC2: name = "CopyBackProgramC2"; break;
+      case NAND::Command::CopyBackProgramDummyC1: name = "CopyBackProgramDummyC1"; break;
+      case NAND::Command::BlockEraseC1: name = "BlockEraseC1"; break;
+      case NAND::Command::BlockEraseC2: name = "BlockEraseC2"; break;
+      case NAND::Command::ReadStatus: name = "ReadStatus"; break;
+      case NAND::Command::ReadStatusMultiplane: name = "ReadStatusMultiplane"; break;
+      default: name = {"CMD(0x", hex(u8(cmd), 2L), ")"};
+    }
+    string message = {"NAND", self.num, " Command=", name, ", ", desc};
     tracer.io->notify(message);
   }
 }

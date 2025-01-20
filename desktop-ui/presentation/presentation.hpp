@@ -88,6 +88,8 @@ struct Presentation : Window {
         Canvas iconBottom{&iconLayout, Size{144, 10}, 0};
     HorizontalLayout statusLayout{&layout, Size{~0, StatusHeight}, 0};
       Label spacerLeft{&statusLayout, Size{8, ~0}, 0};
+      Label ledLeft{&statusLayout, Size{24, ~0}, 0};
+      Label spacer2Left{&statusLayout, Size{8, ~0}, 0};
       Label statusLeft{&statusLayout, Size{~0, ~0}, 0};
       Label statusDebug{&statusLayout, Size{200, ~0}, 0};
       Label statusRight{&statusLayout, Size{90, ~0}, 0};

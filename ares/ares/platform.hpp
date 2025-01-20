@@ -22,6 +22,8 @@ struct Platform {
   virtual auto audio(Node::Audio::Stream) -> void {}
   virtual auto input(Node::Input::Input) -> void {}
   virtual auto cheat(u32 addr) -> maybe<u32> { return nothing; }
+  virtual auto showLED(b1 show) -> void {}
+  virtual auto setLED(b1 on) -> void {}
 };
 
 extern Platform* platform;
