@@ -1,6 +1,6 @@
 struct Atari2600 : Emulator {
   Atari2600();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
@@ -38,15 +38,19 @@ Atari2600::Atari2600() {
   }
 }
 
-auto Atari2600::load() -> bool {
+auto Atari2600::load() -> LoadResult {
   game = mia::Medium::create("Atari 2600");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   system = mia::System::create("Atari 2600");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != LoadResult(successful)) return result;
 
   auto region = Emulator::region();
-  if(!ares::Atari2600::load(root, {"[Atari] Atari 2600 (", region, ")"})) return false;
+  if(!ares::Atari2600::load(root, {"[Atari] Atari 2600 (", region, ")"})) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -63,7 +67,7 @@ auto Atari2600::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto Atari2600::save() -> bool {

@@ -79,3 +79,33 @@ namespace ares {
 #include <ares/memory/fixed-allocator.hpp>
 #include <ares/memory/readable.hpp>
 #include <ares/memory/writable.hpp>
+
+enum ResultEnum {
+  successful,
+  noFileSelected,
+  databaseNotFound,
+  romNotFoundInDatabase,
+  romNotFound,
+  invalidRom,
+  couldNotParseManifest,
+  noFirmware,
+  otherError
+};
+
+struct LoadResult {
+  ResultEnum result;
+  
+  string info;
+  string firmwareType;
+  string firmwareSystemName;
+  string firmwareRegion;
+  
+  LoadResult(ResultEnum r) : result(r), info(0) {}
+  
+  bool operator==(const LoadResult& other) {
+    return result == other.result;
+  }
+  bool operator!=(const LoadResult& other) {
+    return result != other.result;
+  }
+};

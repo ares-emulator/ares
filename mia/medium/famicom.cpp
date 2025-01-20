@@ -1,7 +1,7 @@
 struct Famicom : Cartridge {
   auto name() -> string override { return "Famicom"; }
   auto extensions() -> vector<string> override { return {"fc", "nes", "unf", "unif", "unh"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& data) -> string;
   auto analyzeFDS(vector<u8>& data) -> string;
@@ -9,7 +9,7 @@ struct Famicom : Cartridge {
   auto analyzeUNIF(vector<u8>& data) -> string;
 };
 
-auto Famicom::load(string location) -> bool {
+auto Famicom::load(string location) -> LoadResult {
   vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "ines.rom"});
@@ -18,12 +18,12 @@ auto Famicom::load(string location) -> bool {
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return false;
+  if(!rom) return LoadResult(romNotFound);
 
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return LoadResult(couldNotParseManifest);
 
   pak = new vfs::directory;
   pak->setAttribute("title", document["game/title"].string());
@@ -70,7 +70,7 @@ auto Famicom::load(string location) -> bool {
     Medium::load(node, ".chr");
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto Famicom::save(string location) -> bool {

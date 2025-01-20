@@ -1,6 +1,6 @@
 struct PlayStation : Emulator {
   PlayStation();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
@@ -75,9 +75,12 @@ PlayStation::PlayStation() {
   }
 }
 
-auto PlayStation::load() -> bool {
+auto PlayStation::load() -> LoadResult {
   game = mia::Medium::create("PlayStation");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -86,11 +89,18 @@ auto PlayStation::load() -> bool {
   if(region == "NTSC-U") regionID = 0;
 
   system = mia::System::create("PlayStation");
-  if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
+  result = system->load(firmware[regionID].location);
+  if(result != LoadResult(successful)) {
+    result.firmwareSystemName = "PlayStation";
+    result.firmwareType = firmware[regionID].type;
+    result.firmwareRegion = firmware[regionID].region;
+    result.result = noFirmware;
+    return result;
+  }
 
   ares::PlayStation::option("Recompiler", !settings.general.forceInterpreter);
 
-  if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return false;
+  if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return LoadResult(otherError);
 
   if(auto fastBoot = root->find<ares::Node::Setting::Boolean>("Fast Boot")) {
     fastBoot->setValue(settings.boot.fast);
@@ -121,7 +131,7 @@ auto PlayStation::load() -> bool {
 
   discTrayTimer = Timer{};
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto PlayStation::load(Menu menu) -> void {
@@ -132,7 +142,7 @@ auto PlayStation::load(Menu menu) -> void {
     auto tray = root->find<ares::Node::Port>("PlayStation/Disc Tray");
     tray->disconnect();
 
-    if(!game->load(Emulator::load(game, configuration.game))) {
+    if(game->load(Emulator::load(game, configuration.game)) != LoadResult(successful)) {
       return;
     }
 

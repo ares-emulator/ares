@@ -1,25 +1,25 @@
 struct GameBoyAdvance : Cartridge {
   auto name() -> string override { return "Game Boy Advance"; }
   auto extensions() -> vector<string> override { return {"gba"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
 };
 
-auto GameBoyAdvance::load(string location) -> bool {
+auto GameBoyAdvance::load(string location) -> LoadResult {
   vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return false;
+  if(!rom) return LoadResult(romNotFound);
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return LoadResult(couldNotParseManifest);
 
   pak = new vfs::directory;
   pak->setAttribute("title", document["game/title"].string());
@@ -45,7 +45,7 @@ auto GameBoyAdvance::load(string location) -> bool {
   }
   pak->setAttribute("mirror", mirror);
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto GameBoyAdvance::save(string location) -> bool {

@@ -1,6 +1,6 @@
 struct MegaDrive : Emulator {
   MegaDrive();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
@@ -54,9 +54,12 @@ MegaDrive::MegaDrive() {
   }
 }
 
-auto MegaDrive::load() -> bool {
+auto MegaDrive::load() -> LoadResult {
   game = mia::Medium::create("Mega Drive");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -71,22 +74,30 @@ auto MegaDrive::load() -> bool {
     for(auto& emulator : emulators) {
       if(emulator->name == "Mega CD") firmware = emulator->firmware;
     }
-    if(!firmware) return false;  //should never occur
+    if(!firmware) return LoadResult(otherError);  //should never occur
     name = "Mega CD";
     system = mia::System::create("Mega CD");
-    if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID], "Mega CD"), false;
+    result = system->load(firmware[regionID].location);
+    if(result != LoadResult(successful)) {
+      result.firmwareSystemName = "Mega CD";
+      result.firmwareType = firmware[regionID].type;
+      result.firmwareRegion = firmware[regionID].region;
+      result.result = noFirmware;
+      return result;
+    }
 
     disc = mia::Medium::create("Mega CD");
-    if(!disc->load(Emulator::load(disc, configuration.game))) disc.reset();
+    if(disc->load(Emulator::load(disc, configuration.game)) != LoadResult(successful)) disc.reset();
   } else {
     name = "Mega Drive";
     system = mia::System::create("Mega Drive");
-    if(!system->load()) return false;
+    result = system->load();
+    if(result != LoadResult(successful)) return result;
   }
 
   ares::MegaDrive::option("TMSS", settings.megadrive.tmss);
 
-  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return false;
+  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -108,7 +119,7 @@ auto MegaDrive::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto MegaDrive::save() -> bool {

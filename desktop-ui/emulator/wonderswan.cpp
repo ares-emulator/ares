@@ -1,7 +1,7 @@
 struct WonderSwan : Emulator {
   WonderSwan();
   auto load(Menu) -> void override;
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
@@ -57,23 +57,27 @@ auto WonderSwan::load(Menu menu) -> void {
   }
 }
 
-auto WonderSwan::load() -> bool {
+auto WonderSwan::load() -> LoadResult {
   game = mia::Medium::create("WonderSwan");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   system = mia::System::create("WonderSwan");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != LoadResult(successful)) return result;
 
   ares::WonderSwan::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
-  if(!ares::WonderSwan::load(root, "[Bandai] WonderSwan")) return false;
+  if(!ares::WonderSwan::load(root, "[Bandai] WonderSwan")) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto WonderSwan::save() -> bool {

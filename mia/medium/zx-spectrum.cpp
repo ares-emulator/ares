@@ -1,30 +1,30 @@
 struct ZXSpectrum : Medium {
   auto name() -> string override { return "ZX Spectrum"; }
   auto extensions() -> vector<string> override { return {"wav", "tzx", "tap" }; }
-  auto load(string location) -> bool override;
-  auto loadWav(string location) -> bool;
-  auto loadTzx(string location) -> bool;
+  auto load(string location) -> LoadResult override;
+  auto loadWav(string location) -> LoadResult;
+  auto loadTzx(string location) -> LoadResult;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
 };
 
-auto ZXSpectrum::load(string location) -> bool {
-  if(!inode::exists(location)) return false;
+auto ZXSpectrum::load(string location) -> LoadResult {
+  if(!inode::exists(location)) return LoadResult(romNotFound);
 
   if(location.iendsWith(".tap") || location.iendsWith(".tzx")) return loadTzx(location);
   if(location.iendsWith(".wav")) return loadWav(location);
-  return false;
+  return LoadResult(invalidRom);
 }
 
-auto ZXSpectrum::loadTzx(string location) -> bool {
+auto ZXSpectrum::loadTzx(string location) -> LoadResult {
   this->location = location;
   this->manifest = analyze(location);
   auto document = BML::unserialize(manifest);
-  if (!document) return false;
+  if(!document) return LoadResult(couldNotParseManifest);
 
   vector<u8> input = file::read(location);
   TZXFile tzx;
-  if(tzx.DecodeFile(input.data(), input.size()) == FileTypeUndetermined) return false;
+  if(tzx.DecodeFile(input.data(), input.size()) == FileTypeUndetermined) return LoadResult(invalidRom);
   tzx.GenerateAudioData();
 
   pak = new vfs::directory;
@@ -45,14 +45,14 @@ auto ZXSpectrum::loadTzx(string location) -> bool {
   }
   pak->append("program.tape", output);
 
-  return true;
+  return LoadResult(successful);
 }
 
-auto ZXSpectrum::loadWav(string location) -> bool {
+auto ZXSpectrum::loadWav(string location) -> LoadResult {
   this->location = location;
   this->manifest = analyze(location);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return LoadResult(couldNotParseManifest);
 
   pak = new vfs::directory;
   pak->setAttribute("title",      document["game/title"].string());
@@ -80,7 +80,7 @@ auto ZXSpectrum::loadWav(string location) -> bool {
     }
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto ZXSpectrum::save(string location) -> bool {

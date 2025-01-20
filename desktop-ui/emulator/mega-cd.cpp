@@ -1,6 +1,6 @@
 struct MegaCD : Emulator {
   MegaCD();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
@@ -60,9 +60,12 @@ MegaCD::MegaCD() {
   }
 }
 
-auto MegaCD::load() -> bool {
+auto MegaCD::load() -> LoadResult {
   game = mia::Medium::create("Mega CD");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -71,9 +74,16 @@ auto MegaCD::load() -> bool {
   if(region == "NTSC-U") regionID = 0;
 
   system = mia::System::create("Mega CD");
-  if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
+  result = system->load(firmware[regionID].location);
+  if(result != LoadResult(successful)) {
+    result.firmwareSystemName = "Mega CD";
+    result.firmwareType = firmware[regionID].type;
+    result.firmwareRegion = firmware[regionID].region;
+    result.result = noFirmware;
+    return result;
+  }
 
-  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD (", region, ")"})) return false;
+  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD (", region, ")"})) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -104,7 +114,7 @@ auto MegaCD::load() -> bool {
 
   discTrayTimer = Timer{};
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto MegaCD::load(Menu menu) -> void {
@@ -115,7 +125,7 @@ auto MegaCD::load(Menu menu) -> void {
     auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
     tray->disconnect();
 
-    if(!game->load(Emulator::load(game, configuration.game))) {
+    if(game->load(Emulator::load(game, configuration.game)) != LoadResult(successful)) {
       return;
     }
 

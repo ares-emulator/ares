@@ -1,7 +1,7 @@
 struct Nintendo64DD : FloppyDisk {
   auto name() -> string override { return "Nintendo 64DD"; }
   auto extensions() -> vector<string> override { return {"n64dd", "ndd", "d64"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom, vector<u8> errorTable) -> string;
   auto transform(array_view<u8> input, vector<u8> errorTable) -> vector<u8>;
@@ -10,24 +10,24 @@ struct Nintendo64DD : FloppyDisk {
   auto createErrorTable(array_view<u8> input) -> vector<u8>;
 };
 
-auto Nintendo64DD::load(string location) -> bool {
+auto Nintendo64DD::load(string location) -> LoadResult {
   vector<u8> input;
   if(directory::exists(location)) {
     append(input, {location, "program.disk"});
   } else if(file::exists(location)) {
     input = FloppyDisk::read(location);
   }
-  if(!input) return false;
+  if(!input) return LoadResult(romNotFound);
 
   array_view<u8> view{input};
   auto errorTable = createErrorTable(view);
-  if(!errorTable) return false;
+  if(!errorTable) return LoadResult(invalidRom);
   auto sizeValid = sizeCheck(view);
-  if(!sizeValid) return false;
+  if(!sizeValid) return LoadResult(invalidRom);
   this->location = location;
   this->manifest = analyze(input, errorTable);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return LoadResult(couldNotParseManifest);
   pak = shared_pointer{new vfs::directory};
   pak->setAttribute("title", document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
@@ -38,11 +38,11 @@ auto Nintendo64DD::load(string location) -> bool {
     pak->append("program.disk", output);
   }
 
-  if(!pak) return false;
+  if(!pak) return LoadResult(otherError);
 
   Pak::load("program.disk", ".disk");
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto Nintendo64DD::save(string location) -> bool {

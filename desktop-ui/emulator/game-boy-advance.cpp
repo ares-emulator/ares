@@ -1,7 +1,7 @@
 struct GameBoyAdvance : Emulator {
   GameBoyAdvance();
   auto load(Menu) -> void override;
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
@@ -50,23 +50,32 @@ auto GameBoyAdvance::load(Menu menu) -> void {
   }
 }
 
-auto GameBoyAdvance::load() -> bool {
+auto GameBoyAdvance::load() -> LoadResult {
   game = mia::Medium::create("Game Boy Advance");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   system = mia::System::create("Game Boy Advance");
-  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+  if(system->load(firmware[0].location) != LoadResult(successful)) {
+    result.firmwareSystemName = "Game Boy Advance";
+    result.firmwareType = firmware[0].type;
+    result.firmwareRegion = firmware[0].region;
+    result.result = noFirmware;
+    return result;
+  }
 
   ares::GameBoyAdvance::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
-  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Advance")) return false;
+  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Advance")) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto GameBoyAdvance::save() -> bool {

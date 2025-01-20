@@ -1,6 +1,6 @@
 struct MSX : Emulator {
   MSX();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
@@ -37,16 +37,26 @@ MSX::MSX() {
   }
 }
 
-auto MSX::load() -> bool {
+auto MSX::load() -> LoadResult {
   game = mia::Medium::create("MSX");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
   bool isTape = game->pak->attribute("tape").boolean();
 
   system = mia::System::create("MSX");
-  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+  result = system->load(firmware[0].location);
+  if(result != LoadResult(successful)) {
+    result.firmwareSystemName = "MSX";
+    result.firmwareType = firmware[0].type;
+    result.firmwareRegion = firmware[0].region;
+    result.result = noFirmware;
+    return result;
+  }
 
   auto region = Emulator::region();
-  if(!ares::MSX::load(root, {"[Microsoft] MSX (", region, ")"})) return false;
+  if(!ares::MSX::load(root, {"[Microsoft] MSX (", region, ")"})) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -76,7 +86,7 @@ auto MSX::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto MSX::load(Menu menu) -> void {

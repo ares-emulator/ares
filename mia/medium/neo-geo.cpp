@@ -6,7 +6,7 @@ struct NeoGeo : Mame {
   auto name() -> string override { return "Neo Geo"; }
   auto extensions() -> vector<string> override { return {"ng"}; }
   auto read(string location, string match) -> vector<u8>;
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto board() -> string;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> string;
@@ -58,7 +58,7 @@ auto NeoGeo::read(string location, string match) -> vector<u8> {
   return {};
 }
 
-auto NeoGeo::load(string location) -> bool {
+auto NeoGeo::load(string location) -> LoadResult {
   vector<u8> programROM;    //P ROM (68K CPU program)
   vector<u8> musicROM;      //M ROM (Z80 APU program)
   vector<u8> characterROM;  //C ROM (sprite and background character graphics)
@@ -67,7 +67,7 @@ auto NeoGeo::load(string location) -> bool {
   vector<u8> voiceBROM;     //V ROM (ADPCM-B voice samples)
 
   auto foundDatabase = Medium::loadDatabase();
-  if(!foundDatabase) return false;
+  if(!foundDatabase) return LoadResult(databaseNotFound);
   this->info = BML::unserialize(manifestDatabaseArcade(Medium::name(location)));
 
   if(file::exists(location)) {
@@ -79,11 +79,11 @@ auto NeoGeo::load(string location) -> bool {
     voiceBROM    = NeoGeo::read(location, "voice-b.rom");
   }
 
-  if(!programROM  ) return false;
-  if(!musicROM    ) return false;
-  if(!characterROM) return false;
-  if(!staticROM   ) return false;
-  if(!voiceAROM   ) return false;
+  if(!programROM  ) return LoadResult(romNotFound);
+  if(!musicROM    ) return LoadResult(romNotFound);
+  if(!characterROM) return LoadResult(romNotFound);
+  if(!staticROM   ) return LoadResult(romNotFound);
+  if(!voiceAROM   ) return LoadResult(romNotFound);
   //voiceB is optional
 
   //many games have encrypted roms, so let's decrypt them here
@@ -101,7 +101,7 @@ auto NeoGeo::load(string location) -> bool {
   this->location = location;
   this->manifest = analyze(programROM, musicROM, characterROM, staticROM, voiceAROM, voiceBROM);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return LoadResult(couldNotParseManifest);
 
   pak = new vfs::directory;
   pak->setAttribute("sha256",  sha256);
@@ -114,7 +114,7 @@ auto NeoGeo::load(string location) -> bool {
   pak->append("static.rom",    staticROM);
   pak->append("voice-a.rom",   voiceAROM);
   pak->append("voice-b.rom",   voiceBROM);
-  return true;
+  return LoadResult(successful);
 }
 
 auto NeoGeo::save(string location) -> bool {

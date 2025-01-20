@@ -1,6 +1,6 @@
 struct GameBoy : Emulator {
   GameBoy();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
@@ -28,14 +28,18 @@ GameBoy::GameBoy() {
   }
 }
 
-auto GameBoy::load() -> bool {
+auto GameBoy::load() -> LoadResult {
   game = mia::Medium::create("Game Boy");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   system = mia::System::create("Game Boy");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != LoadResult(successful)) return result;
 
-  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy")) return false;
+  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy")) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -46,7 +50,7 @@ auto GameBoy::load() -> bool {
     fastBoot->setValue(settings.boot.fast);
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto GameBoy::load(Menu menu) -> void {

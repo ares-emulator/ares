@@ -1,6 +1,6 @@
 struct SG1000 : Emulator {
   SG1000();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
@@ -25,15 +25,19 @@ SG1000::SG1000() {
   }
 }
 
-auto SG1000::load() -> bool {
+auto SG1000::load() -> LoadResult {
   game = mia::Medium::create("SG-1000");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   system = mia::System::create("SG-1000");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != LoadResult(successful)) return result;
 
   auto region = Emulator::region();
-  if(!ares::SG1000::load(root, {"[Sega] SG-1000 (", region, ")"})) return false;
+  if(!ares::SG1000::load(root, {"[Sega] SG-1000 (", region, ")"})) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -50,7 +54,7 @@ auto SG1000::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto SG1000::save() -> bool {

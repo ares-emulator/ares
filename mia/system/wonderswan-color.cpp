@@ -1,10 +1,10 @@
 struct WonderSwanColor : System {
   auto name() -> string override { return "WonderSwan Color"; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 };
 
-auto WonderSwanColor::load(string location) -> bool {
+auto WonderSwanColor::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
   pak->append("boot.rom", Resource::WonderSwanColor::Boot);
@@ -12,7 +12,7 @@ auto WonderSwanColor::load(string location) -> bool {
 
   Pak::load("save.eeprom", ".eeprom");
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto WonderSwanColor::save(string location) -> bool {

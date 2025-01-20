@@ -1,7 +1,7 @@
 struct SuperFamicom : Cartridge {
   auto name() -> string override { return "Super Famicom"; }
   auto extensions() -> vector<string> override { return {"sfc", "smc", "swc", "fig"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
 
@@ -33,7 +33,7 @@ protected:
   u32 headerAddress = 0;
 };
 
-auto SuperFamicom::load(string location) -> bool {
+auto SuperFamicom::load(string location) -> LoadResult {
   vector<u8> rom;
   string directory = location;
   bool local_firmware = false;
@@ -75,7 +75,7 @@ auto SuperFamicom::load(string location) -> bool {
     directory = Location::dir(location);
   }
   
-  if(!rom) return false;
+  if(!rom) return LoadResult(romNotFound);
   
   //append firmware to the ROM if it is missing
   auto tmp_manifest = analyze(rom);
@@ -85,7 +85,7 @@ auto SuperFamicom::load(string location) -> bool {
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   auto foundDatabase = Medium::loadDatabase();
-  if(!foundDatabase) return false;
+  if(!foundDatabase) return LoadResult(databaseNotFound);
   this->manifest = Medium::manifestDatabase(sha256);
   
   if(!manifest) {
@@ -102,7 +102,7 @@ auto SuperFamicom::load(string location) -> bool {
   
   if(!manifest) manifest = analyze(rom);
   document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return LoadResult(couldNotParseManifest);
 
   pak = new vfs::directory;
   pak->setAttribute("title", document["game/title"].string());
@@ -182,7 +182,7 @@ auto SuperFamicom::load(string location) -> bool {
     Medium::load(node, ".dram");
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto SuperFamicom::save(string location) -> bool {

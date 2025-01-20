@@ -1,6 +1,6 @@
 struct GameGear : Emulator {
   GameGear();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
@@ -27,23 +27,33 @@ GameGear::GameGear() {
   }
 }
 
-auto GameGear::load() -> bool {
+auto GameGear::load() -> LoadResult {
   game = mia::Medium::create("Game Gear");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   auto region = Emulator::region();
 
   system = mia::System::create("Game Gear");
-  if(!system->load(firmware[0].location)) return false;
+  result = system->load(firmware[0].location);
+  if(result != LoadResult(successful)) {
+    result.firmwareSystemName = "Game Gear";
+    result.firmwareType = firmware[0].type;
+    result.firmwareRegion = firmware[0].region;
+    result.result = noFirmware;
+    return result;
+  }
 
-  if(!ares::MasterSystem::load(root, {"[Sega] Game Gear (", region, ")"})) return false;
+  if(!ares::MasterSystem::load(root, {"[Sega] Game Gear (", region, ")"})) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto GameGear::save() -> bool {

@@ -1,6 +1,6 @@
 struct MyVision: Emulator {
   MyVision();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer < vfs::directory > override;
 };
@@ -42,23 +42,27 @@ MyVision::MyVision() {
   }
 }
 
-auto MyVision::load() -> bool {
+auto MyVision::load() -> LoadResult {
   game = mia::Medium::create("MyVision");
-  if (!game -> load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   system = mia::System::create("MyVision");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != LoadResult(successful)) return result;
 
   if (!ares::MyVision::load(root, {
       "[Nichibutsu] MyVision"
-    })) return false;
+  })) return LoadResult(otherError);
 
   if (auto port = root -> find < ares::Node::Port > ("Cartridge Slot")) {
     port -> allocate();
     port -> connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto MyVision::save() -> bool {

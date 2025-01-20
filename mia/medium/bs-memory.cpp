@@ -1,12 +1,12 @@
 struct BSMemory : Cartridge {
   auto name() -> string override { return "BS Memory"; }
   auto extensions() -> vector<string> override { return {"bs"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
 };
 
-auto BSMemory::load(string location) -> bool {
+auto BSMemory::load(string location) -> LoadResult {
   vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
@@ -14,16 +14,16 @@ auto BSMemory::load(string location) -> bool {
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return false;
+  if(!rom) return LoadResult(romNotFound);
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   auto foundDatabase = Medium::loadDatabase();
-  if(!foundDatabase) return false;
+  if(!foundDatabase) return LoadResult(databaseNotFound);
   this->manifest = Medium::manifestDatabase(sha256);
   if(!manifest) manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return LoadResult(couldNotParseManifest);
 
   pak = new vfs::directory;
   pak->setAttribute("title", document["game/title"].string());
@@ -36,7 +36,7 @@ auto BSMemory::load(string location) -> bool {
     Pak::load("program.flash", ".sav");
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto BSMemory::save(string location) -> bool {

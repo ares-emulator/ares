@@ -1,17 +1,17 @@
 struct GameBoyAdvance : System {
   auto name() -> string override { return "Game Boy Advance"; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 };
 
-auto GameBoyAdvance::load(string location) -> bool {
+auto GameBoyAdvance::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return false;
+  if(!bios) return LoadResult(romNotFound);
 
   this->location = locate();
   pak = new vfs::directory;
   pak->append("bios.rom", bios);
-  return true;
+  return LoadResult(successful);
 }
 
 auto GameBoyAdvance::save(string location) -> bool {

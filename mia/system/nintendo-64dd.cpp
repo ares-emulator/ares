@@ -1,12 +1,12 @@
 struct Nintendo64DD : System {
   auto name() -> string override { return "Nintendo 64DD"; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 };
 
-auto Nintendo64DD::load(string location) -> bool {
+auto Nintendo64DD::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return false;
+  if(!bios) return LoadResult(romNotFound);
 
   this->location = locate();
   pak = new vfs::directory;
@@ -21,7 +21,7 @@ auto Nintendo64DD::load(string location) -> bool {
   }
 
   Pak::load("time.rtc", ".rtc");
-  return true;
+  return LoadResult(successful);
 }
 
 auto Nintendo64DD::save(string location) -> bool {

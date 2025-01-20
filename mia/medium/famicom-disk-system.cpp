@@ -1,13 +1,13 @@
 struct FamicomDiskSystem : FloppyDisk {
   auto name() -> string override { return "Famicom Disk System"; }
   auto extensions() -> vector<string> override { return {"fds"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze() -> string;
   auto transform(array_view<u8> input) -> vector<u8>;
 };
 
-auto FamicomDiskSystem::load(string location) -> bool {
+auto FamicomDiskSystem::load(string location) -> LoadResult {
   if(directory::exists(location)) {
     this->location = location;
     this->manifest = analyze();
@@ -42,14 +42,14 @@ auto FamicomDiskSystem::load(string location) -> bool {
     }
   }
 
-  if(!pak) return false;
+  if(!pak) return LoadResult(romNotFound);
 
   Pak::load("disk1.sideA", ".d1a");
   Pak::load("disk1.sideB", ".d1b");
   Pak::load("disk2.sideA", ".d2a");
   Pak::load("disk2.sideB", ".d2b");
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto FamicomDiskSystem::save(string location) -> bool {

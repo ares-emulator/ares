@@ -1,7 +1,7 @@
 struct FamicomDiskSystem : Emulator {
   FamicomDiskSystem();
   auto load(Menu) -> void override;
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto notify(const string& message) -> void override;
@@ -65,17 +65,28 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
   return (void)disk1sideA.setChecked();
 }
 
-auto FamicomDiskSystem::load() -> bool {
+auto FamicomDiskSystem::load() -> LoadResult {
   game = mia::Medium::create("Famicom Disk System");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   bios = mia::Medium::create("Famicom");
-  if(!bios->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+  result = bios->load(firmware[0].location);
+  if(result != LoadResult(successful)) {
+    result.firmwareSystemName = "Famicom";
+    result.firmwareType = firmware[0].type;
+    result.firmwareRegion = firmware[0].region;
+    result.result = noFirmware;
+    return result;
+  }
 
   system = mia::System::create("Famicom");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != LoadResult(successful)) return result;
 
-  if(!ares::Famicom::load(root, "[Nintendo] Famicom (NTSC-J)")) return false;
+  if(!ares::Famicom::load(root, "[Nintendo] Famicom (NTSC-J)")) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -101,7 +112,7 @@ auto FamicomDiskSystem::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto FamicomDiskSystem::save() -> bool {

@@ -1,6 +1,6 @@
 struct ColecoVision : Emulator {
   ColecoVision();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
@@ -39,15 +39,24 @@ ColecoVision::ColecoVision() {
   }
 }
 
-auto ColecoVision::load() -> bool {
+auto ColecoVision::load() -> LoadResult {
   game = mia::Medium::create("ColecoVision");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   system = mia::System::create("ColecoVision");
-  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+  if(system->load(firmware[0].location) != LoadResult(successful)) {
+    result.firmwareSystemName = "ColecoVision";
+    result.firmwareType = firmware[0].type;
+    result.firmwareRegion = firmware[0].region;
+    result.result = noFirmware;
+    return result;
+  }
 
   auto region = Emulator::region();
-  if(!ares::ColecoVision::load(root, {"[Coleco] ColecoVision (", region, ")"})) return false;
+  if(!ares::ColecoVision::load(root, {"[Coleco] ColecoVision (", region, ")"})) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -64,7 +73,7 @@ auto ColecoVision::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto ColecoVision::save() -> bool {

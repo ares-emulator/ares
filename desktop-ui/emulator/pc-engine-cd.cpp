@@ -1,6 +1,6 @@
 struct PCEngineCD : PCEngine {
   PCEngineCD();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
@@ -20,9 +20,12 @@ PCEngineCD::PCEngineCD() {
   allocatePorts();
 }
 
-auto PCEngineCD::load() -> bool {
+auto PCEngineCD::load() -> LoadResult {
   game = mia::Medium::create("PC Engine CD");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return LoadResult(noFileSelected);
+  LoadResult result = game->load(location);
+  if(result != LoadResult(successful)) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -39,15 +42,23 @@ auto PCEngineCD::load() -> bool {
   }
 
   bios = mia::Medium::create("PC Engine");
-  if(!bios->load(firmware[biosID].location)) return errorFirmware(firmware[biosID]), false;
+  result = bios->load(firmware[biosID].location);
+  if(result != LoadResult(successful)) {
+    result.firmwareSystemName = "PC Engine";
+    result.firmwareType = firmware[biosID].type;
+    result.firmwareRegion = firmware[biosID].region;
+    result.result = noFirmware;
+    return result;
+  }
 
   system = mia::System::create("PC Engine");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != LoadResult(successful)) return result;
 
   ares::PCEngine::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
   auto name = region == "NTSC-J" ? "PC Engine Duo" : "TurboDuo";
-  if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return false;
+  if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return LoadResult(otherError);
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -61,7 +72,7 @@ auto PCEngineCD::load() -> bool {
 
   connectPorts();
 
-  return true;
+  return LoadResult(successful);
 }
 
 auto PCEngineCD::save() -> bool {
