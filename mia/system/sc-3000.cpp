@@ -7,7 +7,7 @@ struct SC3000 : System {
 auto SC3000::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
-  return LoadResult(successful);
+  return successful;
 }
 
 auto SC3000::save(string location) -> bool {

@@ -11,7 +11,7 @@ auto SuperGrafx::load(string location) -> LoadResult {
 
   Pak::load("backup.ram", ".bram");
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto SuperGrafx::save(string location) -> bool {

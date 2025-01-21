@@ -8,7 +8,7 @@ auto MegaDrive::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
   pak->append("tmss.rom", Resource::MegaDrive::TMSS);
-  return LoadResult(successful);
+  return successful;
 }
 
 auto MegaDrive::save(string location) -> bool {

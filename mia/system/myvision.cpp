@@ -9,7 +9,7 @@ auto MyVision::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto MyVision::save(string location) -> bool {

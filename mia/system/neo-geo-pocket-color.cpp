@@ -6,7 +6,7 @@ struct NeoGeoPocketColor : System {
 
 auto NeoGeoPocketColor::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return LoadResult(romNotFound);
+  if(!bios) return romNotFound;
 
   this->location = locate();
   pak = new vfs::directory;
@@ -17,7 +17,7 @@ auto NeoGeoPocketColor::load(string location) -> LoadResult {
   Pak::load("cpu.ram", ".cram");
   Pak::load("apu.ram", ".aram");
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto NeoGeoPocketColor::save(string location) -> bool {

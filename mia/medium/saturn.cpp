@@ -7,12 +7,12 @@ struct Saturn : CompactDisc {
 };
 
 auto Saturn::load(string location) -> LoadResult {
-  if(!inode::exists(location)) return LoadResult(romNotFound);
+  if(!inode::exists(location)) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(location);
   auto document = BML::unserialize(manifest);
-  if(!document) return LoadResult(couldNotParseManifest);
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("title",  document["game/title"].string());
@@ -26,7 +26,7 @@ auto Saturn::load(string location) -> LoadResult {
     pak->append("cd.rom", vfs::cdrom::open(location));
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto Saturn::save(string location) -> bool {

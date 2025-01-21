@@ -28,16 +28,16 @@ SG1000::SG1000() {
 auto SG1000::load() -> LoadResult {
   game = mia::Medium::create("SG-1000");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("SG-1000");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = Emulator::region();
-  if(!ares::SG1000::load(root, {"[Sega] SG-1000 (", region, ")"})) return LoadResult(otherError);
+  if(!ares::SG1000::load(root, {"[Sega] SG-1000 (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -54,7 +54,7 @@ auto SG1000::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto SG1000::save() -> bool {

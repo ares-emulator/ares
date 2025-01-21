@@ -67,7 +67,7 @@ auto NeoGeo::load(string location) -> LoadResult {
   vector<u8> voiceBROM;     //V ROM (ADPCM-B voice samples)
 
   auto foundDatabase = Medium::loadDatabase();
-  if(!foundDatabase) return LoadResult(databaseNotFound);
+  if(!foundDatabase) return { databaseNotFound, "Neo Geo.bml" };
   this->info = BML::unserialize(manifestDatabaseArcade(Medium::name(location)));
 
   if(file::exists(location)) {
@@ -78,12 +78,14 @@ auto NeoGeo::load(string location) -> LoadResult {
     voiceAROM    = NeoGeo::read(location, "voice-a.rom");
     voiceBROM    = NeoGeo::read(location, "voice-b.rom");
   }
+  
+  string invalidRomInfo = "Ensure your ROM is in a MAME-compatible .zip format.";
 
-  if(!programROM  ) return LoadResult(romNotFound);
-  if(!musicROM    ) return LoadResult(romNotFound);
-  if(!characterROM) return LoadResult(romNotFound);
-  if(!staticROM   ) return LoadResult(romNotFound);
-  if(!voiceAROM   ) return LoadResult(romNotFound);
+  if(!programROM  ) return { invalidROM, invalidRomInfo };
+  if(!musicROM    ) return { invalidROM, invalidRomInfo };
+  if(!characterROM) return { invalidROM, invalidRomInfo };
+  if(!staticROM   ) return { invalidROM, invalidRomInfo };
+  if(!voiceAROM   ) return { invalidROM, invalidRomInfo };
   //voiceB is optional
 
   //many games have encrypted roms, so let's decrypt them here
@@ -101,7 +103,7 @@ auto NeoGeo::load(string location) -> LoadResult {
   this->location = location;
   this->manifest = analyze(programROM, musicROM, characterROM, staticROM, voiceAROM, voiceBROM);
   auto document = BML::unserialize(manifest);
-  if(!document) return LoadResult(couldNotParseManifest);
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("sha256",  sha256);
@@ -114,7 +116,7 @@ auto NeoGeo::load(string location) -> LoadResult {
   pak->append("static.rom",    staticROM);
   pak->append("voice-a.rom",   voiceAROM);
   pak->append("voice-b.rom",   voiceBROM);
-  return LoadResult(successful);
+  return successful;
 }
 
 auto NeoGeo::save(string location) -> bool {

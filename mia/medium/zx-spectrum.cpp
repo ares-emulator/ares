@@ -9,22 +9,22 @@ struct ZXSpectrum : Medium {
 };
 
 auto ZXSpectrum::load(string location) -> LoadResult {
-  if(!inode::exists(location)) return LoadResult(romNotFound);
+  if(!inode::exists(location)) return romNotFound;
 
   if(location.iendsWith(".tap") || location.iendsWith(".tzx")) return loadTzx(location);
   if(location.iendsWith(".wav")) return loadWav(location);
-  return LoadResult(invalidRom);
+  return invalidROM;
 }
 
 auto ZXSpectrum::loadTzx(string location) -> LoadResult {
   this->location = location;
   this->manifest = analyze(location);
   auto document = BML::unserialize(manifest);
-  if(!document) return LoadResult(couldNotParseManifest);
+  if(!document) return couldNotParseManifest;
 
   vector<u8> input = file::read(location);
   TZXFile tzx;
-  if(tzx.DecodeFile(input.data(), input.size()) == FileTypeUndetermined) return LoadResult(invalidRom);
+  if(tzx.DecodeFile(input.data(), input.size()) == FileTypeUndetermined) return invalidROM;
   tzx.GenerateAudioData();
 
   pak = new vfs::directory;
@@ -45,14 +45,14 @@ auto ZXSpectrum::loadTzx(string location) -> LoadResult {
   }
   pak->append("program.tape", output);
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto ZXSpectrum::loadWav(string location) -> LoadResult {
   this->location = location;
   this->manifest = analyze(location);
   auto document = BML::unserialize(manifest);
-  if(!document) return LoadResult(couldNotParseManifest);
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("title",      document["game/title"].string());
@@ -80,7 +80,7 @@ auto ZXSpectrum::loadWav(string location) -> LoadResult {
     }
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto ZXSpectrum::save(string location) -> bool {

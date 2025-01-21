@@ -93,9 +93,9 @@ MasterSystem::MasterSystem() {
 auto MasterSystem::load() -> LoadResult {
   game = mia::Medium::create("Master System");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -105,16 +105,10 @@ auto MasterSystem::load() -> LoadResult {
 
   system = mia::System::create("Master System");
   result = system->load(firmware[regionID].location);
-  if(result != LoadResult(successful)) {
-    result.firmwareSystemName = "Master System";
-    result.firmwareType = firmware[regionID].type;
-    result.firmwareRegion = firmware[regionID].region;
-    result.result = noFirmware;
-    return result;
-  }
-  if(!game->pak && !system->pak->read("bios.rom")) return LoadResult(otherError);
+  if(result != successful) return otherError;
+  if(!game->pak && !system->pak->read("bios.rom")) return otherError;
 
-  if(!ares::MasterSystem::load(root, {"[Sega] Master System (", region, ")"})) return LoadResult(otherError);
+  if(!ares::MasterSystem::load(root, {"[Sega] Master System (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -140,7 +134,7 @@ auto MasterSystem::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto MasterSystem::save() -> bool {

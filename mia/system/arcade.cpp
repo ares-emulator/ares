@@ -7,7 +7,7 @@ struct Arcade : System {
 auto Arcade::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
-  return LoadResult(successful);
+  return successful;
 }
 
 auto Arcade::save(string location) -> bool {

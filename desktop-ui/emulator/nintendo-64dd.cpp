@@ -59,9 +59,9 @@ Nintendo64DD::Nintendo64DD() {
 auto Nintendo64DD::load() -> LoadResult {
   game = mia::Medium::create("Nintendo 64DD");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = game->pak->attribute("region");
   //if statements below are ordered by lowest to highest priority
@@ -71,7 +71,7 @@ auto Nintendo64DD::load() -> LoadResult {
 
   system = mia::System::create("Nintendo 64DD");
   result = system->load(firmware[regionID].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "Nintendo 64DD";
     result.firmwareType = firmware[regionID].type;
     result.firmwareRegion = firmware[regionID].region;
@@ -92,7 +92,7 @@ auto Nintendo64DD::load() -> LoadResult {
   ares::Nintendo64::option("Recompiler", !settings.general.forceInterpreter);
   ares::Nintendo64::option("Expansion Pak", settings.nintendo64.expansionPak);
 
-  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64DD (", region, ")"})) return LoadResult(otherError);
+  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64DD (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive")) {
     port->allocate();
@@ -114,7 +114,7 @@ auto Nintendo64DD::load() -> LoadResult {
           if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
             gb = mia::Medium::create("Game Boy");
             string tmpPath;
-            if(gb->load(Emulator::load(gb, tmpPath)) == LoadResult(successful)) {
+            if(gb->load(Emulator::load(gb, tmpPath)) == successful) {
               slot->allocate();
               slot->connect();
               transferPakConnected = true;
@@ -144,7 +144,7 @@ auto Nintendo64DD::load() -> LoadResult {
 
   diskInsertTimer = Timer{};
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto Nintendo64DD::load(Menu menu) -> void {
@@ -155,7 +155,7 @@ auto Nintendo64DD::load(Menu menu) -> void {
     auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
     drive->disconnect();
 
-    if(game->load(Emulator::load(game, configuration.game)) != LoadResult(successful)) {
+    if(game->load(Emulator::load(game, configuration.game)) != successful) {
       return;
     }
 

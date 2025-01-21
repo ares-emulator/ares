@@ -90,19 +90,19 @@ auto PCEngine::connectPorts() -> void {
 auto PCEngine::load() -> LoadResult {
   game = mia::Medium::create("PC Engine");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("PC Engine");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   ares::PCEngine::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
   auto region = Emulator::region();
   string name = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
-  if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return LoadResult(otherError);
+  if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -111,7 +111,7 @@ auto PCEngine::load() -> LoadResult {
 
   connectPorts();
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto PCEngine::save() -> bool {

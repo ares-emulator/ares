@@ -41,16 +41,16 @@ Atari2600::Atari2600() {
 auto Atari2600::load() -> LoadResult {
   game = mia::Medium::create("Atari 2600");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return couldNotParseManifest;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("Atari 2600");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = Emulator::region();
-  if(!ares::Atari2600::load(root, {"[Atari] Atari 2600 (", region, ")"})) return LoadResult(otherError);
+  if(!ares::Atari2600::load(root, {"[Atari] Atari 2600 (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -67,7 +67,7 @@ auto Atari2600::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto Atari2600::save() -> bool {

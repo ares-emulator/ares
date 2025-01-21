@@ -17,17 +17,17 @@ auto Nintendo64DD::load(string location) -> LoadResult {
   } else if(file::exists(location)) {
     input = FloppyDisk::read(location);
   }
-  if(!input) return LoadResult(romNotFound);
+  if(!input) return romNotFound;
 
   array_view<u8> view{input};
   auto errorTable = createErrorTable(view);
-  if(!errorTable) return LoadResult(invalidRom);
+  if(!errorTable) return invalidROM;
   auto sizeValid = sizeCheck(view);
-  if(!sizeValid) return LoadResult(invalidRom);
+  if(!sizeValid) return invalidROM;
   this->location = location;
   this->manifest = analyze(input, errorTable);
   auto document = BML::unserialize(manifest);
-  if(!document) return LoadResult(couldNotParseManifest);
+  if(!document) return couldNotParseManifest;
   pak = shared_pointer{new vfs::directory};
   pak->setAttribute("title", document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
@@ -38,11 +38,11 @@ auto Nintendo64DD::load(string location) -> LoadResult {
     pak->append("program.disk", output);
   }
 
-  if(!pak) return LoadResult(otherError);
+  if(!pak) return otherError;
 
   Pak::load("program.disk", ".disk");
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto Nintendo64DD::save(string location) -> bool {

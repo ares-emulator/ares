@@ -32,13 +32,13 @@ NeoGeoPocket::NeoGeoPocket() {
 auto NeoGeoPocket::load() -> LoadResult {
   game = mia::Medium::create("Neo Geo Pocket");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("Neo Geo Pocket");
   result = system->load(firmware[0].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "Neo Geo Pocket";
     result.firmwareType = firmware[0].type;
     result.firmwareRegion = firmware[0].region;
@@ -46,7 +46,7 @@ auto NeoGeoPocket::load() -> LoadResult {
     return result;
   }
 
-  if(!ares::NeoGeoPocket::load(root, "[SNK] Neo Geo Pocket")) return LoadResult(otherError);;
+  if(!ares::NeoGeoPocket::load(root, "[SNK] Neo Geo Pocket")) return otherError;;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -57,7 +57,7 @@ auto NeoGeoPocket::load() -> LoadResult {
     fastBoot->setValue(settings.boot.fast);
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto NeoGeoPocket::save() -> bool {

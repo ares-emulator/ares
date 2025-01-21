@@ -38,13 +38,13 @@ NeoGeoMVS::NeoGeoMVS() {
 auto NeoGeoMVS::load() -> LoadResult {
   game = mia::Medium::create("Neo Geo");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("Neo Geo MVS");
   result = system->load(firmware[0].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "Neo Geo MVS";
     result.firmwareType = firmware[0].type;
     result.firmwareRegion = firmware[0].region;
@@ -52,7 +52,7 @@ auto NeoGeoMVS::load() -> LoadResult {
     return result;
   }
 
-  if(!ares::NeoGeo::load(root, "[SNK] Neo Geo MVS")) return LoadResult(otherError);
+  if(!ares::NeoGeo::load(root, "[SNK] Neo Geo MVS")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -74,7 +74,7 @@ auto NeoGeoMVS::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto NeoGeoMVS::save() -> bool {

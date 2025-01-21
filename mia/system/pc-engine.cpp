@@ -11,7 +11,7 @@ auto PCEngine::load(string location) -> LoadResult {
 
   Pak::load("backup.ram", ".bram");
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto PCEngine::save(string location) -> bool {

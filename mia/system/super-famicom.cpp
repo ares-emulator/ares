@@ -9,9 +9,9 @@ auto SuperFamicom::load(string location) -> LoadResult {
   pak = new vfs::directory;
   pak->append("ipl.rom", Resource::SuperFamicom::IPLROM);
   auto romLocation = mia::locate("Database/Super Famicom Boards.bml");
-  if(!romLocation) return LoadResult(databaseNotFound);
+  if(!romLocation) return { databaseNotFound, "Super Famicom Boards.bml" };
   pak->append("boards.bml", file::read(romLocation));
-  return LoadResult(successful);
+  return successful;
 }
 
 auto SuperFamicom::save(string location) -> bool {

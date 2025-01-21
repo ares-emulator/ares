@@ -6,7 +6,7 @@ struct NeoGeoPocket : System {
 
 auto NeoGeoPocket::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return LoadResult(romNotFound);
+  if(!bios) return romNotFound;
 
   this->location = locate();
   pak = new vfs::directory;
@@ -17,7 +17,7 @@ auto NeoGeoPocket::load(string location) -> LoadResult {
   Pak::load("cpu.ram", ".cram");
   Pak::load("apu.ram", ".aram");
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto NeoGeoPocket::save(string location) -> bool {

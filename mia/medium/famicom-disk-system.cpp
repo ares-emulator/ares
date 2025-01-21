@@ -42,14 +42,14 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     }
   }
 
-  if(!pak) return LoadResult(romNotFound);
+  if(!pak) return romNotFound;
 
   Pak::load("disk1.sideA", ".d1a");
   Pak::load("disk1.sideB", ".d1b");
   Pak::load("disk2.sideA", ".d2a");
   Pak::load("disk2.sideB", ".d2b");
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto FamicomDiskSystem::save(string location) -> bool {

@@ -55,38 +55,57 @@ auto Emulator::region() -> string {
 }
 
 auto Emulator::handleLoadResult(LoadResult result) -> void {
+  string errorText;
+
   switch (result.result) {
     case successful:
-      break;
+      return;
     case noFileSelected:
+      return;
+    case invalidROM:
+      errorText = { "There was an error trying to parse the selected ROM. \n",
+                    "Your ROM may be corrupt or contain a bad dump." };
       break;
     case couldNotParseManifest:
-      error("An error was encountered while parsing the manifest. \n"
-            "");
+      errorText = { "An error occurred while parsing the database file. You \n",
+                    "may need to reinstall ares." };
       break;
     case databaseNotFound:
-      error("The database file for the system was not found. \n"
-            "Make sure that you have installed or packaged ares correctly.");
+      errorText = { "The database file for the system was not found. \n",
+                    "Make sure that you have installed or packaged ares correctly. \n",
+                    "Missing database file: " };
       break;
     case noFirmware:
+      errorText = { "Error: firmware is missing or invalid.\n",
+                    result.firmwareSystemName, " - ", result.firmwareType, " (", result.firmwareRegion, ") is required to play this game.\n",
+                    "Would you like to configure firmware settings now?" };
+      break;
+    case romNotFound:
+      errorText = "The selected ROM file was not found or could not be opened.";
+      break;
+    case romNotFoundInDatabase:
+      errorText = { "The required manifest for this ROM was not found in the database. \n",
+                    "This title may not be currently supported by ares." };
+      break;
+    case otherError:
+      errorText = "An internal error occurred when initializing the emulator core.";
+      break;
+  }
+  
+  if(result.info) {
+    errorText = { errorText, result.info };
+  }
+  
+  switch (result.result) {
+    case noFirmware:
       if(MessageDialog().setText({
-        "Error: firmware is missing or invalid.\n",
-        result.firmwareSystemName, " - ", result.firmwareType, " (", result.firmwareRegion, ") is required to play this game.\n"
-        "Would you like to configure firmware settings now?"
+        errorText
       }).question() == "Yes") {
         settingsWindow.show("Firmware");
         firmwareSettings.select(emulator->name, result.firmwareType, result.firmwareRegion);
       }
-      break;
-    case romNotFound:
-      error("A required ROM file was not found.");
-      break;
-    case romNotFoundInDatabase:
-      error("The selected ROM was not found in the database.");
-      break;
-    case otherError:
-      error("Failed to load the selected system and ROM.");
-      break;
+    default:
+      error(errorText);
   }
 }
 
@@ -95,7 +114,7 @@ auto Emulator::load(const string& location) -> bool {
   
   LoadResult result = load();
   handleLoadResult(result);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     return false;
   }
   setBoolean("Color Emulation", settings.video.colorEmulation);

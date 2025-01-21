@@ -36,18 +36,18 @@ Arcade::Arcade() {
 auto Arcade::load() -> LoadResult {
   game = mia::Medium::create("Arcade");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("Arcade");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   //Determine from the game manifest which core to use for the given arcade rom
 #ifdef CORE_SG
   if(game->pak->attribute("board") == "sega/sg1000a") {
-    if(!ares::SG1000::load(root, {"[Sega] SG-1000A"})) return LoadResult(otherError);
+    if(!ares::SG1000::load(root, {"[Sega] SG-1000A"})) return otherError;
     systemPakName = "SG-1000A";
     gamePakName = "Arcade Cartridge";
 
@@ -55,11 +55,11 @@ auto Arcade::load() -> LoadResult {
       port->allocate();
       port->connect();
     }
-    return LoadResult(successful);
+    return successful;
   }
 #endif
 
-  return LoadResult(otherError);
+  return otherError;
 }
 
 auto Arcade::save() -> bool {

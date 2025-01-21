@@ -42,12 +42,12 @@ ColecoVision::ColecoVision() {
 auto ColecoVision::load() -> LoadResult {
   game = mia::Medium::create("ColecoVision");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("ColecoVision");
-  if(system->load(firmware[0].location) != LoadResult(successful)) {
+  if(system->load(firmware[0].location) != successful) {
     result.firmwareSystemName = "ColecoVision";
     result.firmwareType = firmware[0].type;
     result.firmwareRegion = firmware[0].region;
@@ -56,7 +56,7 @@ auto ColecoVision::load() -> LoadResult {
   }
 
   auto region = Emulator::region();
-  if(!ares::ColecoVision::load(root, {"[Coleco] ColecoVision (", region, ")"})) return LoadResult(otherError);
+  if(!ares::ColecoVision::load(root, {"[Coleco] ColecoVision (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -73,7 +73,7 @@ auto ColecoVision::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto ColecoVision::save() -> bool {

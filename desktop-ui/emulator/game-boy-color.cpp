@@ -30,15 +30,15 @@ GameBoyColor::GameBoyColor() {
 auto GameBoyColor::load() -> LoadResult {
   game = mia::Medium::create("Game Boy Color");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("Game Boy Color");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
-  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy Color")) return LoadResult(otherError);
+  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy Color")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -49,7 +49,7 @@ auto GameBoyColor::load() -> LoadResult {
     fastBoot->setValue(settings.boot.fast);
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto GameBoyColor::save() -> bool {

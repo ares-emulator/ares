@@ -78,9 +78,9 @@ PlayStation::PlayStation() {
 auto PlayStation::load() -> LoadResult {
   game = mia::Medium::create("PlayStation");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -90,7 +90,7 @@ auto PlayStation::load() -> LoadResult {
 
   system = mia::System::create("PlayStation");
   result = system->load(firmware[regionID].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "PlayStation";
     result.firmwareType = firmware[regionID].type;
     result.firmwareRegion = firmware[regionID].region;
@@ -100,7 +100,7 @@ auto PlayStation::load() -> LoadResult {
 
   ares::PlayStation::option("Recompiler", !settings.general.forceInterpreter);
 
-  if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return LoadResult(otherError);
+  if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return otherError;
 
   if(auto fastBoot = root->find<ares::Node::Setting::Boolean>("Fast Boot")) {
     fastBoot->setValue(settings.boot.fast);
@@ -131,7 +131,7 @@ auto PlayStation::load() -> LoadResult {
 
   discTrayTimer = Timer{};
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto PlayStation::load(Menu menu) -> void {
@@ -142,7 +142,7 @@ auto PlayStation::load(Menu menu) -> void {
     auto tray = root->find<ares::Node::Port>("PlayStation/Disc Tray");
     tray->disconnect();
 
-    if(game->load(Emulator::load(game, configuration.game)) != LoadResult(successful)) {
+    if(game->load(Emulator::load(game, configuration.game)) != successful) {
       return;
     }
 

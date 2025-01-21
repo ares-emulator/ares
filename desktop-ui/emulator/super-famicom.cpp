@@ -96,18 +96,18 @@ SuperFamicom::SuperFamicom() {
 auto SuperFamicom::load() -> LoadResult {
   game = mia::Medium::create("Super Famicom");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("Super Famicom");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   ares::SuperFamicom::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
   auto region = Emulator::region();
-  if(!ares::SuperFamicom::load(root, {"[Nintendo] Super Famicom (", region, ")"})) return LoadResult(otherError);
+  if(!ares::SuperFamicom::load(root, {"[Nintendo] Super Famicom (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     auto cartridge = port->allocate();
@@ -115,7 +115,7 @@ auto SuperFamicom::load() -> LoadResult {
 
     if(auto slot = cartridge->find<ares::Node::Port>("Super Game Boy/Cartridge Slot")) {
       gb = mia::Medium::create("Game Boy");
-      if(gb->load(Emulator::load(gb, settings.paths.superFamicom.gameBoy)) != LoadResult(successful)) {
+      if(gb->load(Emulator::load(gb, settings.paths.superFamicom.gameBoy)) != successful) {
         slot->allocate();
         slot->connect();
       } else {
@@ -125,7 +125,7 @@ auto SuperFamicom::load() -> LoadResult {
 
     if(auto slot = cartridge->find<ares::Node::Port>("BS Memory Slot")) {
       bs = mia::Medium::create("BS Memory");
-      if(bs->load(Emulator::load(bs, settings.paths.superFamicom.bsMemory)) != LoadResult(successful)) {
+      if(bs->load(Emulator::load(bs, settings.paths.superFamicom.bsMemory)) != successful) {
         slot->allocate();
         slot->connect();
       } else {
@@ -135,7 +135,7 @@ auto SuperFamicom::load() -> LoadResult {
 
     if(auto slot = cartridge->find<ares::Node::Port>("Sufami Turbo Slot A")) {
       stA = mia::Medium::create("Sufami Turbo");
-      if(stA->load(Emulator::load(stA, settings.paths.superFamicom.sufamiTurbo)) != LoadResult(successful)) {
+      if(stA->load(Emulator::load(stA, settings.paths.superFamicom.sufamiTurbo)) != successful) {
         slot->allocate();
         slot->connect();
       } else {
@@ -145,7 +145,7 @@ auto SuperFamicom::load() -> LoadResult {
 
     if(auto slot = cartridge->find<ares::Node::Port>("Sufami Turbo Slot B")) {
       stB = mia::Medium::create("Sufami Turbo");
-      if(stB->load(Emulator::load(stB, settings.paths.superFamicom.sufamiTurbo)) != LoadResult(successful)) {
+      if(stB->load(Emulator::load(stB, settings.paths.superFamicom.sufamiTurbo)) != successful) {
         slot->allocate();
         slot->connect();
       } else {
@@ -164,7 +164,7 @@ auto SuperFamicom::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto SuperFamicom::save() -> bool {

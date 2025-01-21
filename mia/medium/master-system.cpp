@@ -13,13 +13,13 @@ auto MasterSystem::load(string location) -> LoadResult {
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   } else {
-    return LoadResult(romNotFound);
+    return romNotFound;
   }
 
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
-  if(!document) return LoadResult(couldNotParseManifest);
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("board",  document["game/board" ].string());
@@ -34,7 +34,7 @@ auto MasterSystem::load(string location) -> LoadResult {
     Medium::load(node, ".ram");
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto MasterSystem::save(string location) -> bool {

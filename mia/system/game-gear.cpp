@@ -11,7 +11,7 @@ auto GameGear::load(string location) -> LoadResult {
   pak = new vfs::directory;
   if(bios) pak->append("bios.rom", bios);
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto GameGear::save(string location) -> bool {

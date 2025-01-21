@@ -13,7 +13,7 @@ struct MegaCD32X : System {
 
 auto MegaCD32X::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return LoadResult(romNotFound);
+  if(!bios) return romNotFound;
 
   this->location = locate();
   pak = new vfs::directory;
@@ -32,7 +32,7 @@ auto MegaCD32X::load(string location) -> LoadResult {
 
   Pak::load("backup.ram", ".bram");
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto MegaCD32X::save(string location) -> bool {

@@ -7,7 +7,7 @@ struct SG1000 : System {
 auto SG1000::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
-  return LoadResult(successful);
+  return successful;
 }
 
 auto SG1000::save(string location) -> bool {

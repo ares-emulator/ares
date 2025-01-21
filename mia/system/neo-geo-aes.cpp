@@ -26,9 +26,9 @@ auto NeoGeoAES::load(string location) -> LoadResult {
     if (bios) pak->append("bios.rom", bios);
   }
 
-  if(pak->count() != 1) return LoadResult(romNotFound);
+  if(pak->count() != 1) return romNotFound;
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto NeoGeoAES::save(string location) -> bool {

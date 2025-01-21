@@ -45,24 +45,24 @@ MyVision::MyVision() {
 auto MyVision::load() -> LoadResult {
   game = mia::Medium::create("MyVision");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("MyVision");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   if (!ares::MyVision::load(root, {
       "[Nichibutsu] MyVision"
-  })) return LoadResult(otherError);
+  })) return otherError;
 
   if (auto port = root -> find < ares::Node::Port > ("Cartridge Slot")) {
     port -> allocate();
     port -> connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto MyVision::save() -> bool {

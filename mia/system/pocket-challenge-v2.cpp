@@ -9,7 +9,7 @@ auto PocketChallengeV2::load(string location) -> LoadResult {
   pak = new vfs::directory;
   pak->append("boot.rom", Resource::PocketChallengeV2::Boot);
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto PocketChallengeV2::save(string location) -> bool {

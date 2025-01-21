@@ -6,7 +6,7 @@ struct Nintendo64DD : System {
 
 auto Nintendo64DD::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return LoadResult(romNotFound);
+  if(!bios) return romNotFound;
 
   this->location = locate();
   pak = new vfs::directory;
@@ -21,7 +21,7 @@ auto Nintendo64DD::load(string location) -> LoadResult {
   }
 
   Pak::load("time.rtc", ".rtc");
-  return LoadResult(successful);
+  return successful;
 }
 
 auto Nintendo64DD::save(string location) -> bool {

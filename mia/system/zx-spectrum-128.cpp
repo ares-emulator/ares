@@ -9,7 +9,7 @@ auto ZXSpectrum128::load(string location) -> LoadResult {
   pak = new vfs::directory;
   pak->append("bios.rom", Resource::ZXSpectrum128::BIOS);
   pak->append("sub.rom", Resource::ZXSpectrum128::Sub);
-  return LoadResult(successful);
+  return successful;
 }
 
 auto ZXSpectrum128::save(string location) -> bool {

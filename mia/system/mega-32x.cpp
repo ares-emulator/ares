@@ -11,7 +11,7 @@ auto Mega32X::load(string location) -> LoadResult {
   pak->append("vector.rom", Resource::Mega32X::Vector);
   pak->append("sh2.boot.mrom", Resource::Mega32X::SH2BootM);
   pak->append("sh2.boot.srom", Resource::Mega32X::SH2BootS);
-  return LoadResult(successful);
+  return successful;
 }
 
 auto Mega32X::save(string location) -> bool {

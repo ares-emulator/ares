@@ -13,12 +13,12 @@ auto GameBoy::load(string location) -> LoadResult {
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return LoadResult(romNotFound);
+  if(!rom) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
-  if(!document) return LoadResult(couldNotParseManifest);
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("title", document["game/title"].string());
@@ -42,7 +42,7 @@ auto GameBoy::load(string location) -> LoadResult {
     Medium::load(node, ".rtc");
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto GameBoy::save(string location) -> bool {

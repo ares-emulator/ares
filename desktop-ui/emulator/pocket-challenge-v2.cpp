@@ -37,24 +37,24 @@ auto PocketChallengeV2::load(Menu menu) -> void {
 auto PocketChallengeV2::load() -> LoadResult {
   game = mia::Medium::create("Pocket Challenge V2");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("Pocket Challenge V2");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   ares::WonderSwan::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
-  if(!ares::WonderSwan::load(root, "[Benesse] Pocket Challenge V2")) return LoadResult(otherError);
+  if(!ares::WonderSwan::load(root, "[Benesse] Pocket Challenge V2")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto PocketChallengeV2::save() -> bool {

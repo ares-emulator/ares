@@ -40,14 +40,14 @@ MSX::MSX() {
 auto MSX::load() -> LoadResult {
   game = mia::Medium::create("MSX");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
   bool isTape = game->pak->attribute("tape").boolean();
 
   system = mia::System::create("MSX");
   result = system->load(firmware[0].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "MSX";
     result.firmwareType = firmware[0].type;
     result.firmwareRegion = firmware[0].region;
@@ -56,7 +56,7 @@ auto MSX::load() -> LoadResult {
   }
 
   auto region = Emulator::region();
-  if(!ares::MSX::load(root, {"[Microsoft] MSX (", region, ")"})) return LoadResult(otherError);
+  if(!ares::MSX::load(root, {"[Microsoft] MSX (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -86,7 +86,7 @@ auto MSX::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto MSX::load(Menu menu) -> void {

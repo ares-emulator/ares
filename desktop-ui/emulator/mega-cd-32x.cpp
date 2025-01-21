@@ -48,9 +48,9 @@ MegaCD32X::MegaCD32X() {
 auto MegaCD32X::load() -> LoadResult {
   game = mia::Medium::create("Mega CD");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -63,12 +63,12 @@ auto MegaCD32X::load() -> LoadResult {
   for(auto& emulator : emulators) {
     if(emulator->name == "Mega CD") firmware = emulator->firmware;
   }
-  if(!firmware) return LoadResult(noFirmware);  //should never occur
+  if(!firmware) return otherError;  //should never occur
 
   system = mia::System::create("Mega CD 32X");
   result = system->load(firmware[regionID].location);
-  if(result != LoadResult(successful)) {
-    result.firmwareSystemName = "Mega CD 32X";
+  if(result != successful) {
+    result.firmwareSystemName = "Mega CD";
     result.firmwareType = firmware[regionID].type;
     result.firmwareRegion = firmware[regionID].region;
     result.result = noFirmware;
@@ -77,7 +77,7 @@ auto MegaCD32X::load() -> LoadResult {
 
   ares::MegaDrive::option("Recompiler", !settings.general.forceInterpreter);
 
-  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD 32X (", region, ")"})) return LoadResult(otherError);
+  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD 32X (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -108,7 +108,7 @@ auto MegaCD32X::load() -> LoadResult {
 
   discTrayTimer = Timer{};
 
-  return LoadResult(successful);
+  return successful;
 }
 
 
@@ -120,7 +120,7 @@ auto MegaCD32X::load(Menu menu) -> void {
     auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
     tray->disconnect();
 
-    if(game->load(Emulator::load(game, configuration.game)) != LoadResult(successful)) {
+    if(game->load(Emulator::load(game, configuration.game)) != successful) {
       return;
     }
 

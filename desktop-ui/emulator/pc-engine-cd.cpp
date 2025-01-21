@@ -23,9 +23,9 @@ PCEngineCD::PCEngineCD() {
 auto PCEngineCD::load() -> LoadResult {
   game = mia::Medium::create("PC Engine CD");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -43,7 +43,7 @@ auto PCEngineCD::load() -> LoadResult {
 
   bios = mia::Medium::create("PC Engine");
   result = bios->load(firmware[biosID].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "PC Engine";
     result.firmwareType = firmware[biosID].type;
     result.firmwareRegion = firmware[biosID].region;
@@ -53,12 +53,12 @@ auto PCEngineCD::load() -> LoadResult {
 
   system = mia::System::create("PC Engine");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   ares::PCEngine::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
   auto name = region == "NTSC-J" ? "PC Engine Duo" : "TurboDuo";
-  if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return LoadResult(otherError);
+  if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -72,7 +72,7 @@ auto PCEngineCD::load() -> LoadResult {
 
   connectPorts();
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto PCEngineCD::save() -> bool {

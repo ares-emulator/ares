@@ -6,12 +6,12 @@ struct ColecoVision : System {
 
 auto ColecoVision::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return LoadResult(romNotFound);
+  if(!bios) return romNotFound;
 
   this->location = locate();
   pak = new vfs::directory;
   pak->append("bios.rom", bios);
-  return LoadResult(successful);
+  return successful;
 }
 
 auto ColecoVision::save(string location) -> bool {

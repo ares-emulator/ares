@@ -20,13 +20,13 @@ SuperGrafxCD::SuperGrafxCD() {
 auto SuperGrafxCD::load() -> LoadResult {
   game = mia::Medium::create("PC Engine CD");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   bios = mia::Medium::create("PC Engine");
   result = bios->load(firmware[0].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "SuperGrafx CD";
     result.firmwareType = firmware[0].type;
     result.firmwareRegion = firmware[0].region;
@@ -36,11 +36,11 @@ auto SuperGrafxCD::load() -> LoadResult {
 
   system = mia::System::create("SuperGrafx");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   ares::PCEngine::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
-  if(!ares::PCEngine::load(root, "[NEC] SuperGrafx (NTSC-J)")) return LoadResult(otherError);
+  if(!ares::PCEngine::load(root, "[NEC] SuperGrafx (NTSC-J)")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -54,7 +54,7 @@ auto SuperGrafxCD::load() -> LoadResult {
 
   connectPorts();
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto SuperGrafxCD::save() -> bool {

@@ -8,7 +8,7 @@ auto GameBoy::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
   pak->append("boot.rom", Resource::GameBoy::BootDMG1);
-  return LoadResult(successful);
+  return successful;
 }
 
 auto GameBoy::save(string location) -> bool {

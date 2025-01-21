@@ -19,9 +19,9 @@ Saturn::Saturn() {
 auto Saturn::load() -> LoadResult {
   game = mia::Medium::create("Saturn");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -31,7 +31,7 @@ auto Saturn::load() -> LoadResult {
 
   system = mia::System::create("Saturn");
   result = system->load(firmware[regionID].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "Saturn";
     result.firmwareType = firmware[regionID].type;
     result.firmwareRegion = firmware[regionID].region;
@@ -39,7 +39,7 @@ auto Saturn::load() -> LoadResult {
     return result;
   }
 
-  if(!ares::Saturn::load(root, {"[Sega] Saturn (", region, ")"})) return LoadResult(otherError);
+  if(!ares::Saturn::load(root, {"[Sega] Saturn (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Saturn/Disc Tray")) {
     port->allocate();

@@ -57,9 +57,9 @@ MegaDrive::MegaDrive() {
 auto MegaDrive::load() -> LoadResult {
   game = mia::Medium::create("Mega Drive");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -74,11 +74,11 @@ auto MegaDrive::load() -> LoadResult {
     for(auto& emulator : emulators) {
       if(emulator->name == "Mega CD") firmware = emulator->firmware;
     }
-    if(!firmware) return LoadResult(otherError);  //should never occur
+    if(!firmware) return otherError;  //should never occur
     name = "Mega CD";
     system = mia::System::create("Mega CD");
     result = system->load(firmware[regionID].location);
-    if(result != LoadResult(successful)) {
+    if(result != successful) {
       result.firmwareSystemName = "Mega CD";
       result.firmwareType = firmware[regionID].type;
       result.firmwareRegion = firmware[regionID].region;
@@ -87,17 +87,17 @@ auto MegaDrive::load() -> LoadResult {
     }
 
     disc = mia::Medium::create("Mega CD");
-    if(disc->load(Emulator::load(disc, configuration.game)) != LoadResult(successful)) disc.reset();
+    if(disc->load(Emulator::load(disc, configuration.game)) != successful) disc.reset();
   } else {
     name = "Mega Drive";
     system = mia::System::create("Mega Drive");
     result = system->load();
-    if(result != LoadResult(successful)) return result;
+    if(result != successful) return result;
   }
 
   ares::MegaDrive::option("TMSS", settings.megadrive.tmss);
 
-  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return LoadResult(otherError);
+  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -119,7 +119,7 @@ auto MegaDrive::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto MegaDrive::save() -> bool {

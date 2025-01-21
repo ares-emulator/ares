@@ -13,16 +13,16 @@ auto SufamiTurbo::load(string location) -> LoadResult {
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return LoadResult(romNotFound);
+  if(!rom) return romNotFound;
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   auto foundDatabase = Medium::loadDatabase();
-  if(!foundDatabase) return LoadResult(databaseNotFound);
+  if(!foundDatabase) return { databaseNotFound, "Sufami Turbo.bml" };
   this->manifest = Medium::manifestDatabase(sha256);
   if(!manifest) manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
-  if(!document) return LoadResult(couldNotParseManifest);
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("title", document["game/title"].string());
@@ -33,7 +33,7 @@ auto SufamiTurbo::load(string location) -> LoadResult {
     Medium::load(node, ".ram");
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto SufamiTurbo::save(string location) -> bool {

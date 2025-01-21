@@ -12,7 +12,7 @@ auto WonderSwanColor::load(string location) -> LoadResult {
 
   Pak::load("save.eeprom", ".eeprom");
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto WonderSwanColor::save(string location) -> bool {

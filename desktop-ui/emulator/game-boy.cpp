@@ -31,15 +31,15 @@ GameBoy::GameBoy() {
 auto GameBoy::load() -> LoadResult {
   game = mia::Medium::create("Game Boy");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("Game Boy");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
-  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy")) return LoadResult(otherError);
+  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -50,7 +50,7 @@ auto GameBoy::load() -> LoadResult {
     fastBoot->setValue(settings.boot.fast);
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto GameBoy::load(Menu menu) -> void {

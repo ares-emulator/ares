@@ -7,7 +7,7 @@ struct Atari2600 : System {
 auto Atari2600::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
-  return LoadResult(successful);
+  return successful;
 }
 
 auto Atari2600::save(string location) -> bool {

@@ -68,13 +68,13 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
 auto FamicomDiskSystem::load() -> LoadResult {
   game = mia::Medium::create("Famicom Disk System");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   bios = mia::Medium::create("Famicom");
   result = bios->load(firmware[0].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "Famicom";
     result.firmwareType = firmware[0].type;
     result.firmwareRegion = firmware[0].region;
@@ -84,9 +84,9 @@ auto FamicomDiskSystem::load() -> LoadResult {
 
   system = mia::System::create("Famicom");
   result = system->load();
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
-  if(!ares::Famicom::load(root, "[Nintendo] Famicom (NTSC-J)")) return LoadResult(otherError);
+  if(!ares::Famicom::load(root, "[Nintendo] Famicom (NTSC-J)")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -112,7 +112,7 @@ auto FamicomDiskSystem::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto FamicomDiskSystem::save() -> bool {

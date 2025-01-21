@@ -13,13 +13,13 @@ auto GameGear::load(string location) -> LoadResult {
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   } else {
-    return LoadResult(romNotFound);
+    return romNotFound;
   }
 
   this->location = location;
   this->manifest = analyze(rom, location);
   auto document = BML::unserialize(manifest);
-  if(!document) return LoadResult(couldNotParseManifest);
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("board",  document["game/board" ].string());
@@ -33,7 +33,7 @@ auto GameGear::load(string location) -> LoadResult {
     Medium::load(node, ".ram");
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto GameGear::save(string location) -> bool {

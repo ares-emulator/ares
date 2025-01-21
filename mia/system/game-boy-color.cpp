@@ -8,7 +8,7 @@ auto GameBoyColor::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
   pak->append("boot.rom", Resource::GameBoyColor::BootCGB0);
-  return LoadResult(successful);
+  return successful;
 }
 
 auto GameBoyColor::save(string location) -> bool {

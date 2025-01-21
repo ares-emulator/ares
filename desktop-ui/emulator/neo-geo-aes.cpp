@@ -37,13 +37,13 @@ NeoGeoAES::NeoGeoAES() {
 auto NeoGeoAES::load() -> LoadResult {
   game = mia::Medium::create("Neo Geo");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   system = mia::System::create("Neo Geo AES");
   result = system->load(firmware[0].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "Neo Geo AES";
     result.firmwareType = firmware[0].type;
     result.firmwareRegion = firmware[0].region;
@@ -51,7 +51,7 @@ auto NeoGeoAES::load() -> LoadResult {
     return result;
   }
 
-  if(!ares::NeoGeo::load(root, "[SNK] Neo Geo AES")) return LoadResult(otherError);
+  if(!ares::NeoGeo::load(root, "[SNK] Neo Geo AES")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -73,7 +73,7 @@ auto NeoGeoAES::load() -> LoadResult {
     port->connect();
   }
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto NeoGeoAES::save() -> bool {

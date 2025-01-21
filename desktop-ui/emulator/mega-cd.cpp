@@ -63,9 +63,9 @@ MegaCD::MegaCD() {
 auto MegaCD::load() -> LoadResult {
   game = mia::Medium::create("Mega CD");
   string location = Emulator::load(game, configuration.game);
-  if(!location) return LoadResult(noFileSelected);
+  if(!location) return noFileSelected;
   LoadResult result = game->load(location);
-  if(result != LoadResult(successful)) return result;
+  if(result != successful) return result;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
@@ -75,7 +75,7 @@ auto MegaCD::load() -> LoadResult {
 
   system = mia::System::create("Mega CD");
   result = system->load(firmware[regionID].location);
-  if(result != LoadResult(successful)) {
+  if(result != successful) {
     result.firmwareSystemName = "Mega CD";
     result.firmwareType = firmware[regionID].type;
     result.firmwareRegion = firmware[regionID].region;
@@ -83,7 +83,7 @@ auto MegaCD::load() -> LoadResult {
     return result;
   }
 
-  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD (", region, ")"})) return LoadResult(otherError);
+  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -114,7 +114,7 @@ auto MegaCD::load() -> LoadResult {
 
   discTrayTimer = Timer{};
 
-  return LoadResult(successful);
+  return successful;
 }
 
 auto MegaCD::load(Menu menu) -> void {
@@ -125,7 +125,7 @@ auto MegaCD::load(Menu menu) -> void {
     auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
     tray->disconnect();
 
-    if(game->load(Emulator::load(game, configuration.game)) != LoadResult(successful)) {
+    if(game->load(Emulator::load(game, configuration.game)) != successful) {
       return;
     }
 
