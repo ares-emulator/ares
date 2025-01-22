@@ -81,7 +81,10 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 
   //PPUCTRL
   case 0:
-    scroll.nametable   = data.bit(0,1);
+    scroll.nametable = data.bit(0,1);
+    if (io.lx == 257 && rendering())
+      var.nametableX = cpu.io.openBus.bit(0);
+
     io.vramIncrement = data.bit(2) ? 32 : 1;
     io.spriteAddress = data.bit(3) ? 0x1000 : 0x0000;
     io.bgAddress     = data.bit(4) ? 0x1000 : 0x0000;
@@ -141,6 +144,9 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
     if(scroll.latch++ == 0) {
       scroll.fineX = data.bit(0,2);
       scroll.tileX = data.bit(3,7);
+
+      if (io.lx == 257 && rendering())
+        var.tileX = cpu.io.openBus.bit(3,7);
     } else {
       scroll.fineY = data.bit(0,2);
       scroll.tileY = data.bit(3,7);
@@ -151,6 +157,8 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
   case 6:
     if(scroll.latch++ == 0) {
       scroll.addressHi = data.bit(0,5);
+      if (io.lx == 257 && rendering())
+        var.nametable = cpu.io.openBus.bit(2,3);
     } else {
       scroll.addressLo = data.bit(0,7);
       scroll.transferDelay = 3;
