@@ -590,6 +590,7 @@ private:
     
     initialized = true;
     setNativeFullScreen(self.nativeFullScreen);
+    setForceSRGB(self.forceSRGB);
     return _ready = true;
   }
 
