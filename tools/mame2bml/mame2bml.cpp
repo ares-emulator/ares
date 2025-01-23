@@ -35,6 +35,11 @@ auto Mame2BML::main(Arguments arguments) -> void {
 
   output.print("database\n");
   output.print("  revision: ", chrono::local::date(), "\n");
+  output.print("  drivers: ");
+  for(auto driver : driverNames) {
+    output.print(driver, ", ");
+  }
+  output.print("\n");
 
   pathname = Location::path(markupName);
   auto document = XML::unserialize(markup);
@@ -48,15 +53,19 @@ auto Mame2BML::main(Arguments arguments) -> void {
         if(machine.name() != "machine") continue;
         string driverName = machine["sourcefile"].string();
         if(!driverNames.find(driverName)) continue;
+        string type = "game";
         string IsBIOS = machine["isbios"].string();
-        if(IsBIOS == "yes") continue;
+        string parent = machine["romof"].string();
+        if(IsBIOS == "yes") type = "bios";
 
-        print("found game: ", machine["name"].string(), " (", machine["description"].string(), ")\n");
+        print("found ", type, ": ", machine["name"].string(), " (", machine["description"].string(), ")\n");
 
         output.print("game\n");
         output.print("  name:    ", machine["name"].string(), "\n");
         output.print("  title:   ", machine["description"].string(), "\n");
         output.print("  board:   ", driverName.trimRight(".cpp"), "\n");
+        output.print("  type:    ", type, "\n");
+        if(parent) output.print("  parent:  ", parent, "\n");
 
         string region = "";
         for(auto rom : machine) {

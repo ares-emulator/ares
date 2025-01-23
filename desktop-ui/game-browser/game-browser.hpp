@@ -1,6 +1,7 @@
 struct GameBrowserEntry {
   string title;
   string name;
+  string board;
   string path;
 };
 

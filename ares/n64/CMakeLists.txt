@@ -23,6 +23,7 @@ ares_add_sources(
     cpu/cpu.cpp
     rsp/rsp.cpp
     rdp/rdp.cpp
+    aleck64/aleck64.cpp
 )
 
 target_enable_feature(ares "N64 Vulkan rendering with paraLLEl-RDP" VULKAN)
@@ -52,6 +53,29 @@ ares_add_sources(
     ai/debugger.cpp
     ai/io.cpp
     ai/serialization.cpp
+)
+
+ares_add_sources(
+  CORE #
+  n64
+  INCLUDED #
+  aleck64/aleck64.hpp
+  aleck64/controls.cpp
+  aleck64/debugger.cpp
+  aleck64/serialization.cpp
+  aleck64/io.cpp
+  aleck64/vdp.cpp
+  aleck64/game-config/11beat.hpp
+  aleck64/game-config/doncdoon.hpp
+  aleck64/game-config/kurufev.hpp
+  aleck64/game-config/mayjin3.hpp
+  aleck64/game-config/starsldr.hpp
+  aleck64/game-config/twrshaft.hpp
+  aleck64/game-config/vivdolls.hpp
+  aleck64/game-config/hipai.hpp
+  aleck64/game-config/hipai2.hpp
+  aleck64/game-config/srmvs.hpp
+  aleck64/game-config/mtetrisc.hpp
 )
 
 ares_add_sources(
@@ -86,6 +110,14 @@ ares_add_sources(
     controller/controller.hpp
     controller/port.cpp
     controller/port.hpp
+)
+
+ares_add_sources(
+  CORE #
+  n64
+  INCLUDED #
+  controller/aleck64/aleck64.cpp
+  controller/aleck64/aleck64.hpp
 )
 
 ares_add_sources(

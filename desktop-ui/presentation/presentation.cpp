@@ -489,10 +489,10 @@ auto Presentation::refreshSystemMenu() -> void {
     for(auto dip : ares::Node::enumerate<ares::Node::Setting::Boolean>(emulator->root)) {
       MenuCheckItem item{&dipSwitchMenu};
       item.setText(dip->name());
-	    item.setAttribute<ares::Node::Setting::Boolean>("dip", dip);
+      item.setAttribute<ares::Node::Setting::Boolean>("dip", dip);
       item.setChecked(dip->value());
       item.onToggle([=] {
-		    auto dip = item.attribute<ares::Node::Setting::Boolean>("dip");
+        auto dip = item.attribute<ares::Node::Setting::Boolean>("dip");
         dip->setValue(item.checked());
       });
     }
@@ -508,8 +508,8 @@ auto Presentation::refreshSystemMenu() -> void {
         group.append(optionItem);
         if(dip->value() == option) optionItem.setChecked();
         optionItem.onActivate([=] {
-		      auto dip = item.attribute<ares::Node::Setting::String>("dip");
-		      dip->setValue(optionItem.text());
+          auto dip = item.attribute<ares::Node::Setting::String>("dip");
+          dip->setValue(optionItem.text());
         });
       }
     }

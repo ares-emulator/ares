@@ -144,6 +144,8 @@ auto VI::refresh() -> void {
     }
     vulkan.unmapScanoutRead();
     vulkan.endScanout();
+
+    if(Model::Aleck64()) aleck64.vdp.render(screen); //aleck64 supports overlay graphics
     return;
   }
   #endif
