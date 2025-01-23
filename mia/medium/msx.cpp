@@ -1,14 +1,14 @@
 struct MSX : Cartridge {
   auto name() -> string override { return "MSX"; }
   auto extensions() -> vector<string> override { return {"msx", "rom", "wav"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
-  auto loadTape(string location) -> bool;
+  auto loadTape(string location) -> LoadResult;
   auto analyzeTape(string location) -> string;
 };
 
-auto MSX::load(string location) -> bool {
+auto MSX::load(string location) -> LoadResult {
   if(location.iendsWith(".wav")) {
     return loadTape(location);
   }
@@ -19,16 +19,16 @@ auto MSX::load(string location) -> bool {
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return false;
+  if(!rom) return romNotFound;
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   auto foundDatabase = Medium::loadDatabase();
-  if(!foundDatabase) return false;
+  if(!foundDatabase) return { databaseNotFound, "MSX.bml" };
   this->manifest = Medium::manifestDatabase(sha256);
   if(!manifest) manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("title",  document["game/title"].string());
@@ -38,7 +38,7 @@ auto MSX::load(string location) -> bool {
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
 
-  return true;
+  return successful;
 }
 
 auto MSX::save(string location) -> bool {
@@ -141,13 +141,13 @@ auto MSX::analyze(vector<u8>& rom) -> string {
 }
 
 
-auto MSX::loadTape(string location) -> bool {
-  if(!inode::exists(location)) return false;
+auto MSX::loadTape(string location) -> LoadResult {
+  if(!inode::exists(location)) return romNotFound;
 
   this->location = location;
   this->manifest = analyzeTape(location);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("title",      document["game/title"].string());
@@ -177,7 +177,7 @@ auto MSX::loadTape(string location) -> bool {
     }
   }
 
-  return true;
+  return successful;
 }
 
 auto MSX::analyzeTape(string location) -> string {

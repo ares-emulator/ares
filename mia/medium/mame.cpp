@@ -8,9 +8,8 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> 
   vector<u8> output;
 
   Decode::ZIP archive;
-  if(!archive.open(location)) {
-    return output;
-  }
+  if(!location.iendsWith(".zip")) return output;
+  if(!archive.open(location)) return output;
 
   string filename = {};
   vector<u8> input = {};

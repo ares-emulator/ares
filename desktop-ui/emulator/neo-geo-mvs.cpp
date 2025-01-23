@@ -1,6 +1,6 @@
 struct NeoGeoMVS : Emulator {
   NeoGeoMVS();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto group() -> string override { return "Arcade"; }
@@ -35,14 +35,24 @@ NeoGeoMVS::NeoGeoMVS() {
   }
 }
 
-auto NeoGeoMVS::load() -> bool {
+auto NeoGeoMVS::load() -> LoadResult {
   game = mia::Medium::create("Neo Geo");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
 
   system = mia::System::create("Neo Geo MVS");
-  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+  result = system->load(firmware[0].location);
+  if(result != successful) {
+    result.firmwareSystemName = "Neo Geo MVS";
+    result.firmwareType = firmware[0].type;
+    result.firmwareRegion = firmware[0].region;
+    result.result = noFirmware;
+    return result;
+  }
 
-  if(!ares::NeoGeo::load(root, "[SNK] Neo Geo MVS")) return false;
+  if(!ares::NeoGeo::load(root, "[SNK] Neo Geo MVS")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -64,7 +74,7 @@ auto NeoGeoMVS::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return successful;
 }
 
 auto NeoGeoMVS::save() -> bool {

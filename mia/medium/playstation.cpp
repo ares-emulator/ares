@@ -1,19 +1,19 @@
 struct PlayStation : CompactDisc {
   auto name() -> string override { return "PlayStation"; }
   auto extensions() -> vector<string> override { return {"cue", "chd", "exe"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
   auto cdFromExecutable(string location) -> vector<u8>;
 };
 
-auto PlayStation::load(string location) -> bool {
-  if(!inode::exists(location)) return false;
+auto PlayStation::load(string location) -> LoadResult {
+  if(!inode::exists(location)) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(location);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("title",  document["game/title"].string());
@@ -36,7 +36,7 @@ auto PlayStation::load(string location) -> bool {
     }
   }
 
-  return true;
+  return successful;
 }
 
 auto PlayStation::save(string location) -> bool {

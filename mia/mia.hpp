@@ -17,6 +17,38 @@ using namespace hiro;
 #include <ares/resource/resource.hpp>
 #include <mia/resource/resource.hpp>
 
+enum ResultEnum {
+  successful,
+  noFileSelected,
+  databaseNotFound,
+  romNotFoundInDatabase,
+  romNotFound,
+  invalidROM,
+  couldNotParseManifest,
+  noFirmware,
+  otherError
+};
+
+struct LoadResult {
+  ResultEnum result;
+
+  string info;
+  string firmwareType;
+  string firmwareSystemName;
+  string firmwareRegion;
+
+  LoadResult(ResultEnum r) : result(r) {}
+
+  LoadResult(ResultEnum r, string i) : result(r), info(i) {}
+
+  bool operator==(const LoadResult& other) {
+    return result == other.result;
+  }
+  bool operator!=(const LoadResult& other) {
+    return result != other.result;
+  }
+};
+
 namespace mia {
   #include "settings/settings.hpp"
   #include "pak/pak.hpp"
@@ -33,4 +65,5 @@ namespace mia {
   auto construct() -> void;
   auto identify(const string& filename) -> string;
   auto import(shared_pointer<Pak>, const string& filename) -> bool;
+
 }

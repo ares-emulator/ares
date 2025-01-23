@@ -1,6 +1,6 @@
 struct ZXSpectrum128 : ZXSpectrum {
   ZXSpectrum128();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
 
@@ -9,14 +9,18 @@ ZXSpectrum128::ZXSpectrum128() {
   name = "ZX Spectrum 128";
 }
 
-auto ZXSpectrum128::load() -> bool {
+auto ZXSpectrum128::load() -> LoadResult {
   game = mia::Medium::create("ZX Spectrum");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
 
   system = mia::System::create("ZX Spectrum 128");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != successful) return result;
 
-  if(!ares::ZXSpectrum::load(root, "[Sinclair] ZX Spectrum 128")) return false;
+  if(!ares::ZXSpectrum::load(root, "[Sinclair] ZX Spectrum 128")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Tape Deck/Tray")) {
     port->allocate();
@@ -28,7 +32,7 @@ auto ZXSpectrum128::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return successful;
 }
 
 auto ZXSpectrum128::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {

@@ -1,6 +1,6 @@
 struct Mega32X : Emulator {
   Mega32X();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
@@ -43,10 +43,13 @@ Mega32X::Mega32X() {
   }
 }
 
-auto Mega32X::load() -> bool {
+auto Mega32X::load() -> LoadResult {
   game = mia::Medium::create("Mega 32X");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
-
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
+  
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
   if(region == "PAL"   ) regionID = 2;
@@ -60,22 +63,30 @@ auto Mega32X::load() -> bool {
     for(auto& emulator : emulators) {
       if(emulator->name == "Mega CD") firmware = emulator->firmware;
     }
-    if(!firmware) return false;  //should never occur
+    if(!firmware) return otherError;  //should never occur
     name = "Mega CD 32X";
     system = mia::System::create("Mega CD 32X");
-    if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID], "Mega CD"), false;
+    result = system->load(firmware[regionID].location);
+    if(result != successful) {
+      result.firmwareSystemName = "Mega CD 32X";
+      result.firmwareType = firmware[regionID].type;
+      result.firmwareRegion = firmware[regionID].region;
+      result.result = noFirmware;
+      return result;
+    }
 
     disc = mia::Medium::create("Mega CD");
-    if(!disc->load(Emulator::load(disc, configuration.game))) disc.reset();
+    if(disc->load(Emulator::load(disc, configuration.game)) != successful) disc.reset();
   } else {
     name = "Mega 32X";
     system = mia::System::create("Mega 32X");
-    if(!system->load()) return false;
+    result = system->load();
+    if(result != successful) return result;
   }
 
   ares::MegaDrive::option("Recompiler", !settings.general.forceInterpreter);
 
-  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return false;
+  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -97,7 +108,7 @@ auto Mega32X::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return successful;
 }
 
 auto Mega32X::save() -> bool {

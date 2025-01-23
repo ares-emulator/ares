@@ -1,18 +1,18 @@
 struct Saturn : CompactDisc {
   auto name() -> string override { return "Saturn"; }
   auto extensions() -> vector<string> override { return {"cue", "chd"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
 };
 
-auto Saturn::load(string location) -> bool {
-  if(!inode::exists(location)) return false;
+auto Saturn::load(string location) -> LoadResult {
+  if(!inode::exists(location)) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(location);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("title",  document["game/title"].string());
@@ -26,7 +26,7 @@ auto Saturn::load(string location) -> bool {
     pak->append("cd.rom", vfs::cdrom::open(location));
   }
 
-  return true;
+  return successful;
 }
 
 auto Saturn::save(string location) -> bool {

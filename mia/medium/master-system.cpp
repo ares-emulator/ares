@@ -1,25 +1,25 @@
 struct MasterSystem : Cartridge {
   auto name() -> string override { return "Master System"; }
   auto extensions() -> vector<string> override { return {"ms", "sms"}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
 };
 
-auto MasterSystem::load(string location) -> bool {
+auto MasterSystem::load(string location) -> LoadResult {
   vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   } else {
-    return false;
+    return romNotFound;
   }
 
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return couldNotParseManifest;
 
   pak = new vfs::directory;
   pak->setAttribute("board",  document["game/board" ].string());
@@ -34,7 +34,7 @@ auto MasterSystem::load(string location) -> bool {
     Medium::load(node, ".ram");
   }
 
-  return true;
+  return successful;
 }
 
 auto MasterSystem::save(string location) -> bool {
