@@ -9,7 +9,8 @@ auto CPU::read(n16 address) -> n8 {
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
-  writeBus(address, io.openBus = data);
+  writeBus(address, data);
+  io.openBus = data;
   step(rate());
 }
 
