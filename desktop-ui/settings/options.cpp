@@ -1,3 +1,18 @@
+struct NANDType {
+  string name;
+  u8 id[4];
+};
+
+const NANDType NANDs64[] =  {
+  { "Samsung K9F1208U0M", { 0xec, 0x76, 0xa5, 0xc0 } },
+  { "Toshiba TC58512FT",  { 0x98, 0x76, 0x00, 0x00 } },
+  { "ST NAND512-A",       { 0x20, 0x76, 0x00, 0x00 } },
+};
+
+const NANDType NANDs128[] =  {
+  { "Samsung K9K1G08U0M", { 0xec, 0x79, 0xa5, 0xc0 } },
+};
+
 auto OptionSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
@@ -43,6 +58,84 @@ auto OptionSettings::construct() -> void {
   });
   nintendo64ExpansionPakLayout.setAlignment(1).setPadding(12_sx, 0);
       nintendo64ExpansionPakHint.setText("Enable/Disable the 4MB Expansion Pak").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  
+  iQuePlayer64MiBNANDPresets.reset();
+  for(auto nand : NANDs64) {
+    iQuePlayer64MiBNANDPresets.append(ComboButtonItem().setText(nand.name));
+  }
+  iQuePlayer64MiBNANDPresets.items().first().setSelected();
+  iQuePlayer64MiBNANDPresets.onChange([&](){
+    for(auto nand : NANDs64) {
+      if(nand.name == iQuePlayer64MiBNANDPresets.selected().text()) {
+        memcpy(settings.nintendo64.nand64, nand.id, 4);
+        for(auto n : range(4))
+          iQuePlayer64MiBNANDID[n].setText(hex(settings.nintendo64.nand64[n], 2L));
+      }
+    }
+  });
+
+  for(auto n : range(4)) {
+    iQuePlayer64MiBNANDID[n].setText(hex(settings.nintendo64.nand64[n], 2L));
+    iQuePlayer64MiBNANDID[n].setEditable(true);
+    iQuePlayer64MiBNANDID[n].onChange([&, n](){
+      settings.nintendo64.nand64[n] = iQuePlayer64MiBNANDID[n].text().hex();
+      string portStr = hex(settings.nintendo64.nand64[n], 2L);
+      string portStrSmall = hex(settings.nintendo64.nand64[n]);
+
+      if((portStr != iQuePlayer64MiBNANDID[n].text()) && (portStrSmall != iQuePlayer64MiBNANDID[n].text())) {
+        iQuePlayer64MiBNANDID[n].setText(portStr);
+      }
+
+      for(auto n : range(iQuePlayer64MiBNANDPresets.itemCount())) {
+        if(memcmp(NANDs64[n].id, settings.nintendo64.nand64, 4) == 0)
+          iQuePlayer64MiBNANDPresets.item(n).setSelected();
+      }
+    });
+  }
+
+  iQuePlayer64MiBNANDID[0].doChange();
+
+  iQuePlayer64MiBNANDLayout.setAlignment(1).setPadding(12_sx, 0);
+      iQuePlayer64MiBNANDHint.setText("Set the ID for 64 MiB NANDs").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
+  iQuePlayer128MiBNANDPresets.reset();
+  for(auto nand : NANDs128) {
+    iQuePlayer128MiBNANDPresets.append(ComboButtonItem().setText(nand.name));
+  }
+  iQuePlayer128MiBNANDPresets.items().first().setSelected();
+  iQuePlayer128MiBNANDPresets.onChange([&](){
+    for(auto nand : NANDs128) {
+      if(nand.name == iQuePlayer128MiBNANDPresets.selected().text()) {
+        memcpy(settings.nintendo64.nand128, nand.id, 4);
+        for(auto n : range(4))
+          iQuePlayer128MiBNANDID[n].setText(hex(settings.nintendo64.nand128[n], 2L));
+      }
+    }
+  });
+
+  for(auto n : range(4)) {
+    iQuePlayer128MiBNANDID[n].setText(hex(settings.nintendo64.nand128[n], 2L));
+    iQuePlayer128MiBNANDID[n].setEditable(true);
+    iQuePlayer128MiBNANDID[n].onChange([&, n](){
+      settings.nintendo64.nand128[n] = iQuePlayer128MiBNANDID[n].text().hex();
+      string portStr = hex(settings.nintendo64.nand128[n], 2L);
+      string portStrSmall = hex(settings.nintendo64.nand128[n]);
+
+      if((portStr != iQuePlayer128MiBNANDID[n].text()) && (portStrSmall != iQuePlayer128MiBNANDID[n].text())) {
+        iQuePlayer128MiBNANDID[n].setText(portStr);
+      }
+
+      for(auto n : range(iQuePlayer128MiBNANDPresets.itemCount())) {
+        if(memcmp(NANDs64[n].id, settings.nintendo64.nand128, 4) == 0)
+          iQuePlayer128MiBNANDPresets.item(n).setSelected();
+      }
+    });
+  }
+
+  iQuePlayer128MiBNANDID[0].doChange();
+
+  iQuePlayer128MiBNANDLayout.setAlignment(1).setPadding(12_sx, 0);
+      iQuePlayer128MiBNANDHint.setText("Set the ID for 128 MiB NANDs").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   megaDriveSettingsLabel.setText("Mega Drive Settings").setFont(Font().setBold());
 

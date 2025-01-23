@@ -27,4 +27,9 @@ struct Accuracy {
     // Emulate a region-locked console
     static constexpr bool RegionLock = false;
   };
+
+  struct AES {
+    static constexpr bool SISD = 0 | Reference | !ARCHITECTURE_SUPPORTS_SSE4_1;
+    static constexpr bool SIMD = !SISD;
+  };
 };

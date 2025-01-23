@@ -64,7 +64,9 @@ auto CPU::Debugger::interrupt(u8 mask) -> void {
     if(mask & 0x01) sources.append("software 0");
     if(mask & 0x02) sources.append("software 1");
     if(mask & 0x04) sources.append("RCP");
-    if(mask & 0x08) sources.append("cartridge");
+    if(mask & 0x08)
+      if(system._BB()) sources.append("iQue Player");
+      else             sources.append("cartridge");
     if(mask & 0x10) sources.append("reset");
     if(mask & 0x20) sources.append("read RDB");
     if(mask & 0x40) sources.append("write RDB");

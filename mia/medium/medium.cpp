@@ -10,6 +10,7 @@ namespace Media {
   #include "game-boy.cpp"
   #include "game-boy-color.cpp"
   #include "game-boy-advance.cpp"
+  #include "ique-player.cpp"
   #include "master-system.cpp"
   #include "game-gear.cpp"
   #include "mega-drive.cpp"
@@ -53,6 +54,7 @@ auto Medium::create(string name) -> shared_pointer<Pak> {
   if(name == "Game Boy") return new Media::GameBoy;
   if(name == "Game Boy Color") return new Media::GameBoyColor;
   if(name == "Game Boy Advance") return new Media::GameBoyAdvance;
+  if(name == "iQue Player") return new Media::iQuePlayer;
   if(name == "Master System") return new Media::MasterSystem;
   if(name == "Game Gear") return new Media::GameGear;
   if(name == "Mega Drive") return new Media::MegaDrive;

@@ -147,10 +147,15 @@ inline auto CPU::busReadBurst(u32 address, u32 *data) -> void {
 }
 
 auto CPU::fetch(PhysAccess access) -> maybe<u32> {
+  maybe<u32> instr = nothing;
+  pipeline.fetch = 1;
   step(1 * 2);
-  if(!access) return nothing;
-  if(access.cache) return icache.fetch(access.vaddr, access.paddr, cpu);
-  return busRead<Word>(access.paddr);
+  if(access) {
+    if(access.cache) instr = icache.fetch(access.vaddr, access.paddr, cpu);
+    else             instr = busRead<Word>(access.paddr);
+  }
+  pipeline.fetch = 0;
+  return instr;
 }
 
 template<u32 Size>

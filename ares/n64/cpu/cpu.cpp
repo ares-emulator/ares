@@ -39,14 +39,14 @@ auto CPU::main() -> void {
   vi.refreshed = false;
   queue.remove(Queue::GDB_Poll);
   if(GDB::server.hasClient()) {
-    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+    queue.insert(Queue::GDB_Poll, system.frequency()/60/240);
   }
 }
 
 auto CPU::gdbPoll() -> void {
   if(GDB::server.hasClient()) {
     GDB::server.updateLoop();
-    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+    queue.insert(Queue::GDB_Poll, system.frequency()/60/240);
   }
 }
 
@@ -54,16 +54,18 @@ auto CPU::synchronize() -> void {
   auto clocks = Thread::clock;
   Thread::clock = 0;
 
+   mi.clock -= clocks;
    vi.clock -= clocks;
    ai.clock -= clocks;
   rsp.clock -= clocks;
   rdp.clock -= clocks;
-  pif.clock -= clocks;
+  if(!system._BB()) pif.clock -= clocks;
+  mi.main();
   vi.main();
   ai.main();
   rsp.main();
   rdp.main();
-  pif.main();
+  if(!system._BB()) pif.main();
 
   queue.step(clocks, [](u32 event) {
     switch(event) {
@@ -73,6 +75,12 @@ auto CPU::synchronize() -> void {
     case Queue::SI_DMA_Read:   return si.dmaRead();
     case Queue::SI_DMA_Write:  return si.dmaWrite();
     case Queue::SI_BUS_Write:  return si.writeFinished();
+    case Queue::VIRAGE0_Command: return virage0.commandFinished();
+    case Queue::VIRAGE1_Command: return virage1.commandFinished();
+    case Queue::VIRAGE2_Command: return virage2.commandFinished();
+    case Queue::NAND_Command: return pi.nandCommandFinished();
+    case Queue::AES_Command: return pi.aesCommandFinished();
+    case Queue::BB_RTC_Tick: return pi.bb_rtc.tickClock();
     case Queue::RTC_Tick:      return cartridge.rtc.tick();
     case Queue::DD_Clock_Tick:  return dd.rtc.tickClock();
     case Queue::DD_MECHA_Response:  return dd.mechaResponse();
@@ -97,7 +105,8 @@ auto CPU::instruction() -> void {
       return exception.interrupt();
     }
   }
-  if (scc.nmiPending) {
+  if (scc.nmiPending || scc.nmiStrobe) {
+    scc.nmiStrobe = 0;
     debugger.nmi();
     step(1 * 2);
     return exception.nmi();
@@ -161,6 +170,14 @@ auto CPU::power(bool reset) -> void {
   cop2 = {};
   fenv.setRound(float_env::toNearest);
   context.setMode();
+
+  if (system._BB()) {
+    //Note: iQue divmode is still 1:1.5 but the value reported is different
+    scc.configuration.systemClockRatio = 1;
+
+    scc.coprocessor.revision = 0x40;
+    scc.coprocessor.implementation = 0x0B;
+  }
 
   if constexpr(Accuracy::CPU::Recompiler) {
     auto buffer = ares::Memory::FixedAllocator::get().tryAcquire(63_MiB);

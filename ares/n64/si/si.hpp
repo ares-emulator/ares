@@ -19,7 +19,9 @@ struct SI : Memory::RCP<SI> {
   auto power(bool reset) -> void;
 
   //dma.cpp
+  auto dmaReadBB() -> void;
   auto dmaRead() -> void;
+  auto dmaWriteBB() -> void;
   auto dmaWrite() -> void;
 
   //io.cpp
@@ -46,6 +48,15 @@ struct SI : Memory::RCP<SI> {
     n1  dmaError;
     n1  interrupt;
   } io;
+
+  struct BBIO {
+    n1 valid;
+    struct {
+        u8 txlen;
+        u8 rxlen;
+        n8 data[64];
+    } ch[4];
+  } bbio;
 };
 
 extern SI si;

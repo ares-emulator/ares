@@ -5,6 +5,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(pipeline.nextpc);
   s(pipeline.state);
   s(pipeline.nstate);
+  s(pipeline.fetch);
 
   s(context.endian);
   s(context.physMask);
@@ -115,6 +116,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.tagLo.physicalAddress);
   s(scc.epcError);
   s(scc.latch);
+  s(scc.nmiStrobe);
   s(scc.nmiPending);
   s(scc.sysadFrozen);
 

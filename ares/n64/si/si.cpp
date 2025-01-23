@@ -20,6 +20,7 @@ auto SI::unload() -> void {
 
 auto SI::power(bool reset) -> void {
   io = {};
+  bbio = {};
 }
 
 }

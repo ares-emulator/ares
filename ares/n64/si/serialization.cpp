@@ -10,4 +10,11 @@ auto SI::serialize(serializer& s) -> void {
   s(io.dmaState);
   s(io.dmaError);
   s(io.interrupt);
+
+  s(bbio.valid);
+  for(auto channel : range(4)) {
+    s(bbio.ch[channel].data);
+    s(bbio.ch[channel].rxlen);
+    s(bbio.ch[channel].txlen);
+  }
 }

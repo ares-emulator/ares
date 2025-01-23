@@ -8,6 +8,13 @@ auto Program::updateMessage() -> void {
     }
   }
 
+  if(!led.show)
+    presentation.ledLeft.setBackgroundColor({ 32, 32, 32});
+  else if(led.on)
+    presentation.ledLeft.setBackgroundColor({255, 32, 32});
+  else
+    presentation.ledLeft.setBackgroundColor({  0, 32, 32});
+
   if(vblanksPerSecond) {
     presentation.statusRight.setText({vblanksPerSecond(), " VPS"});
     vblanksPerSecond.reset();
