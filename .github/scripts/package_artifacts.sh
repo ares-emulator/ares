@@ -5,7 +5,6 @@ case ${GITHUB_REF} in
   *) suffix="" ;;
 esac
 
-srcdir="${GITHUB_WORKSPACE}/src"
 bindir="${GITHUB_WORKSPACE}/bin"
 
 # Hack: Workaround for GitHub artifacts losing attributes.
@@ -20,8 +19,8 @@ do
   outdir=ares${suffix}
   mkdir ${outdir}
   mkdir ${outdir}-dSYMs
-  cp -ar ${bindir}/ares-${package}-dSYMs/*.dSYM ${outdir}-dSYMs
-  cp -ar ${bindir}/ares-${package}/*.app ${outdir}
+  cp -a ${bindir}/ares-${package}-dSYMs/*.dSYM ${outdir}-dSYMs
+  cp -a ${bindir}/ares-${package}/*.app ${outdir}
   zip -r ../ares-${package}.zip ${outdir}
   zip -r ../ares-${package}-dSYMs.zip ${outdir}-dSYMs
 
@@ -37,10 +36,10 @@ do
   outdir=ares${suffix}
   mkdir ${outdir}
   mkdir ${outdir}-PDBs
-  cp -ar ${bindir}/ares-${package}-PDBs/*.pdb ${outdir}-PDBs
+  cp -a ${bindir}/ares-${package}-PDBs/*.pdb ${outdir}-PDBs
   zip -r ../ares-${package}-PDBs.zip ${outdir}-PDBs
   rm -rf ${bindir}/ares-${package}/PDBs
-  cp -ar ${bindir}/ares-${package}/* ${outdir}
+  cp -a ${bindir}/ares-${package}/* ${outdir}
   zip -r ../ares-${package}.zip ${outdir}
   cd -
 done

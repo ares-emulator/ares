@@ -159,7 +159,7 @@ jobs:
         certificatesha1: '${{ secrets.WIN_CERTHASH }}'
         certificatename: '${{ secrets.WIN_CERTNAME }}'
         folder: 'desktop-ui/out'
-        timestampUrl: 'http://timestamp.digicert.com' 
+        timestampUrl: 'http://timestamp.digicert.com'
     - name: "macOS: notarize"
       if: false
       continue-on-error: ${{ github.repository != 'ares-emulator/ares' }}
@@ -305,7 +305,7 @@ jobs:
     - name: Upload ares-windows-msvc-arm64
       uses: actions/upload-release-asset@v1
       env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
-      with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-windows-msvc-arm64.zip', asset_name: 'ares-windows-msvc-arm64.zip', asset_content_type: 'application/zip' }      
+      with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-windows-msvc-arm64.zip', asset_name: 'ares-windows-msvc-arm64.zip', asset_content_type: 'application/zip' }
     - name: Upload ares-macos-universal
       uses: actions/upload-release-asset@v1
       env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
@@ -314,4 +314,3 @@ jobs:
 #      uses: actions/upload-release-asset@v1
 #      env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
 #      with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-ubuntu.zip', asset_name: 'ares-ubuntu.zip', asset_content_type: 'application/zip' }
-
