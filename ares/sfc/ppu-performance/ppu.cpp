@@ -92,7 +92,7 @@ auto PPU::main() -> void {
       int x = 24;
       int y = 16;
       int w = 564 - 48;
-      int h = height() - 20;
+      int h = height() - 16;
 
       if(Region::PAL()) {
         y += 25;
