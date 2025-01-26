@@ -133,6 +133,7 @@ auto System::initDebugHooks() -> void {
   };
 
   GDB::server.hooks.normalizeAddress = [](u64 address) -> u64 {
+    address = (s32)address;
     return cpu.devirtualizeDebug(address);
   };
 
