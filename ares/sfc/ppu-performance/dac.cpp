@@ -18,12 +18,12 @@ auto PPU::DAC::render() -> void {
   auto vcounter = self.vcounter();
   auto output = (n32*)self.screen->pixels().data();
 
-  //PAL systems have additional vertical border
-  if(Region::PAL()) output += 40 * 564;
-
   if(!self.state.overscan) vcounter += 8;
   if(vcounter < 240) {
-    output += vcounter * 2 * 564;
+    auto yScale = self.interlace() ? 2 : 1;
+    output += vcounter * yScale * 564;
+    //PAL systems have additional vertical border
+    if(Region::PAL()) output += (20 * yScale) * 564;
     if(self.interlace() && self.field()) output += 564;
 
     //Offset for horizontal border

@@ -82,12 +82,14 @@ auto PPU::main() -> void {
   }
 
   if(vcounter() == 240) {
-    if(state.interlace == 0) screen->setProgressive(1);
+    if(state.interlace == 0) screen->setProgressive(0);
     if(state.interlace == 1) screen->setInterlace(field());
+    auto yScale = state.interlace ? 2 : 1;
+    screen->setScale(0.5, 1.0 / yScale);
 
     if(screen->overscan()) {
-      screen->setSize(564, height() * 2);
-      screen->setViewport(0, 0, 564, height() * 2);
+      screen->setSize(564, height() * yScale);
+      screen->setViewport(0, 0, 564, height() * yScale);
     } else {
       int x = 26;
       int y = 18;
@@ -105,8 +107,8 @@ auto PPU::main() -> void {
         }
       }
 
-      screen->setSize(w, h * 2);
-      screen->setViewport(x, y, w, h * 2);
+      screen->setSize(w, h * yScale);
+      screen->setViewport(x, y, w, h * yScale);
     }
 
     screen->frame();

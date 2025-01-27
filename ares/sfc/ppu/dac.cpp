@@ -5,9 +5,10 @@ auto PPU::DAC::scanline() -> void {
   auto output = self.screen->pixels().data();
   if(!self.overscan()) vcounter += 8;
   if(vcounter < 240) {
-    line = output + vcounter * 2 * 564;
+    auto yScale = self.interlace() ? 2 : 1;
+    line = output + vcounter * yScale * 564;
     //PAL systems have additional vertical border
-    if(Region::PAL()) line += 40 * 564;
+    if(Region::PAL()) line += (20 * yScale) * 564;
     if(self.interlace() && self.field()) line += 564;
 
     //Offset for horizontal border
