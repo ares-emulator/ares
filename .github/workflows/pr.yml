@@ -1,0 +1,17 @@
+name: Pull Request
+run-name: ${{ github.event.pull_request.title }} PR run
+on:
+  pull_request:
+    branches: [ '*' ]
+    types: [ opened, synchronize, reopened ]
+permissions:
+  contents: read
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+jobs:
+  build-project:
+    name: Build
+    uses: ./.github/workflows/build_new.yml
+    permissions:
+      contents: read

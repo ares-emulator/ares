@@ -1,0 +1,63 @@
+name: Release
+on:
+  workflow_call:
+    inputs:
+      notarize:
+        description: Notarize build (macOS only)
+        required: false
+        default: true
+        type: boolean
+jobs:
+  release:
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: 'src'
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: 'bin'
+    - name: "macOS: notarize"
+      if: inputs.notarize
+      run: |
+        ditto -c -k --keepParent ${{ github.workspace }}/bin/ares-macos-universal/ares.app /tmp/ares.zip
+        xcrun notarytool submit /tmp/ares.zip --apple-id "$MACOS_NOTARIZATION_USERNAME" --password "$MACOS_NOTARIZATION_PASSWORD" --team-id "$MACOS_NOTARIZATION_TEAMID" --wait
+        xcrun stapler staple ${{ github.workspace }}/bin/ares-macos-universal/ares.app
+      env:
+        MACOS_NOTARIZATION_USERNAME: ${{ secrets.MACOS_NOTARIZATION_USERNAME }}
+        MACOS_NOTARIZATION_PASSWORD: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
+        MACOS_NOTARIZATION_TEAMID: ${{ secrets.MACOS_NOTARIZATION_TEAMID }}
+    - name: Package Artifacts
+      run: src/.github/scripts/package_artifacts.sh
+    - name: Check Release Tag ☑️
+      id: check
+      run: |
+          if [[ ${GITHUB_REF_NAME} == master ]];
+          then
+            echo "tag=nightly" >> $GITHUB_OUTPUT
+            now=$(date +'%Y-%m-%d')
+            versionName="nightly ${now}"
+            echo "versionName=${versionName}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            echo "versionName=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
+          
+    - name: Create Release 🛫
+      id: create_release
+      uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191
+      with:
+        draft: ${{ github.ref != 'refs/heads/master' }}
+        tag_name: ${{ steps.check.outputs.tag }}
+        name: ares ${{ steps.check.outputs.versionName }}
+        files: |
+          ${{ github.workspace }}/ares-macos-universal.zip
+          ${{ github.workspace }}/ares-macos-universal-dSYMs.zip
+          ${{ github.workspace }}/ares-windows-x64.zip
+          ${{ github.workspace }}/ares-windows-x64-PDBs.zip
+          ${{ github.workspace }}/ares-windows-clang-cl-x64.zip
+          ${{ github.workspace }}/ares-windows-clang-cl-x64-PDBs.zip
+          ${{ github.workspace }}/ares-windows-clang-cl-arm64.zip
+          ${{ github.workspace }}/ares-windows-clang-cl-arm64-PDBs.zip
