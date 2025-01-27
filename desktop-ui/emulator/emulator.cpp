@@ -54,12 +54,67 @@ auto Emulator::region() -> string {
   return {};
 }
 
+auto Emulator::handleLoadResult(LoadResult result) -> void {
+  string errorText;
+
+  switch (result.result) {
+    case successful:
+      return;
+    case noFileSelected:
+      return;
+    case invalidROM:
+      errorText = { "There was an error trying to parse the selected ROM. \n",
+                    "Your ROM may be corrupt or contain a bad dump." };
+      break;
+    case couldNotParseManifest:
+      errorText = { "An error occurred while parsing the database file. You \n",
+                    "may need to reinstall ares." };
+      break;
+    case databaseNotFound:
+      errorText = { "The database file for the system was not found. \n",
+                    "Make sure that you have installed or packaged ares correctly. \n",
+                    "Missing database file: " };
+      break;
+    case noFirmware:
+      errorText = { "Error: firmware is missing or invalid.\n",
+                    result.firmwareSystemName, " - ", result.firmwareType, " (", result.firmwareRegion, ") is required to play this game.\n",
+                    "Would you like to configure firmware settings now?" };
+      break;
+    case romNotFound:
+      errorText = "The selected ROM file was not found or could not be opened.";
+      break;
+    case romNotFoundInDatabase:
+      errorText = { "The required manifest for this ROM was not found in the database. \n",
+                    "This title may not be currently supported by ares." };
+      break;
+    case otherError:
+      errorText = "An internal error occurred when initializing the emulator core.";
+      break;
+  }
+  
+  if(result.info) {
+    errorText = { errorText, result.info };
+  }
+  
+  switch (result.result) {
+    case noFirmware:
+      if(MessageDialog().setText({
+        errorText
+      }).question() == "Yes") {
+        settingsWindow.show("Firmware");
+        firmwareSettings.select(emulator->name, result.firmwareType, result.firmwareRegion);
+      }
+    default:
+      error(errorText);
+  }
+}
+
 auto Emulator::load(const string& location) -> bool {
   if(inode::exists(location)) locationQueue.append(location);
-
-  if(!load()) {
-    error("Failed to load system! Database files may have been incorrectly \n"
-          "installed. Make sure you have packaged or installed ares correctly.");
+  
+  LoadResult result = load();
+  handleLoadResult(result);
+  if(result != successful) {
     return false;
   }
   setBoolean("Color Emulation", settings.video.colorEmulation);
@@ -176,18 +231,6 @@ auto Emulator::setColorBleed(bool value) -> bool {
 
 auto Emulator::error(const string& text) -> void {
   MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
-}
-
-auto Emulator::errorFirmware(const Firmware& firmware, string system) -> void {
-  if(!system) system = emulator->name;
-  if(MessageDialog().setText({
-    "Error: firmware is missing or invalid.\n",
-    system, " - ", firmware.type, " (", firmware.region, ") is required to play this game.\n"
-    "Would you like to configure firmware settings now?"
-  }).question() == "Yes") {
-    settingsWindow.show("Firmware");
-    firmwareSettings.select(system, firmware.type, firmware.region);
-  }
 }
 
 auto Emulator::input(ares::Node::Input::Input input) -> void {

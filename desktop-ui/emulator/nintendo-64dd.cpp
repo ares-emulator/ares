@@ -1,6 +1,6 @@
 struct Nintendo64DD : Nintendo64 {
   Nintendo64DD();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
@@ -56,9 +56,12 @@ Nintendo64DD::Nintendo64DD() {
   }
 }
 
-auto Nintendo64DD::load() -> bool {
+auto Nintendo64DD::load() -> LoadResult {
   game = mia::Medium::create("Nintendo 64DD");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
 
   auto region = game->pak->attribute("region");
   //if statements below are ordered by lowest to highest priority
@@ -67,7 +70,14 @@ auto Nintendo64DD::load() -> bool {
   if (region == "NTSC-J"  ) regionID = 0;
 
   system = mia::System::create("Nintendo 64DD");
-  if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
+  result = system->load(firmware[regionID].location);
+  if(result != successful) {
+    result.firmwareSystemName = "Nintendo 64DD";
+    result.firmwareType = firmware[regionID].type;
+    result.firmwareRegion = firmware[regionID].region;
+    result.result = noFirmware;
+    return result;
+  }
 
   ares::Nintendo64::option("Quality", settings.video.quality);
   ares::Nintendo64::option("Supersampling", settings.video.supersampling);
@@ -82,7 +92,7 @@ auto Nintendo64DD::load() -> bool {
   ares::Nintendo64::option("Recompiler", !settings.general.forceInterpreter);
   ares::Nintendo64::option("Expansion Pak", settings.nintendo64.expansionPak);
 
-  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64DD (", region, ")"})) return false;
+  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64DD (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive")) {
     port->allocate();
@@ -104,7 +114,7 @@ auto Nintendo64DD::load() -> bool {
           if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
             gb = mia::Medium::create("Game Boy");
             string tmpPath;
-            if(gb->load(Emulator::load(gb, tmpPath))) {
+            if(gb->load(Emulator::load(gb, tmpPath)) == successful) {
               slot->allocate();
               slot->connect();
               transferPakConnected = true;
@@ -134,7 +144,7 @@ auto Nintendo64DD::load() -> bool {
 
   diskInsertTimer = Timer{};
 
-  return true;
+  return successful;
 }
 
 auto Nintendo64DD::load(Menu menu) -> void {
@@ -145,7 +155,7 @@ auto Nintendo64DD::load(Menu menu) -> void {
     auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
     drive->disconnect();
 
-    if(!game->load(Emulator::load(game, configuration.game))) {
+    if(game->load(Emulator::load(game, configuration.game)) != successful) {
       return;
     }
 

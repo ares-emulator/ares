@@ -19,13 +19,13 @@ struct Emulator {
   auto setOverscan(bool value) -> bool;
   auto setColorBleed(bool value) -> bool;
   auto error(const string& text) -> void;
-  auto errorFirmware(const Firmware&, string system = "") -> void;
   auto load(mia::Pak& node, string name) -> bool;
   auto save(mia::Pak& node, string name) -> bool;
   virtual auto input(ares::Node::Input::Input) -> void;
   auto inputKeyboard(string name) -> bool;
+  auto handleLoadResult(LoadResult result) -> void;
   virtual auto load(Menu) -> void {}
-  virtual auto load() -> bool = 0;
+  virtual auto load() -> LoadResult = 0;
   virtual auto save() -> bool { return true; }
   virtual auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> = 0;
   virtual auto notify(const string& message) -> void {}

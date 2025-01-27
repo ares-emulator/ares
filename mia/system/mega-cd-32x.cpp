@@ -1,6 +1,6 @@
 struct MegaCD32X : System {
   auto name() -> string override { return "Mega CD 32X"; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 
   static constexpr u8 bram[64] = {
@@ -11,9 +11,9 @@ struct MegaCD32X : System {
   };
 };
 
-auto MegaCD32X::load(string location) -> bool {
+auto MegaCD32X::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return false;
+  if(!bios) return romNotFound;
 
   this->location = locate();
   pak = new vfs::directory;
@@ -32,7 +32,7 @@ auto MegaCD32X::load(string location) -> bool {
 
   Pak::load("backup.ram", ".bram");
 
-  return true;
+  return successful;
 }
 
 auto MegaCD32X::save(string location) -> bool {

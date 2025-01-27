@@ -1,7 +1,7 @@
 struct PocketChallengeV2 : Emulator {
   PocketChallengeV2();
   auto load(Menu) -> void override;
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
@@ -34,23 +34,27 @@ auto PocketChallengeV2::load(Menu menu) -> void {
   //as such, neither the ares::WonderSwan core nor desktop-ui provide an orientation setting.
 }
 
-auto PocketChallengeV2::load() -> bool {
+auto PocketChallengeV2::load() -> LoadResult {
   game = mia::Medium::create("Pocket Challenge V2");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
 
   system = mia::System::create("Pocket Challenge V2");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != successful) return result;
 
   ares::WonderSwan::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
-  if(!ares::WonderSwan::load(root, "[Benesse] Pocket Challenge V2")) return false;
+  if(!ares::WonderSwan::load(root, "[Benesse] Pocket Challenge V2")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
   }
 
-  return true;
+  return successful;
 }
 
 auto PocketChallengeV2::save() -> bool {

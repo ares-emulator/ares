@@ -1,6 +1,6 @@
 struct Arcade : Emulator {
   Arcade();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto group() -> string override { return "Arcade"; }
@@ -33,17 +33,21 @@ Arcade::Arcade() {
   }
 }
 
-auto Arcade::load() -> bool {
+auto Arcade::load() -> LoadResult {
   game = mia::Medium::create("Arcade");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
 
   system = mia::System::create("Arcade");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != successful) return result;
 
   //Determine from the game manifest which core to use for the given arcade rom
 #ifdef CORE_SG
   if(game->pak->attribute("board") == "sega/sg1000a") {
-    if(!ares::SG1000::load(root, {"[Sega] SG-1000A"})) return false;
+    if(!ares::SG1000::load(root, {"[Sega] SG-1000A"})) return otherError;
     systemPakName = "SG-1000A";
     gamePakName = "Arcade Cartridge";
 
@@ -51,11 +55,11 @@ auto Arcade::load() -> bool {
       port->allocate();
       port->connect();
     }
-    return true;
+    return successful;
   }
 #endif
 
-  return false;
+  return otherError;
 }
 
 auto Arcade::save() -> bool {

@@ -1,4 +1,4 @@
-add_library(mia STATIC mia.cpp resource/resource.cpp)
+add_library(mia STATIC mia.cpp mia.hpp resource/resource.cpp)
 add_library(ares::mia ALIAS mia)
 
 target_sources(

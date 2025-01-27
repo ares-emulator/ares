@@ -144,7 +144,7 @@ auto identify(const string& filename) -> string {
   for(auto& medium : media) {
     auto pak = mia::Medium::create(medium);
     if(pak->extensions().find(extension)) {
-      if(!pak->load(filename)) continue; // Skip medium that the system cannot load
+      if(pak->load(filename) != successful) continue; // Skip medium that the system cannot load
       if(pak->pak->attribute("audio").boolean()) continue; // Skip audio-only media to give the next system a chance to match
       return pak->name();
     }
@@ -154,7 +154,7 @@ auto identify(const string& filename) -> string {
 }
 
 auto import(shared_pointer<Pak> pak, const string& filename) -> bool {
-  if(pak->load(filename)) {
+  if(pak->load(filename) == successful) {
     string pathname = {Path::user(), "Emulation/", pak->name(), "/", Location::prefix(filename), ".", pak->extensions().first(), "/"};
     if(!directory::create(pathname)) return false;
     for(auto& node : *pak->pak) {
@@ -194,7 +194,7 @@ auto main(Arguments arguments) -> void {
     if(!pak) return;
 
     if(string manifest; arguments.take("--manifest", manifest)) {
-      if(pak->load(manifest)) {
+      if(pak->load(manifest) == successful) {
         if(auto fp = pak->pak->read("manifest.bml")) return print(fp->reads());
       }
       return;

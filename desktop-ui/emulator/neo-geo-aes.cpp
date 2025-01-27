@@ -1,6 +1,6 @@
 struct NeoGeoAES : Emulator {
   NeoGeoAES();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto arcade() -> bool override { return true; }
@@ -34,14 +34,24 @@ NeoGeoAES::NeoGeoAES() {
   }
 }
 
-auto NeoGeoAES::load() -> bool {
+auto NeoGeoAES::load() -> LoadResult {
   game = mia::Medium::create("Neo Geo");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
 
   system = mia::System::create("Neo Geo AES");
-  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+  result = system->load(firmware[0].location);
+  if(result != successful) {
+    result.firmwareSystemName = "Neo Geo AES";
+    result.firmwareType = firmware[0].type;
+    result.firmwareRegion = firmware[0].region;
+    result.result = noFirmware;
+    return result;
+  }
 
-  if(!ares::NeoGeo::load(root, "[SNK] Neo Geo AES")) return false;
+  if(!ares::NeoGeo::load(root, "[SNK] Neo Geo AES")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -63,7 +73,7 @@ auto NeoGeoAES::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return successful;
 }
 
 auto NeoGeoAES::save() -> bool {

@@ -1,6 +1,6 @@
 struct ZXSpectrum : Emulator {
   ZXSpectrum();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
@@ -12,14 +12,18 @@ ZXSpectrum::ZXSpectrum() {
   name = "ZX Spectrum";
 }
 
-auto ZXSpectrum::load() -> bool {
+auto ZXSpectrum::load() -> LoadResult {
   game = mia::Medium::create("ZX Spectrum");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
 
   system = mia::System::create("ZX Spectrum");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != successful) return result;
 
-  if(!ares::ZXSpectrum::load(root, "[Sinclair] ZX Spectrum")) return false;
+  if(!ares::ZXSpectrum::load(root, "[Sinclair] ZX Spectrum")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Tape Deck/Tray")) {
     port->allocate();
@@ -31,7 +35,7 @@ auto ZXSpectrum::load() -> bool {
     port->connect();
   }
 
-  return true;
+  return successful;
 }
 
 auto ZXSpectrum::load(Menu menu) -> void {

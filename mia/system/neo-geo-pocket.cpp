@@ -1,12 +1,12 @@
 struct NeoGeoPocket : System {
   auto name() -> string override { return "Neo Geo Pocket"; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 };
 
-auto NeoGeoPocket::load(string location) -> bool {
+auto NeoGeoPocket::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return false;
+  if(!bios) return romNotFound;
 
   this->location = locate();
   pak = new vfs::directory;
@@ -17,7 +17,7 @@ auto NeoGeoPocket::load(string location) -> bool {
   Pak::load("cpu.ram", ".cram");
   Pak::load("apu.ram", ".aram");
 
-  return true;
+  return successful;
 }
 
 auto NeoGeoPocket::save(string location) -> bool {

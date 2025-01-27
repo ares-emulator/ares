@@ -1,11 +1,11 @@
 struct NeoGeoMVS : System {
   auto name() -> string override { return "Neo Geo MVS"; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto endianSwap(vector<u8>&) -> void;
 };
 
-auto NeoGeoMVS::load(string location) -> bool {
+auto NeoGeoMVS::load(string location) -> LoadResult {
   this->location = locate();
   pak = new vfs::directory;
 
@@ -26,9 +26,9 @@ auto NeoGeoMVS::load(string location) -> bool {
     if(bios) pak->append("bios.rom", bios);
   }
 
-  if(pak->count() != 1) return false;
+  if(pak->count() != 1) return romNotFound;
 
-  return true;
+  return successful;
 }
 
 auto NeoGeoMVS::save(string location) -> bool {

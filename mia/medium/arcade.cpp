@@ -1,23 +1,23 @@
 struct Arcade : Mame {
   auto name() -> string override { return "Arcade"; }
   auto extensions() -> vector<string> override { return {}; }
-  auto load(string location) -> bool override;
+  auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 };
 
-auto Arcade::load(string location) -> bool {
+auto Arcade::load(string location) -> LoadResult {
   auto foundDatabase = Medium::loadDatabase();
-  if(!foundDatabase) return false;
+  if(!foundDatabase) return { databaseNotFound, "Arcade.bml" };
   manifest = manifestDatabaseArcade(Medium::name(location));
-  if(!manifest) return false;
+  if(!manifest) return romNotFoundInDatabase;
 
   auto document = BML::unserialize(manifest);
-  if(!document) return false;
+  if(!document) return couldNotParseManifest;
 
   //Sega SG-1000 based arcade
   if(document["game/board"].string() == "sega/sg1000a") {
     vector<u8> rom = loadRoms(location, document, "maincpu");
-    if(!rom) return false;
+    if(!rom) return { invalidROM, "Ensure your ROM is in a MAME-compatible .zip format." };
 
     this->location = location;
 
@@ -28,10 +28,10 @@ auto Arcade::load(string location) -> bool {
     pak->append("manifest.bml", manifest);
     pak->append("program.rom",  rom);
 
-    return true;
+    return successful;
   }
 
-  return false;
+  return otherError;
 }
 
 auto Arcade::save(string location) -> bool {

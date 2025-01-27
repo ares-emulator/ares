@@ -1,6 +1,6 @@
 struct GameBoyColor : Emulator {
   GameBoyColor();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
@@ -27,14 +27,18 @@ GameBoyColor::GameBoyColor() {
   }
 }
 
-auto GameBoyColor::load() -> bool {
+auto GameBoyColor::load() -> LoadResult {
   game = mia::Medium::create("Game Boy Color");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
 
   system = mia::System::create("Game Boy Color");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != successful) return result;
 
-  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy Color")) return false;
+  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy Color")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -45,7 +49,7 @@ auto GameBoyColor::load() -> bool {
     fastBoot->setValue(settings.boot.fast);
   }
 
-  return true;
+  return successful;
 }
 
 auto GameBoyColor::save() -> bool {

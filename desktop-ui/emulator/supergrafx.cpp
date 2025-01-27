@@ -1,6 +1,6 @@
 struct SuperGrafx : PCEngine {
   SuperGrafx();
-  auto load() -> bool override;
+  auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 };
@@ -12,16 +12,20 @@ SuperGrafx::SuperGrafx() {
   allocatePorts();
 }
 
-auto SuperGrafx::load() -> bool {
+auto SuperGrafx::load() -> LoadResult {
   game = mia::Medium::create("SuperGrafx");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
 
   system = mia::System::create("SuperGrafx");
-  if(!system->load()) return false;
+  result = system->load();
+  if(result != successful) return result;
 
   ares::PCEngine::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
-  if(!ares::PCEngine::load(root, "[NEC] SuperGrafx (NTSC-J)")) return false;
+  if(!ares::PCEngine::load(root, "[NEC] SuperGrafx (NTSC-J)")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -30,7 +34,7 @@ auto SuperGrafx::load() -> bool {
 
   connectPorts();
 
-  return true;
+  return successful;
 }
 
 auto SuperGrafx::save() -> bool {
