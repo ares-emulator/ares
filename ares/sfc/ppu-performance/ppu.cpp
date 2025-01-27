@@ -89,19 +89,19 @@ auto PPU::main() -> void {
       screen->setSize(564, height() * 2);
       screen->setViewport(0, 0, 564, height() * 2);
     } else {
-      int x = 24;
-      int y = 16;
-      int w = 564 - 48;
-      int h = height() - 16;
+      int x = 26;
+      int y = 18;
+      int w = 564 - 52;
+      int h = height() - 18;
 
       if(Region::PAL()) {
-        y += 25;
-        h -= 29;
-        w -= 6;
+        x -= 4;
+        y += 24;
+        h -= 31;
 
         if(!io.overscan) {
           y += 16;
-          h -= 16;
+          h -= 15;
         }
       }
 
