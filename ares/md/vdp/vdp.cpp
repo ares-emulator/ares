@@ -79,7 +79,8 @@ auto VDP::pixels() -> u32* {
   if(Region::PAL() ) y += 38 - 8 * latch.overscan;
   y = y % visibleHeight();
 
-  output = screen->pixels().data() + y * 2 * 1415;
+  auto yScale = latch.interlace ? 2 : 1;
+  output = screen->pixels().data() + y * yScale * 1415;
   if(latch.interlace) output += field() * 1415;
 
   if(h40()) {
@@ -95,11 +96,13 @@ auto VDP::pixels() -> u32* {
 }
 
 auto VDP::frame() -> void {
-  if(latch.interlace == 0) screen->setProgressive(1);
+  if(latch.interlace == 0) screen->setProgressive(0);
   if(latch.interlace == 1) screen->setInterlace(field());
+  auto yScale = latch.interlace ? 2 : 1;
+  screen->setScale(0.25, 1.0 / yScale);
 
   if(screen->overscan()) {
-    screen->setSize(1415, visibleHeight() * 2);
+    screen->setSize(1415, visibleHeight() * yScale);
     screen->setViewport(0, 0, screen->width(), screen->height());
   } else {
     int x = 13 * 5;
@@ -107,8 +110,8 @@ auto VDP::frame() -> void {
     int width = 1280;
     int height = screenHeight();
 
-    screen->setSize(width, height * 2);
-    screen->setViewport(x, y * 2, width, height * 2);
+    screen->setSize(width, height * yScale);
+    screen->setViewport(x, y * yScale, width, height * yScale);
   }
 
   screen->frame();
