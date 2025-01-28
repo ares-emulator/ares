@@ -34,15 +34,18 @@ jobs:
     - name: Check Release Tag ☑️
       id: check
       run: |
+          now=$(date +'%Y-%m-%d')
           if [[ ${GITHUB_REF_NAME} == master ]];
           then
             echo "tag=nightly" >> $GITHUB_OUTPUT
-            now=$(date +'%Y-%m-%d')
             versionName="nightly ${now}"
             echo "versionName=${versionName}" >> $GITHUB_OUTPUT
+            echo "description=${{ github.event.head_commit.message }}" >> $GITHUB_OUTPUT
           else
             echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
             echo "versionName=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            description="This is ares ${GITHUB_REF_NAME}, released on ${now}."
+            echo "description=${description}" >> $GITHUB_OUTPUT
           fi
           
     - name: Create Release 🛫
@@ -52,6 +55,7 @@ jobs:
         draft: ${{ github.ref != 'refs/heads/master' }}
         tag_name: ${{ steps.check.outputs.tag }}
         name: ares ${{ steps.check.outputs.versionName }}
+        body: ${{ steps.check.outputs.description }}
         files: |
           ${{ github.workspace }}/ares-macos-universal.zip
           ${{ github.workspace }}/ares-macos-universal-dSYMs.zip
