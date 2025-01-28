@@ -1,6 +1,8 @@
 add_library(mia STATIC mia.cpp mia.hpp resource/resource.cpp)
 add_library(ares::mia ALIAS mia)
 
+add_sourcery_command(mia resource)
+
 target_sources(
   mia
   PRIVATE
@@ -121,6 +123,7 @@ if(ARES_BUILD_OPTIONAL_TARGETS)
       "$<$<PLATFORM_ID:Darwin>:$<LINK_LIBRARY:FRAMEWORK,Carbon.framework>>"
       "$<$<PLATFORM_ID:Darwin>:$<LINK_LIBRARY:FRAMEWORK,IOKit.framework>>"
       "$<$<PLATFORM_ID:Darwin>:$<LINK_LIBRARY:FRAMEWORK,Security.framework>>"
+      "$<$<PLATFORM_ID:Darwin>:mia>"
   )
 
   if(WIN32)
