@@ -1,5 +1,0 @@
-shaders = 1
-
-shader0 = shaders/omniscale.slang
-scale_type0 = viewport
-filter_linear0 = false

@@ -1,4 +1,0 @@
-shaders = 1
-
-shader0 = shaders/ossc.slang
-scale_type0 = viewport

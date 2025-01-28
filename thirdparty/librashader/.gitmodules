@@ -1,9 +1,0 @@
-[submodule "naga"]
-	path = naga
-	url = https://github.com/chyyran/naga
-[submodule "test/capi-tests/librashader-capi-tests/dx11-example/external/crosswindow"]
-	path = test/capi-tests/librashader-capi-tests/dx11-example/external/crosswindow
-	url = https://github.com/alaingalvan/crosswindow.git
-[submodule "test/shaders_slang"]
-	path = test/shaders_slang
-	url = https://github.com/libretro/slang-shaders
