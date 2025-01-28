@@ -1,9 +1,0 @@
-shaders = 2
-
-shader0 = shaders/motion_interpolation/motion_interpolation_pass0.slang
-alias0 = Pass0
-filter_linear0 = true
-scale_type0 = viewport
-
-shader1 = shaders/motion_interpolation/motion_interpolation_pass3.slang
-filter_linear1 = true

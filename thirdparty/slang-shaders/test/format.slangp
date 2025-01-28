@@ -1,7 +1,0 @@
-shaders = 2
-shader0 = format.slang
-shader1 = decode-format.slang
-scale_type0 = source
-scale0 = 1.0
-filter_linear0 = false
-filter_linear1 = false

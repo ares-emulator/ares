@@ -1,2 +1,0 @@
-./gamutthingy -i 64.png -o P22.png -g linear -s ntscjp22trinitron -d srgb --map-mode compress --gma vpr --safe-zone-type const-detail --remap-factor 0.4 --remap-limit 0.9 --knee soft --knee-factor 0.4 --di false --sc true
-

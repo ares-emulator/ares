@@ -1,4 +1,0 @@
-#reference "../Base_CRT_Presets/MBZ__3__STD__GDV.slangp"
-
-HSM_ROTATE_CORE_IMAGE = 1
-HSM_ASPECT_RATIO_MODE = 2

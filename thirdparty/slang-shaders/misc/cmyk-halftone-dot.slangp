@@ -1,4 +1,0 @@
-shaders = 1
-
-shader0 = shaders/cmyk-halftone-dot.slang
-scale_type0 = viewport
