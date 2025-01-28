@@ -38,4 +38,5 @@ hiro/resource/resource.cpp
 hiro/resource/resource.hpp
 desktop-ui/resource/resource.cpp
 desktop-ui/resource/resource.hpp
+tests/arm7tdmi/tests
 tests/m68000/tests

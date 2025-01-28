@@ -58,6 +58,7 @@ struct ARM7TDMI {
   auto TST(n4) -> bool;
 
   //instruction.cpp
+  auto reload() -> void;
   auto fetch() -> void;
   auto instruction() -> void;
   auto exception(u32 mode, n32 address) -> void;

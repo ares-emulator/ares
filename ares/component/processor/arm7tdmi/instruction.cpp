@@ -1,3 +1,14 @@
+auto ARM7TDMI::reload() -> void {
+  u32 mask = !cpsr().t ? 3 : 1;
+  u32 size = !cpsr().t ? Word : Half;
+
+  pipeline.reload = false;
+  r(15).data &= ~mask;
+  pipeline.fetch.address = r(15) & ~mask;
+  pipeline.fetch.instruction = read(Prefetch | size | Nonsequential, pipeline.fetch.address);
+  fetch();
+}
+
 auto ARM7TDMI::fetch() -> void {
   pipeline.execute = pipeline.decode;
   pipeline.execute.irq = pipeline.execute.irq & irq;
@@ -20,16 +31,7 @@ auto ARM7TDMI::fetch() -> void {
 }
 
 auto ARM7TDMI::instruction() -> void {
-  u32 mask = !cpsr().t ? 3 : 1;
-  u32 size = !cpsr().t ? Word : Half;
-
-  if(pipeline.reload) {
-    pipeline.reload = false;
-    r(15).data &= ~mask;
-    pipeline.fetch.address = r(15) & ~mask;
-    pipeline.fetch.instruction = read(Prefetch | size | Nonsequential, pipeline.fetch.address);
-    fetch();
-  }
+  if(pipeline.reload) reload();
   fetch();
 
   if(pipeline.execute.irq) {
