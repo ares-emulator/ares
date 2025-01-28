@@ -8,11 +8,7 @@
 #include <Metal/Metal.h>
 #include <MetalKit/MTKView.h>
 
-#if defined(CMAKE)
 #include <librashader/librashader_ld.h>
-#else
-#include "librashader_ld.h"
-#endif
 #include "ShaderTypes.h"
 
 struct Metal;

@@ -16,11 +16,7 @@
   #error "ruby::OpenGL3: unsupported platform"
 #endif
 
-#if defined(CMAKE)
 #include <librashader/librashader_ld.h>
-#else
-#include "librashader_ld.h"
-#endif
 
 #include "bind.hpp"
 #include "utility.hpp"
