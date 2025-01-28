@@ -126,18 +126,31 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
 (n8 list, n3 n, n1 mode) -> void {
   n32 rn = r(n);
   n32 bitCount = list ? bit::count(list) : 16;
+  n32 rnEnd = r(n) + bitCount * 4;
 
-  if(mode == 1 && !list.bit(n)) r(n) = r(n) + bitCount * 4;
+  if(mode == 1 && !list.bit(n)) r(n) = rnEnd;
 
   endBurst();
   if(!list) {
     if(mode == 1) r(15) = read(Word, rn);
-    if(mode == 0) write(Word, rn, r(15) + 2);
+    if(mode == 0) {
+      write(Word, rn, r(15) + 2);
+      //writeback occurs after first access
+      r(n) = rnEnd;
+    }
   } else {
+    bool wroteBack = false;
     for(u32 m : range(8)) {
       if(!list.bit(m)) continue;
       if(mode == 1) r(m) = read(Word, rn);  //LDMIA
-      if(mode == 0) write(Word, rn, r(m));  //STMIA
+      if(mode == 0) {
+        write(Word, rn, r(m));  //STMIA
+        //writeback occurs after first access
+        if(!wroteBack) {
+          r(n) = rnEnd;
+          wroteBack = true;
+        }
+      }
       rn += 4;
     }
   }
@@ -146,7 +159,6 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
     idle();
   } else {
     endBurst();
-    r(n) = r(n) + bitCount * 4;
   }
 }
 
