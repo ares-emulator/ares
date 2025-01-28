@@ -1,5 +1,6 @@
 auto ARM7TDMI::thumbInstructionALU
 (n3 d, n3 m, n4 mode) -> void {
+  carry = cpsr().c;
   switch(mode) {
   case  0: r(d) = BIT(r(d) & r(m)); break;  //AND
   case  1: r(d) = BIT(r(d) ^ r(m)); break;  //EOR
@@ -92,6 +93,7 @@ auto ARM7TDMI::thumbInstructionBranchTest
 
 auto ARM7TDMI::thumbInstructionImmediate
 (n8 immediate, n3 d, n2 mode) -> void {
+  carry = cpsr().c;
   switch(mode) {
   case 0: r(d) = BIT(immediate); break;  //MOV
   case 1:        SUB(r(d), immediate, 1); break;  //CMP
