@@ -79,7 +79,7 @@ auto Arcade::load() -> LoadResult {
 #ifdef CORE_N64
   if(game->pak->attribute("board") == "nintendo/aleck64") {
     if(!ares::Nintendo64::load(root, {"[SETA] Aleck 64"})) {
-      return false;
+      return otherError;
     }
     systemPakName = "Aleck 64";
     gamePakName = "Arcade Cartridge";
@@ -111,7 +111,7 @@ auto Arcade::load() -> LoadResult {
     ares::Nintendo64::option("Homebrew Mode", settings.general.homebrewMode);
     ares::Nintendo64::option("Recompiler", !settings.general.forceInterpreter);
 
-    return true;
+    return successful;
   }
 #endif
 

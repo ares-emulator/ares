@@ -35,13 +35,13 @@ auto Arcade::load(string location) -> LoadResult {
   //Aleck 64
   if(document["game/board"].string() == "nintendo/aleck64") {
     vector<u8> rom = loadRoms(location, document, "user2");
-    if(!rom) return false;
+    if(!rom) return { invalidROM, "Ensure your ROM is in a MAME-compatible .zip format." };
 
     //MAME stores roms in Byte-Swapped (v64) format, but we need them in their native Big-Endian (z64)
     endianSwap(rom);
 
     vector<u8> pif = loadRoms(location, document, "user1");
-    if(!pif) return false;
+    if(!rom) return { invalidROM, "Ensure your ROM is in a MAME-compatible .zip format." };
 
     this->location = location;
 
@@ -55,7 +55,7 @@ auto Arcade::load(string location) -> LoadResult {
     pak->append("program.rom",  rom);
     pak->append("pif.aleck64.rom", pif);
 
-    return true;
+    return successful;
   }
 
   return otherError;
