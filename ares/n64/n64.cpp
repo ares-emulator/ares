@@ -17,6 +17,7 @@
 #include <n64/cpu/cpu.cpp>
 #include <n64/rsp/rsp.cpp>
 #include <n64/rdp/rdp.cpp>
+#include <n64/aleck64/aleck64.cpp>
 
 //#include <n64/vulkan/parallel-rdp/parallel-rdp/command_ring.cpp>
 //#include <n64/vulkan/parallel-rdp/parallel-rdp/rdp_device.cpp>

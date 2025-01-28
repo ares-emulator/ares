@@ -1,6 +1,7 @@
 // Helper/Utility for importing roms for systems that are using MAME romsets
 struct Mame : Medium {
   auto loadRoms(string location, Markup::Node& info, string sectionName) -> vector<u8>;
+  auto loadRomFile(string location, string filename, Markup::Node& currentInfo) -> vector<u8>;
   auto endianSwap(vector<u8>& memory, u32 address = 0, int size = -1) -> void;
 };
 
@@ -23,11 +24,8 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> 
         filename = section["name"].string().strip();
         if(filename) {
           input = {};
-          for(auto &file: archive.file) {
-            if(!file.name.iequals(filename)) continue;
-            input = archive.extract(file);
-            readOffset = 0;
-          }
+          input = loadRomFile(location, filename, info);
+          readOffset = 0;
           if (!input || input.size() == 0) return output;
         }
       }
@@ -62,6 +60,27 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> 
   }
   return output;
 }
+
+auto Mame::loadRomFile(string location, string filename, Markup::Node& info) -> vector<u8> {
+  Decode::ZIP archive;
+  if(!archive.open(location)) return {};
+
+  for(auto& file : archive.file) {
+    if(file.name.iequals(filename)) {
+      return archive.extract(file);
+    }
+  }
+
+  if(auto parent = info["game/parent"].string()) {
+    auto manifest = manifestDatabaseArcade(parent);
+    auto document = BML::unserialize(manifest);
+    if(!document) return {};
+    location = {Location::path(location), "/", document["game/name"].string(), ".zip"};
+    return loadRomFile(location, filename, document);
+  }
+
+  return {};
+};
 
 
 auto Mame::endianSwap(vector<u8>& memory, u32 address, int size) -> void {

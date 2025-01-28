@@ -11,6 +11,7 @@ auto enumerate() -> vector<string> {
     "[Nintendo] Nintendo 64DD (NTSC-U)",
     "[Nintendo] Nintendo 64DD (NTSC-J)",
     "[Nintendo] Nintendo 64DD (NTSC-DEV)",
+    "[SETA] Aleck 64",
   };
 }
 
@@ -40,7 +41,7 @@ auto option(string name, string value) -> bool {
       rsp.recompiler.enabled = value.boolean();
     }
   }
-  if(name == "Expansion Pak") system.expansionPak = value.boolean();
+  if(Model::Nintendo64() && name == "Expansion Pak") system.expansionPak = value.boolean();
   return true;
 }
 
@@ -68,20 +69,23 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name.match("[Nintendo] Nintendo 64 (*)")) {
-    information.name = "Nintendo 64";
-    information.dd = 0;
-  }
-  if(name.match("[Nintendo] Nintendo 64DD (*)")) {
-    information.name = "Nintendo 64";
-    information.dd = 1;
+  information.name = "Nintendo 64";
+
+  if(name == "[SETA] Aleck 64") {
+    information.name = "Arcade";
+    information.model = Model::Aleck64;
+    information.region = Region::NTSC;
+    information.videoFrequency = 48'681'818;
+    system.expansionPak = true; //Aleck 64 has the 8MB as standard
+  } else {
+    information.dd = name.find("64DD") ? true : false;
   }
 
-  if(name.find("NTSC")) {
+  if (name.find("NTSC")) {
     information.region = Region::NTSC;
     information.videoFrequency = 48'681'818;
   }
-  if(name.find("PAL")) {
+  if (name.find("PAL")) {
     information.region = Region::PAL;
     information.videoFrequency = 49'656'530;
   }
@@ -114,6 +118,7 @@ auto System::load(Node::System& root, string name) -> bool {
   rsp.load(node);
   rdp.load(node);
   if(_DD()) dd.load(node);
+  if(model() == Model::Aleck64) aleck64.load(node);
   #if defined(VULKAN)
   vulkan.load(node);
   #endif
@@ -306,6 +311,7 @@ auto System::unload() -> void {
   rsp.unload();
   rdp.unload();
   if(_DD()) dd.unload();
+  if(model() == Model::Aleck64) aleck64.unload();
   pak.reset();
   node.reset();
 }
@@ -313,11 +319,14 @@ auto System::unload() -> void {
 auto System::save() -> void {
   if(!node) return;
   cartridge.save();
+
   controllerPort1.save();
   controllerPort2.save();
   controllerPort3.save();
   controllerPort4.save();
   if(_DD()) dd.save();
+
+  if(model() == Model::Aleck64) aleck64.save();
 }
 
 auto System::power(bool reset) -> void {
@@ -341,6 +350,7 @@ auto System::power(bool reset) -> void {
   cpu.power(reset);
   rsp.power(reset);
   rdp.power(reset);
+  if(model() == Model::Aleck64) aleck64.power(reset);
 }
 
 }

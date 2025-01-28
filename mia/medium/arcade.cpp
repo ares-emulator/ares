@@ -23,10 +23,37 @@ auto Arcade::load(string location) -> LoadResult {
 
     pak = new vfs::directory;
     pak->setAttribute("board",  document["game/board" ].string());
+    pak->setAttribute("name",   document["game/name" ].string());
     pak->setAttribute("title",  document["game/title"].string());
     pak->setAttribute("region", document["game/region"].string());
     pak->append("manifest.bml", manifest);
     pak->append("program.rom",  rom);
+
+    return successful;
+  }
+
+  //Aleck 64
+  if(document["game/board"].string() == "nintendo/aleck64") {
+    vector<u8> rom = loadRoms(location, document, "user2");
+    if(!rom) return { invalidROM, "Ensure your ROM is in a MAME-compatible .zip format." };
+
+    //MAME stores roms in Byte-Swapped (v64) format, but we need them in their native Big-Endian (z64)
+    endianSwap(rom);
+
+    vector<u8> pif = loadRoms(location, document, "user1");
+    if(!rom) return { invalidROM, "Ensure your ROM is in a MAME-compatible .zip format." };
+
+    this->location = location;
+
+    pak = new vfs::directory;
+    pak->setAttribute("board",  document["game/board" ].string());
+    pak->setAttribute("name",   document["game/name" ].string());
+    pak->setAttribute("title",  document["game/title"].string());
+    pak->setAttribute("region", document["game/region"].string());
+    pak->setAttribute("cic",    "CIC-NUS-5101");
+    pak->append("manifest.bml", manifest);
+    pak->append("program.rom",  rom);
+    pak->append("pif.aleck64.rom", pif);
 
     return successful;
   }

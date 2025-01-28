@@ -5,7 +5,7 @@
 # mame2bml is also required to be present and up-to-date.
 
 # Specify the mame drivers to include in the database
-export CORES="sega/sg1000a.cpp"
+export CORES="sega/sg1000a.cpp nintendo/aleck64.cpp"
 
 export PATH=$PATH:$(pwd)/tools/mame2bml/out
 if ! command -v mame2bml &> /dev/null

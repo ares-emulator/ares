@@ -32,9 +32,16 @@ auto PIF::main() -> void {
 auto PIF::power(bool reset) -> void {
   Thread::reset();
 
-  string pifrom = Region::PAL() ? "pif.pal.rom" : "pif.ntsc.rom";
-  if(auto fp = system.pak->read(pifrom)) {
-    rom.load(fp);
+  if(Model::Aleck64()) {
+    string pifrom = "pif.aleck64.rom";
+    if (auto fp = cartridge.pak->read(pifrom)) {
+      rom.load(fp);
+    }
+  } else {
+    string pifrom = Region::PAL() ? "pif.pal.rom" : "pif.ntsc.rom";
+    if (auto fp = system.pak->read(pifrom)) {
+      rom.load(fp);
+    }
   }
 
   ram.fill();

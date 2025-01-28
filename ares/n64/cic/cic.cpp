@@ -8,9 +8,16 @@ CIC cic;
 #include "serialization.cpp"
 
 auto CIC::power(bool reset) -> void {
-  model = cartridge.node ? cartridge.cic() : dd.cic();
+  if(Model::Aleck64()) {
+    model = "CIC-NUS-5101";
+  } else {
+    model = cartridge.node ? cartridge.cic() : dd.cic();
+  }
+
   type = Cartridge;
   challengeAlgo = DummyChallenge;
+
+  if(model == "CIC-NUS-5101") region = NTSC, seed = 0xac, checksum = 0x93e983a8f152ull;
   if(model == "CIC-NUS-6101") region = NTSC, seed = 0x3f, checksum = 0x45cc73ee317aull;
   if(model == "CIC-NUS-6102") region = NTSC, seed = 0x3f, checksum = 0xa536c0f1d859ull;
   if(model == "CIC-NUS-7101") region = PAL,  seed = 0x3f, checksum = 0xa536c0f1d859ull;
