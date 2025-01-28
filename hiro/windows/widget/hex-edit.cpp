@@ -136,6 +136,7 @@ auto pHexEdit::keyPress(u32 scancode) -> bool {
   }
 
   //convert scancode to hex nibble
+  scancode = pKeyboard::_translate(scancode, 0);
        if(scancode >= '0' && scancode <= '9') scancode = scancode - '0';
   else if(scancode >= 'A' && scancode <= 'F') scancode = scancode - 'A' + 10;
   else if(scancode >= 'a' && scancode <= 'f') scancode = scancode - 'a' + 10;

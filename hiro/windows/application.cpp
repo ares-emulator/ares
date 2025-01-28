@@ -186,9 +186,11 @@ static auto Application_keyboardProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
     //TODO: does this really need to be hooked here?
     #if defined(Hiro_Widget)
     if(auto widget = dynamic_cast<mWidget*>(object)) {
-      if(auto self = widget->self()) {
-        if(auto result = self->windowProc(self->hwnd, msg, wparam, lparam)) {
-          return result();
+      if(!dynamic_cast<mHexEdit*>(object)) {
+        if(auto self = widget->self()) {
+          if(auto result = self->windowProc(self->hwnd, msg, wparam, lparam)) {
+            return result();
+          }
         }
       }
     }
