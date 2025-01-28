@@ -1,6 +1,6 @@
 auto SI::readWord(u32 address, Thread& thread) -> u32 {
   if(address <= 0x048f'ffff) return ioRead(address);
-
+  if(unlikely(system._BB())) return 0; //Should be unreachable on iQue, the MI took over the address space
   if (unlikely(io.ioBusy)) {
     writeForceFinish(); //technically, we should wait until Queue::SI_BUS_Write
     return io.busLatch;
@@ -56,7 +56,7 @@ auto SI::ioRead(u32 address) -> u32 {
 
 auto SI::writeWord(u32 address, u32 data, Thread& thread) -> void {
   if(address <= 0x048f'ffff) return ioWrite(address, data);
-
+  if(system._BB()) return; //Should be unreachable on iQue, the MI took over the address space
   if(io.ioBusy) return;
   io.ioBusy = 1;
   io.dmaBusy = 1;
@@ -82,7 +82,7 @@ auto SI::ioWrite(u32 address, u32 data_) -> void {
     io.dmaBusy = 1;
     io.dmaState = 1;
     io.pchState = 4;
-    int cycles = pif.estimateTiming();
+    int cycles = (!system._BB()) ? pif.estimateTiming() : 7040;
     queue.insert(Queue::SI_DMA_Read, cycles*3);
   }
 
@@ -100,7 +100,7 @@ auto SI::ioWrite(u32 address, u32 data_) -> void {
     io.dmaBusy = 1;
     io.dmaState = 4;
     io.pchState = 1;
-    queue.insert(Queue::SI_DMA_Write, 4065*3);
+    queue.insert(Queue::SI_DMA_Write, system._BB() ? 42*3 : 4065*3);
   }
 
   if(address == 5) {

@@ -123,6 +123,14 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "DebugServer/UseIPv4", debugServer.useIPv4);
 
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
+  bind(natural, "Nintendo64/NAND640", nintendo64.nand64[0]);
+  bind(natural, "Nintendo64/NAND641", nintendo64.nand64[1]);
+  bind(natural, "Nintendo64/NAND642", nintendo64.nand64[2]);
+  bind(natural, "Nintendo64/NAND643", nintendo64.nand64[3]);
+  bind(natural, "Nintendo64/NAND1280", nintendo64.nand128[0]);
+  bind(natural, "Nintendo64/NAND1281", nintendo64.nand128[1]);
+  bind(natural, "Nintendo64/NAND1282", nintendo64.nand128[2]);
+  bind(natural, "Nintendo64/NAND1283", nintendo64.nand128[3]);
 
   bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
 

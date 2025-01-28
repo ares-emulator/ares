@@ -78,6 +78,7 @@ namespace ares::Atari2600 {
   }
   #include "nintendo-64.cpp"
   #include "nintendo-64dd.cpp"
+  #include "ique-player.cpp"
 #endif
 
 #ifdef CORE_NG
@@ -203,6 +204,7 @@ auto Emulator::construct() -> void {
   #ifdef CORE_N64
   emulators.append(new Nintendo64);
   emulators.append(new Nintendo64DD);
+  emulators.append(new iQuePlayer);
   #endif
 
   #ifdef CORE_GB

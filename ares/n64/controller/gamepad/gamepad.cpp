@@ -28,6 +28,9 @@ Gamepad::Gamepad(Node::Port parent) {
   r           = node->append<Node::Input::Button>("R");
   z           = node->append<Node::Input::Button>("Z");
   start       = node->append<Node::Input::Button>("Start");
+
+  if(system._BB() && (parent->name() == "Controller Port 1"))
+    bb_button = node->append<Node::Input::Button>("Power");
 }
 
 Gamepad::~Gamepad() {

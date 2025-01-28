@@ -11,6 +11,7 @@ auto enumerate() -> vector<string> {
     "[Nintendo] Nintendo 64DD (NTSC-U)",
     "[Nintendo] Nintendo 64DD (NTSC-J)",
     "[Nintendo] Nintendo 64DD (NTSC-DEV)",
+    "[iQue] iQue Player"
   };
 }
 
@@ -41,9 +42,18 @@ auto option(string name, string value) -> bool {
     }
   }
   if(name == "Expansion Pak") system.expansionPak = value.boolean();
+  if(name.beginsWith("NAND")) {
+    auto which = name.slice(-1).integer();
+    if(name.beginsWith("NAND64"))
+      system.nand64[which] = value.integer();
+    else if(name.beginsWith("NAND128"))
+      system.nand128[which] = value.integer();
+  }
+  if(name == "Is 128") system.is_128 = value.boolean();
   return true;
 }
 
+Random random;
 System system;
 Queue queue;
 #include "serialization.cpp"
@@ -71,10 +81,21 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.match("[Nintendo] Nintendo 64 (*)")) {
     information.name = "Nintendo 64";
     information.dd = 0;
+    information.bb = 0;
   }
   if(name.match("[Nintendo] Nintendo 64DD (*)")) {
     information.name = "Nintendo 64";
     information.dd = 1;
+    information.bb = 0;
+  }
+  if(name.match("[iQue] iQue Player")) {
+    information.name = "iQue Player";
+    information.dd = 0;
+    information.bb = 1;
+
+    information.region = Region::NTSC;
+    information.frequency = 144'000'000 * 2;
+    information.videoFrequency = 48'681'818;
   }
 
   if(name.find("NTSC")) {
@@ -97,7 +118,7 @@ auto System::load(Node::System& root, string name) -> bool {
   root = node;
   if(!node->setPak(pak = platform->pak(node))) return false;
 
-  cartridgeSlot.load(node);
+  if(!_BB()) cartridgeSlot.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
   controllerPort3.load(node);
@@ -107,13 +128,25 @@ auto System::load(Node::System& root, string name) -> bool {
   vi.load(node);
   ai.load(node);
   pi.load(node);
-  pif.load(node);
+  if(!_BB()) pif.load(node);
   ri.load(node);
   si.load(node);
   cpu.load(node);
   rsp.load(node);
   rdp.load(node);
   if(_DD()) dd.load(node);
+  if(_BB()) {
+    virage0.load(node);
+    virage1.load(node);
+    virage2.load(node);
+    nand0.load(node);
+    nand1.load(node);
+    nand2.load(node);
+    nand3.load(node);
+    usb0.load(node);
+    usb1.load(node);
+  }
+
   #if defined(VULKAN)
   vulkan.load(node);
   #endif
@@ -289,7 +322,7 @@ auto System::unload() -> void {
   #if defined(VULKAN)
   vulkan.unload();
   #endif
-  cartridgeSlot.unload();
+  if(!_BB()) cartridgeSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   controllerPort3.unload();
@@ -299,13 +332,24 @@ auto System::unload() -> void {
   vi.unload();
   ai.unload();
   pi.unload();
-  pif.unload();
+  if(!_BB()) pif.unload();
   ri.unload();
   si.unload();
   cpu.unload();
   rsp.unload();
   rdp.unload();
   if(_DD()) dd.unload();
+  if(_BB()) {
+    virage0.unload();
+    virage1.unload();
+    virage2.unload();
+    nand0.unload();
+    nand1.unload();
+    nand2.unload();
+    nand3.unload();
+    usb0.unload();
+    usb1.unload();
+  }
   pak.reset();
   node.reset();
 }
@@ -318,10 +362,21 @@ auto System::save() -> void {
   controllerPort3.save();
   controllerPort4.save();
   if(_DD()) dd.save();
+  if(_BB()) {
+    virage0.save();
+    virage1.save();
+    virage2.save();
+    pi.save();
+  }
 }
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
+
+  if(_BB())
+    random.entropy(Random::Entropy::High);
+  else
+    random.entropy(Random::Entropy::None);
 
   if constexpr(Accuracy::CPU::Recompiler || Accuracy::RSP::Recompiler) {
     ares::Memory::FixedAllocator::get().release();
@@ -334,13 +389,24 @@ auto System::power(bool reset) -> void {
   vi.power(reset);
   ai.power(reset);
   pi.power(reset);
-  pif.power(reset);
+  if(!_BB()) pif.power(reset);
   cic.power(reset);
   ri.power(reset);
   si.power(reset);
   cpu.power(reset);
   rsp.power(reset);
   rdp.power(reset);
+  if(_BB()) {
+    virage0.power(reset);
+    virage1.power(reset);
+    virage2.power(reset);
+    nand0.power(reset);
+    nand1.power(reset);
+    nand2.power(reset);
+    nand3.power(reset);
+    usb0.power(reset);
+    usb1.power(reset);
+  }
 }
 
 }

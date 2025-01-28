@@ -49,6 +49,7 @@ struct CPU : Thread {
     u64 nextpc = 0;  //pc after next instruction
     u32 state  = 0;  //current branch state
     u32 nstate = 0;  //next branch state
+    n1 fetch   = 0;  //currently fetching an instruction?
 
     enum : u32 {
       EndBlock  = 1 << 0,
@@ -366,6 +367,8 @@ struct CPU : Thread {
     ReadRDB   = 5,
     WriteRDB  = 6,
     Timer     = 7,
+
+    BB        = 3,
   };
 
   //ipu.cpp
@@ -599,8 +602,8 @@ struct CPU : Thread {
 
     //15: Coprocessor Revision Identifier
     struct Coprocessor {
-      static constexpr u8 revision = 0x22;
-      static constexpr u8 implementation = 0x0b;
+      u8 revision = 0x22;
+      u8 implementation = 0x0b;
     } coprocessor;
 
     //16
@@ -652,6 +655,7 @@ struct CPU : Thread {
     //other
     n64 latch;
     n1 nmiPending;
+    n1 nmiStrobe;
     n1 sysadFrozen;
   } scc;
 
@@ -677,7 +681,7 @@ struct CPU : Thread {
 
     struct Coprocessor {
       static constexpr u8 revision = 0x00;
-      static constexpr u8 implementation = 0x0a;
+      static constexpr u8 implementation = 0x0b;
     } coprocessor;
 
     struct ControlStatus {

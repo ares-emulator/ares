@@ -15,6 +15,8 @@ struct Program : ares::Platform {
   auto audio(ares::Node::Audio::Stream) -> void override;
   auto input(ares::Node::Input::Input) -> void override;
   auto cheat(u32 address) -> maybe<u32> override;
+  auto showLED(b1 show) -> void override;
+  auto setLED(b1 on) -> void override;
 
   //load.cpp
   auto identify(const string& filename) -> shared_pointer<Emulator>;
@@ -95,6 +97,11 @@ struct Program : ares::Platform {
     u64 timestamp = 0;
     string text;
   } message;
+
+  struct LED {
+    b1 show = false;
+    b1 on = false;
+  } led;
 
   vector<Message> messages;
   maybe<u64> vblanksPerSecond;

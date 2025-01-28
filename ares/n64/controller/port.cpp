@@ -13,7 +13,10 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setDisconnect([&] { device.reset(); });
-  port->setSupported({"Gamepad", "Mouse"});
+  if(system._BB() && (name == "Controller Port 1"))
+    port->setSupported({"Gamepad"});
+  else
+    port->setSupported({"Gamepad", "Mouse"});
 }
 
 auto ControllerPort::unload() -> void {
