@@ -1,7 +1,0 @@
-#reference "../../Base_CRT_Presets/MBZ__5__POTATO__GDV.slangp"
-
-#reference "../../../resource/param_values/dual-screen/dual-screen-3ds.params"
-
-BackgroundImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
-BackgroundVertImage = ../../../shaders/textures/Placeholder_Transparent_16x16.png
-HSM_BG_OPACITY = 0

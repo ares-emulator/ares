@@ -1,5 +1,0 @@
-#reference "../../Base_CRT_Presets/MBZ__5__POTATO__GDV.slangp"
-
-#reference "../../../resource/param_values/dual-screen/dual-screen-nds.params"
-
-HSM_BG_OPACITY = 0

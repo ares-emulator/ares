@@ -1,5 +1,0 @@
-#reference "../../Base_CRT_Presets/MBZ__5__POTATO__GDV-MINI.slangp"
-
-#reference "../../../resource/param_values/lightgun/sinden-border-basic.params"
-
-HSM_SINDEN_BORDER_EMPTY_TUBE_COMPENSATION = "0.000000"
