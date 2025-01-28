@@ -144,6 +144,19 @@ if(ARES_BUILD_OPTIONAL_TARGETS)
       XCODE_EMBED_PLUGINS_REMOVE_HEADERS_ON_COPY YES
       XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY YES
   )
+  if(OS_MACOS)
+    set_target_xcode_properties(
+      mia-ui
+      PROPERTIES PRODUCT_BUNDLE_IDENTIFIER dev.ares.mia
+                 PRODUCT_NAME mia
+                 ASSETCATALOG_COMPILER_APPICON_NAME AppIcon
+                 MARKETING_VERSION ${ARES_VERSION}
+                 GENERATE_INFOPLIST_FILE YES
+                 CLANG_ENABLE_OBJC_ARC YES
+                 INFOPLIST_KEY_CFBundleDisplayName "mia"
+                 INFOPLIST_KEY_NSHumanReadableCopyright "(c) 2004-${CURRENT_YEAR} ares team, Near et. al."
+    )
+  endif()
   ares_configure_executable(mia-ui)
   target_enable_subproject(mia-ui "mia (manifest generator) standalone frontend")
   set_target_properties(mia-ui PROPERTIES FOLDER tools PREFIX "")
