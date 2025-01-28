@@ -289,6 +289,9 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
     result = skip;  //can still fail, but otherwise count as a skip
   }
 
+  //test cases for MSR to SPSR handle upper bit of mode incorrectly
+  u32 spsrMask = cpsrMask & ~0x00000010;
+
   //are writes to r15 bit 0 observable under any circumstance?
   //ares masks it off during pipeline reload
   u32 r15Mask = ~1u;
@@ -325,11 +328,11 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   if(processor.und.r13 != fs.R_und[0]) error("und.r13: ", hex(u32(processor.und.r13), 8), " != ", hex(fs.R_und[0], 8));
   if(processor.und.r14 != fs.R_und[1]) error("und.r14: ", hex(u32(processor.und.r14), 8), " != ", hex(fs.R_und[1], 8));
   if((processor.cpsr & cpsrMask) != (fs.CPSR & cpsrMask)) error("cpsr: ", hex(u32(processor.cpsr), 8), " != ", hex(fs.CPSR, 8));
-  if((processor.fiq.spsr & cpsrMask) != (fs.SPSR[0] & cpsrMask)) error("fiq.spsr: ", hex(u32(processor.fiq.spsr), 8), " != ", hex(fs.SPSR[0], 8));
-  if((processor.svc.spsr & cpsrMask) != (fs.SPSR[1] & cpsrMask)) error("svc.spsr: ", hex(u32(processor.svc.spsr), 8), " != ", hex(fs.SPSR[1], 8));
-  if((processor.abt.spsr & cpsrMask) != (fs.SPSR[2] & cpsrMask)) error("abt.spsr: ", hex(u32(processor.abt.spsr), 8), " != ", hex(fs.SPSR[2], 8));
-  if((processor.irq.spsr & cpsrMask) != (fs.SPSR[3] & cpsrMask)) error("irq.spsr: ", hex(u32(processor.irq.spsr), 8), " != ", hex(fs.SPSR[3], 8));
-  if((processor.und.spsr & cpsrMask) != (fs.SPSR[4] & cpsrMask)) error("und.spsr: ", hex(u32(processor.und.spsr), 8), " != ", hex(fs.SPSR[4], 8));
+  if((processor.fiq.spsr & spsrMask) != (fs.SPSR[0] & spsrMask)) error("fiq.spsr: ", hex(u32(processor.fiq.spsr), 8), " != ", hex(fs.SPSR[0], 8));
+  if((processor.svc.spsr & spsrMask) != (fs.SPSR[1] & spsrMask)) error("svc.spsr: ", hex(u32(processor.svc.spsr), 8), " != ", hex(fs.SPSR[1], 8));
+  if((processor.abt.spsr & spsrMask) != (fs.SPSR[2] & spsrMask)) error("abt.spsr: ", hex(u32(processor.abt.spsr), 8), " != ", hex(fs.SPSR[2], 8));
+  if((processor.irq.spsr & spsrMask) != (fs.SPSR[3] & spsrMask)) error("irq.spsr: ", hex(u32(processor.irq.spsr), 8), " != ", hex(fs.SPSR[3], 8));
+  if((processor.und.spsr & spsrMask) != (fs.SPSR[4] & spsrMask)) error("und.spsr: ", hex(u32(processor.und.spsr), 8), " != ", hex(fs.SPSR[4], 8));
   if(pipeline.decode.instruction != fs.pipeline[0]) error("pipeline[0]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[0], 8));
   if(pipeline.fetch.instruction != fs.pipeline[1]) error("pipeline[1]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[1], 8));
   //todo: fails some tests in arm_data_proc_register_shift, thumb_data_proc that operate on registers

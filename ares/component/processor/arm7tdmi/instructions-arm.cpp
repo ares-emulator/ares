@@ -29,7 +29,7 @@ auto ARM7TDMI::armMoveToStatus(n4 field, n1 mode, n32 data) -> void {
 
   if(field.bit(0)) {
     if(mode || privileged()) {
-      psr.m = data.bit(0,4);
+      psr.m = data.bit(0,4) | 0x10;
       psr.t = data.bit(5);
       psr.f = data.bit(6);
       psr.i = data.bit(7);
