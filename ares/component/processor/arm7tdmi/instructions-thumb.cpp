@@ -24,7 +24,7 @@ auto ARM7TDMI::thumbInstructionALUExtended
 (n4 d, n4 m, n2 mode) -> void {
   switch(mode) {
   case 0: r(d) = r(d) + r(m); break;  //ADD
-  case 1: SUB(r(d), r(m), 1); break;  //SUBS
+  case 1: SUB(r(d), r(m), 1); break;  //CMP
   case 2: r(d) = r(m); break;  //MOV
   }
 }

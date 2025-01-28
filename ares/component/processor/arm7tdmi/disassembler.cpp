@@ -276,7 +276,7 @@ auto ARM7TDMI::thumbDisassembleALU
 
 auto ARM7TDMI::thumbDisassembleALUExtended
 (n4 d, n4 m, n2 mode) -> string {
-  static const string opcode[] = {"add", "sub", "mov"};
+  static const string opcode[] = {"add", "cmp", "mov"};
   if(d == 8 && m == 8 && mode == 2) return {"nop"};
   return {opcode[mode], " ", _r[d], ",", _r[m]};
 }
