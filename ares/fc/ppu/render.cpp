@@ -26,9 +26,7 @@ auto PPU::renderPixel() -> void {
   bool objectPriority = 0;
 
   //PAL systems technically blank the topmost scanline and a 2px column on each side of active display.
-  //This does little else but crop good tiledata and mismatch screenshots with ntsc.
-  //Uncomment the line below to enable.
-  //if(Region::PAL()) if(io.ly == 0 || x < 2 || x > 253) return;
+  if(Region::PAL()) if(io.ly == 0 || x < 2 || x > 253) return;
 
   palette |= latch.tiledataLo & mask ? 1 : 0;
   palette |= latch.tiledataHi & mask ? 2 : 0;
