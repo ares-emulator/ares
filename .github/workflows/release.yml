@@ -35,12 +35,13 @@ jobs:
       id: check
       run: |
           now=$(date +'%Y-%m-%d')
+          subject=$(git log -1 --pretty=%s)
           if [[ ${GITHUB_REF_NAME} == master ]];
           then
             echo "tag=nightly" >> $GITHUB_OUTPUT
             versionName="nightly ${now}"
             echo "versionName=${versionName}" >> $GITHUB_OUTPUT
-            echo "description=${{ github.event.head_commit.message }}" >> $GITHUB_OUTPUT
+            echo "description=${subject}" >> $GITHUB_OUTPUT
           else
             echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
             echo "versionName=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
