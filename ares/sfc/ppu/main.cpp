@@ -29,17 +29,17 @@ auto PPU::main() -> void {
       screen->setViewport(0, 0, 564, height() * yScale);
     } else {
       int x = 26;
-      int y = 18;
+      int y = 9 * yScale;
       int w = 564 - 52;
       int h = height() - 18;
 
       if(Region::PAL()) {
         x -= 4;
-        y += 24;
+        y += 12 * yScale;
         h -= 31;
 
         if(!io.overscan) {
-          y += 16;
+          y += 8 * yScale;
           h -= 15;
         }
       }
