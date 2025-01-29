@@ -1,5 +1,7 @@
 add_library(ares STATIC ares/ares.cpp ares/memory/fixed-allocator.cpp)
 
+configure_file(ares/ares.cpp.in ares/ares.cpp @ONLY)
+
 add_library(ares::ares ALIAS ares)
 
 option(ARES_PROFILE_ACCURACY "Build to prefer emulation accuracy over performance in certain specific areas" OFF)
@@ -29,7 +31,7 @@ endif()
 
 target_sources(
   ares
-  PRIVATE ares/ares.cpp ares/ares.hpp ares/inline.hpp ares/platform.hpp ares/random.hpp ares/types.hpp
+  PRIVATE ares/ares.cpp ares/ares.cpp.in ares/ares.hpp ares/inline.hpp ares/platform.hpp ares/random.hpp ares/types.hpp
 )
 
 target_sources(
