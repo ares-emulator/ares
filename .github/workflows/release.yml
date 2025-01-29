@@ -35,7 +35,7 @@ jobs:
       id: check
       run: |
           now=$(date +'%Y-%m-%d')
-          subject=$(git log -1 --pretty=%s)
+          subject=$(git -C src log -1 --pretty=%s)
           if [[ ${GITHUB_REF_NAME} == master ]];
           then
             echo "tag=nightly" >> $GITHUB_OUTPUT
