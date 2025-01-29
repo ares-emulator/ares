@@ -25,8 +25,8 @@ auto PPU::renderPixel() -> void {
   u32  objectPalette = 0;
   bool objectPriority = 0;
 
-  //PAL systems blank the topmost scanline and the first and last 2px of active display
-  if(Region::PAL()) if(io.ly == 0 || x < 2 || x > 254) return;
+  //PAL systems technically blank the topmost scanline and a 2px column on each side of active display.
+  if(Region::PAL()) if(io.ly == 0 || x < 2 || x > 253) return;
 
   palette |= latch.tiledataLo & mask ? 1 : 0;
   palette |= latch.tiledataHi & mask ? 2 : 0;
