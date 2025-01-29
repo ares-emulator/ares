@@ -18,11 +18,12 @@ endif()
 
 # Set default global project variables
 set(ARES_NAME "ares")
-set(ARES_WEBSITE "https://ares-emu.net")
+set(ARES_WEBSITE "ares-emu.net")
 set(
   ARES_COMMENTS
   "ares is a cross-platform, open source, multi-system emulator, focusing on accuracy and preservation."
 )
+string(TIMESTAMP CURRENT_YEAR "%Y")
 set(ARES_LEGAL_COPYRIGHT "Copyright (c) 2004-${CURRENT_YEAR} ares team, Near et. al.")
 
 # Add common module directories to default search path
