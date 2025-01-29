@@ -19,9 +19,9 @@
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.13</string>
+	<string>@CMAKE_OSX_DEPLOYMENT_TARGET@</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © ares Team and Contributors.</string>
+	<string>@ARES_LEGAL_COPYRIGHT@</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

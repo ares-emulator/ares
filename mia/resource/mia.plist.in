@@ -14,5 +14,9 @@
   <true/>
   <key>NSSupportsAutomaticGraphicsSwitching</key>
   <true/>
+  <key>LSMinimumSystemVersion</key>
+  <string>@CMAKE_OSX_DEPLOYMENT_TARGET@</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>@ARES_LEGAL_COPYRIGHT@</string>
 </dict>
 </plist>

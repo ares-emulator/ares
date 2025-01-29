@@ -9,13 +9,13 @@ namespace ares {
 Platform* platform = nullptr;
 bool _runAhead = false;
 
-const string Name       = "ares";
-const string Version    = "142";
-const string Copyright  = "ares team, Near";
+const string Name       = "@ARES_NAME@";
+const string Version    = "@ARES_VERSION@";
+const string Copyright  = "@ARES_LEGAL_COPYRIGHT@";
 const string License    = "ISC";
 const string LicenseURI = "https://opensource.org/licenses/ISC";
-const string Website    = "ares-emu.net";
-const string WebsiteURI = "https://ares-emu.net/";
+const string Website    = "@ARES_WEBSITE@";
+const string WebsiteURI = "https://@ARES_WEBSITE@/";
 const u32    SerializerSignature = 0x31545342;  //"BST1" (little-endian)
 
 }
