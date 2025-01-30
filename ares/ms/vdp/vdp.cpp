@@ -106,14 +106,14 @@ auto VDP::main() -> void {
         screen->setSize(284, screenHeight());
         screen->setViewport(0, 0, 284, screenHeight());
       } else {
-        int x = 16;
-        int y = 24;
-        int width = 284 - 32;
-        int height = screenHeight() - 48;
+        int x = 13;
+        int y = 27;
+        int width = 284 - 28;
+        int height = screenHeight() - 51;
 
         if(Region::PAL()) {
-          y += 24;
-          height -= 48;
+          y += 21;
+          height -= 13;
         }
 
         screen->setSize(width, height);
