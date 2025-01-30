@@ -64,10 +64,10 @@ auto VDP::frame() -> void {
     screen->setSize(284 * screenScale, 243 * screenScale);
     screen->setViewport(0, 0, 284 * screenScale, 243 * screenScale);
  } else {
-    int x = 16;
-    int y = 16;
-    int width = 284 - 32;
-    int height = 243 - 32;
+    int x = 13;
+    int y = 27;
+    int width = 284 - 28;
+    int height = 243 - 51;
 
     screen->setSize(width * screenScale, height * screenScale);
     screen->setViewport(x * screenScale, y * screenScale, width * screenScale, height * screenScale);
