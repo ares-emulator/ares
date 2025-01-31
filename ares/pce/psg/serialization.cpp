@@ -23,6 +23,5 @@ auto PSG::serialize(serializer& s) -> void {
     s(c.io.waveOffset);
     s(c.io.noisePeriod);
     s(c.io.noiseSample);
-    s(c.io.output);
   }
 }

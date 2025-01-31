@@ -9,7 +9,7 @@ struct PSG : Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto frame(i16&, i16&) -> void;
+  template<int step> auto frame(i16&, i16&) -> void;
   auto step(u32 clocks) -> void;
 
   auto power() -> void;
@@ -33,8 +33,7 @@ private:
   struct Channel {
     //channel.cpp
     auto power(u32 id) -> void;
-    auto run() -> void;
-    auto sample(n5 sample) -> void;
+    template<int channel, int step> auto run() -> n5;
 
     //io.cpp
     auto write(n4 address, n8 data) -> void;
@@ -55,8 +54,6 @@ private:
       n5  waveOffset;
       n12 noisePeriod;
       n5  noiseSample;
-
-      n5  output;
     } io;
 
     u32 id;

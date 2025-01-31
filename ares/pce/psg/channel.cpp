@@ -3,27 +3,22 @@ auto PSG::Channel::power(u32 id) -> void {
   io = {};
 }
 
-auto PSG::Channel::run() -> void {
-  if(!io.enable) return sample(0);
+template<int index, int step> auto PSG::Channel::run() -> n5 {
+  for(u32 n : range(step)) {
+    if(!io.direct && --io.wavePeriod == 0) {
+      io.wavePeriod = io.waveFrequency;
+      io.waveOffset++;
+      io.waveSample = io.waveBuffer[io.waveOffset];
+    }
 
-  if(!io.direct && --io.wavePeriod == 0) {
-    io.wavePeriod = io.waveFrequency;
-    io.waveOffset++;
-    io.waveSample = io.waveBuffer[io.waveOffset];
+    //Only channels 4-5 support noise
+    if(index >= 4 && io.noiseEnable) {
+      if(--io.noisePeriod == 0) {
+        io.noisePeriod = ~io.noiseFrequency << 7;
+        io.noiseSample = nall::random() & 1 ? ~0 : 0;
+      }
+    }
   }
 
-  if(!io.noiseEnable) {
-    return sample(io.waveSample);
-  }
-
-  if(--io.noisePeriod == 0) {
-    io.noisePeriod = ~io.noiseFrequency << 7;
-    io.noiseSample = nall::random() & 1 ? ~0 : 0;
-  }
-
-  return sample(io.noiseSample);
-}
-
-auto PSG::Channel::sample(n5 sample) -> void {
-  io.output = sample;
+  return index >= 4 && io.noiseEnable ? io.noiseSample : io.waveSample;
 }
