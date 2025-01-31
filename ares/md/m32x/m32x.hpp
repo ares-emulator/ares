@@ -130,6 +130,7 @@ struct M32X {
     auto main() -> void;
     auto step(u32 clocks) -> void;
     auto power(bool reset) -> void;
+    auto updateFrequency() -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
