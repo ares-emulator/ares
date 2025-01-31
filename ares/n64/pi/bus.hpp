@@ -44,7 +44,7 @@ inline auto PI::busRead(u32 address) -> u32 {
     if(cartridge.flash) return cartridge.flash.read<Size>(address);
     return unmapped;
   }
-  if(cartridge.isviewer.enabled() && address >= 0x13f0'0000 && address <= 0x13ff'ffff) {
+  if(cartridge.isviewer.enabled() && address >= 0x13ff'0000 && address <= 0x13ff'ffff) {
     return cartridge.isviewer.read<Size>(address);
   }
   if(address <= 0x1000'0000 + cartridge.rom.size - 1) {
@@ -94,7 +94,7 @@ inline auto PI::busWrite(u32 address, u32 data) -> void {
     if(cartridge.flash) return cartridge.flash.write<Size>(address, data);
     return;
   }
-  if(address >= 0x13f0'0000 && address <= 0x13ff'ffff) {
+  if(address >= 0x13ff'0000 && address <= 0x13ff'ffff) {
     if(cartridge.isviewer.enabled()) {
       writeForceFinish(); //Debugging channel for homebrew, be gentle
       return cartridge.isviewer.write<Size>(address, data);      
