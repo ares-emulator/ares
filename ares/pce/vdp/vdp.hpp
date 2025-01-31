@@ -49,8 +49,8 @@ struct VDP : VDPBase::Implementation {
   auto load(Node::Object) -> void override;
   auto unload() -> void override;
 
-  auto main() -> void;
-  auto step(u32 clocks) -> void;
+  template<bool supergrafx> auto main() -> void;
+  template<bool supergrafx> auto step(u32 clocks) -> void;
   auto power() -> void override;
 
   //color.cpp

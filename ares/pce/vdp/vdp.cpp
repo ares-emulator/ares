@@ -65,24 +65,24 @@ auto VDP::unload() -> void {
   node.reset();
 }
 
-auto VDP::main() -> void {
-  vdc0.hsync(); if(Model::SuperGrafx())
+template<bool supergrafx> auto VDP::main() -> void {
+  vdc0.hsync(); if(supergrafx)
   vdc1.hsync();
 
   if(io.vcounter == 0) {
-    vdc0.vsync(); if(Model::SuperGrafx())
+    vdc0.vsync(); if(supergrafx)
     vdc1.vsync();
   }
 
   auto output = screen->pixels().data() + 1365 * io.vcounter;
 
   while(io.hcounter <= 1360) {
-    vdc0.hclock(); if(Model::SuperGrafx())
+    vdc0.hclock(); if(supergrafx)
     vdc1.hclock();
 
     n10 color;
-    if(Model::SuperGrafx() == 0) color = vdc0.bus();
-    if(Model::SuperGrafx() == 1) color = vpc.bus(io.hcounter);
+    if(!supergrafx) color = vdc0.bus();
+    if( supergrafx) color = vpc.bus(io.hcounter);
     color = vce.io.grayscale << 9 | vce.cram.read(color);
 
     switch(vce.clock()) {
@@ -92,10 +92,10 @@ auto VDP::main() -> void {
     case 1: *output++ = color;
     }
 
-    step(vce.clock());
+    step<supergrafx>(vce.clock());
   }
 
-  step(1365 - io.hcounter);
+  step<supergrafx>(1365 - io.hcounter);
   vdc0.vclock(); if(Model::SuperGrafx())
   vdc1.vclock();
 
@@ -108,9 +108,9 @@ auto VDP::main() -> void {
   }
 }
 
-auto VDP::step(u32 clocks) -> void {
+template<bool supergrafx> auto VDP::step(u32 clocks) -> void {
   io.hcounter += clocks;
-  vdc0.dma.step(clocks); if(Model::SuperGrafx())
+  vdc0.dma.step(clocks); if(supergrafx)
   vdc1.dma.step(clocks);
 
   Thread::step(clocks);
@@ -118,7 +118,9 @@ auto VDP::step(u32 clocks) -> void {
 }
 
 auto VDP::power() -> void {
-  Thread::create(system.colorburst() * 6.0, {&VDP::main, this});
+  if(Model::SuperGrafx()) Thread::create(system.colorburst() * 6.0, {&VDP::main<true>, this});
+  else                    Thread::create(system.colorburst() * 6.0, {&VDP::main<false>, this});
+
   screen->power();
 
   vce.power();
