@@ -57,7 +57,7 @@ auto M32X::PWM::main() -> void {
     if(abs(left)  > 1.0) left  /= abs(left);
     if(abs(right) > 1.0) right /= abs(right);
 
-    stream->frame(left, right);  // Output the frame without the loop, since the sample rate is adjusted dynamically
+    stream->frame(left, right);
 
     step(clocks);
 }
