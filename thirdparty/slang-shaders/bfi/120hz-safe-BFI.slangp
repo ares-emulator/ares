@@ -1,7 +1,0 @@
-shaders = 1
-
-shader0 = shaders/120hz-safe-BFI.slang
-scale_type0 = source
-scale0 = 1.0
-
-filter_linear0 = false

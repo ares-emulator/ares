@@ -1,5 +1,0 @@
-#reference "../Base_CRT_Presets/MBZ__1__ADV__GDV.slangp"
-
-#reference "../../resource/param_values/scene/mega-bezel-duimon-scene.params"
-#reference "../../resource/param_values/tube-effect/tube-effects.params"
-#reference "../../resource/param_values/light/basic__night.params"

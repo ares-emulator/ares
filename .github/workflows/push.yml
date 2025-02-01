@@ -1,7 +1,7 @@
 name: Push
 on:
   push:
-    branches: [ master ]
+    branches: [ '*' ]
     tags: [ 'v*' ]
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.head_ref || github.ref }}'

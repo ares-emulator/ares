@@ -1,9 +1,0 @@
-#reference GameboyMono.slangp
-
-DO_CCORRECTION = "1.000000"
-	BRIGHTNESS = " -0.10"
-	CONTRAST = "-0.25"
-	COLOR_MONO_HUE1 = "0.25"
-	COLOR_MONO_HUE2 = "0.14"
-	COLOR_MONO_HUE_BIAS = "-0.58"
-	SATURATION = "0.24"

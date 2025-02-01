@@ -260,7 +260,7 @@ Presentation::Presentation() {
   loadEmulators();
 
   resizeWindow();
-  setTitle({ares::Name, " v", ares::Version});
+  setTitle({ares::Name, " ", ares::Version});
   setAssociatedFile();
   setBackgroundColor({0, 0, 0});
   setAlignment(Alignment::Center);
@@ -589,7 +589,7 @@ auto Presentation::refreshSystemMenu() -> void {
 }
 
 auto Presentation::unloadEmulator(bool reloading) -> void {
-  setTitle({ares::Name, " v", ares::Version});
+  setTitle({ares::Name, " ", ares::Version});
   setAssociatedFile();
   systemMenu.setVisible(false);
   systemMenu.reset();

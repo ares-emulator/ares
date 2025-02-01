@@ -1,7 +1,0 @@
-#reference "PSP-Overlay-Night-Small.slangp" 
-
-BG_IMAGE_ZOOM = "1.30"
-
-GLOBAL_ZOOM = "0.74"
-GLOBAL_OFFY = "0.03575" 
-GLOBAL_OFFX = "-0.00065"

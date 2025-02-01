@@ -1,6 +1,0 @@
-#reference "../../Base_CRT_Presets/MBZ__3__STD__GDV.slangp"
-
-# Thanks to SixWingedFreak from the Libretro forum for these settings
-#reference "../../../resource/param_values/crt/vector-color-high-res-mode-gdv.params"
-
-HSM_ASPECT_RATIO_MODE = 2

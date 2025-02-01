@@ -1,5 +1,0 @@
-shaders = 1
-
-shader0 = shaders/bevel.slang
-filter_linear0 = false
-scale_type0 = viewport

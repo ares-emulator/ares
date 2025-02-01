@@ -12,8 +12,6 @@ set_target_xcode_properties(
              CLANG_ENABLE_OBJC_ARC YES
              SKIP_INSTALL NO
              INSTALL_PATH "$(LOCAL_APPS_DIR)"
-             INFOPLIST_KEY_CFBundleDisplayName "ares"
-             INFOPLIST_KEY_NSHumanReadableCopyright "(c) 2004-${CURRENT_YEAR} ares team, Near et. al."
 )
 
 set_target_properties(
@@ -21,7 +19,7 @@ set_target_properties(
   PROPERTIES
     OUTPUT_NAME ares
     MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resource/ares.plist"
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/ares.plist"
     XCODE_EMBED_FRAMEWORKS_REMOVE_HEADERS_ON_COPY YES
     XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY YES
     XCODE_EMBED_PLUGINS_REMOVE_HEADERS_ON_COPY YES
