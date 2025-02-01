@@ -3,6 +3,7 @@ auto ARM7TDMI::reload() -> void {
   u32 size = !cpsr().t ? Word : Half;
 
   pipeline.reload = false;
+  pipeline.nonsequential = false;
   r(15).data &= ~mask;
   pipeline.fetch.address = r(15) & ~mask;
   pipeline.fetch.instruction = read(Prefetch | size | Nonsequential, pipeline.fetch.address);
