@@ -10,7 +10,7 @@ auto M32X::PWM::unload(Node::Object parent) -> void {
 }
 
 auto M32X::PWM::main() -> void {
-    int clocks = cycle > 0 ? cycle-1 : 4095;
+    n12 clocks = cycle - 1;
     if(clocks == 0) clocks++;
 
     //check if cycle rate has changed and update sample rate accordingly
@@ -90,7 +90,7 @@ auto M32X::PWM::power(bool reset) -> void {
 }
 
 auto M32X::PWM::updateFrequency() -> void {
-  int clocks = cycle > 0 ? cycle-1 : 4095;
+  n12 clocks = cycle - 1;
   if(clocks == 0) clocks++;
   stream->setFrequency((system.frequency() / 7.0) * 3.0 / clocks);
 }
