@@ -110,6 +110,8 @@ else
     machine := arm64
   else ifneq ($(filter arm-% armv7-%,$(machine_str)),)
     machine := arm32
+  else ifneq ($(filter loong64-% loongarch64-%,$(machine_str)),)
+  machine := loong64
   else ifneq ($(filter powerpc64-% powerpc64le-%,$(machine_str)),)
     machine := ppc64
   else ifneq ($(filter riscv64-%,$(machine_str)),)
