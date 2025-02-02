@@ -91,20 +91,23 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //PWM left channel pulse width
   if(address == 0x4034) {
-    data = pwm.lfifoLatch;
-    data.bit(15) = pwm.lfifo.full();
+    data.bit(0,12) = pwm.lfifoLatch;
+    data.bit(14)   = pwm.lfifo.empty();
+    data.bit(15)   = pwm.lfifo.full();
   }
 
   //PWM right channel pulse width
   if(address == 0x4036) {
-    data = pwm.rfifoLatch;
-    data.bit(15) = pwm.rfifo.full();
+    data.bit(0,12) = pwm.rfifoLatch;
+    data.bit(14)   = pwm.rfifo.empty();
+    data.bit(15)   = pwm.rfifo.full();
   }
 
   //PWM mono pulse width
   if(address == 0x4038) {
-    data = pwm.mfifoLatch;
-    data.bit(15) = pwm.lfifo.full() || pwm.rfifo.full();
+    data.bit(0,12) = pwm.mfifoLatch;
+    data.bit(14)   = pwm.lfifo.empty() && pwm.rfifo.empty();
+    data.bit(15)   = pwm.lfifo.full()  || pwm.rfifo.full();
   }
 
   //bitmap mode
@@ -236,8 +239,6 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
     if(lower) {
       pwm.lmode   = data.bit(0,1);
       pwm.rmode   = data.bit(2,3);
-      if(!pwm.lmode) pwm.lsample = 0;
-      if(!pwm.rmode) pwm.rsample = 0;
       pwm.mono    = data.bit(4);
       pwm.dreqIRQ = data.bit(7);
       if(!pwm.dreqIRQ) {
@@ -259,21 +260,30 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //PWM left channel pulse width
   if(address == 0x4034) {
-    pwm.lfifoLatch = data;
-    pwm.lfifo.write(pwm.lfifoLatch);
+    if(upper) pwm.lfifoLatch.bit(8,11) = data.bit(8,11);
+    if(lower) {
+      pwm.lfifoLatch.byte(0) = data.byte(0);
+      pwm.lfifo.write(pwm.lfifoLatch);
+    }
   }
 
   //PWM right channel pulse width
   if(address == 0x4036) {
-    pwm.rfifoLatch = data;
-    pwm.rfifo.write(pwm.rfifoLatch);
+    if(upper) pwm.rfifoLatch.bit(8,11) = data.bit(8,11);
+    if(lower) {
+      pwm.rfifoLatch.byte(0) = data.byte(0);
+      pwm.rfifo.write(pwm.rfifoLatch);
+    }
   }
 
   //PWM mono pulse width
   if(address == 0x4038) {
-    pwm.mfifoLatch = data;
-    pwm.lfifo.write(pwm.mfifoLatch);
-    pwm.rfifo.write(pwm.mfifoLatch);
+    if(upper) pwm.mfifoLatch.bit(8,11) = data.bit(8,11);
+    if(lower) {
+      pwm.mfifoLatch.byte(0) = data.byte(0);
+      pwm.lfifo.write(pwm.mfifoLatch);
+      pwm.rfifo.write(pwm.mfifoLatch);
+    }
   }
 
   //bitmap mode

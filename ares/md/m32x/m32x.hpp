@@ -1,4 +1,5 @@
 //Mega 32X
+#include "nall/dsp/iir/dc-removal.hpp"
 
 struct M32X {
   Node::Object node;
@@ -123,6 +124,7 @@ struct M32X {
 
   struct PWM : Thread {
     Node::Audio::Stream stream;
+    nall::DSP::IIR::DCRemoval dcfilter_l, dcfilter_r;
 
     //pwm.cpp
     auto load(Node::Object) -> void;

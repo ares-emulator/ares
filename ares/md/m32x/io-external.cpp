@@ -27,6 +27,7 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   //bank set
   if(address == 0xa15104) {
     data.bit(0,1) = io.romBank;
+    data.bit(2, 15) = 0;
   }
 
   //data request control
@@ -87,20 +88,23 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //PWM left channel pulse width
   if(address == 0xa15134) {
-    data = pwm.lfifoLatch;
-    data.bit(15) = pwm.lfifo.full();
+    data.bit(0,12) = pwm.lfifoLatch;
+    data.bit(14)   = pwm.lfifo.empty();
+    data.bit(15)   = pwm.lfifo.full();
   }
 
   //PWM right channel pulse width
   if(address == 0xa15136) {
-    data = pwm.rfifoLatch;
-    data.bit(15) = pwm.rfifo.full();
+    data.bit(0,12) = pwm.rfifoLatch;
+    data.bit(14)   = pwm.rfifo.empty();
+    data.bit(15)   = pwm.rfifo.full();
   }
 
   //PWM mono pulse width
   if(address == 0xa15138) {
-    data = pwm.mfifoLatch;
-    data.bit(15) = pwm.lfifo.full() || pwm.rfifo.full();
+    data.bit(0,12) = pwm.mfifoLatch;
+    data.bit(14)   = pwm.lfifo.empty() && pwm.rfifo.empty();
+    data.bit(15)   = pwm.lfifo.full()  || pwm.rfifo.full();
   }
 
   //bitmap mode
@@ -190,12 +194,17 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(lower) {
       dreq.vram   = data.bit(0);
       dreq.dma    = data.bit(1);
-      dreq.active = data.bit(2);
-      if(!dreq.active) {
+      if(dreq.active > data.bit(2)) {
+        // Night Trap 32X: delay between the last fifo write and flush on disable
+        if(cpu.active()) cpu.wait(1);
+        // Note: The current fifo implementation is incorrect (hw uses dual-block fifo)
+        // but dreq dma works fine as is for normal cases.
+
         dreq.fifo.flush();
         shm.dmac.dreq[0] = 0;
         shs.dmac.dreq[0] = 0;
       }
+      dreq.active = data.bit(2);
     }
   }
 
@@ -225,11 +234,14 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //FIFO
   if(address == 0xa15112) {
+    if(!lower || !upper) debug(unusual, "[DREQ] fifo byte write ", lower ? "(odd)" : "(even)");
     if(dreq.active && !dreq.fifo.full()) {
       dreq.fifo.write(data);
       if(!--dreq.length) dreq.active = 0;
       shm.dmac.dreq[0] = !dreq.fifo.empty();
       shs.dmac.dreq[0] = !dreq.fifo.empty();
+    } else {
+      debug(unusual, "[DREQ] missed fifo write");
     }
   }
 
@@ -251,8 +263,6 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(lower) {
       pwm.lmode   = data.bit(0,1);
       pwm.rmode   = data.bit(2,3);
-      if(!pwm.lmode) pwm.lsample = 0;
-      if(!pwm.rmode) pwm.rsample = 0;
       pwm.mono    = data.bit(4);
     //pwm.dreqIRQ = data.bit(7) = readonly;
     }
@@ -270,7 +280,7 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //PWM left channel pulse width
   if(address == 0xa15134) {
-    if(upper) pwm.lfifoLatch.byte(1) = data.byte(1);
+    if(upper) pwm.lfifoLatch.bit(8,11) = data.bit(8,11);
     if(lower) {
       pwm.lfifoLatch.byte(0) = data.byte(0);
       pwm.lfifo.write(pwm.lfifoLatch);
@@ -279,7 +289,7 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //PWM right channel pulse width
   if(address == 0xa15136) {
-    if(upper) pwm.rfifoLatch.byte(1) = data.byte(1);
+    if(upper) pwm.rfifoLatch.bit(8,11) = data.bit(8,11);
     if(lower) {
       pwm.rfifoLatch.byte(0) = data.byte(0);
       pwm.rfifo.write(pwm.rfifoLatch);
@@ -288,7 +298,7 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //PWM mono pulse width
   if(address == 0xa15138) {
-    if(upper) pwm.mfifoLatch.byte(1) = data.byte(1);
+    if(upper) pwm.mfifoLatch.bit(8,11) = data.bit(8,11);
     if(lower) {
       pwm.mfifoLatch.byte(0) = data.byte(0);
       pwm.lfifo.write(pwm.mfifoLatch);
