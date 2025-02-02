@@ -34,11 +34,17 @@ template<bool _h40, bool _refresh> auto VDP::tick() -> void {
 
   if(cram.bus.active) {
     vdp.dac.dot(hcounter()*2+1, cram.bus.data);
-    vdp.dac.dot(hcounter()*2+2, cram.bus.data);
+
     // DAC dot artifacts may be drawn continuously in the case of consectutive writes.
     // We can detect for this by checking for an impending CRAM write thru the fifo.
     // If refresh or fifo delay occurs, the data will not be updated, resulting in an extended dot.
-    if(displayEnable() || fifo.slots[0].empty() || fifo.slots[0].target != 3) cram.bus.active = 0;
+    // Note: we're not currently checking for back-to-back slots when display is enabled.
+    if(displayEnable() || fifo.slots[0].empty() || fifo.slots[0].target != 3)
+      cram.bus.active = 0;
+    else {
+      if(fifo.slots[0].latency > 1 || vram.refreshing) cram.bus.data = vdp.cram.color(vdp.io.backgroundColor);
+      vdp.dac.dot(hcounter()*2+2, cram.bus.data);
+    }
   }
 
   // There is reportedly a latch effect when enabling the display, but it might be a fixed delay
@@ -174,10 +180,12 @@ auto VDP::mainH32() -> void {
   state.hcounter = 0;
 
   sprite.begin();
-  if(dac.pixels) blocks<false, true>();
-  else blocks<false, false>();
-
-  if(Mega32X()) m32x.vdp.scanline(pixels, vcounter());
+  if(dac.pixels) {
+    blocks<false, true>();
+    if(Mega32X()) m32x.vdp.scanline(pixels, vcounter());
+  } else {
+    blocks<false, false>();
+  }
 
   tick<false>(); slot();
   tick<false>(); slot();
@@ -235,10 +243,12 @@ auto VDP::mainH40() -> void {
   state.hcounter = 0;
 
   sprite.begin();
-  if(dac.pixels) blocks<true, true>();
-  else blocks<true, false>();
-
-  if(Mega32X()) m32x.vdp.scanline(pixels, vcounter());
+  if(dac.pixels) {
+    blocks<true, true>();
+    if(Mega32X()) m32x.vdp.scanline(pixels, vcounter());
+  } else {
+    blocks<true, false>();
+  }
 
   tick<true>(); slot();
   tick<true>(); slot();
