@@ -71,8 +71,6 @@ else()
 endif()
 target_enable_feature(ruby "Quartz input driver" INPUT_QUARTZ)
 
-target_compile_definitions(ruby PUBLIC PLATFORM_MACOS)
-
 add_custom_command(
   TARGET ruby
   POST_BUILD

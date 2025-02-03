@@ -43,10 +43,10 @@ set_target_properties(nall PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_definitions(
   nall
   PUBLIC
-    $<$<CONFIG:Debug>:BUILD_DEBUG=1>
-    $<$<CONFIG:Release>:BUILD_RELEASE=1>
-    $<$<CONFIG:RelWithDebInfo>:BUILD_RELEASE=1>
-    $<$<CONFIG:MinSizeRel>:BUILD_MINIFIED=1>
+    $<$<CONFIG:Debug>:BUILD_DEBUG>
+    $<$<CONFIG:Release>:BUILD_RELEASE>
+    $<$<CONFIG:RelWithDebInfo>:BUILD_RELEASE>
+    $<$<CONFIG:MinSizeRel>:BUILD_MINIFIED>
 )
 
 if(ARES_BUILD_LOCAL)

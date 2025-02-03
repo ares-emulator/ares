@@ -16,8 +16,6 @@ target_sources(
     windows/windows.hpp
 )
 
-target_compile_definitions(nall PUBLIC PLATFORM_WINDOWS)
-
 if(MSVC)
   target_compile_options(nall PRIVATE /W2)
 endif()
