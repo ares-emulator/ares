@@ -29,8 +29,7 @@ GameBrowserWindow::GameBrowserWindow() {
 
 auto GameBrowserWindow::show(shared_pointer<Emulator> emulator) -> void {
   this->emulator = emulator;
-  searchLabel.text().reset();
-
+  searchInput.setText();
   games.reset();
 
   auto tmp = (shared_pointer<mia::Medium>)mia::Medium::create(emulator->medium);
