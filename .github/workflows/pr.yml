@@ -12,6 +12,6 @@ concurrency:
 jobs:
   build-project:
     name: Build
-    uses: ./.github/workflows/build_new.yml
+    uses: ./.github/workflows/build.yml
     permissions:
       contents: read

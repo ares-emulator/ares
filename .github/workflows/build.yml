@@ -1,4 +1,4 @@
-name: Build (New)
+name: Build
 on:
   workflow_call:
     inputs:
