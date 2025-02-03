@@ -22,6 +22,7 @@ auto Mame2BML::main(Arguments arguments) -> void {
   vector<string> driverNames = {};
   if(!markupName.endsWith(".xml")) return print("error: arguments in incorrect order\n");
   if(!outputName.endsWith(".bml")) return print("error: arguments in incorrect order\n");
+  if(arguments.size() == 0) return print("error: mame driver or ares core name required\n");
 
   while(arguments.size()) {
     string driverName = arguments.take();
@@ -35,11 +36,6 @@ auto Mame2BML::main(Arguments arguments) -> void {
 
   output.print("database\n");
   output.print("  revision: ", chrono::local::date(), "\n");
-  output.print("  drivers: ");
-  for(auto driver : driverNames) {
-    output.print(driver, ", ");
-  }
-  output.print("\n");
 
   pathname = Location::path(markupName);
   auto document = XML::unserialize(markup);
@@ -48,6 +44,11 @@ auto Mame2BML::main(Arguments arguments) -> void {
     // machine list xml (from mame.exe -listxml)
     if(header.name() == "mame") {
       output.print("  romset: ", header["build"].string(), "\n");
+      output.print("  drivers: ");
+      for(auto driver : driverNames) {
+        output.print(driver, ", ");
+      }
+      output.print("\n");
 
       for(auto machine : header) {
         if(machine.name() != "machine") continue;
@@ -71,7 +72,7 @@ auto Mame2BML::main(Arguments arguments) -> void {
         for(auto rom : machine) {
           if(rom.name() == "rom") {
             if(rom["region"].string() != region) {
-              region = rom["region"].string().replace(":", "");
+              region = rom["region"].string().replace(":", "-");
               output.print("  ", region, "\n");
             }
 
@@ -99,7 +100,9 @@ auto Mame2BML::main(Arguments arguments) -> void {
         output.print("  title: ", software["description"].string(), "\n");
         output.print("  board: ", driverNames.first(), "\n");
 
-        for(auto sub : software["part"]){
+        print("found ", software["name"].string(), " (", software["description"].string(), ")\n");
+
+        for(auto sub : software["part"]) {
           if(sub.name() == "feature") {
             output.print("  feature\n");
             output.print("    name:  ", sub["name"].string(), "\n");
@@ -108,7 +111,7 @@ auto Mame2BML::main(Arguments arguments) -> void {
           }
 
           if(sub.name() != "dataarea") continue;
-          output.print("  ", sub["name"].string().replace(":", ""), "\n");
+          output.print("  ", sub["name"].string().replace(":", "-"), "\n");
           output.print("    size: ", sub["size"].natural(), "\n");
 
           for(auto rom : sub) {
