@@ -44,8 +44,8 @@ auto NeoGeo::read(string location, string match) -> vector<u8> {
     if(match == "program.rom")   return loadRoms(location, info, "maincpu");
     if(match == "character.rom") return loadRoms(location, info, "sprites");
     if(match == "static.rom")    return loadRoms(location, info, "fixed");
-    if(match == "voice-a.rom")   return loadRoms(location, info, "ymsndadpcma");
-    if(match == "voice-b.rom")   return loadRoms(location, info, "ymsndadpcmb");
+    if(match == "voice-a.rom")   return loadRoms(location, info, "ymsnd-adpcma");
+    if(match == "voice-b.rom")   return loadRoms(location, info, "ymsnd-adpcmb");
     if(match == "music.rom") {
       // music rom can be plaintext (audiocpu) or encrypted (audiocrypt)
       // we must load both types

@@ -1,9 +1,9 @@
 database
-  revision: 2023-01-21
-
+  revision: 2025-02-03
 game
   name:  nam1975
   title: NAM-1975 (NGM-001 ~ NGH-001)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -29,7 +29,7 @@ game
       size:   262144
       crc:    ba874463
       sha1:   a83514f4b20301f84a98699900e2593f1c1b8846
-  ymsndadpcma
+  ymsnd-adpcma
     size: 524288
     rom
       name:   001-v11.v11
@@ -37,7 +37,7 @@ game
       size:   524288
       crc:    a7c3d5e5
       sha1:   e3efc86940f91c53b7724c4566cfc21ea1a7a465
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 1572864
     rom
       name:   001-v21.v21
@@ -105,6 +105,7 @@ game
 game
   name:  bstars
   title: Baseball Stars Professional (NGM-002)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -130,7 +131,7 @@ game
       size:   262144
       crc:    4ecaa4ee
       sha1:   50abfb8eed6cb4887393089f9ccc76f306ef69b5
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   002-v11.v11
@@ -156,7 +157,7 @@ game
       size:   524288
       crc:    c7e11c38
       sha1:   5abf2a7877e0162c758a4dcf09f183930fa7ef24
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   002-v21.v21
@@ -212,6 +213,7 @@ game
 game
   name:  bstarsh
   title: Baseball Stars Professional (NGH-002)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -237,7 +239,7 @@ game
       size:   262144
       crc:    4ecaa4ee
       sha1:   50abfb8eed6cb4887393089f9ccc76f306ef69b5
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   002-v11.v11
@@ -263,7 +265,7 @@ game
       size:   524288
       crc:    c7e11c38
       sha1:   5abf2a7877e0162c758a4dcf09f183930fa7ef24
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   002-v21.v21
@@ -319,6 +321,7 @@ game
 game
   name:  tpgolf
   title: Top Player's Golf (NGM-003 ~ NGH-003)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -351,7 +354,7 @@ game
       size:   131072
       crc:    4cc545e6
       sha1:   8e014b8cab3e5b3995756a4ea52ce49c36866377
-  ymsndadpcma
+  ymsnd-adpcma
     size: 524288
     rom
       name:   003-v11.v11
@@ -359,7 +362,7 @@ game
       size:   524288
       crc:    ff97f1cb
       sha1:   defa249d46ae220f7bfa70746f5202bbbcc3e5fe
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 2097152
     rom
       name:   003-v21.v21
@@ -447,6 +450,7 @@ game
 game
   name:  mahretsu
   title: Mahjong Kyo Retsuden (NGM-004 ~ NGH-004)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -472,7 +476,7 @@ game
       size:   131072
       crc:    c71fbb3b
       sha1:   59c58665b53da61352359d191a0569de5dd1f4b3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   004-v11.v11
@@ -486,7 +490,7 @@ game
       size:   524288
       crc:    8503317b
       sha1:   ab22f1aba1e977ab234a4f1d73dc6ed789dbeb85
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 1572864
     rom
       name:   004-v21.v21
@@ -540,6 +544,7 @@ game
 game
   name:  maglord
   title: Magician Lord (NGM-005)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -565,7 +570,7 @@ game
       size:   262144
       crc:    26259f0f
       sha1:   4f3e500093d61585048767dbd9fa09b3911a05d6
-  ymsndadpcma
+  ymsnd-adpcma
     size: 524288
     rom
       name:   005-v11.v11
@@ -573,7 +578,7 @@ game
       size:   524288
       crc:    cc0455fd
       sha1:   a8ff4270e7705e263d25ff0b301f503bccea7e59
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 1048576
     rom
       name:   005-v21.v21
@@ -635,6 +640,7 @@ game
 game
   name:  maglordh
   title: Magician Lord (NGH-005)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -660,7 +666,7 @@ game
       size:   262144
       crc:    26259f0f
       sha1:   4f3e500093d61585048767dbd9fa09b3911a05d6
-  ymsndadpcma
+  ymsnd-adpcma
     size: 524288
     rom
       name:   005-v11.v11
@@ -668,7 +674,7 @@ game
       size:   524288
       crc:    cc0455fd
       sha1:   a8ff4270e7705e263d25ff0b301f503bccea7e59
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 1048576
     rom
       name:   005-v21.v21
@@ -730,6 +736,7 @@ game
 game
   name:  ridhero
   title: Riding Hero (NGM-006 ~ NGH-006)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -763,7 +770,7 @@ game
       size:   262144
       crc:    92e7b4fe
       sha1:   d240056cd632f92bdfaa5e0492c09aa9bd7b0471
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   006-v11.v11
@@ -777,7 +784,7 @@ game
       size:   524288
       crc:    e2fd2371
       sha1:   cc95297bee7ffbdcb24ac4daeb5307cb39a52067
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 2097152
     rom
       name:   006-v21.v21
@@ -837,6 +844,7 @@ game
 game
   name:  ridheroh
   title: Riding Hero (set 2)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -870,7 +878,7 @@ game
       size:   262144
       crc:    92e7b4fe
       sha1:   d240056cd632f92bdfaa5e0492c09aa9bd7b0471
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   006-v11.v11
@@ -884,7 +892,7 @@ game
       size:   524288
       crc:    e2fd2371
       sha1:   cc95297bee7ffbdcb24ac4daeb5307cb39a52067
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 2097152
     rom
       name:   006-v21.v21
@@ -944,6 +952,7 @@ game
 game
   name:  alpham2
   title: Alpha Mission II / ASO II - Last Guardian (NGM-007 ~ NGH-007)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -976,7 +985,7 @@ game
       size:   131072
       crc:    28dfe2cd
       sha1:   1a1a99fb917c6c8db591e3be695ce03f843ee1df
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   007-v1.v1
@@ -1024,6 +1033,7 @@ game
 game
   name:  alpham2p
   title: Alpha Mission II / ASO II - Last Guardian (prototype)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1056,7 +1066,7 @@ game
       size:   131072
       crc:    5976b464
       sha1:   ec824567ecc3579f6d86c9d9385710cbaeef16a3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   007_v11_1bb4.v11
@@ -1076,7 +1086,7 @@ game
       size:   524288
       crc:    25e60f25
       sha1:   d06b0df872372de38fcf90187195070ac5f8c651
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   007_v21_28c2.v21
@@ -1146,6 +1156,7 @@ game
 game
   name:  ncombat
   title: Ninja Combat (NGM-009)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1171,7 +1182,7 @@ game
       size:   131072
       crc:    b5819863
       sha1:   6f2309d51531052dbf7d712993c9e35649db0d84
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1572864
     rom
       name:   009-v11.v11
@@ -1191,7 +1202,7 @@ game
       size:   524288
       crc:    505a01b5
       sha1:   9426a4f5b31e16f74e72e61951c189a878f211c5
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   009-v21.v21
@@ -1247,6 +1258,7 @@ game
 game
   name:  ncombath
   title: Ninja Combat (NGH-009)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1272,7 +1284,7 @@ game
       size:   131072
       crc:    b5819863
       sha1:   6f2309d51531052dbf7d712993c9e35649db0d84
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1572864
     rom
       name:   009-v11.v11
@@ -1292,7 +1304,7 @@ game
       size:   524288
       crc:    505a01b5
       sha1:   9426a4f5b31e16f74e72e61951c189a878f211c5
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   009-v21.v21
@@ -1348,6 +1360,7 @@ game
 game
   name:  cyberlip
   title: Cyber-Lip (NGM-010)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1373,7 +1386,7 @@ game
       size:   131072
       crc:    8be3a078
       sha1:   054ec6a061fcc88df1ecbb0a01611a31f37a7709
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   010-v11.v11
@@ -1399,7 +1412,7 @@ game
       size:   524288
       crc:    70899bd2
       sha1:   8cf01144f0bcf59f09777175ae6b71846b09f3a1
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   010-v21.v21
@@ -1455,6 +1468,7 @@ game
 game
   name:  superspy
   title: The Super Spy (NGM-011 ~ NGH-011)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1487,7 +1501,7 @@ game
       size:   262144
       crc:    ca661f1b
       sha1:   4e3cb57db716ec48487c1b070c3a55a5faf40856
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1572864
     rom
       name:   011-v11.v11
@@ -1501,7 +1515,7 @@ game
       size:   524288
       crc:    9f513d5a
       sha1:   37b04962f0b8e2a74abd35c407337a6151dc4e95
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   011-v21.v21
@@ -1543,6 +1557,7 @@ game
 game
   name:  mutnat
   title: Mutation Nation (NGM-014 ~ NGH-014)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1568,7 +1583,7 @@ game
       size:   131072
       crc:    b6683092
       sha1:   623ec7ec2915fb077bf65b4a16c815e071c25259
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   014-v1.v1
@@ -1616,6 +1631,7 @@ game
 game
   name:  kotm
   title: King of the Monsters (set 1)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1648,7 +1664,7 @@ game
       size:   131072
       crc:    9da9ca10
       sha1:   88b915827d529f39c365d3e41197d5461e07a085
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   016-v1.v1
@@ -1696,6 +1712,7 @@ game
 game
   name:  kotmh
   title: King of the Monsters (set 2)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1728,7 +1745,7 @@ game
       size:   131072
       crc:    9da9ca10
       sha1:   88b915827d529f39c365d3e41197d5461e07a085
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   016-v1.v1
@@ -1776,6 +1793,7 @@ game
 game
   name:  sengoku
   title: Sengoku / Sengoku Denshou (NGM-017 ~ NGH-017)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1808,7 +1826,7 @@ game
       size:   131072
       crc:    9b4f34c6
       sha1:   7f3a51f47fcbaa598f5c76bc66e2c53c8dfd852d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   017-v1.v1
@@ -1856,6 +1874,7 @@ game
 game
   name:  sengokuh
   title: Sengoku / Sengoku Denshou (NGH-017, US)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1888,7 +1907,7 @@ game
       size:   131072
       crc:    9b4f34c6
       sha1:   7f3a51f47fcbaa598f5c76bc66e2c53c8dfd852d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   017-v1.v1
@@ -1936,6 +1955,7 @@ game
 game
   name:  burningf
   title: Burning Fight (NGM-018 ~ NGH-018)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -1961,7 +1981,7 @@ game
       size:   131072
       crc:    0c939ee2
       sha1:   57d580d3279e66b9fe66bbcc68529d3384a926ff
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   018-v1.v1
@@ -2009,6 +2029,7 @@ game
 game
   name:  burningfh
   title: Burning Fight (NGH-018, US)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2034,7 +2055,7 @@ game
       size:   131072
       crc:    0c939ee2
       sha1:   57d580d3279e66b9fe66bbcc68529d3384a926ff
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   018-v1.v1
@@ -2082,6 +2103,7 @@ game
 game
   name:  burningfpa
   title: Burning Fight (prototype, near final, ver 23.3, 910326)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2114,7 +2136,7 @@ game
       size:   131072
       crc:    2b0c0415
       sha1:   a5a0d5e3ea2ef77b6f5cd14f2907ab2f1aed76b7
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   018_v11_6c00.v11
@@ -2202,6 +2224,7 @@ game
 game
   name:  burningfpb
   title: Burning Fight (prototype, newer, V07)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2234,7 +2257,7 @@ game
       size:   131072
       crc:    3031af09
       sha1:   72d3776f8c818f5db984e7a1b2fa7cb4a9c8d1ee
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   v11.bin
@@ -2328,6 +2351,7 @@ game
 game
   name:  burningfp
   title: Burning Fight (prototype, older)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2360,7 +2384,7 @@ game
       size:   131072
       crc:    470dd5d4
       sha1:   4291811b4aefe45261a1ae3631b6999fcd74fb3f
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   018_v11_56ac.v11
@@ -2374,7 +2398,7 @@ game
       size:   524288
       crc:    f1ae637c
       sha1:   02a4c7d4a544350a314ab7b26d8c9d3baa8f5778
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   018_v21_98dd.v21
@@ -2444,6 +2468,7 @@ game
 game
   name:  lbowling
   title: League Bowling (NGM-019 ~ NGH-019)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2471,7 +2496,7 @@ game
       size:   131072
       crc:    d568c17d
       sha1:   a2e318ed6ad1809c79f3f0853d75e0dd1a2f275c
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   019-v11.v11
@@ -2485,7 +2510,7 @@ game
       size:   524288
       crc:    029faa57
       sha1:   7bbaa87e38929ab1e32df5f6a2ec0fd5001e7cdb
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   019-v21.v21
@@ -2513,6 +2538,7 @@ game
 game
   name:  gpilots
   title: Ghost Pilots (NGM-020 ~ NGH-020)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2545,7 +2571,7 @@ game
       size:   131072
       crc:    48409377
       sha1:   0e212d2c76856a90b2c2fdff675239525972ac43
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1572864
     rom
       name:   020-v11.v11
@@ -2559,7 +2585,7 @@ game
       size:   524288
       crc:    4a9e6f03
       sha1:   d3ac11f333b03d8a318921bdaefb14598e289a14
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   020-v21.v21
@@ -2601,6 +2627,7 @@ game
 game
   name:  gpilotsh
   title: Ghost Pilots (NGH-020, US)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2633,7 +2660,7 @@ game
       size:   131072
       crc:    48409377
       sha1:   0e212d2c76856a90b2c2fdff675239525972ac43
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1572864
     rom
       name:   020-v11.v11
@@ -2647,7 +2674,7 @@ game
       size:   524288
       crc:    4a9e6f03
       sha1:   d3ac11f333b03d8a318921bdaefb14598e289a14
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   020-v21.v21
@@ -2689,6 +2716,7 @@ game
 game
   name:  gpilotsp
   title: Ghost Pilots (prototype)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2721,7 +2749,7 @@ game
       size:   131072
       crc:    32a108cf
       sha1:   4d38a283376725e1c1aca0d5aeedd4862146ba1f
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1572864
     rom
       name:   v11
@@ -2741,7 +2769,7 @@ game
       size:   524288
       crc:    4a9e6f03
       sha1:   d3ac11f333b03d8a318921bdaefb14598e289a14
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   v21
@@ -2811,6 +2839,7 @@ game
 game
   name:  joyjoy
   title: Puzzled / Joy Joy Kid (NGM-021 ~ NGH-021)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2836,7 +2865,7 @@ game
       size:   262144
       crc:    5a4be5e8
       sha1:   552f025ce0d51c25f42e1a81cf0d08376ca5475d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 524288
     rom
       name:   021-v11.v11
@@ -2844,7 +2873,7 @@ game
       size:   524288
       crc:    66c1e5c4
       sha1:   7e85420021d4c39c36ed75a1cec567c5610ffce0
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 524288
     rom
       name:   021-v21.v21
@@ -2872,6 +2901,7 @@ game
 game
   name:  bjourney
   title: Blue's Journey / Raguy (ALM-001 ~ ALH-001)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2897,7 +2927,7 @@ game
       size:   131072
       crc:    8e1d4ab6
       sha1:   deabc11ab81e7e68a3e041c03a127ae28d0d7264
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   022-v11.v11
@@ -2945,6 +2975,7 @@ game
 game
   name:  bjourneyh
   title: Blue's Journey / Raguy (ALH-001)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -2970,7 +3001,7 @@ game
       size:   131072
       crc:    8e1d4ab6
       sha1:   deabc11ab81e7e68a3e041c03a127ae28d0d7264
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   022-v11.v11
@@ -3018,6 +3049,7 @@ game
 game
   name:  quizdais
   title: Quiz Daisousa Sen - The Last Count Down (NGM-023 ~ NGH-023)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3043,7 +3075,7 @@ game
       size:   131072
       crc:    2a2105e0
       sha1:   26fc13556fda2dbeb7b5b035abd994e302dc7662
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   023-v1.v1
@@ -3071,6 +3103,7 @@ game
 game
   name:  quizdaisk
   title: Quiz Salibtamjeong - The Last Count Down (Korean localized Quiz Daisousa Sen)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3096,7 +3129,7 @@ game
       size:   131072
       crc:    d67f53f9
       sha1:   73a1bd175ae29dd957a907a046884f8715bd0a34
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   123-v1.v1
@@ -3124,6 +3157,7 @@ game
 game
   name:  lresort
   title: Last Resort
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3149,7 +3183,7 @@ game
       size:   131072
       crc:    cec19742
       sha1:   ab6c6ba7737e68d2420a0617719c6d4c89039c45
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   024-v1.v1
@@ -3197,6 +3231,7 @@ game
 game
   name:  lresortp
   title: Last Resort (prototype)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3229,7 +3264,7 @@ game
       size:   131072
       crc:    22122875
       sha1:   540c21559163381467679f836cb068adaf526659
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   024_v11_b085.v11
@@ -3317,6 +3352,7 @@ game
 game
   name:  eightman
   title: Eight Man (NGM-025 ~ NGH-025)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3342,7 +3378,7 @@ game
       size:   131072
       crc:    9927034c
       sha1:   205665361c5b2ab4f01ec480dd3c9b69db858d09
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   025-v1.v1
@@ -3390,6 +3426,7 @@ game
 game
   name:  minasan
   title: Minasan no Okagesamadesu! Dai Sugoroku Taikai (MOM-001 ~ MOH-001)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3415,7 +3452,7 @@ game
       size:   131072
       crc:    add5a226
       sha1:   99995bef2584abbba16777bac52f55523f7aa97d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   027-v11.v11
@@ -3423,7 +3460,7 @@ game
       size:   1048576
       crc:    59ad4459
       sha1:   bbb8ba8a8e337dd2946eefda4757e80d0547d54a
-  ymsndadpcmb
+  ymsnd-adpcmb
     size: 1048576
     rom
       name:   027-v21.v21
@@ -3465,6 +3502,7 @@ game
 game
   name:  legendos
   title: Legend of Success Joe / Ashita no Joe Densetsu
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3490,7 +3528,7 @@ game
       size:   131072
       crc:    6f2843f0
       sha1:   975fb1598b87a2798fff05e951fca2e2e0329e79
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   029-v1.v1
@@ -3532,6 +3570,7 @@ game
 game
   name:  2020bb
   title: 2020 Super Baseball (set 1)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3557,7 +3596,7 @@ game
       size:   131072
       crc:    4cf466ec
       sha1:   6a003b53c7a4af9d7529e2c10f27ffc4e58dcda5
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   030-v1.v1
@@ -3605,6 +3644,7 @@ game
 game
   name:  2020bba
   title: 2020 Super Baseball (set 2)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3630,7 +3670,7 @@ game
       size:   131072
       crc:    4cf466ec
       sha1:   6a003b53c7a4af9d7529e2c10f27ffc4e58dcda5
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   030-v1.v1
@@ -3678,6 +3718,7 @@ game
 game
   name:  2020bbh
   title: 2020 Super Baseball (set 3)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3703,7 +3744,7 @@ game
       size:   131072
       crc:    4cf466ec
       sha1:   6a003b53c7a4af9d7529e2c10f27ffc4e58dcda5
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   030-v1.v1
@@ -3751,6 +3792,7 @@ game
 game
   name:  socbrawl
   title: Soccer Brawl (NGM-031)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3776,7 +3818,7 @@ game
       size:   131072
       crc:    cb37427c
       sha1:   99efe9600ebeda48331f396e3203c7588bdb7d24
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   031-v1.v1
@@ -3824,6 +3866,7 @@ game
 game
   name:  socbrawlh
   title: Soccer Brawl (NGH-031)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3849,7 +3892,7 @@ game
       size:   131072
       crc:    cb37427c
       sha1:   99efe9600ebeda48331f396e3203c7588bdb7d24
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   031-v1.v1
@@ -3897,6 +3940,7 @@ game
 game
   name:  roboarmy
   title: Robo Army
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3922,7 +3966,7 @@ game
       size:   131072
       crc:    35ec952d
       sha1:   8aed30e26d7e2c70dbce5de752df416091066f7b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   032-v1.v1
@@ -3970,6 +4014,7 @@ game
 game
   name:  roboarmya
   title: Robo Army (NGM-032 ~ NGH-032)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -3995,7 +4040,7 @@ game
       size:   131072
       crc:    35ec952d
       sha1:   8aed30e26d7e2c70dbce5de752df416091066f7b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   032-v1.v1
@@ -4043,6 +4088,7 @@ game
 game
   name:  fatfury1
   title: Fatal Fury - King of Fighters / Garou Densetsu - Shukumei no Tatakai (NGM-033 ~ NGH-033)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4075,7 +4121,7 @@ game
       size:   131072
       crc:    5be10ffd
       sha1:   90a5e6cbbc58a7883cd2a3a597180d631a466882
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   033-v1.v1
@@ -4123,6 +4169,7 @@ game
 game
   name:  fbfrenzy
   title: Football Frenzy (NGM-034 ~ NGH-034)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4148,7 +4195,7 @@ game
       size:   131072
       crc:    f41b16b8
       sha1:   f3e1cfc4cd2c5baece176f169906aa796367d303
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   034-v1.v1
@@ -4196,6 +4243,7 @@ game
 game
   name:  bakatono
   title: Bakatonosama Mahjong Manyuuki (MOM-002 ~ MOH-002)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4221,7 +4269,7 @@ game
       size:   131072
       crc:    f1385b96
       sha1:   e7e3d1484188a115e262511116aaf466b8b1f428
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   036-v1.v1
@@ -4269,6 +4317,7 @@ game
 game
   name:  crsword
   title: Crossed Swords (ALM-002 ~ ALH-002)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4294,7 +4343,7 @@ game
       size:   131072
       crc:    9504b2c6
       sha1:   9ce8e681b9df6eacd0d23a36bad836bd5074233d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   037-v1.v1
@@ -4336,6 +4385,7 @@ game
 game
   name:  trally
   title: Thrash Rally (ALM-003 ~ ALH-003)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4370,7 +4420,7 @@ game
       size:   131072
       crc:    0908707e
       sha1:   df7489ea6abf84d7f137ba7a8f52a4fd1b088fd7
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1572864
     rom
       name:   038-v1.v1
@@ -4418,6 +4468,7 @@ game
 game
   name:  kotm2
   title: King of the Monsters 2 - The Next Thing (NGM-039 ~ NGH-039)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4450,7 +4501,7 @@ game
       size:   131072
       crc:    0c5b2ad5
       sha1:   15eb5ea10fecdbdbcfd06225ae6d88bb239592e7
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   039-v2.v2
@@ -4510,6 +4561,7 @@ game
 game
   name:  kotm2a
   title: King of the Monsters 2 - The Next Thing (older)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4542,7 +4594,7 @@ game
       size:   131072
       crc:    0c5b2ad5
       sha1:   15eb5ea10fecdbdbcfd06225ae6d88bb239592e7
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   039-v2.v2
@@ -4602,6 +4654,7 @@ game
 game
   name:  kotm2p
   title: King of the Monsters 2 - The Next Thing (prototype)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4634,7 +4687,7 @@ game
       size:   131072
       crc:    0c5b2ad5
       sha1:   15eb5ea10fecdbdbcfd06225ae6d88bb239592e7
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   proto_039-v1.v1
@@ -4734,6 +4787,7 @@ game
 game
   name:  sengoku2
   title: Sengoku 2 / Sengoku Denshou 2
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4759,7 +4813,7 @@ game
       size:   131072
       crc:    d4de4bca
       sha1:   ecf604d06f01d40b04e285facef66a6ae2d35661
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   040-v1.v1
@@ -4819,6 +4873,7 @@ game
 game
   name:  bstars2
   title: Baseball Stars 2
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4844,7 +4899,7 @@ game
       size:   131072
       crc:    15c177a6
       sha1:   3f4abed635102f9bc8b44809750828c82e79b44f
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2621440
     rom
       name:   041-v1.v1
@@ -4898,6 +4953,7 @@ game
 game
   name:  quizdai2
   title: Quiz Meitantei Neo & Geo - Quiz Daisousa Sen Part 2 (NGM-042 ~ NGH-042)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4923,7 +4979,7 @@ game
       size:   131072
       crc:    bb19995d
       sha1:   ed458fad5a23c6bd0d099927d98c31e1e6562d1b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   042-v1.v1
@@ -4971,6 +5027,7 @@ game
 game
   name:  3countb
   title: 3 Count Bout / Fire Suplex (NGM-043 ~ NGH-043)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -4996,7 +5053,7 @@ game
       size:   131072
       crc:    7eab59cb
       sha1:   5ae4107457e091f73960bfba39b589ae36d51ca3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   043-v1.v1
@@ -5068,6 +5125,7 @@ game
 game
   name:  aof
   title: Art of Fighting / Ryuuko no Ken (NGM-044 ~ NGH-044)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -5093,7 +5151,7 @@ game
       size:   131072
       crc:    0987e4bb
       sha1:   8fae4b7fac09d46d4727928e609ed9d3711dbded
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   044-v2.v2
@@ -5165,6 +5223,7 @@ game
 game
   name:  samsho
   title: Samurai Shodown / Samurai Spirits (NGM-045)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -5197,7 +5256,7 @@ game
       size:   131072
       crc:    95170640
       sha1:   125c502db0693e8d11cef619b090081c14a9a300
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   045-v1.v1
@@ -5259,6 +5318,7 @@ game
 game
   name:  samshoh
   title: Samurai Shodown / Samurai Spirits (NGH-045)
+  board: neogeo
   maincpu
     size: 1572864
     rom
@@ -5291,7 +5351,7 @@ game
       size:   131072
       crc:    95170640
       sha1:   125c502db0693e8d11cef619b090081c14a9a300
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   045-v1.v1
@@ -5353,6 +5413,7 @@ game
 game
   name:  tophuntr
   title: Top Hunter - Roddy & Cathy (NGM-046)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -5385,7 +5446,7 @@ game
       size:   131072
       crc:    3f84bb9f
       sha1:   07446040871d11da3c2217ee9d1faf8c3cae7420
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   046-v1.v1
@@ -5473,6 +5534,7 @@ game
 game
   name:  tophuntrh
   title: Top Hunter - Roddy & Cathy (NGH-046)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -5505,7 +5567,7 @@ game
       size:   131072
       crc:    3f84bb9f
       sha1:   07446040871d11da3c2217ee9d1faf8c3cae7420
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   046-v1.v1
@@ -5593,6 +5655,7 @@ game
 game
   name:  fatfury2
   title: Fatal Fury 2 / Garou Densetsu 2 - Arata-naru Tatakai (NGM-047 ~ NGH-047)
+  board: neogeo
   feature
     name:  slot
     value: rom_fatfur2
@@ -5621,7 +5684,7 @@ game
       size:   131072
       crc:    820b0ba7
       sha1:   5708248d89446e49184eaadb52f7c61b2b6c13c5
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   047-v1.v1
@@ -5693,6 +5756,7 @@ game
 game
   name:  janshin
   title: Janshin Densetsu - Quest of Jongmaster
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -5718,7 +5782,7 @@ game
       size:   131072
       crc:    310467c7
       sha1:   c529961195c9bdf5d1ce70a38ad129002d1f3b5f
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   048-v1.v1
@@ -5746,6 +5810,7 @@ game
 game
   name:  androdun
   title: Andro Dunos (NGM-049 ~ NGH-049)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -5778,7 +5843,7 @@ game
       size:   131072
       crc:    edd2acf4
       sha1:   c4ee6ba834d54b9fc5a854dbc41a05877e090371
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   049-v1.v1
@@ -5806,6 +5871,7 @@ game
 game
   name:  ncommand
   title: Ninja Commando
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -5831,7 +5897,7 @@ game
       size:   131072
       crc:    6fcf07d3
       sha1:   e9ecff4bfec1f5964bf06645f75d80d611b6231c
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1572864
     rom
       name:   050-v1.v1
@@ -5879,6 +5945,7 @@ game
 game
   name:  viewpoin
   title: Viewpoint
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -5904,7 +5971,7 @@ game
       size:   131072
       crc:    8e69f29a
       sha1:   7a25f4997996434ea1b7d0d1ca9e7aaf966cbd03
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   051-v2.v1
@@ -5950,6 +6017,7 @@ game
 game
   name:  viewpoinp
   title: Viewpoint (prototype)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -5982,7 +6050,7 @@ game
       size:   131072
       crc:    8e69f29a
       sha1:   7a25f4997996434ea1b7d0d1ca9e7aaf966cbd03
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   v1
@@ -6070,6 +6138,7 @@ game
 game
   name:  ssideki
   title: Super Sidekicks / Tokuten Ou
+  board: neogeo
   feature
     name:  slot
     value: rom_fatfur2
@@ -6098,7 +6167,7 @@ game
       size:   131072
       crc:    49f17d2d
       sha1:   70971fcf71ae3a6b2e26e7ade8063941fb178ae5
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   052-v1.v1
@@ -6138,6 +6207,7 @@ game
 game
   name:  wh1
   title: World Heroes (ALM-005)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -6170,7 +6240,7 @@ game
       size:   131072
       crc:    1bd9d04b
       sha1:   65cd7b002123ed1a3111e3d942608d0082799ff3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   053-v2.v2
@@ -6230,6 +6300,7 @@ game
 game
   name:  wh1h
   title: World Heroes (ALH-005)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -6262,7 +6333,7 @@ game
       size:   131072
       crc:    1bd9d04b
       sha1:   65cd7b002123ed1a3111e3d942608d0082799ff3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   053-v2.v2
@@ -6322,6 +6393,7 @@ game
 game
   name:  wh1ha
   title: World Heroes (set 3)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -6354,7 +6426,7 @@ game
       size:   131072
       crc:    1bd9d04b
       sha1:   65cd7b002123ed1a3111e3d942608d0082799ff3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   053-v2.v2
@@ -6414,6 +6486,7 @@ game
 game
   name:  kof94
   title: The King of Fighters '94 (NGM-055 ~ NGH-055)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -6445,7 +6518,7 @@ game
       size:   131072
       crc:    f6e77cf5
       sha1:   292a3e3a4918ffe72bd1c41acb927b91844e035e
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   055-v1.v1
@@ -6527,6 +6600,7 @@ game
 game
   name:  aof2
   title: Art of Fighting 2 / Ryuuko no Ken 2 (NGM-056)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -6552,7 +6626,7 @@ game
       size:   131072
       crc:    f27e9d52
       sha1:   dddae733d87ce7c88ad2580a8f64cb6ff9572e67
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   056-v1.v1
@@ -6634,6 +6708,7 @@ game
 game
   name:  aof2a
   title: Art of Fighting 2 / Ryuuko no Ken 2 (NGH-056)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -6666,7 +6741,7 @@ game
       size:   131072
       crc:    f27e9d52
       sha1:   dddae733d87ce7c88ad2580a8f64cb6ff9572e67
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   056-v1.v1
@@ -6748,6 +6823,7 @@ game
 game
   name:  wh2
   title: World Heroes 2 (ALM-006 ~ ALH-006)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -6779,7 +6855,7 @@ game
       size:   131072
       crc:    8fa3bc77
       sha1:   982f92978671e4ee66630948e6bb7565b37b5dc0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   057-v1.v1
@@ -6841,6 +6917,7 @@ game
 game
   name:  wh2h
   title: World Heroes 2 (ALH-006)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -6872,7 +6949,7 @@ game
       size:   131072
       crc:    8fa3bc77
       sha1:   982f92978671e4ee66630948e6bb7565b37b5dc0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   057-v1.v1
@@ -6934,6 +7011,7 @@ game
 game
   name:  fatfursp
   title: Fatal Fury Special / Garou Densetsu Special (NGM-058 ~ NGH-058, set 1)
+  board: neogeo
   maincpu
     size: 1572864
     rom
@@ -6966,7 +7044,7 @@ game
       size:   131072
       crc:    ccc5186e
       sha1:   cf9091c523c182aebfb928c91640b2d72fd70123
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   058-v1.v1
@@ -7034,6 +7112,7 @@ game
 game
   name:  fatfurspa
   title: Fatal Fury Special / Garou Densetsu Special (NGM-058 ~ NGH-058, set 2)
+  board: neogeo
   maincpu
     size: 1572864
     rom
@@ -7073,7 +7152,7 @@ game
       size:   131072
       crc:    ccc5186e
       sha1:   cf9091c523c182aebfb928c91640b2d72fd70123
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   058-v1.v1
@@ -7141,6 +7220,7 @@ game
 game
   name:  savagere
   title: Savage Reign / Fu'un Mokushiroku - Kakutou Sousei
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -7172,7 +7252,7 @@ game
       size:   131072
       crc:    29992eba
       sha1:   187be624abe8670503edb235ff21ae8fdc3866e0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   059-v1.v1
@@ -7254,6 +7334,7 @@ game
 game
   name:  fightfev
   title: Fight Fever / Wang Jung Wang (set 1)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -7279,7 +7360,7 @@ game
       size:   131072
       crc:    0b7c4e65
       sha1:   999a1e784de18db3f1332b30bc425836ea6970be
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   060-v1.v1
@@ -7327,6 +7408,7 @@ game
 game
   name:  fightfeva
   title: Fight Fever / Wang Jung Wang (set 2)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -7359,7 +7441,7 @@ game
       size:   131072
       crc:    0b7c4e65
       sha1:   999a1e784de18db3f1332b30bc425836ea6970be
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   060-v1.v1
@@ -7407,6 +7489,7 @@ game
 game
   name:  ssideki2
   title: Super Sidekicks 2 - The World Championship / Tokuten Ou 2 - Real Fight Football (NGM-061 ~ NGH-061)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -7432,7 +7515,7 @@ game
       size:   131072
       crc:    156f6951
       sha1:   49686f615f109a02b4f23931f1c84fee13872ffd
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   061-v1.v1
@@ -7480,6 +7563,7 @@ game
 game
   name:  spinmast
   title: Spin Master / Miracle Adventure
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -7512,7 +7596,7 @@ game
       size:   131072
       crc:    76108b2f
       sha1:   08c89a8b746dbb10ff885b41cde344173c2e3699
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   062-v1.v1
@@ -7582,6 +7666,7 @@ game
 game
   name:  samsho2
   title: Samurai Shodown II / Shin Samurai Spirits - Haohmaru Jigokuhen (NGM-063 ~ NGH-063)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -7613,7 +7698,7 @@ game
       size:   131072
       crc:    56675098
       sha1:   90429fc40d056d480d0e2bbefbc691d9fa260fc4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 7340032
     rom
       name:   063-v1.v1
@@ -7701,6 +7786,7 @@ game
 game
   name:  samsho2k
   title: Saulabi Spirits / Jin Saulabi Tu Hon (Korean release of Samurai Shodown II, set 1)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -7746,7 +7832,7 @@ game
       size:   131072
       crc:    56675098
       sha1:   90429fc40d056d480d0e2bbefbc691d9fa260fc4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 7340032
     rom
       name:   063-v1.v1
@@ -7834,6 +7920,7 @@ game
 game
   name:  samsho2ka
   title: Saulabi Spirits / Jin Saulabi Tu Hon (Korean release of Samurai Shodown II, set 2)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -7865,7 +7952,7 @@ game
       size:   131072
       crc:    56675098
       sha1:   90429fc40d056d480d0e2bbefbc691d9fa260fc4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 7340032
     rom
       name:   063-v1.v1
@@ -7953,6 +8040,7 @@ game
 game
   name:  wh2j
   title: World Heroes 2 Jet (ADM-007 ~ ADH-007)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -7984,7 +8072,7 @@ game
       size:   131072
       crc:    d2eec9d3
       sha1:   09478787045f1448d19d064dd3d540d1741fd619
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   064-v1.v1
@@ -8060,6 +8148,7 @@ game
 game
   name:  wjammers
   title: Windjammers / Flying Power Disc
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -8085,7 +8174,7 @@ game
       size:   131072
       crc:    52c23cfc
       sha1:   809a7e072ad9acbffc25e9bd27cdb97638d09d07
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   065-v1.v1
@@ -8145,6 +8234,7 @@ game
 game
   name:  karnovr
   title: Karnov's Revenge / Fighter's History Dynamite
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -8170,7 +8260,7 @@ game
       size:   131072
       crc:    030beae4
       sha1:   ceb6ee6c09514504efacdbca7b280901e4c97084
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   066-v1.v1
@@ -8226,6 +8316,7 @@ game
 game
   name:  gururin
   title: Gururin
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -8251,7 +8342,7 @@ game
       size:   131072
       crc:    9e3c6328
       sha1:   17e8479c258f28a01d2283be9e692ff7685898cc
-  ymsndadpcma
+  ymsnd-adpcma
     size: 524288
     rom
       name:   067-v1.v1
@@ -8279,6 +8370,7 @@ game
 game
   name:  pspikes2
   title: Power Spikes II (NGM-068)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -8304,7 +8396,7 @@ game
       size:   131072
       crc:    b1c7911e
       sha1:   27b298e7d50981331e17aa642e2e363ffac4333a
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   068-v1.v1
@@ -8372,6 +8464,7 @@ game
 game
   name:  fatfury3
   title: Fatal Fury 3 - Road to the Final Victory / Garou Densetsu 3 - Haruka-naru Tatakai (NGM-069 ~ NGH-069)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -8404,7 +8497,7 @@ game
       size:   131072
       crc:    fce72926
       sha1:   a40c74f793900b8542f0b8383ce4bf46fca112d4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 10485760
     rom
       name:   069-v1.v1
@@ -8472,6 +8565,7 @@ game
 game
   name:  zupapa
   title: Zupapa!
+  board: neogeo
   feature
     name:  slot
     value: cmc42_zupapa
@@ -8501,7 +8595,7 @@ game
       size:   131072
       crc:    5a3b3191
       sha1:   fa9a9930e18c64e598841fb344c4471d3d2c1964
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   070-v1.v1
@@ -8529,6 +8623,7 @@ game
 game
   name:  panicbom
   title: Panic Bomber
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -8554,7 +8649,7 @@ game
       size:   131072
       crc:    3cdf5d88
       sha1:   6d8365a946fbd0b7c7b896536322638d80f6a764
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   073-v1.v1
@@ -8588,6 +8683,7 @@ game
 game
   name:  aodk
   title: Aggressors of Dark Kombat / Tsuukai GANGAN Koushinkyoku (ADM-008 ~ ADH-008)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -8619,7 +8715,7 @@ game
       size:   131072
       crc:    5a52a9d1
       sha1:   ef913a9a55d29d5dd3beab1ce6039d64ce9b1a5b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   074-v1.v1
@@ -8695,6 +8791,7 @@ game
 game
   name:  sonicwi2
   title: Aero Fighters 2 / Sonic Wings 2
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -8726,7 +8823,7 @@ game
       size:   131072
       crc:    bb828df1
       sha1:   eab8e2868173bdaac7c7ed97305a9aa1033fd303
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   075-v1.v1
@@ -8774,6 +8871,7 @@ game
 game
   name:  zedblade
   title: Zed Blade / Operation Ragnarok
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -8799,7 +8897,7 @@ game
       size:   131072
       crc:    7b5f3d0a
       sha1:   4a301781a57ff236f49492b576ff4858b0ffbdf8
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   076-v1.v1
@@ -8853,6 +8951,7 @@ game
 game
   name:  galaxyfg
   title: Galaxy Fight - Universal Warriors
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -8884,7 +8983,7 @@ game
       size:   131072
       crc:    8e9e3b10
       sha1:   7c44d1dbd4f8d337c99e90361d1dab837df85e31
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   078-v1.v1
@@ -8966,6 +9065,7 @@ game
 game
   name:  strhoop
   title: Street Hoop / Street Slam / Dunk Dream (DEM-004 ~ DEH-004)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -8991,7 +9091,7 @@ game
       size:   131072
       crc:    bee3455a
       sha1:   fd5345d9847982085a9b364fff542580889bf02f
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   079-v1.v1
@@ -9039,6 +9139,7 @@ game
 game
   name:  quizkof
   title: Quiz King of Fighters (SAM-080 ~ SAH-080)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -9064,7 +9165,7 @@ game
       size:   131072
       crc:    f5f44172
       sha1:   eaaba1781622901b91bce9257be4e05f84df053b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   080-v1.v1
@@ -9118,6 +9219,7 @@ game
 game
   name:  quizkofk
   title: Quiz King of Fighters (Korea)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -9143,7 +9245,7 @@ game
       size:   131072
       crc:    4f157e9a
       sha1:   8397bfdd5738914670ada7cd8c611c20ed1f74da
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   080-v1.v1
@@ -9196,7 +9298,8 @@ game
 
 game
   name:  ssideki3
-  title: Super Sidekicks 3 - The Next Glory / Tokuten Ou 3 - Eikou e no Michi
+  title: Super Sidekicks 3 - The Next Glory / Tokuten Ou 3 - Eikou e no Chousen
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -9228,7 +9331,7 @@ game
       size:   131072
       crc:    82fcd863
       sha1:   b219a5685450f9c24cc195f1c914bc3b292d72c0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   081-v1.v1
@@ -9296,6 +9399,7 @@ game
 game
   name:  doubledr
   title: Double Dragon (Neo-Geo)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -9327,7 +9431,7 @@ game
       size:   131072
       crc:    10b144de
       sha1:   cf1ed0a447da68240c62bcfd76b1569803f6bf76
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   082-v1.v1
@@ -9403,6 +9507,7 @@ game
 game
   name:  pbobblen
   title: Puzzle Bobble / Bust-A-Move (Neo-Geo, NGM-083)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -9428,7 +9533,7 @@ game
       size:   131072
       crc:    f424368a
       sha1:   5e5bbcaeb82bed2ee17df08f005ca20ad1030723
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3670016
     rom
       name:   068-v1.v1
@@ -9502,6 +9607,7 @@ game
 game
   name:  kof95
   title: The King of Fighters '95 (NGM-084)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -9533,7 +9639,7 @@ game
       size:   131072
       crc:    6f2d7429
       sha1:   6f8462e4f07af82a5ca3197895d5dcbb67bdaa61
-  ymsndadpcma
+  ymsnd-adpcma
     size: 9437184
     rom
       name:   084-v1.v1
@@ -9615,6 +9721,7 @@ game
 game
   name:  kof95a
   title: The King of Fighters '95 (NGM-084, alt board)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -9661,7 +9768,7 @@ game
       size:   131072
       crc:    6f2d7429
       sha1:   6f8462e4f07af82a5ca3197895d5dcbb67bdaa61
-  ymsndadpcma
+  ymsnd-adpcma
     size: 9437184
     rom
       name:   084-v1.v1
@@ -9743,6 +9850,7 @@ game
 game
   name:  kof95h
   title: The King of Fighters '95 (NGH-084)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -9774,7 +9882,7 @@ game
       size:   131072
       crc:    6f2d7429
       sha1:   6f8462e4f07af82a5ca3197895d5dcbb67bdaa61
-  ymsndadpcma
+  ymsnd-adpcma
     size: 9437184
     rom
       name:   084-v1.v1
@@ -9856,6 +9964,7 @@ game
 game
   name:  twsoc96
   title: Tecmo World Soccer '96
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -9881,7 +9990,7 @@ game
       size:   131072
       crc:    cb82bc5d
       sha1:   8e3ecabec25d89adb6e0eed0ef5f94d34a4d5fc0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   086-v1.v1
@@ -9929,6 +10038,7 @@ game
 game
   name:  samsho3
   title: Samurai Shodown III / Samurai Spirits - Zankurou Musouken (NGM-087)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -9982,7 +10092,7 @@ game
       size:   131072
       crc:    8e6440eb
       sha1:   e3f72150af4e326543b29df71cda27d73ec087c1
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   087-v1.v1
@@ -10058,6 +10168,7 @@ game
 game
   name:  samsho3h
   title: Samurai Shodown III / Samurai Spirits - Zankurou Musouken (NGH-087)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -10090,7 +10201,7 @@ game
       size:   131072
       crc:    8e6440eb
       sha1:   e3f72150af4e326543b29df71cda27d73ec087c1
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   087-v1.v1
@@ -10166,6 +10277,7 @@ game
 game
   name:  fswords
   title: Fighters Swords (Korean release of Samurai Shodown III)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -10198,7 +10310,7 @@ game
       size:   131072
       crc:    8e6440eb
       sha1:   e3f72150af4e326543b29df71cda27d73ec087c1
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   087-v1.v1
@@ -10274,6 +10386,7 @@ game
 game
   name:  stakwin
   title: Stakes Winner / Stakes Winner - GI Kinzen Seiha e no Michi
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -10305,7 +10418,7 @@ game
       size:   131072
       crc:    2fe1f499
       sha1:   5b747eeef65be04423d2db05e086df9132758a47
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   088-v1.v1
@@ -10347,6 +10460,7 @@ game
 game
   name:  stakwindev
   title: Stakes Winner / Stakes Winner - GI Kinzen Seiha e no Michi (early development board)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -10379,7 +10493,7 @@ game
       size:   524288
       crc:    daedbcd7
       sha1:   d6d0e67ff7865ff5a0262aba381468e198d50536
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   v1.v1
@@ -10489,6 +10603,7 @@ game
 game
   name:  pulstar
   title: Pulstar
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -10521,7 +10636,7 @@ game
       size:   131072
       crc:    ff3df7c7
       sha1:   59d2ef64f734f6026073b365300221909057a512
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   089-v1.v1
@@ -10597,6 +10712,7 @@ game
 game
   name:  whp
   title: World Heroes Perfect
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -10628,7 +10744,7 @@ game
       size:   131072
       crc:    28065668
       sha1:   0c60d4afa1dccad0135e733104f056be73b54e4e
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   090-v1.v1
@@ -10710,6 +10826,7 @@ game
 game
   name:  kabukikl
   title: Far East of Eden - Kabuki Klash / Tengai Makyou - Shin Den
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -10741,7 +10858,7 @@ game
       size:   131072
       crc:    91957ef6
       sha1:   7b6907532a0e02ceb643623cbd689cf228776ed1
-  ymsndadpcma
+  ymsnd-adpcma
     size: 7340032
     rom
       name:   092-v1.v1
@@ -10801,6 +10918,7 @@ game
 game
   name:  neobombe
   title: Neo Bomberman
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -10826,7 +10944,7 @@ game
       size:   131072
       crc:    e81e780b
       sha1:   c56c53984e0f92e180e850c60a75f550ee84917c
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   093-v1.v1
@@ -10874,6 +10992,7 @@ game
 game
   name:  gowcaizr
   title: Voltage Fighter - Gowcaizer / Choujin Gakuen Gowcaizer
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -10905,7 +11024,7 @@ game
       size:   131072
       crc:    78c851cb
       sha1:   a9923c002e4e2171a564af45cff0958c5d57b275
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   094-v1.v1
@@ -10987,6 +11106,7 @@ game
 game
   name:  rbff1
   title: Real Bout Fatal Fury / Real Bout Garou Densetsu (NGM-095 ~ NGH-095)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -11019,7 +11139,7 @@ game
       size:   131072
       crc:    653492a7
       sha1:   39e511fb9ed5d2135dc8428a31d0baafb2ab36e0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   069-v1.v1
@@ -11101,6 +11221,7 @@ game
 game
   name:  rbff1a
   title: Real Bout Fatal Fury / Real Bout Garou Densetsu (bug fix revision)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -11140,7 +11261,7 @@ game
       size:   131072
       crc:    653492a7
       sha1:   39e511fb9ed5d2135dc8428a31d0baafb2ab36e0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   069-v1.v1
@@ -11222,6 +11343,7 @@ game
 game
   name:  rbff1ka
   title: Real Bout Fatal Fury / Real Bout Garou Densetsu (Korean release, bug fix revision)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -11261,7 +11383,7 @@ game
       size:   131072
       crc:    653492a7
       sha1:   39e511fb9ed5d2135dc8428a31d0baafb2ab36e0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   069-v1.v1
@@ -11343,6 +11465,7 @@ game
 game
   name:  rbff1k
   title: Real Bout Fatal Fury / Real Bout Garou Densetsu (Korean release)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -11375,7 +11498,7 @@ game
       size:   131072
       crc:    653492a7
       sha1:   39e511fb9ed5d2135dc8428a31d0baafb2ab36e0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   069-v1.v1
@@ -11457,6 +11580,7 @@ game
 game
   name:  aof3
   title: Art of Fighting 3 - The Path of the Warrior / Art of Fighting - Ryuuko no Ken Gaiden
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -11489,7 +11613,7 @@ game
       size:   131072
       crc:    cb07b659
       sha1:   940b379957c2987d7ab0443cb80c3ff58f6ba559
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   096-v1.v1
@@ -11571,6 +11695,7 @@ game
 game
   name:  aof3k
   title: Art of Fighting 3 - The Path of the Warrior (Korean release)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -11603,7 +11728,7 @@ game
       size:   131072
       crc:    cb07b659
       sha1:   940b379957c2987d7ab0443cb80c3ff58f6ba559
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   096-v1.v1
@@ -11685,6 +11810,7 @@ game
 game
   name:  sonicwi3
   title: Aero Fighters 3 / Sonic Wings 3
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -11716,7 +11842,7 @@ game
       size:   131072
       crc:    b20e4291
       sha1:   0e891ab53f9fded510295dfc7818bc59b4a9dd97
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   097-v1.v1
@@ -11764,6 +11890,7 @@ game
 game
   name:  turfmast
   title: Neo Turf Masters / Big Tournament Golf
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -11795,7 +11922,7 @@ game
       size:   131072
       crc:    9994ac00
       sha1:   7bded797f3b80fd00bcbe451ac0abe6646b19a14
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   200-v1.v1
@@ -11841,6 +11968,7 @@ game
 game
   name:  mslug
   title: Metal Slug - Super Vehicle-001
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -11872,7 +12000,7 @@ game
       size:   131072
       crc:    c28b3253
       sha1:   fd75bd15aed30266a8b3775f276f997af57d1c06
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   201-v1.v1
@@ -11920,6 +12048,7 @@ game
 game
   name:  puzzledp
   title: Puzzle De Pon!
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -11945,7 +12074,7 @@ game
       size:   131072
       crc:    9c0291ea
       sha1:   3fa67c62acba79be6b3a98cc1601e45569fa11ae
-  ymsndadpcma
+  ymsnd-adpcma
     size: 524288
     rom
       name:   202-v1.v1
@@ -11973,6 +12102,7 @@ game
 game
   name:  moshougi
   title: Shougi no Tatsujin - Master of Shougi
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -11998,7 +12128,7 @@ game
       size:   131072
       crc:    a602c2c2
       sha1:   19fd5d0379244c528b58343f6cbf78b4766fb23d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   203-v1.v1
@@ -12026,6 +12156,7 @@ game
 game
   name:  marukodq
   title: Chibi Maruko-chan: Maruko Deluxe Quiz
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -12051,7 +12182,7 @@ game
       size:   131072
       crc:    0e22902e
       sha1:   fb8466c342d4abd8bb4cad01c6ceab03f96cdad8
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   206-v1.v1
@@ -12099,6 +12230,7 @@ game
 game
   name:  neomrdo
   title: Neo Mr. Do!
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -12124,7 +12256,7 @@ game
       size:   131072
       crc:    b5b74a95
       sha1:   7b01f3b87c247cc7472591f8cdcf0ae8065e31c6
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   207-v1.v1
@@ -12152,6 +12284,7 @@ game
 game
   name:  sdodgeb
   title: Super Dodge Ball / Kunio no Nekketsu Toukyuu Densetsu
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -12183,7 +12316,7 @@ game
       size:   131072
       crc:    0a5f3325
       sha1:   04e0236df478a5452654c823dcb42fea65b6a718
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   208-v1.v1
@@ -12225,6 +12358,7 @@ game
 game
   name:  goalx3
   title: Goal! Goal! Goal!
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -12256,7 +12390,7 @@ game
       size:   131072
       crc:    cd758325
       sha1:   b51eac634fc646c07210dff993018ad9ebabd3f9
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   209-v1.v1
@@ -12298,6 +12432,7 @@ game
 game
   name:  overtop
   title: Over Top
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -12329,7 +12464,7 @@ game
       size:   131072
       crc:    fcab6191
       sha1:   488b8310b0957f0012fe50f73641b606f6ac4a57
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   212-v1.v1
@@ -12385,6 +12520,7 @@ game
 game
   name:  neodrift
   title: Neo Drift Out - New Technology
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -12416,7 +12552,7 @@ game
       size:   131072
       crc:    200045f1
       sha1:   7a6cd1c8d4447ea260d7ff4520c676b8d685f2e4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   213-v1.v1
@@ -12450,6 +12586,7 @@ game
 game
   name:  kof96
   title: The King of Fighters '96 (NGM-214)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -12482,7 +12619,7 @@ game
       size:   131072
       crc:    dabc427c
       sha1:   b76722ed142ee7addceb4757424870dbd003e8b3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 10485760
     rom
       name:   214-v1.v1
@@ -12564,6 +12701,7 @@ game
 game
   name:  kof96h
   title: The King of Fighters '96 (NGH-214)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -12596,7 +12734,7 @@ game
       size:   131072
       crc:    dabc427c
       sha1:   b76722ed142ee7addceb4757424870dbd003e8b3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 10485760
     rom
       name:   214-v1.v1
@@ -12678,6 +12816,7 @@ game
 game
   name:  ssideki4
   title: The Ultimate 11 - The SNK Football Championship / Tokuten Ou - Honoo no Libero
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -12709,7 +12848,7 @@ game
       size:   131072
       crc:    a932081d
       sha1:   376a45e19edb780ac8798c41ae2260c8a8a4bba8
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   215-v1.v1
@@ -12771,6 +12910,7 @@ game
 game
   name:  kizuna
   title: Kizuna Encounter - Super Tag Battle / Fu'un Super Tag Battle
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -12802,7 +12942,7 @@ game
       size:   131072
       crc:    1b096820
       sha1:   72852e78c620038f8dafde5e54e02e418c31be9c
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   059-v1.v1
@@ -12890,6 +13030,7 @@ game
 game
   name:  ninjamas
   title: Ninja Master's - Haoh-ninpo-cho
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -12922,7 +13063,7 @@ game
       size:   131072
       crc:    d00fb2af
       sha1:   6bcaa52e1641cc24288e1f22f4dc98e8d8921b90
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   217-v1.v1
@@ -12998,6 +13139,7 @@ game
 game
   name:  ragnagrd
   title: Ragnagard / Shin-Oh-Ken
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -13029,7 +13171,7 @@ game
       size:   131072
       crc:    17028bcf
       sha1:   7a4e8f33ce9b41beac2152b8f6003f247699e2e1
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   218-v1.v1
@@ -13105,6 +13247,7 @@ game
 game
   name:  pgoal
   title: Pleasure Goal / Futsal - 5 on 5 Mini Soccer (NGM-219)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -13136,7 +13279,7 @@ game
       size:   131072
       crc:    958efdc8
       sha1:   aacc6056b1ff48cde8f241a11a27473cfb4b4aa3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   219-v1.v1
@@ -13178,6 +13321,7 @@ game
 game
   name:  ironclad
   title: Choutetsu Brikin'ger / Iron Clad (prototype)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -13209,7 +13353,7 @@ game
       size:   131072
       crc:    3a08bb63
       sha1:   d8fbbf42a006ccafc3cd99808d28c82dbaac4590
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   proto_220-v1.v1
@@ -13251,6 +13395,7 @@ game
 game
   name:  ironclado
   title: Choutetsu Brikin'ger / Iron Clad (prototype, bootleg)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -13282,7 +13427,7 @@ game
       size:   131072
       crc:    3a08bb63
       sha1:   d8fbbf42a006ccafc3cd99808d28c82dbaac4590
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   proto_220-v1.v1
@@ -13324,6 +13469,7 @@ game
 game
   name:  magdrop2
   title: Magical Drop II
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -13349,7 +13495,7 @@ game
       size:   131072
       crc:    bddae628
       sha1:   02c77e6aaaed43e39778bf83a3184e7c21db63d4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   221-v1.v1
@@ -13377,6 +13523,7 @@ game
 game
   name:  samsho4
   title: Samurai Shodown IV - Amakusa's Revenge / Samurai Spirits - Amakusa Kourin (NGM-222 ~ NGH-222)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -13409,7 +13556,7 @@ game
       size:   131072
       crc:    7615bc1b
       sha1:   b936f7b341f6fe0921b4c41049734684583e3596
-  ymsndadpcma
+  ymsnd-adpcma
     size: 10485760
     rom
       name:   222-v1.v1
@@ -13490,7 +13637,8 @@ game
 
 game
   name:  samsho4k
-  title: Pae Wang Jeon Seol / Legend of a Warrior (Korean censored Samurai Shodown IV)
+  title: Paewang Jeonseol / Legend of a Warrior (Korean censored Samurai Shodown IV)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -13523,7 +13671,7 @@ game
       size:   131072
       crc:    7615bc1b
       sha1:   b936f7b341f6fe0921b4c41049734684583e3596
-  ymsndadpcma
+  ymsnd-adpcma
     size: 10485760
     rom
       name:   222-v1.v1
@@ -13605,6 +13753,7 @@ game
 game
   name:  rbffspec
   title: Real Bout Fatal Fury Special / Real Bout Garou Densetsu Special
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -13637,7 +13786,7 @@ game
       size:   131072
       crc:    3fee46bf
       sha1:   e750f85233953853618fcdff980a4721af1710a3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   223-v1.v1
@@ -13719,6 +13868,7 @@ game
 game
   name:  rbffspeck
   title: Real Bout Fatal Fury Special / Real Bout Garou Densetsu Special (Korean release)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -13751,7 +13901,7 @@ game
       size:   131072
       crc:    3fee46bf
       sha1:   e750f85233953853618fcdff980a4721af1710a3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   223-v1.v1
@@ -13833,6 +13983,7 @@ game
 game
   name:  twinspri
   title: Twinkle Star Sprites
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -13864,7 +14015,7 @@ game
       size:   131072
       crc:    364d6f96
       sha1:   779b95a6476089b71f48c8368d9043ee1dba9032
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   224-v1.v1
@@ -13912,6 +14063,7 @@ game
 game
   name:  wakuwak7
   title: Waku Waku 7
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -13944,7 +14096,7 @@ game
       size:   131072
       crc:    0634bba6
       sha1:   153aaf016440500df7a4454f3f2f2911219cb7d8
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   225-v1.v1
@@ -14006,6 +14158,7 @@ game
 game
   name:  stakwin2
   title: Stakes Winner 2
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -14037,7 +14190,7 @@ game
       size:   131072
       crc:    c8e5e0f9
       sha1:   09bb05ae6f09b59b9e4871fae1fc7c3bafd07394
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   227-v1.v1
@@ -14085,6 +14238,7 @@ game
 game
   name:  ghostlop
   title: Ghostlop (prototype)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -14110,7 +14264,7 @@ game
       size:   131072
       crc:    fd833b33
       sha1:   ab6c218c42cba821654cbdae154efecb69f844f6
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   proto_228-v1.v1
@@ -14138,6 +14292,7 @@ game
 game
   name:  breakers
   title: Breakers
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -14169,7 +14324,7 @@ game
       size:   131072
       crc:    3951a1c1
       sha1:   1e6442a7ea82ada9503d71045dd93e12bd05254f
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   230-v1.v1
@@ -14217,6 +14372,7 @@ game
 game
   name:  miexchng
   title: Money Puzzle Exchanger / Money Idol Exchanger
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -14242,7 +14398,7 @@ game
       size:   131072
       crc:    de41301b
       sha1:   59ce3836ac8f064d56a446c9374f05bcb40fcfd8
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   231-v1.v1
@@ -14284,6 +14440,7 @@ game
 game
   name:  kof97
   title: The King of Fighters '97 (NGM-2320)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -14316,7 +14473,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -14384,6 +14541,7 @@ game
 game
   name:  kof97h
   title: The King of Fighters '97 (NGH-2320)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -14416,7 +14574,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -14484,6 +14642,7 @@ game
 game
   name:  kof97k
   title: The King of Fighters '97 (Korean release)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -14516,7 +14675,7 @@ game
       size:   131072
       crc:    bbea9070
       sha1:   c26c2e29fe90966dd574838be63f0037ea799aca
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -14584,6 +14743,7 @@ game
 game
   name:  magdrop3
   title: Magical Drop III
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -14609,7 +14769,7 @@ game
       size:   131072
       crc:    5beaf34e
       sha1:   2905d26945932cddc2dd3a1dc5abba8aa3baee14
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4718592
     rom
       name:   233-v1.v1
@@ -14657,6 +14817,7 @@ game
 game
   name:  lastblad
   title: The Last Blade / Bakumatsu Roman - Gekka no Kenshi (NGM-2340)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -14689,7 +14850,7 @@ game
       size:   131072
       crc:    087628ea
       sha1:   48dcf739bb16699af4ab8ed632b7dcb25e470e06
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   234-v1.v1
@@ -14763,6 +14924,7 @@ game
 game
   name:  lastbladh
   title: The Last Blade / Bakumatsu Roman - Gekka no Kenshi (NGH-2340)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -14795,7 +14957,7 @@ game
       size:   131072
       crc:    087628ea
       sha1:   48dcf739bb16699af4ab8ed632b7dcb25e470e06
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   234-v1.v1
@@ -14869,6 +15031,7 @@ game
 game
   name:  lastsold
   title: The Last Soldier (Korean release of The Last Blade)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -14901,7 +15064,7 @@ game
       size:   131072
       crc:    087628ea
       sha1:   48dcf739bb16699af4ab8ed632b7dcb25e470e06
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   234-v1.v1
@@ -14975,6 +15138,7 @@ game
 game
   name:  puzzldpr
   title: Puzzle De Pon! R!
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -15000,7 +15164,7 @@ game
       size:   131072
       crc:    9c0291ea
       sha1:   3fa67c62acba79be6b3a98cc1601e45569fa11ae
-  ymsndadpcma
+  ymsnd-adpcma
     size: 524288
     rom
       name:   202-v1.v1
@@ -15028,6 +15192,7 @@ game
 game
   name:  irrmaze
   title: The Irritating Maze / Ultra Denryu Iraira Bou
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -15059,7 +15224,7 @@ game
       size:   131072
       crc:    880a1abd
       sha1:   905afa157aba700e798243b842792e50729b19a0
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3145728
     rom
       name:   236-v1.v1
@@ -15093,6 +15258,7 @@ game
 game
   name:  popbounc
   title: Pop 'n Bounce / Gapporin
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -15118,7 +15284,7 @@ game
       size:   131072
       crc:    d4c946dd
       sha1:   6ca09040b5db8d89511d627954c783154d58ab01
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   237-v1.v1
@@ -15146,6 +15312,7 @@ game
 game
   name:  shocktro
   title: Shock Troopers (set 1)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -15178,7 +15345,7 @@ game
       size:   131072
       crc:    075b9518
       sha1:   ac21b88a860b9572bf24432b4cadcc96d108055d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   238-v1.v1
@@ -15254,6 +15421,7 @@ game
 game
   name:  shocktroa
   title: Shock Troopers (set 2)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -15286,7 +15454,7 @@ game
       size:   131072
       crc:    075b9518
       sha1:   ac21b88a860b9572bf24432b4cadcc96d108055d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   238-v1.v1
@@ -15362,6 +15530,7 @@ game
 game
   name:  blazstar
   title: Blazing Star
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -15394,7 +15563,7 @@ game
       size:   131072
       crc:    d31a3aea
       sha1:   e23abfeb23052f0358edcf2c83401025fe632511
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   239-v1.v1
@@ -15470,6 +15639,7 @@ game
 game
   name:  rbff2
   title: Real Bout Fatal Fury 2 - The Newcomers / Real Bout Garou Densetsu 2 - The Newcomers (NGM-2400)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -15502,7 +15672,7 @@ game
       size:   262144
       crc:    ed482791
       sha1:   1f54a45967cb7842c33aa24be322c9f33ff75ac3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   240-v1.v1
@@ -15576,6 +15746,7 @@ game
 game
   name:  rbff2h
   title: Real Bout Fatal Fury 2 - The Newcomers / Real Bout Garou Densetsu 2 - The Newcomers (NGH-2400)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -15608,7 +15779,7 @@ game
       size:   262144
       crc:    ed482791
       sha1:   1f54a45967cb7842c33aa24be322c9f33ff75ac3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   240-v1.v1
@@ -15682,6 +15853,7 @@ game
 game
   name:  rbff2k
   title: Real Bout Fatal Fury 2 - The Newcomers (Korean release)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -15714,7 +15886,7 @@ game
       size:   262144
       crc:    ed482791
       sha1:   1f54a45967cb7842c33aa24be322c9f33ff75ac3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   240-v1.v1
@@ -15788,6 +15960,7 @@ game
 game
   name:  mslug2
   title: Metal Slug 2 - Super Vehicle-001/II (NGM-2410 ~ NGH-2410)
+  board: neogeo
   maincpu
     size: 3145728
     rom
@@ -15820,7 +15993,7 @@ game
       size:   131072
       crc:    94520ebd
       sha1:   f8a1551cebcb91e416f30f50581feed7f72899e9
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   241-v1.v1
@@ -15868,6 +16041,7 @@ game
 game
   name:  kof98
   title: The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (NGM-2420)
+  board: neogeo
   feature
     name:  slot
     value: rom_kof98
@@ -15903,7 +16077,7 @@ game
       size:   262144
       crc:    4ef7016b
       sha1:   4182235e963bd70d398a79abeb54ab4d62887c48
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -15991,6 +16165,7 @@ game
 game
   name:  kof98a
   title: The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (NGM-2420, alt board)
+  board: neogeo
   feature
     name:  slot
     value: rom_kof98
@@ -16033,7 +16208,7 @@ game
       size:   262144
       crc:    4ef7016b
       sha1:   4182235e963bd70d398a79abeb54ab4d62887c48
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -16121,6 +16296,7 @@ game
 game
   name:  kof98k
   title: The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (Korean board, set 1)
+  board: neogeo
   feature
     name:  slot
     value: rom_kof98
@@ -16156,7 +16332,7 @@ game
       size:   262144
       crc:    ce12da0c
       sha1:   e7c01dae2852d543d1a58d55735239f6a5aa05a5
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -16244,6 +16420,7 @@ game
 game
   name:  kof98ka
   title: The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (Korean board, set 2)
+  board: neogeo
   feature
     name:  slot
     value: rom_kof98
@@ -16279,7 +16456,7 @@ game
       size:   262144
       crc:    ce9fb07c
       sha1:   631d995f1291dd803fb069f3b25e7b9ed30d8649
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -16367,6 +16544,7 @@ game
 game
   name:  kof98h
   title: The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (NGH-2420)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -16399,7 +16577,7 @@ game
       size:   262144
       crc:    4e7a6b1b
       sha1:   b54d08f88713ed0271aa06f9f7c9c572ef555b1a
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -16487,6 +16665,7 @@ game
 game
   name:  lastbld2
   title: The Last Blade 2 / Bakumatsu Roman - Dai Ni Maku Gekka no Kenshi (NGM-2430 ~ NGH-2430)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -16519,7 +16698,7 @@ game
       size:   131072
       crc:    acf12d10
       sha1:   6e6b98cc1fa44f24a5168877559b0055e6957b60
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   243-v1.v1
@@ -16593,6 +16772,7 @@ game
 game
   name:  neocup98
   title: Neo-Geo Cup '98 - The Road to the Victory
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -16624,7 +16804,7 @@ game
       size:   131072
       crc:    a701b276
       sha1:   055550ebc650835bcf8ea4457b2c91bd73e21281
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   244-v1.v1
@@ -16658,6 +16838,7 @@ game
 game
   name:  breakrev
   title: Breakers Revenge
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -16689,7 +16870,7 @@ game
       size:   131072
       crc:    00f31c66
       sha1:   8488598415c9b74bce00e05b31d96e3d1625c20d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   245-v1.v1
@@ -16751,6 +16932,7 @@ game
 game
   name:  shocktr2
   title: Shock Troopers - 2nd Squad
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -16783,7 +16965,7 @@ game
       size:   131072
       crc:    d0604ad1
       sha1:   fae3cd52a177eadd5f5775ace957cc0f8301e65d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   246-v1.v1
@@ -16851,6 +17033,7 @@ game
 game
   name:  flipshot
   title: Battle Flip Shot
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -16876,7 +17059,7 @@ game
       size:   131072
       crc:    a9fe0144
       sha1:   4cc076ecce9216a373f3dcd7ba28a03d6050e522
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   247-v1.v1
@@ -16904,6 +17087,7 @@ game
 game
   name:  pbobbl2n
   title: Puzzle Bobble 2 / Bust-A-Move Again (Neo-Geo)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -16929,7 +17113,7 @@ game
       size:   131072
       crc:    883097a9
       sha1:   677bf9684c0c7977a9a3f0c1288e430040a53b49
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   248-v1.v1
@@ -16977,6 +17161,7 @@ game
 game
   name:  b2b
   title: Bang Bang Busters
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -17002,7 +17187,7 @@ game
       size:   131072
       crc:    6da739ad
       sha1:   cbf5f55c54b4ee00943e2a411eeee4e465ce9c34
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   071.v1
@@ -17030,6 +17215,7 @@ game
 game
   name:  ctomaday
   title: Captain Tomaday
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -17061,7 +17247,7 @@ game
       size:   131072
       crc:    80328a47
       sha1:   34b6b1a81eab1cf38834b2eea55454ce1b6100e2
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   249-v1.v1
@@ -17095,6 +17281,7 @@ game
 game
   name:  mslugx
   title: Metal Slug X - Super Vehicle-001 (NGM-2500 ~ NGH-2500)
+  board: neogeo
   feature
     name:  slot
     value: rom_mslugx
@@ -17130,7 +17317,7 @@ game
       size:   131072
       crc:    fd42a842
       sha1:   55769bad4860f64ef53a333e0da9e073db483d6a
-  ymsndadpcma
+  ymsnd-adpcma
     size: 10485760
     rom
       name:   250-v1.v1
@@ -17198,6 +17385,7 @@ game
 game
   name:  kof99
   title: The King of Fighters '99 - Millennium Battle (NGM-2510)
+  board: neogeo
   feature
     name:  slot
     value: sma_kof99
@@ -17241,7 +17429,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -17329,6 +17517,7 @@ game
 game
   name:  kof99h
   title: The King of Fighters '99 - Millennium Battle (NGH-2510)
+  board: neogeo
   feature
     name:  slot
     value: sma_kof99
@@ -17372,7 +17561,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -17460,6 +17649,7 @@ game
 game
   name:  kof99e
   title: The King of Fighters '99 - Millennium Battle (earlier)
+  board: neogeo
   feature
     name:  slot
     value: sma_kof99
@@ -17517,7 +17707,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -17605,6 +17795,7 @@ game
 game
   name:  kof99k
   title: The King of Fighters '99 - Millennium Battle (Korean release)
+  board: neogeo
   feature
     name:  slot
     value: sma_kof99
@@ -17648,7 +17839,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -17736,6 +17927,7 @@ game
 game
   name:  kof99ka
   title: The King of Fighters '99 - Millennium Battle (Korean release, non-encrypted program)
+  board: neogeo
   feature
     name:  slot
     value: cmc42_kof99k
@@ -17772,7 +17964,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -17860,6 +18052,7 @@ game
 game
   name:  kof99p
   title: The King of Fighters '99 - Millennium Battle (prototype)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -17892,7 +18085,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -17980,6 +18173,7 @@ game
 game
   name:  ganryu
   title: Ganryu / Musashi Ganryuki
+  board: neogeo
   feature
     name:  slot
     value: cmc42_ganryu
@@ -18015,7 +18209,7 @@ game
       size:   131072
       crc:    30cc4099
       sha1:   46453b7aac41855a92724a785372f8daf931d8d4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   252-v1.v1
@@ -18043,6 +18237,7 @@ game
 game
   name:  garou
   title: Garou - Mark of the Wolves (NGM-2530)
+  board: neogeo
   feature
     name:  slot
     value: sma_garou
@@ -18100,7 +18295,7 @@ game
       size:   262144
       crc:    36a806be
       sha1:   90fb44dc0c3fb57946a0f35716056abb84a0f191
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   253-v1.v1
@@ -18188,6 +18383,7 @@ game
 game
   name:  garouh
   title: Garou - Mark of the Wolves (NGM-2530 ~ NGH-2530)
+  board: neogeo
   feature
     name:  slot
     value: sma_garouh
@@ -18231,7 +18427,7 @@ game
       size:   262144
       crc:    36a806be
       sha1:   90fb44dc0c3fb57946a0f35716056abb84a0f191
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   253-v1.v1
@@ -18319,6 +18515,7 @@ game
 game
   name:  garouha
   title: Garou - Mark of the Wolves (NGH-2530)
+  board: neogeo
   feature
     name:  slot
     value: sma_garou
@@ -18376,7 +18573,7 @@ game
       size:   262144
       crc:    36a806be
       sha1:   90fb44dc0c3fb57946a0f35716056abb84a0f191
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   253-v1.v1
@@ -18464,6 +18661,7 @@ game
 game
   name:  garoup
   title: Garou - Mark of the Wolves (prototype)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -18496,7 +18694,7 @@ game
       size:   262144
       crc:    bbe464f7
       sha1:   f5f8f3e48f5d453f45107085d6f4023bcd24c053
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   proto_253-v1.v1
@@ -18584,6 +18782,7 @@ game
 game
   name:  s1945p
   title: Strikers 1945 Plus
+  board: neogeo
   feature
     name:  slot
     value: cmc42_s1945p
@@ -18620,7 +18819,7 @@ game
       size:   131072
       crc:    994b4487
       sha1:   a4e645a3ababa48a8325980ff022e04a8b51b017
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   254-v1.v1
@@ -18708,6 +18907,7 @@ game
 game
   name:  preisle2
   title: Prehistoric Isle 2
+  board: neogeo
   feature
     name:  slot
     value: cmc42_preisle2
@@ -18744,7 +18944,7 @@ game
       size:   131072
       crc:    8efd4014
       sha1:   5b73809b6e4e49264d281ef3e5004ac8a9de296d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   255-v1.v1
@@ -18806,6 +19006,7 @@ game
 game
   name:  mslug3
   title: Metal Slug 3 (NGM-2560)
+  board: neogeo
   feature
     name:  slot
     value: sma_mslug3
@@ -18849,7 +19050,7 @@ game
       size:   524288
       crc:    eaeec116
       sha1:   54419dbb21edc8c4b37eaac2e7ad9496d2de037a
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   256-v1.v1
@@ -18937,6 +19138,7 @@ game
 game
   name:  mslug3a
   title: Metal Slug 3 (NGM-2560, earlier)
+  board: neogeo
   feature
     name:  slot
     value: sma_mslug3a
@@ -18980,7 +19182,7 @@ game
       size:   524288
       crc:    eaeec116
       sha1:   54419dbb21edc8c4b37eaac2e7ad9496d2de037a
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   256-v1.v1
@@ -19068,6 +19270,7 @@ game
 game
   name:  mslug3h
   title: Metal Slug 3 (NGH-2560)
+  board: neogeo
   feature
     name:  slot
     value: cmc42_mslug3h
@@ -19104,7 +19307,7 @@ game
       size:   524288
       crc:    eaeec116
       sha1:   54419dbb21edc8c4b37eaac2e7ad9496d2de037a
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   256-v1.v1
@@ -19192,6 +19395,7 @@ game
 game
   name:  kof2000
   title: The King of Fighters 2000 (NGM-2570 ~ NGH-2570)
+  board: neogeo
   feature
     name:  slot
     value: sma_kof2k
@@ -19235,7 +19439,7 @@ game
       size:   262144
       crc:    4b749113
       sha1:   2af2361146edd0ce3966614d90165a5c1afb8de4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   257-v1.v1
@@ -19323,6 +19527,7 @@ game
 game
   name:  kof2000n
   title: The King of Fighters 2000 (not encrypted)
+  board: neogeo
   feature
     name:  slot
     value: cmc50_kof2000n
@@ -19359,7 +19564,7 @@ game
       size:   262144
       crc:    4b749113
       sha1:   2af2361146edd0ce3966614d90165a5c1afb8de4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   257-v1.v1
@@ -19447,6 +19652,7 @@ game
 game
   name:  bangbead
   title: Bang Bead
+  board: neogeo
   feature
     name:  slot
     value: cmc42_bangbead
@@ -19482,7 +19688,7 @@ game
       size:   131072
       crc:    85668ee9
       sha1:   7d3f51710cf90c097cd3faaeeef10ceb85cbb3e8
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   259-v1.v1
@@ -19516,6 +19722,7 @@ game
 game
   name:  nitd
   title: Nightmare in the Dark
+  board: neogeo
   feature
     name:  slot
     value: cmc42_nitd
@@ -19545,7 +19752,7 @@ game
       size:   524288
       crc:    6407c5e5
       sha1:   d273e154cc905b63205a17a1a6d419cac3485a92
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   260-v1.v1
@@ -19573,6 +19780,7 @@ game
 game
   name:  sengoku3
   title: Sengoku 3 / Sengoku Densho 2001 (set 1)
+  board: neogeo
   feature
     name:  slot
     value: cmc42_sengoku3
@@ -19608,7 +19816,7 @@ game
       size:   524288
       crc:    7d501c39
       sha1:   8e6bcc428f5ac7532d9c9be7e07ad0821461a080
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   261-v1.v1
@@ -19668,6 +19876,7 @@ game
 game
   name:  sengoku3a
   title: Sengoku 3 / Sengoku Densho 2001 (set 2)
+  board: neogeo
   feature
     name:  slot
     value: cmc42_sengoku3
@@ -19703,7 +19912,7 @@ game
       size:   524288
       crc:    7d501c39
       sha1:   8e6bcc428f5ac7532d9c9be7e07ad0821461a080
-  ymsndadpcma
+  ymsnd-adpcma
     size: 14680064
     rom
       name:   261-v1.v1
@@ -19763,6 +19972,7 @@ game
 game
   name:  kof2001
   title: The King of Fighters 2001 (NGM-262?)
+  board: neogeo
   feature
     name:  slot
     value: cmc50_kof2001
@@ -19799,7 +20009,7 @@ game
       size:   262144
       crc:    a7f8119f
       sha1:   71805b39b8b09c32425cf39f9de59b2f755976c2
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -19887,6 +20097,7 @@ game
 game
   name:  kof2001h
   title: The King of Fighters 2001 (NGH-2621)
+  board: neogeo
   feature
     name:  slot
     value: cmc50_kof2001
@@ -19923,7 +20134,7 @@ game
       size:   262144
       crc:    a7f8119f
       sha1:   71805b39b8b09c32425cf39f9de59b2f755976c2
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -20011,6 +20222,7 @@ game
 game
   name:  mslug4
   title: Metal Slug 4 (NGM-2630)
+  board: neogeo
   feature
     name:  slot
     value: pcm2_mslug4
@@ -20047,7 +20259,7 @@ game
       size:   131072
       crc:    46ac8228
       sha1:   5aeea221050c98e4bb0f16489ce772bf1c80f787
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   263-v1.v1
@@ -20109,6 +20321,7 @@ game
 game
   name:  mslug4h
   title: Metal Slug 4 (NGH-2630)
+  board: neogeo
   feature
     name:  slot
     value: pcm2_mslug4
@@ -20145,7 +20358,7 @@ game
       size:   131072
       crc:    46ac8228
       sha1:   5aeea221050c98e4bb0f16489ce772bf1c80f787
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   263-v1.v1
@@ -20207,6 +20420,7 @@ game
 game
   name:  rotd
   title: Rage of the Dragons (NGM-2640?)
+  board: neogeo
   feature
     name:  slot
     value: pcm2_rotd
@@ -20236,7 +20450,7 @@ game
       size:   131072
       crc:    4dbd7b43
       sha1:   6b63756b0d2d30bbf13fbd219833c81fd060ef96
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   264-v1.v1
@@ -20312,6 +20526,7 @@ game
 game
   name:  rotdh
   title: Rage of the Dragons (NGH-2640?)
+  board: neogeo
   feature
     name:  slot
     value: pcm2_rotd
@@ -20348,7 +20563,7 @@ game
       size:   131072
       crc:    4dbd7b43
       sha1:   6b63756b0d2d30bbf13fbd219833c81fd060ef96
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   264-v1.v1
@@ -20424,6 +20639,7 @@ game
 game
   name:  kof2002
   title: The King of Fighters 2002 (NGM-2650 ~ NGH-2650)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_kof2k2
@@ -20460,7 +20676,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -20536,6 +20752,7 @@ game
 game
   name:  matrim
   title: Matrimelee / Shin Gouketsuji Ichizoku Toukon (NGM-2660 ~ NGH-2660)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_matrim
@@ -20572,7 +20789,7 @@ game
       size:   131072
       crc:    456c3e6c
       sha1:   5a07d0186198a18d2dda1331093cf29b0b9b2984
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   266-v1.v1
@@ -20648,6 +20865,7 @@ game
 game
   name:  pnyaa
   title: Pochi and Nyaa (Ver 2.02)
+  board: neogeo
   feature
     name:  slot
     value: pcm2_pnyaa
@@ -20677,7 +20895,7 @@ game
       size:   524288
       crc:    c7853ccd
       sha1:   1b7a4c5093cf0fe3861ce44fd1d3b30c71ad0abe
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   267-v1.v1
@@ -20705,6 +20923,7 @@ game
 game
   name:  pnyaaa
   title: Pochi and Nyaa (Ver 2.00)
+  board: neogeo
   feature
     name:  slot
     value: pcm2_pnyaa
@@ -20734,7 +20953,7 @@ game
       size:   524288
       crc:    c7853ccd
       sha1:   1b7a4c5093cf0fe3861ce44fd1d3b30c71ad0abe
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   267-v1.v1
@@ -20762,6 +20981,7 @@ game
 game
   name:  mslug5
   title: Metal Slug 5 (NGM-2680)
+  board: neogeo
   feature
     name:  slot
     value: pvc_mslug5
@@ -20798,7 +21018,7 @@ game
       size:   524288
       crc:    4a5a6e0e
       sha1:   df0f660f2465e1db7be5adfcaf5e88ad61a74a42
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   268-v1c.v1
@@ -20874,6 +21094,7 @@ game
 game
   name:  mslug5h
   title: Metal Slug 5 (NGH-2680)
+  board: neogeo
   feature
     name:  slot
     value: pvc_mslug5
@@ -20910,7 +21131,7 @@ game
       size:   524288
       crc:    4a5a6e0e
       sha1:   df0f660f2465e1db7be5adfcaf5e88ad61a74a42
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   268-v1c.v1
@@ -20986,6 +21207,7 @@ game
 game
   name:  svc
   title: SNK vs. Capcom - SVC Chaos (NGM-2690 ~ NGH-2690)
+  board: neogeo
   feature
     name:  slot
     value: pvc_svc
@@ -21022,7 +21244,7 @@ game
       size:   524288
       crc:    f6819d00
       sha1:   d3bbe09df502464f104e53501708ac6e2c1832c6
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   269-v1.v1
@@ -21098,6 +21320,7 @@ game
 game
   name:  samsho5
   title: Samurai Shodown V / Samurai Spirits Zero (NGM-2700, set 1)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_samsh5
@@ -21134,7 +21357,7 @@ game
       size:   524288
       crc:    49c9901a
       sha1:   2623e9765a0eba58fee2de72851e9dc502344a3d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   270-v1.v1
@@ -21210,6 +21433,7 @@ game
 game
   name:  samsho5a
   title: Samurai Shodown V / Samurai Spirits Zero (NGM-2700, set 2)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_samsh5
@@ -21246,7 +21470,7 @@ game
       size:   524288
       crc:    49c9901a
       sha1:   2623e9765a0eba58fee2de72851e9dc502344a3d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   270-v1.v1
@@ -21322,6 +21546,7 @@ game
 game
   name:  samsho5h
   title: Samurai Shodown V / Samurai Spirits Zero (NGH-2700)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_samsh5
@@ -21358,7 +21583,7 @@ game
       size:   524288
       crc:    49c9901a
       sha1:   2623e9765a0eba58fee2de72851e9dc502344a3d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   270-v1.v1
@@ -21434,6 +21659,7 @@ game
 game
   name:  kof2003
   title: The King of Fighters 2003 (NGM-2710, Export)
+  board: neogeo
   feature
     name:  slot
     value: pvc_kf2k3
@@ -21477,7 +21703,7 @@ game
       size:   524288
       crc:    f5515629
       sha1:   7516bf1b0207a3c8d41dc30c478f8d8b1f71304b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -21553,6 +21779,7 @@ game
 game
   name:  kof2003h
   title: The King of Fighters 2003 (NGH-2710)
+  board: neogeo
   feature
     name:  slot
     value: pvc_kf2k3h
@@ -21596,7 +21823,7 @@ game
       size:   524288
       crc:    48d9affe
       sha1:   68f01560b91bbada39001ce01bdeeed5c9bb29f2
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -21672,6 +21899,7 @@ game
 game
   name:  samsh5sp
   title: Samurai Shodown V Special / Samurai Spirits Zero Special (NGM-2720)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_sams5s
@@ -21708,7 +21936,7 @@ game
       size:   524288
       crc:    adeebf40
       sha1:   8cbd63dda3fff4de38060405bf70cd9308c9e66e
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   272-v1.v1
@@ -21784,6 +22012,7 @@ game
 game
   name:  samsh5sph
   title: Samurai Shodown V Special / Samurai Spirits Zero Special (NGH-2720, 2nd release, less censored)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_sams5s
@@ -21820,7 +22049,7 @@ game
       size:   524288
       crc:    adeebf40
       sha1:   8cbd63dda3fff4de38060405bf70cd9308c9e66e
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   272-v1.v1
@@ -21896,6 +22125,7 @@ game
 game
   name:  samsh5spho
   title: Samurai Shodown V Special / Samurai Spirits Zero Special (NGH-2720, 1st release, censored)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_sams5s
@@ -21932,7 +22162,7 @@ game
       size:   524288
       crc:    adeebf40
       sha1:   8cbd63dda3fff4de38060405bf70cd9308c9e66e
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   272-v1.v1
@@ -22008,6 +22238,7 @@ game
 game
   name:  jockeygp
   title: Jockey Grand Prix (set 1)
+  board: neogeo
   feature
     name:  slot
     value: cmc50_jockeygp
@@ -22044,7 +22275,7 @@ game
       size:   524288
       crc:    d163c690
       sha1:   1dfd04d20c5985037f07cd01000d0b04f3a8f4f4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   008-v1.v1
@@ -22072,6 +22303,7 @@ game
 game
   name:  jockeygpa
   title: Jockey Grand Prix (set 2)
+  board: neogeo
   feature
     name:  slot
     value: cmc50_jockeygp
@@ -22108,7 +22340,7 @@ game
       size:   524288
       crc:    d163c690
       sha1:   1dfd04d20c5985037f07cd01000d0b04f3a8f4f4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   008-v1.v1
@@ -22136,6 +22368,7 @@ game
 game
   name:  dragonsh
   title: Dragon's Heaven (development board)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -22169,7 +22402,7 @@ game
       size:   196608
       crc:    
       sha1:   
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   sram.v1
@@ -22197,6 +22430,7 @@ game
 game
   name:  zintrckb
   title: Zintrick / Oshidashi Zentrix (bootleg of CD version)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -22222,7 +22456,7 @@ game
       size:   131072
       crc:    fd9627ca
       sha1:   b640c1f1ff466f734bb1cb5d7b589cb7e8a55346
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   zin-v1.bin
@@ -22250,6 +22484,7 @@ game
 game
   name:  froman2b
   title: Idol Mahjong Final Romance 2 (Neo-Geo, bootleg of CD version)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -22275,7 +22510,7 @@ game
       size:   131072
       crc:    da4878cf
       sha1:   ce13d18a4c5d01974df8542c67c4df00dbc6e7c1
-  ymsndadpcma
+  ymsnd-adpcma
     size: 1048576
     rom
       name:   098.v1
@@ -22303,6 +22538,7 @@ game
 game
   name:  crswd2bl
   title: Crossed Swords 2 (bootleg of CD version)
+  board: neogeo
   maincpu
     size: 2097152
     rom
@@ -22334,7 +22570,7 @@ game
       size:   131072
       crc:    63e28343
       sha1:   f46dbc2f1d6033b11047cca31a9a7d715dc69cb2
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   054-v1.v1
@@ -22362,6 +22598,7 @@ game
 game
   name:  kof97oro
   title: The King of Fighters '97 Chongchu Jianghu Plus 2003 (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_kof97oro
@@ -22416,7 +22653,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   orochi-v1.bin
@@ -22484,6 +22721,7 @@ game
 game
   name:  kof97pls
   title: The King of Fighters '97 Plus (bootleg)
+  board: neogeo
   maincpu
     size: 5242880
     rom
@@ -22516,7 +22754,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -22583,7 +22821,8 @@ game
 
 game
   name:  kog
-  title: King of Gladiator (The King of Fighters '97 bootleg)
+  title: King of Gladiator (bootleg of The King of Fighters '97)
+  board: neogeo
   feature
     name:  slot
     value: boot_kog
@@ -22619,7 +22858,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsndadpcma
+  ymsnd-adpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -22686,7 +22925,8 @@ game
 
 game
   name:  lans2004
-  title: Lansquenet 2004 (Shock Troopers - 2nd Squad bootleg)
+  title: Lansquenet 2004 (bootleg of Shock Troopers - 2nd Squad)
+  board: neogeo
   feature
     name:  slot
     value: boot_lans2004
@@ -22729,7 +22969,7 @@ game
       size:   131072
       crc:    d0604ad1
       sha1:   fae3cd52a177eadd5f5775ace957cc0f8301e65d
-  ymsndadpcma
+  ymsnd-adpcma
     size: 10485760
     rom
       name:   lnsq-v1.bin
@@ -22797,6 +23037,7 @@ game
 game
   name:  garoubl
   title: Garou - Mark of the Wolves (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_garoubl
@@ -22832,7 +23073,7 @@ game
       size:   524288
       crc:    7c51d002
       sha1:   01ffba6cbc8da07804f7b21d8c71c39d64a1a4e2
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   garou-v1.bin
@@ -22891,7 +23132,8 @@ game
 
 game
   name:  mslug3b6
-  title: Metal Slug 6 (Metal Slug 3 bootleg)
+  title: Metal Slug 6 (bootleg of Metal Slug 3)
+  board: neogeo
   feature
     name:  slot
     value: boot_mslug3b6
@@ -22927,7 +23169,7 @@ game
       size:   524288
       crc:    eaeec116
       sha1:   54419dbb21edc8c4b37eaac2e7ad9496d2de037a
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   256-v1.v1
@@ -23015,6 +23257,7 @@ game
 game
   name:  nitdbl
   title: Nightmare in the Dark (bootleg)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -23040,7 +23283,7 @@ game
       size:   524288
       crc:    6407c5e5
       sha1:   d273e154cc905b63205a17a1a6d419cac3485a92
-  ymsndadpcma
+  ymsnd-adpcma
     size: 4194304
     rom
       name:   nitd-v1.bin
@@ -23087,7 +23330,8 @@ game
 
 game
   name:  cthd2003
-  title: Crouching Tiger Hidden Dragon 2003 (The King of Fighters 2001 bootleg)
+  title: Crouching Tiger Hidden Dragon 2003 (hack of The King of Fighters 2001)
+  board: neogeo
   feature
     name:  slot
     value: boot_cthd2k3
@@ -23123,7 +23367,7 @@ game
       size:   131072
       crc:    1a8c274b
       sha1:   5f6f9c533f4a296a18c741ce59a69cf6f5c836b9
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -23210,7 +23454,8 @@ game
 
 game
   name:  ct2k3sp
-  title: Crouching Tiger Hidden Dragon 2003 Super Plus (The King of Fighters 2001 bootleg)
+  title: Crouching Tiger Hidden Dragon 2003 Super Plus (hack of The King of Fighters 2001)
+  board: neogeo
   feature
     name:  slot
     value: boot_ct2k3sp
@@ -23246,7 +23491,7 @@ game
       size:   131072
       crc:    1a8c274b
       sha1:   5f6f9c533f4a296a18c741ce59a69cf6f5c836b9
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -23333,7 +23578,8 @@ game
 
 game
   name:  ct2k3sa
-  title: Crouching Tiger Hidden Dragon 2003 Super Plus alternate (The King of Fighters 2001 bootleg)
+  title: Crouching Tiger Hidden Dragon 2003 Super Plus (hack of The King of Fighters 2001, alternate)
+  board: neogeo
   feature
     name:  slot
     value: boot_ct2k3sa
@@ -23369,7 +23615,7 @@ game
       size:   131072
       crc:    1a8c274b
       sha1:   5f6f9c533f4a296a18c741ce59a69cf6f5c836b9
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -23457,6 +23703,7 @@ game
 game
   name:  ms4plus
   title: Metal Slug 4 Plus (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: pcm2_ms4p
@@ -23492,7 +23739,7 @@ game
       size:   131072
       crc:    46ac8228
       sha1:   5aeea221050c98e4bb0f16489ce772bf1c80f787
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   263-v1.v1
@@ -23554,6 +23801,7 @@ game
 game
   name:  kof2002b
   title: The King of Fighters 2002 (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf2k2b
@@ -23589,7 +23837,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -23665,6 +23913,7 @@ game
 game
   name:  kf2k2pls
   title: The King of Fighters 2002 Plus (bootleg set 1)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_kf2k2p
@@ -23700,7 +23949,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -23776,6 +24025,7 @@ game
 game
   name:  kf2k2pla
   title: The King of Fighters 2002 Plus (bootleg set 2)
+  board: neogeo
   feature
     name:  slot
     value: k2k2_kf2k2p
@@ -23811,7 +24061,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -23887,6 +24137,7 @@ game
 game
   name:  kf2k2mp
   title: The King of Fighters 2002 Magic Plus (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf2k2mp
@@ -23922,7 +24173,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -23998,6 +24249,7 @@ game
 game
   name:  kf2k2mp2
   title: The King of Fighters 2002 Magic Plus II (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf2k2mp2
@@ -24033,7 +24285,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -24108,7 +24360,8 @@ game
 
 game
   name:  kof10th
-  title: The King of Fighters 10th Anniversary (The King of Fighters 2002 bootleg)
+  title: The King of Fighters 10th Anniversary (bootleg of The King of Fighters 2002)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf10th
@@ -24138,7 +24391,7 @@ game
       size:   131072
       crc:    f6fab859
       sha1:   0184aa1394b9f9946d610278b53b846020dd88dc
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   kf10-v1.bin
@@ -24269,7 +24522,8 @@ game
 
 game
   name:  kf10thep
-  title: The King of Fighters 10th Anniversary Extra Plus (The King of Fighters 2002 bootleg)
+  title: The King of Fighters 10th Anniversary Extra Plus (bootleg of The King of Fighters 2002)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf10thep
@@ -24312,7 +24566,7 @@ game
       size:   131072
       crc:    5a47d9ad
       sha1:   0197737934653acc6c97221660d789e9914f3578
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   kf10-v1.bin
@@ -24443,7 +24697,8 @@ game
 
 game
   name:  kf2k5uni
-  title: The King of Fighters 10th Anniversary 2005 Unique (The King of Fighters 2002 bootleg)
+  title: The King of Fighters 10th Anniversary 2005 Unique (bootleg of The King of Fighters 2002)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf2k5uni
@@ -24479,7 +24734,7 @@ game
       size:   131072
       crc:    9050bfe7
       sha1:   765bf3d954f775231b7ef2504bb844cd0b29e3f7
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   kf10-v1.bin
@@ -24610,7 +24865,8 @@ game
 
 game
   name:  kof2k4se
-  title: The King of Fighters Special Edition 2004 (The King of Fighters 2002 bootleg)
+  title: The King of Fighters Special Edition 2004 (bootleg of The King of Fighters 2002)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf2k4se
@@ -24653,7 +24909,7 @@ game
       size:   131072
       crc:    5a47d9ad
       sha1:   0197737934653acc6c97221660d789e9914f3578
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   k2k4s-v2.bin
@@ -24729,6 +24985,7 @@ game
 game
   name:  matrimbl
   title: Matrimelee / Shin Gouketsuji Ichizoku Toukon (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_matrimbl
@@ -24765,7 +25022,7 @@ game
       size:   131072
       crc:    3ea96ab1
       sha1:   e5053c4312f658faed2a34e38325a22ef792d384
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   mart-v1.bin
@@ -24855,6 +25112,7 @@ game
 game
   name:  ms5plus
   title: Metal Slug 5 Plus (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_ms5plus
@@ -24897,7 +25155,7 @@ game
       size:   524288
       crc:    4a5a6e0e
       sha1:   df0f660f2465e1db7be5adfcaf5e88ad61a74a42
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   268-v1c.v1
@@ -24973,6 +25231,7 @@ game
 game
   name:  mslug5b
   title: Metal Slug 5 (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_mslug5b
@@ -25008,7 +25267,7 @@ game
       size:   131072
       crc:    bf1601bc
       sha1:   5e285c98c65acefd77e893247482af0d09f3e1e4
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   ms5b-v1.bin
@@ -25096,6 +25355,7 @@ game
 game
   name:  pbobblenb
   title: Puzzle Bobble / Bust-A-Move (Neo-Geo, bootleg)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -25121,7 +25381,7 @@ game
       size:   131072
       crc:    f424368a
       sha1:   5e5bbcaeb82bed2ee17df08f005ca20ad1030723
-  ymsndadpcma
+  ymsnd-adpcma
     size: 3670016
     rom
       name:   u8
@@ -25155,6 +25415,7 @@ game
 game
   name:  svcboot
   title: SNK vs. Capcom - SVC Chaos (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_svcboot
@@ -25195,7 +25456,7 @@ game
       size:   65536
       crc:    
       sha1:   
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   svc-v2.bin
@@ -25287,6 +25548,7 @@ game
 game
   name:  svcplus
   title: SNK vs. Capcom - SVC Chaos Plus (bootleg, set 1)
+  board: neogeo
   feature
     name:  slot
     value: boot_svcplus
@@ -25335,7 +25597,7 @@ game
       size:   65536
       crc:    
       sha1:   
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   svc-v2.bin
@@ -25427,6 +25689,7 @@ game
 game
   name:  svcplusa
   title: SNK vs. Capcom - SVC Chaos Plus (bootleg, set 2)
+  board: neogeo
   feature
     name:  slot
     value: boot_svcplusa
@@ -25474,7 +25737,7 @@ game
       size:   65536
       crc:    
       sha1:   
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   svc-v2.bin
@@ -25566,6 +25829,7 @@ game
 game
   name:  svcsplus
   title: SNK vs. Capcom - SVC Chaos Super Plus (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_svcsplus
@@ -25607,7 +25871,7 @@ game
       size:   65536
       crc:    
       sha1:   
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   svc-v2.bin
@@ -25699,6 +25963,7 @@ game
 game
   name:  samsho5b
   title: Samurai Shodown V / Samurai Spirits Zero (bootleg)
+  board: neogeo
   feature
     name:  slot
     value: boot_samsho5b
@@ -25734,7 +25999,7 @@ game
       size:   131072
       crc:    18114fb1
       sha1:   016dc2f328340f3637a9bff373a20973df29f6b8
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   ssv-v1.bin
@@ -25794,6 +26059,7 @@ game
 game
   name:  kf2k3bl
   title: The King of Fighters 2003 (bootleg, set 1)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf2k3bl
@@ -25841,7 +26107,7 @@ game
       size:   131072
       crc:    3a4969ff
       sha1:   2fc107a023a82053a8df63025829bcf12cee9610
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -25917,6 +26183,7 @@ game
 game
   name:  kf2k3bla
   title: The King of Fighters 2003 (bootleg, set 2)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf2k3pl
@@ -25959,7 +26226,7 @@ game
       size:   131072
       crc:    3a4969ff
       sha1:   2fc107a023a82053a8df63025829bcf12cee9610
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -26034,7 +26301,8 @@ game
 
 game
   name:  kf2k3pl
-  title: The King of Fighters 2004 Plus / Hero (The King of Fighters 2003 bootleg)
+  title: The King of Fighters 2004 Plus / Hero (bootleg of The King of Fighters 2003)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf2k3pl
@@ -26077,7 +26345,7 @@ game
       size:   131072
       crc:    3a4969ff
       sha1:   2fc107a023a82053a8df63025829bcf12cee9610
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -26152,7 +26420,8 @@ game
 
 game
   name:  kf2k3upl
-  title: The King of Fighters 2004 Ultra Plus (The King of Fighters 2003 bootleg)
+  title: The King of Fighters 2004 Ultra Plus (bootleg of The King of Fighters 2003)
+  board: neogeo
   feature
     name:  slot
     value: boot_kf2k3upl
@@ -26181,7 +26450,7 @@ game
       size:   131072
       crc:    3a4969ff
       sha1:   2fc107a023a82053a8df63025829bcf12cee9610
-  ymsndadpcma
+  ymsnd-adpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -26257,6 +26526,7 @@ game
 game
   name:  sbp
   title: Super Bubble Pop (MVS)
+  board: neogeo
   feature
     name:  slot
     value: boot_sbp
@@ -26303,7 +26573,7 @@ game
       size:   524288
       crc:    7b1f86f7
       sha1:   15b6af7f9fbd0f1f6a1ecd912200ca8d0af2da2a
-  ymsndadpcma
+  ymsnd-adpcma
     size: 8388608
     rom
       name:   001-003-12a.u12
@@ -26337,6 +26607,7 @@ game
 game
   name:  diggerma
   title: Digger Man (prototype)
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -26362,7 +26633,7 @@ game
       size:   131072
       crc:    e777a234
       sha1:   9f3974ac07859337bc0203f903c40ae3f60dc1fb
-  ymsndadpcma
+  ymsnd-adpcma
     size: 2097152
     rom
       name:   dig-v1.bin
@@ -26388,8 +26659,717 @@ game
       sha1:   83711c4286fb1d9f3f91414ac6e5fed36618033e
 
 game
+  name:  etyphoon
+  title: The Eye of Typhoon (Tsunami Edition, beta 7)
+  board: neogeo
+  maincpu
+    size: 9437184
+    rom
+      name:   teot-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    c0ae0a56
+      sha1:   d5817755641c5b105c1191b3a1f0dbca64060878
+    rom
+      name:   teot-p2.bin
+      type:   load16_word_swap
+      offset: 1048576
+      size:   8388608
+      crc:    68dc7463
+      sha1:   e304187c3343d6a3f4dcad05ab68a1e73434079c
+  fixed
+    size: 131072
+    rom
+      name:   teot-s1.bin
+      offset: 0
+      size:   131072
+      crc:    6d05f74b
+      sha1:   1643bcf32249d3d90c230ccac09c8026dbd62960
+  audiocpu
+    size: 65536
+    rom
+      name:   teot-m1.bin
+      offset: 0
+      size:   65536
+      crc:    0c17ccac
+      sha1:   39b33f6e6dc96012161cdb452a162495355dd73c
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   teot-v1.bin
+      offset: 0
+      size:   8388608
+      crc:    d2911e9c
+      sha1:   ca53ebda1ae2a339dfceda509c334bc4be24d7a2
+    rom
+      name:   teot-v2.bin
+      offset: 8388608
+      size:   8388608
+      crc:    49e3afe6
+      sha1:   0c37f171035baa4392b28df5de3261f084727a47
+  sprites
+    size: 33554432
+    rom
+      name:   teot-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   16777216
+      crc:    2fdbfbef
+      sha1:   3bc2f207538893f71a7f14800dc9f11f1788c5bf
+    rom
+      name:   teot-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   16777216
+      crc:    4b953a79
+      sha1:   4851352e7f499f3cef20415072a0df7dc0c53bed
+
+game
+  name:  etyphoon_b6
+  title: The Eye of Typhoon (Tsunami Edition, beta 6)
+  board: neogeo
+  maincpu
+    size: 9437184
+    rom
+      name:   teot-b6-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    49b25c64
+      sha1:   91d2d27952818c40ad288af90df606a75ca7f824
+    rom
+      name:   teot-p2.bin
+      type:   load16_word_swap
+      offset: 1048576
+      size:   8388608
+      crc:    68dc7463
+      sha1:   e304187c3343d6a3f4dcad05ab68a1e73434079c
+  fixed
+    size: 131072
+    rom
+      name:   teot-s1.bin
+      offset: 0
+      size:   131072
+      crc:    6d05f74b
+      sha1:   1643bcf32249d3d90c230ccac09c8026dbd62960
+  audiocpu
+    size: 65536
+    rom
+      name:   teot-b6-m1.bin
+      offset: 0
+      size:   65536
+      crc:    16f81e41
+      sha1:   25a8f098254e3addc2040111c7c388e2285da445
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   teot-v1.bin
+      offset: 0
+      size:   8388608
+      crc:    d2911e9c
+      sha1:   ca53ebda1ae2a339dfceda509c334bc4be24d7a2
+    rom
+      name:   teot-v2.bin
+      offset: 8388608
+      size:   8388608
+      crc:    49e3afe6
+      sha1:   0c37f171035baa4392b28df5de3261f084727a47
+  sprites
+    size: 33554432
+    rom
+      name:   teot-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   16777216
+      crc:    2fdbfbef
+      sha1:   3bc2f207538893f71a7f14800dc9f11f1788c5bf
+    rom
+      name:   teot-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   16777216
+      crc:    4b953a79
+      sha1:   4851352e7f499f3cef20415072a0df7dc0c53bed
+
+game
+  name:  etyphoon_b5
+  title: The Eye of Typhoon (Tsunami Edition, beta 5)
+  board: neogeo
+  maincpu
+    size: 9437184
+    rom
+      name:   teot-b5-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    fdb9a8d4
+      sha1:   7e0d43ebe7b3841948a0de311b521b3eaa1c91d7
+    rom
+      name:   teot-b5-p2.bin
+      type:   load16_word_swap
+      offset: 1048576
+      size:   8388608
+      crc:    02dd52ed
+      sha1:   71a310cf48fe719726f60aa11e87e11bb217ac5c
+  fixed
+    size: 131072
+    rom
+      name:   teot-s1.bin
+      offset: 0
+      size:   131072
+      crc:    6d05f74b
+      sha1:   1643bcf32249d3d90c230ccac09c8026dbd62960
+  audiocpu
+    size: 65536
+    rom
+      name:   teot-b5-m1.bin
+      offset: 0
+      size:   65536
+      crc:    16f81e41
+      sha1:   25a8f098254e3addc2040111c7c388e2285da445
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   teot-v1.bin
+      offset: 0
+      size:   8388608
+      crc:    d2911e9c
+      sha1:   ca53ebda1ae2a339dfceda509c334bc4be24d7a2
+    rom
+      name:   teot-v2.bin
+      offset: 8388608
+      size:   8388608
+      crc:    49e3afe6
+      sha1:   0c37f171035baa4392b28df5de3261f084727a47
+  sprites
+    size: 33554432
+    rom
+      name:   teot-b5-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   16777216
+      crc:    66f0afa6
+      sha1:   3ee249703bf4710d4ae7ac6b9928f81dcb679654
+    rom
+      name:   teot-b5-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   16777216
+      crc:    e773037f
+      sha1:   ac3d07091fc8f25f01b9f21f5a0abff750af8208
+
+game
+  name:  etyphoon_b4
+  title: The Eye of Typhoon (Tsunami Edition, beta 4)
+  board: neogeo
+  maincpu
+    size: 9437184
+    rom
+      name:   teot-b4-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    2af068c0
+      sha1:   82f5885fbfdef47c0e9416cf9bd9accf8e5a739d
+    rom
+      name:   teot-b4-p2.bin
+      type:   load16_word_swap
+      offset: 1048576
+      size:   8388608
+      crc:    3ddc321d
+      sha1:   496573202a417d40894f69c2044ef408d3a0f01b
+  fixed
+    size: 131072
+    rom
+      name:   teot-b4-s1.bin
+      offset: 0
+      size:   131072
+      crc:    52895190
+      sha1:   d11385c51591b685c533a9f27c4fd3aa62927bef
+  audiocpu
+    size: 65536
+    rom
+      name:   teot-b4-m1.bin
+      offset: 0
+      size:   65536
+      crc:    5edaa24d
+      sha1:   90209de31a87da4118600be64869b36067d76c4b
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   teot-b4-v1.bin
+      offset: 0
+      size:   8388608
+      crc:    70042574
+      sha1:   368e85d38a94238b61969ee564f94bef143b808d
+    rom
+      name:   teot-b4-v2.bin
+      offset: 8388608
+      size:   8388608
+      crc:    d84d05b2
+      sha1:   7ad3914b5e95572d3fc9dadc6ad0e23463983118
+  sprites
+    size: 33554432
+    rom
+      name:   teot-b4-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   16777216
+      crc:    360e5362
+      sha1:   a86a5eea49218669c5e00a6b286a7d2d6f02ab3c
+    rom
+      name:   teot-b4-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   16777216
+      crc:    1fdff0ce
+      sha1:   4ef77f3e01d58612e9b730426adb81d87ccb5572
+
+game
+  name:  etyphoon_b3
+  title: The Eye of Typhoon (Tsunami Edition, beta 3)
+  board: neogeo
+  maincpu
+    size: 9437184
+    rom
+      name:   teot-b3-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    0d5763ae
+      sha1:   53dc53f9945cd7daeb7ab1e121f3aed132c75d0a
+    rom
+      name:   teot-b3-p2.bin
+      type:   load16_word_swap
+      offset: 1048576
+      size:   8388608
+      crc:    bee21724
+      sha1:   0c37bb950568932493a1806cd1038e5935a5bddf
+  fixed
+    size: 131072
+    rom
+      name:   teot-b3-s1.bin
+      offset: 0
+      size:   131072
+      crc:    52895190
+      sha1:   d11385c51591b685c533a9f27c4fd3aa62927bef
+  audiocpu
+    size: 65536
+    rom
+      name:   teot-b3-m1.bin
+      offset: 0
+      size:   65536
+      crc:    583db6a5
+      sha1:   4f6e15a50b2074aa1d2eb5d1b91bead0639be963
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   teot-b3-v1.bin
+      offset: 0
+      size:   8388608
+      crc:    d88114d4
+      sha1:   981f151c2b7e63e876f350169426759e0e73cdd1
+    rom
+      name:   teot-b3-v2.bin
+      offset: 8388608
+      size:   8388608
+      crc:    6fccb0d0
+      sha1:   386f7f054d1d988cca904c03ca52023236b22813
+  sprites
+    size: 33554432
+    rom
+      name:   teot-b3-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   16777216
+      crc:    f183c0a2
+      sha1:   d28055f79d56f915a803ab1c1b08f08b3eaaf1fe
+    rom
+      name:   teot-b3-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   16777216
+      crc:    93f47c21
+      sha1:   9bb37e45fac53d6be67f6f6e1c9c662d73f7556e
+
+game
+  name:  etyphoon_b2
+  title: The Eye of Typhoon (Tsunami Edition, beta 2)
+  board: neogeo
+  maincpu
+    size: 9437184
+    rom
+      name:   teot-b2-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    4525725e
+      sha1:   484bf2d7e7128744a315803fd57f0f6e9c8fb4a6
+    rom
+      name:   teot-b2-p2.bin
+      type:   load16_word_swap
+      offset: 1048576
+      size:   8388608
+      crc:    1c13c469
+      sha1:   1d255a44a3684fb12117781c5d5ba3fb439a60bf
+  fixed
+    size: 262144
+    rom
+      name:   teot-b2-s1.bin
+      offset: 0
+      size:   131072
+      crc:    52895190
+      sha1:   d11385c51591b685c533a9f27c4fd3aa62927bef
+  audiocpu
+    size: 131072
+    rom
+      name:   teot-b2-m1.bin
+      offset: 0
+      size:   65536
+      crc:    698ee1cf
+      sha1:   3a1bb3a660afb05d9ee321d532190cd39a4ba799
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   teot-b2-v1.bin
+      offset: 0
+      size:   8388608
+      crc:    5948197c
+      sha1:   2b54eb55cb01e30c4b0d50f5a7d2d99f5185d707
+    rom
+      name:   teot-b2-v2.bin
+      offset: 8388608
+      size:   8388608
+      crc:    7597aa1b
+      sha1:   bd764c59fd045877874733d2838a9578217e7c30
+  sprites
+    size: 67108864
+    rom
+      name:   teot-b2-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   16777216
+      crc:    99fa961d
+      sha1:   783a2f016fbebcfba5c287878a0512c402776234
+    rom
+      name:   teot-b2-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   16777216
+      crc:    66330fd9
+      sha1:   e8e3af7b826703a3e2240ad753b8ff0a51b48750
+
+game
+  name:  etyphoon_b1
+  title: The Eye of Typhoon (Tsunami Edition, beta 1)
+  board: neogeo
+  maincpu
+    size: 9437184
+    rom
+      name:   202-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    603fac98
+      sha1:   b5d4caf9162cac28d153fe33169cfc8acb679f84
+    rom
+      name:   202-p2.bin
+      type:   load16_word_swap
+      offset: 1048576
+      size:   8388608
+      crc:    5f557ad5
+      sha1:   9983d3b913f0d3bb315b696cd77f2ad7d04fbcd3
+  fixed
+    size: 131072
+    rom
+      name:   202-s1.bin
+      offset: 0
+      size:   131072
+      crc:    aba8f74c
+      sha1:   c8d12f535099ce0232bb637e04ac7b79569e15fe
+  audiocpu
+    size: 65536
+    rom
+      name:   202-m1.bin
+      offset: 0
+      size:   65536
+      crc:    dc29f33b
+      sha1:   cb1f45e93b19b00b901c5992a2646db652755d6e
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   202-v1.bin
+      offset: 0
+      size:   8388608
+      crc:    91b3deed
+      sha1:   6408ad38bcbe2712a11e30efecb47b027cabd49a
+    rom
+      name:   202-v2.bin
+      offset: 8388608
+      size:   8388608
+      crc:    985e6f6b
+      sha1:   b3e92d6ab08ad42347b622dbb72a7589a7dbe885
+  sprites
+    size: 67108864
+    rom
+      name:   202-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   16777216
+      crc:    7919ea09
+      sha1:   bb8e058346ebc02b7e20f324411c6455271a837b
+    rom
+      name:   202-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   16777216
+      crc:    62aa59a8
+      sha1:   dc4b7dc87d43b2c61bea799d2de5344d1c1999b9
+    rom
+      name:   202-c3.bin
+      type:   load16_byte
+      offset: 33554432
+      size:   16777216
+      crc:    7919ea09
+      sha1:   bb8e058346ebc02b7e20f324411c6455271a837b
+    rom
+      name:   202-c4.bin
+      type:   load16_byte
+      offset: 33554433
+      size:   16777216
+      crc:    62aa59a8
+      sha1:   dc4b7dc87d43b2c61bea799d2de5344d1c1999b9
+
+game
+  name:  etyphoon_a
+  title: The Eye of Typhoon (alpha)
+  board: neogeo
+  maincpu
+    size: 9437184
+    rom
+      name:   202a-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    9038ff78
+      sha1:   33f0ce3874e24c366177c89824c4b0cd1d30dfce
+    rom
+      name:   202a-p2.bin
+      type:   load16_word_swap
+      offset: 1048576
+      size:   8388608
+      crc:    fe363160
+      sha1:   e503dd9cefa2b7d69ea2aaff60c63c00b83c158d
+  fixed
+    size: 131072
+    rom
+      name:   202a-s1.bin
+      offset: 0
+      size:   131072
+      crc:    a545b593
+      sha1:   09077b63595eebb7dddd55e041e7786164df0ead
+  audiocpu
+    size: 65536
+    rom
+      name:   202a-m1.bin
+      offset: 0
+      size:   65536
+      crc:    31b05f06
+      sha1:   da1f984af58bcc7d4d496382bcb938fa7aff5ab1
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   202a-v1.bin
+      offset: 0
+      size:   8388608
+      crc:    299d84cf
+      sha1:   da0bb20b8faeaf0d78f987afc775abaadcc59dfa
+    rom
+      name:   202a-v2.bin
+      offset: 8388608
+      size:   8388608
+      crc:    aced6c72
+      sha1:   8dc481445dbcc717c6dccb27dff446c5f05080f0
+  sprites
+    size: 67108864
+    rom
+      name:   202a-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   16777216
+      crc:    28872e1f
+      sha1:   420d68ed2d417e1edfbd351619ff144fb7eacd9b
+    rom
+      name:   202a-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   16777216
+      crc:    fe31d1fc
+      sha1:   947d4cc47905308d03423640d863e60007b2309a
+    rom
+      name:   202a-c3.bin
+      type:   load16_byte
+      offset: 33554432
+      size:   16777216
+      crc:    28872e1f
+      sha1:   420d68ed2d417e1edfbd351619ff144fb7eacd9b
+    rom
+      name:   202a-c4.bin
+      type:   load16_byte
+      offset: 33554433
+      size:   16777216
+      crc:    fe31d1fc
+      sha1:   947d4cc47905308d03423640d863e60007b2309a
+
+game
+  name:  gladmort
+  title: GladMort (demo²)
+  board: neogeo
+  maincpu
+    size: 1048576
+    rom
+      name:   dod-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    d7712425
+      sha1:   eb9c32b584a600cc67784113cd87629c3eab4e1c
+  fixed
+    size: 131072
+    rom
+      name:   dod-s1.bin
+      offset: 0
+      size:   131072
+      crc:    8304be52
+      sha1:   fbeaee12553709e54e7f5134dfd2ff96df5fdee0
+  audiocpu
+    size: 65536
+    rom
+      name:   dod-m1.bin
+      offset: 0
+      size:   65536
+      crc:    0dfddae3
+      sha1:   4bfa6af6874510d1da95badee1bd23d3be853461
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   dod-v1.bin
+      offset: 0
+      size:   4194304
+      crc:    3b5e1408
+      sha1:   90cc923273d002819228cde8bdc57d76915b52f1
+    rom
+      name:   dod-v2.bin
+      offset: 4194304
+      size:   4194304
+      crc:    d44f004d
+      sha1:   bfb652111b1d065d48833034ab0333e69af9c947
+    rom
+      name:   dod-v3.bin
+      offset: 8388608
+      size:   4194304
+      crc:    e9e8de2f
+      sha1:   2a480f925073776308c07b6d4cc2334115bc17f2
+    rom
+      name:   dod-v4.bin
+      offset: 12582912
+      size:   4194304
+      crc:    aaf3f4e2
+      sha1:   9e126db19a98de4bd0c649f7a655e1e79cc236ed
+  sprites
+    size: 41943040
+    rom
+      name:   dod-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   20971520
+      crc:    bcb081ba
+      sha1:   68cdd3c2920a0fc5c52a5ba1d6e4efd0e735e11d
+    rom
+      name:   dod-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   20971520
+      crc:    1b927329
+      sha1:   4861da95ce6a9d0521bbeed3b4f06daa0750c15c
+
+game
+  name:  gladmort_d1
+  title: GladMort (demo)
+  board: neogeo
+  maincpu
+    size: 524288
+    rom
+      name:   dod-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   524288
+      crc:    e0ceafec
+      sha1:   f147fdb7c0fee02e8ae1923bf0ef3aff954588ae
+  fixed
+    size: 131072
+    rom
+      name:   dod-s1.bin
+      offset: 0
+      size:   131072
+      crc:    8304be52
+      sha1:   fbeaee12553709e54e7f5134dfd2ff96df5fdee0
+  audiocpu
+    size: 65536
+    rom
+      name:   dod-m1.bin
+      offset: 0
+      size:   65536
+      crc:    fb945087
+      sha1:   a2bae6907bf02c93068f9ee23409506277c8a027
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   dod-v1.bin
+      offset: 0
+      size:   4194304
+      crc:    8ab79ed9
+      sha1:   8b1d2ade7494a81b9fa79763aaa54bbf7f4cf394
+    rom
+      name:   dod-v2.bin
+      offset: 4194304
+      size:   4194304
+      crc:    9aae5145
+      sha1:   b218b47eafe8a5d25cbfadbd685de1b291c23af2
+    rom
+      name:   dod-v3.bin
+      offset: 8388608
+      size:   4194304
+      crc:    9ad3e804
+      sha1:   8f309e64b8582aad0f9f3258dee0d96f2c04f7e4
+    rom
+      name:   dod-v4.bin
+      offset: 12582912
+      size:   4194304
+      crc:    9ad3e804
+      sha1:   8f309e64b8582aad0f9f3258dee0d96f2c04f7e4
+  sprites
+    size: 41943040
+    rom
+      name:   dod-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   20971520
+      crc:    050ee046
+      sha1:   ca5a02ba92f7bdbedbb7c0c881eb3cf454140918
+    rom
+      name:   dod-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   20971520
+      crc:    eff26754
+      sha1:   d846093dd2c30daeba4e17ac7946155e62ca25a7
+
+game
   name:  lasthope
   title: Last Hope
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -26415,7 +27395,7 @@ game
       size:   131072
       crc:    113c870f
       sha1:   854425eb4be0d7fa088a6c3bf6078fdd011707f5
-  ymsndadpcma
+  ymsnd-adpcma
     size: 6291456
     rom
       name:   NGDT-300-V1.bin
@@ -26469,6 +27449,7 @@ game
 game
   name:  totc
   title: Treasures of The Caribbean
+  board: neogeo
   maincpu
     size: 1048576
     rom
@@ -26494,7 +27475,7 @@ game
       size:   131072
       crc:    18b23ace
       sha1:   d55495f3d8bb5568c8f2322763278a86ba5297b3
-  ymsndadpcma
+  ymsnd-adpcma
     size: 5242880
     rom
       name:   316.v1
@@ -26530,4 +27511,374 @@ game
       size:   2097152
       crc:    f362c271
       sha1:   4a2efa043cd2553ff7039cb18a1dba8b41493be7
+
+game
+  name:  looptris
+  title: Looptris
+  board: neogeo
+  maincpu
+    size: 524288
+    rom
+      name:   looptris.p1
+      type:   load16_word_swap
+      offset: 0
+      size:   524288
+      crc:    8fcb5104
+      sha1:   6a0da5c4e72ef57600ecd15cba64e3871f48391e
+  fixed
+    size: 131072
+    rom
+      name:   looptris.s1
+      offset: 0
+      size:   131072
+      crc:    70e70448
+      sha1:   40461af534afcba341d2f14b755d6de353fe7afd
+  audiocpu
+    size: 131072
+    rom
+      name:   looptris.m1
+      offset: 0
+      size:   131072
+      crc:    e7105df8
+      sha1:   9f4efad6dcc8b9617d59576415019820e973f45c
+  ymsnd-adpcma
+    size: 524288
+    rom
+      name:   looptris.v1
+      offset: 0
+      size:   524288
+      crc:    dfa63cd2
+      sha1:   bbf4a74a660f12cc037cfa0ac5c664988016ee45
+  sprites
+    size: 1048576
+    rom
+      name:   looptris.c1
+      type:   load16_byte
+      offset: 0
+      size:   524288
+      crc:    b9413f13
+      sha1:   5e7175dff9510dad55f8f05e9b307c3c05d92209
+    rom
+      name:   looptris.c2
+      type:   load16_byte
+      offset: 1
+      size:   524288
+      crc:    9409dbe8
+      sha1:   1e9562aa34f6202e8012104ab79916453fec072e
+
+game
+  name:  looptrsp
+  title: Looptris Plus
+  board: neogeo
+  maincpu
+    size: 524288
+    rom
+      name:   looptrsp.p1
+      type:   load16_word_swap
+      offset: 0
+      size:   524288
+      crc:    894bb290
+      sha1:   f33ed9fe75ca7b5a6da00fe5bff76e26cba85e08
+  fixed
+    size: 131072
+    rom
+      name:   looptrsp.s1
+      offset: 0
+      size:   131072
+      crc:    70e70448
+      sha1:   40461af534afcba341d2f14b755d6de353fe7afd
+  audiocpu
+    size: 131072
+    rom
+      name:   looptrsp.m1
+      offset: 0
+      size:   131072
+      crc:    249bba11
+      sha1:   e8248ff9bc391b1163746c256b137928a9d81fe0
+  ymsnd-adpcma
+    size: 2097152
+    rom
+      name:   looptrsp.v1
+      offset: 0
+      size:   524288
+      crc:    c9f86637
+      sha1:   edb712d5cce180e1d5b6e338e9abfab1125c5581
+    rom
+      name:   looptrsp.v2
+      offset: 524288
+      size:   524288
+      crc:    41b3e17a
+      sha1:   ef216379dbdbbea04cfffa47123436213a8cf26e
+    rom
+      name:   looptrsp.v3
+      offset: 1048576
+      size:   524288
+      crc:    1ed4e538
+      sha1:   921913be499194236535052ed3140fb7169d16e9
+    rom
+      name:   looptrsp.v4
+      offset: 1572864
+      size:   524288
+      crc:    705e7065
+      sha1:   a5eea38afa58db69c0f17e0379da3d819639971f
+  sprites
+    size: 1048576
+    rom
+      name:   looptrsp.c1
+      type:   load16_byte
+      offset: 0
+      size:   524288
+      crc:    b9413f13
+      sha1:   5e7175dff9510dad55f8f05e9b307c3c05d92209
+    rom
+      name:   looptrsp.c2
+      type:   load16_byte
+      offset: 1
+      size:   524288
+      crc:    9409dbe8
+      sha1:   1e9562aa34f6202e8012104ab79916453fec072e
+
+game
+  name:  neotris
+  title: NeoTRIS
+  board: neogeo
+  maincpu
+    size: 524288
+    rom
+      name:   neotris-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   524288
+      crc:    4cd619cf
+      sha1:   081a7819c71171a37f10d1b20f8887ca90df49a8
+  fixed
+    size: 131072
+    rom
+      name:   neotris-s1.bin
+      offset: 0
+      size:   131072
+      crc:    6809043a
+      sha1:   31efdd2bd0713d7a87f2c6dc92e43f312f8d8626
+  audiocpu
+    size: 65536
+    rom
+      name:   neotris-m1.bin
+      offset: 0
+      size:   65536
+      crc:    5a63bb9d
+      sha1:   de024be2535253d6846c380d05717002c0cc032d
+  ymsnd-adpcma
+    size: 16777216
+    rom
+      name:   neotris-v1.bin
+      offset: 0
+      size:   4194304
+      crc:    fef16eb4
+      sha1:   64021cf913c4594d27d0602afc28754f0b76091f
+    rom
+      name:   neotris-v2.bin
+      offset: 4194304
+      size:   4194304
+      crc:    f0d28e19
+      sha1:   e47318bf3b5ef1d9e08928eb7f7ca7dfc15ab2e5
+    rom
+      name:   neotris-v3.bin
+      offset: 8388608
+      size:   4194304
+      crc:    fc652c8b
+      sha1:   a76040eef8dd76da3657bc39b6b5c3dded539829
+    rom
+      name:   neotris-v4.bin
+      offset: 12582912
+      size:   4194304
+      crc:    c25764ca
+      sha1:   ee0f2fa8db2da5c95b94c062bff8ee37ec2b2c7d
+  sprites
+    size: 25165824
+    rom
+      name:   neotris-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   4194304
+      crc:    e1c8eca9
+      sha1:   be1babdc0ae0fd9916e8335c1635148e0498a961
+    rom
+      name:   neotris-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   4194304
+      crc:    11ca6e64
+      sha1:   166c1f973f4fd7f472c3ddd37e0eb945c36d7454
+    rom
+      name:   neotris-c3.bin
+      type:   load16_byte
+      offset: 8388608
+      size:   4194304
+      crc:    1d9e2046
+      sha1:   c2415775170455bd44e19e7c7c8e10817da56385
+    rom
+      name:   neotris-c4.bin
+      type:   load16_byte
+      offset: 8388609
+      size:   4194304
+      crc:    9091e795
+      sha1:   59e7a751633ce8f3db138fc818e50003da4582dc
+    rom
+      name:   neotris-c5.bin
+      type:   load16_byte
+      offset: 16777216
+      size:   4194304
+      crc:    bf278afe
+      sha1:   e7f84cb325dd4535accd44d84f61c53cb4bab312
+    rom
+      name:   neotris-c6.bin
+      type:   load16_byte
+      offset: 16777217
+      size:   4194304
+      crc:    8eb17e24
+      sha1:   7977475bf19073b8bc38fcb88be9226453c7d6e4
+
+game
+  name:  nblktiger
+  title: NeoBlack Tiger (demo)
+  board: neogeo
+  maincpu
+    size: 1048576
+    rom
+      name:   202-p1.bin
+      type:   load16_word_swap
+      offset: 0
+      size:   1048576
+      crc:    18f34200
+      sha1:   78b3b9ef20ddf780a81e644d996d56dd5c0e6d10
+  fixed
+    size: 131072
+    rom
+      name:   202-s1.bin
+      offset: 0
+      size:   131072
+      crc:    a545b593
+      sha1:   09077b63595eebb7dddd55e041e7786164df0ead
+  audiocpu
+    size: 65536
+    rom
+      name:   202-m1.bin
+      offset: 0
+      size:   65536
+      crc:    2037dc19
+      sha1:   c88588d07fc63aeed828a87f0f633c7badafeb3e
+  ymsnd-adpcma
+    size: 9437184
+    rom
+      name:   202-v1.bin
+      offset: 0
+      size:   1048576
+      crc:    3ac066e1
+      sha1:   cab7f04fbce0db685f5fa0d22923f7b7ca37a804
+    rom
+      name:   202-v2.bin
+      offset: 1048576
+      size:   1048576
+      crc:    c5a12987
+      sha1:   71236afffdb69aa3ba8ebc345e1e7b1830db437e
+    rom
+      name:   202-v3.bin
+      offset: 2097152
+      size:   1048576
+      crc:    3c623679
+      sha1:   5fa98eacb612be496aa7937a9678398ba16f2a13
+    rom
+      name:   202-v4.bin
+      offset: 3145728
+      size:   1048576
+      crc:    fbf00c96
+      sha1:   4083f8efbcf748dba31f0030b82487e0ea56980b
+    rom
+      name:   202-v5.bin
+      offset: 4194304
+      size:   1048576
+      crc:    9b2031d4
+      sha1:   15c8f5cb26af29b8dca53f1c1c49384a1b73b820
+    rom
+      name:   202-v6.bin
+      offset: 5242880
+      size:   1048576
+      crc:    107cfc89
+      sha1:   c4ced7dfab24ff42c6fc2424b18cf199ba30cbfa
+    rom
+      name:   202-v7.bin
+      offset: 6291456
+      size:   1048576
+      crc:    0703b761
+      sha1:   7d586b69bb9578d550871eda884cd6b32d86a01f
+    rom
+      name:   202-v8.bin
+      offset: 7340032
+      size:   1048576
+      crc:    8d525588
+      sha1:   297871c1e8888d9adab3781fb6c2c27ecf50ca45
+    rom
+      name:   202-v9.bin
+      offset: 8388608
+      size:   1048576
+      crc:    97f073b6
+      sha1:   02a4cce3f0cdb9421350ee5af49af13d7dcd16c2
+  sprites
+    size: 67108864
+    rom
+      name:   202-c1.bin
+      type:   load16_byte
+      offset: 0
+      size:   8388608
+      crc:    aa469494
+      sha1:   fd98b7445c85174ccb745c74cb9e852b08353324
+    rom
+      name:   202-c2.bin
+      type:   load16_byte
+      offset: 1
+      size:   8388608
+      crc:    fa07ba1e
+      sha1:   8c00be2c0c1402789011e2aa272e04e216fdac10
+    rom
+      name:   202-c3.bin
+      type:   load16_byte
+      offset: 16777216
+      size:   8388608
+      crc:    aa469494
+      sha1:   fd98b7445c85174ccb745c74cb9e852b08353324
+    rom
+      name:   202-c4.bin
+      type:   load16_byte
+      offset: 16777217
+      size:   8388608
+      crc:    fa07ba1e
+      sha1:   8c00be2c0c1402789011e2aa272e04e216fdac10
+    rom
+      name:   202-c5.bin
+      type:   load16_byte
+      offset: 33554432
+      size:   8388608
+      crc:    aa469494
+      sha1:   fd98b7445c85174ccb745c74cb9e852b08353324
+    rom
+      name:   202-c6.bin
+      type:   load16_byte
+      offset: 33554433
+      size:   8388608
+      crc:    fa07ba1e
+      sha1:   8c00be2c0c1402789011e2aa272e04e216fdac10
+    rom
+      name:   202-c7.bin
+      type:   load16_byte
+      offset: 50331648
+      size:   8388608
+      crc:    aa469494
+      sha1:   fd98b7445c85174ccb745c74cb9e852b08353324
+    rom
+      name:   202-c8.bin
+      type:   load16_byte
+      offset: 50331649
+      size:   8388608
+      crc:    fa07ba1e
+      sha1:   8c00be2c0c1402789011e2aa272e04e216fdac10
 
