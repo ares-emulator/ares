@@ -85,11 +85,10 @@ auto VDP::pixels() -> u32* {
 
   if(h40()) {
     // H40 mode has slightly shorter lines, so sides are blanked.
-    // Left side would be 13 wide, but we'll realign to whole pixel (3*4) for sanity.
-    for(auto n: range(12)) output[        n] = 0b101 << 9;
-    for(auto n: range(15)) output[1415-15+n] = 0b101 << 9;
+    for(auto n: range(13)) output[        n] = 0b101 << 9;
+    for(auto n: range(14)) output[1415-14+n] = 0b101 << 9;
 
-    return output+12;
+    return output+13;
   }
 
   return output;
