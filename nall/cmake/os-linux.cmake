@@ -1,5 +1,3 @@
-target_compile_definitions(nall PUBLIC PLATFORM_LINUX)
-
 target_sources(
   nall
   PRIVATE # cmake-format: sortable
