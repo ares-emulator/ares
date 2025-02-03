@@ -14,20 +14,18 @@ Official releases are available from
 Nightly Builds
 --------------
 
-Automated, untested builds of ares are available for Windows and macOS as a [pre-release](https://github.com/higan-emu/ares/releases/tag/nightly). 
+Automated, untested builds of ares are available for Windows and macOS as a [pre-release](https://github.com/ares-emulator/ares/releases/tag/nightly). 
 Only the latest nightly build is kept.
 
 Building ares
 -------------
 
-Build instructions are available on the ares wiki. See build instructions for:
+ares supports building on Windows, macOS, and various Linux/BSD distributions. See build instructions for:
 
 * [Windows](https://github.com/ares-emulator/ares/wiki/Build-Instructions-For-Windows)
 * [macOS](https://github.com/ares-emulator/ares/wiki/Build-Instructions-For-macOS)
 * [Linux](https://github.com/ares-emulator/ares/wiki/Build-Instructions-For-Linux)
 * [BSD](https://github.com/ares-emulator/ares/wiki/Build-Instructions-For-BSD)
-
-For legacy Makefile build instructions, see [here](https://github.com/ares-emulator/ares/wiki/Legacy-Build-Instructions).
 
 Command-line options
 --------------------
@@ -40,7 +38,7 @@ Usage: ./ares [options] game(s)
   --help                 Displays available options and exit
   --fullscreen           Start in full screen mode
   --system system        Specify the system name
-  --shader shader        Specify GLSL shader name to load (requires OpenGL driver)
+  --shader shader        Specify a slang shader to load (requires OpenGL or Metal)
   --setting name=value   Specify a value for a setting
   --dump-all-settings    Show a list of all existing settings and exit
   --no-file-prompt       Do not prompt to load (optional) additional roms (eg: 64DD)
