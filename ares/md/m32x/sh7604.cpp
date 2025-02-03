@@ -50,13 +50,8 @@ auto M32X::SH7604::instructionPrologue(u16 instruction) -> void {
 }
 
 auto M32X::SH7604::step(u32 clocks) -> void {
-  if(clocks > 0) {
-    auto cycles = clocks;
-    while (--cycles) {
-      SH2::frt.run();
-      SH2::wdt.run();
-    }
-  }
+  SH2::frt.run(clocks);
+  SH2::wdt.run(clocks);
 
   Thread::step(clocks);
   cyclesUntilSh2Sync -= clocks;

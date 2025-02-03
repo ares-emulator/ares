@@ -216,7 +216,7 @@
   //watchdog timer
   struct WDT {
     //timer.cpp
-    auto run() -> void;
+    auto run(int cycles) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -282,7 +282,7 @@
     maybe<SH2&> self;
 
     //timer.cpp
-    auto run() -> void;
+    auto run(int cycles) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
