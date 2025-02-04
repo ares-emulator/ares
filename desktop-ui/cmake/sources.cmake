@@ -18,6 +18,7 @@ target_sources(
     program/program.hpp
     program/rewind.cpp
     program/states.cpp
+    program/status.cpp
     program/utility.cpp
 )
 

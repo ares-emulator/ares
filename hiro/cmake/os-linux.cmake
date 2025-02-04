@@ -5,7 +5,6 @@ mark_as_advanced(USE_QT5)
 
 if(NOT USE_QT5)
   find_package(GTK REQUIRED)
-  target_compile_definitions(hiro PRIVATE HIRO_GTK)
 
   target_link_libraries(hiro PRIVATE GTK::GTK X11::X11)
 
