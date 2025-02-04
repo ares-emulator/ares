@@ -39,7 +39,10 @@ endif()
 
 add_compile_definitions(_WIN32_WINNT=0x0601) #global
 
-option(ARES_MINGW_USE_DWARF_SYMBOLS "Generate DWARF debug symbols (instead of CodeView) for use with gdb or lldb. Applies to MSYS2/MinGW environments.")
+option(
+  ARES_MINGW_USE_DWARF_SYMBOLS
+  "Generate DWARF debug symbols (instead of CodeView) for use with gdb or lldb. Applies to MSYS2/MinGW environments."
+)
 
 set(
   _ares_msvc_cxx_options
@@ -93,9 +96,13 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(NOT DEFINED ARES_MINGW_USE_DWARF_SYMBOLS)
       set(ARES_MINGW_USE_DWARF_SYMBOLS OFF)
     endif()
-            
+
     set(_ares_mingw_clang_debug_compile_options -g "$<IF:$<BOOL:${ARES_MINGW_USE_DWARF_SYMBOLS}>,-gdwarf,-gcodeview>")
-    set(_ares_mingw_clang_debug_link_options -g "$<IF:$<BOOL:${ARES_MINGW_USE_DWARF_SYMBOLS}>,-gdwarf,-fuse-ld=lld;-Wl$<COMMA>--pdb=>")
+    set(
+      _ares_mingw_clang_debug_link_options
+      -g
+      "$<IF:$<BOOL:${ARES_MINGW_USE_DWARF_SYMBOLS}>,-gdwarf,-fuse-ld=lld;-Wl$<COMMA>--pdb=>"
+    )
     add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_clang_debug_compile_options}>")
     add_link_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_clang_debug_link_options}>")
 
@@ -125,7 +132,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:${_ares_msvc_cxx_options}>")
-  
+
   if(CMAKE_COMPILE_WARNING_AS_ERROR)
     add_link_options(/WX)
   endif()
@@ -133,12 +140,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if(NOT DEFINED ARES_MINGW_USE_DWARF_SYMBOLS)
     set(ARES_MINGW_USE_DWARF_SYMBOLS ON)
   endif()
-  
+
   set(_ares_mingw_gcc_debug_compile_options -g "$<IF:$<BOOL:${ARES_MINGW_USE_DWARF_SYMBOLS}>,-gdwarf,-gcodeview>")
   set(_ares_mingw_gcc_debug_link_options -g "$<IF:$<BOOL:${ARES_MINGW_USE_DWARF_SYMBOLS}>,-gdwarf,-Wl$<COMMA>--pdb=>")
   add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_gcc_debug_compile_options}>")
   add_link_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_gcc_debug_link_options}>")
-  
+
   add_compile_options(${_ares_gcc_common_options})
 endif()
 
