@@ -2,6 +2,7 @@ namespace Systems {
   #include "arcade.cpp"
   #include "atari-2600.cpp"
   #include "colecovision.cpp"
+  #include "pencil2.cpp"
   #include "myvision.cpp"
   #include "famicom.cpp"
   #include "game-boy.cpp"
@@ -39,6 +40,7 @@ auto System::create(string name) -> shared_pointer<Pak> {
   if(name == "Arcade") return new Systems::Arcade;
   if(name == "Atari 2600") return new Systems::Atari2600;
   if(name == "ColecoVision") return new Systems::ColecoVision;
+  if(name == "Pencil 2") return new Systems::Pencil2;
   if(name == "MyVision") return new Systems::MyVision;
   if(name == "Famicom") return new Systems::Famicom;
   if(name == "Game Boy") return new Systems::GameBoy;
