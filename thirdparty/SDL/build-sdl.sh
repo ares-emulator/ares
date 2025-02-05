@@ -6,7 +6,7 @@ if [ ! -d "SDL" ]; then
 else
     git -C SDL fetch
 fi
-git -C SDL reset --hard "$(cat HEAD)"
+git -C SDL reset --hard "$(git -C SDL rev-parse HEAD)"
 mkdir -p SDL/build
 pushd SDL/build
 
