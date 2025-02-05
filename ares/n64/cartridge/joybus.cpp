@@ -54,7 +54,7 @@ auto Cartridge::joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   if(input[0] == 0x07 && send >= 2 && recv >= 9) {
     if(cartridge.rtc.present) {
       rtc.read(input[1], &output[0]);
-      output[8] = 0x00;
+      output[8] = rtc.status;
       valid = 1;
     }
   }
@@ -63,7 +63,7 @@ auto Cartridge::joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   if(input[0] == 0x08 && send >= 10 && recv >= 1) {
     if(cartridge.rtc.present) {
       rtc.write(input[1], &input[2]);
-      output[0] = 0x00;
+      output[0] = rtc.status;
       valid = 1;
     }
   }
