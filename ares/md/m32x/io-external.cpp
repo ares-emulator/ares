@@ -267,8 +267,8 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
     //pwm.dreqIRQ = data.bit(7) = readonly;
     }
     if(upper) {
-      pwm.timer = data.bit(8,11);
-      pwm.periods = 0;
+    //pwm.timer = data.bit(8,11) = readonly;
+    //pwm.periods = 0 = readonly;
     }
   }
 
