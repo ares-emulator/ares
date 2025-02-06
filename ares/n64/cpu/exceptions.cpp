@@ -1,6 +1,8 @@
 auto CPU::Exception::trigger(u32 code, u32 coprocessor, bool tlbMiss) -> void {
   self.debugger.exception(code);
-  reportGDBException(code, self.ipu.pc); 
+  if (code != 0) {  //ignore interrupt exceptions
+    reportGDBException(code, self.ipu.pc); 
+  }
 
   u64 vectorBase = !self.scc.status.vectorLocation ? (s32)0x8000'0000 : (s32)0xbfc0'0200;
 
