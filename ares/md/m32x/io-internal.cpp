@@ -63,6 +63,8 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //FIFO
   if(address == 0x4012) {
+    if(shm.active()) { shm.syncM68k(); }
+    if(shs.active()) { shs.syncM68k(); }
     data = dreq.fifo.read(data);
     shm.dmac.dreq[0] = !dreq.fifo.empty();
     shs.dmac.dreq[0] = !dreq.fifo.empty();

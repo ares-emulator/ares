@@ -12,8 +12,8 @@ auto M32X::readInternal(n1 upper, n1 lower, n32 address, n16 data) -> n16 {
   if(address >= 0x0200'0000 && address <= 0x023f'ffff) {
     while(dreq.vram) {
       // SH2 ROM accesses stall while RV is set
-      if(shm.active()) shm.internalStep(1);
-      if(shs.active()) shs.internalStep(1);
+      if(shm.active()) { shm.internalStep(1); shm.syncM68k(true); }
+	    if(shs.active()) { shs.internalStep(1); shs.syncM68k(true); }
     }
 
     // TODO: SH2 ROM accesses need to stall while the m68k is on the bus
