@@ -150,6 +150,7 @@ auto SH2::internalReadByte(u32 address, n8 data) -> n8 {
     data.bit(5)   = wdt.wtcsr.tme;
     data.bit(6)   = wdt.wtcsr.wtit;
     data.bit(7)   = wdt.wtcsr.ovf;
+    if(wdt.wtcsr.wtit) debug(unimplemented, "SH2: wdt.wtit = 1");
     return data;
 
   //WTCNT: watchdog timer counter
