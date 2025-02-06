@@ -80,9 +80,14 @@ auto M32X::SH7604::step(u32 clocks) -> void {
 
 auto M32X::SH7604::power(bool reset) -> void {
   Thread::create((system.frequency() / 7.0) * 3.0, {&M32X::SH7604::main, this});
+
+  //When tweaking these values, make sure to test the following problematic games:
+  // Brutal  - Check for hang in attract mode
+  // Chaotix - Check for hang on intro screen or level loading transitions
+
   SH2::recompilerStepCycles =  200; //Recompiler will force an exit after at least N cycles have passed
-  minCyclesBetweenSh2Syncs  =   50; //Do not sync SH2s more than once every N cycles
-  minCyclesBetweenM68kSyncs =  100; //Do not sync M68K more than once every N cycles
+  minCyclesBetweenSh2Syncs  =   10; //Do not sync SH2s more than once every N cycles
+  minCyclesBetweenM68kSyncs =   50; //Do not sync M68K more than once every N cycles
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
