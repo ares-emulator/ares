@@ -49,6 +49,15 @@ auto M32X::SH7604::instructionPrologue(u16 instruction) -> void {
   debugger.instruction(instruction);
 }
 
+auto M32X::SH7604::internalStep(u32 clocks) -> void {
+  if(SH2::Accuracy::Recompiler && m32x.shm.recompiler.enabled) {
+    regs.CCR += clocks;
+    return;
+  }
+
+  step(clocks);
+}
+
 auto M32X::SH7604::step(u32 clocks) -> void {
   SH2::frt.run(clocks);
   SH2::wdt.run(clocks);

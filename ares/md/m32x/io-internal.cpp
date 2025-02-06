@@ -1,5 +1,5 @@
 auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
-  if(shm.active()) shm.step(1); if(shs.active()) shs.step(1);
+  if(shm.active()) shm.internalStep(1); if(shs.active()) shs.internalStep(1);
 
   //interrupt mask
   if(address == 0x4000) {
@@ -152,7 +152,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //palette
   if(address >= 0x4200 && address <= 0x43ff) {
-    if(shm.active()) shm.step(4); if(shs.active()) shs.step(4);
+    if(shm.active()) shm.internalStep(4); if(shs.active()) shs.internalStep(4);
     data = vdp.cram[address >> 1 & 0xff];
   }
 
@@ -160,7 +160,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 }
 
 auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
-  if(shm.active()) shm.step(1); if(shs.active()) shs.step(1);
+  if(shm.active()) shm.internalStep(1); if(shs.active()) shs.internalStep(1);
 
   //interrupt mask
   if(address == 0x4000) {
@@ -338,7 +338,7 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
   //palette
   if(address >= 0x4200 && address <= 0x43ff) {
     if (!vdp.framebufferAccess) return;
-    if(shm.active()) shm.step(4); if(shs.active()) shs.step(4);
+    if(shm.active()) shm.internalStep(4); if(shs.active()) shs.internalStep(4);
     if(upper) vdp.cram[address >> 1 & 0xff].byte(1) = data.byte(1);
     if(lower) vdp.cram[address >> 1 & 0xff].byte(0) = data.byte(0);
   }
