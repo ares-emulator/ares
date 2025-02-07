@@ -4,7 +4,7 @@ set(_ares_version 0)
 
 if(NOT DEFINED ARES_VERSION_OVERRIDE AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
   execute_process(
-    COMMAND git describe --always --tags --dirty=-modified
+    COMMAND git describe --always --tags --exclude=nightly --dirty=-modified
     OUTPUT_VARIABLE ARES_VERSION
     ERROR_VARIABLE _git_describe_err
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
