@@ -149,9 +149,9 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
-    if (vdp.framebufferAccess) return data;
-    while(vdp.paletteEngaged())
-      if(cpu.active()) cpu.wait(1);;
+    if(vdp.framebufferAccess) return data;
+    while(vdp.paletteEngaged()) {
+      if(cpu.active()) cpu.wait(1);
     }
     data = vdp.cram[address >> 1 & 0xff];
   }

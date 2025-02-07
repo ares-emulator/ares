@@ -73,8 +73,8 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
   //communication
   if(address >= 0x4020 && address <= 0x402f) {
     data = communication[address >> 1 & 7];
-    if(shm.active()) { shm.syncOtherSh2(); shm.syncM68k(); }
-    if(shs.active()) { shs.syncOtherSh2(); shs.syncM68k(); }
+    if(shm.active()) { shm.syncAll(); }
+    if(shs.active()) { shs.syncAll(); }
   }
 
   //PWM control
@@ -155,8 +155,11 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //palette
   if(address >= 0x4200 && address <= 0x43ff) {
-    if (!vdp.framebufferAccess) return data;
-    if(vdp.paletteEngaged()) { debug(unusual, "[32X CRAM] SH2 read while PEN==0"); return data; } // wait instead?
+    if(!vdp.framebufferAccess) return data;
+    while(vdp.paletteEngaged()) {
+      if(shm.active()) { shm.internalStep(1); shm.syncAll(); }
+      if(shs.active()) { shs.internalStep(1); shs.syncAll(); }
+    }
     if(shm.active()) shm.internalStep(4); if(shs.active()) shs.internalStep(4);
     data = vdp.cram[address >> 1 & 0xff];
   }
@@ -233,8 +236,8 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //communication
   if(address >= 0x4020 && address <= 0x402f) {
-    if(shm.active()) { shm.syncOtherSh2(); shm.syncM68k(); }
-    if(shs.active()) { shs.syncOtherSh2(); shs.syncM68k(); }
+    if(shm.active()) { shm.syncAll(); }
+    if(shs.active()) { shs.syncAll(); }
     if(upper) communication[address >> 1 & 7].byte(1) = data.byte(1);
     if(lower) communication[address >> 1 & 7].byte(0) = data.byte(0);
   }
@@ -342,8 +345,11 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //palette
   if(address >= 0x4200 && address <= 0x43ff) {
-    if (!vdp.framebufferAccess) return;
-    if(vdp.paletteEngaged()) { debug(unusual, "[32X CRAM] SH2 write while PEN==0"); return; } // wait instead?
+    if(!vdp.framebufferAccess) return;
+    while(vdp.paletteEngaged()) {
+      if(shm.active()) { shm.internalStep(1); shm.syncAll(); }
+      if(shs.active()) { shs.internalStep(1); shs.syncAll(); }
+    }
     if(shm.active()) shm.internalStep(4); if(shs.active()) shs.internalStep(4);
     if(upper) vdp.cram[address >> 1 & 0xff].byte(1) = data.byte(1);
     if(lower) vdp.cram[address >> 1 & 0xff].byte(0) = data.byte(0);

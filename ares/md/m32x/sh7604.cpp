@@ -102,8 +102,25 @@ auto M32X::SH7604::restart() -> void {
   Thread::restart({&M32X::SH7604::main, this});
 }
 
-auto M32X::SH7604::syncOtherSh2() -> void {
+auto M32X::SH7604::syncAll(bool force) -> void {
   SH2::cyclesUntilRecompilerExit = 0;
+
+  if(SH2::Accuracy::Recompiler && m32x.shm.recompiler.enabled && force) {
+    cyclesUntilSh2Sync = 0;
+    cyclesUntilM68kSync = 0;
+    step(regs.CCR);
+    regs.CCR = 0;
+  }
+}
+
+auto M32X::SH7604::syncOtherSh2(bool force) -> void {
+  SH2::cyclesUntilRecompilerExit = 0;
+
+  if(SH2::Accuracy::Recompiler && m32x.shm.recompiler.enabled && force) {
+    cyclesUntilSh2Sync = 0;
+    step(regs.CCR);
+    regs.CCR = 0;
+  }
 }
 
 auto M32X::SH7604::syncM68k(bool force) -> void {

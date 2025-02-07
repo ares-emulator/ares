@@ -43,7 +43,8 @@ struct M32X {
     auto internalStep(u32 clocks) -> void;
     auto power(bool reset) -> void;
     auto restart() -> void;
-    auto syncOtherSh2() -> void;
+    auto syncAll(bool force = false) -> void;
+    auto syncOtherSh2(bool force = false) -> void;
     auto syncM68k(bool force = false) -> void;
 
     auto busReadByte(u32 address) -> u32 override;
