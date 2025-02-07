@@ -150,7 +150,9 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
     if (vdp.framebufferAccess) return data;
-    if(vdp.paletteEngaged()) { debug(unusual, "[32X CRAM] 68k read while PEN==0"); return data; } // wait instead?
+    while(vdp.paletteEngaged())
+      if(cpu.active()) cpu.wait(1);;
+    }
     data = vdp.cram[address >> 1 & 0xff];
   }
 
@@ -360,8 +362,10 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
-    if (vdp.framebufferAccess) return;
-    if(vdp.paletteEngaged()) { debug(unusual, "[32X CRAM] 68k write while PEN==0"); return; } // wait instead?
+    if(vdp.framebufferAccess) return;
+    while(vdp.paletteEngaged()) {
+      if(cpu.active()) cpu.wait(1);;
+    }
     if(upper) vdp.cram[address >> 1 & 0xff].byte(1) = data.byte(1);
     if(lower) vdp.cram[address >> 1 & 0xff].byte(0) = data.byte(0);
   }
