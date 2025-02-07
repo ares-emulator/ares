@@ -76,6 +76,13 @@ auto M32X::vblank(bool line) -> void {
 }
 
 auto M32X::hblank(bool line) -> void {
+  if(vdp.hblank > line) {
+    // TODO: VDP regs should be latched 192 MClks (~82 cycles) before end of hblank (according to official docs)
+    vdp.latch.mode = vdp.mode;
+    vdp.latch.lines = vdp.lines;
+    vdp.latch.priority = vdp.priority;
+    vdp.latch.dotshift = vdp.dotshift;
+  }
   vdp.hblank = line;
   shm.irq.hint.active = 0;
   shs.irq.hint.active = 0;

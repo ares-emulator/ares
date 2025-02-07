@@ -103,6 +103,8 @@ struct M32X {
     auto plot(u32* output, u16 color) -> void;
     auto fill() -> void;
     auto selectFramebuffer(n1 active) -> void;
+    auto framebufferEngaged() -> bool;
+    auto paletteEngaged() -> bool;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -117,8 +119,16 @@ struct M32X {
     n1  framebufferAccess;
     n1  framebufferActive;
     n1  framebufferSelect;
+    int framebufferWait;
     n1  hblank;
     n1  vblank;
+
+    struct Latch {
+      n2 mode;
+      n1 lines;
+      n1 priority;
+      n1 dotshift;
+    } latch;
   };
 
   struct PWM : Thread {

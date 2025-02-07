@@ -66,6 +66,8 @@ auto M32X::SH7604::step(u32 clocks) -> void {
   cyclesUntilSh2Sync -= clocks;
   cyclesUntilM68kSync -= clocks;
 
+  m32x.vdp.framebufferWait -= min(clocks, m32x.vdp.framebufferWait);
+
   if(cyclesUntilSh2Sync <= 0) {
     cyclesUntilSh2Sync = minCyclesBetweenSh2Syncs;
     if (m32x.shm.active()) Thread::synchronize(m32x.shs);

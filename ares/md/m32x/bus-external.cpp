@@ -8,6 +8,8 @@ auto M32X::readExternal(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0x840000 && address <= 0x87ffff) {
+    if(vdp.framebufferAccess) return data;
+    if(vdp.framebufferEngaged()) { debug(unusual, "[32X FB] 68k read while FEN==1"); return data; } // wait instead?
     return vdp.bbram[address >> 1 & 0xffff];
   }
 
@@ -41,6 +43,7 @@ auto M32X::writeExternal(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address >= 0x840000 && address <= 0x85ffff) {
     if(vdp.framebufferAccess) return;
+    if(vdp.framebufferEngaged()) { debug(unusual, "[32X FB] 68k write while FEN==1"); return; } // wait instead?
     if(!data && (!upper || !lower)) return;  //8-bit 0x00 writes do not go through
     shm.debugger.tracer.instruction->invalidate(0x0400'0000 | address & 0x1fffe);
     shs.debugger.tracer.instruction->invalidate(0x0400'0000 | address & 0x1fffe);
@@ -51,6 +54,7 @@ auto M32X::writeExternal(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address >= 0x860000 && address <= 0x87ffff) {
     if(vdp.framebufferAccess) return;
+    if(vdp.framebufferEngaged()) { debug(unusual, "[32X FB] 68k overwrite while FEN==1"); return; } // wait instead?
     shm.debugger.tracer.instruction->invalidate(0x0402'0000 | address & 0x1fffe);
     shs.debugger.tracer.instruction->invalidate(0x0402'0000 | address & 0x1fffe);
     if(upper && data.byte(1)) vdp.bbram[address >> 1 & 0xffff].byte(1) = data.byte(1);

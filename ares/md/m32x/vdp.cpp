@@ -17,28 +17,30 @@ auto M32X::VDP::power(bool reset) -> void {
   lines = 0;
   priority = 0;
   dotshift = 0;
+  latch = {};
   autofillLength = 0;
   autofillAddress = 0;
   autofillData = 0;
   framebufferAccess = 0;
   framebufferActive = 0;
   framebufferSelect = 0;
+  framebufferWait = 0;
   hblank = 0;
   vblank = 1;
   selectFramebuffer(framebufferSelect);
 }
 
 auto M32X::VDP::scanline(u32 pixels[1280], u32 y) -> void {
-  if(!Mega32X() || !pixels || y >= (lines ? 240 : 224)) return;
-  if(mode == 1) return scanlineMode1(pixels, y);
-  if(mode == 2) return scanlineMode2(pixels, y);
-  if(mode == 3) return scanlineMode3(pixels, y);
+  if(!Mega32X() || !pixels || y >= (latch.lines ? 240 : 224)) return;
+  if(latch.mode == 1) return scanlineMode1(pixels, y);
+  if(latch.mode == 2) return scanlineMode2(pixels, y);
+  if(latch.mode == 3) return scanlineMode3(pixels, y);
 }
 
 auto M32X::VDP::scanlineMode1(u32 pixels[1280], u32 y) -> void {
   u16 address = fbram[y];
   for(u32 x : range(320)) {
-    u8 color = fbram[address + (x + dotshift >> 1) & 0xffff].byte(!(x + dotshift & 1));
+    u8 color = fbram[address + (x + latch.dotshift >> 1) & 0xffff].byte(!(x + latch.dotshift & 1));
     plot(&pixels[x * 4], cram[color]);
   }
 }
@@ -70,7 +72,7 @@ auto M32X::VDP::plot(u32* output, u16 color) -> void {
   n1 throughbit = color >> 15;
   b1 opaque = color & 0x7fff;
 
-  if(priority == 0) {
+  if(latch.priority == 0) {
     //Mega Drive has priority
     if(throughbit || backdrop) {
       output[0] = color | 1 << 15;
@@ -90,6 +92,8 @@ auto M32X::VDP::plot(u32* output, u16 color) -> void {
 }
 
 auto M32X::VDP::fill() -> void {
+  if(framebufferWait > 0) { debug(unusual, "[32X FILL] triggered before last fill finished"); return; }
+  framebufferWait = 7+3*(autofillLength+1); // according to official docs
   for(u32 repeat : range(1 + autofillLength)) {
     bbram[autofillAddress] = autofillData;
     autofillAddress.byte(0)++;
@@ -98,9 +102,20 @@ auto M32X::VDP::fill() -> void {
 
 auto M32X::VDP::selectFramebuffer(n1 select) -> void {
   framebufferSelect = select;
-  if(!vblank && mode) return;
+  if(!vblank && latch.mode) return;
 
   framebufferActive = select;
   fbram = {dram.data() + 0x10000 * (select == 0), 0x10000};
   bbram = {dram.data() + 0x10000 * (select == 1), 0x10000};
+}
+
+// back buffer access
+auto M32X::VDP::framebufferEngaged() -> bool {
+  // TODO: 40 cycle wait at start of hblank (according to official docs)
+  return (latch.mode != 0 && framebufferSelect != framebufferActive) || framebufferWait > 0;
+}
+
+auto M32X::VDP::paletteEngaged() -> bool {
+  // TODO: not available for 24 MClks (~10 cycles) at start of hblank (according to official docs)
+  return !vblank && !hblank && latch.mode.bit(0);
 }

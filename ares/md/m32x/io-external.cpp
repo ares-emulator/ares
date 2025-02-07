@@ -139,15 +139,18 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   //frame buffer control
   if(address == 0xa1518a) {
     data.bit( 0) = vdp.framebufferActive;
-    data.bit( 1) = MegaDrive::vdp.refreshing();  //framebuffer access
+    data.bit( 1) = MegaDrive::vdp.refreshing()
+                || vdp.framebufferEngaged(); // FEN: frame buffer engaged
     data.bit( 2, 12) = 0;
-    data.bit(13) = vdp.vblank || vdp.hblank;     //palette access
+    data.bit(13) = !vdp.paletteEngaged();    // PEN: can access palette
     data.bit(14) = vdp.hblank;
     data.bit(15) = vdp.vblank;
   }
 
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
+    if (vdp.framebufferAccess) return data;
+    if(vdp.paletteEngaged()) { debug(unusual, "[32X CRAM] 68k read while PEN==0"); return data; } // wait instead?
     data = vdp.cram[address >> 1 & 0xff];
   }
 
@@ -358,6 +361,7 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
     if (vdp.framebufferAccess) return;
+    if(vdp.paletteEngaged()) { debug(unusual, "[32X CRAM] 68k write while PEN==0"); return; } // wait instead?
     if(upper) vdp.cram[address >> 1 & 0xff].byte(1) = data.byte(1);
     if(lower) vdp.cram[address >> 1 & 0xff].byte(0) = data.byte(0);
   }
