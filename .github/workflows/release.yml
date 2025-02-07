@@ -48,12 +48,19 @@ jobs:
             description="This is ares ${GITHUB_REF_NAME}, released on ${now}."
             echo "description=${description}" >> $GITHUB_OUTPUT
           fi
-          
+    - name: Update Git Tag
+      if: steps.check.outputs.tag == 'nightly'
+      id: update-tag
+      run: |
+          git -C src tag -f ${{ steps.check.outputs.tag }}
+          git -C src push -f origin ${{ steps.check.outputs.tag }}
+
     - name: Create Release 🛫
       id: create_release
       uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191
       with:
         draft: ${{ github.ref != 'refs/heads/master' }}
+        prerelease: ${{ steps.check.outputs.tag == 'nightly' }}
         tag_name: ${{ steps.check.outputs.tag }}
         name: ares ${{ steps.check.outputs.versionName }}
         body: ${{ steps.check.outputs.description }}
