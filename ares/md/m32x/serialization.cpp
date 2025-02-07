@@ -46,12 +46,17 @@ auto M32X::VDP::serialize(serializer& s) -> void {
   s(lines);
   s(priority);
   s(dotshift);
+  s(latch.mode);
+  s(latch.lines);
+  s(latch.priority);
+  s(latch.dotshift);
   s(autofillLength);
   s(autofillAddress);
   s(autofillData);
   s(framebufferAccess);
   s(framebufferActive);
   s(framebufferSelect);
+  s(framebufferWait);
   s(hblank);
   s(vblank);
   selectFramebuffer(framebufferSelect);
