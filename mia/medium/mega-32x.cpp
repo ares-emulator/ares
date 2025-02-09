@@ -142,7 +142,7 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
     if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
     if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
   }
-  if(!regions) { 
+  if(!regions) {
     regions.append("NTSC-J", "NTSC-U", "PAL");
   }
 
