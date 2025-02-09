@@ -81,4 +81,5 @@ auto M32X::PWM::serialize(serializer& s) -> void {
   s(lfifoLatch);
   s(rfifoLatch);
   s(mfifoLatch);
+  updateFrequency();
 }
