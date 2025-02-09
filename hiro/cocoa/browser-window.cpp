@@ -10,11 +10,14 @@ auto pBrowserWindow::directory(BrowserWindow::State& state) -> string {
     if(state.title) [panel setTitle:[NSString stringWithUTF8String:state.title]];
     panel.canChooseDirectories = YES;
     panel.canChooseFiles = NO;
+    panel.canCreateDirectories = YES;
     panel.directoryURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String:state.path]];
     if([panel runModal] == NSModalResponseOK) {
-      NSArray* files = [panel URLs];
-      const char* path = [[[files objectAtIndex:0] path] UTF8String];
-      if(path) result = path;
+      NSString* path = panel.URLs.firstObject.path;
+      if(path) {
+        path = [path stringByAppendingString:@"/"];
+        result = path.UTF8String;
+      }
     }
   }
 
