@@ -120,9 +120,12 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
 
   vector<string> regions;
   string region = slice((const char*)&rom[0x01f0], 0, 16).trimRight(" ");
-  if(!regions) {
-    if(region == "JAPAN" ) regions.append("NTSC-J");
-    if(region == "EUROPE") regions.append("PAL");
+
+  //Stellar Assault (U,E) is the one game using the single-byte region coding which
+  //uses an 'E' value for both PAL and NTSC-U region. (NTSC-J cartridge uses '1')  
+  //https://segaretro.org/ROM_header#Regional_compatiblity
+  if(region(0) == 'E' && hash == "2f9b6017258fbb1c37d81df07c68d5255495d3bf76d9c7b680ff66bccf665750") {
+    regions.append("NTSC-U", "PAL");
   }
   if(!regions) {
     if(region.find("J")) regions.append("NTSC-J");
@@ -139,19 +142,8 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
     if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
     if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
   }
-  if(!regions) {
+  if(!regions) { 
     regions.append("NTSC-J", "NTSC-U", "PAL");
-  }
-
-  // FIFA Soccer 96 and Mortal Kombat II have an incorrect header, so force PAL based on name
-  if(location.ifind("(Europe)") || location.ifind("(PAL)")) {
-    regions.reset();
-    regions.append("PAL");
-  }
-
-  //Shadow Squadron - Stellar Assault is missing NTSC-U region in header
-  if(hash == "2f9b6017258fbb1c37d81df07c68d5255495d3bf76d9c7b680ff66bccf665750") {
-    regions.append("NTSC-U");
   }
 
   string domesticName;
