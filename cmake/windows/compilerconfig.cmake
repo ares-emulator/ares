@@ -147,6 +147,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   add_link_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_gcc_debug_link_options}>")
 
   add_compile_options(${_ares_gcc_common_options})
+  add_link_options(-static-libstdc++)
 endif()
 
 # arch/machine-specific optimizations
