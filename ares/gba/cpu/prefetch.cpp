@@ -11,7 +11,7 @@ auto CPU::prefetchSync(n32 address) -> void {
 
 auto CPU::prefetchStep(u32 clocks) -> void {
   step(clocks);
-  if(!wait.prefetch || context.dmaRomAccess || prefetch.stopped) return;
+  if(!wait.prefetch || prefetch.stopped) return;
 
   while(!prefetch.full() && clocks--) {
     if(--prefetch.wait) continue;
