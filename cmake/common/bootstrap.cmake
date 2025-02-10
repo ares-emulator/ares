@@ -25,6 +25,7 @@ set(
 )
 string(TIMESTAMP CURRENT_YEAR "%Y")
 set(ARES_LEGAL_COPYRIGHT "Copyright (c) 2004-${CURRENT_YEAR} ares team, Near et. al.")
+set(ARES_LEGAL_COPYRIGHT_SHORT "2004-${CURRENT_YEAR} ares team, Near")
 
 # Add common module directories to default search path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/common" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/finders")
