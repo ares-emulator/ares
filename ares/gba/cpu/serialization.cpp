@@ -116,6 +116,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.dmaRan);
   s(context.dmaRomAccess);
   s(context.dmaActive);
+  s(context.dmaActiveChannel);
   s(context.timerLatched);
   s(context.busLocked);
 }

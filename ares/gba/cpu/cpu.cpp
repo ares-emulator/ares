@@ -58,11 +58,18 @@ auto CPU::main() -> void {
 auto CPU::dmaRun() -> void {
   if(!context.dmaActive && !context.busLocked) {
     context.dmaActive = true;
-    while(dma[0].run() | dma[1].run() | dma[2].run() | dma[3].run());
+    while(true) {
+      if(dma[0].run()) continue;
+      if(dma[1].run()) continue;
+      if(dma[2].run()) continue;
+      if(dma[3].run()) continue;
+      break;
+    }
     if(context.dmaRan) {
       idle();
       context.dmaRan = false;
       context.dmaRomAccess = false;
+      context.dmaActiveChannel = 0;  //assign burst to a channel that cannot access ROM
     }
     context.dmaActive = false;
   }

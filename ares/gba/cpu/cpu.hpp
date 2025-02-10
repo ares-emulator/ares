@@ -263,6 +263,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  dmaRan;
     n1  dmaRomAccess;
     n1  dmaActive;
+    n2  dmaActiveChannel;
     n1  timerLatched;
     n1  busLocked;
   } context;
