@@ -80,7 +80,7 @@ jobs:
     - name: "macOS: Import Certificate"
       if: runner.os == 'macOS' && inputs.codesign
       uses: apple-actions/import-codesign-certs@v3
-      continue-on-error: ${{ !inputs.codesign }}
+      continue-on-error: ${{ secrets.MACOS_CERTIFICATE_NAME == '' }}
       with:
         p12-file-base64: ${{ secrets.MACOS_CERTIFICATE_DATA }}
         p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSPHRASE }}
