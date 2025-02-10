@@ -149,7 +149,7 @@ auto Pak::saveLocation(string location, string name, string extension) -> string
   string saveLocation;
   if(auto path = mia::saveLocation()) {
     //if the user has chosen a specific location to save files to ...
-    saveLocation = {path, this->name(), "/", Location::prefix(location), extension};
+    saveLocation = {path, this->saveName(), "/", Location::prefix(location), extension};
   } else if(directory::exists(location)) {
     //if this is a pak ...
     saveLocation = {location, name};
