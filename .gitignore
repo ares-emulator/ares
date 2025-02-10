@@ -38,3 +38,5 @@ mia/resource/resource.cpp
 mia/resource/resource.hpp
 tests/arm7tdmi/tests
 tests/m68000/tests
+thirdparty/libchdr/deps/zlib-*/zconf.h
+thirdparty/libchdr/deps/zlib-*/zconf.h.included
