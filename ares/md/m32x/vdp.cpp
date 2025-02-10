@@ -68,25 +68,17 @@ auto M32X::VDP::scanlineMode3(u32 pixels[1280], u32 y) -> void {
 }
 
 auto M32X::VDP::plot(u32* output, u16 color) -> void {
-  n1 backdrop = output[0] >> 11;
   n1 throughbit = color >> 15;
-  b1 opaque = color & 0x7fff;
 
-  if(latch.priority == 0) {
-    //Mega Drive has priority
-    if(throughbit || backdrop) {
-      output[0] = color | 1 << 15;
-      output[1] = color | 1 << 15;
-      output[2] = color | 1 << 15;
-      output[3] = color | 1 << 15;
-    }
-  } else {
-    //Mega 32X has priority
-    if(!throughbit || backdrop) {
-      output[0] = color | 1 << 15;
-      output[1] = color | 1 << 15;
-      output[2] = color | 1 << 15;
-      output[3] = color | 1 << 15;
+  for(int i = 0; i < 4; i++) {
+    n1 backdrop = output[i] >> 11;
+
+    if(latch.priority == 0) {
+      //Mega Drive has priority
+      if(throughbit || backdrop) output[i] = color | 1 << 15;
+    } else {
+      //Mega 32X has priority
+      if(!throughbit || backdrop) output[i] = color | 1 << 15;
     }
   }
 }
