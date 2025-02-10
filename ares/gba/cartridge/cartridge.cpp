@@ -113,30 +113,36 @@ auto Cartridge::power() -> void {
 
 #define RAM_ANALYZE
 
-auto Cartridge::read(u32 mode, n32 address) -> n32 {
-  if(address < 0x0e00'0000) {
-    if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.read();
-    return mrom.read(mode, address);
-  } else {
-    n32 word = 0xff;
-    if(has.sram) word = sram.read(address);
-    if(has.flash) word = flash.read(address);
-    word |= word <<  8;
-    word |= word << 16;
+auto Cartridge::readRom(u32 mode, n32 address) -> n32 {
+  if(mode & Word) {
+    n32 word = 0;
+    word |= readRom(mode & ~Word | Half, (address & ~3) + 0) <<  0;
+    word |= readRom(mode & ~Word | Half, (address & ~3) + 2) << 16;
     return word;
   }
+
+  if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.read();
+  return mrom.read(mode, address);
 }
 
-auto Cartridge::write(u32 mode, n32 address, n32 word) -> void {
-  if(address < 0x0e00'0000) {
-    if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.write(word & 1);
-    return mrom.write(mode, address, word);
-  } else {
-    if(mode & Word) word = word >> (8 * (address & 3));
-    if(mode & Half) word = word >> (8 * (address & 1));
-    if(has.sram) return sram.write(address, word);
-    if(has.flash) return flash.write(address, word);
-  }
+auto Cartridge::readBackup(u32 mode, n32 address) -> n32 {
+  n32 word = 0xff;
+  if(has.sram) word = sram.read(address);
+  if(has.flash) word = flash.read(address);
+  word *= 0x01010101;
+  return word;
+}
+
+auto Cartridge::writeRom(u32 mode, n32 address, n32 word) -> void {
+  if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.write(word & 1);
+  return mrom.write(mode, address, word);
+}
+
+auto Cartridge::writeBackup(u32 mode, n32 address, n32 word) -> void {
+  if(mode & Word) word = word >> (8 * (address & 3));
+  if(mode & Half) word = word >> (8 * (address & 1));
+  if(has.sram) return sram.write(address, word);
+  if(has.flash) return flash.write(address, word);
 }
 
 }

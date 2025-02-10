@@ -10,11 +10,16 @@ inline auto CPU::DMA::run() -> bool {
 auto CPU::DMA::transfer() -> void {
   u32 seek = size ? 4 : 2;
   u32 mode = size ? Word : Half;
-  mode |= latch.length() == length() ? Nonsequential : Sequential;
 
   if(!cpu.context.dmaRan) {
     cpu.context.dmaRan = true;
     cpu.idle();
+  }
+
+  if(cpu.context.dmaActiveChannel != id) {
+    //channel has switched - new burst transfer must be started
+    cpu.context.dmaRomAccess = 0;
+    cpu.context.dmaActiveChannel = id;
   }
 
   if(latch.source() < 0x0200'0000) {
@@ -23,17 +28,10 @@ auto CPU::DMA::transfer() -> void {
     n32 addr = latch.source();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
-    if(addr & 0x0800'0000) cpu.context.dmaRomAccess = true;
-    latch.data = cpu.get(mode, addr);
+    u32 sequential = Nonsequential;
+    if(cpu.context.dmaRomAccess) sequential = Sequential;
+    latch.data = cpu.get(mode | sequential, addr);
     if(mode & Half) latch.data |= latch.data << 16;
-  }
-
-  if(mode & Nonsequential) {
-    if((source() & 0x0800'0000) && (target() & 0x0800'0000)) {
-      //ROM -> ROM transfer
-      mode |= Sequential;
-      mode ^= Nonsequential;
-    }
   }
 
   if(latch.target() < 0x0200'0000) {
@@ -42,8 +40,9 @@ auto CPU::DMA::transfer() -> void {
     n32 addr = latch.target();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
-    if(addr & 0x0800'0000) cpu.context.dmaRomAccess = true;
-    cpu.set(mode, addr, latch.data >> (addr & 2) * 8);
+    u32 sequential = Nonsequential;
+    if(cpu.context.dmaRomAccess) sequential = Sequential;
+    cpu.set(mode | sequential, addr, latch.data >> (addr & 2) * 8);
   }
 
   switch(sourceMode) {

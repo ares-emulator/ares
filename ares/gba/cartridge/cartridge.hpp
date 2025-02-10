@@ -17,8 +17,10 @@ struct Cartridge {
   auto save() -> void;
   auto power() -> void;
 
-  auto read(u32 mode, n32 address) -> n32;
-  auto write(u32 mode, n32 address, n32 word) -> void;
+  auto readRom(u32 mode, n32 address) -> n32;
+  auto readBackup(u32 mode, n32 address) -> n32;
+  auto writeRom(u32 mode, n32 address, n32 word) -> void;
+  auto writeBackup(u32 mode, n32 address, n32 word) -> void;
 
   auto serialize(serializer&) -> void;
 
