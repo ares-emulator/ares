@@ -11,7 +11,7 @@ bool _runAhead = false;
 
 const string Name       = "@ARES_NAME@";
 const string Version    = "@ARES_VERSION@";
-const string Copyright  = "@ARES_LEGAL_COPYRIGHT@";
+const string Copyright  = "@ARES_LEGAL_COPYRIGHT_SHORT@";
 const string License    = "ISC";
 const string LicenseURI = "https://opensource.org/licenses/ISC";
 const string Website    = "@ARES_WEBSITE@";
