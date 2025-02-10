@@ -1,5 +1,6 @@
 auto ARM7TDMI::thumbInstructionALU
 (n3 d, n3 m, n4 mode) -> void {
+  carry = cpsr().c;
   switch(mode) {
   case  0: r(d) = BIT(r(d) & r(m)); break;  //AND
   case  1: r(d) = BIT(r(d) ^ r(m)); break;  //EOR
@@ -24,7 +25,7 @@ auto ARM7TDMI::thumbInstructionALUExtended
 (n4 d, n4 m, n2 mode) -> void {
   switch(mode) {
   case 0: r(d) = r(d) + r(m); break;  //ADD
-  case 1: SUB(r(d), r(m), 1); break;  //SUBS
+  case 1: SUB(r(d), r(m), 1); break;  //CMP
   case 2: r(d) = r(m); break;  //MOV
   }
 }
@@ -92,6 +93,7 @@ auto ARM7TDMI::thumbInstructionBranchTest
 
 auto ARM7TDMI::thumbInstructionImmediate
 (n8 immediate, n3 d, n2 mode) -> void {
+  carry = cpsr().c;
   switch(mode) {
   case 0: r(d) = BIT(immediate); break;  //MOV
   case 1:        SUB(r(d), immediate, 1); break;  //CMP
@@ -126,18 +128,31 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
 (n8 list, n3 n, n1 mode) -> void {
   n32 rn = r(n);
   n32 bitCount = list ? bit::count(list) : 16;
+  n32 rnEnd = r(n) + bitCount * 4;
 
-  if(mode == 1 && !list.bit(n)) r(n) = r(n) + bitCount * 4;
+  if(mode == 1 && !list.bit(n)) r(n) = rnEnd;
 
   u32 sequential = Nonsequential;
   if(!list) {
     if(mode == 1) r(15) = read(Word | sequential, rn);
-    if(mode == 0) write(Word | sequential, rn, r(15) + 2);
+    if(mode == 0) {
+      write(Word | sequential, rn, r(15) + 2);
+      //writeback occurs after first access
+      r(n) = rnEnd;
+    }
   } else {
+    bool wroteBack = false;
     for(u32 m : range(8)) {
       if(!list.bit(m)) continue;
       if(mode == 1) r(m) = read(Word | sequential, rn);  //LDMIA
-      if(mode == 0) write(Word | sequential, rn, r(m));  //STMIA
+      if(mode == 0) {
+        write(Word | sequential, rn, r(m));  //STMIA
+        //writeback occurs after first access
+        if(!wroteBack) {
+          r(n) = rnEnd;
+          wroteBack = true;
+        }
+      }
       rn += 4;
       sequential = Sequential;
     }
@@ -147,7 +162,6 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
     idle();
   } else {
     pipeline.nonsequential = true;
-    r(n) = r(n) + bitCount * 4;
   }
 }
 
