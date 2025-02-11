@@ -8,8 +8,8 @@
 
     [self setTarget:self];
     [self setAction:@selector(activate:)];
-    [self setBezelStyle:NSRegularSquareBezelStyle];
-    [self setButtonType:NSOnOffButton];
+    [self setBezelStyle:NSBezelStyleFlexiblePush];
+    [self setButtonType:NSButtonTypeOnOff];
   }
   return self;
 }
@@ -64,7 +64,7 @@ auto pRadioButton::setChecked() -> void {
       if(auto object = weak.acquire()) {
         if(auto self = object->self()) {
           if(auto p = dynamic_cast<pRadioButton*>(self)) {
-            auto state = this == p ? NSOnState : NSOffState;
+            auto state = this == p ? NSControlStateValueOn : NSControlStateValueOff;
             [(CocoaRadioButton*)p->cocoaView setState:state];
           }
         }

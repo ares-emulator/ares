@@ -15,7 +15,16 @@
 #endif
 
 #if defined(AUDIO_OPENAL)
+  #if defined(__APPLE__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  #endif
+
   #include <ruby/audio/openal.cpp>
+
+  #if defined(__APPLE__)
+    #pragma clang diagnostic pop
+  #endif
 #endif
 
 #if defined(AUDIO_OSS)

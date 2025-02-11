@@ -30,13 +30,11 @@
   auto& state = verticalScrollBar->state;
 
   switch([self hitPart]) {
-  case NSScrollerIncrementLine:
   case NSScrollerIncrementPage:
     if(state.position < state.length - 1) state.position++;
     [self update];
     break;
 
-  case NSScrollerDecrementLine:
   case NSScrollerDecrementPage:
     if(state.position) state.position--;
     [self update];

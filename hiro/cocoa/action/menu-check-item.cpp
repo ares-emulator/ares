@@ -13,7 +13,7 @@
 
 -(void) activate {
   menuCheckItem->state.checked = !menuCheckItem->state.checked;
-  auto state = menuCheckItem->state.checked ? NSOnState : NSOffState;
+  auto state = menuCheckItem->state.checked ? NSControlStateValueOn : NSControlStateValueOff;
   [self setState:state];
   menuCheckItem->doToggle();
 }
@@ -34,7 +34,7 @@ auto pMenuCheckItem::destruct() -> void {
 }
 
 auto pMenuCheckItem::setChecked(bool checked) -> void {
-  auto state = checked ? NSOnState : NSOffState;
+  auto state = checked ? NSControlStateValueOn : NSControlStateValueOff;
   [cocoaAction setState:state];
 }
 
