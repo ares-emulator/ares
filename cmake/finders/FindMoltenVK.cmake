@@ -87,7 +87,10 @@ if(MoltenVK_FOUND)
     endif()
     set_target_properties(
       MoltenVK::MoltenVK
-      PROPERTIES INTERFACE_COMPILE_OPTIONS "${PC_MoltenVK_CFLAGS_OTHER}" VERSION ${MoltenVK_VERSION}
+      PROPERTIES
+        INTERFACE_COMPILE_OPTIONS "${PC_MoltenVK_CFLAGS_OTHER}"
+        VERSION ${MoltenVK_VERSION}
+        MACOS_VERSION_REQUIRED 10.15
     )
   endif()
 endif()

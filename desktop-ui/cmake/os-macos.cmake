@@ -65,20 +65,24 @@ endfunction()
 # Add slang-shaders as a post-build script so we don't have an exceedingly long "Copy Files" phase
 if(ARES_ENABLE_LIBRASHADER)
   if(TARGET libretro::slang_shaders)
-    add_custom_command(
-      OUTPUT
-        "${CMAKE_CURRENT_BINARY_DIR}/$<IF:$<BOOL:${XCODE}>,$<CONFIG>,>/ares.app/Contents/Resources/Shaders/bilinear.slangp"
-        POST_BUILD
-      COMMAND ditto "${slang_shaders_LOCATION}" "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>/Resources/Shaders/"
-      WORKING_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>"
-      COMMENT "Copying slang shaders to app bundle"
-    )
-    add_custom_target(
-      bundled_shaders
-      DEPENDS
-        "${CMAKE_CURRENT_BINARY_DIR}/$<IF:$<BOOL:${XCODE}>,$<CONFIG>,>/ares.app/Contents/Resources/Shaders/bilinear.slangp"
-    )
-    add_dependencies(desktop-ui bundled_shaders)
+    get_target_property(_required_macos libretro::slang_shaders MACOS_VERSION_REQUIRED)
+    if(_required_macos VERSION_LESS_EQUAL CMAKE_OSX_DEPLOYMENT_TARGET)
+      add_custom_command(
+        OUTPUT
+          "${CMAKE_CURRENT_BINARY_DIR}/$<IF:$<BOOL:${XCODE}>,$<CONFIG>,>/ares.app/Contents/Resources/Shaders/bilinear.slangp"
+          POST_BUILD
+        COMMAND ditto "${slang_shaders_LOCATION}" "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>/Resources/Shaders/"
+        WORKING_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>"
+        COMMENT "Copying slang shaders to app bundle"
+      )
+      add_custom_target(
+        bundled_shaders
+        DEPENDS
+          "${CMAKE_CURRENT_BINARY_DIR}/$<IF:$<BOOL:${XCODE}>,$<CONFIG>,>/ares.app/Contents/Resources/Shaders/bilinear.slangp"
+      )
+      add_dependencies(desktop-ui bundled_shaders)
+    endif()
+    unset(_required_macos)
   endif()
 endif()
 

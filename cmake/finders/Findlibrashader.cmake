@@ -108,6 +108,8 @@ if(librashader_FOUND AND ARES_ENABLE_LIBRASHADER)
   if(NOT TARGET librashader::librashader)
     add_library(librashader::librashader UNKNOWN IMPORTED)
     set_property(TARGET librashader::librashader PROPERTY IMPORTED_LOCATION "${librashader_LIBRARY}")
+    # cargo does not set the minimum version correctly in the dylib, so manually define librashader's actual system requirement
+    set_property(TARGET librashader::librashader PROPERTY MACOS_VERSION_REQUIRED 10.15)
 
     librashader_set_soname()
     set_target_properties(
