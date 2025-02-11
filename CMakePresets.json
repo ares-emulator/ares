@@ -81,7 +81,7 @@
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": {"type": "STRING", "value": "x86_64;arm64"},
-        "CMAKE_OSX_DEPLOYMENT_TARGET": {"type": "STRING", "value": "10.13"},
+        "CMAKE_OSX_DEPLOYMENT_TARGET": {"type": "STRING", "value": "10.15"},
         "ARES_CODESIGN_IDENTITY": {"type": "STRING", "value": "$penv{MACOS_CERTIFICATE_NAME}"},
         "ARES_CODESIGN_TEAM": {"type": "STRING", "value": "$penv{MACOS_NOTARIZATION_TEAMID}"},
         "ENABLE_CCACHE": true,

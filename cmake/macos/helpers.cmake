@@ -22,7 +22,6 @@ function(ares_configure_executable target)
   get_target_property(target_type ${target} TYPE)
 
   if(target_type STREQUAL EXECUTABLE)
-    
     get_target_property(is_bundle ${target} MACOSX_BUNDLE)
     get_target_property(target_output_name ${target} OUTPUT_NAME)
     if(is_bundle)
@@ -109,10 +108,15 @@ function(_bundle_dependencies target)
       endforeach()
       cmake_path(IS_PREFIX system_library_path "${imported_location}" is_system_framework)
 
+      unset(_required_macos)
+      get_target_property(_required_macos ${library} MACOS_VERSION_REQUIRED)
+
       if(is_system_framework OR is_xcode_framework)
         continue()
       elseif(is_framework)
         file(REAL_PATH "../../.." library_location BASE_DIRECTORY "${imported_location}")
+      elseif(_required_macos VERSION_GREATER CMAKE_OSX_DEPLOYMENT_TARGET)
+        continue()
       elseif(NOT library_type STREQUAL "STATIC_LIBRARY")
         if(NOT imported_location MATCHES ".+\\.a")
           set(library_location "${imported_location}")
