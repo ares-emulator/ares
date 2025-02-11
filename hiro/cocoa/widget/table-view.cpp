@@ -202,7 +202,7 @@
   if(self = [super initTextCell:@""]) {
     tableView = &tableViewReference;
     buttonCell = [[NSButtonCell alloc] initTextCell:@""];
-    [buttonCell setButtonType:NSSwitchButton];
+    [buttonCell setButtonType:NSButtonTypeSwitch];
     [buttonCell setControlSize:NSControlSizeSmall];
     [buttonCell setRefusesFirstResponder:YES];
     [buttonCell setTarget:self];
@@ -222,7 +222,7 @@
     if(auto tableViewCell = tableViewItem->cell([view columnAtPoint:frame.origin])) {
       if(tableViewCell->state.checkable) {
         [buttonCell setHighlighted:YES];
-        [buttonCell setState:(tableViewCell->state.checked ? NSOnState : NSOffState)];
+        [buttonCell setState:(tableViewCell->state.checked ? NSControlStateValueOn : NSControlStateValueOff)];
         [buttonCell drawWithFrame:frame inView:view];
         frame.origin.x += frame.size.height + 2;
         frame.size.width -= frame.size.height + 2;

@@ -41,7 +41,7 @@ auto NSMakeImage(image icon, u32 scaleWidth = 0, u32 scaleHeight = 0) -> NSImage
     pixelsWide:icon.width() pixelsHigh:icon.height()
     bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES
     isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace
-    bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
+    bitmapFormat:NSBitmapFormatAlphaNonpremultiplied
     bytesPerRow:(4 * icon.width()) bitsPerPixel:32
   ];
   memory::copy<u32>([bitmap bitmapData], icon.data(), icon.width() * icon.height());

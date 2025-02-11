@@ -1,5 +1,14 @@
 #if defined(VIDEO_CGL)
+  #if defined(__APPLE__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  #endif
+
   #include <ruby/video/cgl.cpp>
+
+  #if defined(__APPLE__)
+    #pragma clang diagnostic pop
+  #endif
 #endif
 
 #if defined(VIDEO_DIRECT3D9)
