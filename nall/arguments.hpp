@@ -60,8 +60,14 @@ inline auto Arguments::construct() -> void {
 
   //normalize path and file arguments
   for(auto& argument : arguments) {
-    if(directory::exists(argument)) argument.transform("\\", "/").trimRight("/").append("/");
-    else if(file::exists(argument)) argument.transform("\\", "/").trimRight("/");
+    if(directory::exists(argument)) {
+      argument.transform("\\", "/").trimRight("/").append("/");
+      argument = Path::real(argument);
+    }
+    else if(file::exists(argument)) {
+      argument.transform("\\", "/").trimRight("/");
+      argument = {Path::real(argument), Location::file(argument)};
+    }
   }
 }
 
