@@ -144,18 +144,7 @@ set(
   CMAKE_XCODE_ATTRIBUTE_WARNING_CFLAGS
   "-Wvla
   -Wformat-security
-  -Wno-c++11-narrowing
-  -Wno-error=strict-prototypes
-  -Wno-error=shorten-64-to-32
-  -Wno-error=sign-compare
-  -Wno-error=comma
-  -Wno-error=parentheses
-  -Wno-error=unused-parameter
-  -Wno-error=unused-variable
-  -Wno-error=deprecated-declarations
-  -Wno-error=newline-eof
-  -Wno-error=protocol
-  -Wno-error=comma"
+  -Wno-c++11-narrowing"
 )
 
 if(CMAKE_COMPILE_WARNING_AS_ERROR)
