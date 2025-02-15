@@ -74,7 +74,6 @@ set(
   -Wno-unused
   -Wvla
   -Wformat-security
-  -Wno-error=strict-prototypes
   -Wno-shorten-64-to-32
   -Wno-sign-compare
   -Wno-comma

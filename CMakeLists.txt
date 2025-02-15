@@ -12,7 +12,7 @@ add_subdirectory(cmake)
 
 add_subdirectory(thirdparty)
 
-add_subdirectory(nall)
+add_subdirectory(nall/nall)
 add_subdirectory(libco)
 add_subdirectory(ruby)
 add_subdirectory(hiro)

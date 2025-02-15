@@ -27,11 +27,25 @@ elseif(OS_FREEBSD OR OS_OPENBSD)
   include(cmake/os-freebsd.cmake)
 endif()
 
+option(ARES_TREAT_NALL_AS_SYSTEM "Enable system library semantics for nall in other targets" ON)
+mark_as_advanced(ARES_TREAT_NALL_AS_SYSTEM)
+
+if(ARES_TREAT_NALL_AS_SYSTEM)
+  target_sources(nall PRIVATE cmake/headers.cpp)
+endif()
+
 get_target_property(nall_SOURCES nall SOURCES)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${nall_SOURCES})
 set_source_files_properties(${nall_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
-
 set_source_files_properties(nall nall.cpp main.cpp sljitAllocator.cpp PROPERTIES HEADER_FILE_ONLY FALSE)
+
+if(ARES_TREAT_NALL_AS_SYSTEM)
+  target_include_directories(nall SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")
+  target_include_directories(nall PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/..")
+  set_source_files_properties(nall cmake/headers.cpp PROPERTIES HEADER_FILE_ONLY FALSE)
+else()
+  target_include_directories(nall PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
+endif()
 
 # global compiler flags
 target_compile_features(nall PUBLIC c_std_11)
@@ -52,5 +66,3 @@ target_compile_definitions(
 if(ARES_BUILD_LOCAL)
   target_compile_definitions(nall PUBLIC BUILD_LOCAL)
 endif()
-
-target_include_directories(nall PRIVATE ${CMAKE_SOURCE_DIR})
