@@ -110,6 +110,7 @@ auto VDP::vtick() -> void {
   } else if(irq.hblank.counter-- == 0) {
     irq.hblank.counter = irq.hblank.frequency;
     irq.hblank.pending = 1;
+    irq.delay = h40() ? 3 : 2; // 4-6 pixel delay (~6 M68k cycles)
     debugger.interrupt(CPU::Interrupt::HorizontalBlank);
   }
 
@@ -147,6 +148,7 @@ auto VDP::vedge() -> void {
     cartridge.vblank(1);
     apu.setINT(1);
     irq.vblank.pending = 1;
+    irq.delay = h40() ? 3 : 2; // 4-6 pixel delay (~6 M68k cycles)
     debugger.interrupt(CPU::Interrupt::VerticalBlank);
   }
 }

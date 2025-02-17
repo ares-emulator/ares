@@ -30,7 +30,7 @@ auto VDP::IRQ::acknowledge(u8 level) -> void {
     else
       hblank.pending = 0;
   }
-  if(level == 6) vblank.pending = 0;
+  if(level == 6 && vblank.enable) vblank.pending = 0;
 }
 
 auto VDP::IRQ::power(bool reset) -> void {
