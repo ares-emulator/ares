@@ -4,12 +4,12 @@ auto ARM7TDMI::thumbInstructionALU
   switch(mode) {
   case  0: r(d) = BIT(r(d) & r(m)); break;  //AND
   case  1: r(d) = BIT(r(d) ^ r(m)); break;  //EOR
-  case  2: r(d) = BIT(LSL(r(d), r(m))); break;  //LSL
-  case  3: r(d) = BIT(LSR(r(d), r(m))); break;  //LSR
-  case  4: r(d) = BIT(ASR(r(d), r(m))); break;  //ASR
+  case  2: r(d) = BIT(LSL(r(d), r(m))); idle(); break;  //LSL
+  case  3: r(d) = BIT(LSR(r(d), r(m))); idle(); break;  //LSR
+  case  4: r(d) = BIT(ASR(r(d), r(m))); idle(); break;  //ASR
   case  5: r(d) = ADD(r(d), r(m), cpsr().c); break;  //ADC
   case  6: r(d) = SUB(r(d), r(m), cpsr().c); break;  //SBC
-  case  7: r(d) = BIT(ROR(r(d), r(m))); break;  //ROR
+  case  7: r(d) = BIT(ROR(r(d), r(m))); idle(); break;  //ROR
   case  8:        BIT(r(d) & r(m)); break;  //TST
   case  9: r(d) = SUB(0, r(m), 1); break;  //NEG
   case 10:        SUB(r(d), r(m), 1); break;  //CMP
