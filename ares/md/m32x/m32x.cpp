@@ -51,14 +51,11 @@ auto M32X::power(bool reset) -> void {
   shs.power(reset);
   vdp.power(reset);
   pwm.power(reset);
+  n32 vec4 = io.vectorLevel4;
   io = {};
+  if(reset) io.vectorLevel4 = vec4;
   dreq = {};
   for(auto& word : communication) word = 0;
-
-  io.vectorLevel4.byte(3) = vectors[0x70 >> 1].byte(1);
-  io.vectorLevel4.byte(2) = vectors[0x70 >> 1].byte(0);
-  io.vectorLevel4.byte(1) = vectors[0x72 >> 1].byte(1);
-  io.vectorLevel4.byte(0) = vectors[0x72 >> 1].byte(0);
 
   //connect interfaces
   shm.sci.link = shs;
