@@ -13,12 +13,14 @@ auto YM2612::serialize(serializer& s) -> void {
   s(envelope.divider);
 
   s(timerA.enable);
+  s(timerA.enableLatch);
   s(timerA.irq);
   s(timerA.line);
   s(timerA.period);
   s(timerA.counter);
 
   s(timerB.enable);
+  s(timerB.enableLatch);
   s(timerB.irq);
   s(timerB.line);
   s(timerB.period);

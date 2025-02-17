@@ -45,6 +45,7 @@ protected:
     auto run() -> void;
 
     n1  enable = 0;
+    n1  enableLatch = 0;
     n1  irq = 0;
     n1  line = 0;
     n10 period = 0;
@@ -56,6 +57,7 @@ protected:
     auto run() -> void;
 
     n1 enable = 0;
+    n1 enableLatch = 0;
     n1 irq = 0;
     n1 line = 0;
     n8 period = 0;

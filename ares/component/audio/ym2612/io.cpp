@@ -36,18 +36,14 @@ auto YM2612::writeData(n8 data) -> void {
   //timer B period
   case 0x026: {
     timerB.period.bit(0,7) = data.bit(0,7);
+    // Not sure if this is the right place for it, but...
+    // handle a specific use case to reset the subticks on timer B
+    if(!timerB.enable) timerB.divider = 0;
     break;
   }
 
   //timer control
   case 0x027: {
-    //reload period on 0->1 transition
-    if(!timerA.enable && data.bit(0)) timerA.counter = timerA.period;
-    if(!timerB.enable && data.bit(1)) {
-      timerB.counter = timerB.period;
-      timerB.divider = 0;
-    }
-
     timerA.enable = data.bit(0);
     timerB.enable = data.bit(1);
     timerA.irq = data.bit(2);
