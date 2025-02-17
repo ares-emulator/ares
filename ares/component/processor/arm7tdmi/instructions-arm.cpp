@@ -92,6 +92,7 @@ auto ARM7TDMI::armInstructionDataRegisterShift
   n32 rm = r(m) + (m == 15 ? 4 : 0);
   carry = cpsr().c;
 
+  idle();
   switch(type) {
   case 0: rm = LSL(rm, rs < 33 ? rs : (n8)33); break;
   case 1: rm = LSR(rm, rs < 33 ? rs : (n8)33); break;
