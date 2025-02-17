@@ -35,7 +35,9 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     data.bit(0) = dreq.vram;
     data.bit(1) = dreq.dma;
     data.bit(2) = dreq.active;
+    data.bit(3,6) = 0;
     data.bit(7) = dreq.fifo.full();
+    data.bit(8,15) = 0;
   }
 
   //68K to SH2 DREQ source address
@@ -62,9 +64,18 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     data.byte(0) = dreq.length.byte(0);
   }
 
+  if(address == 0xa15114 ||
+     address == 0xa15116 ||
+     address == 0xa15118 ||
+     address == 0xa1511c ||
+     address == 0xa1511e) {
+    data = 0;
+  }
+
   //TV register
   if(address == 0xa1511a) {
     data.bit(0) = io.cartridgeMode;
+    data.bit(1,15) = 0;
   }
 
   //communication

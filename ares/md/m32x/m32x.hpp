@@ -218,7 +218,7 @@ struct M32X {
 
     //$a15000
     n1 adapterEnable;
-    n1 adapterReset;
+    n1 adapterReset = 1;
     n1 resetEnable = 1;
 
     //$a15004
