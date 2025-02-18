@@ -65,7 +65,7 @@ auto CPU::step(u32 clocks) -> void {
   refresh.ram += clocks;
   refresh.external += clocks;
   Thread::step(clocks);
-  cyclesUntilSync -= clocks;
+  cyclesUntilFullSync -= clocks;
 }
 
 inline auto CPU::idle(u32 clocks) -> void {
@@ -74,8 +74,10 @@ inline auto CPU::idle(u32 clocks) -> void {
 
 auto CPU::wait(u32 clocks) -> void {
   step(clocks);
-  if (cyclesUntilSync <= 0) {
-    cyclesUntilSync = minCyclesBetweenSyncs;
+
+  Thread::synchronize(apu, cartridge, opn2, vdp);
+  if (cyclesUntilFullSync <= 0) {
+    cyclesUntilFullSync = minCyclesBetweenSyncs;
     Thread::synchronize();
   }  
 }

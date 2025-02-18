@@ -85,7 +85,7 @@ struct CPU : M68000, Thread {
     int stolenMcycles = 0;
   } state;
 
-  int cyclesUntilSync = 0;
+  int cyclesUntilFullSync = 0;
   int minCyclesBetweenSyncs = 0;
 };
 
