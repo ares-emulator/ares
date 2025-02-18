@@ -66,11 +66,8 @@ struct CPU : SM83, Thread {
   //timing.cpp
   auto step() -> void;
   auto step(u32 clocks) -> void;
-  auto timer262144hz() -> void;
-  auto timer65536hz() -> void;
-  auto timer16384hz() -> void;
+  auto timerTick() -> void;
   auto timer8192hz() -> void;
-  auto timer4096hz() -> void;
   auto timer1024hz() -> void;
   auto hblank() -> void;
   auto hblankTrigger() -> void;
@@ -79,6 +76,7 @@ struct CPU : SM83, Thread {
     n22 clock;
     n8  interruptLatch;
     n1  hblankPending;
+    n1  timerLine;
 
     //$ff00  JOYP
     n4 joyp;
