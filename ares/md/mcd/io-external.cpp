@@ -85,8 +85,8 @@ auto MCD::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
       } else {
         if(io.run && !data.bit(0)) resetCpu();
         io.run     = data.bit(0);
-        io.request = data.bit(1);
-        io.halt    = !io.run || io.request;
+        io.request = io.run ? data.bit(1) : 1; // asserting reset forces busreq (confirmed by eke)
+        io.halt    = io.request;
       }
     }
     if(upper) {
