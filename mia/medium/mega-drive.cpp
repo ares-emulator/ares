@@ -615,7 +615,8 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   }
 
   //Wonder Boy in Monster World (USA, Europe)
-  if(hash == "8d905c863b73a1522f6ea734d630beae1b824b9eecb63f899534c02efbde20fd") {
+  if(hash == "8d905c863b73a1522f6ea734d630beae1b824b9eecb63f899534c02efbde20fd" ||  
+     hash == "6b2ac36f624f914ad26e32baa87d1253aea9dcfc13d2a5842ecdd2bd4a7a43b9") {
     eeprom.mode = "X24C01";
     eeprom.size = 128;
     eeprom.rsda = 0;
