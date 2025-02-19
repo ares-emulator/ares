@@ -42,7 +42,7 @@ include(FindPackageHandleStandardArgs)
 
 find_package(PkgConfig QUIET)
 if(PKG_CONFIG_FOUND)
-  pkg_search_module(PC_SDL QUIET sdl2)
+  pkg_search_module(PC_SDL QUIET sdl3)
 endif()
 
 # SDL_set_soname: Set SONAME on imported library target
@@ -66,7 +66,7 @@ endmacro()
 
 find_path(
   SDL_INCLUDE_DIR
-  NAMES SDL.h SDL2/SDL.h
+  NAMES SDL.h SDL3/SDL.h
   HINTS ${PC_SDL_INCLUDE_DIRS}
   PATHS ${CMAKE_SOURCE_DIR}/.deps /usr/include /usr/local/include
   DOC "SDL include directory"
@@ -84,7 +84,7 @@ endif()
 
 find_library(
   SDL_LIBRARY
-  NAMES SDL2 SDL2-2.0.0 SDL2-2.0
+  NAMES SDL3 SDL3-3.0.0 SDL3-3.0
   HINTS ${PC_SDL_LIBRARY_DIRS}
   PATHS ${CMAKE_SOURCE_DIR}/.deps /usr/lib /usr/local/lib
   DOC "SDL location"
