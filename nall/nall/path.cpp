@@ -25,9 +25,16 @@ NALL_HEADER_INLINE auto program() -> string {
     return Path::real(path);
   }
   #endif
-  Dl_info info;
-  dladdr((void*)&program, &info);
-  return Path::real(info.dli_fname);
+  char exe[PATH_MAX];
+  ssize_t count = readlink("/proc/self/exe", exe, PATH_MAX - 1);
+  if(count >= 0) {
+    exe[count] = '\0';
+    return Path::real(exe);
+  } else {
+    Dl_info info;
+    dladdr((void*)&program, &info);
+    return Path::real(info.dli_fname);
+  }
   #endif
 }
 
