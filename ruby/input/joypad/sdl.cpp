@@ -90,15 +90,26 @@ private:
     }
     joypads.reset();
     int num_joysticks;
-    SDL_GetJoysticks(&num_joysticks);
-    for(u32 id : range(num_joysticks)) {
+    SDL_JoystickID *joysticks = SDL_GetJoysticks(&num_joysticks);
+    for(int i = 0; i < num_joysticks; i++) {
+      SDL_JoystickID id = joysticks[i];
       Joypad jp;
       jp.id = id;
       jp.handle = SDL_OpenJoystick(jp.id);
+      if(!jp.handle) {
+        const char *err = SDL_GetError();
+        print("Error opening SDL joystick id ", id, ": ", err);
+        continue;
+      }
 
-      u32 axes = SDL_GetNumJoystickAxes(jp.handle);
-      u32 hats = SDL_GetNumJoystickHats(jp.handle) * 2;
-      u32 buttons = SDL_GetNumJoystickButtons(jp.handle);
+      s32 axes = SDL_GetNumJoystickAxes(jp.handle);
+      s32 hats = SDL_GetNumJoystickHats(jp.handle) * 2;
+      s32 buttons = SDL_GetNumJoystickButtons(jp.handle);
+      if(axes < 0 || hats < 0 || buttons < 0) {
+        const char *err = SDL_GetError();
+        print("Error retrieving SDL joystick information for device ", jp.handle, " at index ", id, ": ", err);
+        continue;
+      }
 
       u16 vid = SDL_GetJoystickVendor(jp.handle);
       u16 pid = SDL_GetJoystickProduct(jp.handle);
