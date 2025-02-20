@@ -94,10 +94,20 @@ private:
       Joypad jp;
       jp.id = id;
       jp.handle = SDL_JoystickOpen(jp.id);
+      if(!jp.handle) {
+        const char *err = SDL_GetError();
+        print("Error opening SDL joystick id ", id, ": ", err);
+        continue;
+      }
 
-      u32 axes = SDL_JoystickNumAxes(jp.handle);
-      u32 hats = SDL_JoystickNumHats(jp.handle) * 2;
-      u32 buttons = SDL_JoystickNumButtons(jp.handle);
+      s32 axes = SDL_JoystickNumAxes(jp.handle);
+      s32 hats = SDL_JoystickNumHats(jp.handle) * 2;
+      s32 buttons = SDL_JoystickNumButtons(jp.handle);
+      if(axes < 0 || hats < 0 || buttons < 0) {
+        const char *err = SDL_GetError();
+        print("Error retrieving SDL joystick information for device ", jp.handle, " at index ", id, ": ", err);
+        continue;
+      }
 
       u16 vid = SDL_JoystickGetVendor(jp.handle);
       u16 pid = SDL_JoystickGetProduct(jp.handle);
