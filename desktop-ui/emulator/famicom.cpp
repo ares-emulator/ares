@@ -1,8 +1,16 @@
 struct Famicom : Emulator {
   Famicom();
+  auto process(bool load) -> void override;
   auto load() -> LoadResult override;
+  auto load(Menu menu) -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+
+  struct Settings {
+    bool ppuCtrlGlitch = false;
+    bool ppuOamScrollGlitch = false;
+    bool ppuOamAddressGlitch = false;
+  } local;
 };
 
 Famicom::Famicom() {
@@ -33,6 +41,26 @@ Famicom::Famicom() {
 
     ports.append(port);
   }
+}
+
+auto Famicom::process(bool load) -> void {
+  Emulator::process(load);
+  #define bind(type, path, name) \
+    if(load) { \
+      if(auto node = settings[path]) name = node.type(); \
+    } else { \
+      settings(path).setValue(name); \
+    }\
+
+  string base = string{name}.replace(" ", "");
+  string name = {base, "/PPU/ControlGlitch"};
+  bind(boolean, name, local.ppuCtrlGlitch);
+  name = {base, "/PPU/OAMScrollGlitch"};
+  bind(boolean, name, local.ppuOamScrollGlitch);
+  name = {base, "/PPU/OAMAddressGlitch"};
+  bind(boolean, name, local.ppuOamAddressGlitch);
+
+  #undef bind
 }
 
 auto Famicom::load() -> LoadResult {
@@ -72,6 +100,44 @@ auto Famicom::load() -> LoadResult {
   }
 
   return successful;
+}
+
+auto Famicom::load(Menu menu) -> void {
+  Menu ppuEmulationMenu{&menu};
+  ppuEmulationMenu.setText("PPU Emulation").setIcon(Icon::Device::Display);
+
+  if(auto ppuCtrlGlitch = root->find<ares::Node::Setting::Boolean>("PPU/Control Glitch")) {
+    MenuCheckItem item{&ppuEmulationMenu};
+    ppuCtrlGlitch->setValue(local.ppuCtrlGlitch);
+    item.setText("Control Glitch").setChecked(ppuCtrlGlitch->value()).onToggle([=] {
+      if(auto ppuCtrlGlitch = root->find<ares::Node::Setting::Boolean>("PPU/Control Glitch")) {
+        local.ppuCtrlGlitch = item.checked();
+        ppuCtrlGlitch->setValue(item.checked());
+      }
+    });
+  }
+
+  if(auto ppuOamScrollGlitch = root->find<ares::Node::Setting::Boolean>("PPU/OAM Scroll Glitch")) {
+    MenuCheckItem item{&ppuEmulationMenu};
+    ppuOamScrollGlitch->setValue(local.ppuOamScrollGlitch);
+    item.setText("OAM Scroll Glitch").setChecked(ppuOamScrollGlitch->value()).onToggle([=] {
+      if(auto ppuOamScrollGlitch = root->find<ares::Node::Setting::Boolean>("PPU/OAM Scroll Glitch")) {
+        local.ppuOamScrollGlitch = item.checked();
+        ppuOamScrollGlitch->setValue(item.checked());
+      }
+    });
+  }
+
+  if(auto ppuOamAddressGlitch = root->find<ares::Node::Setting::Boolean>("PPU/OAM Address Glitch")) {
+    MenuCheckItem item{&ppuEmulationMenu};
+    ppuOamAddressGlitch->setValue(local.ppuOamAddressGlitch);
+    item.setText("OAM Address Glitch").setChecked(ppuOamAddressGlitch->value()).onToggle([=] {
+      if(auto ppuOamAddressGlitch = root->find<ares::Node::Setting::Boolean>("PPU/OAM Address Glitch")) {
+        local.ppuOamAddressGlitch = item.checked();
+        ppuOamAddressGlitch->setValue(item.checked());
+      }
+    });
+  }
 }
 
 auto Famicom::save() -> bool {

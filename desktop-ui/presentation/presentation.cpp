@@ -474,12 +474,16 @@ auto Presentation::loadEmulator() -> void {
 }
 
 auto Presentation::refreshSystemMenu() -> void {
+  int submenuCount = 0;
   systemMenu.reset();
 
   //allow each emulator core to create any specialized menus necessary:
   //for instance, floppy disk and CD-ROM swapping support.
   emulator->load(systemMenu);
-  if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
+  if(systemMenu.actionCount() > submenuCount) {
+    systemMenu.append(MenuSeparator());
+    submenuCount = 2;
+  }
 
   //Build the Dip Switch menu if the emulator core has a DIP Switches node
   if(auto dipSwitches = ares::Node::find<ares::Node::Object>(emulator->root, "DIP Switches")) {
@@ -516,7 +520,7 @@ auto Presentation::refreshSystemMenu() -> void {
 
     if(dipSwitchMenu.actionCount() > 0) systemMenu.append(dipSwitchMenu);
   }
-  if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
+  if(systemMenu.actionCount() > submenuCount) systemMenu.append(MenuSeparator());
 
   u32 portsFound = 0;
   for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {
