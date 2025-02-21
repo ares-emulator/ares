@@ -126,7 +126,7 @@ private:
 
       joypads.append(jp);
     }
-
+    SDL_free(joysticks);
     SDL_UpdateJoysticks();
   }
 };
