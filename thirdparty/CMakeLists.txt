@@ -99,7 +99,8 @@ target_include_directories(ymfm PUBLIC ../thirdparty/ymfm/src)
 target_compile_options(ymfm PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-unreachable-code>)
 
 if(OS_LINUX OR OS_FREEBSD OR OS_OPENBSD)
-  list(APPEND CMAKE_PREFIX_PATH librashader/include)
+  list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/thirdparty/librashader/include")
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} CACHE PATH "CMake prefix search path" FORCE)
 endif()
 
 set_target_properties(ymfm PROPERTIES FOLDER thirdparty PREFIX "")
