@@ -59,7 +59,6 @@ jobs:
       id: create_release
       uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191
       with:
-        draft: ${{ github.ref != 'refs/heads/master' }}
         prerelease: ${{ steps.check.outputs.tag == 'nightly' }}
         tag_name: ${{ steps.check.outputs.tag }}
         name: ares ${{ steps.check.outputs.versionName }}
