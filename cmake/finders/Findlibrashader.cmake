@@ -64,10 +64,14 @@ macro(librashader_set_soname)
   unset(_result)
 endmacro()
 
+if(OS_LINUX OR OS_FREEBSD OR OS_OPENBSD)
+  set(_librashader_path_hint "${CMAKE_SOURCE_DIR}/thirdparty/librashader/include")
+endif()
+
 find_path(
   librashader_INCLUDE_DIR
   NAMES librashader_ld.h librashader/librashader_ld.h
-  HINTS ${PC_librashader_INCLUDE_DIRS}
+  HINTS ${PC_librashader_INCLUDE_DIRS} ${_librashader_path_hint}
   PATHS /usr/include /usr/local/include
   DOC "librashader include directory"
 )
