@@ -57,7 +57,10 @@ mark_as_advanced(slang_shaders_LOCATION)
 if(NOT TARGET libretro::slang_shaders)
   if(slang_shaders_LOCATION)
     add_library(slang_shaders INTERFACE)
-    set_target_properties(slang_shaders PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${slang_shaders_LOCATION}" MACOS_VERSION_REQUIRED 10.15)
+    set_target_properties(
+      slang_shaders
+      PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${slang_shaders_LOCATION}" MACOS_VERSION_REQUIRED 10.15
+    )
     add_library(libretro::slang_shaders ALIAS slang_shaders)
   endif()
 endif()
