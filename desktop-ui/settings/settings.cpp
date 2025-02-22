@@ -157,18 +157,8 @@ auto Settings::process(bool load) -> void {
     if(load == 1) for(u32 binding : range(BindingLimit)) mapping.assignments[binding] = value.split(";")(binding);
   }
 
-  for(auto& emulator : emulators) {
-    string base = string{emulator->name}.replace(" ", ""), name;
-    name = {base, "/Visible"};
-    bind(boolean, name, emulator->configuration.visible);
-    name = {base, "/Path"};
-    bind(string,  name, emulator->configuration.game);
-    for(auto& firmware : emulator->firmware) {
-      string name = {base, "/Firmware/", firmware.type, ".", firmware.region};
-      name.replace(" ", "-");
-      bind(string, name, firmware.location);
-    }
-  }
+  for(auto& emulator : emulators)
+    emulator->process(load);
 
   #undef bind
 }
