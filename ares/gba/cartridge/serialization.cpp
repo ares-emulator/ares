@@ -8,6 +8,8 @@ auto Cartridge::serialize(serializer& s) -> void {
 auto Cartridge::MROM::serialize(serializer& s) -> void {
   s(size);
   s(mask);
+  s(pageAddr);
+  s(burst);
 }
 
 auto Cartridge::SRAM::serialize(serializer& s) -> void {

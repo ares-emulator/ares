@@ -3,9 +3,10 @@ auto ARM7TDMI::reload() -> void {
   u32 size = !cpsr().t ? Word : Half;
 
   pipeline.reload = false;
+  endBurst();
   r(15).data &= ~mask;
   pipeline.fetch.address = r(15) & ~mask;
-  pipeline.fetch.instruction = read(Prefetch | size | Nonsequential, pipeline.fetch.address);
+  pipeline.fetch.instruction = read(Prefetch | size, pipeline.fetch.address);
   fetch();
 }
 
@@ -16,18 +17,12 @@ auto ARM7TDMI::fetch() -> void {
   pipeline.decode.thumb = cpsr().t;
   pipeline.decode.irq = !cpsr().i;
 
-  u32 sequential = Sequential;
-  if(pipeline.nonsequential) {
-    pipeline.nonsequential = false;
-    sequential = Nonsequential;
-  }
-
   u32 mask = !cpsr().t ? 3 : 1;
   u32 size = !cpsr().t ? Word : Half;
 
   r(15).data += size >> 3;
   pipeline.fetch.address = r(15) & ~mask;
-  pipeline.fetch.instruction = read(Prefetch | size | sequential, pipeline.fetch.address);
+  pipeline.fetch.instruction = read(Prefetch | size, pipeline.fetch.address);
 }
 
 auto ARM7TDMI::instruction() -> void {

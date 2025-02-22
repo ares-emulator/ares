@@ -1,14 +1,17 @@
 struct MROM {
   //mrom.cpp
   auto read(u32 mode, n32 address) -> n16;
-  auto write(u32 mode, n32 address, n32 word) -> void;
+  auto write(u32 mode, n32 address, n16 half) -> void;
+  auto burstAddr(u32 mode, n32 address) -> n32;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  n8* data = nullptr;
+  Memory::Readable<n16> data;
   u32 size;
   u32 mask;
+  n16 pageAddr;
+  n1  burst;
   bool mirror;
 } mrom;
 

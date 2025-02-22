@@ -6,15 +6,13 @@ namespace ares {
 
 struct ARM7TDMI {
   enum : u32 {
-    Nonsequential = 1 << 0,  //N cycle
-    Sequential    = 1 << 1,  //S cycle
+    Load          = 1 << 0,  //load operation
+    Store         = 1 << 1,  //store operation
     Prefetch      = 1 << 2,  //instruction fetch
     Byte          = 1 << 3,  // 8-bit access
     Half          = 1 << 4,  //16-bit access
     Word          = 1 << 5,  //32-bit access
-    Load          = 1 << 6,  //load operation
-    Store         = 1 << 7,  //store operation
-    Signed        = 1 << 8,  //sign-extend
+    Signed        = 1 << 6,  //sign-extend
   };
 
   virtual auto step(u32 clocks) -> void = 0;
@@ -44,6 +42,7 @@ struct ARM7TDMI {
   auto load(u32 mode, n32 address) -> n32;
   auto write(u32 mode, n32 address, n32 word) -> void;
   auto store(u32 mode, n32 address, n32 word) -> void;
+  auto endBurst() -> void { nonsequential = true; return; }
 
   //algorithms.cpp
   auto ADD(n32, n32, bool) -> n32;
@@ -221,7 +220,6 @@ struct ARM7TDMI {
     };
 
     n1 reload = 1;
-    n1 nonsequential = 1;
     Instruction fetch;
     Instruction decode;
     Instruction execute;
@@ -230,6 +228,7 @@ struct ARM7TDMI {
   n32 opcode;
   b1  carry;
   b1  irq;
+  b1  nonsequential;
 
   function<void (n32 opcode)> armInstruction[4096];
   function<void ()> thumbInstruction[65536];

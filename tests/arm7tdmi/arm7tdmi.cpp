@@ -117,8 +117,8 @@ struct CPU : ares::ARM7TDMI {
       }
       if(result) {
         //don't check sequential unless we got a result, otherwise it's just noise
-        if(!(mode & Sequential) != !(t.access & Access::Sequential)) {
-          error("write: nonsequential ", !(mode & Sequential), " != ", !(t.access & Access::Sequential), "\n");
+        if(!(!nonsequential) != !(t.access & Access::Sequential)) {
+          error("write: nonsequential ", !(!nonsequential), " != ", !(t.access & Access::Sequential), "\n");
           result = nothing;
         }
       }
@@ -231,7 +231,7 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   if(!thumb && (test.opcode & 0b00001111101111110000000011110000) == 0b0000'00010'0'001111'00000000'1001'0000) return skip;
 
   pipeline.reload = false;
-  pipeline.nonsequential = !(is.access & Access::Sequential);
+  nonsequential = !(is.access & Access::Sequential);
 
   pipeline.decode.address = test.base_addr;
   pipeline.decode.instruction = is.pipeline[0];
@@ -334,7 +334,7 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   if(pipeline.fetch.instruction != fs.pipeline[1]) error("pipeline[1]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[1], 8));
   //todo: fails some tests in arm_data_proc_register_shift, thumb_data_proc that operate on registers
   //should e.g. asr r4,r4 really change the state to nonsequential?
-  //if(pipeline.nonsequential != !(fs.access & Access::Sequential)) error("nonsequential: ", pipeline.nonsequential, " != ", !(fs.access & Access::Sequential));
+  //if(nonsequential != !(fs.access & Access::Sequential)) error("nonsequential: ", nonsequential, " != ", !(fs.access & Access::Sequential));
 
   if(tindex != test.transactions.size()) {
     error("transactions: ", tindex, " != ", test.transactions.size(), "\n");

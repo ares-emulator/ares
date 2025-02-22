@@ -108,7 +108,7 @@ auto ARM7TDMI::armInstructionLoadImmediate
   n32 rd = r(d);
 
   if(pre == 1) rn = up ? rn + immediate : rn - immediate;
-  rd = load((half ? Half : Byte) | Nonsequential | Signed, rn);
+  rd = load((half ? Half : Byte) | Signed, rn);
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
   if(pre == 0 || writeback) r(n) = rn;
@@ -122,7 +122,7 @@ auto ARM7TDMI::armInstructionLoadRegister
   n32 rd = r(d);
 
   if(pre == 1) rn = up ? rn + rm : rn - rm;
-  rd = load((half ? Half : Byte) | Nonsequential | Signed, rn);
+  rd = load((half ? Half : Byte) | Signed, rn);
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
   if(pre == 0 || writeback) r(n) = rn;
@@ -132,8 +132,8 @@ auto ARM7TDMI::armInstructionLoadRegister
 auto ARM7TDMI::armInstructionMemorySwap
 (n4 m, n4 d, n4 n, n1 byte) -> void {
   lock();
-  n32 word = load((byte ? Byte : Word) | Nonsequential, r(n));
-  store((byte ? Byte : Word) | Nonsequential, r(n), r(m));
+  n32 word = load((byte ? Byte : Word), r(n));
+  store((byte ? Byte : Word), r(n), r(m));
   r(d) = word;
   unlock();
 }
@@ -144,8 +144,8 @@ auto ARM7TDMI::armInstructionMoveHalfImmediate
   n32 rd = r(d);
 
   if(pre == 1) rn = up ? rn + immediate : rn - immediate;
-  if(mode == 1) rd = load(Half | Nonsequential, rn);
-  if(mode == 0) store(Half | Nonsequential, rn, rd);
+  if(mode == 1) rd = load(Half, rn);
+  if(mode == 0) store(Half, rn, rd);
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
   if(pre == 0 || writeback) r(n) = rn;
@@ -159,8 +159,8 @@ auto ARM7TDMI::armInstructionMoveHalfRegister
   n32 rd = r(d);
 
   if(pre == 1) rn = up ? rn + rm : rn - rm;
-  if(mode == 1) rd = load(Half | Nonsequential, rn);
-  if(mode == 0) store(Half | Nonsequential, rn, rd);
+  if(mode == 1) rd = load(Half, rn);
+  if(mode == 0) store(Half, rn, rd);
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
   if(pre == 0 || writeback) r(n) = rn;
@@ -173,8 +173,8 @@ auto ARM7TDMI::armInstructionMoveImmediateOffset
   n32 rd = r(d) + (d == 15 ? 4 : 0);
 
   if(pre == 1) rn = up ? rn + immediate : rn - immediate;
-  if(mode == 1) rd = load((byte ? Byte : Word) | Nonsequential, rn);
-  if(mode == 0) store((byte ? Byte : Word) | Nonsequential, rn, rd);
+  if(mode == 1) rd = load((byte ? Byte : Word), rn);
+  if(mode == 0) store((byte ? Byte : Word), rn, rd);
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
   if(pre == 0 || writeback) r(n) = rn;
@@ -201,17 +201,16 @@ auto ARM7TDMI::armInstructionMoveMultiple
   if(type && mode == 0) usr = true;
   if(usr) cpsr().m = PSR::USR;
 
-  u32 sequential = Nonsequential;
+  endBurst();
   if(!list) {
-    if(mode == 1) r(15) = read(Word | sequential, rn);
-    if(mode == 0) write(Word | sequential, rn, r(15) + 4);
+    if(mode == 1) r(15) = read(Word, rn);
+    if(mode == 0) write(Word, rn, r(15) + 4);
   } else {
     for(u32 m : range(16)) {
       if(!list.bit(m)) continue;
-      if(mode == 1) r(m) = read(Word | sequential, rn);
-      if(mode == 0) write(Word | sequential, rn, r(m) + (m == 15 ? 4 : 0));
+      if(mode == 1) r(m) = read(Word, rn);
+      if(mode == 0) write(Word, rn, r(m) + (m == 15 ? 4 : 0));
       rn += 4;
-      sequential = Sequential;
     }
   }
 
@@ -223,7 +222,7 @@ auto ARM7TDMI::armInstructionMoveMultiple
       cpsr() = spsr();
     }
   } else {
-    pipeline.nonsequential = true;
+    endBurst();
   }
 
   if(writeback && mode == 0) {
@@ -247,8 +246,8 @@ auto ARM7TDMI::armInstructionMoveRegisterOffset
   }
 
   if(pre == 1) rn = up ? rn + rm : rn - rm;
-  if(mode == 1) rd = load((byte ? Byte : Word) | Nonsequential, rn);
-  if(mode == 0) store((byte ? Byte : Word) | Nonsequential, rn, rd);
+  if(mode == 1) rd = load((byte ? Byte : Word), rn);
+  if(mode == 0) store((byte ? Byte : Word), rn, rd);
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
   if(pre == 0 || writeback) r(n) = rn;

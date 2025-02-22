@@ -3,6 +3,7 @@ auto ARM7TDMI::serialize(serializer& s) -> void {
   s(pipeline);
   s(carry);
   s(irq);
+  s(nonsequential);
 }
 
 auto ARM7TDMI::Processor::serialize(serializer& s) -> void {
@@ -58,7 +59,6 @@ auto ARM7TDMI::PSR::serialize(serializer& s) -> void {
 
 auto ARM7TDMI::Pipeline::serialize(serializer& s) -> void {
   s(reload);
-  s(nonsequential);
   s(fetch.address);
   s(fetch.instruction);
   s(fetch.thumb);
