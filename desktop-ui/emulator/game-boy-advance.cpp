@@ -12,7 +12,8 @@ GameBoyAdvance::GameBoyAdvance() {
 
   firmware.append({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
 
-  { InputPort port{string{"Game Boy Advance"}};
+  { InputPort portAGB{string{"Game Boy Advance"}};
+    InputPort portDOL{string{"Game Boy Player"}};
 
   { InputDevice device{"Controls"};
     device.digital("Up",     virtualPorts[0].pad.up);
@@ -26,9 +27,11 @@ GameBoyAdvance::GameBoyAdvance() {
     device.digital("Select", virtualPorts[0].pad.select);
     device.digital("Start",  virtualPorts[0].pad.start);
     device.rumble ("Rumble", virtualPorts[0].pad.rumble);
-    port.append(device); }
+    portAGB.append(device);
+    portDOL.append(device); }
 
-    ports.append(port);
+    ports.append(portAGB);
+    ports.append(portDOL);
   }
 }
 
@@ -68,7 +71,11 @@ auto GameBoyAdvance::load() -> LoadResult {
 
   ares::GameBoyAdvance::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
-  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Advance")) return otherError;
+  if(settings.gameBoyAdvance.player) {
+    if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Player")) return otherError;
+  } else {
+    if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Advance")) return otherError;
+  }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -87,6 +94,7 @@ auto GameBoyAdvance::save() -> bool {
 
 auto GameBoyAdvance::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "Game Boy Advance") return system->pak;
+  if(node->name() == "Game Boy Player") return system->pak;
   if(node->name() == "Game Boy Advance Cartridge") return game->pak;
   return {};
 }

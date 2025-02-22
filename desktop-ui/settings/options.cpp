@@ -44,6 +44,14 @@ auto OptionSettings::construct() -> void {
   nintendo64ExpansionPakLayout.setAlignment(1).setPadding(12_sx, 0);
       nintendo64ExpansionPakHint.setText("Enable/Disable the 4MB Expansion Pak").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  gameBoyAdvanceSettingsLabel.setText("Game Boy Advance Settings").setFont(Font().setBold());
+
+  gameBoyPlayerOption.setText("Game Boy Player").setChecked(settings.gameBoyAdvance.player).onToggle([&] {
+    settings.gameBoyAdvance.player = gameBoyPlayerOption.checked();
+  });
+  gameBoyPlayerLayout.setAlignment(1).setPadding(12_sx, 0);
+    gameBoyPlayerHint.setText("Enable/Disable Game Boy Player rumble").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
   megaDriveSettingsLabel.setText("Mega Drive Settings").setFont(Font().setBold());
 
   megaDriveTmssOption.setText("TMSS Boot Rom").setChecked(settings.megadrive.tmss).onToggle([&] {
