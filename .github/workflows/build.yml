@@ -89,6 +89,10 @@ jobs:
       with:
         fetch-tags: true
         fetch-depth: 0
+    - name: Setup MSYS2 Git Environment
+      if: matrix.platform.shell == 'msys2 {0}'
+      run: |
+        git config core.autocrlf true
     - name: Install Linux Dependencies
       if: runner.os == 'Linux'
       run: |
