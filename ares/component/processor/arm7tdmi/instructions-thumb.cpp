@@ -103,22 +103,22 @@ auto ARM7TDMI::thumbInstructionImmediate
 auto ARM7TDMI::thumbInstructionLoadLiteral
 (n8 displacement, n3 d) -> void {
   n32 address = (r(15) & ~3) + (displacement << 2);
-  r(d) = load(Word | Nonsequential, address);
+  r(d) = load(Word, address);
 }
 
 auto ARM7TDMI::thumbInstructionMoveByteImmediate
 (n3 d, n3 n, n5 offset, n1 mode) -> void {
   switch(mode) {
-  case 0: store(Byte | Nonsequential, r(n) + offset, r(d)); break;  //STRB
-  case 1: r(d) = load(Byte | Nonsequential, r(n) + offset); break;  //LDRB
+  case 0: store(Byte, r(n) + offset, r(d)); break;  //STRB
+  case 1: r(d) = load(Byte, r(n) + offset); break;  //LDRB
   }
 }
 
 auto ARM7TDMI::thumbInstructionMoveHalfImmediate
 (n3 d, n3 n, n5 offset, n1 mode) -> void {
   switch(mode) {
-  case 0: store(Half | Nonsequential, r(n) + offset * 2, r(d)); break;  //STRH
-  case 1: r(d) = load(Half | Nonsequential, r(n) + offset * 2); break;  //LDRH
+  case 0: store(Half, r(n) + offset * 2, r(d)); break;  //STRH
+  case 1: r(d) = load(Half, r(n) + offset * 2); break;  //LDRH
   }
 }
 
@@ -129,24 +129,23 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
 
   if(mode == 1 && !list.bit(n)) r(n) = r(n) + bitCount * 4;
 
-  u32 sequential = Nonsequential;
+  endBurst();
   if(!list) {
-    if(mode == 1) r(15) = read(Word | sequential, rn);
-    if(mode == 0) write(Word | sequential, rn, r(15) + 2);
+    if(mode == 1) r(15) = read(Word, rn);
+    if(mode == 0) write(Word, rn, r(15) + 2);
   } else {
     for(u32 m : range(8)) {
       if(!list.bit(m)) continue;
-      if(mode == 1) r(m) = read(Word | sequential, rn);  //LDMIA
-      if(mode == 0) write(Word | sequential, rn, r(m));  //STMIA
+      if(mode == 1) r(m) = read(Word, rn);  //LDMIA
+      if(mode == 0) write(Word, rn, r(m));  //STMIA
       rn += 4;
-      sequential = Sequential;
     }
   }
 
   if(mode) {
     idle();
   } else {
-    pipeline.nonsequential = true;
+    endBurst();
     r(n) = r(n) + bitCount * 4;
   }
 }
@@ -154,30 +153,30 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
 auto ARM7TDMI::thumbInstructionMoveRegisterOffset
 (n3 d, n3 n, n3 m, n3 mode) -> void {
   switch(mode) {
-  case 0: store(Word | Nonsequential, r(n) + r(m), r(d)); break;  //STR
-  case 1: store(Half | Nonsequential, r(n) + r(m), r(d)); break;  //STRH
-  case 2: store(Byte | Nonsequential, r(n) + r(m), r(d)); break;  //STRB
-  case 3: r(d) = load(Byte | Nonsequential | Signed, r(n) + r(m)); break;  //LDSB
-  case 4: r(d) = load(Word | Nonsequential, r(n) + r(m)); break;  //LDR
-  case 5: r(d) = load(Half | Nonsequential, r(n) + r(m)); break;  //LDRH
-  case 6: r(d) = load(Byte | Nonsequential, r(n) + r(m)); break;  //LDRB
-  case 7: r(d) = load(Half | Nonsequential | Signed, r(n) + r(m)); break;  //LDSH
+  case 0: store(Word, r(n) + r(m), r(d)); break;  //STR
+  case 1: store(Half, r(n) + r(m), r(d)); break;  //STRH
+  case 2: store(Byte, r(n) + r(m), r(d)); break;  //STRB
+  case 3: r(d) = load(Byte | Signed, r(n) + r(m)); break;  //LDSB
+  case 4: r(d) = load(Word, r(n) + r(m)); break;  //LDR
+  case 5: r(d) = load(Half, r(n) + r(m)); break;  //LDRH
+  case 6: r(d) = load(Byte, r(n) + r(m)); break;  //LDRB
+  case 7: r(d) = load(Half | Signed, r(n) + r(m)); break;  //LDSH
   }
 }
 
 auto ARM7TDMI::thumbInstructionMoveStack
 (n8 immediate, n3 d, n1 mode) -> void {
   switch(mode) {
-  case 0: store(Word | Nonsequential, r(13) + immediate * 4, r(d)); break;  //STR
-  case 1: r(d) = load(Word | Nonsequential, r(13) + immediate * 4); break;  //LDR
+  case 0: store(Word, r(13) + immediate * 4, r(d)); break;  //STR
+  case 1: r(d) = load(Word, r(13) + immediate * 4); break;  //LDR
   }
 }
 
 auto ARM7TDMI::thumbInstructionMoveWordImmediate
 (n3 d, n3 n, n5 offset, n1 mode) -> void {
   switch(mode) {
-  case 0: store(Word | Nonsequential, r(n) + offset * 4, r(d)); break;  //STR
-  case 1: r(d) = load(Word | Nonsequential, r(n) + offset * 4); break;  //LDR
+  case 0: store(Word, r(n) + offset * 4, r(d)); break;  //STR
+  case 1: r(d) = load(Word, r(n) + offset * 4); break;  //LDR
   }
 }
 
@@ -202,29 +201,28 @@ auto ARM7TDMI::thumbInstructionStackMultiple
   if(mode == 1) r(13) = r(13) + bitCount * 4;  //POP
   if(mode == 0) sp = sp - bitCount * 4 + 0;    //PUSH
 
-  u32 sequential = Nonsequential;
+  endBurst();
   if(bitCount == 16) {
-    if(mode == 1) r(15) = read(Word | sequential, sp);      //POP
-    if(mode == 0) write(Word | sequential, sp, r(15) + 2);  //PUSH
+    if(mode == 1) r(15) = read(Word, sp);      //POP
+    if(mode == 0) write(Word, sp, r(15) + 2);  //PUSH
   } else {
     for(u32 m : range(8)) {
       if(!list.bit(m)) continue;
-      if(mode == 1) r(m) = read(Word | sequential, sp);  //POP
-      if(mode == 0) write(Word | sequential, sp, r(m));  //PUSH
+      if(mode == 1) r(m) = read(Word, sp);  //POP
+      if(mode == 0) write(Word, sp, r(m));  //PUSH
       sp += 4;
-      sequential = Sequential;
     }
   }
   if(lrpc) {
-    if(mode == 1) r(15) = read(Word | sequential, sp);  //POP
-    if(mode == 0) write(Word | sequential, sp, r(14));  //PUSH
+    if(mode == 1) r(15) = read(Word, sp);  //POP
+    if(mode == 0) write(Word, sp, r(14));  //PUSH
     sp += 4;
   }
 
   if(mode) {
     idle();
   } else {
-    pipeline.nonsequential = true;
+    endBurst();
     r(13) = r(13) - bitCount * 4;  //PUSH
   }
 }

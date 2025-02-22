@@ -11,14 +11,12 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 Cartridge::Cartridge() {
-  mrom.data = new n8[mrom.size = 32 * 1024 * 1024];
   sram.data = new n8[sram.size = 32 * 1024];
   eeprom.data = new n8[eeprom.size = 8 * 1024];
   flash.data = new n8[flash.size = 128 * 1024];
 }
 
 Cartridge::~Cartridge() {
-  delete[] mrom.data;
   delete[] sram.data;
   delete[] eeprom.data;
   delete[] flash.data;
@@ -37,7 +35,8 @@ auto Cartridge::connect() -> void {
 
   if(auto fp = pak->read("program.rom")) {
     mrom.size = min(32_MiB, fp->size());
-    fp->read({mrom.data, mrom.size});
+    mrom.data.allocate(mrom.size >> 1);
+    mrom.data.load(fp);
     mrom.mirror = pak->attribute("mirror").boolean();
   }
 
@@ -80,7 +79,7 @@ auto Cartridge::connect() -> void {
 
 auto Cartridge::disconnect() -> void {
   if(!node) return;
-  memory::fill<u8>(mrom.data, mrom.size);
+  mrom.data.reset();
   memory::fill<u8>(sram.data, sram.size);
   memory::fill<u8>(eeprom.data, eeprom.size);
   memory::fill<u8>(flash.data, flash.size);
@@ -109,40 +108,6 @@ auto Cartridge::save() -> void {
 auto Cartridge::power() -> void {
   eeprom.power();
   flash.power();
-}
-
-#define RAM_ANALYZE
-
-auto Cartridge::readRom(u32 mode, n32 address) -> n32 {
-  if(mode & Word) {
-    n32 word = 0;
-    word |= readRom(mode & ~Word | Half, (address & ~3) + 0) <<  0;
-    word |= readRom(mode & ~Word | Half, (address & ~3) + 2) << 16;
-    return word;
-  }
-
-  if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.read();
-  return mrom.read(mode, address);
-}
-
-auto Cartridge::readBackup(u32 mode, n32 address) -> n32 {
-  n32 word = 0xff;
-  if(has.sram) word = sram.read(address);
-  if(has.flash) word = flash.read(address);
-  word *= 0x01010101;
-  return word;
-}
-
-auto Cartridge::writeRom(u32 mode, n32 address, n32 word) -> void {
-  if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.write(word & 1);
-  return mrom.write(mode, address, word);
-}
-
-auto Cartridge::writeBackup(u32 mode, n32 address, n32 word) -> void {
-  if(mode & Word) word = word >> (8 * (address & 3));
-  if(mode & Half) word = word >> (8 * (address & 1));
-  if(has.sram) return sram.write(address, word);
-  if(has.flash) return flash.write(address, word);
 }
 
 }

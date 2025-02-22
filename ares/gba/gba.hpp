@@ -12,15 +12,15 @@ namespace ares::GameBoyAdvance {
   auto option(string name, string value) -> bool;
 
   enum : u32 {           //mode flags for bus read, write:
-    Nonsequential =   1,  //N cycle
-    Sequential    =   2,  //S cycle
+    Load          =   1,  //load operation
+    Store         =   2,  //store operation
     Prefetch      =   4,  //instruction fetch (eligible for prefetch)
     Byte          =   8,  //8-bit access
     Half          =  16,  //16-bit access
     Word          =  32,  //32-bit access
-    Load          =  64,  //load operation
-    Store         = 128,  //store operation
-    Signed        = 256,  //sign extended
+    Signed        =  64,  //sign extended
+    Nonsequential = 128,  //N cycle
+    Sequential    = 256,  //S cycle
   };
 
   struct Model {

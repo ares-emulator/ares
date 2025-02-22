@@ -68,6 +68,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto unlock() -> void override;
   auto waitEWRAM(u32 mode) -> u32;
   auto waitCartridge(u32 mode, n32 address) -> u32;
+  auto cartMode(u32 mode, n32 address) -> u32;
 
   //io.cpp
   auto readIO(n32 address) -> n8 override;
@@ -260,8 +261,9 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  halted;
     n1  stopped;
     n1  booted;  //set to true by the GBA BIOS
-    n1  dmaRan;
+    n1  romAccess;
     n1  dmaRomAccess;
+    n1  dmaRan;
     n1  dmaActive;
     n2  dmaActiveChannel;
     n1  timerLatched;

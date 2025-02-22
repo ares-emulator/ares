@@ -44,6 +44,9 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     break;
 
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
+    if constexpr(UseDebugger) return cartridge.readRom<true>(mode, address);
+    mode = cartMode(mode, address);
+    context.romAccess = true;
     if(mode & Prefetch && wait.prefetch) {
       prefetchSync(address);
       prefetchStep(1);
@@ -51,9 +54,9 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
       if(mode & Word) word |= prefetchRead() << 16;
     } else {
       if(context.dmaActive) context.dmaRomAccess = true;
-      if constexpr(!UseDebugger) prefetchReset();
-      if constexpr(!UseDebugger) step(waitCartridge(mode, address));
-      word = cartridge.readRom(mode, address);
+      prefetchReset();
+      step(waitCartridge(mode, address));
+      word = cartridge.readRom<false>(mode, address);
     }
     break;
 
@@ -78,7 +81,10 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 auto CPU::get(u32 mode, n32 address) -> n32 {
   dmaRun();
   ARM7TDMI::irq = irq.synchronizer;
-  return getBus<false>(mode, address);
+  context.romAccess = false;
+  u32 word = getBus<false>(mode, address);
+  if(!context.romAccess && !context.dmaActive) cartridge.mrom.burst = false;
+  return word;
 }
 
 auto CPU::getDebugger(u32 mode, n32 address) -> n32 {
@@ -88,6 +94,7 @@ auto CPU::getDebugger(u32 mode, n32 address) -> n32 {
 auto CPU::set(u32 mode, n32 address, n32 word) -> void {
   dmaRun();
   ARM7TDMI::irq = irq.synchronizer;
+  context.romAccess = false;
 
   if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
 
@@ -125,6 +132,8 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
     break;
 
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
+    mode = cartMode(mode, address);
+    context.romAccess = true;
     if(context.dmaActive) context.dmaRomAccess = true;
     prefetchReset();
     step(waitCartridge(mode, address));
@@ -144,6 +153,7 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
   }
 
   openBus.set(mode, address, word);
+  if(!context.romAccess && !context.dmaActive) cartridge.mrom.burst = false;
 }
 
 auto CPU::lock() -> void {
@@ -172,11 +182,25 @@ auto CPU::waitCartridge(u32 mode, n32 address) -> u32 {
   }
 
   bool sequential = (mode & Sequential);
-  if((address & 0x1fffe) == 0) sequential = false;  //N cycle on 16-bit ROM crossing 128KB page boundary (RAM S==N)
-
-  u32 clocks = sequential ? s : n;
+  u32 clocks = (mode & Sequential) ? s : n;
   if(mode & Word) clocks += s;  //16-bit bus requires two transfers for words
   return clocks;
+}
+
+auto CPU::cartMode(u32 mode, n32 address) -> u32 {
+  //if no burst transfer is active, start a new burst transfer
+  if(cartridge.mrom.burst == false) return mode | Nonsequential;
+
+  //determine whether sequential access may be performed
+  if(!context.dmaActive) {
+    u32 sequential = nonsequential ? Nonsequential : Sequential;
+    mode |= sequential;
+  } else {
+    u32 sequential = context.dmaRomAccess ? Sequential : Nonsequential;
+    mode |= sequential;
+  }
+
+  return mode;
 }
 
 auto CPU::OpenBus::get(u32 mode, n32 address) -> n32 {

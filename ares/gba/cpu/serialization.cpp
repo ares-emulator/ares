@@ -113,8 +113,9 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.halted);
   s(context.stopped);
   s(context.booted);
-  s(context.dmaRan);
+  s(context.romAccess);
   s(context.dmaRomAccess);
+  s(context.dmaRan);
   s(context.dmaActive);
   s(context.dmaActiveChannel);
   s(context.timerLatched);

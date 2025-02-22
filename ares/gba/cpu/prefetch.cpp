@@ -15,7 +15,7 @@ auto CPU::prefetchStep(u32 clocks) -> void {
 
   while(!prefetch.full() && clocks--) {
     if(--prefetch.wait) continue;
-    prefetch.slot[prefetch.load >> 1 & 7] = cartridge.readRom(Half, prefetch.load);
+    prefetch.slot[prefetch.load >> 1 & 7] = cartridge.readRom<false>(Half | Nonsequential, prefetch.load);  //todo: make access sequentiality consistent with timing used
     prefetch.load += 2;
     prefetch.wait = waitCartridge(Half | Sequential, prefetch.load);
   }

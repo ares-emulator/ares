@@ -17,12 +17,12 @@ auto ARM7TDMI::disassembleInstruction(maybe<n32> pc, maybe<boolean> thumb) -> st
 
   _pc = pc();
   if(!thumb()) {
-    n32 opcode = getDebugger(Word | Nonsequential, _pc & ~3);
+    n32 opcode = getDebugger(Word, _pc & ~3);
     n12 index = (opcode & 0x0ff00000) >> 16 | (opcode & 0x000000f0) >> 4;
     _c = _conditions[opcode >> 28];
     return pad(armDisassemble[index](opcode), -40);
   } else {
-    n16 opcode = getDebugger(Half | Nonsequential, _pc & ~1);
+    n16 opcode = getDebugger(Half, _pc & ~1);
     return pad(thumbDisassemble[opcode](), -40);
   }
 }
@@ -121,7 +121,7 @@ auto ARM7TDMI::armDisassembleDataRegisterShift
 auto ARM7TDMI::armDisassembleLoadImmediate
 (n8 immediate, n1 half, n4 d, n4 n, n1 writeback, n1 up, n1 pre) -> string {
   string data;
-  if(n == 15) data = {" =0x", hex(getDebugger((half ? Half : Byte) | Nonsequential,
+  if(n == 15) data = {" =0x", hex(getDebugger((half ? Half : Byte),
     _pc + 8 + (up ? +immediate : -immediate)), half ? 4L : 2L)};
 
   return {"ldr", _c, half ? "sh" : "sb", " ",
@@ -150,7 +150,7 @@ auto ARM7TDMI::armDisassembleMemorySwap
 auto ARM7TDMI::armDisassembleMoveHalfImmediate
 (n8 immediate, n4 d, n4 n, n1 mode, n1 writeback, n1 up, n1 pre) -> string {
   string data;
-  if(n == 15) data = {" =0x", hex(getDebugger(Half | Nonsequential, _pc + (up ? +immediate : -immediate)), 4L)};
+  if(n == 15) data = {" =0x", hex(getDebugger(Half, _pc + (up ? +immediate : -immediate)), 4L)};
 
   return {mode ? "ldr" : "str", _c, "h ",
     _r[d], ",[", _r[n],
@@ -173,7 +173,7 @@ auto ARM7TDMI::armDisassembleMoveHalfRegister
 auto ARM7TDMI::armDisassembleMoveImmediateOffset
 (n12 immediate, n4 d, n4 n, n1 mode, n1 writeback, n1 byte, n1 up, n1 pre) -> string {
   string data;
-  if(n == 15) data = {" =0x", hex(getDebugger((byte ? Byte : Word) | Nonsequential,
+  if(n == 15) data = {" =0x", hex(getDebugger((byte ? Byte : Word),
     _pc + 8 + (up ? +immediate : -immediate)), byte ? 2L : 4L)};
   return {mode ? "ldr" : "str", _c, byte ? "b" : "", " ", _r[d], ",[", _r[n],
     pre == 0 ? "]" : "",
@@ -308,7 +308,7 @@ auto ARM7TDMI::thumbDisassembleBranchExchange
 
 auto ARM7TDMI::thumbDisassembleBranchFarPrefix
 (i11 displacementHi) -> string {
-  n11 displacementLo = getDebugger(Half | Nonsequential, (_pc & ~1) + 2);
+  n11 displacementLo = getDebugger(Half, (_pc & ~1) + 2);
   i22 displacement = displacementHi << 11 | displacementLo << 0;
   n32 address = _pc + 4 + displacement * 2;
   return {"bl 0x", hex(address, 8L)};
@@ -340,7 +340,7 @@ auto ARM7TDMI::thumbDisassembleImmediate
 auto ARM7TDMI::thumbDisassembleLoadLiteral
 (n8 displacement, n3 d) -> string {
   n32 address = ((_pc + 4) & ~3) + (displacement << 2);
-  n32 data = getDebugger(Word | Nonsequential, address);
+  n32 data = getDebugger(Word, address);
   return {"ldr ", _r[d], ",[pc,#0x", hex(address, 8L), "] =0x", hex(data, 8L)};
 }
 
