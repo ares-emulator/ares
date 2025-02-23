@@ -4,6 +4,7 @@ struct GameBoyAdvance : Emulator {
   auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  string deviceName;
 };
 
 GameBoyAdvance::GameBoyAdvance() {
@@ -69,13 +70,10 @@ auto GameBoyAdvance::load() -> LoadResult {
     return result;
   }
 
+  deviceName = settings.gameBoyAdvance.player ? "Game Boy Player" : "Game Boy Advance";
   ares::GameBoyAdvance::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
-  if(settings.gameBoyAdvance.player) {
-    if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Player")) return otherError;
-  } else {
-    if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Advance")) return otherError;
-  }
+  if(!ares::GameBoyAdvance::load(root, {"[Nintendo] ", deviceName})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -93,8 +91,7 @@ auto GameBoyAdvance::save() -> bool {
 }
 
 auto GameBoyAdvance::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Game Boy Advance") return system->pak;
-  if(node->name() == "Game Boy Player") return system->pak;
+  if(node->name() == deviceName) return system->pak;
   if(node->name() == "Game Boy Advance Cartridge") return game->pak;
   return {};
 }
