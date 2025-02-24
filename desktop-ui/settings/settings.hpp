@@ -105,6 +105,10 @@ struct Settings : Markup::Node {
     bool expansionPak = true;
   } nintendo64;
 
+  struct GameBoyAdvance {
+    bool player = false;
+  } gameBoyAdvance;
+
   struct MegaDrive {
     bool tmss = false;
   } megadrive;
@@ -262,6 +266,10 @@ struct OptionSettings : VerticalLayout {
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, 0}};
+  Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};
+      CheckLabel gameBoyPlayerOption{&gameBoyPlayerLayout, Size{0, 0}, 5};
+      Label gameBoyPlayerHint{&gameBoyPlayerLayout, Size{0, 0}};
   Label megaDriveSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};
       CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};
