@@ -43,8 +43,7 @@ target_link_libraries(
 if(SDL_FOUND)
   target_link_libraries(
     ruby
-    PRIVATE "$<LINK_LIBRARY:WEAK_LIBRARY,SDL::SDL>"
-    # "$<$<BOOL:${SDL_FOUND}>:SDL::SDL>"
+    PRIVATE "$<LINK_LIBRARY:WEAK_FRAMEWORK,SDL::SDL>"
   )
 endif()
 
