@@ -67,7 +67,7 @@ auto VDP::main() -> void {
   } else if(hcounter() == 0x80) {
     if(vcounter() < screenHeight() && !runAhead()) {
       render();
-      m32x.vdp.scanline(pixels(), state.vcounter);
+      if(Mega32X()) m32x.vdp.scanline(pixels() + 18, vcounter()); //approx 3 and 1/4 pixel offset
     }
 
     step(768);
