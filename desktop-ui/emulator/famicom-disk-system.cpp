@@ -2,11 +2,14 @@ struct FamicomDiskSystem : Emulator {
   FamicomDiskSystem();
   auto load(Menu) -> void override;
   auto load() -> LoadResult override;
+  auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto notify(const string& message) -> void override;
+  auto changeDiskState(const string state) -> void;
 
   shared_pointer<mia::Pak> bios;
+  sTimer diskChangeTimer;
 };
 
 FamicomDiskSystem::FamicomDiskSystem() {
@@ -40,29 +43,45 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
   diskMenu.setText("Disk Drive").setIcon(Icon::Media::Floppy);
 
   MenuRadioItem ejected{&diskMenu};
-  ejected.setText("No Disk").onActivate([&] { emulator->notify("Ejected"); });
+  ejected.setText("No Disk").onActivate([&] { changeDiskState("Ejected"); });
   group.append(ejected);
   if(game->pak->count() < 2) return (void)ejected.setChecked();
 
   MenuRadioItem disk1sideA{&diskMenu};
-  disk1sideA.setText("Disk 1: Side A").onActivate([&] { emulator->notify("Disk 1: Side A"); });
+  disk1sideA.setText("Disk 1: Side A").onActivate([&] { changeDiskState("Disk 1: Side A"); });
   group.append(disk1sideA);
   if(game->pak->count() < 3) return (void)disk1sideA.setChecked();
 
   MenuRadioItem disk1sideB{&diskMenu};
-  disk1sideB.setText("Disk 1: Side B").onActivate([&] { emulator->notify("Disk 1: Side B"); });
+  disk1sideB.setText("Disk 1: Side B").onActivate([&] { changeDiskState("Disk 1: Side B"); });
   group.append(disk1sideB);
   if(game->pak->count() < 4) return (void)disk1sideA.setChecked();
 
   MenuRadioItem disk2sideA{&diskMenu};
-  disk2sideA.setText("Disk 2: Side A").onActivate([&] { emulator->notify("Disk 2: Side A"); });
+  disk2sideA.setText("Disk 2: Side A").onActivate([&] { changeDiskState("Disk 2: Side A"); });
   group.append(disk2sideA);
   if(game->pak->count() < 5) return (void)disk1sideA.setChecked();
 
   MenuRadioItem disk2sideB{&diskMenu};
-  disk2sideB.setText("Disk 2: Side B").onActivate([&] { emulator->notify("Disk 2: Side B"); });
+  disk2sideB.setText("Disk 2: Side B").onActivate([&] { changeDiskState("Disk 2: Side B"); });
   group.append(disk2sideB);
   return (void)disk1sideA.setChecked();
+}
+
+auto FamicomDiskSystem::changeDiskState(string state) -> void
+{
+  print("Changing disk state to: ", state, "\n");
+  //Eject the disk and give the emulator time to react before re-inserting
+  print("Ejecting disk\n");
+  emulator->notify("Ejected");
+  if(state != "Ejected") {
+    print("Setting disk change timer\n");
+    diskChangeTimer->onActivate([=] {
+      print("Disk change timer activated, setting disk state to: ", state, "\n");
+      diskChangeTimer->setEnabled(false);
+      emulator->notify(state);
+    }).setInterval(3000).setEnabled();
+  }
 }
 
 auto FamicomDiskSystem::load() -> LoadResult {
@@ -112,7 +131,14 @@ auto FamicomDiskSystem::load() -> LoadResult {
     port->connect();
   }
 
+  diskChangeTimer = Timer{};
+
   return successful;
+}
+
+auto FamicomDiskSystem::unload() -> void {
+  Emulator::unload();
+  diskChangeTimer.reset();
 }
 
 auto FamicomDiskSystem::save() -> bool {
