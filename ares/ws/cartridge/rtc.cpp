@@ -70,8 +70,8 @@ auto Cartridge::RTC::checkAlarm() -> void {
   // TODO: A lot of this is vaguely informed guesswork.
   if(status() & 0x08) {
     // Per-minute edge/steady
-    if(counter < 256) cpu.raise(CPU::Interrupt::Cartridge);
-    if(status() & 0x02 && second() == 0x30 && counter == 0) cpu.lower(CPU::Interrupt::Cartridge);
+    if(counter < 256) cpu.irqLevel(CPU::Interrupt::Cartridge, 1);
+    if(status() & 0x02 && second() == 0x30 && counter == 0) cpu.irqLevel(CPU::Interrupt::Cartridge, 0);
   } else if(status() & 0x02) {
     // Selected frequency steady
     n16 duty = (counter << 1) ^ 0xFFFF;
@@ -86,6 +86,8 @@ auto Cartridge::RTC::checkAlarm() -> void {
       // 12-hour clock
       cpu.irqLevel(CPU::Interrupt::Cartridge, (hour() & 0xBF) == (alarmHour() & 0xBF) && (minute() & 0x7F) == (alarmMinute() & 0x7F));
     }
+  } else {
+    cpu.irqLevel(CPU::Interrupt::Cartridge, 0);
   }
 }
 

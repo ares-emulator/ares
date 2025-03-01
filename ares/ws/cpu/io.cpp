@@ -46,7 +46,8 @@ auto CPU::readIO(n16 address) -> n8 {
     break;
 
   case 0x00b4:  //INT_STATUS
-    data = io.interruptStatus;
+    // interruptStatus is only updated with level-triggered interrupts on poll()
+    data = io.interruptStatus | (io.interruptLevel & io.interruptEnable);
     break;
 
   case 0x00b5:  //KEYPAD
@@ -117,8 +118,7 @@ auto CPU::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x00b6:  //INT_ACK
-    //do not acknowledge level-sensitive interrupts *unless* they are disabled
-    io.interruptStatus &= ~(data & (0b11110010 | ~io.interruptEnable));
+    io.interruptStatus &= ~data;
     break;
 
   case 0x00b7:  //NMI

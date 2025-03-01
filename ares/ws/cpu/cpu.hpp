@@ -98,6 +98,7 @@ struct CPU : V30MZ, Thread, IO {
     n8 interruptBase;
     n8 interruptEnable;
     n8 interruptStatus;
+    n8 interruptLevel;
     n1 nmiOnLowBattery;
   } io;
 };
