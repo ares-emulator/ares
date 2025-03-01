@@ -1,5 +1,5 @@
 auto CPU::poll() -> void {
-  if(!state.poll) return;
+  if(!state.poll || !state.interrupt) return;
 
   io.interruptStatus |= (io.interruptLevel & io.interruptEnable);
 

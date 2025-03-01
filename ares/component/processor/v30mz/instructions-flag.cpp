@@ -21,5 +21,4 @@ auto V30MZ::instructionClearFlag(u32 bit) -> void {
 auto V30MZ::instructionSetFlag(u32 bit) -> void {
   wait(4);
   PSW |= 1 << bit;
-  if(bit == PSW.IE.bit()) state.poll = 0;
 }
