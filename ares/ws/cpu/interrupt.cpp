@@ -1,6 +1,8 @@
 auto CPU::poll() -> void {
   if(!state.poll) return;
 
+  io.interruptStatus |= (io.interruptLevel & io.interruptEnable);
+
   for(auto id : reverse(range(8))) {
     if(!io.interruptStatus.bit(id)) continue;
 
@@ -21,6 +23,5 @@ auto CPU::lower(n3 irq) -> void {
 }
 
 auto CPU::irqLevel(n3 irq, bool value) -> void {
-  if(value) raise(irq);
-  else lower(irq);
+  io.interruptLevel.bit(irq) = value;
 }

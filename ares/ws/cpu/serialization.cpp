@@ -17,5 +17,6 @@ auto CPU::serialize(serializer& s) -> void {
   s(io.interruptBase);
   s(io.interruptEnable);
   s(io.interruptStatus);
+  s(io.interruptLevel);
   s(io.nmiOnLowBattery);
 }
