@@ -241,6 +241,7 @@ struct V30MZ {
     bool poll;      //set to false to suppress interrupt polling between CPU instructions
     bool prefix;    //set to true for prefix instructions; prevents flushing of Prefix struct
     bool interrupt; //interrupt enable processor status before CPU instruction execution
+    bool brk;       //breakpoint enable processor status before CPU instruction execution
     bool nmi;       //non-maskable interrupt requested
   } state;
 

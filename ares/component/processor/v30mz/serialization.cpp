@@ -3,6 +3,7 @@ auto V30MZ::serialize(serializer& s) -> void {
   s(state.poll);
   s(state.prefix);
   s(state.interrupt);
+  s(state.brk);
   s(state.nmi);
 
   s(opcode);
