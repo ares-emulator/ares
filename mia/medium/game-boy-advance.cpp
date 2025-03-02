@@ -87,6 +87,7 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
     "FP7E",  //Classic NES Series - Pac-Man (USA, Europe)
     "FXVE",  //Classic NES Series - Xevious (USA, Europe)
     "FLBE",  //Classic NES Series - Zelda II - The Adventure of Link (USA, Europe)
+    "FADP",  //NES Classics - Castlevania (Europe)
     "FSRJ",  //Famicom Mini - Dai-2-ji Super Robot Taisen (Japan) (Promo)
     "FGZJ",  //Famicom Mini - Kidou Senshi Z Gundam - Hot Scramble (Japan) (Promo)
     "FSMJ",  //Famicom Mini 01 - Super Mario Bros. (Japan) (En) (Rev 1)
