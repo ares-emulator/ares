@@ -27,6 +27,7 @@ auto V30MZ::power() -> void {
   state.poll = 1;
   state.prefix = 0;
   state.interrupt = 0;
+  state.brk = 0;
   state.nmi = 0;
 
   opcode = 0;

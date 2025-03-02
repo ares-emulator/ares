@@ -54,6 +54,7 @@ auto V30MZ::nonMaskableInterrupt(bool value) -> bool {
 #define op(id, name, ...) case id: instruction##name(__VA_ARGS__); break;
 
 auto V30MZ::instruction() -> void {
+  state.brk = PSW.BRK;
   state.interrupt = PSW.IE;
   state.poll = 1;
   state.prefix = 0;
@@ -320,7 +321,7 @@ auto V30MZ::instruction() -> void {
 
   if(!state.prefix) prefixFlush();
   if(state.poll && state.nmi) interrupt(2, InterruptSource::NMI);
-  if(state.poll && PSW.BRK) interrupt(1, InterruptSource::SingleStep);
+  if(state.poll && state.brk) interrupt(1, InterruptSource::SingleStep);
 }
 
 #undef op
