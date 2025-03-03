@@ -13,7 +13,7 @@ auto System::Controls::load(Node::Object parent) -> void {
   start  = node->append<Node::Input::Button>("Start");
 
   if(GameBoyAdvance::Model::GameBoyPlayer()) {
-    rumbler = parent->append<Node::Input::Rumble>("Rumble");
+    rumbler = node->append<Node::Input::Rumble>("Rumble");
   }
 }
 
