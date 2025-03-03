@@ -222,39 +222,36 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
       if(pif.addressCRC(address) == (n5)input[2]) {
         //check if address is bank switch command
         if (address == 0x8000) {
-          bool tValid = true;
           if (send >= 4) {
             u8 reqBank = input[3];
             if (reqBank < system.controllerPakBankCount) {
               bank = reqBank;
-            } else {
-              tValid = false;
             }
           } else {
             if (system.homebrewMode) {
-              tValid = false;
+              debug(unusual, "Controller Pak bank switch command with no bank specified");
             }
             bank = 0;
           }
 
-          if (tValid && system.homebrewMode) {
+          if (system.homebrewMode) {
             //Verify we have 32 bytes (1 block) input and each value is the same bank
             if (send == 35) {
               u8 bank = input[3];
               for (u32 i = 4; i < 35; i++) {
                 if (input[i] != bank) {
-                  tValid = false;
+                  debug(unusual, "Controller Pak bank switch command with mismatched data");
                   break;
                 }
               }
             } else {
-              tValid = false;
+              debug(unusual, "Controller Pak bank switch command with invalid data length");
             }
           }
 
 
           output[0] = pif.dataCRC({&input[3], send - 3u});
-          valid = tValid ? 1 : 0;
+          valid = 1;
         } else {
           for(u32 index : range(send - 3)) {
             if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, input[3 + index]);
