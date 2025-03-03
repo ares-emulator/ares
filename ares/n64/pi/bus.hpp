@@ -7,14 +7,22 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
     return io.busLatch;
   }
   thread.step(250 * 2);
-  io.busLatch = busRead<Word>(address);
+
+  // TODO: this will not have correct open-bus behaviour
+  // can we just ignore the bottom two bits when calculating the unmapped read value?
+  // how does open bus work with DMAs?
+  const n16 hi = busRead<Half>(address    );
+  const n16 lo = busRead<Half>(address + 2);
+
+  io.busLatch.bit(16,31) = hi;
+  io.busLatch.bit( 0,15) = lo;
   return io.busLatch;
 }
 
 template <u32 Size>
-inline auto PI::busRead(u32 address) -> u32 {
-  static_assert(Size == Half || Size == Word);  //PI bus will do 32-bit (CPU) or 16-bit (DMA) only
-  const u32 unmapped = (address & 0xFFFF) | (address << 16);
+inline auto PI::busRead(u32 address) -> u16 {
+  static_assert(Size == Half);  //PI bus will do 16-bit only
+  const u16 unmapped = address & 0xFFFF;
 
   if(address <= 0x04ff'ffff) return unmapped; //Address range not memory mapped, only accessible via DMA
   if(address <= 0x0500'03ff) {
@@ -60,12 +68,19 @@ inline auto PI::writeWord(u32 address, u32 data, Thread& thread) -> void {
   io.ioBusy = 1;
   io.busLatch = data;
   queue.insert(Queue::PI_BUS_Write, 400);
-  return busWrite<Word>(address, data);
+
+  const n16 hi = data >> 16;
+  const n16 lo = data & 0xFFFF;
+
+  busWrite<Half>(address,     hi);
+  busWrite<Half>(address + 2, lo);
+
+  return;
 }
 
 template <u32 Size>
-inline auto PI::busWrite(u32 address, u32 data) -> void {
-  static_assert(Size == Half || Size == Word);  //PI bus will do 32-bit (CPU) or 16-bit (DMA) only
+inline auto PI::busWrite(u32 address, u16 data) -> void {
+  static_assert(Size == Half);  //PI bus will do 16-bit only
   if(address <= 0x04ff'ffff) return; //Address range not memory mapped, only accessible via DMA
   if(address <= 0x0500'03ff) {
     if(_DD()) return dd.c2s.write<Size>(address, data);
