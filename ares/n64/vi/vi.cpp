@@ -111,9 +111,16 @@ auto VI::main() -> void {
         lineDuration = io.hsyncLeap[io.leapPattern.bit(io.leapCounter)];      
       step(io.quarterLineDuration);
     } else {
-      Thread::clock = 0;
+      // arbitrarily call screen->frame() every once in a while to keep the UI responsive.
+      // We do that every 200 simulated lines of 0x800 quarter-clocks. This is just arbitrary,
+      // the real VI is not clocking at all when inactive.
       io.vcounter = 0;
-      break;
+      if(++inactiveCounter >= 200) {
+        inactiveCounter = 0;
+        screen->frame();
+        refreshed = true;
+      }
+      step(0x800);
     }
   }
 }
