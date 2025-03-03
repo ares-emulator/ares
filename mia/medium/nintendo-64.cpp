@@ -573,6 +573,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NH9") {cpak = true; rpak = true;}                              //NHL Breakaway '99
   if(id == "NNC") {cpak = true; rpak = true;}                              //Nightmare Creatures
   if(id == "NCE") {cpak = true; rpak = true;}                              //Nuclear Strike 64
+  if(id == "NTD") {cpak = true; rpak = true;}                              //O.D.T. (Unreleased)
   if(id == "NOF") {cpak = true; rpak = true;}                              //Offroad Challenge
   if(id == "NHN") {cpak = true;}                                           //Olympic Hockey Nagano '98
   if(id == "NOM") {cpak = true;}                                           //Onegai Monsters
