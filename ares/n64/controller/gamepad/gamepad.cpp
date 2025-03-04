@@ -12,6 +12,8 @@ Gamepad::Gamepad(Node::Port parent) {
   port->setDisconnect([&] { return disconnect(); });
   port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak"});
 
+  bank = 0;
+
   x           = node->append<Node::Input::Axis>  ("X-Axis");
   y           = node->append<Node::Input::Axis>  ("Y-Axis");
   up          = node->append<Node::Input::Button>("Up");
@@ -54,12 +56,56 @@ auto Gamepad::allocate(string name) -> Node::Peripheral {
 auto Gamepad::connect() -> void {
   if(!slot) return;
   if(slot->name() == "Controller Pak") {
+    bool create = true;
+
     node->setPak(pak = platform->pak(node));
-    ram.allocate(32_KiB);
+    system.controllerPakBankCount = system.configuredControllerPakBankCount; //reset controller bank count
+    ram.allocate(system.controllerPakBankCount * 32_KiB); //allocate N banks * 32KiB, max # of banks allowed is 62
+    bank = 0;
     formatControllerPak();
     if(auto fp = pak->read("save.pak")) {
       if(fp->attribute("loaded").boolean()) {
+        //read the bank count
+        u8 banks;
+        u32 bank_size;
+
+        fp->seek(0x20 + 0x1A);
+        fp->read(array_span<u8>{&banks, sizeof(banks)});
+        fp->seek(0);
+
+        if (banks < 1) {
+          banks = 1;
+        } else if (banks > 62) {
+          banks = 62;
+        }
+
+        bank_size = 32_KiB * banks;
+
+        if (bank_size != ram.size) {
+          ram.allocate(bank_size);
+
+          //update the system controller bank count
+          system.controllerPakBankCount = banks;
+        }
         ram.load(pak->read("save.pak"));
+
+        if (fp->size() != bank_size) {
+          //reallocate vfs node
+          pak->remove(fp);
+          pak->append("save.pak", bank_size);
+          ram.save(pak->write("save.pak")); //write data back to filesystem
+        }
+
+        create = false;
+      }
+    }
+
+    if (create) {
+      //we need to create a controller pak file, so reallocate the vfs file to configured size
+      if (auto fp = pak->read("save.pak")) {
+        pak->remove(fp);
+        pak->append("save.pak", system.controllerPakBankCount * 32_KiB);
+        ram.save(pak->write("save.pak"));
       }
     }
   }
@@ -132,7 +178,8 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
       u16 address = (input[1] << 8 | input[2] << 0) & ~31;
       if(pif.addressCRC(address) == (n5)input[2]) {
         for(u32 index : range(recv - 1)) {
-          if(address <= 0x7FFF) output[index] = ram.read<Byte>(address);
+          // read into current bank
+          if(address <= 0x7FFF) output[index] = ram.read<Byte>(bank * 32_KiB + address);
           else output[index] = 0;
           address++;
         }
@@ -173,12 +220,46 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
     if(ram) {
       u16 address = (input[1] << 8 | input[2] << 0) & ~31;
       if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(send - 3)) {
-          if(address <= 0x7FFF) ram.write<Byte>(address, input[3 + index]);
-          address++;
+        //check if address is bank switch command
+        if (address == 0x8000) {
+          if (send >= 4) {
+            u8 reqBank = input[3];
+            if (reqBank < system.controllerPakBankCount) {
+              bank = reqBank;
+            }
+          } else {
+            if (system.homebrewMode) {
+              debug(unusual, "Controller Pak bank switch command with no bank specified");
+            }
+            bank = 0;
+          }
+
+          if (system.homebrewMode) {
+            //Verify we have 32 bytes (1 block) input and each value is the same bank
+            if (send == 35) {
+              u8 bank = input[3];
+              for (u32 i = 4; i < 35; i++) {
+                if (input[i] != bank) {
+                  debug(unusual, "Controller Pak bank switch command with mismatched data");
+                  break;
+                }
+              }
+            } else {
+              debug(unusual, "Controller Pak bank switch command with invalid data length");
+            }
+          }
+
+
+          output[0] = pif.dataCRC({&input[3], send - 3u});
+          valid = 1;
+        } else {
+          for(u32 index : range(send - 3)) {
+            if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, input[3 + index]);
+            address++;
+          }
+          output[0] = pif.dataCRC({&input[3], send - 3u});
+          valid = 1;
         }
-        output[0] = pif.dataCRC({&input[3], send - 3u});
-        valid = 1;
       }
     }
 
@@ -315,8 +396,24 @@ auto Gamepad::read() -> n32 {
   return data;
 }
 
-//controller paks contain 32KB of SRAM split into 128 pages of 256 bytes each.
-//the first 5 pages are for storing system data, and the remaining 123 for game data.
+auto Gamepad::getInodeChecksum(u8 bank) -> u8 {
+  if (bank < 62) {
+    u32 checksum = 0;
+    u32 i = bank == 0 ? 3 + ram.read<Byte>(0x20 + 0x1a) * 2 : 1; //first bank has 3 + bank * 2 system pages, other banks have 127.
+
+    for (i; i < 0x100; i++) {
+      checksum += ram.read<Byte>((1 + bank) * 0x100) + ram.read<Byte>((1 + bank) * 0x100 + 0x01);
+    }
+
+    return checksum;
+  }
+
+  return 0;
+}
+
+//controller paks contain 32KB * nBanks of SRAM split into 128 pages of 256 bytes each.
+//the first 3 + nBanks * 2 pages of bank 0 are for storing system data, and the remaining 123 for game data.
+//the remaining banks page 0 is unused and the remaining 127 are for game data.
 auto Gamepad::formatControllerPak() -> void {
   ram.fill(0x00);
 
@@ -325,12 +422,12 @@ auto Gamepad::formatControllerPak() -> void {
   n19 fieldB = random();
   n27 fieldC = random();
   for(u32 area : array<u8[4]>{1,3,4,6}) {
-    ram.write<Byte>(area * 0x20 + 0x01, fieldA);  //unknown
-    ram.write<Word>(area * 0x20 + 0x04, fieldB);  //serial# hi
-    ram.write<Word>(area * 0x20 + 0x08, fieldC);  //serial# lo
-    ram.write<Half>(area * 0x20 + 0x18, 0x0001);  //device ID
-    ram.write<Byte>(area * 0x20 + 0x1a, 0x01);    //banks (0x01 = 32KB)
-    ram.write<Byte>(area * 0x20 + 0x1b, 0x00);    //version#
+    ram.write<Byte>(area * 0x20 + 0x01, fieldA);                        //unknown
+    ram.write<Word>(area * 0x20 + 0x04, fieldB);                        //serial# hi
+    ram.write<Word>(area * 0x20 + 0x08, fieldC);                        //serial# lo
+    ram.write<Half>(area * 0x20 + 0x18, 0x0001);                        //device ID
+    ram.write<Byte>(area * 0x20 + 0x1a, system.controllerPakBankCount); //banks (0x01 = 32KB), (62 = max banks)
+    ram.write<Byte>(area * 0x20 + 0x1b, 0x00);                          //version#
     u16 checksum = 0;
     u16 inverted = 0;
     for(u32 half : range(14)) {
@@ -342,16 +439,25 @@ auto Gamepad::formatControllerPak() -> void {
     ram.write<Half>(area * 0x20 + 0x1e, inverted);
   }
 
-  //pages 1+2 (inode table)
-  for(u32 page : array<u8[2]>{1,2}) {
-    ram.write<Byte>(0x100 * page + 0x01, 0x71);  //unknown
-    for(u32 slot : range(5,128)) {
-      ram.write<Byte>(0x100 * page + slot * 2 + 0x01, 0x03);  //0x01 = stop, 0x03 = empty
+  //pages 1 thru nBanks, nBanks+1 thru (nBanks*2) (inode table, inode table copy)
+  u8 nBanks = ram.read<Byte>(0x20 + 0x1a);
+  u32 inodeTablePage = 1;
+  u32 inodeTableCopyPage = 1 + nBanks * 2;
+  for(u32 bank : range(0,nBanks)) {
+    u32 firstDataPage = bank == 0 ? (3 + nBanks * 2) : 1; //first bank has 3 + bank * 2 system pages, other banks have 127.
+    for(u32 page : array<u32[2]>{inodeTablePage + bank, inodeTableCopyPage + bank}) {
+      for(u32 slot : range(firstDataPage,128)) {
+        ram.write<Byte>(0x100 * page + slot * 2 + 0x01, 0x03);  //0x01 = stop, 0x03 = empty
+      }
+      ram.write<Byte>(0x100 * page + 0x01, getInodeChecksum(bank));  //checksum
     }
   }
 
-  //pages 3+4 (note table)
-  //pages 5-127 (game saves)
+  //page 1 is pak info and serial
+  //pages 2-nBanks are for the inode table
+  //pages at nBanks+1,2*nBanks are for the inode table backup
+  //pages at 2*nBanks+1, 2*nBanks+2 are for note table
+  //pages 3 + 2*nBanks are for save data
 }
 
 auto Gamepad::serialize(serializer& s) -> void {

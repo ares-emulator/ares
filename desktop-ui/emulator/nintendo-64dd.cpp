@@ -91,6 +91,7 @@ auto Nintendo64DD::load() -> LoadResult {
   ares::Nintendo64::option("Homebrew Mode", settings.general.homebrewMode);
   ares::Nintendo64::option("Recompiler", !settings.general.forceInterpreter);
   ares::Nintendo64::option("Expansion Pak", settings.nintendo64.expansionPak);
+  ares::Nintendo64::option("Controller Pak Banks", settings.nintendo64.controllerPakBankString);
 
   if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64DD (", region, ")"})) return otherError;
 
@@ -106,6 +107,18 @@ auto Nintendo64DD::load() -> LoadResult {
       port->connect();
       bool transferPakConnected = false;
       if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+        if(id == 0 && game->pak->attribute("cpak").boolean()) {
+          gamepad = mia::Pak::create("Nintendo 64");
+
+          //create maximum sized controller pak, file is resized later
+          gamepad->pak->append("save.pak", 1984_KiB);
+          gamepad->load("save.pak", ".pak", game->location);
+          port->allocate("Controller Pak");
+          port->connect();
+        } else if(game->pak->attribute("rpak").boolean()) {
+          port->allocate("Rumble Pak");
+          port->connect();
+        }
         if(id == 0 && game->pak->attribute("tpak").boolean()) {
           #if defined(CORE_GB)
           auto transferPak = port->allocate("Transfer Pak");
