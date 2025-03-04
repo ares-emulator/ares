@@ -121,7 +121,6 @@ auto PPU::Background::linear(u32 x, u32 y) -> void {
 }
 
 auto PPU::Background::affineFetchTileMap(u32 x, u32 y) -> void {
-  if(x > 239) return;
   if(ppu.blank() || !io.enable[0]) return;
 
   if(x == 0) {
@@ -146,16 +145,19 @@ auto PPU::Background::affineFetchTileMap(u32 x, u32 y) -> void {
 }
 
 auto PPU::Background::affineFetchTileData(u32 x, u32 y) -> void {
-  if(x > 239) return;
   if(ppu.blank() || !io.enable[0]) return;
 
+  n3 px = affine.cx;
+  n3 py = affine.cy;
+  n8 color = ppu.readVRAM_BG(Byte, (io.characterBase << 14) + (affine.character << 6) + (py << 3) + px);
+
   if(affine.tx < affine.screenSize && affine.ty < affine.screenSize) {
-    n3 px = affine.cx;
-    n3 py = affine.cy;
-    if(n8 color = ppu.readVRAM_BG(Byte, (io.characterBase << 14) + (affine.character << 6) + (py << 3) + px)) {
-      output[x].enable = true;
-      output[x].priority = io.priority;
-      output[x].color = color;
+    if(color) {
+      if(x < 240) {
+        output[x].enable = true;
+        output[x].priority = io.priority;
+        output[x].color = color;
+      }
     }
   }
 
@@ -169,7 +171,6 @@ auto PPU::Background::affineFetchTileData(u32 x, u32 y) -> void {
 }
 
 auto PPU::Background::bitmap(u32 x, u32 y) -> void {
-  if(x > 239) return;
   if(ppu.blank() || !io.enable[0]) return;
 
   if(x == 0) {
@@ -191,15 +192,17 @@ auto PPU::Background::bitmap(u32 x, u32 y) -> void {
   u32 px = fx >> 8;
   u32 py = fy >> 8;
 
-  if(px < width && py < height) {
-    u32 offset = py * width + px;
-    n15 color = ppu.readVRAM_BG(mode, baseAddress + (offset << depth));
+  u32 offset = py * width + px;
+  n15 color = ppu.readVRAM_BG(mode, baseAddress + (offset << depth));
 
+  if(px < width && py < height) {
     if(depth || color) {  //8bpp color 0 is transparent; 15bpp color is always opaque
-      if(depth) output[x].directColor = true;
-      output[x].enable = true;
-      output[x].priority = io.priority;
-      output[x].color = color;
+      if(x < 240) {
+        if(depth) output[x].directColor = true;
+        output[x].enable = true;
+        output[x].priority = io.priority;
+        output[x].color = color;
+      }
     }
   }
 
