@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 #if defined(PLATFORM_WINDOWS)
 #include "shared/rawinput.cpp"
