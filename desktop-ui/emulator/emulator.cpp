@@ -180,6 +180,26 @@ auto Emulator::unload() -> void {
   locationQueue.reset();
 }
 
+auto Emulator::process(bool load) -> void {
+  #define bind(type, path, name) \
+    if(load) { \
+      if(auto node = settings[path]) name = node.type(); \
+    } else { \
+      settings(path).setValue(name); \
+    }\
+
+  string base = string{name}.replace(" ", "");
+  string name = {base, "/Visible"};
+  bind(boolean, name, configuration.visible);
+  for (auto& firmware : firmware) {
+    string name = {base, "/Firmware/", firmware.type, ".", firmware.region};
+    name.replace(" ", "-");
+    bind(string, name, firmware.location);
+  }
+
+  #undef bind
+}
+
 auto Emulator::load(mia::Pak& node, string name) -> bool {
   if(auto fp = node.pak->read(name)) {
     if(auto memory = file::read({node.location, name})) {
