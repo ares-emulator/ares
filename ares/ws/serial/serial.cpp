@@ -18,7 +18,10 @@ auto Serial::unload() -> void {
 
 auto Serial::main() -> void {
   step(80);
-  
+
+  cpu.irqLevel(CPU::Interrupt::SerialSend, (state.enable && !state.txFull));
+  cpu.irqLevel(CPU::Interrupt::SerialReceive, (state.enable && state.rxFull));
+
   if (!state.enable) return;
   if (!state.baudRate && ++state.baudClock < 4) return;
   state.baudClock = 0;
@@ -30,8 +33,6 @@ auto Serial::main() -> void {
       state.txFull = 0;
     }
   }
-  cpu.irqLevel(CPU::Interrupt::SerialSend, !state.txFull);
-  cpu.irqLevel(CPU::Interrupt::SerialReceive, state.rxFull);
 }
 
 auto Serial::step(u32 clocks) -> void {
