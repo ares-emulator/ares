@@ -6,9 +6,11 @@ auto APU::Channel3::sweep() -> void {
 }
 
 auto APU::Channel3::tick() -> void {
-  if(--state.period == io.pitch) {
-    state.period = 0;
-    state.sampleOffset++;
+  if(io.enable) {
+    if(--state.period == io.pitch) {
+      state.period = 0;
+      state.sampleOffset++;
+    }
   }
 }
 

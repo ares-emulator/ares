@@ -255,8 +255,10 @@ auto APU::writeIO(n16 address, n8 data) -> void {
 
   case 0x008e:  //SND_NOISE
     channel4.io.noiseMode   = data.bit(0,2);
-    channel4.io.noiseReset  = data.bit(3);
     channel4.io.noiseUpdate = data.bit(4);
+    if (data.bit(3)) {
+      channel4.state.noiseLFSR = 0;
+    }
     break;
 
   case 0x008f:  //SND_WAVE_BASE

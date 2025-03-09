@@ -84,7 +84,6 @@ auto APU::Channel4::serialize(serializer& s) -> void {
   s(io.volumeLeft);
   s(io.volumeRight);
   s(io.noiseMode);
-  s(io.noiseReset);
   s(io.noiseUpdate);
   s(io.enable);
   s(io.noise);
