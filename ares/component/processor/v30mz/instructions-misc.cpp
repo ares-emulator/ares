@@ -43,21 +43,27 @@ auto V30MZ::instructionUndefined1() -> void {
 }
 
 template<u32 size> auto V30MZ::instructionIn() -> void {
-  wait(6);
+  // TODO: The exact cycle on which I/O access is performed remains unknown.
+  wait(5);
   setAccumulator<size>(in<size>(fetch<Byte>()));
+  wait(1);
 }
 
 template<u32 size> auto V30MZ::instructionOut() -> void {
+  // TODO: The exact cycle on which I/O access is performed remains unknown.
   wait(6);
   out<size>(fetch<Byte>(), getAccumulator<size>());
 }
 
 template<u32 size> auto V30MZ::instructionInDW() -> void {
-  wait(5);
+  // TODO: The exact cycle on which I/O access is performed remains unknown.
+  wait(4);
   setAccumulator<size>(in<size>(DW));
+  wait(1);
 }
 
 template<u32 size> auto V30MZ::instructionOutDW() -> void {
+  // TODO: The exact cycle on which I/O access is performed remains unknown.
   wait(5);
   out<size>(DW, getAccumulator<size>());
 }
