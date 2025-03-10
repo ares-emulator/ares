@@ -340,8 +340,11 @@ auto PIF::mainHLE() -> void {
           " != cpu:", 
           hex(intram.cpuChecksum[0], 2L), hex(intram.cpuChecksum[1], 2L), hex(intram.cpuChecksum[2], 2L),
           hex(intram.cpuChecksum[3], 2L), hex(intram.cpuChecksum[4], 2L), hex(intram.cpuChecksum[5], 2L));
-        state = Error;
-        return;
+        if constexpr(Accuracy::PIF::IPL2Checksum) {
+          state = Error;
+          return;
+        }
+        break;
       }
     }
     for (auto i: range(6)) intram.cpuChecksum[i] = 0;

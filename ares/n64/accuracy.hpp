@@ -26,5 +26,7 @@ struct Accuracy {
   struct PIF {
     // Emulate a region-locked console
     static constexpr bool RegionLock = false;
+    // Emulate the PIF's checksum security check
+    static constexpr bool IPL2Checksum = true;
   };
 };
