@@ -15,6 +15,8 @@ if(NOT ARES_CODESIGN_TEAM)
   endif()
 endif()
 
+find_program(ACTOOL_PROGRAM "actool")
+
 include(xcode)
 
 include(dependencies)

@@ -11,7 +11,9 @@
 	<key>CFBundleExecutable</key>
 	<string>ares</string>
 	<key>CFBundleIconFile</key>
-	<string>ares.icns</string>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>NSHighResolutionCapable</key>
