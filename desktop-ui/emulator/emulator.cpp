@@ -64,11 +64,11 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
       return;
     case invalidROM:
       errorText = { "There was an error trying to parse the selected ROM. \n",
-                    "Your ROM may be corrupt or contain a bad dump." };
+                    "Your ROM may be corrupt or contain a bad dump. " };
       break;
     case couldNotParseManifest:
       errorText = { "An error occurred while parsing the database file. You \n",
-                    "may need to reinstall ares." };
+                    "may need to reinstall ares. " };
       break;
     case databaseNotFound:
       errorText = { "The database file for the system was not found. \n",
@@ -78,17 +78,17 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
     case noFirmware:
       errorText = { "Error: firmware is missing or invalid.\n",
                     result.firmwareSystemName, " - ", result.firmwareType, " (", result.firmwareRegion, ") is required to play this game.\n",
-                    "Would you like to configure firmware settings now?" };
+                    "Would you like to configure firmware settings now? " };
       break;
     case romNotFound:
-      errorText = "The selected ROM file was not found or could not be opened.";
+      errorText = "The selected ROM file was not found or could not be opened. ";
       break;
     case romNotFoundInDatabase:
       errorText = { "The required manifest for this ROM was not found in the database. \n",
-                    "This title may not be currently supported by ares." };
+                    "This title may not be currently supported by ares. " };
       break;
     case otherError:
-      errorText = "An internal error occurred when initializing the emulator core.";
+      errorText = "An internal error occurred when initializing the emulator core. ";
       break;
   }
   
