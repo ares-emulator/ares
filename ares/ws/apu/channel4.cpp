@@ -8,7 +8,7 @@ auto APU::Channel4::tick() -> void {
       state.period = 0;
       state.sampleOffset++;
 
-      if(io.noise && io.noiseUpdate && !apu.io.seqDbgNoise) {
+      if(io.noiseUpdate && !apu.io.seqDbgNoise) {
         static constexpr s32 taps[8] = {14, 10, 13, 4, 8, 6, 9, 11};
         auto tap = taps[io.noiseMode];
 
