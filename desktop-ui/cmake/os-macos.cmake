@@ -27,7 +27,11 @@ set_target_properties(
 )
 
 target_add_resource(desktop-ui "${CMAKE_SOURCE_DIR}/ruby/video/metal/Shaders.metal" "Shaders")
-target_add_resource(desktop-ui "${CMAKE_CURRENT_SOURCE_DIR}/resource/Assets.xcassets")
+if(ACTOOL_PROGRAM)
+  target_add_resource(desktop-ui "${CMAKE_CURRENT_SOURCE_DIR}/resource/Assets.xcassets")
+else()
+  target_add_resource(desktop-ui "${CMAKE_CURRENT_SOURCE_DIR}/resource/AppIcon.icns")
+endif()
 
 function(target_install_shaders target)
   message(DEBUG "Installing shaders for target ${target}...")

@@ -1,5 +1,5 @@
 auto APU::Channel2::tick() -> void {
-  if(!io.voice) {
+  if(io.enable) {
     if(--state.period == io.pitch) {
       state.period = 0;
       state.sampleOffset++;

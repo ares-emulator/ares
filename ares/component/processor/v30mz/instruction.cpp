@@ -42,7 +42,7 @@ auto V30MZ::interrupt(u8 vector, InterruptSource source) -> bool {
 
 auto V30MZ::interrupt(u8 vector) -> bool {
   state.halt = false;
-  if(!PSW.IE) return false;
+  if(!state.interrupt || !PSW.IE) return false;
   return interrupt(vector, InterruptSource::INT);
 }
 
