@@ -22,43 +22,22 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
 template <u32 Size>
 inline auto PI::busRead(u32 address) -> u16 {
   static_assert(Size == Half);  //PI bus will do 16-bit only
-  const u16 unmapped = address & 0xFFFF;
-
-  if(address <= 0x04ff'ffff) return unmapped; //Address range not memory mapped, only accessible via DMA
-  if(address <= 0x0500'03ff) {
+  if(address >= 0x0500'0000 && address <= 0x0500'03ff) {
     if(_DD()) return dd.c2s.read<Size>(address);
-    return unmapped;
   }
-  if(address <= 0x0500'04ff) {
+  if(address >= 0x0500'0400 && address <= 0x0500'04ff) {
     if(_DD()) return dd.ds.read<Size>(address);
-    return unmapped;
   }
-  if(address <= 0x0500'057f) {
+  if(address >= 0x0500'0500 && address <= 0x0500'057f) {
     if(_DD()) return dd.read<Size>(address);
-    return unmapped;
   }
-  if(address <= 0x0500'05bf) {
+  if(address >= 0x0500'0580 && address <= 0x0500'05bf) {
     if(_DD()) return dd.ms.read<Size>(address);
-    return unmapped;
   }
-  if(address <= 0x05ff'ffff) return unmapped;
-  if(address <= 0x063f'ffff) {
+  if(address >= 0x0600'0000 && address <= 0x063f'ffff) {
     if(_DD()) return dd.iplrom.read<Size>(address);
-    return unmapped;
   }
-  if(address <= 0x07ff'ffff) return unmapped;
-  if(address <= 0x0fff'ffff) {
-    if(cartridge.ram  ) return cartridge.ram.read<Size>(address);
-    if(cartridge.flash) return cartridge.flash.read<Size>(address);
-    return unmapped;
-  }
-  if(cartridge.isviewer.enabled() && address >= 0x13ff'0000 && address <= 0x13ff'ffff) {
-    return cartridge.isviewer.read<Size>(address);
-  }
-  if(address <= 0x1000'0000 + cartridge.rom.size - 1) {
-    return cartridge.rom.read<Size>(address);
-  }
-  return unmapped;
+  return cartridge.readHalf(address);
 }
 
 inline auto PI::writeWord(u32 address, u32 data, Thread& thread) -> void {
@@ -81,46 +60,22 @@ inline auto PI::writeWord(u32 address, u32 data, Thread& thread) -> void {
 template <u32 Size>
 inline auto PI::busWrite(u32 address, u16 data) -> void {
   static_assert(Size == Half);  //PI bus will do 16-bit only
-  if(address <= 0x04ff'ffff) return; //Address range not memory mapped, only accessible via DMA
-  if(address <= 0x0500'03ff) {
+  if(address >= 0x0500'0000 && address <= 0x0500'03ff) {
     if(_DD()) return dd.c2s.write<Size>(address, data);
-    return;
   }
-  if(address <= 0x0500'04ff) {
+  if(address >= 0x0500'0400 && address <= 0x0500'04ff) {
     if(_DD()) return dd.ds.write<Size>(address, data);
-    return;
   }
-  if(address <= 0x0500'057f) {
+  if(address >= 0x0500'0500 && address <= 0x0500'057f) {
     if(_DD()) return dd.write<Size>(address, data);
-    return;
   }
-  if(address <= 0x0500'05bf) {
+  if(address >= 0x0500'0580 && address <= 0x0500'05bf) {
     if(_DD()) return dd.ms.write<Size>(address, data);
-    return;
   }
-  if(address <= 0x05ff'ffff) return;
-  if(address <= 0x063f'ffff) {
+  if(address >= 0x0600'0000 && address <= 0x063f'ffff) {
     if(_DD()) return dd.iplrom.write<Size>(address, data);
-    return;
   }
-  if(address <= 0x07ff'ffff) return;
-  if(address <= 0x0fff'ffff) {
-    if(cartridge.ram  ) return cartridge.ram.write<Size>(address, data);
-    if(cartridge.flash) return cartridge.flash.write<Size>(address, data);
-    return;
-  }
-  if(address >= 0x13ff'0000 && address <= 0x13ff'ffff) {
-    if(cartridge.isviewer.enabled()) {
-      writeForceFinish(); //Debugging channel for homebrew, be gentle
-      return cartridge.isviewer.write<Size>(address, data);      
-    } else {
-      debug(unhandled, "[PI::busWrite] attempt to write to ISViewer: ROM is too big so ISViewer is disabled");
-    }
-  }
-  if(address <= 0x1000'0000 + cartridge.rom.size - 1) {
-    return cartridge.rom.write<Size>(address, data);
-  }
-  if(address <= 0x7fff'ffff) return;
+  return cartridge.writeHalf(address, data);
 }
 
 inline auto PI::writeFinished() -> void {
