@@ -65,6 +65,11 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     region = "NTSC-J";
   }
 
+  //Back to the Future III (Europe)
+  if(hash == "c39167c5dc187e7d4da8ead30b77f10d5b14596ebddf7aa081adf7285e1e8d8d") {
+    region = "PAL";
+  }
+
   //BMX Trial - Alex Kidd (Japan)
   if(hash == "0fdd18f1212072bfbc0cfeaf030436d746733029ef26a8a6470c7be101cfedfb") {
     paddle = true;
