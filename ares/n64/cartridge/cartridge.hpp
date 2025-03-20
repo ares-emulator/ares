@@ -14,7 +14,7 @@ struct Cartridge {
 
 
   //cartridge.cpp
-  auto allocate(Node::Port) -> Node::Peripheral;
+  auto allocate(Node::Port, string) -> Node::Peripheral;
   auto loadBoard(string) -> Markup::Node;
   auto connect() -> void;
   auto disconnect() -> void;

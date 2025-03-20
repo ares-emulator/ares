@@ -121,7 +121,7 @@ auto Nintendo64::load() -> LoadResult {
   if(!ares::Nintendo64::load(root, {"[Nintendo] ", name, " (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto cartridge = port->allocate();
+    auto cartridge = port->allocate({name, " Cartridge"});
     port->connect();
 
     if(auto slot = cartridge->find<ares::Node::Port>("GameShark Cartridge Slot")) {
@@ -133,7 +133,7 @@ auto Nintendo64::load() -> LoadResult {
 
       //technically we could recurse infinitely here, since you can stack GameSharks
       //probably not necessary to emulate that though
-      slot->allocate();
+      slot->allocate({name, " Cartridge + GameShark"});
       slot->connect();
     }
   }
@@ -357,5 +357,6 @@ auto Nintendo64::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> 
   if(node->name() == "Game Boy Cartridge") return gb->pak;
   if(node->name() == "Game Boy Color Cartridge") return gb->pak;
   if(node->name() == "Gamepad") return gamepad->pak;
+  if(node->name() == "Nintendo 64 Cartridge + GameShark") return gs->pak;
   return {};
 }

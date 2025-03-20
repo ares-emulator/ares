@@ -8,8 +8,8 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "slot.cpp"
 #include "serialization.cpp"
 
-auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(string{system.name(), " Cartridge"});
+auto Cartridge::allocate(Node::Port parent, string name) -> Node::Peripheral {
+  return node = parent->append<Node::Peripheral>(name);
 }
 
 auto Cartridge::connect() -> void {
@@ -27,6 +27,8 @@ auto Cartridge::connect() -> void {
     board = new Board::NUS_01A(*this);
   } else if((board_name == "NUS-07A-01")) {
     board = new Board::NUS_07A(*this);
+  } else if(board_name == "DATEL-REF1329") {
+    board = new Board::DATEL_REF1329(*this);
   } else {
     board = new Board::Generic(*this);
   }

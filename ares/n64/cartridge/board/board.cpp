@@ -2,6 +2,7 @@ namespace Board {
 
 #include "nus-01a.cpp"
 #include "nus-07a.cpp"
+#include "datel-ref1329.cpp"
 #include "generic.cpp"
 
 auto Interface::title() const -> string {
