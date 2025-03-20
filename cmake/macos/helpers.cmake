@@ -112,8 +112,6 @@ function(_bundle_dependencies target)
 
       if(is_system_framework OR is_xcode_framework)
         continue()
-      elseif(is_framework)
-        file(REAL_PATH "../../.." library_location BASE_DIRECTORY "${imported_location}")
       elseif(_required_macos VERSION_GREATER CMAKE_OSX_DEPLOYMENT_TARGET)
         continue()
       elseif(NOT library_type STREQUAL "STATIC_LIBRARY")
