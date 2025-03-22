@@ -136,6 +136,7 @@ Presentation::Presentation() {
   for(u32 slot : range(9)) {
     MenuItem item{&saveStateMenu};
     item.setText({"Slot ", 1 + slot}).onActivate([=] {
+      lock_guard<recursive_mutex> programLock(program.programMutex);
       if(program.stateSave(1 + slot)) {
         undoSaveStateMenu.setEnabled(true);
       }
@@ -145,6 +146,7 @@ Presentation::Presentation() {
   for(u32 slot : range(9)) {
     MenuItem item{&loadStateMenu};
     item.setText({"Slot ", 1 + slot}).onActivate([=] {
+      lock_guard<recursive_mutex> programLock(program.programMutex);
       if(program.stateLoad(1 + slot)) {
         undoLoadStateMenu.setEnabled(true);
       }
@@ -152,24 +154,30 @@ Presentation::Presentation() {
   }
   undoSaveStateMenu.setText("Undo Last Save State").setIcon(Icon::Edit::Undo).setEnabled(false);
   undoSaveStateMenu.onActivate([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     program.undoStateSave();
     undoSaveStateMenu.setEnabled(false);
   });
   undoLoadStateMenu.setText("Undo Last Load State").setIcon(Icon::Edit::Undo).setEnabled(false);
   undoLoadStateMenu.onActivate([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     program.undoStateLoad();
     undoLoadStateMenu.setEnabled(false);
   });
   captureScreenshot.setText("Capture Screenshot").setIcon(Icon::Emblem::Image).onActivate([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     program.requestScreenshot = true;
   });
   pauseEmulation.setText("Pause Emulation").onToggle([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     program.pause(!program.paused);
   });
   reloadGame.setText("Reload Game").setIcon(Icon::Action::Refresh).onActivate([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     program.load(emulator, emulator->game->location);
   });
   frameAdvance.setText("Frame Advance").setIcon(Icon::Media::Play).onActivate([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if (!program.paused) program.pause(true);
     program.requestFrameAdvance = true;
   });
@@ -211,6 +219,7 @@ Presentation::Presentation() {
   });
 
   viewport.setDroppable().onDrop([&](auto filenames) {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(filenames.size() != 1) return;
     if(auto emulator = program.identify(filenames.first())) {
       program.load(emulator, filenames.first());
@@ -218,6 +227,7 @@ Presentation::Presentation() {
   });
     
   Application::onOpenFile([&](auto filename) {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(auto emulator = program.identify(filename)) {
       program.load(emulator, filename);
     }
@@ -355,6 +365,7 @@ auto Presentation::loadEmulators() -> void {
       item.setIconForFile(location);
       item.setText({Location::base(location).trimRight("/"), " (", system, ")"});
       item.onActivate([=] {
+        lock_guard<recursive_mutex> programLock(program.programMutex);
         if(!inode::exists(location)) {
           MessageDialog()
             .setTitle("Error")
@@ -369,7 +380,8 @@ auto Presentation::loadEmulators() -> void {
         }
         for(auto& emulator : emulators) {
           if(emulator->name == system) {
-            return (void)program.load(emulator, location);
+            program.load(emulator, location);
+            return;
           }
         }
       });
@@ -575,6 +587,7 @@ auto Presentation::refreshSystemMenu() -> void {
 
   MenuItem reset{&systemMenu};
   reset.setText("Reset").setIcon(Icon::Action::Refresh).onActivate([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     emulator->root->power(true);
     program.showMessage("System reset");
   });
@@ -582,8 +595,9 @@ auto Presentation::refreshSystemMenu() -> void {
 
   MenuItem unload{&systemMenu};
   unload.setText("Unload").setIcon(Icon::Media::Eject).onActivate([&] {
-  program.unload();
-  if(settings.video.adaptiveSizing) presentation.resizeWindow();
+    lock_guard<recursive_mutex> programLock(program.programMutex);
+    program.unload();
+    if(settings.video.adaptiveSizing) presentation.resizeWindow();
     presentation.showIcon(true);
   });
 }

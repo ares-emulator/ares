@@ -183,6 +183,7 @@ auto DriverSettings::videoDriverUpdate() -> bool {
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
   ).setAlignment(settingsWindow).question() != "Yes") return false;
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   program.videoDriverUpdate();
   videoRefresh();
   return true;
@@ -228,6 +229,7 @@ auto DriverSettings::audioDriverUpdate() -> bool {
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
   ).setAlignment(settingsWindow).question() != "Yes") return false;
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   program.audioDriverUpdate();
   audioRefresh();
   return true;
@@ -251,6 +253,7 @@ auto DriverSettings::inputDriverUpdate() -> bool {
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
   ).setAlignment(settingsWindow).question() != "Yes") return false;
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   program.inputDriverUpdate();
   inputRefresh();
   return true;

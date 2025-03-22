@@ -37,6 +37,8 @@ private:
     u32 videoFrequency = 48'681'818;
     bool dd = false;
   } information;
+  
+  atomic<bool> _vulkanNeedsLoad = false;
 
   auto initDebugHooks() -> void;
 

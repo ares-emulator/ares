@@ -111,6 +111,7 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
 }
 
 auto Emulator::load(const string& location) -> bool {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(inode::exists(location)) locationQueue.append(location);
   
   LoadResult result = load();
@@ -130,6 +131,7 @@ auto Emulator::load(const string& location) -> bool {
 }
 
 auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   string location;
   if(locationQueue) {
     location = locationQueue.takeFirst();  //pull from the game queue if an entry is available
@@ -160,6 +162,7 @@ auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
 }
 
 auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::file> {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(firmware.location.iendsWith(".zip")) {
     Decode::ZIP archive;
     if(archive.open(firmware.location) && archive.file) {
@@ -173,6 +176,7 @@ auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::fil
 }
 
 auto Emulator::unload() -> void {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   save();
   root->unload();
   game = {};
@@ -182,6 +186,7 @@ auto Emulator::unload() -> void {
 }
 
 auto Emulator::load(mia::Pak& node, string name) -> bool {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(auto fp = node.pak->read(name)) {
     if(auto memory = file::read({node.location, name})) {
       fp->read(memory);
@@ -192,6 +197,7 @@ auto Emulator::load(mia::Pak& node, string name) -> bool {
 }
 
 auto Emulator::save(mia::Pak& node, string name) -> bool {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(auto memory = node.pak->write(name)) {
     return file::write({node.location, name}, {memory->data(), memory->size()});
   }
@@ -199,12 +205,14 @@ auto Emulator::save(mia::Pak& node, string name) -> bool {
 }
 
 auto Emulator::refresh() -> void {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
     screen->refresh();
   }
 }
 
 auto Emulator::setBoolean(const string& name, bool value) -> bool {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(auto node = root->scan<ares::Node::Setting::Boolean>(name)) {
     node->setValue(value);  //setValue() will not call modify() if value has not changed;
     node->modify(value);    //but that may prevent the initial setValue() from working
@@ -214,6 +222,7 @@ auto Emulator::setBoolean(const string& name, bool value) -> bool {
 }
 
 auto Emulator::setOverscan(bool value) -> bool {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
     screen->setOverscan(value);
     return true;
@@ -222,6 +231,7 @@ auto Emulator::setOverscan(bool value) -> bool {
 }
 
 auto Emulator::setColorBleed(bool value) -> bool {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
     screen->setColorBleed(screen->height() < 720 ? value : false);  //only apply to sub-HD content
     return true;
@@ -243,6 +253,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
     input->lastPoll = thisPoll;
   }
 
+  lock_guard<recursive_mutex> programinputLock(program.inputMutex);
   auto device = ares::Node::parent(input);
   if(!device) return;
 
@@ -281,6 +292,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
 }
 
 auto Emulator::inputKeyboard(string name) -> bool {
+  lock_guard<recursive_mutex> programinputLock(program.inputMutex);
   for (auto& device : inputManager.devices) {
     if (!device->isKeyboard()) continue;
 

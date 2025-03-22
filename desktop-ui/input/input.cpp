@@ -5,6 +5,7 @@ VirtualPort virtualPorts[5];
 InputManager inputManager;
 
 auto InputMapping::bind() -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   for(auto& binding : bindings) binding = {};
 
   for(u32 index : range(BindingLimit)) {
@@ -32,22 +33,26 @@ auto InputMapping::bind() -> void {
 }
 
 auto InputMapping::bind(u32 binding, string assignment) -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   if(binding >= BindingLimit) return;
   assignments[binding] = assignment;
   bind();
 }
 
 auto InputMapping::unbind() -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   for(u32 binding : range(BindingLimit)) unbind(binding);
 }
 
 auto InputMapping::unbind(u32 binding) -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   if(binding >= BindingLimit) return;
   bindings[binding] = {};
   assignments[binding] = {};
 }
 
 auto InputMapping::Binding::icon() -> multiFactorImage {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   if(!device && deviceID) return Icon::Device::Joypad;
   if(!device) return {};
   if(device->isKeyboard()) return Icon::Device::Keyboard;
@@ -57,6 +62,7 @@ auto InputMapping::Binding::icon() -> multiFactorImage {
 }
 
 auto InputMapping::Binding::text() -> string {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   if(!device && deviceID) return "(disconnected)";
   if(!device) return {};
   if(groupID >= device->size()) return {};
@@ -90,6 +96,7 @@ auto InputMapping::Binding::text() -> string {
 //
 
 auto InputDigital::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
   if(device->isNull()) {
@@ -128,6 +135,7 @@ auto InputDigital::bind(u32 binding, shared_pointer<HID::Device> device, u32 gro
 }
 
 auto InputDigital::value() -> s16 {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   s16 result = 0;
 
   for(auto& binding : bindings) {
@@ -165,11 +173,13 @@ auto InputDigital::value() -> s16 {
 }
 
 auto InputDigital::pressed() -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   return value() != 0;
 }
 
 
 auto InputHotkey::value() -> s16 {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   s16 result = 0;
 
   for(auto& binding : bindings) {
@@ -210,6 +220,7 @@ auto InputHotkey::value() -> s16 {
 //
 
 auto InputAnalog::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
   if(device->isNull()) {
@@ -244,6 +255,7 @@ auto InputAnalog::bind(u32 binding, shared_pointer<HID::Device> device, u32 grou
 }
 
 auto InputAnalog::value() -> s16 {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   s32 result = 0;
 
   for(auto& binding : bindings) {
@@ -274,12 +286,14 @@ auto InputAnalog::value() -> s16 {
 }
 
 auto InputAnalog::pressed() -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   return value() > 16384;
 }
 
 //
 
 auto InputAbsolute::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
   if(device->isNull()) {
@@ -310,6 +324,7 @@ auto InputAbsolute::bind(u32 binding, shared_pointer<HID::Device> device, u32 gr
 }
 
 auto InputAbsolute::value() -> s16 {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   s32 result = 0;
 
   for(auto& binding : bindings) {
@@ -337,6 +352,7 @@ auto InputAbsolute::value() -> s16 {
 //
 
 auto InputRelative::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
   if(device->isNull()) {
@@ -367,6 +383,7 @@ auto InputRelative::bind(u32 binding, shared_pointer<HID::Device> device, u32 gr
 }
 
 auto InputRelative::value() -> s16 {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   s32 result = 0;
 
   for(auto& binding : bindings) {
@@ -394,6 +411,7 @@ auto InputRelative::value() -> s16 {
 //
 
 auto InputRumble::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
   if(device->isNull()) {
@@ -468,10 +486,12 @@ VirtualMouse::VirtualMouse() {
 //
 
 auto InputManager::create() -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   createHotkeys();
 }
 
 auto InputManager::bind() -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   for(auto& port : virtualPorts) {
     for(auto& input : port.pad.inputs) input.mapping->bind();
     for(auto& input : port.mouse.inputs) input.mapping->bind();
@@ -485,6 +505,7 @@ auto InputManager::poll(bool force) -> void {
   if(thisPoll - lastPoll < pollFrequency && !force) return;
   lastPoll = thisPoll;
 
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   auto devices = ruby::input.poll();
   bool changed = devices.size() != this->devices.size();
   if(!changed) {
@@ -502,6 +523,7 @@ auto InputManager::poll(bool force) -> void {
 }
 
 auto InputManager::eventInput(shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
   inputSettings.eventInput(device, groupID, inputID, oldValue, newValue);
   hotkeySettings.eventInput(device, groupID, inputID, oldValue, newValue);
 }

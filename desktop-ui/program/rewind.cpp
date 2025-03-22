@@ -1,9 +1,11 @@
 auto Program::rewindSetMode(Rewind::Mode mode) -> void {
+  lock_guard<recursive_mutex> programLock(programMutex);
   rewind.mode = mode;
   rewind.counter = 0;
 }
 
 auto Program::rewindReset() -> void {
+  lock_guard<recursive_mutex> programLock(programMutex);
   rewindSetMode(Rewind::Mode::Playing);
   rewind.history.reset();
   rewind.length = settings.rewind.length;
@@ -11,6 +13,7 @@ auto Program::rewindReset() -> void {
 }
 
 auto Program::rewindRun() -> void {
+  lock_guard<recursive_mutex> programLock(programMutex);
   if(!settings.general.rewind) return;  //rewind disabled?
 
   if(rewind.mode == Rewind::Mode::Playing) {

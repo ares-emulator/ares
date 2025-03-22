@@ -77,6 +77,10 @@ auto System::game() -> string {
 }
 
 auto System::run() -> void {
+  if(_vulkanNeedsLoad) {
+    vulkan.load(node);
+    _vulkanNeedsLoad = false;
+  }
   cpu.main();
 }
 
@@ -134,11 +138,9 @@ auto System::load(Node::System& root, string name) -> bool {
   rdp.load(node);
   if(_DD()) dd.load(node);
   if(model() == Model::Aleck64) aleck64.load(node);
-  #if defined(VULKAN)
-  vulkan.load(node);
-  #endif
 
   initDebugHooks();
+  _vulkanNeedsLoad = true;
 
   return true;
 }
@@ -308,6 +310,7 @@ auto System::unload() -> void {
   if(vi.screen) vi.screen->quit(); //stop video thread
   #if defined(VULKAN)
   vulkan.unload();
+  _vulkanNeedsLoad = false;
   #endif
   cartridgeSlot.unload();
   controllerPort1.unload();

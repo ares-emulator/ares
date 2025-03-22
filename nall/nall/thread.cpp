@@ -29,11 +29,11 @@ NALL_HEADER_INLINE auto thread::join() -> void {
 
 NALL_HEADER_INLINE auto thread::create(const function<void (uintptr)>& callback, uintptr parameter, u32 stacksize) -> thread {
   thread instance;
-  
+
   auto context = new thread::context;
   context->callback = callback;
   context->parameter = parameter;
-  
+
   instance.handle = CreateThread(nullptr, stacksize, _threadCallback, (void*)context, 0, nullptr);
   return instance;
 }

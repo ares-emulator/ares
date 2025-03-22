@@ -1,4 +1,5 @@
-auto MemoryEditor::construct() -> void {
+auto MemoryEditor::construct(std::recursive_mutex *programMutexIn) -> void {
+  this->programMutex = programMutexIn;
   setCollapsible();
   setVisible(false);
 
@@ -8,11 +9,13 @@ auto MemoryEditor::construct() -> void {
   memoryEditor.setRows(24);
 
   exportButton.setText("Export").onActivate([&] {
+    lock_guard<recursive_mutex> lock(*programMutex);
     eventExport();
   });
 
   gotoLabel.setText("Goto:");
   gotoAddress.setFont(Font().setFamily(Font::Mono)).onActivate([&] {
+    lock_guard<recursive_mutex> lock(*programMutex);
     auto address = gotoAddress.text().hex();
     memoryEditor.setAddress(address);
     gotoAddress.setText();
@@ -21,6 +24,7 @@ auto MemoryEditor::construct() -> void {
   liveOption.setText("Live");
 
   refreshButton.setText("Refresh").onActivate([&] {
+    lock_guard<recursive_mutex> lock(*programMutex);
     memoryEditor.update();
   });
 }
@@ -58,6 +62,7 @@ auto MemoryEditor::eventChange() -> void {
         return memory->read(address);
       });
       memoryEditor.onWrite([=](u32 address, u8 data) -> void {
+        lock_guard<recursive_mutex> lock(*programMutex);
         return memory->write(address, data);
       });
     }
@@ -71,6 +76,7 @@ auto MemoryEditor::eventChange() -> void {
 }
 
 auto MemoryEditor::eventExport() -> void {
+  lock_guard<recursive_mutex> lock(*programMutex);
   if(auto item = memoryList.selected()) {
     if(auto memory = item.attribute<ares::Node::Debugger::Memory>("node")) {
       auto identifier = memory->name().downcase().replace(" ", "-");
