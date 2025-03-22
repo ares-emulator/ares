@@ -203,6 +203,7 @@ struct VideoMetal : VideoDriver, Metal {
   }
 
   auto size(u32& width, u32& height) -> void override {
+    lock_guard<recursive_mutex> lock(mutex);
     if ((_viewWidth == width && _viewHeight == height) && (_viewWidth != 0 && _viewHeight != 0)) { return; }
     auto area = [view convertRectToBacking:[view bounds]];
     width = area.size.width;
@@ -297,6 +298,7 @@ struct VideoMetal : VideoDriver, Metal {
     /// Synchronously copy the current framebuffer to a Metal texture, then call into the render dispatch queue
     /// either synchronously or asynchronously depending on whether blocking is on and VRR is supported.
 
+    lock_guard<recursive_mutex> lock(mutex);
     if (depth >= kMaxSourceBuffersInFlight) {
       //if we are running very behind, drop this frame
       return;
@@ -348,6 +350,8 @@ private:
     /// acquiring for as long as possible.
     
     dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
+    
+    //lock_guard<recursive_mutex> lock(mutex);
 
     id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     

@@ -1,4 +1,5 @@
 auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
+  lock_guard<recursive_mutex> lock(programMutex);
   if(auto system = mia::identify(filename)) {
     for(auto& emulator : emulators) {
       if(emulator->name == system) return emulator;
@@ -13,8 +14,9 @@ auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
   return {};
 }
 
-//location is an optional game to load automatically (for command-line loading)
+//location is an optional game t  o load automatically (for command-line loading)
 auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
+  lock_guard<recursive_mutex> lock(programMutex);
   unload();
 
   ::emulator = emulator;
@@ -33,6 +35,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
 }
 
 auto Program::load(string location) -> bool {
+  lock_guard<recursive_mutex> lock(programMutex);
   if(settings.debugServer.enabled) {
     nall::GDB::server.reset();
   }
@@ -90,10 +93,12 @@ auto Program::load(string location) -> bool {
   settings.recent.game[0] = {emulator->name, ";", location};
   presentation.loadEmulators();
 
+  loaded = true;
   return true;
 }
 
 auto Program::unload() -> void {
+  lock_guard<recursive_mutex> lock(programMutex);
   if(!emulator) return;
 
   nall::GDB::server.close();
