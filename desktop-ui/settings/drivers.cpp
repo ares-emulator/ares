@@ -179,6 +179,7 @@ auto DriverSettings::videoRefresh() -> void {
 }
 
 auto DriverSettings::videoDriverUpdate() -> bool {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(emulator && settings.video.driver != "None" && MessageDialog(
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
@@ -224,6 +225,7 @@ auto DriverSettings::audioRefresh() -> void {
 }
 
 auto DriverSettings::audioDriverUpdate() -> bool {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(emulator && settings.audio.driver != "None" && MessageDialog(
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
@@ -247,6 +249,7 @@ auto DriverSettings::inputRefresh() -> void {
 }
 
 auto DriverSettings::inputDriverUpdate() -> bool {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(emulator && settings.input.driver != "None" && MessageDialog(
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"

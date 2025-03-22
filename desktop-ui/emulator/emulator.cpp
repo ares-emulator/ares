@@ -25,6 +25,7 @@ auto Emulator::location() -> string {
 }
 
 auto Emulator::locate(const string& location, const string& suffix, const string& path, maybe<string> system) -> string {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(!system) system = root->name();
 
   //game path
@@ -111,6 +112,7 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
 }
 
 auto Emulator::load(const string& location) -> bool {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(inode::exists(location)) locationQueue.append(location);
   
   LoadResult result = load();
@@ -130,6 +132,7 @@ auto Emulator::load(const string& location) -> bool {
 }
 
 auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   string location;
   if(locationQueue) {
     location = locationQueue.takeFirst();  //pull from the game queue if an entry is available
@@ -160,6 +163,7 @@ auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
 }
 
 auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::file> {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(firmware.location.iendsWith(".zip")) {
     Decode::ZIP archive;
     if(archive.open(firmware.location) && archive.file) {
@@ -173,6 +177,7 @@ auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::fil
 }
 
 auto Emulator::unload() -> void {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   save();
   root->unload();
   game = {};
@@ -182,6 +187,7 @@ auto Emulator::unload() -> void {
 }
 
 auto Emulator::load(mia::Pak& node, string name) -> bool {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(auto fp = node.pak->read(name)) {
     if(auto memory = file::read({node.location, name})) {
       fp->read(memory);
@@ -192,6 +198,7 @@ auto Emulator::load(mia::Pak& node, string name) -> bool {
 }
 
 auto Emulator::save(mia::Pak& node, string name) -> bool {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(auto memory = node.pak->write(name)) {
     return file::write({node.location, name}, {memory->data(), memory->size()});
   }
@@ -199,12 +206,14 @@ auto Emulator::save(mia::Pak& node, string name) -> bool {
 }
 
 auto Emulator::refresh() -> void {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
     screen->refresh();
   }
 }
 
 auto Emulator::setBoolean(const string& name, bool value) -> bool {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(auto node = root->scan<ares::Node::Setting::Boolean>(name)) {
     node->setValue(value);  //setValue() will not call modify() if value has not changed;
     node->modify(value);    //but that may prevent the initial setValue() from working
@@ -214,6 +223,7 @@ auto Emulator::setBoolean(const string& name, bool value) -> bool {
 }
 
 auto Emulator::setOverscan(bool value) -> bool {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
     screen->setOverscan(value);
     return true;
@@ -222,6 +232,7 @@ auto Emulator::setOverscan(bool value) -> bool {
 }
 
 auto Emulator::setColorBleed(bool value) -> bool {
+  lock_guard<recursive_mutex> lock(program.programMutex);
   if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
     screen->setColorBleed(screen->height() < 720 ? value : false);  //only apply to sub-HD content
     return true;
@@ -235,6 +246,7 @@ auto Emulator::error(const string& text) -> void {
 }
 
 auto Emulator::input(ares::Node::Input::Input input) -> void {
+  lock_guard<recursive_mutex> lock(program.inputMutex); //necessary?
   //looking up inputs is very time-consuming; skip call if input was called too recently
   //note: allow rumble to be polled at full speed to prevent missed motor events
   if(!input->cast<ares::Node::Input::Rumble>()) {
@@ -281,6 +293,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
 }
 
 auto Emulator::inputKeyboard(string name) -> bool {
+  lock_guard<recursive_mutex> lock(program.inputMutex);
   for (auto& device : inputManager.devices) {
     if (!device->isKeyboard()) continue;
 
