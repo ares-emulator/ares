@@ -74,7 +74,6 @@ if(ARES_ENABLE_LIBRASHADER)
       add_custom_command(
         OUTPUT
           "${CMAKE_CURRENT_BINARY_DIR}/$<IF:$<BOOL:${XCODE}>,$<CONFIG>,>/ares.app/Contents/Resources/Shaders/bilinear.slangp"
-          POST_BUILD
         COMMAND ditto "${slang_shaders_LOCATION}" "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>/Resources/Shaders/"
         WORKING_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>"
         COMMENT "Copying slang shaders to app bundle"
