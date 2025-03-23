@@ -32,11 +32,13 @@ if(OS_WINDOWS)
   include(cmake/os-windows.cmake)
 elseif(OS_MACOS)
   include(cmake/os-macos.cmake)
-elseif(OS_LINUX OR OS_FREEBSD OR OS_OPENBSD)
+elseif(OS_LINUX)
   include(cmake/os-linux.cmake)
+elseif(OS_FREEBSD OR OS_OPENBSD)
+  include(cmake/os-freebsd.cmake)
 endif()
 
-target_sources(ruby PRIVATE cmake/os-macos.cmake cmake/os-windows.cmake cmake/os-linux.cmake)
+target_sources(ruby PRIVATE cmake/os-macos.cmake cmake/os-windows.cmake cmake/os-linux.cmake cmake/os-freebsd.cmake)
 
 target_link_libraries(ruby PUBLIC ares::nall)
 
