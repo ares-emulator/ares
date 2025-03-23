@@ -46,7 +46,7 @@ auto Program::create() -> void {
 }
 
 auto Program::emulatorRunLoop(uintptr_t) -> void {
-  thread::setName("dev.ares.emulation-thread");
+  thread::setName("dev.ares.worker");
   while(!_quitting) {
     lock_guard<recursive_mutex> lock(programMutex);
     if(!loaded || !emulator) {
