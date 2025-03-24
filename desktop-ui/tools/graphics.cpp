@@ -1,4 +1,5 @@
-auto GraphicsViewer::construct() -> void {
+auto GraphicsViewer::construct(std::recursive_mutex *programMutexIn) -> void {
+  this->programMutex = programMutexIn;
   setCollapsible();
   setVisible(false);
 
