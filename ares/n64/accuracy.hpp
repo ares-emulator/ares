@@ -29,4 +29,9 @@ struct Accuracy {
     // Emulate the PIF's checksum security check
     static constexpr bool IPL2Checksum = true;
   };
+
+  struct Cartridge {
+    // Don't clear the base address of an inserted GameShark when resetting
+    static constexpr bool GameSharkReset = 0 | Reference;
+  };
 };

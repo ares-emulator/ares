@@ -69,7 +69,7 @@ struct DATEL_REF1329 : Interface {
   }
 
   auto title() const -> string override {
-    return {"GameShark Pro - ", slot.cartridge.title()};
+    return {Interface::title(), " - ", slot.cartridge.title()};
   }
 
   auto cic() const -> string override {
@@ -77,9 +77,13 @@ struct DATEL_REF1329 : Interface {
   }
 
   auto power(bool reset) -> void override {
-    if(!reset) {
-      //FIXME: should only reset to 0x10 on a power cycle, not a press
-      //of the reset button
+    //should only reset to 0x10 on a power cycle, not a press
+    //of the reset button
+    if constexpr(Accuracy::Cartridge::GameSharkReset) {
+      if(!reset) {
+        base = 0x10;
+      }
+    } else {
       base = 0x10;
     }
 
