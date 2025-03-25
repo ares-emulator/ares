@@ -65,6 +65,11 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     region = "NTSC-J";
   }
 
+  //Addams Family, The (Europe)
+  if(hash == "f6967779b78b91a4a5745f142aa5f49463f1d64ec15d6bea2e617323da60b90c") {
+    region = "PAL";
+  }
+
   //Back to the Future III (Europe)
   if(hash == "c39167c5dc187e7d4da8ead30b77f10d5b14596ebddf7aa081adf7285e1e8d8d") {
     region = "PAL";
@@ -74,6 +79,11 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   if(hash == "0fdd18f1212072bfbc0cfeaf030436d746733029ef26a8a6470c7be101cfedfb") {
     paddle = true;
     region = "NTSC-J";
+  }
+
+  //Desert Strike (Europe)
+  if(hash == "5465d58ebe359ea630bdb0f0454ef0fc3108d04eb941bfb32434429374926ad2") {
+    region = "PAL";
   }
 
   //Galactic Protector (Japan)
@@ -87,14 +97,34 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     sportspad = true;
   }
 
+  //Home Alone (Europe)
+  if(hash == "2bad719ba9913e767be6cbf5ab60113dfec9db08299a3341e82b96f42eda9ead") {
+    region = "PAL";
+  }
+
+  //Laser Ghost (Europe)
+  if(hash == "a65671102f99f397713cdb952463c7641b5f1d46ce1dd93a3ce681a8ce209894") {
+    region = "PAL";
+  }
+
   //Megumi Rescue (Japan)
   if(hash == "d06ec2a0bb145f48695a07d4a6fe374e50ec3dff1a9287c5972b206b74e37c07") {
     paddle = true;
     region = "NTSC-J";
   }
 
+  //NewZealand Story, The (Europe)
+  if(hash == "d1e9c377800133ae54cc262f9357481dbac52b20c3b771c546f897e93d4457e3") {
+    region = "PAL";
+  }
+
   //PGA Tour Golf (Europe)
   if(hash == "a3856f0d15511f7a6d48fa6c47da2c81adf372e6a04f83298a10cd45b6711530") {
+    region = "PAL";
+  }
+
+  //Sensible Soccer (Europe)
+  if(hash == "85228395287d6bfe9f642e620ccf80de60aabc8e4e6d5cd92001d008895d1e92") {
     region = "PAL";
   }
 
@@ -108,10 +138,25 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     sportspad = true;
   }
 
+  //Taito Chase H.Q. (Europe)
+  if(hash == "174f4a723e0ece21853d622ca0cd68f94000d8ef7c41f4e7d270944c85841cf5") {
+    region = "PAL";
+  }
+
   //Woody Pop - Shinjinrui no Block Kuzushi (Japan)
   if(hash == "5cde2716a76d16ee8b693dfe8f08da45d6f76faa945f87657fea9c5cfa64ae34") {
     paddle = true;
     region = "NTSC-J";
+  }
+
+  //Xenon 2 - Megablast (Europe)
+  if(hash == "c91b07d60f032aee7173faf40fce2537994c8065b664f7d9e940a3891f4b691f") {
+    region = "PAL";
+  }
+
+  //Xenon 2 - Megablast (Europe) (Rev 1)
+  if(hash == "59f4878cf9f075ce7c1d13b29f22061e1d978a66344d889a29de70e5a9b2b6cc") {
+    region = "PAL";
   }
 
   //Ys (Japan)
