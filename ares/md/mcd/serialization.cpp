@@ -38,6 +38,7 @@ auto MCD::serialize(serializer& s) -> void {
 
   s(cdc);
   s(cdd);
+  s(ld);
   s(timer);
   s(gpu);
   s(pcm);
@@ -155,6 +156,28 @@ auto MCD::CDD::serialize(serializer& s) -> void {
   s(status);
   s(command);
   s(subcode);
+}
+
+auto MCD::LD::serialize(serializer& s) -> void {
+  s(inputRegs);
+  s(inputFrozenRegs);
+  s(outputRegs);
+  s(outputFrozenRegs);
+  s(areInputRegsFrozen);
+  s(areOutputRegsFrozen);
+  s(operationErrorFlag1);
+  s(seekEnabled);
+  s(currentSeekMode);
+  s(targetDriveState);
+  s(currentDriveState);
+  s(targetPauseState);
+  s(currentPauseState);
+  s(seekPerformedSinceLastFlagsRead);
+  s(selectedTrackInfo);
+  s(currentMdGraphicsFader);
+  s(currentDigitalAudioFader);
+  s(digitalAudioRightExclusive);
+  s(digitalAudioLeftExclusive);
 }
 
 auto MCD::Timer::serialize(serializer& s) -> void {

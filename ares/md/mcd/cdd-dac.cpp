@@ -12,6 +12,25 @@ auto MCD::CDD::DAC::unload(Node::Object parent) -> void {
 }
 
 auto MCD::CDD::DAC::sample(i16 left, i16 right) -> void {
+  // If the MegaLD unit is active, take the digital audio faders and channel selection into account.
+  if (MegaLD()) {
+    // Take right/left exclusive flags into account
+    bool attenuateByFour = false;
+    if (mcd.ld.digitalAudioRightExclusive && !mcd.ld.digitalAudioLeftExclusive) {
+      left = right;
+    } else if (!mcd.ld.digitalAudioRightExclusive && mcd.ld.digitalAudioLeftExclusive) {
+      right = left;
+    } else if (mcd.ld.digitalAudioRightExclusive && mcd.ld.digitalAudioLeftExclusive) {
+      attenuateByFour = true;
+    }
+
+    // Take the digital audio fader into account
+    auto audioFader = (float)mcd.ld.currentDigitalAudioFader / (float)((1 << 8) - 1);
+    audioFader = attenuateByFour ? audioFader * 0.25 : audioFader;
+    left = (i16)(((float)left / (float)((1 << 15) - 1) * audioFader) * ((1 << 15) - 1));
+    right = (i16)(((float)right / (float)((1 << 15) - 1) * audioFader) * ((1 << 15) - 1));
+  }
+
   left  = (left  * (i32)attenuated) / 0x4000 >> 1;
   right = (right * (i32)attenuated) / 0x4000 >> 1;
 

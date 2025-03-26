@@ -160,6 +160,15 @@ auto VDP::slot() -> void {
 }
 
 auto VDP::main() -> void {
+  // If the LD graphics fader has changed, regenerate the palette.
+  if (MegaLD()) {
+    static n6 lastGraphicsFader = 0;
+    if (lastGraphicsFader != mcd.ld.currentMdGraphicsFader) {
+      lastGraphicsFader = mcd.ld.currentMdGraphicsFader;
+      screen->resetPalette();
+    }
+  }
+
   latch.displayWidth = io.displayWidth;
   latch.clockSelect  = io.clockSelect;
   state.edclkPos = 0;

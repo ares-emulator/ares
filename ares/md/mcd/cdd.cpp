@@ -143,7 +143,7 @@ auto MCD::CDD::process() -> void {
   } break;
 
   case Command::Stop: {
-    io.status = mcd.fd ? Status::Stopped : Status::NoDisc;
+    stop();
     status[1] = 0x0;
     status[2] = 0x0; status[3] = 0x0;
     status[4] = 0x0; status[5] = 0x0;
@@ -266,11 +266,11 @@ auto MCD::CDD::process() -> void {
   } break;
 
   case Command::Pause: {
-    io.status = Status::Paused;
+    pause();
   } break;
 
   case Command::Play: {
-    io.status = Status::Playing;
+    play();
   } break;
 
   // TrackSkip command directs movement of the laser/sled by a specified radial track count.
@@ -360,6 +360,92 @@ auto MCD::CDD::eject() -> void {
   io.sector  = 0;
   io.sample  = 0;
   io.track   = 0;
+}
+
+auto MCD::CDD::stop() -> void {
+  io.status = mcd.fd ? Status::Stopped : Status::NoDisc;
+}
+
+auto MCD::CDD::play() -> void {
+  io.status = Status::Playing;
+}
+
+auto MCD::CDD::pause() -> void {
+  io.status = Status::Paused;
+}
+
+auto MCD::CDD::seekToTime(u8 minute, u8 second, u8 frame, bool startPaused) -> void {
+  s32 lba = (s32)minute * 60 * 75 + (s32)second * 75 + (s32)frame - 3;
+  seekToSector(lba, startPaused);
+}
+
+auto MCD::CDD::seekToRelativeTime(n7 track, u8 minute, u8 second, u8 frame, bool startPaused) -> void {
+  auto firstTrack = session.firstTrack;
+  auto lastTrack = session.lastTrack;
+  if ((track < firstTrack) || (track > lastTrack)) {
+    return;
+  }
+
+  auto targetTrackLba = session.tracks[track].indices[1].lba;
+  s32 lba = targetTrackLba + ((s32)minute * 60 * 75 + (s32)second * 75 + (s32)frame - 3);
+  seekToSector(lba, startPaused);
+}
+
+auto MCD::CDD::seekToSector(s32 lba, bool startPaused) -> void {
+  counter = 0;
+  io.status = Status::Seeking;
+  io.seeking = (startPaused ? Status::Paused : Status::Playing);
+  io.latency = 11 + 112.5 * abs(position(io.sector) - position(lba));
+  io.sector = lba;
+  io.sample = 0;
+  if (auto track = session.inTrack(io.sector)) io.track = track();
+}
+
+auto MCD::CDD::seekToTrack(n7 track, bool startPaused) -> void {
+  auto lba = session.tracks[track].indices[1].lba;
+  seekToSector(lba, startPaused);
+}
+
+auto MCD::CDD::getTrackCount() -> n7 {
+  auto lastTrack = session.lastTrack;
+  return lastTrack;
+}
+
+auto MCD::CDD::getCurrentTrack() -> n7 {
+  return io.track;
+}
+
+auto MCD::CDD::getCurrentSector() -> s32 {
+  return io.sector;
+}
+
+auto MCD::CDD::getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void {
+  auto [lminute, lsecond, lframe] = CD::MSF(io.sector);
+  minute = lminute;
+  second = lsecond;
+  frame = lframe;
+}
+
+auto MCD::CDD::getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void {
+  auto [lminute, lsecond, lframe] = CD::MSF(io.sector - session.tracks[io.track].indices[1].lba);
+  minute = lminute;
+  second = lsecond;
+  frame = lframe;
+}
+
+auto MCD::CDD::getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void {
+  auto [lminute, lsecond, lframe] = CD::MSF(session.leadOut.lba);
+  minute = lminute;
+  second = lsecond;
+  frame = lframe;
+}
+
+auto MCD::CDD::getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void {
+  auto [lminute, lsecond, lframe] = CD::MSF(session.tracks[track].indices[1].lba);
+  minute = lminute;
+  second = lsecond;
+  frame = lframe;
+  flags = session.tracks[track].control;
 }
 
 auto MCD::CDD::power(bool reset) -> void {
