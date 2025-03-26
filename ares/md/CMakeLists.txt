@@ -142,6 +142,7 @@ ares_add_sources(
     mcd/cdc.cpp
     mcd/cdd-dac.cpp
     mcd/cdd.cpp
+    mcd/megald.cpp
     mcd/debugger.cpp
     mcd/gpu.cpp
     mcd/io-external.cpp

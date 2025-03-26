@@ -73,6 +73,7 @@ target_sources(
     emulator/mega-32x.cpp
     emulator/mega-cd-32x.cpp
     emulator/mega-cd.cpp
+    emulator/mega-ld.cpp
     emulator/mega-drive.cpp
     emulator/msx.cpp
     emulator/msx2.cpp

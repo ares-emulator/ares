@@ -1,5 +1,5 @@
-struct MegaCD32X : Emulator {
-  MegaCD32X();
+struct MegaLD : Emulator {
+  MegaLD();
   auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto unload() -> void override;
@@ -10,9 +10,12 @@ struct MegaCD32X : Emulator {
   sTimer discTrayTimer;
 };
 
-MegaCD32X::MegaCD32X() {
+MegaLD::MegaLD() {
   manufacturer = "Sega";
-  name = "Mega CD 32X";
+  name = "Mega LD";
+
+  firmware.append({"BIOS", "US"});      //NTSC-U
+  firmware.append({"BIOS", "Japan"});   //NTSC-J
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -32,21 +35,12 @@ MegaCD32X::MegaCD32X() {
     device.digital("Start", virtualPorts[id].pad.start);
     port.append(device); }
 
-  { InputDevice device{"Mega Mouse"};
-    device.relative("X",      virtualPorts[id].mouse.x);
-    device.relative("Y",      virtualPorts[id].mouse.y);
-    device.digital ("Left",   virtualPorts[id].mouse.left);
-    device.digital ("Right",  virtualPorts[id].mouse.right);
-    device.digital ("Middle", virtualPorts[id].mouse.middle);
-    device.digital ("Start",  virtualPorts[id].mouse.extra);
-    port.append(device); }
-
     ports.append(port);
   }
 }
 
-auto MegaCD32X::load() -> LoadResult {
-  game = mia::Medium::create("Mega CD");
+auto MegaLD::load() -> LoadResult {
+  game = mia::Medium::create("Mega LD");
   string location = Emulator::load(game, configuration.game);
   if(!location) return noFileSelected;
   LoadResult result = game->load(location);
@@ -54,35 +48,20 @@ auto MegaCD32X::load() -> LoadResult {
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
-  if(region == "PAL"   ) regionID = 2;
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
 
-  //use Mega CD firmware settings
-  vector<Firmware> firmware;
-  for(auto& emulator : emulators) {
-    if(emulator->name == "Mega CD") firmware = emulator->firmware;
-  }
-  if(!firmware) return otherError;  //should never occur
-
-  system = mia::System::create("Mega CD 32X");
+  system = mia::System::create("Mega LD");
   result = system->load(firmware[regionID].location);
   if(result != successful) {
-    result.firmwareSystemName = "Mega CD";
+    result.firmwareSystemName = "Mega LD";
     result.firmwareType = firmware[regionID].type;
     result.firmwareRegion = firmware[regionID].region;
     result.result = noFirmware;
     return result;
   }
 
-  ares::MegaDrive::option("Recompiler", !settings.general.forceInterpreter);
-
-  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD 32X (", region, ")"}, location)) return otherError;
-
-  if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    port->allocate();
-    port->connect();
-  }
+  if(!ares::MegaDrive::load(root, {"[Sega] Mega LD (", region, ")"}, location)) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Mega CD/Disc Tray")) {
     port->allocate();
@@ -95,24 +74,16 @@ auto MegaCD32X::load() -> LoadResult {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
-    if(game->pak->attribute("serial").beginsWith("GM T-16201F")) {
-      // CORPSE KILLER 32X (U) -- GM T-16201F-00
-      // CORPSE KILLER 32X (E) -- GM T-16201F-50
-      // Gamepad in controller port 2 breaks input polling, so leave it disconnected.
-      // No supported lightgun devices are currently emulated (Sega Menacer, ALG GameGun).
-    } else {
-      port->allocate("Fighting Pad");
-      port->connect();
-    }
+    port->allocate("Fighting Pad");
+    port->connect();
   }
 
-  discTrayTimer = Timer{};
 
+  discTrayTimer = Timer{};
   return successful;
 }
 
-
-auto MegaCD32X::load(Menu menu) -> void {
+auto MegaLD::load(Menu menu) -> void {
   MenuItem changeDisc{&menu};
   changeDisc.setIcon(Icon::Device::Optical);
   changeDisc.setText("Change Disc").onActivate([&] {
@@ -134,19 +105,20 @@ auto MegaCD32X::load(Menu menu) -> void {
   });
 }
 
-auto MegaCD32X::unload() -> void {
+auto MegaLD::unload() -> void {
   Emulator::unload();
   discTrayTimer.reset();
 }
 
-auto MegaCD32X::save() -> bool {
+
+auto MegaLD::save() -> bool {
   root->save();
   system->save(game->location);
   game->save(game->location);
   return true;
 }
 
-auto MegaCD32X::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto MegaLD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "Mega Drive") return system->pak;
   if(node->name() == "Mega CD Disc") return game->pak;
   return {};

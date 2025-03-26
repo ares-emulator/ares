@@ -61,6 +61,8 @@ struct Screen : Video {
   auto colors(u32 colors, function<n64 (n32)> color) -> void;
   auto frame() -> void;
   auto refresh() -> void;
+  auto lookupPalette(u32 index) -> u32;
+  auto overrideLineNextDraw(u32 y, const u32* source) -> void;
 
   auto serialize(string& output, string depth) -> void override;
   auto unserialize(Markup::Node node) -> void override;
@@ -94,6 +96,8 @@ protected:
   unique_pointer<u32[]> _output;
   unique_pointer<u32[]> _rotate;
   unique_pointer<u32[]> _palette;
+  vector<n1> _lineOverrideActive;
+  vector<const u32*> _lineOverride;
   vector<Node::Video::Sprite> _sprites;
 
 //unserialized:

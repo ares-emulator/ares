@@ -20,12 +20,15 @@ auto enumerate() -> vector<string> {
     "[Sega] Mega CD 32X (NTSC-J)",
     "[Sega] Mega CD 32X (NTSC-U)",
     "[Sega] Mega CD 32X (PAL)",
+    //Mega LD
+    "[Sega] Mega LD (NTSC-J)",
+    "[Sega] Mega LD (NTSC-U)",
   };
 }
 
-auto load(Node::System& node, string name) -> bool {
+auto load(Node::System& node, string name, string sourceFile) -> bool {
   if(!enumerate().find(name)) return false;
-  return system.load(node, name);
+  return system.load(node, name, sourceFile);
 }
 
 auto option(string name, string value) -> bool {
@@ -66,7 +69,7 @@ auto System::run() -> void {
   if(!reset && controls.reset->value()) power(true);
 }
 
-auto System::load(Node::System& root, string name) -> bool {
+auto System::load(Node::System& root, string name, string sourceFile) -> bool {
   if(node) unload();
 
   information = {};
@@ -74,25 +77,36 @@ auto System::load(Node::System& root, string name) -> bool {
     information.name = "Mega Drive";
     information.mega32X = 0;
     information.megaCD = 0;
+    information.megaLD = 0;
     cpu.minCyclesBetweenSyncs = 0; // sync every cycle
   }
   if(name.match("[Sega] Mega 32X (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 1;
     information.megaCD = 0;
+    information.megaLD = 0;
     cpu.minCyclesBetweenSyncs = 14; // sync approx every 24-25 pixels
   }
   if(name.match("[Sega] Mega CD (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 0;
     information.megaCD = 1;
+    information.megaLD = 0;
     cpu.minCyclesBetweenSyncs = 0; // sync every cycle
   }
   if(name.match("[Sega] Mega CD 32X (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 1;
     information.megaCD = 1;
-    cpu.minCyclesBetweenSyncs = 40; // sync approx every 70 pixels
+    information.megaLD = 0;
+    cpu.minCyclesBetweenSyncs = 10; // sync approx every 1 pixel
+  }
+  if(name.match("[Sega] Mega LD (*)")) {
+    information.name = "Mega Drive";
+    information.mega32X = 0;
+    information.megaCD = 1;
+    information.megaLD = 1;
+      cpu.minCyclesBetweenSyncs = 4; // sync approx every 7 pixels
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;
@@ -128,7 +142,7 @@ auto System::load(Node::System& root, string name) -> bool {
   opn2.load(node);
   cartridgeSlot.load(node);
   if(Mega32X()) m32x.load(node);
-  if(MegaCD()) mcd.load(node);
+  if(MegaCD()) mcd.load(node, sourceFile);
   controllerPort1.load(node);
   controllerPort2.load(node);
   extensionPort.load(node);

@@ -83,7 +83,7 @@ auto MegaCD::load() -> LoadResult {
     return result;
   }
 
-  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD (", region, ")"})) return otherError;
+  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD (", region, ")"}, location)) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

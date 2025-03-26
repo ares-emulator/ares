@@ -20,12 +20,13 @@ struct System {
   auto region() const -> Region { return information.region; }
   auto mega32X() const -> bool { return information.mega32X; }
   auto megaCD() const -> bool { return information.megaCD; }
+  auto megaLD() const -> bool { return information.megaLD; }
   auto frequency() const -> double { return information.frequency; }
 
   auto game() -> string;
   auto run() -> void;
 
-  auto load(Node::System& node, string name) -> bool;
+  auto load(Node::System& node, string name, string sourceFile) -> bool;
   auto unload() -> void;
   auto save() -> void;
   auto power(bool reset) -> void;
@@ -40,6 +41,7 @@ private:
     Region region = Region::NTSCJ;
     bool mega32X = false;
     bool megaCD = false;
+    bool megaLD = false;
     double frequency = Constants::Colorburst::NTSC * 15.0;
   } information;
 
@@ -56,3 +58,4 @@ auto Region::PAL() -> bool { return system.region() == System::Region::PAL; }
 
 auto Mega32X() -> bool { return system.mega32X(); }
 auto MegaCD() -> bool { return system.megaCD(); }
+auto MegaLD() -> bool { return system.megaLD(); }

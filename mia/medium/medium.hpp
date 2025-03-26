@@ -29,6 +29,7 @@ struct CompactDisc : Medium {
   auto isAudioCd(string location) -> bool;
   auto manifestAudio(string location) -> string;
   auto readDataSector(string filename, u32 sectorID) -> vector<u8>;
+  auto readDataSectorMMI(string filename, string containedFilePath, u32 sectorID) -> vector<u8>; // for laserdisc
 private:
   auto readDataSectorBCD(string filename, u32 sectorID) -> vector<u8>;
   auto readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>;

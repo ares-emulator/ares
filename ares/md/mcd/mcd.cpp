@@ -1,4 +1,10 @@
+#define QOI2_IMPLEMENTATION
+#define QON_IMPLEMENTATION
 #include <md/md.hpp>
+#include <string.h>
+#include <string>
+#include <optional>
+#include <json/json.hpp>
 
 namespace ares::MegaDrive {
 
@@ -14,13 +20,14 @@ MCD mcd;
 #include "cdc-transfer.cpp"
 #include "cdd.cpp"
 #include "cdd-dac.cpp"
+#include "megald.cpp"
 #include "timer.cpp"
 #include "gpu.cpp"
 #include "pcm.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto MCD::load(Node::Object parent) -> void {
+auto MCD::load(Node::Object parent, string sourceFile) -> void {
   node = parent->append<Node::Object>("Mega CD");
 
   tray = node->append<Node::Port>("Disc Tray");
@@ -41,6 +48,10 @@ auto MCD::load(Node::Object parent) -> void {
   pcm.load(node);
   debugger.load(node);
 
+  if(MegaLD()) {
+    ld.load(sourceFile);
+  }
+
   if(auto fp = system.pak->read("bios.rom")) {
     for(auto address : range(bios.size())) bios.program(address, fp->readm(2));
   }
@@ -53,6 +64,7 @@ auto MCD::unload() -> void {
   debugger = {};
   cdd.unload(node);
   pcm.unload(node);
+  ld.unload();
 
   bios.reset();
   pram.reset();
@@ -192,6 +204,9 @@ auto MCD::power(bool reset) -> void {
   gpu.power(reset);
   pcm.power(reset);
   resetPeripheral(reset);
+  if (MegaLD()) {
+    ld.power(reset);
+  }
 }
 
 auto MCD::resetCpu() -> void {

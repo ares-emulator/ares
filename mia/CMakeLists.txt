@@ -30,6 +30,7 @@ target_sources(
     medium/medium.hpp
     medium/mega-32x.cpp
     medium/mega-cd.cpp
+    medium/mega-ld.cpp
     medium/mega-drive.cpp
     medium/msx.cpp
     medium/msx2.cpp
@@ -89,6 +90,7 @@ target_sources(
     system/mega-32x.cpp
     system/mega-cd-32x.cpp
     system/mega-cd.cpp
+    system/mega-ld.cpp
     system/mega-drive.cpp
     system/msx.cpp
     system/msx2.cpp
