@@ -198,6 +198,9 @@ auto MCD::power(bool reset) -> void {
   gpu.power(reset);
   pcm.power(reset);
   resetPeripheral(reset);
+  if (MegaLD()) {
+    ld.power(reset);
+  }
 }
 
 auto MCD::resetCpu() -> void {

@@ -66,18 +66,6 @@ struct MCD : M68000, Thread {
   auto readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
   auto writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
-  // megald.cpp
-  struct LD {
-    auto load() -> void;
-    auto unload() -> void;
-    auto read(n24 address) -> n8;
-    auto write(n24 address, n8 data) -> void;
-
-    n8 input[0x40];
-    n8 output[0x40];
-    n8 driveState;
-  } ld;
-
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
@@ -324,6 +312,20 @@ struct MCD : M68000, Thread {
     auto checksum() -> void;
     auto insert() -> void;
     auto eject() -> void;
+    auto stop() -> void;
+    auto play() -> void;
+    auto pause() -> void;
+    auto seekToTime(u8 minute, u8 second, u8 frame, bool startPaused) -> void;
+    auto seekToRelativeTime(n7 track, u8 minute, u8 second, u8 frame, bool startPaused) -> void;
+    auto seekToSector(s32 lba, bool startPaused) -> void;
+    auto seekToTrack(n7 track, bool startPaused) -> void;
+    auto getTrackCount() -> n7;
+    auto getCurrentTrack() -> n7;
+    auto getCurrentSector() -> s32;
+    auto getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void;
+    auto getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void;
+    auto getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void;
+    auto getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -367,6 +369,44 @@ struct MCD : M68000, Thread {
     n4 command[10];
     n16 subcode[64];
   } cdd;
+
+  struct LD {
+    // megald.cpp
+    auto load() -> void;
+    auto unload() -> void;
+    auto read(n24 address) -> n8;
+    auto write(n24 address, n8 data) -> void;
+    auto getOutputRegisterValue(int regNum) -> n8;
+    auto processInputRegisterWrite(int regNum, n8 data) -> void;
+    auto performSeekWithCurrentState() -> void;
+    auto power(bool reset) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    static const size_t inputRegisterCount = 0x20;
+    static const size_t outputRegisterCount = 0x20;
+    n8 inputRegs[inputRegisterCount];
+    n8 inputFrozenRegs[inputRegisterCount];
+    n8 outputRegs[outputRegisterCount];
+    n8 outputFrozenRegs[outputRegisterCount];
+    n1 areInputRegsFrozen;
+    n1 areOutputRegsFrozen;
+    n1 operationErrorFlag1;
+    n1 seekEnabled;
+    n3 currentSeekMode;
+    n8 targetDriveState;
+    n8 currentDriveState;
+    n1 targetPauseState;
+    n1 currentPauseState;
+    n1 seekPerformedSinceLastFlagsRead;
+    n8 selectedTrackInfo;
+    n6 currentMdGraphicsFader;
+    n8 currentDigitalAudioFader;
+    n1 digitalAudioRightExclusive;
+    n1 digitalAudioLeftExclusive;
+    //n8 pressedButtonId;
+  } ld;
 
   struct Timer {
     //timer.cpp

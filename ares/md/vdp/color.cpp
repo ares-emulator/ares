@@ -18,6 +18,13 @@ auto VDP::color(n32 color) -> n64 {
     n64 g = image::normalize(lookup[M][G], 8, 16);
     n64 b = image::normalize(lookup[M][B], 8, 16);
 
+    if (MegaLD()) {
+      auto graphicsFader = (float)mcd.ld.currentMdGraphicsFader / (float)((1 << 6) - 1);
+      r = (n64)(((float)r / (float)((1 << 16) - 1) * graphicsFader) * ((1 << 16) - 1));
+      g = (n64)(((float)g / (float)((1 << 16) - 1) * graphicsFader) * ((1 << 16) - 1));
+      b = (n64)(((float)b / (float)((1 << 16) - 1) * graphicsFader) * ((1 << 16) - 1));
+    }
+
     return r << 32 | g << 16 | b << 0;
   }
 
