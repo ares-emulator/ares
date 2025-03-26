@@ -14,6 +14,7 @@ MCD mcd;
 #include "cdc-transfer.cpp"
 #include "cdd.cpp"
 #include "cdd-dac.cpp"
+#include "megald.cpp"
 #include "timer.cpp"
 #include "gpu.cpp"
 #include "pcm.cpp"
@@ -41,6 +42,10 @@ auto MCD::load(Node::Object parent) -> void {
   pcm.load(node);
   debugger.load(node);
 
+  if(MegaLD()) {
+    ld.load();
+  }
+
   if(auto fp = system.pak->read("bios.rom")) {
     for(auto address : range(bios.size())) bios.program(address, fp->readm(2));
   }
@@ -53,6 +58,7 @@ auto MCD::unload() -> void {
   debugger = {};
   cdd.unload(node);
   pcm.unload(node);
+  ld.unload();
 
   bios.reset();
   pram.reset();

@@ -53,6 +53,7 @@ namespace ares::Atari2600 {
   #include "mega-32x.cpp"
   #include "mega-cd.cpp"
   #include "mega-cd-32x.cpp"
+  #include "mega-ld.cpp"
 #endif
 
 #ifdef CORE_MS
@@ -228,6 +229,7 @@ auto Emulator::construct() -> void {
   emulators.append(new Mega32X);
   emulators.append(new MegaCD);
   emulators.append(new MegaCD32X);
+  emulators.append(new MegaLD);
   #endif
 
   #ifdef CORE_SATURN

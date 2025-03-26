@@ -1,6 +1,4 @@
 auto MCD::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
-  address.bit(20,23) = 0;  //mirroring
-
   if(address >= 0x000000 && address <= 0x07ffff) {
     return pram[address >> 1];
   }
@@ -27,17 +25,22 @@ auto MCD::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     return data;
   }
 
-  if(address >= 0x0e0000 && address <= 0x0effff) {
+  if(MegaLD() && address >= 0xfd0000 && address <= 0xfdffff) {
+    if (!lower) return data;
+    return ld.read(address | 0x1);
+  }
+
+  if(address >= 0xfe0000 && address <= 0xfeffff) {
     if(!lower) return data;
     return bram.read(address >> 1);
   }
 
-  if(address >= 0x0f0000 && address <= 0x0f7fff) {
+  if(address >= 0xff0000 && address <= 0xff7fff) {
     if(!lower) return data;
     return pcm.read(address >> 1, data);
   }
 
-  if(address >= 0x0f8000 && address <= 0x0fffff) {
+  if(address >= 0xff8000 && address <= 0xffffff) {
     return readIO(upper, lower, address, data);
   }
 
@@ -45,8 +48,6 @@ auto MCD::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 }
 
 auto MCD::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
-  address.bit(20,23) = 0;  //mirroring
-
   if(address >= 0x000000 && address <= 0x07ffff
   && address >= (n24)io.pramProtect << 9) {
     if(upper) pram[address >> 1].byte(1) = data.byte(1);
@@ -97,17 +98,22 @@ auto MCD::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
     }
   }
 
-  if(address >= 0x0e0000 && address <= 0x0effff) {
+  if(MegaLD() && address >= 0xfd0000 && address <= 0xfdffff) {
+    if (!lower) return;
+    return ld.write(address | 0x1, data);
+  }
+
+  if(address >= 0xfe0000 && address <= 0xfeffff) {
     if(!lower) return;
     return bram.write(address >> 1, data);
   }
 
-  if(address >= 0x0f0000 && address <= 0x0f7fff) {
+  if(address >= 0xff0000 && address <= 0xff7fff) {
     if(!lower) return;
     return pcm.write(address >> 1, data);
   }
 
-  if(address >= 0x0f8000 && address <= 0x0fffff) {
+  if(address >= 0xff8000 && address <= 0xffffff) {
     return writeIO(upper, lower, address, data);
   }
 

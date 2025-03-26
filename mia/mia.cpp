@@ -100,6 +100,7 @@ auto construct() -> void {
   media.append("Mega Drive");
   media.append("Mega 32X");
   media.append("Mega CD");
+  media.append("Mega LD");  
   media.append("MSX");
   media.append("MSX2");
   media.append("Neo Geo");
