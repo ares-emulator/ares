@@ -50,16 +50,14 @@ auto PPU::Background::run(s32 x, u32 y) -> void {
 auto PPU::Background::linearFetchTileMap(s32 x, u32 y) -> void {
   if(ppu.blank() || !io.enable[0]) return;
 
-  //start scanline when first partially visible tile is reached
-  n3 subTileScroll = io.hoffset;
-  if(x + subTileScroll < 0) return;
-  if(x + subTileScroll == 0) {
+  if(x == -7) {
     if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
       vmosaic = y;
     }
-    fx = io.hoffset & ~7;
-    fy = vmosaic + io.voffset;
   }
+
+  fx = x + io.hoffset;
+  fy = vmosaic + io.voffset;
 
   n3 px = fx;
   if(px == 0) {
@@ -80,8 +78,6 @@ auto PPU::Background::linearFetchTileMap(s32 x, u32 y) -> void {
     latch.active    = true;
     latch.px        = 0;
   }
-
-  fx++;
 }
 
 auto PPU::Background::linearFetchTileData() -> void {
