@@ -211,6 +211,7 @@ auto PPU::main() -> void {
       #undef cycles32
       #undef cycles64
     } else {
+      step(renderingCycle);
       for(s32 x : range(247)) {
         bg0.run(x - 7, y);
         bg1.run(x - 7, y);
@@ -222,7 +223,7 @@ auto PPU::main() -> void {
         dac.lowerLayer(x, y);
       }
       releaseBus();
-      step(1035);
+      step(1035 - renderingCycle);
     }
   } else {
     step(1035);
@@ -261,6 +262,15 @@ auto PPU::power() -> void {
   window2.power(IN2);
   window3.power(OUT);
   dac.power();
+
+  renderingCycle = 43;  //by default, render at first cycle of pixel output
+  string gameID;
+  for(u32 index : range(4)) {
+    char byte = cartridge.readRom<true>(Byte, 0xac + index);
+    gameID.append(byte);
+  }
+  if(gameID == "AWRE") renderingCycle = 512;  //Advance Wars (USA)
+  if(gameID == "AWRP") renderingCycle = 512;  //Advance Wars (Europe) (En,Fr,De,Es)
 }
 
 }
