@@ -31,6 +31,7 @@ namespace ares::MegaDrive {
 
   inline static auto Mega32X() -> bool;
   inline static auto MegaCD() -> bool;
+  inline static auto MegaLD() -> bool;
 
   #include <md/controller/controller.hpp>
   #include <md/bus/bus.hpp>

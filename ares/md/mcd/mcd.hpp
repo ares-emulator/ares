@@ -66,6 +66,18 @@ struct MCD : M68000, Thread {
   auto readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
   auto writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
+  // megald.cpp
+  struct LD {
+    auto load() -> void;
+    auto unload() -> void;
+    auto read(n24 address) -> n8;
+    auto write(n24 address, n8 data) -> void;
+
+    n8 input[0x40];
+    n8 output[0x40];
+    n8 driveState;
+  } ld;
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 

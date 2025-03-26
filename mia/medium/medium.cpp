@@ -15,6 +15,7 @@ namespace Media {
   #include "mega-drive.cpp"
   #include "mega-32x.cpp"
   #include "mega-cd.cpp"
+  #include "mega-ld.cpp"
   #include "msx.cpp"
   #include "msx2.cpp"
   #include "neo-geo.cpp"
@@ -58,6 +59,7 @@ auto Medium::create(string name) -> shared_pointer<Pak> {
   if(name == "Mega Drive") return new Media::MegaDrive;
   if(name == "Mega 32X") return new Media::Mega32X;
   if(name == "Mega CD") return new Media::MegaCD;
+  if(name == "Mega LD") return new Media::MegaLD;
   if(name == "MSX") return new Media::MSX;
   if(name == "MSX2") return new Media::MSX2;
   if(name == "Neo Geo") return new Media::NeoGeo;
