@@ -228,8 +228,24 @@ struct DATEL_REF1329 : Interface {
       } break;
 
       case 3: {
-        //FIXME: this is actually a strange mapping from the EEPROMs
-        return unmapped;
+        //scrambled firmware access
+        const n22 offset = address & 0x3FFFFE;
+
+        n22 scrambled = 0;
+        scrambled.bit(0 )    = offset.bit(0 );
+        scrambled.bit(1 )    = offset.bit(6 );
+        scrambled.bit(2 )    = offset.bit(9 );
+        scrambled.bit(3 )    = offset.bit(10);
+        scrambled.bit(4 )    = offset.bit(4 );
+        scrambled.bit(5 )    = offset.bit(5 );
+        scrambled.bit(6 )    = offset.bit(1 );
+        scrambled.bit(7 )    = offset.bit(7 );
+        scrambled.bit(8 )    = offset.bit(8 );
+        scrambled.bit(9 )    = offset.bit(3 );
+        scrambled.bit(10)    = offset.bit(2 );
+        scrambled.bit(11,21) = offset.bit(11,21);
+
+        return firmware.read(scrambled);
       } break;
 
       case 4: {
@@ -254,13 +270,9 @@ struct DATEL_REF1329 : Interface {
 
       case 0xC: case 0xD: {
         //direct firmware access
-        const u22 offset = address & 0x3FFFFF;
+        const n22 offset = address & 0x3FFFFE;
 
-        if(offset <= firmware.size() - 1) {
-          return firmware.read(offset);
-        }
-
-        return unmapped;
+        return firmware.read(offset);
       } break;
 
       case 0xE: case 0xF: {
@@ -296,7 +308,7 @@ struct DATEL_REF1329 : Interface {
       } break;
 
       case 3: {
-        //FIXME: this is actually a strange mapping from the EEPROMs
+        //scrambled firmware access
         //(not writable)
         return;
       } break;
