@@ -38,7 +38,8 @@ auto BOARD::GS_EEPROM::writeByte(n19 address, u8 data) -> void {
           sdp = true;
           countdown = delay();
           //FIXME: should be 1 microsecond
-          self.setClock(187, true);
+          //(countdown should be 200 microseconds)
+          self.setClock(20, true);
         } break;
 
         case 0x80: {
@@ -68,7 +69,8 @@ auto BOARD::GS_EEPROM::writeByte(n19 address, u8 data) -> void {
     }
     countdown = delay();
     //FIXME: should be 1 microsecond
-    self.setClock(187, true);
+    //(countdown should be 200 microseconds)
+    self.setClock(20, true);
     return;
   }
   if(state == State::WaitSecondStart) {
@@ -145,7 +147,8 @@ auto BOARD::GS_EEPROM::clock() -> void {
       entries = 0;
     } else {
       //FIXME: should be 1 microsecond
-      self.setClock(187, true);
+      //(countdown should be 200 microseconds)
+      self.setClock(20, true);
     }
   }
 }

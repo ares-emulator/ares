@@ -117,6 +117,10 @@ auto VI::main() -> void {
       io.vcounter = 0;
       if(++inactiveCounter >= 200) {
         inactiveCounter = 0;
+        if (vulkan.enable) {
+          gpuOutputValid = vulkan.scanoutAsync(io.field);
+          vulkan.frame();
+        }
         screen->frame();
         refreshed = true;
       }
