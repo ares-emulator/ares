@@ -661,7 +661,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NQ2") {cpak = true; rpak = true;}                              //Quake 2
   if(id == "NKR") {cpak = true;}                                           //Rakuga Kids (E)
   if(id == "NRP") {cpak = true; rpak = true;}                              //Rampage - World Tour
-  if(id == "NRP") {cpak = true; rpak = true;}                              //Rampage 2 - Universal Tour
+  if(id == "N2P") {cpak = true; rpak = true;}                              //Rampage 2 - Universal Tour
   if(id == "NRT") {cpak = true;}                                           //Rat Attack
   if(id == "NY2") {cpak = true;}                                           //Rayman 2 - The Great Escape
   if(id == "NFQ") {cpak = true; rpak = true;}                              //Razor Freestyle Scooter
