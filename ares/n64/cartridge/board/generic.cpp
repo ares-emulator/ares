@@ -141,7 +141,9 @@ struct Generic : Interface {
   auto joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 override {
     n1 valid = 0, over = 0;
 
-    valid = Interface::joybusEeprom(eeprom, send, recv, input, output);
+    if(has.EEPROM) {
+      valid |= Interface::joybusEeprom(eeprom, send, recv, input, output);
+    }
 
     if(has.RTC) {
       valid |= rtc.joybusComm(send, recv, input, output);

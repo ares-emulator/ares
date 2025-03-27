@@ -1,6 +1,6 @@
 struct Nintendo64 : Cartridge {
   auto name() -> string override { return "Nintendo 64"; }
-  auto extensions() -> vector<string> override { return {"n64", "v64", "z64"}; }
+  auto extensions() -> vector<string> override { return {"n64", "v64", "z64", "bin", "dec"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
@@ -139,11 +139,19 @@ auto Nintendo64::load(string location) -> LoadResult {
   
   array_view<u8> view{rom};
   for(auto node : document.find("game/board/memory(content=Program)")) {
-    string name = {"program.", node["type"].string().downcase()};
+    string extension = {".", node["type"].string().downcase()};
     u32 size = node["size"].natural();
-    if(view.size() < size) break; //???
-    pak->append(name, {view.data(), size});
+    string name = {"program", extension};
+
+    if(!Medium::load(node, extension)) {
+      if(view.size() >= size) {
+        pak->remove(pak->files().last());
+        pak->append(name, {view.data(), size});
+      }
+    }
+    
     view += size;
+    
   }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {

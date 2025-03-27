@@ -94,6 +94,8 @@ ares_add_sources(
     cartridge/board/isviewer.hpp
     cartridge/board/rtc.cpp
     cartridge/board/rtc.hpp
+    cartridge/board/gs-eeprom.cpp
+    cartridge/board/gs-eeprom.hpp
     cartridge/board/generic.cpp
     cartridge/board/nus-01a.cpp
     cartridge/board/nus-07a.cpp

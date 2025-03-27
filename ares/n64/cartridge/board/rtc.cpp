@@ -47,7 +47,8 @@ auto BOARD::RTC::tick(int nsec) -> void {
 auto BOARD::RTC::run(bool run) -> void {
   status.bit(7) = !run;
   queue.remove(Queue::RTC_Tick);
-  if(run) queue.insert(Queue::RTC_Tick, 187'500'000);
+  //FIXME: read the actual system clock instead of hardcoding
+  if(run) queue.insert(Queue::RTC_Tick, 93'750'000 * 2);
 }
 
 auto BOARD::RTC::running() -> bool {

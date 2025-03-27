@@ -10,8 +10,12 @@ struct Cartridge {
   auto cic() const -> string { return board->cic(); }
 
   auto tickRTC() -> void { board->tickRTC(); }
+  auto clock() -> void { board->clock(); }
   auto joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 { return board->joybusComm(send, recv, input, output); }
-
+  auto setClock(u32 clock, bool run) -> void {
+    queue.remove(Queue::Cartridge_Clock);
+    if(run) queue.insert(Queue::Cartridge_Clock, clock);
+  }
 
   //cartridge.cpp
   auto allocate(Node::Port, string) -> Node::Peripheral;

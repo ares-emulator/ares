@@ -12,6 +12,7 @@ struct Interface {
   virtual auto writeBus(u32 address, u16 data) -> void {};
   virtual auto joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 { return 0; };
   virtual auto tickRTC() -> void {}
+  virtual auto clock() -> void {}
   virtual auto title() const -> string;
   virtual auto cic() const -> string;
   virtual auto power(bool reset) -> void {}

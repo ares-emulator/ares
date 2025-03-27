@@ -23,6 +23,7 @@ auto Cartridge::connect() -> void {
 
   const auto board_name = information.board;
 
+  //TODO: more boards
   if((board_name == "NUS-01A-01") || (board_name == "NUS-01A-02") || (board_name == "NUS-01A-03")) {
     board = new Board::NUS_01A(*this);
   } else if((board_name == "NUS-07A-01")) {

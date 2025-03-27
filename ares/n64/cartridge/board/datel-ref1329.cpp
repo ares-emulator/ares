@@ -1,10 +1,108 @@
 struct DATEL_REF1329 : Interface {
   using Interface::Interface;
-  //FIXME: replace this with two EEPROMs
-  Memory::Writable16 firmware;
+
+#include "gs-eeprom.hpp"
+
+  struct Firmware {
+    Cartridge& self;
+    Firmware(Cartridge& self) : self(self) {}
+
+    GS_EEPROM eeprom_lo{self}, eeprom_hi{self};
+  
+    auto size() -> u32 {
+      return eeprom_lo.size + eeprom_hi.size;
+    }
+
+    auto allocate(u32 capacity, u32 fillWith = ~0) -> void {
+      eeprom_lo.allocate(capacity / 2, fillWith);
+      eeprom_hi.allocate(capacity / 2, fillWith);
+    }
+
+    auto load(VFS::File fp) -> void {
+      if(!size()) {
+        eeprom_lo.allocate(fp->size() / 2);
+        eeprom_hi.allocate(fp->size() / 2);
+      }
+      for(u32 address = 0; address < min(size(), fp->size()); address += 2) {
+        n16 hword = fp->readm(2L);
+        eeprom_lo.set(address, hword.bit(0,7 ));
+        eeprom_hi.set(address, hword.bit(8,15));
+      }
+    }
+
+    auto save(VFS::File fp) -> void {
+      for(u32 address = 0; address < min(size(), fp->size()); address += 2) {
+        n16 hword = 0;
+        hword.bit(0,7 ) = eeprom_lo.get(address);
+        hword.bit(8,15) = eeprom_hi.get(address);
+        fp->writem(hword, 2L);
+      }
+    }
+
+    auto reset() -> void {
+      eeprom_lo.reset();
+      eeprom_hi.reset();
+    }
+
+    auto clock() -> void {
+      return eeprom_lo.clock(), eeprom_hi.clock();
+    }
+
+    auto readByte(n20 address) -> u8 {
+      if(address.bit(0) == 0) {
+        return eeprom_lo.get(address);
+      }
+      if(address.bit(0) == 1) {
+        return eeprom_hi.get(address);
+      }
+      unreachable;
+    }
+
+    auto writeByte(n20 address, u8 data) -> void {
+      if(address.bit(0) == 0) {
+        return eeprom_lo.set(address, data);
+      }
+      if(address.bit(0) == 1) {
+        return eeprom_hi.set(address, data);
+      }
+    }
+
+    auto readHalf(n19 address) -> u16 {
+      n16 hword = 0;
+      hword.bit(0,7 ) = eeprom_lo.read<Byte>(address);
+      hword.bit(8,15) = eeprom_hi.read<Byte>(address);
+      return hword;
+    }
+
+    auto writeHalf(n19 address, n16 data) -> void {
+      eeprom_lo.write<Byte>(address, data.bit(0,7 ));
+      eeprom_hi.write<Byte>(address, data.bit(8,15));
+    }
+
+    auto read(n20 address) -> u16 {
+      n16 hword = 0;
+      hword.bit(0,7 ) = eeprom_lo.read<Byte>(address >> 1);
+      hword.bit(8,15) = eeprom_hi.read<Byte>(address >> 1); 
+      return hword;
+    }
+
+    auto write(n20 address, n16 data) -> void {
+      eeprom_lo.write<Byte>(address >> 1, data.bit(0,7 ));
+      eeprom_hi.write<Byte>(address >> 1, data.bit(8,15));
+    }
+
+    auto serialize(serializer& s) -> void {
+      s(eeprom_lo);
+      s(eeprom_hi);
+    }
+  } firmware{this->cartridge};
+
   CartridgeSlot slot{"GameShark Cartridge Slot"};
 
   u8 base;
+
+  //FIXME: this is definitely not how open-bus should work
+  u16 last_read = 0;
 
   struct Debugger {
     DATEL_REF1329& self;
@@ -32,6 +130,8 @@ struct DATEL_REF1329 : Interface {
     slot.unload();
 
     firmware.reset();
+
+    cartridge.setClock(0, false);
   }
 
   auto save() -> void override {
@@ -68,6 +168,10 @@ struct DATEL_REF1329 : Interface {
     return slot.cartridge.tickRTC();
   }
 
+  auto clock() -> void override {
+    return firmware.clock();
+  }
+
   auto title() const -> string override {
     return {Interface::title(), " - ", slot.cartridge.title()};
   }
@@ -96,7 +200,7 @@ struct DATEL_REF1329 : Interface {
     s(base);
   }
   
-  auto readIO(u24 address) -> u16 {
+  auto readIO(n24 address) -> u16 {
     const u16 unmapped = address & 0xFFFF;
 
     const u4 section = address >> 20;
@@ -105,7 +209,7 @@ struct DATEL_REF1329 : Interface {
       case 0: case 1: {
         //boot firmware
         if(address <= 0x00'003f) {
-          return firmware.read<Half>(address);
+          return firmware.read(address);
         }
         if(address >= 0x00'0040 && address <= 0x00'0fff) {
           //FIXME: haven't actually confirmed this is what happens
@@ -113,7 +217,7 @@ struct DATEL_REF1329 : Interface {
           return slot.cartridge.readHalf(0x1000'0000 | address);
         }
         if(address >= 0x00'1000 && address <= 0x01'ffff) {
-          return firmware.read<Half>(address);
+          return firmware.read(address);
         }
         return 0x0000;
       } break;
@@ -152,34 +256,30 @@ struct DATEL_REF1329 : Interface {
         //direct firmware access
         const u22 offset = address & 0x3FFFFF;
 
-        if(offset <= firmware.size - 1) {
-          return firmware.read<Half>(offset);
+        if(offset <= firmware.size() - 1) {
+          return firmware.read(offset);
         }
 
         return unmapped;
       } break;
 
       case 0xE: case 0xF: {
-        //FIXME: replace this with proper EEPROM code
+        if(address.bit(1) == 0) {
+          const n21 vaddr = address & 0x1FFFFC;
 
-        const n21 vaddr = address & 0x1FFFFF;
+          n19 eeprom_addr = 0;
+          eeprom_addr.bit(0) = vaddr.bit(20);
+          eeprom_addr.bit(1,18) = vaddr.bit(2,19);
 
-        n17 eeprom_addr = 0;
-        eeprom_addr.bit(0) = vaddr.bit(20);
-        eeprom_addr.bit(1,16) = vaddr.bit(2,17);
-
-        const n18 firmware_addr = eeprom_addr * 2;
-
-        if(firmware_addr <= firmware.size - 1) {
-          return firmware.read<Half>(firmware_addr);
+          last_read = firmware.readHalf(eeprom_addr);
         }
-        return unmapped;
+        return last_read;
       } break;
     }
     unreachable;
   }
 
-  auto writeIO(u24 address, u16 data) -> void {
+  auto writeIO(n24 address, u16 data) -> void {
     const u4 section = address >> 20;
 
     switch(section) {
@@ -229,14 +329,15 @@ struct DATEL_REF1329 : Interface {
       } break;
 
       case 0xE: case 0xF: {
-        //FIXME: replace this with proper EEPROM code
+        if(address.bit(1) == 0) {
+          const n21 vaddr = address & 0x1FFFFC;
 
-        const n21 vaddr = address & 0x1FFFFF;
+          n19 eeprom_addr = 0;
+          eeprom_addr.bit(0) = vaddr.bit(20);
+          eeprom_addr.bit(1,18) = vaddr.bit(2,19);
 
-        n17 eeprom_addr = 0;
-        eeprom_addr.bit(0) = vaddr.bit(20);
-        eeprom_addr.bit(1,16) = vaddr.bit(2,17);
-
+          firmware.writeHalf(eeprom_addr, data);
+        }
         return;
       } break;
     }
@@ -304,12 +405,12 @@ struct DATEL_REF1329 : Interface {
 
 auto DATEL_REF1329::Debugger::load(Node::Object parent) -> void {
   memory.firmware = parent->append<Node::Debugger::Memory>("GameShark Firmware");
-  memory.firmware->setSize(self.firmware.size);
+  memory.firmware->setSize(self.firmware.size());
   memory.firmware->setRead([&](u32 address) -> u8 {
-    return self.firmware.read<Byte>(address);
+    return self.firmware.readByte(address);
   });
   memory.firmware->setWrite([&](u32 address, u8 data) -> void {
-    return self.firmware.write<Byte>(address, data);
+    return self.firmware.writeByte(address, data);
   });
 }
 
@@ -317,3 +418,9 @@ auto DATEL_REF1329::Debugger::unload(Node::Object parent) -> void {
   parent->remove(memory.firmware);
   memory.firmware.reset();
 }
+
+#define BOARD DATEL_REF1329
+
+#include "gs-eeprom.cpp"
+
+#undef BOARD
