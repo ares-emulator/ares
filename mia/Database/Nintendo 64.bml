@@ -1,5 +1,5 @@
 database
-	revision: 2025-03-19
+	revision: 2025-03-27
 
 game
 	sha256:   cd983fb567cfb8e3475d2023f403238bd832a3884883b2e28593b3b2d1611741
@@ -7,7 +7,63 @@ game
 	name:     GameShark Pro
 	region:   NTSC
 	controllerpak
-	revision: 3.3 (April)
+	revision: 3.30 (April)
+	board:    DATEL-REF1329
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+game
+	sha256:   bfae87fc342e570495980bb654618d4ac5db6bdbf24701274c23163d43f218a8
+	title:    GameShark Pro
+	name:     GameShark Pro
+	region:   NTSC
+	controllerpak
+	revision: 3.30 (March)
+	board:    DATEL-REF1329
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+game
+	sha256:   850010396166196781f5d07a79c8b45bc270142452f82ef2514802c686b7d0e6
+	title:    GameShark Pro
+	name:     GameShark Pro
+	region:   NTSC
+	controllerpak
+	revision: 3.21
+	board:    DATEL-REF1329
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+//Not actually a REF1329 board
+//TODO: put the real board in
+game
+	sha256:   919a7d1cf560401dae0d6d1c287b23caf4b72e77ec821d04f71fb7ba089ddc79
+	title:    GameShark
+	name:     GameShark
+	region:   NTSC
+	controllerpak
+	revision: 2.50
+	board:    DATEL-REF1329
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+//Not actually a REF1329 board
+//TODO: put the real board in
+game
+	sha256:   6324b40102dbff35db08e280587bc2abd58ea9916a16d5c85b844e078e09d0de
+	title:    GameShark
+	name:     GameShark
+	region:   NTSC
+	controllerpak
+	revision: 1.01
 	board:    DATEL-REF1329
 		memory
 			type: EEPROM
