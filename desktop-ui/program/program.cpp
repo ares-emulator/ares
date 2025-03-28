@@ -48,63 +48,62 @@ auto Program::create() -> void {
 auto Program::emulatorRunLoop(uintptr_t) -> void {
   thread::setName("dev.ares.worker");
   while(!_quitting) {
-    {
-      lock_guard<recursive_mutex> lock(programMutex);
-      if(!loaded || !emulator) {
-        usleep(20 * 1000);
-        continue;
-      }
-
-      if(emulator && nall::GDB::server.isHalted()) {
-        ruby::audio.clear();
-        nall::GDB::server.updateLoop(); // sleeps internally
-        continue;
-      }
-
-      bool defocused = driverSettings.inputDefocusPause.checked() && !ruby::video.fullScreen() && !presentation.focused();
-
-      if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
-        ruby::audio.clear();
-        nall::GDB::server.updateLoop();
-        usleep(20 * 1000);
-        continue;
-      }
-
-      rewindRun();
-
-      nall::GDB::server.updateLoop();
-
-      program.requestFrameAdvance = false;
-      if(!runAhead || fastForwarding || rewinding) {
-        emulator->root->run();
-      } else {
-        ares::setRunAhead(true);
-        emulator->root->run();
-        auto state = emulator->root->serialize(false);
-        ares::setRunAhead(false);
-        emulator->root->run();
-        state.setReading();
-        emulator->root->unserialize(state);
-      }
-
-      nall::GDB::server.updateLoop();
-
-      if(settings.general.autoSaveMemory) {
-        static u64 previousTime = chrono::timestamp();
-        u64 currentTime = chrono::timestamp();
-        if(currentTime - previousTime >= 30) {
-          previousTime = currentTime;
-          emulator->save();
-        }
-      }
-
-      if(emulator->latch.changed) {
-        emulator->latch.changed = false;
-        _needsResize = true;
-      }
-    }
     // Allow other threads to access the program mutex
     usleep(1);
+    
+    lock_guard<recursive_mutex> lock(programMutex);
+    if(!loaded || !emulator) {
+      usleep(20 * 1000);
+      continue;
+    }
+
+    if(emulator && nall::GDB::server.isHalted()) {
+      ruby::audio.clear();
+      nall::GDB::server.updateLoop(); // sleeps internally
+      continue;
+    }
+
+    bool defocused = driverSettings.inputDefocusPause.checked() && !ruby::video.fullScreen() && !presentation.focused();
+
+    if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
+      ruby::audio.clear();
+      nall::GDB::server.updateLoop();
+      usleep(20 * 1000);
+      continue;
+    }
+
+    rewindRun();
+
+    nall::GDB::server.updateLoop();
+
+    program.requestFrameAdvance = false;
+    if(!runAhead || fastForwarding || rewinding) {
+      emulator->root->run();
+    } else {
+      ares::setRunAhead(true);
+      emulator->root->run();
+      auto state = emulator->root->serialize(false);
+      ares::setRunAhead(false);
+      emulator->root->run();
+      state.setReading();
+      emulator->root->unserialize(state);
+    }
+
+    nall::GDB::server.updateLoop();
+
+    if(settings.general.autoSaveMemory) {
+      static u64 previousTime = chrono::timestamp();
+      u64 currentTime = chrono::timestamp();
+      if(currentTime - previousTime >= 30) {
+        previousTime = currentTime;
+        emulator->save();
+      }
+    }
+
+    if(emulator->latch.changed) {
+      emulator->latch.changed = false;
+      _needsResize = true;
+    }
   }
 }
 
