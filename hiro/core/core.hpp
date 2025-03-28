@@ -13,6 +13,7 @@
 #include <nall/shared-pointer.hpp>
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>
+#include <nall/thread.hpp>
 #include <nall/traits.hpp>
 #include <nall/unique-pointer.hpp>
 #include <nall/utility.hpp>

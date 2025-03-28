@@ -355,6 +355,7 @@ auto Presentation::loadEmulators() -> void {
       item.setIconForFile(location);
       item.setText({Location::base(location).trimRight("/"), " (", system, ")"});
       item.onActivate([=] {
+        lock_guard<recursive_mutex> lock(program.programMutex);
         if(!inode::exists(location)) {
           MessageDialog()
             .setTitle("Error")
@@ -369,7 +370,8 @@ auto Presentation::loadEmulators() -> void {
         }
         for(auto& emulator : emulators) {
           if(emulator->name == system) {
-            return (void)program.load(emulator, location);
+            program.load(emulator, location);
+            return;
           }
         }
       });

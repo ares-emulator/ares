@@ -161,7 +161,9 @@ auto pLabel::setForegroundColor(SystemColor color) -> void {
 }
 
 auto pLabel::setText(const string& text) -> void {
-  [cocoaView setNeedsDisplay:YES];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [cocoaView setNeedsDisplay:YES];
+  });
 }
 
 }

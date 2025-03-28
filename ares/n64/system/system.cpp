@@ -77,6 +77,11 @@ auto System::game() -> string {
 }
 
 auto System::run() -> void {
+  //todo: terrible; fix; remove
+  if(!vulkanLoaded) {
+    vulkan.load(node);
+    vulkanLoaded = true;
+  }
   cpu.main();
 }
 
@@ -135,7 +140,7 @@ auto System::load(Node::System& root, string name) -> bool {
   if(_DD()) dd.load(node);
   if(model() == Model::Aleck64) aleck64.load(node);
   #if defined(VULKAN)
-  vulkan.load(node);
+  //vulkan.load(node);
   #endif
 
   initDebugHooks();

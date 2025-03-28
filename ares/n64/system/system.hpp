@@ -5,6 +5,7 @@ struct System {
   bool expansionPak = true;
   u8 configuredControllerPakBankCount = 1;
   u8 controllerPakBankCount = 1;
+  bool vulkanLoaded = false;
 
   enum class Model : u32 { Nintendo64, Aleck64 };
   enum class Region : u32 { NTSC, PAL };
