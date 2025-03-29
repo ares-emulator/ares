@@ -16,7 +16,7 @@ auto APU::Noise::run() -> void {
     }
   }
 
-  n4 sample = lfsr & 1 ? 0 : (u32)volume;
+  sample = lfsr & 1 ? 0 : (u32)volume;
   if(!enable) sample = 0;
 
   output = sample;
@@ -79,6 +79,7 @@ auto APU::Noise::serialize(serializer& s) -> void {
   s(divisor);
   s(counter);
 
+  s(sample);
   s(output);
   s(length);
   s(envelopePeriod);
