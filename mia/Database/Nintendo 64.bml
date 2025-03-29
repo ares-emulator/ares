@@ -84,7 +84,6 @@ game
 //			size: 0x40000
 //			content: Program
 
-//this is *maybe* a good dump?
 //TODO: revision
 game
 	sha256:     2bc1abf5327b8f3f575a51f96db15b1eb9edd788ec90a04abfa232cbf7276f23
