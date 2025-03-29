@@ -139,16 +139,6 @@ auto CPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
     return data;
   }
 
-  if(Model::GameBoyColor())
-  if(address == 0xff76 && cycle == 2) {  //???
-    return 0xff;
-  }
-
-  if(Model::GameBoyColor())
-  if(address == 0xff77 && cycle == 2) {  //???
-    return 0xff;
-  }
-
   if(address == 0xffff && cycle == 2) {  //IE
     return status.interruptEnable;
   }

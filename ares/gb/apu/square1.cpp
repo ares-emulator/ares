@@ -14,7 +14,7 @@ auto APU::Square1::run() -> void {
     }
   }
 
-  n4 sample = dutyOutput ? (u32)volume : 0;
+  sample = dutyOutput ? (u32)volume : 0;
   if(!enable) sample = 0;
 
   output = sample;
@@ -120,6 +120,7 @@ auto APU::Square1::serialize(serializer& s) -> void {
   s(frequency);
   s(counter);
 
+  s(sample);
   s(output);
   s(dutyOutput);
   s(phase);
