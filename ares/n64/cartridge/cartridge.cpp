@@ -28,6 +28,10 @@ auto Cartridge::connect() -> void {
     board = new Board::NUS_01A(*this);
   } else if((board_name == "NUS-07A-01")) {
     board = new Board::NUS_07A(*this);
+#if defined(CORE_GB)
+  } else if(board_name == "DATEL-REF1256") {
+    board = new Board::DATEL_REF1256(*this);
+#endif
   } else if(board_name == "DATEL-REF1329") {
     board = new Board::DATEL_REF1329(*this);
   } else {

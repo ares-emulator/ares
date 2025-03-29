@@ -2,6 +2,9 @@ namespace Board {
 
 #include "nus-01a.cpp"
 #include "nus-07a.cpp"
+#if defined(CORE_GB)
+#include "datel-ref1256.cpp"
+#endif
 #include "datel-ref1329.cpp"
 #include "generic.cpp"
 

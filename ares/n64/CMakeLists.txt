@@ -99,6 +99,7 @@ ares_add_sources(
     cartridge/board/generic.cpp
     cartridge/board/nus-01a.cpp
     cartridge/board/nus-07a.cpp
+    cartridge/board/datel-ref1256.cpp
     cartridge/board/datel-ref1329.cpp
 )
 

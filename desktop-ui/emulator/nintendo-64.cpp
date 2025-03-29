@@ -136,6 +136,35 @@ auto Nintendo64::load() -> LoadResult {
       slot->allocate({name, " Cartridge + GameShark"});
       slot->connect();
     }
+
+    #if defined(CORE_GB)
+    if(auto slot = cartridge->find<ares::Node::Port>("Game Booster Back Cartridge Slot")) {
+      if(auto gbslot = cartridge->find<ares::Node::Port>("Game Booster Top Cartridge Slot")) {
+        gs = mia::Medium::create("Nintendo 64");
+        string location = Emulator::load(gs, configuration.game);
+        if(!location) return noFileSelected;
+        LoadResult result = gs->load(location);
+        if(result != successful) return result;
+  
+        //technically we could recurse infinitely here (...)
+        //FIXME: should we have different cartridge slot names for
+        //different Datel boards? It makes sense to model them the same,
+        //since they work the same and use the same chip, but what about
+        //other manufacturers in the future?
+        slot->allocate({name, " Cartridge + GameShark"});
+        slot->connect();
+
+        gb = mia::Medium::create("Game Boy");
+        location = Emulator::load(gb, configuration.game);
+        if(!location) return noFileSelected;
+        result = gb->load(location);
+        if(result != successful) return result;
+
+        gbslot->allocate();
+        gbslot->connect();
+      }
+    }
+    #endif
   }
 
   if(auto port = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive")) {
