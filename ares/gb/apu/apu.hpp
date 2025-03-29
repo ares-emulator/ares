@@ -44,6 +44,7 @@ struct APU : Thread {
     n11 frequency;
     bool counter;
 
+    n4 sample;
     i16 output;
     bool dutyOutput;
     n3 phase;
@@ -77,6 +78,7 @@ struct APU : Thread {
     n11 frequency;
     bool counter;
 
+    n4 sample;
     i16 output;
     bool dutyOutput;
     n3 phase;
@@ -105,6 +107,7 @@ struct APU : Thread {
     bool counter;
     n8 pattern[16];
 
+    n4 sample;
     i16 output;
     u32 length;
     u32 period;
@@ -135,6 +138,7 @@ struct APU : Thread {
     n3 divisor;
     bool counter;
 
+    n4 sample;
     i16 output;
     u32 length;
     n3 envelopePeriod;

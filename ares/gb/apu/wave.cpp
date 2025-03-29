@@ -12,7 +12,7 @@ auto APU::Wave::run() -> void {
   }
 
   static const u32 shift[] = {4, 0, 1, 2};  //0%, 100%, 50%, 25%
-  n4 sample = patternSample >> shift[volume];
+  sample = patternSample >> shift[volume];
   if(!enable) sample = 0;
 
   output = sample;
@@ -95,6 +95,7 @@ auto APU::Wave::serialize(serializer& s) -> void {
   s(counter);
   s(pattern);
 
+  s(sample);
   s(output);
   s(length);
   s(period);
