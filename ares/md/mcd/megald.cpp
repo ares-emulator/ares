@@ -1,12 +1,5 @@
 // Pioneer PD6103A
 auto MCD::LD::load() -> void {
-  currentDriveState = 0x02; // 0x02 = CD door closed
-  targetDriveState = currentDriveState;
-  currentPauseState = false;
-  targetPauseState = false;
-  areOutputRegsFrozen = false;
-  areInputRegsFrozen = false;
-  currentMdGraphicsFader = 0x3F;
 }
 
 auto MCD::LD::unload() -> void {
@@ -163,22 +156,31 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //         --------------------------------- (Buffered in $5912)
     // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x02|-------------------------------|
-    // 0xFDFE85|*U7| ? |*U5|*U4| ? | ? | ? | ? |
+    // 0xFDFE85|*U7|*U6|*U5|*U4| ? | ? | ? | ? |
     //         ---------------------------------
     // *U7: Set to 1 when an LD is in the tray
     // *U5: Set to 1 when a CD is in the tray
     // *U4: Set to 1 when the the drive tray is closed and empty
     // ##NEW## 2025
+    // -This is clearly a more complex full media type value
     // 0xA5 when GGV1069 is spun up (mech request 0x04), 0x80 when it is loaded but not spinning. 0xA5 persisted after stop (mech request 0x03, then 0x02)
     // 0xC5 when Triad Stone is spun up (mech request 0x04), 0x80 when it is loaded but not spinning. 0xC5 persisted after stop (mech request 0x03, then 0x02)
     //   Actually seen to start as 0xC0, then go to 0xC4, then quickly transition to 0xC5.
     // 0xC6 when a CLV full size Laserdisc is spun up
     // 0x28 when a CD-V disc (PAL) is spun up
     // 0x20 when an audio CD is spun up
+
+    //##FIX## Do this properly
     data = 0;
-    data.bit(7) = 0; // 1 = LD in tray
-    data.bit(5) = currentDriveState >= 0x02; // 1 = CD in tray
-    data.bit(4) = 0; // 1 = CD door closed and empty
+    if (currentDriveState < 0x02) {
+      data = 0x00; // Tray open
+    } else if (!mcd.cdd.isDiscLoaded()) {
+      data.bit(4) = 1; // Drive empty
+    } else if (mcd.cdd.isDiscLaserdisc()) {
+      data = (currentDriveState >= 0x04) ? (mcd.cdd.isLaserdiscClv() ? 0xC6 : 0xC5) : 0x80; // Assume 30cm laserdisc
+    } else {
+      data = 0x20; // CD
+    }
     break;
   case 0x03:
     //         --------------------------------- (Buffered in $5913)
@@ -194,25 +196,36 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // *U4: Unknown. DRVINIT tests this, and only reads TOC info from the loaded disk if it is set to 0. It's possible this
     //      is an error in the bios routines however, and they meant to test U4 in the above output register 0x02. This would
     //      make sense.
+
     //##FIX## This is supposed to be latched until the tray is ejected
+    //##FIX## Do this properly
+    data.bit(6) = (currentDriveState >= 0x04) && mcd.cdd.isDiscLoaded() && mcd.cdd.isDiscLaserdisc();
     data.bit(3) = currentDriveState >= 0x04;
     break;
   case 0x04:
     //         --------------------------------- (Buffered in $5914)
     // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x04|-------------------------------|
-    // 0xFDFE89|*U7| ? |*U5| ? | ? | ? | ? | ? |
+    // 0xFDFE89|*U7| ? |*U5|*U4|     *U30      |
     //         ---------------------------------
     // ##NEW## 2025
     // *U5: Always seen set to 1, unless an LD is currently spun up. Stays set to 1 when a CD is spun up.
+    // *U4: When a laserdisc is being spun up (drive state 0x04) but that process is not complete, this briefly gets set
+    //      to 1 for maybe a quarter of a second, at the same time as U5 is cleared. It is set to 0 afterwards and stays
+    //      that way. This is while the spinup operation is still in progress, before the U7 drive busy flag in reg 0x06
+    //      is cleared.
     // *U7: Set to 1 if bit 4 of input register 0x0D is set, unless a CD is in the drive, whether it is spun up or not.
+    // *U30: Seen set to 0xE during laserdisc playback when the redbook digital audio is playing a data track, 0xC when
+    //       it is playing an audio track. This was observed on Space Berserker.
     // ##OLD## Before 2025
     // *U7: Set to 1 if bit 4 of input register 0x0D is set
-    //##FIX## Add logic here for Laserdiscs
     data = 0;
-    data.bit(5) = true;
-    if (currentDriveState < 0x02) {
+    data.bit(5) = !mcd.cdd.isDiscLoaded() || !mcd.cdd.isDiscLaserdisc() || (currentDriveState < 0x04);
+    if (!mcd.cdd.isDiscLoaded() || mcd.cdd.isDiscLaserdisc() || (currentDriveState < 0x02)) {
       data.bit(7) = inputRegs[0x0D].bit(4);
+    }
+    if (!mcd.cdd.isDiscLoaded() || mcd.cdd.isDiscLaserdisc() || (currentDriveState >= 0x05)) {
+      data.bit(0, 3) = (mcd.cdd.isTrackAudio(mcd.cdd.getCurrentTrack()) ? 0x0C : 0x0E);
     }
     break;
   case 0x05:
@@ -263,8 +276,8 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     break;
   case 0x06:
     //         --------------------------------- (Buffered in $5916)
-    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x06-0x0B seem related to seeking and reading. See 0x369E (CDBIOS_ROMSEEK) and 0x359A (CDBIOS_ROMREAD).
-    // Reg 0x06|-------------------------------| ##NOTE## Related to reg 0x0A? See 0x2960 and 0x295E.
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x06|-------------------------------|
     // 0xFDFE8D|*U7| ? |*U5|*U4|      *U30     |
     //         ---------------------------------
     // ##NEW## 2025
@@ -301,31 +314,45 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //       ##OLD## Note: Seek sets this register to 0x02
 
     // Update the mechanical drive state
-    if ((previousData.bit(0, 3) != currentDriveState) || seekPerformedSinceLastFlagsRead) {
+    if ((previousData.bit(0, 3) != currentDriveState) || seekPerformedSinceLastFlagsRead || (driveStateChangeDelayCounter > 0)) {
       // If the drive state has changed since the last time this register was read, we pretend the drive is still
-      // transitioning to the new state for one read, then we swap it over. In the real hardware, most of these
+      // transitioning to the new state for a number of reads, then we swap it over. In the real hardware, most of these
       // transitions take many seconds. We put this small wait state in here not to try and obtain accurate timing, but
       // as a defensive measure in case any code out there malfunctions if the state changes instantly without going
       // into a busy state at least once. It's possible that this could be interpreted as an error or failure to apply
-      // the change.
-      if (previousData.bit(7) != 1) {
-        data.bit(7) = 1;
-        if (seekPerformedSinceLastFlagsRead) {
-          data.bit(5) = 1;
+      // the change. This has now been confirmed to be true in at least one BIOS routine, making this code necessary for
+      // games to boot.
+      static const unsigned int ChangeDelayCount = 10;
+      if (seekPerformedSinceLastFlagsRead) {
+        data.bit(5) = 1;
+        if (previousData.bit(7) != 1) {
+          seekPerformedSinceLastFlagsRead = false;
         }
       }
-      else {
-        data.bit(7) = 0;
-        data.bit(5) = 0;
-        data.bit(0, 3) = currentDriveState;
-        seekPerformedSinceLastFlagsRead = false;
+      if (previousData.bit(7) != 1) {
+        data.bit(7) = 1;
+        driveStateChangeDelayCounter = ChangeDelayCount;
+      } else {
+        if (driveStateChangeDelayCounter == 1) {
+          data.bit(7) = seekPerformedSinceLastFlagsRead;
+          data.bit(5) = seekPerformedSinceLastFlagsRead;
+          data.bit(0, 3) = currentDriveState;
+          if (seekPerformedSinceLastFlagsRead) {
+            driveStateChangeDelayCounter = ChangeDelayCount;
+            seekPerformedSinceLastFlagsRead = false;
+          } else {
+            driveStateChangeDelayCounter = 0;
+          }
+        } else {
+          --driveStateChangeDelayCounter;
+        }
       }
     }
 
     // Update the pause state
     data.bit(4) = currentPauseState || targetPauseState;
     break;
-  case 0x07: {
+  case 0x07:
     //         --------------------------------- (Buffered in $5917)
     // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x07|-------------------------------|
@@ -340,51 +367,34 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //       case if the step speed is set to 1, indicating a single frame update only.
     // *U20: Current step speed, as selected by input register 0x03. Note that invalid step speed settings for the current playback
     //       mode do not change this register. Only the true current effective step speed value is displayed here.
-    int newInputMode = inputRegs[0x03].bit(4, 7);
-    if (newInputMode <= 0x03) {
-      data.bit(4, 7) = newInputMode;
-      switch (newInputMode) {
-      case 0:
-        data.bit(0, 3) = 0;
-        break;
-      case 1:
-        data.bit(0, 2) = inputRegs[0x03].bit(0, 2);
-        data.bit(3) = (inputRegs[0x03].bit(0, 2) == 1);
-        break;
-      case 2:
-        data.bit(0, 3) = inputRegs[0x03].bit(0, 3);
-        break;
-      case 3:
-        data.bit(0, 3) = inputRegs[0x03].bit(0, 3);
-        if (data.bit(0, 2) == 0x07) {
-          data.bit(0, 2) == 0x06;
-        }
-        break;
-      }
-    }
+    data.bit(4, 7) = currentPlaybackMode;
+    data.bit(3) = currentPlaybackDirection;
+    data.bit(0, 2) = currentPlaybackSpeed;
     break;
-  }
   case 0x08:
     //         --------------------------------- (Buffered in $5918)
-    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x08-0x0B related? See 0x292A.
-    // Reg 0x08|-------------------------------| ##NOTE## Related to reg 0x0C? See 0x2960 and 0x295E.
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x08|-------------------------------|
     // 0xFDFE91|*U7|*U6| ? |*U4| ? | ? | ? |*U0|
     //         ---------------------------------
     //##NEW## 2025
-    // *U0: Set when a CD is loaded and spinning. Retained until drive tray is opened. Not yet tested for Laserdiscs.
+    // *U7: Set when an LD starts playing, IE not set at drive state 0x04. Cleared when the disc is spun down. Not set for CD.
+    // *U6: For a CD, set when a CD is detected when the drive is closed, IE at drive state 0x02. Retained until the tray is
+    //      opened. For an LD, set when the disc is loaded and spinning. Cleared when the disc is spun down.
+    // *U0: Set when a CD or LD is loaded and spinning. Retained until drive tray is opened.
     //##OLD## 2025
     // *U7: Observed to be set when testing bad seeking operations
     // *U6: Observed to be set when a CD was detected when the drive tray was closed. The disk has not been spun up at this point.
     // *U4: Observed to be set when testing bad seeking operations
     // *U0: Unknown. DRVINIT tests this.
-    //##FIX## Wrong for Laserdiscs
-    //##FIX## Should be tied to disc presense
-    data.bit(6) = (currentDriveState >= 2);
-    data.bit(0) = (currentDriveState >= 4);
+    //##FIX## Retain bit U0 until the drive tray is opened
+    data.bit(7) = mcd.cdd.isDiscLoaded() && mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 5);
+    data.bit(6) = mcd.cdd.isDiscLoaded() && ((!mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 2)) || (mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 4)));
+    data.bit(0) = mcd.cdd.isDiscLoaded() && (currentDriveState >= 4);
     break;
   case 0x09:
     //         --------------------------------- (Buffered in $5919)
-    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x08-0x0B related? See 0x292A.
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x09|-------------------------------|
     // 0xFDFE93| ? | ? | ? |*U4| ? |*U2|*U1|*U0|
     //         ---------------------------------
@@ -393,6 +403,8 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // they first clear this flag, then set it if there's an error. This means if changing reg 0x03 has flagged an error for example,
     // then you do a valid write to 0x02 that doesn't trigger an error, the flag will be cleared, despite 0x03 being invalid. It's
     // not a live effective error state.
+    // *U0: This is also seen to be set when a CD is loaded and trying to seek to track 0x00. Note that when an LD is loaded, seeking
+    //      to track 0x00 works and is treated the same as seeking to track 0x01.
     // ##OLD## Before 2025
     // *U4: This bit appears to be cleared if the previously requested drive code in input register 0x02 was valid, and set if it
     //      was invalid. See input register 0x02 for a list of valid codes. Note that the exact same function has also confirmed to
@@ -408,11 +420,13 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // -U0, U1, and U2, along with U4 in output reg 0x09 have all now seen to be set automatically when the last track on the disk
     //  finishes playing.
     data.bit(4) = operationErrorFlag1;
+    data.bit(1) = operationErrorFlag2;
+    data.bit(0) = operationErrorFlag3;
     break;
   case 0x0A:
     //         --------------------------------- (Buffered in $591A)
-    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x08-0x0B related? See 0x292A.
-    // Reg 0x0A|-------------------------------| ##NOTE## Related to reg 0x0E? See 0x2960 and 0x295E.
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x0A|-------------------------------|
     // 0xFDFE95| -   -   -   -   - |    SM     |
     //         ---------------------------------
     // -Returns the current state of input register 0x06. See notes on that register for more info.
@@ -422,11 +436,11 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     break;
   case 0x0B:
     //         --------------------------------- (Buffered in $591B)
-    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x08-0x0B related? See 0x292A.
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x0B|-------------------------------|
     // 0xFDFE97|           Track No            |
     //         ---------------------------------
-    // *U70: Returns the current state of input register 0x07. See notes on that register for more info.
+    // Returns the current state of input register 0x07. See notes on that register for more info.
     data = inputRegs[0x07];
     break;
   case 0x0C:
@@ -435,7 +449,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // Reg 0x0C|-------------------------------|
     // 0xFDFE99|           SectorNoU           |
     //         ---------------------------------
-    // *U70: Returns the current state of input register 0x08. See notes on that register for more info.
+    // Returns the current state of input register 0x08. See notes on that register for more info.
     data = inputRegs[0x08];
     break;
   case 0x0D:
@@ -444,7 +458,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // Reg 0x0D|-------------------------------|
     // 0xFDFE9B|        Minutes/SectorNoM      |
     //         ---------------------------------
-    // *Minutes: Returns the current state of input register 0x09. See notes on that register for more info.
+    // Returns the current state of input register 0x09. See notes on that register for more info.
     data = inputRegs[0x09];
     break;
   case 0x0E:
@@ -453,7 +467,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // Reg 0x0E|-------------------------------|
     // 0xFDFE9D|        Seconds/SectorNoL      |
     //         ---------------------------------
-    // *Seconds: Returns the current state of input register 0x0A. See notes on that register for more info.
+    // Returns the current state of input register 0x0A. See notes on that register for more info.
     data = inputRegs[0x0A];
     break;
   case 0x0F:
@@ -462,7 +476,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // Reg 0x0F|-------------------------------|
     // 0xFDFE9F|            Frames             |
     //         ---------------------------------
-    // *Frames: Returns the current state of input register 0x0B. See notes on that register for more info.
+    // Returns the current state of input register 0x0B. See notes on that register for more info.
     data = inputRegs[0x0B];
     break;
   case 0x10:
@@ -471,29 +485,26 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // Reg 0x10|-------------------------------|
     // 0xFDFEA1|      Track Info Selection     |
     //         ---------------------------------
-    // Track Info Selection: Returns the current state of input register 0x05. See notes on that register for more info.
+    // Returns the current state of input register 0x05. See notes on that register for more info.
     data = inputRegs[0x05];
     break;
   case 0x11: {
     //         --------------------------------- (Buffered in $5921)
-    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x11-0x14 related? See 0x2550.
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x11|-------------------------------|
-    // 0xFDFEA3|          TOC Flags            |
+    // 0xFDFEA3|RedbookControl |   DataValid   |
     //         ---------------------------------
-    // TOC Flags: The TOC flags for the currently selected track are output here. This is the currently playing track if input
-    //            register 0x05 is set to 0, otherwise it is the track number indicated in input register 0x05. Note that the
-    //            format of these flags is not currently known.
-    //##NEW## 2025
-    // -Upper 4 bits are TOC flags. Lower 4 bits are seen at 0x1 for CDs tested so far.
-    //##OLD## 2025
-    // ##TODO## Decode the TOC flags, and determine if they correspond to a known standard, and how they compare with CD data.
-    // ##NOTE##
-    // -Seen as 0x01 for audio CD track
-    // -Seen as 0x44 for first track
-    // -Seen as 0x04 for second track
-    // -Seen as 0x00 for invalid tracks
-    // -Bits 3-0 are believed to correspond to the "Sub-channel Q Control Bits" CD code standard for the selected track. Here's
-    //  an excerpt from the standard:
+    // RedbookControl:
+    //    CDs: If input register 0x05 is set to 0x00 or 0xFF, reports the 4-bit track bitflags as per CONTROL in the Q
+    //         channel subcode data for current location, or TOC data depending on input reg 0x05. For other values of
+    //         input register 0x05, see the notes on that register.
+    //    LDs: As per CDs, if the LD has a digital (redbook) track in the current playback area. If there is no redbook
+    //         data encoded (IE, no digital audio track), this is set to 0x00.
+    // DataValid: If the data in this register and the following output regs 0x12-0x14 are reporting valid control and
+    //            timecode information, this is set to 0x1, otherwise it is set to 0x0. This applies for input reg 0x05
+    //            values 0xFF, and 0x00-0x99, where this is supposed to give control and timecode information, otherwise
+    //            this whole register is set according to the notes in input reg 0x05.
+    // 
     //                       Table 13-22: Sub-channel Q Control Bits
     // ==============================================================================
     //  Bit           equals zero                   equals one             
@@ -514,22 +525,27 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     break;}
   case 0x12:
     //         --------------------------------- (Buffered in $5922)
-    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x11-0x14 related? See 0x2550.
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x12|-------------------------------|
-    // 0xFDFEA5|           Minutes (R)         |
+    // 0xFDFEA5|        RedbookMinutesA        |
     //         ---------------------------------
-    // Minutes: The BCD minute value of the current seek position if input register 0x05 is set to 0, otherwise it is the recorded
-    //          minute length from the TOC of the track number indicated in input register 0x05.
+    // RedbookMinutesA:
+    //    CDs: If input register 0x05 is set to 0x00 or 0xFF, reports the absolute minutes as per AMIN in the Q channel
+    //         subcode data for current location, or TOC data depending on input reg 0x05. For other values of input
+    //         register 0x05, see the notes on that register.
+    //    LDs: As per CDs, if the LD has a digital (redbook) track in the current playback area. In this case, this data
+    //         is fetched from the redbook track subcode data, and reports in CD time format with 75 frames per second.
+    //         If there is no redbook data encoded (IE, no digital audio track), this is set to 0x00.
     if ((selectedTrackInfo == 0xA0) || (selectedTrackInfo == 0xB0)) {
       data = BCD::encode(mcd.cdd.session.firstTrack);
     } else if ((selectedTrackInfo == 0xA1) || (selectedTrackInfo == 0xB1)) {
       mcd.cdd.getLeadOutTimecode(minute, second, frame);
       data = BCD::encode(minute);
-    } else if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
-      data = 0xFF;
-    } else  if (selectedTrackInfo == 0) {
+    } else if (((selectedTrackInfo == 0) || (selectedTrackInfo == 0xFF)) && (mcd.cdd.getTrackCount() > 0)) {
       mcd.cdd.getCurrentTimecode(minute, second, frame);
       data = BCD::encode(minute);
+    } else if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
+      data = 0xFF;
     } else {
       mcd.cdd.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
       data = BCD::encode(minute);
@@ -537,22 +553,27 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     break;
   case 0x13:
     //         --------------------------------- (Buffered in $5923)
-    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x11-0x14 related? See 0x2550.
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x13|-------------------------------|
-    // 0xFDFEA7|           Seconds (R)         |
+    // 0xFDFEA7|        RedbookSecondsA        |
     //         ---------------------------------
-    // Seconds: The BCD second value of the current seek position if input register 0x05 is set to 0, otherwise it is the recorded
-    //          second length from the TOC of the track number indicated in input register 0x05.
+    // RedbookSecondsA:
+    //    CDs: If input register 0x05 is set to 0x00 or 0xFF, reports the absolute seconds as per ASEC in the Q channel
+    //         subcode data for current location, or TOC data depending on input reg 0x05. For other values of input
+    //         register 0x05, see the notes on that register.
+    //    LDs: As per CDs, if the LD has a digital (redbook) track in the current playback area. In this case, this data
+    //         is fetched from the redbook track subcode data, and reports in CD time format with 75 frames per second.
+    //         If there is no redbook data encoded (IE, no digital audio track), this is set to 0x00.
     if ((selectedTrackInfo == 0xA0) || (selectedTrackInfo == 0xB0)) {
       data = BCD::encode(mcd.cdd.getTrackCount());
     } else if ((selectedTrackInfo == 0xA1) || (selectedTrackInfo == 0xB1)) {
       mcd.cdd.getLeadOutTimecode(minute, second, frame);
       data = BCD::encode(second);
-    } else if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
-      data = 0xFF;
-    } else  if (selectedTrackInfo == 0) {
+    } else if (((selectedTrackInfo == 0) || (selectedTrackInfo == 0xFF)) && (mcd.cdd.getTrackCount() > 0)) {
       mcd.cdd.getCurrentTimecode(minute, second, frame);
       data = BCD::encode(second);
+    } else if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
+      data = 0xFF;
     } else {
       mcd.cdd.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
       data = BCD::encode(second);
@@ -560,22 +581,27 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     break;
   case 0x14:
     //         --------------------------------- (Buffered in $5924)
-    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x11-0x14 related? See 0x2550.
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x14|-------------------------------|
-    // 0xFDFEA9|           Frames (R)          |
+    // 0xFDFEA9|        RedbookFramesA         |
     //         ---------------------------------
-    // Frames: The BCD frame value of the current seek position if input register 0x05 is set to 0, otherwise it is the recorded
-    //         frame length from the TOC of the track number indicated in input register 0x05.
+    // RedbookFramesA:
+    //    CDs: If input register 0x05 is set to 0x00 or 0xFF, reports the absolute frames as per AFRAME in the Q channel
+    //         subcode data for current location, or TOC data depending on input reg 0x05. For other values of input
+    //         register 0x05, see the notes on that register.
+    //    LDs: As per CDs, if the LD has a digital (redbook) track in the current playback area. In this case, this data
+    //         is fetched from the redbook track subcode data, and reports in CD time format with 75 frames per second.
+    //         If there is no redbook data encoded (IE, no digital audio track), this is set to 0x00.
     if ((selectedTrackInfo == 0xA0) || (selectedTrackInfo == 0xB0)) {
       data = 0x00;
     } else if ((selectedTrackInfo == 0xA1) || (selectedTrackInfo == 0xB1)) {
       mcd.cdd.getLeadOutTimecode(minute, second, frame);
       data = BCD::encode(frame);
-    } else if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
-      data = 0xFF;
-    } else  if (selectedTrackInfo == 0) {
+    } else if (((selectedTrackInfo == 0) || (selectedTrackInfo == 0xFF)) && (mcd.cdd.getTrackCount() > 0)) {
       mcd.cdd.getCurrentTimecode(minute, second, frame);
       data = BCD::encode(frame);
+    } else if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
+      data = 0xFF;
     } else {
       mcd.cdd.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
       data = BCD::encode(frame);
@@ -588,71 +614,215 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // 0xFDFEAB|         Current Track         |
     //         ---------------------------------
     // Current Track: When either a CD or LD is playing, this reports the currently playing track number.
-    // ##TODO## Re-test and correct these notes for CD mode. Seems that in CD mode output regs 0x17-0x19 actually report the current
-    //          time as per 0x12-0x14 perhaps, and output reg 0x16 outputs some other unknown data.
-    data = BCD::encode(mcd.cdd.getCurrentTrack());
+    // -This register is set to 0x01 when the disc is spun down (drive state 0x03 or 0x02), and is set to 0x00 when
+    //  the drive tray is ejected (drive state 0x01). If the drive tray is empty it remains at 0x00 in drive state
+    //  0x02-0x03.
+    // -The following regs 0x16-0x19 all get set to 0x00 when the disc is spun down (drive state 0x03).
+    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
+      data = BCD::encode(mcd.cdd.getCurrentTrack());
+    } else if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 2)) {
+      data = 0x01;
+    } else {
+      data = 0x00;
+    }
     break;
   case 0x16:
     //         --------------------------------- (Buffered in $5926)
     // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x16|-------------------------------|
-    // 0xFDFEAD|       Current SectorNoU       |
+    // 0xFDFEAD|     Current Hour/FrameNoU     |
     //         ---------------------------------
-    // Current SectorNoU: Upper data of current sector number, in BCD format.
-    // ##OLD##
-    // ##NOTE##
-    // -When a music CD was playing, this seemed fixed at a value of 1. Does this report the session number for a CD?
-    // ##FIX## I believe this note got applied to the wrong register
-    // *U0: Observed to be set when a CD was detected when the drive tray was closed. The disk has not been spun up at this point.
-    data = 0x01;
+    // Current Hour/FrameNoU:
+    //    -CAV LDs: Upper digit of current frame number in BCD format, IE X in "X????".
+    //    -CLV LDs: Hours counter of current time code in BCD format, IE X in "X??????".
+    //    -CDs: The current subdivision number within the track, IE, "X" from the Q channel subcode data.
+    data = 0;
+    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
+      if (mcd.cdd.isDiscLaserdisc()) {
+        auto frameNumber = frameNumberFromLba(mcd.cdd.getCurrentSector());
+        if (mcd.cdd.isLaserdiscClv()) {
+          data = BCD::encode((frameNumber / (60 * 60 * 30)) % 60);
+        } else {
+          data = BCD::encode((frameNumber / (100 * 100)) % 100);
+        }
+      } else {
+        //##FIX## Pull the subdivision number out of the subcode buffers
+        data = 0x01;
+      }
+    }
     break;
   case 0x17:
     //         --------------------------------- (Buffered in $5927)
     // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x17|-------------------------------|
-    // 0xFDFEAF|       Current SectorNoM       |
+    // 0xFDFEAF|    Current Minute/FrameNoM    |
     //         ---------------------------------
-    // Current SectorNoM: Middle data of current sector number, in BCD format.
-    // ##NOTE##
-    // -When a CD was playing, output registers 0x17-0x19 provided this counter, and it had different properties.
-    // -When a CD was playing, this counter was relative to the start of the current track.
-    //##FIX## Wrong for Laserdiscs
-    mcd.cdd.getCurrentTrackRelativeTimecode(minute, second, frame);
-    data = BCD::encode(minute);
+    // Current Minute/FrameNoM:
+    //    -CAV LDs: Digits 2-3 of current frame number in BCD format, IE X in "?XX??".
+    //    -CLV LDs: Minutes counter of current time code in BCD format, IE X in "?XX????".
+    //    -CDs: Minutes counter of current relative track time in BCD format. IE, each track begins again at 0.
+    data = 0;
+    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
+      if (mcd.cdd.isDiscLaserdisc()) {
+        auto frameNumber = frameNumberFromLba(mcd.cdd.getCurrentSector());
+        if (mcd.cdd.isLaserdiscClv()) {
+          data = BCD::encode((frameNumber / (60 * 30)) % 60);
+        } else {
+          data = BCD::encode((frameNumber / 100) % 100);
+        }
+      } else {
+        mcd.cdd.getCurrentTrackRelativeTimecode(minute, second, frame);
+        data = BCD::encode(minute);
+      }
+    }
     break;
   case 0x18:
     //         --------------------------------- (Buffered in $5928)
     // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x18|-------------------------------|
-    // 0xFDFEB1|       Current SectorNoL       |
+    // 0xFDFEB1|    Current Second/FrameNoL    |
     //         ---------------------------------
-    // Current SectorNoL: Lower data of current sector number, in BCD format.
-    // ##NOTE##
-    // -When a CD is playing, this was observed to only count from 0 to 59.
-    //##FIX## Wrong for Laserdiscs
-    mcd.cdd.getCurrentTrackRelativeTimecode(minute, second, frame);
-    data = BCD::encode(second);
+    // Current Second/FrameNoL:
+    //    -CAV LDs: Digits 4-5 of current frame number in BCD format, IE X in "???XX".
+    //    -CLV LDs: Seconds counter of current time code in BCD format, IE X in "???XX??".
+    //    -CDs: Seconds counter of current relative track time in BCD format. IE, each track begins again at 0.
+    data = 0;
+    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
+      if (mcd.cdd.isDiscLaserdisc()) {
+        auto frameNumber = frameNumberFromLba(mcd.cdd.getCurrentSector());
+        if (mcd.cdd.isLaserdiscClv()) {
+          data = BCD::encode((frameNumber / 30) % 60);
+        } else {
+          data = BCD::encode(frameNumber % 100);
+        }
+      } else {
+        mcd.cdd.getCurrentTrackRelativeTimecode(minute, second, frame);
+        data = BCD::encode(second);
+      }
+    }
     break;
   case 0x19:
     //         --------------------------------- (Buffered in $5929)
     // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x19|-------------------------------|
-    // 0xFDFEB3|             *U70              |
+    // 0xFDFEB3|         Current Frame         |
     //         ---------------------------------
-    // *U70: Even lower data of some kind of seek counter in BCD form, counting from 0 to 74. Only seen to be active when a CD is
-    //       playing, and not when an LD is playing.
-    //##FIX## Wrong for Laserdiscs
-    mcd.cdd.getCurrentTrackRelativeTimecode(minute, second, frame);
-    data = BCD::encode(frame);
+    // Current Frame:
+    //    -CAV LDs: This is set to 0x00.
+    //    -CLV LDs: Frames counter of current time code in BCD format, IE X in "?????XX".
+    //    -CDs: Frames counter of current relative track time in BCD format. IE, each track begins again at 0.
+    data = 0;
+    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
+      if (mcd.cdd.isDiscLaserdisc()) {
+        if (mcd.cdd.isLaserdiscClv()) {
+          auto frameNumber = frameNumberFromLba(mcd.cdd.getCurrentSector());
+          data = BCD::encode(frameNumber % 30);
+        } else {
+          data = 0x00;
+        }
+      } else {
+        mcd.cdd.getCurrentTrackRelativeTimecode(minute, second, frame);
+        data = BCD::encode(frame);
+      }
+    }
     break;
-    // These output registers are unused and undriven.
-    //##FIX## These registers report input target seek locations under some seek modes. Document them here.
   case 0x1A:
+    //         --------------------------------- (Buffered in $592A)
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x1A|-------------------------------|
+    // 0xFDFEB5|          StopChapter          |
+    //         ---------------------------------
+    // StopChapter: Reports the target chapter number to stop at, as a BCD number. Set to 0xFF if no stop chapter is
+    //              latched, including if the corresponding input register is set to 0x00.
+    // -Note that this output is only driven when a stop location is set, at the exact time it is latched. After this
+    //  point, the output register can be freely written to again as it is not driven. Changes from writing to the
+    //  output register do not change the actual stop location however, and the player will only stop at the actual time
+    //  that was latched. This applies for all the following stop location output registers too.
+    // -This register is also driven to 0xFF when the stop time is reached. This applies for all the following stop
+    //  location output registers too.
   case 0x1B:
+    //         --------------------------------- (Buffered in $592B)
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x1B|-------------------------------|
+    // 0xFDFEB7|           StopFrame           |
+    //         ---------------------------------
+    // StopFrame:
+    //    -CAV LDs: This is set to 0x00.
+    //    -CLV LDs: Frames counter of target stop point in BCD format, IE X in "?????XX".
+    //    -CDs: Frames counter of target stop point in BCD format
   case 0x1C:
+    //         --------------------------------- (Buffered in $592C)
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x1C|-------------------------------|
+    // 0xFDFEB9|     StopSeconds/FrameNoL      |
+    //         ---------------------------------
+    // StopSeconds/FrameNoL:
+    //    -CAV LDs: Digits 4-5 of target stop point in BCD format, IE X in "???XX".
+    //    -CLV LDs: Seconds counter of target stop point in BCD format, IE X in "???XX??".
+    //    -CDs: Seconds counter of target stop point in BCD format
   case 0x1D:
+    //         --------------------------------- (Buffered in $592D)
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x1D|-------------------------------|
+    // 0xFDFEBB|     StopMinutes/FrameNoM      |
+    //         ---------------------------------
+    // StopMinutes/FrameNoM:
+    //    -CAV LDs: Digits 2-3 of target stop point in BCD format, IE X in "?XX??".
+    //    -CLV LDs: Minutes counter of target stop point in BCD format, IE X in "?XX????".
+    //    -CDs: Minutes counter of target stop point in BCD format
   case 0x1E:
+    //         --------------------------------- (Buffered in $592E)
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x1E|-------------------------------|
+    // 0xFDFEBD|      StopHours/FrameNoH       |
+    //         ---------------------------------
+    // StopHours/FrameNoH:
+    //    -CAV LDs: Upper digit of target stop point in BCD format, IE X in "X????".
+    //    -CLV LDs: Hours counter of target stop point in BCD format, IE X in "X??????".
+    //    -CDs: This is set to 0x00.
+    // -Note that only the lower digit of the source hours/frame value is latched, IE, if the source register is
+    //  set to 0x33, this output register will read 0x03.
+    // -Despite only the lower four bits of this register being set based on the input, all 8 bits are driven, so
+    //  if the source register is set to 0x33 the register will read 0x03 even if the output register was manually
+    //  written as 0xFF prior.
+    // -The same applies to when the register is driven to 0xFF when the stop point is reached. That value will
+    //  still be set, not 0x0F.
   case 0x1F:
+    //         --------------------------------- (Buffered in $592F)
+    // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x1F|-------------------------------|
+    // 0xFDFEBF|       StopPointLatched        |
+    //         ---------------------------------
+    // StopPointLatched: This output is driven to 0x01 when a stop point has been latched, and reset to 0x00 when the
+    //       stop time is reached and the player stop is triggered. Note that all lines are actually driven when the
+    //       output is updated, so all bits will be reset even though only bit 0 has an identified change in value.
+    if (mcd.cdd.reachedStopPoint && !reachedStopPointPreviously) {
+      debug(unverified, "Hit stoppoint: lba:", mcd.cdd.io.sector);
+      if (inputRegs[0x06].bit(7)) {
+        // Repeat mode
+        //##TODO## Test if the output gets re-driven here to 0x01
+        mcd.cdd.reachedStopPoint = false;
+        mcd.cdd.io.status = CDD::Status::Playing;
+        performSeekWithLatchedState();
+      } else {
+        // Stop mode
+        outputRegs[0x1A] = 0xFF;
+        outputRegs[0x1B] = 0xFF;
+        outputRegs[0x1C] = 0xFF;
+        outputRegs[0x1D] = 0xFF;
+        outputRegs[0x1E] = 0xFF;
+        outputRegs[0x1F] = 0x00;
+        currentPlaybackMode = 2;
+        currentPlaybackSpeed = 0;
+        currentPlaybackDirection = 0;
+        reachedStopPointPreviously = true;
+        operationErrorFlag1 = false;
+        operationErrorFlag2 = true;
+        operationErrorFlag3 = true;
+        mcd.cdd.stopPointEnabled = false;
+      }
+      data = outputRegs[regNum];
+    }
   default:
     break;
   }
@@ -726,8 +896,8 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
   case 0x02: {
     //         --------------------------------- (Buffered in $5932 (edit buffer)/ and $5052 (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-    // Reg 0x02|-------------------------------| ##NOTE## A lot of use with this register
-    // 0xFDFE45|*U7| ? |*U5|*U4|     *U30      | ##NOTE## Related to reg 0x06 ($5916)
+    // Reg 0x02|-------------------------------|
+    // 0xFDFE45|*U7| ? |*U5|*U4|     *U30      |
     //         ---------------------------------
     //##NEW## 2025
     // *U4: When testing this again with CDs, the behaviour of the pause flag not being effective when triggered from the tray open
@@ -738,6 +908,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     //             flags are set to indicate failure if this is not the case, it simply doesn't do anything, and output register 0x06
     //             continues to report the previously active drive state. Note that even when correctly applied from drive state 0x5,
     //             the active drive state stays at 0x5. This then acts more like a command than an active state.
+    // -We've confirmed operationErrorFlag3 is cleared when the seek mode changes too
     //##OLD## Before 2025
     // *U7: Flags the CD tray to be opened when an open command is sent and this register is set, otherwise the LD tray is opened.
     //      See the description of the open command for further notes.
@@ -787,8 +958,10 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     // Update the seek enable state
     seekEnabled = data.bit(5);
 
-    // Clear the operation error flag before we do anything
+    // Clear the operation error flags before we do anything
     operationErrorFlag1 = false;
+    operationErrorFlag2 = false;
+    operationErrorFlag3 = false;
 
     // Update the pause state if required. Note that hardware tests have shown that the pause flag is only effective
     // when it changes state at the same time as drive state 0x05 or 0x07 requests are being issued, otherwise it is
@@ -825,6 +998,12 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
         currentDriveState = 0x03;
         break;
       case 0x04: // Load disc
+        // If no disc is present, flag an error and abort.
+        if (!mcd.cdd.isDiscLoaded()) {
+          operationErrorFlag1 = true;
+          operationErrorFlag2 = true;
+          break;
+        }
         // If the disc isn't already loaded, insert it and seek to the start, otherwise do nothing.
         if (currentDriveState <= 3) {
           mcd.cdd.insert();
@@ -832,30 +1011,55 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
           seekPerformedSinceLastFlagsRead = true;
           currentPauseState = true;
         }
-        currentDriveState = 0x04;
-        break;
-      case 0x05: // Load and play disc
-        // If the disc isn't already loaded, insert it and seek to the start, otherwise do nothing.
-        if (currentDriveState <= 3) {
-          mcd.cdd.insert();
-          mcd.cdd.seekToTrack(1, true);
-          seekPerformedSinceLastFlagsRead = true;
-          currentPauseState = true;
-        }
-        // If seeking is enabled, perform the currently active seek operation.
-        if (seekEnabled) {
-          performSeekWithCurrentState();
-        }
-        // Either play or pause the disc depending on the pause flag
-        if (targetPauseState) {
-          mcd.cdd.pause();
+        // If the disc is already loaded, the drive state doesn't change back to 0x04 when we set it here, instead an
+        // error is flaggged.
+        if (currentDriveState < 0x04) {
+          currentDriveState = 0x04;
         } else {
-          mcd.cdd.play();
+          operationErrorFlag1 = true;
         }
+        break;
+      case 0x05: { // Load and play disc
+        // If no disc is present, flag an error and abort.
+        if (!mcd.cdd.isDiscLoaded()) {
+          operationErrorFlag1 = true;
+          operationErrorFlag2 = true;
+          break;
+        }
+        // Clear the stop point triggered flag
+        mcd.cdd.reachedStopPoint = false;
+        // If the disc isn't already loaded, insert it and seek to the start, otherwise do nothing.
+        if (currentDriveState <= 3) {
+          mcd.cdd.insert();
+          mcd.cdd.seekToTrack(1, true);
+          seekPerformedSinceLastFlagsRead = true;
+          currentPauseState = true;
+        }
+        // Update the pause and drive state. Note that we have to update the drive state before calling our seek
+        // function below.
         currentPauseState = targetPauseState;
         currentDriveState = 0x05;
-        break;
+        // If seeking is enabled, perform the currently active seek operation.
+        if (seekEnabled) {
+          if (latchSeekTargetFromCurrentState()) {
+            performSeekWithLatchedState();
+          }
+        }
+        // Either play or pause the disc depending on the pause flag
+        if (currentPauseState) {
+          mcd.cdd.pause();
+        }
+        else {
+          mcd.cdd.play();
+        }
+        break; }
       case 0x07: // Toggle pause from running state
+        // If no disc is present, flag an error and abort.
+        if (!mcd.cdd.isDiscLoaded()) {
+          operationErrorFlag1 = true;
+          operationErrorFlag2 = true;
+          break;
+        }
         // Note that as this is a command rather than an actual state change, we don't update the current drive state
         // here.
         if (currentDriveState == 0x05) {
@@ -868,6 +1072,9 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
         break;
       default: // Invalid mode
         operationErrorFlag1 = true;
+        if (!mcd.cdd.isDiscLoaded()) {
+          operationErrorFlag2 = true;
+        }
         break;
       }
     }
@@ -929,13 +1136,35 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     // ##OLD##
     // *U4: Set at 0x2314. Tested in DRVINIT.
 
-    // Clear the operation error flag before we do anything
+    // Clear the operation error flags before we do anything
     operationErrorFlag1 = false;
+    operationErrorFlag2 = false;
+    operationErrorFlag3 = false;
 
+    // Latch the new playback mode settings
     //##TODO## Implement playback mode support. Note that this does work for CDs as well as LDs.
     auto newPlaybackMode = data.bit(4, 7);
     if (newPlaybackMode >= 0x04) {
       operationErrorFlag1 = true;
+    } else {
+      auto newPlaybackSpeed = data.bit(0, 2);
+      auto newPlaybackDirection = data.bit(3);
+      switch (newPlaybackMode) {
+      case 0:
+        newPlaybackSpeed = 0;
+        break;
+      case 1:
+        newPlaybackDirection = (inputRegs[0x03].bit(0, 2) == 1);
+        break;
+      case 3:
+        if (newPlaybackSpeed == 0x07) {
+          newPlaybackSpeed == 0x06;
+        }
+        break;
+      }
+      currentPlaybackMode = newPlaybackMode;
+      currentPlaybackSpeed = newPlaybackSpeed;
+      currentPlaybackDirection = newPlaybackDirection;
     }
     break;
   }
@@ -957,14 +1186,20 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     //                       otherwise they report TOC information on the specified track number. Output register 0x10 returns
     //                       the value of this register.
     // ##NEW## 2025
+    // -Values 0x01-0x99 return TOC track information in output registers 0x11-0x14, specifically the CONTROL and PMIN/PSEC/PFRAME
+    //  values from the TOC Q channel subcode data.
+    // -If a track number past the last track is specified, output reg 0x11 is set to 0x00 and 0x12-0x14 are set to 0xFF.
     // -Value 0xA0 returns the first valid track number in output reg 0x12, and the last valid track number in 0x13. Used by bios.
     // -Value 0xA1 appears to returns the start of leadout time in the min/sec/frame regs
     // -Values 0xB0 and 0xB1 appear identical to 0xAx counterparts for a SegaCD game, but must be able to be something different.
     // -All these values are used by the bios
+    // -Note that this all uses the redbook digital track information, including on LDs. If an LD has no digital track, 0xA0/0xB0
+    //  return 0x01 for the first track and 0x99 for the last, and 0x00 for all outputs in 0xA1/0xB1.
+    // -Despite notes below, this is a BCD value, it's just that 0x0A=10, 0x0B=11, etc, so 0x0A and 0x10 will give the same output.
+    // -Data reported for TOC information is retained even when the disc is stopped (drive state 0x02) until it is unloaded (0x01).
+    // -Data reported for currently playing track info is also retained even when stopped like the TOC information.
     // ##OLD## Before 2025
     // ##NOTE##
-    // -Only track numbers 0x01-0x99 are valid. Note that although the odd end position of 0x99, all hex values from 0x01-0x99
-    //  are valid, this isn't a BCD value.
     // -If an invalid track number is selected (>0x99), output registers 0x11-0x14 actually report internal data instead. It appears
     //  that somewhere, there's an internal data buffer, which the TOC information is loaded into. This isn't the only info in this
     //  buffer however. Upper register values have been observed to contain the internal state of data buffers which are directed to
@@ -972,21 +1207,171 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     //  timers of some kind). The correct content for these upper register values will take quite awhile to map out.
     // -Entering a value of 0xFF returns the exact same data as a value of 0x00. This may be because the actual current counter data
     //  is stored in the internal memory at this location, rather than this being a properly supported value.
-    // -Testing under CD mode has confirmed this is a BCD value. Entry 0x0A was same as 0x10, 0x0B as 0x11, etc.
     // ##TODO## Document the internal upper register values accessed in this data block
     selectedTrackInfo = (data < 0x99 ? BCD::decode(data) : (u8)data);
     break;
   case 0x06: {
+    //##NEW## 2025
     //         --------------------------------- (Buffered in $5936)
-    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x06-0x0B seem related to seeking and reading. See 0x369E (CDBIOS_ROMSEEK) and 0x359A (CDBIOS_ROMREAD).
-    // Reg 0x06|-------------------------------| ##NOTE## Related to reg 0x0A? See 0x2960 and 0x295E.
+    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x06|-------------------------------|
+    // 0xFDFE4D|RP | -   -   -   - |TF |  SM   |
+    //         ---------------------------------
+    //SM - Seek Mode: (Defaults to 0x1, Saved state reset when disc stopped/drive state 0x03)
+    //	0x0 - No change (use last set seek mode)
+    //	0x1 - Seek to track relative
+    //	0x2 - Seek to absolute
+    //	0x3 - Set stop point
+    //TF - Time Format: (Defaults to 0x1, Saved state reset when disc stopped/drive state 0x03)
+    //RP - Repeat:
+    //	0x0 - Stop when stop point reached and clear stop point.
+    //	0x1 - Trigger seek (last successfully latched) when stop point reached and don't clear stop point.
+    //
+    //
+    //Seek mode 4D/reg 0x06:
+    //-Seeking is performed even if jumping directly from state 0x01 to 0x25.
+    //-Seek mode and targets are latched! They do not use the live register state from input regs 0x06-0x0B. If you do a seek to track 0x02 for example with seek mode 0x01 or 0x02, then change to seek mode 0x03 which doesn't trigger a seek, then switch to 0x05 then back to 0x25, the player will trigger the previously set seek to track 0x02 with the latched seek mode that was applied, even though the input regs now say something else entirely.
+    //
+    //##NOTE##
+    //-Writing to the seek registers may cause immediate seeking, but it will NOT resume from a pause state. If the player has paused by hitting a stop point, it will stay stopped after modifying the seek registers and the player seeking to the target location. Unlike modifying the seek registers though, writing to reg 0x02 to set the mechanical drive state to something else (IE, 0x26 or 0x07 then back to 0x25) will cause a seek and playback to resume. Changing to 0x05 however will NOT cause a seek and a resume, the seek needs to be triggered to cause the resume.
+    //
+    //-0x00/0x04: Seek to track no
+    //	CD:
+    //	-Sets output reg 0x09 U4 (operationErrorFlag1) and U0 (seekError) when used while a CD is playing
+    //	-Errors when a CD is loaded are set even when seeking is disabled (45=0x05)
+    //	-Does NOT perform a seek immediately when the seek mode is set to this value
+    //	-Seeking DOES NOT happen instantly when any of the input regs 0x07-0x0B are written to
+    //	CAV LD (no CDD):
+    //	-Just seeks to the start of the target video track indicated by input reg 0x07. Other registers do nothing.
+    //	-If the target track no is invalid (past the end of the track count), sets output reg 0x09 U4 (operationErrorFlag1) and U0 (seek Error) without attempting seeking or interrupting playback.
+    //	CAV LD (with CDD):
+    //	-Same as CAV LD no CDD.
+    //	-Setting target track 0x00 does perform a seek and works the same as track 0x01. May be the same for CD and no CDD, untested.
+    //	CLV LD:
+    //	-We've actually confirmed that this sets output reg 0x09 U4 (operationErrorFlag1) and U0 (seekError) always, regardless of the current drive state, or whether seeking is enabled or not. Well, not when the drive state is changed to 0x05 or 0x25, that will perform the seek to chapter. Rather, when the seek mode is changed to 0x00 or 0x04, or any of the following regs 0x07-0x0B are written to when seek mode is 0x00 or 0x04, reg 0x09 will be set to 0x11.
+    //	-As per the above, only chapter seeking works. No effect from other regs.
+    //	-##FIX## 0x04 just worked with seeking to a start time from a track beginning!
+    //	-Maybe it picks up the last valid seek point?
+    //	-Correction to above: Chapter 0x00 is the same as seeking to the FIRST chapter. On a multi-disc setup the first chapter number may not be 0.
+    //	-Additionally, if seeking is enabled, and a valid seek target is not set for seeking to with this mode, when trying to transition from drive state 0x04 to 0x05, the attempt will fail with output reg 0x09 set to 0x11, and the player will remain paused. Actually, this only happens if the drive has previously been at state 0x04 or above, with the TOC loaded. If you attempt this from a drive state of 0x01 for example, or a drive state of 0x03 or less when the TOC has never been loaded, the attempt to play will succeed, the drive will transition to state 0x05, but it will play from the beginning.
+    //	-Ok, to be clear, under CLV LD, there are definitely two different modes here:
+    //	-0x04: Seek to absolute time
+    //	-Wait, this is also wrong. What 0x00 and 0x04 do is act as the last valid seek target. They do not change the current seek mode at all.
+    //	-Note that 
+    //	-The following input regs 0x07-0x0B will be applied when the seek is performed based on their current state, so if we last seeked to a given time, then we disable seeking, switch to mode 0x00 or 0x04 and change the target time, then perform seeking, the new time will be used, not the previous one.
+    //	-This means the initial seek mode is 0x01 or 0x05, to perform track based seeking.
+    //	-Now we're back to not being able to reproduce this properly
+    //
+    //-0x01/0x05: Seek to track relative time
+    //	CD:
+    //	-Will perform a seek to start of indicated CD track number, plus the relative time within the track.
+    //	-Does NOT perform a seek immediately when the seek mode is set to this value
+    //	-Seeking happens instantly when any of the input regs 0x07-0x0B are written to
+    //	-Reg 0x08 has no effect on the seek, but writing to it will still trigger seeking.
+    //	-Sets output reg 0x09 U4 (operationErrorFlag1) and U0 (seekError) when an invalid track number is given, and seeking is currently enabled. No effect if it is disabled.
+    //	-If the target time is invalid (past the end of the target track), sets output reg 0x09 U4 (operationErrorFlag1) and U0 (seekError) without attempting seeking or interrupting playback.
+    //	CAV LD (no CDD):
+    //	-Seeks to the beginning of the target video track.
+    //	-Input regs 0x07-0x0B trigger seeking when written, but have no effect.
+    //	CAV LD (with CDD):
+    //	-0x01 and 0x05 behave differently!
+    //		0x01:
+    //		-Seeks to a relative time from the beginning of the digital audio track.
+    //		-Input regs 0x09-0x0B are MM:SS:FF time for the CD tracks, IE, 75 frames per second.
+    //		-Input reg 0x08 triggers seeking but has no effect
+    //		0x05:
+    //		-Like CAV LD without CDD, seeks to start of target track, no effect from other regs.
+    //	CLV LD (with CDD):
+    //	-0x01 as per CAV LD (with CDD), seeks based on CD tracks using MM:SS:FF from regs 0x09-0x0B, no effect from 0x08.
+    //	-0x05 as per CAV LD (with CDD) and CAV LD (no CDD), seeks to start of track only.
+    //	-Note that the relative time CAN be past the end of the track, it will just seek to the target location however far ahead it is.
+    //
+    //-0x02/0x06: Seek to absolute time
+    //	CD:
+    //	-Will perform a seek to indicated absolute CD time
+    //	-Performs seek immediately when the seek mode is set to this value, unlike other modes.
+    //	-Seeking happens instantly when any of the input regs 0x07-0x0B are written to
+    //	-Regs 0x07 and 0x08 have no effect on the seek, but writing to them will still trigger seeking.
+    //	-If the target time is invalid (past the end of the disc), sets output reg 0x09 U4 (operationErrorFlag1) and U0 (seekError) without attempting seeking or interrupting playback.
+    //	CAV LD (no CDD):
+    //	-Seeks to an absolute video time (even though this is CAV) in MM:SS:FF. Reg 0x08 with hours doesn't have any effect, although writing to it does trigger seeking immediately.
+    //	-Input regs 0x07-0x0B trigger seeking when written, but have no effect.
+    //	-If the target time is invalid (past the end of the disc), player attempts to perform the seek, stops at the start of lead-out, and sets output reg 0x09 to 0x07.
+    //	-0x02 and 0x06 behave differently!
+    //		0x02: Seek to absolute video time
+    //		0x06: Seek to absolute video frame
+    //	-Behaviour is otherwise the same as described above. Reg 0x0B "frames" register does nothing, but performs seek when written to.
+    //	CAV LD (with CDD):
+    //	-0x02: Seeks based on absolute CD time
+    //	-0x06: Seeks based on absolute video frame
+    //	CLV LD (with CDD):
+    //	-0x02: Seeks based on absolute CD time
+    //	-0x06: Seeks based on absolute video time
+    //
+    //-0x03/0x07: Set stop point
+    //	-Latches the following regs 0x07-0x0B to set an automatic stop point
+    //	-If a chapter number is set, that applies. If it is 0, the following MM:SS:FF values apply.
+    //	-If chapter number is 0xFF, all output regs are driven to 0xFF, and output reg 0x1F is driven to 0x01.
+    //	-If chapter number is 0x00, output reg is driven to 0xFF.
+    //	-No seeking triggered when this mode is set, just flags a stop point
+    //	-Latches the values immediately when the seek mode is set to this value, unlike other modes.
+    //	-Latches stop point register values live, IE, changing the regs immediately updates.
+    //	-Latching works even with seeking disabled (45=0x05)
+    //	-Latching only works when drive state is 0x04 or higher, otherwise ignored.
+    //	-Latching triggers when drive state changed from below 0x04 to 0x04 or higher.
+    //	CAV LD (no CDD):
+    //	-Sets stop point as a frame number
+    //	-If a chapter number is set, that applies instead, and frame number is ignored.
+    //	-Definitely works the same on 0x03/0x07. No MM:SS:FF stop point here.
+    //	-"Frames" field is ignored, and its output is driven to 0x00.
+    //	CAV LD (with CDD):
+    //	-Exactly the same as no CDD
+    //	CLV LD (with CDD):
+    //	-Other behaviour the same as above, except that time is HH:MM:SS:FF based on video time.
+    //	-Definitely no difference between 0x03/0x07.
+
+    // Update the current seek mode
+    bool seekModeUpdated = false;
+    auto targetSeekMode = data.bit(0, 1);
+    if (((targetSeekMode == 1) || (targetSeekMode == 2)) && (currentSeekMode != targetSeekMode)) {
+      currentSeekMode = targetSeekMode;
+      seekModeUpdated = true;
+    }
+
+    // Update the current seek mode time format
+    auto targetSeekModeTimeFormat = data.bit(2);
+    if (((targetSeekMode == 1) || (targetSeekMode == 2)) && (currentSeekModeTimeFormat != targetSeekModeTimeFormat)) {
+      currentSeekModeTimeFormat = targetSeekModeTimeFormat;
+      seekModeUpdated = true;
+    }
+
+    // Either update the stop point or trigger a seek if required
+    if (targetSeekMode == 3) {
+      updateStopPointWithCurrentState();
+    } else if (seekEnabled && (currentDriveState = 0x5) && (((currentSeekMode == 1) && (currentSeekModeTimeFormat == 1)) || (currentSeekMode == 2))) {
+      if (latchSeekTargetFromCurrentState()) {
+        performSeekWithLatchedState();
+      }
+    }
+
+    break;}
+
+    //##OLD##
+    //         --------------------------------- (Buffered in $5936)
+    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x06|-------------------------------|
     // 0xFDFE4D| -   -   -   -   - |    SM     |
     //         ---------------------------------
     //##NEW## 2025
     // -Seeking is only performed if the current mechanical drive state is exactly 0x5. Invalid modes like 0x6 and 0x8 do not perform
-    // seeking when writing to the SM value above, or when changing the following seek target registers. Likewie, the valid drive state
+    // seeking when writing to the SM value above, or when changing the following seek target registers. Likewise, the valid drive state
     // of 0x7, which previously seemed the same as play mode, now has a purpose. Under this mode seeking is not active either, however
     // the player is still in a valid play mode.
+    // -Another pecularity is that seeking is only performed if the target drive state as specified in this input register is exactly
+    // 0x05. This was hinted above with the description of drive mode 0x07, but not explicit. Setting drive mode 0x07 is actually a
+    // command more than a mode, and doesn't change the reported current drive mode in output register 0x06. Likewise, swiching from
+    // drive mode 0x05 to 0x04 during playback doesn't actually change current drive mode, but seeking also doesn't work if this input
+    // register has the target drive state set to 0x04 either, even if the disc is currently actively playing.
     //##OLD## Before 2025
     // SM: Seek mode
     //       -0x7: ?? Seems the same as 0x03
@@ -1052,34 +1437,48 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     //  when these bits are both set, and U0 then remains set from that point on, even if the issue is corrected. It is not currently
     //  known if this bit can be cleared after it has been set.
 
-    // Update the current seek mode
-    auto seekMode = data.bit(0, 2);
-    if (currentSeekMode != seekMode) {
-      currentSeekMode = seekMode;
-      if (seekEnabled && (currentDriveState = 0x5) && ((currentSeekMode == 2) || (currentSeekMode == 6))) {
-        performSeekWithCurrentState();
-      }
-    }
-    break;}
+    //// Update the current seek mode
+    //auto seekMode = data.bit(0, 2);
+    //if (currentSeekMode != seekMode) {
+    //  currentSeekMode = seekMode;
+    //  if (seekEnabled && (currentDriveState = 0x5) && ((currentSeekMode == 2) || (currentSeekMode == 6))) {
+    //    performSeekWithCurrentState();
+    //  }
+    //}
+    //break;}
   case 0x07:
     //         --------------------------------- (Buffered in $5937 (edit buffer)/ and $5057 (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x07|-------------------------------|
     // 0xFDFE4F|           Track No            |
     //         ---------------------------------
+    //##NEW## 2025
+    // Track No: When a CD is loaded, seeking to track number 0x00 is invalid, and flags both U0 and U4 of output reg 0x09 if
+    //           attempted, without affecting current playback.
+    // -In seek mode 0x03, sets the chapter number to stop at when reached. If this is set to 0x00, the following
+    //  frame/time registers will set a time-based stop point instead, and the output register will be set to 0xFF. If
+    //  this is set to 0xFF, latching a stop point is disabled, and all stop point output registers will be driven to
+    //  0xFF. Interestingly however, output register 0x1F will still be driven to 0x01 when this is done, I suppose to
+    //  confirm the change has taken effect? This means that flag is probably a "stop point processed" flag.
+
+    //##OLD## Before 2025
     // Track No: Requested track number for seeking. Note that 0x01 is the first track on the disk, 0x02 is the second, etc.
     // ##NOTE##
     // -Seek sets this to 0x00
     // -In CD mode, this was observed to be a BCD value. A value of 0x0A was the same as 0x10, 0x0B as 0x11, etc.
-    if (seekEnabled && (currentDriveState = 0x5) && ((currentSeekMode == 1) || (currentSeekMode == 2) || (currentSeekMode == 5) || (currentSeekMode == 6))) {
-      performSeekWithCurrentState();
+    if (inputRegs[0x06].bit(0, 1) == 3) {
+      updateStopPointWithCurrentState();
+    } else if (seekEnabled && (currentDriveState = 0x5) && (((currentSeekMode == 1) && (currentSeekModeTimeFormat == 1)) || (currentSeekMode == 2))) {
+      if (latchSeekTargetFromCurrentState()) {
+        performSeekWithLatchedState();
+      }
     }
     break;
   case 0x08:
     //         --------------------------------- (Buffered in $5938 (edit buffer)/ and $5058 (last written))
-    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x08-0x0B related? See 0x292A.
-    // Reg 0x08|-------------------------------| ##NOTE## Related to reg 0x0C? See 0x2960 and 0x295E.
-    // 0xFDFE51|           SectorNoU           |
+    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x08|-------------------------------|
+    // 0xFDFE51|        Hours/FrameNoU         |
     //         ---------------------------------
     // SectorNoU: Upper data of seek sector number, in BCD format. The seek sector number is an actual target sector
     //            location. Data is stored in BCD form, with each nybble running from 0x0-0x9. If any digit exceeds
@@ -1095,15 +1494,19 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     // -The start of the video track in space berserker is at location 0x3661 in these units
     // -The ROMREAD bios routine sets this register to 0xFF, and register 0x07 to 0x00. The reason this register is set to
     //  0xFF is unknown. It appears to have no effect.
-    if (seekEnabled && (currentDriveState = 0x5) && ((currentSeekMode == 1) || (currentSeekMode == 2) || (currentSeekMode == 5) || (currentSeekMode == 6))) {
-      performSeekWithCurrentState();
+    if (inputRegs[0x06].bit(0, 1) == 3) {
+      updateStopPointWithCurrentState();
+    } else if (seekEnabled && (currentDriveState = 0x5) && (((currentSeekMode == 1) && (currentSeekModeTimeFormat == 1)) || (currentSeekMode == 2))) {
+      if (latchSeekTargetFromCurrentState()) {
+        performSeekWithLatchedState();
+      }
     }
     break;
   case 0x09:
     //         --------------------------------- (Buffered in $5939 (edit buffer)/ and $5059 (last written))
-    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x08-0x0B related? See 0x292A.
+    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x09|-------------------------------|
-    // 0xFDFE53|       Minutes/SectorNoM       |
+    // 0xFDFE53|       Minutes/FrameNoM        |
     //         ---------------------------------
     // Minutes: Requested seek position for minutes, in BCD format.
     //          -If the lower digit of this number exceeds its maximum bounds (0x0-0x9), the remainder is carried
@@ -1115,15 +1518,19 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     // ##NOTE##
     // -When reg 0x06 U20=2, allowable range is 0x00-0x2B, 0x30-0x31, 0x9B-0x9F, 0xA1-0xCB, 0xD0-0xD1. No other
     //  related registers appear to have input value restrictions.
-    if (seekEnabled && (currentDriveState = 0x5) && ((currentSeekMode == 1) || (currentSeekMode == 2) || (currentSeekMode == 5) || (currentSeekMode == 6))) {
-      performSeekWithCurrentState();
+    if (inputRegs[0x06].bit(0, 1) == 3) {
+      updateStopPointWithCurrentState();
+    } else if (seekEnabled && (currentDriveState = 0x5) && (((currentSeekMode == 1) && (currentSeekModeTimeFormat == 1)) || (currentSeekMode == 2))) {
+      if (latchSeekTargetFromCurrentState()) {
+        performSeekWithLatchedState();
+      }
     }
     break;
   case 0x0A:
     //         --------------------------------- (Buffered in $593A (edit buffer)/ and $505A (last written))
-    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x08-0x0B related? See 0x292A.
-    // Reg 0x0A|-------------------------------| ##NOTE## Related to reg 0x0E? See 0x2960 and 0x295E.
-    // 0xFDFE55|       Seconds/SectorNoL       |
+    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+    // Reg 0x0A|-------------------------------|
+    // 0xFDFE55|       Seconds/FrameNoL        |
     //         ---------------------------------
     // Seconds: Requested seek position for seconds, in BCD format.
     //          -If the lower digit of this number exceeds its maximum bounds (0x0-0x9), the remainder is carried
@@ -1134,13 +1541,17 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     //          -In CD mode, invalid values are handled differently. If any digit exceeds the BCD bounds, it is
     //           treated as 0, and a carry is generated into the higher digit.
     // SectorNoL: Lower data of seek sector number, in BCD format. See input register 0x08.
-    if (seekEnabled && (currentDriveState = 0x5) && ((currentSeekMode == 1) || (currentSeekMode == 2) || (currentSeekMode == 5) || (currentSeekMode == 6))) {
-      performSeekWithCurrentState();
+    if (inputRegs[0x06].bit(0, 1) == 3) {
+      updateStopPointWithCurrentState();
+    } else if (seekEnabled && (currentDriveState = 0x5) && (((currentSeekMode == 1) && (currentSeekModeTimeFormat == 1)) || (currentSeekMode == 2))) {
+      if (latchSeekTargetFromCurrentState()) {
+        performSeekWithLatchedState();
+      }
     }
     break;
   case 0x0B:
     //         --------------------------------- (Buffered in $593B (edit buffer)/ and $505B (last written))
-    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | ##NOTE## Regs 0x08-0x0B related? See 0x292A.
+    // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x0B|-------------------------------|
     // 0xFDFE57|            Frames             |
     //         ---------------------------------
@@ -1154,19 +1565,20 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
     //          if this value is 0x00, the frame 0x01 will be requested.
     //         -In CD mode, invalid values are handled differently. If any digit exceeds the BCD bounds, it is
     //          treated as 0, and a carry is generated into the higher digit.
-    if (seekEnabled && (currentDriveState = 0x5) && ((currentSeekMode == 1) || (currentSeekMode == 2) || (currentSeekMode == 5) || (currentSeekMode == 6))) {
-      performSeekWithCurrentState();
+    if (inputRegs[0x06].bit(0, 1) == 3) {
+      updateStopPointWithCurrentState();
+    } else if (seekEnabled && (currentDriveState = 0x5) && (((currentSeekMode == 1) && (currentSeekModeTimeFormat == 1)) || (currentSeekMode == 2))) {
+      if (latchSeekTargetFromCurrentState()) {
+        performSeekWithLatchedState();
+      }
     }
     break;
   case 0x0C:
     //         --------------------------------- (Buffered in $593C (edit buffer)/ and $505C (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x0C|-------------------------------|
-    // 0xFDFE59|PSC|*U6|HLD|*U4|*U3|VD |DM |*U0|
+    // 0xFDFE59|PSC| - |HLD|*U4|*U3|VD |DM |*U0|
     //         ---------------------------------
-    // ##NEW## 2025
-    // *U6: This was seen to be set when getting the MegaLD bios working. From the CD player, when chapter skip
-    //      was getting stuck in "Search" mode, pressing pause would do 0x0C=0x0C, rather than the usual 0x02=0x15.
     // ##OLD## Before 2025
     // PSC: Picture Stop Cancel. If this bit is set, the LD hardware is allowed to seek past
     //      picture stop codes in the LD video stream. If this bit is not set, when a picture stop
@@ -1473,45 +1885,229 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data) -> void
   inputRegs[regNum] = data;
 }
 
-auto MCD::LD::performSeekWithCurrentState() -> void {
-  //##TODO## Respect the immediate vs delayed seek modes here
-  //##TODO## Fully reverse engineer, document, and implement the 0x3 and 0x7 modes which implement automatic player stop
-  //functionality.
-  switch (currentSeekMode) {
-  case 0x00: // Seek to sector
-  case 0x04: // Unknown, but so far seems same as sector mode.
-  case 0x06: // Seek to sector immediate
-    if (inputRegs[0x07] != 0) {
-      //##TODO## Handle peculiarities of invalid BCD value decoding, including differences between LDs and CDs.
-      s32 lba = (BCD::decode(inputRegs[0x08]) * 100) + BCD::decode(inputRegs[0x07]);
-      mcd.cdd.seekToSector(lba, targetPauseState);
-      seekPerformedSinceLastFlagsRead = true;
+auto MCD::LD::updateStopPointWithCurrentState() -> void {
+  if (inputRegs[0x07] == 0xFF) {
+    // Clear the stop point
+    outputRegs[0x1A] = 0xFF;
+    outputRegs[0x1B] = 0xFF;
+    outputRegs[0x1C] = 0xFF;
+    outputRegs[0x1D] = 0xFF;
+    outputRegs[0x1E] = 0xFF;
+    outputRegs[0x1F] = 0x01; // Strange as it is, yes, this gets set to 0x01. Probably a hardware bug, really should be 0x00.
+    mcd.cdd.stopPointEnabled = false;
+    debug(unverified, "Disabled stoppoint");
+  } else {
+    // Latch the stop point regs
+    stopPointRegs[(int)SeekPointReg::Chapter] = (inputRegs[0x07] == 0x00) ? (n8)0xFF : inputRegs[0x07];
+    stopPointRegs[(int)SeekPointReg::HoursOrFrameH] = (!mcd.cdd.isDiscLaserdisc() ? 0x00 : (inputRegs[0x08] & 0x0F)); // Only the lower 4 bits of this reg are accepted
+    stopPointRegs[(int)SeekPointReg::MinutesOrFrameM] = inputRegs[0x09];
+    stopPointRegs[(int)SeekPointReg::SecondsOrFrameL] = inputRegs[0x0A];
+    stopPointRegs[(int)SeekPointReg::Frames] = (mcd.cdd.isDiscLaserdisc() && !mcd.cdd.isLaserdiscClv()) ? (n8)0x00 : inputRegs[0x0B];
+    outputRegs[0x1A] = stopPointRegs[(int)SeekPointReg::Chapter];
+    outputRegs[0x1B] = stopPointRegs[(int)SeekPointReg::Frames];
+    outputRegs[0x1C] = stopPointRegs[(int)SeekPointReg::SecondsOrFrameL];
+    outputRegs[0x1D] = stopPointRegs[(int)SeekPointReg::MinutesOrFrameM];
+    outputRegs[0x1E] = stopPointRegs[(int)SeekPointReg::HoursOrFrameH];
+    outputRegs[0x1F] = 0x01;
+
+    // Convert the stop point to an LBA address
+    //##FIX## This is incorrect for LDs. They should be using the actual frame data to set stop points, not the CD track
+    //data.
+    s32 stopLba;
+    if (!mcd.cdd.isDiscLaserdisc()) {
+      // CDs set stop points using MM:SS:FF
+      stopLba = mcd.cdd.lbaFromTime(BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]));
+    } else if (!mcd.cdd.isLaserdiscClv()) {
+      // CAV LDs set stop points using frame numbers
+      s32 frameNumber = ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::HoursOrFrameH]) * 10000) + ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]) * 100) + (s32)BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
+      stopLba = LbaFromFrameNumber(frameNumber);
+    } else {
+      // CLV LDs set stop points using HH:MM:SS:FF
+      //##FIX## This doesn't work for times over an hour
+      stopLba = mcd.cdd.lbaFromTime(BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]), VideoFramesToRedbookFrames(BCD::decode(stopPointRegs[(int)SeekPointReg::Frames])));
     }
-    break;
-  case 0x01: // Seek to relative track time
-    if (inputRegs[0x07] != 0) {
-      mcd.cdd.seekToRelativeTime(BCD::decode(inputRegs[0x07]), BCD::decode(inputRegs[0x09]), BCD::decode(inputRegs[0x0A]), BCD::decode(inputRegs[0x0B]), targetPauseState);
-      seekPerformedSinceLastFlagsRead = true;
-    }
-    break;
-  case 0x02: // Seek to time
-    mcd.cdd.seekToTime(BCD::decode(inputRegs[0x09]), BCD::decode(inputRegs[0x0A]), BCD::decode(inputRegs[0x0B]), targetPauseState);
-    seekPerformedSinceLastFlagsRead = true;
-    break;
-  case 0x03: // Seek to last and stop
-  case 0x07: // Unknown, but so far seems same as seek to last and stop.
-    mcd.cdd.seekToTrack(mcd.cdd.getTrackCount(), true);
-    seekPerformedSinceLastFlagsRead = true;
-    currentPauseState = true;
-    break;
-  case 0x05: // Seek to track
-    mcd.cdd.seekToTrack(BCD::decode(inputRegs[0x07]), targetPauseState);
-    seekPerformedSinceLastFlagsRead = true;
-    break;
+
+    // Apply the stop point to playback control
+    mcd.cdd.targetStopPoint = stopLba;
+    mcd.cdd.stopPointEnabled = true;
+    debug(unverified, "Latched stoppoint: lba:", stopLba, " 0x07=", inputRegs[0x07], " 0x08=", inputRegs[0x08], " 0x09=", inputRegs[0x09], " 0x0A=", inputRegs[0x0A], " 0x0B=", inputRegs[0x0B]);
   }
+}
+
+auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
+  // Reset the error flags before we do anything further
+  operationErrorFlag1 = false;
+  operationErrorFlag2 = false;
+  operationErrorFlag3 = false;
+
+  // If the player isn't in a valid state to accept seek requests, abort any further processing.
+  if (!mcd.cdd.isDiscLoaded() || (currentDriveState <= 0x04) || (targetDriveState != 0x05)) {
+    operationErrorFlag1 = true;
+    operationErrorFlag3 = true;
+    return false;
+  }
+
+  //##TODO## Handle peculiarities of invalid BCD value decoding, including differences between LDs and CDs.
+
+  // Seek to track relative time
+  if (currentSeekMode == 1) {
+    auto targetTrack = inputRegs[0x07];
+    auto targetTrackAsInt = (mcd.cdd.isDiscLaserdisc() && (targetTrack == 0x00)) ? (n8)mcd.cdd.getFirstTrack() : (n8)BCD::decode(targetTrack);
+    if ((targetTrack > 0x99) || (targetTrackAsInt < mcd.cdd.getFirstTrack()) || (targetTrackAsInt > mcd.cdd.getLastTrack())) {
+      operationErrorFlag1 = true;
+      operationErrorFlag3 = true;
+      return false;
+    }
+    bool allowSeekToTime = !mcd.cdd.isDiscLaserdisc() || (!currentSeekModeTimeFormat && mcd.cdd.isLaserdiscDigitalAudioPresent());
+    seekPointRegs[(int)SeekPointReg::Chapter] = targetTrack;
+    seekPointRegs[(int)SeekPointReg::HoursOrFrameH] = 0x00;
+    seekPointRegs[(int)SeekPointReg::MinutesOrFrameM] = (allowSeekToTime ? inputRegs[0x09] : (n8)0x00);
+    seekPointRegs[(int)SeekPointReg::SecondsOrFrameL] = (allowSeekToTime ? inputRegs[0x0A] : (n8)0x00);
+    seekPointRegs[(int)SeekPointReg::Frames] = (allowSeekToTime ? inputRegs[0x0B] : (n8)0x00);
+    activeSeekMode = (u8)SeekMode::SeekToRedbookRelativeTime;
+    debug(unverified, "Latched SeekToRedbookRelativeTime: 0x07=", inputRegs[0x07], " 0x08=", inputRegs[0x08], " 0x09=", inputRegs[0x09], " 0x0A=", inputRegs[0x0A], " 0x0B=", inputRegs[0x0B]);
+  }
+
+  // Seek to absolute time
+  if (currentSeekMode == 2) {
+    //##TODO## Flag an error and don't perform seek if it's past the end of the disc
+
+    // Determine what time format to use. Can be redbook timecode, video timecode, or video frame number. These
+    // conditions below should be mutually exclusive.
+    bool seekToRedbookTimecode = !mcd.cdd.isDiscLaserdisc() || (!currentSeekModeTimeFormat && mcd.cdd.isDiscLaserdisc());
+    bool seekToVideoFrame = mcd.cdd.isDiscLaserdisc() && currentSeekModeTimeFormat && !mcd.cdd.isLaserdiscClv();
+    bool seekToVideoTime = mcd.cdd.isDiscLaserdisc() && ((!mcd.cdd.isLaserdiscClv() && !mcd.cdd.isLaserdiscDigitalAudioPresent()) || (mcd.cdd.isLaserdiscClv() && mcd.cdd.isLaserdiscDigitalAudioPresent()));
+    if (seekToRedbookTimecode) {
+      seekPointRegs[(int)SeekPointReg::Chapter] = 0x00;
+      seekPointRegs[(int)SeekPointReg::HoursOrFrameH] = 0x00;
+      seekPointRegs[(int)SeekPointReg::MinutesOrFrameM] = inputRegs[0x09];
+      seekPointRegs[(int)SeekPointReg::SecondsOrFrameL] = inputRegs[0x0A];
+      seekPointRegs[(int)SeekPointReg::Frames] = inputRegs[0x0B];
+      activeSeekMode = (u8)SeekMode::SeekToRedbookTime;
+      debug(unverified, "Latched SeekToRedbookTime: 0x07=", inputRegs[0x07], " 0x08=", inputRegs[0x08], " 0x09=", inputRegs[0x09], " 0x0A=", inputRegs[0x0A], " 0x0B=", inputRegs[0x0B]);
+    } else if (seekToVideoFrame) {
+      seekPointRegs[(int)SeekPointReg::Chapter] = 0x00;
+      seekPointRegs[(int)SeekPointReg::HoursOrFrameH] = inputRegs[0x08];
+      seekPointRegs[(int)SeekPointReg::MinutesOrFrameM] = inputRegs[0x09];
+      seekPointRegs[(int)SeekPointReg::SecondsOrFrameL] = inputRegs[0x0A];
+      seekPointRegs[(int)SeekPointReg::Frames] = 0x00;
+      activeSeekMode = (u8)SeekMode::SeekToVideoFrame;
+      debug(unverified, "Latched SeekToVideoFrame: 0x07=", inputRegs[0x07], " 0x08=", inputRegs[0x08], " 0x09=", inputRegs[0x09], " 0x0A=", inputRegs[0x0A], " 0x0B=", inputRegs[0x0B]);
+    } else if (seekToVideoTime) {
+      seekPointRegs[(int)SeekPointReg::Chapter] = 0x00;
+      seekPointRegs[(int)SeekPointReg::HoursOrFrameH] = inputRegs[0x08] & 0x0F;
+      seekPointRegs[(int)SeekPointReg::MinutesOrFrameM] = inputRegs[0x09];
+      seekPointRegs[(int)SeekPointReg::SecondsOrFrameL] = inputRegs[0x0A];
+      seekPointRegs[(int)SeekPointReg::Frames] = inputRegs[0x0B];
+      activeSeekMode = (u8)SeekMode::SeekToVideoTime;
+      debug(unverified, "Latched SeekToVideoTime: 0x07=", inputRegs[0x07], " 0x08=", inputRegs[0x08], " 0x09=", inputRegs[0x09], " 0x0A=", inputRegs[0x0A], " 0x0B=", inputRegs[0x0B]);
+    }
+  }
+  return true;
+}
+
+auto MCD::LD::performSeekWithLatchedState() -> void {
+  // Perform the latched seek operation
+  switch ((SeekMode)activeSeekMode) {
+  case SeekMode::SeekToRedbookTime:
+    debug(unverified, "SeekToRedbookTime: ", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !mcd.cdd.reachedStopPoint);
+    mcd.cdd.seekToTime(BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !mcd.cdd.reachedStopPoint);
+    seekPerformedSinceLastFlagsRead = true;
+    break;
+  case SeekMode::SeekToRedbookRelativeTime:
+    debug(unverified, "SeekToRedbookRelativeTime: ", "Chapter:", BCD::decode(seekPointRegs[(int)SeekPointReg::Chapter]), " ", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !mcd.cdd.reachedStopPoint);
+    mcd.cdd.seekToRelativeTime(BCD::decode(seekPointRegs[(int)SeekPointReg::Chapter]), BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !mcd.cdd.reachedStopPoint);
+    seekPerformedSinceLastFlagsRead = true;
+    break;
+  case SeekMode::SeekToVideoFrame: {
+    //##FIX## This should work on the video stream frame numbers
+    s32 frameNumber = ((s32)BCD::decode(seekPointRegs[(int)SeekPointReg::HoursOrFrameH]) * 10000) + ((s32)BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]) * 100) + (s32)BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
+    debug(unverified, "SeekToVideoFrame: ", frameNumber, " paused=", targetPauseState && !mcd.cdd.reachedStopPoint);
+    auto lba = LbaFromFrameNumber(frameNumber);
+    mcd.cdd.seekToSector(lba, targetPauseState && !mcd.cdd.reachedStopPoint);
+    seekPerformedSinceLastFlagsRead = true;
+    break;}
+  case SeekMode::SeekToVideoTime: {
+    //##FIX## This is lossy and will not reliably hit the target exactly
+    //##FIX## We technically ignore hours right now, since CD data doesn't encode this.
+    debug(unverified, "SeekToVideoTime: ", BCD::decode(seekPointRegs[(int)SeekPointReg::HoursOrFrameH]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !mcd.cdd.reachedStopPoint);
+    auto redbookFrames = VideoFramesToRedbookFrames(seekPointRegs[(int)SeekPointReg::Frames]);
+    mcd.cdd.seekToTime(BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(redbookFrames), targetPauseState && !mcd.cdd.reachedStopPoint);
+    seekPerformedSinceLastFlagsRead = true;
+    break; }
+  }
+}
+
+// Note that this is a bit of a hack. It assumes the digital data tracks start precisely at frame 0. This should be the
+// case, but it's technically not guaranteed. In a final implementation, we should be decoding the frame numbers
+// straight from the VBI coded data from the currently displayed frame, that way we'll know that we're actually showing
+// the exact intended frames. This functions to get us started though, in the absence of actual video data right now.
+auto MCD::LD::frameNumberFromLba(s32 lba) -> s32 {
+  // If we're in the lead-in, return 0.
+  if (lba < 0) {
+    return 0;
+  }
+
+  // Turn the lba sector number into a frame number. Since there are 30 frames of video per second, and 75 sectors of CD
+  // data per second, this will work well enough.
+  auto currentFrame = (s32)(((double)lba / 75.0) * 30.0);
+  return currentFrame;
+}
+
+auto MCD::LD::LbaFromFrameNumber(s32 frameNumber) -> s32 {
+  auto lba = (s32)(((double)frameNumber / 30.0) * 75.0);
+  return lba;
+}
+
+auto MCD::LD::RedbookFramesToVideoFrames(u8 frames) -> u8 {
+  auto videoFrames = (u8)(((double)frames / 75.0) * 30.0);
+  return videoFrames;
+}
+
+auto MCD::LD::VideoFramesToRedbookFrames(u8 frames) -> u8 {
+  auto redbookFrames = (u8)(((double)frames / 30.0) * 75.0);
+  return redbookFrames;
 }
 
 auto MCD::LD::power(bool reset) -> void {
   // Note we currently rely on our reset call happening after the cdd reset to get this to work
   mcd.cdd.hostClockEnable = true;
+
+  // Zero all our registers
+  for (auto& data : inputRegs) data = 0x0;
+  for (auto& data : inputFrozenRegs) data = 0x0;
+  for (auto& data : outputRegs) data = 0x0;
+  for (auto& data : outputFrozenRegs) data = 0x0;
+  areInputRegsFrozen = false;
+  areOutputRegsFrozen = false;
+  operationErrorFlag1 = false;
+  operationErrorFlag2 = false;
+  operationErrorFlag3 = false;
+  seekEnabled = false;
+  currentSeekMode = 0x0;
+  currentSeekModeTimeFormat = 0;
+  currentSeekModeRepeat = false;
+  for (auto& data : stopPointRegs) data = 0x0;
+  reachedStopPointPreviously = false;
+  activeSeekMode = 0x0;
+  currentPlaybackMode = 0x0;
+  currentPlaybackSpeed = 0x0;
+  currentPlaybackDirection = 0;
+  for (auto& data : seekPointRegs) data = 0x0;
+  targetDriveState = 0x0;
+  currentDriveState = 0x0;
+  targetPauseState = false;
+  currentPauseState = false;
+  seekPerformedSinceLastFlagsRead = false;
+  driveStateChangeDelayCounter = 0x0;
+  selectedTrackInfo = 0x0;
+  currentMdGraphicsFader = 0x0;
+  currentDigitalAudioFader = 0x0;
+  digitalAudioRightExclusive = false;
+  digitalAudioLeftExclusive = false;
+
+  // Set the few registers that start with initial values
+  currentDriveState = 0x02; // 0x02 = CD door closed
+  targetDriveState = currentDriveState;
+  currentMdGraphicsFader = 0x3F;
 }

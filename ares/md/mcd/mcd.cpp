@@ -1,4 +1,6 @@
 #include <md/md.hpp>
+#include <string.h>
+#include <string>
 
 namespace ares::MegaDrive {
 
