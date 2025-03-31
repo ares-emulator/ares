@@ -35,15 +35,32 @@ auto MegaLD::save(string location) -> bool {
 }
 
 auto MegaLD::analyze(string location) -> string {
-  auto sector = readDataSectorCUE(location, 0);
-  if(!sector) return CompactDisc::manifestAudio(location);
+  vector<u8> sector;
 
-  if(memory::compare(sector.data(), "SEGADISCSYSTEM  ", 16)) {
-    return CompactDisc::manifestAudio(location);
+  if(location.iendsWith(".cue")) {
+      sector = readDataSectorCUE(location, 0);
+  } else if (location.iendsWith(".chd")) {
+      sector = readDataSectorCHD(location, 0);
   }
 
+  if(!sector || memory::compare(sector.data(), "SEGA", 4))
+    return CompactDisc::manifestAudio(location);
+
+  vector<string> regions;
+  if(!memory::compare(sector.data()+4, "DISCSYSTEM  ", 12)
+  || !memory::compare(sector.data()+4, "BOOTDISC    ", 12)) {
+    //##TODO## Same hash here, need to find reliable detection. Discs may all be multi-region anyway though, need to confirm.
+    if(Hash::CRC32({sector.data()+0x200,  340}).value() == 0xB53fCE8B) // JP boot
+      regions.append("NTSC-J");
+    if(Hash::CRC32({sector.data()+0x200,  340}).value() == 0xB53fCE8B) // US boot
+      regions.append("NTSC-U");
+  }
+  if(!regions) regions.append("NTSC-J","NTSC-U"); // unknown boot
+
+  string serialNumber = slice((const char*)(sector.data() + 0x180), 0, 14).trimRight(" ");
+
   vector<string> devices;
-  string device = slice((const char*)(sector.data() + 0x1a0), 0, 16).trimRight(" ");
+  string device = slice((const char*)(sector.data() + 0x190), 0, 16).trimRight(" ");
   for(auto& id : device) {
     if(id == '0');  //Master System controller
     if(id == '4');  //multitap
@@ -64,35 +81,11 @@ auto MegaLD::analyze(string location) -> string {
     if(id == 'V');  //paddle
   }
 
-  vector<string> regions;
-  string region = slice((const char*)(sector.data() + 0x1f0), 0, 16).trimRight(" ");
-  if(!regions) {
-    if(region == "JAPAN" ) regions.append("NTSC-J");
-    if(region == "EUROPE") regions.append("PAL");
-  }
-  if(!regions) {
-    if(region.find("J")) regions.append("NTSC-J");
-    if(region.find("U")) regions.append("NTSC-U");
-    if(region.find("E")) regions.append("PAL");
-  }
-  if(!regions && region.size() == 1) {
-    maybe<u8> bits;
-    u8 field = region[0];
-    if(field >= '0' && field <= '9') bits = field - '0';
-    if(field >= 'A' && field <= 'F') bits = field - 'A' + 10;
-    if(bits && *bits & 1) regions.append("NTSC-J");  //domestic 60hz
-    if(bits && *bits & 2);                           //domestic 50hz
-    if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
-    if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
-  }
-  if(!regions) {
-    regions.append("NTSC-J", "NTSC-U", "PAL");
-  }
-
   string s;
   s += "game\n";
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
+  s +={"  serial: ", serialNumber, "\n"};
   s +={"  region: ", regions.merge(", "), "\n"};
   if(devices)
   s +={"  device: ", devices.merge(", "), "\n"};

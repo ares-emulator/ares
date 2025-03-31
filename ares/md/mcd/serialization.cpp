@@ -156,6 +156,10 @@ auto MCD::CDD::serialize(serializer& s) -> void {
   s(status);
   s(command);
   s(subcode);
+  s(isDiscMegaLd);
+  s(stopPointEnabled);
+  s(reachedStopPoint);
+  s(targetStopPoint);
 }
 
 auto MCD::LD::serialize(serializer& s) -> void {
@@ -166,13 +170,25 @@ auto MCD::LD::serialize(serializer& s) -> void {
   s(areInputRegsFrozen);
   s(areOutputRegsFrozen);
   s(operationErrorFlag1);
+  s(operationErrorFlag2);
+  s(operationErrorFlag3);
   s(seekEnabled);
   s(currentSeekMode);
+  s(currentSeekModeTimeFormat);
+  s(currentSeekModeRepeat);
+  s(stopPointRegs);
+  s(reachedStopPointPreviously);
+  s(activeSeekMode);
+  s(currentPlaybackMode);
+  s(currentPlaybackSpeed);
+  s(currentPlaybackDirection);
+  s(seekPointRegs);
   s(targetDriveState);
   s(currentDriveState);
   s(targetPauseState);
   s(currentPauseState);
   s(seekPerformedSinceLastFlagsRead);
+  s(driveStateChangeDelayCounter);
   s(selectedTrackInfo);
   s(currentMdGraphicsFader);
   s(currentDigitalAudioFader);

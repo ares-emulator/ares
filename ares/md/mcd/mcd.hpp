@@ -320,12 +320,20 @@ struct MCD : M68000, Thread {
     auto seekToSector(s32 lba, bool startPaused) -> void;
     auto seekToTrack(n7 track, bool startPaused) -> void;
     auto getTrackCount() -> n7;
+    auto getFirstTrack() -> n7;
+    auto getLastTrack() -> n7;
     auto getCurrentTrack() -> n7;
     auto getCurrentSector() -> s32;
     auto getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void;
     auto getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void;
     auto getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void;
     auto getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void;
+    auto lbaFromTime(u8 minute, u8 second, u8 frame) -> s32;
+    auto isTrackAudio(n7 track) -> bool;
+    auto isDiscLoaded() -> bool;
+    auto isDiscLaserdisc() -> bool;
+    auto isLaserdiscClv() -> bool;
+    auto isLaserdiscDigitalAudioPresent() -> bool;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -368,6 +376,10 @@ struct MCD : M68000, Thread {
     n4 status [10];
     n4 command[10];
     n16 subcode[64];
+    n1 isDiscMegaLd;
+    n1 stopPointEnabled;
+    n1 reachedStopPoint;
+    s32 targetStopPoint;
   } cdd;
 
   struct LD {
@@ -378,11 +390,31 @@ struct MCD : M68000, Thread {
     auto write(n24 address, n8 data) -> void;
     auto getOutputRegisterValue(int regNum) -> n8;
     auto processInputRegisterWrite(int regNum, n8 data) -> void;
-    auto performSeekWithCurrentState() -> void;
+    auto latchSeekTargetFromCurrentState() -> bool;
+    auto performSeekWithLatchedState() -> void;
+    auto updateStopPointWithCurrentState() -> void;
+    auto frameNumberFromLba(s32 lba) -> s32;
+    auto LbaFromFrameNumber(s32 frameNumber) -> s32;
+    auto RedbookFramesToVideoFrames(u8 frames) -> u8;
+    auto VideoFramesToRedbookFrames(u8 frames) -> u8;
     auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
+
+    enum class SeekPointReg {
+      Chapter,
+      HoursOrFrameH,
+      MinutesOrFrameM,
+      SecondsOrFrameL,
+      Frames,
+    };
+    enum class SeekMode {
+      SeekToRedbookTime,
+      SeekToRedbookRelativeTime,
+      SeekToVideoFrame,
+      SeekToVideoTime,
+    };
 
     static const size_t inputRegisterCount = 0x20;
     static const size_t outputRegisterCount = 0x20;
@@ -393,13 +425,25 @@ struct MCD : M68000, Thread {
     n1 areInputRegsFrozen;
     n1 areOutputRegsFrozen;
     n1 operationErrorFlag1;
+    n1 operationErrorFlag2;
+    n1 operationErrorFlag3;
     n1 seekEnabled;
     n3 currentSeekMode;
+    n1 currentSeekModeTimeFormat;
+    n1 currentSeekModeRepeat;
+    n8 stopPointRegs[5];
+    n1 reachedStopPointPreviously;
+    u8 activeSeekMode;
+    u4 currentPlaybackMode;
+    u3 currentPlaybackSpeed;
+    u1 currentPlaybackDirection;
+    n8 seekPointRegs[5];
     n8 targetDriveState;
     n8 currentDriveState;
     n1 targetPauseState;
     n1 currentPauseState;
     n1 seekPerformedSinceLastFlagsRead;
+    n8 driveStateChangeDelayCounter;
     n8 selectedTrackInfo;
     n6 currentMdGraphicsFader;
     n8 currentDigitalAudioFader;
