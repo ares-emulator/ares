@@ -98,7 +98,9 @@
 #include <nall/cd.hpp>
 #include <nall/ips.hpp>
 #include <nall/decode/cue.hpp>
+#if defined(ARES_ENABLE_CHD)
 #include <nall/decode/chd.hpp>
+#endif
 #include <nall/decode/wav.hpp>
 #include <nall/dsp/iir/one-pole.hpp>
 #include <nall/dsp/iir/biquad.hpp>

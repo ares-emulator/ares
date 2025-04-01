@@ -1,6 +1,12 @@
 struct PlayStation : CompactDisc {
   auto name() -> string override { return "PlayStation"; }
-  auto extensions() -> vector<string> override { return {"cue", "chd", "exe"}; }
+  auto extensions() -> vector<string> override {
+#if defined(ARES_ENABLE_CHD)
+    return {"cue", "chd", "exe"};
+#else
+    return {"cue", "exe"};
+#endif
+  }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;

@@ -4,55 +4,59 @@ target_include_directories(sljit PUBLIC ../thirdparty)
 target_compile_definitions(sljit PUBLIC SLJIT_HAVE_CONFIG_PRE=1 SLJIT_HAVE_CONFIG_POST=1)
 target_compile_options(sljit PRIVATE $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-conditional-uninitialized>)
 
-# lzma
-add_subdirectory(libchdr/deps/lzma-24.05 EXCLUDE_FROM_ALL)
-list(APPEND CHDR_LIBS lzma)
-list(APPEND CHDR_INCLUDES lzma)
+option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
 
-if(OS_MACOS)
-  option(WITH_SYSTEM_ZLIB "Use system zlib" ON)
-endif()
-# zlib
-if(WITH_SYSTEM_ZLIB)
-  find_package(ZLIB REQUIRED)
-  list(APPEND PLATFORM_LIBS ZLIB::ZLIB)
-else()
-  option(ZLIB_BUILD_EXAMPLES "Enable Zlib Examples" OFF)
-  add_subdirectory(libchdr/deps/zlib-1.3.1 EXCLUDE_FROM_ALL)
-  set_target_properties(
-    zlibstatic
-    PROPERTIES POSITION_INDEPENDENT_CODE ON FOLDER thirdparty PREFIX ""
+if(ARES_ENABLE_CHD)
+  # lzma
+  add_subdirectory(libchdr/deps/lzma-24.05 EXCLUDE_FROM_ALL)
+  list(APPEND CHDR_LIBS lzma)
+  list(APPEND CHDR_INCLUDES lzma)
+
+  if(OS_MACOS)
+    option(WITH_SYSTEM_ZLIB "Use system zlib" ON)
+  endif()
+  # zlib
+  if(WITH_SYSTEM_ZLIB)
+    find_package(ZLIB REQUIRED)
+    list(APPEND PLATFORM_LIBS ZLIB::ZLIB)
+  else()
+    option(ZLIB_BUILD_EXAMPLES "Enable Zlib Examples" OFF)
+    add_subdirectory(libchdr/deps/zlib-1.3.1 EXCLUDE_FROM_ALL)
+    set_target_properties(
+      zlibstatic
+      PROPERTIES POSITION_INDEPENDENT_CODE ON FOLDER thirdparty PREFIX ""
+    )
+    list(APPEND CHDR_LIBS zlibstatic)
+  endif()
+
+  # zstd
+  option(ZSTD_BUILD_SHARED "BUILD SHARED LIBRARIES" OFF)
+  option(ZSTD_BUILD_PROGRAMS "BUILD PROGRAMS" OFF)
+  add_subdirectory(libchdr/deps/zstd-1.5.6/build/cmake EXCLUDE_FROM_ALL)
+  list(APPEND CHDR_LIBS libzstd_static)
+  #--------------------------------------------------
+  # chdr
+  #--------------------------------------------------
+
+  set(
+    CHDR_SOURCES
+    libchdr/src/libchdr_bitstream.c
+    libchdr/src/libchdr_cdrom.c
+    libchdr/src/libchdr_chd.c
+    libchdr/src/libchdr_flac.c
+    libchdr/src/libchdr_huffman.c
   )
-  list(APPEND CHDR_LIBS zlibstatic)
+
+  list(APPEND CHDR_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/libchdr/include)
+
+  add_library(chdr-static STATIC ${CHDR_SOURCES})
+  target_include_directories(chdr-static PUBLIC ${CHDR_INCLUDES} PUBLIC libchdr/include)
+  target_link_libraries(chdr-static PRIVATE ${CHDR_LIBS} ${PLATFORM_LIBS})
+  target_compile_options(
+    chdr-static
+    PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-unreachable-code -Wno-unused-function>
+  )
 endif()
-
-# zstd
-option(ZSTD_BUILD_SHARED "BUILD SHARED LIBRARIES" OFF)
-option(ZSTD_BUILD_PROGRAMS "BUILD PROGRAMS" OFF)
-add_subdirectory(libchdr/deps/zstd-1.5.6/build/cmake EXCLUDE_FROM_ALL)
-list(APPEND CHDR_LIBS libzstd_static)
-#--------------------------------------------------
-# chdr
-#--------------------------------------------------
-
-set(
-  CHDR_SOURCES
-  libchdr/src/libchdr_bitstream.c
-  libchdr/src/libchdr_cdrom.c
-  libchdr/src/libchdr_chd.c
-  libchdr/src/libchdr_flac.c
-  libchdr/src/libchdr_huffman.c
-)
-
-list(APPEND CHDR_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/libchdr/include)
-
-add_library(chdr-static STATIC ${CHDR_SOURCES})
-target_include_directories(chdr-static PUBLIC ${CHDR_INCLUDES} PUBLIC libchdr/include)
-target_link_libraries(chdr-static PRIVATE ${CHDR_LIBS} ${PLATFORM_LIBS})
-target_compile_options(
-  chdr-static
-  PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-unreachable-code -Wno-unused-function>
-)
 
 add_library(
   tzxfile
@@ -100,10 +104,12 @@ target_compile_options(ymfm PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-u
 
 set_target_properties(ymfm PROPERTIES FOLDER thirdparty PREFIX "")
 set_target_properties(tzxfile PROPERTIES FOLDER thirdparty PREFIX "")
-set_target_properties(chdr-static PROPERTIES FOLDER thirdparty PREFIX "")
 set_target_properties(sljit PROPERTIES FOLDER thirdparty PREFIX "")
-if(NOT WITH_SYSTEM_ZLIB)
-  set_target_properties(zlib PROPERTIES FOLDER thirdparty PREFIX "")
+if(ARES_ENABLE_CHD)
+  set_target_properties(chdr-static PROPERTIES FOLDER thirdparty PREFIX "")
+  if(NOT WITH_SYSTEM_ZLIB)
+    set_target_properties(zlib PROPERTIES FOLDER thirdparty PREFIX "")
+  endif()
+  set_target_properties(lzma PROPERTIES FOLDER thirdparty PREFIX "")
+  set_target_properties(libzstd_static PROPERTIES FOLDER thirdparty PREFIX "")
 endif()
-set_target_properties(lzma PROPERTIES FOLDER thirdparty PREFIX "")
-set_target_properties(libzstd_static PROPERTIES FOLDER thirdparty PREFIX "")
