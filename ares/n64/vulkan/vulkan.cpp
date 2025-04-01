@@ -235,7 +235,10 @@ Vulkan::Implementation::Implementation(u8* data, u32 size) {
 
   if(vulkan.internalUpscale > 1) {
     flags |= ::RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;
-    flags |= ::RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
+    //rasky: this is explicitly disabled because we want to make sure we don't
+    // read back the super sampled version, as it can cause artifacts. We want
+    // parallelRDP to also produce a 1x render to use for readbacks.
+    //flags |= ::RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
   }
 
   processor = new ::RDP::CommandProcessor(device, data, 0, size, size / 2, flags);
