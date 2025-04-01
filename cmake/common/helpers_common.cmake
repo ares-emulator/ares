@@ -235,6 +235,17 @@ function(_extract_target_from_link_expression)
         set(${arg_dt_TARGET_VAR} "${gen_library}")
       endif()
     endif()
+  elseif(arg_dt_LIBRARY MATCHES "\\$<LINK_ONLY:[^>]+>")
+    # Non-specific target link expression found. Since no other expressions matched, consider the parameter following
+    # LINK_ONLY to be a CMake target.
+    string(REGEX REPLACE "\\$<LINK_ONLY:([^>]+)>" "\\1" gen_library "${arg_dt_LIBRARY}")
+
+    message(DEBUG "gen_library is ${gen_library}")
+
+    if(TARGET ${gen_library})
+      message(DEBUG "setting arg_dt_TARGET_VAR to ${gen_library}")
+      set(${arg_dt_TARGET_VAR} ${gen_library})
+    endif()
   else()
     # Unknown or unimplemented generator expression found. Abort script run to either add to ignore list or implement
     # detection.

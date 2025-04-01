@@ -3,7 +3,14 @@ add_library(ares::nall ALIAS nall)
 
 include(cmake/sources.cmake)
 
-target_link_libraries(nall PUBLIC sljit chdr-static)
+find_package(Threads REQUIRED)
+target_link_libraries(nall PRIVATE Threads::Threads)
+
+target_link_libraries(nall PUBLIC sljit)
+if(ARES_ENABLE_CHD)
+  target_link_libraries(nall PUBLIC chdr-static)
+  target_compile_definitions(nall PUBLIC ARES_ENABLE_CHD)
+endif()
 target_compile_definitions(nall PUBLIC CMAKE)
 target_compile_options(
   nall
