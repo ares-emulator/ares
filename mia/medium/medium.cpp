@@ -164,6 +164,19 @@ auto CompactDisc::manifestAudio(string location) -> string {
   return manifest;
 }
 
+auto CompactDisc::readDataSector(string pathname, u32 sectorID) -> vector<u8> {
+  if(pathname.iendsWith(".bcd")) {
+    return readDataSectorBCD(pathname, sectorID);
+  }
+  if(pathname.iendsWith(".cue")) {
+    return readDataSectorCUE(pathname, sectorID);
+  }
+  if(pathname.iendsWith(".chd")) {
+    return readDataSectorCHD(pathname, sectorID);
+  }
+  return {};
+}
+
 auto CompactDisc::readDataSectorBCD(string pathname, u32 sectorID) -> vector<u8> {
   auto fp = file::open({pathname, "cd.rom"}, file::mode::read);
   if(!fp) return {};

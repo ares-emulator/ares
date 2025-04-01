@@ -39,11 +39,7 @@ auto MegaCD::save(string location) -> bool {
 auto MegaCD::analyze(string location) -> string {
   vector<u8> sector;
 
-  if(location.iendsWith(".cue")) {
-      sector = readDataSectorCUE(location, 0);
-  } else if (location.iendsWith(".chd")) {
-      sector = readDataSectorCHD(location, 0);
-  }
+  sector = readDataSector(location, 0);
 
   if(!sector || memory::compare(sector.data(), "SEGA", 4))
     return CompactDisc::manifestAudio(location);

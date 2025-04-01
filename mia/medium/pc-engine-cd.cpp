@@ -39,13 +39,8 @@ auto PCEngineCD::save(string location) -> bool {
 auto PCEngineCD::analyze(string location) -> string {
   vector<u8> sectors[2];
 
-  if(location.iendsWith(".cue")) {
-    sectors[0] = readDataSectorCUE(location, 0);  // NEC
-    sectors[1] = readDataSectorCUE(location, 16); // Games Express
-  } else if (location.iendsWith(".chd")) {
-    sectors[0] = readDataSectorCHD(location, 0);  // NEC
-    sectors[1] = readDataSectorCHD(location, 16); // Games Express
-  }
+  sectors[0] = readDataSector(location, 0);
+  sectors[1] = readDataSector(location, 16);
 
   if(!sectors[0] && !sectors[1]) return CompactDisc::manifestAudio(location);
 
