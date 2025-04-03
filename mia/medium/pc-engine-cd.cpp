@@ -1,6 +1,12 @@
 struct PCEngineCD : CompactDisc {
   auto name() -> string override { return "PC Engine CD"; }
-  auto extensions() -> vector<string> override { return {"cue", "chd"}; }
+  auto extensions() -> vector<string> override {
+#if defined(ARES_ENABLE_CHD)
+    return {"cue", "chd"};
+#else
+    return {"cue"};
+#endif
+  }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
@@ -39,13 +45,8 @@ auto PCEngineCD::save(string location) -> bool {
 auto PCEngineCD::analyze(string location) -> string {
   vector<u8> sectors[2];
 
-  if(location.iendsWith(".cue")) {
-    sectors[0] = readDataSectorCUE(location, 0);  // NEC
-    sectors[1] = readDataSectorCUE(location, 16); // Games Express
-  } else if (location.iendsWith(".chd")) {
-    sectors[0] = readDataSectorCHD(location, 0);  // NEC
-    sectors[1] = readDataSectorCHD(location, 16); // Games Express
-  }
+  sectors[0] = readDataSector(location, 0);
+  sectors[1] = readDataSector(location, 16);
 
   if(!sectors[0] && !sectors[1]) return CompactDisc::manifestAudio(location);
 

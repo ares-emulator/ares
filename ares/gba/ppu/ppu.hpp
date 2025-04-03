@@ -307,6 +307,7 @@ private:
 
   bool pramAccessed;
   bool vramAccessedBG;
+  n32  renderingCycle;
 };
 
 extern PPU ppu;

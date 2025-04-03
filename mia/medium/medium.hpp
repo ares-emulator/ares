@@ -19,11 +19,21 @@ struct Cartridge : Medium {
 
 struct CompactDisc : Medium {
   auto type() -> string override { return "Compact Disc"; }
-  auto extensions() -> vector<string> override { return {"cue", "chd"}; }
+  auto extensions() -> vector<string> override {
+#if defined(ARES_ENABLE_CHD)
+    return {"cue", "chd"};
+#else
+    return {"cue"};
+#endif
+  }
   auto manifestAudio(string location) -> string;
+  auto readDataSector(string filename, u32 sectorID) -> vector<u8>;
+private:
   auto readDataSectorBCD(string filename, u32 sectorID) -> vector<u8>;
   auto readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>;
+#if defined(ARES_ENABLE_CHD)
   auto readDataSectorCHD(string filename, u32 sectorID) -> vector<u8>;
+#endif
 };
 
 struct FloppyDisk : Medium {

@@ -104,6 +104,7 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
         settingsWindow.show("Firmware");
         firmwareSettings.select(emulator->name, result.firmwareType, result.firmwareRegion);
       }
+      break;
     default:
       error(errorText);
   }

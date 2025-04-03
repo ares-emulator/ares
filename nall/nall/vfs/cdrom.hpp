@@ -5,7 +5,9 @@
 #include <nall/file.hpp>
 #include <nall/string.hpp>
 #include <nall/decode/cue.hpp>
+#if defined(ARES_ENABLE_CHD)
 #include <nall/decode/chd.hpp>
+#endif
 #include <nall/decode/wav.hpp>
 
 namespace nall::vfs {
@@ -18,7 +20,9 @@ struct cdrom : file {
   static auto open(const string& location) -> shared_pointer<cdrom> {
     auto instance = shared_pointer<cdrom>{new cdrom};
     if(location.iendsWith(".cue") && instance->loadCue(location)) return instance;
+#if defined(ARES_ENABLE_CHD)
     if(location.iendsWith(".chd") && instance->loadChd(location)) return instance;
+#endif
     return {};
   }
 
@@ -184,7 +188,7 @@ private:
 
     return true;
   }
-
+#if defined(ARES_ENABLE_CHD)
   auto loadChd(const string& location) -> bool {
     auto chd = shared_pointer<Decode::CHD>::create();
     if(!chd->load(location)) return false;
@@ -265,6 +269,7 @@ private:
 
     return true;
   }
+#endif
 
 private:
   void loadSub(const string& location, const CD::Session& session) {

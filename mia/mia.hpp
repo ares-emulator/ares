@@ -4,7 +4,9 @@
 #include <nall/vfs.hpp>
 #include <nall/beat/single/apply.hpp>
 #include <nall/decode/cue.hpp>
+#if defined(ARES_ENABLE_CHD)
 #include <nall/decode/chd.hpp>
+#endif
 #include <nall/decode/wav.hpp>
 using namespace nall;
 
