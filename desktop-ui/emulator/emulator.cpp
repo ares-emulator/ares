@@ -25,7 +25,6 @@ auto Emulator::location() -> string {
 }
 
 auto Emulator::locate(const string& location, const string& suffix, const string& path, maybe<string> system) -> string {
-  lock_guard<recursive_mutex> lock(program.programMutex);
   if(!system) system = root->name();
 
   //game path

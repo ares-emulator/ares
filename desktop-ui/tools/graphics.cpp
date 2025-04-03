@@ -7,6 +7,7 @@ auto GraphicsViewer::construct(std::recursive_mutex *programMutexIn) -> void {
   graphicsList.onChange([&] { eventChange(); });
   graphicsView.setAlignment({0.0, 0.0});
   exportButton.setText("Export").onActivate([&] {
+    lock_guard<recursive_mutex> lock(*programMutex);
     eventExport();
   });
   liveOption.setText("Live");
