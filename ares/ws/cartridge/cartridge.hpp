@@ -93,6 +93,7 @@ struct Cartridge : IO, Thread {
 
     n4 command;
     n1 active;
+    n1 ready;
     n4 index;
     n8 fetchedData;
     n15 counter;
