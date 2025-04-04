@@ -159,29 +159,27 @@ struct VideoMetal : VideoDriver, Metal {
   }
 
   auto setShader(string pathname) -> bool override {
-    if (_filterChain != NULL) {
-      _libra.mtl_filter_chain_free(&_filterChain);
-    }
-    
-    if (_preset != NULL) {
-      _libra.preset_free(&_preset);
-    }
-    
-    if(file::exists(pathname)) {
-      if (auto error = _libra.preset_create(pathname.data(), &_preset)) {
-        print(string{"Metal: Failed to load shader: ", pathname, "\n"});
-        _libra.error_print(error);
-        return false;
+    dispatch_async(_renderQueue, ^{
+      if (_filterChain != NULL) {
+        _libra.mtl_filter_chain_free(&_filterChain);
       }
-      
-      if (auto error = _libra.mtl_filter_chain_create(&_preset, _commandQueue, nil, &_filterChain)) {
-        print(string{"Metal: Failed to create filter chain for: ", pathname, "\n"});
-        _libra.error_print(error);
-        return false;
-      };
-    } else {
-      return false;
-    }
+
+      if (_preset != NULL) {
+        _libra.preset_free(&_preset);
+      }
+
+      if(file::exists(pathname)) {
+        if (auto error = _libra.preset_create(pathname.data(), &_preset)) {
+          print(string{"Metal: Failed to load shader: ", pathname, "\n"});
+          _libra.error_print(error);
+        }
+
+        if (auto error = _libra.mtl_filter_chain_create(&_preset, _commandQueue, nil, &_filterChain)) {
+          print(string{"Metal: Failed to create filter chain for: ", pathname, "\n"});
+          _libra.error_print(error);
+        };
+      }
+    });
     return true;
   }
 
@@ -421,9 +419,11 @@ private:
           
           id<CAMetalDrawable> drawable = view.currentDrawable;
           
+          __block VideoMetal &strongSelf = self;
+
           if (@available(macOS 10.15.4, *)) {
             [drawable addPresentedHandler:^(id<MTLDrawable> drawable) {
-             self.drawableWasPresented(drawable);
+             strongSelf.drawableWasPresented(drawable);
              depth--;
              }];
           }
@@ -599,31 +599,35 @@ private:
   }
 
   auto terminate() -> void {
-    _ready = false;
-    
-    _commandQueue = nullptr;
-    _library = nullptr;
-
-    _vertexBuffer = nullptr;
-    for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
-      _sourceTextures[i] = nullptr;
-    }
-    _mtlVertexDescriptor = nullptr;
-    
-    _renderToTextureRenderPassDescriptor = nullptr;
-    _renderTargetTexture = nullptr;
-    _renderToTextureRenderPipeline = nullptr;
-    
-    _drawableRenderPipeline = nullptr;
-    
-    if (_filterChain) {
-      _libra.mtl_filter_chain_free(&_filterChain);
-    }
-    _device = nullptr;
-
-    if (view) {
-      [view removeFromSuperview];
-      view = nil;
+    if(_renderQueue) {
+      dispatch_sync(_renderQueue, ^{
+        _ready = false;
+        
+        _commandQueue = nullptr;
+        _library = nullptr;
+        
+        _vertexBuffer = nullptr;
+        for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
+          _sourceTextures[i] = nullptr;
+        }
+        _mtlVertexDescriptor = nullptr;
+        
+        _renderToTextureRenderPassDescriptor = nullptr;
+        _renderTargetTexture = nullptr;
+        _renderToTextureRenderPipeline = nullptr;
+        
+        _drawableRenderPipeline = nullptr;
+        
+        if (_filterChain) {
+          _libra.mtl_filter_chain_free(&_filterChain);
+        }
+        _device = nullptr;
+        
+        if (view) {
+          [view removeFromSuperview];
+          view = nil;
+        }
+      });
     }
   }
 
