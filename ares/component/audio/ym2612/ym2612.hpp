@@ -108,7 +108,7 @@ protected:
 
       n1 keyOn = 0;
       n1 keyLine = 0;
-      n1 lfoEnable = 0;
+      n1 tremoloEnable = 0;
       n5 keyScale = 0;
       n3 detune = 0;
       n4 multiple = 0;
