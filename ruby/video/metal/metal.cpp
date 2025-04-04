@@ -421,9 +421,11 @@ private:
           
           id<CAMetalDrawable> drawable = view.currentDrawable;
           
+          __block VideoMetal &strongSelf = self;
+
           if (@available(macOS 10.15.4, *)) {
             [drawable addPresentedHandler:^(id<MTLDrawable> drawable) {
-             self.drawableWasPresented(drawable);
+             strongSelf.drawableWasPresented(drawable);
              depth--;
              }];
           }
@@ -599,31 +601,35 @@ private:
   }
 
   auto terminate() -> void {
-    _ready = false;
-    
-    _commandQueue = nullptr;
-    _library = nullptr;
-
-    _vertexBuffer = nullptr;
-    for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
-      _sourceTextures[i] = nullptr;
-    }
-    _mtlVertexDescriptor = nullptr;
-    
-    _renderToTextureRenderPassDescriptor = nullptr;
-    _renderTargetTexture = nullptr;
-    _renderToTextureRenderPipeline = nullptr;
-    
-    _drawableRenderPipeline = nullptr;
-    
-    if (_filterChain) {
-      _libra.mtl_filter_chain_free(&_filterChain);
-    }
-    _device = nullptr;
-
-    if (view) {
-      [view removeFromSuperview];
-      view = nil;
+    if(_renderQueue) {
+      dispatch_sync(_renderQueue, ^{
+        _ready = false;
+        
+        _commandQueue = nullptr;
+        _library = nullptr;
+        
+        _vertexBuffer = nullptr;
+        for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
+          _sourceTextures[i] = nullptr;
+        }
+        _mtlVertexDescriptor = nullptr;
+        
+        _renderToTextureRenderPassDescriptor = nullptr;
+        _renderTargetTexture = nullptr;
+        _renderToTextureRenderPipeline = nullptr;
+        
+        _drawableRenderPipeline = nullptr;
+        
+        if (_filterChain) {
+          _libra.mtl_filter_chain_free(&_filterChain);
+        }
+        _device = nullptr;
+        
+        if (view) {
+          [view removeFromSuperview];
+          view = nil;
+        }
+      });
     }
   }
 
