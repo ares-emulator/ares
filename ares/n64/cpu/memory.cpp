@@ -156,6 +156,15 @@ auto CPU::fetch(PhysAccess access) -> maybe<u32> {
 template<u32 Size>
 auto CPU::read(PhysAccess access) -> maybe<u64> {
   if(!access) return nothing;
+
+  //FIXME: figure out where this should actually go in the pipeline
+  if(scc.watchLo.trapOnRead) {
+    if((access.paddr & ~0b0111) == scc.watchLo.physicalAddress) {
+      exception.watchAddress();
+      return nothing;
+    }
+  }
+
   GDB::server.reportMemRead(access.vaddr, Size);
   if(access.cache) return dcache.read<Size>(access.vaddr, access.paddr);
   return busRead<Size>(access.paddr);
@@ -173,6 +182,15 @@ auto CPU::readDebug(u64 vaddr) -> u8 {
 template<u32 Size>
 auto CPU::write(PhysAccess access, u64 data) -> bool {
   if(!access) return false;
+
+  //FIXME: figure out where this should actually go in the pipeline
+  if(scc.watchLo.trapOnWrite) {
+    if((access.paddr & ~0b0111) == scc.watchLo.physicalAddress) {
+      exception.watchAddress();
+      return false;
+    }
+  }
+
   GDB::server.reportMemWrite(access.vaddr, Size);
   if(access.cache) return dcache.write<Size>(access.vaddr, access.paddr, data), true;
   return busWrite<Size>(access.paddr, data), true;

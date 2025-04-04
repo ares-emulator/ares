@@ -1,8 +1,8 @@
-auto Cartridge::RTC::power(bool reset) -> void {
+auto BOARD::RTC::power(bool reset) -> void {
   if(present) run(!status.bit(7));
 }
 
-auto Cartridge::RTC::load() -> void {
+auto BOARD::RTC::load() -> bool {
   if(auto fp = self.pak->read("save.rtc")) {
     ram.allocate(fp->size());
     ram.load(fp);
@@ -24,32 +24,38 @@ auto Cartridge::RTC::load() -> void {
 
     timestamp = time(0) - timestamp;
     advance(timestamp);
+
+    return true;
   }
+  return false;
 }
 
-auto Cartridge::RTC::save() -> void {
+auto BOARD::RTC::save() -> bool {
   if(auto fp = self.pak->write("save.rtc")) {
     ram.write<Dual>(24, time(0));
     ram.save(fp);
+    return true;
   }
+  return false;
 }
 
-auto Cartridge::RTC::tick(int nsec) -> void {
+auto BOARD::RTC::tick(int nsec) -> void {
   advance(nsec);
   run(true);
 }
 
-auto Cartridge::RTC::run(bool run) -> void {
+auto BOARD::RTC::run(bool run) -> void {
   status.bit(7) = !run;
   queue.remove(Queue::RTC_Tick);
-  if(run) queue.insert(Queue::RTC_Tick, 187'500'000);
+  //FIXME: read the actual system clock instead of hardcoding
+  if(run) queue.insert(Queue::RTC_Tick, 93'750'000 * 2);
 }
 
-auto Cartridge::RTC::running() -> bool {
+auto BOARD::RTC::running() -> bool {
   return !status.bit(7);
 }
 
-auto Cartridge::RTC::advance(int nsec) -> void {
+auto BOARD::RTC::advance(int nsec) -> void {
   auto seconds = BCD::decode(ram.read<Byte>(16));
   auto minutes = BCD::decode(ram.read<Byte>(17));
   auto hours   = BCD::decode(ram.read<Byte>(18) & 0x7f);
@@ -88,7 +94,7 @@ auto Cartridge::RTC::advance(int nsec) -> void {
   ram.write<Byte>(23, BCD::encode(year / 100));
 }
 
-auto Cartridge::RTC::read(u2 block, n8* data) -> void {
+auto BOARD::RTC::read(u2 block, n8* data) -> void {
   data[0] = ram.read<Byte>(block*8 + 0);
   data[1] = ram.read<Byte>(block*8 + 1);
   data[2] = ram.read<Byte>(block*8 + 2);
@@ -99,7 +105,7 @@ auto Cartridge::RTC::read(u2 block, n8* data) -> void {
   data[7] = ram.read<Byte>(block*8 + 7);
 }
 
-auto Cartridge::RTC::write(u2 block, n8* data) -> void {
+auto BOARD::RTC::write(u2 block, n8* data) -> void {
   if (writeLock.bit(block)) return;
   ram.write<Byte>(block*8 + 0, data[0]);
   ram.write<Byte>(block*8 + 1, data[1]);
@@ -116,8 +122,36 @@ auto Cartridge::RTC::write(u2 block, n8* data) -> void {
   }
 }
 
-auto Cartridge::RTC::serialize(serializer& s) -> void {
+auto BOARD::RTC::serialize(serializer& s) -> void {
   s(ram);
   s(status);
   s(writeLock);
+}
+
+auto BOARD::RTC::joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n1 {
+  n1 valid = 0;
+
+  //RTC status
+  if(input[0] == 0x06 && send >= 1 && recv >= 3) {
+    output[0] = 0x00;
+    output[1] = 0x10;
+    output[2] = status;
+    valid = 1;
+  }
+
+  //RTC read
+  if(input[0] == 0x07 && send >= 2 && recv >= 9) {
+    read(input[1], &output[0]);
+    output[8] = status;
+    valid = 1;
+  }
+
+  //RTC write
+  if(input[0] == 0x08 && send >= 10 && recv >= 1) {
+    write(input[1], &input[2]);
+    output[0] = status;
+    valid = 1;
+  }
+
+  return valid;
 }
