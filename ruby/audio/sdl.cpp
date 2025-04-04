@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 struct AudioSDL : AudioDriver {
   AudioSDL& self = *this;
@@ -34,14 +34,14 @@ struct AudioSDL : AudioDriver {
 
   auto clear() -> void override {
     if(!ready()) return;
-    SDL_ClearQueuedAudio(_device);
+    SDL_ClearAudioStream(_stream);
   }
 
   auto output(const f64 samples[]) -> void override {
     if(!ready()) return;
 
     if(self.blocking) {
-      auto bytesRemaining = SDL_GetQueuedAudioSize(_device);
+      auto bytesRemaining = SDL_GetAudioStreamAvailable(_stream);
       while(bytesRemaining > _bufferSize) {
         //wait for audio to drain
         auto bytesToWait = bytesRemaining - _bufferSize;
@@ -49,17 +49,17 @@ struct AudioSDL : AudioDriver {
         auto samplesRemaining = bytesToWait / bytesPerSample;
         auto secondsRemaining = samplesRemaining / frequency;
         usleep(secondsRemaining * 1000000);
-        bytesRemaining = SDL_GetQueuedAudioSize(_device);
+        bytesRemaining = SDL_GetAudioStreamAvailable(_stream);
       }
     }
 
     std::unique_ptr<f32[]> output = std::make_unique<f32[]>(channels);
     for(auto n : range(channels)) output[n] = samples[n];
-    SDL_QueueAudio(_device, &output[0], channels * sizeof(f32));
+    SDL_PutAudioStreamData(_stream, &output[0], channels * sizeof(f32));
   }
 
   auto level() -> f64 override {
-    return SDL_GetQueuedAudioSize(_device) / ((f64)_bufferSize);
+    return SDL_GetAudioStreamAvailable(_stream) / ((f64)_bufferSize);
   }
 
 private:
@@ -72,20 +72,24 @@ private:
 
     SDL_InitSubSystem(SDL_INIT_AUDIO);
 
-    SDL_AudioSpec want{}, have{};
-    want.freq = frequency;
-    want.format = AUDIO_F32SYS;
-    want.channels = 2;
-
+    SDL_AudioSpec spec;
+    spec.format = SDL_AUDIO_F32;
+    spec.channels = 2;
+    spec.freq = frequency;
     auto desired_samples = (latency * frequency) / 1000.0f;
-    want.samples = pow(2, ceil(log2(desired_samples))); // SDL2 requires power-of-two buffer sizes
-
-    _device = SDL_OpenAudioDevice(NULL,0,&want,&have,0);
-    frequency = have.freq;
-    channels = have.channels;
-    bitsPerSample = SDL_AUDIO_BITSIZE(have.format);
-    _bufferSize = have.size;
-    SDL_PauseAudioDevice(_device, 0);
+    string desired_samples_string = (string)desired_samples;
+    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, desired_samples_string);
+    
+    SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+    _device = SDL_GetAudioStreamDevice(stream);
+    SDL_ResumeAudioDevice(_device);
+    _stream = stream;
+    frequency = spec.freq;
+    channels = spec.channels;
+    int bufferFrameSize;
+    SDL_GetAudioDeviceFormat(_device, &spec, &bufferFrameSize);
+    bitsPerSample = SDL_AUDIO_BITSIZE(spec.format);
+    _bufferSize = bufferFrameSize * channels * 4;
 
     _ready = true;
     clear();
@@ -105,5 +109,6 @@ private:
   bool _ready = false;
 
   SDL_AudioDeviceID _device = 0;
+  SDL_AudioStream *_stream;
   u32 _bufferSize = 0;
 };
