@@ -117,9 +117,109 @@ auto Video::setShader(string shader) -> bool {
   return true;
 }
 
-auto Video::refreshRateHint(double refreshRate) -> void {
+auto Video::refreshRateHint(ares::Node::Video::Screen node, double refreshRate) -> void {
   lock_guard<recursive_mutex> lock(mutex);
-  instance->refreshRateHint(refreshRate);
+  instance->refreshRateHint(node, refreshRate);
+}
+
+auto Video::resetPalette(ares::Node::Video::Screen node) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->resetPalette(node);
+}
+
+auto Video::resetSprites(ares::Node::Video::Screen node) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->resetSprites(node);
+}
+
+auto Video::setViewport(ares::Node::Video::Screen node, u32 x, u32 y, u32 width, u32 height) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setViewport(node, x, y, width, height);
+}
+
+auto Video::setOverscan(ares::Node::Video::Screen node, bool overscan) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setOverscan(node, overscan);
+}
+
+auto Video::setSize(ares::Node::Video::Screen node, u32 width, u32 height) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setSize(node, width, height);
+}
+
+auto Video::setScale(ares::Node::Video::Screen node, f64 scaleX, f64 scaleY) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setScale(node, scaleX, scaleY);
+}
+
+auto Video::setAspect(ares::Node::Video::Screen node, f64 aspectX, f64 aspectY) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setAspect(node, aspectX, aspectY);
+}
+
+auto Video::setSaturation(ares::Node::Video::Screen node, f64 saturation) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setSaturation(node, saturation);
+}
+
+auto Video::setGamma(ares::Node::Video::Screen node, f64 gamma) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setGamma(node, gamma);
+}
+
+auto Video::setLuminance(ares::Node::Video::Screen node, f64 luminance) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setLuminance(node, luminance);
+}
+
+auto Video::setFillColor(ares::Node::Video::Screen node, u32 fillColor) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setFillColor(node, fillColor);
+}
+
+auto Video::setColorBleed(ares::Node::Video::Screen node, bool colorBleed) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setColorBleed(node, colorBleed);
+}
+
+auto Video::setColorBleedWidth(ares::Node::Video::Screen node, u32 width) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setColorBleedWidth(node, width);
+}
+
+auto Video::setInterframeBlending(ares::Node::Video::Screen node, bool interframeBlending) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setInterframeBlending(node, interframeBlending);
+}
+
+auto Video::setRotation(ares::Node::Video::Screen node, u32 rotation) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setRotation(node, rotation);
+}
+
+auto Video::setProgressive(ares::Node::Video::Screen node, bool progressiveDouble) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setProgressive(node, progressiveDouble);
+}
+
+auto Video::setInterlace(ares::Node::Video::Screen node, bool interlaceField) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->setInterlace(node, interlaceField);
+}
+
+auto Video::attachSprite(ares::Node::Video::Screen node, ares::Node::Video::Sprite sprite) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->attachSprite(node, sprite);
+}
+
+auto Video::detachSprite(ares::Node::Video::Screen node, ares::Node::Video::Sprite sprite) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->detachSprite(node, sprite);
+}
+
+auto Video::colors(ares::Node::Video::Screen node, u32 colors, function<n64 (n32)> color) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
+  instance->colors(node, colors, color);
 }
 
 //
