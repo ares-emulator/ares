@@ -289,7 +289,10 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
     break;
 
   case range32(0x0020, 0x003f):  //PALMONO
-    pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 0] = data.bit(0,2);
+    // bits 0-2 are zero for palettes 4, 5, 6, 7, 12, 13, 14, 15
+    if((address & 0x9) != 0x8) {
+        pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 0] = data.bit(0,2);
+    }
     pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 1] = data.bit(4,6);
     break;
 
