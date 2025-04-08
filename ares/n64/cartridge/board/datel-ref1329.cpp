@@ -99,7 +99,7 @@ struct DATEL_REF1329 : Interface {
 
   CartridgeSlot slot{"GameShark Cartridge Slot"};
 
-  u8 base;
+  n8 base;
 
   //FIXME: this is definitely not how open-bus should work
   u16 last_read = 0;
@@ -144,7 +144,7 @@ struct DATEL_REF1329 : Interface {
     const u8 bank = address >> 24;
 
     if(bank == base) {
-      return readIO(address & 0x00FFFFFF);
+      return readIO(address);
     }
 
     return slot.cartridge.readHalf(address);
@@ -154,7 +154,7 @@ struct DATEL_REF1329 : Interface {
     const u8 bank = address >> 24;
 
     if(bank == base) {
-      return writeIO(address & 0x00FFFFFF, data);
+      return writeIO(address, data);
     }
 
     return slot.cartridge.writeHalf(address, data);
@@ -199,25 +199,65 @@ struct DATEL_REF1329 : Interface {
     s(firmware);
     s(base);
   }
+
+  auto scramble(n22 address) -> n22 {
+    n22 scrambled = 0;
+
+    if(base.bit(6)) {
+      //no scrambling if base & 0x40
+      scrambled = address;
+    } else if(base.bit(5)) {
+      //secondary scrambling
+      scrambled.bit(0 )    =  address.bit(0 );
+      scrambled.bit(1 )    =  address.bit(1 );
+      scrambled.bit(2 )    =  address.bit(9 );
+      scrambled.bit(3 )    = ~address.bit(10);
+      scrambled.bit(4 )    =  address.bit(4 );
+      scrambled.bit(5 )    =  address.bit(5 );
+      scrambled.bit(6 )    =  address.bit(6 );
+      scrambled.bit(7 )    =  address.bit(7 );
+      scrambled.bit(8 )    =  address.bit(8 );
+      scrambled.bit(9 )    = ~address.bit(3 );
+      scrambled.bit(10)    =  address.bit(2 );
+      scrambled.bit(11,21) =  address.bit(11,21);
+    } else {
+      //primary scrambling
+      scrambled.bit(0 )    =  address.bit(0 );
+      scrambled.bit(1 )    =  address.bit(6 );
+      scrambled.bit(2 )    =  address.bit(9 );
+      scrambled.bit(3 )    =  address.bit(10);
+      scrambled.bit(4 )    =  address.bit(4 );
+      scrambled.bit(5 )    =  address.bit(5 );
+      scrambled.bit(6 )    =  address.bit(1 );
+      scrambled.bit(7 )    =  address.bit(7 );
+      scrambled.bit(8 )    =  address.bit(8 );
+      scrambled.bit(9 )    =  address.bit(3 );
+      scrambled.bit(10)    =  address.bit(2 );
+      scrambled.bit(11,21) =  address.bit(11,21);
+    }
+
+    return scrambled;
+  }
   
-  auto readIO(n24 address) -> u16 {
+  auto readIO(n32 address) -> u16 {
     const u16 unmapped = address & 0xFFFF;
 
     const u4 section = address >> 20;
+    const n24 offset = address & 0x00FFFFFF;
 
     switch(section) {
       case 0: case 1: {
         //boot firmware
-        if(address <= 0x00'003f) {
-          return firmware.read(address);
+        if(offset <= 0x00'003f) {
+          return firmware.read(offset);
         }
-        if(address >= 0x00'0040 && address <= 0x00'0fff) {
+        if(offset >= 0x00'0040 && offset <= 0x00'0fff) {
           //FIXME: haven't actually confirmed this is what happens
           //with base != 0x10
-          return slot.cartridge.readHalf(0x1000'0000 | address);
+          return slot.cartridge.readHalf(address);
         }
-        if(address >= 0x00'1000 && address <= 0x01'ffff) {
-          return firmware.read(address);
+        if(offset >= 0x00'1000 && offset <= 0x01'ffff) {
+          return firmware.read(offset);
         }
         return 0x0000;
       } break;
@@ -229,28 +269,12 @@ struct DATEL_REF1329 : Interface {
 
       case 3: {
         //scrambled firmware access
-        const n22 offset = address & 0x3FFFFE;
-
-        n22 scrambled = 0;
-        scrambled.bit(0 )    = offset.bit(0 );
-        scrambled.bit(1 )    = offset.bit(6 );
-        scrambled.bit(2 )    = offset.bit(9 );
-        scrambled.bit(3 )    = offset.bit(10);
-        scrambled.bit(4 )    = offset.bit(4 );
-        scrambled.bit(5 )    = offset.bit(5 );
-        scrambled.bit(6 )    = offset.bit(1 );
-        scrambled.bit(7 )    = offset.bit(7 );
-        scrambled.bit(8 )    = offset.bit(8 );
-        scrambled.bit(9 )    = offset.bit(3 );
-        scrambled.bit(10)    = offset.bit(2 );
-        scrambled.bit(11,21) = offset.bit(11,21);
-
-        return firmware.read(scrambled);
+        return firmware.read(scramble(offset & 0x3FFFFE));
       } break;
 
       case 4: {
         //registers
-        return readReg(address);
+        return readReg(offset);
       } break;
 
       case 5: {
@@ -270,14 +294,12 @@ struct DATEL_REF1329 : Interface {
 
       case 0xC: case 0xD: {
         //direct firmware access
-        const n22 offset = address & 0x3FFFFE;
-
-        return firmware.read(offset);
+        return firmware.read(offset & 0x3FFFFE);
       } break;
 
       case 0xE: case 0xF: {
-        if(address.bit(1) == 0) {
-          const n21 vaddr = address & 0x1FFFFC;
+        if(offset.bit(1) == 0) {
+          const n21 vaddr = offset & 0x1FFFFC;
 
           n19 eeprom_addr = 0;
           eeprom_addr.bit(0) = vaddr.bit(20);
@@ -291,8 +313,9 @@ struct DATEL_REF1329 : Interface {
     unreachable;
   }
 
-  auto writeIO(n24 address, u16 data) -> void {
+  auto writeIO(n32 address, u16 data) -> void {
     const u4 section = address >> 20;
+    const n24 offset = address & 0x00FFFFFF;
 
     switch(section) {
       case 0: case 1: {
@@ -315,7 +338,7 @@ struct DATEL_REF1329 : Interface {
 
       case 4: {
         //registers
-        return writeReg(address, data);
+        return writeReg(offset, data);
       } break;
 
       case 5: {
@@ -341,8 +364,8 @@ struct DATEL_REF1329 : Interface {
       } break;
 
       case 0xE: case 0xF: {
-        if(address.bit(1) == 0) {
-          const n21 vaddr = address & 0x1FFFFC;
+        if(offset.bit(1) == 0) {
+          const n21 vaddr = offset & 0x1FFFFC;
 
           n19 eeprom_addr = 0;
           eeprom_addr.bit(0) = vaddr.bit(20);
