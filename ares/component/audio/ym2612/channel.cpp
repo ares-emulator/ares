@@ -125,7 +125,7 @@ auto YM2612::Channel::Operator::updatePhase() -> void {
 
 auto YM2612::Channel::Operator::updateLevel() -> void {
   u32 lfo = ym2612.lfo.clock & 0x40 ? ym2612.lfo.clock & 0x3f : ~ym2612.lfo.clock & 0x3f;
-  u32 depth = tremolos[channel.tremolo];
+  u32 depth = tremolos[tremoloEnable * channel.tremolo];
 
   bool invert = ssg.attack != ssg.invert && envelope.state != Release;
   n10 value = ssg.enable && invert ? 0x200 - envelope.value : 0 + envelope.value;
@@ -147,7 +147,7 @@ auto YM2612::Channel::power() -> void {
   for(auto& op : operators) {
     op.keyOn = 0;
     op.keyLine = 0;
-    op.lfoEnable = 0;
+    op.tremoloEnable = 0;
     op.keyScale = 0;
     op.detune = 0;
     op.multiple = 0;

@@ -45,7 +45,7 @@ auto YM2612::Channel::serialize(serializer& s) -> void {
 auto YM2612::Channel::Operator::serialize(serializer& s) -> void {
   s(keyOn);
   s(keyLine);
-  s(lfoEnable);
+  s(tremoloEnable);
   s(keyScale);
   s(detune);
   s(multiple);

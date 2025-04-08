@@ -121,10 +121,10 @@ auto YM2612::writeData(n8 data) -> void {
     break;
   }
 
-  //LFO enable, decay rate
+  //LFO AM enable, decay rate
   case 0x060: {
     op.envelope.decayRate = data.bit(0,4);
-    op.lfoEnable = data.bit(7);
+    op.tremoloEnable = data.bit(7);
     channel[index].updateEnvelope();
     channel[index].updateLevel();
     break;
