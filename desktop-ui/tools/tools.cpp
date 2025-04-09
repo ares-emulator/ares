@@ -17,7 +17,7 @@ StreamManager& streamManager = toolsWindow.streamManager;
 PropertiesViewer& propertiesViewer = toolsWindow.propertiesViewer;
 TraceLogger& traceLogger = toolsWindow.traceLogger;
 
-ToolsWindow::ToolsWindow() {
+ToolsWindow::ToolsWindow(std::recursive_mutex *programMutex) {
 
   panelList.append(ListViewItem().setText("Manifest").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Cheats").setIcon(Icon::Emblem::Text));
@@ -43,9 +43,9 @@ ToolsWindow::ToolsWindow() {
   panelContainer.append(homePanel, Size{~0, ~0});
 
   manifestViewer.construct();
-  cheatEditor.construct();
-  memoryEditor.construct();
-  graphicsViewer.construct();
+  cheatEditor.construct(programMutex);
+  memoryEditor.construct(programMutex);
+  graphicsViewer.construct(programMutex);
   streamManager.construct();
   propertiesViewer.construct();
   traceLogger.construct();

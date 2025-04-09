@@ -117,7 +117,7 @@ auto VI::main() -> void {
       io.vcounter = 0;
       if(++inactiveCounter >= 200) {
         inactiveCounter = 0;
-        screen->frame();
+        //screen->frame();
         refreshed = true;
       }
       step(0x800);
