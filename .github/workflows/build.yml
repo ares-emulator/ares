@@ -131,18 +131,19 @@ jobs:
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
         MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
         MACOS_NOTARIZATION_TEAMID: ${{ secrets.MACOS_NOTARIZATION_TEAMID }}
-    - name: Upload Build (Windows)
-      if: runner.os != 'macOS' && runner.os != 'Linux'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.program }}-${{ matrix.platform.name }}
-        path: build/desktop-ui/rundir/*
-    - name: Upload Build (macOS)
+    - name: "Compress Build Artifact (macOS)"
       if: runner.os == 'macOS'
+      run: |
+        tar -cvJf ares-${{ matrix.platform.name }}.tar.xz -C build/desktop-ui/RelWithDebInfo/ .
+    - name: "Compress Build Artifacts (Windows)"
+      if: runner.os != 'macOS' && runner.os != 'Linux'
+      run: |
+        tar -cvJf ares-${{ matrix.platform.name }}.tar.xz -C build/desktop-ui/rundir/ .
+    - name: Upload Build
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.program }}-${{ matrix.platform.name }}
-        path: build/desktop-ui/RelWithDebInfo/
+        path: ares-${{ matrix.platform.name }}.tar.xz
     - name: Upload Debug Symbols (Windows)
       if: runner.os != 'macOS' && runner.os != 'Linux'
       uses: actions/upload-artifact@v4
