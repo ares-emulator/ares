@@ -19,6 +19,15 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: 'bin'
+    - name: "Decompress Build Artifacts"
+      if: runner.os == 'macOS'
+      run: |
+        for package in macos-universal windows-x64 windows-clang-cl-x64 windows-clang-cl-arm64; do
+          pushd bin/ares-${package}
+          tar -xJf ares-${package}.tar.xz
+          rm -f ares-${package}.tar.xz
+          popd
+        done
     - name: "macOS: notarize"
       if: inputs.notarize
       run: |
