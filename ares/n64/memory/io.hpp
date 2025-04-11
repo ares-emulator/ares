@@ -62,24 +62,18 @@ template<typename T>
 struct PI {  //A device which is reachable only behind PI
   template<u32 Size>
   auto read(u32 address) -> u64 {
-    static_assert(Size == Half || Size == Word);  //PI bus will do 32-bit (CPU) or 16-bit (DMA) only
+    static_assert(Size == Half);  //PI bus will do 16-bit only
     if constexpr(Size == Half) {
       return ((T*)this)->readHalf(address);
-    }
-    if constexpr(Size == Word) {
-      return ((T*)this)->readWord(address);
     }
     unreachable;
   }
   
   template<u32 Size>
   auto write(u32 address, u64 data) -> void {
-    static_assert(Size == Half || Size == Word);  //PI bus will do 32-bit (CPU) or 16-bit (DMA) only
+    static_assert(Size == Half);  //PI bus will do 16-bit only
     if constexpr(Size == Half) {
       return ((T*)this)->writeHalf(address, data);
-    }
-    if constexpr(Size == Word) {
-      return ((T*)this)->writeWord(address, data);
     }
     unreachable;
   }

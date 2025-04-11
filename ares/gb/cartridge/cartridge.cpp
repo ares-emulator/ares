@@ -10,7 +10,7 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
   auto system = (Node::System)parent->parent();
-  transferPak = system->name() == "Transfer Pak";
+  transferPak = (system->name() == "Transfer Pak") || (system->name() == "Nintendo 64 Cartridge");
   return node = parent->append<Node::Peripheral>(string{parent->family(), " Cartridge"});
 }
 
