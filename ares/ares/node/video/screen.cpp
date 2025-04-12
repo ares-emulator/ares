@@ -24,6 +24,7 @@ Screen::~Screen() {
 }
 
 auto Screen::main(uintptr_t) -> void {
+  thread::setName("dev.ares.screen");
   while(!_kill) {
     unique_lock<mutex> lock(_frameMutex);
 

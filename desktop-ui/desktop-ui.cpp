@@ -156,10 +156,10 @@ auto nall::main(Arguments arguments) -> void {
 
   Instances::presentation.construct();
   Instances::settingsWindow.construct();
-  Instances::toolsWindow.construct();
   Instances::gameBrowserWindow.construct();
 
   program.create();
+  Instances::toolsWindow.construct(&program.programMutex);
   Application::onMain({&Program::main, &program});
   Application::run();
 
