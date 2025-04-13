@@ -120,4 +120,5 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.dmaActiveChannel);
   s(context.timerLatched);
   s(context.busLocked);
+  s(context.hcounter);
 }
