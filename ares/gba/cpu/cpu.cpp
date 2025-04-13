@@ -88,6 +88,7 @@ inline auto CPU::stepIRQ() -> void {
 
 auto CPU::step(u32 clocks) -> void {
   if(!clocks) return;
+  context.hcounter = (context.hcounter + clocks) % 1232;
 
   dma[0].waiting = max(0, dma[0].waiting - (s32)clocks);
   dma[1].waiting = max(0, dma[1].waiting - (s32)clocks);
