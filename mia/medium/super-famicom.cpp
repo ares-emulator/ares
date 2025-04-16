@@ -561,7 +561,7 @@ auto SuperFamicom::board() const -> string {
   //so we identify it with this embedded string
   string sufamiSignature = "BANDAI SFC-ADX";
   auto romSignature = string_view(rom.data(), sufamiSignature.length());
-  if(string(romSignature) == sufamiSignature) board.append("ST-", mode);
+  if(romSignature == sufamiSignature) board.append("ST-", mode);
 
   //this game's title overwrite the map mode with '!' (0x21), but is a LOROM game
   if(label() == "YUYU NO QUIZ DE GO!GO") mode = "LOROM-";
