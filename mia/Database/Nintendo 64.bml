@@ -1,0 +1,188 @@
+database
+	revision: 2025-03-27
+
+game
+	sha256:   cd983fb567cfb8e3475d2023f403238bd832a3884883b2e28593b3b2d1611741
+	title:    GameShark Pro
+	name:     GameShark Pro
+	region:   NTSC
+	controllerpak
+	revision: 3.30 (April)
+	board:    DATEL-REF1329
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+game
+	sha256:   bfae87fc342e570495980bb654618d4ac5db6bdbf24701274c23163d43f218a8
+	title:    GameShark Pro
+	name:     GameShark Pro
+	region:   NTSC
+	controllerpak
+	revision: 3.30 (March)
+	board:    DATEL-REF1329
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+game
+	sha256:   850010396166196781f5d07a79c8b45bc270142452f82ef2514802c686b7d0e6
+	title:    GameShark Pro
+	name:     GameShark Pro
+	region:   NTSC
+	controllerpak
+	revision: 3.21
+	board:    DATEL-REF1329
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+//Not actually a REF1329 board
+//TODO: put the real board in
+game
+	sha256:   919a7d1cf560401dae0d6d1c287b23caf4b72e77ec821d04f71fb7ba089ddc79
+	title:    GameShark
+	name:     GameShark
+	region:   NTSC
+	controllerpak
+	revision: 2.50
+	board:    DATEL-REF1329
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+//Not actually a REF1329 board
+//TODO: put the real board in
+game
+	sha256:   6324b40102dbff35db08e280587bc2abd58ea9916a16d5c85b844e078e09d0de
+	title:    GameShark
+	name:     GameShark
+	region:   NTSC
+	controllerpak
+	revision: 1.01
+	board:    DATEL-REF1329
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+//this doesn't actually use a DATEL-REF1256 board - it's a *clone* of that board,
+//which currently isn't emulated
+//game
+//	sha256:   24843c7bacca13a8675358687c1ee48f16e31c500b334d0165d093c9d194f0f3
+//	title:    GB Hunter
+//	name:     GB Hunter
+//	region:   NTSC
+//	revision: 1.0
+//	board:    DATEL-REF1256
+//		memory
+//			type: EEPROM
+//			size: 0x40000
+//			content: Program
+
+//TODO: revision
+game
+	sha256:     2bc1abf5327b8f3f575a51f96db15b1eb9edd788ec90a04abfa232cbf7276f23
+	title:      Game Booster
+	name:       Game Booster
+	region:     PAL
+	revision:   ???
+	board:      DATEL-REF1256
+		memory
+			type: EEPROM
+			size: 0x40000
+			content: Program
+
+//this is *definitely* a bad dump, but if you patch the IPL3 checksum
+//to B5F092FB 1A7E8DDF it works just fine - what *is* this?????
+//TODO: revision
+//game
+//	sha256:     15fcd8a0535f9287d0d9f90f6d016ba48b1ae9ee8df7553098292ace7d060159
+//	title:      Game Booster
+//	name:       Game Booster
+//	region:     NTSC
+//	revision:   ???
+//	board:      DATEL-REF1256
+//		memory
+//			type: EEPROM
+//			size: 0x40000
+//			content: Program
+
+//Knowing the board type is enough to know what type of save chip is
+//present, but not how big it is (e.g. SM64 (U) and DK64 are both
+//NUS-01A-02, despite SM64 being 512 byte EEPROM and DK64 being 2KiB)
+
+game
+	sha256:   9cf7a80db321b07a8d461fe536c02c87b7412433953891cdec9191bfad2db317
+	title:    スーパーマリオ64
+	name:     Super Mario 64
+	region:   NTSC
+	id:       NSMJ
+	revision: 1.0
+	board:    NUS-01A-01
+		cic:    CIC-NUS-6102
+		memory
+			type: ROM
+			size: 0x800000
+			content: Program
+		memory
+			type: EEPROM
+			size: 0x200
+			content: Save
+
+//Note: I don't know enough about board types to know whether including
+//the revision is worth it - it doesn't appear to provide any extra info,
+//but without checking every game I don't know that for sure. However, I
+//also don't know whether any games were ever released using more than one
+//board revision. I've included the revision for now
+
+game
+	sha256:   17ce077343c6133f8c9f2d6d6d9a4ab62c8cd2aa57c40aea1f490b4c8bb21d91
+	title:    Super Mario 64
+	name:     Super Mario 64
+	region:   NTSC
+	id:       NSME
+	revision: 1.0
+	board:    NUS-01A-02
+		cic:    CIC-NUS-6102
+		memory
+			type: ROM
+			size: 0x800000
+			content: Program
+		memory
+			type: EEPROM
+			size: 0x200
+			content: Save
+
+//What's the standard we're supposed to use for transliterating Japanese
+//names? I've gone with the slightly modified Revised Hepburn I personally
+//prefer here, but we could just use the English title, or follow what
+//FC/SFC do
+
+game
+	sha256:   d9417be056534fcc0bdff2e6cd5f1135511be7c0a4dace04a96a2649596ce908
+	title:    どうぶつの森
+	name:     Doubutsu no Mori
+	region:   NTSC
+	id:       NAFJ
+	controllerpak
+	rtc
+	revision: 1.0
+	board:    NUS-07A-01
+		cic:    CIC-NUS-6102
+		memory
+			type: ROM
+			size: 0x1000000
+			content: Program
+		memory
+			type: Flash
+			size: 0x20000
+			content: Save
+		memory
+			type: RTC
+			size: 0x20
+			content: Save

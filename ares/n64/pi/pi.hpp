@@ -34,9 +34,9 @@ struct PI : Memory::RCP<PI> {
   auto writeFinished() -> void;
   auto writeForceFinish() -> u32;
   template <u32 Size>
-  auto busRead(u32 address) -> u32;
+  auto busRead(u32 address) -> u16;
   template <u32 Size>
-  auto busWrite(u32 address, u32 data) -> void;
+  auto busWrite(u32 address, u16 data) -> void;
   
   //serialization.cpp
   auto serialize(serializer&) -> void;
