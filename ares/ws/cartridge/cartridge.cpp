@@ -58,6 +58,7 @@ auto Cartridge::connect() -> void {
   }
 
   has.karnak = pak->attribute("board") == "KARNAK";
+  has.wordWidth = pak->attribute("width") != "8";
 
   debugger.load(node);
   power();
