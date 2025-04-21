@@ -32,7 +32,10 @@ auto Bus::read(n20 address) -> n8 {
     return iram.read(address);
   case 0x1: return cartridge.readRAM(address);
   case range14(0x2, 0xf):
-    if(!cpu.io.cartridgeRomWidth) address &= ~(0x1);
+    if(cpu.io.cartridgeRomWidth != cartridge.has.wordWidth) {
+      if(cartridge.has.wordWidth) return cartridge.readROM(address & ~1);
+      return (address & 1) ? cartridge.openbus.byte(1) : cartridge.readROM(address);
+    }
     return cartridge.readROM(address);
   }
 }
