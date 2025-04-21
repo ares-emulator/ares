@@ -26,6 +26,7 @@ struct CompactDisc : Medium {
     return {"cue"};
 #endif
   }
+  auto isAudioCd(string location) -> bool;
   auto manifestAudio(string location) -> string;
   auto readDataSector(string filename, u32 sectorID) -> vector<u8>;
 private:
