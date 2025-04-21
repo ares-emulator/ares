@@ -56,7 +56,7 @@ struct CPU : Thread {
 
   struct Pipeline {
     u32 address = 0;
-    u32 instruction = 0;
+    n32 instruction = 0;
   } pipeline;
 
   //delay-slots.cpp
@@ -114,7 +114,7 @@ struct CPU : Thread {
     Exception(CPU& self) : self(self) {}
 
     auto operator()() -> bool;
-    auto trigger(u32 code) -> void;
+    auto trigger(u32 code, n1 hardwareBreakpoint = 0) -> void;
 
     auto interruptsPending() -> u8;
     auto interrupt() -> void;
