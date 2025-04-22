@@ -1,4 +1,7 @@
-#define clip(X, LO, HI) std::clamp((X), (((LO) <= (HI)) ? (LO) : (HI)), (((HI) >= (LO)) ? (HI) : (LO)))
+
+constexpr auto clip = [](auto x, auto lo, auto hi) {
+  return std::clamp(x, lo <= hi ? lo : hi, hi >= lo ? hi : lo);
+};
 
 auto GPU::generateTables() -> void {
   static constexpr s8 table[4][4] = {
