@@ -16,11 +16,6 @@ auto load(Node::System& node, string name) -> bool {
 }
 
 auto option(string name, string value) -> bool {
-  if(name == "Recompiler") {
-    if constexpr(Accuracy::CPU::Recompiler) {
-      cpu.recompiler.enabled = value.boolean();
-    }
-  }
   return true;
 }
 
@@ -124,10 +119,6 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  if constexpr(Accuracy::CPU::Recompiler) {
-    ares::Memory::FixedAllocator::get().release();
-  }
   bios.setWaitStates(8, 16, 31);
   memory.power(reset);
   cpu.power(reset);

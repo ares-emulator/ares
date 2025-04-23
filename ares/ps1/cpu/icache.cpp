@@ -1,15 +1,3 @@
-//used by the recompiler to simulate instruction cache fetch timing
-auto CPU::InstructionCache::step(u32 address) -> void {
-  auto& line = lines[address >> 4 & 0xff];
-  if(line.tag != (address & 0x1fff'fff0)) {
-    if((address & 0x1fff'ffff) <= 0x007f'ffff) cpu.step(4 *  4);
-    if((address & 0x1fff'ffff) >= 0x1fc0'0000) cpu.step(4 * 24);
-    line.tag = address & 0x1fff'fff0 | line.tag & 0x0000'000e;
-  } else {
-    cpu.step(1);
-  }
-}
-
 //used by the interpreter to fully emulate the instruction cache
 inline auto CPU::InstructionCache::fetch(u32 address) -> u32 {
   auto& line = lines[address >> 4 & 0xff];
