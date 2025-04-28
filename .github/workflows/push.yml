@@ -8,11 +8,15 @@ permissions:
   contents: write
 jobs:
   build:
-    name: Build ares
+    name: Build ares (primary)
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
       codesign: true
+  build-aux:
+    name: Build ares (auxiliary)
+    uses: ./.github/workflows/build-aux.yml
+    secrets: inherit
   release:
     name: Release
     needs: build

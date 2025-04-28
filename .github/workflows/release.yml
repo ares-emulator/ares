@@ -22,7 +22,7 @@ jobs:
     - name: "Decompress Build Artifacts"
       if: runner.os == 'macOS'
       run: |
-        for package in macos-universal windows-x64 windows-clang-cl-x64 windows-clang-cl-arm64; do
+        for package in macos-universal windows-x64 windows-arm64; do
           pushd bin/ares-${package}
           tar -xJf ares-${package}.tar.xz
           rm -f ares-${package}.tar.xz
@@ -77,7 +77,5 @@ jobs:
           ${{ github.workspace }}/ares-macos-universal-dSYMs.zip
           ${{ github.workspace }}/ares-windows-x64.zip
           ${{ github.workspace }}/ares-windows-x64-PDBs.zip
-          ${{ github.workspace }}/ares-windows-clang-cl-x64.zip
-          ${{ github.workspace }}/ares-windows-clang-cl-x64-PDBs.zip
-          ${{ github.workspace }}/ares-windows-clang-cl-arm64.zip
-          ${{ github.workspace }}/ares-windows-clang-cl-arm64-PDBs.zip
+          ${{ github.workspace }}/ares-windows-arm64.zip
+          ${{ github.workspace }}/ares-windows-arm64-PDBs.zip

@@ -71,6 +71,18 @@ namespace ares {
   inline auto setRunAhead(bool runAhead) -> void { _runAhead = runAhead; }
 }
 
+/// ares elects to use the reserved C++ `register` identifier liberally in a few different areas so that it can more
+/// freely describe hardware registers within emulated system components. This macro exists to prevent compilers
+/// exploding at the sight of the reserved identifier.
+///
+/// Perhaps unsurprisingly, this macro will conflict with certain system headers. MSVC headers will emit an error
+/// forbidding macroizing `register` if the identifier is defined, while the `clangarm64` system headers in MSYS2
+/// appear to try to make use of the obsolete keyword meaning of the identifier.
+///
+/// Defining this macro after all platform headers are included avoids these conflicts... for now. Removing this
+/// macro along with all uses of this identifier may inevitably become necessary in the future.
+#define register $register
+
 #include <ares/types.hpp>
 #include <ares/random.hpp>
 #include <ares/debug/debug.hpp>

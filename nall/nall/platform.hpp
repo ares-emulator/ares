@@ -187,7 +187,6 @@ namespace nall {
 #endif
 
 #define export $export
-#define register $register
 
 #if defined(NALL_HEADER_ONLY)
   #include <nall/platform.cpp>
