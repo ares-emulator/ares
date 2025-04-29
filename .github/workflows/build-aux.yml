@@ -15,19 +15,20 @@ jobs:
           os: windows-latest
           shell: 'msys2 {0}'
           msystem: mingw64
-          install: mingw-w64-x86_64-toolchain
+          install: make git cmake ccache ninja mingw-w64-x86_64-toolchain
           target-cmake-preset: windows-ci-mingw-native
         - name: windows-clang-cl-x64
           os: windows-latest
           windres: rc
           shell: bash
           target-cmake-preset: windows-ci-cl-native
-        - name: windows-clang-cl-arm64
-          os: windows-latest
-          windres: rc
-          shell: bash
-          target-cmake-preset: windows-ci-cl-cross
-          native-cmake-preset: windows-ci-cl-native
+        - name: windows-arm64
+          os: windows-11-arm
+          compiler: clang++
+          shell: 'msys2 {0}'
+          msystem: clangarm64
+          install: mingw-w64-clang-aarch64-make git mingw-w64-clang-aarch64-cmake mingw-w64-clang-aarch64-ccache mingw-w64-clang-aarch64-ninja  mingw-w64-clang-aarch64-clang
+          target-cmake-preset: windows-ci-mingw-native
         - name: windows-msvc-x64
           os: windows-latest
           windres: rc
@@ -66,7 +67,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{ matrix.platform.msystem }}
-        install: make git cmake ccache ninja ${{ matrix.platform.install }}
+        install: ${{ matrix.platform.install }}
     - name: Checkout source code
       uses: actions/checkout@v4
       with:
