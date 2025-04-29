@@ -26,7 +26,7 @@ do
   cd -
 done
 
-for package in windows-x64 windows-arm64
+for package in windows-x64 windows-clang-cl-arm64
 do
   mkdir "${package}"
   cd "${package}"
