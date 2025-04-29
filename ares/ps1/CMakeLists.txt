@@ -50,7 +50,6 @@ ares_add_sources(
     cpu/interpreter-scc.cpp
     cpu/interpreter.cpp
     cpu/memory.cpp
-    cpu/recompiler.cpp
     cpu/serialization.cpp
 )
 
