@@ -2,18 +2,18 @@
 auto GPU::readGP0() -> u32 {
   n32 data;
 
-  if(io.mode == Mode::Status) {
-    data = io.status;
-    return data;
-  }
-
   if(io.mode == Mode::CopyFromVRAM) {
     vram.mutex.lock();
+
+    auto isOdd = (io.copy.width * io.copy.height) & 1;
+    auto lastLine = io.copy.py == io.copy.height - 1;
+
     for(u32 loop : range(2)) {
       n10 x = io.copy.x + io.copy.px;
       n9  y = io.copy.y + io.copy.py;
-      data = vram2D[y & 511][x & 1023] << 16 | data >> 16;
-      if(++io.copy.px >= io.copy.width) {
+      u16 pixel = vram2D[y & 511][x & 1023];
+      data |= (loop == 0) ? pixel : pixel << 16;
+      if(++io.copy.px >= io.copy.width + (isOdd && lastLine ? 1 : 0)) {
         io.copy.px = 0;
         if(++io.copy.py >= io.copy.height) {
           io.copy.py = 0;

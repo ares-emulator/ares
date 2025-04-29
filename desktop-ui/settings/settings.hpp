@@ -103,6 +103,8 @@ struct Settings : Markup::Node {
 
   struct Nintendo64 {
     bool expansionPak = true;
+    u8 controllerPakBankCount = 1;
+    string controllerPakBankString = "32KiB (Default)";
   } nintendo64;
 
   struct GameBoyAdvance {
@@ -266,10 +268,17 @@ struct OptionSettings : VerticalLayout {
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, 0}};
+    HorizontalLayout nintendo64ControllerPakBankLayout{this, Size{~0, 0}, 5};
+      Label nintendo64ControllerPakBankLabel{&nintendo64ControllerPakBankLayout, Size{0, 0}};
+      ComboButton nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{0, 0}};
+      // LineEdit nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{40, 0}};
+      Label nintendo64ControllerPakBankHint{&nintendo64ControllerPakBankLayout, Size{0, 0}};
+
   Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};
       CheckLabel gameBoyPlayerOption{&gameBoyPlayerLayout, Size{0, 0}, 5};
       Label gameBoyPlayerHint{&gameBoyPlayerLayout, Size{0, 0}};
+
   Label megaDriveSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};
       CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};

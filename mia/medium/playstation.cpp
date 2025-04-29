@@ -1,6 +1,12 @@
 struct PlayStation : CompactDisc {
   auto name() -> string override { return "PlayStation"; }
-  auto extensions() -> vector<string> override { return {"cue", "chd", "exe"}; }
+  auto extensions() -> vector<string> override {
+#if defined(ARES_ENABLE_CHD)
+    return {"cue", "chd", "exe"};
+#else
+    return {"cue", "exe"};
+#endif
+  }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
@@ -45,13 +51,10 @@ auto PlayStation::save(string location) -> bool {
 
 auto PlayStation::analyze(string location) -> string {
   if(location.iendsWith(".cue") || location.iendsWith(".chd")) {
-    vector<u8> sector;
+    if(isAudioCd(location)) return CompactDisc::manifestAudio(location);
 
-    if(location.iendsWith(".cue")) {
-      sector = readDataSectorCUE(location, 4);
-    } else if (location.iendsWith(".chd")) {
-      sector = readDataSectorCHD(location, 4);
-    }
+    vector<u8> sector;
+    sector = readDataSector(location, 4);
 
     if(!sector) return CompactDisc::manifestAudio(location);
 
@@ -64,7 +67,10 @@ auto PlayStation::analyze(string location) -> string {
     if(text.find("Sony Computer Entertainment Amer"      )) region = "NTSC-U";
     if(text.find("Sony Computer Entertainment of America")) region = "NTSC-U";
     if(text.find("Sony Computer Entertainment Euro"      )) region = "PAL";
-    if(!region) return CompactDisc::manifestAudio(location);
+    if(!region) {
+      //A valid license string is only required for NTSC-J hardware
+      region = "NTSC-U, PAL";
+    }
 
     string s;
     s += "game\n";

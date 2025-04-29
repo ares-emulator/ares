@@ -4,7 +4,16 @@ auto PPU::releaseBus() -> void {
 }
 
 auto PPU::pramContention() -> bool {
-  return pramAccessed;
+  if(accurate) return pramAccessed;
+
+  //approximate timings in scanline renderer, assuming no layer blending
+  n3 mode = PPU::Background::IO::mode;
+  if(display.io.vcounter < 160 && !ppu.blank() && mode != 3 && mode != 5) {
+    n32 hcounter = cpu.context.hcounter;
+    if(hcounter < 46 || hcounter > 1005) return false;
+    return (hcounter & 3) == 2;
+  }
+  return false;
 }
 
 auto PPU::vramContention(n32 address) -> bool {

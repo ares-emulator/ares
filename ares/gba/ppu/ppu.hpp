@@ -37,11 +37,12 @@ struct PPU : Thread, IO {
   auto blank() -> bool;
 
   auto step(u32 clocks) -> void;
-  template<u32> auto cycleLinear(u32 x, u32 y) -> void;
-  template<u32> auto cycleAffine(u32 x, u32 y) -> void;
+  template<s32> auto cycleLinearMap(s32 x, u32 y) -> void;
+  template<s32> auto cycleLinearRender(s32 x, u32 y) -> void;
+  template<s32> auto cycleAffine(u32 x, u32 y) -> void;
   auto cycleBitmap(u32 x, u32 y) -> void;
   auto cycleUpperLayer(u32 x, u32 y) -> void;
-  template<u32> auto cycle(u32 y) -> void;
+  template<s32> auto cycle(u32 y) -> void;
   auto main() -> void;
 
   auto frame() -> void;
@@ -106,10 +107,10 @@ private:
     auto setEnable(n1 status) -> void;
     auto scanline(u32 y) -> void;
     auto outputPixel(u32 x, u32 y) -> void;
-    auto run(u32 x, u32 y) -> void;
-    auto linearFetchTileMap() -> void;
+    auto run(s32 x, u32 y) -> void;
+    auto linearFetchTileMap(s32 x, u32 y) -> void;
     auto linearFetchTileData() -> void;
-    auto linear(u32 x, u32 y) -> void;
+    auto linearRender(s32 x, u32 y) -> void;
     auto affineFetchTileMap(u32 x, u32 y) -> void;
     auto affineFetchTileData(u32 x, u32 y) -> void;
     auto bitmap(u32 x, u32 y) -> void;
@@ -160,6 +161,9 @@ private:
       n4 palette;
 
       n16 data;
+
+      n1 active;
+      n3 px;
     } latch;
 
     struct Affine {
@@ -303,6 +307,7 @@ private:
 
   bool pramAccessed;
   bool vramAccessedBG;
+  n32  renderingCycle;
 };
 
 extern PPU ppu;

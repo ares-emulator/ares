@@ -164,6 +164,43 @@ auto CompactDisc::manifestAudio(string location) -> string {
   return manifest;
 }
 
+auto CompactDisc::isAudioCd(string pathname) -> bool {
+  auto fp = file::open({pathname, "cd.rom"}, file::mode::read);
+  if(!fp) return {};
+
+  vector<u8> toc;
+  toc.resize(96 * 7500);
+  for(u32 sector : range(7500)) {
+    fp.read({toc.data() + 96 * sector, 96});
+  }
+  CD::Session session;
+  session.decode(toc, 96);
+
+  //If the disc contains no data tracks, we are an audio cd
+  for(u32 trackID : range(100)) {
+    if(auto& track = session.tracks[trackID]) {
+      if(track.isData()) return false;
+    }
+  }
+
+  return true;
+}
+
+auto CompactDisc::readDataSector(string pathname, u32 sectorID) -> vector<u8> {
+  if(pathname.iendsWith(".bcd")) {
+    return readDataSectorBCD(pathname, sectorID);
+  }
+  if(pathname.iendsWith(".cue")) {
+    return readDataSectorCUE(pathname, sectorID);
+  }
+#if defined(ARES_ENABLE_CHD)
+  if(pathname.iendsWith(".chd")) {
+    return readDataSectorCHD(pathname, sectorID);
+  }
+#endif
+  return {};
+}
+
 auto CompactDisc::readDataSectorBCD(string pathname, u32 sectorID) -> vector<u8> {
   auto fp = file::open({pathname, "cd.rom"}, file::mode::read);
   if(!fp) return {};
@@ -237,6 +274,7 @@ auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>
   return {};
 }
 
+#if defined(ARES_ENABLE_CHD)
 auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> vector<u8> {
   Decode::CHD chd;
   if(!chd.load(filename)) return {};
@@ -264,3 +302,4 @@ auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> vector<u8>
 
   return {};
 }
+#endif

@@ -184,7 +184,7 @@ auto VDP::mainH32() -> void {
   sprite.begin();
   if(dac.pixels) {
     blocks<false, true>();
-    if(Mega32X()) m32x.vdp.scanline(pixels, vcounter());
+    if(Mega32X()) m32x.vdp.scanline(pixels + 18, vcounter()); //approx 3 and 1/4 pixel offset
   } else {
     blocks<false, false>();
   }

@@ -3,22 +3,18 @@ auto APU::Channel4::noiseSample() -> n4 {
 }
 
 auto APU::Channel4::tick() -> void {
-  if(--state.period == io.pitch) {
-    state.period = 0;
-    state.sampleOffset++;
+  if(io.enable) {
+    if(--state.period == io.pitch) {
+      state.period = 0;
+      state.sampleOffset++;
 
-    if(io.noiseReset) {
-      io.noiseReset = 0;
-      state.noiseLFSR = 0;
-      state.noiseOutput = 0;
-    }
+      if(io.noiseUpdate && !apu.io.seqDbgNoise) {
+        static constexpr s32 taps[8] = {14, 10, 13, 4, 8, 6, 9, 11};
+        auto tap = taps[io.noiseMode];
 
-    if(io.noiseUpdate && !apu.io.seqDbgNoise) {
-      static constexpr s32 taps[8] = {14, 10, 13, 4, 8, 6, 9, 11};
-      auto tap = taps[io.noiseMode];
-
-      state.noiseOutput = (1 ^ (state.noiseLFSR >> 7) ^ (state.noiseLFSR >> tap)) & 1;
-      state.noiseLFSR = state.noiseLFSR << 1 | state.noiseOutput;
+        state.noiseOutput = (1 ^ (state.noiseLFSR >> 7) ^ (state.noiseLFSR >> tap)) & 1;
+        state.noiseLFSR = state.noiseLFSR << 1 | state.noiseOutput;
+      }
     }
   }
 }

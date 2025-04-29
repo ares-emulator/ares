@@ -31,6 +31,5 @@ inline auto Bus::read(u32 address) -> u32 {
 
 template<u32 Size>
 inline auto Bus::write(u32 address, u32 data) -> void {
-  if constexpr(Accuracy::CPU::Recompiler) cpu.recompiler.invalidate(address);
   return mmio(address).write<Size>(address, data);
 }

@@ -42,17 +42,20 @@ auto V30MZ::interrupt(u8 vector, InterruptSource source) -> bool {
 
 auto V30MZ::interrupt(u8 vector) -> bool {
   state.halt = false;
-  if(!PSW.IE) return false;
+  if(!state.interrupt || !PSW.IE) return false;
   return interrupt(vector, InterruptSource::INT);
 }
 
-auto V30MZ::nonMaskableInterrupt() -> bool {
-  return interrupt(2, InterruptSource::NMI);
+auto V30MZ::nonMaskableInterrupt(bool value) -> bool {
+  state.nmi = value;
+  return true;
 }
 
 #define op(id, name, ...) case id: instruction##name(__VA_ARGS__); break;
 
 auto V30MZ::instruction() -> void {
+  state.brk = PSW.BRK;
+  state.interrupt = PSW.IE;
   state.poll = 1;
   state.prefix = 0;
   if(state.halt) return wait(1);
@@ -317,7 +320,8 @@ auto V30MZ::instruction() -> void {
   }
 
   if(!state.prefix) prefixFlush();
-  if(PSW.BRK) interrupt(1, InterruptSource::SingleStep);
+  if(state.poll && state.nmi) interrupt(2, InterruptSource::NMI);
+  if(state.poll && state.brk) interrupt(1, InterruptSource::SingleStep);
 }
 
 #undef op

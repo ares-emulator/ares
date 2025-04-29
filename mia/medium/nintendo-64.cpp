@@ -4,6 +4,7 @@ struct Nintendo64 : Cartridge {
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
+  auto cic_detect(array_view<u8> ipl3) -> string;
   auto ipl2checksum(u32 seed, array_view<u8> rom) -> u64;
 };
 
@@ -145,78 +146,9 @@ auto Nintendo64::save(string location) -> bool {
   return true;
 }
 
-auto Nintendo64::analyze(vector<u8>& data) -> string {
-  if(data.size() < 0x1000) {
-    print("[mia] Loading rom failed. Minimum expected rom size is 4096 (0x1000) bytes. Rom size: ", data.size(), " (0x", hex(data.size()), ") bytes.\n");
-    return {};
-  } else if((data[0] == 0x80 && data[1] == 0x37 && data[2] == 0x12 && data[3] == 0x40)
-         || (data[0] == 0x80 && data[1] == 0x27 && data[2] == 0x07 && data[3] == 0x40)) {   //64DD IPL
-    //big endian
-  } else if((data[0] == 0x37 && data[1] == 0x80 && data[2] == 0x40 && data[3] == 0x12)
-         || (data[0] == 0x27 && data[1] == 0x80 && data[2] == 0x40 && data[3] == 0x07)) {   //64DD IPL
-    //byte-swapped
-    for(u32 index = 0; index < data.size(); index += 2) {
-      u8 d0 = data[index + 0];
-      u8 d1 = data[index + 1];
-      data[index + 0] = d1;
-      data[index + 1] = d0;
-    }
-  } else if((data[0] == 0x40 && data[1] == 0x12 && data[2] == 0x37 && data[3] == 0x80)
-         || (data[0] == 0x40 && data[1] == 0x07 && data[2] == 0x27 && data[3] == 0x80)) {   //64DD IPL
-    //little endian
-    for(u32 index = 0; index < data.size(); index += 4) {
-      u8 d0 = data[index + 0];
-      u8 d1 = data[index + 1];
-      u8 d2 = data[index + 2];
-      u8 d3 = data[index + 3];
-      data[index + 0] = d3;
-      data[index + 1] = d2;
-      data[index + 2] = d1;
-      data[index + 3] = d0;
-    }
-  } else {
-    //unrecognized
-    return {};
-  }
-
-  string region = "NTSC";
-  switch(data[0x3e]) {
-  case 'A': region = "NTSC"; break;  //North America + Japan
-  case 'B': region = "NTSC"; break;  //Brazil
-  case 'C': region = "NTSC"; break;  //China
-  case 'D': region = "PAL";  break;  //Germany
-  case 'E': region = "NTSC"; break;  //North America
-  case 'F': region = "PAL";  break;  //France
-  case 'G': region = "NTSC"; break;  //Gateway 64 (NTSC)
-  case 'H': region = "PAL";  break;  //Netherlands
-  case 'I': region = "PAL";  break;  //Italy
-  case 'J': region = "NTSC"; break;  //Japan
-  case 'K': region = "NTSC"; break;  //Korea
-  case 'L': region = "PAL";  break;  //Gateway 64 (PAL)
-  case 'N': region = "NTSC"; break;  //Canada
-  case 'P': region = "PAL";  break;  //Europe
-  case 'S': region = "PAL";  break;  //Spain
-  case 'U': region = "PAL";  break;  //Australia
-  case 'W': region = "PAL";  break;  //Scandinavia
-  case 'X': region = "PAL";  break;  //Europe
-  case 'Y': region = "PAL";  break;  //Europe
-  case 'Z': region = "PAL";  break;  //Europe
-  }
-
-  string id;
-  id.append((char)data[0x3b]);
-  id.append((char)data[0x3c]);
-  id.append((char)data[0x3d]);
-
-  char region_code = data[0x3e];
-  u8 revision = data[0x3f];
-
-  //detect the CIC used by calculating the IPL2 checksum with the various seeds
-  //provided by the various CICs, and checking if the checksum matches.
-  //this also works for modern IPL3s variants (proprietary or open source),
-  //as long as they are used with a CIC we know of.
-  bool ntsc = region == "NTSC";
-  auto ipl3 = array_view<u8>(&data[0x40], 0xfc0);
+auto Nintendo64::cic_detect(array_view<u8> ipl3) -> string
+{
+  bool ntsc = true;
   string cic = "";
 
   if (!cic) switch (ipl2checksum(0x3F, ipl3)) {
@@ -242,7 +174,101 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
     case 0x083c6c77e0b1ull: cic = "CIC-NUS-5167"; break; //64DD Conversion cartridges
     case 0x05ba2ef0a5f1ull: cic = "CIC-NUS-DDUS"; break; //64DD Retail IPL (North American, unreleased)
   }
-  if (!cic) cic = ntsc ? "CIC-NUS-6102" : "CIC-NUS-7101";  //fallback; most common
+  return cic;
+}
+
+auto Nintendo64::analyze(vector<u8>& data) -> string {
+  if(data.size() < 0x1000) {
+    print("[mia] Loading rom failed. Minimum expected rom size is 4096 (0x1000) bytes. Rom size: ", data.size(), " (0x", hex(data.size()), ") bytes.\n");
+    return {};
+  } 
+  
+  //detect endianness of the ROM by checking the IPL3 checksum. We run the same
+  //checksum algorithm with the various seeds provided by the various CICs, and
+  //check if the checksum matches. If it doesn't, we try byte-swapping the ROM
+  //and running the checksum again.
+  //this also works for modern IPL3s variants (proprietary or open source),
+  //as long as they are used with a CIC we know of.
+  string cic = cic_detect(array_view<u8>(&data[0x40], 0xfc0));
+  if (cic == "") {
+    //check if byte-swapped
+    for(u32 index = 0; index < data.size(); index += 2) {
+      u8 d0 = data[index + 0];
+      u8 d1 = data[index + 1];
+      data[index + 0] = d1;
+      data[index + 1] = d0;
+    }
+
+    cic = cic_detect(array_view<u8>(&data[0x40], 0xfc0));
+    if (cic == "") {
+      //check if little-endian
+      for(u32 index = 0; index < data.size(); index += 4) {
+        u8 d0 = data[index + 0];
+        u8 d1 = data[index + 1];
+        u8 d2 = data[index + 2];
+        u8 d3 = data[index + 3];
+        data[index + 0] = d2;
+        data[index + 1] = d3;
+        data[index + 2] = d0;
+        data[index + 3] = d1;
+      }
+
+      cic = cic_detect(array_view<u8>(&data[0x40], 0xfc0));
+      if (cic == "") {
+        //no match is found. Fallback to CIC 6102, big-endian.
+        cic = "CIC-NUS-6102";
+        for(u32 index = 0; index < data.size(); index += 4) {
+          u8 d0 = data[index + 0];
+          u8 d1 = data[index + 1];
+          u8 d2 = data[index + 2];
+          u8 d3 = data[index + 3];
+          data[index + 0] = d3;
+          data[index + 1] = d2;
+          data[index + 2] = d1;
+          data[index + 3] = d0;
+        }
+      }
+    }
+  }
+
+  char region_code = data[0x3e];
+  string region = "NTSC";
+  switch(region_code) {
+  case 'A': region = "NTSC"; break;  //North America + Japan
+  case 'B': region = "NTSC"; break;  //Brazil
+  case 'C': region = "NTSC"; break;  //China
+  case 'D': region = "PAL";  break;  //Germany
+  case 'E': region = "NTSC"; break;  //North America
+  case 'F': region = "PAL";  break;  //France
+  case 'G': region = "NTSC"; break;  //Gateway 64 (NTSC)
+  case 'H': region = "PAL";  break;  //Netherlands
+  case 'I': region = "PAL";  break;  //Italy
+  case 'J': region = "NTSC"; break;  //Japan
+  case 'K': region = "NTSC"; break;  //Korea
+  case 'L': region = "PAL";  break;  //Gateway 64 (PAL)
+  case 'N': region = "NTSC"; break;  //Canada
+  case 'P': region = "PAL";  break;  //Europe
+  case 'S': region = "PAL";  break;  //Spain
+  case 'U': region = "PAL";  break;  //Australia
+  case 'W': region = "PAL";  break;  //Scandinavia
+  case 'X': region = "PAL";  break;  //Europe
+  case 'Y': region = "PAL";  break;  //Europe
+  case 'Z': region = "PAL";  break;  //Europe
+  }
+
+  if(region != "NTSC") {
+    //convert CIC to the PAL variant
+    if(cic == "CIC-NUS-6102") cic = "CIC-NUS-7101";
+    if(cic == "CIC-NUS-6103") cic = "CIC-NUS-7103";
+    if(cic == "CIC-NUS-6105") cic = "CIC-NUS-7105";
+    if(cic == "CIC-NUS-6106") cic = "CIC-NUS-7106";
+  }
+
+  string id;
+  id.append((char)data[0x3b]);
+  id.append((char)data[0x3c]);
+  id.append((char)data[0x3d]);
+  u8 revision = data[0x3f];
 
   //detect the save type based on the game ID
   u32 eeprom  = 0;      //512_B or 2_KiB
@@ -573,6 +599,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NH9") {cpak = true; rpak = true;}                              //NHL Breakaway '99
   if(id == "NNC") {cpak = true; rpak = true;}                              //Nightmare Creatures
   if(id == "NCE") {cpak = true; rpak = true;}                              //Nuclear Strike 64
+  if(id == "NTD") {cpak = true; rpak = true;}                              //O.D.T. (Unreleased)
   if(id == "NOF") {cpak = true; rpak = true;}                              //Offroad Challenge
   if(id == "NHN") {cpak = true;}                                           //Olympic Hockey Nagano '98
   if(id == "NOM") {cpak = true;}                                           //Onegai Monsters
@@ -588,7 +615,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NQ2") {cpak = true; rpak = true;}                              //Quake 2
   if(id == "NKR") {cpak = true;}                                           //Rakuga Kids (E)
   if(id == "NRP") {cpak = true; rpak = true;}                              //Rampage - World Tour
-  if(id == "NRP") {cpak = true; rpak = true;}                              //Rampage 2 - Universal Tour
+  if(id == "N2P") {cpak = true; rpak = true;}                              //Rampage 2 - Universal Tour
   if(id == "NRT") {cpak = true;}                                           //Rat Attack
   if(id == "NY2") {cpak = true;}                                           //Rayman 2 - The Great Escape
   if(id == "NFQ") {cpak = true; rpak = true;}                              //Razor Freestyle Scooter

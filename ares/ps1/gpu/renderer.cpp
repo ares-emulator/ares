@@ -1,3 +1,8 @@
+
+constexpr auto clip = [](auto x, auto lo, auto hi) {
+  return std::clamp(x, lo <= hi ? lo : hi, hi >= lo ? hi : lo);
+};
+
 auto GPU::generateTables() -> void {
   static constexpr s8 table[4][4] = {
     {-4, +0, -3, +1},
@@ -165,10 +170,10 @@ auto GPU::Render::line() -> void {
   v0.x += drawingAreaOffsetX, v0.y += drawingAreaOffsetY;
   v1.x += drawingAreaOffsetX, v1.y += drawingAreaOffsetY;
 
-  v0.x = std::clamp(v0.x, drawingAreaOriginX1, drawingAreaOriginX2);
-  v0.y = std::clamp(v0.y, drawingAreaOriginY1, drawingAreaOriginY2);
-  v1.x = std::clamp(v1.x, drawingAreaOriginX1, drawingAreaOriginX2);
-  v1.y = std::clamp(v1.y, drawingAreaOriginY1, drawingAreaOriginY2);
+  v0.x = clip(v0.x, drawingAreaOriginX1, drawingAreaOriginX2);
+  v0.y = clip(v0.y, drawingAreaOriginY1, drawingAreaOriginY2);
+  v1.x = clip(v1.x, drawingAreaOriginX1, drawingAreaOriginX2);
+  v1.y = clip(v1.y, drawingAreaOriginY1, drawingAreaOriginY2);
 
   Point d = {v1.x - v0.x, v1.y - v0.y};
   s32 steps = abs(d.x) > abs(d.y) ? abs(d.x) : abs(d.y);
@@ -215,10 +220,10 @@ auto GPU::Render::triangle() -> void {
   if(vmax.x - vmin.x > 1024 || vmax.y - vmin.y > 512) return;
 
   //clip rendering to drawing area
-  vmin.x = std::clamp(vmin.x, drawingAreaOriginX1, drawingAreaOriginX2);
-  vmin.y = std::clamp(vmin.y, drawingAreaOriginY1, drawingAreaOriginY2);
-  vmax.x = std::clamp(vmax.x, drawingAreaOriginX1, drawingAreaOriginX2);
-  vmax.y = std::clamp(vmax.y, drawingAreaOriginY1, drawingAreaOriginY2);
+  vmin.x = clip(vmin.x, drawingAreaOriginX1, drawingAreaOriginX2);
+  vmin.y = clip(vmin.y, drawingAreaOriginY1, drawingAreaOriginY2);
+  vmax.x = clip(vmax.x, drawingAreaOriginX1, drawingAreaOriginX2);
+  vmax.y = clip(vmax.y, drawingAreaOriginY1, drawingAreaOriginY2);
 
   s32 area = weight(v0, v1, v2);  //<0 = counter-clockwise; 0 = colinear, >0 = clockwise
   if(area == 0) return;  //do not render colinear triangles

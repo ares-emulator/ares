@@ -176,7 +176,6 @@ auto GPU::writeGP1(u32 value) -> void {
 
   //get GPU information
   if(command >= 0x10 && command <= 0x1f) {
-    io.mode = Mode::Status;
     data &= 0xf;
 
     //GP1(e2)

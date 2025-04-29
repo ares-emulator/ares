@@ -41,7 +41,7 @@ struct V30MZ {
   //instruction.cpp
   auto prefixFlush() -> void;
   auto interrupt(u8 vector) -> bool;
-  auto nonMaskableInterrupt() -> bool;
+  auto nonMaskableInterrupt(bool value) -> bool;
   auto instruction() -> void;
 
   //registers.cpp
@@ -237,9 +237,12 @@ struct V30MZ {
   auto disassembleContext() -> string;
 
   struct State {
-    bool halt;    //set to true for hlt instruction; blocks execution until next interrupt
-    bool poll;    //set to false to suppress interrupt polling between CPU instructions
-    bool prefix;  //set to true for prefix instructions; prevents flushing of Prefix struct
+    bool halt;      //set to true for hlt instruction; blocks execution until next interrupt
+    bool poll;      //set to false to suppress interrupt polling between CPU instructions
+    bool prefix;    //set to true for prefix instructions; prevents flushing of Prefix struct
+    bool interrupt; //interrupt enable processor status before CPU instruction execution
+    bool brk;       //breakpoint enable processor status before CPU instruction execution
+    bool nmi;       //non-maskable interrupt requested
   } state;
 
   u8 opcode;

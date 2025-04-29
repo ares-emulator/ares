@@ -27,7 +27,11 @@ set_target_properties(
 )
 
 target_add_resource(desktop-ui "${CMAKE_SOURCE_DIR}/ruby/video/metal/Shaders.metal" "Shaders")
-target_add_resource(desktop-ui "${CMAKE_CURRENT_SOURCE_DIR}/resource/Assets.xcassets")
+if(ACTOOL_PROGRAM)
+  target_add_resource(desktop-ui "${CMAKE_CURRENT_SOURCE_DIR}/resource/Assets.xcassets")
+else()
+  target_add_resource(desktop-ui "${CMAKE_CURRENT_SOURCE_DIR}/resource/AppIcon.icns")
+endif()
 
 function(target_install_shaders target)
   message(DEBUG "Installing shaders for target ${target}...")
@@ -70,7 +74,6 @@ if(ARES_ENABLE_LIBRASHADER)
       add_custom_command(
         OUTPUT
           "${CMAKE_CURRENT_BINARY_DIR}/$<IF:$<BOOL:${XCODE}>,$<CONFIG>,>/ares.app/Contents/Resources/Shaders/bilinear.slangp"
-          POST_BUILD
         COMMAND ditto "${slang_shaders_LOCATION}" "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>/Resources/Shaders/"
         WORKING_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>"
         COMMENT "Copying slang shaders to app bundle"

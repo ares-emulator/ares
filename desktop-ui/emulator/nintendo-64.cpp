@@ -116,6 +116,7 @@ auto Nintendo64::load() -> LoadResult {
   ares::Nintendo64::option("Homebrew Mode", settings.general.homebrewMode);
   ares::Nintendo64::option("Recompiler", !settings.general.forceInterpreter);
   ares::Nintendo64::option("Expansion Pak", settings.nintendo64.expansionPak);
+  ares::Nintendo64::option("Controller Pak Banks", settings.nintendo64.controllerPakBankString);
 
   if(!ares::Nintendo64::load(root, {"[Nintendo] ", name, " (", region, ")"})) return otherError;
 
@@ -162,7 +163,9 @@ auto Nintendo64::load() -> LoadResult {
         if(!transferPakConnected) {
           if(id == 0 && game->pak->attribute("cpak").boolean()) {
             gamepad = mia::Pak::create("Nintendo 64");
-            gamepad->pak->append("save.pak", 32_KiB);
+
+            //create maximum sized controller pak, file is resized later
+            gamepad->pak->append("save.pak", 1984_KiB);
             gamepad->load("save.pak", ".pak", game->location);
             port->allocate("Controller Pak");
             port->connect();

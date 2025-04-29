@@ -6,7 +6,11 @@
 #include "monitor.cpp"
 #include "keyboard.cpp"
 #include "mouse.cpp"
+#if HIRO_GTK==2
 #include "browser-window.cpp"
+#else
+#include "browser-window-native.cpp"
+#endif
 #include "message-window.cpp"
 
 #include "object.cpp"

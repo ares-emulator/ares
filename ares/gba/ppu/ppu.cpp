@@ -75,16 +75,25 @@ auto PPU::step(u32 clocks) -> void {
   Thread::synchronize(cpu, display);
 }
 
-template<u32 Cycle>
-auto PPU::cycleLinear(u32 x, u32 y) -> void {
+template<s32 Cycle>
+auto PPU::cycleLinearMap(s32 x, u32 y) -> void {
   n3 mode = PPU::Background::IO::mode;
-  if constexpr(Cycle == 0) if(mode <= 1) bg0.linear(x, y);
-  if constexpr(Cycle == 1) if(mode <= 1) bg1.linear(x, y);
-  if constexpr(Cycle == 2) if(mode == 0) bg2.linear(x, y);
-  if constexpr(Cycle == 3) if(mode == 0) bg3.linear(x, y);
+  if constexpr(Cycle == 0) if(mode <= 1) bg0.linearFetchTileMap(x, y);
+  if constexpr(Cycle == 1) if(mode <= 1) bg1.linearFetchTileMap(x, y);
+  if constexpr(Cycle == 2) if(mode == 0) bg2.linearFetchTileMap(x, y);
+  if constexpr(Cycle == 3) if(mode == 0) bg3.linearFetchTileMap(x, y);
 }
 
-template<u32 Cycle>
+template<s32 Cycle>
+auto PPU::cycleLinearRender(s32 x, u32 y) -> void {
+  n3 mode = PPU::Background::IO::mode;
+  if constexpr(Cycle == 0) if(mode <= 1) bg0.linearRender(x, y);
+  if constexpr(Cycle == 1) if(mode <= 1) bg1.linearRender(x, y);
+  if constexpr(Cycle == 2) if(mode == 0) bg2.linearRender(x, y);
+  if constexpr(Cycle == 3) if(mode == 0) bg3.linearRender(x, y);
+}
+
+template<s32 Cycle>
 auto PPU::cycleAffine(u32 x, u32 y) -> void {
   n3 mode = PPU::Background::IO::mode;
   if constexpr(Cycle == 0) if(             mode == 2) bg3.affineFetchTileMap(x, y);
@@ -111,11 +120,12 @@ auto PPU::cycleUpperLayer(u32 x, u32 y) -> void {
   dac.upperLayer(x, y);
 }
 
-template<u32 Cycle>
+template<s32 Cycle>
 auto PPU::cycle(u32 y) -> void {
-  if constexpr(Cycle >= 31 && Cycle <= 1005                         ) cycleLinear<(Cycle - 31) & 3>((Cycle - 31) / 4, y);
-  if constexpr(Cycle >= 31 && Cycle <= 1005                         ) cycleAffine<(Cycle - 31) & 3>((Cycle - 31) / 4, y);
-  if constexpr(Cycle >= 31 && Cycle <= 1005 && (Cycle - 31) % 4 == 3) cycleBitmap((Cycle - 31) / 4, y);
+  if constexpr(Cycle >=  7 && Cycle <= 1037                         ) cycleLinearRender<(Cycle -  7) & 3>((Cycle - 35) >> 2, y);
+  if constexpr(Cycle >=  3 && Cycle <= 1005                         ) cycleLinearMap<(Cycle -  3) & 3>((Cycle - 31) >> 2, y);
+  if constexpr(Cycle >= 31 && Cycle <= 1005                         ) cycleAffine<(Cycle - 31) & 3>((Cycle - 31) >> 2, y);
+  if constexpr(Cycle >= 31 && Cycle <= 1005 && (Cycle - 31) % 4 == 3) cycleBitmap((Cycle - 31) >> 2, y);
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 0) cycleUpperLayer((Cycle - 46) / 4, y);
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 2) dac.lowerLayer((Cycle - 46) / 4, y);
   step(1);
@@ -133,7 +143,7 @@ auto PPU::main() -> void {
     bg3.io.ly = bg3.io.y;
   }
 
-  step(31);
+  step(3);
 
   u32 y = display.io.vcounter;
   memory::move(io.forceBlank, io.forceBlank + 1, sizeof(io.forceBlank) - 1);
@@ -159,7 +169,13 @@ auto PPU::main() -> void {
       #define cycles32(index) cycles16(index); cycles16(index + 16)
       #define cycles64(index) cycles32(index); cycles32(index + 32)
 
-      //cycle 31 - start rendering backgrounds
+      //cycle 3 - earliest possible background render cycle
+      cycles04(  3);
+      cycles08(  7);
+      cycles08( 15);
+      cycles08( 23);
+
+      //cycle 31 - start rendering backgrounds unconditionally
       cycles01( 31);
       cycles02( 32);
       cycles04( 34);
@@ -182,6 +198,12 @@ auto PPU::main() -> void {
       cycles64(878);
       cycles64(942);
 
+      //cycle 1006 - finish rendering final background tiles
+      cycles08(1006);
+      cycles08(1014);
+      cycles08(1022);
+      cycles08(1030);
+
       #undef cycles02
       #undef cycles04
       #undef cycles08
@@ -189,22 +211,25 @@ auto PPU::main() -> void {
       #undef cycles32
       #undef cycles64
     } else {
+      step(renderingCycle);
+      for(s32 x : range(247)) {
+        bg0.run(x - 7, y);
+        bg1.run(x - 7, y);
+        bg2.run(x - 7, y);
+        bg3.run(x - 7, y);
+      }
       for(u32 x : range(240)) {
-        bg0.run(x, y);
-        bg1.run(x, y);
-        bg2.run(x, y);
-        bg3.run(x, y);
         cycleUpperLayer(x, y);
         dac.lowerLayer(x, y);
       }
       releaseBus();
-      step(975);
+      step(1035 - renderingCycle);
     }
   } else {
-    step(975);
+    step(1035);
   }
 
-  step(226);
+  step(194);
 }
 
 auto PPU::frame() -> void {
@@ -237,6 +262,15 @@ auto PPU::power() -> void {
   window2.power(IN2);
   window3.power(OUT);
   dac.power();
+
+  renderingCycle = 43;  //by default, render at first cycle of pixel output
+  string gameID;
+  for(u32 index : range(4)) {
+    char byte = cartridge.readRom<true>(Byte, 0xac + index);
+    gameID.append(byte);
+  }
+  if(gameID == "AWRE") renderingCycle = 512;  //Advance Wars (USA)
+  if(gameID == "AWRP") renderingCycle = 512;  //Advance Wars (Europe) (En,Fr,De,Es)
 }
 
 }

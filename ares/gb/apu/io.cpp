@@ -1,4 +1,20 @@
 auto APU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
+  if(Model::GameBoyColor()) {
+    //PCM12
+    if(address == 0xff76 && cycle == 2) {
+      data.bit(0,3) = square1.sample;
+      data.bit(4,7) = square2.sample;
+      return data;
+    }
+
+    //PCM34
+    if(address == 0xff77 && cycle == 2) {
+      data.bit(0,3) = wave.sample;
+      data.bit(4,7) = noise.sample;
+      return data;
+    }
+  }
+
   if(address < 0xff10 || address > 0xff3f) return data;
 
   //NR10

@@ -32,6 +32,7 @@ struct Cartridge : IO, Thread {
     n1 rtc;
     n1 flash;
     n1 karnak;
+    n1 wordWidth;
   } has;
 
   auto title() const { return information.title; }
@@ -93,6 +94,7 @@ struct Cartridge : IO, Thread {
 
     n4 command;
     n1 active;
+    n1 ready;
     n4 index;
     n8 fetchedData;
     n15 counter;

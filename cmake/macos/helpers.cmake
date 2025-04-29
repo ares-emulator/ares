@@ -45,12 +45,10 @@ endfunction()
 function(target_add_resource target resource)
   message(DEBUG "Add resource ${resource} to target ${target} at destination ${destination}...")
   target_sources(${target} PRIVATE "${resource}")
-  if(ARGN)
-    set(subpath ${ARGN})
-    set_property(SOURCE "${resource}" PROPERTY MACOSX_PACKAGE_LOCATION "Resources/${subpath}")
-  else()
-    if(UNUSED) # ${resource} MATCHES ".+\\.xcassets")
-      # todo: asset archive compilation on non-Xcode; very annoying
+  if(${resource} MATCHES ".+\\.xcassets")
+    if(XCODE)
+      set_property(SOURCE "${resource}" PROPERTY MACOSX_PACKAGE_LOCATION Resources)
+    elseif(ACTOOL_PROGRAM)
       add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Assets.car ${CMAKE_CURRENT_BINARY_DIR}/AppIcon.icns
         BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/ac_generated_info.plist
@@ -67,9 +65,10 @@ function(target_add_resource target resource)
         ${CMAKE_CURRENT_BINARY_DIR}/AppIcon.icns
         PROPERTIES HEADER_FILE_ONLY TRUE MACOSX_PACKAGE_LOCATION Resources
       )
-    else()
-      set_property(SOURCE "${resource}" PROPERTY MACOSX_PACKAGE_LOCATION Resources)
     endif()
+  else()
+    set(subpath ${ARGN})
+    set_property(SOURCE "${resource}" PROPERTY MACOSX_PACKAGE_LOCATION "Resources/${subpath}")
   endif()
   source_group("Resources" FILES "${resource}")
 endfunction()
@@ -113,8 +112,6 @@ function(_bundle_dependencies target)
 
       if(is_system_framework OR is_xcode_framework)
         continue()
-      elseif(is_framework)
-        file(REAL_PATH "../../.." library_location BASE_DIRECTORY "${imported_location}")
       elseif(_required_macos VERSION_GREATER CMAKE_OSX_DEPLOYMENT_TARGET)
         continue()
       elseif(NOT library_type STREQUAL "STATIC_LIBRARY")

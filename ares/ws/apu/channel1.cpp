@@ -1,7 +1,9 @@
 auto APU::Channel1::tick() -> void {
-  if(--state.period == io.pitch) {
-    state.period = 0;
-    state.sampleOffset++;
+  if(io.enable) {
+    if(--state.period == io.pitch) {
+      state.period = 0;
+      state.sampleOffset++;
+    }
   }
 }
 

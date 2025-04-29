@@ -72,7 +72,6 @@ struct GPU : Thread, Memory::Interface {
 
   enum class Mode : u32 {
     Normal,
-    Status,
     CopyToVRAM,
     CopyFromVRAM,
   };

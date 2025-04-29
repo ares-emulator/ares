@@ -21,13 +21,12 @@ do
   mkdir ${outdir}-dSYMs
   cp -a ${bindir}/ares-${package}-dSYMs/*.dSYM ${outdir}-dSYMs
   cp -a ${bindir}/ares-${package}/*.app ${outdir}
-  zip -r ../ares-${package}.zip ${outdir}
-  zip -r ../ares-${package}-dSYMs.zip ${outdir}-dSYMs
-
+  zip -r -y ../ares-${package}.zip ${outdir}
+  zip -r -y ../ares-${package}-dSYMs.zip ${outdir}-dSYMs
   cd -
 done
 
-for package in windows-x64 windows-clang-cl-x64 windows-clang-cl-arm64
+for package in windows-x64 windows-arm64
 do
   mkdir "${package}"
   cd "${package}"

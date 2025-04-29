@@ -162,6 +162,16 @@
         "ARES_BUILD_OPTIONAL_TARGETS": true,
         "ARES_PRECOMPILE_HEADERS": false
       }
+    },
+    {
+      "name": "ubuntu-ci-clang",
+      "displayName": "Ubuntu CI (clang)",
+      "description": "Single-arch binary for building on Github Actions",
+      "inherits": ["ubuntu-ci"],
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
     }
   ],
   "buildPresets": [

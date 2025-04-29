@@ -70,8 +70,8 @@ auto Cartridge::RTC::checkAlarm() -> void {
   // TODO: A lot of this is vaguely informed guesswork.
   if(status() & 0x08) {
     // Per-minute edge/steady
-    if(counter < 256) cpu.raise(CPU::Interrupt::Cartridge);
-    if(status() & 0x02 && second() == 0x30 && counter == 0) cpu.lower(CPU::Interrupt::Cartridge);
+    if(counter < 256) cpu.irqLevel(CPU::Interrupt::Cartridge, 1);
+    if(status() & 0x02 && second() == 0x30 && counter == 0) cpu.irqLevel(CPU::Interrupt::Cartridge, 0);
   } else if(status() & 0x02) {
     // Selected frequency steady
     n16 duty = (counter << 1) ^ 0xFFFF;
@@ -86,6 +86,8 @@ auto Cartridge::RTC::checkAlarm() -> void {
       // 12-hour clock
       cpu.irqLevel(CPU::Interrupt::Cartridge, (hour() & 0xBF) == (alarmHour() & 0xBF) && (minute() & 0x7F) == (alarmMinute() & 0x7F));
     }
+  } else {
+    cpu.irqLevel(CPU::Interrupt::Cartridge, 0);
   }
 }
 
@@ -93,20 +95,11 @@ auto Cartridge::RTC::controlRead() -> n8 {
   n8 data = 0;
   data.bit(0,3) = command;
   data.bit(4)   = active;
-  data.bit(7)   = 1;  //0 = busy; 1 = ready for command
+  data.bit(7)   = ready;
   return data;
 }
 
 auto Cartridge::RTC::controlWrite(n5 data) -> void {
-  // TODO: This probably isn't right, but will do unless someone tries to
-  // cancel an RTC command mid-execution.
-  if(active) {
-    if(!data.bit(4) || command != data.bit(0,3)) {
-      debug(unimplemented, "[RTC] Port 0xCA write during command processing = ", data);
-    }
-    return;
-  }
-
   command = data.bit(0,3);
   active = data.bit(4);
 
@@ -130,12 +123,11 @@ auto Cartridge::RTC::controlWrite(n5 data) -> void {
     case 0x0A: { // no-op
       index = 0;
     } break;
-    default: {
-      active = 0;
-    } break;
   }
 
-  if(active && command.bit(0)) fetch();
+  ready = 1;
+  if(active &&  command.bit(0)) fetch();
+  if(active && !command.bit(0)) write(fetchedData);
 }
 
 auto Cartridge::RTC::fetch() -> void {
@@ -179,22 +171,25 @@ auto Cartridge::RTC::fetch() -> void {
       data = 0xFF;
       if(++index >= 2) active = 0;
     } break;
-    default: {
-      active = 0;
-    } break;
   }
 
+  ready = 1;
   fetchedData = data;
 }
 
 auto Cartridge::RTC::read() -> n8 {
   n8 data = fetchedData;
+
+  if(!active) ready = 0;
   if(active && command.bit(0)) fetch();
 
   return data;
 }
 
 auto Cartridge::RTC::write(n8 data) -> void {
+  fetchedData = data;
+
+  if(!active) ready = 0;
   if(active && !command.bit(0)) switch(command & 0x0E) {
     case 0x02: { // STATUS
       status().bit(6) = data.bit(6);
@@ -257,6 +252,7 @@ auto Cartridge::RTC::power() -> void {
   
   command = 0;
   active = 0;
+  ready = 0;
   index = 0;
   counter = 0;
   fetchedData = 0xFF;

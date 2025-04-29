@@ -12,6 +12,7 @@ auto PPU::Background::setEnable(n1 status) -> void {
 auto PPU::Background::scanline(u32 y) -> void {
   mosaicOffset = 0;
   for(auto& pixel : output) pixel = {};
+  latch.active = false;
 }
 
 auto PPU::Background::outputPixel(u32 x, u32 y) -> void {
@@ -23,47 +24,64 @@ auto PPU::Background::outputPixel(u32 x, u32 y) -> void {
   mosaicOffset--;
 }
 
-auto PPU::Background::run(u32 x, u32 y) -> void {
+auto PPU::Background::run(s32 x, u32 y) -> void {
   switch(id) {
   case PPU::BG0:
-    if(io.mode <= 1) { linear(x, y); break; }
+    if(io.mode <= 1) { linearFetchTileMap(x, y); linearRender(x, y); break; }
     break;
 
   case PPU::BG1:
-    if(io.mode <= 1) { linear(x, y); break; }
+    if(io.mode <= 1) { linearFetchTileMap(x, y); linearRender(x, y); break; }
     break;
 
   case PPU::BG2:
-    if(io.mode == 0) { linear(x, y); break; }
+    if(io.mode == 0) { linearFetchTileMap(x, y); linearRender(x, y); break; }
     if(io.mode <= 2) { affineFetchTileMap(x, y); affineFetchTileData(x, y); break; }
     if(io.mode <= 5) { bitmap(x, y); break; }
     break;
 
   case PPU::BG3:
-    if(io.mode == 0) { linear(x, y); break; }
+    if(io.mode == 0) { linearFetchTileMap(x, y); linearRender(x, y); break; }
     if(io.mode == 2) { affineFetchTileMap(x, y); affineFetchTileData(x, y); break; }
     break;
   }
 }
 
-auto PPU::Background::linearFetchTileMap() -> void {
-  n6 tx = fx >> 3;
-  n6 ty = fy >> 3;
+auto PPU::Background::linearFetchTileMap(s32 x, u32 y) -> void {
+  if(ppu.blank() || !io.enable[0]) return;
 
-  u32 offset = (ty & 31) << 5 | (tx & 31);
-  if(io.screenSize.bit(0) && (tx & 32)) offset += 32 << 5;
-  if(io.screenSize.bit(1) && (ty & 32)) offset += 32 << 5 + io.screenSize.bit(0);
-  offset = (io.screenBase << 11) + (offset << 1);
+  if(x == -7) {
+    if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
+      vmosaic = y;
+    }
+  }
 
-  n16 tilemap  = ppu.readVRAM_BG(Half, offset);
-  latch.character = tilemap.bit(0,9);
-  latch.hflip     = tilemap.bit(10);
-  latch.vflip     = tilemap.bit(11);
-  latch.palette   = tilemap.bit(12,15);
+  fx = x + io.hoffset;
+  fy = vmosaic + io.voffset;
+
+  n3 px = fx;
+  if(px == 0) {
+    //fetch tilemap
+    n6 tx = fx >> 3;
+    n6 ty = fy >> 3;
+
+    u32 offset = (ty & 31) << 5 | (tx & 31);
+    if(io.screenSize.bit(0) && (tx & 32)) offset += 32 << 5;
+    if(io.screenSize.bit(1) && (ty & 32)) offset += 32 << 5 + io.screenSize.bit(0);
+    offset = (io.screenBase << 11) + (offset << 1);
+
+    n16 tilemap  = ppu.readVRAM_BG(Half, offset);
+    latch.character = tilemap.bit(0,9);
+    latch.hflip     = tilemap.bit(10);
+    latch.vflip     = tilemap.bit(11);
+    latch.palette   = tilemap.bit(12,15);
+    latch.active    = true;
+    latch.px        = 0;
+  }
 }
 
 auto PPU::Background::linearFetchTileData() -> void {
-  n3 px = fx;
+  n3 px = latch.px;
   n3 py = fy;
   if(latch.hflip) px = ~px;
   if(latch.vflip) py = ~py;
@@ -75,29 +93,13 @@ auto PPU::Background::linearFetchTileData() -> void {
   latch.data = ppu.readVRAM_BG(Half, offset);
 }
 
-auto PPU::Background::linear(u32 x, u32 y) -> void {
-  if(x > 239) return;
+auto PPU::Background::linearRender(s32 x, u32 y) -> void {
   if(ppu.blank() || !io.enable[0]) return;
+  if(!latch.active) return;
 
-  if(x == 0) {
-    if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
-      vmosaic = y;
-    }
-    fx = io.hoffset;
-    fy = vmosaic + io.voffset;
-  }
+  n3 px = latch.px;
 
-  n3 px = fx;
-  n3 py = fy;
-
-  if(x == 0 || px == 0) linearFetchTileMap();
-  if(x == 0) {
-    linearFetchTileData();
-  } else if(io.colorMode == 0 && (px & 3) == 0) {
-    linearFetchTileData();
-  } else if(io.colorMode == 1 && (px & 1) == 0) {
-    linearFetchTileData();
-  }
+  if(((px << io.colorMode) & 3) == 0) linearFetchTileData();
 
   if(latch.hflip) px = ~px;
 
@@ -111,17 +113,18 @@ auto PPU::Background::linear(u32 x, u32 y) -> void {
   }
 
   if(color) {
-    if(io.colorMode == 0) color |= latch.palette << 4;
-    output[x].enable = true;
-    output[x].priority = io.priority;
-    output[x].color = color;
+    if(x >= 0 && x < 240) {
+      if(io.colorMode == 0) color |= latch.palette << 4;
+      output[x].enable = true;
+      output[x].priority = io.priority;
+      output[x].color = color;
+    }
   }
 
-  fx++;
+  if(++latch.px == 0) latch.active = false;
 }
 
 auto PPU::Background::affineFetchTileMap(u32 x, u32 y) -> void {
-  if(x > 239) return;
   if(ppu.blank() || !io.enable[0]) return;
 
   if(x == 0) {
@@ -146,16 +149,19 @@ auto PPU::Background::affineFetchTileMap(u32 x, u32 y) -> void {
 }
 
 auto PPU::Background::affineFetchTileData(u32 x, u32 y) -> void {
-  if(x > 239) return;
   if(ppu.blank() || !io.enable[0]) return;
 
+  n3 px = affine.cx;
+  n3 py = affine.cy;
+  n8 color = ppu.readVRAM_BG(Byte, (io.characterBase << 14) + (affine.character << 6) + (py << 3) + px);
+
   if(affine.tx < affine.screenSize && affine.ty < affine.screenSize) {
-    n3 px = affine.cx;
-    n3 py = affine.cy;
-    if(n8 color = ppu.readVRAM_BG(Byte, (io.characterBase << 14) + (affine.character << 6) + (py << 3) + px)) {
-      output[x].enable = true;
-      output[x].priority = io.priority;
-      output[x].color = color;
+    if(color) {
+      if(x < 240) {
+        output[x].enable = true;
+        output[x].priority = io.priority;
+        output[x].color = color;
+      }
     }
   }
 
@@ -169,7 +175,6 @@ auto PPU::Background::affineFetchTileData(u32 x, u32 y) -> void {
 }
 
 auto PPU::Background::bitmap(u32 x, u32 y) -> void {
-  if(x > 239) return;
   if(ppu.blank() || !io.enable[0]) return;
 
   if(x == 0) {
@@ -191,15 +196,17 @@ auto PPU::Background::bitmap(u32 x, u32 y) -> void {
   u32 px = fx >> 8;
   u32 py = fy >> 8;
 
-  if(px < width && py < height) {
-    u32 offset = py * width + px;
-    n15 color = ppu.readVRAM_BG(mode, baseAddress + (offset << depth));
+  u32 offset = py * width + px;
+  n15 color = ppu.readVRAM_BG(mode, baseAddress + (offset << depth));
 
+  if(px < width && py < height) {
     if(depth || color) {  //8bpp color 0 is transparent; 15bpp color is always opaque
-      if(depth) output[x].directColor = true;
-      output[x].enable = true;
-      output[x].priority = io.priority;
-      output[x].color = color;
+      if(x < 240) {
+        if(depth) output[x].directColor = true;
+        output[x].enable = true;
+        output[x].priority = io.priority;
+        output[x].color = color;
+      }
     }
   }
 

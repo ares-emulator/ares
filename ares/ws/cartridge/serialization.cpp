@@ -41,6 +41,7 @@ auto Cartridge::RTC::serialize(serializer& s) -> void {
 
   s(command);
   s(active);
+  s(ready);
   s(index);
   s(fetchedData);
   s(counter);

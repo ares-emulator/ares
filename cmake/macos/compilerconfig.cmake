@@ -21,22 +21,41 @@ endif()
 set_property(CACHE CMAKE_OSX_ARCHITECTURES PROPERTY STRINGS arm64 x86_64)
 
 # Ensure recent enough Xcode and platform SDK
-set(_ares_macos_minimum_sdk 11.1) # Minimum tested SDK
-set(_ares_macos_minimum_xcode 12.4) # Sync with SDK
-message(DEBUG "macOS SDK Path: ${CMAKE_OSX_SYSROOT}")
-string(REGEX MATCH ".+/SDKs/MacOSX([0-9]+\\.[0-9])+\\.sdk$" _ ${CMAKE_OSX_SYSROOT})
-set(_ares_macos_current_sdk ${CMAKE_MATCH_1})
-message(DEBUG "macOS SDK version: ${_ares_macos_current_sdk}")
-if(_ares_macos_current_sdk VERSION_LESS _ares_macos_minimum_sdk)
-  message(
-    FATAL_ERROR
-    "Your macOS SDK version (${_ares_macos_current_sdk}) is too low. "
-    "The macOS ${_ares_macos_minimum_sdk} SDK (Xcode ${_ares_macos_minimum_xcode}) is required to build ares."
+function(check_sdk_requirements)
+  set(ares_macos_minimum_sdk 11.1) # Minimum tested SDK
+  set(ares_macos_minimum_xcode 12.4) # Sync with SDK
+  execute_process(
+    COMMAND xcrun --sdk macosx --show-sdk-platform-version
+    OUTPUT_VARIABLE ares_macos_current_sdk
+    RESULT_VARIABLE result
+    OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-endif()
-unset(_ares_macos_current_sdk)
-unset(_ares_macos_minimum_sdk)
-unset(_ares_macos_minimum_xcode)
+  if(NOT result EQUAL 0)
+    message(
+      FATAL_ERROR
+      "Failed to fetch macOS SDK version. "
+      "Ensure that the macOS SDK is installed and that xcode-select points at the Xcode developer directory."
+    )
+  endif()
+  message(DEBUG "macOS SDK version: ${ares_macos_current_sdk}")
+  if(ares_macos_current_sdk VERSION_LESS ares_macos_minimum_sdk)
+    message(
+      FATAL_ERROR
+      "Your macOS SDK version (${ares_macos_current_sdk}) is too low. "
+      "The macOS ${ares_macos_minimum_sdk} SDK (Xcode ${ares_macos_minimum_xcode}) is required to build ares."
+    )
+  endif()
+  if(XCODE)
+    if(XCODE_VERSION VERSION_LESS ares_macos_minimum_xcode)
+      message(
+        FATAL_ERROR
+        "Your Xcode version (${XCODE_VERSION}) is too low. Xcode ${ares_macos_minimum_xcode} is required to build ares."
+      )
+    endif()
+  endif()
+endfunction()
+
+check_sdk_requirements()
 
 # Enable dSYM generator for release builds
 string(APPEND CMAKE_C_FLAGS_RELEASE " -g")

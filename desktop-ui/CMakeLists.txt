@@ -47,8 +47,12 @@ endif()
 
 target_link_libraries(
   desktop-ui
-  PRIVATE ares::ruby ares::hiro ares::ares mia chdr-static sljit
+  PRIVATE ares::ruby ares::hiro ares::ares mia sljit
 )
+
+if(ARES_ENABLE_CHD)
+  target_link_libraries(desktop-ui PRIVATE chdr-static)
+endif()
 
 set_target_properties(desktop-ui PROPERTIES OUTPUT_NAME ares)
 

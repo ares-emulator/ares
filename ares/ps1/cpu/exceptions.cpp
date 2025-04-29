@@ -3,7 +3,7 @@ auto CPU::Exception::operator()() -> bool {
   return triggered;
 }
 
-auto CPU::Exception::trigger(u32 code) -> void {
+auto CPU::Exception::trigger(u32 code, n1 hardwareBreakpoint) -> void {
   triggered = true;
   self.debugger.exception(code);
 
@@ -12,7 +12,13 @@ auto CPU::Exception::trigger(u32 code) -> void {
   self.scc.status.frame[0] = {};
 
   self.scc.cause.exceptionCode = code;
-  self.scc.cause.coprocessorError = self.pipeline.instruction >> 28;
+  self.scc.cause.coprocessorError = 0;
+
+  //CE is not set for Bus Errors or Hardware Breakpoints
+  if(code != 6 && code !=7 && !hardwareBreakpoint) {
+    self.scc.cause.coprocessorError = self.pipeline.instruction.bit(26, 27);
+  }
+
   self.scc.cause.branchDelay = self.delay.branch[0].slot;
   self.scc.cause.branchTaken = self.delay.branch[0].take;
 
@@ -71,7 +77,7 @@ auto CPU::Exception::systemCall() -> void {
 }
 
 auto CPU::Exception::breakpoint(bool overrideVectorLocation) -> void {
-  trigger(9);
+  trigger(9, overrideVectorLocation);
   //todo: is this really 0xbfc0'0140 when BEV=1?
   if(overrideVectorLocation) self.ipu.pc -= 0x40, self.ipu.pd -= 0x40;
 }

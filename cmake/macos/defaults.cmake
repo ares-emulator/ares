@@ -2,9 +2,6 @@
 
 include_guard(GLOBAL)
 
-# Required to avoid us finding a system SDL2.framework before our provided SDL2.dylib
-set(CMAKE_FIND_FRAMEWORK LAST)
-
 # Set empty codesigning team if not specified as cache variable
 if(NOT ARES_CODESIGN_TEAM)
   set(ARES_CODESIGN_TEAM "" CACHE STRING "ares code signing team for macOS" FORCE)
@@ -14,6 +11,8 @@ if(NOT ARES_CODESIGN_TEAM)
     set(ARES_CODESIGN_IDENTITY "-" CACHE STRING "ares code signing identity for macOS" FORCE)
   endif()
 endif()
+
+find_program(ACTOOL_PROGRAM "actool")
 
 include(xcode)
 

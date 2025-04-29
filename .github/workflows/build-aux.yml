@@ -1,0 +1,111 @@
+name: Build (Auxiliary)
+on:
+  workflow_call
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        program:
+        - ares
+        config:
+        - RelWithDebInfo
+        platform:
+        - name: windows-x64-gcc
+          os: windows-latest
+          shell: 'msys2 {0}'
+          msystem: mingw64
+          install: mingw-w64-x86_64-toolchain
+          target-cmake-preset: windows-ci-mingw-native
+        - name: windows-clang-cl-x64
+          os: windows-latest
+          windres: rc
+          shell: bash
+          target-cmake-preset: windows-ci-cl-native
+        - name: windows-clang-cl-arm64
+          os: windows-latest
+          windres: rc
+          shell: bash
+          target-cmake-preset: windows-ci-cl-cross
+          native-cmake-preset: windows-ci-cl-native
+        - name: windows-msvc-x64
+          os: windows-latest
+          windres: rc
+          shell: bash
+          target-cmake-preset: windows-ci-msvc-native
+        - name: windows-msvc-arm64
+          os: windows-latest
+          windres: rc
+          shell: bash
+          target-cmake-preset: windows-ci-msvc-cross
+          native-cmake-preset: windows-ci-msvc-native
+        - name: ubuntu-gcc-x64
+          os: ubuntu-24.04
+          shell: bash
+          target-cmake-preset: ubuntu-ci
+        - name: ubuntu-gcc-arm64
+          os: ubuntu-24.04-arm
+          shell: bash
+          target-cmake-preset: ubuntu-ci
+        - name: ubuntu-clang-x64
+          os: ubuntu-24.04
+          shell: bash
+          target-cmake-preset: ubuntu-ci-clang
+        - name: ubuntu-clang-arm64
+          os: ubuntu-24.04-arm
+          shell: bash
+          target-cmake-preset: ubuntu-ci-clang
+    name: ${{ matrix.program }}-${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.platform.shell }}
+    steps:
+    - name: Install MSYS2 Dependencies
+      if: matrix.platform.shell == 'msys2 {0}'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.platform.msystem }}
+        install: make git cmake ccache ninja ${{ matrix.platform.install }}
+    - name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+        fetch-tags: true
+        fetch-depth: 0
+    - name: Setup MSYS2 Git Environment
+      if: matrix.platform.shell == 'msys2 {0}'
+      run: |
+        git config core.autocrlf true
+    - name: Install Linux Dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y -qq
+        sudo apt-get install cmake ccache ninja-build libsdl2-dev libgtk-3-dev libao-dev libopenal-dev
+    - name: "Build: Linux"
+      if: runner.os == 'Linux'
+      run: .github/scripts/build_ubuntu.sh
+      env:
+        TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
+    - name: "Build: Windows"
+      if: runner.os != 'macOS' && runner.os != 'Linux'
+      run: .github/scripts/build_windows.sh
+      env:
+        ARES_PLATFORM_NAME: ${{ matrix.platform.name }}
+        CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
+        NATIVE_PRESET: ${{ matrix.platform.native-cmake-preset }}
+        TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
+    - name: "Compress Build Artifacts (Windows)"
+      if: runner.os != 'macOS' && runner.os != 'Linux'
+      run: |
+        tar -cvJf ares-${{ matrix.platform.name }}.tar.xz -C build/desktop-ui/rundir/ .
+    - name: Upload Build
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.program }}-${{ matrix.platform.name }}
+        path: ares-${{ matrix.platform.name }}.tar.xz
+    - name: Upload Debug Symbols (Windows)
+      if: runner.os != 'macOS' && runner.os != 'Linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.program }}-${{ matrix.platform.name }}-PDBs
+        path: build/PDBs/*

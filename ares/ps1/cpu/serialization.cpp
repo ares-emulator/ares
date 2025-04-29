@@ -174,8 +174,4 @@ auto CPU::serialize(serializer& s) -> void {
   s(gte.mv);
   s(gte.mm);
   s(gte.sf);
-
-  if constexpr(Accuracy::CPU::Recompiler) {
-    recompiler.reset();
-  }
 }

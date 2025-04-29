@@ -3,21 +3,18 @@ struct Accuracy {
   static constexpr bool Reference = 0;
 
   struct CPU {
-    static constexpr bool Interpreter = 0 | Reference | !recompiler::generic::supported;
-    static constexpr bool Recompiler = !Interpreter;
-
     //exceptions when the CPU accesses unaligned memory addresses
-    static constexpr bool AddressErrors = 0 | Reference & !Recompiler;
+    static constexpr bool AddressErrors = 1 | Reference;
 
     //exceptions when the CPU accesses unmapped memory addresses
-    static constexpr bool BusErrors = 0 | Reference & !Recompiler;
+    static constexpr bool BusErrors = 1 | Reference;
 
-    //breakpoints are expensive and not used by any commercial games
-    static constexpr bool Breakpoints = 0 | Reference & !Recompiler;
+    //breakpoints are expensive and not used by any commercial games (but are used by Action Replay, etc)
+    static constexpr bool Breakpoints = 1 | Reference;
   };
 
   struct GPU {
     //performs GPU primitive rendering on a separate thread
-    static constexpr bool Threaded = 1 & !Reference;
+    static constexpr bool Threaded = 1;
   };
 };

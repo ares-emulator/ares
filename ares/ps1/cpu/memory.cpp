@@ -226,9 +226,6 @@ inline auto CPU::write(u32 address, u32 data) -> void {
     }
     if(likely(address <= 0x007f'ffff)) {
       //step(ram.wait<Size>());
-      if constexpr(Accuracy::CPU::Recompiler) {
-        recompiler.invalidate(address);
-      }
       return ram.write<Size>(address, data);
     }
     if(likely(address >= 0x1fc0'0000)) {
@@ -259,9 +256,6 @@ inline auto CPU::write(u32 address, u32 data) -> void {
     }
     if(likely(address <= 0x807f'ffff)) {
       //step(ram.wait<Size>());
-      if constexpr(Accuracy::CPU::Recompiler) {
-        recompiler.invalidate(address);
-      }
       return ram.write<Size>(address, data);
     }
     if(likely(address >= 0x9fc0'0000)) {
@@ -283,9 +277,6 @@ inline auto CPU::write(u32 address, u32 data) -> void {
   case 5: {//KSEG1
     if(likely(address <= 0xa07f'ffff)) {
       //step(ram.wait<Size>());
-      if constexpr(Accuracy::CPU::Recompiler) {
-        recompiler.invalidate(address);
-      }
       return ram.write<Size>(address, data);
     }
     if(likely(address >= 0xbfc0'0000)) {

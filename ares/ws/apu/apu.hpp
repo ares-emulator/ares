@@ -155,7 +155,6 @@ struct APU : Thread, IO {
       n4  volumeLeft;
       n4  volumeRight;
       n3  noiseMode;
-      n1  noiseReset;
       n1  noiseUpdate;
       n1  enable;
       n1  noise;

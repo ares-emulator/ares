@@ -105,7 +105,6 @@ auto V30MZ::instructionReturnInt() -> void {
   PS = pop();
   PSW = pop();
   flush();
-  state.poll = 0;
 }
 
 auto V30MZ::instructionInt3() -> void {
@@ -182,7 +181,6 @@ auto V30MZ::instructionPushFlags() -> void {
 auto V30MZ::instructionPopFlags() -> void {
   wait(2);
   PSW = pop();
-  state.poll = 0;
 }
 
 auto V30MZ::instructionPushAll() -> void {

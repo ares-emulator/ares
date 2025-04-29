@@ -68,6 +68,7 @@ struct VI : Thread, Memory::RCP<VI> {
   } io;
 
   u32 clockFraction;
+  u32 inactiveCounter;
 
 //unserialized:
   bool refreshed;

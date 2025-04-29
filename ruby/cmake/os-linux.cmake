@@ -1,12 +1,12 @@
 target_sources(
   ruby
-  PRIVATE # cmake-format: sortable
+  PRIVATE #
     video/glx.cpp
 )
 
 target_sources(
   ruby
-  PRIVATE # cmake-format: sortable
+  PRIVATE #
     audio/oss.cpp
     audio/alsa.cpp
     audio/openal.cpp
@@ -18,7 +18,7 @@ target_sources(
 
 target_sources(
   ruby
-  PRIVATE # cmake-format: sortable
+  PRIVATE #
     input/xlib.cpp
     input/sdl.cpp
     input/mouse/xlib.cpp
@@ -117,16 +117,6 @@ else()
   target_disable_feature(ruby "udev input driver")
 endif()
 
-option(ARES_ENABLE_USBHID "Enable the usbhid input driver" ON)
-if(ARES_ENABLE_USBHID)
-  find_package(usbhid)
-endif()
-if(usbhid_FOUND)
-  target_enable_feature(ruby "usbhid input driver" INPUT_UHID)
-else()
-  target_disable_feature(ruby "usbhid input driver")
-endif()
-
 target_link_libraries(
   ruby
   PRIVATE
@@ -139,5 +129,4 @@ target_link_libraries(
     $<$<BOOL:${PulseAudio_FOUND}>:PulseAudio::PulseAudioSimple>
     $<$<BOOL:${AO_FOUND}>:AO::AO>
     $<$<BOOL:${udev_FOUND}>:udev::udev>
-    $<$<BOOL:${usbhid_FOUND}>:usbhid::usbhid>
 )

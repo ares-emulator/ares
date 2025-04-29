@@ -1,6 +1,6 @@
 //20000-fffff
 auto Cartridge::readROM(n20 address) -> n8 {
-  int busbyte = ((address & 1) && cpu.width(address) == Word) ? 1 : 0;
+  int busbyte = ((address & 1) && cpu.io.cartridgeRomWidth) ? 1 : 0;
   if(!rom) return openbus.byte(busbyte);
 
   n8 value;

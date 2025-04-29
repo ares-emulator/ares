@@ -12,7 +12,6 @@ CPU cpu;
 #include "interpreter-ipu.cpp"
 #include "interpreter-scc.cpp"
 #include "interpreter-gte.cpp"
-#include "recompiler.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"
@@ -65,30 +64,25 @@ auto CPU::synchronize() -> void {
 }
 
 auto CPU::instruction() -> void {
-  if(Accuracy::CPU::Interpreter || !recompiler.enabled) {
-    if constexpr(Accuracy::CPU::Breakpoints) {
-      if(unlikely(breakpoint.testCode(ipu.pc))) {
-        return (void)instructionEpilogue<0>();
-      }
+  if constexpr(Accuracy::CPU::Breakpoints) {
+    if(unlikely(breakpoint.testCode(ipu.pc))) {
+        return (void)instructionEpilogue();
     }
-
-    if constexpr(Accuracy::CPU::AddressErrors) {
-      if(unlikely(ipu.pc & 3)) {
-        exception.address<Read>(ipu.pc);
-        return (void)instructionEpilogue<0>();
-      }
-    }
-
-    u32 instruction = fetch(ipu.pc);
-    if(exception()) return (void)instructionEpilogue<0>();
-
-    instructionPrologue(instruction);
-    decoderEXECUTE();
-    instructionEpilogue<0>();
-  } else {
-    auto block = recompiler.block(ipu.pc);
-    block->execute(*this);
   }
+
+  if constexpr(Accuracy::CPU::AddressErrors) {
+    if(unlikely(ipu.pc & 3)) {
+      exception.address<Read>(ipu.pc);
+        return (void)instructionEpilogue();
+    }
+  }
+
+  u32 instruction = fetch(ipu.pc);
+  if(exception()) return (void)instructionEpilogue();
+
+  instructionPrologue(instruction);
+  decoderEXECUTE();
+  instructionEpilogue();
 }
 
 auto CPU::instructionPrologue(u32 instruction) -> void {
@@ -97,12 +91,7 @@ auto CPU::instructionPrologue(u32 instruction) -> void {
   debugger.instruction();
 }
 
-template<bool Recompiled>
-auto CPU::instructionEpilogue() -> s32 {
-  if constexpr(Recompiled) {
-    icache.step(ipu.pc);  //simulates timings without performing actual icache loads
-  }
-
+auto CPU::instructionEpilogue() -> void {
   ipu.pb = ipu.pc;
   ipu.pc = ipu.pd;
   ipu.pd = ipu.pd + 4;
@@ -117,13 +106,11 @@ auto CPU::instructionEpilogue() -> s32 {
   }
   exception.triggered = 0;
 
-  //the recompiler needs to know when branches occur to break execution of blocks early
+  //When a branch is detected, check if we need to hook a  bios call
   if(ipu.pb + 4 != ipu.pc) {
     debugger.message();
     debugger.function();
-    return true;
   }
-  return false;
 }
 
 auto CPU::instructionHook() -> void {
@@ -266,12 +253,6 @@ auto CPU::power(bool reset) -> void {
   gte.mv = 0;
   gte.mm = 0;
   gte.sf = 0;
-
-  if constexpr(Accuracy::CPU::Recompiler) {
-    auto buffer = ares::Memory::FixedAllocator::get().tryAcquire(64_MiB);
-    recompiler.allocator.resize(64_MiB, bump_allocator::executable, buffer);
-    recompiler.reset();
-  }
 }
 
 }

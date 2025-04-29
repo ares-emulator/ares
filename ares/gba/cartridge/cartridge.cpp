@@ -56,7 +56,7 @@ auto Cartridge::connect() -> void {
     eeprom.mask = mrom.size > 16 * 1024 * 1024 ? 0x0fffff00 : 0x0f000000;
     eeprom.test = mrom.size > 16 * 1024 * 1024 ? 0x0dffff00 : 0x0d000000;
     for(auto n : range(eeprom.size)) eeprom.data[n] = 0xff;
-    fp->read({eeprom.data, eeprom.size});
+    if(!fp->end()) fp->read({eeprom.data, eeprom.size});  //only load save file if already present
   }
 
   if(auto fp = pak->read("save.flash")) {

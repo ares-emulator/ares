@@ -540,7 +540,7 @@ auto Disc::commandGetID() -> void {
 
       irq.error.flag = 1;
       irq.poll();
-    } else if(region() == "NTSC-J" && Region::NTSCJ()) {
+    } else if(region().find("NTSC-J") && Region::NTSCJ()) {
       ssr.idError = 0;
 
       fifo.response.write(status());
@@ -554,7 +554,7 @@ auto Disc::commandGetID() -> void {
 
       irq.complete.flag = 1;
       irq.poll();
-    } else if(region() == "NTSC-U" && Region::NTSCU()) {
+    } else if(region().find("NTSC-U") && Region::NTSCU()) {
       ssr.idError = 0;
 
       fifo.response.write(status());
@@ -568,7 +568,7 @@ auto Disc::commandGetID() -> void {
 
       irq.complete.flag = 1;
       irq.poll();
-    } else if(region() == "PAL" && Region::PAL()) {
+    } else if(region().find("PAL") && Region::PAL()) {
       ssr.idError = 0;
 
       fifo.response.write(status());
