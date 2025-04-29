@@ -46,11 +46,9 @@ auto System::load(Node::System& root, string name) -> bool {
 
   information = {};
   if(name.find("Game Boy Advance")) {
-    information.name = "Game Boy Advance";
     information.model = Model::GameBoyAdvance;
   }
   if(name.find("Game Boy Player")) {
-    information.name = "Game Boy Player";
     information.model = Model::GameBoyPlayer;
   }
 

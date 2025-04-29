@@ -107,6 +107,10 @@ struct Settings : Markup::Node {
     string controllerPakBankString = "32KiB (Default)";
   } nintendo64;
 
+  struct GameBoyAdvance {
+    bool player = false;
+  } gameBoyAdvance;
+
   struct MegaDrive {
     bool tmss = false;
   } megadrive;
@@ -269,6 +273,11 @@ struct OptionSettings : VerticalLayout {
       ComboButton nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{0, 0}};
       // LineEdit nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{40, 0}};
       Label nintendo64ControllerPakBankHint{&nintendo64ControllerPakBankLayout, Size{0, 0}};
+
+  Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};
+      CheckLabel gameBoyPlayerOption{&gameBoyPlayerLayout, Size{0, 0}, 5};
+      Label gameBoyPlayerHint{&gameBoyPlayerLayout, Size{0, 0}};
 
   Label megaDriveSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};

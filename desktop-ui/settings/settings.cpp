@@ -125,6 +125,8 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
   bind(string, "Nintendo64/ControllerPakBankString", nintendo64.controllerPakBankString);
 
+  bind(boolean, "GameBoyAdvance/Player", gameBoyAdvance.player);
+
   bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
 
   for(u32 index : range(9)) {
