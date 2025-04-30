@@ -80,7 +80,7 @@ template<typename T> struct set {
 
   template<typename... P> auto insert(const T& value, P&&... p) -> bool {
     bool result = insert(value);
-    insert(std::forward<P>(p)...) | result;
+    result |= insert(std::forward<P>(p)...);
     return result;
   }
 
