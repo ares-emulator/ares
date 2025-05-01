@@ -173,7 +173,7 @@ struct APU : Thread, IO {
     auto reset() -> void;
     auto power() -> void;
 
-    i8 samples[32];
+    i8 samples[28];
     i8 active;
     i8 output;
 

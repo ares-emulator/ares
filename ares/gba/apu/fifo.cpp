@@ -5,13 +5,18 @@ auto APU::FIFO::sample() -> void {
 auto APU::FIFO::read() -> void {
   if(size == 0) return;
   size--;
-  active = samples[rdoffset++];
+  active = samples[rdoffset];
+  rdoffset = (rdoffset + 1) % 28;
 }
 
 auto APU::FIFO::write(i8 byte) -> void {
-  if(size == 32) rdoffset++;
-  else size++;
-  samples[wroffset++] = byte;
+  if(size == 28) {
+    rdoffset = (rdoffset + 1) % 28;
+  } else {
+    size++;
+  }
+  samples[wroffset] = byte;
+  wroffset = (wroffset + 1) % 28;
 }
 
 auto APU::FIFO::reset() -> void {
