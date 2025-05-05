@@ -93,6 +93,7 @@ struct APU : Thread, IO {
     auto clockLength() -> void;
     auto read(u32 address) const -> n8;
     auto write(u32 address, n8 byte) -> void;
+    auto freeBank() const -> n1;
     auto readRAM(u32 address) const -> n8;
     auto writeRAM(u32 address, n8 byte) -> void;
     auto power() -> void;
@@ -169,17 +170,19 @@ struct APU : Thread, IO {
     //fifo.cpp
     auto sample() -> void;
     auto read() -> void;
-    auto write(i8 byte) -> void;
+    auto write(n2 address, n8 byte) -> void;
     auto reset() -> void;
     auto power() -> void;
+    auto size() -> n3 { return wroffset - rdoffset; }
 
-    i8 samples[28];
-    i8 active;
-    i8 output;
+    n32 buffer;
+    n32 samples[8];
+    i8  active;
+    i8  output;
 
-    n5 rdoffset;
-    n5 wroffset;
-    n6 size;
+    n3 rdoffset;
+    n3 wroffset;
+    n3 samplesRead;
 
     n1 volume;  //0 = 50%, 1 = 100%
     n1 lenable;

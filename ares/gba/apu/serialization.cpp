@@ -96,12 +96,13 @@ auto APU::serialize(serializer& s) -> void {
   s(sequencer.routput);
 
   for(auto& f : fifo) {
+    s(f.buffer);
     s(f.samples);
     s(f.active);
     s(f.output);
     s(f.rdoffset);
     s(f.wroffset);
-    s(f.size);
+    s(f.samplesRead);
     s(f.volume);
     s(f.lenable);
     s(f.renable);

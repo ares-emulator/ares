@@ -57,7 +57,7 @@ auto CPU::Timer::step() -> void {
 auto CPU::runFIFO(u32 n) -> void {
   synchronize(apu);
   apu.fifo[n].read();
-  if(apu.fifo[n].size > 12) return;
+  if(apu.fifo[n].size() > 3) return;
 
   auto& dma = this->dma[1 + n];
   if(dma.enable && dma.timingMode == 3) {
