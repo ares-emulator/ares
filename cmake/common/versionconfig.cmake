@@ -4,18 +4,53 @@ function(populate_ares_version_info)
   if(DEFINED ARES_VERSION_OVERRIDE)
     set(ARES_VERSION ${ARES_VERSION_OVERRIDE})
   elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+    # Get current branch or tag
     execute_process(
-      COMMAND git describe --always --tags --exclude=nightly --dirty=-modified
-      OUTPUT_VARIABLE ARES_VERSION
-      ERROR_VARIABLE git_describe_err
-      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-      RESULT_VARIABLE ares_version_result
-      OUTPUT_STRIP_TRAILING_WHITESPACE
+        COMMAND git symbolic-ref --short -q HEAD
+        OUTPUT_VARIABLE GIT_REF
+        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+    if(NOT GIT_REF)
+        execute_process(
+            COMMAND git describe --tags --exact-match
+            OUTPUT_VARIABLE GIT_REF
+            ERROR_QUIET
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        )
+    endif()
+
+    # Get short hash
+    execute_process(
+        COMMAND git rev-parse --short HEAD
+        OUTPUT_VARIABLE GIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     )
 
-    if(git_describe_err)
-      message(FATAL_ERROR "Could not fetch ares version tag from git.\n" ${git_describe_err})
+    # Check for local modifications
+    execute_process(
+        COMMAND git status --porcelain
+        OUTPUT_VARIABLE GIT_STATUS
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+    if(GIT_STATUS)
+        set(GIT_HASH "${GIT_HASH}-modified")
     endif()
+
+    # Get commit date
+    execute_process(
+        COMMAND git show -s --format=%cd --date=short
+        OUTPUT_VARIABLE GIT_DATE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+
+    # Combine all parts
+    set(ARES_VERSION "${GIT_REF} (${GIT_HASH} - ${GIT_DATE})")
   else()
     file(READ cmake/common/.archive-version ares_tarball_version)
     string(STRIP "${ares_tarball_version}" ares_tarball_version)
@@ -42,14 +77,4 @@ function(populate_ares_version_info)
 endfunction()
 
 populate_ares_version_info()
-
-if(NOT ARES_VERSION_CANONICAL MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
-  message(
-    FATAL_ERROR
-    "Available ares version information ('${ARES_VERSION}') could not be converted to a valid CMake version string.\n"
-    "Make sure the repository you have cloned or archived from contains ares version tags ('git fetch --tags').\n"
-    "If tags are unavailable, you may specify a custom version with ARES_VERSION_OVERRIDE, using an ares-formatted "
-    "version string, e.g. 'v123'.\n"
-  )
-endif()
 
