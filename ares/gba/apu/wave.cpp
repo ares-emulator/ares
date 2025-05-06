@@ -65,16 +65,20 @@ auto APU::Wave::write(u32 address, n8 byte) -> void {
   }
 }
 
+auto APU::Wave::freeBank() const -> n1 {
+  return bank && apu.sequencer.masterenable;
+}
+
 auto APU::Wave::readRAM(u32 address) const -> n8 {
   n8 byte = 0;
-  byte |= pattern[!bank << 5 | address << 1 | 0] << 4;
-  byte |= pattern[!bank << 5 | address << 1 | 1] << 0;
+  byte |= pattern[freeBank() << 5 | address << 1 | 0] << 4;
+  byte |= pattern[freeBank() << 5 | address << 1 | 1] << 0;
   return byte;
 }
 
 auto APU::Wave::writeRAM(u32 address, n8 byte) -> void {
-  pattern[!bank << 5 | address << 1 | 0] = byte >> 4;
-  pattern[!bank << 5 | address << 1 | 1] = byte >> 0;
+  pattern[freeBank() << 5 | address << 1 | 0] = byte >> 4;
+  pattern[freeBank() << 5 | address << 1 | 1] = byte >> 0;
 }
 
 auto APU::Wave::power() -> void {

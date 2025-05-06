@@ -146,6 +146,7 @@ auto APU::readIO(n32 address) -> n8 {
 }
 
 auto APU::writeIO(n32 address, n8 data) -> void {
+  if(!sequencer.masterenable && (address < 0x0400'0080 || address >= 0x0400'00a0)) return;
   cpu.synchronize(apu);
 
   switch(address) {
@@ -260,12 +261,12 @@ auto APU::writeIO(n32 address, n8 data) -> void {
   //FIFO_A_H
   case 0x0400'00a0: case 0x0400'00a1:
   case 0x0400'00a2: case 0x0400'00a3:
-    return fifo[0].write(data);
+    return fifo[0].write(address, data);
 
   //FIFO_B_L
   //FIFO_B_H
   case 0x0400'00a4: case 0x0400'00a5:
   case 0x0400'00a6: case 0x0400'00a7:
-    return fifo[1].write(data);
+    return fifo[1].write(address, data);
   }
 }
