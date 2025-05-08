@@ -7,6 +7,11 @@ on:
         required: false
         default: false
         type: boolean
+      official:
+        description: Use official version strings
+        required: true
+        default: true
+        type: boolean
 jobs:
   build:
     strategy:
@@ -77,6 +82,7 @@ jobs:
       if: runner.os != 'macOS' && runner.os != 'Linux'
       run: .github/scripts/build_windows.sh
       env:
+        ARES_BUILD_OFFICIAL: ${{ inputs.official }}
         ARES_PLATFORM_NAME: ${{ matrix.platform.name }}
         CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
         NATIVE_PRESET: ${{ matrix.platform.native-cmake-preset }}
@@ -95,6 +101,7 @@ jobs:
       if: runner.os == 'macOS'
       run: .github/scripts/build_macos.sh
       env:
+        ARES_BUILD_OFFICIAL: ${{ inputs.official }}
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
         MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
         MACOS_NOTARIZATION_TEAMID: ${{ secrets.MACOS_NOTARIZATION_TEAMID }}

@@ -12,7 +12,8 @@
       "cacheVariables": {
         "ARES_PROFILE_ACCURACY": false,
         "ARES_BUILD_LOCAL": true,
-        "ENABLE_CCACHE": true
+        "ENABLE_CCACHE": true,
+        "ARES_BUILD_OFFICIAL": {"type": "BOOL", "value": "$penv{ARES_BUILD_OFFICIAL}"}
       }
     },
     {
