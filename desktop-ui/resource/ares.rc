@@ -1,4 +1,0 @@
-#ifndef EXCLUDE_MANIFEST_FROM_RC
-1 24 "ares.Manifest"
-#endif
-2 ICON DISCARDABLE "ares.ico"

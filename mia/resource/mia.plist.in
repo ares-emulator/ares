@@ -18,5 +18,7 @@
   <string>@CMAKE_OSX_DEPLOYMENT_TARGET@</string>
   <key>NSHumanReadableCopyright</key>
   <string>@ARES_LEGAL_COPYRIGHT@</string>
+  <key>CFBundleShortVersionString</key>
+  <string>@ARES_VERSION_CANONICAL@</string>
 </dict>
 </plist>

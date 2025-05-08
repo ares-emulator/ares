@@ -1,4 +1,6 @@
-target_sources(desktop-ui PRIVATE resource/ares.rc resource/ares.Manifest)
+configure_file(resource/ares.rc.in ares.rc)
+
+target_sources(desktop-ui PRIVATE ares.rc resource/ares.Manifest)
 
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT desktop-ui)
 
