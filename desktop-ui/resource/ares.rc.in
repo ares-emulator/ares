@@ -1,0 +1,24 @@
+1 VERSIONINFO
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "ProductName", "ares"
+      VALUE "ProductVersion", "${ARES_VERSION}"
+      VALUE "Comments", "Open-source multi-system emulator, focusing on accuracy and preservation."
+      VALUE "LegalCopyright", "${ARES_LEGAL_COPYRIGHT_SHORT}"
+    END
+  END
+
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 0x04B0
+  END
+END
+
+2 ICON DISCARDABLE "resource/ares.ico"
+
+#ifndef EXCLUDE_MANIFEST_FROM_RC
+3 24 "resource/ares.Manifest"
+#endif
