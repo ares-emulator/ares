@@ -1,2 +1,2 @@
 # When archiving, export a version file containing tag/commit information
-cmake/common/.archive-version export-subst
+cmake/common/.archive-version.json export-subst

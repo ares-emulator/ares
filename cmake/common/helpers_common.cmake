@@ -33,8 +33,8 @@ function(message_configuration)
     "                   ..     .:::.    / __ `/ ___/ _ \\/ ___/\n"
     "                    .-::::::::    / /_/ / /  /  __(__  )\n"
     "                      .::::.      \\__,_/_/   \\___/____/\n"
-    "\n                  ares version: ${ARES_VERSION}\n"
-    "==================================================================================\n\n"
+    "\n   ares version: ${ARES_VERSION} (${ARES_VERSION_CANONICAL})\n"
+    "=================================================================================="
   )
 
   get_property(ARES_FEATURES_ENABLED GLOBAL PROPERTY ARES_FEATURES_ENABLED)

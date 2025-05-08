@@ -13,6 +13,7 @@ jobs:
     secrets: inherit
     with:
       codesign: true
+      official: ${{ github.ref_name == 'master' || github.ref_type == 'tag' }}
   build-aux:
     name: Build ares (auxiliary)
     uses: ./.github/workflows/build-aux.yml
