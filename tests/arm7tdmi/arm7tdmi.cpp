@@ -230,6 +230,10 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   //r15 as rn incorrectly reads from +4 offset in test data
   if(!thumb && (test.opcode & 0b00001111101111110000000011110000) == 0b0000'00010'0'001111'00000000'1001'0000) return skip;
 
+  //tests/v1/thumb_undefined_bcc.json
+  //condition code AL is invalid in Thumb mode
+  if(thumb && (test.opcode & 0b1111111100000000) == 0b1101'1110'00000000) return skip;
+
   pipeline.reload = false;
   nonsequential = !(is.access & Access::Sequential);
 
@@ -259,15 +263,8 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
 
   TestResult result = pass;
 
-  u32 cpsrMask = ~0u;
-
-  //arm MRS
-  if((test.opcode & 0b0000'1111'1011'0000'0000'0000'0000'0000) == 0b0000'0011'0010'0000'0000'0000'0000'0000
-  || (test.opcode & 0b0000'1111'1011'0000'0000'0000'1111'0000) == 0b0000'0001'0010'0000'0000'0000'0000'0000) {
-    //todo: are these bits settable on real hw?
-    cpsrMask &= ~0x0fffff00u;
-    result = skip;
-  }
+  //other PSR bits are not settable on real hardware
+  u32 cpsrMask = ~0x0fffff00u;
 
   //mul carry nyi (documented as "unpredictable")
   //thumb MUL
@@ -335,9 +332,7 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   if((processor.und.spsr & spsrMask) != (fs.SPSR[4] & spsrMask)) error("und.spsr: ", hex(u32(processor.und.spsr), 8), " != ", hex(fs.SPSR[4], 8));
   if(pipeline.decode.instruction != fs.pipeline[0]) error("pipeline[0]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[0], 8));
   if(pipeline.fetch.instruction != fs.pipeline[1]) error("pipeline[1]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[1], 8));
-  //todo: fails some tests in arm_data_proc_register_shift, thumb_data_proc that operate on registers
-  //should e.g. asr r4,r4 really change the state to nonsequential?
-  //if(nonsequential != !(fs.access & Access::Sequential)) error("nonsequential: ", nonsequential, " != ", !(fs.access & Access::Sequential));
+  if(nonsequential != !(fs.access & Access::Sequential)) error("nonsequential: ", nonsequential, " != ", !(fs.access & Access::Sequential));
 
   if(tindex != test.transactions.size()) {
     error("transactions: ", tindex, " != ", test.transactions.size(), "\n");

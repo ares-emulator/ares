@@ -80,9 +80,12 @@ auto ARM7TDMI::armInitialize() -> void {
   #undef arguments
 
   #define arguments \
-    opcode.bit( 0, 3)   /* m */
-  {
-    auto opcode = pattern(".... 0001 0010 ---- ---- ---- 0001 ????");
+    opcode.bit( 0, 3),  /* m */ \
+    opcode.bit(12,15)   /* d */
+  for(n4 m : range(16))
+  for(n2 _ : range(4))
+  for(n4 d : range(16)) {
+    auto opcode = pattern(".... 0001 0010 ---- ???? ---- 0??1 ????") | d << 12 | _ << 5 | m << 0;
     bind(opcode, BranchExchangeRegister);
   }
   #undef arguments
@@ -418,9 +421,9 @@ auto ARM7TDMI::thumbInitialize() -> void {
     bind(opcode, AdjustStack, immediate, mode);
   }
 
-  for(n4 d : range(16))
+  for(n4 _ : range(16))
   for(n4 m : range(16)) {
-    auto opcode = pattern("0100 0111 ???? ?---") | d.bit(0,2) << 0 | m << 3 | d.bit(3) << 7;
+    auto opcode = pattern("0100 0111 ???? ?---") | _.bit(0,2) << 0 | m << 3 | _.bit(3) << 7;
     bind(opcode, BranchExchange, m);
   }
 
@@ -441,6 +444,7 @@ auto ARM7TDMI::thumbInitialize() -> void {
 
   for(n8 displacement : range(256))
   for(n4 condition : range(16)) {
+    if(condition == 14) continue;  //BAL
     if(condition == 15) continue;  //BNV
     auto opcode = pattern("1101 ???? ???? ????") | displacement << 0 | condition << 8;
     bind(opcode, BranchTest, displacement, condition);
