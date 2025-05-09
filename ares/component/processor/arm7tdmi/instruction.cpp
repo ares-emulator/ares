@@ -80,9 +80,12 @@ auto ARM7TDMI::armInitialize() -> void {
   #undef arguments
 
   #define arguments \
-    opcode.bit( 0, 3)   /* m */
-  {
-    auto opcode = pattern(".... 0001 0010 ---- ---- ---- 0001 ????");
+    opcode.bit( 0, 3),  /* m */ \
+    opcode.bit(12,15)   /* d */
+  for(n4 m : range(16))
+  for(n2 _ : range(4))
+  for(n4 d : range(16)) {
+    auto opcode = pattern(".... 0001 0010 ---- ???? ---- 0??1 ????") | d << 12 | _ << 5 | m << 0;
     bind(opcode, BranchExchangeRegister);
   }
   #undef arguments

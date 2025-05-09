@@ -54,10 +54,10 @@ auto ARM7TDMI::armInstructionBranch
 }
 
 auto ARM7TDMI::armInstructionBranchExchangeRegister
-(n4 m) -> void {
+(n4 m, n4 d) -> void {
   n32 address = r(m);
   cpsr().t = address.bit(0);
-  r(15) = address;
+  r(d) = address;
 }
 
 auto ARM7TDMI::armInstructionDataImmediate
