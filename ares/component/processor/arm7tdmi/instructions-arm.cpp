@@ -98,10 +98,10 @@ auto ARM7TDMI::armInstructionDataRegisterShift
 
   idle();
   switch(type) {
-  case 0: rm = LSL(rm, rs < 33 ? rs : (n8)33); break;
-  case 1: rm = LSR(rm, rs < 33 ? rs : (n8)33); break;
-  case 2: rm = ASR(rm, rs < 32 ? rs : (n8)32); break;
-  case 3: if(rs) rm = ROR(rm, rs & 31 ? u32(rs & 31) : 32); break;
+  case 0: rm = LSL(rm, rs); break;
+  case 1: rm = LSR(rm, rs); break;
+  case 2: rm = ASR(rm, rs); break;
+  case 3: rm = ROR(rm, rs); break;
   }
 
   armALU(mode, d, rn, rm);
