@@ -229,13 +229,18 @@ auto ARM7TDMI::armDisassembleMoveToStatusFromImmediate
 }
 
 auto ARM7TDMI::armDisassembleMoveToStatusFromRegister
-(n4 m, n4 field, n1 mode) -> string {
+(n4 m, n2 type, n5 shift, n4 field, n1 mode) -> string {
   return {"msr", _c, " ", mode ? "spsr:" : "cpsr:",
     field.bit(0) ? "c" : "",
     field.bit(1) ? "x" : "",
     field.bit(2) ? "s" : "",
     field.bit(3) ? "f" : "",
-    ",", _r[m]};
+    ",", _r[m],
+    type == 0 && shift ? string{" lsl #", shift} : string{},
+    type == 1 ? string{" lsr #", shift ? (u32)shift : 32} : string{},
+    type == 2 ? string{" asr #", shift ? (u32)shift : 32} : string{},
+    type == 3 && shift ? string{" ror #", shift} : string{},
+    type == 3 && !shift ? " rrx" : ""};
 }
 
 auto ARM7TDMI::armDisassembleMultiply

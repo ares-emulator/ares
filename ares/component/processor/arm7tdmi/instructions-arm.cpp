@@ -280,8 +280,18 @@ auto ARM7TDMI::armInstructionMoveToStatusFromImmediate
 }
 
 auto ARM7TDMI::armInstructionMoveToStatusFromRegister
-(n4 m, n4 field, n1 mode) -> void {
-  armMoveToStatus(field, mode, r(m));
+(n4 m, n2 type, n5 shift, n4 field, n1 mode) -> void {
+  n32 rm = r(m);
+  carry = cpsr().c;
+
+  switch(type) {
+  case 0: rm = LSL(rm, shift); break;
+  case 1: rm = LSR(rm, shift ? (u32)shift : 32); break;
+  case 2: rm = ASR(rm, shift ? (u32)shift : 32); break;
+  case 3: rm = shift ? ROR(rm, shift) : RRX(rm); break;
+  }
+
+  armMoveToStatus(field, mode, rm);
 }
 
 auto ARM7TDMI::armInstructionMultiply

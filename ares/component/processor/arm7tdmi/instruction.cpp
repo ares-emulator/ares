@@ -310,10 +310,14 @@ auto ARM7TDMI::armInitialize() -> void {
 
   #define arguments \
     opcode.bit( 0, 3),  /* m */ \
+    opcode.bit( 5, 6),  /* type */ \
+    opcode.bit( 7,11),  /* shift */ \
     opcode.bit(16,19),  /* field */ \
     opcode.bit(22)      /* mode */
+  for(n2 type : range(4))
+  for(n1 shiftLo : range(2))
   for(n1 mode : range(2)) {
-    auto opcode = pattern(".... 0001 0?10 ???? ---- ---- 0000 ????") | mode << 22;
+    auto opcode = pattern(".... 0001 0?10 ???? ---- ???? ???0 ????") | type << 5 | shiftLo << 7 | mode << 22;
     bind(opcode, MoveToStatusFromRegister);
   }
   #undef arguments
