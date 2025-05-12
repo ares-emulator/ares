@@ -64,7 +64,7 @@ auto ARM7TDMI::armDisassembleBranch
 }
 
 auto ARM7TDMI::armDisassembleBranchExchangeRegister
-(n4 m, n4 d) -> string {
+(n4 m, n4 d, n4 field) -> string {
   return {"bx", _c, " ", _r[m]};
 }
 
