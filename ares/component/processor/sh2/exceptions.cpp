@@ -1,5 +1,3 @@
-#include <nall/gdb/server.hpp>
-
 auto SH2::exceptionHandler() -> void {
   if(!exceptions) return;
   if(inDelaySlot()) { cyclesUntilRecompilerExit = 0; return; }
@@ -35,7 +33,6 @@ auto SH2::push(u32 data) -> void {
 }
 
 auto SH2::interrupt(u8 level, u8 vector) -> void {
-  nall::GDB::server.reportSignal(nall::GDB::Signal::TRAP, PC - 4);
   push(SR);
   push(PC - 4);
   jump(readLong(VBR + vector * 4) + 4);
@@ -43,7 +40,7 @@ auto SH2::interrupt(u8 level, u8 vector) -> void {
 }
 
 auto SH2::addressErrorCPU() -> void {
-  nall::GDB::server.reportSignal(nall::GDB::Signal::BUS, PC - 4);
+  GDB::server.reportSignal(GDB::Signal::BUS, PC - 4);
   static constexpr u8 vector = 0x09;
   SP &= ~3;  //not accurate; but prevents infinite recursion
   push(SR);
@@ -52,7 +49,7 @@ auto SH2::addressErrorCPU() -> void {
 }
 
 auto SH2::addressErrorDMA() -> void {
-  nall::GDB::server.reportSignal(nall::GDB::Signal::BUS, PC - 4);
+  GDB::server.reportSignal(GDB::Signal::BUS, PC - 4);
   static constexpr u8 vector = 0x0a;
   SP &= ~3;  //not accurate; but prevents infinite recursion
   push(SR);
@@ -62,7 +59,7 @@ auto SH2::addressErrorDMA() -> void {
 
 auto SH2::illegalInstruction() -> void {
   if(inDelaySlot()) return illegalSlotInstruction();
-  nall::GDB::server.reportSignal(nall::GDB::Signal::ILL, PC - 4);
+  GDB::server.reportSignal(GDB::Signal::ILL, PC - 4);
   debug(unusual, "[SH2] illegal instruction: 0x", hex(busReadWord(PC - 4), 4L), " @ 0x", hex(PC - 4));
   static constexpr u8 vector = 0x04;
   push(SR);
@@ -71,7 +68,7 @@ auto SH2::illegalInstruction() -> void {
 }
 
 auto SH2::illegalSlotInstruction() -> void {
-  nall::GDB::server.reportSignal(nall::GDB::Signal::ILL, PC - 4);
+  GDB::server.reportSignal(GDB::Signal::ILL, PC - 4);
   debug(unusual, "[SH2] illegal slot instruction: 0x", hex(busReadWord(PC - 4), 4L));
   static constexpr u8 vector = 0x06;
   push(SR);
