@@ -92,4 +92,28 @@ auto M32X::hblank(bool line) -> void {
   }
 }
 
+auto M32X::debugRead(u32 address) -> u32 {
+  /* if(address >= 0x0000'0000 && address <= 0x0000'3fff) {
+    return bootROM[address >> 1];
+  } */
+
+  /* if(address >= 0x0000'4000 && address <= 0x0000'43ff) {
+    return readInternalIO(upper, lower, address, data);
+  } */
+
+  /* if(address >= 0x0200'0000 && address <= 0x03ff'ffff) {
+    return rom[address >> 1 & 0x1ff'ffff];
+  } */
+
+  if(address >= 0x0400'0000 && address <= 0x05ff'ffff) {
+    return vdp.bbram[address >> 1 & 0xffff];
+  }
+
+  if(address >= 0x0600'0000 && address <= 0x0603'ffff) {
+    return sdram[address >> 1 & 0x1ffff];
+  }
+
+  return 0;
+}
+
 }

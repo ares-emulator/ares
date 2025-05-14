@@ -1,3 +1,5 @@
+#include <nall/gdb/server.hpp>
+
 auto M32X::SH7604::load(Node::Object parent, string name, string bootFile) -> void {
   node = parent->append<Node::Object>(name);
   if(auto fp = system.pak->read(bootFile)) {
@@ -5,6 +7,10 @@ auto M32X::SH7604::load(Node::Object parent, string name, string bootFile) -> vo
     for(auto address : range(bootROM.size())) bootROM.program(address, fp->readm(2L));
   }
   debugger.load(node);
+  
+  if (m32x.shm.active()) {
+    initDebugHooks();
+  }
 }
 
 auto M32X::SH7604::unload() -> void {
@@ -37,7 +43,15 @@ auto M32X::SH7604::main() -> void {
     }
     #undef raise
   }
-
+  
+  if (m32x.shm.active()) {
+    if (m32x.vdp.vblank) {
+      nall::GDB::server.updateLoop();
+    }
+    
+    nall::GDB::server.reportPC(regs.PC);
+  }
+  
   SH2::instruction();
   SH2::intc.run();
   SH2::dmac.run();
@@ -134,6 +148,9 @@ auto M32X::SH7604::syncM68k(bool force) -> void {
 }
 
 auto M32X::SH7604::busReadByte(u32 address) -> u32 {
+  if (m32x.shm.active()) {
+    nall::GDB::server.reportMemRead(address, 1);
+  }
   if(address & 1) {
     return m32x.readInternal(0, 1, address & ~1).byte(0);
   } else {
@@ -142,15 +159,24 @@ auto M32X::SH7604::busReadByte(u32 address) -> u32 {
 }
 
 auto M32X::SH7604::busReadWord(u32 address) -> u32 {
+  if (m32x.shm.active()) {
+    nall::GDB::server.reportMemRead(address, 2);
+  }
   return m32x.readInternal(1, 1, address & ~1);
 }
 
 auto M32X::SH7604::busReadLong(u32 address) -> u32 {
+  if (m32x.shm.active()) {
+    nall::GDB::server.reportMemRead(address, 4);
+  }
   u32    data = m32x.readInternal(1, 1, address & ~3 | 0) << 16;
   return data | m32x.readInternal(1, 1, address & ~3 | 2) <<  0;
 }
 
 auto M32X::SH7604::busWriteByte(u32 address, u32 data) -> void {
+  if (m32x.shm.active()) {
+    nall::GDB::server.reportMemWrite(address, 1);
+  }
   debugger.tracer.instruction->invalidate(address & ~1);
   if(address & 1) {
     m32x.writeInternal(0, 1, address & ~1, data << 8 | (u8)data << 0);
@@ -160,13 +186,80 @@ auto M32X::SH7604::busWriteByte(u32 address, u32 data) -> void {
 }
 
 auto M32X::SH7604::busWriteWord(u32 address, u32 data) -> void {
+  if (m32x.shm.active()) {
+    nall::GDB::server.reportMemWrite(address, 2);
+  }
   debugger.tracer.instruction->invalidate(address & ~1);
   m32x.writeInternal(1, 1, address & ~1, data);
 }
 
 auto M32X::SH7604::busWriteLong(u32 address, u32 data) -> void {
+  if (m32x.shm.active()) {
+    nall::GDB::server.reportMemWrite(address, 4);
+  }
   debugger.tracer.instruction->invalidate(address & ~3 | 0);
   debugger.tracer.instruction->invalidate(address & ~3 | 2);
   m32x.writeInternal(1, 1, address & ~3 | 0, data >> 16);
   m32x.writeInternal(1, 1, address & ~3 | 2, data >>  0);
+}
+
+auto M32X::SH7604::initDebugHooks() -> void {
+
+  // See: https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format
+  nall::GDB::server.hooks.targetXML = []() -> string {
+    return "<target version=\"1.0\">"
+      "<architecture>sheb</architecture>"
+    "</target>";
+  };
+  
+  nall::GDB::server.hooks.read = [](u64 address, u32 byteCount) -> string {
+    address = (s32)address;
+
+    string res{};
+    res.resize(byteCount * 2);
+    char* resPtr = res.begin();
+
+    for(u32 i : range(byteCount)) {
+      auto val = m32x.debugRead(address++);
+      hexByte(resPtr, val);
+      resPtr += 2;
+    }
+
+    return res;
+  };
+  
+  nall::GDB::server.hooks.regRead = [this](u32 regIdx) {
+    if(regIdx < 16) {
+      return hex(regs.R[regIdx], 16, '0');
+    }
+
+    switch (regIdx)
+    {
+      case 16: { // PC
+        auto pcOverride = nall::GDB::server.getPcOverride();
+        return hex(pcOverride ? pcOverride.get() : regs.PC, 16, '0');
+      }
+      case 17: return hex(regs.PR, 16, '0');
+      case 18: return hex(regs.GBR, 16, '0');
+      case 19: return hex(regs.VBR, 16, '0');
+      case 20: return hex(regs.MACL, 16, '0');
+      case 21: return hex(regs.MACH, 16, '0');
+      case 22: return hex(regs.CCR, 16, '0');
+      case 23: return hex((u32)regs.SR, 16, '0');
+      case 24: return hex(regs.PPC, 16, '0');
+      case 25: return hex(regs.PPM, 16, '0');
+      case 26: return hex(regs.ET, 16, '0');
+      case 27: return hex(regs.ID, 16, '0');
+    }
+
+    return string{"0000000000000000"};
+  };
+  
+  nall::GDB::server.hooks.regReadGeneral = []() {
+    string res{};
+    for(auto i : range(28)) {
+      res.append(nall::GDB::server.hooks.regRead(i));
+    }
+    return res;
+  };
 }
