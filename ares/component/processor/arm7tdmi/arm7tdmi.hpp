@@ -69,7 +69,7 @@ struct ARM7TDMI {
   auto armMoveToStatus(n4 field, n1 source, n32 data) -> void;
 
   auto armInstructionBranch(i24, n1) -> void;
-  auto armInstructionBranchExchangeRegister(n4, n4) -> void;
+  auto armInstructionBranchExchangeRegister(n4, n4, n4) -> void;
   auto armInstructionDataImmediate(n8, n4, n4, n4, n1, n4) -> void;
   auto armInstructionDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> void;
   auto armInstructionDataRegisterShift(n4, n2, n4, n4, n4, n1, n4) -> void;
@@ -83,7 +83,7 @@ struct ARM7TDMI {
   auto armInstructionMoveRegisterOffset(n4, n2, n5, n4, n4, n1, n1, n1, n1, n1) -> void;
   auto armInstructionMoveToRegisterFromStatus(n4, n1) -> void;
   auto armInstructionMoveToStatusFromImmediate(n8, n4, n4, n1) -> void;
-  auto armInstructionMoveToStatusFromRegister(n4, n4, n1) -> void;
+  auto armInstructionMoveToStatusFromRegister(n4, n2, n5, n4, n1) -> void;
   auto armInstructionMultiply(n4, n4, n4, n4, n1, n1) -> void;
   auto armInstructionMultiplyLong(n4, n4, n4, n4, n1, n1, n1) -> void;
   auto armInstructionSoftwareInterrupt(n24 immediate) -> void;
@@ -235,7 +235,7 @@ struct ARM7TDMI {
 
   //disassembler.cpp
   auto armDisassembleBranch(i24, n1) -> string;
-  auto armDisassembleBranchExchangeRegister(n4, n4) -> string;
+  auto armDisassembleBranchExchangeRegister(n4, n4, n4) -> string;
   auto armDisassembleDataImmediate(n8, n4, n4, n4, n1, n4) -> string;
   auto armDisassembleDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> string;
   auto armDisassembleDataRegisterShift(n4, n2, n4, n4, n4, n1, n4) -> string;
@@ -249,7 +249,7 @@ struct ARM7TDMI {
   auto armDisassembleMoveRegisterOffset(n4, n2, n5, n4, n4, n1, n1, n1, n1, n1) -> string;
   auto armDisassembleMoveToRegisterFromStatus(n4, n1) -> string;
   auto armDisassembleMoveToStatusFromImmediate(n8, n4, n4, n1) -> string;
-  auto armDisassembleMoveToStatusFromRegister(n4, n4, n1) -> string;
+  auto armDisassembleMoveToStatusFromRegister(n4, n2, n5, n4, n1) -> string;
   auto armDisassembleMultiply(n4, n4, n4, n4, n1, n1) -> string;
   auto armDisassembleMultiplyLong(n4, n4, n4, n4, n1, n1, n1) -> string;
   auto armDisassembleSoftwareInterrupt(n24) -> string;

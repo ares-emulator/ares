@@ -54,9 +54,13 @@ auto ARM7TDMI::armInstructionBranch
 }
 
 auto ARM7TDMI::armInstructionBranchExchangeRegister
-(n4 m, n4 d) -> void {
+(n4 m, n4 d, n4 field) -> void {
   n32 address = r(m);
-  cpsr().t = address.bit(0);
+  if((field & 0b1001) == 0b1001) {
+    cpsr().t = address.bit(0);
+  } else {
+    armMoveToStatus(field, 0, address);
+  }
   r(d) = address;
 }
 
@@ -94,10 +98,10 @@ auto ARM7TDMI::armInstructionDataRegisterShift
 
   idle();
   switch(type) {
-  case 0: rm = LSL(rm, rs < 33 ? rs : (n8)33); break;
-  case 1: rm = LSR(rm, rs < 33 ? rs : (n8)33); break;
-  case 2: rm = ASR(rm, rs < 32 ? rs : (n8)32); break;
-  case 3: if(rs) rm = ROR(rm, rs & 31 ? u32(rs & 31) : 32); break;
+  case 0: rm = LSL(rm, rs); break;
+  case 1: rm = LSR(rm, rs); break;
+  case 2: rm = ASR(rm, rs); break;
+  case 3: rm = ROR(rm, rs); break;
   }
 
   armALU(mode, d, rn, rm);
@@ -276,8 +280,18 @@ auto ARM7TDMI::armInstructionMoveToStatusFromImmediate
 }
 
 auto ARM7TDMI::armInstructionMoveToStatusFromRegister
-(n4 m, n4 field, n1 mode) -> void {
-  armMoveToStatus(field, mode, r(m));
+(n4 m, n2 type, n5 shift, n4 field, n1 mode) -> void {
+  n32 rm = r(m);
+  carry = cpsr().c;
+
+  switch(type) {
+  case 0: rm = LSL(rm, shift); break;
+  case 1: rm = LSR(rm, shift ? (u32)shift : 32); break;
+  case 2: rm = ASR(rm, shift ? (u32)shift : 32); break;
+  case 3: rm = shift ? ROR(rm, shift) : RRX(rm); break;
+  }
+
+  armMoveToStatus(field, mode, rm);
 }
 
 auto ARM7TDMI::armInstructionMultiply
