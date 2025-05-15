@@ -18,6 +18,14 @@ auto M32X::SH7604::unload() -> void {
 }
 
 auto M32X::SH7604::main() -> void {
+  if (m32x.shm.active()) {
+    if (m32x.vdp.vblank) {
+      GDB::server.updateLoop();
+    }
+    
+    if (!GDB::server.reportPC(regs.PC)) return;
+  }
+  
   if(!m32x.io.adapterReset) return step(1000);
 
   if(!regs.ID) {
@@ -40,14 +48,6 @@ auto M32X::SH7604::main() -> void {
       raise("PWM", 6, 67);
     }
     #undef raise
-  }
-  
-  if (m32x.shm.active()) {
-    if (m32x.vdp.vblank) {
-      GDB::server.updateLoop();
-    }
-    
-    GDB::server.reportPC(regs.PC);
   }
   
   SH2::instruction();
@@ -210,6 +210,10 @@ auto M32X::SH7604::initDebugHooks() -> void {
     "</target>";
   };
   
+  GDB::server.hooks.normalizeAddress = [](u64 address) -> u64 {
+    return (u32)address & 0x00FFFFFF;
+  };
+  
   GDB::server.hooks.read = [](u64 address, u32 byteCount) -> string {
     address = (s32)address;
 
@@ -260,4 +264,10 @@ auto M32X::SH7604::initDebugHooks() -> void {
     }
     return res;
   };
+  
+  if constexpr(Accuracy::Recompiler) {
+    GDB::server.hooks.emuCacheInvalidate = [](u64 address) {
+      m32x.shm.recompiler.invalidate(address, 4);
+    };
+  }
 }
