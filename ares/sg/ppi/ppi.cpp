@@ -49,9 +49,9 @@ auto PPI::readPortB() -> n8 {
 
   output.bit(0, 3) = controllerPort2.read().bit(2, 5);
   output.bit(4) = 1; // Set if cartridge pin b11 is not grounded
-  output.bit(5) = 0; // Printer Fault (SC-3000)
-  output.bit(6) = 0; // Printer Busy (SC-3000)
-  output.bit(7) = 1; // Cassette Input (SC-3000)
+  output.bit(5) = 1; // Printer Fault (SC-3000)
+  output.bit(6) = 1; // Printer Busy (SC-3000)
+  output.bit(7) = 0; // Cassette Input (SC-3000)
   return output;
 }
 
