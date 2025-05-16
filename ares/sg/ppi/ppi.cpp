@@ -25,11 +25,11 @@ auto PPI::readPortA() -> n8 {
     return output;
   }
 
-  switch(io.inputSelect) {
-    case 7:
-      output.bit(0, 5) = controllerPort1.read();
-      output.bit(6, 7) = controllerPort2.read().bit(0, 1);
-      break;
+  if(io.inputSelect == 7) {
+    output.bit(0, 5) = controllerPort1.read();
+    output.bit(6, 7) = controllerPort2.read().bit(0, 1);
+  } else {
+    output = keyboard.read(io.inputSelect).bit(0,7);
   }
 
   return output;
@@ -52,10 +52,10 @@ auto PPI::readPortB() -> n8 {
     return output;
   }
 
-  switch(io.inputSelect) {
-    case 7:
-      output.bit(0, 3) = controllerPort2.read().bit(2, 5);
-      break;
+  if(io.inputSelect == 7) {
+    output.bit(0, 3) = controllerPort2.read().bit(2, 5);
+  } else {
+    output = keyboard.read(io.inputSelect).bit(8, 11);
   }
 
   output.bit(4) = 1; // Set if cartridge pin b11 is not grounded
