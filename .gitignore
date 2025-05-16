@@ -26,6 +26,10 @@
 !CMakeLists.txt
 !CMakePresets.json
 
+# Exclude old macOS Finder metadata
+.DS_Store
+
+# Exclude generated sources that still reside in-tree
 ruby/video/metal/shaders.metallib
 ruby/video/metal/shaders.ir
 ares/ares/resource/resource.cpp
@@ -36,7 +40,11 @@ desktop-ui/resource/resource.cpp
 desktop-ui/resource/resource.hpp
 mia/resource/resource.cpp
 mia/resource/resource.hpp
+
+# Exclude fetched third-party processor test binaries
 tests/arm7tdmi/tests
 tests/m68000/tests
+
+# Exclude unused legacy zlib header that is renamed by CMake
 thirdparty/libchdr/deps/zlib-*/zconf.h
 thirdparty/libchdr/deps/zlib-*/zconf.h.included
