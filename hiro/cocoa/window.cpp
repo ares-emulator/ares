@@ -76,6 +76,17 @@
     item.keyEquivalent = @"q";
     [rootMenu addItem:item];
 
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Edit"] action:nil keyEquivalent:@""];
+    editMenu = [[NSMenu alloc] init];
+    [item setSubmenu:editMenu];
+    [menuBar addItem:item];
+      
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Copy"] action:@selector(copy:) keyEquivalent:@"c"];
+    [item setTarget: nil];
+    //item.keyEquivalent = @"c";
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    [editMenu addItem:item];
+
     statusBar = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)];
     [statusBar setAlignment:NSTextAlignmentLeft];
     [statusBar setBordered:YES];

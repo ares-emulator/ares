@@ -17,6 +17,13 @@
   return self;
 }
 
+- (BOOL) validateMenuItem:(NSMenuItem *) menuItem {
+  if([menuItem.title isEqual: @"Copy"]) {
+    return YES;
+  }
+  return NO;
+}
+
 -(NSTextView*) content {
   return content;
 }
@@ -40,7 +47,6 @@
   textEdit->state.text = [[content string] UTF8String];
   textEdit->doChange();
 }
-
 @end
 
 namespace hiro {
@@ -88,7 +94,7 @@ auto pTextEdit::setText(const string& text) -> void {
 }
 
 auto pTextEdit::setTextCursor(TextCursor cursor) -> void {
-  //todo: handle text selection (cursor.length())
+  //TODO: handle text selection (cursor.length())
   string text = [[[(CocoaTextEdit*)cocoaView content] string] UTF8String];
   auto offset = min(cursor.offset(), text.length());
   [[(CocoaTextEdit*)cocoaView content] setSelectedRange:NSMakeRange(offset, 0)];

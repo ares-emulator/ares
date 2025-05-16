@@ -1,10 +1,11 @@
 #if defined(Hiro_Window)
 
-@interface CocoaWindow : NSWindow <NSWindowDelegate> {
+@interface CocoaWindow : NSWindow <NSWindowDelegate, NSMenuDelegate> {
 @public
   hiro::mWindow* window;
   NSMenu* menuBar;
   NSMenu* rootMenu;
+  NSMenu* editMenu;
   NSMenuItem* disableGatekeeper;
   NSTextField* statusBar;
 }

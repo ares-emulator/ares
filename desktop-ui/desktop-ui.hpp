@@ -29,3 +29,6 @@ namespace ruby {
 #include "tools/tools.hpp"
 
 auto locate(const string& name) -> string;
+
+// TODO: Additional Code, delete if necessary
+#include "TestAddCode.hpp"
