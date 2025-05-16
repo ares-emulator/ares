@@ -9,7 +9,6 @@ namespace ares {
     io.portCHigherInput = 1;
     io.portAInput = 1;
     io.groupAMode = 0;
-    io.ioMode = 0;
     state.portA = 0xff;
     state.portB = 0xff;
     state.portC = 0xff;
@@ -43,15 +42,20 @@ namespace ares {
   }
 
   auto I8255::writeControl(n8 data) -> void {
+    if(data.bit(7) == 0) {
+      n3 bitSelect = data.bit(1, 3);
+      state.portC.bit(bitSelect) = data.bit(0);
+      writePortC(state.portC);
+      return;
+    }
+
     io.portCLowerInput  = data.bit(0);
     io.portBInput       = data.bit(1);
     io.groupBMode       = data.bit(2);
     io.portCHigherInput = data.bit(3);
     io.portAInput       = data.bit(4);
     io.groupAMode       = data.bit(5,6);
-    io.ioMode           = data.bit(7);
 
-    if(!io.ioMode) debug(unimplemented, "[I8255] BSR Mode");
     if(io.groupAMode != 0) debug(unimplemented, "[I8255] Group A Mode != 0");
     if(io.groupBMode != 0) debug(unimplemented, "[I8255] Group B Mode != 0");
   }
@@ -63,7 +67,6 @@ namespace ares {
     s(io.portCHigherInput);
     s(io.portAInput);
     s(io.groupAMode);
-    s(io.ioMode);
 
     s(state.portA);
     s(state.portB);
