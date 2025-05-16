@@ -29,6 +29,8 @@ struct Cartridge {
     string title;
     string region;
     string board;
+    n32 expansionRam;
+    n1 ramDisable;
   } information;
 };
 

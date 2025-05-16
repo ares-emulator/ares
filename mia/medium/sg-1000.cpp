@@ -24,6 +24,7 @@ auto SG1000::load(string location) -> LoadResult {
   pak->setAttribute("board",  document["game/board" ].string());  
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
+  pak->setAttribute("expansionRam",   document["game/board/memory(type=RAM,content=Expansion)/size"].integer());
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
 
@@ -48,6 +49,30 @@ auto SG1000::analyze(vector<u8>& rom) -> string {
   string hash   = Hash::SHA256(rom).digest();
   string board  = "Linear";
 
+  u32 ram = 0;
+  n1 expansionRam = 0;
+
+  // BASIC Level II (Japan) (SC-3000) (Program)
+  if(hash == "f01ea0e97648915c43a91e2c7116a39f4434b4fc480e764fa2b26cfbf9af32c5") {
+    board = "Linear";
+    ram = 3_KiB;
+    expansionRam = 1;
+  }
+
+  // BASIC Level III (Europe, Australia, New Zealand) (SC-3000)
+  if(hash == "5e6eed91bf0006fea60c0993d8270150196cd26aa0e5e73eb5a0455560eeb2c4") {
+    board = "Linear";
+    ram = 32_KiB;
+    expansionRam = 1;
+  }
+
+  // BASIC Level III (Japan) (SC-3000) (Program)
+  if(hash == "7af3c40a976ca2c1e96cdef60e5b2f719a04603289fd08c7079717f8427ea3e8") {
+    board = "Linear";
+    ram = 32_KiB;
+    expansionRam = 1;
+  }
+
   // Bomberman Special (Taiwan) (Chinese Logo) (Unl)
   if (hash == "30417fcd412ad281cd6f72c77ecc107b2c13c719bff2d045dde05ea760c757ff") {
     board = "Taiwan-A";
@@ -56,6 +81,14 @@ auto SG1000::analyze(vector<u8>& rom) -> string {
   // Bomberman Special (Taiwan) (English Logo) (Unl)
   if (hash == "3eff3d6f1f74041f7b732455799d0978ab49724552ff2985f34b76478cd91721") {
     board = "Taiwan-B";
+  }
+
+  // Castle, The (Japan)
+  //sha256: 305ad1ed2aa7b692224b2a0dc5b582ae86e4798cf40c786c1ab73c48eff59b23
+  if(hash == "305ad1ed2aa7b692224b2a0dc5b582ae86e4798cf40c786c1ab73c48eff59b23") {
+    board = "Linear";
+    ram = 8_KiB;
+    expansionRam = 1;
   }
 
   // Castle, The (Taiwan) (Unl) (Pirate)
@@ -81,6 +114,13 @@ auto SG1000::analyze(vector<u8>& rom) -> string {
   // Magical Kid Wiz (Taiwan)
   if (hash == "2f443c61e9e6a55dc609de4c789dde4a9243ec6817d0ff4bfb7b6762cabe4e98") {
     board = "Taiwan-B";
+  }
+
+  // Othello (Japan)
+  if(hash == "ae20568a13010c3773928e5073fc25a52006ae0242263c7a31118a4d56fad8da") {
+    board = "Linear";
+    ram = 2_KiB;
+    expansionRam = 1;
   }
 
   // Pippols (Taiwan)
@@ -128,7 +168,6 @@ auto SG1000::analyze(vector<u8>& rom) -> string {
     board = "Taiwan-A";
   }
 
-
   string s;
   s += "game\n";
   s +={"  name:   ", Medium::name(location), "\n"};
@@ -140,9 +179,11 @@ auto SG1000::analyze(vector<u8>& rom) -> string {
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};
   s += "      content: Program\n";
+  if(ram) {
   s += "    memory\n";
   s += "      type: RAM\n";
-  s += "      size: 0x4000\n";
-  s += "      content: Save\n";
+  s +={"      size: 0x", hex(ram), "\n"};
+  s +={"      content: ", (expansionRam ? "Expansion" : "Save"), "\n"};
+  }
   return s;
 }
