@@ -1,0 +1,71 @@
+struct SC3000 : Emulator {
+  SC3000();
+  auto load() -> LoadResult override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+};
+
+SC3000::SC3000() {
+  manufacturer = "Sega";
+  name = "SC-3000";
+
+  for(auto id : range(2)) {
+    InputPort port{string{"Controller Port ", 1 + id}};
+
+  { InputDevice device{"Gamepad"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("1",     virtualPorts[id].pad.south);
+    device.digital("2",     virtualPorts[id].pad.east);
+    port.append(device); }
+
+    ports.append(port);
+  }
+}
+
+auto SC3000::load() -> LoadResult {
+  game = mia::Medium::create("SC-3000");
+  string location = Emulator::load(game, configuration.game);
+  if(!location) return noFileSelected;
+  LoadResult result = game->load(location);
+  if(result != successful) return result;
+
+  system = mia::System::create("SC-3000");
+  result = system->load();
+  if(result != successful) return result;
+
+  auto region = Emulator::region();
+  if(!ares::SG1000::load(root, {"[Sega] SC-3000 (", region, ")"})) return otherError;
+
+  if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
+    port->allocate();
+    port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
+    port->allocate("Gamepad");
+    port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
+    port->allocate("Gamepad");
+    port->connect();
+  }
+
+  return successful;
+}
+
+auto SC3000::save() -> bool {
+  root->save();
+  system->save(system->location);
+  game->save(game->location);
+  return true;
+}
+
+auto SC3000::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "SC-3000") return system->pak;
+  if(node->name() == "SC-3000 Cartridge") return game->pak;
+  return {};
+}
