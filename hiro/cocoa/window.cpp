@@ -82,8 +82,6 @@
     [menuBar addItem:item];
       
     item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Copy"] action:@selector(copy:) keyEquivalent:@"c"];
-    [item setTarget: nil];
-    //item.keyEquivalent = @"c";
     item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
     [editMenu addItem:item];
 
