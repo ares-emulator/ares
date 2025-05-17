@@ -1,8 +1,8 @@
-auto CPU::CP0::CDP(n32 opcode) -> void {
+auto CPU::CP0::CDP(n4 cm, n3 op2, n4 cd, n4 cn, n4 op1) -> void {
   static bool warnVC = false;
   if(!warnVC) {
     warnVC = true;
-    print("Warning: CP0 instruction ", hex(opcode, 8L), " executed. This likely signifies a Virtual Console ROM which may not function correctly on real hardware.\n");
+    print("Warning: CP0 instruction executed. This likely signifies a Virtual Console ROM which may not function correctly on real hardware.\n");
   }
   cpu.armInstructionUndefined();
 }

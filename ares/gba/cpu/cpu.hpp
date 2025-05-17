@@ -258,7 +258,7 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   struct CP0 : Coprocessor {
     //coprocessor.cpp
-    auto CDP(n32 opcode) -> void override;
+    auto CDP(n4 cm, n3 op2, n4 cd, n4 cn, n4 op1) -> void override;
   } cp0;
 
   struct CP14 : Coprocessor {
