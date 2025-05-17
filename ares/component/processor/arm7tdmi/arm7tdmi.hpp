@@ -8,10 +8,8 @@ struct Coprocessor {
   auto power(n4 cpID) -> void { id = cpID; }
 
   virtual auto CDP(n32 opcode) -> void { return; }
-  virtual auto LDC(n32 opcode) -> void { return; }
-  virtual auto MCR(n32 opcode) -> void { return; }
+  virtual auto MCR(n32 data, n4 cm, n3 op2, n4 cn, n3 op1) -> void { return; }
   virtual auto MRC(n4 cm, n3 op2, n4 cn, n3 op1) -> n32 { return 0; }
-  virtual auto STC(n32 opcode) -> void { return; }
 
   n4 id;
 };
@@ -93,6 +91,7 @@ struct ARM7TDMI {
   auto armInstructionMoveImmediateOffset(n12, n4, n4, n1, n1, n1, n1, n1) -> void;
   auto armInstructionMoveMultiple(n16, n4, n1, n1, n1, n1, n1) -> void;
   auto armInstructionMoveRegisterOffset(n4, n2, n5, n4, n4, n1, n1, n1, n1, n1) -> void;
+  auto armInstructionMoveToCoprocessorFromRegister(n4, n3, n4, n4, n4, n3) -> void;
   auto armInstructionMoveToRegisterFromCoprocessor(n4, n3, n4, n4, n4, n3) -> void;
   auto armInstructionMoveToRegisterFromStatus(n4, n1) -> void;
   auto armInstructionMoveToStatusFromImmediate(n8, n4, n4, n1) -> void;
@@ -248,16 +247,12 @@ struct ARM7TDMI {
 
   //coprocessor.cpp
   auto bindCDP(Coprocessor& cp) -> void;
-  auto bindLDC(Coprocessor& cp) -> void;
   auto bindMCR(Coprocessor& cp) -> void;
   auto bindMRC(Coprocessor& cp) -> void;
-  auto bindSTC(Coprocessor& cp) -> void;
 
   function<void (n32 opcode)> CDP[16];
-  function<void (n32 opcode)> LDC[16];
-  function<void (n32 opcode)> MCR[16];
+  function<void (n32 data, n4 cm, n3 op2, n4 cn, n3 op1)> MCR[16];
   function<n32 (n4 cm, n3 op2, n4 cn, n3 op1)> MRC[16];
-  function<void (n32 opcode)> STC[16];
 
   //disassembler.cpp
   auto armDisassembleBranch(i24, n1) -> string;
@@ -273,6 +268,7 @@ struct ARM7TDMI {
   auto armDisassembleMoveImmediateOffset(n12, n4, n4, n1, n1, n1, n1, n1) -> string;
   auto armDisassembleMoveMultiple(n16, n4, n1, n1, n1, n1, n1) -> string;
   auto armDisassembleMoveRegisterOffset(n4, n2, n5, n4, n4, n1, n1, n1, n1, n1) -> string;
+  auto armDisassembleMoveToCoprocessorFromRegister(n4, n3, n4, n4, n4, n3) -> string;
   auto armDisassembleMoveToRegisterFromCoprocessor(n4, n3, n4, n4, n4, n3) -> string;
   auto armDisassembleMoveToRegisterFromStatus(n4, n1) -> string;
   auto armDisassembleMoveToStatusFromImmediate(n8, n4, n4, n1) -> string;
