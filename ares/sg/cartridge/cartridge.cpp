@@ -18,7 +18,7 @@ auto Cartridge::connect() -> void {
   information.title  = pak->attribute("title");
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
-
+  information.expansionRam = pak->attribute("expansionRam").integer();
 
   if(information.board == "Linear"   ) board = new Board::Linear{*this};
   if(information.board == "Taiwan-A" ) board = new Board::TaiwanA{*this};

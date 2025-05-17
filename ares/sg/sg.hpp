@@ -25,6 +25,7 @@ namespace ares::SG1000 {
   };
 
   #include <sg/controller/controller.hpp>
+  #include <sg/keyboard/keyboard.hpp>
 
   #include <sg/cpu/cpu.hpp>
   #include <sg/vdp/vdp.hpp>

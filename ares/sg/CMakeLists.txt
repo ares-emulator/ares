@@ -13,6 +13,7 @@ ares_add_sources(
     system/system.cpp
     cartridge/cartridge.cpp
     controller/controller.cpp
+    keyboard/keyboard.cpp
 )
 
 ares_add_sources(
@@ -58,6 +59,14 @@ ares_add_sources(
     controller/port.hpp
     controller/gamepad/gamepad.cpp
     controller/gamepad/gamepad.hpp
+)
+
+ares_add_sources(
+   CORE #
+    sg
+   INCLUDED #
+    keyboard/keyboard.hpp
+    keyboard/keyboard.cpp
 )
 
 ares_add_sources(
