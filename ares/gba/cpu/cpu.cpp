@@ -10,6 +10,7 @@ CPU cpu;
 #include "dma.cpp"
 #include "timer.cpp"
 #include "keypad.cpp"
+#include "coprocessor.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 
@@ -130,6 +131,12 @@ auto CPU::step(u32 clocks) -> void {
 auto CPU::power() -> void {
   ARM7TDMI::power();
   Thread::create(system.frequency(), {&CPU::main, this});
+
+  cp0.power(0);
+  cp14.power(14);
+  bindCDP(cp0);
+  bindMCR(cp14);
+  bindMRC(cp14);
 
   for(auto& byte : iwram) byte = 0x00;
   for(auto& byte : ewram) byte = 0x00;
