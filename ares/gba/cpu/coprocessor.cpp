@@ -7,7 +7,7 @@ auto CPU::CP0::CDP(n32 opcode) -> void {
   cpu.armInstructionUndefined();
 }
 
-auto CPU::CP14::MCR(n32 opcode) -> void {
+auto CPU::CP14::MCR(n32 data, n4 cm, n3 op2, n4 cn, n3 op1) -> void {
   return;
 }
 

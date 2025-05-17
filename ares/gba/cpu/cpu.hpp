@@ -264,7 +264,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   struct CP14 : Coprocessor {
     //coprocessor.cpp
     auto MRC(n4 cm, n3 op2, n4 cn, n3 op1) -> n32 override;
-    auto MCR(n32 opcode) -> void override;
+    auto MCR(n32 data, n4 cm, n3 op2, n4 cn, n3 op1) -> void override;
   } cp14;
 
   struct Context {

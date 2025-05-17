@@ -267,6 +267,12 @@ auto ARM7TDMI::armInstructionMoveRegisterOffset
   if(mode == 1) r(d) = rd;
 }
 
+auto ARM7TDMI::armInstructionMoveToCoprocessorFromRegister
+(n4 cm, n3 op2, n4 cpid, n4 d, n4 cn, n3 op1) -> void {
+  if(!MCR[cpid]) return armInstructionUndefined();
+  MCR[cpid](r(d), cm, op2, cn, op1);
+}
+
 auto ARM7TDMI::armInstructionMoveToRegisterFromCoprocessor
 (n4 cm, n3 op2, n4 cpid, n4 d, n4 cn, n3 op1) -> void {
   if(!MRC[cpid]) return armInstructionUndefined();

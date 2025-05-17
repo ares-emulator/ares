@@ -293,6 +293,20 @@ auto ARM7TDMI::armInitialize() -> void {
     opcode.bit(21,23)   /* op1 */
   for(n3 op2 : range(8))
   for(n3 op1 : range(8)) {
+    auto opcode = pattern(".... 1110 ???0 ???? ???? ???? ???1 ????") | op2 << 5 | op1 << 21;
+    bind(opcode, MoveToCoprocessorFromRegister);
+  }
+  #undef arguments
+
+  #define arguments \
+    opcode.bit( 0, 3),  /* cm */ \
+    opcode.bit( 5, 7),  /* op2 */ \
+    opcode.bit( 8,11),  /* cpid */ \
+    opcode.bit(12,15),  /* d */ \
+    opcode.bit(16,19),  /* cn */ \
+    opcode.bit(21,23)   /* op1 */
+  for(n3 op2 : range(8))
+  for(n3 op1 : range(8)) {
     auto opcode = pattern(".... 1110 ???1 ???? ???? ???? ???1 ????") | op2 << 5 | op1 << 21;
     bind(opcode, MoveToRegisterFromCoprocessor);
   }
