@@ -5,13 +5,9 @@
 namespace ares {
 
 struct Coprocessor {
-  auto power(n4 cpID) -> void { id = cpID; }
-
   virtual auto CDP(n4 cm, n3 op2, n4 cd, n4 cn, n4 op1) -> void { return; }
   virtual auto MCR(n32 data, n4 cm, n3 op2, n4 cn, n3 op1) -> void { return; }
   virtual auto MRC(n4 cm, n3 op2, n4 cn, n3 op1) -> n32 { return 0; }
-
-  n4 id;
 };
 
 struct ARM7TDMI {
@@ -247,9 +243,9 @@ struct ARM7TDMI {
   function<void ()> thumbInstruction[65536];
 
   //coprocessor.cpp
-  auto bindCDP(Coprocessor& cp) -> void;
-  auto bindMCR(Coprocessor& cp) -> void;
-  auto bindMRC(Coprocessor& cp) -> void;
+  auto bindCDP(n4 id, Coprocessor& cp) -> void;
+  auto bindMCR(n4 id, Coprocessor& cp) -> void;
+  auto bindMRC(n4 id, Coprocessor& cp) -> void;
 
   function<void (n4 cm, n3 op2, n4 cd, n4 cn, n4 op1)> CDP[16];
   function<void (n32 data, n4 cm, n3 op2, n4 cn, n3 op1)> MCR[16];

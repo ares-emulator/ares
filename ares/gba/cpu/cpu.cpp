@@ -132,11 +132,9 @@ auto CPU::power() -> void {
   ARM7TDMI::power();
   Thread::create(system.frequency(), {&CPU::main, this});
 
-  cp0.power(0);
-  cp14.power(14);
-  bindCDP(cp0);
-  bindMCR(cp14);
-  bindMRC(cp14);
+  bindCDP(0, cp0);
+  bindMCR(14, cp14);
+  bindMRC(14, cp14);
 
   for(auto& byte : iwram) byte = 0x00;
   for(auto& byte : ewram) byte = 0x00;
