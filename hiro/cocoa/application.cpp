@@ -46,7 +46,6 @@
 
     item = [[NSMenuItem alloc] initWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@""];
     [item setTarget:NSApp];
-    [item setTarget:NSApp];
     item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
     item.keyEquivalent = @"h";
     [rootMenu addItem:item];
@@ -211,8 +210,8 @@ auto pApplication::initialize() -> void {
     [NSApplication sharedApplication];
     cocoaDelegate = [[CocoaDelegate alloc] init];
     [NSApp setDelegate:cocoaDelegate];
+    [cocoaDelegate constructMenu];
   }
-  [cocoaDelegate constructMenu];
 }
 
 }
