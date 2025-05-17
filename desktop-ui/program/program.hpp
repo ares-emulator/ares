@@ -1,6 +1,7 @@
 struct Program : ares::Platform {
   auto create() -> void;
   auto main() -> void;
+  auto emulatorRunLoop(uintptr_t) -> void;
   auto quit() -> void;
 
   //platform.cpp
@@ -73,6 +74,8 @@ struct Program : ares::Platform {
   bool requestFrameAdvance = false;
   bool requestScreenshot = false;
   bool keyboardCaptured = false;
+  atomic<bool> loaded = false;
+  atomic<bool> unloading = false;
 
   struct State {
     u32 slot = 1;
@@ -97,7 +100,19 @@ struct Program : ares::Platform {
   } message;
 
   vector<Message> messages;
-  maybe<u64> vblanksPerSecond;
+  atomic<u64> vblanksPerSecond = 0;
+  /// The emulator run loop mutex. The emulator thread will hold a lock on this mutex for the duration of its run loop, including while the thread is suspended. This means that the UI thread should only acquire this mutex when absolutely necessary, as there will be a severe UI responsiveness penalty acquiring it.
+  std::recursive_mutex programMutex;
+  
+  /// Mutex used to synchronize access to the status message queue.
+  std::recursive_mutex messageMutex;
+  
+  /// Mutex used to synchronize access to the input system. Polling occurs on the main thread while the results are read by the emulation thread.
+  std::recursive_mutex inputMutex;
+  
+private:
+  atomic<bool> _quitting = false;
+  atomic<bool> _needsResize = false;
 };
 
 extern Program program;
