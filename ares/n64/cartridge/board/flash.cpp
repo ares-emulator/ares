@@ -1,11 +1,11 @@
-auto Cartridge::Flash::readByte(u32 address) -> u64 {
-  debug(unusual, "[Cartridge::Flash::readByte] mode=", (u32)mode);
+auto BOARD::Flash::readByte(u32 address) -> u64 {
+  debug(unusual, "[Board::Flash::readByte] mode=", (u32)mode);
   return 0;
 }
 
-auto Cartridge::Flash::readHalf(u32 address) -> u64 {
+auto BOARD::Flash::readHalf(u32 address) -> u64 {
   if(mode == Mode::Read) {
-    return Memory::Writable::read<Half>(address);
+    return Memory::Writable16::read<Half>(address);
   }
 
   if(mode == Mode::Status) {
@@ -17,43 +17,43 @@ auto Cartridge::Flash::readHalf(u32 address) -> u64 {
     }
   }
 
-  debug(unusual, "[Cartridge::Flash::readHalf] mode=", (u32)mode);
+  debug(unusual, "[Board::Flash::readHalf] mode=", (u32)mode);
   return 0;
 }
 
-auto Cartridge::Flash::readWord(u32 address) -> u64 {
+auto BOARD::Flash::readWord(u32 address) -> u64 {
   switch(address & 4) { default:
   case 0: return status >> 32;
   case 4: return status >>  0;
   }
 }
 
-auto Cartridge::Flash::readDual(u32 address) -> u64 {
-  debug(unusual, "[Cartridge::Flash::readDual] mode=", (u32)mode);
+auto BOARD::Flash::readDual(u32 address) -> u64 {
+  debug(unusual, "[Board::Flash::readDual] mode=", (u32)mode);
   return 0;
 }
 
-auto Cartridge::Flash::writeByte(u32 address, u64 data) -> void {
-  debug(unusual, "[Cartridge::Flash::writeByte] mode=", (u32)mode);
+auto BOARD::Flash::writeByte(u32 address, u64 data) -> void {
+  debug(unusual, "[Board::Flash::writeByte] mode=", (u32)mode);
   return;
 }
 
-auto Cartridge::Flash::writeHalf(u32 address, u64 data) -> void {
+auto BOARD::Flash::writeHalf(u32 address, u64 data) -> void {
   if(mode == Mode::Write) {
     //writes are deferred until the flash execute command is sent later
     source = pi.io.dramAddress;
     return;
   }
 
-  debug(unusual, "[Cartridge::Flash::writeHalf] mode=", (u32)mode);
+  debug(unusual, "[Board::Flash::writeHalf] mode=", (u32)mode);
   return;
 }
 
-auto Cartridge::Flash::writeWord(u32 address, u64 data) -> void {
+auto BOARD::Flash::writeWord(u32 address, u64 data) -> void {
   address = (address & 0x7ff'ffff) >> 2;
 
   if(address == 0) {
-    debug(unusual, "[Cartridge::Flash::writeWord] ignoring write to status register");
+    debug(unusual, "[Board::Flash::writeWord] ignoring write to status register");
     return;
   }
 
@@ -80,14 +80,14 @@ auto Cartridge::Flash::writeWord(u32 address, u64 data) -> void {
   case 0xd2:  //execute
     if(mode == Mode::Erase) {
       for(u32 index = 0; index < 128; index += 2) {
-        Memory::Writable::write<Half>(offset + index, 0xffff);
+        Memory::Writable16::write<Half>(offset + index, 0xffff);
       }
     }
     if(mode == Mode::Write) {
       for(u32 index = 0; index < 128; index += 2) {
         // FIXME: this is obviously wrong, the flash can't access RDRAM
         u16 half = rdram.ram.read<Half>(source + index, "Flash");
-        Memory::Writable::write<Half>(offset + index, half);
+        Memory::Writable16::write<Half>(offset + index, half);
       }
     }
     return;
@@ -103,12 +103,12 @@ auto Cartridge::Flash::writeWord(u32 address, u64 data) -> void {
     return;
 
   default:
-    debug(unusual, "[Cartridge::Flash::writeWord] command=", hex(command, 2L));
+    debug(unusual, "[Board::Flash::writeWord] command=", hex(command, 2L));
     return;
   }
 }
 
-auto Cartridge::Flash::writeDual(u32 address, u64 data) -> void {
-  debug(unusual, "[Cartridge::Flash::writeDual] mode=", (u32)mode);
+auto BOARD::Flash::writeDual(u32 address, u64 data) -> void {
+  debug(unusual, "[Board::Flash::writeDual] mode=", (u32)mode);
   return;
 }
