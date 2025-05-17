@@ -256,6 +256,17 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  stopped = 1;
   } prefetch;
 
+  struct CP0 : Coprocessor {
+    //coprocessor.cpp
+    auto CDP(n32 opcode) -> void override;
+  } cp0;
+
+  struct CP14 : Coprocessor {
+    //coprocessor.cpp
+    auto MRC(n4 cm, n3 op2, n4 cn, n3 op1) -> n32 override;
+    auto MCR(n32 opcode) -> void override;
+  } cp14;
+
   struct Context {
     n32 clock;
     n1  halted;

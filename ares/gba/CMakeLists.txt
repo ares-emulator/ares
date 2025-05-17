@@ -60,6 +60,7 @@ ares_add_sources(
     gba
   INCLUDED #
     cpu/bus.cpp
+    cpu/coprocessor.cpp
     cpu/cpu.hpp
     cpu/debugger.cpp
     cpu/dma.cpp
