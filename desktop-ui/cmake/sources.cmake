@@ -89,6 +89,7 @@ target_sources(
     emulator/pocket-challenge-v2.cpp
     emulator/saturn.cpp
     emulator/sg-1000.cpp
+    emulator/sc-3000.cpp
     emulator/super-famicom.cpp
     emulator/supergrafx-cd.cpp
     emulator/supergrafx.cpp

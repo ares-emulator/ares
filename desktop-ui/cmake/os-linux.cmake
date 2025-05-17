@@ -6,7 +6,7 @@ if(ARES_ENABLE_LIBRASHADER)
   if(TARGET libretro::slang_shaders)
     if(ARES_BUNDLE_SHADERS)
       add_custom_command(
-        OUTPUT "${ARES_BUILD_OUTPUT_DIR}/${ARES_INSTALL_DATA_DESTINATION}/Shaders/bilinear.slangp" POST_BUILD
+        OUTPUT "${ARES_BUILD_OUTPUT_DIR}/${ARES_INSTALL_DATA_DESTINATION}/Shaders/bilinear.slangp"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${ARES_BUILD_OUTPUT_DIR}/${ARES_INSTALL_DATA_DESTINATION}/Shaders"
         COMMAND cp -R "${slang_shaders_LOCATION}/." "${ARES_BUILD_OUTPUT_DIR}/${ARES_INSTALL_DATA_DESTINATION}/Shaders"
         COMMENT "Copying slang shaders to staging directory"
