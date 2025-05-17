@@ -66,7 +66,6 @@ ares_add_sources(
     sg
    INCLUDED #
     keyboard/keyboard.hpp
-    keyboard/keyboard.cpp
 )
 
 ares_add_sources(

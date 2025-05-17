@@ -5,7 +5,6 @@ set_target_xcode_properties(
   PROPERTIES PRODUCT_BUNDLE_IDENTIFIER dev.ares.ares
              PRODUCT_NAME ares
              ASSETCATALOG_COMPILER_APPICON_NAME AppIcon
-             CURRENT_PROJECT_VERSION ${ARES_BUILD_NUMBER}
              MARKETING_VERSION ${ARES_VERSION}
              GENERATE_INFOPLIST_FILE YES
              COPY_PHASE_STRIP NO
