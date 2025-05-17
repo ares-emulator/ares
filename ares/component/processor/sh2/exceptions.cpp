@@ -40,7 +40,9 @@ auto SH2::interrupt(u8 level, u8 vector) -> void {
 }
 
 auto SH2::addressErrorCPU() -> void {
-  GDB::server.reportSignal(GDB::Signal::BUS, PC - 4);
+  if (GDB::server.hasActiveClient) {
+    GDB::server.reportSignal(GDB::Signal::BUS, PC - 4);
+  }
   static constexpr u8 vector = 0x09;
   SP &= ~3;  //not accurate; but prevents infinite recursion
   push(SR);
@@ -49,7 +51,9 @@ auto SH2::addressErrorCPU() -> void {
 }
 
 auto SH2::addressErrorDMA() -> void {
-  GDB::server.reportSignal(GDB::Signal::BUS, PC - 4);
+  if (GDB::server.hasActiveClient) {
+    GDB::server.reportSignal(GDB::Signal::BUS, PC - 4);
+  }
   static constexpr u8 vector = 0x0a;
   SP &= ~3;  //not accurate; but prevents infinite recursion
   push(SR);
@@ -59,7 +63,9 @@ auto SH2::addressErrorDMA() -> void {
 
 auto SH2::illegalInstruction() -> void {
   if(inDelaySlot()) return illegalSlotInstruction();
-  GDB::server.reportSignal(GDB::Signal::ILL, PC - 4);
+  if (GDB::server.hasActiveClient) {
+    GDB::server.reportSignal(GDB::Signal::ILL, PC - 4);
+  }
   debug(unusual, "[SH2] illegal instruction: 0x", hex(busReadWord(PC - 4), 4L), " @ 0x", hex(PC - 4));
   static constexpr u8 vector = 0x04;
   push(SR);
@@ -68,7 +74,9 @@ auto SH2::illegalInstruction() -> void {
 }
 
 auto SH2::illegalSlotInstruction() -> void {
-  GDB::server.reportSignal(GDB::Signal::ILL, PC - 4);
+  if (GDB::server.hasActiveClient) {
+    GDB::server.reportSignal(GDB::Signal::ILL, PC - 4);
+  }
   debug(unusual, "[SH2] illegal slot instruction: 0x", hex(busReadWord(PC - 4), 4L));
   static constexpr u8 vector = 0x06;
   push(SR);

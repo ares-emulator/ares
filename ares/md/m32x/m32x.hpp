@@ -54,8 +54,6 @@ struct M32X {
     auto busWriteWord(u32 address, u32 data) -> void override;
     auto busWriteLong(u32 address, u32 data) -> void override;
 
-    auto initDebugHooks() -> void;
-
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
@@ -190,7 +188,7 @@ struct M32X {
   auto vblank(bool) -> void;
   auto hblank(bool) -> void;
 
-  auto debugRead(u32 address) -> u32;
+  auto initDebugHooks() -> void;
 
   //bus-internal.cpp
   auto readInternal(n1 upper, n1 lower, n32 address, n16 data = 0) -> n16;

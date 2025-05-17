@@ -26,6 +26,8 @@ auto M32X::load(Node::Object parent) -> void {
     vectors.allocate(fp->size() >> 1);
     for(auto address : range(vectors.size())) vectors.program(address, fp->readm(2L));
   }
+  
+  initDebugHooks();
 }
 
 auto M32X::unload() -> void {
@@ -92,28 +94,75 @@ auto M32X::hblank(bool line) -> void {
   }
 }
 
-auto M32X::debugRead(u32 address) -> u32 {
-  /* if(address >= 0x0000'0000 && address <= 0x0000'3fff) {
-    return bootROM[address >> 1];
-  } */
+auto M32X::initDebugHooks() -> void {
 
-  /* if(address >= 0x0000'4000 && address <= 0x0000'43ff) {
-    return readInternalIO(upper, lower, address, data);
-  } */
+  // See: https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format
+  GDB::server.hooks.targetXML = []() -> string {
+    return "<target version=\"1.0\">"
+      "<architecture>sh2</architecture>"
+    "</target>";
+  };
+  
+  GDB::server.hooks.normalizeAddress = [](u64 address) -> u64 {
+    return address & 0x00FFFFFF;
+  };
+  
+  GDB::server.hooks.read = [](u64 address, u32 byteCount) -> string {
+    address = (s32)address;
 
-  /* if(address >= 0x0200'0000 && address <= 0x03ff'ffff) {
-    return rom[address >> 1 & 0x1ff'ffff];
-  } */
+    string res{};
+    res.resize(byteCount * 2);
+    char* resPtr = res.begin();
 
-  if(address >= 0x0400'0000 && address <= 0x05ff'ffff) {
-    return vdp.bbram[address >> 1 & 0xffff];
+    for(u32 i : range(byteCount)) {
+      auto val = m32x.shm.readByte(address++);
+      hexByte(resPtr, val);
+      resPtr += 2;
+    }
+
+    return res;
+  };
+  
+  GDB::server.hooks.regRead = [this](u32 regIdx) {
+    if(regIdx < 16) {
+      return hex(m32x.shm.regs.R[regIdx], 16, '0');
+    }
+
+    switch (regIdx)
+    {
+      case 16: { // PC
+        auto pcOverride = GDB::server.getPcOverride();
+        return hex(pcOverride ? pcOverride.get() : m32x.shm.regs.PC, 16, '0');
+      }
+      case 17: return hex(m32x.shm.regs.PR, 16, '0');
+      case 18: return hex(m32x.shm.regs.GBR, 16, '0');
+      case 19: return hex(m32x.shm.regs.VBR, 16, '0');
+      case 20: return hex(m32x.shm.regs.MACL, 16, '0');
+      case 21: return hex(m32x.shm.regs.MACH, 16, '0');
+      case 22: return hex(m32x.shm.regs.CCR, 16, '0');
+      case 23: return hex((u32)m32x.shm.regs.SR, 16, '0');
+      case 24: return hex(m32x.shm.regs.PPC, 16, '0');
+      case 25: return hex(m32x.shm.regs.PPM, 16, '0');
+      case 26: return hex(m32x.shm.regs.ET, 16, '0');
+      case 27: return hex(m32x.shm.regs.ID, 16, '0');
+    }
+
+    return string{"0000000000000000"};
+  };
+  
+  GDB::server.hooks.regReadGeneral = []() {
+    string res{};
+    for(auto i : range(28)) {
+      res.append(GDB::server.hooks.regRead(i));
+    }
+    return res;
+  };
+  
+  if constexpr(SH2::Accuracy::Recompiler) {
+    GDB::server.hooks.emuCacheInvalidate = [](u64 address) {
+      m32x.shm.recompiler.invalidate(address, 4);
+    };
   }
-
-  if(address >= 0x0600'0000 && address <= 0x0603'ffff) {
-    return sdram[address >> 1 & 0x1ffff];
-  }
-
-  return 0;
 }
 
 }
