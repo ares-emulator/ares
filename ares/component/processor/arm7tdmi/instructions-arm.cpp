@@ -64,6 +64,12 @@ auto ARM7TDMI::armInstructionBranchExchangeRegister
   r(d) = address;
 }
 
+auto ARM7TDMI::armInstructionCoprocessorDataProcessing
+(n4 cm, n3 op2, n4 cpid, n4 cd, n4 cn, n4 op1) -> void {
+  if(!CDP[cpid]) return armInstructionUndefined();
+  CDP[cpid](cm, op2, cd, cn, op1);
+}
+
 auto ARM7TDMI::armInstructionDataImmediate
 (n8 immediate, n4 shift, n4 d, n4 n, n1 save, n4 mode) -> void {
   n32 rn = r(n);

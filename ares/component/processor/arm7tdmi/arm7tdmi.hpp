@@ -7,7 +7,7 @@ namespace ares {
 struct Coprocessor {
   auto power(n4 cpID) -> void { id = cpID; }
 
-  virtual auto CDP(n32 opcode) -> void { return; }
+  virtual auto CDP(n4 cm, n3 op2, n4 cd, n4 cn, n4 op1) -> void { return; }
   virtual auto MCR(n32 data, n4 cm, n3 op2, n4 cn, n3 op1) -> void { return; }
   virtual auto MRC(n4 cm, n3 op2, n4 cn, n3 op1) -> n32 { return 0; }
 
@@ -80,6 +80,7 @@ struct ARM7TDMI {
 
   auto armInstructionBranch(i24, n1) -> void;
   auto armInstructionBranchExchangeRegister(n4, n4, n4) -> void;
+  auto armInstructionCoprocessorDataProcessing(n4, n3, n4, n4, n4, n4) -> void;
   auto armInstructionDataImmediate(n8, n4, n4, n4, n1, n4) -> void;
   auto armInstructionDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> void;
   auto armInstructionDataRegisterShift(n4, n2, n4, n4, n4, n1, n4) -> void;
@@ -250,13 +251,14 @@ struct ARM7TDMI {
   auto bindMCR(Coprocessor& cp) -> void;
   auto bindMRC(Coprocessor& cp) -> void;
 
-  function<void (n32 opcode)> CDP[16];
+  function<void (n4 cm, n3 op2, n4 cd, n4 cn, n4 op1)> CDP[16];
   function<void (n32 data, n4 cm, n3 op2, n4 cn, n3 op1)> MCR[16];
   function<n32 (n4 cm, n3 op2, n4 cn, n3 op1)> MRC[16];
 
   //disassembler.cpp
   auto armDisassembleBranch(i24, n1) -> string;
   auto armDisassembleBranchExchangeRegister(n4, n4, n4) -> string;
+  auto armDisassembleCoprocessorDataProcessing(n4, n3, n4, n4, n4, n4) -> string;
   auto armDisassembleDataImmediate(n8, n4, n4, n4, n1, n4) -> string;
   auto armDisassembleDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> string;
   auto armDisassembleDataRegisterShift(n4, n2, n4, n4, n4, n1, n4) -> string;
