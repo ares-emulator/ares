@@ -7,3 +7,4 @@
 #include <sg/system/system.cpp>
 #include <sg/cartridge/cartridge.cpp>
 #include <sg/controller/controller.cpp>
+#include <sg/keyboard/keyboard.cpp>

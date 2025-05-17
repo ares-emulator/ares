@@ -13,6 +13,10 @@ struct PPI : I8255 {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  struct {
+    n3 inputSelect;
+  } io;
 };
 
 extern PPI ppi;

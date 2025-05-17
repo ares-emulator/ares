@@ -23,7 +23,6 @@ namespace ares {
       n1 portCHigherInput;
       n1 portAInput;
       n2 groupAMode;
-      n1 ioMode;
     } io;
 
     struct State {

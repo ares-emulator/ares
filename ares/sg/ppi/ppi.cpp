@@ -10,7 +10,7 @@ auto PPI::load(Node::Object parent) -> void {
 }
 
 auto PPI::readPortA() -> n8 {
-  n8 output;
+  n8 output = 0xff;
 
   if(Model::SG1000A()) {
     system.arcadeControls.poll();
@@ -25,13 +25,18 @@ auto PPI::readPortA() -> n8 {
     return output;
   }
 
-  output.bit(0, 5) = controllerPort1.read();
-  output.bit(6, 7) = controllerPort2.read().bit(0, 1);
+  if(io.inputSelect == 7) {
+    output.bit(0, 5) = controllerPort1.read();
+    output.bit(6, 7) = controllerPort2.read().bit(0, 1);
+  } else {
+    output = keyboard.read(io.inputSelect).bit(0,7);
+  }
+
   return output;
 }
 
 auto PPI::readPortB() -> n8 {
-  n8 output;
+  n8 output = 0xff;
 
   if(Model::SG1000A()) {
     system.arcadeControls.poll();
@@ -47,11 +52,24 @@ auto PPI::readPortB() -> n8 {
     return output;
   }
 
-  output.bit(0, 3) = controllerPort2.read().bit(2, 5);
+  if(io.inputSelect == 7) {
+    output.bit(0, 3) = controllerPort2.read().bit(2, 5);
+  } else {
+    output = keyboard.read(io.inputSelect).bit(8, 11);
+  }
+
   output.bit(4) = 1; // Set if cartridge pin b11 is not grounded
-  output.bit(5) = 0; // Printer Fault (SC-3000)
-  output.bit(6) = 0; // Printer Busy (SC-3000)
-  output.bit(7) = 1; // Cassette Input (SC-3000)
+
+  if(Model::SC3000()) {
+    output.bit(5) = 1; //TODO: Printer Fault
+    output.bit(6) = 1; //TODO: Printer Busy
+    output.bit(7) = 0; //TODO: Cassette Pulse
+  } else {
+    output.bit(5) = 1;
+    output.bit(6) = 1;
+    output.bit(7) = 0;
+  }
+
   return output;
 }
 
@@ -61,7 +79,9 @@ auto PPI::readPortC() -> n8 {
 }
 
 auto PPI::writePortC(n8 data) -> void {
-  debug(unimplemented, "PPI::writePortC(0x", hex(data, 2), ")");
+  if(Model::SC3000()) {
+    io.inputSelect = data.bit(0,2);
+  }
 }
 
 auto PPI::unload() -> void {

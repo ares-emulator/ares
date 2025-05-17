@@ -135,6 +135,7 @@ namespace ares::Atari2600 {
     auto load(Node::System& node, string name) -> bool;
   }
   #include "sg-1000.cpp"
+  #include "sc-3000.cpp"
 #endif
 
 #ifdef CORE_WS
@@ -216,6 +217,7 @@ auto Emulator::construct() -> void {
 
   #ifdef CORE_SG
   emulators.append(new SG1000);
+  emulators.append(new SC3000);
   #endif
 
   #ifdef CORE_MS
