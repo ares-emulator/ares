@@ -132,9 +132,9 @@ auto CPU::power() -> void {
   ARM7TDMI::power();
   Thread::create(system.frequency(), {&CPU::main, this});
 
-  bindCDP(0, cp0);
-  bindMCR(14, cp14);
-  bindMRC(14, cp14);
+  bindCDP( 0, [&](n4 cm, n3 op2, n4 cd, n4 cn, n4 op1) { return coprocessor.vcCDP(); });
+  bindMCR(14, [&](n32 data, n4 cm, n3 op2, n4 cn, n3 op1) { return coprocessor.debugMCR(); });
+  bindMRC(14, [&](n4 cm, n3 op2, n4 cn, n3 op1) { return coprocessor.debugMRC(); });
 
   for(auto& byte : iwram) byte = 0x00;
   for(auto& byte : ewram) byte = 0x00;
