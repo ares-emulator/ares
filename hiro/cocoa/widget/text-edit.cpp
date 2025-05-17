@@ -17,15 +17,6 @@
   return self;
 }
 
-- (BOOL) validateMenuItem:(NSMenuItem *) menuItem {
-  SEL action = menuItem.action;
-  if (action == @selector(copy:) ||
-        action == @selector(selectAll:)) {
-    return YES;
-  }
-  return [super validateMenuItem:menuItem];
-}
-
 -(NSTextView*) content {
   return content;
 }

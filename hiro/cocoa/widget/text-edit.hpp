@@ -1,11 +1,10 @@
 #if defined(Hiro_TextEdit)
 
-@interface CocoaTextEdit : NSScrollView <NSTextViewDelegate, NSMenuItemValidation> {
+@interface CocoaTextEdit : NSScrollView <NSTextViewDelegate> {
 @public
   hiro::mTextEdit* textEdit;
   NSTextView* content;
 }
--(BOOL) validateMenuItem:(NSMenuItem *) menuItem;
 -(id) initWith:(hiro::mTextEdit&)textEdit;
 -(NSTextView*) content;
 -(void) configure;
