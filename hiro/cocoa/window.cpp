@@ -85,6 +85,10 @@
     item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
     [editMenu addItem:item];
 
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Select All"] action:@selector(selectAll:) keyEquivalent:@"a"];
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    [editMenu addItem:item];
+
     statusBar = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)];
     [statusBar setAlignment:NSTextAlignmentLeft];
     [statusBar setBordered:YES];

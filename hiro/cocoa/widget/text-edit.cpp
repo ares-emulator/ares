@@ -18,10 +18,12 @@
 }
 
 - (BOOL) validateMenuItem:(NSMenuItem *) menuItem {
-  if([menuItem.title isEqual: @"Copy"]) {
+  SEL action = menuItem.action;
+  if (action == @selector(copy:) ||
+        action == @selector(selectAll:)) {
     return YES;
   }
-  return NO;
+  return [super validateMenuItem:menuItem];
 }
 
 -(NSTextView*) content {
