@@ -19,7 +19,6 @@ auto M32X::SH7604::main() -> void {
       GDB::server.updateLoop();
     }
     
-    // if (!GDB::server.reportPC(regs.PC - 4)) return;
     GDB::server.reportPC(regs.PC - 4);
   }
   

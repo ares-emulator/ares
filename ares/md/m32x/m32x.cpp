@@ -125,34 +125,28 @@ auto M32X::initDebugHooks() -> void {
   
   GDB::server.hooks.regRead = [this](u32 regIdx) {
     if(regIdx < 16) {
-      return hex(m32x.shm.regs.R[regIdx], 16, '0');
+      return hex(shm.regs.R[regIdx], 8, '0');
     }
 
     switch (regIdx)
     {
       case 16: { // PC
         auto pcOverride = GDB::server.getPcOverride();
-        return hex(pcOverride ? pcOverride.get() : m32x.shm.regs.PC, 16, '0');
+        return hex(pcOverride ? pcOverride.get() : shm.regs.PC, 8, '0');
       }
-      case 17: return hex(m32x.shm.regs.PR, 16, '0');
-      case 18: return hex(m32x.shm.regs.GBR, 16, '0');
-      // case 19: return hex(m32x.shm.regs.VBR, 16, '0');
-      case 19: return hex(m32x.shm.regs.MACL, 16, '0');
-      case 20: return hex(m32x.shm.regs.MACH, 16, '0');
-      // case 22: return hex(m32x.shm.regs.CCR, 16, '0');
-      // case 23: return hex((u32)m32x.shm.regs.SR, 16, '0');
-      // case 24: return hex(m32x.shm.regs.PPC, 16, '0');
-      // case 25: return hex(m32x.shm.regs.PPM, 16, '0');
-      // case 26: return hex(m32x.shm.regs.ET, 16, '0');
-      // case 27: return hex(m32x.shm.regs.ID, 16, '0');
+      case 17: return hex(shm.regs.PR, 8, '0');
+      case 18: return hex(shm.regs.GBR, 8, '0');
+      case 19: return hex(shm.regs.MACL, 8, '0');
+      case 20: return hex(shm.regs.MACH, 8, '0');
+      case 21: return hex((u32)shm.regs.SR, 8, '0');
     }
 
-    return string{"0000000000000000"};
+    return string{"00000000"};
   };
   
   GDB::server.hooks.regReadGeneral = []() {
     string res{};
-    for(auto i : range(21)) {
+    for(auto i : range(22)) {
       res.append(GDB::server.hooks.regRead(i));
     }
     return res;
