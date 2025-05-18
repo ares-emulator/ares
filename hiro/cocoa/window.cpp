@@ -4,7 +4,7 @@
 
 -(id) initWith:(hiro::mWindow&)windowReference {
   window = &windowReference;
-
+    
   NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
   if(window->state.resizable) style |= NSWindowStyleMaskResizable;
 
@@ -19,63 +19,7 @@
     NSString* applicationName = [dictionary objectForKey:@"CFBundleDisplayName"];
     string hiroName = hiro::Application::state().name ? hiro::Application::state().name : string{"hiro"};
     if(applicationName == nil) applicationName = [NSString stringWithUTF8String:hiroName];
-
-    menuBar = [[NSMenu alloc] init];
-
-    NSMenuItem* item;
-    string text;
-
-    rootMenu = [[NSMenu alloc] init];
-    item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-    [item setSubmenu:rootMenu];
-    [menuBar addItem:item];
-
-    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"About %@…", applicationName] action:@selector(menuAbout) keyEquivalent:@""];
-    [item setTarget:self];
-    [rootMenu addItem:item];
-    [rootMenu addItem:[NSMenuItem separatorItem]];
-
-    item = [[NSMenuItem alloc] initWithTitle:@"Preferences…" action:@selector(menuPreferences) keyEquivalent:@""];
-    [item setTarget:self];
-    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
-    item.keyEquivalent = @",";
-    [rootMenu addItem:item];
-
-    [rootMenu addItem:[NSMenuItem separatorItem]];
-
-    NSMenu* servicesMenu = [[NSMenu alloc] initWithTitle:@"Services"];
-    item = [[NSMenuItem alloc] initWithTitle:@"Services" action:nil keyEquivalent:@""];
-    [item setTarget:self];
-    [item setSubmenu:servicesMenu];
-    [rootMenu addItem:item];
-    [rootMenu addItem:[NSMenuItem separatorItem]];
-    [NSApp setServicesMenu:servicesMenu];
-
-    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Hide %@", applicationName] action:@selector(hide:) keyEquivalent:@""];
-    [item setTarget:NSApp];
-    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
-    item.keyEquivalent = @"h";
-    [rootMenu addItem:item];
-
-    item = [[NSMenuItem alloc] initWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@""];
-    [item setTarget:NSApp];
-    [item setTarget:NSApp];
-    item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
-    item.keyEquivalent = @"h";
-    [rootMenu addItem:item];
-
-    item = [[NSMenuItem alloc] initWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
-    [item setTarget:NSApp];
-    [rootMenu addItem:item];
-
-    [rootMenu addItem:[NSMenuItem separatorItem]];
-
-    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Quit %@", applicationName] action:@selector(menuQuit) keyEquivalent:@""];
-    [item setTarget:self];
-    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
-    item.keyEquivalent = @"q";
-    [rootMenu addItem:item];
-
+      
     statusBar = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)];
     [statusBar setAlignment:NSTextAlignmentLeft];
     [statusBar setBordered:YES];
@@ -96,12 +40,6 @@
 
 -(BOOL) canBecomeMainWindow {
   return YES;
-}
-
--(void) windowDidBecomeMain:(NSNotification*)notification {
-  if(window->state.menuBar) {
-    [NSApp setMainMenu:menuBar];
-  }
 }
 
 -(void) windowDidMove:(NSNotification*)notification {
@@ -131,19 +69,7 @@
 }
 
 -(NSMenu*) menuBar {
-  return menuBar;
-}
-
--(void) menuAbout {
-  hiro::Application::Cocoa::doAbout();
-}
-
--(void) menuPreferences {
-  hiro::Application::Cocoa::doPreferences();
-}
-
--(void) menuQuit {
-  hiro::Application::Cocoa::doQuit();
+  return [NSApp mainMenu];
 }
 
 -(NSTextField*) statusBar {
@@ -164,12 +90,6 @@ namespace hiro {
 
 auto pWindow::construct() -> void {
   cocoaWindow = [[CocoaWindow alloc] initWith:self()];
-
-  static bool once = true;
-  if(once) {
-    once = false;
-    [NSApp setMainMenu:[cocoaWindow menuBar]];
-  }
 }
 
 auto pWindow::destruct() -> void {

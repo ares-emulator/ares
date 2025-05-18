@@ -1,7 +1,15 @@
 #if defined(Hiro_Application)
 
 @interface CocoaDelegate : NSObject <NSApplicationDelegate> {
+@public
+  NSMenu* menuBar;
+  NSMenu* rootMenu;
+  NSMenu* editMenu;
 }
+-(void) constructMenu;
+-(void) menuAbout;
+-(void) menuPreferences;
+-(void) menuQuit;
 -(NSApplicationTerminateReply) applicationShouldTerminate:(NSApplication*)sender;
 -(BOOL) applicationShouldHandleReopen:(NSApplication*)application hasVisibleWindows:(BOOL)flag;
 -(void) run:(NSTimer*)timer;

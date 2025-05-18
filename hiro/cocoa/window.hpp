@@ -3,24 +3,18 @@
 @interface CocoaWindow : NSWindow <NSWindowDelegate> {
 @public
   hiro::mWindow* window;
-  NSMenu* menuBar;
-  NSMenu* rootMenu;
   NSMenuItem* disableGatekeeper;
   NSTextField* statusBar;
 }
 -(id) initWith:(hiro::mWindow&)window;
 -(BOOL) canBecomeKeyWindow;
 -(BOOL) canBecomeMainWindow;
--(void) windowDidBecomeMain:(NSNotification*)notification;
 -(void) windowDidMove:(NSNotification*)notification;
 -(void) windowDidResize:(NSNotification*)notification;
 -(BOOL) windowShouldClose:(id)sender;
 -(NSDragOperation) draggingEntered:(id<NSDraggingInfo>)sender;
 -(BOOL) performDragOperation:(id<NSDraggingInfo>)sender;
 -(NSMenu*) menuBar;
--(void) menuAbout;
--(void) menuPreferences;
--(void) menuQuit;
 -(NSTextField*) statusBar;
 @end
 

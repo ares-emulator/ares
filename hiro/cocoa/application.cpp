@@ -2,6 +2,102 @@
 
 @implementation CocoaDelegate : NSObject
 
+-(void) constructMenu {
+    NSBundle* bundle = [NSBundle mainBundle];
+    NSDictionary* dictionary = [bundle infoDictionary];
+    NSString* applicationName = [dictionary objectForKey:@"CFBundleDisplayName"];
+
+    menuBar = [[NSMenu alloc] init];
+
+    NSMenuItem* item;
+    string text;
+
+    rootMenu = [[NSMenu alloc] init];
+    item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    [item setSubmenu:rootMenu];
+    [menuBar addItem:item];
+
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"About %@…", applicationName] action:@selector(menuAbout) keyEquivalent:@""];
+    [item setTarget:self];
+    [rootMenu addItem:item];
+    [rootMenu addItem:[NSMenuItem separatorItem]];
+
+    item = [[NSMenuItem alloc] initWithTitle:@"Preferences…" action:@selector(menuPreferences) keyEquivalent:@""];
+    [item setTarget:self];
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    item.keyEquivalent = @",";
+    [rootMenu addItem:item];
+
+    [rootMenu addItem:[NSMenuItem separatorItem]];
+
+    NSMenu* servicesMenu = [[NSMenu alloc] initWithTitle:@"Services"];
+    item = [[NSMenuItem alloc] initWithTitle:@"Services" action:nil keyEquivalent:@""];
+    [item setTarget:self];
+    [item setSubmenu:servicesMenu];
+    [rootMenu addItem:item];
+    [rootMenu addItem:[NSMenuItem separatorItem]];
+    [NSApp setServicesMenu:servicesMenu];
+
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Hide %@", applicationName] action:@selector(hide:) keyEquivalent:@""];
+    [item setTarget:NSApp];
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    item.keyEquivalent = @"h";
+    [rootMenu addItem:item];
+
+    item = [[NSMenuItem alloc] initWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@""];
+    [item setTarget:NSApp];
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
+    item.keyEquivalent = @"h";
+    [rootMenu addItem:item];
+
+    item = [[NSMenuItem alloc] initWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
+    [item setTarget:NSApp];
+    [rootMenu addItem:item];
+
+    [rootMenu addItem:[NSMenuItem separatorItem]];
+
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Quit %@", applicationName] action:@selector(menuQuit) keyEquivalent:@""];
+    [item setTarget:self];
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    item.keyEquivalent = @"q";
+    [rootMenu addItem:item];
+
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Edit"] action:nil keyEquivalent:@""];
+    editMenu = [[NSMenu alloc] init];
+    [item setSubmenu:editMenu];
+    [menuBar addItem:item];
+      
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Cut"] action:@selector(cut:) keyEquivalent:@"x"];
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    [editMenu addItem:item];
+
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Copy"] action:@selector(copy:) keyEquivalent:@"c"];
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    [editMenu addItem:item];
+
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Paste"] action:@selector(paste:) keyEquivalent:@"v"];
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    [editMenu addItem:item];
+
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Select All"] action:@selector(selectAll:) keyEquivalent:@"a"];
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    [editMenu addItem:item];
+    
+    [NSApp setMainMenu:menuBar];
+}
+
+-(void) menuAbout {
+  hiro::Application::Cocoa::doAbout();
+}
+
+-(void) menuPreferences {
+  hiro::Application::Cocoa::doPreferences();
+}
+
+-(void) menuQuit {
+  hiro::Application::Cocoa::doQuit();
+}
+
 -(NSApplicationTerminateReply) applicationShouldTerminate:(NSApplication*)sender {
   using hiro::Application;
   if(Application::state().cocoa.onQuit) Application::Cocoa::doQuit();
@@ -114,6 +210,7 @@ auto pApplication::initialize() -> void {
     [NSApplication sharedApplication];
     cocoaDelegate = [[CocoaDelegate alloc] init];
     [NSApp setDelegate:cocoaDelegate];
+    [cocoaDelegate constructMenu];
   }
 }
 
