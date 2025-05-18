@@ -20,7 +20,7 @@ auto M32X::SH7604::main() -> void {
     }
     
     // if (!GDB::server.reportPC(regs.PC - 4)) return;
-    GDB::server.reportPC(regs.PC);
+    GDB::server.reportPC(regs.PC - 4);
   }
   
   if(!m32x.io.adapterReset) return step(1000);

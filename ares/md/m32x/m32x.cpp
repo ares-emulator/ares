@@ -136,15 +136,15 @@ auto M32X::initDebugHooks() -> void {
       }
       case 17: return hex(m32x.shm.regs.PR, 16, '0');
       case 18: return hex(m32x.shm.regs.GBR, 16, '0');
-      case 19: return hex(m32x.shm.regs.VBR, 16, '0');
-      case 20: return hex(m32x.shm.regs.MACL, 16, '0');
-      case 21: return hex(m32x.shm.regs.MACH, 16, '0');
-      case 22: return hex(m32x.shm.regs.CCR, 16, '0');
-      case 23: return hex((u32)m32x.shm.regs.SR, 16, '0');
-      case 24: return hex(m32x.shm.regs.PPC, 16, '0');
-      case 25: return hex(m32x.shm.regs.PPM, 16, '0');
-      case 26: return hex(m32x.shm.regs.ET, 16, '0');
-      case 27: return hex(m32x.shm.regs.ID, 16, '0');
+      // case 19: return hex(m32x.shm.regs.VBR, 16, '0');
+      case 19: return hex(m32x.shm.regs.MACL, 16, '0');
+      case 20: return hex(m32x.shm.regs.MACH, 16, '0');
+      // case 22: return hex(m32x.shm.regs.CCR, 16, '0');
+      // case 23: return hex((u32)m32x.shm.regs.SR, 16, '0');
+      // case 24: return hex(m32x.shm.regs.PPC, 16, '0');
+      // case 25: return hex(m32x.shm.regs.PPM, 16, '0');
+      // case 26: return hex(m32x.shm.regs.ET, 16, '0');
+      // case 27: return hex(m32x.shm.regs.ID, 16, '0');
     }
 
     return string{"0000000000000000"};
@@ -152,7 +152,7 @@ auto M32X::initDebugHooks() -> void {
   
   GDB::server.hooks.regReadGeneral = []() {
     string res{};
-    for(auto i : range(28)) {
+    for(auto i : range(21)) {
       res.append(GDB::server.hooks.regRead(i));
     }
     return res;
