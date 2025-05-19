@@ -70,6 +70,7 @@ struct ARM7TDMI {
 
   auto armInstructionBranch(i24, n1) -> void;
   auto armInstructionBranchExchangeRegister(n4, n4, n4) -> void;
+  auto armInstructionCoprocessorDataProcessing(n4, n3, n4, n4, n4, n4) -> void;
   auto armInstructionDataImmediate(n8, n4, n4, n4, n1, n4) -> void;
   auto armInstructionDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> void;
   auto armInstructionDataRegisterShift(n4, n2, n4, n4, n4, n1, n4) -> void;
@@ -81,6 +82,8 @@ struct ARM7TDMI {
   auto armInstructionMoveImmediateOffset(n12, n4, n4, n1, n1, n1, n1, n1) -> void;
   auto armInstructionMoveMultiple(n16, n4, n1, n1, n1, n1, n1) -> void;
   auto armInstructionMoveRegisterOffset(n4, n2, n5, n4, n4, n1, n1, n1, n1, n1) -> void;
+  auto armInstructionMoveToCoprocessorFromRegister(n4, n3, n4, n4, n4, n3) -> void;
+  auto armInstructionMoveToRegisterFromCoprocessor(n4, n3, n4, n4, n4, n3) -> void;
   auto armInstructionMoveToRegisterFromStatus(n4, n1) -> void;
   auto armInstructionMoveToStatusFromImmediate(n8, n4, n4, n1) -> void;
   auto armInstructionMoveToStatusFromRegister(n4, n2, n5, n4, n1) -> void;
@@ -233,9 +236,19 @@ struct ARM7TDMI {
   function<void (n32 opcode)> armInstruction[4096];
   function<void ()> thumbInstruction[65536];
 
+  //coprocessor.cpp
+  auto bindCDP(n4 id, function<void (n4 cm, n3 op2, n4 cd, n4 cn, n4 op1)> handler) -> void;
+  auto bindMCR(n4 id, function<void (n32 data, n4 cm, n3 op2, n4 cn, n3 op1)> handler) -> void;
+  auto bindMRC(n4 id, function<n32 (n4 cm, n3 op2, n4 cn, n3 op1)> handler) -> void;
+
+  function<void (n4 cm, n3 op2, n4 cd, n4 cn, n4 op1)> CDP[16];
+  function<void (n32 data, n4 cm, n3 op2, n4 cn, n3 op1)> MCR[16];
+  function<n32 (n4 cm, n3 op2, n4 cn, n3 op1)> MRC[16];
+
   //disassembler.cpp
   auto armDisassembleBranch(i24, n1) -> string;
   auto armDisassembleBranchExchangeRegister(n4, n4, n4) -> string;
+  auto armDisassembleCoprocessorDataProcessing(n4, n3, n4, n4, n4, n4) -> string;
   auto armDisassembleDataImmediate(n8, n4, n4, n4, n1, n4) -> string;
   auto armDisassembleDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> string;
   auto armDisassembleDataRegisterShift(n4, n2, n4, n4, n4, n1, n4) -> string;
@@ -247,6 +260,8 @@ struct ARM7TDMI {
   auto armDisassembleMoveImmediateOffset(n12, n4, n4, n1, n1, n1, n1, n1) -> string;
   auto armDisassembleMoveMultiple(n16, n4, n1, n1, n1, n1, n1) -> string;
   auto armDisassembleMoveRegisterOffset(n4, n2, n5, n4, n4, n1, n1, n1, n1, n1) -> string;
+  auto armDisassembleMoveToCoprocessorFromRegister(n4, n3, n4, n4, n4, n3) -> string;
+  auto armDisassembleMoveToRegisterFromCoprocessor(n4, n3, n4, n4, n4, n3) -> string;
   auto armDisassembleMoveToRegisterFromStatus(n4, n1) -> string;
   auto armDisassembleMoveToStatusFromImmediate(n8, n4, n4, n1) -> string;
   auto armDisassembleMoveToStatusFromRegister(n4, n2, n5, n4, n1) -> string;

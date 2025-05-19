@@ -68,6 +68,12 @@ auto ARM7TDMI::armDisassembleBranchExchangeRegister
   return {"bx", _c, " ", _r[m]};
 }
 
+auto ARM7TDMI::armDisassembleCoprocessorDataProcessing
+(n4 cm, n3 op2, n4 cpid, n4 cd, n4 cn, n4 op1) -> string {
+  return {"cdp", _c, " p", cpid, ", ", op1, ", cr", cd,
+    ", cr", cn, ", cr", cm, ", ", op2};
+}
+
 auto ARM7TDMI::armDisassembleDataImmediate
 (n8 immediate, n4 shift, n4 d, n4 n, n1 save, n4 mode) -> string {
   static const string opcode[] = {
@@ -210,6 +216,18 @@ auto ARM7TDMI::armDisassembleMoveRegisterOffset
     type == 3 && !shift ? " rrx" : "",
     pre == 1 ? "]" : "",
     pre == 0 || writeback ? "!" : ""};
+}
+
+auto ARM7TDMI::armDisassembleMoveToCoprocessorFromRegister
+(n4 cm, n3 op2, n4 cpid, n4 d, n4 cn, n3 op1) -> string {
+  return {"mcr", _c, " p", cpid, ", ", op1, ", ", _r[d],
+    ", cr", cn, ", cr", cm, ", ", op2};
+}
+
+auto ARM7TDMI::armDisassembleMoveToRegisterFromCoprocessor
+(n4 cm, n3 op2, n4 cpid, n4 d, n4 cn, n3 op1) -> string {
+  return {"mrc", _c, " p", cpid, ", ", op1, ", ", _r[d],
+    ", cr", cn, ", cr", cm, ", ", op2};
 }
 
 auto ARM7TDMI::armDisassembleMoveToRegisterFromStatus

@@ -256,6 +256,13 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  stopped = 1;
   } prefetch;
 
+  struct Coprocessor {
+    //coprocessor.cpp
+    auto vcCDP() -> void;
+    auto debugMCR() -> void;
+    auto debugMRC() -> n32;
+  } coprocessor;
+
   struct Context {
     n32 clock;
     n1  halted;

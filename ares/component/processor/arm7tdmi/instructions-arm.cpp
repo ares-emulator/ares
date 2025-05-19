@@ -64,6 +64,12 @@ auto ARM7TDMI::armInstructionBranchExchangeRegister
   r(d) = address;
 }
 
+auto ARM7TDMI::armInstructionCoprocessorDataProcessing
+(n4 cm, n3 op2, n4 cpid, n4 cd, n4 cn, n4 op1) -> void {
+  if(!CDP[cpid]) return armInstructionUndefined();
+  CDP[cpid](cm, op2, cd, cn, op1);
+}
+
 auto ARM7TDMI::armInstructionDataImmediate
 (n8 immediate, n4 shift, n4 d, n4 n, n1 save, n4 mode) -> void {
   n32 rn = r(n);
@@ -265,6 +271,18 @@ auto ARM7TDMI::armInstructionMoveRegisterOffset
 
   if(pre == 0 || writeback) r(n) = rn;
   if(mode == 1) r(d) = rd;
+}
+
+auto ARM7TDMI::armInstructionMoveToCoprocessorFromRegister
+(n4 cm, n3 op2, n4 cpid, n4 d, n4 cn, n3 op1) -> void {
+  if(!MCR[cpid]) return armInstructionUndefined();
+  MCR[cpid](r(d), cm, op2, cn, op1);
+}
+
+auto ARM7TDMI::armInstructionMoveToRegisterFromCoprocessor
+(n4 cm, n3 op2, n4 cpid, n4 d, n4 cn, n3 op1) -> void {
+  if(!MRC[cpid]) return armInstructionUndefined();
+  r(d) = MRC[cpid](cm, op2, cn, op1);
 }
 
 auto ARM7TDMI::armInstructionMoveToRegisterFromStatus

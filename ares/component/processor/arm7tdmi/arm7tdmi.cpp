@@ -9,6 +9,7 @@ namespace ares {
 #include "instruction.cpp"
 #include "instructions-arm.cpp"
 #include "instructions-thumb.cpp"
+#include "coprocessor.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"
 
