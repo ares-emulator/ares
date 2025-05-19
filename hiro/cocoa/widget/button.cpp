@@ -8,7 +8,7 @@
     [self setTarget:self];
     [self setAction:@selector(activate:)];
     //NSRoundedBezelStyle has a fixed height; which breaks both icons and larger/smaller text
-    [self setBezelStyle:NSBezelStyleFlexiblePush];
+    [self setBezelStyle:NSBezelStyleRegularSquare];
   }
   return self;
 }

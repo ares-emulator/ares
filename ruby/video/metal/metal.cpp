@@ -127,13 +127,13 @@ struct VideoMetal : VideoDriver, Metal {
       NSTimeInterval minInterval = view.window.screen.minimumRefreshInterval;
       NSTimeInterval maxInterval = view.window.screen.maximumRefreshInterval;
       _vrrIsSupported = minInterval != maxInterval;
-#else
-      _vrrIsSupported = false;
-#endif
-      return _vrrIsSupported;
     } else {
-      return false;
+      _vrrIsSupported = false;
     }
+#else
+    _vrrIsSupported = false;
+#endif
+    return _vrrIsSupported;
   }
   
   auto updatePresentInterval() -> void {

@@ -3,8 +3,8 @@ auto PSG::Channel::power(u32 id) -> void {
   io = {};
 }
 
-template<int index, int step> auto PSG::Channel::run() -> n5 {
-  for(u32 n : range(step)) {
+template<int index, int stepArg> auto PSG::Channel::run() -> n5 {
+  for(u32 n : range(stepArg)) {
     if(!io.direct && --io.wavePeriod == 0) {
       io.wavePeriod = io.waveFrequency;
       io.waveOffset++;
