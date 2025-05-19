@@ -159,29 +159,27 @@ struct VideoMetal : VideoDriver, Metal {
   }
 
   auto setShader(string pathname) -> bool override {
-    if (_filterChain != NULL) {
-      _libra.mtl_filter_chain_free(&_filterChain);
-    }
-    
-    if (_preset != NULL) {
-      _libra.preset_free(&_preset);
-    }
-    
-    if(file::exists(pathname)) {
-      if (auto error = _libra.preset_create(pathname.data(), &_preset)) {
-        print(string{"Metal: Failed to load shader: ", pathname, "\n"});
-        _libra.error_print(error);
-        return false;
+    dispatch_async(_renderQueue, ^{
+      if (_filterChain != NULL) {
+        _libra.mtl_filter_chain_free(&_filterChain);
       }
-      
-      if (auto error = _libra.mtl_filter_chain_create(&_preset, _commandQueue, nil, &_filterChain)) {
-        print(string{"Metal: Failed to create filter chain for: ", pathname, "\n"});
-        _libra.error_print(error);
-        return false;
-      };
-    } else {
-      return false;
-    }
+
+      if (_preset != NULL) {
+        _libra.preset_free(&_preset);
+      }
+
+      if(file::exists(pathname)) {
+        if (auto error = _libra.preset_create(pathname.data(), &_preset)) {
+          print(string{"Metal: Failed to load shader: ", pathname, "\n"});
+          _libra.error_print(error);
+        }
+
+        if (auto error = _libra.mtl_filter_chain_create(&_preset, _commandQueue, nil, &_filterChain)) {
+          print(string{"Metal: Failed to create filter chain for: ", pathname, "\n"});
+          _libra.error_print(error);
+        };
+      }
+    });
     return true;
   }
 
@@ -203,6 +201,7 @@ struct VideoMetal : VideoDriver, Metal {
   }
 
   auto size(u32& width, u32& height) -> void override {
+    lock_guard<recursive_mutex> lock(mutex);
     if ((_viewWidth == width && _viewHeight == height) && (_viewWidth != 0 && _viewHeight != 0)) { return; }
     auto area = [view convertRectToBacking:[view bounds]];
     width = area.size.width;
@@ -297,6 +296,7 @@ struct VideoMetal : VideoDriver, Metal {
     /// Synchronously copy the current framebuffer to a Metal texture, then call into the render dispatch queue
     /// either synchronously or asynchronously depending on whether blocking is on and VRR is supported.
 
+    lock_guard<recursive_mutex> lock(mutex);
     if (depth >= kMaxSourceBuffersInFlight) {
       //if we are running very behind, drop this frame
       return;
@@ -348,6 +348,8 @@ private:
     /// acquiring for as long as possible.
     
     dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
+    
+    //lock_guard<recursive_mutex> lock(mutex);
 
     id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     
@@ -417,9 +419,11 @@ private:
           
           id<CAMetalDrawable> drawable = view.currentDrawable;
           
+          __block VideoMetal &strongSelf = self;
+
           if (@available(macOS 10.15.4, *)) {
             [drawable addPresentedHandler:^(id<MTLDrawable> drawable) {
-             self.drawableWasPresented(drawable);
+             strongSelf.drawableWasPresented(drawable);
              depth--;
              }];
           }
@@ -595,31 +599,35 @@ private:
   }
 
   auto terminate() -> void {
-    _ready = false;
-    
-    _commandQueue = nullptr;
-    _library = nullptr;
-
-    _vertexBuffer = nullptr;
-    for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
-      _sourceTextures[i] = nullptr;
-    }
-    _mtlVertexDescriptor = nullptr;
-    
-    _renderToTextureRenderPassDescriptor = nullptr;
-    _renderTargetTexture = nullptr;
-    _renderToTextureRenderPipeline = nullptr;
-    
-    _drawableRenderPipeline = nullptr;
-    
-    if (_filterChain) {
-      _libra.mtl_filter_chain_free(&_filterChain);
-    }
-    _device = nullptr;
-
-    if (view) {
-      [view removeFromSuperview];
-      view = nil;
+    if(_renderQueue) {
+      dispatch_sync(_renderQueue, ^{
+        _ready = false;
+        
+        _commandQueue = nullptr;
+        _library = nullptr;
+        
+        _vertexBuffer = nullptr;
+        for (int i = 0; i < kMaxSourceBuffersInFlight; i++) {
+          _sourceTextures[i] = nullptr;
+        }
+        _mtlVertexDescriptor = nullptr;
+        
+        _renderToTextureRenderPassDescriptor = nullptr;
+        _renderTargetTexture = nullptr;
+        _renderToTextureRenderPipeline = nullptr;
+        
+        _drawableRenderPipeline = nullptr;
+        
+        if (_filterChain) {
+          _libra.mtl_filter_chain_free(&_filterChain);
+        }
+        _device = nullptr;
+        
+        if (view) {
+          [view removeFromSuperview];
+          view = nil;
+        }
+      });
     }
   }
 
