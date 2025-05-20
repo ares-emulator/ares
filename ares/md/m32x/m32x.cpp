@@ -138,7 +138,7 @@ auto M32X::initDebugHooks() -> void {
       case 18: return hex(shm.regs.GBR, 8, '0');
       case 19: return hex(shm.regs.MACL, 8, '0');
       case 20: return hex(shm.regs.MACH, 8, '0');
-      case 21: return hex((u32)shm.regs.SR, 8, '0');
+      // case 21: return hex((u32)shm.regs.SR, 8, '0');
     }
 
     return string{"00000000"};
@@ -146,7 +146,7 @@ auto M32X::initDebugHooks() -> void {
   
   GDB::server.hooks.regReadGeneral = []() {
     string res{};
-    for(auto i : range(22)) {
+    for(auto i : range(21)) {
       res.append(GDB::server.hooks.regRead(i));
     }
     return res;

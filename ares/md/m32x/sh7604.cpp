@@ -15,11 +15,12 @@ auto M32X::SH7604::unload() -> void {
 
 auto M32X::SH7604::main() -> void {
   if (GDB::server.hasActiveClient && m32x.shm.active()) {
-    if (m32x.vdp.vblank) {
+    if (m32x.vdp.vblank != vblank_state) {
       GDB::server.updateLoop();
+      vblank_state = m32x.vdp.vblank;
     }
     
-    GDB::server.reportPC(regs.PC - 4);
+    if (!GDB::server.reportPC(regs.PC)) return;
   }
   
   if(!m32x.io.adapterReset) return step(1000);
@@ -101,6 +102,7 @@ auto M32X::SH7604::power(bool reset) -> void {
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
+  vblank_state = m32x.vdp.vblank;
 }
 
 auto M32X::SH7604::restart() -> void {
