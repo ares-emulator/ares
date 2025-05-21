@@ -21,6 +21,8 @@ auto M32X::SH7604::main() -> void {
     } else if (m32x.vdp.vblank && !vblank_state) {
       GDB::server.updateLoop();
     }
+    
+    vblank_state = m32x.vdp.vblank;
   }
   
   if(!m32x.io.adapterReset) return step(1000);
@@ -76,8 +78,6 @@ auto M32X::SH7604::step(u32 clocks) -> void {
   cyclesUntilM68kSync -= clocks;
 
   m32x.vdp.framebufferWait -= min(clocks, m32x.vdp.framebufferWait);
-  
-  vblank_state = m32x.vdp.vblank;
 
   if(cyclesUntilSh2Sync <= 0) {
     cyclesUntilSh2Sync = minCyclesBetweenSh2Syncs;
