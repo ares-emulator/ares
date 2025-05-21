@@ -6,7 +6,7 @@ using string = ::nall::string;
 using string_view = ::nall::string_view;
 
 namespace {
-  constexpr bool GDB_LOG_MESSAGES = true;
+  constexpr bool GDB_LOG_MESSAGES = false;
 
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
   constexpr u32 MAX_PACKET_SIZE = 0x4096;
