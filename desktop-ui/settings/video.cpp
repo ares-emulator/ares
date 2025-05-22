@@ -92,23 +92,23 @@ auto VideoSettings::construct() -> void {
   weaveDeinterlacingLayout.setAlignment(1).setPadding(12_sx, 0);
   weaveDeinterlacingHint.setText("Doubles the perceived vertical resolution; incompatible with supersampling").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  renderQualitySD.setText("SD Quality").onActivate([&] {
+  renderQuality1x.setText("1x Native").onActivate([&] {
     settings.video.quality = "SD";
     renderSupersamplingOption.setChecked(false).setEnabled(false);
     settings.video.supersampling = false;
     weaveDeinterlacingOption.setEnabled(true);
   });
-  renderQualityHD.setText("HD Quality").onActivate([&] {
+  renderQuality2x.setText("2x Native").onActivate([&] {
     settings.video.quality = "HD";
     if(weaveDeinterlacingOption.checked() == false) renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
   });
-  renderQualityUHD.setText("UHD Quality").onActivate([&] {
+  renderQuality4x.setText("4x Native").onActivate([&] {
     settings.video.quality = "UHD";
     if(weaveDeinterlacingOption.checked() == false) renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
   });
-  if(settings.video.quality == "SD") renderQualitySD.setChecked();
-  if(settings.video.quality == "HD") renderQualityHD.setChecked();
-  if(settings.video.quality == "UHD") renderQualityUHD.setChecked();
+  if(settings.video.quality == "SD") renderQuality1x.setChecked();
+  if(settings.video.quality == "HD") renderQuality2x.setChecked();
+  if(settings.video.quality == "UHD") renderQuality4x.setChecked();
   renderSupersamplingOption.setText("Supersampling").setChecked(settings.video.supersampling && settings.video.quality != "SD").setEnabled(settings.video.quality != "SD").onToggle([&] {
     settings.video.supersampling = renderSupersamplingOption.checked();
     if(renderSupersamplingOption.checked() == true) {
@@ -119,7 +119,7 @@ auto VideoSettings::construct() -> void {
     }
   });
   renderSupersamplingLayout.setAlignment(1).setPadding(12_sx, 0);
-  renderSupersamplingHint.setText("Scales HD and UHD resolutions back down to SD").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  renderSupersamplingHint.setText("Scales 2x and 4x resolutions back down to native.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   renderSettingsLayout.setPadding(12_sx, 0);
   renderSettingsHint.setText("Note: render settings changes require a game reload to take effect").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 

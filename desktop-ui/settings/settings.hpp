@@ -160,10 +160,10 @@ struct VideoSettings : VerticalLayout {
     CheckLabel weaveDeinterlacingOption{&weaveDeinterlacingLayout, Size{0, 0}, 5};
     Label weaveDeinterlacingHint{&weaveDeinterlacingLayout, Size{0, 0}};
   HorizontalLayout renderQualityLayout{this, Size{~0, 0}, 5};
-    RadioLabel renderQualitySD{&renderQualityLayout, Size{0, 0}};
-    RadioLabel renderQualityHD{&renderQualityLayout, Size{0, 0}};
-    RadioLabel renderQualityUHD{&renderQualityLayout, Size{0, 0}};
-    Group renderQualityGroup{&renderQualitySD, &renderQualityHD, &renderQualityUHD};
+    RadioLabel renderQuality1x{&renderQualityLayout, Size{0, 0}};
+    RadioLabel renderQuality2x{&renderQualityLayout, Size{0, 0}};
+    RadioLabel renderQuality4x{&renderQualityLayout, Size{0, 0}};
+    Group renderQualityGroup{&renderQuality1x, &renderQuality2x, &renderQuality4x};
   HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 5};
     CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
     Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, 0}};
