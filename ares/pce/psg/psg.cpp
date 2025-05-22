@@ -46,7 +46,7 @@ auto PSG::main() -> void {
   #endif
 }
 
-template<int step> auto PSG::frame(i16& outputLeft, i16& outputRight) -> void {
+template<int stepArg> auto PSG::frame(i16& outputLeft, i16& outputRight) -> void {
   static const n5 volumeScale[16] = {
     0x00, 0x03, 0x05, 0x07, 0x09, 0x0b, 0x0d, 0x0f,
     0x10, 0x13, 0x15, 0x17, 0x19, 0x1b, 0x1d, 0x1f,
@@ -59,12 +59,12 @@ template<int step> auto PSG::frame(i16& outputLeft, i16& outputRight) -> void {
   n5 rmal = volumeScale[io.volumeRight];
 
   n5 output[6];
-  if(channel[0].io.enable) output[0] = channel[0].run<0, step>();
-  if(channel[1].io.enable) output[1] = channel[1].run<1, step>();
-  if(channel[2].io.enable) output[2] = channel[2].run<2, step>();
-  if(channel[3].io.enable) output[3] = channel[3].run<3, step>();
-  if(channel[4].io.enable) output[4] = channel[4].run<4, step>();
-  if(channel[5].io.enable) output[5] = channel[5].run<5, step>();
+  if(channel[0].io.enable) output[0] = channel[0].run<0, stepArg>();
+  if(channel[1].io.enable) output[1] = channel[1].run<1, stepArg>();
+  if(channel[2].io.enable) output[2] = channel[2].run<2, stepArg>();
+  if(channel[3].io.enable) output[3] = channel[3].run<3, stepArg>();
+  if(channel[4].io.enable) output[4] = channel[4].run<4, stepArg>();
+  if(channel[5].io.enable) output[5] = channel[5].run<5, stepArg>();
 
   for(u32 C : range(6)) {
     n5  al = channel[C].io.volume;

@@ -8,7 +8,7 @@
 
     [self setTarget:self];
     [self setAction:@selector(activate:)];
-    [self setBezelStyle:NSBezelStyleFlexiblePush];
+    [self setBezelStyle:NSBezelStyleRegularSquare];
     [self setButtonType:NSButtonTypeOnOff];
   }
   return self;
