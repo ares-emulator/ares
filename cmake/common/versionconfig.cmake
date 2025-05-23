@@ -30,7 +30,7 @@ function(ares_populate_version_info)
     string(STRIP "${ARES_VERSION}" ARES_VERSION)
   endif()
 
-  string(REGEX REPLACE "^v([0-9]+(\\.[0-9]+)*)-.*" "\\1" ares_version_stripped "${ARES_VERSION}")
+  string(REGEX REPLACE "^v([0-9]+(\\.[0-9]+)*)(-.*)?$" "\\1" ares_version_stripped "${ARES_VERSION}")
   string(REPLACE "." ";" ares_version_parts "${ares_version_stripped}")
   list(LENGTH ares_version_parts ares_version_parts_length)
   list(GET ares_version_parts 0 minor)
