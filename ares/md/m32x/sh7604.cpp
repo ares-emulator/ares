@@ -48,7 +48,7 @@ auto M32X::SH7604::main() -> void {
     }
     #undef raise
   }
-  
+
   SH2::instruction();
   SH2::intc.run();
   SH2::dmac.run();
