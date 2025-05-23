@@ -132,7 +132,7 @@ auto M32X::initDebugHooks() -> void {
     {
       case 16: { // PC
         auto pcOverride = GDB::server.getPcOverride();
-        return hex(pcOverride ? pcOverride.get() : shm.regs.PC, 8, '0');
+        return hex(pcOverride ? pcOverride.get() - 4 : shm.regs.PC - 4, 8, '0');
       }
       case 17: return hex(shm.regs.PR, 8, '0');
       case 18: return hex(shm.regs.GBR, 8, '0');

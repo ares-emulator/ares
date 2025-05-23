@@ -15,7 +15,7 @@ auto M32X::SH7604::unload() -> void {
 
 auto M32X::SH7604::main() -> void {
   if (GDB::server.hasActiveClient && m32x.shm.active()) {
-    if (!GDB::server.reportPC(regs.PC)) {
+    if (!GDB::server.reportDelayedPC(regs.PC)) {
       GDB::server.updateLoop();
       return;
     } else if (m32x.vdp.vblank && !vblank_state) {
