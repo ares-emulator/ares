@@ -14,6 +14,17 @@ auto M32X::SH7604::unload() -> void {
 }
 
 auto M32X::SH7604::main() -> void {
+  if (GDB::server.hasActiveClient && m32x.shm.active()) {
+    if (!GDB::server.reportDelayedPC(regs.PC)) {
+      GDB::server.updateLoop();
+      return;
+    } else if (m32x.vdp.vblank && !vblank_state) {
+      GDB::server.updateLoop();
+    }
+    
+    vblank_state = m32x.vdp.vblank;
+  }
+  
   if(!m32x.io.adapterReset) return step(1000);
 
   if(!regs.ID) {
@@ -93,6 +104,7 @@ auto M32X::SH7604::power(bool reset) -> void {
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
+  vblank_state = m32x.vdp.vblank;
 }
 
 auto M32X::SH7604::restart() -> void {
@@ -134,6 +146,9 @@ auto M32X::SH7604::syncM68k(bool force) -> void {
 }
 
 auto M32X::SH7604::busReadByte(u32 address) -> u32 {
+  if (GDB::server.hasActiveClient && m32x.shm.active()) {
+    GDB::server.reportMemRead(address, 1);
+  }
   if(address & 1) {
     return m32x.readInternal(0, 1, address & ~1).byte(0);
   } else {
@@ -142,15 +157,24 @@ auto M32X::SH7604::busReadByte(u32 address) -> u32 {
 }
 
 auto M32X::SH7604::busReadWord(u32 address) -> u32 {
+  if (GDB::server.hasActiveClient && m32x.shm.active()) {
+    GDB::server.reportMemRead(address, 2);
+  }
   return m32x.readInternal(1, 1, address & ~1);
 }
 
 auto M32X::SH7604::busReadLong(u32 address) -> u32 {
+  if (GDB::server.hasActiveClient && m32x.shm.active()) {
+    GDB::server.reportMemRead(address, 4);
+  }
   u32    data = m32x.readInternal(1, 1, address & ~3 | 0) << 16;
   return data | m32x.readInternal(1, 1, address & ~3 | 2) <<  0;
 }
 
 auto M32X::SH7604::busWriteByte(u32 address, u32 data) -> void {
+  if (GDB::server.hasActiveClient && m32x.shm.active()) {
+    GDB::server.reportMemWrite(address, 1);
+  }
   debugger.tracer.instruction->invalidate(address & ~1);
   if(address & 1) {
     m32x.writeInternal(0, 1, address & ~1, data << 8 | (u8)data << 0);
@@ -160,11 +184,17 @@ auto M32X::SH7604::busWriteByte(u32 address, u32 data) -> void {
 }
 
 auto M32X::SH7604::busWriteWord(u32 address, u32 data) -> void {
+  if (GDB::server.hasActiveClient && m32x.shm.active()) {
+    GDB::server.reportMemWrite(address, 2);
+  }
   debugger.tracer.instruction->invalidate(address & ~1);
   m32x.writeInternal(1, 1, address & ~1, data);
 }
 
 auto M32X::SH7604::busWriteLong(u32 address, u32 data) -> void {
+  if (GDB::server.hasActiveClient && m32x.shm.active()) {
+    GDB::server.reportMemWrite(address, 4);
+  }
   debugger.tracer.instruction->invalidate(address & ~3 | 0);
   debugger.tracer.instruction->invalidate(address & ~3 | 2);
   m32x.writeInternal(1, 1, address & ~3 | 0, data >> 16);

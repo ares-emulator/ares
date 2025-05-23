@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/recompiler/generic/generic.hpp>
+#include <nall/gdb/server.hpp>
 
 //Hitachi SH-2
 

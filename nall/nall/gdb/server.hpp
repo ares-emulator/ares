@@ -88,6 +88,7 @@ class Server : public nall::TCPText::Server {
 
     // PC / Memory State Updates
     auto reportPC(u64 pc) -> bool;
+    auto reportDelayedPC(u64 pc) -> bool;
     auto reportMemRead(u64 address, u32 size) -> void;
     auto reportMemWrite(u64 address, u32 size) -> void;
 
@@ -101,6 +102,8 @@ class Server : public nall::TCPText::Server {
 
     auto updateLoop() -> void;
     auto getStatusText(u32 port, bool useIPv4) -> string;
+    
+    bool hasActiveClient{false};
 
   protected:
     auto onText(string_view text) -> void override;
@@ -120,7 +123,6 @@ class Server : public nall::TCPText::Server {
     bool handshakeDone{false}; // set to true after a few handshake commands, used to prevent exception-reporting until client is ready
     bool requestDisconnect{false}; // set to true if the client decides it wants to disconnect
 
-    bool hasActiveClient{false};
     u32 messageCount{0}; // message count per update loop
     s32 currentThreadC{-1}; // selected thread for the next 'c' command
 

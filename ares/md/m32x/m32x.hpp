@@ -73,6 +73,7 @@ struct M32X {
     s32 cyclesUntilM68kSync = 0;
     s32 minCyclesBetweenSh2Syncs = 0;
     s32 minCyclesBetweenM68kSyncs = 0;
+    n1 vblank_state;
   };
 
   struct VDP {
@@ -187,6 +188,8 @@ struct M32X {
 
   auto vblank(bool) -> void;
   auto hblank(bool) -> void;
+
+  auto initDebugHooks() -> void;
 
   //bus-internal.cpp
   auto readInternal(n1 upper, n1 lower, n32 address, n16 data = 0) -> n16;

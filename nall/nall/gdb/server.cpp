@@ -105,6 +105,29 @@ namespace nall::GDB {
     return !needHalts;
   }
 
+  auto Server::reportDelayedPC(u64 pc) -> bool {
+    if(!hasActiveClient)return true;
+
+    currentPC = pc;
+    bool needHalts = forceHalt || breakpoints.contains(pc - 4);
+
+    if(needHalts) {
+      forceHalt = true; // breakpoints may get deleted after a signal, but we have to stay stopped
+
+      if(!haltSignalSent) {
+        haltSignalSent = true;
+        sendSignal(Signal::TRAP);
+      }
+    }
+
+    if(singleStepActive) {
+      singleStepActive = false;
+      forceHalt = true;
+    }
+
+    return !needHalts;
+  }
+
   /**
    * NOTE: please read the comment in the header server.hpp file before making any changes here!
    */
