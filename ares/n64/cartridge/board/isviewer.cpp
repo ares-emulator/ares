@@ -1,19 +1,19 @@
-auto Cartridge::ISViewer::readHalf(u32 address) -> u16 {
+auto BOARD::ISViewer::readHalf(u32 address) -> u16 {
   address = (address & 0xffff);
   return ram.read<Half>(address);
 }
 
-auto Cartridge::ISViewer::readWord(u32 address) -> u32 {
+auto BOARD::ISViewer::readWord(u32 address) -> u32 {
   address = (address & 0xffff);
   return ram.read<Word>(address);
 }
 
-auto Cartridge::ISViewer::messageChar(char c) -> void {
+auto BOARD::ISViewer::messageChar(char c) -> void {
   if(!tracer->enabled()) return;
   tracer->notify(c);
 }
 
-auto Cartridge::ISViewer::writeHalf(u32 address, u16 data) -> void {
+auto BOARD::ISViewer::writeHalf(u32 address, u16 data) -> void {
   address = (address & 0xffff);
 
   if(address == 0x16) {
@@ -36,7 +36,7 @@ auto Cartridge::ISViewer::writeHalf(u32 address, u16 data) -> void {
   ram.write<Half>(address, data);
 }
 
-auto Cartridge::ISViewer::writeWord(u32 address, u32 data) -> void {
+auto BOARD::ISViewer::writeWord(u32 address, u32 data) -> void {
   address = (address & 0xffff);
   writeHalf(address+0, data >> 16);
   writeHalf(address+2, data & 0xffff);

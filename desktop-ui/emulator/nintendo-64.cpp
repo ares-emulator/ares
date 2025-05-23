@@ -7,7 +7,7 @@ struct Nintendo64 : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
-  shared_pointer<mia::Pak> disk;
+  shared_pointer<mia::Pak> disk, gs;
   u32 regionID = 0;
   sTimer diskInsertTimer;
 };
@@ -121,8 +121,50 @@ auto Nintendo64::load() -> LoadResult {
   if(!ares::Nintendo64::load(root, {"[Nintendo] ", name, " (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    port->allocate();
+    auto cartridge = port->allocate({name, " Cartridge"});
     port->connect();
+
+    if(auto slot = cartridge->find<ares::Node::Port>("GameShark Cartridge Slot")) {
+      gs = mia::Medium::create("Nintendo 64");
+      string location = Emulator::load(gs, configuration.game);
+      if(!location) return noFileSelected;
+      LoadResult result = gs->load(location);
+      if(result != successful) return result;
+
+      //technically we could recurse infinitely here, since you can stack GameSharks
+      //probably not necessary to emulate that though
+      slot->allocate({name, " Cartridge + GameShark"});
+      slot->connect();
+    }
+
+    #if defined(CORE_GB)
+    if(auto slot = cartridge->find<ares::Node::Port>("Game Booster Back Cartridge Slot")) {
+      if(auto gbslot = cartridge->find<ares::Node::Port>("Game Booster Top Cartridge Slot")) {
+        gs = mia::Medium::create("Nintendo 64");
+        string location = Emulator::load(gs, configuration.game);
+        if(!location) return noFileSelected;
+        LoadResult result = gs->load(location);
+        if(result != successful) return result;
+  
+        //technically we could recurse infinitely here (...)
+        //FIXME: should we have different cartridge slot names for
+        //different Datel boards? It makes sense to model them the same,
+        //since they work the same and use the same chip, but what about
+        //other manufacturers in the future?
+        slot->allocate({name, " Cartridge + GameShark"});
+        slot->connect();
+
+        gb = mia::Medium::create("Game Boy");
+        location = Emulator::load(gb, configuration.game);
+        if(!location) return noFileSelected;
+        result = gb->load(location);
+        if(result != successful) return result;
+
+        gbslot->allocate();
+        gbslot->connect();
+      }
+    }
+    #endif
   }
 
   if(auto port = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive")) {
@@ -333,6 +375,7 @@ auto Nintendo64::save() -> bool {
   if(disk) disk->save(disk->location);
   if(gamepad) gamepad->save("save.pak", ".pak", game->location);
   if(gb) gb->save(gb->location);
+  if(gs) gs->save(gs->location);
   return true;
 }
 
@@ -343,5 +386,6 @@ auto Nintendo64::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> 
   if(node->name() == "Game Boy Cartridge") return gb->pak;
   if(node->name() == "Game Boy Color Cartridge") return gb->pak;
   if(node->name() == "Gamepad") return gamepad->pak;
+  if(node->name() == "Nintendo 64 Cartridge + GameShark") return gs->pak;
   return {};
 }
