@@ -193,8 +193,9 @@ auto ARM7TDMI::armInitialize() -> void {
     opcode.bit(12,15),  /* d */ \
     opcode.bit(16,19),  /* n */ \
     opcode.bit(22)      /* byte */
+  for(n3 _ : range(8))
   for(n1 byte : range(2)) {
-    auto opcode = pattern(".... 0001 0?00 ???? ???? ---- 1001 ????") | byte << 22;
+    auto opcode = pattern(".... 0001 ???? ???? ???? ---- 1001 ????") | _.bit(0,1) << 20 | byte << 22 | _.bit(2) << 23;
     bind(opcode, MemorySwap);
   }
   #undef arguments
