@@ -26,6 +26,8 @@ auto M32X::load(Node::Object parent) -> void {
     vectors.allocate(fp->size() >> 1);
     for(auto address : range(vectors.size())) vectors.program(address, fp->readm(2L));
   }
+  
+  initDebugHooks();
 }
 
 auto M32X::unload() -> void {
@@ -89,6 +91,71 @@ auto M32X::hblank(bool line) -> void {
       shm.irq.hint.active = 1;
       shs.irq.hint.active = 1;
     }
+  }
+}
+
+auto M32X::initDebugHooks() -> void {
+
+  // See: https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format
+  GDB::server.hooks.targetXML = []() -> string {
+    return "<target version=\"1.0\">"
+      "<architecture>sh2</architecture>"
+    "</target>";
+  };
+  
+  GDB::server.hooks.normalizeAddress = [](u64 address) -> u64 {
+    return address & 0x00FFFFFF;
+  };
+  
+  GDB::server.hooks.read = [](u64 address, u32 byteCount) -> string {
+    address = (s32)address;
+
+    string res{};
+    res.resize(byteCount * 2);
+    char* resPtr = res.begin();
+
+    for(u32 i : range(byteCount)) {
+      auto val = m32x.shm.readByte(address++);
+      hexByte(resPtr, val);
+      resPtr += 2;
+    }
+
+    return res;
+  };
+  
+  GDB::server.hooks.regRead = [this](u32 regIdx) {
+    if(regIdx < 16) {
+      return hex(shm.regs.R[regIdx], 8, '0');
+    }
+
+    switch (regIdx)
+    {
+      case 16: { // PC
+        auto pcOverride = GDB::server.getPcOverride();
+        return hex(pcOverride ? pcOverride.get() - 4 : shm.regs.PC - 4, 8, '0');
+      }
+      case 17: return hex(shm.regs.PR, 8, '0');
+      case 18: return hex(shm.regs.GBR, 8, '0');
+      case 19: return hex(shm.regs.MACL, 8, '0');
+      case 20: return hex(shm.regs.MACH, 8, '0');
+      // case 21: return hex((u32)shm.regs.SR, 8, '0');
+    }
+
+    return string{"00000000"};
+  };
+  
+  GDB::server.hooks.regReadGeneral = []() {
+    string res{};
+    for(auto i : range(21)) {
+      res.append(GDB::server.hooks.regRead(i));
+    }
+    return res;
+  };
+  
+  if constexpr(SH2::Accuracy::Recompiler) {
+    GDB::server.hooks.emuCacheInvalidate = [](u64 address) {
+      m32x.shm.recompiler.invalidate(address, 4);
+    };
   }
 }
 
