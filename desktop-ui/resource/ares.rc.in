@@ -20,5 +20,5 @@ END
 2 ICON DISCARDABLE "resource/ares.ico"
 
 #ifndef EXCLUDE_MANIFEST_FROM_RC
-3 24 "resource/ares.Manifest"
+1 24 "resource/ares.Manifest"
 #endif
