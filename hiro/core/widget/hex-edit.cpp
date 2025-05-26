@@ -14,6 +14,10 @@ auto mHexEdit::backgroundColor() const -> Color {
   return state.backgroundColor;
 }
 
+auto mHexEdit::base() const -> u16 {
+  return state.base;
+}
+
 auto mHexEdit::columns() const -> u32 {
   return state.columns;
 }
@@ -52,6 +56,12 @@ auto mHexEdit::rows() const -> u32 {
 auto mHexEdit::setAddress(u32 address) -> type& {
   state.address = address;
   signal(setAddress, address);
+  return *this;
+}
+
+auto mHexEdit::setBase(u16 base) -> type& {
+  state.base = base;
+  signal(setBase, base);
   return *this;
 }
 

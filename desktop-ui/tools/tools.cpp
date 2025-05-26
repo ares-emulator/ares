@@ -7,6 +7,7 @@
 #include "properties.cpp"
 #include "tracer.cpp"
 
+Tools tools;
 namespace Instances { Instance<ToolsWindow> toolsWindow; }
 ToolsWindow& toolsWindow = Instances::toolsWindow();
 ManifestViewer& manifestViewer = toolsWindow.manifestViewer;

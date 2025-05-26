@@ -82,7 +82,20 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
     address += columnNumber;
     if (address < hexEdit->length()) {
       u8 data = hexEdit->doRead(address);
-      return [NSString stringWithUTF8String:hex(data, 2L).data()];
+      switch(hexEdit->base()) {
+        case 2: {
+          NSMutableString *binary = [NSMutableString stringWithCapacity:8];
+          for(int bit = 7; bit >= 0; bit--) {
+            [binary appendFormat:@"%c", (data & (1 << bit)) ? '1' : '0'];
+          }
+          return binary;
+        }
+        case 8:
+          return [NSString stringWithFormat:@"%03o", data];
+        case 16:
+        default:
+          return [NSString stringWithFormat:@"%02X", data];
+      }
     } else {
       return @"  ";
     }
@@ -143,7 +156,11 @@ namespace hiro {
   auto pHexEdit::setBackgroundColor(Color color) -> void {
     update();
   }
-  
+
+  auto pHexEdit::setBase(u16 base) -> void {
+    update();
+  }
+
   auto pHexEdit::setColumns(u32 columns) -> void {
     update();
   }

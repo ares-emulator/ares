@@ -4,6 +4,7 @@ struct mHexEdit : mWidget {
 
   auto address() const -> u32;
   auto backgroundColor() const -> Color;
+  auto base() const -> u16;
   auto columns() const -> u32;
   auto doRead(u32 offset) const -> u8;
   auto doWrite(u32 offset, u8 data) const -> void;
@@ -14,6 +15,7 @@ struct mHexEdit : mWidget {
   auto rows() const -> u32;
   auto setAddress(u32 address = 0) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
+  auto setBase(u16 base) -> type&;
   auto setColumns(u32 columns = 16) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
   auto setLength(u32 length) -> type&;
@@ -24,6 +26,7 @@ struct mHexEdit : mWidget {
   struct State {
     u32 address = 0;
     Color backgroundColor;
+    u16 base = 16;
     u32 columns = 16;
     Color foregroundColor;
     u32 length = 0;
