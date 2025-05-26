@@ -69,7 +69,7 @@ struct ARM7TDMI {
   auto armMoveToStatus(n4 field, n1 source, n32 data) -> void;
 
   auto armInstructionBranch(i24, n1) -> void;
-  auto armInstructionBranchExchangeRegister(n4, n4, n4) -> void;
+  auto armInstructionBranchExchangeRegister(n4, n4, n4, n1) -> void;
   auto armInstructionCoprocessorDataProcessing(n4, n3, n4, n4, n4, n4) -> void;
   auto armInstructionDataImmediate(n8, n4, n4, n4, n1, n4) -> void;
   auto armInstructionDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> void;
@@ -150,19 +150,29 @@ struct ARM7TDMI {
     };
 
     operator u32() const {
-      return m << 0 | t << 5 | f << 6 | i << 7 | v << 28 | c << 29 | z << 30 | n << 31;
+      return m << 0 | 1 << 4 | t << 5 | f << 6 | i << 7 | v << 28 | c << 29 | z << 30 | n << 31;
     }
 
     auto operator=(n32 data) -> PSR& {
-      m = data.bit(0,4);
-      t = data.bit(5);
-      f = data.bit(6);
-      i = data.bit(7);
-      v = data.bit(28);
-      c = data.bit(29);
-      z = data.bit(30);
-      n = data.bit(31);
+      set(0b1111, data);
       return *this;
+    }
+
+    auto set(n4 field, n32 data) -> void {
+      if(readonly) return;
+      if(field.bit(0)) {
+        m = data.bit(0,4) | 0x10;
+        t = data.bit(5);
+        f = data.bit(6);
+        i = data.bit(7);
+      }
+
+      if(field.bit(3)) {
+        v = data.bit(28);
+        c = data.bit(29);
+        z = data.bit(30);
+        n = data.bit(31);
+      }
     }
 
     //serialization.cpp
@@ -176,6 +186,8 @@ struct ARM7TDMI {
     b1 c;  //carry
     b1 z;  //zero
     b1 n;  //negative
+
+    b1 readonly;
   };
 
   struct Processor {
@@ -184,6 +196,8 @@ struct ARM7TDMI {
 
     GPR r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15;
     PSR cpsr;
+    GPR rNULL;  //read-only, used when no register is mapped to r(13) or r(14)
+    PSR spsrNULL;  //read-only, used when no SPSR is mapped
 
     struct FIQ {
       GPR r8, r9, r10, r11, r12, r13, r14;
@@ -247,7 +261,7 @@ struct ARM7TDMI {
 
   //disassembler.cpp
   auto armDisassembleBranch(i24, n1) -> string;
-  auto armDisassembleBranchExchangeRegister(n4, n4, n4) -> string;
+  auto armDisassembleBranchExchangeRegister(n4, n4, n4, n1) -> string;
   auto armDisassembleCoprocessorDataProcessing(n4, n3, n4, n4, n4, n4) -> string;
   auto armDisassembleDataImmediate(n8, n4, n4, n4, n1, n4) -> string;
   auto armDisassembleDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> string;

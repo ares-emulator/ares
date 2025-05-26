@@ -24,6 +24,8 @@ auto ARM7TDMI::Processor::serialize(serializer& s) -> void {
   s(r14.data);
   s(r15.data);
   s(cpsr);
+  s(rNULL.data);
+  s(spsrNULL);
   s(fiq.r8.data);
   s(fiq.r9.data);
   s(fiq.r10.data);
@@ -55,6 +57,7 @@ auto ARM7TDMI::PSR::serialize(serializer& s) -> void {
   s(c);
   s(z);
   s(n);
+  s(readonly);
 }
 
 auto ARM7TDMI::Pipeline::serialize(serializer& s) -> void {
