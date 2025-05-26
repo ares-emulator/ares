@@ -14,20 +14,24 @@ inline auto ARM7TDMI::r(n4 index) -> GPR& {
   case 11: return processor.cpsr.m == PSR::FIQ ? processor.fiq.r11 : processor.r11;
   case 12: return processor.cpsr.m == PSR::FIQ ? processor.fiq.r12 : processor.r12;
   case 13: switch(processor.cpsr.m) {
+    case PSR::USR: return processor.r13;
     case PSR::FIQ: return processor.fiq.r13;
     case PSR::IRQ: return processor.irq.r13;
     case PSR::SVC: return processor.svc.r13;
     case PSR::ABT: return processor.abt.r13;
     case PSR::UND: return processor.und.r13;
-    default: return processor.r13;
+    case PSR::SYS: return processor.r13;
+    default: return processor.rNULL;
   }
   case 14: switch(processor.cpsr.m) {
+    case PSR::USR: return processor.r14;
     case PSR::FIQ: return processor.fiq.r14;
     case PSR::IRQ: return processor.irq.r14;
     case PSR::SVC: return processor.svc.r14;
     case PSR::ABT: return processor.abt.r14;
     case PSR::UND: return processor.und.r14;
-    default: return processor.r14;
+    case PSR::SYS: return processor.r14;
+    default: return processor.rNULL;
   }
   case 15: return processor.r15;
   }
@@ -46,7 +50,7 @@ inline auto ARM7TDMI::spsr() -> PSR& {
   case PSR::ABT: return processor.abt.spsr;
   case PSR::UND: return processor.und.spsr;
   }
-  throw;
+  return processor.spsrNULL;
 }
 
 inline auto ARM7TDMI::privileged() const -> bool {
