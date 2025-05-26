@@ -69,7 +69,7 @@ struct ARM7TDMI {
   auto armMoveToStatus(n4 field, n1 source, n32 data) -> void;
 
   auto armInstructionBranch(i24, n1) -> void;
-  auto armInstructionBranchExchangeRegister(n4, n4, n4) -> void;
+  auto armInstructionBranchExchangeRegister(n4, n4, n4, n1) -> void;
   auto armInstructionCoprocessorDataProcessing(n4, n3, n4, n4, n4, n4) -> void;
   auto armInstructionDataImmediate(n8, n4, n4, n4, n1, n4) -> void;
   auto armInstructionDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> void;
@@ -261,7 +261,7 @@ struct ARM7TDMI {
 
   //disassembler.cpp
   auto armDisassembleBranch(i24, n1) -> string;
-  auto armDisassembleBranchExchangeRegister(n4, n4, n4) -> string;
+  auto armDisassembleBranchExchangeRegister(n4, n4, n4, n1) -> string;
   auto armDisassembleCoprocessorDataProcessing(n4, n3, n4, n4, n4, n4) -> string;
   auto armDisassembleDataImmediate(n8, n4, n4, n4, n1, n4) -> string;
   auto armDisassembleDataImmediateShift(n4, n2, n5, n4, n4, n1, n4) -> string;

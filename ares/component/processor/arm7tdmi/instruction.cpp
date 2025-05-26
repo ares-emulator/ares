@@ -82,9 +82,11 @@ auto ARM7TDMI::armInitialize() -> void {
   #define arguments \
     opcode.bit( 0, 3),  /* m */ \
     opcode.bit(12,15),  /* d */ \
-    opcode.bit(16,19)   /* field */
-  for(n2 _ : range(4)) {
-    auto opcode = pattern(".... 0001 0010 ???? ???? ---- 0??1 ????") | _ << 5;
+    opcode.bit(16,19),  /* field */ \
+    opcode.bit(22)      /* mode */
+  for(n2 _ : range(4))
+  for(n1 mode : range(2)) {
+    auto opcode = pattern(".... 0001 0?10 ???? ???? ---- 0??1 ????") | _ << 5 | mode << 22;
     bind(opcode, BranchExchangeRegister);
   }
   #undef arguments

@@ -42,12 +42,13 @@ auto ARM7TDMI::armInstructionBranch
 }
 
 auto ARM7TDMI::armInstructionBranchExchangeRegister
-(n4 m, n4 d, n4 field) -> void {
+(n4 m, n4 d, n4 field, n1 mode) -> void {
   n32 address = r(m);
   if((field & 0b1001) == 0b1001) {
-    cpsr().t = address.bit(0);
+    PSR& psr = mode ? spsr() : cpsr();
+    psr.t = address.bit(0);
   } else {
-    armMoveToStatus(field, 0, address);
+    armMoveToStatus(field, mode, address);
   }
   r(d) = address;
 }
