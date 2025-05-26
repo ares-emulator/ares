@@ -21,6 +21,8 @@ ARM7TDMI::ARM7TDMI() {
 auto ARM7TDMI::power() -> void {
   processor = {};
   processor.r15.modify = [&] { pipeline.reload = true; };
+  processor.rNULL.modify = [&] { processor.rNULL.data = 0; };
+  processor.spsrNULL.readonly = true;
   pipeline = {};
   carry = 0;
   irq = 0;

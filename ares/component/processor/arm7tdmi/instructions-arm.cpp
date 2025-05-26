@@ -24,24 +24,12 @@ auto ARM7TDMI::armALU(n4 mode, n4 d, n32 rn, n32 rm) -> void {
 }
 
 auto ARM7TDMI::armMoveToStatus(n4 field, n1 mode, n32 data) -> void {
-  if(mode && (cpsr().m == PSR::USR || cpsr().m == PSR::SYS)) return;
-  PSR& psr = mode ? spsr() : cpsr();
-
-  if(field.bit(0)) {
-    if(mode || privileged()) {
-      psr.m = data.bit(0,4) | 0x10;
-      psr.t = data.bit(5);
-      psr.f = data.bit(6);
-      psr.i = data.bit(7);
-      if(!mode && psr.t) r(15).data += 2;
-    }
-  }
-
-  if(field.bit(3)) {
-    psr.v = data.bit(28);
-    psr.c = data.bit(29);
-    psr.z = data.bit(30);
-    psr.n = data.bit(31);
+  if(mode) {
+    spsr().set(field, data);
+  } else {
+    if(!privileged()) field.bit(0) = 0;
+    cpsr().set(field, data);
+    if(cpsr().t) r(15).data += 2;
   }
 }
 
