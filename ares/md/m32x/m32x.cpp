@@ -130,8 +130,8 @@ auto M32X::initDebugHooks() -> void {
 
     switch (regIdx)
     {
-      case 16: return hex(shm.regs.PC, 8, '0');
-      case 17: return hex(shm.regs.PR, 8, '0');
+      case 16: return hex(shm.regs.PC - 4, 8, '0');
+      case 17: return hex(shm.regs.PR - 4, 8, '0');
       case 18: return hex(shm.regs.GBR, 8, '0');
       case 19: return hex(shm.regs.VBR, 8, '0');
       case 20: return hex(shm.regs.MACH, 8, '0');
