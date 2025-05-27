@@ -76,12 +76,15 @@ auto pHexEdit::update() -> void {
         switch (state().length) {
           case 2:
             hexdata.append(binary(data, 2L));
+            break;
           case 8:
             hexdata.append(octal(data, 2L));
+            break;
           case 16:
             hexdata.append(hex(data, 2L));
+            break;
           default:
-            throw std::invalid_argument("Invalid state().length value: state().length is neither 2, 8, nor 16.");
+            throw std::invalid_argument("Invalid state().length value: " + std::to_string(state().length));
         }
         hexdata.append(" ");
         ansidata.append(data >= 0x20 && data <= 0x7e ? (char)data : '.');
