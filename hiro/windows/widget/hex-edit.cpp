@@ -32,6 +32,10 @@ auto pHexEdit::setAddress(u32 address) -> void {
   update();
 }
 
+auto pHexEdit::setBase(u16 base) -> void {
+  update();
+}
+
 auto pHexEdit::setBackgroundColor(Color color) -> void {
   if(backgroundBrush) DeleteObject(backgroundBrush);
   backgroundBrush = CreateSolidBrush(color ? CreateRGB(color) : GetSysColor(COLOR_WINDOW));

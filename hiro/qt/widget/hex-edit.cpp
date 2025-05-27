@@ -40,6 +40,10 @@ auto pHexEdit::setAddress(u32 address) -> void {
   _setState();
 }
 
+auto pHexEdit::setBase(u32 base) -> void {
+  _setState();
+}
+
 auto pHexEdit::setBackgroundColor(Color color) -> void {
   static auto defaultColor = qtHexEdit->palette().color(QPalette::Base);
 

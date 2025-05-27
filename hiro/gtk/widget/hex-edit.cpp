@@ -94,6 +94,11 @@ auto pHexEdit::setAddress(u32 address) -> void {
   update();
 }
 
+auto pHexEdit::setBase(u16 base) -> void {
+  setScroll();
+  update();
+}
+
 auto pHexEdit::setBackgroundColor(Color color) -> void {
   GdkColor gdkColor = CreateColor(color);
   gtk_widget_modify_base(subWidget, GTK_STATE_NORMAL, color ? &gdkColor : nullptr);
