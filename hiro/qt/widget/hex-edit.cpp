@@ -104,7 +104,7 @@ auto pHexEdit::update() -> void {
             hexdata.append(hex(data, 2L));
             break;
           default:
-            throw std::invalid_argument("Invalid state().length value: " + std::to_string((unsigned) state().base));
+            throw;
         }
         hexdata.append(" ");
         ansidata.append(data >= 0x20 && data <= 0x7e ? (char)data : '.');
