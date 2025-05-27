@@ -93,7 +93,7 @@ auto pHexEdit::update() -> void {
     for(u32 column = 0; column < state().columns; column++) {
       if(address < state().length) {
         u8 data = self().doRead(address++);
-        switch (state().length) {
+        switch (state().base) {
           case 2:
             hexdata.append(binary(data, 2L));
             break;
@@ -104,7 +104,7 @@ auto pHexEdit::update() -> void {
             hexdata.append(hex(data, 2L));
             break;
           default:
-            throw std::invalid_argument("Invalid state().length value: " + std::to_string(state().length));
+            throw std::invalid_argument("Invalid state().length value: " + std::to_string((unsigned) state().base));
         }
         hexdata.append(" ");
         ansidata.append(data >= 0x20 && data <= 0x7e ? (char)data : '.');
