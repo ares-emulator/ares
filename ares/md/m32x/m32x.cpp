@@ -130,26 +130,51 @@ auto M32X::initDebugHooks() -> void {
 
     switch (regIdx)
     {
-      case 16: { // PC
-        auto pcOverride = GDB::server.getPcOverride();
-        return hex(pcOverride ? pcOverride.get() - 4 : shm.regs.PC - 4, 8, '0');
-      }
+      case 16: return hex(shm.regs.PC, 8, '0');
       case 17: return hex(shm.regs.PR, 8, '0');
       case 18: return hex(shm.regs.GBR, 8, '0');
-      case 19: return hex(shm.regs.MACL, 8, '0');
+      case 19: return hex(shm.regs.VBR, 8, '0');
       case 20: return hex(shm.regs.MACH, 8, '0');
-      // case 21: return hex((u32)shm.regs.SR, 8, '0');
+      case 21: return hex(shm.regs.MACL, 8, '0');
+      case 22: return hex((u32)shm.regs.SR, 8, '0');
     }
 
     return string{"00000000"};
   };
   
+  GDB::server.hooks.regWrite = [this](u32 regIdx, u64 regValue) -> bool {
+    if(regIdx < 16) {
+      shm.regs.R[regIdx] = (u32)regValue; return true;
+    }
+
+    switch (regIdx)
+    {
+      case 16: shm.regs.PC = (u32)regValue; return true;
+      case 17: shm.regs.PR = (u32)regValue; return true;
+      case 18: shm.regs.GBR = (u32)regValue; return true;
+      case 19: shm.regs.VBR = (u32)regValue; return true;
+      case 20: shm.regs.MACH = (u32)regValue; return true;
+      case 21: shm.regs.MACL = (u32)regValue; return true;
+      case 22: shm.regs.SR = (u32)regValue; return true;
+    }
+    
+    return false;
+  };
+  
   GDB::server.hooks.regReadGeneral = []() {
     string res{};
-    for(auto i : range(21)) {
+    for(auto i : range(23)) {
       res.append(GDB::server.hooks.regRead(i));
     }
     return res;
+  };
+
+  GDB::server.hooks.regWriteGeneral = [](const string &regData) {
+    u32 regIdx{0};
+    for(auto i=0; i<regData.size(); i+=8) {
+      GDB::server.hooks.regWrite(regIdx, regData.slice(i, 8).hex());
+      ++regIdx;
+    }
   };
   
   if constexpr(SH2::Accuracy::Recompiler) {

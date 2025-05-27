@@ -73,7 +73,7 @@ struct M32X {
     s32 cyclesUntilM68kSync = 0;
     s32 minCyclesBetweenSh2Syncs = 0;
     s32 minCyclesBetweenM68kSyncs = 0;
-    n1 vblank_state;
+    s32 updateLoopCounter;
   };
 
   struct VDP {

@@ -88,7 +88,6 @@ class Server : public nall::TCPText::Server {
 
     // PC / Memory State Updates
     auto reportPC(u64 pc) -> bool;
-    auto reportDelayedPC(u64 pc) -> bool;
     auto reportMemRead(u64 address, u32 size) -> void;
     auto reportMemWrite(u64 address, u32 size) -> void;
 

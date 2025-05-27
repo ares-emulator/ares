@@ -15,14 +15,18 @@ auto M32X::SH7604::unload() -> void {
 
 auto M32X::SH7604::main() -> void {
   if (GDB::server.hasActiveClient && m32x.shm.active()) {
-    if (!GDB::server.reportDelayedPC(regs.PC)) {
-      GDB::server.updateLoop();
-      return;
-    } else if (m32x.vdp.vblank && !vblank_state) {
-      GDB::server.updateLoop();
-    }
+    updateLoopCounter--;
     
-    vblank_state = m32x.vdp.vblank;
+    if (!GDB::server.reportPC(regs.PC)) {
+      if (!updateLoopCounter) {
+        GDB::server.updateLoop();
+        updateLoopCounter = 23000000 / 60 / 240;
+      }
+      return;
+    } else if (!updateLoopCounter) {
+      GDB::server.updateLoop();
+      updateLoopCounter = 23000000 / 60;
+    }
   }
   
   if(!m32x.io.adapterReset) return step(1000);
@@ -104,7 +108,7 @@ auto M32X::SH7604::power(bool reset) -> void {
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
-  vblank_state = m32x.vdp.vblank;
+  updateLoopCounter = 23000000 / 60;
 }
 
 auto M32X::SH7604::restart() -> void {
