@@ -73,7 +73,16 @@ auto pHexEdit::update() -> void {
     for(auto column : range(state().columns)) {
       if(address < state().length) {
         u8 data = self().doRead(address++);
-        hexdata.append(hex(data, 2L));
+        switch (state().length) {
+          case 2:
+            hexdata.append(binary(data, 2L));
+          case 8:
+            hexdata.append(octal(data, 2L));
+          case 16:
+            hexdata.append(hex(data, 2L));
+          default:
+            throw std::invalid_argument("Invalid state().length value: state().length is neither 2, 8, nor 16.");
+        }
         hexdata.append(" ");
         ansidata.append(data >= 0x20 && data <= 0x7e ? (char)data : '.');
       } else {

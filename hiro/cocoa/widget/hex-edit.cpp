@@ -93,8 +93,12 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
         case 8:
           return [NSString stringWithFormat:@"%03o", data];
         case 16:
-        default:
           return [NSString stringWithFormat:@"%02X", data];
+        default:
+          @throw [NSException exceptionWithName:@"InvalidBaseException"
+                                         reason:@"The base for the Hex Editor was neither 2, 8, nor 16."
+                                       userInfo:@{
+                  @"filename": @"hiro/cocoa/widget/hex-edit.cpp"}];
       }
     } else {
       return @"  ";
