@@ -97,7 +97,7 @@ struct Metal {
   id<MTLTexture> _renderTargetTexture;
   
   libra_instance_t _libra;
-  libra_shader_preset_t _preset;
-  libra_mtl_filter_chain_t _filterChain;
+  libra_shader_preset_t _preset = nullptr;
+  libra_mtl_filter_chain_t _filterChain = nullptr;
   bool initialized = false;
 };
