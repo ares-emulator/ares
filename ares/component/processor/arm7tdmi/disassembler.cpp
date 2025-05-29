@@ -124,30 +124,6 @@ auto ARM7TDMI::armDisassembleDataRegisterShift
     " ", _r[s]};
 }
 
-auto ARM7TDMI::armDisassembleLoadImmediate
-(n8 immediate, n1 half, n4 d, n4 n, n1 writeback, n1 up, n1 pre) -> string {
-  string data;
-  if(n == 15) data = {" =0x", hex(getDebugger((half ? Half : Byte),
-    _pc + 8 + (up ? +immediate : -immediate)), half ? 4L : 2L)};
-
-  return {"ldr", _c, half ? "sh" : "sb", " ",
-    _r[d], ",[", _r[n],
-    pre == 0 ? "]" : "",
-    immediate ? string{",", up ? "+" : "-", "0x", hex(immediate, 2L)} : string{},
-    pre == 1 ? "]" : "",
-    pre == 0 || writeback ? "!" : "", data};
-}
-
-auto ARM7TDMI::armDisassembleLoadRegister
-(n4 m, n1 half, n4 d, n4 n, n1 writeback, n1 up, n1 pre) -> string {
-  return {"ldr", _c, half ? "sh" : "sb", " ",
-    _r[d], ",[", _r[n],
-    pre == 0 ? "]" : "",
-    ",", up ? "+" : "-", _r[m],
-    pre == 1 ? "]" : "",
-    pre == 0 || writeback ? "!" : ""};
-}
-
 auto ARM7TDMI::armDisassembleMemorySwap
 (n4 m, n4 d, n4 n, n1 byte) -> string {
   return {"swp", _c, byte ? "b" : "", " ", _r[d], ",", _r[m], ",[", _r[n], "]"};
@@ -214,6 +190,30 @@ auto ARM7TDMI::armDisassembleMoveRegisterOffset
     type == 2 ? string{" asr #", shift ? (u32)shift : 32} : string{},
     type == 3 && shift ? string{" ror #", shift} : string{},
     type == 3 && !shift ? " rrx" : "",
+    pre == 1 ? "]" : "",
+    pre == 0 || writeback ? "!" : ""};
+}
+
+auto ARM7TDMI::armDisassembleMoveSignedImmediate
+(n8 immediate, n1 half, n4 d, n4 n, n1 mode, n1 writeback, n1 up, n1 pre) -> string {
+  string data;
+  if(n == 15) data = {" =0x", hex(getDebugger((half ? Half : Byte),
+    _pc + 8 + (up ? +immediate : -immediate)), half ? 4L : 2L)};
+
+  return {mode ? "ldr" : "str", _c, half ? "sh" : "sb", " ",
+    _r[d], ",[", _r[n],
+    pre == 0 ? "]" : "",
+    immediate ? string{",", up ? "+" : "-", "0x", hex(immediate, 2L)} : string{},
+    pre == 1 ? "]" : "",
+    pre == 0 || writeback ? "!" : "", data};
+}
+
+auto ARM7TDMI::armDisassembleMoveSignedRegister
+(n4 m, n1 half, n4 d, n4 n, n1 mode, n1 writeback, n1 up, n1 pre) -> string {
+  return {mode ? "ldr" : "str", _c, half ? "sh" : "sb", " ",
+    _r[d], ",[", _r[n],
+    pre == 0 ? "]" : "",
+    ",", up ? "+" : "-", _r[m],
     pre == 1 ? "]" : "",
     pre == 0 || writeback ? "!" : ""};
 }
