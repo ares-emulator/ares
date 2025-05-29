@@ -157,40 +157,6 @@ auto ARM7TDMI::armInitialize() -> void {
   #undef arguments
 
   #define arguments \
-    opcode.bit( 0, 3) << 0 | opcode.bit( 8,11) << 4,  /* immediate */ \
-    opcode.bit( 5),     /* half */ \
-    opcode.bit(12,15),  /* d */ \
-    opcode.bit(16,19),  /* n */ \
-    opcode.bit(21),     /* writeback */ \
-    opcode.bit(23),     /* up */ \
-    opcode.bit(24)      /* pre */
-  for(n1 half : range(2))
-  for(n1 writeback : range(2))
-  for(n1 up : range(2))
-  for(n1 pre : range(2)) {
-    auto opcode = pattern(".... 000? ?1?1 ???? ???? ???? 11?1 ????") | half << 5 | writeback << 21 | up << 23 | pre << 24;
-    bind(opcode, LoadImmediate);
-  }
-  #undef arguments
-
-  #define arguments \
-    opcode.bit( 0, 3),  /* m */ \
-    opcode.bit( 5),     /* half */ \
-    opcode.bit(12,15),  /* d */ \
-    opcode.bit(16,19),  /* n */ \
-    opcode.bit(21),     /* writeback */ \
-    opcode.bit(23),     /* up */ \
-    opcode.bit(24)      /* pre */
-  for(n1 half : range(2))
-  for(n1 writeback : range(2))
-  for(n1 up : range(2))
-  for(n1 pre : range(2)) {
-    auto opcode = pattern(".... 000? ?0?1 ???? ???? ---- 11?1 ????") | half << 5 | writeback << 21 | up << 23 | pre << 24;
-    bind(opcode, LoadRegister);
-  }
-  #undef arguments
-
-  #define arguments \
     opcode.bit( 0, 3),  /* m */ \
     opcode.bit(12,15),  /* d */ \
     opcode.bit(16,19),  /* n */ \
@@ -302,6 +268,44 @@ auto ARM7TDMI::armInitialize() -> void {
   #undef arguments
 
   #define arguments \
+    opcode.bit( 0, 3) << 0 | opcode.bit( 8,11) << 4,  /* immediate */ \
+    opcode.bit( 5),     /* half */ \
+    opcode.bit(12,15),  /* d */ \
+    opcode.bit(16,19),  /* n */ \
+    opcode.bit(20),     /* mode */ \
+    opcode.bit(21),     /* writeback */ \
+    opcode.bit(23),     /* up */ \
+    opcode.bit(24)      /* pre */
+  for(n1 half : range(2))
+  for(n1 mode : range(2))
+  for(n1 writeback : range(2))
+  for(n1 up : range(2))
+  for(n1 pre : range(2)) {
+    auto opcode = pattern(".... 000? ?1?? ???? ???? ???? 11?1 ????") | half << 5 | mode << 20 | writeback << 21 | up << 23 | pre << 24;
+    bind(opcode, MoveSignedImmediate);
+  }
+  #undef arguments
+
+  #define arguments \
+    opcode.bit( 0, 3),  /* m */ \
+    opcode.bit( 5),     /* half */ \
+    opcode.bit(12,15),  /* d */ \
+    opcode.bit(16,19),  /* n */ \
+    opcode.bit(20),     /* mode */ \
+    opcode.bit(21),     /* writeback */ \
+    opcode.bit(23),     /* up */ \
+    opcode.bit(24)      /* pre */
+  for(n1 half : range(2))
+  for(n1 mode : range(2))
+  for(n1 writeback : range(2))
+  for(n1 up : range(2))
+  for(n1 pre : range(2)) {
+    auto opcode = pattern(".... 000? ?0?? ???? ???? ---- 11?1 ????") | half << 5 | mode << 20 | writeback << 21 | up << 23 | pre << 24;
+    bind(opcode, MoveSignedRegister);
+  }
+  #undef arguments
+
+  #define arguments \
     opcode.bit( 0, 3),  /* cm */ \
     opcode.bit( 5, 7),  /* op2 */ \
     opcode.bit( 8,11),  /* cpid */ \
@@ -332,8 +336,9 @@ auto ARM7TDMI::armInitialize() -> void {
   #define arguments \
     opcode.bit(12,15),  /* d */ \
     opcode.bit(22)      /* mode */
+  for(n3 _ : range(8))
   for(n1 mode : range(2)) {
-    auto opcode = pattern(".... 0001 0?00 ---- ???? ---- 0000 ----") | mode << 22;
+    auto opcode = pattern(".... 0001 0?00 ---- ???? ---- ???0 ----") | _ << 5 | mode << 22;
     bind(opcode, MoveToRegisterFromStatus);
   }
   #undef arguments
@@ -372,8 +377,9 @@ auto ARM7TDMI::armInitialize() -> void {
     opcode.bit(20),     /* save */ \
     opcode.bit(21)      /* accumulate */
   for(n1 save : range(2))
-  for(n1 accumulate : range(2)) {
-    auto opcode = pattern(".... 0000 00?? ???? ???? ???? 1001 ????") | save << 20 | accumulate << 21;
+  for(n1 accumulate : range(2))
+  for(n1 _ : range(2)) {
+    auto opcode = pattern(".... 0000 0??? ???? ???? ???? 1001 ????") | save << 20 | accumulate << 21 | _ << 22;
     bind(opcode, Multiply);
   }
   #undef arguments

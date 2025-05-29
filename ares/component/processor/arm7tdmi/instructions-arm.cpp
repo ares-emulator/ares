@@ -102,33 +102,6 @@ auto ARM7TDMI::armInstructionDataRegisterShift
   armALU(mode, d, rn, rm);
 }
 
-auto ARM7TDMI::armInstructionLoadImmediate
-(n8 immediate, n1 half, n4 d, n4 n, n1 writeback, n1 up, n1 pre) -> void {
-  n32 rn = r(n);
-  n32 rd = r(d);
-
-  if(pre == 1) rn = up ? rn + immediate : rn - immediate;
-  rd = load((half ? Half : Byte) | Signed, rn);
-  if(pre == 0) rn = up ? rn + immediate : rn - immediate;
-
-  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);
-  r(d) = rd;
-}
-
-auto ARM7TDMI::armInstructionLoadRegister
-(n4 m, n1 half, n4 d, n4 n, n1 writeback, n1 up, n1 pre) -> void {
-  n32 rn = r(n);
-  n32 rm = r(m);
-  n32 rd = r(d);
-
-  if(pre == 1) rn = up ? rn + rm : rn - rm;
-  rd = load((half ? Half : Byte) | Signed, rn);
-  if(pre == 0) rn = up ? rn + rm : rn - rm;
-
-  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);
-  r(d) = rd;
-}
-
 auto ARM7TDMI::armInstructionMemorySwap
 (n4 m, n4 d, n4 n, n1 byte) -> void {
   n32 rm = r(m) + (m == 15 ? 4 : 0);
@@ -259,6 +232,35 @@ auto ARM7TDMI::armInstructionMoveRegisterOffset
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
   if(pre == 0 || writeback) r(n) = rn;
+  if(mode == 1) r(d) = rd;
+}
+
+auto ARM7TDMI::armInstructionMoveSignedImmediate
+(n8 immediate, n1 half, n4 d, n4 n, n1 mode, n1 writeback, n1 up, n1 pre) -> void {
+  n32 rn = r(n);
+  n32 rd = r(d) + (d == 15 ? 4 : 0);
+
+  if(pre == 1) rn = up ? rn + immediate : rn - immediate;
+  if(mode == 1) rd = load((half ? Half : Byte) | Signed, rn);
+  if(mode == 0) store((half ? Half : Byte) | Signed, rn, rd);
+  if(pre == 0) rn = up ? rn + immediate : rn - immediate;
+
+  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);
+  if(mode == 1) r(d) = rd;
+}
+
+auto ARM7TDMI::armInstructionMoveSignedRegister
+(n4 m, n1 half, n4 d, n4 n, n1 mode, n1 writeback, n1 up, n1 pre) -> void {
+  n32 rn = r(n);
+  n32 rm = r(m);
+  n32 rd = r(d) + (d == 15 ? 4 : 0);
+
+  if(pre == 1) rn = up ? rn + rm : rn - rm;
+  if(mode == 1) rd = load((half ? Half : Byte) | Signed, rn);
+  if(mode == 0) store((half ? Half : Byte) | Signed, rn, rd);
+  if(pre == 0) rn = up ? rn + rm : rn - rm;
+
+  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);
   if(mode == 1) r(d) = rd;
 }
 
