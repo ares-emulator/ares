@@ -336,8 +336,9 @@ auto ARM7TDMI::armInitialize() -> void {
   #define arguments \
     opcode.bit(12,15),  /* d */ \
     opcode.bit(22)      /* mode */
+  for(n3 _ : range(8))
   for(n1 mode : range(2)) {
-    auto opcode = pattern(".... 0001 0?00 ---- ???? ---- 0000 ----") | mode << 22;
+    auto opcode = pattern(".... 0001 0?00 ---- ???? ---- ???0 ----") | _ << 5 | mode << 22;
     bind(opcode, MoveToRegisterFromStatus);
   }
   #undef arguments
@@ -376,8 +377,9 @@ auto ARM7TDMI::armInitialize() -> void {
     opcode.bit(20),     /* save */ \
     opcode.bit(21)      /* accumulate */
   for(n1 save : range(2))
-  for(n1 accumulate : range(2)) {
-    auto opcode = pattern(".... 0000 00?? ???? ???? ???? 1001 ????") | save << 20 | accumulate << 21;
+  for(n1 accumulate : range(2))
+  for(n1 _ : range(2)) {
+    auto opcode = pattern(".... 0000 0??? ???? ???? ???? 1001 ????") | save << 20 | accumulate << 21 | _ << 22;
     bind(opcode, Multiply);
   }
   #undef arguments
