@@ -4,6 +4,7 @@ struct MasterSystem : Cartridge {
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
+  auto validateHeader(vector<u8>& rom) -> bool;
 };
 
 auto MasterSystem::load(string location) -> LoadResult {
@@ -58,12 +59,8 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   //Region
   //======
 
-  //Games not containing "TMR SEGA" are only compatible with Japanese systems
-  if((rom.size() >= 0x8000 && slice((const char*)&rom[0x7ff0], 0, 8) != "TMR SEGA") &&
-     (rom.size() >= 0x4000 && slice((const char*)&rom[0x3ff0], 0, 8) != "TMR SEGA") &&
-     (rom.size() >= 0x2000 && slice((const char*)&rom[0x1ff0], 0, 8) != "TMR SEGA")) {
-    region = "NTSC-J";
-  }
+  //Games not containing "TMR SEGA" and a correct checksum are only compatible with Japanese systems
+  if(!validateHeader(rom)) region = "NTSC-J";
 
   //Addams Family, The (Europe)
   if(hash == "f6967779b78b91a4a5745f142aa5f49463f1d64ec15d6bea2e617323da60b90c") {
@@ -489,4 +486,27 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   s += "      content: Save\n";
   }
   return s;
+}
+
+// Validate header: returns true if the header will be accepted by international bios versions
+// NOTE: This does not validate checksum, only region code and 'TMR SEGA' presence
+auto MasterSystem::validateHeader(vector<u8>& rom) -> bool {
+  if(rom.size() < 0x200) return false;
+
+  //Locate "TMR SEGA" header
+  u32 headerOffset = 0;
+  if((rom.size() >= 0x8000 && slice((const char*)&rom[0x7ff0], 0, 8) == "TMR SEGA")) {
+    headerOffset = 0x7ff0;
+  } else if((rom.size() >= 0x4000 && slice((const char*)&rom[0x3ff0], 0, 8) == "TMR SEGA")) {
+    headerOffset = 0x3ff0;
+  } else if((rom.size() >= 0x2000 && slice((const char*)&rom[0x1ff0], 0, 8) == "TMR SEGA")) {
+    headerOffset = 0x1ff0;
+  } else {
+    return false;
+  }
+
+  u4 regionCode = rom[headerOffset + 0xf] >> 4;
+  if(regionCode != 4) return false;
+
+  return true;
 }
