@@ -83,14 +83,24 @@ ares_add_sources(
     n64
   INCLUDED #
     cartridge/cartridge.hpp
-    cartridge/debugger.cpp
-    cartridge/flash.cpp
-    cartridge/isviewer.cpp
-    cartridge/joybus.cpp
-    cartridge/rtc.cpp
     cartridge/serialization.cpp
     cartridge/slot.cpp
     cartridge/slot.hpp
+    cartridge/board/board.cpp
+    cartridge/board/board.hpp
+    cartridge/board/flash.cpp
+    cartridge/board/flash.hpp
+    cartridge/board/isviewer.cpp
+    cartridge/board/isviewer.hpp
+    cartridge/board/rtc.cpp
+    cartridge/board/rtc.hpp
+    cartridge/board/gs-eeprom.cpp
+    cartridge/board/gs-eeprom.hpp
+    cartridge/board/generic.cpp
+    cartridge/board/nus-01a.cpp
+    cartridge/board/nus-07a.cpp
+    cartridge/board/datel-ref1256.cpp
+    cartridge/board/datel-ref1329.cpp
 )
 
 ares_add_sources(

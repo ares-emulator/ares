@@ -1,6 +1,6 @@
 struct Nintendo64 : Cartridge {
   auto name() -> string override { return "Nintendo 64"; }
-  auto extensions() -> vector<string> override { return {"n64", "v64", "z64"}; }
+  auto extensions() -> vector<string> override { return {"n64", "v64", "z64", "bin", "dec"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
@@ -85,23 +85,50 @@ auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
 
 auto Nintendo64::load(string location) -> LoadResult {
   vector<u8> rom;
+  string directory = location;
+  bool folder = false;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
+    append(rom, {location, "program.eeprom"});
+    folder = true;
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
+    directory = Location::dir(location);
   }
   if(!rom) return romNotFound;
 
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
-  this->manifest = analyze(rom);
+
+  //database only contains hashes for big-endian (z64) ROMs
+  //future work: fix that or evaluate other options
+  //note: GameShark firmwares should always be big-endian,
+  //so no point supporting little-endian or anything else for those
+
+  auto foundDatabase = Medium::loadDatabase();
+  if(!foundDatabase) return { databaseNotFound, "Nintendo 64.bml" };
+  this->manifest = Medium::manifestDatabase(sha256);
+  
+  if(!manifest) {
+    auto local_manifest = location.replace({".", location.split(".").last()}, ".bml");
+    if (folder)
+      local_manifest = directory.append("manifest.bml");
+    if(file::exists(local_manifest)) {
+      manifest = file::read(local_manifest);
+    }
+  }
+  
+  if(!manifest) manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
+
+  print(BML::serialize(document));
 
   pak = new vfs::directory;
   pak->setAttribute("id",     document["game/id"].string());
   pak->setAttribute("title",  document["game/title"].string());
+  pak->setAttribute("board",  document["game/board"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("cpak",   (bool)document["game/controllerpak"]);
   pak->setAttribute("rpak",   (bool)document["game/rumblepak"]);
@@ -109,7 +136,23 @@ auto Nintendo64::load(string location) -> LoadResult {
   pak->setAttribute("cic",    document["game/board/cic"].string());
   pak->setAttribute("dd",     (bool)document["game/dd"]);
   pak->append("manifest.bml", manifest);
-  pak->append("program.rom",  rom);
+  
+  array_view<u8> view{rom};
+  for(auto node : document.find("game/board/memory(content=Program)")) {
+    string extension = {".", node["type"].string().downcase()};
+    u32 size = node["size"].natural();
+    string name = {"program", extension};
+
+    if(!Medium::load(node, extension)) {
+      if(view.size() >= size) {
+        pak->remove(pak->files().last());
+        pak->append(name, {view.data(), size});
+      }
+    }
+    
+    view += size;
+    
+  }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
     Medium::load(node, ".ram");
@@ -130,6 +173,9 @@ auto Nintendo64::load(string location) -> LoadResult {
 auto Nintendo64::save(string location) -> bool {
   auto document = BML::unserialize(manifest);
 
+  if(auto node = document["game/board/memory(type=EEPROM,content=Program)"]) {
+    Medium::save(node, ".eeprom");
+  }
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
     Medium::save(node, ".ram");
   }
@@ -182,7 +228,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
     print("[mia] Loading rom failed. Minimum expected rom size is 4096 (0x1000) bytes. Rom size: ", data.size(), " (0x", hex(data.size()), ") bytes.\n");
     return {};
   } 
-  
+
   //detect endianness of the ROM by checking the IPL3 checksum. We run the same
   //checksum algorithm with the various seeds provided by the various CICs, and
   //check if the checksum matches. If it doesn't, we try byte-swapping the ROM
@@ -819,7 +865,8 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(revision < 4) {
   s +={"  revision: 1.", revision, "\n"};
   }
-  s += "  board\n";
+  //figure out a sensible default
+  s += "  board: NUS-???\n";
   s +={"    cic: ", cic, "\n"};
   s += "    memory\n";
   s += "      type: ROM\n";
