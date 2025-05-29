@@ -32,7 +32,7 @@ auto pHexEdit::setAddress(u32 address) -> void {
   update();
 }
 
-auto pHexEdit::setBase(u16 base) -> void {
+auto pHexEdit::setBase(u8 base) -> void {
   update();
 }
 
