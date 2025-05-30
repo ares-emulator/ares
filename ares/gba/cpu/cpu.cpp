@@ -46,7 +46,7 @@ auto CPU::main() -> void {
   if(halted()) {
     dmaRun();
     if(!(irq.enable[0] & irq.flag[0])) {
-      return step(4);
+      return step(1);
     }
     step(2);
     context.halted = false;
