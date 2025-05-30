@@ -50,20 +50,20 @@ struct DATEL_REF1329 : Interface {
 
     auto readByte(n20 address) -> u8 {
       if(address.bit(0) == 0) {
-        return eeprom_lo.get(address);
+        return eeprom_hi.get(address);
       }
       if(address.bit(0) == 1) {
-        return eeprom_hi.get(address);
+        return eeprom_lo.get(address);
       }
       unreachable;
     }
 
     auto writeByte(n20 address, u8 data) -> void {
       if(address.bit(0) == 0) {
-        return eeprom_lo.set(address, data);
+        return eeprom_hi.set(address, data);
       }
       if(address.bit(0) == 1) {
-        return eeprom_hi.set(address, data);
+        return eeprom_lo.set(address, data);
       }
     }
 
