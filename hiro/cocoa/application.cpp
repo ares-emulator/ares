@@ -144,8 +144,7 @@ auto pApplication::run() -> void {
   if(Application::state().onMain) {
     applicationTimer = [NSTimer scheduledTimerWithTimeInterval:0.0 target:cocoaDelegate selector:@selector(run:) userInfo:nil repeats:YES];
 
-    //below line is needed to run application during window resize; however it has a large performance penalty on the resize smoothness
-    //[[NSRunLoop currentRunLoop] addTimer:applicationTimer forMode:NSEventTrackingRunLoopMode];
+    [[NSRunLoop currentRunLoop] addTimer:applicationTimer forMode:NSRunLoopCommonModes];
   }
   [[NSUserDefaults standardUserDefaults] registerDefaults:@{
     //@"NO" is not a mistake; the value really needs to be a string

@@ -1,4 +1,5 @@
 auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
+  lock_guard<recursive_mutex> programLock(programMutex);
   if(auto system = mia::identify(filename)) {
     for(auto& emulator : emulators) {
       if(emulator->name == system) return emulator;
@@ -13,8 +14,9 @@ auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
   return {};
 }
 
-//location is an optional game to load automatically (for command-line loading)
+/// Loads an emulator and, optionally, a ROM from the given location.
 auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
+  lock_guard<recursive_mutex> programLock(programMutex);
   unload();
 
   ::emulator = emulator;
@@ -22,17 +24,15 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
   // For arcade systems, show the game browser dialog as we're using MAME-compatible roms
   if(emulator->arcade() && !location) {
     gameBrowserWindow.show(emulator);
-
-    // Temporarily pretend that the load failed to prevent UI hang
-    // The browser dialog will call load() again when necessary
-    ::emulator.reset();
     return false;
   }
 
   return load(location);
 }
 
+/// Loads a ROM for an already-loaded emulator.
 auto Program::load(string location) -> bool {
+  lock_guard<recursive_mutex> programLock(programMutex);
   if(settings.debugServer.enabled) {
     nall::GDB::server.reset();
   }
@@ -94,6 +94,7 @@ auto Program::load(string location) -> bool {
 }
 
 auto Program::unload() -> void {
+  lock_guard<recursive_mutex> programLock(programMutex);
   if(!emulator) return;
 
   nall::GDB::server.close();

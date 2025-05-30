@@ -44,6 +44,7 @@ struct thread {
   static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
   static auto detach() -> void;
   static auto exit() -> void;
+  static auto setName(string name) -> void;
 
   struct context {
     function<auto (uintptr) -> void> callback;
@@ -91,6 +92,14 @@ inline auto thread::exit() -> void {
   pthread_exit(nullptr);
 }
 
+inline auto thread::setName(string name) -> void {
+#if defined(__APPLE__)
+  pthread_setname_np(name);
+#else
+  pthread_setname_np(pthread_self(), name);
+#endif
+}
+
 }
 
 #elif defined(API_WINDOWS)
@@ -120,6 +129,7 @@ struct thread {
   static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
   static auto detach() -> void;
   static auto exit() -> void;
+  static auto setName(string name) -> void;
 
   struct context {
     function<auto (uintptr) -> void> callback;

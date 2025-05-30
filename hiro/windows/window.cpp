@@ -24,7 +24,6 @@ u32 pWindow::minimumStatusHeight = 0;
 
 auto pWindow::initialize() -> void {
   pApplication::state().modalTimer.setInterval(1);
-  pApplication::state().modalTimer.onActivate([] { Application::doMain(); });
 
   HWND hwnd = CreateWindow(L"hiroWindow", L"", ResizableStyle, 128, 128, 256, 256, 0, 0, GetModuleHandle(0), 0);
   HWND hstatus = CreateWindow(STATUSCLASSNAME, L"", WS_CHILD, 0, 0, 0, 0, hwnd, nullptr, GetModuleHandle(0), 0);

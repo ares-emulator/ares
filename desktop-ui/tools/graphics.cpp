@@ -1,4 +1,5 @@
-auto GraphicsViewer::construct() -> void {
+auto GraphicsViewer::construct(std::recursive_mutex *programMutexIn) -> void {
+  this->programMutex = programMutexIn;
   setCollapsible();
   setVisible(false);
 
@@ -6,6 +7,7 @@ auto GraphicsViewer::construct() -> void {
   graphicsList.onChange([&] { eventChange(); });
   graphicsView.setAlignment({0.0, 0.0});
   exportButton.setText("Export").onActivate([&] {
+    lock_guard<recursive_mutex> lock(*programMutex);
     eventExport();
   });
   liveOption.setText("Live");

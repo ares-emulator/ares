@@ -48,6 +48,7 @@ auto HotkeySettings::refresh() -> void {
 }
 
 auto HotkeySettings::eventChange() -> void {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   assignButton.setEnabled(inputList.batched().size() == 1);
   clearButton.setEnabled(inputList.batched().size() >= 1);
 }

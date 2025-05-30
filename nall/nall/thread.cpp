@@ -48,6 +48,11 @@ NALL_HEADER_INLINE auto thread::exit() -> void {
   ExitThread(0);
 }
 
+NALL_HEADER_INLINE auto thread::setName(string name) -> void {
+  HANDLE hThread = GetCurrentThread();
+  HRESULT hr = SetThreadDescription(hThread, (wchar_t*)utf16_t(name));
+}
+
 #endif
 
 }
