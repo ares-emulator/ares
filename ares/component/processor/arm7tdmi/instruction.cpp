@@ -420,15 +420,28 @@ auto ARM7TDMI::armInitialize() -> void {
   #undef arguments
 
   #define arguments
-  for(n12 id : range(4096)) {
-    if(armInstruction[id]) continue;
-    auto opcode = pattern(".... ???? ???? ---- ---- ---- ???? ----") | id.bit(0,3) << 4 | id.bit(4,11) << 20;
+  for(n8 _ : range(256)) {
+    //architecturally undefined
+    auto opcode = pattern(".... 011? ???? ---- ---- ---- ???1 ----") | _.bit(0,2) << 5 | _.bit(3,7) << 20;
+    bind(opcode, Undefined);
+  }
+  for(n8 _ : range(256)) {
+    //load to coprocessor
+    auto opcode = pattern(".... 110? ???1 ---- ---- ---- ???? ----") | _.bit(0,3) << 4 | _.bit(4,7) << 21;
+    bind(opcode, Undefined);
+  }
+  for(n8 _ : range(256)) {
+    //store from coprocessor
+    auto opcode = pattern(".... 110? ???0 ---- ---- ---- ???? ----") | _.bit(0,3) << 4 | _.bit(4,7) << 21;
     bind(opcode, Undefined);
   }
   #undef arguments
 
   #undef bind
   #undef pattern
+
+  //check that all encodings are bound
+  for(n12 index : range(4096)) assert(armInstruction[index]);
 }
 
 auto ARM7TDMI::thumbInitialize() -> void {
