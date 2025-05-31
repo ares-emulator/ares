@@ -84,9 +84,9 @@ auto ARM7TDMI::armInitialize() -> void {
     opcode.bit(12,15),  /* d */ \
     opcode.bit(16,19),  /* field */ \
     opcode.bit(22)      /* mode */
-  for(n2 _ : range(4))
+  for(n3 _ : range(8))
   for(n1 mode : range(2)) {
-    auto opcode = pattern(".... 0001 0?10 ???? ???? ---- 0??1 ????") | _ << 5 | mode << 22;
+    auto opcode = pattern(".... 0001 0??0 ???? ???? ---- 0??1 ????") | _.bit(0,1) << 5 | _.bit(2) << 21 | mode << 22;
     bind(opcode, BranchExchangeRegister);
   }
   #undef arguments
@@ -330,6 +330,16 @@ auto ARM7TDMI::armInitialize() -> void {
   for(n3 op1 : range(8)) {
     auto opcode = pattern(".... 1110 ???1 ???? ???? ???? ???1 ????") | op2 << 5 | op1 << 21;
     bind(opcode, MoveToRegisterFromCoprocessor);
+  }
+  #undef arguments
+
+  #define arguments \
+    opcode.bit(12,15),  /* d */ \
+    opcode.bit(16,19)   /* n */
+  for(n5 _ : range(32)) {
+    //undocumented instruction, equivalent to "mov rd, rn"
+    auto opcode = pattern(".... 0011 0?00 ???? ???? ---- ???? ----") | _.bit(0,3) << 4 | _.bit(4) << 22;
+    bind(opcode, MoveToRegisterFromRegister);
   }
   #undef arguments
 
