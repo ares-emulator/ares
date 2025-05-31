@@ -26,6 +26,15 @@ auto PPU::load(Node::Object parent) -> void {
   Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
   screen->refreshRateHint(system.frequency() / rate(), 341, vlines());
 
+  ctrlGlitch = node->append<Node::Setting::Boolean>("Control Glitch", false);
+  ctrlGlitch->setDynamic(false);
+
+  oamScrollGlitch = node->append<Node::Setting::Boolean>("OAM Scroll Glitch", false);
+  oamScrollGlitch->setDynamic(false);
+
+  oamAddressGlitch = node->append<Node::Setting::Boolean>("OAM Address Glitch", false);
+  oamAddressGlitch->setDynamic(false);
+
   debugger.load(node);
 }
 
@@ -33,6 +42,9 @@ auto PPU::unload() -> void {
   screen->quit();
   node->remove(screen);
   debugger.unload();
+  ctrlGlitch.reset();
+  oamScrollGlitch.reset();
+  oamAddressGlitch.reset();
   screen.reset();
   node.reset();
   ciram.reset();
