@@ -230,6 +230,11 @@ auto ARM7TDMI::armDisassembleMoveToRegisterFromCoprocessor
     ", cr", cn, ", cr", cm, ", ", op2};
 }
 
+auto ARM7TDMI::armDisassembleMoveToRegisterFromRegister
+(n4 d, n4 n) -> string {
+  return {"mov", _c, " ", _r[d], ",", _r[n]};
+}
+
 auto ARM7TDMI::armDisassembleMoveToRegisterFromStatus
 (n4 d, n1 mode) -> string {
   return {"mrs", _c, " ", _r[d], ",", mode ? "spsr" : "cpsr"};

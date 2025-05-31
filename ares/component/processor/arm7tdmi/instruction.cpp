@@ -84,9 +84,9 @@ auto ARM7TDMI::armInitialize() -> void {
     opcode.bit(12,15),  /* d */ \
     opcode.bit(16,19),  /* field */ \
     opcode.bit(22)      /* mode */
-  for(n2 _ : range(4))
+  for(n3 _ : range(8))
   for(n1 mode : range(2)) {
-    auto opcode = pattern(".... 0001 0?10 ???? ???? ---- 0??1 ????") | _ << 5 | mode << 22;
+    auto opcode = pattern(".... 0001 0??0 ???? ???? ---- 0??1 ????") | _.bit(0,1) << 5 | _.bit(2) << 21 | mode << 22;
     bind(opcode, BranchExchangeRegister);
   }
   #undef arguments
@@ -335,6 +335,16 @@ auto ARM7TDMI::armInitialize() -> void {
 
   #define arguments \
     opcode.bit(12,15),  /* d */ \
+    opcode.bit(16,19)   /* n */
+  for(n5 _ : range(32)) {
+    //undocumented instruction, equivalent to "mov rd, rn"
+    auto opcode = pattern(".... 0011 0?00 ???? ???? ---- ???? ----") | _.bit(0,3) << 4 | _.bit(4) << 22;
+    bind(opcode, MoveToRegisterFromRegister);
+  }
+  #undef arguments
+
+  #define arguments \
+    opcode.bit(12,15),  /* d */ \
     opcode.bit(22)      /* mode */
   for(n3 _ : range(8))
   for(n1 mode : range(2)) {
@@ -410,15 +420,28 @@ auto ARM7TDMI::armInitialize() -> void {
   #undef arguments
 
   #define arguments
-  for(n12 id : range(4096)) {
-    if(armInstruction[id]) continue;
-    auto opcode = pattern(".... ???? ???? ---- ---- ---- ???? ----") | id.bit(0,3) << 4 | id.bit(4,11) << 20;
+  for(n8 _ : range(256)) {
+    //architecturally undefined
+    auto opcode = pattern(".... 011? ???? ---- ---- ---- ???1 ----") | _.bit(0,2) << 5 | _.bit(3,7) << 20;
+    bind(opcode, Undefined);
+  }
+  for(n8 _ : range(256)) {
+    //load to coprocessor
+    auto opcode = pattern(".... 110? ???1 ---- ---- ---- ???? ----") | _.bit(0,3) << 4 | _.bit(4,7) << 21;
+    bind(opcode, Undefined);
+  }
+  for(n8 _ : range(256)) {
+    //store from coprocessor
+    auto opcode = pattern(".... 110? ???0 ---- ---- ---- ???? ----") | _.bit(0,3) << 4 | _.bit(4,7) << 21;
     bind(opcode, Undefined);
   }
   #undef arguments
 
   #undef bind
   #undef pattern
+
+  //check that all encodings are bound
+  for(n12 index : range(4096)) assert(armInstruction[index]);
 }
 
 auto ARM7TDMI::thumbInitialize() -> void {

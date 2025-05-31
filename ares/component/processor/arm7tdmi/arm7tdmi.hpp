@@ -84,6 +84,7 @@ struct ARM7TDMI {
   auto armInstructionMoveSignedRegister(n4, n1, n4, n4, n1, n1, n1, n1) -> void;
   auto armInstructionMoveToCoprocessorFromRegister(n4, n3, n4, n4, n4, n3) -> void;
   auto armInstructionMoveToRegisterFromCoprocessor(n4, n3, n4, n4, n4, n3) -> void;
+  auto armInstructionMoveToRegisterFromRegister(n4, n4) -> void;
   auto armInstructionMoveToRegisterFromStatus(n4, n1) -> void;
   auto armInstructionMoveToStatusFromImmediate(n8, n4, n4, n1) -> void;
   auto armInstructionMoveToStatusFromRegister(n4, n2, n5, n4, n1) -> void;
@@ -276,6 +277,7 @@ struct ARM7TDMI {
   auto armDisassembleMoveSignedRegister(n4, n1, n4, n4, n1, n1, n1, n1) -> string;
   auto armDisassembleMoveToCoprocessorFromRegister(n4, n3, n4, n4, n4, n3) -> string;
   auto armDisassembleMoveToRegisterFromCoprocessor(n4, n3, n4, n4, n4, n3) -> string;
+  auto armDisassembleMoveToRegisterFromRegister(n4, n4) -> string;
   auto armDisassembleMoveToRegisterFromStatus(n4, n1) -> string;
   auto armDisassembleMoveToStatusFromImmediate(n8, n4, n4, n1) -> string;
   auto armDisassembleMoveToStatusFromRegister(n4, n2, n5, n4, n1) -> string;

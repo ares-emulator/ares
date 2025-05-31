@@ -276,6 +276,11 @@ auto ARM7TDMI::armInstructionMoveToRegisterFromCoprocessor
   r(d) = MRC[cpid](cm, op2, cn, op1);
 }
 
+auto ARM7TDMI::armInstructionMoveToRegisterFromRegister
+(n4 d, n4 n) -> void {
+  r(d) = r(n);
+}
+
 auto ARM7TDMI::armInstructionMoveToRegisterFromStatus
 (n4 d, n1 mode) -> void {
   r(d) = (mode && cpsr().m != PSR::USR && cpsr().m != PSR::SYS) ? spsr() : cpsr();
