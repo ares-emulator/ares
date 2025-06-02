@@ -157,9 +157,9 @@ auto nall::main(Arguments arguments) -> void {
   Instances::presentation.construct();
   Instances::settingsWindow.construct();
   Instances::gameBrowserWindow.construct();
+  Instances::toolsWindow.construct(&program.programMutex);
 
   program.create();
-  Instances::toolsWindow.construct(&program.programMutex);
   Application::onMain({&Program::main, &program});
   Application::run();
 
