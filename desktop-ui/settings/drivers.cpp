@@ -89,14 +89,17 @@ auto DriverSettings::construct() -> void {
     audioRefresh();
   });
   audioExclusiveToggle.setText("Exclusive mode").onToggle([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     settings.audio.exclusive = audioExclusiveToggle.checked();
     ruby::audio.setExclusive(settings.audio.exclusive);
   });
   audioBlockingToggle.setText("Synchronize").onToggle([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     settings.audio.blocking = audioBlockingToggle.checked();
     ruby::audio.setBlocking(settings.audio.blocking);
   });
   audioDynamicToggle.setText("Dynamic rate").onToggle([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     settings.audio.dynamic = audioDynamicToggle.checked();
     ruby::audio.setDynamic(settings.audio.dynamic);
   });
@@ -179,11 +182,11 @@ auto DriverSettings::videoRefresh() -> void {
 }
 
 auto DriverSettings::videoDriverUpdate() -> bool {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(emulator && settings.video.driver != "None" && MessageDialog(
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
   ).setAlignment(settingsWindow).question() != "Yes") return false;
-  lock_guard<recursive_mutex> programLock(program.programMutex);
   program.videoDriverUpdate();
   videoRefresh();
   return true;
@@ -225,11 +228,11 @@ auto DriverSettings::audioRefresh() -> void {
 }
 
 auto DriverSettings::audioDriverUpdate() -> bool {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(emulator && settings.audio.driver != "None" && MessageDialog(
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
   ).setAlignment(settingsWindow).question() != "Yes") return false;
-  lock_guard<recursive_mutex> programLock(program.programMutex);
   program.audioDriverUpdate();
   audioRefresh();
   return true;
@@ -249,11 +252,11 @@ auto DriverSettings::inputRefresh() -> void {
 }
 
 auto DriverSettings::inputDriverUpdate() -> bool {
+  lock_guard<recursive_mutex> programLock(program.programMutex);
   if(emulator && settings.input.driver != "None" && MessageDialog(
     "Warning: incompatible drivers may cause this software to crash.\n"
     "Are you sure you want to change this driver while a game is loaded?"
   ).setAlignment(settingsWindow).question() != "Yes") return false;
-  lock_guard<recursive_mutex> programLock(program.programMutex);
   program.inputDriverUpdate();
   inputRefresh();
   return true;
