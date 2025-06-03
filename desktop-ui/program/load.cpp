@@ -24,6 +24,10 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
   // For arcade systems, show the game browser dialog as we're using MAME-compatible roms
   if(emulator->arcade() && !location) {
     gameBrowserWindow.show(emulator);
+    
+    // Temporarily pretend that the load failed to prevent crash
+    // The browser dialog will call load() again when necessary
+    ::emulator.reset();
     return false;
   }
 
