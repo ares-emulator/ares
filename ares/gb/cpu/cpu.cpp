@@ -62,7 +62,6 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   if(status.hblankPending) {
-    status.hblankPending = 0;
     hblankTrigger();
   }
 

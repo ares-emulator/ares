@@ -54,8 +54,12 @@ auto CPU::timer1024hz() -> void {
   joypPoll();
 }
 
-auto CPU::hblank() -> void {
+auto CPU::hblankIn() -> void {
   status.hblankPending = 1;
+}
+
+auto CPU::hblankOut() -> void {
+  status.hblankPending = 0;
 }
 
 auto CPU::hblankTrigger() -> void {
@@ -67,5 +71,6 @@ auto CPU::hblankTrigger() -> void {
     if(status.dmaLength-- == 0) {
       status.hdmaActive = 0;
     }
+    status.hblankPending = 0;
   }
 }

@@ -69,7 +69,8 @@ struct CPU : SM83, Thread {
   auto timerTick() -> void;
   auto timer8192hz() -> void;
   auto timer1024hz() -> void;
-  auto hblank() -> void;
+  auto hblankIn() -> void;
+  auto hblankOut() -> void;
   auto hblankTrigger() -> void;
   
   struct Status {

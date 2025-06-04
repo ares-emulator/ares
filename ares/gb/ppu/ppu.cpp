@@ -103,7 +103,6 @@ auto PPU::main() -> void {
     step(172);
 
     mode(0);
-    cpu.hblank();
     step(456 - 8 - status.lx);
   } else if(status.ly <= 143) {
     mode(2);
@@ -123,7 +122,6 @@ auto PPU::main() -> void {
     step(12);
 
     mode(0);
-    cpu.hblank();
     step(456 - status.lx);
   } else {
     mode(1);
@@ -146,6 +144,9 @@ auto PPU::main() -> void {
 }
 
 auto PPU::mode(n2 mode) -> void {
+  if(mode == 0) cpu.hblankIn();
+  if(mode != 0) cpu.hblankOut();
+
   if(status.mode == 0 && mode != 0) {
     if(Model::SuperGameBoy()) superGameBoy->ppuHreset();
   }
