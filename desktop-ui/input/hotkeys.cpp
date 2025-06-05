@@ -12,6 +12,7 @@ auto InputManager::createHotkeys() -> void {
   }));
 
   hotkeys.append(InputHotkey("Toggle Mouse Capture").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     if(!ruby::input.acquired()) {
       ruby::input.acquire();
@@ -21,12 +22,14 @@ auto InputManager::createHotkeys() -> void {
   }));
 
   hotkeys.append(InputHotkey("Toggle Keyboard Capture").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     program.keyboardCaptured = !program.keyboardCaptured;
     print("Keyboard capture: ", program.keyboardCaptured, "\n");
   }));
 
   hotkeys.append(InputHotkey("Fast Forward").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator || program.rewinding) return;
     program.fastForwarding = true;
     fastForwardVideoBlocking = ruby::video.blocking();
@@ -36,6 +39,7 @@ auto InputManager::createHotkeys() -> void {
     ruby::audio.setBlocking(false);
     ruby::audio.setDynamic(false);
   }).onRelease([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     program.fastForwarding = false;
     ruby::video.setBlocking(fastForwardVideoBlocking);
@@ -44,6 +48,7 @@ auto InputManager::createHotkeys() -> void {
   }));
 
   hotkeys.append(InputHotkey("Toggle Fast Forward").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator || program.rewinding) return;
     program.fastForwarding = !program.fastForwarding;
 
@@ -63,6 +68,7 @@ auto InputManager::createHotkeys() -> void {
   }));
 
   hotkeys.append(InputHotkey("Rewind").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator || program.fastForwarding) return;
     if(program.rewind.frequency == 0) {
       return program.showMessage("Please enable rewind support in the emulator settings first.");
@@ -76,22 +82,26 @@ auto InputManager::createHotkeys() -> void {
   }));
 
   hotkeys.append(InputHotkey("Frame Advance").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     if(!program.paused) program.pause(true);
     program.requestFrameAdvance = true;
   }));
 
   hotkeys.append(InputHotkey("Capture Screenshot").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     program.requestScreenshot = true;
   }));
 
   hotkeys.append(InputHotkey("Save State").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     program.stateSave(program.state.slot);
   }));
 
   hotkeys.append(InputHotkey("Load State").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     program.stateLoad(program.state.slot);
   }));
@@ -111,21 +121,25 @@ auto InputManager::createHotkeys() -> void {
   }));
 
   hotkeys.append(InputHotkey("Pause Emulation").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     program.pause(!program.paused);
   }));
 
   hotkeys.append(InputHotkey("Reset System").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     emulator->root->power(true);
   }));
 
   hotkeys.append(InputHotkey("Reload Current Game").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     if(!emulator) return;
     program.load(emulator, emulator->game->location);
   }));
 
   hotkeys.append(InputHotkey("Quit Emulator").onPress([&] {
+    lock_guard<recursive_mutex> programLock(program.programMutex);
     program.quit();
   }));
 
