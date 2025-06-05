@@ -81,10 +81,12 @@ auto CPU::setInterruptFlag(u32 source) -> void {
 }
 
 inline auto CPU::stepIRQ() -> void {
-  irq.synchronizer = irq.ime[0] && (irq.enable[0] & irq.flag[0]);
-  irq.enable[0] = irq.enable[1];
-  irq.flag[0] = irq.flag[1];
-  irq.ime[0] = irq.ime[1];
+  if(!context.dmaActive) {
+    irq.synchronizer = irq.ime[0] && (irq.enable[0] & irq.flag[0]);
+    irq.enable[0] = irq.enable[1];
+    irq.flag[0] = irq.flag[1];
+    irq.ime[0] = irq.ime[1];
+  }
 }
 
 auto CPU::step(u32 clocks) -> void {
