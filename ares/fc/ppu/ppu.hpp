@@ -6,6 +6,10 @@ struct PPU : Thread {
   Memory::Writable<n8> oam;
   Memory::Writable<n8> soam;
 
+  Node::Setting::Boolean ctrlGlitch;
+  Node::Setting::Boolean oamScrollGlitch;
+  Node::Setting::Boolean oamAddressGlitch;
+
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
