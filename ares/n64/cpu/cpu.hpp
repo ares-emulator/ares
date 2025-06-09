@@ -884,7 +884,22 @@ struct CPU : Thread {
     };
 
     struct Pool {
-      Block* blocks[1 << 6];
+      Block* blocks[1<<6];
+      u32 tags[1<<6];
+    };
+
+    struct JITContext {
+      bool singleInstruction;
+      Context::Endian endian;
+      Context::Mode mode;
+      bool cop1Enabled;
+      bool floatingPointMode;
+      bool is64bit;
+
+      u32  stateBits; //the above state, compressed
+
+      auto update(const CPU& cpu) -> void;
+      auto toBits() const -> u32;
     };
 
     auto reset() -> void {
@@ -921,10 +936,12 @@ struct CPU : Thread {
     }
 
     auto pool(u32 address) -> Pool*;
-    auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
+    auto block(u64 vaddr, u32 address) -> Block*;
 
-    auto emit(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
+    auto emit(u64 vaddr, u32 address) -> Block*;
+    auto emitOverflowCheck() -> sljit_jump*;
     auto emitZeroClear(u32 n) -> void;
+    auto checkDualAllowed() -> bool;
     auto emitEXECUTE(u32 instruction) -> bool;
     auto emitSPECIAL(u32 instruction) -> bool;
     auto emitREGIMM(u32 instruction) -> bool;
@@ -936,7 +953,16 @@ struct CPU : Thread {
     bool callInstructionPrologue = false;
     bump_allocator allocator;
     vector<Pool*> pools;
+    JITContext jitContext;
   } recompiler{*this};
+
+  auto arithmeticOverflowException() -> void {
+    exception.arithmeticOverflow();
+  }
+
+  auto reservedInstructionException() -> void {
+    exception.reservedInstruction();
+  }
 
   struct Disassembler {
     CPU& self;
