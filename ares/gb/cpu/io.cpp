@@ -249,11 +249,12 @@ auto CPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
 
     //GDMA
     if(!data.bit(7)) {
+      step(4);
       do {
         for(u32 loop : range(16)) {
           writeDMA(status.dmaTarget++, readDMA(status.dmaSource++, 0xff));
         }
-        step(8 << status.speedDouble);
+        step(2 << status.speedDouble);
       } while(status.dmaLength--);
     }
     return;

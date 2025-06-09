@@ -71,9 +71,10 @@ auto CPU::hdmaTrigger(n1 hblank, n1 active) -> void {
 }
 
 auto CPU::performHdma() -> void {
+  step(4);
   for(u32 loop : range(16)) {
     writeDMA(status.dmaTarget++, readDMA(status.dmaSource++, 0xff));
-    if(loop & 1) step(1 << status.speedDouble);
+    step(2 << status.speedDouble);
   }
   if(status.dmaLength-- == 0) {
     status.hdmaActive = 0;
