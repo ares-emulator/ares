@@ -71,12 +71,14 @@ struct CPU : SM83, Thread {
   auto timer1024hz() -> void;
   auto hblankIn() -> void;
   auto hblankOut() -> void;
-  auto hblankTrigger() -> void;
+  auto hdmaTrigger(n1 hblank, n1 active) -> void;
+  auto performHdma() -> void;
   
   struct Status {
     n22 clock;
     n8  interruptLatch;
-    n1  hblankPending;
+    n1  hblank;
+    n1  hdmaPending;
     n1  timerLine;
 
     //$ff00  JOYP

@@ -55,22 +55,27 @@ auto CPU::timer1024hz() -> void {
 }
 
 auto CPU::hblankIn() -> void {
-  status.hblankPending = 1;
+  hdmaTrigger(1, status.hdmaActive);
+  status.hblank = 1;
 }
 
 auto CPU::hblankOut() -> void {
-  status.hblankPending = 0;
+  status.hblank = 0;
 }
 
-auto CPU::hblankTrigger() -> void {
-  if(status.hdmaActive && ppu.status.ly < 144) {
-    for(u32 loop : range(16)) {
-      writeDMA(status.dmaTarget++, readDMA(status.dmaSource++, 0xff));
-      if(loop & 1) step(1 << status.speedDouble);
-    }
-    if(status.dmaLength-- == 0) {
-      status.hdmaActive = 0;
-    }
-    status.hblankPending = 0;
+auto CPU::hdmaTrigger(n1 hblank, n1 active) -> void {
+  //HDMA is triggered on rising edge of combined signal
+  n1 previousState = status.hdmaActive && status.hblank;
+  n1 newState = active && hblank;
+  status.hdmaPending = previousState == 0 && newState == 1;
+}
+
+auto CPU::performHdma() -> void {
+  for(u32 loop : range(16)) {
+    writeDMA(status.dmaTarget++, readDMA(status.dmaSource++, 0xff));
+    if(loop & 1) step(1 << status.speedDouble);
+  }
+  if(status.dmaLength-- == 0) {
+    status.hdmaActive = 0;
   }
 }

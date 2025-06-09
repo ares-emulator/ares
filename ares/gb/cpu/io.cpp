@@ -244,6 +244,7 @@ auto CPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
     }
 
     status.dmaLength  = data.bit(0,6);
+    hdmaTrigger(status.hblank, 1);
     status.hdmaActive = data.bit(7);
 
     //GDMA

@@ -61,8 +61,9 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  if(status.hblankPending) {
-    hblankTrigger();
+  if(ppu.status.ly < 144 && status.hdmaPending) {
+    performHdma();
+    status.hdmaPending = 0;
   }
 
   //are interrupts enabled?

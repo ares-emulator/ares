@@ -7,7 +7,8 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(status.clock);
   s(status.interruptLatch);
-  s(status.hblankPending);
+  s(status.hblank);
+  s(status.hdmaPending);
   s(status.timerLine);
 
   s(status.joyp);
