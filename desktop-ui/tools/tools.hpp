@@ -1,3 +1,9 @@
+struct Tools : Markup::Node {
+  struct Memory {
+    unsigned char base = 16;
+  } memory;
+};
+
 struct ManifestViewer : VerticalLayout {
   auto construct() -> void;
   auto reload() -> void;
@@ -62,6 +68,11 @@ struct MemoryEditor : VerticalLayout {
 
   Label memoryLabel{this, Size{~0, 0}, 5};
   ComboButton memoryList{this, Size{~0, 0}};
+  HorizontalLayout baseFormatLayout{this, Size{~0, 0}, 5};
+    RadioLabel base2Editor{&baseFormatLayout, Size{0, 0}};
+    RadioLabel base8Editor{&baseFormatLayout, Size{0, 0}};
+    RadioLabel base16Editor{&baseFormatLayout, Size{0, 0}};
+    Group renderQualityGroup{&base2Editor, &base8Editor, &base16Editor};
   HexEdit memoryEditor{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
     Button exportButton{&controlLayout, Size{80, 0}};
@@ -151,6 +162,7 @@ struct ToolsWindow : Window {
       HomePanel homePanel;
 };
 
+extern Tools tools;
 namespace Instances { extern Instance<ToolsWindow> toolsWindow; }
 extern ToolsWindow& toolsWindow;
 extern CheatEditor& cheatEditor;
