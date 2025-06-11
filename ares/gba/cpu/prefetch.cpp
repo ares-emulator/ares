@@ -33,15 +33,13 @@ auto CPU::prefetchReset() -> void {
 }
 
 auto CPU::prefetchRead() -> n16 {
-  if(prefetch.empty()) prefetchStep(prefetch.wait);
-
-  n16 word = prefetch.slot[prefetch.addr >> 1 & 7];
-  prefetch.addr += 2;
-
   if(prefetch.stopped && prefetch.empty()) {
     prefetch.stopped = false;
     prefetch.wait = waitCartridge(Half | Nonsequential, prefetch.load);
   }
+  if(prefetch.empty()) prefetchStep(prefetch.wait);
 
+  n16 word = prefetch.slot[prefetch.addr >> 1 & 7];
+  prefetch.addr += 2;
   return word;
 }
