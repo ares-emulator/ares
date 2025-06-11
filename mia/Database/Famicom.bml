@@ -57,7 +57,7 @@ game
   sha256: 8e844d77da01f86ace52823f1f974c9230f09e6a6cbf33a07abfe9beeff00292
   name:   10-Yard Fight (USA, Europe)
   title:  10-Yard Fight (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-NROM
     mirror
       mode: horizontal
@@ -2855,7 +2855,7 @@ game
   sha256: f22944452be3259aac853258759f469e7d2e2447c6178f26cc7bd0e89945bc04
   name:   Baseball (USA, Europe)
   title:  Baseball (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-NROM
     mirror
       mode: horizontal
@@ -8401,7 +8401,7 @@ game
   sha256: 234c2f62cbc3c72eb7519425a1893229e19a3fd1b1630fb75f3e951960a300e5
   name:   Donkey Kong Classics (USA, Europe)
   title:  Donkey Kong Classics (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-CNROM
     mirror
       mode: vertical
@@ -8469,7 +8469,7 @@ game
   sha256: 07dd16464d769429c651bd203ac2e74c7aa5852824482ca8877959d643bc8689
   name:   Donkey Kong Jr. Math (USA, Europe)
   title:  Donkey Kong Jr. Math (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-NROM
     mirror
       mode: vertical
@@ -10039,7 +10039,7 @@ game
   sha256: 1266108d927cb288a5f396e78ac097e48678375e80c0e0c09ecbce4dc03699bc
   name:   EarthBound Beginnings (USA, Europe)
   title:  EarthBound Beginnings (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-TLROM
     chip
       type: MMC3B
@@ -14620,7 +14620,7 @@ game
   sha256: 4628f32db9b826d19fe5dd8e2c45a9f70e1041f15b7b44b06dee2f01731566e8
   name:   Gumshoe (USA, Europe)
   title:  Gumshoe (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-GNROM
     mirror
       mode: vertical
@@ -16101,7 +16101,7 @@ game
   sha256: 002bb62441c1625051555109bce93ff2e2a2badb534a350b6d17ad0d7e7ef023
   name:   Ice Climber (USA, Europe)
   title:  Ice Climber (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-NROM
     mirror
       mode: horizontal
@@ -18670,7 +18670,7 @@ game
   sha256: 56f1fe3a7881b2e9d69cd33a0971b2f26247e964c3c7dd4a6019715425ff2256
   name:   Kid Icarus (USA, Europe)
   title:  Kid Icarus (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-SXROM
     chip
       type: MMC1B2
@@ -18692,7 +18692,7 @@ game
   sha256: ee8b884dec3b2c5c0b92e4d6aee61d6ee4191ecdcd7cd4c96733bf54ecbed962
   name:   Kid Icarus (USA, Europe) (Rev 1)
   title:  Kid Icarus (USA, Europe) (Rev 1)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-SXROM
     chip
       type: MMC1B2
@@ -35877,7 +35877,7 @@ game
   sha256: dd89b8e08738243d20740194ef814b011df138d820844ee4e53d3a6e536b1c83
   name:   Terminator, The (USA, Europe)
   title:  Terminator, The (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-TLROM
     chip
       type: MMC3B
@@ -38230,7 +38230,7 @@ game
   sha256: 2e312fc327c1e569eccf14eee5a00c41f676c1492035d99af0873681da0f034d
   name:   Volleyball (USA, Europe)
   title:  Volleyball (USA, Europe)
-  region: NTSC-U
+  region: NTSC-U, PAL
   board:  HVC-NROM
     mirror
       mode: vertical
