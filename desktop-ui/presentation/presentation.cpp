@@ -73,21 +73,31 @@ Presentation::Presentation() {
   fastBoot.setText("Fast Boot").setChecked(settings.boot.fast).onToggle([&] {
     settings.boot.fast = fastBoot.checked();
   });
+  bootOptionsRegionMenu.setText("Region Preference").setIcon(Icon::Application::Browser);
   launchDebugger.setText("Launch Debugger").setChecked(settings.boot.debugger).onToggle([&] {
     settings.boot.debugger = launchDebugger.checked();
   });
-  preferNTSCU.setText("Prefer US").onActivate([&] {
-    settings.boot.prefer = "NTSC-U";
-  });
-  preferNTSCJ.setText("Prefer Japan").onActivate([&] {
-    settings.boot.prefer = "NTSC-J";
-  });
-  preferPAL.setText("Prefer Europe").onActivate([&] {
-    settings.boot.prefer = "PAL";
-  });
-  if(settings.boot.prefer == "NTSC-U") preferNTSCU.setChecked();
-  if(settings.boot.prefer == "NTSC-J") preferNTSCJ.setChecked();
-  if(settings.boot.prefer == "PAL") preferPAL.setChecked();
+
+  regionUJE.setText("NTSC-U -> NTSC-J -> PAL").onActivate([&] { settings.boot.prefer = "NTSC-U,NTSC-J,PAL"; });
+  regionUEJ.setText("NTSC-U -> PAL -> NTSC-J").onActivate([&] { settings.boot.prefer = "NTSC-U,PAL,NTSC-J"; });
+  regionJUE.setText("NTSC-J -> NTSC-U -> PAL").onActivate([&] { settings.boot.prefer = "NTSC-J,NTSC-U,PAL"; });
+  regionJEU.setText("NTSC-J -> PAL -> NTSC-U").onActivate([&] { settings.boot.prefer = "NTSC-J,PAL,NTSC-U"; });
+  regionEUJ.setText("PAL -> NTSC-U -> NTSC-J").onActivate([&] { settings.boot.prefer = "PAL,NTSC-U,NTSC-J"; });
+  regionEJU.setText("PAL -> NTSC-J -> NTSC-U").onActivate([&] { settings.boot.prefer = "PAL,NTSC-J,NTSC-U"; });
+
+  //Backwards compatibility: convert old region preferences to new format
+  string prefer = settings.boot.prefer;
+  if(prefer == "NTSC-U") prefer = "NTSC-U,NTSC-J,PAL";
+  if(prefer == "NTSC-J") prefer = "NTSC-J,NTSC-U,PAL";
+  if(prefer == "PAL")    prefer = "PAL,NTSC-U,NTSC-J";
+
+  if(settings.boot.prefer == "NTSC-U,NTSC-J,PAL") regionUJE.setChecked();
+  if(settings.boot.prefer == "NTSC-U,PAL,NTSC-J") regionUEJ.setChecked();
+  if(settings.boot.prefer == "NTSC-J,NTSC-U,PAL") regionJUE.setChecked();
+  if(settings.boot.prefer == "NTSC-J,PAL,NTSC-U") regionJEU.setChecked();
+  if(settings.boot.prefer == "PAL,NTSC-U,NTSC-J") regionEUJ.setChecked();
+  if(settings.boot.prefer == "PAL,NTSC-J,NTSC-U") regionEJU.setChecked();
+
   muteAudioSetting.setText("Mute Audio").setChecked(settings.audio.mute).onToggle([&] {
     settings.audio.mute = muteAudioSetting.checked();
   });
