@@ -48,6 +48,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     mode = cartMode(mode, address);
     context.romAccess = true;
     if(mode & Prefetch && wait.prefetch) {
+      if(mode & Nonsequential && prefetch.cycle == 0 && prefetch.empty()) prefetchReset();
       prefetchSync(address);
       prefetchStep(1);
       word = prefetchRead();
