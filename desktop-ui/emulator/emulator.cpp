@@ -41,28 +41,23 @@ auto Emulator::region() -> string {
   auto preferredRegions = settings.boot.prefer.split(",").strip();
   if(game && game->pak) {
     if(auto regions = game->pak->attribute("region").split(",").strip()) {
-      for(auto& prefer : preferredRegions) {
-        if(prefer == "PAL" || prefer == "NTSC-J" || prefer == "NTSC-U") {
-          if(regions.find(prefer)) return prefer;
-        }
+      for(auto &prefer: preferredRegions) {
+        if(regions.find(prefer)) return prefer; //NTSC-U, NTSC-J or PAL
       }
 
-      for(auto& region : regions) {
-        if(region == "PAL" || region == "NTSC-J" || region == "NTSC-U") {
-          return region;
-        }
-      }
-    }
-  }
+      //Handle generic "NTSC" region.
+      //NOTE: we don't need to check PAL because the above check covered it
+      if(regions.find("NTSC")) return "NTSC";
 
-  for(auto& prefer : preferredRegions) {
-    if(prefer == "PAL" || prefer == "NTSC-J" || prefer == "NTSC-U") {
-      return prefer;
+      //If no preferred region was found, return the first region in the list
+      //NOTE: required for 'unsual' regions like NTSC-DEV for 64DD
+      return regions.first();
     }
   }
 
   return {};
 }
+
 
 auto Emulator::handleLoadResult(LoadResult result) -> void {
   string errorText;
