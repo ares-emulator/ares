@@ -265,12 +265,10 @@ Presentation::Presentation() {
 
   spacerLeft .setBackgroundColor({32, 32, 32});
   statusLeft .setBackgroundColor({32, 32, 32}).setForegroundColor({255, 255, 255});
-  statusDebug.setBackgroundColor({32, 32, 32}).setForegroundColor({255, 255, 255});
   statusRight.setBackgroundColor({32, 32, 32}).setForegroundColor({255, 255, 255});
   spacerRight.setBackgroundColor({32, 32, 32});
 
   statusLeft .setAlignment(0.0).setFont(Font().setBold());
-  statusDebug.setAlignment(1.0).setFont(Font().setBold());
   statusRight.setAlignment(1.0).setFont(Font().setBold());
 
   onClose([&] {

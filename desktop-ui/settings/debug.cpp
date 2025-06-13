@@ -52,12 +52,8 @@ auto DebugSettings::infoRefresh() -> void {
       ? "Note: IPv4 mode binds to any device, enabling anyone in your network to access this server"
       : "Note: localhost only (for Windows/WSL: please use IPv4 instead)"
     );
-    presentation.statusDebug.setText(
-      nall::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4)
-    );
   } else {
     connectInfo.setText("");
-    presentation.statusDebug.setText("");
   }
 }
 

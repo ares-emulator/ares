@@ -58,6 +58,7 @@ auto System::load(Node::System& root, string name) -> bool {
 
   if(information.name == "Game Boy" || information.name == "Game Boy Color") {
     node = Node::System::create(information.name);
+    node->setAttribute("configuration", name);
     node->setGame({&System::game, this});
     node->setRun({&System::run, this});
     node->setPower({&System::power, this});

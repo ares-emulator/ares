@@ -40,6 +40,7 @@ auto System::load(Node::System& root, string name) -> bool {
   }
 
   node = Node::System::create(information.name);
+  node->setAttribute("configuration", name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
