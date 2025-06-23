@@ -127,34 +127,22 @@ auto ARM7TDMI::thumbInstructionMoveHalfImmediate
 auto ARM7TDMI::thumbInstructionMoveMultiple
 (n8 list, n3 n, n1 mode) -> void {
   n32 rn = r(n);
-  n32 bitCount = list ? bit::count(list) : 16;
+  n16 rlist = list;
+  n32 bitCount = rlist ? bit::count(rlist) : 16;
   n32 rnEnd = r(n) + bitCount * 4;
 
-  if(mode == 1 && !list.bit(n)) r(n) = rnEnd;
+  if(mode == 1 && !rlist.bit(n)) r(n) = rnEnd;
 
   endBurst();
-  if(!list) {
-    if(mode == 1) r(15) = read(Word, rn);
+  if(!rlist) rlist.bit(15) = 1;
+  for(u32 m : range(16)) {
+    if(!rlist.bit(m)) continue;
+    if(mode == 1) r(m) = read(Word, rn);  //LDMIA
     if(mode == 0) {
-      write(Word, rn, r(15) + 2);
-      //writeback occurs after first access
-      r(n) = rnEnd;
+      write(Word, rn, r(m) + (m == 15 ? 2 : 0));  //STMIA
+      r(n) = rnEnd;  //writeback occurs after first access
     }
-  } else {
-    bool wroteBack = false;
-    for(u32 m : range(8)) {
-      if(!list.bit(m)) continue;
-      if(mode == 1) r(m) = read(Word, rn);  //LDMIA
-      if(mode == 0) {
-        write(Word, rn, r(m));  //STMIA
-        //writeback occurs after first access
-        if(!wroteBack) {
-          r(n) = rnEnd;
-          wroteBack = true;
-        }
-      }
-      rn += 4;
-    }
+    rn += 4;
   }
 
   if(mode) {
@@ -211,25 +199,21 @@ auto ARM7TDMI::thumbInstructionSoftwareInterrupt
 auto ARM7TDMI::thumbInstructionStackMultiple
 (n8 list, n1 lrpc, n1 mode) -> void {
   n32 sp = r(13);
-  n32 bitCount = (list | lrpc) ? (bit::count(list) + lrpc) : 16;
+  n16 rlist = list;
+  if(lrpc) {
+    if(mode == 1) rlist.bit(15) = 1;  //POP
+    if(mode == 0) rlist.bit(14) = 1;  //PUSH
+  }
+  n32 bitCount = rlist ? bit::count(rlist) : 16;
   if(mode == 1) r(13) = r(13) + bitCount * 4;  //POP
   if(mode == 0) sp = sp - bitCount * 4 + 0;    //PUSH
 
   endBurst();
-  if(bitCount == 16) {
-    if(mode == 1) r(15) = read(Word, sp);      //POP
-    if(mode == 0) write(Word, sp, r(15) + 2);  //PUSH
-  } else {
-    for(u32 m : range(8)) {
-      if(!list.bit(m)) continue;
-      if(mode == 1) r(m) = read(Word, sp);  //POP
-      if(mode == 0) write(Word, sp, r(m));  //PUSH
-      sp += 4;
-    }
-  }
-  if(lrpc) {
-    if(mode == 1) r(15) = read(Word, sp);  //POP
-    if(mode == 0) write(Word, sp, r(14));  //PUSH
+  if(!rlist) rlist.bit(15) = 1;
+  for(u32 m : range(16)) {
+    if(!rlist.bit(m)) continue;
+    if(mode == 1) r(m) = read(Word, sp);  //POP
+    if(mode == 0) write(Word, sp, r(m) + (m == 15 ? 2 : 0));  //PUSH
     sp += 4;
   }
 
