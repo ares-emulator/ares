@@ -176,28 +176,15 @@ auto ARM7TDMI::armInstructionMoveMultiple
   if(writeback && mode == 1 && !list.bit(n)) r(n) = rnEnd;
 
   endBurst();
-  if(!list) {
-    if(mode == 1) r(15) = read(Word, rn);
+  if(!list) list.bit(15) = 1;
+  for(u32 m : range(16)) {
+    if(!list.bit(m)) continue;
+    if(mode == 1) r(m) = read(Word, rn);
     if(mode == 0) {
-      write(Word, rn, r(15) + 4);
-      //writeback occurs after first access
-      if(writeback) r(n) = rnEnd;
+      write(Word, rn, r(m) + (!(n == 15 && writeback) && m == 15 ? 4 : 0));
+      if(writeback) r(n) = rnEnd;  //writeback occurs after first access
     }
-  } else {
-    bool wroteBack = false;
-    for(u32 m : range(16)) {
-      if(!list.bit(m)) continue;
-      if(mode == 1) r(m) = read(Word, rn);
-      if(mode == 0) {
-        write(Word, rn, r(m) + (!(n == 15 && writeback) && m == 15 ? 4 : 0));
-        if(!wroteBack && writeback) {
-          //writeback occurs after first access
-          r(n) = rnEnd;
-          wroteBack = true;
-        }
-      }
-      rn += 4;
-    }
+    rn += 4;
   }
 
   if(usr) cpsr().m = cpsrMode;

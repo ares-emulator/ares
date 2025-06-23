@@ -71,6 +71,7 @@ struct CPU : ares::ARM7TDMI {
   auto sleep() -> void override {}
   auto get(u32 mode, n32 address) -> n32 override {
     if(!(mode & Prefetch)) mode |= Load;  //todo: fix this in ares
+    if(mode & Prefetch && mode & Word) address &= ~3;  //test cases use incorrect address for misaligned fetches
     if(auto data = matchTransaction(mode, address)) return *data;
     error("read: mode ", hex(mode, 3L), " address ", hex(address, 8L), "\n");
     return 0;
@@ -253,12 +254,7 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   const bool fthumb = processor.cpsr.t;
   const u32 flength = fthumb ? 2 : 4;
 
-  if(pipeline.reload) {
-    //todo: confirm if ares should be preserving r15 bit 1 in arm mode
-    u32 r15low = fthumb ? 0 : processor.r15 & 2;
-    reload();
-    processor.r15.data |= r15low;
-  }
+  if(pipeline.reload) reload();
   processor.r15.data += flength;
 
   TestResult result = pass;
@@ -289,8 +285,7 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   //test cases for MSR to SPSR handle upper bit of mode incorrectly
   u32 spsrMask = cpsrMask & ~0x00000010;
 
-  //are writes to r15 bit 0 observable under any circumstance?
-  //ares masks it off during pipeline reload
+  //r15 bit 0 appears to always be clear on real hardware
   u32 r15Mask = ~1u;
 
   if(processor.r0 != fs.R[0]) error("r0: ", hex(u32(processor.r0), 8), " != ", hex(fs.R[0], 8));
@@ -397,13 +392,8 @@ auto fromNode(const nall::Markup::Node& node, TestCase& test) -> void {
   for(auto n : range(transactions.size())) {
     fromNode(transactions[n], test.transactions[n]);
   }
-  //todo: uncomment when transcode script fix is accepted upstream
-  //node["opcode"].value(test.opcode);
-  //node["base_addr"].value(test.base_addr);
-  test.opcode = test.initial.pipeline[0];
-  const bool thumb = test.initial.CPSR & (1 << 5);
-  const u32 length = thumb ? 2 : 4;
-  test.base_addr = test.initial.R[15] - 2 * length;
+  node["opcode"].value(test.opcode);
+  node["base_addr"].value(test.base_addr);
 }
 
 template<typename T>
