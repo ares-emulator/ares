@@ -2,7 +2,7 @@ struct PlayStation : CompactDisc {
   auto name() -> string override { return "PlayStation"; }
   auto extensions() -> vector<string> override {
 #if defined(ARES_ENABLE_CHD)
-    return {"cue", "chd", "exe"};
+    return {"cue", "chd", "exe", "ps-exe"};
 #else
     return {"cue", "exe"};
 #endif
@@ -37,7 +37,7 @@ auto PlayStation::load(string location) -> LoadResult {
     if(location.iendsWith(".chd")) {
       pak->append("cd.rom", vfs::cdrom::open(location));
     }
-    if(location.iendsWith(".exe")) {
+    if(location.iendsWith(".exe") || location.iendsWith(".ps-exe")) {
       pak->append("program.exe", vfs::disk::open(location, vfs::read));
     }
   }
@@ -80,7 +80,7 @@ auto PlayStation::analyze(string location) -> string {
     return s;
   }
 
-  if(location.iendsWith(".exe")) {
+  if(location.iendsWith(".exe") || location.iendsWith(".ps-exe")) {
     auto exe = file::read(location);
     if(exe.size() < 2048) return {};
     if(memory::compare(exe.data(), "PS-X EXE", 8)) return {};
