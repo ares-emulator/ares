@@ -55,6 +55,7 @@ auto DMA::readWord(u32 address) -> u32 {
   //DICR: DMA Interrupt
   if(address == 0x1f80'10f4) {
     data.bit( 0, 5) = irq.unknown;
+    data.bit(15)    = irq.force;
     data.bit(16)    = channels[0].irq.enable;
     data.bit(17)    = channels[1].irq.enable;
     data.bit(18)    = channels[2].irq.enable;
