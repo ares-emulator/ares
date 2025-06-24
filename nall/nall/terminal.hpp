@@ -9,14 +9,13 @@ constexpr char csi[] = "\x1b[";
 
 auto redirectStdioToTerminal(bool create) -> void;
 
-inline auto escapable() -> bool {
-  #if defined(PLATFORM_WINDOWS)
-  //todo: colors are supported by Windows 10+ and with alternate terminals (eg msys)
-  //disabled for now for compatibility with Windows 7 and 8.1's cmd.exe
-  return false;
-  #endif
-  return true;
-}
+#if defined(PLATFORM_WINDOWS)
+extern bool _escapable;
+inline auto setEscapable(bool escapable) { _escapable = escapable; }
+inline auto escapable() -> bool { return _escapable; }
+#else
+inline auto escapable() -> bool { return true; }
+#endif
 
 namespace color {
 
