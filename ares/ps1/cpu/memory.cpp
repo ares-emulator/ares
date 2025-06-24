@@ -1,21 +1,23 @@
 //read code from the bus
 inline auto CPU::fetch(u32 address) -> u32 {
+  auto physAddr = address & 0x1fff'ffff;
+
   switch(address >> 29) {
   //cached
   case 0:  //$00000000-$1fffffff  KUSEG
   case 4: {//$80000000-$9fffffff  KSEG0
-    return icache.fetch(address);
+    return icache.fetch(physAddr);
   }
 
   //uncached
   case 5: {//$a0000000-$bfffffff  KSEG1
     if(likely(address <= 0xa07f'ffff)) {
-      auto data = ram.read<Word>(address);
+      auto data = ram.read<Word>(physAddr);
       step(ram.wait<Word>());
       return data;
     }
     if(likely(address >= 0xbfc0'0000)) {
-      auto data = bios.read<Word>(address);
+      auto data = bios.read<Word>(physAddr);
       step(bios.wait<Word>());
       return data;
     }
@@ -48,14 +50,14 @@ inline auto CPU::fetch(u32 address) -> u32 {
 
 //peek at the next instruction, does not consume cycles
 inline auto CPU::peek(u32 address) -> u32 {
-  address &= 0x1fff'ffff;
+  auto physAddr = address & 0x1fff'ffff;
 
   if(likely(address <= 0x007f'ffff)) {
-    return ram.read<Word>(address);
+    return ram.read<Word>(physAddr);
   }
 
   if(likely(address >= 0x1fc0'0000)) {
-    return bios.read<Word>(address);
+    return bios.read<Word>(physAddr);
   }
 
   return 0;
@@ -81,31 +83,33 @@ inline auto CPU::read(u32 address) -> u32 {
     return memory.read<Size>(address);
   }
 
+  auto physAddr = address & 0x1fff'ffff;
+
   switch(address >> 29) {
   //cached
   case 0: {//KUSEG
     if(unlikely(scc.status.cache.isolate)) {
       if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
-        return icache.read(address);
+        return icache.read(physAddr);
       }
       if(memory.cache.tagTest == 0 && memory.cache.scratchpadEnable == 1) {
-        return scratchpad.read<Size>(address);
+        return scratchpad.read<Size>(physAddr);
       }
       return 0;  //nop
     }
     if(likely(address <= 0x007f'ffff)) {
-      auto data = ram.read<Size>(address);
+      auto data = ram.read<Size>(physAddr);
       step(ram.wait<Size>());
       return data;
     }
     if(likely(address >= 0x1fc0'0000)) {
-      auto data = memory.read<Size>(address);
+      auto data = memory.read<Size>(physAddr);
       step(bios.wait<Size>());
       return data;
     }
     if(likely(address >= 0x1f00'0000)) {
-      auto& memory = bus.mmio(address);
-      auto data = memory.read<Size>(address);
+      auto& memory = bus.mmio(physAddr);
+      auto data = memory.read<Size>(physAddr);
       step(memory.wait<Size>());
       return data;
     }
@@ -119,26 +123,26 @@ inline auto CPU::read(u32 address) -> u32 {
   case 4: {//KSEG0
     if(unlikely(scc.status.cache.isolate)) {
       if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
-        return icache.read(address);
+        return icache.read(physAddr);
       }
       if(memory.cache.tagTest == 0 && memory.cache.scratchpadEnable == 1) {
-        return scratchpad.read<Size>(address);
+        return scratchpad.read<Size>(physAddr);
       }
       return 0;  //nop
     }
     if(likely(address <= 0x807f'ffff)) {
-      auto data = ram.read<Size>(address);
+      auto data = ram.read<Size>(physAddr);
       step(ram.wait<Size>());
       return data;
     }
     if(likely(address >= 0x9fc0'0000)) {
-      auto data = memory.read<Size>(address);
+      auto data = memory.read<Size>(physAddr);
       step(bios.wait<Size>());
       return data;
     }
     if(likely(address >= 0x9f00'0000)) {
-      auto& memory = bus.mmio(address);
-      auto data = memory.read<Size>(address);
+      auto& memory = bus.mmio(physAddr);
+      auto data = memory.read<Size>(physAddr);
       step(memory.wait<Size>());
       return data;
     }
@@ -151,18 +155,18 @@ inline auto CPU::read(u32 address) -> u32 {
   //uncached
   case 5: {//KSEG1
     if(likely(address <= 0xa07f'ffff)) {
-      auto data = ram.read<Size>(address);
+      auto data = ram.read<Size>(physAddr);
       step(ram.wait<Size>());
       return data;
     }
     if(likely(address >= 0xbfc0'0000)) {
-      auto data = bios.read<Size>(address);
+      auto data = bios.read<Size>(physAddr);
       step(bios.wait<Size>());
       return data;
     }
     if(likely(address >= 0xbf00'0000)) {
-      auto& memory = bus.mmio(address);
-      auto data = memory.read<Size>(address);
+      auto& memory = bus.mmio(physAddr);
+      auto data = memory.read<Size>(physAddr);
       step(memory.wait<Size>());
       return data;
     }
@@ -212,30 +216,32 @@ inline auto CPU::write(u32 address, u32 data) -> void {
     return memory.write<Size>(address, data);
   }
 
+  auto physAddr = address & 0x1fff'ffff;
+
   switch(address >> 29) {
   //cached
   case 0: {//KUSEG
     if(unlikely(scc.status.cache.isolate)) {
       if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
-        return icache.invalidate(address);
+        return icache.invalidate(physAddr);
       }
       if(memory.cache.tagTest == 0 && memory.cache.scratchpadEnable == 1) {
-        return scratchpad.write<Size>(address, data);
+        return scratchpad.write<Size>(physAddr, data);
       }
       return;
     }
     if(likely(address <= 0x007f'ffff)) {
       //step(ram.wait<Size>());
-      return ram.write<Size>(address, data);
+      return ram.write<Size>(physAddr, data);
     }
     if(likely(address >= 0x1fc0'0000)) {
       //step(bios.wait<Size>());
-      return bios.write<Size>(address, data);
+      return bios.write<Size>(physAddr, data);
     }
     if(likely(address >= 0x1f00'0000)) {
-      auto& memory = bus.mmio(address);
+      auto& memory = bus.mmio(physAddr);
       //step(memory.wait<Size>());
-      return memory.write<Size>(address, data);
+      return memory.write<Size>(physAddr, data);
     }
     if constexpr(Accuracy::CPU::BusErrors) {
       exception.busData();
@@ -247,25 +253,25 @@ inline auto CPU::write(u32 address, u32 data) -> void {
   case 4: {//KSEG0
     if(unlikely(scc.status.cache.isolate)) {
       if(memory.cache.tagTest == 1 && memory.cache.codeEnable == 1) {
-        return icache.invalidate(address);
+        return icache.invalidate(physAddr);
       }
       if(memory.cache.tagTest == 0 && memory.cache.scratchpadEnable == 1) {
-        return scratchpad.write<Size>(address, data);
+        return scratchpad.write<Size>(physAddr, data);
       }
       return;
     }
     if(likely(address <= 0x807f'ffff)) {
       //step(ram.wait<Size>());
-      return ram.write<Size>(address, data);
+      return ram.write<Size>(physAddr, data);
     }
     if(likely(address >= 0x9fc0'0000)) {
       //step(bios.wait<Size>());
-      return bios.write<Size>(address, data);
+      return bios.write<Size>(physAddr, data);
     }
     if(likely(address >= 0x9f00'0000)) {
-      auto& memory = bus.mmio(address);
+      auto& memory = bus.mmio(physAddr);
       //step(memory.wait<Size>());
-      return memory.write<Size>(address, data);
+      return memory.write<Size>(physAddr, data);
     }
     if constexpr(Accuracy::CPU::BusErrors) {
       exception.busData();
@@ -277,16 +283,16 @@ inline auto CPU::write(u32 address, u32 data) -> void {
   case 5: {//KSEG1
     if(likely(address <= 0xa07f'ffff)) {
       //step(ram.wait<Size>());
-      return ram.write<Size>(address, data);
+      return ram.write<Size>(physAddr, data);
     }
     if(likely(address >= 0xbfc0'0000)) {
       //step(bios.wait<Size>());
-      return bios.write<Size>(address, data);
+      return bios.write<Size>(physAddr, data);
     }
     if(likely(address >= 0xbf00'0000)) {
-      auto& memory = bus.mmio(address);
+      auto& memory = bus.mmio(physAddr);
       //step(memory.wait<Size>());
-      return memory.write<Size>(address, data);
+      return memory.write<Size>(physAddr, data);
     }
     if constexpr(Accuracy::CPU::BusErrors) {
       exception.busData();

@@ -1,5 +1,4 @@
 inline auto Bus::mmio(u32 address) -> Memory::Interface& {
-  address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return cpu.ram;
   if(address >= 0x1fc0'0000) return bios;
   if(address <= 0x1eff'ffff) return unmapped;
