@@ -49,19 +49,19 @@ jobs:
     steps:
     - name: Install MSYS2 Dependencies
       if: matrix.platform.shell == 'msys2 {0}'
-      uses: msys2/setup-msys2@v2
+      uses: msys2/setup-msys2@40677d36a502eb2cf0fb808cc9dec31bf6152638
       with:
         msystem: ${{ matrix.platform.msystem }}
         install: ${{ matrix.platform.install }}
     - name: "macOS: Import Certificate"
       if: runner.os == 'macOS' && inputs.codesign
-      uses: apple-actions/import-codesign-certs@v3
+      uses: apple-actions/import-codesign-certs@65cfbc37e1464d733524cb555b724878f278b8c3
       continue-on-error: ${{ secrets.MACOS_CERTIFICATE_NAME == '' }}
       with:
         p12-file-base64: ${{ secrets.MACOS_CERTIFICATE_DATA }}
         p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSPHRASE }}
     - name: Checkout source code
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:
         fetch-tags: true
         fetch-depth: 0
@@ -114,19 +114,19 @@ jobs:
       run: |
         tar -cvJf ares-${{ matrix.platform.name }}.tar.xz -C build/desktop-ui/rundir/ .
     - name: Upload Build
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: ${{ matrix.program }}-${{ matrix.platform.name }}
         path: ares-${{ matrix.platform.name }}.tar.xz
     - name: Upload Debug Symbols (Windows)
       if: runner.os != 'macOS' && runner.os != 'Linux'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: ${{ matrix.program }}-${{ matrix.platform.name }}-PDBs
         path: build/PDBs/*
     - name: Upload Debug Symbols (macOS)
       if: runner.os == 'macOS'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: ${{ matrix.program }}-${{ matrix.platform.name }}-dSYMs
         path: build/dSYMs/*
