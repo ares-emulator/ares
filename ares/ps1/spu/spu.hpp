@@ -67,7 +67,7 @@ struct SPU : Thread, Memory::Interface {
     n2  step;
     n4  shift;
   //internal:
-    n32 level;
+    i16 level;
     n32 count;
   } noise{*this};
 
