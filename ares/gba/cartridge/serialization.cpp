@@ -44,6 +44,8 @@ auto Cartridge::FLASH::serialize(serializer& s) -> void {
 }
 
 auto Cartridge::GPIO::serialize(serializer& s) -> void {
+  s(latch);
+  s(direction);
   s(readEnable);
 }
 
