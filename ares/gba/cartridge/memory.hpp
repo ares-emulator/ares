@@ -91,6 +91,8 @@ struct GPIO {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  n4 latch;
+  n4 direction;
   n1 readEnable;
 } gpio;
 
