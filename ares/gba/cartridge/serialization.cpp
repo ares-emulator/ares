@@ -52,9 +52,6 @@ auto Cartridge::GPIO::serialize(serializer& s) -> void {
 auto Cartridge::RTC::serialize(serializer& s) -> void {
   s(array_span<u8>{data, size});
 
-  s(csDirection);
-  s(sioDirection);
-  s(sckDirection);
   s(cs);
   s(sioIn);
   s(sioOut);
