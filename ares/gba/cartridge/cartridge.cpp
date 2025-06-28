@@ -8,18 +8,22 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "sram.cpp"
 #include "eeprom.cpp"
 #include "flash.cpp"
+#include "gpio.cpp"
+#include "rtc.cpp"
 #include "serialization.cpp"
 
 Cartridge::Cartridge() {
   sram.data = new n8[sram.size = 32 * 1024];
   eeprom.data = new n8[eeprom.size = 8 * 1024];
   flash.data = new n8[flash.size = 128 * 1024];
+  rtc.data = new n8[rtc.size];
 }
 
 Cartridge::~Cartridge() {
   delete[] sram.data;
   delete[] eeprom.data;
   delete[] flash.data;
+  delete[] rtc.data;
 }
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
@@ -74,6 +78,13 @@ auto Cartridge::connect() -> void {
     fp->read({flash.data, flash.size});
   }
 
+  if(auto fp = pak->read("time.rtc")) {
+    has.rtc = true;
+    for(auto n : range(rtc.size)) rtc.data[n] = 0x00;
+    if(!fp->end()) fp->read({rtc.data, rtc.size});  //only load save file if already present
+    rtc.load();
+  }
+
   power();
 }
 
@@ -83,6 +94,7 @@ auto Cartridge::disconnect() -> void {
   memory::fill<u8>(sram.data, sram.size);
   memory::fill<u8>(eeprom.data, eeprom.size);
   memory::fill<u8>(flash.data, flash.size);
+  memory::fill<u8>(rtc.data, rtc.size);
   has = {};
   pak.reset();
   node.reset();
@@ -103,11 +115,17 @@ auto Cartridge::save() -> void {
   if(auto fp = pak->write("save.flash")) {
     fp->write({flash.data, flash.size});
   }
+
+  if(auto fp = pak->write("time.rtc")) {
+    rtc.save();
+    fp->write({rtc.data, rtc.size});
+  }
 }
 
 auto Cartridge::power() -> void {
   eeprom.power();
   flash.power();
+  if(has.rtc) rtc.power();
 }
 
 }

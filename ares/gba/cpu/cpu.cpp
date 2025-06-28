@@ -121,11 +121,11 @@ auto CPU::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(display, player);
 
-  //occasionally synchronize with PPU and APU in case CPU has not recently interacted with them
+  //occasionally perform a full sync in case CPU has not recently interacted with some component
   static u32 counter = 0;
   counter += clocks;
   if(counter >= 1024) {
-    Thread::synchronize(ppu, apu);
+    Thread::synchronize();
     counter = 0;
   }
 }
