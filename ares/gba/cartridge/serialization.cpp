@@ -42,3 +42,27 @@ auto Cartridge::FLASH::serialize(serializer& s) -> void {
   s(writeselect);
   s(bank);
 }
+
+auto Cartridge::GPIO::serialize(serializer& s) -> void {
+  s(readEnable);
+}
+
+auto Cartridge::RTC::serialize(serializer& s) -> void {
+  s(array_span<u8>{data, size});
+
+  s(csDirection);
+  s(sioDirection);
+  s(sckDirection);
+  s(cs);
+  s(sioIn);
+  s(sioOut);
+  s(sck);
+  s(inBuffer);
+  s(outBuffer);
+  s(shift);
+  s(index);
+  s(rwSelect);
+  s(regSelect);
+  s(cmdLatched);
+  s(counter);
+}
