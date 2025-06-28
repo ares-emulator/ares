@@ -10,11 +10,12 @@ auto CPU::serialize(serializer& s) -> void {
   s(pipeline.address);
   s(pipeline.instruction);
 
-  //todo: serialize delay slot target pointers portably
-  s((u64&)delay.load[0].target);
-  s(delay.load[0].source);
-  s((u64&)delay.load[1].target);
-  s(delay.load[1].source);
+  for(auto& load : delay.load) {
+    u32 index = load.target ? load.target - ipu.r : ~0;
+    s(index);
+    load.target = index < 32 ? &ipu.r[index] : nullptr;
+    s(load.source);
+  }
   s(delay.branch[0].slot);
   s(delay.branch[0].take);
   s(delay.branch[0].address);
