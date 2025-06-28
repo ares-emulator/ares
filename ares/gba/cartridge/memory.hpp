@@ -109,9 +109,7 @@ struct RTC : Thread {
   auto save() -> void;
   auto tickSecond() -> void;
   auto checkAlarm() -> void;
-  auto CS() -> n1;
-  auto SIO() -> n1;
-  auto SCK() -> n1;
+  auto readSIO() -> n1;
   auto writeCS(n1 data) -> void;
   auto writeSIO(n1 data) -> void;
   auto writeSCK(n1 data) -> void;
@@ -125,11 +123,6 @@ struct RTC : Thread {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
-
-  //pin directions
-  n1 csDirection;
-  n1 sioDirection;
-  n1 sckDirection;
 
   //pin states
   n1 cs;

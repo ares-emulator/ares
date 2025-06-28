@@ -74,26 +74,16 @@ auto Cartridge::RTC::checkAlarm() -> void {
   }
 }
 
-auto Cartridge::RTC::CS() -> n1 {
-  return cs & csDirection;
-}
-
-auto Cartridge::RTC::SIO() -> n1 {
-  return sioOut | ~rwSelect | ~CS();
-}
-
-auto Cartridge::RTC::SCK() -> n1 {
-  return sck & sckDirection;
+auto Cartridge::RTC::readSIO() -> n1 {
+  return sioOut | ~rwSelect | ~cs;
 }
 
 auto Cartridge::RTC::writeCS(n1 data) -> void {
-  if(!csDirection) return;
-
-  n1 csPrev = CS();
+  n1 csPrev = cs;
   cs = data;
 
   //clear command status on falling edge
-  if(csPrev == 1 && CS() == 0) {
+  if(csPrev == 1 && cs == 0) {
     inBuffer = 0x00;
     shift = 0;
     index = 0;
@@ -103,28 +93,25 @@ auto Cartridge::RTC::writeCS(n1 data) -> void {
 }
 
 auto Cartridge::RTC::writeSIO(n1 data) -> void {
-  if(!sioDirection) return;
   sioIn = data;
 }
 
 auto Cartridge::RTC::writeSCK(n1 data) -> void {
-  if(!sckDirection) return;
-
-  n1 sckPrev = SCK() | ~CS();
+  n1 sckPrev = sck | ~cs;
   sck = data;
 
   //only read SIO data if CS is raised
-  if(!CS()) return;
+  if(!cs) return;
 
   //process command and output data on falling edge of SCK
-  if(sckPrev == 1 && SCK() == 0) {
+  if(sckPrev == 1 && sck == 0) {
     if(!cmdLatched && shift == 0) writeCommand();
     if(cmdLatched && rwSelect == 1 && shift == 0) readRegister();
     sioOut = outBuffer.bit(shift);
   }
 
   //sample RTC command data on rising edge of SCK
-  if(sckPrev == 0 && SCK() == 1) {
+  if(sckPrev == 0 && sck == 1) {
     //add bit into input buffer
     inBuffer.bit(shift) = sioIn;
     shift++;
@@ -258,9 +245,6 @@ auto Cartridge::RTC::initRegs(bool reset) -> void {
 auto Cartridge::RTC::power() -> void {
   Thread::create(32'768, {&Cartridge::RTC::main, this});
 
-  csDirection = 0;
-  sioDirection = 0;
-  sckDirection = 0;
   cs = 0;
   sioIn = 0;
   sioOut = 0;
