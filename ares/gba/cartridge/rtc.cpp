@@ -3,11 +3,11 @@
 auto Cartridge::RTC::load() -> void {
   n64 timestamp = 0;
   for(auto n : range(8)) timestamp.byte(n) = data[8 + n];
-  if(!timestamp || !(timestamp + 1)) return initRegs();  //new save file
+  if(!timestamp || !(timestamp + 1)) return initRegs(false);  //new save file
 
   if(status() & 0x15) {
     //these status bits are always 0; reset state on invalid status.
-    initRegs();
+    initRegs(false);
     return;
   }
 
@@ -151,7 +151,7 @@ auto Cartridge::RTC::writeCommand() -> void {
   //process any registers that have an effect on write without a payload
   if(rwSelect == 1) return;
   switch(regSelect) {
-  case 0: initRegs(); break;
+  case 0: initRegs(true); break;
   case 6: cpu.setInterruptFlag(CPU::Interrupt::Cartridge); break;
   default: break;
   }
@@ -242,7 +242,7 @@ auto Cartridge::RTC::writeRegister() -> void {
   }
 }
 
-auto Cartridge::RTC::initRegs() -> void {
+auto Cartridge::RTC::initRegs(bool reset) -> void {
   year() = 0;
   month() = 1;
   day() = 1;
@@ -250,9 +250,9 @@ auto Cartridge::RTC::initRegs() -> void {
   hour() = 0;
   minute() = 0;
   second() = 0;
-  status() = 0x00;
+  status() = reset ? 0x00 : 0x82;
   alarmHour() = 0x00;
-  alarmMinute() = 0x00;
+  alarmMinute() = reset ? 0x00 : 0x80;
 }
 
 auto Cartridge::RTC::power() -> void {

@@ -118,7 +118,7 @@ struct RTC : Thread {
   auto writeCommand() -> void;
   auto readRegister() -> void;
   auto writeRegister() -> void;
-  auto initRegs() -> void;
+  auto initRegs(bool reset) -> void;
   auto power() -> void;
   auto main() -> void;
   auto step(u32 clocks) -> void;
