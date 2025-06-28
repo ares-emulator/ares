@@ -68,6 +68,8 @@ auto SPU::sample() -> void {
   if(!master.unmute || !master.enable) {
     lsum = 0;
     rsum = 0;
+    lreverb = 0;
+    rreverb = 0;
   }
   noise.update();
   if(cdaudio.enable) {
