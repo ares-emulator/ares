@@ -94,6 +94,8 @@ auto Program::load(string location) -> bool {
   settings.recent.game[0] = {emulator->name, ";", location};
   presentation.loadEmulators();
 
+  configuration = emulator->root->attribute("configuration");
+
   return true;
 }
 
@@ -123,6 +125,7 @@ auto Program::unload() -> void {
   propertiesViewer.unload();
   traceLogger.unload();
   message.text = "";
+  configuration = "";
   ruby::video.clear();
   ruby::audio.clear();
 }

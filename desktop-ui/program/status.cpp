@@ -12,8 +12,8 @@ auto Program::updateMessage() -> void {
       presentation.statusLeft.setText(message.text);
     } else if(settings.debugServer.enabled) {
       presentation.statusLeft.setText(nall::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4));
-    } else if(emulator && emulator->root) {
-      presentation.statusLeft.setText(emulator->root->attribute("configuration"));
+    } else if(configuration) {
+      presentation.statusLeft.setText(configuration);
     } else {
       presentation.statusLeft.setText();
     }
