@@ -4,6 +4,7 @@
 #include <ares/ares.hpp>
 
 #include <component/processor/arm7tdmi/arm7tdmi.hpp>
+#include <component/rtc/s3511a/s3511a.hpp>
 
 namespace ares::GameBoyAdvance {
   #include <ares/inline.hpp>
