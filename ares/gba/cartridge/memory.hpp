@@ -126,8 +126,7 @@ struct RTC : Thread {
 
   //pin states
   n1 cs;
-  n1 sioIn;
-  n1 sioOut;
+  n1 sio;
   n1 sck;
 
   //buffered command data
