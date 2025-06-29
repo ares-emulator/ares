@@ -98,6 +98,7 @@ struct Program : ares::Platform {
   } message;
 
   vector<Message> messages;
+  string configuration;
   atomic<u64> vblanksPerSecond = 0;
   /// The emulator run loop mutex. The emulator thread will hold a lock on this mutex for the duration of its run loop, including while the thread is suspended. The UI thread should only acquire this mutex when absolutely necessary, as there will be a severe UI responsiveness penalty acquiring it.
   std::recursive_mutex programMutex;
