@@ -43,15 +43,16 @@ struct Random {
     }
   }
 
-  auto array(array_span<n8> buffer) -> void {
+  auto array(array_span<u8> buffer) -> void {
     if(_entropy == Entropy::None) {
       memory::fill(buffer.data(), buffer.size());
       return;
     }
 
     if(_entropy == Entropy::High) {
-      for(n32 address : range(buffer.size())) {
-        buffer[address] = random();
+      while(buffer.size()) {
+        u64 value = random();
+        buffer.writel(value, min(sizeof(value), buffer.size()));
       }
       return;
     }

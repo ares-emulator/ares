@@ -30,6 +30,7 @@ private:
   auto serialize(serializer&, bool synchronize) -> void;
 };
 
+extern Random random;
 extern System system;
 
 auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }
