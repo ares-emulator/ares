@@ -149,7 +149,6 @@ auto Cartridge::RTC::readRegister() -> void {
   case 1:
     //STATUS
     outBuffer = status();
-    status().bit(7) = 0;
     break;
   case 2: {
     //DATETIME
@@ -190,10 +189,11 @@ auto Cartridge::RTC::writeRegister() -> void {
   switch(regSelect) {
   case 1:
     //STATUS
-    status().bit(1) = inBuffer.bit(1);
-    status().bit(3) = inBuffer.bit(3);
-    status().bit(5) = inBuffer.bit(5);
-    status().bit(6) = inBuffer.bit(6);
+    status().bit(1)  = inBuffer.bit(1);
+    status().bit(3)  = inBuffer.bit(3);
+    status().bit(5)  = inBuffer.bit(5);
+    status().bit(6)  = inBuffer.bit(6);
+    status().bit(7) &= inBuffer.bit(7);
     break;
   case 2: {
     //DATETIME
