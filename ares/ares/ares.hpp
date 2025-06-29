@@ -66,7 +66,7 @@ namespace ares {
     }
   }
 
-  extern bool _runAhead;
+  extern atomic<bool> _runAhead;
   inline auto runAhead() -> bool { return _runAhead; }
   inline auto setRunAhead(bool runAhead) -> void { _runAhead = runAhead; }
 }
