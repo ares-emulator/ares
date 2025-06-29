@@ -159,8 +159,15 @@ auto S3511A::writeCommand() -> void {
   //process any registers that have an effect on write without a payload
   if(rwSelect == 1) return;
   switch(regSelect) {
-  case 0: initRegs(true); break;
-  case 6: raiseIRQ(); break;
+  case 0:
+    //RESET
+    initRegs(true);
+    break;
+  case 6:
+    //TESTSTART
+    //todo: implement test mode
+    raiseIRQ();
+    break;
   default: break;
   }
 }
