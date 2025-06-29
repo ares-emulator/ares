@@ -3,6 +3,8 @@ auto Cartridge::serialize(serializer& s) -> void {
   if(has.sram) s(sram);
   if(has.eeprom) s(eeprom);
   if(has.flash) s(flash);
+  if(has.rtc) s(gpio);
+  if(has.rtc) s(rtc);
 }
 
 auto Cartridge::MROM::serialize(serializer& s) -> void {
@@ -50,17 +52,6 @@ auto Cartridge::GPIO::serialize(serializer& s) -> void {
 }
 
 auto Cartridge::RTC::serialize(serializer& s) -> void {
-  s(array_span<u8>{data, size});
-
-  s(cs);
-  s(sio);
-  s(sck);
-  s(inBuffer);
-  s(outBuffer);
-  s(shift);
-  s(index);
-  s(rwSelect);
-  s(regSelect);
-  s(cmdLatched);
-  s(counter);
+  S3511A::serialize(s);
+  Thread::serialize(s);
 }

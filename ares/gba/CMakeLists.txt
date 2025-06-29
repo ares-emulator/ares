@@ -1,4 +1,7 @@
-ares_components(arm7tdmi)
+ares_components(
+  arm7tdmi
+  s3511a
+)
 
 ares_add_sources(
   CORE #

@@ -16,14 +16,12 @@ Cartridge::Cartridge() {
   sram.data = new n8[sram.size = 32 * 1024];
   eeprom.data = new n8[eeprom.size = 8 * 1024];
   flash.data = new n8[flash.size = 128 * 1024];
-  rtc.data = new n8[rtc.size];
 }
 
 Cartridge::~Cartridge() {
   delete[] sram.data;
   delete[] eeprom.data;
   delete[] flash.data;
-  delete[] rtc.data;
 }
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
