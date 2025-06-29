@@ -46,6 +46,6 @@ auto CPU::InstructionCache::enable(bool enable) -> void {
 auto CPU::InstructionCache::power(bool reset) -> void {
   for(auto& line : lines) {
     line.tag = 1;  //mark tag as invalid
-    for(auto& word : line.words) word = 0;  //should be random
+    for(auto& word : line.words) word = random();
   }
 }

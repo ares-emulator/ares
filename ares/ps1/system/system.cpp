@@ -21,6 +21,7 @@ auto option(string name, string value) -> bool {
   return true;
 }
 
+Random random;
 System system;
 #include "serialization.cpp"
 
@@ -122,6 +123,9 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
+
+  random.entropy(Random::Entropy::High);
+
   bios.setWaitStates(8, 16, 31);
   memory.power(reset);
   cpu.power(reset);
