@@ -53,8 +53,7 @@ auto Cartridge::RTC::serialize(serializer& s) -> void {
   s(array_span<u8>{data, size});
 
   s(cs);
-  s(sioIn);
-  s(sioOut);
+  s(sio);
   s(sck);
   s(inBuffer);
   s(outBuffer);

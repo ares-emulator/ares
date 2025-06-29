@@ -75,7 +75,7 @@ auto Cartridge::RTC::checkAlarm() -> void {
 }
 
 auto Cartridge::RTC::readSIO() -> n1 {
-  return sioOut | ~rwSelect | ~cs;
+  return sio | ~rwSelect | ~cs;
 }
 
 auto Cartridge::RTC::writeCS(n1 data) -> void {
@@ -93,7 +93,7 @@ auto Cartridge::RTC::writeCS(n1 data) -> void {
 }
 
 auto Cartridge::RTC::writeSIO(n1 data) -> void {
-  sioIn = data;
+  sio = data;
 }
 
 auto Cartridge::RTC::writeSCK(n1 data) -> void {
@@ -107,13 +107,13 @@ auto Cartridge::RTC::writeSCK(n1 data) -> void {
   if(sckPrev == 1 && sck == 0) {
     if(!cmdLatched && shift == 0) writeCommand();
     if(cmdLatched && rwSelect == 1 && shift == 0) readRegister();
-    sioOut = outBuffer.bit(shift);
+    sio = outBuffer.bit(shift);
   }
 
   //sample RTC command data on rising edge of SCK
   if(sckPrev == 0 && sck == 1) {
     //add bit into input buffer
-    inBuffer.bit(shift) = sioIn;
+    inBuffer.bit(shift) = sio;
     shift++;
     if(cmdLatched && rwSelect == 0 && shift == 0) writeRegister();
   }
@@ -246,8 +246,7 @@ auto Cartridge::RTC::power() -> void {
   Thread::create(32'768, {&Cartridge::RTC::main, this});
 
   cs = 0;
-  sioIn = 0;
-  sioOut = 0;
+  sio = 0;
   sck = 0;
   inBuffer = 0;
   outBuffer = 0;
