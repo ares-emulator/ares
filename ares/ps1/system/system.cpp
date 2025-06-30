@@ -18,6 +18,7 @@ auto load(Node::System& node, string name) -> bool {
 }
 
 auto option(string name, string value) -> bool {
+  if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
   return true;
 }
 
@@ -125,6 +126,9 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   random.entropy(Random::Entropy::High);
+  if(system.homebrewMode) {
+    random.seed(Random::Default);
+  }
 
   bios.setWaitStates(8, 16, 31);
   memory.power(reset);

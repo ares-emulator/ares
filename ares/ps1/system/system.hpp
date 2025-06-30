@@ -2,6 +2,7 @@ struct System {
   Node::System node;
   Node::Setting::Boolean fastBoot;
   VFS::Pak pak;
+  bool homebrewMode = false;
 
   enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
