@@ -27,6 +27,11 @@ struct Cartridge {
     }
 
     if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.read();
+    if(has.rtc) {
+      if((address & 0x1fffffe) == 0xc4) return gpio.readData();
+      if((address & 0x1fffffe) == 0xc6) return gpio.readDirection();
+      if((address & 0x1fffffe) == 0xc8) return gpio.readControl();
+    }
 
     n32 romAddr;
     if constexpr(!UseDebugger) romAddr = mrom.burstAddr(mode, address);
@@ -54,6 +59,12 @@ struct Cartridge {
 
     if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.write(word & 1);
 
+    if(has.rtc) {
+      if((address & 0x1fffffe) == 0xc4) return gpio.writeData(word);
+      if((address & 0x1fffffe) == 0xc6) return gpio.writeDirection(word);
+      if((address & 0x1fffffe) == 0xc8) return gpio.writeControl(word);
+    }
+
     n32 romAddr = mrom.burstAddr(mode, address);
     mrom.write(mode, romAddr, word);
     mrom.pageAddr++;
@@ -78,6 +89,7 @@ private:
     n1 sram;
     n1 eeprom;
     n1 flash;
+    n1 rtc;
   } has;
 };
 

@@ -434,6 +434,16 @@ component_sources(
 
 component_sources(
   COMPONENT
+    s3511a
+  PRIMARY
+    rtc/s3511a/s3511a.cpp
+  INCLUDED
+    rtc/s3511a/s3511a.hpp
+    rtc/s3511a/serialization.cpp
+)
+
+component_sources(
+  COMPONENT
     sst39sf0x0
   PRIMARY
     flash/sst39sf0x0/sst39sf0x0.cpp

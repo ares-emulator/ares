@@ -39,6 +39,9 @@ auto GameBoyAdvance::load(string location) -> LoadResult {
       fp->setAttribute("manufacturer", node["manufacturer"].string());
     }
   }
+  if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
+    Medium::load(node, ".rtc");
+  }
 
   bool mirror = false;
   if(auto node = document["game/board/memory(type=ROM,mirror=true)"]) {
@@ -61,20 +64,14 @@ auto GameBoyAdvance::save(string location) -> bool {
   if(auto node = document["game/board/memory(type=Flash,content=Save)"]) {
     Medium::save(node, ".flash");
   }
+  if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
+    Medium::save(node, ".rtc");
+  }
 
   return true;
 }
 
 auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
-  vector<string> identifiers = {
-    "SRAM_V",
-    "SRAM_F_V",
-    "EEPROM_V",
-    "FLASH_V",
-    "FLASH512_V",
-    "FLASH1M_V",
-  };
-
   vector<string> mirrorCodes = {
     "FBME",  //Classic NES Series - Bomberman (USA, Europe)
     "FADE",  //Classic NES Series - Castlevania (USA)
@@ -126,6 +123,15 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
     }
   }
 
+  vector<string> identifiers = {
+    "SRAM_V",
+    "SRAM_F_V",
+    "EEPROM_V",
+    "FLASH_V",
+    "FLASH512_V",
+    "FLASH1M_V",
+  };
+
   vector<string> saveTypes;
   if(gameCode == "A2YE") { saveTypes.append("NONE"      ); };  //Top Gun - Combat Zones (USA)
   if(gameCode == "ALUE") { saveTypes.append("EEPROM_V"  ); };  //Super Monkey Ball Jr. (USA)
@@ -138,6 +144,14 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
       if(!memory::compare(&rom[n], identifier.data(), identifier.size())) {
         if(!saveTypes.find(identifier.data())) saveTypes.append(identifier.data());
       }
+    }
+  }
+
+  bool hasRTC = false;
+  string detectRTC = "SIIRTC_V";
+  for(s32 n : range(rom.size() - 16)) {
+    if(!memory::compare(&rom[n], detectRTC.data(), detectRTC.size())) {
+      hasRTC = true;
     }
   }
 
@@ -184,6 +198,13 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
       s += "      content: Save\n";
       s += "      manufacturer: Macronix\n";
     }
+  }
+
+  if(hasRTC) {
+    s += "    memory\n";
+    s += "      type: RTC\n";
+    s += "      size: 0x12\n";
+    s += "      content: Time\n";
   }
 
   return s;
