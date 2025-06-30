@@ -23,8 +23,10 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #define IpuReg(r)      sreg(1), offsetof(IPU, r) - IpuBase
 #define PipelineReg(x) mem(sreg(0), offsetof(CPU, pipeline) + offsetof(Pipeline, x))
 
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#endif
 auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
@@ -96,7 +98,9 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;
 }
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
 #pragma GCC diagnostic pop
+#endif
 
 #define Sa  (instruction >>  6 & 31)
 #define Rdn (instruction >> 11 & 31)
