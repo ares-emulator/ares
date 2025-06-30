@@ -12,7 +12,7 @@ struct S3511A {
   static constexpr u32 size = 18;
   n8 data[size];
 
-  virtual auto raiseIRQ() -> void = 0;
+  virtual auto irqLevel(bool value) -> void = 0;
 
   //s3511a.cpp
   auto load() -> void;

@@ -54,4 +54,5 @@ auto Cartridge::GPIO::serialize(serializer& s) -> void {
 auto Cartridge::RTC::serialize(serializer& s) -> void {
   S3511A::serialize(s);
   Thread::serialize(s);
+  s(irq);
 }
