@@ -4,6 +4,9 @@ namespace ares {
 
 struct Random {
   enum class Entropy : u32 { None, Low, High };
+  struct Init { u64 seed, sequence; };
+
+  static constexpr Init Default { 0x853c49e6748fea9b, 0xda3e39cb94b95bdb };
 
   auto operator()() -> n64 {
     return random();
@@ -14,8 +17,8 @@ struct Random {
     seed();
   }
 
-  auto seed(maybe<n32> seed = nothing, maybe<n32> sequence = nothing) -> void {
-    if(!seed) seed = (n32)clock();
+  auto seed(maybe<n64> seed = nothing, maybe<n64> sequence = nothing) -> void {
+    if(!seed) seed = (n64)clock();
     if(!sequence) sequence = 0;
 
     _state = 0;
@@ -23,6 +26,10 @@ struct Random {
     step();
     _state += seed();
     step();
+  }
+
+  auto seed(Init init) -> void {
+    seed((n64)init.seed, (n64)init.sequence);
   }
 
   auto random() -> n64 {
