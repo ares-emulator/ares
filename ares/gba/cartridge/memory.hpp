@@ -98,11 +98,13 @@ struct GPIO {
 
 struct RTC : S3511A, Thread {
   //rtc.cpp
-  auto raiseIRQ() -> void override;
+  auto irqLevel(bool value) -> void override;
   auto power() -> void;
   auto main() -> void;
   auto step(u32 clocks) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  bool irq;
 } rtc;

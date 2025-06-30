@@ -62,11 +62,11 @@ auto S3511A::tickSecond() -> void {
   minute() = 0;
 
   if(status() & 0x40) {
-    // 24-hour clock
+    //24-hour clock
     if((bcdIncrement(hour()) & 0x7F) < 0x24) return;
     hour().bit(0,5) = 0;
   } else {
-    // 12-hour clock
+    //12-hour clock
     if((bcdIncrement(hour()) & 0x7F) < 0x12) return;
     hour().bit(0,5) = 0;
     hour().bit(7) ^= 1;
@@ -88,10 +88,27 @@ auto S3511A::tickSecond() -> void {
 }
 
 auto S3511A::checkAlarm() -> void {
-  //todo: currently only per-minute IRQ is implemented
+  //todo: a lot of this is vaguely informed guesswork.
   if(status() & 0x08) {
-    //per-minute IRQ
-    if(second() == 0x30 && counter == 0) raiseIRQ();
+    //per-minute edge/steady
+    if(counter < 256) irqLevel(1);
+    if(status() & 0x02 && second() == 0x30 && counter == 0) irqLevel(0);
+  } else if(status() & 0x02) {
+    //selected frequency steady
+    n16 duty = (counter << 1) ^ 0xFFFF;
+    n16 mask = (alarmHour() | (alarmMinute() << 8));
+    irqLevel((duty & mask) != 0);
+  } else if(status() & 0x20) {
+    //alarm
+    if(status() & 0x40) {
+      //24-hour clock
+      irqLevel((hour() & 0x3F) == (alarmHour() & 0x3F) && (minute() & 0x7F) == (alarmMinute() & 0x7F));
+    } else {
+      //12-hour clock
+      irqLevel((hour() & 0xBF) == (alarmHour() & 0xBF) && (minute() & 0x7F) == (alarmMinute() & 0x7F));
+    }
+  } else {
+    irqLevel(0);
   }
 }
 
@@ -163,12 +180,8 @@ auto S3511A::writeCommand() -> void {
     //RESET
     initRegs(true);
     break;
-  case 6:
-    //TESTSTART
-    //todo: implement test mode
-    raiseIRQ();
+  default:
     break;
-  default: break;
   }
 }
 

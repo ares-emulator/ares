@@ -1,5 +1,8 @@
-auto Cartridge::RTC::raiseIRQ() -> void {
-  cpu.setInterruptFlag(CPU::Interrupt::Cartridge);
+auto Cartridge::RTC::irqLevel(bool value) -> void {
+  //trigger IRQ on rising edge
+  bool irqPrev = irq;
+  irq = value;
+  if(!irqPrev && irq) cpu.setInterruptFlag(CPU::Interrupt::Cartridge);
 }
 
 auto Cartridge::RTC::power() -> void {
