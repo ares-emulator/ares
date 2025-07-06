@@ -83,6 +83,8 @@ class Server : public nall::TCPText::Server {
 
     } hooks{};
 
+    function<void()> onClientConnectCallback{};
+
     // Exception
     auto reportSignal(Signal sig, u64 originPC) -> bool;
 
