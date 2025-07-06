@@ -32,36 +32,42 @@ auto VideoSettings::construct() -> void {
 
   emulatorSettingsLabel.setText("Emulator Settings").setFont(Font().setBold());
   colorBleedOption.setText("Color Bleed").setChecked(settings.video.colorBleed).onToggle([&] {
+    Program::Guard guard;
     settings.video.colorBleed = colorBleedOption.checked();
     if(emulator) emulator->setColorBleed(settings.video.colorBleed);
   });
   colorBleedLayout.setAlignment(1).setPadding(12_sx, 0);
   colorBleedHint.setText("Blurs adjacent pixels for translucency effects").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   colorEmulationOption.setText("Color Emulation").setChecked(settings.video.colorEmulation).onToggle([&] {
+    Program::Guard guard;
     settings.video.colorEmulation = colorEmulationOption.checked();
     if(emulator) emulator->setBoolean("Color Emulation", settings.video.colorEmulation);
   });
   colorEmulationLayout.setAlignment(1).setPadding(12_sx, 0);
   colorEmulationHint.setText("Matches colors to how they look on real hardware").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   deepBlackBoostOption.setText("Deep Black Boost").setChecked(settings.video.deepBlackBoost).onToggle([&] {
+    Program::Guard guard;
     settings.video.deepBlackBoost = deepBlackBoostOption.checked();
     if(emulator) emulator->setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
   });
   deepBlackBoostLayout.setAlignment(1).setPadding(12_sx, 0);
   deepBlackBoostHint.setText("Applies a gamma ramp to crush black levels (SNES/SFC)").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   interframeBlendingOption.setText("Interframe Blending").setChecked(settings.video.interframeBlending).onToggle([&] {
+    Program::Guard guard;
     settings.video.interframeBlending = interframeBlendingOption.checked();
     if(emulator) emulator->setBoolean("Interframe Blending", settings.video.interframeBlending);
   });
   interframeBlendingLayout.setAlignment(1).setPadding(12_sx, 0);
   interframeBlendingHint.setText("Emulates LCD translucency effects, but increases motion blur").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   overscanOption.setText("Overscan").setChecked(settings.video.overscan).onToggle([&] {
+    Program::Guard guard;
     settings.video.overscan = overscanOption.checked();
     if(emulator) emulator->setOverscan(settings.video.overscan);
   });
   overscanLayout.setAlignment(1).setPadding(12_sx, 0);
   overscanHint.setText("Displays the full frame without cropping 'undesirable' borders").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   pixelAccuracyOption.setText("Pixel Accuracy Mode").setChecked(settings.video.pixelAccuracy).onToggle([&] {
+    Program::Guard guard;
     settings.video.pixelAccuracy = pixelAccuracyOption.checked();
     if(emulator) emulator->setBoolean("Pixel Accuracy", settings.video.pixelAccuracy);
   });
@@ -73,6 +79,7 @@ auto VideoSettings::construct() -> void {
   renderQualityLayout.setPadding(12_sx, 0);
 
   disableVideoInterfaceProcessingOption.setText("Disable Video Interface Processing").setChecked(settings.video.disableVideoInterfaceProcessing).onToggle([&] {
+    Program::Guard guard;
     settings.video.disableVideoInterfaceProcessing = disableVideoInterfaceProcessingOption.checked();
     if(emulator) emulator->setBoolean("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
   });
@@ -81,6 +88,7 @@ auto VideoSettings::construct() -> void {
 
   weaveDeinterlacingOption.setText("Weave Deinterlacing").setChecked(settings.video.weaveDeinterlacing).onToggle([&] {
     settings.video.weaveDeinterlacing = weaveDeinterlacingOption.checked();
+    Program::Guard guard;
     if(emulator) emulator->setBoolean("(Experimental) Double the perceived vertical resolution; disabled when supersampling is used", settings.video.weaveDeinterlacing);
     if(weaveDeinterlacingOption.checked() == true) {
       renderSupersamplingOption.setChecked(false).setEnabled(false);
