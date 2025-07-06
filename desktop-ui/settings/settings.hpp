@@ -60,7 +60,7 @@ struct Settings : Markup::Node {
   struct Boot {
     bool fast = false;
     bool debugger = false;
-    bool waitGDB = false;
+    bool awaitGDBClient = false;
     string prefer = "NTSC-U";
   } boot;
 
