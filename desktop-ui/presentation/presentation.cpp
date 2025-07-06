@@ -81,11 +81,11 @@ Presentation::Presentation() {
     settings.boot.fast = fastBoot.checked();
   });
   bootOptionsRegionMenu.setText("Region Preference").setIcon(Icon::Application::Browser);
-  launchDebugger.setText("Launch Debugger").setChecked(settings.boot.debugger).onToggle([&] {
+  launchDebugger.setText("Launch Tracer").setChecked(settings.boot.debugger).onToggle([&] {
     settings.boot.debugger = launchDebugger.checked();
   });
-  waitGDB.setText("Wait GDB").setChecked(settings.boot.waitGDB).onToggle([&] {
-    settings.boot.waitGDB = waitGDB.checked();
+  awaitGDBClient.setText("Await GDB Client").setChecked(settings.boot.awaitGDBClient).onToggle([&] {
+    settings.boot.awaitGDBClient = awaitGDBClient.checked();
   });
 
   regionUJE.setText("NTSC-U -> NTSC-J -> PAL").onActivate([&] { settings.boot.prefer = "NTSC-U,NTSC-J,PAL"; });
