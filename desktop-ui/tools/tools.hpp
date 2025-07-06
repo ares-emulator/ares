@@ -12,15 +12,13 @@ struct ManifestViewer : VerticalLayout {
 };
 
 struct CheatEditor : VerticalLayout {
-  auto construct(std::recursive_mutex *programMutex) -> void;
+  auto construct() -> void;
   auto reload() -> void;
   auto unload() -> void;
   auto refresh() -> void;
   auto setVisible(bool visible = true) -> CheatEditor&;
 
   auto find(u32 address) -> maybe<u32>;
-  
-  std::recursive_mutex *programMutex;
 
   Label cheatsLabel{this, Size{~0, 0}, 5};
   HorizontalLayout editLayout{this, Size{~0, 0}};
@@ -49,7 +47,7 @@ struct CheatEditor : VerticalLayout {
 };
 
 struct MemoryEditor : VerticalLayout {
-  auto construct(std::recursive_mutex *programMutex) -> void;
+  auto construct() -> void;
   auto reload() -> void;
   auto unload() -> void;
   auto refresh() -> void;
@@ -57,8 +55,6 @@ struct MemoryEditor : VerticalLayout {
   auto eventChange() -> void;
   auto eventExport() -> void;
   auto setVisible(bool visible = true) -> MemoryEditor&;
-  
-  std::recursive_mutex *programMutex;
 
   Label memoryLabel{this, Size{~0, 0}, 5};
   ComboButton memoryList{this, Size{~0, 0}};
@@ -73,7 +69,7 @@ struct MemoryEditor : VerticalLayout {
 };
 
 struct GraphicsViewer : VerticalLayout {
-  auto construct(std::recursive_mutex *programMutex) -> void;
+  auto construct() -> void;
   auto reload() -> void;
   auto unload() -> void;
   auto refresh() -> void;
@@ -81,8 +77,6 @@ struct GraphicsViewer : VerticalLayout {
   auto eventChange() -> void;
   auto eventExport() -> void;
   auto setVisible(bool visible = true) -> GraphicsViewer&;
-  
-  std::recursive_mutex *programMutex;
 
   Label graphicsLabel{this, Size{~0, 0}, 5};
   ComboButton graphicsList{this, Size{~0, 0}};
@@ -134,7 +128,7 @@ struct TraceLogger : VerticalLayout {
 };
 
 struct ToolsWindow : Window {
-  ToolsWindow(std::recursive_mutex *programMutex);
+  ToolsWindow();
   auto show(const string& panel) -> void;
   auto eventChange() -> void;
 

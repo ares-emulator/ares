@@ -1,5 +1,5 @@
 auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(auto system = mia::identify(filename)) {
     for(auto& emulator : emulators) {
       if(emulator->name == system) return emulator;
@@ -16,7 +16,7 @@ auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
 
 /// Loads an emulator and, optionally, a ROM from the given location.
 auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   unload();
 
   ::emulator = emulator;
@@ -36,7 +36,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
 
 /// Loads a ROM for an already-loaded emulator.
 auto Program::load(string location) -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(settings.debugServer.enabled) {
     nall::GDB::server.reset();
   }
@@ -100,7 +100,7 @@ auto Program::load(string location) -> bool {
 }
 
 auto Program::unload() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return;
 
   nall::GDB::server.close();

@@ -160,7 +160,7 @@ auto InputSettings::eventAssign(TableViewCell cell, string binding) -> void {
 }
 
 auto InputSettings::eventAssign(TableViewCell cell) -> void {
-  lock_guard<recursive_mutex> programLock(program.programMutex);
+  Program::Guard guard;
   inputManager.poll(true);  //clear any pending events first
 
   if(ruby::input.driver() == "None") return (void)MessageDialog().setText(
