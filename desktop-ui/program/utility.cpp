@@ -1,5 +1,5 @@
 auto Program::pause(bool state) -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(paused == state) return;
   paused = state;
   presentation.pauseEmulation.setChecked(paused);
@@ -11,13 +11,13 @@ auto Program::pause(bool state) -> void {
 }
 
 auto Program::mute() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   settings.audio.mute = !settings.audio.mute;
   presentation.muteAudioSetting.setChecked(settings.audio.mute);
 }
 
 auto Program::paletteUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return;
   for(auto& screen : emulator->root->find<ares::Node::Video::Screen>()) {
     screen->setLuminance(settings.video.luminance);
@@ -27,7 +27,7 @@ auto Program::paletteUpdate() -> void {
 }
 
 auto Program::runAheadUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   runAhead = settings.general.runAhead;
   if(!emulator) return;
   if(emulator->name == "Game Boy Advance") runAhead = false;  //crashes immediately
@@ -46,7 +46,7 @@ auto Program::captureScreenshot(const u32* data, u32 pitch, u32 width, u32 heigh
 }
 
 auto Program::openFile(BrowserDialog& dialog) -> string {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   BrowserWindow window;
   window.setTitle(dialog.title());
   window.setPath(dialog.path());
@@ -58,7 +58,7 @@ auto Program::openFile(BrowserDialog& dialog) -> string {
 }
 
 auto Program::selectFolder(BrowserDialog& dialog) -> string {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   BrowserWindow window;
   window.setTitle(dialog.title());
   window.setPath(dialog.path());

@@ -1,5 +1,5 @@
 auto Program::stateSave(u32 slot) -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return false;
 
   auto location = emulator->locate(emulator->game->location, {".bs", slot}, settings.paths.saves);
@@ -20,7 +20,7 @@ auto Program::stateSave(u32 slot) -> bool {
 }
 
 auto Program::stateLoad(u32 slot) -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return false;
 
   //Store current state for undo
@@ -43,7 +43,7 @@ auto Program::stateLoad(u32 slot) -> bool {
 }
 
 auto Program::undoStateSave() -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return false;
 
   auto undoLocation = emulator->locate(emulator->game->location, ".bsu", settings.paths.saves);
@@ -58,7 +58,7 @@ auto Program::undoStateSave() -> bool {
 }
 
 auto Program::undoStateLoad() -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return false;
 
   auto undoLocation = emulator->locate(emulator->game->location, ".blu", settings.paths.saves);
@@ -79,7 +79,7 @@ auto Program::undoStateLoad() -> bool {
 }
 
 auto Program::clearUndoStates() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return;
 
   auto location = emulator->locate(emulator->game->location, ".blu", settings.paths.saves);
