@@ -20,11 +20,12 @@ auto pApplication::modal() -> bool {
 auto pApplication::run() -> void {
   while(!Application::state().quit) {
     if(Application::state().onMain) {
-      //doMain() is responsible for sleeping the thread where practical
       Application::doMain();
+      // Sleep for 8ms between main run loops
+      usleep(8 * 1000);
       if(Application::state().quit) break;
     } else {
-      //avoid consuming 100% CPU thread usage
+      // If there is no main run loop, sleep for longer
       usleep(20 * 1000);
     }
     //called after doMain(), in case doMain() calls Application::quit()
