@@ -27,10 +27,11 @@ auto pApplication::modal() -> bool {
 auto pApplication::run() -> void {
   while(!Application::state().quit) {
     Application::doMain();
+    // Sleep for 8ms between main run loops
+    usleep(8 * 1000);
     processEvents();
-    //avoid spinlooping the thread when there is no main loop ...
-    //when there is one, Application::onMain() is expected to sleep when possible instead
-    if(!Application::state().onMain) usleep(2000);
+    // If there is no main run loop, sleep for longer
+    if(!Application::state().onMain) usleep(20 * 1000);
   }
 }
 
