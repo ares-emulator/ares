@@ -84,6 +84,9 @@ Presentation::Presentation() {
   launchDebugger.setText("Launch Debugger").setChecked(settings.boot.debugger).onToggle([&] {
     settings.boot.debugger = launchDebugger.checked();
   });
+  waitGDB.setText("Wait GDB").setChecked(settings.boot.waitGDB).onToggle([&] {
+    settings.boot.waitGDB = waitGDB.checked();
+  });
 
   regionUJE.setText("NTSC-U -> NTSC-J -> PAL").onActivate([&] { settings.boot.prefer = "NTSC-U,NTSC-J,PAL"; });
   regionUEJ.setText("NTSC-U -> PAL -> NTSC-J").onActivate([&] { settings.boot.prefer = "NTSC-U,PAL,NTSC-J"; });

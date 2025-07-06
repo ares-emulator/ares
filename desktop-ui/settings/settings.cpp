@@ -99,6 +99,7 @@ auto Settings::process(bool load) -> void {
 
   bind(boolean, "Boot/Fast", boot.fast);
   bind(boolean, "Boot/Debugger", boot.debugger);
+  bind(boolean, "Boot/WaitGDB", boot.waitGDB);
   bind(string,  "Boot/Prefer", boot.prefer);
 
   bind(boolean, "General/ShowStatusBar", general.showStatusBar);
