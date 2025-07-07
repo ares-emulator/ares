@@ -146,7 +146,7 @@ auto Nintendo64::load() -> LoadResult {
           port->connect();
 
           if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
-            gb = mia::Medium::create("Game Boy");
+            gb = mia::Medium::create("Game Boy Color");
             string tmpPath;
             if(gb->load(Emulator::load(gb, tmpPath)) == successful) {
               slot->allocate();
@@ -291,7 +291,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
           port->connect();
 
           if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
-            emulator->gb = mia::Medium::create("Game Boy");
+            emulator->gb = mia::Medium::create("Game Boy Color");
             string tmpPath;
             if(emulator->gb->load(emulator->load(emulator->gb, tmpPath)) == successful) {
               slot->allocate();
