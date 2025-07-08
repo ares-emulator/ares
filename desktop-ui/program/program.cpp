@@ -20,10 +20,12 @@ auto Program::create() -> void {
   driverSettings.videoRefresh();
   driverSettings.audioRefresh();
   driverSettings.inputRefresh();
-  
+
+  _isRunning = true;
   worker = thread::create({&Program::emulatorRunLoop, this});
 
   if(startGameLoad) {
+    Program::Guard guard;
     auto gameToLoad = startGameLoad.takeFirst();
     if(startSystem) {
       for(auto &emulator: emulators) {
@@ -53,7 +55,6 @@ auto Program::waitForInterrupts() -> void {
 
 auto Program::emulatorRunLoop(uintptr_t) -> void {
   thread::setName("dev.ares.worker");
-  _isRunning = true;
   _programThread = true;
   while(!_quitting) {
     // Allow other threads to carry out tasks between emulator run loop iterations
