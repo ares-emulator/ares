@@ -18,7 +18,10 @@ auto M32X::SH7604::main() -> void {
     updateLoopCounter--;
     
     if (!GDB::server.reportDelayedPC(regs.PC)) {
-      GDB::server.updateLoop();
+      if (!updateLoopCounter) {
+        GDB::server.updateLoop();
+        updateLoopCounter = 23000000 / 60 / 240;
+      }
       return;
     } else if (!updateLoopCounter) {
       GDB::server.updateLoop();
