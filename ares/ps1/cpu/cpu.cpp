@@ -143,8 +143,8 @@ auto CPU::instructionHook() -> void {
 
 auto CPU::power(bool reset) -> void {
   Thread::reset();
-  ram.fill();
-  scratchpad.fill();
+  random.array({ram.data, ram.size});
+  random.array({scratchpad.data, scratchpad.size});
 
   pipeline = {};
   delay = {};
