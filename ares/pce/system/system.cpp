@@ -18,7 +18,7 @@ auto load(Node::System& node, string name) -> bool {
 }
 
 auto option(string name, string value) -> bool {
-  if(name == "Pixel Accuracy") vdp.setAccurate(value.boolean());
+  if(name == "Pixel Accuracy") vdp.setAccurate(true); // Forced: scanline renderer is too buggy
   return true;
 }
 
