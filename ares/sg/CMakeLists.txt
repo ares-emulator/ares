@@ -62,9 +62,9 @@ ares_add_sources(
 )
 
 ares_add_sources(
-   CORE #
+  CORE #
     sg
-   INCLUDED #
+  INCLUDED #
     keyboard/keyboard.hpp
 )
 
