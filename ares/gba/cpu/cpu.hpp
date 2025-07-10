@@ -54,6 +54,8 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   //prefetch.cpp
   auto prefetchSync(n32 address) -> void;
+  auto prefetchAdvance(u32 mode) -> void;
+  auto prefetchStepInternal(u32 clocks) -> void;
   auto prefetchStep(u32 clocks) -> void;
   auto prefetchReset() -> void;
   auto prefetchRead() -> n16;
@@ -255,6 +257,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     i32 wait = 1;  //wait states for current load
     i32 cycle;     //number of clocks elapsed on current load
     n1  stopped = 1;
+    n1  ahead;
   } prefetch;
 
   struct Coprocessor {
