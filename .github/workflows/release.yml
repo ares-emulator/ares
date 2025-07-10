@@ -73,6 +73,7 @@ jobs:
         name: ares ${{ steps.check.outputs.versionName }}
         body: ${{ steps.check.outputs.description }}
         files: |
+          ${{ github.workspace }}/ares-source.tar.gz
           ${{ github.workspace }}/ares-macos-universal.zip
           ${{ github.workspace }}/ares-macos-universal-dSYMs.zip
           ${{ github.workspace }}/ares-windows-x64.zip

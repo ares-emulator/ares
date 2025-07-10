@@ -42,3 +42,8 @@ do
   zip -r ../ares-${package}.zip ${outdir}
   cd -
 done
+
+# Package the source archive
+pushd src
+git archive --format=tar.gz -o ../ares-source.tar.gz HEAD
+popd
