@@ -1,4 +1,5 @@
 struct DualShock : PeripheralDevice {
+  Node::Input::Axis axis;
   Node::Input::Axis lx;
   Node::Input::Axis ly;
   Node::Input::Axis rx;
