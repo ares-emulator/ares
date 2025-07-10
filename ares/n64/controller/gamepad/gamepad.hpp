@@ -5,6 +5,7 @@ struct Gamepad : Controller {
   u8 bank;
   Memory::Writable ram;  //Toshiba TC55257DFL-85V
   Node::Input::Rumble motor;
+  Node::Input::Axis axis;
 
   Node::Input::Axis x;
   Node::Input::Axis y;

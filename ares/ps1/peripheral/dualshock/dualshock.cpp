@@ -5,6 +5,8 @@
 DualShock::DualShock(Node::Port parent) {
   node = parent->append<Node::Peripheral>("DualShock");
 
+  axis = node->append<Node::Input::Axis>("Axis");
+
   lx       = node->append<Node::Input::Axis  >("L-Stick X");
   ly       = node->append<Node::Input::Axis  >("L-Stick Y");
   rx       = node->append<Node::Input::Axis  >("R-Stick X");
@@ -213,15 +215,76 @@ auto DualShock::readPad() -> vector<u8> {
 
   if(!analogMode && !configMode) return result;
 
+  auto cardinalMax = 127.5;
+  auto diagonalMax = 127.5;
+  auto innerDeadzone = 6.0; //missing information on deadzone for DualShock potentiometers; use arbitrary number roughly 4.7% of cardinalMax instead (common software default in gaming industry seems to be 5.0%) 
+  auto saturationRadius = (innerDeadzone + diagonalMax + sqrt(pow(innerDeadzone + diagonalMax, 2.0) - 2.0 * sqrt(2.0) * diagonalMax * innerDeadzone)) / sqrt(2.0); //from linear response curve function within axis->processDeadzoneAndResponseCurve, substitute saturationRadius * sqrt(2) / 2 for right-hand lengthAbsolute and set diagonalMax as the result then solve for saturationRadius
+  auto offset = -0.5;
+
   platform->input(rx);
   platform->input(ry);
-  result.append((rx->value() + 32768) * 255 / 65535);
-  result.append((ry->value() + 32768) * 255 / 65535);
+
+  //scale {-32767 ... +32767} to {-saturationRadius + offset ... +saturationRadius + offset}
+  auto arx = axis->setOperatingRange(rx->value(), saturationRadius, offset);
+  auto ary = axis->setOperatingRange(ry->value(), saturationRadius, offset);
+
+  //create inner axial dead-zone in range {-innerDeadzone ... +innerDeadzone} and scale from it up to saturationRadius
+  arx = axis->processDeadzoneAndResponseCurve(arx, innerDeadzone, saturationRadius, offset);
+  ary = axis->processDeadzoneAndResponseCurve(ary, innerDeadzone, saturationRadius, offset);
+
+  auto scaledLengthRightStick = hypot(arx - offset, ary - offset);
+  if(scaledLengthRightStick > saturationRadius) {
+    arx = axis->revisePosition(arx, scaledLengthRightStick, saturationRadius, offset);
+    ary = axis->revisePosition(ary, scaledLengthRightStick, saturationRadius, offset);
+  }
+
+  //let cardinalMax and diagonalMax define boundaries and restrict to a square gate
+  double arxBounded = 0.0;
+  double aryBounded = 0.0;
+  axis->applyGateBoundaries(innerDeadzone, cardinalMax, diagonalMax, arx, ary, offset, arxBounded, aryBounded);
+  arx = arxBounded;
+  ary = aryBounded;
+
+  //keep cardinal input within positive and negative bounds of cardinalMax
+  arx = axis->clampAxisToNearestBoundary(arx, offset, cardinalMax);
+  ary = axis->clampAxisToNearestBoundary(ary, offset, cardinalMax);
+
+  //add epsilon to counteract floating point precision error
+  arx = axis->counteractPrecisionError(arx);
+  ary = axis->counteractPrecisionError(ary);
+
+  result.append(u8(arx + 128.0));
+  result.append(u8(ary + 128.0));
 
   platform->input(lx);
   platform->input(ly);
-  result.append((lx->value() + 32768) * 255 / 65535);
-  result.append((ly->value() + 32768) * 255 / 65535);
+
+  auto alx = axis->setOperatingRange(lx->value(), saturationRadius, offset);
+  auto aly = axis->setOperatingRange(ly->value(), saturationRadius, offset);
+
+  alx = axis->processDeadzoneAndResponseCurve(alx, innerDeadzone, saturationRadius, offset);
+  aly = axis->processDeadzoneAndResponseCurve(aly, innerDeadzone, saturationRadius, offset);
+
+  auto scaledLengthLeftStick = hypot(alx - offset, aly - offset);
+  if(scaledLengthLeftStick > saturationRadius) {
+    alx = axis->revisePosition(alx, scaledLengthLeftStick, saturationRadius, offset);
+    aly = axis->revisePosition(aly, scaledLengthLeftStick, saturationRadius, offset);
+  }
+
+  double alxBounded = 0.0;
+  double alyBounded = 0.0;
+  axis->applyGateBoundaries(innerDeadzone, cardinalMax, diagonalMax, alx , aly, offset, alxBounded, alyBounded);
+  alx = alxBounded;
+  aly = alyBounded;
+
+  alx = axis->clampAxisToNearestBoundary(alx, offset, cardinalMax);
+  aly = axis->clampAxisToNearestBoundary(aly, offset, cardinalMax);
+
+  alx = axis->counteractPrecisionError(alx);
+  aly = axis->counteractPrecisionError(aly);
+
+  result.append(u8(alx + 128.0));
+  result.append(u8(aly + 128.0));
 
   return result;
 }

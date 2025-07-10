@@ -14,6 +14,8 @@ Gamepad::Gamepad(Node::Port parent) {
 
   bank = 0;
 
+  axis = node->append<Node::Input::Axis>("Axis");
+
   x           = node->append<Node::Input::Axis>  ("X-Axis");
   y           = node->append<Node::Input::Axis>  ("Y-Axis");
   up          = node->append<Node::Input::Button>("Up");
@@ -313,57 +315,37 @@ auto Gamepad::read() -> n32 {
   auto cardinalMax   = 85.0;
   auto diagonalMax   = 69.0;
   auto innerDeadzone =  7.0; // default should remain 7 (~8.2% of 85) as the deadzone is axial in nature and fights cardinalMax
-  auto outerDeadzoneRadiusMax = 2.0 / sqrt(2.0) * (diagonalMax / cardinalMax * (cardinalMax - innerDeadzone) + innerDeadzone); //from linear scaling equation, substitute outerDeadzoneRadiusMax*sqrt(2)/2 for lengthAbsoluteX and set diagonalMax as the result then solve for outerDeadzoneRadiusMax
+  auto saturationRadius = (innerDeadzone + diagonalMax + sqrt(pow(innerDeadzone + diagonalMax, 2.0) - 2.0 * sqrt(2.0) * diagonalMax * innerDeadzone)) / sqrt(2.0); //from linear response curve function within axis->processDeadzoneAndResponseCurve, substitute saturationRadius * sqrt(2) / 2 for right-hand lengthAbsolute and set diagonalMax as the result then solve for saturationRadius
+  auto offset = 0.0;
 
-  //scale {-32768 ... +32767} to {-outerDeadzoneRadiusMax ... +outerDeadzoneRadiusMax}
-  auto ax = x->value() * outerDeadzoneRadiusMax / 32767.0;
-  auto ay = y->value() * outerDeadzoneRadiusMax / 32767.0;
-  
-  //create inner axial dead-zone in range {-innerDeadzone ... +innerDeadzone} and scale from it up to outer circular dead-zone of radius outerDeadzoneRadiusMax
-  auto length = sqrt(ax * ax + ay * ay);
-  if(length <= outerDeadzoneRadiusMax) {
-    auto lengthAbsoluteX = abs(ax);
-    auto lengthAbsoluteY = abs(ay);
-    if(lengthAbsoluteX <= innerDeadzone) {
-      lengthAbsoluteX = 0.0;
-    } else {
-      lengthAbsoluteX = (lengthAbsoluteX - innerDeadzone) * cardinalMax / (cardinalMax - innerDeadzone) / lengthAbsoluteX;
-    }
-    ax *= lengthAbsoluteX;
-    if(lengthAbsoluteY <= innerDeadzone) {
-      lengthAbsoluteY = 0.0;
-    } else {
-      lengthAbsoluteY = (lengthAbsoluteY - innerDeadzone) * cardinalMax / (cardinalMax - innerDeadzone) / lengthAbsoluteY;
-    }
-    ay *= lengthAbsoluteY;
-  } else {
-    length = outerDeadzoneRadiusMax / length;
-    ax *= length;
-    ay *= length;
-  }
-  
-  //bound diagonals to an octagonal range {-diagonalMax ... +diagonalMax}
-  if(ax != 0.0 && ay != 0.0) {
-    auto slope = ay / ax;
-    auto edgex = copysign(cardinalMax / (abs(slope) + (cardinalMax - diagonalMax) / diagonalMax), ax);
-    auto edgey = copysign(min(abs(edgex * slope), cardinalMax / (1.0 / abs(slope) + (cardinalMax - diagonalMax) / diagonalMax)), ay);
-    edgex = edgey / slope;
+  //scale {-32767 ... +32767} to {-saturationRadius + offset ... +saturationRadius + offset}
+  auto ax = axis->setOperatingRange(x->value(), saturationRadius, offset);
+  auto ay = axis->setOperatingRange(y->value(), saturationRadius, offset);
 
-    length = sqrt(ax * ax + ay * ay);
-    auto distanceToEdge = sqrt(edgex * edgex + edgey * edgey);
-    if(length > distanceToEdge) {
-      ax = edgex;
-      ay = edgey;
-    }
+  //create inner axial dead-zone in range {-innerDeadzone ... +innerDeadzone} and scale from it up to saturationRadius
+  ax = axis->processDeadzoneAndResponseCurve(ax, innerDeadzone, saturationRadius, offset);
+  ay = axis->processDeadzoneAndResponseCurve(ay, innerDeadzone, saturationRadius, offset);
+
+  auto scaledLength = hypot(ax - offset, ay - offset);
+  if(scaledLength > saturationRadius) {
+    ax = axis->revisePosition(ax, scaledLength, saturationRadius, offset);
+    ay = axis->revisePosition(ay, scaledLength, saturationRadius, offset);
   }
+
+  //let cardinalMax and diagonalMax define boundaries and restrict to an octagonal gate
+  double axBounded = 0.0;
+  double ayBounded = 0.0;
+  axis->applyGateBoundaries(innerDeadzone, cardinalMax, diagonalMax, ax, ay, offset, axBounded, ayBounded);
+  ax = axBounded;
+  ay = ayBounded;
 
   //keep cardinal input within positive and negative bounds of cardinalMax
-  if(abs(ax) > cardinalMax) ax = copysign(cardinalMax, ax);
-  if(abs(ay) > cardinalMax) ay = copysign(cardinalMax, ay);
-  
+  ax = axis->clampAxisToNearestBoundary(ax, offset, cardinalMax);
+  ay = axis->clampAxisToNearestBoundary(ay, offset, cardinalMax);
+
   //add epsilon to counteract floating point precision error
-  ax = copysign(abs(ax) + 1e-09, ax);
-  ay = copysign(abs(ay) + 1e-09, ay);
+  ax = axis->counteractPrecisionError(ax);
+  ay = axis->counteractPrecisionError(ay);
   
   n32 data;
   data.byte(0) = s8(-ay);
