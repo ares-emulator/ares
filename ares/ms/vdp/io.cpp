@@ -119,7 +119,6 @@ auto VDP::registerWrite(n4 address, n8 data) -> void {
     background.io.vscrollLock = data.bit(7);
     irq.line.pending &= irq.line.enable;
     irq.poll();
-    updateScreenSize();
     return;
 
   case 0x1:  //mode control 2
@@ -131,7 +130,6 @@ auto VDP::registerWrite(n4 address, n8 data) -> void {
     io.displayEnable     = data.bit(6);
     irq.frame.pending &= irq.frame.enable;
     irq.poll();
-    updateScreenSize();
     return;
 
   case 0x2:  //name table base address
