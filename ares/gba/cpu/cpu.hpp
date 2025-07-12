@@ -254,8 +254,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n16 slot[8];
     n32 addr;      //read location of slot buffer
     n32 load;      //write location of slot buffer
-    i32 wait = 1;  //wait states for current load
-    i32 cycle;     //number of clocks elapsed on current load
+    i32 wait = 1;  //number of clocks before next slot load
     n1  stopped = 1;
     n1  ahead;
   } prefetch;
