@@ -38,7 +38,6 @@ struct VDP : Thread {
   auto main() -> void;
   auto step(u32 clocks) -> void;
 
-  auto updateScreenSize() -> void;
   auto screenHeight() const -> u32 { return Region::PAL() ? 288 : 243; }
 
   auto vlines() -> u32;

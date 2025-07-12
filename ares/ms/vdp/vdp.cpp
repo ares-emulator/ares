@@ -149,15 +149,6 @@ auto VDP::step(u32 clocks) -> void {
   }
 }
 
-auto VDP::updateScreenSize() -> void {
-  if(Display::CRT()) {
-    screen->setSize(284, screenHeight());
-  }
-  //if(Display::LCD()) {
-  //  screen->setSize(160, 144);
-  //}
-}
-
 auto VDP::vlines() -> u32 {
   if(revision->value() == 1) return 192;
 
