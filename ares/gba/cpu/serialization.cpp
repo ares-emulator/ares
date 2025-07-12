@@ -107,7 +107,6 @@ auto CPU::serialize(serializer& s) -> void {
   s(prefetch.addr);
   s(prefetch.load);
   s(prefetch.wait);
-  s(prefetch.cycle);
   s(prefetch.stopped);
   s(prefetch.ahead);
 
