@@ -6,6 +6,7 @@
 #include "status.cpp"
 #include "utility.cpp"
 #include "drivers.cpp"
+#include "video.cpp"
 
 Program program;
 thread worker;
