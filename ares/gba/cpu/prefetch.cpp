@@ -1,21 +1,12 @@
-auto CPU::prefetchSync(n32 address) -> void {
-  if(address == prefetch.addr) return;
-
+auto CPU::prefetchSync(u32 mode, n32 address) -> void {
   if(prefetch.wait == 1) step(1);
 
+  n32 size = (mode & Word) ? 4 : 2;
   prefetch.stopped = false;
   prefetch.ahead = false;
-  prefetch.addr = address;
-  prefetch.load = address;
-  prefetch.wait = waitCartridge(Half | Nonsequential, prefetch.load);
-}
-
-auto CPU::prefetchAdvance(u32 mode) -> void {
-  n32 size = (mode & Word) ? 4 : 2;
-  prefetch.addr += size;
-  prefetch.load += size;
+  prefetch.addr = address + size;
+  prefetch.load = address + size;
   prefetch.wait = waitCartridge(Half | Sequential, prefetch.load);
-  prefetch.stopped = false;
 }
 
 auto CPU::prefetchStepInternal(u32 clocks) -> void {

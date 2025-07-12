@@ -48,14 +48,13 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     mode = cartMode(mode, address);
     context.romAccess = true;
     if(mode & Prefetch && wait.prefetch) {
-      if(mode & Word) address &= ~3;  //prevents misaligned PC from reading incorrect values
-      prefetchSync(address);
-      if(!prefetch.empty() || prefetch.ahead) {
+      if(address == prefetch.addr && (!prefetch.empty() || prefetch.ahead)) {
         prefetchStepInternal(1);
         word = prefetchRead();
         if(mode & Word) word |= prefetchRead() << 16;
       } else {
-        prefetchAdvance(mode);
+        if(mode & Word) address &= ~3;  //prevents misaligned PC from reading incorrect values
+        prefetchSync(mode, address);
         step(waitCartridge(mode, address));
         word = cartridge.readRom<false>(mode, address);
       }
