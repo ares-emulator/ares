@@ -17,7 +17,7 @@ auto RDRAM::Debugger::load(Node::Object parent) -> void {
   memory.dcache->setSize(4_MiB + 4_MiB);
   memory.dcache->setRead([&](u32 address) -> u8 {
     u32 vaddr = address | 0x8000'0000;
-    return cpu.dcache.readDebug(vaddr, address);
+    return cpu.dcache.readDebug<Byte>(vaddr, address);
   });
   memory.dcache->setWrite([&](u32 address, u8 data) -> void {
     u32 vaddr = address | 0x8000'0000;
