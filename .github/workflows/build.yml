@@ -89,6 +89,7 @@ jobs:
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
     - name: "Windows: sign"
       if: runner.os == 'Windows' && inputs.codesign
+      continue-on-error: true
       uses: DanaBear/code-sign-action@98c79121b376beab8d6a9484f445089db4461bca
       with:
         certificate: '${{ secrets.WIN_CERTIFICATE }}'
