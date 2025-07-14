@@ -50,7 +50,7 @@ auto Program::waitForInterrupts() -> void {
   std::unique_lock<std::mutex> lock(_programMutex);
   _interruptWorking = true;
   _programConditionVariable.notify_one();
-  _programConditionVariable.wait(lock, [this] { return !_interruptWorking; });
+  _programConditionVariable.wait(lock, [this] { return !_interruptWorking || _quitting; });
 }
 
 auto Program::emulatorRunLoop(uintptr_t) -> void {
@@ -60,6 +60,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
     // Allow other threads to carry out tasks between emulator run loop iterations
     if(_interruptWaiting) {
       waitForInterrupts();
+      continue;
     }
     if(!emulator) {
       usleep(20 * 1000);
@@ -142,6 +143,8 @@ auto Program::main() -> void {
 
 auto Program::quit() -> void {
   _quitting = true;
+  _programMutex.unlock();
+  _programConditionVariable.notify_all();
   worker.join();
   program._isRunning = false;
   unload();
