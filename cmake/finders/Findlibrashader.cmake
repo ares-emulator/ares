@@ -64,7 +64,7 @@ macro(librashader_set_soname)
   unset(_result)
 endmacro()
 
-if(OS_LINUX OR OS_FREEBSD OR OS_OPENBSD)
+if(OS_LINUX OR OS_FREEBSD OR OS_OPENBSD OR ARES_SKIP_DEPS OR (NOT ARES_ENABLE_LIBRASHADER))
   set(_librashader_path_hint "${CMAKE_SOURCE_DIR}/thirdparty/librashader/include")
 endif()
 
