@@ -191,16 +191,19 @@ auto System::initDebugHooks() -> void {
         hexByte(resPtr + 6, value & 0xff);
         return res;
       case Dual:
-        value = cpu.readDebug<Dual>(address);
-        hexByte(resPtr + 0, (value >> 56) & 0xff);
-        hexByte(resPtr + 2, (value >> 48) & 0xff);
-        hexByte(resPtr + 4, (value >> 40) & 0xff);
-        hexByte(resPtr + 6, (value >> 32) & 0xff);
-        hexByte(resPtr + 8, (value >> 24) & 0xff);
-        hexByte(resPtr + 10, (value >> 16) & 0xff);
-        hexByte(resPtr + 12, (value >> 8) & 0xff);
-        hexByte(resPtr + 14, value & 0xff);
-        return res;
+        // Don't allow 64-bit access to RCP to prevent freezing
+        if (address < 0xffff'ffff'a400'0000ull || address + byteCount > 0xffff'ffff'bfff'ffffull) {
+            value = cpu.readDebug<Dual>(address);
+            hexByte(resPtr + 0, (value >> 56) & 0xff);
+            hexByte(resPtr + 2, (value >> 48) & 0xff);
+            hexByte(resPtr + 4, (value >> 40) & 0xff);
+            hexByte(resPtr + 6, (value >> 32) & 0xff);
+            hexByte(resPtr + 8, (value >> 24) & 0xff);
+            hexByte(resPtr + 10, (value >> 16) & 0xff);
+            hexByte(resPtr + 12, (value >> 8) & 0xff);
+            hexByte(resPtr + 14, value & 0xff);
+            return res;
+        }
     }
 
     // Handle reads of different/unaligned sizes only within the RDRAM area,
