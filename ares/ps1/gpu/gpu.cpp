@@ -137,7 +137,7 @@ auto GPU::power(bool reset) -> void {
   screen->power();
   refreshed = false;
 
-  vram.fill();
+  random.array({vram.data, vram.size});
   display.dotclock = 0;
   display.width = 0;
   display.height = 0;
