@@ -81,9 +81,6 @@ auto System::run() -> void {
     vulkan.load(node);
     _vulkanNeedsLoad = false;
   }
-  if(_needsPower) {
-    _power(_reset);
-  }
   cpu.main();
 }
 
@@ -425,13 +422,6 @@ auto System::save() -> void {
 }
 
 auto System::power(bool reset) -> void {
-  _reset = reset;
-  // Re-initializing ParaLLEl-RDP from a thread that did not initialize it seems to occasionally cause a deadlock.
-  // Delay reset until the next iteration of the system's run loop on the worker thread.
-  _needsPower = true;
-}
-
-auto System::_power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   if constexpr(Accuracy::CPU::Recompiler || Accuracy::RSP::Recompiler) {
@@ -443,6 +433,10 @@ auto System::_power(bool reset) -> void {
   if(_DD()) dd.power(reset);
   mi.power(reset);
   vi.power(reset);
+  #if defined(VULKAN)
+  vulkan.unload();
+  _vulkanNeedsLoad = true;
+  #endif
   ai.power(reset);
   pi.power(reset);
   pif.power(reset);
@@ -453,7 +447,6 @@ auto System::_power(bool reset) -> void {
   rsp.power(reset);
   rdp.power(reset);
   if(model() == Model::Aleck64) aleck64.power(reset);
-  _needsPower = false;
 }
 
 }
