@@ -39,8 +39,6 @@ private:
   } information;
   
   atomic<bool> _vulkanNeedsLoad = false;
-  atomic<bool> _needsPower = false;
-  bool _reset = false;
 
   auto initDebugHooks() -> void;
   auto _power(bool reset) -> void;
