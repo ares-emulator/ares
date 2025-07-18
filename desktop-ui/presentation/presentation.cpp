@@ -119,6 +119,9 @@ Presentation::Presentation() {
   inputSettingsAction.setText("Input" ELLIPSIS).setIcon(Icon::Device::Joypad).onActivate([&] {
     settingsWindow.show("Input");
   });
+  stickSettingsAction.setText("Stick" ELLIPSIS).setIcon(Icon::Device::Joypad).onActivate([&] {
+    settingsWindow.show("Stick");
+  });
   hotkeySettingsAction.setText("Hotkeys" ELLIPSIS).setIcon(Icon::Device::Keyboard).onActivate([&] {
     settingsWindow.show("Hotkeys");
   });

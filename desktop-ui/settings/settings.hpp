@@ -57,6 +57,24 @@ struct Settings : Markup::Node {
     string defocus = "Pause";
   } input;
 
+  struct Stick {
+    string outputStyleString = "Octagon (Virtual) (Default)";
+    string outputStyleChoice = "Octagon (Virtual) (Default)";
+    f64 maxOutputReducerOneFactor = 0.5;
+    f64 maxOutputReducerTwoFactor = 0.25;
+    f64 customMaxOutput = 85.0;
+    string deadzoneShape = "Axial";
+    f64 deadzoneSize = 7.0;
+    f64 proportionalSensitivity = 1.0;
+    string responseCurveString = "Linear (Default)";
+    string responseCurveChoice = "Linear (Default)";
+    f64 rangeNormalizedInflectionPoint = 0.5;
+    f64 responseStrength = 0.0;
+    bool virtualNotch = false;
+    f64 notchLengthFromEdge = 0.1;
+    f64 notchAngularSnappingDistance = 0.0;
+  } stick;
+
   struct Boot {
     bool fast = false;
     bool debugger = false;
@@ -214,6 +232,72 @@ struct InputSettings : VerticalLayout {
   u32 activeBinding = 0;
   Timer timer;
   PopupMenu menu;
+};
+
+struct StickSettings : VerticalLayout {
+  auto construct() -> void;
+  auto updateSlider() -> void;
+
+  Label nintendo64ControlStickSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout outputStyleLayout{this, Size{~0, 0}, 5};
+      Label outputStyleLabel{&outputStyleLayout, Size{0, 0}};
+      ComboButton outputStyleOption{&outputStyleLayout, Size{0, 0}};
+      Label outputStyleHint{&outputStyleLayout, Size{0, 0}};
+    TableLayout nintendo64ControlStickSettingsLayout{this, Size{~0, 0}};
+      Label maxOutputReducerOneFactorLabel{&nintendo64ControlStickSettingsLayout, Size{0, 0}};
+      Label maxOutputReducerOneFactorValue{&nintendo64ControlStickSettingsLayout, Size{120_sx, 0}};
+      HorizontalSlider maxOutputReducerOneFactorSlider{&nintendo64ControlStickSettingsLayout, Size{~0, 0}};
+      //
+      Label maxOutputReducerTwoFactorLabel{&nintendo64ControlStickSettingsLayout, Size{0, 0}};
+      Label maxOutputReducerTwoFactorValue{&nintendo64ControlStickSettingsLayout, Size{120_sx, 0}};
+      HorizontalSlider maxOutputReducerTwoFactorSlider{&nintendo64ControlStickSettingsLayout, Size{~0, 0}};
+      //
+      Label customMaxOutputLabel{&nintendo64ControlStickSettingsLayout, Size{0, 0}};
+      Label customMaxOutputValue{&nintendo64ControlStickSettingsLayout, Size{120_sx, 0}};
+      HorizontalSlider customMaxOutputSlider{&nintendo64ControlStickSettingsLayout, Size{~0, 0}};
+    Canvas customMaxOutputSpacer{this, Size{~0, 1}};
+    HorizontalLayout deadzoneShapeLayout{this, Size{~0, 0}, 5};
+      Label deadzoneShapeLabel{&deadzoneShapeLayout, Size{0, 0}};
+      RadioLabel deadzoneShapeAxial{&deadzoneShapeLayout, Size{0, 0}};
+      RadioLabel deadzoneShapeRadial{&deadzoneShapeLayout, Size{0, 0}};
+      Group deadzoneShapeGroup{&deadzoneShapeAxial, &deadzoneShapeRadial};
+    TableLayout nintendo64ControlStickSettingsTwoLayout{this, Size{~0, 0}};
+      Label deadzoneSizeLabel{&nintendo64ControlStickSettingsTwoLayout, Size{0, 0}};
+      Label deadzoneSizeValue{&nintendo64ControlStickSettingsTwoLayout, Size{50_sx, 0}};
+      HorizontalSlider deadzoneSizeSlider{&nintendo64ControlStickSettingsTwoLayout, Size{~0, 0}};
+    Label deadzoneSizeHint{this, Size{400, 0}};
+    Canvas deadzoneSpacer{this, Size{~0, 1}};
+    TableLayout nintendo64ControlStickSettingsThreeLayout{ this, Size{~0, 0} };
+      Label proportionalSensitivityLabel{&nintendo64ControlStickSettingsThreeLayout, Size{0, 0}};
+      Label proportionalSensitivityValue{&nintendo64ControlStickSettingsThreeLayout, Size{50_sx, 0}};
+      HorizontalSlider proportionalSensitivitySlider{&nintendo64ControlStickSettingsThreeLayout, Size{~0, 0}};
+    HorizontalLayout responseCurveLayout{this, Size{~0, 0}, 5};
+      Label responseCurveLabel{&responseCurveLayout, Size{0, 0}};
+      ComboButton responseCurveOption{&responseCurveLayout, Size{0, 0}};
+      Label responseCurveHint{&responseCurveLayout, Size{0, 0}};
+    TableLayout nintendo64ControlStickSettingsFourLayout{ this, Size{~0, 0} };
+      Label rangeNormalizedInflectionPointLabel{&nintendo64ControlStickSettingsFourLayout, Size{0, 0}};
+      Label rangeNormalizedInflectionPointValue{&nintendo64ControlStickSettingsFourLayout, Size{50_sx, 0}};
+      HorizontalSlider rangeNormalizedInflectionPointSlider{&nintendo64ControlStickSettingsFourLayout, Size{~0, 0}};
+      //
+      Label responseStrengthLabel{&nintendo64ControlStickSettingsFourLayout, Size{0, 0}};
+      Label responseStrengthValue{&nintendo64ControlStickSettingsFourLayout, Size{50_sx, 0}};
+      HorizontalSlider responseStrengthSlider{&nintendo64ControlStickSettingsFourLayout, Size{~0, 0}};
+    Label responseStrengthHint{this, Size{900, 0}};
+    Canvas responseSpacer{this, Size{~0, 1}};
+    HorizontalLayout virtualNotchLayout{this, Size{~0, 0}, 5};
+      CheckLabel virtualNotchOption{&virtualNotchLayout, Size{0, 0}, 5};
+      Label virtualNotchHint{&virtualNotchLayout, Size{~0, 0}};
+    TableLayout nintendo64ControlStickSettingsFiveLayout{ this, Size{~0, 0} };
+      Label notchLengthFromEdgeLabel{&nintendo64ControlStickSettingsFiveLayout, Size{0, 0}};
+      Label notchLengthFromEdgeValue{&nintendo64ControlStickSettingsFiveLayout, Size{50_sx, 0}};
+      HorizontalSlider notchLengthFromEdgeSlider{&nintendo64ControlStickSettingsFiveLayout, Size{~0, 0}};
+      //
+      Label notchAngularSnappingDistanceLabel{&nintendo64ControlStickSettingsFiveLayout, Size{0, 0}};
+      Label notchAngularSnappingDistanceValue{&nintendo64ControlStickSettingsFiveLayout, Size{50_sx, 0}};
+      HorizontalSlider notchAngularSnappingDistanceSlider{&nintendo64ControlStickSettingsFiveLayout, Size{~0, 0}};
+      Widget spacer{this, Size{~0, ~0}, 0};
+    Label advisoryHint{this, Size{850, 0}};
 };
 
 struct HotkeySettings : VerticalLayout {
@@ -449,6 +533,7 @@ struct SettingsWindow : Window {
       VideoSettings videoSettings;
       AudioSettings audioSettings;
       InputSettings inputSettings;
+      StickSettings stickSettings;
       HotkeySettings hotkeySettings;
       EmulatorSettings emulatorSettings;
       OptionSettings optionSettings;
@@ -465,6 +550,7 @@ extern SettingsWindow& settingsWindow;
 extern VideoSettings& videoSettings;
 extern AudioSettings& audioSettings;
 extern InputSettings& inputSettings;
+extern StickSettings& stickSettings;
 extern HotkeySettings& hotkeySettings;
 extern EmulatorSettings& emulatorSettings;
 extern OptionSettings& optionSettings;

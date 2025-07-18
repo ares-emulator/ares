@@ -22,6 +22,10 @@ struct DualShock : PeripheralDevice {
   Node::Input::Button start;
   Node::Input::Button mode;
   Node::Input::Rumble rumble;
+  Node::Input::Button maxOutputReducer1LeftStick;
+  Node::Input::Button maxOutputReducer2LeftStick;
+  Node::Input::Button maxOutputReducer1RightStick;
+  Node::Input::Button maxOutputReducer2RightStick;
 
   DualShock(Node::Port);
   auto reset() -> void override;
@@ -55,4 +59,42 @@ struct DualShock : PeripheralDevice {
   vector<n8> inputData;
 
   bool _active = false;
+
+  enum class OutputStyleRightStick : int {
+    CustomVirtualOctagon,
+    CustomCircle,
+    CustomMorphedOctagon,
+    MaxCircle,
+    MaxVirtualSquare,
+    MaxMorphedSquare,
+  } outputStyleRightStick = OutputStyleRightStick::MaxVirtualSquare;
+
+  enum class ResponseRightStick : int {
+    Linear,
+    RelaxedToAggressive,
+    RelaxedToLinear,
+    LinearToRelaxed,
+    AggressiveToRelaxed,
+    AggressiveToLinear,
+    LinearToAggressive,
+  } responseRightStick = ResponseRightStick::Linear;
+
+  enum class OutputStyleLeftStick : int {
+    CustomVirtualOctagon,
+    CustomCircle,
+    CustomMorphedOctagon,
+    MaxCircle,
+    MaxVirtualSquare,
+    MaxMorphedSquare,
+  } outputStyleLeftStick = OutputStyleLeftStick::MaxVirtualSquare;
+
+  enum class ResponseLeftStick : int {
+    Linear,
+    RelaxedToAggressive,
+    RelaxedToLinear,
+    LinearToRelaxed,
+    AggressiveToRelaxed,
+    AggressiveToLinear,
+    LinearToAggressive,
+  } responseLeftStick = ResponseLeftStick::Linear;
 };
