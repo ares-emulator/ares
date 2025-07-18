@@ -132,6 +132,8 @@ private:
   NALL_USED auto getProgramThreadValue() -> bool {
     return _programThread;
   }
+  /// Unique lock used by `Program::Guard` instances to synchronize interrupts. Generally this should not be used directly, with synchronization happening via `Program::Guard` construction. However, it is still exposed for exceptions such as the exit handler in `Program::quit()`.
+  std::unique_lock<std::mutex> lock{_programMutex, std::defer_lock};
 };
 
 extern Program program;
