@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28...4.0)
+cmake_minimum_required(VERSION 3.25...4.0)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/bootstrap.cmake" NO_POLICY_SCOPE)
 
