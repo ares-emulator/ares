@@ -35,10 +35,10 @@ public:
     if(program._isRunning && !program._programThread) {
       program._interruptDepth += 1;
       if(program._interruptDepth == 1) {
-        lock.lock();
+        program.lock.lock();
         program._interruptWaiting = true;
         program._programConditionVariable.notify_one();
-        program._programConditionVariable.wait(lock, [] { return program._interruptWorking; });
+        program._programConditionVariable.wait(program.lock, [] { return program._interruptWorking; });
       }
     }
   }
@@ -49,14 +49,11 @@ public:
       if(program._interruptDepth == 0) {
         program._interruptWorking = false;
         program._interruptWaiting = false;
-        lock.unlock();
+        program.lock.unlock();
         program._programConditionVariable.notify_one();
       }
     }
   }
-  
-private:
-  std::unique_lock<std::mutex> lock{program._programMutex, std::defer_lock};
 };
 
 auto locate(const string& name) -> string;

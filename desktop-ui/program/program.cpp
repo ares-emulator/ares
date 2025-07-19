@@ -142,8 +142,9 @@ auto Program::main() -> void {
 }
 
 auto Program::quit() -> void {
+  Program::Guard guard;
   _quitting = true;
-  _programMutex.unlock();
+  lock.unlock();
   _programConditionVariable.notify_all();
   worker.join();
   program._isRunning = false;
