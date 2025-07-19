@@ -130,7 +130,7 @@ auto StickSettings::construct() -> void {
     "assemblies and inherently leads to cardinal snapping.\n\n"
     "Radial creates a uniform deadzone in all directions and lacks cardinal snapping.\n\n"
     "Mixing deadzone shapes may lead to unexpected results and is not recommended. Please\n"
-    "either match or turn off deadzones in other software to maintain chosen shape."
+    "either match or turn off deadzones in other software to maintain the chosen shape."
   );
   deadzoneShapeAxial.setText("Axial").onActivate([&] {
     Program::Guard guard;

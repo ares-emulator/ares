@@ -511,8 +511,8 @@ auto DualShock::readPad() -> vector<u8> {
   auto configuredProportionalSensitivityLeftStick = axis->proportionalSensitivity(); //user-defined (default 1.0); Should this only apply to a linear response? What percentage range should be used? Place outside of Gamepad::responseCurve()?
 
   //scale {-32767 ... +32767} to {-saturationRadius + offset ... +saturationRadius + offset}
-  auto alx = axis->setOperatingRange(rx->value(), saturationRadiusLeftStick, offsetLeftStick);
-  auto aly = axis->setOperatingRange(ry->value(), saturationRadiusLeftStick, offsetLeftStick);
+  auto alx = axis->setOperatingRange(lx->value(), saturationRadiusLeftStick, offsetLeftStick);
+  auto aly = axis->setOperatingRange(ly->value(), saturationRadiusLeftStick, offsetLeftStick);
 
   if(configuredVirtualNotchLeftStick == true) {
     auto initialLengthLeftStick = hypot(alx - offsetLeftStick, aly - offsetLeftStick);
@@ -524,10 +524,10 @@ auto DualShock::readPad() -> vector<u8> {
 
   //create axial dead-zone of chosen shape in range {-configuredInnerDeadzoneLeftStick ... +configuredInnerDeadzoneLeftStick} and scale from it up to saturationRadius
   if(configuredDeadzoneShapeLeftStick == "Axial") {
-    auto lengthAbsoluteRX = abs(alx - offsetLeftStick);
-    auto lengthAbsoluteRY = abs(aly - offsetLeftStick);
-    alx = axis->processDeadzoneAndResponseCurve(alx, lengthAbsoluteRX, configuredInnerDeadzoneLeftStick, saturationRadiusLeftStick, offsetLeftStick, configuredRangeNormalizedInflectionPointLeftStick, configuredResponseStrengthLeftStick, configuredProportionalSensitivityLeftStick, configuredResponseCurveModeLeftStick);
-    aly = axis->processDeadzoneAndResponseCurve(aly, lengthAbsoluteRY, configuredInnerDeadzoneLeftStick, saturationRadiusLeftStick, offsetLeftStick, configuredRangeNormalizedInflectionPointLeftStick, configuredResponseStrengthLeftStick, configuredProportionalSensitivityLeftStick, configuredResponseCurveModeLeftStick);
+    auto lengthAbsoluteLX = abs(alx - offsetLeftStick);
+    auto lengthAbsoluteLY = abs(aly - offsetLeftStick);
+    alx = axis->processDeadzoneAndResponseCurve(alx, lengthAbsoluteLX, configuredInnerDeadzoneLeftStick, saturationRadiusLeftStick, offsetLeftStick, configuredRangeNormalizedInflectionPointLeftStick, configuredResponseStrengthLeftStick, configuredProportionalSensitivityLeftStick, configuredResponseCurveModeLeftStick);
+    aly = axis->processDeadzoneAndResponseCurve(aly, lengthAbsoluteLY, configuredInnerDeadzoneLeftStick, saturationRadiusLeftStick, offsetLeftStick, configuredRangeNormalizedInflectionPointLeftStick, configuredResponseStrengthLeftStick, configuredProportionalSensitivityLeftStick, configuredResponseCurveModeLeftStick);
   } else {
     auto lengthLeftStick = hypot(alx - offsetLeftStick, aly - offsetLeftStick);
     alx = axis->processDeadzoneAndResponseCurve(alx, lengthLeftStick, configuredInnerDeadzoneLeftStick, saturationRadiusLeftStick, offsetLeftStick, configuredRangeNormalizedInflectionPointLeftStick, configuredResponseStrengthLeftStick, configuredProportionalSensitivityLeftStick, configuredResponseCurveModeLeftStick);
@@ -543,18 +543,18 @@ auto DualShock::readPad() -> vector<u8> {
 
   //let cardinalMax and diagonalMax define boundaries and restrict to a square gate
   if(outputStyleLeftStick == OutputStyleLeftStick::CustomVirtualOctagon || outputStyleLeftStick == OutputStyleLeftStick::CustomMorphedOctagon || outputStyleLeftStick == OutputStyleLeftStick::MaxVirtualSquare || outputStyleLeftStick == OutputStyleLeftStick::MaxMorphedSquare) {
-    double edgeRX = 0.0;
-    double edgeRY = 0.0;
+    double edgeLX = 0.0;
+    double edgeLY = 0.0;
 
-    axis->applyGateBoundaries(cardinalMaxLeftStick, diagonalMaxLeftStick, alx, aly, offsetLeftStick, edgeRX, edgeRY);
+    axis->applyGateBoundaries(cardinalMaxLeftStick, diagonalMaxLeftStick, alx, aly, offsetLeftStick, edgeLX, edgeLY);
 
-    auto distanceToEdgeLeftStick = hypot(edgeRX, edgeRY);
+    auto distanceToEdgeLeftStick = hypot(edgeLX, edgeLY);
 
     if(outputStyleLeftStick == OutputStyleLeftStick::CustomVirtualOctagon || outputStyleLeftStick == OutputStyleLeftStick::MaxVirtualSquare) {
       auto currentLengthLeftStick = hypot(alx - offsetLeftStick, aly - offsetLeftStick);
       if(currentLengthLeftStick > distanceToEdgeLeftStick) {
-        alx = edgeRX;
-        aly = edgeRY;
+        alx = edgeLX;
+        aly = edgeLY;
       }
     } else {
       auto scaleLeftStick = distanceToEdgeLeftStick / saturationRadiusLeftStick;
