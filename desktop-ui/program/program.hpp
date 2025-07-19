@@ -1,9 +1,7 @@
 struct Program : ares::Platform {
   auto create() -> void;
   auto main() -> void;
-  auto emulatorRunLoop(uintptr_t) -> void;
   auto quit() -> void;
-  auto waitForInterrupts() -> void;
 
   //platform.cpp
   auto attach(ares::Node::Object) -> void override;
@@ -110,9 +108,14 @@ struct Program : ares::Platform {
   std::recursive_mutex inputMutex;
   
 private:
+  /// Routine used while the emulator thread is waiting for work to complete that modifies its state.
+  auto waitForInterrupts() -> void;
+  /// The main run loop for the emulator thread spawned on startup.
+  auto emulatorRunLoop(uintptr_t) -> void;
+
   atomic<bool> _quitting = false;
   atomic<bool> _needsResize = false;
-  
+
   /// Mutex used to manage access to the status message queue.
   std::recursive_mutex _messageMutex;
 
