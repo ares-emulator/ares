@@ -316,7 +316,7 @@ auto StickSettings::updateSlider() -> void {
   } else if(settings.stick.outputStyleChoice == "Custom Octagon (Virtual)") {
     diagonalMax = maxOutputMultiplier * 69.0;
     cardinalMax = maxOutputMultiplier * 85.0;
-    saturationRadius = sqrt(2.0) * (configuredInnerDeadzone + diagonalMax + sqrt(pow(configuredInnerDeadzone + diagonalMax, 2.0) - 2.0 * sqrt(2.0) * diagonalMax * configuredInnerDeadzone)) / sqrt(2.0);
+    saturationRadius = (configuredInnerDeadzone + diagonalMax + sqrt(pow(configuredInnerDeadzone + diagonalMax, 2.0) - 2.0 * sqrt(2.0) * diagonalMax * configuredInnerDeadzone)) / sqrt(2.0);
   } else if(settings.stick.outputStyleChoice == "Custom Circle") {
     diagonalMax = maxOutputMultiplier * 85.0 * sqrt(2.0) / 2.0;
     cardinalMax = maxOutputMultiplier * 85.0;
@@ -324,7 +324,7 @@ auto StickSettings::updateSlider() -> void {
   } else if(settings.stick.outputStyleChoice == "Octagon (Virtual) (Default)") {
     diagonalMax = 69.0;
     cardinalMax = 85.0;
-    saturationRadius = sqrt(2.0) * (configuredInnerDeadzone + diagonalMax + sqrt(pow(configuredInnerDeadzone + diagonalMax, 2.0) - 2.0 * sqrt(2.0) * diagonalMax * configuredInnerDeadzone)) / sqrt(2.0);
+    saturationRadius = (configuredInnerDeadzone + diagonalMax + sqrt(pow(configuredInnerDeadzone + diagonalMax, 2.0) - 2.0 * sqrt(2.0) * diagonalMax * configuredInnerDeadzone)) / sqrt(2.0);
   } else if(settings.stick.outputStyleChoice == "Circle (Diagonal)") {
     diagonalMax = 69.0;
     saturationRadius = (configuredInnerDeadzone + diagonalMax + sqrt(pow(configuredInnerDeadzone + diagonalMax, 2.0) - 2.0 * sqrt(2.0) * diagonalMax * configuredInnerDeadzone)) / sqrt(2.0);
