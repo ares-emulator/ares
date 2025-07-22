@@ -176,7 +176,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  irqEnable;
 
     n16 data[4];
-    n8  data8;
+    n16 dataMulti;
   } serial;
 
   struct Keypad {
