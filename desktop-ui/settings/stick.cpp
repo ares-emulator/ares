@@ -150,11 +150,11 @@ auto StickSettings::construct() -> void {
 
   deadzoneSizeLabel.setText("Deadzone Size:");
   deadzoneSizeValue.setAlignment(0.5);
-  deadzoneSizeSlider.setLength(128).setPosition(settings.stick.deadzoneSize).onChange([&] {
+  deadzoneSizeSlider.setLength(1276).setPosition(settings.stick.deadzoneSize * 10.0).onChange([&] {
     Program::Guard guard;
-    settings.stick.deadzoneSize = deadzoneSizeSlider.position();
+    settings.stick.deadzoneSize = deadzoneSizeSlider.position() * 0.1;
     if(emulator) emulator->setDeadzoneSize(settings.stick.deadzoneSize);
-    deadzoneSizeValue.setText(deadzoneSizeSlider.position());
+    deadzoneSizeValue.setText(deadzoneSizeSlider.position() * 0.1);
     updateSlider();
   }).doChange();
   deadzoneSpacer.setColor({192, 192, 192});
@@ -233,11 +233,11 @@ auto StickSettings::construct() -> void {
     "the real deadzone to the stick edge where the curve changes behavior."
   );
   rangeNormalizedInflectionPointValue.setAlignment(0.5).setToolTip(rangeNormalizedInflectionPointLabel.toolTip());
-  rangeNormalizedInflectionPointSlider.setLength(199).setPosition((settings.stick.rangeNormalizedInflectionPoint - 0.005) / 0.5 * 100.0).onChange([&] {
+  rangeNormalizedInflectionPointSlider.setLength(999).setPosition((settings.stick.rangeNormalizedInflectionPoint - 0.001) * 10.0 * 100.0).onChange([&] {
     Program::Guard guard;
-    settings.stick.rangeNormalizedInflectionPoint = (rangeNormalizedInflectionPointSlider.position() * 0.5 + 0.5) / 100.0;
+    settings.stick.rangeNormalizedInflectionPoint = (rangeNormalizedInflectionPointSlider.position() * 0.1 + 0.1) / 100.0;
     if(emulator) emulator->setRangeNormalizedInflectionPoint(settings.stick.rangeNormalizedInflectionPoint);
-    rangeNormalizedInflectionPointValue.setText({0.5 + 0.5 * rangeNormalizedInflectionPointSlider.position(), "%"});
+    rangeNormalizedInflectionPointValue.setText({0.1 + 0.1 * rangeNormalizedInflectionPointSlider.position(), "%"});
     updateSlider();
   }).doChange();
 
@@ -246,11 +246,11 @@ auto StickSettings::construct() -> void {
     "Changes are subtle when low and pronounced when high."
   );
   responseStrengthValue.setAlignment(0.5).setToolTip(responseStrengthLabel.toolTip());
-  responseStrengthSlider.setLength(101).setPosition(settings.stick.responseStrength * 100.0).onChange([&] {
+  responseStrengthSlider.setLength(1001).setPosition(settings.stick.responseStrength * 100.0 * 10.0).onChange([&] {
     Program::Guard guard;
-    settings.stick.responseStrength = responseStrengthSlider.position() / 100.0;
+    settings.stick.responseStrength = responseStrengthSlider.position() / 100.0 * 0.1;
     if(emulator) emulator->setResponseStrength(settings.stick.responseStrength);
-    responseStrengthValue.setText({responseStrengthSlider.position(), "%"});
+    responseStrengthValue.setText({responseStrengthSlider.position() * 0.1, "%"});
     updateSlider();
   }).doChange();
   responseSpacer.setColor({192, 192, 192});
@@ -271,22 +271,22 @@ auto StickSettings::construct() -> void {
     "A higher value results in a larger notch that can be reached sooner."
   );
   notchLengthFromEdgeValue.setAlignment(0.5).setToolTip(notchLengthFromEdgeLabel.toolTip());
-  notchLengthFromEdgeSlider.setLength(21).setPosition(settings.stick.notchLengthFromEdge * 100.0).onChange([&] {
+  notchLengthFromEdgeSlider.setLength(201).setPosition(settings.stick.notchLengthFromEdge * 100.0 * 10.0).onChange([&] {
     Program::Guard guard;
-    settings.stick.notchLengthFromEdge = notchLengthFromEdgeSlider.position() / 100.0;
+    settings.stick.notchLengthFromEdge = notchLengthFromEdgeSlider.position() / 100.0 * 0.1;
     if(emulator) emulator->setNotchLengthFromEdge(settings.stick.notchLengthFromEdge);
-    notchLengthFromEdgeValue.setText({notchLengthFromEdgeSlider.position(), "%"});
+    notchLengthFromEdgeValue.setText({notchLengthFromEdgeSlider.position() * 0.1, "%"});
   }).doChange();
 
   notchAngularSnappingDistanceLabel.setText("Angular Snapping Distance:").setToolTip(
     "Set the angular distance at which input will snap to the nearest notch."
   );
   notchAngularSnappingDistanceValue.setAlignment(0.5).setToolTip(notchAngularSnappingDistanceLabel.toolTip());
-  notchAngularSnappingDistanceSlider.setLength(91).setPosition(settings.stick.notchAngularSnappingDistance * 2.0).onChange([&] {
+  notchAngularSnappingDistanceSlider.setLength(451).setPosition(settings.stick.notchAngularSnappingDistance * 10.0).onChange([&] {
     Program::Guard guard;
-    settings.stick.notchAngularSnappingDistance = notchAngularSnappingDistanceSlider.position() * 0.5;
+    settings.stick.notchAngularSnappingDistance = notchAngularSnappingDistanceSlider.position() * 0.1;
     if(emulator) emulator->setNotchAngularSnappingDistance(settings.stick.notchAngularSnappingDistance);
-    notchAngularSnappingDistanceValue.setText({notchAngularSnappingDistanceSlider.position() * 0.5, "\u00b0"}); //unicode escape code for degree symbol
+    notchAngularSnappingDistanceValue.setText({notchAngularSnappingDistanceSlider.position() * 0.1, "\u00b0"}); //unicode escape code for degree symbol
   }).doChange();
 
   advisoryHint.setText("Note: Settings currently only apply to Controller Port 1 with the system's default used for the remaining ports.\nCustomization must be reapplied after connecting to a peripheral with an analog stick in the system's menu.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
