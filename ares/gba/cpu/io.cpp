@@ -61,8 +61,8 @@ auto CPU::readIO(n32 address) -> n8 {
   );
 
   //SIOMLT_SEND (SIODATA8)
-  case 0x0400'012a: return serial.data8;
-  case 0x0400'012b: return 0;
+  case 0x0400'012a: return serial.dataMulti.byte(0);
+  case 0x0400'012b: return serial.dataMulti.byte(1);  //upper 8 bits are always readable, but only used in multiplayer mode
 
   //KEYINPUT
   case 0x04000130: {
@@ -346,8 +346,8 @@ auto CPU::writeIO(n32 address, n8 data) -> void {
     return;
 
   //SIOMLT_SEND (SIODATA8)
-  case 0x0400'012a: serial.data8 = data; return;
-  case 0x0400'012b: return;
+  case 0x0400'012a: serial.dataMulti.byte(0) = data; return;
+  case 0x0400'012b: serial.dataMulti.byte(1) = data; return;  //upper 8 bits are always writable, but only used in multiplayer mode
 
   //KEYCNT
   case 0x0400'0132:

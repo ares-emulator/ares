@@ -24,6 +24,7 @@ struct Controller {
 
 #include "port.hpp"
 #include "gamepad/gamepad.hpp"
+#include "rumble-gamepad/rumble-gamepad.hpp"
 #include "justifier/justifier.hpp"
 #include "justifiers/justifiers.hpp"
 #include "mouse/mouse.hpp"

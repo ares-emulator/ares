@@ -17,14 +17,7 @@ struct InputMouseRawInput {
   } ms;
 
   auto acquired() -> bool {
-    if(mouseAcquired) {
-      SetFocus((HWND)handle);
-      SetCapture((HWND)handle);
-      RECT rc;
-      GetWindowRect((HWND)handle, &rc);
-      ClipCursor(&rc);
-    }
-    return GetCapture() == (HWND)handle;
+    return mouseAcquired;
   }
 
   auto acquire() -> bool {
@@ -32,7 +25,13 @@ struct InputMouseRawInput {
       mouseAcquired = true;
       ShowCursor(false);
     }
-    return acquired();
+    
+    SetFocus((HWND)handle);
+    SetCapture((HWND)handle);
+    RECT rc;
+    GetWindowRect((HWND)handle, &rc);
+    ClipCursor(&rc);
+    return GetCapture() == (HWND)handle;
   }
 
   auto release() -> bool {

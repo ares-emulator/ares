@@ -56,7 +56,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(serial.mode);
   s(serial.irqEnable);
   for(auto& value : serial.data) s(value);
-  s(serial.data8);
+  s(serial.dataMulti);
 
   s(keypad.enable);
   s(keypad.condition);

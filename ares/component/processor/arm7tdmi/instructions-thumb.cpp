@@ -106,13 +106,14 @@ auto ARM7TDMI::thumbInstructionLoadLiteral
 (n8 displacement, n3 d) -> void {
   n32 address = (r(15) & ~3) + (displacement << 2);
   r(d) = load(Word, address);
+  idle();
 }
 
 auto ARM7TDMI::thumbInstructionMoveByteImmediate
 (n3 d, n3 n, n5 offset, n1 mode) -> void {
   switch(mode) {
   case 0: store(Byte, r(n) + offset, r(d)); break;  //STRB
-  case 1: r(d) = load(Byte, r(n) + offset); break;  //LDRB
+  case 1: r(d) = load(Byte, r(n) + offset); idle(); break;  //LDRB
   }
 }
 
@@ -120,7 +121,7 @@ auto ARM7TDMI::thumbInstructionMoveHalfImmediate
 (n3 d, n3 n, n5 offset, n1 mode) -> void {
   switch(mode) {
   case 0: store(Half, r(n) + offset * 2, r(d)); break;  //STRH
-  case 1: r(d) = load(Half, r(n) + offset * 2); break;  //LDRH
+  case 1: r(d) = load(Half, r(n) + offset * 2); idle(); break;  //LDRH
   }
 }
 
@@ -158,11 +159,11 @@ auto ARM7TDMI::thumbInstructionMoveRegisterOffset
   case 0: store(Word, r(n) + r(m), r(d)); break;  //STR
   case 1: store(Half, r(n) + r(m), r(d)); break;  //STRH
   case 2: store(Byte, r(n) + r(m), r(d)); break;  //STRB
-  case 3: r(d) = load(Byte | Signed, r(n) + r(m)); break;  //LDSB
-  case 4: r(d) = load(Word, r(n) + r(m)); break;  //LDR
-  case 5: r(d) = load(Half, r(n) + r(m)); break;  //LDRH
-  case 6: r(d) = load(Byte, r(n) + r(m)); break;  //LDRB
-  case 7: r(d) = load(Half | Signed, r(n) + r(m)); break;  //LDSH
+  case 3: r(d) = load(Byte | Signed, r(n) + r(m)); idle(); break;  //LDSB
+  case 4: r(d) = load(Word, r(n) + r(m)); idle(); break;  //LDR
+  case 5: r(d) = load(Half, r(n) + r(m)); idle(); break;  //LDRH
+  case 6: r(d) = load(Byte, r(n) + r(m)); idle(); break;  //LDRB
+  case 7: r(d) = load(Half | Signed, r(n) + r(m)); idle(); break;  //LDSH
   }
 }
 
@@ -170,7 +171,7 @@ auto ARM7TDMI::thumbInstructionMoveStack
 (n8 immediate, n3 d, n1 mode) -> void {
   switch(mode) {
   case 0: store(Word, r(13) + immediate * 4, r(d)); break;  //STR
-  case 1: r(d) = load(Word, r(13) + immediate * 4); break;  //LDR
+  case 1: r(d) = load(Word, r(13) + immediate * 4); idle(); break;  //LDR
   }
 }
 
@@ -178,7 +179,7 @@ auto ARM7TDMI::thumbInstructionMoveWordImmediate
 (n3 d, n3 n, n5 offset, n1 mode) -> void {
   switch(mode) {
   case 0: store(Word, r(n) + offset * 4, r(d)); break;  //STR
-  case 1: r(d) = load(Word, r(n) + offset * 4); break;  //LDR
+  case 1: r(d) = load(Word, r(n) + offset * 4); idle(); break;  //LDR
   }
 }
 
