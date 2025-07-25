@@ -23,6 +23,8 @@ struct Gamepad : Controller {
   Node::Input::Button r;
   Node::Input::Button z;
   Node::Input::Button start;
+  Node::Input::Button maxOutputReducer1;
+  Node::Input::Button maxOutputReducer2;
 
   Gamepad(Node::Port);
   ~Gamepad();
@@ -49,4 +51,27 @@ struct Gamepad : Controller {
     n2 resetState;
     n2 addressBank;
   } transferPak;
+
+  enum class OutputStyle : int {
+    CustomVirtualOctagon,
+    CustomCircle,
+    CustomMorphedOctagon,
+    DiagonalCircle,
+    VirtualOctagon,
+    MaxCircle,
+    CardinalCircle,
+    MorphedOctagon,
+    MaxVirtualSquare,
+    MaxMorphedSquare,
+  } outputStyle = OutputStyle::VirtualOctagon;
+
+  enum class Response : int {
+    Linear,
+    RelaxedToAggressive,
+    RelaxedToLinear,
+    LinearToRelaxed,
+    AggressiveToRelaxed,
+    AggressiveToLinear,
+    LinearToAggressive,
+  } response = Response::Linear;
 };

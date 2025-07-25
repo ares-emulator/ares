@@ -12,6 +12,8 @@ auto Aleck64::Controls::load(Node::Object parent) -> void {
   p1right = node->append<Node::Input::Button>("Player 1 Right");
   p1start = node->append<Node::Input::Button>("Player 1 Start");
   p1coin  = node->append<Node::Input::Button>("Player 1 Coin");
+  p1maxOutputReducer1 = node->append<Node::Input::Button>("Player 1 Max Output Reducer 1");
+  p1maxOutputReducer2 = node->append<Node::Input::Button>("Player 1 Max Output Reducer 2");
 
   for(auto n: range(9)) {
     string name = {"Player 1 Button ", 1 + n};
@@ -26,6 +28,8 @@ auto Aleck64::Controls::load(Node::Object parent) -> void {
   p2right = node->append<Node::Input::Button>("Player 2 Right");
   p2start = node->append<Node::Input::Button>("Player 2 Start");
   p2coin  = node->append<Node::Input::Button>("Player 2 Coin");
+  p2maxOutputReducer1 = node->append<Node::Input::Button>("Player 2 Max Output Reducer 1");
+  p2maxOutputReducer2 = node->append<Node::Input::Button>("Player 2 Max Output Reducer 2");
 
   for(auto n: range(9)) {
     string name = {"Player 2 Button ", 1 + n};
@@ -65,6 +69,8 @@ auto Aleck64::Controls::poll() -> void {
   platform->input(p1right);
   platform->input(p1start);
   platform->input(p1coin);
+  platform->input(p1maxOutputReducer1);
+  platform->input(p1maxOutputReducer2);
 
   for(auto n : range(9)) {
     platform->input(p1[n]);
@@ -78,6 +84,8 @@ auto Aleck64::Controls::poll() -> void {
   platform->input(p2right);
   platform->input(p2start);
   platform->input(p2coin);
+  platform->input(p2maxOutputReducer1);
+  platform->input(p2maxOutputReducer2);
 
   for(auto n : range(9)) {
     platform->input(p2[n]);
@@ -106,27 +114,31 @@ auto Aleck64::Controls::poll() -> void {
 
 auto Aleck64::Controls::controllerButton(int playerIndex, string button) -> bool {
   if(playerIndex == 1) {
-    if(button == "Up"     ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1up->value();
-    if(button == "Down"   ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1down->value();
-    if(button == "Left"   ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1left->value();
-    if(button == "Right"  ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1right->value();
-    if(button == "Start"  ) return aleck64.controls.p1start->value();
-    if(button == "A"      ) return aleck64.controls.p1[0]->value();
-    if(button == "B"      ) return aleck64.controls.p1[1]->value();
-    if(button == "R"      ) return aleck64.controls.p1[2]->value();
-    if(button == "C-Right") return aleck64.controls.p1[3]->value();
+    if(button == "Up"                  ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1up->value();
+    if(button == "Down"                ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1down->value();
+    if(button == "Left"                ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1left->value();
+    if(button == "Right"               ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p1right->value();
+    if(button == "Start"               ) return aleck64.controls.p1start->value();
+    if(button == "A"                   ) return aleck64.controls.p1[0]->value();
+    if(button == "B"                   ) return aleck64.controls.p1[1]->value();
+    if(button == "R"                   ) return aleck64.controls.p1[2]->value();
+    if(button == "C-Right"             ) return aleck64.controls.p1[3]->value();
+    if(button == "Max Output Reducer 1") return aleck64.controls.p1maxOutputReducer1->value();
+    if(button == "Max Output Reducer 2") return aleck64.controls.p1maxOutputReducer2->value();
   }
 
   if(playerIndex == 2) {
-    if(button == "Up"     ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2up->value();
-    if(button == "Down"   ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2down->value();
-    if(button == "Left"   ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2left->value();
-    if(button == "Right"  ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2right->value();
-    if(button == "Start"  ) return aleck64.controls.p2start->value();
-    if(button == "A"      ) return aleck64.controls.p2[0]->value();
-    if(button == "B"      ) return aleck64.controls.p2[1]->value();
-    if(button == "R"      ) return aleck64.controls.p2[2]->value();
-    if(button == "C-Right") return aleck64.controls.p2[3]->value();
+    if(button == "Up"                  ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2up->value();
+    if(button == "Down"                ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2down->value();
+    if(button == "Left"                ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2left->value();
+    if(button == "Right"               ) return aleck64.gameConfig->dpadDisabled() ? 1 : aleck64.controls.p2right->value();
+    if(button == "Start"               ) return aleck64.controls.p2start->value();
+    if(button == "A"                   ) return aleck64.controls.p2[0]->value();
+    if(button == "B"                   ) return aleck64.controls.p2[1]->value();
+    if(button == "R"                   ) return aleck64.controls.p2[2]->value();
+    if(button == "C-Right"             ) return aleck64.controls.p2[3]->value();
+    if(button == "Max Output Reducer 1") return aleck64.controls.p2maxOutputReducer1->value();
+    if(button == "Max Output Reducer 2") return aleck64.controls.p2maxOutputReducer2->value();
   }
 
   return 0;
