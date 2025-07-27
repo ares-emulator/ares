@@ -178,7 +178,7 @@ auto Settings::process(bool load) -> void {
 
 //
 
-SettingsWindow::SettingsWindow() {
+auto SettingsWindow::initialize() -> void {
   onClose([&] {
     settings.save();
     setVisible(false);
@@ -231,9 +231,15 @@ SettingsWindow::SettingsWindow() {
   setSize({700_sx, 425_sy});
   setAlignment({0.0, 1.0});
   setResizable(false);
+  
+  driverSettings.videoRefresh();
+  driverSettings.audioRefresh();
+  driverSettings.inputRefresh();
+  initialized = true;
 }
 
 auto SettingsWindow::show(const string& panel) -> void {
+  if(!initialized) initialize();
   for(auto item : panelList.items()) {
     if(item.text() == panel) {
       item.setSelected();

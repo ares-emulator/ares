@@ -17,10 +17,6 @@ auto Program::create() -> void {
   audioDriverUpdate();
   inputDriverUpdate();
 
-  driverSettings.videoRefresh();
-  driverSettings.audioRefresh();
-  driverSettings.inputRefresh();
-
   _isRunning = true;
   worker = thread::create({&Program::emulatorRunLoop, this});
 
