@@ -439,7 +439,6 @@ struct HomePanel : VerticalLayout {
 };
 
 struct SettingsWindow : Window {
-  SettingsWindow();
   auto show(const string& panel) -> void;
   auto eventChange() -> void;
 
@@ -457,6 +456,11 @@ struct SettingsWindow : Window {
       DriverSettings driverSettings;
       DebugSettings debugSettings;
       HomePanel homePanel;
+  
+  bool initialized = false;
+  
+private:
+  auto initialize() -> void;
 };
 
 extern Settings settings;
