@@ -57,14 +57,29 @@ Presentation::Presentation() {
   if(settings.video.output == "Scale"   ) videoOutputScale.setChecked();
   if(settings.video.output == "Stretch" ) videoOutputStretch.setChecked();
 
-  videoAspectCorrection.setText("Aspect Correction").setChecked(settings.video.aspectCorrection).onToggle([&] {
-    settings.video.aspectCorrection = videoAspectCorrection.checked();
+  videoAspectCorrectionNone.setText("Aspect: No correction").onActivate([&] {
+    settings.video.aspectCorrection = "None";
     if(settings.video.adaptiveSizing) resizeWindow();
   });
-  videoAdaptiveSizing.setText("Adaptive Sizing").setChecked(settings.video.adaptiveSizing).onToggle([&] {
+
+  videoAspectCorrectionStandard.setText("Aspect: Standard").onActivate([&] {
+    settings.video.aspectCorrection = "Standard";
+    if(settings.video.adaptiveSizing) resizeWindow();
+  });
+
+  videoAspectCorrectionAnamorphic.setText("Aspect: Anamorphic (16:9)").onActivate([&] {
+    settings.video.aspectCorrection = "Anamorphic";
+    if(settings.video.adaptiveSizing) resizeWindow();
+  });
+
+  if(settings.video.aspectCorrection == "None")       videoAspectCorrectionNone.setChecked();
+  if(settings.video.aspectCorrection == "Standard")   videoAspectCorrectionStandard.setChecked();
+  if(settings.video.aspectCorrection == "Anamorphic") videoAspectCorrectionAnamorphic.setChecked();
+
+  videoAdaptiveSizing.setText("Window: Auto resize").setChecked(settings.video.adaptiveSizing).onToggle([&] {
     if(settings.video.adaptiveSizing = videoAdaptiveSizing.checked()) resizeWindow();
   });
-  videoAutoCentering.setText("Auto Centering").setChecked(settings.video.autoCentering).onToggle([&] {
+  videoAutoCentering.setText("Window: Auto center").setChecked(settings.video.autoCentering).onToggle([&] {
     if(settings.video.autoCentering = videoAutoCentering.checked()) resizeWindow();
   });
   videoShaderMenu.setText("Shader").setIcon(Icon::Emblem::Image);
@@ -305,7 +320,8 @@ auto Presentation::resizeWindow() -> void {
     auto& node = program.screens.first();
     u32 videoWidth = node->width() * node->scaleX();
     u32 videoHeight = node->height() * node->scaleY();
-    if(settings.video.aspectCorrection) videoWidth = videoWidth * node->aspectX() / node->aspectY();
+    if(settings.video.aspectCorrection != "None")       videoWidth = videoWidth * node->aspectX() / node->aspectY();
+    if(settings.video.aspectCorrection == "Anamorphic") videoWidth = videoWidth * 4 / 3;
     if(node->rotation() == 90 || node->rotation() == 270) swap(videoWidth, videoHeight);
 
     viewportWidth = videoWidth * multiplier;

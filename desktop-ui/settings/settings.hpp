@@ -18,7 +18,7 @@ struct Settings : Markup::Node {
     string shader = "None";
     u32 multiplier = 2;
     string output = "Scale";
-    bool aspectCorrection = true;
+    string aspectCorrection = "Standard";
     bool adaptiveSizing = true;
     bool autoCentering = false;
 

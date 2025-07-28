@@ -74,7 +74,8 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
 
   u32 videoWidth = node->width() * node->scaleX();
   u32 videoHeight = node->height() * node->scaleY();
-  if(settings.video.aspectCorrection) videoWidth = videoWidth * node->aspectX() / node->aspectY();
+  if(settings.video.aspectCorrection != "None")       videoWidth = videoWidth * node->aspectX() / node->aspectY();
+  if(settings.video.aspectCorrection == "Anamorphic") videoWidth = videoWidth * 4 / 3;
   if(node->rotation() == 90 || node->rotation() == 270) swap(videoWidth, videoHeight);
 
   ruby::video.lock();
