@@ -27,7 +27,12 @@ struct Presentation : Window {
         Group videoOutputGroup{&videoOutputPixelPerfect, &videoOutputFixedScale, &videoOutputIntegerScale,
                                &videoOutputScale, &videoOutputStretch};
         MenuSeparator videoOutputSeparator{&videoOutputMenu};
-        MenuCheckItem videoAspectCorrection{&videoOutputMenu};
+        MenuRadioItem videoAspectCorrectionNone{&videoOutputMenu};
+        MenuRadioItem videoAspectCorrectionStandard{&videoOutputMenu};
+        MenuRadioItem videoAspectCorrectionAnamorphic{&videoOutputMenu};
+        Group videoAspectCorrectionGroup{&videoAspectCorrectionNone, &videoAspectCorrectionStandard, 
+                                         &videoAspectCorrectionAnamorphic};
+        MenuSeparator videoOutputSeparator2{&videoOutputMenu};
         MenuCheckItem videoAdaptiveSizing{&videoOutputMenu};
         MenuCheckItem videoAutoCentering{&videoOutputMenu};
       Menu videoShaderMenu{&settingsMenu};
