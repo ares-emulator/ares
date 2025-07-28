@@ -77,7 +77,7 @@ auto MegaCD32X::load() -> LoadResult {
 
   ares::MegaDrive::option("Recompiler", !settings.general.forceInterpreter);
 
-  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD 32X (", region, ")"})) return otherError;
+  if(!ares::MegaDrive::load(root, {"[Sega] Mega CD 32X (", region, ")"}, location)) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

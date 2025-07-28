@@ -196,7 +196,7 @@ auto CompactDisc::readDataSectorBCD(string pathname, u32 sectorID) -> vector<u8>
 
 auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8> {
   Decode::CUE cuesheet;
-  if(!cuesheet.load(filename)) return {};
+  if(!cuesheet.load(filename, nullptr, nullptr)) return {};
 
   for(auto& file : cuesheet.files) {
     u64 offset = 0;
@@ -234,6 +234,59 @@ auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>
         }
       }
     }
+  }
+
+  return {};
+}
+
+auto CompactDisc::readDataSectorZIP(string filename, u32 sectorID) -> vector<u8> {
+  auto archive = std::make_unique<Decode::ZIP>();
+  if (!archive->open(filename)) return {};
+  Decode::CUE cuesheet;
+  if(!cuesheet.load(filename, archive.get(), archive->findFile("DigitalAudio.cue"))) return {};
+
+  for(auto& file : cuesheet.files) {
+    u64 offset = 0;
+    if(file.type == "binary") {
+      auto fileEntry = archive->findFile(file.name);
+      if(fileEntry == nullptr) continue;
+      array_view<u8> rawDataView;
+      vector<u8> rawDataBuffer;
+      if (archive->isDataUncompressed(*fileEntry)) {
+        rawDataView = archive->dataViewIfUncompressed(*fileEntry);
+      } else {
+        rawDataBuffer = archive->extract(*fileEntry);
+        rawDataView = rawDataBuffer;
+      }
+      for(auto& track : file.tracks) {
+        for(auto& index : track.indices) {
+          u32 sectorSize = 0;
+          if(track.type == "mode1/2048") sectorSize = 2048;
+          if(track.type == "mode1/2352") sectorSize = 2352;
+          if(track.type == "mode2/2352") sectorSize = 2352;
+          if(sectorSize && index.number == 1) {
+            size_t readPos = offset + (sectorSize * sectorID) + (sectorSize == 2352 ? 16 : 0);
+            vector<u8> sector;
+            sector.resize(2048);
+            memcpy(sector.data(), rawDataView.data() + readPos, sector.size());
+            return sector;
+          }
+          offset += track.sectorSize() * index.sectorCount();
+        }
+      }
+    }
+
+    //if(file.type == "wave") {
+    //  Decode::WAV wave;
+    //  if(!wave.open(location)) continue;
+    //  offset += wave.headerSize;
+    //  for(auto& track : file.tracks) {
+    //    auto length = track.sectorSize();
+    //    for(auto& index : track.indices) {
+    //      offset += track.sectorSize() * index.sectorCount();
+    //    }
+    //  }
+    //}
   }
 
   return {};

@@ -192,6 +192,17 @@ struct ZIP {
     return buffer;
   }
 
+  auto isDataUncompressed(const File& file) const {
+    return (file.cmode == 0);
+  }
+
+  auto dataViewIfUncompressed(const File& file) const -> array_view<u8> {
+    if(file.cmode == 0) {
+      return array_view<u8>(file.data, file.size);
+    }
+    return array_view<u8>();
+  }
+
   auto close() -> void {
     if(fm) fm.close();
   }

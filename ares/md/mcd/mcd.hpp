@@ -33,7 +33,7 @@ struct MCD : M68000, Thread {
   auto title() const -> string { return information.title; }
 
   //mcd.cpp
-  auto load(Node::Object) -> void;
+  auto load(Node::Object parent, string sourceFile) -> void;
   auto unload() -> void;
 
   auto allocate(Node::Port) -> Node::Peripheral;
@@ -365,6 +365,7 @@ struct MCD : M68000, Thread {
       n4  seeking;  //status after seeking (Playing or Paused)
       n16 latency;
       i32 sector;   //current frame#
+      i32 sectorRepeatCount;
       n16 sample;   //current audio sample# within current frame
       n7  track;    //current track#
       n1  tocRead;
@@ -384,20 +385,24 @@ struct MCD : M68000, Thread {
 
   struct LD {
     // megald.cpp
-    auto load() -> void;
+    auto load(string sourceFile) -> void;
     auto unload() -> void;
     auto read(n24 address) -> n8;
     auto write(n24 address, n8 data) -> void;
     auto getOutputRegisterValue(int regNum) -> n8;
-    auto processInputRegisterWrite(int regNum, n8 data) -> void;
+    auto processInputRegisterWrite(int regNum, n8 data, bool wasDeferredRegisterWrite) -> void;
+    auto resetSeekTargetToDefault() -> void;
+    auto liveSeekRegistersContainsLatchableTarget() const -> bool;
     auto latchSeekTargetFromCurrentState() -> bool;
     auto performSeekWithLatchedState() -> void;
     auto updateStopPointWithCurrentState() -> void;
-    auto frameNumberFromLba(s32 lba) -> s32;
+    auto frameNumberFromLba(s32 lba, bool processLeadIn = false) -> s32;
     auto LbaFromFrameNumber(s32 frameNumber) -> s32;
     auto RedbookFramesToVideoFrames(u8 frames) -> u8;
     auto VideoFramesToRedbookFrames(u8 frames) -> u8;
+    auto updateCurrentVideoFrameNumber(s32 lba) -> void;
     auto power(bool reset) -> void;
+    auto scanline(u32 pixels[1280], u32 y) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -416,6 +421,29 @@ struct MCD : M68000, Thread {
       SeekToVideoTime,
     };
 
+    struct AnalogVideoFrameIndex {
+      size_t leadInFrameCount;
+      size_t activeVideoFrameCount;
+      size_t leadOutFrameCount;
+      std::vector<const ::nall::Decode::ZIP::File*> leadInFrames;
+      std::vector<const ::nall::Decode::ZIP::File*> activeVideoFrames;
+      std::vector<const ::nall::Decode::ZIP::File*> leadOutFrames;
+
+      s32 currentVideoFrameIndex;
+      n1 currentVideoFrameLeadIn;
+      n1 currentVideoFrameLeadOut;
+      qoi_desc currentVideoFrameInfo;
+      unsigned char* currentVideoFrame = nullptr;
+
+      static const size_t FrameBufferWidth = 1280;
+      static const size_t FrameBufferHeight = 480;
+      std::vector<u32> outputFramebuffer;
+    } video;
+    vector<u8> analogAudioDataBuffer;
+    array_view<u8> analogAudioRawDataView;
+    n32 analogAudioLeadingAudioSamples;
+    ::nall::Decode::ZIP sourceArchive;
+
     static const size_t inputRegisterCount = 0x20;
     static const size_t outputRegisterCount = 0x20;
     n8 inputRegs[inputRegisterCount];
@@ -431,13 +459,18 @@ struct MCD : M68000, Thread {
     n3 currentSeekMode;
     n1 currentSeekModeTimeFormat;
     n1 currentSeekModeRepeat;
+
+    // Currently latched seek point
+    u8 activeSeekMode;
+    n8 seekPointRegs[5];
+
+    // Currently latched stop point
     n8 stopPointRegs[5];
     n1 reachedStopPointPreviously;
-    u8 activeSeekMode;
+
     u4 currentPlaybackMode;
     u3 currentPlaybackSpeed;
     u1 currentPlaybackDirection;
-    n8 seekPointRegs[5];
     n8 targetDriveState;
     n8 currentDriveState;
     n1 targetPauseState;

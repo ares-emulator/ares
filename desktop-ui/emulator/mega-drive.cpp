@@ -97,7 +97,7 @@ auto MegaDrive::load() -> LoadResult {
 
   ares::MegaDrive::option("TMSS", settings.megadrive.tmss);
 
-  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return otherError;
+  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"}, location)) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

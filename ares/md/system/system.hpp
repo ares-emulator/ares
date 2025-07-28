@@ -26,7 +26,7 @@ struct System {
   auto game() -> string;
   auto run() -> void;
 
-  auto load(Node::System& node, string name) -> bool;
+  auto load(Node::System& node, string name, string sourceFile) -> bool;
   auto unload() -> void;
   auto save() -> void;
   auto power(bool reset) -> void;

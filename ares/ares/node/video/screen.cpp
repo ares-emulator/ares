@@ -49,6 +49,8 @@ auto Screen::power() -> void {
   memory::fill<u32>(_inputB.data(), _canvasWidth * _canvasHeight, _fillColor);
   memory::fill<u32>(_output.data(), _canvasWidth * _canvasHeight, _fillColor);
   memory::fill<u32>(_rotate.data(), _canvasWidth * _canvasHeight, _fillColor);
+  _lineOverrideActive.resize(_canvasWidth * _canvasHeight, false);
+  _lineOverride.resize(_canvasWidth * _canvasHeight, nullptr);
 }
 
 auto Screen::pixels(bool frame) -> array_span<u32> {
@@ -225,7 +227,14 @@ auto Screen::refresh() -> void {
     auto source = input  + y * pitch;
     auto target = output + y * width;
 
-    if(_interlace) {
+    if (_lineOverrideActive[y]) {
+      auto source = _lineOverride[y];
+      for(u32 x : range(width)) {
+        auto color = *source++;
+        *target++ = color;
+      }
+      _lineOverrideActive[y] = false;
+    } else if(_interlace) {
       if((_interlaceField & 1) == (y & 1)) {
         for(u32 x : range(width)) {
           auto color = _palette[*source++];
@@ -331,6 +340,15 @@ auto Screen::refresh() -> void {
 
   platform->video(shared(), output + viewX + viewY * width, width * sizeof(u32), viewWidth, viewHeight);
   memory::fill<u32>(_inputB.data(), width * height, _fillColor);
+}
+
+auto Screen::lookupPalette(u32 index) -> u32 {
+  return _palette[index];
+}
+
+auto Screen::overrideLineNextDraw(u32 y, const u32* source) -> void {
+  _lineOverrideActive[y] = true;
+  _lineOverride[y] = source;
 }
 
 auto Screen::refreshPalette() -> void {

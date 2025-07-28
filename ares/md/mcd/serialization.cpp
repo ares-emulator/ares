@@ -146,6 +146,7 @@ auto MCD::CDD::serialize(serializer& s) -> void {
   s(io.seeking);
   s(io.latency);
   s(io.sector);
+  s(io.sectorRepeatCount);
   s(io.sample);
   s(io.track);
   s(io.tocRead);
@@ -194,6 +195,10 @@ auto MCD::LD::serialize(serializer& s) -> void {
   s(currentDigitalAudioFader);
   s(digitalAudioRightExclusive);
   s(digitalAudioLeftExclusive);
+
+  s(video.currentVideoFrameIndex);
+  s(video.currentVideoFrameLeadIn);
+  s(video.currentVideoFrameLeadOut);
 }
 
 auto MCD::Timer::serialize(serializer& s) -> void {
