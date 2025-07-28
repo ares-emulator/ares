@@ -61,7 +61,7 @@ auto MegaLD::load() -> LoadResult {
     return result;
   }
 
-  if(!ares::MegaDrive::load(root, {"[Sega] Mega LD (", region, ")"})) return otherError;
+  if(!ares::MegaDrive::load(root, {"[Sega] Mega LD (", region, ")"}, location)) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Mega CD/Disc Tray")) {
     port->allocate();

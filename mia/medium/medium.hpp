@@ -32,6 +32,7 @@ struct CompactDisc : Medium {
 private:
   auto readDataSectorBCD(string filename, u32 sectorID) -> vector<u8>;
   auto readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>;
+  auto readDataSectorZIP(string filename, u32 sectorID) -> vector<u8>;
 #if defined(ARES_ENABLE_CHD)
   auto readDataSectorCHD(string filename, u32 sectorID) -> vector<u8>;
 #endif

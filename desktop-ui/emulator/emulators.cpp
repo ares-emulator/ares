@@ -46,7 +46,7 @@ namespace ares::Atari2600 {
 
 #ifdef CORE_MD
   namespace ares::MegaDrive {
-    auto load(Node::System& node, string name) -> bool;
+    auto load(Node::System& node, string name, string sourceFile) -> bool;
     auto option(string name, string value) -> bool;
   }
   #include "mega-drive.cpp"

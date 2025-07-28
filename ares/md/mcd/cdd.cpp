@@ -57,10 +57,113 @@ auto MCD::CDD::clock() -> void {
 }
 
 auto MCD::CDD::advance() -> void {
-  if(auto track = session.inTrack(io.sector + 1)) {
+  // Calculate the sector advance amount based on the MegaLD playback modes, if applicable.
+  i32 sectorAdvanceOffset = 1;
+  if (MegaLD()) {
+    switch (mcd.ld.currentPlaybackMode) {
+    case 0x00:
+      // Normal playback. Nothing to do.
+      sectorAdvanceOffset = 1;
+      io.sectorRepeatCount = 0;
+      break;
+    case 0x01:
+      // Frame skipping. This only affects the analog video update rate.
+      //##TODO##
+    case 0x02:
+      // Frame stepping.
+      switch (mcd.ld.currentPlaybackSpeed) {
+      case 0x00:
+        //-0x0: 0 frames. This pauses playback in frame stepping mode, and performs a normal playback in frame skipping mode.
+        sectorAdvanceOffset = 0;
+        io.sectorRepeatCount = 0;
+        break;
+      case 0x01:
+        //-0x1: 1 frame only. The image will not update after the initial frame. Note that under frame step mode, output register
+        // 0x07 will report this step speed as 0x1 only until the single frame step has been performed, after which, the output
+        // register will now state a value of 0x0.
+        if (io.sectorRepeatCount == 0) {
+          sectorAdvanceOffset = 1;
+          io.sectorRepeatCount = 1;
+        } else {
+          sectorAdvanceOffset = 0;
+        }
+        break;
+      case 0x02:
+        //-0x2: 1 frame every 0.0625 seconds (100 frames every 16 seconds) (1.875 times slower)
+        //##FIX## Rounded to 2
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 30 ? 2 : 0);
+        break;
+      case 0x03:
+        //-0x3: 1 frame every 0.133r seconds (4 frames every 3 seconds) (4 times slower)
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 4 ? 1 : 0);
+        break;
+      case 0x04:
+        //-0x4: 1 frame every 0.25 seconds (7.5 times slower)
+        //##FIX## Rounded to 8
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 8 ? 1 : 0);
+        break;
+      case 0x05:
+        //-0x5: 1 frame every 0.5 seconds (15 times slower)
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 15 ? 1 : 0);
+        break;
+      case 0x06:
+        //-0x6: 1 frame per second (30 times slower)
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 30 ? 1 : 0);
+        break;
+      case 0x07:
+        //-0x7: 1 frame every 3 seconds (90 times slower)
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 90 ? 1 : 0);
+        break;
+      }
+      sectorAdvanceOffset = (mcd.ld.currentPlaybackDirection ? (i32)(-sectorAdvanceOffset) : sectorAdvanceOffset);
+      io.sectorRepeatCount = (sectorAdvanceOffset != 0 ? (i32)0 : io.sectorRepeatCount);
+      break;
+    case 0x03:
+      // Fast forward.
+      switch (mcd.ld.currentPlaybackSpeed) {
+      case 0x00:
+        sectorAdvanceOffset = 1;
+        break;
+      case 0x01:
+        sectorAdvanceOffset = 2;
+        break;
+      case 0x02:
+        sectorAdvanceOffset = 3;
+        break;
+      case 0x03:
+        sectorAdvanceOffset = 8;
+        break;
+      case 0x04:
+        sectorAdvanceOffset = 14;
+        break;
+      case 0x05:
+        sectorAdvanceOffset = 20;
+        break;
+      case 0x06:
+      case 0x07:
+        //##TODO## Unimplemented
+        //       -0x7/0x06: Search mode. Plays 0.75 seconds of footage forwards in time, with audio, then jumps either forward or back
+        //        4 seconds from the resulting point. Note that setting this register to 0x07 is the same as 0x06, but 0x06 is the value
+        //        that is reported back as the current mode in either case by output register 0x07.
+        break;
+      }
+      sectorAdvanceOffset = (mcd.ld.currentPlaybackDirection ? (i32)(-sectorAdvanceOffset) : sectorAdvanceOffset);
+      io.sectorRepeatCount = 0;
+      break;
+    }
+  }
+
+  if(auto track = session.inTrack(io.sector + sectorAdvanceOffset)) {
     io.track = track();
-    io.sector++;
+    io.sector += sectorAdvanceOffset;
     io.sample = 0;
+
+    if (MegaLD()) {
+      // Only update the displayed video frame if the image hold bit isn't set
+      if (!mcd.ld.inputRegs[0x0C].bit(5)) {
+        mcd.ld.updateCurrentVideoFrameNumber(io.sector);
+      }
+    }
 
     if (stopPointEnabled && (io.sector == targetStopPoint)) {
       reachedStopPoint = true;
@@ -69,23 +172,87 @@ auto MCD::CDD::advance() -> void {
     return;
   }
 
-  io.status = Status::LeadOut;
-  io.track = 0xaa;
+  if ((io.sector + sectorAdvanceOffset) < 0) {
+    io.status = Status::LeadIn;
+    io.track = 0xa00;
+  } else {
+    io.status = Status::LeadOut;
+    io.track = 0xaa;
+  }
 }
 
 auto MCD::CDD::sample() -> void {
-  i16 left  = 0;
-  i16 right = 0;
+  i16 digitalSampleLeft  = 0;
+  i16 digitalSampleRight = 0;
   if(io.status == Status::Playing) {
     if(session.tracks[io.track].isAudio()) {
       mcd.fd->seek((abs(session.leadIn.lba) + io.sector) * 2448 + io.sample);
-      left  = mcd.fd->readl(2);
-      right = mcd.fd->readl(2);
+      digitalSampleLeft  = mcd.fd->readl(2);
+      digitalSampleRight = mcd.fd->readl(2);
       io.sample += 4;
       if(io.sample >= 2352) advance();
     }
   }
-  dac.sample(left, right);
+
+  if (MegaLD()) {
+    // Disable digital audio if it is turned off
+    //if (!mcd.ld.inputRegs[0x01].bit(7)) {
+    //  digitalSampleLeft = 0;
+    //  digitalSampleRight = 0;
+    //}
+    // Attenuate the digital audio using the digital audio fader
+    //##TODO## Fully reverse enginner input reg 0x0D and take bits 4-7 into account for digital audio
+    float digitalAudioFader = (float)mcd.ld.inputRegs[0x0F] / (float)((1 << 8) - 1);
+    digitalSampleLeft = (int16_t)((float)digitalSampleLeft * digitalAudioFader);
+    digitalSampleRight = (int16_t)((float)digitalSampleLeft * digitalAudioFader);
+    // Take digital left/right exclusive register state into account
+    if (mcd.ld.inputRegs[0x0D].bit(0) && mcd.ld.inputRegs[0x0D].bit(1)) {
+      digitalSampleLeft /= 2;
+      digitalSampleRight /= 2;
+    } else if (mcd.ld.inputRegs[0x0D].bit(0)) {
+      digitalSampleRight = digitalSampleLeft;
+    } else if (mcd.ld.inputRegs[0x0D].bit(1)) {
+      digitalSampleLeft = digitalSampleRight;
+    }
+    // Retrieve the next analog audio sample
+    i16 analogSampleLeft = 0;
+    i16 analogSampleRight = 0;
+    auto analogAudioSamplePos = (io.sector * 2352) + io.sample + (mcd.ld.analogAudioLeadingAudioSamples * 4);
+    if ((analogAudioSamplePos + 3) < mcd.ld.analogAudioRawDataView.size()) {
+      analogSampleLeft = (i16)((u16)mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 0] | (u16)(mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 1] << 8));
+      analogSampleRight = (i16)((u16)mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 2] | (u16)(mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 3] << 8));
+    }
+    // Disable analog audio if it is turned off
+    if (!mcd.ld.inputRegs[0x01].bit(7) && !mcd.ld.inputRegs[0x0D].bit(4)) {
+      analogSampleLeft = 0;
+      analogSampleRight = 0;
+    }
+    // Take analog mute and left/right exclusive register state into account
+    if (mcd.ld.inputRegs[0x0E].bit(7) || (mcd.ld.inputRegs[0x0E].bit(0) && mcd.ld.inputRegs[0x0E].bit(1))) {
+      analogSampleLeft = 0;
+      analogSampleRight = 0;
+    } else if (mcd.ld.inputRegs[0x0E].bit(0)) {
+      analogSampleRight = analogSampleLeft;
+    } else if (mcd.ld.inputRegs[0x0E].bit(1)) {
+      analogSampleLeft = analogSampleRight;
+    }
+    // Audio is disabled in frame stepping mode
+    if (mcd.ld.currentPlaybackMode == 0x02) {
+      digitalSampleLeft = 0;
+      digitalSampleRight = 0;
+      analogSampleLeft = 0;
+      analogSampleRight = 0;
+    }
+    // Attenuate the analog audio
+    //##TODO## Fully reverse engineer input regs 0x1E and 0x1F to provide analog audio attenuation
+    // Mix analog and digital audio together
+    i16 combinedSampleLeft = (int16_t)std::clamp((int)digitalSampleLeft + (int)analogSampleLeft, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
+    i16 combinedSampleRight = (int16_t)std::clamp((int)digitalSampleRight + (int)analogSampleRight, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
+    // Output the combined sample
+    dac.sample(combinedSampleLeft, combinedSampleRight);
+  } else {
+    dac.sample(digitalSampleLeft, digitalSampleRight);
+  }
 }
 
 //convert sector# to normalized sector position on the CD-ROM surface for seek latency calculation

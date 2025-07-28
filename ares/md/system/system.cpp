@@ -26,9 +26,9 @@ auto enumerate() -> vector<string> {
   };
 }
 
-auto load(Node::System& node, string name) -> bool {
+auto load(Node::System& node, string name, string sourceFile) -> bool {
   if(!enumerate().find(name)) return false;
-  return system.load(node, name);
+  return system.load(node, name, sourceFile);
 }
 
 auto option(string name, string value) -> bool {
@@ -69,7 +69,7 @@ auto System::run() -> void {
   if(!reset && controls.reset->value()) power(true);
 }
 
-auto System::load(Node::System& root, string name) -> bool {
+auto System::load(Node::System& root, string name, string sourceFile) -> bool {
   if(node) unload();
 
   information = {};
@@ -142,7 +142,7 @@ auto System::load(Node::System& root, string name) -> bool {
   opn2.load(node);
   cartridgeSlot.load(node);
   if(Mega32X()) m32x.load(node);
-  if(MegaCD()) mcd.load(node);
+  if(MegaCD()) mcd.load(node, sourceFile);
   controllerPort1.load(node);
   controllerPort2.load(node);
   extensionPort.load(node);

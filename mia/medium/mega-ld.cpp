@@ -41,6 +41,8 @@ auto MegaLD::analyze(string location) -> string {
       sector = readDataSectorCUE(location, 0);
   } else if (location.iendsWith(".chd")) {
       sector = readDataSectorCHD(location, 0);
+  } else if (location.iendsWith(".zip")) {
+      sector = readDataSectorZIP(location, 0);
   }
 
   if(!sector || memory::compare(sector.data(), "SEGA", 4))

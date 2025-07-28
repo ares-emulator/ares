@@ -2,6 +2,11 @@
 //started: 2016-07-08
 
 #include <ares/ares.hpp>
+#include <nall/decode/zip.hpp>
+#include <vector>
+#include <cmath>
+#define QOI_NO_STDIO
+#include "qoi.h"
 
 #include <component/processor/m68000/m68000.hpp>
 #include <component/processor/z80/z80.hpp>
@@ -14,7 +19,7 @@
 namespace ares::MegaDrive {
   #include <ares/inline.hpp>
   auto enumerate() -> vector<string>;
-  auto load(Node::System& node, string name) -> bool;
+  auto load(Node::System& node, string name, string sourceFile) -> bool;
   auto option(string name, string value) -> bool;
 
   enum : u32 {

@@ -160,15 +160,6 @@ auto VDP::slot() -> void {
 }
 
 auto VDP::main() -> void {
-  // If the LD graphics fader has changed, regenerate the palette.
-  if (MegaLD()) {
-    static n6 lastGraphicsFader = 0;
-    if (lastGraphicsFader != mcd.ld.currentMdGraphicsFader) {
-      lastGraphicsFader = mcd.ld.currentMdGraphicsFader;
-      screen->resetPalette();
-    }
-  }
-
   latch.displayWidth = io.displayWidth;
   latch.clockSelect  = io.clockSelect;
   state.edclkPos = 0;
@@ -194,6 +185,7 @@ auto VDP::mainH32() -> void {
   if(dac.pixels) {
     blocks<false, true>();
     if(Mega32X()) m32x.vdp.scanline(pixels + 18, vcounter()); //approx 3 and 1/4 pixel offset
+    if(MegaLD()) mcd.ld.scanline(pixels, vcounter());
   } else {
     blocks<false, false>();
   }
@@ -257,6 +249,7 @@ auto VDP::mainH40() -> void {
   if(dac.pixels) {
     blocks<true, true>();
     if(Mega32X()) m32x.vdp.scanline(pixels, vcounter());
+    if(MegaLD()) mcd.ld.scanline(pixels, vcounter());
   } else {
     blocks<true, false>();
   }
