@@ -6,6 +6,7 @@ struct pHexEdit : pWidget {
   Declare(HexEdit, Widget)
 
   auto setAddress(u32 address) -> void;
+  auto setBase(u8 base) -> void;
   auto setBackgroundColor(Color color) -> void;
   auto setColumns(u32 columns) -> void;
   auto setForegroundColor(Color color) -> void;
