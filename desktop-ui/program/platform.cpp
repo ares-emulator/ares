@@ -87,16 +87,6 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
   u32 outputWidth = videoWidth * multiplier;
   u32 outputHeight = videoHeight * multiplier;
 
-  if(settings.video.output == "Perfect") {
-    outputWidth = videoWidth;
-    outputHeight = videoHeight;
-  }
-
-  if(settings.video.output == "Fixed") {
-    outputWidth = videoWidth * settings.video.multiplier;
-    outputHeight = videoHeight * settings.video.multiplier;
-  }
-
   if(multiplier == 0 || settings.video.output == "Scale") {
     f32 multiplierX = (f32)viewportWidth / (f32)videoWidth;
     f32 multiplierY = (f32)viewportHeight / (f32)videoHeight;

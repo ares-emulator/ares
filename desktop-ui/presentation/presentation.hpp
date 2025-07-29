@@ -19,13 +19,10 @@ struct Presentation : Window {
       Menu videoSizeMenu{&settingsMenu};
         Group videoSizeGroup;
       Menu videoOutputMenu{&settingsMenu};
-        MenuRadioItem videoOutputPixelPerfect{&videoOutputMenu};
-        MenuRadioItem videoOutputFixedScale{&videoOutputMenu};
-        MenuRadioItem videoOutputIntegerScale{&videoOutputMenu};
         MenuRadioItem videoOutputScale{&videoOutputMenu};
+        MenuRadioItem videoOutputIntegerScale{&videoOutputMenu};
         MenuRadioItem videoOutputStretch{&videoOutputMenu};
-        Group videoOutputGroup{&videoOutputPixelPerfect, &videoOutputFixedScale, &videoOutputIntegerScale,
-                               &videoOutputScale, &videoOutputStretch};
+        Group videoOutputGroup{&videoOutputIntegerScale, &videoOutputScale, &videoOutputStretch};
         MenuSeparator videoOutputSeparator{&videoOutputMenu};
         MenuRadioItem videoAspectCorrectionNone{&videoOutputMenu};
         MenuRadioItem videoAspectCorrectionStandard{&videoOutputMenu};
