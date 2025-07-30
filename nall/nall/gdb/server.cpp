@@ -505,6 +505,8 @@ namespace nall::GDB {
 
   auto Server::onConnect() -> void {
     printf("GDB client connected\n");
+    if (onClientConnectCallback)
+      onClientConnectCallback();
     resetClientData();
     hasActiveClient = true;
   }
