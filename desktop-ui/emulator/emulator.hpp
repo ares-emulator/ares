@@ -26,7 +26,7 @@ struct Emulator {
   auto setDeadzoneSize(f64 value) -> bool;
   auto setProportionalSensitivity(f64 value) -> bool;
   auto setResponseCurve(string value) -> bool;
-  auto setRangeNormalizedInflectionPoint(f64 value) -> bool;
+  auto setRangeNormalizedSwitchDistance(f64 value) -> bool;
   auto setResponseStrength(f64 value) -> bool;
   auto setVirtualNotch(bool value) -> bool;
   auto setNotchLengthFromEdge(f64 value) -> bool;

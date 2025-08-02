@@ -23,7 +23,7 @@ struct Axis : Input {
   auto deadzoneSize() const -> f64 { return _deadzoneSize; }
   auto proportionalSensitivity() const -> f64 { return _proportionalSensitivity; }
   auto responseCurve() const -> string { return _responseCurve; }
-  auto rangeNormalizedInflectionPoint() const -> f64 { return _rangeNormalizedInflectionPoint; }
+  auto rangeNormalizedSwitchDistance() const -> f64 { return _rangeNormalizedSwitchDistance; }
   auto responseStrength() const -> f64 { return _responseStrength; }
   auto virtualNotch() const -> bool { return _virtualNotch; }
   auto notchLengthFromEdge() const -> f64 { return _notchLengthFromEdge; }
@@ -69,9 +69,9 @@ struct Axis : Input {
     _responseCurve = responseCurve;
   }
 
-  auto setRangeNormalizedInflectionPoint(f64 rangeNormalizedInflectionPoint) -> void {
+  auto setRangeNormalizedSwitchDistance(f64 rangeNormalizedSwitchDistance) -> void {
     lock_guard<recursive_mutex> lock(_mutex);
-    _rangeNormalizedInflectionPoint = rangeNormalizedInflectionPoint;
+    _rangeNormalizedSwitchDistance = rangeNormalizedSwitchDistance;
   }
 
   auto setResponseStrength(f64 responseStrength) -> void {
@@ -120,10 +120,10 @@ struct Axis : Input {
     return initialAngle;
   }
 
-  auto responseCurve(double position, double configuredInnerDeadzone, double saturationRadius, double offset, double configuredRangeNormalizedInflectionPoint, double configuredResponseStrength, double configuredProportionalSensitivity, string configuredResponseCurveMode) -> double {
-    auto inflectionPoint = configuredRangeNormalizedInflectionPoint * (saturationRadius - configuredInnerDeadzone) + configuredInnerDeadzone;
+  auto responseCurve(double position, double configuredInnerDeadzone, double saturationRadius, double offset, double configuredRangeNormalizedSwitchDistance, double configuredResponseStrength, double configuredProportionalSensitivity, string configuredResponseCurveMode) -> double {
+    auto switchDistance = configuredRangeNormalizedSwitchDistance * (saturationRadius - configuredInnerDeadzone) + configuredInnerDeadzone;
     auto b = 1.0;  //keep for clarity or remove to reduce number of operations performed?
-    auto c = b * (log(1.0 - cos(Math::Pi * (inflectionPoint - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone))) - log(2.0)) / log((inflectionPoint - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)); //c = 2.0 * log(sin(Math::Pi/2.0*(inflectionPoint-configuredInnerDeadzone)/(saturationRadius-configuredInnerDeadzone)))/log((inflectionPoint-configuredInnerDeadzone)/(saturationRadius-configuredInnerDeadzone)); more efficient but requires b = 1.0 to remove a
+    auto c = b * (log(1.0 - cos(Math::Pi * (switchDistance - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone))) - log(2.0)) / log((switchDistance - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)); //c = 2.0 * log(sin(Math::Pi/2.0*(switchDistance-configuredInnerDeadzone)/(saturationRadius-configuredInnerDeadzone)))/log((switchDistance-configuredInnerDeadzone)/(saturationRadius-configuredInnerDeadzone)); more efficient but requires b = 1.0 to remove a
     auto maxA = 0.0;
     auto a = 0.0;
 
@@ -154,7 +154,7 @@ struct Axis : Input {
       break;
     }
     case Response::RelaxedToLinear: case Response::AggressiveToLinear: {
-      if(position <= inflectionPoint) {
+      if(position <= switchDistance) {
         position = configuredProportionalSensitivity * pow(((position - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)), (a / b)) * saturationRadius * pow((sin(((position - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)) * Math::Pi / 2.0)), (2.0 * (b - a) / c)) / position;
       } else {
         position = configuredProportionalSensitivity * (position - configuredInnerDeadzone) * saturationRadius / (saturationRadius - configuredInnerDeadzone) / position;
@@ -162,7 +162,7 @@ struct Axis : Input {
       break;
     }
     case Response::LinearToRelaxed: case Response::LinearToAggressive: {
-      if(position <= inflectionPoint) {
+      if(position <= switchDistance) {
         position = configuredProportionalSensitivity * (position - configuredInnerDeadzone) * saturationRadius / (saturationRadius - configuredInnerDeadzone) / position;
       } else {
         position = configuredProportionalSensitivity * pow(((position - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)), (a / b)) * saturationRadius * pow((sin(((position - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)) * Math::Pi / 2.0)), (2.0 * (b - a) / c)) / position;
@@ -173,11 +173,11 @@ struct Axis : Input {
     return position;
   }
   
-  auto processDeadzoneAndResponseCurve(double position, double length, double configuredInnerDeadzone, double saturationRadius, double offset, double configuredRangeNormalizedInflectionPoint, double configuredResponseStrength, double configuredProportionalSensitivity, string configuredResponseCurveMode) -> double {
+  auto processDeadzoneAndResponseCurve(double position, double length, double configuredInnerDeadzone, double saturationRadius, double offset, double configuredRangeNormalizedSwitchDistance, double configuredResponseStrength, double configuredProportionalSensitivity, string configuredResponseCurveMode) -> double {
     if(length <= configuredInnerDeadzone) {
       position = offset;
     } else {
-      length = responseCurve(length, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedInflectionPoint, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
+      length = responseCurve(length, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedSwitchDistance, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
       position = revisePosition(position, length, offset);
     }
     return position;
@@ -185,8 +185,8 @@ struct Axis : Input {
 
   auto applyGateBoundaries(double cardinalMax, double diagonalMax, double positionX, double positionY, double offset, double& edgex, double& edgey) -> void {
     auto slope = (positionY - offset) / (positionX - offset);
-    edgex = copysign(cardinalMax / (abs(slope) + (cardinalMax - diagonalMax) / diagonalMax), positionX);
-    edgey = copysign(min(abs(edgex * slope), cardinalMax / (1.0 / abs(slope) + (cardinalMax - diagonalMax) / diagonalMax)), positionY);
+    edgex = copysign(cardinalMax / (abs(slope) + (cardinalMax - diagonalMax) / diagonalMax), positionX - offset);
+    edgey = copysign(min(abs(edgex * slope), cardinalMax / (1.0 / abs(slope) + (cardinalMax - diagonalMax) / diagonalMax)), positionY - offset);
     edgex = edgey / slope;
   }
 
@@ -212,7 +212,7 @@ protected:
   string _deadzoneShape = "Axial";
   f64 _proportionalSensitivity = 1.0;
   string _responseCurve = "Linear (Default)";
-  f64 _rangeNormalizedInflectionPoint = 0.5;
+  f64 _rangeNormalizedSwitchDistance = 0.5;
   f64 _responseStrength = 0.0;
   bool _virtualNotch = false;
   f64 _notchLengthFromEdge = 0.1;

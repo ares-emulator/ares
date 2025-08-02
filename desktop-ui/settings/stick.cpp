@@ -1,11 +1,118 @@
+auto presetKeepPreserved = false;
+auto customKeepPreserved = false;
+
 auto StickSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  nintendo64ControlStickSettingsLabel.setText("Nintendo 64 Control Stick Settings").setFont(Font().setBold());
-  nintendo64ControlStickSettingsLayout.setSize({3, 3}).setPadding(12_sx, 6_sy);
-  nintendo64ControlStickSettingsLayout.column(0).setAlignment(1.0);
+  analogStickSettingsLabel.setText("Analog Stick Settings").setFont(Font().setBold());
+  analogStickSettingsLayout.setSize({3, 3}).setPadding(12_sx, 6_sy);
+  analogStickSettingsLayout.column(0).setAlignment(1.0);
+  
+  for(auto& optP : array<string[13]>{"None", "Slightly Narrow and Slightly Weak", "Slightly Narrow and Moderate", "Slightly Narrow and Slightly Strong", "Slightly Narrow and Moderately Strong", "Mostly Even and Slightly Weak", "Mostly Even and Moderate", "Mostly Even and Slightly Strong", "Mostly Even and Moderately Strong", "Slightly Wide and Slightly Weak", "Slightly Wide and Moderate", "Slightly Wide and Slightly Strong", "Slightly Wide and Moderately Strong"}) {
+    ComboButtonItem item{&responsePresetOption};
+    item.setText(optP);
+    if(optP == settings.stick.responsePresetString) {
+      item.setSelected();
+      
+      if(optP == "None") {
+        settings.stick.responsePresetChoice == "None";
+      } else if(optP == "Slightly Narrow and Slightly Weak") {
+        settings.stick.responsePresetChoice = "Slightly Narrow and Slightly Weak";
+      } else if(optP == "Slightly Narrow and Moderate") {
+        settings.stick.responsePresetChoice = "Slightly Narrow and Moderate";
+      } else if(optP == "Slightly Narrow and Slightly Strong") {
+        settings.stick.responsePresetChoice = "Slightly Narrow and Slightly Strong";
+      } else if(optP == "Slightly Narrow and Moderately Strong") {
+        settings.stick.responsePresetChoice = "Slightly Narrow and Moderately Strong";
+      } else if(optP == "Mostly Even and Slightly Weak") {
+        settings.stick.responsePresetChoice = "Mostly Even and Slightly Weak";
+      } else if(optP == "Mostly Even and Moderate") {
+        settings.stick.responsePresetChoice = "Mostly Even and Moderate";
+      } else if(optP == "Mostly Even and Slightly Strong") {
+        settings.stick.responsePresetChoice = "Mostly Even and Slightly Strong";
+      } else if(optP == "Mostly Even and Moderately Strong") {
+        settings.stick.responsePresetChoice = "Mostly Even and Moderately Strong";
+      } else if(optP == "Slightly Wide and Slightly Weak") {
+        settings.stick.responsePresetChoice = "Slightly Wide and Slightly Weak";
+      } else if(optP == "Slightly Wide and Moderate") {
+        settings.stick.responsePresetChoice = "Slightly Wide and Moderate";
+      } else if(optP == "Slightly Wide and Slightly Strong") {
+        settings.stick.responsePresetChoice == "Slightly Wide and Slightly Strong";
+      } else if(optP == "Slightly Wide and Moderately Strong") {
+        settings.stick.responsePresetChoice = "Slightly Wide and Moderately Strong";
+      }
+    }
+  }
+  responsePresetOption.onChange([&] {
+    auto idxP = responsePresetOption.selected();
+    auto valueP = idxP.text();
 
+    if(valueP != settings.stick.responsePresetString) {
+      Program::Guard guard;
+      settings.stick.responsePresetString = valueP;
+
+      if(valueP == "None") {
+        settings.stick.responsePresetChoice = "None";
+        settings.stick.rangeNormalizedSwitchDistance = settings.stick.preservedRangeNormalizedSwitchDistance;
+        settings.stick.responseStrength = settings.stick.preservedResponseStrength;
+        settings.stick.responseCurveChoice = settings.stick.preservedResponseCurveChoice;
+        presetKeepPreserved = false;
+        
+        rangeNormalizedSwitchDistanceSlider.setEnabled(true);
+        rangeNormalizedSwitchDistanceSlider.setPosition((settings.stick.rangeNormalizedSwitchDistance - 0.001) * 10.0 * 100.0);
+        Program::Guard guard;
+        if(emulator) emulator->setRangeNormalizedSwitchDistance(settings.stick.rangeNormalizedSwitchDistance);
+        rangeNormalizedSwitchDistanceValue.setText({0.1 + 0.1 * rangeNormalizedSwitchDistanceSlider.position(), "%"});
+
+        responseStrengthSlider.setEnabled(true);
+        responseStrengthSlider.setPosition(settings.stick.responseStrength * 100.0 * 10.0);
+        if(emulator) emulator->setResponseStrength(settings.stick.responseStrength);
+        responseStrengthValue.setText({responseStrengthSlider.position() * 0.1, "%"});
+
+        responseCurveOption.reset();
+        for(auto& optR : array<string[7]>{"Linear (Default)", "Relaxed to Aggressive", "Relaxed to Linear", "Linear to Relaxed", "Aggressive to Relaxed", "Aggressive to Linear", "Linear to Aggressive"}) {
+          ComboButtonItem item{&responseCurveOption};
+          item.setText(optR);
+          if(optR == settings.stick.responseCurveChoice) {
+            item.setSelected();
+          }
+        }
+        if(emulator) emulator->setResponseCurve(settings.stick.responseCurveChoice);
+      } else if(valueP == "Slightly Narrow and Slightly Weak") {
+        settings.stick.responsePresetChoice = "Slightly Narrow and Slightly Weak";
+      } else if(valueP == "Slightly Narrow and Moderate") {
+        settings.stick.responsePresetChoice = "Slightly Narrow and Moderate";
+      } else if(valueP == "Slightly Narrow and Slightly Strong") {
+        settings.stick.responsePresetChoice = "Slightly Narrow and Slightly Strong";
+      } else if(valueP == "Slightly Narrow and Moderately Strong") {
+        settings.stick.responsePresetChoice = "Slightly Narrow and Moderately Strong";
+      } else if(valueP == "Mostly Even and Slightly Weak") {
+        settings.stick.responsePresetChoice = "Mostly Even and Slightly Weak";
+      } else if(valueP == "Mostly Even and Moderate") {
+        settings.stick.responsePresetChoice = "Mostly Even and Moderate";
+      } else if(valueP == "Mostly Even and Slightly Strong") {
+        settings.stick.responsePresetChoice = "Mostly Even and Slightly Strong";
+      } else if(valueP == "Mostly Even and Moderately Strong") {
+        settings.stick.responsePresetChoice = "Mostly Even and Moderately Strong";
+      } else if(valueP == "Slightly Wide and Slightly Weak") {
+        settings.stick.responsePresetChoice = "Slightly Wide and Slightly Weak";
+      } else if(valueP == "Slightly Wide and Moderate") {
+        settings.stick.responsePresetChoice = "Slightly Wide and Moderate";
+      } else if(valueP == "Slightly Wide and Slightly Strong") {
+        settings.stick.responsePresetChoice = "Slightly Wide and Slightly Strong";
+      } else if(valueP == "Slightly Wide and Moderately Strong") {
+        settings.stick.responsePresetChoice = "Slightly Wide and Moderately Strong";
+      }
+    }
+    updateSlider();
+  });
+  responsePresetLayout.setAlignment(1).setPadding(12_sx, 0);
+  responsePresetLabel.setText("Response Preset:").setToolTip(
+    "Sets the behavior switch distance and response strength to\n"
+    "predefined values with a Relaxed to Aggressive curve."
+  );
+  
   for(auto& opt : array<string[10]>{"Octagon (Virtual) (Default)", "Circle (Diagonal)", "Circle (Cardinal)", "Circle (Maximum)", "Octagon (Morphed)", "Square (Maximum Virtual)", "Square (Maximum Morphed)", "Custom Octagon (Virtual)", "Custom Circle", "Custom Octagon (Morphed)"}) {
     ComboButtonItem item{&outputStyleOption};
     item.setText(opt);
@@ -68,6 +175,15 @@ auto StickSettings::construct() -> void {
       } else if(value == "Custom Octagon (Morphed)") {
         settings.stick.outputStyleChoice = "Custom Octagon (Morphed)";
       }
+    }
+    if(settings.stick.outputStyleChoice == "Custom Octagon (Virtual)" || settings.stick.outputStyleChoice == "Custom Circle" || settings.stick.outputStyleChoice == "Custom Octagon (Morphed)") {
+      settings.stick.customMaxOutput = settings.stick.preservedCustomMaxOutput;
+      customKeepPreserved = false;
+      customMaxOutputSlider.setEnabled(true);
+      customMaxOutputSlider.setPosition(settings.stick.customMaxOutput * 2.0);
+      Program::Guard guard;
+      if(emulator) emulator->setCustomMaxOutput(settings.stick.customMaxOutput);
+      customMaxOutputValue.setText({customMaxOutputSlider.position() * 0.5, " (", (customMaxOutputSlider.position() * 0.5) / 85.0 * 100.0, "%)"});
     }
     if(emulator) emulator->setOutputStyle(settings.stick.outputStyleString);
     updateSlider();
@@ -145,11 +261,16 @@ auto StickSettings::construct() -> void {
   if(settings.stick.deadzoneShape == "Axial") deadzoneShapeAxial.setChecked();
   if(settings.stick.deadzoneShape == "Radial") deadzoneShapeRadial.setChecked();
 
-  nintendo64ControlStickSettingsTwoLayout.setSize({3, 1}).setPadding(12_sx, 0);
-  nintendo64ControlStickSettingsTwoLayout.column(0).setAlignment(1.0);
+  analogStickSettingsTwoLayout.setSize({3, 1}).setPadding(12_sx, 0);
+  analogStickSettingsTwoLayout.column(0).setAlignment(1.0);
 
-  deadzoneSizeLabel.setText("Deadzone Size:");
-  deadzoneSizeValue.setAlignment(0.5);
+  deadzoneSizeLabel.setText("Deadzone Size:").setToolTip(
+    "Set the size of the deadzone. Percentage is dependent upon maximum value(s)\n"
+    "set by the chosen output style.\n\n"
+    "A larger deadzone size will compress the response curve, creating a quicker\n"
+    "rise from zero to max output."
+  );
+  deadzoneSizeValue.setAlignment(0.5).setToolTip(deadzoneSizeLabel.toolTip());
   deadzoneSizeSlider.setLength(1276).setPosition(settings.stick.deadzoneSize * 10.0).onChange([&] {
     Program::Guard guard;
     settings.stick.deadzoneSize = deadzoneSizeSlider.position() * 0.1;
@@ -159,8 +280,8 @@ auto StickSettings::construct() -> void {
   }).doChange();
   deadzoneSpacer.setColor({192, 192, 192});
 
-  nintendo64ControlStickSettingsThreeLayout.setSize({3, 1}).setPadding(12_sx, 3_sy);
-  nintendo64ControlStickSettingsThreeLayout.column(0).setAlignment(1.0);
+  analogStickSettingsThreeLayout.setSize({3, 1}).setPadding(12_sx, 3_sy);
+  analogStickSettingsThreeLayout.column(0).setAlignment(1.0);
 
   proportionalSensitivityLabel.setText("Sensitivity:");
   proportionalSensitivityValue.setAlignment(0.5);
@@ -225,25 +346,28 @@ auto StickSettings::construct() -> void {
   responseCurveLabel.setText("Response Curve:");
   responseCurveHint.setText("Changes control stick behavior according to the response curve selected").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  nintendo64ControlStickSettingsFourLayout.setSize({3, 2}).setPadding(12_sx, 6_sy);
-  nintendo64ControlStickSettingsFourLayout.column(0).setAlignment(1.0);
+  analogStickSettingsFourLayout.setSize({3, 2}).setPadding(12_sx, 6_sy);
+  analogStickSettingsFourLayout.column(0).setAlignment(1.0);
 
-  rangeNormalizedInflectionPointLabel.setText("Inflection Point:").setToolTip(
-    "Set the relative distance with respect to the range of\n"
-    "the real deadzone to the stick edge where the curve changes behavior."
+  rangeNormalizedSwitchDistanceLabel.setText("Behavior Switch Distance:").setToolTip(
+    "Set the relative distance with respect to the range of the real deadzone\n"
+    "to the stick edge where the curve switches behavior.\n\n"
+    "A higher value causes the first behavior to become the majority and the\n"
+    "second behavior the minority. The opposite is true for a lower value."
   );
-  rangeNormalizedInflectionPointValue.setAlignment(0.5).setToolTip(rangeNormalizedInflectionPointLabel.toolTip());
-  rangeNormalizedInflectionPointSlider.setLength(999).setPosition((settings.stick.rangeNormalizedInflectionPoint - 0.001) * 10.0 * 100.0).onChange([&] {
+  rangeNormalizedSwitchDistanceValue.setAlignment(0.5).setToolTip(rangeNormalizedSwitchDistanceLabel.toolTip());
+  rangeNormalizedSwitchDistanceSlider.setLength(999).setPosition((settings.stick.rangeNormalizedSwitchDistance - 0.001) * 10.0 * 100.0).onChange([&] {
     Program::Guard guard;
-    settings.stick.rangeNormalizedInflectionPoint = (rangeNormalizedInflectionPointSlider.position() * 0.1 + 0.1) / 100.0;
-    if(emulator) emulator->setRangeNormalizedInflectionPoint(settings.stick.rangeNormalizedInflectionPoint);
-    rangeNormalizedInflectionPointValue.setText({0.1 + 0.1 * rangeNormalizedInflectionPointSlider.position(), "%"});
+    settings.stick.rangeNormalizedSwitchDistance = (rangeNormalizedSwitchDistanceSlider.position() * 0.1 + 0.1) / 100.0;
+    if(emulator) emulator->setRangeNormalizedSwitchDistance(settings.stick.rangeNormalizedSwitchDistance);
+    rangeNormalizedSwitchDistanceValue.setText({0.1 + 0.1 * rangeNormalizedSwitchDistanceSlider.position(), "%"});
     updateSlider();
   }).doChange();
 
   responseStrengthLabel.setText("Response Strength:").setToolTip(
     "Set the response strength.\n"
-    "Changes are subtle when low and pronounced when high."
+    "Changes are subtle when low and pronounced when high. A greater response\n"
+    "occurs with the majority behavior."
   );
   responseStrengthValue.setAlignment(0.5).setToolTip(responseStrengthLabel.toolTip());
   responseStrengthSlider.setLength(1001).setPosition(settings.stick.responseStrength * 100.0 * 10.0).onChange([&] {
@@ -263,8 +387,8 @@ auto StickSettings::construct() -> void {
   virtualNotchLayout.setAlignment(1).setPadding(12_sx, 6_sy);
   virtualNotchHint.setText("Enable/Disable virtual notches").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  nintendo64ControlStickSettingsFiveLayout.setSize({3, 2}).setPadding(12_sx, 3_sy);
-  nintendo64ControlStickSettingsFiveLayout.column(0).setAlignment(1.0);
+  analogStickSettingsFiveLayout.setSize({3, 2}).setPadding(12_sx, 3_sy);
+  analogStickSettingsFiveLayout.column(0).setAlignment(1.0);
 
   notchLengthFromEdgeLabel.setText("Notch Length from Edge:").setToolTip(
     "Set the notch length from the circular edge of the analog stick.\n"
@@ -293,15 +417,63 @@ auto StickSettings::construct() -> void {
 }
 
 auto StickSettings::updateSlider() -> void {
-  if(settings.stick.outputStyleChoice == "Custom Octagon (Virtual)" || settings.stick.outputStyleChoice == "Custom Circle" || settings.stick.outputStyleChoice == "Custom Octagon (Morphed)") {
-    customMaxOutputSlider.setEnabled(true);
-    settings.stick.customMaxOutput = customMaxOutputSlider.position() * 0.5;
-  } else {
+  if(settings.stick.responsePresetChoice != "None") {
+    if(presetKeepPreserved == false) {
+      settings.stick.preservedRangeNormalizedSwitchDistance = settings.stick.rangeNormalizedSwitchDistance;
+      settings.stick.preservedResponseStrength = settings.stick.responseStrength;
+      settings.stick.preservedResponseCurveChoice = settings.stick.responseCurveChoice;
+      presetKeepPreserved = true;
+    }
+
+    if(settings.stick.responsePresetChoice == "Slightly Narrow and Slightly Weak") { settings.stick.rangeNormalizedSwitchDistance = 0.435; settings.stick.responseStrength = 0.440; }
+    if(settings.stick.responsePresetChoice == "Slightly Narrow and Moderate") { settings.stick.rangeNormalizedSwitchDistance = 0.435; settings.stick.responseStrength = 0.530; }
+    if(settings.stick.responsePresetChoice == "Slightly Narrow and Slightly Strong") { settings.stick.rangeNormalizedSwitchDistance = 0.435; settings.stick.responseStrength = 0.620; }
+    if(settings.stick.responsePresetChoice == "Slightly Narrow and Moderately Strong") { settings.stick.rangeNormalizedSwitchDistance = 0.435; settings.stick.responseStrength = 0.710; }
+    if(settings.stick.responsePresetChoice == "Mostly Even and Slightly Weak") { settings.stick.rangeNormalizedSwitchDistance = 0.510; settings.stick.responseStrength = 0.440; }
+    if(settings.stick.responsePresetChoice == "Mostly Even and Moderate") { settings.stick.rangeNormalizedSwitchDistance = 0.510; settings.stick.responseStrength = 0.530; }
+    if(settings.stick.responsePresetChoice == "Mostly Even and Slightly Strong") { settings.stick.rangeNormalizedSwitchDistance = 0.510; settings.stick.responseStrength = 0.620; }
+    if(settings.stick.responsePresetChoice == "Mostly Even and Moderately Strong") { settings.stick.rangeNormalizedSwitchDistance = 0.510; settings.stick.responseStrength = 0.710; }
+    if(settings.stick.responsePresetChoice == "Slightly Wide and Slightly Weak") { settings.stick.rangeNormalizedSwitchDistance = 0.585; settings.stick.responseStrength = 0.440; }
+    if(settings.stick.responsePresetChoice == "Slightly Wide and Moderate") { settings.stick.rangeNormalizedSwitchDistance = 0.585; settings.stick.responseStrength = 0.530; }
+    if(settings.stick.responsePresetChoice == "Slightly Wide and Slightly Strong") { settings.stick.rangeNormalizedSwitchDistance = 0.585; settings.stick.responseStrength = 0.620; }
+    if(settings.stick.responsePresetChoice == "Slightly Wide and Moderately Strong") { settings.stick.rangeNormalizedSwitchDistance = 0.585; settings.stick.responseStrength = 0.710; }
+
+    if(settings.stick.responsePresetChoice != "None") {
+      settings.stick.responseCurveChoice = "Relaxed to Aggressive";
+      responseCurveOption.reset();
+      for(auto& optR : array<string[7]>{"Linear (Default)", "Relaxed to Aggressive", "Relaxed to Linear", "Linear to Relaxed", "Aggressive to Relaxed", "Aggressive to Linear", "Linear to Aggressive"}) {
+        ComboButtonItem item{&responseCurveOption};
+        item.setText(optR);
+        if(optR == settings.stick.responseCurveChoice) {
+          item.setSelected();
+        }
+      }
+      Program::Guard guard;
+      if(emulator) emulator->setResponseCurve(settings.stick.responseCurveChoice);
+      rangeNormalizedSwitchDistanceSlider.setPosition((settings.stick.rangeNormalizedSwitchDistance - 0.001) * 10.0 * 100.0);
+      if(emulator) emulator->setRangeNormalizedSwitchDistance(settings.stick.rangeNormalizedSwitchDistance);
+      rangeNormalizedSwitchDistanceValue.setText({0.1 + 0.1 * rangeNormalizedSwitchDistanceSlider.position(), "%"});
+      rangeNormalizedSwitchDistanceSlider.setEnabled(false);
+
+      responseStrengthSlider.setPosition(settings.stick.responseStrength * 100.0 * 10.0);
+      if(emulator) emulator->setResponseStrength(settings.stick.responseStrength);
+      responseStrengthValue.setText({responseStrengthSlider.position() * 0.1, "%"});
+      responseStrengthSlider.setEnabled(false);
+    }
+  }
+
+  if(settings.stick.outputStyleChoice != "Custom Octagon (Virtual)" && settings.stick.outputStyleChoice != "Custom Circle" && settings.stick.outputStyleChoice != "Custom Octagon (Morphed)") {
+    if(customKeepPreserved == false) {
+      settings.stick.preservedCustomMaxOutput = settings.stick.customMaxOutput;
+      customKeepPreserved = true;
+    }
     customMaxOutputSlider.setEnabled(false);
     settings.stick.customMaxOutput = 85.0;
+    customMaxOutputSlider.setPosition(settings.stick.customMaxOutput * 2.0);
+    Program::Guard guard;
+    if(emulator) emulator->setCustomMaxOutput(settings.stick.customMaxOutput);
+    customMaxOutputValue.setText({customMaxOutputSlider.position() * 0.5, " (", (customMaxOutputSlider.position() * 0.5) / 85.0 * 100.0, "%)"});
   }
-  Program::Guard guard;
-  if(emulator) emulator->setCustomMaxOutput(settings.stick.customMaxOutput);
 
   auto maxOutputMultiplier = settings.stick.customMaxOutput / 85.0;
   auto diagonalMax = 0.0;
@@ -356,9 +528,9 @@ auto StickSettings::updateSlider() -> void {
   } else {
     deadzoneSizeHint.setText({"Virtual: N/A     ", "Real: ", settings.stick.deadzoneSize / saturationRadius * 100.0, "%"}).setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   }
-  auto inflectionPoint = settings.stick.rangeNormalizedInflectionPoint * (saturationRadius - configuredInnerDeadzone) + configuredInnerDeadzone;
+  auto switchDistance = settings.stick.rangeNormalizedSwitchDistance * (saturationRadius - configuredInnerDeadzone) + configuredInnerDeadzone;
   auto b = 1.0;
-  auto c = b * (log(1.0 - cos(Math::Pi * (inflectionPoint - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone))) - log(2.0)) / log((inflectionPoint - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone));
+  auto c = b * (log(1.0 - cos(Math::Pi * (switchDistance - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone))) - log(2.0)) / log((switchDistance - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone));
 
 
   auto configuredProportionalSensitivity = settings.stick.proportionalSensitivity;
@@ -383,13 +555,13 @@ auto StickSettings::updateSlider() -> void {
   } else if(settings.stick.responseCurveChoice == "Relaxed to Aggressive" || settings.stick.responseCurveChoice == "Aggressive to Relaxed") {
     diagonalOutput = configuredProportionalSensitivity * pow(((diagonalInput - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)), (a / b)) * saturationRadius * pow((sin(((diagonalInput - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)) * Math::Pi / 2.0)), (2.0 * (b - a) / c));
   } else if(settings.stick.responseCurveChoice == "Relaxed to Linear" || settings.stick.responseCurveChoice == "Aggressive to Linear") {
-    if(diagonalInput <= inflectionPoint) {
+    if(diagonalInput <= switchDistance) {
       diagonalOutput = configuredProportionalSensitivity * pow(((diagonalInput - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)), (a / b)) * saturationRadius * pow((sin(((diagonalInput - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)) * Math::Pi / 2.0)), (2.0 * (b - a) / c));
     } else {
       diagonalOutput = configuredProportionalSensitivity * (diagonalInput - configuredInnerDeadzone) * saturationRadius / (saturationRadius - configuredInnerDeadzone);
     }
   } else if(settings.stick.responseCurveChoice == "Linear to Relaxed" || settings.stick.responseCurveChoice == "Linear to Aggressive") {
-    if(diagonalInput <= inflectionPoint) {
+    if(diagonalInput <= switchDistance) {
       diagonalOutput = configuredProportionalSensitivity * (diagonalInput - configuredInnerDeadzone) * saturationRadius / (saturationRadius - configuredInnerDeadzone);
     } else {
       diagonalOutput = configuredProportionalSensitivity * pow(((diagonalInput - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)), (a / b)) * saturationRadius * pow((sin(((diagonalInput - configuredInnerDeadzone) / (saturationRadius - configuredInnerDeadzone)) * Math::Pi / 2.0)), (2.0 * (b - a) / c));
@@ -399,9 +571,9 @@ auto StickSettings::updateSlider() -> void {
   diagonalOutput += 1e-09; //add epsilon to counteract floating point precision error
   if((diagonalOutput < diagonalMax) && !(settings.stick.outputStyleChoice == "Octagon (Morphed)" || settings.stick.outputStyleChoice == "Square (Maximum Morphed)" || settings.stick.outputStyleChoice == "Custom Octagon (Morphed)")) {
     if(settings.stick.responseCurveChoice == "Relaxed to Aggressive" || settings.stick.responseCurveChoice == "Relaxed to Linear") {
-      responseStrengthHint.setText("Note: Reduced diagonal output.\nLower the inflection point, lessen the response strength, raise sensitivity, decrease deadzone, and/or increase max output for full diagonal output.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+      responseStrengthHint.setText("Note: Reduced diagonal output.\nLessen the switch distance, lower the response strength, raise sensitivity, decrease deadzone, and/or increase max output for full diagonal output.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
     } else if(settings.stick.responseCurveChoice == "Aggressive to Relaxed" || settings.stick.responseCurveChoice == "Linear to Aggressive") {
-      responseStrengthHint.setText("Note: Reduced diagonal output.\nRaise the inflection point, lessen the response strength, raise sensitivity, decrease deadzone, and/or increase max output for full diagonal output.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+      responseStrengthHint.setText("Note: Reduced diagonal output.\nIncrease the switch distance, lower the response strength, raise sensitivity, decrease deadzone, and/or increase max output for full diagonal output.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
     } else if(settings.stick.responseCurveChoice == "Linear (Default)" || settings.stick.responseCurveChoice == "Linear to Relaxed" || settings.stick.responseCurveChoice == "Aggressive to Linear") {
       responseStrengthHint.setText("Note: Reduced diagonal output.\nRaise sensitivity, decrease deadzone, and/or increase max output for full diagonal output.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
     }

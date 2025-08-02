@@ -360,10 +360,10 @@ auto Gamepad::read() -> n32 {
   stickResponseCurve->setAllowedValues({"Linear (Default)", "Relaxed to Aggressive", "Aggressive to Relaxed", "Relaxed to Linear", "Linear to Relaxed", "Aggressive to Linear", "Linear to Aggressive"});
 
 
-  Node::Setting::Real stickRangeNormalizedInflectionPoint = axis->append<Node::Setting::Real>("Stick Range Normalized Inflection Point", 0.5, [&](auto value) {
-    axis->setRangeNormalizedInflectionPoint(value);
+  Node::Setting::Real stickRangeNormalizedSwitchDistance = axis->append<Node::Setting::Real>("Stick Range Normalized Switch Distance", 0.5, [&](auto value) {
+    axis->setRangeNormalizedSwitchDistance(value);
   });
-  stickRangeNormalizedInflectionPoint->setDynamic(true);
+  stickRangeNormalizedSwitchDistance->setDynamic(true);
 
   Node::Setting::Real stickResponseStrength = axis->append<Node::Setting::Real>("Stick Response Strength", 0.0, [&](auto value) {
     axis->setResponseStrength(value);
@@ -471,11 +471,11 @@ auto Gamepad::read() -> n32 {
   auto configuredMaxNotchAngularDist = axis->notchAngularSnappingDistance(); //user-defined in degrees [0.0, 45.0] (default 0.0); values under 15.0 are likely to be more favorable
   auto configuredVirtualNotch = axis->virtualNotch();
   if(configuredVirtualNotch == true) {
-    auto initialLength = hypot(ax, ay);
-    auto initialAngle = atan2(ay, ax);
+    auto initialLength = hypot(ax - offset, ay - offset);
+    auto initialAngle = atan2(ay - offset, ax - offset);
     auto currentAngle = axis->virtualNotch(initialLength, initialAngle, saturationRadius, configuredNotchLengthFromEdge, configuredMaxNotchAngularDist);
-    ax = cos(currentAngle) * initialLength;
-    ay = sin(currentAngle) * initialLength;
+    ax = cos(currentAngle) * initialLength + offset;
+    ay = sin(currentAngle) * initialLength + offset;
   }
 
   string configuredResponseCurveMode = axis->responseCurve();
@@ -487,7 +487,7 @@ auto Gamepad::read() -> n32 {
   if(configuredResponseCurveMode == "Aggressive to Linear") response = Response::AggressiveToLinear;
   if(configuredResponseCurveMode == "Linear to Aggressive") response = Response::LinearToAggressive;
 
-  auto configuredRangeNormalizedInflectionPoint = std::clamp(axis->rangeNormalizedInflectionPoint(), 0.005, 0.995); //user-defined (configuredInnerDeadzone, cardinalMax) (default 50.0)
+  auto configuredRangeNormalizedSwitchDistance = std::clamp(axis->rangeNormalizedSwitchDistance(), 0.001, 0.999); //user-defined (configuredInnerDeadzone, cardinalMax) (default 50.0)
   auto configuredResponseStrength = axis->responseStrength(); //user-defined (0.0, 100.0] (default 100.0); used to produce a more relaxed or aggressive curve; values close to 0.0 and 100.0 create strongest response when relaxed and aggressive, respectively
   auto configuredProportionalSensitivity = axis->proportionalSensitivity(); //user-defined (default 1.0); Should this only apply to a linear response? What percentage range should be used? Place outside of Gamepad::responseCurve()?
 
@@ -495,12 +495,12 @@ auto Gamepad::read() -> n32 {
   if(configuredDeadzoneShape == "Axial"){
     auto lengthAbsoluteX = abs(ax - offset);
     auto lengthAbsoluteY = abs(ay - offset);
-    ax = axis->processDeadzoneAndResponseCurve(ax, lengthAbsoluteX, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedInflectionPoint, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
-    ay = axis->processDeadzoneAndResponseCurve(ay, lengthAbsoluteY, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedInflectionPoint, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
+    ax = axis->processDeadzoneAndResponseCurve(ax, lengthAbsoluteX, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedSwitchDistance, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
+    ay = axis->processDeadzoneAndResponseCurve(ay, lengthAbsoluteY, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedSwitchDistance, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
   } else {
     auto length = hypot(ax - offset, ay - offset);
-    ax = axis->processDeadzoneAndResponseCurve(ax, length, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedInflectionPoint, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
-    ay = axis->processDeadzoneAndResponseCurve(ay, length, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedInflectionPoint, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
+    ax = axis->processDeadzoneAndResponseCurve(ax, length, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedSwitchDistance, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
+    ay = axis->processDeadzoneAndResponseCurve(ay, length, configuredInnerDeadzone, saturationRadius, offset, configuredRangeNormalizedSwitchDistance, configuredResponseStrength, configuredProportionalSensitivity, configuredResponseCurveMode);
   }
 
   auto scaledLength = hypot(ax - offset, ay - offset);

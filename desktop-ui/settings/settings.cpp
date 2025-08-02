@@ -99,12 +99,17 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Stick/OutputStyleString", stick.outputStyleString);
   bind(real,    "Stick/MaxOutputReducerOneFactor", stick.maxOutputReducerOneFactor);
   bind(real,    "Stick/MaxOutputReducerTwoFactor", stick.maxOutputReducerTwoFactor);
+  bind(real,    "Stick/PreservedCustomMaxOutput", stick.preservedCustomMaxOutput);
   bind(real,    "Stick/CustomMaxOutput", stick.customMaxOutput);
   bind(string,  "Stick/DeadzoneShape", stick.deadzoneShape);
   bind(real,    "Stick/DeadzoneSize", stick.deadzoneSize);
   bind(real,    "Stick/ProportionalSensitivity", stick.proportionalSensitivity);
+  bind(string,  "Stick/ResponsePresetString", stick.responsePresetString);
+  bind(string,  "Stick/PreservedResponseCurveChoice", stick.preservedResponseCurveChoice);
+  bind(real,    "Stick/PreservedRangeNormalizedSwitchDistance", stick.preservedRangeNormalizedSwitchDistance);
+  bind(real,    "Stick/PreservedResponseStrength", stick.preservedResponseStrength);
   bind(string,  "Stick/ResponseCurveString", stick.responseCurveString);
-  bind(real,    "Stick/RangeNormalizedInflectionPoint", stick.rangeNormalizedInflectionPoint);
+  bind(real,    "Stick/RangeNormalizedSwitchDistance", stick.rangeNormalizedSwitchDistance);
   bind(real,    "Stick/ResponseStrength", stick.responseStrength);
   bind(boolean, "Stick/VirtualNotch", stick.virtualNotch);
   bind(real,    "Stick/NotchLengthFromEdge", stick.notchLengthFromEdge);

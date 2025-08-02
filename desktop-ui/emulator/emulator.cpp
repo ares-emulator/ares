@@ -137,7 +137,7 @@ auto Emulator::load(const string& location) -> bool {
   setDeadzoneSize(settings.stick.deadzoneSize);
   setProportionalSensitivity(settings.stick.proportionalSensitivity);
   setResponseCurve(settings.stick.responseCurveString);
-  setRangeNormalizedInflectionPoint(settings.stick.rangeNormalizedInflectionPoint);
+  setRangeNormalizedSwitchDistance(settings.stick.rangeNormalizedSwitchDistance);
   setResponseStrength(settings.stick.responseStrength);
   setVirtualNotch(settings.stick.virtualNotch);
   setNotchLengthFromEdge(settings.stick.notchLengthFromEdge);
@@ -322,10 +322,10 @@ auto Emulator::setResponseCurve(string value) -> bool {
   }
   return false;
 }
-auto Emulator::setRangeNormalizedInflectionPoint(f64 value) -> bool {
+auto Emulator::setRangeNormalizedSwitchDistance(f64 value) -> bool {
   Program::Guard guard;
   if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
-    axis->setRangeNormalizedInflectionPoint(value);
+    axis->setRangeNormalizedSwitchDistance(value);
     return true;
   }
   return false;
