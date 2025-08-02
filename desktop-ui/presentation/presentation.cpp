@@ -35,36 +35,43 @@ Presentation::Presentation() {
     setAlignment(Alignment::Center);
   });
   videoOutputMenu.setText("Output").setIcon(Icon::Emblem::Image);
-  videoOutputPixelPerfect.setText("Pixel Perfect").onActivate([&] {
-    settings.video.output = "Perfect";
-  });
-  videoOutputFixedScale.setText("Scale (Fixed)").onActivate([&] {
-    settings.video.output = "Fixed";
-  });
-  videoOutputIntegerScale.setText("Scale (Integer)").onActivate([&] {
-    settings.video.output = "Integer";
-  });
-  videoOutputScale.setText("Scale (Best Fit)").onActivate([&] {
+  videoOutputScale.setText("Scale: Best Fit").onActivate([&] {
     settings.video.output = "Scale";
   });
-  videoOutputStretch.setText("Stretch").onActivate([&] {
+  videoOutputIntegerScale.setText("Scale: Integer").onActivate([&] {
+    settings.video.output = "Integer";
+  });
+  videoOutputStretch.setText("Scale: Stretch to Fill").onActivate([&] {
     settings.video.output = "Stretch";
   });
 
-  if(settings.video.output == "Perfect" ) videoOutputPixelPerfect.setChecked();
-  if(settings.video.output == "Fixed"   ) videoOutputFixedScale.setChecked();
   if(settings.video.output == "Integer" ) videoOutputIntegerScale.setChecked();
   if(settings.video.output == "Scale"   ) videoOutputScale.setChecked();
   if(settings.video.output == "Stretch" ) videoOutputStretch.setChecked();
 
-  videoAspectCorrection.setText("Aspect Correction").setChecked(settings.video.aspectCorrection).onToggle([&] {
-    settings.video.aspectCorrection = videoAspectCorrection.checked();
+  videoAspectCorrectionNone.setText("Aspect: No correction").onActivate([&] {
+    settings.video.aspectCorrection = "None";
     if(settings.video.adaptiveSizing) resizeWindow();
   });
-  videoAdaptiveSizing.setText("Adaptive Sizing").setChecked(settings.video.adaptiveSizing).onToggle([&] {
+
+  videoAspectCorrectionStandard.setText("Aspect: Standard").onActivate([&] {
+    settings.video.aspectCorrection = "Standard";
+    if(settings.video.adaptiveSizing) resizeWindow();
+  });
+
+  videoAspectCorrectionAnamorphic.setText("Aspect: Anamorphic (16:9)").onActivate([&] {
+    settings.video.aspectCorrection = "Anamorphic";
+    if(settings.video.adaptiveSizing) resizeWindow();
+  });
+
+  if(settings.video.aspectCorrection == "None")       videoAspectCorrectionNone.setChecked();
+  if(settings.video.aspectCorrection == "Standard")   videoAspectCorrectionStandard.setChecked();
+  if(settings.video.aspectCorrection == "Anamorphic") videoAspectCorrectionAnamorphic.setChecked();
+
+  videoAdaptiveSizing.setText("Window: Auto resize").setChecked(settings.video.adaptiveSizing).onToggle([&] {
     if(settings.video.adaptiveSizing = videoAdaptiveSizing.checked()) resizeWindow();
   });
-  videoAutoCentering.setText("Auto Centering").setChecked(settings.video.autoCentering).onToggle([&] {
+  videoAutoCentering.setText("Window: Auto center").setChecked(settings.video.autoCentering).onToggle([&] {
     if(settings.video.autoCentering = videoAutoCentering.checked()) resizeWindow();
   });
   videoShaderMenu.setText("Shader").setIcon(Icon::Emblem::Image);
@@ -298,7 +305,6 @@ Presentation::Presentation() {
 auto Presentation::resizeWindow() -> void {
   if(fullScreen()) setFullScreen(false);
   if(maximized()) return;
-  if(settings.video.output == "Fixed") return;
 
   u32 multiplier = settings.video.multiplier;
   u32 viewportWidth = 320 * multiplier;
@@ -308,7 +314,8 @@ auto Presentation::resizeWindow() -> void {
     auto& node = program.screens.first();
     u32 videoWidth = node->width() * node->scaleX();
     u32 videoHeight = node->height() * node->scaleY();
-    if(settings.video.aspectCorrection) videoWidth = videoWidth * node->aspectX() / node->aspectY();
+    if(settings.video.aspectCorrection != "None")       videoWidth = videoWidth * node->aspectX() / node->aspectY();
+    if(settings.video.aspectCorrection == "Anamorphic") videoWidth = videoWidth * 4 / 3;
     if(node->rotation() == 90 || node->rotation() == 270) swap(videoWidth, videoHeight);
 
     viewportWidth = videoWidth * multiplier;

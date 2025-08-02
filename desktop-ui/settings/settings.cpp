@@ -65,7 +65,7 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Video/Shader", video.shader);
   bind(natural, "Video/Multiplier", video.multiplier);
   bind(string,  "Video/Output", video.output);
-  bind(boolean, "Video/AspectCorrection", video.aspectCorrection);
+  bind(string,  "Video/AspectCorrectionMode", video.aspectCorrection);
   bind(boolean, "Video/AdaptiveSizing", video.adaptiveSizing);
   bind(boolean, "Video/AutoCentering", video.autoCentering);
   bind(real,    "Video/Luminance", video.luminance);
@@ -194,7 +194,7 @@ auto Settings::process(bool load) -> void {
 
 //
 
-SettingsWindow::SettingsWindow() {
+auto SettingsWindow::initialize() -> void {
   onClose([&] {
     settings.save();
     setVisible(false);
@@ -250,9 +250,15 @@ SettingsWindow::SettingsWindow() {
   setSize({825_sx, 560_sy});
   setAlignment({0.0, 1.0});
   setResizable(false);
+  
+  driverSettings.videoRefresh();
+  driverSettings.audioRefresh();
+  driverSettings.inputRefresh();
+  initialized = true;
 }
 
 auto SettingsWindow::show(const string& panel) -> void {
+  if(!initialized) initialize();
   for(auto item : panelList.items()) {
     if(item.text() == panel) {
       item.setSelected();

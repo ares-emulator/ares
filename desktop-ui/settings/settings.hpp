@@ -18,7 +18,7 @@ struct Settings : Markup::Node {
     string shader = "None";
     u32 multiplier = 2;
     string output = "Scale";
-    bool aspectCorrection = true;
+    string aspectCorrection = "Standard";
     bool adaptiveSizing = true;
     bool autoCentering = false;
 
@@ -523,7 +523,6 @@ struct HomePanel : VerticalLayout {
 };
 
 struct SettingsWindow : Window {
-  SettingsWindow();
   auto show(const string& panel) -> void;
   auto eventChange() -> void;
 
@@ -542,6 +541,11 @@ struct SettingsWindow : Window {
       DriverSettings driverSettings;
       DebugSettings debugSettings;
       HomePanel homePanel;
+  
+  bool initialized = false;
+  
+private:
+  auto initialize() -> void;
 };
 
 extern Settings settings;

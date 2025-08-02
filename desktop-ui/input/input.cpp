@@ -521,8 +521,10 @@ auto InputManager::poll(bool force) -> void {
   if(changed) {
     this->devices = devices;
     bind();
-    inputSettings.refresh();
-    hotkeySettings.refresh();
+    if(settingsWindow.initialized) {
+      inputSettings.refresh();
+      hotkeySettings.refresh();
+    }
   }
 }
 

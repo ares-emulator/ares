@@ -32,7 +32,7 @@ auto Program::updateMessage() -> void {
   }
 
   
-  bool defocused = driverSettings.inputDefocusPause.checked() && !ruby::video.fullScreen() && !presentation.focused();
+  bool defocused = settings.input.defocus == "Pause" && !ruby::video.fullScreen() && !presentation.focused();
   if(emulator && defocused) message.text = "Paused";
 }
 
