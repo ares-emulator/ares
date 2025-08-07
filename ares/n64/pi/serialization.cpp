@@ -19,4 +19,10 @@ auto PI::serialize(serializer& s) -> void {
   s(bsd2.pulseWidth);
   s(bsd2.pageSize);
   s(bsd2.releaseDuration);
+
+  s(runningDMA.firstBlock);
+  s(runningDMA.maxBlockSize);
+  s(runningDMA.length);
+  s(runningDMA.misalign);
+  s(runningDMA.distEndOfRow);
 }

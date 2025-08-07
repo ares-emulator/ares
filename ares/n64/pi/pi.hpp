@@ -22,7 +22,8 @@ struct PI : Memory::RCP<PI> {
   auto dmaRead() -> void;
   auto dmaWrite() -> void;
   auto dmaFinished() -> void;
-  auto dmaDuration(bool read) -> u32;
+  auto dmaReadDuration() -> u32;
+  auto dmaWriteDuration() -> u32;
 
   //io.cpp
   auto ioRead(u32 address) -> u32;
@@ -53,6 +54,18 @@ struct PI : Memory::RCP<PI> {
     n32 busLatch;
     u64 originPc;
   } io;
+
+  struct RunningDMA {
+    n1 firstBlock;
+    i32 maxBlockSize;
+    i32 length;
+    i32 misalign;
+    i32 distEndOfRow;    
+
+    auto blockLen() -> i32 {
+      return min(length, min(maxBlockSize-misalign, distEndOfRow));
+    }    
+  } runningDMA;
 
   struct BSD {
     n8 latency;
