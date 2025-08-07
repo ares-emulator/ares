@@ -107,16 +107,14 @@ auto PI::ioWrite(u32 address, u32 data_) -> void {
     io.readLength = n24(data);
     io.dmaBusy = 1;
     io.originPc = cpu.ipu.pc;
-    queue.insert(Queue::PI_DMA_Read, dmaDuration(true));
+    queue.insert(Queue::PI_DMA_Read, dmaReadDuration());
     dmaRead();
   }
 
   if(address == 3) {
     //PI_WRITE_LENGTH
     io.writeLength = n24(data);
-    io.dmaBusy = 1;
     io.originPc = cpu.ipu.pc;
-    queue.insert(Queue::PI_DMA_Write, dmaDuration(false));
     dmaWrite();
   }
 
