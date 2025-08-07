@@ -159,7 +159,6 @@ auto MCD::CDD::serialize(serializer& s) -> void {
   s(subcode);
   s(isDiscMegaLd);
   s(stopPointEnabled);
-  s(reachedStopPoint);
   s(targetStopPoint);
 }
 
@@ -178,6 +177,7 @@ auto MCD::LD::serialize(serializer& s) -> void {
   s(currentSeekModeTimeFormat);
   s(currentSeekModeRepeat);
   s(stopPointRegs);
+  s(reachedStopPoint);
   s(reachedStopPointPreviously);
   s(activeSeekMode);
   s(currentPlaybackMode);
@@ -188,17 +188,22 @@ auto MCD::LD::serialize(serializer& s) -> void {
   s(currentDriveState);
   s(targetPauseState);
   s(currentPauseState);
-  s(seekPerformedSinceLastFlagsRead);
+  s(seekPerformedSinceLastFrameUpdate);
   s(driveStateChangeDelayCounter);
   s(selectedTrackInfo);
-  s(currentMdGraphicsFader);
-  s(currentDigitalAudioFader);
-  s(digitalAudioRightExclusive);
-  s(digitalAudioLeftExclusive);
 
+  s(video.frameSkipBaseFrame);
+  s(video.frameSkipCounter);
   s(video.currentVideoFrameIndex);
   s(video.currentVideoFrameLeadIn);
   s(video.currentVideoFrameLeadOut);
+  s(video.currentVideoFrameFieldSelectionEnabled);
+  s(video.currentVideoFrameFieldSelectionEvenField);
+
+  // Restore the current video frame into the display buffer
+  if (MegaLD() && s.reading()) {
+	loadCurrentVideoFrameIntoBuffer();
+  }
 }
 
 auto MCD::Timer::serialize(serializer& s) -> void {

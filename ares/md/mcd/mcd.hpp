@@ -379,7 +379,6 @@ struct MCD : M68000, Thread {
     n16 subcode[64];
     n1 isDiscMegaLd;
     n1 stopPointEnabled;
-    n1 reachedStopPoint;
     s32 targetStopPoint;
   } cdd;
 
@@ -396,11 +395,13 @@ struct MCD : M68000, Thread {
     auto latchSeekTargetFromCurrentState() -> bool;
     auto performSeekWithLatchedState() -> void;
     auto updateStopPointWithCurrentState() -> void;
-    auto frameNumberFromLba(s32 lba, bool processLeadIn = false) -> s32;
-    auto LbaFromFrameNumber(s32 frameNumber) -> s32;
+    auto zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn = false) -> s32;
+    auto lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32;
     auto RedbookFramesToVideoFrames(u8 frames) -> u8;
     auto VideoFramesToRedbookFrames(u8 frames) -> u8;
+    auto handleStopPointReached(s32 lba) -> void;
     auto updateCurrentVideoFrameNumber(s32 lba) -> void;
+    auto loadCurrentVideoFrameIntoBuffer() -> void;
     auto power(bool reset) -> void;
     auto scanline(u32 pixels[1280], u32 y) -> void;
 
@@ -429,9 +430,13 @@ struct MCD : M68000, Thread {
       std::vector<const ::nall::Decode::ZIP::File*> activeVideoFrames;
       std::vector<const ::nall::Decode::ZIP::File*> leadOutFrames;
 
+      s32 frameSkipBaseFrame;
+      s32 frameSkipCounter;
       s32 currentVideoFrameIndex;
       n1 currentVideoFrameLeadIn;
       n1 currentVideoFrameLeadOut;
+      n1 currentVideoFrameFieldSelectionEnabled;
+      n1 currentVideoFrameFieldSelectionEvenField;
       qoi_desc currentVideoFrameInfo;
       unsigned char* currentVideoFrame = nullptr;
 
@@ -466,23 +471,20 @@ struct MCD : M68000, Thread {
 
     // Currently latched stop point
     n8 stopPointRegs[5];
+    n1 reachedStopPoint;
     n1 reachedStopPointPreviously;
 
     u4 currentPlaybackMode;
     u3 currentPlaybackSpeed;
+    n8 skippedFrameCount;
     u1 currentPlaybackDirection;
     n8 targetDriveState;
     n8 currentDriveState;
     n1 targetPauseState;
     n1 currentPauseState;
-    n1 seekPerformedSinceLastFlagsRead;
+    n1 seekPerformedSinceLastFrameUpdate;
     n8 driveStateChangeDelayCounter;
     n8 selectedTrackInfo;
-    n6 currentMdGraphicsFader;
-    n8 currentDigitalAudioFader;
-    n1 digitalAudioRightExclusive;
-    n1 digitalAudioLeftExclusive;
-    //n8 pressedButtonId;
   } ld;
 
   struct Timer {

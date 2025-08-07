@@ -35,7 +35,7 @@ struct LDMediaEntry {
   LDMediaType type;
   int sequenceNo;
   std::optional<LDMediaFormat> format;
-  std::optional<std::string> region;
+  std::optional<std::string> videoRegion;
   std::optional<std::string> size;
   std::optional<int> side;
   std::optional<std::string> mintMarkSideId;
@@ -46,7 +46,7 @@ struct LDMediaEntry {
   std::optional<size_t> videoFramesInLeadInRegion;
   std::optional<size_t> videoFramesInLeadOutRegion;
 };
-NLOHMANN_JSONIFY_ALL_THINGS(LDMediaEntry, name, type, sequenceNo, format, region, size, side, mintMarkSideId, digitalTrack, analogAudioTrack, analogVideoTrack, videoFramesInActiveRegion, videoFramesInLeadInRegion, videoFramesInLeadOutRegion);
+NLOHMANN_JSONIFY_ALL_THINGS(LDMediaEntry, name, type, sequenceNo, format, videoRegion, size, side, mintMarkSideId, digitalTrack, analogAudioTrack, analogVideoTrack, videoFramesInActiveRegion, videoFramesInLeadInRegion, videoFramesInLeadOutRegion);
 
 struct LDMediaInfo {
   std::string name;
@@ -138,7 +138,7 @@ auto MCD::LD::read(n24 address) -> n8 {
   if (!isOutput && ((regNum != 0x00) || includeReg0InputReadBack)) {
     debug(unusual, "[MCD::readLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
   } else {
-//    debug(unverified, "[MCD::readLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
+    //debug(unverified, "[MCD::readLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
   }
   return data;
 }
@@ -150,7 +150,7 @@ auto MCD::LD::write(n24 address, n8 data) -> void {
   ares::_debug.reset();
   //debug(unverified, "[MCD::writeLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
   if ((regNum != 0x00) || includeReg0DebugOutput) {
-    //debug(unverified, "[MCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
+    debug(unverified, "[MCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
     if (isOutput) {
       debug(unusual, "[MCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
     }
@@ -468,40 +468,35 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //       ##OLD## DRVOPEN doesn't do anything if this is set to 1. DRVINIT also compares this to 1, 2, 3, 4 and 5.
     //       ##OLD## Note: Seek sets this register to 0x02
 
-    // Update the mechanical drive state
-    if ((previousData.bit(0, 3) != currentDriveState) || seekPerformedSinceLastFlagsRead || (driveStateChangeDelayCounter > 0)) {
-      // If the drive state has changed since the last time this register was read, we pretend the drive is still
-      // transitioning to the new state for a number of reads, then we swap it over. In the real hardware, most of these
-      // transitions take many seconds. We put this small wait state in here not to try and obtain accurate timing, but
-      // as a defensive measure in case any code out there malfunctions if the state changes instantly without going
-      // into a busy state at least once. It's possible that this could be interpreted as an error or failure to apply
-      // the change. This has now been confirmed to be true in at least one BIOS routine, making this code necessary for
-      // games to boot.
-      static const unsigned int ChangeDelayCount = 10;
-      if (seekPerformedSinceLastFlagsRead) {
-        data.bit(5) = 1;
-        if (previousData.bit(7) != 1) {
-          seekPerformedSinceLastFlagsRead = false;
-        }
-      }
-      if (previousData.bit(7) != 1) {
-        data.bit(7) = 1;
+    // If the drive state has changed since the last time this register was read, we pretend the drive is still
+    // transitioning to the new state for a number of reads, then we swap it over. In the real hardware, most of these
+    // transitions take many seconds. We put this small wait state in here not to try and obtain accurate timing, but
+    // as a defensive measure in case any code out there malfunctions if the state changes instantly without going
+    // into a busy state at least once. It's possible that this could be interpreted as an error or failure to apply
+    // the change. This has now been confirmed to be true in at least one BIOS routine, making this code necessary for
+    // games to boot.
+    //##FIX## Tie this to a cycle counter to make it deterministic. This is a hack currently.
+    if ((previousData.bit(0, 3) != currentDriveState) || (driveStateChangeDelayCounter > 0)) {
+      if ((previousData.bit(7) != 1) || (driveStateChangeDelayCounter == 0)) {
+        static const unsigned int ChangeDelayCount = 10;
         driveStateChangeDelayCounter = ChangeDelayCount;
+      } else if (driveStateChangeDelayCounter == 1) {
+        data.bit(0, 3) = currentDriveState;
+        driveStateChangeDelayCounter = 0;
       } else {
-        if (driveStateChangeDelayCounter == 1) {
-          data.bit(7) = seekPerformedSinceLastFlagsRead;
-          data.bit(5) = seekPerformedSinceLastFlagsRead;
-          data.bit(0, 3) = currentDriveState;
-          if (seekPerformedSinceLastFlagsRead) {
-            driveStateChangeDelayCounter = ChangeDelayCount;
-            seekPerformedSinceLastFlagsRead = false;
-          } else {
-            driveStateChangeDelayCounter = 0;
-          }
-        } else {
-          --driveStateChangeDelayCounter;
-        }
+        --driveStateChangeDelayCounter;
       }
+    }
+
+    // Update the drive busy and seek in progress flags. Note that some games (IE, Pyramid Patrol) perform unpaused seek
+    // operations and spin in a busy loop waiting first for the seek to complete, then for the current frame number to
+    // exactly match the target frame, so we need seek busy state to be accurate here.
+    if ((data.bit(0, 3) == 5) && (mcd.cdd.io.status == CDD::Status::Seeking)) {
+      data.bit(7) = 1;
+      data.bit(5) = 1;
+    } else {
+      data.bit(7) = (driveStateChangeDelayCounter > 0);
+      data.bit(5) = 0;
     }
 
     // Update the pause state
@@ -526,10 +521,17 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     data.bit(3) = currentPlaybackDirection;
     data.bit(0, 2) = currentPlaybackSpeed;
 
-    // As a special case, under single-frame frame step mode, the current playback speed is only repoted as 0x01 until the frame
-    // step has occurred, after which it becomes 0x00. We emulate that here.
-    if ((currentPlaybackMode == 0x01) && (currentPlaybackSpeed == 0x01) && (mcd.cdd.io.sectorRepeatCount > 0)) {
+    // Handle special cases
+    if ((currentPlaybackMode == 0x02) && (currentPlaybackSpeed == 0x01) && (mcd.cdd.io.sectorRepeatCount > 0)) {
+      // Under single-frame frame step mode, the current playback speed is only repoted as 0x01 until the frame step has occurred,
+      // after which it becomes 0x00. We emulate that here.
       data.bit(0, 2) = 0x00;
+    } else if ((currentPlaybackMode == 0x01) && (currentPlaybackSpeed == 0x01)) {
+      // Under single-frame frame skip mode, the direction bit is set to 1. We emulate that here. Note that this is seen to flicker
+      // between 0 and 1 when a seek is being performed while this mode is set, so it probably actually indicates whether the target
+      // frame has been latched. It flickers madly between 0 and 1 during seeking though, so it couldn't reliably be used to
+      // determine when the target frame has been shown.
+      data.bit(3) = true;
     }
     break;
   case 0x08:
@@ -655,6 +657,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // Reg 0x11|-------------------------------|
     // 0xFDFEA3|RedbookControl |   DataValid   |
     //         ---------------------------------
+    //##FIX## We know the "DataValid" info here is wrong. Pyramid Patrol track no 0x01 lookup returns 0x44 for this register.
     // RedbookControl:
     //    CDs: If input register 0x05 is set to 0x00 or 0xFF, reports the 4-bit track bitflags as per CONTROL in the Q
     //         channel subcode data for current location, or TOC data depending on input reg 0x05. For other values of
@@ -800,7 +803,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     data = 0;
     if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
       if (mcd.cdd.isDiscLaserdisc()) {
-        auto frameNumber = frameNumberFromLba(mcd.cdd.getCurrentSector()) + 1;
+        auto frameNumber = zeroBasedFrameIndexFromLba(mcd.cdd.getCurrentSector()) + 1;
         if (mcd.cdd.isLaserdiscClv()) {
           data = BCD::encode((frameNumber / (60 * 60 * 30)) % 60);
         } else {
@@ -825,7 +828,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     data = 0;
     if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
       if (mcd.cdd.isDiscLaserdisc()) {
-        auto frameNumber = frameNumberFromLba(mcd.cdd.getCurrentSector()) + 1;
+        auto frameNumber = zeroBasedFrameIndexFromLba(mcd.cdd.getCurrentSector()) + 1;
         if (mcd.cdd.isLaserdiscClv()) {
           data = BCD::encode((frameNumber / (60 * 30)) % 60);
         } else {
@@ -850,7 +853,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     data = 0;
     if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
       if (mcd.cdd.isDiscLaserdisc()) {
-        auto frameNumber = frameNumberFromLba(mcd.cdd.getCurrentSector()) + 1;
+        auto frameNumber = zeroBasedFrameIndexFromLba(mcd.cdd.getCurrentSector()) + 1;
         if (mcd.cdd.isLaserdiscClv()) {
           data = BCD::encode((frameNumber / 30) % 60);
         } else {
@@ -876,7 +879,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
       if (mcd.cdd.isDiscLaserdisc()) {
         if (mcd.cdd.isLaserdiscClv()) {
-          auto frameNumber = frameNumberFromLba(mcd.cdd.getCurrentSector()) + 1;
+          auto frameNumber = zeroBasedFrameIndexFromLba(mcd.cdd.getCurrentSector()) + 1;
           data = BCD::encode(frameNumber % 30);
         } else {
           data = 0x00;
@@ -962,33 +965,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // StopPointLatched: This output is driven to 0x01 when a stop point has been latched, and reset to 0x00 when the
     //       stop time is reached and the player stop is triggered. Note that all lines are actually driven when the
     //       output is updated, so all bits will be reset even though only bit 0 has an identified change in value.
-    if (mcd.cdd.reachedStopPoint && !reachedStopPointPreviously) {
-      debug(unverified, "Hit stoppoint: lba:", mcd.cdd.io.sector);
-      if (inputRegs[0x06].bit(7)) {
-        // Repeat mode
-        //##TODO## Test if the output gets re-driven here to 0x01
-        mcd.cdd.reachedStopPoint = false;
-        mcd.cdd.io.status = CDD::Status::Playing;
-        performSeekWithLatchedState();
-      } else {
-        // Stop mode
-        outputRegs[0x1A] = 0xFF;
-        outputRegs[0x1B] = 0xFF;
-        outputRegs[0x1C] = 0xFF;
-        outputRegs[0x1D] = 0xFF;
-        outputRegs[0x1E] = 0xFF;
-        outputRegs[0x1F] = 0x00;
-        currentPlaybackMode = 2;
-        currentPlaybackSpeed = 0;
-        currentPlaybackDirection = 0;
-        reachedStopPointPreviously = true;
-        operationErrorFlag1 = false;
-        operationErrorFlag2 = true;
-        operationErrorFlag3 = true;
-        mcd.cdd.stopPointEnabled = false;
-      }
-      data = outputRegs[regNum];
-    }
+    break;
   default:
     break;
   }
@@ -1211,7 +1188,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
         mcd.cdd.insert();
         resetSeekTargetToDefault();
         mcd.cdd.seekToTrack(1, true);
-        seekPerformedSinceLastFlagsRead = true;
+        seekPerformedSinceLastFrameUpdate = true;
         currentPauseState = true;
       }
       // If the disc is already loaded, the drive state doesn't change back to 0x04 when we set it here, instead an
@@ -1230,14 +1207,14 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
         break;
       }
       // Clear the stop point triggered flag
-      mcd.cdd.reachedStopPoint = false;
+      reachedStopPoint = false;
       // If the disc isn't already loaded, insert it and seek to the start.
       bool performedLoadOfDisc = false;
       if (currentDriveState <= 3) {
         mcd.cdd.insert();
         resetSeekTargetToDefault();
         mcd.cdd.seekToTrack(1, true);
-        seekPerformedSinceLastFlagsRead = true;
+        seekPerformedSinceLastFrameUpdate = true;
         currentPauseState = true;
         performedLoadOfDisc = true;
       }
@@ -1261,8 +1238,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
       // Either play or pause the disc depending on the pause flag
       if (currentPauseState) {
         mcd.cdd.pause();
-      }
-      else {
+      } else {
         mcd.cdd.play();
       }
       break; }
@@ -1325,15 +1301,17 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     //      otherwise it occurs forwards. This bit is ignored for frameskip mode.
     // *U20: Step speed. This has no effect under normal playback mode, but when frame stepping or skipping is active, this controls
     //       the rate at which updates occur. The following are the observed rates:
-    //       -0x7: 1 frame every 3 seconds (90 times slower)
-    //       -0x6: 1 frame per second (30 times slower)
-    //       -0x5: 1 frame every 0.5 seconds (15 times slower)
-    //       -0x4: 1 frame every 0.25 seconds (7.5 times slower)
-    //       -0x3: 1 frame every 0.133r seconds (4 frames every 3 seconds) (4 times slower)
-    //       -0x2: 1 frame every 0.0625 seconds (100 frames every 16 seconds) (1.875 times slower)
+    //       -0x7: ~0.33r FPS instead of 30 (30 seconds for 10 frames) - Display frame 90x
+    //       -0x6: 1 FPS instead of 30 (45 seconds for 45 frames) - Display frame 30x
+    //       -0x5: 1.875 FPS instead of 30 (48 seconds for 90 frames) - Display frame 16x
+    //       -0x4: 3.75 FPS instead of 30 (24 seconds for 90 frames) - Display frame 8x
+    //       -0x3: 7.5 FPS instead of 30 (24 seconds for 180 frames) - Display frame 4x
+    //       -0x2: 15 FPS instead of 30 (12 seconds for 180 frames) - Display frame 2x
     //       -0x1: 1 frame only. The image will not update after the initial frame. Note that under frame step mode, output register
     //             0x07 will report this step speed as 0x1 only until the single frame step has been performed, after which, the output
-    //             register will now state a value of 0x0.
+    //             register will now state a value of 0x0. Also note that under frame skip mode, the output register will output 0x19 for
+    //             an input register state of 0x11, in other words, the "direction" bit is set to "reverse" when a 1-frame frame skip mode
+    //             is activated.
     //       -0x0: 0 frames. This pauses playback in frame stepping mode, and performs a normal playback in frame skipping mode.
     //       Under fast forward mode, this register is applied differently. The following are the observed rates in fast forward:
     //       -0x7/0x06: Search mode. Plays 0.75 seconds of footage forwards in time, with audio, then jumps either forward or back
@@ -1367,7 +1345,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
         break;
       case 3:
         if (newPlaybackSpeed == 0x07) {
-          newPlaybackSpeed == 0x06;
+          newPlaybackSpeed = 0x06;
         }
         break;
       }
@@ -1745,8 +1723,6 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     // LE:  Digital audio left exclusive. Play left track in both speakers. Half volume normal left/right output if combined with RE.
     // ##OLD##
     // *Unknown: Set as a complete write by UNK138.
-    digitalAudioRightExclusive = data.bit(1);
-    digitalAudioLeftExclusive = data.bit(0);
     break;
   case 0x0E:
     //         --------------------------------- (Buffered in $593E (edit buffer)/ and $505E (last written))
@@ -1770,7 +1746,6 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     // DigitalAudioFader: This set the attenuation of the background audio in Space Berserker. Set as a complete write by UNK130. From TascoDLX:
     //           "I think I missed a call for you. 0130 [A0] should set the volume to the correct level."
     //           "SB is constantly setting the volume with this call, so I don't know if the value gets reset somewhere and this is how they counter it."
-    currentDigitalAudioFader = data;
     break;
   case 0x10:
     //         --------------------------------- (Buffered in $5940 (edit buffer)/ and $5060 (last written))
@@ -1897,7 +1872,6 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     //                    -va is the VDP attenuation
     //                    -la is the LD video attenuation
     //                    and all values in this calculation are in the range 0.0-1.0.
-    currentMdGraphicsFader = data.bit(2, 7);
     break;
   case 0x1B:
     //         --------------------------------- (Buffered in $594B (edit buffer)/ and $506B (last written))
@@ -2012,7 +1986,8 @@ auto MCD::LD::updateStopPointWithCurrentState() -> void {
     } else if (!mcd.cdd.isLaserdiscClv()) {
       // CAV LDs set stop points using frame numbers
       s32 frameNumber = ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::HoursOrFrameH]) * 10000) + ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]) * 100) + (s32)BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
-      stopLba = LbaFromFrameNumber(frameNumber);
+      // Convert the frame number to zero-based, then to an LBA.
+      stopLba = lbaFromZeroBasedFrameIndex(frameNumber - 1);
     } else {
       // CLV LDs set stop points using HH:MM:SS:FF
       //##FIX## This doesn't work for times over an hour
@@ -2023,7 +1998,7 @@ auto MCD::LD::updateStopPointWithCurrentState() -> void {
     mcd.cdd.targetStopPoint = stopLba;
     mcd.cdd.stopPointEnabled = true;
     reachedStopPointPreviously = false;
-    debug(unverified, "Latched stoppoint: lba:", stopLba, " 0x07=", inputRegs[0x07], " 0x08=", inputRegs[0x08], " 0x09=", inputRegs[0x09], " 0x0A=", inputRegs[0x0A], " 0x0B=", inputRegs[0x0B]);
+    debug(unverified, "Latched stoppoint: lba:", stopLba, " frame:", zeroBasedFrameIndexFromLba(stopLba, true) + 1, " 0x07=", hex(inputRegs[0x07]), " 0x08=", hex(inputRegs[0x08]), " 0x09=", hex(inputRegs[0x09]), " 0x0A=", hex(inputRegs[0x0A]), " 0x0B=", hex(inputRegs[0x0B]));
   }
 }
 
@@ -2171,33 +2146,40 @@ auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
 }
 
 auto MCD::LD::performSeekWithLatchedState() -> void {
+  // Performing a seek operation during frameskip mode clears the latched frame. In single-frame frameskip mode, this
+  // causes it to show the frame we end up seeking to. In other modes, it causes the seek target to be shown, and re-bases
+  // the skipping sequence from that frame. We emulate that here.
+  video.frameSkipBaseFrame = 0;
+  video.frameSkipCounter = 0;
+
   // Perform the latched seek operation
   switch ((SeekMode)activeSeekMode) {
   case SeekMode::SeekToRedbookTime:
-    debug(unverified, "SeekToRedbookTime: ", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !mcd.cdd.reachedStopPoint);
-    mcd.cdd.seekToTime(BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !mcd.cdd.reachedStopPoint);
-    seekPerformedSinceLastFlagsRead = true;
+    debug(unverified, "SeekToRedbookTime: ", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !reachedStopPoint);
+    mcd.cdd.seekToTime(BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !reachedStopPoint);
+    seekPerformedSinceLastFrameUpdate = true;
     break;
   case SeekMode::SeekToRedbookRelativeTime:
-    debug(unverified, "SeekToRedbookRelativeTime: ", "Chapter:", BCD::decode(seekPointRegs[(int)SeekPointReg::Chapter]), " ", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !mcd.cdd.reachedStopPoint);
-    mcd.cdd.seekToRelativeTime(BCD::decode(seekPointRegs[(int)SeekPointReg::Chapter]), BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !mcd.cdd.reachedStopPoint);
-    seekPerformedSinceLastFlagsRead = true;
+    debug(unverified, "SeekToRedbookRelativeTime: ", "Chapter:", BCD::decode(seekPointRegs[(int)SeekPointReg::Chapter]), " ", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !reachedStopPoint);
+    mcd.cdd.seekToRelativeTime(BCD::decode(seekPointRegs[(int)SeekPointReg::Chapter]), BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !reachedStopPoint);
+    seekPerformedSinceLastFrameUpdate = true;
     break;
   case SeekMode::SeekToVideoFrame: {
     //##FIX## This should work on the video stream frame numbers
     s32 frameNumber = ((s32)BCD::decode(seekPointRegs[(int)SeekPointReg::HoursOrFrameH]) * 10000) + ((s32)BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]) * 100) + (s32)BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
-    debug(unverified, "SeekToVideoFrame: ", frameNumber, " paused=", targetPauseState && !mcd.cdd.reachedStopPoint);
-    auto lba = LbaFromFrameNumber(frameNumber);
-    mcd.cdd.seekToSector(lba, targetPauseState && !mcd.cdd.reachedStopPoint);
-    seekPerformedSinceLastFlagsRead = true;
+    // Convert the frame number to zero-based, then to an LBA.
+    auto lba = lbaFromZeroBasedFrameIndex(std::max(1, frameNumber) - 1);
+    debug(unverified, "SeekToVideoFrame: ", frameNumber, " lba:", lba, " paused=", targetPauseState && !reachedStopPoint);
+    mcd.cdd.seekToSector(lba, targetPauseState && !reachedStopPoint);
+    seekPerformedSinceLastFrameUpdate = true;
     break;}
   case SeekMode::SeekToVideoTime: {
     //##FIX## This is lossy and will not reliably hit the target exactly
     //##FIX## We technically ignore hours right now, since CD data doesn't encode this.
-    debug(unverified, "SeekToVideoTime: ", BCD::decode(seekPointRegs[(int)SeekPointReg::HoursOrFrameH]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !mcd.cdd.reachedStopPoint);
+    debug(unverified, "SeekToVideoTime: ", BCD::decode(seekPointRegs[(int)SeekPointReg::HoursOrFrameH]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !reachedStopPoint);
     auto redbookFrames = VideoFramesToRedbookFrames(seekPointRegs[(int)SeekPointReg::Frames]);
-    mcd.cdd.seekToTime(BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(redbookFrames), targetPauseState && !mcd.cdd.reachedStopPoint);
-    seekPerformedSinceLastFlagsRead = true;
+    mcd.cdd.seekToTime(BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(redbookFrames), targetPauseState && !reachedStopPoint);
+    seekPerformedSinceLastFrameUpdate = true;
     break; }
   }
 }
@@ -2206,8 +2188,8 @@ auto MCD::LD::performSeekWithLatchedState() -> void {
 // Note that this is a bit of a hack. It assumes the digital data tracks start precisely at frame 0. This should be the
 // case, but it's technically not guaranteed. In a final implementation, we should be decoding the frame numbers
 // straight from the VBI coded data from the currently displayed frame, that way we'll know that we're actually showing
-// the exact intended frames. This functions to get us started though, in the absence of actual video data right now.
-auto MCD::LD::frameNumberFromLba(s32 lba, bool processLeadIn) -> s32 {
+// the exact intended frames. This functioned to get us started though.
+auto MCD::LD::zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn) -> s32 {
   // If we're in the lead-in and not asked to handle lead-in values, return 0.
   if (!processLeadIn && (lba < 0)) {
     return 0;
@@ -2215,29 +2197,93 @@ auto MCD::LD::frameNumberFromLba(s32 lba, bool processLeadIn) -> s32 {
 
   // Turn the lba sector number into a frame number. Since there are 30 frames of video per second, and 75 sectors of CD
   // data per second, this will work well enough.
-  auto currentFrame = (s32)(((double)lba / 75.0) * 30.0);
-  currentFrame = (processLeadIn && (lba < 0)) ? (-currentFrame) - 1 : currentFrame;
-  return currentFrame;
+  auto frameIndex = (s32)std::round(((double)lba / 75.0) * 30.0);
+  frameIndex = (processLeadIn && (lba < 0)) ? (-frameIndex) - 1 : frameIndex;
+  return frameIndex;
 }
 
-auto MCD::LD::LbaFromFrameNumber(s32 frameNumber) -> s32 {
-  auto lba = (s32)(((double)frameNumber / 30.0) * 75.0);
+// Convert the ZERO-BASED frame number to an LBA.
+auto MCD::LD::lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32 {
+  auto lba = (s32)std::round(((double)frameIndex / 30.0) * 75.0);
   return lba;
 }
 
 auto MCD::LD::RedbookFramesToVideoFrames(u8 frames) -> u8 {
-  auto videoFrames = (u8)(((double)frames / 75.0) * 30.0);
+  auto videoFrames = (u8)std::round(((double)frames / 75.0) * 30.0);
   return videoFrames;
 }
 
 auto MCD::LD::VideoFramesToRedbookFrames(u8 frames) -> u8 {
-  auto redbookFrames = (u8)(((double)frames / 30.0) * 75.0);
+  auto redbookFrames = (u8)std::round(((double)frames / 30.0) * 75.0);
   return redbookFrames;
 }
 
+auto MCD::LD::handleStopPointReached(s32 lba) -> void {
+  if (inputRegs[0x06].bit(7)) {
+    // Repeat mode
+    // Note that repeating isn't instant on the hardware, there's a small seek time which depends on the distance to the
+    // loop start point, and at the beginning of that process, the stop point frame is visible on screen. With a target
+    // seek point 9 frames backwards, we measured around 130ms of time in which the stop frame appears on screen,
+    // followed by the frame we seeked to being visible for around an extra 100ms in addition to its intended display
+    // time. This is basically hidden at step speed of 0x4 and slower (heavily used by Myst), and not very noticeable at
+    // step speed 0x03. Faster and realtime modes would be noticeable if a continuous animation was attempted, however if
+    // slight pauses of motion for 250ms or more are acceptable in a looping animation, the seek time can be hidden.
+    // When increasing to 100 frames looping, the 130ms time holding the stop point roughly doubled to around 250ms,
+    // while the 100ms at the end of the seek remained the same. Increasing to 1000 frames looping roughly doubled again
+    // to around 500ms stop frame hold time.
+    //##TODO## There are some initial seek latency numbers in the CDD section to handle LaserActive seek latency, but
+    //more precise measurements should be taken to tune this more accurately.
+    debug(unverified, "Hit stoppoint - repeat mode: lba:", lba, " frame:", zeroBasedFrameIndexFromLba(lba, true) + 1);
+    //##TODO## Test if the 0x1F output reg gets re-driven here to 0x01
+    reachedStopPoint = false;
+    mcd.cdd.io.status = CDD::Status::Playing;
+    performSeekWithLatchedState();
+  } else {
+    // Stop mode
+    debug(unverified, "Hit stoppoint - stop mode: lba:", lba, " frame:", zeroBasedFrameIndexFromLba(lba, true) + 1);
+    outputRegs[0x1A] = 0xFF;
+    outputRegs[0x1B] = 0xFF;
+    outputRegs[0x1C] = 0xFF;
+    outputRegs[0x1D] = 0xFF;
+    outputRegs[0x1E] = 0xFF;
+    outputRegs[0x1F] = 0x00;
+    currentPlaybackMode = 2;
+    currentPlaybackSpeed = 0;
+    currentPlaybackDirection = 0;
+    reachedStopPointPreviously = true;
+    operationErrorFlag1 = false;
+    operationErrorFlag2 = true;
+    operationErrorFlag3 = true;
+    reachedStopPoint = true;
+    mcd.cdd.io.status = CDD::Status::Paused;
+    mcd.cdd.stopPointEnabled = false;
+  }
+}
+
 auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
+  // Step the LBA back one unit, to factor in that the CDD has to step forward once to trigger a frame update. This
+  // helps with rounding issues. Consider this scenario:
+  //   targetFrame = 11766
+  //   targetFrameZeroBased = 11765
+  //   targetLba = (11765 / 30) * 75 = 29412.5 = 29413
+  // Now when the CDD does a frame update, the numbers will look like this:
+  //   actualLba = 29414
+  //   actualFrameZeroBased = (29414 / 75) * 30 = 11765.6 = 11766
+  //   actualFrame = 11766 + 1 = 11767
+  // Adjusting for this issue here avoids this problem. Since there are 2.5 LBA steps per frame, this adjustment is 
+  // within tolerance.
+  lba = (lba == 0 ? 0 : lba - 1);
+
+  // Detect and clear the state on whether we've displayed the first frame after a seek operation. This is to handle
+  // frameskip mode base frame latching behaviour. The way this works is that, if a seek is performed at the same time
+  // as frameskip mode is entered, or even if there's a pending seek operation still in progress, the first frame of
+  // that seek operation is always displayed first, then on the subsequent frame, that's when frameskip mode will latch
+  // the base frame.
+  bool justCompletedSeekFirstFrame = seekPerformedSinceLastFrameUpdate;
+  seekPerformedSinceLastFrameUpdate = false;
+
   // Calculate the new video frame index
-  auto newVideoFrameIndex = frameNumberFromLba(lba, true);
+  auto newVideoFrameIndex = zeroBasedFrameIndexFromLba(lba, true);
   bool newVideoFrameLeadIn = (lba < 0);
   bool newVideoFrameLeadOut = (newVideoFrameIndex >= video.activeVideoFrameCount);
   if (newVideoFrameLeadOut) {
@@ -2251,8 +2297,96 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
     newVideoFrameIndex = (newVideoFrameIndex >= video.leadOutFrameCount) ? video.leadOutFrameCount - 1 : newVideoFrameIndex;
   }
 
-  // If the video frame index hasn't changed, abort any further processing.
-  if ((newVideoFrameIndex == video.currentVideoFrameIndex) && (newVideoFrameLeadIn == video.currentVideoFrameLeadIn) && (newVideoFrameLeadOut == video.currentVideoFrameLeadOut)) {
+  // If the video frame index hasn't changed, abort any further processing, unless the player is actively looping on the
+  // one frame. We need the exception to handle cases where games switch from one field to another on the same frame.
+  // Rocket Coaster does this in its main menu when transitioning to the vehicle selection screen.
+  bool playerIsLoopingOnSingleFrame = (currentDriveState = 0x05) && !currentPauseState && (currentPlaybackMode == 0x2) && (currentPlaybackSpeed == 0x0);
+  bool newFrameIsSameAsLastFrame = (newVideoFrameIndex == video.currentVideoFrameIndex) && (newVideoFrameLeadIn == video.currentVideoFrameLeadIn) && (newVideoFrameLeadOut == video.currentVideoFrameLeadOut);
+  if (!playerIsLoopingOnSingleFrame && newFrameIsSameAsLastFrame) {
+    return;
+  }
+
+  // Handle frameskip mode. Note that we do this processing before we handle the image hold bit, as we need to handle
+  // our base frame latching even if the image hold bit is set. Myst 02-110 relies on this for the open Myst book intro
+  // when selecting to start a new game.
+  if (!justCompletedSeekFirstFrame && (currentPlaybackMode == 0x01)) {
+    // Decode the current target frameskip counter
+    s32 newFrameSkipCounter = 0;
+    switch (currentPlaybackSpeed) {
+    case 0x00:
+      //-0x0: 0 frames. This pauses playback in frame stepping mode, and performs a normal playback in frame skipping mode.
+      newFrameSkipCounter = 1;
+      break;
+    case 0x01:
+      //-0x1: 1 frame only. The image will not update after the initial frame. Note that under frame step mode, output register
+      // 0x07 will report this step speed as 0x1 only until the single frame step has been performed, after which, the output
+      // register will now state a value of 0x0. Also note that under frame skip mode, the output register will output 0x19 for
+      // an input register state of 0x11, in other words, the "direction" bit is set to "reverse" when a 1-frame frame skip mode
+      // is activated.
+      newFrameSkipCounter = 9999999;
+      break;
+    case 0x02:
+      //-0x2: 15 FPS instead of 30 (12 seconds for 180 frames) - Display frame 2x
+      newFrameSkipCounter = 2;
+      break;
+    case 0x03:
+      //-0x3: 7.5 FPS instead of 30 (24 seconds for 180 frames) - Display frame 4x
+      newFrameSkipCounter = 4;
+      break;
+    case 0x04:
+      //-0x4: 3.75 FPS instead of 30 (24 seconds for 90 frames) - Display frame 8x
+      newFrameSkipCounter = 8;
+      break;
+    case 0x05:
+      //-0x5: 1.875 FPS instead of 30 (48 seconds for 90 frames) - Display frame 16x
+      newFrameSkipCounter = 16;
+      break;
+    case 0x06:
+      //-0x6: 1 FPS instead of 30 (45 seconds for 45 frames) - Display frame 30x
+      newFrameSkipCounter = 30;
+      break;
+    case 0x07:
+      //-0x7: ~0.33r FPS instead of 30 (30 seconds for 10 frames) - Display frame 90x
+      newFrameSkipCounter = 90;
+      break;
+    }
+
+    // Perform frameskip, aborting the following update of the current video frame if required.
+    if ((video.frameSkipBaseFrame == 0) || (video.frameSkipCounter != newFrameSkipCounter)) {
+      // When transitioning to frameskip mode, the way it works is that the next frame to be shown after frameskip is
+      // activated is latched as the base frame, and shown on the screen. After that, a skip counter will be running
+      // which will not show subsequent frames until it expires, at which point it will be reloaded again. IE, if input
+      // reg 0x03 is currently 0x20, with frame number 300 shown, and input reg 0x03 is changed to 0x20, frame number 301
+      // will be shown, then the next frame to be shown will be frame number 391 (3 seconds later). Note that the base
+      // frame number is reset when the frame skip rate is changed too, however it is NOT reset when input reg 0x03 bit 3
+      // is changed to modify the direction, which is ignored in frameskip mode.
+      video.frameSkipBaseFrame = newVideoFrameIndex;
+      video.frameSkipCounter = newFrameSkipCounter;
+    } else {
+      int frameDeltaFromBase = std::abs((int)newVideoFrameIndex - (int)video.frameSkipBaseFrame);
+      if ((frameDeltaFromBase % video.frameSkipCounter) != 0) {
+        // This frame is being skipped, so we don't need to update the current frame info. Abort any further processing.
+        return;
+      }
+    }
+  } else {
+    video.frameSkipBaseFrame = 0;
+    video.frameSkipCounter = 0;
+  }
+
+  // We only update the displayed video frame if the image hold bit isn't set. If the image hold bit is set, abort any
+  // further processing.
+  if (inputRegs[0x0C].bit(5)) {
+    return;
+  }
+
+  // Determine whether the digital memory buffer is active, and if so, which field to latch in the buffer.
+  video.currentVideoFrameFieldSelectionEnabled = inputRegs[0x01].bit(7) && (inputRegs[0x0C].bit(1) || inputRegs[0x0C].bit(3));
+  video.currentVideoFrameFieldSelectionEvenField = (video.currentVideoFrameFieldSelectionEnabled ? inputRegs[0x0C].bit(0) : false);
+
+  // At the end of all the above state updates, if we're still showing the same frame (but not necessarily the same
+  // field), abort any further processing, since the correct full frame is already latched.
+  if (newFrameIsSameAsLastFrame) {
     return;
   }
 
@@ -2261,14 +2395,25 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   video.currentVideoFrameLeadIn = newVideoFrameLeadIn;
   video.currentVideoFrameLeadOut = newVideoFrameLeadOut;
 
+  // Load the displayed video frame into the buffer
+  loadCurrentVideoFrameIntoBuffer();
+}
+
+auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
+  // Remove the current video frame
+  if (video.currentVideoFrame != nullptr) {
+    free(video.currentVideoFrame);
+    video.currentVideoFrame = nullptr;
+  }
+
   // Locate the new video frame in the source file
   const ::nall::Decode::ZIP::File* videoFrameCompressed = nullptr;
-  if (newVideoFrameLeadIn) {
-    videoFrameCompressed = video.leadInFrames[newVideoFrameIndex];
-  } else if (newVideoFrameLeadOut) {
-    videoFrameCompressed = video.leadOutFrames[newVideoFrameIndex];
+  if (video.currentVideoFrameLeadIn) {
+    videoFrameCompressed = video.leadInFrames[video.currentVideoFrameIndex];
+  } else if (video.currentVideoFrameLeadOut) {
+    videoFrameCompressed = video.leadOutFrames[video.currentVideoFrameIndex];
   } else {
-    videoFrameCompressed = video.activeVideoFrames[newVideoFrameIndex];
+    videoFrameCompressed = video.activeVideoFrames[video.currentVideoFrameIndex];
   }
   if (videoFrameCompressed == nullptr) {
     return;
@@ -2285,10 +2430,6 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   }
 
   // Decode the new video frame
-  if (video.currentVideoFrame != nullptr) {
-    free(video.currentVideoFrame);
-    video.currentVideoFrame = nullptr;
-  }
   video.currentVideoFrame = (unsigned char*)qoi_decode(rawDataView.data(), rawDataView.size(), &video.currentVideoFrameInfo, 3);
 }
 
@@ -2311,6 +2452,7 @@ auto MCD::LD::power(bool reset) -> void {
   currentSeekModeTimeFormat = 0x0;
   currentSeekModeRepeat = false;
   for (auto& data : stopPointRegs) data = 0x0;
+  reachedStopPoint = false;
   reachedStopPointPreviously = false;
   activeSeekMode = 0x0;
   currentPlaybackMode = 0x0;
@@ -2321,22 +2463,21 @@ auto MCD::LD::power(bool reset) -> void {
   currentDriveState = 0x0;
   targetPauseState = false;
   currentPauseState = false;
-  seekPerformedSinceLastFlagsRead = false;
+  seekPerformedSinceLastFrameUpdate = false;
   driveStateChangeDelayCounter = 0x0;
   selectedTrackInfo = 0x0;
-  currentMdGraphicsFader = 0x0;
-  currentDigitalAudioFader = 0x0;
-  digitalAudioRightExclusive = false;
-  digitalAudioLeftExclusive = false;
 
   // Set the few registers that start with initial values
   currentDriveState = 0x02; // 0x02 = CD door closed
   targetDriveState = currentDriveState;
-  currentMdGraphicsFader = 0x3F;
-  inputRegs[0x1A] = currentMdGraphicsFader << 2;
+  inputRegs[0x1A] = 0xFC;
   //##TODO## Confirm the correct initial state for input regs being frozen
   areInputRegsFrozen = true;
   inputRegs[0x00] = 0x80;
+
+  // Clear any currently latched video frame
+  video.currentVideoFrameIndex = -99999999;
+  loadCurrentVideoFrameIntoBuffer();
 }
 
 auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
@@ -2350,7 +2491,7 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   //if(Region::PAL() ) y += 38 - 8 * latch.overscan;
   //y = y % visibleHeight();
 
-  //##FIX##
+  //##FIX## This is a dodgy hack
   static bool currentFieldIsEven = true;
   if (y == 0) {
     currentFieldIsEven = !currentFieldIsEven;
@@ -2369,7 +2510,7 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   // Choose which field of the input video to use. We toggle between even and odd fields on successive frames
   // by default for interlace mode. If the register block has manual field selection enabled however, we use
   // the target field indicated by the registers.
-  bool useEvenField = (inputRegs[0x01].bit(7) && (inputRegs[0x0C].bit(1) || inputRegs[0x0C].bit(3))) ? inputRegs[0x0C].bit(0) : currentFieldIsEven;
+  bool useEvenField = video.currentVideoFrameFieldSelectionEnabled ? (bool)video.currentVideoFrameFieldSelectionEvenField : currentFieldIsEven;
 
   // These offset adjustments are based on visual comparisons on a physical player. The positioning was
   // adjustable via calibration, so there's no one fixed, correct positioning settings. These ones get correct
@@ -2461,36 +2602,8 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
     u32 rf = (u32)(combinedNormalizedR * (float)((1 << 8) - 1));
     u32 gf = (u32)(combinedNormalizedG * (float)((1 << 8) - 1));
     u32 bf = (u32)(combinedNormalizedB * (float)((1 << 8) - 1));
-    static size_t pixelOffset = 65;// 83;
-    //video.outputFramebuffer[targetLinePos + ((i + pixelOffset) % video.FrameBufferWidth)] = ((u32)a << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;
+    static size_t pixelOffset = 65;
     video.outputFramebuffer[targetLinePos + (i + pixelOffset)] = ((u32)a << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;
-
-
-    //float combinedNormalizedR = (mdNormalizedR * mdGraphicsFader) + (ldNormalizedR * ldGraphicsFader) + ((1 - ((mdGraphicsFader + ldGraphicsFader) / 2)) * mdNormalizedR * ldNormalizedR);
-    //float combinedNormalizedG = (mdNormalizedG * mdGraphicsFader) + (ldNormalizedG * ldGraphicsFader) + ((1 - ((mdGraphicsFader + ldGraphicsFader) / 2)) * mdNormalizedG * ldNormalizedG);
-    //float combinedNormalizedB = (mdNormalizedB * mdGraphicsFader) + (ldNormalizedB * ldGraphicsFader) + ((1 - ((mdGraphicsFader + ldGraphicsFader) / 2)) * mdNormalizedB * ldNormalizedB);
-
-
-    //n1 backdrop = pixels[i] >> 11;
-    //if (backdrop) {
-    //  // Apply the LD graphics fader to the analog video
-    //  auto ldGraphicsFader = (float)(((1 << 6) - 1) - (inputRegs[0x1B] >> 2)) / (float)((1 << 6) - 1);
-    //  auto rf = (u32)(((float)r / (float)((1 << 8) - 1) * ldGraphicsFader) * ((1 << 8) - 1));
-    //  auto gf = (u32)(((float)g / (float)((1 << 8) - 1) * ldGraphicsFader) * ((1 << 8) - 1));
-    //  auto bf = (u32)(((float)b / (float)((1 << 8) - 1) * ldGraphicsFader) * ((1 << 8) - 1));
-    //  video.outputFramebuffer[targetLinePos + i] = ((u32)a << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;
-    //} else {
-    //  // Apply the MD graphics fader to the VDP pixel value for this location
-    //  auto colorPacked = vdp.screen->lookupPalette(pixels[i]);
-    //  auto mdGraphicsFader = (float)(inputRegs[0x1A] >> 2) / (float)((1 << 6) - 1);
-    //  auto mdr = (colorPacked >> 16) & 0xFF;
-    //  auto mdg = (colorPacked >> 8) & 0xFF;
-    //  auto mdb = colorPacked & 0xFF;
-    //  auto mdrf = (u32)(((float)mdr / (float)((1 << 8) - 1) * mdGraphicsFader) * ((1 << 8) - 1));
-    //  auto mdgf = (u32)(((float)mdg / (float)((1 << 8) - 1) * mdGraphicsFader) * ((1 << 8) - 1));
-    //  auto mdbf = (u32)(((float)mdb / (float)((1 << 8) - 1) * mdGraphicsFader) * ((1 << 8) - 1));
-    //  video.outputFramebuffer[targetLinePos + i] = ((u32)a << 24) | ((u32)mdrf << 16) | ((u32)mdgf << 8) | (u32)mdbf;
-    //}
   }
 
   vdp.screen->overrideLineNextDraw(vdpImageSourceLine, &video.outputFramebuffer[targetLinePos]);
