@@ -380,13 +380,9 @@ auto Gamepad::read() -> n32 {
 
 auto Gamepad::getInodeChecksum(u8 bank) -> u8 {
   if (bank < 62) {
-    u32 checksum = 0;
-    u32 i = bank == 0 ? 3 + ram.read<Byte>(0x20 + 0x1a) * 2 : 1; //first bank has 3 + bank * 2 system pages, other banks have 127.
-
-    for (i; i < 0x100; i++) {
-      checksum += ram.read<Byte>((1 + bank) * 0x100) + ram.read<Byte>((1 + bank) * 0x100 + 0x01);
-    }
-
+    u8 checksum = 0;
+    for (i32 i=2; i<0x100; i++)
+      checksum += ram.read<Byte>((1 + bank) * 0x100 + i);
     return checksum;
   }
 
@@ -424,7 +420,7 @@ auto Gamepad::formatControllerPak() -> void {
   //pages 1 thru nBanks, nBanks+1 thru (nBanks*2) (inode table, inode table copy)
   u8 nBanks = ram.read<Byte>(0x20 + 0x1a);
   u32 inodeTablePage = 1;
-  u32 inodeTableCopyPage = 1 + nBanks * 2;
+  u32 inodeTableCopyPage = 1 + nBanks;
   for(u32 bank : range(0,nBanks)) {
     u32 firstDataPage = bank == 0 ? (3 + nBanks * 2) : 1; //first bank has 3 + bank * 2 system pages, other banks have 127.
     for(u32 page : array<u32[2]>{inodeTablePage + bank, inodeTableCopyPage + bank}) {
