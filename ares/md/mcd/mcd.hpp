@@ -426,9 +426,9 @@ struct MCD : M68000, Thread {
       size_t leadInFrameCount;
       size_t activeVideoFrameCount;
       size_t leadOutFrameCount;
-      std::vector<const ::nall::Decode::ZIP::File*> leadInFrames;
-      std::vector<const ::nall::Decode::ZIP::File*> activeVideoFrames;
-      std::vector<const ::nall::Decode::ZIP::File*> leadOutFrames;
+      std::vector<const unsigned char*> leadInFrames;
+      std::vector<const unsigned char*> activeVideoFrames;
+      std::vector<const unsigned char*> leadOutFrames;
 
       s32 frameSkipBaseFrame;
       s32 frameSkipCounter;
@@ -437,8 +437,10 @@ struct MCD : M68000, Thread {
       n1 currentVideoFrameLeadOut;
       n1 currentVideoFrameFieldSelectionEnabled;
       n1 currentVideoFrameFieldSelectionEvenField;
-      qoi_desc currentVideoFrameInfo;
-      unsigned char* currentVideoFrame = nullptr;
+      qon_desc videoFileHeader;
+      qoi2_desc videoFrameHeader;
+      int drawIndex;
+      std::vector<unsigned char> videoFrameBuffers[2];
 
       static const size_t FrameBufferWidth = 1280;
       static const size_t FrameBufferHeight = 480;
@@ -449,6 +451,7 @@ struct MCD : M68000, Thread {
     n32 analogAudioLeadingAudioSamples;
     ::nall::Decode::ZIP sourceArchive;
 
+    static constexpr double videoFramesPerSecond = 30.0 / 1.001; // Roughly 29.97
     static const size_t inputRegisterCount = 0x20;
     static const size_t outputRegisterCount = 0x20;
     n8 inputRegs[inputRegisterCount];

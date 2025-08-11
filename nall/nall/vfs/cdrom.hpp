@@ -19,18 +19,22 @@ struct cdrom : file {
     _thread.join();
   }
 
-  static auto open(const string& location) -> shared_pointer<cdrom> {
+  static auto open(const string& location, const string& pathWithinArchive) -> shared_pointer<cdrom> {
     auto instance = shared_pointer<cdrom>{new cdrom};
 
-    if (location.iendsWith(".zip")) {
+    if (location.iendsWith(".mmi")) {
       instance->_archive = std::make_unique<Decode::ZIP>();
       if (!instance->_archive->open(location)) return {};
 
-      const Decode::ZIP::File* compressedFile = nullptr;
-      if ((compressedFile = instance->_archive->findFile("Disc1Side1/DigitalAudio.cue")) && instance->loadCue(location, instance->_archive.get(), compressedFile)) return instance;
-      //if (location.iendsWith(".chd") && instance->loadChd(location)) return instance;
+      const Decode::ZIP::File* compressedFile = instance->_archive->findFile(pathWithinArchive);
+      if ((compressedFile != nullptr) && instance->loadCue(location, instance->_archive.get(), compressedFile)) return instance;
     }
 
+    return {};
+  }
+
+  static auto open(const string& location) -> shared_pointer<cdrom> {
+    auto instance = shared_pointer<cdrom>{new cdrom};
     if(location.iendsWith(".cue") && instance->loadCue(location, nullptr, nullptr)) return instance;
 #if defined(ARES_ENABLE_CHD)
     if(location.iendsWith(".chd") && instance->loadChd(location)) return instance;

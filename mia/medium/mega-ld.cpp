@@ -1,16 +1,20 @@
 struct MegaLD : CompactDisc {
   auto name() -> string override { return "Mega LD"; }
-  auto extensions() -> vector<string> override { return {"mcd", "cue"}; }
+  auto extensions() -> vector<string> override { return { "mmi" }; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(string location) -> string;
+  auto analyze(string location, string pathWithinArchive) -> string;
 };
 
 auto MegaLD::load(string location) -> LoadResult {
   if(!inode::exists(location)) return romNotFound;
 
+  //##TODO## Parse the mmi file metadata to locate this. We're hardcoding it for now until we review/discuss
+  //how to integrate our new Mixed Media Images (.mmi files) into mia properly.
+  string pathWithinArchive = "Disc1Side1/DigitalAudio.cue";
+
   this->location = location;
-  this->manifest = analyze(location);
+  this->manifest = analyze(location, pathWithinArchive);
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
@@ -18,11 +22,8 @@ auto MegaLD::load(string location) -> LoadResult {
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->append("manifest.bml", manifest);
-  if(directory::exists(location)) {
-    pak->append("cd.rom", vfs::disk::open({location, "cd.rom"}, vfs::read));
-  }
   if(file::exists(location)) {
-    pak->append("cd.rom", vfs::cdrom::open(location));
+    pak->append("cd.rom", vfs::cdrom::open(location, pathWithinArchive));
   }
 
   return successful;
@@ -34,15 +35,11 @@ auto MegaLD::save(string location) -> bool {
   return true;
 }
 
-auto MegaLD::analyze(string location) -> string {
+auto MegaLD::analyze(string location, string pathWithinArchive) -> string {
   vector<u8> sector;
 
-  if(location.iendsWith(".cue")) {
-      sector = readDataSectorCUE(location, 0);
-  } else if (location.iendsWith(".chd")) {
-      sector = readDataSectorCHD(location, 0);
-  } else if (location.iendsWith(".zip")) {
-      sector = readDataSectorZIP(location, 0);
+  if(location.iendsWith(".mmi") || location.iendsWith(".zip")) {
+    sector = readDataSectorMMI(location, pathWithinArchive, 0);
   }
 
   if(!sector || memory::compare(sector.data(), "SEGA", 4))
