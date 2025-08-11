@@ -19,6 +19,7 @@
 #include <nall/vector.hpp>
 #include <nall/dsp/resampler/cubic.hpp>
 #include <nall/hash/crc32.hpp>
+#include <ares/ares.hpp>
 
 using nall::atomic;
 using nall::function;
