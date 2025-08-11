@@ -1,4 +1,5 @@
-#define QOI_IMPLEMENTATION
+#define QOI2_IMPLEMENTATION
+#define QON_IMPLEMENTATION
 #include <md/md.hpp>
 #include <string.h>
 #include <string>

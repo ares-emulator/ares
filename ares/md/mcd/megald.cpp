@@ -2,67 +2,65 @@
 // This is all temporary handling for our zip containers. If this is going to move ahead, proper support should be added
 // to nall::vfs. Right now we have some hacky code in nall/vfs/cdrom.hpp to allow loading these files sufficient to end
 // up here.
-enum class LDMediaType {
+enum class MMIMediaType {
   LD,
 };
-NLOHMANN_JSON_SERIALIZE_ENUM(LDMediaType, {
-  {LDMediaType::LD, "LD"},
+NLOHMANN_JSON_SERIALIZE_ENUM(MMIMediaType, {
+  {MMIMediaType::LD, "LD"},
 })
 
-enum class LDMediaFormat {
-  CAV,
+enum class MMIStreamType {
+  Redbook,
+  RawAudio,
+  RawVideo,
 };
-NLOHMANN_JSON_SERIALIZE_ENUM(LDMediaFormat, {
-  {LDMediaFormat::CAV, "CAV"},
+NLOHMANN_JSON_SERIALIZE_ENUM(MMIStreamType, {
+  {MMIStreamType::Redbook, "Redbook"},
+  {MMIStreamType::RawAudio, "RawAudio"},
+  {MMIStreamType::RawVideo, "RawVideo"},
 })
 
-enum class LDSystem {
-  MegaLD,
-};
-NLOHMANN_JSON_SERIALIZE_ENUM(LDSystem, {
-  {LDSystem::MegaLD, "MegaLD"},
-})
-
-enum class LDRegion {
-  U,
-};
-NLOHMANN_JSON_SERIALIZE_ENUM(LDRegion, {
-  {LDRegion::U, "U"},
-})
-
-struct LDMediaEntry {
+struct MMIStreamEntry {
   std::string name;
-  LDMediaType type;
-  int sequenceNo;
-  std::optional<LDMediaFormat> format;
-  std::optional<std::string> videoRegion;
-  std::optional<std::string> size;
-  std::optional<int> side;
-  std::optional<std::string> mintMarkSideId;
-  std::optional<std::string> digitalTrack;
-  std::optional<std::string> analogAudioTrack;
-  std::optional<std::string> analogVideoTrack;
-  std::optional<size_t> videoFramesInActiveRegion;
-  std::optional<size_t> videoFramesInLeadInRegion;
-  std::optional<size_t> videoFramesInLeadOutRegion;
+  MMIStreamType type;
+  std::string file;
+  std::optional<std::string> format;
+  std::optional<int> channels;
+  std::optional<size_t> framesInActiveRegion;
+  std::optional<size_t> framesInLeadInRegion;
+  std::optional<size_t> framesInLeadOutRegion;
 };
-NLOHMANN_JSONIFY_ALL_THINGS(LDMediaEntry, name, type, sequenceNo, format, videoRegion, size, side, mintMarkSideId, digitalTrack, analogAudioTrack, analogVideoTrack, videoFramesInActiveRegion, videoFramesInLeadInRegion, videoFramesInLeadOutRegion);
+NLOHMANN_JSONIFY_ALL_THINGS(MMIStreamEntry, name, type, file, format, channels, framesInActiveRegion, framesInLeadInRegion, framesInLeadOutRegion);
 
-struct LDMediaInfo {
+struct MMIMediaEntry {
   std::string name;
-  LDSystem system;
-  std::optional<LDRegion> region;
+  MMIMediaType type;
+  std::string format;
+  std::optional<int> sequenceNo;
+  std::optional<int> volumeNo;
+  std::optional<int> sideNo;
+  std::optional<std::string> physicalType;
+  std::optional<std::string> masterReference;
+  std::vector<MMIStreamEntry> streams;
+};
+NLOHMANN_JSONIFY_ALL_THINGS(MMIMediaEntry, name, type, format, sequenceNo, volumeNo, sideNo, physicalType, masterReference, streams);
+
+struct MMIMediaInfo {
+  std::string name;
+  std::optional<std::string> system;
+  std::optional<std::string> regionCode;
   std::optional<std::string> catalogId;
-  std::vector<LDMediaEntry> media;
+  std::vector<MMIMediaEntry> media;
 };
-NLOHMANN_JSONIFY_ALL_THINGS(LDMediaInfo, name, system, region, catalogId, media);
+NLOHMANN_JSONIFY_ALL_THINGS(MMIMediaInfo, name, system, regionCode, catalogId, media);
 
 // Pioneer PD6103A
 auto MCD::LD::load(string sourceFile) -> void {
+  // Resize our output video framebuffer
+  video.outputFramebuffer.resize(video.FrameBufferWidth * (video.FrameBufferHeight + 1));
+
   // Open the source archive
   sourceArchive.open(sourceFile);
-
-  video.outputFramebuffer.resize(video.FrameBufferWidth * (video.FrameBufferHeight + 1));
 
   // Read the metadata file
   //##TODO## No proper error handling here right now, because this is all just a placeholder.
@@ -71,41 +69,79 @@ auto MCD::LD::load(string sourceFile) -> void {
   vector<u8> mediaInfoDataRaw = sourceArchive.extract(*mediaInfoFile);
   std::string mediaInfoDataString((const char*)mediaInfoDataRaw.data(), mediaInfoDataRaw.size());
   auto jsonData = nlohmann::json::parse(mediaInfoDataString);
-  auto mediaInfo = jsonData.template get<LDMediaInfo>();
+  auto mediaInfo = jsonData.template get<MMIMediaInfo>();
 
-  video.leadInFrameCount = mediaInfo.media[0].videoFramesInLeadInRegion.value_or(0); // 1175;
-  video.activeVideoFrameCount = mediaInfo.media[0].videoFramesInActiveRegion.value_or(0);// 38760;
-  video.leadOutFrameCount = mediaInfo.media[0].videoFramesInLeadOutRegion.value_or(0); // 19112;
-  analogAudioLeadingAudioSamples = (video.leadInFrameCount) * (44100 / 30);
-  string folderPrefix = mediaInfo.media[0].analogVideoTrack.value_or("NOVIDEO").c_str(); //"AnalogVideo/";
-  string analogAudioFileName = mediaInfo.media[0].analogAudioTrack.value_or("NOAUDIO").c_str(); // "AnalogAudio.pcm";
+  // Extract the stream information for analog video and audio
+  string analogAudioFileName;
+  string analogVideoFileName;
+  for (const auto& streamEntry : mediaInfo.media[0].streams) {
+    switch (streamEntry.type) {
+    case MMIStreamType::Redbook:
+      //##FIX## Nothing to do here because this has already been loaded as a CD image in nall
+      break;
+    case MMIStreamType::RawAudio:
+      analogAudioFileName = streamEntry.file.c_str();
+      break;
+    case MMIStreamType::RawVideo:
+      analogVideoFileName = streamEntry.file.c_str();
+      video.leadInFrameCount = streamEntry.framesInLeadInRegion.value_or(0);
+      video.activeVideoFrameCount = streamEntry.framesInActiveRegion.value_or(0);
+      video.leadOutFrameCount = streamEntry.framesInLeadOutRegion.value_or(0);
+      break;
+    }
+  }
 
-  // Index the video frames
+  // Calculate the number of leading audio samples before the first frame
+  analogAudioLeadingAudioSamples = (n32)((double)video.leadInFrameCount * (44100.0 / videoFramesPerSecond));
+
+  // Retrieve the analog audio file
+  auto analogAudioFile = sourceArchive.findFile(analogAudioFileName);
+  if (sourceArchive.isDataUncompressed(*analogAudioFile)) {
+    analogAudioRawDataView = sourceArchive.dataViewIfUncompressed(*analogAudioFile);
+  } else {
+    analogAudioDataBuffer = sourceArchive.extract(*analogAudioFile);
+    analogAudioRawDataView = analogAudioDataBuffer;
+  }
+
+  // Retrieve the analog video file
+  auto analogVideoFile = sourceArchive.findFile(analogVideoFileName);
+  if (!sourceArchive.isDataUncompressed(*analogVideoFile)) {
+    return;
+  }
+  array_view<u8> analogVideoFileView = sourceArchive.dataViewIfUncompressed(*analogVideoFile);
+
+  // Read the QON/QOI2 header information for the analog video
+  if (!qon_decode_header(analogVideoFileView.data(), analogVideoFileView.size(), &video.videoFileHeader)) {
+    return;
+  }
+  if ((video.videoFileHeader.flags & QON_FLAGS_USES_INTERFRAME_COMPRESSION) != 0) {
+    return;
+  }
+  video.videoFrameHeader.width = video.videoFileHeader.width;
+  video.videoFrameHeader.height = video.videoFileHeader.height;
+  video.videoFrameHeader.channels = video.videoFileHeader.channels;
+  video.videoFrameHeader.colorspace = video.videoFileHeader.colorspace;
+
+  // Index the analog video frames
+  const unsigned char* frameIndexBase = (const unsigned char*)analogVideoFileView.data() + QON_BARE_HEADER_SIZE;
+  size_t frameIndexSize = video.videoFileHeader.frame_count * QON_INDEX_SIZE_PER_ENTRY;
   video.leadInFrames.resize(video.leadInFrameCount);
   video.leadOutFrames.resize(video.leadOutFrameCount);
   video.activeVideoFrames.resize(video.activeVideoFrameCount);
-  for (const auto& fileEntry : sourceArchive.file) {
-    if (fileEntry.name.equals(analogAudioFileName)) {
-      auto analogAudioFile = &fileEntry;
-      if (sourceArchive.isDataUncompressed(*analogAudioFile)) {
-        analogAudioRawDataView = sourceArchive.dataViewIfUncompressed(*analogAudioFile);
-      } else {
-        analogAudioDataBuffer = sourceArchive.extract(*analogAudioFile);
-        analogAudioRawDataView = analogAudioDataBuffer;
-      }
-      continue;
-    }
+  for (size_t frameIndex = 0; frameIndex < video.videoFileHeader.frame_count; ++frameIndex) {
+    // Retrieve the index entry for the next frame
+    size_t frameOffsetAfterIndex;
+    unsigned short frameFlags;
+    qon_decode_index_entry(frameIndexBase, frameIndex, &frameOffsetAfterIndex, &frameFlags);
 
-    if (!fileEntry.name.ibeginsWith(folderPrefix) || (fileEntry.name.size() == folderPrefix.size())) continue;
-    bool isLeadOutFrame = (fileEntry.name[folderPrefix.size()] == '+');
-    s32 frameNumber = fileEntry.name.slice(folderPrefix.size(), fileEntry.name.size() - (folderPrefix.size() + 4)).integer();
-    bool isLeadInFrame = (frameNumber < 0);
-    if (isLeadOutFrame) {
-      video.leadOutFrames[frameNumber - 1] = &fileEntry;
-    } else if (isLeadInFrame) {
-      video.leadInFrames[(-frameNumber) - 1] = &fileEntry;
+    // Add the frame to our own frame index in memory
+    const unsigned char* frameBaseAddress = frameIndexBase + frameIndexSize + frameOffsetAfterIndex;
+    if (frameIndex < video.leadInFrameCount) {
+      video.leadInFrames[frameIndex] = frameBaseAddress;
+    } else if (frameIndex < (video.leadInFrameCount + video.activeVideoFrameCount)) {
+      video.activeVideoFrames[frameIndex - video.leadInFrameCount] = frameBaseAddress;
     } else {
-      video.activeVideoFrames[frameNumber - 1] = &fileEntry;
+      video.leadOutFrames[frameIndex - video.leadInFrameCount - video.activeVideoFrameCount] = frameBaseAddress;
     }
   }
 }
@@ -2197,24 +2233,24 @@ auto MCD::LD::zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn) -> s32 {
 
   // Turn the lba sector number into a frame number. Since there are 30 frames of video per second, and 75 sectors of CD
   // data per second, this will work well enough.
-  auto frameIndex = (s32)std::round(((double)lba / 75.0) * 30.0);
+  auto frameIndex = (s32)std::round(((double)lba / 75.0) * videoFramesPerSecond);
   frameIndex = (processLeadIn && (lba < 0)) ? (-frameIndex) - 1 : frameIndex;
   return frameIndex;
 }
 
 // Convert the ZERO-BASED frame number to an LBA.
 auto MCD::LD::lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32 {
-  auto lba = (s32)std::round(((double)frameIndex / 30.0) * 75.0);
+  auto lba = (s32)std::round(((double)frameIndex / videoFramesPerSecond) * 75.0);
   return lba;
 }
 
 auto MCD::LD::RedbookFramesToVideoFrames(u8 frames) -> u8 {
-  auto videoFrames = (u8)std::round(((double)frames / 75.0) * 30.0);
+  auto videoFrames = (u8)std::round(((double)frames / 75.0) * videoFramesPerSecond);
   return videoFrames;
 }
 
 auto MCD::LD::VideoFramesToRedbookFrames(u8 frames) -> u8 {
-  auto redbookFrames = (u8)std::round(((double)frames / 30.0) * 75.0);
+  auto redbookFrames = (u8)std::round(((double)frames / videoFramesPerSecond) * 75.0);
   return redbookFrames;
 }
 
@@ -2261,6 +2297,10 @@ auto MCD::LD::handleStopPointReached(s32 lba) -> void {
 }
 
 auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
+  //##TODO## Now that we've implemented proper 29.97 framerate conversion, the original issues have been resolved,
+  //and this modification below introduces new "off by one" issues in Myst in particular. We've disabled it, and 
+  //it's no longer required, but this code/comment is being kept for reference until other titles receive more
+  //testing.
   // Step the LBA back one unit, to factor in that the CDD has to step forward once to trigger a frame update. This
   // helps with rounding issues. Consider this scenario:
   //   targetFrame = 11766
@@ -2272,7 +2312,7 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   //   actualFrame = 11766 + 1 = 11767
   // Adjusting for this issue here avoids this problem. Since there are 2.5 LBA steps per frame, this adjustment is 
   // within tolerance.
-  lba = (lba == 0 ? 0 : lba - 1);
+//  lba = (lba == 0 ? 0 : lba - 1);
 
   // Detect and clear the state on whether we've displayed the first frame after a seek operation. This is to handle
   // frameskip mode base frame latching behaviour. The way this works is that, if a seek is performed at the same time
@@ -2400,14 +2440,8 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
 }
 
 auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
-  // Remove the current video frame
-  if (video.currentVideoFrame != nullptr) {
-    free(video.currentVideoFrame);
-    video.currentVideoFrame = nullptr;
-  }
-
   // Locate the new video frame in the source file
-  const ::nall::Decode::ZIP::File* videoFrameCompressed = nullptr;
+  const unsigned char* videoFrameCompressed = nullptr;
   if (video.currentVideoFrameLeadIn) {
     videoFrameCompressed = video.leadInFrames[video.currentVideoFrameIndex];
   } else if (video.currentVideoFrameLeadOut) {
@@ -2419,18 +2453,15 @@ auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
     return;
   }
 
-  // Retrieve the compressed QOI image for the video frame
-  array_view<u8> rawDataView;
-  vector<u8> rawDataBuffer;
-  if (sourceArchive.isDataUncompressed(*videoFrameCompressed)) {
-    rawDataView = sourceArchive.dataViewIfUncompressed(*videoFrameCompressed);
-  } else {
-    rawDataBuffer = sourceArchive.extract(*videoFrameCompressed);
-    rawDataView = rawDataBuffer;
+  // Allocate memory for the video frame buffer if it's currently empty
+  int buildIndex = video.drawIndex ^ 0x01;
+  if (video.videoFrameBuffers[buildIndex].empty()) {
+    video.videoFrameBuffers[buildIndex].resize(video.videoFrameHeader.width * video.videoFrameHeader.height * 3);
   }
 
-  // Decode the new video frame
-  video.currentVideoFrame = (unsigned char*)qoi_decode(rawDataView.data(), rawDataView.size(), &video.currentVideoFrameInfo, 3);
+  // Decode the QOI2 compressed video frame
+  size_t frameSizeCompressed = qon_decode_frame_size(videoFrameCompressed);
+  qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, video.videoFrameBuffers[buildIndex].data(), 3);
 }
 
 auto MCD::LD::power(bool reset) -> void {
@@ -2477,24 +2508,30 @@ auto MCD::LD::power(bool reset) -> void {
 
   // Clear any currently latched video frame
   video.currentVideoFrameIndex = -99999999;
-  loadCurrentVideoFrameIntoBuffer();
+  video.drawIndex = 0;
+  video.videoFrameBuffers[0].clear();
+  video.videoFrameBuffers[1].clear();
 }
 
 auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
-  if (video.currentVideoFrame == nullptr) {
-    return;
-  }
-
   // adjust for top border
   size_t vdpImageSourceLine = y;
   if(Region::NTSC()) vdpImageSourceLine += 11;
   //if(Region::PAL() ) y += 38 - 8 * latch.overscan;
   //y = y % visibleHeight();
 
-  //##FIX## This is a dodgy hack
-  static bool currentFieldIsEven = true;
+  //##FIX## This is even/odd field thing is a dodgy hack
+  static bool currentFieldIsEven = false;
   if (y == 0) {
-    currentFieldIsEven = !currentFieldIsEven;
+    // Swap the buffers if a new frame is waiting
+    int buildIndex = video.drawIndex ^ 0x01;
+    if (!video.videoFrameBuffers[buildIndex].empty()) {
+      video.videoFrameBuffers[video.drawIndex].clear();
+      video.drawIndex = buildIndex;
+      currentFieldIsEven = false;
+    } else {
+      currentFieldIsEven = !currentFieldIsEven;
+    }
   }
 
   //##FIX##
@@ -2503,7 +2540,14 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   }
 
   // If the analog video stream is disabled, don't modify the scanline, and abort any further processing.
+  //##FIX## This seems wrong, since the VDP fader isn't taken into account now. Do testing and fix this up.
   if ((inputRegs[0x01].bit(7, 6) == 0) || inputRegs[0x0C].bit(2)) {
+    return;
+  }
+
+  // If no frame is present, there's nothing to mix, so abort any further processing.
+  //##FIX## Same as above. Run the mixing, but make the analog video stream pure black in this case.
+  if (video.videoFrameBuffers[video.drawIndex].empty()) {
     return;
   }
 
@@ -2525,12 +2569,15 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   const size_t VideoFrameTopBorderHeight = 25 + 5; // Compensate for vertical positioning
   //const size_t VideoFrameLeftBorderWidth = 150 - 5; // Compensate for line beginning near the right side of the screen
   //const size_t VideoFrameRightBorderWidth = 117 - 5; // Just shift the image, don't change the scaling
-  size_t targetLineInSourceImage = (y + VideoFrameTopBorderHeight + (useEvenField ? (video.currentVideoFrameInfo.height / 2) : 0));
-  size_t sourceLinePos = ((targetLineInSourceImage * video.currentVideoFrameInfo.width) + VideoFrameLeftBorderWidth) * video.currentVideoFrameInfo.channels;
-  size_t pixelsInSourceLine = video.currentVideoFrameInfo.width - (VideoFrameLeftBorderWidth + VideoFrameRightBorderWidth);
+  size_t channelCount = 3;
+  size_t targetLineInSourceImage = (y + VideoFrameTopBorderHeight + (useEvenField ? (video.videoFrameHeader.height / 2) : 0));
+  size_t sourceLinePos = ((targetLineInSourceImage * video.videoFrameHeader.width) + VideoFrameLeftBorderWidth) * channelCount;
+  size_t pixelsInSourceLine = video.videoFrameHeader.width - (VideoFrameLeftBorderWidth + VideoFrameRightBorderWidth);
   size_t targetLinePos = vdpImageSourceLine * video.FrameBufferWidth;
 
   // Perform a linear resampling of the source video line to match the screen output
+  //##TODO## Everything here is unoptimized. Review all this code to improve the mixing performance.
+  const unsigned char* analogVideoFrameData = video.videoFrameBuffers[video.drawIndex].data();
   float imageWidthConversionRatio = (float)pixelsInSourceLine / (float)video.FrameBufferWidth;
   float firstSamplePointX = 0.0f;
   float lastSamplePointX = 0.0f;
@@ -2554,7 +2601,7 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
         float sampleStartPointX = (currentSampleX == firstSamplePosX) ? (firstSamplePointX - (float)firstSamplePosX) : 0.0f;
         float sampleEndPointX = (currentSampleX == lastSamplePosX) ? (lastSamplePointX - (float)lastSamplePosX) : 1.0f;
         float sampleWeightX = sampleEndPointX - sampleStartPointX;
-        float sample = (*(video.currentVideoFrame + sourceLinePos + (currentSampleX * video.currentVideoFrameInfo.channels) + plane)) * sampleConversion;
+        float sample = (*(analogVideoFrameData + sourceLinePos + (currentSampleX * channelCount) + plane)) * sampleConversion;
         finalSample += sample * sampleWeightX;
       }
 

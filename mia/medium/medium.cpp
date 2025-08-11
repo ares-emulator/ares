@@ -239,16 +239,18 @@ auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>
   return {};
 }
 
-auto CompactDisc::readDataSectorZIP(string filename, u32 sectorID) -> vector<u8> {
+auto CompactDisc::readDataSectorMMI(string filename, string containedFilePath, u32 sectorID) -> vector<u8> {
   auto archive = std::make_unique<Decode::ZIP>();
   if (!archive->open(filename)) return {};
   Decode::CUE cuesheet;
-  if(!cuesheet.load(filename, archive.get(), archive->findFile("DigitalAudio.cue"))) return {};
+  if(!cuesheet.load(filename, archive.get(), archive->findFile(containedFilePath))) return {};
 
   for(auto& file : cuesheet.files) {
     u64 offset = 0;
     if(file.type == "binary") {
-      auto fileEntry = archive->findFile(file.name);
+      auto filePathInArchive = file.archiveFolder;
+      filePathInArchive.append(file.name);
+      auto fileEntry = archive->findFile(filePathInArchive);
       if(fileEntry == nullptr) continue;
       array_view<u8> rawDataView;
       vector<u8> rawDataBuffer;
@@ -275,18 +277,6 @@ auto CompactDisc::readDataSectorZIP(string filename, u32 sectorID) -> vector<u8>
         }
       }
     }
-
-    //if(file.type == "wave") {
-    //  Decode::WAV wave;
-    //  if(!wave.open(location)) continue;
-    //  offset += wave.headerSize;
-    //  for(auto& track : file.tracks) {
-    //    auto length = track.sectorSize();
-    //    for(auto& index : track.indices) {
-    //      offset += track.sectorSize() * index.sectorCount();
-    //    }
-    //  }
-    //}
   }
 
   return {};

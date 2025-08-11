@@ -24,7 +24,7 @@ struct CompactDisc : Medium {
   auto readDataSectorBCD(string filename, u32 sectorID) -> vector<u8>;
   auto readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>;
   auto readDataSectorCHD(string filename, u32 sectorID) -> vector<u8>;
-  auto readDataSectorZIP(string filename, u32 sectorID) -> vector<u8>;
+  auto readDataSectorMMI(string filename, string containedFilePath, u32 sectorID) -> vector<u8>;
 };
 
 struct FloppyDisk : Medium {

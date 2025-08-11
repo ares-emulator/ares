@@ -196,6 +196,7 @@ auto MCD::CDD::sample() -> void {
 
   if (MegaLD()) {
     // Disable digital audio if it is turned off
+    //##TODO## Properly reverse engineer and implement input reg 0x01 and its effects on audio
     //if (!mcd.ld.inputRegs[0x01].bit(7)) {
     //  digitalSampleLeft = 0;
     //  digitalSampleRight = 0;
