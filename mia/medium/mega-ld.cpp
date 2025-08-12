@@ -1,6 +1,5 @@
-struct MegaLD : CompactDisc {
+struct MegaLD : LaserDisc {
   auto name() -> string override { return "Mega LD"; }
-  auto extensions() -> vector<string> override { return { "mmi" }; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location, string pathWithinArchive) -> string;
@@ -39,11 +38,10 @@ auto MegaLD::analyze(string location, string pathWithinArchive) -> string {
   vector<u8> sector;
 
   if(location.iendsWith(".mmi") || location.iendsWith(".zip")) {
-    sector = readDataSectorMMI(location, pathWithinArchive, 0);
+    sector = readDataSector(location, pathWithinArchive, 0);
   }
 
-  if(!sector || memory::compare(sector.data(), "SEGA", 4))
-    return CompactDisc::manifestAudio(location);
+  if(!sector || memory::compare(sector.data(), "SEGA", 4)) return {};
 
   vector<string> regions;
   if(!memory::compare(sector.data()+4, "DISCSYSTEM  ", 12)

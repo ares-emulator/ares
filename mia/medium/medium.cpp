@@ -276,11 +276,41 @@ auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>
   return {};
 }
 
-auto CompactDisc::readDataSectorMMI(string filename, string containedFilePath, u32 sectorID) -> vector<u8> {
-  auto archive = std::make_unique<Decode::ZIP>();
-  if (!archive->open(filename)) return {};
+#if defined(ARES_ENABLE_CHD)
+auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> vector<u8> {
+  Decode::CHD chd;
+  if(!chd.load(filename)) return {};
+
+  // Find the first data track within the chd
+  for (auto& track : chd.tracks) {
+    if(track.type == "AUDIO") continue;
+    for(auto& index : track.indices) {
+      if (index.number != 1) continue;
+
+      // Read the sector from CHD and extract the user data portion (2048 bytes)
+      auto sector = chd.read(index.lba + sectorID);
+      vector<u8> output;
+      output.resize(2048);
+
+      if (sector.size() == 2048) {
+        memory::copy(output.data(), output.size(), sector.data(), output.size());
+        return output;
+      }
+
+      memory::copy(output.data(), output.size(), sector.data() + 16, output.size());
+      return output;
+    }
+  }
+
+  return {};
+}
+#endif
+
+auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> vector<u8> {
+  unique_pointer archive = new Decode::ZIP;
+  if (!archive->open(mmiPath)) return {};
   Decode::CUE cuesheet;
-  if(!cuesheet.load(filename, archive.get(), archive->findFile(containedFilePath))) return {};
+  if(!cuesheet.load(mmiPath, archive.data(), archive->findFile(cuePath))) return {};
 
   for(auto& file : cuesheet.files) {
     u64 offset = 0;
@@ -318,33 +348,3 @@ auto CompactDisc::readDataSectorMMI(string filename, string containedFilePath, u
 
   return {};
 }
-
-#if defined(ARES_ENABLE_CHD)
-auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> vector<u8> {
-  Decode::CHD chd;
-  if(!chd.load(filename)) return {};
-
-  // Find the first data track within the chd
-  for (auto& track : chd.tracks) {
-    if(track.type == "AUDIO") continue;
-    for(auto& index : track.indices) {
-      if (index.number != 1) continue;
-
-      // Read the sector from CHD and extract the user data portion (2048 bytes)
-      auto sector = chd.read(index.lba + sectorID);
-      vector<u8> output;
-      output.resize(2048);
-
-      if (sector.size() == 2048) {
-        memory::copy(output.data(), output.size(), sector.data(), output.size());
-        return output;
-      }
-
-      memory::copy(output.data(), output.size(), sector.data() + 16, output.size());
-      return output;
-    }
-  }
-
-  return {};
-}
-#endif

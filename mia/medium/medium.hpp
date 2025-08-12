@@ -29,7 +29,6 @@ struct CompactDisc : Medium {
   auto isAudioCd(string location) -> bool;
   auto manifestAudio(string location) -> string;
   auto readDataSector(string filename, u32 sectorID) -> vector<u8>;
-  auto readDataSectorMMI(string filename, string containedFilePath, u32 sectorID) -> vector<u8>; // for laserdisc
 private:
   auto readDataSectorBCD(string filename, u32 sectorID) -> vector<u8>;
   auto readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>;
@@ -40,4 +39,10 @@ private:
 
 struct FloppyDisk : Medium {
   auto type() -> string override { return "Floppy Disk"; }
+};
+
+struct LaserDisc : Medium {
+  auto type() -> string override { return "LaserDisc"; }
+  auto extensions() -> vector<string> override { return {"mmi"}; }
+  auto readDataSector(string mmiPath, string cuePath, u32 sectorID) -> vector<u8>;
 };
