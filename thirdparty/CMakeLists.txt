@@ -102,6 +102,12 @@ target_include_directories(ymfm PUBLIC ../thirdparty/ymfm/src)
 
 target_compile_options(ymfm PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-unreachable-code>)
 
+add_library(
+  qon
+  STATIC
+  qon/qon.cpp
+)
+
 set_target_properties(ymfm PROPERTIES FOLDER thirdparty PREFIX "")
 set_target_properties(tzxfile PROPERTIES FOLDER thirdparty PREFIX "")
 set_target_properties(sljit PROPERTIES FOLDER thirdparty PREFIX "")
@@ -113,3 +119,4 @@ if(ARES_ENABLE_CHD)
   set_target_properties(lzma PROPERTIES FOLDER thirdparty PREFIX "")
   set_target_properties(libzstd_static PROPERTIES FOLDER thirdparty PREFIX "")
 endif()
+set_target_properties(qon PROPERTIES FOLDER thirdparty PREFIX "")

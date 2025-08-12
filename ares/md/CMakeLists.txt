@@ -8,6 +8,8 @@ ares_components(
   m24c
 )
 
+target_link_libraries(ares PRIVATE qon)
+
 ares_add_sources(
   CORE #
     md

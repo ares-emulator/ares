@@ -5,6 +5,7 @@
 #include <nall/decode/zip.hpp>
 #include <vector>
 #include <cmath>
+
 #include <qon/qon.h>
 #include <qon/qoi2.h>
 
