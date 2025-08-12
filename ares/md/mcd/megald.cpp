@@ -1,102 +1,19 @@
-//##TODO##
-// This is all temporary handling for our zip containers. If this is going to move ahead, proper support should be added
-// to nall::vfs. Right now we have some hacky code in nall/vfs/cdrom.hpp to allow loading these files sufficient to end
-// up here.
-enum class MMIMediaType {
-  LD,
-};
-NLOHMANN_JSON_SERIALIZE_ENUM(MMIMediaType, {
-  {MMIMediaType::LD, "LD"},
-})
-
-enum class MMIStreamType {
-  Redbook,
-  RawAudio,
-  RawVideo,
-};
-NLOHMANN_JSON_SERIALIZE_ENUM(MMIStreamType, {
-  {MMIStreamType::Redbook, "Redbook"},
-  {MMIStreamType::RawAudio, "RawAudio"},
-  {MMIStreamType::RawVideo, "RawVideo"},
-})
-
-struct MMIStreamEntry {
-  std::string name;
-  MMIStreamType type;
-  std::string file;
-  std::optional<std::string> format;
-  std::optional<int> channels;
-  std::optional<size_t> framesInActiveRegion;
-  std::optional<size_t> framesInLeadInRegion;
-  std::optional<size_t> framesInLeadOutRegion;
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(MMIStreamEntry, name, type, file, format, channels, framesInActiveRegion, framesInLeadInRegion, framesInLeadOutRegion)
-
-struct MMIMediaEntry {
-  std::string name;
-  MMIMediaType type;
-  std::string format;
-  std::optional<int> sequenceNo;
-  std::optional<int> volumeNo;
-  std::optional<int> sideNo;
-  std::optional<std::string> physicalType;
-  std::optional<std::string> masterReference;
-  std::vector<MMIStreamEntry> streams;
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(MMIMediaEntry, name, type, format, sequenceNo, volumeNo, sideNo, physicalType, masterReference, streams)
-
-struct MMIMediaInfo {
-  std::string name;
-  std::optional<std::string> system;
-  std::optional<std::string> regionCode;
-  std::optional<std::string> catalogId;
-  std::vector<MMIMediaEntry> media;
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(MMIMediaInfo, name, system, regionCode, catalogId, media)
-
 // Pioneer PD6103A
 auto MCD::LD::load(string sourceFile) -> void {
-  // Resize our output video framebuffer
   video.outputFramebuffer.resize(video.FrameBufferWidth * (video.FrameBufferHeight + 1));
-
-  // Open the source archive
-  sourceArchive.open(sourceFile);
-
-  // Read the metadata file
-  //##TODO## No proper error handling here right now, because this is all just a placeholder.
-  auto mediaInfoFile = sourceArchive.findFile("MediaInfo.json");
-  if (mediaInfoFile == nullptr) {
-    return;
-  }
-  vector<u8> mediaInfoDataRaw = sourceArchive.extract(*mediaInfoFile);
-  std::string mediaInfoDataString((const char*)mediaInfoDataRaw.data(), mediaInfoDataRaw.size());
-  auto jsonData = nlohmann::json::parse(mediaInfoDataString, nullptr, false);
-  if (jsonData.is_discarded()) {
-    return;
-  }
-  MMIMediaInfo mediaInfo;
-  try {
-    mediaInfo = jsonData.template get<MMIMediaInfo>();
-  } catch(nlohmann::json::exception) {
-    return;
-  }
+  mmi.open(sourceFile);
 
   // Extract the stream information for analog video and audio
   string analogAudioFileName;
   string analogVideoFileName;
-  for (const auto& streamEntry : mediaInfo.media[0].streams) {
-    switch (streamEntry.type) {
-    case MMIStreamType::Redbook:
-      //##FIX## Nothing to do here because this has already been loaded as a CD image in nall
-      break;
-    case MMIStreamType::RawAudio:
-      analogAudioFileName = streamEntry.file.c_str();
-      break;
-    case MMIStreamType::RawVideo:
-      analogVideoFileName = streamEntry.file.c_str();
-      video.leadInFrameCount = streamEntry.framesInLeadInRegion.value_or(0);
-      video.activeVideoFrameCount = streamEntry.framesInActiveRegion.value_or(0);
-      video.leadOutFrameCount = streamEntry.framesInLeadOutRegion.value_or(0);
+  for(const auto& stream : mmi.media()[0].streams) {
+    if(stream.type == "Redbook") continue; // Handled by nall (as cd.rom)
+    if(stream.type == "RawAudio") analogAudioFileName = stream.file;
+    if(stream.type == "RawVideo") {
+      analogVideoFileName = stream.file;
+      video.leadInFrameCount = stream.framesInLeadInRegion;
+      video.activeVideoFrameCount = stream.framesInActiveRegion;
+      video.leadOutFrameCount = stream.framesInLeadOutRegion;
       break;
     }
   }
@@ -105,20 +22,20 @@ auto MCD::LD::load(string sourceFile) -> void {
   analogAudioLeadingAudioSamples = (n32)((double)video.leadInFrameCount * (44100.0 / videoFramesPerSecond));
 
   // Retrieve the analog audio file
-  auto analogAudioFile = sourceArchive.findFile(analogAudioFileName);
-  if (sourceArchive.isDataUncompressed(*analogAudioFile)) {
-    analogAudioRawDataView = sourceArchive.dataViewIfUncompressed(*analogAudioFile);
+  auto analogAudioFile = mmi.archive().findFile(analogAudioFileName);
+  if (mmi.archive().isDataUncompressed(*analogAudioFile)) {
+    analogAudioRawDataView = mmi.archive().dataViewIfUncompressed(*analogAudioFile);
   } else {
-    analogAudioDataBuffer = sourceArchive.extract(*analogAudioFile);
+    analogAudioDataBuffer = mmi.archive().extract(*analogAudioFile);
     analogAudioRawDataView = analogAudioDataBuffer;
   }
 
   // Retrieve the analog video file
-  auto analogVideoFile = sourceArchive.findFile(analogVideoFileName);
-  if (!sourceArchive.isDataUncompressed(*analogVideoFile)) {
+  auto analogVideoFile = mmi.archive().findFile(analogVideoFileName);
+  if (!mmi.archive().isDataUncompressed(*analogVideoFile)) {
     return;
   }
-  array_view<u8> analogVideoFileView = sourceArchive.dataViewIfUncompressed(*analogVideoFile);
+  array_view<u8> analogVideoFileView = mmi.archive().dataViewIfUncompressed(*analogVideoFile);
 
   // Read the QON/QOI2 header information for the analog video
   if (!qon_decode_header(analogVideoFileView.data(), analogVideoFileView.size(), &video.videoFileHeader)) {
@@ -158,7 +75,7 @@ auto MCD::LD::load(string sourceFile) -> void {
 
 auto MCD::LD::unload() -> void {
   // Open the source archive
-  sourceArchive.close();
+  mmi.close();
 }
 
 auto MCD::LD::read(n24 address) -> n8 {

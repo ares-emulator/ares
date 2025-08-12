@@ -449,7 +449,7 @@ struct MCD : M68000, Thread {
     vector<u8> analogAudioDataBuffer;
     array_view<u8> analogAudioRawDataView;
     n32 analogAudioLeadingAudioSamples;
-    ::nall::Decode::ZIP sourceArchive;
+    Decode::MMI mmi;
 
     static constexpr double videoFramesPerSecond = 30.0 / 1.001; // Roughly 29.97
     static const size_t inputRegisterCount = 0x20;

@@ -2,18 +2,30 @@ struct MegaLD : LaserDisc {
   auto name() -> string override { return "Mega LD"; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(string location, string pathWithinArchive) -> string;
+  auto analyze(string digitalTrack) -> string;
 };
 
 auto MegaLD::load(string location) -> LoadResult {
   if(!inode::exists(location)) return romNotFound;
 
-  //##TODO## Parse the mmi file metadata to locate this. We're hardcoding it for now until we review/discuss
-  //how to integrate our new Mixed Media Images (.mmi files) into mia properly.
-  string pathWithinArchive = "Disc1Side1/DigitalAudio.cue";
+  if(!location.iendsWith(".mmi")) return invalidROM;
+  if(!mmiArchive.open(location)) return invalidROM;
+  if(!mmiArchive.media().size()) return invalidROM;
+
+  if(mmiArchive.media().size() > 1) {
+    //TODO: Multi-side media is not yet supported
+    return invalidROM;
+  }
+
+  // Mega-LD games must have a digital track
+  string digitalTrack;
+  for(auto& stream : mmiArchive.media().first().streams) {
+    if(stream.name == "DigitalAudio") digitalTrack = stream.file;
+  }
+  if(!digitalTrack) return invalidROM;
 
   this->location = location;
-  this->manifest = analyze(location, pathWithinArchive);
+  this->manifest = analyze(digitalTrack);
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
@@ -22,7 +34,7 @@ auto MegaLD::load(string location) -> LoadResult {
   pak->setAttribute("region", document["game/region"].string());
   pak->append("manifest.bml", manifest);
   if(file::exists(location)) {
-    pak->append("cd.rom", vfs::cdrom::open(location, pathWithinArchive));
+    pak->append("cd.rom", vfs::cdrom::open(location, digitalTrack));
   }
 
   return successful;
@@ -34,13 +46,8 @@ auto MegaLD::save(string location) -> bool {
   return true;
 }
 
-auto MegaLD::analyze(string location, string pathWithinArchive) -> string {
-  vector<u8> sector;
-
-  if(location.iendsWith(".mmi") || location.iendsWith(".zip")) {
-    sector = readDataSector(location, pathWithinArchive, 0);
-  }
-
+auto MegaLD::analyze(string digitalTrack) -> string {
+  auto sector = readDataSector(location, digitalTrack, 0);
   if(!sector || memory::compare(sector.data(), "SEGA", 4)) return {};
 
   vector<string> regions;

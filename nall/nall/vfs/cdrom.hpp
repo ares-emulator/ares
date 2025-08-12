@@ -26,8 +26,8 @@ struct cdrom : file {
       instance->_archive = std::make_unique<Decode::ZIP>();
       if (!instance->_archive->open(location)) return {};
 
-      const Decode::ZIP::File* compressedFile = instance->_archive->findFile(pathWithinArchive);
-      if ((compressedFile != nullptr) && instance->loadCue(location, instance->_archive.get(), compressedFile)) return instance;
+      maybe<Decode::ZIP::File> compressedFile = instance->_archive->findFile(pathWithinArchive);
+      if (compressedFile && instance->loadCue(location, instance->_archive.get(), &compressedFile.get())) return instance;
     }
 
     return {};
@@ -158,7 +158,7 @@ private:
     //preload subchannel data
     if (compressedFile != nullptr) {
       auto subFile = archive->findFile("Disc1Side1/DigitalAudio.sub");
-      loadSub(cueLocation, archive, subFile, session);
+      loadSub(cueLocation, archive, &subFile.get(), session);
     } else {
       loadSub({ Location::notsuffix(cueLocation), ".sub" }, archive, compressedFile, session);
     }
@@ -179,7 +179,7 @@ private:
         auto filePathInArchive = file.archiveFolder;
         filePathInArchive.append(file.name);
         auto fileEntry = archive->findFile(filePathInArchive);
-        if (fileEntry != nullptr) {
+        if (fileEntry) {
           if (archive->isDataUncompressed(*fileEntry)) {
             rawDataView = archive->dataViewIfUncompressed(*fileEntry);
           } else {

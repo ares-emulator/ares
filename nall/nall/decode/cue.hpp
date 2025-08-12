@@ -192,13 +192,13 @@ inline auto CUE::sectorCount() const -> u32 {
 inline auto CUE::File::scan(const string& pathname, const string& archiveFolderPath, const Decode::ZIP* archive) -> bool {
   string location = {Location::path(pathname), name};
 
-  const Decode::ZIP::File* zipFileEntry = nullptr;
+  maybe<ZIP::File> zipFileEntry;
   if(archive != nullptr) {
     string archiveFilePath = archiveFolderPath;
     archiveFilePath.append(name);
     zipFileEntry = archive->findFile(archiveFilePath);
     archiveFolder = archiveFolderPath;
-    if(zipFileEntry == nullptr) return false;
+    if(!zipFileEntry) return false;
   } else {
     if(!file::exists(location)) return false;
   }
@@ -206,7 +206,7 @@ inline auto CUE::File::scan(const string& pathname, const string& archiveFolderP
   u64 size = 0;
 
   if(type == "binary") {
-    if(zipFileEntry != nullptr) {
+    if(zipFileEntry) {
       size = zipFileEntry->size;
     } else {
       size = file::size(location);

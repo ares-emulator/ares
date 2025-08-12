@@ -2,7 +2,6 @@
 #include <string.h>
 #include <string>
 #include <optional>
-#include <json/json.hpp>
 
 namespace ares::MegaDrive {
 

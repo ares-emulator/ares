@@ -310,7 +310,7 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
   unique_pointer archive = new Decode::ZIP;
   if (!archive->open(mmiPath)) return {};
   Decode::CUE cuesheet;
-  if(!cuesheet.load(mmiPath, archive.data(), archive->findFile(cuePath))) return {};
+  if(!cuesheet.load(mmiPath, archive.data(), &archive->findFile(cuePath).get())) return {};
 
   for(auto& file : cuesheet.files) {
     u64 offset = 0;
@@ -318,7 +318,7 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
       auto filePathInArchive = file.archiveFolder;
       filePathInArchive.append(file.name);
       auto fileEntry = archive->findFile(filePathInArchive);
-      if(fileEntry == nullptr) continue;
+      if(!fileEntry) continue;
       array_view<u8> rawDataView;
       vector<u8> rawDataBuffer;
       if (archive->isDataUncompressed(*fileEntry)) {

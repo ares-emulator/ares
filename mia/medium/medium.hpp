@@ -45,4 +45,6 @@ struct LaserDisc : Medium {
   auto type() -> string override { return "LaserDisc"; }
   auto extensions() -> vector<string> override { return {"mmi"}; }
   auto readDataSector(string mmiPath, string cuePath, u32 sectorID) -> vector<u8>;
+protected:
+  Decode::MMI mmiArchive;
 };

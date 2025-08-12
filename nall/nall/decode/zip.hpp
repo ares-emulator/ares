@@ -22,13 +22,13 @@ struct ZIP {
     close();
   }
 
-  auto findFile(const string& filename) const -> const File* {
+  auto findFile(const string& filename) const -> const maybe<File> {
     for (const auto& currentFile : file) {
       if (currentFile.name.iequals(filename)) {
-        return &currentFile;
+        return currentFile;
       }
     }
-    return nullptr;
+    return nothing;
   }
 
   auto open(const string& filename) -> bool {
