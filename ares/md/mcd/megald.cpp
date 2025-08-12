@@ -30,7 +30,7 @@ struct MMIStreamEntry {
   std::optional<size_t> framesInLeadInRegion;
   std::optional<size_t> framesInLeadOutRegion;
 };
-NLOHMANN_JSONIFY_ALL_THINGS(MMIStreamEntry, name, type, file, format, channels, framesInActiveRegion, framesInLeadInRegion, framesInLeadOutRegion);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(MMIStreamEntry, name, type, file, format, channels, framesInActiveRegion, framesInLeadInRegion, framesInLeadOutRegion)
 
 struct MMIMediaEntry {
   std::string name;
@@ -43,7 +43,7 @@ struct MMIMediaEntry {
   std::optional<std::string> masterReference;
   std::vector<MMIStreamEntry> streams;
 };
-NLOHMANN_JSONIFY_ALL_THINGS(MMIMediaEntry, name, type, format, sequenceNo, volumeNo, sideNo, physicalType, masterReference, streams);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(MMIMediaEntry, name, type, format, sequenceNo, volumeNo, sideNo, physicalType, masterReference, streams)
 
 struct MMIMediaInfo {
   std::string name;
@@ -52,7 +52,7 @@ struct MMIMediaInfo {
   std::optional<std::string> catalogId;
   std::vector<MMIMediaEntry> media;
 };
-NLOHMANN_JSONIFY_ALL_THINGS(MMIMediaInfo, name, system, regionCode, catalogId, media);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(MMIMediaInfo, name, system, regionCode, catalogId, media)
 
 // Pioneer PD6103A
 auto MCD::LD::load(string sourceFile) -> void {
@@ -65,11 +65,21 @@ auto MCD::LD::load(string sourceFile) -> void {
   // Read the metadata file
   //##TODO## No proper error handling here right now, because this is all just a placeholder.
   auto mediaInfoFile = sourceArchive.findFile("MediaInfo.json");
-  if (mediaInfoFile == nullptr) return;
+  if (mediaInfoFile == nullptr) {
+    return;
+  }
   vector<u8> mediaInfoDataRaw = sourceArchive.extract(*mediaInfoFile);
   std::string mediaInfoDataString((const char*)mediaInfoDataRaw.data(), mediaInfoDataRaw.size());
-  auto jsonData = nlohmann::json::parse(mediaInfoDataString);
-  auto mediaInfo = jsonData.template get<MMIMediaInfo>();
+  auto jsonData = nlohmann::json::parse(mediaInfoDataString, nullptr, false);
+  if (jsonData.is_discarded()) {
+    return;
+  }
+  MMIMediaInfo mediaInfo;
+  try {
+    mediaInfo = jsonData.template get<MMIMediaInfo>();
+  } catch(nlohmann::json::exception) {
+    return;
+  }
 
   // Extract the stream information for analog video and audio
   string analogAudioFileName;
@@ -2332,9 +2342,9 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
 
   // Limit the new video frame index to the set of video data that's available
   if (newVideoFrameLeadIn) {
-    newVideoFrameIndex = (newVideoFrameIndex >= video.leadInFrameCount) ? video.leadInFrameCount - 1 : newVideoFrameIndex;
+    newVideoFrameIndex = (newVideoFrameIndex >= video.leadInFrameCount) ? (video.leadInFrameCount > 0 ? video.leadInFrameCount - 1 : 0) : newVideoFrameIndex;
   } else if (newVideoFrameLeadOut) {
-    newVideoFrameIndex = (newVideoFrameIndex >= video.leadOutFrameCount) ? video.leadOutFrameCount - 1 : newVideoFrameIndex;
+    newVideoFrameIndex = (newVideoFrameIndex >= video.leadOutFrameCount) ? (video.leadOutFrameCount > 0 ? video.leadOutFrameCount - 1 : 0) : newVideoFrameIndex;
   }
 
   // If the video frame index hasn't changed, abort any further processing, unless the player is actively looping on the
@@ -2443,11 +2453,11 @@ auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
   // Locate the new video frame in the source file
   const unsigned char* videoFrameCompressed = nullptr;
   if (video.currentVideoFrameLeadIn) {
-    videoFrameCompressed = video.leadInFrames[video.currentVideoFrameIndex];
+    videoFrameCompressed = (video.currentVideoFrameIndex < video.leadInFrameCount ? video.leadInFrames[video.currentVideoFrameIndex] : nullptr);
   } else if (video.currentVideoFrameLeadOut) {
-    videoFrameCompressed = video.leadOutFrames[video.currentVideoFrameIndex];
+    videoFrameCompressed = (video.currentVideoFrameIndex < video.leadOutFrameCount ? video.leadOutFrames[video.currentVideoFrameIndex] : nullptr);
   } else {
-    videoFrameCompressed = video.activeVideoFrames[video.currentVideoFrameIndex];
+    videoFrameCompressed = (video.currentVideoFrameIndex < video.activeVideoFrameCount ? video.activeVideoFrames[video.currentVideoFrameIndex] : nullptr);
   }
   if (videoFrameCompressed == nullptr) {
     return;

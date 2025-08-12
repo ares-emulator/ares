@@ -5,8 +5,8 @@
 #include <nall/decode/zip.hpp>
 #include <vector>
 #include <cmath>
-#include "qoi2.h"
-#include "qon.h"
+#include <qon/qon.h>
+#include <qon/qoi2.h>
 
 #include <component/processor/m68000/m68000.hpp>
 #include <component/processor/z80/z80.hpp>
