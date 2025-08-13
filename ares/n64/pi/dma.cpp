@@ -8,124 +8,56 @@ auto PI::dmaRead() -> void {
   }
 }
 
-auto PI::dmaWriteDuration() -> u32 {
-  BSD bsd;
-  switch (io.pbusAddress.bit(24,31)) {
-    case 0x05:               bsd = bsd2; break; 
-    case range8(0x08, 0x0F): bsd = bsd2; break;
-    default:                 bsd = bsd1; break;
-  }
-
-  int blockLen = (pi.runningDMA.blockLen() + 1) & ~1;
-  int rdramLen = blockLen - pi.runningDMA.misalign;
-  int pageShift = bsd.pageSize + 2;
-  int pageSize = 1 << pageShift;
-
-  int cyclesInitial = 0;
-  if(pi.runningDMA.firstBlock)
-    cyclesInitial = 4 * 3; // Initial setup time
-
-  // PI page selection time
-  int cyclePiSel = 0;
-  int firstPage = (io.pbusAddress >> pageShift);
-  int lastPage = (io.pbusAddress + blockLen - 1) >> pageShift;
-  if (pi.runningDMA.firstBlock || firstPage != lastPage)
-    cyclePiSel = (14 + bsd.latency + 1) * 3;
-
-  // PI transfer time for the block
-  int cyclesPiTx = ((bsd.pulseWidth + 1 + bsd.releaseDuration + 1) * blockLen/2) * 3;
-
-  // RDRAM row opening time
-  int cyclesRdramRow = 0;
-  int cyclesRdramMasking = 0;
-  int cyclesRdramSetup = 0;
-  int cyclesRdramTx = 0;
-
-  // RDRAM masking
-  if(pi.runningDMA.misalign || ((io.dramAddress + blockLen) & 7) != 0)
-    cyclesRdramMasking = 21 * 3;
-
-  if(rdramLen > 0) {
-    // RDRAM row opening
-    if((io.dramAddress & 0x7ff) == 0 && !pi.runningDMA.firstBlock)
-      cyclesRdramRow = 6 * 3; 
-
-    // RDRAM burst setup
-    cyclesRdramSetup = 6 * 3;
-
-    // RDRAM writeback time at 350 MiB/s
-    cyclesRdramTx = (i64)rdramLen * (62500000 * 3) / (350 * 1024 * 1024);
-  }
-
-  return cyclesInitial + cyclePiSel + cyclesPiTx + cyclesRdramRow + cyclesRdramMasking + cyclesRdramSetup + cyclesRdramTx;
-}
-
-
 auto PI::dmaWrite() -> void {
   u8 mem[128];
-
-  if(!io.dmaBusy) {
-    io.dmaBusy = 1;
-    pi.runningDMA = {};
-    pi.runningDMA.firstBlock = 1;
-    pi.runningDMA.maxBlockSize = 128;
-    pi.runningDMA.length = io.writeLength+1;
-    pi.runningDMA.misalign = io.dramAddress & 7;
-    pi.runningDMA.distEndOfRow = 0x800-(io.dramAddress&0x7ff);
-    queue.insert(Queue::PI_DMA_Write, dmaWriteDuration());
-    return;
-  }
-
-  i32 curLen = pi.runningDMA.blockLen();
-
-  for (int i=0; i<curLen; i+=2) {
-    u16 data = busRead<Half>(io.pbusAddress);
-    mem[i+0] = data >> 8;
-    mem[i+1] = data >> 0;
-    io.pbusAddress += 2;
-    pi.runningDMA.length -= 2;
-  }
+  i32 length = io.writeLength+1;
+  i32 maxBlockSize = 128;
+  bool firstBlock = true;
 
   if constexpr(Accuracy::CPU::Recompiler) {
-    cpu.recompiler.invalidateRange(io.dramAddress, curLen);
+    cpu.recompiler.invalidateRange(io.dramAddress, (length + 1) & ~1);
   }
-  
-  if (pi.runningDMA.firstBlock && curLen < 127-pi.runningDMA.misalign) {
-    for (i32 i = 0; i < curLen-pi.runningDMA.misalign; i++) {
-      rdram.ram.write<Byte>(io.dramAddress++, mem[i], "PI DMA");
+
+  while (length > 0) {
+    i32 misalign = io.dramAddress & 7;
+    i32 distEndOfRow = 0x800-(io.dramAddress&0x7ff);
+    i32 blockLen = min(maxBlockSize-misalign, distEndOfRow);
+    i32 curLen = min(length, blockLen);
+
+    for (int i=0; i<curLen; i+=2) {
+      u16 data = busRead<Half>(io.pbusAddress);
+      mem[i+0] = data >> 8;
+      mem[i+1] = data >> 0;
+      io.pbusAddress += 2;
+      length -= 2;
     }
-  } else {
-    for (i32 i = 0; i < curLen-pi.runningDMA.misalign; i+=2) {
-      rdram.ram.write<Byte>(io.dramAddress++, mem[i+0], "PI DMA");
-      rdram.ram.write<Byte>(io.dramAddress++, mem[i+1], "PI DMA");
+
+    if (firstBlock && curLen < 127-misalign) {
+      for (i32 i = 0; i < curLen-misalign; i++) {
+        rdram.ram.write<Byte>(io.dramAddress++, mem[i], "PI DMA");
+      }
+    } else {
+      for (i32 i = 0; i < curLen-misalign; i+=2) {
+        rdram.ram.write<Byte>(io.dramAddress++, mem[i+0], "PI DMA");
+        rdram.ram.write<Byte>(io.dramAddress++, mem[i+1], "PI DMA");
+      }
     }
+
+    io.dramAddress = (io.dramAddress + 7) & ~7;
+    io.writeLength = curLen <= 8 ? 127-misalign : 127;
+    firstBlock = false;
+    maxBlockSize = distEndOfRow < 8 ? 128-misalign : 128;
   }
-
-  io.dramAddress = (io.dramAddress + 7) & ~7;
-  io.writeLength = curLen <= 8 ? 127-pi.runningDMA.misalign : 127;
-
-  if (pi.runningDMA.length <= 0) {
-    dmaFinished();
-    return;
-  }
-
-  pi.runningDMA.firstBlock = 0;
-  pi.runningDMA.maxBlockSize = pi.runningDMA.distEndOfRow < 8 ? 128-pi.runningDMA.misalign : 128;
-  pi.runningDMA.misalign = io.dramAddress & 7;
-  pi.runningDMA.distEndOfRow = 0x800-(io.dramAddress&0x7ff);
-  queue.insert(Queue::PI_DMA_Write, dmaWriteDuration());
 }
 
 auto PI::dmaFinished() -> void {
-  pi.runningDMA = {};
   io.dmaBusy = 0;
   io.interrupt = 1;
   mi.raise(MI::IRQ::PI);
 }
 
-auto PI::dmaReadDuration() -> u32 {
-  // FIXME: old algorithm, we keep it for one-shot DMA reads for now
-  auto len = io.readLength;
+auto PI::dmaDuration(bool read) -> u32 {
+  auto len = read ? io.readLength : io.writeLength;
   len = (len | 1) + 1;
 
   BSD bsd;

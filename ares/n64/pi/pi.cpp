@@ -23,7 +23,6 @@ auto PI::power(bool reset) -> void {
   io = {};
   bsd1 = {};
   bsd2 = {};
-  runningDMA = {};
 }
 
 }
