@@ -19,6 +19,7 @@ auto Program::mute() -> void {
 auto Program::paletteUpdate() -> void {
   Program::Guard guard;
   if(!emulator) return;
+  if(!emulator->root) return;
   for(auto& screen : emulator->root->find<ares::Node::Video::Screen>()) {
     screen->setLuminance(settings.video.luminance);
     screen->setSaturation(settings.video.saturation);
