@@ -525,14 +525,7 @@ auto MCD::CDD::insert() -> void {
   io.sample  = 0;
   io.track   = 0;
 
-  // Check if this is a MegaLD Laserdisc. We currently do this by looking at magic bytes in the first data sector.
-  static auto constexpr matchString = "LICENCED BY PIONEER & SEGA";
-  static auto constexpr matchStringLength = std::string::traits_type::length(matchString);
-  mcd.fd->seek(((abs(session.leadIn.lba) + session.tracks[session.firstTrack].indices[1].lba) * 2448) + 0x23E);
-  isDiscMegaLd = false;
-  if ((mcd.fd->size() - mcd.fd->offset()) >= matchStringLength) {
-    isDiscMegaLd = (std::strncmp((const char*)(mcd.fd->data() + mcd.fd->offset()), matchString, matchStringLength) == 0);
-  }
+  isDiscMegaLd = mcd.pak->attribute("system") == "MegaLD";
 }
 
 auto MCD::CDD::eject() -> void {
