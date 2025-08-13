@@ -24,7 +24,7 @@ MCD mcd;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto MCD::load(Node::Object parent, string sourceFile) -> void {
+auto MCD::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Mega CD");
 
   tray = node->append<Node::Port>("Disc Tray");
@@ -44,10 +44,6 @@ auto MCD::load(Node::Object parent, string sourceFile) -> void {
   cdd.load(node);
   pcm.load(node);
   debugger.load(node);
-
-  if(MegaLD()) {
-    ld.load(sourceFile);
-  }
 
   if(auto fp = system.pak->read("bios.rom")) {
     for(auto address : range(bios.size())) bios.program(address, fp->readm(2));
@@ -86,6 +82,11 @@ auto MCD::connect() -> void {
 
   information = {};
   information.title = pak->attribute("title");
+
+  if(MegaLD()) {
+    ld.unload();
+    ld.load(pak->attribute("location"));
+  }
 
   fd = pak->read("cd.rom");
   if(!fd) return disconnect();

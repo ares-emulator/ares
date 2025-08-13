@@ -32,6 +32,7 @@ auto MegaLD::load(string location) -> LoadResult {
   pak = new vfs::directory;
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
+  pak->setAttribute("location", location);
   pak->append("manifest.bml", manifest);
   if(file::exists(location)) {
     pak->append("cd.rom", vfs::cdrom::open(location, digitalTrack));

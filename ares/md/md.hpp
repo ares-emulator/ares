@@ -20,7 +20,7 @@
 namespace ares::MegaDrive {
   #include <ares/inline.hpp>
   auto enumerate() -> vector<string>;
-  auto load(Node::System& node, string name, string sourceFile) -> bool;
+  auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 
   enum : u32 {

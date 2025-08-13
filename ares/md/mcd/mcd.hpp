@@ -33,7 +33,7 @@ struct MCD : M68000, Thread {
   auto title() const -> string { return information.title; }
 
   //mcd.cpp
-  auto load(Node::Object parent, string sourceFile) -> void;
+  auto load(Node::Object parent) -> void;
   auto unload() -> void;
 
   auto allocate(Node::Port) -> Node::Peripheral;
