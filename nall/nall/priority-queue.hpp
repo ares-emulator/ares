@@ -26,12 +26,10 @@ struct priority_queue<T[Size]> {
 
   template<typename F>
   auto step(u32 clocks, const F& callback) -> void {
-    u32 baseClock = clock;
-    while(size && ge(baseClock+clocks, heap[0].clock)) {
-      clock = heap[0].clock;
+    clock += clocks;
+    while(size && ge(clock, heap[0].clock)) {
       if(auto event = remove()) callback(*event);
     }
-    clock = baseClock + clocks;
   }
 
   auto insert(const T& event, u32 clock) -> bool {
