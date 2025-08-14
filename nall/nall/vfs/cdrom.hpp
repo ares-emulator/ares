@@ -157,8 +157,12 @@ private:
 
     //preload subchannel data
     if (compressedFile != nullptr) {
-      auto subFile = archive->findFile("Disc1Side1/DigitalAudio.sub");
-      loadSub(cueLocation, archive, &subFile.get(), session);
+      auto subFile = archive->findFile({ Location::notsuffix(compressedFile->name), ".sub" });
+      if (subFile) {
+        loadSub(cueLocation, archive, &subFile.get(), session);
+      } else {
+        loadSub(cueLocation, archive, nullptr, session);
+      }
     } else {
       loadSub({ Location::notsuffix(cueLocation), ".sub" }, archive, compressedFile, session);
     }

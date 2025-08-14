@@ -199,6 +199,7 @@ auto MCD::LD::serialize(serializer& s) -> void {
   s(video.currentVideoFrameLeadOut);
   s(video.currentVideoFrameFieldSelectionEnabled);
   s(video.currentVideoFrameFieldSelectionEvenField);
+  s(video.currentVideoFrameOnEvenField);
 
   // Restore the current video frame into the display buffer
   if (MegaLD() && s.reading()) {

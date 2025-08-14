@@ -63,7 +63,7 @@ auto MegaLD::analyze(string digitalTrack) -> string {
   }
   if(!regions) regions.append("NTSC-J","NTSC-U"); // unknown boot
 
-  string serialNumber = slice((const char*)(sector.data() + 0x180), 0, 14).trimRight(" ");
+  string serialNumber = slice((const char*)(sector.data() + 0x180), 0, 16).trimRight(" ");
 
   vector<string> devices;
   string device = slice((const char*)(sector.data() + 0x190), 0, 16).trimRight(" ");

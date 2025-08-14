@@ -84,7 +84,7 @@ auto MCD::LD::read(n24 address) -> n8 {
 //  ares::_debug.reset();
   //debug(unverified, "[MCD::readLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L));
 
-  // Retieve the current value of the target register
+  // Retrieve the current value of the target register
   n8 data = 0;
   if (!isOutput) {
     // Reading back the input registers always returns the last written value to that register
@@ -110,10 +110,10 @@ auto MCD::LD::write(n24 address, n8 data) -> void {
   static bool includeReg0DebugOutput = false;
   bool isOutput = (address & 0x80);
   u8 regNum = (address & 0x3f) >> 1;
-  ares::_debug.reset();
+  //ares::_debug.reset();
   //debug(unverified, "[MCD::writeLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
   if ((regNum != 0x00) || includeReg0DebugOutput) {
-    debug(unverified, "[MCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
+    //debug(unverified, "[MCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
     if (isOutput) {
       debug(unusual, "[MCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
     }
@@ -2447,21 +2447,32 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   //if(Region::PAL() ) y += 38 - 8 * latch.overscan;
   //y = y % visibleHeight();
 
-  //##FIX## This is even/odd field thing is a dodgy hack
-  static bool currentFieldIsEven = false;
+  // If we're at the start of a new frame, handle swapping the video buffers and even/odd field selection for interlace
+  // mode.
   if (y == 0) {
-    // Swap the buffers if a new frame is waiting
     int buildIndex = video.drawIndex ^ 0x01;
     if (!video.videoFrameBuffers[buildIndex].empty()) {
+      // Note that we're relying on the characteristic here of std::vector (guaranteed in the standard) that clear()
+      // doesn't actually release the memory (IE, doesn't change capacity), it just sets the number of valid elements to
+      // zero. This means we don't incur heap allocation penalties from clearing and resizing each frame. The buffer
+      // will size itself once, then we're just changing the valid element count to indicate whether it contains a frame
+      // or not, and zeroing out the buffer.
       video.videoFrameBuffers[video.drawIndex].clear();
       video.drawIndex = buildIndex;
-      currentFieldIsEven = false;
+
+      // Reset the odd/even field selection to the odd field when advancing to a new frame
+      video.currentVideoFrameOnEvenField = false;
     } else {
-      currentFieldIsEven = !currentFieldIsEven;
+      // Invert the even/odd frame if we're not advancing to a new frame.
+      video.currentVideoFrameOnEvenField = !video.currentVideoFrameOnEvenField;
     }
   }
 
-  //##FIX##
+  // We're outside the video buffer vertically, so abort any further processing.
+  //##FIX## Well since we're encoding all 525 lines of video, technically this shouldn't happen, but I believe it does
+  //right now, probably because of the "source line" adjustment above. Perhaps we should wrap around the video here?
+  //all this only matters if Ares has an option to show the full frame with the borders though, which I don't believe
+  //it currently does.
   if (y >= video.FrameBufferHeight) {
     return;
   }
@@ -2481,21 +2492,16 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   // Choose which field of the input video to use. We toggle between even and odd fields on successive frames
   // by default for interlace mode. If the register block has manual field selection enabled however, we use
   // the target field indicated by the registers.
-  bool useEvenField = video.currentVideoFrameFieldSelectionEnabled ? (bool)video.currentVideoFrameFieldSelectionEvenField : currentFieldIsEven;
+  bool useEvenField = video.currentVideoFrameFieldSelectionEnabled ? (bool)video.currentVideoFrameFieldSelectionEvenField : (bool)video.currentVideoFrameOnEvenField;
 
   // These offset adjustments are based on visual comparisons on a physical player. The positioning was
   // adjustable via calibration, so there's no one fixed, correct positioning settings. These ones get correct
   // alignment for Space Berserker with the video in the HUD frames though, based on comparisons with a real
-  // player.
-  //##TODO## Confirm against Myst which has more precise VDP overlay alignment requirements. It is a proto
-  //though, so alignment may not be verified correct. Find another released LaserActive game if the alignment
-  //in the Myst protos is questionable.
-  //const size_t VideoFrameTopBorderHeight = 25;
+  // player. Further testing on the Myst protos, which have precise overlay requirements with individual frames,
+  // also seem to confirm the alignment.
   const size_t VideoFrameLeftBorderWidth = 175;
   const size_t VideoFrameRightBorderWidth = 57;
   const size_t VideoFrameTopBorderHeight = 25 + 5; // Compensate for vertical positioning
-  //const size_t VideoFrameLeftBorderWidth = 150 - 5; // Compensate for line beginning near the right side of the screen
-  //const size_t VideoFrameRightBorderWidth = 117 - 5; // Just shift the image, don't change the scaling
   size_t channelCount = 3;
   size_t targetLineInSourceImage = (y + VideoFrameTopBorderHeight + (useEvenField ? (video.videoFrameHeader.height / 2) : 0));
   size_t sourceLinePos = ((targetLineInSourceImage * video.videoFrameHeader.width) + VideoFrameLeftBorderWidth) * channelCount;

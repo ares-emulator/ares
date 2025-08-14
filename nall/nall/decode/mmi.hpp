@@ -75,10 +75,12 @@ struct MMI {
       return false;
     }
 
-    auto jsonString = string((const char*)jsonBuffer.data(), jsonBuffer.size());
-    //FIXME: Why is jsonString larger than the input data size when creating from the buffer?
-    //HACK: prevent JSON::unserialize from failing due to tailing data
-    if(jsonString.length() > jsonBuffer.size()) jsonString = jsonString.slice(0, jsonBuffer.size());
+    // Currently (2025-08-14) there is no way to construct a nall::string from a fixed-length buffer using
+    // nall::string_view, as the variadic constructor overrides "string_view(const char* data, u32 size)",
+    // meaning we can't create a string_view from a fixed-length input. We use an array_view here as a
+    // workaround.
+    auto jsonBufferAsArrayView = jsonBuffer.view(0, jsonBuffer.size());
+    auto jsonString = string(jsonBufferAsArrayView);
 
     _mediaInfo = JSON::unserialize(jsonString);
     if(!_mediaInfo) {
