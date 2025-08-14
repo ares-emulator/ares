@@ -75,14 +75,8 @@ struct MMI {
       return false;
     }
 
-    // Currently (2025-08-14) there is no way to construct a nall::string from a fixed-length buffer using
-    // nall::string_view, as the variadic constructor overrides "string_view(const char* data, u32 size)",
-    // meaning we can't create a string_view from a fixed-length input. We use an array_view here as a
-    // workaround.
-    auto jsonBufferAsArrayView = jsonBuffer.view(0, jsonBuffer.size());
-    auto jsonString = string(jsonBufferAsArrayView);
-
-    _mediaInfo = JSON::unserialize(jsonString);
+    auto jsonBufferView = string_view((const char*)jsonBuffer.data(), jsonBuffer.size());
+    _mediaInfo = JSON::unserialize(jsonBufferView);
     if(!_mediaInfo) {
       close();
       return false;
