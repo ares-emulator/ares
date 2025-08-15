@@ -157,7 +157,6 @@ auto MCD::CDD::serialize(serializer& s) -> void {
   s(status);
   s(command);
   s(subcode);
-  s(isDiscMegaLd);
   s(stopPointEnabled);
   s(targetStopPoint);
 }

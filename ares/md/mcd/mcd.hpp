@@ -315,7 +315,7 @@ struct MCD : M68000, Thread {
     auto stop() -> void;
     auto play() -> void;
     auto pause() -> void;
-    auto seekToTime(u8 minute, u8 second, u8 frame, bool startPaused) -> void;
+    auto seekToTime(u8 hour, u8 minute, u8 second, u8 frame, bool startPaused) -> void;
     auto seekToRelativeTime(n7 track, u8 minute, u8 second, u8 frame, bool startPaused) -> void;
     auto seekToSector(s32 lba, bool startPaused) -> void;
     auto seekToTrack(n7 track, bool startPaused) -> void;
@@ -328,7 +328,7 @@ struct MCD : M68000, Thread {
     auto getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void;
     auto getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void;
     auto getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void;
-    auto lbaFromTime(u8 minute, u8 second, u8 frame) -> s32;
+    auto lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32;
     auto isTrackAudio(n7 track) -> bool;
     auto isDiscLoaded() -> bool;
     auto isDiscLaserdisc() -> bool;
@@ -377,9 +377,9 @@ struct MCD : M68000, Thread {
     n4 status [10];
     n4 command[10];
     n16 subcode[64];
-    n1 isDiscMegaLd;
     n1 stopPointEnabled;
     s32 targetStopPoint;
+    bool laserdiscLoaded;
   } cdd;
 
   struct LD {
@@ -397,8 +397,7 @@ struct MCD : M68000, Thread {
     auto updateStopPointWithCurrentState() -> void;
     auto zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn = false) -> s32;
     auto lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32;
-    auto RedbookFramesToVideoFrames(u8 frames) -> u8;
-    auto VideoFramesToRedbookFrames(u8 frames) -> u8;
+    auto VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void;
     auto handleStopPointReached(s32 lba) -> void;
     auto updateCurrentVideoFrameNumber(s32 lba) -> void;
     auto loadCurrentVideoFrameIntoBuffer() -> void;
@@ -423,6 +422,8 @@ struct MCD : M68000, Thread {
     };
 
     struct AnalogVideoFrameIndex {
+      bool isCLV;
+      bool hasDigitalAudio;
       size_t leadInFrameCount;
       size_t activeVideoFrameCount;
       size_t leadOutFrameCount;

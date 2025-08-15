@@ -525,7 +525,10 @@ auto MCD::CDD::insert() -> void {
   io.sample  = 0;
   io.track   = 0;
 
-  isDiscMegaLd = mcd.pak->attribute("system") == "MegaLD";
+  laserdiscLoaded = false;
+  if ((mcd.pak->attribute("system") == "MegaLD") && (mcd.ld.mmi.media().size() > 0)) {
+    laserdiscLoaded = mcd.ld.mmi.media()[0].type.match("LD");
+  }
 }
 
 auto MCD::CDD::eject() -> void {
@@ -557,8 +560,8 @@ auto MCD::CDD::pause() -> void {
   }
 }
 
-auto MCD::CDD::seekToTime(u8 minute, u8 second, u8 frame, bool startPaused) -> void {
-  s32 lba = lbaFromTime(minute, second, frame);
+auto MCD::CDD::seekToTime(u8 hour, u8 minute, u8 second, u8 frame, bool startPaused) -> void {
+  s32 lba = lbaFromTime(hour, minute, second, frame);
   seekToSector(lba, startPaused);
 }
 
@@ -640,8 +643,8 @@ auto MCD::CDD::getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& 
   flags = session.tracks[track].control;
 }
 
-auto MCD::CDD::lbaFromTime(u8 minute, u8 second, u8 frame) -> s32 {
-  s32 lba = ((s32)minute * 60 * 75) + ((s32)second * 75) + (s32)frame;
+auto MCD::CDD::lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
+  s32 lba = ((((((s32)hour * 60) + (s32)minute) * 60) + (s32)second) * 75) + (s32)frame;
   return lba;
 }
 
@@ -657,25 +660,15 @@ auto MCD::CDD::isDiscLaserdisc() -> bool {
   if (!isDiscLoaded()) {
     return false;
   }
-
-  // We don't have mechanical state here to tell us if a physical Laserdisc or CD was inserted. Since the only kind of
-  // laserdiscs we care about right now are valid MegaLD titles, we just return true if a MegaLD disc image has been
-  // detected. This won't get the bios "CD player" working for Laserdisc video however. If in the future we want to be
-  // able to, for example, load a file which represents just an analog laserdisc, this will need to be amended.
-  return isDiscMegaLd;
+  return laserdiscLoaded;
 }
 
 auto MCD::CDD::isLaserdiscClv() -> bool {
-  //##TODO## Forced to false right now. Some MegaLD games do use CAV format. Once we determine how we're going to bundle
-  //things all together for MegaLD games, plumb the necessary metadata here so we can set this properly.
-  return false;
+  return isDiscLaserdisc() && mcd.ld.video.isCLV;
 }
 
 auto MCD::CDD::isLaserdiscDigitalAudioPresent() -> bool {
-  //##TODO## Forced to true right now. Not actually required to be anything other than true for MegaLD games, but if we
-  //wanted to support loading raw Laserdisc video in the future, this could be set to handle the different hardware
-  //behaviour.
-  return true;
+  return mcd.ld.video.hasDigitalAudio;
 }
 
 auto MCD::CDD::power(bool reset) -> void {
@@ -689,7 +682,6 @@ auto MCD::CDD::power(bool reset) -> void {
   for(auto& data : command) data = 0x0;
   insert();
   checksum();
-  isDiscMegaLd = false;
   stopPointEnabled = false;
   targetStopPoint = 0;
 }
