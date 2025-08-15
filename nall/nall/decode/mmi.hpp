@@ -142,7 +142,7 @@ struct MMI {
     return _mediaInfo["catalogId"].string();
   }
 
-  auto media() const -> const vector<Media>& {
+  auto media() -> const vector<Media>& {
     return _media;
   }
 

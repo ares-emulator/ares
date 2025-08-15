@@ -31,7 +31,7 @@ auto MCD::load(Node::Object parent) -> void {
   tray->setFamily("Mega CD");
   tray->setType("Compact Disc");
   tray->setHotSwappable(true);
-  tray->setAllocate([&](auto name) { return allocate(tray); });
+  tray->setAllocate([&](auto name) { return allocate(tray, name); });
   tray->setConnect([&] { return connect(); });
   tray->setDisconnect([&] { return disconnect(); });
 
@@ -69,8 +69,10 @@ auto MCD::unload() -> void {
   node.reset();
 }
 
-auto MCD::allocate(Node::Port parent) -> Node::Peripheral {
-  return disc = parent->append<Node::Peripheral>("Mega CD Disc");
+auto MCD::allocate(Node::Port parent, string name) -> Node::Peripheral {
+  disc = parent->append<Node::Peripheral>("Mega CD Disc");
+  disc->setAttribute("media", name);
+  return disc;
 }
 
 auto MCD::connect() -> void {
@@ -84,11 +86,11 @@ auto MCD::connect() -> void {
   information.title = pak->attribute("title");
 
   if(MegaLD()) {
-    ld.unload();
     ld.load(pak->attribute("location"));
+  } else {
+    fd = pak->read("cd.rom");
   }
 
-  fd = pak->read("cd.rom");
   if(!fd) return disconnect();
 
   cdd.insert();

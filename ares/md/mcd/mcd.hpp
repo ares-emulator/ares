@@ -36,7 +36,7 @@ struct MCD : M68000, Thread {
   auto load(Node::Object parent) -> void;
   auto unload() -> void;
 
-  auto allocate(Node::Port) -> Node::Peripheral;
+  auto allocate(Node::Port, string name) -> Node::Peripheral;
   auto connect() -> void;
   auto disconnect() -> void;
 

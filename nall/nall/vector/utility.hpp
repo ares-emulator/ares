@@ -16,7 +16,7 @@ template<typename T> auto vector<T>::reverse() -> void {
   operator=(std::move(reversed));
 }
 
-template<typename T> auto vector<T>::find(const function<bool (const T& lhs)>& comparator) -> maybe<u64> {
+template<typename T> auto vector<T>::find(const function<bool (const T& lhs)>& comparator) const -> maybe<u64> {
   for(u64 n : range(size())) if(comparator(_pool[n])) return n;
   return nothing;
 }

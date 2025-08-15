@@ -5,6 +5,7 @@ struct MegaLD : Emulator {
   auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto changeDiskState(const string state) -> void;
 
   u32 regionID = 0;
   sTimer discTrayTimer;
@@ -78,38 +79,55 @@ auto MegaLD::load() -> LoadResult {
     port->connect();
   }
 
-
   discTrayTimer = Timer{};
   return successful;
 }
 
 auto MegaLD::load(Menu menu) -> void {
-  MenuItem changeDisc{&menu};
-  changeDisc.setIcon(Icon::Device::Optical);
-  changeDisc.setText("Change Disc").onActivate([&] {
-    save();
-    auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
-    tray->disconnect();
+  Group group;
+  Menu changeSideMenu{&menu};
+  changeSideMenu.setIcon(Icon::Device::Optical);
+  changeSideMenu.setText("Change Side");
+  auto sides = game->pak->attribute("medium").split(",").strip();
 
-    if(game->load(Emulator::load(game, configuration.game)) != successful) {
-      return;
-    }
-
-    //give the emulator core a few seconds to notice an empty drive state before reconnecting
-    discTrayTimer->onActivate([&] {
-      discTrayTimer->setEnabled(false);
-      auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
-      tray->allocate();
-      tray->connect();
-    }).setInterval(3000).setEnabled();
+  MenuRadioItem noDiscItem{&changeSideMenu};
+  noDiscItem.setText("No Disc").onActivate([&] {
+    changeDiskState("No Disc");
   });
+  group.append(noDiscItem);
+
+  bool first = true;
+  for(auto side : sides) {
+    MenuRadioItem item{ &changeSideMenu };
+    group.append(item);
+    item.setText(side).onActivate([this, side] { changeDiskState(side); });
+    if(first) {
+      item.setChecked();
+      first = false;
+    }
+  }
+}
+
+auto MegaLD::changeDiskState(const string state) -> void {
+  discTrayTimer->setEnabled(false);
+  save();
+  auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
+  tray->disconnect();
+
+  if(state == "No Disc") return;
+
+  discTrayTimer->onActivate([&, state] {
+    discTrayTimer->setEnabled(false);
+    auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
+    tray->allocate(state);
+    tray->connect();
+  }).setInterval(3000).setEnabled();
 }
 
 auto MegaLD::unload() -> void {
   Emulator::unload();
   discTrayTimer.reset();
 }
-
 
 auto MegaLD::save() -> bool {
   root->save();

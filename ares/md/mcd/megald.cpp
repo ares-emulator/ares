@@ -1,20 +1,31 @@
 // Pioneer PD6103A
-auto MCD::LD::load(string sourceFile) -> void {
+auto MCD::LD::load(string location) -> void {
   video.outputFramebuffer.resize(video.FrameBufferWidth * (video.FrameBufferHeight + 1));
-  mmi.open(sourceFile);
+
+  //Load MMI file only if it has changed or is the first load
+  //FIXME: calling mmi.close() during emulation crashes; we don't support changing .mmi file at present in the UI anyway so this doesn't matter (yet)
+  if(mmi.location() != location) {
+    if(mmi.location()) mmi.close();
+    mmi.open(location);
+  }
+
+  //attempt to locate the requested media in the mmi archive
+  string mediaName = mcd.disc->attribute("media");
+  auto mediaIndex = mmi.media().find([mediaName](auto& m) { return m.name == mediaName; });
+  if(!mediaIndex) mediaIndex = 0;
 
   // Extract the stream information for analog video and audio
   string analogAudioFileName;
   string analogVideoFileName;
-  for(const auto& stream : mmi.media()[0].streams) {
-    if(stream.type == "Redbook") continue; // Handled by nall (as cd.rom)
+
+  for(const auto& stream : mmi.media()[mediaIndex.get()].streams) {
+    if(stream.type == "Redbook") mcd.fd = mcd.pak->read(stream.file);
     if(stream.type == "RawAudio") analogAudioFileName = stream.file;
     if(stream.type == "RawVideo") {
       analogVideoFileName = stream.file;
       video.leadInFrameCount = stream.framesInLeadInRegion;
       video.activeVideoFrameCount = stream.framesInActiveRegion;
       video.leadOutFrameCount = stream.framesInLeadOutRegion;
-      break;
     }
   }
 
