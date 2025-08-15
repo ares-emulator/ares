@@ -17,15 +17,19 @@ auto MCD::LD::load(string location) -> void {
   // Extract the stream information for analog video and audio
   string analogAudioFileName;
   string analogVideoFileName;
-
+  video.isCLV = false;
   for(const auto& stream : mmi.media()[mediaIndex.get()].streams) {
-    if(stream.type == "Redbook") mcd.fd = mcd.pak->read(stream.file);
+    if(stream.type == "Redbook") {
+	  mcd.fd = mcd.pak->read(stream.file);
+      video.hasDigitalAudio = true;
+    }
     if(stream.type == "RawAudio") analogAudioFileName = stream.file;
     if(stream.type == "RawVideo") {
       analogVideoFileName = stream.file;
       video.leadInFrameCount = stream.framesInLeadInRegion;
       video.activeVideoFrameCount = stream.framesInActiveRegion;
       video.leadOutFrameCount = stream.framesInLeadOutRegion;
+      video.isCLV = mmi.media()[mediaIndex.get()].format.endsWith("CLV");
     }
   }
 
@@ -1956,7 +1960,7 @@ auto MCD::LD::updateStopPointWithCurrentState() -> void {
     s32 stopLba;
     if (!mcd.cdd.isDiscLaserdisc()) {
       // CDs set stop points using MM:SS:FF
-      stopLba = mcd.cdd.lbaFromTime(BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]));
+      stopLba = mcd.cdd.lbaFromTime(0, BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]));
     } else if (!mcd.cdd.isLaserdiscClv()) {
       // CAV LDs set stop points using frame numbers
       s32 frameNumber = ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::HoursOrFrameH]) * 10000) + ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]) * 100) + (s32)BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
@@ -1964,8 +1968,12 @@ auto MCD::LD::updateStopPointWithCurrentState() -> void {
       stopLba = lbaFromZeroBasedFrameIndex(frameNumber - 1);
     } else {
       // CLV LDs set stop points using HH:MM:SS:FF
-      //##FIX## This doesn't work for times over an hour
-      stopLba = mcd.cdd.lbaFromTime(BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]), VideoFramesToRedbookFrames(BCD::decode(stopPointRegs[(int)SeekPointReg::Frames])));
+      u8 videoTimeHours = BCD::decode(stopPointRegs[(int)SeekPointReg::HoursOrFrameH]);
+      u8 videoTimeMinutes = BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]);
+      u8 videoTimeSeconds = BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
+      u8 videoTimeFrames = BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]);
+      VideoTimeToRedbookTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
+      stopLba = mcd.cdd.lbaFromTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
     }
 
     // Apply the stop point to playback control
@@ -2073,39 +2081,6 @@ auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
       seekPointRegs[(int)SeekPointReg::Frames] = 0x00;
       activeSeekMode = (u8)SeekMode::SeekToVideoFrame;
       //debug(unverified, "Latched SeekToVideoFrame: 0x07=", inputRegs[0x07], " 0x08=", inputRegs[0x08], " 0x09=", inputRegs[0x09], " 0x0A=", inputRegs[0x0A], " 0x0B=", inputRegs[0x0B]);
-      //##DEBUG##
-      //debug(unverified, "   0x00=", hex(inputRegs[0x00]));
-      //debug(unverified, "   0x01=", hex(inputRegs[0x01]));
-      //debug(unverified, "   0x02=", hex(inputRegs[0x02]));
-      //debug(unverified, "   0x03=", hex(inputRegs[0x03]));
-      //debug(unverified, "   0x04=", hex(inputRegs[0x04]));
-      //debug(unverified, "   0x05=", hex(inputRegs[0x05]));
-      //debug(unverified, "   0x06=", hex(inputRegs[0x06]));
-      //debug(unverified, "   0x07=", hex(inputRegs[0x07]));
-      //debug(unverified, "   0x08=", hex(inputRegs[0x08]));
-      //debug(unverified, "   0x09=", hex(inputRegs[0x09]));
-      //debug(unverified, "   0x0A=", hex(inputRegs[0x0A]));
-      //debug(unverified, "   0x0B=", hex(inputRegs[0x0B]));
-      //debug(unverified, "   0x0C=", hex(inputRegs[0x0C]));
-      //debug(unverified, "   0x0D=", hex(inputRegs[0x0D]));
-      //debug(unverified, "   0x0E=", hex(inputRegs[0x0E]));
-      //debug(unverified, "   0x0F=", hex(inputRegs[0x0F]));
-      //debug(unverified, "   0x10=", hex(inputRegs[0x10]));
-      //debug(unverified, "   0x11=", hex(inputRegs[0x11]));
-      //debug(unverified, "   0x12=", hex(inputRegs[0x12]));
-      //debug(unverified, "   0x13=", hex(inputRegs[0x13]));
-      //debug(unverified, "   0x14=", hex(inputRegs[0x14]));
-      //debug(unverified, "   0x15=", hex(inputRegs[0x15]));
-      //debug(unverified, "   0x16=", hex(inputRegs[0x16]));
-      //debug(unverified, "   0x17=", hex(inputRegs[0x17]));
-      //debug(unverified, "   0x18=", hex(inputRegs[0x18]));
-      //debug(unverified, "   0x19=", hex(inputRegs[0x19]));
-      //debug(unverified, "   0x1A=", hex(inputRegs[0x1A]));
-      //debug(unverified, "   0x1B=", hex(inputRegs[0x1B]));
-      //debug(unverified, "   0x1C=", hex(inputRegs[0x1C]));
-      //debug(unverified, "   0x1D=", hex(inputRegs[0x1D]));
-      //debug(unverified, "   0x1E=", hex(inputRegs[0x1E]));
-      //debug(unverified, "   0x1F=", hex(inputRegs[0x1F]));
     } else if (seekToVideoTime) {
       seekPointRegs[(int)SeekPointReg::Chapter] = 0x00;
       seekPointRegs[(int)SeekPointReg::HoursOrFrameH] = inputRegs[0x08] & 0x0F;
@@ -2130,7 +2105,7 @@ auto MCD::LD::performSeekWithLatchedState() -> void {
   switch ((SeekMode)activeSeekMode) {
   case SeekMode::SeekToRedbookTime:
     debug(unverified, "SeekToRedbookTime: ", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !reachedStopPoint);
-    mcd.cdd.seekToTime(BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !reachedStopPoint);
+    mcd.cdd.seekToTime(0, BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !reachedStopPoint);
     seekPerformedSinceLastFrameUpdate = true;
     break;
   case SeekMode::SeekToRedbookRelativeTime:
@@ -2148,11 +2123,16 @@ auto MCD::LD::performSeekWithLatchedState() -> void {
     seekPerformedSinceLastFrameUpdate = true;
     break;}
   case SeekMode::SeekToVideoTime: {
-    //##FIX## This is lossy and will not reliably hit the target exactly
-    //##FIX## We technically ignore hours right now, since CD data doesn't encode this.
-    debug(unverified, "SeekToVideoTime: ", BCD::decode(seekPointRegs[(int)SeekPointReg::HoursOrFrameH]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !reachedStopPoint);
-    auto redbookFrames = VideoFramesToRedbookFrames(seekPointRegs[(int)SeekPointReg::Frames]);
-    mcd.cdd.seekToTime(BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(redbookFrames), targetPauseState && !reachedStopPoint);
+    // Note that hardware tests have shown the LaserActive seems to have a +/- 1 frame accuracy with seeking to CLV
+    // timecodes. The player may stop and report back a frame one before or after the target frame number when seeking
+    // in still-frame mode.
+    u8 videoTimeHours = BCD::decode(seekPointRegs[(int)SeekPointReg::HoursOrFrameH]);
+    u8 videoTimeMinutes = BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]);
+    u8 videoTimeSeconds = BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
+    u8 videoTimeFrames = BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]);
+    debug(unverified, "SeekToVideoTime: ", videoTimeHours, ":", videoTimeMinutes, ":", videoTimeSeconds, ":", videoTimeFrames, " paused=", targetPauseState && !reachedStopPoint);
+    VideoTimeToRedbookTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
+    mcd.cdd.seekToTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames, targetPauseState && !reachedStopPoint);
     seekPerformedSinceLastFrameUpdate = true;
     break; }
   }
@@ -2182,14 +2162,16 @@ auto MCD::LD::lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32 {
   return lba;
 }
 
-auto MCD::LD::RedbookFramesToVideoFrames(u8 frames) -> u8 {
-  auto videoFrames = (u8)std::round(((double)frames / 75.0) * videoFramesPerSecond);
-  return videoFrames;
-}
-
-auto MCD::LD::VideoFramesToRedbookFrames(u8 frames) -> u8 {
-  auto redbookFrames = (u8)std::round(((double)frames / videoFramesPerSecond) * 75.0);
-  return redbookFrames;
+auto MCD::LD::VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void {
+  auto videoTimeTotalFrames = ((((((s32)hours * 60) + (s32)minutes) * 60) + (s32)seconds) * 30) + (s32)frames;
+  auto redbookTimeTotalFrames = (s32)std::round(((double)videoTimeTotalFrames / videoFramesPerSecond) * 75.0);
+  frames = redbookTimeTotalFrames % 75;
+  redbookTimeTotalFrames /= 75;
+  seconds = redbookTimeTotalFrames % 60;
+  redbookTimeTotalFrames /= 60;
+  minutes = redbookTimeTotalFrames % 60;
+  redbookTimeTotalFrames /= 60;
+  hours = redbookTimeTotalFrames;
 }
 
 auto MCD::LD::handleStopPointReached(s32 lba) -> void {
