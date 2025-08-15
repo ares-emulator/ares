@@ -17,8 +17,13 @@ auto MegaLD::load(string location) -> LoadResult {
   if(!document) return couldNotParseManifest;
 
   string region = "NTSC-J, NTSC-U";
-  if(mmiArchive.region() == "U") region = "NTSC-U";
-  if(mmiArchive.region() == "J") region = "NTSC-J";
+  //##FIX## Although not advertised as such, all MegaLD games tested so far are in fact region free, and will work
+  //under either a US or Japan bios. Additionally, for all games tested so far which were released in both the US and
+  //Japan, they will derive their default language based on the region of the bios. Due to this, and also considering
+  //the current lack of available rips for all regions, we do not currently lock the games into one region, and
+  //instead let the user region preferences determine which region will be selected.
+//  if(mmiArchive.region() == "U") region = "NTSC-U";
+//  if(mmiArchive.region() == "J") region = "NTSC-J";
 
   string medium = "";
   for(auto& media : mmiArchive.media()) {
