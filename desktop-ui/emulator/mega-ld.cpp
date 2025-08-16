@@ -96,16 +96,13 @@ auto MegaLD::load(Menu menu) -> void {
   });
   group.append(noDiscItem);
 
-  bool first = true;
+  auto checkedItemIndex = group.objectCount();
   for(auto side : sides) {
     MenuRadioItem item{ &changeSideMenu };
     group.append(item);
     item.setText(side).onActivate([this, side] { changeDiskState(side); });
-    if(first) {
-      item.setChecked();
-      first = false;
-    }
   }
+  group.objects<MenuRadioItem>()[checkedItemIndex].setChecked();
 }
 
 auto MegaLD::changeDiskState(const string state) -> void {
