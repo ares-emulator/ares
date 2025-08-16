@@ -386,6 +386,7 @@ struct MCD : M68000, Thread {
     // megald.cpp
     auto load(string sourceFile) -> void;
     auto unload() -> void;
+    auto notifyDiscEjected() -> void;
     auto read(n24 address) -> n8;
     auto write(n24 address, n8 data) -> void;
     auto getOutputRegisterValue(int regNum) -> n8;

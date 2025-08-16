@@ -86,11 +86,21 @@ auto MCD::LD::load(string location) -> void {
       video.leadOutFrames[frameIndex - video.leadInFrameCount - video.activeVideoFrameCount] = frameBaseAddress;
     }
   }
+
+  // Reset the mechanical drive state to closed
+  currentDriveState = 0x02;
+  targetDriveState = currentDriveState;
 }
 
 auto MCD::LD::unload() -> void {
   // Open the source archive
   mmi.close();
+}
+
+auto MCD::LD::notifyDiscEjected() -> void {
+  // Reset the mechanical drive state to opened
+  currentDriveState = 0x01;
+  targetDriveState = currentDriveState;
 }
 
 auto MCD::LD::read(n24 address) -> n8 {
@@ -2357,7 +2367,10 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
 
   // Load the displayed video frame into the buffer
   loadCurrentVideoFrameIntoBuffer();
-}
+
+  //##TODO## Implement picture stop codes. This is where we should check the lines in the VBI region and stop the player
+  //if a picture stop code is detected, unless picture stop cancel is active (Input reg 0x0C bit 7).
+ }
 
 auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
   // Locate the new video frame in the source file

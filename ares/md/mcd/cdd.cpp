@@ -538,6 +538,11 @@ auto MCD::CDD::eject() -> void {
   io.sector  = 0;
   io.sample  = 0;
   io.track   = 0;
+
+  // If this is a MegaLD system, release the analog audio stream when changing discs.
+  if (MegaLD()) {
+    mcd.ld.analogAudioRawDataView = {};
+  }
 }
 
 auto MCD::CDD::stop() -> void {

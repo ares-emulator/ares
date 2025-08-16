@@ -105,6 +105,9 @@ auto MCD::disconnect() -> void {
   fd.reset();
   pak.reset();
   information = {};
+  if(MegaLD()) {
+    ld.notifyDiscEjected();
+  }
 }
 
 auto MCD::save() -> void {
