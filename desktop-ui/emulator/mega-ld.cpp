@@ -96,7 +96,7 @@ auto MegaLD::load(Menu menu) -> void {
   });
   group.append(noDiscItem);
 
-  auto checkedItemIndex = group.objectCount();
+  auto checkedItemIndex = (sides.size() > 0 ? group.objectCount() : 0);
   for(auto side : sides) {
     MenuRadioItem item{ &changeSideMenu };
     group.append(item);
