@@ -58,8 +58,8 @@ auto Display::main() -> void {
   step(3);
 
   if(io.vcounter == 162) {
-    if(videoCapture) cpu.dma[3].enable = 0;
-    videoCapture = !videoCapture && cpu.dma[3].timingMode == 3 && cpu.dma[3].enable;
+    if(videoCapture) cpu.dmac.channel[3].enable = 0;
+    videoCapture = !videoCapture && cpu.dmac.channel[3].timingMode == 3 && cpu.dmac.channel[3].enable;
   }
   if(io.vcounter >= 2 && io.vcounter < 162 && videoCapture) cpu.dmaHDMA();
 
