@@ -444,6 +444,7 @@ struct MCD : M68000, Thread {
       qoi2_desc videoFrameHeader;
       int drawIndex;
       std::vector<unsigned char> videoFrameBuffers[2];
+      std::vector<unsigned char> dummyBlankLineBuffer;
 
       static const size_t FrameBufferWidth = 1280;
       static const size_t FrameBufferHeight = 480;
