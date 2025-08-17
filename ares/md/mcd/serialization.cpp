@@ -175,6 +175,10 @@ auto MCD::LD::serialize(serializer& s) -> void {
   s(currentSeekMode);
   s(currentSeekModeTimeFormat);
   s(currentSeekModeRepeat);
+  s(analogAudioAttenuationLeft);
+  s(analogAudioAttenuationRight);
+  s(analogAudioFadeToMutedLeft);
+  s(analogAudioFadeToMutedRight);
   s(stopPointRegs);
   s(reachedStopPoint);
   s(reachedStopPointPreviously);

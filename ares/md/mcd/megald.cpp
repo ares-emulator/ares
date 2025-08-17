@@ -213,10 +213,10 @@ auto MCD::LD::write(n24 address, n8 data) -> void {
       // If the input registers are currently frozen, update the frozen state of the target register.
       inputFrozenRegs[regNum] = data;
 
-      // Only trigger changes on a few limited registers while frozen
-      //##TODO## Regs 0x19, 0x1A, and 0x1B all can be updated when frozen.
-      //##TODO## Confirm which other registers can be updated when frozen
-      if (regNum == 0x00) {
+      // Only trigger changes on a few limited registers while frozen. These are the analog mixing registers 0x19,
+      // 0x1A, and 0x1B for video, and 0x1E and 0x1F for audio. Regs 0x1C and 0x1D currently have no known function.
+      if (regNum >= 0x19) {
+        processInputRegisterWrite(regNum, data, false);
       }
     } else {
       // Trigger any required behaviour in response to this input register write
@@ -1049,14 +1049,58 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     // Reg 0x01|-------------------------------|
     // 0xFDFE43| *U76  | -   - |     *U30      |
     //         ---------------------------------
-    // *U76: Set by UNK11F based on the lower 2 bits supplied in d1. Seems to affect audio and video track selection.
-    //       -0x0: No space berserker video or audio
-    //        -##NOTE## New results show this enabled space berserker background audio (digital), just no video.
-    //        -##NOTE## Further tests show this is not a simple register. Changing this setting to 0 from 2 or 3 disabled LD video,
-    //         but retained the background audio (digital). Changing this setting from 1 to 0 disabled LD video, and also disabled comms audio.
-    //       -0x1: Space berserker video, no background audio, no comms video (even field display?).
-    //       -0x2/0x3: Space berserker speech (analog) and background audio (digital), with selectable field display controlled by bit 0 of input register
-    //                 0x0C.
+    //##NEW## 2025:
+    // *U76: Analog mixing mode selection. The following modes are defined:
+    //       -0x0: No video mixing, no audio mixing. VDP graphics are shown, digital audio is played. Analog audio is
+    //             disabled, and analog video is hidden. The digital memory light on the front of the unit remains lit
+    //             in this mode. Input reg 0x0C has no apparent effect under this mode, including bit 7 to set PSC.
+    //             Picture stop is enabled under this mode and cannot be turned off. Input regs 0x0D and 0x0F also have
+    //             no effect on digital audio under this mode. Digital audio is played in stereo at full volume. Note
+    //             that actually, this isn't entirely true. If mixing mode was set to 0x1 or higher, and reg 0x0D bits
+    //             4-7 was set to a mode that disabled digital audio, digital audio remains disabled when switching
+    //             directly to mixing mode 0x0, however changing register 0x0D no longer has any effect, meaning
+    //             digital audio remains disabled, until the mixing mode is changed back and reg 0x0D is modified. Note
+    //             that this is different to input regs 0x0D and 0x0F, which do not remain in effect when mixing mode
+    //             0x0 is selected.
+    //       -0x1: Video mixing enabled without field selection, audio mixing set to single source. Under this mode,
+    //             input reg 0x0C is mostly effective. VDP and analog video can be mixed, however reg 0x0C bit 0 to
+    //             select fields has no effect. Input reg 0x0D bits 4-7 have the following effects on audio under this
+    //             mode:
+    //                  -0x0: Digital audio enabled
+    //                  -0x1: Analog audio enabled
+    //                  -0x2: Digital audio enabled
+    //                  -0x3: Analog audio enabled
+    //                  -0x4: Digital audio enabled
+    //                  -0x5: Analog audio enabled
+    //                  -0x6: Digital audio enabled
+    //                  -0x7: Analog audio enabled
+    //                  -0x8: No audio
+    //                  -0x9: Analog audio enabled
+    //                  -0xA: No audio
+    //                  -0xB: Analog audio enabled
+    //                  -0xC: Digital audio enabled (Input reg 0x0F ignored - Digital audio full volume always)
+    //                  -0xD: Analog audio enabled
+    //                  -0xE: Digital audio enabled (Input reg 0x0F ignored - Digital audio full volume always)
+    //                  -0xF: Analog audio enabled
+    //       -0x2,0x3: Full video and audio mixing. Under this mode, input reg 0x0C is fully effective, including
+    //             field selection. Analog and digital audio sources can be played simultaneously and mixed together.
+    //             Input reg 0x0D bits 4-7 have the following effects on audio under this mode:
+    //                  -0x0: Analog and digital audio enabled
+    //                  -0x1: Analog and digital audio enabled
+    //                  -0x2: Analog and digital audio enabled
+    //                  -0x3: Analog and digital audio enabled
+    //                  -0x4: Analog and digital audio enabled
+    //                  -0x5: Analog and digital audio enabled
+    //                  -0x6: Analog and digital audio enabled
+    //                  -0x7: Analog and digital audio enabled
+    //                  -0x8: Analog audio enabled
+    //                  -0x9: Analog audio enabled
+    //                  -0xA: Analog audio enabled
+    //                  -0xB: Analog audio enabled
+    //                  -0xC: Analog and digital audio enabled (Input reg 0x0F ignored - Digital audio full volume always)
+    //                  -0xD: Analog and digital audio enabled (Input reg 0x0F ignored - Digital audio full volume always)
+    //                  -0xE: Analog and digital audio enabled (Input reg 0x0F ignored - Digital audio full volume always)
+    //                  -0xF: Analog and digital audio enabled (Input reg 0x0F ignored - Digital audio full volume always)
     // *U30: Set by UNK11F based on a value stored at 0x1A81. No observed effect from changing this yet.
     break;
   case 0x02: {
@@ -1621,6 +1665,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     //          if this value is 0x00, the frame 0x01 will be requested.
     //         -In CD mode, invalid values are handled differently. If any digit exceeds the BCD bounds, it is
     //          treated as 0, and a carry is generated into the higher digit.
+    inputRegs[regNum] = data;
     if (!wasDeferredRegisterWrite) {
       if (inputRegs[0x06].bit(0, 1) == 3) {
         updateStopPointWithCurrentState();
@@ -1681,6 +1726,9 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     // 0xFDFE5B|      *U74     | ? | ? |RE |LE |
     //         ---------------------------------
     // ##NEW## 2025
+    // *U74: The way these bits interact with the "Analog mixing mode selection" bits U76 in input reg 0x01 is
+    //       complex, but these bits affect audio track selection and operation. See notes on input reg 0x01 for
+    //       a full description of how this operates.
     // -New testing has shown setting both RE and LE attenuates equivalent to a reg 0x0F filter of 0x40.
     // -Under CD mode at least (LD not tested) only bits 6 and 7 seem to have any effect, with these results:
     //       -00 = Normal
@@ -1688,25 +1736,6 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     //       -10 = No audio
     //       -11 = Audio plays full volume (reg 0x0F ignored)
     // ##OLD## Before 2025
-    // *U74: Somehow affects audio selection. The following effects were observed in space berserker:
-    //       -0x0: Background audio (digital)
-    //       -0x1: Voice audio (analog)
-    //       -0x2: Background audio (digital)
-    //       -0x3: Voice audio (analog)
-    //       -0x4: Background audio (digital)
-    //       -0x5: Voice audio (analog)
-    //       -0x6: Background audio (digital)
-    //       -0x7: Voice audio (analog)
-    //       -0x8: No audio
-    //       -0x9: Voice audio (analog)
-    //       -0xA: No audio
-    //       -0xB: Voice audio (analog)
-    //       -0xC: Background audio (digital) (Ignore input reg 0x0F - Full volume always)
-    //       -0xD: Voice audio (analog)
-    //       -0xE: Background audio (digital) (Ignore input reg 0x0F - Full volume always)
-    //       -0xF: Voice audio (analog)
-    // ##TODO## - Determine the relationship between U74 and U76 in input register 0x01. All the above results come from when that
-    //            value is set to 1 I believe.
     // RE:  Digital audio right exclusive. Play right track in both speakers.  Half volume normal left/right output if combined with LE.
     // LE:  Digital audio left exclusive. Play left track in both speakers. Half volume normal left/right output if combined with RE.
     // ##OLD##
@@ -1893,42 +1922,67 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     //         --------------------------------- (Buffered in $594E (edit buffer)/ and $506E (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x1E|-------------------------------|
-    // 0xFDFE7D| ? | ? | ? | ? |     *U30      |
+    // 0xFDFE7D| ? | ? | ? | ? |*U3|*U2|*U1|*U0|
     //         ---------------------------------
-    // *U30: Some kind of audio mode flag:
-    //       -0x0: ??
-    //       -0x1: ??
-    //       -0x2/0x03: Input register 0x1F provides attenuation level for left and right analog audio (lower is louder)
-    //       -0x4: ??
-    //       -0x5: ??
-    //       -0x6: Input register 0x1F provides attenuation level for left analog audio (lower is louder)
-    //       -0x7: Input register 0x1F provides attenuation level for right analog audio (lower is louder)
-    //       -0x8: ??
-    //       -0x9: ??
-    //       -0xA/0x0B/0xE: Initiate analog audio fade out
-    //       -0xC: ??
-    //       -0xD: ??
-    //       -0xF: Mute right analog audio
-    // ##OLD##
-    // *Unknown: Set as a complete write by UNK131. Testing has shown this is not a simple state register, rather, it seems to issue
-    //           commands which affect audio. Simply changing this register back to a previous value is not enough to undo a state
-    //           change here, a different command needs to be issued which undoes the operation. We have seen this register remove
-    //           either the left or right channel of voice audio on space berserker, as well as trigger fade out operations, where
-    //           the voice audio fades out over one or two seconds, possibly on a per-speaker basis. From TascoDLX:
-    //           "And, I did mention the game's init sequence, including: 0131 [02] and 0132 [00]. That would be important to setup the digital audio."
-    //           Also:
-    //           "0131 may select the digital track (which that bit disables), and that may play in tandem with the video. Just tossing around ideas. Not completely sure of anything at this point."
-    break;
+    // -This register mutes or applies attenuation to one or both analog audio channels, using input register 0x1F to
+    // provide an attenuation value. 
+    // -Note that changes to this register are effective even when the input register block is frozen.
+    // *U3: Operation type
+    //       -0x0: Attenuate the target analog audio channel(s) using the attenuation value in input register 0x1F
+    //       -0x1: Fade to mute. Quickly over about .5 of a second, attenuates the target analog audio channel(s) until
+    //             they are truly muted (IE, better than setting attenuation to 0xFF). The fade out characteristic is
+    //             most likely to avoid popping. Note that as an unusual characteristic, this fade out behaviour only
+    //             applies to the first channel muted, in the case that two channels are muted separately. If one
+    //             channel is muted, it will fade out, then if the second channel is muted at any time later without
+    //             restoring the first channel by setting its attenuation (even to 0xFF), the second channel will be 
+    //             instantly muted with no fade out.
+    // *U2: Single channel select
+    //       -0x0: Operate on both left and right channels
+    //       -0x1: Select left or right channel to operate on based on U0
+    // *U1: Operation enable (0 = do nothing, 1 = apply)
+    //       -0x0: Disabled. If this bit is 0, changes to this register or input register 0x1F have no effect.
+    //       -0x1: Enabled. Writing to this register will apply the indicated operation. Changes to input register 0x1F
+    //             will affect attenuation if this register is configured to use it.
+    // *U0: Channel selection (0 = left, 1 = right)
+    //       -0x0: Left channel. If U2 is set to 1, the operation will only affect the left analog audio channel.
+    //       -0x0: Right channel. If U2 is set to 1, the operation will only affect the right analog audio channel.
+    inputRegs[regNum] = data;
+    if (inputRegs[0x1E].bit(1) && inputRegs[0x1E].bit(3)) {
+      if (!inputRegs[0x1E].bit(2)) {
+        analogAudioFadeToMutedLeft = true;
+        analogAudioFadeToMutedRight = true;
+      } else if (!inputRegs[0x1E].bit(0)) {
+        analogAudioFadeToMutedLeft = true;
+      } else {
+        analogAudioFadeToMutedRight = true;
+      }
+    }
+    [[fallthrough]];
   case 0x1F:
     //         --------------------------------- (Buffered in $594F (edit buffer)/ and $506F (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x1F|-------------------------------|
     // 0xFDFE7F|        AnalogAudioFader       |
     //         ---------------------------------
-    // AnalogAudioFader: Set as a complete write by UNK132. This set the attenuation of the voice audio in
-    //                   space berserker. A higher value gives a lower volume. Actually, we just saw a lower
-    //                   value giving a higher volume. Perhaps our previous test was incorrect. From TascoDLX:
-    //           "And, I did mention the game's init sequence, including: 0131 [02] and 0132 [00]. That would be important to setup the digital audio."
+    // -Note that changes to this register are effective even when the input register block is frozen.
+    // AnalogAudioFader: Sets the attenuation of the target analog audio channel(s) identified by input register 0x1E.
+    //                   A lower value gives a higher volume. Setting this to 0xFF almost, but not quite, mutes the
+    //                   target channel. If no valid attenuation target is currently defined by input register 0x1E,
+    //                   changes to this register have no effect.
+    if (inputRegs[0x1E].bit(1) && !inputRegs[0x1E].bit(3)) {
+      if (!inputRegs[0x1E].bit(2)) {
+        analogAudioAttenuationLeft = data;
+        analogAudioAttenuationRight = data;
+        analogAudioFadeToMutedLeft = false;
+        analogAudioFadeToMutedRight = false;
+      } else if (!inputRegs[0x1E].bit(0)) {
+        analogAudioAttenuationLeft = data;
+        analogAudioFadeToMutedLeft = false;
+      } else {
+        analogAudioAttenuationRight = data;
+        analogAudioFadeToMutedRight = false;
+      }
+    }
     break;
   default:
     debug(unusual, "[MCD::LD::processInputRegisterWrite] reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
