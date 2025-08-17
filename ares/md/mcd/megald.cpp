@@ -2537,15 +2537,11 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
     return;
   }
 
-  // If the analog video stream is disabled, don't modify the scanline, and abort any further processing.
-  //##FIX## This seems wrong, since the VDP fader isn't taken into account now. Do testing and fix this up.
-  if ((inputRegs[0x01].bit(7, 6) == 0) || inputRegs[0x0C].bit(2)) {
-    return;
-  }
-
-  // If no frame is present, there's nothing to mix, so abort any further processing.
-  //##FIX## Same as above. Run the mixing, but make the analog video stream pure black in this case.
-  if (video.videoFrameBuffers[video.drawIndex].empty()) {
+  // If analog video mixing is disabled, don't modify the scanline, and abort any further processing. This is the
+  // correct behaviour here based on hardware tests. Under this mode, VDP graphics are passed through unaltered, and
+  // the VDP graphics fader and other mixing features have no effect.
+  auto analogMixingMode = inputRegs[0x01].bit(7, 6);
+  if (analogMixingMode == 0) {
     return;
   }
 
@@ -2568,21 +2564,30 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   size_t pixelsInSourceLine = video.videoFrameHeader.width - (VideoFrameLeftBorderWidth + VideoFrameRightBorderWidth);
   size_t targetLinePos = vdpImageSourceLine * video.FrameBufferWidth;
 
-  // Perform a linear resampling of the source video line to match the screen output
+  // Retrieve the line of analog video data we're processing here. If the analog video stream is disabled, or
+  // there's no frame data present, we force the input analog data to black, and proceed with mixing.
+  const unsigned char* analogVideoFrameData = nullptr;
+  if (inputRegs[0x0C].bit(2) || video.videoFrameBuffers[video.drawIndex].empty()) {
+    video.dummyBlankLineBuffer.resize(pixelsInSourceLine * channelCount, 0);
+    analogVideoFrameData = video.dummyBlankLineBuffer.data();
+    sourceLinePos = 0;
+  } else {
+    analogVideoFrameData = video.videoFrameBuffers[video.drawIndex].data();
+  }
+
+  // Mix the analog video stream from the laserdisc with the video output from the Mega Drive VDP
   //##TODO## Everything here is unoptimized. Review all this code to improve the mixing performance.
-  const unsigned char* analogVideoFrameData = video.videoFrameBuffers[video.drawIndex].data();
   float imageWidthConversionRatio = (float)pixelsInSourceLine / (float)video.FrameBufferWidth;
   float firstSamplePointX = 0.0f;
   float lastSamplePointX = 0.0f;
   float totalDomainInverse = 1.0f / imageWidthConversionRatio;
   for (size_t i = 0; i < video.FrameBufferWidth; ++i) {
-    // Calculate the first and last pixels of interest from the source region
+    // Calculate the pixel value for the laserdisc analog video, using a linear resampling of the source
+    // video line to match the screen output.
     firstSamplePointX = lastSamplePointX;
     lastSamplePointX = (float)std::min(i + 1, video.FrameBufferWidth - 1) * imageWidthConversionRatio;
     size_t firstSamplePosX = (size_t)firstSamplePointX;
     size_t lastSamplePosX = (size_t)lastSamplePointX;
-
-    // Calculate the sample value in each plane
     u8 convertedSamples[3] = {};
     for (unsigned int plane = 0; plane < 3; ++plane)
     {
@@ -2606,29 +2611,27 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
     auto ldr = convertedSamples[0];
     auto ldg = convertedSamples[1];
     auto ldb = convertedSamples[2];
-    auto a = 0xFF;
 
-    // Composite the digital VDP graphics with the analog video track
-    //##TODO## Implement input reg 0x19 bit 0 properly
+    // Retrieve the output VDP color for this pixel location
     auto mdColorPacked = vdp.screen->lookupPalette(pixels[i]);
-    n1 backdrop = pixels[i] >> 11;
-    auto ldGraphicsFader = (float)(((1 << 6) - 1) - (inputRegs[0x1B] >> 2)) / (float)((1 << 6) - 1);
-    auto mdGraphicsFader = (float)(inputRegs[0x1A] >> 2) / (float)((1 << 6) - 1);
-
-    float ldNormalizedR = (float)ldr / (float)((1 << 8) - 1);
-    float ldNormalizedG = (float)ldg / (float)((1 << 8) - 1);
-    float ldNormalizedB = (float)ldb / (float)((1 << 8) - 1);
-
     auto mdr = (mdColorPacked >> 16) & 0xFF;
     auto mdg = (mdColorPacked >> 8) & 0xFF;
     auto mdb = mdColorPacked & 0xFF;
+
+    // Composite the digital VDP graphics with the analog video track
+    //##TODO## Implement input reg 0x19 bit 0 properly
+    auto ldGraphicsFader = (float)(((1 << 6) - 1) - (inputRegs[0x1B] >> 2)) / (float)((1 << 6) - 1);
+    auto mdGraphicsFader = (float)(inputRegs[0x1A] >> 2) / (float)((1 << 6) - 1);
+    float ldNormalizedR = (float)ldr / (float)((1 << 8) - 1);
+    float ldNormalizedG = (float)ldg / (float)((1 << 8) - 1);
+    float ldNormalizedB = (float)ldb / (float)((1 << 8) - 1);
     float mdNormalizedR = (float)mdr / (float)((1 << 8) - 1);
     float mdNormalizedG = (float)mdg / (float)((1 << 8) - 1);
     float mdNormalizedB = (float)mdb / (float)((1 << 8) - 1);
-
     float combinedNormalizedR;
     float combinedNormalizedG;
     float combinedNormalizedB;
+    n1 backdrop = pixels[i] >> 11;
     if (backdrop) {
       combinedNormalizedR = ldNormalizedR * ldGraphicsFader;
       combinedNormalizedG = ldNormalizedG * ldGraphicsFader;
@@ -2639,12 +2642,15 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
       combinedNormalizedB = (mdNormalizedB * mdGraphicsFader) + (ldNormalizedB * ldGraphicsFader * (1.0f - mdGraphicsFader)) + (ldNormalizedB * mdNormalizedB * (1.0f - ldGraphicsFader) * (1.0f - mdGraphicsFader));
     }
 
+    // Write the composited pixel value to the output framebuffer
     u32 rf = (u32)(combinedNormalizedR * (float)((1 << 8) - 1));
     u32 gf = (u32)(combinedNormalizedG * (float)((1 << 8) - 1));
     u32 bf = (u32)(combinedNormalizedB * (float)((1 << 8) - 1));
+    u32 af = 0xFF;
     static size_t pixelOffset = 65;
-    video.outputFramebuffer[targetLinePos + (i + pixelOffset)] = ((u32)a << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;
+    video.outputFramebuffer[targetLinePos + (i + pixelOffset)] = ((u32)af << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;
   }
 
+  // Override the line draw for this line of video with our composited line buffer
   vdp.screen->overrideLineNextDraw(vdpImageSourceLine, &video.outputFramebuffer[targetLinePos]);
 }

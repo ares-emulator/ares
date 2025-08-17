@@ -196,6 +196,12 @@ auto MCD::CDD::sample() -> void {
 
   if (MegaLD()) {
     // Determine the state of our overall audio mixing mode settings
+    //##FIX## Note that we don't take the unusual "latching" behaviour of the digital audio mixing disabled state
+    //persisting when switching into analog mixing mode 0 here, as described in the notes for input register 0x01. It
+    //is highly, highly unlikely anything relies on this however. If there was a scenario however where only VDP
+    //graphics were on the screen, and digital audio was intended to play, but was instead silent, it's possible this
+    //is the culprit. Fixing this would require latching a mute state into a register, rather than evaluating the
+    //input register state live like we do here.
     auto analogMixingMode = mcd.ld.inputRegs[0x01].bit(7, 6);
     auto audioMixingInputSelection = mcd.ld.inputRegs[0x0D].bit(7, 6);
     bool digitalAudioMixingDisabled = (analogMixingMode > 0) && ((audioMixingInputSelection == 2) || ((analogMixingMode == 1) && mcd.ld.inputRegs[0x0D].bit(4)));
