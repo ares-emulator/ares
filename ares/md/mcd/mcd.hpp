@@ -470,6 +470,10 @@ struct MCD : M68000, Thread {
     n3 currentSeekMode;
     n1 currentSeekModeTimeFormat;
     n1 currentSeekModeRepeat;
+    n8 analogAudioAttenuationLeft;
+    n8 analogAudioAttenuationRight;
+    n1 analogAudioFadeToMutedLeft;
+    n1 analogAudioFadeToMutedRight;
 
     // Currently latched seek point
     u8 activeSeekMode;

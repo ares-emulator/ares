@@ -195,19 +195,28 @@ auto MCD::CDD::sample() -> void {
   }
 
   if (MegaLD()) {
+    // Determine the state of our overall audio mixing mode settings
+    auto analogMixingMode = mcd.ld.inputRegs[0x01].bit(7, 6);
+    auto audioMixingInputSelection = mcd.ld.inputRegs[0x0D].bit(7, 6);
+    bool digitalAudioMixingDisabled = (analogMixingMode > 0) && ((audioMixingInputSelection == 2) || ((analogMixingMode == 1) && mcd.ld.inputRegs[0x0D].bit(4)));
+    bool digitalAudioAttenuationDisabled = (analogMixingMode == 0) || (audioMixingInputSelection == 3);
+    bool analogAudioMixingDisabled = (analogMixingMode == 0) || ((analogMixingMode == 1) && !mcd.ld.inputRegs[0x0D].bit(4));
+
     // Disable digital audio if it is turned off
-    //##TODO## Properly reverse engineer and implement input reg 0x01 and its effects on audio
-    //if (!mcd.ld.inputRegs[0x01].bit(7)) {
-    //  digitalSampleLeft = 0;
-    //  digitalSampleRight = 0;
-    //}
+    if (digitalAudioMixingDisabled) {
+      digitalSampleLeft = 0;
+      digitalSampleRight = 0;
+    }
+
     // Attenuate the digital audio using the digital audio fader
-    //##TODO## Fully reverse enginner input reg 0x0D and take bits 4-7 into account for digital audio
-    float digitalAudioFader = (float)mcd.ld.inputRegs[0x0F] / (float)((1 << 8) - 1);
-    digitalSampleLeft = (int16_t)((float)digitalSampleLeft * digitalAudioFader);
-    digitalSampleRight = (int16_t)((float)digitalSampleRight * digitalAudioFader);
+    if (!digitalAudioAttenuationDisabled) {
+      float digitalAudioFader = (float)mcd.ld.inputRegs[0x0F] / (float)((1 << 8) - 1);
+      digitalSampleLeft = (int16_t)((float)digitalSampleLeft * digitalAudioFader);
+      digitalSampleRight = (int16_t)((float)digitalSampleRight * digitalAudioFader);
+    }
+
     // Take digital left/right exclusive register state into account
-    if (mcd.ld.inputRegs[0x0D].bit(0) && mcd.ld.inputRegs[0x0D].bit(1)) {
+    if ((analogMixingMode != 0) && mcd.ld.inputRegs[0x0D].bit(0) && mcd.ld.inputRegs[0x0D].bit(1)) {
       digitalSampleLeft /= 2;
       digitalSampleRight /= 2;
     } else if (mcd.ld.inputRegs[0x0D].bit(0)) {
@@ -215,6 +224,7 @@ auto MCD::CDD::sample() -> void {
     } else if (mcd.ld.inputRegs[0x0D].bit(1)) {
       digitalSampleLeft = digitalSampleRight;
     }
+
     // Retrieve the next analog audio sample
     i16 analogSampleLeft = 0;
     i16 analogSampleRight = 0;
@@ -223,11 +233,13 @@ auto MCD::CDD::sample() -> void {
       analogSampleLeft = (i16)((u16)mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 0] | (u16)(mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 1] << 8));
       analogSampleRight = (i16)((u16)mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 2] | (u16)(mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 3] << 8));
     }
+
     // Disable analog audio if it is turned off
-    if (!mcd.ld.inputRegs[0x01].bit(7) && !mcd.ld.inputRegs[0x0D].bit(4)) {
+    if (analogAudioMixingDisabled) {
       analogSampleLeft = 0;
       analogSampleRight = 0;
     }
+
     // Take analog mute and left/right exclusive register state into account
     if (mcd.ld.inputRegs[0x0E].bit(7) || (mcd.ld.inputRegs[0x0E].bit(0) && mcd.ld.inputRegs[0x0E].bit(1))) {
       analogSampleLeft = 0;
@@ -237,6 +249,24 @@ auto MCD::CDD::sample() -> void {
     } else if (mcd.ld.inputRegs[0x0E].bit(1)) {
       analogSampleLeft = analogSampleRight;
     }
+
+    // Attenuate analog audio by the current attenuation register settings. Note that as per the hardware, the
+    // maximum attenuation value of 0xFF doesn't give total silence.
+    //##FIX## We currently make the "fade to mute" flags apply immediately. This is techically incorrect, however
+    //since most likely nothing relies on this, and it's a bit of a pain to do, we just make them take effect
+    //immediately here. If we want to do this properly, we need to take accurate measurements on the hardware for
+    //the time taken for the fade, then tie a process into the clock event to reduce a secondary attenuation value
+    //by the correct amount to achieve that timing as the clock advances. The fact that triggering a fade for a
+    //second channel applies immediately if the other channel has already been faded to mute, shows there's in
+    //fact a single secondary attenuation counter/register behind the scenes which handles this, which both
+    //channels share.
+    unsigned int analogAudioVolumeScaleLeft = 0x100 - (unsigned int)mcd.ld.analogAudioAttenuationLeft;
+    unsigned int analogAudioVolumeScaleRight = 0x100 - (unsigned int)mcd.ld.analogAudioAttenuationRight;
+    analogAudioVolumeScaleLeft = (mcd.ld.analogAudioFadeToMutedLeft ? 0 : analogAudioVolumeScaleLeft);
+    analogAudioVolumeScaleRight = (mcd.ld.analogAudioFadeToMutedRight ? 0 : analogAudioVolumeScaleRight);
+    analogSampleLeft = (i16)(((int)analogSampleLeft * (int)analogAudioVolumeScaleLeft) >> 8);
+    analogSampleRight = (i16)(((int)analogSampleRight * (int)analogAudioVolumeScaleRight) >> 8);
+
     // Audio is disabled in frame stepping mode
     if (mcd.ld.currentPlaybackMode == 0x02) {
       digitalSampleLeft = 0;
@@ -244,11 +274,11 @@ auto MCD::CDD::sample() -> void {
       analogSampleLeft = 0;
       analogSampleRight = 0;
     }
-    // Attenuate the analog audio
-    //##TODO## Fully reverse engineer input regs 0x1E and 0x1F to provide analog audio attenuation
+
     // Mix analog and digital audio together
     i16 combinedSampleLeft = (int16_t)std::clamp((int)digitalSampleLeft + (int)analogSampleLeft, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
     i16 combinedSampleRight = (int16_t)std::clamp((int)digitalSampleRight + (int)analogSampleRight, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
+
     // Output the combined sample
     dac.sample(combinedSampleLeft, combinedSampleRight);
   } else {
