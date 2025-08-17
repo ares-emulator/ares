@@ -29,7 +29,7 @@ template<> struct vector<u8> : vector_base<u8> {
   auto view(u32 offset, u32 length) -> array_view<u8> {
     #ifdef DEBUG
     struct out_of_bounds {};
-    if(offset + length >= size()) throw out_of_bounds{};
+    if(offset + length > size()) throw out_of_bounds{};
     #endif
     return {data() + offset, length};
   }

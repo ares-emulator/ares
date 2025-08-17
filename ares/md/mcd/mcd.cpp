@@ -1,4 +1,7 @@
 #include <md/md.hpp>
+#include <string.h>
+#include <string>
+#include <optional>
 
 namespace ares::MegaDrive {
 
@@ -14,6 +17,7 @@ MCD mcd;
 #include "cdc-transfer.cpp"
 #include "cdd.cpp"
 #include "cdd-dac.cpp"
+#include "megald.cpp"
 #include "timer.cpp"
 #include "gpu.cpp"
 #include "pcm.cpp"
@@ -27,7 +31,7 @@ auto MCD::load(Node::Object parent) -> void {
   tray->setFamily("Mega CD");
   tray->setType("Compact Disc");
   tray->setHotSwappable(true);
-  tray->setAllocate([&](auto name) { return allocate(tray); });
+  tray->setAllocate([&](auto name) { return allocate(tray, name); });
   tray->setConnect([&] { return connect(); });
   tray->setDisconnect([&] { return disconnect(); });
 
@@ -53,6 +57,7 @@ auto MCD::unload() -> void {
   debugger = {};
   cdd.unload(node);
   pcm.unload(node);
+  ld.unload();
 
   bios.reset();
   pram.reset();
@@ -64,8 +69,10 @@ auto MCD::unload() -> void {
   node.reset();
 }
 
-auto MCD::allocate(Node::Port parent) -> Node::Peripheral {
-  return disc = parent->append<Node::Peripheral>("Mega CD Disc");
+auto MCD::allocate(Node::Port parent, string name) -> Node::Peripheral {
+  disc = parent->append<Node::Peripheral>("Mega CD Disc");
+  disc->setAttribute("media", name);
+  return disc;
 }
 
 auto MCD::connect() -> void {
@@ -78,7 +85,12 @@ auto MCD::connect() -> void {
   information = {};
   information.title = pak->attribute("title");
 
-  fd = pak->read("cd.rom");
+  if(MegaLD()) {
+    ld.load(pak->attribute("location"));
+  } else {
+    fd = pak->read("cd.rom");
+  }
+
   if(!fd) return disconnect();
 
   cdd.insert();
@@ -93,6 +105,9 @@ auto MCD::disconnect() -> void {
   fd.reset();
   pak.reset();
   information = {};
+  if(MegaLD()) {
+    ld.notifyDiscEjected();
+  }
 }
 
 auto MCD::save() -> void {
@@ -192,6 +207,9 @@ auto MCD::power(bool reset) -> void {
   gpu.power(reset);
   pcm.power(reset);
   resetPeripheral(reset);
+  if (MegaLD()) {
+    ld.power(reset);
+  }
 }
 
 auto MCD::resetCpu() -> void {

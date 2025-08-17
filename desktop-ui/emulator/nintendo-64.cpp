@@ -142,7 +142,7 @@ auto Nintendo64::load() -> LoadResult {
       port->connect();
       bool transferPakConnected = false;
       if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-        if(id == 0 && game->pak->attribute("tpak").boolean()) {
+        if(game->pak->attribute({"port", id+1, "/tpak"}).boolean()) {
           #if defined(CORE_GB)
           auto transferPak = port->allocate("Transfer Pak");
           port->connect();
@@ -163,7 +163,7 @@ auto Nintendo64::load() -> LoadResult {
         }
 
         if(!transferPakConnected) {
-          if(id == 0 && game->pak->attribute("cpak").boolean()) {
+          if(game->pak->attribute({"port", id+1, "/cpak"}).boolean()) {
             gamepad = mia::Pak::create("Nintendo 64");
 
             //create maximum sized controller pak, file is resized later
@@ -171,7 +171,7 @@ auto Nintendo64::load() -> LoadResult {
             gamepad->load("save.pak", ".pak", game->location);
             port->allocate("Controller Pak");
             port->connect();
-          } else if(game->pak->attribute("rpak").boolean()) {
+          } else if(game->pak->attribute({"port", id+1, "/rpak"}).boolean()) {
             port->allocate("Rumble Pak");
             port->connect();
           }

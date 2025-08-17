@@ -2,6 +2,12 @@
 //started: 2016-07-08
 
 #include <ares/ares.hpp>
+#include <nall/decode/mmi.hpp>
+#include <vector>
+#include <cmath>
+
+#include <qon/qon.h>
+#include <qon/qoi2.h>
 
 #include <component/processor/m68000/m68000.hpp>
 #include <component/processor/z80/z80.hpp>
@@ -31,6 +37,7 @@ namespace ares::MegaDrive {
 
   inline static auto Mega32X() -> bool;
   inline static auto MegaCD() -> bool;
+  inline static auto MegaLD() -> bool;
 
   #include <md/controller/controller.hpp>
   #include <md/bus/bus.hpp>

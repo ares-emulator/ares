@@ -121,7 +121,7 @@ struct vector_base {
   auto fill(const T& value = {}) -> void;
   auto sort(const function<bool (const T& lhs, const T& rhs)>& comparator = [](auto& lhs, auto& rhs) { return lhs < rhs; }) -> void;
   auto reverse() -> void;
-  auto find(const function<bool (const T& lhs)>& comparator) -> maybe<u64>;
+  auto find(const function<bool (const T& lhs)>& comparator) const -> maybe<u64>;
   auto find(const T& value) const -> maybe<u64>;
   auto findSorted(const T& value) const -> maybe<u64>;
   auto contains(const T& value) const -> bool;

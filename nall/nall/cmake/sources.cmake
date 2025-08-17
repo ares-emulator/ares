@@ -119,6 +119,7 @@ target_sources(
     decode/huffman.hpp
     decode/inflate.hpp
     decode/lzsa.hpp
+    decode/mmi.hpp
     decode/mtf.hpp
     decode/png.hpp
     decode/rle.hpp

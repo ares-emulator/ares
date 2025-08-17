@@ -38,6 +38,7 @@ auto MCD::serialize(serializer& s) -> void {
 
   s(cdc);
   s(cdd);
+  s(ld);
   s(timer);
   s(gpu);
   s(pcm);
@@ -145,6 +146,7 @@ auto MCD::CDD::serialize(serializer& s) -> void {
   s(io.seeking);
   s(io.latency);
   s(io.sector);
+  s(io.sectorRepeatCount);
   s(io.sample);
   s(io.track);
   s(io.tocRead);
@@ -155,6 +157,53 @@ auto MCD::CDD::serialize(serializer& s) -> void {
   s(status);
   s(command);
   s(subcode);
+  s(stopPointEnabled);
+  s(targetStopPoint);
+}
+
+auto MCD::LD::serialize(serializer& s) -> void {
+  s(inputRegs);
+  s(inputFrozenRegs);
+  s(outputRegs);
+  s(outputFrozenRegs);
+  s(areInputRegsFrozen);
+  s(areOutputRegsFrozen);
+  s(operationErrorFlag1);
+  s(operationErrorFlag2);
+  s(operationErrorFlag3);
+  s(seekEnabled);
+  s(currentSeekMode);
+  s(currentSeekModeTimeFormat);
+  s(currentSeekModeRepeat);
+  s(stopPointRegs);
+  s(reachedStopPoint);
+  s(reachedStopPointPreviously);
+  s(activeSeekMode);
+  s(currentPlaybackMode);
+  s(currentPlaybackSpeed);
+  s(currentPlaybackDirection);
+  s(seekPointRegs);
+  s(targetDriveState);
+  s(currentDriveState);
+  s(targetPauseState);
+  s(currentPauseState);
+  s(seekPerformedSinceLastFrameUpdate);
+  s(driveStateChangeDelayCounter);
+  s(selectedTrackInfo);
+
+  s(video.frameSkipBaseFrame);
+  s(video.frameSkipCounter);
+  s(video.currentVideoFrameIndex);
+  s(video.currentVideoFrameLeadIn);
+  s(video.currentVideoFrameLeadOut);
+  s(video.currentVideoFrameFieldSelectionEnabled);
+  s(video.currentVideoFrameFieldSelectionEvenField);
+  s(video.currentVideoFrameOnEvenField);
+
+  // Restore the current video frame into the display buffer
+  if (MegaLD() && s.reading()) {
+	loadCurrentVideoFrameIntoBuffer();
+  }
 }
 
 auto MCD::Timer::serialize(serializer& s) -> void {

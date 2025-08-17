@@ -43,7 +43,7 @@ auto MCD::CDD::clock() -> void {
     readSubcode();
     if(session.tracks[io.track].isAudio()) break;
     mcd.cdc.decode(io.sector);
-    advance();
+    if (!MegaLD()) advance();
   } break;
 
   case Status::Tracking: [[fallthrough]]; // TODO: implement tracking logic
@@ -57,30 +57,203 @@ auto MCD::CDD::clock() -> void {
 }
 
 auto MCD::CDD::advance() -> void {
-  if(auto track = session.inTrack(io.sector + 1)) {
+  // Calculate the sector advance amount based on the MegaLD playback modes, if applicable.
+  i32 sectorAdvanceOffset = 1;
+  if (MegaLD()) {
+    switch (mcd.ld.currentPlaybackMode) {
+    case 0x00:
+      // Normal playback. Nothing to do.
+      sectorAdvanceOffset = 1;
+      io.sectorRepeatCount = 0;
+      break;
+    case 0x01:
+      // Frame skipping. This only affects the analog video update rate, and is handled in MCD::LD::updateCurrentVideoFrameNumber.
+      sectorAdvanceOffset = 1;
+      io.sectorRepeatCount = 0;
+      break;
+    case 0x02:
+      // Frame stepping
+      switch (mcd.ld.currentPlaybackSpeed) {
+      case 0x00:
+        //-0x0: 0 frames. This pauses playback in frame stepping mode, and performs a normal playback in frame skipping mode.
+        sectorAdvanceOffset = 0;
+        io.sectorRepeatCount = 0;
+        break;
+      case 0x01:
+        //-0x1: 1 frame only. The image will not update after the initial frame. Note that under frame step mode, output register
+        // 0x07 will report this step speed as 0x1 only until the single frame step has been performed, after which, the output
+        // register will now state a value of 0x0. Also note that under frame skip mode, the output register will output 0x19 for
+        // an input register state of 0x11, in other words, the "direction" bit is set to "reverse" when a 1-frame frame skip mode
+        // is activated.
+        if (io.sectorRepeatCount == 0) {
+          sectorAdvanceOffset = 1;
+          io.sectorRepeatCount = 1;
+        } else {
+          sectorAdvanceOffset = 0;
+        }
+        break;
+      case 0x02:
+        //-0x2: 15 FPS instead of 30 (12 seconds for 180 frames) - Display frame 2x
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 2 ? 1 : 0);
+        break;
+      case 0x03:
+        //-0x3: 7.5 FPS instead of 30 (24 seconds for 180 frames) - Display frame 4x
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 4 ? 1 : 0);
+        break;
+      case 0x04:
+        //-0x4: 3.75 FPS instead of 30 (24 seconds for 90 frames) - Display frame 8x
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 8 ? 1 : 0);
+        break;
+      case 0x05:
+        //-0x5: 1.875 FPS instead of 30 (48 seconds for 90 frames) - Display frame 16x
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 16 ? 1 : 0);
+        break;
+      case 0x06:
+        //-0x6: 1 FPS instead of 30 (45 seconds for 45 frames) - Display frame 30x
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 30 ? 1 : 0);
+        break;
+      case 0x07:
+        //-0x7: ~0.33r FPS instead of 30 (30 seconds for 10 frames) - Display frame 90x
+        sectorAdvanceOffset = (++io.sectorRepeatCount >= 90 ? 1 : 0);
+        break;
+      }
+      sectorAdvanceOffset = (mcd.ld.currentPlaybackDirection ? (i32)(-sectorAdvanceOffset) : sectorAdvanceOffset);
+      io.sectorRepeatCount = (sectorAdvanceOffset != 0 ? (i32)0 : io.sectorRepeatCount);
+      break;
+    case 0x03:
+      // Fast forward
+      switch (mcd.ld.currentPlaybackSpeed) {
+      case 0x00:
+        sectorAdvanceOffset = 1;
+        break;
+      case 0x01:
+        sectorAdvanceOffset = 2;
+        break;
+      case 0x02:
+        sectorAdvanceOffset = 3;
+        break;
+      case 0x03:
+        sectorAdvanceOffset = 8;
+        break;
+      case 0x04:
+        sectorAdvanceOffset = 14;
+        break;
+      case 0x05:
+        sectorAdvanceOffset = 20;
+        break;
+      case 0x06:
+      case 0x07:
+        //##TODO## Unimplemented
+        //       -0x7/0x06: Search mode. Plays 0.75 seconds of footage forwards in time, with audio, then jumps either forward or back
+        //        4 seconds from the resulting point. Note that setting this register to 0x07 is the same as 0x06, but 0x06 is the value
+        //        that is reported back as the current mode in either case by output register 0x07.
+        break;
+      }
+      sectorAdvanceOffset = (mcd.ld.currentPlaybackDirection ? (i32)(-sectorAdvanceOffset) : sectorAdvanceOffset);
+      io.sectorRepeatCount = 0;
+      break;
+    }
+  }
+
+  if(auto track = session.inTrack(io.sector + sectorAdvanceOffset)) {
     io.track = track();
-    io.sector++;
+    io.sector += sectorAdvanceOffset;
     io.sample = 0;
+
+    if (MegaLD()) {
+      mcd.ld.updateCurrentVideoFrameNumber(io.sector);
+
+      if (stopPointEnabled && (io.sector == targetStopPoint)) {
+        mcd.ld.handleStopPointReached(io.sector);
+      }
+    }
     return;
   }
 
-  io.status = Status::LeadOut;
-  io.track = 0xaa;
+  if ((io.sector + sectorAdvanceOffset) < 0) {
+    io.status = Status::LeadIn;
+    io.track = 0xa00;
+  } else {
+    io.status = Status::LeadOut;
+    io.track = 0xaa;
+  }
 }
 
 auto MCD::CDD::sample() -> void {
-  i16 left  = 0;
-  i16 right = 0;
-  if(io.status == Status::Playing) {
-    if(session.tracks[io.track].isAudio()) {
-      mcd.fd->seek((abs(session.leadIn.lba) + io.sector) * 2448 + io.sample);
-      left  = mcd.fd->readl(2);
-      right = mcd.fd->readl(2);
+  i16 digitalSampleLeft  = 0;
+  i16 digitalSampleRight = 0;
+  if (io.status == Status::Playing) {
+    if (MegaLD() || session.tracks[io.track].isAudio()) {
+      if (session.tracks[io.track].isAudio()) {
+        mcd.fd->seek((abs(session.leadIn.lba) + io.sector) * 2448 + io.sample);
+        digitalSampleLeft  = mcd.fd->readl(2);
+        digitalSampleRight = mcd.fd->readl(2);
+      }
       io.sample += 4;
       if(io.sample >= 2352) advance();
     }
   }
-  dac.sample(left, right);
+
+  if (MegaLD()) {
+    // Disable digital audio if it is turned off
+    //##TODO## Properly reverse engineer and implement input reg 0x01 and its effects on audio
+    //if (!mcd.ld.inputRegs[0x01].bit(7)) {
+    //  digitalSampleLeft = 0;
+    //  digitalSampleRight = 0;
+    //}
+    // Attenuate the digital audio using the digital audio fader
+    //##TODO## Fully reverse enginner input reg 0x0D and take bits 4-7 into account for digital audio
+    float digitalAudioFader = (float)mcd.ld.inputRegs[0x0F] / (float)((1 << 8) - 1);
+    digitalSampleLeft = (int16_t)((float)digitalSampleLeft * digitalAudioFader);
+    digitalSampleRight = (int16_t)((float)digitalSampleRight * digitalAudioFader);
+    // Take digital left/right exclusive register state into account
+    if (mcd.ld.inputRegs[0x0D].bit(0) && mcd.ld.inputRegs[0x0D].bit(1)) {
+      digitalSampleLeft /= 2;
+      digitalSampleRight /= 2;
+    } else if (mcd.ld.inputRegs[0x0D].bit(0)) {
+      digitalSampleRight = digitalSampleLeft;
+    } else if (mcd.ld.inputRegs[0x0D].bit(1)) {
+      digitalSampleLeft = digitalSampleRight;
+    }
+    // Retrieve the next analog audio sample
+    i16 analogSampleLeft = 0;
+    i16 analogSampleRight = 0;
+    auto analogAudioSamplePos = (io.sector * 2352) + io.sample + (mcd.ld.analogAudioLeadingAudioSamples * 4);
+    if ((analogAudioSamplePos + 3) < mcd.ld.analogAudioRawDataView.size()) {
+      analogSampleLeft = (i16)((u16)mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 0] | (u16)(mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 1] << 8));
+      analogSampleRight = (i16)((u16)mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 2] | (u16)(mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 3] << 8));
+    }
+    // Disable analog audio if it is turned off
+    if (!mcd.ld.inputRegs[0x01].bit(7) && !mcd.ld.inputRegs[0x0D].bit(4)) {
+      analogSampleLeft = 0;
+      analogSampleRight = 0;
+    }
+    // Take analog mute and left/right exclusive register state into account
+    if (mcd.ld.inputRegs[0x0E].bit(7) || (mcd.ld.inputRegs[0x0E].bit(0) && mcd.ld.inputRegs[0x0E].bit(1))) {
+      analogSampleLeft = 0;
+      analogSampleRight = 0;
+    } else if (mcd.ld.inputRegs[0x0E].bit(0)) {
+      analogSampleRight = analogSampleLeft;
+    } else if (mcd.ld.inputRegs[0x0E].bit(1)) {
+      analogSampleLeft = analogSampleRight;
+    }
+    // Audio is disabled in frame stepping mode
+    if (mcd.ld.currentPlaybackMode == 0x02) {
+      digitalSampleLeft = 0;
+      digitalSampleRight = 0;
+      analogSampleLeft = 0;
+      analogSampleRight = 0;
+    }
+    // Attenuate the analog audio
+    //##TODO## Fully reverse engineer input regs 0x1E and 0x1F to provide analog audio attenuation
+    // Mix analog and digital audio together
+    i16 combinedSampleLeft = (int16_t)std::clamp((int)digitalSampleLeft + (int)analogSampleLeft, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
+    i16 combinedSampleRight = (int16_t)std::clamp((int)digitalSampleRight + (int)analogSampleRight, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
+    // Output the combined sample
+    dac.sample(combinedSampleLeft, combinedSampleRight);
+  } else {
+    dac.sample(digitalSampleLeft, digitalSampleRight);
+  }
 }
 
 //convert sector# to normalized sector position on the CD-ROM surface for seek latency calculation
@@ -143,7 +316,7 @@ auto MCD::CDD::process() -> void {
   } break;
 
   case Command::Stop: {
-    io.status = mcd.fd ? Status::Stopped : Status::NoDisc;
+    stop();
     status[1] = 0x0;
     status[2] = 0x0; status[3] = 0x0;
     status[4] = 0x0; status[5] = 0x0;
@@ -266,11 +439,11 @@ auto MCD::CDD::process() -> void {
   } break;
 
   case Command::Pause: {
-    io.status = Status::Paused;
+    pause();
   } break;
 
   case Command::Play: {
-    io.status = Status::Playing;
+    play();
   } break;
 
   // TrackSkip command directs movement of the laser/sled by a specified radial track count.
@@ -351,6 +524,11 @@ auto MCD::CDD::insert() -> void {
   io.sector  = session.leadIn.lba;
   io.sample  = 0;
   io.track   = 0;
+
+  laserdiscLoaded = false;
+  if ((mcd.pak->attribute("system") == "MegaLD") && (mcd.ld.mmi.media().size() > 0)) {
+    laserdiscLoaded = mcd.ld.mmi.media()[0].type.match("LD");
+  }
 }
 
 auto MCD::CDD::eject() -> void {
@@ -360,6 +538,142 @@ auto MCD::CDD::eject() -> void {
   io.sector  = 0;
   io.sample  = 0;
   io.track   = 0;
+
+  // If this is a MegaLD system, release the analog audio stream when changing discs.
+  if (MegaLD()) {
+    mcd.ld.analogAudioRawDataView = {};
+  }
+}
+
+auto MCD::CDD::stop() -> void {
+  io.status = mcd.fd ? Status::Stopped : Status::NoDisc;
+}
+
+auto MCD::CDD::play() -> void {
+  if (io.status == Status::Seeking) {
+    io.seeking = Status::Playing;
+  } else {
+    io.status = Status::Playing;
+  }
+}
+
+auto MCD::CDD::pause() -> void {
+  if (io.status == Status::Seeking) {
+    io.seeking = Status::Paused;
+  } else {
+    io.status = Status::Paused;
+  }
+}
+
+auto MCD::CDD::seekToTime(u8 hour, u8 minute, u8 second, u8 frame, bool startPaused) -> void {
+  s32 lba = lbaFromTime(hour, minute, second, frame);
+  seekToSector(lba, startPaused);
+}
+
+auto MCD::CDD::seekToRelativeTime(n7 track, u8 minute, u8 second, u8 frame, bool startPaused) -> void {
+  auto firstTrack = session.firstTrack;
+  auto lastTrack = session.lastTrack;
+  if ((track < firstTrack) || (track > lastTrack)) {
+    return;
+  }
+
+  auto targetTrackLba = session.tracks[track].indices[1].lba;
+  s32 lba = targetTrackLba + ((s32)minute * 60 * 75 + (s32)second * 75 + (s32)frame);
+  seekToSector(lba, startPaused);
+}
+
+// Note that despite the generic name, this implementation is currently MegaLD specific.
+auto MCD::CDD::seekToSector(s32 lba, bool startPaused) -> void {
+  counter = 0;
+  io.status = Status::Seeking;
+  io.seeking = (startPaused ? Status::Paused : Status::Playing);
+  //##TODO## Calculate correct latency for the LaserActive
+  io.latency = 20.0 + 10.0 * abs(position(io.sector) - position(lba));
+  io.sector = lba;
+  io.sample = 0;
+  if (auto track = session.inTrack(io.sector)) io.track = track();
+}
+
+auto MCD::CDD::seekToTrack(n7 track, bool startPaused) -> void {
+  auto lba = session.tracks[track].indices[1].lba;
+  seekToSector(lba, startPaused);
+}
+
+auto MCD::CDD::getTrackCount() -> n7 {
+  return (session.lastTrack - session.firstTrack) + 1;
+}
+
+auto MCD::CDD::getFirstTrack() -> n7 {
+  return session.firstTrack;
+}
+
+auto MCD::CDD::getLastTrack() -> n7 {
+  return session.lastTrack;
+}
+
+auto MCD::CDD::getCurrentTrack() -> n7 {
+  return io.track;
+}
+
+auto MCD::CDD::getCurrentSector() -> s32 {
+  return io.sector;
+}
+
+auto MCD::CDD::getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void {
+  auto [lminute, lsecond, lframe] = CD::MSF(io.sector);
+  minute = lminute;
+  second = lsecond;
+  frame = lframe;
+}
+
+auto MCD::CDD::getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void {
+  auto [lminute, lsecond, lframe] = CD::MSF(io.sector - session.tracks[io.track].indices[1].lba);
+  minute = lminute;
+  second = lsecond;
+  frame = lframe;
+}
+
+auto MCD::CDD::getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void {
+  auto [lminute, lsecond, lframe] = CD::MSF(session.leadOut.lba);
+  minute = lminute;
+  second = lsecond;
+  frame = lframe;
+}
+
+auto MCD::CDD::getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void {
+  auto [lminute, lsecond, lframe] = CD::MSF(session.tracks[track].indices[1].lba);
+  minute = lminute;
+  second = lsecond;
+  frame = lframe;
+  flags = session.tracks[track].control;
+}
+
+auto MCD::CDD::lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
+  s32 lba = ((((((s32)hour * 60) + (s32)minute) * 60) + (s32)second) * 75) + (s32)frame;
+  return lba;
+}
+
+auto MCD::CDD::isTrackAudio(n7 track) -> bool {
+  return session.tracks[track].isAudio();
+}
+
+auto MCD::CDD::isDiscLoaded() -> bool {
+  return (mcd.disc && mcd.fd);
+}
+
+auto MCD::CDD::isDiscLaserdisc() -> bool {
+  if (!isDiscLoaded()) {
+    return false;
+  }
+  return laserdiscLoaded;
+}
+
+auto MCD::CDD::isLaserdiscClv() -> bool {
+  return isDiscLaserdisc() && mcd.ld.video.isCLV;
+}
+
+auto MCD::CDD::isLaserdiscDigitalAudioPresent() -> bool {
+  return mcd.ld.video.hasDigitalAudio;
 }
 
 auto MCD::CDD::power(bool reset) -> void {
@@ -373,4 +687,6 @@ auto MCD::CDD::power(bool reset) -> void {
   for(auto& data : command) data = 0x0;
   insert();
   checksum();
+  stopPointEnabled = false;
+  targetStopPoint = 0;
 }

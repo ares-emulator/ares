@@ -4,6 +4,7 @@
 #include <nall/maybe.hpp>
 #include <nall/string.hpp>
 #include <nall/decode/wav.hpp>
+#include <nall/decode/zip.hpp>
 
 namespace nall::Decode {
 
@@ -29,14 +30,15 @@ struct CUE {
 
   struct File {
     auto sectorCount() const -> u32;
-    auto scan(const string& pathname) -> bool;
+    auto scan(const string& pathname, const string& archiveFolder, const Decode::ZIP* archive) -> bool;
 
     string name;
+    string archiveFolder;
     string type;
     vector<Track> tracks;
   };
 
-  auto load(const string& location) -> bool;
+  auto load(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool;
   auto sectorCount() const -> u32;
 
   vector<File> files;
@@ -48,8 +50,20 @@ private:
   auto toLBA(const string& msf) -> u32;
 };
 
-inline auto CUE::load(const string& location) -> bool {
-  auto lines = string::read(location).replace("\r", "").split("\n");
+inline auto CUE::load(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
+  vector<string> lines;
+  string archiveFolder;
+  if (compressedFile != nullptr) {
+    auto fileNameSeparatorPos = compressedFile->name.findPrevious(compressedFile->name.size()-1, "/");
+    if (fileNameSeparatorPos.data() != nullptr) {
+      archiveFolder = compressedFile->name.slice(0, fileNameSeparatorPos.get() + 1);
+    }
+    auto rawDataBuffer = archive->extract(*compressedFile);
+    auto rawDataBufferView = string_view((const char*)rawDataBuffer.data(), rawDataBuffer.size());
+    lines = string(rawDataBufferView).replace("\r", "").split("\n");
+  } else {
+    lines = string::read(location).replace("\r", "").split("\n");
+  }
 
   u32 offset = 0;
   while(offset < lines.size()) {
@@ -80,7 +94,7 @@ inline auto CUE::load(const string& location) -> bool {
   }
 
   for(auto& file : files) {
-    if(!file.scan(Location::path(location))) return false;
+    if(!file.scan(Location::path(location), archiveFolder, archive)) return false;
   }
 
   return true;
@@ -176,15 +190,30 @@ inline auto CUE::sectorCount() const -> u32 {
   return count;
 }
 
-inline auto CUE::File::scan(const string& pathname) -> bool {
+inline auto CUE::File::scan(const string& pathname, const string& archiveFolderPath, const Decode::ZIP* archive) -> bool {
   string location = {Location::path(pathname), name};
-  if(!file::exists(location)) return false;
+
+  maybe<ZIP::File> zipFileEntry;
+  if(archive != nullptr) {
+    string archiveFilePath = archiveFolderPath;
+    archiveFilePath.append(name);
+    zipFileEntry = archive->findFile(archiveFilePath);
+    archiveFolder = archiveFolderPath;
+    if(!zipFileEntry) return false;
+  } else {
+    if(!file::exists(location)) return false;
+  }
 
   u64 size = 0;
 
   if(type == "binary") {
-    size = file::size(location);
+    if(zipFileEntry) {
+      size = zipFileEntry->size;
+    } else {
+      size = file::size(location);
+    }
   } else if(type == "wave") {
+    //##TODO## Do we bother to support wav files in our zip bundles?
     Decode::WAV wav;
     if(!wav.open(location)) return false;
     if(wav.channels != 2) return false;

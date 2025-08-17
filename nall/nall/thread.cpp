@@ -49,8 +49,16 @@ NALL_HEADER_INLINE auto thread::exit() -> void {
 }
 
 NALL_HEADER_INLINE auto thread::setName(string name) -> void {
-  HANDLE hThread = GetCurrentThread();
-  HRESULT hr = SetThreadDescription(hThread, (wchar_t*)utf16_t(name));
+  auto module = GetModuleHandleA("kernel32.dll");
+  if(module) {
+    using pfn_set_thread_description_t = HRESULT (WINAPI *)(HANDLE, PCWSTR);
+    const pfn_set_thread_description_t PFN_SetThreadDescription =
+      reinterpret_cast<pfn_set_thread_description_t>(GetProcAddress(module, "SetThreadDescription"));
+    if(PFN_SetThreadDescription) {
+      HANDLE hThread = GetCurrentThread();
+      HRESULT hr = PFN_SetThreadDescription(hThread, (wchar_t*)utf16_t(name));
+    }
+  }
 }
 
 #endif
