@@ -20,7 +20,7 @@ auto MCD::LD::load(string location) -> void {
   video.isCLV = false;
   for(const auto& stream : mmi.media()[mediaIndex.get()].streams) {
     if(stream.type == "Redbook") {
-	  mcd.fd = mcd.pak->read(stream.file);
+      mcd.fd = mcd.pak->read(stream.file);
       video.hasDigitalAudio = true;
     }
     if(stream.type == "RawAudio") analogAudioFileName = stream.file;
@@ -2575,6 +2575,13 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
     analogVideoFrameData = video.videoFrameBuffers[video.drawIndex].data();
   }
 
+  // Define some 16.16 fixed point helper functions
+  static constexpr uint32_t OneIn1616FixedPoint = 1 << 16;
+  auto convert6BitUnsignedToNormalized1616FixedPoint = [](uint8_t val) { return ((uint32_t)val << 10) | ((uint32_t)val << 4) | ((uint32_t)val >> 2); };
+  auto convert8BitUnsignedToNormalized1616FixedPoint = [](uint8_t val) { return ((uint32_t)val << 8) | (uint32_t)val; };
+  auto convert1616FixedPointTo8BitUnsigned = [](uint32_t val) { return (uint8_t)(((val + 0x80) - ((val + 0x80) >> 8)) >> 8); };
+  auto mul1616FixedPoint = [](uint32_t a, uint32_t b) { return (uint32_t)(((uint64_t)a * (uint64_t)b) >> 16); };
+
   // Mix the analog video stream from the laserdisc with the video output from the Mega Drive VDP
   //##TODO## Everything here is unoptimized. Review all this code to improve the mixing performance.
   float imageWidthConversionRatio = (float)pixelsInSourceLine / (float)video.FrameBufferWidth;
@@ -2620,32 +2627,40 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
 
     // Composite the digital VDP graphics with the analog video track
     //##TODO## Implement input reg 0x19 bit 0 properly
-    auto ldGraphicsFader = (float)(((1 << 6) - 1) - (inputRegs[0x1B] >> 2)) / (float)((1 << 6) - 1);
-    auto mdGraphicsFader = (float)(inputRegs[0x1A] >> 2) / (float)((1 << 6) - 1);
-    float ldNormalizedR = (float)ldr / (float)((1 << 8) - 1);
-    float ldNormalizedG = (float)ldg / (float)((1 << 8) - 1);
-    float ldNormalizedB = (float)ldb / (float)((1 << 8) - 1);
-    float mdNormalizedR = (float)mdr / (float)((1 << 8) - 1);
-    float mdNormalizedG = (float)mdg / (float)((1 << 8) - 1);
-    float mdNormalizedB = (float)mdb / (float)((1 << 8) - 1);
-    float combinedNormalizedR;
-    float combinedNormalizedG;
-    float combinedNormalizedB;
-    n1 backdrop = pixels[i] >> 11;
+    auto ldGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(((1 << 6) - 1) - (inputRegs[0x1B] >> 2));
+    auto mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1A] >> 2);
+    auto ldNormalizedR = convert8BitUnsignedToNormalized1616FixedPoint(ldr);
+    auto ldNormalizedG = convert8BitUnsignedToNormalized1616FixedPoint(ldg);
+    auto ldNormalizedB = convert8BitUnsignedToNormalized1616FixedPoint(ldb);
+    auto mdNormalizedR = convert8BitUnsignedToNormalized1616FixedPoint(mdr);
+    auto mdNormalizedG = convert8BitUnsignedToNormalized1616FixedPoint(mdg);
+    auto mdNormalizedB = convert8BitUnsignedToNormalized1616FixedPoint(mdb);
+    uint32_t combinedNormalizedR;
+    uint32_t combinedNormalizedG;
+    uint32_t combinedNormalizedB;
+    bool backdrop = pixels[i] >> 11;
     if (backdrop) {
-      combinedNormalizedR = ldNormalizedR * ldGraphicsFader;
-      combinedNormalizedG = ldNormalizedG * ldGraphicsFader;
-      combinedNormalizedB = ldNormalizedB * ldGraphicsFader;
+      combinedNormalizedR = mul1616FixedPoint(ldNormalizedR, ldGraphicsFader);
+      combinedNormalizedG = mul1616FixedPoint(ldNormalizedG, ldGraphicsFader);
+      combinedNormalizedB = mul1616FixedPoint(ldNormalizedB, ldGraphicsFader);
     } else {
-      combinedNormalizedR = (mdNormalizedR * mdGraphicsFader) + (ldNormalizedR * ldGraphicsFader * (1.0f - mdGraphicsFader)) + (ldNormalizedR * mdNormalizedR * (1.0f - ldGraphicsFader) * (1.0f - mdGraphicsFader));
-      combinedNormalizedG = (mdNormalizedG * mdGraphicsFader) + (ldNormalizedG * ldGraphicsFader * (1.0f - mdGraphicsFader)) + (ldNormalizedG * mdNormalizedG * (1.0f - ldGraphicsFader) * (1.0f - mdGraphicsFader));
-      combinedNormalizedB = (mdNormalizedB * mdGraphicsFader) + (ldNormalizedB * ldGraphicsFader * (1.0f - mdGraphicsFader)) + (ldNormalizedB * mdNormalizedB * (1.0f - ldGraphicsFader) * (1.0f - mdGraphicsFader));
+      uint32_t oneMinusMdGraphicsFader = OneIn1616FixedPoint - mdGraphicsFader;
+      uint32_t oneMinusLdGraphicsFader = OneIn1616FixedPoint - ldGraphicsFader;
+      combinedNormalizedR = mul1616FixedPoint(mdNormalizedR, mdGraphicsFader) +
+                            mul1616FixedPoint(ldNormalizedR, mul1616FixedPoint(ldGraphicsFader, oneMinusMdGraphicsFader)) +
+                            mul1616FixedPoint(mul1616FixedPoint(ldNormalizedR, mdNormalizedR), mul1616FixedPoint(oneMinusLdGraphicsFader, oneMinusMdGraphicsFader));
+      combinedNormalizedG = mul1616FixedPoint(mdNormalizedG, mdGraphicsFader) +
+                            mul1616FixedPoint(ldNormalizedG, mul1616FixedPoint(ldGraphicsFader, oneMinusMdGraphicsFader)) +
+                            mul1616FixedPoint(mul1616FixedPoint(ldNormalizedG, mdNormalizedG), mul1616FixedPoint(oneMinusLdGraphicsFader, oneMinusMdGraphicsFader));
+      combinedNormalizedB = mul1616FixedPoint(mdNormalizedB, mdGraphicsFader) +
+                            mul1616FixedPoint(ldNormalizedB, mul1616FixedPoint(ldGraphicsFader, oneMinusMdGraphicsFader)) +
+                            mul1616FixedPoint(mul1616FixedPoint(ldNormalizedB, mdNormalizedB), mul1616FixedPoint(oneMinusLdGraphicsFader, oneMinusMdGraphicsFader));
     }
 
     // Write the composited pixel value to the output framebuffer
-    u32 rf = (u32)(combinedNormalizedR * (float)((1 << 8) - 1));
-    u32 gf = (u32)(combinedNormalizedG * (float)((1 << 8) - 1));
-    u32 bf = (u32)(combinedNormalizedB * (float)((1 << 8) - 1));
+    u32 rf = convert1616FixedPointTo8BitUnsigned(combinedNormalizedR);
+    u32 gf = convert1616FixedPointTo8BitUnsigned(combinedNormalizedG);
+    u32 bf = convert1616FixedPointTo8BitUnsigned(combinedNormalizedB);
     u32 af = 0xFF;
     static size_t pixelOffset = 65;
     video.outputFramebuffer[targetLinePos + (i + pixelOffset)] = ((u32)af << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;
