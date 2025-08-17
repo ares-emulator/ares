@@ -46,7 +46,6 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto unload() -> void;
 
   auto main() -> void;
-  auto dmaRun() -> void;
   auto setInterruptFlag(u32 source) -> void;
   auto stepIRQ() -> void;
   auto step(u32 clocks) -> void override;
@@ -107,36 +106,48 @@ struct CPU : ARM7TDMI, Thread, IO {
     n32 mask;
   };
 
-  struct DMA {
+  struct DMAC {
     //dma.cpp
-    auto run() -> bool;
-    auto transfer() -> void;
+    auto step() -> bool;
+    auto runPending() -> void;
 
-    n2 id;
+    n1  romBurst;
+    n1  active;
+    n2  activeChannel;
+    n1  stallingCPU;
+    n1  writeCycle;
 
-    n1 active;
-    i32 waiting;
+    struct Channel {
+      auto ready() -> bool;
+      auto read() -> void;
+      auto write() -> void;
 
-    n2 targetMode;
-    n2 sourceMode;
-    n1 repeat;
-    n1 size;
-    n1 drq;
-    n2 timingMode;
-    n1 irq;
-    n1 enable;
+      n2 id;
 
-    uintVN source;
-    uintVN target;
-    uintVN length;
+      n1 active;
+      i32 waiting;
 
-    struct Latch {
+      n2 targetMode;
+      n2 sourceMode;
+      n1 repeat;
+      n1 size;
+      n1 drq;
+      n2 timingMode;
+      n1 irq;
+      n1 enable;
+
       uintVN source;
       uintVN target;
       uintVN length;
-      u32 data;
-    } latch;
-  } dma[4];
+
+      struct Latch {
+        uintVN source;
+        uintVN target;
+        uintVN length;
+        u32 data;
+      } latch;
+    } channel[4];
+  } dmac;
 
   struct Timer {
     //timer.cpp
@@ -271,10 +282,6 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  stopped;
     n1  booted;  //set to true by the GBA BIOS
     n1  romAccess;
-    n1  dmaRomAccess;
-    n1  dmaRan;
-    n1  dmaActive;
-    n2  dmaActiveChannel;
     n1  timerLatched;
     n1  busLocked;
     n32 hcounter;

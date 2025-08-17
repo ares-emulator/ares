@@ -1,7 +1,8 @@
 auto CPU::sleep() -> void {
-  dmaRun();
-  ARM7TDMI::irq = irq.synchronizer;
-  prefetchStep(1);
+  if(!dmac.step()) {
+    ARM7TDMI::irq = irq.synchronizer;
+    prefetchStep(1);
+  }
 }
 
 template <bool UseDebugger>
@@ -59,7 +60,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
         word = cartridge.readRom<false>(mode, address);
       }
     } else {
-      if(context.dmaActive) context.dmaRomAccess = true;
+      if(mode & DMA) dmac.romBurst = true;
       prefetchReset();
       step(waitCartridge(mode, address));
       word = cartridge.readRom<false>(mode, address);
@@ -85,11 +86,11 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 }
 
 auto CPU::get(u32 mode, n32 address) -> n32 {
-  dmaRun();
+  if(!(mode & DMA)) dmac.runPending();
   ARM7TDMI::irq = irq.synchronizer;
   context.romAccess = false;
   u32 word = getBus<false>(mode, address);
-  if(!context.romAccess && !context.dmaActive) cartridge.mrom.burst = false;
+  if(!context.romAccess && !(mode & DMA)) cartridge.mrom.burst = false;
   return word;
 }
 
@@ -98,7 +99,7 @@ auto CPU::getDebugger(u32 mode, n32 address) -> n32 {
 }
 
 auto CPU::set(u32 mode, n32 address, n32 word) -> void {
-  dmaRun();
+  if(!(mode & DMA)) dmac.runPending();
   ARM7TDMI::irq = irq.synchronizer;
   context.romAccess = false;
 
@@ -140,7 +141,7 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
     mode = cartMode(mode, address);
     context.romAccess = true;
-    if(context.dmaActive) context.dmaRomAccess = true;
+    if(mode & DMA) dmac.romBurst = true;
     prefetchReset();
     step(waitCartridge(mode, address));
     cartridge.writeRom(mode, address, word);
@@ -159,11 +160,11 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
   }
 
   openBus.set(mode, address, word);
-  if(!context.romAccess && !context.dmaActive) cartridge.mrom.burst = false;
+  if(!context.romAccess && !(mode & DMA)) cartridge.mrom.burst = false;
 }
 
 auto CPU::lock() -> void {
-  dmaRun();
+  dmac.runPending();
   context.busLocked = true;
 }
 
@@ -198,11 +199,11 @@ auto CPU::cartMode(u32 mode, n32 address) -> u32 {
   if(cartridge.mrom.burst == false) return mode | Nonsequential;
 
   //determine whether sequential access may be performed
-  if(!context.dmaActive) {
-    u32 sequential = nonsequential ? Nonsequential : Sequential;
+  if(mode & DMA) {
+    u32 sequential = dmac.romBurst ? Sequential : Nonsequential;
     mode |= sequential;
   } else {
-    u32 sequential = context.dmaRomAccess ? Sequential : Nonsequential;
+    u32 sequential = ARM7TDMI::nonsequential ? Nonsequential : Sequential;
     mode |= sequential;
   }
 

@@ -44,7 +44,7 @@ auto CPU::main() -> void {
   }
 
   if(halted()) {
-    dmaRun();
+    dmac.runPending();
     if(!(irq.enable[0] & irq.flag[0])) {
       return step(1);
     }
@@ -56,32 +56,12 @@ auto CPU::main() -> void {
   instruction();
 }
 
-auto CPU::dmaRun() -> void {
-  if(!context.dmaActive && !context.busLocked) {
-    context.dmaActive = true;
-    while(true) {
-      if(dma[0].run()) continue;
-      if(dma[1].run()) continue;
-      if(dma[2].run()) continue;
-      if(dma[3].run()) continue;
-      break;
-    }
-    if(context.dmaRan) {
-      idle();
-      context.dmaRan = false;
-      context.dmaRomAccess = false;
-      context.dmaActiveChannel = 0;  //assign burst to a channel that cannot access ROM
-    }
-    context.dmaActive = false;
-  }
-}
-
 auto CPU::setInterruptFlag(u32 source) -> void {
   irq.flag[1] |= source;
 }
 
 inline auto CPU::stepIRQ() -> void {
-  if(!context.dmaActive) {
+  if(!dmac.stallingCPU) {
     irq.synchronizer = irq.ime[0] && (irq.enable[0] & irq.flag[0]);
     irq.enable[0] = irq.enable[1];
     irq.flag[0] = irq.flag[1];
@@ -93,10 +73,10 @@ auto CPU::step(u32 clocks) -> void {
   if(!clocks) return;
   context.hcounter = (context.hcounter + clocks) % 1232;
 
-  dma[0].waiting = max(0, dma[0].waiting - (s32)clocks);
-  dma[1].waiting = max(0, dma[1].waiting - (s32)clocks);
-  dma[2].waiting = max(0, dma[2].waiting - (s32)clocks);
-  dma[3].waiting = max(0, dma[3].waiting - (s32)clocks);
+  dmac.channel[0].waiting = max(0, dmac.channel[0].waiting - (s32)clocks);
+  dmac.channel[1].waiting = max(0, dmac.channel[1].waiting - (s32)clocks);
+  dmac.channel[2].waiting = max(0, dmac.channel[2].waiting - (s32)clocks);
+  dmac.channel[3].waiting = max(0, dmac.channel[3].waiting - (s32)clocks);
 
   for(auto _ : range(clocks)) {
     stepIRQ();
@@ -141,7 +121,7 @@ auto CPU::power() -> void {
   for(auto& byte : iwram) byte = 0x00;
   for(auto& byte : ewram) byte = 0x00;
 
-  for(auto n : range(4)) dma[n] = {n};
+  for(auto n : range(4)) dmac.channel[n] = {n};
   for(auto n : range(4)) timer[n] = {n};
   serial = {};
   keypad = {};
@@ -152,21 +132,21 @@ auto CPU::power() -> void {
   prefetch = {};
   context = {};
 
-  dma[0].source.setBits(27); dma[0].latch.source.setBits(27);
-  dma[0].target.setBits(27); dma[0].latch.target.setBits(27);
-  dma[0].length.setBits(14); dma[0].latch.length.setBits(14);
+  dmac.channel[0].source.setBits(27); dmac.channel[0].latch.source.setBits(27);
+  dmac.channel[0].target.setBits(27); dmac.channel[0].latch.target.setBits(27);
+  dmac.channel[0].length.setBits(14); dmac.channel[0].latch.length.setBits(14);
 
-  dma[1].source.setBits(28); dma[1].latch.source.setBits(28);
-  dma[1].target.setBits(27); dma[1].latch.target.setBits(27);
-  dma[1].length.setBits(14); dma[1].latch.length.setBits(14);
+  dmac.channel[1].source.setBits(28); dmac.channel[1].latch.source.setBits(28);
+  dmac.channel[1].target.setBits(27); dmac.channel[1].latch.target.setBits(27);
+  dmac.channel[1].length.setBits(14); dmac.channel[1].latch.length.setBits(14);
 
-  dma[2].source.setBits(28); dma[2].latch.source.setBits(28);
-  dma[2].target.setBits(27); dma[2].latch.target.setBits(27);
-  dma[2].length.setBits(14); dma[2].latch.length.setBits(14);
+  dmac.channel[2].source.setBits(28); dmac.channel[2].latch.source.setBits(28);
+  dmac.channel[2].target.setBits(27); dmac.channel[2].latch.target.setBits(27);
+  dmac.channel[2].length.setBits(14); dmac.channel[2].latch.length.setBits(14);
 
-  dma[3].source.setBits(28); dma[3].latch.source.setBits(28);
-  dma[3].target.setBits(28); dma[3].latch.target.setBits(28);
-  dma[3].length.setBits(16); dma[3].latch.length.setBits(16);
+  dmac.channel[3].source.setBits(28); dmac.channel[3].latch.source.setBits(28);
+  dmac.channel[3].target.setBits(28); dmac.channel[3].latch.target.setBits(28);
+  dmac.channel[3].length.setBits(16); dmac.channel[3].latch.length.setBits(16);
 
   for(u32 n = 0x0b0; n <= 0x0df; n++) bus.io[n] = this;  //DMA
   for(u32 n = 0x100; n <= 0x10f; n++) bus.io[n] = this;  //Timers

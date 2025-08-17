@@ -22,6 +22,7 @@ namespace ares::GameBoyAdvance {
     Signed        =  64,  //sign extended
     Nonsequential = 128,  //N cycle
     Sequential    = 256,  //S cycle
+    DMA           = 512,  //DMA transaction
   };
 
   struct Model {
