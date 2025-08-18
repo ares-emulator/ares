@@ -82,8 +82,10 @@ auto MCD::LD::load(string location) -> void {
       video.leadInFrames[frameIndex] = frameBaseAddress;
     } else if (frameIndex < (video.leadInFrameCount + video.activeVideoFrameCount)) {
       video.activeVideoFrames[frameIndex - video.leadInFrameCount] = frameBaseAddress;
-    } else {
+    } else if (frameIndex < (video.leadInFrameCount + video.activeVideoFrameCount + video.leadOutFrameCount)) {
       video.leadOutFrames[frameIndex - video.leadInFrameCount - video.activeVideoFrameCount] = frameBaseAddress;
+    } else {
+      debug(unusual, "[MCD::LD::load] Trailing frames in analog video file: ", analogVideoFileName);
     }
   }
 
@@ -182,7 +184,16 @@ auto MCD::LD::write(n24 address, n8 data) -> void {
 
         // Update the seek register state. If the mechanical drive state is correct to action this, a new seek target will
         // be latched here now. If not, and the mechanical drive state changes to make this seek action possible, it will
-        // be handled below when we trigger the mechanical drive state update.
+        // be handled below when we trigger the mechanical drive state update. Note that we need to take a backup of the
+        // previous register state for the benefit of stop point latching, which doesn't trigger with seek target latching,
+        // and relies on the previous register state.
+        n8 seekRegsPreviousState[6];
+        seekRegsPreviousState[0] = inputRegs[0x06];
+        seekRegsPreviousState[1] = inputRegs[0x07];
+        seekRegsPreviousState[2] = inputRegs[0x08];
+        seekRegsPreviousState[3] = inputRegs[0x09];
+        seekRegsPreviousState[4] = inputRegs[0x0A];
+        seekRegsPreviousState[5] = inputRegs[0x0B];
         inputRegs[0x06] = inputFrozenRegs[0x06];
         inputRegs[0x07] = inputFrozenRegs[0x07];
         inputRegs[0x08] = inputFrozenRegs[0x08];
@@ -193,12 +204,13 @@ auto MCD::LD::write(n24 address, n8 data) -> void {
           latchSeekTargetFromCurrentState();
         }
         // Update the mechanical drive state. This needs to be done before seeking is evaluated.
-        processInputRegisterWrite(2, inputFrozenRegs[2], true);
+        processInputRegisterWrite(0x02, inputFrozenRegs[0x02], inputRegs[0x02], true);
         // Update remaining registers. Register 0x00 is quite important, as it may trigger a seek operation here itself,
         // and it relies on the mechanical drive state and seek registers being handled above before it can work
         // correctly.
         for (int i = 0; i < inputRegisterCount; ++i) {
-          processInputRegisterWrite(i, inputFrozenRegs[i], true);
+          n8 previousData = ((i >= 0x06) && (i <= 0x0B) ? seekRegsPreviousState[i - 0x06] : inputRegs[i]);
+          processInputRegisterWrite(i, inputFrozenRegs[i], previousData, true);
         }
       } else if (areInputRegsFrozen && !previousInputRegsFrozenState) {
         // If the input register block is being frozen, copy the current register state into the frozen register state.
@@ -216,11 +228,11 @@ auto MCD::LD::write(n24 address, n8 data) -> void {
       // Only trigger changes on a few limited registers while frozen. These are the analog mixing registers 0x19,
       // 0x1A, and 0x1B for video, and 0x1E and 0x1F for audio. Regs 0x1C and 0x1D currently have no known function.
       if (regNum >= 0x19) {
-        processInputRegisterWrite(regNum, data, false);
+        processInputRegisterWrite(regNum, data, inputRegs[regNum], false);
       }
     } else {
       // Trigger any required behaviour in response to this input register write
-      processInputRegisterWrite(regNum, data, false);
+      processInputRegisterWrite(regNum, data, inputRegs[regNum], false);
     }
   } else if (areOutputRegsFrozen) {
     // Perform writes to the output register block while the register output block is frozen. In this state, most
@@ -510,7 +522,12 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     data.bit(0, 2) = currentPlaybackSpeed;
 
     // Handle special cases
-    if ((currentPlaybackMode == 0x02) && (currentPlaybackSpeed == 0x01) && (mcd.cdd.io.sectorRepeatCount > 0)) {
+    if (reachedStopPoint) {
+      // At a stop point, the hardware reports we're in single-frame step mode at speed 0. This is not a persistent change though,
+      // as just toggling seek enable off and on again releases the stop point, with the playback mode and speed settings reverting
+      // to the previous latched state.
+      data = 0x20;
+    } else if ((currentPlaybackMode == 0x02) && (currentPlaybackSpeed == 0x01) && (mcd.cdd.io.sectorRepeatCount > 0)) {
       // Under single-frame frame step mode, the current playback speed is only repoted as 0x01 until the frame step has occurred,
       // after which it becomes 0x00. We emulate that here.
       data.bit(0, 2) = 0x00;
@@ -965,11 +982,8 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
   return data;
 }
 
-auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredRegisterWrite) -> void
+auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bool wasDeferredRegisterWrite) -> void
 {
-  // Retrieve the previous state of the target input register
-  n8 previousData = inputRegs[regNum];
-
   // Trigger any required changes based on the updated input register
   switch (regNum) {
   case 0x00:
@@ -1021,25 +1035,33 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
       outputRegs[0] = (outputRegs[0] & 0x3E) | (data & 0xC1);
     }
 
-    // Trigger a seek if required, based on the seek update flag.
+    // If the state of U0 has changed since the last time it was latched, check for seek and stop point operations
+    // to perform.
     //##TODO## Do more testing around this behaviour
-    if (seekEnabled && (previousData.bit(0) != data.bit(0))) {
-      if (liveSeekRegistersContainsLatchableTarget()) {
-        // Note that if latching fails because the seek target isn't valid (IE, invalid timecode), no seek operation
-        // occurs, not even to the previously valid seek target.
-        //##TODO## Note that we've seen that when latching a seek target fails in this manner, it leaves the
-        //previously latched target seek location in an inconsistent state. The data buffers are apparently
-        //partially updated, so triggering a seek operation to the previously valid seek location from this
-        //point on will seek to a consistent, but different address. This behaviour should be probed more, as
-        //it should be possible to discover the sequence and method of decoding based on the actual seek
-        //locations from the resulting latched seek target when failed updates occur.
-        if (latchSeekTargetFromCurrentState()) {
+    if (previousData.bit(0) != data.bit(0)) {
+      // Clear the stop point triggered flag, regardless of whether seeking is enabled or not. This has been
+      // confirmed through hardware tests, and Ghost Rush relies on this when moving around the mansion.
+      reachedStopPoint = false;
+
+      // Trigger a seek if required, based on the seek update flag.
+      if (seekEnabled) {
+        if (liveSeekRegistersContainsLatchableTarget()) {
+          // Note that if latching fails because the seek target isn't valid (IE, invalid timecode), no seek operation
+          // occurs, not even to the previously valid seek target.
+          //##TODO## Note that we've seen that when latching a seek target fails in this manner, it leaves the
+          //previously latched target seek location in an inconsistent state. The data buffers are apparently
+          //partially updated, so triggering a seek operation to the previously valid seek location from this
+          //point on will seek to a consistent, but different address. This behaviour should be probed more, as
+          //it should be possible to discover the sequence and method of decoding based on the actual seek
+          //locations from the resulting latched seek target when failed updates occur.
+          if (latchSeekTargetFromCurrentState()) {
+            performSeekWithLatchedState();
+          }
+        } else {
+          // A seek will stll be performed here, but it will go to the last valid latched seek target. Note that this
+          // may not correlate in any way with the current input register state.
           performSeekWithLatchedState();
         }
-      } else {
-        // A seek will stll be performed here, but it will go to the last valid latched seek target. Note that this
-        // may not correlate in any way with the current input register state.
-        performSeekWithLatchedState();
       }
     }
     break;
@@ -1238,8 +1260,12 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
         operationErrorFlag2 = true;
         break;
       }
-      // Clear the stop point triggered flag
-      reachedStopPoint = false;
+      // Clear the stop point triggered flag if seeking is enabled. It has been confirmed through hardware tests that
+      // the stop point is only cleared when seeking is enabled, and only when setting drive state 0x05, not 0x06 or
+      // 0x07. Ghost Rush relies on this when entering the tutorial from new character creation.
+      if (seekEnabled) {
+        reachedStopPoint = false;
+      }
       // If the disc isn't already loaded, insert it and seek to the start.
       bool performedLoadOfDisc = false;
       if (currentDriveState <= 3) {
@@ -1267,8 +1293,9 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
           performSeekWithLatchedState();
         }
       }
-      // Either play or pause the disc depending on the pause flag
-      if (currentPauseState) {
+      // Either play or pause the disc depending on the pause flag and whether we've reached an
+      // active stop point
+      if (currentPauseState || reachedStopPoint) {
         mcd.cdd.pause();
       } else {
         mcd.cdd.play();
@@ -1287,7 +1314,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
       // Note that as this is a command rather than an actual state change, we don't update the current drive state
       // here.
       if (currentDriveState == 0x05) {
-        if (targetPauseState) {
+        if (targetPauseState || reachedStopPoint) {
           mcd.cdd.pause();
         } else {
           mcd.cdd.play();
@@ -1366,6 +1393,13 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     if (newPlaybackMode >= 0x04) {
       operationErrorFlag1 = true;
     } else {
+      // Any valid writes to this register which actually change the data reset the stop point hit state. Writes with
+      // an invalid playback mode are ignored. Ghost Rush relies on this.
+      if (previousData != data) {
+        reachedStopPoint = false;
+      }
+
+      // Latch the new playback mode settings
       auto newPlaybackSpeed = data.bit(0, 2);
       auto newPlaybackDirection = data.bit(3);
       switch (newPlaybackMode) {
@@ -1566,7 +1600,12 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
 
     // Either update the stop point or trigger a seek if required
     if (targetSeekMode == 3) {
-      updateStopPointWithCurrentState();
+      // Hardware tests have shown that the stop point is only latched again if an actual effective register state
+      // change occurs to the lower three bits. This is true when changing the register directly, or when restoring
+      // the input register block from a frozen state.
+      if (previousData.bit(0, 2) != data.bit(0, 2)) {
+        updateStopPointWithCurrentState();
+      }
     } else if (seekModeUpdated && seekEnabled && (currentDriveState == 0x5) && (((currentSeekMode == 1) && (currentSeekModeTimeFormat == 1)) || (currentSeekMode == 2))) {
       if (latchSeekTargetFromCurrentState()) {
         performSeekWithLatchedState();
@@ -1649,7 +1688,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     //           treated as 0, and a carry is generated into the higher digit.
     // SectorNoL: Lower data of seek sector number, in BCD format. See input register 0x08.
     [[fallthrough]];
-  case 0x0B:
+  case 0x0B: {
     //         --------------------------------- (Buffered in $593B (edit buffer)/ and $505B (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x0B|-------------------------------|
@@ -1666,16 +1705,16 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, bool wasDeferredReg
     //         -In CD mode, invalid values are handled differently. If any digit exceeds the BCD bounds, it is
     //          treated as 0, and a carry is generated into the higher digit.
     inputRegs[regNum] = data;
-    if (!wasDeferredRegisterWrite) {
-      if (inputRegs[0x06].bit(0, 1) == 3) {
-        updateStopPointWithCurrentState();
-      } else if (seekEnabled && (currentDriveState == 0x5) && (((currentSeekMode == 1) && (currentSeekModeTimeFormat == 1)) || (currentSeekMode == 2))) {
-        if (latchSeekTargetFromCurrentState()) {
-          performSeekWithLatchedState();
-        }
+    auto targetSeekMode = inputRegs[0x06].bit(0, 1);
+    if ((targetSeekMode == 3) && (previousData != data)) {
+      updateStopPointWithCurrentState();
+    }
+    if (!wasDeferredRegisterWrite && seekEnabled && (currentDriveState == 0x5) && (((currentSeekMode == 1) && (currentSeekModeTimeFormat == 1)) || (currentSeekMode == 2))) {
+      if (latchSeekTargetFromCurrentState()) {
+        performSeekWithLatchedState();
       }
     }
-    break;
+    break;}
   case 0x0C:
     //         --------------------------------- (Buffered in $593C (edit buffer)/ and $505C (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
@@ -2045,6 +2084,15 @@ auto MCD::LD::updateStopPointWithCurrentState() -> void {
     mcd.cdd.stopPointEnabled = true;
     reachedStopPointPreviously = false;
     debug(unverified, "Latched stoppoint: lba:", stopLba, " frame:", zeroBasedFrameIndexFromLba(stopLba, true) + 1, " 0x07=", hex(inputRegs[0x07]), " 0x08=", hex(inputRegs[0x08]), " 0x09=", hex(inputRegs[0x09]), " 0x0A=", hex(inputRegs[0x0A]), " 0x0B=", hex(inputRegs[0x0B]));
+
+    // As a special case, if we're currently stopped at our own stop point, and a register write has caused
+    // the stop point to be latched again, it's immediately hit again here. Note that this is truly a special
+    // case, as even if the updated register state indicates a target with a new different location, it will
+    // still immediately trip as though we're there already, even though it's the previous location we're at.
+    // The character creation screen of Ghost Rush relies on this.
+    if (reachedStopPoint) {
+      handleStopPointReached(mcd.cdd.io.sector);
+    }
   }
 }
 
@@ -2239,6 +2287,16 @@ auto MCD::LD::VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& fr
 }
 
 auto MCD::LD::handleStopPointReached(s32 lba) -> void {
+  // Hardware tests have shown that as a special case, stop points are ignored in still-frame stepping mode. The stop
+  // points will remain active and not be latched in this case. Note that this is only if the "true" playback mode is
+  // set to this, not when a stop point has been hit and the output registers claim we're in still-frame stepping mode.
+  if ((currentPlaybackMode == 2) && (currentPlaybackSpeed <= 1)) {
+    return;
+  }
+
+  // Trigger the stop point, pausing playback or triggering repeat mode as necessary. Note that hardware tests have
+  // shown that input reg 0x6 bit 7 is indeed used live - it isn't latched at the time of the last seek operation, or
+  // at the point when the stop point is set.
   if (inputRegs[0x06].bit(7)) {
     // Repeat mode
     // Note that repeating isn't instant on the hardware, there's a small seek time which depends on the distance to the
@@ -2267,9 +2325,6 @@ auto MCD::LD::handleStopPointReached(s32 lba) -> void {
     outputRegs[0x1D] = 0xFF;
     outputRegs[0x1E] = 0xFF;
     outputRegs[0x1F] = 0x00;
-    currentPlaybackMode = 2;
-    currentPlaybackSpeed = 0;
-    currentPlaybackDirection = 0;
     reachedStopPointPreviously = true;
     operationErrorFlag1 = false;
     operationErrorFlag2 = true;
@@ -2398,14 +2453,15 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
     video.frameSkipCounter = 0;
   }
 
-  // We only update the displayed video frame if the image hold bit isn't set. If the image hold bit is set, abort any
-  // further processing.
+  // We only update the displayed video frame if the image hold bit isn't set. If it is, abort any further processing.
+  //##TODO## Determine how this interacts with picture stop codes once we go to implement them
   if (inputRegs[0x0C].bit(5)) {
     return;
   }
 
   // Determine whether the digital memory buffer is active, and if so, which field to latch in the buffer.
-  video.currentVideoFrameFieldSelectionEnabled = inputRegs[0x01].bit(7) && (inputRegs[0x0C].bit(1) || inputRegs[0x0C].bit(3));
+  auto analogMixingMode = inputRegs[0x01].bit(7, 6);
+  video.currentVideoFrameFieldSelectionEnabled = (analogMixingMode >= 2) && (inputRegs[0x0C].bit(1) || inputRegs[0x0C].bit(3));
   video.currentVideoFrameFieldSelectionEvenField = (video.currentVideoFrameFieldSelectionEnabled ? inputRegs[0x0C].bit(0) : false);
 
   // At the end of all the above state updates, if we're still showing the same frame (but not necessarily the same
@@ -2419,14 +2475,20 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   video.currentVideoFrameLeadIn = newVideoFrameLeadIn;
   video.currentVideoFrameLeadOut = newVideoFrameLeadOut;
 
-  // Load the displayed video frame into the buffer
-  loadCurrentVideoFrameIntoBuffer();
+  // If the video disable bit is set, clear the buffer, otherwise load the displayed video frame into the buffer.
+  //##TODO## Determine how this interacts with picture stop codes once we go to implement them
+  loadCurrentVideoFrameIntoBuffer(inputRegs[0x0C].bit(2));
 
   //##TODO## Implement picture stop codes. This is where we should check the lines in the VBI region and stop the player
   //if a picture stop code is detected, unless picture stop cancel is active (Input reg 0x0C bit 7).
+  //##TODO## The way picture stop codes work, is when they're encountered, currentPlaybackMode goes to 0x02, and
+  //currentPlaybackSpeed goes to 0x00, as reported by output register 0x07, IE, the player switches into still-frame
+  //mode. Additionally, operationErrorFlag3 at output reg 0x09 bit 0 gets set to true when this is hit. This is
+  //basically what happens when stop points get hit, except that operationErrorFlag2 is set to false, not true.
+  //When we implement picture stop codes, we need to compare behaviour with stop points more closely.
  }
 
-auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
+auto MCD::LD::loadCurrentVideoFrameIntoBuffer(bool blankFrame) -> void {
   // Locate the new video frame in the source file
   const unsigned char* videoFrameCompressed = nullptr;
   if (video.currentVideoFrameLeadIn) {
@@ -2440,15 +2502,22 @@ auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
     return;
   }
 
-  // Allocate memory for the video frame buffer if it's currently empty
+  // Update the framebuffer with the correct content
   int buildIndex = video.drawIndex ^ 0x01;
-  if (video.videoFrameBuffers[buildIndex].empty()) {
-    video.videoFrameBuffers[buildIndex].resize(video.videoFrameHeader.width * video.videoFrameHeader.height * 3);
-  }
+  auto& buildFrameBuffer = video.videoFrameBuffers[buildIndex];
+  if (blankFrame) {
+    // Clear the framebuffer if this is a blank frame
+    buildFrameBuffer.clear();
+  } else {
+    // Allocate memory for the video frame buffer if it's currently empty
+    if (buildFrameBuffer.empty()) {
+      buildFrameBuffer.resize(video.videoFrameHeader.width * video.videoFrameHeader.height * 3);
+    }
 
-  // Decode the QOI2 compressed video frame
-  size_t frameSizeCompressed = qon_decode_frame_size(videoFrameCompressed);
-  qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, video.videoFrameBuffers[buildIndex].data(), 3);
+    // Decode the QOI2 compressed video frame into the buffer
+    size_t frameSizeCompressed = qon_decode_frame_size(videoFrameCompressed);
+    qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, buildFrameBuffer.data(), 3);
+  }
 }
 
 auto MCD::LD::power(bool reset) -> void {
@@ -2564,8 +2633,8 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   size_t pixelsInSourceLine = video.videoFrameHeader.width - (VideoFrameLeftBorderWidth + VideoFrameRightBorderWidth);
   size_t targetLinePos = vdpImageSourceLine * video.FrameBufferWidth;
 
-  // Retrieve the line of analog video data we're processing here. If the analog video stream is disabled, or
-  // there's no frame data present, we force the input analog data to black, and proceed with mixing.
+  // Retrieve the line of analog video data we're processing here. If there's no frame data present, or the video
+  // stream is currently disabled, we force the input analog data to black and proceed with mixing.
   const unsigned char* analogVideoFrameData = nullptr;
   if (inputRegs[0x0C].bit(2) || video.videoFrameBuffers[video.drawIndex].empty()) {
     video.dummyBlankLineBuffer.resize(pixelsInSourceLine * channelCount, 0);
@@ -2577,13 +2646,21 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
 
   // Define some 16.16 fixed point helper functions
   static constexpr uint32_t OneIn1616FixedPoint = 1 << 16;
+  // Below are a commented out set of 16.16 routines which are more technically accurate in terms of rounding.
+  // This only makes differences of +/- 1 on the output values however, and from profiling they slow down
+  // calculations by 30% over the more lossy versions below. Due to the performance critical nature of this
+  // code, we have chosen not to implement them at this time, however they are kept here for reference.
+  //auto convert6BitUnsignedToNormalized1616FixedPoint = [](uint8_t val) { return ((static_cast<uint32_t>(val) << 10) | (static_cast<uint32_t>(val) << 4) | (static_cast<uint32_t>(val) >> 2)) + ((static_cast<uint32_t>(val) >> 1) & 0x00000001u); };
+  //auto convert8BitUnsignedToNormalized1616FixedPoint = [](uint8_t val) { return (((uint16_t)val << 8) | (uint16_t)val) + (((uint16_t)val >> 7) & 0x00000001u); };
+  //auto convert1616NormalizedFixedPointTo8BitUnsigned = [](uint32_t val) { auto temp = ((val + 1) * 0xFFu); return (uint32_t)(temp >> 16) + ((temp >> 15) & 0x00000001u); };
+  //auto mul1616FixedPoint = [](uint32_t a, uint32_t b) { auto temp = (uint64_t)a * (uint64_t)b; return (uint32_t)(temp >> 16) + ((temp >> 15) & 0x00000001u); };
   auto convert6BitUnsignedToNormalized1616FixedPoint = [](uint8_t val) { return ((uint32_t)val << 10) | ((uint32_t)val << 4) | ((uint32_t)val >> 2); };
   auto convert8BitUnsignedToNormalized1616FixedPoint = [](uint8_t val) { return ((uint32_t)val << 8) | (uint32_t)val; };
-  auto convert1616FixedPointTo8BitUnsigned = [](uint32_t val) { return (uint8_t)(((val + 0x80) - ((val + 0x80) >> 8)) >> 8); };
+  auto convert1616NormalizedFixedPointTo8BitUnsigned = [](uint32_t val) { return (uint8_t)(((val + 0x80) - ((val + 0x80) >> 8)) >> 8); };
   auto mul1616FixedPoint = [](uint32_t a, uint32_t b) { return (uint32_t)(((uint64_t)a * (uint64_t)b) >> 16); };
 
   // Mix the analog video stream from the laserdisc with the video output from the Mega Drive VDP
-  //##TODO## Everything here is unoptimized. Review all this code to improve the mixing performance.
+  //##TODO## Do some work to improve the performance of the linear interpolation code
   float imageWidthConversionRatio = (float)pixelsInSourceLine / (float)video.FrameBufferWidth;
   float firstSamplePointX = 0.0f;
   float lastSamplePointX = 0.0f;
@@ -2658,9 +2735,9 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
     }
 
     // Write the composited pixel value to the output framebuffer
-    u32 rf = convert1616FixedPointTo8BitUnsigned(combinedNormalizedR);
-    u32 gf = convert1616FixedPointTo8BitUnsigned(combinedNormalizedG);
-    u32 bf = convert1616FixedPointTo8BitUnsigned(combinedNormalizedB);
+    u32 rf = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedR);
+    u32 gf = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedG);
+    u32 bf = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedB);
     u32 af = 0xFF;
     static size_t pixelOffset = 65;
     video.outputFramebuffer[targetLinePos + (i + pixelOffset)] = ((u32)af << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;

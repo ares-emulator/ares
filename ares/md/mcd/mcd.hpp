@@ -390,7 +390,7 @@ struct MCD : M68000, Thread {
     auto read(n24 address) -> n8;
     auto write(n24 address, n8 data) -> void;
     auto getOutputRegisterValue(int regNum) -> n8;
-    auto processInputRegisterWrite(int regNum, n8 data, bool wasDeferredRegisterWrite) -> void;
+    auto processInputRegisterWrite(int regNum, n8 data, n8 previousData, bool wasDeferredRegisterWrite) -> void;
     auto resetSeekTargetToDefault() -> void;
     auto liveSeekRegistersContainsLatchableTarget() const -> bool;
     auto latchSeekTargetFromCurrentState() -> bool;
@@ -401,7 +401,7 @@ struct MCD : M68000, Thread {
     auto VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void;
     auto handleStopPointReached(s32 lba) -> void;
     auto updateCurrentVideoFrameNumber(s32 lba) -> void;
-    auto loadCurrentVideoFrameIntoBuffer() -> void;
+    auto loadCurrentVideoFrameIntoBuffer(bool blankFrame) -> void;
     auto power(bool reset) -> void;
     auto scanline(u32 pixels[1280], u32 y) -> void;
 
