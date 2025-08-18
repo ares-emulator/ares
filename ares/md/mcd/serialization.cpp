@@ -206,7 +206,7 @@ auto MCD::LD::serialize(serializer& s) -> void {
 
   // Restore the current video frame into the display buffer
   if (MegaLD() && s.reading()) {
-	loadCurrentVideoFrameIntoBuffer();
+	loadCurrentVideoFrameIntoBuffer(inputRegs[0x0C].bit(2));
   }
 }
 
