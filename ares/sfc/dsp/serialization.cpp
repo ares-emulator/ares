@@ -32,8 +32,8 @@ auto DSP::serialize(serializer& s) -> void {
   s(noise.frequency);
   s(noise.lfsr);
 
-  s(brr.bank);
-  s(brr._bank);
+  s(brr.page);
+  s(brr._page);
   s(brr._source);
   s(brr._address);
   s(brr._nextAddress);
