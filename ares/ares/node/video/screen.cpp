@@ -63,11 +63,13 @@ auto Screen::pixels(bool frame) -> array_span<u32> {
 auto Screen::resetPalette() -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _palette.reset();
+  platform->resetPalette(shared());
 }
 
 auto Screen::resetSprites() -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _sprites.reset();
+  platform->resetSprites(shared());
 }
 
 auto Screen::setRefresh(function<void ()> refresh) -> void {
@@ -81,7 +83,7 @@ auto Screen::refreshRateHint(double pixelFrequency, int dotsPerLine, int linesPe
 
 auto Screen::refreshRateHint(double refreshRate) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
-  platform->refreshRateHint(refreshRate);
+  platform->refreshRateHint(shared(), refreshRate);
 }
 
 auto Screen::setViewport(u32 x, u32 y, u32 width, u32 height) -> void {
@@ -90,72 +92,85 @@ auto Screen::setViewport(u32 x, u32 y, u32 width, u32 height) -> void {
   _viewportY = y;
   _viewportWidth  = width;
   _viewportHeight = height;
+  platform->setViewport(shared(), x, y, width, height);
 }
 
 auto Screen::setOverscan(bool overscan) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _overscan = overscan;
+  platform->setOverscan(shared(), overscan);
 }
 
 auto Screen::setSize(u32 width, u32 height) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _width  = width;
   _height = height;
+  platform->setSize(shared(), width, height);
 }
 
 auto Screen::setScale(f64 scaleX, f64 scaleY) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _scaleX = scaleX;
   _scaleY = scaleY;
+  platform->setScale(shared(), scaleX, scaleY);
 }
 
 auto Screen::setAspect(f64 aspectX, f64 aspectY) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _aspectX = aspectX;
   _aspectY = aspectY;
+  platform->setAspect(shared(), aspectX, aspectY);
 }
 
 auto Screen::setSaturation(f64 saturation) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _saturation = saturation;
   _palette.reset();
+  platform->setSaturation(shared(), saturation);
 }
 
 auto Screen::setGamma(f64 gamma) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _gamma = gamma;
   _palette.reset();
+  platform->setGamma(shared(), gamma);
 }
 
 auto Screen::setLuminance(f64 luminance) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _luminance = luminance;
   _palette.reset();
+  platform->setLuminance(shared(), luminance);
 }
 
 auto Screen::setFillColor(u32 fillColor) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _fillColor = fillColor;
+  platform->setFillColor(shared(), fillColor);
 }
 
 auto Screen::setColorBleed(bool colorBleed) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _colorBleed = colorBleed;
+  platform->setColorBleed(shared(), colorBleed);
 }
 
 auto Screen::setColorBleedWidth(u32 width) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _colorBleedWidth = width;
+  platform->setColorBleedWidth(shared(), width);
 }
 
 auto Screen::setInterframeBlending(bool interframeBlending) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _interframeBlending = interframeBlending;
+  platform->setInterframeBlending(shared(), interframeBlending);
 }
 
 auto Screen::setRotation(u32 rotation) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _rotation = rotation;
+  platform->setRotation(shared(), rotation);
 }
 
 auto Screen::setProgressive(bool progressiveDouble) -> void {
@@ -163,6 +178,7 @@ auto Screen::setProgressive(bool progressiveDouble) -> void {
   _interlace = false;
   _progressive = true;
   _progressiveDouble = progressiveDouble;
+  platform->setProgressive(shared(), progressiveDouble);
 }
 
 auto Screen::setInterlace(bool interlaceField) -> void {
@@ -170,18 +186,21 @@ auto Screen::setInterlace(bool interlaceField) -> void {
   _progressive = false;
   _interlace = true;
   _interlaceField = interlaceField;
+  platform->setInterlace(shared(), interlaceField);
 }
 
 auto Screen::attach(Node::Video::Sprite sprite) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   if(_sprites.find(sprite)) return;
   _sprites.append(sprite);
+  platform->attachSprite(shared(), sprite);
 }
 
 auto Screen::detach(Node::Video::Sprite sprite) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   if(!_sprites.find(sprite)) return;
   _sprites.removeByValue(sprite);
+  platform->detachSprite(shared(), sprite);
 }
 
 auto Screen::colors(u32 colors, function<n64 (n32)> color) -> void {
@@ -189,6 +208,7 @@ auto Screen::colors(u32 colors, function<n64 (n32)> color) -> void {
   _colors = colors;
   _color = color;
   _palette.reset();
+  platform->colors(shared(), colors, color);
 }
 
 auto Screen::frame() -> void {
@@ -222,6 +242,13 @@ auto Screen::refresh() -> void {
   auto width  = _canvasWidth;
   auto height = _canvasHeight;
   auto input  = _inputB.data();
+  
+  if (!_usesSoftwareRendering) {
+    platform->video(shared(), input + viewX + viewY * width, width * sizeof(u32), viewWidth, viewHeight);
+    memory::fill<u32>(_inputB.data(), width * height, _fillColor);
+    return;
+  }
+  
   auto output = _output.data();
 
   for(u32 y : range(height)) {

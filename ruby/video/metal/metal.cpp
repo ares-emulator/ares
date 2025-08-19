@@ -115,7 +115,7 @@ struct VideoMetal : VideoDriver, Metal {
     return true;
   }
   
-  auto refreshRateHint(double refreshRate) -> void override {
+  auto refreshRateHint(ares::Node::Video::Screen node, double refreshRate) -> void override {
     if (refreshRate == _refreshRateHint) return;
     _refreshRateHint = refreshRate;
     updatePresentInterval();

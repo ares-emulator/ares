@@ -71,6 +71,7 @@ private:
   auto refreshPalette() -> void;
 
 protected:
+  bool _usesSoftwareRendering = true; //todo: add setting for this
   u32  _canvasWidth = 0;
   u32  _canvasHeight = 0;
   u32  _width = 0;
