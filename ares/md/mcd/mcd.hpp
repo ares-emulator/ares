@@ -437,8 +437,8 @@ struct MCD : M68000, Thread {
       s32 currentVideoFrameIndex;
       n1 currentVideoFrameLeadIn;
       n1 currentVideoFrameLeadOut;
-      n1 currentVideoFrameFieldSelectionEnabled;
-      n1 currentVideoFrameFieldSelectionEvenField;
+      n1 currentVideoFrameFieldSelectionEnabled[2];
+      n1 currentVideoFrameFieldSelectionEvenField[2];
       n1 currentVideoFrameOnEvenField;
       qon_desc videoFileHeader;
       qoi2_desc videoFrameHeader;

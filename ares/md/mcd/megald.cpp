@@ -2454,19 +2454,28 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   }
 
   // We only update the displayed video frame if the image hold bit isn't set. If it is, abort any further processing.
+  // Hardware tests have shown this really does retain the last image in the buffer. Changes to field selection, or
+  // starting playback at a new location, do not cause any change in the displayed image.
   //##TODO## Determine how this interacts with picture stop codes once we go to implement them
   if (inputRegs[0x0C].bit(5)) {
     return;
   }
 
   // Determine whether the digital memory buffer is active, and if so, which field to latch in the buffer.
+  int buildIndex = video.drawIndex ^ 0x01;
   auto analogMixingMode = inputRegs[0x01].bit(7, 6);
-  video.currentVideoFrameFieldSelectionEnabled = (analogMixingMode >= 2) && (inputRegs[0x0C].bit(1) || inputRegs[0x0C].bit(3));
-  video.currentVideoFrameFieldSelectionEvenField = (video.currentVideoFrameFieldSelectionEnabled ? inputRegs[0x0C].bit(0) : false);
+  bool newFieldSelectionEnabledState = (analogMixingMode >= 2) && (inputRegs[0x0C].bit(1) || inputRegs[0x0C].bit(3));
+  bool newFieldSelectionEvenField = (newFieldSelectionEnabledState ? inputRegs[0x0C].bit(0) : false);
+  bool fieldSelectionChanged = false;
+  if ((newFieldSelectionEnabledState != video.currentVideoFrameFieldSelectionEnabled[buildIndex]) || (newFieldSelectionEvenField != video.currentVideoFrameFieldSelectionEvenField[buildIndex])) {
+    fieldSelectionChanged = true;
+    video.currentVideoFrameFieldSelectionEnabled[buildIndex] = newFieldSelectionEnabledState;
+    video.currentVideoFrameFieldSelectionEvenField[buildIndex] = newFieldSelectionEvenField;
+  }
 
   // At the end of all the above state updates, if we're still showing the same frame (but not necessarily the same
   // field), abort any further processing, since the correct full frame is already latched.
-  if (newFrameIsSameAsLastFrame) {
+  if (!fieldSelectionChanged && newFrameIsSameAsLastFrame) {
     return;
   }
 
@@ -2486,7 +2495,7 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   //mode. Additionally, operationErrorFlag3 at output reg 0x09 bit 0 gets set to true when this is hit. This is
   //basically what happens when stop points get hit, except that operationErrorFlag2 is set to false, not true.
   //When we implement picture stop codes, we need to compare behaviour with stop points more closely.
- }
+}
 
 auto MCD::LD::loadCurrentVideoFrameIntoBuffer(bool blankFrame) -> void {
   // Locate the new video frame in the source file
@@ -2587,6 +2596,8 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
       // will size itself once, then we're just changing the valid element count to indicate whether it contains a frame
       // or not, and zeroing out the buffer.
       video.videoFrameBuffers[video.drawIndex].clear();
+      video.currentVideoFrameFieldSelectionEnabled[video.drawIndex] = video.currentVideoFrameFieldSelectionEnabled[buildIndex];
+      video.currentVideoFrameFieldSelectionEvenField[video.drawIndex] = video.currentVideoFrameFieldSelectionEvenField[buildIndex];
       video.drawIndex = buildIndex;
 
       // Reset the odd/even field selection to the odd field when advancing to a new frame
@@ -2617,7 +2628,7 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   // Choose which field of the input video to use. We toggle between even and odd fields on successive frames
   // by default for interlace mode. If the register block has manual field selection enabled however, we use
   // the target field indicated by the registers.
-  bool useEvenField = video.currentVideoFrameFieldSelectionEnabled ? (bool)video.currentVideoFrameFieldSelectionEvenField : (bool)video.currentVideoFrameOnEvenField;
+  bool useEvenField = video.currentVideoFrameFieldSelectionEnabled[video.drawIndex] ? (bool)video.currentVideoFrameFieldSelectionEvenField[video.drawIndex] : (bool)video.currentVideoFrameOnEvenField;
 
   // These offset adjustments are based on visual comparisons on a physical player. The positioning was
   // adjustable via calibration, so there's no one fixed, correct positioning settings. These ones get correct
