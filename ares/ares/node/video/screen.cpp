@@ -350,7 +350,7 @@ auto Screen::refresh() -> void {
 }
 
 auto Screen::lookupPalette(u32 index) -> u32 {
-  return (_palette ? _palette[index] : 0);
+  return _palette[index];
 }
 
 auto Screen::overrideLineDraw(u32 y, const u32* source) -> void {
