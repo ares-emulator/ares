@@ -1393,12 +1393,6 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
     if (newPlaybackMode >= 0x04) {
       operationErrorFlag1 = true;
     } else {
-      // Any valid writes to this register which actually change the data reset the stop point hit state. Writes with
-      // an invalid playback mode are ignored. Ghost Rush relies on this.
-      if (previousData != data) {
-        reachedStopPoint = false;
-      }
-
       // Latch the new playback mode settings
       auto newPlaybackSpeed = data.bit(0, 2);
       auto newPlaybackDirection = data.bit(3);
@@ -1418,6 +1412,24 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
       currentPlaybackMode = newPlaybackMode;
       currentPlaybackSpeed = newPlaybackSpeed;
       currentPlaybackDirection = newPlaybackDirection;
+
+      // Any valid writes to this register which actually change the data reset the stop point hit state, and start
+      // playback resuming if we're in the right player state. Writes with an invalid playback mode are ignored.
+      if (previousData != data) {
+        // Clear the stop point if we've genuinely changed the playback mode. Ghost Rush relies on this.
+        reachedStopPoint = false;
+
+        // Wake the player up from being stopped at a stop point when a valid change occurs to the playback mode.
+        // Back to the Edo relies on this when getting an answer wrong. Note that this does not resume playback
+        // however if the player is genuinely in a paused state.
+        if (currentDriveState == 0x05) {
+          if (currentPauseState) {
+            mcd.cdd.pause();
+          } else {
+            mcd.cdd.play();
+          }
+        }
+      }
     }
     break;
   }
@@ -2455,7 +2467,19 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
 
   // We only update the displayed video frame if the image hold bit isn't set. If it is, abort any further processing.
   // Hardware tests have shown this really does retain the last image in the buffer. Changes to field selection, or
-  // starting playback at a new location, do not cause any change in the displayed image.
+  // starting playback at a new location, do not cause any change in the displayed image. Also note some important
+  // interaction with the player paused state, as from setting bit 4 of input reg 0x02. Putting the player into a
+  // pause state blanks the display, which is handled dynamically in the line output function, however, interestingly
+  // setting the image hold bit as well while in a paused state causes the previous frame in the buffer to be shown,
+  // even if the pause bit is set. This is because testing has shown that setting the pause mode flag turns off the
+  // digital memory buffer (light goes off on the front of the unit, even when input reg 0x0C bit 1 is set), while
+  // turning on the image hold bit re-enables the buffer, and the image appears again. Setting input reg 0x0C bit 4
+  // doesn't have this effect, and the digital memory light stays off with the blank image. Only setting the hold
+  // bit (input reg 0x0C bit 5) has the effect of overriding blanking caused by the player pause state. We can seek
+  // while the player is paused and image hold is on, and the latched frame will not update. If we flick image hold
+  // off and on again after a seek however, the frame at the new location will be latched, and the updated frame will
+  // be shown when we turn the image hold bit back on again. This shows that we do need to latch new frames when the
+  // player is paused, even if the output is normally blanked in pause mode.
   //##TODO## Determine how this interacts with picture stop codes once we go to implement them
   if (inputRegs[0x0C].bit(5)) {
     return;
@@ -2673,9 +2697,11 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
   size_t targetLinePos = targetScanLine * video.FrameBufferWidth;
 
   // Retrieve the line of analog video data we're processing here. If there's no frame data present, or the video
-  // stream is currently disabled, we force the input analog data to black and proceed with mixing.
+  // stream is currently disabled, we force the input analog data to black and proceed with mixing. Note that this
+  // includes when the player is paused, as this disables digital memory and blanks the display, unless the image
+  // hold bit is set, in which case, digital memory comes back on and the previously captured frame appears again.
   const unsigned char* analogVideoFrameData = nullptr;
-  if (inputRegs[0x0C].bit(2) || video.videoFrameBuffers[video.drawIndex].empty()) {
+  if (inputRegs[0x0C].bit(2) || (currentPauseState && !inputRegs[0x0C].bit(5)) || video.videoFrameBuffers[video.drawIndex].empty()) {
     video.dummyBlankLineBuffer.resize(pixelsInSourceLine * channelCount, 0);
     analogVideoFrameData = video.dummyBlankLineBuffer.data();
     sourceLinePos = 0;
