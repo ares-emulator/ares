@@ -65,6 +65,7 @@ auto Screen::pixels(bool frame) -> array_span<u32> {
 auto Screen::resetPalette() -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _palette.reset();
+  refreshPalette();
 }
 
 auto Screen::resetSprites() -> void {
@@ -121,18 +122,21 @@ auto Screen::setSaturation(f64 saturation) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _saturation = saturation;
   _palette.reset();
+  refreshPalette();
 }
 
 auto Screen::setGamma(f64 gamma) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _gamma = gamma;
   _palette.reset();
+  refreshPalette();
 }
 
 auto Screen::setLuminance(f64 luminance) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _luminance = luminance;
   _palette.reset();
+  refreshPalette();
 }
 
 auto Screen::setFillColor(u32 fillColor) -> void {
@@ -191,6 +195,7 @@ auto Screen::colors(u32 colors, function<n64 (n32)> color) -> void {
   _colors = colors;
   _color = color;
   _palette.reset();
+  refreshPalette();
 }
 
 auto Screen::frame() -> void {
