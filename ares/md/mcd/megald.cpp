@@ -2578,16 +2578,44 @@ auto MCD::LD::power(bool reset) -> void {
   video.videoFrameBuffers[1].clear();
 }
 
-auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
-  // adjust for top border
-  size_t vdpImageSourceLine = y;
-  if(Region::NTSC()) vdpImageSourceLine += 11;
-  //if(Region::PAL() ) y += 38 - 8 * latch.overscan;
-  //y = y % visibleHeight();
+auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
+
+  // Convert the VDP vcounter to a linear scanline index. We only have to worry about NTSC V28 mode, as that's all the
+  // LaserActive supported. If someone wanted to make a hypothetical PAL version of the system, they'd have to mess with
+  // all the numbers in this function to handle alignment and composition with PAL line counts and border sizes. We
+  // start line 0 here from the beginning of the bottom blanking region, which aligns with our raw frame data.
+  u32 targetScanLine = 0;
+  targetScanLine = (vcounter >= 0x1E5 ? (vcounter - 0x1E5) + 3 : (vcounter >= 0x0E8 ? vcounter - 0x0E8 : vcounter + (0x200 - 0x1E5) + 3));
+
+  // Calculate offsets/margins for VDP video stream
+  size_t vdpActiveRegionLeftOffset = 0;
+  size_t vdpActiveRegionTopOffset = 0;
+  if (!vdp.screen->overscan()) {
+    // Omit 19 lines of leading video unless overscan is active. You may expect it would be 30 as follows:
+    // -Bottom blanking:   3
+    // -Vertical sync:     3
+    // -Top blanking:      13
+    // -Top border:        11
+    // However "VDP::frame()" currently expects the border to be drawn, and offsets the viewport by 11 pixels
+    // vertically. We therefore remove the 11-pixel top border, giving us 19 lines.
+    vdpActiveRegionTopOffset = (3 + 3  + 13 + 11) - 11;
+    // Omit the 13 pixel VDP left border. This is 13 pixels in all modes, but we need to account for H32/H40 mode
+    // affecting the pixel "width" here.
+    vdpActiveRegionLeftOffset = (vdp.h32() ? (13 * 5) : (13 * 4));
+  } else {
+    vdpActiveRegionLeftOffset = 0;
+    vdpActiveRegionTopOffset = 0;
+  }
+  // VDP horizontal lines are currently "trimmed" by the VDP core, and don't contain the full 1710 dots we'd expect if
+  // we were generating pixels at an effective MCLK/2 rate (5 pixels in H32, 4 pixels in H40), instead there are 1495
+  // dots, leaving 215 dots unrepresented, and the lines are fairly arbitrarily centered. We account for the offset here
+  // in the input data from the VDP, and we also have to apply it on the way out again so that the modified lines match
+  // alignment with unmodified lines.
+  size_t vdpBorderLeftOffset = (vdp.h32() ? (8 * 5) : (17 * 4));
 
   // If we're at the start of a new frame, handle swapping the video buffers and even/odd field selection for interlace
   // mode.
-  if (y == 0) {
+  if (targetScanLine == 0) {
     int buildIndex = video.drawIndex ^ 0x01;
     if (!video.videoFrameBuffers[buildIndex].empty()) {
       // Note that we're relying on the characteristic here of std::vector (guaranteed in the standard) that clear()
@@ -2608,12 +2636,9 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
     }
   }
 
-  // We're outside the video buffer vertically, so abort any further processing.
-  //##FIX## Well since we're encoding all 525 lines of video, technically this shouldn't happen, but I believe it does
-  //right now, probably because of the "source line" adjustment above. Perhaps we should wrap around the video here?
-  //all this only matters if Ares has an option to show the full frame with the borders though, which I don't believe
-  //it currently does.
-  if (y >= video.FrameBufferHeight) {
+  // Don't process the top vsync+vblank+border region unless overscan is active. We could, but it would be wasted
+  // effort, since that part of the buffer won't be drawn.
+  if (!vdp.screen->overscan() && (targetScanLine < vdpActiveRegionTopOffset)) {
     return;
   }
 
@@ -2622,6 +2647,7 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   // the VDP graphics fader and other mixing features have no effect.
   auto analogMixingMode = inputRegs[0x01].bit(7, 6);
   if (analogMixingMode == 0) {
+    vdp.screen->clearOverrideLineDraw(targetScanLine - (!vdp.screen->overscan() ? vdpActiveRegionTopOffset : 0));
     return;
   }
 
@@ -2630,19 +2656,21 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
   // the target field indicated by the registers.
   bool useEvenField = video.currentVideoFrameFieldSelectionEnabled[video.drawIndex] ? (bool)video.currentVideoFrameFieldSelectionEvenField[video.drawIndex] : (bool)video.currentVideoFrameOnEvenField;
 
-  // These offset adjustments are based on visual comparisons on a physical player. The positioning was
-  // adjustable via calibration, so there's no one fixed, correct positioning settings. These ones get correct
-  // alignment for Space Berserker with the video in the HUD frames though, based on comparisons with a real
-  // player. Further testing on the Myst protos, which have precise overlay requirements with individual frames,
-  // also seem to confirm the alignment.
-  const size_t VideoFrameLeftBorderWidth = 175;
-  const size_t VideoFrameRightBorderWidth = 57;
-  const size_t VideoFrameTopBorderHeight = 25 + 5; // Compensate for vertical positioning
+  // These offset adjustments are based on visual comparisons on a physical player. The positioning was adjustable via
+  // calibration, so there's no one fixed, correct positioning settings. These ones get correct alignment for the H32
+  // in-game screens from Space Berserker, using the alignment of video in the HUD frames as a reference, based on
+  // comparisons with a real player. Further testing Pyramid Patrol, which uses H40, was used to confirm alignment.
+  // Testing was also done on the Myst protos, which have precise overlay requirements with individual frames, and also
+  // seem to confirm the alignment. Note however that the video on both Myst protos is shifted and out of alignment, in
+  // different ways, but we confirmed though hardware tests that they are "off" by the correct amount with this\
+  // alignment as they are on the real hardware.
+  const int VideoFrameLeftBorderWidth = 118;
+  const int VideoFrameRightBorderWidth = 0;
   size_t channelCount = 3;
-  size_t targetLineInSourceImage = (y + VideoFrameTopBorderHeight + (useEvenField ? (video.videoFrameHeader.height / 2) : 0));
+  size_t targetLineInSourceImage = (targetScanLine + (useEvenField ? (video.videoFrameHeader.height / 2) : 0));
   size_t sourceLinePos = ((targetLineInSourceImage * video.videoFrameHeader.width) + VideoFrameLeftBorderWidth) * channelCount;
   size_t pixelsInSourceLine = video.videoFrameHeader.width - (VideoFrameLeftBorderWidth + VideoFrameRightBorderWidth);
-  size_t targetLinePos = vdpImageSourceLine * video.FrameBufferWidth;
+  size_t targetLinePos = targetScanLine * video.FrameBufferWidth;
 
   // Retrieve the line of analog video data we're processing here. If there's no frame data present, or the video
   // stream is currently disabled, we force the input analog data to black and proceed with mixing.
@@ -2708,7 +2736,12 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
     auto ldb = convertedSamples[2];
 
     // Retrieve the output VDP color for this pixel location
-    auto mdColorPacked = vdp.screen->lookupPalette(pixels[i]);
+    //##FIX## Technically, vblank regions here should be forced to black-ish, non-backdrop pixels if the VDP output is
+    //the primary sync source. On the real system, we see them as very dark grey bars when looking at them on a PVM with
+    //H/V delay active, and they mask out the analog video VBI data lines. It's nice seeing the VBI lines when overscan
+    //is turned on though, and we'd have to do more work to confirm the exact lines that get masked, and an appropriate
+    //color to use, so for now we pass them through as black background pixels and let the analog video show through.
+    auto mdColorPacked = ((vdpPixelBuffer != nullptr) && (i >= vdpBorderLeftOffset) ? vdp.screen->lookupPalette(vdpPixelBuffer[i - vdpBorderLeftOffset]) : (u32)0);
     auto mdr = (mdColorPacked >> 16) & 0xFF;
     auto mdg = (mdColorPacked >> 8) & 0xFF;
     auto mdb = mdColorPacked & 0xFF;
@@ -2726,7 +2759,7 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
     uint32_t combinedNormalizedR;
     uint32_t combinedNormalizedG;
     uint32_t combinedNormalizedB;
-    bool backdrop = pixels[i] >> 11;
+    bool backdrop = ((vdpPixelBuffer != nullptr) && (i >= vdpBorderLeftOffset) ? (vdpPixelBuffer[i - vdpBorderLeftOffset] >> 11) != 0 : true);
     if (backdrop) {
       combinedNormalizedR = mul1616FixedPoint(ldNormalizedR, ldGraphicsFader);
       combinedNormalizedG = mul1616FixedPoint(ldNormalizedG, ldGraphicsFader);
@@ -2750,10 +2783,19 @@ auto MCD::LD::scanline(u32 pixels[1280], u32 y) -> void {
     u32 gf = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedG);
     u32 bf = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedB);
     u32 af = 0xFF;
-    static size_t pixelOffset = 65;
-    video.outputFramebuffer[targetLinePos + (i + pixelOffset)] = ((u32)af << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;
+    video.outputFramebuffer[targetLinePos + i] = ((u32)af << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;
   }
 
   // Override the line draw for this line of video with our composited line buffer
-  vdp.screen->overrideLineNextDraw(vdpImageSourceLine, &video.outputFramebuffer[targetLinePos]);
+  if (vdp.screen->overscan()) {
+    // Draw the whole line
+    vdp.screen->overrideLineDraw(targetScanLine, &video.outputFramebuffer[targetLinePos]);
+  } else {
+    // Draw the display region of the line only, with line 0 starting from the first active line. Note that the current
+    // VDP core draws its own framebuffer with extra left and right padding under H40 mode. See VDP::frame() and
+    // VDP::pixels(). We compensate for that here with "pixelOffsetInOutputLine", which will cancel out the border
+    // offset for H32 mode, and leave the correct 13 pixel offset we need for H40 mode.
+    size_t pixelOffsetInOutputLine = 13 * 5;
+    vdp.screen->overrideLineDraw(targetScanLine - vdpActiveRegionTopOffset, &video.outputFramebuffer[targetLinePos] + vdpBorderLeftOffset + vdpActiveRegionLeftOffset - pixelOffsetInOutputLine);
+  }
 }

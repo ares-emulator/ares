@@ -403,7 +403,7 @@ struct MCD : M68000, Thread {
     auto updateCurrentVideoFrameNumber(s32 lba) -> void;
     auto loadCurrentVideoFrameIntoBuffer(bool blankFrame) -> void;
     auto power(bool reset) -> void;
-    auto scanline(u32 pixels[1280], u32 y) -> void;
+    auto scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -446,8 +446,8 @@ struct MCD : M68000, Thread {
       std::vector<unsigned char> videoFrameBuffers[2];
       std::vector<unsigned char> dummyBlankLineBuffer;
 
-      static const size_t FrameBufferWidth = 1280;
-      static const size_t FrameBufferHeight = 480;
+      static const size_t FrameBufferWidth = 1495;
+      static const size_t FrameBufferHeight = 525;
       std::vector<u32> outputFramebuffer;
     } video;
     vector<u8> analogAudioDataBuffer;

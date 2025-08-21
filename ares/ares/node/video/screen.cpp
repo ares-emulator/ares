@@ -7,6 +7,8 @@ Screen::Screen(string name, u32 width, u32 height) : Video(name) {
     _inputB = new u32[width * height]();
     _output = new u32[width * height]();
     _rotate = new u32[width * height]();
+    _lineOverrideActive.resize(width * height, false);
+    _lineOverride.resize(width * height, nullptr);
 
     if constexpr(ares::Video::Threaded) {
       _thread = nall::thread::create({&Screen::main, this});
@@ -50,8 +52,8 @@ auto Screen::power() -> void {
   memory::fill<u32>(_inputB.data(), _canvasWidth * _canvasHeight, _fillColor);
   memory::fill<u32>(_output.data(), _canvasWidth * _canvasHeight, _fillColor);
   memory::fill<u32>(_rotate.data(), _canvasWidth * _canvasHeight, _fillColor);
-  _lineOverrideActive.resize(_canvasWidth * _canvasHeight, false);
-  _lineOverride.resize(_canvasWidth * _canvasHeight, nullptr);
+  memory::fill<n1>(_lineOverrideActive.data(), _canvasWidth * _canvasHeight, false);
+  memory::fill<const u32*>(_lineOverride.data(), _canvasWidth * _canvasHeight, nullptr);
 }
 
 auto Screen::pixels(bool frame) -> array_span<u32> {
@@ -234,7 +236,6 @@ auto Screen::refresh() -> void {
         auto color = *source++;
         *target++ = color;
       }
-      _lineOverrideActive[y] = false;
     } else if(_interlace) {
       if((_interlaceField & 1) == (y & 1)) {
         for(u32 x : range(width)) {
@@ -344,12 +345,17 @@ auto Screen::refresh() -> void {
 }
 
 auto Screen::lookupPalette(u32 index) -> u32 {
-  return _palette[index];
+  return (_palette ? _palette[index] : 0);
 }
 
-auto Screen::overrideLineNextDraw(u32 y, const u32* source) -> void {
-  _lineOverrideActive[y] = true;
+auto Screen::overrideLineDraw(u32 y, const u32* source) -> void {
   _lineOverride[y] = source;
+  _lineOverrideActive[y] = true;
+}
+
+auto Screen::clearOverrideLineDraw(u32 y) -> void {
+  _lineOverrideActive[y] = false;
+  _lineOverride[y] = nullptr;
 }
 
 auto Screen::refreshPalette() -> void {
