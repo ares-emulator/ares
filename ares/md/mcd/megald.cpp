@@ -2822,6 +2822,9 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
     // VDP::pixels(). We compensate for that here with "pixelOffsetInOutputLine", which will cancel out the border
     // offset for H32 mode, and leave the correct 13 pixel offset we need for H40 mode.
     size_t pixelOffsetInOutputLine = 13 * 5;
+    //##FIX## We apply a fudge factor here. There's apparently some of the math wrong, and this offset is needed to fix
+    //things under H40 mode without overscan visible.
+    pixelOffsetInOutputLine += (vdp.h32() ? 0 : 15);
     vdp.screen->overrideLineDraw(targetScanLine - vdpActiveRegionTopOffset, &video.outputFramebuffer[targetLinePos] + vdpBorderLeftOffset + vdpActiveRegionLeftOffset - pixelOffsetInOutputLine);
   }
 }
