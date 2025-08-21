@@ -62,7 +62,8 @@ struct Screen : Video {
   auto frame() -> void;
   auto refresh() -> void;
   auto lookupPalette(u32 index) -> u32;
-  auto overrideLineNextDraw(u32 y, const u32* source) -> void;
+  auto overrideLineDraw(u32 y, const u32* source) -> void;
+  auto clearOverrideLineDraw(u32 y) -> void;
 
   auto serialize(string& output, string depth) -> void override;
   auto unserialize(Markup::Node node) -> void override;
