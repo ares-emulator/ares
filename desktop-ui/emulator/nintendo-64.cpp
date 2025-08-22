@@ -308,10 +308,9 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
     pakGroup.append(tpak);
 
     // set currently enabled pak
-    // Note: based on initialization routine in desktop-ui/emulator/nintendo-64.cpp & nintedo-64dd.cpp
-    if(emulator->game->pak->attribute("tpak").boolean() && portNum == "1") tpak.setChecked();
-    else if(emulator->game->pak->attribute("cpak").boolean() && portNum == "1") cpak.setChecked();
-    else if(emulator->game->pak->attribute("rpak").boolean()) rpak.setChecked();
+    if(emulator->game->pak->attribute({"port", portNum, "/tpak"}).boolean()) tpak.setChecked();
+    else if(emulator->game->pak->attribute({"port", portNum, "/cpak"}).boolean()) cpak.setChecked();
+    else if(emulator->game->pak->attribute({"port", portNum, "/rpak"}).boolean()) rpak.setChecked();
     else nothing.setChecked();
   }
 }
