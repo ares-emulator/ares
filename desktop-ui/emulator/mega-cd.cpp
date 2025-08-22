@@ -121,6 +121,7 @@ auto MegaCD::load(Menu menu) -> void {
   MenuItem changeDisc{&menu};
   changeDisc.setIcon(Icon::Device::Optical);
   changeDisc.setText("Change Disc").onActivate([&] {
+    Program::Guard guard;
     save();
     auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
     tray->disconnect();
@@ -131,6 +132,7 @@ auto MegaCD::load(Menu menu) -> void {
 
     //give the emulator core a few seconds to notice an empty drive state before reconnecting
     discTrayTimer->onActivate([&] {
+      Program::Guard guard;
       discTrayTimer->setEnabled(false);
       auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
       tray->allocate();
