@@ -2,6 +2,7 @@ struct Gamepad : Controller {
   Node::Port port;
   Node::Peripheral slot;
   VFS::Pak pak;
+  bool pakChanged = false;  //flag to track when pak is swapped
   u8 bank;
   Memory::Writable ram;  //Toshiba TC55257DFL-85V
   Node::Input::Rumble motor;
@@ -49,4 +50,18 @@ struct Gamepad : Controller {
     n2 resetState;
     n2 addressBank;
   } transferPak;
+
+  struct BioSensor {
+    auto load() -> void;
+    auto unload() -> void;
+    auto update() -> void;
+    auto read(u16 address) -> u8;
+    auto write(u16 address, u8 data) -> void;
+    auto setBeatsPerMinute(u8 bpm) -> void;
+
+    bool isPulsing;
+    u8 beatsPerMinute;
+    u64 lastPulseTime;
+    Node::Setting::Integer bpmSetting;
+  } bioSensor;
 };
