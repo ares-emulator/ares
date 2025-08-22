@@ -213,106 +213,103 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
   const string portNum = port->name()[port->name().length() - 1];
 
   // remove this check to enable pak menu option for all 4 controllers
-  if(portNum == "1") {
+  if(portMenu.actionCount() > 0) portMenu.append(MenuSeparator());
+  Menu pakMenu{&portMenu};
+  pakMenu.setText("Pak");
+  Group pakGroup;
+  MenuRadioItem nothing{&pakMenu};;
+  nothing.setText("Nothing");
+  nothing.setAttribute<ares::Node::Port>("port", port);
+  nothing.onActivate([=] {
+    auto port = nothing.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      port->disconnect();
+      auto peripheral = port->allocate("Gamepad");
+      port->connect();
+    }
+  });
+  pakGroup.append(nothing);
 
-    if(portMenu.actionCount() > 0) portMenu.append(MenuSeparator());
-    Menu pakMenu{&portMenu};
-    pakMenu.setText("Pak");
-    Group pakGroup;
-    MenuRadioItem nothing{&pakMenu};;
-    nothing.setText("Nothing");
-    nothing.setAttribute<ares::Node::Port>("port", port);
-    nothing.onActivate([=] {
-      auto port = nothing.attribute<ares::Node::Port>("port");
-      const string portName = port->name();
-      if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
-        port->disconnect();
-        auto peripheral = port->allocate("Gamepad");
+  MenuRadioItem cpak{&pakMenu};
+  cpak.setAttribute<ares::Node::Port>("port", port);
+  cpak.setText("Controller Pak");
+  cpak.onActivate([=] {
+    auto port = cpak.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      port->disconnect();
+      auto peripheral = port->allocate("Gamepad");
+      port->connect();
+      if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+        emulator->gamepad = mia::Pak::create("Nintendo 64");
+        emulator->gamepad->pak->append("save.pak", 32_KiB);
+        string pakExt = ".pak";
+        if(portNum != "1") { pakExt = string(".", portNum, ".pak");}
+        emulator->gamepad->load("save.pak", pakExt, emulator->game->location);
+        port->allocate("Controller Pak");
         port->connect();
       }
-    });
-    pakGroup.append(nothing);
+    }
+  });
+  pakGroup.append(cpak);
 
-    MenuRadioItem cpak{&pakMenu};
-    cpak.setAttribute<ares::Node::Port>("port", port);
-    cpak.setText("Controller Pak");
-    cpak.onActivate([=] {
-      auto port = cpak.attribute<ares::Node::Port>("port");
-      const string portName = port->name();
-      if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
-        port->disconnect();
-        auto peripheral = port->allocate("Gamepad");
+  MenuRadioItem rpak{&pakMenu};
+  rpak.setAttribute<ares::Node::Port>("port", port);
+  rpak.setText("Rumble Pak");
+  rpak.onActivate([=] {
+    auto port = rpak.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      port->disconnect();
+      auto peripheral = port->allocate("Gamepad");
+      port->connect();
+      if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+        port->allocate("Rumble Pak");
         port->connect();
-        if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-          emulator->gamepad = mia::Pak::create("Nintendo 64");
-          emulator->gamepad->pak->append("save.pak", 32_KiB);
-          string pakExt = ".pak";
-          if(portNum != "1") { pakExt = string(".", portNum, ".pak");}
-          emulator->gamepad->load("save.pak", pakExt, emulator->game->location);
-          port->allocate("Controller Pak");
-          port->connect();
-        }
       }
-    });
-    pakGroup.append(cpak);
+    }
+  });
+  pakGroup.append(rpak);
 
-    MenuRadioItem rpak{&pakMenu};
-    rpak.setAttribute<ares::Node::Port>("port", port);
-    rpak.setText("Rumble Pak");
-    rpak.onActivate([=] {
-      auto port = rpak.attribute<ares::Node::Port>("port");
-      const string portName = port->name();
-      if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
-        port->disconnect();
-        auto peripheral = port->allocate("Gamepad");
-        port->connect();
-        if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-          port->allocate("Rumble Pak");
-          port->connect();
-        }
-      }
-    });
-    pakGroup.append(rpak);
-
-    MenuRadioItem tpak{&pakMenu};
-    tpak.setAttribute<ares::Node::Port>("port", port);
-    tpak.setText("Transfer Pak");
-    tpak.onActivate([=] {
-      auto port = tpak.attribute<ares::Node::Port>("port");
-      const string portName = port->name();
-      if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
-        port->disconnect();
-        auto peripheral = port->allocate("Gamepad");
-        port->connect();
-        if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+  MenuRadioItem tpak{&pakMenu};
+  tpak.setAttribute<ares::Node::Port>("port", port);
+  tpak.setText("Transfer Pak");
+  tpak.onActivate([=] {
+    auto port = tpak.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      port->disconnect();
+      auto peripheral = port->allocate("Gamepad");
+      port->connect();
+      if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
 #if defined(CORE_GB)
-          emulator->gb.reset();
-          auto transferPak = port->allocate("Transfer Pak");
-          port->connect();
+        emulator->gb.reset();
+        auto transferPak = port->allocate("Transfer Pak");
+        port->connect();
 
-          if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
-            emulator->gb = mia::Medium::create("Game Boy Color");
-            string tmpPath;
-            if(emulator->gb->load(emulator->load(emulator->gb, tmpPath)) == successful) {
-              slot->allocate();
-              slot->connect();
-            } else {
-              port->disconnect();
-              emulator->gb.reset();
-            }
+        if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
+          emulator->gb = mia::Medium::create("Game Boy Color");
+          string tmpPath;
+          if(emulator->gb->load(emulator->load(emulator->gb, tmpPath)) == successful) {
+            slot->allocate();
+            slot->connect();
+          } else {
+            port->disconnect();
+            emulator->gb.reset();
           }
-#endif
         }
+#endif
       }
-    });
-    pakGroup.append(tpak);
+    }
+  });
+  pakGroup.append(tpak);
 
-    // set currently enabled pak
-    if(emulator->game->pak->attribute({"port", portNum, "/tpak"}).boolean()) tpak.setChecked();
-    else if(emulator->game->pak->attribute({"port", portNum, "/cpak"}).boolean()) cpak.setChecked();
-    else if(emulator->game->pak->attribute({"port", portNum, "/rpak"}).boolean()) rpak.setChecked();
-    else nothing.setChecked();
-  }
+  // set currently enabled pak
+  if(emulator->game->pak->attribute({"port", portNum, "/tpak"}).boolean()) tpak.setChecked();
+  else if(emulator->game->pak->attribute({"port", portNum, "/cpak"}).boolean()) cpak.setChecked();
+  else if(emulator->game->pak->attribute({"port", portNum, "/rpak"}).boolean()) rpak.setChecked();
+  else nothing.setChecked();
 }
 
 auto Nintendo64::unload() -> void {
