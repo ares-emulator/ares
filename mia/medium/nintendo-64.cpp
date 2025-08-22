@@ -747,7 +747,9 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   bool cpaks[4] = {false, false, false, false};
   bool rpaks[4] = {false, false, false, false};
   bool tpaks[4] = {false, false, false, false};
-  if(cpak && rpak) {
+  if (tpak) {
+    tpaks[0] = true; //default controller with Transfer Pak
+  } else if(cpak && rpak) {
     cpaks[0] = true; //default controller with Rumble Pak
     rpaks[1] = true;
   } else if(cpak) {
