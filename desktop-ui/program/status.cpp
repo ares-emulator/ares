@@ -17,7 +17,7 @@ auto Program::updateMessage() -> void {
     presentation.statusLeft.setText();
   }
 
-  if(vblanksPerSecond > 0) {
+  if(vblanksPerSecond > 0 && !paused) {
     presentation.statusRight.setText({ vblanksPerSecond.load(), " VPS" });
   }
 
