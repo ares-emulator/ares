@@ -24,16 +24,17 @@ auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
 
   screen = node->append<Node::Video::Screen>("Screen", 1365, 263);
-  screen->colors(1 << 10, {&VDP::color, this});
-  screen->setSize(1128, 263);
-  screen->setScale(0.25, 1.0);
-  screen->setAspect(8.0, 7.0);
-  screen->refreshRateHint(60); // TODO: More accurate refresh rate hint
 
   colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
+
+  screen->colors(1 << 10, {&VDP::color, this});
+  screen->setSize(1128, 263);
+  screen->setScale(0.25, 1.0);
+  screen->setAspect(8.0, 7.0);
+  screen->refreshRateHint(60); // TODO: More accurate refresh rate hint
 
   vce.debugger.load(vce, parent);
   vdc0.debugger.load(vdc0, parent); if(Model::SuperGrafx())
