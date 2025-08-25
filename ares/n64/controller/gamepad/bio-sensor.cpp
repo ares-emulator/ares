@@ -1,24 +1,28 @@
 auto Gamepad::BioSensor::load() -> void {
-  isPulsing = false;
   beatsPerMinute = 60;  //default to 60 BPM
-  lastPulseTime = chrono::microsecond();
+  nextPulseTime = chrono::microsecond();
 }
 
 auto Gamepad::BioSensor::unload() -> void {
-  isPulsing = false;
+  //nothing to do
 }
 
 auto Gamepad::BioSensor::update() -> void {
   //Calculate pulse interval in microseconds
+  static constexpr u64 PULSE_DURATION = 200'000;
   u64 pulseInterval = 60'000'000 / beatsPerMinute;
   u64 currentTime = chrono::microsecond();
 
-  //Check if we need to start a new pulse
-  if(currentTime - lastPulseTime >= pulseInterval) {
-    isPulsing = true;
-    lastPulseTime = currentTime;
-  } else {
+  //Check if current pulse should end
+  if(isPulsing && (currentTime - pulseStartTime >= PULSE_DURATION)) {
     isPulsing = false;
+  }
+
+  //Check if it's time to start a new pulse
+  if(!isPulsing && currentTime >= nextPulseTime) {
+    isPulsing = true;
+    pulseStartTime = currentTime;
+    nextPulseTime = currentTime + pulseInterval;
   }
 }
 

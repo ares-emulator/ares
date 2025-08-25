@@ -61,7 +61,8 @@ struct Gamepad : Controller {
 
     bool isPulsing;
     u8 beatsPerMinute;
-    u64 lastPulseTime;
+    u64 nextPulseTime;
+    u64 pulseStartTime;
     Node::Setting::Integer bpmSetting;
   } bioSensor;
 };
