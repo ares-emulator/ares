@@ -1,4 +1,5 @@
 #include "transfer-pak.cpp"
+#include "bio-sensor.cpp"
 
 Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
@@ -10,7 +11,7 @@ Gamepad::Gamepad(Node::Port parent) {
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setConnect([&] { return connect(); });
   port->setDisconnect([&] { return disconnect(); });
-  port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak"});
+  port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak", "Bio Sensor"});
 
   bank = 0;
 
@@ -52,6 +53,7 @@ auto Gamepad::allocate(string name) -> Node::Peripheral {
   if(name == "Controller Pak") return slot = port->append<Node::Peripheral>("Controller Pak");
   if(name == "Rumble Pak"    ) return slot = port->append<Node::Peripheral>("Rumble Pak");
   if(name == "Transfer Pak"  ) return slot = port->append<Node::Peripheral>("Transfer Pak");
+  if(name == "Bio Sensor"    ) return slot = port->append<Node::Peripheral>("Bio Sensor");
   return {};
 }
 
@@ -117,10 +119,22 @@ auto Gamepad::connect() -> void {
   if(slot->name() == "Transfer Pak") {
     transferPak.load(slot);
   }
+  if(slot->name() == "Bio Sensor") {
+    bioSensor.load();
+    
+    // Bio Sensor BPM setting node
+    bioSensor.bpmSetting = slot->append<Node::Setting::Integer>("BPM", bioSensor.beatsPerMinute,
+      [&](s64 value) {
+        bioSensor.setBeatsPerMinute(value);
+      });
+    bioSensor.bpmSetting->setDynamic(true);
+    bioSensor.bpmSetting->setAllowedValues({30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180});
+  }
 }
 
 auto Gamepad::disconnect() -> void {
   if(!slot) return;
+  pakChanged = true;  //set flag when a pak is disconnected
   if(slot->name() == "Controller Pak") {
     save();
     ram.reset();
@@ -132,6 +146,13 @@ auto Gamepad::disconnect() -> void {
   }
   if(slot->name() == "Transfer Pak") {
     transferPak.unload();
+  }
+  if(slot->name() == "Bio Sensor") {
+    bioSensor.unload();
+    if(bioSensor.bpmSetting) {
+      slot->remove(bioSensor.bpmSetting);
+      bioSensor.bpmSetting.reset();
+    }
   }
   port->remove(slot);
   slot.reset();
@@ -151,10 +172,16 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   if(input[0] == 0x00 || input[0] == 0xff) {
     output[0] = 0x05;  //0x05 = gamepad; 0x02 = mouse
     output[1] = 0x00;
-    output[2] = 0x02;  //0x02 = nothing present in controller slot
-    if(ram || motor || (slot && slot->name() == "Transfer Pak")) {
-      output[2] = 0x01;  //0x01 = pak present
+    if(slot) {
+      if(pakChanged) {
+        output[2] = 0x03;  //0x03 = pak changed
+      } else {
+        output[2] = 0x01;  //0x01 = pak present
+      }
+    } else {
+      output[2] = 0x02;  //0x02 = pak absent
     }
+    pakChanged = false;  //reset flag after reporting pak status
     valid = 1;
   }
 
@@ -210,6 +237,17 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
       u16 address = (input[1] << 8 | input[2] << 0) & ~31;
       if(pif.addressCRC(address) == (n5)input[2]) {
         for(u32 index : range(recv - 1)) output[index] = transferPak.read(address++);
+        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
+        valid = 1;
+      }
+    }
+
+    //bio sensor
+    if(slot && slot->name() == "Bio Sensor") {
+      bioSensor.update();
+      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+      if(pif.addressCRC(address) == (n5)input[2]) {
+        for(u32 index : range(recv - 1)) output[index] = bioSensor.read(address++);
         output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
         valid = 1;
       }
@@ -281,6 +319,18 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
       if(pif.addressCRC(address) == (n5)input[2]) {
         for(u32 index : range(send - 3)) {
           transferPak.write(address++, input[3 + index]);
+        }
+        output[0] = pif.dataCRC({&input[3], send - 3u});
+        valid = 1;
+      }
+    }
+
+    //bio sensor
+    if(slot && slot->name() == "Bio Sensor") {
+      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+      if(pif.addressCRC(address) == (n5)input[2]) {
+        for(u32 index : range(send - 3)) {
+          bioSensor.write(address++, input[3 + index]);
         }
         output[0] = pif.dataCRC({&input[3], send - 3u});
         valid = 1;
