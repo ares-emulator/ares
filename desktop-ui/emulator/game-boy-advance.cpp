@@ -42,6 +42,7 @@ auto GameBoyAdvance::load(Menu menu) -> void {
       MenuRadioItem item{&orientationMenu};
       item.setText(orientation);
       item.onActivate([=] {
+        Program::Guard guard;
         if(auto orientations = root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
           orientations->setValue(orientation);
         }

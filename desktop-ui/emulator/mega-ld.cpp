@@ -106,6 +106,7 @@ auto MegaLD::load(Menu menu) -> void {
 }
 
 auto MegaLD::changeDiskState(const string state) -> void {
+  Program::Guard guard;
   discTrayTimer->setEnabled(false);
   save();
   auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
@@ -114,6 +115,7 @@ auto MegaLD::changeDiskState(const string state) -> void {
   if(state == "No Disc") return;
 
   discTrayTimer->onActivate([&, state] {
+    Program::Guard guard;
     discTrayTimer->setEnabled(false);
     auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
     tray->allocate(state);

@@ -62,6 +62,7 @@ auto GameBoy::load(Menu menu) -> void {
         MenuRadioItem item{&colorEmulationMenu};
         item.setText(setting);
         item.onActivate([=] {
+          Program::Guard guard;
           if(auto settings = root->find<ares::Node::Setting::String>("PPU/Screen/Color Emulation")) {
             settings->setValue(setting);
           }

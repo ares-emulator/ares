@@ -24,17 +24,18 @@ auto PPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PPU");
 
   screen = node->append<Node::Video::Screen>("Screen", 240, 160);
+
+  colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
+    screen->resetPalette();
+  });
+  colorEmulation->setDynamic(true);
+
   screen->colors(1 << 15, {&PPU::color, this});
   screen->setSize(240, 160);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
   screen->setViewport(0, 0, 240, 160);
   screen->refreshRateHint(system.frequency() / 4, 308, 228);
-
-  colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
-    screen->resetPalette();
-  });
-  colorEmulation->setDynamic(true);
 
   interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
     screen->setInterframeBlending(value);

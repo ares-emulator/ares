@@ -164,6 +164,7 @@ auto Nintendo64DD::load(Menu menu) -> void {
   MenuItem changeDisk{&menu};
   changeDisk.setIcon(Icon::Device::Optical);
   changeDisk.setText("Change Disk").onActivate([&] {
+    Program::Guard guard;
     save();
     auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
     drive->disconnect();
@@ -174,6 +175,7 @@ auto Nintendo64DD::load(Menu menu) -> void {
 
     //give the emulator core a few seconds to notice an empty drive state before reconnecting
     diskInsertTimer->onActivate([&] {
+      Program::Guard guard;
       diskInsertTimer->setEnabled(false);
       auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
       drive->allocate();

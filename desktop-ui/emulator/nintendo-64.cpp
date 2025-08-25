@@ -191,6 +191,7 @@ auto Nintendo64::load(Menu menu) -> void {
     MenuItem changeDisk{&menu};
     changeDisk.setIcon(Icon::Device::Optical);
     changeDisk.setText("Change Disk").onActivate([&] {
+      Program::Guard guard;
       save();
       auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
       drive->disconnect();
@@ -201,6 +202,7 @@ auto Nintendo64::load(Menu menu) -> void {
 
       //give the emulator core a few seconds to notice an empty drive state before reconnecting
       diskInsertTimer->onActivate([&] {
+        Program::Guard guard;
         diskInsertTimer->setEnabled(false);
         auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
         drive->allocate();
@@ -235,6 +237,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
   nothing.setAttribute<ares::Node::Port>("port", port);
   if(!pak) nothing.setChecked();
   nothing.onActivate([=] {
+    Program::Guard guard;
     auto port = nothing.attribute<ares::Node::Port>("port");
     const string portName = port->name();
     if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
@@ -254,6 +257,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
   cpak.setText("Controller Pak");
   if(pak && pak->name() == "Controller Pak") cpak.setChecked();
   cpak.onActivate([=] {
+    Program::Guard guard;
     auto port = cpak.attribute<ares::Node::Port>("port");
     const string portName = port->name();
     if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
@@ -280,6 +284,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
   rpak.setText("Rumble Pak");
   if(pak && pak->name() == "Rumble Pak") rpak.setChecked();
   rpak.onActivate([=] {
+    Program::Guard guard;
     auto port = rpak.attribute<ares::Node::Port>("port");
     const string portName = port->name();
     if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
@@ -302,6 +307,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
   tpak.setText("Transfer Pak");
   if(pak && pak->name() == "Transfer Pak") tpak.setChecked();
   tpak.onActivate([=] {
+    Program::Guard guard;
     auto port = tpak.attribute<ares::Node::Port>("port");
     const string portName = port->name();
     if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
