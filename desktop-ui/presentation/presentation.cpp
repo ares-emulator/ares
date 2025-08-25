@@ -563,6 +563,7 @@ auto Presentation::refreshSystemMenu() -> void {
     { MenuRadioItem peripheralItem{&portMenu};
       peripheralItem.setAttribute<ares::Node::Port>("port", port);
       peripheralItem.setText("Nothing");
+      if(!port->connected()) peripheralItem.setChecked();
       peripheralItem.onActivate([=] {
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
         port->disconnect();
