@@ -39,6 +39,8 @@ struct string_view {
   string_view(const char* data);
   string_view(const char* data, u32 size);
   string_view(const string& source);
+  template<typename... P> string_view(P&&... p);
+  ~string_view();
 
   auto operator=(const string_view& source) -> type&;
   auto operator=(string_view&& source) -> type&;
@@ -55,6 +57,7 @@ struct string_view {
   auto end() const { return &_data[size()]; }
 
 protected:
+  string* _string;
   const char* _data;
   mutable s32 _size;
 };

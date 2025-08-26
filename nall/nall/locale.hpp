@@ -56,7 +56,7 @@ struct Locale {
       }
     }
     for(u32 index : range(arguments.size())) {
-      input.replace(string{"{", index, "}"}, arguments[index]);
+      input.replace({"{", index, "}"}, arguments[index]);
     }
     return input;
   }
