@@ -13,7 +13,7 @@ NALL_HEADER_INLINE auto directory::exists(const string& pathname) -> bool {
   return (result & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-NALL_HEADER_INLINE auto directory::ufolders(const string& pathname, const string& pattern) -> vector<string> {
+NALL_HEADER_INLINE auto directory::ufolders(const string& pathname, const string& pattern) -> std::vector<string> {
   if(!pathname) {
     //special root pseudo-folder (return list of drives)
     wchar_t drives[PATH_MAX] = {0};
@@ -26,7 +26,7 @@ NALL_HEADER_INLINE auto directory::ufolders(const string& pathname, const string
     return string{(const char*)utf8_t(drives)}.replace("\\", "/").split(";");
   }
 
-  vector<string> list;
+  std::vector<string> list;
   string path = pathname;
   path.transform("/", "\\");
   if(!path.endsWith("\\")) path.append("\\");
@@ -54,10 +54,10 @@ NALL_HEADER_INLINE auto directory::ufolders(const string& pathname, const string
   return list;
 }
 
-NALL_HEADER_INLINE auto directory::ufiles(const string& pathname, const string& pattern) -> vector<string> {
+NALL_HEADER_INLINE auto directory::ufiles(const string& pathname, const string& pattern) -> std::vector<string> {
   if(!pathname) return {};
 
-  vector<string> list;
+  std::vector<string> list;
   string path = pathname;
   path.transform("/", "\\");
   if(!path.endsWith("\\")) path.append("\\");
