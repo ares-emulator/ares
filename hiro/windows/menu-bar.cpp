@@ -7,7 +7,11 @@ auto pMenuBar::construct() -> void {
 }
 
 auto pMenuBar::destruct() -> void {
-  pApplication::state().menuBarsToRebuild.removeByValue(this);
+  auto& menuBarsToRebuild = pApplication::state().menuBarsToRebuild;
+  if(auto it = std::find(menuBarsToRebuild.begin(), menuBarsToRebuild.end(), this);
+     it != menuBarsToRebuild.end()) {
+    menuBarsToRebuild.erase(it);
+  }
   if(hmenu) { DestroyMenu(hmenu); hmenu = nullptr; }
   if(auto parent = _parent()) {
     SetMenu(parent->hwnd, nullptr);
@@ -86,8 +90,12 @@ auto pMenuBar::_update() -> void {
   }
 
   //otherwise, defer the menu bar update for later to reduce flickering
-  pApplication::state().menuBarsToRebuild.removeByValue(this);
-  pApplication::state().menuBarsToRebuild.append(this);
+  auto& menuBarsToRebuild = pApplication::state().menuBarsToRebuild;
+  if(auto it = std::find(menuBarsToRebuild.begin(), menuBarsToRebuild.end(), this);
+     it != menuBarsToRebuild.end()) {
+    menuBarsToRebuild.erase(it);
+  }
+  menuBarsToRebuild.push_back(this);
 }
 
 }

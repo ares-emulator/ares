@@ -66,7 +66,10 @@ struct AudioWASAPI : AudioDriver {
 
   auto create() -> bool override {
     super.setExclusive(false);
-    if(hasDevices()) super.setDevice(hasDevices().first());
+    {
+      auto devices = hasDevices();
+      if(!devices.empty()) super.setDevice(devices.front());
+    }
     super.setBlocking(false);
     super.setChannels(2);
     super.setFrequency(48000);
@@ -150,11 +153,10 @@ private:
   std::vector<Device> devices;
 
   auto getDevice() -> maybe<Device&> {
-    if(auto index = self.devices.find([&](auto& device) { return device.name == self.device; })) {
-      return self.devices[*index];
-    } else {
-      return nothing;
+    for(auto& device : self.devices) {
+      if(device.name == self.device) return device;
     }
+    return nothing;
   }
 
   using PActivateAudioInterfaceAsync = HRESULT(__stdcall *)(LPCWSTR, REFIID, PROPVARIANT*, IActivateAudioInterfaceCompletionHandler*, IActivateAudioInterfaceAsyncOperation**);
