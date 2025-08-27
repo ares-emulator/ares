@@ -57,6 +57,7 @@ auto Gamepad::allocate(string name) -> Node::Peripheral {
 
 auto Gamepad::connect() -> void {
   if(!slot) return;
+  pakDetectLatched = true;
   if(slot->name() == "Controller Pak") {
     bool create = true;
 
@@ -121,6 +122,7 @@ auto Gamepad::connect() -> void {
 
 auto Gamepad::disconnect() -> void {
   if(!slot) return;
+  pakDetectLatched = true;
   if(slot->name() == "Controller Pak") {
     save();
     ram.reset();
@@ -151,10 +153,16 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   if(input[0] == 0x00 || input[0] == 0xff) {
     output[0] = 0x05;  //0x05 = gamepad; 0x02 = mouse
     output[1] = 0x00;
-    output[2] = 0x02;  //0x02 = nothing present in controller slot
-    if(ram || motor || (slot && slot->name() == "Transfer Pak")) {
-      output[2] = 0x01;  //0x01 = pak present
+    if(slot) {
+      if(pakDetectLatched) {
+        output[2] = 0x03;  //0x03 = pak inserted
+      } else {
+        output[2] = 0x01;  //0x01 = pak present
+      }
+    } else {
+      output[2] = 0x02;  //0x02 = pak absent
     }
+    pakDetectLatched = false;  //reset flag after reporting pak status
     valid = 1;
   }
 
@@ -175,119 +183,120 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
 
   //read pak
   if(input[0] == 0x02 && send >= 3 && recv >= 1) {
+    u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+    //check address CRC and DETECT latch state
+    if(pif.addressCRC(address) != (n5)input[2] || pakDetectLatched) {
+      //zero out pak read data if address CRC is invalid or pak detect is latched
+      for(u32 index : range(recv - 1)) output[index] = 0x00;
+      output[recv - 1] = 0xFF; //invalid pak state
+      valid = 1;
+      goto comm_done;
+    }
+
     //controller pak
     if(ram) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(recv - 1)) {
-          // read into current bank
-          if(address <= 0x7FFF) output[index] = ram.read<Byte>(bank * 32_KiB + address);
-          else output[index] = 0;
-          address++;
-        }
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
-        valid = 1;
+      for(u32 index : range(recv - 1)) {
+        // read into current bank
+        if(address <= 0x7FFF) output[index] = ram.read<Byte>(bank * 32_KiB + address);
+        else output[index] = 0;
+        address++;
       }
+      output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
+      valid = 1;
     }
 
     //rumble pak
     if(motor) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(recv - 1)) {
-          if(address <= 0x7FFF) output[index] = 0;
-          else if(address <= 0x8FFF) output[index] = 0x80;
-          else output[index] = motor->enable() ? 0xFF : 0x00;
-          address++;
-        }
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
-        valid = 1;
+      for(u32 index : range(recv - 1)) {
+        if(address <= 0x7FFF) output[index] = 0;
+        else if(address <= 0x8FFF) output[index] = 0x80;
+        else output[index] = motor->enable() ? 0xFF : 0x00;
+        address++;
       }
+      output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
+      valid = 1;
     }
 
     //transfer pak
     if(slot && slot->name() == "Transfer Pak") {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(recv - 1)) output[index] = transferPak.read(address++);
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
-        valid = 1;
-      }
+      for(u32 index : range(recv - 1)) output[index] = transferPak.read(address++);
+      output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
+      valid = 1;
     }
   }
 
   //write pak
   if(input[0] == 0x03 && send >= 3 && recv >= 1) {
+    u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+    //check address CRC and DETECT latch state
+    if(pif.addressCRC(address) != (n5)input[2] || pakDetectLatched) {
+      //ignore pak write command if address CRC is invalid or pak detect is latched
+      output[0] = pif.dataCRC({&input[3], send - 3u}) ^ 0xFF;
+      valid = 1;
+      goto comm_done;
+    }
+
     //controller pak
     if(ram) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        //check if address is bank switch command
-        if (address == 0x8000) {
-          if (send >= 4) {
-            u8 reqBank = input[3];
-            if (reqBank < system.controllerPakBankCount) {
-              bank = reqBank;
+      //check if address is bank switch command
+      if (address == 0x8000) {
+        if (send >= 4) {
+          u8 reqBank = input[3];
+          if (reqBank < system.controllerPakBankCount) {
+            bank = reqBank;
+          }
+        } else {
+          if (system.homebrewMode) {
+            debug(unusual, "Controller Pak bank switch command with no bank specified");
+          }
+          bank = 0;
+        }
+
+        if (system.homebrewMode) {
+          //Verify we have 32 bytes (1 block) input and each value is the same bank
+          if (send == 35) {
+            u8 bank = input[3];
+            for (u32 i = 4; i < 35; i++) {
+              if (input[i] != bank) {
+                debug(unusual, "Controller Pak bank switch command with mismatched data");
+                break;
+              }
             }
           } else {
-            if (system.homebrewMode) {
-              debug(unusual, "Controller Pak bank switch command with no bank specified");
-            }
-            bank = 0;
+            debug(unusual, "Controller Pak bank switch command with invalid data length");
           }
-
-          if (system.homebrewMode) {
-            //Verify we have 32 bytes (1 block) input and each value is the same bank
-            if (send == 35) {
-              u8 bank = input[3];
-              for (u32 i = 4; i < 35; i++) {
-                if (input[i] != bank) {
-                  debug(unusual, "Controller Pak bank switch command with mismatched data");
-                  break;
-                }
-              }
-            } else {
-              debug(unusual, "Controller Pak bank switch command with invalid data length");
-            }
-          }
-
-
-          output[0] = pif.dataCRC({&input[3], send - 3u});
-          valid = 1;
-        } else {
-          for(u32 index : range(send - 3)) {
-            if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, input[3 + index]);
-            address++;
-          }
-          output[0] = pif.dataCRC({&input[3], send - 3u});
-          valid = 1;
         }
+
+        output[0] = pif.dataCRC({&input[3], send - 3u});
+        valid = 1;
+      } else {
+        for(u32 index : range(send - 3)) {
+          if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, input[3 + index]);
+          address++;
+        }
+        output[0] = pif.dataCRC({&input[3], send - 3u});
+        valid = 1;
       }
     }
 
     //rumble pak
     if(motor) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        output[0] = pif.dataCRC({&input[3], send - 3u});
-        valid = 1;
-        if(address >= 0xC000) rumble(input[3] & 1);
-      }
+      output[0] = pif.dataCRC({&input[3], send - 3u});
+      valid = 1;
+      if(address >= 0xC000) rumble(input[3] & 1);
     }
 
     //transfer pak
     if(slot && slot->name() == "Transfer Pak") {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(send - 3)) {
-          transferPak.write(address++, input[3 + index]);
-        }
-        output[0] = pif.dataCRC({&input[3], send - 3u});
-        valid = 1;
+      for(u32 index : range(send - 3)) {
+        transferPak.write(address++, input[3 + index]);
       }
+      output[0] = pif.dataCRC({&input[3], send - 3u});
+      valid = 1;
     }
   }
 
+comm_done:
   n2 status = 0;
   status.bit(0) = valid;
   status.bit(1) = over;
