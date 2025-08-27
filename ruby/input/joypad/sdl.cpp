@@ -120,7 +120,6 @@ private:
       jp.hid->setProductID(pid);
       jp.hid->setPathID(jp.id);
       for(u32 n : range(axes)) jp.hid->axes().append(n);
-      jp.axisPolled.assign(axes, false);
       for(u32 n : range(hats)) jp.hid->hats().append(n);
       for(u32 n : range(buttons)) jp.hid->buttons().append(n);
       jp.hid->setRumble(true);
