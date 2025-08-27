@@ -170,9 +170,9 @@ auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::fil
   Program::Guard guard;
   if(firmware.location.iendsWith(".zip")) {
     Decode::ZIP archive;
-    if(archive.open(firmware.location) && archive.file) {
-      auto image = archive.extract(archive.file.first());
-      return vfs::memory::open(image);
+    if(archive.open(firmware.location) && !archive.file.empty()) {
+      auto image = archive.extract(archive.file.front());
+      return vfs::memory::open(array_view<u8>(image.data(), image.size()));
     }
   } else if(auto image = file::read(firmware.location)) {
     return vfs::memory::open(image);

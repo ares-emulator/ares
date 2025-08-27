@@ -67,7 +67,11 @@ auto Mame::loadRomFile(string location, string filename, Markup::Node& info) -> 
 
   for(auto& file : archive.file) {
     if(file.name.iequals(filename)) {
-      return archive.extract(file);
+      auto tmp = archive.extract(file);
+      vector<u8> out;
+      out.resize(tmp.size());
+      if(!tmp.empty()) memcpy(out.data(), tmp.data(), tmp.size());
+      return out;
     }
   }
 

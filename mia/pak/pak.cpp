@@ -40,7 +40,9 @@ auto Pak::read(string location, vector<string> match) -> vector<u8> {
         for(auto& file : archive.file) {
           for(auto& pattern : match) {
             if(file.name.imatch(pattern)) {
-              memory = archive.extract(file);
+              auto tmp = archive.extract(file);
+              memory.resize(tmp.size());
+              if(!tmp.empty()) memcpy(memory.data(), tmp.data(), tmp.size());
               break;
             }
           }
@@ -50,10 +52,14 @@ auto Pak::read(string location, vector<string> match) -> vector<u8> {
           //support BPS patches inside the ZIP archive
           for(auto& file : archive.file) {
             if(file.name.imatch("*.bps")) {
-              bps_patch = archive.extract(file);
+              auto tmp = archive.extract(file);
+              bps_patch.resize(tmp.size());
+              if(!tmp.empty()) memcpy(bps_patch.data(), tmp.data(), tmp.size());
               break;
             } else if (file.name.imatch("*.ips")) {
-              ips_patch = archive.extract(file);
+              auto tmp = archive.extract(file);
+              ips_patch.resize(tmp.size());
+              if(!tmp.empty()) memcpy(ips_patch.data(), tmp.data(), tmp.size());
               break;
             }
           }

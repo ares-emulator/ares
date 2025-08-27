@@ -6,7 +6,7 @@ struct directory : node {
   }
 
   auto find(shared_pointer<node> item) const -> bool {
-    return (bool)_nodes.find(item);
+    return std::find(_nodes.begin(), _nodes.end(), item) != _nodes.end();
   }
 
   auto find(const string& name) const -> bool {
@@ -48,47 +48,53 @@ struct directory : node {
     if(find(name)) return false;
     auto item = memory::create(size);
     item->setName(name);
-    return _nodes.append(item), true;
+    _nodes.push_back(item);
+    return true;
   }
 
   auto append(const string& name, shared_pointer<node> item) -> bool {
     if(!item) return false;
-    if(_nodes.find(item)) return false;
+    if(find(item)) return false;
     item->setName(name);
-    return _nodes.append(item), true;
+    _nodes.push_back(item);
+    return true;
   }
 
   auto append(const string& name, array_view<u8> view) -> bool {
     if(find(name)) return false;
     auto item = memory::open(view);
     item->setName(name);
-    return _nodes.append(item), true;
+    _nodes.push_back(item);
+    return true;
   }
 
   auto append(shared_pointer<node> item) -> bool {
-    if(_nodes.find(item)) return false;
-    return _nodes.append(item), true;
+    if(find(item)) return false;
+    _nodes.push_back(item);
+    return true;
   }
 
   auto remove(shared_pointer<node> item) -> bool {
-    if(!_nodes.find(item)) return false;
-    return _nodes.removeByValue(item), true;
+    auto it = std::find(_nodes.begin(), _nodes.end(), item);
+    if(it == _nodes.end()) return false;
+    _nodes.erase(it);
+    return true;
   }
 
-  auto files() const -> vector<shared_pointer<file>> {
-    vector<shared_pointer<file>> files;
+  auto files() const -> std::vector<shared_pointer<file>> {
+    std::vector<shared_pointer<file>> files;
     for(auto& node : _nodes) {
       if(!node->isFile()) continue;
-      files.append(node);
+      files.push_back(node);
     }
     return files;
   }
 
-  auto directories() const -> vector<shared_pointer<directory>> {
-    vector<shared_pointer<directory>> directories;
+  auto directories() const -> std::vector<shared_pointer<directory>> {
+    std::vector<shared_pointer<directory>> directories;
     for(auto& node : _nodes) {
       if(!node->isDirectory()) continue;
-      directories.append(node);
+      directories.push_back(node);
     }
     return directories;
   }
@@ -100,7 +106,7 @@ struct directory : node {
   auto end() const { return _nodes.end(); }
 
 protected:
-  vector<shared_pointer<node>> _nodes;
+  std::vector<shared_pointer<node>> _nodes;
 };
 
 inline auto node::isFile() const -> bool {

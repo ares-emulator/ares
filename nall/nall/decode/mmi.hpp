@@ -1,5 +1,5 @@
 #include <nall/string.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 #include "nall/string/markup/json.hpp"
 #include "nall/string/markup/bml.hpp"
 #include "zip.hpp"
@@ -40,7 +40,7 @@ struct MMI {
     int sideNo;
     string physicalType;
     string masterReference;
-    vector<Stream> streams;
+    std::vector<Stream> streams;
 
     static Media parse(Markup::Node node) {
       Media media;
@@ -53,7 +53,7 @@ struct MMI {
       media.physicalType = node["physicalType"].string();
       media.masterReference = node["masterReference"].string();
       for(auto streamNode : node["streams"]) {
-        media.streams.append(Stream::parse(streamNode));
+        media.streams.push_back(Stream::parse(streamNode));
       }
       return media;
     }
@@ -70,7 +70,7 @@ struct MMI {
     }
 
     auto jsonBuffer = _archive.extract(file.get());
-    if(!jsonBuffer) {
+    if(jsonBuffer.empty()) {
       close();
       return false;
     }
@@ -79,7 +79,7 @@ struct MMI {
     // nall::string_view, as the variadic constructor overrides "string_view(const char* data, u32 size)",
     // meaning we can't create a string_view from a fixed-length input. We use an array_view here as a
     // workaround.
-    auto jsonBufferAsArrayView = jsonBuffer.view(0, jsonBuffer.size());
+    auto jsonBufferAsArrayView = array_view<u8>(jsonBuffer.data(), jsonBuffer.size());
     auto jsonString = string(jsonBufferAsArrayView);
 
     _mediaInfo = JSON::unserialize(jsonString);
@@ -91,7 +91,7 @@ struct MMI {
     int index = 0;
     int childIndex = 0;
     for(auto media : _mediaInfo["media"]) {
-      _media.append(Media::parse(media));
+      _media.push_back(Media::parse(media));
     }
 
     if(_media.size() == 0) {
@@ -99,7 +99,7 @@ struct MMI {
       return false;
     }
 
-    _media.sort([](const Media& a, const Media& b) {
+    std::sort(_media.begin(), _media.end(), [](const Media& a, const Media& b) {
       return a.sequenceNo < b.sequenceNo;
     });
 
@@ -110,7 +110,7 @@ struct MMI {
     _archive.close();
     _location = {};
     _mediaInfo = {};
-    _media.reset();
+    _media.clear();
   }
 
   auto location() const -> string {
@@ -148,7 +148,7 @@ struct MMI {
     return _mediaInfo["catalogId"].string();
   }
 
-  auto media() -> const vector<Media>& {
+  auto media() -> const std::vector<Media>& {
     return _media;
   }
 
@@ -159,7 +159,7 @@ struct MMI {
 private:
   string _location;
   Markup::Node _mediaInfo;
-  vector<Media> _media;
+  std::vector<Media> _media;
   ZIP _archive;
 };
 

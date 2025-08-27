@@ -13,7 +13,7 @@ class Server : public TCP::Socket {
     bool hadHandshake{false};
 
   protected:
-    auto onData(const vector<u8> &data) -> void override;
+    auto onData(const std::vector<u8> &data) -> void override;
 
     auto sendText(const string &text) -> void;
     virtual auto onText(string_view text) -> void = 0;

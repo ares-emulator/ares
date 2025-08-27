@@ -10,21 +10,21 @@ struct Locale {
   };
 
   auto scan(string pathname) -> void {
-    dictionaries.reset();
+    dictionaries.clear();
     selected.reset();
     for(auto filename : directory::icontents(pathname, "*.bml")) {
       Dictionary dictionary;
       dictionary.location = {pathname, filename};
       dictionary.document = BML::unserialize(string::read(dictionary.location));
       dictionary.language = dictionary.document["locale/language"].text();
-      dictionaries.append(dictionary);
+      dictionaries.push_back(dictionary);
     }
   }
 
-  auto available() const -> vector<string> {
-    vector<string> result;
+  auto available() const -> std::vector<string> {
+    std::vector<string> result;
     for(auto& dictionary : dictionaries) {
-      result.append(dictionary.language);
+      result.push_back(dictionary.language);
     }
     return result;
   }
@@ -42,7 +42,7 @@ struct Locale {
 
   template<typename... P>
   auto operator()(string ns, string input, P&&... p) const -> string {
-    vector<string> arguments{std::forward<P>(p)...};
+    std::vector<string> arguments{std::forward<P>(p)...};
     if(selected) {
       for(auto node : selected().document) {
         if(node.name() == "namespace" && node.text() == ns) {
@@ -80,7 +80,7 @@ struct Locale {
   };
 
 private:
-  vector<Dictionary> dictionaries;
+  std::vector<Dictionary> dictionaries;
   maybe<Dictionary&> selected;
 };
 
