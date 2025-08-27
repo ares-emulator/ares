@@ -1,7 +1,7 @@
 #include <nall/instruction-set.hpp>
 #include <nall/array.hpp>
 #include <nall/memory.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 
 #if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_AMD64)
   #if defined(PLATFORM_WINDOWS)
@@ -31,10 +31,10 @@ NALL_HEADER_INLINE instruction_set::information::information() {
   cpuidex(cpui.data(), 0, 0);
   int maxId = cpui[0];
 
-  vector<array<int[4]>> data;
+  std::vector<array<int[4]>> data;
   for(int i = 0; i <= maxId; i++) {
     cpuidex(cpui.data(), i, 0);
-    data.append(cpui);
+    data.push_back(cpui);
   }
 
   //capture vendor string
@@ -65,10 +65,10 @@ NALL_HEADER_INLINE instruction_set::information::information() {
   cpuidex(cpui.data(), 0x80000000, 0);
   int maxExId = cpui[0];
 
-  vector<array<int[4]>> extdata;
+  std::vector<array<int[4]>> extdata;
   for(int i = 0x80000000; i <= maxExId; i++) {
     cpuidex(cpui.data(), i, 0);
-    extdata.append(cpui);
+    extdata.push_back(cpui);
   }
 
   //load flags for function 0x80000001

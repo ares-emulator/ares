@@ -14,9 +14,12 @@ auto NeoGeoAES::load(string location) -> LoadResult {
     if(archive.open(location)) {
       for(auto& file : archive.file) {
         if(file.name == "neo-epo.bin") {
-          auto memory = archive.extract(file);
+          auto extracted = archive.extract(file);
+          vector<u8> memory;
+          memory.resize(extracted.size());
+          if(!extracted.empty()) memcpy(memory.data(), extracted.data(), extracted.size());
           endianSwap(memory);
-          pak->append("bios.rom", memory);
+          pak->append("bios.rom", array_view<u8>(memory.data(), memory.size()));
         }
       }
     }

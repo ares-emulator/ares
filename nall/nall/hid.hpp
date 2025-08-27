@@ -3,7 +3,7 @@
 #include <nall/maybe.hpp>
 #include <nall/range.hpp>
 #include <nall/string.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 
 namespace nall::HID {
 
@@ -20,26 +20,35 @@ private:
   friend struct Group;
 };
 
-struct Group : vector<Input> {
+struct Group {
   Group(const string& name) : _name(name) {}
 
   auto name() const -> string { return _name; }
-  auto input(u32 id) -> Input& { return operator[](id); }
-  auto append(const string& name) -> void { vector::append(Input{name}); }
+  auto input(u32 id) -> Input& { return _inputs[id]; }
+  auto append(const string& name) -> void { _inputs.push_back(Input{name}); }
 
   auto find(const string& name) const -> maybe<u32> {
-    for(auto id : range(size())) {
-      if(operator[](id)._name == name) return id;
+    for(u32 id : range(_inputs.size())) {
+      if(_inputs[id]._name == name) return id;
     }
     return nothing;
   }
 
+  auto begin() { return _inputs.begin(); }
+  auto end() { return _inputs.end(); }
+  auto begin() const { return _inputs.begin(); }
+  auto end() const { return _inputs.end(); }
+  auto size() const -> u32 { return static_cast<u32>(_inputs.size()); }
+  auto operator[](u32 index) -> Input& { return _inputs[index]; }
+  auto operator[](u32 index) const -> const Input& { return _inputs[index]; }
+
 private:
+  std::vector<Input> _inputs;
   string _name;
   friend struct Device;
 };
 
-struct Device : vector<Group> {
+struct Device {
   Device(const string& name) : _name(name) {}
   virtual ~Device() = default;
 
@@ -60,17 +69,26 @@ struct Device : vector<Group> {
   auto name() const -> string { return _name; }
   auto id() const -> u64 { return _id; }
   auto setID(u64 id) -> void { _id = id; }
-  auto group(u32 id) -> Group& { return operator[](id); }
-  auto append(const string& name) -> void { vector::append(Group{name}); }
+  auto group(u32 id) -> Group& { return _groups[id]; }
+  auto append(const string& name) -> void { _groups.push_back(Group{name}); }
 
   auto find(const string& name) const -> maybe<u32> {
-    for(auto id : range(size())) {
-      if(operator[](id)._name == name) return id;
+    for(u32 id : range(_groups.size())) {
+      if(_groups[id]._name == name) return id;
     }
     return nothing;
   }
 
+  auto begin() { return _groups.begin(); }
+  auto end() { return _groups.end(); }
+  auto begin() const { return _groups.begin(); }
+  auto end() const { return _groups.end(); }
+  auto size() const -> u32 { return static_cast<u32>(_groups.size()); }
+  auto operator[](u32 index) -> Group& { return _groups[index]; }
+  auto operator[](u32 index) const -> const Group& { return _groups[index]; }
+
 private:
+  std::vector<Group> _groups;
   string _name;
   u64 _id = 0;
 };

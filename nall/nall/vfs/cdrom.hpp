@@ -11,6 +11,7 @@
 #include <nall/decode/wav.hpp>
 #include <nall/decode/zip.hpp>
 #include <utility>
+#include <vector>
 
 namespace nall::vfs {
 
@@ -176,7 +177,7 @@ private:
       bool usingFileBuffer = false;
       size_t fileDataReadPos = 0;
       file_buffer fileBuffer;
-      vector<u8> rawDataBuffer;
+      std::vector<u8> rawDataBuffer;
       array_view<u8> rawDataView;
       const Decode::ZIP::File* fileEntry = nullptr;
       if (compressedFile != nullptr) {
@@ -188,7 +189,7 @@ private:
             rawDataView = archive->dataViewIfUncompressed(*fileEntry);
           } else {
             rawDataBuffer = archive->extract(*fileEntry);
-            rawDataView = rawDataBuffer;
+            rawDataView = array_view<u8>(rawDataBuffer.data(), rawDataBuffer.size());
           }
         }
       } else {
@@ -239,7 +240,7 @@ private:
         }
         if(track.postgap) lbaFileBase += track.postgap();
       }
-      lbaFileBase += file.tracks.last().indices.last().end + 1;
+      lbaFileBase += file.tracks.back().indices.back().end + 1;
     }
     _loadOffset = _image.size();
 

@@ -179,7 +179,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
 
   auto threadSend = std::thread([this]() 
   {
-    vector<u8> localSendBuffer{};
+    std::vector<u8> localSendBuffer{};
     u32 cycles = 0;
 
     while(!stopServer) 
@@ -283,7 +283,7 @@ NALL_HEADER_INLINE auto Socket::close(bool notifyHandler) -> void {
 }
 
 NALL_HEADER_INLINE auto Socket::update() -> void {
-  vector<u8> data{};
+  std::vector<u8> data{};
   
   { // local copy, minimize lock time
     std::lock_guard guard{receiveBufferMutex};

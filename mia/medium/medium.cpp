@@ -324,8 +324,10 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
       if (archive->isDataUncompressed(*fileEntry)) {
         rawDataView = archive->dataViewIfUncompressed(*fileEntry);
       } else {
-        rawDataBuffer = archive->extract(*fileEntry);
-        rawDataView = rawDataBuffer;
+        auto tmp = archive->extract(*fileEntry);
+        rawDataBuffer.resize(tmp.size());
+        if(!tmp.empty()) memcpy(rawDataBuffer.data(), tmp.data(), tmp.size());
+        rawDataView = array_view<u8>(rawDataBuffer.data(), rawDataBuffer.size());
       }
       for(auto& track : file.tracks) {
         for(auto& index : track.indices) {

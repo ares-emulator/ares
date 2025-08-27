@@ -11,14 +11,15 @@ auto MCD::LD::load(string location) -> void {
 
   //attempt to locate the requested media in the mmi archive
   string mediaName = mcd.disc->attribute("media");
-  auto mediaIndex = mmi.media().find([mediaName](auto& m) { return m.name == mediaName; });
-  if(!mediaIndex) mediaIndex = 0;
+  auto& mediaVec = mmi.media();
+  auto it = std::find_if(mediaVec.begin(), mediaVec.end(), [mediaName](const auto& m){ return m.name == mediaName; });
+  u32 mediaIndex = it == mediaVec.end() ? 0u : static_cast<u32>(it - mediaVec.begin());
 
   // Extract the stream information for analog video and audio
   string analogAudioFileName;
   string analogVideoFileName;
   video.isCLV = false;
-  for(const auto& stream : mmi.media()[mediaIndex.get()].streams) {
+  for(const auto& stream : mmi.media()[mediaIndex].streams) {
     if(stream.type == "Redbook") {
       mcd.fd = mcd.pak->read(stream.file);
       video.hasDigitalAudio = true;
@@ -29,7 +30,7 @@ auto MCD::LD::load(string location) -> void {
       video.leadInFrameCount = stream.framesInLeadInRegion;
       video.activeVideoFrameCount = stream.framesInActiveRegion;
       video.leadOutFrameCount = stream.framesInLeadOutRegion;
-      video.isCLV = mmi.media()[mediaIndex.get()].format.endsWith("CLV");
+      video.isCLV = mmi.media()[mediaIndex].format.endsWith("CLV");
     }
   }
 
@@ -41,8 +42,10 @@ auto MCD::LD::load(string location) -> void {
   if (mmi.archive().isDataUncompressed(*analogAudioFile)) {
     analogAudioRawDataView = mmi.archive().dataViewIfUncompressed(*analogAudioFile);
   } else {
-    analogAudioDataBuffer = mmi.archive().extract(*analogAudioFile);
-    analogAudioRawDataView = analogAudioDataBuffer;
+    auto tmp = mmi.archive().extract(*analogAudioFile);
+    analogAudioDataBuffer.resize(tmp.size());
+    if(!tmp.empty()) memcpy(analogAudioDataBuffer.data(), tmp.data(), tmp.size());
+    analogAudioRawDataView = array_view<u8>(analogAudioDataBuffer.data(), analogAudioDataBuffer.size());
   }
 
   // Retrieve the analog video file
