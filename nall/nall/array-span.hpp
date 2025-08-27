@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/array-view.hpp>
+#include <vector>
 
 namespace nall {
 
