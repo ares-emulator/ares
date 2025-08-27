@@ -119,7 +119,7 @@ auto CPU::Disassembler::SPECIAL() -> vector<string> {
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
 
-  auto ALU = [&](string_view name, string_view by) -> vector<string> {
+  auto ALU = [&](string_view name, string by) -> vector<string> {
     return {name, rdName(), rtValue(), by};
   };
 

@@ -124,7 +124,8 @@ auto Pak::save(string name, string extension, string location) -> bool {
   if(!pak) return false;
   if(!location) location = this->location;
   if(auto save = pak->read(name)) {
-    directory::create(Location::dir(saveLocation(location, name, extension)));
+    auto saveFilePath = saveLocation(location, name, extension);
+    directory::create(Location::dir(saveFilePath));
     if(auto fp = file::open(saveLocation(location, name, extension), file::mode::write)) {
       fp.write({save->data(), save->size()});
       return true;
