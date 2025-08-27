@@ -172,6 +172,9 @@ auto Nintendo64::load() -> LoadResult {
           } else if(game->pak->attribute({"port", id+1, "/rpak"}).boolean()) {
             port->allocate("Rumble Pak");
             port->connect();
+          } else if(game->pak->attribute({"port", id+1, "/biosensor"}).boolean()) {
+            port->allocate("Bio Sensor");
+            port->connect();
           }
         }
       }
@@ -244,6 +247,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
         }
       }
     }
+    presentation.refreshSystemMenu();
   });
   pakGroup.append(nothing);
 
@@ -270,6 +274,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
         }
       }
     }
+    presentation.refreshSystemMenu();
   });
   pakGroup.append(cpak);
 
@@ -291,6 +296,7 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
         }
       }
     }
+    presentation.refreshSystemMenu();
   });
   pakGroup.append(rpak);
 
@@ -326,9 +332,54 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
         }
       }
     }
+    presentation.refreshSystemMenu();
   });
   pakGroup.append(tpak);
 #endif
+
+  // Show Bio Sensor option
+  MenuRadioItem biosensor{&pakMenu};
+  biosensor.setAttribute<ares::Node::Port>("port", port);
+  biosensor.setText("Bio Sensor");
+  if(pak && pak->name() == "Bio Sensor") biosensor.setChecked();
+  biosensor.onActivate([=] {
+    Program::Guard guard;
+    auto port = biosensor.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      if(auto peripheral = port->connected()) {
+        if(auto pakPort = peripheral->find<ares::Node::Port>("Pak")) {
+          pakPort->disconnect();
+          pakPort->allocate("Bio Sensor");
+          pakPort->connect();
+        }
+      }
+    }
+    presentation.refreshSystemMenu();
+  });
+  pakGroup.append(biosensor);
+  
+  // Show Bio Sensor BPM menu if Bio Sensor is connected
+  if(pak && pak->name() == "Bio Sensor") {
+    // Find BPM setting directly from the Bio Sensor pak
+    if(auto bpmSetting = pak->find<ares::Node::Setting::Integer>("Bio Sensor BPM")) {
+      portMenu.append(MenuSeparator());
+      Menu bpmMenu{&portMenu};
+      bpmMenu.setText(bpmSetting->name());
+      
+      Group bpmGroup;
+      for(auto value : bpmSetting->readAllowedValues()) {
+        MenuRadioItem item{&bpmMenu};
+        item.setText({value, " BPM"});
+        s64 bpmValue = value.integer();
+        if(bpmSetting->value() == bpmValue) item.setChecked();
+        item.onActivate([bpmSetting, bpmValue]() mutable {
+          bpmSetting->setValue(bpmValue);
+        });
+        bpmGroup.append(item);
+      }
+    }
+  }
 }
 
 auto Nintendo64::unload() -> void {
