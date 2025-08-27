@@ -2,7 +2,7 @@
 
 #include <nall/file-map.hpp>
 #include <nall/string.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 #include <nall/decode/inflate.hpp>
 
 namespace nall::Decode {
@@ -47,7 +47,7 @@ struct ZIP {
     filedata = data;
     filesize = size;
 
-    file.reset();
+    file.clear();
 
     bool isZip64 = false;
 
@@ -168,14 +168,14 @@ struct ZIP {
 
       directory += 46 + namelength + extralength + commentlength;
 
-      this->file.append(file);
+      this->file.push_back(file);
     }
 
     return true;
   }
 
-  auto extract(const File& file) const -> vector<u8> {
-    vector<u8> buffer;
+  auto extract(const File& file) const -> std::vector<u8> {
+    std::vector<u8> buffer;
 
     if(file.cmode == 0) {
       buffer.resize(file.size);
@@ -185,7 +185,7 @@ struct ZIP {
     if(file.cmode == 8) {
       buffer.resize(file.size);
       if(inflate(buffer.data(), buffer.size(), file.data, file.csize) == false) {
-        buffer.reset();
+        buffer.clear();
       }
     }
 
@@ -219,7 +219,7 @@ protected:
   }
 
 public:
-  vector<File> file;
+  std::vector<File> file;
 };
 
 }

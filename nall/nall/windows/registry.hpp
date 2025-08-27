@@ -2,6 +2,7 @@
 
 #include <nall/platform.hpp>
 #include <nall/string.hpp>
+#include <vector>
 
 namespace nall {
 
@@ -14,7 +15,7 @@ struct registry {
 
   static auto remove(const string& name) -> bool;
 
-  static auto contents(const string& name) -> vector<string>;
+  static auto contents(const string& name) -> std::vector<string>;
 
 private:
   static auto root(const string& name);

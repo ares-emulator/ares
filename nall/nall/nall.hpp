@@ -61,7 +61,6 @@
 #include <nall/utility.hpp>
 #include <nall/variant.hpp>
 #include <nall/varint.hpp>
-#include <nall/vector.hpp>
 #include <nall/view.hpp>
 #include <nall/arguments.hpp>  //todo: compilation errors when included earlier
 #include <nall/decode/base.hpp>
