@@ -210,10 +210,12 @@ auto MOS6502::algorithmJMP() -> void {
 }
 
 auto MOS6502::algorithmJSR() -> void {
-  PC--;
+  n16 target = operand();
+  MDR = read(0x0100 | S); // dummy stack read
   push(PCH);
-L push(PCL);
-  PC = MAR;
+  push(PCL);
+L target |= operand() << 8;
+  PC = target;
 }
 
 auto MOS6502::algorithmLDA() -> void {
