@@ -51,7 +51,7 @@ auto pTabFrame::construct() -> void {
   gtk_notebook_set_show_border(GTK_NOTEBOOK(gtkWidget), false);
   gtk_notebook_set_tab_pos(GTK_NOTEBOOK(gtkWidget), GTK_POS_TOP);
 
-  tabs.reset();  //todo: memory leak, need to release each tab
+  tabs.clear();  //todo: memory leak, need to release each tab
   for(auto& item : state().items) append(item);
   setNavigation(state().navigation);
 
@@ -109,7 +109,7 @@ auto pTabFrame::remove(sTabFrameItem item) -> void {
       setItemSelected(item->offset() + displacement);
     }
   }
-  tabs.remove(item->offset());
+  tabs.erase(tabs.begin() + item->offset());
   gtk_notebook_remove_page(GTK_NOTEBOOK(gtkWidget), item->offset());
 
   u32 position = gtk_notebook_get_current_page(GTK_NOTEBOOK(gtkWidget));
@@ -204,7 +204,7 @@ auto pTabFrame::_append() -> void {
   pFont::setFont(tab.close, Font("sans", 9).setBold());
   auto color = CreateColor({255, 0, 0});
   gtk_widget_modify_fg(gtk_bin_get_child(GTK_BIN(tab.close)), GTK_STATE_PRELIGHT, &color);
-  tabs.append(tab);
+  tabs.push_back(tab);
 
   gtk_widget_show(tab.child);
   gtk_widget_show(tab.container);

@@ -12,7 +12,7 @@ auto mIconView::destruct() -> void {
 //
 
 auto mIconView::append(sIconViewItem item) -> type& {
-  state.items.append(item);
+  state.items.push_back(item);
   item->setParent(this, itemCount() - 1);
   signal(append, item);
   return *this;
@@ -26,10 +26,11 @@ auto mIconView::batchable() const -> bool {
   return state.batchable;
 }
 
-auto mIconView::batched() const -> vector<IconViewItem> {
-  vector<IconViewItem> items;
+auto mIconView::batched() const -> std::vector<IconViewItem> {
+  std::vector<IconViewItem> items;
+  items.reserve(state.items.size());
   for(auto& item : state.items) {
-    if(item->selected()) items.append(item);
+    if(item->selected()) items.push_back(item);
   }
   return items;
 }
@@ -63,9 +64,10 @@ auto mIconView::itemCount() const -> u32 {
   return state.items.size();
 }
 
-auto mIconView::items() const -> vector<IconViewItem> {
-  vector<IconViewItem> items;
-  for(auto& item : state.items) items.append(item);
+auto mIconView::items() const -> std::vector<IconViewItem> {
+  std::vector<IconViewItem> items;
+  items.reserve(state.items.size());
+  for(auto& item : state.items) items.push_back(item);
   return items;
 }
 
@@ -90,7 +92,7 @@ auto mIconView::orientation() const -> Orientation {
 
 auto mIconView::remove(sIconViewItem item) -> type& {
   signal(remove, item);
-  state.items.remove(item->offset());
+  state.items.erase(state.items.begin() + item->offset());
   for(auto n : range(item->offset(), itemCount())) {
     state.items[n]->adjustOffset(-1);
   }
@@ -101,7 +103,7 @@ auto mIconView::remove(sIconViewItem item) -> type& {
 auto mIconView::reset() -> type& {
   signal(reset);
   for(auto& item : state.items) item->setParent();
-  state.items.reset();
+  state.items.clear();
   return *this;
 }
 
@@ -143,17 +145,17 @@ auto mIconView::setOrientation(Orientation orientation) -> type& {
 }
 
 auto mIconView::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& item : reverse(state.items)) item->destruct();
+  for(auto it = state.items.rbegin(); it != state.items.rend(); ++it) (*it)->destruct();
   mObject::setParent(parent, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());
   return *this;
 }
 
-auto mIconView::setSelected(const vector<s32>& selections) -> type& {
-  bool selectAll = selections(0, 0) == ~0;
+auto mIconView::setSelected(const std::vector<s32>& selections) -> type& {
+  bool selectAll = (!selections.empty() && selections[0] == ~0);
   for(auto& item : state.items) item->state.selected = selectAll;
   if(selectAll) return signal(setItemSelectedAll), *this;
-  if(!selections) return signal(setItemSelectedNone), *this;
+  if(selections.empty()) return signal(setItemSelectedNone), *this;
   for(auto& position : selections) {
     if(position >= itemCount()) continue;
     state.items[position]->state.selected = true;
