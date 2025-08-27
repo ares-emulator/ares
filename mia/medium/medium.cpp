@@ -327,7 +327,7 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
         auto tmp = archive->extract(*fileEntry);
         rawDataBuffer.resize(tmp.size());
         if(!tmp.empty()) memcpy(rawDataBuffer.data(), tmp.data(), tmp.size());
-        rawDataView = array_view<u8>(rawDataBuffer.data(), rawDataBuffer.size());
+        rawDataView = array_view<u8>(rawDataBuffer);
       }
       for(auto& track : file.tracks) {
         for(auto& index : track.indices) {

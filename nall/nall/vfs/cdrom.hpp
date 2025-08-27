@@ -189,7 +189,7 @@ private:
             rawDataView = archive->dataViewIfUncompressed(*fileEntry);
           } else {
             rawDataBuffer = archive->extract(*fileEntry);
-            rawDataView = array_view<u8>(rawDataBuffer.data(), rawDataBuffer.size());
+            rawDataView = array_view<u8>(rawDataBuffer);
           }
         }
       } else {

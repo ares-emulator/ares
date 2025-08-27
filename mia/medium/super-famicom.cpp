@@ -152,14 +152,14 @@ auto SuperFamicom::load(string location) -> LoadResult {
     //add msu-1 rom
     if(_file.imatch("*.msu") || _file == "msu1.data.rom") {
       auto mem = file::read({directory, "/", _file});
-      pak->append("msu1.data.rom", array_view<u8>(mem.data(), mem.size()));
+      pak->append("msu1.data.rom", mem);
     }
 
     //add msu-1 audio tracks
     if(_file.imatch("*-*.pcm")) {
       auto track = _file.split("-").last().replace(".pcm", "").integer();
       auto mem = file::read({directory, "/", _file});
-      pak->append({"msu1.track-", track,".pcm"}, array_view<u8>(mem.data(), mem.size()));
+      pak->append({"msu1.track-", track,".pcm"}, mem);
     }
   }
 

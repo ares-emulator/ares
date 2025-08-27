@@ -75,10 +75,10 @@ inline auto LZSA(array_view<u8> input) -> std::vector<u8> {
     output.insert(output.end(), buffer.begin(), buffer.end());
   };
 
-  save(Encode::Huffman(array_view<u8>(flags.data(), flags.size())));
-  save(Encode::Huffman(array_view<u8>(literals.data(), literals.size())));
-  save(Encode::Huffman(array_view<u8>(stringLengths.data(), stringLengths.size())));
-  save(Encode::Huffman(array_view<u8>(stringOffsets.data(), stringOffsets.size())));
+  save(Encode::Huffman(array_view<u8>(flags)));
+  save(Encode::Huffman(array_view<u8>(literals)));
+  save(Encode::Huffman(array_view<u8>(stringLengths)));
+  save(Encode::Huffman(array_view<u8>(stringOffsets)));
 
   return output;
 }
