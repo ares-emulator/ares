@@ -18,14 +18,14 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
     auto pak = mia::Medium::create(system);
     auto extensions = pak->extensions();
     for(auto& extension : extensions) extension.prepend("*.");
-    if(auto files = BrowserDialog()
+    auto files = BrowserDialog()
     .setTitle({"Import ", system, " Games"})
     .setPath(settings.recent)
     .setFilters({{system, "|", extensions.merge(":"), ":*.zip:", extensions.merge(":").upcase(), ":*.ZIP"}, "All|*"})
     .setAlignment(programWindow)
-    .openFiles()
-    ) {
-      if(!files.empty()) settings.recent = Location::path(files.front());
+    .openFiles();
+    if(!files.empty()) {
+      settings.recent = Location::path(files.front());
       gameImporter.import(system, files);
     }
   });

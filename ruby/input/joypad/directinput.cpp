@@ -181,7 +181,7 @@ struct InputJoypadDirectInput {
     for(auto n : range(6)) jp.hid->axes().append(n);
     for(auto n : range(8)) jp.hid->hats().append(n);
     for(auto n : range(128)) jp.hid->buttons().append(n);
-    joypads.append(jp);
+    joypads.push_back(jp);
 
     return DIENUM_CONTINUE;
   }

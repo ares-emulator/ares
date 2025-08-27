@@ -96,7 +96,12 @@ private:
   auto initialize() -> bool {
     terminate();
 
-    if(!hasDevices().find(self.device)) self.device = hasDevices().first();
+    {
+      auto devices = hasDevices();
+      if(std::find(devices.begin(), devices.end(), self.device) == devices.end()) {
+        if(!devices.empty()) self.device = devices.front();
+      }
+    }
 
     _fd = open(self.device, O_WRONLY | O_NONBLOCK);
     if(_fd < 0) return false;
