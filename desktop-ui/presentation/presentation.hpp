@@ -36,6 +36,7 @@ struct Presentation : Window {
       Menu bootOptionsMenu{&settingsMenu};
         MenuCheckItem fastBoot{&bootOptionsMenu};
         MenuCheckItem launchDebugger{&bootOptionsMenu};
+        MenuCheckItem awaitGDBClient{&bootOptionsMenu};
         MenuSeparator bootOptionsSeparator{&bootOptionsMenu};
         Menu bootOptionsRegionMenu{&bootOptionsMenu};
           MenuRadioItem regionUJE{&bootOptionsRegionMenu};
