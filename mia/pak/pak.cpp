@@ -10,27 +10,27 @@ auto Pak::name(string location) const -> string {
   return Location::prefix(location);
 }
 
-auto Pak::read(string location) -> vector<u8> {
+auto Pak::read(string location) -> std::vector<u8> {
   //attempt to match known extensions
   auto extensions = this->extensions();
   for(auto& extension : extensions) extension.prepend("*.");
   auto memory = read(location, extensions);
 
   //failing that, read whatever exists
-  if(!memory) memory = read(location, {"*"});
+  if(memory.empty()) memory = read(location, {"*"});
 
   return memory;
 }
 
-auto Pak::read(string location, vector<string> match) -> vector<u8> {
-  vector<u8> memory;
-  vector<u8> ips_patch;
-  vector<u8> bps_patch;
+auto Pak::read(string location, vector<string> match) -> std::vector<u8> {
+  std::vector<u8> memory;
+  std::vector<u8> ips_patch;
+  std::vector<u8> bps_patch;
 
   if(file::exists(location)) {
     //support IPS or BPS patches next to the file
     bps_patch = file::read({Location::notsuffix(location), ".bps"});
-    if (!bps_patch) {
+    if (bps_patch.empty()) {
       ips_patch = file::read({Location::notsuffix(location), ".ips"});
     }
 
@@ -40,26 +40,20 @@ auto Pak::read(string location, vector<string> match) -> vector<u8> {
         for(auto& file : archive.file) {
           for(auto& pattern : match) {
             if(file.name.imatch(pattern)) {
-              auto tmp = archive.extract(file);
-              memory.resize(tmp.size());
-              if(!tmp.empty()) memcpy(memory.data(), tmp.data(), tmp.size());
+              memory = archive.extract(file);
               break;
             }
           }
-          if(memory) break;
+          if(!memory.empty()) break;
         }
-        if(memory) {
+        if(!memory.empty()) {
           //support BPS patches inside the ZIP archive
           for(auto& file : archive.file) {
             if(file.name.imatch("*.bps")) {
-              auto tmp = archive.extract(file);
-              bps_patch.resize(tmp.size());
-              if(!tmp.empty()) memcpy(bps_patch.data(), tmp.data(), tmp.size());
+              bps_patch = archive.extract(file);
               break;
             } else if (file.name.imatch("*.ips")) {
-              auto tmp = archive.extract(file);
-              ips_patch.resize(tmp.size());
-              if(!tmp.empty()) memcpy(ips_patch.data(), tmp.data(), tmp.size());
+              ips_patch = archive.extract(file);
               break;
             }
           }
@@ -76,13 +70,17 @@ auto Pak::read(string location, vector<string> match) -> vector<u8> {
   }
 
   //attempt to apply IPS or BPS patch if one was found, favoring BPS
-  if(bps_patch) {
+  if(!bps_patch.empty()) {
     if(auto output = Beat::Single::apply(memory, bps_patch)) {
-      memory = std::move(*output);
+      memory.clear();
+      memory.resize(output->size());
+      if(output->size()) memcpy(memory.data(), output->data(), output->size());
     }
-  } else if (ips_patch) {
+  } else if (!ips_patch.empty()) {
     if (auto output = IPS::apply(memory, ips_patch)) {
-      memory = std::move(*output);
+      memory.clear();
+      memory.resize(output->size());
+      if(output->size()) memcpy(memory.data(), output->data(), output->size());
     }
   }
 
@@ -98,13 +96,23 @@ auto Pak::append(vector<u8>& output, string filename) -> bool {
   return true;
 }
 
+auto Pak::append(std::vector<u8>& output, string filename) -> bool {
+  if(!file::exists(filename)) return false;
+  auto input = file::read(filename);
+  auto size = output.size();
+  output.resize(size + input.size());
+  if(!input.empty()) memcpy(output.data() + size, input.data(), input.size());
+  return true;
+}
+
 auto Pak::load(string name, string extension, string location) -> bool {
   if(!pak) return false;
   if(!location) location = this->location;
   if(auto load = pak->write(name)) {
-    if(auto memory = file::read(saveLocation(location, name, extension))) {
+    auto memory = file::read(saveLocation(location, name, extension));
+    if(!memory.empty()) {
       if(!load->size()) load->resize(memory.size());
-      load->write(memory);
+      load->write({memory.data(), memory.size()});
       load->setAttribute("loaded", true);
       return true;
     }

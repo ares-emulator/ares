@@ -1,19 +1,19 @@
 struct ColecoVision : Cartridge {
   auto name() -> string override { return "ColecoVision"; }
-  auto extensions() -> vector<string> override { return {"cv", "col"}; }
+  auto extensions() -> vector<string> override { return {"col"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
 };
 
 auto ColecoVision::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
@@ -36,7 +36,7 @@ auto ColecoVision::save(string location) -> bool {
   return true;
 }
 
-auto ColecoVision::analyze(vector<u8>& rom) -> string {
+auto ColecoVision::analyze(std::vector<u8>& rom) -> string {
   string hash   = Hash::SHA256(rom).digest();
   string board  = "coleco";
   

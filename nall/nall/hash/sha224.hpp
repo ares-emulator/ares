@@ -24,12 +24,13 @@ struct SHA224 : Hash {
     length++;
   }
 
-  auto output() const -> vector<u8> override {
+  auto output() const -> std::vector<u8> override {
     SHA224 self(*this);
     self.finish();
-    vector<u8> result;
+    std::vector<u8> result;
+    result.reserve(7 * 4);
     for(auto h : range(7)) {
-      for(auto n : reverse(range(4))) result.append(self.h[h] >> n * 8);
+      for(auto n : reverse(range(4))) result.push_back((u8)(self.h[h] >> (n * 8)));
     }
     return result;
   }

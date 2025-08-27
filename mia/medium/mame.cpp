@@ -1,19 +1,19 @@
 // Helper/Utility for importing roms for systems that are using MAME romsets
 struct Mame : Medium {
-  auto loadRoms(string location, Markup::Node& info, string sectionName) -> vector<u8>;
-  auto loadRomFile(string location, string filename, Markup::Node& currentInfo) -> vector<u8>;
-  auto endianSwap(vector<u8>& memory, u32 address = 0, int size = -1) -> void;
+  auto loadRoms(string location, Markup::Node& info, string sectionName) -> std::vector<u8>;
+  auto loadRomFile(string location, string filename, Markup::Node& currentInfo) -> std::vector<u8>;
+  auto endianSwap(std::vector<u8>& memory, u32 address = 0, int size = -1) -> void;
 };
 
-auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> vector<u8> {
-  vector<u8> output;
+auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> std::vector<u8> {
+  std::vector<u8> output;
 
   Decode::ZIP archive;
   if(!location.iendsWith(".zip")) return output;
   if(!archive.open(location)) return output;
 
   string filename = {};
-  vector<u8> input = {};
+  std::vector<u8> input = {};
   u32 readOffset = 0;
   string loadType = {};
 
@@ -26,7 +26,7 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> 
           input = {};
           input = loadRomFile(location, filename, info);
           readOffset = 0;
-          if (!input || input.size() == 0) return output;
+          if (input.empty()) return output;
         }
       }
 
@@ -61,17 +61,14 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> 
   return output;
 }
 
-auto Mame::loadRomFile(string location, string filename, Markup::Node& info) -> vector<u8> {
+auto Mame::loadRomFile(string location, string filename, Markup::Node& info) -> std::vector<u8> {
   Decode::ZIP archive;
   if(!archive.open(location)) return {};
 
   for(auto& file : archive.file) {
     if(file.name.iequals(filename)) {
-      auto tmp = archive.extract(file);
-      vector<u8> out;
-      out.resize(tmp.size());
-      if(!tmp.empty()) memcpy(out.data(), tmp.data(), tmp.size());
-      return out;
+      auto tmp = archive.extract(file); // std::vector<u8>
+      return tmp;
     }
   }
 
@@ -87,9 +84,9 @@ auto Mame::loadRomFile(string location, string filename, Markup::Node& info) -> 
 };
 
 
-auto Mame::endianSwap(vector<u8>& memory, u32 address, int size) -> void {
-  if(size < 0) size = memory.size();
-  for(u32 index = 0; index < size; index += 2) {
+auto Mame::endianSwap(std::vector<u8>& memory, u32 address, int size) -> void {
+  if(size < 0) size = (int)memory.size();
+  for(u32 index = 0; index < (u32)size; index += 2) {
     swap(memory[address + index + 0], memory[address + index + 1]);
   }
 }

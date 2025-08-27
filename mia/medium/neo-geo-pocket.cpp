@@ -3,18 +3,18 @@ struct NeoGeoPocket : Cartridge {
   auto extensions() -> vector<string> override { return {"ngp"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
-  auto label(vector<u8>& data) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
+  auto label(std::vector<u8>& data) -> string;
 };
 
 auto NeoGeoPocket::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.flash"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
@@ -39,7 +39,7 @@ auto NeoGeoPocket::save(string location) -> bool {
   return true;
 }
 
-auto NeoGeoPocket::analyze(vector<u8>& rom) -> string {
+auto NeoGeoPocket::analyze(std::vector<u8>& rom) -> string {
   string hash = Hash::SHA256(rom).digest();
 
   //expand ROMs that are smaller than valid flash chip sizes (homebrew games)
@@ -76,7 +76,7 @@ auto NeoGeoPocket::analyze(vector<u8>& rom) -> string {
   return s;
 }
 
-auto NeoGeoPocket::label(vector<u8>& rom) -> string {
+auto NeoGeoPocket::label(std::vector<u8>& rom) -> string {
   string label;
   label.size(12);
   for(u32 index : range(12)) {

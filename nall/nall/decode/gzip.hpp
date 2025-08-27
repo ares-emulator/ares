@@ -21,8 +21,9 @@ GZIP::~GZIP() {
 }
 
 auto GZIP::decompress(const string& filename) -> bool {
-  if(auto memory = file::read(filename)) {
-    return decompress(memory.data(), memory.size());
+  auto memory = file::read(filename);
+  if(!memory.empty()) {
+    return decompress(memory.data(), (u32)memory.size());
   }
   return false;
 }
