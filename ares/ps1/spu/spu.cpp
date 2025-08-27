@@ -104,7 +104,7 @@ auto SPU::step(u32 clocks) -> void {
 auto SPU::power(bool reset) -> void {
   Thread::reset();
   Memory::Interface::setWaitStates(18, 18, 45);
-  ram.fill();
+  random.array({ram.data, ram.size});
 
   master = {};
   noise.step = 0;
