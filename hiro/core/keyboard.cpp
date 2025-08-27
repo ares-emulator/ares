@@ -58,7 +58,7 @@ auto Keyboard::poll() -> std::vector<bool> {
     }
   }
 
-  return pressed;
+  return std::vector<bool>(pressed.begin(), pressed.end());
 }
 
 auto Keyboard::pressed(const string& key) -> bool {
