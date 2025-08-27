@@ -14,7 +14,7 @@ struct pApplication {
   static auto initialize() -> void;
 
   struct State {
-    vector<pWindow*> windows;
+    std::vector<pWindow*> windows;
 
     #if defined(DISPLAY_XORG)
     XlibDisplay* display = nullptr;

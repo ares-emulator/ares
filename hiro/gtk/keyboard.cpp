@@ -2,16 +2,17 @@
 
 namespace hiro {
 
-auto pKeyboard::poll() -> vector<bool> {
+auto pKeyboard::poll() -> std::vector<bool> {
   if(Application::state().quit) return {};
 
-  vector<bool> result;
+  std::vector<bool> result;
   char state[256];
   #if defined(DISPLAY_XORG)
   XQueryKeymap(pApplication::state().display, state);
   #endif
+  result.reserve(settings.keycodes.size());
   for(auto& code : settings.keycodes) {
-    result.append(_pressed(state, code));
+    result.push_back(_pressed(state, code));
   }
   return result;
 }

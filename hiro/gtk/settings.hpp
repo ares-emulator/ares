@@ -4,7 +4,7 @@ struct Settings {
   Settings();
   ~Settings();
 
-  vector<u16> keycodes;
+  std::vector<u16> keycodes;
 
   struct Geometry {
     s32 frameX = 4;

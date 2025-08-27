@@ -112,7 +112,7 @@ public:
   void setImage(unsigned selection, const image& image);
   void setOrientation(Orientation orientation);
   void setSelected(unsigned selection, bool selected);
-  void setSelected(const vector<unsigned>& selections);
+  void setSelected(const std::vector<unsigned>& selections);
   void setSelectedAll();
   void setSelectedNone();
   void setSingleSelection(bool singleSelection);

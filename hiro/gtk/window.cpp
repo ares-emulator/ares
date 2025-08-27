@@ -206,15 +206,12 @@ auto pWindow::construct() -> void {
   g_object_set_data(G_OBJECT(widget), "hiro::window", (gpointer)this);
   g_object_set_data(G_OBJECT(formContainer), "hiro::window", (gpointer)this);
 
-  pApplication::state().windows.append(this);
+  pApplication::state().windows.push_back(this);
 }
 
 auto pWindow::destruct() -> void {
-  for(u32 offset : range(pApplication::state().windows.size())) {
-    if(pApplication::state().windows[offset] == this) {
-      pApplication::state().windows.remove(offset);
-      break;
-    }
+  for(auto it = pApplication::state().windows.begin(); it != pApplication::state().windows.end(); ++it) {
+    if(*it == this) { pApplication::state().windows.erase(it); break; }
   }
 
   gtk_widget_destroy(widget);
