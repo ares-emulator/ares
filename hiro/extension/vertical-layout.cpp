@@ -14,12 +14,13 @@ auto mVerticalLayout::append(sSizable sizable, Size size, f32 spacing) -> type& 
   cell->setSize(size);
   cell->setSpacing(spacing);
   cell->setParent(this, cellCount());
-  state.cells.append(cell);
+  state.cells.push_back(cell);
   return synchronize();
 }
 
 auto mVerticalLayout::cell(u32 position) const -> VerticalLayoutCell {
-  return state.cells(position, {});
+  if(position < state.cells.size()) return state.cells[position];
+  return {};
 }
 
 auto mVerticalLayout::cell(sSizable sizable) const -> VerticalLayoutCell {
@@ -29,7 +30,7 @@ auto mVerticalLayout::cell(sSizable sizable) const -> VerticalLayoutCell {
   return {};
 }
 
-auto mVerticalLayout::cells() const -> vector<VerticalLayoutCell> {
+auto mVerticalLayout::cells() const -> std::vector<VerticalLayoutCell> {
   return state.cells;
 }
 
@@ -89,13 +90,13 @@ auto mVerticalLayout::remove(sVerticalLayoutCell cell) -> type& {
   if(cell->parent() != this) return *this;
   auto offset = cell->offset();
   cell->setParent();
-  state.cells.remove(offset);
+  state.cells.erase(state.cells.begin() + offset);
   for(u32 n : range(offset, cellCount())) state.cells[n]->adjustOffset(-1);
   return synchronize();
 }
 
 auto mVerticalLayout::reset() -> type& {
-  while(state.cells) remove(state.cells.right());
+  while(!state.cells.empty()) remove(state.cells.back());
   return synchronize();
 }
 
@@ -144,7 +145,7 @@ auto mVerticalLayout::setGeometry(Geometry requestedGeometry) -> type& {
     }
   }
 
-  vector<f32> heights;
+  std::vector<f32> heights;
   heights.resize(cellCount());
   u32 maximumHeights = 0;
   for(u32 index : range(cellCount())) {
@@ -207,7 +208,7 @@ auto mVerticalLayout::setPadding(Geometry padding) -> type& {
 }
 
 auto mVerticalLayout::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& cell : reverse(state.cells)) cell->destruct();
+  for(auto it = state.cells.rbegin(); it != state.cells.rend(); ++it) (*it)->destruct();
   mSizable::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());
   return *this;

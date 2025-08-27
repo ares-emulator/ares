@@ -88,12 +88,12 @@ auto pTableView::remove(sTableViewItem item) -> void {
 auto pTableView::resizeColumns() -> void {
   auto lock = acquire();
 
-  vector<s32> widths;
+  std::vector<s32> widths;
   s32 minimumWidth = 0;
   s32 expandable = 0;
   for(u32 position : range(self().columnCount())) {
     s32 width = _width(position);
-    widths.append(width);
+    widths.push_back(width);
     minimumWidth += width;
     if(self().column(position).expandable()) expandable++;
   }
@@ -222,16 +222,16 @@ auto pTableView::_createModel() -> void {
   gtkListStore = nullptr;
   gtkTreeModel = nullptr;
 
-  vector<GType> types;
+  std::vector<GType> types;
   for(auto& column : state().columns) {
     if(auto self = column->self()) {
       if(!self->gtkColumn) continue;  //may not have been created yet; or recently destroyed
-      types.append(G_TYPE_BOOLEAN);
-      types.append(GDK_TYPE_PIXBUF);
-      types.append(G_TYPE_STRING);
+      types.push_back(G_TYPE_BOOLEAN);
+      types.push_back(GDK_TYPE_PIXBUF);
+      types.push_back(G_TYPE_STRING);
     }
   }
-  if(!types) return;  //no columns available
+  if(!types.size()) return;  //no columns available
 
   gtkListStore = gtk_list_store_newv(types.size(), types.data());
   gtkTreeModel = GTK_TREE_MODEL(gtkListStore);
@@ -486,7 +486,7 @@ auto pTableView::_updateSelected() -> void {
     return;
   }
 
-  vector<u32> selected;
+  std::vector<u32> selected;
 
   GList* list = gtk_tree_selection_get_selected_rows(gtkTreeSelection, &gtkTreeModel);
   GList* p = list;
@@ -497,7 +497,7 @@ auto pTableView::_updateSelected() -> void {
       char* pathname = gtk_tree_model_get_string_from_iter(gtkTreeModel, &iter);
       u32 selection = toNatural(pathname);
       g_free(pathname);
-      selected.append(selection);
+      selected.push_back(selection);
     }
     p = p->next;
   }

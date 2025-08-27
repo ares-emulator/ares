@@ -20,11 +20,11 @@ struct AudioSDL : AudioDriver {
   
   double bitsPerSample = 0;
 
-  auto hasFrequencies() -> vector<u32> override {
+  auto hasFrequencies() -> std::vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<u32> override {
+  auto hasLatencies() -> std::vector<u32> override {
     return {10, 20, 40, 60, 80, 100};
   }
 

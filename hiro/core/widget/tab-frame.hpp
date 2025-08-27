@@ -10,7 +10,7 @@ struct mTabFrame : mWidget {
   auto doMove(sTabFrameItem from, sTabFrameItem to) const -> void;
   auto item(uint position) const -> TabFrameItem;
   auto itemCount() const -> uint;
-  auto items() const -> vector<TabFrameItem>;
+  auto items() const -> std::vector<TabFrameItem>;
   auto navigation() const -> Navigation;
   auto onChange(const function<void ()>& callback = {}) -> type&;
   auto onClose(const function<void (TabFrameItem)>& callback = {}) -> type&;
@@ -26,7 +26,7 @@ struct mTabFrame : mWidget {
 
 //private:
   struct State {
-    vector<sTabFrameItem> items;
+    std::vector<sTabFrameItem> items;
     Navigation navigation = Navigation::Top;
     function<void ()> onChange;
     function<void (TabFrameItem)> onClose;

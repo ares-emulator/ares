@@ -2,7 +2,7 @@
 
 Keyboard::State Keyboard::state;
 
-const vector<string> Keyboard::keys = {
+const std::vector<string> Keyboard::keys = {
   //physical keyboard buttons
   "Escape", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
   "PrintScreen", "ScrollLock", "Pause",
@@ -26,7 +26,7 @@ const vector<string> Keyboard::keys = {
 };
 
 auto Keyboard::append(Hotkey hotkey) -> void {
-  state.hotkeys.append(hotkey);
+  state.hotkeys.push_back(hotkey);
 }
 
 auto Keyboard::hotkey(u32 position) -> Hotkey {
@@ -38,11 +38,11 @@ auto Keyboard::hotkeyCount() -> u32 {
   return state.hotkeys.size();
 }
 
-auto Keyboard::hotkeys() -> vector<Hotkey> {
+auto Keyboard::hotkeys() -> std::vector<Hotkey> {
   return state.hotkeys;
 }
 
-auto Keyboard::poll() -> vector<bool> {
+auto Keyboard::poll() -> std::vector<bool> {
   auto pressed = pKeyboard::poll();
 
   for(auto& hotkey : state.hotkeys) {
@@ -62,7 +62,8 @@ auto Keyboard::poll() -> vector<bool> {
 }
 
 auto Keyboard::pressed(const string& key) -> bool {
-  if(auto code = keys.find(key)) return pKeyboard::pressed(*code);
+  auto it = std::find(keys.begin(), keys.end(), key);
+  if(it != keys.end()) return pKeyboard::pressed(static_cast<u32>(std::distance(keys.begin(), it)));
   return false;
 }
 
@@ -71,9 +72,8 @@ auto Keyboard::released(const string& key) -> bool {
 }
 
 auto Keyboard::remove(Hotkey hotkey) -> void {
-  if(auto offset = state.hotkeys.find(hotkey)) {
-    state.hotkeys.remove(*offset);
-  }
+  auto it = std::find(state.hotkeys.begin(), state.hotkeys.end(), hotkey);
+  if(it != state.hotkeys.end()) state.hotkeys.erase(it);
 }
 
 #endif

@@ -31,7 +31,7 @@
 
 -(BOOL) performDragOperation:(id<NSDraggingInfo>)sender {
   auto paths = DropPaths(sender);
-  if(!paths) return NO;
+  if(paths.empty()) return NO;
   viewport->doDrop(paths);
   return YES;
 }

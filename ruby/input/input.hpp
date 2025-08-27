@@ -15,7 +15,7 @@ struct InputDriver {
   virtual auto acquired() -> bool { return false; }
   virtual auto acquire() -> bool { return false; }
   virtual auto release() -> bool { return false; }
-  virtual auto poll() -> vector<shared_pointer<nall::HID::Device>> { return {}; }
+  virtual auto poll() -> std::vector<shared_pointer<nall::HID::Device>> { return {}; }
   virtual auto rumble(u64 id, u16 strong, u16 weak) -> bool { return false; }
 
 protected:
@@ -26,8 +26,8 @@ protected:
 };
 
 struct Input {
-  static auto hasDrivers() -> vector<string>;
-  static auto hasDriver(string driver) -> bool { return (bool)hasDrivers().find(driver); }
+  static auto hasDrivers() -> std::vector<string>;
+  static auto hasDriver(string driver) -> bool { auto v = hasDrivers(); return std::find(v.begin(), v.end(), driver) != v.end(); }
   static auto optimalDriver() -> string;
   static auto safestDriver() -> string;
 
@@ -47,7 +47,7 @@ struct Input {
   auto acquired() -> bool;
   auto acquire() -> bool;
   auto release() -> bool;
-  auto poll() -> vector<shared_pointer<nall::HID::Device>>;
+  auto poll() -> std::vector<shared_pointer<nall::HID::Device>>;
   auto rumble(u64 id, u16 strong, u16 weak) -> bool;
 
   auto onChange(const function<void (shared_pointer<nall::HID::Device>, u32, u32, s16, s16)>&) -> void;

@@ -17,7 +17,7 @@ struct mHorizontalLayout : mSizable {
   auto append(sSizable sizable, Size size, f32 spacing = 5_sy) -> type&;
   auto cell(u32 position) const -> HorizontalLayoutCell;
   auto cell(sSizable sizable) const -> HorizontalLayoutCell;
-  auto cells() const -> vector<HorizontalLayoutCell>;
+  auto cells() const -> std::vector<HorizontalLayoutCell>;
   auto cellCount() const -> u32;
   auto minimumSize() const -> Size override;
   auto padding() const -> Geometry;
@@ -41,7 +41,7 @@ private:
 
   struct State {
     maybe<f32> alignment;
-    vector<HorizontalLayoutCell> cells;
+    std::vector<HorizontalLayoutCell> cells;
     Geometry padding;
     f32 spacing = 5_sx;
   } state;

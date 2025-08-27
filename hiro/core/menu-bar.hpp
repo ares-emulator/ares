@@ -5,7 +5,7 @@ struct mMenuBar : mObject {
   auto append(sMenu menu) -> type&;
   auto menu(u32 position) const -> Menu;
   auto menuCount() const -> u32;
-  auto menus() const -> vector<Menu>;
+  auto menus() const -> std::vector<Menu>;
   auto remove() -> type& override;
   auto remove(sMenu menu) -> type&;
   auto reset() -> type& override;
@@ -13,7 +13,7 @@ struct mMenuBar : mObject {
 
 //private:
   struct State {
-    vector<sMenu> menus;
+    std::vector<sMenu> menus;
   } state;
 
   auto destruct() -> void override;

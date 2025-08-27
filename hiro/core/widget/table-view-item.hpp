@@ -7,7 +7,7 @@ struct mTableViewItem : mObject {
   auto backgroundColor() const -> Color;
   auto cell(u32 position) const -> TableViewCell;
   auto cellCount() const -> u32;
-  auto cells() const -> vector<TableViewCell>;
+  auto cells() const -> std::vector<TableViewCell>;
   auto foregroundColor() const -> Color;
   auto remove() -> type& override;
   auto remove(sTableViewCell cell) -> type&;
@@ -24,7 +24,7 @@ struct mTableViewItem : mObject {
   struct State {
     Alignment alignment;
     Color backgroundColor;
-    vector<sTableViewCell> cells;
+    std::vector<sTableViewCell> cells;
     Color foregroundColor;
     bool selected = false;
   } state;

@@ -11,7 +11,7 @@ struct mWindow : mObject {
   auto backgroundColor() const -> Color;
   auto dismissable() const -> bool;
   auto doClose() const -> void;
-  auto doDrop(vector<string>) const -> void;
+  auto doDrop(std::vector<string>) const -> void;
   auto doKeyPress(s32) const -> void;
   auto doKeyRelease(s32) const -> void;
   auto doMove() const -> void;
@@ -29,7 +29,7 @@ struct mWindow : mObject {
   auto modal() const -> bool;
   auto monitor() const -> u32;
   auto onClose(const function<void ()>& callback = {}) -> type&;
-  auto onDrop(const function<void (vector<string>)>& callback = {}) -> type&;
+  auto onDrop(const function<void (std::vector<string>)>& callback = {}) -> type&;
   auto onKeyPress(const function<void (s32)>& callback = {}) -> type&;
   auto onKeyRelease(const function<void (s32)>& callback = {}) -> type&;
   auto onMove(const function<void ()>& callback = {}) -> type&;
@@ -80,7 +80,7 @@ struct mWindow : mObject {
     sMenuBar menuBar;
     bool modal = false;
     function<void ()> onClose;
-    function<void (vector<string>)> onDrop;
+    function<void (std::vector<string>)> onDrop;
     function<void (s32)> onKeyPress;
     function<void (s32)> onKeyRelease;
     function<void ()> onMove;

@@ -8,7 +8,7 @@ auto mGroup::allocate() -> pObject* {
 
 auto mGroup::append(sObject object) -> type& {
   if(auto group = instance.acquire()) {
-    state.objects.append(object);
+    state.objects.push_back(object);
     object->setGroup(group);
   }
   return *this;
@@ -27,10 +27,10 @@ auto mGroup::objectCount() const -> u32 {
   return state.objects.size();
 }
 
-auto mGroup::objects() const -> vector<Object> {
-  vector<Object> objects;
+auto mGroup::objects() const -> std::vector<Object> {
+  std::vector<Object> objects;
   for(auto& weak : state.objects) {
-    if(auto object = weak.acquire()) objects.append(object);
+    if(auto object = weak.acquire()) objects.push_back(object);
   }
   return objects;
 }
@@ -40,7 +40,7 @@ auto mGroup::remove(sObject object) -> type& {
   for(auto offset : range(state.objects.size())) {
     if(auto shared = state.objects[offset].acquire()) {
       if(object == shared) {
-        state.objects.remove(offset);
+        state.objects.erase(state.objects.begin() + offset);
         break;
       }
     }

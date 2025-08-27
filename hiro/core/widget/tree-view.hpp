@@ -15,7 +15,7 @@ struct mTreeView : mWidget {
   auto foregroundColor() const -> Color;
   auto item(const string& path) const -> TreeViewItem;
   auto itemCount() const -> u32;
-  auto items() const -> vector<TreeViewItem>;
+  auto items() const -> std::vector<TreeViewItem>;
   auto onActivate(const function<void ()>& callback = {}) -> type&;
   auto onChange(const function<void ()>& callback = {}) -> type&;
   auto onContext(const function<void ()>& callback = {}) -> type&;
@@ -34,7 +34,7 @@ struct mTreeView : mWidget {
     Mouse::Click activation = Mouse::Click::Double;
     Color backgroundColor;
     Color foregroundColor;
-    vector<sTreeViewItem> items;
+    std::vector<sTreeViewItem> items;
     function<void ()> onActivate;
     function<void ()> onChange;
     function<void ()> onContext;

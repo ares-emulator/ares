@@ -18,7 +18,7 @@ struct pConsole : pWidget {
   GtkWidget* subWidget = nullptr;
   GtkTextBuffer* textBuffer = nullptr;
   string previousPrompt;
-  vector<string> history;
+  std::vector<string> history;
   u32 historyOffset = 0;
 };
 

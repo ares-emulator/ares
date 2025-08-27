@@ -8,19 +8,19 @@ auto MessageDialog::checked() const -> bool {
   return state.checked;
 }
 
-auto MessageDialog::error(const vector<string>& buttons) -> string {
+auto MessageDialog::error(const std::vector<string>& buttons) -> string {
   state.buttons = buttons;
   state.icon = Icon::Prompt::Error;
   return _run();
 }
 
-auto MessageDialog::information(const vector<string>& buttons) -> string {
+auto MessageDialog::information(const std::vector<string>& buttons) -> string {
   state.buttons = buttons;
   state.icon = Icon::Prompt::Information;
   return _run();
 }
 
-auto MessageDialog::question(const vector<string>& buttons) -> string {
+auto MessageDialog::question(const std::vector<string>& buttons) -> string {
   state.buttons = buttons;
   state.icon = Icon::Prompt::Question;
   return _run();
@@ -58,14 +58,14 @@ auto MessageDialog::setTitle(const string& title) -> type& {
   return *this;
 }
 
-auto MessageDialog::warning(const vector<string>& buttons) -> string {
+auto MessageDialog::warning(const std::vector<string>& buttons) -> string {
   state.buttons = buttons;
   state.icon = Icon::Prompt::Warning;
   return _run();
 }
 
 auto MessageDialog::_run() -> string {
-  if(!state.buttons) return {};  //nothing to do
+  if(state.buttons.empty()) return {};  //nothing to do
   Application::Namespace tr{"MessageDialog"};
 
   Window window;
@@ -109,7 +109,7 @@ auto MessageDialog::_run() -> string {
     //and set a flag to indicate that the dialog was dismissed to the caller.
     //note that the safest option should always be the last option in the buttons list.
     if(!state.response) {
-      state.response = state.buttons.last();
+      state.response = state.buttons.back();
       state.dismissed = true;
     }
     window.setModal(false);

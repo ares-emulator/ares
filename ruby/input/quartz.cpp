@@ -17,8 +17,8 @@ struct InputQuartz : InputDriver {
   auto acquire() -> bool override { return false; }
   auto release() -> bool override { return false; }
 
-  auto poll() -> vector<shared_pointer<HID::Device>> override {
-    vector<shared_pointer<HID::Device>> devices;
+  auto poll() -> std::vector<shared_pointer<HID::Device>> override {
+    std::vector<shared_pointer<HID::Device>> devices;
     keyboard.poll(devices);
     joypad.poll(devices);
     return devices;

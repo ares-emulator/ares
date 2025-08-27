@@ -2,8 +2,8 @@
 
 namespace hiro {
 
-auto pKeyboard::poll() -> vector<bool> {
-  vector<bool> result;
+auto pKeyboard::poll() -> std::vector<bool> {
+  std::vector<bool> result;
   return result;
 }
 

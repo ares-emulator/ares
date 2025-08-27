@@ -22,14 +22,14 @@ auto mMenu::actionCount() const -> u32 {
   return state.actions.size();
 }
 
-auto mMenu::actions() const -> vector<Action> {
-  vector<Action> actions;
-  for(auto& action : state.actions) actions.append(action);
+auto mMenu::actions() const -> std::vector<Action> {
+  std::vector<Action> actions;
+  for(auto& action : state.actions) actions.push_back(action);
   return actions;
 }
 
 auto mMenu::append(sAction action) -> type& {
-  state.actions.append(action);
+  state.actions.push_back(action);
   action->setParent(this, actionCount() - 1);
   signal(append, action);
   return *this;
@@ -41,7 +41,7 @@ auto mMenu::icon() const -> multiFactorImage {
 
 auto mMenu::remove(sAction action) -> type& {
   signal(remove, action);
-  state.actions.remove(action->offset());
+  state.actions.erase(state.actions.begin() + action->offset());
   for(auto n : range(action->offset(), actionCount())) {
     state.actions[n]->adjustOffset(-1);
   }
@@ -50,7 +50,7 @@ auto mMenu::remove(sAction action) -> type& {
 }
 
 auto mMenu::reset() -> type& {
-  while(state.actions) remove(state.actions.right());
+  state.actions.clear();
   return *this;
 }
 
@@ -72,7 +72,7 @@ auto mMenu::setIconForFile(const string& filename) -> type& {
 }
 
 auto mMenu::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& action : reverse(state.actions)) action->destruct();
+  for(auto it = state.actions.rbegin(); it != state.actions.rend(); ++it) (*it)->destruct();
   mObject::setParent(parent, offset);
   for(auto& action : state.actions) action->setParent(this, action->offset());
   return *this;

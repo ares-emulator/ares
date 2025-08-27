@@ -59,7 +59,7 @@ struct InputJoypadUdev {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     while(hotplugDevicesAvailable()) hotplugDevice();
 
     for(auto& jp : joypads) {

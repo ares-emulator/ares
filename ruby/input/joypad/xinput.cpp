@@ -39,7 +39,7 @@ struct InputJoypadXInput {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     for(auto& jp : joypads) {
       XINPUT_STATE state;
       if(XInputGetStateEx(jp.id, &state) != ERROR_SUCCESS) continue;

@@ -13,7 +13,7 @@ struct mTreeViewItem : mObject {
   auto icon() const -> multiFactorImage;
   auto item(const string& path) const -> TreeViewItem;
   auto itemCount() const -> u32;
-  auto items() const -> vector<TreeViewItem>;
+  auto items() const -> std::vector<TreeViewItem>;
   auto path() const -> string;
   auto remove() -> type& override;
   auto remove(sTreeViewItem item) -> type&;
@@ -38,7 +38,7 @@ struct mTreeViewItem : mObject {
     bool expanded = false;
     Color foregroundColor;
     multiFactorImage icon;
-    vector<sTreeViewItem> items;
+    std::vector<sTreeViewItem> items;
     string text;
   } state;
 
