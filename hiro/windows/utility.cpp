@@ -61,13 +61,13 @@ static auto DropPaths(WPARAM wparam) -> std::vector<string> {
 }
 
 static auto WINAPI EnumVisibleChildWindowsProc(HWND hwnd, LPARAM lparam) -> BOOL {
-  auto children = (vector<HWND>*)lparam;
-  if(IsWindowVisible(hwnd)) children->append(hwnd);
+  auto children = (std::vector<HWND>*)lparam;
+  if(IsWindowVisible(hwnd)) children->push_back(hwnd);
   return true;
 }
 
-static auto EnumVisibleChildWindows(HWND hwnd) -> vector<HWND> {
-  vector<HWND> children;
+static auto EnumVisibleChildWindows(HWND hwnd) -> std::vector<HWND> {
+  std::vector<HWND> children;
   EnumChildWindows(hwnd, EnumVisibleChildWindowsProc, (LPARAM)&children);
   return children;
 }
