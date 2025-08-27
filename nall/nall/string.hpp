@@ -199,6 +199,7 @@ public:
   template<typename T, typename... P> auto prepend(const T&, P&&...) -> type&;
   template<typename... P> auto prepend(const nall::string_format&, P&&...) -> type&;
   template<typename T> auto _prepend(const stringify<T>&) -> type&;
+  template<typename... P> auto append(string&& value, P&&... p) -> string&;
   template<typename T, typename... P> auto append(const T&, P&&...) -> type&;
   template<typename... P> auto append(const nall::string_format&, P&&...) -> type&;
   template<typename T> auto _append(const stringify<T>&) -> type&;

@@ -36,7 +36,7 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
 auto GameManager::select(string system) -> void {
   auto userPath = Path::user();
   path = {userPath, "Emulation/", system, "/"};
-  auto pathLabelTemp = string{path}.replace(Path::user(), "~/");
+  auto pathLabelTemp = string{path}.replace(userPath, "~/");
   pathLabel.setText(pathLabelTemp);
   this->system = system;
   refresh();
