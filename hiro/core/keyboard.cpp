@@ -58,7 +58,10 @@ auto Keyboard::poll() -> std::vector<bool> {
     }
   }
 
-  return std::vector<bool>(pressed.begin(), pressed.end());
+  std::vector<bool> result;
+  result.resize(pressed.size());
+  for(u32 i : range(pressed.size())) result[i] = pressed[i];
+  return result;
 }
 
 auto Keyboard::pressed(const string& key) -> bool {

@@ -32,7 +32,7 @@ struct pTabFrame : pWidget {
     GtkWidget* title = nullptr;
     GtkWidget* close = nullptr;
   };
-  vector<Tab> tabs;
+  std::vector<Tab> tabs;
 };
 
 }

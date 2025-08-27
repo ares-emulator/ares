@@ -114,7 +114,10 @@ private:
   auto initialize() -> bool {
     terminate();
 
-    if(!hasDevices().find(self.device)) self.device = "default";
+    {
+      auto devices = hasDevices();
+      if(std::find(devices.begin(), devices.end(), self.device) == devices.end()) self.device = "default";
+    }
     if(snd_pcm_open(&_interface, self.device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) < 0) return terminate(), false;
 
     u32 rate = self.frequency;

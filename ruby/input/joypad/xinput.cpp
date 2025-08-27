@@ -147,7 +147,7 @@ struct InputJoypadXInput {
       jp.hid->buttons().append("RightThumb");
       jp.hid->buttons().append("Guide");
 
-      joypads.append(jp);
+      joypads.push_back(jp);
     }
 
     return true;
