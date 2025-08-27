@@ -8,7 +8,10 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   ~AudioXAudio2() { destruct(); }
 
   auto create() -> bool override {
-    if(hasDevices()) super.setDevice(hasDevices().first());
+    {
+      auto devices = hasDevices();
+      if(!devices.empty()) super.setDevice(devices.front());
+    }
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(40);
@@ -145,10 +148,18 @@ private:
     self.index = 0;
     self.queue = 0;
 
-    if(!hasDevices().find(self.device)) self.device = hasDevices().first();
-    u32 deviceID = devices[hasDevices().find(self.device)()].id;
-
-    if(FAILED(self.xa2Interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, deviceID, nullptr))) return terminate(), false;
+    {
+      auto names = hasDevices();
+      auto it = std::find(names.begin(), names.end(), self.device);
+      if(it == names.end()) {
+        if(!names.empty()) self.device = names.front();
+        it = names.begin();
+      }
+      u32 deviceIndex = (u32)std::distance(names.begin(), it);
+      u32 deviceID = devices[deviceIndex].id;
+      
+      if(FAILED(self.xa2Interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, deviceID, nullptr))) return terminate(), false;
+    }
 
     WAVEFORMATEX waveFormat{};
     waveFormat.wFormatTag = WAVE_FORMAT_PCM;
