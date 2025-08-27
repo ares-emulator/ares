@@ -174,7 +174,7 @@ auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::fil
       auto image = archive.extract(archive.file.front());
       return vfs::memory::open(array_view<u8>(image.data(), image.size()));
     }
-  } else if(auto image = file::read(firmware.location)) {
+  } else if(auto image = file::read(firmware.location); !image.empty()) {
     return vfs::memory::open(image);
   }
   return {};
@@ -193,7 +193,7 @@ auto Emulator::unload() -> void {
 auto Emulator::load(mia::Pak& node, string name) -> bool {
   Program::Guard guard;
   if(auto fp = node.pak->read(name)) {
-    if(auto memory = file::read({node.location, name})) {
+    if(auto memory = file::read({node.location, name}); !memory.empty()) {
       fp->read(memory);
       return true;
     }

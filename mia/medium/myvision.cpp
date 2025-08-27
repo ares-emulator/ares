@@ -6,17 +6,17 @@ struct MyVision : Cartridge {
   auto extensions() -> vector<string> override { return {"myv"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
 };
 
 auto MyVision::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
@@ -38,7 +38,7 @@ auto MyVision::save(string location) -> bool {
   return true;
 }
 
-auto MyVision::analyze(vector<u8>& rom) -> string {
+auto MyVision::analyze(std::vector<u8>& rom) -> string {
   string s;
   s += "game\n";
   s +={"  name:   ", Medium::name(location), "\n"};

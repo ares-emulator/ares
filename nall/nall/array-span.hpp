@@ -28,6 +28,11 @@ template<typename T> struct array_span : array_view<T> {
     super::_size = size;
   }
 
+  array_span(std::vector<T>& v) {
+    super::_data = v.data();
+    super::_size = (s32)v.size();
+  }
+
   explicit operator bool() const {
     return super::_data && super::_size > 0;
   }

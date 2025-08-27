@@ -9,7 +9,7 @@
 #define nallHash(Name) \
   Name() { reset(); } \
   Name(const void* data, u64 size) : Name() { input(data, size); } \
-  Name(const vector<u8>& data) : Name() { input(data); } \
+  Name(const std::vector<u8>& data) : Name() { input(data); } \
   Name(const string& data) : Name() { input(data); } \
   using Hash::input; \
 
@@ -18,7 +18,7 @@ namespace nall::Hash {
 struct Hash {
   virtual auto reset() -> void = 0;
   virtual auto input(u8 data) -> void = 0;
-  virtual auto output() const -> vector<u8> = 0;
+  virtual auto output() const -> std::vector<u8> = 0;
 
   auto input(array_view<u8> data) -> void {
     for(auto byte : data) input(byte);
@@ -29,8 +29,8 @@ struct Hash {
     while(size--) input(*p++);
   }
 
-  auto input(const vector<u8>& data) -> void {
-    for(auto byte : data) input(byte);
+  auto input(const std::vector<u8>& data) -> void {
+    for(u64 n : range(data.size())) input(data[n]);
   }
 
   auto input(const string& data) -> void {
@@ -38,9 +38,10 @@ struct Hash {
   }
 
   auto digest() const -> string {
-    string result;
-    for(auto n : output()) result.append(hex(n, 2L));
-    return result;
+    auto data = output();
+    string s;
+    for(u32 n : range(data.size())) s.append(hex(data[n], 2L));
+    return s;
   }
 };
 

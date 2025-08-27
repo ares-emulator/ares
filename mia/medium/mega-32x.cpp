@@ -3,8 +3,8 @@ struct Mega32X : Cartridge {
   auto extensions() -> vector<string> override { return {"32x"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
-  auto analyzeStorage(vector<u8>& rom, string hash) -> void;
+  auto analyze(std::vector<u8>& rom) -> string;
+  auto analyzeStorage(std::vector<u8>& rom, string hash) -> void;
 
   struct RAM {
     explicit operator bool() const { return mode && size != 0; }
@@ -26,13 +26,13 @@ struct Mega32X : Cartridge {
 };
 
 auto Mega32X::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
@@ -84,7 +84,7 @@ auto Mega32X::save(string location) -> bool {
   return true;
 }
 
-auto Mega32X::analyze(vector<u8>& rom) -> string {
+auto Mega32X::analyze(std::vector<u8>& rom) -> string {
   if(rom.size() < 0x800) {
     print("[mia] Loading rom failed. Minimum expected rom size is 2048 (0x800) bytes. Rom size: ", rom.size(), " (0x", hex(rom.size()), ") bytes.\n");
     return {};
@@ -206,7 +206,7 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
   return s;
 }
 
-auto Mega32X::analyzeStorage(vector<u8>& rom, string hash) -> void {
+auto Mega32X::analyzeStorage(std::vector<u8>& rom, string hash) -> void {
   //SRAM
   //====
 

@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <initializer_list>
 #include <memory>
+#include <vector>
 
 #include <nall/platform.hpp>
 #include <nall/array-view.hpp>

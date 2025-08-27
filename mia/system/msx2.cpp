@@ -8,10 +8,10 @@ auto MSX2::loadMultiple(vector<string> location) -> bool {
   if(location.size() != 2) return false;
 
   auto bios = Pak::read(location[0]);
-  if(!bios) return false;
+  if(bios.empty()) return false;
 
   auto sub = Pak::read(location[1]);
-  if(!sub) return false;
+  if(sub.empty()) return false;
 
   this->location = locate();
   pak = new vfs::directory;

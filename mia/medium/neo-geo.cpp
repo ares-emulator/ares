@@ -5,19 +5,19 @@
 struct NeoGeo : Mame {
   auto name() -> string override { return "Neo Geo"; }
   auto extensions() -> vector<string> override { return {"ng"}; }
-  auto read(string location, string match) -> vector<u8>;
+  auto read(string location, string match) -> std::vector<u8>;
   auto load(string location) -> LoadResult override;
   auto board() -> string;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> string;
-  auto decrypt(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> void;
-  auto decryptCmc42(vector<u8>& c , vector<u8>& s, u8 key) -> void;
-  auto decryptCmc50(vector<u8>& c , vector<u8>& s, vector<u8>& m, u8 key) -> void;
-  auto loadCmcFixedRom(vector<u8>& c, vector<u8>& s) -> void;
-  auto decryptCmcGraphics(vector<u8>& c, u8 key) -> void;
+  auto analyze(std::vector<u8>& p, std::vector<u8>& m, std::vector<u8>& c, std::vector<u8>& s, std::vector<u8>& vA, std::vector<u8>& vB) -> string;
+  auto decrypt(std::vector<u8>& p, std::vector<u8>& m, std::vector<u8>& c, std::vector<u8>& s, std::vector<u8>& vA, std::vector<u8>& vB) -> void;
+  auto decryptCmc42(std::vector<u8>& c , std::vector<u8>& s, u8 key) -> void;
+  auto decryptCmc50(std::vector<u8>& c , std::vector<u8>& s, std::vector<u8>& m, u8 key) -> void;
+  auto loadCmcFixedRom(std::vector<u8>& c, std::vector<u8>& s) -> void;
+  auto decryptCmcGraphics(std::vector<u8>& c, u8 key) -> void;
   auto decryptCmcGraphicsInternal(u8 *r0, u8 *r1, u8 c0,  u8 c1, u8 *table0hi,u8 *table0lo,
                                   u8 *table1, int base, int invert) -> void;
-  auto decryptCmcMusic(vector<u8>& m) -> void;
+  auto decryptCmcMusic(std::vector<u8>& m) -> void;
   auto decryptCmcMusicDescramble(u32 addr, u16 key) -> u32;
 
   Markup::Node info;
@@ -36,7 +36,7 @@ struct NeoGeo : Mame {
   } cmc;
 };
 
-auto NeoGeo::read(string location, string match) -> vector<u8> {
+auto NeoGeo::read(string location, string match) -> std::vector<u8> {
   // we expect mame style .zip rom images
   if(!location.iendsWith(".zip")) {}
 
@@ -59,12 +59,12 @@ auto NeoGeo::read(string location, string match) -> vector<u8> {
 }
 
 auto NeoGeo::load(string location) -> LoadResult {
-  vector<u8> programROM;    //P ROM (68K CPU program)
-  vector<u8> musicROM;      //M ROM (Z80 APU program)
-  vector<u8> characterROM;  //C ROM (sprite and background character graphics)
-  vector<u8> staticROM;     //S ROM (fix layer static graphics)
-  vector<u8> voiceAROM;     //V ROM (ADPCM-A voice samples)
-  vector<u8> voiceBROM;     //V ROM (ADPCM-B voice samples)
+  std::vector<u8> programROM;    //P ROM (68K CPU program)
+  std::vector<u8> musicROM;      //M ROM (Z80 APU program)
+  std::vector<u8> characterROM;  //C ROM (sprite and background character graphics)
+  std::vector<u8> staticROM;     //S ROM (fix layer static graphics)
+  std::vector<u8> voiceAROM;     //V ROM (ADPCM-A voice samples)
+  std::vector<u8> voiceBROM;     //V ROM (ADPCM-B voice samples)
 
   auto foundDatabase = Medium::loadDatabase();
   if(!foundDatabase) return { databaseNotFound, "Neo Geo.bml" };
@@ -81,11 +81,11 @@ auto NeoGeo::load(string location) -> LoadResult {
   
   string invalidRomInfo = "Ensure your ROM is in a MAME-compatible .zip format.";
 
-  if(!programROM  ) return { invalidROM, invalidRomInfo };
-  if(!musicROM    ) return { invalidROM, invalidRomInfo };
-  if(!characterROM) return { invalidROM, invalidRomInfo };
-  if(!staticROM   ) return { invalidROM, invalidRomInfo };
-  if(!voiceAROM   ) return { invalidROM, invalidRomInfo };
+  if(programROM.empty()  ) return { invalidROM, invalidRomInfo };
+  if(musicROM.empty()    ) return { invalidROM, invalidRomInfo };
+  if(characterROM.empty()) return { invalidROM, invalidRomInfo };
+  if(staticROM.empty()   ) return { invalidROM, invalidRomInfo };
+  if(voiceAROM.empty()   ) return { invalidROM, invalidRomInfo };
   //voiceB is optional
 
   //many games have encrypted roms, so let's decrypt them here
@@ -135,7 +135,7 @@ auto NeoGeo::board() -> string {
   return "rom";
 }
 
-auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> string {
+auto NeoGeo::analyze(std::vector<u8>& p, std::vector<u8>& m, std::vector<u8>& c, std::vector<u8>& s, std::vector<u8>& vA, std::vector<u8>& vB) -> string {
   string manifest;
 
   manifest += "game\n";
@@ -151,7 +151,7 @@ auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s,
   return manifest;
 }
 
-auto NeoGeo::decrypt(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> void {
+auto NeoGeo::decrypt(std::vector<u8>& p, std::vector<u8>& m, std::vector<u8>& c, std::vector<u8>& s, std::vector<u8>& vA, std::vector<u8>& vB) -> void {
   //cmc42
   if(board() == "cmc42_bangbead") return decryptCmc42(c, s, 0xf8);
   if(board() == "cmc42_ganryu"  ) return decryptCmc42(c, s, 0x07);
@@ -168,7 +168,7 @@ auto NeoGeo::decrypt(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s,
   if(board() == "cmc50_kof2000n") return decryptCmc50(c, s, m, 0x00);
 }
 
-auto NeoGeo::decryptCmc42(vector<u8>& c, vector<u8>& s, u8 key) -> void {
+auto NeoGeo::decryptCmc42(std::vector<u8>& c, std::vector<u8>& s, u8 key) -> void {
   cmc.type0_t03          = kof99_type0_t03;
   cmc.type0_t12          = kof99_type0_t12;
   cmc.type1_t03          = kof99_type1_t03;
@@ -183,7 +183,7 @@ auto NeoGeo::decryptCmc42(vector<u8>& c, vector<u8>& s, u8 key) -> void {
   loadCmcFixedRom(c, s);
 }
 
-auto NeoGeo::decryptCmc50(vector<u8>& c, vector<u8>& s, vector<u8>& m, u8 key) -> void {
+auto NeoGeo::decryptCmc50(std::vector<u8>& c, std::vector<u8>& s, std::vector<u8>& m, u8 key) -> void {
   cmc.type0_t03          = kof2000_type0_t03;
   cmc.type0_t12          = kof2000_type0_t12;
   cmc.type1_t03          = kof2000_type1_t03;
@@ -199,19 +199,19 @@ auto NeoGeo::decryptCmc50(vector<u8>& c, vector<u8>& s, vector<u8>& m, u8 key) -
   decryptCmcMusic(m);
 }
 
-auto NeoGeo::loadCmcFixedRom(vector<u8>& c, vector<u8>& s) -> void {
+auto NeoGeo::loadCmcFixedRom(std::vector<u8>& c, std::vector<u8>& s) -> void {
   // SROM is stored after CROM
-  for (int i = 0; i < s.size(); i++) {
+  for (int i = 0; i < (int)s.size(); i++) {
     s[i] = c[(c.size() - s.size()) + ((i & ~0x1f) + ((i & 7) << 2) + ((~i & 8) >> 2) + ((i & 0x10) >> 4))];
   }
 }
 
-auto NeoGeo::decryptCmcGraphics(vector<u8>& c, u8 key) -> void {
-  vector<u8> buf;
+auto NeoGeo::decryptCmcGraphics(std::vector<u8>& c, u8 key) -> void {
+  std::vector<u8> buf;
   buf.resize(c.size());
 
   // Data xor
-  for (auto rpos = 0; rpos < c.size() / 4; rpos++) {
+  for (auto rpos = 0; rpos < (int)(c.size() / 4); rpos++) {
     decryptCmcGraphicsInternal(&buf[4 * rpos + 0], &buf[4 * rpos + 3], c[4 * rpos+0], c[4 * rpos+3],
             cmc. type0_t03, cmc.type0_t12, cmc.type1_t03, rpos, (rpos >> 8) & 1);
     decryptCmcGraphicsInternal(&buf[4 * rpos + 1], &buf[4 * rpos + 2], c[4 * rpos+1], c[4 * rpos+2],
@@ -220,7 +220,7 @@ auto NeoGeo::decryptCmcGraphics(vector<u8>& c, u8 key) -> void {
   }
 
   // Address xor
-  for(auto rpos = 0; rpos < c.size() / 4; rpos++) {
+  for(auto rpos = 0; rpos < (int)(c.size() / 4); rpos++) {
     auto baser = rpos;
     baser ^= key;
 
@@ -265,13 +265,13 @@ auto NeoGeo::decryptCmcGraphicsInternal(u8 *r0, u8 *r1, u8 c0,  u8 c1, u8 *table
   *r1 = c1 ^ xor1;
 }
 
-auto NeoGeo::decryptCmcMusic(vector<u8>& m) -> void {
-  vector<u8> input = m;
+auto NeoGeo::decryptCmcMusic(std::vector<u8>& m) -> void {
+  std::vector<u8> input = m;
 
   //checksum of the first 64k of ROM is used as a key
   u16 key = 0;
   for(auto i = 0; i < 0x10000; i++) key += input[i];
-  for(auto i = 0; i < input.size(); i++) m[i] = input[decryptCmcMusicDescramble(i, key)];
+  for(auto i = 0; i < (int)input.size(); i++) m[i] = input[decryptCmcMusicDescramble(i, key)];
 }
 
 auto NeoGeo::decryptCmcMusicDescramble(u32 address, u16 key) -> u32 {

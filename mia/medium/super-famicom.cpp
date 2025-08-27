@@ -3,7 +3,7 @@ struct SuperFamicom : Cartridge {
   auto extensions() -> vector<string> override { return {"sfc", "smc", "swc", "fig"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
 
 protected:
   auto region() const -> string;
@@ -29,7 +29,7 @@ protected:
   auto firmwareHITACHI() const -> string;
   auto firmwareNEC() const -> string;
 
-  vector<u8> rom; 
+  std::vector<u8> rom; 
   u32 headerAddress = 0;
 };
 
@@ -56,7 +56,7 @@ auto SuperFamicom::load(string location) -> LoadResult {
         if(id == "ST010") view = Resource::SuperFamicom::ST010;
         if(id == "ST011") view = Resource::SuperFamicom::ST011;
         if(id == "ST018") view = Resource::SuperFamicom::ST018;
-        while(view) rom.append(*view++);
+        while(view) rom.push_back(*view++);
       }
 	}
   };
@@ -71,11 +71,17 @@ auto SuperFamicom::load(string location) -> LoadResult {
     for(auto& file : files) { if(file.match("*.data.rom"   )) { append(rom, {location, file}); local_firmware = true; } }
     for(auto& file : files) { if(file.match("*.boot.rom"   )) { append(rom, {location, file});                        } }
 	folder = true;
-  } else if(rom = Medium::read(location)) {
-    directory = Location::dir(location);
+  } else {
+    auto temp = Medium::read(location);
+    if(!temp.empty()) {
+      rom.resize(temp.size());
+      memory::copy(rom.data(), temp.data(), temp.size());
+      directory = Location::dir(location);
+    }
   }
+
   
-  if(!rom) return romNotFound;
+  if(rom.size() == 0) return romNotFound;
   
   //append firmware to the ROM if it is missing
   auto tmp_manifest = analyze(rom);
@@ -145,13 +151,15 @@ auto SuperFamicom::load(string location) -> LoadResult {
   for(auto& _file : files) {
     //add msu-1 rom
     if(_file.imatch("*.msu") || _file == "msu1.data.rom") {
-      pak->append("msu1.data.rom", file::read({directory, "/", _file}));
+      auto mem = file::read({directory, "/", _file});
+      pak->append("msu1.data.rom", array_view<u8>(mem.data(), mem.size()));
     }
 
     //add msu-1 audio tracks
     if(_file.imatch("*-*.pcm")) {
       auto track = _file.split("-").last().replace(".pcm", "").integer();
-      pak->append({"msu1.track-", track,".pcm"}, file::read({directory, "/", _file}));
+      auto mem = file::read({directory, "/", _file});
+      pak->append({"msu1.track-", track,".pcm"}, array_view<u8>(mem.data(), mem.size()));
     }
   }
 
@@ -207,7 +215,7 @@ auto SuperFamicom::save(string location) -> bool {
   return true;
 }
 
-auto SuperFamicom::analyze(vector<u8>& rom) -> string {
+auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
   if((rom.size() & 0x7fff) == 512) {
     //remove header if present
     memory::move(&rom[0], &rom[512], rom.size() - 512);

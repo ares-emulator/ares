@@ -22,7 +22,7 @@ auto ZXSpectrum::loadTzx(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  vector<u8> input = file::read(location);
+  auto input = file::read(location);
   TZXFile tzx;
   if(tzx.DecodeFile(input.data(), input.size()) == FileTypeUndetermined) return invalidROM;
   tzx.GenerateAudioData();

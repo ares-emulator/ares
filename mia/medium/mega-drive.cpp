@@ -3,11 +3,11 @@ struct MegaDrive : Cartridge {
   auto extensions() -> vector<string> override { return {"md", "gen", "bin"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
-  auto analyzeStorage(vector<u8>& rom, string hash) -> void;
-  auto analyzePeripherals(vector<u8>& rom, string hash) -> void;
-  auto analyzeCopyProtection(vector<u8>& rom, string hash) -> void;
-  auto analyzeRegion(vector<u8>& rom, string hash) -> void;
+  auto analyze(std::vector<u8>& rom) -> string;
+  auto analyzeStorage(std::vector<u8>& rom, string hash) -> void;
+  auto analyzePeripherals(std::vector<u8>& rom, string hash) -> void;
+  auto analyzeCopyProtection(std::vector<u8>& rom, string hash) -> void;
+  auto analyzeRegion(std::vector<u8>& rom, string hash) -> void;
 
   string board;
   vector<string> regions;
@@ -38,13 +38,13 @@ struct MegaDrive : Cartridge {
 };
 
 auto MegaDrive::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
@@ -117,7 +117,7 @@ auto MegaDrive::save(string location) -> bool {
   return true;
 }
 
-auto MegaDrive::analyze(vector<u8>& rom) -> string {
+auto MegaDrive::analyze(std::vector<u8>& rom) -> string {
   if(rom.size() < 0x800) {
     print("[mia] Loading rom failed. Minimum expected rom size is 2048 (0x800) bytes. Rom size: ", rom.size(), " (0x", hex(rom.size()), ") bytes.\n");
     return {};
@@ -246,7 +246,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
   return s;
 }
 
-auto MegaDrive::analyzeRegion(vector<u8>& rom, string hash) -> void {
+auto MegaDrive::analyzeRegion(std::vector<u8>& rom, string hash) -> void {
   string serial = slice((const char*)&rom[0x0180], 0, 14);
 
   int offset = 0;
@@ -287,7 +287,7 @@ auto MegaDrive::analyzeRegion(vector<u8>& rom, string hash) -> void {
   }
 }
 
-auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
+auto MegaDrive::analyzeStorage(std::vector<u8>& rom, string hash) -> void {
   string serial = slice((const char*)&rom[0x0180], 0, 14);
   int offset = 0; 
 
@@ -837,7 +837,7 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   }
 }
 
-auto MegaDrive::analyzePeripherals(vector<u8>& rom, string hash) -> void {
+auto MegaDrive::analyzePeripherals(std::vector<u8>& rom, string hash) -> void {
   //J-Cart
   //======
 
@@ -892,7 +892,7 @@ auto MegaDrive::analyzePeripherals(vector<u8>& rom, string hash) -> void {
   }
 }
 
-auto MegaDrive::analyzeCopyProtection(vector<u8>& rom, string hash) -> void {
+auto MegaDrive::analyzeCopyProtection(std::vector<u8>& rom, string hash) -> void {
   //Super Bubble Bobble (Taiwan)
   if(hash == "e0a310c89961d781432715f71ce92d2d559fc272a7b46ea7b77383365b27ce21") {
     rom[0x0123e4] = 0x60;

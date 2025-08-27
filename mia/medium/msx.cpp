@@ -3,7 +3,7 @@ struct MSX : Cartridge {
   auto extensions() -> vector<string> override { return {"msx", "rom", "wav"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
   auto loadTape(string location) -> LoadResult;
   auto analyzeTape(string location) -> string;
 };
@@ -13,13 +13,13 @@ auto MSX::load(string location) -> LoadResult {
     return loadTape(location);
   }
 
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
@@ -47,7 +47,7 @@ auto MSX::save(string location) -> bool {
   return true;
 }
 
-auto MSX::analyze(vector<u8>& rom) -> string {
+auto MSX::analyze(std::vector<u8>& rom) -> string {
   if(location.iendsWith(".wav")) {
     return analyzeTape(location);
   }
