@@ -120,7 +120,7 @@ auto Audio::setLatency(u32 latency) -> bool {
 
 auto Audio::updateResampleChannels(u32 channels) -> void {
   if(resamplers.size() != channels) {
-    resamplers.reset();
+    resamplers.clear();
     resamplers.resize(channels);
     updateResampleFrequency(instance->frequency);
     resampleBuffer.resize(channels);
@@ -153,7 +153,7 @@ auto Audio::output(const f64 samples[]) -> void {
     resampler.write(*samples++);
   }
 
-  while(resamplers.first().pending()) {
+  while(!resamplers.empty() && resamplers.front().pending()) {
     for(u32 n : range(instance->channels)) resampleBuffer[n] = resamplers[n].read();
     instance->output(resampleBuffer.data());
   }
@@ -218,7 +218,7 @@ auto Audio::create(string driver) -> bool {
   return self.instance->create();
 }
 
-auto Audio::hasDrivers() -> vector<string> {
+auto Audio::hasDrivers() -> std::vector<string> {
   return {
 
   #if defined(AUDIO_ASIO)

@@ -16,7 +16,7 @@
 #include <nall/string.hpp>
 #include <nall/thread.hpp>
 #include <nall/unique-pointer.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 #include <nall/dsp/resampler/cubic.hpp>
 #include <nall/hash/crc32.hpp>
 
@@ -30,7 +30,6 @@ using nall::shared_pointer;
 using nall::string;
 using nall::tuple;
 using nall::unique_pointer;
-using nall::vector;
 
 namespace ruby {
 

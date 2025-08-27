@@ -63,8 +63,8 @@ struct Program : ares::Platform {
   string startSystem;
   string startShader;
 
-  vector<ares::Node::Video::Screen> screens;
-  vector<ares::Node::Audio::Stream> streams;
+  std::vector<ares::Node::Video::Screen> screens;
+  std::vector<ares::Node::Audio::Stream> streams;
 
   bool paused = false;
   bool fastForwarding = false;
@@ -98,7 +98,7 @@ struct Program : ares::Platform {
 
   class Guard;
 
-  vector<Message> messages;
+  std::vector<Message> messages;
   string configuration;
   atomic<u64> vblanksPerSecond = 0;
 

@@ -14,7 +14,7 @@ struct Gradient {
 
 //private:
   struct State {
-    vector<Color> colors;
+    std::vector<Color> colors;
   } state;
 };
 #endif

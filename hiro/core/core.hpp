@@ -17,7 +17,7 @@
 #include <nall/traits.hpp>
 #include <nall/unique-pointer.hpp>
 #include <nall/utility.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 
 using nall::any;
 using nall::function;
@@ -31,7 +31,6 @@ using nall::shared_pointer;
 using nall::shared_pointer_weak;
 using nall::string;
 using nall::unique_pointer;
-using nall::vector;
 
 namespace hiro {
 

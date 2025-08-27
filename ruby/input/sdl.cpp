@@ -36,8 +36,8 @@ struct InputSDL : InputDriver {
   auto acquire() -> bool override { return mouse.acquire(); }
   auto release() -> bool override { return mouse.release(); }
 
-  auto poll() -> vector<shared_pointer<HID::Device>> override {
-    vector<shared_pointer<HID::Device>> devices;
+  auto poll() -> std::vector<shared_pointer<HID::Device>> override {
+    std::vector<shared_pointer<HID::Device>> devices;
     keyboard.poll(devices);
     mouse.poll(devices);
     joypad.poll(devices);

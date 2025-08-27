@@ -7,7 +7,7 @@ struct mComboButton : mWidget {
   auto doChange() const -> void;
   auto item(u32 position) const -> ComboButtonItem;
   auto itemCount() const -> u32;
-  auto items() const -> vector<ComboButtonItem>;
+  auto items() const -> std::vector<ComboButtonItem>;
   auto onChange(const function<void ()>& callback = {}) -> type&;
   auto remove(sComboButtonItem item) -> type&;
   auto reset() -> type& override;
@@ -16,7 +16,7 @@ struct mComboButton : mWidget {
 
 //private:
   struct State {
-    vector<sComboButtonItem> items;
+    std::vector<sComboButtonItem> items;
     function<void ()> onChange;
   } state;
 

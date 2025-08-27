@@ -50,10 +50,11 @@ auto Hotkey::sequence() const -> string {
 auto Hotkey::setSequence(const string& sequence) -> type& {
   state->active = false;
   state->sequence = sequence;
-  state->keys.reset();
+  state->keys.clear();
   for(auto& key : sequence.split("+")) {
-    if(auto position = Keyboard::keys.find(key)) {
-      state->keys.append(*position);
+    auto it = std::find(Keyboard::keys.begin(), Keyboard::keys.end(), key);
+    if(it != Keyboard::keys.end()) {
+      state->keys.push_back(static_cast<u32>(std::distance(Keyboard::keys.begin(), it)));
     }
   }
   return *this;

@@ -9,12 +9,13 @@ auto mFixedLayout::append(sSizable sizable, Geometry geometry) -> type& {
   cell->setSizable(sizable);
   cell->setGeometry(geometry);
   cell->setParent(this, cellCount());
-  state.cells.append(cell);
+  state.cells.push_back(cell);
   return synchronize();
 }
 
 auto mFixedLayout::cell(u32 position) const -> FixedLayoutCell {
-  return state.cells(position, {});
+  if(position < state.cells.size()) return state.cells[position];
+  return {};
 }
 
 auto mFixedLayout::cell(sSizable sizable) const -> FixedLayoutCell {
@@ -24,7 +25,7 @@ auto mFixedLayout::cell(sSizable sizable) const -> FixedLayoutCell {
   return {};
 }
 
-auto mFixedLayout::cells() const -> vector<FixedLayoutCell> {
+auto mFixedLayout::cells() const -> std::vector<FixedLayoutCell> {
   return state.cells;
 }
 
@@ -57,13 +58,13 @@ auto mFixedLayout::remove(sFixedLayoutCell cell) -> type& {
   if(cell->parent() != this) return *this;
   auto offset = cell->offset();
   cell->setParent();
-  state.cells.remove(offset);
+  state.cells.erase(state.cells.begin() + offset);
   for(u32 n : range(offset, cellCount())) state.cells[n]->adjustOffset(-1);
   return synchronize();
 }
 
 auto mFixedLayout::reset() -> type& {
-  while(state.cells) remove(state.cells.right());
+  while(!state.cells.empty()) remove(state.cells.back());
   return synchronize();
 }
 
@@ -85,7 +86,7 @@ auto mFixedLayout::setFont(const Font& font) -> type& {
 }
 
 auto mFixedLayout::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& cell : reverse(state.cells)) cell->destruct();
+  for(auto it = state.cells.rbegin(); it != state.cells.rend(); ++it) (*it)->destruct();
   mSizable::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());
   return *this;

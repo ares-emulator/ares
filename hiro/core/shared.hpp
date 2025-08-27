@@ -63,7 +63,7 @@
 #define DeclareSharedWidget(Name) \
   DeclareSharedSizable(Name) \
   auto droppable() const { return self().droppable(); } \
-  auto doDrop(vector<string> names) { return self().doDrop(names); } \
+  auto doDrop(std::vector<string> names) { return self().doDrop(names); } \
   auto doMouseEnter() const { return self().doMouseEnter(); } \
   auto doMouseLeave() const { return self().doMouseLeave(); } \
   auto doMouseMove(Position position) const { return self().doMouseMove(position); } \
@@ -71,7 +71,7 @@
   auto doMouseRelease(Mouse::Button button) const { return self().doMouseRelease(button); } \
   auto focusable() const { return self().focusable(); } \
   auto mouseCursor() const { return self().mouseCursor(); } \
-  auto onDrop(const function<void (vector<string>)>& callback = {}) { return self().onDrop(callback), *this; } \
+  auto onDrop(const function<void (std::vector<string>)>& callback = {}) { return self().onDrop(callback), *this; } \
   auto onMouseEnter(const function<void ()>& callback = {}) { return self().onMouseEnter(callback), *this; } \
   auto onMouseLeave(const function<void ()>& callback = {}) { return self().onMouseLeave(callback), *this; } \
   auto onMouseMove(const function<void (Position)>& callback = {}) { return self().onMouseMove(callback), *this; } \
@@ -97,10 +97,10 @@ struct Group : sGroup {
   auto append(sObject object) -> type& { return self().append(object), *this; }
   auto object(u32 position) const { return self().object(position); }
   auto objectCount() const { return self().objectCount(); }
-  template<typename T = Object> auto objects() const -> vector<T> {
-    vector<T> objects;
+  template<typename T = Object> auto objects() const -> std::vector<T> {
+    std::vector<T> objects;
     for(auto object : self().objects()) {
-      if(auto casted = object.cast<T>()) objects.append(casted);
+      if(auto casted = object.cast<T>()) objects.push_back(casted);
     }
     return objects;
   }
@@ -463,7 +463,7 @@ struct IconView : sIconView {
   auto setFlow(Orientation orientation = Orientation::Vertical) { return self().setFlow(orientation), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
   auto setOrientation(Orientation orientation = Orientation::Horizontal) { return self().setOrientation(orientation), *this; }
-  auto setSelected(const vector<s32>& selections) { return self().setSelected(selections), *this; }
+  auto setSelected(const std::vector<s32>& selections) { return self().setSelected(selections), *this; }
 };
 #endif
 
@@ -906,7 +906,7 @@ struct Window : sWindow {
   auto backgroundColor() const { return self().backgroundColor(); }
   auto dismissable() const { return self().dismissable(); }
   auto doClose() const { return self().doClose(); }
-  auto doDrop(vector<string> names) const { return self().doDrop(names); }
+  auto doDrop(std::vector<string> names) const { return self().doDrop(names); }
   auto doKeyPress(s32 key) const { return self().doKeyPress(key); }
   auto doKeyRelease(s32 key) const { return self().doKeyRelease(key); }
   auto doMove() const { return self().doMove(); }
@@ -924,7 +924,7 @@ struct Window : sWindow {
   auto modal() const { return self().modal(); }
   auto monitor() const { return self().monitor(); }
   auto onClose(const function<void ()>& callback = {}) { return self().onClose(callback), *this; }
-  auto onDrop(const function<void (vector<string>)>& callback = {}) { return self().onDrop(callback), *this; }
+  auto onDrop(const function<void (std::vector<string>)>& callback = {}) { return self().onDrop(callback), *this; }
   auto onKeyPress(const function<void (s32)>& callback = {}) { return self().onKeyPress(callback), *this; }
   auto onKeyRelease(const function<void (s32)>& callback = {}) { return self().onKeyRelease(callback), *this; }
   auto onMove(const function<void ()>& callback = {}) { return self().onMove(callback), *this; }

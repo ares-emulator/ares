@@ -12,12 +12,12 @@ auto Program::attach(ares::Node::Object node) -> void {
 auto Program::detach(ares::Node::Object node) -> void {
   if(auto screen = node->cast<ares::Node::Video::Screen>()) {
     screens = emulator->root->find<ares::Node::Video::Screen>();
-    screens.removeByValue(screen);
+    screens.erase(std::remove(screens.begin(), screens.end(), screen), screens.end());
   }
 
   if(auto stream = node->cast<ares::Node::Audio::Stream>()) {
     streams = emulator->root->find<ares::Node::Audio::Stream>();
-    streams.removeByValue(stream);
+    streams.erase(std::remove(streams.begin(), streams.end(), stream), streams.end());
     stream->setResamplerFrequency(ruby::audio.frequency());
   }
 }
@@ -58,7 +58,7 @@ auto Program::status(string_view message) -> void {
 }
 
 auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, u32 width, u32 height) -> void {
-  if(!screens) return;
+  if(screens.empty()) return;
 
   if(requestScreenshot) {
     requestScreenshot = false;
@@ -128,7 +128,7 @@ auto Program::refreshRateHint(double refreshRate) -> void {
 }
 
 auto Program::audio(ares::Node::Audio::Stream node) -> void {
-  if(!streams) return;
+  if(streams.empty()) return;
 
   //process all pending frames (there may be more than one waiting)
   while(true) {

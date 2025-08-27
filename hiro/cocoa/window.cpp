@@ -63,7 +63,7 @@
 
 -(BOOL) performDragOperation:(id<NSDraggingInfo>)sender {
   auto paths = DropPaths(sender);
-  if(!paths) return NO;
+  if(paths.empty()) return NO;
   window->doDrop(paths);
   return YES;
 }

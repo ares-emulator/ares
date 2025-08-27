@@ -5,7 +5,7 @@ struct mPopupMenu : mObject {
 
   auto action(u32 position) const -> Action;
   auto actionCount() const -> u32;
-  auto actions() const -> vector<Action>;
+  auto actions() const -> std::vector<Action>;
   auto append(sAction action) -> type&;
   auto remove(sAction action) -> type&;
   auto reset() -> type& override;
@@ -14,7 +14,7 @@ struct mPopupMenu : mObject {
 
 //private:
   struct State {
-    vector<sAction> actions;
+    std::vector<sAction> actions;
   } state;
 
   auto destruct() -> void override;

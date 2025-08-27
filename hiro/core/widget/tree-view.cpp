@@ -16,7 +16,7 @@ auto mTreeView::activation() const -> Mouse::Click {
 }
 
 auto mTreeView::append(sTreeViewItem item) -> type& {
-  state.items.append(item);
+  state.items.push_back(item);
   item->setParent(this, itemCount() - 1);
   signal(append, item);
   return *this;
@@ -69,9 +69,9 @@ auto mTreeView::itemCount() const -> u32 {
   return state.items.size();
 }
 
-auto mTreeView::items() const -> vector<TreeViewItem> {
-  vector<TreeViewItem> items;
-  for(auto& item : state.items) items.append(item);
+auto mTreeView::items() const -> std::vector<TreeViewItem> {
+  std::vector<TreeViewItem> items;
+  for(auto& item : state.items) items.push_back(item);
   return items;
 }
 
@@ -97,7 +97,7 @@ auto mTreeView::onToggle(const function<void (sTreeViewItem)>& callback) -> type
 
 auto mTreeView::remove(sTreeViewItem item) -> type& {
   signal(remove, item);
-  state.items.remove(item->offset());
+  state.items.erase(state.items.begin() + item->offset());
   for(auto n : range(item->offset(), itemCount())) {
     state.items[n]->adjustOffset(-1);
   }
@@ -107,7 +107,7 @@ auto mTreeView::remove(sTreeViewItem item) -> type& {
 
 auto mTreeView::reset() -> type& {
   state.selectedPath.reset();
-  while(state.items) remove(state.items.right());
+  state.items.clear();
   return *this;
 }
 
@@ -142,7 +142,7 @@ auto mTreeView::setForegroundColor(Color color) -> type& {
 }
 
 auto mTreeView::setParent(mObject* object, s32 offset) -> type& {
-  for(auto& item : reverse(state.items)) item->destruct();
+  for(auto it = state.items.rbegin(); it != state.items.rend(); ++it) (*it)->destruct();
   mObject::setParent(object, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());
   return *this;
