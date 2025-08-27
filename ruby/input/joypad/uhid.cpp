@@ -17,7 +17,7 @@ struct InputJoypadUHID {
     u8* buffer = nullptr;
     bool writable = false;
   };
-  vector<Joypad> joypads;
+  std::vector<Joypad> joypads;
 
   auto assign(Joypad& joypad, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = joypad.hid->group(groupID);
@@ -26,7 +26,7 @@ struct InputJoypadUHID {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     //hotplug support
     u64 thisTimestamp = chrono::millisecond();
     if(thisTimestamp - lastTimestamp >= 2000) {
@@ -186,7 +186,7 @@ struct InputJoypadUHID {
         for(u32 n : range(axes)) joypad.hid->buttons().append(n);
       }
 
-      joypads.append(joypad);
+      joypads.push_back(joypad);
     }
 
     lastTimestamp = chrono::millisecond();
@@ -199,7 +199,7 @@ struct InputJoypadUHID {
       flock(joypad.fd, LOCK_UN);
       close(joypad.fd);
     }
-    joypads.reset();
+    joypads.clear();
   }
 
 private:

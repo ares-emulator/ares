@@ -25,7 +25,7 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
     .setAlignment(programWindow)
     .openFiles()
     ) {
-      settings.recent = Location::path(files.first());
+      if(!files.empty()) settings.recent = Location::path(files.front());
       gameImporter.import(system, files);
     }
   });

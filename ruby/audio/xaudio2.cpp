@@ -21,17 +21,17 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   auto hasBlocking() -> bool override { return true; }
   auto hasDynamic() -> bool override { return true; }
 
-  auto hasDevices() -> vector<string> override {
-    vector<string> devices;
-    for(auto& device : self.devices) devices.append(device.name);
+  auto hasDevices() -> std::vector<string> override {
+    std::vector<string> devices;
+    for(auto& device : self.devices) devices.push_back(device.name);
     return devices;
   }
 
-  auto hasFrequencies() -> vector<u32> override {
+  auto hasFrequencies() -> std::vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<u32> override {
+  auto hasLatencies() -> std::vector<u32> override {
     return {20, 40, 60, 80, 100};
   }
 
@@ -93,7 +93,7 @@ private:
     Format format = Format::none;
     string name;
   };
-  vector<Device> devices;
+  std::vector<Device> devices;
 
   auto construct() -> void {
     if(FAILED(XAudio2Create(&self.xa2Interface, 0 , XAUDIO2_DEFAULT_PROCESSOR))) return;
@@ -120,9 +120,9 @@ private:
 
       //ensure devices.first() is the default device
       if(deviceDetails.Role & DefaultGameDevice) {
-        devices.prepend(device);
+        devices.insert(devices.begin(), device);
       } else {
-        devices.append(device);
+        devices.push_back(device);
       }
     }
   }

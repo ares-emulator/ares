@@ -30,7 +30,7 @@ struct InputJoypadXInput {
     shared_pointer<HID::Joypad> hid{new HID::Joypad};
     u32 id = 0;
   };
-  vector<Joypad> joypads;
+  std::vector<Joypad> joypads;
 
   auto assign(shared_pointer<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
@@ -83,7 +83,7 @@ struct InputJoypadXInput {
       assign(jp.hid, HID::Joypad::GroupID::Button,  9, (bool)(state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB));
       assign(jp.hid, HID::Joypad::GroupID::Button, 10, (bool)(state.Gamepad.wButtons & XINPUT_GAMEPAD_GUIDE));
 
-      devices.append(jp.hid);
+      devices.push_back(jp.hid);
     }
   }
 

@@ -86,21 +86,21 @@ struct AudioWASAPI : AudioDriver {
   }
   auto hasBlocking() -> bool override { return true; }
 
-  auto hasDevices() -> vector<string> override {
-    vector<string> devices;
-    for(auto& device : self.devices) devices.append(device.name);
+  auto hasDevices() -> std::vector<string> override {
+    std::vector<string> devices;
+    for(auto& device : self.devices) devices.push_back(device.name);
     return devices;
   }
 
-  auto hasChannels() -> vector<u32> override {
+  auto hasChannels() -> std::vector<u32> override {
     return {self.channels};
   }
 
-  auto hasFrequencies() -> vector<u32> override {
+  auto hasFrequencies() -> std::vector<u32> override {
     return {self.frequency};
   }
 
-  auto hasLatencies() -> vector<u32> override {
+  auto hasLatencies() -> std::vector<u32> override {
     return {0, 20, 40, 60, 80, 100};
   }
 
@@ -147,7 +147,7 @@ private:
     string name;
     bool isDefault;
   };
-  vector<Device> devices;
+  std::vector<Device> devices;
 
   auto getDevice() -> maybe<Device&> {
     if(auto index = self.devices.find([&](auto& device) { return device.name == self.device; })) {
@@ -193,7 +193,7 @@ private:
       defaultDevice.name = "Default";
       defaultDevice.isDefault = true;
 
-      self.devices.append(defaultDevice);
+      self.devices.push_back(defaultDevice);
       CoTaskMemFree(defaultDeviceString);
     }
 
@@ -224,7 +224,7 @@ private:
       device.name = (const char*)utf8_t(propVariant.pwszVal);
       propertyStore->Release();
 
-      self.devices.append(device);
+      self.devices.push_back(device);
     }
 
     deviceCollection->Release();
