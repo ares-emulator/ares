@@ -58,12 +58,12 @@ auto pTableView::remove(sTableViewItem item) -> void {
 auto pTableView::resizeColumns() -> void {
   auto lock = acquire();
 
-  vector<s32> widths;
+  std::vector<s32> widths;
   s32 minimumWidth = 0;
   s32 expandable = 0;
   for(auto column : range(self().columnCount())) {
     s32 width = _width(column);
-    widths.append(width);
+    widths.push_back(width);
     minimumWidth += width;
     if(self().column(column).expandable()) expandable++;
   }
