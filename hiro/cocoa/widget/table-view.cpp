@@ -62,6 +62,7 @@
   }
 
   for(auto& tableViewColumn : tableView->state.columns) {
+    if(!tableViewColumn) continue;
     auto column = tableViewColumn->offset();
 
     NSTableColumn* tableColumn = [[NSTableColumn alloc] initWithIdentifier:[[NSNumber numberWithInteger:column] stringValue]];
