@@ -61,7 +61,7 @@ inline auto BWT(array_view<u8> input) -> std::vector<u8> {
   for(u32 offset : range(size)) buffer.push_back(input[offset]);
   for(u32 offset : range(size)) buffer.push_back(input[offset]);
 
-  auto suffixes = SuffixArray(array_view<u8>(buffer.data(), buffer.size()));
+  auto suffixes = SuffixArray(buffer);
 
   std::vector<s32> prefixes;
   prefixes.reserve(size);
