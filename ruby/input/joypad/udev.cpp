@@ -50,7 +50,7 @@ struct InputJoypadUdev {
     bool rumble = false;
     s32 effectID = -1;
   };
-  vector<Joypad> joypads;
+  std::vector<Joypad> joypads;
 
   auto assign(shared_pointer<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
@@ -92,7 +92,7 @@ struct InputJoypadUdev {
         }
       }
 
-      devices.append(jp.hid);
+      devices.push_back(jp.hid);
     }
   }
 
@@ -257,7 +257,7 @@ private:
       jp.rumble = jp.effects >= 2 && testBit(jp.ffbit, FF_RUMBLE);
 
       createJoypadHID(jp);
-      joypads.append(jp);
+      joypads.push_back(jp);
     }
 
     #undef testBit
@@ -278,7 +278,7 @@ private:
     for(u32 n : range(joypads.size())) {
       if(joypads[n].deviceNode == deviceNode) {
         close(joypads[n].fd);
-        joypads.remove(n);
+        joypads.erase(joypads.begin() + n);
         return;
       }
     }

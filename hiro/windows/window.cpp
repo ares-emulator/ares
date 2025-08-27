@@ -315,7 +315,8 @@ auto pWindow::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> m
   }
 
   if(msg == WM_DROPFILES) {
-    if(auto paths = DropPaths(wparam)) self().doDrop(paths);
+    auto paths = DropPaths(wparam);
+    if(!paths.empty()) self().doDrop(paths);
     return false;
   }
 

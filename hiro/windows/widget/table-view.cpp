@@ -185,7 +185,7 @@ auto pTableView::onCustomDraw(LPARAM lparam) -> LRESULT {
       ListView_GetSubItemRect(hwnd, row, column, LVIR_LABEL, &rcLabel);
       rc.right = rcLabel.right;  //bounds of column 0 returns width of entire item
       s32 iconSize = rc.bottom - rc.top - 1;
-      bool selected = state().items(row)->state.selected;
+      bool selected = state().items[row]->state.selected;
 
       if(auto cell = self().item(row)->cell(column)) {
         auto backgroundColor = cell->backgroundColor(true);

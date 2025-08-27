@@ -16,7 +16,7 @@ struct AudioPulseAudioSimple : AudioDriver {
   auto driver() -> string override { return "PulseAudio Simple"; }
   auto ready() -> bool override { return _ready; }
 
-  auto hasFrequencies() -> vector<u32> override {
+  auto hasFrequencies() -> std::vector<u32> override {
     return {44100, 48000, 96000};
   }
 

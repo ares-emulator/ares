@@ -90,7 +90,7 @@ struct InputMouseRawInput {
     ms.relativeY = 0;
     ms.relativeZ = 0;
 
-    devices.append(ms.hid);
+    devices.push_back(ms.hid);
   }
 
   auto initialize(uintptr handle) -> bool {

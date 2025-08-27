@@ -13,7 +13,7 @@ struct InputKeyboardXlib {
     u32 keysym = 0;
     u32 keycode = 0;
   };
-  vector<Key> keys;
+  std::vector<Key> keys;
 
   auto assign(u32 inputID, bool value) -> void {
     auto& group = hid->buttons();
@@ -59,19 +59,19 @@ struct InputKeyboardXlib {
     keys.push_back({"Tilde", XK_asciitilde});
 
     keys.push_back({"Num0", XK_0});
-    keys.append({"Num1", XK_1});
-    keys.append({"Num2", XK_2});
-    keys.append({"Num3", XK_3});
-    keys.append({"Num4", XK_4});
-    keys.append({"Num5", XK_5});
-    keys.append({"Num6", XK_6});
-    keys.append({"Num7", XK_7});
-    keys.append({"Num8", XK_8});
-    keys.append({"Num9", XK_9});
+    keys.push_back({"Num1", XK_1});
+    keys.push_back({"Num2", XK_2});
+    keys.push_back({"Num3", XK_3});
+    keys.push_back({"Num4", XK_4});
+    keys.push_back({"Num5", XK_5});
+    keys.push_back({"Num6", XK_6});
+    keys.push_back({"Num7", XK_7});
+    keys.push_back({"Num8", XK_8});
+    keys.push_back({"Num9", XK_9});
 
-    keys.append({"Dash", XK_minus});
-    keys.append({"Equal", XK_equal});
-    keys.append({"Backspace", XK_BackSpace});
+    keys.push_back({"Dash", XK_minus});
+    keys.push_back({"Equal", XK_equal});
+    keys.push_back({"Backspace", XK_BackSpace});
 
     keys.push_back({"Insert", XK_Insert});
     keys.push_back({"Delete", XK_Delete});

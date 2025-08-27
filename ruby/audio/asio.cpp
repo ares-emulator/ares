@@ -21,41 +21,41 @@ struct AudioASIO : AudioDriver {
   auto hasContext() -> bool override { return true; }
   auto hasBlocking() -> bool override { return true; }
 
-  auto hasDevices() -> vector<string> override {
-    self.devices.reset();
+  auto hasDevices() -> std::vector<string> override {
+    self.devices.clear();
     for(auto candidate : registry::contents("HKLM\\SOFTWARE\\ASIO\\")) {
       if(auto classID = registry::read({"HKLM\\SOFTWARE\\ASIO\\", candidate, "CLSID"})) {
-        self.devices.append({candidate.trimRight("\\", 1L), classID});
+        self.devices.push_back({candidate.trimRight("\\", 1L), classID});
       }
     }
 
-    vector<string> devices;
-    for(auto& device : self.devices) devices.append(device.name);
+    std::vector<string> devices;
+    for(auto& device : self.devices) devices.push_back(device.name);
     return devices;
   }
 
-  auto hasChannels() -> vector<u32> override {
+  auto hasChannels() -> std::vector<u32> override {
     return {1, 2};
   }
 
-  auto hasFrequencies() -> vector<u32> override {
+  auto hasFrequencies() -> std::vector<u32> override {
     return {self.frequency};
   }
 
-  auto hasLatencies() -> vector<u32> override {
-    vector<u32> latencies;
+  auto hasLatencies() -> std::vector<u32> override {
+    std::vector<u32> latencies;
     u32 latencyList[] = {64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 6144};  //factors of 6144
     for(auto& latency : latencyList) {
       if(self.activeDevice) {
         if(latency < self.activeDevice.minimumBufferSize) continue;
         if(latency > self.activeDevice.maximumBufferSize) continue;
       }
-      latencies.append(latency);
+      latencies.push_back(latency);
     }
     //it is possible that no latencies in the hard-coded list above will match; so ensure driver-declared latencies are available
-    if(!latencies.find(self.activeDevice.minimumBufferSize)) latencies.append(self.activeDevice.minimumBufferSize);
-    if(!latencies.find(self.activeDevice.maximumBufferSize)) latencies.append(self.activeDevice.maximumBufferSize);
-    if(!latencies.find(self.activeDevice.preferredBufferSize)) latencies.append(self.activeDevice.preferredBufferSize);
+    if(!latencies.find(self.activeDevice.minimumBufferSize)) latencies.push_back(self.activeDevice.minimumBufferSize);
+    if(!latencies.find(self.activeDevice.maximumBufferSize)) latencies.push_back(self.activeDevice.maximumBufferSize);
+    if(!latencies.find(self.activeDevice.preferredBufferSize)) latencies.push_back(self.activeDevice.preferredBufferSize);
     latencies.sort();
     return latencies;
   }
@@ -286,7 +286,7 @@ private:
   };
 
   Queue _queue;
-  vector<Device> devices;
+  std::vector<Device> devices;
   Device activeDevice;
   IASIO* _asio = nullptr;
   ASIOBufferInfo _channel[8];

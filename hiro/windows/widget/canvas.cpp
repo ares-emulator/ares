@@ -63,7 +63,8 @@ auto pCanvas::doMouseMove(s32 x, s32 y) -> void {
 
 auto pCanvas::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> maybe<LRESULT> {
   if(msg == WM_DROPFILES) {
-    if(auto paths = DropPaths(wparam)) self().doDrop(paths);
+    auto paths = DropPaths(wparam);
+    if(!paths.empty()) self().doDrop(paths);
     return false;
   }
 
