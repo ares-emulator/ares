@@ -74,8 +74,12 @@ private:
   auto initialize() -> bool {
     terminate();
 
-    auto deviceIndex = hasDevices().find(self.device);
-    if(!deviceIndex) deviceIndex = 0;
+    u32 deviceIndex = 0;
+    {
+      auto names = hasDevices();
+      auto it = std::find(names.begin(), names.end(), self.device);
+      if(it != names.end()) deviceIndex = (u32)std::distance(names.begin(), it);
+    }
 
     WAVEFORMATEX format{};
     format.wFormatTag = WAVE_FORMAT_PCM;
@@ -86,7 +90,7 @@ private:
     format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
     format.cbSize = 0;  //not sizeof(WAVEFORMAT); size of extra information after WAVEFORMATEX
     //-1 = default; 0+ = specific device; subtract -1 as hasDevices() includes "Default" entry
-    waveOutOpen(&handle, (s32)*deviceIndex - 1, &format, (DWORD_PTR)waveOutCallback, (DWORD_PTR)this, CALLBACK_FUNCTION);
+    waveOutOpen(&handle, (s32)deviceIndex - 1, &format, (DWORD_PTR)waveOutCallback, (DWORD_PTR)this, CALLBACK_FUNCTION);
 
     frameCount = self.latency;
     blockCount = 32;
