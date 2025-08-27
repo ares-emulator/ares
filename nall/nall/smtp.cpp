@@ -33,7 +33,7 @@ NALL_HEADER_INLINE auto SMTP::send() -> bool {
     info.message.append("Content-Transfer-Encoding: base64\r\n");
     info.message.append("Content-Disposition: attachment; size=", attachment.buffer.size(), "; filename*=UTF-8''", filename(attachment.name), "\r\n");
     info.message.append("\r\n");
-    info.message.append(split(Encode::Base64(attachment.buffer)), "\r\n");
+    info.message.append(split(Encode::Base64(attachment.buffer.data(), (u32)attachment.buffer.size())), "\r\n");
     info.message.append("\r\n");
   }
 
@@ -114,15 +114,15 @@ NALL_HEADER_INLINE auto SMTP::send(s32 sock, const string& text) -> bool {
 }
 
 NALL_HEADER_INLINE auto SMTP::recv(s32 sock) -> string {
-  vector<u8> buffer;
+  std::vector<u8> buffer;
   while(true) {
     char c;
     if(::recv(sock, &c, sizeof(char), 0) < 1) break;
-    buffer.append(c);
+    buffer.push_back((u8)c);
     if(c == '\n') break;
   }
-  buffer.append(0);
-  return buffer;
+  buffer.push_back(0);
+  return string((const char*)buffer.data(), (u32)buffer.size());
 }
 
 #if defined(API_WINDOWS)

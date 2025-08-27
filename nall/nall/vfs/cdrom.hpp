@@ -343,7 +343,8 @@ private:
         memory::copy(target, length, rawDataBuffer.data(), rawDataBuffer.size());
       }
     } else {
-      if(auto overlay = nall::file::read(location)) {
+      auto overlay = nall::file::read(location);
+      if(!overlay.empty()) {
         auto target = subchannel.data() + 96 * (LeadInSectors + Track1Pregap);
         auto length = (s64)subchannel.size() - 96 * (LeadInSectors + Track1Pregap);
         memory::copy(target, length, overlay.data(), overlay.size());
@@ -357,7 +358,7 @@ private:
     }
   }
 
-  vector<u8> _image;
+  std::vector<u8> _image;
   u64 _offset = 0;
   atomic<u64> _loadOffset = 0;
   thread _thread;

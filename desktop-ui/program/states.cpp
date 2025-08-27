@@ -30,7 +30,7 @@ auto Program::stateLoad(u32 slot) -> bool {
   }
 
   auto location = emulator->locate(emulator->game->location, {".bs", slot}, settings.paths.saves);
-  if(auto memory = file::read(location)) {
+  if(auto memory = file::read(location); !memory.empty()) {
     serializer state{memory.data(), (u32)memory.size()};
     if(emulator->root->unserialize(state)) {
       showMessage({"Loaded state from slot ", slot});
@@ -62,7 +62,7 @@ auto Program::undoStateLoad() -> bool {
   if(!emulator) return false;
 
   auto undoLocation = emulator->locate(emulator->game->location, ".blu", settings.paths.saves);
-  if(auto memory = file::read(undoLocation)) {
+  if(auto memory = file::read(undoLocation); !memory.empty()) {
     serializer state{memory.data(), (u32)memory.size()};
     if(emulator->root->unserialize(state)) {
       showMessage({"Loaded state from undo load file ", undoLocation});

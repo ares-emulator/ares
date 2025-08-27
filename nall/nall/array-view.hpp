@@ -29,6 +29,11 @@ template<typename T> struct array_view {
     _size = size;
   }
 
+  array_view(const std::vector<T>& v) {
+    _data = v.data();
+    _size = (s32)v.size();
+  }
+
   explicit operator bool() const {
     return _data && _size > 0;
   }

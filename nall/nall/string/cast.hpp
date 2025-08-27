@@ -192,6 +192,24 @@ template<> struct stringify<vector<u8>> {
   vector<char> _text;
 };
 
+template<> struct stringify<std::vector<u8>> {
+  stringify(const std::vector<u8>& source) {
+    _text.resize(source.size());
+    memory::copy(_text.get(), source.data(), source.size());
+  }
+  auto data() const -> const char* { return _text.data(); }
+  auto size() const -> u32 { return _text.size(); }
+  string _text;
+};
+
+//helper to stringify std::vector<u8> without affecting other stringify mechanics
+inline auto stringify_std_vector_u8(const std::vector<u8>& value) -> string {
+  string output;
+  output.resize(value.size());
+  memory::copy(output.get(), value.data(), value.size());
+  return output;
+}
+
 //char arrays
 
 template<> struct stringify<char*> {
