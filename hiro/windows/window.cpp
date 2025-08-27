@@ -41,11 +41,11 @@ auto pWindow::construct() -> void {
   setDroppable(state().droppable);
   setGeometry({128, 128, 256, 256});
 
-  windows.append(self().instance);
+  windows.push_back(self().instance);
 }
 
 auto pWindow::destruct() -> void {
-  if(auto position = windows.find(self().instance)) windows.remove(*position);
+  if(auto it = std::find(windows.begin(), windows.end(), self().instance); it != windows.end()) windows.erase(it);
 
   if(hbrush) { DeleteObject(hbrush); hbrush = nullptr; }
   DestroyWindow(hwnd);

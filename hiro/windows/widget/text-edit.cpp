@@ -58,8 +58,8 @@ auto pTextEdit::setWordWrap(bool wordWrap) -> void {
 
 auto pTextEdit::text() const -> string {
   u32 length = GetWindowTextLength(hwnd);
-  vector<wchar_t> buffer;
-  buffer.reallocate(length + 1);
+  std::vector<wchar_t> buffer;
+  buffer.resize(length + 1);
   GetWindowText(hwnd, buffer.data(), length + 1);
   buffer[length] = 0;
   string text = (const char*)utf8_t(buffer.data());

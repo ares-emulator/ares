@@ -37,7 +37,7 @@ struct pTableView : pWidget {
 
   TableViewCell activateCell;
   HIMAGELIST imageList = 0;
-  vector<image> icons;
+  std::vector<image> icons;
 };
 
 }

@@ -23,7 +23,7 @@ struct pCanvas : pWidget {
   auto _rasterize() -> void;
   auto _redraw() -> void;
 
-  vector<u32> pixels;
+  std::vector<u32> pixels;
   s32 width = 0;
   s32 height = 0;
 };

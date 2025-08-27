@@ -167,7 +167,7 @@ auto pCanvas::_rasterize() -> void {
   }
   if(width <= 0 || height <= 0) return;
 
-  pixels.reset();
+  pixels.clear();
   pixels.resize(width * height);
 
   if(auto& icon = state().icon) {
