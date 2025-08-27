@@ -100,7 +100,7 @@ auto APU::readIO(n16 address) -> n8 {
     data.bit(2) = (bool)triangle.length.counter;
     data.bit(3) = (bool)noise.length.counter;
     data.bit(4) = (bool)dmc.lengthCounter;
-    data.bit(5) = 0;
+    //bit 5 is open bus
     data.bit(6) = frame.irqPending;
     data.bit(7) = dmc.irqPending;
     frame.irqPending = false;
