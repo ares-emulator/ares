@@ -36,8 +36,12 @@ static auto TabFrame_move(GtkNotebook* notebook, GtkWidget* page, u32 moveTo, pT
     }
   }
   if(moveFrom) {
-    p->state().items.insert(moveTo, p->state().items.take(*moveFrom));
-    p->tabs.insert(moveTo, p->tabs.take(*moveFrom));
+    auto item = p->state().items[*moveFrom];
+    p->state().items.erase(p->state().items.begin() + *moveFrom);
+    p->state().items.insert(p->state().items.begin() + moveTo, item);
+    auto tab = p->tabs[*moveFrom];
+    p->tabs.erase(p->tabs.begin() + *moveFrom);
+    p->tabs.insert(p->tabs.begin() + moveTo, tab);
     if(!p->locked()) p->self().doMove(p->self().item(*moveFrom), p->self().item(moveTo));
   }
 }

@@ -38,11 +38,11 @@ static auto CreateRGB(const Color& color) -> COLORREF {
   return RGB(color.red(), color.green(), color.blue());
 }
 
-static auto DropPaths(WPARAM wparam) -> vector<string> {
+static auto DropPaths(WPARAM wparam) -> std::vector<string> {
   auto dropList = HDROP(wparam);
   auto fileCount = DragQueryFile(dropList, ~0u, nullptr, 0);
 
-  vector<string> paths;
+  std::vector<string> paths;
   for(auto n : range(fileCount)) {
     auto length = DragQueryFile(dropList, n, nullptr, 0);
     auto buffer = new wchar_t[length + 1];
@@ -51,7 +51,7 @@ static auto DropPaths(WPARAM wparam) -> vector<string> {
       string path = (const char*)utf8_t(buffer);
       path.transform("\\", "/");
       if(directory::exists(path) && !path.endsWith("/")) path.append("/");
-      paths.append(path);
+      paths.push_back(path);
     }
 
     delete[] buffer;

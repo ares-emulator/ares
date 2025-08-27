@@ -14,11 +14,11 @@ struct AudioAO : AudioDriver {
   auto driver() -> string override { return "libao"; }
   auto ready() -> bool override { return _ready; }
 
-  auto hasChannels() -> vector<u32> override {
+  auto hasChannels() -> std::vector<u32> override {
     return {2};
   }
 
-  auto hasFrequencies() -> vector<u32> override {
+  auto hasFrequencies() -> std::vector<u32> override {
     return {44100, 48000, 96000};
   }
 
