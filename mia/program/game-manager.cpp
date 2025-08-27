@@ -10,7 +10,8 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
     .selectFolder()
     ) {
       path = location;
-      auto pathLabelTemp = string{path}.replace(Path::user(), "~/");
+      auto userPath = Path::user();
+      auto pathLabelTemp = string{path}.replace(userPath, "~/");
       pathLabel.setText(pathLabelTemp);
       refresh();
     }
@@ -33,7 +34,8 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
 }
 
 auto GameManager::select(string system) -> void {
-  path = {Path::user(), "Emulation/", system, "/"};
+  auto userPath = Path::user();
+  path = {userPath, "Emulation/", system, "/"};
   auto pathLabelTemp = string{path}.replace(Path::user(), "~/");
   pathLabel.setText(pathLabelTemp);
   this->system = system;
