@@ -112,7 +112,8 @@ inline auto DML::parseBlock(string& block, const string& pathname, u32 depth) ->
 
   //header
   else if(auto depth = count(block, '#')) {
-    auto content = slice(lines.takeLeft(), depth + 1);
+    auto nextLine = lines.takeLeft();
+    auto content = slice(nextLine, depth + 1);
     auto data = markup(content);
     auto name = anchor(content);
     if(depth <= 5) {

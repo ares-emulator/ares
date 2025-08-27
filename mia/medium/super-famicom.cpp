@@ -89,7 +89,8 @@ auto SuperFamicom::load(string location) -> LoadResult {
   this->manifest = Medium::manifestDatabase(sha256);
   
   if(!manifest) {
-    auto local_manifest = location.replace({".", location.split(".").last()}, ".bml");
+    auto extension = string{ ".", location.split(".").last() };
+    auto local_manifest = location.replace(extension, ".bml");
     if (folder)
       local_manifest = directory.append("manifest.bml");
     if(file::exists(local_manifest)) {
