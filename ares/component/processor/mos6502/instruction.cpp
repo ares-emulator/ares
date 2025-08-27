@@ -64,7 +64,7 @@ auto MOS6502::instruction() -> void {
   op(0x1d, Load,   addr(AbsoluteXRead),  fp(ORA))
   op(0x1e, Modify, addr(AbsoluteXWrite), fp(ASLM))
   op(0x1f, Modify, addr(AbsoluteXWrite), fp(SLO))
-  op(0x20, Load,   addr(Absolute),       fp(JSR))
+  op(0x20, None,   addr(Implied),        fp(JSR))
   op(0x21, Load,   addr(IndirectX),      fp(AND))
   op(0x22, None,   addr(Implied),        fp(JAM))
   op(0x23, Modify, addr(IndirectX),      fp(RLA))
