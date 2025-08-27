@@ -257,8 +257,8 @@ auto MOS6502::algorithmORA() -> void {
 }
 
 auto MOS6502::algorithmPHA() -> void {
-    read(MAR); // dummy implied read
-    L push(A);
+  read(MAR); // dummy implied read
+L push(A);
 }
 
 auto MOS6502::algorithmPHP() -> void {
