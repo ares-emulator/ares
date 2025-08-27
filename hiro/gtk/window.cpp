@@ -59,8 +59,7 @@ static auto Window_drop(GtkWidget* widget, GdkDragContext* context, s32 x, s32 y
 GtkSelectionData* data, u32 type, u32 timestamp, pWindow* p) -> void {
   if(!p->state().droppable) return;
   auto paths = DropPaths(data);
-  if(!paths) return;
-  p->self().doDrop(paths);
+  if(!paths.empty()) p->self().doDrop(paths);
 }
 
 static auto Window_getPreferredWidth(GtkWidget* widget, s32* minimalWidth, s32* naturalWidth) -> void {

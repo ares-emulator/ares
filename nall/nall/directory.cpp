@@ -23,7 +23,11 @@ NALL_HEADER_INLINE auto directory::ufolders(const string& pathname, const string
       if(!*p) *p = ';';
       p++;
     }
-    return string{(const char*)utf8_t(drives)}.replace("\\", "/").split(";");
+    auto temp = string{(const char*)utf8_t(drives)}.replace("\\", "/").split(";");
+    std::vector<string> out;
+    out.reserve(temp.size());
+    for(auto& s : temp) out.push_back(s);
+    return out;
   }
 
   std::vector<string> list;
@@ -38,14 +42,14 @@ NALL_HEADER_INLINE auto directory::ufolders(const string& pathname, const string
     if(wcscmp(data.cFileName, L".") && wcscmp(data.cFileName, L"..")) {
       if(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
         string name = (const char*)utf8_t(data.cFileName);
-        if(name.match(pattern)) list.append(name);
+        if(name.match(pattern)) list.push_back(name);
       }
     }
     while(FindNextFile(handle, &data) != false) {
       if(wcscmp(data.cFileName, L".") && wcscmp(data.cFileName, L"..")) {
         if(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
           string name = (const char*)utf8_t(data.cFileName);
-          if(name.match(pattern)) list.append(name);
+          if(name.match(pattern)) list.push_back(name);
         }
       }
     }
@@ -68,12 +72,12 @@ NALL_HEADER_INLINE auto directory::ufiles(const string& pathname, const string& 
   if(handle != INVALID_HANDLE_VALUE) {
     if((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
       string name = (const char*)utf8_t(data.cFileName);
-      if(name.match(pattern)) list.append(name);
+      if(name.match(pattern)) list.push_back(name);
     }
     while(FindNextFile(handle, &data) != false) {
       if((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
         string name = (const char*)utf8_t(data.cFileName);
-        if(name.match(pattern)) list.append(name);
+        if(name.match(pattern)) list.push_back(name);
       }
     }
     FindClose(handle);
