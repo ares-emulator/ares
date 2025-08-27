@@ -20,14 +20,14 @@ auto mPopupMenu::actionCount() const -> u32 {
   return state.actions.size();
 }
 
-auto mPopupMenu::actions() const -> vector<Action> {
-  vector<Action> actions;
-  for(auto& action : state.actions) actions.append(action);
+auto mPopupMenu::actions() const -> std::vector<Action> {
+  std::vector<Action> actions;
+  for(auto& action : state.actions) actions.push_back(action);
   return actions;
 }
 
 auto mPopupMenu::append(sAction action) -> type& {
-  state.actions.append(action);
+  state.actions.push_back(action);
   action->setParent(this, actionCount() - 1);
   signal(append, action);
   return *this;
@@ -36,7 +36,7 @@ auto mPopupMenu::append(sAction action) -> type& {
 auto mPopupMenu::remove(sAction action) -> type& {
   s32 offset = action->offset();
   signal(remove, action);
-  state.actions.remove(offset);
+  state.actions.erase(state.actions.begin() + offset);
   for(auto n : range(offset, actionCount())) {
     state.actions[n]->adjustOffset(-1);
   }
@@ -45,12 +45,12 @@ auto mPopupMenu::remove(sAction action) -> type& {
 }
 
 auto mPopupMenu::reset() -> type& {
-  while(state.actions) remove(state.actions.right());
+  state.actions.clear();
   return *this;
 }
 
 auto mPopupMenu::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& action : reverse(state.actions)) action->destruct();
+  for(auto it = state.actions.rbegin(); it != state.actions.rend(); ++it) (*it)->destruct();
   mObject::setParent(parent, offset);
   for(auto& action : state.actions) action->construct();
   return *this;

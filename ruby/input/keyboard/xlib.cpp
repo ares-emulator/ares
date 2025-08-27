@@ -22,7 +22,7 @@ struct InputKeyboardXlib {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     char state[32];
     XQueryKeymap(display, state);
 

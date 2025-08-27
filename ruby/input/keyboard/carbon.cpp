@@ -19,7 +19,7 @@ struct InputKeyboardCarbon {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     KeyMap keymap;
     GetKeys(keymap);
     auto buffer = (const uint8*)keymap;

@@ -33,7 +33,7 @@ struct InputKeyboardRawInput {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     for(auto n : range(keys.size())) assign(n, keys[n].value);
     devices.append(kb.hid);
   }

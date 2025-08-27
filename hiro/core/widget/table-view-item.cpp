@@ -16,7 +16,7 @@ auto mTableViewItem::alignment() const -> Alignment {
 }
 
 auto mTableViewItem::append(sTableViewCell cell) -> type& {
-  state.cells.append(cell);
+  state.cells.push_back(cell);
   cell->setParent(this, cellCount() - 1);
   signal(append, cell);
   return *this;
@@ -35,9 +35,9 @@ auto mTableViewItem::cellCount() const -> u32 {
   return state.cells.size();
 }
 
-auto mTableViewItem::cells() const -> vector<TableViewCell> {
-  vector<TableViewCell> cells;
-  for(auto& cell : state.cells) cells.append(cell);
+auto mTableViewItem::cells() const -> std::vector<TableViewCell> {
+  std::vector<TableViewCell> cells;
+  for(auto& cell : state.cells) cells.push_back(cell);
   return cells;
 }
 
@@ -52,7 +52,7 @@ auto mTableViewItem::remove() -> type& {
 
 auto mTableViewItem::remove(sTableViewCell cell) -> type& {
   signal(remove, cell);
-  state.cells.remove(cell->offset());
+  state.cells.erase(state.cells.begin() + cell->offset());
   for(auto n : range(cell->offset(), cellCount())) {
     state.cells[n]->adjustOffset(-1);
   }
@@ -61,7 +61,7 @@ auto mTableViewItem::remove(sTableViewCell cell) -> type& {
 }
 
 auto mTableViewItem::reset() -> type& {
-  while(state.cells) remove(state.cells.right());
+  state.cells.clear();
   return *this;
 }
 

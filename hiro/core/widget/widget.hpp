@@ -2,7 +2,7 @@
 struct mWidget : mSizable {
   Declare(Widget)
 
-  auto doDrop(vector<string> names) const -> void;
+  auto doDrop(std::vector<string> names) const -> void;
   auto doMouseEnter() const -> void;
   auto doMouseLeave() const -> void;
   auto doMouseMove(Position position) const -> void;
@@ -11,7 +11,7 @@ struct mWidget : mSizable {
   auto droppable() const -> bool;
   auto focusable() const -> bool;
   auto mouseCursor() const -> MouseCursor;
-  auto onDrop(const function<void (vector<string>)>& callback = {}) -> type&;
+  auto onDrop(const function<void (std::vector<string>)>& callback = {}) -> type&;
   auto onMouseEnter(const function<void ()>& callback = {}) -> type&;
   auto onMouseLeave(const function<void ()>& callback = {}) -> type&;
   auto onMouseMove(const function<void (Position position)>& callback = {}) -> type&;
@@ -29,7 +29,7 @@ struct mWidget : mSizable {
     bool droppable = false;
     bool focusable = false;
     MouseCursor mouseCursor;
-    function<void (vector<string>)> onDrop;
+    function<void (std::vector<string>)> onDrop;
     function<void ()> onMouseEnter;
     function<void ()> onMouseLeave;
     function<void (Position)> onMouseMove;

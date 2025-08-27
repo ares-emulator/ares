@@ -14,10 +14,10 @@ mListView::mListView() {
   append(TableViewColumn().setExpandable());
 }
 
-auto mListView::batched() const -> vector<ListViewItem> {
+auto mListView::batched() const -> std::vector<ListViewItem> {
   auto batched = mTableView::batched();
-  vector<ListViewItem> result;
-  for(auto item : batched) result.append(ListViewItem{item});
+  std::vector<ListViewItem> result;
+  for(auto item : batched) result.push_back(ListViewItem{item});
   return result;
 }
 
@@ -41,10 +41,10 @@ auto mListView::item(u32 position) const -> ListViewItem {
   return ListViewItem{mTableView::item(position)};
 }
 
-auto mListView::items() const -> vector<ListViewItem> {
+auto mListView::items() const -> std::vector<ListViewItem> {
   auto items = mTableView::items();
-  vector<ListViewItem> result;
-  for(auto item : items) result.append(ListViewItem{item});
+  std::vector<ListViewItem> result;
+  for(auto item : items) result.push_back(ListViewItem{item});
   return result;
 }
 

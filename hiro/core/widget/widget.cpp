@@ -6,7 +6,7 @@ auto mWidget::allocate() -> pObject* {
 
 //
 
-auto mWidget::doDrop(vector<string> names) const -> void {
+auto mWidget::doDrop(std::vector<string> names) const -> void {
   if(state.onDrop) return state.onDrop(names);
 }
 
@@ -42,7 +42,7 @@ auto mWidget::mouseCursor() const -> MouseCursor {
   return state.mouseCursor;
 }
 
-auto mWidget::onDrop(const function<void (vector<string>)>& callback) -> type& {
+auto mWidget::onDrop(const function<void (std::vector<string>)>& callback) -> type& {
   state.onDrop = callback;
   return *this;
 }

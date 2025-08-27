@@ -64,7 +64,7 @@ struct InputMouseXlib {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     Window rootReturn;
     Window childReturn;
     s32 rootXReturn = 0;

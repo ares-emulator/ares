@@ -66,10 +66,10 @@ auto SuperFamicom::load(string location) -> LoadResult {
     append(rom, {location, "program.rom"  });
     append(rom, {location, "data.rom"     });
     append(rom, {location, "expansion.rom"});
-    for(auto& file : files.match("slot-*.rom"   )) { append(rom, {location, file});                        }
-    for(auto& file : files.match("*.program.rom")) { append(rom, {location, file}); local_firmware = true; }
-    for(auto& file : files.match("*.data.rom"   )) { append(rom, {location, file}); local_firmware = true; }
-    for(auto& file : files.match("*.boot.rom"   )) { append(rom, {location, file});                        }
+    for(auto& file : files) { if(file.match("slot-*.rom"   )) { append(rom, {location, file});                        } }
+    for(auto& file : files) { if(file.match("*.program.rom")) { append(rom, {location, file}); local_firmware = true; } }
+    for(auto& file : files) { if(file.match("*.data.rom"   )) { append(rom, {location, file}); local_firmware = true; } }
+    for(auto& file : files) { if(file.match("*.boot.rom"   )) { append(rom, {location, file});                        } }
 	folder = true;
   } else if(rom = Medium::read(location)) {
     directory = Location::dir(location);
@@ -136,10 +136,10 @@ auto SuperFamicom::load(string location) -> LoadResult {
   //find all msu1 files
   auto files = directory::files(directory, "*.msu");
   for(auto _file : directory::files(directory, "*-*.pcm")) {
-    files.append(_file);
+    files.push_back(_file);
   }
   for(auto _file : directory::files(directory, "msu1.data.rom")) {
-    files.append(_file);
+    files.push_back(_file);
   }
 
   for(auto& _file : files) {

@@ -17,14 +17,14 @@ auto mTableView::alignment() const -> Alignment {
 }
 
 auto mTableView::append(sTableViewColumn column) -> type& {
-  state.columns.append(column);
+  state.columns.push_back(column);
   column->setParent(this, columnCount() - 1);
   signal(append, column);
   return *this;
 }
 
 auto mTableView::append(sTableViewItem item) -> type& {
-  state.items.append(item);
+  state.items.push_back(item);
   item->setParent(this, itemCount() - 1);
   signal(append, item);
   return *this;
@@ -38,10 +38,10 @@ auto mTableView::batchable() const -> bool {
   return state.batchable;
 }
 
-auto mTableView::batched() const -> vector<TableViewItem> {
-  vector<TableViewItem> items;
+auto mTableView::batched() const -> std::vector<TableViewItem> {
+  std::vector<TableViewItem> items;
   for(auto& item : state.items) {
-    if(item->selected()) items.append(item);
+    if(item->selected()) items.push_back(item);
   }
   return items;
 }
@@ -59,10 +59,10 @@ auto mTableView::columnCount() const -> u32 {
   return state.columns.size();
 }
 
-auto mTableView::columns() const -> vector<TableViewColumn> {
-  vector<TableViewColumn> columns;
-  for(auto& column : columns) columns.append(column);
-  return columns;
+auto mTableView::columns() const -> std::vector<TableViewColumn> {
+  std::vector<TableViewColumn> result;
+  for(auto& column : state.columns) result.push_back(column);
+  return result;
 }
 
 auto mTableView::doActivate(sTableViewCell cell) const -> void {
@@ -106,9 +106,9 @@ auto mTableView::itemCount() const -> u32 {
   return state.items.size();
 }
 
-auto mTableView::items() const -> vector<TableViewItem> {
-  vector<TableViewItem> items;
-  for(auto& item : state.items) items.append(item);
+auto mTableView::items() const -> std::vector<TableViewItem> {
+  std::vector<TableViewItem> items;
+  for(auto& item : state.items) items.push_back(item);
   return items;
 }
 
@@ -144,7 +144,7 @@ auto mTableView::onToggle(const function<void (TableViewCell)>& callback) -> typ
 
 auto mTableView::remove(sTableViewColumn column) -> type& {
   signal(remove, column);
-  state.columns.remove(column->offset());
+  state.columns.erase(state.columns.begin() + column->offset());
   for(u32 n : range(column->offset(), columnCount())) {
     state.columns[n]->adjustOffset(-1);
   }
@@ -154,7 +154,7 @@ auto mTableView::remove(sTableViewColumn column) -> type& {
 
 auto mTableView::remove(sTableViewItem item) -> type& {
   signal(remove, item);
-  state.items.remove(item->offset());
+  state.items.erase(state.items.begin() + item->offset());
   for(u32 n : range(item->offset(), itemCount())) {
     state.items[n]->adjustOffset(-1);
   }
@@ -163,8 +163,8 @@ auto mTableView::remove(sTableViewItem item) -> type& {
 }
 
 auto mTableView::reset() -> type& {
-  while(state.items) remove(state.items.last());
-  while(state.columns) remove(state.columns.last());
+  state.items.clear();
+  state.columns.clear();
   return *this;
 }
 
@@ -232,8 +232,8 @@ auto mTableView::setHeadered(bool headered) -> type& {
 }
 
 auto mTableView::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& item : reverse(state.items)) item->destruct();
-  for(auto& column : reverse(state.columns)) column->destruct();
+  for(auto it = state.items.rbegin(); it != state.items.rend(); ++it) (*it)->destruct();
+  for(auto it = state.columns.rbegin(); it != state.columns.rend(); ++it) (*it)->destruct();
   mObject::setParent(parent, offset);
   for(auto& column : state.columns) column->setParent(this, column->offset());
   for(auto& item : state.items) item->setParent(this, item->offset());
@@ -262,16 +262,14 @@ auto mTableView::sort() -> type& {
     offset = column->offset();
     break;
   }
-  auto sorted = state.items;
-  sorted.sort([&](auto& lhs, auto& rhs) {
+  auto &itemsRef = state.items;
+  std::stable_sort(itemsRef.begin(), itemsRef.end(), [&](const sTableViewItem& lhs, const sTableViewItem& rhs) {
     string x = offset < lhs->cellCount() ? lhs->state.cells[offset]->state.text : ""_s;
     string y = offset < rhs->cellCount() ? rhs->state.cells[offset]->state.text : ""_s;
     if(sorting == Sort::Ascending ) return string::icompare(x, y) < 0;
     if(sorting == Sort::Descending) return string::icompare(y, x) < 0;
-    return false;  //unreachable
+    return false;
   });
-  while(state.items) remove(state.items.last());
-  for(auto& item : sorted) append(item);
   return *this;
 }
 

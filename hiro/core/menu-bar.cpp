@@ -12,7 +12,7 @@ auto mMenuBar::destruct() -> void {
 //
 
 auto mMenuBar::append(sMenu menu) -> type& {
-  state.menus.append(menu);
+  state.menus.push_back(menu);
   menu->setParent(this, menuCount() - 1);
   signal(append, menu);
   return *this;
@@ -27,9 +27,9 @@ auto mMenuBar::menuCount() const -> u32 {
   return state.menus.size();
 }
 
-auto mMenuBar::menus() const -> vector<Menu> {
-  vector<Menu> menus;
-  for(auto& menu : state.menus) menus.append(menu);
+auto mMenuBar::menus() const -> std::vector<Menu> {
+  std::vector<Menu> menus;
+  for(auto& menu : state.menus) menus.push_back(menu);
   return menus;
 }
 
@@ -41,7 +41,7 @@ auto mMenuBar::remove() -> type& {
 auto mMenuBar::remove(sMenu menu) -> type& {
   s32 offset = menu->offset();
   signal(remove, menu);
-  state.menus.remove(offset);
+  state.menus.erase(state.menus.begin() + offset);
   for(auto n : range(offset, menuCount())) {
     state.menus[n]->adjustOffset(-1);
   }
@@ -50,12 +50,12 @@ auto mMenuBar::remove(sMenu menu) -> type& {
 }
 
 auto mMenuBar::reset() -> type& {
-  while(state.menus) remove(state.menus.right());
+  state.menus.clear();
   return *this;
 }
 
 auto mMenuBar::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& menu : reverse(state.menus)) menu->destruct();
+  for(auto it = state.menus.rbegin(); it != state.menus.rend(); ++it) (*it)->destruct();
   mObject::setParent(parent, offset);
   for(auto& menu : state.menus) menu->setParent(this, menu->offset());
   return *this;
