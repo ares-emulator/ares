@@ -1,4 +1,5 @@
 #include "transfer-pak.cpp"
+#include "bio-sensor.cpp"
 
 Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
@@ -10,7 +11,7 @@ Gamepad::Gamepad(Node::Port parent) {
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setConnect([&] { return connect(); });
   port->setDisconnect([&] { return disconnect(); });
-  port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak"});
+  port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak", "Bio Sensor"});
 
   bank = 0;
 
@@ -52,6 +53,7 @@ auto Gamepad::allocate(string name) -> Node::Peripheral {
   if(name == "Controller Pak") return slot = port->append<Node::Peripheral>("Controller Pak");
   if(name == "Rumble Pak"    ) return slot = port->append<Node::Peripheral>("Rumble Pak");
   if(name == "Transfer Pak"  ) return slot = port->append<Node::Peripheral>("Transfer Pak");
+  if(name == "Bio Sensor"    ) return slot = port->append<Node::Peripheral>("Bio Sensor");
   return {};
 }
 
@@ -118,6 +120,17 @@ auto Gamepad::connect() -> void {
   if(slot->name() == "Transfer Pak") {
     transferPak.load(slot);
   }
+  if(slot->name() == "Bio Sensor") {
+    bioSensor.load();
+    // Bio Sensor BPM setting node
+    bioSensorBpm = slot->append<Node::Setting::Integer>(
+      "Bio Sensor BPM",
+      bioSensor.beatsPerMinute,
+      [&](s64 value) { bioSensor.beatsPerMinute = value; }
+    );
+    bioSensorBpm->setDynamic(true);
+    bioSensorBpm->setAllowedValues({30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180});
+  }
 }
 
 auto Gamepad::disconnect() -> void {
@@ -134,6 +147,13 @@ auto Gamepad::disconnect() -> void {
   }
   if(slot->name() == "Transfer Pak") {
     transferPak.unload();
+  }
+  if(slot->name() == "Bio Sensor") {
+    bioSensor.unload();
+    if(bioSensorBpm) {
+      slot->remove(bioSensorBpm);
+      bioSensorBpm.reset();
+    }
   }
   port->remove(slot);
   slot.reset();
@@ -226,6 +246,13 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
       valid = 1;
     }
 
+    //bio sensor
+    if(slot && slot->name() == "Bio Sensor") {
+      bioSensor.update();
+      for(u32 index : range(recv_data_len)) output[index] = bioSensor.read(address++);
+      valid = 1;
+    }
+
 read_pak_data_crc:
     //calculate the data CRC if we have enough recv bytes
     if(valid && recv >= 33) {
@@ -300,6 +327,12 @@ read_pak_data_crc:
       for(u32 index : range(send_data_len)) {
         transferPak.write(address++, send_data[index]);
       }
+      valid = 1;
+    }
+
+    //bio sensor
+    if(slot && slot->name() == "Bio Sensor") {
+      //Bio Sensor is read-only; writes are ignored
       valid = 1;
     }
 

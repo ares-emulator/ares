@@ -25,6 +25,8 @@ struct Gamepad : Controller {
   Node::Input::Button z;
   Node::Input::Button start;
 
+  Node::Setting::Integer bioSensorBpm;
+
   Gamepad(Node::Port);
   ~Gamepad();
   auto save() -> void override;
@@ -50,4 +52,16 @@ struct Gamepad : Controller {
     n2 resetState;
     n2 addressBank;
   } transferPak;
+
+  struct BioSensor {
+    auto load() -> void;
+    auto unload() -> void;
+    auto update() -> void;
+    auto read(u16 address) -> u8;
+
+    b1 isPulsing;
+    u8 beatsPerMinute;
+    u64 pulseNext;
+    u64 pulseStart;
+  } bioSensor;
 };
