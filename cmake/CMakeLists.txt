@@ -44,4 +44,12 @@ target_sources(
     ../.gersemirc
 )
 
+if(TARGET clean-all)
+  set_target_properties(clean-all PROPERTIES FOLDER cmake/unused PREFIX "")
+endif()
+
+if(TARGET uninstall)
+  set_target_properties(uninstall PROPERTIES FOLDER cmake/unused PREFIX "")
+endif()
+
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${cmake_sources})
