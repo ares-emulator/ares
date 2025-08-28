@@ -2,9 +2,7 @@
 
 add_library(cmake INTERFACE)
 
-target_sources(
-  cmake
-  PRIVATE
+set(cmake_sources
     common/bootstrap.cmake
     common/dependencies_common.cmake
     common/ccache.cmake
@@ -30,12 +28,20 @@ target_sources(
     windows/compilerconfig.cmake
     windows/defaults.cmake
     windows/dependencies.cmake
-    windows/helpers.cmake
+    windows/helpers.cmake 
     linux/compilerconfig.cmake
     linux/defaults.cmake
     linux/helpers.cmake
     linux/dependencies.cmake
 )
 
-get_target_property(cmake_SOURCES cmake SOURCES)
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${cmake_SOURCES})
+target_sources(
+  cmake
+  PRIVATE
+    ${cmake_sources}
+    ../CMakePresets.json
+    ../deps.json
+    ../.gersemirc
+)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${cmake_sources})

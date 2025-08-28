@@ -8,6 +8,7 @@ include(compilerconfig)
 include(defaults)
 include(helpers)
 
+add_subdirectory(.github)
 add_subdirectory(cmake)
 
 add_subdirectory(thirdparty)
