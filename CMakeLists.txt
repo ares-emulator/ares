@@ -8,9 +8,6 @@ include(compilerconfig)
 include(defaults)
 include(helpers)
 
-add_subdirectory(.github)
-add_subdirectory(cmake)
-
 add_subdirectory(thirdparty)
 
 add_subdirectory(nall/nall)
@@ -53,4 +50,7 @@ endif()
 add_subdirectory(tools/sourcery)
 
 message_configuration()
+
+add_subdirectory(.github)
+add_subdirectory(cmake)
 return()

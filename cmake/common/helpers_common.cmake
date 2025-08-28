@@ -15,7 +15,7 @@ function(add_sourcery_command target subdir)
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/resource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/resource.hpp
   )
   add_dependencies(${target} ${target}-resource)
-  set_target_properties(${target}-resource PROPERTIES FOLDER resources PREFIX "")
+  set_target_properties(${target}-resource PROPERTIES FOLDER ${target} PREFIX "")
 endfunction()
 
 # message_configuration: Function to print configuration outcome

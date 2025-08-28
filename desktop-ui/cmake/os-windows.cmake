@@ -20,6 +20,7 @@ if(ARES_ENABLE_LIBRASHADER)
       DEPENDS "${ARES_EXECUTABLE_DESTINATION}/desktop-ui/rundir/Shaders/bilinear.slangp"
     )
     add_dependencies(desktop-ui bundled_shaders)
+    set_target_properties(bundled_shaders PROPERTIES FOLDER desktop-ui PREFIX "")
   endif()
 endif()
 
