@@ -16,15 +16,10 @@ target_sources(
     windows/windows.hpp
 )
 
-if(MSVC)
-  target_compile_options(nall PRIVATE /W2)
-endif()
-
 target_link_libraries(nall PUBLIC ws2_32 ole32 shell32 shlwapi)
 if(MINGW)
   target_link_options(nall PUBLIC -mthreads -static)
 endif()
-target_link_libraries(nall PUBLIC ws2_32 ole32 shell32 shlwapi)
 
 set_source_files_properties(
   nall

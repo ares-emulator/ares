@@ -116,7 +116,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # work around https://gitlab.kitware.com/cmake/cmake/-/issues/26559
     add_compile_options($<$<AND:$<BOOL:${ENABLE_IPO}>,$<NOT:$<CONFIG:Debug>>>:-flto=thin>)
     add_link_options(
-      $<$<AND:$<BOOL:${ENABLE_IPO}>,$<NOT:$<CONFIG:Debug>>>:-flto=thin>
       $<$<NOT:$<CONFIG:Debug>>:/INCREMENTAL:NO>
       /Debug
       $<$<NOT:$<CONFIG:Debug>>:/OPT:REF>

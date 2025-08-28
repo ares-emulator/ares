@@ -11,7 +11,6 @@ if(ARES_ENABLE_CHD)
   target_link_libraries(nall PUBLIC chdr-static)
   target_compile_definitions(nall PUBLIC ARES_ENABLE_CHD)
 endif()
-target_compile_definitions(nall PUBLIC CMAKE)
 target_compile_options(
   nall
   PRIVATE
@@ -53,13 +52,6 @@ if(ARES_TREAT_NALL_AS_SYSTEM)
 else()
   target_include_directories(nall PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
 endif()
-
-# global compiler flags
-target_compile_features(nall PUBLIC c_std_11)
-set_target_properties(nall PROPERTIES C_EXTENSIONS OFF)
-
-target_compile_features(nall PUBLIC cxx_std_17)
-set_target_properties(nall PROPERTIES CXX_EXTENSIONS OFF)
 
 target_compile_definitions(
   nall

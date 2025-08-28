@@ -22,7 +22,7 @@ add_subdirectory(hiro)
 set(
   ARES_CORES
   a26 fc sfc sg ms md ps1 pce ng msx cv myvision gb gba ws ngp spec n64
-  CACHE STRING LIST
+  CACHE STRING "List of systems to be built by the project"
 )
 # gersemi: on
 
