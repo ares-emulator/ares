@@ -8,7 +8,8 @@ if(NOT USE_QT5)
 
   target_link_libraries(hiro PRIVATE GTK::GTK X11::X11)
 
-  target_enable_feature(hiro "GTK3 UI backend" HIRO_GTK=3)
+  target_enable_feature(hiro "GTK3 UI backend")
+  target_compile_definitions(hiro PUBLIC HIRO_GTK=3)
 else()
   # Note that Qt6 is more-or-less a drop-in replacement here, but changing these targets to use Qt6 is deferred until
   # Qt support is properly addressed.
@@ -26,7 +27,8 @@ else()
     PRIVATE X11::X11 Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Xcb
   )
 
-  target_enable_feature(hiro "Qt5 UI backend" HIRO_QT=5)
+  target_enable_feature(hiro "Qt5 UI backend")
+  target_compile_definitions(hiro PUBLIC HIRO_QT=5)
 endif()
 
 get_target_property(hiro_SOURCES hiro SOURCES)

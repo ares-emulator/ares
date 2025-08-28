@@ -1,6 +1,7 @@
 target_sources(hiro PRIVATE cmake/os-macos.cmake hiro.mm hiro.cpp)
 
-target_enable_feature(hiro "Cocoa UI backend" HIRO_COCOA)
+target_enable_feature(hiro "Cocoa UI backend")
+target_compile_definitions(hiro PUBLIC HIRO_COCOA)
 
 target_link_libraries(
   hiro

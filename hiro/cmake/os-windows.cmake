@@ -1,4 +1,5 @@
-target_enable_feature(hiro "Win32 UI" HIRO_WINDOWS)
+target_enable_feature(hiro "Win32 UI")
+target_compile_definitions(hiro PUBLIC HIRO_WINDOWS)
 target_link_libraries(
   hiro
   PRIVATE kernel32 user32 gdi32 advapi32 ole32 comctl32 comdlg32 uxtheme msimg32 dwmapi
