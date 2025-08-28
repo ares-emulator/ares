@@ -3,7 +3,9 @@
 #include <nall/file.hpp>
 #include <nall/maybe.hpp>
 #include <nall/string.hpp>
+#if defined(ARES_ENABLE_CHD)
 #include <libchdr/chd.h>
+#endif
 
 namespace nall::Decode {
 

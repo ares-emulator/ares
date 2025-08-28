@@ -15,6 +15,8 @@ target_sources(ruby PRIVATE audio/audio.cpp audio/audio.hpp audio/sdl.cpp)
 
 target_sources(ruby PRIVATE input/input.cpp input/input.hpp input/sdl.cpp)
 
+target_include_directories(ruby PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty)
+
 target_sources(
   ruby
   PRIVATE
@@ -40,7 +42,7 @@ endif()
 
 target_sources(ruby PRIVATE cmake/os-macos.cmake cmake/os-windows.cmake cmake/os-linux.cmake cmake/os-freebsd.cmake)
 
-target_link_libraries(ruby PUBLIC ares::nall)
+target_link_libraries(ruby PRIVATE ares::nall::headers)
 
 target_include_directories(ruby PRIVATE ${CMAKE_SOURCE_DIR})
 

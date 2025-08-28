@@ -30,7 +30,7 @@ if(arm7tdmi IN_LIST ARES_COMPONENTS_LIST)
 
   target_enable_subproject(arm7tdmi "arm7tdmi processor test harness")
 
-  target_link_libraries(arm7tdmi PRIVATE ares::ares)
+  target_link_libraries(arm7tdmi PRIVATE ares::ares ares::nall)
   set(CONSOLE TRUE)
   ares_configure_executable(arm7tdmi)
 
