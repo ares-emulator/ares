@@ -8,6 +8,7 @@
 #include <nall/maybe.hpp>
 #include <nall/path.hpp>
 #include <nall/range.hpp>
+#include <nall/ranges-helpers.hpp>
 #include <nall/run.hpp>
 #include <nall/set.hpp>
 #include <nall/shared-pointer.hpp>
@@ -22,6 +23,7 @@
 using nall::any;
 using nall::function;
 using nall::image;
+using nall::index_of;
 using nall::multiFactorImage;
 using nall::Locale;
 using nall::maybe;

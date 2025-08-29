@@ -92,10 +92,7 @@ private:
     timeBeginPeriod(1);
 #endif
 
-    {
-      auto devices = hasDevices();
-      if(!devices.empty() && std::ranges::find(devices, self.device) == devices.end()) self.device = devices.front();
-    }
+    if (auto devs = hasDevices(); !devs.empty() && !index_of(devs, self.device)) self.device = devs.front();
     _queueLength = 0;
     updateLatency();
 

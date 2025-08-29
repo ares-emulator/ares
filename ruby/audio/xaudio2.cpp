@@ -148,18 +148,10 @@ private:
     self.index = 0;
     self.queue = 0;
 
-    {
-      auto names = hasDevices();
-      auto it = std::ranges::find(names, self.device);
-      if(it == names.end()) {
-        if(!names.empty()) self.device = names.front();
-        it = names.begin();
-      }
-      u32 deviceIndex = (u32)(it - names.begin());
-      u32 deviceID = devices[deviceIndex].id;
-      
-      if(FAILED(self.xa2Interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, deviceID, nullptr))) return terminate(), false;
-    }
+    auto names = hasDevices();
+    u32 idx = (u32)index_of(names, self.device).value_or(0);
+    u32 deviceID = devices[idx].id;
+    if(FAILED(self.xa2Interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, deviceID, nullptr))) return terminate(), false;
 
     WAVEFORMATEX waveFormat{};
     waveFormat.wFormatTag = WAVE_FORMAT_PCM;

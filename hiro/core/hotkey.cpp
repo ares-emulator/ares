@@ -52,10 +52,7 @@ auto Hotkey::setSequence(const string& sequence) -> type& {
   state->sequence = sequence;
   state->keys.clear();
   for(auto& key : sequence.split("+")) {
-    auto it = std::ranges::find(Keyboard::keys, key);
-    if(it != Keyboard::keys.end()) {
-      state->keys.push_back(static_cast<u32>(it - Keyboard::keys.begin()));
-    }
+    if (auto idx = nall::index_of(Keyboard::keys, key)) state->keys.push_back((u32)*idx);
   }
   return *this;
 }
