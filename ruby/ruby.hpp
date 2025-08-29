@@ -11,17 +11,20 @@
 #include <nall/matrix-multiply.hpp>
 #include <nall/queue.hpp>
 #include <nall/range.hpp>
+#include <nall/ranges-helpers.hpp>
 #include <nall/set.hpp>
 #include <nall/shared-pointer.hpp>
 #include <nall/string.hpp>
 #include <nall/thread.hpp>
 #include <nall/unique-pointer.hpp>
 #include <vector>
+#include <ranges>
 #include <nall/dsp/resampler/cubic.hpp>
 #include <nall/hash/crc32.hpp>
 
 using nall::atomic;
 using nall::function;
+using nall::index_of;
 using nall::lock_guard;
 using nall::mutex;
 using nall::queue;
