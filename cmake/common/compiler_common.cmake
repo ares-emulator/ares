@@ -30,10 +30,10 @@ else()
   message(STATUS "Checking if interprocedural optimization is supported - skipped")
 endif()
 
-# Set C and C++ language standards to C17 and C++17
+# Set C and C++ language standards to C17 and C++20
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Set symbols to be hidden by default for C and C++
