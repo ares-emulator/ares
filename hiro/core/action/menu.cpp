@@ -72,7 +72,7 @@ auto mMenu::setIconForFile(const string& filename) -> type& {
 }
 
 auto mMenu::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto it = state.actions.rbegin(); it != state.actions.rend(); ++it) (*it)->destruct();
+  for(auto& action : state.actions | std::views::reverse) action->destruct();
   mObject::setParent(parent, offset);
   for(auto& action : state.actions) action->setParent(this, action->offset());
   return *this;

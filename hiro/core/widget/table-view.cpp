@@ -232,8 +232,8 @@ auto mTableView::setHeadered(bool headered) -> type& {
 }
 
 auto mTableView::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto it = state.items.rbegin(); it != state.items.rend(); ++it) (*it)->destruct();
-  for(auto it = state.columns.rbegin(); it != state.columns.rend(); ++it) (*it)->destruct();
+  for(auto& item : state.items | std::views::reverse) item->destruct();
+  for(auto& column : state.columns | std::views::reverse) column->destruct();
   mObject::setParent(parent, offset);
   for(auto& column : state.columns) column->setParent(this, column->offset());
   for(auto& item : state.items) item->setParent(this, item->offset());

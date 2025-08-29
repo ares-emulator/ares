@@ -65,8 +65,8 @@ auto Keyboard::poll() -> std::vector<bool> {
 }
 
 auto Keyboard::pressed(const string& key) -> bool {
-  auto it = std::find(keys.begin(), keys.end(), key);
-  if(it != keys.end()) return pKeyboard::pressed(static_cast<u32>(std::distance(keys.begin(), it)));
+  auto it = std::ranges::find(keys, key);
+  if(it != keys.end()) return pKeyboard::pressed(static_cast<u32>(it - keys.begin()));
   return false;
 }
 
@@ -75,7 +75,7 @@ auto Keyboard::released(const string& key) -> bool {
 }
 
 auto Keyboard::remove(Hotkey hotkey) -> void {
-  auto it = std::find(state.hotkeys.begin(), state.hotkeys.end(), hotkey);
+  auto it = std::ranges::find(state.hotkeys, hotkey);
   if(it != state.hotkeys.end()) state.hotkeys.erase(it);
 }
 

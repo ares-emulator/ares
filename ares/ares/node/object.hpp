@@ -51,7 +51,7 @@ struct Object : shared_pointer_this<Object> {
   }
 
   auto remove(Node::Object node) -> void {
-    if(auto it = std::find(_nodes.begin(), _nodes.end(), node); it != _nodes.end()) {
+    if(auto it = std::ranges::find(_nodes, node); it != _nodes.end()) {
       PlatformDetach(node);
       node->reset();
       node->_parent.reset();

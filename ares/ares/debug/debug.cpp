@@ -11,7 +11,7 @@ auto Debug::reset() -> void {
 }
 
 auto Debug::_unhandled(const string& text) -> void {
-  if(std::find(_unhandledNotices.begin(), _unhandledNotices.end(), text) != _unhandledNotices.end()) return;
+  if(std::ranges::find(_unhandledNotices, text) != _unhandledNotices.end()) return;
   if(_totalNotices++ > 256) return;
   _unhandledNotices.push_back(text);
 
@@ -19,7 +19,7 @@ auto Debug::_unhandled(const string& text) -> void {
 }
 
 auto Debug::_unimplemented(const string& text) -> void {
-  if(std::find(_unimplementedNotices.begin(), _unimplementedNotices.end(), text) != _unimplementedNotices.end()) return;
+  if(std::ranges::find(_unimplementedNotices, text) != _unimplementedNotices.end()) return;
   if(_totalNotices++ > 256) return;
   _unimplementedNotices.push_back(text);
 
@@ -27,7 +27,7 @@ auto Debug::_unimplemented(const string& text) -> void {
 }
 
 auto Debug::_unusual(const string& text) -> void {
-  if(std::find(_unusualNotices.begin(), _unusualNotices.end(), text) != _unusualNotices.end()) return;
+  if(std::ranges::find(_unusualNotices, text) != _unusualNotices.end()) return;
   if(_totalNotices++ > 256) return;
   _unusualNotices.push_back(text);
 
@@ -35,7 +35,7 @@ auto Debug::_unusual(const string& text) -> void {
 }
 
 auto Debug::_unverified(const string& text) -> void {
-  if(std::find(_unverifiedNotices.begin(), _unverifiedNotices.end(), text) != _unverifiedNotices.end()) return;
+  if(std::ranges::find(_unverifiedNotices, text) != _unverifiedNotices.end()) return;
   if(_totalNotices++ > 256) return;
   _unverifiedNotices.push_back(text);
 

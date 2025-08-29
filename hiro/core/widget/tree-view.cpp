@@ -142,7 +142,7 @@ auto mTreeView::setForegroundColor(Color color) -> type& {
 }
 
 auto mTreeView::setParent(mObject* object, s32 offset) -> type& {
-  for(auto it = state.items.rbegin(); it != state.items.rend(); ++it) (*it)->destruct();
+  for(auto& item : state.items | std::views::reverse) item->destruct();
   mObject::setParent(object, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());
   return *this;

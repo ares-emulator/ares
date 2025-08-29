@@ -12,12 +12,12 @@ auto Program::attach(ares::Node::Object node) -> void {
 auto Program::detach(ares::Node::Object node) -> void {
   if(auto screen = node->cast<ares::Node::Video::Screen>()) {
     screens = emulator->root->find<ares::Node::Video::Screen>();
-    screens.erase(std::remove(screens.begin(), screens.end(), screen), screens.end());
+    std::erase(screens, screen);
   }
 
   if(auto stream = node->cast<ares::Node::Audio::Stream>()) {
     streams = emulator->root->find<ares::Node::Audio::Stream>();
-    streams.erase(std::remove(streams.begin(), streams.end(), stream), streams.end());
+    std::erase(streams, stream);
     stream->setResamplerFrequency(ruby::audio.frequency());
   }
 }

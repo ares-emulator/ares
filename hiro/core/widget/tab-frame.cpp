@@ -107,7 +107,7 @@ auto mTabFrame::setNavigation(Navigation navigation) -> type& {
 }
 
 auto mTabFrame::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto it = state.items.rbegin(); it != state.items.rend(); ++it) (*it)->destruct();
+  for(auto& item : state.items | std::views::reverse) item->destruct();
   mObject::setParent(parent, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());
   return *this;

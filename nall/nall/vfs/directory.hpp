@@ -6,7 +6,7 @@ struct directory : node {
   }
 
   auto find(shared_pointer<node> item) const -> bool {
-    return std::find(_nodes.begin(), _nodes.end(), item) != _nodes.end();
+    return std::ranges::find(_nodes, item) != _nodes.end();
   }
 
   auto find(const string& name) const -> bool {
@@ -75,7 +75,7 @@ struct directory : node {
   }
 
   auto remove(shared_pointer<node> item) -> bool {
-    auto it = std::find(_nodes.begin(), _nodes.end(), item);
+    auto it = std::ranges::find(_nodes, item);
     if(it == _nodes.end()) return false;
     _nodes.erase(it);
     return true;
