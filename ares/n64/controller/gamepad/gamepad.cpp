@@ -184,56 +184,68 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   //read pak
   if(input[0] == 0x02 && send >= 3 && recv >= 1) {
     u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-    //check address CRC and DETECT latch state
-    if(pif.addressCRC(address) != (n5)input[2] || pakDetectLatched) {
-      //zero out pak read data if address CRC is invalid or pak detect is latched
-      for(u32 index : range(recv - 1)) output[index] = 0x00;
-      output[recv - 1] = 0xFF; //invalid pak state
+
+    //NUS-CNT only touches the first 33 bytes of output (32 data + 1 data CRC);
+    //reads of less than 32 bytes are technically possible, but with no data CRC
+    n8 recv_data_len = min(recv, 32);
+    for(u32 index : range(min(recv, 33))) output[index] = 0x00; //zero out up to 33 bytes
+
+    //check if no pak is connected, DETECT is latched, or address CRC is invalid
+    b1 data_crc_no_pak = 0;
+    if(!slot || pakDetectLatched || pif.addressCRC(address) != (n5)input[2]) {
+      data_crc_no_pak = 1;
       valid = 1;
-      goto comm_done;
+      goto read_pak_data_crc;
     }
 
     //controller pak
     if(ram) {
-      for(u32 index : range(recv - 1)) {
+      for(u32 index : range(recv_data_len)) {
         // read into current bank
         if(address <= 0x7FFF) output[index] = ram.read<Byte>(bank * 32_KiB + address);
         else output[index] = 0;
         address++;
       }
-      output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
       valid = 1;
     }
 
     //rumble pak
     if(motor) {
-      for(u32 index : range(recv - 1)) {
+      for(u32 index : range(recv_data_len)) {
         if(address <= 0x7FFF) output[index] = 0;
         else if(address <= 0x8FFF) output[index] = 0x80;
         else output[index] = motor->enable() ? 0xFF : 0x00;
         address++;
       }
-      output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
       valid = 1;
     }
 
     //transfer pak
     if(slot && slot->name() == "Transfer Pak") {
-      for(u32 index : range(recv - 1)) output[index] = transferPak.read(address++);
-      output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
+      for(u32 index : range(recv_data_len)) output[index] = transferPak.read(address++);
       valid = 1;
+    }
+
+read_pak_data_crc:
+    //calculate the data CRC if we have enough recv bytes
+    if(valid && recv >= 33) {
+      output[32] = pif.dataCRC({&output[0], 32});
+      if (data_crc_no_pak) output[32] ^= 0xFF;
     }
   }
 
   //write pak
-  if(input[0] == 0x03 && send >= 3 && recv >= 1) {
+  if(input[0] == 0x03 && send >= 4 && recv >= 1) {
     u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-    //check address CRC and DETECT latch state
-    if(pif.addressCRC(address) != (n5)input[2] || pakDetectLatched) {
-      //ignore pak write command if address CRC is invalid or pak detect is latched
-      output[0] = pif.dataCRC({&input[3], send - 3u}) ^ 0xFF;
+    n8 *send_data = &input[3];
+    n8 send_data_len = min(send - 3, (n8)32); //max of 32 bytes can be written at once
+
+    //check if no pak is connected, DETECT is latched, or address CRC is invalid
+    b1 data_crc_no_pak = 0;
+    if(!slot || pakDetectLatched || pif.addressCRC(address) != (n5)input[2]) {
+      data_crc_no_pak = 1;
       valid = 1;
-      goto comm_done;
+      goto write_pak_data_crc;
     }
 
     //controller pak
@@ -263,40 +275,43 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
               }
             }
           } else {
-            debug(unusual, "Controller Pak bank switch command with invalid data length");
+            debug(unusual, "Controller Pak bank switch command with unusual data length");
           }
         }
 
-        output[0] = pif.dataCRC({&input[3], send - 3u});
         valid = 1;
       } else {
-        for(u32 index : range(send - 3)) {
-          if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, input[3 + index]);
+        for(u32 index : range(send_data_len)) {
+          if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, send_data[index]);
           address++;
         }
-        output[0] = pif.dataCRC({&input[3], send - 3u});
         valid = 1;
       }
     }
 
     //rumble pak
     if(motor) {
-      output[0] = pif.dataCRC({&input[3], send - 3u});
+      if(address >= 0xC000) rumble((*send_data) & 1);
       valid = 1;
-      if(address >= 0xC000) rumble(input[3] & 1);
     }
 
     //transfer pak
     if(slot && slot->name() == "Transfer Pak") {
-      for(u32 index : range(send - 3)) {
-        transferPak.write(address++, input[3 + index]);
+      for(u32 index : range(send_data_len)) {
+        transferPak.write(address++, send_data[index]);
       }
-      output[0] = pif.dataCRC({&input[3], send - 3u});
       valid = 1;
+    }
+
+write_pak_data_crc:
+    if(valid) {
+      output[0] = 0x00; //zero out the data CRC
+      //calculate the data CRC if we have enough send bytes
+      if (send_data_len == 32) output[0] = pif.dataCRC({send_data, send_data_len});
+      if (data_crc_no_pak) output[0] ^= 0xFF;
     }
   }
 
-comm_done:
   n2 status = 0;
   status.bit(0) = valid;
   status.bit(1) = over;
