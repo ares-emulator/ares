@@ -28,8 +28,94 @@ Famicom::Famicom() {
     device.relative("X",         virtualPorts[id].mouse.x);
     device.relative("Y",         virtualPorts[id].mouse.y);
     device.digital ("Trigger",   virtualPorts[id].mouse.left);
-    port.append(device);
-    }
+    port.append(device); }
+
+    ports.append(port);
+  }
+
+  {
+    InputPort port{"Expansion Port"};
+  { InputDevice device{"Family BASIC Keyboard"};
+    device.digital("F1",          virtualPorts[2].keyboard.f1);
+    device.digital("F2",          virtualPorts[2].keyboard.f2);
+    device.digital("F3",          virtualPorts[2].keyboard.f3);
+    device.digital("F4",          virtualPorts[2].keyboard.f4);
+    device.digital("F5",          virtualPorts[2].keyboard.f5);
+    device.digital("F6",          virtualPorts[2].keyboard.f6);
+    device.digital("F7",          virtualPorts[2].keyboard.f7);
+    device.digital("F8",          virtualPorts[2].keyboard.f8);
+
+    device.digital("1",           virtualPorts[2].keyboard.num1);
+    device.digital("2",           virtualPorts[2].keyboard.num2);
+    device.digital("3",           virtualPorts[2].keyboard.num3);
+    device.digital("4",           virtualPorts[2].keyboard.num4);
+    device.digital("5",           virtualPorts[2].keyboard.num5);
+    device.digital("6",           virtualPorts[2].keyboard.num6);
+    device.digital("7",           virtualPorts[2].keyboard.num7);
+    device.digital("8",           virtualPorts[2].keyboard.num8);
+    device.digital("9",           virtualPorts[2].keyboard.num9);
+    device.digital("0",           virtualPorts[2].keyboard.num0);
+    device.digital("Minus",       virtualPorts[2].keyboard.dash);
+    device.digital("^",           virtualPorts[2].keyboard.tilde);
+    device.digital("Yen",         virtualPorts[2].keyboard.equals);
+    device.digital("Stop",        virtualPorts[2].keyboard.backspace);
+
+    device.digital("Escape",      virtualPorts[2].keyboard.esc);
+    device.digital("Q",           virtualPorts[2].keyboard.q);
+    device.digital("W",           virtualPorts[2].keyboard.w);
+    device.digital("E",           virtualPorts[2].keyboard.e);
+    device.digital("R",           virtualPorts[2].keyboard.r);
+    device.digital("T",           virtualPorts[2].keyboard.t);
+    device.digital("Y",           virtualPorts[2].keyboard.y);
+    device.digital("U",           virtualPorts[2].keyboard.u);
+    device.digital("I",           virtualPorts[2].keyboard.i);
+    device.digital("O",           virtualPorts[2].keyboard.o);
+    device.digital("P",           virtualPorts[2].keyboard.p);
+    device.digital("@",           virtualPorts[2].keyboard.lbracket);
+    device.digital("Return",      virtualPorts[2].keyboard.return_);
+
+    device.digital("Control",     virtualPorts[2].keyboard.lctrl);
+    device.digital("A",           virtualPorts[2].keyboard.a);
+    device.digital("S",           virtualPorts[2].keyboard.s);
+    device.digital("D",           virtualPorts[2].keyboard.d);
+    device.digital("F",           virtualPorts[2].keyboard.f);
+    device.digital("G",           virtualPorts[2].keyboard.g);
+    device.digital("H",           virtualPorts[2].keyboard.h);
+    device.digital("J",           virtualPorts[2].keyboard.j);
+    device.digital("K",           virtualPorts[2].keyboard.k);
+    device.digital("L",           virtualPorts[2].keyboard.l);
+    device.digital(";",           virtualPorts[2].keyboard.semicolon);
+    device.digital(":",           virtualPorts[2].keyboard.apostrophe);
+    device.digital("]",           virtualPorts[2].keyboard.rbracket);
+    device.digital("Kana",        virtualPorts[2].keyboard.rctrl);
+
+    device.digital("Left Shift",  virtualPorts[2].keyboard.lshift);
+    device.digital("Z",           virtualPorts[2].keyboard.z);
+    device.digital("X",           virtualPorts[2].keyboard.x);
+    device.digital("C",           virtualPorts[2].keyboard.c);
+    device.digital("V",           virtualPorts[2].keyboard.v);
+    device.digital("B",           virtualPorts[2].keyboard.b);
+    device.digital("N",           virtualPorts[2].keyboard.n);
+    device.digital("M",           virtualPorts[2].keyboard.m);
+    device.digital(",",           virtualPorts[2].keyboard.comma);
+    device.digital(".",           virtualPorts[2].keyboard.period);
+    device.digital("/",           virtualPorts[2].keyboard.slash);
+    device.digital("_",           virtualPorts[2].keyboard.ralt);
+    device.digital("Right Shift", virtualPorts[2].keyboard.rshift);
+
+    device.digital("Graph",       virtualPorts[2].keyboard.lalt);
+    device.digital("Spacebar",    virtualPorts[2].keyboard.spacebar);
+
+    device.digital("Home",        virtualPorts[2].keyboard.home);
+    device.digital("Insert",      virtualPorts[2].keyboard.insert);
+    device.digital("Delete",      virtualPorts[2].keyboard.delete_);
+
+    device.digital("Up",          virtualPorts[2].keyboard.up);
+    device.digital("Down",        virtualPorts[2].keyboard.down);
+    device.digital("Left",        virtualPorts[2].keyboard.left);
+    device.digital("Right",       virtualPorts[2].keyboard.right);
+
+    port.append(device); }
 
     ports.append(port);
   }

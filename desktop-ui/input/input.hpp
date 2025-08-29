@@ -190,9 +190,32 @@ struct VirtualMouse : InputDevice {
   InputDigital  extra;
 };
 
+struct VirtualKeyboard : InputDevice {
+  VirtualKeyboard();
+
+  // The keyboard is represented as a matrix of buttons. Each button
+  // corresponds to a key on the keyboard. The matrix is scanned by
+  // selecting a column and reading the rows.
+  InputDigital esc, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12;
+  InputDigital print_screen, scroll_lock, pause;
+  InputDigital tilde, num1, num2, num3, num4, num5, num6, num7, num8, num9, num0, dash, equals, backspace;
+  InputDigital insert, delete_, home, end, page_up, page_down;
+  InputDigital tab, q, w, e, r, t, y, u, i, o, p, lbracket, rbracket, backslash;
+  InputDigital capslock, a, s, d, f, g, h, j, k, l, semicolon, apostrophe, return_;
+  InputDigital lshift, z, x, c, v, b, n, m, comma, period, slash, rshift;
+  InputDigital lctrl, lsuper, lalt, spacebar, ralt, rsuper, rctrl;
+  InputDigital up, down, left, right;
+  InputDigital numlock, divide, multiply, minus;
+  InputDigital keypad7, keypad8, keypad9, add;
+  InputDigital keypad4, keypad5, keypad6;
+  InputDigital keypad1, keypad2, keypad3, enter;
+  InputDigital keypad0, point;
+};
+
 struct VirtualPort {
   VirtualPad   pad;
   VirtualMouse mouse;
+  VirtualKeyboard keyboard;
 };
 
 struct InputManager {
