@@ -442,8 +442,8 @@ auto ARM7TDMI::armInitialize() -> void {
 auto ARM7TDMI::thumbInitialize() -> void {
   #define bind(id, name, ...) { \
     assert(!thumbInstruction[id]); \
-    thumbInstruction[id] = [=] { return thumbInstruction##name(__VA_ARGS__); }; \
-    thumbDisassemble[id] = [=] { return thumbDisassemble##name(__VA_ARGS__); }; \
+    thumbInstruction[id] = [=, this] { return thumbInstruction##name(__VA_ARGS__); }; \
+    thumbDisassemble[id] = [=, this] { return thumbDisassemble##name(__VA_ARGS__); }; \
   }
 
   #define pattern(s) \

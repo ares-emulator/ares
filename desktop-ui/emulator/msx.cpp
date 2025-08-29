@@ -92,7 +92,7 @@ auto MSX::load() -> LoadResult {
 auto MSX::load(Menu menu) -> void {
   if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
     MenuCheckItem playingItem{&menu};
-    playingItem.setText("Play Tape").setChecked(playing->value()).onToggle([=] {
+    playingItem.setText("Play Tape").setChecked(playing->value()).onToggle([=, this] {
       if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
         playing->setValue(playingItem.checked());
       }
