@@ -150,12 +150,12 @@ private:
 
     {
       auto names = hasDevices();
-      auto it = std::find(names.begin(), names.end(), self.device);
+      auto it = std::ranges::find(names, self.device);
       if(it == names.end()) {
         if(!names.empty()) self.device = names.front();
         it = names.begin();
       }
-      u32 deviceIndex = (u32)std::distance(names.begin(), it);
+      u32 deviceIndex = (u32)(it - names.begin());
       u32 deviceID = devices[deviceIndex].id;
       
       if(FAILED(self.xa2Interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, deviceID, nullptr))) return terminate(), false;
