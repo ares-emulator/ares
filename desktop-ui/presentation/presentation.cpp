@@ -17,7 +17,7 @@ Presentation::Presentation() {
   for(u32 multiplier : range(1, multipliers + 1)) {
     MenuRadioItem item{&videoSizeMenu};
     item.setText({multiplier, "x"});
-    item.onActivate([=] {
+    item.onActivate([=, this] {
       settings.video.multiplier = multiplier;
       resizeWindow();
     });
@@ -152,7 +152,7 @@ Presentation::Presentation() {
   saveStateMenu.setText("Save State").setIcon(Icon::Media::Record);
   for(u32 slot : range(9)) {
     MenuItem item{&saveStateMenu};
-    item.setText({"Slot ", 1 + slot}).onActivate([=] {
+    item.setText({"Slot ", 1 + slot}).onActivate([=, this] {
       Program::Guard guard;
       if(program.stateSave(1 + slot)) {
         undoSaveStateMenu.setEnabled(true);
@@ -162,7 +162,7 @@ Presentation::Presentation() {
   loadStateMenu.setText("Load State").setIcon(Icon::Media::Rewind);
   for(u32 slot : range(9)) {
     MenuItem item{&loadStateMenu};
-    item.setText({"Slot ", 1 + slot}).onActivate([=] {
+    item.setText({"Slot ", 1 + slot}).onActivate([=, this] {
       Program::Guard guard;
       if(program.stateLoad(1 + slot)) {
         undoLoadStateMenu.setEnabled(true);
@@ -379,7 +379,7 @@ auto Presentation::loadEmulators() -> void {
       auto location = entry.split(";", 1L)(1);
       item.setIconForFile(location);
       item.setText({Location::base(location).trimRight("/"), " (", system, ")"});
-      item.onActivate([=] {
+      item.onActivate([=, this] {
         Program::Guard guard;
         if(!inode::exists(location)) {
           MessageDialog()
@@ -564,7 +564,7 @@ auto Presentation::refreshSystemMenu() -> void {
       peripheralItem.setAttribute<ares::Node::Port>("port", port);
       peripheralItem.setText("Nothing");
       if(!port->connected()) peripheralItem.setChecked();
-      peripheralItem.onActivate([=] {
+      peripheralItem.onActivate([=, this] {
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
         port->disconnect();
         refreshSystemMenu();
@@ -578,7 +578,7 @@ auto Presentation::refreshSystemMenu() -> void {
       MenuRadioItem peripheralItem{&portMenu};
       peripheralItem.setAttribute<ares::Node::Port>("port", port);
       peripheralItem.setText(peripheral);
-      peripheralItem.onActivate([=] {
+      peripheralItem.onActivate([=, this] {
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
         port->disconnect();
         port->allocate(peripheralItem.text());
@@ -709,7 +709,7 @@ auto Presentation::loadShaders() -> void {
       for(auto &file: files) {
         MenuCheckItem item{&parent};
         item.setAttribute("file", {directory, file});
-        item.setText(string{file}.trimRight(".slangp", 1L)).onToggle([=] {
+        item.setText(string{file}.trimRight(".slangp", 1L)).onToggle([=, this] {
           settings.video.shader = {directory, file};
           ruby::video.setShader({location, settings.video.shader});
           loadShaders();

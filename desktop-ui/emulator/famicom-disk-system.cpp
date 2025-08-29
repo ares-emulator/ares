@@ -77,7 +77,7 @@ auto FamicomDiskSystem::changeDiskState(string state) -> void
   emulator->notify("Ejected");
   if(state != "Ejected") {
     print("Setting disk change timer\n");
-    diskChangeTimer->onActivate([=] {
+    diskChangeTimer->onActivate([=, this] {
       Program::Guard guard;
       print("Disk change timer activated, setting disk state to: ", state, "\n");
       diskChangeTimer->setEnabled(false);
