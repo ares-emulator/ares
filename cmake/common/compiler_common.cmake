@@ -36,6 +36,9 @@ set(CMAKE_C_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+# Disable C++20 module scanning (CMP0155)
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 # Set symbols to be hidden by default for C and C++
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
