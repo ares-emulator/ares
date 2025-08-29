@@ -55,7 +55,7 @@ auto mMenuBar::reset() -> type& {
 }
 
 auto mMenuBar::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto it = state.menus.rbegin(); it != state.menus.rend(); ++it) (*it)->destruct();
+  for(auto& menu : state.menus | std::views::reverse) menu->destruct();
   mObject::setParent(parent, offset);
   for(auto& menu : state.menus) menu->setParent(this, menu->offset());
   return *this;

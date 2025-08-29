@@ -98,7 +98,7 @@ private:
 
     {
       auto devices = hasDevices();
-      if(std::find(devices.begin(), devices.end(), self.device) == devices.end()) {
+      if(std::ranges::find(devices, self.device) == devices.end()) {
         if(!devices.empty()) self.device = devices.front();
       }
     }

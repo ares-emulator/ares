@@ -86,7 +86,7 @@ auto mFixedLayout::setFont(const Font& font) -> type& {
 }
 
 auto mFixedLayout::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto it = state.cells.rbegin(); it != state.cells.rend(); ++it) (*it)->destruct();
+  for(auto& cell : state.cells | std::views::reverse) cell->destruct();
   mSizable::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());
   return *this;

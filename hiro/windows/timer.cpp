@@ -22,7 +22,7 @@ auto pTimer::construct() -> void {
 
 auto pTimer::destruct() -> void {
   setEnabled(false);
-  if(auto it = std::find(timers.begin(), timers.end(), this); it != timers.end()) timers.erase(it);
+  std::erase(timers, this);
 }
 
 auto pTimer::setEnabled(bool enabled) -> void {

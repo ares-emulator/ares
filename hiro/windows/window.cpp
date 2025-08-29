@@ -45,7 +45,7 @@ auto pWindow::construct() -> void {
 }
 
 auto pWindow::destruct() -> void {
-  if(auto it = std::find(windows.begin(), windows.end(), self().instance); it != windows.end()) windows.erase(it);
+  std::erase(windows, self().instance);
 
   if(hbrush) { DeleteObject(hbrush); hbrush = nullptr; }
   DestroyWindow(hwnd);

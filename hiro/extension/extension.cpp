@@ -1,6 +1,9 @@
 #include "extension.hpp"
 using namespace nall;
 
+#include <nall/serializer.hpp>
+#include <ranges>
+
 namespace hiro {
   #include "../resource/resource.cpp"
   #include "../resource/icon.cpp"

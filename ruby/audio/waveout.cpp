@@ -77,8 +77,8 @@ private:
     u32 deviceIndex = 0;
     {
       auto names = hasDevices();
-      auto it = std::find(names.begin(), names.end(), self.device);
-      if(it != names.end()) deviceIndex = (u32)std::distance(names.begin(), it);
+      auto it = std::ranges::find(names, self.device);
+      if(it != names.end()) deviceIndex = (u32)(it - names.begin());
     }
 
     WAVEFORMATEX format{};
