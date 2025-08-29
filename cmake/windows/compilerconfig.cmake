@@ -53,6 +53,7 @@ set(
   /wd4805 # unsafe mix of types in operation
   /MP
   /Zc:__cplusplus
+  /Zc:char8_t-
   /utf-8
   /permissive-
   $<$<NOT:$<CONFIG:Debug>>:/GS->
