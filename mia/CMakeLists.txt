@@ -121,14 +121,7 @@ target_compile_definitions(mia PRIVATE MIA_LIBRARY)
 
 target_include_directories(mia PRIVATE ${CMAKE_SOURCE_DIR})
 target_include_directories(mia PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty)
-target_link_libraries(
-  mia
-  PRIVATE
-    ares::ares
-    ares::nall::headers
-    tzxfile
-    $<$<BOOL:${ARES_ENABLE_CHD}>:chdr-static>
-)
+target_link_libraries(mia PRIVATE ares::ares ares::nall::headers tzxfile $<$<BOOL:${ARES_ENABLE_CHD}>:chdr-static>)
 
 if(ARES_BUILD_OPTIONAL_TARGETS)
   add_executable(mia-ui mia.cpp resource/resource.cpp)
