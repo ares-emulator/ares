@@ -65,8 +65,7 @@ auto Keyboard::poll() -> std::vector<bool> {
 }
 
 auto Keyboard::pressed(const string& key) -> bool {
-  auto it = std::ranges::find(keys, key);
-  if(it != keys.end()) return pKeyboard::pressed(static_cast<u32>(it - keys.begin()));
+  if (auto idx = index_of(keys, key)) return pKeyboard::pressed((u32)*idx);
   return false;
 }
 
