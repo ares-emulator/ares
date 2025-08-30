@@ -3,14 +3,9 @@ target_sources(
   PRIVATE
     windows/detour.cpp
     windows/detour.hpp
-    windows/guid.cpp
-    windows/guid.hpp
-    windows/launcher.cpp
-    windows/launcher.hpp
     windows/registry.cpp
     windows/registry.hpp
     windows/service.hpp
-    windows/shared-memory.hpp
     windows/utf8.cpp
     windows/utf8.hpp
     windows/windows.hpp
