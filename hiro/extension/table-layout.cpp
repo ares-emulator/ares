@@ -280,9 +280,9 @@ auto mTableLayout::setPadding(Geometry padding) -> type& {
 }
 
 auto mTableLayout::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto it = state.cells.rbegin(); it != state.cells.rend(); ++it) (*it)->destruct();
-  for(auto it = state.columns.rbegin(); it != state.columns.rend(); ++it) (*it)->destruct();
-  for(auto it = state.rows.rbegin(); it != state.rows.rend(); ++it) (*it)->destruct();
+  for(auto& it : state.cells | std::views::reverse) it->destruct();
+  for(auto& it : state.columns | std::views::reverse) it->destruct();
+  for(auto& it : state.rows | std::views::reverse) it->destruct();
   mObject::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());
   for(auto& column : state.columns) column->setParent(this, column->offset());

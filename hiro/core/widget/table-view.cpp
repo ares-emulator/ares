@@ -263,7 +263,7 @@ auto mTableView::sort() -> type& {
     break;
   }
   auto &itemsRef = state.items;
-  std::stable_sort(itemsRef.begin(), itemsRef.end(), [&](const sTableViewItem& lhs, const sTableViewItem& rhs) {
+  std::ranges::stable_sort(itemsRef, [&](const sTableViewItem& lhs, const sTableViewItem& rhs) {
     string x = offset < lhs->cellCount() ? lhs->state.cells[offset]->state.text : ""_s;
     string y = offset < rhs->cellCount() ? rhs->state.cells[offset]->state.text : ""_s;
     if(sorting == Sort::Ascending ) return string::icompare(x, y) < 0;

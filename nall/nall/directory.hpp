@@ -29,30 +29,30 @@ struct directory : inode {
 
   static auto folders(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto folders = directory::ufolders(pathname, pattern);
-    std::sort(folders.begin(), folders.end());
+    std::ranges::sort(folders);
     for(auto& folder : folders) folder.append("/");  //must append after sorting
     return folders;
   }
 
   static auto files(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto files = directory::ufiles(pathname, pattern);
-    std::sort(files.begin(), files.end());
+    std::ranges::sort(files);
     return files;
   }
 
   static auto contents(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto folders = directory::ufolders(pathname);  //pattern search of contents should only filter files
-    std::sort(folders.begin(), folders.end());
+    std::ranges::sort(folders);
     for(auto& folder : folders) folder.append("/");  //must append after sorting
     auto files = directory::ufiles(pathname, pattern);
-    std::sort(files.begin(), files.end());
+    std::ranges::sort(files);
     for(auto& file : files) folders.push_back(file);
     return folders;
   }
 
   static auto ifolders(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto folders = ufolders(pathname, pattern);
-    std::sort(folders.begin(), folders.end(), [](const string& x, const string& y){
+    std::ranges::sort(folders, [](const string& x, const string& y){
       return string::icompare(x, y) < 0;
     });
     for(auto& folder : folders) folder.append("/");  //must append after sorting
@@ -61,7 +61,7 @@ struct directory : inode {
 
   static auto ifiles(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto files = ufiles(pathname, pattern);
-    std::sort(files.begin(), files.end(), [](const string& x, const string& y){
+    std::ranges::sort(files, [](const string& x, const string& y){
       return string::icompare(x, y) < 0;
     });
     return files;
@@ -69,12 +69,12 @@ struct directory : inode {
 
   static auto icontents(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto folders = directory::ufolders(pathname);  //pattern search of contents should only filter files
-    std::sort(folders.begin(), folders.end(), [](const string& x, const string& y){
+    std::ranges::sort(folders, [](const string& x, const string& y){
       return string::icompare(x, y) < 0;
     });
     for(auto& folder : folders) folder.append("/");  //must append after sorting
     auto files = directory::ufiles(pathname, pattern);
-    std::sort(files.begin(), files.end(), [](const string& x, const string& y){
+    std::ranges::sort(files, [](const string& x, const string& y){
       return string::icompare(x, y) < 0;
     });
     for(auto& file : files) folders.push_back(file);
@@ -100,7 +100,7 @@ struct directory : inode {
     for(auto& file : directory::ufiles(pathname, pattern)) {
       contents.push_back(file);
     }
-    std::sort(contents.begin(), contents.end());
+    std::ranges::sort(contents);
     return contents;
   }
 
@@ -123,7 +123,7 @@ struct directory : inode {
     for(auto& file : directory::ufiles(pathname, pattern)) {
       contents.push_back(file);
     }
-    std::sort(contents.begin(), contents.end(), [](const string& x, const string& y){
+    std::ranges::sort(contents, [](const string& x, const string& y){
       return string::icompare(x, y) < 0;
     });
     return contents;
