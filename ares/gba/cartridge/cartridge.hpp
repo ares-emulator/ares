@@ -18,14 +18,7 @@ struct Cartridge {
   auto power() -> void;
 
   template<bool UseDebugger>
-  auto readRom(u32 mode, n32 address) -> n32 {
-    if(mode & Word) {
-      n32 word = 0;
-      word |= readRom<UseDebugger>(mode & ~Word | Half, (address & ~3) + 0) <<  0;
-      word |= readRom<UseDebugger>(Sequential | Half, (address & ~3) + 2) << 16;
-      return word;
-    }
-
+  auto readRom(u32 mode, n32 address) -> n16 {
     if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.read();
     if(has.rtc) {
       if((address & 0x1fffffe) == 0xc4) return gpio.readData();
@@ -38,44 +31,34 @@ struct Cartridge {
     if constexpr( UseDebugger) romAddr = address & 0x1ff'fffe;
     n16 half = mrom.read(mode, romAddr);
     if constexpr(!UseDebugger) mrom.pageAddr++;
-
-    if(mode & Byte) return half.byte(address & 1);
     return half;
   }
 
-  auto readBackup(u32 mode, n32 address) -> n32 {
-    n32 word = 0xff;
-    if(has.sram) word = sram.read(address);
-    if(has.flash) word = flash.read(address);
-    word *= 0x01010101;
-    return word;
+  auto readBackup(n32 address) -> n8 {
+    n8 byte = 0xff;
+    if(has.sram) byte = sram.read(address);
+    if(has.flash) byte = flash.read(address);
+    return byte;
   }
 
-  auto writeRom(u32 mode, n32 address, n32 word) -> void {
-    if(mode & Word) {
-      writeRom(mode & ~Word | Half, (address & ~3) + 0, word >> 0);
-      writeRom(Sequential | Half, (address & ~3) + 2, word >> 16);
-    }
-
-    if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.write(word & 1);
+  auto writeRom(u32 mode, n32 address, n16 half) -> void {
+    if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.write(half & 1);
 
     if(has.rtc) {
-      if((address & 0x1fffffe) == 0xc4) return gpio.writeData(word);
-      if((address & 0x1fffffe) == 0xc6) return gpio.writeDirection(word);
-      if((address & 0x1fffffe) == 0xc8) return gpio.writeControl(word);
+      if((address & 0x1fffffe) == 0xc4) return gpio.writeData(half);
+      if((address & 0x1fffffe) == 0xc6) return gpio.writeDirection(half);
+      if((address & 0x1fffffe) == 0xc8) return gpio.writeControl(half);
     }
 
     n32 romAddr = mrom.burstAddr(mode, address);
-    mrom.write(mode, romAddr, word);
+    mrom.write(mode, romAddr, half);
     mrom.pageAddr++;
     return;
   }
 
-  auto writeBackup(u32 mode, n32 address, n32 word) -> void {
-    if(mode & Word) word = word >> (8 * (address & 3));
-    if(mode & Half) word = word >> (8 * (address & 1));
-    if(has.sram) return sram.write(address, word);
-    if(has.flash) return flash.write(address, word);
+  auto writeBackup(n32 address, n8 byte) -> void {
+    if(has.sram) return sram.write(address, byte);
+    if(has.flash) return flash.write(address, byte);
   }
 
   auto serialize(serializer&) -> void;

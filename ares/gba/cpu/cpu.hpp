@@ -86,6 +86,9 @@ struct CPU : ARM7TDMI, Thread, IO {
   template<bool UseDebugger> auto readVRAM(u32 mode, n32 address) -> n32;
   auto writeVRAM(u32 mode, n32 address, n32 word) -> void;
 
+  template<bool UseDebugger> auto readROM(u32 mode, n32 address) -> n32;
+  auto writeROM(u32 mode, n32 address, n32 word) -> void;
+
   //dma.cpp
   auto dmaVblank() -> void;
   auto dmaHblank() -> void;

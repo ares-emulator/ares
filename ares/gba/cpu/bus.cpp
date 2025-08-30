@@ -44,8 +44,9 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     word = ppu.readOAM(mode, address);
     break;
 
+  //timings for ROM are handled in memory.cpp and prefetch.cpp
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
-    if constexpr(UseDebugger) return cartridge.readRom<true>(mode, address);
+    if constexpr(UseDebugger) return readROM<true>(mode, address);
     mode = cartMode(mode, address);
     context.romAccess = true;
     if(mode & Prefetch && wait.prefetch) {
@@ -56,21 +57,19 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
       } else {
         if(mode & Word) address &= ~3;  //prevents misaligned PC from reading incorrect values
         prefetchSync(mode, address);
-        step(waitCartridge(mode, address));
-        word = cartridge.readRom<false>(mode, address);
+        word = readROM<false>(mode, address);
       }
     } else {
       if(mode & DMA) dmac.romBurst = true;
       prefetchReset();
-      step(waitCartridge(mode, address));
-      word = cartridge.readRom<false>(mode, address);
+      word = readROM<false>(mode, address);
     }
     break;
 
   case 0x0e: case 0x0f:
     if constexpr(!UseDebugger) prefetchReset();
     if constexpr(!UseDebugger) step(waitCartridge(mode, address));
-    word = cartridge.readBackup(mode, address);
+    word = cartridge.readBackup(address) * 0x01010101;
     break;
 
   default:
@@ -138,19 +137,21 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
     ppu.writeOAM(mode, address, word);
     break;
 
+  //timings for ROM are handled in memory.cpp
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
     mode = cartMode(mode, address);
     context.romAccess = true;
     if(mode & DMA) dmac.romBurst = true;
     prefetchReset();
-    step(waitCartridge(mode, address));
-    cartridge.writeRom(mode, address, word);
+    writeROM(mode, address, word);
     break;
 
   case 0x0e: case 0x0f:
     prefetchReset();
     step(waitCartridge(mode, address));
-    cartridge.writeBackup(mode, address, word);
+    if(mode & Word) word >>= 8 * (address & 3);
+    if(mode & Half) word >>= 8 * (address & 1);
+    cartridge.writeBackup(address, word);
     break;
 
   default:
@@ -190,7 +191,6 @@ auto CPU::waitCartridge(u32 mode, n32 address) -> u32 {
 
   bool sequential = (mode & Sequential);
   u32 clocks = (mode & Sequential) ? s : n;
-  if(mode & Word) clocks += s;  //16-bit bus requires two transfers for words
   return clocks;
 }
 

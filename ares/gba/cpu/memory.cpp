@@ -105,3 +105,31 @@ auto CPU::writeVRAM(u32 mode, n32 address, n32 word) -> void {
 
   ppu.writeVRAM(mode, address, word);
 }
+
+template<bool UseDebugger>
+auto CPU::readROM(u32 mode, n32 address) -> n32 {
+  if(mode & Word) {
+    n32 word = 0;
+    word |= readROM<UseDebugger>(mode & ~Word | Half, address & ~2) <<  0;
+    word |= readROM<UseDebugger>(  Sequential | Half, address |  2) << 16;
+    return word;
+  }
+
+  step(waitCartridge(mode, address));
+  n16 half = cartridge.readRom<UseDebugger>(mode, address);
+
+  if(mode & Byte) return half.byte(address & 1);
+  return half;
+}
+
+auto CPU::writeROM(u32 mode, n32 address, n32 word) -> void {
+  if(mode & Word) {
+    writeROM(mode & ~Word | Half, address & ~2, word >>  0);
+    writeROM(  Sequential | Half, address |  2, word >> 16);
+    return;
+  }
+
+  step(waitCartridge(mode, address));
+  cartridge.writeRom(mode, address, word);
+  return;
+}
