@@ -77,7 +77,7 @@ auto mTabFrame::remove(sTabFrameItem item) -> type& {
 }
 
 auto mTabFrame::reset() -> type& {
-  state.items.clear();
+  while(!state.items.empty()) remove(state.items.back());
   return *this;
 }
 

@@ -107,7 +107,7 @@ auto mTreeView::remove(sTreeViewItem item) -> type& {
 
 auto mTreeView::reset() -> type& {
   state.selectedPath.reset();
-  state.items.clear();
+  while(!state.items.empty()) remove(state.items.back());
   return *this;
 }
 

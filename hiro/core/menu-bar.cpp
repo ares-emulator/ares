@@ -50,7 +50,7 @@ auto mMenuBar::remove(sMenu menu) -> type& {
 }
 
 auto mMenuBar::reset() -> type& {
-  state.menus.clear();
+  while(!state.menus.empty()) remove(state.menus.back());
   return *this;
 }
 

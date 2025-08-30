@@ -54,7 +54,7 @@ auto mComboButton::remove(sComboButtonItem item) -> type& {
 }
 
 auto mComboButton::reset() -> type& {
-  state.items.clear();
+  while(!state.items.empty()) remove(state.items.back());
   return *this;
 }
 

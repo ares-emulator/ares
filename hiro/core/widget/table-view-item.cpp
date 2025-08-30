@@ -61,7 +61,7 @@ auto mTableViewItem::remove(sTableViewCell cell) -> type& {
 }
 
 auto mTableViewItem::reset() -> type& {
-  state.cells.clear();
+  while(!state.cells.empty()) remove(state.cells.back());
   return *this;
 }
 
