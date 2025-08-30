@@ -75,10 +75,8 @@ struct directory : node {
   }
 
   auto remove(shared_pointer<node> item) -> bool {
-    auto it = std::ranges::find(_nodes, item);
-    if(it == _nodes.end()) return false;
-    _nodes.erase(it);
-    return true;
+    auto erased = std::erase(_nodes, item);
+    return erased > 0;
   }
 
   auto files() const -> std::vector<shared_pointer<file>> {
