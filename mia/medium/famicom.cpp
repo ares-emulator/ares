@@ -882,10 +882,10 @@ auto Famicom::analyzeUNIF(std::vector<u8>& data) -> string {
   std::vector<u8> programROM;
   std::vector<u8> characterROM;
   for(u32 id : range(8)) {
-    if(programROMs[id].size()) programROM.insert(programROM.end(), programROMs[id].data(), programROMs[id].data() + programROMs[id].size());
+    std::ranges::copy(programROMs[id], std::back_inserter(programROM));
   }
   for(u32 id : range(8)) {
-    if(characterROMs[id].size()) characterROM.insert(characterROM.end(), characterROMs[id].data(), characterROMs[id].data() + characterROMs[id].size());
+    std::ranges::copy(characterROMs[id], std::back_inserter(characterROM));
   }
 
   u32 programRAM = 0;
@@ -940,8 +940,8 @@ auto Famicom::analyzeUNIF(std::vector<u8>& data) -> string {
   }
 
   data.clear();
-  if(programROM.size()) data.insert(data.end(), programROM.begin(), programROM.end());
-  if(characterROM.size()) data.insert(data.end(), characterROM.begin(), characterROM.end());
+  std::ranges::copy(programROM, std::back_inserter(data));
+  std::ranges::copy(characterROM, std::back_inserter(data));
 
   return s;
 }

@@ -41,7 +41,10 @@ auto Arcade::load(string location) -> LoadResult {
     endianSwap(rom);
 
     std::vector<u8> pif = loadRoms(location, document, "user1");
-    if(pif.empty()) return { invalidROM, "Ensure your ROM is in a MAME-compatible .zip format and that the Aleck64 pif ROM is available." };
+    if(pif.empty()) return {
+      invalidROM,
+      "Ensure your ROM is in a MAME-compatible .zip format and that the Aleck64 pif ROM is available."
+    };
 
     this->location = location;
 

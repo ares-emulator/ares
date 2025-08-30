@@ -87,7 +87,7 @@ struct Object : shared_pointer_this<Object> {
     }
     for(auto& node : _nodes) {
       auto sub = node->find<T>();
-      result.insert(result.end(), sub.begin(), sub.end());
+      std::ranges::copy(sub, std::back_inserter(result));
     }
     return result;
   }

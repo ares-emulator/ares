@@ -12,7 +12,8 @@ auto MCD::LD::load(string location) -> void {
   //attempt to locate the requested media in the mmi archive
   string mediaName = mcd.disc->attribute("media");
   auto& mediaVec = mmi.media();
-  auto it = std::find_if(mediaVec.begin(), mediaVec.end(), [mediaName](const auto& m){ return m.name == mediaName; });
+  //FIXME(stdc++): revisit this constructor with nicer code
+  auto it = std::ranges::find_if(mediaVec, [mediaName](const auto& m){ return m.name == mediaName; });
   u32 mediaIndex = it == mediaVec.end() ? 0u : static_cast<u32>(it - mediaVec.begin());
 
   // Extract the stream information for analog video and audio

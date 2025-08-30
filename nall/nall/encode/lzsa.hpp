@@ -72,7 +72,7 @@ inline auto LZSA(array_view<u8> input) -> std::vector<u8> {
 
   auto save = [&](const std::vector<u8>& buffer) {
     for(u32 byte : range(8)) output.push_back((u8)(buffer.size() >> (byte * 8)));
-    output.insert(output.end(), buffer.begin(), buffer.end());
+    std::ranges::copy(buffer, std::back_inserter(output));
   };
 
   save(Encode::Huffman(array_view<u8>(flags)));
