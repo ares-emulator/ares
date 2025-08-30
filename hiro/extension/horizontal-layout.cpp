@@ -208,7 +208,7 @@ auto mHorizontalLayout::setPadding(Geometry padding) -> type& {
 }
 
 auto mHorizontalLayout::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto it = state.cells.rbegin(); it != state.cells.rend(); ++it) (*it)->destruct();
+  for(auto& it : state.cells | std::views::reverse) it->destruct();
   mSizable::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());
   return *this;

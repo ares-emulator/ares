@@ -99,7 +99,7 @@ struct MMI {
       return false;
     }
 
-    std::sort(_media.begin(), _media.end(), [](const Media& a, const Media& b) {
+    std::ranges::sort(_media, [](const Media& a, const Media& b) {
       return a.sequenceNo < b.sequenceNo;
     });
 
