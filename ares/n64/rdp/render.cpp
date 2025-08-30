@@ -193,7 +193,8 @@ auto RDP::render() -> void {
     u64 op = fetch();
 
     if(debugger.tracer.command->enabled()) {
-      debugger.command({hex(op, 16L), "  ", commandNames(op >> 56 & 0x3f, "Invalid")});
+      auto message = string{ hex(op, 16L), "  ", commandNames(op >> 56 & 0x3f, "Invalid") };
+      debugger.command(message);
     }
 
     switch(op >> 56 & 0x3f) {

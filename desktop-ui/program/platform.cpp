@@ -32,8 +32,9 @@ auto Program::event(ares::Event event) -> void {
 auto Program::log(ares::Node::Debugger::Tracer::Tracer node, string_view message) -> void {
   string channel = string{node->component(), " ", node->name()};
 
-  if(node->prefix()) { message = string{channel, ": ", message}; }
-  if(node->autoLineBreak()) message = string{message, "\n"};
+  string modifiedMessage;
+  if(node->prefix()) { message = modifiedMessage = string{channel, ": ", message}; }
+  if(node->autoLineBreak()) message = modifiedMessage = string{message, "\n"};
 
   if(node->terminal()) {
     print(message);

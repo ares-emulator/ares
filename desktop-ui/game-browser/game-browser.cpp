@@ -73,10 +73,11 @@ auto GameBrowserWindow::refresh() -> void {
   gameList.append(TableViewColumn().setText("MAME Name"));
 
   for(auto& game : games) {
-    if(searchInput.text().size()) {
-      if(!game.title.ifind(searchInput.text()) &&
-         !game.board.ifind(searchInput.text()) &&
-         !game.name.ifind(searchInput.text())) continue;
+    auto searchText = searchInput.text();
+    if(searchText.size()) {
+      if(!game.title.ifind(searchText) &&
+         !game.board.ifind(searchText) &&
+         !game.name.ifind(searchText)) continue;
     }
 
     TableViewItem item{&gameList};

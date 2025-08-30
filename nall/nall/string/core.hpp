@@ -56,6 +56,13 @@ template<typename T, typename... P> inline auto string::append(const T& value, P
   return *this;
 }
 
+template<typename... P> inline auto string::append(string&& value, P&&... p) -> string& {
+  const string& lvalue = value;
+  _append(make_string(lvalue));
+  if constexpr(sizeof...(p) > 0) append(std::forward<P>(p)...);
+  return *this;
+}
+
 template<typename... P> inline auto string::append(const nall::string_format& value, P&&... p) -> string& {
   format(value);
   if constexpr(sizeof...(p)) append(std::forward<P>(p)...);

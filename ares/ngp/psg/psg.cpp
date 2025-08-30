@@ -6,7 +6,8 @@ PSG psg;
 #include "serialization.cpp"
 
 auto PSG::writePitch(u32 pitch) -> void {
-  apu.debugger.interrupt(string{"writePitch ", pitch & 15, " ", pitch >> 4 & 63});
+  auto message = string{ "writePitch ", pitch & 15, " ", pitch >> 4 & 63 };
+  apu.debugger.interrupt(message);
 }
 
 auto PSG::load(Node::Object parent) -> void {

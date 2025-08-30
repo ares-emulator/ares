@@ -548,7 +548,8 @@ auto Presentation::refreshSystemMenu() -> void {
   u32 portsFound = 0;
   for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {
     //do not add unsupported ports to the port menu
-    if(emulator->portBlacklist.find(port->name())) continue;
+    auto portName = port->name();
+    if(emulator->portBlacklist.find(portName)) continue;
 
     if(!port->hotSwappable()) continue;
     if(port->type() != "Controller" && port->type() != "Expansion") continue;
@@ -746,7 +747,8 @@ auto Presentation::loadShaders() -> void {
 
   if(settings.video.shader.imatch("None")) {none.setChecked(); settings.video.shader = "None";}
   for(auto item : shaders.objects<MenuCheckItem>()) {
-    if(settings.video.shader.imatch(item.attribute("file"))) {
+    auto temp = item.attribute("file");
+    if(settings.video.shader.imatch(temp)) {
       item.setChecked();
       settings.video.shader = item.attribute("file");
       ruby::video.setShader({location, settings.video.shader});

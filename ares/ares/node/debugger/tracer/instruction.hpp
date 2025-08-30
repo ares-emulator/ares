@@ -71,7 +71,8 @@ struct Instruction : Tracer {
     if(!enabled()) return;
 
     if(_omitted) {
-      PlatformLog(shared(), {"[Omitted: ", _omitted, "]"});
+      auto message = string{ "[Omitted: ", _omitted, "]" };
+      PlatformLog(shared(), message);
       _omitted = 0;
     }
 

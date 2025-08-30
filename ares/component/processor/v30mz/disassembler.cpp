@@ -17,7 +17,7 @@ auto V30MZ::disassembleInstruction(u16 ps, u16 pc) -> string {
     return offset;
   };
 
-  auto instruction = [&](string_view name) -> string {
+  auto instruction = [&](string name) -> string {
     if(name.size() >= 7) return name;
     return pad(name, -7);
   };
