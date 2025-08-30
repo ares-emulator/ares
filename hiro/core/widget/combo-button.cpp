@@ -66,7 +66,7 @@ auto mComboButton::selected() const -> ComboButtonItem {
 }
 
 auto mComboButton::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto it = state.items.rbegin(); it != state.items.rend(); ++it) (*it)->destruct();
+  for(auto& it : state.items | std::views::reverse) it->destruct();
   mObject::setParent(parent, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());
   return *this;
