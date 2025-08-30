@@ -267,7 +267,8 @@ auto PPU::power() -> void {
   renderingCycle = 43;  //by default, render at first cycle of pixel output
   string gameID;
   for(u32 index : range(4)) {
-    char byte = cartridge.readRom<true>(Byte, 0xac + index);
+    n32 address = 0xac + index;
+    char byte = cartridge.readRom<true>(0, address).byte(address & 1);
     gameID.append(byte);
   }
   if(gameID == "AWRE") renderingCycle = 512;  //Advance Wars (USA)
