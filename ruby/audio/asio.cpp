@@ -53,9 +53,9 @@ struct AudioASIO : AudioDriver {
       latencies.push_back(latency);
     }
     //it is possible that no latencies in the hard-coded list above will match; so ensure driver-declared latencies are available
-    if(std::find(latencies.begin(), latencies.end(), self.activeDevice.minimumBufferSize) == latencies.end()) latencies.push_back(self.activeDevice.minimumBufferSize);
-    if(std::find(latencies.begin(), latencies.end(), self.activeDevice.maximumBufferSize) == latencies.end()) latencies.push_back(self.activeDevice.maximumBufferSize);
-    if(std::find(latencies.begin(), latencies.end(), self.activeDevice.preferredBufferSize) == latencies.end()) latencies.push_back(self.activeDevice.preferredBufferSize);
+    if(std::ranges::find(latencies, self.activeDevice.minimumBufferSize) == latencies.end()) latencies.push_back(self.activeDevice.minimumBufferSize);
+    if(std::ranges::find(latencies, self.activeDevice.maximumBufferSize) == latencies.end()) latencies.push_back(self.activeDevice.maximumBufferSize);
+    if(std::ranges::find(latencies, self.activeDevice.preferredBufferSize) == latencies.end()) latencies.push_back(self.activeDevice.preferredBufferSize);
     latencies.sort();
     return latencies;
   }

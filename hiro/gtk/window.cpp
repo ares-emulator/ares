@@ -210,8 +210,8 @@ auto pWindow::construct() -> void {
 }
 
 auto pWindow::destruct() -> void {
-  for(auto it = pApplication::state().windows.begin(); it != pApplication::state().windows.end(); ++it) {
-    if(*it == this) { pApplication::state().windows.erase(it); break; }
+  if (auto& ws = pApplication::state().windows; auto it = std::ranges::find(ws, this); it != ws.end()) {
+    ws.erase(it);
   }
 
   gtk_widget_destroy(widget);

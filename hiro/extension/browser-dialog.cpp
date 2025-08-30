@@ -218,7 +218,10 @@ auto BrowserDialogWindow::run() -> BrowserDialog::Response {
     auto part = filter.split("|", 1L);
     filterList.append(ComboButtonItem().setText(part.left()));
   }
-  optionList.setCollapsible().setVisible(!state.options.empty()).onChange([&] { response.option = optionList.selected().text(); });
+  optionList
+  .setCollapsible()
+  .setVisible(!state.options.empty())
+  .onChange([&] { response.option = optionList.selected().text(); });
   for(auto& option : state.options) {
     optionList.append(ComboButtonItem().setText(option));
   }

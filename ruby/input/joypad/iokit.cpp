@@ -46,7 +46,7 @@ struct InputJoypadIOKit {
 
     auto appendAxis(IOHIDElementRef element) -> void {
       IOHIDElementCookie cookie = IOHIDElementGetCookie(element);
-      if(std::find_if(axes.begin(), axes.end(), [cookie](auto axis) { return IOHIDElementGetCookie(axis) == cookie; }) != axes.end()) {
+      if(std::ranges::find_if(axes, [cookie](auto axis) { return IOHIDElementGetCookie(axis) == cookie; }) != axes.end()) {
         return;
       }
 
@@ -61,7 +61,7 @@ struct InputJoypadIOKit {
 
     auto appendHat(IOHIDElementRef element) -> void {
       IOHIDElementCookie cookie = IOHIDElementGetCookie(element);
-      if(std::find_if(hats.begin(), hats.end(), [cookie](auto hat) { return IOHIDElementGetCookie(hat) == cookie; }) != hats.end()) {
+      if(std::ranges::find_if(hats, [cookie](auto hat) { return IOHIDElementGetCookie(hat) == cookie; }) != hats.end()) {
         return;
       }
 
@@ -73,7 +73,7 @@ struct InputJoypadIOKit {
 
     auto appendButton(IOHIDElementRef element) -> void {
       IOHIDElementCookie cookie = IOHIDElementGetCookie(element);
-      if(std::find_if(buttons.begin(), buttons.end(), [cookie](auto button) { return IOHIDElementGetCookie(button) == cookie; }) != buttons.end()) {
+      if(std::ranges::find_if(buttons, [cookie](auto button) { return IOHIDElementGetCookie(button) == cookie; }) != buttons.end()) {
         return;
       }
 
