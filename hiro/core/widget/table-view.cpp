@@ -163,8 +163,8 @@ auto mTableView::remove(sTableViewItem item) -> type& {
 }
 
 auto mTableView::reset() -> type& {
-  state.items.clear();
-  state.columns.clear();
+  while(!state.items.empty()) remove(state.items.back());
+  while(!state.columns.empty()) remove(state.columns.back());
   return *this;
 }
 

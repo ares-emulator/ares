@@ -50,7 +50,7 @@ auto mMenu::remove(sAction action) -> type& {
 }
 
 auto mMenu::reset() -> type& {
-  state.actions.clear();
+  while(!state.actions.empty()) remove(state.actions.back());
   return *this;
 }
 
