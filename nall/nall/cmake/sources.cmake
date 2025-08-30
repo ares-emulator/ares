@@ -16,7 +16,7 @@ target_sources(
     case-range.hpp
     cd.hpp
     chrono.hpp
-    counting-sort.hpp
+    
     directory.cpp
     directory.hpp
     dl.cpp
@@ -32,8 +32,8 @@ target_sources(
     hashset.hpp
     hid.hpp
     image.hpp
-    induced-sort.hpp
-    inline-if.hpp
+    
+    
     inode.cpp
     inode.hpp
     instance.hpp
@@ -61,7 +61,7 @@ target_sources(
     pointer.hpp
     primitives.hpp
     priority-queue.hpp
-    property.hpp
+    
     queue.hpp
     random.cpp
     random.hpp
@@ -71,13 +71,13 @@ target_sources(
     run.hpp
     serial.hpp
     serializer.hpp
-    service.hpp
+    
     set.hpp
-    shared-memory.hpp
+    
     shared-pointer.hpp
     stdint.hpp
     string.hpp
-    suffix-array.hpp
+    
     terminal.cpp
     terminal.hpp
     thread.cpp
@@ -92,9 +92,9 @@ target_sources(
     view.hpp
 )
 
-target_sources(nall PRIVATE arithmetic/barrett.hpp arithmetic/natural.hpp arithmetic/unsigned.hpp)
+target_sources(nall PRIVATE arithmetic/natural.hpp arithmetic/unsigned.hpp)
 
-target_sources(nall PRIVATE beat/single/apply.hpp beat/single/create.hpp)
+target_sources(nall PRIVATE beat/single/apply.hpp)
 
 target_sources(
   nall
@@ -111,18 +111,18 @@ target_sources(
     decode/base.hpp
     decode/base64.hpp
     decode/bmp.hpp
-    decode/bwt.hpp
+    
     decode/chd.hpp
     decode/cue.hpp
     decode/gzip.hpp
     decode/html.hpp
-    decode/huffman.hpp
+    
     decode/inflate.hpp
-    decode/lzsa.hpp
+    
     decode/mmi.hpp
-    decode/mtf.hpp
+    
     decode/png.hpp
-    decode/rle.hpp
+    
     decode/url.hpp
     decode/wav.hpp
     decode/zip.hpp
@@ -135,27 +135,27 @@ target_sources(
   PRIVATE
     elliptic-curve/curve25519.hpp
     elliptic-curve/ed25519.hpp
-    elliptic-curve/modulo25519-optimized.hpp
-    elliptic-curve/modulo25519-reference.hpp
+    
+    
 )
 
-target_sources(nall PRIVATE emulation/21fx.hpp)
+ 
 
 target_sources(
   nall
   PRIVATE
     encode/base.hpp
     encode/base64.hpp
-    encode/bmp.hpp
-    encode/bwt.hpp
+    
+    
     encode/html.hpp
-    encode/huffman.hpp
-    encode/lzsa.hpp
-    encode/mtf.hpp
+    
+    
+    
     encode/png.hpp
-    encode/rle.hpp
+    
     encode/url.hpp
-    encode/wav.hpp
+    
     encode/zip.hpp
 )
 
@@ -168,10 +168,10 @@ target_sources(
     hash/crc32.hpp
     hash/crc64.hpp
     hash/hash.hpp
-    hash/sha224.hpp
+    
     hash/sha256.hpp
-    hash/sha384.hpp
-    hash/sha512.hpp
+    
+    
 )
 
 target_sources(
@@ -188,9 +188,9 @@ target_sources(
     image/utility.hpp
 )
 
-target_sources(nall PRIVATE mac/poly1305.hpp)
+ 
 
-target_sources(nall PRIVATE posix/service.hpp posix/shared-memory.hpp)
+target_sources(nall PRIVATE posix/service.hpp)
 
 target_sources(
   nall
@@ -213,12 +213,12 @@ target_sources(
     recompiler/amd64/amd64.hpp
     recompiler/amd64/constants.hpp
     recompiler/amd64/emitter.hpp
-    recompiler/amd64/encoder-calls-systemv.hpp
-    recompiler/amd64/encoder-calls-windows.hpp
-    recompiler/amd64/encoder-instructions.hpp
+    
+    
+    
     recompiler/generic/constants.hpp
-    recompiler/generic/encoder-calls.hpp
-    recompiler/generic/encoder-instructions.hpp
+    
+    
     recompiler/generic/generic.hpp
 )
 
