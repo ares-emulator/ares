@@ -14,6 +14,7 @@ auto Emulator::enumeratePorts(string name) -> vector<InputPort>& {
       InputPort port{string{"Controller Port ", 1 + id}};
       port.append(virtualPorts[id].pad);
       port.append(virtualPorts[id].mouse);
+      port.append(virtualPorts[id].keyboard);
       ports.append(port);
     }
   }
@@ -96,11 +97,11 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
       errorText = "An internal error occurred when initializing the emulator core. ";
       break;
   }
-  
+
   if(result.info) {
     errorText = { errorText, result.info };
   }
-  
+
   switch (result.result) {
     case noFirmware:
       if(MessageDialog().setText({

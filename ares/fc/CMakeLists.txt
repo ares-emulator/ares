@@ -178,8 +178,8 @@ ares_add_sources(
   CORE #
     fc
   INCLUDED #
-    expansion/family-keyboard/family-keyboard.cpp
-    expansion/family-keyboard/family-keyboard.hpp
+    expansion/family-basic-keyboard/family-basic-keyboard.cpp
+    expansion/family-basic-keyboard/family-basic-keyboard.hpp
 )
 
 ares_add_sources(
