@@ -77,6 +77,7 @@ jobs:
     - name: Install macOS Dependencies
       if: runner.os == 'macOS'
       run: |
+        brew uninstall --ignore-dependencies cmake
         brew install ${{ matrix.platform.install }}
     - name: "Build: Windows"
       if: runner.os != 'macOS' && runner.os != 'Linux'
