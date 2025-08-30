@@ -14,7 +14,7 @@ struct Class {
 
   template<typename T> static auto register() -> void {
     auto& cls = classes();
-    auto it = std::find_if(cls.begin(), cls.end(), [&](const Instance& instance) { return instance.identifier == T::identifier(); });
+    auto it = std::ranges::find_if(cls, [&](const Instance& instance) { return instance.identifier == T::identifier(); });
     if(it == cls.end()) {
       cls.push_back({T::identifier(), &T::create});
     } else {
@@ -24,7 +24,8 @@ struct Class {
 
   static auto create(string identifier) -> Node::Object {
     auto& cls = classes();
-    if(auto it = std::find_if(cls.begin(), cls.end(), [&](const Instance& instance) { return instance.identifier == identifier; }); it != cls.end()) return it->create();
+    auto it = std::ranges::find_if(cls, [&](const Instance& instance) { return instance.identifier == identifier; });
+    if(it != cls.end()) return it->create();
     if(identifier == "Object") throw;  //should never occur: detects unregistered classes
     return create("Object");
   }

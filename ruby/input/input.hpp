@@ -27,7 +27,7 @@ protected:
 
 struct Input {
   static auto hasDrivers() -> std::vector<string>;
-  static auto hasDriver(string driver) -> bool { auto v = hasDrivers(); return std::find(v.begin(), v.end(), driver) != v.end(); }
+  static auto hasDriver(string driver) -> bool { auto v = hasDrivers(); return std::ranges::find(v, driver) != v.end(); }
   static auto optimalDriver() -> string;
   static auto safestDriver() -> string;
 
