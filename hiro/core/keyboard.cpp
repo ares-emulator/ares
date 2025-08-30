@@ -74,8 +74,7 @@ auto Keyboard::released(const string& key) -> bool {
 }
 
 auto Keyboard::remove(Hotkey hotkey) -> void {
-  auto it = std::ranges::find(state.hotkeys, hotkey);
-  if(it != state.hotkeys.end()) state.hotkeys.erase(it);
+  std::erase(state.hotkeys, hotkey);
 }
 
 #endif

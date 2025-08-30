@@ -51,11 +51,10 @@ struct Object : shared_pointer_this<Object> {
   }
 
   auto remove(Node::Object node) -> void {
-    if(auto it = std::ranges::find(_nodes, node); it != _nodes.end()) {
+    if(std::erase(_nodes, node)) {
       PlatformDetach(node);
       node->reset();
       node->_parent.reset();
-      _nodes.erase(it);
     }
   }
 
