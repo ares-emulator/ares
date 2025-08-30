@@ -49,36 +49,36 @@ namespace nall::Encode {
   Although to be fair, BWT is inferior to the bijective BWT anyway, so it may not be worth the effort.
 */
 
-inline auto BWT(array_view<u8> input) -> vector<u8> {
+inline auto BWT(array_view<u8> input) -> std::vector<u8> {
   auto size = input.size();
-  vector<u8> output;
+  std::vector<u8> output;
   output.reserve(8 + 8 + size);
-  for(u32 byte : range(8)) output.append(size >> byte * 8);
-  for(u32 byte : range(8)) output.append(0x00);
+  for(u32 byte : range(8)) output.push_back((u8)(size >> (byte * 8)));
+  for(u32 byte : range(8)) output.push_back(0x00);
 
-  vector<u8> buffer;
+  std::vector<u8> buffer;
   buffer.reserve(2 * size);
-  for(u32 offset : range(size)) buffer.append(input[offset]);
-  for(u32 offset : range(size)) buffer.append(input[offset]);
+  for(u32 offset : range(size)) buffer.push_back(input[offset]);
+  for(u32 offset : range(size)) buffer.push_back(input[offset]);
 
   auto suffixes = SuffixArray(buffer);
 
-  vector<s32> prefixes;
+  std::vector<s32> prefixes;
   prefixes.reserve(size);
 
   for(u32 offset : range(2 * size + 1)) {
     u32 suffix = suffixes[offset];
     if(suffix >= size) continue;  //beyond the bounds of the original input string
-    prefixes.append(suffix);
+    prefixes.push_back((s32)suffix);
   }
 
   u64 root = 0;
   for(u32 offset : range(size)) {
-    u32 suffix = prefixes[offset];
+    u32 suffix = (u32)prefixes[offset];
     if(suffix == 0) root = offset, suffix = size;
-    output.append(input[--suffix]);
+    output.push_back(input[--suffix]);
   }
-  for(u32 byte : range(8)) output[8 + byte] = root >> byte * 8;
+  for(u32 byte : range(8)) output[8 + byte] = (u8)(root >> (byte * 8));
 
   return output;
 }

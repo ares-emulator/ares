@@ -2,7 +2,7 @@
 
 namespace nall::Decode {
 
-inline auto Base64(const string& text) -> vector<u8> {
+inline auto Base64(const string& text) -> std::vector<u8> {
   static bool initialized = false;
   static u8 lookup[256] = {};
   if(!initialized) {
@@ -14,7 +14,7 @@ inline auto Base64(const string& text) -> vector<u8> {
     lookup['/'] = lookup['_'] = 63;
   }
 
-  vector<u8> result;
+  std::vector<u8> result;
   u8 buffer = 0;
   u8 output = 0;
   for(u32 n : range(text.size())) {
@@ -26,22 +26,22 @@ inline auto Base64(const string& text) -> vector<u8> {
       break;
 
     case 1:
-      result.append(output | buffer >> 4);
+      result.push_back(output | (buffer >> 4));
       output = (buffer & 15) << 4;
       break;
 
     case 2:
-      result.append(output | buffer >> 2);
+      result.push_back(output | (buffer >> 2));
       output = (buffer & 3) << 6;
       break;
 
     case 3:
-      result.append(output | buffer);
+      result.push_back(output | buffer);
       break;
     }
   }
 
-  if(text.size() & 3) result.append(output | buffer);
+  if(text.size() & 3) result.push_back(output | buffer);
   return result;
 }
 

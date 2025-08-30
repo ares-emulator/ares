@@ -16,7 +16,8 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     pak->setAttribute("title", Medium::name(location));
     pak->append("manifest.bml", manifest);
     for(auto& filename : directory::files(location, "disk?*.side?*")) {
-      pak->append(filename, file::read({location, filename}));
+      auto mem = file::read({location, filename});
+      pak->append(filename, mem);
     }
   }
 
@@ -28,7 +29,7 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     pak->setAttribute("title", Medium::name(location));
     pak->append("manifest.bml", manifest);
 
-    vector<u8> input = FloppyDisk::read(location);
+    std::vector<u8> input = FloppyDisk::read(location);
     array_view<u8> view{input};
     if(view.size() % 65500 == 16) view += 16;  //skip iNES / fwNES header
     u32 index = 0;

@@ -50,7 +50,7 @@ auto pApplication::processEvents() -> void {
   for(auto menu : pApplication::state().menuBarsToRebuild) {
     menu->_rebuild();
   }
-  pApplication::state().menuBarsToRebuild.reset();
+  pApplication::state().menuBarsToRebuild.clear();
 }
 
 auto Application_processDialogMessage(MSG& msg) -> void {

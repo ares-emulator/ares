@@ -47,17 +47,17 @@ private:
       string name;
     };
     Contact from;
-    vector<Contact> to;
-    vector<Contact> cc;
-    vector<Contact> bcc;
+    std::vector<Contact> to;
+    std::vector<Contact> cc;
+    std::vector<Contact> bcc;
     struct Attachment {
-      vector<u8> buffer;
+      std::vector<u8> buffer;
       string name;
     };
     string subject;
     string body;
     Format format = Format::Plain;
-    vector<Attachment> attachments;
+    std::vector<Attachment> attachments;
 
     string message;
     string response;
@@ -68,7 +68,7 @@ private:
   auto boundary() -> string;
   auto filename(const string& filename) -> string;
   auto contact(const Information::Contact& contact) -> string;
-  auto contacts(const vector<Information::Contact>& contacts) -> string;
+  auto contacts(const std::vector<Information::Contact>& contacts) -> string;
   auto split(const string& text) -> string;
 };
 
@@ -82,29 +82,32 @@ inline auto SMTP::from(string mail, string name) -> void {
 }
 
 inline auto SMTP::to(string mail, string name) -> void {
-  info.to.append({mail, name});
+  info.to.push_back({mail, name});
 }
 
 inline auto SMTP::cc(string mail, string name) -> void {
-  info.cc.append({mail, name});
+  info.cc.push_back({mail, name});
 }
 
 inline auto SMTP::bcc(string mail, string name) -> void {
-  info.bcc.append({mail, name});
+  info.bcc.push_back({mail, name});
 }
 
 inline auto SMTP::attachment(const u8* data, u32 size, string name) -> void {
-  vector<u8> buffer;
+  std::vector<u8> buffer;
   buffer.resize(size);
   memcpy(buffer.data(), data, size);
-  info.attachments.append({std::move(buffer), name});
+  info.attachments.push_back({std::move(buffer), name});
 }
 
 inline auto SMTP::attachment(string filename, string name) -> bool {
   if(!file::exists(filename)) return false;
   if(name == "") name = Location::file(filename);
-  auto buffer = file::read(filename);
-  info.attachments.append({std::move(buffer), name});
+  auto nallBuffer = file::read(filename);
+  std::vector<u8> buffer;
+  buffer.resize(nallBuffer.size());
+  memcpy(buffer.data(), nallBuffer.data(), nallBuffer.size());
+  info.attachments.push_back({std::move(buffer), name});
   return true;
 }
 
@@ -147,7 +150,7 @@ inline auto SMTP::contact(const Information::Contact& contact) -> string {
   return {"\"", contact.name, "\" <", contact.mail, ">"};
 }
 
-inline auto SMTP::contacts(const vector<Information::Contact>& contacts) -> string {
+inline auto SMTP::contacts(const std::vector<Information::Contact>& contacts) -> string {
   string result;
   for(auto& contact : contacts) {
     result.append(this->contact(contact), "; ");

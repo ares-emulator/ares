@@ -6,7 +6,8 @@
 #include <nall/intrinsics.hpp>
 #include <nall/merge-sort.hpp>
 #include <nall/string.hpp>
-#include <nall/vector.hpp>
+#include <vector>
+#include <algorithm>
 
 #if defined(PLATFORM_WINDOWS)
   #include <nall/windows/utf8.hpp>
@@ -26,134 +27,144 @@ struct directory : inode {
   static auto remove(const string& pathname) -> bool;  //recursive
   static auto exists(const string& pathname) -> bool;
 
-  static auto folders(const string& pathname, const string& pattern = "*") -> vector<string> {
+  static auto folders(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto folders = directory::ufolders(pathname, pattern);
-    folders.sort();
+    std::ranges::sort(folders);
     for(auto& folder : folders) folder.append("/");  //must append after sorting
     return folders;
   }
 
-  static auto files(const string& pathname, const string& pattern = "*") -> vector<string> {
+  static auto files(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto files = directory::ufiles(pathname, pattern);
-    files.sort();
+    std::ranges::sort(files);
     return files;
   }
 
-  static auto contents(const string& pathname, const string& pattern = "*") -> vector<string> {
+  static auto contents(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto folders = directory::ufolders(pathname);  //pattern search of contents should only filter files
-    folders.sort();
+    std::ranges::sort(folders);
     for(auto& folder : folders) folder.append("/");  //must append after sorting
     auto files = directory::ufiles(pathname, pattern);
-    files.sort();
-    for(auto& file : files) folders.append(file);
+    std::ranges::sort(files);
+    for(auto& file : files) folders.push_back(file);
     return folders;
   }
 
-  static auto ifolders(const string& pathname, const string& pattern = "*") -> vector<string> {
+  static auto ifolders(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto folders = ufolders(pathname, pattern);
-    folders.isort();
+    std::ranges::sort(folders, [](const string& x, const string& y){
+      return string::icompare(x, y) < 0;
+    });
     for(auto& folder : folders) folder.append("/");  //must append after sorting
     return folders;
   }
 
-  static auto ifiles(const string& pathname, const string& pattern = "*") -> vector<string> {
+  static auto ifiles(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto files = ufiles(pathname, pattern);
-    files.isort();
+    std::ranges::sort(files, [](const string& x, const string& y){
+      return string::icompare(x, y) < 0;
+    });
     return files;
   }
 
-  static auto icontents(const string& pathname, const string& pattern = "*") -> vector<string> {
+  static auto icontents(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto folders = directory::ufolders(pathname);  //pattern search of contents should only filter files
-    folders.isort();
+    std::ranges::sort(folders, [](const string& x, const string& y){
+      return string::icompare(x, y) < 0;
+    });
     for(auto& folder : folders) folder.append("/");  //must append after sorting
     auto files = directory::ufiles(pathname, pattern);
-    files.isort();
-    for(auto& file : files) folders.append(file);
+    std::ranges::sort(files, [](const string& x, const string& y){
+      return string::icompare(x, y) < 0;
+    });
+    for(auto& file : files) folders.push_back(file);
     return folders;
   }
 
-  static auto rcontents(const string& pathname, const string& pattern = "*") -> vector<string> {
-    vector<string> contents;
+  static auto rcontents(const string& pathname, const string& pattern = "*") -> std::vector<string> {
+    std::vector<string> contents;
     function<void (const string&, const string&, const string&)>
     recurse = [&](const string& basename, const string& pathname, const string& pattern) {
       for(auto& folder : directory::ufolders(pathname)) {
-        contents.append(string{pathname, folder, "/"}.trimLeft(basename, 1L));
+        contents.push_back(string{pathname, folder, "/"}.trimLeft(basename, 1L));
         recurse(basename, {pathname, folder, "/"}, pattern);
       }
       for(auto& file : directory::ufiles(pathname, pattern)) {
-        contents.append(string{pathname, file}.trimLeft(basename, 1L));
+        contents.push_back(string{pathname, file}.trimLeft(basename, 1L));
       }
     };
     for(auto& folder : directory::ufolders(pathname)) {
-      contents.append({folder, "/"});
+      contents.push_back({folder, "/"});
       recurse(pathname, {pathname, folder, "/"}, pattern);
     }
     for(auto& file : directory::ufiles(pathname, pattern)) {
-      contents.append(file);
+      contents.push_back(file);
     }
-    contents.sort();
+    std::ranges::sort(contents);
     return contents;
   }
 
-  static auto ircontents(const string& pathname, const string& pattern = "*") -> vector<string> {
-    vector<string> contents;
+  static auto ircontents(const string& pathname, const string& pattern = "*") -> std::vector<string> {
+    std::vector<string> contents;
     function<void (const string&, const string&, const string&)>
     recurse = [&](const string& basename, const string& pathname, const string& pattern) {
       for(auto& folder : directory::ufolders(pathname)) {
-        contents.append(string{pathname, folder, "/"}.trimLeft(basename, 1L));
+        contents.push_back(string{pathname, folder, "/"}.trimLeft(basename, 1L));
         recurse(basename, {pathname, folder, "/"}, pattern);
       }
       for(auto& file : directory::ufiles(pathname, pattern)) {
-        contents.append(string{pathname, file}.trimLeft(basename, 1L));
+        contents.push_back(string{pathname, file}.trimLeft(basename, 1L));
       }
     };
     for(auto& folder : directory::ufolders(pathname)) {
-      contents.append({folder, "/"});
+      contents.push_back({folder, "/"});
       recurse(pathname, {pathname, folder, "/"}, pattern);
     }
     for(auto& file : directory::ufiles(pathname, pattern)) {
-      contents.append(file);
+      contents.push_back(file);
     }
-    contents.isort();
+    std::ranges::sort(contents, [](const string& x, const string& y){
+      return string::icompare(x, y) < 0;
+    });
     return contents;
   }
 
-  static auto rfolders(const string& pathname, const string& pattern = "*") -> vector<string> {
-    vector<string> folders;
+  static auto rfolders(const string& pathname, const string& pattern = "*") -> std::vector<string> {
+    std::vector<string> folders;
     for(auto& folder : rcontents(pathname, pattern)) {
-      if(directory::exists({pathname, folder})) folders.append(folder);
+      if(directory::exists({pathname, folder})) folders.push_back(folder);
     }
     return folders;
   }
 
-  static auto irfolders(const string& pathname, const string& pattern = "*") -> vector<string> {
-    vector<string> folders;
+  static auto irfolders(const string& pathname, const string& pattern = "*") -> std::vector<string> {
+    std::vector<string> folders;
     for(auto& folder : ircontents(pathname, pattern)) {
-      if(directory::exists({pathname, folder})) folders.append(folder);
+      if(directory::exists({pathname, folder})) folders.push_back(folder);
     }
     return folders;
   }
 
-  static auto rfiles(const string& pathname, const string& pattern = "*") -> vector<string> {
-    vector<string> files;
+  static auto rfiles(const string& pathname, const string& pattern = "*") -> std::vector<string> {
+    std::vector<string> files;
     for(auto& file : rcontents(pathname, pattern)) {
-      if(file::exists({pathname, file})) files.append(file);
+      if(file::exists({pathname, file})) files.push_back(file);
     }
     return files;
   }
 
-  static auto irfiles(const string& pathname, const string& pattern = "*") -> vector<string> {
-    vector<string> files;
+  static auto irfiles(const string& pathname, const string& pattern = "*") -> std::vector<string> {
+    std::vector<string> files;
     for(auto& file : ircontents(pathname, pattern)) {
-      if(file::exists({pathname, file})) files.append(file);
+      if(file::exists({pathname, file})) files.push_back(file);
     }
     return files;
   }
 
 private:
   //internal functions; these return unsorted lists
-  static auto ufolders(const string& pathname, const string& pattern = "*") -> vector<string>;
-  static auto ufiles(const string& pathname, const string& pattern = "*") -> vector<string>;
+  static auto ufolders(const string& pathname, const string& pattern = "*") -> std::vector<string>;
+  static auto ufiles(const string& pathname, const string& pattern = "*") -> std::vector<string>;
 };
 
 inline auto directory::copy(const string& source, const string& target) -> bool {
@@ -234,10 +245,10 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
     return S_ISDIR(data.st_mode);
   }
 
-  inline auto directory::ufolders(const string& pathname, const string& pattern) -> vector<string> {
-    if(!pathname) return vector<string>{"/"};
+  inline auto directory::ufolders(const string& pathname, const string& pattern) -> std::vector<string> {
+    if(!pathname) return std::vector<string>{"/"};
 
-    vector<string> list;
+    std::vector<string> list;
     DIR* dp;
     struct dirent* ep;
     dp = opendir(pathname);
@@ -247,17 +258,17 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
         if(!strcmp(ep->d_name, "..")) continue;
         if(!directoryIsFolder(dp, ep)) continue;
         string name{ep->d_name};
-        if(name.match(pattern)) list.append(std::move(name));
+        if(name.match(pattern)) list.push_back(std::move(name));
       }
       closedir(dp);
     }
     return list;
   }
 
-  inline auto directory::ufiles(const string& pathname, const string& pattern) -> vector<string> {
+  inline auto directory::ufiles(const string& pathname, const string& pattern) -> std::vector<string> {
     if(!pathname) return {};
 
-    vector<string> list;
+    std::vector<string> list;
     DIR* dp;
     struct dirent* ep;
     dp = opendir(pathname);
@@ -267,7 +278,7 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
         if(!strcmp(ep->d_name, "..")) continue;
         if(directoryIsFolder(dp, ep)) continue;
         string name{ep->d_name};
-        if(name.match(pattern)) list.append(std::move(name));
+        if(name.match(pattern)) list.push_back(std::move(name));
       }
       closedir(dp);
     }

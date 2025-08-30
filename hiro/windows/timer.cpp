@@ -5,7 +5,7 @@
 
 namespace hiro {
 
-static vector<pTimer*> timers;
+static std::vector<pTimer*> timers;
 
 static auto CALLBACK Timer_timeoutProc(HWND hwnd, UINT msg, UINT_PTR timerID, DWORD time) -> void {
   if(Application::state().quit) return;
@@ -16,13 +16,13 @@ static auto CALLBACK Timer_timeoutProc(HWND hwnd, UINT msg, UINT_PTR timerID, DW
 }
 
 auto pTimer::construct() -> void {
-  timers.append(this);
+  timers.push_back(this);
   htimer = 0;
 }
 
 auto pTimer::destruct() -> void {
   setEnabled(false);
-  if(auto index = timers.find(this)) timers.remove(*index);
+  std::erase(timers, this);
 }
 
 auto pTimer::setEnabled(bool enabled) -> void {

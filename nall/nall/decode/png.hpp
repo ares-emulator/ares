@@ -62,8 +62,9 @@ inline PNG::~PNG() {
 }
 
 inline auto PNG::load(const string& filename) -> bool {
-  if(auto memory = file::read(filename)) {
-    return load(memory.data(), memory.size());
+  auto memory = file::read(filename);
+  if(!memory.empty()) {
+    return load(memory.data(), (u32)memory.size());
   }
   return false;
 }
@@ -235,7 +236,7 @@ inline auto PNG::filter(u8* outputData, const u8* inputData, u32 width, u32 heig
   u8* wr = outputData;
   const u8* rd = inputData;
   s32 bpp = info.bytesPerPixel, pitch = width * bpp;
-  for(s32 y = 0; y < height; y++) {
+  for(s32 y = 0; y < (s32)height; y++) {
     u8 filter = *rd++;
 
     switch(filter) {

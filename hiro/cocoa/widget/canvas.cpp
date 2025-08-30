@@ -26,7 +26,7 @@
 
 -(BOOL) performDragOperation:(id<NSDraggingInfo>)sender {
   auto paths = DropPaths(sender);
-  if(!paths) return NO;
+  if(paths.empty()) return NO;
   canvas->doDrop(paths);
   return YES;
 }

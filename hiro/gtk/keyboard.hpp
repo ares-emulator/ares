@@ -3,7 +3,7 @@
 namespace hiro {
 
 struct pKeyboard {
-  static auto poll() -> vector<bool>;
+  static auto poll() -> std::vector<bool>;
   static auto pressed(u32 code) -> bool;
 
   static auto _pressed(const char* state, u16 code) -> bool;

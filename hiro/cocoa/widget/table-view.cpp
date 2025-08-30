@@ -62,6 +62,7 @@
   }
 
   for(auto& tableViewColumn : tableView->state.columns) {
+    if(!tableViewColumn) continue;
     auto column = tableViewColumn->offset();
 
     NSTableColumn* tableColumn = [[NSTableColumn alloc] initWithIdentifier:[[NSNumber numberWithInteger:column] stringValue]];
@@ -343,12 +344,12 @@ auto pTableView::remove(sTableViewItem item) -> void {
 }
 
 auto pTableView::resizeColumns() -> void {
-  vector<s32> widths;
+  std::vector<s32> widths;
   s32 minimumWidth = 0;
   s32 expandable = 0;
   for(u32 column : range(self().columnCount())) {
     s32 width = _width(column);
-    widths.append(width);
+    widths.push_back(width);
     minimumWidth += width;
     if(state().columns[column]->expandable()) expandable++;
   }

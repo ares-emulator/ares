@@ -5,15 +5,15 @@
 #include <nall/file.hpp>
 #include <nall/location.hpp>
 #include <nall/path.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 
 namespace nall {
 
 struct Arguments {
   Arguments(int argc, char** argv);
-  Arguments(vector<string> arguments);
+  Arguments(std::vector<string> arguments);
 
-  explicit operator bool() const { return (bool)arguments; }
+  explicit operator bool() const { return !arguments.empty(); }
   auto size() const -> u32 { return arguments.size(); }
 
   auto operator[](u32 index) -> string& { return arguments[index]; }
@@ -48,14 +48,15 @@ private:
   auto construct() -> void;
 
   string programArgument;
-  vector<string> arguments;
+  std::vector<string> arguments;
 };
 
 inline auto Arguments::construct() -> void {
-  if(!arguments) return;
+  if(arguments.empty()) return;
 
   //extract and pre-process program argument
-  programArgument = arguments.takeFirst();
+  programArgument = arguments.front();
+  arguments.erase(arguments.begin());
   programArgument = {Path::real(programArgument), Location::file(programArgument)};
 
   //normalize path and file arguments
@@ -75,12 +76,12 @@ inline Arguments::Arguments(int argc, char** argv) {
   #if defined(PLATFORM_WINDOWS)
   utf8_arguments(argc, argv);
   #endif
-  for(u32 index : range(argc)) arguments.append(argv[index]);
+  for(u32 index : range(argc)) arguments.push_back(argv[index]);
   construct();
 }
 
-inline Arguments::Arguments(vector<string> arguments) {
-  this->arguments = arguments;
+inline Arguments::Arguments(std::vector<string> arguments) {
+  this->arguments = std::move(arguments);
   construct();
 }
 
@@ -129,14 +130,16 @@ inline auto Arguments::find(string_view name, string& argument) const -> bool {
 //
 
 inline auto Arguments::take() -> string {
-  if(!arguments) return {};
-  return arguments.takeFirst();
+  if(arguments.empty()) return {};
+  auto out = arguments.front();
+  arguments.erase(arguments.begin());
+  return out;
 }
 
 inline auto Arguments::take(string_view name) -> bool {
   for(u32 index : range(arguments.size())) {
     if(arguments[index].match(name)) {
-      arguments.remove(index);
+      arguments.erase(arguments.begin() + index);
       return true;
     }
   }
@@ -147,8 +150,9 @@ inline auto Arguments::take(string_view name, bool& argument) -> bool {
   for(u32 index : range(arguments.size())) {
     if(arguments[index].match(name) && arguments.size() > index + 1
     && (arguments[index + 1] == "true" || arguments[index + 1] == "false")) {
-      arguments.remove(index);
-      argument = arguments.take(index) == "true";
+      arguments.erase(arguments.begin() + index);
+      argument = arguments[index] == "true";
+      arguments.erase(arguments.begin() + index);
       return true;
     }
   }
@@ -158,8 +162,9 @@ inline auto Arguments::take(string_view name, bool& argument) -> bool {
 inline auto Arguments::take(string_view name, string& argument) -> bool {
   for(u32 index : range(arguments.size())) {
     if(arguments[index].match(name) && arguments.size() > index + 1) {
-      arguments.remove(index);
-      argument = arguments.take(index);
+      arguments.erase(arguments.begin() + index);
+      argument = arguments[index];
+      arguments.erase(arguments.begin() + index);
       return true;
     }
   }

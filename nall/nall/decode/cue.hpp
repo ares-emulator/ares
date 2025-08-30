@@ -5,6 +5,7 @@
 #include <nall/string.hpp>
 #include <nall/decode/wav.hpp>
 #include <nall/decode/zip.hpp>
+#include <vector>
 
 namespace nall::Decode {
 
@@ -23,7 +24,7 @@ struct CUE {
 
     u8 number = 0xff; //01-99
     string type;
-    vector<Index> indices;
+    std::vector<Index> indices;
     maybe<s32> pregap;
     maybe<s32> postgap;
   };
@@ -35,23 +36,23 @@ struct CUE {
     string name;
     string archiveFolder;
     string type;
-    vector<Track> tracks;
+    std::vector<Track> tracks;
   };
 
   auto load(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool;
   auto sectorCount() const -> u32;
 
-  vector<File> files;
+  std::vector<File> files;
 
 private:
-  auto loadFile(vector<string>& lines, u32& offset) -> File;
-  auto loadTrack(vector<string>& lines, u32& offset) -> Track;
-  auto loadIndex(vector<string>& lines, u32& offset) -> Index;
+  auto loadFile(std::vector<string>& lines, u32& offset) -> File;
+  auto loadTrack(std::vector<string>& lines, u32& offset) -> Track;
+  auto loadIndex(std::vector<string>& lines, u32& offset) -> Index;
   auto toLBA(const string& msf) -> u32;
 };
 
 inline auto CUE::load(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
-  vector<string> lines;
+  std::vector<string> lines;
   string archiveFolder;
   if (compressedFile != nullptr) {
     auto fileNameSeparatorPos = compressedFile->name.findPrevious(compressedFile->name.size()-1, "/");
@@ -63,10 +64,16 @@ inline auto CUE::load(const string& location, const Decode::ZIP* archive, const 
     // nall::string_view, as the variadic constructor overrides "string_view(const char* data, u32 size)",
     // meaning we can't create a string_view from a fixed-length input. We use an array_view here as a
     // workaround.
-    auto rawDataBufferAsArrayView = rawDataBuffer.view(0, rawDataBuffer.size());
-    lines = string(rawDataBufferAsArrayView).replace("\r", "").split("\n");
+    auto rawDataBufferAsArrayView = array_view<u8>(rawDataBuffer.data(), rawDataBuffer.size());
+    auto splitLines = string(rawDataBufferAsArrayView).replace("\r", "").split("\n");
+    lines.clear();
+    lines.reserve(splitLines.size());
+    for (u32 i = 0; i < splitLines.size(); i++) lines.push_back(splitLines[i]);
   } else {
-    lines = string::read(location).replace("\r", "").split("\n");
+    auto splitLines = string::read(location).replace("\r", "").split("\n");
+    lines.clear();
+    lines.reserve(splitLines.size());
+    for (u32 i = 0; i < splitLines.size(); i++) lines.push_back(splitLines[i]);
   }
 
   u32 offset = 0;
@@ -74,16 +81,16 @@ inline auto CUE::load(const string& location, const Decode::ZIP* archive, const 
     lines[offset].strip();
     if(lines[offset].ibeginsWith("FILE ")) {
       auto file = loadFile(lines, offset);
-      if(!file.tracks) continue;
-      files.append(file);
+      if(file.tracks.empty()) continue;
+      files.push_back(file);
       continue;
     }
     offset++;
   }
 
-  if(!files) return false;
-  if(!files.first().tracks) return false;
-  if(!files.first().tracks.first().indices) return false;
+  if(files.empty()) return false;
+  if(files.front().tracks.empty()) return false;
+  if(files.front().tracks.front().indices.empty()) return false;
 
   // calculate index ends for all but the last index
   for(auto& file : files) {
@@ -104,7 +111,7 @@ inline auto CUE::load(const string& location, const Decode::ZIP* archive, const 
   return true;
 }
 
-inline auto CUE::loadFile(vector<string>& lines, u32& offset) -> File {
+inline auto CUE::loadFile(std::vector<string>& lines, u32& offset) -> File {
   File file;
 
   lines[offset].itrimLeft("FILE ", 1L).strip();
@@ -118,8 +125,8 @@ inline auto CUE::loadFile(vector<string>& lines, u32& offset) -> File {
     if(lines[offset].ibeginsWith("FILE ")) break;
     if(lines[offset].ibeginsWith("TRACK ")) {
       auto track = loadTrack(lines, offset);
-      if(!track.indices) continue;
-      file.tracks.append(track);
+      if(track.indices.empty()) continue;
+      file.tracks.push_back(track);
       continue;
     }
     offset++;
@@ -128,7 +135,7 @@ inline auto CUE::loadFile(vector<string>& lines, u32& offset) -> File {
   return file;
 }
 
-inline auto CUE::loadTrack(vector<string>& lines, u32& offset) -> Track {
+inline auto CUE::loadTrack(std::vector<string>& lines, u32& offset) -> Track {
   Track track;
 
   lines[offset].itrimLeft("TRACK ", 1L).strip();
@@ -145,19 +152,19 @@ inline auto CUE::loadTrack(vector<string>& lines, u32& offset) -> Track {
       auto index = loadIndex(lines, offset);
       if(index.number == 0 && track.number == 1)
         index.lba = 0; // ignore track 1 index 0 (assume 1st pregap always starts at origin)
-      track.indices.append(index);
+      track.indices.push_back(index);
       continue;
     }
     if(lines[offset].ibeginsWith("PREGAP ")) {
       track.pregap = toLBA(lines[offset++].itrimLeft("PREGAP ", 1L));
       Index index; index.number = 0; index.lba = -1;
-      track.indices.append(index); // placeholder
+      track.indices.push_back(index); // placeholder
       continue;
     }
     if(lines[offset].ibeginsWith("POSTGAP ")) {
       track.postgap = toLBA(lines[offset++].itrimLeft("POSTGAP ", 1L));
-      Index index; index.number = track.indices.last().number + 1; index.lba = -1;
-      track.indices.append(index); // placeholder
+      Index index; index.number = track.indices.back().number + 1; index.lba = -1;
+      track.indices.push_back(index); // placeholder
       continue;
     }
     offset++;
@@ -167,7 +174,7 @@ inline auto CUE::loadTrack(vector<string>& lines, u32& offset) -> Track {
   return track;
 }
 
-inline auto CUE::loadIndex(vector<string>& lines, u32& offset) -> Index {
+inline auto CUE::loadIndex(std::vector<string>& lines, u32& offset) -> Index {
   Index index;
 
   lines[offset].itrimLeft("INDEX ", 1L);

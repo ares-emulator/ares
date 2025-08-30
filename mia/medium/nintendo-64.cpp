@@ -3,7 +3,7 @@ struct Nintendo64 : Cartridge {
   auto extensions() -> vector<string> override { return {"n64", "v64", "z64"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
   auto cic_detect(array_view<u8> ipl3) -> string;
   auto ipl2checksum(u32 seed, array_view<u8> rom) -> u64;
 };
@@ -84,13 +84,13 @@ auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
 }
 
 auto Nintendo64::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
 
   this->sha256   = Hash::SHA256(rom).digest();
@@ -181,7 +181,7 @@ auto Nintendo64::cic_detect(array_view<u8> ipl3) -> string
   return cic;
 }
 
-auto Nintendo64::analyze(vector<u8>& data) -> string {
+auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   if(data.size() < 0x1000) {
     print("[mia] Loading rom failed. Minimum expected rom size is 4096 (0x1000) bytes. Rom size: ", data.size(), " (0x", hex(data.size()), ") bytes.\n");
     return {};

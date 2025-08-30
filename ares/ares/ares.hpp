@@ -29,7 +29,7 @@
 #include <nall/traits.hpp>
 #include <nall/unique-pointer.hpp>
 #include <nall/variant.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 #include <nall/vfs.hpp>
 #include <nall/cd.hpp>
 #include <nall/dsp/iir/one-pole.hpp>

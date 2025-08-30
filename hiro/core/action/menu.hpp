@@ -5,7 +5,7 @@ struct mMenu : mAction {
 
   auto action(u32 position) const -> Action;
   auto actionCount() const -> u32;
-  auto actions() const -> vector<Action>;
+  auto actions() const -> std::vector<Action>;
   auto append(sAction action) -> type&;
   auto icon() const -> multiFactorImage;
   auto remove(sAction action) -> type&;
@@ -18,7 +18,7 @@ struct mMenu : mAction {
 
 //private:
   struct State {
-    vector<sAction> actions;
+    std::vector<sAction> actions;
     multiFactorImage icon;
     string text;
   } state;

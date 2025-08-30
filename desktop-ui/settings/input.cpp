@@ -204,7 +204,7 @@ auto InputSettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, 
 
 auto InputSettings::setVisible(bool visible) -> InputSettings& {
   if(visible == 1) {
-    systemList.items().first().setSelected();
+    systemList.items().front().setSelected();
     if(emulator) {
       for(auto item : systemList.items()) {
         if(item.text() == emulator->name) item.setSelected();

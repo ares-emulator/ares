@@ -4,7 +4,7 @@ auto Program::updateMessage() -> void {
   lock_guard<recursive_mutex> messageLock(_messageMutex);
   if(chrono::millisecond() - message.timestamp >= 2000) {
     message = {};
-    if(messages.size()) message = messages.takeFirst();
+    if(!messages.empty()) { message = messages.front(); messages.erase(messages.begin()); }
   }
 
   if(message.text.length() > 0) {
@@ -38,6 +38,6 @@ auto Program::updateMessage() -> void {
 
 auto Program::showMessage(const string& text) -> void {
   lock_guard<recursive_mutex> messageLock(_messageMutex);
-  messages.append({chrono::millisecond(), text});
+  messages.push_back({chrono::millisecond(), text});
   printf("%s\n", (const char*)text);
 }

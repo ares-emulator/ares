@@ -49,7 +49,7 @@ auto Input::release() -> bool {
   return instance->release();
 }
 
-auto Input::poll() -> vector<shared_pointer<nall::HID::Device>> {
+auto Input::poll() -> std::vector<shared_pointer<nall::HID::Device>> {
   return instance->poll();
 }
 
@@ -106,7 +106,7 @@ auto Input::create(string driver) -> bool {
   return self.instance->create();
 }
 
-auto Input::hasDrivers() -> vector<string> {
+auto Input::hasDrivers() -> std::vector<string> {
   return {
 
   #if defined(INPUT_WINDOWS)

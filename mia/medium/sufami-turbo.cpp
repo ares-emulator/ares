@@ -3,17 +3,17 @@ struct SufamiTurbo : Cartridge {
   auto extensions() -> vector<string> override { return {"st"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& data) -> string;
+  auto analyze(std::vector<u8>& data) -> string;
 };
 
 auto SufamiTurbo::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
@@ -46,7 +46,7 @@ auto SufamiTurbo::save(string location) -> bool {
   return true;
 }
 
-auto SufamiTurbo::analyze(vector<u8>& rom) -> string {
+auto SufamiTurbo::analyze(std::vector<u8>& rom) -> string {
   if(rom.size() < 0x20000) {
     print("[mia] Loading rom failed. Minimum expected rom size is 131072 (0x20000) bytes. Rom size: ", rom.size(), " (0x", hex(rom.size()), ") bytes.\n");;
     return {};

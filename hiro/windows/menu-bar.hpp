@@ -16,7 +16,7 @@ struct pMenuBar : pObject {
   auto _update() -> void;
 
   HMENU hmenu = 0;
-  vector<wObject> objects;
+  std::vector<wObject> objects;
 };
 
 }

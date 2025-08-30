@@ -7,23 +7,25 @@ struct Class {
     const function<Node::Object ()> create;
   };
 
-  static auto classes() -> vector<Instance>& {
-    static vector<Instance> classes;
+  static auto classes() -> std::vector<Instance>& {
+    static std::vector<Instance> classes;
     return classes;
   }
 
   template<typename T> static auto register() -> void {
-    if(!classes().find([&](auto instance) { return instance.identifier == T::identifier(); })) {
-      classes().append({T::identifier(), &T::create});
+    auto& cls = classes();
+    auto it = std::ranges::find_if(cls, [&](const Instance& instance) { return instance.identifier == T::identifier(); });
+    if(it == cls.end()) {
+      cls.push_back({T::identifier(), &T::create});
     } else {
       throw;
     }
   }
 
   static auto create(string identifier) -> Node::Object {
-    if(auto index = classes().find([&](auto instance) { return instance.identifier == identifier; })) {
-      return classes()[*index].create();
-    }
+    auto& cls = classes();
+    auto it = std::ranges::find_if(cls, [&](const Instance& instance) { return instance.identifier == identifier; });
+    if(it != cls.end()) return it->create();
     if(identifier == "Object") throw;  //should never occur: detects unregistered classes
     return create("Object");
   }

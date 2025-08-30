@@ -110,8 +110,8 @@ auto Program::unload() -> void {
   clearUndoStates();
   showMessage({"Unloaded ", Location::prefix(emulator->game->location)});
   emulator->unload();
-  screens.reset();
-  streams.reset();
+  screens.clear();
+  streams.clear();
   emulator.reset();
   rewindReset();
   presentation.unloadEmulator();

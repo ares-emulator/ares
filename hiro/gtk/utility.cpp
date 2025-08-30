@@ -36,11 +36,11 @@ static auto CreateImage(const image& icon, bool scale = false) -> GtkImage* {
   return gtkIcon;
 }
 
-static auto DropPaths(GtkSelectionData* data) -> vector<string> {
+static auto DropPaths(GtkSelectionData* data) -> std::vector<string> {
   gchar** uris = gtk_selection_data_get_uris(data);
   if(uris == nullptr) return {};
 
-  vector<string> paths;
+  std::vector<string> paths;
   for(u32 n = 0; uris[n] != nullptr; n++) {
     gchar* pathname = g_filename_from_uri(uris[n], nullptr, nullptr);
     if(pathname == nullptr) continue;
@@ -48,7 +48,7 @@ static auto DropPaths(GtkSelectionData* data) -> vector<string> {
     string path = pathname;
     g_free(pathname);
     if(directory::exists(path) && !path.endsWith("/")) path.append("/");
-    paths.append(path);
+    paths.push_back(path);
   }
 
   g_strfreev(uris);

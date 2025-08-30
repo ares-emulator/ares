@@ -235,11 +235,11 @@ Presentation::Presentation() {
     .show();
   });
 
-  viewport.setDroppable().onDrop([&](auto filenames) {
+  viewport.setDroppable().onDrop([&](std::vector<string> filenames) {
     Program::Guard guard;
     if(filenames.size() != 1) return;
-    if(auto emulator = program.identify(filenames.first())) {
-      program.load(emulator, filenames.first());
+    if(auto emulator = program.identify(filenames[0])) {
+      program.load(emulator, filenames[0]);
     }
   });
     
@@ -307,8 +307,8 @@ auto Presentation::resizeWindow() -> void {
   u32 viewportWidth = 320 * multiplier;
   u32 viewportHeight = 240 * multiplier;
 
-  if(emulator && program.screens) {
-    auto& node = program.screens.first();
+  if(emulator && !program.screens.empty()) {
+    auto& node = program.screens.front();
     u32 videoWidth = node->width() * node->scaleX();
     u32 videoHeight = node->height() * node->scaleY();
     if(settings.video.aspectCorrection != "None")       videoWidth = videoWidth * node->aspectX() / node->aspectY();

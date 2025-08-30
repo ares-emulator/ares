@@ -235,26 +235,26 @@ auto test(string path) -> TestResults {
   return results;
 }
 
-auto addDirectory(vector<string>& files, string location) -> void {
+auto addDirectory(std::vector<string>& files, string location) -> void {
   auto filenames = directory::files(location, "*.json");
-  if(!filenames) {
+  if(filenames.empty()) {
     print("no tests found in ", location, "\n");
     return;
   }
   for(auto& filename : filenames) {
-    files.append({location, filename});
+    files.push_back({location, filename});
   }
 }
 
 auto nall::main(Arguments arguments) -> void {
-  vector<string> files;
+  std::vector<string> files;
 
   if(arguments) {
     for(auto argument : arguments) {
       if(directory::exists(argument)) {
         addDirectory(files, argument);
       } else if(file::exists(argument)) {
-        files.append(argument);
+        files.push_back(argument);
       } else {
         print("unknown argument: ", argument, "\n");
       }

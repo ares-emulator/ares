@@ -15,13 +15,13 @@ struct mListView : mTableView {
   using mTableView::remove;
 
   mListView();
-  auto batched() const -> vector<ListViewItem>;
+  auto batched() const -> std::vector<ListViewItem>;
   auto doActivate() const -> void;
   auto doChange() const -> void;
   auto doContext() const -> void;
   auto doToggle(ListViewItem) const -> void;
   auto item(u32 position) const -> ListViewItem;
-  auto items() const -> vector<ListViewItem>;
+  auto items() const -> std::vector<ListViewItem>;
   auto onActivate(const function<void ()>& callback) -> type&;
   auto onChange(const function<void ()>& callback) -> type&;
   auto onContext(const function<void ()>& callback) -> type&;

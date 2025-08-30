@@ -19,7 +19,7 @@ struct InputJoypadDirectInput {
     u16 productID = 0;
     bool isXInputDevice = false;
   };
-  vector<Joypad> joypads;
+  std::vector<Joypad> joypads;
 
   uintptr handle = 0;
   LPDIRECTINPUT8 context = nullptr;
@@ -34,7 +34,7 @@ struct InputJoypadDirectInput {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     for(auto& jp : joypads) {
       if(FAILED(jp.device->Poll())) jp.device->Acquire();
 
@@ -68,7 +68,7 @@ struct InputJoypadDirectInput {
         assign(jp.hid, HID::Joypad::GroupID::Button, n, (bool)state.rgbButtons[n]);
       }
 
-      devices.append(jp.hid);
+      devices.push_back(jp.hid);
     }
   }
 
@@ -101,7 +101,7 @@ struct InputJoypadDirectInput {
       if(jp.effect) jp.effect->Release();
       jp.device->Release();
     }
-    joypads.reset();
+    joypads.clear();
     context = nullptr;
   }
 
@@ -181,7 +181,7 @@ struct InputJoypadDirectInput {
     for(auto n : range(6)) jp.hid->axes().append(n);
     for(auto n : range(8)) jp.hid->hats().append(n);
     for(auto n : range(128)) jp.hid->buttons().append(n);
-    joypads.append(jp);
+    joypads.push_back(jp);
 
     return DIENUM_CONTINUE;
   }

@@ -2,7 +2,7 @@
 
 namespace hiro {
 
-static auto BrowserWindow_addFilters(GtkWidget* dialog, vector<string> filters) -> void {
+static auto BrowserWindow_addFilters(GtkWidget* dialog, std::vector<string> filters) -> void {
   for(auto& filter : filters) {
     auto part = filter.split("|", 1L);
     if(part.size() != 2) continue;

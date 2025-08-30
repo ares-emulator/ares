@@ -84,8 +84,8 @@ NALL_HEADER_INLINE auto registry::remove(const string& name) -> bool {
   return SHDeleteValueW(rootKey, utf16_t(path), utf16_t(node)) == ERROR_SUCCESS;
 }
 
-NALL_HEADER_INLINE auto registry::contents(const string& name) -> vector<string> {
-  vector<string> result;
+NALL_HEADER_INLINE auto registry::contents(const string& name) -> std::vector<string> {
+  std::vector<string> result;
   auto part = name.split("\\");
   HKEY handle, rootKey = root(part.takeLeft());
   part.removeRight();
@@ -97,13 +97,13 @@ NALL_HEADER_INLINE auto registry::contents(const string& name) -> vector<string>
       wchar_t name[NWR_SIZE] = L"";
       DWORD size = NWR_SIZE * sizeof(wchar_t);
       RegEnumKeyEx(handle, n, (wchar_t*)&name, &size, nullptr, nullptr, nullptr, nullptr);
-      result.append(string{(const char*)utf8_t(name), "\\"});
+      result.push_back(string{(const char*)utf8_t(name), "\\"});
     }
     for(u32 n = 0; n < nodes; n++) {
       wchar_t name[NWR_SIZE] = L"";
       DWORD size = NWR_SIZE * sizeof(wchar_t);
       RegEnumValueW(handle, n, (wchar_t*)&name, &size, nullptr, nullptr, nullptr, nullptr);
-      result.append((const char*)utf8_t(name));
+      result.push_back((const char*)utf8_t(name));
     }
     RegCloseKey(handle);
   }

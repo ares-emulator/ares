@@ -178,7 +178,8 @@ auto main(Arguments arguments) -> void {
 
   construct();
 
-  if(auto document = file::read(locate("settings.bml"))) {
+  auto document = file::read(locate("settings.bml"));
+  if(!document.empty()) {
     settings.unserialize(document);
   }
 

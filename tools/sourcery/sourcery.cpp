@@ -52,11 +52,12 @@ auto Sourcery::parse(Markup::Node& root) -> void {
       auto buffer = file::read(filename);
       header.print("extern const unsigned char ", node["name"].text(), "[", buffer.size(), "];\n");
       source.print("const unsigned char ", node["name"].text(), "[", buffer.size(), "] = {\n");
-      buffer.foreach([&](uint offset, int data) {
+      for(u32 offset : range((u32)buffer.size())) {
+        int data = (int)buffer[offset];
         if((offset & 31) ==  0) source.print("  ");
         source.print(data, ",");
         if((offset & 31) == 31) source.print("\n");
-      });
+      }
       if(buffer.size() & 31) source.print("\n");
       source.print("};\n");
     }
