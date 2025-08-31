@@ -20,9 +20,7 @@ namespace ares::GameBoyAdvance {
     Half          =  16,  //16-bit access
     Word          =  32,  //32-bit access
     Signed        =  64,  //sign extended
-    Nonsequential = 128,  //N cycle
-    Sequential    = 256,  //S cycle
-    DMA           = 512,  //DMA transaction
+    DMA           = 128,  //DMA transaction
   };
 
   struct Model {

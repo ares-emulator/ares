@@ -6,7 +6,7 @@ auto CPU::prefetchSync(u32 mode, n32 address) -> void {
   prefetch.ahead = false;
   prefetch.addr = address + size;
   prefetch.load = address + size;
-  prefetch.wait = waitCartridge(Sequential, prefetch.load);
+  prefetch.wait = waitCartridge(prefetch.load, true);
 }
 
 auto CPU::prefetchStepInternal(u32 clocks) -> void {
@@ -20,9 +20,10 @@ auto CPU::prefetchStepInternal(u32 clocks) -> void {
       break;
     }
     if(--prefetch.wait) continue;
-    prefetch.slot[prefetch.load >> 1 & 7] = cartridge.readRom<false>(Nonsequential, prefetch.load);  //todo: make access sequentiality consistent with timing used
+    cartridge.startBurst(prefetch.load);  //todo: only start burst when necessary
+    prefetch.slot[prefetch.load >> 1 & 7] = cartridge.readRom<false>(prefetch.load);
     prefetch.load += 2;
-    prefetch.wait = waitCartridge(Sequential, prefetch.load);
+    prefetch.wait = waitCartridge(prefetch.load, true);
   }
 }
 
@@ -44,7 +45,7 @@ auto CPU::prefetchReset() -> void {
 auto CPU::prefetchRead() -> n16 {
   if(prefetch.stopped && prefetch.empty()) {
     prefetch.stopped = false;
-    prefetch.wait = waitCartridge(Nonsequential, prefetch.load);
+    prefetch.wait = waitCartridge(prefetch.load, false);
   }
   if(prefetch.empty()) prefetchStepInternal(prefetch.wait);
 
