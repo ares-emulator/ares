@@ -268,7 +268,7 @@ auto PPU::power() -> void {
   string gameID;
   for(u32 index : range(4)) {
     n32 address = 0xac + index;
-    char byte = cartridge.readRom<true>(0, address).byte(address & 1);
+    char byte = cartridge.readRom<true>(address).byte(address & 1);
     gameID.append(byte);
   }
   if(gameID == "AWRE") renderingCycle = 512;  //Advance Wars (USA)

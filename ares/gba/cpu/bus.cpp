@@ -47,7 +47,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
   //timings for ROM are handled in memory.cpp and prefetch.cpp
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
     if constexpr(UseDebugger) return readROM<true>(mode, address);
-    mode = cartMode(mode, address);
+    context.burstActive = checkBurst(mode);
     context.romAccess = true;
     if(mode & Prefetch && wait.prefetch) {
       if(address == prefetch.addr && (!prefetch.empty() || prefetch.ahead)) {
@@ -68,7 +68,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 
   case 0x0e: case 0x0f:
     if constexpr(!UseDebugger) prefetchReset();
-    if constexpr(!UseDebugger) step(waitCartridge(mode, address));
+    if constexpr(!UseDebugger) step(waitCartridge(address, false));
     word = cartridge.readBackup(address) * 0x01010101;
     break;
 
@@ -139,7 +139,7 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
 
   //timings for ROM are handled in memory.cpp
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
-    mode = cartMode(mode, address);
+    context.burstActive = checkBurst(mode);
     context.romAccess = true;
     if(mode & DMA) dmac.romBurst = true;
     prefetchReset();
@@ -148,7 +148,7 @@ auto CPU::set(u32 mode, n32 address, n32 word) -> void {
 
   case 0x0e: case 0x0f:
     prefetchReset();
-    step(waitCartridge(mode, address));
+    step(waitCartridge(address, false));
     if(mode & Word) word >>= 8 * (address & 3);
     if(mode & Half) word >>= 8 * (address & 1);
     cartridge.writeBackup(address, word);
@@ -177,7 +177,7 @@ auto CPU::waitEWRAM(u32 mode) -> u32 {
   return (16 - memory.ewramWait) * (mode & Word ? 2 : 1);
 }
 
-auto CPU::waitCartridge(u32 mode, n32 address) -> u32 {
+auto CPU::waitCartridge(n32 address, bool sequential) -> u32 {
   static u32 timings[] = {5, 4, 3, 9};
   u32 n = timings[wait.nwait[address >> 25 & 3]];
   u32 s = wait.swait[address >> 25 & 3];
@@ -189,25 +189,15 @@ auto CPU::waitCartridge(u32 mode, n32 address) -> u32 {
   case 0x0e00'0000: s = n; break;
   }
 
-  bool sequential = (mode & Sequential);
-  u32 clocks = (mode & Sequential) ? s : n;
+  u32 clocks = sequential ? s : n;
   return clocks;
 }
 
-auto CPU::cartMode(u32 mode, n32 address) -> u32 {
-  //if no burst transfer is active, start a new burst transfer
-  if(cartridge.mrom.burst == false) return mode | Nonsequential;
-
-  //determine whether sequential access may be performed
-  if(mode & DMA) {
-    u32 sequential = dmac.romBurst ? Sequential : Nonsequential;
-    mode |= sequential;
-  } else {
-    u32 sequential = ARM7TDMI::nonsequential ? Nonsequential : Sequential;
-    mode |= sequential;
-  }
-
-  return mode;
+auto CPU::checkBurst(u32 mode) -> bool {
+  //check whether burst transfer is in progress
+  if(cartridge.mrom.burst == false) return false;
+  if(mode & DMA) return dmac.romBurst;
+  return !ARM7TDMI::nonsequential;
 }
 
 auto CPU::OpenBus::get(u32 mode, n32 address) -> n32 {

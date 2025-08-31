@@ -122,5 +122,6 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.romAccess);
   s(context.timerLatched);
   s(context.busLocked);
+  s(context.burstActive);
   s(context.hcounter);
 }
