@@ -258,9 +258,9 @@ auto BrowserDialogWindow::run() -> BrowserDialog::Response {
   if(state.filters.empty()) state.filters.push_back("All|*");
   for(auto& filter : state.filters) {
     auto part = filter.split("|", 1L);
-    auto right = part.right().split(":");
+    auto filterParts = part.right().split(":");
     std::vector<string> v;
-    for(auto& s : right) v.push_back(s);
+    for(auto& s : filterParts) v.push_back(s);
     filters.push_back(std::move(v));
   }
 

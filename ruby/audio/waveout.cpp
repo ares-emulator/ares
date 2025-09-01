@@ -75,10 +75,7 @@ private:
     terminate();
 
     u32 deviceIndex = 0;
-    {
-      auto names = hasDevices();
-      if (auto idx = index_of(names, self.device)) deviceIndex = (u32)*idx;
-    }
+    if (auto index = index_of(hasDevices(), self.device)) deviceIndex = (u32)*index;
 
     WAVEFORMATEX format{};
     format.wFormatTag = WAVE_FORMAT_PCM;

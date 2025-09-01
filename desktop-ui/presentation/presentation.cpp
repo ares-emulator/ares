@@ -238,8 +238,8 @@ Presentation::Presentation() {
   viewport.setDroppable().onDrop([&](std::vector<string> filenames) {
     Program::Guard guard;
     if(filenames.size() != 1) return;
-    if(auto emulator = program.identify(filenames[0])) {
-      program.load(emulator, filenames[0]);
+    if(auto emulator = program.identify(filenames.front())) {
+      program.load(emulator, filenames.front());
     }
   });
     

@@ -96,11 +96,9 @@ private:
   auto initialize() -> bool {
     terminate();
 
-    {
-      auto devices = hasDevices();
-      if(std::ranges::find(devices, self.device) == devices.end()) {
-        if(!devices.empty()) self.device = devices.front();
-      }
+    auto devices = hasDevices();
+    if(std::ranges::find(devices, self.device) == devices.end()) {
+      if(!devices.empty()) self.device = devices.front();
     }
 
     _fd = open(self.device, O_WRONLY | O_NONBLOCK);

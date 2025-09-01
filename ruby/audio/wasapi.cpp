@@ -66,10 +66,8 @@ struct AudioWASAPI : AudioDriver {
 
   auto create() -> bool override {
     super.setExclusive(false);
-    {
-      auto devices = hasDevices();
-      if(!devices.empty()) super.setDevice(devices.front());
-    }
+    auto devices = hasDevices();
+    if(!devices.empty()) super.setDevice(devices.front());
     super.setBlocking(false);
     super.setChannels(2);
     super.setFrequency(48000);

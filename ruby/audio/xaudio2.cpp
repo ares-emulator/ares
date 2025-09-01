@@ -8,10 +8,8 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   ~AudioXAudio2() { destruct(); }
 
   auto create() -> bool override {
-    {
-      auto devices = hasDevices();
-      if(!devices.empty()) super.setDevice(devices.front());
-    }
+    auto devices = hasDevices();
+    if(!devices.empty()) super.setDevice(devices.front());
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(40);

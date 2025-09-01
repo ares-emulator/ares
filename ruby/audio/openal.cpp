@@ -12,7 +12,8 @@ struct AudioOpenAL : AudioDriver {
   ~AudioOpenAL() { terminate(); }
 
   auto create() -> bool override {
-    auto devs = hasDevices(); if(!devs.empty()) super.setDevice(devs.front());
+    auto devices = hasDevices();
+    if(!devices.empty()) super.setDevice(devices.front());
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(20);

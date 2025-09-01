@@ -20,7 +20,10 @@ struct VideoDriver {
   virtual auto hasFormats() -> std::vector<string> { return {"ARGB24"}; }
   virtual auto hasShader() -> bool { return false; }
 
-  auto hasFormat(string format) -> bool { auto v = hasFormats(); return std::ranges::find(v, format) != v.end(); }
+  auto hasFormat(string format) -> bool { 
+    auto formats = hasFormats();
+    return std::ranges::find(formats, format) != formats.end();
+  }
 
   virtual auto setFullScreen(bool fullScreen) -> bool { return true; }
   virtual auto setMonitor(string monitor) -> bool { return true; }
@@ -62,7 +65,10 @@ protected:
 
 struct Video {
   static auto hasDrivers() -> std::vector<string>;
-  static auto hasDriver(string driver) -> bool { auto v = hasDrivers(); return std::ranges::find(v, driver) != v.end(); }
+  static auto hasDriver(string driver) -> bool { 
+    auto drivers = hasDrivers(); 
+    return std::ranges::find(drivers, driver) != drivers.end();
+  }
   static auto optimalDriver() -> string;
   static auto safestDriver() -> string;
 
