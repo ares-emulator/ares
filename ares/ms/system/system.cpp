@@ -1,8 +1,9 @@
 #include <ms/ms.hpp>
+#include <algorithm>
 
 namespace ares::MasterSystem {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Sega] Mark III (NTSC-J)",
     "[Sega] Master System (NTSC-J)",
@@ -16,7 +17,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 

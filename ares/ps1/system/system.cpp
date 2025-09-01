@@ -1,8 +1,9 @@
 #include <ps1/ps1.hpp>
+#include <algorithm>
 
 namespace ares::PlayStation {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Sony] PlayStation (NTSC-J)",
     "[Sony] PlayStation (NTSC-U)",
@@ -11,7 +12,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 

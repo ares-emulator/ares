@@ -2,6 +2,7 @@
 //started: 2019-01-03
 
 #include <ares/ares.hpp>
+#include <vector>
 
 #include <component/processor/tlcs900h/tlcs900h.hpp>
 #include <component/processor/z80/z80.hpp>
@@ -9,7 +10,7 @@
 
 namespace ares::NeoGeoPocket {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
 
   struct Model {
