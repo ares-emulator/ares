@@ -83,9 +83,9 @@ auto pWindow::handle() const -> uintptr_t {
 }
 
 auto pWindow::monitor() const -> u32 {
-  s32 monitor = QDesktopWidget().screenNumber(qtWindow);
-  if(monitor < 0) monitor = Monitor::primary();
-  return monitor;
+  auto screen = qtWindow->window()->windowHandle()->screen();
+  if(screen == nullptr) return Monitor::primary();
+  return max(QApplication::screens().indexOf(screen), 0);
 }
 
 auto pWindow::remove(sMenuBar menuBar) -> void {
