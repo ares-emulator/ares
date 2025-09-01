@@ -16,10 +16,11 @@
 #include <component/audio/sn76489/sn76489.hpp>
 #include <component/audio/ym2612/ym2612.hpp>
 #include <component/eeprom/m24c/m24c.hpp>
+#include <vector>
 
 namespace ares::MegaDrive {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 

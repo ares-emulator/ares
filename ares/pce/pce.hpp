@@ -2,13 +2,14 @@
 //started: 2017-01-11
 
 #include <ares/ares.hpp>
+#include <vector>
 
 #include <component/processor/huc6280/huc6280.hpp>
 #include <component/audio/msm5205/msm5205.hpp>
 
 namespace ares::PCEngine {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 

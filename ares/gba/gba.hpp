@@ -2,13 +2,14 @@
 //started: 2012-03-19
 
 #include <ares/ares.hpp>
+#include <vector>
 
 #include <component/processor/arm7tdmi/arm7tdmi.hpp>
 #include <component/rtc/s3511a/s3511a.hpp>
 
 namespace ares::GameBoyAdvance {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 

@@ -2,6 +2,7 @@
 //started: 2004-10-14
 
 #include <ares/ares.hpp>
+#include <vector>
 
 #include <component/processor/arm7tdmi/arm7tdmi.hpp>
 #include <component/processor/gsu/gsu.hpp>
@@ -16,7 +17,7 @@
 
 namespace ares::SuperFamicom {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 

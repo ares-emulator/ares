@@ -1,8 +1,9 @@
 #include <sg/sg.hpp>
+#include <algorithm>
 
 namespace ares::SG1000 {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Sega] SG-1000 (NTSC)",
     "[Sega] SG-1000 (PAL)",
@@ -13,7 +14,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 

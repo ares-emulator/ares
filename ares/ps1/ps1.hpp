@@ -2,11 +2,12 @@
 //started: 2020-06-17
 
 #include <ares/ares.hpp>
+#include <vector>
 #include <nall/hashset.hpp>
 #include <component/processor/m68hc05/m68hc05.hpp>
 
 namespace ares::PlayStation {
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 
