@@ -19,10 +19,22 @@ struct AudioDriver {
   virtual auto hasFrequencies() -> std::vector<u32> { return {48000}; }
   virtual auto hasLatencies() -> std::vector<u32> { return {0}; }
 
-  auto hasDevice(string device) -> bool { auto v = hasDevices(); return std::ranges::find(v, device) != v.end(); }
-  auto hasChannels(u32 channels) -> bool { auto v = hasChannels(); return std::ranges::find(v, channels) != v.end(); }
-  auto hasFrequency(u32 frequency) -> bool { auto v = hasFrequencies(); return std::ranges::find(v, frequency) != v.end(); }
-  auto hasLatency(u32 latency) -> bool { auto v = hasLatencies(); return std::ranges::find(v, latency) != v.end(); }
+  auto hasDevice(string device) -> bool {
+    auto allDevices = hasDevices();
+    return std::ranges::find(allDevices, device) != allDevices.end();
+  }
+  auto hasChannels(u32 channels) -> bool {
+    auto allChannels = hasChannels();
+    return std::ranges::find(allChannels, channels) != allChannels.end();
+  }
+  auto hasFrequency(u32 frequency) -> bool {
+    auto allFrequencies = hasFrequencies();
+    return std::ranges::find(allFrequencies, frequency) != allFrequencies.end();
+  }
+  auto hasLatency(u32 latency) -> bool {
+    auto allLatencies = hasLatencies();
+    return std::ranges::find(allLatencies, latency) != allLatencies.end();
+  }
 
   virtual auto setExclusive(bool exclusive) -> bool { return true; }
   virtual auto setContext(uintptr context) -> bool { return true; }
@@ -53,7 +65,10 @@ protected:
 
 struct Audio {
   static auto hasDrivers() -> std::vector<string>;
-  static auto hasDriver(string driver) -> bool { auto v = hasDrivers(); return std::ranges::find(v, driver) != v.end(); }
+  static auto hasDriver(string driver) -> bool {
+    auto drivers = hasDrivers(); 
+    return std::ranges::find(drivers, driver) != drivers.end();
+  }
   static auto optimalDriver() -> string;
   static auto safestDriver() -> string;
 

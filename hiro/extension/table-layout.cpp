@@ -23,7 +23,8 @@ auto mTableLayout::cell(u32 position) const -> TableLayoutCell {
 }
 
 auto mTableLayout::cell(u32 x, u32 y) const -> TableLayoutCell {
-  if(auto index = y * columnCount() + x; index < state.cells.size()) return state.cells[index];
+  auto index = y * columnCount() + x;
+  if(index < state.cells.size()) return state.cells[index];
   return {};
 }
 
@@ -280,9 +281,9 @@ auto mTableLayout::setPadding(Geometry padding) -> type& {
 }
 
 auto mTableLayout::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& it : state.cells | std::views::reverse) it->destruct();
-  for(auto& it : state.columns | std::views::reverse) it->destruct();
-  for(auto& it : state.rows | std::views::reverse) it->destruct();
+  for(auto& cell : state.cells | std::views::reverse) cell->destruct();
+  for(auto& column : state.columns | std::views::reverse) column->destruct();
+  for(auto& row : state.rows | std::views::reverse) row->destruct();
   mObject::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());
   for(auto& column : state.columns) column->setParent(this, column->offset());

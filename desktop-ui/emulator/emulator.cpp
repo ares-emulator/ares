@@ -193,7 +193,8 @@ auto Emulator::unload() -> void {
 auto Emulator::load(mia::Pak& node, string name) -> bool {
   Program::Guard guard;
   if(auto fp = node.pak->read(name)) {
-    if(auto memory = file::read({node.location, name}); !memory.empty()) {
+    auto memory = file::read({node.location, name});
+    if(!memory.empty()) {
       fp->read(memory);
       return true;
     }

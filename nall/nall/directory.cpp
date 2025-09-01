@@ -23,10 +23,10 @@ NALL_HEADER_INLINE auto directory::ufolders(const string& pathname, const string
       if(!*p) *p = ';';
       p++;
     }
-    auto temp = string{(const char*)utf8_t(drives)}.replace("\\", "/").split(";");
+    auto parts = string{(const char*)utf8_t(drives)}.replace("\\", "/").split(";");
     std::vector<string> out;
-    out.reserve(temp.size());
-    for(auto& s : temp) out.push_back(s);
+    out.reserve(parts.size());
+    for(auto& s : parts) out.push_back(s);
     return out;
   }
 
