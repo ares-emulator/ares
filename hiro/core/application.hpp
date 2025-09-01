@@ -15,7 +15,6 @@ struct Application {
   static auto run() -> void;
   static auto scale() -> f32;
   static auto scale(f32 value) -> f32;
-  static auto pendingEvents() -> bool;
   static auto processEvents() -> void;
   static auto quit() -> void;
   static auto screenSaver() -> bool;
