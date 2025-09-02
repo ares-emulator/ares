@@ -888,8 +888,8 @@ struct CPU : Thread {
     };
 
     auto reset() -> void {
-      pools.reallocate(1 << 21);  //2_MiB * sizeof(void*) == 16_MiB
-      pools.fill();
+      pools.resize(1 << 21);  //2_MiB * sizeof(void*) == 16_MiB
+      std::ranges::fill(pools, nullptr);
     }
 
     auto invalidate(u32 address) -> void {
@@ -935,7 +935,7 @@ struct CPU : Thread {
     bool enabled = false;
     bool callInstructionPrologue = false;
     bump_allocator allocator;
-    vector<Pool*> pools;
+    std::vector<Pool*> pools;
   } recompiler{*this};
 
   struct Disassembler {

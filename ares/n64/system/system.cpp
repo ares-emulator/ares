@@ -241,7 +241,7 @@ auto System::initDebugHooks() -> void {
     return {};
   };
 
-  GDB::server.hooks.write = [](u64 address, vector<u8> data) {
+  GDB::server.hooks.write = [](u64 address, std::vector<u8> data) {
     address = (s32)address;
 
     // For 8/16/32/64-bit writes, perform an actual write like the CPU would do.

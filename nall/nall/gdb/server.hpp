@@ -67,7 +67,7 @@ class Server : public nall::TCPText::Server {
     struct {
       // Memory
       function<string(u64 address, u32 byteCount)> read{};
-      function<void(u64 address, vector<u8> value)> write{};
+      function<void(u64 address, std::vector<u8> value)> write{};
       function<u64(u64 address)> normalizeAddress{};
 
       // Registers
@@ -94,7 +94,7 @@ class Server : public nall::TCPText::Server {
     // Breakpoints / Watchpoints
     auto isHalted() const { return forceHalt && haltSignalSent; }
     auto hasBreakpoints() const { 
-      return breakpoints || singleStepActive || watchpointRead || watchpointWrite;
+      return !breakpoints.empty() || singleStepActive || !watchpointRead.empty() || !watchpointWrite.empty();
     }
     
     auto getPcOverride() const { return pcOverride; };
@@ -128,9 +128,9 @@ class Server : public nall::TCPText::Server {
     maybe<u64> pcOverride{0}; // temporary override to handle edge-cases for exceptions/watchpoints
 
     // client-state:
-    vector<u64> breakpoints{};
-    vector<Watchpoint> watchpointRead{};
-    vector<Watchpoint> watchpointWrite{};
+    std::vector<u64> breakpoints{};
+    std::vector<Watchpoint> watchpointRead{};
+    std::vector<Watchpoint> watchpointWrite{};
 
     auto processCommand(const string& cmd, bool &shouldReply) -> string;
     auto resetClientData() -> void;
