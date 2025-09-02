@@ -450,7 +450,7 @@ struct MCD : M68000, Thread {
       static const size_t FrameBufferHeight = 525;
       std::vector<u32> outputFramebuffer;
     } video;
-    vector<u8> analogAudioDataBuffer;
+    std::vector<u8> analogAudioDataBuffer;
     array_view<u8> analogAudioRawDataView;
     n32 analogAudioLeadingAudioSamples;
     Decode::MMI mmi;

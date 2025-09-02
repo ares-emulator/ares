@@ -29,8 +29,8 @@ private:
     function<n8 ()>,       //read
     function<void (n8)>    //write
   )> linkInit;
-  function<void (vector<string>)> linkMain;
+  function<void (std::vector<string>)> linkMain;
 
-  vector<n8> snesBuffer;  //SNES -> Link
-  vector<n8> linkBuffer;  //Link -> SNES
+  std::vector<n8> snesBuffer;  //SNES -> Link
+  std::vector<n8> linkBuffer;  //Link -> SNES
 };

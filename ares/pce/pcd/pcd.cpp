@@ -100,7 +100,7 @@ auto PCD::connect() -> void {
 
   //read TOC (table of contents) from disc lead-in
   u32 sectors = fd->size() / 2448;
-  vector<u8> subchannel;
+  std::vector<u8> subchannel;
   subchannel.resize(sectors * 96);
   for(u32 sector : range(sectors)) {
     fd->seek(sector * 2448 + 2352);
