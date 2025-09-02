@@ -506,9 +506,10 @@ auto RSP::Disassembler::vpuRegisterName(u32 index, u32 element) const -> string 
 
 auto RSP::Disassembler::vpuRegisterValue(u32 index, u32 element) const -> string {
   if(showValues) {
-    vector<string> elements;
-    for(u32 e : range(8)) elements.append(hex(self.vpu.r[index].element(e), 4L));
-    return {vpuRegisterName(index, element), hint("{$", elements.merge("|"), "}")};
+    std::vector<string> elements;
+    elements.reserve(8);
+    for(u32 e : range(8)) elements.push_back(hex(self.vpu.r[index].element(e), 4L));
+    return {vpuRegisterName(index, element), hint("{$", nall::merge(elements, "|"), "}")};
   }
   return vpuRegisterName(index, element);
 }

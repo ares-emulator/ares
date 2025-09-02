@@ -30,6 +30,7 @@
 #include <nall/unique-pointer.hpp>
 #include <nall/variant.hpp>
 #include <vector>
+#include <ranges>
 #include <nall/vfs.hpp>
 #include <nall/cd.hpp>
 #include <nall/dsp/iir/one-pole.hpp>
