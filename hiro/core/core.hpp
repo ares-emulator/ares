@@ -8,7 +8,7 @@
 #include <nall/maybe.hpp>
 #include <nall/path.hpp>
 #include <nall/range.hpp>
-#include <nall/ranges-helpers.hpp>
+#include <nall/vector-helpers.hpp>
 #include <nall/run.hpp>
 #include <nall/set.hpp>
 #include <nall/shared-pointer.hpp>

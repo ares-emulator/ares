@@ -11,7 +11,7 @@
 #include <nall/matrix-multiply.hpp>
 #include <nall/queue.hpp>
 #include <nall/range.hpp>
-#include <nall/ranges-helpers.hpp>
+#include <nall/vector-helpers.hpp>
 #include <nall/set.hpp>
 #include <nall/shared-pointer.hpp>
 #include <nall/string.hpp>

@@ -518,11 +518,11 @@ struct CPU : Thread {
     bool showValues = true;
 
   //private:
-    auto EXECUTE() -> vector<string>;
-    auto SPECIAL() -> vector<string>;
-    auto REGIMM() -> vector<string>;
-    auto SCC() -> vector<string>;
-    auto GTE() -> vector<string>;
+    auto EXECUTE() -> std::vector<string>;
+    auto SPECIAL() -> std::vector<string>;
+    auto REGIMM() -> std::vector<string>;
+    auto SCC() -> std::vector<string>;
+    auto GTE() -> std::vector<string>;
     auto immediate(s64 value, u8 bits = 0) const -> string;
     auto ipuRegisterName(u8 index) const -> string;
     auto ipuRegisterValue(u8 index) const -> string;
