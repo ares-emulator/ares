@@ -6,7 +6,7 @@ auto SH2::hint(P&&... p) const -> string {
 }
 
 auto SH2::disassembleInstruction(u16 opcode) -> string {
-  vector<string> s;
+  std::vector<string> s;
 
   auto registerName = [&](u32 r) -> string {
     return {"r", r};
@@ -512,10 +512,10 @@ auto SH2::disassembleInstruction(u16 opcode) -> string {
     break;
   }
 
-  if(!s) s = {"illegal", {"0x", hex(opcode, 4L)}};
-  auto name = s.takeFirst();
+  if(s.empty()) s = {"illegal", {"0x", hex(opcode, 4L)}};
+  auto name = s.front(); s.erase(s.begin());
   while(name.size() < 8) name.append(" ");
-  string r = {name, s.merge(",")};
+  string r = {name, nall::merge(s, ",")};
   while(r.size() < 30) r.append(" ");
   return r;
 }
