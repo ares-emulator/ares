@@ -8,7 +8,7 @@ namespace ares::SuperFamicom {
 
 Expansion::Expansion() {
   if(!handle()) Thread::create(1, {&Expansion::main, this});
-  cpu.peripherals.append(this);
+  cpu.peripherals.push_back(this);
 }
 
 Expansion::~Expansion() {

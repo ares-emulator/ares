@@ -97,9 +97,9 @@ protected:
   unique_pointer<u32[]> _output;
   unique_pointer<u32[]> _rotate;
   unique_pointer<u32[]> _palette;
-  vector<n1> _lineOverrideActive;
-  vector<const u32*> _lineOverride;
-  vector<Node::Video::Sprite> _sprites;
+  std::vector<n1> _lineOverrideActive;
+  std::vector<const u32*> _lineOverride;
+  std::vector<Node::Video::Sprite> _sprites;
 
 //unserialized:
   nall::thread _thread;

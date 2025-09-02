@@ -13,7 +13,7 @@ auto MSU1::unload(Node::Object parent) -> void {
   dataFile.reset();
   audioFile.reset();
 
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
@@ -48,7 +48,7 @@ auto MSU1::main() -> void {
 
 auto MSU1::power() -> void {
   Thread::create(44100, {&MSU1::main, this});
-  cpu.coprocessors.append(this);
+  cpu.coprocessors.push_back(this);
 
   io.dataSeekOffset = 0;
   io.dataReadOffset = 0;

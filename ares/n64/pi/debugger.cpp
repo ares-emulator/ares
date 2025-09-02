@@ -3,7 +3,7 @@ auto PI::Debugger::load(Node::Object parent) -> void {
 }
 
 auto PI::Debugger::io(bool mode, u32 address, u32 data) -> void {
-  static const vector<string> registerNames = {
+  static const std::vector<string> registerNames = {
     "PI_DRAM_ADDRESS",
     "PI_PBUS_ADDRESS",
     "PI_READ_LENGTH",
@@ -21,7 +21,7 @@ auto PI::Debugger::io(bool mode, u32 address, u32 data) -> void {
 
   if(unlikely(tracer.io->enabled())) {
     string message;
-    string name = registerNames(address, "PI_UNKNOWN");
+    string name = (address < registerNames.size() ? registerNames[address] : string("PI_UNKNOWN"));
     if(mode == Read) {
       message = {name.split("|").first(), " => ", hex(data, 8L)};
     }

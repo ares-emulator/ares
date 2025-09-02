@@ -38,11 +38,11 @@ protected:
     DSP::IIR::Biquad biquad;
   };
   struct Channel {
-    vector<Filter> filters;
-    vector<DSP::IIR::Biquad> nyquist;
+    std::vector<Filter> filters;
+    std::vector<DSP::IIR::Biquad> nyquist;
     DSP::Resampler::Cubic resampler;
   };
-  vector<Channel> _channels;
+  std::vector<Channel> _channels;
   f64 _frequency = 48000.0;
   f64 _resamplerFrequency = 48000.0;
   bool _muted = false;

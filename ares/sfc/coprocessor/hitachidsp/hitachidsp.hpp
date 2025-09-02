@@ -54,7 +54,7 @@ struct HitachiDSP : HG51B, Thread {
   auto readIO(n24 address, n8 data = 0) -> n8;
   auto writeIO(n24 address, n8 data) -> void;
 
-  auto firmware() const -> vector<n8>;
+  auto firmware() const -> std::vector<n8>;
   auto serialize(serializer&) -> void;
 
   n32 Frequency;

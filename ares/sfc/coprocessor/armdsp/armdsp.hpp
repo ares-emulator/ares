@@ -38,7 +38,7 @@ struct ARMDSP : ARM7TDMI, Thread {
   auto write(n24 address, n8 data) -> void;
 
   //serialization.cpp
-  auto firmware() const -> vector<n8>;
+  auto firmware() const -> std::vector<n8>;
   auto serialize(serializer&) -> void;
 
   n8 programROM[128_KiB];

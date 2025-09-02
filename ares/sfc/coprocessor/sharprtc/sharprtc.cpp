@@ -25,13 +25,13 @@ auto SharpRTC::initialize() -> void {
 }
 
 auto SharpRTC::unload() -> void {
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
 auto SharpRTC::power() -> void {
   Thread::create(1, {&SharpRTC::main, this});
-  cpu.coprocessors.append(this);
+  cpu.coprocessors.push_back(this);
 
   state = State::Read;
   index = -1;
