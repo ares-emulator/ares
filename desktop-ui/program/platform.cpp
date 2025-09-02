@@ -102,7 +102,8 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
   }
 
   pitch >>= 2;
-  if(auto [output, length] = ruby::video.acquire(width, height); output) {
+  auto [output, length] = ruby::video.acquire(width, height);
+  if(output) {
     length >>= 2;
     for(auto y : range(height)) {
       memory::copy<u32>(output + y * length, data + y * pitch, width);

@@ -174,8 +174,11 @@ auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::fil
       auto image = archive.extract(archive.file.front());
       return vfs::memory::open(image);
     }
-  } else if(auto image = file::read(firmware.location); !image.empty()) {
-    return vfs::memory::open(image);
+  } else {
+    auto image = file::read(firmware.location); 
+    if(!image.empty()) {
+      return vfs::memory::open(image);
+    }
   }
   return {};
 }
