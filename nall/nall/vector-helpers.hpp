@@ -28,6 +28,17 @@ inline auto merge(const Range& range, string_view separator = "") -> string {
   return output;
 }
 
+inline auto merge(std::initializer_list<string> range, string_view separator = "") -> string {
+  string output;
+  bool first = true;
+  for(const auto& item : range) {
+    if(!first) output.append(separator);
+    first = false;
+    output.append(item);
+  }
+  return output;
+}
+
 inline auto split(string_view source, string_view on, long limit = LONG_MAX) -> std::vector<string> {
   auto tmp = vector<string>()._split<0, 0>(source, on, limit);
   std::vector<string> out;
