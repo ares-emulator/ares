@@ -60,15 +60,18 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   //bus.cpp
   auto sleep() -> void override;
-  template<bool UseDebugger> auto getBus(u32 mode, n32 address) -> n32;
+  template<bool isDMA, bool UseDebugger> auto getBus(u32 mode, n32 address) -> n32;
   auto get(u32 mode, n32 address) -> n32 override;
+  auto getDMA(u32 mode, n32 address) -> n32;
   auto getDebugger(u32 mode, n32 address) -> n32 override;
+  template<bool IsDMA> auto setBus(u32 mode, n32 address, n32 word) -> void;
   auto set(u32 mode, n32 address, n32 word) -> void override;
+  auto setDMA(u32 mode, n32 address, n32 word) -> void;
   auto lock() -> void override;
   auto unlock() -> void override;
   auto waitEWRAM(u32 mode) -> u32;
   auto waitCartridge(n32 address, bool sequential) -> u32;
-  auto checkBurst(u32 mode) -> bool;
+  template<bool IsDMA> auto checkBurst(u32 mode) -> bool;
 
   //io.cpp
   auto readIO(n32 address) -> n8 override;

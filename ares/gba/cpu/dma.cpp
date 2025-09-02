@@ -44,7 +44,7 @@ inline auto CPU::DMAC::Channel::ready() -> bool {
 
 auto CPU::DMAC::Channel::read() -> void {
   u32 seek = size ? 4 : 2;
-  u32 mode = DMA | (size ? Word : Half );
+  u32 mode = size ? Word : Half;
 
   if(cpu.dmac.activeChannel != id) {
     //channel has switched - new burst transfer must be started
@@ -58,7 +58,7 @@ auto CPU::DMAC::Channel::read() -> void {
     n32 addr = latch.source();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
-    latch.data = cpu.get(mode, addr);
+    latch.data = cpu.getDMA(mode, addr);
     if(mode & Half) latch.data |= latch.data << 16;
   }
 
@@ -72,7 +72,7 @@ auto CPU::DMAC::Channel::read() -> void {
 
 auto CPU::DMAC::Channel::write() -> void {
   u32 seek = size ? 4 : 2;
-  u32 mode = DMA | (size ? Word : Half );
+  u32 mode = size ? Word : Half;
 
   if(latch.target() < 0x0200'0000) {
     cpu.prefetchStep(1);  //cannot access BIOS
@@ -80,7 +80,7 @@ auto CPU::DMAC::Channel::write() -> void {
     n32 addr = latch.target();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
-    cpu.set(mode, addr, latch.data >> (addr & 2) * 8);
+    cpu.setDMA(mode, addr, latch.data >> (addr & 2) * 8);
   }
 
   switch(targetMode) {
