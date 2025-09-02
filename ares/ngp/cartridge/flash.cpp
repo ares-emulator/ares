@@ -91,7 +91,8 @@ auto Flash::block(n21 address) -> maybe<n6> {
 auto Flash::program(n21 address, n8 data) -> void {
   auto blockID = block(address);
   if(blockID && blocks[*blockID].writable) {
-    if(auto input = rom.read(address); input != (input & data)) {
+    auto input = rom.read(address);
+    if(input != (input & data)) {
       modified = true;
       rom.write(address, input & data);
     }

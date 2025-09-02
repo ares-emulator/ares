@@ -430,28 +430,32 @@ auto BrowserDialog::filters() const -> std::vector<string> {
 auto BrowserDialog::openFile() -> string {
   state.action = "openFile";
   if(!state.title) state.title = "Open File";
-  if(auto result = _run(); !result.empty()) return result[0];
+  auto result = _run();
+  if(!result.empty()) return result[0];
   return {};
 }
 
 auto BrowserDialog::openFiles() -> std::vector<string> {
   state.action = "openFiles";
   if(!state.title) state.title = "Open Files";
-  if(auto result = _run(); !result.empty()) return result;
+  auto result = _run();
+  if(!result.empty()) return result;
   return {};
 }
 
 auto BrowserDialog::openFolder() -> string {
   state.action = "openFolder";
   if(!state.title) state.title = "Open Folder";
-  if(auto result = _run(); !result.empty()) return result[0];
+  auto result = _run();
+  if(!result.empty()) return result[0];
   return {};
 }
 
 auto BrowserDialog::openObject() -> string {
   state.action = "openObject";
   if(!state.title) state.title = "Open Object";
-  if(auto result = _run(); !result.empty()) return result[0];
+  auto result = _run();
+  if(!result.empty()) return result[0];
   return {};
 }
 
@@ -466,7 +470,8 @@ auto BrowserDialog::path() const -> string {
 auto BrowserDialog::saveFile() -> string {
   state.action = "saveFile";
   if(!state.title) state.title = "Save File";
-  if(auto result = _run(); !result.empty()) return result[0];
+  auto result = _run();
+  if(!result.empty()) return result[0];
   return {};
 }
 
@@ -477,7 +482,8 @@ auto BrowserDialog::selected() -> std::vector<string> {
 auto BrowserDialog::selectFolder() -> string {
   state.action = "selectFolder";
   if(!state.title) state.title = "Select Folder";
-  if(auto result = _run(); !result.empty()) return result[0];
+  auto result = _run();
+  if(!result.empty()) return result[0];
   return {};
 }
 
