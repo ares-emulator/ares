@@ -215,8 +215,8 @@ auto BrowserDialogWindow::run() -> BrowserDialog::Response {
   view.onContext([&] { context(); });
   filterList.setCollapsible().setVisible(state.action != "selectFolder").onChange([&] { setPath(state.path); });
   for(auto& filter : state.filters) {
-    auto part = filter.split("|", 1L);
-    filterList.append(ComboButtonItem().setText(part.left()));
+    auto part = ::nall::split(filter, "|", 1L);
+    filterList.append(ComboButtonItem().setText(part.empty() ? string{} : part.front()));
   }
   optionList
   .setCollapsible()
@@ -257,8 +257,9 @@ auto BrowserDialogWindow::run() -> BrowserDialog::Response {
 
   if(state.filters.empty()) state.filters.push_back("All|*");
   for(auto& filter : state.filters) {
-    auto part = filter.split("|", 1L);
-    auto filterParts = part.right().split(":");
+    auto part = ::nall::split(filter, "|", 1L);
+    auto partBack = part.size() > 1 ? part.back() : string{};
+    auto filterParts = ::nall::split(partBack, ":");
     std::vector<string> v;
     for(auto& s : filterParts) v.push_back(s);
     filters.push_back(std::move(v));
@@ -308,7 +309,7 @@ auto BrowserDialogWindow::run() -> BrowserDialog::Response {
     if(batched.empty()) return;
     if(MessageDialog()
     .setTitle("Remove Selected")
-    .setText({"Are you sure you want to permanently delete the selected item", batched.size() == 1 ? "" : "s", "?"})
+    .setText({"Are you sure you want to permanently delete the selected item", batched.size() == 1 ? string{} : string{"s"}, "?"})
     .setAlignment(window)
     .question() == "No") return;
     for(auto& item : batched) {

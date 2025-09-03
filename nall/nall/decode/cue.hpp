@@ -65,12 +65,12 @@ inline auto CUE::load(const string& location, const Decode::ZIP* archive, const 
     // meaning we can't create a string_view from a fixed-length input. We use an array_view here as a
     // workaround.
     auto rawDataBufferAsArrayView = array_view<u8>(rawDataBuffer.data(), rawDataBuffer.size());
-    auto splitLines = string(rawDataBufferAsArrayView).replace("\r", "").split("\n");
+    auto splitLines = ::nall::split(string(rawDataBufferAsArrayView).replace("\r", ""), "\n");
     lines.clear();
     lines.reserve(splitLines.size());
     for (u32 i = 0; i < splitLines.size(); i++) lines.push_back(splitLines[i]);
   } else {
-    auto splitLines = string::read(location).replace("\r", "").split("\n");
+    auto splitLines = ::nall::split(string::read(location).replace("\r", ""), "\n");
     lines.clear();
     lines.reserve(splitLines.size());
     for (u32 i = 0; i < splitLines.size(); i++) lines.push_back(splitLines[i]);
@@ -115,7 +115,8 @@ inline auto CUE::loadFile(std::vector<string>& lines, u32& offset) -> File {
   File file;
 
   lines[offset].itrimLeft("FILE ", 1L).strip();
-  file.type = lines[offset].split(" ").last().strip().downcase();
+  auto parts = ::nall::split(lines[offset], " ");
+  file.type = parts.empty() ? string{} : parts.back().strip().downcase();
   lines[offset].itrimRight(file.type, 1L).strip();
   file.name = lines[offset].trim("\"", "\"", 1L);
   offset++;
@@ -139,7 +140,8 @@ inline auto CUE::loadTrack(std::vector<string>& lines, u32& offset) -> Track {
   Track track;
 
   lines[offset].itrimLeft("TRACK ", 1L).strip();
-  track.type = lines[offset].split(" ").last().strip().downcase();
+  auto parts2 = ::nall::split(lines[offset], " ");
+  track.type = parts2.empty() ? string{} : parts2.back().strip().downcase();
   lines[offset].itrimRight(track.type, 1L).strip();
   track.number = lines[offset].natural();
   offset++;
@@ -178,7 +180,8 @@ inline auto CUE::loadIndex(std::vector<string>& lines, u32& offset) -> Index {
   Index index;
 
   lines[offset].itrimLeft("INDEX ", 1L);
-  string sector = lines[offset].split(" ").last().strip();
+  auto parts3 = ::nall::split(lines[offset], " ");
+  string sector = parts3.empty() ? string{} : parts3.back().strip();
   lines[offset].itrimRight(sector, 1L).strip();
   index.number = lines[offset].natural();
   index.lba = toLBA(sector);
@@ -189,9 +192,10 @@ inline auto CUE::loadIndex(std::vector<string>& lines, u32& offset) -> Index {
 }
 
 inline auto CUE::toLBA(const string& msf) -> u32 {
-  u32 m = msf.split(":")(0).natural();
-  u32 s = msf.split(":")(1).natural();
-  u32 f = msf.split(":")(2).natural();
+  auto parts = ::nall::split(msf, ":");
+  u32 m = parts.size() > 0 ? parts[0].natural() : 0;
+  u32 s = parts.size() > 1 ? parts[1].natural() : 0;
+  u32 f = parts.size() > 2 ? parts[2].natural() : 0;
   return m * 60 * 75 + s * 75 + f;
 }
 

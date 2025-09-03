@@ -19,7 +19,7 @@ static auto BrowserWindow_fileDialog(bool save, BrowserWindow::State& state) -> 
 
   string filters;
   for(auto& filter : state.filters) {
-    auto part = filter.split("|", 1L);
+    auto part = ::nall::split(filter, "|", 1L);
     if(part.size() != 2) continue;
     filters.append(part[0], "\t", part[1].transform(":", ";"), "\t");
   }

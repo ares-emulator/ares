@@ -110,7 +110,7 @@ namespace nall::GDB {
    */
   auto Server::processCommand(const string& cmd, bool &shouldReply) -> string
   {
-    auto cmdParts = cmd.split(":");
+    auto cmdParts = ::nall::split(cmd, ":");
     auto cmdName = cmdParts[0];
     char cmdPrefix = cmdName.size() > 0 ? cmdName(0) : ' ';
 
