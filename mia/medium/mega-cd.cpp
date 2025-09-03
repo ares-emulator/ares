@@ -43,11 +43,11 @@ auto MegaCD::save(string location) -> bool {
 }
 
 auto MegaCD::analyze(string location) -> string {
-  vector<u8> sector;
+  std::vector<u8> sector;
 
   sector = readDataSector(location, 0);
 
-  if(!sector || memory::compare(sector.data(), "SEGA", 4))
+  if(sector.empty() || memory::compare(sector.data(), "SEGA", 4))
     return CompactDisc::manifestAudio(location);
 
   std::vector<string> regions;
@@ -60,7 +60,7 @@ auto MegaCD::analyze(string location) -> string {
     else if(Hash::CRC32({sector.data()+0x200, 1412}).value() == 0xf361ab57) // US boot
       regions.push_back("NTSC-U");
   }
-  if(regions.empty()) { regions.push_back("NTSC-J"); regions.push_back("NTSC-U"); regions.push_back("PAL"); } // unknown boot
+  if(regions.empty()) { regions.insert(regions.end(), {"NTSC-J", "NTSC-U", "PAL"}); } // unknown boot
 
   string serialNumber = slice((const char*)(sector.data() + 0x180), 0, 14).trimRight(" ");
 

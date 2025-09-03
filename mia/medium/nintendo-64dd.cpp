@@ -4,7 +4,7 @@ struct Nintendo64DD : FloppyDisk {
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom, std::vector<u8> errorTable) -> string;
-  auto transform(array_view<u8> input, std::vector<u8> errorTable) -> vector<u8>;
+  auto transform(array_view<u8> input, std::vector<u8> errorTable) -> std::vector<u8>;
   auto sizeCheck(array_view<u8> input) -> bool;
   auto repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bool;
   auto createErrorTable(array_view<u8> input) -> std::vector<u8>;
@@ -34,7 +34,8 @@ auto Nintendo64DD::load(string location) -> LoadResult {
   pak->append("manifest.bml", manifest);
   pak->append("program.disk.error", errorTable);
 
-  if(auto output = transform(view, errorTable)) {
+  auto output = transform(view, errorTable);
+  if(!output.empty()) {
     pak->append("program.disk", output);
   }
 
@@ -306,7 +307,7 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> std::vector<u8> {
   return output;
 }
 
-auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -> vector<u8> {
+auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -> std::vector<u8> {
   //basic disk format check (further d64 check will be done later)
   b1 ndd = (input.size() == 0x3DEC800);
   b1 mame = (input.size() == 0x435B0C0);
@@ -319,7 +320,7 @@ auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -
     //mame physical format (canon ares format)
     //just copy
     input.begin();
-    vector<u8> output;
+    std::vector<u8> output;
     output.resize(0x435B0C0, 0);
 
     for(u32 n : range(input.size()))
@@ -362,7 +363,7 @@ auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -
 
   //ndd conv
   input.begin();
-  vector<u8> output;
+  std::vector<u8> output;
   output.resize(0x435B0C0, 0);
 
   u32 lba = 0;

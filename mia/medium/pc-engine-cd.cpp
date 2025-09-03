@@ -43,15 +43,15 @@ auto PCEngineCD::save(string location) -> bool {
 }
 
 auto PCEngineCD::analyze(string location) -> string {
-  vector<u8> sectors[2];
+  std::vector<u8> sectors[2];
 
   sectors[0] = readDataSector(location, 0);
   sectors[1] = readDataSector(location, 16);
 
-  if(!sectors[0] && !sectors[1]) return CompactDisc::manifestAudio(location);
+  if(sectors[0].empty() && sectors[1].empty()) return CompactDisc::manifestAudio(location);
 
-  bool isNEC = sectors[0] && (memory::compare(sectors[0].data() + 0x264, "NEC Home Electoronics", 21) == 0);
-  bool isGamesExpress = sectors[1] &&(memory::compare(sectors[1].data() + 0x1, "CD001", 5) == 0);
+  bool isNEC = !sectors[0].empty() && (memory::compare(sectors[0].data() + 0x264, "NEC Home Electoronics", 21) == 0);
+  bool isGamesExpress = !sectors[1].empty() && (memory::compare(sectors[1].data() + 0x1, "CD001", 5) == 0);
 
   if(!isGamesExpress && !isNEC) return CompactDisc::manifestAudio(location);
 

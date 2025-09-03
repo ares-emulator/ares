@@ -34,13 +34,13 @@ auto ZXSpectrum::loadTzx(string location) -> LoadResult {
   pak->setAttribute("length",    tzx.GetAudioBufferLengthInSamples());
   pak->append("manifest.bml",    manifest);
 
-  vector<u8> output;
+  std::vector<u8> output;
   auto decodedData = tzx.GetAudioBufferPtr();
   for(int i = 0; i < tzx.GetAudioBufferLength();) {
     u64 sample = (u64)((i32)decodedData[i++] + 128);
 
     for (int byte = 0; byte < sizeof(u64); byte++) {
-      output.append((sample & (0xff << (byte * 8))) >> (byte * 8));
+      output.push_back((sample & (0xff << (byte * 8))) >> (byte * 8));
     }
   }
   pak->append("program.tape", output);
