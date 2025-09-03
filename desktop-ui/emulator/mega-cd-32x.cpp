@@ -41,7 +41,7 @@ MegaCD32X::MegaCD32X() {
     device.digital ("Start",  virtualPorts[id].mouse.extra);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -59,11 +59,11 @@ auto MegaCD32X::load() -> LoadResult {
   if(region == "NTSC-U") regionID = 0;
 
   //use Mega CD firmware settings
-  vector<Firmware> firmware;
+  std::vector<Firmware> firmware;
   for(auto& emulator : emulators) {
     if(emulator->name == "Mega CD") firmware = emulator->firmware;
   }
-  if(!firmware) return otherError;  //should never occur
+  if(firmware.empty()) return otherError;  //should never occur
 
   system = mia::System::create("Mega CD 32X");
   result = system->load(firmware[regionID].location);

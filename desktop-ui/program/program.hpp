@@ -57,7 +57,7 @@ struct Program : ares::Platform {
   auto inputDriverUpdate() -> void;
 
   bool startFullScreen = false;
-  vector<string> startGameLoad;
+  std::vector<string> startGameLoad;
   bool noFilePrompt = false;
 
   string startSystem;
@@ -82,7 +82,7 @@ struct Program : ares::Platform {
   //rewind.cpp
   struct Rewind {
     enum class Mode : u32 { Playing, Rewinding } mode = Mode::Playing;
-    vector<serializer> history;
+    std::vector<serializer> history;
     u32 length = 0;
     u32 frequency = 0;
     u32 counter = 0;

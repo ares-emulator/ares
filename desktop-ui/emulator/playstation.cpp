@@ -15,9 +15,9 @@ PlayStation::PlayStation() {
   manufacturer = "Sony";
   name = "PlayStation";
 
-  firmware.append({"BIOS", "US", "11052b6499e466bbf0a709b1f9cb6834a9418e66680387912451e971cf8a1fef"});      //NTSC-U
-  firmware.append({"BIOS", "Japan", "9c0421858e217805f4abe18698afea8d5aa36ff0727eb8484944e00eb5e7eadb"});   //NTSC-J
-  firmware.append({"BIOS", "Europe", "1faaa18fa820a0225e488d9f086296b8e6c46df739666093987ff7d8fd352c09"});  //PAL
+  firmware.push_back({"BIOS", "US", "11052b6499e466bbf0a709b1f9cb6834a9418e66680387912451e971cf8a1fef"});      //NTSC-U
+  firmware.push_back({"BIOS", "Japan", "9c0421858e217805f4abe18698afea8d5aa36ff0727eb8484944e00eb5e7eadb"});   //NTSC-J
+  firmware.push_back({"BIOS", "Europe", "1faaa18fa820a0225e488d9f086296b8e6c46df739666093987ff7d8fd352c09"});  //PAL
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -71,7 +71,7 @@ PlayStation::PlayStation() {
     device.rumble("Rumble",    virtualPorts[0].pad.rumble);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

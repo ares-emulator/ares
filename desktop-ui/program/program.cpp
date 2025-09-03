@@ -21,9 +21,10 @@ auto Program::create() -> void {
   worker = thread::create({&Program::emulatorRunLoop, this});
   program.rewindReset();
 
-  if(startGameLoad) {
+  if(!startGameLoad.empty()) {
     Program::Guard guard;
-    auto gameToLoad = startGameLoad.takeFirst();
+    auto gameToLoad = startGameLoad.front();
+    startGameLoad.erase(startGameLoad.begin());
     if(startSystem) {
       for(auto &emulator: emulators) {
         if(emulator->name == startSystem) {
