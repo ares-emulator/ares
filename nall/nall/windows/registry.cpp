@@ -29,10 +29,12 @@ NALL_HEADER_INLINE auto registry::root(const string& name) {
 }
 
 NALL_HEADER_INLINE auto registry::exists(const string& name) -> bool {
-  auto part = name.split("\\");
-  HKEY handle, rootKey = root(part.takeLeft());
-  string node = part.takeRight();
-  string path = part.merge("\\");
+  auto part = ::nall::split(name, "\\");
+  HKEY handle, rootKey = root(part.front());
+  part.erase(part.begin());
+  string node = part.empty() ? string("") : part.back();
+  if(!part.empty()) part.pop_back();
+  string path = nall::merge(part, "\\");
   if(RegOpenKeyExW(rootKey, utf16_t(path), 0, NWR_FLAGS | KEY_READ, &handle) == ERROR_SUCCESS) {
     wchar_t data[NWR_SIZE] = L"";
     DWORD size = NWR_SIZE * sizeof(wchar_t);
@@ -44,10 +46,12 @@ NALL_HEADER_INLINE auto registry::exists(const string& name) -> bool {
 }
 
 NALL_HEADER_INLINE auto registry::read(const string& name) -> string {
-  auto part = name.split("\\");
-  HKEY handle, rootKey = root(part.takeLeft());
-  string node = part.takeRight();
-  string path = part.merge("\\");
+  auto part = ::nall::split(name, "\\");
+  HKEY handle, rootKey = root(part.front());
+  part.erase(part.begin());
+  string node = part.empty() ? string("") : part.back();
+  if(!part.empty()) part.pop_back();
+  string path = nall::merge(part, "\\");
   if(RegOpenKeyExW(rootKey, utf16_t(path), 0, NWR_FLAGS | KEY_READ, &handle) == ERROR_SUCCESS) {
     wchar_t data[NWR_SIZE] = L"";
     DWORD size = NWR_SIZE * sizeof(wchar_t);
@@ -59,9 +63,11 @@ NALL_HEADER_INLINE auto registry::read(const string& name) -> string {
 }
 
 NALL_HEADER_INLINE auto registry::write(const string& name, const string& data) -> void {
-  auto part = name.split("\\");
-  HKEY handle, rootKey = root(part.takeLeft());
-  string node = part.takeRight(), path;
+  auto part = ::nall::split(name, "\\");
+  HKEY handle, rootKey = root(part.front());
+  part.erase(part.begin());
+  string node = part.empty() ? string("") : part.back(), path;
+  if(!part.empty()) part.pop_back();
   DWORD disposition;
   for(u32 n = 0; n < part.size(); n++) {
     path.append(part[n]);
@@ -76,20 +82,23 @@ NALL_HEADER_INLINE auto registry::write(const string& name, const string& data) 
 }
 
 NALL_HEADER_INLINE auto registry::remove(const string& name) -> bool {
-  auto part = name.split("\\");
-  HKEY rootKey = root(part.takeLeft());
-  string node = part.takeRight();
-  string path = part.merge("\\");
+  auto part = ::nall::split(name, "\\");
+  HKEY rootKey = root(part.front());
+  part.erase(part.begin());
+  string node = part.empty() ? string("") : part.back();
+  if(!part.empty()) part.pop_back();
+  string path = nall::merge(part, "\\");
   if(!node) return SHDeleteKeyW(rootKey, utf16_t(path)) == ERROR_SUCCESS;
   return SHDeleteValueW(rootKey, utf16_t(path), utf16_t(node)) == ERROR_SUCCESS;
 }
 
 NALL_HEADER_INLINE auto registry::contents(const string& name) -> std::vector<string> {
   std::vector<string> result;
-  auto part = name.split("\\");
-  HKEY handle, rootKey = root(part.takeLeft());
-  part.removeRight();
-  string path = part.merge("\\");
+  auto part = ::nall::split(name, "\\");
+  HKEY handle, rootKey = root(part.front());
+  part.erase(part.begin());
+  if(!part.empty()) part.pop_back();
+  string path = nall::merge(part, "\\");
   if(RegOpenKeyExW(rootKey, utf16_t(path), 0, NWR_FLAGS | KEY_READ, &handle) == ERROR_SUCCESS) {
     DWORD folders, nodes;
     RegQueryInfoKey(handle, nullptr, nullptr, nullptr, &folders, nullptr, nullptr, &nodes, nullptr, nullptr, nullptr, nullptr);
