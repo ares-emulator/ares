@@ -18,10 +18,10 @@ auto RI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     string message;
     string name = (address < registerNames.size() ? registerNames[address] : string("RI_UNKNOWN"));
     if(mode == Read) {
-      message = {name.split("|").first(), " => ", hex(data, 8L)};
+      message = {::nall::split(name, "|").front(), " => ", hex(data, 8L)};
     }
     if(mode == Write) {
-      message = {name.split("|").last(), " <= ", hex(data, 8L)};
+      message = {::nall::split(name, "|").back(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }
