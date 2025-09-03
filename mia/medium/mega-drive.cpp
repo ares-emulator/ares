@@ -277,7 +277,7 @@ auto MegaDrive::analyzeRegion(std::vector<u8>& rom, string hash) -> void {
     if(bits && *bits & 8) regions.push_back("PAL");     //overseas 50hz
   }
   if(regions.empty()) {
-    regions.push_back("NTSC-J"); regions.push_back("NTSC-U"); regions.push_back("PAL");
+    regions.insert(regions.end(), {"NTSC-J", "NTSC-U", "PAL"});
   }
 
   // Many PAL games have incorrect headers, so force PAL based on name

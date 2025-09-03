@@ -4,7 +4,7 @@ struct FamicomDiskSystem : FloppyDisk {
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze() -> string;
-  auto transform(array_view<u8> input) -> vector<u8>;
+  auto transform(array_view<u8> input) -> std::vector<u8>;
 };
 
 auto FamicomDiskSystem::load(string location) -> LoadResult {
@@ -33,7 +33,8 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     array_view<u8> view{input};
     if(view.size() % 65500 == 16) view += 16;  //skip iNES / fwNES header
     u32 index = 0;
-    while(auto output = transform(view)) {
+    auto output = transform(view);
+    while(!output.empty()) {
       string name;
       name.append("disk", (char)('1' + index / 2), ".");
       name.append("side", (char)('A' + index % 2));
@@ -72,7 +73,7 @@ auto FamicomDiskSystem::analyze() -> string {
   return s;
 }
 
-auto FamicomDiskSystem::transform(array_view<u8> input) -> vector<u8> {
+auto FamicomDiskSystem::transform(array_view<u8> input) -> std::vector<u8> {
   if(input.size() < 65500) return {};
 
   array_view<u8> data{input.data(), 65500};
@@ -81,7 +82,7 @@ auto FamicomDiskSystem::transform(array_view<u8> input) -> vector<u8> {
   if(data[0x3a] != 0x03) return {};
   if(data[0x4a] != 0x04) return {};
 
-  vector<u8> output;
+  std::vector<u8> output;
   u16 crc16 = 0;
   auto hash = [&](u8 byte) {
     for(u32 bit : range(8)) {
@@ -92,13 +93,13 @@ auto FamicomDiskSystem::transform(array_view<u8> input) -> vector<u8> {
   };
   auto write = [&](u8 byte) {
     hash(byte);
-    output.append(byte);
+    output.push_back(byte);
   };
   auto flush = [&] {
     hash(0x00);
     hash(0x00);
-    output.append(crc16 >> 0);
-    output.append(crc16 >> 8);
+    output.push_back(crc16 >> 0);
+    output.push_back(crc16 >> 8);
     crc16 = 0;
   };
 
@@ -133,7 +134,7 @@ auto FamicomDiskSystem::transform(array_view<u8> input) -> vector<u8> {
   }
 
   //note: actual maximum capacity of a Famicom Disk is currently unknown
-  while(output.size() < 0x12000) output.append(0x00);  //expand if too small
+  while(output.size() < 0x12000) output.push_back(0x00);  //expand if too small
   output.resize(0x12000);  //shrink if too large
   return output;
 }
