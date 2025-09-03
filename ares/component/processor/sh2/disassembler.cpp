@@ -515,7 +515,7 @@ auto SH2::disassembleInstruction(u16 opcode) -> string {
   if(s.empty()) s = {"illegal", {"0x", hex(opcode, 4L)}};
   auto name = s.front(); s.erase(s.begin());
   while(name.size() < 8) name.append(" ");
-  string r = {name, nall::merge(s, ",")};
+  string r = {name, ::nall::merge(s, ",")};
   while(r.size() < 30) r.append(" ");
   return r;
 }
