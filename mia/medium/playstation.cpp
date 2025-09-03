@@ -1,6 +1,6 @@
 struct PlayStation : CompactDisc {
   auto name() -> string override { return "PlayStation"; }
-  auto extensions() -> vector<string> override {
+  auto extensions() -> std::vector<string> override {
 #if defined(ARES_ENABLE_CHD)
     return {"cue", "chd", "exe", "ps-exe"};
 #else

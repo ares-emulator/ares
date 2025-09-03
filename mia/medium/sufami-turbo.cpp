@@ -1,6 +1,6 @@
 struct SufamiTurbo : Cartridge {
   auto name() -> string override { return "Sufami Turbo"; }
-  auto extensions() -> vector<string> override { return {"st"}; }
+  auto extensions() -> std::vector<string> override { return {"st"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& data) -> string;
