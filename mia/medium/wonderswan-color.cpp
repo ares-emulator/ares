@@ -1,4 +1,4 @@
 struct WonderSwanColor : WonderSwan {
   auto name() -> string override { return "WonderSwan Color"; }
-  auto extensions() -> vector<string> override { return {"wsc"}; }
+  auto extensions() -> std::vector<string> override { return {"wsc"}; }
 };

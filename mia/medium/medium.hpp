@@ -19,7 +19,7 @@ struct Cartridge : Medium {
 
 struct CompactDisc : Medium {
   auto type() -> string override { return "Compact Disc"; }
-  auto extensions() -> vector<string> override {
+  auto extensions() -> std::vector<string> override {
 #if defined(ARES_ENABLE_CHD)
     return {"cue", "chd"};
 #else
@@ -43,7 +43,7 @@ struct FloppyDisk : Medium {
 
 struct LaserDisc : Medium {
   auto type() -> string override { return "LaserDisc"; }
-  auto extensions() -> vector<string> override { return {"mmi"}; }
+  auto extensions() -> std::vector<string> override { return {"mmi"}; }
   auto readDataSector(string mmiPath, string cuePath, u32 sectorID) -> vector<u8>;
 protected:
   Decode::MMI mmiArchive;

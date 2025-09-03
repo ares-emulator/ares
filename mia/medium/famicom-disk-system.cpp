@@ -1,6 +1,6 @@
 struct FamicomDiskSystem : FloppyDisk {
   auto name() -> string override { return "Famicom Disk System"; }
-  auto extensions() -> vector<string> override { return {"fds"}; }
+  auto extensions() -> std::vector<string> override { return {"fds"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze() -> string;

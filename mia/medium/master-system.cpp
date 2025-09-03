@@ -1,6 +1,6 @@
 struct MasterSystem : Cartridge {
   auto name() -> string override { return "Master System"; }
-  auto extensions() -> vector<string> override { return {"ms", "sms"}; }
+  auto extensions() -> std::vector<string> override { return {"ms", "sms"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;

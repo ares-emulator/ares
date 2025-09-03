@@ -1,6 +1,6 @@
 struct Mega32X : Cartridge {
   auto name() -> string override { return "Mega 32X"; }
-  auto extensions() -> vector<string> override { return {"32x"}; }
+  auto extensions() -> std::vector<string> override { return {"32x"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;
@@ -96,7 +96,7 @@ auto Mega32X::analyze(std::vector<u8>& rom) -> string {
   auto hash = Hash::SHA256(rom).digest();
   analyzeStorage(rom, hash);
 
-  vector<string> devices;
+  std::vector<string> devices;
   string device = slice((const char*)&rom[0x190], 0, 16).trimRight(" ");
   for(auto& id : device) {
     if(id == '0');  //Master System controller
@@ -104,7 +104,7 @@ auto Mega32X::analyze(std::vector<u8>& rom) -> string {
     if(id == '6');  //6-button controller
     if(id == 'A');  //analog joystick
     if(id == 'B');  //trackball
-    if(id == 'C') devices.append("Mega CD");
+    if(id == 'C') devices.push_back("Mega CD");
     if(id == 'D');  //download?
     if(id == 'F');  //floppy drive
     if(id == 'G');  //light gun
@@ -118,32 +118,32 @@ auto Mega32X::analyze(std::vector<u8>& rom) -> string {
     if(id == 'V');  //paddle
   }
 
-  vector<string> regions;
+  std::vector<string> regions;
   string region = slice((const char*)&rom[0x01f0], 0, 16).trimRight(" ");
 
   //Stellar Assault (U,E) is the one game using the single-byte region coding which
   //uses an 'E' value for both PAL and NTSC-U region. (NTSC-J cartridge uses '1')  
   //https://segaretro.org/ROM_header#Regional_compatiblity
   if(region(0) == 'E' && hash == "2f9b6017258fbb1c37d81df07c68d5255495d3bf76d9c7b680ff66bccf665750") {
-    regions.append("NTSC-U", "PAL");
+    regions.push_back("NTSC-U"); regions.push_back("PAL");
   }
-  if(!regions) {
-    if(region.find("J")) regions.append("NTSC-J");
-    if(region.find("U")) regions.append("NTSC-U");
-    if(region.find("E")) regions.append("PAL");
+  if(regions.empty()) {
+    if(region.find("J")) regions.push_back("NTSC-J");
+    if(region.find("U")) regions.push_back("NTSC-U");
+    if(region.find("E")) regions.push_back("PAL");
   }
-  if(!regions && region.size() == 1) {
+  if(regions.empty() && region.size() == 1) {
     maybe<u8> bits;
     u8 field = region(0);
     if(field >= '0' && field <= '9') bits = field - '0';
     if(field >= 'A' && field <= 'F') bits = field - 'A' + 10;
-    if(bits && *bits & 1) regions.append("NTSC-J");  //domestic 60hz
+    if(bits && *bits & 1) regions.push_back("NTSC-J");  //domestic 60hz
     if(bits && *bits & 2);                           //domestic 50hz
-    if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
-    if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
+    if(bits && *bits & 4) regions.push_back("NTSC-U");  //overseas 60hz
+    if(bits && *bits & 8) regions.push_back("PAL");     //overseas 50hz
   }
-  if(!regions) {
-    regions.append("NTSC-J", "NTSC-U", "PAL");
+  if(regions.empty()) {
+    regions.push_back("NTSC-J"); regions.push_back("NTSC-U"); regions.push_back("PAL");
   }
 
   string domesticName;
@@ -175,9 +175,9 @@ auto Mega32X::analyze(std::vector<u8>& rom) -> string {
   s +={"  label:  ", domesticName, "\n"};
   s +={"  label:  ", internationalName, "\n"};
   s +={"  serial: ", serialNumber, "\n"};
-  s +={"  region: ", regions.merge(", "), "\n"};
-  if(devices)
-  s +={"  device: ", devices.merge(", "), "\n"};
+  s +={"  region: ", nall::merge(regions, ", "), "\n"};
+  if(!devices.empty())
+  s +={"  device: ", nall::merge(devices, ", "), "\n"};
   s += "  board\n";
   s += "    memory\n";
   s += "      type: ROM\n";

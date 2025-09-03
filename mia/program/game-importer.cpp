@@ -5,7 +5,7 @@ GameImporter::GameImporter(View* parent) : Panel(parent, Size{~0, ~0}) {
   closeButton.setCollapsible().setText("Close").onActivate([&] { eventClose(); });
 }
 
-auto GameImporter::import(string system, const vector<string>& files) -> void {
+auto GameImporter::import(string system, const std::vector<string>& files) -> void {
   importList.reset();
   abortButton.setVisible(true);
   closeButton.setVisible(false);

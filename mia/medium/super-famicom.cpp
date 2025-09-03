@@ -1,6 +1,6 @@
 struct SuperFamicom : Cartridge {
   auto name() -> string override { return "Super Famicom"; }
-  auto extensions() -> vector<string> override { return {"sfc", "smc", "swc", "fig"}; }
+  auto extensions() -> std::vector<string> override { return {"sfc", "smc", "swc", "fig"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;

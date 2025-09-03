@@ -1,6 +1,6 @@
 struct Nintendo64DD : FloppyDisk {
   auto name() -> string override { return "Nintendo 64DD"; }
-  auto extensions() -> vector<string> override { return {"n64dd", "ndd", "d64"}; }
+  auto extensions() -> std::vector<string> override { return {"n64dd", "ndd", "d64"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom, std::vector<u8> errorTable) -> string;

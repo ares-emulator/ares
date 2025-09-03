@@ -1,6 +1,6 @@
 struct MegaDrive : Cartridge {
   auto name() -> string override { return "Mega Drive"; }
-  auto extensions() -> vector<string> override { return {"md", "gen", "bin"}; }
+  auto extensions() -> std::vector<string> override { return {"md", "gen", "bin"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;
@@ -10,7 +10,7 @@ struct MegaDrive : Cartridge {
   auto analyzeRegion(std::vector<u8>& rom, string hash) -> void;
 
   string board;
-  vector<string> regions;
+  std::vector<string> regions;
 
   struct RAM {
     explicit operator bool() const { return mode && size != 0; }
@@ -134,7 +134,7 @@ auto MegaDrive::analyze(std::vector<u8>& rom) -> string {
   analyzeCopyProtection(rom, hash);
   analyzeRegion(rom, hash);
 
-  vector<string> devices;
+  std::vector<string> devices;
   string device = slice((const char*)&rom[0x190], 0, 16).trimRight(" ");
   if(device == "OJKRPTBVFCA") {
     //ignore erroneous device string used by Codemasters
@@ -146,7 +146,7 @@ auto MegaDrive::analyze(std::vector<u8>& rom) -> string {
     if(id == '6');  //6-button controller
     if(id == 'A');  //analog joystick
     if(id == 'B');  //trackball
-    if(id == 'C') devices.append("Mega CD");
+    if(id == 'C') devices.push_back("Mega CD");
     if(id == 'D');  //download?
     if(id == 'F');  //floppy drive
     if(id == 'G');  //light gun
@@ -189,9 +189,9 @@ auto MegaDrive::analyze(std::vector<u8>& rom) -> string {
   s +={"  label:  ", domesticName, "\n"};
   s +={"  label:  ", internationalName, "\n"};
   s +={"  serial: ", serialNumber, "\n"};
-  s +={"  region: ", regions.merge(", "), "\n"};
-  if(devices)
-  s +={"  device: ", devices.merge(", "), "\n"};
+  s +={"  region: ", nall::merge(regions, ", "), "\n"};
+  if(!devices.empty())
+  s +={"  device: ", nall::merge(devices, ", "), "\n"};
   if(board)
   s +={"  board:  ", board, "\n"};
   s += "  board\n";
@@ -256,34 +256,34 @@ auto MegaDrive::analyzeRegion(std::vector<u8>& rom, string hash) -> void {
   }
 
   string region = slice((const char*)&rom[0x01f0 + offset], 0, 16).trimRight(" ");
-  if(!regions) {
-    if(region == "JAPAN" ) regions.append("NTSC-J");
-    if(region == "EUROPE") regions.append("PAL");
+  if(regions.empty()) {
+    if(region == "JAPAN" ) regions.push_back("NTSC-J");
+    if(region == "EUROPE") regions.push_back("PAL");
   }
-  if(!regions) {
+  if(regions.empty()) {
     if(region.find("J")
-    || region.find("K")) regions.append("NTSC-J");
-    if(region.find("U")) regions.append("NTSC-U");
-    if(region.find("E")) regions.append("PAL");
+    || region.find("K")) regions.push_back("NTSC-J");
+    if(region.find("U")) regions.push_back("NTSC-U");
+    if(region.find("E")) regions.push_back("PAL");
   }
-  if(!regions && region.size() == 1) {
+  if(regions.empty() && region.size() == 1) {
     maybe<u8> bits;
     u8 field = region(0);
     if(field >= '0' && field <= '9') bits = field - '0';
     if(field >= 'A' && field <= 'F') bits = field - 'A' + 10;
-    if(bits && *bits & 1) regions.append("NTSC-J");  //domestic 60hz
-    if(bits && *bits & 2);                           //domestic 50hz
-    if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
-    if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
+    if(bits && *bits & 1) regions.push_back("NTSC-J");  //domestic 60hz
+    if(bits && *bits & 2);                              //domestic 50hz
+    if(bits && *bits & 4) regions.push_back("NTSC-U");  //overseas 60hz
+    if(bits && *bits & 8) regions.push_back("PAL");     //overseas 50hz
   }
-  if(!regions) {
-    regions.append("NTSC-J", "NTSC-U", "PAL");
+  if(regions.empty()) {
+    regions.push_back("NTSC-J"); regions.push_back("NTSC-U"); regions.push_back("PAL");
   }
 
   // Many PAL games have incorrect headers, so force PAL based on name
   if(location.ifind("(Europe)") || location.ifind("(PAL)")) {
-    regions.reset();
-    regions.append("PAL");
+    regions.clear();
+    regions.push_back("PAL");
   }
 }
 
