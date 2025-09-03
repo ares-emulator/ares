@@ -22,7 +22,7 @@ auto Pak::read(string location) -> std::vector<u8> {
   return memory;
 }
 
-auto Pak::read(string location, vector<string> match) -> std::vector<u8> {
+auto Pak::read(string location, std::vector<string> match) -> std::vector<u8> {
   std::vector<u8> memory;
   std::vector<u8> ips_patch;
   std::vector<u8> bps_patch;

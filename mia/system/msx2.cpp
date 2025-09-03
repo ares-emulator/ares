@@ -1,10 +1,10 @@
 struct MSX2 : System {
   auto name() -> string override { return "MSX2"; }
-  auto loadMultiple(vector<string> location) -> bool override;
+  auto loadMultiple(std::vector<string> location) -> bool override;
   auto save(string location) -> bool override;
 };
 
-auto MSX2::loadMultiple(vector<string> location) -> bool {
+auto MSX2::loadMultiple(std::vector<string> location) -> bool {
   if(location.size() != 2) return false;
 
   auto bios = Pak::read(location[0]);

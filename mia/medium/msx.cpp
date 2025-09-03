@@ -1,6 +1,6 @@
 struct MSX : Cartridge {
   auto name() -> string override { return "MSX"; }
-  auto extensions() -> vector<string> override { return {"msx", "rom", "wav"}; }
+  auto extensions() -> std::vector<string> override { return {"msx", "rom", "wav"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;
@@ -164,12 +164,12 @@ auto MSX::loadTape(string location) -> LoadResult {
     if(location.iendsWith(".wav")) {
         Decode::WAV wav;
         if (wav.open(location)) {
-          vector <u8> data;
+          std::vector<u8> data;
           for (int i = 0; i < wav.size(); i++) {
             u64 sample = wav.read();
 
             for (int byte = 0; byte < sizeof(u64); byte++) {
-              data.append((sample & (0xff << (byte * 8))) >> (byte * 8));
+              data.push_back((sample & (0xff << (byte * 8))) >> (byte * 8));
             }
           }
         pak->append("program.tape", data);

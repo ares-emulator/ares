@@ -1,6 +1,6 @@
 struct MegaCD : CompactDisc {
   auto name() -> string override { return "Mega CD"; }
-  auto extensions() -> vector<string> override {
+  auto extensions() -> std::vector<string> override {
 #if defined(ARES_ENABLE_CHD)
     return {"cue", "chd"};
 #else
@@ -50,21 +50,21 @@ auto MegaCD::analyze(string location) -> string {
   if(!sector || memory::compare(sector.data(), "SEGA", 4))
     return CompactDisc::manifestAudio(location);
 
-  vector<string> regions;
+  std::vector<string> regions;
   if(!memory::compare(sector.data()+4, "DISCSYSTEM  ", 12)
   || !memory::compare(sector.data()+4, "BOOTDISC    ", 12)) {
     if(     Hash::CRC32({sector.data()+0x200,  340}).value() == 0x4571f623) // JP boot
-      regions.append("NTSC-J");
+      regions.push_back("NTSC-J");
     else if(Hash::CRC32({sector.data()+0x200, 1390}).value() == 0x6ffb4732) // EU boot
-      regions.append("PAL");
+      regions.push_back("PAL");
     else if(Hash::CRC32({sector.data()+0x200, 1412}).value() == 0xf361ab57) // US boot
-      regions.append("NTSC-U");
+      regions.push_back("NTSC-U");
   }
-  if(!regions) regions.append("NTSC-J","NTSC-U","PAL"); // unknown boot
+  if(regions.empty()) { regions.push_back("NTSC-J"); regions.push_back("NTSC-U"); regions.push_back("PAL"); } // unknown boot
 
   string serialNumber = slice((const char*)(sector.data() + 0x180), 0, 14).trimRight(" ");
 
-  vector<string> devices;
+  std::vector<string> devices;
   string device = slice((const char*)(sector.data() + 0x190), 0, 16).trimRight(" ");
   for(auto& id : device) {
     if(id == '0');  //Master System controller
@@ -91,8 +91,8 @@ auto MegaCD::analyze(string location) -> string {
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s +={"  serial: ", serialNumber, "\n"};
-  s +={"  region: ", regions.merge(", "), "\n"};
-  if(devices)
-  s +={"  device: ", devices.merge(", "), "\n"};
+  s +={"  region: ", nall::merge(regions, ", "), "\n"};
+  if(!devices.empty())
+  s +={"  device: ", nall::merge(devices, ", "), "\n"};
   return s;
 }
