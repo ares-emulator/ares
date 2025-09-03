@@ -12,10 +12,10 @@ PCEngineCD::PCEngineCD() {
   manufacturer = "NEC";
   name = "PC Engine CD";
 
-  firmware.append({"System-Card 1.0", "Japan", "afe9f27f91ac918348555b86298b4f984643eafa2773196f2c5441ea84f0c3bb"});
-  firmware.append({"Arcade Card"    , "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});
-  firmware.append({"System Card 3.0", "US",    "cadac2725711b3c442bcf237b02f5a5210c96f17625c35fa58f009e0ed39e4db"});
-  firmware.append({"Games Express"  , "Japan", "4b86bb96a48a4ca8375fc0109631d0b1d64f255a03b01de70594d40788ba6c3d"});
+  firmware.push_back({"System-Card 1.0", "Japan", "afe9f27f91ac918348555b86298b4f984643eafa2773196f2c5441ea84f0c3bb"});
+  firmware.push_back({"Arcade Card"    , "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});
+  firmware.push_back({"System Card 3.0", "US",    "cadac2725711b3c442bcf237b02f5a5210c96f17625c35fa58f009e0ed39e4db"});
+  firmware.push_back({"Games Express"  , "Japan", "4b86bb96a48a4ca8375fc0109631d0b1d64f255a03b01de70594d40788ba6c3d"});
 
   allocatePorts();
 }

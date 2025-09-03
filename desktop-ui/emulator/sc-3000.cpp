@@ -22,7 +22,7 @@ SC3000::SC3000() {
     device.digital("2",     virtualPorts[id].pad.east);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

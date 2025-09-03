@@ -9,7 +9,7 @@ NeoGeoPocketColor::NeoGeoPocketColor() {
   manufacturer = "SNK";
   name = "Neo Geo Pocket Color";
 
-  firmware.append({"BIOS", "World", "8fb845a2f71514cec20728e2f0fecfade69444f8d50898b92c2259f1ba63e10d"});
+  firmware.push_back({"BIOS", "World", "8fb845a2f71514cec20728e2f0fecfade69444f8d50898b92c2259f1ba63e10d"});
 
   { InputPort port{"Neo Geo Pocket Color"};
 
@@ -25,7 +25,7 @@ NeoGeoPocketColor::NeoGeoPocketColor() {
     device.digital("Debugger", virtualPorts[0].pad.r_bumper);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

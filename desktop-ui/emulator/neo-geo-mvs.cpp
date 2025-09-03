@@ -12,7 +12,7 @@ NeoGeoMVS::NeoGeoMVS() {
   name = "Neo Geo MVS";
   medium = "Neo Geo";
 
-  firmware.append({"BIOS", "World"});
+  firmware.push_back({"BIOS", "World"});
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -31,7 +31,7 @@ NeoGeoMVS::NeoGeoMVS() {
     device.digital("Start",  virtualPorts[id].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

@@ -16,7 +16,7 @@ struct GameBrowserWindow : Window {
     LineEdit searchInput{&searchLayout, Size{~0, 0}};
   TableView gameList{&layout, Size{~0, ~0}};
 
-  vector<GameBrowserEntry> games;
+  std::vector<GameBrowserEntry> games;
   shared_pointer<Emulator> emulator;
 };
 

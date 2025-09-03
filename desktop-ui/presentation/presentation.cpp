@@ -351,14 +351,14 @@ auto Presentation::loadEmulators() -> void {
   loadMenu.reset();
 
   //clean up the recent games history first
-  vector<string> recentGames;
+  std::vector<string> recentGames;
   for(u32 index : range(9)) {
     auto entry = settings.recent.game[index];
     auto system = entry.split(";", 1L)(0);
     auto location = entry.split(";", 1L)(1);
     if(location.length()) {  //remove missing games
-      if(!recentGames.find(entry)) {  //remove duplicate entries
-        recentGames.append(entry);
+      if(std::ranges::find(recentGames, entry) == recentGames.end()) {  //remove duplicate entries
+        recentGames.push_back(entry);
       }
     }
     settings.recent.game[index] = {};
@@ -549,7 +549,7 @@ auto Presentation::refreshSystemMenu() -> void {
   for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {
     //do not add unsupported ports to the port menu
     auto portName = port->name();
-    if(emulator->portBlacklist.find(portName)) continue;
+    if(std::ranges::find(emulator->portBlacklist, portName) != emulator->portBlacklist.end()) continue;
 
     if(!port->hotSwappable()) continue;
     if(port->type() != "Controller" && port->type() != "Expansion") continue;
@@ -574,7 +574,7 @@ auto Presentation::refreshSystemMenu() -> void {
     }
     for(auto peripheral : port->supported()) {
       //do not add unsupported peripherals to the peripheral port menu
-      if(emulator->inputBlacklist.find(peripheral)) continue;
+      if(std::ranges::find(emulator->inputBlacklist, peripheral) != emulator->inputBlacklist.end()) continue;
 
       MenuRadioItem peripheralItem{&portMenu};
       peripheralItem.setAttribute<ares::Node::Port>("port", port);
@@ -661,12 +661,12 @@ auto Presentation::loadShaders() -> void {
     function<void(string)> findShaderDirectories = [&](string path) {
       for(auto &entry: directory::folders(path)) findShaderDirectories({path, entry});
       auto files = directory::files(path, "*.slangp");
-      if(files.size() > 0) shaderDirectories.append((string({path}).trimLeft(location, 1L)));
+      if(files.size() > 0) shaderDirectories.push_back((string({path}).trimLeft(location, 1L)));
     };
     findShaderDirectories(location);
 
     // Sort by name and depth such that child folders appear after their parents
-    shaderDirectories.sort([](const string &lhs, const string &rhs) {
+    std::ranges::sort(shaderDirectories, [](const string &lhs, const string &rhs) {
       auto lhsParts = lhs.split("/");
       auto rhsParts = rhs.split("/");
       for(u32 i : range(min(lhsParts.size(), rhsParts.size()))) {
