@@ -350,6 +350,7 @@ inline auto operator"" _s(const char* value, std::size_t) -> string { return {va
 #include <nall/string/format.hpp>
 #include <nall/string/match.hpp>
 #include <nall/string/replace.hpp>
+#include <nall/vector-helpers.hpp>
 #include <nall/string/split.hpp>
 #include <nall/string/trim.hpp>
 #include <nall/string/utf8.hpp>
@@ -368,5 +369,3 @@ inline auto operator"" _s(const char* value, std::size_t) -> string { return {va
 
 #include <nall/string/transform/cml.hpp>
 #include <nall/string/transform/dml.hpp>
-
-#include <nall/vector-helpers.hpp>

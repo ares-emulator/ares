@@ -7,7 +7,7 @@ auto RSP::Disassembler::disassemble(u32 address, u32 instruction) -> string {
   if(!instruction) v = {"nop"};
   auto s = pad(v.front(), -8L);
   v.erase(v.begin());
-  return {s, nall::merge(v, ",")};
+  return {s, ::nall::merge(v, ",")};
 }
 
 auto RSP::Disassembler::EXECUTE() -> std::vector<string> {
@@ -509,7 +509,7 @@ auto RSP::Disassembler::vpuRegisterValue(u32 index, u32 element) const -> string
     std::vector<string> elements;
     elements.reserve(8);
     for(u32 e : range(8)) elements.push_back(hex(self.vpu.r[index].element(e), 4L));
-    return {vpuRegisterName(index, element), hint("{$", nall::merge(elements, "|"), "}")};
+    return {vpuRegisterName(index, element), hint("{$", ::nall::merge(elements, "|"), "}")};
   }
   return vpuRegisterName(index, element);
 }
