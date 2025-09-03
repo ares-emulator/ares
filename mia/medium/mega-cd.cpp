@@ -91,8 +91,8 @@ auto MegaCD::analyze(string location) -> string {
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s +={"  serial: ", serialNumber, "\n"};
-  s +={"  region: ", nall::merge(regions, ", "), "\n"};
+  s +={"  region: ", ::nall::merge(regions, ", "), "\n"};
   if(!devices.empty())
-  s +={"  device: ", nall::merge(devices, ", "), "\n"};
+  s +={"  device: ", ::nall::merge(devices, ", "), "\n"};
   return s;
 }

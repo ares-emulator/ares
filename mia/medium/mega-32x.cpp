@@ -44,7 +44,9 @@ auto Mega32X::load(string location) -> LoadResult {
   pak->setAttribute("region",   document["game/region"].string());
   pak->setAttribute("bootable", true);
   pak->setAttribute("mega32x",  true);
-  pak->setAttribute("megacd",   (bool)document["game/device"].string().split(", ").find("Mega CD"));
+  auto deviceList = document["game/device"].string();
+  auto devices = ::nall::split(deviceList, ", ");
+  pak->setAttribute("megacd",   (bool)(std::ranges::find(devices, string{"Mega CD"}) != devices.end()));
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
 
@@ -175,9 +177,9 @@ auto Mega32X::analyze(std::vector<u8>& rom) -> string {
   s +={"  label:  ", domesticName, "\n"};
   s +={"  label:  ", internationalName, "\n"};
   s +={"  serial: ", serialNumber, "\n"};
-  s +={"  region: ", nall::merge(regions, ", "), "\n"};
+  s +={"  region: ", ::nall::merge(regions, ", "), "\n"};
   if(!devices.empty())
-  s +={"  device: ", nall::merge(devices, ", "), "\n"};
+  s +={"  device: ", ::nall::merge(devices, ", "), "\n"};
   s += "  board\n";
   s += "    memory\n";
   s += "      type: ROM\n";

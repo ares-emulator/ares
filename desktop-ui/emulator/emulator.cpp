@@ -38,20 +38,22 @@ auto Emulator::locate(const string& location, const string& suffix, const string
 
 //handles region selection when games support multiple regions
 auto Emulator::region() -> string {
-  auto preferredRegions = settings.boot.prefer.split(",").strip();
+  auto preferredRegions = ::nall::split_and_strip(settings.boot.prefer, ",");
   if(game && game->pak) {
-    if(auto regions = game->pak->attribute("region").split(",").strip()) {
+    auto regionList = game->pak->attribute("region");
+    auto regions = ::nall::split_and_strip(regionList, ",");
+    if(!regions.empty()) {
       for(auto &prefer: preferredRegions) {
-        if(regions.find(prefer)) return prefer; //NTSC-U, NTSC-J or PAL
+        if(std::ranges::find(regions, prefer) != regions.end()) return prefer; //NTSC-U, NTSC-J or PAL
       }
 
       //Handle generic "NTSC" region.
       //NOTE: we don't need to check PAL because the above check covered it
-      if(regions.find("NTSC")) return "NTSC";
+      if(std::ranges::find(regions, string{"NTSC"}) != regions.end()) return "NTSC";
 
       //If no preferred region was found, return the first region in the list
       //NOTE: required for 'unsual' regions like NTSC-DEV for 64DD
-      return regions.first();
+      return regions.front();
     }
   }
 

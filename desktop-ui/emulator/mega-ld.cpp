@@ -88,7 +88,8 @@ auto MegaLD::load(Menu menu) -> void {
   Menu changeSideMenu{&menu};
   changeSideMenu.setIcon(Icon::Device::Optical);
   changeSideMenu.setText("Change Side");
-  auto sides = game->pak->attribute("medium").split(",").strip();
+  auto medium = game->pak->attribute("medium");
+  auto sides = ::nall::split_and_strip(medium, ",");
 
   MenuRadioItem noDiscItem{&changeSideMenu};
   noDiscItem.setText("No Disc").onActivate([&] {

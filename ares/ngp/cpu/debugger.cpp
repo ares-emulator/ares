@@ -43,7 +43,7 @@ auto CPU::Debugger::instruction() -> void {
   if(unlikely(tracer.systemCall->enabled())) {
     auto PC = self.TLCS900H::load(TLCS900H::PC);
     if(!PC) return;
-    if(auto vectorID = nall::index_of(vectors, n24(PC))) {
+    if(auto vectorID = ::nall::index_of(vectors, n24(PC))) {
       auto RA3  = self.TLCS900H::load(TLCS900H::RA3);
       auto RC3  = self.TLCS900H::load(TLCS900H::RC3);
       auto RB3  = self.TLCS900H::load(TLCS900H::RB3);
@@ -162,7 +162,7 @@ auto CPU::Debugger::instruction() -> void {
         name = {"VECT_UNKNOWN[$", hex(*vectorID, 2L), "]"};
         break;
       }
-      tracer.systemCall->notify(string{name, "(", nall::merge(args, ", "), ")"});
+      tracer.systemCall->notify(string{name, "(", ::nall::merge(args, ", "), ")"});
     }
   }
 

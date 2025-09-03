@@ -6,9 +6,9 @@ auto CheatEditor::Cheat::update(string description, string code, bool enabled) -
   //TODO: support other code formats based on the game system (e.g. GameShark, Game-Genie, etc.)
 
   addressValuePairs.reset();
-  auto codes = code.split("+");
+  auto codes = nall::split(code, "+");
   for(auto& code : codes) {
-    auto parts = code.split(":");
+    auto parts = nall::split(code, ":");
     if(parts.size() != 2) continue;
     addressValuePairs.insert(string{"0x", parts[0]}.natural(), string{"0x",parts[1]}.natural());
   }

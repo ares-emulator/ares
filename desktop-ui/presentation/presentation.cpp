@@ -354,8 +354,10 @@ auto Presentation::loadEmulators() -> void {
   std::vector<string> recentGames;
   for(u32 index : range(9)) {
     auto entry = settings.recent.game[index];
-    auto system = entry.split(";", 1L)(0);
-    auto location = entry.split(";", 1L)(1);
+    auto parts = nall::split(entry, ";", 1L);
+    parts.resize(2);
+    auto system = parts[0];
+    auto location = parts[1];
     if(location.length()) {  //remove missing games
       if(std::ranges::find(recentGames, entry) == recentGames.end()) {  //remove duplicate entries
         recentGames.push_back(entry);
@@ -375,8 +377,10 @@ auto Presentation::loadEmulators() -> void {
     for(u32 index : range(count)) {
       MenuItem item{&recentGames};
       auto entry = settings.recent.game[index];
-      auto system = entry.split(";", 1L)(0);
-      auto location = entry.split(";", 1L)(1);
+      auto parts = nall::split(entry, ";", 1L);
+      parts.resize(2);
+      auto system = parts[0];
+      auto location = parts[1];
       item.setIconForFile(location);
       item.setText({Location::base(location).trimRight("/"), " (", system, ")"});
       item.onActivate([=, this] {
@@ -667,8 +671,8 @@ auto Presentation::loadShaders() -> void {
 
     // Sort by name and depth such that child folders appear after their parents
     std::ranges::sort(shaderDirectories, [](const string &lhs, const string &rhs) {
-      auto lhsParts = lhs.split("/");
-      auto rhsParts = rhs.split("/");
+      auto lhsParts = nall::split(lhs, "/");
+      auto rhsParts = nall::split(rhs, "/");
       for(u32 i : range(min(lhsParts.size(), rhsParts.size()))) {
         if(lhsParts[i] != rhsParts[i]) return lhsParts[i] < rhsParts[i];
       }
@@ -678,7 +682,7 @@ auto Presentation::loadShaders() -> void {
 
   if(ruby::video.hasShader()) {
     for(auto &directory : shaderDirectories) {
-      auto parts = directory.split("/");
+      auto parts = nall::split(directory, "/");
       Menu parent = videoShaderMenu;
 
       if(directory != "") {
