@@ -39,7 +39,7 @@ Mega32X::Mega32X() {
     device.digital ("Start",  virtualPorts[id].mouse.extra);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -59,11 +59,11 @@ auto Mega32X::load() -> LoadResult {
   string name;
   if(game->pak->attribute("megacd").boolean()) {
     //use Mega CD firmware settings
-    vector<Firmware> firmware;
+    std::vector<Firmware> firmware;
     for(auto& emulator : emulators) {
       if(emulator->name == "Mega CD") firmware = emulator->firmware;
     }
-    if(!firmware) return otherError;  //should never occur
+    if(firmware.empty()) return otherError;  //should never occur
     name = "Mega CD 32X";
     system = mia::System::create("Mega CD 32X");
     result = system->load(firmware[regionID].location);

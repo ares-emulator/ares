@@ -11,9 +11,9 @@ MasterSystem::MasterSystem() {
   manufacturer = "Sega";
   name = "Master System";
 
-  firmware.append({"BIOS", "US", "477617917a12a30f9f43844909dc2de6e6a617430f5c9a36306c86414a670d50"});      //NTSC-U
-  firmware.append({"BIOS", "Japan", "67846e26764bd862f19179294347f7353a4166b62ac4198a5ec32933b7da486e"});   //NTSC-J
-  firmware.append({"BIOS", "Europe", "477617917a12a30f9f43844909dc2de6e6a617430f5c9a36306c86414a670d50"});  //PAL
+  firmware.push_back({"BIOS", "US", "477617917a12a30f9f43844909dc2de6e6a617430f5c9a36306c86414a670d50"});      //NTSC-U
+  firmware.push_back({"BIOS", "Japan", "67846e26764bd862f19179294347f7353a4166b62ac4198a5ec32933b7da486e"});   //NTSC-J
+  firmware.push_back({"BIOS", "Europe", "477617917a12a30f9f43844909dc2de6e6a617430f5c9a36306c86414a670d50"});  //PAL
 
   { InputPort port{"Master System"};
 
@@ -22,7 +22,7 @@ MasterSystem::MasterSystem() {
     //device.digital("Reset", virtualPorts[0].pad.rt);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 
   for(auto id : range(2)) {
@@ -86,7 +86,7 @@ MasterSystem::MasterSystem() {
     device.digital ("Start",  virtualPorts[id].mouse.extra);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

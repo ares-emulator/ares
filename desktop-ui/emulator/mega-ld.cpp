@@ -15,8 +15,8 @@ MegaLD::MegaLD() {
   manufacturer = "Sega";
   name = "Mega LD";
 
-  firmware.append({"BIOS", "US"});      //NTSC-U
-  firmware.append({"BIOS", "Japan"});   //NTSC-J
+  firmware.push_back({"BIOS", "US"});      //NTSC-U
+  firmware.push_back({"BIOS", "Japan"});   //NTSC-J
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -36,7 +36,7 @@ MegaLD::MegaLD() {
     device.digital("Start", virtualPorts[id].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
