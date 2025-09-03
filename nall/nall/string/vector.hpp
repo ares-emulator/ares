@@ -33,13 +33,6 @@ inline auto vector<string>::ifind(string_view source) const -> maybe<u32> {
   return {};
 }
 
-inline auto vector<string>::match(string_view pattern) const -> vector<string> {
-  vector<string> result;
-  for(u32 n = 0; n < size(); n++) {
-    if(operator[](n).match(pattern)) result.append(operator[](n));
-  }
-  return result;
-}
 
 inline auto vector<string>::merge(string_view separator) const -> string {
   string output;

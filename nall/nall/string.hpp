@@ -265,12 +265,6 @@ public:
   auto qreplace(string_view from, string_view to, long limit = LONG_MAX) -> type&;
   auto iqreplace(string_view from, string_view to, long limit = LONG_MAX) -> type&;
 
-  //split.hpp
-  auto split(string_view key, long limit = LONG_MAX) const -> vector<string>;
-  auto isplit(string_view key, long limit = LONG_MAX) const -> vector<string>;
-  auto qsplit(string_view key, long limit = LONG_MAX) const -> vector<string>;
-  auto iqsplit(string_view key, long limit = LONG_MAX) const -> vector<string>;
-
   //trim.hpp
   auto trim(string_view lhs, string_view rhs, long limit = LONG_MAX) -> type&;
   auto trimLeft(string_view lhs, long limit = LONG_MAX) -> type&;
