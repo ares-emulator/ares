@@ -125,7 +125,7 @@ auto Mega32X::analyze(std::vector<u8>& rom) -> string {
   //uses an 'E' value for both PAL and NTSC-U region. (NTSC-J cartridge uses '1')  
   //https://segaretro.org/ROM_header#Regional_compatiblity
   if(region(0) == 'E' && hash == "2f9b6017258fbb1c37d81df07c68d5255495d3bf76d9c7b680ff66bccf665750") {
-    regions.push_back("NTSC-U"); regions.push_back("PAL");
+    regions.insert(regions.end(), {"NTSC-U", "PAL"});
   }
   if(regions.empty()) {
     if(region.find("J")) regions.push_back("NTSC-J");
@@ -143,7 +143,7 @@ auto Mega32X::analyze(std::vector<u8>& rom) -> string {
     if(bits && *bits & 8) regions.push_back("PAL");     //overseas 50hz
   }
   if(regions.empty()) {
-    regions.push_back("NTSC-J"); regions.push_back("NTSC-U"); regions.push_back("PAL");
+    regions.insert(regions.end(), {"NTSC-J", "NTSC-U", "PAL"});
   }
 
   string domesticName;
