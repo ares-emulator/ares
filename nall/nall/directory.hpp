@@ -183,7 +183,7 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
 #if defined(PLATFORM_WINDOWS)
   inline auto directory::create(const string& pathname, u32 permissions) -> bool {
     string path;
-    auto list = string{pathname}.transform("\\", "/").trimRight("/").split("/");
+    auto list = ::nall::split(string{pathname}.transform("\\", "/").trimRight("/"), "/");
     bool result = true;
     for(auto& part : list) {
       path.append(part, "/");
@@ -217,7 +217,7 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
 
   inline auto directory::create(const string& pathname, u32 permissions) -> bool {
     string path;
-    auto list = string{pathname}.trimRight("/").split("/");
+    auto list = ::nall::split(string{pathname}.trimRight("/"), "/");
     bool result = true;
     for(auto& part : list) {
       path.append(part, "/");

@@ -305,7 +305,7 @@ template<> struct vector<string> : vector_base<string> {
   vector(const vector& source) { vector_base::operator=(source); }
   vector(vector& source) { vector_base::operator=(source); }
   vector(vector&& source) { vector_base::operator=(std::move(source)); }
-  template<typename... P> vector(P&&... p) { append(std::forward<P>(p)...); }
+  template<typename... P> explicit vector(P&&... p) { append(std::forward<P>(p)...); }
 
   auto operator=(const vector& source) -> type& { return vector_base::operator=(source), *this; }
   auto operator=(vector& source) -> type& { return vector_base::operator=(source), *this; }
