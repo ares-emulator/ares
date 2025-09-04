@@ -14,7 +14,7 @@ struct ManagedNode {
   auto clone() const -> SharedNode {
     SharedNode clone{new ManagedNode(_name, _value)};
     for(auto& child : _children) {
-      clone->_children.append(child->clone());
+      clone->_children.push_back(child->clone());
     }
     return clone;
   }
@@ -23,9 +23,9 @@ struct ManagedNode {
     _name = source->_name;
     _value = source->_value;
     _metadata = source->_metadata;
-    _children.reset();
+    _children.clear();
     for(auto child : source->_children) {
-      _children.append(child->clone());
+      _children.push_back(child->clone());
     }
   }
 
@@ -33,7 +33,7 @@ protected:
   string _name;
   string _value;
   uintptr _metadata = 0;
-  vector<SharedNode> _children;
+  std::vector<SharedNode> _children;
 
   auto _evaluate(string query) const -> bool;
   auto _find(const string& query) const -> std::vector<Node>;
@@ -53,7 +53,7 @@ struct Node {
   auto clone() const -> Node { return shared->clone(); }
   auto copy(Node source) -> void { return shared->copy(source.shared); }
 
-  explicit operator bool() const { return shared->_name || shared->_children; }
+  explicit operator bool() const { return shared->_name || !shared->_children.empty(); }
   auto name() const -> nall::string { return shared->_name; }
   auto value() const -> nall::string { return shared->_value; }
 
@@ -80,15 +80,15 @@ struct Node {
   auto setName(const nall::string& name = "") -> Node& { shared->_name = name; return *this; }
   auto setValue(const nall::string& value = "") -> Node& { shared->_value = value; return *this; }
 
-  auto reset() -> void { shared->_children.reset(); }
+  auto reset() -> void { shared->_children.clear(); }
   auto size() const -> u32 { return shared->_children.size(); }
 
-  auto prepend(const Node& node) -> void { shared->_children.prepend(node.shared); }
-  auto append(const Node& node) -> void { shared->_children.append(node.shared); }
+  auto prepend(const Node& node) -> void { shared->_children.insert(shared->_children.begin(), node.shared); }
+  auto append(const Node& node) -> void { shared->_children.push_back(node.shared); }
   auto remove(const Node& node) -> bool {
     for(auto n : range(size())) {
       if(node.shared == shared->_children[n]) {
-        return shared->_children.remove(n), true;
+        return shared->_children.erase(shared->_children.begin() + n), true;
       }
     }
     return false;
@@ -96,12 +96,12 @@ struct Node {
 
   auto insert(u32 position, const Node& node) -> bool {
     if(position > size()) return false;  //used > instead of >= to allow indexed-equivalent of append()
-    return shared->_children.insert(position, node.shared), true;
+    return shared->_children.insert(shared->_children.begin() + position, node.shared), true;
   }
 
   auto remove(u32 position) -> bool {
     if(position >= size()) return false;
-    return shared->_children.remove(position), true;
+    return shared->_children.erase(shared->_children.begin() + position), true;
   }
 
   auto swap(u32 x, u32 y) -> bool {
@@ -126,13 +126,7 @@ struct Node {
 
   auto operator[](const nall::string& path) const -> Node { return shared->_lookup(path); }
   auto operator()(const nall::string& path) -> Node { return shared->_create(path); }
-  auto find(const nall::string& query) const -> vector<Node> { 
-    // FIXME(stdc++): copy loop should be removed
-    auto result = shared->_find(query);
-    vector<Node> out;
-    for(auto& item : result) out.append(item);
-    return out;
-  }
+  auto find(const nall::string& query) const -> std::vector<Node> { return shared->_find(query); }
 
   struct iterator {
     auto operator*() -> Node { return {source.shared->_children[position]}; }
