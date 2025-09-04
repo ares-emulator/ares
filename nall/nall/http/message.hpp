@@ -46,8 +46,8 @@ struct Variables {
     return append(name);
   }
 
-  auto find(const string& name) const -> vector<SharedVariable> {
-    vector<SharedVariable> result;
+  auto find(const string& name) const -> std::vector<SharedVariable> {
+    std::vector<SharedVariable> result;
     for(auto& variable : variables) {
       if(variable.shared->name.iequals(name)) result.append(variable);
     }
@@ -82,7 +82,7 @@ struct Variables {
   auto begin() { return variables.begin(); }
   auto end() { return variables.end(); }
 
-  vector<SharedVariable> variables;
+  std::vector<SharedVariable> variables;
 };
 
 struct Message {

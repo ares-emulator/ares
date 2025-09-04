@@ -30,21 +30,21 @@ struct ChaCha20 {
     offset = 0;
   }
 
-  auto encrypt(array_view<u8> input) -> vector<u8> {
-    vector<u8> output;
+  auto encrypt(array_view<u8> input) -> std::vector<u8> {
+    std::vector<u8> output;
     while(input) {
       if(!offset) {
         cipher();
         increment();
       }
       auto byte = offset++;
-      output.append(*input++ ^ (block[byte >> 2] >> (byte & 3) * 8));
+      output.push_back(*input++ ^ (block[byte >> 2] >> (byte & 3) * 8));
       offset &= 63;
     }
     return output;
   }
 
-  auto decrypt(array_view<u8> input) -> vector<u8> {
+  auto decrypt(array_view<u8> input) -> std::vector<u8> {
     return encrypt(input);  //reciprocal cipher
   }
 
