@@ -62,8 +62,8 @@ struct SQLite3 {
       return result;
     }
 
-    auto data(u32 column) -> vector<u8> {
-      vector<u8> result;
+    auto data(u32 column) -> std::vector<u8> {
+      std::vector<u8> result;
       if(auto data = sqlite3_column_blob(statement(), column)) {
         result.resize(sqlite3_column_bytes(statement(), column));
         memory::copy(result.data(), data, result.size());

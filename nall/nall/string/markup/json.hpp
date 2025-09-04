@@ -68,34 +68,34 @@ protected:
     if(*p++ != ']') throw "Expected ']'";
   }
 
-  auto utf8Encode(vector<char>& output, u32 c) -> void {
+  auto utf8Encode(std::vector<char>& output, u32 c) -> void {
     if(c <= 0x00007f) {
-      output.append(c);
+      output.push_back(c);
       return;
     }
     if(c <= 0x0007ff) {
-      output.append(0b110'00000 | c >>  6 & 0b000'11111);
-      output.append(0b10'000000 | c >>  0 & 0b00'111111);
+      output.push_back(0b110'00000 | c >>  6 & 0b000'11111);
+      output.push_back(0b10'000000 | c >>  0 & 0b00'111111);
       return;
     }
     if(c <= 0x00ffff) {
-      output.append(0b1110'0000 | c >> 12 & 0b0000'1111);
-      output.append(0b10'000000 | c >>  6 & 0b00'111111);
-      output.append(0b10'000000 | c >>  0 & 0b00'111111);
+      output.push_back(0b1110'0000 | c >> 12 & 0b0000'1111);
+      output.push_back(0b10'000000 | c >>  6 & 0b00'111111);
+      output.push_back(0b10'000000 | c >>  0 & 0b00'111111);
       return;
     }
     if(c <= 0x10ffff) {
-      output.append(0b11110'000 | c >> 18 & 0b00000'111);
-      output.append(0b10'000000 | c >> 12 & 0b00'111111);
-      output.append(0b10'000000 | c >>  6 & 0b00'111111);
-      output.append(0b10'000000 | c >>  0 & 0b00'111111);
+      output.push_back(0b11110'000 | c >> 18 & 0b00000'111);
+      output.push_back(0b10'000000 | c >> 12 & 0b00'111111);
+      output.push_back(0b10'000000 | c >>  6 & 0b00'111111);
+      output.push_back(0b10'000000 | c >>  0 & 0b00'111111);
       return;
     }
     throw "Illegal code point";
   }
 
   auto parseString(string& target, const char*& p) -> void {
-    vector<char> output;
+    std::vector<char> output;
 
     if(*p++ != '"') throw "Expected opening '\"'";
     while(*p && u8(*p) >= ' ' && *p != '"') {
@@ -104,12 +104,12 @@ protected:
         switch(*p) {
           case '"':
           case '\\':
-          case '/': output.append(*p++); break;
-          case 'b': output.append('\b'); p++; break;
-          case 'f': output.append('\f'); p++; break;
-          case 'n': output.append('\n'); p++; break;
-          case 'r': output.append('\r'); p++; break;
-          case 't': output.append('\t'); p++; break;
+          case '/': output.push_back(*p++); break;
+          case 'b': output.push_back('\b'); p++; break;
+          case 'f': output.push_back('\f'); p++; break;
+          case 'n': output.push_back('\n'); p++; break;
+          case 'r': output.push_back('\r'); p++; break;
+          case 't': output.push_back('\t'); p++; break;
           case 'u': {
             p++;
             char codepoint[5];
@@ -124,7 +124,7 @@ protected:
           default: throw "Expected escape sequence";
         }
       } else {
-        output.append(*p++);
+        output.push_back(*p++);
       }
     }
     if(*p++ != '\"') throw "Expected closing '\"'";
