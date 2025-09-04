@@ -68,23 +68,5 @@ inline auto tokenize(const char* s, const char* p) -> bool {
   return !*p;
 }
 
-inline auto tokenize(vector<string>& list, const char* s, const char* p) -> bool {
-  while(*s) {
-    if(*p == '*') {
-      const char* b = s;
-      while(*s) {
-        if(tokenize(list, s++, p + 1)) {
-          list.prepend(slice(b, 0, --s - b));
-          return true;
-        }
-      }
-      list.prepend(b);
-      return !*++p;
-    }
-    if(*s++ != *p++) return false;
-  }
-  while(*p == '*') { list.prepend(s); p++; }
-  return !*p;
-}
 
 }
