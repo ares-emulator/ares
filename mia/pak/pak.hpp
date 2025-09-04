@@ -13,7 +13,6 @@ struct Pak {
   auto name(string location) const -> string;
   auto read(string location) -> std::vector<u8>;
   auto read(string location, std::vector<string> match) -> std::vector<u8>;
-  auto append(vector<u8>& data, string location) -> bool;
   auto append(std::vector<u8>& data, string location) -> bool;
   auto load(string name, string extension, string location = {}) -> bool;
   auto save(string name, string extension, string location = {}) -> bool;

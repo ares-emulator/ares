@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 namespace nall::Markup {
 
 struct Node;
@@ -114,7 +116,7 @@ struct Node {
   }
 
   auto sort(function<bool (Node, Node)> comparator = [](auto x, auto y) { return x < y; }) -> void {
-    nall::sort(shared->_children.data(), shared->_children.size(), [&](auto x, auto y) {
+    std::sort(shared->_children.begin(), shared->_children.end(), [&](auto x, auto y) {
       return comparator(x, y);  //this call converts SharedNode objects to Node objects
     });
   }

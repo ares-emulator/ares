@@ -22,7 +22,6 @@
 #include <nall/unique-pointer.hpp>
 #include <nall/utility.hpp>
 #include <nall/varint.hpp>
-#include <nall/vector.hpp>
 #include <nall/view.hpp>
 
 namespace nall {
