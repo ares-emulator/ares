@@ -29,7 +29,7 @@ private:
     string name;
     string value;
   };
-  vector<Variable> variables;
+  std::vector<Variable> variables;
   bool inMedia = false;
   bool inMediaNode = false;
 
@@ -59,7 +59,7 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
 
   for(auto& block : ::nall::split(filedata, "\n\n")) {
     auto lines = ::nall::split(block.stripRight(), "\n");
-    auto name = lines.empty() ? "" : lines.front();
+    auto name = lines.empty() ? string{} : lines.front();
     if(!lines.empty()) lines.erase(lines.begin());
 
     if(name.beginsWith("include ")) {
@@ -75,7 +75,7 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
         auto dataParts = ::nall::split(line, ":", 1L);
         std::vector<string> data;
         for(auto& part : dataParts) data.push_back(part.strip());
-        variables.append({data.size() > 0 ? data[0] : "", data.size() > 1 ? data[1] : ""});
+        variables.emplace_back(data.size() > 0 ? data[0] : string{}, data.size() > 1 ? data[1] : string{});
       }
       continue;
     }
@@ -94,7 +94,8 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
       auto dataParts2 = ::nall::split(line, ":", 1L);
       std::vector<string> data2;
       for(auto& part : dataParts2) data2.push_back(part.strip());
-      auto name = data2.size() > 0 ? data2[0] : "", value = data2.size() > 1 ? data2[1] : "";
+      string name = data2.size() > 0 ? data2[0] : string{};
+      string value = data2.size() > 1 ? data2[1] : string{};
       while(auto offset = value.find("var(")) {
         bool found = false;
         if(auto length = value.findFrom(*offset, ")")) {
