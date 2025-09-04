@@ -143,10 +143,10 @@ struct Session {
     return {};
   }
 
-  auto encode(u32 sectors) const -> vector<u8> {
+  auto encode(u32 sectors) const -> std::vector<u8> {
     if(sectors < abs(leadIn.lba) + leadOut.lba) return {};  //not enough sectors
 
-    vector<u8> data;
+    std::vector<u8> data;
     data.resize(sectors * 96 + 96);  //add one sector for P shift
 
     auto toP = [&](s32 lba) -> array_span<u8> {

@@ -28,8 +28,8 @@ struct Response : Message {
   auto setResponseType(u32 value) -> type& { _responseType = value; return *this; }
 
   auto hasData() const -> bool { return (bool)_data; }
-  auto data() const -> const vector<u8>& { return _data; }
-  auto setData(const vector<u8>& value) -> type&;
+  auto data() const -> const std::vector<u8>& { return _data; }
+  auto setData(const std::vector<u8>& value) -> type&;
 
   auto hasFile() const -> bool { return (bool)_file; }
   auto file() const -> const string& { return _file; }
@@ -49,7 +49,7 @@ struct Response : Message {
 
   const Request* _request = nullptr;
   u32 _responseType = 0;
-  vector<u8> _data;
+  std::vector<u8> _data;
   string _file;
   string _text;
 };
@@ -242,7 +242,7 @@ inline auto Response::findResponseTypeVerbose() const -> string {
   return findResponseType();  //fallback for uncommon responses
 }
 
-inline auto Response::setData(const vector<u8>& value) -> type& {
+inline auto Response::setData(const std::vector<u8>& value) -> type& {
   _data = value;
   header.assign("Content-Length", value.size());
   return *this;
