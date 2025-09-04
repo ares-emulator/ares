@@ -26,8 +26,8 @@ const T* ydata, u32 yrows, u32 ycols
 template<typename T> inline auto MatrixMultiply(
 const T* xdata, u32 xrows, u32 xcols,
 const T* ydata, u32 yrows, u32 ycols
-) -> vector<T> {
-  vector<T> output;
+) -> std::vector<T> {
+  std::vector<T> output;
   output.resize(xrows * ycols);
   MatrixMultiply(output.data(), xdata, xrows, xcols, ydata, yrows, ycols);
   return output;
