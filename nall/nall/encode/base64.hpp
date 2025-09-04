@@ -57,7 +57,7 @@ inline auto Base64(const void* vdata, u32 size, const string& format = "MIME") -
   return result;
 }
 
-inline auto Base64(const vector<u8>& buffer, const string& format = "MIME") -> string {
+inline auto Base64(const std::vector<u8>& buffer, const string& format = "MIME") -> string {
   return Base64(buffer.data(), buffer.size(), format);
 }
 

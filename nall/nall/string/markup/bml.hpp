@@ -75,7 +75,7 @@ protected:
       node->_name = slice(p, 0, length);
       node->parseData(p += length, spacing);
       node->_value.trimRight("\n", 1L);
-      _children.append(node);
+      _children.push_back(node);
     }
   }
 
@@ -98,7 +98,7 @@ protected:
 
       SharedNode node(new ManagedNode);
       node->parseNode(text, y, spacing);
-      _children.append(node);
+      _children.push_back(node);
     }
 
     _value.trimRight("\n", 1L);
@@ -136,7 +136,7 @@ protected:
       SharedNode node(new ManagedNode);
       node->parseNode(text, y, spacing);
       if(node->_metadata > 0) throw "Root nodes cannot be indented";
-      _children.append(node);
+      _children.push_back(node);
     }
   }
 

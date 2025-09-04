@@ -43,7 +43,7 @@ protected:
     while(true) {
       SharedNode node(new ManagedNode);
       node->parseMember(p);
-      _children.append(node);
+      _children.push_back(node);
       if(*p != ',') break;
       p++;
     }
@@ -61,7 +61,7 @@ protected:
       SharedNode node(new ManagedNode);
       node->_name = index;
       node->parseElement(p);
-      _children.append(node);
+      _children.push_back(node);
       if(*p != ',') break;
       p++;
     }
