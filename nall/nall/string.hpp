@@ -138,7 +138,6 @@ protected:
 
 public:
   string();
-  string(string& source) : string() { operator=(source); }
   string(const string& source) : string() { operator=(source); }
   string(string&& source) : string() { operator=(std::move(source)); }
   template<typename T = char> auto get() -> T*;
@@ -302,7 +301,6 @@ template<> struct vector<string> : vector_base<string> {
   template<typename... P> explicit vector(P&&... p) { append(std::forward<P>(p)...); }
 
   auto operator=(const vector& source) -> type& { return vector_base::operator=(source), *this; }
-  auto operator=(vector& source) -> type& { return vector_base::operator=(source), *this; }
   auto operator=(vector&& source) -> type& { return vector_base::operator=(std::move(source)), *this; }
 
   //vector.hpp
