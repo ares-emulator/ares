@@ -239,7 +239,6 @@ target_sources(
     string/trim.hpp
     string/utf8.hpp
     string/utility.hpp
-    string/vector.hpp
     string/view.hpp
     string/allocator/adaptive.hpp
     string/allocator/copy-on-write.hpp
