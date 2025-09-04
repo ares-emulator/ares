@@ -189,7 +189,7 @@ template<> struct stringify<vector<u8>> {
   }
   auto data() const -> const char* { return _text.data(); }
   auto size() const -> u32 { return _text.size(); }
-  vector<char> _text;
+  std::vector<char> _text;
 };
 
 template<> struct stringify<std::vector<u8>> {
