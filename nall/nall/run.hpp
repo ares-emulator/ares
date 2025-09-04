@@ -36,7 +36,7 @@ template<typename... P> inline auto execute(const string& name, P&&... p) -> exe
   if(pid == 0) {
     const char* argv[1 + sizeof...(p) + 1];
     const char** argp = argv;
-    vector<string> argl(std::forward<P>(p)...);
+    std::vector<string> argl{std::forward<P>(p)...};
     *argp++ = (const char*)name;
     for(auto& arg : argl) *argp++ = (const char*)arg;
     *argp++ = nullptr;
@@ -92,7 +92,7 @@ template<typename... P> inline auto invoke(const string& name, P&&... p) -> void
   if(pid == 0) {
     const char* argv[1 + sizeof...(p) + 1];
     const char** argp = argv;
-    vector<string> argl(std::forward<P>(p)...);
+    std::vector<string> argl{std::forward<P>(p)...};
     *argp++ = (const char*)name;
     for(auto& arg : argl) *argp++ = (const char*)arg;
     *argp++ = nullptr;
@@ -110,17 +110,17 @@ template<typename... P> inline auto invoke(const string& name, P&&... p) -> void
 
 #elif defined(PLATFORM_WINDOWS)
 
-auto execute(const string& name, vector<string> argl) -> execute_result_t;
+auto execute(const string& name, std::vector<string> argl) -> execute_result_t;
 
 template<typename... P> inline auto execute(const string& name, P&&... p) -> execute_result_t {
-  vector<string> argl(name, std::forward<P>(p)...);
+  std::vector<string> argl{name, std::forward<P>(p)...};
   return execute(name, std::move(argl));
 }
 
-auto invoke(const string& name, vector<string> argl) -> void;
+auto invoke(const string& name, std::vector<string> argl) -> void;
 
 template<typename... P> inline auto invoke(const string& name, P&&... p) -> void {
-  vector<string> argl(std::forward<P>(p)...);
+  std::vector<string> argl{std::forward<P>(p)...};
   invoke(name, std::move(argl));
 }
 

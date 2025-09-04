@@ -59,8 +59,8 @@ inline auto ManagedNode::_evaluate(string query) const -> bool {
   return true;
 }
 
-inline auto ManagedNode::_find(const string& query) const -> vector<Node> {
-  vector<Node> result;
+inline auto ManagedNode::_find(const string& query) const -> std::vector<Node> {
+  std::vector<Node> result;
 
   auto path = ::nall::split(query, "/");
   string name = path.empty() ? string{} : path.front();
@@ -96,9 +96,9 @@ inline auto ManagedNode::_find(const string& query) const -> vector<Node> {
     if(!inrange) continue;
 
     if(path.empty()) {
-      result.append(node);
+      result.push_back(node);
     } else for(auto& item : node->_find(::nall::merge(path, "/"))) {
-      result.append(item);
+      result.push_back(item);
     }
   }
 
@@ -108,7 +108,7 @@ inline auto ManagedNode::_find(const string& query) const -> vector<Node> {
 //operator[](string)
 inline auto ManagedNode::_lookup(const string& path) const -> Node {
   auto result = _find(path);
-  return result ? result[0] : Node{};
+  return !result.empty() ? result[0] : Node{};
 
 /*//faster, but cannot search
   if(auto position = path.find("/")) {
