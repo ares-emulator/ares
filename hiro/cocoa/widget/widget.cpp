@@ -58,10 +58,10 @@ auto pWidget::setFont(const Font& font) -> void {
 auto pWidget::setGeometry(Geometry geometry) -> void {
   CGFloat windowHeight = [[cocoaView superview] frame].size.height;
   //round coordinates
-  u32 x = geometry.x();
-  u32 y = windowHeight - geometry.y() - geometry.height();
-  u32 width = geometry.width();
-  u32 height = geometry.height();
+  f32 x = geometry.x();
+  f32 y = windowHeight - geometry.y() - geometry.height();
+  f32 width = geometry.width();
+  f32 height = geometry.height();
   [cocoaView setFrame:NSMakeRect(x, y, width, height)];
   [[cocoaView superview] setNeedsDisplay:YES];
   pSizable::setGeometry(geometry);
