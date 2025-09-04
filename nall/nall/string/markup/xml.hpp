@@ -155,7 +155,7 @@ protected:
       const char* dataEnd = p++;  //skip closing terminal
 
       copy(attribute->_value, dataStart, dataEnd - dataStart);
-      _children.append(attribute);
+      _children.push_back(attribute);
     }
 
     //parse closure
@@ -169,7 +169,7 @@ protected:
   auto parseElement(const char*& p) -> void {
     SharedNode node(new ManagedNode);
     if(node->parseHead(p) == false) node->parse(p);
-    _children.append(node);
+    _children.push_back(node);
   }
 
   //return true if </tag> matches this node's name

@@ -60,7 +60,7 @@ inline auto string::format(const nall::string_format& params) -> type& {
 }
 
 template<typename T, typename... P> inline auto string_format::append(const T& value, P&&... p) -> string_format& {
-  vector<string>::append(value);
+  std::vector<string>::push_back(value);
   return append(std::forward<P>(p)...);
 }
 

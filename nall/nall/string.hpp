@@ -318,7 +318,7 @@ template<> struct vector<string> : vector_base<string> {
   template<bool, bool> auto _split(string_view, string_view, long) -> type&;
 };
 
-struct string_format : vector<string> {
+struct string_format : std::vector<string> {
   using type = string_format;
 
   template<typename... P> string_format(P&&... p) { reserve(sizeof...(p)); append(std::forward<P>(p)...); }
