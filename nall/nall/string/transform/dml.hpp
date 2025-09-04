@@ -37,7 +37,7 @@ private:
     string name;
     string value;
   };
-  vector<Attribute> attributes;
+  std::vector<Attribute> attributes;
 
   auto parseDocument(const string& filedata, const string& pathname, u32 depth) -> bool;
   auto parseBlock(string& block, const string& pathname, u32 depth) -> bool;
@@ -96,9 +96,7 @@ inline auto DML::parseBlock(string& block, const string& pathname, u32 depth) ->
       if(!lines[n].beginsWith("? ")) continue;
       auto part = nall::split_and_strip(lines[n].trimLeft("? ", 1L), ":", 1L);
       if(part.size() != 2) continue;
-      auto name = part[0];
-      auto value = part[1];
-      attributes.append({name, value});
+      attributes.emplace_back(part[0], part[1]);
     }
   }
 

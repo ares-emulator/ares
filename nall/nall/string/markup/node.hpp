@@ -36,7 +36,7 @@ protected:
   vector<SharedNode> _children;
 
   auto _evaluate(string query) const -> bool;
-  auto _find(const string& query) const -> vector<Node>;
+  auto _find(const string& query) const -> std::vector<Node>;
   auto _lookup(const string& path) const -> Node;
   auto _create(const string& path) -> Node;
 
@@ -126,7 +126,13 @@ struct Node {
 
   auto operator[](const nall::string& path) const -> Node { return shared->_lookup(path); }
   auto operator()(const nall::string& path) -> Node { return shared->_create(path); }
-  auto find(const nall::string& query) const -> vector<Node> { return shared->_find(query); }
+  auto find(const nall::string& query) const -> vector<Node> { 
+    // FIXME(stdc++): copy loop should be removed
+    auto result = shared->_find(query);
+    vector<Node> out;
+    for(auto& item : result) out.append(item);
+    return out;
+  }
 
   struct iterator {
     auto operator*() -> Node { return {source.shared->_children[position]}; }
