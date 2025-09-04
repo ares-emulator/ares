@@ -87,7 +87,6 @@ target_sources(
     utility.hpp
     variant.hpp
     varint.hpp
-    vector.hpp
     vfs.hpp
     view.hpp
 )
@@ -235,7 +234,6 @@ target_sources(
     string/match.hpp
     string/pascal.hpp
     string/replace.hpp
-    string/split.hpp
     string/trim.hpp
     string/utf8.hpp
     string/utility.hpp
@@ -258,20 +256,6 @@ target_sources(
 target_sources(
   nall
   PRIVATE tcptext/tcp-socket.cpp tcptext/tcp-socket.hpp tcptext/tcptext-server.cpp tcptext/tcptext-server.hpp
-)
-
-target_sources(
-  nall
-  PRIVATE
-    vector/access.hpp
-    vector/assign.hpp
-    vector/compare.hpp
-    vector/core.hpp
-    vector/iterator.hpp
-    vector/memory.hpp
-    vector/modify.hpp
-    vector/utility.hpp
-    vector/specialization/u8.hpp
 )
 
 target_sources(
