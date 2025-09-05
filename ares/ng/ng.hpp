@@ -2,6 +2,7 @@
 //started: 2021-05-18
 
 #include <ares/ares.hpp>
+#include <vector>
 
 #include <component/processor/m68000/m68000.hpp>
 #include <component/processor/z80/z80.hpp>
@@ -9,7 +10,7 @@
 
 namespace ares::NeoGeo {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
 
   struct Model {

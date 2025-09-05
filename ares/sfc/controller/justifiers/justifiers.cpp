@@ -20,11 +20,11 @@ Justifiers::Justifiers(Node::Port parent) {
   ppu.screen()->attach(sprite2);
 
   Thread::create(system.cpuFrequency(), {&Justifiers::main, this});
-  cpu.peripherals.append(this);
+  cpu.peripherals.push_back(this);
 }
 
 Justifiers::~Justifiers() {
-  cpu.peripherals.removeByValue(this);
+  std::erase(cpu.peripherals, this);
   if(ppu.screen()) {
     ppu.screen()->detach(sprite1);
     ppu.screen()->detach(sprite2);

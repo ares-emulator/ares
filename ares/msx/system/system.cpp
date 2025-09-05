@@ -1,8 +1,9 @@
 #include <msx/msx.hpp>
+#include <algorithm>
 
 namespace ares::MSX {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Microsoft] MSX (NTSC)",
     "[Microsoft] MSX (PAL)",
@@ -12,7 +13,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 

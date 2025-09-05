@@ -1,8 +1,9 @@
 #include <ng/ng.hpp>
+#include <algorithm>
 
 namespace ares::NeoGeo {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[SNK] Neo Geo AES",
     "[SNK] Neo Geo MVS",
@@ -10,7 +11,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 

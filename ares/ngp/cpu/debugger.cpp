@@ -43,7 +43,7 @@ auto CPU::Debugger::instruction() -> void {
   if(unlikely(tracer.systemCall->enabled())) {
     auto PC = self.TLCS900H::load(TLCS900H::PC);
     if(!PC) return;
-    if(auto vectorID = vectors.find(PC)) {
+    if(auto vectorID = nall::index_of(vectors, n24(PC))) {
       auto RA3  = self.TLCS900H::load(TLCS900H::RA3);
       auto RC3  = self.TLCS900H::load(TLCS900H::RC3);
       auto RB3  = self.TLCS900H::load(TLCS900H::RB3);
@@ -53,71 +53,71 @@ auto CPU::Debugger::instruction() -> void {
       auto XHL3 = self.TLCS900H::load(TLCS900H::XHL3);
 
       string name;
-      vector<string> args;
+      std::vector<string> args;
       switch(*vectorID) {
       case 0x00:
         name = "VECT_SHUTDOWN";
         break;
       case 0x01:
         name = "VECT_CLOCKGEARSET";
-        args.append({"clockSpeed:0x", hex(RB3, 2L)});
-        args.append({"clockRegeneration:0x", hex(RC3, 2L)});
+        args.push_back({"clockSpeed:0x", hex(RB3, 2L)});
+        args.push_back({"clockRegeneration:0x", hex(RC3, 2L)});
         break;
       case 0x02:
         name = "VECT_RTCGET";
-        args.append({"storageAddress:0x", hex(XHL3, 6L)});
+        args.push_back({"storageAddress:0x", hex(XHL3, 6L)});
         break;
     //case 0x03: break; //unknown
       case 0x04:
         name = "VECT_INTLVSET";
-        args.append({"interruptLevel:0x", hex(RB3, 2L)});
-        args.append({"interruptNumber:0x", hex(RC3, 2L)});
+        args.push_back({"interruptLevel:0x", hex(RB3, 2L)});
+        args.push_back({"interruptNumber:0x", hex(RC3, 2L)});
         break;
       case 0x05:
         name = "VECT_SYSFONTSET";
-        args.append({"foreground:0x", hex(RA3 >> 0, 1L)});
-        args.append({"background:0x", hex(RA3 >> 4, 1L)});
+        args.push_back({"foreground:0x", hex(RA3 >> 0, 1L)});
+        args.push_back({"background:0x", hex(RA3 >> 4, 1L)});
         break;
       case 0x06:
         name = "VECT_FLASHWRITE";
-        args.append({"address:0x", hex(RA3, 2L)});
-        args.append({"length:0x", hex(RC3 << 8, 4L)});
-        args.append({"source:0x", hex(XHL3, 6L)});
-        args.append({"target:0x", hex(XDE3, 6L)});
+        args.push_back({"address:0x", hex(RA3, 2L)});
+        args.push_back({"length:0x", hex(RC3 << 8, 4L)});
+        args.push_back({"source:0x", hex(XHL3, 6L)});
+        args.push_back({"target:0x", hex(XDE3, 6L)});
         break;
       case 0x07:
         name = "VECT_FLASHALLERS";
-        args.append({"address:0x", hex(RA3, 2L)});
+        args.push_back({"address:0x", hex(RA3, 2L)});
         break;
       case 0x08:
         name = "VECT_FLASHERS";
-        args.append({"address:0x", hex(RA3, 2L)});
-        args.append({"block:0x", hex(RB3, 2L)});
+        args.push_back({"address:0x", hex(RA3, 2L)});
+        args.push_back({"block:0x", hex(RB3, 2L)});
         break;
       case 0x09:
         name = "VECT_ALARMSET";
-        args.append({"day:0x", hex(QC3, 2L)});
-        args.append({"hour:0x", hex(RB3, 2L)});
-        args.append({"minute:0x", hex(RC3, 2L)});
+        args.push_back({"day:0x", hex(QC3, 2L)});
+        args.push_back({"hour:0x", hex(RB3, 2L)});
+        args.push_back({"minute:0x", hex(RC3, 2L)});
         break;
     //case 0x0a: //unknown
       case 0x0b:
         name = "VECT_ALARMDOWNSET";
-        args.append({"day:0x", hex(QC3, 2L)});
-        args.append({"hour:0x", hex(RB3, 2L)});
-        args.append({"minute:0x", hex(RC3, 2L)});
+        args.push_back({"day:0x", hex(QC3, 2L)});
+        args.push_back({"hour:0x", hex(RB3, 2L)});
+        args.push_back({"minute:0x", hex(RC3, 2L)});
         break;
     //case 0x0c: //unknown
       case 0x0d:
         name = "VECT_FLASHPROTECT";
-        args.append({"address:0x", hex(RA3, 2L)});
-        args.append({"block:0x", hex(RB3, 2L)});
-        args.append({"type:0x", hex(RC3, 2L)});
-        args.append({"blocks:0x", hex(RD3, 2L)});
+        args.push_back({"address:0x", hex(RA3, 2L)});
+        args.push_back({"block:0x", hex(RB3, 2L)});
+        args.push_back({"type:0x", hex(RC3, 2L)});
+        args.push_back({"blocks:0x", hex(RD3, 2L)});
         break;
       case 0x0e:
         name = "VECT_GETMODESET";
-        args.append({"mode:0x", hex(RA3, 2L)});
+        args.push_back({"mode:0x", hex(RA3, 2L)});
         break;
     //case 0x0f: //unknown
       case 0x10:
@@ -131,7 +131,7 @@ auto CPU::Debugger::instruction() -> void {
         break;
       case 0x13:
         name = "VECT_COMCREATEDATA";
-        args.append({"data:0x", hex(RB3, 2L)});
+        args.push_back({"data:0x", hex(RB3, 2L)});
         break;
       case 0x14:
         name = "VECT_COMGETDATA";
@@ -150,19 +150,19 @@ auto CPU::Debugger::instruction() -> void {
         break;
       case 0x19:
         name = "VECT_COMCREATEBUFDATA";
-        args.append({"address:0x", hex(XHL3, 6L)});
-        args.append({"size:0x", hex(RB3, 2L)});
+        args.push_back({"address:0x", hex(XHL3, 6L)});
+        args.push_back({"size:0x", hex(RB3, 2L)});
         break;
       case 0x1a:
         name = "VECT_COMGETBUFDATA";
-        args.append({"address:0x", hex(XHL3, 6L)});
-        args.append({"size:0x", hex(RB3, 2L)});
+        args.push_back({"address:0x", hex(XHL3, 6L)});
+        args.push_back({"size:0x", hex(RB3, 2L)});
         break;
       default:
         name = {"VECT_UNKNOWN[$", hex(*vectorID, 2L), "]"};
         break;
       }
-      tracer.systemCall->notify(string{name, "(", args.merge(", "), ")"});
+      tracer.systemCall->notify(string{name, "(", nall::merge(args, ", "), ")"});
     }
   }
 

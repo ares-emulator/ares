@@ -6,7 +6,7 @@ struct Cartridge : Thread {
   VFS::Pak pak;
 
   auto title() const -> string { return information.title; }
-  auto regions() const -> vector<string> { return information.regions; }
+  auto regions() const -> std::vector<string> { return information.regions; }
   auto bootable() const -> boolean { return information.bootable; }  //CART_IN line
 
   //cartridge.cpp
@@ -33,7 +33,7 @@ struct Cartridge : Thread {
 
   struct Information {
     string title;
-    vector<string> regions;
+    std::vector<string> regions;
     boolean bootable;
   } information;
 

@@ -3,13 +3,14 @@ auto CPU::Disassembler::disassemble(u32 address, u32 instruction) -> string {
   this->instruction = instruction;
 
   auto v = EXECUTE();
-  if(!v) v.append("invalid", string{"$", hex(instruction, 8L)});
+  if(v.empty()) v = {"invalid", string{"$", hex(instruction, 8L)}};
   if(!instruction) v = {"nop"};
-  auto s = pad(v.takeFirst(), -8L);
-  return {s, v.merge(",")};
+  auto s = pad(v.front(), -8L);
+  v.erase(v.begin());
+  return {s, nall::merge(v, ",")};
 }
 
-auto CPU::Disassembler::EXECUTE() -> vector<string> {
+auto CPU::Disassembler::EXECUTE() -> std::vector<string> {
   auto rtName  = [&] { return ipuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
@@ -21,24 +22,24 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
   auto branch  = [&] { return immediate(address + 4 + (s16(instruction) << 2)); };
   auto offset  = [&] { return ipuRegisterIndex(instruction >> 21 & 31, s16(instruction)); };
 
-  auto ALU = [&](string_view name) -> vector<string> {
+  auto ALU = [&](string_view name) -> std::vector<string> {
     return {name, rtName(), rsValue(), immediate(u16(instruction))};
   };
 
-  auto ADDI = [&](string_view add, string_view sub, string_view mov) -> vector<string> {
+  auto ADDI = [&](string_view add, string_view sub, string_view mov) -> std::vector<string> {
     if(!(instruction >> 21 & 31)) return {mov, rtName(), immediate(s16(instruction), 32L)};
     return {s16(instruction) >= 0 ? add : sub, rtName(), rsValue(), immediate(abs(s16(instruction)))};
   };
 
-  auto BRANCH1 = [&](string_view name) -> vector<string> {
+  auto BRANCH1 = [&](string_view name) -> std::vector<string> {
     return {name, rsValue(), branch()};
   };
 
-  auto BRANCH2 = [&](string_view name) -> vector<string> {
+  auto BRANCH2 = [&](string_view name) -> std::vector<string> {
     return {name, rsValue(), rtValue(), branch()};
   };
 
-  auto CACHE = [&](string_view name) -> vector<string> {
+  auto CACHE = [&](string_view name) -> std::vector<string> {
     auto operation = instruction >> 16 & 31;
     string type = "reserved";
     switch(operation) {
@@ -60,15 +61,15 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
     return {name, type, offset()};
   };
 
-  auto JUMP = [&](string_view name) -> vector<string> {
+  auto JUMP = [&](string_view name) -> std::vector<string> {
     return {name, jump()};
   };
 
-  auto LOAD = [&](string_view name) -> vector<string> {
+  auto LOAD = [&](string_view name) -> std::vector<string> {
     return {name, rtName(), offset()};
   };
 
-  auto STORE = [&](string_view name) -> vector<string> {
+  auto STORE = [&](string_view name) -> std::vector<string> {
     return {name, rtValue(), offset()};
   };
 
@@ -141,27 +142,27 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::SPECIAL() -> vector<string> {
+auto CPU::Disassembler::SPECIAL() -> std::vector<string> {
   auto shift   = [&] { return string{instruction >> 6 & 31}; };
   auto rdName  = [&] { return ipuRegisterName (instruction >> 11 & 31); };
   auto rdValue = [&] { return ipuRegisterValue(instruction >> 11 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
 
-  auto ALU = [&](string_view name, string by) -> vector<string> {
+  auto ALU = [&](string_view name, string by) -> std::vector<string> {
     return {name, rdName(), rtValue(), by};
   };
 
-  auto JALR = [&](string_view name) -> vector<string> {
+  auto JALR = [&](string_view name) -> std::vector<string> {
     if((instruction >> 11 & 31) == 31) return {name, rsValue()};
     return {name, rdName(), rsValue()};
   };
 
-  auto REG = [&](string_view name) -> vector<string> {
+  auto REG = [&](string_view name) -> std::vector<string> {
     return {name, rdName(), rsValue(), rtValue()};
   };
 
-  auto ST = [&](string_view name) -> vector<string> {
+  auto ST = [&](string_view name) -> std::vector<string> {
     return {name, rsValue(), rtValue()};
   };
 
@@ -235,16 +236,16 @@ auto CPU::Disassembler::SPECIAL() -> vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::REGIMM() -> vector<string> {
+auto CPU::Disassembler::REGIMM() -> std::vector<string> {
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
   auto imm16i  = [&] { return immediate(s16(instruction)); };
   auto branch  = [&] { return immediate(address + 4 + (s16(instruction) << 2)); };
 
-  auto BRANCH = [&](string_view name) -> vector<string> {
+  auto BRANCH = [&](string_view name) -> std::vector<string> {
     return {name, rsValue(), branch()};
   };
 
-  auto TRAP = [&](string_view name) -> vector<string> {
+  auto TRAP = [&](string_view name) -> std::vector<string> {
     return {name, rsValue(), imm16i()};
   };
 
@@ -286,7 +287,7 @@ auto CPU::Disassembler::REGIMM() -> vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::SCC() -> vector<string> {
+auto CPU::Disassembler::SCC() -> std::vector<string> {
   auto rtName  = [&] { return ipuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto sdName  = [&] { return sccRegisterName (instruction >> 11 & 31); };
@@ -314,7 +315,7 @@ auto CPU::Disassembler::SCC() -> vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::FPU() -> vector<string> {
+auto CPU::Disassembler::FPU() -> std::vector<string> {
   auto rtName  = [&] { return ipuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto rdName  = [&] { return fpuRegisterName (instruction >> 11 & 31); };
@@ -343,15 +344,15 @@ auto CPU::Disassembler::FPU() -> vector<string> {
   auto fsValue = [&] { return fpuRegisterValue(instruction >> 11 & 31); };
   auto ftValue = [&] { return fpuRegisterValue(instruction >> 16 & 31); };
 
-  auto DS = [&](string_view name) -> vector<string> {
+  auto DS = [&](string_view name) -> std::vector<string> {
     return {name, fdName(), fsValue()};
   };
 
-  auto DST = [&](string_view name) -> vector<string> {
+  auto DST = [&](string_view name) -> std::vector<string> {
     return {name, fdName(), fsValue(), ftValue()};
   };
 
-  auto ST = [&](string_view name) -> vector<string> {
+  auto ST = [&](string_view name) -> std::vector<string> {
     return {name, fsValue(), ftValue()};
   };
 

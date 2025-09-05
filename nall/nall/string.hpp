@@ -368,3 +368,5 @@ inline auto operator"" _s(const char* value, std::size_t) -> string { return {va
 
 #include <nall/string/transform/cml.hpp>
 #include <nall/string/transform/dml.hpp>
+
+#include <nall/vector-helpers.hpp>

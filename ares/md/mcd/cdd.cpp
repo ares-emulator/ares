@@ -307,7 +307,7 @@ auto MCD::CDD::readSubcode() -> void {
   if(!mcd.fd) return;
 
   mcd.fd->seek(((abs(mcd.cdd.session.leadIn.lba) + io.sector) * 2448) + 2352);
-  vector<u8> subchannel;
+  std::vector<u8> subchannel;
   subchannel.resize(96);
   mcd.fd->read({subchannel.data(), 96});
 
@@ -548,7 +548,7 @@ auto MCD::CDD::insert() -> void {
 
   //read TOC (table of contents) from disc lead-in
   u32 sectors = mcd.fd->size() / 2448;
-  vector<u8> subchannel;
+  std::vector<u8> subchannel;
   subchannel.resize(sectors * 96);
   for(u32 sector : range(sectors)) {
     mcd.fd->seek(sector * 2448 + 2352);

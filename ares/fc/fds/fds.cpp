@@ -47,30 +47,30 @@ auto FDS::connect() -> void {
   state = node->append<Node::Setting::String>("State", "Ejected", [&](auto value) {
     change(value);
   });
-  vector<string> states = {"Ejected"};
+  std::vector<string> states = {"Ejected"};
 
   if(auto fp = pak->read("disk1.sideA")) {
     disk1.sideA.allocate(fp->size());
     disk1.sideA.load(fp);
-    states.append("Disk 1: Side A");
+    states.push_back("Disk 1: Side A");
   }
 
   if(auto fp = pak->read("disk1.sideB")) {
     disk1.sideB.allocate(fp->size());
     disk1.sideB.load(fp);
-    states.append("Disk 1: Side B");
+    states.push_back("Disk 1: Side B");
   }
 
   if(auto fp = pak->read("disk2.sideA")) {
     disk2.sideA.allocate(fp->size());
     disk2.sideA.load(fp);
-    states.append("Disk 2: Side A");
+    states.push_back("Disk 2: Side A");
   }
 
   if(auto fp = pak->read("disk2.sideB")) {
     disk2.sideB.allocate(fp->size());
     disk2.sideB.load(fp);
-    states.append("Disk 2: Side B");
+    states.push_back("Disk 2: Side B");
   }
 
   state->setAllowedValues(states);

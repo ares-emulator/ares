@@ -163,7 +163,7 @@ auto HuC6280::disassembleInstruction() -> string {
 
   n8 opcode = readByte();
 
-  #define op(id, name, ...) case id: o = {name, " ", vector<string>{__VA_ARGS__}.merge(",")}; break;
+  #define op(id, name, ...) case id: o = {name, " ", nall::merge({__VA_ARGS__}, ",")}; break;
   string o;
 
   #define U

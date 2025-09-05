@@ -3,7 +3,7 @@ auto AI::Debugger::load(Node::Object parent) -> void {
 }
 
 auto AI::Debugger::io(bool mode, u32 address, u32 data) -> void {
-  static const vector<string> registerNames = {
+  static const std::vector<string> registerNames = {
     "AI_DRAM_ADDRESS",
     "AI_LENGTH",
     "AI_CONTROL",
@@ -14,7 +14,7 @@ auto AI::Debugger::io(bool mode, u32 address, u32 data) -> void {
 
   if(unlikely(tracer.io->enabled())) {
     string message;
-    string name = registerNames(address, "AI_UNKNOWN");
+    string name = (address < registerNames.size() ? registerNames[address] : string("AI_UNKNOWN"));
     if(mode == Read) {
       message = {name.split("|").first(), " => ", hex(data, 8L)};
     }

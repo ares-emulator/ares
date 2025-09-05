@@ -15,7 +15,7 @@ auto HitachiDSP::unload() -> void {
 
   rom.reset();
   ram.reset();
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
@@ -33,5 +33,5 @@ auto HitachiDSP::halt() -> void {
 auto HitachiDSP::power() -> void {
   HG51B::power();
   Thread::create(Frequency, [&] { main(); });
-  cpu.coprocessors.append(this);
+  cpu.coprocessors.push_back(this);
 }

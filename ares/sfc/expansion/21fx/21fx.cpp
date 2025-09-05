@@ -91,7 +91,9 @@ auto S21FX::read(n24 address, n8 data) -> n8 {
 
   if(address == 0x21ff) {
     if(linkBuffer.size() > 0) {
-      return linkBuffer.takeLeft();
+      auto result = linkBuffer.front();
+      linkBuffer.erase(linkBuffer.begin());
+      return result;
     }
   }
 
@@ -103,7 +105,7 @@ auto S21FX::write(n24 address, n8 data) -> void {
 
   if(address == 0x21ff) {
     if(snesBuffer.size() < 1024) {
-      snesBuffer.append(data);
+      snesBuffer.push_back(data);
     }
   }
 }
@@ -131,7 +133,9 @@ auto S21FX::writable() -> bool {
 auto S21FX::read() -> n8 {
   step(1);
   if(snesBuffer.size() > 0) {
-    return snesBuffer.takeLeft();
+    auto result = snesBuffer.front();
+    snesBuffer.erase(snesBuffer.begin());
+    return result;
   }
   return 0x00;
 }
@@ -140,6 +144,6 @@ auto S21FX::read() -> n8 {
 auto S21FX::write(n8 data) -> void {
   step(1);
   if(linkBuffer.size() < 1024) {
-    linkBuffer.append(data);
+    linkBuffer.push_back(data);
   }
 }

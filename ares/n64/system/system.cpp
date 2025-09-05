@@ -1,10 +1,11 @@
 #include <n64/n64.hpp>
+#include <algorithm>
 
 #include <nall/gdb/server.hpp>
 
 namespace ares::Nintendo64 {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Nintendo] Nintendo 64 (NTSC)",
     "[Nintendo] Nintendo 64 (PAL)",
@@ -16,7 +17,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 
@@ -239,7 +241,7 @@ auto System::initDebugHooks() -> void {
     return {};
   };
 
-  GDB::server.hooks.write = [](u64 address, vector<u8> data) {
+  GDB::server.hooks.write = [](u64 address, std::vector<u8> data) {
     address = (s32)address;
 
     // For 8/16/32/64-bit writes, perform an actual write like the CPU would do.

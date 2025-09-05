@@ -4,7 +4,7 @@ auto Flash::reset(natural ID) -> void {
   modified = false;
   vendorID = 0;
   deviceID = 0;
-  blocks.reset();
+  blocks.clear();
 }
 
 auto Flash::allocate(natural size) -> bool {
@@ -13,11 +13,11 @@ auto Flash::allocate(natural size) -> bool {
   if(size == 16_Mibit) { rom.allocate(size); vendorID = 0x98; deviceID = 0x2f; }  //vendorID 0xec => Samsung
   if(!rom) return false;
 
-  for(u32 index : range(size / 64_KiB - 1)) blocks.append({true, index * 64_KiB, 64_KiB});
-  blocks.append({true, size - 64_KiB, 32_KiB});
-  blocks.append({true, size - 32_KiB,  8_KiB});
-  blocks.append({true, size - 24_KiB,  8_KiB});
-  blocks.append({true, size - 16_KiB, 16_KiB});
+  for(u32 index : range(size / 64_KiB - 1)) blocks.push_back({true, index * 64_KiB, 64_KiB});
+  blocks.push_back({true, size - 64_KiB, 32_KiB});
+  blocks.push_back({true, size - 32_KiB,  8_KiB});
+  blocks.push_back({true, size - 24_KiB,  8_KiB});
+  blocks.push_back({true, size - 16_KiB, 16_KiB});
   return true;
 }
 

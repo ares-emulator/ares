@@ -60,16 +60,16 @@ auto CPU::Debugger::exception(u8 code) -> void {
 
 auto CPU::Debugger::interrupt(u8 mask) -> void {
   if(unlikely(tracer.interrupt->enabled())) {
-    vector<string> sources;
-    if(mask & 0x01) sources.append("software 0");
-    if(mask & 0x02) sources.append("software 1");
-    if(mask & 0x04) sources.append("RCP");
-    if(mask & 0x08) sources.append("cartridge");
-    if(mask & 0x10) sources.append("reset");
-    if(mask & 0x20) sources.append("read RDB");
-    if(mask & 0x40) sources.append("write RDB");
-    if(mask & 0x80) sources.append("timer");
-    tracer.interrupt->notify(sources.merge(","));
+    std::vector<string> sources;
+    if(mask & 0x01) sources.push_back("software 0");
+    if(mask & 0x02) sources.push_back("software 1");
+    if(mask & 0x04) sources.push_back("RCP");
+    if(mask & 0x08) sources.push_back("cartridge");
+    if(mask & 0x10) sources.push_back("reset");
+    if(mask & 0x20) sources.push_back("read RDB");
+    if(mask & 0x40) sources.push_back("write RDB");
+    if(mask & 0x80) sources.push_back("timer");
+    tracer.interrupt->notify(nall::merge(sources, ","));
   }
 }
 

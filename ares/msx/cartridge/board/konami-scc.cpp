@@ -252,5 +252,5 @@ struct KonamiSCC : Interface {
   n8 test;
 
 //unserialized:
-  vector<i16> mixer;
+  std::vector<i16> mixer;
 };

@@ -25,11 +25,11 @@ SuperScope::SuperScope(Node::Port parent) {
   ppu.screen()->attach(sprite);
 
   Thread::create(system.cpuFrequency(), {&SuperScope::main, this});
-  cpu.peripherals.append(this);
+  cpu.peripherals.push_back(this);
 }
 
 SuperScope::~SuperScope() {
-  cpu.peripherals.removeByValue(this);
+  std::erase(cpu.peripherals, this);
   if(ppu.screen()) ppu.screen()->detach(sprite);
 }
 

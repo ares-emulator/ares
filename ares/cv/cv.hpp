@@ -2,6 +2,7 @@
 //started: 2019-02-19
 
 #include <ares/ares.hpp>
+#include <vector>
 
 #include <component/processor/z80/z80.hpp>
 #include <component/video/tms9918/tms9918.hpp>
@@ -9,7 +10,7 @@
 
 namespace ares::ColecoVision {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
 
   struct Model {

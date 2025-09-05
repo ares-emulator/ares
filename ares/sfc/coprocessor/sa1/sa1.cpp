@@ -22,7 +22,7 @@ auto SA1::unload() -> void {
   iram.reset();
   bwram.reset();
 
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
@@ -133,7 +133,7 @@ auto SA1::power() -> void {
   WDC65816::power();
 
   Thread::create(system.cpuFrequency(), {&SA1::main, this});
-  cpu.coprocessors.append(this);
+  cpu.coprocessors.push_back(this);
 
   bwram.dma = false;
   for(u32 address : range(iram.size())) {

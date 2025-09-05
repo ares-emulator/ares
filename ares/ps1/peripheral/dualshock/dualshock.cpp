@@ -38,7 +38,7 @@ DualShock::DualShock(Node::Port parent) {
 auto DualShock::reset() -> void {
   state = State::Idle;
   _active = false;
-  outputData.reset();
+  outputData.clear();
 }
 
 auto DualShock::acknowledge() -> bool {
@@ -56,7 +56,7 @@ auto DualShock::bus(u8 data) -> u8 {
   //old rumble mode
   if(!newRumbleMode && command == 0x42) {
     switch(commandStep) {
-      case 1: inputData.reset(); inputData.append(input); break;
+      case 1: inputData.clear(); inputData.push_back(input); break;
       case 2: rumble->setEnable(inputData[0].bit(6, 7) == 1 && input.bit(0) == 1); break;
     }
     platform->input(rumble);
@@ -84,9 +84,9 @@ auto DualShock::bus(u8 data) -> u8 {
 
   //variable response A
   if(command == 0x46 && commandStep == 1) {
-    if(input == 0x00)      outputData.append({0x01, 0x02, 0x00, 0x00});
-    else if(input == 0x01) outputData.append({0x01, 0x01, 0x01, 0x14});
-    else                   outputData.append({0x00, 0x00, 0x00, 0x00});
+    if(input == 0x00)      { outputData.insert(outputData.end(), {0x01,0x02,0x00,0x00}); }
+    else if(input == 0x01) { outputData.insert(outputData.end(), {0x01,0x01,0x01,0x14}); }
+    else                   { outputData.insert(outputData.end(), {0x00,0x00,0x00,0x00}); }
   }
 
   //variable response B
@@ -94,7 +94,7 @@ auto DualShock::bus(u8 data) -> u8 {
     u8 value = 0x00;
     if(input == 0x00) value = 0x04;
     if(input == 0x01) value = 0x07;
-    outputData.append({value, 0x00, 0x00});
+    outputData.insert(outputData.end(), {value,0x00,0x00});
   }
 
   if(command == 0x4d && commandStep >= 1) {
@@ -103,7 +103,7 @@ auto DualShock::bus(u8 data) -> u8 {
 
   //if there is data in the output queue, return that
   if(outputData.size() > 0) {
-    output = outputData.takeFirst();
+    output = outputData.front(); outputData.erase(outputData.begin());
     commandStep++;
     if(outputData.size() == 0) {
       commandStep = 0;
@@ -132,33 +132,33 @@ auto DualShock::bus(u8 data) -> u8 {
 
     if(configMode) output = 0xf3;
     else output = analogMode ? 0x73 : 0x41;
-    outputData.append(0x5a);
+    outputData.push_back(0x5a);
 
     //Global commands: these work during any operation mode
     switch(input) {
-      case 0x42: outputData.append(readPad()); break;
+      case 0x42: { auto v = readPad(); outputData.insert(outputData.end(), v.begin(), v.end()); } break;
       case 0x43: {
-        if(configMode) outputData.append({0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-        else outputData.append(readPad());
+        if(configMode) { outputData.insert(outputData.end(), {0x00,0x00,0x00,0x00,0x00,0x00}); }
+        else { auto v = readPad(); outputData.insert(outputData.end(), v.begin(), v.end()); }
         break;
       default:
         if(configMode) {
           switch(input) {
-            case 0x44: outputData.append({0x00, 0x00, 0x00, 0x00, 0x00, 0x00}); break;
-            case 0x45: outputData.append({0x01, 0x02, analogMode, 0x02, 0x01, 0x00}); break;
-            case 0x46: outputData.append({0x00, 0x00}); break; // Partial response, will be completed on step 1
-            case 0x47: outputData.append({0x00, 0x00, 0x02, 0x00, 0x01, 0x00}); break;
-            case 0x4c: outputData.append({0x00, 0x00, 0x00}); break; // Partial response, will be completed on step 1
-            case 0x4d: for(auto n : range(6)) outputData.append(rumbleConfig[n]); break;
+            case 0x44: { outputData.insert(outputData.end(), {0x00,0x00,0x00,0x00,0x00,0x00}); } break;
+            case 0x45: { outputData.insert(outputData.end(), {0x01,0x02,(u8)analogMode,0x02,0x01,0x00}); } break;
+            case 0x46: { outputData.insert(outputData.end(), {0x00,0x00}); } break; // Partial response, will be completed on step 1
+            case 0x47: { outputData.insert(outputData.end(), {0x00,0x00,0x02,0x00,0x01,0x00}); } break;
+            case 0x4c: { outputData.insert(outputData.end(), {0x00,0x00,0x00}); } break; // Partial response, will be completed on step 1
+            case 0x4d: for(auto n : range(6)) outputData.push_back(rumbleConfig[n]); break;
             default:
-              outputData.reset();
+              outputData.clear();
               output = invalid(input);
               break;
           }
           break;
         }
 
-        outputData.reset();
+        outputData.clear();
         output = invalid(input);
         break;
       }
@@ -171,8 +171,8 @@ auto DualShock::bus(u8 data) -> u8 {
   return output;
 }
 
-auto DualShock::readPad() -> vector<u8> {
-  vector<u8> result;
+auto DualShock::readPad() -> std::vector<u8> {
+  std::vector<u8> result;
   n8 output;
 
   platform->input(select);
@@ -192,7 +192,7 @@ auto DualShock::readPad() -> vector<u8> {
   output.bit(5) = !(right->value() & !left->value());
   output.bit(6) = !(down->value() & !up->value());
   output.bit(7) = !(left->value() & !right->value());
-  result.append(output);
+  result.push_back(output);
 
   platform->input(l2);
   platform->input(r2);
@@ -211,7 +211,7 @@ auto DualShock::readPad() -> vector<u8> {
   output.bit(5) = !circle->value();
   output.bit(6) = !cross->value();
   output.bit(7) = !square->value();
-  result.append(output);
+  result.push_back(output);
 
   if(!analogMode && !configMode) return result;
 
@@ -253,8 +253,8 @@ auto DualShock::readPad() -> vector<u8> {
   arx = axis->counteractPrecisionError(arx);
   ary = axis->counteractPrecisionError(ary);
 
-  result.append(u8(arx + 128.0));
-  result.append(u8(ary + 128.0));
+  result.push_back(u8(arx + 128.0));
+  result.push_back(u8(ary + 128.0));
 
   platform->input(lx);
   platform->input(ly);
@@ -283,8 +283,8 @@ auto DualShock::readPad() -> vector<u8> {
   alx = axis->counteractPrecisionError(alx);
   aly = axis->counteractPrecisionError(aly);
 
-  result.append(u8(alx + 128.0));
-  result.append(u8(aly + 128.0));
+  result.push_back(u8(alx + 128.0));
+  result.push_back(u8(aly + 128.0));
 
   return result;
 }

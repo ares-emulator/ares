@@ -43,7 +43,7 @@ auto Screen::main(uintptr_t) -> void {
 auto Screen::quit() -> void {
   _kill = true;
   _thread.join();
-  _sprites.reset();
+  _sprites.clear();
 }
 
 auto Screen::power() -> void {
@@ -70,7 +70,7 @@ auto Screen::resetPalette() -> void {
 
 auto Screen::resetSprites() -> void {
   lock_guard<recursive_mutex> lock(_mutex);
-  _sprites.reset();
+  _sprites.clear();
 }
 
 auto Screen::setRefresh(function<void ()> refresh) -> void {
@@ -180,14 +180,14 @@ auto Screen::setInterlace(bool interlaceField) -> void {
 
 auto Screen::attach(Node::Video::Sprite sprite) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
-  if(_sprites.find(sprite)) return;
-  _sprites.append(sprite);
+  if(std::ranges::find(_sprites, sprite) != _sprites.end()) return;
+  _sprites.push_back(sprite);
 }
 
 auto Screen::detach(Node::Video::Sprite sprite) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
-  if(!_sprites.find(sprite)) return;
-  _sprites.removeByValue(sprite);
+  if(std::ranges::find(_sprites, sprite) == _sprites.end()) return;
+  std::erase(_sprites, sprite);
 }
 
 auto Screen::colors(u32 colors, function<n64 (n32)> color) -> void {
