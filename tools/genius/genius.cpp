@@ -103,7 +103,7 @@ auto ListWindow::updateWindow() -> void {
   removeButton.setEnabled((bool)gameList.selected());
   string name = Location::base(location);
   if(!name) name = "(Untitled)";
-  setTitle({modified ? "*" : "", name, " [", games.size(), "] - genius"});
+  setTitle({modified ? "*" : string{}, name, " [", games.size(), "] - genius"});
 }
 
 auto ListWindow::newDatabase() -> void {
