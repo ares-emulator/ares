@@ -30,7 +30,7 @@ struct TestState {
   u32 usp;
   u32 ssp;
   array<u32[2]> prefetch;
-  vector<array<u32[2]>> ram;
+  std::vector<array<u32[2]>> ram;
 };
 
 struct TestCase {
@@ -101,9 +101,9 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
 
   instruction();
 
-  vector<string> errors;
+  std::vector<string> errors;
   auto error = [&](auto&&... p) -> void {
-    errors.append(string{std::forward<decltype(p)>(p)...});
+    errors.push_back(string{std::forward<decltype(p)>(p)...});
   };
 
   if(!r.s) swap(r.a[7], r.sp);  //swap back to match test format
@@ -148,7 +148,7 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
     }
   }
 
-  if(errors) {
+  if(!errors.empty()) {
     if(logErrors) {
       print("\n");
       print(test.name, "\n");
