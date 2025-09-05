@@ -1,8 +1,9 @@
 #include <a26/a26.hpp>
+#include <algorithm>
 
 namespace ares::Atari2600 {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Atari] Atari 2600 (NTSC)",
     "[Atari] Atari 2600 (PAL)",
@@ -11,7 +12,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 

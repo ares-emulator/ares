@@ -1,5 +1,6 @@
 #include <nall/run.hpp>
 #include <nall/path.hpp>
+#include <nall/vector-helpers.hpp>
 
 #if defined(PLATFORM_WINDOWS)
   #include <shellapi.h>
@@ -9,9 +10,9 @@ namespace nall {
 
 #if defined(PLATFORM_WINDOWS)
 
-NALL_HEADER_INLINE auto execute(const string& name, vector<string> argl) -> execute_result_t {
+NALL_HEADER_INLINE auto execute(const string& name, std::vector<string> argl) -> execute_result_t {
   for(auto& arg : argl) if(arg.find(" ")) arg = {"\"", arg, "\""};
-  string arguments = argl.merge(" ");
+  string arguments = merge(argl, " ");
 
   SECURITY_ATTRIBUTES sa;
   ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
@@ -90,9 +91,9 @@ NALL_HEADER_INLINE auto execute(const string& name, vector<string> argl) -> exec
   return result;
 }
 
-NALL_HEADER_INLINE auto invoke(const string& name, vector<string> argl) -> void {
+NALL_HEADER_INLINE auto invoke(const string& name, std::vector<string> argl) -> void {
   for(auto& arg : argl) if(arg.find(" ")) arg = {"\"", arg, "\""};
-  string arguments = argl.merge(" ");
+  string arguments = merge(argl, " ");
   string directory = Path::program().replace("/", "\\");
   ShellExecute(nullptr, nullptr, utf16_t(name), utf16_t(arguments), utf16_t(directory), SW_SHOWNORMAL);
 }

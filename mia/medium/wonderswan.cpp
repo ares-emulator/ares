@@ -1,6 +1,6 @@
 struct WonderSwan : Cartridge {
   auto name() -> string override { return "WonderSwan"; }
-  auto extensions() -> vector<string> override { return {"ws"}; }
+  auto extensions() -> std::vector<string> override { return {"ws"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;

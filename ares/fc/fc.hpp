@@ -2,6 +2,7 @@
 //started: 2011-09-05
 
 #include <ares/ares.hpp>
+#include <vector>
 
 #include <component/processor/mos6502/mos6502.hpp>
 #include <component/audio/ym2149/ym2149.hpp>
@@ -12,7 +13,7 @@
 
 namespace ares::Famicom {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
 
   struct Region {

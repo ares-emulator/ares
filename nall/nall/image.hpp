@@ -47,7 +47,7 @@ struct image {
   image(bool endian, u32 depth, u64 alphaMask, u64 redMask, u64 greenMask, u64 blueMask);
   image(const string& filename);
   image(const void* data, u32 size);
-  image(const vector<u8>& buffer);
+  image(const std::vector<u8>& buffer);
   template<u32 Size> image(const u8 (&Name)[Size]);
   image();
   ~image();

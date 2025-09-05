@@ -12,7 +12,7 @@ struct Setting : Object {
 
   virtual auto readValue() const -> string { return {}; }
   virtual auto readLatch() const -> string { return {}; }
-  virtual auto readAllowedValues() const -> vector<string> { return {}; }
+  virtual auto readAllowedValues() const -> std::vector<string> { return {}; }
   virtual auto writeValue(string value) -> void {}
 
   auto load(Node::Object source) -> bool override {

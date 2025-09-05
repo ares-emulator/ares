@@ -74,11 +74,13 @@ auto mTreeViewItem::icon() const -> multiFactorImage {
 
 auto mTreeViewItem::item(const string& path) const -> TreeViewItem {
   if(!path) return {};
-  auto paths = path.split("/");
-  u32 position = paths.takeLeft().natural();
+  auto paths = ::nall::split(path, "/");
+  if(paths.empty()) return {};
+  u32 position = paths.front().natural();
+  paths.erase(paths.begin());
   if(position >= itemCount()) return {};
-  if(!paths) return state.items[position];
-  return state.items[position]->item(paths.merge("/"));
+  if(paths.empty()) return state.items[position];
+  return state.items[position]->item(::nall::merge(paths, "/"));
 }
 
 auto mTreeViewItem::itemCount() const -> u32 {

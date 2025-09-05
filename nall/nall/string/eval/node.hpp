@@ -27,11 +27,18 @@ struct Node {
 
   Type type;
   string literal;
-  vector<Node*> link;
+  std::vector<Node*> link;
 
   Node() : type(Type::Null) {}
   Node(Type type) : type(type) {}
   ~Node() { for(auto& node : link) delete node; }
+
+  auto set_link(u32 index, Node* node) -> void {
+    while(index >= link.size()) link.push_back(nullptr);
+    link[index] = node;
+  }
+  
+  auto size() const -> u32 { return link.size(); }
 };
 
 }

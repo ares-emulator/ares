@@ -11,7 +11,7 @@ GameBoyAdvance::GameBoyAdvance() {
   manufacturer = "Nintendo";
   name = "Game Boy Advance";
 
-  firmware.append({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
+  firmware.push_back({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
 
   { InputPort port{string{"Game Boy Advance"}};
 
@@ -29,7 +29,7 @@ GameBoyAdvance::GameBoyAdvance() {
     device.rumble ("Rumble", virtualPorts[0].pad.rumble);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

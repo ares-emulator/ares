@@ -1,8 +1,8 @@
 auto PPU::Debugger::load(Node::Object parent) -> void {
   graphics.screen1 = parent->append<Node::Debugger::Graphics>("Screen 1");
   graphics.screen1->setSize(256, 256);
-  graphics.screen1->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.screen1->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(256 * 256);
     for(u32 y : range(256)) {
       for(u32 x : range(256)) {
@@ -20,8 +20,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.screen2 = parent->append<Node::Debugger::Graphics>("Screen 2");
   graphics.screen2->setSize(256, 256);
-  graphics.screen2->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.screen2->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(256 * 256);
     for(u32 y : range(256)) {
       for(u32 x : range(256)) {
@@ -40,8 +40,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.tiles = parent->append<Node::Debugger::Graphics>("Tiles");
   graphics.tiles->setSize(256, 256);
-  graphics.tiles->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.tiles->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(256 * 256);
     for(u32 tileY : range(32)) {
       if(tileY == 16 && !system.color()) break;

@@ -26,7 +26,7 @@ struct Boolean : Setting {
 
   auto readValue() const -> string override { return value(); }
   auto readLatch() const -> string override { return latch(); }
-  auto readAllowedValues() const -> vector<string> override { return {"false", "true"}; }
+  auto readAllowedValues() const -> std::vector<string> override { return {"false", "true"}; }
   auto writeValue(string value) -> void override { setValue(value.boolean()); }
 
 protected:

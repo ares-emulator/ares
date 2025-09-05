@@ -26,7 +26,7 @@ WonderSwan::WonderSwan() {
     device.digital("Start", virtualPorts[0].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

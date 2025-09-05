@@ -31,7 +31,7 @@ inline image::image(const void* data_, u32 size) {
   else if(data[1] == 'P' && data[2] == 'N' && data[3] == 'G') loadPNG(data, size);
 }
 
-inline image::image(const vector<u8>& buffer) : image(buffer.data(), buffer.size()) {
+inline image::image(const std::vector<u8>& buffer) : image(buffer.data(), buffer.size()) {
 }
 
 template<u32 Size> inline image::image(const u8 (&Name)[Size]) : image(Name, Size) {

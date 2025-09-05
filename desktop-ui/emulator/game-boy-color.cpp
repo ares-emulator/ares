@@ -23,7 +23,7 @@ GameBoyColor::GameBoyColor() {
     device.rumble ("Rumble",  virtualPorts[0].pad.rumble);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

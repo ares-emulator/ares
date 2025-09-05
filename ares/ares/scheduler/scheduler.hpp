@@ -38,7 +38,7 @@ private:
   cothread_t _primary = nullptr;  //primary thread (used to synchronize components)
   Mode _mode = Mode::Run;
   Event _event = Event::Step;
-  vector<Thread*> _threads;
+  std::vector<Thread*> _threads;
   bool _synchronize = false;
 
   friend struct Thread;
