@@ -177,6 +177,10 @@ struct VirtualPad : InputDevice {
   InputDigital pound;
   InputDigital point;
   InputDigital end;
+  InputDigital lstick_max_output_reduce_1;
+  InputDigital lstick_max_output_reduce_2;
+  InputDigital rstick_max_output_reduce_1;
+  InputDigital rstick_max_output_reduce_2;
 };
 
 struct VirtualMouse : InputDevice {
