@@ -1,5 +1,5 @@
-FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
-  node = parent->append<Node::Peripheral>("Family Keyboard");
+FamilyBasicKeyboard::FamilyBasicKeyboard(Node::Port parent) {
+  node = parent->append<Node::Peripheral>("Family BASIC Keyboard");
 
   key.f1 = node->append<Node::Input::Button>("F1");
   key.f2 = node->append<Node::Input::Button>("F2");
@@ -80,15 +80,20 @@ FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
   key.down  = node->append<Node::Input::Button>("Down");
   key.left  = node->append<Node::Input::Button>("Left");
   key.right = node->append<Node::Input::Button>("Right");
+
+  tapePort.load(node);
 }
 
-auto FamilyKeyboard::read1() -> n1 {
-  n1 data;
-  //data recorder (unsupported)
-  return data;
+FamilyBasicKeyboard::~FamilyBasicKeyboard() {
+  tapePort.unload();
+  node.reset();
 }
 
-auto FamilyKeyboard::read2() -> n5 {
+auto FamilyBasicKeyboard::read1() -> n1 {
+  return tapePort.read();
+}
+
+auto FamilyBasicKeyboard::read2() -> n5 {
   if(!latch.bit(2)) return 0b00000;
 
   #define poll(id, name) \
@@ -214,9 +219,10 @@ auto FamilyKeyboard::read2() -> n5 {
   return data;
 }
 
-auto FamilyKeyboard::write(n8 data) -> void {
+auto FamilyBasicKeyboard::write(n8 data) -> void {
   latch = data.bit(0,2);
   if(column && !latch.bit(1)) row = (row + 1) % 10;
   column = latch.bit(1);
   if(latch.bit(0)) row = 0;
+  tapePort.write(latch);
 }
