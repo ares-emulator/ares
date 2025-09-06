@@ -10,6 +10,7 @@
 #endif
 #include <nall/decode/wav.hpp>
 #include <nall/decode/mmi.hpp>
+#include <nall/encode/wav.hpp>
 using namespace nall;
 
 #if !defined(MIA_LIBRARY)

@@ -1,4 +1,6 @@
 struct FamilyBasicKeyboard : Expansion {
+  TapePort tapePort{"Tape Port"};
+
   struct Key {
     Node::Input::Button f1, f2, f3, f4, f5, f6, f7, f8;
     Node::Input::Button one, two, three, four, five, six, seven, eight, nine, zero, minus, power, yen, stop;
@@ -11,6 +13,8 @@ struct FamilyBasicKeyboard : Expansion {
   } key;
 
   FamilyBasicKeyboard(Node::Port);
+  ~FamilyBasicKeyboard() override;
+
   auto read1() -> n1 override;
   auto read2() -> n5 override;
   auto write(n8 data) -> void override;

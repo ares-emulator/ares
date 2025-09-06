@@ -20,7 +20,7 @@ auto ExpansionPort::unload() -> void {
 
 auto ExpansionPort::allocate(string name) -> Node::Peripheral {
   if(name == "EPSM") device = new EPSM(port);
-  if(name == "Family Keyboard") device = new FamilyBasicKeyboard(port);
+  if(name == "Family BASIC Keyboard") device = new FamilyBasicKeyboard(port);
   if(device) return device->node;
   return {};
 }

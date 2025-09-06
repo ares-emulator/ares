@@ -3,6 +3,10 @@ struct Famicom : Emulator {
   auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto loadTape(ares::Node::Object node, string location) -> bool override;
+  auto unloadTape(ares::Node::Object node) -> void override;
+
+  shared_pointer<mia::Pak> familyBasicDataRecorder{};
 };
 
 Famicom::Famicom() {
@@ -157,6 +161,19 @@ auto Famicom::load() -> LoadResult {
     }
   }
 
+  string input = game->pak->attribute("input");
+  if (input == "Family BASIC Keyboard") {
+    if (auto port = root->find<ares::Node::Port>("Expansion Port")) {
+      port->allocate("Family BASIC Keyboard");
+      port->connect();
+    }
+
+    if (auto port = root->find<ares::Node::Port>("Expansion Port/Family BASIC Keyboard/Tape Port")) {
+      port->allocate("Family BASIC Data Recorder");
+      port->connect();
+    }
+  }
+
   return successful;
 }
 
@@ -164,11 +181,41 @@ auto Famicom::save() -> bool {
   root->save();
   system->save(system->location);
   game->save(game->location);
+  if (familyBasicDataRecorder) {
+    familyBasicDataRecorder->save(familyBasicDataRecorder->location);
+  }
   return true;
 }
 
 auto Famicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "Famicom") return system->pak;
   if(node->name() == "Famicom Cartridge") return game->pak;
+  if(node->name() == "Family BASIC Data Recorder") return familyBasicDataRecorder->pak;
   return {};
+}
+
+auto Famicom::loadTape(ares::Node::Object node, string location) -> bool {
+  if (node->name() == "Family BASIC Data Recorder") {
+    familyBasicDataRecorder = mia::Medium::create("Tape");
+    if (!location) {
+      location = Emulator::load(familyBasicDataRecorder, settings.paths.home);
+      if (!location) return false;
+    }
+    LoadResult result = familyBasicDataRecorder->load(location);
+    if (result != successful) {
+      familyBasicDataRecorder.reset();
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+auto Famicom::unloadTape(ares::Node::Object node) -> void {
+  if (node->name() == "Family BASIC Data Recorder") {
+    familyBasicDataRecorder->save(familyBasicDataRecorder->location);
+    familyBasicDataRecorder.reset();
+  }
 }

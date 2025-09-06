@@ -614,6 +614,7 @@ auto InputManager::bind() -> void {
   for(auto& port : virtualPorts) {
     for(auto& input : port.pad.inputs) input.mapping->bind();
     for(auto& input : port.mouse.inputs) input.mapping->bind();
+    for(auto& input : port.keyboard.inputs) input.mapping->bind();
   }
   for(auto& mapping : hotkeys) mapping.bind();
 }

@@ -80,12 +80,17 @@ FamilyBasicKeyboard::FamilyBasicKeyboard(Node::Port parent) {
   key.down  = node->append<Node::Input::Button>("Down");
   key.left  = node->append<Node::Input::Button>("Left");
   key.right = node->append<Node::Input::Button>("Right");
+
+  tapePort.load(node);
+}
+
+FamilyBasicKeyboard::~FamilyBasicKeyboard() {
+  tapePort.unload();
+  node.reset();
 }
 
 auto FamilyBasicKeyboard::read1() -> n1 {
-  n1 data;
-  //data recorder (unsupported)
-  return data;
+  return tapePort.read();
 }
 
 auto FamilyBasicKeyboard::read2() -> n5 {
@@ -219,4 +224,5 @@ auto FamilyBasicKeyboard::write(n8 data) -> void {
   if(column && !latch.bit(1)) row = (row + 1) % 10;
   column = latch.bit(1);
   if(latch.bit(0)) row = 0;
+  tapePort.write(latch);
 }

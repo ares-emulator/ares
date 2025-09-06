@@ -2,6 +2,7 @@ namespace ares::Core {
   struct Object;
   struct System;
   struct Peripheral;
+  struct Tape;
   struct Port;
   namespace Component {
     struct Component;
@@ -48,6 +49,7 @@ namespace ares::Node {
   using Object           = shared_pointer<Core::Object>;
   using System           = shared_pointer<Core::System>;
   using Peripheral       = shared_pointer<Core::Peripheral>;
+  using Tape             = shared_pointer<Core::Tape>;
   using Port             = shared_pointer<Core::Port>;
   namespace Component {
     using Component      = shared_pointer<Core::Component::Component>;
@@ -101,6 +103,7 @@ namespace ares::Core {
   #include <ares/node/object.hpp>
   #include <ares/node/system.hpp>
   #include <ares/node/peripheral.hpp>
+  #include <ares/node/tape.hpp>
   #include <ares/node/port.hpp>
   namespace Component {
     #include <ares/node/component/component.hpp>

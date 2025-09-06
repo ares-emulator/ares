@@ -6,6 +6,7 @@
 #include "streams.cpp"
 #include "properties.cpp"
 #include "tracer.cpp"
+#include "tape.cpp"
 
 namespace Instances { Instance<ToolsWindow> toolsWindow; }
 ToolsWindow& toolsWindow = Instances::toolsWindow();
@@ -16,6 +17,7 @@ GraphicsViewer& graphicsViewer = toolsWindow.graphicsViewer;
 StreamManager& streamManager = toolsWindow.streamManager;
 PropertiesViewer& propertiesViewer = toolsWindow.propertiesViewer;
 TraceLogger& traceLogger = toolsWindow.traceLogger;
+TapeViewer& tapeViewer = toolsWindow.tapeViewer;
 
 ToolsWindow::ToolsWindow() {
 
@@ -29,6 +31,7 @@ ToolsWindow::ToolsWindow() {
   panelList.append(ListViewItem().setText("Streams").setIcon(Icon::Emblem::Audio));
   panelList.append(ListViewItem().setText("Properties").setIcon(Icon::Emblem::Text));
   panelList.append(ListViewItem().setText("Tracer").setIcon(Icon::Emblem::Script));
+  panelList.append(ListViewItem().setText("Tape").setIcon(Icon::Device::Tape));
   panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
 
@@ -40,6 +43,7 @@ ToolsWindow::ToolsWindow() {
   panelContainer.append(streamManager, Size{~0, ~0});
   panelContainer.append(propertiesViewer, Size{~0, ~0});
   panelContainer.append(traceLogger, Size{~0, ~0});
+  panelContainer.append(tapeViewer, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
   manifestViewer.construct();
@@ -50,6 +54,7 @@ ToolsWindow::ToolsWindow() {
   propertiesViewer.construct();
   traceLogger.construct();
   homePanel.construct();
+  tapeViewer.construct();
 
   setDismissable();
   setTitle("Tools");
@@ -80,6 +85,7 @@ auto ToolsWindow::eventChange() -> void {
   propertiesViewer.setVisible(false);
   traceLogger.setVisible(false);
   homePanel.setVisible(false);
+  tapeViewer.setVisible(false);
 
   bool found = false;
   if(auto item = panelList.selected()) {
@@ -90,6 +96,7 @@ auto ToolsWindow::eventChange() -> void {
     if(item.text() == "Streams"   ) found = true, streamManager.setVisible();
     if(item.text() == "Properties") found = true, propertiesViewer.setVisible();
     if(item.text() == "Tracer"    ) found = true, traceLogger.setVisible();
+    if(item.text() == "Tape"      ) found = true, tapeViewer.setVisible();
   }
   if(!found) homePanel.setVisible();
 
