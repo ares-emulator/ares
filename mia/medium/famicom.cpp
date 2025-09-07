@@ -236,7 +236,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
       "Racermate Bicycle",            "U-Force",
     };
     u32 inputId = data[15];
-    input = inputId < 0x2e ? inputTypes[inputId] : "Unspecified";
+    input = inputId < 0x2e ? inputTypes[inputId] : inputTypes[0];
 
     u32 timing = data[12] & 3;
 
