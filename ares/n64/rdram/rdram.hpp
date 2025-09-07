@@ -11,19 +11,57 @@ struct RDRAM : Memory::RCP<RDRAM> {
     template<u32 Size>
     auto read(u32 address, const char *peripheral) -> u64 {
       if (address >= size) return 0;
-      if (peripheral && system.homebrewMode) {
+      if (unlikely(peripheral && system.homebrewMode)) {
         self.debugger.readWord(address, Size, peripheral);
       }
       return Memory::Writable::read<Size>(address);
     }
 
     template<u32 Size>
+    auto writeRepeat(u32 address, u64 value, u8 length) -> void {
+      if constexpr(Size == Byte)
+        value <<= 24;
+      else if constexpr(Size == Half)
+        value <<= 16;
+      if constexpr(Size != Dual)
+        value |= value << 32;
+
+      const u32 end = (address & ~7) + length + 1;
+      if (end <= address)
+        return;
+
+      const u32 end64 = address + ((end - address) & ~7);
+      for (; address != end64; address += 8) {
+        Memory::Writable::writeUnaligned<Dual>(address, value);
+        if (address >= size) return;
+      }
+      if (end >= address + 4) {
+        Memory::Writable::writeUnaligned<Word>(address, value >> 32);
+        value <<= 32;
+        address += 4;
+        if (address >= size) return;
+      }
+      if (end >= address + 2) {
+        Memory::Writable::writeUnaligned<Half>(address, value >> 48);
+        value <<= 16;
+        address += 2;
+        if (address >= size) return;
+      }
+      if (end >= address + 1)
+        Memory::Writable::write<Byte>(address, value >> 56);
+    }
+
+    template<u32 Size>
     auto write(u32 address, u64 value, const char *peripheral) -> void {
       if (address >= size) return;
-      if (peripheral && system.homebrewMode) {
+      if (unlikely(peripheral && system.homebrewMode)) {
         self.debugger.writeWord(address, Size, value, peripheral);
       }
-      Memory::Writable::write<Size>(address, value);
+      if (unlikely(mi.initializeMode())) {
+        writeRepeat<Size>(address, value, mi.initializeLength());
+      } else {
+        Memory::Writable::write<Size>(address, value);
+      }
     }
 
     template<u32 Size>
