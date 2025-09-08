@@ -48,7 +48,6 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 set(
   _ares_clang_common_options
   -fno-strict-aliasing
-  -fno-char8_t
   -Wblock-capture-autoreleasing
   # -Wswitch
   -Wdeprecated
@@ -96,6 +95,7 @@ set(_ares_clang_c_options ${_ares_clang_common_options})
 set(
   _ares_clang_cxx_options
   ${_ares_clang_common_options}
+  -fno-char8_t
   -Wvexing-parse
   -Wdelete-non-virtual-dtor
   -Wrange-loop-analysis
@@ -104,7 +104,9 @@ set(
   -Wno-delete-non-abstract-non-virtual-dtor
 )
 
-set(_ares_gcc_common_options -fwrapv -fno-strict-aliasing -Wno-unused-result -Wno-stringop-overflow -fno-char8_t)
+set(_ares_gcc_common_options -fwrapv -fno-strict-aliasing -Wno-unused-result -Wno-stringop-overflow)
+
+set(_ares_gcc_cxx_options -fno-char8_t)
 
 if(NOT DEFINED CMAKE_COMPILE_WARNING_AS_ERROR)
   set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
