@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 //subchannel processor
 //note: this code is not tolerant to subchannel data that violates the Redbook standard
 
