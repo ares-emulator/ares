@@ -56,6 +56,10 @@ jobs:
           os: ubuntu-24.04-arm
           shell: bash
           target-cmake-preset: ubuntu-ci-clang
+        - name: ubuntu-gcc-arm64-qt
+          os: ubuntu-24.04-arm
+          shell: bash
+          target-cmake-preset: ubuntu-ci-qt
     name: ${{ matrix.program }}-${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.os }}
     defaults:
@@ -81,7 +85,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update -y -qq
-        sudo apt-get install cmake ccache ninja-build libsdl2-dev libgtk-3-dev libao-dev libopenal-dev
+        sudo apt-get install cmake ccache ninja-build libsdl2-dev libgtk-3-dev libao-dev libopenal-dev qt6-base-dev
     - name: "Build: Linux"
       if: runner.os == 'Linux'
       run: .github/scripts/build_ubuntu.sh
