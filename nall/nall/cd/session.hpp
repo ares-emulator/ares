@@ -370,7 +370,7 @@ struct Session {
     leadOut.lba = InvalidLBA;
     for(s32 lba = leadIn.lba; lba < 0; lba++) {
       auto q = toQ(lba);
-      if(!q) break;
+      if(q.size() == 0) break;
       auto crc16 = CRC16({q.data(), 10});
       if(q[10] != u8(crc16 >> 8)) continue;
       if(q[11] != u8(crc16 >> 0)) continue;
@@ -406,7 +406,7 @@ struct Session {
     //tracks
     for(s32 lba = 0; lba < leadOut.lba; lba++) {
       auto q = toQ(lba);
-      if(!q) break;
+      if(q.size() == 0) break;
       auto crc16 = CRC16({q.data(), 10});
       if(q[10] != u8(crc16 >> 8)) continue;
       if(q[11] != u8(crc16 >> 0)) continue;
