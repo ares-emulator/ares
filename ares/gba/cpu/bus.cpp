@@ -23,24 +23,16 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     word = bios.read(mode, address);
     break;
 
-  case 0x02:
-    if constexpr(!UseDebugger) prefetchStep(waitEWRAM(mode));
-    word = readEWRAM(mode, address);
-    break;
-
-  case 0x03:
-    if constexpr(!UseDebugger) prefetchStep(1);
-    word = readIWRAM(mode, address);
-    break;
+  case 0x02: word = readEWRAM<UseDebugger>(mode, address); break;
+  case 0x03: word = readIWRAM<UseDebugger>(mode, address); break;
 
   case 0x04:
     if constexpr(!UseDebugger) prefetchStep(1);
          if((address & 0xffff'fc00) == 0x0400'0000) word = bus.io[address & 0x3ff]->readIO(mode, address);
-    else if((address & 0xff00'ffff) == 0x0400'0800) word = ((IO*)this)->readIO(mode, 0x0400'0800 | (address & 3));
+    else if((address & 0xff00'fffc) == 0x0400'0800) word = ((IO*)this)->readIO(mode, 0x0400'0800 | (address & 3));
     else return openBus.get(mode, address);
     break;
 
-  //timings for VRAM and PRAM are handled in memory.cpp
   case 0x05: word = readPRAM<UseDebugger>(mode, address); break;
   case 0x06: word = readVRAM<UseDebugger>(mode, address); break;
 
@@ -49,7 +41,6 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     word = ppu.readOAM(mode, address);
     break;
 
-  //timings for ROM are handled in memory.cpp and prefetch.cpp
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
     if constexpr(UseDebugger) return readROM<true>(mode, address);
     context.burstActive = checkBurst<IsDMA>(mode);
@@ -118,23 +109,15 @@ auto CPU::setBus(u32 mode, n32 address, n32 word) -> void {
     bios.write(mode, address, word);
     break;
 
-  case 0x02:
-    prefetchStep(waitEWRAM(mode));
-    writeEWRAM(mode, address, word);
-    break;
-
-  case 0x03:
-    prefetchStep(1);
-    writeIWRAM(mode, address, word);
-    break;
+  case 0x02: writeEWRAM(mode, address, word); break;
+  case 0x03: writeIWRAM(mode, address, word); break;
 
   case 0x04:
     prefetchStep(1);
          if((address & 0xffff'fc00) == 0x0400'0000) bus.io[address & 0x3ff]->writeIO(mode, address, word);
-    else if((address & 0xff00'ffff) == 0x0400'0800) ((IO*)this)->writeIO(mode, 0x0400'0800 | (address & 3), word);
+    else if((address & 0xff00'fffc) == 0x0400'0800) ((IO*)this)->writeIO(mode, 0x0400'0800 | (address & 3), word);
     break;
 
-  //timings for VRAM and PRAM are handled in memory.cpp
   case 0x05: writePRAM(mode, address, word); break;
   case 0x06: writeVRAM(mode, address, word); break;
 
@@ -144,7 +127,6 @@ auto CPU::setBus(u32 mode, n32 address, n32 word) -> void {
     ppu.writeOAM(mode, address, word);
     break;
 
-  //timings for ROM are handled in memory.cpp
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
     context.burstActive = checkBurst<IsDMA>(mode);
     context.romAccess = true;
@@ -188,10 +170,6 @@ auto CPU::lock() -> void {
 
 auto CPU::unlock() -> void {
   context.busLocked = false;
-}
-
-auto CPU::waitEWRAM(u32 mode) -> u32 {
-  return (16 - memory.ewramWait) * (mode & Word ? 2 : 1);
 }
 
 auto CPU::waitCartridge(n32 address, bool sequential) -> u32 {
