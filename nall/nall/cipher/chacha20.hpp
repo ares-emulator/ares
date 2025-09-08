@@ -1,7 +1,8 @@
 #pragma once
 
 #include <nall/arithmetic.hpp>
-#include <nall/array-view.hpp>
+#include <nall/span-helpers.hpp>
+#include <span>
 
 namespace nall::Cipher {
 
@@ -30,7 +31,7 @@ struct ChaCha20 {
     offset = 0;
   }
 
-  auto encrypt(array_view<u8> input) -> std::vector<u8> {
+  auto encrypt(std::span<const u8> input) -> std::vector<u8> {
     std::vector<u8> output;
     while(input.size()) {
       if(!offset) {
@@ -38,15 +39,13 @@ struct ChaCha20 {
         increment();
       }
       auto byte = offset++;
-      output.push_back(input.read() ^ (block[byte >> 2] >> (byte & 3) * 8));
+      output.push_back(consume_front(input) ^ (block[byte >> 2] >> (byte & 3) * 8));
       offset &= 63;
     }
     return output;
   }
 
-  auto decrypt(array_view<u8> input) -> std::vector<u8> {
-    return encrypt(input);  //reciprocal cipher
-  }
+  auto decrypt(std::span<const u8> input) -> std::vector<u8> { return encrypt(input); }
 
 //protected:
   auto rol(u32 value, u32 bits) -> u32 {
