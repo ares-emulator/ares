@@ -69,7 +69,6 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto setDMA(u32 mode, n32 address, n32 word) -> void;
   auto lock() -> void override;
   auto unlock() -> void override;
-  auto waitEWRAM(u32 mode) -> u32;
   auto waitCartridge(n32 address, bool sequential) -> u32;
   template<bool IsDMA> auto checkBurst(u32 mode) -> bool;
 
@@ -77,10 +76,10 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto readIO(n32 address) -> n8 override;
   auto writeIO(n32 address, n8 byte) -> void override;
 
-  auto readIWRAM(u32 mode, n32 address) -> n32;
+  template<bool UseDebugger> auto readIWRAM(u32 mode, n32 address) -> n32;
   auto writeIWRAM(u32 mode, n32 address, n32 word) -> void;
 
-  auto readEWRAM(u32 mode, n32 address) -> n32;
+  template<bool UseDebugger> auto readEWRAM(u32 mode, n32 address) -> n32;
   auto writeEWRAM(u32 mode, n32 address, n32 word) -> void;
 
   template<bool UseDebugger> auto readPRAM(u32 mode, n32 address) -> n32;
@@ -249,7 +248,8 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   struct Memory {
     n1 biosSwap;
-    n3 unknown1;
+    n2 unknown1;
+    n1 cgbBootRomDisable;
     n1 ewram = 1;
     n4 ewramWait = 13;
     n4 unknown2;
