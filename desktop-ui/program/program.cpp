@@ -19,6 +19,7 @@ auto Program::create() -> void {
 
   _isRunning = true;
   worker = thread::create({&Program::emulatorRunLoop, this});
+  program.rewindReset();
 
   if(startGameLoad) {
     Program::Guard guard;
