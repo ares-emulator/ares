@@ -47,7 +47,7 @@ auto Cartridge::connect() -> void {
     sram.size = min(32_KiB, fp->size());
     sram.mask = sram.size - 1;
     for(auto n : range(sram.size)) sram.data[n] = 0xff;
-    fp->read({sram.data, sram.size});
+    fp->read(sram.data, sram.size);
   }
 
   if(auto fp = pak->read("save.eeprom")) {
@@ -58,7 +58,7 @@ auto Cartridge::connect() -> void {
     eeprom.mask = mrom.size > 16 * 1024 * 1024 ? 0x0fffff00 : 0x0f000000;
     eeprom.test = mrom.size > 16 * 1024 * 1024 ? 0x0dffff00 : 0x0d000000;
     for(auto n : range(eeprom.size)) eeprom.data[n] = 0xff;
-    if(!fp->end()) fp->read({eeprom.data, eeprom.size});  //only load save file if already present
+    if(!fp->end()) fp->read(eeprom.data, eeprom.size);  //only load save file if already present
   }
 
   if(auto fp = pak->read("save.flash")) {
@@ -73,13 +73,13 @@ auto Cartridge::connect() -> void {
     if(flash.manufacturer == "Panasonic" && flash.size ==  64 * 1024) flash.id = 0x1b32;
     if(flash.manufacturer == "Sanyo"     && flash.size == 128 * 1024) flash.id = 0x1362;
     if(flash.manufacturer == "SST"       && flash.size ==  64 * 1024) flash.id = 0xd4bf;
-    fp->read({flash.data, flash.size});
+    fp->read(flash.data, flash.size);
   }
 
   if(auto fp = pak->read("time.rtc")) {
     has.rtc = true;
     for(auto n : range(rtc.size)) rtc.data[n] = 0x00;
-    if(!fp->end()) fp->read({rtc.data, rtc.size});  //only load save file if already present
+    if(!fp->end()) fp->read(rtc.data, rtc.size);  //only load save file if already present
     rtc.load();
   }
 
@@ -102,21 +102,21 @@ auto Cartridge::save() -> void {
   if(!node) return;
 
   if(auto fp = pak->write("save.ram")) {
-    fp->write({sram.data, sram.size});
+    fp->write(sram.data, sram.size);
   }
 
   if(auto fp = pak->write("save.eeprom")) {
     if(eeprom.bits != 0 && fp->size() != eeprom.size) fp->resize(eeprom.size);
-    fp->write({eeprom.data, eeprom.size});
+    fp->write(eeprom.data, eeprom.size);
   }
 
   if(auto fp = pak->write("save.flash")) {
-    fp->write({flash.data, flash.size});
+    fp->write(flash.data, flash.size);
   }
 
   if(auto fp = pak->write("time.rtc")) {
     rtc.save();
-    fp->write({rtc.data, rtc.size});
+    fp->write(rtc.data, rtc.size);
   }
 }
 

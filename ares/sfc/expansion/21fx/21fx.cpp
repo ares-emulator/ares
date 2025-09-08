@@ -17,7 +17,7 @@ S21FX::S21FX(Node::Port parent) {
   ram[2] = 0xff;
 
   if(auto fp = cartridge.pak->read("21fx.rom")) {
-    fp->read({ram, sizeof(ram)});
+    fp->read(ram, sizeof(ram));
   }
 
   //dynamic libraries can only be loaded via filename ...

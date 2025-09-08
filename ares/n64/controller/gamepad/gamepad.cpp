@@ -75,7 +75,7 @@ auto Gamepad::connect() -> void {
         u32 bank_size;
 
         fp->seek(0x20 + 0x1A);
-        fp->read(array_span<u8>{&banks, sizeof(banks)});
+        fp->read(&banks, sizeof(banks));
         fp->seek(0);
 
         if (banks < 1) {
