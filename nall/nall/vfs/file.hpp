@@ -20,7 +20,7 @@ struct file : node {
   }
 
   auto read(array_span<u8> span) -> void {
-    while(span) *span++ = read();
+    while(span.size()) { *span.data() = read(); span = {span.data() + 1, span.size() - 1}; }
   }
 
   auto readl(u32 bytes) -> u64 {
@@ -44,7 +44,7 @@ struct file : node {
   }
 
   auto write(array_view<u8> view) -> void {
-    while(view) write(*view++);
+    for(u64 i = 0; i < view.size(); i++) write(view[i]);
   }
 
   auto writel(u64 data, u32 bytes) -> void {

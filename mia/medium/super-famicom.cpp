@@ -56,7 +56,7 @@ auto SuperFamicom::load(string location) -> LoadResult {
         if(id == "ST010") view = Resource::SuperFamicom::ST010;
         if(id == "ST011") view = Resource::SuperFamicom::ST011;
         if(id == "ST018") view = Resource::SuperFamicom::ST018;
-        while(view) rom.push_back(*view++);
+        while(view.size()) rom.push_back(view.read());
       }
 	}
   };

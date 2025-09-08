@@ -32,13 +32,13 @@ struct ChaCha20 {
 
   auto encrypt(array_view<u8> input) -> std::vector<u8> {
     std::vector<u8> output;
-    while(input) {
+    while(input.size()) {
       if(!offset) {
         cipher();
         increment();
       }
       auto byte = offset++;
-      output.push_back(*input++ ^ (block[byte >> 2] >> (byte & 3) * 8));
+      output.push_back(input.read() ^ (block[byte >> 2] >> (byte & 3) * 8));
       offset &= 63;
     }
     return output;

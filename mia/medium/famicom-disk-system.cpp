@@ -108,13 +108,13 @@ auto FamicomDiskSystem::transform(array_view<u8> input) -> std::vector<u8> {
   //block 1
   for(u32 n : range(0xe00)) write(0x00);  //pregap
   write(0x80);
-  for(u32 n : range(0x38)) write(*data++);
+  for(u32 n : range(0x38)) write(data.read());
   flush();
 
   //block 2
   for(u32 n : range(0x80)) write(0x00);  //gap
   write(0x80);
-  for(u32 n : range(0x02)) write(*data++);
+  for(u32 n : range(0x02)) write(data.read());
   flush();
 
   while(true) {
@@ -125,13 +125,13 @@ auto FamicomDiskSystem::transform(array_view<u8> input) -> std::vector<u8> {
     //block 3
     for(u32 n : range(0x80)) write(0x00);  //gap
     write(0x80);
-    for(u32 n : range(0x10)) write(*data++);
+    for(u32 n : range(0x10)) write(data.read());
     flush();
 
     //block 4
     for(u32 n : range(0x80)) write(0x00);  //gap
     write(0x80);
-    for(u32 n : range(1 + size)) write(*data++);
+    for(u32 n : range(1 + size)) write(data.read());
     flush();
   }
 
