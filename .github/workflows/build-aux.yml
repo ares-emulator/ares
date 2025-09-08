@@ -60,6 +60,10 @@ jobs:
           os: ubuntu-24.04-arm
           shell: bash
           target-cmake-preset: ubuntu-ci-qt
+        - name: freebsd
+          os: ubuntu-24.04
+          shell: bash
+          target-cmake-preset: ubuntu-ci-clang
     name: ${{ matrix.program }}-${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.os }}
     defaults:
@@ -82,12 +86,12 @@ jobs:
       run: |
         git config core.autocrlf true
     - name: Install Linux Dependencies
-      if: runner.os == 'Linux'
+      if: runner.os == 'Linux' && matrix.platform.name != 'freebsd'
       run: |
         sudo apt-get update -y -qq
         sudo apt-get install cmake ccache ninja-build libsdl2-dev libgtk-3-dev libao-dev libopenal-dev qt6-base-dev
     - name: "Build: Linux"
-      if: runner.os == 'Linux'
+      if: runner.os == 'Linux' && matrix.platform.name != 'freebsd'
       run: .github/scripts/build_ubuntu.sh
       env:
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
@@ -99,6 +103,18 @@ jobs:
         CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
         NATIVE_PRESET: ${{ matrix.platform.native-cmake-preset }}
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
+    - name: "Build: FreeBSD"
+      if: matrix.platform.name == 'freebsd'
+      uses: cross-platform-actions/action@e8a7b572196ff79ded1979dc2bb9ee67d1ddb252
+      env:
+        TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
+      with:
+        operating_system: freebsd
+        version: 14.3
+        environment_variables: TARGET_PRESET
+        run: |
+          sudo pkg install -y cmake pkgconf ccache ninja gtk3 libX11 libXext libXrandr libXrender libglvnd alsa-lib libao libudev-devd librashader openal-soft pulseaudio sdl3 vulkan-loader
+          .github/scripts/build_ubuntu.sh
     - name: "Compress Build Artifacts (Windows)"
       if: runner.os != 'macOS' && runner.os != 'Linux'
       run: |
