@@ -1,3 +1,5 @@
+#include <span>
+
 namespace nall::vfs {
 
 struct file : node {
@@ -19,8 +21,12 @@ struct file : node {
     return offset() >= size();
   }
 
-  auto read(array_span<u8> span) -> void {
-    while(span.size()) { *span.data() = read(); span = {span.data() + 1, span.size() - 1}; }
+  auto read(std::span<u8> span) -> void {
+    for(auto& byte : span) byte = read();
+  }
+
+  template<typename T> auto read(T* ptr, size_t size) -> void {
+    read(std::span<u8>((u8*)ptr, size));
   }
 
   auto readl(u32 bytes) -> u64 {
@@ -43,8 +49,12 @@ struct file : node {
     return s;
   }
 
-  auto write(array_view<u8> view) -> void {
-    for(u64 i = 0; i < view.size(); i++) write(view[i]);
+  auto write(std::span<const u8> view) -> void {
+    for(auto byte : view) write(byte);
+  }
+
+  template<typename T> auto write(const T* ptr, size_t size) -> void {
+    write(std::span<const u8>((const u8*)ptr, size));
   }
 
   auto writel(u64 data, u32 bytes) -> void {

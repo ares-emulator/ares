@@ -31,11 +31,11 @@ auto Cartridge::connect() -> void {
   // WS cartridges are allocated from the top (end of ROM) down
   if(auto fp = pak->read("program.flash")) {
     rom.allocate(bit::round(fp->size()));
-    fp->read({rom.data() + bit::round(fp->size()) - fp->size(), fp->size()});
+    fp->read(rom.data() + bit::round(fp->size()) - fp->size(), fp->size());
     has.flash = true;
   } else if(auto fp = pak->read("program.rom")) {
     rom.allocate(bit::round(fp->size()));
-    fp->read({rom.data() + bit::round(fp->size()) - fp->size(), fp->size()});
+    fp->read(rom.data() + bit::round(fp->size()) - fp->size(), fp->size());
   }
   
   if(auto fp = pak->read("save.ram")) {
@@ -46,7 +46,7 @@ auto Cartridge::connect() -> void {
 
   if(auto fp = pak->read("save.eeprom")) {
     eeprom.allocate(fp->size(), 16, 1, 0xff);
-    fp->read({eeprom.data, eeprom.size});
+    fp->read(eeprom.data, eeprom.size);
     has.eeprom = true;
   }
 
@@ -86,7 +86,7 @@ auto Cartridge::save() -> void {
   }
 
   if(auto fp = pak->write("save.eeprom")) {
-    fp->write({eeprom.data, eeprom.size});
+    fp->write(eeprom.data, eeprom.size);
   }
 
   if(auto fp = pak->write("time.rtc")) {

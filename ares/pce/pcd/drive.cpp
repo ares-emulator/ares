@@ -49,7 +49,7 @@ auto PCD::Drive::read() -> bool {
 //print("* ", reading() ? "data" : "cdda", " read ", lba, " to ", end - 1, "\n");
 
   pcd.fd->seek(2448 * (abs(session->leadIn.lba) + lba + 150));
-  pcd.fd->read({ sector, 2448 });
+  pcd.fd->read(sector, 2448);
 
   // Calculate the sector advance amount based on the MegaLD playback modes, if applicable. Note that if a SCSI read
   // command has been issued, the playback modes are ignored, and sectors are advanced linearly until the read is
