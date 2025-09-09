@@ -49,7 +49,7 @@ namespace nall::Encode {
   Although to be fair, BWT is inferior to the bijective BWT anyway, so it may not be worth the effort.
 */
 
-inline auto BWT(array_view<u8> input) -> std::vector<u8> {
+inline auto BWT(std::span<const u8> input) -> std::vector<u8> {
   auto size = input.size();
   std::vector<u8> output;
   output.reserve(8 + 8 + size);

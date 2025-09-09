@@ -151,12 +151,12 @@ struct Session {
     std::vector<u8> data;
     data.resize(sectors * 96 + 96);  //add one sector for P shift
 
-    auto toP = [&](s32 lba) -> array_span<u8> {
+    auto toP = [&](s32 lba) -> std::span<u8> {
       //P is encoded one sector later than Q
       return {&data[(lba + abs(leadIn.lba) + 1) * 96], 12};
     };
 
-    auto toQ = [&](s32 lba) -> array_span<u8> {
+    auto toQ = [&](s32 lba) -> std::span<u8> {
       return {&data[(lba + abs(leadIn.lba)) * 96 + 12], 12};
     };
 
@@ -344,7 +344,7 @@ struct Session {
       if(size ==   96) offset += 12;
       if(size == 2448) offset += 12 + 2352;
       if(offset + 12 > data.size()) break;
-      auto q = array_view<u8>{&data[offset], 12};
+      auto q = std::span<const u8>{&data[offset], 12};
       auto crc16 = CRC16({q.data(), 10});
       if(q[10] != u8(crc16 >> 8)) continue;
       if(q[11] != u8(crc16 >> 0)) continue;
@@ -360,7 +360,7 @@ struct Session {
     }
     if(leadIn.lba == InvalidLBA || leadIn.lba >= 0) return false;
 
-    auto toQ = [&](s32 lba) -> array_view<u8> {
+    auto toQ = [&](s32 lba) -> std::span<const u8> {
       u32 offset = (lba + abs(leadIn.lba)) * size;
       if(size ==   96) offset += 12;
       if(size == 2448) offset += 12 + 2352;

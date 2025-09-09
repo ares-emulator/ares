@@ -3,11 +3,11 @@
 namespace nall::Decode {
 
 template<u32 S = 1, u32 M = 4 / S>  //S = word size; M = match length
-inline auto RLE(array_view<u8> input) -> std::vector<u8> {
+inline auto RLE(std::span<const u8> input) -> std::vector<u8> {
   std::vector<u8> output;
 
   auto load = [&]() -> u8 {
-    return input ? *input++ : 0;
+    return input.size() ? consume_front(input) : 0;
   };
 
   u32 base = 0;
