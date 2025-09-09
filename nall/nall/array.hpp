@@ -1,7 +1,5 @@
 #pragma once
 
-#include <nall/array-span.hpp>
-#include <nall/array-view.hpp>
 #include <nall/range.hpp>
 #include <nall/view.hpp>
 #include <span>

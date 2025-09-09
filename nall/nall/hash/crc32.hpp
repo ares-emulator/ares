@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/hash/hash.hpp>
+#include <nall/iterator.hpp>
 
 namespace nall::Hash {
 
