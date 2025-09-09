@@ -14,7 +14,7 @@ struct memory : file {
     return instance;
   }
 
-  static auto open(array_view<u8> view) -> shared_pointer<memory> {
+  static auto open(std::span<const u8> view) -> shared_pointer<memory> {
     auto instance = shared_pointer<memory>{new memory};
     instance->_open(view.data(), view.size());
     return instance;

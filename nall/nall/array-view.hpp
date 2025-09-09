@@ -75,13 +75,6 @@ protected:
   s32 _size;
 };
 
-//array_view<u8>
-
-template<> template<typename U> inline auto array_view<u8>::readm(U& value, u32 size) -> U {
-  value = 0;
-  for(u32 byte : reverse(range(size))) value |= (U)read() << byte * 8;
-  return value;
-}
 
 
 }

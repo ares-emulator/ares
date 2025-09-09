@@ -81,7 +81,7 @@ struct file : inode {
     return memory;
   }
 
-  static auto read(const string& filename, array_span<u8> memory) -> bool {
+  static auto read(const string& filename, std::span<u8> memory) -> bool {
     if(auto fp = file::open(filename, mode::read)) return fp.read(memory), true;
     return false;
   }
@@ -99,7 +99,7 @@ struct file : inode {
 
   static auto sha256(const string& filename) -> string {
     auto mem = read(filename);
-    return Hash::SHA256(array_view<u8>(mem.data(), mem.size())).digest();
+    return Hash::SHA256(std::span<const u8>(mem.data(), mem.size())).digest();
   }
 };
 

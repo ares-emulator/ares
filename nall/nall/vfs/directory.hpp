@@ -64,7 +64,7 @@ struct directory : node {
 
   auto append(const string& name, std::span<const u8> view) -> bool {
     if(find(name)) return false;
-    auto item = memory::open(array_view<u8>{view.data(), view.size()});
+    auto item = memory::open(std::span<const u8>{view.data(), view.size()});
     item->setName(name);
     _nodes.push_back(item);
     return true;
