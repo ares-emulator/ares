@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nall/array-span.hpp>
 #include <nall/cd.hpp>
 #include <nall/file.hpp>
 #include <nall/string.hpp>

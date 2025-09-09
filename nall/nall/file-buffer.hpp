@@ -1,10 +1,9 @@
 #pragma once
 
 #include <nall/platform.hpp>
-#include <nall/array-span.hpp>
-#include <nall/array-view.hpp>
 #include <span>
 #include <nall/inode.hpp>
+#include <nall/iterator.hpp>
 #include <nall/range.hpp>
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>

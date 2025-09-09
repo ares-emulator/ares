@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nall/iterator.hpp>
+
 namespace nall {
 
 //scan all four sides of the image for fully transparent pixels, and then crop them

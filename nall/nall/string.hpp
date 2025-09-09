@@ -11,7 +11,6 @@
 #include <vector>
 
 #include <nall/platform.hpp>
-#include <nall/array-view.hpp>
 #include <nall/atoi.hpp>
 #include <nall/function.hpp>
 #include <nall/intrinsics.hpp>

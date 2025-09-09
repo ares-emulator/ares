@@ -6,8 +6,6 @@ target_sources(
     any.hpp
     arguments.hpp
     arithmetic.hpp
-    array-span.hpp
-    array-view.hpp
     array.hpp
     atoi.hpp
     bcd.hpp
