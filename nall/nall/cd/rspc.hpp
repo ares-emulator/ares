@@ -4,7 +4,7 @@
 
 namespace nall::CD::RSPC {
 
-inline auto encodeP(array_view<u8> input, array_span<u8> parity) -> bool {
+inline auto encodeP(std::span<const u8> input, std::span<u8> parity) -> bool {
   ReedSolomon<26,24> s;
   u32 lo = 0, hi = 43 * 2;
   for(u32 x : range(43)) {
@@ -21,7 +21,7 @@ inline auto encodeP(array_view<u8> input, array_span<u8> parity) -> bool {
   return true;
 }
 
-inline auto encodeQ(array_view<u8> input, array_span<u8> parity) -> bool {
+inline auto encodeQ(std::span<const u8> input, std::span<u8> parity) -> bool {
   ReedSolomon<45,43> s;
   u32 lo = 0, hi = 26 * 2;
   for(u32 y : range(26)) {
@@ -38,7 +38,7 @@ inline auto encodeQ(array_view<u8> input, array_span<u8> parity) -> bool {
   return true;
 }
 
-inline auto encodeMode1(array_span<u8> sector) -> bool {
+inline auto encodeMode1(std::span<u8> sector) -> bool {
   if(sector.size() != 2352) return false;
   if(!encodeP({sector.data() + 12, 2064}, {sector.data() + 2076, 172})) return false;
   if(!encodeQ({sector.data() + 12, 2236}, {sector.data() + 2248, 104})) return false;
@@ -47,7 +47,7 @@ inline auto encodeMode1(array_span<u8> sector) -> bool {
 
 //
 
-inline auto decodeP(array_span<u8> input, array_span<u8> parity) -> s32 {
+inline auto decodeP(std::span<u8> input, std::span<u8> parity) -> s32 {
   bool success = false;
   bool failure = false;
   ReedSolomon<26,24> s;
@@ -79,7 +79,7 @@ inline auto decodeP(array_span<u8> input, array_span<u8> parity) -> s32 {
   return success ? 1 : -1;  //return success even if there are some failures
 }
 
-inline auto decodeQ(array_span<u8> input, array_span<u8> parity) -> s32 {
+inline auto decodeQ(std::span<u8> input, std::span<u8> parity) -> s32 {
   bool success = false;
   bool failure = false;
   ReedSolomon<45,43> s;
@@ -111,7 +111,7 @@ inline auto decodeQ(array_span<u8> input, array_span<u8> parity) -> s32 {
   return success ? 1 : -1;
 }
 
-inline auto decodeMode1(array_span<u8> sector) -> bool {
+inline auto decodeMode1(std::span<u8> sector) -> bool {
   if(sector.size() != 2352) return false;
   //P corrections can allow Q corrections that previously failed to succeed, and vice versa.
   //the more iterations, the more chances to correct errors, but the more computationally expensive it is.
