@@ -1,3 +1,5 @@
+#include <span>
+
 namespace nall::vfs {
 
 struct directory : node {
@@ -60,9 +62,9 @@ struct directory : node {
     return true;
   }
 
-  auto append(const string& name, array_view<u8> view) -> bool {
+  auto append(const string& name, std::span<const u8> view) -> bool {
     if(find(name)) return false;
-    auto item = memory::open(view);
+    auto item = memory::open(array_view<u8>{view.data(), view.size()});
     item->setName(name);
     _nodes.push_back(item);
     return true;

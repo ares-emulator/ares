@@ -255,6 +255,13 @@ template<> struct stringify<array_view<u8>> {
   const array_view<u8>& _view;
 };
 
+template<> struct stringify<std::span<const u8>> {
+  stringify(const std::span<const u8>& source) : _view(source) {}
+  auto data() const -> const char* { return (const char*)_view.data(); }
+  auto size() const -> u32 { return _view.size(); }
+  const std::span<const u8>& _view;
+};
+
 template<> struct stringify<string_pascal> {
   stringify(const string_pascal& source) : _text(source) {}
   auto data() const -> const char* { return _text.data(); }

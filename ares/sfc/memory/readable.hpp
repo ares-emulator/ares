@@ -44,7 +44,7 @@ struct ReadableMemory : AbstractMemory {
   }
 
   auto serialize(serializer& s) -> void {
-    s(array_span<n8>{self.data, self.size});
+    s(std::span<n8>{self.data, self.size});
   }
 
 private:

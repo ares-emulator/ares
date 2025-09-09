@@ -62,7 +62,7 @@ struct Writable {
   auto end() const -> const T* { return &self.data[self.size]; }
 
   auto serialize(serializer& s) -> void {
-    s(array_span<T>{self.data, self.size});
+    s(std::span<T>{self.data, self.size});
   }
 
 private:

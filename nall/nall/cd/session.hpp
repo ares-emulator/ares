@@ -332,7 +332,7 @@ struct Session {
     return data;
   }
 
-  auto decode(array_view<u8> data, u32 size, u32 leadOutSectors = 0) -> bool {
+  auto decode(std::span<const u8> data, u32 size, u32 leadOutSectors = 0) -> bool {
     *this = {};  //reset session
     //three data[] types supported: subcode Q only, subcode P-W only, data+subcode complete image
     if(size != 12 && size != 96 && size != 2448) return false;
