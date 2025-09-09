@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/file-buffer.hpp>
+#include <span>
 
 namespace nall {
 
@@ -85,7 +86,7 @@ struct file : inode {
     return false;
   }
 
-  static auto write(const string& filename, array_view<u8> memory) -> bool {
+  static auto write(const string& filename, std::span<const u8> memory) -> bool {
     if(auto fp = file::open(filename, mode::write)) return fp.write(memory), true;
     return false;
   }

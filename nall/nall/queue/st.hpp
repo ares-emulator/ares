@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 //simple circular ring buffer (single-threaded)
 
 namespace nall {
@@ -172,7 +174,7 @@ struct queue {
   }
 
   auto serialize(serializer& s) -> void {
-    s(array_span<T>{_data, _capacity});
+    s(std::span<T>{_data, _capacity});
     s(_read);
     s(_write);
   }

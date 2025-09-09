@@ -51,7 +51,7 @@ struct Writable : Interface {
   auto readWordUnaligned(u32 address) const -> u32 { return *(u32*)&data[address & maskByte]; }
 
   auto serialize(serializer& s) -> void {
-    s(array_span<u8>{data, size});
+    s(std::span<u8>{data, size});
   }
 
 //private:

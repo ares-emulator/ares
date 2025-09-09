@@ -3,6 +3,7 @@
 #include <nall/arithmetic.hpp>
 #include <nall/range.hpp>
 #include <nall/string.hpp>
+#include <span>
 
 //cannot use constructor inheritance due to needing to call virtual reset();
 //instead, define a macro to reduce boilerplate code in every Hash subclass
@@ -20,7 +21,7 @@ struct Hash {
   virtual auto input(u8 data) -> void = 0;
   virtual auto output() const -> std::vector<u8> = 0;
 
-  auto input(array_view<u8> data) -> void {
+  auto input(std::span<const u8> data) -> void {
     for(auto byte : data) input(byte);
   }
 

@@ -6,7 +6,7 @@ auto PPU::serialize(serializer& s) -> void {
   s(state.overscan);
   s(state.vdisp);
 
-  s(array_span<u16>{vram.data, vram.mask + 1u});
+  s(std::span<n16>{vram.data, vram.mask + 1u});
   s(oam.object);
   s(cgram);
 
