@@ -321,7 +321,7 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
       filePathInArchive.append(file.name);
       auto fileEntry = archive->findFile(filePathInArchive);
       if(!fileEntry) continue;
-      array_view<u8> rawDataView;
+      std::span<const u8> rawDataView;
       std::vector<u8> rawDataBuffer;
       if (archive->isDataUncompressed(*fileEntry)) {
         rawDataView = archive->dataViewIfUncompressed(*fileEntry);
@@ -329,7 +329,7 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
         auto tmp = archive->extract(*fileEntry);
         rawDataBuffer.resize(tmp.size());
         if(!tmp.empty()) memcpy(rawDataBuffer.data(), tmp.data(), tmp.size());
-        rawDataView = array_view<u8>(rawDataBuffer);
+        rawDataView = std::span<const u8>(rawDataBuffer);
       }
       for(auto& track : file.tracks) {
         for(auto& index : track.indices) {

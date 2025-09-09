@@ -69,13 +69,13 @@ auto MegaDrive::load(string location) -> LoadResult {
     }
   }
 
-  array_view<u8> view{rom};
+  std::span<const u8> view{rom};
   for(auto node : document.find("game/board/memory(type=ROM)")) {
     string name = {node["content"].string().downcase(), ".rom"};
     u32 size = node["size"].natural();
     if(view.size() < size) break;  //missing firmware
     pak->append(name, {view.data(), size});
-    view += size;
+    view = view.subspan(size);
   }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
