@@ -96,7 +96,7 @@ auto PPU::power(bool reset) -> void {
   PPUcounter::reset();
   screen->power();
 
-  if(!reset) random.array({vram.data, sizeof(vram.data)});
+  if(!reset) random.array({(n8*)vram.data, sizeof(vram.data)});
 
   ppu1.version = versionPPU1->value();
   ppu1.mdr = random.bias(0xff);
@@ -120,7 +120,7 @@ auto PPU::power(bool reset) -> void {
   }
 
   if(!reset) {
-    random.array({cgram, sizeof(cgram)});
+    random.array({(n8*)cgram, sizeof(cgram)});
     for(auto& word : cgram) word &= 0x7fff;
   }
 

@@ -11,7 +11,7 @@ auto PIF::addressCRC(u16 address) const -> n5 {
   return crc;
 }
 
-auto PIF::dataCRC(array_view<u8> data) const -> n8 {
+auto PIF::dataCRC(std::span<const u8> data) const -> n8 {
   n8 crc = 0;
   for(u32 i : range(33)) {
     for(u32 j : reverse(range(8))) {

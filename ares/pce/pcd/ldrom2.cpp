@@ -55,7 +55,7 @@ auto PCD::LD::load(string location) -> void {
       auto tmp = mmi.archive().extract(*analogAudioFile);
       analogAudioDataBuffer.resize(tmp.size());
       if(!tmp.empty()) memcpy(analogAudioDataBuffer.data(), tmp.data(), tmp.size());
-      analogAudioRawDataView = array_view<u8>(analogAudioDataBuffer.data(), analogAudioDataBuffer.size());
+      analogAudioRawDataView = std::span<const u8>(analogAudioDataBuffer.data(), analogAudioDataBuffer.size());
     }
   }
 
@@ -66,7 +66,7 @@ auto PCD::LD::load(string location) -> void {
     if (!mmi.archive().isDataUncompressed(*analogVideoFile)) {
       return;
     }
-    array_view<u8> analogVideoFileView = mmi.archive().dataViewIfUncompressed(*analogVideoFile);
+    std::span<const u8> analogVideoFileView = mmi.archive().dataViewIfUncompressed(*analogVideoFile);
 
     // Read the QON/QOI2 header information for the analog video
     if (!qon_decode_header(analogVideoFileView.data(), analogVideoFileView.size(), &video.videoFileHeader)) {

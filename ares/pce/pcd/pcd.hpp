@@ -420,7 +420,7 @@ struct PCD : Thread {
       std::vector<u32> outputFramebuffer;
     } video;
     std::vector<u8> analogAudioDataBuffer;
-    array_view<u8> analogAudioRawDataView;
+    std::span<const u8> analogAudioRawDataView;
     n32 analogAudioLeadingAudioSamples;
     Decode::MMI mmi;
 

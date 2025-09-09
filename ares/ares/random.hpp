@@ -50,7 +50,7 @@ struct Random {
     }
   }
 
-  auto array(array_span<u8> buffer) -> void {
+  auto array(std::span<u8> buffer) -> void {
     if(_entropy == Entropy::None) {
       memory::fill(buffer.data(), buffer.size());
       return;

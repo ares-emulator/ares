@@ -56,7 +56,7 @@ auto Screen::power() -> void {
   memory::fill<const u32*>(_lineOverride.data(), _canvasWidth * _canvasHeight, nullptr);
 }
 
-auto Screen::pixels(bool frame) -> array_span<u32> {
+auto Screen::pixels(bool frame) -> std::span<u32> {
   if(frame == 0) return {_inputA.data(), _canvasWidth * _canvasHeight};
   if(frame == 1) return {_inputB.data(), _canvasWidth * _canvasHeight};
   return {};
