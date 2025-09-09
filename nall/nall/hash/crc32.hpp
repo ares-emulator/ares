@@ -7,7 +7,7 @@ namespace nall::Hash {
 struct CRC32 : Hash {
   using Hash::input;
 
-  CRC32(array_view<u8> buffer = {}) {
+  CRC32(std::span<const u8> buffer = {}) {
     reset();
     input(buffer);
   }

@@ -61,14 +61,5 @@ template<typename T> struct array_span : array_view<T> {
   template<typename U> auto writem(U value, u32 size) -> void;
 };
 
-//array_span<u8>
-
-template<> template<typename U> inline auto array_span<u8>::writel(U value, u32 size) -> void {
-  for(u32 byte : range(size)) write(value >> byte * 8);
-}
-
-template<> template<typename U> inline auto array_span<u8>::writem(U value, u32 size) -> void {
-  for(u32 byte : reverse(range(size))) write(value >> byte * 8);
-}
 
 }

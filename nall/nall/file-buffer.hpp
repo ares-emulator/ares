@@ -91,7 +91,7 @@ struct file_buffer {
     return result;
   }
 
-  auto read(array_span<u8> memory) -> void {
+  auto read(std::span<u8> memory) -> void {
     for(auto& byte : memory) byte = read();
   }
 
