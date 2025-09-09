@@ -44,7 +44,7 @@ auto SuperFamicom::load(string location) -> LoadResult {
     if(auto identifier = document["game/board/memory/identifier"]) {
       if(!firmwareRomSize() && !local_firmware) {
         auto id = identifier.string();
-        array_view<u8> view;
+        std::span<const u8> view;
         if(id == "Cx4"  ) view = Resource::SuperFamicom::Cx4;
         if(id == "DSP1" ) view = Resource::SuperFamicom::DSP1;
         if(id == "DSP1B") view = Resource::SuperFamicom::DSP1B;
@@ -56,7 +56,7 @@ auto SuperFamicom::load(string location) -> LoadResult {
         if(id == "ST010") view = Resource::SuperFamicom::ST010;
         if(id == "ST011") view = Resource::SuperFamicom::ST011;
         if(id == "ST018") view = Resource::SuperFamicom::ST018;
-        while(view.size()) rom.push_back(view.read());
+        for(auto byte : view) rom.push_back(byte);
       }
 	}
   };
@@ -166,7 +166,7 @@ auto SuperFamicom::load(string location) -> LoadResult {
     }
   }
 
-  array_view<u8> view{rom};
+  std::span<const u8> view{rom};
   for(auto node : document.find("game/board/memory(type=ROM)")) {
     string name;
     if(auto architecture = node["architecture"].string()) name.append(architecture.downcase(), ".");
@@ -174,7 +174,7 @@ auto SuperFamicom::load(string location) -> LoadResult {
     u32 size = node["size"].natural();
     if(view.size() < size) break;  //missing firmware
     pak->append(name, {view.data(), size});
-    view += size;
+    view = view.subspan(size);
   }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {

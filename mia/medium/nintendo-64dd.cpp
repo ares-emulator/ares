@@ -4,10 +4,10 @@ struct Nintendo64DD : FloppyDisk {
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom, std::vector<u8> errorTable) -> string;
-  auto transform(array_view<u8> input, std::vector<u8> errorTable) -> std::vector<u8>;
-  auto sizeCheck(array_view<u8> input) -> bool;
-  auto repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bool;
-  auto createErrorTable(array_view<u8> input) -> std::vector<u8>;
+  auto transform(std::span<const u8> input, std::vector<u8> errorTable) -> std::vector<u8>;
+  auto sizeCheck(std::span<const u8> input) -> bool;
+  auto repeatCheck(std::span<const u8> input, u32 repeat, u32 size) -> bool;
+  auto createErrorTable(std::span<const u8> input) -> std::vector<u8>;
 };
 
 auto Nintendo64DD::load(string location) -> LoadResult {
@@ -19,7 +19,7 @@ auto Nintendo64DD::load(string location) -> LoadResult {
   }
   if(input.empty()) return romNotFound;
 
-  array_view<u8> view{input};
+  std::span<const u8> view{input};
   auto errorTable = createErrorTable(view);
   if(errorTable.empty()) return invalidROM;
   auto sizeValid = sizeCheck(view);
@@ -99,7 +99,7 @@ auto Nintendo64DD::analyze(std::vector<u8>& rom, std::vector<u8> errorTable) -> 
   return s;
 }
 
-auto Nintendo64DD::sizeCheck(array_view<u8> input) -> bool {
+auto Nintendo64DD::sizeCheck(std::span<const u8> input) -> bool {
   //check disk image size
   //ndd
   if(input.size() == 0x3DEC800) return true;
@@ -163,7 +163,7 @@ auto Nintendo64DD::sizeCheck(array_view<u8> input) -> bool {
   return false;
 }
 
-auto Nintendo64DD::repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bool {
+auto Nintendo64DD::repeatCheck(std::span<const u8> input, u32 repeat, u32 size) -> bool {
   for(u32 i : range(size)) {
     for(u32 j : range(repeat)) {
       if (input[i] != input[(j * size) + i]) return false;
@@ -172,7 +172,7 @@ auto Nintendo64DD::repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bo
   return true;
 }
 
-auto Nintendo64DD::createErrorTable(array_view<u8> input) -> std::vector<u8> {
+auto Nintendo64DD::createErrorTable(std::span<const u8> input) -> std::vector<u8> {
   //basic disk format check (further d64 check will be done later)
   b1 ndd = (input.size() == 0x3DEC800);
   b1 mame = (input.size() == 0x435B0C0);
@@ -213,7 +213,7 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> std::vector<u8> {
       if(input[systemOffset + 0x1C] != 0x80) continue;  //load address
 
       //repeat check
-      array_view<u8> block{input.data() + systemOffset, 0xE8 * 0x55};
+      std::span<const u8> block{input.data() + systemOffset, 0xE8 * 0x55};
       if(!repeatCheck(block, 0x55, 0xE8))   continue;
 
       output[systemBlocks[n]] = 0;
@@ -244,7 +244,7 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> std::vector<u8> {
         if(input[systemOffset + 0x1C] != 0x80) continue;  //load address
 
         //repeat check
-        array_view<u8> block{input.data() + systemOffset, 0xC0 * 0x55};
+        std::span<const u8> block{input.data() + systemOffset, 0xC0 * 0x55};
         if(!repeatCheck(block, 0x55, 0xC0))   continue;
 
         output[systemBlocks[n]+2] = 0;
@@ -293,7 +293,7 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> std::vector<u8> {
       output[diskIdBlocks[n]] = 1;
 
       //repeat check
-      array_view<u8> block{input.data() + diskIdOffset, 0xE8 * 0x55};
+      std::span<const u8> block{input.data() + diskIdOffset, 0xE8 * 0x55};
       if(!repeatCheck(block, 0x55, 0xE8))   continue;
 
       output[diskIdBlocks[n]] = 0;
@@ -307,7 +307,7 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> std::vector<u8> {
   return output;
 }
 
-auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -> std::vector<u8> {
+auto Nintendo64DD::transform(std::span<const u8> input, std::vector<u8> errorTable) -> std::vector<u8> {
   //basic disk format check (further d64 check will be done later)
   b1 ndd = (input.size() == 0x3DEC800);
   b1 mame = (input.size() == 0x435B0C0);
@@ -319,12 +319,11 @@ auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -
   if(mame) {
     //mame physical format (canon ares format)
     //just copy
-    input.begin();
     std::vector<u8> output;
     output.resize(0x435B0C0, 0);
 
     for(u32 n : range(input.size()))
-      output[n] = input.read();
+      output[n] = input[n];
     
     return output;
   }
@@ -358,11 +357,10 @@ auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -
   }
 
   //make sure to use valid disk info when converting
-  input.begin();
-  array_view<u8> dataFormat{input.data() + systemOffset, 0xE8};
+  u32 inputPos = 0;  // Track position in input
+  std::span<const u8> dataFormat{input.data() + systemOffset, 0xE8};
 
   //ndd conv
-  input.begin();
   std::vector<u8> output;
   output.resize(0x435B0C0, 0);
 
@@ -424,7 +422,7 @@ auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -
       offsetCalc += blockSizeTable[headCalc ? pzoneCalc - 7 : pzoneCalc] * blockCalc;
 
       for(u32 n : range(blockSizeTable[headCalc ? pzoneCalc - 7 : pzoneCalc]))
-        output[offsetCalc + n] = input.read();
+        output[offsetCalc + n] = input[inputPos++];
     }
   }
   if(d64) {
@@ -473,7 +471,7 @@ auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -
     }
 
     //copy lbas
-    input += 0x200;
+    input = input.subspan(0x200);
     u32 vzone = 0;
     for (; lba < 0x10DC; lba++) {
       if (lba >= vzoneLbaTable[type][vzone]) vzone++;
@@ -513,7 +511,7 @@ auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -
       offsetCalc += blockSizeTable[headCalc ? pzoneCalc - 7 : pzoneCalc] * blockCalc;
 
       for(u32 n : range(blockSizeTable[headCalc ? pzoneCalc - 7 : pzoneCalc]))
-        output[offsetCalc + n] = input.read();
+        output[offsetCalc + n] = input[inputPos++];
     }
   }
 

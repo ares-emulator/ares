@@ -4,7 +4,7 @@ struct FamicomDiskSystem : FloppyDisk {
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze() -> string;
-  auto transform(array_view<u8> input) -> std::vector<u8>;
+  auto transform(std::span<const u8> input) -> std::vector<u8>;
 };
 
 auto FamicomDiskSystem::load(string location) -> LoadResult {
@@ -30,8 +30,8 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     pak->append("manifest.bml", manifest);
 
     std::vector<u8> input = FloppyDisk::read(location);
-    array_view<u8> view{input};
-    if(view.size() % 65500 == 16) view += 16;  //skip iNES / fwNES header
+    std::span<const u8> view{input};
+    if(view.size() % 65500 == 16) view = view.subspan(16);  //skip iNES / fwNES header
     u32 index = 0;
 
     auto output = transform(view);
@@ -40,7 +40,7 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
       name.append("disk", (char)('1' + index / 2), ".");
       name.append("side", (char)('A' + index % 2));
       pak->append(name, output);
-      view += 65500;
+      view = view.subspan(65500);
       index++;
       output = transform(view);
     } while (!output.empty());
@@ -75,10 +75,10 @@ auto FamicomDiskSystem::analyze() -> string {
   return s;
 }
 
-auto FamicomDiskSystem::transform(array_view<u8> input) -> std::vector<u8> {
+auto FamicomDiskSystem::transform(std::span<const u8> input) -> std::vector<u8> {
   if(input.size() < 65500) return {};
 
-  array_view<u8> data{input.data(), 65500};
+  std::span<const u8> data{input.data(), 65500};
   if(data[0x00] != 0x01) return {};
   if(data[0x38] != 0x02) return {};
   if(data[0x3a] != 0x03) return {};
@@ -86,6 +86,7 @@ auto FamicomDiskSystem::transform(array_view<u8> input) -> std::vector<u8> {
 
   std::vector<u8> output;
   u16 crc16 = 0;
+  u32 offset = 0;
   auto hash = [&](u8 byte) {
     for(u32 bit : range(8)) {
       bool carry = crc16 & 1;
@@ -108,30 +109,30 @@ auto FamicomDiskSystem::transform(array_view<u8> input) -> std::vector<u8> {
   //block 1
   for(u32 n : range(0xe00)) write(0x00);  //pregap
   write(0x80);
-  for(u32 n : range(0x38)) write(data.read());
+  for(u32 n : range(0x38)) write(data[offset++]);
   flush();
 
   //block 2
   for(u32 n : range(0x80)) write(0x00);  //gap
   write(0x80);
-  for(u32 n : range(0x02)) write(data.read());
+  for(u32 n : range(0x02)) write(data[offset++]);
   flush();
 
   while(true) {
-    if(data[0x00] != 0x03 || data.size() < 0x11) break;
-    u16 size = data[0x0d] << 0 | data[0x0e] << 8;
-    if(data[0x10] != 0x04 || data.size() < 0x11 + size) break;
+    if(offset >= data.size() || data[offset] != 0x03 || data.size() < offset + 0x11) break;
+    u16 size = data[offset + 0x0d] << 0 | data[offset + 0x0e] << 8;
+    if(data[offset + 0x10] != 0x04 || data.size() < offset + 0x11 + size) break;
 
     //block 3
     for(u32 n : range(0x80)) write(0x00);  //gap
     write(0x80);
-    for(u32 n : range(0x10)) write(data.read());
+    for(u32 n : range(0x10)) write(data[offset++]);
     flush();
 
     //block 4
     for(u32 n : range(0x80)) write(0x00);  //gap
     write(0x80);
-    for(u32 n : range(1 + size)) write(data.read());
+    for(u32 n : range(1 + size)) write(data[offset++]);
     flush();
   }
 
