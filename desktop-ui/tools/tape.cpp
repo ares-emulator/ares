@@ -8,7 +8,7 @@ auto TapeViewer::construct() -> void {
 
   statusLabel.setText("Status: No tape loaded");
   lengthLabel.setText("Length: 0/0");
-  newButton.setText("New").setEnabled(true).onActivate([=] {
+  newButton.setText("New").setEnabled(true).onActivate([&] {
     auto tape = loadButton.attribute<ares::Node::Tape>("node");
     if (tape->loaded())
       return;
@@ -26,7 +26,7 @@ auto TapeViewer::construct() -> void {
     }
     refresh();
   });
-  loadButton.setText("Load").setEnabled(true).onActivate([=] {
+  loadButton.setText("Load").setEnabled(true).onActivate([&] {
     auto tape = loadButton.attribute<ares::Node::Tape>("node");
     if (tape->loaded())
       return;
@@ -35,7 +35,7 @@ auto TapeViewer::construct() -> void {
     }
     refresh();
   });
-  unloadButton.setText("Unload").setEnabled(false).onActivate([=] {
+  unloadButton.setText("Unload").setEnabled(false).onActivate([&] {
     auto tape = unloadButton.attribute<ares::Node::Tape>("node");
     if (!tape->loaded())
       return;
@@ -45,35 +45,35 @@ auto TapeViewer::construct() -> void {
     emulator->unloadTape(tape);
     refresh();
   });
-  playButton.setText("Play").setEnabled(false).onActivate([=] {
+  playButton.setText("Play").setEnabled(false).onActivate([&] {
     auto tape = playButton.attribute<ares::Node::Tape>("node");
     if (!tape->loaded() || tape->playing() || tape->recording())
       return;
     tape->play();
     refresh();
   });
-  recordButton.setText("Record").setEnabled(false).onActivate([=] {
+  recordButton.setText("Record").setEnabled(false).onActivate([&] {
     auto tape = playButton.attribute<ares::Node::Tape>("node");
     if (!tape->loaded() || tape->playing() || tape->recording())
       return;
     tape->record();
     refresh();
   });
-  fastForwardButton.setText("Fast Forward").setEnabled(false).onActivate([=] {
+  fastForwardButton.setText("Fast Forward").setEnabled(false).onActivate([&] {
     auto tape = fastForwardButton.attribute<ares::Node::Tape>("node");
     if (!tape->loaded() || tape->playing() || tape->recording())
       return;
     tape->setPosition(tape->length());
     refresh();
   });
-  rewindButton.setText("Rewind").setEnabled(false).onActivate([=] {
+  rewindButton.setText("Rewind").setEnabled(false).onActivate([&] {
     auto tape = rewindButton.attribute<ares::Node::Tape>("node");
     if (!tape->loaded() || tape->playing() || tape->recording())
       return;
     tape->setPosition(0);
     refresh();
   });
-  stopButton.setText("Stop").setEnabled(false).onActivate([=] {
+  stopButton.setText("Stop").setEnabled(false).onActivate([&] {
     auto tape = stopButton.attribute<ares::Node::Tape>("node");
     if (!tape->loaded() || (!tape->playing() && !tape->recording()))
       return;
