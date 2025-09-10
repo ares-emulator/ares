@@ -1,8 +1,9 @@
 #include <ws/ws.hpp>
+#include <algorithm>
 
 namespace ares::WonderSwan {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Bandai] WonderSwan",
     "[Bandai] WonderSwan Color",
@@ -12,7 +13,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 

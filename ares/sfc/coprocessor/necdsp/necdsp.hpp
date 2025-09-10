@@ -26,7 +26,7 @@ struct NECDSP : uPD96050, Thread {
   auto readRAM(n24 address, n8 data) -> n8;
   auto writeRAM(n24 address, n8 data) -> void;
 
-  auto firmware() const -> vector<n8>;
+  auto firmware() const -> std::vector<n8>;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

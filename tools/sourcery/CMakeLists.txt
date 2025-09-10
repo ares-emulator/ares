@@ -4,7 +4,12 @@ if(NOT (CMAKE_CROSSCOMPILING OR ARES_CROSSCOMPILING))
 
   target_include_directories(sourcery PRIVATE ${CMAKE_SOURCE_DIR})
 
-  target_link_libraries(sourcery PRIVATE nall "$<$<PLATFORM_ID:Darwin>:$<LINK_LIBRARY:FRAMEWORK,Cocoa.framework>>")
+  target_link_libraries(
+    sourcery
+    PRIVATE
+      ares::nall
+      "$<$<PLATFORM_ID:Darwin>:$<LINK_LIBRARY:FRAMEWORK,Cocoa.framework>>"
+  )
 
   set(CONSOLE TRUE)
   ares_configure_executable(sourcery)

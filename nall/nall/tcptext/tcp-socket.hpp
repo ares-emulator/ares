@@ -38,7 +38,7 @@ class Socket {
     auto update() -> void;
 
     auto sendData(const u8* data, u32 size) -> void;
-    virtual auto onData(const vector<u8> &data) -> void = 0;
+    virtual auto onData(const std::vector<u8> &data) -> void = 0;
 
     virtual auto onConnect() -> void = 0;
     virtual auto onDisconnect() -> void = 0;
@@ -51,10 +51,10 @@ class Socket {
     std::atomic<s32> fdServer{-1};
     std::atomic<s32> fdClient{-1};
 
-    vector<u8> receiveBuffer{};
+    std::vector<u8> receiveBuffer{};
     std::mutex receiveBufferMutex{};
 
-    vector<u8> sendBuffer{};
+    std::vector<u8> sendBuffer{};
     std::mutex sendBufferMutex{};
 };
 

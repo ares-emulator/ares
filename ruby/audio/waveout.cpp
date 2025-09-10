@@ -17,12 +17,12 @@ struct AudioWaveOut : AudioDriver {
   auto driver() -> string override { return "waveOut"; }
   auto ready() -> bool override { return true; }
 
-  auto hasDevices() -> vector<string> override {
-    vector<string> devices{"Default"};
+  auto hasDevices() -> std::vector<string> override {
+    std::vector<string> devices{"Default"};
     for(u32 index : range(waveOutGetNumDevs())) {
       WAVEOUTCAPS caps{};
       if(waveOutGetDevCaps(index, &caps, sizeof(WAVEOUTCAPS)) == MMSYSERR_NOERROR) {
-        devices.append((const char*)utf8_t(caps.szPname));
+        devices.push_back((const char*)utf8_t(caps.szPname));
       }
     }
     return devices;
@@ -30,8 +30,8 @@ struct AudioWaveOut : AudioDriver {
 
   auto hasBlocking() -> bool override { return true; }
   auto hasDynamic() -> bool override { return true; }
-  auto hasFrequencies() -> vector<u32> override { return {44100}; }
-  auto hasLatencies() -> vector<u32> override { return {512, 384, 320, 256, 192, 160, 128, 96, 80, 64, 48, 40, 32}; }
+  auto hasFrequencies() -> std::vector<u32> override { return {44100}; }
+  auto hasLatencies() -> std::vector<u32> override { return {512, 384, 320, 256, 192, 160, 128, 96, 80, 64, 48, 40, 32}; }
 
   auto setBlocking(bool blocking) -> bool override { return true; }
   auto setDynamic(bool dynamic) -> bool override { return initialize(); }
@@ -74,8 +74,8 @@ private:
   auto initialize() -> bool {
     terminate();
 
-    auto deviceIndex = hasDevices().find(self.device);
-    if(!deviceIndex) deviceIndex = 0;
+    u32 deviceIndex = 0;
+    if (auto index = index_of(hasDevices(), self.device)) deviceIndex = (u32)*index;
 
     WAVEFORMATEX format{};
     format.wFormatTag = WAVE_FORMAT_PCM;
@@ -86,7 +86,7 @@ private:
     format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
     format.cbSize = 0;  //not sizeof(WAVEFORMAT); size of extra information after WAVEFORMATEX
     //-1 = default; 0+ = specific device; subtract -1 as hasDevices() includes "Default" entry
-    waveOutOpen(&handle, (s32)*deviceIndex - 1, &format, (DWORD_PTR)waveOutCallback, (DWORD_PTR)this, CALLBACK_FUNCTION);
+    waveOutOpen(&handle, (s32)deviceIndex - 1, &format, (DWORD_PTR)waveOutCallback, (DWORD_PTR)this, CALLBACK_FUNCTION);
 
     frameCount = self.latency;
     blockCount = 32;
@@ -117,11 +117,11 @@ private:
     }
     waveOutClose(handle);
     handle = nullptr;
-    headers.reset();
+    headers.clear();
   }
 
   HWAVEOUT handle = nullptr;
-  vector<WAVEHDR> headers;
+  std::vector<WAVEHDR> headers;
   u32 frameCount = 0;
   u32 blockCount = 0;
   u32 frameIndex = 0;

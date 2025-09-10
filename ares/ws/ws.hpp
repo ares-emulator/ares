@@ -2,13 +2,14 @@
 //started: 2016-01-26
 
 #include <ares/ares.hpp>
+#include <vector>
 
 #include <component/processor/v30mz/v30mz.hpp>
 #include <component/eeprom/m93lcx6/m93lcx6.hpp>
 
 namespace ares::WonderSwan {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 

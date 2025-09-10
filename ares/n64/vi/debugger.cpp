@@ -3,7 +3,7 @@ auto VI::Debugger::load(Node::Object parent) -> void {
 }
 
 auto VI::Debugger::io(bool mode, u32 address, u32 data) -> void {
-  static const vector<string> registerNames = {
+  static const std::vector<string> registerNames = {
     "VI_CONTROL",
     "VI_DRAM_ADDRESS",
     "VI_H_WIDTH",
@@ -22,7 +22,7 @@ auto VI::Debugger::io(bool mode, u32 address, u32 data) -> void {
 
   if(unlikely(tracer.io->enabled())) {
     string message;
-    string name = registerNames(address, "VI_UNKNOWN");
+    string name = (address < registerNames.size() ? registerNames[address] : string("VI_UNKNOWN"));
     if(mode == Read) {
       message = {name.split("|").first(), " => ", hex(data, 8L)};
     }

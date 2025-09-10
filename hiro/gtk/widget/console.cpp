@@ -82,8 +82,8 @@ auto pConsole::_keyPress(u32 scancode, u32 mask) -> bool {
     g_free(temp);
     gtk_text_buffer_insert(textBuffer, &end, string{"\n", state().prompt}, -1);
     self().doActivate(s);
-    if(s) history.prepend(s);
-    if(history.size() > 128) history.removeRight();
+    if(s) history.insert(history.begin(), s);
+    if(history.size() > 128) history.pop_back();
     historyOffset = 0;
     _seekToEnd();
     return true;

@@ -119,15 +119,20 @@ target_sources(
 
 target_compile_definitions(mia PRIVATE MIA_LIBRARY)
 
-target_link_libraries(mia PUBLIC ares::nall ares::ares ares::hiro PRIVATE tzxfile)
+target_include_directories(mia PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(mia PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty)
+target_link_libraries(mia PRIVATE ares::ares ares::nall::headers tzxfile $<$<BOOL:${ARES_ENABLE_CHD}>:chdr-static>)
 
 if(ARES_BUILD_OPTIONAL_TARGETS)
   add_executable(mia-ui mia.cpp resource/resource.cpp)
 
+  target_include_directories(mia-ui PRIVATE ${CMAKE_SOURCE_DIR})
   target_link_libraries(
     mia-ui
-    PUBLIC ares::hiro ares::ares
     PRIVATE
+      ares::hiro
+      ares::ares
+      ares::nall
       tzxfile
       "$<$<PLATFORM_ID:Darwin>:$<LINK_LIBRARY:FRAMEWORK,Carbon.framework>>"
       "$<$<PLATFORM_ID:Darwin>:$<LINK_LIBRARY:FRAMEWORK,IOKit.framework>>"
@@ -137,12 +142,6 @@ if(ARES_BUILD_OPTIONAL_TARGETS)
 
   if(WIN32)
     target_sources(mia-ui PRIVATE resource/mia.rc resource/mia.Manifest)
-  endif()
-
-  if(OS_WINDOWS)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      target_link_libraries(mia-ui PRIVATE nall)
-    endif()
   endif()
 
   set_target_properties(

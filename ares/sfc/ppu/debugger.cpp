@@ -28,8 +28,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.tiles2bpp = parent->append<Node::Debugger::Graphics>("2 BPP Tiles");
   graphics.tiles2bpp->setSize(512, 512);
-  graphics.tiles2bpp->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.tiles2bpp->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(512 * 512);
     for(u32 tileY : range(64)) {
       for(u32 tileX : range(64)) {
@@ -50,8 +50,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.tiles4bpp = parent->append<Node::Debugger::Graphics>("4 BPP Tiles");
   graphics.tiles4bpp->setSize(512, 256);
-  graphics.tiles4bpp->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.tiles4bpp->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(512 * 256);
     for(u32 tileY : range(32)) {
       for(u32 tileX : range(64)) {
@@ -75,8 +75,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.tiles8bpp = parent->append<Node::Debugger::Graphics>("8 BPP Tiles");
   graphics.tiles8bpp->setSize(512, 128);
-  graphics.tiles8bpp->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.tiles8bpp->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(512 * 128);
     for(u32 tileY : range(16)) {
       for(u32 tileX : range(64)) {
@@ -106,8 +106,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.tilesMode7 = parent->append<Node::Debugger::Graphics>("Mode 7 Tiles");
   graphics.tilesMode7->setSize(128, 128);
-  graphics.tilesMode7->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.tilesMode7->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(128 * 128);
     for(u32 tileY : range(16)) {
       for(u32 tileX : range(16)) {

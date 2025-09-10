@@ -192,6 +192,39 @@ template<> struct stringify<vector<u8>> {
   vector<char> _text;
 };
 
+template<> struct stringify<std::vector<u8>> {
+  stringify(const std::vector<u8>& source) {
+    _text.resize(source.size());
+    memory::copy(_text.get(), source.data(), source.size());
+  }
+  auto data() const -> const char* { return _text.data(); }
+  auto size() const -> u32 { return _text.size(); }
+  string _text;
+};
+
+//helper to stringify std::vector<u8> without affecting other stringify mechanics
+inline auto stringify_std_vector_u8(const std::vector<u8>& value) -> string {
+  string output;
+  output.resize(value.size());
+  memory::copy(output.get(), value.data(), value.size());
+  return output;
+}
+
+// stringify for std::vector<string> used by some toolchains in gtk/browser-window-native
+template<> struct stringify<std::vector<string>> {
+  stringify(const std::vector<string>& source) {
+    // join with NUL separators as nall::vector<string> would have been printed element-wise where needed
+    // but here we produce a simple concatenation with newlines for debugging/logging purposes
+    for(size_t i = 0; i < source.size(); i++) {
+      if(i) _text.append("\n");
+      _text.append(source[i]);
+    }
+  }
+  auto data() const -> const char* { return _text.data(); }
+  auto size() const -> u32 { return _text.size(); }
+  string _text;
+};
+
 //char arrays
 
 template<> struct stringify<char*> {

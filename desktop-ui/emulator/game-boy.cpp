@@ -61,7 +61,7 @@ auto GameBoy::load(Menu menu) -> void {
       for(auto& setting : options->readAllowedValues()) {
         MenuRadioItem item{&colorEmulationMenu};
         item.setText(setting);
-        item.onActivate([=] {
+        item.onActivate([=, this] {
           Program::Guard guard;
           if(auto settings = root->find<ares::Node::Setting::String>("PPU/Screen/Color Emulation")) {
             settings->setValue(setting);
@@ -73,7 +73,7 @@ auto GameBoy::load(Menu menu) -> void {
 
     if(auto headphones = root->find<ares::Node::Setting::Boolean>("Headphones")) {
         MenuCheckItem headphoneItem{&menu};
-        headphoneItem.setText("Headphones").setChecked(headphones->value()).onToggle([=] {
+      headphoneItem.setText("Headphones").setChecked(headphones->value()).onToggle([=, this] {
             if(auto headphones = root->find<ares::Node::Setting::Boolean>("Headphones")) {
                 headphones->setValue(headphoneItem.checked());
             }

@@ -71,11 +71,11 @@ struct file : inode {
     return (data.st_mode & S_IFMT) == S_IFREG ? data.st_size : 0u;
   }
 
-  static auto read(const string& filename) -> vector<u8> {
-    vector<u8> memory;
+  static auto read(const string& filename) -> std::vector<u8> {
+    std::vector<u8> memory;
     if(auto fp = file::open(filename, mode::read)) {
       memory.resize(fp.size());
-      fp.read(memory);
+      fp.read({memory.data(), memory.size()});
     }
     return memory;
   }
@@ -97,7 +97,8 @@ struct file : inode {
   }
 
   static auto sha256(const string& filename) -> string {
-    return Hash::SHA256(read(filename)).digest();
+    auto mem = read(filename);
+    return Hash::SHA256(array_view<u8>(mem.data(), mem.size())).digest();
   }
 };
 

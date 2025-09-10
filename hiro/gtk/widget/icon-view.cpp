@@ -148,7 +148,7 @@ auto pIconView::setItemSelected(u32 position, bool selected) -> void {
   unlock();
 }
 
-auto pIconView::setItemSelected(const vector<s32>& selections) -> void {
+auto pIconView::setItemSelected(const std::vector<s32>& selections) -> void {
   lock();
   setItemSelectedNone();
   for(auto& position : selections) setItemSelected(position, true);
@@ -185,7 +185,7 @@ auto pIconView::setOrientation(Orientation orientation) -> void {
 }
 
 auto pIconView::_updateSelected() -> void {
-  vector<u32> selected;
+  std::vector<u32> selected;
 
   GList* list = gtk_icon_view_get_selected_items(GTK_ICON_VIEW(subWidget));
   GList* p = list;
@@ -195,7 +195,7 @@ auto pIconView::_updateSelected() -> void {
     char* pathString = gtk_tree_path_to_string(path);
     u32 position = toNatural(pathString);
     g_free(pathString);
-    selected.append(position);
+    selected.push_back(position);
     p = p->next;
   }
 

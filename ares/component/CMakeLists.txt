@@ -1,6 +1,6 @@
 list(REMOVE_DUPLICATES ares.components)
 
-set(ARES_COMPONENTS_LIST "${ares.components}" CACHE LIST "Enabled shared hardware components" FORCE)
+set(ARES_COMPONENTS_LIST "${ares.components}" CACHE STRING "Enabled shared hardware components" FORCE)
 
 mark_as_advanced(ARES_COMPONENTS_LIST)
 

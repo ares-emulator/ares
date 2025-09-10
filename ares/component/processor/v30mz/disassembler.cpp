@@ -17,7 +17,7 @@ auto V30MZ::disassembleInstruction(u16 ps, u16 pc) -> string {
     return offset;
   };
 
-  auto instruction = [&](string_view name) -> string {
+  auto instruction = [&](string name) -> string {
     if(name.size() >= 7) return name;
     return pad(name, -7);
   };
@@ -150,7 +150,7 @@ auto V30MZ::disassembleInstruction(u16 ps, u16 pc) -> string {
   };
 
   #define op(id, name, ...) case id: \
-    output.append(instruction(name), vector<string>{__VA_ARGS__}.merge(",")); \
+    output.append(instruction(name), nall::merge({__VA_ARGS__}, ",")); \
     break
 
   auto opcode = read(0);

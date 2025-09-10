@@ -118,12 +118,14 @@ auto PathSettings::construct() -> void {
 auto PathSettings::refresh() -> void {
   //simplifies pathnames by abbreviating the home folder and trailing slash
   auto pathname = [](string name) -> string {
-    if(name.beginsWith(Path::program())) {
-      name.trimLeft(Path::program(), 1L);
+    auto programPath = Path::program();
+    if(name.beginsWith(programPath)) {
+      name.trimLeft(programPath, 1L);
       name.prepend("./");
     }
-    if(name.beginsWith(Path::user())) {
-      name.trimLeft(Path::user(), 1L);
+    auto userPath = Path::user();
+    if(name.beginsWith(userPath)) {
+      name.trimLeft(userPath, 1L);
       name.prepend("~/");
     }
     if(name != "/") name.trimRight("/", 1L);

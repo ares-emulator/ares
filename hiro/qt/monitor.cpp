@@ -7,10 +7,9 @@ auto pMonitor::count() -> u32 {
 }
 
 auto pMonitor::dpi(u32 monitor) -> Position {
-  //Qt does not support per-monitor DPI retrieval
   return {
-    QApplication::desktop()->logicalDpiX(),
-    QApplication::desktop()->logicalDpiY()
+    QApplication::screens().at(monitor)->logicalDotsPerInchX(),
+    QApplication::screens().at(monitor)->logicalDotsPerInchY()
   };
 }
 

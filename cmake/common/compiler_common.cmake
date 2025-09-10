@@ -30,11 +30,14 @@ else()
   message(STATUS "Checking if interprocedural optimization is supported - skipped")
 endif()
 
-# Set C and C++ language standards to C17 and C++17
+# Set C and C++ language standards to C17 and C++20
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
+# Disable C++20 module scanning (CMP0155)
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 # Set symbols to be hidden by default for C and C++
 set(CMAKE_C_VISIBILITY_PRESET hidden)
@@ -92,6 +95,7 @@ set(_ares_clang_c_options ${_ares_clang_common_options})
 set(
   _ares_clang_cxx_options
   ${_ares_clang_common_options}
+  -fno-char8_t
   -Wvexing-parse
   -Wdelete-non-virtual-dtor
   -Wrange-loop-analysis
@@ -101,6 +105,8 @@ set(
 )
 
 set(_ares_gcc_common_options -fwrapv -fno-strict-aliasing -Wno-unused-result -Wno-stringop-overflow)
+
+set(_ares_gcc_cxx_options -fno-char8_t)
 
 if(NOT DEFINED CMAKE_COMPILE_WARNING_AS_ERROR)
   set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)

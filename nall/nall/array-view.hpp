@@ -3,6 +3,7 @@
 #include <nall/iterator.hpp>
 #include <nall/range.hpp>
 #include <nall/traits.hpp>
+#include <vector>
 
 namespace nall {
 
@@ -27,6 +28,11 @@ template<typename T> struct array_view {
   template<s32 size> array_view(const T (&data)[size]) {
     _data = data;
     _size = size;
+  }
+
+  array_view(const std::vector<T>& v) {
+    _data = v.data();
+    _size = (s32)v.size();
   }
 
   explicit operator bool() const {

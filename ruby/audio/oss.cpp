@@ -32,22 +32,22 @@ struct AudioOSS : AudioDriver {
   auto hasBlocking() -> bool override { return true; }
   auto hasDynamic() -> bool override { return true; }
 
-  auto hasDevices() -> vector<string> override {
-    vector<string> devices;
-    devices.append("/dev/dsp");
-    for(auto& device : directory::files("/dev/", "dsp?*")) devices.append(string{"/dev/", device});
+  auto hasDevices() -> std::vector<string> override {
+    std::vector<string> devices;
+    devices.push_back("/dev/dsp");
+    for(auto& device : directory::files("/dev/", "dsp?*")) devices.push_back(string{"/dev/", device});
     return devices;
   }
 
-  auto hasChannels() -> vector<u32> override {
+  auto hasChannels() -> std::vector<u32> override {
     return {1, 2, 3, 4, 5, 6, 7, 8};
   }
 
-  auto hasFrequencies() -> vector<u32> override {
+  auto hasFrequencies() -> std::vector<u32> override {
     return {22050, 44100, 48000, 96000, 192000};
   }
 
-  auto hasLatencies() -> vector<u32> override {
+  auto hasLatencies() -> std::vector<u32> override {
     return {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   }
 
@@ -96,7 +96,10 @@ private:
   auto initialize() -> bool {
     terminate();
 
-    if(!hasDevices().find(self.device)) self.device = hasDevices().first();
+    auto devices = hasDevices();
+    if(std::ranges::find(devices, self.device) == devices.end()) {
+      if(!devices.empty()) self.device = devices.front();
+    }
 
     _fd = open(self.device, O_WRONLY | O_NONBLOCK);
     if(_fd < 0) return false;

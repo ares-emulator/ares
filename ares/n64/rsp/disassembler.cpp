@@ -3,13 +3,14 @@ auto RSP::Disassembler::disassemble(u32 address, u32 instruction) -> string {
   this->instruction = instruction;
 
   auto v = EXECUTE();
-  if(!v) v.append("invalid", string{"$", hex(instruction, 8L)});
+  if(v.empty()) v = {"invalid", string{"$", hex(instruction, 8L)}};
   if(!instruction) v = {"nop"};
-  auto s = pad(v.takeFirst(), -8L);
-  return {s, v.merge(",")};
+  auto s = pad(v.front(), -8L);
+  v.erase(v.begin());
+  return {s, nall::merge(v, ",")};
 }
 
-auto RSP::Disassembler::EXECUTE() -> vector<string> {
+auto RSP::Disassembler::EXECUTE() -> std::vector<string> {
   auto rtName  = [&] { return ipuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
@@ -19,24 +20,24 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
   auto branch  = [&] { return immediate(n12(address + 4 + (s16(instruction) << 2))); };
   auto offset  = [&] { return ipuRegisterIndex(instruction >> 21 & 31, s16(instruction)); };
 
-  auto ADDI = [&](string_view add, string_view sub, string_view mov) -> vector<string> {
+  auto ADDI = [&](string_view add, string_view sub, string_view mov) -> std::vector<string> {
     if(!(instruction >> 21 & 31)) return {mov, rtName(), immediate(s16(instruction), 32L)};
     return {s16(instruction) >= 0 ? add : sub, rtName(), rsValue(), immediate(abs(s16(instruction)))};
   };
 
-  auto ALU = [&](string_view name) -> vector<string> {
+  auto ALU = [&](string_view name) -> std::vector<string> {
     return {name, rtName(), rsValue(), immediate(u16(instruction))};
   };
 
-  auto BRANCH1 = [&](string_view name) -> vector<string> {
+  auto BRANCH1 = [&](string_view name) -> std::vector<string> {
     return {name, rsValue(), branch()};
   };
 
-  auto BRANCH2 = [&](string_view name) -> vector<string> {
+  auto BRANCH2 = [&](string_view name) -> std::vector<string> {
     return {name, rsValue(), rtValue(), branch()};
   };
 
-  auto CACHE = [&](string_view name) -> vector<string> {
+  auto CACHE = [&](string_view name) -> std::vector<string> {
     auto cache  = instruction >> 16 & 3;
     auto op     = instruction >> 18 & 7;
     string type = "reserved";
@@ -60,15 +61,15 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
     return {name, type, offset()};
   };
 
-  auto JUMP = [&](string_view name) -> vector<string> {
+  auto JUMP = [&](string_view name) -> std::vector<string> {
     return {name, jump()};
   };
 
-  auto LOAD = [&](string_view name) -> vector<string> {
+  auto LOAD = [&](string_view name) -> std::vector<string> {
     return {name, rtName(), offset()};
   };
 
-  auto STORE = [&](string_view name) -> vector<string> {
+  auto STORE = [&](string_view name) -> std::vector<string> {
     return {name, rtValue(), offset()};
   };
 
@@ -142,23 +143,23 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
   return {};
 }
 
-auto RSP::Disassembler::SPECIAL() -> vector<string> {
+auto RSP::Disassembler::SPECIAL() -> std::vector<string> {
   auto shift   = [&] { return string{instruction >> 6 & 31}; };
   auto rdName  = [&] { return ipuRegisterName (instruction >> 11 & 31); };
   auto rdValue = [&] { return ipuRegisterValue(instruction >> 11 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
 
-  auto ALU = [&](string_view name, string_view by) -> vector<string> {
+  auto ALU = [&](string_view name, string by) -> std::vector<string> {
     return {name, rdName(), rtValue(), by};
   };
 
-  auto JALR = [&](string_view name) -> vector<string> {
+  auto JALR = [&](string_view name) -> std::vector<string> {
     if((instruction >> 11 & 31) == 31) return {name, rsValue()};
     return {name, rdName(), rsValue()};
   };
 
-  auto REG = [&](string_view name) -> vector<string> {
+  auto REG = [&](string_view name) -> std::vector<string> {
     return {name, rdName(), rsValue(), rtValue()};
   };
 
@@ -232,11 +233,11 @@ auto RSP::Disassembler::SPECIAL() -> vector<string> {
   return {};
 }
 
-auto RSP::Disassembler::REGIMM() -> vector<string> {
+auto RSP::Disassembler::REGIMM() -> std::vector<string> {
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
   auto branch  = [&] { return immediate(n12(address + 4 + (s16(instruction) << 2))); };
 
-  auto BRANCH = [&](string_view name) -> vector<string> {
+  auto BRANCH = [&](string_view name) -> std::vector<string> {
     return {name, rsValue(), branch()};
   };
 
@@ -278,7 +279,7 @@ auto RSP::Disassembler::REGIMM() -> vector<string> {
   return {};
 }
 
-auto RSP::Disassembler::SCC() -> vector<string> {
+auto RSP::Disassembler::SCC() -> std::vector<string> {
   auto rtName  = [&] { return ipuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto sdName  = [&] { return sccRegisterName (instruction >> 11 & 31); };
@@ -292,7 +293,7 @@ auto RSP::Disassembler::SCC() -> vector<string> {
   return {};
 }
 
-auto RSP::Disassembler::LWC2() -> vector<string> {
+auto RSP::Disassembler::LWC2() -> std::vector<string> {
   auto vtName  = [&] { return vpuRegisterName  (instruction >> 16 & 31, instruction >> 7 & 15); };
   auto vtValue = [&] { return vpuRegisterValue (instruction >> 16 & 31, instruction >> 7 & 15); };
   auto offset  = [&](u32 multiplier) { return ipuRegisterIndex(instruction >> 21 & 31, i7(instruction) * multiplier); };
@@ -314,7 +315,7 @@ auto RSP::Disassembler::LWC2() -> vector<string> {
   return {};
 }
 
-auto RSP::Disassembler::SWC2() -> vector<string> {
+auto RSP::Disassembler::SWC2() -> std::vector<string> {
   auto vtName  = [&] { return vpuRegisterName  (instruction >> 16 & 31); };
   auto vtValue = [&] { return vpuRegisterValue (instruction >> 16 & 31); };
   auto offset  = [&](u32 multiplier) { return ipuRegisterIndex(instruction >> 21 & 31, i7(instruction) * multiplier); };
@@ -336,7 +337,7 @@ auto RSP::Disassembler::SWC2() -> vector<string> {
   return {};
 }
 
-auto RSP::Disassembler::VU() -> vector<string> {
+auto RSP::Disassembler::VU() -> std::vector<string> {
   auto rtName  = [&] { return ipuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto rdName  = [&] { return vpuRegisterName  (instruction >> 11 & 31, instruction >> 7 & 15); };
@@ -361,11 +362,11 @@ auto RSP::Disassembler::VU() -> vector<string> {
   auto vmName  = [&] { return vpuRegisterName (instruction >>  6 & 31, instruction >> 11 & 31); };
   auto vmValue = [&] { return vpuRegisterValue(instruction >>  6 & 31, instruction >> 11 & 31); };
 
-  auto DST = [&](string_view name) -> vector<string> {
+  auto DST = [&](string_view name) -> std::vector<string> {
     return {name, vdName(), vsValue(), vtValue()};
   };
 
-  auto DSE = [&](string_view name) -> vector<string> {
+  auto DSE = [&](string_view name) -> std::vector<string> {
     static const string registerNames[] = {
       "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
       "acch", "accm", "accl", "r11", "r12", "r13", "r14", "r15",
@@ -373,11 +374,11 @@ auto RSP::Disassembler::VU() -> vector<string> {
     return {name, vdName(), vsValue(), registerNames[instruction >> 21 & 15]};
   };
 
-  auto DT = [&](string_view name) -> vector<string> {
+  auto DT = [&](string_view name) -> std::vector<string> {
     return {name, vmName(), vtValue()};
   };
 
-  auto D = [&](string_view name) -> vector<string> {
+  auto D = [&](string_view name) -> std::vector<string> {
     return {name, vdName()};
   };
 
@@ -505,9 +506,10 @@ auto RSP::Disassembler::vpuRegisterName(u32 index, u32 element) const -> string 
 
 auto RSP::Disassembler::vpuRegisterValue(u32 index, u32 element) const -> string {
   if(showValues) {
-    vector<string> elements;
-    for(u32 e : range(8)) elements.append(hex(self.vpu.r[index].element(e), 4L));
-    return {vpuRegisterName(index, element), hint("{$", elements.merge("|"), "}")};
+    std::vector<string> elements;
+    elements.reserve(8);
+    for(u32 e : range(8)) elements.push_back(hex(self.vpu.r[index].element(e), 4L));
+    return {vpuRegisterName(index, element), hint("{$", nall::merge(elements, "|"), "}")};
   }
   return vpuRegisterName(index, element);
 }

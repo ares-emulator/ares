@@ -92,7 +92,7 @@ auto BSMemoryCartridge::disconnect() -> void {
       }
       fp->writes(manifest);
     }
-    cpu.coprocessors.removeByValue(this);
+    std::erase(cpu.coprocessors, this);
     Thread::destroy();
   }
 
@@ -128,7 +128,7 @@ auto BSMemoryCartridge::power() -> void {
   if(ROM) return;
 
   Thread::create(1'000'000, {&BSMemoryCartridge::main, this});  //microseconds
-  cpu.coprocessors.append(this);
+  cpu.coprocessors.push_back(this);
 
   for(auto& block : blocks) {
     block.erasing = 0;

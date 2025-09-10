@@ -6,12 +6,12 @@ struct mGroup : mObject {
   auto append(sObject object) -> type&;
   auto object(u32 offset) const -> Object;
   auto objectCount() const -> u32;
-  auto objects() const -> vector<Object>;
+  auto objects() const -> std::vector<Object>;
   auto remove(sObject object) -> type&;
 
 //private:
   struct State {
-    vector<wObject> objects;
+    std::vector<wObject> objects;
   } state;
 };
 #endif

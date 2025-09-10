@@ -6,8 +6,7 @@ static auto Widget_drop(GtkWidget* widget, GdkDragContext* context, s32 x, s32 y
 GtkSelectionData* data, u32 type, u32 timestamp, pWidget* p) -> void {
   if(!p->state().droppable) return;
   auto paths = DropPaths(data);
-  if(!paths) return;
-  p->self().doDrop(paths);
+  if(!paths.empty()) p->self().doDrop(paths);
 }
 
 static auto Widget_mouseEnter(GtkWidget* widget, GdkEventButton* event, pWidget* p) -> s32 {

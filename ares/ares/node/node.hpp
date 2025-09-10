@@ -180,8 +180,8 @@ namespace ares::Node {
   }
 
   template<typename T>
-  static inline auto enumerate(Object from) -> vector<T> {
-    vector<T> objects;
+  static inline auto enumerate(Object from) -> std::vector<T> {
+    std::vector<T> objects;
     if(from) from->enumerate<T>(objects);
     return objects;
   }

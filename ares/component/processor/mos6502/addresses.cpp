@@ -6,8 +6,8 @@ auto MOS6502::addressAbsolute() -> n16 {
 
 auto MOS6502::addressAbsoluteJMP() -> n16 {
   n16 absolute = operand();
-  // JMP Indirect last_cycle
-  L absolute |= operand() << 8;
+  // JMP Indirect last cycle
+L absolute |= operand() << 8;
   return absolute;
 }
 
@@ -39,10 +39,6 @@ auto MOS6502::addressAbsoluteYWrite() -> n16 {
   return absolute + Y;
 }
 
-auto MOS6502::addressAccumulator() -> n16 {
-  return PC;
-}
-
 auto MOS6502::addressImmediate() -> n16 {
   return PC++;
 }
@@ -56,8 +52,8 @@ auto MOS6502::addressIndirect() -> n16 {
   absolute |= operand() << 8;
   n16 indirect = read(absolute);
   absolute.byte(0)++;
-  // JMP Indirect last_cycle
-  L indirect |= read(absolute) << 8;
+  // JMP Indirect last cycle
+L indirect |= read(absolute) << 8;
   return indirect;
 }
 

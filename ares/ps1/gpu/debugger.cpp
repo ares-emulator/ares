@@ -10,8 +10,8 @@ auto GPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.vram15bpp = parent->append<Node::Debugger::Graphics>("GPU VRAM 15bpp");
   graphics.vram15bpp->setSize(1024, 512);
-  graphics.vram15bpp->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.vram15bpp->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(1024 * 512);
     for(u32 y : range(512)) {
       for(u32 x : range(1024)) {
@@ -28,8 +28,8 @@ auto GPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.vram24bpp = parent->append<Node::Debugger::Graphics>("GPU VRAM 24bpp");
   graphics.vram24bpp->setSize(682, 512);
-  graphics.vram24bpp->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.vram24bpp->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(682 * 512);
     for(u32 y : range(512)) {
       for(u32 x : range(682)) {

@@ -1,4 +1,5 @@
 #include <spec/spec.hpp>
+#include <algorithm>
 
 namespace ares::ZXSpectrum {
 
@@ -7,7 +8,7 @@ ROM rom;
 System system;
 #include "serialization.cpp"
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Sinclair] ZX Spectrum",
     "[Sinclair] ZX Spectrum 128",
@@ -15,7 +16,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 

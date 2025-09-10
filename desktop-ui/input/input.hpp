@@ -104,41 +104,41 @@ struct InputDevice {
   }
 
   auto digital(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Digital, name, &mapping});
+    inputs.push_back({InputNode::Type::Digital, name, &mapping});
   }
 
   auto analog(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Analog, name, &mapping});
+    inputs.push_back({InputNode::Type::Analog, name, &mapping});
   }
 
   auto absolute(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Absolute, name, &mapping});
+    inputs.push_back({InputNode::Type::Absolute, name, &mapping});
   }
 
   auto relative(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Relative, name, &mapping});
+    inputs.push_back({InputNode::Type::Relative, name, &mapping});
   }
 
   auto rumble(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Rumble, name, &mapping});
+    inputs.push_back({InputNode::Type::Rumble, name, &mapping});
   }
 
   auto analog(string name, InputMapping& mappingLo, InputMapping& mappingHi) -> void {
-    pairs.append({InputPair::Type::Analog, name, &mappingLo, &mappingHi});
+    pairs.push_back({InputPair::Type::Analog, name, &mappingLo, &mappingHi});
   }
 
   string name;
-  vector<InputNode> inputs;
-  vector<InputPair> pairs;
+  std::vector<InputNode> inputs;
+  std::vector<InputPair> pairs;
 };
 
 struct InputPort {
   auto append(const InputDevice& device) -> void {
-    devices.append(device);
+    devices.push_back(device);
   }
 
   string name;
-  vector<InputDevice> devices;
+  std::vector<InputDevice> devices;
 };
 
 struct VirtualPad : InputDevice {
@@ -212,8 +212,8 @@ struct InputManager {
   auto createHotkeys() -> void;
   auto pollHotkeys() -> void;
 
-  vector<shared_pointer<HID::Device>> devices;
-  vector<InputHotkey> hotkeys;
+  std::vector<shared_pointer<HID::Device>> devices;
+  std::vector<InputHotkey> hotkeys;
 
   u64 pollFrequency = 5;
   u64 lastPoll = 0;

@@ -20,11 +20,11 @@ namespace {
   }
 
   template<typename T>
-  inline auto addOrRemoveEntry(vector<T> &data, T value, bool shouldAdd) {
+  inline auto addOrRemoveEntry(std::vector<T> &data, T value, bool shouldAdd) {
     if(shouldAdd) {
-      data.append(value);
+      data.push_back(value);
     } else {
-      data.removeByValue(value);
+      std::erase(data, value);
     }
   }
 }
@@ -53,7 +53,7 @@ namespace nall::GDB {
   }
 
   auto Server::reportMemRead(u64 address, u32 size) -> void {
-    if(!watchpointRead)return;
+    if(watchpointRead.empty())return;
     
     if(hooks.normalizeAddress) {
       address = hooks.normalizeAddress(address);
@@ -68,7 +68,7 @@ namespace nall::GDB {
   }
 
   auto Server::reportMemWrite(u64 address, u32 size) -> void {
-    if(!watchpointWrite)return;
+    if(watchpointWrite.empty())return;
 
     if(hooks.normalizeAddress) {
       address = hooks.normalizeAddress(address);
@@ -86,7 +86,7 @@ namespace nall::GDB {
     if(!hasActiveClient)return true;
 
     currentPC = pc;
-    bool needHalts = forceHalt || breakpoints.contains(pc);
+    bool needHalts = forceHalt || std::ranges::find(breakpoints, pc) != breakpoints.end();
 
     if(needHalts) {
       forceHalt = true; // breakpoints may get deleted after a signal, but we have to stay stopped
@@ -194,11 +194,11 @@ namespace nall::GDB {
           u64 address = cmdName.slice(1, sepIdx-1).hex();
           u64 byteSize = cmdName.slice(sepIdx+1, 1).hex();
           string hexvalue = cmdParts.size() > 1 ? cmdParts[1] : string{};
-          vector<u8> value;
+          std::vector<u8> value;
           string hexbyte;
           for (int i=0; i<hexvalue.size(); i+=2) {
             hexbyte = hexvalue.slice(i, 2);
-            value.append((u8)toHex(hexbyte.data()));
+            value.push_back((u8)toHex(hexbyte.data()));
           }
           hooks.write(address, value);
           return "OK";
@@ -531,13 +531,13 @@ namespace nall::GDB {
   }
 
   auto Server::resetClientData() -> void {
-    breakpoints.reset();
+    breakpoints.clear();
     breakpoints.reserve(DEF_BREAKPOINT_SIZE);
 
-    watchpointRead.reset();
+    watchpointRead.clear();
     watchpointRead.reserve(DEF_BREAKPOINT_SIZE);
 
-    watchpointWrite.reset();
+    watchpointWrite.clear();
     watchpointWrite.reserve(DEF_BREAKPOINT_SIZE);
 
     pcOverride.reset();

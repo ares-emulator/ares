@@ -12,7 +12,8 @@ struct AudioOpenAL : AudioDriver {
   ~AudioOpenAL() { terminate(); }
 
   auto create() -> bool override {
-    super.setDevice(hasDevices().first());
+    auto devices = hasDevices();
+    if(!devices.empty()) super.setDevice(devices.front());
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(20);
@@ -24,26 +25,26 @@ struct AudioOpenAL : AudioDriver {
 
   auto hasBlocking() -> bool override { return true; }
 
-  auto hasDevices() -> vector<string> override {
-    vector<string> devices;
+  auto hasDevices() -> std::vector<string> override {
+    std::vector<string> devices;
     if(const char* list = alcGetString(nullptr, ALC_DEVICE_SPECIFIER)) {
       while(list && *list) {
-        devices.append(list);
+        devices.push_back(list);
         list += strlen(list) + 1;
       }
     }
     return devices;
   }
 
-  auto hasChannels() -> vector<u32> override {
+  auto hasChannels() -> std::vector<u32> override {
     return {2};
   }
 
-  auto hasFrequencies() -> vector<u32> override {
+  auto hasFrequencies() -> std::vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<u32> override {
+  auto hasLatencies() -> std::vector<u32> override {
     return {20, 40, 60, 80, 100};
   }
 
@@ -92,7 +93,7 @@ private:
     timeBeginPeriod(1);
 #endif
 
-    if(!hasDevices().find(self.device)) self.device = hasDevices().first();
+    if (auto devs = hasDevices(); !devs.empty() && !index_of(devs, self.device)) self.device = devs.front();
     _queueLength = 0;
     updateLatency();
 

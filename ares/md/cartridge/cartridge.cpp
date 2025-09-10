@@ -16,7 +16,12 @@ auto Cartridge::connect() -> void {
 
   information = {};
   information.title    = pak->attribute("title");
-  information.regions  = pak->attribute("region").split(",").strip();
+  //FIXME(stdc++): make sure we fix this later
+  auto temp_regions = pak->attribute("region").split(",").strip();
+  information.regions.clear();
+  for(auto& region : temp_regions) {
+    information.regions.push_back(region);
+  }
   information.bootable = pak->attribute("bootable").boolean();
 
   if(pak->attribute("mega32x").boolean()) {

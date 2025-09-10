@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/array-view.hpp>
+#include <vector>
 
 namespace nall {
 
@@ -26,6 +27,11 @@ template<typename T> struct array_span : array_view<T> {
   template<s32 size> array_span(T (&data)[size]) {
     super::_data = data;
     super::_size = size;
+  }
+
+  array_span(std::vector<T>& v) {
+    super::_data = v.data();
+    super::_size = (s32)v.size();
   }
 
   explicit operator bool() const {

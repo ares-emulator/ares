@@ -24,7 +24,7 @@ struct Object : shared_pointer_this<Object> {
 
   auto prepend(Node::Object node) -> Node::Object {
     if(auto found = find(node)) return found;
-    _nodes.prepend(node);
+    _nodes.insert(_nodes.begin(), node);
     node->_parent = shared();
     PlatformAttach(node);
     return node;
@@ -38,7 +38,7 @@ struct Object : shared_pointer_this<Object> {
 
   auto append(Node::Object node) -> Node::Object {
     if(auto found = find(node)) return found;
-    _nodes.append(node);
+    _nodes.push_back(node);
     node->_parent = shared();
     PlatformAttach(node);
     return node;
@@ -51,11 +51,10 @@ struct Object : shared_pointer_this<Object> {
   }
 
   auto remove(Node::Object node) -> void {
-    if(auto index = _nodes.find(node)) {
+    if(std::erase(_nodes, node)) {
       PlatformDetach(node);
       node->reset();
       node->_parent.reset();
-      _nodes.remove(*index);
     }
   }
 
@@ -65,7 +64,7 @@ struct Object : shared_pointer_this<Object> {
       node->reset();
       node->_parent.reset();
     }
-    _nodes.reset();
+    _nodes.clear();
   }
 
   template<typename T>
@@ -80,12 +79,15 @@ struct Object : shared_pointer_this<Object> {
   }
 
   template<typename T>
-  auto find() -> vector<shared_pointer<typename T::type>> {
-    vector<shared_pointer<typename T::type>> result;
+  auto find() -> std::vector<shared_pointer<typename T::type>> {
+    std::vector<shared_pointer<typename T::type>> result;
     if(dynamic_cast<typename T::type*>(this)) {
-      if(auto instance = shared()) result.append(instance);
+      if(auto instance = shared()) result.push_back(instance);
     }
-    for(auto& node : _nodes) result.append(node->find<T>());
+    for(auto& node : _nodes) {
+      auto sub = node->find<T>();
+      std::ranges::copy(sub, std::back_inserter(result));
+    }
     return result;
   }
 
@@ -128,9 +130,9 @@ struct Object : shared_pointer_this<Object> {
   }
 
   template<typename T>
-  auto enumerate(vector<T>& objects) -> void {
+  auto enumerate(std::vector<T>& objects) -> void {
     using Type = typename T::type;
-    if(auto instance = cast<T>()) objects.append(instance);
+    if(auto instance = cast<T>()) objects.push_back(instance);
     for(auto& node : _nodes) node->enumerate<T>(objects);
   }
 
@@ -231,5 +233,5 @@ protected:
   VFS::Pak _pak;
   set<Attribute> _attributes;
   shared_pointer_weak<Object> _parent;
-  vector<Node::Object> _nodes;
+  std::vector<Node::Object> _nodes;
 };

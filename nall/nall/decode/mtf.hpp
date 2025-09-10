@@ -4,8 +4,8 @@
 
 namespace nall::Decode {
 
-inline auto MTF(array_view<u8> input) -> vector<u8> {
-  vector<u8> output;
+inline auto MTF(array_view<u8> input) -> std::vector<u8> {
+  std::vector<u8> output;
   output.resize(input.size());
 
   u8 order[256];

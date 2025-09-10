@@ -59,8 +59,7 @@ static auto Window_drop(GtkWidget* widget, GdkDragContext* context, s32 x, s32 y
 GtkSelectionData* data, u32 type, u32 timestamp, pWindow* p) -> void {
   if(!p->state().droppable) return;
   auto paths = DropPaths(data);
-  if(!paths) return;
-  p->self().doDrop(paths);
+  if(!paths.empty()) p->self().doDrop(paths);
 }
 
 static auto Window_getPreferredWidth(GtkWidget* widget, s32* minimalWidth, s32* naturalWidth) -> void {
@@ -207,17 +206,11 @@ auto pWindow::construct() -> void {
   g_object_set_data(G_OBJECT(widget), "hiro::window", (gpointer)this);
   g_object_set_data(G_OBJECT(formContainer), "hiro::window", (gpointer)this);
 
-  pApplication::state().windows.append(this);
+  pApplication::state().windows.push_back(this);
 }
 
 auto pWindow::destruct() -> void {
-  for(u32 offset : range(pApplication::state().windows.size())) {
-    if(pApplication::state().windows[offset] == this) {
-      pApplication::state().windows.remove(offset);
-      break;
-    }
-  }
-
+  std::erase(pApplication::state().windows, this);
   gtk_widget_destroy(widget);
 }
 

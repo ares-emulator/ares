@@ -21,7 +21,7 @@ auto SuperFX::unload() -> void {
   ram.reset();
   bram.reset();
 
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
@@ -59,7 +59,7 @@ auto SuperFX::power() -> void {
   GSU::power();
 
   Thread::create(Frequency, {&SuperFX::main, this});
-  cpu.coprocessors.append(this);
+  cpu.coprocessors.push_back(this);
 
   // SuperFX voxel demo has a non power-of-two rom
   // resulting in an incorrect/broken rom mask

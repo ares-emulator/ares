@@ -1,24 +1,18 @@
 target_sources(
   ruby
-  PRIVATE # cmake-format: sortable
+  PRIVATE #
     video/direct3d9.cpp
     video/wgl.cpp
 )
 
 target_sources(
   ruby
-  PRIVATE # cmake-format: sortable
-    audio/wasapi.cpp
-    audio/xaudio2.cpp
-    audio/xaudio2.hpp
-    audio/directsound.cpp
-    audio/waveout.cpp
-    audio/sdl.cpp
+  PRIVATE audio/wasapi.cpp audio/xaudio2.cpp audio/xaudio2.hpp audio/directsound.cpp audio/waveout.cpp audio/sdl.cpp
 )
 
 target_sources(
   ruby
-  PRIVATE # cmake-format: sortable
+  PRIVATE
     input/sdl.cpp
     input/shared/rawinput.cpp
     input/windows.cpp

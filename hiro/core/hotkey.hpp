@@ -20,7 +20,7 @@ struct Hotkey {
 //private:
   struct State {
     bool active = false;
-    vector<u32> keys;
+    std::vector<u32> keys;
     function<void ()> onPress;
     function<void ()> onRelease;
     string sequence;

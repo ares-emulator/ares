@@ -163,10 +163,9 @@ auto ListWindow::saveDatabase(string location) -> void {
 
   auto copy = games;
   copy.sort([](auto x, auto y) {
-    return string::icompare(
-      {x.name, "\n", x.region, "\n", x.revision},
-      {y.name, "\n", y.region, "\n", y.revision}
-    ) < 0;
+    string a = { x.name, "\n", x.region, "\n", x.revision };
+    string b = { y.name, "\n", y.region, "\n", y.revision };
+    return string::icompare(a, b) < 0;
   });
 
   fp.print("database\n");

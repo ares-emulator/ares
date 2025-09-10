@@ -46,5 +46,5 @@ struct Flash {
     natural offset;
     natural length;
   };
-  vector<Block> blocks;
+  std::vector<Block> blocks;
 };

@@ -142,7 +142,7 @@ set(CMAKE_XCODE_ATTRIBUTE_CLANG_WARN_UNGUARDED_AVAILABILITY YES)
 
 # set(CMAKE_XCODE_ATTRIBUTE_CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS YES)
 
-# Add other warnings, downgrade errors to warnings where necessary 
+# Add other warnings, downgrade errors to warnings where necessary
 set(
   CMAKE_XCODE_ATTRIBUTE_WARNING_CFLAGS
   "-Wvla

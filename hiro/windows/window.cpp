@@ -41,11 +41,11 @@ auto pWindow::construct() -> void {
   setDroppable(state().droppable);
   setGeometry({128, 128, 256, 256});
 
-  windows.append(self().instance);
+  windows.push_back(self().instance);
 }
 
 auto pWindow::destruct() -> void {
-  if(auto position = windows.find(self().instance)) windows.remove(*position);
+  std::erase(windows, self().instance);
 
   if(hbrush) { DeleteObject(hbrush); hbrush = nullptr; }
   DestroyWindow(hwnd);
@@ -315,7 +315,8 @@ auto pWindow::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> m
   }
 
   if(msg == WM_DROPFILES) {
-    if(auto paths = DropPaths(wparam)) self().doDrop(paths);
+    auto paths = DropPaths(wparam);
+    if(!paths.empty()) self().doDrop(paths);
     return false;
   }
 

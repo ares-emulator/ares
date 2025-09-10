@@ -101,6 +101,7 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(memory.biosSwap);
   s(memory.unknown1);
+  s(memory.cgbBootRomDisable);
   s(memory.ewram);
   s(memory.ewramWait);
   s(memory.unknown2);
@@ -122,5 +123,6 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.romAccess);
   s(context.timerLatched);
   s(context.busLocked);
+  s(context.burstActive);
   s(context.hcounter);
 }

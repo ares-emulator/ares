@@ -24,10 +24,10 @@ struct mTableLayout : mSizable {
   auto cell(u32 position) const -> TableLayoutCell;
   auto cell(u32 x, u32 y) const -> TableLayoutCell;
   auto cell(sSizable sizable) const -> TableLayoutCell;
-  auto cells() const -> vector<TableLayoutCell>;
+  auto cells() const -> std::vector<TableLayoutCell>;
   auto cellCount() const -> u32;
   auto column(u32 position) const -> TableLayoutColumn;
-  auto columns() const -> vector<TableLayoutColumn>;
+  auto columns() const -> std::vector<TableLayoutColumn>;
   auto columnCount() const -> u32;
   auto minimumSize() const -> Size override;
   auto padding() const -> Geometry;
@@ -36,7 +36,7 @@ struct mTableLayout : mSizable {
   auto reset() -> type& override;
   auto resize() -> type&;
   auto row(u32 position) const -> TableLayoutRow;
-  auto rows() const -> vector<TableLayoutRow>;
+  auto rows() const -> std::vector<TableLayoutRow>;
   auto rowCount() const -> u32;
   auto setAlignment(Alignment alignment) -> type&;
   auto setEnabled(bool enabled) -> type& override;
@@ -54,10 +54,10 @@ private:
 
   struct State {
     Alignment alignment;
-    vector<TableLayoutCell> cells;
-    vector<TableLayoutColumn> columns;
+    std::vector<TableLayoutCell> cells;
+    std::vector<TableLayoutColumn> columns;
     Geometry padding;
-    vector<TableLayoutRow> rows;
+    std::vector<TableLayoutRow> rows;
     Size size;
   } state;
 };

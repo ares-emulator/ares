@@ -40,7 +40,6 @@ struct MOS6502 {
   auto addressAbsoluteXWrite() -> n16;
   auto addressAbsoluteYRead() -> n16;
   auto addressAbsoluteYWrite() -> n16;
-  auto addressAccumulator() -> n16;
   auto addressImmediate() -> n16;
   auto addressImplied() -> n16;
   auto addressIndirect() -> n16;

@@ -3,6 +3,10 @@
 #include <libco/libco.h>
 #include <sljit.h>
 
+#include <vector>
+#include <ranges>
+#include <algorithm>
+
 #include <nall/platform.hpp>
 #include <nall/adaptive-array.hpp>
 #include <nall/any.hpp>
@@ -29,7 +33,6 @@
 #include <nall/traits.hpp>
 #include <nall/unique-pointer.hpp>
 #include <nall/variant.hpp>
-#include <nall/vector.hpp>
 #include <nall/vfs.hpp>
 #include <nall/cd.hpp>
 #include <nall/dsp/iir/one-pole.hpp>

@@ -21,7 +21,7 @@ if(ARES_PRECOMPILE_HEADERS)
   target_precompile_headers(ares PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:ares/ares.hpp>")
 endif()
 
-target_link_libraries(ares PUBLIC libco sljit nall)
+target_link_libraries(ares PRIVATE libco ares::nall::headers $<$<BOOL:${ARES_ENABLE_CHD}>:chdr-static> PUBLIC sljit)
 
 if(ARES_PROFILE_ACCURACY)
   target_compile_definitions(ares PUBLIC PROFILE_ACCURACY)

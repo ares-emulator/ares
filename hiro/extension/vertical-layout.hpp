@@ -17,7 +17,7 @@ struct mVerticalLayout : mSizable {
   auto append(sSizable sizable, Size size, f32 spacing = 5_sy) -> type&;
   auto cell(u32 position) const -> VerticalLayoutCell;
   auto cell(sSizable sizable) const -> VerticalLayoutCell;
-  auto cells() const -> vector<VerticalLayoutCell>;
+  auto cells() const -> std::vector<VerticalLayoutCell>;
   auto cellCount() const -> u32;
   auto minimumSize() const -> Size override;
   auto padding() const -> Geometry;
@@ -41,7 +41,7 @@ private:
 
   struct State {
     maybe<f32> alignment;
-    vector<VerticalLayoutCell> cells;
+    std::vector<VerticalLayoutCell> cells;
     Geometry padding;
     f32 spacing = 5_sy;
   } state;
