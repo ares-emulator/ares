@@ -150,12 +150,13 @@ auto Settings::process(bool load) -> void {
       bind(string, name, value);
       if(load == 1) for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = value.split(";")(binding);
     }
-    for(auto& input : port.keyboard.inputs) {
-      string name = {"VirtualKeyboard", 1 + index, "/", input.name}, value;
-      if(load == 0) for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
-      if(load == 0) value.trimRight(";", 1L);
-      bind(string, name, value);
-      if(load == 1) for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = value.split(";")(binding);
+  }
+
+  for (auto emulator : emulators) {
+    if (load) {
+      emulator->loadSetting(this);
+    } else {
+      emulator->saveSetting(this);
     }
   }
 

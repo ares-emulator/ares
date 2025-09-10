@@ -1,11 +1,140 @@
+struct FamilyBasicKeyboard : InputDevice {
+  FamilyBasicKeyboard();
+
+  auto loadSetting(Markup::Node *node) -> void;
+  auto saveSetting(Markup::Node *node) -> void;
+
+  InputDigital f1, f2, f3, f4, f5, f6, f7, f8;
+  InputDigital num1, num2, num3, num4, num5, num6, num7, num8, num9, num0, minus, power, yen, stop;
+  InputDigital esc, q, w, e, r, t, y, u, i, o, p, at, lbrace, enter;
+  InputDigital control, a, s, d, f, g, h, j, k, l, semicolon, colon, rbrace, kana;
+  InputDigital lshift, z, x, c, v, b, n, m, comma, period, slash, underscore, rshift;
+  InputDigital graph, spacebar;
+  InputDigital home, insert, backspace;
+  InputDigital up, down, left, right;
+};
+
+FamilyBasicKeyboard::FamilyBasicKeyboard() : InputDevice("Family BASIC Keyboard") {
+  InputDevice::digital("F1", f1);
+  InputDevice::digital("F2", f2);
+  InputDevice::digital("F3", f3);
+  InputDevice::digital("F4", f4);
+  InputDevice::digital("F5", f5);
+  InputDevice::digital("F6", f6);
+  InputDevice::digital("F7", f7);
+  InputDevice::digital("F8", f8);
+
+  InputDevice::digital("Num1",  num1);
+  InputDevice::digital("Num2",  num2);
+  InputDevice::digital("Num3",  num3);
+  InputDevice::digital("Num4",  num4);
+  InputDevice::digital("Num5",  num5);
+  InputDevice::digital("Num6",  num6);
+  InputDevice::digital("Num7",  num7);
+  InputDevice::digital("Num8",  num8);
+  InputDevice::digital("Num9",  num9);
+  InputDevice::digital("Num0",  num0);
+  InputDevice::digital("Minus", minus);
+  InputDevice::digital("Power", power);
+  InputDevice::digital("Yen",   yen);
+  InputDevice::digital("Stop",  stop);
+
+  InputDevice::digital("Escape",     esc);
+  InputDevice::digital("Q",          q);
+  InputDevice::digital("W",          w);
+  InputDevice::digital("E",          e);
+  InputDevice::digital("R",          r);
+  InputDevice::digital("T",          t);
+  InputDevice::digital("Y",          y);
+  InputDevice::digital("U",          u);
+  InputDevice::digital("I",          i);
+  InputDevice::digital("O",          o);
+  InputDevice::digital("P",          p);
+  InputDevice::digital("At",         at);
+  InputDevice::digital("Left Brace", lbrace);
+  InputDevice::digital("Return",     enter);
+
+  InputDevice::digital("Control",     control);
+  InputDevice::digital("A",           a);
+  InputDevice::digital("S",           s);
+  InputDevice::digital("D",           d);
+  InputDevice::digital("F",           f);
+  InputDevice::digital("G",           g);
+  InputDevice::digital("H",           h);
+  InputDevice::digital("J",           j);
+  InputDevice::digital("K",           k);
+  InputDevice::digital("L",           l);
+  InputDevice::digital("Semicolon",   semicolon);
+  InputDevice::digital("Colon",       colon);
+  InputDevice::digital("Right Brace", rbrace);
+  InputDevice::digital("Kana",        kana);
+
+  InputDevice::digital("Left Shift",  lshift);
+  InputDevice::digital("Z",           z);
+  InputDevice::digital("X",           x);
+  InputDevice::digital("C",           c);
+  InputDevice::digital("V",           v);
+  InputDevice::digital("B",           b);
+  InputDevice::digital("N",           n);
+  InputDevice::digital("M",           m);
+  InputDevice::digital("Comma",       comma);
+  InputDevice::digital("Period",      period);
+  InputDevice::digital("Slash",       slash);
+  InputDevice::digital("Underscore",  underscore);
+  InputDevice::digital("Right Shift", rshift);
+
+  InputDevice::digital("Graph",    graph);
+  InputDevice::digital("Spacebar", spacebar);
+
+  InputDevice::digital("Home",      home);
+  InputDevice::digital("Insert",    insert);
+  InputDevice::digital("Backspace", backspace);
+
+  InputDevice::digital("Up",    up);
+  InputDevice::digital("Down",  down);
+  InputDevice::digital("Left",  left);
+  InputDevice::digital("Right", right);
+}
+
+auto FamilyBasicKeyboard::loadSetting(Markup::Node *node) -> void {
+  for (auto& input : inputs) {
+    string node_name = string{"Famicom/", name, "/", input.name}.replace(" ", ".");
+    if (auto subnode = (*node)[node_name]) {
+      string value = subnode.string();
+      for (u32 binding : range(BindingLimit)) {
+        input.mapping->assignments[binding] = value.split(";")(binding);
+      }
+    }
+  }
+}
+
+auto FamilyBasicKeyboard::saveSetting(Markup::Node *node) -> void {
+  for (auto& input : inputs) {
+    string node_name = string{"Famicom/", name, "/", input.name}.replace(" ", ".");
+    string value;
+    for (auto& assignment : input.mapping->assignments) {
+      value.append(assignment, ";");
+    }
+    value.trimRight(";", 1L);
+
+    (*node)(node_name).setValue(value);
+  }
+}
+
 struct Famicom : Emulator {
   Famicom();
   auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+
   auto loadTape(ares::Node::Object node, string location) -> bool override;
   auto unloadTape(ares::Node::Object node) -> void override;
 
+  auto loadSetting(Markup::Node *node) -> void override;
+  auto saveSetting(Markup::Node *node) -> void override;
+  auto bindInput() -> void override;
+
+  FamilyBasicKeyboard familyBasicKeyboard;
   shared_pointer<mia::Pak> familyBasicDataRecorder{};
 };
 
@@ -39,88 +168,7 @@ Famicom::Famicom() {
 
   {
     InputPort port{"Expansion Port"};
-  { InputDevice device{"Family BASIC Keyboard"};
-    device.digital("F1",          virtualPorts[2].keyboard.f1);
-    device.digital("F2",          virtualPorts[2].keyboard.f2);
-    device.digital("F3",          virtualPorts[2].keyboard.f3);
-    device.digital("F4",          virtualPorts[2].keyboard.f4);
-    device.digital("F5",          virtualPorts[2].keyboard.f5);
-    device.digital("F6",          virtualPorts[2].keyboard.f6);
-    device.digital("F7",          virtualPorts[2].keyboard.f7);
-    device.digital("F8",          virtualPorts[2].keyboard.f8);
-
-    device.digital("1",           virtualPorts[2].keyboard.num1);
-    device.digital("2",           virtualPorts[2].keyboard.num2);
-    device.digital("3",           virtualPorts[2].keyboard.num3);
-    device.digital("4",           virtualPorts[2].keyboard.num4);
-    device.digital("5",           virtualPorts[2].keyboard.num5);
-    device.digital("6",           virtualPorts[2].keyboard.num6);
-    device.digital("7",           virtualPorts[2].keyboard.num7);
-    device.digital("8",           virtualPorts[2].keyboard.num8);
-    device.digital("9",           virtualPorts[2].keyboard.num9);
-    device.digital("0",           virtualPorts[2].keyboard.num0);
-    device.digital("Minus",       virtualPorts[2].keyboard.dash);
-    device.digital("^",           virtualPorts[2].keyboard.tilde);
-    device.digital("Yen",         virtualPorts[2].keyboard.equals);
-    device.digital("Stop",        virtualPorts[2].keyboard.backspace);
-
-    device.digital("Escape",      virtualPorts[2].keyboard.esc);
-    device.digital("Q",           virtualPorts[2].keyboard.q);
-    device.digital("W",           virtualPorts[2].keyboard.w);
-    device.digital("E",           virtualPorts[2].keyboard.e);
-    device.digital("R",           virtualPorts[2].keyboard.r);
-    device.digital("T",           virtualPorts[2].keyboard.t);
-    device.digital("Y",           virtualPorts[2].keyboard.y);
-    device.digital("U",           virtualPorts[2].keyboard.u);
-    device.digital("I",           virtualPorts[2].keyboard.i);
-    device.digital("O",           virtualPorts[2].keyboard.o);
-    device.digital("P",           virtualPorts[2].keyboard.p);
-    device.digital("@",           virtualPorts[2].keyboard.lbracket);
-    device.digital("Return",      virtualPorts[2].keyboard.return_);
-
-    device.digital("Control",     virtualPorts[2].keyboard.lctrl);
-    device.digital("A",           virtualPorts[2].keyboard.a);
-    device.digital("S",           virtualPorts[2].keyboard.s);
-    device.digital("D",           virtualPorts[2].keyboard.d);
-    device.digital("F",           virtualPorts[2].keyboard.f);
-    device.digital("G",           virtualPorts[2].keyboard.g);
-    device.digital("H",           virtualPorts[2].keyboard.h);
-    device.digital("J",           virtualPorts[2].keyboard.j);
-    device.digital("K",           virtualPorts[2].keyboard.k);
-    device.digital("L",           virtualPorts[2].keyboard.l);
-    device.digital(";",           virtualPorts[2].keyboard.semicolon);
-    device.digital(":",           virtualPorts[2].keyboard.apostrophe);
-    device.digital("]",           virtualPorts[2].keyboard.rbracket);
-    device.digital("Kana",        virtualPorts[2].keyboard.rctrl);
-
-    device.digital("Left Shift",  virtualPorts[2].keyboard.lshift);
-    device.digital("Z",           virtualPorts[2].keyboard.z);
-    device.digital("X",           virtualPorts[2].keyboard.x);
-    device.digital("C",           virtualPorts[2].keyboard.c);
-    device.digital("V",           virtualPorts[2].keyboard.v);
-    device.digital("B",           virtualPorts[2].keyboard.b);
-    device.digital("N",           virtualPorts[2].keyboard.n);
-    device.digital("M",           virtualPorts[2].keyboard.m);
-    device.digital(",",           virtualPorts[2].keyboard.comma);
-    device.digital(".",           virtualPorts[2].keyboard.period);
-    device.digital("/",           virtualPorts[2].keyboard.slash);
-    device.digital("_",           virtualPorts[2].keyboard.ralt);
-    device.digital("Right Shift", virtualPorts[2].keyboard.rshift);
-
-    device.digital("Graph",       virtualPorts[2].keyboard.lalt);
-    device.digital("Spacebar",    virtualPorts[2].keyboard.spacebar);
-
-    device.digital("Home",        virtualPorts[2].keyboard.home);
-    device.digital("Insert",      virtualPorts[2].keyboard.insert);
-    device.digital("Delete",      virtualPorts[2].keyboard.delete_);
-
-    device.digital("Up",          virtualPorts[2].keyboard.up);
-    device.digital("Down",        virtualPorts[2].keyboard.down);
-    device.digital("Left",        virtualPorts[2].keyboard.left);
-    device.digital("Right",       virtualPorts[2].keyboard.right);
-
-    port.append(device); }
-
+    port.append(familyBasicKeyboard);
     ports.append(port);
   }
 }
@@ -217,5 +265,19 @@ auto Famicom::unloadTape(ares::Node::Object node) -> void {
   if (node->name() == "Family BASIC Data Recorder") {
     familyBasicDataRecorder->save(familyBasicDataRecorder->location);
     familyBasicDataRecorder.reset();
+  }
+}
+
+auto Famicom::loadSetting(Markup::Node *node) -> void {
+  familyBasicKeyboard.loadSetting(node);
+}
+
+auto Famicom::saveSetting(Markup::Node *node) -> void {
+  familyBasicKeyboard.saveSetting(node);
+}
+
+auto Famicom::bindInput() -> void {
+  for (auto& input : familyBasicKeyboard.inputs) {
+    input.mapping->bind();
   }
 }

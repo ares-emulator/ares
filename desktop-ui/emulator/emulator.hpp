@@ -36,6 +36,10 @@ struct Emulator {
   virtual auto loadTape(ares::Node::Object node, string location) -> bool { return false; }
   virtual auto unloadTape(ares::Node::Object node) -> void {}
 
+  virtual auto loadSetting(Markup::Node *node) -> void {}
+  virtual auto saveSetting(Markup::Node *node) -> void {}
+  virtual auto bindInput() -> void {}
+
   struct Firmware {
     string type;
     string region;

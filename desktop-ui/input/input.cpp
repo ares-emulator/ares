@@ -438,8 +438,7 @@ auto InputRumble::rumble(u16 strong, u16 weak) -> void {
 
 //
 
-VirtualPad::VirtualPad() {
-  InputDevice::name = "Virtual Gamepad";
+VirtualPad::VirtualPad() : InputDevice("Virtual Gamepad") {
   InputDevice::digital("Pad Up",          up);
   InputDevice::digital("Pad Down",        down);
   InputDevice::digital("Pad Left",        left);
@@ -469,137 +468,13 @@ VirtualPad::VirtualPad() {
 
 //
 
-VirtualMouse::VirtualMouse() {
-  InputDevice::name = "Mouse";
+VirtualMouse::VirtualMouse() : InputDevice("Mouse") {
   InputDevice::relative("X",      x);
   InputDevice::relative("Y",      y);
   InputDevice::digital ("Left",   left);
   InputDevice::digital ("Middle", middle);
   InputDevice::digital ("Right",  right);
   InputDevice::digital ("Extra",  extra);
-}
-
-//
-
-VirtualKeyboard::VirtualKeyboard() {
-  InputDevice::name = "Keyboard";
-
-  InputDevice::digital("Escape",        esc);
-  InputDevice::digital("F1",            f1);
-  InputDevice::digital("F2",            f2);
-  InputDevice::digital("F3",            f3);
-  InputDevice::digital("F4",            f4);
-  InputDevice::digital("F5",            f5);
-  InputDevice::digital("F6",            f6);
-  InputDevice::digital("F7",            f7);
-  InputDevice::digital("F8",            f8);
-  InputDevice::digital("F9",            f9);
-  InputDevice::digital("F10",           f10);
-  InputDevice::digital("F11",           f11);
-  InputDevice::digital("F12",           f12);
-
-  InputDevice::digital("Print Screen",  print_screen);
-  InputDevice::digital("Scroll Lock",   scroll_lock);
-  //InputDevice::digital("Pause",         pause);
-
-  InputDevice::digital("Tilde",         tilde);
-  InputDevice::digital("Num1",          num1);
-  InputDevice::digital("Num2",          num2);
-  InputDevice::digital("Num3",          num3);
-  InputDevice::digital("Num4",          num4);
-  InputDevice::digital("Num5",          num5);
-  InputDevice::digital("Num6",          num6);
-  InputDevice::digital("Num7",          num7);
-  InputDevice::digital("Num8",          num8);
-  InputDevice::digital("Num9",          num9);
-  InputDevice::digital("Num0",          num0);
-  InputDevice::digital("Dash",          dash);
-  InputDevice::digital("Equals",        equals);
-  InputDevice::digital("Backspace",     backspace);
-
-  InputDevice::digital("Tab",           tab);
-  InputDevice::digital("Q",             q);
-  InputDevice::digital("W",             w);
-  InputDevice::digital("E",             e);
-  InputDevice::digital("R",             r);
-  InputDevice::digital("T",             t);
-  InputDevice::digital("Y",             y);
-  InputDevice::digital("U",             u);
-  InputDevice::digital("I",             i);
-  InputDevice::digital("O",             o);
-  InputDevice::digital("P",             p);
-  InputDevice::digital("Left Bracket",  lbracket);
-  InputDevice::digital("Right Bracket", rbracket);
-  InputDevice::digital("Backslash",     backslash);
-
-  InputDevice::digital("Insert",        insert);
-  InputDevice::digital("Delete",        delete_);
-  InputDevice::digital("Home",          home);
-  InputDevice::digital("End",           end);
-  InputDevice::digital("Page Up",       page_up);
-  InputDevice::digital("Page Down",     page_down);
-
-  InputDevice::digital("Caps Lock",     capslock);
-  InputDevice::digital("A",             a);
-  InputDevice::digital("S",             s);
-  InputDevice::digital("D",             d);
-  InputDevice::digital("F",             f);
-  InputDevice::digital("G",             g);
-  InputDevice::digital("H",             h);
-  InputDevice::digital("J",             j);
-  InputDevice::digital("K",             k);
-  InputDevice::digital("L",             l);
-  InputDevice::digital("Semicolon",     semicolon);
-  InputDevice::digital("Quote",         apostrophe);
-  InputDevice::digital("Return",        return_);
-
-  InputDevice::digital("Left Shift",    lshift);
-  InputDevice::digital("Z",             z);
-  InputDevice::digital("X",             x);
-  InputDevice::digital("C",             c);
-  InputDevice::digital("V",             v);
-  InputDevice::digital("B",             b);
-  InputDevice::digital("N",             n);
-  InputDevice::digital("M",             m);
-  InputDevice::digital("Comma",         comma);
-  InputDevice::digital("Period",        period);
-  InputDevice::digital("Slash",         slash);
-  InputDevice::digital("Right Shift",   rshift);
-
-  InputDevice::digital("Left Control",  lctrl);
-  //InputDevice::digital("Left Super",    lsuper);
-  InputDevice::digital("Left Alt",      lalt);
-  InputDevice::digital("SpaceBar",      spacebar);
-  InputDevice::digital("Right Alt",     ralt);
-  //InputDevice::digital("Right Super",   rsuper);
-  InputDevice::digital("Right Control", rctrl);
-
-  InputDevice::digital("Up",            up);
-  InputDevice::digital("Down",          down);
-  InputDevice::digital("Left",          left);
-  InputDevice::digital("Right",         right);
-
-  //InputDevice::digital("Num Lock",      numlock);
-  InputDevice::digital("Divide",        divide);
-  InputDevice::digital("Multiply",      multiply);
-  InputDevice::digital("Minus",         minus);
-
-  InputDevice::digital("Keypad7",       num7);
-  InputDevice::digital("Keypad8",       num8);
-  InputDevice::digital("Keypad9",       num9);
-  InputDevice::digital("Add",           add);
-
-  InputDevice::digital("Keypad4",       num4);
-  InputDevice::digital("Keypad5",       num5);
-  InputDevice::digital("Keypad6",       num6);
-
-  InputDevice::digital("Keypad1",       num1);
-  InputDevice::digital("Keypad2",       num2);
-  InputDevice::digital("Keypad3",       num3);
-  InputDevice::digital("Enter",         enter);
-
-  InputDevice::digital("Keypad0",       num0);
-  InputDevice::digital("Point",         point);
 }
 
 //
@@ -614,7 +489,9 @@ auto InputManager::bind() -> void {
   for(auto& port : virtualPorts) {
     for(auto& input : port.pad.inputs) input.mapping->bind();
     for(auto& input : port.mouse.inputs) input.mapping->bind();
-    for(auto& input : port.keyboard.inputs) input.mapping->bind();
+  }
+  for(auto emulator : emulators) {
+    emulator->bindInput();
   }
   for(auto& mapping : hotkeys) mapping.bind();
 }
