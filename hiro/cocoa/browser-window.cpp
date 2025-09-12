@@ -30,9 +30,10 @@ auto pBrowserWindow::open(BrowserWindow::State& state) -> string {
   @autoreleasepool {
     NSMutableArray* filters = [[NSMutableArray alloc] init];
     for(auto& rule : state.filters) {
-      string pattern = rule.split("|", 1L)(1).replace("*", "").replace(".", "");
+      auto parts = ::nall::split(rule, "|", 1L);
+      string pattern = (parts.size() > 1 ? parts[1] : string{}).replace("*", "").replace(".", "");
       if (pattern) {
-        for(auto& extension : pattern.split(":")) {
+        for(auto& extension : ::nall::split(pattern, ":")) {
           [filters addObject:[NSString stringWithUTF8String:extension]];
         }
       }
@@ -62,9 +63,10 @@ auto pBrowserWindow::save(BrowserWindow::State& state) -> string {
   @autoreleasepool {
     NSMutableArray* filters = [[NSMutableArray alloc] init];
     for(auto& rule : state.filters) {
-      string pattern = rule.split("|", 1L)(1).replace("*", "").replace(".", "");
+      auto parts = ::nall::split(rule, "|", 1L);
+      string pattern = (parts.size() > 1 ? parts[1] : string{}).replace("*", "").replace(".", "");
       if (pattern) {
-        for(auto& extension : pattern.split(":")) {
+        for(auto& extension : ::nall::split(pattern, ":")) {
           [filters addObject:[NSString stringWithUTF8String:extension]];
         }
       }

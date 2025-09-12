@@ -1,6 +1,6 @@
 struct Atari2600 : Cartridge {
   auto name() -> string override { return "Atari 2600"; }
-  auto extensions() -> vector<string> override { return {"a26", "bin"}; }
+  auto extensions() -> std::vector<string> override { return {"a26", "bin"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;

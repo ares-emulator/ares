@@ -121,14 +121,14 @@ struct ReedSolomon {
 
   //algorithm: brute force
   //todo: implement Chien search here
-  auto calculateErrors() -> vector<u8> {
+  auto calculateErrors() -> std::vector<u8> {
     calculateSyndromes();
     if(syndromesAreZero()) return {};  //no errors detected
     calculateLocators();
-    vector<u8> errors;
+    std::vector<u8> errors;
     for(u32 n : range(Length)) {
       if(evaluate(locators, Field{2}.pow(255 - n))) continue;
-      errors.append(Length - (n + 1));
+      errors.push_back(Length - (n + 1));
     }
     return errors;
   }

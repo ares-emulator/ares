@@ -9,7 +9,7 @@ NeoGeoPocket::NeoGeoPocket() {
   manufacturer = "SNK";
   name = "Neo Geo Pocket";
 
-  firmware.append({"BIOS", "World", "0293555b21c4fac516d25199df7809b26beeae150e1d4504a050db32264a6ad7"});
+  firmware.push_back({"BIOS", "World", "0293555b21c4fac516d25199df7809b26beeae150e1d4504a050db32264a6ad7"});
 
   { InputPort port{"Neo Geo Pocket"};
 
@@ -25,7 +25,7 @@ NeoGeoPocket::NeoGeoPocket() {
     device.digital("Debugger", virtualPorts[0].pad.r_bumper);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

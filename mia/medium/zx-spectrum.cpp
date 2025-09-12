@@ -1,6 +1,6 @@
 struct ZXSpectrum : Medium {
   auto name() -> string override { return "ZX Spectrum"; }
-  auto extensions() -> vector<string> override { return {"wav", "tzx", "tap" }; }
+  auto extensions() -> std::vector<string> override { return {"wav", "tzx", "tap" }; }
   auto load(string location) -> LoadResult override;
   auto loadWav(string location) -> LoadResult;
   auto loadTzx(string location) -> LoadResult;
@@ -34,13 +34,13 @@ auto ZXSpectrum::loadTzx(string location) -> LoadResult {
   pak->setAttribute("length",    tzx.GetAudioBufferLengthInSamples());
   pak->append("manifest.bml",    manifest);
 
-  vector<u8> output;
+  std::vector<u8> output;
   auto decodedData = tzx.GetAudioBufferPtr();
   for(int i = 0; i < tzx.GetAudioBufferLength();) {
     u64 sample = (u64)((i32)decodedData[i++] + 128);
 
     for (int byte = 0; byte < sizeof(u64); byte++) {
-      output.append((sample & (0xff << (byte * 8))) >> (byte * 8));
+      output.push_back((sample & (0xff << (byte * 8))) >> (byte * 8));
     }
   }
   pak->append("program.tape", output);
@@ -67,12 +67,12 @@ auto ZXSpectrum::loadWav(string location) -> LoadResult {
     if(location.iendsWith(".wav")) {
       Decode::WAV wav;
       if (wav.open(location)) {
-        vector <u8> data;
+        std::vector<u8> data;
         for (int i = 0; i < wav.size(); i++) {
           u64 sample = wav.read();
 
           for (int byte = 0; byte < sizeof(u64); byte++) {
-            data.append((sample & (0xff << (byte * 8))) >> (byte * 8));
+            data.push_back((sample & (0xff << (byte * 8))) >> (byte * 8));
           }
         }
         pak->append("program.tape", data);

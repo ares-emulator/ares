@@ -19,7 +19,7 @@ struct ZIP {
     filename.transform("\\", "/");
     if(!timestamp) timestamp = this->timestamp;
     u32 checksum = Hash::CRC32({data, size}).digest().hex();
-    directory.append({filename, timestamp, checksum, size, (u32)fp.offset()});
+    directory.emplace_back(filename, timestamp, checksum, size, (u32)fp.offset());
 
     fp.writel(0x04034b50, 4);         //signature
     fp.writel(0x0014, 2);             //minimum version (2.0)
@@ -95,7 +95,7 @@ protected:
     u32 size;
     u32 offset;
   };
-  vector<entry_t> directory;
+  std::vector<entry_t> directory;
 };
 
 }

@@ -24,7 +24,7 @@ PocketChallengeV2::PocketChallengeV2() {
     device.digital("Escape", virtualPorts[0].pad.select);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

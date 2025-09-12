@@ -21,7 +21,7 @@ SG1000::SG1000() {
     device.digital("2",     virtualPorts[id].pad.east);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

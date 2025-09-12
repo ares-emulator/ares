@@ -1,7 +1,7 @@
 struct GameBoyAdvance : Cartridge {
   auto name() -> string override { return "Game Boy Advance"; }
   auto saveName() -> string override { return "Game Boy Advance"; }
-  auto extensions() -> vector<string> override { return {"gba"}; }
+  auto extensions() -> std::vector<string> override { return {"gba"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;
@@ -72,7 +72,7 @@ auto GameBoyAdvance::save(string location) -> bool {
 }
 
 auto GameBoyAdvance::analyze(std::vector<u8>& rom) -> string {
-  vector<string> mirrorCodes = {
+  std::vector<string> mirrorCodes = {
     "FBME",  //Classic NES Series - Bomberman (USA, Europe)
     "FADE",  //Classic NES Series - Castlevania (USA)
     "FDKE",  //Classic NES Series - Donkey Kong (USA, Europe)
@@ -123,7 +123,7 @@ auto GameBoyAdvance::analyze(std::vector<u8>& rom) -> string {
     }
   }
 
-  vector<string> identifiers = {
+  std::vector<string> identifiers = {
     "SRAM_V",
     "SRAM_F_V",
     "EEPROM_V",
@@ -132,17 +132,17 @@ auto GameBoyAdvance::analyze(std::vector<u8>& rom) -> string {
     "FLASH1M_V",
   };
 
-  vector<string> saveTypes;
-  if(gameCode == "A2YE") { saveTypes.append("NONE"      ); };  //Top Gun - Combat Zones (USA)
-  if(gameCode == "ALUE") { saveTypes.append("EEPROM_V"  ); };  //Super Monkey Ball Jr. (USA)
-  if(gameCode == "AR8E") { saveTypes.append("EEPROM_V"  ); };  //Rocky (USA)
-  if(gameCode == "AROP") { saveTypes.append("EEPROM_V"  ); };  //Rocky (Europe)
-  if(gameCode == "BR4J") { saveTypes.append("FLASH512_V"); };  //Rockman EXE 4.5 - Real Operation (Japan)
+  std::vector<string> saveTypes;
+  if(gameCode == "A2YE") { saveTypes.push_back("NONE"      ); };  //Top Gun - Combat Zones (USA)
+  if(gameCode == "ALUE") { saveTypes.push_back("EEPROM_V"  ); };  //Super Monkey Ball Jr. (USA)
+  if(gameCode == "AR8E") { saveTypes.push_back("EEPROM_V"  ); };  //Rocky (USA)
+  if(gameCode == "AROP") { saveTypes.push_back("EEPROM_V"  ); };  //Rocky (Europe)
+  if(gameCode == "BR4J") { saveTypes.push_back("FLASH512_V"); };  //Rockman EXE 4.5 - Real Operation (Japan)
 
   for(auto& identifier : identifiers) {
     for(s32 n : range(rom.size() - 16)) {
       if(!memory::compare(&rom[n], identifier.data(), identifier.size())) {
-        if(!saveTypes.find(identifier.data())) saveTypes.append(identifier.data());
+        if(std::ranges::find(saveTypes, string(identifier.data())) == saveTypes.end()) saveTypes.push_back(identifier.data());
       }
     }
   }
@@ -168,22 +168,22 @@ auto GameBoyAdvance::analyze(std::vector<u8>& rom) -> string {
   s += "      content: Program\n";
   s +={"      mirror: ", mirror, "\n"};
 
-  if(saveTypes) {
-    if(saveTypes.first().beginsWith("SRAM_V") || saveTypes.first().beginsWith("SRAM_F_V")) {
+  if(!saveTypes.empty()) {
+    if(saveTypes.front().beginsWith("SRAM_V") || saveTypes.front().beginsWith("SRAM_F_V")) {
       s += "    memory\n";
       s += "      type: RAM\n";
       s += "      size: 0x8000\n";
       s += "      content: Save\n";
     }
 
-    if(saveTypes.first().beginsWith("EEPROM_V")) {
+    if(saveTypes.front().beginsWith("EEPROM_V")) {
       s += "    memory\n";
       s += "      type: EEPROM\n";
       s += "      size: 0x0\n";  //auto-detected
       s += "      content: Save\n";
     }
 
-    if(saveTypes.first().beginsWith("FLASH_V") || saveTypes.first().beginsWith("FLASH512_V")) {
+    if(saveTypes.front().beginsWith("FLASH_V") || saveTypes.front().beginsWith("FLASH512_V")) {
       s += "    memory\n";
       s += "      type: Flash\n";
       s += "      size: 0x10000\n";
@@ -191,7 +191,7 @@ auto GameBoyAdvance::analyze(std::vector<u8>& rom) -> string {
       s += "      manufacturer: Macronix\n";
     }
 
-    if(saveTypes.first().beginsWith("FLASH1M_V")) {
+    if(saveTypes.front().beginsWith("FLASH1M_V")) {
       s += "    memory\n";
       s += "      type: Flash\n";
       s += "      size: 0x20000\n";

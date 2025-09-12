@@ -9,7 +9,7 @@ GameGear::GameGear() {
   manufacturer = "Sega";
   name = "Game Gear";
 
-  firmware.append({"BIOS", "World", "8c8a21335038285cfa03dc076100c1f0bfadf3e4ff70796f11f3dfaaab60eee2"});
+  firmware.push_back({"BIOS", "World", "8c8a21335038285cfa03dc076100c1f0bfadf3e4ff70796f11f3dfaaab60eee2"});
 
   { InputPort port{"Game Gear"};
 
@@ -23,7 +23,7 @@ GameGear::GameGear() {
     device.digital("Start", virtualPorts[0].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

@@ -19,7 +19,7 @@ Atari2600::Atari2600() {
     device.digital("TV Type",          virtualPorts[0].pad.north);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 
   for(auto id : range(2)) {
@@ -34,7 +34,7 @@ Atari2600::Atari2600() {
 
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

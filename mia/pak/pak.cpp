@@ -22,7 +22,7 @@ auto Pak::read(string location) -> std::vector<u8> {
   return memory;
 }
 
-auto Pak::read(string location, vector<string> match) -> std::vector<u8> {
+auto Pak::read(string location, std::vector<string> match) -> std::vector<u8> {
   std::vector<u8> memory;
   std::vector<u8> ips_patch;
   std::vector<u8> bps_patch;
@@ -85,15 +85,6 @@ auto Pak::read(string location, vector<string> match) -> std::vector<u8> {
   }
 
   return memory;
-}
-
-auto Pak::append(vector<u8>& output, string filename) -> bool {
-  if(!file::exists(filename)) return false;
-  auto input = file::read(filename);
-  auto size = output.size();
-  output.resize(size + input.size());
-  memory::copy(output.data() + size, input.data(), input.size());
-  return true;
 }
 
 auto Pak::append(std::vector<u8>& output, string filename) -> bool {

@@ -1,6 +1,6 @@
 struct PCEngine : Cartridge {
   auto name() -> string override { return "PC Engine"; }
-  auto extensions() -> vector<string> override { return {"pce"}; }
+  auto extensions() -> std::vector<string> override { return {"pce"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;

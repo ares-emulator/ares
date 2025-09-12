@@ -1,6 +1,6 @@
 struct Arcade : Mame {
   auto name() -> string override { return "Arcade"; }
-  auto extensions() -> vector<string> override { return {}; }
+  auto extensions() -> std::vector<string> override { return {}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 };
