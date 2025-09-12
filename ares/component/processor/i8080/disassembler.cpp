@@ -41,7 +41,7 @@ auto I8080::disassembleContext() -> string {
   return s;
 }
 
-#define op(id, name, ...) case id: return {name, " ", nall::merge({__VA_ARGS__}, ",")};
+#define op(id, name, ...) case id: return {name, " ", ::nall::merge({__VA_ARGS__}, ",")};
 
 #define N   string{"$", hex(byte(), 2L)}
 #define IN  string{"(", N, ")"}

@@ -12,16 +12,16 @@ auto InputMapping::bind() -> void {
     auto& assignment = assignments[index];
     auto& binding = bindings[index];
 
-    auto token = assignment.split("/");
+    auto token = nall::split(assignment, "/");
     if(token.size() < 3) continue;  //ignore invalid mappings
 
     binding.deviceID = token[0].natural();
     binding.groupID = token[1].natural();
     binding.inputID = token[2].natural();
     binding.qualifier = Qualifier::None;
-    if(token(3) == "Lo") binding.qualifier = Qualifier::Lo;
-    if(token(3) == "Hi") binding.qualifier = Qualifier::Hi;
-    if(token(3) == "Rumble") binding.qualifier = Qualifier::Rumble;
+    if(token.size() > 3 && token[3] == "Lo") binding.qualifier = Qualifier::Lo;
+    if(token.size() > 3 && token[3] == "Hi") binding.qualifier = Qualifier::Hi;
+    if(token.size() > 3 && token[3] == "Rumble") binding.qualifier = Qualifier::Rumble;
 
     for(auto& device : inputManager.devices) {
       if(binding.deviceID == device->id()) {

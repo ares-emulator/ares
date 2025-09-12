@@ -43,7 +43,7 @@ struct CheatEditor : VerticalLayout {
   };
 
   string location;
-  vector<Cheat> cheats;
+  std::vector<Cheat> cheats;
 };
 
 struct MemoryEditor : VerticalLayout {

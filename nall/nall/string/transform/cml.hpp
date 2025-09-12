@@ -57,9 +57,10 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
     state.output.append("  -webkit-", name, ": ", value, ";\n");
   };
 
-  for(auto& block : filedata.split("\n\n")) {
-    auto lines = block.stripRight().split("\n");
-    auto name = lines.takeFirst();
+  for(auto& block : ::nall::split(filedata, "\n\n")) {
+    auto lines = ::nall::split(block.stripRight(), "\n");
+    auto name = lines.empty() ? "" : lines.front();
+    if(!lines.empty()) lines.erase(lines.begin());
 
     if(name.beginsWith("include ")) {
       name.trimLeft("include ", 1L);
@@ -71,8 +72,10 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
 
     if(name == "variables") {
       for(auto& line : lines) {
-        auto data = line.split(":", 1L).strip();
-        variables.append({data(0), data(1)});
+        auto dataParts = ::nall::split(line, ":", 1L);
+        std::vector<string> data;
+        for(auto& part : dataParts) data.push_back(part.strip());
+        variables.append({data.size() > 0 ? data[0] : "", data.size() > 1 ? data[1] : ""});
       }
       continue;
     }
@@ -88,8 +91,10 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
         continue;
       }
 
-      auto data = line.split(":", 1L).strip();
-      auto name = data(0), value = data(1);
+      auto dataParts2 = ::nall::split(line, ":", 1L);
+      std::vector<string> data2;
+      for(auto& part : dataParts2) data2.push_back(part.strip());
+      auto name = data2.size() > 0 ? data2[0] : "", value = data2.size() > 1 ? data2[1] : "";
       while(auto offset = value.find("var(")) {
         bool found = false;
         if(auto length = value.findFrom(*offset, ")")) {

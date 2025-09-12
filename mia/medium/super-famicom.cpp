@@ -1,6 +1,6 @@
 struct SuperFamicom : Cartridge {
   auto name() -> string override { return "Super Famicom"; }
-  auto extensions() -> vector<string> override { return {"sfc", "smc", "swc", "fig"}; }
+  auto extensions() -> std::vector<string> override { return {"sfc", "smc", "swc", "fig"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;
@@ -95,8 +95,9 @@ auto SuperFamicom::load(string location) -> LoadResult {
   this->manifest = Medium::manifestDatabase(sha256);
   
   if(!manifest) {
-    auto extension = string{ ".", location.split(".").last() };
-    auto local_manifest = location.replace(extension, ".bml");
+    auto tmp = nall::split(location, ".");
+    auto ext = string{".", tmp.back()};
+    auto local_manifest = location.replace(ext, ".bml");
     if (folder)
       local_manifest = directory.append("manifest.bml");
     if(file::exists(local_manifest)) {
@@ -158,7 +159,8 @@ auto SuperFamicom::load(string location) -> LoadResult {
 
     //add msu-1 audio tracks
     if(_file.imatch("*-*.pcm")) {
-      auto track = _file.split("-").last().replace(".pcm", "").integer();
+      auto tmp = nall::split(_file, "-");
+      auto track = tmp.back().replace(".pcm", "").integer();
       auto mem = file::read({directory, "/", _file});
       pak->append({"msu1.track-", track,".pcm"}, mem);
     }
@@ -252,10 +254,10 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
   s +={"  revision: ", revision(), "\n"};
   s +={"  board:    ", board(), "\n"};
 
-  auto board = this->board().trimRight("#A", 1L).split("-");
+  auto board = nall::split(this->board().trimRight("#A", 1L), "-");
 
   if(auto size = romSize()) {
-    if(board(0) == "SPC7110" && size > 0x100000) {
+    if(board[0] == "SPC7110" && size > 0x100000) {
       s += "    memory\n";
       s += "      type: ROM\n";
       s += "      size: 0x100000\n";
@@ -264,7 +266,7 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
       s += "      type: ROM\n";
       s +={"      size: 0x", hex(size - 0x100000), "\n"};
       s += "      content: Data\n";
-    } else if(board(0) == "EXSPC7110" && size == 0x700000) {
+    } else if(board[0] == "EXSPC7110" && size == 0x700000) {
       //Tengai Maykou Zero (fan translation)
       s += "    memory\n";
       s += "      type: ROM\n";
@@ -300,7 +302,7 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
     s += "      content: Save\n";
   }
 
-  if(board(0) == "ARM") {
+  if(board[0] == "ARM") {
     s += "    memory\n";
     s += "      type: ROM\n";
     s += "      size: 0x20000\n";
@@ -325,12 +327,12 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
     s += "      volatile\n";
     s += "    oscillator\n";
     s += "      frequency: 21440000\n";
-  } else if(board(0) == "BS" && board(1) == "MCC") {
+  } else if(board[0] == "BS" && board[1] == "MCC") {
     s += "    memory\n";
     s += "      type: RAM\n";
     s += "      size: 0x80000\n";
     s += "      content: Download\n";
-  } else if(board(0) == "EXNEC") {
+  } else if(board[0] == "EXNEC") {
     s += "    memory\n";
     s += "      type: ROM\n";
     s += "      size: 0xc000\n";
@@ -354,7 +356,7 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
     s +={"      identifier: ", firmwareEXNEC(), "\n"};
     s += "    oscillator\n";
     s +={"      frequency: ", firmwareEXNEC() == "ST010" ? 11000000 : 15000000, "\n"};
-  } else if(board(0) == "GB") {
+  } else if(board[0] == "GB") {
     s += "    memory\n";
     s += "      type: ROM\n";
     s += "      size: 0x100\n";
@@ -366,11 +368,11 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
       s += "    oscillator\n";
       s += "      frequency: 20971520\n";
     }
-  } else if(board(0) == "GSU") {
+  } else if(board[0] == "GSU") {
   //todo: MARIO CHIP 1 uses CPU oscillator
     s += "    oscillator\n";
     s += "      frequency: 21440000\n";
-  } else if(board(0) == "HITACHI") {
+  } else if(board[0] == "HITACHI") {
     s += "    memory\n";
     s += "      type: ROM\n";
     s += "      size: 0xc00\n";
@@ -388,7 +390,7 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
     s += "      volatile\n";
     s += "    oscillator\n";
     s += "      frequency: 20000000\n";
-  } else if(board(0) == "NEC") {
+  } else if(board[0] == "NEC") {
     s += "    memory\n";
     s += "      type: ROM\n";
     s += "      size: 0x1800\n";
@@ -413,7 +415,7 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
     s += "      volatile\n";
     s += "    oscillator\n";
     s += "      frequency: 7600000\n";
-  } else if(board(0) == "SA1" || board(1) == "SA1") {  //SA1-* or BS-SA1-*
+  } else if(board[0] == "SA1" || board[1] == "SA1") {  //SA1-* or BS-SA1-*
     s += "    memory\n";
     s += "      type: RAM\n";
     s += "      size: 0x800\n";
@@ -421,13 +423,13 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
     s += "      volatile\n";
   }
 
-  if(board.right() == "EPSONRTC") {
+  if(board.back() == "EPSONRTC") {
     s += "    memory\n";
     s += "      type: RTC\n";
     s += "      size: 0x10\n";
     s += "      content: Time\n";
     s += "      manufacturer: Epson\n";
-  } else if(board.right() == "SHARPRTC") {
+  } else if(board.back() == "SHARPRTC") {
     s += "    memory\n";
     s += "      type: RTC\n";
     s += "      size: 0x10\n";

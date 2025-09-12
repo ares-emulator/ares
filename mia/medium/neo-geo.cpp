@@ -4,7 +4,7 @@
 
 struct NeoGeo : Mame {
   auto name() -> string override { return "Neo Geo"; }
-  auto extensions() -> vector<string> override { return {"ng"}; }
+  auto extensions() -> std::vector<string> override { return {"ng"}; }
   auto read(string location, string match) -> std::vector<u8>;
   auto load(string location) -> LoadResult override;
   auto board() -> string;

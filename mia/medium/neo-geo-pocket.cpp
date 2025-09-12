@@ -1,6 +1,6 @@
 struct NeoGeoPocket : Cartridge {
   auto name() -> string override { return "Neo Geo Pocket"; }
-  auto extensions() -> vector<string> override { return {"ngp"}; }
+  auto extensions() -> std::vector<string> override { return {"ngp"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;
