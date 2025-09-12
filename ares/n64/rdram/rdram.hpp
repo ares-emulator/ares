@@ -19,35 +19,59 @@ struct RDRAM : Memory::RCP<RDRAM> {
 
     template<u32 Size>
     auto writeRepeat(u32 address, u64 value, u8 length) -> void {
-      if constexpr(Size == Byte)
-        value <<= 24;
-      else if constexpr(Size == Half)
-        value <<= 16;
+      if constexpr(Size == Byte) {
+        value = value & (0xFFFFFFFF >> (24 - (address & 3) * 8));
+        value = (u32)((value << 24) | (value >> 8));
+      } else if constexpr(Size == Half) {
+        value = value & (0xFFFFFFFF >> (16 - (address & 2) * 8));
+        value = (u32)((value << 16) | (value >> 16));
+      }
       if constexpr(Size != Dual)
-        value |= value << 32;
+        value = (value << 32) | (u32) value;
 
-      const u32 end = (address & ~7) + length + 1;
+      const u32 end = min((address & ~7) + length, size);
       if (end <= address)
         return;
 
-      const u32 end64 = address + ((end - address) & ~7);
-      for (; address != end64; address += 8) {
-        Memory::Writable::writeUnaligned<Dual>(address, value);
-        if (address >= size) return;
+      length = end - address;
+
+      if (address & 1) {
+        Memory::Writable::write<Byte>(address, value >> 56);
+        value = (value << 8) | (value >> 56);
+        address = (address & ~0x7FF) | ((address + 1) & 0x7FF);
+        length -= 1;
       }
-      if (end >= address + 4) {
-        Memory::Writable::writeUnaligned<Word>(address, value >> 32);
+      if ((address & 2) && length >= 2) {
+        Memory::Writable::write<Half>(address, value >> 48);
+        value = (value << 16) | (value >> 48);
+        address = (address & ~0x7FF) | ((address + 2) & 0x7FF);
+        length -= 2;
+      }
+      if ((address & 4) && length >= 4) {
+        Memory::Writable::write<Word>(address, value >> 32);
+        value = (value << 32) | (value >> 32);
+        address = (address & ~0x7FF) | ((address + 4) & 0x7FF);
+        length -= 4;
+      }
+
+      while (length >= 8) {
+        Memory::Writable::write<Dual>(address, value);
+        address = (address & ~0x7FF) | ((address + 8) & 0x7FF);
+        length -= 8;
+      }
+      if (length >= 4) {
+        Memory::Writable::write<Word>(address, value >> 32);
         value <<= 32;
         address += 4;
-        if (address >= size) return;
+        length -= 4;
       }
-      if (end >= address + 2) {
-        Memory::Writable::writeUnaligned<Half>(address, value >> 48);
+      if (length >= 2) {
+        Memory::Writable::write<Half>(address, value >> 48);
         value <<= 16;
         address += 2;
-        if (address >= size) return;
+        length -= 2;
       }
-      if (end >= address + 1)
+      if (length == 1)
         Memory::Writable::write<Byte>(address, value >> 56);
     }
 
@@ -58,7 +82,7 @@ struct RDRAM : Memory::RCP<RDRAM> {
         self.debugger.writeWord(address, Size, value, peripheral);
       }
       if (unlikely(mi.initializeMode())) {
-        writeRepeat<Size>(address, value, mi.initializeLength());
+        writeRepeat<Size>(address, value, mi.initializeLength()+1);
       } else {
         Memory::Writable::write<Size>(address, value);
       }
