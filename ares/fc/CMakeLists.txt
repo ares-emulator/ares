@@ -17,6 +17,7 @@ ares_add_sources(
     system/system.cpp
     controller/controller.cpp
     expansion/expansion.cpp
+    tape/tape.cpp
     cartridge/cartridge.cpp
     cpu/cpu.cpp
     apu/apu.cpp
@@ -178,8 +179,8 @@ ares_add_sources(
   CORE #
     fc
   INCLUDED #
-    expansion/family-keyboard/family-keyboard.cpp
-    expansion/family-keyboard/family-keyboard.hpp
+    expansion/family-basic-keyboard/family-basic-keyboard.cpp
+    expansion/family-basic-keyboard/family-basic-keyboard.hpp
 )
 
 ares_add_sources(
@@ -217,4 +218,15 @@ ares_add_sources(
     system/controls.cpp
     system/serialization.cpp
     system/system.hpp
+)
+
+ares_add_sources(
+  CORE #
+    fc
+  INCLUDED #
+    tape/family-basic-data-recorder/family-basic-data-recorder.cpp
+    tape/family-basic-data-recorder/family-basic-data-recorder.hpp
+    tape/port.cpp
+    tape/port.hpp
+    tape/tape.hpp
 )
