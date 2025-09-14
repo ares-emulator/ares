@@ -3,6 +3,7 @@
 
 #include <ares/ares.hpp>
 #include <nall/decode/mmi.hpp>
+#include <nall/dsp/iir/dc-removal.hpp>
 #include <vector>
 #include <cmath>
 
