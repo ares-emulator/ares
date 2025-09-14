@@ -32,7 +32,7 @@ struct InputJoypadUHID {
     if(thisTimestamp - lastTimestamp >= 2000) {
       lastTimestamp = thisTimestamp;
       auto devices = directory::files("/dev/", "uhid*");
-      if(enumeratedDevices != devices.merge(";")) initialize();
+      if(enumeratedDevices != nall::merge(devices, ";")) initialize();
     }
 
     for(auto& joypad : joypads) {
@@ -86,7 +86,7 @@ struct InputJoypadUHID {
         }
         hid_end_parse(parse);
       }
-      devices.append(joypad.hid);
+      devices.push_back(joypad.hid);
     }
   }
 
@@ -95,7 +95,7 @@ struct InputJoypadUHID {
 
     u32 pathID = 0;
     auto devices = directory::files("/dev/", "uhid*");
-    enumeratedDevices = devices.merge(";");
+    enumeratedDevices = nall::merge(devices, ";");
     for(auto device : devices) {
       Joypad joypad;
       string deviceName = {"/dev/", device};
