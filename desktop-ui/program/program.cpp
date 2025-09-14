@@ -18,7 +18,7 @@ auto Program::create() -> void {
   inputDriverUpdate();
 
   _isRunning = true;
-  worker = thread::create({&Program::emulatorRunLoop, this});
+  worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
   program.rewindReset();
 
   if(!startGameLoad.empty()) {

@@ -5,7 +5,7 @@ struct mConsole : mWidget {
   auto backgroundColor() const -> Color;
   auto doActivate(string) const -> void;
   auto foregroundColor() const -> Color;
-  auto onActivate(const function<void (string)>& callback = {}) -> type&;
+  auto onActivate(const std::function<void (string)>& callback = {}) -> type&;
   auto print(const string& text) -> type&;
   auto prompt() const -> string;
   auto reset() -> type& override;
@@ -17,7 +17,7 @@ struct mConsole : mWidget {
   struct State {
     Color backgroundColor;
     Color foregroundColor;
-    function<void (string)> onActivate;
+    std::function<void (string)> onActivate;
     string prompt;
   } state;
 };

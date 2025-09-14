@@ -13,23 +13,23 @@ private:
   auto usleep(u32) -> void;
   auto readable() -> bool;
   auto writable() -> bool;
-  auto read() -> n8;
-  auto write(n8) -> void;
+  auto read1() -> n8;
+  auto write1(n8) -> void;
 
   n1  booted;
   n16 resetVector;
   n8  ram[122];
 
   nall::library link;
-  function<void (
-    function<bool ()>,     //quit
-    function<void (u32)>,  //usleep
-    function<bool ()>,     //readable
-    function<bool ()>,     //writable
-    function<n8 ()>,       //read
-    function<void (n8)>    //write
+  std::function<void (
+    std::function<bool ()>,     //quit
+    std::function<void (u32)>,  //usleep
+    std::function<bool ()>,     //readable
+    std::function<bool ()>,     //writable
+    std::function<n8 ()>,       //read
+    std::function<void (n8)>    //write
   )> linkInit;
-  function<void (std::vector<string>)> linkMain;
+  std::function<void (std::vector<string>)> linkMain;
 
   std::vector<n8> snesBuffer;  //SNES -> Link
   std::vector<n8> linkBuffer;  //Link -> SNES

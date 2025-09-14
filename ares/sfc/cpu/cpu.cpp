@@ -61,33 +61,33 @@ auto CPU::main() -> void {
 }
 
 auto CPU::map() -> void {
-  function<n8   (n24, n8)> reader;
-  function<void (n24, n8)> writer;
+  std::function<n8   (n24, n8)> reader;
+  std::function<void (n24, n8)> writer;
 
-  reader = {&CPU::readRAM, this};
-  writer = {&CPU::writeRAM, this};
+  reader = std::bind_front(&CPU::readRAM, this);
+  writer = std::bind_front(&CPU::writeRAM, this);
   bus.map(reader, writer, "00-3f,80-bf:0000-1fff", 0x2000);
   bus.map(reader, writer, "7e-7f:0000-ffff", 0x20000);
 
-  reader = {&CPU::readAPU, this};
-  writer = {&CPU::writeAPU, this};
+  reader = std::bind_front(&CPU::readAPU, this);
+  writer = std::bind_front(&CPU::writeAPU, this);
   bus.map(reader, writer, "00-3f,80-bf:2140-217f");
 
-  reader = {&CPU::readCPU, this};
-  writer = {&CPU::writeCPU, this};
+  reader = std::bind_front(&CPU::readCPU, this);
+  writer = std::bind_front(&CPU::writeCPU, this);
   bus.map(reader, writer, "00-3f,80-bf:2180-2183,4016-4017,4200-421f");
 
-  reader = {&CPU::readDMA, this};
-  writer = {&CPU::writeDMA, this};
+  reader = std::bind_front(&CPU::readDMA, this);
+  writer = std::bind_front(&CPU::writeDMA, this);
   bus.map(reader, writer, "00-3f,80-bf:4300-437f");
 }
 
 auto CPU::power(bool reset) -> void {
   WDC65816::power();
-  create(system.cpuFrequency(), {&CPU::main, this});
+  create(system.cpuFrequency(), std::bind_front(&CPU::main, this));
   coprocessors.clear();
   PPUcounter::reset();
-  PPUcounter::scanline = {&CPU::scanline, this};
+  PPUcounter::scanline = std::bind_front(&CPU::scanline, this);
 
   if(!reset) random.array({(u8*)wram, sizeof(wram)});
 

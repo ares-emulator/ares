@@ -14,7 +14,7 @@ auto mVerticalSlider::length() const -> u32 {
   return state.length;
 }
 
-auto mVerticalSlider::onChange(const function<void ()>& callback) -> type& {
+auto mVerticalSlider::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }

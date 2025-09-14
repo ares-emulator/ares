@@ -26,7 +26,7 @@ auto VI::load(Node::Object parent) -> void {
   }
   #endif
   screen = node->append<Node::Video::Screen>("Screen", width, height);
-  screen->setRefresh({&VI::refresh, this});
+  screen->setRefresh(std::bind_front(&VI::refresh, this));
   screen->refreshRateHint(Region::PAL() ? 50 : 60); // TODO: More accurate refresh rate hint
   screen->colors((1 << 24) + (1 << 15), [&](n32 color) -> n64 {
     if(color < (1 << 24)) {

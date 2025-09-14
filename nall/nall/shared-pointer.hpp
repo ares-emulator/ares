@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/maybe.hpp>
 #include <nall/traits.hpp>
 
@@ -10,7 +10,7 @@ template<typename T> struct shared_pointer;
 
 struct shared_pointer_manager {
   void* pointer = nullptr;
-  function<void (void*)> deleter;
+  std::function<void (void*)> deleter;
   u32 strong = 0;
   u32 weak = 0;
 
@@ -44,9 +44,9 @@ struct shared_pointer {
     operator=(source);
   }
 
-  shared_pointer(T* source, const function<void (T*)>& deleter) {
+  shared_pointer(T* source, const std::function<void (T*)>& deleter) {
     operator=(source);
-    manager->deleter = function<void (void*)>([=](void* p) {
+    manager->deleter = std::function<void (void*)>([=](void* p) {
       deleter((T*)p);
     });
   }

@@ -2,7 +2,7 @@
 #include <nall/any.hpp>
 #include <nall/chrono.hpp>
 #include <nall/directory.hpp>
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/image.hpp>
 #include <nall/locale.hpp>
 #include <nall/maybe.hpp>
@@ -21,7 +21,6 @@
 #include <vector>
 
 using nall::any;
-using nall::function;
 using nall::image;
 using nall::index_of;
 using nall::multiFactorImage;

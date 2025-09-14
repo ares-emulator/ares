@@ -7,8 +7,8 @@ struct RawInput {
   HWND hwnd = nullptr;
   bool ready = false;
   bool initialized = false;
-  function<void (RAWINPUT*)> updateKeyboard;
-  function<void (RAWINPUT*)> updateMouse;
+  std::function<void (RAWINPUT*)> updateKeyboard;
+  std::function<void (RAWINPUT*)> updateMouse;
 
   struct Device {
     HANDLE handle = nullptr;

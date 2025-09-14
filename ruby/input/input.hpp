@@ -53,11 +53,11 @@ struct Input {
   auto poll() -> std::vector<shared_pointer<nall::HID::Device>>;
   auto rumble(u64 id, u16 strong, u16 weak) -> bool;
 
-  auto onChange(const function<void (shared_pointer<nall::HID::Device>, u32, u32, s16, s16)>&) -> void;
+  auto onChange(const std::function<void (shared_pointer<nall::HID::Device>, u32, u32, s16, s16)>&) -> void;
   auto doChange(shared_pointer<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue) -> void;
 
 protected:
   Input& self;
   unique_pointer<InputDriver> instance;
-  function<void (shared_pointer<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue)> change;
+  std::function<void (shared_pointer<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue)> change;
 };

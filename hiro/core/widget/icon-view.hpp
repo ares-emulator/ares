@@ -15,9 +15,9 @@ struct mIconView : mWidget {
   auto item(u32 position) const -> IconViewItem;
   auto itemCount() const -> u32;
   auto items() const -> std::vector<IconViewItem>;
-  auto onActivate(const function<void ()>& callback = {}) -> type&;
-  auto onChange(const function<void ()>& callback = {}) -> type&;
-  auto onContext(const function<void ()>& callback = {}) -> type&;
+  auto onActivate(const std::function<void ()>& callback = {}) -> type&;
+  auto onChange(const std::function<void ()>& callback = {}) -> type&;
+  auto onContext(const std::function<void ()>& callback = {}) -> type&;
   auto orientation() const -> Orientation;
   auto remove(sIconViewItem item) -> type&;
   auto reset() -> type& override;
@@ -37,9 +37,9 @@ struct mIconView : mWidget {
     Color foregroundColor;
     Orientation flow = Orientation::Vertical;
     std::vector<sIconViewItem> items;
-    function<void ()> onActivate;
-    function<void ()> onChange;
-    function<void ()> onContext;
+    std::function<void ()> onActivate;
+    std::function<void ()> onChange;
+    std::function<void ()> onContext;
     Orientation orientation = Orientation::Horizontal;
   } state;
 

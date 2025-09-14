@@ -115,7 +115,7 @@ struct Node {
     return nall::string::compare(shared->_name, node.shared->_name) < 0;
   }
 
-  auto sort(function<bool (Node, Node)> comparator = [](auto x, auto y) { return x < y; }) -> void {
+  auto sort(std::function<bool (Node, Node)> comparator = [](auto x, auto y) { return x < y; }) -> void {
     std::sort(shared->_children.begin(), shared->_children.end(), [&](auto x, auto y) {
       return comparator(x, y);  //this call converts SharedNode objects to Node objects
     });

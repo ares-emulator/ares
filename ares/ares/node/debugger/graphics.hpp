@@ -9,7 +9,7 @@ struct Graphics : Debugger {
   auto capture() const -> std::vector<u32> { if(_capture) return _capture(); return {}; }
 
   auto setSize(u32 width, u32 height) -> void { _width = width, _height = height; }
-  auto setCapture(function<std::vector<u32> ()> capture) -> void { _capture = capture; }
+  auto setCapture(std::function<std::vector<u32> ()> capture) -> void { _capture = capture; }
 
   auto serialize(string& output, string depth) -> void override {
     Debugger::serialize(output, depth);
@@ -22,5 +22,5 @@ struct Graphics : Debugger {
 protected:
   u32 _width = 0;
   u32 _height = 0;
-  function<std::vector<u32> ()> _capture;
+  std::function<std::vector<u32> ()> _capture;
 };

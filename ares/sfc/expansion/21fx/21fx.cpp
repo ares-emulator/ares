@@ -1,13 +1,13 @@
 S21FX::S21FX(Node::Port parent) {
   node = parent->append<Node::Peripheral>("21fx");
 
-  Thread::create(10'000'000, {&S21FX::main, this});
+  Thread::create(10'000'000, std::bind_front(&S21FX::main, this));
 
   resetVector.byte(0) = bus.read(0xfffc, 0x00);
   resetVector.byte(1) = bus.read(0xfffd, 0x00);
 
-  bus.map({&S21FX::read, this}, {&S21FX::write, this}, "00-3f,80-bf:2184-21ff");
-  bus.map({&S21FX::read, this}, {&S21FX::write, this}, "00:fffc-fffd");
+  bus.map(std::bind_front(&S21FX::read, this), std::bind_front(&S21FX::write, this), "00-3f,80-bf:2184-21ff");
+  bus.map(std::bind_front(&S21FX::read, this), std::bind_front(&S21FX::write, this), "00:fffc-fffd");
 
   booted = false;
 
@@ -30,8 +30,17 @@ S21FX::S21FX(Node::Port parent) {
 
   string filename{Path::temporary(), "21fx.so"};
   if(link.openAbsolute(filename)) {
-    linkInit = (decltype(linkInit)::cast)link.sym("fx_init");
-    linkMain = (decltype(linkMain)::cast)link.sym("fx_main");
+    using linkInit_fp = void (*)(
+      std::function<bool ()>,
+      std::function<void (u32)>,
+      std::function<bool ()>,
+      std::function<bool ()>,
+      std::function<n8 ()>,
+      std::function<void (n8)>
+    );
+    using linkMain_fp = void (*)(std::vector<string>);
+    linkInit = (linkInit_fp)link.sym("fx_init");
+    linkMain = (linkMain_fp)link.sym("fx_main");
   }
 }
 
@@ -53,8 +62,8 @@ S21FX::~S21FX() {
   }, "00:fffc-fffd", 2);
 
   if(link.open()) link.close();
-  linkInit.reset();
-  linkMain.reset();
+  linkInit = nullptr;
+  linkMain = nullptr;
 }
 
 auto S21FX::step(u32 clocks) -> void {
@@ -64,12 +73,12 @@ auto S21FX::step(u32 clocks) -> void {
 
 auto S21FX::main() -> void {
   if(linkInit) linkInit(
-    {&S21FX::quit, this},
-    {&S21FX::usleep, this},
-    {&S21FX::readable, this},
-    {&S21FX::writable, this},
-    {&S21FX::read, this},
-    {&S21FX::write, this}
+    std::bind_front(&S21FX::quit, this),
+    std::bind_front(&S21FX::usleep, this),
+    std::bind_front(&S21FX::readable, this),
+    std::bind_front(&S21FX::writable, this),
+    std::bind_front(&S21FX::read1, this),
+    std::bind_front(&S21FX::write1, this)
   );
   if(linkMain) linkMain({});
   while(true) scheduler.synchronize(), step(10'000'000);
@@ -130,7 +139,7 @@ auto S21FX::writable() -> bool {
 }
 
 //SNES -> Link
-auto S21FX::read() -> n8 {
+auto S21FX::read1() -> n8 {
   step(1);
   if(snesBuffer.size() > 0) {
     auto result = snesBuffer.front();
@@ -141,7 +150,7 @@ auto S21FX::read() -> n8 {
 }
 
 //Link -> SNES
-auto S21FX::write(n8 data) -> void {
+auto S21FX::write1(n8 data) -> void {
   step(1);
   if(linkBuffer.size() < 1024) {
     linkBuffer.push_back(data);

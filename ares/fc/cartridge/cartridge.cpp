@@ -47,7 +47,7 @@ auto Cartridge::save() -> void {
 }
 
 auto Cartridge::power() -> void {
-  Thread::create(system.frequency(), {&Cartridge::main, this});
+  Thread::create(system.frequency(), std::bind_front(&Cartridge::main, this));
   board->power();
 }
 

@@ -89,7 +89,7 @@ auto PSG::step(u32 clocks) -> void {
 }
 
 auto PSG::power() -> void {
-  Thread::create(system.colorburst(), {&PSG::main, this});
+  Thread::create(system.colorburst(), std::bind_front(&PSG::main, this));
 
   io = {};
   for(auto C : range(6)) channel[C].power(C);

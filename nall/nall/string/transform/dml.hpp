@@ -14,7 +14,7 @@ struct DML {
   auto& setAllowHTML(bool allowHTML) { settings.allowHTML = allowHTML; return *this; }
   auto& setHost(const string& hostname) { settings.host = hostname; return *this; }
   auto& setPath(const string& pathname) { settings.path = pathname; return *this; }
-  auto& setReader(const function<string (string)>& reader) { settings.reader = reader; return *this; }
+  auto& setReader(const std::function<string (string)>& reader) { settings.reader = reader; return *this; }
 
   auto parse(const string& filedata, const string& pathname) -> string;
   auto parse(const string& filename) -> string;
@@ -26,7 +26,7 @@ private:
     bool allowHTML = true;
     string host = "localhost";
     string path;
-    function<string (string)> reader;
+    std::function<string (string)> reader;
   } settings;
 
   struct State {

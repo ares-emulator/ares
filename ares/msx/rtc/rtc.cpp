@@ -29,7 +29,7 @@ auto RTC::step(u32 clocks) -> void {
 
 auto RTC::power() -> void {
   io = {};
-  Thread::create(16, {&RTC::main, this});
+  Thread::create(16, std::bind_front(&RTC::main, this));
 }
 
 auto RTC::read() -> n4 {

@@ -1,12 +1,13 @@
 #pragma once
 
 #include <nall/file.hpp>
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/inode.hpp>
 #include <nall/intrinsics.hpp>
 #include <nall/string.hpp>
 #include <vector>
 #include <algorithm>
+#include <functional>
 
 #if defined(PLATFORM_WINDOWS)
   #include <nall/windows/utf8.hpp>
@@ -82,7 +83,7 @@ struct directory : inode {
 
   static auto rcontents(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     std::vector<string> contents;
-    function<void (const string&, const string&, const string&)>
+    std::function<void (const string&, const string&, const string&)>
     recurse = [&](const string& basename, const string& pathname, const string& pattern) {
       for(auto& folder : directory::ufolders(pathname)) {
         contents.push_back(string{pathname, folder, "/"}.trimLeft(basename, 1L));
@@ -105,7 +106,7 @@ struct directory : inode {
 
   static auto ircontents(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     std::vector<string> contents;
-    function<void (const string&, const string&, const string&)>
+    std::function<void (const string&, const string&, const string&)>
     recurse = [&](const string& basename, const string& pathname, const string& pattern) {
       for(auto& folder : directory::ufolders(pathname)) {
         contents.push_back(string{pathname, folder, "/"}.trimLeft(basename, 1L));

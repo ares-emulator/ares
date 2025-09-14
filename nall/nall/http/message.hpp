@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 //httpMessage: base class for httpRequest and httpResponse
 //provides shared functionality
 
@@ -88,10 +90,10 @@ struct Variables {
 struct Message {
   using type = Message;
 
-  virtual auto head(const function<bool (const u8* data, u32 size)>& callback) const -> bool = 0;
+  virtual auto head(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool = 0;
   virtual auto setHead() -> bool = 0;
 
-  virtual auto body(const function<bool (const u8* data, u32 size)>& callback) const -> bool = 0;
+  virtual auto body(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool = 0;
   virtual auto setBody() -> bool = 0;
 
   Variables header;

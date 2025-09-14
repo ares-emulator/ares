@@ -6,7 +6,7 @@
 //O(log n) remove(first)
 //O(n)     remove(event)
 
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/serializer.hpp>
 
 namespace nall {

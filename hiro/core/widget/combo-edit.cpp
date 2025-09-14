@@ -54,12 +54,12 @@ auto mComboEdit::items() const -> std::vector<ComboEditItem> {
   return items;
 }
 
-auto mComboEdit::onActivate(const function<void ()>& callback) -> type& {
+auto mComboEdit::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }
 
-auto mComboEdit::onChange(const function<void ()>& callback) -> type& {
+auto mComboEdit::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }

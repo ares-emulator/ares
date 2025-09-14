@@ -58,7 +58,7 @@ auto romSizeRound(u32 romSize) -> u32 {
 auto SuperFX::power() -> void {
   GSU::power();
 
-  Thread::create(Frequency, {&SuperFX::main, this});
+  Thread::create(Frequency, std::bind_front(&SuperFX::main, this));
   cpu.coprocessors.push_back(this);
 
   // SuperFX voxel demo has a non power-of-two rom

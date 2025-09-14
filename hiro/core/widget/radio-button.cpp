@@ -26,7 +26,7 @@ auto mRadioButton::icon() const -> multiFactorImage {
   return state.icon;
 }
 
-auto mRadioButton::onActivate(const function<void ()>& callback) -> type& {
+auto mRadioButton::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }

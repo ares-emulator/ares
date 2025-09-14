@@ -67,15 +67,15 @@ struct InputRumble : InputMapping {
 
 struct InputHotkey : InputDigital {
   InputHotkey(string name) : name(name) {}
-  auto& onPress(function<void ()> press) { return this->press = press, *this; }
-  auto& onRelease(function<void ()> release) { return this->release = release, *this; }
+  auto& onPress(std::function<void ()> press) { return this->press = press, *this; }
+  auto& onRelease(std::function<void ()> release) { return this->release = release, *this; }
   auto value() -> s16 override;
 
   const string name;
 
 private:
-  function<void ()> press;
-  function<void ()> release;
+  std::function<void ()> press;
+  std::function<void ()> release;
   s16 state = 0;
   friend struct InputManager;
 };

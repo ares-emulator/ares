@@ -47,7 +47,7 @@ auto MSU1::main() -> void {
 }
 
 auto MSU1::power() -> void {
-  Thread::create(44100, {&MSU1::main, this});
+  Thread::create(44100, std::bind_front(&MSU1::main, this));
   cpu.coprocessors.push_back(this);
 
   io.dataSeekOffset = 0;

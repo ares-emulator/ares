@@ -153,7 +153,7 @@ struct Video {
   auto output(u32 width = 0, u32 height = 0) -> void;
   auto poll() -> void;
 
-  auto onUpdate(const function<void (u32, u32)>&) -> void;
+  auto onUpdate(const std::function<void (u32, u32)>&) -> void;
   auto doUpdate(u32 width, u32 height) -> void;
 
   auto lock() -> void { mutex.lock(); }
@@ -162,7 +162,7 @@ struct Video {
 protected:
   Video& self;
   unique_pointer<VideoDriver> instance;
-  function<void (u32, u32)> update;
+  std::function<void (u32, u32)> update;
 
 private:
   std::recursive_mutex mutex;

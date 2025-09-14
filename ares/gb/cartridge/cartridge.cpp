@@ -57,7 +57,7 @@ auto Cartridge::save() -> void {
 
 auto Cartridge::power() -> void {
   if(!transferPak) {
-    Thread::create(4 * 1024 * 1024, {&Cartridge::main, this});
+    Thread::create(4 * 1024 * 1024, std::bind_front(&Cartridge::main, this));
     bootromEnable = true;
   }
 

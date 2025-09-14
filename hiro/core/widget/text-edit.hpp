@@ -7,8 +7,8 @@ struct mTextEdit : mWidget {
   auto doMove() const -> void;
   auto editable() const -> bool;
   auto foregroundColor() const -> Color;
-  auto onChange(const function<void ()>& callback = {}) -> type&;
-  auto onMove(const function<void ()>& callback = {}) -> type&;
+  auto onChange(const std::function<void ()>& callback = {}) -> type&;
+  auto onMove(const std::function<void ()>& callback = {}) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
   auto setEditable(bool editable = true) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
@@ -24,8 +24,8 @@ struct mTextEdit : mWidget {
     Color backgroundColor;
     bool editable = true;
     Color foregroundColor;
-    function<void ()> onChange;
-    function<void ()> onMove;
+    std::function<void ()> onChange;
+    std::function<void ()> onMove;
     string text;
     TextCursor textCursor;
     bool wordWrap = true;

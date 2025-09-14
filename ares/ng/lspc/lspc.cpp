@@ -12,7 +12,7 @@ auto LSPC::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("LSPC");
 
   screen = node->append<Node::Video::Screen>("Screen", 320, 256);
-  screen->colors(1 << 17, {&LSPC::color, this});
+  screen->colors(1 << 17, std::bind_front(&LSPC::color, this));
   screen->setSize(320, 256);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
@@ -101,7 +101,7 @@ auto LSPC::frame() -> void {
 }
 
 auto LSPC::power(bool reset) -> void {
-  Thread::create(6'000'000, {&LSPC::main, this});
+  Thread::create(6'000'000, std::bind_front(&LSPC::main, this));
   screen->power();
   animation = {};
   timer = {};

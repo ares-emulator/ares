@@ -71,17 +71,17 @@ auto mIconView::items() const -> std::vector<IconViewItem> {
   return items;
 }
 
-auto mIconView::onActivate(const function<void ()>& callback) -> type& {
+auto mIconView::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }
 
-auto mIconView::onChange(const function<void ()>& callback) -> type& {
+auto mIconView::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }
 
-auto mIconView::onContext(const function<void ()>& callback) -> type& {
+auto mIconView::onContext(const std::function<void ()>& callback) -> type& {
   state.onContext = callback;
   return *this;
 }

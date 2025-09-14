@@ -77,7 +77,7 @@ auto APU::setIRQ() -> void {
 }
 
 auto APU::power(bool reset) -> void {
-  Thread::create(system.frequency(), {&APU::main, this});
+  Thread::create(system.frequency(), std::bind_front(&APU::main, this));
 
   pulse1.power(reset);
   pulse2.power(reset);

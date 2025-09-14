@@ -11,7 +11,7 @@ Screen::Screen(string name, u32 width, u32 height) : Video(name) {
     _lineOverride.resize(width * height, nullptr);
 
     if constexpr(ares::Video::Threaded) {
-      _thread = nall::thread::create({&Screen::main, this});
+      _thread = nall::thread::create(std::bind_front(&Screen::main, this));
     }
   }
 }
@@ -73,7 +73,7 @@ auto Screen::resetSprites() -> void {
   _sprites.clear();
 }
 
-auto Screen::setRefresh(function<void ()> refresh) -> void {
+auto Screen::setRefresh(std::function<void ()> refresh) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _refresh = refresh;
 }
@@ -190,7 +190,7 @@ auto Screen::detach(Node::Video::Sprite sprite) -> void {
   std::erase(_sprites, sprite);
 }
 
-auto Screen::colors(u32 colors, function<n64 (n32)> color) -> void {
+auto Screen::colors(u32 colors, std::function<n64 (n32)> color) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _colors = colors;
   _color = color;

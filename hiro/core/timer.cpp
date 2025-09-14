@@ -18,7 +18,7 @@ auto mTimer::interval() const -> u32 {
   return state.interval;
 }
 
-auto mTimer::onActivate(const function<void ()>& callback) -> type& {
+auto mTimer::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }

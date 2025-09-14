@@ -56,7 +56,7 @@
   auto doSize() const { return self().doSize(); } \
   auto geometry() const { return self().geometry(); } \
   auto minimumSize() const { return self().minimumSize(); } \
-  auto onSize(const function<void ()>& callback = {}) { return self().onSize(callback), *this; } \
+  auto onSize(const std::function<void ()>& callback = {}) { return self().onSize(callback), *this; } \
   auto setCollapsible(bool collapsible = true) { return self().setCollapsible(collapsible), *this; } \
   auto setGeometry(Geometry geometry) { return self().setGeometry(geometry), *this; } \
 
@@ -71,12 +71,12 @@
   auto doMouseRelease(Mouse::Button button) const { return self().doMouseRelease(button); } \
   auto focusable() const { return self().focusable(); } \
   auto mouseCursor() const { return self().mouseCursor(); } \
-  auto onDrop(const function<void (std::vector<string>)>& callback = {}) { return self().onDrop(callback), *this; } \
-  auto onMouseEnter(const function<void ()>& callback = {}) { return self().onMouseEnter(callback), *this; } \
-  auto onMouseLeave(const function<void ()>& callback = {}) { return self().onMouseLeave(callback), *this; } \
-  auto onMouseMove(const function<void (Position)>& callback = {}) { return self().onMouseMove(callback), *this; } \
-  auto onMousePress(const function<void (Mouse::Button)>& callback = {}) { return self().onMousePress(callback), *this; } \
-  auto onMouseRelease(const function<void (Mouse::Button)>& callback = {}) { return self().onMouseRelease(callback), *this; } \
+  auto onDrop(const std::function<void (std::vector<string>)>& callback = {}) { return self().onDrop(callback), *this; } \
+  auto onMouseEnter(const std::function<void ()>& callback = {}) { return self().onMouseEnter(callback), *this; } \
+  auto onMouseLeave(const std::function<void ()>& callback = {}) { return self().onMouseLeave(callback), *this; } \
+  auto onMouseMove(const std::function<void (Position)>& callback = {}) { return self().onMouseMove(callback), *this; } \
+  auto onMousePress(const std::function<void (Mouse::Button)>& callback = {}) { return self().onMousePress(callback), *this; } \
+  auto onMouseRelease(const std::function<void (Mouse::Button)>& callback = {}) { return self().onMouseRelease(callback), *this; } \
   auto setDroppable(bool droppable = true) { return self().setDroppable(droppable), *this; } \
   auto setFocusable(bool focusable = true) { return self().setFocusable(focusable), *this; } \
   auto setMouseCursor(const MouseCursor& mouseCursor = {}) { return self().setMouseCursor(mouseCursor), *this; } \
@@ -121,7 +121,7 @@ struct Timer : sTimer {
 
   auto doActivate() const { return self().doActivate(); }
   auto interval() const { return self().interval(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
   auto setInterval(u32 interval = 0) { return self().setInterval(interval), *this; }
 };
 #endif
@@ -162,7 +162,7 @@ struct MenuItem : sMenuItem {
 
   auto doActivate() const { return self().doActivate(); }
   auto icon() const { return self().icon(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
   auto setIcon(const multiFactorImage& icon = {}, bool forced = false) { return self().setIcon(icon, forced), *this; }
   auto setIconForFile(const string& filename) { return self().setIconForFile(filename), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
@@ -176,7 +176,7 @@ struct MenuCheckItem : sMenuCheckItem {
 
   auto checked() const { return self().checked(); }
   auto doToggle() const { return self().doToggle(); }
-  auto onToggle(const function<void ()>& callback = {}) { return self().onToggle(callback), *this; }
+  auto onToggle(const std::function<void ()>& callback = {}) { return self().onToggle(callback), *this; }
   auto setChecked(bool checked = true) { return self().setChecked(checked), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }
@@ -190,7 +190,7 @@ struct MenuRadioItem : sMenuRadioItem {
   auto checked() const { return self().checked(); }
   auto doActivate() const { return self().doActivate(); }
   auto group() const { return self().group(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
   auto setChecked() { return self().setChecked(), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }
@@ -216,7 +216,7 @@ struct Button : sButton {
   auto bordered() const { return self().bordered(); }
   auto doActivate() const { return self().doActivate(); }
   auto icon() const { return self().icon(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
   auto orientation() const { return self().orientation(); }
   auto setBordered(bool bordered = true) { return self().setBordered(bordered), *this; }
   auto setIcon(const multiFactorImage& icon = {}) { return self().setIcon(icon), *this; }
@@ -252,7 +252,7 @@ struct CheckButton : sCheckButton {
   auto checked() const { return self().checked(); }
   auto doToggle() const { return self().doToggle(); }
   auto icon() const { return self().icon(); }
-  auto onToggle(const function<void ()>& callback = {}) { return self().onToggle(callback), *this; }
+  auto onToggle(const std::function<void ()>& callback = {}) { return self().onToggle(callback), *this; }
   auto orientation() const { return self().orientation(); }
   auto setBordered(bool bordered = true) { return self().setBordered(bordered), *this; }
   auto setChecked(bool checked = true) { return self().setChecked(checked), *this; }
@@ -269,7 +269,7 @@ struct CheckLabel : sCheckLabel {
 
   auto checked() const { return self().checked(); }
   auto doToggle() const { return self().doToggle(); }
-  auto onToggle(const function<void ()>& callback = {}) { return self().onToggle(callback), *this; }
+  auto onToggle(const std::function<void ()>& callback = {}) { return self().onToggle(callback), *this; }
   auto setChecked(bool checked = true) { return self().setChecked(checked), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }
@@ -298,7 +298,7 @@ struct ComboButton : sComboButton {
   auto item(u32 position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto remove(sComboButtonItem item) { return self().remove(item), *this; }
   auto reset() { return self().reset(), *this; }
   auto selected() const { return self().selected(); }
@@ -330,8 +330,8 @@ struct ComboEdit : sComboEdit {
   auto item(u32 position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto remove(sComboEditItem item) { return self().remove(item), *this; }
   auto reset() { return self().reset(), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
@@ -349,7 +349,7 @@ struct Console : sConsole {
   auto backgroundColor() const { return self().backgroundColor(); }
   auto doActivate(string command) const { return self().doActivate(command); }
   auto foregroundColor() const { return self().foregroundColor(); }
-  auto onActivate(const function<void (string)>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onActivate(const std::function<void (string)>& callback = {}) { return self().onActivate(callback), *this; }
   auto print(const string& text) { return self().print(text), *this; }
   auto prompt() const { return self().prompt(); }
   auto reset() { return self().reset(), *this; }
@@ -383,8 +383,8 @@ struct HexEdit : sHexEdit {
   auto doWrite(u32 offset, u8 data) const { return self().doWrite(offset, data); }
   auto foregroundColor() const { return self().foregroundColor(); }
   auto length() const { return self().length(); }
-  auto onRead(const function<u8 (u32)>& callback = {}) { return self().onRead(callback), *this; }
-  auto onWrite(const function<void (u32, u8)>& callback = {}) { return self().onWrite(callback), *this; }
+  auto onRead(const std::function<u8 (u32)>& callback = {}) { return self().onRead(callback), *this; }
+  auto onWrite(const std::function<void (u32, u8)>& callback = {}) { return self().onWrite(callback), *this; }
   auto rows() const { return self().rows(); }
   auto setAddress(u32 address) { return self().setAddress(address), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
@@ -402,7 +402,7 @@ struct HorizontalScrollBar : sHorizontalScrollBar {
 
   auto doChange() const { return self().doChange(); }
   auto length() const { return self().length(); }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto position() const { return self().position(); }
   auto setLength(u32 length = 101) { return self().setLength(length), *this; }
   auto setPosition(u32 position = 0) { return self().setPosition(position), *this; }
@@ -415,7 +415,7 @@ struct HorizontalSlider : sHorizontalSlider {
 
   auto doChange() const { return self().doChange(); }
   auto length() const { return self().length(); }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto position() const { return self().position(); }
   auto setLength(u32 length = 101) { return self().setLength(length), *this; }
   auto setPosition(u32 position = 0) { return self().setPosition(position), *this; }
@@ -451,9 +451,9 @@ struct IconView : sIconView {
   auto item(u32 position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
-  auto onContext(const function<void ()>& callback = {}) { return self().onContext(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onContext(const std::function<void ()>& callback = {}) { return self().onContext(callback), *this; }
   auto orientation() const { return self().orientation(); }
   auto remove(sIconViewItem item) { return self().remove(item), *this; }
   auto reset() { return self().reset(), *this; }
@@ -492,8 +492,8 @@ struct LineEdit : sLineEdit {
   auto doChange() const { return self().doChange(); }
   auto editable() const { return self().editable(); }
   auto foregroundColor() const { return self().foregroundColor(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
   auto setEditable(bool editable = true) { return self().setEditable(editable), *this; }
   auto setForegroundColor(SystemColor color) { return self().setForegroundColor(color), *this; }
@@ -521,7 +521,7 @@ struct RadioButton : sRadioButton {
   auto doActivate() const { return self().doActivate(); }
   auto group() const { return self().group(); }
   auto icon() const { return self().icon(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
   auto orientation() const { return self().orientation(); }
   auto setBordered(bool bordered = true) { return self().setBordered(bordered), *this; }
   auto setChecked() { return self().setChecked(), *this; }
@@ -539,7 +539,7 @@ struct RadioLabel : sRadioLabel {
   auto checked() const { return self().checked(); }
   auto doActivate() const { return self().doActivate(); }
   auto group() const { return self().group(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
   auto setChecked() { return self().setChecked(), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }
@@ -555,8 +555,8 @@ struct SourceEdit : sSourceEdit {
   auto editable() const { return self().editable(); }
   auto language() const { return self().language(); }
   auto numbered() const { return self().numbered(); }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
-  auto onMove(const function<void ()>& callback = {}) { return self().onMove(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onMove(const std::function<void ()>& callback = {}) { return self().onMove(callback), *this; }
   auto scheme() const { return self().scheme(); }
   auto setEditable(bool editable = true) { return self().setEditable(editable), *this; }
   auto setLanguage(const string& language = "") { return self().setLanguage(language), *this; }
@@ -604,9 +604,9 @@ struct TabFrame : sTabFrame {
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
   auto navigation() const { return self().navigation(); }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
-  auto onClose(const function<void (sTabFrameItem)>& callback = {}) { return self().onClose(callback), *this; }
-  auto onMove(const function<void (sTabFrameItem, sTabFrameItem)>& callback = {}) { return self().onMove(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onClose(const std::function<void (sTabFrameItem)>& callback = {}) { return self().onClose(callback), *this; }
+  auto onMove(const std::function<void (sTabFrameItem, sTabFrameItem)>& callback = {}) { return self().onMove(callback), *this; }
   auto remove(sTabFrameItem item) { return self().remove(item), *this; }
   auto reset() { return self().reset(), *this; }
   auto selected() const { return self().selected(); }
@@ -716,12 +716,12 @@ struct TableView : sTableView {
   auto item(u32 position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
-  auto onActivate(const function<void (TableViewCell)>& callback = {}) { return self().onActivate(callback), *this; }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
-  auto onContext(const function<void (TableViewCell)>& callback = {}) { return self().onContext(callback), *this; }
-  auto onEdit(const function<void (TableViewCell)>& callback = {}) { return self().onEdit(callback), *this; }
-  auto onSort(const function<void (TableViewColumn)>& callback = {}) { return self().onSort(callback), *this; }
-  auto onToggle(const function<void (TableViewCell)>& callback = {}) { return self().onToggle(callback), *this; }
+  auto onActivate(const std::function<void (TableViewCell)>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onContext(const std::function<void (TableViewCell)>& callback = {}) { return self().onContext(callback), *this; }
+  auto onEdit(const std::function<void (TableViewCell)>& callback = {}) { return self().onEdit(callback), *this; }
+  auto onSort(const std::function<void (TableViewColumn)>& callback = {}) { return self().onSort(callback), *this; }
+  auto onToggle(const std::function<void (TableViewCell)>& callback = {}) { return self().onToggle(callback), *this; }
   auto remove(sTableViewColumn column) { return self().remove(column), *this; }
   auto remove(sTableViewItem item) { return self().remove(item), *this; }
   auto reset() { return self().reset(), *this; }
@@ -751,8 +751,8 @@ struct TextEdit : sTextEdit {
   auto doMove() const { return self().doMove(); }
   auto editable() const { return self().editable(); }
   auto foregroundColor() const { return self().foregroundColor(); }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
-  auto onMove(const function<void ()>& callback = {}) { return self().onMove(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onMove(const std::function<void ()>& callback = {}) { return self().onMove(callback), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
   auto setEditable(bool editable = true) { return self().setEditable(editable), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
@@ -813,10 +813,10 @@ struct TreeView : sTreeView {
   auto item(const string& path) const { return self().item(path); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
-  auto onContext(const function<void ()>& callback = {}) { return self().onContext(callback), *this; }
-  auto onToggle(const function<void (sTreeViewItem)>& callback = {}) { return self().onToggle(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onContext(const std::function<void ()>& callback = {}) { return self().onContext(callback), *this; }
+  auto onToggle(const std::function<void (sTreeViewItem)>& callback = {}) { return self().onToggle(callback), *this; }
   auto remove(sTreeViewItem item) { return self().remove(item), *this; }
   auto reset() { return self().reset(), *this; }
   auto selectNone() { return self().selectNone(), *this; }
@@ -833,7 +833,7 @@ struct VerticalScrollBar : sVerticalScrollBar {
 
   auto doChange() const { return self().doChange(); }
   auto length() const { return self().length(); }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto position() const { return self().position(); }
   auto setLength(u32 length = 101) { return self().setLength(length), *this; }
   auto setPosition(u32 position = 0) { return self().setPosition(position), *this; }
@@ -846,7 +846,7 @@ struct VerticalSlider : sVerticalSlider {
 
   auto doChange() const { return self().doChange(); }
   auto length() const { return self().length(); }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto position() const { return self().position(); }
   auto setLength(u32 length = 101) { return self().setLength(length), *this; }
   auto setPosition(u32 position = 0) { return self().setPosition(position), *this; }
@@ -923,12 +923,12 @@ struct Window : sWindow {
   auto minimumSize() const { return self().minimumSize(); }
   auto modal() const { return self().modal(); }
   auto monitor() const { return self().monitor(); }
-  auto onClose(const function<void ()>& callback = {}) { return self().onClose(callback), *this; }
-  auto onDrop(const function<void (std::vector<string>)>& callback = {}) { return self().onDrop(callback), *this; }
-  auto onKeyPress(const function<void (s32)>& callback = {}) { return self().onKeyPress(callback), *this; }
-  auto onKeyRelease(const function<void (s32)>& callback = {}) { return self().onKeyRelease(callback), *this; }
-  auto onMove(const function<void ()>& callback = {}) { return self().onMove(callback), *this; }
-  auto onSize(const function<void ()>& callback = {}) { return self().onSize(callback), *this; }
+  auto onClose(const std::function<void ()>& callback = {}) { return self().onClose(callback), *this; }
+  auto onDrop(const std::function<void (std::vector<string>)>& callback = {}) { return self().onDrop(callback), *this; }
+  auto onKeyPress(const std::function<void (s32)>& callback = {}) { return self().onKeyPress(callback), *this; }
+  auto onKeyRelease(const std::function<void (s32)>& callback = {}) { return self().onKeyRelease(callback), *this; }
+  auto onMove(const std::function<void ()>& callback = {}) { return self().onMove(callback), *this; }
+  auto onSize(const std::function<void ()>& callback = {}) { return self().onSize(callback), *this; }
   auto remove(sMenuBar menuBar) { return self().remove(menuBar), *this; }
   auto remove(sSizable sizable) { return self().remove(sizable), *this; }
   auto remove(sStatusBar statusBar) { return self().remove(statusBar), *this; }

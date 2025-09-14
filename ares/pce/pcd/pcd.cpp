@@ -195,7 +195,7 @@ auto PCD::irqLine() const -> bool {
 }
 
 auto PCD::power() -> void {
-  Thread::create(9'216'900, {&PCD::main, this});
+  Thread::create(9'216'900, std::bind_front(&PCD::main, this));
   drive.power();
   scsi.power();
   cdda.power();

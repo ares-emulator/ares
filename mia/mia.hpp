@@ -65,10 +65,10 @@ namespace mia {
   #include "program/program.hpp"
   #endif
 
-  extern function<string ()> homeLocation;
-  extern function<string ()> saveLocation;
-  auto setHomeLocation(function<string ()>) -> void;
-  auto setSaveLocation(function<string ()>) -> void;
+  extern std::function<string ()> homeLocation;
+  extern std::function<string ()> saveLocation;
+  auto setHomeLocation(std::function<string ()>) -> void;
+  auto setSaveLocation(std::function<string ()>) -> void;
   auto construct() -> void;
   auto identify(const string& filename) -> string;
   auto import(shared_pointer<Pak>, const string& filename) -> bool;

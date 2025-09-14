@@ -27,6 +27,6 @@ auto NECDSP::main() -> void {
 
 auto NECDSP::power() -> void {
   uPD96050::power();
-  Thread::create(Frequency, {&NECDSP::main, this});
+  Thread::create(Frequency, std::bind_front(&NECDSP::main, this));
   cpu.coprocessors.push_back(this);
 }

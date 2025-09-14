@@ -10,12 +10,12 @@ struct unique_pointer {
 
   using type = T;
   T* pointer = nullptr;
-  function<void (T*)> deleter;
+  std::function<void (T*)> deleter;
 
   unique_pointer(const unique_pointer&) = delete;
   auto operator=(const unique_pointer&) -> unique_pointer& = delete;
 
-  unique_pointer(T* pointer = nullptr, const function<void (T*)>& deleter = {}) : pointer(pointer), deleter(deleter) {}
+  unique_pointer(T* pointer = nullptr, const std::function<void (T*)>& deleter = {}) : pointer(pointer), deleter(deleter) {}
   ~unique_pointer() { reset(); }
 
   auto operator=(T* source) -> unique_pointer& {
@@ -65,12 +65,12 @@ template<typename T>
 struct unique_pointer<T[]> {
   using type = T;
   T* pointer = nullptr;
-  function<void (T*)> deleter;
+  std::function<void (T*)> deleter;
 
   unique_pointer(const unique_pointer&) = delete;
   auto operator=(const unique_pointer&) -> unique_pointer& = delete;
 
-  unique_pointer(T* pointer = nullptr, const function<void (T*)>& deleter = {}) : pointer(pointer), deleter(deleter) {}
+  unique_pointer(T* pointer = nullptr, const std::function<void (T*)>& deleter = {}) : pointer(pointer), deleter(deleter) {}
   ~unique_pointer() { reset(); }
 
   auto operator=(T* source) -> unique_pointer& {

@@ -4,7 +4,7 @@ struct mMenuItem : mAction {
 
   auto doActivate() const -> void;
   auto icon() const -> multiFactorImage;
-  auto onActivate(const function<void ()>& callback = {}) -> type&;
+  auto onActivate(const std::function<void ()>& callback = {}) -> type&;
   auto setIcon(const multiFactorImage& icon = {}, bool force = false) -> type&;
   auto setIconForFile(const string& filename) -> type&;
   auto setText(const string& text = "") -> type&;
@@ -13,7 +13,7 @@ struct mMenuItem : mAction {
 //private:
   struct State {
     multiFactorImage icon;
-    function<void ()> onActivate;
+    std::function<void ()> onActivate;
     string text;
   } state;
 };

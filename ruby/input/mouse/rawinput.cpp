@@ -111,12 +111,12 @@ struct InputMouseRawInput {
     ms.hid->buttons().append("Up");
     ms.hid->buttons().append("Down");
 
-    rawinput.updateMouse = {&InputMouseRawInput::update, this};
+    rawinput.updateMouse = std::bind_front(&InputMouseRawInput::update, this);
     return true;
   }
 
   auto terminate() -> void {
-    rawinput.updateMouse.reset();
+    rawinput.updateMouse = {};
     release();
   }
 };

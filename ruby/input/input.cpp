@@ -59,7 +59,7 @@ auto Input::rumble(u64 id, u16 strong, u16 weak) -> bool {
 
 //
 
-auto Input::onChange(const function<void (shared_pointer<HID::Device>, u32, u32, s16, s16)>& onChange) -> void {
+auto Input::onChange(const std::function<void (shared_pointer<HID::Device>, u32, u32, s16, s16)>& onChange) -> void {
   change = onChange;
 }
 

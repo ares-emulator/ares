@@ -37,7 +37,7 @@ auto PSG::step(u32 clocks) -> void {
 
 auto PSG::power() -> void {
   AY38910::power();
-  Thread::create(system.colorburst() / 16.0, {&PSG::main, this});
+  Thread::create(system.colorburst() / 16.0, std::bind_front(&PSG::main, this));
 
   for(u32 level : range(16)) {
     volume[level] = 1.0 / pow(2, 1.0 / 2 * (15 - level));

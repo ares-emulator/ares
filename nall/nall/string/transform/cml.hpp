@@ -10,7 +10,7 @@ namespace nall {
 
 struct CML {
   auto& setPath(const string& pathname) { settings.path = pathname; return *this; }
-  auto& setReader(const function<string (string)>& reader) { settings.reader = reader; return *this; }
+  auto& setReader(const std::function<string (string)>& reader) { settings.reader = reader; return *this; }
 
   auto parse(const string& filename) -> string;
   auto parse(const string& filedata, const string& pathname) -> string;
@@ -18,7 +18,7 @@ struct CML {
 private:
   struct Settings {
     string path;
-    function<string (string)> reader;
+    std::function<string (string)> reader;
   } settings;
 
   struct State {

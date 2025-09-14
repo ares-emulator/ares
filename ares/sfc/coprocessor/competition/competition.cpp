@@ -31,7 +31,7 @@ auto Competition::unload() -> void {
 }
 
 auto Competition::power() -> void {
-  Thread::create(1, {&Competition::main, this});
+  Thread::create(1, std::bind_front(&Competition::main, this));
   cpu.coprocessors.push_back(this);
 
   //DIP switches 0-3 control the time: 3 minutes + 0-15 extra minutes

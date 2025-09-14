@@ -12,7 +12,7 @@
 
 #include <nall/platform.hpp>
 #include <nall/atoi.hpp>
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/intrinsics.hpp>
 #include <nall/memory.hpp>
 #include <nall/primitives.hpp>

@@ -46,13 +46,13 @@ auto System::load(Node::System& root, string name) -> bool {
 
   node = Node::System::create(information.name);
   node->setAttribute("configuration", name);
-  node->setGame({&System::game, this});
-  node->setRun({&System::run, this});
-  node->setPower({&System::power, this});
-  node->setSave({&System::save, this});
-  node->setUnload({&System::unload, this});
-  node->setSerialize({&System::serialize, this});
-  node->setUnserialize({&System::unserialize, this});
+  node->setGame(std::bind_front(&System::game, this));
+  node->setRun(std::bind_front(&System::run, this));
+  node->setPower(std::bind_front(&System::power, this));
+  node->setSave(std::bind_front(&System::save, this));
+  node->setUnload(std::bind_front(&System::unload, this));
+  node->setSerialize([this](bool save) -> serializer { return serialize(save); });
+  node->setUnserialize(std::bind_front(&System::unserialize, this));
   root = node;
   if(!node->setPak(pak = platform->pak(node))) return false;
 
