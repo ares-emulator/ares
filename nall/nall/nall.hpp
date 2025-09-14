@@ -37,7 +37,6 @@
 #include <nall/matrix-multiply.hpp>
 #include <nall/maybe.hpp>
 #include <nall/memory.hpp>
-#include <nall/merge-sort.hpp>
 #include <nall/path.hpp>
 #include <nall/pointer.hpp>
 #include <nall/primitives.hpp>

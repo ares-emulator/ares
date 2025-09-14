@@ -4,7 +4,6 @@
 #include <nall/function.hpp>
 #include <nall/inode.hpp>
 #include <nall/intrinsics.hpp>
-#include <nall/merge-sort.hpp>
 #include <nall/string.hpp>
 #include <vector>
 #include <algorithm>
