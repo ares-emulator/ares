@@ -49,7 +49,6 @@ target_sources(
     maybe.hpp
     memory.cpp
     memory.hpp
-    merge-sort.hpp
     nall.cpp
     nall.hpp
     path.cpp
