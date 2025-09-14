@@ -33,7 +33,7 @@ auto RIOT::step(u32 clocks) -> void {
 }
 
 auto RIOT::power(bool reset) -> void {
-  Thread::create(system.frequency() / 3, {&RIOT::main, this});
+  Thread::create(system.frequency() / 3, std::bind_front(&RIOT::main, this));
   timer = {};
   port[0] = {};
   port[0].data = 0xff;

@@ -26,12 +26,12 @@ auto mSourceEdit::numbered() const -> bool {
   return state.numbered;
 }
 
-auto mSourceEdit::onChange(const function<void ()>& callback) -> type& {
+auto mSourceEdit::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }
 
-auto mSourceEdit::onMove(const function<void ()>& callback) -> type& {
+auto mSourceEdit::onMove(const std::function<void ()>& callback) -> type& {
   state.onMove = callback;
   return *this;
 }

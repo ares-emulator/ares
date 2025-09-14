@@ -15,8 +15,8 @@ M68000::M68000() {
   }
 
   #define unbind(id) { \
-    instructionTable[id].reset(); \
-    disassembleTable[id].reset(); \
+    instructionTable[id] = {}; \
+    disassembleTable[id] = {}; \
   }
 
   #define pattern(s) \

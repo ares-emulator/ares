@@ -165,7 +165,7 @@ auto Video::poll() -> void {
 
 //
 
-auto Video::onUpdate(const function<void (u32, u32)>& onUpdate) -> void {
+auto Video::onUpdate(const std::function<void (u32, u32)>& onUpdate) -> void {
   lock_guard<recursive_mutex> lock(mutex);
   update = onUpdate;
 }

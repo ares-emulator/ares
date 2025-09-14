@@ -43,7 +43,7 @@ auto VDP::load(Node::Object parent) -> void {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
-  screen->colors(1 << 10, {&VDP::color, this});
+  screen->colors(1 << 10, std::bind_front(&VDP::color, this));
   screen->setSize(1128, 263);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
@@ -133,8 +133,8 @@ template<bool supergrafx> auto VDP::step(u32 clocks) -> void {
 }
 
 auto VDP::power() -> void {
-  if(Model::SuperGrafx()) Thread::create(system.colorburst() * 6.0, {&VDP::main<true>, this});
-  else                    Thread::create(system.colorburst() * 6.0, {&VDP::main<false>, this});
+  if(Model::SuperGrafx()) Thread::create(system.colorburst() * 6.0, std::bind_front(&VDP::main<true>, this));
+  else                    Thread::create(system.colorburst() * 6.0, std::bind_front(&VDP::main<false>, this));
 
   screen->power();
 

@@ -74,7 +74,7 @@ auto Cartridge::power(bool reset) -> void {
 
     board->load();
   }
-  Thread::create(board->frequency(), {&Cartridge::main, this});
+  Thread::create(board->frequency(), std::bind_front(&Cartridge::main, this));
   board->power(reset);
 }
 

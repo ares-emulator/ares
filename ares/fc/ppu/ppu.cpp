@@ -20,7 +20,7 @@ auto PPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PPU");
 
   screen = node->append<Node::Video::Screen>("Screen", 283, displayHeight());
-  screen->colors(1 << 9, {&PPU::color, this});
+  screen->colors(1 << 9, std::bind_front(&PPU::color, this));
   screen->setSize(283, displayHeight());
   screen->setScale(1.0, 1.0);
   Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
@@ -115,7 +115,7 @@ auto PPU::frame() -> void {
 }
 
 auto PPU::power(bool reset) -> void {
-  Thread::create(system.frequency(), {&PPU::main, this});
+  Thread::create(system.frequency(), std::bind_front(&PPU::main, this));
   screen->power();
 
   if(!reset) {

@@ -127,7 +127,7 @@ auto BSMemoryCartridge::step(u32 clocks) -> void {
 auto BSMemoryCartridge::power() -> void {
   if(ROM) return;
 
-  Thread::create(1'000'000, {&BSMemoryCartridge::main, this});  //microseconds
+  Thread::create(1'000'000, std::bind_front(&BSMemoryCartridge::main, this));  //microseconds
   cpu.coprocessors.push_back(this);
 
   for(auto& block : blocks) {

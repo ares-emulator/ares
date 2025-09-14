@@ -73,7 +73,7 @@ auto PSG::writeRightDAC(n8 data) -> void {
 }
 
 auto PSG::power() -> void {
-  Thread::create(system.frequency() / 32.0, {&PSG::main, this});
+  Thread::create(system.frequency() / 32.0, std::bind_front(&PSG::main, this));
 
   psg = {};
   dac = {};

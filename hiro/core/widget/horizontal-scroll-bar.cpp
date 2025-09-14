@@ -14,7 +14,7 @@ auto mHorizontalScrollBar::length() const -> u32 {
   return state.length;
 }
 
-auto mHorizontalScrollBar::onChange(const function<void ()>& callback) -> type& {
+auto mHorizontalScrollBar::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }

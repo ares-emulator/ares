@@ -132,7 +132,7 @@ inline auto SA1::triggerIRQ() -> void {
 auto SA1::power() -> void {
   WDC65816::power();
 
-  Thread::create(system.cpuFrequency(), {&SA1::main, this});
+  Thread::create(system.cpuFrequency(), std::bind_front(&SA1::main, this));
   cpu.coprocessors.push_back(this);
 
   bwram.dma = false;

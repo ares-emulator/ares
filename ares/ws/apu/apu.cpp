@@ -139,7 +139,7 @@ auto APU::step(u32 clocks) -> void {
 }
 
 auto APU::power() -> void {
-  Thread::create(3'072'000, {&APU::main, this});
+  Thread::create(3'072'000, std::bind_front(&APU::main, this));
 
   bus.map(this, 0x004a, 0x004c);
   bus.map(this, 0x004e, 0x0050);

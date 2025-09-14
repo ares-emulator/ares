@@ -161,8 +161,8 @@ struct HorizontalResizeGrip : sHorizontalResizeGrip {
 
   auto doActivate() const { return self().doActivate(); }
   auto doResize(int offset) const { return self().doResize(offset); }
-  auto onActivate(const function<void ()>& callback) { return self().onActivate(callback), *this; }
-  auto onResize(const function<void (int)>& callback) { return self().onResize(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback) { return self().onActivate(callback), *this; }
+  auto onResize(const std::function<void (int)>& callback) { return self().onResize(callback), *this; }
 };
 #endif
 
@@ -172,8 +172,8 @@ struct VerticalResizeGrip : sVerticalResizeGrip {
 
   auto doActivate() const { return self().doActivate(); }
   auto doResize(int offset) const { return self().doResize(offset); }
-  auto onActivate(const function<void ()>& callback) { return self().onActivate(callback), *this; }
-  auto onResize(const function<void (int)>& callback) { return self().onResize(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback) { return self().onActivate(callback), *this; }
+  auto onResize(const std::function<void (int)>& callback) { return self().onResize(callback), *this; }
 };
 #endif
 
@@ -216,10 +216,10 @@ struct ListView : sListView {
   auto item(uint position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
-  auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
-  auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
-  auto onContext(const function<void ()>& callback = {}) { return self().onContext(callback), *this; }
-  auto onToggle(const function<void (ListViewItem)>& callback = {}) { return self().onToggle(callback), *this; }
+  auto onActivate(const std::function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
+  auto onChange(const std::function<void ()>& callback = {}) { return self().onChange(callback), *this; }
+  auto onContext(const std::function<void ()>& callback = {}) { return self().onContext(callback), *this; }
+  auto onToggle(const std::function<void (ListViewItem)>& callback = {}) { return self().onToggle(callback), *this; }
   auto remove(sListViewItem item) { return self().remove(item), *this; }
   auto reset() { return self().reset(), *this; }
   auto resizeColumn() { return self().resizeColumn(), *this; }

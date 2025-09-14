@@ -22,7 +22,7 @@ auto mCheckButton::icon() const -> multiFactorImage {
   return state.icon;
 }
 
-auto mCheckButton::onToggle(const function<void ()>& callback) -> type& {
+auto mCheckButton::onToggle(const std::function<void ()>& callback) -> type& {
   state.onToggle = callback;
   return *this;
 }

@@ -138,7 +138,7 @@ auto nall::main(Arguments arguments) -> void {
   }
 
   if(arguments.take("--dump-all-settings")) {
-    function<void(const Markup::Node&, string)> dump;
+    std::function<void(const Markup::Node&, string)> dump;
     dump = [&](const Markup::Node& node, string prefix) -> void {
       for(const auto& setting : node) {
         print(prefix, setting.name(), "\n");
@@ -160,7 +160,7 @@ auto nall::main(Arguments arguments) -> void {
   Instances::toolsWindow.construct();
 
   program.create();
-  Application::onMain({&Program::main, &program});
+  Application::onMain(std::bind_front(&Program::main, &program));
   Application::run();
 
   settings.save();

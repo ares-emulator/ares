@@ -4,8 +4,8 @@
 
 namespace mia {
 
-function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/Systems/"}; };
-function<string ()> saveLocation = [] { return string{}; };
+std::function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/Systems/"}; };
+std::function<string ()> saveLocation = [] { return string{}; };
 std::vector<string> media;
 
 auto locate(const string &name) -> string {
@@ -73,11 +73,11 @@ auto hexString(std::span<const u8> view) -> string {
 #include "program/program.cpp"
 #endif
 
-auto setHomeLocation(function<string ()> callback) -> void {
+auto setHomeLocation(std::function<string ()> callback) -> void {
   homeLocation = callback;
 }
 
-auto setSaveLocation(function<string ()> callback) -> void {
+auto setSaveLocation(std::function<string ()> callback) -> void {
   saveLocation = callback;
 }
 

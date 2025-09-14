@@ -34,7 +34,7 @@ auto SPC7110::unload() -> void {
 }
 
 auto SPC7110::power() -> void {
-  Thread::create(21'477'272, {&SPC7110::main, this});
+  Thread::create(21'477'272, std::bind_front(&SPC7110::main, this));
   cpu.coprocessors.push_back(this);
 
   r4801 = 0x00;

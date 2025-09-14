@@ -18,7 +18,7 @@ auto mRadioLabel::group() const -> Group {
   return state.group;
 }
 
-auto mRadioLabel::onActivate(const function<void ()>& callback) -> type& {
+auto mRadioLabel::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }

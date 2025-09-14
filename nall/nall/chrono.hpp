@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/string.hpp>
 
 #include <chrono>
@@ -18,7 +18,7 @@ inline auto microsecond() -> u64 { return nanosecond() / 1'000; }
 inline auto millisecond() -> u64 { return nanosecond() / 1'000'000; }
 inline auto second() -> u64 { return nanosecond() / 1'000'000'000; }
 
-inline auto benchmark(const function<void ()>& f, u64 times = 1) -> void {
+inline auto benchmark(const std::function<void ()>& f, u64 times = 1) -> void {
   auto start = nanosecond();
   while(times--) f();
   auto end = nanosecond();

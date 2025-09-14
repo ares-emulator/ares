@@ -14,7 +14,7 @@ auto mCheckLabel::doToggle() const -> void {
   if(state.onToggle) return state.onToggle();
 }
 
-auto mCheckLabel::onToggle(const function<void ()>& callback) -> type& {
+auto mCheckLabel::onToggle(const std::function<void ()>& callback) -> type& {
   state.onToggle = callback;
   return *this;
 }

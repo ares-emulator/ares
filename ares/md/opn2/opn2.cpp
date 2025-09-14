@@ -34,12 +34,12 @@ auto OPN2::step(u32 clocks) -> void {
 
 auto OPN2::power(bool reset) -> void {
   YM2612::power();
-  Thread::create(system.frequency() / 7.0, {&OPN2::main, this});
+  Thread::create(system.frequency() / 7.0, std::bind_front(&OPN2::main, this));
 }
 
 auto OPN2::restart() -> void {
   YM2612::power();
-  Thread::restart({&OPN2::main, this});
+  Thread::restart(std::bind_front(&OPN2::main, this));
 }
 
 }

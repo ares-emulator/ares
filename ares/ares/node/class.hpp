@@ -4,7 +4,7 @@
 struct Class {
   struct Instance {
     const string identifier;
-    const function<Node::Object ()> create;
+    const std::function<Node::Object ()> create;
   };
 
   static auto classes() -> std::vector<Instance>& {

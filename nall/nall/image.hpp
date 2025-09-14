@@ -70,7 +70,7 @@ struct image {
   //fill.hpp
   auto fill(u64 color = 0) -> void;
   auto gradient(u64 a, u64 b, u64 c, u64 d) -> void;
-  auto gradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY, function<f64 (f64, f64)> callback) -> void;
+  auto gradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY, std::function<f64 (f64, f64)> callback) -> void;
   auto crossGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
   auto diamondGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
   auto horizontalGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;

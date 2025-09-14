@@ -57,7 +57,7 @@ auto APU::step(u32 clocks) -> void {
 auto APU::power() -> void {
   Z80::bus = this;
   Z80::power();
-  Thread::create(system.frequency() / 2.0, {&APU::main, this});
+  Thread::create(system.frequency() / 2.0, std::bind_front(&APU::main, this));
 
   nmi = {};
   irq = {};
@@ -68,7 +68,7 @@ auto APU::power() -> void {
 auto APU::enable() -> void {
   Thread::destroy();
   Z80::power();
-  Thread::create(system.frequency() / 2.0, {&APU::main, this});
+  Thread::create(system.frequency() / 2.0, std::bind_front(&APU::main, this));
 
   nmi = {};
   irq = {};

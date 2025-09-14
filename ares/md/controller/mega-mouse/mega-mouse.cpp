@@ -37,7 +37,7 @@ MegaMouse::MegaMouse(Node::Port parent) {
   // 10 is used here.
   t_data = 10 * timerfreq / 1000000;
 
-  Thread::create(timerfreq, {&MegaMouse::main, this});
+  Thread::create(timerfreq, std::bind_front(&MegaMouse::main, this));
 }
 
 MegaMouse::~MegaMouse() {

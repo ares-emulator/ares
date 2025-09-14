@@ -5,7 +5,7 @@ struct RealTimeClock : Component {
   auto update() -> void { if(_update) return _update(); }
   auto timestamp() const -> u64 { return _timestamp; }
 
-  auto setUpdate(function<void ()> update) -> void { _update = update; }
+  auto setUpdate(std::function<void ()> update) -> void { _update = update; }
   auto setTimestamp(u64 timestamp) -> void { _timestamp = timestamp; }
 
   auto synchronize(u64 timestamp = 0) -> void {
@@ -25,6 +25,6 @@ struct RealTimeClock : Component {
   }
 
 protected:
-  function<void ()> _update;
+  std::function<void ()> _update;
   u64 _timestamp;
 };

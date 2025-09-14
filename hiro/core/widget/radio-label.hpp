@@ -5,7 +5,7 @@ struct mRadioLabel : mWidget {
   auto checked() const -> bool;
   auto doActivate() const -> void;
   auto group() const -> Group override;
-  auto onActivate(const function<void ()>& callback = {}) -> type&;
+  auto onActivate(const std::function<void ()>& callback = {}) -> type&;
   auto setChecked() -> type&;
   auto setGroup(sGroup group = {}) -> type& override;
   auto setText(const string& text = "") -> type&;
@@ -15,7 +15,7 @@ struct mRadioLabel : mWidget {
   struct State {
     bool checked = false;
     sGroup group;
-    function<void ()> onActivate;
+    std::function<void ()> onActivate;
     string text;
   } state;
 };

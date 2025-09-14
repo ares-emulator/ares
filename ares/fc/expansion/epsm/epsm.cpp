@@ -14,7 +14,7 @@ EPSM::EPSM(Node::Port parent) : ymf288(interface) {
 
   ymf288.reset();
   clocksPerSample = clocksPerSample = 8_MHz / ymf288.sample_rate(8_MHz);
-  Thread::create(8_MHz, {&EPSM::main, this});
+  Thread::create(8_MHz, std::bind_front(&EPSM::main, this));
 }
 
 EPSM::~EPSM() {

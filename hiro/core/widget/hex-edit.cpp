@@ -35,12 +35,12 @@ auto mHexEdit::length() const -> u32 {
   return state.length;
 }
 
-auto mHexEdit::onRead(const function<u8 (u32)>& callback) -> type& {
+auto mHexEdit::onRead(const std::function<u8 (u32)>& callback) -> type& {
   state.onRead = callback;
   return *this;
 }
 
-auto mHexEdit::onWrite(const function<void (u32, u8)>& callback) -> type& {
+auto mHexEdit::onWrite(const std::function<void (u32, u8)>& callback) -> type& {
   state.onWrite = callback;
   return *this;
 }

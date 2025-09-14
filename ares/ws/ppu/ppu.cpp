@@ -34,7 +34,7 @@ auto PPU::load(Node::Object parent) -> void {
   });
   colorEmulation->setDynamic(true);
 
-  screen->colors(1 << 12, {&PPU::color, this});
+  screen->colors(1 << 12, std::bind_front(&PPU::color, this));
   screen->setSize(width, height);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
@@ -235,7 +235,7 @@ auto PPU::step(u32 clocks) -> void {
 }
 
 auto PPU::power() -> void {
-  Thread::create(3'072'000, {&PPU::main, this});
+  Thread::create(3'072'000, std::bind_front(&PPU::main, this));
   screen->power();
 
   bus.map(this, 0x0000, 0x0017);

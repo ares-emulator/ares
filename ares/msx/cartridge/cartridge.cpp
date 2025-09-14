@@ -62,7 +62,7 @@ auto Cartridge::step(u32 clocks) -> void {
 }
 
 auto Cartridge::power() -> void {
-  Thread::create(system.colorburst(), {&Cartridge::main, this});
+  Thread::create(system.colorburst(), std::bind_front(&Cartridge::main, this));
   if(board) board->power();
 }
 

@@ -11,7 +11,7 @@ auto VDP::load(Node::Object parent) -> void {
 
   if(Model::MSX()) {
     screen = node->append<Node::Video::Screen>("Screen", 284, 243);
-    screen->colors(1 << 4, {&VDP::colorMSX, this});
+    screen->colors(1 << 4, std::bind_front(&VDP::colorMSX, this));
     screen->setSize(284, 243);
     screen->setScale(1.0, 1.0);
     screen->setAspect(8.0, 7.0);
@@ -21,7 +21,7 @@ auto VDP::load(Node::Object parent) -> void {
 
   if(Model::MSX2()) {
     screen = node->append<Node::Video::Screen>("Screen", 568, 486);
-    screen->colors(1 << 9, {&VDP::colorMSX2, this});
+    screen->colors(1 << 9, std::bind_front(&VDP::colorMSX2, this));
     screen->setSize(568, 486);
     screen->setScale(0.5, 0.5);
     screen->setAspect(8.0, 7.0);

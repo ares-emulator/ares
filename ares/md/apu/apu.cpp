@@ -67,7 +67,7 @@ auto APU::setBUSREQ(n1 line) -> void {
 auto APU::power(bool reset) -> void {
   Z80::bus = this;
   Z80::power();
-  Thread::create(system.frequency() / 15.0, {&APU::main, this});
+  Thread::create(system.frequency() / 15.0, std::bind_front(&APU::main, this));
   if(!reset) {
     Z80::power();
     ram.fill();
@@ -85,7 +85,7 @@ auto APU::power(bool reset) -> void {
 
 auto APU::restart() -> void {
   Z80::reset();
-  Thread::restart({&APU::main, this});
+  Thread::restart(std::bind_front(&APU::main, this));
   state.nmiLine = 0;
   state.intLine = 0;
   state.busreqLatch = state.busreqLine;
