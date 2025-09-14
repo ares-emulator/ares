@@ -103,7 +103,8 @@ auto DualShock::bus(u8 data) -> u8 {
 
   //if there is data in the output queue, return that
   if(outputData.size() > 0) {
-    output = outputData.front(); outputData.erase(outputData.begin());
+    output = outputData.front();
+    outputData.erase(outputData.begin());
     commandStep++;
     if(outputData.size() == 0) {
       commandStep = 0;
@@ -136,11 +137,16 @@ auto DualShock::bus(u8 data) -> u8 {
 
     //Global commands: these work during any operation mode
     switch(input) {
-      case 0x42: { auto v = readPad(); outputData.insert(outputData.end(), v.begin(), v.end()); } break;
+      case 0x42: { 
+        auto v = readPad();
+        outputData.insert(outputData.end(), v.begin(), v.end()); 
+      } break;
       case 0x43: {
         if(configMode) { outputData.insert(outputData.end(), {0x00,0x00,0x00,0x00,0x00,0x00}); }
-        else { auto v = readPad(); outputData.insert(outputData.end(), v.begin(), v.end()); }
-        break;
+        else {
+          auto v = readPad();
+          outputData.insert(outputData.end(), v.begin(), v.end());
+        } break;
       default:
         if(configMode) {
           switch(input) {
