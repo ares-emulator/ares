@@ -106,7 +106,8 @@ auto QtCanvas::dragEnterEvent(QDragEnterEvent* event) -> void {
 }
 
 auto QtCanvas::dropEvent(QDropEvent* event) -> void {
-  if(auto paths = DropPaths(event)) p.self().doDrop(paths);
+  auto paths = DropPaths(event);
+  if(!paths.empty()) p.self().doDrop(paths);
 }
 
 auto QtCanvas::leaveEvent(QEvent* event) -> void {

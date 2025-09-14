@@ -48,7 +48,7 @@ auto pKeyboard::initialize() -> void {
     lo = lo ? (u8)XKeysymToKeycode(pApplication::state().display, lo) : 0;
     hi = hi ? (u8)XKeysymToKeycode(pApplication::state().display, hi) : 0;
     #endif
-    settings.keycodes.append(lo << 0 | hi << 8);
+    settings.keycodes.push_back(lo << 0 | hi << 8);
   };
 
   #define map(name, ...) if(key == name) { append(__VA_ARGS__); continue; }
