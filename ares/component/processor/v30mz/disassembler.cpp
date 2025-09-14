@@ -150,7 +150,7 @@ auto V30MZ::disassembleInstruction(u16 ps, u16 pc) -> string {
   };
 
   #define op(id, name, ...) case id: \
-    output.append(instruction(name), ::nall::merge({__VA_ARGS__}, ",")); \
+    output.append(instruction(name), nall::merge({__VA_ARGS__}, ",")); \
     break
 
   auto opcode = read(0);

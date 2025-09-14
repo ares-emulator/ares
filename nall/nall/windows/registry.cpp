@@ -29,7 +29,7 @@ NALL_HEADER_INLINE auto registry::root(const string& name) {
 }
 
 NALL_HEADER_INLINE auto registry::exists(const string& name) -> bool {
-  auto part = ::nall::split(name, "\\");
+  auto part = nall::split(name, "\\");
   HKEY handle, rootKey = root(part.front());
   part.erase(part.begin());
   string node = part.empty() ? string("") : part.back();
@@ -46,7 +46,7 @@ NALL_HEADER_INLINE auto registry::exists(const string& name) -> bool {
 }
 
 NALL_HEADER_INLINE auto registry::read(const string& name) -> string {
-  auto part = ::nall::split(name, "\\");
+  auto part = nall::split(name, "\\");
   HKEY handle, rootKey = root(part.front());
   part.erase(part.begin());
   string node = part.empty() ? string("") : part.back();
@@ -63,7 +63,7 @@ NALL_HEADER_INLINE auto registry::read(const string& name) -> string {
 }
 
 NALL_HEADER_INLINE auto registry::write(const string& name, const string& data) -> void {
-  auto part = ::nall::split(name, "\\");
+  auto part = nall::split(name, "\\");
   HKEY handle, rootKey = root(part.front());
   part.erase(part.begin());
   string node = part.empty() ? string("") : part.back(), path;
@@ -82,7 +82,7 @@ NALL_HEADER_INLINE auto registry::write(const string& name, const string& data) 
 }
 
 NALL_HEADER_INLINE auto registry::remove(const string& name) -> bool {
-  auto part = ::nall::split(name, "\\");
+  auto part = nall::split(name, "\\");
   HKEY rootKey = root(part.front());
   part.erase(part.begin());
   string node = part.empty() ? string("") : part.back();
@@ -94,7 +94,7 @@ NALL_HEADER_INLINE auto registry::remove(const string& name) -> bool {
 
 NALL_HEADER_INLINE auto registry::contents(const string& name) -> std::vector<string> {
   std::vector<string> result;
-  auto part = ::nall::split(name, "\\");
+  auto part = nall::split(name, "\\");
   HKEY handle, rootKey = root(part.front());
   part.erase(part.begin());
   if(!part.empty()) part.pop_back();

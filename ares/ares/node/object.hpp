@@ -109,13 +109,13 @@ struct Object : shared_pointer_this<Object> {
   template<typename T = Node::Object>
   auto find(string name) -> T {
     using Type = typename T::type;
-    auto path = ::nall::split(name, "/");
+    auto path = nall::split(name, "/");
     if(path.empty()) return {};
     name = path.front();
     path.erase(path.begin());
     for(auto& node : _nodes) {
       if(node->_name != name) continue;
-      if(!path.empty()) return node->find<T>(::nall::merge(path, "/"));
+      if(!path.empty()) return node->find<T>(nall::merge(path, "/"));
       if(node->identity() == Type::identifier()) return node;
     }
     return {};

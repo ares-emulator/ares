@@ -9,7 +9,7 @@ auto pFont::size(const Font& font, const string& text) -> Size {
 auto pFont::size(const QFont& qtFont, const string& text) -> Size {
   QFontMetrics metrics(qtFont);
   s32 maxWidth = 0;
-  auto lines = ::nall::split(text, "\n");
+  auto lines = nall::split(text, "\n");
   for(auto& line : lines) {
     maxWidth = max(maxWidth, metrics.boundingRect(QString::fromUtf8(line)).width());
   }

@@ -5,7 +5,7 @@ namespace nall::Markup {
 inline auto ManagedNode::_evaluate(string query) const -> bool {
   if(!query) return true;
 
-  for(auto& rule : ::nall::split(query, ",")) {
+  for(auto& rule : nall::split(query, ",")) {
     enum class Comparator : u32 { ID, EQ, NE, LT, LE, GT, GE, NF };
     auto comparator = Comparator::ID;
          if(rule.match("*!=*")) comparator = Comparator::NE;
@@ -29,12 +29,12 @@ inline auto ManagedNode::_evaluate(string query) const -> bool {
 
     std::vector<string> side;
     switch(comparator) {
-    case Comparator::EQ: side = ::nall::split(rule, "=", 1L); break;
-    case Comparator::NE: side = ::nall::split(rule, "!=", 1L); break;
-    case Comparator::LT: side = ::nall::split(rule, "<", 1L); break;
-    case Comparator::LE: side = ::nall::split(rule, "<=", 1L); break;
-    case Comparator::GT: side = ::nall::split(rule, ">", 1L); break;
-    case Comparator::GE: side = ::nall::split(rule, ">=", 1L); break;
+    case Comparator::EQ: side = nall::split(rule, "=", 1L); break;
+    case Comparator::NE: side = nall::split(rule, "!=", 1L); break;
+    case Comparator::LT: side = nall::split(rule, "<", 1L); break;
+    case Comparator::LE: side = nall::split(rule, "<=", 1L); break;
+    case Comparator::GT: side = nall::split(rule, ">", 1L); break;
+    case Comparator::GE: side = nall::split(rule, ">=", 1L); break;
     }
 
     string data = string{_value}.strip();
@@ -62,17 +62,17 @@ inline auto ManagedNode::_evaluate(string query) const -> bool {
 inline auto ManagedNode::_find(const string& query) const -> vector<Node> {
   vector<Node> result;
 
-  auto path = ::nall::split(query, "/");
+  auto path = nall::split(query, "/");
   string name = path.empty() ? string{} : path.front();
   if(!path.empty()) path.erase(path.begin());
   string rule;
   u32 lo = 0u, hi = ~0u;
 
   if(name.match("*[*]")) {
-    auto p = ::nall::split(name.trimRight("]", 1L), "[", 1L);
+    auto p = nall::split(name.trimRight("]", 1L), "[", 1L);
     name = p.empty() ? string{} : p[0];
     if(p.size() > 1 && p[1].find("-")) {
-      auto p2 = ::nall::split(p[1], "-", 1L);
+      auto p2 = nall::split(p[1], "-", 1L);
       lo = p2.empty() || !p2[0] ?  0u : p2[0].natural();
       hi = p2.size() <= 1 || !p2[1] ? ~0u : p2[1].natural();
     } else if(p.size() > 1) {
@@ -81,7 +81,7 @@ inline auto ManagedNode::_find(const string& query) const -> vector<Node> {
   }
 
   if(name.match("*(*)")) {
-    auto p = ::nall::split(name.trimRight(")", 1L), "(", 1L);
+    auto p = nall::split(name.trimRight(")", 1L), "(", 1L);
     name = p.empty() ? string{} : p[0];
     rule = p.size() > 1 ? p[1] : string{};
   }
@@ -97,7 +97,7 @@ inline auto ManagedNode::_find(const string& query) const -> vector<Node> {
 
     if(path.empty()) {
       result.append(node);
-    } else for(auto& item : node->_find(::nall::merge(path, "/"))) {
+    } else for(auto& item : node->_find(nall::merge(path, "/"))) {
       result.append(item);
     }
   }

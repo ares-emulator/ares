@@ -58,13 +58,13 @@ auto mTreeView::foregroundColor() const -> Color {
 
 auto mTreeView::item(const string& path) const -> TreeViewItem {
   if(!path) return {};
-  auto paths = ::nall::split(path, "/");
+  auto paths = nall::split(path, "/");
   if(paths.empty()) return {};
   u32 position = paths.front().natural();
   paths.erase(paths.begin());
   if(position >= itemCount()) return {};
   if(paths.empty()) return state.items[position];
-  return state.items[position]->item(::nall::merge(paths, "/"));
+  return state.items[position]->item(nall::merge(paths, "/"));
 }
 
 auto mTreeView::itemCount() const -> u32 {

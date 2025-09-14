@@ -23,7 +23,7 @@ NALL_HEADER_INLINE auto directory::ufolders(const string& pathname, const string
       if(!*p) *p = ';';
       p++;
     }
-    auto parts = ::nall::split((const char*)utf8_t(drives), ";");
+    auto parts = nall::split((const char*)utf8_t(drives), ";");
     std::vector<string> out;
     out.reserve(parts.size());
     for(auto& s : parts) out.push_back(s);

@@ -42,14 +42,14 @@ auto Bus::map(
   reader[id] = read;
   writer[id] = write;
 
-  auto p = ::nall::split(addr, ":", 1L);
+  auto p = nall::split(addr, ":", 1L);
   p.resize(2);
-  auto banks = ::nall::split(p[0], ",");
-  auto addrs = ::nall::split(p[1], ",");
+  auto banks = nall::split(p[0], ",");
+  auto addrs = nall::split(p[1], ",");
   for(auto& bank : banks) {
     for(auto& addr : addrs) {
-      auto bankRange = ::nall::split(bank, "-", 1L);
-      auto addrRange = ::nall::split(addr, "-", 1L);
+      auto bankRange = nall::split(bank, "-", 1L);
+      auto addrRange = nall::split(addr, "-", 1L);
       u32 bankLo = bankRange[0].hex();
       u32 bankHi = bankRange.size() > 1 ? bankRange[1].hex() : bankRange[0].hex();
       u32 addrLo = addrRange[0].hex();
@@ -78,14 +78,14 @@ auto Bus::map(
 }
 
 auto Bus::unmap(const string& addr) -> void {
-  auto p = ::nall::split(addr, ":", 1L);
+  auto p = nall::split(addr, ":", 1L);
   p.resize(2);
-  auto banks = ::nall::split(p[0], ",");
-  auto addrs = ::nall::split(p[1], ",");
+  auto banks = nall::split(p[0], ",");
+  auto addrs = nall::split(p[1], ",");
   for(auto& bank : banks) {
     for(auto& addr : addrs) {
-      auto bankRange = ::nall::split(bank, "-", 1L);
-      auto addrRange = ::nall::split(addr, "-", 1L);
+      auto bankRange = nall::split(bank, "-", 1L);
+      auto addrRange = nall::split(addr, "-", 1L);
       u32 bankLo = bankRange[0].hex();
       u32 bankHi = bankRange.size() > 1 ? bankRange[1].hex() : bankRange[0].hex();
       u32 addrLo = addrRange[0].hex();
