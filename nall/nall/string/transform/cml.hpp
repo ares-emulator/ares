@@ -57,8 +57,8 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
     state.output.append("  -webkit-", name, ": ", value, ";\n");
   };
 
-  for(auto& block : ::nall::split(filedata, "\n\n")) {
-    auto lines = ::nall::split(block.stripRight(), "\n");
+  for(auto& block : nall::split(filedata, "\n\n")) {
+    auto lines = nall::split(block.stripRight(), "\n");
     auto name = lines.empty() ? string{} : lines.front();
     if(!lines.empty()) lines.erase(lines.begin());
 
@@ -72,7 +72,7 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
 
     if(name == "variables") {
       for(auto& line : lines) {
-        auto dataParts = ::nall::split(line, ":", 1L);
+        auto dataParts = nall::split(line, ":", 1L);
         std::vector<string> data;
         for(auto& part : dataParts) data.push_back(part.strip());
         variables.emplace_back(data.size() > 0 ? data[0] : string{}, data.size() > 1 ? data[1] : string{});
@@ -91,7 +91,7 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
         continue;
       }
 
-      auto dataParts2 = ::nall::split(line, ":", 1L);
+      auto dataParts2 = nall::split(line, ":", 1L);
       std::vector<string> data2;
       for(auto& part : dataParts2) data2.push_back(part.strip());
       string name = data2.size() > 0 ? data2[0] : string{};

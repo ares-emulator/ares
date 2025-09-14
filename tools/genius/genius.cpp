@@ -281,7 +281,7 @@ GameWindow::GameWindow() {
     if(auto item = componentTree.selected()) {
       setEnabled(false);
       auto itemPath = item.path();
-      auto path     = ::nall::split(itemPath, "/");
+      auto path     = nall::split(itemPath, "/");
       auto offset   = path.empty() ? 0u : path[0].natural();
       Component component = game.components[offset];
       if(component.type == Component::Type::Memory) {
@@ -426,7 +426,7 @@ auto GameWindow::modifyComponent(Component component) -> void {
   if(auto item = componentTree.selected()) {
     modified = true;
     auto itemPath = item.path();
-    auto path     = ::nall::split(itemPath, "/");
+    auto path     = nall::split(itemPath, "/");
     auto offset   = path.empty() ? 0u : path[0].natural();
     game.components[offset] = component;
     reloadList();
@@ -442,7 +442,7 @@ auto GameWindow::removeComponent() -> void {
     }).question() == "Yes") {
       modified = true;
       auto itemPath = item.path();
-      auto path     = ::nall::split(itemPath, "/");
+      auto path     = nall::split(itemPath, "/");
       auto offset   = path.empty() ? 0u : path[0].natural();
       game.components.erase(game.components.begin() + offset);
       reloadList();

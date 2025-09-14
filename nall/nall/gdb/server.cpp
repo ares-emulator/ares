@@ -2,8 +2,8 @@
 
 #include <inttypes.h>
 
-using string = ::nall::string;
-using string_view = ::nall::string_view;
+using string = nall::string;
+using string_view = nall::string_view;
 
 namespace {
   constexpr bool GDB_LOG_MESSAGES = false;
@@ -110,7 +110,7 @@ namespace nall::GDB {
    */
   auto Server::processCommand(const string& cmd, bool &shouldReply) -> string
   {
-    auto cmdParts = ::nall::split(cmd, ":");
+    auto cmdParts = nall::split(cmd, ":");
     auto cmdName = cmdParts[0];
     char cmdPrefix = cmdName.size() > 0 ? cmdName(0) : ' ';
 

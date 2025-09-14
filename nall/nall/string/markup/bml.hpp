@@ -130,7 +130,7 @@ protected:
     document.resize(document.size() - (p - output)).trimRight("\n");
     if(document.size() == 0) return;  //empty document
 
-    auto text = ::nall::split(document, "\n");
+    auto text = nall::split(document, "\n");
     u32 y = 0;
     while(y < text.size()) {
       SharedNode node(new ManagedNode);
@@ -167,7 +167,7 @@ inline auto serialize(const Markup::Node& node, string_view spacing = {}, u32 de
   padding.fill(' ');
 
   std::vector<string> lines;
-  if(auto value = node.value()) lines = ::nall::split(value, "\n");
+  if(auto value = node.value()) lines = nall::split(value, "\n");
 
   string result;
   result.append(padding);

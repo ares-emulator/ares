@@ -51,10 +51,10 @@ auto RDRAM::Debugger::io(bool mode, u32 chipID, u32 address, u32 data) -> void {
     string name = (address < registerNames.size() ? registerNames[address] : string("RDRAM_UNKNOWN"));
     name.append("[", chipID, "]");
     if(mode == Read) {
-      message = {::nall::split(name, "|").front(), " => ", hex(data, 8L)};
+      message = {nall::split(name, "|").front(), " => ", hex(data, 8L)};
     }
     if(mode == Write) {
-      message = {::nall::split(name, "|").back(), " <= ", hex(data, 8L)};
+      message = {nall::split(name, "|").back(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }

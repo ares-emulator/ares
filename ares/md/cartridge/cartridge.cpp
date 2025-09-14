@@ -17,7 +17,7 @@ auto Cartridge::connect() -> void {
   information = {};
   information.title    = pak->attribute("title");
   auto region = pak->attribute("region");
-  information.regions  = ::nall::split_and_strip(region, ",");
+  information.regions  = nall::split_and_strip(region, ",");
   information.bootable = pak->attribute("bootable").boolean();
 
   if(pak->attribute("mega32x").boolean()) {

@@ -16,7 +16,7 @@ auto pBrowserWindow::directory(BrowserWindow::State& state) -> string {
 auto pBrowserWindow::open(BrowserWindow::State& state) -> string {
   string filters;
   for(auto& filter : state.filters) {
-    auto part = ::nall::split(filter, "|", 1L);
+    auto part = nall::split(filter, "|", 1L);
     if(part.size() != 2) continue;
     filters.append(part[0], " (", part[1].transform(":", " "), ");;");
   }
@@ -33,7 +33,7 @@ auto pBrowserWindow::open(BrowserWindow::State& state) -> string {
 auto pBrowserWindow::save(BrowserWindow::State& state) -> string {
   string filters;
   for(auto& filter : state.filters) {
-    auto part = ::nall::split(filter, "|", 1L);
+    auto part = nall::split(filter, "|", 1L);
     if(part.size() != 2) continue;
     filters.append(part[0], " (", part[1].transform(":", " "), ");;");
   }

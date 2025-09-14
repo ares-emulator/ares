@@ -76,10 +76,10 @@ auto RSP::Debugger::ioSCC(bool mode, u32 address, u32 data) -> void {
     string message;
     string name = (address < registerNames.size() ? registerNames[address] : string("SP_UNKNOWN"));
     if(mode == Read) {
-      message = {::nall::split(name, "|").front(), " => ", hex(data, 8L)};
+      message = {nall::split(name, "|").front(), " => ", hex(data, 8L)};
     }
     if(mode == Write) {
-      message = {::nall::split(name, "|").back(), " <= ", hex(data, 8L)};
+      message = {nall::split(name, "|").back(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }
@@ -95,10 +95,10 @@ auto RSP::Debugger::ioStatus(bool mode, u32 address, u32 data) -> void {
     string message;
     string name = (address < registerNames.size() ? registerNames[address] : string("SP_UNKNOWN"));
     if(mode == Read) {
-      message = {::nall::split(name, "|").front(), " => ", hex(data, 8L)};
+      message = {nall::split(name, "|").front(), " => ", hex(data, 8L)};
     }
     if(mode == Write) {
-      message = {::nall::split(name, "|").back(), " <= ", hex(data, 8L)};
+      message = {nall::split(name, "|").back(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }

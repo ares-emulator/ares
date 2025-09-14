@@ -7,7 +7,7 @@ auto CPU::Disassembler::disassemble(u32 address, u32 instruction) -> string {
   if(!instruction) v = {"nop"};
   auto s = pad(v.front(), -8L);
   v.erase(v.begin());
-  return {s, ::nall::merge(v, ",")};
+  return {s, nall::merge(v, ",")};
 }
 
 auto CPU::Disassembler::EXECUTE() -> std::vector<string> {

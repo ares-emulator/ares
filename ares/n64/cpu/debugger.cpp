@@ -69,7 +69,7 @@ auto CPU::Debugger::interrupt(u8 mask) -> void {
     if(mask & 0x20) sources.push_back("read RDB");
     if(mask & 0x40) sources.push_back("write RDB");
     if(mask & 0x80) sources.push_back("timer");
-    tracer.interrupt->notify(::nall::merge(sources, ","));
+    tracer.interrupt->notify(nall::merge(sources, ","));
   }
 }
 

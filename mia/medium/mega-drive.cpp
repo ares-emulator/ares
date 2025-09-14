@@ -57,7 +57,7 @@ auto MegaDrive::load(string location) -> LoadResult {
   pak->setAttribute("board",    document["game/board"].string());
   pak->setAttribute("bootable", true);
   auto deviceList = document["game/device"].string();
-  auto devices = ::nall::split(deviceList, ", ");
+  auto devices = nall::split(deviceList, ", ");
   pak->setAttribute("megacd",   (bool)(std::ranges::find(devices, string{"Mega CD"}) != devices.end()));
   pak->append("manifest.bml", manifest);
 
@@ -191,9 +191,9 @@ auto MegaDrive::analyze(std::vector<u8>& rom) -> string {
   s +={"  label:  ", domesticName, "\n"};
   s +={"  label:  ", internationalName, "\n"};
   s +={"  serial: ", serialNumber, "\n"};
-  s +={"  region: ", ::nall::merge(regions, ", "), "\n"};
+  s +={"  region: ", nall::merge(regions, ", "), "\n"};
   if(!devices.empty())
-  s +={"  device: ", ::nall::merge(devices, ", "), "\n"};
+  s +={"  device: ", nall::merge(devices, ", "), "\n"};
   if(board)
   s +={"  board:  ", board, "\n"};
   s += "  board\n";
