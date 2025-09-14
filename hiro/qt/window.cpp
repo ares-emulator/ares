@@ -326,7 +326,8 @@ auto QtWindow::dragEnterEvent(QDragEnterEvent* event) -> void {
 }
 
 auto QtWindow::dropEvent(QDropEvent* event) -> void {
-  if(auto paths = DropPaths(event)) p.self().doDrop(paths);
+  auto paths = DropPaths(event);
+  if(!paths.empty()) p.self().doDrop(paths);
 }
 
 auto QtWindow::keyPressEvent(QKeyEvent* event) -> void {
