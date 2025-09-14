@@ -194,7 +194,7 @@ auto DSP::sample(i16 left, i16 right) -> void {
 }
 
 auto DSP::power(bool reset) -> void {
-  Thread::create(system.apuFrequency(), {&DSP::main, this});
+  Thread::create(system.apuFrequency(), std::bind_front(&DSP::main, this));
 
   if(!reset) {
     random.array({(u8*)apuram, sizeof(apuram)});

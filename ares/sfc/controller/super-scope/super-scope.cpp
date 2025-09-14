@@ -24,7 +24,7 @@ SuperScope::SuperScope(Node::Port parent) {
   sprite->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
   ppu.screen()->attach(sprite);
 
-  Thread::create(system.cpuFrequency(), {&SuperScope::main, this});
+  Thread::create(system.cpuFrequency(), std::bind_front(&SuperScope::main, this));
   cpu.peripherals.push_back(this);
 }
 

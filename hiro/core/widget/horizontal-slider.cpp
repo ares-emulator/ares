@@ -14,7 +14,7 @@ auto mHorizontalSlider::length() const -> u32 {
   return state.length;
 }
 
-auto mHorizontalSlider::onChange(const function<void ()>& callback) -> type& {
+auto mHorizontalSlider::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }

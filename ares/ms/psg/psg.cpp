@@ -66,7 +66,7 @@ auto PSG::balance(n8 data) -> void {
 
 auto PSG::power() -> void {
   SN76489::power();
-  Thread::create(system.colorburst() / 16.0, {&PSG::main, this});
+  Thread::create(system.colorburst() / 16.0, std::bind_front(&PSG::main, this));
 
   io = {};
   for(u32 level : range(15)) {

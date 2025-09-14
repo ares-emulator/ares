@@ -30,7 +30,7 @@ auto SharpRTC::unload() -> void {
 }
 
 auto SharpRTC::power() -> void {
-  Thread::create(1, {&SharpRTC::main, this});
+  Thread::create(1, std::bind_front(&SharpRTC::main, this));
   cpu.coprocessors.push_back(this);
 
   state = State::Read;

@@ -1,6 +1,6 @@
 
 auto Cartridge::KARNAK::power() -> void {
-  Thread::create(384'000, {&Cartridge::KARNAK::main, this});
+  Thread::create(384'000, std::bind_front(&Cartridge::KARNAK::main, this));
   
   timerEnable = 0;
   timerPeriod = 0;

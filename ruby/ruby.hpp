@@ -4,7 +4,7 @@
 #include <nall/chrono.hpp>
 #include <nall/directory.hpp>
 #include <nall/file.hpp>
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/hid.hpp>
 #include <nall/image.hpp>
 #include <nall/matrix.hpp>
@@ -23,7 +23,6 @@
 #include <nall/hash/crc32.hpp>
 
 using nall::atomic;
-using nall::function;
 using nall::index_of;
 using nall::lock_guard;
 using nall::mutex;

@@ -14,7 +14,7 @@ FightingPad::FightingPad(Node::Port parent) {
   mode  = node->append<Node::Input::Button>("Mode");
   start = node->append<Node::Input::Button>("Start");
 
-  Thread::create(1'000'000, {&FightingPad::main, this});
+  Thread::create(1'000'000, std::bind_front(&FightingPad::main, this));
 }
 
 FightingPad::~FightingPad() {

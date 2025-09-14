@@ -7,7 +7,7 @@
 //win32-pthreads (needed for std::thread) is licensed under the GPL only
 
 #include <nall/platform.hpp>
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/intrinsics.hpp>
 
 namespace nall {
@@ -41,13 +41,13 @@ struct thread {
 
   auto join() -> void;
 
-  static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
+  static auto create(const std::function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
   static auto detach() -> void;
   static auto exit() -> void;
   static auto setName(string name) -> void;
 
   struct context {
-    function<auto (uintptr) -> void> callback;
+    std::function<void (uintptr)> callback;
     uintptr parameter = 0;
   };
 
@@ -69,7 +69,7 @@ inline auto thread::join() -> void {
   }
 }
 
-inline auto thread::create(const function<void (uintptr)>& callback, uintptr parameter, u32 stacksize) -> thread {
+inline auto thread::create(const std::function<void (uintptr)>& callback, uintptr parameter, u32 stacksize) -> thread {
   thread instance;
 
   auto context = new thread::context;
@@ -126,13 +126,13 @@ struct thread {
   auto close() -> void;
   auto join() -> void;
 
-  static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
+  static auto create(const std::function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
   static auto detach() -> void;
   static auto exit() -> void;
   static auto setName(string name) -> void;
 
   struct context {
-    function<auto (uintptr) -> void> callback;
+    std::function<void (uintptr)> callback;
     uintptr parameter = 0;
   };
 

@@ -27,7 +27,7 @@ auto PPU::load(Node::Object parent) -> void {
     screen->resetPalette();
   });
   deepBlackBoost->setDynamic(true);
-  screen->colors(1 << 19, {&PPU::color, this});
+  screen->colors(1 << 19, std::bind_front(&PPU::color, this));
   screen->setSize(564, height() * 2);
   screen->setScale(0.5, 0.5);
   Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
@@ -119,13 +119,13 @@ auto PPU::main() -> void {
 }
 
 auto PPU::map() -> void {
-  function<n8   (n24, n8)> reader{&PPU::readIO, this};
-  function<void (n24, n8)> writer{&PPU::writeIO, this};
+  std::function<n8   (n24, n8)> reader{std::bind_front(&PPU::readIO, this)};
+  std::function<void (n24, n8)> writer{std::bind_front(&PPU::writeIO, this)};
   bus.map(reader, writer, "00-3f,80-bf:2100-213f");
 }
 
 auto PPU::power(bool reset) -> void {
-  Thread::create(system.cpuFrequency(), {&PPU::main, this});
+  Thread::create(system.cpuFrequency(), std::bind_front(&PPU::main, this));
   PPUcounter::reset();
   screen->power();
 

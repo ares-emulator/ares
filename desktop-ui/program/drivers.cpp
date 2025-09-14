@@ -125,7 +125,7 @@ auto Program::inputDriverUpdate() -> void {
   Program::Guard guard;
   ruby::input.create(settings.input.driver);
   ruby::input.setContext(presentation.viewport.handle());
-  ruby::input.onChange({&InputManager::eventInput, &inputManager});
+  ruby::input.onChange(std::bind_front(&InputManager::eventInput, &inputManager));
 
   if(!ruby::input.ready()) {
     MessageDialog().setText({"Failed to initialize ", settings.input.driver, " input driver."}).setAlignment(presentation).error();

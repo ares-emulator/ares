@@ -24,12 +24,12 @@ struct mTableView : mWidget {
   auto item(u32 position) const -> TableViewItem;
   auto itemCount() const -> u32;
   auto items() const -> std::vector<TableViewItem>;
-  auto onActivate(const function<void (TableViewCell)>& callback = {}) -> type&;
-  auto onChange(const function<void ()>& callback = {}) -> type&;
-  auto onContext(const function<void (TableViewCell)>& callback = {}) -> type&;
-  auto onEdit(const function<void (TableViewCell)>& callback = {}) -> type&;
-  auto onSort(const function<void (TableViewColumn)>& callback = {}) -> type&;
-  auto onToggle(const function<void (TableViewCell)>& callback = {}) -> type&;
+  auto onActivate(const std::function<void (TableViewCell)>& callback = {}) -> type&;
+  auto onChange(const std::function<void ()>& callback = {}) -> type&;
+  auto onContext(const std::function<void (TableViewCell)>& callback = {}) -> type&;
+  auto onEdit(const std::function<void (TableViewCell)>& callback = {}) -> type&;
+  auto onSort(const std::function<void (TableViewColumn)>& callback = {}) -> type&;
+  auto onToggle(const std::function<void (TableViewCell)>& callback = {}) -> type&;
   auto remove(sTableViewColumn column) -> type&;
   auto remove(sTableViewItem item) -> type&;
   auto reset() -> type& override;
@@ -60,12 +60,12 @@ struct mTableView : mWidget {
     Color foregroundColor;
     bool headered = false;
     std::vector<sTableViewItem> items;
-    function<void (TableViewCell)> onActivate;
-    function<void ()> onChange;
-    function<void (TableViewCell)> onContext;
-    function<void (TableViewCell)> onEdit;
-    function<void (TableViewColumn)> onSort;
-    function<void (TableViewCell)> onToggle;
+    std::function<void (TableViewCell)> onActivate;
+    std::function<void ()> onChange;
+    std::function<void (TableViewCell)> onContext;
+    std::function<void (TableViewCell)> onEdit;
+    std::function<void (TableViewColumn)> onSort;
+    std::function<void (TableViewCell)> onToggle;
     bool sortable = false;
   } state;
 

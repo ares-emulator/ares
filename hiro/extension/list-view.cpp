@@ -48,22 +48,22 @@ auto mListView::items() const -> std::vector<ListViewItem> {
   return result;
 }
 
-auto mListView::onActivate(const function<void ()>& callback) -> type& {
+auto mListView::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }
 
-auto mListView::onChange(const function<void ()>& callback) -> type& {
+auto mListView::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }
 
-auto mListView::onContext(const function<void ()>& callback) -> type& {
+auto mListView::onContext(const std::function<void ()>& callback) -> type& {
   state.onContext = callback;
   return *this;
 }
 
-auto mListView::onToggle(const function<void (ListViewItem)>& callback) -> type& {
+auto mListView::onToggle(const std::function<void (ListViewItem)>& callback) -> type& {
   state.onToggle = callback;
   return *this;
 }

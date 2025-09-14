@@ -1,7 +1,7 @@
 struct String : Setting {
   DeclareClass(String, "setting.string")
 
-  String(string name = {}, string value = {}, function<void (string)> modify = {}) : Setting(name) {
+  String(string name = {}, string value = {}, std::function<void (string)> modify = {}) : Setting(name) {
     _currentValue = value;
     _latchedValue = value;
     _modify = modify;
@@ -11,7 +11,7 @@ struct String : Setting {
   auto value() const -> string { return _currentValue; }
   auto latch() const -> string { return _latchedValue; }
 
-  auto setModify(function<void (string)> modify) { _modify = modify; }
+  auto setModify(std::function<void (string)> modify) { _modify = modify; }
 
   auto setValue(string value) -> void {
     if(!_allowedValues.empty() && !std::ranges::count(_allowedValues, value)) return;
@@ -36,7 +36,7 @@ struct String : Setting {
   auto writeValue(string value) -> void override { setValue(value); }
 
 protected:
-  function<void (string)> _modify;
+  std::function<void (string)> _modify;
   string _currentValue = {};
   string _latchedValue = {};
   std::vector<string> _allowedValues;

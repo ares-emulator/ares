@@ -43,7 +43,7 @@ auto APU::step(u32 clocks) -> void {
 auto APU::power(bool reset) -> void {
   Z80::bus = this;
   Z80::power();
-  Thread::create(4'000'000, {&APU::main, this});
+  Thread::create(4'000'000, std::bind_front(&APU::main, this));
   communication = {};
   nmi = {};
   irq = {};

@@ -81,7 +81,7 @@ auto M32X::SH7604::step(u32 clocks) -> void {
 }
 
 auto M32X::SH7604::power(bool reset) -> void {
-  Thread::create((system.frequency() / 7.0) * 3.0, {&M32X::SH7604::main, this});
+  Thread::create((system.frequency() / 7.0) * 3.0, std::bind_front(&M32X::SH7604::main, this));
 
   //When tweaking these values, make sure to test the following problematic games:
   // Brutal  - Check for hang in attract mode
@@ -99,7 +99,7 @@ auto M32X::SH7604::restart() -> void {
   SH2::power(true);
   irq = {};
   irq.vres.enable = 1;
-  Thread::restart({&M32X::SH7604::main, this});
+  Thread::restart(std::bind_front(&M32X::SH7604::main, this));
 }
 
 auto M32X::SH7604::syncAll(bool force) -> void {

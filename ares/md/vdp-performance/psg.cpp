@@ -32,7 +32,7 @@ auto VDP::PSG::step(u32 clocks) -> void {
 
 auto VDP::PSG::power(bool reset) -> void {
   SN76489::power();
-  Thread::create(system.frequency() / 15.0, {&PSG::main, this});
+  Thread::create(system.frequency() / 15.0, std::bind_front(&PSG::main, this));
 
   for(u32 level : range(15)) {
     volume[level] = pow(2, level * -2.0 / 6.0);

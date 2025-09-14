@@ -45,7 +45,7 @@ inline auto Thread::setClock(u64 clock) -> void {
   _clock = clock;
 }
 
-inline auto Thread::create(double frequency, function<void ()> entryPoint) -> void {
+inline auto Thread::create(double frequency, std::function<void ()> entryPoint) -> void {
   if(!_handle) {
     _handle = co_create(Thread::Size, &Thread::Enter);
   } else {
@@ -58,7 +58,7 @@ inline auto Thread::create(double frequency, function<void ()> entryPoint) -> vo
 }
 
 //returns a thread to its entry point (eg for a reset), without resetting the clock value
-inline auto Thread::restart(function<void()> entryPoint) -> void {
+inline auto Thread::restart(std::function<void()> entryPoint) -> void {
   co_derive(_handle, Thread::Size, &Thread::Enter);
   EntryPoints().push_back({_handle, entryPoint});
 }

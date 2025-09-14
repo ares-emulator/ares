@@ -6,7 +6,7 @@ SportsPad::SportsPad(Node::Port parent) {
   one = node->append<Node::Input::Button>("1");
   two = node->append<Node::Input::Button>("2");
 
-  Thread::create(1'000'000, {&SportsPad::main, this});
+  Thread::create(1'000'000, std::bind_front(&SportsPad::main, this));
 }
 
 SportsPad::~SportsPad() {

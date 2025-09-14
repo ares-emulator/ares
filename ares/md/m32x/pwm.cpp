@@ -68,7 +68,7 @@ auto M32X::PWM::step(u32 clocks) -> void {
 }
 
 auto M32X::PWM::power(bool reset) -> void {
-  Thread::create((system.frequency() / 7.0) * 3.0, {&M32X::PWM::main, this});
+  Thread::create((system.frequency() / 7.0) * 3.0, std::bind_front(&M32X::PWM::main, this));
   lmode = 0;
   rmode = 0;
   mono = 0;

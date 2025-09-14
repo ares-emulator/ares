@@ -112,7 +112,7 @@ auto CPU::step(u32 clocks) -> void {
 
 auto CPU::power() -> void {
   ARM7TDMI::power();
-  Thread::create(system.frequency(), {&CPU::main, this});
+  Thread::create(system.frequency(), std::bind_front(&CPU::main, this));
 
   bindCDP( 0, [&](n4 cm, n3 op2, n4 cd, n4 cn, n4 op1) { return coprocessor.vcCDP(); });
   bindMCR(14, [&](n32 data, n4 cm, n3 op2, n4 cn, n3 op1) { return coprocessor.debugMCR(); });

@@ -39,7 +39,7 @@ struct InputKeyboardRawInput {
   }
 
   auto initialize() -> bool {
-    rawinput.updateKeyboard = {&InputKeyboardRawInput::update, this};
+    rawinput.updateKeyboard = std::bind_front(&InputKeyboardRawInput::update, this);
 
     //Pause sends 0x001d,4 + 0x0045,0; NumLock sends only 0x0045,0
     //pressing Pause will falsely trigger NumLock
@@ -172,6 +172,6 @@ struct InputKeyboardRawInput {
   }
 
   auto terminate() -> void {
-    rawinput.updateKeyboard.reset();
+    rawinput.updateKeyboard = {};
   }
 };

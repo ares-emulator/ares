@@ -1,7 +1,7 @@
 struct Real : Setting {
   DeclareClass(Real, "setting.real")
 
-  Real(string name = {}, f64 value = {}, function<void (f64)> modify = {}) : Setting(name) {
+  Real(string name = {}, f64 value = {}, std::function<void (f64)> modify = {}) : Setting(name) {
     _currentValue = value;
     _latchedValue = value;
     _modify = modify;
@@ -11,7 +11,7 @@ struct Real : Setting {
   auto value() const -> f64 { return _currentValue; }
   auto latch() const -> f64 { return _latchedValue; }
 
-  auto setModify(function<void (f64)> modify) { _modify = modify; }
+  auto setModify(std::function<void (f64)> modify) { _modify = modify; }
 
   auto setValue(f64 value) -> void {
     if(!_allowedValues.empty() && !std::ranges::count(_allowedValues, value)) return;
@@ -40,7 +40,7 @@ struct Real : Setting {
   auto writeValue(string value) -> void override { setValue(value.real()); }
 
 protected:
-  function<void (f64)> _modify;
+  std::function<void (f64)> _modify;
   f64 _currentValue = {};
   f64 _latchedValue = {};
   std::vector<f64> _allowedValues;

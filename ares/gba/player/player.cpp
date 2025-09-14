@@ -18,7 +18,7 @@ auto Player::step(u32 clocks) -> void {
 }
 
 auto Player::power() -> void {
-  Thread::create(1000, {&Player::main, this});
+  Thread::create(1000, std::bind_front(&Player::main, this));
 
   status.enable = false;
   status.rumble = false;

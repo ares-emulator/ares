@@ -1,7 +1,7 @@
 struct Natural : Setting {
   DeclareClass(Natural, "setting.natural")
 
-  Natural(string name = {}, u64 value = {}, function<void (u64)> modify = {}) : Setting(name) {
+  Natural(string name = {}, u64 value = {}, std::function<void (u64)> modify = {}) : Setting(name) {
     _currentValue = value;
     _latchedValue = value;
     _modify = modify;
@@ -11,7 +11,7 @@ struct Natural : Setting {
   auto value() const -> u64 { return _currentValue; }
   auto latch() const -> u64 { return _latchedValue; }
 
-  auto setModify(function<void (u64)> modify) { _modify = modify; }
+  auto setModify(std::function<void (u64)> modify) { _modify = modify; }
 
   auto setValue(u64 value) -> void {
     if(!_allowedValues.empty() && !std::ranges::count(_allowedValues, value)) return;
@@ -40,7 +40,7 @@ struct Natural : Setting {
   auto writeValue(string value) -> void override { setValue(value.natural()); }
 
 protected:
-  function<void (u64)> _modify;
+  std::function<void (u64)> _modify;
   u64 _currentValue = {};
   u64 _latchedValue = {};
   std::vector<u64> _allowedValues;

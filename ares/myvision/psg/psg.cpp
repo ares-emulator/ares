@@ -38,10 +38,7 @@ namespace ares::MyVision {
 
   auto PSG::power()->void {
     AY38910::power();
-    Thread::create(Constants::Colorburst::NTSC / 2, {
-      & PSG::main,
-      this
-    });
+    Thread::create(Constants::Colorburst::NTSC / 2, std::bind_front(&PSG::main, this));
 
     for (uint level: range(16)) {
       volume[level] = 1.0 / pow(2, 1.0 / 2 * (15 - level));

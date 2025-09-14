@@ -665,7 +665,7 @@ auto Presentation::loadShaders() -> void {
   #endif
 
   if(shaderDirectories.size() == 0) {
-    function<void(string)> findShaderDirectories = [&](string path) {
+    std::function<void(string)> findShaderDirectories = [&](string path) {
       for(auto &entry: directory::folders(path)) findShaderDirectories({path, entry});
       auto files = directory::files(path, "*.slangp");
       if(files.size() > 0) shaderDirectories.push_back((string({path}).trimLeft(location, 1L)));
