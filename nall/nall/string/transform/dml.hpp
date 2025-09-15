@@ -94,10 +94,10 @@ inline auto DML::parseBlock(string& block, const string& pathname, u32 depth) ->
   else if(block.beginsWith("? ")) {
     for(auto n : range(lines.size())) {
       if(!lines[n].beginsWith("? ")) continue;
-      auto part = nall::split(lines[n].trimLeft("? ", 1L), ":", 1L);
+      auto part = nall::split_and_strip(lines[n].trimLeft("? ", 1L), ":", 1L);
       if(part.size() != 2) continue;
-      auto name = part[0].strip();
-      auto value = part[1].strip();
+      auto name = part[0];
+      auto value = part[1];
       attributes.append({name, value});
     }
   }

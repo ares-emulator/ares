@@ -309,7 +309,7 @@ auto BrowserDialogWindow::run() -> BrowserDialog::Response {
     if(batched.empty()) return;
     if(MessageDialog()
     .setTitle("Remove Selected")
-    .setText({"Are you sure you want to permanently delete the selected item", batched.size() == 1 ? string{} : string{"s"}, "?"})
+    .setText({"Are you sure you want to permanently delete the selected item", batched.size() == 1 ? "" : "s", "?"})
     .setAlignment(window)
     .question() == "No") return;
     for(auto& item : batched) {
