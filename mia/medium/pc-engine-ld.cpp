@@ -31,7 +31,7 @@ auto PCEngineLD::load(string location) -> LoadResult {
 
   string region = "NTSC-J, NTSC-U";
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title", { mmiArchive.name(), " [", mmiArchive.catalogId(), "]" });
   pak->setAttribute("region", region);
   pak->setAttribute("location", location);

@@ -6,7 +6,7 @@ struct Program : ares::Platform {
   //platform.cpp
   auto attach(ares::Node::Object) -> void override;
   auto detach(ares::Node::Object) -> void override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto event(ares::Event) -> void override;
   auto log(ares::Node::Debugger::Tracer::Tracer tracer, string_view message) -> void override;
   auto status(string_view message) -> void override;
@@ -17,8 +17,8 @@ struct Program : ares::Platform {
   auto cheat(u32 address) -> maybe<u32> override;
 
   //load.cpp
-  auto identify(const string& filename) -> shared_pointer<Emulator>;
-  auto load(shared_pointer<Emulator> emulator, string location = {}) -> bool;
+  auto identify(const string& filename) -> std::shared_ptr<Emulator>;
+  auto load(std::shared_ptr<Emulator> emulator, string location = {}) -> bool;
   auto load(string location) -> bool;
   auto unload() -> void;
 

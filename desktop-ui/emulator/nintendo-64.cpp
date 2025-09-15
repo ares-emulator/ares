@@ -5,9 +5,9 @@ struct Nintendo64 : Emulator {
   auto portMenu(Menu& portMenu, ares::Node::Port port) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> disk;
+  std::shared_ptr<mia::Pak> disk;
   u32 regionID = 0;
   sTimer diskInsertTimer;
 };
@@ -402,7 +402,7 @@ auto Nintendo64::save() -> bool {
   return true;
 }
 
-auto Nintendo64::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto Nintendo64::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Nintendo 64") return system->pak;
   if(node->name() == "Nintendo 64 Cartridge") return game->pak;
   if(node->name() == "Nintendo 64DD Disk" && disk) return disk->pak;

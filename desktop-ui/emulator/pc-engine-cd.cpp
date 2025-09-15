@@ -2,9 +2,9 @@ struct PCEngineCD : PCEngine {
   PCEngineCD();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> bios;
+  std::shared_ptr<mia::Pak> bios;
   u32 biosID = 0;
 };
 
@@ -21,7 +21,7 @@ PCEngineCD::PCEngineCD() {
 }
 
 auto PCEngineCD::load() -> LoadResult {
-  game = mia::Medium::create("PC Engine CD");
+  game = std::dynamic_pointer_cast<mia::Pak>(mia::Medium::create("PC Engine CD"));
   string location = Emulator::load(game, configuration.game);
   if(!location) return noFileSelected;
   LoadResult result = game->load(location);
@@ -41,7 +41,7 @@ auto PCEngineCD::load() -> LoadResult {
     }
   }
 
-  bios = mia::Medium::create("PC Engine");
+  bios = std::dynamic_pointer_cast<mia::Pak>(mia::Medium::create("PC Engine"));
   result = bios->load(firmware[biosID].location);
   if(result != successful) {
     result.firmwareSystemName = "PC Engine";
@@ -83,7 +83,7 @@ auto PCEngineCD::save() -> bool {
   return true;
 }
 
-auto PCEngineCD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto PCEngineCD::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "PC Engine") return system->pak;
   if(node->name() == "PC Engine Card") return bios->pak;
   if(node->name() == "PC Engine CD Disc") return game->pak;

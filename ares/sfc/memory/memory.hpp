@@ -5,8 +5,8 @@ struct AbstractMemory {
   virtual auto reset() -> void {}
   virtual auto allocate(u32, n8 = 0xff) -> void {}
 
-  virtual auto load(shared_pointer<vfs::file> fp) -> void {}
-  virtual auto save(shared_pointer<vfs::file> fp) -> void {}
+  virtual auto load(VFS::File fp) -> void {}
+  virtual auto save(VFS::File fp) -> void {}
 
   virtual auto data() -> n8* = 0;
   virtual auto size() const -> u32 = 0;

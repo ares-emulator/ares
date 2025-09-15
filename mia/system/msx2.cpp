@@ -14,7 +14,7 @@ auto MSX2::loadMultiple(std::vector<string> location) -> bool {
   if(sub.empty()) return false;
 
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("bios.rom", bios);
   pak->append("sub.rom", sub);
 

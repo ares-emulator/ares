@@ -6,7 +6,7 @@ struct Atari2600 : System {
 
 auto Atari2600::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   return successful;
 }
 

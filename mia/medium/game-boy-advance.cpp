@@ -22,7 +22,7 @@ auto GameBoyAdvance::load(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title", document["game/title"].string());
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);

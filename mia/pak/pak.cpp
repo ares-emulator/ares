@@ -1,6 +1,6 @@
-auto Pak::create(string name) -> shared_pointer<Pak> {
-  auto pak = new Pak;
-  pak->pak = new vfs::directory;
+auto Pak::create(string name) -> std::shared_ptr<Pak> {
+  auto pak = std::make_shared<Pak>();
+  pak->pak = std::make_shared<vfs::directory>();
   pak->pak->setAttribute("name", name);
   pak->pak->setAttribute("type", "Pak");
   return pak;

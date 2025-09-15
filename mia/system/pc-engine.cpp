@@ -6,7 +6,7 @@ struct PCEngine : System {
 
 auto PCEngine::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("backup.ram", 2_KiB);
 
   Pak::load("backup.ram", ".bram");
