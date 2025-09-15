@@ -5,7 +5,7 @@ struct InputJoypadSDL {
   InputJoypadSDL(Input& input) : input(input) {}
 
   struct Joypad {
-    shared_pointer<HID::Joypad> hid{new HID::Joypad};
+    std::shared_ptr<HID::Joypad> hid = std::make_shared<HID::Joypad>();
     std::vector<bool> axisPolled;
 
     u32 id = 0;
@@ -27,7 +27,7 @@ struct InputJoypadSDL {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     SDL_UpdateJoysticks();
     SDL_Event event;
     while(SDL_PollEvent(&event)) {

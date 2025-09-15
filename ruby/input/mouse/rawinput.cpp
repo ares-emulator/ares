@@ -8,7 +8,7 @@ struct InputMouseRawInput {
   bool mouseAcquired = false;
 
   struct Mouse {
-    shared_pointer<HID::Mouse> hid{new HID::Mouse};
+    std::shared_ptr<HID::Mouse> hid = std::make_shared<HID::Mouse>();
 
     s32 relativeX = 0;
     s32 relativeY = 0;
@@ -73,7 +73,7 @@ struct InputMouseRawInput {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     assign(HID::Mouse::GroupID::Axis, 0, ms.relativeX);
     assign(HID::Mouse::GroupID::Axis, 1, ms.relativeY);
     assign(HID::Mouse::GroupID::Axis, 2, ms.relativeZ);
