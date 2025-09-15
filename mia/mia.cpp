@@ -157,12 +157,12 @@ auto identify(const string& filename) -> string {
   return {};  //unable to identify
 }
 
-auto import(shared_pointer<Pak> pak, const string& filename) -> bool {
+auto import(std::shared_ptr<Pak> pak, const string& filename) -> bool {
   if(pak->load(filename) == successful) {
     string pathname = {Path::user(), "Emulation/", pak->name(), "/", Location::prefix(filename), ".", pak->extensions().front(), "/"};
     if(!directory::create(pathname)) return false;
     for(auto& node : *pak->pak) {
-      if(auto input = node.cast<vfs::file>()) {
+      if(auto input = std::dynamic_pointer_cast<vfs::file>(node)) {
         if(input->name() == "manifest.bml" && !settings.createManifests) continue;
         if(auto output = file::open({pathname, input->name()}, file::mode::write)) {
           while(!input->end()) output.write(input->read());

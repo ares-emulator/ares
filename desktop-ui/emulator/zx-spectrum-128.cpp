@@ -1,7 +1,7 @@
 struct ZXSpectrum128 : ZXSpectrum {
   ZXSpectrum128();
   auto load() -> LoadResult override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 };
 
 ZXSpectrum128::ZXSpectrum128() {
@@ -35,7 +35,7 @@ auto ZXSpectrum128::load() -> LoadResult {
   return successful;
 }
 
-auto ZXSpectrum128::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto ZXSpectrum128::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   print(string{node->name(), "\n"});
   if(node->name() == "ZX Spectrum 128") return system->pak;
   if(node->name() == "ZX Spectrum Tape") return game->pak;

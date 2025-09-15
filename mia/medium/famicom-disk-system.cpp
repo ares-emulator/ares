@@ -12,7 +12,7 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     this->location = location;
     this->manifest = analyze();
 
-    pak = new vfs::directory;
+    pak = std::make_shared<vfs::directory>();
     pak->setAttribute("title", Medium::name(location));
     pak->append("manifest.bml", manifest);
     for(auto& filename : directory::files(location, "disk?*.side?*")) {
@@ -25,7 +25,7 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     this->location = location;
     this->manifest = analyze();
 
-    pak = new vfs::directory;
+    pak = std::make_shared<vfs::directory>();
     pak->setAttribute("title", Medium::name(location));
     pak->append("manifest.bml", manifest);
 

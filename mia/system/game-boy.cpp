@@ -6,7 +6,7 @@ struct GameBoy : System {
 
 auto GameBoy::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("boot.rom", Resource::GameBoy::BootDMG1);
   return successful;
 }

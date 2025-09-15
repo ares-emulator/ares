@@ -6,7 +6,7 @@ struct Arcade : System {
 
 auto Arcade::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   return successful;
 }
 

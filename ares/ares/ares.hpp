@@ -55,8 +55,8 @@ namespace ares {
   extern const u32 SerializerSignature;
 
   namespace VFS {
-    using Pak = shared_pointer<vfs::directory>;
-    using File = shared_pointer<vfs::file>;
+    using Pak = std::shared_ptr<vfs::directory>;
+    using File = std::shared_ptr<vfs::file>;
   }
 
   namespace Video {

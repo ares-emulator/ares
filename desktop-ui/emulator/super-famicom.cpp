@@ -2,9 +2,9 @@ struct SuperFamicom : Emulator {
   SuperFamicom();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> gb, bs, stA, stB;
+  std::shared_ptr<mia::Pak> gb, bs, stA, stB;
 };
 
 SuperFamicom::SuperFamicom() {
@@ -194,7 +194,7 @@ auto SuperFamicom::save() -> bool {
   return true;
 }
 
-auto SuperFamicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto SuperFamicom::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Super Famicom") return system->pak;
   if(node->name() == "Super Famicom Cartridge") return game->pak;
   if(node->name() == "Game Boy Cartridge") return gb->pak;

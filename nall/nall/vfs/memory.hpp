@@ -8,14 +8,16 @@ namespace nall::vfs {
 struct memory : file {
   ~memory() { nall::memory::free(_data); }
 
-  static auto create(u64 size = 0) -> shared_pointer<memory> {
-    auto instance = shared_pointer<memory>{new memory};
+  static auto create(u64 size = 0) -> std::shared_ptr<memory> {
+    struct enable_make_shared : memory { using memory::memory; };
+    auto instance = std::make_shared<enable_make_shared>();
     instance->_create(size);
     return instance;
   }
 
-  static auto open(std::span<const u8> view) -> shared_pointer<memory> {
-    auto instance = shared_pointer<memory>{new memory};
+  static auto open(std::span<const u8> view) -> std::shared_ptr<memory> {
+    struct enable_make_shared : memory { using memory::memory; };
+    auto instance = std::make_shared<enable_make_shared>();
     instance->_open(view.data(), view.size());
     return instance;
   }

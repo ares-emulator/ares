@@ -6,7 +6,7 @@ struct MegaDrive : System {
 
 auto MegaDrive::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("tmss.rom", Resource::MegaDrive::TMSS);
   return successful;
 }

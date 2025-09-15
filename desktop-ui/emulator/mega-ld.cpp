@@ -4,7 +4,7 @@ struct MegaLD : Emulator {
   auto load(Menu) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto changeDiskState(const string state) -> void;
 
   u32 regionID = 0;
@@ -136,7 +136,7 @@ auto MegaLD::save() -> bool {
   return true;
 }
 
-auto MegaLD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto MegaLD::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Mega Drive") return system->pak;
   if(node->name() == "Mega CD Disc") return game->pak;
   return {};
