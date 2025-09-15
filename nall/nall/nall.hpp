@@ -53,7 +53,7 @@
 #include <nall/terminal.hpp>
 #include <nall/thread.hpp>
 #include <nall/traits.hpp>
-#include <nall/unique-pointer.hpp>
+#include <memory>
 #include <nall/utility.hpp>
 #include <nall/variant.hpp>
 #include <nall/varint.hpp>

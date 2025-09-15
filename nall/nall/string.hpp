@@ -18,7 +18,6 @@
 #include <nall/primitives.hpp>
 #include <nall/shared-pointer.hpp>
 #include <nall/stdint.hpp>
-#include <nall/unique-pointer.hpp>
 #include <nall/utility.hpp>
 #include <nall/varint.hpp>
 #include <nall/view.hpp>

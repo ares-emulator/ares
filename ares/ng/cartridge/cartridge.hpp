@@ -27,7 +27,7 @@ struct Cartridge {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  unique_pointer<Board::Interface> board;
+  std::unique_ptr<Board::Interface> board;
 
 private:
   struct Information {

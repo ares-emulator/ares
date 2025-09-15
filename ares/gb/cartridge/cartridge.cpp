@@ -22,19 +22,19 @@ auto Cartridge::connect() -> void {
   information.board = pak->attribute("board");
 
   board.reset();
-  if(information.board == "HuC1"  ) board = new Board::HuC1{*this};
-  if(information.board == "HuC3"  ) board = new Board::HuC3{*this};
-  if(information.board == "MBC1"  ) board = new Board::MBC1{*this};
-  if(information.board == "MBC1#M") board = new Board::MBC1M{*this};
-  if(information.board == "MBC2"  ) board = new Board::MBC2{*this};
-  if(information.board == "MBC3"  ) board = new Board::MBC3{*this};
-  if(information.board == "MBC30" ) board = new Board::MBC3{*this};
-  if(information.board == "MBC5"  ) board = new Board::MBC5{*this};
-  if(information.board == "MBC6"  ) board = new Board::MBC6{*this};
-  if(information.board == "MBC7"  ) board = new Board::MBC7{*this};
-  if(information.board == "MMM01" ) board = new Board::MMM01{*this};
-  if(information.board == "TAMA"  ) board = new Board::TAMA{*this};
-  if(!board) board = new Board::Linear{*this};
+  if(information.board == "HuC1"  ) board = std::make_unique<Board::HuC1>(*this);
+  if(information.board == "HuC3"  ) board = std::make_unique<Board::HuC3>(*this);
+  if(information.board == "MBC1"  ) board = std::make_unique<Board::MBC1>(*this);
+  if(information.board == "MBC1#M") board = std::make_unique<Board::MBC1M>(*this);
+  if(information.board == "MBC2"  ) board = std::make_unique<Board::MBC2>(*this);
+  if(information.board == "MBC3"  ) board = std::make_unique<Board::MBC3>(*this);
+  if(information.board == "MBC30" ) board = std::make_unique<Board::MBC3>(*this);
+  if(information.board == "MBC5"  ) board = std::make_unique<Board::MBC5>(*this);
+  if(information.board == "MBC6"  ) board = std::make_unique<Board::MBC6>(*this);
+  if(information.board == "MBC7"  ) board = std::make_unique<Board::MBC7>(*this);
+  if(information.board == "MMM01" ) board = std::make_unique<Board::MMM01>(*this);
+  if(information.board == "TAMA"  ) board = std::make_unique<Board::TAMA>(*this);
+  if(!board) board = std::make_unique<Board::Linear>(*this);
   board->pak = pak;
   board->load();
 
@@ -61,7 +61,7 @@ auto Cartridge::power() -> void {
     bootromEnable = true;
   }
 
-  if(!board) board = new Board::None{*this};
+  if(!board) board = std::make_unique<Board::None>(*this);
   board->power();
 }
 

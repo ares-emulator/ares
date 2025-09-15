@@ -31,9 +31,9 @@ auto PeripheralPort::save() -> void {
 }
 
 auto PeripheralPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Digital Gamepad") device = new DigitalGamepad(port);
-  if(name == "DualShock"      ) device = new DualShock(port);
-  if(name == "Memory Card"    ) device = new MemoryCard(port);
+  if(name == "Digital Gamepad") device = std::make_unique<DigitalGamepad>(port);
+  if(name == "DualShock"      ) device = std::make_unique<DualShock>(port);
+  if(name == "Memory Card"    ) device = std::make_unique<MemoryCard>(port);
   if(device) return device->node;
   return {};
 }

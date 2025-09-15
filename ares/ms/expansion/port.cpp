@@ -17,7 +17,7 @@ auto ExpansionPort::unload() -> void {
 }
 
 auto ExpansionPort::allocate(string name) -> Node::Peripheral {
-  if(name == "FM Sound Unit") device = new FMSoundUnit(port);
+  if(name == "FM Sound Unit") device = std::make_unique<FMSoundUnit>(port);
   if(device) return device->node;
   return {};
 }

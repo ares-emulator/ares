@@ -92,11 +92,11 @@ protected:
   u32  _rotation = 0;  //counter-clockwise (90 = left, 270 = right)
 
   std::function<n64 (n32)> _color;
-  unique_pointer<u32[]> _inputA;
-  unique_pointer<u32[]> _inputB;
-  unique_pointer<u32[]> _output;
-  unique_pointer<u32[]> _rotate;
-  unique_pointer<u32[]> _palette;
+  std::unique_ptr<u32[]> _inputA;
+  std::unique_ptr<u32[]> _inputB;
+  std::unique_ptr<u32[]> _output;
+  std::unique_ptr<u32[]> _rotate;
+  std::unique_ptr<u32[]> _palette;
   std::vector<n1> _lineOverrideActive;
   std::vector<const u32*> _lineOverride;
   std::vector<Node::Video::Sprite> _sprites;
