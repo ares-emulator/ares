@@ -309,7 +309,8 @@ auto Emulator::inputKeyboard(string name) -> bool {
   for (auto& device : inputManager.devices) {
     if (!device->isKeyboard()) continue;
 
-    auto keyboard = (shared_pointer<HID::Keyboard>)device;
+    auto keyboard = std::dynamic_pointer_cast<HID::Keyboard>(device);
+    if (!keyboard) continue;
 
     auto key = keyboard->buttons().find(name);
     if (!key) return false;

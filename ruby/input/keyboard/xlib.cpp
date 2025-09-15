@@ -4,7 +4,7 @@ struct InputKeyboardXlib {
   Input& input;
   InputKeyboardXlib(Input& input) : input(input) {}
 
-  shared_pointer<HID::Keyboard> hid{new HID::Keyboard};
+  std::shared_ptr<HID::Keyboard> hid = std::make_shared<HID::Keyboard>();
 
   Display* display = nullptr;
 
@@ -22,7 +22,7 @@ struct InputKeyboardXlib {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     char state[32];
     XQueryKeymap(display, state);
 
