@@ -18,7 +18,7 @@ auto Cartridge::connect() -> void {
   information.title  = pak->attribute("title");
   information.region = pak->attribute("region");
 
-  board = Board::Interface::create(pak->attribute("board"));
+  board.reset(Board::Interface::create(pak->attribute("board")));
   board->pak = pak;
   board->load();
 

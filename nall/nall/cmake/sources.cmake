@@ -79,7 +79,6 @@ target_sources(
     thread.cpp
     thread.hpp
     traits.hpp
-    unique-pointer.hpp
     utility.hpp
     variant.hpp
     varint.hpp

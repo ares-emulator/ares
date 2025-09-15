@@ -36,7 +36,7 @@ struct Input {
 
   Input() : self(*this) { reset(); }
   explicit operator bool() { return instance->driver() != "None"; }
-  auto reset() -> void { instance = new InputDriver(*this); }
+  auto reset() -> void { instance = std::make_unique<InputDriver>(*this); }
   auto create(string driver = "") -> bool;
   auto driver() -> string { return instance->driver(); }
   auto ready() -> bool { return instance->ready(); }
@@ -58,6 +58,6 @@ struct Input {
 
 protected:
   Input& self;
-  unique_pointer<InputDriver> instance;
+  std::unique_ptr<InputDriver> instance;
   std::function<void (shared_pointer<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue)> change;
 };
