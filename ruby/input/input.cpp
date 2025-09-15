@@ -49,7 +49,7 @@ auto Input::release() -> bool {
   return instance->release();
 }
 
-auto Input::poll() -> std::vector<shared_pointer<nall::HID::Device>> {
+auto Input::poll() -> std::vector<std::shared_ptr<nall::HID::Device>> {
   return instance->poll();
 }
 
@@ -59,11 +59,11 @@ auto Input::rumble(u64 id, u16 strong, u16 weak) -> bool {
 
 //
 
-auto Input::onChange(const std::function<void (shared_pointer<HID::Device>, u32, u32, s16, s16)>& onChange) -> void {
+auto Input::onChange(const std::function<void (std::shared_ptr<HID::Device>, u32, u32, s16, s16)>& onChange) -> void {
   change = onChange;
 }
 
-auto Input::doChange(shared_pointer<HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue) -> void {
+auto Input::doChange(std::shared_ptr<HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue) -> void {
   if(change) change(device, group, input, oldValue, newValue);
 }
 

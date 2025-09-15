@@ -9,7 +9,7 @@ struct InputJoypadUHID {
   InputJoypadUHID(Input& input) : input(input) {}
 
   struct Joypad {
-    shared_pointer<HID::Joypad> hid{new HID::Joypad};
+    std::shared_ptr<HID::Joypad> hid = std::make_shared<HID::Joypad>();
     s32 fd = -1;
     report_desc_t report;
     s32 reportID = -1;
@@ -26,7 +26,7 @@ struct InputJoypadUHID {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     //hotplug support
     u64 thisTimestamp = chrono::millisecond();
     if(thisTimestamp - lastTimestamp >= 2000) {
