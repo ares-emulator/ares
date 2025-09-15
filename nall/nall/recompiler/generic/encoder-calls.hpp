@@ -128,10 +128,9 @@
       lea(dst, sreg(i), src.snd);
     } else if constexpr (std::is_same_v<T, imm>) {
       sljit_emit_op1(compiler, SLJIT_MOV32, dst.fst, dst.snd, src.fst, src.snd);
-    } else if constexpr (std::is_same_v<T, imm64>) {
-      sljit_emit_op1(compiler, SLJIT_MOV, dst.fst, dst.snd, SLJIT_IMM, src.data);
     } else {
-      static_assert(false, "unknown function argument type");
+      static_assert(std::is_same_v<T, imm64>, "unknown function argument type");
+      sljit_emit_op1(compiler, SLJIT_MOV, dst.fst, dst.snd, SLJIT_IMM, src.data);
     }
   }
 
