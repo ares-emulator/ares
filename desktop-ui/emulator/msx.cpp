@@ -3,7 +3,7 @@ struct MSX : Emulator {
   auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -108,7 +108,7 @@ auto MSX::save() -> bool {
   return true;
 }
 
-auto MSX::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto MSX::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "MSX") return system->pak;
   if(node->name() == "MSX Cartridge") return game->pak;
   if(node->name() == "MSX Tape") return game->pak;

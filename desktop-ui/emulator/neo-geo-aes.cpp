@@ -2,7 +2,7 @@ struct NeoGeoAES : Emulator {
   NeoGeoAES();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto arcade() -> bool override { return true; }
 };
 
@@ -83,7 +83,7 @@ auto NeoGeoAES::save() -> bool {
   return true;
 }
 
-auto NeoGeoAES::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto NeoGeoAES::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Neo Geo AES") return system->pak;
   if(node->name() == "Neo Geo Cartridge") return game->pak;
   return {};

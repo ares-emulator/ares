@@ -2,9 +2,9 @@ struct PCEngineLD : PCEngine {
   PCEngineLD();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> hucard;
+  std::shared_ptr<mia::Pak> hucard;
   u32 internalBiosId = 0;
   maybe<u32> hucardBiosId;
 };
@@ -101,7 +101,7 @@ auto PCEngineLD::save() -> bool {
   return true;
 }
 
-auto PCEngineLD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto PCEngineLD::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "PC Engine") return system->pak;
   if(node->name() == "PC Engine Card") return hucard->pak;
   if(node->name() == "PC Engine CD Disc") return game->pak;

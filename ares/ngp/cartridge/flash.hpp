@@ -19,8 +19,8 @@ struct Flash {
   //flash.cpp
   auto reset(natural ID) -> void;
   auto allocate(natural size) -> bool;
-  auto load(shared_pointer<vfs::file> fp) -> void;
-  auto save(shared_pointer<vfs::file> fp) -> void;
+  auto load(VFS::File fp) -> void;
+  auto save(VFS::File fp) -> void;
 
   auto power() -> void;
   auto read(n21 address) -> n8;

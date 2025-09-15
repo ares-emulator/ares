@@ -10,7 +10,7 @@ auto PCEngineLD::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
   if(bios.empty()) return romNotFound;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("bios.rom", bios);
   pak->append("backup.ram", 2_KiB);
 

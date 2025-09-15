@@ -2,7 +2,7 @@ struct MSX2 : MSX {
   MSX2();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -86,7 +86,7 @@ auto MSX2::save() -> bool {
   return true;
 }
 
-auto MSX2::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto MSX2::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "MSX2") return system->pak;
   if(node->name() == "MSX2 Cartridge") return game->pak;
   if(node->name() == "MSX Tape") return game->pak;

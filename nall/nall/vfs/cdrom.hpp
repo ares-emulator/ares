@@ -19,8 +19,9 @@ struct cdrom : file {
     _thread.join();
   }
 
-  static auto open(const string& location, const string& pathWithinArchive) -> shared_pointer<cdrom> {
-    auto instance = shared_pointer<cdrom>{new cdrom};
+  static auto open(const string& location, const string& pathWithinArchive) -> std::shared_ptr<cdrom> {
+    struct enable_make_shared : cdrom { using cdrom::cdrom; };
+    auto instance = std::make_shared<enable_make_shared>();
 
     if (location.iendsWith(".mmi")) {
       instance->_archive = std::make_unique<Decode::ZIP>();
@@ -33,8 +34,9 @@ struct cdrom : file {
     return {};
   }
 
-  static auto open(const string& location) -> shared_pointer<cdrom> {
-    auto instance = shared_pointer<cdrom>{new cdrom};
+  static auto open(const string& location) -> std::shared_ptr<cdrom> {
+    struct enable_make_shared : cdrom { using cdrom::cdrom; };
+    auto instance = std::make_shared<enable_make_shared>();
     if(location.iendsWith(".cue") && instance->loadCue(location, nullptr, nullptr)) return instance;
 #if defined(ARES_ENABLE_CHD)
     if(location.iendsWith(".chd") && instance->loadChd(location)) return instance;

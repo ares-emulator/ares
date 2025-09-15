@@ -162,100 +162,100 @@ namespace ares::ZXSpectrum {
 #include "arcade.cpp"
 
 auto Emulator::construct() -> void {
-  emulators.push_back(new Arcade);
+  emulators.push_back(std::make_shared<Arcade>());
 
   #ifdef CORE_A26
-  emulators.push_back(new Atari2600);
+  emulators.push_back(std::make_shared<Atari2600>());
   #endif
 
   #ifdef CORE_WS
-  emulators.push_back(new WonderSwan);
-  emulators.push_back(new WonderSwanColor);
-  emulators.push_back(new PocketChallengeV2);
+  emulators.push_back(std::make_shared<WonderSwan>());
+  emulators.push_back(std::make_shared<WonderSwanColor>());
+  emulators.push_back(std::make_shared<PocketChallengeV2>());
   #endif
 
   #ifdef CORE_CV
-  emulators.push_back(new ColecoVision);
+  emulators.push_back(std::make_shared<ColecoVision>());
   #endif
 
   #ifdef CORE_MYVISION
-  emulators.push_back(new MyVision);
+  emulators.push_back(std::make_shared<MyVision>());
   #endif
 
   #ifdef CORE_MSX
-  emulators.push_back(new MSX);
-  emulators.push_back(new MSX2);
+  emulators.push_back(std::make_shared<MSX>());
+  emulators.push_back(std::make_shared<MSX2>());
   #endif
 
   #ifdef CORE_PCE
-  emulators.push_back(new PCEngine);
-  emulators.push_back(new PCEngineCD);
-  emulators.push_back(new PCEngineLD);
-  emulators.push_back(new SuperGrafx);
-  emulators.push_back(new SuperGrafxCD);
+  emulators.push_back(std::make_shared<PCEngine>());
+  emulators.push_back(std::make_shared<PCEngineCD>());
+  emulators.push_back(std::make_shared<PCEngineLD>());
+  emulators.push_back(std::make_shared<SuperGrafx>());
+  emulators.push_back(std::make_shared<SuperGrafxCD>());
   #endif
 
   #ifdef CORE_FC
-  emulators.push_back(new Famicom);
-  emulators.push_back(new FamicomDiskSystem);
+  emulators.push_back(std::make_shared<Famicom>());
+  emulators.push_back(std::make_shared<FamicomDiskSystem>());
   #endif
 
   #ifdef CORE_SFC
-  emulators.push_back(new SuperFamicom);
+  emulators.push_back(std::make_shared<SuperFamicom>());
   #endif
 
   #ifdef CORE_N64
-  emulators.push_back(new Nintendo64);
-  emulators.push_back(new Nintendo64DD);
+  emulators.push_back(std::make_shared<Nintendo64>());
+  emulators.push_back(std::make_shared<Nintendo64DD>());
   #endif
 
   #ifdef CORE_GB
-  emulators.push_back(new GameBoy);
-  emulators.push_back(new GameBoyColor);
+  emulators.push_back(std::make_shared<GameBoy>());
+  emulators.push_back(std::make_shared<GameBoyColor>());
   #endif
 
   #ifdef CORE_GBA
-  emulators.push_back(new GameBoyAdvance);
+  emulators.push_back(std::make_shared<GameBoyAdvance>());
   #endif
 
   #ifdef CORE_SG
-  emulators.push_back(new SG1000);
-  emulators.push_back(new SC3000);
+  emulators.push_back(std::make_shared<SG1000>());
+  emulators.push_back(std::make_shared<SC3000>());
   #endif
 
   #ifdef CORE_MS
-  emulators.push_back(new MasterSystem);
-  emulators.push_back(new GameGear);
+  emulators.push_back(std::make_shared<MasterSystem>());
+  emulators.push_back(std::make_shared<GameGear>());
   #endif
 
   #ifdef CORE_MD
-  emulators.push_back(new MegaDrive);
-  emulators.push_back(new Mega32X);
-  emulators.push_back(new MegaCD);
-  emulators.push_back(new MegaCD32X);
-  emulators.push_back(new MegaLD);
+  emulators.push_back(std::make_shared<MegaDrive>());
+  emulators.push_back(std::make_shared<Mega32X>());
+  emulators.push_back(std::make_shared<MegaCD>());
+  emulators.push_back(std::make_shared<MegaCD32X>());
+  emulators.push_back(std::make_shared<MegaLD>());
   #endif
 
   #ifdef CORE_SATURN
-  emulators.push_back(new Saturn);
+  emulators.push_back(std::make_shared<Saturn>());
   #endif
 
   #ifdef CORE_NG
-  emulators.push_back(new NeoGeoAES);
-  emulators.push_back(new NeoGeoMVS);
+  emulators.push_back(std::make_shared<NeoGeoAES>());
+  emulators.push_back(std::make_shared<NeoGeoMVS>());
   #endif
 
   #ifdef CORE_NGP
-  emulators.push_back(new NeoGeoPocket);
-  emulators.push_back(new NeoGeoPocketColor);
+  emulators.push_back(std::make_shared<NeoGeoPocket>());
+  emulators.push_back(std::make_shared<NeoGeoPocketColor>());
   #endif
 
   #ifdef CORE_PS1
-  emulators.push_back(new PlayStation);
+  emulators.push_back(std::make_shared<PlayStation>());
   #endif
 
   #ifdef CORE_SPEC
-  emulators.push_back(new ZXSpectrum);
-  emulators.push_back(new ZXSpectrum128);
+  emulators.push_back(std::make_shared<ZXSpectrum>());
+  emulators.push_back(std::make_shared<ZXSpectrum128>());
   #endif
 }

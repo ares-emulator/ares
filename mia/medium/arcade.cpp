@@ -21,7 +21,7 @@ auto Arcade::load(string location) -> LoadResult {
 
     this->location = location;
 
-    pak = new vfs::directory;
+    pak = std::make_shared<vfs::directory>();
     pak->setAttribute("board",  document["game/board" ].string());
     pak->setAttribute("name",   document["game/name" ].string());
     pak->setAttribute("title",  document["game/title"].string());
@@ -48,7 +48,7 @@ auto Arcade::load(string location) -> LoadResult {
 
     this->location = location;
 
-    pak = new vfs::directory;
+    pak = std::make_shared<vfs::directory>();
     pak->setAttribute("board",  document["game/board" ].string());
     pak->setAttribute("name",   document["game/name" ].string());
     pak->setAttribute("title",  document["game/title"].string());

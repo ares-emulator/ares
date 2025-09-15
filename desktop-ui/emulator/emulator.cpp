@@ -1,8 +1,8 @@
 #include "../desktop-ui.hpp"
 #include "emulators.cpp"
 
-std::vector<shared_pointer<Emulator>> emulators;
-shared_pointer<Emulator> emulator;
+std::vector<std::shared_ptr<Emulator>> emulators;
+std::shared_ptr<Emulator> emulator;
 
 auto Emulator::enumeratePorts(string name) -> std::vector<InputPort>& {
   for(auto& emulator : emulators) {
@@ -137,7 +137,7 @@ auto Emulator::load(const string& location) -> bool {
   return true;
 }
 
-auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
+auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
   Program::Guard guard;
   string location;
   if(!locationQueue.empty()) {
@@ -170,7 +170,7 @@ auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
   return {};
 }
 
-auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::file> {
+auto Emulator::loadFirmware(const Firmware& firmware) -> std::shared_ptr<vfs::file> {
   Program::Guard guard;
   if(firmware.location.iendsWith(".zip")) {
     Decode::ZIP archive;

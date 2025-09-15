@@ -6,7 +6,7 @@ struct ZXSpectrum : System {
 
 auto ZXSpectrum::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("bios.rom", Resource::ZXSpectrum::BIOS);
   return successful;
 }

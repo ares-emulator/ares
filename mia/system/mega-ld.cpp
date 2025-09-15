@@ -16,7 +16,7 @@ auto MegaLD::load(string location) -> LoadResult {
   if(bios.empty()) return romNotFound;
 
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("tmss.rom", Resource::MegaDrive::TMSS);
   pak->append("bios.rom", bios);
   pak->append("backup.ram", 8_KiB);

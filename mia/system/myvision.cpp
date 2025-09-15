@@ -7,7 +7,7 @@ struct MyVision : System {
 auto MyVision::load(string location) -> LoadResult {
 
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
 
   return successful;
 }

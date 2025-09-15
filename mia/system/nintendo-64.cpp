@@ -6,7 +6,7 @@ struct Nintendo64 : System {
 
 auto Nintendo64::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("pif.ntsc.rom", Resource::Nintendo64::PIFNTSC);
   pak->append("pif.pal.rom",  Resource::Nintendo64::PIFPAL );
   pak->append("pif.sm5.rom",  Resource::Nintendo64::PIFSM5 );

@@ -16,7 +16,7 @@ auto MegaCD32X::load(string location) -> LoadResult {
   if(bios.empty()) return romNotFound;
 
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("tmss.rom", Resource::MegaDrive::TMSS);
   pak->append("bios.rom", bios);
   pak->append("vector.rom", Resource::Mega32X::Vector);

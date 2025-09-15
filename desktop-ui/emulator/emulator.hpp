@@ -11,8 +11,8 @@ struct Emulator {
   auto locate(const string& location, const string& suffix, const string& path = "", maybe<string> system = {}) -> string;
   auto region() -> string;
   auto load(const string& location) -> bool;
-  auto load(shared_pointer<mia::Pak> pak, string& path) -> string;
-  auto loadFirmware(const Firmware&) -> shared_pointer<vfs::file>;
+  auto load(std::shared_ptr<mia::Pak> pak, string& path) -> string;
+  auto loadFirmware(const Firmware&) -> std::shared_ptr<vfs::file>;
   virtual auto unload() -> void;
   auto refresh() -> void;
   auto setBoolean(const string& name, bool value) -> bool;
@@ -27,7 +27,7 @@ struct Emulator {
   virtual auto load(Menu) -> void {}
   virtual auto load() -> LoadResult = 0;
   virtual auto save() -> bool { return true; }
-  virtual auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> = 0;
+  virtual auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> = 0;
   virtual auto notify(const string& message) -> void {}
   virtual auto arcade() -> bool { return false; }
   virtual auto group() -> string { return manufacturer; }
@@ -45,10 +45,10 @@ struct Emulator {
   string medium;
   ares::Node::System root;
   std::vector<Firmware> firmware;
-  shared_pointer<mia::Pak> system;
-  shared_pointer<mia::Pak> game;
-  shared_pointer<mia::Pak> gamepad;
-  shared_pointer<mia::Pak> gb;
+  std::shared_ptr<mia::Pak> system;
+  std::shared_ptr<mia::Pak> game;
+  std::shared_ptr<mia::Pak> gamepad;
+  std::shared_ptr<mia::Pak> gb;
   std::vector<InputPort> ports;
   std::vector<string> inputBlacklist;
   std::vector<string> portBlacklist;
@@ -69,5 +69,5 @@ struct Emulator {
   std::vector<string> locationQueue;
 };
 
-extern std::vector<shared_pointer<Emulator>> emulators;
-extern shared_pointer<Emulator> emulator;
+extern std::vector<std::shared_ptr<Emulator>> emulators;
+extern std::shared_ptr<Emulator> emulator;
