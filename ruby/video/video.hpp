@@ -92,7 +92,7 @@ struct Video {
 
   Video() : self(*this) { reset(); }
   explicit operator bool() { return instance->driver() != "None"; }
-  auto reset() -> void { instance = new VideoDriver(*this); }
+  auto reset() -> void { instance = std::make_unique<VideoDriver>(*this); }
   auto create(string driver = "") -> bool;
   auto driver() -> string { return instance->driver(); }
   auto ready() -> bool { return instance->ready(); }
@@ -161,7 +161,7 @@ struct Video {
 
 protected:
   Video& self;
-  unique_pointer<VideoDriver> instance;
+  std::unique_ptr<VideoDriver> instance;
   std::function<void (u32, u32)> update;
 
 private:

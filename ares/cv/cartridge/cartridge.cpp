@@ -19,12 +19,12 @@ auto Cartridge::connect() -> void {
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
 
-  if(information.board == "xin1") board = new Board::xin1{*this};
-  if(information.board == "coleco") board = new Board::coleco{*this};
-  if(information.board == "megacart") board = new Board::megacart{*this};
+  if(information.board == "xin1") board = std::make_unique<Board::xin1>(*this);
+  if(information.board == "coleco") board = std::make_unique<Board::coleco>(*this);
+  if(information.board == "megacart") board = std::make_unique<Board::megacart>(*this);
   
   
-  if(!board) board = new Board::Interface{*this};
+  if(!board) board = std::make_unique<Board::Interface>(*this);
   board->pak = pak;
   board->load();
   power();

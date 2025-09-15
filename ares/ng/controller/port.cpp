@@ -20,7 +20,7 @@ auto ControllerPort::unload() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Arcade Stick") device = new ArcadeStick(port);
+  if(name == "Arcade Stick") device = std::make_unique<ArcadeStick>(port);
   if(device) return device->node;
   return {};
 }

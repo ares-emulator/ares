@@ -37,7 +37,7 @@ struct Cartridge : Thread {
     boolean bootable;
   } information;
 
-  unique_pointer<Board::Interface> board;
+  std::unique_ptr<Board::Interface> board;
   maybe<Board::Interface&> child;
 };
 

@@ -1,6 +1,6 @@
 struct ControllerPort {
   Node::Port port;
-  unique_pointer<Controller> device;
+  std::unique_ptr<Controller> device;
 
   ControllerPort(string name);
   auto load(Node::Object) -> void;

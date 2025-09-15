@@ -74,7 +74,7 @@ struct Audio {
 
   Audio() : self(*this) { reset(); }
   explicit operator bool() { return instance->driver() != "None"; }
-  auto reset() -> void { instance = new AudioDriver(*this); }
+  auto reset() -> void { instance = std::make_unique<AudioDriver>(*this); }
   auto create(string driver = "") -> bool;
   auto driver() -> string { return instance->driver(); }
   auto ready() -> bool { return instance->ready(); }
@@ -120,7 +120,7 @@ struct Audio {
 
 protected:
   Audio& self;
-  unique_pointer<AudioDriver> instance;
+  std::unique_ptr<AudioDriver> instance;
   std::vector<nall::DSP::Resampler::Cubic> resamplers;
   std::vector<f64> resampleBuffer;
 };

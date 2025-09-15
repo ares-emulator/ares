@@ -27,6 +27,8 @@
   #include <ruby/video/metal/metal.cpp>
 #endif
 
+#include <memory>
+
 namespace ruby {
 
 auto Video::setFullScreen(bool fullScreen) -> bool {
@@ -183,26 +185,26 @@ auto Video::create(string driver) -> bool {
   if(!driver) driver = optimalDriver();
 
   #if defined(VIDEO_CGL)
-  if(driver == "OpenGL 3.2") self.instance = new VideoCGL(*this);
+  if(driver == "OpenGL 3.2") self.instance = std::make_unique<VideoCGL>(*this);
   #endif
 
   #if defined(VIDEO_DIRECT3D9)
-  if(driver == "Direct3D 9.0") self.instance = new VideoDirect3D9(*this);
+  if(driver == "Direct3D 9.0") self.instance = std::make_unique<VideoDirect3D9>(*this);
   #endif
 
   #if defined(VIDEO_GLX)
-  if(driver == "OpenGL 3.2") self.instance = new VideoGLX(*this);
+  if(driver == "OpenGL 3.2") self.instance = std::make_unique<VideoGLX>(*this);
   #endif
 
   #if defined(VIDEO_WGL)
-  if(driver == "OpenGL 3.2") self.instance = new VideoWGL(*this);
+  if(driver == "OpenGL 3.2") self.instance = std::make_unique<VideoWGL>(*this);
   #endif
   
   #if defined(VIDEO_METAL)
-  if(driver == "Metal") self.instance = new VideoMetal(*this);
+  if(driver == "Metal") self.instance = std::make_unique<VideoMetal>(*this);
   #endif
 
-  if(!self.instance) self.instance = new VideoDriver(*this);
+  if(!self.instance) self.instance = std::make_unique<VideoDriver>(*this);
 
   return self.instance->create();
 }

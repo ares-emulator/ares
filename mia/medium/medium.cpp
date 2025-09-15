@@ -309,10 +309,10 @@ auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> std::vecto
 #endif
 
 auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> std::vector<u8> {
-  unique_pointer archive = new Decode::ZIP;
+  std::unique_ptr<Decode::ZIP> archive = std::make_unique<Decode::ZIP>();
   if (!archive->open(mmiPath)) return {};
   Decode::CUE cuesheet;
-  if(!cuesheet.load(mmiPath, archive.data(), &archive->findFile(cuePath).get())) return {};
+  if(!cuesheet.load(mmiPath, archive.get(), &archive->findFile(cuePath).get())) return {};
 
   for(auto& file : cuesheet.files) {
     u64 offset = 0;

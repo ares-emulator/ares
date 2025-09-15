@@ -20,18 +20,18 @@ auto Cartridge::connect() -> void {
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
 
-  if(information.board == "ASC16") board = new Board::ASC16{*this, false};
-  if(information.board == "ASC16R") board = new Board::ASC16{*this, true};
-  if(information.board == "ASC8") board = new Board::ASC8{*this};
-  if(information.board == "CrossBlaim") board = new Board::CrossBlaim{*this};
-  if(information.board == "Konami") board = new Board::Konami{*this};
-  if(information.board == "KonamiSCC") board = new Board::KonamiSCC{*this};
-  if(information.board == "Linear") board = new Board::Linear{*this, 0x4000};
-  if(information.board == "LinearPage2") board = new Board::Linear{*this, 0x8000};
-  if(information.board == "Mirrored") board = new Board::Mirrored{*this};
-  if(information.board == "SuperLodeRunner") board = new Board::SuperLodeRunner{*this};
-  if(information.board == "SuperPierrot") board = new Board::SuperPierrot{*this};
-  if(!board) board = new Board::Konami{*this};
+  if(information.board == "ASC16") board = std::make_unique<Board::ASC16>(*this, false);
+  if(information.board == "ASC16R") board = std::make_unique<Board::ASC16>(*this, true);
+  if(information.board == "ASC8") board = std::make_unique<Board::ASC8>(*this);
+  if(information.board == "CrossBlaim") board = std::make_unique<Board::CrossBlaim>(*this);
+  if(information.board == "Konami") board = std::make_unique<Board::Konami>(*this);
+  if(information.board == "KonamiSCC") board = std::make_unique<Board::KonamiSCC>(*this);
+  if(information.board == "Linear") board = std::make_unique<Board::Linear>(*this, 0x4000);
+  if(information.board == "LinearPage2") board = std::make_unique<Board::Linear>(*this, 0x8000);
+  if(information.board == "Mirrored") board = std::make_unique<Board::Mirrored>(*this);
+  if(information.board == "SuperLodeRunner") board = std::make_unique<Board::SuperLodeRunner>(*this);
+  if(information.board == "SuperPierrot") board = std::make_unique<Board::SuperPierrot>(*this);
+  if(!board) board = std::make_unique<Board::Konami>(*this);
   board->pak = pak;
   board->load();
 
