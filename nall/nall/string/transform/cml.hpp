@@ -72,9 +72,7 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
 
     if(name == "variables") {
       for(auto& line : lines) {
-        auto dataParts = nall::split(line, ":", 1L);
-        std::vector<string> data;
-        for(auto& part : dataParts) data.push_back(part.strip());
+        auto data = nall::split_and_strip(line, ":", 1L);
         variables.emplace_back(data.size() > 0 ? data[0] : string{}, data.size() > 1 ? data[1] : string{});
       }
       continue;
@@ -91,9 +89,7 @@ inline auto CML::parseDocument(const string& filedata, const string& pathname, u
         continue;
       }
 
-      auto dataParts2 = nall::split(line, ":", 1L);
-      std::vector<string> data2;
-      for(auto& part : dataParts2) data2.push_back(part.strip());
+      auto data2 = nall::split_and_strip(line, ":", 1L);
       string name = data2.size() > 0 ? data2[0] : string{};
       string value = data2.size() > 1 ? data2[1] : string{};
       while(auto offset = value.find("var(")) {

@@ -115,8 +115,8 @@ inline auto CUE::loadFile(std::vector<string>& lines, u32& offset) -> File {
   File file;
 
   lines[offset].itrimLeft("FILE ", 1L).strip();
-  auto parts = nall::split(lines[offset], " ");
-  file.type = parts.empty() ? string{} : parts.back().strip().downcase();
+  auto parts = nall::split_and_strip(lines[offset], " ");
+  file.type = parts.empty() ? string{} : parts.back().downcase();
   lines[offset].itrimRight(file.type, 1L).strip();
   file.name = lines[offset].trim("\"", "\"", 1L);
   offset++;
@@ -140,8 +140,8 @@ inline auto CUE::loadTrack(std::vector<string>& lines, u32& offset) -> Track {
   Track track;
 
   lines[offset].itrimLeft("TRACK ", 1L).strip();
-  auto parts2 = nall::split(lines[offset], " ");
-  track.type = parts2.empty() ? string{} : parts2.back().strip().downcase();
+  auto parts = nall::split_and_strip(lines[offset], " ");
+  track.type = parts.empty() ? string{} : parts.back().downcase();
   lines[offset].itrimRight(track.type, 1L).strip();
   track.number = lines[offset].natural();
   offset++;
@@ -180,8 +180,8 @@ inline auto CUE::loadIndex(std::vector<string>& lines, u32& offset) -> Index {
   Index index;
 
   lines[offset].itrimLeft("INDEX ", 1L);
-  auto parts3 = nall::split(lines[offset], " ");
-  string sector = parts3.empty() ? string{} : parts3.back().strip();
+  auto parts = nall::split_and_strip(lines[offset], " ");
+  string sector = parts.empty() ? string{} : parts.back();
   lines[offset].itrimRight(sector, 1L).strip();
   index.number = lines[offset].natural();
   index.lba = toLBA(sector);
