@@ -80,7 +80,7 @@ protected:
   }
 
   //read a node and all of its child nodes
-  auto parseNode(const vector<string>& text, u32& y, string_view spacing) -> void {
+  auto parseNode(const std::vector<string>& text, u32& y, string_view spacing) -> void {
     const char* p = text[y++];
     _metadata = parseDepth(p);
     parseName(p);
@@ -130,7 +130,7 @@ protected:
     document.resize(document.size() - (p - output)).trimRight("\n");
     if(document.size() == 0) return;  //empty document
 
-    auto text = document.split("\n");
+    auto text = nall::split(document, "\n");
     u32 y = 0;
     while(y < text.size()) {
       SharedNode node(new ManagedNode);
@@ -166,8 +166,8 @@ inline auto serialize(const Markup::Node& node, string_view spacing = {}, u32 de
   padding.resize(depth * 2);
   padding.fill(' ');
 
-  vector<string> lines;
-  if(auto value = node.value()) lines = value.split("\n");
+  std::vector<string> lines;
+  if(auto value = node.value()) lines = nall::split(value, "\n");
 
   string result;
   result.append(padding);

@@ -194,13 +194,15 @@ auto pTreeView::_buttonEvent(GdkEventButton* gdkEvent) -> s32 {
 
 auto pTreeView::_doDataFunc(GtkTreeViewColumn* column, GtkCellRenderer* renderer, GtkTreeIter* iter) -> void {
   auto path = gtk_tree_model_get_string_from_iter(gtkTreeModel, iter);
-  auto parts = string{path}.split(":");
+  auto parts = nall::split((const char*)path, ":");
   g_free(path);
 
-  auto item = self().item(parts.takeLeft().natural());
+  auto item = self().item(parts.empty() ? 0u : parts.front().natural());
+  if(!parts.empty()) parts.erase(parts.begin());
   if(!item) return;
-  while(parts) {
-    item = item.item(parts.takeLeft().natural());
+  while(!parts.empty()) {
+    item = item.item(parts.front().natural());
+    parts.erase(parts.begin());
     if(!item) return;
   }
 

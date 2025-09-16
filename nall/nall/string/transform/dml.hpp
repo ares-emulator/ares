@@ -74,14 +74,14 @@ inline auto DML::parse(const string& filename) -> string {
 inline auto DML::parseDocument(const string& filedata, const string& pathname, u32 depth) -> bool {
   if(depth >= 100) return false;  //attempt to prevent infinite recursion with reasonable limit
 
-  auto blocks = filedata.split("\n\n");
+  auto blocks = nall::split(filedata, "\n\n");
   for(auto& block : blocks) parseBlock(block, pathname, depth);
   return true;
 }
 
 inline auto DML::parseBlock(string& block, const string& pathname, u32 depth) -> bool {
   if(!block.stripRight()) return true;
-  auto lines = block.split("\n");
+  auto lines = nall::split(block, "\n");
 
   //include
   if(block.beginsWith("<include ") && block.endsWith(">")) {
@@ -94,10 +94,10 @@ inline auto DML::parseBlock(string& block, const string& pathname, u32 depth) ->
   else if(block.beginsWith("? ")) {
     for(auto n : range(lines.size())) {
       if(!lines[n].beginsWith("? ")) continue;
-      auto part = lines[n].trimLeft("? ", 1L).split(":", 1L);
+      auto part = nall::split_and_strip(lines[n].trimLeft("? ", 1L), ":", 1L);
       if(part.size() != 2) continue;
-      auto name = part[0].strip();
-      auto value = part[1].strip();
+      auto name = part[0];
+      auto value = part[1];
       attributes.append({name, value});
     }
   }
@@ -112,8 +112,9 @@ inline auto DML::parseBlock(string& block, const string& pathname, u32 depth) ->
 
   //header
   else if(auto depth = count(block, '#')) {
-    auto nextLine = lines.takeLeft();
-    auto content = slice(nextLine, depth + 1);
+    auto front = lines.empty() ? string{} : lines.front();
+    auto content = slice(front, depth + 1);
+    if(!lines.empty()) lines.erase(lines.begin());
     auto data = markup(content);
     auto name = anchor(content);
     if(depth <= 5) {
@@ -284,9 +285,11 @@ inline auto DML::markup(const string& s) -> string {
     }
 
     if(link && !image && a == ']' && b == ']') {
-      auto list = slice(s, link(), n - link()).split("::", 1L);
-      string uri = address(list.last());
-      string name = list.size() == 2 ? list.first() : uri.split("//", 1L).last();
+      auto sliceStr = slice(s, link(), n - link());
+      auto   list     = nall::split(sliceStr, "::", 1L);
+      string uri      = address(list.empty() ? string{} : list.back());
+      auto   uriParts = nall::split(uri, "//", 1L);
+      string name     = list.size() == 2 ? list.front() : (uriParts.empty() ? string{} : uriParts.back());
 
       t.append("<a href=\"", escape(uri), "\">", escape(name), "</a>");
 
@@ -296,11 +299,15 @@ inline auto DML::markup(const string& s) -> string {
     }
 
     if(image && !link && a == '}' && b == '}') {
-      auto side = slice(s, image(), n - image()).split("}{", 1L);
-      auto list = side(0).split("::", 1L);
-      string uri = address(list.last());
-      string name = list.size() == 2 ? list.first() : uri.split("//", 1L).last();
-      list = side(1).split("; ");
+      auto   sliceStr  = slice(s, image(), n - image());
+      auto   side      = nall::split(sliceStr, "}{", 1L);
+      string side0     = side.empty() ? string{} : side[0];
+      auto   list      = nall::split(side0, "::", 1L);
+      string uri       = address(list.empty() ? string{} : list.back());
+      auto   uriParts2 = nall::split(uri, "//", 1L);
+      string name      = list.size() == 2 ? list.front() : (uriParts2.empty() ? string{} : uriParts2.back());
+      string side1     = side.size() > 1 ? side[1] : string{};
+      list = nall::split(side1, "; ");
       Boolean link, title, caption;
       string Class, width, height;
       for(auto p : list) {

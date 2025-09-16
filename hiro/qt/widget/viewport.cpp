@@ -40,7 +40,8 @@ auto QtViewport::dragEnterEvent(QDragEnterEvent* event) -> void {
 }
 
 auto QtViewport::dropEvent(QDropEvent* event) -> void {
-  if(auto paths = DropPaths(event)) p.self().doDrop(paths);
+  auto paths = DropPaths(event);
+  if(!paths.empty()) p.self().doDrop(paths);
 }
 
 auto QtViewport::leaveEvent(QEvent* event) -> void {

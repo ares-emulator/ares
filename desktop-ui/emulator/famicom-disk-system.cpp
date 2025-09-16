@@ -16,7 +16,7 @@ FamicomDiskSystem::FamicomDiskSystem() {
   manufacturer = "Nintendo";
   name = "Famicom Disk System";
 
-  firmware.append({"BIOS", "Japan", "fdc1a76e654feea993fcb38366e05ee5f4eb641f86fe6bebaeefd412e112dd72"});
+  firmware.push_back({"BIOS", "Japan", "fdc1a76e654feea993fcb38366e05ee5f4eb641f86fe6bebaeefd412e112dd72"});
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -33,7 +33,7 @@ FamicomDiskSystem::FamicomDiskSystem() {
     device.digital("Microphone", virtualPorts[id].pad.north);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

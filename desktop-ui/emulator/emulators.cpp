@@ -161,99 +161,99 @@ namespace ares::ZXSpectrum {
 #include "arcade.cpp"
 
 auto Emulator::construct() -> void {
-  emulators.append(new Arcade);
+  emulators.push_back(new Arcade);
 
   #ifdef CORE_A26
-  emulators.append(new Atari2600);
+  emulators.push_back(new Atari2600);
   #endif
 
   #ifdef CORE_WS
-  emulators.append(new WonderSwan);
-  emulators.append(new WonderSwanColor);
-  emulators.append(new PocketChallengeV2);
+  emulators.push_back(new WonderSwan);
+  emulators.push_back(new WonderSwanColor);
+  emulators.push_back(new PocketChallengeV2);
   #endif
 
   #ifdef CORE_CV
-  emulators.append(new ColecoVision);
+  emulators.push_back(new ColecoVision);
   #endif
 
   #ifdef CORE_MYVISION
-  emulators.append(new MyVision);
+  emulators.push_back(new MyVision);
   #endif
 
   #ifdef CORE_MSX
-  emulators.append(new MSX);
-  emulators.append(new MSX2);
+  emulators.push_back(new MSX);
+  emulators.push_back(new MSX2);
   #endif
 
   #ifdef CORE_PCE
-  emulators.append(new PCEngine);
-  emulators.append(new PCEngineCD);
-  emulators.append(new SuperGrafx);
-  emulators.append(new SuperGrafxCD);
+  emulators.push_back(new PCEngine);
+  emulators.push_back(new PCEngineCD);
+  emulators.push_back(new SuperGrafx);
+  emulators.push_back(new SuperGrafxCD);
   #endif
 
   #ifdef CORE_FC
-  emulators.append(new Famicom);
-  emulators.append(new FamicomDiskSystem);
+  emulators.push_back(new Famicom);
+  emulators.push_back(new FamicomDiskSystem);
   #endif
 
   #ifdef CORE_SFC
-  emulators.append(new SuperFamicom);
+  emulators.push_back(new SuperFamicom);
   #endif
 
   #ifdef CORE_N64
-  emulators.append(new Nintendo64);
-  emulators.append(new Nintendo64DD);
+  emulators.push_back(new Nintendo64);
+  emulators.push_back(new Nintendo64DD);
   #endif
 
   #ifdef CORE_GB
-  emulators.append(new GameBoy);
-  emulators.append(new GameBoyColor);
+  emulators.push_back(new GameBoy);
+  emulators.push_back(new GameBoyColor);
   #endif
 
   #ifdef CORE_GBA
-  emulators.append(new GameBoyAdvance);
+  emulators.push_back(new GameBoyAdvance);
   #endif
 
   #ifdef CORE_SG
-  emulators.append(new SG1000);
-  emulators.append(new SC3000);
+  emulators.push_back(new SG1000);
+  emulators.push_back(new SC3000);
   #endif
 
   #ifdef CORE_MS
-  emulators.append(new MasterSystem);
-  emulators.append(new GameGear);
+  emulators.push_back(new MasterSystem);
+  emulators.push_back(new GameGear);
   #endif
 
   #ifdef CORE_MD
-  emulators.append(new MegaDrive);
-  emulators.append(new Mega32X);
-  emulators.append(new MegaCD);
-  emulators.append(new MegaCD32X);
-  emulators.append(new MegaLD);
+  emulators.push_back(new MegaDrive);
+  emulators.push_back(new Mega32X);
+  emulators.push_back(new MegaCD);
+  emulators.push_back(new MegaCD32X);
+  emulators.push_back(new MegaLD);
   #endif
 
   #ifdef CORE_SATURN
-  emulators.append(new Saturn);
+  emulators.push_back(new Saturn);
   #endif
 
   #ifdef CORE_NG
-  emulators.append(new NeoGeoAES);
-  emulators.append(new NeoGeoMVS);
+  emulators.push_back(new NeoGeoAES);
+  emulators.push_back(new NeoGeoMVS);
   #endif
 
   #ifdef CORE_NGP
-  emulators.append(new NeoGeoPocket);
-  emulators.append(new NeoGeoPocketColor);
+  emulators.push_back(new NeoGeoPocket);
+  emulators.push_back(new NeoGeoPocketColor);
   #endif
 
   #ifdef CORE_PS1
-  emulators.append(new PlayStation);
+  emulators.push_back(new PlayStation);
   #endif
 
   #ifdef CORE_SPEC
-  emulators.append(new ZXSpectrum);
-  emulators.append(new ZXSpectrum128);
+  emulators.push_back(new ZXSpectrum);
+  emulators.push_back(new ZXSpectrum128);
   #endif
 }

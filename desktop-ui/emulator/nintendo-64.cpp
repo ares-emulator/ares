@@ -50,7 +50,7 @@ Nintendo64::Nintendo64() {
     device.digital ("Right", virtualPorts[id].mouse.right);
     port.append(device); }
   
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -66,11 +66,11 @@ auto Nintendo64::load() -> LoadResult {
   string name;
   if(game->pak->attribute("dd").boolean()) {
     //use 64DD firmware settings
-    vector<Firmware> firmware;
+    std::vector<Firmware> firmware;
     for(auto& emulator : emulators) {
       if(emulator->name == "Nintendo 64DD") firmware = emulator->firmware;
     }
-    if(!firmware) return otherError;  //should never occur
+    if(firmware.empty()) return otherError;  //should never occur
     name = "Nintendo 64DD";
 
     disk = mia::Medium::create("Nintendo 64DD");

@@ -3,7 +3,7 @@
 
 struct MyVision : Cartridge {
   auto name() -> string override { return "MyVision"; }
-  auto extensions() -> vector<string> override { return {"myv"}; }
+  auto extensions() -> std::vector<string> override { return {"myv"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;

@@ -1,4 +1,5 @@
 #include "../desktop-ui.hpp"
+#include <nall/vector-helpers.hpp>
 #include "video.cpp"
 #include "audio.cpp"
 #include "input.cpp"
@@ -143,14 +144,22 @@ auto Settings::process(bool load) -> void {
       if(load == 0) for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
       if(load == 0) value.trimRight(";", 1L);
       bind(string, name, value);
-      if(load == 1) for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = value.split(";")(binding);
+      if(load == 1) {
+        auto parts = nall::split(value, ";");
+        parts.resize(BindingLimit);
+        for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = parts[binding];
+      }
     }
     for(auto& input : port.mouse.inputs) {
       string name = {"VirtualMouse", 1 + index, "/", input.name}, value;
       if(load == 0) for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
       if(load == 0) value.trimRight(";", 1L);
       bind(string, name, value);
-      if(load == 1) for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = value.split(";")(binding);
+      if(load == 1) {
+        auto parts = nall::split(value, ";");
+        parts.resize(BindingLimit);
+        for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = parts[binding];
+      }
     }
   }
 
@@ -167,7 +176,11 @@ auto Settings::process(bool load) -> void {
     if(load == 0) for(auto& assignment : mapping.assignments) value.append(assignment, ";");
     if(load == 0) value.trimRight(";", 1L);
     bind(string, name, value);
-    if(load == 1) for(u32 binding : range(BindingLimit)) mapping.assignments[binding] = value.split(";")(binding);
+    if(load == 1) {
+      auto parts = nall::split(value, ";");
+      parts.resize(BindingLimit);
+      for(u32 binding : range(BindingLimit)) mapping.assignments[binding] = parts[binding];
+    }
   }
 
   for(auto& emulator : emulators) {

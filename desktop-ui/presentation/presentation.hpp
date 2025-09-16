@@ -10,7 +10,7 @@ struct Presentation : Window {
   auto loadShaders() -> void;
   auto refreshSystemMenu() -> void;
 
-  vector<string> shaderDirectories;
+  std::vector<string> shaderDirectories;
 
   MenuBar menuBar{this};
     Menu loadMenu{&menuBar};

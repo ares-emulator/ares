@@ -6,7 +6,7 @@ struct Emulator {
   virtual ~Emulator() = default;
 
   //emulator.cpp
-  static auto enumeratePorts(string name) -> vector<InputPort>&;
+  static auto enumeratePorts(string name) -> std::vector<InputPort>&;
   auto location() -> string;
   auto locate(const string& location, const string& suffix, const string& path = "", maybe<string> system = {}) -> string;
   auto region() -> string;
@@ -51,14 +51,14 @@ struct Emulator {
   string name;
   string medium;
   ares::Node::System root;
-  vector<Firmware> firmware;
+  std::vector<Firmware> firmware;
   shared_pointer<mia::Pak> system;
   shared_pointer<mia::Pak> game;
   shared_pointer<mia::Pak> gamepad;
   shared_pointer<mia::Pak> gb;
-  vector<InputPort> ports;
-  vector<string> inputBlacklist;
-  vector<string> portBlacklist;
+  std::vector<InputPort> ports;
+  std::vector<string> inputBlacklist;
+  std::vector<string> portBlacklist;
 
   struct Configuration {
     bool visible = true;  //whether or not to show this emulator in the load menu
@@ -73,8 +73,8 @@ struct Emulator {
   } latch;
 
   //queue of pre-specified game locations; used by Program::load()
-  vector<string> locationQueue;
+  std::vector<string> locationQueue;
 };
 
-extern vector<shared_pointer<Emulator>> emulators;
+extern std::vector<shared_pointer<Emulator>> emulators;
 extern shared_pointer<Emulator> emulator;

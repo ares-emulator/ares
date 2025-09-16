@@ -51,7 +51,7 @@ auto Hotkey::setSequence(const string& sequence) -> type& {
   state->active = false;
   state->sequence = sequence;
   state->keys.clear();
-  for(auto& key : sequence.split("+")) {
+  for(auto& key : nall::split(sequence, "+")) {
     if (auto idx = nall::index_of(Keyboard::keys, key)) state->keys.push_back((u32)*idx);
   }
   return *this;

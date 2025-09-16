@@ -1,5 +1,5 @@
 namespace Media {
-  vector<Database> databases;
+  std::vector<Database> databases;
   #include "mame.cpp"
   #include "arcade.cpp"
   #include "atari-2600.cpp"
@@ -96,7 +96,7 @@ auto Medium::loadDatabase() -> bool {
   auto databaseFile = locate({"Database/", name(), ".bml"});
   if(inode::exists(databaseFile)) {
     database.list = BML::unserialize(file::read(databaseFile));
-    Media::databases.append(std::move(database));
+    Media::databases.push_back(std::move(database));
     return true;
   }
 
@@ -171,7 +171,7 @@ auto CompactDisc::isAudioCd(string pathname) -> bool {
   auto fp = file::open({pathname, "cd.rom"}, file::mode::read);
   if(!fp) return {};
 
-  vector<u8> toc;
+  std::vector<u8> toc;
   toc.resize(96 * 7500);
   for(u32 sector : range(7500)) {
     fp.read({toc.data() + 96 * sector, 96});
@@ -189,7 +189,7 @@ auto CompactDisc::isAudioCd(string pathname) -> bool {
   return true;
 }
 
-auto CompactDisc::readDataSector(string pathname, u32 sectorID) -> vector<u8> {
+auto CompactDisc::readDataSector(string pathname, u32 sectorID) -> std::vector<u8> {
   if(pathname.iendsWith(".bcd")) {
     return readDataSectorBCD(pathname, sectorID);
   }
@@ -204,11 +204,11 @@ auto CompactDisc::readDataSector(string pathname, u32 sectorID) -> vector<u8> {
   return {};
 }
 
-auto CompactDisc::readDataSectorBCD(string pathname, u32 sectorID) -> vector<u8> {
+auto CompactDisc::readDataSectorBCD(string pathname, u32 sectorID) -> std::vector<u8> {
   auto fp = file::open({pathname, "cd.rom"}, file::mode::read);
   if(!fp) return {};
 
-  vector<u8> toc;
+  std::vector<u8> toc;
   toc.resize(96 * 7500);
   for(u32 sector : range(7500)) {
     fp.read({toc.data() + 96 * sector, 96});
@@ -220,7 +220,7 @@ auto CompactDisc::readDataSectorBCD(string pathname, u32 sectorID) -> vector<u8>
     if(auto& track = session.tracks[trackID]) {
       if(!track.isData()) continue;
       if(auto index = track.index(1)) {
-        vector<u8> sector;
+        std::vector<u8> sector;
         sector.resize(2448);
         fp.seek(2448 * (abs(session.leadIn.lba) + index->lba + sectorID) + 16);
         fp.read({sector.data(), 2448});
@@ -232,7 +232,7 @@ auto CompactDisc::readDataSectorBCD(string pathname, u32 sectorID) -> vector<u8>
   return {};
 }
 
-auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8> {
+auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> std::vector<u8> {
   Decode::CUE cuesheet;
   if(!cuesheet.load(filename, nullptr, nullptr)) return {};
 
@@ -251,7 +251,7 @@ auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>
           if(track.type == "mode2/2352") sectorSize = 2352;
           if(sectorSize && index.number == 1) {
             binary.seek(offset + (sectorSize * sectorID) + (sectorSize == 2352 ? 16 : 0));
-            vector<u8> sector;
+            std::vector<u8> sector;
             sector.resize(2048);
             binary.read({sector.data(), sector.size()});
             return sector;
@@ -278,7 +278,7 @@ auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>
 }
 
 #if defined(ARES_ENABLE_CHD)
-auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> vector<u8> {
+auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> std::vector<u8> {
   Decode::CHD chd;
   if(!chd.load(filename)) return {};
 
@@ -290,7 +290,7 @@ auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> vector<u8>
 
       // Read the sector from CHD and extract the user data portion (2048 bytes)
       auto sector = chd.read(index.lba + sectorID);
-      vector<u8> output;
+      std::vector<u8> output;
       output.resize(2048);
 
       if (sector.size() == 2048) {
@@ -307,7 +307,7 @@ auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> vector<u8>
 }
 #endif
 
-auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> vector<u8> {
+auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> std::vector<u8> {
   unique_pointer archive = new Decode::ZIP;
   if (!archive->open(mmiPath)) return {};
   Decode::CUE cuesheet;
@@ -321,7 +321,7 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
       auto fileEntry = archive->findFile(filePathInArchive);
       if(!fileEntry) continue;
       array_view<u8> rawDataView;
-      vector<u8> rawDataBuffer;
+      std::vector<u8> rawDataBuffer;
       if (archive->isDataUncompressed(*fileEntry)) {
         rawDataView = archive->dataViewIfUncompressed(*fileEntry);
       } else {
@@ -338,7 +338,7 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
           if(track.type == "mode2/2352") sectorSize = 2352;
           if(sectorSize && index.number == 1) {
             size_t readPos = offset + (sectorSize * sectorID) + (sectorSize == 2352 ? 16 : 0);
-            vector<u8> sector;
+            std::vector<u8> sector;
             sector.resize(2048);
             memcpy(sector.data(), rawDataView.data() + readPos, sector.size());
             return sector;

@@ -163,7 +163,7 @@ Famicom::Famicom() {
     device.digital ("Trigger",   virtualPorts[id].mouse.left);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 
   {

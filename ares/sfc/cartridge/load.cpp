@@ -13,9 +13,10 @@ auto Cartridge::loadBoard(string board) -> Markup::Node {
       auto id = leaf.text();
       bool matched = id == board;
       if(!matched && id.match("*(*)*")) {
-        auto part = id.transform("()", "||").split("|");
-        for(auto& revision : part(1).split(",")) {
-          if(string{part(0), revision, part(2)} == board) matched = true;
+        auto part = nall::split(id.transform("()", "||"), "|");
+        part.resize(3);
+        for(auto& revision : nall::split(part[1], ",")) {
+          if(string{part[0], revision, part[2]} == board) matched = true;
         }
       }
       if(matched) return leaf;

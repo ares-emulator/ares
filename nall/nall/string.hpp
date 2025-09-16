@@ -138,7 +138,6 @@ protected:
 
 public:
   string();
-  string(string& source) : string() { operator=(source); }
   string(const string& source) : string() { operator=(source); }
   string(string&& source) : string() { operator=(std::move(source)); }
   template<typename T = char> auto get() -> T*;
@@ -265,12 +264,6 @@ public:
   auto qreplace(string_view from, string_view to, long limit = LONG_MAX) -> type&;
   auto iqreplace(string_view from, string_view to, long limit = LONG_MAX) -> type&;
 
-  //split.hpp
-  auto split(string_view key, long limit = LONG_MAX) const -> vector<string>;
-  auto isplit(string_view key, long limit = LONG_MAX) const -> vector<string>;
-  auto qsplit(string_view key, long limit = LONG_MAX) const -> vector<string>;
-  auto iqsplit(string_view key, long limit = LONG_MAX) const -> vector<string>;
-
   //trim.hpp
   auto trim(string_view lhs, string_view rhs, long limit = LONG_MAX) -> type&;
   auto trimLeft(string_view lhs, long limit = LONG_MAX) -> type&;
@@ -305,10 +298,9 @@ template<> struct vector<string> : vector_base<string> {
   vector(const vector& source) { vector_base::operator=(source); }
   vector(vector& source) { vector_base::operator=(source); }
   vector(vector&& source) { vector_base::operator=(std::move(source)); }
-  template<typename... P> vector(P&&... p) { append(std::forward<P>(p)...); }
+  template<typename... P> explicit vector(P&&... p) { append(std::forward<P>(p)...); }
 
   auto operator=(const vector& source) -> type& { return vector_base::operator=(source), *this; }
-  auto operator=(vector& source) -> type& { return vector_base::operator=(source), *this; }
   auto operator=(vector&& source) -> type& { return vector_base::operator=(std::move(source)), *this; }
 
   //vector.hpp
@@ -350,6 +342,7 @@ inline auto operator"" _s(const char* value, std::size_t) -> string { return {va
 #include <nall/string/format.hpp>
 #include <nall/string/match.hpp>
 #include <nall/string/replace.hpp>
+#include <nall/vector-helpers.hpp>
 #include <nall/string/split.hpp>
 #include <nall/string/trim.hpp>
 #include <nall/string/utf8.hpp>
@@ -368,5 +361,3 @@ inline auto operator"" _s(const char* value, std::size_t) -> string { return {va
 
 #include <nall/string/transform/cml.hpp>
 #include <nall/string/transform/dml.hpp>
-
-#include <nall/vector-helpers.hpp>

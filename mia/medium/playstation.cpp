@@ -1,6 +1,6 @@
 struct PlayStation : CompactDisc {
   auto name() -> string override { return "PlayStation"; }
-  auto extensions() -> vector<string> override {
+  auto extensions() -> std::vector<string> override {
 #if defined(ARES_ENABLE_CHD)
     return {"cue", "chd", "exe", "ps-exe"};
 #else
@@ -10,7 +10,7 @@ struct PlayStation : CompactDisc {
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
-  auto cdFromExecutable(string location) -> vector<u8>;
+  auto cdFromExecutable(string location) -> std::vector<u8>;
 };
 
 auto PlayStation::load(string location) -> LoadResult {
@@ -53,10 +53,10 @@ auto PlayStation::analyze(string location) -> string {
   if(location.iendsWith(".cue") || location.iendsWith(".chd")) {
     if(isAudioCd(location)) return CompactDisc::manifestAudio(location);
 
-    vector<u8> sector;
+    std::vector<u8> sector;
     sector = readDataSector(location, 4);
 
-    if(!sector) return CompactDisc::manifestAudio(location);
+    if(sector.empty()) return CompactDisc::manifestAudio(location);
 
     string text;
     text.resize(sector.size());
@@ -98,10 +98,10 @@ auto PlayStation::analyze(string location) -> string {
 }
 
 //todo: not implemented yet
-auto PlayStation::cdFromExecutable(string location) -> vector<u8> {
+auto PlayStation::cdFromExecutable(string location) -> std::vector<u8> {
   auto exe = file::read(location);
   if(exe.size() < 2048) return {};
   if(memory::compare(exe.data(), "PS-X EXE", 8)) return {};
-  vector<u8> cd;
+  std::vector<u8> cd;
   return cd;
 }

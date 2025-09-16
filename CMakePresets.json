@@ -181,7 +181,8 @@
       "description": "Single-arch binary for building on Github Actions",
       "inherits": ["ubuntu-ci"],
       "cacheVariables": {
-        "USE_QT6": true
+        "USE_QT6": true,
+        "ARES_BUILD_OPTIONAL_TARGETS": false
       }
     }
   ],
