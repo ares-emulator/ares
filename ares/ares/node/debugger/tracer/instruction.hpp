@@ -18,7 +18,7 @@ struct Instruction : Tracer {
 
   auto setMask(bool mask) -> void {
     _mask = mask;
-    _masks.reset();
+    _masks.clear();
   }
 
   auto setDepth(u32 depth) -> void {
@@ -34,9 +34,9 @@ struct Instruction : Tracer {
     address >>= _addressMask;  //clip unneeded alignment bits (to reduce _masks size)
 
     if(_mask) {
-      auto mask = _masks.find(address);
-      if(!mask) mask = _masks.insert(address);
-      if(mask->visit(address)) return false;  //do not trace twice
+      auto key = address >> 6;
+      auto [it, inserted] = _masks.try_emplace(key);
+      if(it->second.visit(address)) return false;
     }
 
     if(_depth) {
@@ -62,8 +62,9 @@ struct Instruction : Tracer {
       address &= ~0ull >> (64 - _addressBits);
       address >>= _addressMask;
 
-      auto mask = _masks.find(address);
-      if(mask) mask->unvisit(address);
+      auto key = address >> 6;
+      auto it = _masks.find(key);
+      if(it != _masks.end()) it->second.unvisit(address);
     }
   }
 
@@ -107,10 +108,6 @@ struct Instruction : Tracer {
 
 protected:
   struct VisitMask {
-    VisitMask(u64 address) : upper(address >> 6), mask(0) {}
-    auto operator==(const VisitMask& source) const -> bool { return upper == source.upper; }
-    auto hash() const -> u32 { return upper; }
-
     auto visit(u64 address) -> bool {
       const u64 bit = 1ull << (address & 0x3f);
       if(mask & bit) return true;
@@ -124,8 +121,7 @@ protected:
     }
 
   private:
-    u64 upper;
-    u64 mask;
+    u64 mask = 0;
   };
 
   u32  _addressBits = 32;
@@ -137,5 +133,5 @@ protected:
   n64 _address = 0;
   n64 _omitted = 0;
   std::vector<u64> _history;
-  hashset<VisitMask> _masks;
+  std::unordered_map<u64, VisitMask> _masks;
 };
