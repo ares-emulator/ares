@@ -1,4 +1,5 @@
 #include <nall/nall.hpp>
+#include <map>
 #include <nall/map.hpp>
 #include <nall/string/markup/json.hpp>
 using namespace nall;
@@ -9,17 +10,16 @@ using namespace nall;
 #include <component/processor/m68000/m68000.hpp>
 
 template<typename T, typename U> struct MemMap {
-  auto reset() -> void {
-    _m.reset();
-  }
+  auto reset() -> void { _m.clear(); }
 
   auto operator[](T index) -> U& {
-    if(auto found = _m.find(index)) return found();
-    _m.insert(index, {});
-    return _m.find(index)();
+    auto it = _m.find(index);
+    if(it != _m.end()) return it->second;
+    it = _m.emplace(index, U{}).first;
+    return it->second;
   }
 
-  map<T, U> _m;
+  std::map<T, U> _m;
 };
 
 struct TestState {

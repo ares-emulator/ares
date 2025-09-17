@@ -303,7 +303,7 @@ struct FirmwareSettings : VerticalLayout {
     Button assignButton{&controlLayout, Size{80, 0}};
     Button clearButton{&controlLayout, Size{80, 0}};
 
-  map<string, string> fileHashes;
+  std::map<string, string> fileHashes;
 };
 
 struct PathSettings : VerticalLayout {
