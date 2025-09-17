@@ -6,8 +6,8 @@ struct FixedLayoutCell;
 struct mFixedLayout;
 struct mFixedLayoutCell;
 
-using sFixedLayout = shared_pointer<mFixedLayout>;
-using sFixedLayoutCell = shared_pointer<mFixedLayoutCell>;
+using sFixedLayout = std::shared_ptr<mFixedLayout>;
+using sFixedLayoutCell = std::shared_ptr<mFixedLayoutCell>;
 
 struct mFixedLayout : mSizable {
   using type = mFixedLayout;

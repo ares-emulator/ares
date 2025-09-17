@@ -17,7 +17,7 @@ auto BrowserWindow::setFilters(const std::vector<string>& filters) -> type& {
   return *this;
 }
 
-auto BrowserWindow::setParent(shared_pointer<mWindow> parent) -> type& {
+auto BrowserWindow::setParent(std::shared_ptr<mWindow> parent) -> type& {
   state.parent = parent;
   return *this;
 }

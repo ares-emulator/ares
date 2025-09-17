@@ -89,7 +89,7 @@ auto pTabFrame::container(mWidget& widget) -> GtkWidget* {
 
   u32 position = 0;
   for(auto& item : state().items) {
-    if(item->state.sizable.data() == object) return tabs[position].child;
+    if(item->state.sizable.get() == object) return tabs[position].child;
     position++;
   }
 

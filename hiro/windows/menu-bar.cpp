@@ -62,7 +62,7 @@ auto pMenuBar::_rebuild() -> void {
 
     MENUITEMINFO mii{sizeof(MENUITEMINFO)};
     mii.fMask = MIIM_DATA;
-    mii.dwItemData = (ULONG_PTR)menu.data();
+    mii.dwItemData = (ULONG_PTR)menu.get();
 
     if(menu->visible()) {
       if(auto self = menu->self()) {

@@ -6,8 +6,8 @@ mListView::mListView() {
   mTableView::onContext([&](auto cell) { doContext(); });
   mTableView::onToggle([&](TableViewCell cell) {
     if(auto item = cell->parentTableViewItem()) {
-      if(auto shared = item->instance.acquire()) {
-        doToggle(ListViewItem{shared});
+      if(auto shared = item->instance.lock()) {
+        doToggle(ListViewItem{std::static_pointer_cast<mListViewItem>(shared)});
       }
     }
   });
@@ -17,7 +17,7 @@ mListView::mListView() {
 auto mListView::batched() const -> std::vector<ListViewItem> {
   auto batched = mTableView::batched();
   std::vector<ListViewItem> result;
-  for(auto item : batched) result.push_back(ListViewItem{item});
+  for(auto item : batched) result.push_back(ListViewItem{std::static_pointer_cast<mListViewItem>(item)});
   return result;
 }
 
@@ -38,13 +38,13 @@ auto mListView::doToggle(ListViewItem item) const -> void {
 }
 
 auto mListView::item(u32 position) const -> ListViewItem {
-  return ListViewItem{mTableView::item(position)};
+  return ListViewItem{std::static_pointer_cast<mListViewItem>(mTableView::item(position))};
 }
 
 auto mListView::items() const -> std::vector<ListViewItem> {
   auto items = mTableView::items();
   std::vector<ListViewItem> result;
-  for(auto item : items) result.push_back(ListViewItem{item});
+  for(auto item : items) result.push_back(ListViewItem{std::static_pointer_cast<mListViewItem>(item)});
   return result;
 }
 
@@ -80,7 +80,7 @@ auto mListView::resizeColumn() -> type& {
 }
 
 auto mListView::selected() const -> ListViewItem {
-  return ListViewItem{mTableView::selected()};
+  return ListViewItem{std::static_pointer_cast<mListViewItem>(mTableView::selected())};
 }
 
 auto mListView::setVisible(bool visible) -> type& {

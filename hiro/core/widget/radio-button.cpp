@@ -44,8 +44,8 @@ auto mRadioButton::setBordered(bool bordered) -> type& {
 auto mRadioButton::setChecked() -> type& {
   if(auto group = this->group()) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioButton = dynamic_cast<mRadioButton*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioButton = dynamic_cast<mRadioButton*>(object.get())) {
           radioButton->state.checked = false;
         }
       }

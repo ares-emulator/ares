@@ -6,8 +6,8 @@ struct VerticalLayoutCell;
 struct mVerticalLayout;
 struct mVerticalLayoutCell;
 
-using sVerticalLayout = shared_pointer<mVerticalLayout>;
-using sVerticalLayoutCell = shared_pointer<mVerticalLayoutCell>;
+using sVerticalLayout = std::shared_ptr<mVerticalLayout>;
+using sVerticalLayoutCell = std::shared_ptr<mVerticalLayoutCell>;
 
 struct mVerticalLayout : mSizable {
   using type = mVerticalLayout;
