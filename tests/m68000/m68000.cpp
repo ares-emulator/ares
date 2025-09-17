@@ -1,6 +1,5 @@
 #include <nall/nall.hpp>
 #include <map>
-#include <nall/map.hpp>
 #include <nall/string/markup/json.hpp>
 using namespace nall;
 

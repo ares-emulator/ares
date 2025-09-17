@@ -30,7 +30,6 @@
 #include <nall/literals.hpp>
 #include <nall/locale.hpp>
 #include <nall/location.hpp>
-#include <nall/map.hpp>
 #include <nall/matrix.hpp>
 #include <nall/matrix-multiply.hpp>
 #include <nall/maybe.hpp>
