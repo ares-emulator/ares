@@ -87,7 +87,7 @@ struct cdrom : file {
 
 private:
   auto loadCue(const string& cueLocation, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
-    auto cuesheet = shared_pointer<Decode::CUE>::create();
+    auto cuesheet = std::make_shared<Decode::CUE>();
     if(!cuesheet->load(cueLocation, archive, compressedFile)) return false;
 
     CD::Session session;
@@ -251,7 +251,7 @@ private:
   }
 #if defined(ARES_ENABLE_CHD)
   auto loadChd(const string& location) -> bool {
-    auto chd = shared_pointer<Decode::CHD>::create();
+    auto chd = std::make_shared<Decode::CHD>();
     if(!chd->load(location)) return false;
 
     CD::Session session;
