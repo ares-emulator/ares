@@ -13,7 +13,7 @@ struct Variable {
 };
 
 struct SharedVariable {
-  SharedVariable(const nall::string& name = "", const nall::string& value = "") : shared(new Variable{name, value}) {}
+  SharedVariable(const nall::string& name = "", const nall::string& value = "") : shared(std::make_shared<Variable>(Variable{name, value})) {}
 
   explicit operator bool() const { return (bool)shared->name; }
   auto operator()() const { return shared->value; }
@@ -30,7 +30,7 @@ struct SharedVariable {
   auto& setName(const nall::string& name) { shared->name = name; return *this; }
   auto& setValue(const nall::string& value = "") { shared->value = value; return *this; }
 
-  shared_pointer<Variable> shared;
+  std::shared_ptr<Variable> shared;
 };
 
 struct Variables {
