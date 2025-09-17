@@ -44,7 +44,7 @@ auto System::load(Node::System& root, string name) -> bool {
     information.region = Region::PAL;
   }
 
-  node = Node::System::create(information.name);
+  node = std::make_shared<Core::System>(information.name);
   node->setAttribute("configuration", name);
   node->setGame(std::bind_front(&System::game, this));
   node->setRun(std::bind_front(&System::run, this));

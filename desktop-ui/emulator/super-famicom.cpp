@@ -201,8 +201,9 @@ auto SuperFamicom::pak(ares::Node::Object node) -> std::shared_ptr<vfs::director
   if(node->name() == "Game Boy Color Cartridge") return gb->pak;
   if(node->name() == "BS Memory Cartridge") return bs->pak;
   if(node->name() == "Sufami Turbo Cartridge") {
-    if(auto parent = node->parent()) {
-      if(auto port = parent.acquire()) {
+    auto wp = node->parent();
+    if(!wp.expired()) {
+      if(auto port = wp.lock()) {
         if(port->name() == "Sufami Turbo Slot A") return stA->pak;
         if(port->name() == "Sufami Turbo Slot B") return stB->pak;
       }
