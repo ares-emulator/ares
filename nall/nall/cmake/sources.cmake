@@ -26,7 +26,6 @@ target_sources(
     file.hpp
     float-env.hpp
     galois-field.hpp
-    hashset.hpp
     hid.hpp
     image.hpp
     
