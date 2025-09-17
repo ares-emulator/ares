@@ -13,7 +13,6 @@
 #include <nall/range.hpp>
 #include <nall/vector-helpers.hpp>
 #include <nall/set.hpp>
-#include <nall/shared-pointer.hpp>
 #include <nall/string.hpp>
 #include <nall/thread.hpp>
 #include <memory>
@@ -28,7 +27,6 @@ using nall::lock_guard;
 using nall::mutex;
 using nall::queue;
 using nall::recursive_mutex;
-using nall::shared_pointer;
 using nall::string;
 using nall::tuple;
 

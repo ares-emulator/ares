@@ -70,7 +70,6 @@ target_sources(
     
     set.hpp
     
-    shared-pointer.hpp
     stdint.hpp
     string.hpp
     
