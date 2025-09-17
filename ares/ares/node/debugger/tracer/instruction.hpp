@@ -72,7 +72,7 @@ struct Instruction : Tracer {
 
     if(_omitted) {
       auto message = string{ "[Omitted: ", _omitted, "]" };
-      PlatformLog(shared(), message);
+      PlatformLog(std::dynamic_pointer_cast<Tracer>(shared_from_this()), message);
       _omitted = 0;
     }
 
@@ -83,7 +83,7 @@ struct Instruction : Tracer {
       context, "  ",
       extra
     };
-    PlatformLog(shared(), {output.strip()});
+    PlatformLog(std::dynamic_pointer_cast<Tracer>(shared_from_this()), {output.strip()});
   }
 
   auto serialize(string& output, string depth) -> void override {

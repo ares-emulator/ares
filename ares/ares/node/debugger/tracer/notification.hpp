@@ -6,7 +6,7 @@ struct Notification : Tracer {
 
   auto notify(const string& message = {}) -> void {
     if(!enabled()) return;
-    PlatformLog(shared(), message);
+    PlatformLog(std::dynamic_pointer_cast<Tracer>(shared_from_this()), message);
   }
 
 protected:

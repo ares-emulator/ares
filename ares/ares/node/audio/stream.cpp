@@ -127,5 +127,5 @@ auto Stream::write(const f64 samples[]) -> void {
 
   //if there are samples pending, then alert the frontend to possibly process them.
   //this will generally happen when every audio stream has pending samples to be mixed.
-  if(pending()) platform->audio(shared());
+  if(pending()) platform->audio(std::static_pointer_cast<Core::Audio::Stream>(shared_from_this()));
 }

@@ -346,7 +346,7 @@ auto Screen::refresh() -> void {
     swap(viewWidth, viewHeight);
   }
 
-  platform->video(shared(), output + viewX + viewY * width, width * sizeof(u32), viewWidth, viewHeight);
+  platform->video(std::static_pointer_cast<Core::Video::Screen>(shared_from_this()), output + viewX + viewY * width, width * sizeof(u32), viewWidth, viewHeight);
   memory::fill<u32>(_inputB.get(), width * height, _fillColor);
 }
 
