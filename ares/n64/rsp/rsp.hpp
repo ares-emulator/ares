@@ -523,18 +523,11 @@ struct RSP : Thread, Memory::RCP<RSP> {
       Pipeline pipeline;  //state at *end* of block excepting taken branch stall
     };
 
-    struct BlockHashPair {
-      auto operator==(const BlockHashPair& source) const -> bool { return hashcode == source.hashcode; }
-      auto operator< (const BlockHashPair& source) const -> bool { return hashcode <  source.hashcode; }
-      auto hash() const -> u32 { return hashcode; }
-
-      Block* block;
-      u64 hashcode;
-    };
+    
 
     auto reset() -> void {
       context.fill();
-      blocks.reset();
+      blocks.clear();
       dirty = 0;
     }
 
@@ -573,7 +566,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     Pipeline pipeline;
     bump_allocator allocator;
     array<Block*[1024]> context;
-    hashset<BlockHashPair> blocks;
+    std::unordered_map<u64, Block*> blocks;
     u64 dirty;
   } recompiler{*this};
 
