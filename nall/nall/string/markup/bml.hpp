@@ -8,7 +8,7 @@ namespace nall::BML {
 //metadata is used to store nesting level
 
 struct ManagedNode;
-using SharedNode = shared_pointer<ManagedNode>;
+using SharedNode = std::shared_ptr<ManagedNode>;
 
 struct ManagedNode : Markup::ManagedNode {
 protected:
@@ -68,7 +68,7 @@ protected:
       while(*p == ' ') p++;  //skip excess spaces
       if(*(p + 0) == '/' && *(p + 1) == '/') break;  //skip comments
 
-      SharedNode node(new ManagedNode);
+      SharedNode node = std::make_shared<ManagedNode>();
       u32 length = 0;
       while(valid(p[length])) length++;
       if(length == 0) throw "Invalid attribute name";
@@ -96,7 +96,7 @@ protected:
         continue;
       }
 
-      SharedNode node(new ManagedNode);
+      SharedNode node = std::make_shared<ManagedNode>();
       node->parseNode(text, y, spacing);
       _children.push_back(node);
     }
@@ -144,7 +144,7 @@ protected:
 };
 
 inline auto unserialize(const string& markup, string_view spacing = {}) -> Markup::Node {
-  SharedNode node(new ManagedNode);
+  SharedNode node = std::make_shared<ManagedNode>();
   try {
     node->parse(markup, spacing);
   } catch(const char* error) {

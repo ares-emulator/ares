@@ -16,7 +16,6 @@
 #include <nall/intrinsics.hpp>
 #include <nall/memory.hpp>
 #include <nall/primitives.hpp>
-#include <nall/shared-pointer.hpp>
 #include <nall/stdint.hpp>
 #include <nall/utility.hpp>
 #include <nall/varint.hpp>
