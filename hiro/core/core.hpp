@@ -11,7 +11,6 @@
 #include <nall/vector-helpers.hpp>
 #include <nall/run.hpp>
 #include <nall/set.hpp>
-#include <nall/shared-pointer.hpp>
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>
 #include <nall/thread.hpp>
@@ -28,8 +27,6 @@ using nall::Locale;
 using nall::maybe;
 using nall::nothing;
 using nall::set;
-using nall::shared_pointer;
-using nall::shared_pointer_weak;
 using nall::string;
 
 namespace hiro {
