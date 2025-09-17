@@ -19,7 +19,6 @@
 #include <nall/file-map.hpp>
 #include <functional>
 #include <nall/galois-field.hpp>
-#include <nall/hashset.hpp>
 #include <nall/hid.hpp>
 #include <nall/image.hpp>
 #include <nall/inode.hpp>

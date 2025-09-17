@@ -17,7 +17,6 @@
 #include <nall/directory.hpp>
 #include <nall/dl.hpp>
 #include <nall/endian.hpp>
-#include <nall/hashset.hpp>
 #include <nall/image.hpp>
 #include <nall/instruction-set.hpp>
 #include <nall/literals.hpp>
