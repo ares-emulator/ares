@@ -39,8 +39,8 @@ auto pRadioLabel::setChecked() -> void {
 auto pRadioLabel::setGroup(sGroup group) -> void {
   maybe<GtkRadioButton*> gtkRadioButton;
   for(auto& weak : group->state.objects) {
-    if(auto object = weak.acquire()) {
-      if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.data())) {
+    if(auto object = weak.lock()) {
+      if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.get())) {
         if(auto self = radioLabel->self()) {
           auto lock = self->acquire();
           gtk_radio_button_set_group(self->gtkRadioButton, nullptr);
@@ -65,7 +65,7 @@ auto pRadioLabel::setText(const string& text) -> void {
 auto pRadioLabel::groupLocked() const -> bool {
   if(auto group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
+      if(auto object = weak.lock()) {
         if(auto self = object->self()) {
           if(self->locked()) return true;
         }

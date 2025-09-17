@@ -58,9 +58,9 @@ auto pMenu::_update() -> void {
 
     MENUITEMINFO mii{sizeof(MENUITEMINFO)};
     mii.fMask = MIIM_DATA;
-    mii.dwItemData = (ULONG_PTR)action.data();
+    mii.dwItemData = (ULONG_PTR)action.get();
 
-    if(auto menu = dynamic_cast<mMenu*>(action.data())) {
+    if(auto menu = dynamic_cast<mMenu*>(action.get())) {
       if(menu->visible()) {
         menu->self()->_update();
         AppendMenu(hmenu, MF_STRING | MF_POPUP | enabled, (UINT_PTR)menu->self()->hmenu, utf16_t(menu->text()));
@@ -75,7 +75,7 @@ auto pMenu::_update() -> void {
     }
 
     #if defined(Hiro_MenuSeparator)
-    else if(auto menuSeparator = dynamic_cast<mMenuSeparator*>(action.data())) {
+    else if(auto menuSeparator = dynamic_cast<mMenuSeparator*>(action.get())) {
       if(menuSeparator->visible()) {
         AppendMenu(hmenu, MF_SEPARATOR | enabled, position, L"");
         SetMenuItemInfo(hmenu, position++, true, &mii);
@@ -84,7 +84,7 @@ auto pMenu::_update() -> void {
     #endif
 
     #if defined(Hiro_MenuItem)
-    else if(auto menuItem = dynamic_cast<mMenuItem*>(action.data())) {
+    else if(auto menuItem = dynamic_cast<mMenuItem*>(action.get())) {
       if(menuItem->visible()) {
         AppendMenu(hmenu, MF_STRING | enabled, position, utf16_t(menuItem->text()));
         if(auto bitmap = menuItem->self()->hbitmap) {
@@ -97,7 +97,7 @@ auto pMenu::_update() -> void {
     #endif
 
     #if defined(Hiro_MenuCheckItem)
-    else if(auto menuCheckItem = dynamic_cast<mMenuCheckItem*>(action.data())) {
+    else if(auto menuCheckItem = dynamic_cast<mMenuCheckItem*>(action.get())) {
       if(menuCheckItem->visible()) {
         AppendMenu(hmenu, MF_STRING | enabled, position, utf16_t(menuCheckItem->text()));
         SetMenuItemInfo(hmenu, position++, true, &mii);
@@ -107,7 +107,7 @@ auto pMenu::_update() -> void {
     #endif
 
     #if defined(Hiro_MenuRadioItem)
-    else if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(action.data())) {
+    else if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(action.get())) {
       if(menuRadioItem->visible()) {
         AppendMenu(hmenu, MF_STRING | enabled, position, utf16_t(menuRadioItem->text()));
         SetMenuItemInfo(hmenu, position++, true, &mii);

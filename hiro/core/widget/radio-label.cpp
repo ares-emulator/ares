@@ -26,8 +26,8 @@ auto mRadioLabel::onActivate(const std::function<void ()>& callback) -> type& {
 auto mRadioLabel::setChecked() -> type& {
   if(auto group = this->group()) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.get())) {
           radioLabel->state.checked = false;
         }
       }

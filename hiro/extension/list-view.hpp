@@ -6,8 +6,8 @@ struct ListViewItem;
 struct mListView;
 struct mListViewItem;
 
-using sListView = shared_pointer<mListView>;
-using sListViewItem = shared_pointer<mListViewItem>;
+using sListView = std::shared_ptr<mListView>;
+using sListViewItem = std::shared_ptr<mListViewItem>;
 
 struct mListView : mTableView {
   using type = mListView;

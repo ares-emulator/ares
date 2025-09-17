@@ -41,8 +41,8 @@ struct Keyboard;
   struct Name; \
   struct m##Name; \
   struct p##Name; \
-  using s##Name = shared_pointer<m##Name>; \
-  using w##Name = shared_pointer_weak<m##Name>; \
+  using s##Name = std::shared_ptr<m##Name>; \
+  using w##Name = std::weak_ptr<m##Name>; \
 
 Declare(Object)
 Declare(Group)
@@ -122,7 +122,7 @@ enum class Sort : u32 { None, Ascending, Descending };
 
 #define Declare(Name) \
   using type = m##Name; \
-  operator s##Name() const { return instance; } \
+  operator s##Name() const { return std::static_pointer_cast<type>(instance.lock()); } \
   auto self() -> p##Name* { return (p##Name*)delegate; } \
   auto self() const -> const p##Name* { return (const p##Name*)delegate; } \
   auto bind(const s##Name& instance) -> void { \
@@ -142,7 +142,7 @@ enum class Sort : u32 { None, Ascending, Descending };
 #undef Declare
 #define Declare(Name) \
   using type = m##Name; \
-  operator s##Name() const { return instance; } \
+  operator s##Name() const { return std::static_pointer_cast<m##Name>(instance.lock()); } \
   auto self() -> p##Name* { return (p##Name*)delegate; } \
   auto self() const -> const p##Name* { return (const p##Name*)delegate; } \
   auto bind(const s##Name& instance) -> void { \

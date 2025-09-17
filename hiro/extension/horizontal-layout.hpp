@@ -6,8 +6,8 @@ struct HorizontalLayoutCell;
 struct mHorizontalLayout;
 struct mHorizontalLayoutCell;
 
-using sHorizontalLayout = shared_pointer<mHorizontalLayout>;
-using sHorizontalLayoutCell = shared_pointer<mHorizontalLayoutCell>;
+using sHorizontalLayout = std::shared_ptr<mHorizontalLayout>;
+using sHorizontalLayoutCell = std::shared_ptr<mHorizontalLayoutCell>;
 
 struct mHorizontalLayout : mSizable {
   using type = mHorizontalLayout;
