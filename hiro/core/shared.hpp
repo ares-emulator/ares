@@ -1,9 +1,8 @@
 #define DeclareShared(Name) \
   using type = Name; \
   using internalType = m##Name; \
-  Name() : s##Name(new m##Name, [](auto p) { \
-    p->unbind(); \
-    delete p; \
+  Name() : s##Name(new m##Name, [](m##Name* p) { \
+    if(p) { p->unbind(); delete p; } \
   }) { \
     (*this)->bind(*this); \
   } \
@@ -20,11 +19,13 @@
     if(parent) (*parent)->append(*this, std::forward<P>(p)...); \
   } \
   template<typename T> auto is() -> bool { \
-    return dynamic_cast<typename T::internalType*>(s##Name::data()); \
+    return dynamic_cast<typename T::internalType*>(s##Name::get()); \
   } \
   template<typename T> auto cast() -> T { \
-    if(auto pointer = dynamic_cast<typename T::internalType*>(s##Name::data())) { \
-      if(auto shared = pointer->instance.acquire()) return T(shared); \
+    if(auto pointer = dynamic_cast<typename T::internalType*>(s##Name::get())) { \
+      if(auto shared = pointer->instance.lock()) { \
+        if(auto down = std::dynamic_pointer_cast<typename T::internalType>(shared)) return T(down); \
+      } \
     } \
     return T(); \
   } \
@@ -35,7 +36,7 @@
   auto offset() const { return self().offset(); } \
   auto parent() const { \
     if(auto object = self().parent()) { \
-      if(auto instance = object->instance.acquire()) return Object(instance); \
+      if(auto instance = object->instance.lock()) return Object(instance); \
     } \
     return Object(); \
   } \
@@ -110,6 +111,14 @@ private:
   auto _append() {}
   template<typename T, typename... P> auto _append(T* object, P&&... p) {
     append(*object);
+    _append(std::forward<P>(p)...);
+  }
+  // Handle weak object pointers passed like Group{ &instance }
+  auto _append(wObject* object) {
+    if(auto shared = object->lock()) append(shared);
+  }
+  template<typename... P> auto _append(wObject* object, P&&... p) {
+    if(auto shared = object->lock()) append(shared);
     _append(std::forward<P>(p)...);
   }
 };

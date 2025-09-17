@@ -2,7 +2,7 @@
 
 struct VerticalResizeGrip;
 struct mVerticalResizeGrip;
-using sVerticalResizeGrip = shared_pointer<mVerticalResizeGrip>;
+using sVerticalResizeGrip = std::shared_ptr<mVerticalResizeGrip>;
 
 struct mVerticalResizeGrip : mCanvas {
   using type = mVerticalResizeGrip;

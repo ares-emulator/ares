@@ -19,7 +19,7 @@ auto MessageWindow::question(Buttons buttons) -> Response {
   return pMessageWindow::question(state);
 }
 
-auto MessageWindow::setParent(shared_pointer<mWindow> parent) -> type& {
+auto MessageWindow::setParent(std::shared_ptr<mWindow> parent) -> type& {
   state.parent = parent;
   return *this;
 }

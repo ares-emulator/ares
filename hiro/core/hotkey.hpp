@@ -25,6 +25,6 @@ struct Hotkey {
     std::function<void ()> onRelease;
     string sequence;
   };
-  shared_pointer<State> state;
+  std::shared_ptr<State> state;
 };
 #endif

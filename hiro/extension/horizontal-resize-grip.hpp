@@ -2,7 +2,7 @@
 
 struct HorizontalResizeGrip;
 struct mHorizontalResizeGrip;
-using sHorizontalResizeGrip = shared_pointer<mHorizontalResizeGrip>;
+using sHorizontalResizeGrip = std::shared_ptr<mHorizontalResizeGrip>;
 
 struct mHorizontalResizeGrip : mCanvas {
   using type = mHorizontalResizeGrip;

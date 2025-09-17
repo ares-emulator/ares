@@ -12,8 +12,8 @@ auto pMenuRadioItem::destruct() -> void {
 auto pMenuRadioItem::setChecked() -> void {
   if(auto& group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.get())) {
           if(auto self = menuRadioItem->self()) {
             if(auto menu = self->_parentMenu()) {
               //CheckMenuRadioItem takes: lo, hi, id; checking only id when lo <= id <= hi
@@ -36,8 +36,8 @@ auto pMenuRadioItem::setGroup(sGroup group) -> void {
   bool first = true;
   if(auto& group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.get())) {
           if(auto self = menuRadioItem->self()) {
             menuRadioItem->state.checked = first;
             first = false;

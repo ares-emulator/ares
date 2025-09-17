@@ -235,7 +235,7 @@ struct Aleck64 {
     virtual auto writeExpansionPort(n32 data) -> void {};
   };
 
-  shared_pointer<GameConfig> gameConfig;
+  std::shared_ptr<GameConfig> gameConfig;
 };
 
 extern Aleck64 aleck64;
