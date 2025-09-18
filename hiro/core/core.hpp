@@ -10,7 +10,7 @@
 #include <nall/range.hpp>
 #include <nall/vector-helpers.hpp>
 #include <nall/run.hpp>
-#include <nall/set.hpp>
+#include <set>
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>
 #include <nall/thread.hpp>
@@ -26,7 +26,6 @@ using nall::multiFactorImage;
 using nall::Locale;
 using nall::maybe;
 using nall::nothing;
-using nall::set;
 using nall::string;
 
 namespace hiro {
