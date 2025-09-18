@@ -2,7 +2,7 @@
 #import <mach-o/dyld.h>
 #endif
 auto OpenGL::setShader(const string& pathname) -> void {
-  settings.reset();
+  settings.clear();
 
   format = inputFormat;
   filter = GL_NEAREST;
