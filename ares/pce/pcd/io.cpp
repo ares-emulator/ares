@@ -37,9 +37,16 @@ auto PCD::readIO(n13 address, n8 data) -> n8 {
   if(address == 0x18c1 && Model::PCEngineDuo()) return 0xaa;
   if(address == 0x18c2 && Model::PCEngineDuo()) return 0x55;
   if(address == 0x18c3 && Model::PCEngineDuo()) return sram.size() / 64_KiB;
-  if(address >= 0x18c4) return data;
+  if(address >= 0x18c4 && !Model::LaserActive()) return data;
+  if(address >= 0x1960 && Model::LaserActive()) return data;
 
   scsi.update();
+
+  auto originalAddress = address;
+  if((originalAddress >= 0x1920) && (originalAddress <= 0x195F)) {
+    return ld.read(originalAddress << 1);
+  }
+
   address = (n4)address;
   data = io.mdr[address];
 
@@ -150,7 +157,14 @@ auto PCD::writeIO(n13 address, n8 data) -> void {
     io.sramEnable = io.sramEnable << 8 | data;
     if(io.sramEnable == 0xaa55) sramEnable = 1; // Remains enabled until power cycle
   }
-  if(address >= 0x18c4) return;
+  if(address >= 0x18c4 && !Model::LaserActive()) return;
+  if(address >= 0x1960 && Model::LaserActive()) return;
+
+  auto originalAddress = address;
+  if((originalAddress >= 0x1920) && (originalAddress <= 0x195F)) {
+    ld.write(originalAddress << 1, data);
+    return;
+  }
 
   address = (n4)address;
 

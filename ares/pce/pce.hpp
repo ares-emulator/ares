@@ -2,7 +2,12 @@
 //started: 2017-01-11
 
 #include <ares/ares.hpp>
+#include <nall/decode/mmi.hpp>
 #include <vector>
+#include <cmath>
+
+#include <qon/qon.h>
+#include <qon/qoi2.h>
 
 #include <component/processor/huc6280/huc6280.hpp>
 #include <component/audio/msm5205/msm5205.hpp>
@@ -16,6 +21,7 @@ namespace ares::PCEngine {
   struct Model {
     inline static auto PCEngine() -> bool;
     inline static auto PCEngineDuo() -> bool;
+    inline static auto LaserActive() -> bool;
     inline static auto SuperGrafx() -> bool;
   };
 

@@ -110,6 +110,7 @@ auto construct() -> void {
   media.push_back("Nintendo 64DD");
   media.push_back("PC Engine");
   media.push_back("PC Engine CD");
+  media.push_back("PC Engine LD");
   media.push_back("PlayStation");
   media.push_back("Pocket Challenge V2");
   media.push_back("Saturn");

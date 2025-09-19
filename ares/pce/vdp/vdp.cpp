@@ -74,15 +74,16 @@ template<bool supergrafx> auto VDP::main() -> void {
   }
 
   auto output = screen->pixels().data() + 1365 * io.vcounter;
+  auto outputStart = output;
 
   while(io.hcounter <= 1360) {
     vdc0.hclock(); if(supergrafx)
     vdc1.hclock();
 
-    n10 color;
+    n14 color;
     if(!supergrafx) color = vdc0.bus();
     if( supergrafx) color = vpc.bus(io.hcounter);
-    color = vce.io.grayscale << 9 | vce.cram.read(color);
+    color = vce.io.grayscale << 9 | vce.cram.read((n9)color) | color.bit(8, 11) << 10;
 
     switch(vce.clock()) {
     case 4: *output++ = color; [[fallthrough]];
@@ -98,11 +99,26 @@ template<bool supergrafx> auto VDP::main() -> void {
   vdc0.vclock(); if(Model::SuperGrafx())
   vdc1.vclock();
 
+  if (Model::LaserActive() && (io.vcounter < 262)) {
+    pcd.ld.scanline(outputStart, io.vcounter);
+  }
+  while (outputStart < output) {
+    *(outputStart++) &= 0b1111111111;
+  }
+
   io.hcounter = 0;
   if(++io.vcounter >= 262 + vce.io.extraLine) {
     io.vcounter = 0;
-    screen->setViewport(48, 16, screen->width(), 242);
+
+    if(screen->overscan()) {
+      screen->setSize(1128+(24*2), 263);
+      screen->setViewport(0, 0, screen->width(), screen->height());
+    } else {
+      screen->setSize(1128-(48+24)-24, 263-(21+12)-12);
+      screen->setViewport(48+24, 21+12, screen->width(), screen->height());
+    }
     screen->frame();
+
     scheduler.exit(Event::Frame);
   }
 }

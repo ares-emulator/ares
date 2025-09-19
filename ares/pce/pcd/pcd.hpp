@@ -54,7 +54,7 @@ struct PCD : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-private:
+//private:
   struct Interrupt {
     auto poll() const -> bool { return line & enable; }
     auto raise() -> void { line = 1; }
@@ -80,6 +80,7 @@ private:
   struct CDDA;
   struct ADPCM;
   struct Fader;
+  struct LD;
 
   struct Drive {
     maybe<CD::Session&> session;
@@ -99,6 +100,7 @@ private:
     auto playing()  const -> bool { return mode == Mode::Playing;  }
     auto paused()   const -> bool { return mode == Mode::Paused;   }
     auto stopped()  const -> bool { return mode == Mode::Stopped;  }
+    auto playingAudioTrack()  const -> bool { return playing() && session && session->tracks[track].isAudio(); }
 
     auto setInactive() -> void { mode = Mode::Inactive; }
     auto setReading()  -> void { mode = Mode::Reading;  }
@@ -118,11 +120,34 @@ private:
 
     //drive.cpp
     auto distance() -> u32;
+    auto position(s32 sector) -> double;
     auto seekRead() -> void;
     auto seekPlay() -> void;
     auto seekPause() -> void;
     auto read() -> bool;
     auto power() -> void;
+    auto stop() -> void;
+    auto play() -> void;
+    auto pause() -> void;
+    auto seekToTime(u8 hour, u8 minute, u8 second, u8 frame, bool startPaused) -> void;
+    auto seekToRelativeTime(n7 track, u8 minute, u8 second, u8 frame, bool startPaused) -> void;
+    auto seekToSector(s32 lba, bool startPaused) -> void;
+    auto seekToTrack(n7 track, bool startPaused) -> void;
+    auto getTrackCount() -> n7;
+    auto getFirstTrack() -> n7;
+    auto getLastTrack() -> n7;
+    auto getCurrentTrack() -> n7;
+    auto getCurrentSector() -> s32;
+    auto getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void;
+    auto getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void;
+    auto getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void;
+    auto getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void;
+    auto lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32;
+    auto isTrackAudio(n7 track) -> bool;
+    auto isDiscLoaded() -> bool;
+    auto isDiscLaserdisc() -> bool;
+    auto isLaserdiscClv() -> bool;
+    auto isLaserdiscDigitalAudioPresent() -> bool;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -134,6 +159,11 @@ private:
     s32 start   = 0;               //where the laser should start reading
     s32 end     = 0;               //where the laser should stop reading
     n8  sector[2448];              //contains the most recently read disc sector
+    n7  track;    //current track#
+    i32 sectorRepeatCount;
+    n1 stopPointEnabled;
+    s32 targetStopPoint;
+    bool laserdiscLoaded;
   } drive;
 
   struct SCSI {
@@ -311,6 +341,132 @@ private:
     n16 sramEnable;
     n1  bramEnable;
   } io;
+
+  struct LD {
+    // ldrom2.cpp
+    auto load(string sourceFile) -> void;
+    auto unload() -> void;
+    auto notifyDiscEjected() -> void;
+    auto read(n24 address) -> n8;
+    auto write(n24 address, n8 data) -> void;
+    auto getOutputRegisterValue(int regNum) -> n8;
+    auto processInputRegisterWrite(int regNum, n8 data, n8 previousData, bool wasDeferredRegisterWrite) -> void;
+    auto resetSeekTargetToDefault() -> void;
+    auto liveSeekRegistersContainsLatchableTarget() const -> bool;
+    auto latchSeekTargetFromCurrentState() -> bool;
+    auto performSeekWithLatchedState() -> void;
+    auto updateStopPointWithCurrentState() -> void;
+    auto zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn = false) -> s32;
+    auto lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32;
+    auto VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void;
+    auto handleStopPointReached(s32 lba) -> void;
+    auto updateCurrentVideoFrameNumber(s32 lba) -> void;
+    auto loadCurrentVideoFrameIntoBuffer() -> void;
+    auto decodeBiphaseCodeFromScanline(int lineNo) -> u32;
+    auto power() -> void;
+    auto scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    enum class SeekPointReg {
+      Chapter,
+      HoursOrFrameH,
+      MinutesOrFrameM,
+      SecondsOrFrameL,
+      Frames,
+    };
+    enum class SeekMode {
+      SeekToRedbookTime,
+      SeekToRedbookRelativeTime,
+      SeekToVideoFrame,
+      SeekToVideoTime,
+    };
+
+    struct AnalogVideoFrameIndex {
+      bool isCLV;
+      bool hasDigitalAudio;
+      size_t leadInFrameCount;
+      size_t activeVideoFrameCount;
+      size_t leadOutFrameCount;
+      std::vector<const unsigned char*> leadInFrames;
+      std::vector<const unsigned char*> activeVideoFrames;
+      std::vector<const unsigned char*> leadOutFrames;
+
+      s32 frameSkipBaseFrame;
+      s32 frameSkipCounter;
+      s32 currentVideoFrameIndex;
+      n1 currentVideoFrameLeadIn;
+      n1 currentVideoFrameLeadOut;
+      n1 currentVideoFrameFieldSelectionEnabled[2];
+      n1 currentVideoFrameFieldSelectionEvenField[2];
+      n1 currentVideoFrameOnEvenField;
+      n1 currentVideoFrameBlanked;
+      n1 currentVideoFrameInterlaced;
+      n1 imageHoldFrameLatched;
+      qon_desc videoFileHeader;
+      qoi2_desc videoFrameHeader;
+      int drawIndex;
+      std::vector<unsigned char> videoFrameBuffers[2];
+      std::vector<unsigned char> dummyBlankLineBuffer;
+
+      size_t vbiDataSearchStartPos;
+      size_t vbiDataSearchEndPos;
+      double vbiDataBitCellLengthInPixels;
+      std::vector<size_t> vbiDataBitSampleOffsets;
+
+      static const size_t FrameBufferWidth = 1128 + 48;
+      static const size_t FrameBufferHeight = 525;
+      std::vector<u32> outputFramebuffer;
+    } video;
+    vector<u8> analogAudioDataBuffer;
+    array_view<u8> analogAudioRawDataView;
+    n32 analogAudioLeadingAudioSamples;
+    Decode::MMI mmi;
+
+    static constexpr double videoFramesPerSecond = 30.0 / 1.001; // Roughly 29.97
+    static const size_t inputRegisterCount = 0x20;
+    static const size_t outputRegisterCount = 0x20;
+    n8 inputRegs[inputRegisterCount];
+    n8 inputFrozenRegs[inputRegisterCount];
+    n8 outputRegs[outputRegisterCount];
+    n8 outputFrozenRegs[outputRegisterCount];
+    n8 outputRegsWrittenData[outputRegisterCount];
+    n8 outputRegsWrittenCooldownTimer[outputRegisterCount];
+    n1 areInputRegsFrozen;
+    n1 areOutputRegsFrozen;
+    n1 operationErrorFlag1;
+    n1 operationErrorFlag2;
+    n1 operationErrorFlag3;
+    n1 seekEnabled;
+    n3 currentSeekMode;
+    n1 currentSeekModeTimeFormat;
+    n1 currentSeekModeRepeat;
+    n8 analogAudioAttenuationLeft;
+    n8 analogAudioAttenuationRight;
+    n1 analogAudioFadeToMutedLeft;
+    n1 analogAudioFadeToMutedRight;
+
+    // Currently latched seek point
+    u8 activeSeekMode;
+    n8 seekPointRegs[5];
+
+    // Currently latched stop point
+    n8 stopPointRegs[5];
+    n1 reachedStopPoint;
+    n1 reachedStopPointPreviously;
+
+    u4 currentPlaybackMode;
+    u3 currentPlaybackSpeed;
+    u1 currentPlaybackDirection;
+    n8 targetDriveState;
+    n8 currentDriveState;
+    n1 targetPauseState;
+    n1 currentPauseState;
+    n1 seekPerformedSinceLastFrameUpdate;
+    n8 driveStateChangeDelayCounter;
+    n8 selectedTrackInfo;
+  } ld;
 
   n1 sramEnable;
 

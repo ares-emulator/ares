@@ -25,6 +25,7 @@ namespace Media {
   #include "nintendo-64dd.cpp"
   #include "pc-engine.cpp"
   #include "pc-engine-cd.cpp"
+  #include "pc-engine-ld.cpp"
   #include "saturn.cpp"
   #include "supergrafx.cpp"
   #include "playstation.cpp"
@@ -69,6 +70,7 @@ auto Medium::create(string name) -> shared_pointer<Pak> {
   if(name == "Nintendo 64DD") return new Media::Nintendo64DD;
   if(name == "PC Engine") return new Media::PCEngine;
   if(name == "PC Engine CD") return new Media::PCEngineCD;
+  if(name == "PC Engine LD") return new Media::PCEngineLD;
   if(name == "Saturn") return new Media::Saturn;
   if(name == "SuperGrafx") return new Media::SuperGrafx;
   if(name == "PlayStation") return new Media::PlayStation;
