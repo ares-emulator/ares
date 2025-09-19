@@ -401,7 +401,8 @@ struct MCD : M68000, Thread {
     auto VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void;
     auto handleStopPointReached(s32 lba) -> void;
     auto updateCurrentVideoFrameNumber(s32 lba) -> void;
-    auto loadCurrentVideoFrameIntoBuffer(bool blankFrame) -> void;
+    auto loadCurrentVideoFrameIntoBuffer() -> void;
+    auto decodeBiphaseCodeFromScanline(int lineNo) -> u32;
     auto power(bool reset) -> void;
     auto scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void;
 
@@ -440,11 +441,19 @@ struct MCD : M68000, Thread {
       n1 currentVideoFrameFieldSelectionEnabled[2];
       n1 currentVideoFrameFieldSelectionEvenField[2];
       n1 currentVideoFrameOnEvenField;
+      n1 currentVideoFrameBlanked;
+      n1 currentVideoFrameInterlaced;
+      n1 imageHoldFrameLatched;
       qon_desc videoFileHeader;
       qoi2_desc videoFrameHeader;
       int drawIndex;
       std::vector<unsigned char> videoFrameBuffers[2];
       std::vector<unsigned char> dummyBlankLineBuffer;
+
+      size_t vbiDataSearchStartPos;
+      size_t vbiDataSearchEndPos;
+      double vbiDataBitCellLengthInPixels;
+      std::vector<size_t> vbiDataBitSampleOffsets;
 
       static const size_t FrameBufferWidth = 1495;
       static const size_t FrameBufferHeight = 525;
@@ -462,6 +471,8 @@ struct MCD : M68000, Thread {
     n8 inputFrozenRegs[inputRegisterCount];
     n8 outputRegs[outputRegisterCount];
     n8 outputFrozenRegs[outputRegisterCount];
+    n8 outputRegsWrittenData[outputRegisterCount];
+    n8 outputRegsWrittenCooldownTimer[outputRegisterCount];
     n1 areInputRegsFrozen;
     n1 areOutputRegsFrozen;
     n1 operationErrorFlag1;
@@ -487,7 +498,6 @@ struct MCD : M68000, Thread {
 
     u4 currentPlaybackMode;
     u3 currentPlaybackSpeed;
-    n8 skippedFrameCount;
     u1 currentPlaybackDirection;
     n8 targetDriveState;
     n8 currentDriveState;
