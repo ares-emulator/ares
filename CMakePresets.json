@@ -103,7 +103,8 @@
         "ARES_BUILD_OPTIONAL_TARGETS": true,
         "ARES_UNITY_CORES": true,
         "ARES_PRECOMPILE_HEADERS": true,
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {"type": "STRING", "value": "MultiThreaded"}
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {"type": "STRING", "value": "MultiThreaded"},
+        "CMAKE_IGNORE_PATH": {"type": "STRING", "value": "C:/Strawberry/c/bin/"}
       }
     },
     {
