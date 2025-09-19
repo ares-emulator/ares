@@ -188,7 +188,7 @@ private:
             rawDataView = archive->dataViewIfUncompressed(*fileEntry);
           } else {
             rawDataBuffer = archive->extract(*fileEntry);
-            rawDataView = std::span<const u8>(rawDataBuffer);
+            rawDataView = {rawDataBuffer.data(), rawDataBuffer.size()};
           }
         }
       } else {

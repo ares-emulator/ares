@@ -99,7 +99,7 @@ struct file : inode {
 
   static auto sha256(const string& filename) -> string {
     auto mem = read(filename);
-    return Hash::SHA256(std::span<const u8>(mem.data(), mem.size())).digest();
+    return Hash::SHA256({mem.data(), mem.size()}).digest();
   }
 };
 
