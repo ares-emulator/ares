@@ -166,6 +166,8 @@ auto MCD::LD::serialize(serializer& s) -> void {
   s(inputFrozenRegs);
   s(outputRegs);
   s(outputFrozenRegs);
+  s(outputRegsWrittenData);
+  s(outputRegsWrittenCooldownTimer);
   s(areInputRegsFrozen);
   s(areOutputRegsFrozen);
   s(operationErrorFlag1);
@@ -203,10 +205,13 @@ auto MCD::LD::serialize(serializer& s) -> void {
   s(video.currentVideoFrameFieldSelectionEnabled);
   s(video.currentVideoFrameFieldSelectionEvenField);
   s(video.currentVideoFrameOnEvenField);
+  s(video.currentVideoFrameBlanked);
+  s(video.currentVideoFrameInterlaced);
+  s(video.imageHoldFrameLatched);
 
   // Restore the current video frame into the display buffer
   if (MegaLD() && s.reading()) {
-	loadCurrentVideoFrameIntoBuffer(inputRegs[0x0C].bit(2));
+	loadCurrentVideoFrameIntoBuffer();
   }
 }
 

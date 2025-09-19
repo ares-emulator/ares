@@ -82,15 +82,9 @@ auto MCD::CDD::advance() -> void {
       case 0x01:
         //-0x1: 1 frame only. The image will not update after the initial frame. Note that under frame step mode, output register
         // 0x07 will report this step speed as 0x1 only until the single frame step has been performed, after which, the output
-        // register will now state a value of 0x0. Also note that under frame skip mode, the output register will output 0x19 for
-        // an input register state of 0x11, in other words, the "direction" bit is set to "reverse" when a 1-frame frame skip mode
-        // is activated.
-        if (io.sectorRepeatCount == 0) {
-          sectorAdvanceOffset = 1;
-          io.sectorRepeatCount = 1;
-        } else {
-          sectorAdvanceOffset = 0;
-        }
+        // register will now state a value of 0x0.
+        sectorAdvanceOffset = 1;
+        io.sectorRepeatCount = 0;
         break;
       case 0x02:
         //-0x2: 15 FPS instead of 30 (12 seconds for 180 frames) - Display frame 2x
@@ -118,7 +112,7 @@ auto MCD::CDD::advance() -> void {
         break;
       }
       sectorAdvanceOffset = (mcd.ld.currentPlaybackDirection ? (i32)(-sectorAdvanceOffset) : sectorAdvanceOffset);
-      io.sectorRepeatCount = (sectorAdvanceOffset != 0 ? (i32)0 : io.sectorRepeatCount);
+      io.sectorRepeatCount = ((mcd.ld.currentPlaybackSpeed >= 0x02) && (sectorAdvanceOffset != 0) ? (i32)0 : io.sectorRepeatCount);
       break;
     case 0x03:
       // Fast forward
@@ -172,7 +166,7 @@ auto MCD::CDD::advance() -> void {
 
   if ((io.sector + sectorAdvanceOffset) < 0) {
     io.status = Status::LeadIn;
-    io.track = 0xa00;
+    io.track = 0xa0;
   } else {
     io.status = Status::LeadOut;
     io.track = 0xaa;
@@ -180,6 +174,7 @@ auto MCD::CDD::advance() -> void {
 }
 
 auto MCD::CDD::sample() -> void {
+  // Retrieve the next CD digital audio sample
   i16 digitalSampleLeft  = 0;
   i16 digitalSampleRight = 0;
   if (io.status == Status::Playing) {
@@ -194,6 +189,9 @@ auto MCD::CDD::sample() -> void {
     }
   }
 
+  // If we're emulating a LaserActive, mix in analog audio, and apply additional fader settings.
+  i16 combinedSampleLeft = digitalSampleLeft;
+  i16 combinedSampleRight = digitalSampleRight;
   if (MegaLD()) {
     // Determine the state of our overall audio mixing mode settings
     //##FIX## Note that we don't take the unusual "latching" behaviour of the digital audio mixing disabled state
@@ -258,7 +256,7 @@ auto MCD::CDD::sample() -> void {
 
     // Attenuate analog audio by the current attenuation register settings. Note that as per the hardware, the
     // maximum attenuation value of 0xFF doesn't give total silence.
-    //##FIX## We currently make the "fade to mute" flags apply immediately. This is techically incorrect, however
+    //##FIX## We currently make the "fade to mute" flags apply immediately. This is technically incorrect, however
     //since most likely nothing relies on this, and it's a bit of a pain to do, we just make them take effect
     //immediately here. If we want to do this properly, we need to take accurate measurements on the hardware for
     //the time taken for the fade, then tie a process into the clock event to reduce a secondary attenuation value
@@ -282,14 +280,12 @@ auto MCD::CDD::sample() -> void {
     }
 
     // Mix analog and digital audio together
-    i16 combinedSampleLeft = (int16_t)std::clamp((int)digitalSampleLeft + (int)analogSampleLeft, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
-    i16 combinedSampleRight = (int16_t)std::clamp((int)digitalSampleRight + (int)analogSampleRight, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
-
-    // Output the combined sample
-    dac.sample(combinedSampleLeft, combinedSampleRight);
-  } else {
-    dac.sample(digitalSampleLeft, digitalSampleRight);
+    combinedSampleLeft = (int16_t)std::clamp((int)digitalSampleLeft + (int)analogSampleLeft, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
+    combinedSampleRight = (int16_t)std::clamp((int)digitalSampleRight + (int)analogSampleRight, (int)std::numeric_limits<int16_t>::min(), (int)std::numeric_limits<int16_t>::max());
   }
+
+  // Output the combined sample
+  dac.sample(combinedSampleLeft, combinedSampleRight);
 }
 
 //convert sector# to normalized sector position on the CD-ROM surface for seek latency calculation

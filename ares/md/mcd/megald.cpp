@@ -20,19 +20,27 @@ auto MCD::LD::load(string location) -> void {
   string analogAudioFileName;
   string analogVideoFileName;
   video.isCLV = false;
-  for(const auto& stream : mmi.media()[mediaIndex].streams) {
-    if(stream.type == "Redbook") {
-      mcd.fd = mcd.pak->read(stream.file);
-      video.hasDigitalAudio = true;
+  video.leadInFrameCount = 0;
+  video.activeVideoFrameCount = 0;
+  video.leadOutFrameCount = 0;
+  if (mmi.media().size() > 0) {
+    for(const auto& stream : mmi.media()[mediaIndex].streams) {
+      if(stream.type == "Redbook") {
+        mcd.fd = mcd.pak->read(stream.file);
+        video.hasDigitalAudio = true;
+      }
+      if(stream.type == "RawAudio") analogAudioFileName = stream.file;
+      if(stream.type == "RawVideo") {
+        analogVideoFileName = stream.file;
+        video.leadInFrameCount = stream.framesInLeadInRegion;
+        video.activeVideoFrameCount = stream.framesInActiveRegion;
+        video.leadOutFrameCount = stream.framesInLeadOutRegion;
+        video.isCLV = mmi.media()[mediaIndex].format.endsWith("CLV");
+      }
     }
-    if(stream.type == "RawAudio") analogAudioFileName = stream.file;
-    if(stream.type == "RawVideo") {
-      analogVideoFileName = stream.file;
-      video.leadInFrameCount = stream.framesInLeadInRegion;
-      video.activeVideoFrameCount = stream.framesInActiveRegion;
-      video.leadOutFrameCount = stream.framesInLeadOutRegion;
-      video.isCLV = mmi.media()[mediaIndex].format.endsWith("CLV");
-    }
+  } else {
+    mcd.fd = mcd.pak->read("cd.rom");
+    video.hasDigitalAudio = true;
   }
 
   // Calculate the number of leading audio samples before the first frame
@@ -40,57 +48,92 @@ auto MCD::LD::load(string location) -> void {
 
   // Retrieve the analog audio file
   auto analogAudioFile = mmi.archive().findFile(analogAudioFileName);
-  if (mmi.archive().isDataUncompressed(*analogAudioFile)) {
-    analogAudioRawDataView = mmi.archive().dataViewIfUncompressed(*analogAudioFile);
-  } else {
-    auto tmp = mmi.archive().extract(*analogAudioFile);
-    analogAudioDataBuffer.resize(tmp.size());
-    if(!tmp.empty()) memcpy(analogAudioDataBuffer.data(), tmp.data(), tmp.size());
-    analogAudioRawDataView = array_view<u8>(analogAudioDataBuffer.data(), analogAudioDataBuffer.size());
-  }
-
-  // Retrieve the analog video file
-  auto analogVideoFile = mmi.archive().findFile(analogVideoFileName);
-  if (!mmi.archive().isDataUncompressed(*analogVideoFile)) {
-    return;
-  }
-  array_view<u8> analogVideoFileView = mmi.archive().dataViewIfUncompressed(*analogVideoFile);
-
-  // Read the QON/QOI2 header information for the analog video
-  if (!qon_decode_header(analogVideoFileView.data(), analogVideoFileView.size(), &video.videoFileHeader)) {
-    return;
-  }
-  if ((video.videoFileHeader.flags & QON_FLAGS_USES_INTERFRAME_COMPRESSION) != 0) {
-    return;
-  }
-  video.videoFrameHeader.width = video.videoFileHeader.width;
-  video.videoFrameHeader.height = video.videoFileHeader.height;
-  video.videoFrameHeader.channels = video.videoFileHeader.channels;
-  video.videoFrameHeader.colorspace = video.videoFileHeader.colorspace;
-
-  // Index the analog video frames
-  const unsigned char* frameIndexBase = (const unsigned char*)analogVideoFileView.data() + QON_BARE_HEADER_SIZE;
-  size_t frameIndexSize = video.videoFileHeader.frame_count * QON_INDEX_SIZE_PER_ENTRY;
-  video.leadInFrames.resize(video.leadInFrameCount);
-  video.leadOutFrames.resize(video.leadOutFrameCount);
-  video.activeVideoFrames.resize(video.activeVideoFrameCount);
-  for (size_t frameIndex = 0; frameIndex < video.videoFileHeader.frame_count; ++frameIndex) {
-    // Retrieve the index entry for the next frame
-    size_t frameOffsetAfterIndex;
-    unsigned short frameFlags;
-    qon_decode_index_entry(frameIndexBase, frameIndex, &frameOffsetAfterIndex, &frameFlags);
-
-    // Add the frame to our own frame index in memory
-    const unsigned char* frameBaseAddress = frameIndexBase + frameIndexSize + frameOffsetAfterIndex;
-    if (frameIndex < video.leadInFrameCount) {
-      video.leadInFrames[frameIndex] = frameBaseAddress;
-    } else if (frameIndex < (video.leadInFrameCount + video.activeVideoFrameCount)) {
-      video.activeVideoFrames[frameIndex - video.leadInFrameCount] = frameBaseAddress;
-    } else if (frameIndex < (video.leadInFrameCount + video.activeVideoFrameCount + video.leadOutFrameCount)) {
-      video.leadOutFrames[frameIndex - video.leadInFrameCount - video.activeVideoFrameCount] = frameBaseAddress;
+  if (analogAudioFile) {
+    if (mmi.archive().isDataUncompressed(*analogAudioFile)) {
+      analogAudioRawDataView = mmi.archive().dataViewIfUncompressed(*analogAudioFile);
     } else {
-      debug(unusual, "[MCD::LD::load] Trailing frames in analog video file: ", analogVideoFileName);
+      auto tmp = mmi.archive().extract(*analogAudioFile);
+      analogAudioDataBuffer.resize(tmp.size());
+      if(!tmp.empty()) memcpy(analogAudioDataBuffer.data(), tmp.data(), tmp.size());
+      analogAudioRawDataView = array_view<u8>(analogAudioDataBuffer.data(), analogAudioDataBuffer.size());
     }
+  }
+
+  // Load and index our analog video data
+  auto analogVideoFile = mmi.archive().findFile(analogVideoFileName);
+  if (analogVideoFile) {
+  // Retrieve the analog video file
+    if (!mmi.archive().isDataUncompressed(*analogVideoFile)) {
+      return;
+    }
+    array_view<u8> analogVideoFileView = mmi.archive().dataViewIfUncompressed(*analogVideoFile);
+
+    // Read the QON/QOI2 header information for the analog video
+    if (!qon_decode_header(analogVideoFileView.data(), analogVideoFileView.size(), &video.videoFileHeader)) {
+      return;
+    }
+    if ((video.videoFileHeader.flags & QON_FLAGS_USES_INTERFRAME_COMPRESSION) != 0) {
+      return;
+    }
+    video.videoFrameHeader.width = video.videoFileHeader.width;
+    video.videoFrameHeader.height = video.videoFileHeader.height;
+    video.videoFrameHeader.channels = video.videoFileHeader.channels;
+    video.videoFrameHeader.colorspace = video.videoFileHeader.colorspace;
+
+    // Index the analog video frames
+    const unsigned char* frameIndexBase = (const unsigned char*)analogVideoFileView.data() + QON_BARE_HEADER_SIZE;
+    size_t frameIndexSize = video.videoFileHeader.frame_count * QON_INDEX_SIZE_PER_ENTRY;
+    video.leadInFrames.resize(video.leadInFrameCount);
+    video.leadOutFrames.resize(video.leadOutFrameCount);
+    video.activeVideoFrames.resize(video.activeVideoFrameCount);
+    for (size_t frameIndex = 0; frameIndex < video.videoFileHeader.frame_count; ++frameIndex) {
+      // Retrieve the index entry for the next frame
+      size_t frameOffsetAfterIndex;
+      unsigned short frameFlags;
+      qon_decode_index_entry(frameIndexBase, frameIndex, &frameOffsetAfterIndex, &frameFlags);
+
+      // Add the frame to our own frame index in memory
+      const unsigned char* frameBaseAddress = frameIndexBase + frameIndexSize + frameOffsetAfterIndex;
+      if (frameIndex < video.leadInFrameCount) {
+        video.leadInFrames[frameIndex] = frameBaseAddress;
+      } else if (frameIndex < (video.leadInFrameCount + video.activeVideoFrameCount)) {
+        video.activeVideoFrames[frameIndex - video.leadInFrameCount] = frameBaseAddress;
+      } else if (frameIndex < (video.leadInFrameCount + video.activeVideoFrameCount + video.leadOutFrameCount)) {
+        video.leadOutFrames[frameIndex - video.leadInFrameCount - video.activeVideoFrameCount] = frameBaseAddress;
+      } else {
+        debug(unusual, "[MCD::LD::load] Trailing frames in analog video file: ", analogVideoFileName);
+      }
+    }
+
+    // Build position information to assist with fast retrieval of biphase coded data in the VBI regions. As per
+    // IEC 60857:1986, the first bit is the "key" bit, and will always be logical level 1. We need to locate the key
+    // bit in VBI lines, however since the exact offset of the coded data is allowed to, and does, vary in its exact
+    // alignment vs the horizontal blanking region, we need to search for it. We can, however, be sure that it occurs
+    // after horizontal blanking and color burst. Giving ourself a healthy margin, we start scanning from roughly 15%
+    // of the way into the horizontal line, and continue to scan up to 25%. If we can't find it in that range, it's not
+    // in there.
+    video.vbiDataSearchStartPos = (size_t)((float)video.videoFrameHeader.width * 0.15f);
+    video.vbiDataSearchEndPos = (size_t)((float)video.videoFrameHeader.width * 0.25f);
+
+    // Build position offsets for each subsequent bit sample position for the biphase data after the key bit. As per
+    // IEC 60857:1986 Figure 11, positive transitions in the centre of a bit cell represent a 1, negative transitions
+    // represent a 0. This encoding scheme expects at least one transition each cell length therefore, and we need to
+    // sample twice for each bit on either side of the cell centre position.
+    double linesPerSecond = videoFramesPerSecond * (double)video.FrameBufferHeight;
+    double microsecondsPerLine = (1.0 * 1000.0 * 1000.0) / linesPerSecond;
+    double cellLengthInMicroseconds = 2.0;
+    video.vbiDataBitCellLengthInPixels = (double)video.videoFrameHeader.width * (cellLengthInMicroseconds / microsecondsPerLine);
+    double vbiDataBitQuarterCellLengthInPixels = video.vbiDataBitCellLengthInPixels / 4.0;
+    size_t biphaseCodeTotalBitcount = 6 * 4;
+    video.vbiDataBitSampleOffsets.resize(biphaseCodeTotalBitcount * 2);
+    for (size_t i = 0; i < video.vbiDataBitSampleOffsets.size(); i += 2) {
+      video.vbiDataBitSampleOffsets[i+0] = (size_t)((video.vbiDataBitCellLengthInPixels * (i / 2)) + vbiDataBitQuarterCellLengthInPixels);
+      video.vbiDataBitSampleOffsets[i+1] = (size_t)((video.vbiDataBitCellLengthInPixels * (i / 2)) + (vbiDataBitQuarterCellLengthInPixels * 3.0));
+    }
+  } else {
+    video.leadInFrames.clear();
+    video.leadOutFrames.clear();
+    video.activeVideoFrames.clear();
   }
 
   // Reset the mechanical drive state to closed
@@ -120,6 +163,13 @@ auto MCD::LD::read(n24 address) -> n8 {
   if (!isOutput) {
     // Reading back the input registers always returns the last written value to that register
     data = areInputRegsFrozen ? inputFrozenRegs[regNum] : inputRegs[regNum];
+  } else if (outputRegsWrittenCooldownTimer[regNum] > 0) {
+    // If we're still in cooldown mode from an output register write, return the previously written state and decrement
+    // the cooldown timer. This is an imperfect approximation of the observed behaviour that output registers retain
+    // their previously written values for a short time, before actively asserted lines revert to their previous values.
+    // The NEC PAC bios relies on this to boot.
+    --outputRegsWrittenCooldownTimer[regNum];
+    data = outputRegsWrittenData[regNum];
   } else if (areOutputRegsFrozen) {
     // Reading the output register block when frozen doesn't require us to update the values
     data = outputFrozenRegs[regNum];
@@ -130,7 +180,7 @@ auto MCD::LD::read(n24 address) -> n8 {
 
   static bool includeReg0InputReadBack = false;
   if (!isOutput && ((regNum != 0x00) || includeReg0InputReadBack)) {
-    debug(unusual, "[MCD::readLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
+    //debug(unusual, "[MCD::readLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
   } else {
     //debug(unverified, "[MCD::readLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
   }
@@ -209,6 +259,8 @@ auto MCD::LD::write(n24 address, n8 data) -> void {
         }
         // Update the mechanical drive state. This needs to be done before seeking is evaluated.
         processInputRegisterWrite(0x02, inputFrozenRegs[0x02], inputRegs[0x02], true);
+        // Update the playback mode. This needs to be done before input reg 0x00 bit 0 changes are evaluated.
+        processInputRegisterWrite(0x03, inputFrozenRegs[0x03], inputRegs[0x03], true);
         // Update remaining registers. Register 0x00 is quite important, as it may trigger a seek operation here itself,
         // and it relies on the mechanical drive state and seek registers being handled above before it can work
         // correctly.
@@ -256,6 +308,8 @@ auto MCD::LD::write(n24 address, n8 data) -> void {
   } else {
     // Perform writes to the output register block while the register output block is not frozen. Most writes will not
     // work, or at least the written values will have reverted by the time another read can be attempted.
+    outputRegsWrittenData[regNum] = data;
+    outputRegsWrittenCooldownTimer[regNum] = 5;
     if (regNum == 0x00) {
       // Bits 1-5 are not driven, so writes to them are retained forever.
       outputRegs[regNum] = (data & 0x3E) | (outputRegs[regNum] & 0xC1);
@@ -375,7 +429,8 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //      is cleared.
     // *U7: Set to 1 if bit 4 of input register 0x0D is set, unless a CD is in the drive, whether it is spun up or not.
     // *U30: Seen set to 0xE during laserdisc playback when the redbook digital audio is playing a data track, 0xC when
-    //       it is playing an audio track. This was observed on Space Berserker.
+    //       it is playing an audio track. This was observed on Space Berserker. Also seen set to 0x2 when playing a CD
+    //       data or audio track.
     // ##OLD## Before 2025
     // *U7: Set to 1 if bit 4 of input register 0x0D is set
     data = 0;
@@ -383,8 +438,10 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     if (!mcd.cdd.isDiscLoaded() || mcd.cdd.isDiscLaserdisc() || (currentDriveState < 0x02)) {
       data.bit(7) = inputRegs[0x0D].bit(4);
     }
-    if (!mcd.cdd.isDiscLoaded() || mcd.cdd.isDiscLaserdisc() || (currentDriveState >= 0x05)) {
+    if (mcd.cdd.isDiscLoaded() && mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 0x05)) {
       data.bit(0, 3) = (mcd.cdd.isTrackAudio(mcd.cdd.getCurrentTrack()) ? 0x0C : 0x0E);
+    } else if (mcd.cdd.isDiscLoaded() && !mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 0x05)) {
+      data.bit(0, 3) = 0x2;
     }
     break;
   case 0x05:
@@ -531,16 +588,21 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
       // as just toggling seek enable off and on again releases the stop point, with the playback mode and speed settings reverting
       // to the previous latched state.
       data = 0x20;
-    } else if ((currentPlaybackMode == 0x02) && (currentPlaybackSpeed == 0x01) && (mcd.cdd.io.sectorRepeatCount > 0)) {
-      // Under single-frame frame step mode, the current playback speed is only repoted as 0x01 until the frame step has occurred,
-      // after which it becomes 0x00. We emulate that here.
-      data.bit(0, 2) = 0x00;
-    } else if ((currentPlaybackMode == 0x01) && (currentPlaybackSpeed == 0x01)) {
-      // Under single-frame frame skip mode, the direction bit is set to 1. We emulate that here. Note that this is seen to flicker
-      // between 0 and 1 when a seek is being performed while this mode is set, so it probably actually indicates whether the target
-      // frame has been latched. It flickers madly between 0 and 1 during seeking though, so it couldn't reliably be used to
-      // determine when the target frame has been shown.
-      data.bit(3) = true;
+    } else if ((currentPlaybackMode == 0x02) && (currentPlaybackSpeed == 0x00)) {
+      // Under single-frame frame step mode, the current playback speed is only reported as 0x01 until the frame step has occurred,
+      // after which it becomes 0x00. That's handled on a frame update, with the actual playback speed being modified. Under
+      // playback speed 0x00 however, either when set manually or when transitioned to from a frame step with speed 0x01, the
+      // direction bit is always reported as 0 on the output register. We emulate that here.
+      data.bit(3) = false;
+    } else if ((currentPlaybackMode == 0x01) && (currentPlaybackSpeed == 0x01) && (video.frameSkipCounter == -1)) {
+      // Under single-frame frame skip mode, the direction bit is inverted from its current value once the frame skip has occurred.
+      // This means if it was originally clear, it will be set, while if it is originally set, it will be cleared. That is handled
+      // elsewhere. When re-triggering by toggling bit 0 of input reg 0x00 however, the direction bit gets toggled again when it
+      // gets re-latched, so it does not indicate whether the frame as been latched or not from its originally set value. Also note
+      // that the direction bit is seen to rapdily flicker between 0 and 1 when a seek is being performed while this mode is set,
+      // most likely as it continuously latches a new base frame during the seek operation, which would happen with our current
+      // implementation, if we reported updates to seek position during the seek latency countdown. At any rate, there's nothing to
+      // do here, since this case is all handled elsewhere.
     }
     break;
   case 0x08:
@@ -1067,6 +1129,23 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
           performSeekWithLatchedState();
         }
       }
+
+      // As per hardware testing, when input reg 0x00 bit 0 is toggled from either 1 to 0, or 0 to 1, while input
+      // register changes are not frozen or are being unfrozen, and while current live input register 0x03 state is
+      // valid, and while either single-frame frame skip or step operations are set, it will cause the frame to latch
+      // or advance again. This means just inverting bit 0 of reg 0x00 is enough to trigger a new frame to latch, or a
+      // new frame to step. The "direction" bit of output reg 0x07 doesn't
+      auto livePlaybackMode = inputRegs[0x03].bit(4, 7);
+      auto livePlaybackSpeed = inputRegs[0x03].bit(0, 2);
+      auto livePlaybackDirection = inputRegs[0x03].bit(3);
+      if ((livePlaybackMode == 0x01) && (currentPlaybackMode == 0x01) && (livePlaybackSpeed == 0x01) && (currentPlaybackSpeed == 0x01) && (video.frameSkipCounter == -1)) {
+        // Trigger single-frame frame skip mode to re-latch on the next frame
+        video.frameSkipBaseFrame = 0;
+        video.frameSkipCounter = 0;
+      } else if ((livePlaybackMode == 0x02) && (currentPlaybackMode == 0x02) && (livePlaybackSpeed == 0x01) && (currentPlaybackSpeed == 0x00)) {
+        // Trigger single-frame frame step mode to re-latch on the next frame
+        currentPlaybackSpeed = 0x01;
+      }
     }
     break;
   case 0x01:
@@ -1190,6 +1269,17 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
     // -Other bits in this register actively effect things. We've seen seeks not play automatically, seeks not re-seek if we're currently playing from that location, etc. More testing required.
     // -This register also seems complex. If we're playing with the register data set to 0x25, then we scroll back from 0x20 to 0x15, nothing happens, but if we jump straight to 0x15, playback stops.
     //  If we then scroll up to 0x20, playback resumes. 0x17 has the same effect.
+
+    // If no actual change has occurred to the "important" bits in this register, don't do anything. We do this because
+    // it's important that the error flags are not cleared if no real change has taken place, nor is a seek operation
+    // performed when writing a value of 0x25 after writing a value of 0x65 for example. It appears that changes to the
+    // lower six bits cause things to effectively change/re-run, while writes to the upper two bits do not. LDRom2 games
+    // rely on this, to ensure the error flags are not cleared after reaching a stop point just because register writes
+    // are suspended then restored for example, but the same property is true and valid here with just writing to the
+    // register directly when writes are active.
+    if (data.bit(0, 5) == previousData.bit(0, 5)) {
+      break;
+    }
 
     // Update the seek enable state
     seekEnabled = data.bit(5);
@@ -1341,6 +1431,26 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
     //         ---------------------------------
     //##NEW## 2025
     // -The U74 playback mode is actually 0x0-0xF, and all modes above 0x3 are invalid, flagging an error.
+    // -With mode 0x1 for frame skipping and a rate of 0x01, IE, when 0x11 is written to this register, output reg 0x07
+    //  uses the "reverse" bit to indicate whether the single frame skip has been completed. This means writing 0x11 or
+    //  0x19 will initially have output reg 0x07 reporting 0x11, then changing to 0x19 when completed.
+    // -With mode 0x2 for frame stepping and a rate of 0x00, IE, when 0x21 or 0x29 is written to this register, output
+    //  reg 0x07 will report the same value as this input register before the frame step is complete. After it is
+    //  complete and a single new frame has been shown, both the reverse bit and the rate will be set to 0x0, so the
+    //  output reg will read 0x20 if either 0x21 or 0x29 is written once the step has been processed, even though the
+    //  reverse bit is effective in controlling the step direction.
+    // -Toggling bit 0 of input reg 0x00 will cause the frame skip/step to be run again for rate 0x01. In the case of
+    //  frame skip, this causes the output register to toggle its "reverse" bit again, so if it was previously on 0x19,
+    //  after processing the frame skip again, it will now be 0x11, even though input reg 0x03 hasn't changed. In the
+    //  case of frame step mode, it will apply just as before, with the current effective value of input reg 0x03 being
+    //  output to output reg 0x07, until the step has been processed, at which time it will revert to 0x20.
+    // -Freezing then unfreezing the input register block does not cause skipping/stepping to occur again, unless input
+    //  reg 0x00 bit 0 has also had its effective value changed.
+    // -Note that the live state of input reg 0x03 is used when toggling bit 0 of input reg 0x00. If the last attempted
+    //  write to this register set an invalid playback mode, toggling bit 0 of input reg 0x00 will not cause frame skip
+    //  or step at rate 1 to advance while invalid data is in input reg 0x03.
+    // -Note that "bouncing" back and forth between 0x11 and 0x19 will cause the frame skip mode to advance by 1, with
+    //  the direction bit in output reg 0x07 toggling, just like if we toggled bit 0 of input reg 0x00.
     //##OLD## Before 2025
     // *U74: Playback mode.
     //       -0x4-0x7: Invalid. Any settings change which targets any of these modes is ignored, and the error bit U4 is set in output
@@ -1387,6 +1497,14 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
     //       -0x1: 2x speed
     //       -0x0: 1x speed (Normal playback)
 
+    // If no actual change has occurred to this register, don't do anything. We do this because it's important that the
+    // error flags are not cleared if no real change has taken place. LDRom2 games rely on this, to ensure the error
+    // flags are not cleared after reaching a stop point just because register writes are suspended then restored for
+    // example.
+    if (data == previousData) {
+      break;
+    }
+
     // Clear the operation error flags before we do anything
     operationErrorFlag1 = false;
     operationErrorFlag2 = false;
@@ -1405,7 +1523,15 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
         newPlaybackSpeed = 0;
         break;
       case 1:
-        newPlaybackDirection = (inputRegs[0x03].bit(0, 2) == 1);
+        // Playback direction is fixed at 0. For a speed of 1, indicating single skip, this will be set to 1 when
+        // complete. When we bounce back and forth between 0x11 and 0x19, it toggles, like it does when toggling bit 0
+        // of input register 0x00.
+        newPlaybackDirection = 0;
+        break;
+      case 2:
+        // Playback direction is set to 0 for a speed of 0, or for a speed of 1 indicating a single frame, it is
+        // retained, then cleared later when the step is complete.
+        newPlaybackDirection = (newPlaybackSpeed == 0) ? 0 : newPlaybackDirection;
         break;
       case 3:
         if (newPlaybackSpeed == 0x07) {
@@ -1418,20 +1544,18 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
       currentPlaybackDirection = newPlaybackDirection;
 
       // Any valid writes to this register which actually change the data reset the stop point hit state, and start
-      // playback resuming if we're in the right player state. Writes with an invalid playback mode are ignored.
-      if (previousData != data) {
-        // Clear the stop point if we've genuinely changed the playback mode. Ghost Rush relies on this.
-        reachedStopPoint = false;
+      // playback resuming if we're in the right player state. Writes with an invalid playback mode are ignored. Ghost
+      // Rush relies on this.
+      reachedStopPoint = false;
 
-        // Wake the player up from being stopped at a stop point when a valid change occurs to the playback mode.
-        // Back to the Edo relies on this when getting an answer wrong. Note that this does not resume playback
-        // however if the player is genuinely in a paused state.
-        if (currentDriveState == 0x05) {
-          if (currentPauseState) {
-            mcd.cdd.pause();
-          } else {
-            mcd.cdd.play();
-          }
+      // Wake the player up from being stopped at a stop point when a valid change occurs to the playback mode. Back to
+      // the Edo relies on this when getting an answer wrong. Note that this does not resume playback however if the
+      // player is genuinely in a paused state.
+      if (currentDriveState == 0x05) {
+        if (currentPauseState) {
+          mcd.cdd.pause();
+        } else {
+          mcd.cdd.play();
         }
       }
     }
@@ -2151,14 +2275,26 @@ auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
   currentSeekMode = targetSeekMode;
   currentSeekModeTimeFormat = targetSeekModeTimeFormat;
 
-  // Reset the error flags before we do anything further
-  operationErrorFlag1 = false;
-  operationErrorFlag2 = false;
-  operationErrorFlag3 = false;
+  // Reset the error flags before we do anything further, but only if we haven't hit a stop point. Hardware tests show
+  // that the operation error flags are retained here if we're currently stopped at a stop point. Note that new seek
+  // settings can still be latched, and seeking can still be performed in these conditions, but the player remains
+  // stopped, and the error flags remain in their current state (output reg 0x09 remains at 0x03), unless an invalid
+  // seek mode setting is entered, such as an invalid track number in seek mode 1. In this case, the error flags change,
+  // and the stop point is released. The player doesn't start playing back immediately, but the next seek operation
+  // triggered will resume playback. This has been confirmed through hardware testing. Note that the same behaviour
+  // occurs when a picture stop code has been hit. Updating seek registers does clear these flags when the current
+  // errors are only asserted from a previous invalid seek operation being attempted though, which shows that internal
+  // state is used, not only the live state of these flags.
+  if (!reachedStopPoint) {
+    operationErrorFlag1 = false;
+    operationErrorFlag2 = false;
+    operationErrorFlag3 = false;
+  }
 
   // If the player isn't in a valid state to accept seek requests, abort any further processing.
   if (!mcd.cdd.isDiscLoaded() || (currentDriveState <= 0x04) || (targetDriveState != 0x05)) {
     operationErrorFlag1 = true;
+    operationErrorFlag2 = false;
     operationErrorFlag3 = true;
     return false;
   }
@@ -2171,7 +2307,9 @@ auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
     auto targetTrackAsInt = (mcd.cdd.isDiscLaserdisc() && (targetTrack == 0x00)) ? (n8)mcd.cdd.getFirstTrack() : (n8)BCD::decode(targetTrack);
     if ((targetTrack > 0x99) || (targetTrackAsInt < mcd.cdd.getFirstTrack()) || (targetTrackAsInt > mcd.cdd.getLastTrack())) {
       operationErrorFlag1 = true;
+      operationErrorFlag2 = false;
       operationErrorFlag3 = true;
+      reachedStopPoint = false;
       return false;
     }
     bool allowSeekToTime = !mcd.cdd.isDiscLaserdisc() || (!currentSeekModeTimeFormat && mcd.cdd.isLaserdiscDigitalAudioPresent());
@@ -2352,23 +2490,6 @@ auto MCD::LD::handleStopPointReached(s32 lba) -> void {
 }
 
 auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
-  //##TODO## Now that we've implemented proper 29.97 framerate conversion, the original issues have been resolved,
-  //and this modification below introduces new "off by one" issues in Myst in particular. We've disabled it, and 
-  //it's no longer required, but this code/comment is being kept for reference until other titles receive more
-  //testing.
-  // Step the LBA back one unit, to factor in that the CDD has to step forward once to trigger a frame update. This
-  // helps with rounding issues. Consider this scenario:
-  //   targetFrame = 11766
-  //   targetFrameZeroBased = 11765
-  //   targetLba = (11765 / 30) * 75 = 29412.5 = 29413
-  // Now when the CDD does a frame update, the numbers will look like this:
-  //   actualLba = 29414
-  //   actualFrameZeroBased = (29414 / 75) * 30 = 11765.6 = 11766
-  //   actualFrame = 11766 + 1 = 11767
-  // Adjusting for this issue here avoids this problem. Since there are 2.5 LBA steps per frame, this adjustment is 
-  // within tolerance.
-//  lba = (lba == 0 ? 0 : lba - 1);
-
   // Detect and clear the state on whether we've displayed the first frame after a seek operation. This is to handle
   // frameskip mode base frame latching behaviour. The way this works is that, if a seek is performed at the same time
   // as frameskip mode is entered, or even if there's a pending seek operation still in progress, the first frame of
@@ -2413,12 +2534,11 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
       newFrameSkipCounter = 1;
       break;
     case 0x01:
-      //-0x1: 1 frame only. The image will not update after the initial frame. Note that under frame step mode, output register
-      // 0x07 will report this step speed as 0x1 only until the single frame step has been performed, after which, the output
-      // register will now state a value of 0x0. Also note that under frame skip mode, the output register will output 0x19 for
-      // an input register state of 0x11, in other words, the "direction" bit is set to "reverse" when a 1-frame frame skip mode
-      // is activated.
-      newFrameSkipCounter = 9999999;
+      //-0x1: 1 frame only. No further updates will appear. Since we're latching the frame here, we also need to invert
+      // the current playback direction bit, so that the output register state is correct. The hardware inverts this bit
+      // once the frame has been latched.
+      newFrameSkipCounter = -1;
+      currentPlaybackDirection = !currentPlaybackDirection;
       break;
     case 0x02:
       //-0x2: 15 FPS instead of 30 (12 seconds for 180 frames) - Display frame 2x
@@ -2464,6 +2584,12 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
         return;
       }
     }
+  } else if ((currentPlaybackMode == 0x02) && (currentPlaybackSpeed == 0x01)) {
+    // When a single frame frame-step is processed, and a new frame is now being shown, clear the playback speed so that
+    // we stop advancing. From hardware testing, this is the effect seen in the output registers, and nothing seems to
+    // invalidate this being the way the player knows the step operation has been processed. We have already detected
+    // above that a legitimate frame advance has occurred for us to reach this point.
+    currentPlaybackSpeed = 0;
   } else {
     video.frameSkipBaseFrame = 0;
     video.frameSkipCounter = 0;
@@ -2471,25 +2597,34 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
 
   // We only update the displayed video frame if the image hold bit isn't set. If it is, abort any further processing.
   // Hardware tests have shown this really does retain the last image in the buffer. Changes to field selection, or
-  // starting playback at a new location, do not cause any change in the displayed image. Also note some important
-  // interaction with the player paused state, as from setting bit 4 of input reg 0x02. Putting the player into a
-  // pause state blanks the display, which is handled dynamically in the line output function, however, interestingly
-  // setting the image hold bit as well while in a paused state causes the previous frame in the buffer to be shown,
-  // even if the pause bit is set. This is because testing has shown that setting the pause mode flag turns off the
-  // digital memory buffer (light goes off on the front of the unit, even when input reg 0x0C bit 1 is set), while
-  // turning on the image hold bit re-enables the buffer, and the image appears again. Setting input reg 0x0C bit 4
-  // doesn't have this effect, and the digital memory light stays off with the blank image. Only setting the hold
-  // bit (input reg 0x0C bit 5) has the effect of overriding blanking caused by the player pause state. We can seek
-  // while the player is paused and image hold is on, and the latched frame will not update. If we flick image hold
-  // off and on again after a seek however, the frame at the new location will be latched, and the updated frame will
-  // be shown when we turn the image hold bit back on again. This shows that we do need to latch new frames when the
-  // player is paused, even if the output is normally blanked in pause mode.
+  // starting playback at a new location, do not cause any change in the displayed image.
+  // -Note some important interaction with the player paused state, as from setting bit 4 of input reg 0x02. Putting the
+  // player into a pause state blanks the display, which is handled dynamically in the line output function, however,
+  // interestingly setting the image hold bit as well while in a paused state causes the previous frame in the buffer to
+  // be shown, even if the pause bit is set. This is because testing has shown that setting the pause mode flag turns
+  // off the digital memory buffer (light goes off on the front of the unit, even when input reg 0x0C bit 1 is set),
+  // while turning on the image hold bit re-enables the buffer, and the image appears again. Setting input reg 0x0C bit
+  // 4 doesn't have this effect, and the digital memory light stays off with the blank image. Only setting the hold
+  // bit (input reg 0x0C bit 5) has the effect of overriding blanking caused by the player pause state.
+  // -We can seek while the player is paused and image hold is on, and the latched frame will not update. If we flick
+  // image hold off and on again after a seek however, the frame at the new location will be latched, and the updated
+  // frame will be shown when we turn the image hold bit back on again. This shows that we do need to latch new frames
+  // when the player is paused, even if the output is normally blanked in pause mode.
+  // -Note that there is additional interaction with input reg 0x0C bit 2, the video disable flag. If image hold off
+  // when the video is disabled, then image hold is turned on, with video disable still active, a new frame cannot be
+  // latched yet. If we then perform a seek for example, then turn off the video disable bit, the next frame to be shown
+  // will be latched and held. This shows us that while image hold can latch a new frame during pause, it cannot latch a
+  // new frame when the video disable bit is set, and remains in a "pending" state until the next frame arrives.
+  // -Note that merely toggling the video disable bit on and off doesn't clear the image held in the digital memory
+  // -Note that toggling digital memory off then back on doesn't clear the held image either
   //##TODO## Determine how this interacts with picture stop codes once we go to implement them
-  if (inputRegs[0x0C].bit(5)) {
+  if ((inputRegs[0x0C].bit(5) && video.imageHoldFrameLatched) || inputRegs[0x0C].bit(2)) {
     return;
   }
 
-  // Determine whether the digital memory buffer is active, and if so, which field to latch in the buffer.
+  // Determine whether the digital memory buffer is active, and if so, which field to latch in the buffer. Hardware
+  // tests have shown bits 1 or 3 of input reg 0x0C make field selection active, as long as the analog mixing mode
+  // allows it.
   int buildIndex = video.drawIndex ^ 0x01;
   auto analogMixingMode = inputRegs[0x01].bit(7, 6);
   bool newFieldSelectionEnabledState = (analogMixingMode >= 2) && (inputRegs[0x0C].bit(1) || inputRegs[0x0C].bit(3));
@@ -2500,6 +2635,9 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
     video.currentVideoFrameFieldSelectionEnabled[buildIndex] = newFieldSelectionEnabledState;
     video.currentVideoFrameFieldSelectionEvenField[buildIndex] = newFieldSelectionEvenField;
   }
+
+  // Mark this frame as latched if we're in image hold mode, otherwise clear the latch.
+  video.imageHoldFrameLatched = inputRegs[0x0C].bit(5);
 
   // At the end of all the above state updates, if we're still showing the same frame (but not necessarily the same
   // field), abort any further processing, since the correct full frame is already latched.
@@ -2513,8 +2651,7 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   video.currentVideoFrameLeadOut = newVideoFrameLeadOut;
 
   // If the video disable bit is set, clear the buffer, otherwise load the displayed video frame into the buffer.
-  //##TODO## Determine how this interacts with picture stop codes once we go to implement them
-  loadCurrentVideoFrameIntoBuffer(inputRegs[0x0C].bit(2));
+  loadCurrentVideoFrameIntoBuffer();
 
   //##TODO## Implement picture stop codes. This is where we should check the lines in the VBI region and stop the player
   //if a picture stop code is detected, unless picture stop cancel is active (Input reg 0x0C bit 7).
@@ -2523,9 +2660,43 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   //mode. Additionally, operationErrorFlag3 at output reg 0x09 bit 0 gets set to true when this is hit. This is
   //basically what happens when stop points get hit, except that operationErrorFlag2 is set to false, not true.
   //When we implement picture stop codes, we need to compare behaviour with stop points more closely.
+  //##TODO## Check if the same playback mode exceptions to step through picture stop codes apply as per stop points. It
+  //seems they must, or we probably couldn't step through it on the player, but do tests to confirm.
+  if (!video.isCLV && !inputRegs[0x0C].bit(7) && ((currentPlaybackMode != 2) || (currentPlaybackSpeed > 1))) {
+    // As per IEC 60857:1986, picture stop codes are encoded into lines 16 & 17 of the frame for the even field, and
+    // lines 279 and 280 of the frame for the odd field. We try and take the first one from each, falling back to the
+    // second line if decoding fails.
+    auto biphaseCodeEvenField = decodeBiphaseCodeFromScanline(16-1);
+    if (biphaseCodeEvenField == 0) {
+      biphaseCodeEvenField = decodeBiphaseCodeFromScanline(17-1);
+    }
+    auto biphaseCodeOddField = decodeBiphaseCodeFromScanline(279-1);
+    if (biphaseCodeOddField == 0) {
+      biphaseCodeOddField = decodeBiphaseCodeFromScanline(280-1);
+    }
+
+    // If we have a picture stop code detected, process it now.
+    if ((biphaseCodeEvenField == 0x82CFFF) || (biphaseCodeOddField == 0x82CFFF)) {
+      //##TODO## Shouldn't we clear the build framebuffer here to stop the display buffer rolling over to this one? As
+      //per the spec, the picture stop code is applied on the field AFTER the one you want the player to stop at.
+      //##TODO## Can we stop at the second field in a frame? IE, hold on the first field? This doesn't seem like it
+      //would be very sensible/logical. The player has to loop on the one frame surely? Maybe it stops before the frame
+      //if it's on the first field, and on the frame if it's on the second field? Check some discs and see if we can
+      //find a real world case to test behaviour.
+      //##TODO## Confirm the exact frame the real player stops on when encountering picture stop codes.
+      reachedStopPointPreviously = true;
+      operationErrorFlag1 = false;
+      operationErrorFlag2 = false;
+      operationErrorFlag3 = true;
+      reachedStopPoint = true;
+      mcd.cdd.io.status = CDD::Status::Paused;
+      //##TODO## Check on the hardware if a stop point is cleared when a picture stop code is triggered
+      mcd.cdd.stopPointEnabled = false;
+    }
+  }
 }
 
-auto MCD::LD::loadCurrentVideoFrameIntoBuffer(bool blankFrame) -> void {
+auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
   // Locate the new video frame in the source file
   const unsigned char* videoFrameCompressed = nullptr;
   if (video.currentVideoFrameLeadIn) {
@@ -2539,22 +2710,84 @@ auto MCD::LD::loadCurrentVideoFrameIntoBuffer(bool blankFrame) -> void {
     return;
   }
 
-  // Update the framebuffer with the correct content
+  // Allocate memory for the video frame buffer if it's currently empty
   int buildIndex = video.drawIndex ^ 0x01;
   auto& buildFrameBuffer = video.videoFrameBuffers[buildIndex];
-  if (blankFrame) {
-    // Clear the framebuffer if this is a blank frame
-    buildFrameBuffer.clear();
-  } else {
-    // Allocate memory for the video frame buffer if it's currently empty
-    if (buildFrameBuffer.empty()) {
-      buildFrameBuffer.resize(video.videoFrameHeader.width * video.videoFrameHeader.height * 3);
+  if (buildFrameBuffer.empty()) {
+    buildFrameBuffer.resize(video.videoFrameHeader.width * video.videoFrameHeader.height * 3);
+  }
+
+  // Decode the QOI2 compressed video frame into the buffer
+  size_t frameSizeCompressed = qon_decode_frame_size(videoFrameCompressed);
+  qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, buildFrameBuffer.data(), 3);
+}
+
+auto MCD::LD::decodeBiphaseCodeFromScanline(int lineNo) -> u32 {
+  // Retrieve the frame currently in the build framebuffer
+  int buildIndex = video.drawIndex ^ 0x01;
+  auto& buildFrameBuffer = video.videoFrameBuffers[buildIndex];
+  if (buildFrameBuffer.empty()) {
+    return 0;
+  }
+
+  // Attempt to locate the start of the 24-bit biphase coded signal. As per IEC 60857:1986, the first bit is the "key"
+  // bit, and will always be logical level 1. This is represented by a transition from IRE 0 to IRE 100 at the mid-point
+  // of the "bit cell". We attempt to locate the transition in key bit here, indicating the mid-point of the bit cell at
+  // the start of the biphase code. Since the exact offset of this video data is allowed to, and does, vary in its exact
+  // alignment vs the horizontal blanking region, we do need to search for it, using fixed pixel offsets is not
+  // sufficient. We can be sure however that it occurs after horizontal blanking and color burst. Giving ourself a
+  // healthy margin, we start scanning from roughly 15% of the way into the horizontal line. We'll continue to scan up
+  // to 25%. We look for a string of consecutive pixels a quarter of the bit cell length in width, with all colour
+  // channels set to 0x80 or above. We use a quarter of the bit cell length, as per IEC 60857:1986, logic level
+  // transitions may only persist half the bit cell length, and we have rise and fall times that mean we won't get a
+  // perfect half bit cell length with a clear value, so we look for a quarter length period with a clear value. If we
+  // don't locate the key bit in this region of video, it's not there, or the video is completely out of spec, rendering
+  // the codes unreadable in practice anyway.
+  size_t linePos = video.videoFrameHeader.width * lineNo * 3;
+  size_t lineWidth = video.videoFrameHeader.width;
+  size_t searchCellLengthInPixels = (size_t)(video.vbiDataBitCellLengthInPixels / 4.0);
+  bool foundStartPos = false;
+  size_t biphaseCodeStartPixelNo = video.vbiDataSearchStartPos;
+  while (!foundStartPos && (biphaseCodeStartPixelNo < video.vbiDataSearchEndPos)) {
+    bool cellVerificationFailed = false;
+    for (size_t i = 0; i < searchCellLengthInPixels; ++i) {
+      size_t checkPixelPos = linePos + ((biphaseCodeStartPixelNo + i) * 3);
+      if ((buildFrameBuffer[checkPixelPos + 0] < 0x80) || (buildFrameBuffer[checkPixelPos + 1] < 0x80) || (buildFrameBuffer[checkPixelPos + 2] < 0x80)) {
+        cellVerificationFailed = true;
+        break;
+      }
+    }
+    if (!cellVerificationFailed) {
+      foundStartPos = true;
+      break;
+    }
+    ++biphaseCodeStartPixelNo;
+  }
+  if (!foundStartPos) {
+    return 0;
+  }
+
+  // Since we found the mid-point of the first bit cell, back off half a cell width to align correctly with the true
+  // start of the biphase code.
+  biphaseCodeStartPixelNo -= (size_t)(video.vbiDataBitCellLengthInPixels / 2.0);
+
+  // Read out the biphase code from the target line
+  u32 biphaseCode = 0;
+  for (size_t i = 0; i < video.vbiDataBitSampleOffsets.size(); i += 2) {
+    size_t leadingSamplePixelPos = linePos + ((biphaseCodeStartPixelNo + video.vbiDataBitSampleOffsets[i+0]) * 3);
+    size_t trailingSamplePixelPos = linePos + ((biphaseCodeStartPixelNo + video.vbiDataBitSampleOffsets[i+1]) * 3);
+    bool leadingSampleValue = (buildFrameBuffer[leadingSamplePixelPos + 0] >= 0xC0) && (buildFrameBuffer[leadingSamplePixelPos + 1] >= 0xC0) && (buildFrameBuffer[leadingSamplePixelPos + 2] >= 0xC0);
+    bool trailingSampleValue = (buildFrameBuffer[trailingSamplePixelPos + 0] >= 0xC0) && (buildFrameBuffer[trailingSamplePixelPos + 1] >= 0xC0) && (buildFrameBuffer[trailingSamplePixelPos + 2] >= 0xC0);
+
+    // If no transition was found, the biphase data is corrupted, so we return 0.
+    if (leadingSampleValue == trailingSampleValue) {
+      return 0;
     }
 
-    // Decode the QOI2 compressed video frame into the buffer
-    size_t frameSizeCompressed = qon_decode_frame_size(videoFrameCompressed);
-    qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, buildFrameBuffer.data(), 3);
+    // Add this bit value to the decoded biphase code
+    biphaseCode = (biphaseCode << 1) | (trailingSampleValue ? 1 : 0);
   }
+  return biphaseCode;
 }
 
 auto MCD::LD::power(bool reset) -> void {
@@ -2566,6 +2799,7 @@ auto MCD::LD::power(bool reset) -> void {
   for (auto& data : inputFrozenRegs) data = 0x0;
   for (auto& data : outputRegs) data = 0x0;
   for (auto& data : outputFrozenRegs) data = 0x0;
+  for (auto& data : outputRegsWrittenCooldownTimer) data = 0x0;
   areInputRegsFrozen = false;
   areOutputRegsFrozen = false;
   operationErrorFlag1 = false;
@@ -2592,22 +2826,23 @@ auto MCD::LD::power(bool reset) -> void {
   selectedTrackInfo = 0x0;
 
   // Set the few registers that start with initial values
-  currentDriveState = 0x02; // 0x02 = CD door closed
+  currentDriveState = 0x02; // 0x02 = Drive door closed
   targetDriveState = currentDriveState;
-  inputRegs[0x1A] = 0xFC;
-  //##TODO## Confirm the correct initial state for input regs being frozen
-  areInputRegsFrozen = true;
-  inputRegs[0x00] = 0x80;
+  inputRegs[0x1A] = 0xFF;
+  inputRegs[0x1B] = 0xFF;
+  inputRegs[0x1C] = 0xFF;
+  inputRegs[0x1D] = 0xFF;
 
   // Clear any currently latched video frame
   video.currentVideoFrameIndex = -99999999;
   video.drawIndex = 0;
   video.videoFrameBuffers[0].clear();
   video.videoFrameBuffers[1].clear();
+  video.currentVideoFrameBlanked = false;
+  video.imageHoldFrameLatched = false;
 }
 
 auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
-
   // Convert the VDP vcounter to a linear scanline index. We only have to worry about NTSC V28 mode, as that's all the
   // LaserActive supported. If someone wanted to make a hypothetical PAL version of the system, they'd have to mess with
   // all the numbers in this function to handle alignment and composition with PAL line counts and border sizes. We
@@ -2641,9 +2876,14 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
   // alignment with unmodified lines.
   size_t vdpBorderLeftOffset = (vdp.h32() ? (8 * 5) : (17 * 4));
 
-  // If we're at the start of a new frame, handle swapping the video buffers and even/odd field selection for interlace
-  // mode.
+  // If we're at the start of a new frame, handle blanking, swapping the video buffers, even/odd field selection for
+  // interlace mode.
   if (targetScanLine == 0) {
+    // Determine if we're currently outputting an interlaced image
+    //##FIX## Actually output interlaced images in 480i mode here, not just as 240p like we do currently.
+    video.currentVideoFrameInterlaced = !inputRegs[0x0C].bit(5) && !inputRegs[0x0C].bit(3) && !inputRegs[0x0C].bit(1);
+
+    // Advance the pending frame into the current frame buffer
     int buildIndex = video.drawIndex ^ 0x01;
     if (!video.videoFrameBuffers[buildIndex].empty()) {
       // Note that we're relying on the characteristic here of std::vector (guaranteed in the standard) that clear()
@@ -2658,10 +2898,16 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
 
       // Reset the odd/even field selection to the odd field when advancing to a new frame
       video.currentVideoFrameOnEvenField = false;
-    } else {
-      // Invert the even/odd frame if we're not advancing to a new frame.
+    } else if (video.currentVideoFrameInterlaced) {
+      // Invert the even/odd frame if we're not advancing to a new frame, and an interlaced output is enabled. Yes, this
+      // does mean it's impossible to get 60hz interlaced output with digital memory enabled, which also means it's
+      // impossible to get a stable mixed VDP/analog video output at 240p. It's possible this works with the Sega PAC
+      // hardware at least with the interlaced VDP output mode, however this would need to be tested.
       video.currentVideoFrameOnEvenField = !video.currentVideoFrameOnEvenField;
     }
+
+    // Determine if the frame is currently blanked
+    video.currentVideoFrameBlanked = inputRegs[0x0C].bit(2) || (currentPauseState && !inputRegs[0x0C].bit(5));
   }
 
   // Don't process the top vsync+vblank+border region unless overscan is active. We could, but it would be wasted
@@ -2690,14 +2936,14 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
   // comparisons with a real player. Further testing Pyramid Patrol, which uses H40, was used to confirm alignment.
   // Testing was also done on the Myst protos, which have precise overlay requirements with individual frames, and also
   // seem to confirm the alignment. Note however that the video on both Myst protos is shifted and out of alignment, in
-  // different ways, but we confirmed though hardware tests that they are "off" by the correct amount with this\
+  // different ways, but we confirmed though hardware tests that they are "off" by the correct amount with this
   // alignment as they are on the real hardware.
   const int VideoFrameLeftBorderWidth = 118;
   const int VideoFrameRightBorderWidth = 0;
   size_t channelCount = 3;
-  size_t targetLineInSourceImage = (targetScanLine + (useEvenField ? (video.videoFrameHeader.height / 2) : 0));
+  size_t targetLineInSourceImage = (targetScanLine + (useEvenField ? 263 : 0));
   size_t sourceLinePos = ((targetLineInSourceImage * video.videoFrameHeader.width) + VideoFrameLeftBorderWidth) * channelCount;
-  size_t pixelsInSourceLine = video.videoFrameHeader.width - (VideoFrameLeftBorderWidth + VideoFrameRightBorderWidth);
+  size_t pixelsInSourceLine = std::max(2, (int)video.videoFrameHeader.width - (VideoFrameLeftBorderWidth + VideoFrameRightBorderWidth));
   size_t targetLinePos = targetScanLine * video.FrameBufferWidth;
 
   // Retrieve the line of analog video data we're processing here. If there's no frame data present, or the video
@@ -2705,7 +2951,7 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
   // includes when the player is paused, as this disables digital memory and blanks the display, unless the image
   // hold bit is set, in which case, digital memory comes back on and the previously captured frame appears again.
   const unsigned char* analogVideoFrameData = nullptr;
-  if (inputRegs[0x0C].bit(2) || (currentPauseState && !inputRegs[0x0C].bit(5)) || video.videoFrameBuffers[video.drawIndex].empty()) {
+  if (video.currentVideoFrameBlanked || video.videoFrameBuffers[video.drawIndex].empty()) {
     video.dummyBlankLineBuffer.resize(pixelsInSourceLine * channelCount, 0);
     analogVideoFrameData = video.dummyBlankLineBuffer.data();
     sourceLinePos = 0;
@@ -2766,47 +3012,28 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
     auto ldb = convertedSamples[2];
 
     // Retrieve the output VDP color for this pixel location
-    //##FIX## Technically, vblank regions here should be forced to black-ish, non-backdrop pixels if the VDP output is
-    //the primary sync source. On the real system, we see them as very dark grey bars when looking at them on a PVM with
-    //H/V delay active, and they mask out the analog video VBI data lines. It's nice seeing the VBI lines when overscan
-    //is turned on though, and we'd have to do more work to confirm the exact lines that get masked, and an appropriate
-    //color to use, so for now we pass them through as black background pixels and let the analog video show through.
-    auto mdColorPacked = ((vdpPixelBuffer != nullptr) && (i >= vdpBorderLeftOffset) ? vdp.screen->lookupPalette(vdpPixelBuffer[i - vdpBorderLeftOffset]) : (u32)0);
+    u32 currentPixelValue = ((vdpPixelBuffer != nullptr) && (i >= vdpBorderLeftOffset)) ? vdpPixelBuffer[i - vdpBorderLeftOffset] : 0;
+    auto mdColorPacked = vdp.screen->lookupPalette(currentPixelValue);
     auto mdr = (mdColorPacked >> 16) & 0xFF;
     auto mdg = (mdColorPacked >> 8) & 0xFF;
     auto mdb = mdColorPacked & 0xFF;
 
+    // Extract layer/status flags for this pixel to determine how we're going to mix it
+    bool backdrop = (currentPixelValue >> 11) != 0;
+
     // Composite the digital VDP graphics with the analog video track
     //##TODO## Implement input reg 0x19 bit 0 properly
-    auto ldGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(((1 << 6) - 1) - (inputRegs[0x1B] >> 2));
-    auto mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1A] >> 2);
+    unsigned int mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint((backdrop ? (inputRegs[0x1B] >> 2) : (inputRegs[0x1A] >> 2)));
     auto ldNormalizedR = convert8BitUnsignedToNormalized1616FixedPoint(ldr);
     auto ldNormalizedG = convert8BitUnsignedToNormalized1616FixedPoint(ldg);
     auto ldNormalizedB = convert8BitUnsignedToNormalized1616FixedPoint(ldb);
     auto mdNormalizedR = convert8BitUnsignedToNormalized1616FixedPoint(mdr);
     auto mdNormalizedG = convert8BitUnsignedToNormalized1616FixedPoint(mdg);
     auto mdNormalizedB = convert8BitUnsignedToNormalized1616FixedPoint(mdb);
-    uint32_t combinedNormalizedR;
-    uint32_t combinedNormalizedG;
-    uint32_t combinedNormalizedB;
-    bool backdrop = ((vdpPixelBuffer != nullptr) && (i >= vdpBorderLeftOffset) ? (vdpPixelBuffer[i - vdpBorderLeftOffset] >> 11) != 0 : true);
-    if (backdrop) {
-      combinedNormalizedR = mul1616FixedPoint(ldNormalizedR, ldGraphicsFader);
-      combinedNormalizedG = mul1616FixedPoint(ldNormalizedG, ldGraphicsFader);
-      combinedNormalizedB = mul1616FixedPoint(ldNormalizedB, ldGraphicsFader);
-    } else {
-      uint32_t oneMinusMdGraphicsFader = OneIn1616FixedPoint - mdGraphicsFader;
-      uint32_t oneMinusLdGraphicsFader = OneIn1616FixedPoint - ldGraphicsFader;
-      combinedNormalizedR = mul1616FixedPoint(mdNormalizedR, mdGraphicsFader) +
-                            mul1616FixedPoint(ldNormalizedR, mul1616FixedPoint(ldGraphicsFader, oneMinusMdGraphicsFader)) +
-                            mul1616FixedPoint(mul1616FixedPoint(ldNormalizedR, mdNormalizedR), mul1616FixedPoint(oneMinusLdGraphicsFader, oneMinusMdGraphicsFader));
-      combinedNormalizedG = mul1616FixedPoint(mdNormalizedG, mdGraphicsFader) +
-                            mul1616FixedPoint(ldNormalizedG, mul1616FixedPoint(ldGraphicsFader, oneMinusMdGraphicsFader)) +
-                            mul1616FixedPoint(mul1616FixedPoint(ldNormalizedG, mdNormalizedG), mul1616FixedPoint(oneMinusLdGraphicsFader, oneMinusMdGraphicsFader));
-      combinedNormalizedB = mul1616FixedPoint(mdNormalizedB, mdGraphicsFader) +
-                            mul1616FixedPoint(ldNormalizedB, mul1616FixedPoint(ldGraphicsFader, oneMinusMdGraphicsFader)) +
-                            mul1616FixedPoint(mul1616FixedPoint(ldNormalizedB, mdNormalizedB), mul1616FixedPoint(oneMinusLdGraphicsFader, oneMinusMdGraphicsFader));
-    }
+    uint32_t oneMinusMdGraphicsFader = OneIn1616FixedPoint - mdGraphicsFader;
+    uint32_t combinedNormalizedR = mul1616FixedPoint(mdNormalizedR, mdGraphicsFader) + mul1616FixedPoint(ldNormalizedR, oneMinusMdGraphicsFader);
+    uint32_t combinedNormalizedG = mul1616FixedPoint(mdNormalizedG, mdGraphicsFader) + mul1616FixedPoint(ldNormalizedG, oneMinusMdGraphicsFader);
+    uint32_t combinedNormalizedB = mul1616FixedPoint(mdNormalizedB, mdGraphicsFader) + mul1616FixedPoint(ldNormalizedB, oneMinusMdGraphicsFader);
 
     // Write the composited pixel value to the output framebuffer
     u32 rf = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedR);
