@@ -66,8 +66,6 @@ target_sources(
     serial.hpp
     serializer.hpp
     
-    set.hpp
-    
     stdint.hpp
     string.hpp
     
