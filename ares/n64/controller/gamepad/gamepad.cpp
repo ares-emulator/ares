@@ -456,7 +456,7 @@ auto Gamepad::formatControllerPak() -> void {
   n6  fieldA = random();
   n19 fieldB = random();
   n27 fieldC = random();
-  for(u32 area : array<u8[4]>{1,3,4,6}) {
+  for(u32 area : std::array<u8,4>{1,3,4,6}) {
     ram.write<Byte>(area * 0x20 + 0x01, fieldA);                        //unknown
     ram.write<Word>(area * 0x20 + 0x04, fieldB);                        //serial# hi
     ram.write<Word>(area * 0x20 + 0x08, fieldC);                        //serial# lo
@@ -480,7 +480,7 @@ auto Gamepad::formatControllerPak() -> void {
   u32 inodeTableCopyPage = 1 + nBanks;
   for(u32 bank : range(0,nBanks)) {
     u32 firstDataPage = bank == 0 ? (3 + nBanks * 2) : 1; //first bank has 3 + bank * 2 system pages, other banks have 127.
-    for(u32 page : array<u32[2]>{inodeTablePage + bank, inodeTableCopyPage + bank}) {
+    for(u32 page : std::array<u32,2>{inodeTablePage + bank, inodeTableCopyPage + bank}) {
       for(u32 slot : range(firstDataPage,128)) {
         ram.write<Byte>(0x100 * page + slot * 2 + 0x01, 0x03);  //0x01 = stop, 0x03 = empty
       }

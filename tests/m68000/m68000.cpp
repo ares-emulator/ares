@@ -28,8 +28,8 @@ struct TestState {
   u32 sr;
   u32 usp;
   u32 ssp;
-  array<u32[2]> prefetch;
-  std::vector<array<u32[2]>> ram;
+  std::array<u32, 2> prefetch;
+  std::vector<std::array<u32, 2>> ram;
 };
 
 struct TestCase {
@@ -43,7 +43,7 @@ enum TestResult {
   pass, fail, skip
 };
 
-using TestResults = array<u32[3]>;
+using TestResults = std::array<u32, 3>;
 
 struct CPU : ares::M68000 {
   u32 clock = 0;
