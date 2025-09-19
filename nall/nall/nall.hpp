@@ -10,8 +10,6 @@
 //#include <nall/arguments.hpp>
 #include <nall/arithmetic.hpp>
 #include <nall/array.hpp>
-#include <nall/array-span.hpp>
-#include <nall/array-view.hpp>
 #include <nall/atoi.hpp>
 #include <nall/bit.hpp>
 #include <nall/chrono.hpp>

@@ -2,6 +2,7 @@
 //started: 2020-06-17
 
 #include <ares/ares.hpp>
+#include <span>
 #include <vector>
 #include <nall/hashset.hpp>
 #include <component/processor/m68hc05/m68hc05.hpp>

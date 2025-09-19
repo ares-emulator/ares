@@ -18,7 +18,7 @@ struct Screen : Video {
   auto aspectY() const -> f64 { return _aspectY; }
   auto overscan() const -> bool { return _overscan; }
   auto colors() const -> u32 { return _colors; }
-  auto pixels(bool frame = 0) -> array_span<u32>;
+  auto pixels(bool frame = 0) -> std::span<u32>;
 
   auto saturation() const -> double { return _saturation; }
   auto gamma() const -> double { return _gamma; }

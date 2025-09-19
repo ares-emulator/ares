@@ -67,7 +67,7 @@ auto Cartridge::loadMemory(AbstractMemory& ram, Markup::Node node) -> void {
 
   if(auto fp = pak->read(name)) {
     ram.allocate(fp->size());
-    fp->read({ram.data(), min(fp->size(), ram.size())});
+    fp->read(ram.data(), min(fp->size(), ram.size()));
   }
 }
 

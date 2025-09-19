@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 //serializer: a class designed to save and restore the state of classes.
 //
 //benefits:
@@ -92,7 +94,7 @@ struct serializer {
     return *this;
   }
 
-  template<typename T> auto operator()(array_span<T> array) -> serializer& {
+  template<typename T> auto operator()(std::span<T> array) -> serializer& {
     for(auto& value : array) operator()(value);
     return *this;
   }

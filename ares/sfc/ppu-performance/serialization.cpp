@@ -8,7 +8,7 @@ auto PPU::serialize(serializer& s) -> void {
   s(ppu2.version);
   s(ppu2.mdr);
 
-  s(array_span<n16>{vram.data, vram.mask + 1u});
+  s(std::span<n16>{vram.data, vram.mask + 1u});
   s(vram.address);
   s(vram.increment);
   s(vram.mapping);

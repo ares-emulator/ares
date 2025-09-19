@@ -2,6 +2,7 @@
 //started: 2016-01-26
 
 #include <ares/ares.hpp>
+#include <span>
 #include <vector>
 
 #include <component/processor/v30mz/v30mz.hpp>

@@ -15,12 +15,12 @@ auto SufamiTurboCartridge::connect() -> void {
 
   if(auto fp = pak->read("program.rom")) {
     rom.allocate(fp->size());
-    fp->read({rom.data(), rom.size()});
+    fp->read(rom.data(), rom.size());
   }
 
   if(auto fp = pak->read("save.ram")) {
     ram.allocate(fp->size());
-    fp->read({ram.data(), ram.size()});
+    fp->read(ram.data(), ram.size());
   }
 }
 
@@ -40,6 +40,6 @@ auto SufamiTurboCartridge::save() -> void {
   if(!node) return;
 
   if(auto fp = pak->write("save.ram")) {
-    fp->write({ram.data(), ram.size()});
+    fp->write(ram.data(), ram.size());
   }
 }

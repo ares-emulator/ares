@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nall/array-span.hpp>
 #include <nall/cd.hpp>
 #include <nall/file.hpp>
 #include <nall/string.hpp>
@@ -178,7 +177,7 @@ private:
       size_t fileDataReadPos = 0;
       file_buffer fileBuffer;
       std::vector<u8> rawDataBuffer;
-      array_view<u8> rawDataView;
+      std::span<const u8> rawDataView;
       const Decode::ZIP::File* fileEntry = nullptr;
       if (compressedFile != nullptr) {
         auto filePathInArchive = file.archiveFolder;
@@ -189,7 +188,7 @@ private:
             rawDataView = archive->dataViewIfUncompressed(*fileEntry);
           } else {
             rawDataBuffer = archive->extract(*fileEntry);
-            rawDataView = array_view<u8>(rawDataBuffer);
+            rawDataView = {rawDataBuffer.data(), rawDataBuffer.size()};
           }
         }
       } else {

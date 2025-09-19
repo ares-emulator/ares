@@ -4,7 +4,7 @@
 
 namespace nall::Encode {
 
-inline auto MTF(array_view<u8> input) -> std::vector<u8> {
+inline auto MTF(std::span<const u8> input) -> std::vector<u8> {
   std::vector<u8> output;
   output.resize(input.size());
 

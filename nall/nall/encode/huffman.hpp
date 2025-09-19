@@ -2,7 +2,7 @@
 
 namespace nall::Encode {
 
-inline auto Huffman(array_view<u8> input) -> std::vector<u8> {
+inline auto Huffman(std::span<const u8> input) -> std::vector<u8> {
   std::vector<u8> output;
   for(u32 byte : range(8)) output.push_back((u8)(input.size() >> (byte * 8)));
 

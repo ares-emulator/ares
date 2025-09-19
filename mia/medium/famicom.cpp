@@ -38,26 +38,26 @@ auto Famicom::load(string location) -> LoadResult {
   pak->setAttribute("pinout/va10", document["game/board/pinout/va10"].natural());
   pak->append("manifest.bml", manifest);
 
-  array_view<u8> view{rom};
+  std::span<const u8> view{rom};
   if(auto node = document["game/board/memory(type=ROM,content=iNES)"]) {
     pak->append("ines.rom", {view.data(), node["size"].natural()});
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   }
   if(auto node = document["game/board/memory(type=Flash,content=Program)"]) {
     pak->append("program.flash", {view.data(), node["size"].natural()});
     Pak::load("program.flash", ".flash");
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   } else if(auto node = document["game/board/memory(type=ROM,content=Program)"]) {
     pak->append("program.rom", {view.data(), node["size"].natural()});
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   }
   if(auto node = document["game/board/memory(type=ROM,content=Option)"]) {
     pak->append("option.rom", {view.data(), node["size"].natural()});
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   }
   if(auto node = document["game/board/memory(type=ROM,content=Character)"]) {
     pak->append("character.rom", {view.data(), node["size"].natural()});
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {

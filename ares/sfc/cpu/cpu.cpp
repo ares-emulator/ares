@@ -89,7 +89,7 @@ auto CPU::power(bool reset) -> void {
   PPUcounter::reset();
   PPUcounter::scanline = {&CPU::scanline, this};
 
-  if(!reset) random.array({wram, sizeof(wram)});
+  if(!reset) random.array({(u8*)wram, sizeof(wram)});
 
   for(u32 id : range(8)) {
     channels[id] = {};

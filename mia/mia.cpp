@@ -59,7 +59,7 @@ auto operator+=(string& lhs, const string& rhs) -> string& {
   return lhs;
 }
 
-auto hexString(array_view<u8> view) -> string {
+auto hexString(std::span<const u8> view) -> string {
   string s;
   for(u8 n : view) s.append(hex(n, 2L), " ");
   return s.stripRight();

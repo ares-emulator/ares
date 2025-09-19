@@ -1,6 +1,9 @@
+#include <span>
+
 #include <nall/nall.hpp>
 #include <nall/cd.hpp>
 #include <nall/ips.hpp>
+#include <nall/span-helpers.hpp>
 #include <nall/vfs.hpp>
 #include <nall/beat/single/apply.hpp>
 #include <nall/decode/cue.hpp>

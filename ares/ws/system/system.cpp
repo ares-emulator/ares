@@ -168,7 +168,7 @@ auto System::load(Node::System& root, string name) -> bool {
 
   if(auto fp = pak->read("save.eeprom")) {
     if(fp->attribute("loaded").boolean()) {
-      fp->read({eeprom.data, eeprom.size});
+      fp->read(eeprom.data, eeprom.size);
     }
   }
 
@@ -187,7 +187,7 @@ auto System::save() -> void {
   if(!node) return;
 
   if(auto fp = pak->write("save.eeprom")) {
-    fp->write({eeprom.data, eeprom.size});
+    fp->write(eeprom.data, eeprom.size);
   }
 
   cartridge.save();

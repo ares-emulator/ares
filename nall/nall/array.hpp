@@ -1,9 +1,8 @@
 #pragma once
 
-#include <nall/array-span.hpp>
-#include <nall/array-view.hpp>
 #include <nall/range.hpp>
 #include <nall/view.hpp>
+#include <span>
 
 namespace nall {
 
@@ -20,11 +19,11 @@ template<typename T, u32 Size> struct array<T[Size]> {
     }
   }
 
-  operator array_span<T>() {
+  operator std::span<T>() {
     return {data(), size()};
   }
 
-  operator array_view<T>() const {
+  operator std::span<const T>() const {
     return {data(), size()};
   }
 

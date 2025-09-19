@@ -21,8 +21,8 @@ inline auto polynomial(u32 x) -> u8 {
 
 //
 
-inline auto transform(array_span<u8> sector) -> bool {
-  if(sector.size() == 2352) sector += 12;  //header is not scrambled
+inline auto transform(std::span<u8> sector) -> bool {
+  if(sector.size() == 2352) sector = sector.subspan(12);  //header is not scrambled
   if(sector.size() != 2340) return false;  //F1 frames only
 
   for(u32 index : range(2340)) {
