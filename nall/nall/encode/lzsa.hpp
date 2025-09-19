@@ -75,10 +75,10 @@ inline auto LZSA(std::span<const u8> input) -> std::vector<u8> {
     std::ranges::copy(buffer, std::back_inserter(output));
   };
 
-  save(Encode::Huffman(std::span<const u8>(flags)));
-  save(Encode::Huffman(std::span<const u8>(literals)));
-  save(Encode::Huffman(std::span<const u8>(stringLengths)));
-  save(Encode::Huffman(std::span<const u8>(stringOffsets)));
+  save(Encode::Huffman({flags.data(), flags.size()}));
+  save(Encode::Huffman({literals.data(), literals.size()}));
+  save(Encode::Huffman({stringLengths.data(), stringLengths.size()}));
+  save(Encode::Huffman({stringOffsets.data(), stringOffsets.size()}));
 
   return output;
 }

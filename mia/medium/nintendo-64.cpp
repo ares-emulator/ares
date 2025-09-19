@@ -193,7 +193,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   //and running the checksum again.
   //this also works for modern IPL3s variants (proprietary or open source),
   //as long as they are used with a CIC we know of.
-  string cic = cic_detect(std::span<const u8>(&data[0x40], 0xfc0));
+  string cic = cic_detect({&data[0x40], 0xfc0});
   if (cic == "") {
     //check if byte-swapped
     for(u32 index = 0; index < data.size(); index += 2) {
@@ -203,7 +203,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
       data[index + 1] = d0;
     }
 
-    cic = cic_detect(std::span<const u8>(&data[0x40], 0xfc0));
+    cic = cic_detect({&data[0x40], 0xfc0});
     if (cic == "") {
       //check if little-endian
       for(u32 index = 0; index < data.size(); index += 4) {
@@ -217,7 +217,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
         data[index + 3] = d1;
       }
 
-      cic = cic_detect(std::span<const u8>(&data[0x40], 0xfc0));
+      cic = cic_detect({&data[0x40], 0xfc0});
       if (cic == "") {
         //no match is found. Fallback to CIC 6102, big-endian.
         cic = "CIC-NUS-6102";

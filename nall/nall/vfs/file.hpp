@@ -26,7 +26,7 @@ struct file : node {
   }
 
   template<typename T> auto read(T* ptr, size_t size) -> void {
-    read(std::span<u8>((u8*)ptr, size));
+    read({(u8*)ptr, size});
   }
 
   auto readl(u32 bytes) -> u64 {
@@ -54,7 +54,7 @@ struct file : node {
   }
 
   template<typename T> auto write(const T* ptr, size_t size) -> void {
-    write(std::span<const u8>((const u8*)ptr, size));
+    write({(const u8*)ptr, size});
   }
 
   auto writel(u64 data, u32 bytes) -> void {
