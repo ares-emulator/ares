@@ -197,8 +197,8 @@ auto DSP::power(bool reset) -> void {
   Thread::create(system.apuFrequency(), {&DSP::main, this});
 
   if(!reset) {
-    random.array({apuram, sizeof(apuram)});
-    random.array({registers, sizeof(registers)});
+    random.array({(u8*)apuram, sizeof(apuram)});
+    random.array({(u8*)registers, sizeof(registers)});
   }
 
   mainvol = {};

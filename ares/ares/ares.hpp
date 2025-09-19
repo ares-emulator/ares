@@ -27,6 +27,7 @@
 #include <nall/serializer.hpp>
 #include <nall/set.hpp>
 #include <nall/shared-pointer.hpp>
+#include <nall/span-helpers.hpp>
 #include <nall/string.hpp>
 #include <nall/terminal.hpp>
 #include <nall/thread.hpp>
