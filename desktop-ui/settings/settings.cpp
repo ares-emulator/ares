@@ -177,6 +177,7 @@ auto Settings::process(bool load) -> void {
 
   for(auto& emulator : emulators) {
     string base = string{emulator->name}.replace(" ", ""), name;
+    base.replace("(", "").replace(")", "");
     name = {base, "/Visible"};
     bind(boolean, name, emulator->configuration.visible);
     name = {base, "/Path"};
