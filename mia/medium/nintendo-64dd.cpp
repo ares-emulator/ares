@@ -358,7 +358,7 @@ auto Nintendo64DD::transform(std::span<const u8> input, std::vector<u8> errorTab
 
   //make sure to use valid disk info when converting
   u32 inputPos = 0;  // Track position in input
-  std::span<const u8> dataFormat{input.data() + systemOffset, 0xE8};
+  std::span<const u8> dataFormat = input.subspan(systemOffset, 0xE8);
 
   //ndd conv
   std::vector<u8> output;
