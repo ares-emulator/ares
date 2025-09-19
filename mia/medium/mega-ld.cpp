@@ -55,4 +55,3 @@ auto MegaLD::save(string location) -> bool {
 
   return true;
 }
-

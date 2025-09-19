@@ -28,18 +28,22 @@ auto VDC::vsync() -> void {
 }
 
 auto VDC::hclock() -> void {
-  output = 0x100;  //blanking area backdrop color
+  if (latch.burstMode) {
+    output = 0x000 | 1 << 11;
+  } else {
+    output = 0x100 | 1 << 10;  //blanking area backdrop color
+  }
 
   if(timing.vstate == VDW && timing.hstate == HDW && !burstMode()) {
     background.run(timing.hoffset, timing.voffset);
     sprite.run(timing.hoffset, timing.voffset);
 
     if(sprite.color && sprite.priority) {
-      output = sprite.color << 0 | sprite.palette << 4 | 1 << 8;
+      output = sprite.color << 0 | sprite.palette << 4 | 1 << 8 | 1 << 9;
     } else if(background.color) {
-      output = background.color << 0 | background.palette << 4 | 0 << 8;
+      output = background.color << 0 | background.palette << 4 | 0 << 8 | 1 << 9;
     } else if(sprite.color) {
-      output = sprite.color << 0 | sprite.palette << 4 | 1 << 8;
+      output = sprite.color << 0 | sprite.palette << 4 | 1 << 8 | 1 << 9;
     } else {
       output = 0x000;  //active display backdrop color
     }

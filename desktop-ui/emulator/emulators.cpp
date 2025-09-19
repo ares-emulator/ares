@@ -104,6 +104,7 @@ namespace ares::Atari2600 {
   }
   #include "pc-engine.cpp"
   #include "pc-engine-cd.cpp"
+  #include "pc-engine-ld.cpp"
   #include "supergrafx.cpp"
   #include "supergrafx-cd.cpp"
 #endif
@@ -189,6 +190,7 @@ auto Emulator::construct() -> void {
   #ifdef CORE_PCE
   emulators.push_back(new PCEngine);
   emulators.push_back(new PCEngineCD);
+  emulators.push_back(new PCEngineLD);
   emulators.push_back(new SuperGrafx);
   emulators.push_back(new SuperGrafxCD);
   #endif
