@@ -22,8 +22,8 @@ auto enumerate() -> std::vector<string> {
     "[Sega] Mega CD 32X (NTSC-U)",
     "[Sega] Mega CD 32X (PAL)",
     //Mega LD
-    "[Sega] Mega LD (NTSC-J)",
-    "[Sega] Mega LD (NTSC-U)",
+    "[Pioneer] LaserActive (SEGA PAC) (NTSC-J)",
+    "[Pioneer] LaserActive (SEGA PAC) (NTSC-U)",
   };
 }
 
@@ -103,12 +103,12 @@ auto System::load(Node::System& root, string name) -> bool {
     information.megaLD = 0;
     cpu.minCyclesBetweenSyncs = 10; // sync approx every 1 pixel
   }
-  if(name.match("[Sega] Mega LD (*)")) {
+  if(name.beginsWith("[Pioneer] LaserActive")) {
     information.name = "Mega Drive";
     information.mega32X = 0;
     information.megaCD = 1;
     information.megaLD = 1;
-      cpu.minCyclesBetweenSyncs = 4; // sync approx every 7 pixels
+    cpu.minCyclesBetweenSyncs = 4; // sync approx every 7 pixels
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;
