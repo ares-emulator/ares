@@ -78,10 +78,11 @@ if(ENABLE_COMPILER_TRACE)
   add_link_options(LINKER:-print_statistics)
 endif()
 
+add_compile_options(-fwrapv -fno-char8_t)
+
 if(NOT XCODE)
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:C>:${_ares_clang_c_options}>"
     "$<$<COMPILE_LANGUAGE:CXX>:${_ares_clang_cxx_options}>"
-    -fwrapv
   )
 endif()
