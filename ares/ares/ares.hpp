@@ -24,7 +24,6 @@
 #include <nall/queue.hpp>
 #include <nall/random.hpp>
 #include <nall/serializer.hpp>
-#include <nall/set.hpp>
 #include <nall/span-helpers.hpp>
 #include <nall/string.hpp>
 #include <nall/terminal.hpp>
