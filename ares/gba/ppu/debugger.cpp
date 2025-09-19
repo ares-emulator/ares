@@ -19,8 +19,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.tiles4bpp = parent->append<Node::Debugger::Graphics>("4 BPP Tiles");
   graphics.tiles4bpp->setSize(512, 384);
-  graphics.tiles4bpp->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.tiles4bpp->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(512 * 384);
     for(u32 tileY : range(48)) {
       for(u32 tileX : range(64)) {
@@ -41,8 +41,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.tiles8bpp = parent->append<Node::Debugger::Graphics>("8 BPP Tiles");
   graphics.tiles8bpp->setSize(256, 384);
-  graphics.tiles8bpp->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.tiles8bpp->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(256 * 384);
     for(u32 tileY : range(48)) {
       for(u32 tileX : range(32)) {
@@ -66,8 +66,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.mode3 = parent->append<Node::Debugger::Graphics>("Mode 3");
   graphics.mode3->setSize(240, 160);
-  graphics.mode3->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.mode3->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(240 * 160);
     for(u32 y : range(160)) {
       for(u32 x : range(240)) {
@@ -84,8 +84,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.mode4 = parent->append<Node::Debugger::Graphics>("Mode 4");
   graphics.mode4->setSize(240, 320);
-  graphics.mode4->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.mode4->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(240 * 320);
     for(u32 y : range(160)) {
       for(u32 x : range(240)) {
@@ -114,8 +114,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   graphics.mode5 = parent->append<Node::Debugger::Graphics>("Mode 5");
   graphics.mode5->setSize(160, 256);
-  graphics.mode5->setCapture([&]() -> vector<u32> {
-    vector<u32> output;
+  graphics.mode5->setCapture([&]() -> std::vector<u32> {
+    std::vector<u32> output;
     output.resize(160 * 256);
     for(u32 y : range(256)) {
       for(u32 x : range(160)) {

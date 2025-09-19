@@ -3,8 +3,8 @@
 namespace nall::Decode {
 
 template<u32 S = 1, u32 M = 4 / S>  //S = word size; M = match length
-inline auto RLE(array_view<u8> input) -> vector<u8> {
-  vector<u8> output;
+inline auto RLE(array_view<u8> input) -> std::vector<u8> {
+  std::vector<u8> output;
 
   auto load = [&]() -> u8 {
     return input ? *input++ : 0;
@@ -12,18 +12,18 @@ inline auto RLE(array_view<u8> input) -> vector<u8> {
 
   u32 base = 0;
   u64 size = 0;
-  for(u32 byte : range(8)) size |= load() << byte * 8;
+  for(u32 byte : range(8)) size |= (u64)load() << (byte * 8);
   output.resize(size);
 
   auto read = [&]() -> u64 {
     u64 value = 0;
-    for(u32 byte : range(S)) value |= load() << byte * 8;
+    for(u32 byte : range(S)) value |= (u64)load() << (byte * 8);
     return value;
   };
 
   auto write = [&](u64 value) -> void {
     if(base >= size) return;
-    for(u32 byte : range(S)) output[base++] = value >> byte * 8;
+    for(u32 byte : range(S)) output[base++] = (u8)(value >> (byte * 8));
   };
 
   while(base < size) {

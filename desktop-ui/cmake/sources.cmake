@@ -73,6 +73,7 @@ target_sources(
     emulator/mega-32x.cpp
     emulator/mega-cd-32x.cpp
     emulator/mega-cd.cpp
+    emulator/mega-ld.cpp
     emulator/mega-drive.cpp
     emulator/msx.cpp
     emulator/msx2.cpp
@@ -84,6 +85,7 @@ target_sources(
     emulator/nintendo-64.cpp
     emulator/nintendo-64dd.cpp
     emulator/pc-engine-cd.cpp
+    emulator/pc-engine-ld.cpp
     emulator/pc-engine.cpp
     emulator/playstation.cpp
     emulator/pocket-challenge-v2.cpp

@@ -46,9 +46,15 @@ NALL_HEADER_INLINE auto file_map::open(const string& filename, u32 mode_) -> boo
     return false;
   }
 
-  _size = GetFileSize(_file, nullptr);
+  LARGE_INTEGER fileSizeRaw;
+  if(GetFileSizeEx(_file, &fileSizeRaw) == 0) {
+    CloseHandle(_file);
+    _file = nullptr;
+    return false;
+  }
+  _size = fileSizeRaw.QuadPart;
 
-  _map = CreateFileMapping(_file, nullptr, protection, 0, _size, nullptr);
+  _map = CreateFileMapping(_file, nullptr, protection, fileSizeRaw.HighPart, fileSizeRaw.LowPart, nullptr);
   if(_map == nullptr) {
     CloseHandle(_file);
     _file = nullptr;

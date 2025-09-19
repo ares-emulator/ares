@@ -6,17 +6,17 @@ struct InputJoypadSDL {
 
   struct Joypad {
     shared_pointer<HID::Joypad> hid{new HID::Joypad};
-    vector<bool> axisPolled;
+    std::vector<bool> axisPolled;
 
     u32 id = 0;
     SDL_Joystick* handle = nullptr;
   };
-  vector<Joypad> joypads;
+  std::vector<Joypad> joypads;
 
   auto assign(Joypad& joypad, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = joypad.hid->group(groupID);
     if(group.input(inputID).value() == value) return;
-    if(groupID == HID::Joypad::GroupID::Axis && !joypad.axisPolled(inputID)) {
+    if(groupID == HID::Joypad::GroupID::Axis && (inputID < joypad.axisPolled.size()) && !joypad.axisPolled[inputID]) {
       //suppress the first axis polling event, because the value can change dramatically.
       //SDL seems to return 0 for all axes, until the first movement, where it jumps to the real value.
       //this triggers onChange handlers to instantly bind inputs erroneously if not suppressed.
@@ -27,7 +27,7 @@ struct InputJoypadSDL {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     SDL_UpdateJoysticks();
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
@@ -51,7 +51,7 @@ struct InputJoypadSDL {
         assign(jp, HID::Joypad::GroupID::Button, n, (bool)SDL_GetJoystickButton(jp.handle, n));
       }
 
-      devices.append(jp.hid);
+      devices.push_back(jp.hid);
     }
   }
 
@@ -79,7 +79,7 @@ struct InputJoypadSDL {
     for(auto& jp : joypads) {
       SDL_CloseJoystick(jp.handle);
     }
-    joypads.reset();
+    joypads.clear();
     SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
   }
 
@@ -88,7 +88,7 @@ private:
     for(auto& joypad : joypads) {
       SDL_CloseJoystick(joypad.handle);
     }
-    joypads.reset();
+    joypads.clear();
     int num_joysticks;
     SDL_JoystickID *joysticks = SDL_GetJoysticks(&num_joysticks);
     for(int i = 0; i < num_joysticks; i++) {
@@ -124,7 +124,7 @@ private:
       for(u32 n : range(buttons)) jp.hid->buttons().append(n);
       jp.hid->setRumble(true);
 
-      joypads.append(jp);
+      joypads.push_back(jp);
     }
     SDL_free(joysticks);
     SDL_UpdateJoysticks();

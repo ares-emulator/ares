@@ -163,14 +163,17 @@ namespace nall {
   #define no_optimize __attribute__((optnone))
   #define NALL_NOINLINE __attribute__((noinline))
   #define alwaysinline inline __attribute__((always_inline))
+  #define NALL_USED __attribute__((used))
 #elif defined(COMPILER_MICROSOFT)
   #define no_optimize
   #define NALL_NOINLINE __declspec(noinline)
   #define alwaysinline inline __forceinline
+  #define NALL_USED
 #else
   #define no_optimize
   #define NALL_NOINLINE
   #define alwaysinline inline
+  #define NALL_USED
 #endif
 
 //P0627: [[unreachable]] -- impossible to simulate with identical syntax, must omit brackets ...

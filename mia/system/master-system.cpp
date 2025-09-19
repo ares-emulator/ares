@@ -9,7 +9,7 @@ auto MasterSystem::load(string location) -> LoadResult {
 
   this->location = locate();
   pak = new vfs::directory;
-  if(bios) pak->append("bios.rom", bios);
+  if(!bios.empty()) pak->append("bios.rom", bios);
 
   return successful;
 }

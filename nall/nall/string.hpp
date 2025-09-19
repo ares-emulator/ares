@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <initializer_list>
 #include <memory>
+#include <vector>
 
 #include <nall/platform.hpp>
 #include <nall/array-view.hpp>
@@ -21,7 +22,6 @@
 #include <nall/unique-pointer.hpp>
 #include <nall/utility.hpp>
 #include <nall/varint.hpp>
-#include <nall/vector.hpp>
 #include <nall/view.hpp>
 
 namespace nall {
@@ -39,8 +39,7 @@ struct string_view {
   string_view(const char* data);
   string_view(const char* data, u32 size);
   string_view(const string& source);
-  template<typename... P> string_view(P&&... p);
-  ~string_view();
+  string_view(string&& source) = delete;
 
   auto operator=(const string_view& source) -> type&;
   auto operator=(string_view&& source) -> type&;
@@ -57,7 +56,6 @@ struct string_view {
   auto end() const { return &_data[size()]; }
 
 protected:
-  string* _string;
   const char* _data;
   mutable s32 _size;
 };
@@ -83,7 +81,6 @@ template<typename T> auto binary(T value, long precision = 0, char padchar = '0'
 
 //match.hpp
 auto tokenize(const char* s, const char* p) -> bool;
-auto tokenize(vector<string>& list, const char* s, const char* p) -> bool;
 
 //utf8.hpp
 auto characters(string_view self, s32 offset = 0, s32 length = -1) -> u32;
@@ -139,7 +136,6 @@ protected:
 
 public:
   string();
-  string(string& source) : string() { operator=(source); }
   string(const string& source) : string() { operator=(source); }
   string(string&& source) : string() { operator=(std::move(source)); }
   template<typename T = char> auto get() -> T*;
@@ -200,6 +196,7 @@ public:
   template<typename T, typename... P> auto prepend(const T&, P&&...) -> type&;
   template<typename... P> auto prepend(const nall::string_format&, P&&...) -> type&;
   template<typename T> auto _prepend(const stringify<T>&) -> type&;
+  template<typename... P> auto append(string&& value, P&&... p) -> string&;
   template<typename T, typename... P> auto append(const T&, P&&...) -> type&;
   template<typename... P> auto append(const nall::string_format&, P&&...) -> type&;
   template<typename T> auto _append(const stringify<T>&) -> type&;
@@ -265,12 +262,6 @@ public:
   auto qreplace(string_view from, string_view to, long limit = LONG_MAX) -> type&;
   auto iqreplace(string_view from, string_view to, long limit = LONG_MAX) -> type&;
 
-  //split.hpp
-  auto split(string_view key, long limit = LONG_MAX) const -> vector<string>;
-  auto isplit(string_view key, long limit = LONG_MAX) const -> vector<string>;
-  auto qsplit(string_view key, long limit = LONG_MAX) const -> vector<string>;
-  auto iqsplit(string_view key, long limit = LONG_MAX) const -> vector<string>;
-
   //trim.hpp
   auto trim(string_view lhs, string_view rhs, long limit = LONG_MAX) -> type&;
   auto trimLeft(string_view lhs, long limit = LONG_MAX) -> type&;
@@ -298,35 +289,8 @@ public:
   auto slice(s32 offset = 0, s32 length = -1) const -> string;
 };
 
-template<> struct vector<string> : vector_base<string> {
-  using type = vector<string>;
-  using vector_base<string>::vector_base;
 
-  vector(const vector& source) { vector_base::operator=(source); }
-  vector(vector& source) { vector_base::operator=(source); }
-  vector(vector&& source) { vector_base::operator=(std::move(source)); }
-  template<typename... P> vector(P&&... p) { append(std::forward<P>(p)...); }
-
-  auto operator=(const vector& source) -> type& { return vector_base::operator=(source), *this; }
-  auto operator=(vector& source) -> type& { return vector_base::operator=(source), *this; }
-  auto operator=(vector&& source) -> type& { return vector_base::operator=(std::move(source)), *this; }
-
-  //vector.hpp
-  template<typename... P> auto append(const string&, P&&...) -> type&;
-  auto append() -> type&;
-
-  auto isort() -> type&;
-  auto find(string_view source) const -> maybe<u32>;
-  auto ifind(string_view source) const -> maybe<u32>;
-  auto match(string_view pattern) const -> vector<string>;
-  auto merge(string_view separator = "") const -> string;
-  auto strip() -> type&;
-
-  //split.hpp
-  template<bool, bool> auto _split(string_view, string_view, long) -> type&;
-};
-
-struct string_format : vector<string> {
+struct string_format : std::vector<string> {
   using type = string_format;
 
   template<typename... P> string_format(P&&... p) { reserve(sizeof...(p)); append(std::forward<P>(p)...); }
@@ -350,11 +314,10 @@ inline auto operator"" _s(const char* value, std::size_t) -> string { return {va
 #include <nall/string/format.hpp>
 #include <nall/string/match.hpp>
 #include <nall/string/replace.hpp>
-#include <nall/string/split.hpp>
+#include <nall/vector-helpers.hpp>
 #include <nall/string/trim.hpp>
 #include <nall/string/utf8.hpp>
 #include <nall/string/utility.hpp>
-#include <nall/string/vector.hpp>
 
 #include <nall/string/eval/node.hpp>
 #include <nall/string/eval/literal.hpp>

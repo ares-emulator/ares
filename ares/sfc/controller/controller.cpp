@@ -5,6 +5,7 @@ namespace ares::SuperFamicom {
 
 #include "port.cpp"
 #include "gamepad/gamepad.cpp"
+#include "rumble-gamepad/rumble-gamepad.cpp"
 #include "justifier/justifier.cpp"
 #include "justifiers/justifiers.cpp"
 #include "mouse/mouse.cpp"

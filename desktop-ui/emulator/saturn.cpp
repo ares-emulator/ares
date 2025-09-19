@@ -11,9 +11,9 @@ Saturn::Saturn() {
   manufacturer = "Sega";
   name = "Saturn";
 
-  firmware.append({"BIOS", "US"});      //NTSC-U
-  firmware.append({"BIOS", "Japan"});   //NTSC-J
-  firmware.append({"BIOS", "Europe"});  //PAL
+  firmware.push_back({"BIOS", "US"});      //NTSC-U
+  firmware.push_back({"BIOS", "Japan"});   //NTSC-J
+  firmware.push_back({"BIOS", "Europe"});  //PAL
 }
 
 auto Saturn::load() -> LoadResult {

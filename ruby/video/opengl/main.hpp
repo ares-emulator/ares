@@ -57,8 +57,8 @@ auto OpenGL::output() -> void {
     u32 width, height;
     GLuint filter, wrap;
   };
-  vector<Source> sources;
-  sources.prepend({texture, width, height, filter, wrap});
+  std::vector<Source> sources;
+  sources.push_back({texture, width, height, filter, wrap});
 
   u32 targetWidth = absoluteWidth ? absoluteWidth : outputWidth;
   u32 targetHeight = absoluteHeight ? absoluteHeight : outputHeight;
@@ -131,10 +131,10 @@ auto OpenGL::initialize(const string& shader) -> bool {
   return initialized = true;
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 auto OpenGL::resolveSymbol(const char* name) -> const void * {
 #if defined(PLATFORM_MACOS)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   NSSymbol symbol;
   char *symbolName;
   symbolName = (char*)malloc(strlen(name) + 2);
@@ -144,6 +144,7 @@ auto OpenGL::resolveSymbol(const char* name) -> const void * {
   if(NSIsSymbolNameDefined (symbolName)) symbol = NSLookupAndBindSymbol (symbolName);
   free(symbolName); // 5
   return (void*)(symbol ? NSAddressOfSymbol(symbol) : NULL);
+#pragma clang diagnostic pop
 #else
   void* symbol = (void*)glGetProcAddress(name);
   #if defined(PLATFORM_WINDOWS)
@@ -155,7 +156,6 @@ auto OpenGL::resolveSymbol(const char* name) -> const void * {
     }
   #endif
 #endif
-#pragma clang diagnostic pop
 
   return symbol;
 }

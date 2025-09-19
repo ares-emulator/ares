@@ -1,14 +1,14 @@
 {
     "dependencies": {
         "prebuilt": {
-            "version": "2025-05-22",
+            "version": "2025-08-27",
             "baseUrl": "https://github.com/ares-emulator/ares-deps/releases/download",
             "label": "Pre-Built ares-deps",
             "hashes": {
-                "linux-universal": "d24162136d2a310ade86223e8cf099c6e6b93003b35c136e8cbe30ffc2390845",
-                "macos-universal": "2b7bc99370e360c9086ba863ac9cd810aa67928206b799af74830ba6e0a9ffc4",
-                "windows-arm64": "07181e8a56f2f17b26b70ef852a44e4193e5196adc5013fcd1d691d155a49f42",
-                "windows-x64": "a7086281f98d9f0fcad0a833a6410f90b4776a5d274c125aef99fe3a81d2eed5"
+                "linux-universal": "4a9e8258fc419e3ad41c9a8e8becd748a9d05eacfc4a8f3a47af17881588df97",
+                "macos-universal": "61ad0086b92bcc322074c74ac58e1a1425dc98900c30d0169835913f6f67218a",
+                "windows-arm64": "973088cb4289703f5c1f61c240ea0c691f5c8116d6424a8d300cfd861d57115d",
+                "windows-x64": "a869c0f4c2a873f69b1247f1928be72abf9558b86f03f7931f5844ea1eeb0921"
             }
         }
     },

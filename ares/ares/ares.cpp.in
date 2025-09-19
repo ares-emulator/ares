@@ -7,7 +7,7 @@
 namespace ares {
 
 Platform* platform = nullptr;
-bool _runAhead = false;
+atomic<bool> _runAhead = false;
 
 const string Name       = "@ARES_NAME@";
 const string Version    = "@ARES_VERSION@";

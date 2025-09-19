@@ -20,9 +20,10 @@ struct CRC64 : Hash {
     checksum = (checksum >> 8) ^ table(checksum ^ value);
   }
 
-  auto output() const -> vector<u8> override {
-    vector<u8> result;
-    for(auto n : reverse(range(8))) result.append(~checksum >> n * 8);
+  auto output() const -> std::vector<u8> override {
+    std::vector<u8> result;
+    result.reserve(8);
+    for(auto n : reverse(range(8))) result.push_back((u8)(~checksum >> (n * 8)));
     return result;
   }
 

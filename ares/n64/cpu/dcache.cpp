@@ -58,13 +58,16 @@ auto CPU::DataCache::read(u64 vaddr, u32 paddr) -> u64 {
   return line.read<Size>(paddr);
 }
 
-auto CPU::DataCache::readDebug(u64 vaddr, u32 paddr) -> u8 {
+template<u32 Size>
+auto CPU::DataCache::readDebug(u64 vaddr, u32 paddr) -> u64 {
+  // This is used by the debugger to read memory through the cache but without
+  // actually causing side effects that modify the cache state (eg: no line fill)
   auto& line = this->line(vaddr);
   if(!line.hit(paddr)) {
     Thread dummyThread{};
-    return bus.read<Byte>(paddr, dummyThread, "Ares Debugger");
+    return bus.read<Size>(paddr, dummyThread, "Ares Debugger");
   }
-  return line.read<Byte>(paddr);
+  return line.read<Size>(paddr);
 }
 
 template<u32 Size>
@@ -79,13 +82,16 @@ auto CPU::DataCache::write(u64 vaddr, u32 paddr, u64 data) -> void {
   line.write<Size>(paddr, data);
 }
 
-auto CPU::DataCache::writeDebug(u64 vaddr, u32 paddr, u8 data) -> void {
+template<u32 Size>
+auto CPU::DataCache::writeDebug(u64 vaddr, u32 paddr, u64 data) -> void {
+  // This is used by the debugger to write memory through the cache but without
+  // actually causing side effects that modify the cache state (eg: no line fill)
   auto& line = this->line(vaddr);
   if(!line.hit(paddr)) {
     Thread dummyThread{};
-    return bus.write<Byte>(paddr, data, dummyThread, "Ares Debugger");
+    return bus.write<Size>(paddr, data, dummyThread, "Ares Debugger");
   }
-  line.write<Byte>(paddr, data);
+  line.write<Size>(paddr, data);
 }
 
 auto CPU::DataCache::power(bool reset) -> void {
@@ -99,5 +105,6 @@ auto CPU::DataCache::power(bool reset) -> void {
   }
 }
 
-template
-auto CPU::DataCache::Line::write<Byte>(u32 paddr, u64 data) -> void;
+template auto CPU::DataCache::Line::write<Byte>(u32 paddr, u64 data) -> void;
+template auto CPU::DataCache::writeDebug<Byte>(u64 vaddr, u32 paddr, u64 data) -> void;
+template auto CPU::DataCache::readDebug<Byte>(u64 vaddr, u32 paddr) -> u64;

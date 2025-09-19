@@ -1,8 +1,8 @@
 struct MROM {
   //mrom.cpp
-  auto read(u32 mode, n32 address) -> n16;
-  auto write(u32 mode, n32 address, n16 half) -> void;
-  auto burstAddr(u32 mode, n32 address) -> n32;
+  auto read(n32 address) -> n16;
+  auto write(n32 address, n16 half) -> void;
+  auto burstAddr(n32 address) -> n32;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -18,7 +18,7 @@ struct MROM {
 struct SRAM {
   //sram.cpp
   auto read(n32 address) -> n8;
-  auto write(n32 address, n32 word) -> void;
+  auto write(n32 address, n8 byte) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -78,3 +78,33 @@ struct FLASH {
   bool writeselect;
   bool bank;
 } flash;
+
+struct GPIO {
+  //gpio.cpp
+  auto readData() -> n4;
+  auto readDirection() -> n4;
+  auto readControl() -> n1;
+  auto writeData(n4 data) -> void;
+  auto writeDirection(n4 data) -> void;
+  auto writeControl(n1 data) -> void;
+
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
+  n4 latch;
+  n4 direction;
+  n1 readEnable;
+} gpio;
+
+struct RTC : S3511A, Thread {
+  //rtc.cpp
+  auto irqLevel(bool value) -> void override;
+  auto power() -> void;
+  auto main() -> void;
+  auto step(u32 clocks) -> void;
+
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
+  bool irq;
+} rtc;

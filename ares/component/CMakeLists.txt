@@ -1,5 +1,9 @@
 list(REMOVE_DUPLICATES ares.components)
 
+set(ARES_COMPONENTS_LIST "${ares.components}" CACHE STRING "Enabled shared hardware components" FORCE)
+
+mark_as_advanced(ARES_COMPONENTS_LIST)
+
 ares_add_sources(INCLUDED CMakeLists.txt)
 
 macro(component_sources)
@@ -430,6 +434,16 @@ component_sources(
     processor/z80/registers.hpp
     processor/z80/serialization.cpp
     processor/z80/z80.hpp
+)
+
+component_sources(
+  COMPONENT
+    s3511a
+  PRIMARY
+    rtc/s3511a/s3511a.cpp
+  INCLUDED
+    rtc/s3511a/s3511a.hpp
+    rtc/s3511a/serialization.cpp
 )
 
 component_sources(

@@ -12,12 +12,12 @@ auto Program::attach(ares::Node::Object node) -> void {
 auto Program::detach(ares::Node::Object node) -> void {
   if(auto screen = node->cast<ares::Node::Video::Screen>()) {
     screens = emulator->root->find<ares::Node::Video::Screen>();
-    screens.removeByValue(screen);
+    std::erase(screens, screen);
   }
 
   if(auto stream = node->cast<ares::Node::Audio::Stream>()) {
     streams = emulator->root->find<ares::Node::Audio::Stream>();
-    streams.removeByValue(stream);
+    std::erase(streams, stream);
     stream->setResamplerFrequency(ruby::audio.frequency());
   }
 }
@@ -32,8 +32,9 @@ auto Program::event(ares::Event event) -> void {
 auto Program::log(ares::Node::Debugger::Tracer::Tracer node, string_view message) -> void {
   string channel = string{node->component(), " ", node->name()};
 
-  if(node->prefix()) { message = string{channel, ": ", message}; }
-  if(node->autoLineBreak()) message = string{message, "\n"};
+  string modifiedMessage;
+  if(node->prefix()) { message = modifiedMessage = string{channel, ": ", message}; }
+  if(node->autoLineBreak()) message = modifiedMessage = string{message, "\n"};
 
   if(node->terminal()) {
     print(message);
@@ -58,7 +59,7 @@ auto Program::status(string_view message) -> void {
 }
 
 auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, u32 width, u32 height) -> void {
-  if(!screens) return;
+  if(screens.empty()) return;
 
   if(requestScreenshot) {
     requestScreenshot = false;
@@ -74,7 +75,8 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
 
   u32 videoWidth = node->width() * node->scaleX();
   u32 videoHeight = node->height() * node->scaleY();
-  if(settings.video.aspectCorrection) videoWidth = videoWidth * node->aspectX() / node->aspectY();
+  if(settings.video.aspectCorrection != "None")       videoWidth = videoWidth * node->aspectX() / node->aspectY();
+  if(settings.video.aspectCorrection == "Anamorphic") videoWidth = videoWidth * 4 / 3;
   if(node->rotation() == 90 || node->rotation() == 270) swap(videoWidth, videoHeight);
 
   ruby::video.lock();
@@ -85,16 +87,6 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
 
   u32 outputWidth = videoWidth * multiplier;
   u32 outputHeight = videoHeight * multiplier;
-
-  if(settings.video.output == "Perfect") {
-    outputWidth = videoWidth;
-    outputHeight = videoHeight;
-  }
-
-  if(settings.video.output == "Fixed") {
-    outputWidth = videoWidth * settings.video.multiplier;
-    outputHeight = videoHeight * settings.video.multiplier;
-  }
 
   if(multiplier == 0 || settings.video.output == "Scale") {
     f32 multiplierX = (f32)viewportWidth / (f32)videoWidth;
@@ -111,7 +103,8 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
   }
 
   pitch >>= 2;
-  if(auto [output, length] = ruby::video.acquire(width, height); output) {
+  auto [output, length] = ruby::video.acquire(width, height);
+  if(output) {
     length >>= 2;
     for(auto y : range(height)) {
       memory::copy<u32>(output + y * length, data + y * pitch, width);
@@ -137,7 +130,7 @@ auto Program::refreshRateHint(double refreshRate) -> void {
 }
 
 auto Program::audio(ares::Node::Audio::Stream node) -> void {
-  if(!streams) return;
+  if(streams.empty()) return;
 
   //process all pending frames (there may be more than one waiting)
   while(true) {

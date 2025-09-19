@@ -17,10 +17,13 @@ struct VideoDriver {
   virtual auto hasThreadedRenderer() -> bool { return false; }
   virtual auto hasNativeFullScreen() -> bool { return false; }
   virtual auto hasFlush() -> bool { return false; }
-  virtual auto hasFormats() -> vector<string> { return {"ARGB24"}; }
+  virtual auto hasFormats() -> std::vector<string> { return {"ARGB24"}; }
   virtual auto hasShader() -> bool { return false; }
 
-  auto hasFormat(string format) -> bool { return (bool)hasFormats().find(format); }
+  auto hasFormat(string format) -> bool { 
+    auto formats = hasFormats();
+    return std::ranges::find(formats, format) != formats.end();
+  }
 
   virtual auto setFullScreen(bool fullScreen) -> bool { return true; }
   virtual auto setMonitor(string monitor) -> bool { return true; }
@@ -61,8 +64,11 @@ protected:
 };
 
 struct Video {
-  static auto hasDrivers() -> vector<string>;
-  static auto hasDriver(string driver) -> bool { return (bool)hasDrivers().find(driver); }
+  static auto hasDrivers() -> std::vector<string>;
+  static auto hasDriver(string driver) -> bool { 
+    auto drivers = hasDrivers(); 
+    return std::ranges::find(drivers, driver) != drivers.end();
+  }
   static auto optimalDriver() -> string;
   static auto safestDriver() -> string;
 
@@ -76,7 +82,7 @@ struct Video {
     uintptr_t nativeHandle = 0;
   };
   static auto monitor(string name) -> Monitor;
-  static auto hasMonitors() -> vector<Monitor>;
+  static auto hasMonitors() -> std::vector<Monitor>;
   static auto hasMonitor(string name) -> bool {
     for(auto& monitor : hasMonitors()) {
       if(monitor.name == name) return true;
@@ -100,7 +106,7 @@ struct Video {
   auto hasThreadedRenderer() -> bool { return instance->hasThreadedRenderer(); }
   auto hasNativeFullScreen() -> bool { return instance->hasNativeFullScreen(); }
   auto hasFlush() -> bool { return instance->hasFlush(); }
-  auto hasFormats() -> vector<string> { return instance->hasFormats(); }
+  auto hasFormats() -> std::vector<string> { return instance->hasFormats(); }
   auto hasShader() -> bool { return instance->hasShader(); }
 
   auto hasFormat(string format) -> bool { return instance->hasFormat(format); }

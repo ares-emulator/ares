@@ -6,7 +6,7 @@ struct NeoGeoPocket : System {
 
 auto NeoGeoPocket::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return romNotFound;
+  if(bios.empty()) return romNotFound;
 
   this->location = locate();
   pak = new vfs::directory;

@@ -30,7 +30,7 @@ GameBrowserWindow::GameBrowserWindow() {
 auto GameBrowserWindow::show(shared_pointer<Emulator> emulator) -> void {
   this->emulator = emulator;
   searchInput.setText();
-  games.reset();
+  games.clear();
 
   auto tmp = (shared_pointer<mia::Medium>)mia::Medium::create(emulator->medium);
   if(!tmp) {
@@ -48,11 +48,11 @@ auto GameBrowserWindow::show(shared_pointer<Emulator> emulator) -> void {
     path = {path, "/", node["name"].string(), ".zip"};
 
     if(inode::exists(path)) {
-      games.append({node["title"].string(), node["name"].string(), node["board"].string(), path});
+      games.push_back({node["title"].string(), node["name"].string(), node["board"].string(), path});
     }
   }
 
-  games.sort([](auto x, auto y) {
+  std::ranges::sort(games, [](auto x, auto y) {
     return string::icompare(x.title, y.title) < 0;
   });
 
@@ -73,10 +73,11 @@ auto GameBrowserWindow::refresh() -> void {
   gameList.append(TableViewColumn().setText("MAME Name"));
 
   for(auto& game : games) {
-    if(searchInput.text().size()) {
-      if(!game.title.ifind(searchInput.text()) &&
-         !game.board.ifind(searchInput.text()) &&
-         !game.name.ifind(searchInput.text())) continue;
+    auto searchText = searchInput.text();
+    if(searchText.size()) {
+      if(!game.title.ifind(searchText) &&
+         !game.board.ifind(searchText) &&
+         !game.name.ifind(searchText)) continue;
     }
 
     TableViewItem item{&gameList};

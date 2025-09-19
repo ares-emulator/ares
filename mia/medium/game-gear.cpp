@@ -1,23 +1,22 @@
 struct GameGear : Cartridge {
   auto name() -> string override { return "Game Gear"; }
-  auto extensions() -> vector<string> override { return {"gg"}; }
+  auto extensions() -> std::vector<string> override { return {"gg"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom, string location) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
 };
 
 auto GameGear::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
-  } else {
-    return romNotFound;
   }
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
-  this->manifest = analyze(rom, location);
+  this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
@@ -46,7 +45,7 @@ auto GameGear::save(string location) -> bool {
   return true;
 }
 
-auto GameGear::analyze(vector<u8>& rom, string location) -> string {
+auto GameGear::analyze(std::vector<u8>& rom) -> string {
   string hash   = Hash::SHA256(rom).digest();
   string board  = "Sega";
   string region = "NTSC-J, NTSC-U";  //database required to detect region

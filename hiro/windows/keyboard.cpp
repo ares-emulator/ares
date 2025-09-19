@@ -2,11 +2,12 @@
 
 namespace hiro {
 
-vector<uint16_t> pKeyboard::keycodes;
+std::vector<uint16_t> pKeyboard::keycodes;
 
-auto pKeyboard::poll() -> vector<bool> {
-  vector<bool> result;
-  for(auto& code : keycodes) result.append(pressed(code));
+auto pKeyboard::poll() -> std::vector<bool> {
+  std::vector<bool> result;
+  result.reserve(keycodes.size());
+  for(auto& code : keycodes) result.push_back(pressed(code));
   return result;
 }
 
@@ -20,7 +21,7 @@ auto pKeyboard::pressed(u32 code) -> bool {
 
 auto pKeyboard::initialize() -> void {
   auto append = [](u32 lo, u32 hi = 0) {
-    keycodes.append(lo << 0 | hi << 8);
+    keycodes.push_back(lo << 0 | hi << 8);
   };
 
   #define map(name, ...) if(key == name) { append(__VA_ARGS__); continue; }

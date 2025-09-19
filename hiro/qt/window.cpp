@@ -18,7 +18,7 @@ auto pWindow::construct() -> void {
   }
 
   qtLayout = new QVBoxLayout(qtWindow);
-  qtLayout->setMargin(0);
+  qtLayout->setContentsMargins(0, 0, 0, 0);
   qtLayout->setSpacing(0);
   qtWindow->setLayout(qtLayout);
 
@@ -83,9 +83,9 @@ auto pWindow::handle() const -> uintptr_t {
 }
 
 auto pWindow::monitor() const -> u32 {
-  s32 monitor = QDesktopWidget().screenNumber(qtWindow);
-  if(monitor < 0) monitor = Monitor::primary();
-  return monitor;
+  auto screen = qtWindow->window()->windowHandle()->screen();
+  if(screen == nullptr) return Monitor::primary();
+  return max(QApplication::screens().indexOf(screen), 0);
 }
 
 auto pWindow::remove(sMenuBar menuBar) -> void {
@@ -147,11 +147,7 @@ auto pWindow::setFullScreen(bool fullScreen) -> void {
 auto pWindow::setGeometry(Geometry geometry) -> void {
   auto lock = acquire();
   Application::processEvents();
-  #if HIRO_QT==4
-  QApplication::syncX();
-  #elif HIRO_QT==5
   QApplication::sync();
-  #endif
 
   setResizable(state().resizable);
   qtWindow->move(geometry.x() - frameMargin().x(), geometry.y() - frameMargin().y());
@@ -330,7 +326,8 @@ auto QtWindow::dragEnterEvent(QDragEnterEvent* event) -> void {
 }
 
 auto QtWindow::dropEvent(QDropEvent* event) -> void {
-  if(auto paths = DropPaths(event)) p.self().doDrop(paths);
+  auto paths = DropPaths(event);
+  if(!paths.empty()) p.self().doDrop(paths);
 }
 
 auto QtWindow::keyPressEvent(QKeyEvent* event) -> void {

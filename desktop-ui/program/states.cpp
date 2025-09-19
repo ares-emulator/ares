@@ -1,5 +1,5 @@
 auto Program::stateSave(u32 slot) -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return false;
 
   auto location = emulator->locate(emulator->game->location, {".bs", slot}, settings.paths.saves);
@@ -20,7 +20,7 @@ auto Program::stateSave(u32 slot) -> bool {
 }
 
 auto Program::stateLoad(u32 slot) -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return false;
 
   //Store current state for undo
@@ -30,7 +30,8 @@ auto Program::stateLoad(u32 slot) -> bool {
   }
 
   auto location = emulator->locate(emulator->game->location, {".bs", slot}, settings.paths.saves);
-  if(auto memory = file::read(location)) {
+  auto memory = file::read(location);
+  if(!memory.empty()) {
     serializer state{memory.data(), (u32)memory.size()};
     if(emulator->root->unserialize(state)) {
       showMessage({"Loaded state from slot ", slot});
@@ -43,7 +44,7 @@ auto Program::stateLoad(u32 slot) -> bool {
 }
 
 auto Program::undoStateSave() -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return false;
 
   auto undoLocation = emulator->locate(emulator->game->location, ".bsu", settings.paths.saves);
@@ -58,11 +59,12 @@ auto Program::undoStateSave() -> bool {
 }
 
 auto Program::undoStateLoad() -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return false;
 
   auto undoLocation = emulator->locate(emulator->game->location, ".blu", settings.paths.saves);
-  if(auto memory = file::read(undoLocation)) {
+  auto memory = file::read(undoLocation);
+  if(!memory.empty()) {
     serializer state{memory.data(), (u32)memory.size()};
     if(emulator->root->unserialize(state)) {
       showMessage({"Loaded state from undo load file ", undoLocation});
@@ -79,7 +81,7 @@ auto Program::undoStateLoad() -> bool {
 }
 
 auto Program::clearUndoStates() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return;
 
   auto location = emulator->locate(emulator->game->location, ".blu", settings.paths.saves);

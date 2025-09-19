@@ -59,7 +59,6 @@
 #include <nall/utility.hpp>
 #include <nall/variant.hpp>
 #include <nall/varint.hpp>
-#include <nall/vector.hpp>
 #include <nall/view.hpp>
 #include <nall/arguments.hpp>
 #include <nall/decode/base.hpp>
@@ -70,6 +69,7 @@
 #include <nall/decode/inflate.hpp>
 #include <nall/decode/png.hpp>
 #include <nall/decode/url.hpp>
+#include <nall/decode/mmi.hpp>
 #include <nall/decode/zip.hpp>
 #include <nall/encode/base.hpp>
 #include <nall/encode/base64.hpp>

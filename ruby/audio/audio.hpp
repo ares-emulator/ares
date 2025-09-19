@@ -12,17 +12,29 @@ struct AudioDriver {
 
   virtual auto hasExclusive() -> bool { return false; }
   virtual auto hasContext() -> bool { return false; }
-  virtual auto hasDevices() -> vector<string> { return {"Default"}; }
+  virtual auto hasDevices() -> std::vector<string> { return {"Default"}; }
   virtual auto hasBlocking() -> bool { return false; }
   virtual auto hasDynamic() -> bool { return false; }
-  virtual auto hasChannels() -> vector<u32> { return {2}; }
-  virtual auto hasFrequencies() -> vector<u32> { return {48000}; }
-  virtual auto hasLatencies() -> vector<u32> { return {0}; }
+  virtual auto hasChannels() -> std::vector<u32> { return {2}; }
+  virtual auto hasFrequencies() -> std::vector<u32> { return {48000}; }
+  virtual auto hasLatencies() -> std::vector<u32> { return {0}; }
 
-  auto hasDevice(string device) -> bool { return (bool)hasDevices().find(device); }
-  auto hasChannels(u32 channels) -> bool { return (bool)hasChannels().find(channels); }
-  auto hasFrequency(u32 frequency) -> bool { return (bool)hasFrequencies().find(frequency); }
-  auto hasLatency(u32 latency) -> bool { return (bool)hasLatencies().find(latency); }
+  auto hasDevice(string device) -> bool {
+    auto allDevices = hasDevices();
+    return std::ranges::find(allDevices, device) != allDevices.end();
+  }
+  auto hasChannels(u32 channels) -> bool {
+    auto allChannels = hasChannels();
+    return std::ranges::find(allChannels, channels) != allChannels.end();
+  }
+  auto hasFrequency(u32 frequency) -> bool {
+    auto allFrequencies = hasFrequencies();
+    return std::ranges::find(allFrequencies, frequency) != allFrequencies.end();
+  }
+  auto hasLatency(u32 latency) -> bool {
+    auto allLatencies = hasLatencies();
+    return std::ranges::find(allLatencies, latency) != allLatencies.end();
+  }
 
   virtual auto setExclusive(bool exclusive) -> bool { return true; }
   virtual auto setContext(uintptr context) -> bool { return true; }
@@ -52,8 +64,11 @@ protected:
 };
 
 struct Audio {
-  static auto hasDrivers() -> vector<string>;
-  static auto hasDriver(string driver) -> bool { return (bool)hasDrivers().find(driver); }
+  static auto hasDrivers() -> std::vector<string>;
+  static auto hasDriver(string driver) -> bool {
+    auto drivers = hasDrivers(); 
+    return std::ranges::find(drivers, driver) != drivers.end();
+  }
   static auto optimalDriver() -> string;
   static auto safestDriver() -> string;
 
@@ -66,12 +81,12 @@ struct Audio {
 
   auto hasExclusive() -> bool { return instance->hasExclusive(); }
   auto hasContext() -> bool { return instance->hasContext(); }
-  auto hasDevices() -> vector<string> { return instance->hasDevices(); }
+  auto hasDevices() -> std::vector<string> { return instance->hasDevices(); }
   auto hasBlocking() -> bool { return instance->hasBlocking(); }
   auto hasDynamic() -> bool { return instance->hasDynamic(); }
-  auto hasChannels() -> vector<u32> { return instance->hasChannels(); }
-  auto hasFrequencies() -> vector<u32> { return instance->hasFrequencies(); }
-  auto hasLatencies() -> vector<u32> { return instance->hasLatencies(); }
+  auto hasChannels() -> std::vector<u32> { return instance->hasChannels(); }
+  auto hasFrequencies() -> std::vector<u32> { return instance->hasFrequencies(); }
+  auto hasLatencies() -> std::vector<u32> { return instance->hasLatencies(); }
 
   auto hasDevice(string device) -> bool { return instance->hasDevice(device); }
   auto hasChannels(u32 channels) -> bool { return instance->hasChannels(channels); }
@@ -106,6 +121,6 @@ struct Audio {
 protected:
   Audio& self;
   unique_pointer<AudioDriver> instance;
-  vector<nall::DSP::Resampler::Cubic> resamplers;
-  vector<f64> resampleBuffer;
+  std::vector<nall::DSP::Resampler::Cubic> resamplers;
+  std::vector<f64> resampleBuffer;
 };

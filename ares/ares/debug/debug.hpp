@@ -26,10 +26,10 @@ private:
   auto _unverified(const string&) -> void;
 
   u64 _totalNotices = 0;
-  vector<string> _unhandledNotices;
-  vector<string> _unimplementedNotices;
-  vector<string> _unusualNotices;
-  vector<string> _unverifiedNotices;
+  std::vector<string> _unhandledNotices;
+  std::vector<string> _unimplementedNotices;
+  std::vector<string> _unusualNotices;
+  std::vector<string> _unverifiedNotices;
 };
 
 extern Debug _debug;

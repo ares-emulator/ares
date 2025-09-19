@@ -62,8 +62,8 @@ struct SQLite3 {
       return result;
     }
 
-    auto data(u32 column) -> vector<u8> {
-      vector<u8> result;
+    auto data(u32 column) -> std::vector<u8> {
+      std::vector<u8> result;
       if(auto data = sqlite3_column_blob(statement(), column)) {
         result.resize(sqlite3_column_bytes(statement(), column));
         memory::copy(result.data(), data, result.size());
@@ -76,7 +76,7 @@ struct SQLite3 {
     auto natural() -> u64 { return natural(_output++); }
     auto real() -> f64 { return real(_output++); }
     auto string() -> nall::string { return string(_output++); }
-    auto data() -> vector<u8> { return data(_output++); }
+    auto data() -> std::vector<u8> { return data(_output++); }
 
   protected:
     virtual auto statement() -> sqlite3_stmt* { return _statement; }
@@ -121,7 +121,7 @@ struct SQLite3 {
     auto& bind(u32 column, nall::Natural value) { sqlite3_bind_int64(_statement, 1 + column, value); return *this; }
     auto& bind(u32 column, f64 value) { sqlite3_bind_double(_statement, 1 + column, value); return *this; }
     auto& bind(u32 column, const nall::string& value) { sqlite3_bind_text(_statement, 1 + column, value.data(), value.size(), SQLITE_TRANSIENT); return *this; }
-    auto& bind(u32 column, const vector<u8>& value) { sqlite3_bind_blob(_statement, 1 + column, value.data(), value.size(), SQLITE_TRANSIENT); return *this; }
+    auto& bind(u32 column, const std::vector<u8>& value) { sqlite3_bind_blob(_statement, 1 + column, value.data(), value.size(), SQLITE_TRANSIENT); return *this; }
 
     auto& bind(nullptr_t) { return bind(_input++, nullptr); }
     auto& bind(bool value) { return bind(_input++, value); }
@@ -136,7 +136,7 @@ struct SQLite3 {
     auto& bind(nall::Natural value) { return bind(_input++, value); }
     auto& bind(f64 value) { return bind(_input++, value); }
     auto& bind(const nall::string& value) { return bind(_input++, value); }
-    auto& bind(const vector<u8>& value) { return bind(_input++, value); }
+    auto& bind(const std::vector<u8>& value) { return bind(_input++, value); }
 
     auto step() -> bool {
       _stepped = true;

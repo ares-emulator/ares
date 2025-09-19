@@ -1,8 +1,8 @@
 HG51B::HG51B() {
   #define bind(id, name, ...) { \
     if(instructionTable[id]) throw; \
-    instructionTable[id] = [=] { return instruction##name(__VA_ARGS__); }; \
-    disassembleTable[id] = [=] { return disassemble##name(__VA_ARGS__); }; \
+    instructionTable[id] = [=, this] { return instruction##name(__VA_ARGS__); }; \
+    disassembleTable[id] = [=, this] { return disassemble##name(__VA_ARGS__); }; \
   }
 
   #define pattern(s) \

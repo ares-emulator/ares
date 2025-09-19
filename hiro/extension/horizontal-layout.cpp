@@ -14,12 +14,13 @@ auto mHorizontalLayout::append(sSizable sizable, Size size, f32 spacing) -> type
   cell->setSize(size);
   cell->setSpacing(spacing);
   cell->setParent(this, cellCount());
-  state.cells.append(cell);
+  state.cells.push_back(cell);
   return synchronize();
 }
 
 auto mHorizontalLayout::cell(u32 position) const -> HorizontalLayoutCell {
-  return state.cells(position, {});
+  if(position < state.cells.size()) return state.cells[position];
+  return {};
 }
 
 auto mHorizontalLayout::cell(sSizable sizable) const -> HorizontalLayoutCell {
@@ -29,7 +30,7 @@ auto mHorizontalLayout::cell(sSizable sizable) const -> HorizontalLayoutCell {
   return {};
 }
 
-auto mHorizontalLayout::cells() const -> vector<HorizontalLayoutCell> {
+auto mHorizontalLayout::cells() const -> std::vector<HorizontalLayoutCell> {
   return state.cells;
 }
 
@@ -89,13 +90,13 @@ auto mHorizontalLayout::remove(sHorizontalLayoutCell cell) -> type& {
   if(cell->parent() != this) return *this;
   auto offset = cell->offset();
   cell->setParent();
-  state.cells.remove(offset);
+  state.cells.erase(state.cells.begin() + offset);
   for(u32 n : range(offset, cellCount())) state.cells[n]->adjustOffset(-1);
   return synchronize();
 }
 
 auto mHorizontalLayout::reset() -> type& {
-  while(state.cells) remove(state.cells.right());
+  while(!state.cells.empty()) remove(state.cells.back());
   return synchronize();
 }
 
@@ -130,7 +131,7 @@ auto mHorizontalLayout::setGeometry(Geometry requestedGeometry) -> type& {
   geometry.setWidth (geometry.width()  - padding().x() - padding().width());
   geometry.setHeight(geometry.height() - padding().y() - padding().height());
 
-  vector<f32> widths;
+  std::vector<f32> widths;
   widths.resize(cellCount());
   u32 maximumWidths = 0;
   for(u32 index : range(cellCount())) {
@@ -207,7 +208,7 @@ auto mHorizontalLayout::setPadding(Geometry padding) -> type& {
 }
 
 auto mHorizontalLayout::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& cell : reverse(state.cells)) cell->destruct();
+  for(auto& cell : state.cells | std::views::reverse) cell->destruct();
   mSizable::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());
   return *this;

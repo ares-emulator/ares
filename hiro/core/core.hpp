@@ -8,6 +8,7 @@
 #include <nall/maybe.hpp>
 #include <nall/path.hpp>
 #include <nall/range.hpp>
+#include <nall/vector-helpers.hpp>
 #include <nall/run.hpp>
 #include <nall/set.hpp>
 #include <nall/shared-pointer.hpp>
@@ -17,11 +18,12 @@
 #include <nall/traits.hpp>
 #include <nall/unique-pointer.hpp>
 #include <nall/utility.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 
 using nall::any;
 using nall::function;
 using nall::image;
+using nall::index_of;
 using nall::multiFactorImage;
 using nall::Locale;
 using nall::maybe;
@@ -31,7 +33,6 @@ using nall::shared_pointer;
 using nall::shared_pointer_weak;
 using nall::string;
 using nall::unique_pointer;
-using nall::vector;
 
 namespace hiro {
 

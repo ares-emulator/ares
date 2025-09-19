@@ -160,7 +160,7 @@ auto InputSettings::eventAssign(TableViewCell cell, string binding) -> void {
 }
 
 auto InputSettings::eventAssign(TableViewCell cell) -> void {
-  lock_guard<recursive_mutex> programLock(program.programMutex);
+  Program::Guard guard;
   inputManager.poll(true);  //clear any pending events first
 
   if(ruby::input.driver() == "None") return (void)MessageDialog().setText(
@@ -204,7 +204,7 @@ auto InputSettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, 
 
 auto InputSettings::setVisible(bool visible) -> InputSettings& {
   if(visible == 1) {
-    systemList.items().first().setSelected();
+    systemList.items().front().setSelected();
     if(emulator) {
       for(auto item : systemList.items()) {
         if(item.text() == emulator->name) item.setSelected();

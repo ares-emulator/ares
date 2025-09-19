@@ -32,4 +32,6 @@ target_compile_options(libco PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-
 
 set_source_files_properties(libco ${libco_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${libco_SOURCES})
+
 set_source_files_properties(libco libco.c PROPERTIES HEADER_FILE_ONLY FALSE)

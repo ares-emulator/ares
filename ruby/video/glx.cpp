@@ -28,7 +28,7 @@ struct VideoGLX : VideoDriver, OpenGL {
   auto hasFlush() -> bool override { return true; }
   auto hasShader() -> bool override { return true; }
 
-  auto hasFormats() -> vector<string> override {
+  auto hasFormats() -> std::vector<string> override {
     if(_depth == 30) return {"ARGB30", "ARGB24"};
     if(_depth == 24) return {"ARGB24"};
     return {"ARGB24"};  //fallback

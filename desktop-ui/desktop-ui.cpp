@@ -97,7 +97,7 @@ auto nall::main(Arguments arguments) -> void {
   if(arguments.find("--setting")) {
     string settingValue;
     while(arguments.take("--setting", settingValue)) {
-      auto kv = settingValue.split("=", 1L);
+      auto kv = nall::split(settingValue, "=", 1L);
       if(kv.size() == 2) {
         auto node = settings[kv[0]];
         if(node) {
@@ -149,15 +149,15 @@ auto nall::main(Arguments arguments) -> void {
     return;
   }
 
-  program.startGameLoad.reset();
+  program.startGameLoad.clear();
   for(auto argument : arguments) {
-    if(file::exists(argument) || directory::exists(argument)) program.startGameLoad.append(argument);
+    if(file::exists(argument) || directory::exists(argument)) program.startGameLoad.push_back(argument);
   }
 
   Instances::presentation.construct();
   Instances::settingsWindow.construct();
   Instances::gameBrowserWindow.construct();
-  Instances::toolsWindow.construct(&program.programMutex);
+  Instances::toolsWindow.construct();
 
   program.create();
   Application::onMain({&Program::main, &program});

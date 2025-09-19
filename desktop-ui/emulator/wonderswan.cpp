@@ -26,7 +26,7 @@ WonderSwan::WonderSwan() {
     device.digital("Start", virtualPorts[0].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -38,7 +38,8 @@ auto WonderSwan::load(Menu menu) -> void {
     for(auto& orientation : orientations->readAllowedValues()) {
       MenuRadioItem item{&orientationMenu};
       item.setText(orientation);
-      item.onActivate([=] {
+      item.onActivate([=, this] {
+        Program::Guard guard;
         if(auto orientations = root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
           orientations->setValue(orientation);
         }
@@ -49,7 +50,7 @@ auto WonderSwan::load(Menu menu) -> void {
 
   if(auto headphones = root->find<ares::Node::Setting::Boolean>("Headphones")) {
     MenuCheckItem headphoneItem{&menu};
-    headphoneItem.setText("Headphones").setChecked(headphones->value()).onToggle([=] {
+    headphoneItem.setText("Headphones").setChecked(headphones->value()).onToggle([=, this] {
       if(auto headphones = root->find<ares::Node::Setting::Boolean>("Headphones")) {
         headphones->setValue(headphoneItem.checked());
       }

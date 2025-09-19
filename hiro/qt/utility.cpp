@@ -28,16 +28,16 @@ static auto CreateIcon(const image& icon, bool scale = false) -> QIcon {
   return QIcon(QPixmap::fromImage(qtImage));
 }
 
-static auto DropPaths(QDropEvent* event) -> vector<string> {
+static auto DropPaths(QDropEvent* event) -> std::vector<string> {
   QList<QUrl> urls = event->mimeData()->urls();
   if(urls.size() == 0) return {};
 
-  vector<string> paths;
+  std::vector<string> paths;
   for(auto n : range(urls.size())) {
     string path{urls[n].path().toUtf8().constData()};
     if(!path) continue;
     if(directory::exists(path) && !path.endsWith("/")) path.append("/");
-    paths.append(path);
+    paths.push_back(path);
   }
 
   return paths;

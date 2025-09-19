@@ -1,4 +1,7 @@
 #include <nall/nall.hpp>
+#include <algorithm>
+#include <ranges>
+#include <vector>
 
 using namespace nall;
 
@@ -19,14 +22,14 @@ auto Mame2BML::main(Arguments arguments) -> void {
 
   string markupName = arguments.take();
   string outputName = arguments.take();
-  vector<string> driverNames = {};
+  std::vector<string> driverNames = {};
   if(!markupName.endsWith(".xml")) return print("error: arguments in incorrect order\n");
   if(!outputName.endsWith(".bml")) return print("error: arguments in incorrect order\n");
   if(arguments.size() == 0) return print("error: mame driver or ares core name required\n");
 
   while(arguments.size()) {
     string driverName = arguments.take();
-    driverNames.append(driverName);
+    driverNames.push_back(driverName);
   }
 
   string markup = string::read(markupName);
@@ -53,7 +56,7 @@ auto Mame2BML::main(Arguments arguments) -> void {
       for(auto machine : header) {
         if(machine.name() != "machine") continue;
         string driverName = machine["sourcefile"].string();
-        if(!driverNames.find(driverName)) continue;
+        if(std::ranges::find(driverNames, driverName) == driverNames.end()) continue;
         string type = "game";
         string IsBIOS = machine["isbios"].string();
         string parent = machine["romof"].string();
@@ -98,7 +101,7 @@ auto Mame2BML::main(Arguments arguments) -> void {
         output.print("game\n");
         output.print("  name:  ", software["name"].string(), "\n");
         output.print("  title: ", software["description"].string(), "\n");
-        output.print("  board: ", driverNames.first(), "\n");
+        output.print("  board: ", driverNames.front(), "\n");
 
         print("found ", software["name"].string(), " (", software["description"].string(), ")\n");
 

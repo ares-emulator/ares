@@ -9,6 +9,9 @@
 #include <nall/decode/chd.hpp>
 #endif
 #include <nall/decode/wav.hpp>
+#include <nall/decode/zip.hpp>
+#include <utility>
+#include <vector>
 
 namespace nall::vfs {
 
@@ -17,9 +20,23 @@ struct cdrom : file {
     _thread.join();
   }
 
+  static auto open(const string& location, const string& pathWithinArchive) -> shared_pointer<cdrom> {
+    auto instance = shared_pointer<cdrom>{new cdrom};
+
+    if (location.iendsWith(".mmi")) {
+      instance->_archive = std::make_unique<Decode::ZIP>();
+      if (!instance->_archive->open(location)) return {};
+
+      maybe<Decode::ZIP::File> compressedFile = instance->_archive->findFile(pathWithinArchive);
+      if (compressedFile && instance->loadCue(location, instance->_archive.get(), &compressedFile.get())) return instance;
+    }
+
+    return {};
+  }
+
   static auto open(const string& location) -> shared_pointer<cdrom> {
     auto instance = shared_pointer<cdrom>{new cdrom};
-    if(location.iendsWith(".cue") && instance->loadCue(location)) return instance;
+    if(location.iendsWith(".cue") && instance->loadCue(location, nullptr, nullptr)) return instance;
 #if defined(ARES_ENABLE_CHD)
     if(location.iendsWith(".chd") && instance->loadChd(location)) return instance;
 #endif
@@ -68,9 +85,9 @@ struct cdrom : file {
   }
 
 private:
-  auto loadCue(const string& cueLocation) -> bool {
+  auto loadCue(const string& cueLocation, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
     auto cuesheet = shared_pointer<Decode::CUE>::create();
-    if(!cuesheet->load(cueLocation)) return false;
+    if(!cuesheet->load(cueLocation, archive, compressedFile)) return false;
 
     CD::Session session;
     session.leadIn.lba = -LeadInSectors;
@@ -140,17 +157,50 @@ private:
     _image.resize(2448 * (LeadInSectors + lbaFileBase + LeadOutSectors));
 
     //preload subchannel data
-    loadSub({Location::notsuffix(cueLocation), ".sub"}, session);
+    if (compressedFile != nullptr) {
+      auto subFile = archive->findFile({ Location::notsuffix(compressedFile->name), ".sub" });
+      if (subFile) {
+        loadSub(cueLocation, archive, &subFile.get(), session);
+      } else {
+        loadSub(cueLocation, archive, nullptr, session);
+      }
+    } else {
+      loadSub({ Location::notsuffix(cueLocation), ".sub" }, archive, compressedFile, session);
+    }
 
     //load user data on separate thread
     _thread = thread::create(
-    [this, cueLocation, cuesheet = std::move(cuesheet)](uintptr) -> void {
+    [this, archive, compressedFile, cueLocation, cuesheet = std::move(cuesheet)](uintptr) -> void {
 
     s32 lbaFileBase = 0;
     for(auto& file : cuesheet->files) {
-      auto location = string{Location::path(cueLocation), file.name};
-      auto filedata = nall::file::open(location, nall::file::mode::read);
-      if(file.type == "wave") filedata.seek(44);  //skip RIFF header
+      bool usingFileBuffer = false;
+      size_t fileDataReadPos = 0;
+      file_buffer fileBuffer;
+      std::vector<u8> rawDataBuffer;
+      array_view<u8> rawDataView;
+      const Decode::ZIP::File* fileEntry = nullptr;
+      if (compressedFile != nullptr) {
+        auto filePathInArchive = file.archiveFolder;
+        filePathInArchive.append(file.name);
+        auto fileEntry = archive->findFile(filePathInArchive);
+        if (fileEntry) {
+          if (archive->isDataUncompressed(*fileEntry)) {
+            rawDataView = archive->dataViewIfUncompressed(*fileEntry);
+          } else {
+            rawDataBuffer = archive->extract(*fileEntry);
+            rawDataView = array_view<u8>(rawDataBuffer);
+          }
+        }
+      } else {
+        auto location = string{Location::path(cueLocation), file.name};
+        fileBuffer = nall::file::open(location, nall::file::mode::read);
+        usingFileBuffer = true;
+      }
+      if (file.type == "wave") {
+        if (usingFileBuffer) fileBuffer.seek(44);  //skip RIFF header
+        else fileDataReadPos = 44;
+      }
       for(auto& track : file.tracks) {
         if(track.pregap) lbaFileBase += track.pregap();
         for(auto& index : track.indices) {
@@ -168,19 +218,29 @@ private:
               target[13] = BCD::encode(second);
               target[14] = BCD::encode(frame);
               target[15] = 0x01;  //mode
-              filedata.read({target + 16, length});
+              if (usingFileBuffer) {
+                fileBuffer.read({ target + 16, length });
+              } else {
+                memcpy(target + 16, rawDataView.data() + fileDataReadPos, length);
+                fileDataReadPos += length;
+              }
               CD::RSPC::encodeMode1({target, 2352});
             }
             if(length == 2352) {
               //BIN + WAV: direct copy
-              filedata.read({target, length});
+              if (usingFileBuffer) {
+                fileBuffer.read({target, length});
+              } else {
+                memcpy(target, rawDataView.data() + fileDataReadPos, length);
+                fileDataReadPos += length;
+              }
             }
             _loadOffset = offset + 2448;
           }
         }
         if(track.postgap) lbaFileBase += track.postgap();
       }
-      lbaFileBase += file.tracks.last().indices.last().end + 1;
+      lbaFileBase += file.tracks.back().indices.back().end + 1;
     }
     _loadOffset = _image.size();
 
@@ -231,7 +291,7 @@ private:
     _image.resize(2448 * (LeadInSectors + lbaIndex + LeadOutSectors));
 
     //preload subchannel data
-    loadSub({Location::notsuffix(location), ".sub"}, session);
+    loadSub({Location::notsuffix(location), ".sub"}, nullptr, nullptr, session);
 
     //load user data on separate thread
     _thread = thread::create(
@@ -272,13 +332,23 @@ private:
 #endif
 
 private:
-  void loadSub(const string& location, const CD::Session& session) {
+  void loadSub(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile, const CD::Session& session) {
     auto subchannel = session.encode(LeadInSectors + session.leadOut.end + 1);
 
-    if(auto overlay = nall::file::read(location)) {
-      auto target = subchannel.data() + 96 * (LeadInSectors + Track1Pregap);
-      auto length = (s64)subchannel.size() - 96 * (LeadInSectors + Track1Pregap);
-      memory::copy(target, length, overlay.data(), overlay.size());
+    if (archive != nullptr) {
+      if (compressedFile != nullptr) {
+        auto rawDataBuffer = archive->extract(*compressedFile);
+        auto target = subchannel.data() + 96 * (LeadInSectors + Track1Pregap);
+        auto length = (s64)subchannel.size() - 96 * (LeadInSectors + Track1Pregap);
+        memory::copy(target, length, rawDataBuffer.data(), rawDataBuffer.size());
+      }
+    } else {
+      auto overlay = nall::file::read(location);
+      if(!overlay.empty()) {
+        auto target = subchannel.data() + 96 * (LeadInSectors + Track1Pregap);
+        auto length = (s64)subchannel.size() - 96 * (LeadInSectors + Track1Pregap);
+        memory::copy(target, length, overlay.data(), overlay.size());
+      }
     }
 
     for(u64 sector : range(size() / 2448)) {
@@ -288,10 +358,11 @@ private:
     }
   }
 
-  vector<u8> _image;
+  std::vector<u8> _image;
   u64 _offset = 0;
   atomic<u64> _loadOffset = 0;
   thread _thread;
+  std::unique_ptr<Decode::ZIP> _archive;
 
   static constexpr s32 LeadInSectors  = 7500;
   static constexpr s32 Track1Pregap   =  150;

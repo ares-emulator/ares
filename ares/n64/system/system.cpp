@@ -1,10 +1,11 @@
 #include <n64/n64.hpp>
+#include <algorithm>
 
 #include <nall/gdb/server.hpp>
 
 namespace ares::Nintendo64 {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Nintendo] Nintendo 64 (NTSC)",
     "[Nintendo] Nintendo 64 (PAL)",
@@ -16,7 +17,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 
@@ -167,56 +169,129 @@ auto System::initDebugHooks() -> void {
     res.resize(byteCount * 2);
     char* resPtr = res.begin();
 
-    for(u32 i : range(byteCount)) {
-      auto val = cpu.readDebug(address++);
-      hexByte(resPtr, val);
-      resPtr += 2;
+    // For 8/16/32/64-bit reads, perform an actual read like the CPU would do.
+    // This makes sure we return the same value the CPU would get wrt to masking.
+    u64 value;
+    switch(byteCount) {
+      case Byte: 
+        value = cpu.readDebug<Byte>(address);
+        hexByte(resPtr, value);
+        return res;
+      case Half: 
+        value = cpu.readDebug<Half>(address);
+        hexByte(resPtr + 0, (value >> 8) & 0xff);
+        hexByte(resPtr + 2, value & 0xff);
+        return res;
+      case Word: 
+        value = cpu.readDebug<Word>(address);
+        hexByte(resPtr + 0, (value >> 24) & 0xff);
+        hexByte(resPtr + 2, (value >> 16) & 0xff);
+        hexByte(resPtr + 4, (value >> 8) & 0xff);
+        hexByte(resPtr + 6, value & 0xff);
+        return res;
+      case Dual:
+        // Don't allow 64-bit access to RCP to prevent freezing
+        if (address < 0xffff'ffff'a400'0000ull || address + byteCount > 0xffff'ffff'bfff'ffffull) {
+            value = cpu.readDebug<Dual>(address);
+            hexByte(resPtr + 0, (value >> 56) & 0xff);
+            hexByte(resPtr + 2, (value >> 48) & 0xff);
+            hexByte(resPtr + 4, (value >> 40) & 0xff);
+            hexByte(resPtr + 6, (value >> 32) & 0xff);
+            hexByte(resPtr + 8, (value >> 24) & 0xff);
+            hexByte(resPtr + 10, (value >> 16) & 0xff);
+            hexByte(resPtr + 12, (value >> 8) & 0xff);
+            hexByte(resPtr + 14, value & 0xff);
+            return res;
+        }
     }
 
-    return res;
+    // Handle reads of different/unaligned sizes only within the RDRAM area,
+    // where we are sure that the write size does not really matter
+    if(address >= 0xffff'ffff'8000'0000ull && address + byteCount <= 0xffff'ffff'83ef'ffffull) {
+      for(u32 i : range(byteCount)) {
+        auto val = cpu.readDebug<Byte>(address++);
+        hexByte(resPtr, val);
+        resPtr += 2;
+      }
+      return res;
+    } else if (address >= 0xffff'ffff'a000'0000ull && address + byteCount <= 0xffff'ffff'a3ef'ffffull) {
+      Thread dummyThread{};
+      for(u32 i : range(byteCount)) {
+        auto val = bus.read<Byte>(address & 0x1fff'ffff, dummyThread, "Ares Debugger");
+        hexByte(resPtr, val);
+        resPtr += 2;
+        address++;
+      }
+      return res;
+    } else if (address >= 0xffff'ffff'a400'0000ull && address + byteCount <= 0xffff'ffff'bfff'ffffull) {
+      // Otherwise, use 32-bit reads to read the data. This is the expected
+      // read for RCP, so it's the one that's most likely to return the data
+      // as the user would expect.
+      Thread dummyThread{};
+      for(u32 i : range(byteCount / 4)) {
+        u64 value = bus.read<Word>(address & 0x1fff'ffff, dummyThread, "Ares Debugger");
+        hexByte(resPtr + 0, (value >> 24) & 0xff);
+        hexByte(resPtr + 2, (value >> 16) & 0xff);
+        hexByte(resPtr + 4, (value >> 8) & 0xff);
+        hexByte(resPtr + 6, value & 0xff);
+        resPtr += 8;
+        address += 4;
+      }
+    }
+    return {};
   };
 
-  GDB::server.hooks.write = [](u64 address, vector<u8> data) {
+  GDB::server.hooks.write = [](u64 address, std::vector<u8> data) {
     address = (s32)address;
+
+    // For 8/16/32/64-bit writes, perform an actual write like the CPU would do.
+    // This makes sure we write the same value the CPU would write wrt to masking.
+    u64 value;
+    switch(data.size()) {
+      case Byte: 
+        value = (u64)data[0];
+        cpu.writeDebug<Byte>(address, value);
+        break;
+      case Half: 
+        value = ((u64)data[0]<<8) | ((u64)data[1]<<0);
+        cpu.writeDebug<Half>(address, value);
+        break;
+      case Word: 
+        value = ((u64)data[0]<<24) | ((u64)data[1]<<16) | ((u64)data[2]<<8) | ((u64)data[3]<<0);
+        cpu.writeDebug<Word>(address, value);
+        break;
+      case Dual:
+        value  = ((u64)data[0]<<56) | ((u64)data[1]<<48) | ((u64)data[2]<<40) | ((u64)data[3]<<32);
+        value |= ((u64)data[4]<<24) | ((u64)data[5]<<16) | ((u64)data[6]<< 8) | ((u64)data[7]<< 0);
+        cpu.writeDebug<Dual>(address, value);
+        break;
+    }
 
     // Handle writes of different/unaligned sizes only within the RDRAM area,
     // where we are sure that the write size does not really matter
-    if(address >= 0xffff'ffff'8000'0000ull && address <= 0xffff'ffff'83ef'ffffull) {
+    if(address >= 0xffff'ffff'8000'0000ull && address + data.size() <= 0xffff'ffff'83ef'ffffull) {
       for(auto b : data) {
-        cpu.dcache.writeDebug(address, address & 0x1fff'ffff, b);
+        cpu.dcache.writeDebug<Byte>(address, address & 0x1fff'ffff, b);
         address++;
       }
-    } else if (address >= 0xffff'ffff'a000'0000ull && address <= 0xffff'ffff'a3ef'ffffull) {
+    } else if (address >= 0xffff'ffff'a000'0000ull && address + data.size() <= 0xffff'ffff'a3ef'ffffull) {
       Thread dummyThread{};
       for(auto b : data) {
         bus.write<Byte>(address & 0x1fff'ffff, b, dummyThread, "Ares Debugger");
         address++;
       }
-    } else {
-      // Otherwise, the write is expected to be of a set size to an aligned address.
-      u64 value;
-      switch(data.size()) {
-        case Byte: 
-          value = (u64)data[0];
-          cpu.writeDebug<Byte>(address, value);
-          break;
-        case Half: 
-          value = ((u64)data[0]<<8) | ((u64)data[1]<<0);
-          cpu.writeDebug<Half>(address, value);
-          break;
-        case Word: 
-          value = ((u64)data[0]<<24) | ((u64)data[1]<<16) | ((u64)data[2]<<8) | ((u64)data[3]<<0);
-          cpu.writeDebug<Word>(address, value);
-          break;
-        case Dual:
-          value  = ((u64)data[0]<<56) | ((u64)data[1]<<48) | ((u64)data[2]<<40) | ((u64)data[3]<<32);
-          value |= ((u64)data[4]<<24) | ((u64)data[5]<<16) | ((u64)data[6]<< 8) | ((u64)data[7]<< 0);
-          cpu.writeDebug<Dual>(address, value);
-          break;
+    } else if (address >= 0xffff'ffff'a400'0000ull && address + data.size() <= 0xffff'ffff'bfff'ffffull) {
+      // Otherwise, use 32-bit writes to write the data. This is the expected
+      // write for RCP, so it's the one that's most likely to write the data
+      // as the user would expect.
+      Thread dummyThread{};
+      for(u32 i = 0; i < data.size() / 4; i++) {
+        u64 value = ((u64)data[i*4+0]<<24) | ((u64)data[i*4+1]<<16) | ((u64)data[i*4+2]<<8) | ((u64)data[i*4+3]<<0);
+        bus.write<Word>(address & 0x1fff'ffff, value, dummyThread, "Ares Debugger");
+        address += 4;
       }
     }
   };
-
 
   GDB::server.hooks.regRead = [](u32 regIdx) {
     if(regIdx < 32) {
@@ -360,6 +435,10 @@ auto System::power(bool reset) -> void {
   if(_DD()) dd.power(reset);
   mi.power(reset);
   vi.power(reset);
+  #if defined(VULKAN)
+  vulkan.unload();
+  _vulkanNeedsLoad = true;
+  #endif
   ai.power(reset);
   pi.power(reset);
   pif.power(reset);

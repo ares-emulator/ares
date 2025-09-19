@@ -161,12 +161,13 @@ auto CPU::read(PhysAccess access) -> maybe<u64> {
   return busRead<Size>(access.paddr);
 }
 
-auto CPU::readDebug(u64 vaddr) -> u8 {
+template<u32 Size>
+auto CPU::readDebug(u64 vaddr) -> u64 {
   Thread dummyThread{};
-  auto access = devirtualize<Read, Byte>(vaddr, false, false);
+  auto access = devirtualize<Read, Size>(vaddr, false, false);
   if(!access) return 0;
-  if(access.cache) return dcache.readDebug(access.vaddr, access.paddr);
-  return bus.read<Byte>(access.paddr, dummyThread, "Ares Debugger");
+  if(access.cache) return dcache.readDebug<Size>(access.vaddr, access.paddr);
+  return bus.read<Size>(access.paddr, dummyThread, "Ares Debugger");
 }
 
 
@@ -180,11 +181,12 @@ auto CPU::write(PhysAccess access, u64 data) -> bool {
 
 template<u32 Size>
 auto CPU::writeDebug(u64 vaddr, u64 data) -> bool {
+  Thread dummyThread{};
   auto access = devirtualize<Write, Size>(vaddr, false, false);
   if(!access) return false;
   GDB::server.reportMemWrite(access.vaddr, Size);
-  if(access.cache) return dcache.write<Size>(access.vaddr, access.paddr, data), true;
-  return busWrite<Size>(access.paddr, data), true;
+  if(access.cache) return dcache.writeDebug<Size>(access.vaddr, access.paddr, data), true;
+  return bus.write<Size>(access.paddr, data, dummyThread, "Ares Debugger"), true;
 }
 
 template<u32 Size>
@@ -221,3 +223,7 @@ template auto CPU::writeDebug<Byte>(u64, u64) -> bool;
 template auto CPU::writeDebug<Half>(u64, u64) -> bool;
 template auto CPU::writeDebug<Word>(u64, u64) -> bool;
 template auto CPU::writeDebug<Dual>(u64, u64) -> bool;
+template auto CPU::readDebug<Byte>(u64) -> u64;
+template auto CPU::readDebug<Half>(u64) -> u64;
+template auto CPU::readDebug<Word>(u64) -> u64;
+template auto CPU::readDebug<Dual>(u64) -> u64;

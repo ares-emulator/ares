@@ -6,9 +6,9 @@ auto CheatEditor::Cheat::update(string description, string code, bool enabled) -
   //TODO: support other code formats based on the game system (e.g. GameShark, Game-Genie, etc.)
 
   addressValuePairs.reset();
-  vector<string> codes = code.split("+");
+  auto codes = nall::split(code, "+");
   for(auto& code : codes) {
-    auto parts = code.split(":");
+    auto parts = nall::split(code, ":");
     if(parts.size() != 2) continue;
     addressValuePairs.insert(string{"0x", parts[0]}.natural(), string{"0x",parts[1]}.natural());
   }
@@ -16,8 +16,7 @@ auto CheatEditor::Cheat::update(string description, string code, bool enabled) -
   return *this;
 }
 
-auto CheatEditor::construct(std::recursive_mutex *programMutexIn) -> void {
-  this->programMutex = programMutexIn;
+auto CheatEditor::construct() -> void {
   setCollapsible();
   setVisible(false);
   cheatsLabel.setText("Cheats").setFont(Font().setBold());
@@ -25,13 +24,14 @@ auto CheatEditor::construct(std::recursive_mutex *programMutexIn) -> void {
   descriptionLabel.setText("Description:");
   codeLabel.setText("Code:");
   deleteButton.setText("Delete").onActivate([&] {
-    lock_guard<recursive_mutex> lock(*programMutex);
+    Program::Guard guard;
     if(auto item = cheatList.selected()) {
       if(auto cheat = item.attribute<Cheat*>("cheat")) {
-        if(auto c = cheats.find([cheat](auto& c) { return &c == cheat; })) {
+        auto it = std::ranges::find_if(cheats, [cheat](auto& c) { return &c == cheat; });
+        if(it != cheats.end()) {
           descriptionEdit.setText("");
           codeEdit.setText("");
-          cheats.remove(*c);
+          cheats.erase(it);
           deleteButton.setEnabled(false);
           refresh();
         }
@@ -40,21 +40,22 @@ auto CheatEditor::construct(std::recursive_mutex *programMutexIn) -> void {
   }).setEnabled(false);
 
   saveButton.setText("Save").onActivate([&] {
-    lock_guard<recursive_mutex> lock(*programMutex);
+    Program::Guard guard;
     string description = descriptionEdit.text();
     string code = codeEdit.text();
 
-    if(auto c = cheats.find([description](auto& c) { return c.description == description; })) {
-      cheats[*c].update(description, code);
+    auto it = std::ranges::find_if(cheats, [description](auto& c) { return c.description == description; });
+    if(it != cheats.end()) {
+      it->update(description, code);
     } else {
-      cheats.append(Cheat().update(description, code));
+      cheats.push_back(Cheat().update(description, code));
     }
 
     refresh();
   });
 
   cheatList.onToggle([&](auto cell) {
-    lock_guard<recursive_mutex> lock(*programMutex);
+    Program::Guard guard;
     if(auto item = cheatList.selected()) {
       if(auto cheat = item.attribute<Cheat*>("cheat")) {
         cheat->enabled = cell.checked();
@@ -63,7 +64,7 @@ auto CheatEditor::construct(std::recursive_mutex *programMutexIn) -> void {
   });
 
   cheatList.onChange([&] {
-    lock_guard<recursive_mutex> lock(*programMutex);
+    Program::Guard guard;
     deleteButton.setEnabled(false);
     descriptionEdit.setText("");
     codeEdit.setText("");
@@ -79,14 +80,14 @@ auto CheatEditor::construct(std::recursive_mutex *programMutexIn) -> void {
 }
 
 auto CheatEditor::reload() -> void {
-  lock_guard<recursive_mutex> lock(*programMutex);
-  cheats.reset();
+  Program::Guard guard;
+  cheats.clear();
 
   location = emulator->locate(emulator->game->location, {".cheats.bml"});
   if(file::exists(location)) {
     auto document = BML::unserialize(string::read(location), " ");
     for(auto cheatNode : document.find("cheat")) {
-      cheats.append(Cheat().update(
+      cheats.push_back(Cheat().update(
         cheatNode["description"].text(),
         cheatNode["code"].text(),
         cheatNode["enabled"].boolean()
@@ -98,7 +99,7 @@ auto CheatEditor::reload() -> void {
 }
 
 auto CheatEditor::refresh() -> void {
-  lock_guard<recursive_mutex> lock(*programMutex);
+  Program::Guard guard;
   cheatList.reset();
   cheatList.setHeadered();
   cheatList.append(TableViewColumn());
@@ -118,7 +119,7 @@ auto CheatEditor::refresh() -> void {
 }
 
 auto CheatEditor::unload() -> void {
-  lock_guard<recursive_mutex> lock(*programMutex);
+  Program::Guard guard;
   bool hasCheats = cheats.size() > 0;
   bool isCheatLocation = location.endsWith(".cheats.bml");
 
@@ -145,7 +146,7 @@ auto CheatEditor::unload() -> void {
 }
 
 auto CheatEditor::find(uint address) -> maybe<u32> {
-  lock_guard<recursive_mutex> lock(*programMutex);
+  Program::Guard guard;
   for(auto& cheat : cheats) {
     if(!cheat.enabled) continue;
     if(auto result = cheat.addressValuePairs.find(address)) return result();

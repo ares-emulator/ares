@@ -104,12 +104,12 @@ auto ARM7TDMI::armInstructionDataRegisterShift
 
 auto ARM7TDMI::armInstructionMemorySwap
 (n4 m, n4 d, n4 n, n1 byte) -> void {
-  n32 rm = r(m) + (m == 15 ? 4 : 0);
   lock();
   n32 word = load((byte ? Byte : Word), r(n));
-  store((byte ? Byte : Word), r(n), rm);
-  r(d) = word;
+  store((byte ? Byte : Word), r(n), r(m) + (m == 15 ? 4 : 0));
   unlock();
+  idle();
+  r(d) = word;
 }
 
 auto ARM7TDMI::armInstructionMoveHalfImmediate
@@ -123,7 +123,10 @@ auto ARM7TDMI::armInstructionMoveHalfImmediate
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
   if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);
-  if(mode == 1) r(d) = rd;
+  if(mode == 1) {
+    idle();
+    r(d) = rd;
+  }
 }
 
 auto ARM7TDMI::armInstructionMoveHalfRegister
@@ -138,7 +141,10 @@ auto ARM7TDMI::armInstructionMoveHalfRegister
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
   if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);
-  if(mode == 1) r(d) = rd;
+  if(mode == 1) {
+    idle();
+    r(d) = rd;
+  }
 }
 
 auto ARM7TDMI::armInstructionMoveImmediateOffset
@@ -152,7 +158,10 @@ auto ARM7TDMI::armInstructionMoveImmediateOffset
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
   if(pre == 0 || writeback) r(n) = rn;
-  if(mode == 1) r(d) = rd;
+  if(mode == 1) {
+    idle();
+    r(d) = rd;
+  }
 }
 
 auto ARM7TDMI::armInstructionMoveMultiple
@@ -219,7 +228,10 @@ auto ARM7TDMI::armInstructionMoveRegisterOffset
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
   if(pre == 0 || writeback) r(n) = rn;
-  if(mode == 1) r(d) = rd;
+  if(mode == 1) {
+    idle();
+    r(d) = rd;
+  }
 }
 
 auto ARM7TDMI::armInstructionMoveSignedImmediate
@@ -233,7 +245,10 @@ auto ARM7TDMI::armInstructionMoveSignedImmediate
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
   if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);
-  if(mode == 1) r(d) = rd;
+  if(mode == 1) {
+    idle();
+    r(d) = rd;
+  }
 }
 
 auto ARM7TDMI::armInstructionMoveSignedRegister
@@ -248,7 +263,10 @@ auto ARM7TDMI::armInstructionMoveSignedRegister
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
   if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);
-  if(mode == 1) r(d) = rd;
+  if(mode == 1) {
+    idle();
+    r(d) = rd;
+  }
 }
 
 auto ARM7TDMI::armInstructionMoveToCoprocessorFromRegister

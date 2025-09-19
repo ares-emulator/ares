@@ -11,19 +11,81 @@ struct RDRAM : Memory::RCP<RDRAM> {
     template<u32 Size>
     auto read(u32 address, const char *peripheral) -> u64 {
       if (address >= size) return 0;
-      if (peripheral && system.homebrewMode) {
+      if (unlikely(peripheral && system.homebrewMode)) {
         self.debugger.readWord(address, Size, peripheral);
       }
       return Memory::Writable::read<Size>(address);
     }
 
     template<u32 Size>
+    auto writeRepeat(u32 address, u64 value, u8 length) -> void {
+      if constexpr(Size == Byte) {
+        value = value & (0xFFFFFFFF >> (24 - (address & 3) * 8));
+        value = (u32)((value << 24) | (value >> 8));
+      } else if constexpr(Size == Half) {
+        value = value & (0xFFFFFFFF >> (16 - (address & 2) * 8));
+        value = (u32)((value << 16) | (value >> 16));
+      }
+      if constexpr(Size != Dual)
+        value = (value << 32) | (u32) value;
+
+      const u32 end = min((address & ~7) + length, size);
+      if (end <= address)
+        return;
+
+      length = end - address;
+
+      if (address & 1) {
+        Memory::Writable::write<Byte>(address, value >> 56);
+        value = (value << 8) | (value >> 56);
+        address = (address & ~0x7FF) | ((address + 1) & 0x7FF);
+        length -= 1;
+      }
+      if ((address & 2) && length >= 2) {
+        Memory::Writable::write<Half>(address, value >> 48);
+        value = (value << 16) | (value >> 48);
+        address = (address & ~0x7FF) | ((address + 2) & 0x7FF);
+        length -= 2;
+      }
+      if ((address & 4) && length >= 4) {
+        Memory::Writable::write<Word>(address, value >> 32);
+        value = (value << 32) | (value >> 32);
+        address = (address & ~0x7FF) | ((address + 4) & 0x7FF);
+        length -= 4;
+      }
+
+      while (length >= 8) {
+        Memory::Writable::write<Dual>(address, value);
+        address = (address & ~0x7FF) | ((address + 8) & 0x7FF);
+        length -= 8;
+      }
+      if (length >= 4) {
+        Memory::Writable::write<Word>(address, value >> 32);
+        value <<= 32;
+        address += 4;
+        length -= 4;
+      }
+      if (length >= 2) {
+        Memory::Writable::write<Half>(address, value >> 48);
+        value <<= 16;
+        address += 2;
+        length -= 2;
+      }
+      if (length == 1)
+        Memory::Writable::write<Byte>(address, value >> 56);
+    }
+
+    template<u32 Size>
     auto write(u32 address, u64 value, const char *peripheral) -> void {
       if (address >= size) return;
-      if (peripheral && system.homebrewMode) {
+      if (unlikely(peripheral && system.homebrewMode)) {
         self.debugger.writeWord(address, Size, value, peripheral);
       }
-      Memory::Writable::write<Size>(address, value);
+      if (unlikely(mi.initializeMode())) {
+        writeRepeat<Size>(address, value, mi.initializeLength()+1);
+      } else {
+        Memory::Writable::write<Size>(address, value);
+      }
     }
 
     template<u32 Size>

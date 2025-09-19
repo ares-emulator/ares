@@ -2,7 +2,7 @@ struct System {
   Node::System node;
   VFS::Pak pak;
 
-  enum class Model : u32 { PCEngine, PCEngineDuo, SuperGrafx };
+  enum class Model : u32 { PCEngine, PCEngineDuo, SuperGrafx, LaserActive};
   enum class Region : u32 { NTSCJ, NTSCU };
 
   auto name() const -> string { return information.name; }
@@ -38,7 +38,8 @@ private:
 extern System system;
 
 auto Model::PCEngine()    -> bool { return system.model() == System::Model::PCEngine;    }
-auto Model::PCEngineDuo() -> bool { return system.model() == System::Model::PCEngineDuo; }
+auto Model::PCEngineDuo() -> bool { return (system.model() == System::Model::PCEngineDuo) || (system.model() == System::Model::LaserActive); }
+auto Model::LaserActive() -> bool { return system.model() == System::Model::LaserActive; }
 auto Model::SuperGrafx()  -> bool { return system.model() == System::Model::SuperGrafx;  }
 
 auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }

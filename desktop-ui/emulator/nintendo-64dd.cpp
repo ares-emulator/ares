@@ -14,9 +14,9 @@ Nintendo64DD::Nintendo64DD() {
   manufacturer = "Nintendo";
   name = "Nintendo 64DD";
 
-  firmware.append({"BIOS", "Japan", "806400ec0df94b0755de6c5b8249d6b6a9866124c5ddbdac198bde22499bfb8b"});
-  firmware.append({"BIOS", "US", "e9fec87a45fba02399e88064b9e2f8cf0f2106e351c58279a87f05da5bc984ad"});
-  firmware.append({"BIOS", "DEV", "9c2962a8b994a29e4cd04b3a6e4ed730a751414655ab6a9799ebf5fc08b79d44"});
+  firmware.push_back({"BIOS", "Japan", "806400ec0df94b0755de6c5b8249d6b6a9866124c5ddbdac198bde22499bfb8b"});
+  firmware.push_back({"BIOS", "US", "e9fec87a45fba02399e88064b9e2f8cf0f2106e351c58279a87f05da5bc984ad"});
+  firmware.push_back({"BIOS", "DEV", "9c2962a8b994a29e4cd04b3a6e4ed730a751414655ab6a9799ebf5fc08b79d44"});
 
   for(auto id : range(4)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -52,7 +52,7 @@ Nintendo64DD::Nintendo64DD() {
     device.digital ("Right", virtualPorts[id].mouse.right);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -125,7 +125,7 @@ auto Nintendo64DD::load() -> LoadResult {
           port->connect();
 
           if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
-            gb = mia::Medium::create("Game Boy");
+            gb = mia::Medium::create("Game Boy Color");
             string tmpPath;
             if(gb->load(Emulator::load(gb, tmpPath)) == successful) {
               slot->allocate();
@@ -164,6 +164,7 @@ auto Nintendo64DD::load(Menu menu) -> void {
   MenuItem changeDisk{&menu};
   changeDisk.setIcon(Icon::Device::Optical);
   changeDisk.setText("Change Disk").onActivate([&] {
+    Program::Guard guard;
     save();
     auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
     drive->disconnect();
@@ -174,6 +175,7 @@ auto Nintendo64DD::load(Menu menu) -> void {
 
     //give the emulator core a few seconds to notice an empty drive state before reconnecting
     diskInsertTimer->onActivate([&] {
+      Program::Guard guard;
       diskInsertTimer->setEnabled(false);
       auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
       drive->allocate();

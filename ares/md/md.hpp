@@ -2,6 +2,13 @@
 //started: 2016-07-08
 
 #include <ares/ares.hpp>
+#include <nall/decode/mmi.hpp>
+#include <nall/dsp/iir/dc-removal.hpp>
+#include <vector>
+#include <cmath>
+
+#include <qon/qon.h>
+#include <qon/qoi2.h>
 
 #include <component/processor/m68000/m68000.hpp>
 #include <component/processor/z80/z80.hpp>
@@ -10,10 +17,11 @@
 #include <component/audio/sn76489/sn76489.hpp>
 #include <component/audio/ym2612/ym2612.hpp>
 #include <component/eeprom/m24c/m24c.hpp>
+#include <vector>
 
 namespace ares::MegaDrive {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 
@@ -31,6 +39,7 @@ namespace ares::MegaDrive {
 
   inline static auto Mega32X() -> bool;
   inline static auto MegaCD() -> bool;
+  inline static auto MegaLD() -> bool;
 
   #include <md/controller/controller.hpp>
   #include <md/bus/bus.hpp>

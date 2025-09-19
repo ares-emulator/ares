@@ -10,7 +10,9 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
     .selectFolder()
     ) {
       path = location;
-      pathLabel.setText(string{path}.replace(Path::user(), "~/"));
+      auto userPath = Path::user();
+      auto pathLabelTemp = string{path}.replace(userPath, "~/");
+      pathLabel.setText(pathLabelTemp);
       refresh();
     }
   });
@@ -18,22 +20,24 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
     auto pak = mia::Medium::create(system);
     auto extensions = pak->extensions();
     for(auto& extension : extensions) extension.prepend("*.");
-    if(auto files = BrowserDialog()
+    auto files = BrowserDialog()
     .setTitle({"Import ", system, " Games"})
     .setPath(settings.recent)
-    .setFilters({{system, "|", extensions.merge(":"), ":*.zip:", extensions.merge(":").upcase(), ":*.ZIP"}, "All|*"})
+    .setFilters({{system, "|", nall::merge(extensions, ":"), ":*.zip:", nall::merge(extensions, ":").upcase(), ":*.ZIP"}, "All|*"})
     .setAlignment(programWindow)
-    .openFiles()
-    ) {
-      settings.recent = Location::path(files.first());
+    .openFiles();
+    if(!files.empty()) {
+      settings.recent = Location::path(files.front());
       gameImporter.import(system, files);
     }
   });
 }
 
 auto GameManager::select(string system) -> void {
-  path = {Path::user(), "Emulation/", system, "/"};
-  pathLabel.setText(string{path}.replace(Path::user(), "~/"));
+  auto userPath = Path::user();
+  path = {userPath, "Emulation/", system, "/"};
+  auto pathLabelTemp = string{path}.replace(userPath, "~/");
+  pathLabel.setText(pathLabelTemp);
   this->system = system;
   refresh();
 }

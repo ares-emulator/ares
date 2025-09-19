@@ -1447,7 +1447,7 @@ static bool init_surface_info(Device &device, WSIPlatform &platform,
 	}
 
 	// Ensure that 10-bit formats come before other formats.
-	std::sort(info.formats.begin(), info.formats.end(), [](const VkSurfaceFormatKHR &a, const VkSurfaceFormatKHR &b) {
+	std::ranges::sort(info.formats, [](const VkSurfaceFormatKHR &a, const VkSurfaceFormatKHR &b) {
 		const auto qual = [](VkFormat fmt) {
 			// Prefer a consistent ordering so Fossilize caches are more effective.
 			if (fmt == VK_FORMAT_A2B10G10R10_UNORM_PACK32)

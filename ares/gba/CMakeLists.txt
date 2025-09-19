@@ -1,4 +1,4 @@
-ares_components(arm7tdmi)
+ares_components(arm7tdmi s3511a)
 
 ares_add_sources(
   CORE #
@@ -47,8 +47,10 @@ ares_add_sources(
     cartridge/cartridge.hpp
     cartridge/eeprom.cpp
     cartridge/flash.cpp
+    cartridge/gpio.cpp
     cartridge/memory.hpp
     cartridge/mrom.cpp
+    cartridge/rtc.cpp
     cartridge/serialization.cpp
     cartridge/slot.cpp
     cartridge/slot.hpp

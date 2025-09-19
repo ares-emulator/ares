@@ -38,11 +38,11 @@ static auto CreateRGB(const Color& color) -> COLORREF {
   return RGB(color.red(), color.green(), color.blue());
 }
 
-static auto DropPaths(WPARAM wparam) -> vector<string> {
+static auto DropPaths(WPARAM wparam) -> std::vector<string> {
   auto dropList = HDROP(wparam);
   auto fileCount = DragQueryFile(dropList, ~0u, nullptr, 0);
 
-  vector<string> paths;
+  std::vector<string> paths;
   for(auto n : range(fileCount)) {
     auto length = DragQueryFile(dropList, n, nullptr, 0);
     auto buffer = new wchar_t[length + 1];
@@ -51,7 +51,7 @@ static auto DropPaths(WPARAM wparam) -> vector<string> {
       string path = (const char*)utf8_t(buffer);
       path.transform("\\", "/");
       if(directory::exists(path) && !path.endsWith("/")) path.append("/");
-      paths.append(path);
+      paths.push_back(path);
     }
 
     delete[] buffer;
@@ -61,13 +61,13 @@ static auto DropPaths(WPARAM wparam) -> vector<string> {
 }
 
 static auto WINAPI EnumVisibleChildWindowsProc(HWND hwnd, LPARAM lparam) -> BOOL {
-  auto children = (vector<HWND>*)lparam;
-  if(IsWindowVisible(hwnd)) children->append(hwnd);
+  auto children = (std::vector<HWND>*)lparam;
+  if(IsWindowVisible(hwnd)) children->push_back(hwnd);
   return true;
 }
 
-static auto EnumVisibleChildWindows(HWND hwnd) -> vector<HWND> {
-  vector<HWND> children;
+static auto EnumVisibleChildWindows(HWND hwnd) -> std::vector<HWND> {
+  std::vector<HWND> children;
   EnumChildWindows(hwnd, EnumVisibleChildWindowsProc, (LPARAM)&children);
   return children;
 }

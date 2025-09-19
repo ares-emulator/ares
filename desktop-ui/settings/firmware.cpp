@@ -28,7 +28,9 @@ auto FirmwareSettings::refresh() -> void {
       item.append(TableViewCell().setText(firmware.type));
       item.append(TableViewCell().setText(firmware.region));
       if(file::exists(firmware.location)) {
-        item.append(TableViewCell().setText(string{firmware.location}.replace(Path::user(), "~/")));
+        auto userPath = Path::user();
+        auto firmwareDisplayPath = string{ firmware.location }.replace(userPath, "~/");
+        item.append(TableViewCell().setText(firmwareDisplayPath));
       } else {
         item.append(TableViewCell().setText("(unset)").setForegroundColor(SystemColor::PlaceholderText));
       }

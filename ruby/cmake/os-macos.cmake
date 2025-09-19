@@ -41,10 +41,7 @@ target_link_libraries(
 )
 
 if(SDL_FOUND)
-  target_link_libraries(
-    ruby
-    PRIVATE "$<LINK_LIBRARY:WEAK_FRAMEWORK,SDL::SDL>"
-  )
+  target_link_libraries(ruby PRIVATE "$<LINK_LIBRARY:WEAK_FRAMEWORK,SDL::SDL>")
 endif()
 
 if(librashader_FOUND)

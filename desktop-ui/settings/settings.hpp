@@ -18,7 +18,7 @@ struct Settings : Markup::Node {
     string shader = "None";
     u32 multiplier = 2;
     string output = "Scale";
-    bool aspectCorrection = true;
+    string aspectCorrection = "Standard";
     bool adaptiveSizing = true;
     bool autoCentering = false;
 
@@ -355,7 +355,6 @@ struct DriverSettings : VerticalLayout {
   HorizontalLayout videoDriverLayout{this, Size{~0, 0}};
     Label videoDriverLabel{&videoDriverLayout, Size{0, 0}};
     ComboButton videoDriverList{&videoDriverLayout, Size{0, 0}};
-    Button videoDriverAssign{&videoDriverLayout, Size{0, 0}};
     Label videoDriverActive{&videoDriverLayout, Size{0, 0}};
   HorizontalLayout videoPropertyLayout{this, Size{~0, 0}};
     Label videoMonitorLabel{&videoPropertyLayout, Size{0, 0}};
@@ -378,7 +377,6 @@ struct DriverSettings : VerticalLayout {
   HorizontalLayout audioDriverLayout{this, Size{~0, 0}};
     Label audioDriverLabel{&audioDriverLayout, Size{0, 0}};
     ComboButton audioDriverList{&audioDriverLayout, Size{0, 0}};
-    Button audioDriverAssign{&audioDriverLayout, Size{0, 0}};
     Label audioDriverActive{&audioDriverLayout, Size{0, 0}};
   HorizontalLayout audioDeviceLayout{this, Size{~0, 0}};
     Label audioDeviceLabel{&audioDeviceLayout, Size{0, 0}};
@@ -397,7 +395,6 @@ struct DriverSettings : VerticalLayout {
   HorizontalLayout inputDriverLayout{this, Size{~0, 0}};
     Label inputDriverLabel{&inputDriverLayout, Size{0, 0}};
     ComboButton inputDriverList{&inputDriverLayout, Size{0, 0}};
-    Button inputDriverAssign{&inputDriverLayout, Size{0, 0}};
     Label inputDriverActive{&inputDriverLayout, Size{0, 0}};
   HorizontalLayout inputDefocusLayout{this, Size{~0, 0}};
     Label inputDefocusLabel{&inputDefocusLayout, Size{0, 0}};
@@ -405,8 +402,6 @@ struct DriverSettings : VerticalLayout {
     RadioLabel inputDefocusBlock{&inputDefocusLayout, Size{0, 0}};
     RadioLabel inputDefocusAllow{&inputDefocusLayout, Size{0, 0}};
     Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
-  //
-  Label driverApplyHint{this, Size{0, 35}};
 };
 
 struct DebugSettings : VerticalLayout {
@@ -439,7 +434,6 @@ struct HomePanel : VerticalLayout {
 };
 
 struct SettingsWindow : Window {
-  SettingsWindow();
   auto show(const string& panel) -> void;
   auto eventChange() -> void;
 
@@ -457,6 +451,11 @@ struct SettingsWindow : Window {
       DriverSettings driverSettings;
       DebugSettings debugSettings;
       HomePanel homePanel;
+  
+  bool initialized = false;
+  
+private:
+  auto initialize() -> void;
 };
 
 extern Settings settings;

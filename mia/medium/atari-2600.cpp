@@ -1,26 +1,26 @@
 struct Atari2600 : Cartridge {
   auto name() -> string override { return "Atari 2600"; }
-  auto extensions() -> vector<string> override { return {"a26", "bin"}; }
+  auto extensions() -> std::vector<string> override { return {"a26", "bin"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom, string location) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
 
-  auto match(vector<u8>& rom, vector<u8> pattern, u8 target_matches = 1) -> bool;
+  auto match(std::vector<u8>& rom, std::vector<u8> pattern, u8 target_matches = 1) -> bool;
 };
 
 auto Atari2600::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
   this->manifest = Medium::manifestDatabase(sha256);
-  if(!manifest) manifest = analyze(rom, location);
+  if(!manifest) manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
@@ -40,7 +40,7 @@ auto Atari2600::save(string location) -> bool {
   return true;
 }
 
-auto Atari2600::analyze(vector<u8>& rom, string location) -> string {
+auto Atari2600::analyze(std::vector<u8>& rom) -> string {
   string board = "Linear";
 
   // TODO: More heuristics for more mapper types
@@ -100,7 +100,7 @@ auto Atari2600::analyze(vector<u8>& rom, string location) -> string {
   return s;
 }
 
-auto Atari2600::match(vector<u8>& rom, vector<u8> pattern, u8 target_matches) -> bool {
+auto Atari2600::match(std::vector<u8>& rom, std::vector<u8> pattern, u8 target_matches) -> bool {
   u8 matches = 0;
 
   for (int romIndex = 0; romIndex + pattern.size() <= rom.size(); ++romIndex) {

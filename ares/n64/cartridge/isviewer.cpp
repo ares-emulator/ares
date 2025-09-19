@@ -24,12 +24,16 @@ auto Cartridge::ISViewer::writeHalf(u32 address, u16 data) -> void {
     // libdragon instead treats this as a "number of bytes" register, only
     // writing an "output byte count"
     // In order to satisfy both libraries, we assume it behaves as libdragon
-    // expects, and by forcing the write to never hit ram, libultra remains
-    // functional.
-    for(auto address : range(data)) {
+    // expects, and by forcing the write pointer to always be zero, libultra
+    // remains functional.
+    // Also reset the read pointer back to zero if it is used as a starting
+    // address, for compatibility with hardware even though neither library
+    // ever writes to it.
+    for(auto address : range(ram.read<Half>(0x4), data)) {
       char c = ram.read<Byte>(0x20 + address);
       messageChar(c);
     }
+    ram.write<Word>(0x4, 0);
     return;
   }
 

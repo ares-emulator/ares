@@ -1,5 +1,5 @@
 auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(auto system = mia::identify(filename)) {
     for(auto& emulator : emulators) {
       if(emulator->name == system) return emulator;
@@ -16,7 +16,7 @@ auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
 
 /// Loads an emulator and, optionally, a ROM from the given location.
 auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   unload();
 
   ::emulator = emulator;
@@ -36,7 +36,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
 
 /// Loads a ROM for an already-loaded emulator.
 auto Program::load(string location) -> bool {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(settings.debugServer.enabled) {
     nall::GDB::server.reset();
   }
@@ -94,11 +94,13 @@ auto Program::load(string location) -> bool {
   settings.recent.game[0] = {emulator->name, ";", location};
   presentation.loadEmulators();
 
+  configuration = emulator->root->attribute("configuration");
+
   return true;
 }
 
 auto Program::unload() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!emulator) return;
 
   nall::GDB::server.close();
@@ -108,8 +110,8 @@ auto Program::unload() -> void {
   clearUndoStates();
   showMessage({"Unloaded ", Location::prefix(emulator->game->location)});
   emulator->unload();
-  screens.reset();
-  streams.reset();
+  screens.clear();
+  streams.clear();
   emulator.reset();
   rewindReset();
   presentation.unloadEmulator();
@@ -123,6 +125,7 @@ auto Program::unload() -> void {
   propertiesViewer.unload();
   traceLogger.unload();
   message.text = "";
+  configuration = "";
   ruby::video.clear();
   ruby::audio.clear();
 }

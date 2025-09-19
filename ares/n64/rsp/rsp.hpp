@@ -589,13 +589,13 @@ struct RSP : Thread, Memory::RCP<RSP> {
     bool showValues = true;
 
   private:
-    auto EXECUTE() -> vector<string>;
-    auto SPECIAL() -> vector<string>;
-    auto REGIMM() -> vector<string>;
-    auto SCC() -> vector<string>;
-    auto LWC2() -> vector<string>;
-    auto SWC2() -> vector<string>;
-    auto VU() -> vector<string>;
+    auto EXECUTE() -> std::vector<string>;
+    auto SPECIAL() -> std::vector<string>;
+    auto REGIMM() -> std::vector<string>;
+    auto SCC() -> std::vector<string>;
+    auto LWC2() -> std::vector<string>;
+    auto SWC2() -> std::vector<string>;
+    auto VU() -> std::vector<string>;
     auto immediate(s64 value, u32 bits = 0) const -> string;
     auto ipuRegisterName(u32 index) const -> string;
     auto ipuRegisterValue(u32 index) const -> string;

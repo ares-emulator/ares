@@ -17,14 +17,14 @@ auto Program::create() -> void {
   audioDriverUpdate();
   inputDriverUpdate();
 
-  driverSettings.videoRefresh();
-  driverSettings.audioRefresh();
-  driverSettings.inputRefresh();
-  
+  _isRunning = true;
   worker = thread::create({&Program::emulatorRunLoop, this});
+  program.rewindReset();
 
-  if(startGameLoad) {
-    auto gameToLoad = startGameLoad.takeFirst();
+  if(!startGameLoad.empty()) {
+    Program::Guard guard;
+    auto gameToLoad = startGameLoad.front();
+    startGameLoad.erase(startGameLoad.begin());
     if(startSystem) {
       for(auto &emulator: emulators) {
         if(emulator->name == startSystem) {
@@ -44,13 +44,22 @@ auto Program::create() -> void {
   }
 }
 
+auto Program::waitForInterrupts() -> void {
+  std::unique_lock<std::mutex> lock(_programMutex);
+  _interruptWorking = true;
+  _programConditionVariable.notify_one();
+  _programConditionVariable.wait(lock, [this] { return !_interruptWorking || _quitting; });
+}
+
 auto Program::emulatorRunLoop(uintptr_t) -> void {
   thread::setName("dev.ares.worker");
+  _programThread = true;
   while(!_quitting) {
-    // Allow other threads to access the program mutex
-    usleep(1);
-    
-    lock_guard<recursive_mutex> programLock(programMutex);
+    // Allow other threads to carry out tasks between emulator run loop iterations
+    if(_interruptWaiting) {
+      waitForInterrupts();
+      continue;
+    }
     if(!emulator) {
       usleep(20 * 1000);
       continue;
@@ -131,8 +140,12 @@ auto Program::main() -> void {
 }
 
 auto Program::quit() -> void {
+  Program::Guard guard;
   _quitting = true;
+  lock.unlock();
+  _programConditionVariable.notify_all();
   worker.join();
+  program._isRunning = false;
   unload();
   Application::processEvents();
   Application::quit();

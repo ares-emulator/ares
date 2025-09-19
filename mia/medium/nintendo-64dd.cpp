@@ -1,27 +1,27 @@
 struct Nintendo64DD : FloppyDisk {
   auto name() -> string override { return "Nintendo 64DD"; }
-  auto extensions() -> vector<string> override { return {"n64dd", "ndd", "d64"}; }
+  auto extensions() -> std::vector<string> override { return {"n64dd", "ndd", "d64"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom, vector<u8> errorTable) -> string;
-  auto transform(array_view<u8> input, vector<u8> errorTable) -> vector<u8>;
+  auto analyze(std::vector<u8>& rom, std::vector<u8> errorTable) -> string;
+  auto transform(array_view<u8> input, std::vector<u8> errorTable) -> std::vector<u8>;
   auto sizeCheck(array_view<u8> input) -> bool;
   auto repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bool;
-  auto createErrorTable(array_view<u8> input) -> vector<u8>;
+  auto createErrorTable(array_view<u8> input) -> std::vector<u8>;
 };
 
 auto Nintendo64DD::load(string location) -> LoadResult {
-  vector<u8> input;
+  std::vector<u8> input;
   if(directory::exists(location)) {
     append(input, {location, "program.disk"});
   } else if(file::exists(location)) {
     input = FloppyDisk::read(location);
   }
-  if(!input) return romNotFound;
+  if(input.empty()) return romNotFound;
 
   array_view<u8> view{input};
   auto errorTable = createErrorTable(view);
-  if(!errorTable) return invalidROM;
+  if(errorTable.empty()) return invalidROM;
   auto sizeValid = sizeCheck(view);
   if(!sizeValid) return invalidROM;
   this->location = location;
@@ -34,7 +34,8 @@ auto Nintendo64DD::load(string location) -> LoadResult {
   pak->append("manifest.bml", manifest);
   pak->append("program.disk.error", errorTable);
 
-  if(auto output = transform(view, errorTable)) {
+  auto output = transform(view, errorTable);
+  if(!output.empty()) {
     pak->append("program.disk", output);
   }
 
@@ -53,7 +54,7 @@ auto Nintendo64DD::save(string location) -> bool {
   return true;
 }
 
-auto Nintendo64DD::analyze(vector<u8>& rom, vector<u8> errorTable) -> string {
+auto Nintendo64DD::analyze(std::vector<u8>& rom, std::vector<u8> errorTable) -> string {
   //basic disk format check (further d64 check will be done later)
   b1 ndd = (rom.size() == 0x3DEC800);
   b1 mame = (rom.size() == 0x435B0C0);
@@ -171,7 +172,7 @@ auto Nintendo64DD::repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bo
   return true;
 }
 
-auto Nintendo64DD::createErrorTable(array_view<u8> input) -> vector<u8> {
+auto Nintendo64DD::createErrorTable(array_view<u8> input) -> std::vector<u8> {
   //basic disk format check (further d64 check will be done later)
   b1 ndd = (input.size() == 0x3DEC800);
   b1 mame = (input.size() == 0x435B0C0);
@@ -180,7 +181,7 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> vector<u8> {
   if (!ndd && !mame && !d64) return {};
 
   input.begin();
-  vector<u8> output;
+  std::vector<u8> output;
   output.resize(1175*2*2, 0);   //1175 tracks * 2 blocks per track * 2 sides
 
   //perform basic system area check, check if the data repeats and validity
@@ -306,7 +307,7 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> vector<u8> {
   return output;
 }
 
-auto Nintendo64DD::transform(array_view<u8> input, vector<u8> errorTable) -> vector<u8> {
+auto Nintendo64DD::transform(array_view<u8> input, std::vector<u8> errorTable) -> std::vector<u8> {
   //basic disk format check (further d64 check will be done later)
   b1 ndd = (input.size() == 0x3DEC800);
   b1 mame = (input.size() == 0x435B0C0);
@@ -319,7 +320,7 @@ auto Nintendo64DD::transform(array_view<u8> input, vector<u8> errorTable) -> vec
     //mame physical format (canon ares format)
     //just copy
     input.begin();
-    vector<u8> output;
+    std::vector<u8> output;
     output.resize(0x435B0C0, 0);
 
     for(u32 n : range(input.size()))
@@ -362,7 +363,7 @@ auto Nintendo64DD::transform(array_view<u8> input, vector<u8> errorTable) -> vec
 
   //ndd conv
   input.begin();
-  vector<u8> output;
+  std::vector<u8> output;
   output.resize(0x435B0C0, 0);
 
   u32 lba = 0;

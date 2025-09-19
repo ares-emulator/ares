@@ -1,4 +1,5 @@
 #include "../desktop-ui.hpp"
+#include <nall/vector-helpers.hpp>
 #include "video.cpp"
 #include "audio.cpp"
 #include "input.cpp"
@@ -26,14 +27,16 @@ DebugSettings& debugSettings = settingsWindow.debugSettings;
 DriverSettings& driverSettings = settingsWindow.driverSettings;
 
 auto Settings::load() -> void {
-  Markup::Node::operator=(BML::unserialize(string::read(locate("settings.bml")), " "));
+  auto settingsPath = locate("settings.bml");
+  Markup::Node::operator=(BML::unserialize(string::read(settingsPath), " "));
   process(true);
   save();
 }
 
 auto Settings::save() -> void {
   process(false);
-  file::write(locate("settings.bml"), BML::serialize(*this, " "));
+  auto settingsPath = locate("settings.bml");
+  file::write(settingsPath, BML::serialize(*this, " "));
 }
 
 auto Settings::process(bool load) -> void {
@@ -63,7 +66,7 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Video/Shader", video.shader);
   bind(natural, "Video/Multiplier", video.multiplier);
   bind(string,  "Video/Output", video.output);
-  bind(boolean, "Video/AspectCorrection", video.aspectCorrection);
+  bind(string,  "Video/AspectCorrectionMode", video.aspectCorrection);
   bind(boolean, "Video/AdaptiveSizing", video.adaptiveSizing);
   bind(boolean, "Video/AutoCentering", video.autoCentering);
   bind(real,    "Video/Luminance", video.luminance);
@@ -141,14 +144,22 @@ auto Settings::process(bool load) -> void {
       if(load == 0) for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
       if(load == 0) value.trimRight(";", 1L);
       bind(string, name, value);
-      if(load == 1) for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = value.split(";")(binding);
+      if(load == 1) {
+        auto parts = nall::split(value, ";");
+        parts.resize(BindingLimit);
+        for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = parts[binding];
+      }
     }
     for(auto& input : port.mouse.inputs) {
       string name = {"VirtualMouse", 1 + index, "/", input.name}, value;
       if(load == 0) for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
       if(load == 0) value.trimRight(";", 1L);
       bind(string, name, value);
-      if(load == 1) for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = value.split(";")(binding);
+      if(load == 1) {
+        auto parts = nall::split(value, ";");
+        parts.resize(BindingLimit);
+        for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = parts[binding];
+      }
     }
   }
 
@@ -157,7 +168,11 @@ auto Settings::process(bool load) -> void {
     if(load == 0) for(auto& assignment : mapping.assignments) value.append(assignment, ";");
     if(load == 0) value.trimRight(";", 1L);
     bind(string, name, value);
-    if(load == 1) for(u32 binding : range(BindingLimit)) mapping.assignments[binding] = value.split(";")(binding);
+    if(load == 1) {
+      auto parts = nall::split(value, ";");
+      parts.resize(BindingLimit);
+      for(u32 binding : range(BindingLimit)) mapping.assignments[binding] = parts[binding];
+    }
   }
 
   for(auto& emulator : emulators) {
@@ -178,7 +193,7 @@ auto Settings::process(bool load) -> void {
 
 //
 
-SettingsWindow::SettingsWindow() {
+auto SettingsWindow::initialize() -> void {
   onClose([&] {
     settings.save();
     setVisible(false);
@@ -231,9 +246,15 @@ SettingsWindow::SettingsWindow() {
   setSize({700_sx, 425_sy});
   setAlignment({0.0, 1.0});
   setResizable(false);
+  
+  driverSettings.videoRefresh();
+  driverSettings.audioRefresh();
+  driverSettings.inputRefresh();
+  initialized = true;
 }
 
 auto SettingsWindow::show(const string& panel) -> void {
+  if(!initialized) initialize();
   for(auto item : panelList.items()) {
     if(item.text() == panel) {
       item.setSelected();

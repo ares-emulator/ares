@@ -17,14 +17,7 @@ struct InputMouseRawInput {
   } ms;
 
   auto acquired() -> bool {
-    if(mouseAcquired) {
-      SetFocus((HWND)handle);
-      SetCapture((HWND)handle);
-      RECT rc;
-      GetWindowRect((HWND)handle, &rc);
-      ClipCursor(&rc);
-    }
-    return GetCapture() == (HWND)handle;
+    return mouseAcquired;
   }
 
   auto acquire() -> bool {
@@ -32,7 +25,13 @@ struct InputMouseRawInput {
       mouseAcquired = true;
       ShowCursor(false);
     }
-    return acquired();
+    
+    SetFocus((HWND)handle);
+    SetCapture((HWND)handle);
+    RECT rc;
+    GetWindowRect((HWND)handle, &rc);
+    ClipCursor(&rc);
+    return GetCapture() == (HWND)handle;
   }
 
   auto release() -> bool {
@@ -74,7 +73,7 @@ struct InputMouseRawInput {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     assign(HID::Mouse::GroupID::Axis, 0, ms.relativeX);
     assign(HID::Mouse::GroupID::Axis, 1, ms.relativeY);
     assign(HID::Mouse::GroupID::Axis, 2, ms.relativeZ);
@@ -91,7 +90,7 @@ struct InputMouseRawInput {
     ms.relativeY = 0;
     ms.relativeZ = 0;
 
-    devices.append(ms.hid);
+    devices.push_back(ms.hid);
   }
 
   auto initialize(uintptr handle) -> bool {

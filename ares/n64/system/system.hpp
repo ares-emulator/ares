@@ -41,6 +41,7 @@ private:
   atomic<bool> _vulkanNeedsLoad = false;
 
   auto initDebugHooks() -> void;
+  auto _power(bool reset) -> void;
 
   //serialization.cpp
   auto serialize(serializer&, bool synchronize) -> void;

@@ -13,6 +13,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setDisconnect([&] { device.reset(); });
   port->setSupported({
     "Gamepad",
+    "Rumble Gamepad",
     "Justifier",
     "Justifiers",
     "Mouse",
@@ -30,6 +31,7 @@ auto ControllerPort::unload() -> void {
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
   if(name == "Gamepad"        ) device = new Gamepad(port);
+  if(name == "Rumble Gamepad" ) device = new RumbleGamepad(port);
   if(name == "Justifier"      ) device = new Justifier(port);
   if(name == "Justifiers"     ) device = new Justifiers(port);
   if(name == "Mouse"          ) device = new Mouse(port);

@@ -25,7 +25,6 @@ auto ARM7TDMI::load(u32 mode, n32 address) -> n32 {
   } else {
     word = ROR(word, address.bit(0,1) << 3);
   }
-  idle();
   return word;
 }
 

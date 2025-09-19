@@ -12,7 +12,7 @@ auto mComboEdit::destruct() -> void {
 //
 
 auto mComboEdit::append(sComboEditItem item) -> type& {
-  state.items.append(item);
+  state.items.push_back(item);
   item->setParent(this, itemCount() - 1);
   signal(append, item);
   return *this;
@@ -47,9 +47,10 @@ auto mComboEdit::itemCount() const -> u32 {
   return state.items.size();
 }
 
-auto mComboEdit::items() const -> vector<ComboEditItem> {
-  vector<ComboEditItem> items;
-  for(auto& item : state.items) items.append(item);
+auto mComboEdit::items() const -> std::vector<ComboEditItem> {
+  std::vector<ComboEditItem> items;
+  items.reserve(state.items.size());
+  for(auto& item : state.items) items.push_back(item);
   return items;
 }
 
@@ -65,7 +66,7 @@ auto mComboEdit::onChange(const function<void ()>& callback) -> type& {
 
 auto mComboEdit::remove(sComboEditItem item) -> type& {
   signal(remove, item);
-  state.items.remove(item->offset());
+  state.items.erase(state.items.begin() + item->offset());
   for(auto n : range(item->offset(), itemCount())) {
     state.items[n]->adjustOffset(-1);
   }
@@ -76,7 +77,7 @@ auto mComboEdit::remove(sComboEditItem item) -> type& {
 auto mComboEdit::reset() -> type& {
   signal(reset);
   for(auto& item : state.items) item->setParent();
-  state.items.reset();
+  state.items.clear();
   return *this;
 }
 

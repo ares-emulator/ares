@@ -1,5 +1,5 @@
-inline auto Thread::EntryPoints() -> vector<EntryPoint>& {
-  static vector<EntryPoint> entryPoints;
+inline auto Thread::EntryPoints() -> std::vector<EntryPoint>& {
+  static std::vector<EntryPoint> entryPoints;
   return entryPoints;
 }
 
@@ -7,7 +7,7 @@ inline auto Thread::Enter() -> void {
   for(u32 index : range(EntryPoints().size())) {
     if(co_active() == EntryPoints()[index].handle) {
       auto entryPoint = EntryPoints()[index].entryPoint;
-      EntryPoints().remove(index);
+      EntryPoints().erase(EntryPoints().begin() + index);
       while(true) {
         scheduler.synchronize();
         entryPoint();
@@ -51,7 +51,7 @@ inline auto Thread::create(double frequency, function<void ()> entryPoint) -> vo
   } else {
     co_derive(_handle, Thread::Size, &Thread::Enter);
   }
-  EntryPoints().append({_handle, entryPoint});
+  EntryPoints().push_back({_handle, entryPoint});
   setFrequency(frequency);
   setClock(0);
   scheduler.append(*this);
@@ -60,7 +60,7 @@ inline auto Thread::create(double frequency, function<void ()> entryPoint) -> vo
 //returns a thread to its entry point (eg for a reset), without resetting the clock value
 inline auto Thread::restart(function<void()> entryPoint) -> void {
   co_derive(_handle, Thread::Size, &Thread::Enter);
-  EntryPoints().append({_handle, entryPoint});
+  EntryPoints().push_back({_handle, entryPoint});
 }
 
 inline auto Thread::destroy() -> void {

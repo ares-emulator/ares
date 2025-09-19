@@ -1,4 +1,5 @@
 #include <nall/intrinsics.hpp>
+#include <ranges>
 
 #if defined(HIRO_WINDOWS)
   #include "../windows/header.hpp"

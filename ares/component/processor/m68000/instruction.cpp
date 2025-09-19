@@ -10,8 +10,8 @@ auto M68000::instruction() -> void {
 M68000::M68000() {
   #define bind(id, name, ...) { \
     assert(!instructionTable[id]); \
-    instructionTable[id] = [=] { return instruction##name(__VA_ARGS__); }; \
-    disassembleTable[id] = [=] { return disassemble##name(__VA_ARGS__); }; \
+    instructionTable[id] = [=, this] { return instruction##name(__VA_ARGS__); }; \
+    disassembleTable[id] = [=, this] { return disassemble##name(__VA_ARGS__); }; \
   }
 
   #define unbind(id) { \

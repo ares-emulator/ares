@@ -19,15 +19,15 @@ struct AudioALSA : AudioDriver {
   auto hasBlocking() -> bool override { return true; }
   auto hasDynamic() -> bool override { return true; }
 
-  auto hasDevices() -> vector<string> override {
-    vector<string> devices;
+  auto hasDevices() -> std::vector<string> override {
+    std::vector<string> devices;
 
     char** list;
     if(snd_device_name_hint(-1, "pcm", (void***)&list) == 0) {
       u32 index = 0;
       while(list[index]) {
         char* deviceName = snd_device_name_get_hint(list[index], "NAME");
-        if(deviceName) devices.append(deviceName);
+        if(deviceName) devices.push_back(deviceName);
         free(deviceName);
         index++;
       }
@@ -37,15 +37,15 @@ struct AudioALSA : AudioDriver {
     return devices;
   }
 
-  auto hasChannels() -> vector<u32> override {
+  auto hasChannels() -> std::vector<u32> override {
     return {2};
   }
 
-  auto hasFrequencies() -> vector<u32> override {
+  auto hasFrequencies() -> std::vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<u32> override {
+  auto hasLatencies() -> std::vector<u32> override {
     return {20, 40, 60, 80, 100};
   }
 
@@ -114,7 +114,10 @@ private:
   auto initialize() -> bool {
     terminate();
 
-    if(!hasDevices().find(self.device)) self.device = "default";
+    {
+      auto devices = hasDevices();
+      if(std::ranges::find(devices, self.device) == devices.end()) self.device = "default";
+    }
     if(snd_pcm_open(&_interface, self.device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) < 0) return terminate(), false;
 
     u32 rate = self.frequency;

@@ -15,7 +15,7 @@ PCEngine::PCEngine() {
 }
 
 auto PCEngine::allocatePorts() -> void {
-  ports.reset();
+  ports.clear();
 
   InputPort port{string{"Controller Port"}};
 
@@ -45,7 +45,7 @@ auto PCEngine::allocatePorts() -> void {
     device.digital("Run",   virtualPorts[0].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
 
   for(auto id : range(5)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -76,7 +76,7 @@ auto PCEngine::allocatePorts() -> void {
     device.digital("Run",   virtualPorts[id].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

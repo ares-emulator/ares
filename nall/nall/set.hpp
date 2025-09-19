@@ -12,7 +12,7 @@
 //  bool T::operator< (const T&) const;
 
 #include <nall/utility.hpp>
-#include <nall/vector.hpp>
+#include <vector>
 
 namespace nall {
 
@@ -103,13 +103,13 @@ template<typename T> struct set {
     auto operator++() -> base_iterator& {
       if(++position >= source.size()) { position = source.size(); return *this; }
 
-      if(stack.right()->link[1]) {
-        stack.append(stack.right()->link[1]);
-        while(stack.right()->link[0]) stack.append(stack.right()->link[0]);
+      if(stack.back()->link[1]) {
+        stack.push_back(stack.back()->link[1]);
+        while(stack.back()->link[0]) stack.push_back(stack.back()->link[0]);
       } else {
         node_t* child;
-        do child = stack.takeRight();
-        while(child == stack.right()->link[1]);
+        do { child = stack.back(); stack.pop_back(); }
+        while(child == stack.back()->link[1]);
       }
 
       return *this;
@@ -118,7 +118,7 @@ template<typename T> struct set {
     base_iterator(const set& source, u32 position) : source(source), position(position) {
       node_t* node = source.root;
       while(node) {
-        stack.append(node);
+        stack.push_back(node);
         node = node->link[0];
       }
     }
@@ -126,12 +126,12 @@ template<typename T> struct set {
   protected:
     const set& source;
     u32 position;
-    vector<node_t*> stack;
+    std::vector<node_t*> stack;
   };
 
   struct iterator : base_iterator {
     iterator(const set& source, u32 position) : base_iterator(source, position) {}
-    auto operator*() const -> T& { return base_iterator::stack.right()->value; }
+    auto operator*() const -> T& { return base_iterator::stack.back()->value; }
   };
 
   auto begin() -> iterator { return iterator(*this, 0); }
@@ -139,7 +139,7 @@ template<typename T> struct set {
 
   struct const_iterator : base_iterator {
     const_iterator(const set& source, u32 position) : base_iterator(source, position) {}
-    auto operator*() const -> const T& { return base_iterator::stack.right()->value; }
+    auto operator*() const -> const T& { return base_iterator::stack.back()->value; }
   };
 
   auto begin() const -> const const_iterator { return const_iterator(*this, 0); }

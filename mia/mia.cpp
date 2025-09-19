@@ -6,7 +6,7 @@ namespace mia {
 
 function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/Systems/"}; };
 function<string ()> saveLocation = [] { return string{}; };
-vector<string> media;
+std::vector<string> media;
 
 auto locate(const string &name) -> string {
   // First check each path for the presence of the file we are looking for in the following order
@@ -86,40 +86,42 @@ auto construct() -> void {
   if(initialized) return;
   initialized = true;
 
-  media.append("Atari 2600");
-  media.append("BS Memory");
-  media.append("ColecoVision");
-  media.append("MyVision");
-  media.append("Famicom");
-  media.append("Famicom Disk System");
-  media.append("Game Boy");
-  media.append("Game Boy Color");
-  media.append("Game Boy Advance");
-  media.append("Game Gear");
-  media.append("Master System");
-  media.append("Mega Drive");
-  media.append("Mega 32X");
-  media.append("Mega CD");
-  media.append("MSX");
-  media.append("MSX2");
-  media.append("Neo Geo");
-  media.append("Neo Geo Pocket");
-  media.append("Neo Geo Pocket Color");
-  media.append("Nintendo 64");
-  media.append("Nintendo 64DD");
-  media.append("PC Engine");
-  media.append("PC Engine CD");
-  media.append("PlayStation");
-  media.append("Pocket Challenge V2");
-  media.append("Saturn");
-  media.append("SC-3000");
-  media.append("SG-1000");
-  media.append("Sufami Turbo");
-  media.append("Super Famicom");
-  media.append("SuperGrafx");
-  media.append("WonderSwan");
-  media.append("WonderSwan Color");
-  media.append("ZX Spectrum");
+  media.push_back("Atari 2600");
+  media.push_back("BS Memory");
+  media.push_back("ColecoVision");
+  media.push_back("MyVision");
+  media.push_back("Famicom");
+  media.push_back("Famicom Disk System");
+  media.push_back("Game Boy");
+  media.push_back("Game Boy Color");
+  media.push_back("Game Boy Advance");
+  media.push_back("Game Gear");
+  media.push_back("Master System");
+  media.push_back("Mega Drive");
+  media.push_back("Mega 32X");
+  media.push_back("Mega CD");
+  media.push_back("Mega LD");  
+  media.push_back("MSX");
+  media.push_back("MSX2");
+  media.push_back("Neo Geo");
+  media.push_back("Neo Geo Pocket");
+  media.push_back("Neo Geo Pocket Color");
+  media.push_back("Nintendo 64");
+  media.push_back("Nintendo 64DD");
+  media.push_back("PC Engine");
+  media.push_back("PC Engine CD");
+  media.push_back("PC Engine LD");
+  media.push_back("PlayStation");
+  media.push_back("Pocket Challenge V2");
+  media.push_back("Saturn");
+  media.push_back("SC-3000");
+  media.push_back("SG-1000");
+  media.push_back("Sufami Turbo");
+  media.push_back("Super Famicom");
+  media.push_back("SuperGrafx");
+  media.push_back("WonderSwan");
+  media.push_back("WonderSwan Color");
+  media.push_back("ZX Spectrum");
 }
 
 auto identify(const string& filename) -> string {
@@ -133,7 +135,8 @@ auto identify(const string& filename) -> string {
         auto match = Location::suffix(file.name).trimLeft(".", 1L).downcase();
         for(auto& medium : media) {
           auto pak = mia::Medium::create(medium);
-          if(pak->extensions().find(match)) {
+          auto exts = pak->extensions();
+          if(std::ranges::find(exts, match) != exts.end()) {
             extension = match;
           }
         }
@@ -143,7 +146,8 @@ auto identify(const string& filename) -> string {
 
   for(auto& medium : media) {
     auto pak = mia::Medium::create(medium);
-    if(pak->extensions().find(extension)) {
+    auto exts = pak->extensions();
+    if(std::ranges::find(exts, extension) != exts.end()) {
       if(pak->load(filename) != successful) continue; // Skip medium that the system cannot load
       if(pak->pak->attribute("audio").boolean()) continue; // Skip audio-only media to give the next system a chance to match
       return pak->name();
@@ -155,7 +159,7 @@ auto identify(const string& filename) -> string {
 
 auto import(shared_pointer<Pak> pak, const string& filename) -> bool {
   if(pak->load(filename) == successful) {
-    string pathname = {Path::user(), "Emulation/", pak->name(), "/", Location::prefix(filename), ".", pak->extensions().first(), "/"};
+    string pathname = {Path::user(), "Emulation/", pak->name(), "/", Location::prefix(filename), ".", pak->extensions().front(), "/"};
     if(!directory::create(pathname)) return false;
     for(auto& node : *pak->pak) {
       if(auto input = node.cast<vfs::file>()) {
@@ -177,7 +181,8 @@ auto main(Arguments arguments) -> void {
 
   construct();
 
-  if(auto document = file::read(locate("settings.bml"))) {
+  auto document = file::read(locate("settings.bml"));
+  if(!document.empty()) {
     settings.unserialize(document);
   }
 

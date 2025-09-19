@@ -8,6 +8,7 @@ auto PCD::serialize(serializer& s) -> void {
   s(cdda);
   s(adpcm);
   s(fader);
+  s(ld);
 
   s(clock.drive);
   s(clock.cdda);
@@ -29,6 +30,11 @@ auto PCD::Drive::serialize(serializer& s) -> void {
   s(start);
   s(end);
   s(sector);
+  s(track);
+  s(sectorRepeatCount);
+  s(stopPointEnabled);
+  s(targetStopPoint);
+  s(laserdiscLoaded);
 }
 
 auto PCD::SCSI::serialize(serializer& s) -> void {
@@ -111,4 +117,58 @@ auto PCD::Fader::serialize(serializer& s) -> void {
   s((u32&)mode);
   s(step);
   s(volume);
+}
+
+auto PCD::LD::serialize(serializer& s) -> void {
+  s(inputRegs);
+  s(inputFrozenRegs);
+  s(outputRegs);
+  s(outputFrozenRegs);
+  s(outputRegsWrittenData);
+  s(outputRegsWrittenCooldownTimer);
+  s(areInputRegsFrozen);
+  s(areOutputRegsFrozen);
+  s(operationErrorFlag1);
+  s(operationErrorFlag2);
+  s(operationErrorFlag3);
+  s(seekEnabled);
+  s(currentSeekMode);
+  s(currentSeekModeTimeFormat);
+  s(currentSeekModeRepeat);
+  s(analogAudioAttenuationLeft);
+  s(analogAudioAttenuationRight);
+  s(analogAudioFadeToMutedLeft);
+  s(analogAudioFadeToMutedRight);
+  s(activeSeekMode);
+  s(seekPointRegs);
+  s(stopPointRegs);
+  s(reachedStopPoint);
+  s(reachedStopPointPreviously);
+  s(currentPlaybackMode);
+  s(currentPlaybackSpeed);
+  s(currentPlaybackDirection);
+  s(targetDriveState);
+  s(currentDriveState);
+  s(targetPauseState);
+  s(currentPauseState);
+  s(seekPerformedSinceLastFrameUpdate);
+  s(driveStateChangeDelayCounter);
+  s(selectedTrackInfo);
+
+  s(video.frameSkipBaseFrame);
+  s(video.frameSkipCounter);
+  s(video.currentVideoFrameIndex);
+  s(video.currentVideoFrameLeadIn);
+  s(video.currentVideoFrameLeadOut);
+  s(video.currentVideoFrameFieldSelectionEnabled);
+  s(video.currentVideoFrameFieldSelectionEvenField);
+  s(video.currentVideoFrameOnEvenField);
+  s(video.currentVideoFrameBlanked);
+  s(video.currentVideoFrameInterlaced);
+  s(video.imageHoldFrameLatched);
+
+  // Restore the current video frame into the display buffer
+  if (Model::LaserActive() && s.reading()) {
+	loadCurrentVideoFrameIntoBuffer();
+  }
 }

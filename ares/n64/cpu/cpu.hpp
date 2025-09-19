@@ -196,8 +196,8 @@ struct CPU : Thread {
     template<u32 Size> auto write(u64 vaddr, u32 paddr, u64 data) -> void;
     auto power(bool reset) -> void;
 
-    auto readDebug(u64 vaddr, u32 paddr) -> u8;
-    auto writeDebug(u64 vaddr, u32 paddr, u8 value) -> void;
+    template<u32 Size> auto readDebug(u64 vaddr, u32 paddr) -> u64;
+    template<u32 Size> auto writeDebug(u64 vaddr, u32 paddr, u64 value) -> void;
 
     //8KB
     struct Line {
@@ -318,7 +318,7 @@ struct CPU : Thread {
   template<u32 Size> auto vaddrAlignedError(u64 vaddr, bool write) -> bool;
   auto addressException(u64 vaddr) -> void;
 
-  auto readDebug(u64 vaddr) -> u8;
+  template <u32 Size> auto readDebug(u64 vaddr) -> u64;
   template <u32 Size> auto writeDebug(u64 vaddr, u64 data) -> bool;
 
   //serialization.cpp
@@ -888,8 +888,8 @@ struct CPU : Thread {
     };
 
     auto reset() -> void {
-      pools.reallocate(1 << 21);  //2_MiB * sizeof(void*) == 16_MiB
-      pools.fill();
+      pools.resize(1 << 21);  //2_MiB * sizeof(void*) == 16_MiB
+      std::ranges::fill(pools, nullptr);
     }
 
     auto invalidate(u32 address) -> void {
@@ -935,7 +935,7 @@ struct CPU : Thread {
     bool enabled = false;
     bool callInstructionPrologue = false;
     bump_allocator allocator;
-    vector<Pool*> pools;
+    std::vector<Pool*> pools;
   } recompiler{*this};
 
   struct Disassembler {
@@ -950,11 +950,11 @@ struct CPU : Thread {
     bool showValues = true;
 
   private:
-    auto EXECUTE() -> vector<string>;
-    auto SPECIAL() -> vector<string>;
-    auto REGIMM() -> vector<string>;
-    auto SCC() -> vector<string>;
-    auto FPU() -> vector<string>;
+    auto EXECUTE() -> std::vector<string>;
+    auto SPECIAL() -> std::vector<string>;
+    auto REGIMM() -> std::vector<string>;
+    auto SCC() -> std::vector<string>;
+    auto FPU() -> std::vector<string>;
     auto immediate(s64 value, u32 bits = 0) const -> string;
     auto ipuRegisterName(u32 index) const -> string;
     auto ipuRegisterValue(u32 index) const -> string;

@@ -1,4 +1,5 @@
 struct DualShock : PeripheralDevice {
+  Node::Input::Axis axis;
   Node::Input::Axis lx;
   Node::Input::Axis ly;
   Node::Input::Axis rx;
@@ -29,7 +30,7 @@ struct DualShock : PeripheralDevice {
   auto invalid(u8 data) -> u8;
   auto active() -> bool override;
 
-  vector<u8> readPad();
+  std::vector<u8> readPad();
 
   enum class State : u32 {
     Idle,
@@ -50,8 +51,8 @@ struct DualShock : PeripheralDevice {
   i8 commandStep;
   n8 rumbleConfig[6];
 
-  vector<u8> outputData;
-  vector<n8> inputData;
+  std::vector<u8> outputData;
+  std::vector<n8> inputData;
 
   bool _active = false;
 };

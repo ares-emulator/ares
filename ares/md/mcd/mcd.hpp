@@ -33,10 +33,10 @@ struct MCD : M68000, Thread {
   auto title() const -> string { return information.title; }
 
   //mcd.cpp
-  auto load(Node::Object) -> void;
+  auto load(Node::Object parent) -> void;
   auto unload() -> void;
 
-  auto allocate(Node::Port) -> Node::Peripheral;
+  auto allocate(Node::Port, string name) -> Node::Peripheral;
   auto connect() -> void;
   auto disconnect() -> void;
 
@@ -312,6 +312,28 @@ struct MCD : M68000, Thread {
     auto checksum() -> void;
     auto insert() -> void;
     auto eject() -> void;
+    auto stop() -> void;
+    auto play() -> void;
+    auto pause() -> void;
+    auto seekToTime(u8 hour, u8 minute, u8 second, u8 frame, bool startPaused) -> void;
+    auto seekToRelativeTime(n7 track, u8 minute, u8 second, u8 frame, bool startPaused) -> void;
+    auto seekToSector(s32 lba, bool startPaused) -> void;
+    auto seekToTrack(n7 track, bool startPaused) -> void;
+    auto getTrackCount() -> n7;
+    auto getFirstTrack() -> n7;
+    auto getLastTrack() -> n7;
+    auto getCurrentTrack() -> n7;
+    auto getCurrentSector() -> s32;
+    auto getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void;
+    auto getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void;
+    auto getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void;
+    auto getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void;
+    auto lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32;
+    auto isTrackAudio(n7 track) -> bool;
+    auto isDiscLoaded() -> bool;
+    auto isDiscLaserdisc() -> bool;
+    auto isLaserdiscClv() -> bool;
+    auto isLaserdiscDigitalAudioPresent() -> bool;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -343,6 +365,7 @@ struct MCD : M68000, Thread {
       n4  seeking;  //status after seeking (Playing or Paused)
       n16 latency;
       i32 sector;   //current frame#
+      i32 sectorRepeatCount;
       n16 sample;   //current audio sample# within current frame
       n7  track;    //current track#
       n1  tocRead;
@@ -354,7 +377,136 @@ struct MCD : M68000, Thread {
     n4 status [10];
     n4 command[10];
     n16 subcode[64];
+    n1 stopPointEnabled;
+    s32 targetStopPoint;
+    bool laserdiscLoaded;
   } cdd;
+
+  struct LD {
+    // megald.cpp
+    auto load(string sourceFile) -> void;
+    auto unload() -> void;
+    auto notifyDiscEjected() -> void;
+    auto read(n24 address) -> n8;
+    auto write(n24 address, n8 data) -> void;
+    auto getOutputRegisterValue(int regNum) -> n8;
+    auto processInputRegisterWrite(int regNum, n8 data, n8 previousData, bool wasDeferredRegisterWrite) -> void;
+    auto resetSeekTargetToDefault() -> void;
+    auto liveSeekRegistersContainsLatchableTarget() const -> bool;
+    auto latchSeekTargetFromCurrentState() -> bool;
+    auto performSeekWithLatchedState() -> void;
+    auto updateStopPointWithCurrentState() -> void;
+    auto zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn = false) -> s32;
+    auto lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32;
+    auto VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void;
+    auto handleStopPointReached(s32 lba) -> void;
+    auto updateCurrentVideoFrameNumber(s32 lba) -> void;
+    auto loadCurrentVideoFrameIntoBuffer() -> void;
+    auto decodeBiphaseCodeFromScanline(int lineNo) -> u32;
+    auto power(bool reset) -> void;
+    auto scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    enum class SeekPointReg {
+      Chapter,
+      HoursOrFrameH,
+      MinutesOrFrameM,
+      SecondsOrFrameL,
+      Frames,
+    };
+    enum class SeekMode {
+      SeekToRedbookTime,
+      SeekToRedbookRelativeTime,
+      SeekToVideoFrame,
+      SeekToVideoTime,
+    };
+
+    struct AnalogVideoFrameIndex {
+      bool isCLV;
+      bool hasDigitalAudio;
+      size_t leadInFrameCount;
+      size_t activeVideoFrameCount;
+      size_t leadOutFrameCount;
+      std::vector<const unsigned char*> leadInFrames;
+      std::vector<const unsigned char*> activeVideoFrames;
+      std::vector<const unsigned char*> leadOutFrames;
+
+      s32 frameSkipBaseFrame;
+      s32 frameSkipCounter;
+      s32 currentVideoFrameIndex;
+      n1 currentVideoFrameLeadIn;
+      n1 currentVideoFrameLeadOut;
+      n1 currentVideoFrameFieldSelectionEnabled[2];
+      n1 currentVideoFrameFieldSelectionEvenField[2];
+      n1 currentVideoFrameOnEvenField;
+      n1 currentVideoFrameBlanked;
+      n1 currentVideoFrameInterlaced;
+      n1 imageHoldFrameLatched;
+      qon_desc videoFileHeader;
+      qoi2_desc videoFrameHeader;
+      int drawIndex;
+      std::vector<unsigned char> videoFrameBuffers[2];
+      std::vector<unsigned char> dummyBlankLineBuffer;
+
+      size_t vbiDataSearchStartPos;
+      size_t vbiDataSearchEndPos;
+      double vbiDataBitCellLengthInPixels;
+      std::vector<size_t> vbiDataBitSampleOffsets;
+
+      static const size_t FrameBufferWidth = 1495;
+      static const size_t FrameBufferHeight = 525;
+      std::vector<u32> outputFramebuffer;
+    } video;
+    std::vector<u8> analogAudioDataBuffer;
+    array_view<u8> analogAudioRawDataView;
+    n32 analogAudioLeadingAudioSamples;
+    Decode::MMI mmi;
+
+    static constexpr double videoFramesPerSecond = 30.0 / 1.001; // Roughly 29.97
+    static const size_t inputRegisterCount = 0x20;
+    static const size_t outputRegisterCount = 0x20;
+    n8 inputRegs[inputRegisterCount];
+    n8 inputFrozenRegs[inputRegisterCount];
+    n8 outputRegs[outputRegisterCount];
+    n8 outputFrozenRegs[outputRegisterCount];
+    n8 outputRegsWrittenData[outputRegisterCount];
+    n8 outputRegsWrittenCooldownTimer[outputRegisterCount];
+    n1 areInputRegsFrozen;
+    n1 areOutputRegsFrozen;
+    n1 operationErrorFlag1;
+    n1 operationErrorFlag2;
+    n1 operationErrorFlag3;
+    n1 seekEnabled;
+    n3 currentSeekMode;
+    n1 currentSeekModeTimeFormat;
+    n1 currentSeekModeRepeat;
+    n8 analogAudioAttenuationLeft;
+    n8 analogAudioAttenuationRight;
+    n1 analogAudioFadeToMutedLeft;
+    n1 analogAudioFadeToMutedRight;
+
+    // Currently latched seek point
+    u8 activeSeekMode;
+    n8 seekPointRegs[5];
+
+    // Currently latched stop point
+    n8 stopPointRegs[5];
+    n1 reachedStopPoint;
+    n1 reachedStopPointPreviously;
+
+    u4 currentPlaybackMode;
+    u3 currentPlaybackSpeed;
+    u1 currentPlaybackDirection;
+    n8 targetDriveState;
+    n8 currentDriveState;
+    n1 targetPauseState;
+    n1 currentPauseState;
+    n1 seekPerformedSinceLastFrameUpdate;
+    n8 driveStateChangeDelayCounter;
+    n8 selectedTrackInfo;
+  } ld;
 
   struct Timer {
     //timer.cpp

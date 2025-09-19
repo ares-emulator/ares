@@ -8,6 +8,7 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
   }
   thread.step(250 * 2);
   io.busLatch = busRead<Word>(address);
+  io.pbusAddress = (address + 4) & ~1;
   return io.busLatch;
 }
 
@@ -59,6 +60,7 @@ inline auto PI::writeWord(u32 address, u32 data, Thread& thread) -> void {
   if(io.ioBusy) return;
   io.ioBusy = 1;
   io.busLatch = data;
+  io.pbusAddress = (address + 4) & ~1;
   queue.insert(Queue::PI_BUS_Write, 400);
   return busWrite<Word>(address, data);
 }

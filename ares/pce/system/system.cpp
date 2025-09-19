@@ -1,24 +1,28 @@
 #include <pce/pce.hpp>
+#include <algorithm>
 
 namespace ares::PCEngine {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[NEC] PC Engine (NTSC-J)",
     "[NEC] TurboGrafx 16 (NTSC-U)",
     "[NEC] PC Engine Duo (NTSC-J)",
     "[NEC] TurboDuo (NTSC-U)",
     "[NEC] SuperGrafx (NTSC-J)",
+    "[Pioneer] LaserActive (NEC PAC) (NTSC-U)",
+    "[Pioneer] LaserActive (NEC PAC) (NTSC-J)",
   };
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 
 auto option(string name, string value) -> bool {
-  if(name == "Pixel Accuracy") vdp.setAccurate(value.boolean());
+  if(name == "Pixel Accuracy") vdp.setAccurate(true); // Forced: scanline renderer is too buggy
   return true;
 }
 
@@ -65,6 +69,10 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.find("SuperGrafx")) {
     information.name = "SuperGrafx";
     information.model = Model::SuperGrafx;
+  }
+  if(name.find("LaserActive")) {
+    information.name = "PC Engine";
+    information.model = Model::LaserActive;
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;

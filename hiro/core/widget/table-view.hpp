@@ -8,11 +8,11 @@ struct mTableView : mWidget {
   auto append(sTableViewItem item) -> type&;
   auto backgroundColor() const -> Color;
   auto batchable() const -> bool;
-  auto batched() const -> vector<TableViewItem>;
+  auto batched() const -> std::vector<TableViewItem>;
   auto bordered() const -> bool;
   auto column(u32 position) const -> TableViewColumn;
   auto columnCount() const -> u32;
-  auto columns() const -> vector<TableViewColumn>;
+  auto columns() const -> std::vector<TableViewColumn>;
   auto doActivate(sTableViewCell cell) const -> void;
   auto doChange() const -> void;
   auto doContext(sTableViewCell cell) const -> void;
@@ -23,7 +23,7 @@ struct mTableView : mWidget {
   auto headered() const -> bool;
   auto item(u32 position) const -> TableViewItem;
   auto itemCount() const -> u32;
-  auto items() const -> vector<TableViewItem>;
+  auto items() const -> std::vector<TableViewItem>;
   auto onActivate(const function<void (TableViewCell)>& callback = {}) -> type&;
   auto onChange(const function<void ()>& callback = {}) -> type&;
   auto onContext(const function<void (TableViewCell)>& callback = {}) -> type&;
@@ -56,10 +56,10 @@ struct mTableView : mWidget {
     Color backgroundColor;
     bool batchable = false;
     bool bordered = false;
-    vector<sTableViewColumn> columns;
+    std::vector<sTableViewColumn> columns;
     Color foregroundColor;
     bool headered = false;
-    vector<sTableViewItem> items;
+    std::vector<sTableViewItem> items;
     function<void (TableViewCell)> onActivate;
     function<void ()> onChange;
     function<void (TableViewCell)> onContext;

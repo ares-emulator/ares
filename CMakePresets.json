@@ -102,7 +102,9 @@
         "ARES_BUILD_LOCAL": false,
         "ARES_BUILD_OPTIONAL_TARGETS": true,
         "ARES_UNITY_CORES": true,
-        "ARES_PRECOMPILE_HEADERS": true
+        "ARES_PRECOMPILE_HEADERS": true,
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {"type": "STRING", "value": "MultiThreaded"},
+        "CMAKE_IGNORE_PATH": {"type": "STRING", "value": "C:/Strawberry/c/bin/"}
       }
     },
     {
@@ -159,6 +161,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {"type": "STRING", "value": "RelWithDebInfo"},
         "ENABLE_CCACHE": true,
+        "ENABLE_IPO": false,
         "ARES_BUILD_LOCAL": false,
         "ARES_BUILD_OPTIONAL_TARGETS": true,
         "ARES_PRECOMPILE_HEADERS": false
@@ -172,6 +175,16 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "ubuntu-ci-qt",
+      "displayName": "Ubuntu CI (arm64, gcc, Qt)",
+      "description": "Single-arch binary for building on Github Actions",
+      "inherits": ["ubuntu-ci"],
+      "cacheVariables": {
+        "USE_QT6": true,
+        "ARES_BUILD_OPTIONAL_TARGETS": false
       }
     }
   ],

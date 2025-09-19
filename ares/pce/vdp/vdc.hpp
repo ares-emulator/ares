@@ -16,7 +16,7 @@ struct VDC : VDCBase {
     } memory;
   } debugger;
 
-  auto bus() const -> n9 { return output; }
+  auto bus() const -> n13 { return output; }
   auto burstMode() const -> bool { return latch.burstMode || timing.vstate != VDW; }
   auto irqLine() const -> bool { return irq.line; }
 
@@ -32,7 +32,7 @@ struct VDC : VDCBase {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  n9 output;
+  n13 output;
 
   struct VRAM {
     //vdc.cpp

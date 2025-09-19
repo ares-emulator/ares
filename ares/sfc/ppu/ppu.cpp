@@ -34,6 +34,12 @@ auto PPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PPU");
 
   screen = node->append<Node::Video::Screen>("Screen", 564, height() * 2);
+
+  deepBlackBoost = screen->append<Node::Setting::Boolean>("Deep Black Boost", true, [&](auto value) {
+    screen->resetPalette();
+  });
+  deepBlackBoost->setDynamic(true);
+
   screen->colors(1 << 19, {&PPU::color, this});
   screen->setSize(564, height() * 2);
   screen->setScale(0.5, 0.5);
@@ -48,11 +54,6 @@ auto PPU::load(Node::Object parent) -> void {
 
   vramSize = node->append<Node::Setting::Natural>("VRAM", 64_KiB);
   vramSize->setAllowedValues({64_KiB, 128_KiB});
-
-  deepBlackBoost = screen->append<Node::Setting::Boolean>("Deep Black Boost", true, [&](auto value) {
-    screen->resetPalette();
-  });
-  deepBlackBoost->setDynamic(true);
 
   debugger.load(node);
 }

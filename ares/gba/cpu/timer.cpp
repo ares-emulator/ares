@@ -59,12 +59,12 @@ auto CPU::runFIFO(u32 n) -> void {
   apu.fifo[n].read();
   if(apu.fifo[n].size() > 3) return;
 
-  auto& dma = this->dma[1 + n];
-  if(dma.enable && dma.timingMode == 3) {
-    dma.active = true;
-    dma.waiting = 2;
-    dma.targetMode = 2;
-    dma.size = 1;
-    dma.latch.length.data = 4;
+  auto& channel = this->dmac.channel[1 + n];
+  if(channel.enable && channel.timingMode == 3) {
+    channel.active = true;
+    channel.waiting = 2;
+    channel.targetMode = 2;
+    channel.size = 1;
+    channel.latch.length.data = 4;
   }
 }

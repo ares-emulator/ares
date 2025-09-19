@@ -4,6 +4,8 @@
 #include <nall/maybe.hpp>
 #include <nall/string.hpp>
 #include <nall/decode/wav.hpp>
+#include <nall/decode/zip.hpp>
+#include <vector>
 
 namespace nall::Decode {
 
@@ -22,50 +24,73 @@ struct CUE {
 
     u8 number = 0xff; //01-99
     string type;
-    vector<Index> indices;
+    std::vector<Index> indices;
     maybe<s32> pregap;
     maybe<s32> postgap;
   };
 
   struct File {
     auto sectorCount() const -> u32;
-    auto scan(const string& pathname) -> bool;
+    auto scan(const string& pathname, const string& archiveFolder, const Decode::ZIP* archive) -> bool;
 
     string name;
+    string archiveFolder;
     string type;
-    vector<Track> tracks;
+    std::vector<Track> tracks;
   };
 
-  auto load(const string& location) -> bool;
+  auto load(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool;
   auto sectorCount() const -> u32;
 
-  vector<File> files;
+  std::vector<File> files;
 
 private:
-  auto loadFile(vector<string>& lines, u32& offset) -> File;
-  auto loadTrack(vector<string>& lines, u32& offset) -> Track;
-  auto loadIndex(vector<string>& lines, u32& offset) -> Index;
+  auto loadFile(std::vector<string>& lines, u32& offset) -> File;
+  auto loadTrack(std::vector<string>& lines, u32& offset) -> Track;
+  auto loadIndex(std::vector<string>& lines, u32& offset) -> Index;
   auto toLBA(const string& msf) -> u32;
 };
 
-inline auto CUE::load(const string& location) -> bool {
-  auto lines = string::read(location).replace("\r", "").split("\n");
+inline auto CUE::load(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
+  std::vector<string> lines;
+  string archiveFolder;
+  if (compressedFile != nullptr) {
+    auto fileNameSeparatorPos = compressedFile->name.findPrevious(compressedFile->name.size()-1, "/");
+    if (fileNameSeparatorPos.data() != nullptr) {
+      archiveFolder = compressedFile->name.slice(0, fileNameSeparatorPos.get() + 1);
+    }
+    auto rawDataBuffer = archive->extract(*compressedFile);
+    // Currently (2025-08-14) there is no way to construct a nall::string from a fixed-length buffer using
+    // nall::string_view, as the variadic constructor overrides "string_view(const char* data, u32 size)",
+    // meaning we can't create a string_view from a fixed-length input. We use an array_view here as a
+    // workaround.
+    auto rawDataBufferAsArrayView = array_view<u8>(rawDataBuffer.data(), rawDataBuffer.size());
+    auto splitLines = nall::split(string(rawDataBufferAsArrayView).replace("\r", ""), "\n");
+    lines.clear();
+    lines.reserve(splitLines.size());
+    for (u32 i = 0; i < splitLines.size(); i++) lines.push_back(splitLines[i]);
+  } else {
+    auto splitLines = nall::split(string::read(location).replace("\r", ""), "\n");
+    lines.clear();
+    lines.reserve(splitLines.size());
+    for (u32 i = 0; i < splitLines.size(); i++) lines.push_back(splitLines[i]);
+  }
 
   u32 offset = 0;
   while(offset < lines.size()) {
     lines[offset].strip();
     if(lines[offset].ibeginsWith("FILE ")) {
       auto file = loadFile(lines, offset);
-      if(!file.tracks) continue;
-      files.append(file);
+      if(file.tracks.empty()) continue;
+      files.push_back(file);
       continue;
     }
     offset++;
   }
 
-  if(!files) return false;
-  if(!files.first().tracks) return false;
-  if(!files.first().tracks.first().indices) return false;
+  if(files.empty()) return false;
+  if(files.front().tracks.empty()) return false;
+  if(files.front().tracks.front().indices.empty()) return false;
 
   // calculate index ends for all but the last index
   for(auto& file : files) {
@@ -80,17 +105,18 @@ inline auto CUE::load(const string& location) -> bool {
   }
 
   for(auto& file : files) {
-    if(!file.scan(Location::path(location))) return false;
+    if(!file.scan(Location::path(location), archiveFolder, archive)) return false;
   }
 
   return true;
 }
 
-inline auto CUE::loadFile(vector<string>& lines, u32& offset) -> File {
+inline auto CUE::loadFile(std::vector<string>& lines, u32& offset) -> File {
   File file;
 
   lines[offset].itrimLeft("FILE ", 1L).strip();
-  file.type = lines[offset].split(" ").last().strip().downcase();
+  auto parts = nall::split_and_strip(lines[offset], " ");
+  file.type = parts.empty() ? string{} : parts.back().downcase();
   lines[offset].itrimRight(file.type, 1L).strip();
   file.name = lines[offset].trim("\"", "\"", 1L);
   offset++;
@@ -100,8 +126,8 @@ inline auto CUE::loadFile(vector<string>& lines, u32& offset) -> File {
     if(lines[offset].ibeginsWith("FILE ")) break;
     if(lines[offset].ibeginsWith("TRACK ")) {
       auto track = loadTrack(lines, offset);
-      if(!track.indices) continue;
-      file.tracks.append(track);
+      if(track.indices.empty()) continue;
+      file.tracks.push_back(track);
       continue;
     }
     offset++;
@@ -110,11 +136,12 @@ inline auto CUE::loadFile(vector<string>& lines, u32& offset) -> File {
   return file;
 }
 
-inline auto CUE::loadTrack(vector<string>& lines, u32& offset) -> Track {
+inline auto CUE::loadTrack(std::vector<string>& lines, u32& offset) -> Track {
   Track track;
 
   lines[offset].itrimLeft("TRACK ", 1L).strip();
-  track.type = lines[offset].split(" ").last().strip().downcase();
+  auto parts = nall::split_and_strip(lines[offset], " ");
+  track.type = parts.empty() ? string{} : parts.back().downcase();
   lines[offset].itrimRight(track.type, 1L).strip();
   track.number = lines[offset].natural();
   offset++;
@@ -127,19 +154,19 @@ inline auto CUE::loadTrack(vector<string>& lines, u32& offset) -> Track {
       auto index = loadIndex(lines, offset);
       if(index.number == 0 && track.number == 1)
         index.lba = 0; // ignore track 1 index 0 (assume 1st pregap always starts at origin)
-      track.indices.append(index);
+      track.indices.push_back(index);
       continue;
     }
     if(lines[offset].ibeginsWith("PREGAP ")) {
       track.pregap = toLBA(lines[offset++].itrimLeft("PREGAP ", 1L));
       Index index; index.number = 0; index.lba = -1;
-      track.indices.append(index); // placeholder
+      track.indices.push_back(index); // placeholder
       continue;
     }
     if(lines[offset].ibeginsWith("POSTGAP ")) {
       track.postgap = toLBA(lines[offset++].itrimLeft("POSTGAP ", 1L));
-      Index index; index.number = track.indices.last().number + 1; index.lba = -1;
-      track.indices.append(index); // placeholder
+      Index index; index.number = track.indices.back().number + 1; index.lba = -1;
+      track.indices.push_back(index); // placeholder
       continue;
     }
     offset++;
@@ -149,11 +176,12 @@ inline auto CUE::loadTrack(vector<string>& lines, u32& offset) -> Track {
   return track;
 }
 
-inline auto CUE::loadIndex(vector<string>& lines, u32& offset) -> Index {
+inline auto CUE::loadIndex(std::vector<string>& lines, u32& offset) -> Index {
   Index index;
 
   lines[offset].itrimLeft("INDEX ", 1L);
-  string sector = lines[offset].split(" ").last().strip();
+  auto parts = nall::split_and_strip(lines[offset], " ");
+  string sector = parts.empty() ? string{} : parts.back();
   lines[offset].itrimRight(sector, 1L).strip();
   index.number = lines[offset].natural();
   index.lba = toLBA(sector);
@@ -164,9 +192,10 @@ inline auto CUE::loadIndex(vector<string>& lines, u32& offset) -> Index {
 }
 
 inline auto CUE::toLBA(const string& msf) -> u32 {
-  u32 m = msf.split(":")(0).natural();
-  u32 s = msf.split(":")(1).natural();
-  u32 f = msf.split(":")(2).natural();
+  auto parts = nall::split(msf, ":");
+  u32 m = parts.size() > 0 ? parts[0].natural() : 0;
+  u32 s = parts.size() > 1 ? parts[1].natural() : 0;
+  u32 f = parts.size() > 2 ? parts[2].natural() : 0;
   return m * 60 * 75 + s * 75 + f;
 }
 
@@ -176,15 +205,30 @@ inline auto CUE::sectorCount() const -> u32 {
   return count;
 }
 
-inline auto CUE::File::scan(const string& pathname) -> bool {
+inline auto CUE::File::scan(const string& pathname, const string& archiveFolderPath, const Decode::ZIP* archive) -> bool {
   string location = {Location::path(pathname), name};
-  if(!file::exists(location)) return false;
+
+  maybe<ZIP::File> zipFileEntry;
+  if(archive != nullptr) {
+    string archiveFilePath = archiveFolderPath;
+    archiveFilePath.append(name);
+    zipFileEntry = archive->findFile(archiveFilePath);
+    archiveFolder = archiveFolderPath;
+    if(!zipFileEntry) return false;
+  } else {
+    if(!file::exists(location)) return false;
+  }
 
   u64 size = 0;
 
   if(type == "binary") {
-    size = file::size(location);
+    if(zipFileEntry) {
+      size = zipFileEntry->size;
+    } else {
+      size = file::size(location);
+    }
   } else if(type == "wave") {
+    //##TODO## Do we bother to support wav files in our zip bundles?
     Decode::WAV wav;
     if(!wav.open(location)) return false;
     if(wav.channels != 2) return false;

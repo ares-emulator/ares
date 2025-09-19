@@ -45,7 +45,7 @@ Arcade::Arcade() {
     }
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

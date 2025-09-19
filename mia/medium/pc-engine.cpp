@@ -1,19 +1,19 @@
 struct PCEngine : Cartridge {
   auto name() -> string override { return "PC Engine"; }
-  auto extensions() -> vector<string> override { return {"pce"}; }
+  auto extensions() -> std::vector<string> override { return {"pce"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
 };
 
 auto PCEngine::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
@@ -50,7 +50,7 @@ auto PCEngine::save(string location) -> bool {
   return true;
 }
 
-auto PCEngine::analyze(vector<u8>& data) -> string {
+auto PCEngine::analyze(std::vector<u8>& data) -> string {
   if((data.size() & 0x1fff) == 512) {
     //remove header if present
     memory::move(&data[0], &data[512], data.size() - 512);
@@ -114,6 +114,15 @@ auto PCEngine::analyze(vector<u8>& data) -> string {
   //note: because all three cards use the same ROM image, it is not possible to distinguish them here.
   //since the Arcade Card Pro is the most capable card, and is fully backward compatible, that is chosen here.
   if(digest == "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce") board = "Arcade Card Pro", region = "NTSC-J";
+
+  // PAC-N10
+  if(digest == "????????????????????????????????????????????????????????????????") board = "Arcade Card Pro", region = "NTSC-J";
+
+  // PAC-N1
+  if(digest == "459325690a458baebd77495c91e37c4dddfdd542ba13a821ce954e5bb245627f") board = "Arcade Card Pro", region = "NTSC-J";
+
+  // PCE-LP1
+  if(digest == "3f43b3b577117d84002e99cb0baeb97b0d65b1d70b4adadc68817185c6a687f0") board = "Arcade Card Pro", region = "NTSC-J";
 
   //TurboGrafx System Card 2.00
   if(digest == "edba5be43803b180e1d64ca678c3f8bdbf07180c9e2a65a5db69ad635951e6cc") board = "System Card", region = "NTSC-U";

@@ -9,7 +9,7 @@ struct Thread {
     function<void ()> entryPoint;
   };
 
-  static auto EntryPoints() -> vector<EntryPoint>&;
+  static auto EntryPoints() -> std::vector<EntryPoint>&;
   static auto Enter() -> void;
 
   Thread() = default;

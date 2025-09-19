@@ -13,6 +13,7 @@ namespace Systems {
   #include "mega-32x.cpp"
   #include "mega-cd.cpp"
   #include "mega-cd-32x.cpp"
+  #include "mega-ld.cpp"
   #include "msx.cpp"
   #include "msx2.cpp"
   #include "neo-geo-aes.cpp"
@@ -49,6 +50,7 @@ auto System::create(string name) -> shared_pointer<Pak> {
   if(name == "Mega Drive") return new Systems::MegaDrive;
   if(name == "Mega 32X") return new Systems::Mega32X;
   if(name == "Mega CD") return new Systems::MegaCD;
+  if(name == "Mega LD") return new Systems::MegaLD;
   if(name == "Mega CD 32X") return new Systems::MegaCD32X;
   if(name == "MSX") return new Systems::MSX;
   if(name == "MSX2") return new Systems::MSX2;

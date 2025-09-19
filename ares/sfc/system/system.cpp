@@ -1,8 +1,9 @@
 #include <sfc/sfc.hpp>
+#include <algorithm>
 
 namespace ares::SuperFamicom {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Nintendo] Super Famicom (NTSC)",
     "[Nintendo] Super Famicom (PAL)",
@@ -10,7 +11,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 

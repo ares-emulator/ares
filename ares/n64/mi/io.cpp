@@ -57,7 +57,6 @@ auto MI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
     if(data.bit(12)) io.rdramRegisterSelect = 0;
     if(data.bit(13)) io.rdramRegisterSelect = 1;
 
-    if(io.initializeMode) debug(unimplemented, "[MI::writeWord] initializeMode=1");
     if(io.ebusTestMode  ) debug(unimplemented, "[MI::writeWord] ebusTestMode=1");
   }
 

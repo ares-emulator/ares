@@ -17,7 +17,7 @@ struct InputJoypadUHID {
     u8* buffer = nullptr;
     bool writable = false;
   };
-  vector<Joypad> joypads;
+  std::vector<Joypad> joypads;
 
   auto assign(Joypad& joypad, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = joypad.hid->group(groupID);
@@ -26,13 +26,13 @@ struct InputJoypadUHID {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
     //hotplug support
     u64 thisTimestamp = chrono::millisecond();
     if(thisTimestamp - lastTimestamp >= 2000) {
       lastTimestamp = thisTimestamp;
       auto devices = directory::files("/dev/", "uhid*");
-      if(enumeratedDevices != devices.merge(";")) initialize();
+      if(enumeratedDevices != nall::merge(devices, ";")) initialize();
     }
 
     for(auto& joypad : joypads) {
@@ -86,7 +86,7 @@ struct InputJoypadUHID {
         }
         hid_end_parse(parse);
       }
-      devices.append(joypad.hid);
+      devices.push_back(joypad.hid);
     }
   }
 
@@ -95,7 +95,7 @@ struct InputJoypadUHID {
 
     u32 pathID = 0;
     auto devices = directory::files("/dev/", "uhid*");
-    enumeratedDevices = devices.merge(";");
+    enumeratedDevices = nall::merge(devices, ";");
     for(auto device : devices) {
       Joypad joypad;
       string deviceName = {"/dev/", device};
@@ -186,7 +186,7 @@ struct InputJoypadUHID {
         for(u32 n : range(axes)) joypad.hid->buttons().append(n);
       }
 
-      joypads.append(joypad);
+      joypads.push_back(joypad);
     }
 
     lastTimestamp = chrono::millisecond();
@@ -199,7 +199,7 @@ struct InputJoypadUHID {
       flock(joypad.fd, LOCK_UN);
       close(joypad.fd);
     }
-    joypads.reset();
+    joypads.clear();
   }
 
 private:

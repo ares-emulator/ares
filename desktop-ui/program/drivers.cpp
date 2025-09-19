@@ -1,5 +1,5 @@
 auto Program::videoDriverUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   ruby::video.create(settings.video.driver);
   ruby::video.setContext(presentation.viewport.handle());
   videoMonitorUpdate();
@@ -22,7 +22,7 @@ auto Program::videoDriverUpdate() -> void {
 }
 
 auto Program::videoMonitorUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!ruby::video.hasMonitor(settings.video.monitor)) {
     settings.video.monitor = ruby::video.monitor();
   }
@@ -30,7 +30,7 @@ auto Program::videoMonitorUpdate() -> void {
 }
 
 auto Program::videoFormatUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!ruby::video.hasFormat(settings.video.format)) {
     settings.video.format = ruby::video.format();
   }
@@ -38,7 +38,7 @@ auto Program::videoFormatUpdate() -> void {
 }
 
 auto Program::videoFullScreenToggle() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!ruby::video.hasFullScreen()) return;
 
   ruby::video.clear();
@@ -59,7 +59,7 @@ auto Program::videoFullScreenToggle() -> void {
 }
 
 auto Program::videoPseudoFullScreenToggle() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(ruby::video.fullScreen()) return;
 
   if(!presentation.fullScreen()) {
@@ -74,7 +74,7 @@ auto Program::videoPseudoFullScreenToggle() -> void {
 }
 
 auto Program::audioDriverUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   ruby::audio.create(settings.audio.driver);
   ruby::audio.setContext(presentation.viewport.handle());
   audioDeviceUpdate();
@@ -92,7 +92,7 @@ auto Program::audioDriverUpdate() -> void {
 }
 
 auto Program::audioDeviceUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!ruby::audio.hasDevice(settings.audio.device)) {
     settings.audio.device = ruby::audio.device();
   }
@@ -100,7 +100,7 @@ auto Program::audioDeviceUpdate() -> void {
 }
 
 auto Program::audioFrequencyUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!ruby::audio.hasFrequency(settings.audio.frequency)) {
     settings.audio.frequency = ruby::audio.frequency();
   }
@@ -112,7 +112,7 @@ auto Program::audioFrequencyUpdate() -> void {
 }
 
 auto Program::audioLatencyUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   if(!ruby::audio.hasLatency(settings.audio.latency)) {
     settings.audio.latency = ruby::audio.latency();
   }
@@ -122,7 +122,7 @@ auto Program::audioLatencyUpdate() -> void {
 //
 
 auto Program::inputDriverUpdate() -> void {
-  lock_guard<recursive_mutex> programLock(programMutex);
+  Program::Guard guard;
   ruby::input.create(settings.input.driver);
   ruby::input.setContext(presentation.viewport.handle());
   ruby::input.onChange({&InputManager::eventInput, &inputManager});

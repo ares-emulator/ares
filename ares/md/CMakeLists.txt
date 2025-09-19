@@ -8,6 +8,8 @@ ares_components(
   m24c
 )
 
+target_link_libraries(ares PRIVATE qon)
+
 ares_add_sources(
   CORE #
     md
@@ -142,6 +144,7 @@ ares_add_sources(
     mcd/cdc.cpp
     mcd/cdd-dac.cpp
     mcd/cdd.cpp
+    mcd/megald.cpp
     mcd/debugger.cpp
     mcd/gpu.cpp
     mcd/io-external.cpp

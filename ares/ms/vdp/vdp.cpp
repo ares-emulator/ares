@@ -27,15 +27,15 @@ auto VDP::load(Node::Object parent) -> void {
   screen->refreshRateHint(system.colorburst() * 15, 3420, Region::PAL() ? 313 : 262);
 
   if(Display::CRT()) {
-    screen->colors(1 << 6, {&VDP::colorMasterSystem, this});
-    screen->setSize(284, screenHeight());
-    screen->setScale(1.0, 1.0);
-    Region::PAL() ? screen->setAspect(19.0, 14.0) : screen->setAspect(8.0, 7.0);
-
     colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
       screen->resetPalette();
     });
     colorEmulation->setDynamic(true);
+
+    screen->colors(1 << 6, {&VDP::colorMasterSystem, this});
+    screen->setSize(284, screenHeight());
+    screen->setScale(1.0, 1.0);
+    Region::PAL() ? screen->setAspect(19.0, 14.0) : screen->setAspect(8.0, 7.0);
   }
 
   if(Display::LCD()) {
@@ -147,15 +147,6 @@ auto VDP::step(u32 clocks) -> void {
     Thread::step(1);
     Thread::synchronize(cpu);
   }
-}
-
-auto VDP::updateScreenSize() -> void {
-  if(Display::CRT()) {
-    screen->setSize(284, screenHeight());
-  }
-  //if(Display::LCD()) {
-  //  screen->setSize(160, 144);
-  //}
 }
 
 auto VDP::vlines() -> u32 {

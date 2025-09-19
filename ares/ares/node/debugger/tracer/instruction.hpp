@@ -23,7 +23,7 @@ struct Instruction : Tracer {
 
   auto setDepth(u32 depth) -> void {
     _depth = depth;
-    _history.reset();
+    _history.clear();
     _history.resize(depth);
     for(auto& history : _history) history = ~0ull;
   }
@@ -49,7 +49,7 @@ struct Instruction : Tracer {
       for(auto index : range(_depth - 1)) {
         _history[index] = _history[index + 1];
       }
-      _history.last() = _address;
+      _history.back() = _address;
     }
 
     return true;
@@ -71,7 +71,8 @@ struct Instruction : Tracer {
     if(!enabled()) return;
 
     if(_omitted) {
-      PlatformLog(shared(), {"[Omitted: ", _omitted, "]"});
+      auto message = string{ "[Omitted: ", _omitted, "]" };
+      PlatformLog(shared(), message);
       _omitted = 0;
     }
 
@@ -135,6 +136,6 @@ protected:
 //unserialized:
   n64 _address = 0;
   n64 _omitted = 0;
-  vector<u64> _history;
+  std::vector<u64> _history;
   hashset<VisitMask> _masks;
 };

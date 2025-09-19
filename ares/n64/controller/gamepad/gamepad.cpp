@@ -1,4 +1,5 @@
 #include "transfer-pak.cpp"
+#include "bio-sensor.cpp"
 
 Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
@@ -10,9 +11,11 @@ Gamepad::Gamepad(Node::Port parent) {
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setConnect([&] { return connect(); });
   port->setDisconnect([&] { return disconnect(); });
-  port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak"});
+  port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak", "Bio Sensor"});
 
   bank = 0;
+
+  axis = node->append<Node::Input::Axis>("Axis");
 
   x           = node->append<Node::Input::Axis>  ("X-Axis");
   y           = node->append<Node::Input::Axis>  ("Y-Axis");
@@ -50,11 +53,13 @@ auto Gamepad::allocate(string name) -> Node::Peripheral {
   if(name == "Controller Pak") return slot = port->append<Node::Peripheral>("Controller Pak");
   if(name == "Rumble Pak"    ) return slot = port->append<Node::Peripheral>("Rumble Pak");
   if(name == "Transfer Pak"  ) return slot = port->append<Node::Peripheral>("Transfer Pak");
+  if(name == "Bio Sensor"    ) return slot = port->append<Node::Peripheral>("Bio Sensor");
   return {};
 }
 
 auto Gamepad::connect() -> void {
   if(!slot) return;
+  pakDetectLatched = true;
   if(slot->name() == "Controller Pak") {
     bool create = true;
 
@@ -115,10 +120,22 @@ auto Gamepad::connect() -> void {
   if(slot->name() == "Transfer Pak") {
     transferPak.load(slot);
   }
+  if(slot->name() == "Bio Sensor") {
+    bioSensor.load();
+    // Bio Sensor BPM setting node
+    bioSensorBpm = slot->append<Node::Setting::Integer>(
+      "Bio Sensor BPM",
+      bioSensor.beatsPerMinute,
+      [&](s64 value) { bioSensor.beatsPerMinute = value; }
+    );
+    bioSensorBpm->setDynamic(true);
+    bioSensorBpm->setAllowedValues({30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180});
+  }
 }
 
 auto Gamepad::disconnect() -> void {
   if(!slot) return;
+  pakDetectLatched = true;
   if(slot->name() == "Controller Pak") {
     save();
     ram.reset();
@@ -130,6 +147,13 @@ auto Gamepad::disconnect() -> void {
   }
   if(slot->name() == "Transfer Pak") {
     transferPak.unload();
+  }
+  if(slot->name() == "Bio Sensor") {
+    bioSensor.unload();
+    if(bioSensorBpm) {
+      slot->remove(bioSensorBpm);
+      bioSensorBpm.reset();
+    }
   }
   port->remove(slot);
   slot.reset();
@@ -149,10 +173,16 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   if(input[0] == 0x00 || input[0] == 0xff) {
     output[0] = 0x05;  //0x05 = gamepad; 0x02 = mouse
     output[1] = 0x00;
-    output[2] = 0x02;  //0x02 = nothing present in controller slot
-    if(ram || motor || (slot && slot->name() == "Transfer Pak")) {
-      output[2] = 0x01;  //0x01 = pak present
+    if(slot) {
+      if(pakDetectLatched) {
+        output[2] = 0x03;  //0x03 = pak inserted
+      } else {
+        output[2] = 0x01;  //0x01 = pak present
+      }
+    } else {
+      output[2] = 0x02;  //0x02 = pak absent
     }
+    pakDetectLatched = false;  //reset flag after reporting pak status
     valid = 1;
   }
 
@@ -173,116 +203,145 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
 
   //read pak
   if(input[0] == 0x02 && send >= 3 && recv >= 1) {
+    u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+
+    //NUS-CNT only touches the first 33 bytes of output (32 data + 1 data CRC);
+    //reads of less than 32 bytes are technically possible, but with no data CRC
+    n8 recv_data_len = min(recv, 32);
+    for(u32 index : range(min(recv, 33))) output[index] = 0x00; //zero out up to 33 bytes
+
+    //check if no pak is connected, DETECT is latched, or address CRC is invalid
+    b1 data_crc_no_pak = 0;
+    if(!slot || pakDetectLatched || pif.addressCRC(address) != (n5)input[2]) {
+      data_crc_no_pak = 1;
+      valid = 1;
+      goto read_pak_data_crc;
+    }
+
     //controller pak
     if(ram) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(recv - 1)) {
-          // read into current bank
-          if(address <= 0x7FFF) output[index] = ram.read<Byte>(bank * 32_KiB + address);
-          else output[index] = 0;
-          address++;
-        }
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
-        valid = 1;
+      for(u32 index : range(recv_data_len)) {
+        // read into current bank
+        if(address <= 0x7FFF) output[index] = ram.read<Byte>(bank * 32_KiB + address);
+        else output[index] = 0;
+        address++;
       }
+      valid = 1;
     }
 
     //rumble pak
     if(motor) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(recv - 1)) {
-          if(address <= 0x7FFF) output[index] = 0;
-          else if(address <= 0x8FFF) output[index] = 0x80;
-          else output[index] = motor->enable() ? 0xFF : 0x00;
-          address++;
-        }
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
-        valid = 1;
+      for(u32 index : range(recv_data_len)) {
+        if(address <= 0x7FFF) output[index] = 0;
+        else if(address <= 0x8FFF) output[index] = 0x80;
+        else output[index] = motor->enable() ? 0xFF : 0x00;
+        address++;
       }
+      valid = 1;
     }
 
     //transfer pak
     if(slot && slot->name() == "Transfer Pak") {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(recv - 1)) output[index] = transferPak.read(address++);
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
-        valid = 1;
-      }
+      for(u32 index : range(recv_data_len)) output[index] = transferPak.read(address++);
+      valid = 1;
+    }
+
+    //bio sensor
+    if(slot && slot->name() == "Bio Sensor") {
+      bioSensor.update();
+      for(u32 index : range(recv_data_len)) output[index] = bioSensor.read(address++);
+      valid = 1;
+    }
+
+read_pak_data_crc:
+    //calculate the data CRC if we have enough recv bytes
+    if(valid && recv >= 33) {
+      output[32] = pif.dataCRC({&output[0], 32});
+      if (data_crc_no_pak) output[32] ^= 0xFF;
     }
   }
 
   //write pak
-  if(input[0] == 0x03 && send >= 3 && recv >= 1) {
+  if(input[0] == 0x03 && send >= 4 && recv >= 1) {
+    u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+    n8 *send_data = &input[3];
+    n8 send_data_len = min(send - 3, (n8)32); //max of 32 bytes can be written at once
+
+    //check if no pak is connected, DETECT is latched, or address CRC is invalid
+    b1 data_crc_no_pak = 0;
+    if(!slot || pakDetectLatched || pif.addressCRC(address) != (n5)input[2]) {
+      data_crc_no_pak = 1;
+      valid = 1;
+      goto write_pak_data_crc;
+    }
+
     //controller pak
     if(ram) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        //check if address is bank switch command
-        if (address == 0x8000) {
-          if (send >= 4) {
-            u8 reqBank = input[3];
-            if (reqBank < system.controllerPakBankCount) {
-              bank = reqBank;
+      //check if address is bank switch command
+      if (address == 0x8000) {
+        if (send >= 4) {
+          u8 reqBank = input[3];
+          if (reqBank < system.controllerPakBankCount) {
+            bank = reqBank;
+          }
+        } else {
+          if (system.homebrewMode) {
+            debug(unusual, "Controller Pak bank switch command with no bank specified");
+          }
+          bank = 0;
+        }
+
+        if (system.homebrewMode) {
+          //Verify we have 32 bytes (1 block) input and each value is the same bank
+          if (send == 35) {
+            u8 bank = input[3];
+            for (u32 i = 4; i < 35; i++) {
+              if (input[i] != bank) {
+                debug(unusual, "Controller Pak bank switch command with mismatched data");
+                break;
+              }
             }
           } else {
-            if (system.homebrewMode) {
-              debug(unusual, "Controller Pak bank switch command with no bank specified");
-            }
-            bank = 0;
+            debug(unusual, "Controller Pak bank switch command with unusual data length");
           }
-
-          if (system.homebrewMode) {
-            //Verify we have 32 bytes (1 block) input and each value is the same bank
-            if (send == 35) {
-              u8 bank = input[3];
-              for (u32 i = 4; i < 35; i++) {
-                if (input[i] != bank) {
-                  debug(unusual, "Controller Pak bank switch command with mismatched data");
-                  break;
-                }
-              }
-            } else {
-              debug(unusual, "Controller Pak bank switch command with invalid data length");
-            }
-          }
-
-
-          output[0] = pif.dataCRC({&input[3], send - 3u});
-          valid = 1;
-        } else {
-          for(u32 index : range(send - 3)) {
-            if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, input[3 + index]);
-            address++;
-          }
-          output[0] = pif.dataCRC({&input[3], send - 3u});
-          valid = 1;
         }
+
+        valid = 1;
+      } else {
+        for(u32 index : range(send_data_len)) {
+          if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, send_data[index]);
+          address++;
+        }
+        valid = 1;
       }
     }
 
     //rumble pak
     if(motor) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        output[0] = pif.dataCRC({&input[3], send - 3u});
-        valid = 1;
-        if(address >= 0xC000) rumble(input[3] & 1);
-      }
+      if(address >= 0xC000) rumble((*send_data) & 1);
+      valid = 1;
     }
 
     //transfer pak
     if(slot && slot->name() == "Transfer Pak") {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(send - 3)) {
-          transferPak.write(address++, input[3 + index]);
-        }
-        output[0] = pif.dataCRC({&input[3], send - 3u});
-        valid = 1;
+      for(u32 index : range(send_data_len)) {
+        transferPak.write(address++, send_data[index]);
       }
+      valid = 1;
+    }
+
+    //bio sensor
+    if(slot && slot->name() == "Bio Sensor") {
+      //Bio Sensor is read-only; writes are ignored
+      valid = 1;
+    }
+
+write_pak_data_crc:
+    if(valid) {
+      output[0] = 0x00; //zero out the data CRC
+      //calculate the data CRC if we have enough send bytes
+      if (send_data_len == 32) output[0] = pif.dataCRC({send_data, send_data_len});
+      if (data_crc_no_pak) output[0] ^= 0xFF;
     }
   }
 
@@ -313,57 +372,37 @@ auto Gamepad::read() -> n32 {
   auto cardinalMax   = 85.0;
   auto diagonalMax   = 69.0;
   auto innerDeadzone =  7.0; // default should remain 7 (~8.2% of 85) as the deadzone is axial in nature and fights cardinalMax
-  auto outerDeadzoneRadiusMax = 2.0 / sqrt(2.0) * (diagonalMax / cardinalMax * (cardinalMax - innerDeadzone) + innerDeadzone); //from linear scaling equation, substitute outerDeadzoneRadiusMax*sqrt(2)/2 for lengthAbsoluteX and set diagonalMax as the result then solve for outerDeadzoneRadiusMax
+  auto saturationRadius = (innerDeadzone + diagonalMax + sqrt(pow(innerDeadzone + diagonalMax, 2.0) - 2.0 * sqrt(2.0) * diagonalMax * innerDeadzone)) / sqrt(2.0); //from linear response curve function within axis->processDeadzoneAndResponseCurve, substitute saturationRadius * sqrt(2) / 2 for right-hand lengthAbsolute and set diagonalMax as the result then solve for saturationRadius
+  auto offset = 0.0;
 
-  //scale {-32768 ... +32767} to {-outerDeadzoneRadiusMax ... +outerDeadzoneRadiusMax}
-  auto ax = x->value() * outerDeadzoneRadiusMax / 32767.0;
-  auto ay = y->value() * outerDeadzoneRadiusMax / 32767.0;
-  
-  //create inner axial dead-zone in range {-innerDeadzone ... +innerDeadzone} and scale from it up to outer circular dead-zone of radius outerDeadzoneRadiusMax
-  auto length = sqrt(ax * ax + ay * ay);
-  if(length <= outerDeadzoneRadiusMax) {
-    auto lengthAbsoluteX = abs(ax);
-    auto lengthAbsoluteY = abs(ay);
-    if(lengthAbsoluteX <= innerDeadzone) {
-      lengthAbsoluteX = 0.0;
-    } else {
-      lengthAbsoluteX = (lengthAbsoluteX - innerDeadzone) * cardinalMax / (cardinalMax - innerDeadzone) / lengthAbsoluteX;
-    }
-    ax *= lengthAbsoluteX;
-    if(lengthAbsoluteY <= innerDeadzone) {
-      lengthAbsoluteY = 0.0;
-    } else {
-      lengthAbsoluteY = (lengthAbsoluteY - innerDeadzone) * cardinalMax / (cardinalMax - innerDeadzone) / lengthAbsoluteY;
-    }
-    ay *= lengthAbsoluteY;
-  } else {
-    length = outerDeadzoneRadiusMax / length;
-    ax *= length;
-    ay *= length;
-  }
-  
-  //bound diagonals to an octagonal range {-diagonalMax ... +diagonalMax}
-  if(ax != 0.0 && ay != 0.0) {
-    auto slope = ay / ax;
-    auto edgex = copysign(cardinalMax / (abs(slope) + (cardinalMax - diagonalMax) / diagonalMax), ax);
-    auto edgey = copysign(min(abs(edgex * slope), cardinalMax / (1.0 / abs(slope) + (cardinalMax - diagonalMax) / diagonalMax)), ay);
-    edgex = edgey / slope;
+  //scale {-32767 ... +32767} to {-saturationRadius + offset ... +saturationRadius + offset}
+  auto ax = axis->setOperatingRange(x->value(), saturationRadius, offset);
+  auto ay = axis->setOperatingRange(y->value(), saturationRadius, offset);
 
-    length = sqrt(ax * ax + ay * ay);
-    auto distanceToEdge = sqrt(edgex * edgex + edgey * edgey);
-    if(length > distanceToEdge) {
-      ax = edgex;
-      ay = edgey;
-    }
+  //create inner axial dead-zone in range {-innerDeadzone ... +innerDeadzone} and scale from it up to saturationRadius
+  ax = axis->processDeadzoneAndResponseCurve(ax, innerDeadzone, saturationRadius, offset);
+  ay = axis->processDeadzoneAndResponseCurve(ay, innerDeadzone, saturationRadius, offset);
+
+  auto scaledLength = hypot(ax - offset, ay - offset);
+  if(scaledLength > saturationRadius) {
+    ax = axis->revisePosition(ax, scaledLength, saturationRadius, offset);
+    ay = axis->revisePosition(ay, scaledLength, saturationRadius, offset);
   }
+
+  //let cardinalMax and diagonalMax define boundaries and restrict to an octagonal gate
+  double axBounded = 0.0;
+  double ayBounded = 0.0;
+  axis->applyGateBoundaries(innerDeadzone, cardinalMax, diagonalMax, ax, ay, offset, axBounded, ayBounded);
+  ax = axBounded;
+  ay = ayBounded;
 
   //keep cardinal input within positive and negative bounds of cardinalMax
-  if(abs(ax) > cardinalMax) ax = copysign(cardinalMax, ax);
-  if(abs(ay) > cardinalMax) ay = copysign(cardinalMax, ay);
-  
+  ax = axis->clampAxisToNearestBoundary(ax, offset, cardinalMax);
+  ay = axis->clampAxisToNearestBoundary(ay, offset, cardinalMax);
+
   //add epsilon to counteract floating point precision error
-  ax = copysign(abs(ax) + 1e-09, ax);
-  ay = copysign(abs(ay) + 1e-09, ay);
+  ax = axis->counteractPrecisionError(ax);
+  ay = axis->counteractPrecisionError(ay);
   
   n32 data;
   data.byte(0) = s8(-ay);
@@ -398,13 +437,9 @@ auto Gamepad::read() -> n32 {
 
 auto Gamepad::getInodeChecksum(u8 bank) -> u8 {
   if (bank < 62) {
-    u32 checksum = 0;
-    u32 i = bank == 0 ? 3 + ram.read<Byte>(0x20 + 0x1a) * 2 : 1; //first bank has 3 + bank * 2 system pages, other banks have 127.
-
-    for (i; i < 0x100; i++) {
-      checksum += ram.read<Byte>((1 + bank) * 0x100) + ram.read<Byte>((1 + bank) * 0x100 + 0x01);
-    }
-
+    u8 checksum = 0;
+    for (i32 i=2; i<0x100; i++)
+      checksum += ram.read<Byte>((1 + bank) * 0x100 + i);
     return checksum;
   }
 
@@ -442,7 +477,7 @@ auto Gamepad::formatControllerPak() -> void {
   //pages 1 thru nBanks, nBanks+1 thru (nBanks*2) (inode table, inode table copy)
   u8 nBanks = ram.read<Byte>(0x20 + 0x1a);
   u32 inodeTablePage = 1;
-  u32 inodeTableCopyPage = 1 + nBanks * 2;
+  u32 inodeTableCopyPage = 1 + nBanks;
   for(u32 bank : range(0,nBanks)) {
     u32 firstDataPage = bank == 0 ? (3 + nBanks * 2) : 1; //first bank has 3 + bank * 2 system pages, other banks have 127.
     for(u32 page : array<u32[2]>{inodeTablePage + bank, inodeTableCopyPage + bank}) {

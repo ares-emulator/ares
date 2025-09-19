@@ -19,7 +19,7 @@ struct Cartridge : Medium {
 
 struct CompactDisc : Medium {
   auto type() -> string override { return "Compact Disc"; }
-  auto extensions() -> vector<string> override {
+  auto extensions() -> std::vector<string> override {
 #if defined(ARES_ENABLE_CHD)
     return {"cue", "chd"};
 #else
@@ -28,15 +28,23 @@ struct CompactDisc : Medium {
   }
   auto isAudioCd(string location) -> bool;
   auto manifestAudio(string location) -> string;
-  auto readDataSector(string filename, u32 sectorID) -> vector<u8>;
+  auto readDataSector(string filename, u32 sectorID) -> std::vector<u8>;
 private:
-  auto readDataSectorBCD(string filename, u32 sectorID) -> vector<u8>;
-  auto readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>;
+  auto readDataSectorBCD(string filename, u32 sectorID) -> std::vector<u8>;
+  auto readDataSectorCUE(string filename, u32 sectorID) -> std::vector<u8>;
 #if defined(ARES_ENABLE_CHD)
-  auto readDataSectorCHD(string filename, u32 sectorID) -> vector<u8>;
+  auto readDataSectorCHD(string filename, u32 sectorID) -> std::vector<u8>;
 #endif
 };
 
 struct FloppyDisk : Medium {
   auto type() -> string override { return "Floppy Disk"; }
+};
+
+struct LaserDisc : Medium {
+  auto type() -> string override { return "LaserDisc"; }
+  auto extensions() -> std::vector<string> override { return {"mmi"}; }
+  auto readDataSector(string mmiPath, string cuePath, u32 sectorID) -> std::vector<u8>;
+protected:
+  Decode::MMI mmiArchive;
 };
