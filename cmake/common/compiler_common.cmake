@@ -95,7 +95,6 @@ set(_ares_clang_c_options ${_ares_clang_common_options})
 set(
   _ares_clang_cxx_options
   ${_ares_clang_common_options}
-  -fno-char8_t
   -Wvexing-parse
   -Wdelete-non-virtual-dtor
   -Wrange-loop-analysis
