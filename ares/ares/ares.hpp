@@ -6,11 +6,12 @@
 #include <vector>
 #include <ranges>
 #include <algorithm>
+#include <array>
+#include <unordered_map>
 
 #include <nall/platform.hpp>
 #include <nall/adaptive-array.hpp>
 #include <nall/any.hpp>
-#include <nall/array.hpp>
 #include <nall/bump-allocator.hpp>
 #include <nall/case-range.hpp>
 #include <nall/chrono.hpp>

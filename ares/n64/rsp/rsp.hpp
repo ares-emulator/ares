@@ -526,7 +526,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     
 
     auto reset() -> void {
-      context.fill();
+      context.fill(nullptr);
       blocks.clear();
       dirty = 0;
     }
@@ -565,7 +565,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     bool callInstructionPrologue = false;
     Pipeline pipeline;
     bump_allocator allocator;
-    array<Block*[1024]> context;
+    std::array<Block*, 1024> context;
     std::unordered_map<u64, Block*> blocks;
     u64 dirty;
   } recompiler{*this};

@@ -7,7 +7,7 @@ namespace ares {
 
 struct YM2612 {
   //ym2612.cpp
-  auto clock() -> array<i16[2]>;
+  auto clock() -> std::array<i16, 2>;
   auto power() -> void;
 
   //io.cpp

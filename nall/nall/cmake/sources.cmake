@@ -6,7 +6,6 @@ target_sources(
     any.hpp
     arguments.hpp
     arithmetic.hpp
-    array.hpp
     atoi.hpp
     bcd.hpp
     bit.hpp

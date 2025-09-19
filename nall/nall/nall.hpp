@@ -9,7 +9,7 @@
 #include <nall/any.hpp>
 //#include <nall/arguments.hpp>
 #include <nall/arithmetic.hpp>
-#include <nall/array.hpp>
+#include <array>
 #include <nall/atoi.hpp>
 #include <nall/bit.hpp>
 #include <nall/chrono.hpp>
