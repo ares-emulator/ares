@@ -52,7 +52,7 @@ mark_as_advanced(ARES_TREAT_NALL_AS_SYSTEM)
 
 if(ARES_TREAT_NALL_AS_SYSTEM)
   add_library(nall-static-compile-test STATIC cmake/headers.cpp)
-  set_target_properties(nall-static-compile-test PROPERTIES FOLDER nall PREFIX "")
+  set_target_properties(nall-static-compile-test PROPERTIES FOLDER "generated" PREFIX "")
   target_include_directories(nall-static-compile-test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/..")
 endif()
 
