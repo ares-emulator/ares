@@ -51,7 +51,6 @@
 #include <nall/utility.hpp>
 #include <nall/variant.hpp>
 #include <nall/varint.hpp>
-#include <nall/view.hpp>
 #include <nall/arguments.hpp>
 #include <nall/decode/base.hpp>
 #include <nall/decode/base64.hpp>
