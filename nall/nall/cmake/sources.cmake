@@ -77,7 +77,6 @@ target_sources(
     variant.hpp
     varint.hpp
     vfs.hpp
-    view.hpp
 )
 
 target_sources(nall PRIVATE arithmetic/natural.hpp arithmetic/unsigned.hpp)
