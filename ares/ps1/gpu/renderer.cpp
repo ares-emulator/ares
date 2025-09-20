@@ -455,6 +455,6 @@ auto GPU::Renderer::power() -> void {
   if constexpr(Accuracy::GPU::Threaded) {
     kill();
     fifo.flush();
-    handle = thread::create({&GPU::Renderer::main, &self.renderer});
+    handle = thread::create(std::bind_front(&GPU::Renderer::main, &self.renderer));
   }
 }

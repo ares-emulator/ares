@@ -133,13 +133,13 @@ inline auto ManagedNode::_create(const string& path) -> Node {
         return node->_create(slice(path, *position + 1));
       }
     }
-    _children.push_back(new ManagedNode(name));
+    _children.push_back(std::make_shared<ManagedNode>(name));
     return _children.back()->_create(slice(path, *position + 1));
   }
   for(auto& node : _children) {
     if(path == node->_name) return node;
   }
-  _children.push_back(new ManagedNode(path));
+  _children.push_back(std::make_shared<ManagedNode>(path));
   return _children.back();
 }
 

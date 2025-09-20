@@ -4,7 +4,7 @@
 
 namespace nall::Beat::Single {
 
-inline auto create(array_view<u8> source, array_view<u8> target, string_view manifest = {}) -> std::vector<u8> {
+inline auto create(std::span<const u8> source, std::span<const u8> target, string_view manifest = {}) -> std::vector<u8> {
   std::vector<u8> beat;
 
   auto write = [&](u8 data) {

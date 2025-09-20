@@ -14,7 +14,7 @@ auto InternalRAM::power() -> void {
 }
 
 auto InternalRAM::serialize(serializer& s) -> void {
-  s(array_span<u8>{memory, SoC::ASWAN() ? 16_KiB : 64_KiB});
+  s(std::span<n8>{memory, SoC::ASWAN() ? 16_KiB : 64_KiB});
 }
 
 auto Bus::power() -> void {

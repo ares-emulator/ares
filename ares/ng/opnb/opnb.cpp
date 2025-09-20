@@ -62,7 +62,7 @@ auto OPNB::step(u32 clocks) -> void {
 auto OPNB::power(bool reset) -> void {
   ym2610.reset();
   clocksPerSample = 8'000'000.0 / ym2610.sample_rate(8'000'000);
-  Thread::create(8'000'000, {&OPNB::main, this});
+  Thread::create(8'000'000, std::bind_front(&OPNB::main, this));
 }
 
 auto OPNB::read(n2 address) -> n8 {

@@ -6,7 +6,7 @@ namespace nall::Markup {
 
 struct Node;
 struct ManagedNode;
-using SharedNode = shared_pointer<ManagedNode>;
+using SharedNode = std::shared_ptr<ManagedNode>;
 
 struct ManagedNode {
   ManagedNode() = default;
@@ -46,12 +46,12 @@ protected:
 };
 
 struct Node {
-  Node() : shared(new ManagedNode) {}
-  Node(const SharedNode& source) : shared(source ? source : new ManagedNode) {}
-  Node(const nall::string& name) : shared(new ManagedNode(name)) {}
-  Node(const nall::string& name, const nall::string& value) : shared(new ManagedNode(name, value)) {}
+  Node() : shared(std::make_shared<ManagedNode>()) {}
+  Node(const SharedNode& source) : shared(source ? source : std::make_shared<ManagedNode>()) {}
+  Node(const nall::string& name) : shared(std::make_shared<ManagedNode>(name)) {}
+  Node(const nall::string& name, const nall::string& value) : shared(std::make_shared<ManagedNode>(name, value)) {}
 
-  auto unique() const -> bool { return shared.unique(); }
+  auto unique() const -> bool { return shared.use_count() == 1; }
   auto clone() const -> Node { return shared->clone(); }
   auto copy(Node source) -> void { return shared->copy(source.shared); }
 
@@ -115,7 +115,7 @@ struct Node {
     return nall::string::compare(shared->_name, node.shared->_name) < 0;
   }
 
-  auto sort(function<bool (Node, Node)> comparator = [](auto x, auto y) { return x < y; }) -> void {
+  auto sort(std::function<bool (Node, Node)> comparator = [](auto x, auto y) { return x < y; }) -> void {
     std::sort(shared->_children.begin(), shared->_children.end(), [&](auto x, auto y) {
       return comparator(x, y);  //this call converts SharedNode objects to Node objects
     });

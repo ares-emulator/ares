@@ -2,7 +2,7 @@ struct Saturn : Emulator {
   Saturn();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
   u32 regionID = 0;
 };
@@ -61,7 +61,7 @@ auto Saturn::save() -> bool {
   return true;
 }
 
-auto Saturn::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto Saturn::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Saturn") return system->pak;
   if(node->name() == "Saturn Disc") return game->pak;
   return {};

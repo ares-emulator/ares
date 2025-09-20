@@ -4,7 +4,7 @@ struct mMenuCheckItem : mAction {
 
   auto checked() const -> bool;
   auto doToggle() const -> void;
-  auto onToggle(const function<void ()>& callback = {}) -> type&;
+  auto onToggle(const std::function<void ()>& callback = {}) -> type&;
   auto setChecked(bool checked = true) -> type&;
   auto setText(const string& text = "") -> type&;
   auto text() const -> string;
@@ -12,7 +12,7 @@ struct mMenuCheckItem : mAction {
 //private:
   struct State {
     bool checked = false;
-    function<void ()> onToggle;
+    std::function<void ()> onToggle;
     string text;
   } state;
 };

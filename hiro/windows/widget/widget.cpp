@@ -85,7 +85,7 @@ auto pWidget::setMouseCursor(const MouseCursor& mouseCursor) -> void {
 
 auto pWidget::setToolTip(const string& toolTipText) -> void {
   if(toolTipText) {
-    toolTip = new pToolTip{toolTipText};
+    toolTip = std::make_unique<pToolTip>(toolTipText);
   } else {
     toolTip.reset();
   }

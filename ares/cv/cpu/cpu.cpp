@@ -57,7 +57,7 @@ auto CPU::setIRQ(bool value) -> void {
 auto CPU::power() -> void {
   Z80::bus = this;
   Z80::power();
-  Thread::create(system.colorburst(), {&CPU::main, this});
+  Thread::create(system.colorburst(), std::bind_front(&CPU::main, this));
 
   PC = 0x0000;  //reset vector address
   state = {};

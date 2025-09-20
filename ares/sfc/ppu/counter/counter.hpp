@@ -32,7 +32,7 @@ struct PPUcounter {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  function<void ()> scanline;
+  std::function<void ()> scanline;
 
 private:
   struct {

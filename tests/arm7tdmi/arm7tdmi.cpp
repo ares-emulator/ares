@@ -51,7 +51,7 @@ enum TestResult {
   pass, fail, skip
 };
 
-using TestResults = array<u32[3]>;
+using TestResults = std::array<u32, 3>;
 
 struct CPU : ares::ARM7TDMI {
   u32 clock = 0;

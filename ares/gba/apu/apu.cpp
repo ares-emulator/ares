@@ -86,7 +86,7 @@ auto APU::step(u32 clocks) -> void {
 }
 
 auto APU::power() -> void {
-  Thread::create(system.frequency(), {&APU::main, this});
+  Thread::create(system.frequency(), std::bind_front(&APU::main, this));
 
   clock = 0;
   bias = {};

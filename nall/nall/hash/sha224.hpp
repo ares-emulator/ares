@@ -7,7 +7,7 @@ namespace nall::Hash {
 struct SHA224 : Hash {
   using Hash::input;
 
-  SHA224(array_view<u8> buffer = {}) {
+  SHA224(std::span<const u8> buffer = {}) {
     reset();
     input(buffer);
   }

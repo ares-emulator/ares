@@ -1,12 +1,12 @@
 struct Mega32X : Interface {
   using Interface::Interface;
-  unique_pointer<Board::Interface> board;
+  std::unique_ptr<Board::Interface> board;
 
   auto load() -> void override {
     if(pak) {
-      board = new Board::Standard(*cartridge);
+      board = std::make_unique<Board::Standard>(*cartridge);
     } else {
-      board = new Board::Interface(*cartridge);
+      board = std::make_unique<Board::Interface>(*cartridge);
     }
 
     board->pak = pak;

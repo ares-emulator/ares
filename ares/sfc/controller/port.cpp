@@ -30,15 +30,15 @@ auto ControllerPort::unload() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Gamepad"        ) device = new Gamepad(port);
-  if(name == "Rumble Gamepad" ) device = new RumbleGamepad(port);
-  if(name == "Justifier"      ) device = new Justifier(port);
-  if(name == "Justifiers"     ) device = new Justifiers(port);
-  if(name == "Mouse"          ) device = new Mouse(port);
-  if(name == "NTT Data Keypad") device = new NTTDataKeypad(port);
-  if(name == "Super Multitap" ) device = new SuperMultitap(port);
-  if(name == "Super Scope"    ) device = new SuperScope(port);
-  if(name == "Twin Tap"       ) device = new TwinTap(port);
+  if(name == "Gamepad"        ) device = std::make_unique<Gamepad>(port);
+  if(name == "Rumble Gamepad" ) device = std::make_unique<RumbleGamepad>(port);
+  if(name == "Justifier"      ) device = std::make_unique<Justifier>(port);
+  if(name == "Justifiers"     ) device = std::make_unique<Justifiers>(port);
+  if(name == "Mouse"          ) device = std::make_unique<Mouse>(port);
+  if(name == "NTT Data Keypad") device = std::make_unique<NTTDataKeypad>(port);
+  if(name == "Super Multitap" ) device = std::make_unique<SuperMultitap>(port);
+  if(name == "Super Scope"    ) device = std::make_unique<SuperScope>(port);
+  if(name == "Twin Tap"       ) device = std::make_unique<TwinTap>(port);
   if(device) return device->node;
   return {};
 }

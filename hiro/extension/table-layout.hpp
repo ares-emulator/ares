@@ -10,10 +10,10 @@ struct mTableLayoutColumn;
 struct mTableLayoutRow;
 struct mTableLayoutCell;
 
-using sTableLayout = shared_pointer<mTableLayout>;
-using sTableLayoutColumn = shared_pointer<mTableLayoutColumn>;
-using sTableLayoutRow = shared_pointer<mTableLayoutRow>;
-using sTableLayoutCell = shared_pointer<mTableLayoutCell>;
+using sTableLayout = std::shared_ptr<mTableLayout>;
+using sTableLayoutColumn = std::shared_ptr<mTableLayoutColumn>;
+using sTableLayoutRow = std::shared_ptr<mTableLayoutRow>;
+using sTableLayoutCell = std::shared_ptr<mTableLayoutCell>;
 
 struct mTableLayout : mSizable {
   using type = mTableLayout;

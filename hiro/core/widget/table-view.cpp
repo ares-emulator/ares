@@ -112,32 +112,32 @@ auto mTableView::items() const -> std::vector<TableViewItem> {
   return items;
 }
 
-auto mTableView::onActivate(const function<void (TableViewCell)>& callback) -> type& {
+auto mTableView::onActivate(const std::function<void (TableViewCell)>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }
 
-auto mTableView::onChange(const function<void ()>& callback) -> type& {
+auto mTableView::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }
 
-auto mTableView::onContext(const function<void (TableViewCell)>& callback) -> type& {
+auto mTableView::onContext(const std::function<void (TableViewCell)>& callback) -> type& {
   state.onContext = callback;
   return *this;
 }
 
-auto mTableView::onEdit(const function<void (TableViewCell)>& callback) -> type& {
+auto mTableView::onEdit(const std::function<void (TableViewCell)>& callback) -> type& {
   state.onEdit = callback;
   return *this;
 }
 
-auto mTableView::onSort(const function<void (TableViewColumn)>& callback) -> type& {
+auto mTableView::onSort(const std::function<void (TableViewColumn)>& callback) -> type& {
   state.onSort = callback;
   return *this;
 }
 
-auto mTableView::onToggle(const function<void (TableViewCell)>& callback) -> type& {
+auto mTableView::onToggle(const std::function<void (TableViewCell)>& callback) -> type& {
   state.onToggle = callback;
   return *this;
 }

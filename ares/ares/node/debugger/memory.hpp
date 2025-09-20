@@ -9,8 +9,8 @@ struct Memory : Debugger {
   auto write(u32 address, u8 data) const -> void { if(_write) return _write(address, data); }
 
   auto setSize(u32 size) -> void { _size = size; }
-  auto setRead(function<u8 (u32)> read) -> void { _read = read; }
-  auto setWrite(function<void (u32, u8)> write) -> void { _write = write; }
+  auto setRead(std::function<u8 (u32)> read) -> void { _read = read; }
+  auto setWrite(std::function<void (u32, u8)> write) -> void { _write = write; }
 
   auto serialize(string& output, string depth) -> void override {
     Debugger::serialize(output, depth);
@@ -22,6 +22,6 @@ struct Memory : Debugger {
 
 protected:
   u32 _size = 0;
-  function<u8 (u32)> _read;
-  function<void (u32, u8)> _write;
+  std::function<u8 (u32)> _read;
+  std::function<void (u32, u8)> _write;
 };

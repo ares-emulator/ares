@@ -48,8 +48,8 @@ auto pRadioButton::setBordered(bool bordered) -> void {
 
 auto pRadioButton::setChecked() -> void {
   for(auto& weak : self().group()->state.objects) {
-    if(auto object = weak.acquire()) {
-      if(auto radioButton = dynamic_cast<mRadioButton*>(object.data())) {
+    if(auto object = weak.lock()) {
+      if(auto radioButton = dynamic_cast<mRadioButton*>(object.get())) {
         if(auto self = radioButton->self()) {
           self->lock();
           gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(self->gtkWidget), radioButton->state.checked);
@@ -63,8 +63,8 @@ auto pRadioButton::setChecked() -> void {
 auto pRadioButton::setGroup(sGroup group) -> void {
   bool first = true;
   for(auto& weak : group->state.objects) {
-    if(auto object = weak.acquire()) {
-      if(auto radioButton = dynamic_cast<mRadioButton*>(object.data())) {
+    if(auto object = weak.lock()) {
+      if(auto radioButton = dynamic_cast<mRadioButton*>(object.get())) {
         if(auto self = radioButton->self()) {
           self->lock();
           gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(self->gtkWidget), radioButton->state.checked = first);
@@ -100,7 +100,7 @@ auto pRadioButton::setText(const string& text) -> void {
 auto pRadioButton::groupLocked() const -> bool {
   if(auto group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
+      if(auto object = weak.lock()) {
         if(auto self = object->self()) {
           if(self->locked()) return true;
         }

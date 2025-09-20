@@ -18,7 +18,7 @@ auto mConsole::foregroundColor() const -> Color {
   return state.foregroundColor;
 }
 
-auto mConsole::onActivate(const function<void (string)>& callback) -> type& {
+auto mConsole::onActivate(const std::function<void (string)>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }

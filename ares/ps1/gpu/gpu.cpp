@@ -23,7 +23,7 @@ auto GPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("GPU");
 
   screen = node->append<Node::Video::Screen>("Screen", 640, 512);
-  screen->setRefresh({&GPU::Blitter::refresh, &blitter});
+  screen->setRefresh(std::bind_front(&GPU::Blitter::refresh, &blitter));
   screen->colors((1 << 24) + (1 << 15), [&](n32 color) -> n64 {
     if(color < (1 << 24)) {
       u64 a = 65535;

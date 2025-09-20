@@ -33,7 +33,7 @@ struct Cartridge : Thread {
   bool bootromEnable = true;
   bool transferPak = false; // Set when connected to an N64 via transfer pak
 
-  unique_pointer<Board::Interface> board;
+  std::unique_ptr<Board::Interface> board;
 };
 
 #include "slot.hpp"

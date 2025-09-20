@@ -20,8 +20,8 @@ auto ControllerPort::unload() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Gamepad") device = new Gamepad(port);
-  if(name == "Zapper") device = new Zapper(port);
+  if(name == "Gamepad") device = std::make_unique<Gamepad>(port);
+  if(name == "Zapper") device = std::make_unique<Zapper>(port);
   if(device) return device->node;
   return {};
 }

@@ -83,7 +83,7 @@ auto HotkeySettings::eventAssign(TableViewCell cell) -> void {
   }
 }
 
-auto HotkeySettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
+auto HotkeySettings::eventInput(std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
   if(!activeMapping) return;
   if(!settingsWindow.focused()) return;
   if(device->isMouse()) return;

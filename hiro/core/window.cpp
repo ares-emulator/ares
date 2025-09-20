@@ -125,32 +125,32 @@ auto mWindow::monitor() const -> u32 {
   return signal(monitor);
 }
 
-auto mWindow::onClose(const function<void ()>& callback) -> type& {
+auto mWindow::onClose(const std::function<void ()>& callback) -> type& {
   state.onClose = callback;
   return *this;
 }
 
-auto mWindow::onDrop(const function<void (std::vector<string>)>& callback) -> type& {
+auto mWindow::onDrop(const std::function<void (std::vector<string>)>& callback) -> type& {
   state.onDrop = callback;
   return *this;
 }
 
-auto mWindow::onKeyPress(const function<void (s32)>& callback) -> type& {
+auto mWindow::onKeyPress(const std::function<void (s32)>& callback) -> type& {
   state.onKeyPress = callback;
   return *this;
 }
 
-auto mWindow::onKeyRelease(const function<void (s32)>& callback) -> type& {
+auto mWindow::onKeyRelease(const std::function<void (s32)>& callback) -> type& {
   state.onKeyRelease = callback;
   return *this;
 }
 
-auto mWindow::onMove(const function<void ()>& callback) -> type& {
+auto mWindow::onMove(const std::function<void ()>& callback) -> type& {
   state.onMove = callback;
   return *this;
 }
 
-auto mWindow::onSize(const function<void ()>& callback) -> type& {
+auto mWindow::onSize(const std::function<void ()>& callback) -> type& {
   state.onSize = callback;
   return *this;
 }

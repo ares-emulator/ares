@@ -7,7 +7,7 @@ struct mRadioButton : mWidget {
   auto doActivate() const -> void;
   auto group() const -> Group override;
   auto icon() const -> multiFactorImage;
-  auto onActivate(const function<void ()>& callback = {}) -> type&;
+  auto onActivate(const std::function<void ()>& callback = {}) -> type&;
   auto orientation() const -> Orientation;
   auto setBordered(bool bordered = true) -> type&;
   auto setChecked() -> type&;
@@ -23,7 +23,7 @@ struct mRadioButton : mWidget {
     bool checked = false;
     sGroup group;
     multiFactorImage icon;
-    function<void ()> onActivate;
+    std::function<void ()> onActivate;
     Orientation orientation = Orientation::Horizontal;
     string text;
   } state;

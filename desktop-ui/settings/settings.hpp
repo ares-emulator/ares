@@ -196,7 +196,7 @@ struct InputSettings : VerticalLayout {
   auto eventClear() -> void;
   auto eventAssign(TableViewCell, string binding) -> void;
   auto eventAssign(TableViewCell) -> void;
-  auto eventInput(shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
+  auto eventInput(std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
   auto setVisible(bool visible = true) -> InputSettings&;
 
   HorizontalLayout indexLayout{this, Size{~0, 0}};
@@ -223,7 +223,7 @@ struct HotkeySettings : VerticalLayout {
   auto eventChange() -> void;
   auto eventClear() -> void;
   auto eventAssign(TableViewCell) -> void;
-  auto eventInput(shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
+  auto eventInput(std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
   auto setVisible(bool visible = true) -> HotkeySettings&;
 
   TableView inputList{this, Size{~0, ~0}};
@@ -303,7 +303,7 @@ struct FirmwareSettings : VerticalLayout {
     Button assignButton{&controlLayout, Size{80, 0}};
     Button clearButton{&controlLayout, Size{80, 0}};
 
-  map<string, string> fileHashes;
+  std::map<string, string> fileHashes;
 };
 
 struct PathSettings : VerticalLayout {

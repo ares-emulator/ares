@@ -9,7 +9,7 @@ struct InputJoypadDirectInput {
   InputJoypadDirectInput(Input& input) : input(input) {}
 
   struct Joypad {
-    shared_pointer<HID::Joypad> hid{new HID::Joypad};
+    std::shared_ptr<HID::Joypad> hid = std::make_shared<HID::Joypad>();
 
     LPDIRECTINPUTDEVICE8 device = nullptr;
     LPDIRECTINPUTEFFECT effect = nullptr;
@@ -27,14 +27,14 @@ struct InputJoypadDirectInput {
   bool xinputAvailable = false;
   u32 effects = 0;
 
-  auto assign(shared_pointer<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
+  auto assign(std::shared_ptr<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
     group.input(inputID).setValue(value);
   }
 
-  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     for(auto& jp : joypads) {
       if(FAILED(jp.device->Poll())) jp.device->Acquire();
 

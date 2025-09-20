@@ -79,7 +79,7 @@ auto Display::main() -> void {
 }
 
 auto Display::power() -> void {
-  Thread::create(system.frequency(), {&Display::main, this});
+  Thread::create(system.frequency(), std::bind_front(&Display::main, this));
 
   for(u32 n = 0x004; n <= 0x007; n++) bus.io[n] = this;
 

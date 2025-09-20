@@ -17,8 +17,8 @@ auto ExpansionPort::unload() -> void {
 }
 
 auto ExpansionPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Satellaview") device = new Satellaview(port);
-  if(name == "21fx"       ) device = new S21FX(port);
+  if(name == "Satellaview") device = std::make_unique<Satellaview>(port);
+  if(name == "21fx"       ) device = std::make_unique<S21FX>(port);
   if(device) return device->node;
   return {};
 }

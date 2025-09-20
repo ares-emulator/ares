@@ -17,7 +17,7 @@ struct Setting : Object {
 
   auto load(Node::Object source) -> bool override {
     if(!Object::load(source)) return false;
-    if(auto setting = source->cast<shared_pointer<Setting>>()) writeValue(setting->readValue());
+    if(auto setting = source->cast<Node::Setting::Setting>()) writeValue(setting->readValue());
     return true;
   }
 

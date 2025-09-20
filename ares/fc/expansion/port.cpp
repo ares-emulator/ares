@@ -19,8 +19,8 @@ auto ExpansionPort::unload() -> void {
 }
 
 auto ExpansionPort::allocate(string name) -> Node::Peripheral {
-  if(name == "EPSM") device = new EPSM(port);
-  if(name == "Family Keyboard") device = new FamilyKeyboard(port);
+  if(name == "EPSM") device = std::make_unique<EPSM>(port);
+  if(name == "Family Keyboard") device = std::make_unique<FamilyKeyboard>(port);
   if(device) return device->node;
   return {};
 }

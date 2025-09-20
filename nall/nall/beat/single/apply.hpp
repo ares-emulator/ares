@@ -2,7 +2,7 @@
 
 namespace nall::Beat::Single {
 
-inline auto apply(array_view<u8> source, array_view<u8> beat, maybe<string&> manifest = {}, maybe<string&> result = {}) -> maybe<std::vector<u8>> {
+inline auto apply(std::span<const u8> source, std::span<const u8> beat, maybe<string&> manifest = {}, maybe<string&> result = {}) -> maybe<std::vector<u8>> {
   #define error(text) { if(result) *result = {"error: ", text}; return {}; }
   #define warning(text) { if(result) *result = {"warning: ", text}; return target; }
   #define success() { if(result) *result = ""; return target; }

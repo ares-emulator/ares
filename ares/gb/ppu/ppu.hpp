@@ -75,8 +75,8 @@ struct PPU : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  function<void ()> scanline;
-  function<void ()> run;
+  std::function<void ()> scanline;
+  std::function<void ()> run;
 
   struct Status {
     n1 irq;  //STAT IRQ line

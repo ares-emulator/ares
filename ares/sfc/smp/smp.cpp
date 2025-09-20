@@ -30,11 +30,11 @@ auto SMP::main() -> void {
 
 auto SMP::power(bool reset) -> void {
   if(auto fp = system.pak->read("ipl.rom")) {
-    fp->read({iplrom, 64});
+    fp->read(iplrom, 64);
   }
 
   SPC700::power();
-  create(system.apuFrequency() / 12.0, {&SMP::main, this});
+  create(system.apuFrequency() / 12.0, std::bind_front(&SMP::main, this));
 
   r.pc.byte.l = iplrom[62];
   r.pc.byte.h = iplrom[63];

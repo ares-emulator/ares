@@ -4,11 +4,11 @@ struct Nintendo64 : Cartridge {
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(std::vector<u8>& rom) -> string;
-  auto cic_detect(array_view<u8> ipl3) -> string;
-  auto ipl2checksum(u32 seed, array_view<u8> rom) -> u64;
+  auto cic_detect(std::span<const u8> ipl3) -> string;
+  auto ipl2checksum(u32 seed, std::span<const u8> rom) -> u64;
 };
 
-auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
+auto Nintendo64::ipl2checksum(u32 seed, std::span<const u8> rom) -> u64 {
   auto rotl = [](u32 value, u32 shift) -> u32 {
     return (value << shift) | (value >> (-shift&31));
   };
@@ -27,7 +27,7 @@ auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
 
   // create the initialization data
   u32 init = 0x6c078965 * (seed & 0xff) + 1;
-  u32 data = rom.readm(4);
+  u32 data = readm<u32>(rom, 4);
   init ^= data;
 
   // copy to the state
@@ -54,7 +54,7 @@ auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
 
       if (loop == 1008) break;
 
-      dataNext   = rom.readm(4);
+      dataNext   = readm<u32>(rom, 4);
       state[15]  = csum(csum(state[15], rotl(data, dataLast  >> 27), loop), rotl(dataNext, data  >> 27), loop);
       state[14]  = csum(csum(state[14], rotr(data, dataLast & 0x1f), loop), rotr(dataNext, data & 0x1f), loop);
       state[13] += rotr(data, data & 0x1f) + rotr(dataNext, dataNext & 0x1f);
@@ -99,7 +99,7 @@ auto Nintendo64::load(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("id",     document["game/id"].string());
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
@@ -150,7 +150,7 @@ auto Nintendo64::save(string location) -> bool {
   return true;
 }
 
-auto Nintendo64::cic_detect(array_view<u8> ipl3) -> string
+auto Nintendo64::cic_detect(std::span<const u8> ipl3) -> string
 {
   bool ntsc = true;
   string cic = "";
@@ -193,7 +193,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   //and running the checksum again.
   //this also works for modern IPL3s variants (proprietary or open source),
   //as long as they are used with a CIC we know of.
-  string cic = cic_detect(array_view<u8>(&data[0x40], 0xfc0));
+  string cic = cic_detect({&data[0x40], 0xfc0});
   if (cic == "") {
     //check if byte-swapped
     for(u32 index = 0; index < data.size(); index += 2) {
@@ -203,7 +203,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
       data[index + 1] = d0;
     }
 
-    cic = cic_detect(array_view<u8>(&data[0x40], 0xfc0));
+    cic = cic_detect({&data[0x40], 0xfc0});
     if (cic == "") {
       //check if little-endian
       for(u32 index = 0; index < data.size(); index += 4) {
@@ -217,7 +217,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
         data[index + 3] = d1;
       }
 
-      cic = cic_detect(array_view<u8>(&data[0x40], 0xfc0));
+      cic = cic_detect({&data[0x40], 0xfc0});
       if (cic == "") {
         //no match is found. Fallback to CIC 6102, big-endian.
         cic = "CIC-NUS-6102";

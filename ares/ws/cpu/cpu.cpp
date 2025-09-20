@@ -77,7 +77,7 @@ auto CPU::out(n16 port, n8 data) -> void {
 
 auto CPU::power() -> void {
   V30MZ::power();
-  Thread::create(3'072'000, {&CPU::main, this});
+  Thread::create(3'072'000, std::bind_front(&CPU::main, this));
 
   bus.map(this, 0x00a0);
   bus.map(this, 0x00b0);

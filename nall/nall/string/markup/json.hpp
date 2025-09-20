@@ -3,7 +3,7 @@
 namespace nall::JSON {
 
 struct ManagedNode;
-using SharedNode = shared_pointer<ManagedNode>;
+using SharedNode = std::shared_ptr<ManagedNode>;
 
 struct ManagedNode : Markup::ManagedNode {
 protected:
@@ -41,7 +41,7 @@ protected:
       return;
     }
     while(true) {
-      SharedNode node(new ManagedNode);
+      SharedNode node = std::make_shared<ManagedNode>();
       node->parseMember(p);
       _children.push_back(node);
       if(*p != ',') break;
@@ -58,7 +58,7 @@ protected:
       return;
     }
     for(u32 index = 0;; index++) {
-      SharedNode node(new ManagedNode);
+      SharedNode node = std::make_shared<ManagedNode>();
       node->_name = index;
       node->parseElement(p);
       _children.push_back(node);
@@ -189,7 +189,7 @@ protected:
 };
 
 inline auto unserialize(const string& markup) -> Markup::Node {
-  SharedNode node(new ManagedNode);
+  SharedNode node = std::make_shared<ManagedNode>();
   try {
     const char* p = markup;
     node->parseElement(p);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 //error detection code
 
 namespace nall::CD::EDC {
@@ -20,13 +22,13 @@ inline auto polynomial(u8 x) -> u32 {
 
 //
 
-inline auto create(array_view<u8> input) -> u32 {
+inline auto create(std::span<const u8> input) -> u32 {
   u32 sum = 0;
   for(auto& byte : input) sum = sum >> 8 ^ polynomial(sum ^ byte);
   return sum;
 }
 
-inline auto create(array_view<u8> input, array_span<u8> output) -> bool {
+inline auto create(std::span<const u8> input, std::span<u8> output) -> bool {
   if(output.size() != 4) return false;
   auto sum = create(input);
   output[0] = sum >>  0;
@@ -36,18 +38,18 @@ inline auto create(array_view<u8> input, array_span<u8> output) -> bool {
   return true;
 }
 
-inline auto createMode1(array_span<u8> sector) -> bool {
+inline auto createMode1(std::span<u8> sector) -> bool {
   if(sector.size() != 2352) return false;
   return create({sector.data(), 2064}, {sector.data() + 2064, 4});
 }
 
 //
 
-inline auto verify(array_view<u8> input, u32 edc) -> bool {
+inline auto verify(std::span<const u8> input, u32 edc) -> bool {
   return edc == create(input);
 }
 
-inline auto verify(array_view<u8> input, array_view<u8> compare) -> bool {
+inline auto verify(std::span<const u8> input, std::span<const u8> compare) -> bool {
   if(compare.size() != 4) return false;
   auto sum = create(input);
   if(compare[0] != u8(sum >>  0)) return false;
@@ -57,7 +59,7 @@ inline auto verify(array_view<u8> input, array_view<u8> compare) -> bool {
   return true;
 }
 
-inline auto verifyMode1(array_view<u8> sector) -> bool {
+inline auto verifyMode1(std::span<const u8> sector) -> bool {
   if(sector.size() != 2352) return false;
   return verify({sector.data(), 2064}, {sector.data() + 2064, 4});
 }

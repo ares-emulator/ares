@@ -9,7 +9,7 @@ namespace ares {
 #include "constants.cpp"
 #include "serialization.cpp"
 
-auto YM2612::clock() -> array<i16[2]> {
+auto YM2612::clock() -> std::array<i16, 2> {
   s32 left  = 0;
   s32 right = 0;
 

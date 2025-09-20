@@ -6,9 +6,6 @@ target_sources(
     any.hpp
     arguments.hpp
     arithmetic.hpp
-    array-span.hpp
-    array-view.hpp
-    array.hpp
     atoi.hpp
     bcd.hpp
     bit.hpp
@@ -27,9 +24,7 @@ target_sources(
     file-map.hpp
     file.hpp
     float-env.hpp
-    function.hpp
     galois-field.hpp
-    hashset.hpp
     hid.hpp
     image.hpp
     
@@ -45,13 +40,11 @@ target_sources(
     locale.hpp
     location.hpp
     main.hpp
-    map.hpp
     matrix-multiply.hpp
     matrix.hpp
     maybe.hpp
     memory.cpp
     memory.hpp
-    merge-sort.hpp
     nall.cpp
     nall.hpp
     path.cpp
@@ -72,9 +65,6 @@ target_sources(
     serial.hpp
     serializer.hpp
     
-    set.hpp
-    
-    shared-pointer.hpp
     stdint.hpp
     string.hpp
     
@@ -83,12 +73,10 @@ target_sources(
     thread.cpp
     thread.hpp
     traits.hpp
-    unique-pointer.hpp
     utility.hpp
     variant.hpp
     varint.hpp
     vfs.hpp
-    view.hpp
 )
 
 target_sources(nall PRIVATE arithmetic/natural.hpp arithmetic/unsigned.hpp)

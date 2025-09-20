@@ -9,7 +9,7 @@ auto GameBoyAdvance::load(string location) -> LoadResult {
   if(bios.empty()) return romNotFound;
 
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("bios.rom", bios);
   return successful;
 }

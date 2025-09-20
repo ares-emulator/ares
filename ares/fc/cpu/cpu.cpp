@@ -42,7 +42,7 @@ auto CPU::step(u32 clocks) -> void {
 auto CPU::power(bool reset) -> void {
   MOS6502::BCD = 0;
   MOS6502::power(reset);
-  Thread::create(system.frequency(), {&CPU::main, this});
+  Thread::create(system.frequency(), std::bind_front(&CPU::main, this));
 
   if(!reset) {
     ram.fill(0xff);

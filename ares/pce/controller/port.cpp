@@ -19,9 +19,9 @@ auto ControllerPort::unload() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Gamepad") device = new Gamepad(port);
-  if(name == "Avenue Pad 6") device = new AvenuePad(port);
-  if(name == "Multitap") device = new Multitap(port);
+  if(name == "Gamepad") device = std::make_unique<Gamepad>(port);
+  if(name == "Avenue Pad 6") device = std::make_unique<AvenuePad>(port);
+  if(name == "Multitap") device = std::make_unique<Multitap>(port);
   if(device) return device->node;
   return {};
 }

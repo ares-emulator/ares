@@ -16,7 +16,7 @@ struct Ed25519 {
     return compress(scalarMultiply(B, clamp(hash(privateKey)) % L));
   }
 
-  auto sign(array_view<u8> message, u256 privateKey) const -> u512 {
+  auto sign(std::span<const u8> message, u256 privateKey) const -> u512 {
     u512 H = hash(privateKey);
     u256 a = clamp(H) % L;
     u256 A = compress(scalarMultiply(B, a));
@@ -30,7 +30,7 @@ struct Ed25519 {
     return u512(S) << 256 | R;
   }
 
-  auto verify(array_view<u8> message, u512 signature, u256 publicKey) const -> bool {
+  auto verify(std::span<const u8> message, u512 signature, u256 publicKey) const -> bool {
     auto R = decompress(lower(signature));
     auto A = decompress(publicKey);
     if(!R || !A) return false;
@@ -60,7 +60,7 @@ private:
     input(hash, std::forward<P>(p)...);
   }
 
-  template<typename... P> auto input(Hash::SHA512& hash, array_view<u8> value, P&&... p) const -> void {
+  template<typename... P> auto input(Hash::SHA512& hash, std::span<const u8> value, P&&... p) const -> void {
     hash.input(value);
     input(hash, std::forward<P>(p)...);
   }

@@ -2,7 +2,7 @@ struct NeoGeoMVS : Emulator {
   NeoGeoMVS();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto group() -> string override { return "Arcade"; }
   auto arcade() -> bool override { return true; }
 };
@@ -84,7 +84,7 @@ auto NeoGeoMVS::save() -> bool {
   return true;
 }
 
-auto NeoGeoMVS::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto NeoGeoMVS::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Neo Geo MVS") return system->pak;
   if(node->name() == "Neo Geo Cartridge") return game->pak;
   return {};

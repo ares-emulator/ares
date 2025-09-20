@@ -11,8 +11,8 @@ Bus::~Bus() {
 
 auto Bus::reset() -> void {
   for(auto id : range(256)) {
-    reader[id].reset();
-    writer[id].reset();
+    reader[id] = nullptr;
+    writer[id] = nullptr;
     counter[id] = 0;
   }
 
@@ -30,8 +30,8 @@ auto Bus::reset() -> void {
 }
 
 auto Bus::map(
-  const function<n8   (n24, n8)>& read,
-  const function<void (n24, n8)>& write,
+  const std::function<n8   (n24, n8)>& read,
+  const std::function<void (n24, n8)>& write,
   const string& addr, u32 size, u32 base, u32 mask
 ) -> u32 {
   u32 id = 1;
@@ -59,8 +59,8 @@ auto Bus::map(
         for(u32 addr = addrLo; addr <= addrHi; addr++) {
           u32 pid = lookup[bank << 16 | addr];
           if(pid && --counter[pid] == 0) {
-            reader[pid].reset();
-            writer[pid].reset();
+            reader[pid] = nullptr;
+            writer[pid] = nullptr;
           }
 
           u32 offset = reduce(bank << 16 | addr, mask);
@@ -95,8 +95,8 @@ auto Bus::unmap(const string& addr) -> void {
         for(u32 addr = addrLo; addr <= addrHi; addr++) {
           u32 pid = lookup[bank << 16 | addr];
           if(pid && --counter[pid] == 0) {
-            reader[pid].reset();
-            writer[pid].reset();
+            reader[pid] = nullptr;
+            writer[pid] = nullptr;
           }
 
           lookup[bank << 16 | addr] = 0;

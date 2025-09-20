@@ -107,7 +107,7 @@ struct Writable {
   }
 
   auto serialize(serializer& s) -> void {
-    s(array_span<u8>{data, size});
+    s(std::span<u8>{data, size});
   }
 
 //private:

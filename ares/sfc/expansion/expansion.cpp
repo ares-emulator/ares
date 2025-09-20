@@ -7,7 +7,7 @@ namespace ares::SuperFamicom {
 #include "satellaview/satellaview.cpp"
 
 Expansion::Expansion() {
-  if(!handle()) Thread::create(1, {&Expansion::main, this});
+  if(!handle()) Thread::create(1, std::bind_front(&Expansion::main, this));
   cpu.peripherals.push_back(this);
 }
 

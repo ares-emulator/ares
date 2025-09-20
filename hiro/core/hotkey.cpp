@@ -28,12 +28,12 @@ auto Hotkey::doRelease() const -> void {
   if(state->onRelease) state->onRelease();
 }
 
-auto Hotkey::onPress(const function<void ()>& callback) -> type& {
+auto Hotkey::onPress(const std::function<void ()>& callback) -> type& {
   state->onPress = callback;
   return *this;
 }
 
-auto Hotkey::onRelease(const function<void ()>& callback) -> type& {
+auto Hotkey::onRelease(const std::function<void ()>& callback) -> type& {
   state->onRelease = callback;
   return *this;
 }

@@ -16,7 +16,7 @@ auto mMenuItem::icon() const -> multiFactorImage {
   return state.icon;
 }
 
-auto mMenuItem::onActivate(const function<void ()>& callback) -> type& {
+auto mMenuItem::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }

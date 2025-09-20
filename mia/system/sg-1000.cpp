@@ -6,7 +6,7 @@ struct SG1000 : System {
 
 auto SG1000::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   return successful;
 }
 

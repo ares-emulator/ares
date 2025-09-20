@@ -1,4 +1,4 @@
-auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
+auto Program::identify(const string& filename) -> std::shared_ptr<Emulator> {
   Program::Guard guard;
   if(auto system = mia::identify(filename)) {
     for(auto& emulator : emulators) {
@@ -15,7 +15,7 @@ auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
 }
 
 /// Loads an emulator and, optionally, a ROM from the given location.
-auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
+auto Program::load(std::shared_ptr<Emulator> emulator, string location) -> bool {
   Program::Guard guard;
   unload();
 

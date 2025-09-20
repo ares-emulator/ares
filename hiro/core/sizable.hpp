@@ -6,7 +6,7 @@ struct mSizable : mObject {
   auto doSize() const -> void;
   auto geometry() const -> Geometry;
   virtual auto minimumSize() const -> Size;
-  auto onSize(const function<void ()>& callback = {}) -> type&;
+  auto onSize(const std::function<void ()>& callback = {}) -> type&;
   virtual auto setCollapsible(bool collapsible = true) -> type&;
   virtual auto setGeometry(Geometry geometry) -> type&;
 
@@ -14,7 +14,7 @@ struct mSizable : mObject {
   struct State {
     bool collapsible = false;
     Geometry geometry;
-    function<void ()> onSize;
+    std::function<void ()> onSize;
   } state;
 };
 #endif

@@ -32,14 +32,14 @@ auto VDP::load(Node::Object parent) -> void {
     });
     colorEmulation->setDynamic(true);
 
-    screen->colors(1 << 6, {&VDP::colorMasterSystem, this});
+    screen->colors(1 << 6, std::bind_front(&VDP::colorMasterSystem, this));
     screen->setSize(284, screenHeight());
     screen->setScale(1.0, 1.0);
     Region::PAL() ? screen->setAspect(19.0, 14.0) : screen->setAspect(8.0, 7.0);
   }
 
   if(Display::LCD()) {
-    screen->colors(1 << 12, {&VDP::colorGameGear, this});
+    screen->colors(1 << 12, std::bind_front(&VDP::colorGameGear, this));
     screen->setSize(160, 144);
     screen->setScale(1.0, 1.0);
     screen->setAspect(6.0, 5.0);
@@ -164,7 +164,7 @@ auto VDP::vblank() -> bool {
 }
 
 auto VDP::power() -> void {
-  Thread::create(system.colorburst() * 15.0 / 5.0, {&VDP::main, this});
+  Thread::create(system.colorburst() * 15.0 / 5.0, std::bind_front(&VDP::main, this));
   screen->power();
 
   for(auto& byte : vram) byte = 0x00;

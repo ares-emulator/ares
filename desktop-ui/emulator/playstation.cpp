@@ -4,9 +4,9 @@ struct PlayStation : Emulator {
   auto load(Menu) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> memoryCard;
+  std::shared_ptr<mia::Pak> memoryCard;
   u32 regionID = 0;
   sTimer discTrayTimer;
 };
@@ -172,7 +172,7 @@ auto PlayStation::save() -> bool {
   return true;
 }
 
-auto PlayStation::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto PlayStation::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "PlayStation") return system->pak;
   if(node->name() == "PlayStation Disc") return game->pak;
   if(node->name() == "Memory Card") return memoryCard->pak;

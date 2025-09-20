@@ -10,7 +10,7 @@ Justifier::Justifier(Node::Port parent) {
   sprite->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
   ppu.screen()->attach(sprite);
 
-  Thread::create(system.cpuFrequency(), {&Justifier::main, this});
+  Thread::create(system.cpuFrequency(), std::bind_front(&Justifier::main, this));
   cpu.peripherals.push_back(this);
 }
 
