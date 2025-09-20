@@ -48,3 +48,13 @@ struct LaserDisc : Medium {
 protected:
   Decode::MMI mmiArchive;
 };
+
+struct Tape : Medium {
+  auto name() -> string override { return "Tape"; }
+  auto type() -> string override { return "Tape"; }
+  auto load(string location) -> LoadResult override;
+  auto save(string location) -> bool override;
+  // TODO: add support for more tape formats
+  auto extensions() -> vector<string> override { return {"wav"}; }
+  auto analyze(string location) -> string;
+};

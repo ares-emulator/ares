@@ -77,6 +77,7 @@ struct Presentation : Window {
       MenuItem streamManagerAction{&toolsMenu};
       MenuItem propertiesViewerAction{&toolsMenu};
       MenuItem traceLoggerAction{&toolsMenu};
+      MenuItem tapeViewerAction{&toolsMenu};
     Menu helpMenu{&menuBar};
       MenuItem aboutAction{&helpMenu};
 

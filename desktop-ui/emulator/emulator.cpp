@@ -98,11 +98,11 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
       errorText = "An internal error occurred when initializing the emulator core. ";
       break;
   }
-  
+
   if(result.info) {
     errorText = { errorText, result.info };
   }
-  
+
   switch (result.result) {
     case noFirmware:
       if(MessageDialog().setText({
@@ -272,7 +272,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
 
   auto port = ares::Node::parent(device);
   if(!port) return;
-  
+
   for(auto& inputPort : ports) {
     if(inputPort.name != port->name()) continue;
     for(auto& inputDevice : inputPort.devices) {
