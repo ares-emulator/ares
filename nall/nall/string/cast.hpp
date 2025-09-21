@@ -182,15 +182,6 @@ template<u32 Bits> struct stringify<Real<Bits>> {
 
 //arrays
 
-template<> struct stringify<vector<u8>> {
-  stringify(const vector<u8>& source) {
-    _text.resize(source.size());
-    memory::copy(_text.data(), source.data(), source.size());
-  }
-  auto data() const -> const char* { return _text.data(); }
-  auto size() const -> u32 { return _text.size(); }
-  vector<char> _text;
-};
 
 template<> struct stringify<std::vector<u8>> {
   stringify(const std::vector<u8>& source) {

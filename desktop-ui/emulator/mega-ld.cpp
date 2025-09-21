@@ -12,8 +12,8 @@ struct MegaLD : Emulator {
 };
 
 MegaLD::MegaLD() {
-  manufacturer = "Sega";
-  name = "Mega LD";
+  manufacturer = "Pioneer";
+  name = "LaserActive (SEGA PAC)";
 
   firmware.push_back({"BIOS", "US"});      //NTSC-U
   firmware.push_back({"BIOS", "Japan"});   //NTSC-J
@@ -62,7 +62,7 @@ auto MegaLD::load() -> LoadResult {
     return result;
   }
 
-  if(!ares::MegaDrive::load(root, {"[Sega] Mega LD (", region, ")"})) return otherError;
+  if(!ares::MegaDrive::load(root, {"[Pioneer] LaserActive (SEGA PAC) (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Mega CD/Disc Tray")) {
     port->allocate();

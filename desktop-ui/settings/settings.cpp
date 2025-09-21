@@ -99,6 +99,7 @@ auto Settings::process(bool load) -> void {
 
   bind(boolean, "Boot/Fast", boot.fast);
   bind(boolean, "Boot/Debugger", boot.debugger);
+  bind(boolean, "Boot/AwaitGDBClient", boot.awaitGDBClient);
   bind(string,  "Boot/Prefer", boot.prefer);
 
   bind(boolean, "General/ShowStatusBar", general.showStatusBar);
@@ -185,6 +186,7 @@ auto Settings::process(bool load) -> void {
 
   for(auto& emulator : emulators) {
     string base = string{emulator->name}.replace(" ", ""), name;
+    base.replace("(", "").replace(")", "");
     name = {base, "/Visible"};
     bind(boolean, name, emulator->configuration.visible);
     name = {base, "/Path"};

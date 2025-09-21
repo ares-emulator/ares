@@ -10,6 +10,7 @@ if(NOT USE_QT6)
 
   target_enable_feature(hiro "GTK3 UI backend")
   target_compile_definitions(hiro PUBLIC HIRO_GTK=3)
+  set(HIRO_BACKEND "GTK3" PARENT_SCOPE)
 else()
   find_package(Qt6 COMPONENTS Widgets REQUIRED)
 
@@ -29,6 +30,7 @@ else()
 
   target_enable_feature(hiro "Qt6 UI backend")
   target_compile_definitions(hiro PUBLIC HIRO_QT=6)
+  set(HIRO_BACKEND "Qt" PARENT_SCOPE)
 endif()
 
 get_target_property(hiro_SOURCES hiro SOURCES)

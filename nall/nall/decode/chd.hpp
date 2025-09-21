@@ -25,22 +25,22 @@ struct CHD {
 
     u8 number = 0xff; //01-99
     string type;
-    vector<Index> indices;
+    std::vector<Index> indices;
     maybe<s32> pregap;
     maybe<s32> postgap;
   };
 
   auto load(const string& location) -> bool;
-  auto read(u32 sector) const -> vector<u8>;
+  auto read(u32 sector) const -> std::vector<u8>;
   auto sectorCount() const -> u32;
 
-  vector<Track> tracks;
+  std::vector<Track> tracks;
 private:
   file_buffer fp;
   chd_file* chd = nullptr;
   static constexpr int chd_sector_size = 2352 + 96;
   size_t chd_hunk_size;
-  mutable vector<u8> chd_hunk_buffer;
+  mutable std::vector<u8> chd_hunk_buffer;
   mutable int chd_current_hunk = -1;
 };
 
@@ -148,7 +148,7 @@ inline auto CHD::load(const string& location) -> bool {
       }
 
       disc_lba += pregap_frames;
-      track.indices.append(index);
+      track.indices.push_back(index);
     }
 
     // index1 = track data
@@ -158,7 +158,7 @@ inline auto CHD::load(const string& location) -> bool {
       index.lba = disc_lba;
       index.end = disc_lba + frames - 1;
       index.chd_lba = chd_lba;
-      track.indices.append(index);
+      track.indices.push_back(index);
       disc_lba += frames;
       chd_lba += frames;
 
@@ -172,24 +172,24 @@ inline auto CHD::load(const string& location) -> bool {
       index.number = 2;
       index.lba = disc_lba;
       index.end = disc_lba + postgap_frames - 1;
-      track.indices.append(index);
+      track.indices.push_back(index);
       disc_lba += postgap_frames;
     }
 
-    tracks.append(track);
+    tracks.push_back(track);
   }
 
   return true;
 }
 
-inline auto CHD::read(u32 sector) const -> vector<u8> {
+inline auto CHD::read(u32 sector) const -> std::vector<u8> {
   // Convert LBA in CD-ROM to LBA in CHD
   for(auto& track : tracks) {
     for(auto& index : track.indices) {
       if (sector >= index.lba && sector <= index.end) {
         auto chd_lba = (sector - index.lba) + index.chd_lba;
 
-        vector<u8> output;
+        std::vector<u8> output;
         output.resize(track.type == "MODE1" ? 2048 : 2352);
 
         int hunk = (chd_lba * chd_sector_size) / chd_hunk_size;

@@ -103,7 +103,8 @@
         "ARES_BUILD_OPTIONAL_TARGETS": true,
         "ARES_UNITY_CORES": true,
         "ARES_PRECOMPILE_HEADERS": true,
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {"type": "STRING", "value": "MultiThreaded"}
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {"type": "STRING", "value": "MultiThreaded"},
+        "CMAKE_IGNORE_PATH": {"type": "STRING", "value": "C:/Strawberry/c/bin/"}
       }
     },
     {
@@ -160,6 +161,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {"type": "STRING", "value": "RelWithDebInfo"},
         "ENABLE_CCACHE": true,
+        "ENABLE_IPO": false,
         "ARES_BUILD_LOCAL": false,
         "ARES_BUILD_OPTIONAL_TARGETS": true,
         "ARES_PRECOMPILE_HEADERS": false

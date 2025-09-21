@@ -69,7 +69,7 @@ auto VDP::color(n32 color) -> n64 {
   n1 M = color.bit(9);
   n64 r, g, b;
 
-  if(colorEmulation->value()) {
+  if(colorEmulation && colorEmulation->value()) {
     auto index = color.bit(0, 8);
     n8 B = huc620lut[index].bit( 0,  7);
     n8 G = huc620lut[index].bit( 8, 15);

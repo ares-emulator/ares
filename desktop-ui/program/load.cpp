@@ -78,6 +78,8 @@ auto Program::load(string location) -> bool {
     pause(true);
     toolsWindow.show("Tracer");
     presentation.setFocused();
+  } else if (settings.boot.awaitGDBClient) {
+    pause(true);
   } else {
     pause(false);
   }
@@ -86,6 +88,10 @@ auto Program::load(string location) -> bool {
 
   if(settings.debugServer.enabled) {
     nall::GDB::server.open(settings.debugServer.port, settings.debugServer.useIPv4);
+    nall::GDB::server.onClientConnectCallback = []() {
+      if (settings.boot.awaitGDBClient)
+        program.pause(false);
+    };
   }
 
   //update recent games list

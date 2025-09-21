@@ -2,6 +2,7 @@ struct System {
   Node::System node;
   Node::Setting::Boolean fastBoot;
   VFS::Pak pak;
+  bool homebrewMode = false;
 
   enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
@@ -30,6 +31,7 @@ private:
   auto serialize(serializer&, bool synchronize) -> void;
 };
 
+extern Random random;
 extern System system;
 
 auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }

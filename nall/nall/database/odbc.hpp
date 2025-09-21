@@ -69,14 +69,14 @@ struct ODBC {
       return value;
     }
 
-    auto data(u32 column) -> vector<u8> {
-      if(auto value = _values(column)) return value.get<vector<u8>>({});
-      vector<u8> value;
+    auto data(u32 column) -> std::vector<u8> {
+      if(auto value = _values(column)) return value.get<std::vector<u8>>({});
+      std::vector<u8> value;
       value.resize(65535);
       SQLLEN size = 0;
       SQLGetData(statement(), 1 + column, SQL_C_CHAR, value.data(), value.size(), &size);
       value.resize(size);
-      _values(column) = (vector<u8>)value;
+      _values(column) = (std::vector<u8>)value;
       return value;
     }
 
@@ -84,14 +84,14 @@ struct ODBC {
     auto natural() -> u64 { return natural(_output++); }
     auto real() -> f64 { return real(_output++); }
     auto text() -> string { return text(_output++); }
-    auto data() -> vector<u8> { return data(_output++); }
+    auto data() -> std::vector<u8> { return data(_output++); }
 
   protected:
     virtual auto statement() -> SQLHANDLE { return _statement; }
 
     SQLHANDLE _statement = nullptr;
     u32 _output = 0;
-    vector<any> _values;  //some ODBC drivers (eg MS-SQL) do not allow the same column to be read more than once
+    std::vector<any> _values;  //some ODBC drivers (eg MS-SQL) do not allow the same column to be read more than once
   };
 
   struct Query : Statement {
@@ -132,14 +132,14 @@ struct ODBC {
     //if the bound paramters go out of scope before the query is executed, binding would reference dangling pointers
     //so to work around this, we cache all parameters inside Query until the query is executed
 
-    auto& bind(u32 column, nullptr_t) { return _bindings.append({column, any{(nullptr_t)nullptr}}), *this; }
-    auto& bind(u32 column, s32 value) { return _bindings.append({column, any{(s32)value}}), *this; }
-    auto& bind(u32 column, u32 value) { return _bindings.append({column, any{(u32)value}}), *this; }
-    auto& bind(u32 column, s64 value) { return _bindings.append({column, any{(s64)value}}), *this; }
-    auto& bind(u32 column, u64 value) { return _bindings.append({column, any{(u64)value}}), *this; }
-    auto& bind(u32 column, f64 value) { return _bindings.append({column, any{(f64)value}}), *this; }
-    auto& bind(u32 column, const string& value) { return _bindings.append({column, any{(string)value}}), *this; }
-    auto& bind(u32 column, const vector<u8>& value) { return _bindings.append({column, any{(vector<u8>)value}}), *this; }
+    auto& bind(u32 column, nullptr_t) { return _bindings.emplace_back({column, any{(nullptr_t)nullptr}}), *this; }
+    auto& bind(u32 column, s32 value) { return _bindings.emplace_back({column, any{(s32)value}}), *this; }
+    auto& bind(u32 column, u32 value) { return _bindings.emplace_back({column, any{(u32)value}}), *this; }
+    auto& bind(u32 column, s64 value) { return _bindings.emplace_back({column, any{(s64)value}}), *this; }
+    auto& bind(u32 column, u64 value) { return _bindings.emplace_back({column, any{(u64)value}}), *this; }
+    auto& bind(u32 column, f64 value) { return _bindings.emplace_back({column, any{(f64)value}}), *this; }
+    auto& bind(u32 column, const string& value) { return _bindings.emplace_back({column, any{(string)value}}), *this; }
+    auto& bind(u32 column, const std::vector<u8>& value) { return _bindings.emplace_back({column, any{(std::vector<u8>)value}}), *this; }
 
     auto& bind(nullptr_t) { return bind(_input++, nullptr); }
     auto& bind(s32 value) { return bind(_input++, value); }
@@ -148,7 +148,7 @@ struct ODBC {
     auto& bind(u64 value) { return bind(_input++, value); }
     auto& bind(f64 value) { return bind(_input++, value); }
     auto& bind(const string& value) { return bind(_input++, value); }
-    auto& bind(const vector<u8>& value) { return bind(_input++, value); }
+    auto& bind(const std::vector<u8>& value) { return bind(_input++, value); }
 
     auto step() -> bool {
       if(!_stepped) {
@@ -170,8 +170,8 @@ struct ODBC {
             auto& value = binding.value.get<string>();
             SQLLEN length = SQL_NTS;
             SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, value.size(), 0, (SQLPOINTER)value.data(), 0, &length);
-          } else if(binding.value.is<vector<u8>>()) {
-            auto& value = binding.value.get<vector<u8>>();
+          } else if(binding.value.is<std::vector<u8>>()) {
+            auto& value = binding.value.get<std::vector<u8>>();
             SQLLEN length = value.size();
             SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARBINARY, value.size(), 0, (SQLPOINTER)value.data(), 0, &length);
           }
@@ -216,7 +216,7 @@ struct ODBC {
       u32 column;
       any value;
     };
-    vector<Binding> _bindings;
+    std::vector<Binding> _bindings;
 
     SQLRETURN _result = SQL_SUCCESS;
     u32 _input = 0;

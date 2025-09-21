@@ -10,6 +10,8 @@ auto enumerate() -> std::vector<string> {
     "[NEC] PC Engine Duo (NTSC-J)",
     "[NEC] TurboDuo (NTSC-U)",
     "[NEC] SuperGrafx (NTSC-J)",
+    "[Pioneer] LaserActive (NEC PAC) (NTSC-U)",
+    "[Pioneer] LaserActive (NEC PAC) (NTSC-J)",
   };
 }
 
@@ -67,6 +69,10 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.find("SuperGrafx")) {
     information.name = "SuperGrafx";
     information.model = Model::SuperGrafx;
+  }
+  if(name.find("LaserActive")) {
+    information.name = "PC Engine";
+    information.model = Model::LaserActive;
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;

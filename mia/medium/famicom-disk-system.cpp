@@ -33,15 +33,17 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     array_view<u8> view{input};
     if(view.size() % 65500 == 16) view += 16;  //skip iNES / fwNES header
     u32 index = 0;
+
     auto output = transform(view);
-    while(!output.empty()) {
+    do {
       string name;
       name.append("disk", (char)('1' + index / 2), ".");
       name.append("side", (char)('A' + index % 2));
       pak->append(name, output);
       view += 65500;
       index++;
-    }
+      output = transform(view);
+    } while (!output.empty());
   }
 
   if(!pak) return romNotFound;

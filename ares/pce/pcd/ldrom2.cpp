@@ -1,5 +1,5 @@
 // Pioneer PD6103A
-auto MCD::LD::load(string location) -> void {
+auto PCD::LD::load(string location) -> void {
   video.outputFramebuffer.resize(video.FrameBufferWidth * (video.FrameBufferHeight + 1));
 
   //Load MMI file only if it has changed or is the first load
@@ -10,7 +10,7 @@ auto MCD::LD::load(string location) -> void {
   }
 
   //attempt to locate the requested media in the mmi archive
-  string mediaName = mcd.disc->attribute("media");
+  string mediaName = pcd.disc->attribute("media");
   auto& mediaVec = mmi.media();
   //FIXME(stdc++): revisit this constructor with nicer code
   auto it = std::ranges::find_if(mediaVec, [mediaName](const auto& m){ return m.name == mediaName; });
@@ -26,7 +26,7 @@ auto MCD::LD::load(string location) -> void {
   if (mmi.media().size() > 0) {
     for(const auto& stream : mmi.media()[mediaIndex].streams) {
       if(stream.type == "Redbook") {
-        mcd.fd = mcd.pak->read(stream.file);
+        pcd.fd = pcd.pak->read(stream.file);
         video.hasDigitalAudio = true;
       }
       if(stream.type == "RawAudio") analogAudioFileName = stream.file;
@@ -39,7 +39,7 @@ auto MCD::LD::load(string location) -> void {
       }
     }
   } else {
-    mcd.fd = mcd.pak->read("cd.rom");
+    pcd.fd = pcd.pak->read("cd.rom");
     video.hasDigitalAudio = true;
   }
 
@@ -101,7 +101,7 @@ auto MCD::LD::load(string location) -> void {
       } else if (frameIndex < (video.leadInFrameCount + video.activeVideoFrameCount + video.leadOutFrameCount)) {
         video.leadOutFrames[frameIndex - video.leadInFrameCount - video.activeVideoFrameCount] = frameBaseAddress;
       } else {
-        debug(unusual, "[MCD::LD::load] Trailing frames in analog video file: ", analogVideoFileName);
+        debug(unusual, "[PCD::LD::load] Trailing frames in analog video file: ", analogVideoFileName);
       }
     }
 
@@ -141,22 +141,22 @@ auto MCD::LD::load(string location) -> void {
   targetDriveState = currentDriveState;
 }
 
-auto MCD::LD::unload() -> void {
+auto PCD::LD::unload() -> void {
   // Open the source archive
   mmi.close();
 }
 
-auto MCD::LD::notifyDiscEjected() -> void {
+auto PCD::LD::notifyDiscEjected() -> void {
   // Reset the mechanical drive state to opened
   currentDriveState = 0x01;
   targetDriveState = currentDriveState;
 }
 
-auto MCD::LD::read(n24 address) -> n8 {
+auto PCD::LD::read(n24 address) -> n8 {
   bool isOutput = (address & 0x80);
   u8 regNum = (address & 0x3f) >> 1;
-//  ares::_debug.reset();
-  //debug(unverified, "[MCD::readLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L));
+  //ares::_debug.reset();
+  //debug(unverified, "[PCD::readLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L));
 
   // Retrieve the current value of the target register
   n8 data = 0;
@@ -180,23 +180,23 @@ auto MCD::LD::read(n24 address) -> n8 {
 
   static bool includeReg0InputReadBack = false;
   if (!isOutput && ((regNum != 0x00) || includeReg0InputReadBack)) {
-    //debug(unusual, "[MCD::readLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
+    //debug(unusual, "[PCD::readLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
   } else {
-    //debug(unverified, "[MCD::readLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
+    //debug(unverified, "[PCD::readLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
   }
   return data;
 }
 
-auto MCD::LD::write(n24 address, n8 data) -> void {
+auto PCD::LD::write(n24 address, n8 data) -> void {
   static bool includeReg0DebugOutput = false;
   bool isOutput = (address & 0x80);
   u8 regNum = (address & 0x3f) >> 1;
   //ares::_debug.reset();
-  //debug(unverified, "[MCD::writeLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
+  //debug(unverified, "[PCD::writeLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
   if ((regNum != 0x00) || includeReg0DebugOutput) {
-    //debug(unverified, "[MCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
+    //debug(unverified, "[PCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
     if (isOutput) {
-      debug(unusual, "[MCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
+      debug(unusual, "[PCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
     }
   }
 
@@ -320,7 +320,7 @@ auto MCD::LD::write(n24 address, n8 data) -> void {
   }
 }
 
-auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
+auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
 {
   // Retrieve the previous value of the target register
   n8 previousData = outputRegs[regNum];
@@ -387,10 +387,10 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     data = 0;
     if (currentDriveState < 0x02) {
       data = 0x00; // Tray open
-    } else if (!mcd.cdd.isDiscLoaded()) {
+    } else if (!pcd.drive.isDiscLoaded()) {
       data.bit(4) = 1; // Drive empty
-    } else if (mcd.cdd.isDiscLaserdisc()) {
-      data = (currentDriveState >= 0x04) ? (mcd.cdd.isLaserdiscClv() ? 0xC6 : 0xC5) : 0x80; // Assume 30cm laserdisc
+    } else if (pcd.drive.isDiscLaserdisc()) {
+      data = (currentDriveState >= 0x04) ? (pcd.drive.isLaserdiscClv() ? 0xC6 : 0xC5) : 0x80; // Assume 30cm laserdisc
     } else {
       data = 0x20; // CD
     }
@@ -412,7 +412,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
 
     //##FIX## This is supposed to be latched until the tray is ejected
     //##FIX## Do this properly
-    data.bit(6) = (currentDriveState >= 0x04) && mcd.cdd.isDiscLoaded() && mcd.cdd.isDiscLaserdisc();
+    data.bit(6) = (currentDriveState >= 0x04) && pcd.drive.isDiscLoaded() && pcd.drive.isDiscLaserdisc();
     data.bit(3) = currentDriveState >= 0x04;
     break;
   case 0x04:
@@ -434,13 +434,13 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // ##OLD## Before 2025
     // *U7: Set to 1 if bit 4 of input register 0x0D is set
     data = 0;
-    data.bit(5) = !mcd.cdd.isDiscLoaded() || !mcd.cdd.isDiscLaserdisc() || (currentDriveState < 0x04);
-    if (!mcd.cdd.isDiscLoaded() || mcd.cdd.isDiscLaserdisc() || (currentDriveState < 0x02)) {
+    data.bit(5) = !pcd.drive.isDiscLoaded() || !pcd.drive.isDiscLaserdisc() || (currentDriveState < 0x04);
+    if (!pcd.drive.isDiscLoaded() || pcd.drive.isDiscLaserdisc() || (currentDriveState < 0x02)) {
       data.bit(7) = inputRegs[0x0D].bit(4);
     }
-    if (mcd.cdd.isDiscLoaded() && mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 0x05)) {
-      data.bit(0, 3) = (mcd.cdd.isTrackAudio(mcd.cdd.getCurrentTrack()) ? 0x0C : 0x0E);
-    } else if (mcd.cdd.isDiscLoaded() && !mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 0x05)) {
+    if (!pcd.drive.isDiscLoaded() || pcd.drive.isDiscLaserdisc() || (currentDriveState >= 0x05)) {
+      data.bit(0, 3) = (pcd.drive.isTrackAudio(pcd.drive.getCurrentTrack()) ? 0x0C : 0x0E);
+    } else if (pcd.drive.isDiscLoaded() && !pcd.drive.isDiscLaserdisc() && (currentDriveState >= 0x05)) {
       data.bit(0, 3) = 0x2;
     }
     break;
@@ -552,7 +552,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // Update the drive busy and seek in progress flags. Note that some games (IE, Pyramid Patrol) perform unpaused seek
     // operations and spin in a busy loop waiting first for the seek to complete, then for the current frame number to
     // exactly match the target frame, so we need seek busy state to be accurate here.
-    if ((data.bit(0, 3) == 5) && (mcd.cdd.io.status == CDD::Status::Seeking)) {
+    if ((data.bit(0, 3) == 5) && (pcd.drive.mode == PCD::Drive::Mode::Seeking)) {
       data.bit(7) = 1;
       data.bit(5) = 1;
     } else {
@@ -622,9 +622,9 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     // *U4: Observed to be set when testing bad seeking operations
     // *U0: Unknown. DRVINIT tests this.
     //##FIX## Retain bit U0 until the drive tray is opened
-    data.bit(7) = mcd.cdd.isDiscLoaded() && mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 5);
-    data.bit(6) = mcd.cdd.isDiscLoaded() && ((!mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 2)) || (mcd.cdd.isDiscLaserdisc() && (currentDriveState >= 4)));
-    data.bit(0) = mcd.cdd.isDiscLoaded() && (currentDriveState >= 4);
+    data.bit(7) = pcd.drive.isDiscLoaded() && pcd.drive.isDiscLaserdisc() && (currentDriveState >= 5);
+    data.bit(6) = pcd.drive.isDiscLoaded() && ((!pcd.drive.isDiscLaserdisc() && (currentDriveState >= 2)) || (pcd.drive.isDiscLaserdisc() && (currentDriveState >= 4)));
+    data.bit(0) = pcd.drive.isDiscLoaded() && (currentDriveState >= 4);
     break;
   case 0x09:
     //         --------------------------------- (Buffered in $5919)
@@ -749,11 +749,11 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //   2       Audio track                   Data track               
     //   3       Two channel audio             Four channel audio       
     // ==============================================================================
-    if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
+    if (selectedTrackInfo > pcd.drive.getTrackCount()) {
       data = 0;
     } else {
-      auto trackToQuery = (selectedTrackInfo == 0 ? mcd.cdd.getCurrentTrack() : (n7)selectedTrackInfo);
-      mcd.cdd.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
+      auto trackToQuery = (selectedTrackInfo == 0 ? pcd.drive.getCurrentTrack() : (n7)selectedTrackInfo);
+      pcd.drive.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
       data.bit(4, 7) = flags;
       data.bit(0, 3) = 0x01;
     }
@@ -772,17 +772,17 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //         is fetched from the redbook track subcode data, and reports in CD time format with 75 frames per second.
     //         If there is no redbook data encoded (IE, no digital audio track), this is set to 0x00.
     if ((selectedTrackInfo == 0xA0) || (selectedTrackInfo == 0xB0)) {
-      data = BCD::encode(mcd.cdd.session.firstTrack);
+      data = BCD::encode(pcd.session.firstTrack);
     } else if ((selectedTrackInfo == 0xA1) || (selectedTrackInfo == 0xB1)) {
-      mcd.cdd.getLeadOutTimecode(minute, second, frame);
+      pcd.drive.getLeadOutTimecode(minute, second, frame);
       data = BCD::encode(minute);
-    } else if (((selectedTrackInfo == 0) || (selectedTrackInfo == 0xFF)) && (mcd.cdd.getTrackCount() > 0)) {
-      mcd.cdd.getCurrentTimecode(minute, second, frame);
+    } else if (((selectedTrackInfo == 0) || (selectedTrackInfo == 0xFF)) && (pcd.drive.getTrackCount() > 0)) {
+      pcd.drive.getCurrentTimecode(minute, second, frame);
       data = BCD::encode(minute);
-    } else if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
+    } else if (selectedTrackInfo > pcd.drive.getTrackCount()) {
       data = 0xFF;
     } else {
-      mcd.cdd.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
+      pcd.drive.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
       data = BCD::encode(minute);
     }
     break;
@@ -800,17 +800,17 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //         is fetched from the redbook track subcode data, and reports in CD time format with 75 frames per second.
     //         If there is no redbook data encoded (IE, no digital audio track), this is set to 0x00.
     if ((selectedTrackInfo == 0xA0) || (selectedTrackInfo == 0xB0)) {
-      data = BCD::encode(mcd.cdd.getTrackCount());
+      data = BCD::encode(pcd.drive.getTrackCount());
     } else if ((selectedTrackInfo == 0xA1) || (selectedTrackInfo == 0xB1)) {
-      mcd.cdd.getLeadOutTimecode(minute, second, frame);
+      pcd.drive.getLeadOutTimecode(minute, second, frame);
       data = BCD::encode(second);
-    } else if (((selectedTrackInfo == 0) || (selectedTrackInfo == 0xFF)) && (mcd.cdd.getTrackCount() > 0)) {
-      mcd.cdd.getCurrentTimecode(minute, second, frame);
+    } else if (((selectedTrackInfo == 0) || (selectedTrackInfo == 0xFF)) && (pcd.drive.getTrackCount() > 0)) {
+      pcd.drive.getCurrentTimecode(minute, second, frame);
       data = BCD::encode(second);
-    } else if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
+    } else if (selectedTrackInfo > pcd.drive.getTrackCount()) {
       data = 0xFF;
     } else {
-      mcd.cdd.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
+      pcd.drive.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
       data = BCD::encode(second);
     }
     break;
@@ -830,15 +830,15 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     if ((selectedTrackInfo == 0xA0) || (selectedTrackInfo == 0xB0)) {
       data = 0x00;
     } else if ((selectedTrackInfo == 0xA1) || (selectedTrackInfo == 0xB1)) {
-      mcd.cdd.getLeadOutTimecode(minute, second, frame);
+      pcd.drive.getLeadOutTimecode(minute, second, frame);
       data = BCD::encode(frame);
-    } else if (((selectedTrackInfo == 0) || (selectedTrackInfo == 0xFF)) && (mcd.cdd.getTrackCount() > 0)) {
-      mcd.cdd.getCurrentTimecode(minute, second, frame);
+    } else if (((selectedTrackInfo == 0) || (selectedTrackInfo == 0xFF)) && (pcd.drive.getTrackCount() > 0)) {
+      pcd.drive.getCurrentTimecode(minute, second, frame);
       data = BCD::encode(frame);
-    } else if (selectedTrackInfo > mcd.cdd.getTrackCount()) {
+    } else if (selectedTrackInfo > pcd.drive.getTrackCount()) {
       data = 0xFF;
     } else {
-      mcd.cdd.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
+      pcd.drive.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
       data = BCD::encode(frame);
     }
     break;
@@ -853,9 +853,9 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //  the drive tray is ejected (drive state 0x01). If the drive tray is empty it remains at 0x00 in drive state
     //  0x02-0x03.
     // -The following regs 0x16-0x19 all get set to 0x00 when the disc is spun down (drive state 0x03).
-    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
-      data = BCD::encode(mcd.cdd.getCurrentTrack());
-    } else if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 2)) {
+    if (pcd.drive.isDiscLoaded() && (currentDriveState >= 5)) {
+      data = BCD::encode(pcd.drive.getCurrentTrack());
+    } else if (pcd.drive.isDiscLoaded() && (currentDriveState >= 2)) {
       data = 0x01;
     } else {
       data = 0x00;
@@ -872,10 +872,10 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //    -CLV LDs: Hours counter of current time code in BCD format, IE X in "X??????".
     //    -CDs: The current subdivision number within the track, IE, "X" from the Q channel subcode data.
     data = 0;
-    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
-      if (mcd.cdd.isDiscLaserdisc()) {
-        auto frameNumber = zeroBasedFrameIndexFromLba(mcd.cdd.getCurrentSector()) + 1;
-        if (mcd.cdd.isLaserdiscClv()) {
+    if (pcd.drive.isDiscLoaded() && (currentDriveState >= 5)) {
+      if (pcd.drive.isDiscLaserdisc()) {
+        auto frameNumber = zeroBasedFrameIndexFromLba(pcd.drive.getCurrentSector()) + 1;
+        if (pcd.drive.isLaserdiscClv()) {
           data = BCD::encode((frameNumber / (60 * 60 * 30)) % 60);
         } else {
           data = BCD::encode((frameNumber / (100 * 100)) % 100);
@@ -897,16 +897,16 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //    -CLV LDs: Minutes counter of current time code in BCD format, IE X in "?XX????".
     //    -CDs: Minutes counter of current relative track time in BCD format. IE, each track begins again at 0.
     data = 0;
-    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
-      if (mcd.cdd.isDiscLaserdisc()) {
-        auto frameNumber = zeroBasedFrameIndexFromLba(mcd.cdd.getCurrentSector()) + 1;
-        if (mcd.cdd.isLaserdiscClv()) {
+    if (pcd.drive.isDiscLoaded() && (currentDriveState >= 5)) {
+      if (pcd.drive.isDiscLaserdisc()) {
+        auto frameNumber = zeroBasedFrameIndexFromLba(pcd.drive.getCurrentSector()) + 1;
+        if (pcd.drive.isLaserdiscClv()) {
           data = BCD::encode((frameNumber / (60 * 30)) % 60);
         } else {
           data = BCD::encode((frameNumber / 100) % 100);
         }
       } else {
-        mcd.cdd.getCurrentTrackRelativeTimecode(minute, second, frame);
+        pcd.drive.getCurrentTrackRelativeTimecode(minute, second, frame);
         data = BCD::encode(minute);
       }
     }
@@ -922,16 +922,16 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //    -CLV LDs: Seconds counter of current time code in BCD format, IE X in "???XX??".
     //    -CDs: Seconds counter of current relative track time in BCD format. IE, each track begins again at 0.
     data = 0;
-    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
-      if (mcd.cdd.isDiscLaserdisc()) {
-        auto frameNumber = zeroBasedFrameIndexFromLba(mcd.cdd.getCurrentSector()) + 1;
-        if (mcd.cdd.isLaserdiscClv()) {
+    if (pcd.drive.isDiscLoaded() && (currentDriveState >= 5)) {
+      if (pcd.drive.isDiscLaserdisc()) {
+        auto frameNumber = zeroBasedFrameIndexFromLba(pcd.drive.getCurrentSector()) + 1;
+        if (pcd.drive.isLaserdiscClv()) {
           data = BCD::encode((frameNumber / 30) % 60);
         } else {
           data = BCD::encode(frameNumber % 100);
         }
       } else {
-        mcd.cdd.getCurrentTrackRelativeTimecode(minute, second, frame);
+        pcd.drive.getCurrentTrackRelativeTimecode(minute, second, frame);
         data = BCD::encode(second);
       }
     }
@@ -947,16 +947,16 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
     //    -CLV LDs: Frames counter of current time code in BCD format, IE X in "?????XX".
     //    -CDs: Frames counter of current relative track time in BCD format. IE, each track begins again at 0.
     data = 0;
-    if (mcd.cdd.isDiscLoaded() && (currentDriveState >= 5)) {
-      if (mcd.cdd.isDiscLaserdisc()) {
-        if (mcd.cdd.isLaserdiscClv()) {
-          auto frameNumber = zeroBasedFrameIndexFromLba(mcd.cdd.getCurrentSector()) + 1;
+    if (pcd.drive.isDiscLoaded() && (currentDriveState >= 5)) {
+      if (pcd.drive.isDiscLaserdisc()) {
+        if (pcd.drive.isLaserdiscClv()) {
+          auto frameNumber = zeroBasedFrameIndexFromLba(pcd.drive.getCurrentSector()) + 1;
           data = BCD::encode(frameNumber % 30);
         } else {
           data = 0x00;
         }
       } else {
-        mcd.cdd.getCurrentTrackRelativeTimecode(minute, second, frame);
+        pcd.drive.getCurrentTrackRelativeTimecode(minute, second, frame);
         data = BCD::encode(frame);
       }
     }
@@ -1048,7 +1048,7 @@ auto MCD::LD::getOutputRegisterValue(int regNum) -> n8
   return data;
 }
 
-auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bool wasDeferredRegisterWrite) -> void
+auto PCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bool wasDeferredRegisterWrite) -> void
 {
   // Trigger any required changes based on the updated input register
   switch (regNum) {
@@ -1310,32 +1310,34 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
     // Apply the new requested drive state
     switch (targetDriveState) {
     case 0x01: // Open tray
-      mcd.cdd.eject();
+      //##FIX##
+      //pcd.drive.eject();
       currentDriveState = 0x01;
       resetSeekTargetToDefault();
       break;
     case 0x02: // Close tray
-      mcd.cdd.stop();
+      pcd.drive.stop();
       currentDriveState = 0x02;
       resetSeekTargetToDefault();
       break;
     case 0x03: // Unload disc
-      mcd.cdd.stop();
+      pcd.drive.stop();
       currentDriveState = 0x03;
       resetSeekTargetToDefault();
       break;
     case 0x04: // Load disc
       // If no disc is present, flag an error and abort.
-      if (!mcd.cdd.isDiscLoaded()) {
+      if (!pcd.drive.isDiscLoaded()) {
         operationErrorFlag1 = true;
         operationErrorFlag2 = true;
         break;
       }
       // If the disc isn't already loaded, insert it and seek to the start, otherwise do nothing.
       if (currentDriveState <= 3) {
-        mcd.cdd.insert();
+        //##FIX##
+        //pcd.drive.insert();
         resetSeekTargetToDefault();
-        mcd.cdd.seekToTrack(1, true);
+        pcd.drive.seekToTrack(1, true);
         seekPerformedSinceLastFrameUpdate = true;
         currentPauseState = true;
       }
@@ -1349,7 +1351,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
       break;
     case 0x05: { // Load and play disc
       // If no disc is present, flag an error and abort.
-      if (!mcd.cdd.isDiscLoaded()) {
+      if (!pcd.drive.isDiscLoaded()) {
         operationErrorFlag1 = true;
         operationErrorFlag2 = true;
         break;
@@ -1363,9 +1365,11 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
       // If the disc isn't already loaded, insert it and seek to the start.
       bool performedLoadOfDisc = false;
       if (currentDriveState <= 3) {
-        mcd.cdd.insert();
+        //##FIX##
+        //pcd.drive.insert();
         resetSeekTargetToDefault();
-        mcd.cdd.seekToTrack(1, true);
+        pcd.drive.seekToTrack(1, true);
+        pcd.drive.seekPause();
         seekPerformedSinceLastFrameUpdate = true;
         currentPauseState = true;
         performedLoadOfDisc = true;
@@ -1390,15 +1394,15 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
       // Either play or pause the disc depending on the pause flag and whether we've reached an
       // active stop point
       if (currentPauseState || reachedStopPoint) {
-        mcd.cdd.pause();
+        pcd.drive.pause();
       } else {
-        mcd.cdd.play();
+        pcd.drive.play();
       }
       break; }
     case 0x00: // Toggle pause from running state
     case 0x07:
       // If no disc is present, flag an error if target state is 0x07, and abort for either 0x00 or 0x07.
-      if (!mcd.cdd.isDiscLoaded()) {
+      if (!pcd.drive.isDiscLoaded()) {
         if (targetDriveState == 0x07) {
           operationErrorFlag1 = true;
           operationErrorFlag2 = true;
@@ -1409,15 +1413,15 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
       // here.
       if (currentDriveState == 0x05) {
         if (targetPauseState || reachedStopPoint) {
-          mcd.cdd.pause();
+          pcd.drive.pause();
         } else {
-          mcd.cdd.play();
+          pcd.drive.play();
         }
       }
       break;
     default: // Invalid mode
       operationErrorFlag1 = true;
-      if (!mcd.cdd.isDiscLoaded()) {
+      if (!pcd.drive.isDiscLoaded()) {
         operationErrorFlag2 = true;
       }
       break;
@@ -1553,9 +1557,9 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
       // player is genuinely in a paused state.
       if (currentDriveState == 0x05) {
         if (currentPauseState) {
-          mcd.cdd.pause();
+          pcd.drive.pause();
         } else {
-          mcd.cdd.play();
+          pcd.drive.play();
         }
       }
     }
@@ -2164,7 +2168,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
     }
     break;
   default:
-    debug(unusual, "[MCD::LD::processInputRegisterWrite] reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
+    debug(unusual, "[PCD::LD::processInputRegisterWrite] reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
     break;
   }
 
@@ -2172,7 +2176,7 @@ auto MCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
   inputRegs[regNum] = data;
 }
 
-auto MCD::LD::updateStopPointWithCurrentState() -> void {
+auto PCD::LD::updateStopPointWithCurrentState() -> void {
   if (inputRegs[0x07] == 0xFF) {
     // Clear the stop point
     outputRegs[0x1A] = 0xFF;
@@ -2181,15 +2185,15 @@ auto MCD::LD::updateStopPointWithCurrentState() -> void {
     outputRegs[0x1D] = 0xFF;
     outputRegs[0x1E] = 0xFF;
     outputRegs[0x1F] = 0x01; // Strange as it is, yes, this gets set to 0x01. Probably a hardware bug, really should be 0x00.
-    mcd.cdd.stopPointEnabled = false;
+    pcd.drive.stopPointEnabled = false;
     debug(unverified, "Disabled stoppoint");
   } else {
     // Latch the stop point regs
     stopPointRegs[(int)SeekPointReg::Chapter] = (inputRegs[0x07] == 0x00) ? (n8)0xFF : inputRegs[0x07];
-    stopPointRegs[(int)SeekPointReg::HoursOrFrameH] = (!mcd.cdd.isDiscLaserdisc() ? 0x00 : (inputRegs[0x08] & 0x0F)); // Only the lower 4 bits of this reg are accepted
+    stopPointRegs[(int)SeekPointReg::HoursOrFrameH] = (!pcd.drive.isDiscLaserdisc() ? 0x00 : (inputRegs[0x08] & 0x0F)); // Only the lower 4 bits of this reg are accepted
     stopPointRegs[(int)SeekPointReg::MinutesOrFrameM] = inputRegs[0x09];
     stopPointRegs[(int)SeekPointReg::SecondsOrFrameL] = inputRegs[0x0A];
-    stopPointRegs[(int)SeekPointReg::Frames] = (mcd.cdd.isDiscLaserdisc() && !mcd.cdd.isLaserdiscClv()) ? (n8)0x00 : inputRegs[0x0B];
+    stopPointRegs[(int)SeekPointReg::Frames] = (pcd.drive.isDiscLaserdisc() && !pcd.drive.isLaserdiscClv()) ? (n8)0x00 : inputRegs[0x0B];
     outputRegs[0x1A] = stopPointRegs[(int)SeekPointReg::Chapter];
     outputRegs[0x1B] = stopPointRegs[(int)SeekPointReg::Frames];
     outputRegs[0x1C] = stopPointRegs[(int)SeekPointReg::SecondsOrFrameL];
@@ -2201,10 +2205,10 @@ auto MCD::LD::updateStopPointWithCurrentState() -> void {
     //##FIX## This is incorrect for LDs. They should be using the actual frame data to set stop points, not the CD track
     //data.
     s32 stopLba;
-    if (!mcd.cdd.isDiscLaserdisc()) {
+    if (!pcd.drive.isDiscLaserdisc()) {
       // CDs set stop points using MM:SS:FF
-      stopLba = mcd.cdd.lbaFromTime(0, BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]));
-    } else if (!mcd.cdd.isLaserdiscClv()) {
+      stopLba = pcd.drive.lbaFromTime(0, BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]));
+    } else if (!pcd.drive.isLaserdiscClv()) {
       // CAV LDs set stop points using frame numbers
       s32 frameNumber = ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::HoursOrFrameH]) * 10000) + ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]) * 100) + (s32)BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
       // Convert the frame number to zero-based, then to an LBA.
@@ -2216,12 +2220,12 @@ auto MCD::LD::updateStopPointWithCurrentState() -> void {
       u8 videoTimeSeconds = BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
       u8 videoTimeFrames = BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]);
       VideoTimeToRedbookTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
-      stopLba = mcd.cdd.lbaFromTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
+      stopLba = pcd.drive.lbaFromTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
     }
 
     // Apply the stop point to playback control
-    mcd.cdd.targetStopPoint = stopLba;
-    mcd.cdd.stopPointEnabled = true;
+    pcd.drive.targetStopPoint = stopLba;
+    pcd.drive.stopPointEnabled = true;
     reachedStopPointPreviously = false;
     debug(unverified, "Latched stoppoint: lba:", stopLba, " frame:", zeroBasedFrameIndexFromLba(stopLba, true) + 1, " 0x07=", hex(inputRegs[0x07]), " 0x08=", hex(inputRegs[0x08]), " 0x09=", hex(inputRegs[0x09]), " 0x0A=", hex(inputRegs[0x0A]), " 0x0B=", hex(inputRegs[0x0B]));
 
@@ -2231,12 +2235,12 @@ auto MCD::LD::updateStopPointWithCurrentState() -> void {
     // still immediately trip as though we're there already, even though it's the previous location we're at.
     // The character creation screen of Ghost Rush relies on this.
     if (reachedStopPoint) {
-      handleStopPointReached(mcd.cdd.io.sector);
+      handleStopPointReached(pcd.drive.lba);
     }
   }
 }
 
-auto MCD::LD::resetSeekTargetToDefault() -> void {
+auto PCD::LD::resetSeekTargetToDefault() -> void {
   //##TODO## Confirm and document this
   currentSeekMode = 0x1;
   currentSeekModeTimeFormat = 0x1;
@@ -2249,7 +2253,7 @@ auto MCD::LD::resetSeekTargetToDefault() -> void {
   activeSeekMode = (u8)SeekMode::SeekToRedbookRelativeTime;
 }
 
-auto MCD::LD::liveSeekRegistersContainsLatchableTarget() const -> bool {
+auto PCD::LD::liveSeekRegistersContainsLatchableTarget() const -> bool {
   // Get the target seek settings based on the live register state
   auto targetSeekMode = inputRegs[0x06].bit(0, 1);
   auto targetSeekModeTimeFormat = inputRegs[0x06].bit(2);
@@ -2261,7 +2265,7 @@ auto MCD::LD::liveSeekRegistersContainsLatchableTarget() const -> bool {
   return true;
 }
 
-auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
+auto PCD::LD::latchSeekTargetFromCurrentState() -> bool {
   // If the live seek registers aren't latchable, abort any further processing.
   if (!liveSeekRegistersContainsLatchableTarget()) {
     return false;
@@ -2292,7 +2296,7 @@ auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
   }
 
   // If the player isn't in a valid state to accept seek requests, abort any further processing.
-  if (!mcd.cdd.isDiscLoaded() || (currentDriveState <= 0x04) || (targetDriveState != 0x05)) {
+  if (!pcd.drive.isDiscLoaded() || (currentDriveState <= 0x04) || (targetDriveState != 0x05)) {
     operationErrorFlag1 = true;
     operationErrorFlag2 = false;
     operationErrorFlag3 = true;
@@ -2304,15 +2308,15 @@ auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
   // Seek to track relative time
   if (currentSeekMode == 1) {
     auto targetTrack = inputRegs[0x07];
-    auto targetTrackAsInt = (mcd.cdd.isDiscLaserdisc() && (targetTrack == 0x00)) ? (n8)mcd.cdd.getFirstTrack() : (n8)BCD::decode(targetTrack);
-    if ((targetTrack > 0x99) || (targetTrackAsInt < mcd.cdd.getFirstTrack()) || (targetTrackAsInt > mcd.cdd.getLastTrack())) {
+    auto targetTrackAsInt = (pcd.drive.isDiscLaserdisc() && (targetTrack == 0x00)) ? (n8)pcd.drive.getFirstTrack() : (n8)BCD::decode(targetTrack);
+    if ((targetTrack > 0x99) || (targetTrackAsInt < pcd.drive.getFirstTrack()) || (targetTrackAsInt > pcd.drive.getLastTrack())) {
       operationErrorFlag1 = true;
       operationErrorFlag2 = false;
       operationErrorFlag3 = true;
       reachedStopPoint = false;
       return false;
     }
-    bool allowSeekToTime = !mcd.cdd.isDiscLaserdisc() || (!currentSeekModeTimeFormat && mcd.cdd.isLaserdiscDigitalAudioPresent());
+    bool allowSeekToTime = !pcd.drive.isDiscLaserdisc() || (!currentSeekModeTimeFormat && pcd.drive.isLaserdiscDigitalAudioPresent());
     seekPointRegs[(int)SeekPointReg::Chapter] = targetTrack;
     seekPointRegs[(int)SeekPointReg::HoursOrFrameH] = 0x00;
     seekPointRegs[(int)SeekPointReg::MinutesOrFrameM] = (allowSeekToTime ? inputRegs[0x09] : (n8)0x00);
@@ -2328,9 +2332,9 @@ auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
 
     // Determine what time format to use. Can be redbook timecode, video timecode, or video frame number. These
     // conditions below should be mutually exclusive.
-    bool seekToRedbookTimecode = !mcd.cdd.isDiscLaserdisc() || (!currentSeekModeTimeFormat && mcd.cdd.isDiscLaserdisc());
-    bool seekToVideoFrame = mcd.cdd.isDiscLaserdisc() && currentSeekModeTimeFormat && !mcd.cdd.isLaserdiscClv();
-    bool seekToVideoTime = mcd.cdd.isDiscLaserdisc() && ((!mcd.cdd.isLaserdiscClv() && !mcd.cdd.isLaserdiscDigitalAudioPresent()) || (mcd.cdd.isLaserdiscClv() && mcd.cdd.isLaserdiscDigitalAudioPresent()));
+    bool seekToRedbookTimecode = !pcd.drive.isDiscLaserdisc() || (!currentSeekModeTimeFormat && pcd.drive.isDiscLaserdisc());
+    bool seekToVideoFrame = pcd.drive.isDiscLaserdisc() && currentSeekModeTimeFormat && !pcd.drive.isLaserdiscClv();
+    bool seekToVideoTime = pcd.drive.isDiscLaserdisc() && ((!pcd.drive.isLaserdiscClv() && !pcd.drive.isLaserdiscDigitalAudioPresent()) || (pcd.drive.isLaserdiscClv() && pcd.drive.isLaserdiscDigitalAudioPresent()));
     if (seekToRedbookTimecode) {
       seekPointRegs[(int)SeekPointReg::Chapter] = 0x00;
       seekPointRegs[(int)SeekPointReg::HoursOrFrameH] = 0x00;
@@ -2360,7 +2364,7 @@ auto MCD::LD::latchSeekTargetFromCurrentState() -> bool {
   return true;
 }
 
-auto MCD::LD::performSeekWithLatchedState() -> void {
+auto PCD::LD::performSeekWithLatchedState() -> void {
   // Performing a seek operation during frameskip mode clears the latched frame. In single-frame frameskip mode, this
   // causes it to show the frame we end up seeking to. In other modes, it causes the seek target to be shown, and re-bases
   // the skipping sequence from that frame. We emulate that here.
@@ -2371,12 +2375,12 @@ auto MCD::LD::performSeekWithLatchedState() -> void {
   switch ((SeekMode)activeSeekMode) {
   case SeekMode::SeekToRedbookTime:
     debug(unverified, "SeekToRedbookTime: ", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !reachedStopPoint);
-    mcd.cdd.seekToTime(0, BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !reachedStopPoint);
+    pcd.drive.seekToTime(0, BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !reachedStopPoint);
     seekPerformedSinceLastFrameUpdate = true;
     break;
   case SeekMode::SeekToRedbookRelativeTime:
     debug(unverified, "SeekToRedbookRelativeTime: ", "Chapter:", BCD::decode(seekPointRegs[(int)SeekPointReg::Chapter]), " ", BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), ":", BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), " paused=", targetPauseState && !reachedStopPoint);
-    mcd.cdd.seekToRelativeTime(BCD::decode(seekPointRegs[(int)SeekPointReg::Chapter]), BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !reachedStopPoint);
+    pcd.drive.seekToRelativeTime(BCD::decode(seekPointRegs[(int)SeekPointReg::Chapter]), BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]), targetPauseState && !reachedStopPoint);
     seekPerformedSinceLastFrameUpdate = true;
     break;
   case SeekMode::SeekToVideoFrame: {
@@ -2385,7 +2389,7 @@ auto MCD::LD::performSeekWithLatchedState() -> void {
     // Convert the frame number to zero-based, then to an LBA.
     auto lba = lbaFromZeroBasedFrameIndex(std::max(1, frameNumber) - 1);
     debug(unverified, "SeekToVideoFrame: ", frameNumber, " lba:", lba, " paused=", targetPauseState && !reachedStopPoint);
-    mcd.cdd.seekToSector(lba, targetPauseState && !reachedStopPoint);
+    pcd.drive.seekToSector(lba, targetPauseState && !reachedStopPoint);
     seekPerformedSinceLastFrameUpdate = true;
     break;}
   case SeekMode::SeekToVideoTime: {
@@ -2398,7 +2402,7 @@ auto MCD::LD::performSeekWithLatchedState() -> void {
     u8 videoTimeFrames = BCD::decode(seekPointRegs[(int)SeekPointReg::Frames]);
     debug(unverified, "SeekToVideoTime: ", videoTimeHours, ":", videoTimeMinutes, ":", videoTimeSeconds, ":", videoTimeFrames, " paused=", targetPauseState && !reachedStopPoint);
     VideoTimeToRedbookTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
-    mcd.cdd.seekToTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames, targetPauseState && !reachedStopPoint);
+    pcd.drive.seekToTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames, targetPauseState && !reachedStopPoint);
     seekPerformedSinceLastFrameUpdate = true;
     break; }
   }
@@ -2409,7 +2413,7 @@ auto MCD::LD::performSeekWithLatchedState() -> void {
 // case, but it's technically not guaranteed. In a final implementation, we should be decoding the frame numbers
 // straight from the VBI coded data from the currently displayed frame, that way we'll know that we're actually showing
 // the exact intended frames. This functioned to get us started though.
-auto MCD::LD::zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn) -> s32 {
+auto PCD::LD::zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn) -> s32 {
   // If we're in the lead-in and not asked to handle lead-in values, return 0.
   if (!processLeadIn && (lba < 0)) {
     return 0;
@@ -2423,12 +2427,12 @@ auto MCD::LD::zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn) -> s32 {
 }
 
 // Convert the ZERO-BASED frame number to an LBA.
-auto MCD::LD::lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32 {
+auto PCD::LD::lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32 {
   auto lba = (s32)std::round(((double)frameIndex / videoFramesPerSecond) * 75.0);
   return lba;
 }
 
-auto MCD::LD::VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void {
+auto PCD::LD::VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void {
   auto videoTimeTotalFrames = ((((((s32)hours * 60) + (s32)minutes) * 60) + (s32)seconds) * 30) + (s32)frames;
   auto redbookTimeTotalFrames = (s32)std::round(((double)videoTimeTotalFrames / videoFramesPerSecond) * 75.0);
   frames = redbookTimeTotalFrames % 75;
@@ -2440,7 +2444,7 @@ auto MCD::LD::VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& fr
   hours = redbookTimeTotalFrames;
 }
 
-auto MCD::LD::handleStopPointReached(s32 lba) -> void {
+auto PCD::LD::handleStopPointReached(s32 lba) -> void {
   // Hardware tests have shown that as a special case, stop points are ignored in still-frame stepping mode. The stop
   // points will remain active and not be latched in this case. Note that this is only if the "true" playback mode is
   // set to this, not when a stop point has been hit and the output registers claim we're in still-frame stepping mode.
@@ -2468,7 +2472,7 @@ auto MCD::LD::handleStopPointReached(s32 lba) -> void {
     debug(unverified, "Hit stoppoint - repeat mode: lba:", lba, " frame:", zeroBasedFrameIndexFromLba(lba, true) + 1);
     //##TODO## Test if the 0x1F output reg gets re-driven here to 0x01
     reachedStopPoint = false;
-    mcd.cdd.io.status = CDD::Status::Playing;
+    pcd.drive.mode = PCD::Drive::Mode::Playing;
     performSeekWithLatchedState();
   } else {
     // Stop mode
@@ -2484,12 +2488,12 @@ auto MCD::LD::handleStopPointReached(s32 lba) -> void {
     operationErrorFlag2 = true;
     operationErrorFlag3 = true;
     reachedStopPoint = true;
-    mcd.cdd.io.status = CDD::Status::Paused;
-    mcd.cdd.stopPointEnabled = false;
+    pcd.drive.mode = PCD::Drive::Mode::Paused;
+    pcd.drive.stopPointEnabled = false;
   }
 }
 
-auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
+auto PCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   // Detect and clear the state on whether we've displayed the first frame after a seek operation. This is to handle
   // frameskip mode base frame latching behaviour. The way this works is that, if a seek is performed at the same time
   // as frameskip mode is entered, or even if there's a pending seek operation still in progress, the first frame of
@@ -2689,14 +2693,14 @@ auto MCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
       operationErrorFlag2 = false;
       operationErrorFlag3 = true;
       reachedStopPoint = true;
-      mcd.cdd.io.status = CDD::Status::Paused;
+      pcd.drive.mode = PCD::Drive::Mode::Paused;
       //##TODO## Check on the hardware if a stop point is cleared when a picture stop code is triggered
-      mcd.cdd.stopPointEnabled = false;
+      pcd.drive.stopPointEnabled = false;
     }
   }
 }
 
-auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
+auto PCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
   // Locate the new video frame in the source file
   const unsigned char* videoFrameCompressed = nullptr;
   if (video.currentVideoFrameLeadIn) {
@@ -2722,7 +2726,7 @@ auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
   qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, buildFrameBuffer.data(), 3);
 }
 
-auto MCD::LD::decodeBiphaseCodeFromScanline(int lineNo) -> u32 {
+auto PCD::LD::decodeBiphaseCodeFromScanline(int lineNo) -> u32 {
   // Retrieve the frame currently in the build framebuffer
   int buildIndex = video.drawIndex ^ 0x01;
   auto& buildFrameBuffer = video.videoFrameBuffers[buildIndex];
@@ -2790,10 +2794,7 @@ auto MCD::LD::decodeBiphaseCodeFromScanline(int lineNo) -> u32 {
   return biphaseCode;
 }
 
-auto MCD::LD::power(bool reset) -> void {
-  // Note we currently rely on our reset call happening after the cdd reset to get this to work
-  mcd.cdd.hostClockEnable = true;
-
+auto PCD::LD::power() -> void {
   // Zero all our registers
   for (auto& data : inputRegs) data = 0x0;
   for (auto& data : inputFrozenRegs) data = 0x0;
@@ -2842,39 +2843,26 @@ auto MCD::LD::power(bool reset) -> void {
   video.imageHoldFrameLatched = false;
 }
 
-auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
+auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {
   // Convert the VDP vcounter to a linear scanline index. We only have to worry about NTSC V28 mode, as that's all the
   // LaserActive supported. If someone wanted to make a hypothetical PAL version of the system, they'd have to mess with
   // all the numbers in this function to handle alignment and composition with PAL line counts and border sizes. We
   // start line 0 here from the beginning of the bottom blanking region, which aligns with our raw frame data.
-  u32 targetScanLine = 0;
-  targetScanLine = (vcounter >= 0x1E5 ? (vcounter - 0x1E5) + 3 : (vcounter >= 0x0E8 ? vcounter - 0x0E8 : vcounter + (0x200 - 0x1E5) + 3));
+  u32 targetScanLine = (vcounter + 3) % 263;
 
   // Calculate offsets/margins for VDP video stream
   size_t vdpActiveRegionLeftOffset = 0;
   size_t vdpActiveRegionTopOffset = 0;
-  if (!vdp.screen->overscan()) {
-    // Omit 19 lines of leading video unless overscan is active. You may expect it would be 30 as follows:
-    // -Bottom blanking:   3
-    // -Vertical sync:     3
-    // -Top blanking:      13
-    // -Top border:        11
-    // However "VDP::frame()" currently expects the border to be drawn, and offsets the viewport by 11 pixels
-    // vertically. We therefore remove the 11-pixel top border, giving us 19 lines.
-    vdpActiveRegionTopOffset = (3 + 3  + 13 + 11) - 11;
-    // Omit the 13 pixel VDP left border. This is 13 pixels in all modes, but we need to account for H32/H40 mode
-    // affecting the pixel "width" here.
-    vdpActiveRegionLeftOffset = (vdp.h32() ? (13 * 5) : (13 * 4));
-  } else {
-    vdpActiveRegionLeftOffset = 0;
-    vdpActiveRegionTopOffset = 0;
-  }
+
   // VDP horizontal lines are currently "trimmed" by the VDP core, and don't contain the full 1710 dots we'd expect if
   // we were generating pixels at an effective MCLK/2 rate (5 pixels in H32, 4 pixels in H40), instead there are 1495
   // dots, leaving 215 dots unrepresented, and the lines are fairly arbitrarily centered. We account for the offset here
   // in the input data from the VDP, and we also have to apply it on the way out again so that the modified lines match
   // alignment with unmodified lines.
-  size_t vdpBorderLeftOffset = (vdp.h32() ? (8 * 5) : (17 * 4));
+  //##FIX##
+  //size_t vdpBorderLeftOffset = (vdp.h32() ? (8 * 5) : (17 * 4));
+  //size_t vdpBorderLeftOffset = (true ? (8 * 5) : (17 * 4));
+  static ptrdiff_t vdpBorderLeftOffset = -26;
 
   // If we're at the start of a new frame, handle blanking, swapping the video buffers, even/odd field selection for
   // interlace mode.
@@ -2910,18 +2898,12 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
     video.currentVideoFrameBlanked = inputRegs[0x0C].bit(2) || (currentPauseState && !inputRegs[0x0C].bit(5));
   }
 
-  // Don't process the top vsync+vblank+border region unless overscan is active. We could, but it would be wasted
-  // effort, since that part of the buffer won't be drawn.
-  if (!vdp.screen->overscan() && (targetScanLine < vdpActiveRegionTopOffset)) {
-    return;
-  }
-
   // If analog video mixing is disabled, don't modify the scanline, and abort any further processing. This is the
   // correct behaviour here based on hardware tests. Under this mode, VDP graphics are passed through unaltered, and
   // the VDP graphics fader and other mixing features have no effect.
   auto analogMixingMode = inputRegs[0x01].bit(7, 6);
   if (analogMixingMode == 0) {
-    vdp.screen->clearOverrideLineDraw(targetScanLine - (!vdp.screen->overscan() ? vdpActiveRegionTopOffset : 0));
+    vdpImpl.screen->clearOverrideLineDraw(targetScanLine);
     return;
   }
 
@@ -3012,18 +2994,32 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
     auto ldb = convertedSamples[2];
 
     // Retrieve the output VDP color for this pixel location
-    u32 currentPixelValue = ((vdpPixelBuffer != nullptr) && (i >= vdpBorderLeftOffset)) ? vdpPixelBuffer[i - vdpBorderLeftOffset] : 0;
-    auto mdColorPacked = vdp.screen->lookupPalette(currentPixelValue);
+    u32 currentPixelValue = ((vdpPixelBuffer != nullptr) && ((ptrdiff_t)i >= std::max(vdpBorderLeftOffset, (ptrdiff_t)0))) ? vdpPixelBuffer[(ptrdiff_t)i - vdpBorderLeftOffset] : 0x1400;
+    auto mdColorPacked = vdpImpl.screen->lookupPalette(currentPixelValue & 0b1111111111);
     auto mdr = (mdColorPacked >> 16) & 0xFF;
     auto mdg = (mdColorPacked >> 8) & 0xFF;
     auto mdb = mdColorPacked & 0xFF;
 
     // Extract layer/status flags for this pixel to determine how we're going to mix it
-    bool backdrop = (currentPixelValue >> 11) != 0;
+    bool backdrop = (currentPixelValue & 0x800) == 0;
+    bool sprite = (currentPixelValue & 0x400) != 0;
+    bool blanking = (currentPixelValue & 0x1000) != 0;
+    bool burstMode = (currentPixelValue & 0x2000) != 0;
 
     // Composite the digital VDP graphics with the analog video track
     //##TODO## Implement input reg 0x19 bit 0 properly
-    unsigned int mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint((backdrop ? (inputRegs[0x1B] >> 2) : (inputRegs[0x1A] >> 2)));
+    unsigned int mdGraphicsFader;
+    if (burstMode) {
+      mdGraphicsFader = 0;
+    } else if (blanking) { // Note that this takes priority over the sprite flag
+      mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1D] >> 2);
+    } else if (sprite) {
+      mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1A] >> 2);
+    } else if (backdrop) {
+      mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1C] >> 2);
+    } else { //background
+      mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1B] >> 2);
+    }
     auto ldNormalizedR = convert8BitUnsignedToNormalized1616FixedPoint(ldr);
     auto ldNormalizedG = convert8BitUnsignedToNormalized1616FixedPoint(ldg);
     auto ldNormalizedB = convert8BitUnsignedToNormalized1616FixedPoint(ldb);
@@ -3044,18 +3040,5 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
   }
 
   // Override the line draw for this line of video with our composited line buffer
-  if (vdp.screen->overscan()) {
-    // Draw the whole line
-    vdp.screen->overrideLineDraw(targetScanLine, &video.outputFramebuffer[targetLinePos]);
-  } else {
-    // Draw the display region of the line only, with line 0 starting from the first active line. Note that the current
-    // VDP core draws its own framebuffer with extra left and right padding under H40 mode. See VDP::frame() and
-    // VDP::pixels(). We compensate for that here with "pixelOffsetInOutputLine", which will cancel out the border
-    // offset for H32 mode, and leave the correct 13 pixel offset we need for H40 mode.
-    size_t pixelOffsetInOutputLine = 13 * 5;
-    //##FIX## We apply a fudge factor here. There's apparently some of the math wrong, and this offset is needed to fix
-    //things under H40 mode without overscan visible.
-    pixelOffsetInOutputLine += (vdp.h32() ? 0 : 15);
-    vdp.screen->overrideLineDraw(targetScanLine - vdpActiveRegionTopOffset, &video.outputFramebuffer[targetLinePos] + vdpBorderLeftOffset + vdpActiveRegionLeftOffset - pixelOffsetInOutputLine);
-  }
+  vdpImpl.screen->overrideLineDraw(targetScanLine, &video.outputFramebuffer[targetLinePos]);
 }

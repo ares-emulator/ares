@@ -42,6 +42,7 @@ target_sources(
     medium/nintendo-64.cpp
     medium/nintendo-64dd.cpp
     medium/pc-engine-cd.cpp
+    medium/pc-engine-ld.cpp
     medium/pc-engine.cpp
     medium/playstation.cpp
     medium/pocket-challenge-v2.cpp
