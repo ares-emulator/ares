@@ -22,7 +22,6 @@ struct Timer : Memory::Interface {
   auto serialize(serializer&) -> void;
 
   struct Counter {
-    u32 dotclock;
     u32 divclock;
   } counter;
 

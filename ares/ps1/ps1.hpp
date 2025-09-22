@@ -8,6 +8,7 @@
 #include <component/processor/m68hc05/m68hc05.hpp>
 
 namespace ares::PlayStation {
+  #include <ares/inline.hpp>
   auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
@@ -19,18 +20,6 @@ namespace ares::PlayStation {
     inline static auto NTSCJ() -> bool;
     inline static auto NTSCU() -> bool;
     inline static auto PAL() -> bool;
-  };
-
-  struct Thread {
-    auto reset() -> void {
-      clock = 0;
-    }
-
-    auto serialize(serializer& s) -> void {
-      s(clock);
-    }
-
-    s64 clock;
   };
 
   #include <ps1/accuracy.hpp>

@@ -21,17 +21,27 @@ auto DMA::unload() -> void {
 
 auto DMA::main() -> void {
   for(u32 id : channelsByPriority) {
-    if(channels[id].step(16)) break;
+    if(channels[id].step()) return;
   }
-  step(16);
+
+  step(counter > 0 ? counter : (i32)128);
 }
 
 auto DMA::step(u32 clocks) -> void {
-  Thread::clock += clocks;
+  counter-= clocks;
+  Thread::step(clocks);
+  Thread::synchronize();
+}
+
+auto DMA::active() -> bool {
+  for(u32 id : channelsByPriority) {
+    if(channels[id].state == Running) return true;
+  }
+  return false;
 }
 
 auto DMA::power(bool reset) -> void {
-  Memory::Interface::setWaitStates(4, 4, 4);
+  Thread::create(system.frequency(), std::bind_front(&DMA::main, this));
 
   irq.force = 0;
   irq.enable = 0;
@@ -57,7 +67,6 @@ auto DMA::power(bool reset) -> void {
     channels[n].chain.address = 0;
     channels[n].chain.length = 0;
     channels[n].state = 0;
-    channels[n].counter = 0;
   }
   for(auto& v : channelsByPriority) v = 0;
   sortChannelsByPriority();

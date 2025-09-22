@@ -1,3 +1,7 @@
+auto Disc::canReadDMA() -> bool {
+  return !fifo.data.empty();
+}
+
 auto Disc::readDMA() -> u32 {
   u32 data = 0;
   data |= fifo.data.read(0) <<  0;
@@ -18,17 +22,18 @@ auto Disc::readByte(u32 address) -> u32 {
     data.bit(4) = !fifo.parameter.full();  //0 when full
     data.bit(5) = !fifo.response.empty();  //0 when empty
     data.bit(6) = !fifo.data.empty();      //0 when empty
-    data.bit(7) = 0;  //command/parameter busy (0 = ready)
+    data.bit(7) = (event.counter > 0);     //command/parameter busy (0 = ready)
+    return data;
   }
 
   //response FIFO
   if(address == 0x1f80'1801 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
-    data = fifo.response.read(data);
+    return data = fifo.response.read(data);
   }
 
   //data FIFO
   if(address == 0x1f80'1802 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
-    data = fifo.data.read(data);
+    return data = fifo.data.read(data);
   }
 
   //interrupt enable
@@ -41,6 +46,7 @@ auto Disc::readByte(u32 address) -> u32 {
     data.bit(5) = 1;
     data.bit(6) = 1;
     data.bit(7) = 1;
+    return data;
   }
 
   //interrupt flag
@@ -57,8 +63,10 @@ auto Disc::readByte(u32 address) -> u32 {
     data.bit(5) = 1;
     data.bit(6) = 1;
     data.bit(7) = 1;
+    return data;
   }
 
+  debug(unhandled, "Disc::readByte(", hex(address, 8L), ") -> ", hex(data, 2L));
   return data;
 }
 
@@ -79,34 +87,52 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   if(address == 0x1f80'1800) {
     io.index = data.bit(0,1);
+    return;
   }
 
   //command register
   if(address == 0x1f80'1801 && io.index == 0) {
     if(event.counter) {
-      debug(unimplemented, "Disc::writeByte(): ", hex(event.counter, 2L), "->", hex(data, 2L));
+      if(!event.queued) {
+        event.queued = data;
+      } else {
+        debug(unhandled, "CDROM: command dropped while busy: ", hex(data,2L));
+      }
+      return;
     }
     event.command = data;
     event.counter = 50'000;
     event.invocation = 0;
+    return;
   }
 
   //sound map data output
   if(address == 0x1f80'1801 && io.index == 1) {
+    debug(unimplemented, "Disc::writeByte(): sound map data output = ", hex(data, 2L));
+    return;
   }
 
   //sound map coding information
   if(address == 0x1f80'1801 && io.index == 2) {
+    debug(unimplemented, "Disc::writeByte(): sound map coding information = ", hex(data, 2L));
+    return;
   }
 
   //audio volume for right CD output to right SPU input
   if(address == 0x1f80'1801 && io.index == 3) {
     audio.volumeLatch[3] = data;
+    return;
   }
 
   //parameter FIFO
   if(address == 0x1f80'1802 && io.index == 0) {
-    if(!fifo.parameter.full()) fifo.parameter.write(data);
+    if(!fifo.parameter.full()) {
+      fifo.parameter.write(data);
+      return;
+    }
+
+    debug(unusual, "Disc::writeByte(): parameter FIFO full, data lost");
+    return;
   }
 
   //interrupt enable
@@ -117,27 +143,31 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
     irq.end.enable         = data.bit(3);
     irq.error.enable       = data.bit(4);
     irq.poll();
+    return;
   }
 
   //audio volume for left CD output to left SPU input
   if(address == 0x1f80'1802 && io.index == 2) {
     audio.volumeLatch[0] = data;
+    return;
   }
 
   //audio volume for right CD output to left SPU input
   if(address == 0x1f80'1802 && io.index == 3) {
     audio.volumeLatch[2] = data;
+    return;
   }
 
   //request register
   if(address == 0x1f80'1803 && io.index == 0) {
+    debug(unimplemented, "Disc::writeByte(): request register = ", hex(data, 2L));
+    return;
   }
 
   //interrupt flag
   if(address == 0x1f80'1803 && io.index == 1) {
     if(data.bit(0,2) == 7) {
-      if(0);
-      else if(irq.ready.flag      ) irq.ready.flag       = 0;
+           if(irq.ready.flag      ) irq.ready.flag       = 0;
       else if(irq.complete.flag   ) irq.complete.flag    = 0;
       else if(irq.acknowledge.flag) irq.acknowledge.flag = 0;
       else if(irq.end.flag        ) irq.end.flag         = 0;
@@ -147,11 +177,13 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
     if(data.bit(4)) irq.error.flag = 0;
     if(data.bit(6)) fifo.parameter.flush();
     irq.poll();
+    return;
   }
 
   //audio volume for left CD output to right SPU input
   if(address == 0x1f80'1803 && io.index == 2) {
     audio.volumeLatch[1] = data;
+    return;
   }
 
   //audio volume apply changes
@@ -164,7 +196,10 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
       audio.volume[3] = audio.volumeLatch[3];
     }
     if(audio.muteADPCM) debug(unusual, "Disc::writeByte: ADPMUTE = 1");
+    return;
   }
+
+  debug(unhandled, "Disc::writeByte(", hex(address, 8L), ", ", hex(data, 2L), ")");
 }
 
 auto Disc::writeHalf(u32 address, u32 data) -> void {

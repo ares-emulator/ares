@@ -1,4 +1,5 @@
 #include <ps1/ps1.hpp>
+#include <map>
 
 namespace ares::PlayStation {
 
@@ -19,9 +20,7 @@ CPU cpu;
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("CPU");
   ram.allocate(2_MiB);
-  ram.setWaitStates(6, 6, 6);
   scratchpad.allocate(1_KiB);
-  scratchpad.setWaitStates(0, 0, 0);
   gte.constructTable();
   debugger.load(node);
 }
@@ -34,33 +33,52 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  if(waitCycles > 0) {
-    step(waitCycles);
-    waitCycles = 0;
+  //we need to return periodically to allow save states/exit/etc to function
+  //re-entering has high function call overhead; but we can batch instructions
+  while (true) {
+    instruction();
+    if(ipu.pb + 4 != ipu.pc) {
+       if(accruedCycles >= branchCooldownCycles) {
+        synchronize();
+        break;
+      }
+    }
   }
-
-  instruction();
-  synchronize();
 }
 
 auto CPU::step(u32 clocks) -> void {
-  timer.step(clocks);
-  Thread::clock += clocks;
+  if(clocks == 0) return;
+
+  accruedCycles += clocks;
+
+  if(cyclesUntilForcedSync <= 0) {
+    cyclesUntilForcedSync = forceSyncInterval;
+  }
+
+  cyclesUntilForcedSync -= (s32)clocks;
+
+  if(cyclesUntilForcedSync > 0) return;
+  synchronize();
 }
 
 auto CPU::synchronize() -> void {
-  gpu.clock -= Thread::clock;
-  dma.clock -= Thread::clock;
-  disc.clock -= Thread::clock;
-  spu.clock -= Thread::clock;
-  peripheral.clock -= Thread::clock;
-  Thread::clock = 0;
+  if(accruedCycles == 0) return;
+  timer.step(accruedCycles);
+  disc.step(accruedCycles);
+  peripheral.step(accruedCycles);
+  Thread::step(accruedCycles);
+  Thread::synchronize();
 
-  while(gpu.clock < 0) gpu.main();
-  while(dma.clock < 0) dma.main();
-  while(disc.clock < 0) disc.main();
-  while(spu.clock < 0) spu.main();
-  while(peripheral.clock < 0) peripheral.main();
+  accruedCycles = 0;
+  cyclesUntilForcedSync = 0;
+}
+
+auto CPU::ioSynchronize() -> void {
+  if(accruedCycles >= ioCooldownCycles) synchronize();
+}
+
+auto CPU::waitDMA() -> void {
+  while(dma.active()) step(16);
 }
 
 auto CPU::instruction() -> void {
@@ -119,11 +137,7 @@ auto CPU::instructionHook() -> void {
     exeLoaded = 1;
     if(!disc.cd || disc.audioCD()) {
       //todo: is it possible to fast boot into the BIOS menu here?
-    } else if(disc.executable()) {
-      if(auto fp = disc.pak->read("program.exe")) {
-        Memory::Readable exe;
-        exe.allocate(fp->size());
-        exe.load(fp);
+    } else if(exe.size > 0) {
         u32 pc     = exe.readWord(0x10);
         u32 gp     = exe.readWord(0x14);
         u32 target = exe.readWord(0x18) & ram.size - 1;
@@ -134,7 +148,6 @@ auto CPU::instructionHook() -> void {
         for(u32 address : range(exe.size - source)) {
           ram.writeByte(target + address, exe.readByte(source + address));
         }
-      }
     } else if(system.fastBoot->value()) {
       ipu.pd = ipu.r[31];
     }
@@ -142,9 +155,12 @@ auto CPU::instructionHook() -> void {
 }
 
 auto CPU::power(bool reset) -> void {
-  Thread::reset();
+  Thread::create(system.frequency(), std::bind_front(&CPU::main, this));
   random.array({ram.data, ram.size});
   random.array({scratchpad.data, scratchpad.size});
+
+  accruedCycles = 0;
+  cyclesUntilForcedSync = 0;
 
   pipeline = {};
   delay = {};

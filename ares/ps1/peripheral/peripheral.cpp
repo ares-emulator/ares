@@ -18,42 +18,46 @@ auto Peripheral::unload() -> void {
   node.reset();
 }
 
-auto Peripheral::main() -> void {
-  if(io.transferCounter > 0) {
-    if(--io.transferCounter == 0) {
-      //transfer complete, set receive size to 1 byte
-      io.receiveSize = 1;
-    }
-  }
+auto Peripheral::step(u32 clocks) -> void {
+  while(clocks > 0) {
+    int nextTransfer = (io.transferCounter > 0) ? io.transferCounter : (i32)INT32_MAX;
+    int nextAck      = (io.transferCounter <= 0 && io.ackCounter > 0) ? io.ackCounter : (i32)INT32_MAX;
 
-  if(io.transferCounter == 0 && io.ackCounter > 0) {
-    if(--io.ackCounter == 0) {
-      if (!io.acknowledgeAsserted) {
-        //Assert /ACK and fire the IRQ
-        io.interruptRequest = 1;
-        io.acknowledgeAsserted = 1;
-        if(io.acknowledgeInterruptEnable) {
-          interrupt.raise(Interrupt::Peripheral);
-        }
+    u32 stepClocks = static_cast<u32>(std::min<int>(clocks, std::min(nextTransfer, nextAck)));
 
-        io.ackCounter = 96; // ACK duration is approx 96 cycles (2.84us)
+    if(io.transferCounter > 0) {
+      if(stepClocks >= static_cast<u32>(io.transferCounter)) {
+        stepClocks = static_cast<u32>(io.transferCounter);
+        io.transferCounter = 0;
+        io.receiveSize = 1;
       } else {
-        //De-assert /ACK
-        io.acknowledgeAsserted = 0;
+        io.transferCounter -= static_cast<int>(stepClocks);
       }
     }
+
+    if(io.transferCounter <= 0 && io.ackCounter > 0) {
+      if(stepClocks >= static_cast<u32>(io.ackCounter)) {
+        stepClocks = static_cast<u32>(io.ackCounter);
+        io.ackCounter = 0;
+
+        if(!io.acknowledgeAsserted) {
+          io.interruptRequest = 1;
+          io.acknowledgeAsserted = 1;
+          if(io.acknowledgeInterruptEnable) interrupt.raise(Interrupt::Peripheral);
+          io.ackCounter = 96; // ACK duration
+        } else {
+          io.acknowledgeAsserted = 0;
+        }
+      } else {
+        io.ackCounter -= static_cast<int>(stepClocks);
+      }
+    }
+
+    clocks -= stepClocks;
   }
-
-  step(1);
-}
-
-auto Peripheral::step(u32 clocks) -> void {
-  Thread::clock += clocks;
 }
 
 auto Peripheral::power(bool reset) -> void {
-  Thread::reset();
-  Memory::Interface::setWaitStates(4, 4, 4);
   io = {};
   io.transmitStarted = 1;
   io.transmitFinished = 1;

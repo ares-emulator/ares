@@ -24,6 +24,10 @@ struct GPU : Thread, Memory::Interface {
   auto vend() const -> u32 { return io.displayRangeY2; }
   auto vblank() const -> bool { return io.vcounter < vstart() || io.vcounter >= vend(); }
   auto interlace() const -> bool { return io.verticalResolution && io.interlace; }
+  auto htotal() const -> u32 { return io.videoMode ? 3406 : 3413; }
+  auto hblankStart() const -> u32 { return htotal() - (displayWidth() * dotclockDivider()); }
+  auto displayWidth() const -> u32 { return io.horizontalResolution < 4 ? displayWidths[io.horizontalResolution] : displayWidths[4]; }
+  auto dotclockDivider() const -> u32 { return io.horizontalResolution < 4 ? dotclockDividers[io.horizontalResolution] : dotclockDividers[4]; }
 
   //gpu.cpp
   auto load(Node::Object) -> void;
@@ -35,6 +39,8 @@ struct GPU : Thread, Memory::Interface {
   auto power(bool reset) -> void;
 
   //io.cpp
+  auto canReadDMA() -> bool;
+  auto canWriteDMA() -> bool;
   auto readDMA() -> u32;
   auto writeDMA(u32 data) -> void;
 
@@ -92,10 +98,11 @@ struct GPU : Thread, Memory::Interface {
   struct IO {
     Mode mode = Mode::Normal;
 
-    n1  field;     //even or odd scanline
-    n16 hcounter;  //horizontal counter
-    n16 vcounter;  //vertical counter
-    i32 pcounter;  //pixel drawing counter
+    n1  field;      //even or odd scanline
+    n16 hcounter;   //horizontal counter
+    n16 vcounter;   //vertical counter
+    i32 pcounter;   //pixel drawing counter
+    i32 dotcounter; //dotclocks since the last timer update
 
     //GP0(a0): copy rectangle (CPU to VRAM)
     //GP0(c0): copy rectangle (VRAM to CPU)
@@ -164,7 +171,7 @@ struct GPU : Thread, Memory::Interface {
     n12 displayRangeY2 = 16 + 240;
 
     //GP1(08): display mode
-    n3 horizontalResolution = 1;
+    n3 horizontalResolution;
     n1 verticalResolution;
     n1 videoMode;   //0 = NTSC, 1 = PAL
     n1 colorDepth;  //0 = 15bpp, 1 = 24bpp
@@ -383,6 +390,8 @@ struct GPU : Thread, Memory::Interface {
 
   u16* vram2D[512];
   u8   ditherTable[4][4][256];
+  static constexpr u32 dotclockDividers[5] = {10, 8, 5, 4, 7};
+  static constexpr u32 displayWidths[5] = {256, 320, 512, 640, 368};
   bool refreshed;
 };
 

@@ -66,6 +66,7 @@ auto Peripheral::readHalf(u32 address) -> u32 {
   //JOY_RX_DATA
   if(address == 0x1f80'1040) {
     data = receive();
+    return data;
   }
 
   //JOY_STAT
@@ -76,6 +77,7 @@ auto Peripheral::readHalf(u32 address) -> u32 {
     data.bit(3) = io.parityError;
     data.bit(7) = io.acknowledgeAsserted;
     data.bit(9) = io.interruptRequest;
+    return data;
   }
 
   //JOY_MODE
@@ -87,6 +89,7 @@ auto Peripheral::readHalf(u32 address) -> u32 {
     data.bit(6, 7) = io.unknownMode_6_7;
     data.bit(8)    = io.clockOutputPolarity;
     data.bit(9,15) = io.unknownMode_9_15;
+    return data;
   }
 
   //JOY_CTRL
@@ -105,13 +108,16 @@ auto Peripheral::readHalf(u32 address) -> u32 {
     data.bit(12)    = io.acknowledgeInterruptEnable;
     data.bit(13)    = io.slotNumber;
     data.bit(14,15) = io.unknownCtrl_14_15;
+    return data;
   }
 
   //JOY_BAUD
   if(address == 0x1f80'104e) {
     data.bit(0,15) = io.baudrateReloadValue;
+    return data;
   }
 
+  debug(unhandled, "Peripheral::readHalf(", hex(address, 8L), ") -> ", hex(data, 4L));
   return data;
 }
 
@@ -125,6 +131,7 @@ auto Peripheral::readWord(u32 address) -> u32 {
       io.receiveData = 0xff;
       io.receiveSize--;
     }
+    return data;
   }
 
   //JOY_STAT
@@ -135,8 +142,10 @@ auto Peripheral::readWord(u32 address) -> u32 {
     data.bit(3) = io.parityError;
     data.bit(7) = io.acknowledgeAsserted;
     data.bit(9) = io.interruptRequest;
+    return data;
   }
 
+  debug(unhandled, "Peripheral::readWord(", hex(address, 8L), ") -> ", hex(data, 8L));
   return data;
 }
 
@@ -146,7 +155,10 @@ auto Peripheral::writeByte(u32 address, u32 value) -> void {
   //JOY_TX_DATA
   if(address == 0x1f80'1040) {
     transmit(data);
+    return;
   }
+
+  debug(unhandled, "Peripheral::writeByte(", hex(address, 8L), ", ", hex(data, 2L), ")");
 }
 
 auto Peripheral::writeHalf(u32 address, u32 value) -> void {
@@ -155,6 +167,7 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
   //JOY_TX_DATA
   if(address == 0x1f80'1040) {
     transmit(data);
+    return;
   }
 
   //JOY_MODE
@@ -166,6 +179,7 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
     io.unknownMode_6_7      = data.bit(6, 7);
     io.clockOutputPolarity  = data.bit(8);
     io.unknownMode_9_15     = data.bit(9,15);
+    return;
   }
 
   //JOY_CTRL
@@ -197,12 +211,16 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
       io.interruptRequest = 0;
       interrupt.lower(Interrupt::Peripheral);
     }
+    return;
   }
 
   //JOY_BAUD
   if(address == 0x1f80'104e) {
     io.baudrateReloadValue = data.bit(0,15);
+    return;
   }
+
+  debug(unhandled, "Peripheral::writeHalf(", hex(address, 8L), ", ", hex(data, 4L), ")");
 }
 
 auto Peripheral::writeWord(u32 address, u32 data) -> void {

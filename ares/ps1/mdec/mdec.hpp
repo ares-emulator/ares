@@ -8,15 +8,19 @@ struct MDEC : Thread, Memory::Interface {
   auto unload() -> void;
 
   auto power(bool reset) -> void;
+  auto main() -> void;
+  auto step(u32 cycles) -> void;
 
   //decoder.cpp
-  auto decodeMacroblocks() -> void;
+  auto decodeMacroblock() -> bool;
   auto decodeBlock(s16 block[64], u8 table[64]) -> bool;
   template<u32 Pass> auto decodeIDCT(s16 source[64], s16 target[64]) -> void;
   auto convertY(u32 output[64], s16 luma[64]) -> void;
   auto convertYUV(u32 output[256], s16 luma[64], u32 bx, u32 by) -> void;
 
   //io.cpp
+  auto canReadDMA() -> bool;
+  auto canWriteDMA() -> bool;
   auto readDMA() -> u32;
   auto writeDMA(u32 data) -> void;
 
@@ -27,26 +31,28 @@ struct MDEC : Thread, Memory::Interface {
   auto writeHalf(u32 address, u32 data) -> void;
   auto writeWord(u32 address, u32 data) -> void;
 
+  auto readInputFifo() -> maybe<u16>;
+  auto writeOutputFifo(u32 data) -> void;
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
   struct FIFO {
-    queue<u16[65536]> input;
+    queue<u16[64]> input;
     queue<u32[65536]> output;
   } fifo;
 
   struct Status {
-    n16 remaining;
+    n32 remaining;
     n3  currentBlock;
     n1  outputMaskBit;
     n1  outputSigned;
     n2  outputDepth;
     n1  outputRequest;
     n1  inputRequest;
-    n1  commandBusy;
-    n1  inputFull;
-    n1  outputEmpty;
   } status;
+
+  u32 output[256];
 
   enum Mode : u32 { Idle, DecodeMacroblock, SetQuantTable, SetScaleTable };
 

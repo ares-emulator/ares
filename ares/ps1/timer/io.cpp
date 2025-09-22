@@ -12,6 +12,7 @@ auto Timer::readWord(u32 address) -> u32 {
 
   if((address & 0x1fff'ffcf) == 0x1f80'1100 && c <= 2) {
     data.bit(0,15) = timers[c].counter;
+    return data;
   }
 
   if((address & 0x1fff'ffcf) == 0x1f80'1104 && c <= 2) {
@@ -30,12 +31,15 @@ auto Timer::readWord(u32 address) -> u32 {
     data.bit(13,15) = timers[c].unknown;
     timers[c].reachedTarget   = 0;
     timers[c].reachedSaturate = 0;
+    return data;
   }
 
   if((address & 0x1fff'ffcf) == 0x1f80'1108 && c <= 2) {
     data.bit(0,15) = timers[c].target;
+    return data;
   }
 
+  debug(unhandled, "Timer::readWord(", hex(address, 8L), ") -> ", hex(data, 8L));
   return data;
 }
 
@@ -54,6 +58,7 @@ auto Timer::writeWord(u32 address, u32 value) -> void {
   if((address & 0x1fff'ffcf) == 0x1f80'1100 && c <= 2) {
     timers[c].counter = data.bit(0,15);
     timers[c].wait = WAIT_CYCLES;
+    return;
   }
 
   if((address & 0x1fff'ffcf) == 0x1f80'1104 && c <= 2) {
@@ -76,9 +81,13 @@ auto Timer::writeWord(u32 address, u32 value) -> void {
     timers[c].counter      = 0;
     timers[c].irqTriggered = 0;
     timers[c].wait = WAIT_CYCLES;
+    return;
   }
 
   if((address & 0x1fff'ffcf) == 0x1f80'1108 && c <= 2) {
     timers[c].target = data.bit(0,15);
+    return;
   }
+
+  debug(unhandled, "Timer::writeWord(", hex(address, 8L), ", ", hex(data, 8L), ") -> ");
 }

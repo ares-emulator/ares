@@ -19,6 +19,8 @@ struct DMA : Thread, Memory::Interface {
   auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
+  auto active() -> bool;
+
   //io.cpp
   auto readByte(u32 address) -> u32;
   auto readHalf(u32 address) -> u32;
@@ -34,7 +36,7 @@ struct DMA : Thread, Memory::Interface {
   auto serialize(serializer&) -> void;
 
   enum : u32 { MDECin, MDECout, GPU, CDROM, SPU, PIO, OTC };  //channel IDs
-  enum : u32 { Waiting, Running };  //channel states
+  enum : u32 { Idle, Running };  //channel states
 
   struct IRQ {
     DMA& self;
@@ -53,9 +55,10 @@ struct DMA : Thread, Memory::Interface {
     const u32 id;
 
     //channel.cpp
-    auto step(u32 clocks) -> bool;
+    auto step() -> bool;
     auto transferBlock() -> void;
     auto transferChain() -> void;
+    auto kick() -> bool;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -86,10 +89,10 @@ struct DMA : Thread, Memory::Interface {
     } chain;
 
     n8  state;
-    i32 counter;
   } channels[7] = {{0}, {1}, {2}, {3}, {4}, {5}, {6}};
 
   u32 channelsByPriority[7];
+  i32 counter;
 };
 
 extern DMA dma;

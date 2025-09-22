@@ -143,7 +143,7 @@ auto Disc::commandPlay() -> void {
   ssr.reading = 1;
   ssr.playingCDDA = 1;
   cdda.playMode = CDDA::PlayMode::Normal;
-  counter.report = 33'868'800 / 75;
+  counter.report = system.frequency() / 75;
 
   fifo.response.write(status());
 
@@ -442,7 +442,7 @@ auto Disc::commandGetTrackStart() -> void {
       lba = index->lba;
     }
   }
-  auto [minute, second, frame] = CD::MSF::fromLBA(150 + lba);
+  auto [minute, second, frame] = CD::MSF::fromLBA(lba);
 
   fifo.response.write(status());
   fifo.response.write(BCD::encode(minute));

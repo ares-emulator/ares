@@ -22,6 +22,7 @@ auto option(string name, string value) -> bool {
   return true;
 }
 
+Scheduler scheduler;
 Random random;
 System system;
 #include "serialization.cpp"
@@ -35,8 +36,7 @@ auto System::game() -> string {
 }
 
 auto System::run() -> void {
-  while(!gpu.refreshed) cpu.main();
-  gpu.refreshed = false;
+  scheduler.enter();
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -48,12 +48,15 @@ auto System::load(Node::System& root, string name) -> bool {
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;
+    information.gpuFrequency = 53'690'000;
   }
   if(name.find("NTSC-U")) {
     information.region = Region::NTSCU;
+    information.gpuFrequency = 53'690'000;
   }
   if(name.find("PAL")) {
     information.region = Region::PAL;
+    information.gpuFrequency = 53'200'000;
   }
 
   node = std::make_shared<Core::System>(information.name);
@@ -130,7 +133,6 @@ auto System::power(bool reset) -> void {
     random.seed(Random::Default);
   }
 
-  bios.setWaitStates(8, 16, 31);
   memory.power(reset);
   cpu.power(reset);
   gpu.power(reset);
@@ -141,6 +143,16 @@ auto System::power(bool reset) -> void {
   peripheral.power(reset);
   dma.power(reset);
   timer.power(reset);
+
+  cpu.exe.reset();
+  if(disc.executable()) {
+    if(auto fp = disc.pak->read("program.exe")) {
+      cpu.exe.allocate(fp->size());
+      cpu.exe.load(fp);
+    }
+  }
+
+  scheduler.power(cpu);
 }
 
 }

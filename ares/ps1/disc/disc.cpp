@@ -121,12 +121,17 @@ auto Disc::main() -> void {
     event.counter -= 128;
     if(event.counter <= 0) {
       event.counter = 0;
-      command(event.command);
-      if(!event.counter && event.queued) {
-        event.command = event.queued;
-        event.counter = 50'000;
-        event.invocation = 0;
-        event.queued = 0;
+
+      if (!irq.pending()) {
+        command(event.command);
+        if(!event.counter && event.queued) {
+          event.command = event.queued;
+          event.counter = 50'000;
+          event.invocation = 0;
+          event.queued = 0;
+        }
+      } else {
+        event.counter = 128;
       }
     }
   }
@@ -134,7 +139,7 @@ auto Disc::main() -> void {
   if(drive.mode.report && ssr.playingCDDA) {
     counter.report -= 128;
     if(counter.report <= 0) {
-      counter.report += 33'868'800 / 75;
+      counter.report += system.frequency() / 75;
 
       s32 lba = drive.lba.current;
       s32 lbaTrack = 0;
@@ -176,18 +181,18 @@ auto Disc::main() -> void {
       }
     }
   }
-
-  step(128);
 }
 
 auto Disc::step(u32 clocks) -> void {
-  Thread::clock += clocks;
+  static u32 clockAccumulator = 0;
+  clockAccumulator += clocks;
+  while (clockAccumulator >= 128) {
+    main();
+    clockAccumulator -= 128;
+  }
 }
 
 auto Disc::power(bool reset) -> void {
-  Thread::reset();
-  Memory::Interface::setWaitStates(8, 25, 60);
-
   drive.lba.current = 0;
   drive.lba.request = 0;
   drive.lba.seeking = 0;

@@ -5,13 +5,14 @@ auto DMA::readByte(u32 address) -> u32 {
   if((address & ~3) == 0x1f80'10f8) return data = readWord(address & ~3) >> 8 * (address & 3);
   if((address & ~3) == 0x1f80'10fc) return data = readWord(address & ~3) >> 8 * (address & 3);
   auto& channel = channels[address >> 4 & 7];
-  if((address & 0x1fff'ff8c) == 0x1f80'1080) data = readWord(address & ~3) >> 8 * (address & 3);
-  if((address & 0x1fff'ff8f) == 0x1f80'1084) data = channel.length.byte(0);
-  if((address & 0x1fff'ff8f) == 0x1f80'1085) data = channel.length.byte(1);
-  if((address & 0x1fff'ff8f) == 0x1f80'1086) data = channel.blocks.byte(0);
-  if((address & 0x1fff'ff8f) == 0x1f80'1087) data = channel.blocks.byte(1);
-  if((address & 0x1fff'ff8c) == 0x1f80'1088) data = readWord(address & ~3) >> 8 * (address & 3);
-  if((address & 0x1fff'ff8c) == 0x1f80'108c) data = readWord(address & ~3) >> 8 * (address & 3);
+  if((address & 0x1fff'ff8c) == 0x1f80'1080) return data = readWord(address & ~3) >> 8 * (address & 3);
+  if((address & 0x1fff'ff8f) == 0x1f80'1084) return data = channel.length.byte(0);
+  if((address & 0x1fff'ff8f) == 0x1f80'1085) return data = channel.length.byte(1);
+  if((address & 0x1fff'ff8f) == 0x1f80'1086) return data = channel.blocks.byte(0);
+  if((address & 0x1fff'ff8f) == 0x1f80'1087) return data = channel.blocks.byte(1);
+  if((address & 0x1fff'ff8c) == 0x1f80'1088) return data = readWord(address & ~3) >> 8 * (address & 3);
+  if((address & 0x1fff'ff8c) == 0x1f80'108c) return data = readWord(address & ~3) >> 8 * (address & 3);
+  debug(unhandled, "DMA::readByte(", hex(address, 8L), ") -> ", hex(data, 2L));
   return data;
 }
 
@@ -22,11 +23,12 @@ auto DMA::readHalf(u32 address) -> u32 {
   if((address & ~3) == 0x1f80'10f8) return data = readWord(address & ~3) >> 8 * (address & 3);
   if((address & ~3) == 0x1f80'10fc) return data = readWord(address & ~3) >> 8 * (address & 3);
   auto& channel = channels[address >> 4 & 7];
-  if((address & 0x1fff'ff8c) == 0x1f80'1080) data = readWord(address & ~3) >> 8 * (address & 3);
-  if((address & 0x1fff'ff8e) == 0x1f80'1084) data = channel.length;
-  if((address & 0x1fff'ff8e) == 0x1f80'1086) data = channel.blocks;
-  if((address & 0x1fff'ff8c) == 0x1f80'1088) data = readWord(address & ~3) >> 8 * (address & 3);
-  if((address & 0x1fff'ff8c) == 0x1f80'108c) data = readWord(address & ~3) >> 8 * (address & 3);
+  if((address & 0x1fff'ff8c) == 0x1f80'1080) return data = readWord(address & ~3) >> 8 * (address & 3);
+  if((address & 0x1fff'ff8e) == 0x1f80'1084) return data = channel.length;
+  if((address & 0x1fff'ff8e) == 0x1f80'1086) return data = channel.blocks;
+  if((address & 0x1fff'ff8c) == 0x1f80'1088) return data = readWord(address & ~3) >> 8 * (address & 3);
+  if((address & 0x1fff'ff8c) == 0x1f80'108c) return data = readWord(address & ~3) >> 8 * (address & 3);
+  debug(unhandled, "DMA::readHalf(", hex(address, 8L), ") -> ", hex(data, 4L));
   return data;
 }
 
@@ -92,12 +94,14 @@ auto DMA::readWord(u32 address) -> u32 {
   //DnMADR: DMA Base Address
   if((address & 0x1fff'ff8f) == 0x1f80'1080) {
     data.bit(0,23) = channel.address;
+    return data;
   }
 
   //DnBCR: DMA Block Control
   if((address & 0x1fff'ff8f) == 0x1f80'1084) {
     data.bit( 0,15) = channel.length;
     data.bit(16,31) = channel.blocks;
+    return data;
   }
 
   //DnCHCR: DMA Channel Control
@@ -113,8 +117,10 @@ auto DMA::readWord(u32 address) -> u32 {
     data.bit(24)    = channel.enable;
     data.bit(28)    = channel.trigger;
     data.bit(29,30) = channel.unknown;
+    return data;
   }
 
+  debug(unhandled, "DMA::readWord(", hex(address, 8L), ") -> ", hex(data, 8L));
   return data;
 }
 
@@ -125,13 +131,15 @@ auto DMA::writeByte(u32 address, u32 value) -> void {
   if((address & ~3) == 0x1f80'10f8) return writeWord(address & ~3, data << 8 * (address & 3));
   if((address & ~3) == 0x1f80'10fc) return writeWord(address & ~3, data << 8 * (address & 3));
   auto& channel = channels[address >> 4 & 7];
-  if((address & 0x1fff'ff8c) == 0x1f80'1080) writeWord(address & ~3, data << 8 * (address & 3));
-  if((address & 0x1fff'ff8f) == 0x1f80'1084) channel.length.byte(0) = data;
-  if((address & 0x1fff'ff8f) == 0x1f80'1085) channel.length.byte(1) = data;
-  if((address & 0x1fff'ff8f) == 0x1f80'1086) channel.blocks.byte(0) = data;
-  if((address & 0x1fff'ff8f) == 0x1f80'1087) channel.blocks.byte(1) = data;
-  if((address & 0x1fff'ff8c) == 0x1f80'1088) writeWord(address & ~3, data << 8 * (address & 3));
-  if((address & 0x1fff'ff8c) == 0x1f80'108c) writeWord(address & ~3, data << 8 * (address & 3));
+  if((address & 0x1fff'ff8c) == 0x1f80'1080) return writeWord(address & ~3, data << 8 * (address & 3));
+  if((address & 0x1fff'ff8f) == 0x1f80'1084) { channel.length.byte(0) = data; return; }
+  if((address & 0x1fff'ff8f) == 0x1f80'1085) { channel.length.byte(1) = data; return; }
+  if((address & 0x1fff'ff8f) == 0x1f80'1086) { channel.blocks.byte(0) = data; return; }
+  if((address & 0x1fff'ff8f) == 0x1f80'1087) { channel.blocks.byte(1) = data; return; }
+  if((address & 0x1fff'ff8c) == 0x1f80'1088) return writeWord(address & ~3, data << 8 * (address & 3));
+  if((address & 0x1fff'ff8c) == 0x1f80'108c) return writeWord(address & ~3, data << 8 * (address & 3));
+
+  debug(unhandled, "DMA::writeByte(", hex(address, 8L), ", ", hex(data, 2L), ")");
 }
 
 auto DMA::writeHalf(u32 address, u32 value) -> void {
@@ -141,11 +149,13 @@ auto DMA::writeHalf(u32 address, u32 value) -> void {
   if((address & ~3) == 0x1f80'10f8) return writeWord(address & ~3, data << 8 * (address & 3));
   if((address & ~3) == 0x1f80'10fc) return writeWord(address & ~3, data << 8 * (address & 3));
   auto& channel = channels[address >> 4 & 7];
-  if((address & 0x1fff'ff8c) == 0x1f80'1080) writeWord(address & ~3, data << 8 * (address & 3));
-  if((address & 0x1fff'fffe) == 0x1f80'1084) channel.length = data;
-  if((address & 0x1fff'fffe) == 0x1f80'1086) channel.blocks = data;
-  if((address & 0x1fff'ff8c) == 0x1f80'1088) writeWord(address & ~3, data << 8 * (address & 3));
-  if((address & 0x1fff'ff8c) == 0x1f80'108c) writeWord(address & ~3, data << 8 * (address & 3));
+  if((address & 0x1fff'ff8c) == 0x1f80'1080) return writeWord(address & ~3, data << 8 * (address & 3));
+  if((address & 0x1fff'fffe) == 0x1f80'1084) { channel.length = data; return; }
+  if((address & 0x1fff'fffe) == 0x1f80'1086) { channel.blocks = data; return; }
+  if((address & 0x1fff'ff8c) == 0x1f80'1088) return writeWord(address & ~3, data << 8 * (address & 3));
+  if((address & 0x1fff'ff8c) == 0x1f80'108c) return writeWord(address & ~3, data << 8 * (address & 3));
+
+  debug(unhandled, "DMA::writeHalf(", hex(address, 8L), ", ", hex(data, 4L), ")");
 }
 
 auto DMA::writeWord(u32 address, u32 value) -> void {
@@ -196,11 +206,13 @@ auto DMA::writeWord(u32 address, u32 value) -> void {
 
   //unused
   if(address == 0x1f80'10f8) {
+    debug(unusual, "DMA::writeWord(): write to unused register 0x1f8010f8");
     return;
   }
 
   //unused
   if(address == 0x1f80'10fc) {
+    debug(unusual, "DMA::writeWord(): write to unused register 0x1f8010c0");
     return;
   }
 
@@ -209,12 +221,14 @@ auto DMA::writeWord(u32 address, u32 value) -> void {
   //DnMADR: DMA Base Address
   if((address & 0x1fff'ff8f) == 0x1f80'1080) {
     channel.address = data.bit(0,23);
+    return;
   }
 
   //DnBCR: DMA Block Control
   if((address & 0x1fff'ff8f) == 0x1f80'1084) {
     channel.length = data.bit( 0,15);
     channel.blocks = data.bit(16,31);
+    return;
   }
 
   //DnCHCR: DMA Channel Control
@@ -242,8 +256,15 @@ auto DMA::writeWord(u32 address, u32 value) -> void {
       channel.unknown.bit(0) = 0;
     }
 
-    channel.state = Waiting;
+    channel.state = Idle;
     channel.chain.length = 0;
-    channel.counter = 1;
+
+    for(u32 id : channelsByPriority) {
+      if(channels[id].kick()) break;
+    }
+
+    return;
   }
+
+  debug(unhandled, "DMA::writeWord(", hex(address, 8L), ", ", hex(data, 8L), ")");
 }

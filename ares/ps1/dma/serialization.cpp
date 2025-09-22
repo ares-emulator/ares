@@ -10,6 +10,7 @@ auto DMA::serialize(serializer& s) -> void {
     s(channel);
   }
   s(channelsByPriority);
+  s(counter);
 }
 
 auto DMA::Channel::serialize(serializer& s) -> void {
@@ -32,5 +33,4 @@ auto DMA::Channel::serialize(serializer& s) -> void {
   s(chain.length);
   s(chain.address);
   s(state);
-  s(counter);
 }
