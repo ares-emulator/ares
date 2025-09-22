@@ -23,6 +23,7 @@ namespace Systems {
   #include "nintendo-64.cpp"
   #include "nintendo-64dd.cpp"
   #include "pc-engine.cpp"
+  #include "pc-engine-ld.cpp"
   #include "saturn.cpp"
   #include "supergrafx.cpp"
   #include "playstation.cpp"
@@ -61,6 +62,7 @@ auto System::create(string name) -> shared_pointer<Pak> {
   if(name == "Nintendo 64") return new Systems::Nintendo64;
   if(name == "Nintendo 64DD") return new Systems::Nintendo64DD;
   if(name == "PC Engine") return new Systems::PCEngine;
+  if(name == "PC Engine LD") return new Systems::PCEngineLD;
   if(name == "Saturn") return new Systems::Saturn;
   if(name == "SuperGrafx") return new Systems::SuperGrafx;
   if(name == "PlayStation") return new Systems::PlayStation;

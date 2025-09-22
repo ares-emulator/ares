@@ -9,7 +9,7 @@ struct PCD : Thread {
   CD::Session session;
   Memory::Writable<n8> wram;  // 64KB
   Memory::Writable<n8> bram;  //  2KB
-  //PC Engine Duo only:
+  //PC Engine Duo & LaserActive only:
   Memory::Readable<n8> bios;  //256KB
   Memory::Writable<n8> sram;  //192KB
 

@@ -4,8 +4,8 @@ struct PCEngineLD : PCEngine {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
-  shared_pointer<mia::Pak> bios;
-  u32 biosID = 0;
+  shared_pointer<mia::Pak> hucard;
+  u32 internalBiosId = 0;
 };
 
 PCEngineLD::PCEngineLD() {
@@ -28,36 +28,35 @@ auto PCEngineLD::load() -> LoadResult {
 
   // Attempt to load the bios based on the desired region
   auto region = Emulator::region();
-  bios = mia::Medium::create("PC Engine");
-  biosID = 0;
+  system = mia::System::create("PC Engine LD");
+  internalBiosId = 0;
   bool foundBiosVersion = false;
-  while (!foundBiosVersion && (biosID < firmware.size())) {
-    result = bios->load(firmware[biosID].location);
+  while (!foundBiosVersion && (internalBiosId < firmware.size())) {
+    result = system->load(firmware[internalBiosId].location);
     foundBiosVersion = (result == successful);
-    if (!foundBiosVersion) ++biosID;
+    if (!foundBiosVersion) ++internalBiosId;
   }
   if (!foundBiosVersion) {
-    biosID = (region == "NTSC-J") ? 1 : 0;
+    internalBiosId = (region == "NTSC-J") ? 1 : 0;
     result.firmwareSystemName = "PC Engine";
-    result.firmwareType = firmware[biosID].type;
-    result.firmwareRegion = firmware[biosID].region;
+    result.firmwareType = firmware[internalBiosId].type;
+    result.firmwareRegion = firmware[internalBiosId].region;
     result.result = noFirmware;
     return result;
   }
 
-  system = mia::System::create("PC Engine");
-  result = system->load();
-  if(result != successful) return result;
+  hucard = mia::Medium::create("PC Engine");
 
   ares::PCEngine::option("Pixel Accuracy", settings.video.pixelAccuracy);
 
   auto name = "[Pioneer] LaserActive (NEC PAC)";
   if(!ares::PCEngine::load(root, {name, " (", region, ")"})) return otherError;
 
-  if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    port->allocate();
-    port->connect();
-  }
+  //TODO: If a hucard was selected/if the game requires a specific system card, insert it here
+  //if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
+//    port->allocate();
+//    port->connect();
+//  }
 
   if(auto port = root->find<ares::Node::Port>("PC Engine LD/Disc Tray")) {
     port->allocate();
@@ -72,14 +71,14 @@ auto PCEngineLD::load() -> LoadResult {
 auto PCEngineLD::save() -> bool {
   root->save();
   system->save(game->location);
-  bios->save(game->location);
+  hucard->save(game->location);
   game->save(game->location);
   return true;
 }
 
 auto PCEngineLD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "PC Engine") return system->pak;
-  if(node->name() == "PC Engine Card") return bios->pak;
+  if(node->name() == "PC Engine Card") return hucard->pak;
   if(node->name() == "PC Engine CD Disc") return game->pak;
   if(node->name() == "Laserdisc") return game->pak;
   return {};
