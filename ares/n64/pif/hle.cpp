@@ -144,9 +144,10 @@ auto PIF::joyRun() -> void {
       continue;
     }
     u32 recvOffset = offset;
-    n8 recv = ram.read<Byte>(offset++);
+    n8 recv = ram.read<Byte>(offset);
     send &= 0x3f;
     recv &= 0x3f;
+    ram.write<Byte>(offset++, recv);
 
     n8 input[64];
     for(u32 index : range(send)) {
