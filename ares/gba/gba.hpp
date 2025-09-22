@@ -2,6 +2,7 @@
 //started: 2012-03-19
 
 #include <ares/ares.hpp>
+#include <span>
 #include <vector>
 
 #include <component/processor/arm7tdmi/arm7tdmi.hpp>

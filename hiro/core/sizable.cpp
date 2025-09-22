@@ -20,7 +20,7 @@ auto mSizable::minimumSize() const -> Size {
   return signal(minimumSize);
 }
 
-auto mSizable::onSize(const function<void ()>& callback) -> type& {
+auto mSizable::onSize(const std::function<void ()>& callback) -> type& {
   state.onSize = callback;
   return *this;
 }

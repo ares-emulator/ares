@@ -85,7 +85,7 @@ auto Serial::writeIO(n16 address, n8 data) -> void {
 }
 
 auto Serial::power() -> void {
-  Thread::create(3'072'000, {&Serial::main, this});
+  Thread::create(3'072'000, std::bind_front(&Serial::main, this));
 
   bus.map(this, 0x00b1);
   bus.map(this, 0x00b3);

@@ -67,7 +67,7 @@ auto CPU::lower(Interrupt interrupt) -> bool {
 
 auto CPU::power(bool reset) -> void {
   M68000::power();
-  Thread::create(12'000'000, {&CPU::main, this});
+  Thread::create(12'000'000, std::bind_front(&CPU::main, this));
   io = {};
   raise(Interrupt::Reset);
 }

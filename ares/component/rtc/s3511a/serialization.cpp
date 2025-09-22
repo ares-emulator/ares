@@ -1,5 +1,5 @@
 auto S3511A::serialize(serializer& s) -> void {
-  s(array_span<u8>{data, size});
+  s(std::span<n8>{data, size});
 
   s(cs);
   s(sio);

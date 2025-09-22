@@ -18,7 +18,7 @@ auto TIA::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("TIA");
 
   screen = node->append<Node::Video::Screen>("Screen", 180, displayHeight());
-  screen->colors(1 << 7, {&TIA::color, this});
+  screen->colors(1 << 7, std::bind_front(&TIA::color, this));
   screen->setSize(180, displayHeight());
   screen->setScale(2.0, 1.0);
   Region::PAL() ? screen->setAspect(38.0, 45.0) : screen->setAspect(4.0, 5.0);
@@ -123,7 +123,7 @@ auto TIA::step(u32 clocks) -> void {
 }
 
 auto TIA::power(bool reset) -> void {
-  Thread::create(system.frequency(), {&TIA::main, this});
+  Thread::create(system.frequency(), std::bind_front(&TIA::main, this));
   screen->power();
   io = {};
   playfield = {};

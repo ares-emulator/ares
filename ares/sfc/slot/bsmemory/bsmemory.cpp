@@ -14,13 +14,13 @@ auto BSMemoryCartridge::connect() -> void {
   if(auto fp = pak->read("program.rom")) {
     ROM = 1;
     memory.allocate(fp->size());
-    fp->read({memory.data(), memory.size()});
+    fp->read(memory.data(), memory.size());
   }
 
   if(auto fp = pak->read("program.flash")) {
     ROM = 0;
     memory.allocate(max(fp->size(), 0x100000));
-    fp->read({memory.data(), memory.size()});
+    fp->read(memory.data(), memory.size());
   }
 
   //some BS Memory cassetes use ROM chips rather than Flash chips ...
@@ -127,7 +127,7 @@ auto BSMemoryCartridge::step(u32 clocks) -> void {
 auto BSMemoryCartridge::power() -> void {
   if(ROM) return;
 
-  Thread::create(1'000'000, {&BSMemoryCartridge::main, this});  //microseconds
+  Thread::create(1'000'000, std::bind_front(&BSMemoryCartridge::main, this));  //microseconds
   cpu.coprocessors.push_back(this);
 
   for(auto& block : blocks) {
@@ -145,7 +145,7 @@ auto BSMemoryCartridge::save() -> void {
   if(!node) return;
 
   if(auto fp = pak->write("program.flash")) {
-    fp->write({memory.data(), memory.size()});
+    fp->write(memory.data(), memory.size());
   }
 }
 

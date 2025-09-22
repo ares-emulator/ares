@@ -22,7 +22,7 @@ auto Program::detach(ares::Node::Object node) -> void {
   }
 }
 
-auto Program::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto Program::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   return emulator->pak(node);
 }
 

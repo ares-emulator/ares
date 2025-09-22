@@ -35,7 +35,7 @@ auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
 
   screen = node->append<Node::Video::Screen>("Screen", 1495, visibleHeight() * 2);
-  screen->colors(1 << 16, {&VDP::color, this});
+  screen->colors(1 << 16, std::bind_front(&VDP::color, this));
   screen->setSize(1495, visibleHeight() * 2);
   screen->setScale(0.25, 0.5);
   Region::PAL() ? screen->setAspect(41.0, 37.0) : screen->setAspect(32.0, 35.0);
@@ -122,7 +122,7 @@ auto VDP::frame() -> void {
 }
 
 auto VDP::power(bool reset) -> void {
-  Thread::create(system.frequency(), {&VDP::main, this});
+  Thread::create(system.frequency(), std::bind_front(&VDP::main, this));
   screen->power();
 
   if(!reset) {

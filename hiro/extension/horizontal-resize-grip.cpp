@@ -37,12 +37,12 @@ auto mHorizontalResizeGrip::doResize(s32 offset) const -> void {
   if(state.onResize) state.onResize(offset);
 }
 
-auto mHorizontalResizeGrip::onActivate(const function<void ()>& callback) -> type& {
+auto mHorizontalResizeGrip::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }
 
-auto mHorizontalResizeGrip::onResize(const function<void (s32)>& callback) -> type& {
+auto mHorizontalResizeGrip::onResize(const std::function<void (s32)>& callback) -> type& {
   state.onResize = callback;
   return *this;
 }

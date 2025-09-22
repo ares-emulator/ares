@@ -7,8 +7,8 @@ struct mSourceEdit : mWidget {
   auto editable() const -> bool;
   auto language() const -> string;
   auto numbered() const -> bool;
-  auto onChange(const function<void ()>& callback = {}) -> type&;
-  auto onMove(const function<void ()>& callback = {}) -> type&;
+  auto onChange(const std::function<void ()>& callback = {}) -> type&;
+  auto onMove(const std::function<void ()>& callback = {}) -> type&;
   auto scheme() const -> string;
   auto setEditable(bool editable) -> type&;
   auto setLanguage(const string& language = "") -> type&;
@@ -26,8 +26,8 @@ struct mSourceEdit : mWidget {
     bool editable = true;
     string language;
     bool numbered = true;
-    function<void ()> onChange;
-    function<void ()> onMove;
+    std::function<void ()> onChange;
+    std::function<void ()> onMove;
     string scheme;
     string text;
     TextCursor textCursor;

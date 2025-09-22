@@ -44,16 +44,14 @@ struct mObject {
   auto visible(bool recursive = false) const -> bool;
 
   template<typename T = string> auto attribute(const string& name) const -> T {
-    if(auto attribute = state.attributes.find(name)) {
-      if(attribute->value().is<T>()) return attribute->value().get<T>();
-    }
+    auto it = state.attributes.find({name});
+    if(it != state.attributes.end() && it->value().is<T>()) return it->value().get<T>();
     return {};
   }
 
   template<typename T = string> auto hasAttribute(const string& name) const -> bool {
-    if(auto attribute = state.attributes.find(name)) {
-      if(attribute->value().is<T>()) return true;
-    }
+    auto it = state.attributes.find({name});
+    if(it != state.attributes.end() && it->value().is<T>()) return true;
     return false;
   }
 
@@ -66,10 +64,11 @@ struct mObject {
     if constexpr(std::is_same_v<T, string> && !std::is_same_v<U, string>) {
       return setAttribute(name, string{value});
     }
-    if(auto attribute = state.attributes.find(name)) {
-      if((const T&)value) attribute->setValue((const T&)value);
-      else state.attributes.remove(*attribute);
-    } else {
+    auto it = state.attributes.find({name});
+    if(it != state.attributes.end()) {
+      if((const T&)value) const_cast<Attribute&>(*it).setValue((const T&)value);
+      else state.attributes.erase(it);
+    } else { 
       if((const T&)value) state.attributes.insert({name, (const T&)value});
     }
     return *this;
@@ -77,7 +76,7 @@ struct mObject {
 
 //private:
   struct State {
-    set<Attribute> attributes;
+    std::set<Attribute> attributes;
     Font font;
     mObject* parent = nullptr;
     s32 offset = -1;

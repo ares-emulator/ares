@@ -73,7 +73,7 @@ auto Interface::load(u32& addr, u32& size, M24C& m24c, string name) -> bool {
     if(mode == "M24C256") m24c.load(M24C::Type::M24C256);
     if(mode == "M24C512") m24c.load(M24C::Type::M24C512);
     if(m24c) {
-      fp->read({m24c.memory, m24c.size()});
+      fp->read(m24c.memory, m24c.size());
       return true;
     }
   }
@@ -100,7 +100,7 @@ auto Interface::save(Memory::Writable<n16>& wram, Memory::Writable<n8>& uram, Me
 auto Interface::save(M24C& m24c, string name) -> bool {
   if(auto fp = pak->write(name)) {
     if(m24c) {
-      fp->write({m24c.memory, m24c.size()});
+      fp->write(m24c.memory, m24c.size());
       return true;
     }
   }

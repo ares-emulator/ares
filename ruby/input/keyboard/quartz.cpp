@@ -4,7 +4,7 @@ struct InputKeyboardQuartz {
   Input& input;
   InputKeyboardQuartz(Input& input) : input(input) {}
 
-  shared_pointer<HID::Keyboard> hid{new HID::Keyboard};
+  std::shared_ptr<HID::Keyboard> hid = std::make_shared<HID::Keyboard>();
 
   struct Key {
     string name;
@@ -19,7 +19,7 @@ struct InputKeyboardQuartz {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     u32 inputID = 0;
     for(auto& key : keys) {
       bool value = CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, key.id);

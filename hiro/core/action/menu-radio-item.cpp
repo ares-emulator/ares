@@ -18,7 +18,7 @@ auto mMenuRadioItem::group() const -> Group {
   return state.group;
 }
 
-auto mMenuRadioItem::onActivate(const function<void ()>& callback) -> type& {
+auto mMenuRadioItem::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }
@@ -26,8 +26,8 @@ auto mMenuRadioItem::onActivate(const function<void ()>& callback) -> type& {
 auto mMenuRadioItem::setChecked() -> type& {
   if(auto group = this->group()) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.get())) {
           menuRadioItem->state.checked = false;
         }
       }

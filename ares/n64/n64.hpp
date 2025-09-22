@@ -6,10 +6,10 @@
 #include <float.h>
 #include <ares/ares.hpp>
 #include <nall/float-env.hpp>
-#include <nall/hashset.hpp>
 #include <nall/queue.hpp>
 #include <nall/recompiler/generic/generic.hpp>
 #include <component/processor/sm5k/sm5k.hpp>
+#include <span>
 #include <vector>
 
 #if defined(ARCHITECTURE_AMD64)

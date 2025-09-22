@@ -24,7 +24,7 @@ inline auto image::gradient(u64 a, u64 b, u64 c, u64 d) -> void {
   }
 }
 
-inline auto image::gradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY, function<f64 (f64, f64)> callback) -> void {
+inline auto image::gradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY, std::function<f64 (f64, f64)> callback) -> void {
   for(s32 y = 0; y < _height; y++) {
     u8* dp = _data + pitch() * y;
     f64 py = max(-radiusY, min(+radiusY, y - centerY)) * 1.0 / radiusY;

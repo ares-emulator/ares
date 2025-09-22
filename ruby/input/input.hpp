@@ -15,7 +15,7 @@ struct InputDriver {
   virtual auto acquired() -> bool { return false; }
   virtual auto acquire() -> bool { return false; }
   virtual auto release() -> bool { return false; }
-  virtual auto poll() -> std::vector<shared_pointer<nall::HID::Device>> { return {}; }
+  virtual auto poll() -> std::vector<std::shared_ptr<nall::HID::Device>> { return {}; }
   virtual auto rumble(u64 id, u16 strong, u16 weak) -> bool { return false; }
 
 protected:
@@ -36,7 +36,7 @@ struct Input {
 
   Input() : self(*this) { reset(); }
   explicit operator bool() { return instance->driver() != "None"; }
-  auto reset() -> void { instance = new InputDriver(*this); }
+  auto reset() -> void { instance = std::make_unique<InputDriver>(*this); }
   auto create(string driver = "") -> bool;
   auto driver() -> string { return instance->driver(); }
   auto ready() -> bool { return instance->ready(); }
@@ -50,14 +50,14 @@ struct Input {
   auto acquired() -> bool;
   auto acquire() -> bool;
   auto release() -> bool;
-  auto poll() -> std::vector<shared_pointer<nall::HID::Device>>;
+  auto poll() -> std::vector<std::shared_ptr<nall::HID::Device>>;
   auto rumble(u64 id, u16 strong, u16 weak) -> bool;
 
-  auto onChange(const function<void (shared_pointer<nall::HID::Device>, u32, u32, s16, s16)>&) -> void;
-  auto doChange(shared_pointer<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue) -> void;
+  auto onChange(const std::function<void (std::shared_ptr<nall::HID::Device>, u32, u32, s16, s16)>&) -> void;
+  auto doChange(std::shared_ptr<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue) -> void;
 
 protected:
   Input& self;
-  unique_pointer<InputDriver> instance;
-  function<void (shared_pointer<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue)> change;
+  std::unique_ptr<InputDriver> instance;
+  std::function<void (std::shared_ptr<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue)> change;
 };

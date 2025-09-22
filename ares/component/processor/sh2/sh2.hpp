@@ -272,17 +272,11 @@ struct SH2 {
       Block* blocks[1 << 7];
     };
 
-    struct BlockHashPair {
-      auto operator==(const BlockHashPair& source) const -> bool { return hashcode == source.hashcode; }
-      auto hash() const -> u32 { return hashcode; }
-
-      Block* block;
-      u64 hashcode;
-    };
+    
 
     auto reset() -> void {
       generation = 0;
-      blocks.reset();
+      blocks.clear();
       pools.resize(1 << 24);
       std::ranges::fill(pools, nullptr);
     }
@@ -310,7 +304,7 @@ struct SH2 {
     bool inDelaySlot;
     u32 generation;
     bump_allocator allocator;
-    hashset<BlockHashPair> blocks;
+    std::unordered_map<u64, Block*> blocks;
     u16 instructions[1 << 7];
     std::vector<Pool*> pools;
   } recompiler{*this};

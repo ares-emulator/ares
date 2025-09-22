@@ -15,10 +15,10 @@ struct Response : Message {
   explicit operator bool() const { return responseType() != 0; }
   auto operator()(u32 responseType) -> type& { return setResponseType(responseType); }
 
-  auto head(const function<bool (const u8* data, u32 size)>& callback) const -> bool override;
+  auto head(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool override;
   auto setHead() -> bool override;
 
-  auto body(const function<bool (const u8* data, u32 size)>& callback) const -> bool override;
+  auto body(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool override;
   auto setBody() -> bool override;
 
   auto request() const -> const Request* { return _request; }
@@ -54,7 +54,7 @@ struct Response : Message {
   string _text;
 };
 
-inline auto Response::head(const function<bool (const u8*, u32)>& callback) const -> bool {
+inline auto Response::head(const std::function<bool (const u8*, u32)>& callback) const -> bool {
   if(!callback) return false;
   string output;
 
@@ -109,7 +109,7 @@ inline auto Response::setHead() -> bool {
   return true;
 }
 
-inline auto Response::body(const function<bool (const u8*, u32)>& callback) const -> bool {
+inline auto Response::body(const std::function<bool (const u8*, u32)>& callback) const -> bool {
   if(!callback) return false;
   if(!hasBody()) return true;
   bool chunked = header["Transfer-Encoding"].value() == "chunked";

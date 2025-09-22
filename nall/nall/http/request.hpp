@@ -13,10 +13,10 @@ struct Request : Message {
 
   explicit operator bool() const { return requestType() != RequestType::None; }
 
-  auto head(const function<bool (const u8* data, u32 size)>& callback) const -> bool override;
+  auto head(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool override;
   auto setHead() -> bool override;
 
-  auto body(const function<bool (const u8* data, u32 size)>& callback) const -> bool override;
+  auto body(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool override;
   auto setBody() -> bool override;
 
   auto ipv4() const -> bool { return _ipv6 == false; }
@@ -40,7 +40,7 @@ struct Request : Message {
   string _path;
 };
 
-inline auto Request::head(const function<bool (const u8*, u32)>& callback) const -> bool {
+inline auto Request::head(const std::function<bool (const u8*, u32)>& callback) const -> bool {
   if(!callback) return false;
   string output;
 
@@ -122,7 +122,7 @@ inline auto Request::setHead() -> bool {
   return true;
 }
 
-inline auto Request::body(const function<bool (const u8*, u32)>& callback) const -> bool {
+inline auto Request::body(const std::function<bool (const u8*, u32)>& callback) const -> bool {
   if(!callback) return false;
 
   if(_body) {

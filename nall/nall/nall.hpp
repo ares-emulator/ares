@@ -9,9 +9,7 @@
 #include <nall/any.hpp>
 //#include <nall/arguments.hpp>
 #include <nall/arithmetic.hpp>
-#include <nall/array.hpp>
-#include <nall/array-span.hpp>
-#include <nall/array-view.hpp>
+#include <array>
 #include <nall/atoi.hpp>
 #include <nall/bit.hpp>
 #include <nall/chrono.hpp>
@@ -21,9 +19,7 @@
 #include <nall/file.hpp>
 #include <nall/file-buffer.hpp>
 #include <nall/file-map.hpp>
-#include <nall/function.hpp>
 #include <nall/galois-field.hpp>
-#include <nall/hashset.hpp>
 #include <nall/hid.hpp>
 #include <nall/image.hpp>
 #include <nall/inode.hpp>
@@ -34,12 +30,10 @@
 #include <nall/literals.hpp>
 #include <nall/locale.hpp>
 #include <nall/location.hpp>
-#include <nall/map.hpp>
 #include <nall/matrix.hpp>
 #include <nall/matrix-multiply.hpp>
 #include <nall/maybe.hpp>
 #include <nall/memory.hpp>
-#include <nall/merge-sort.hpp>
 #include <nall/path.hpp>
 #include <nall/pointer.hpp>
 #include <nall/primitives.hpp>
@@ -50,18 +44,15 @@
 #include <nall/reed-solomon.hpp>
 #include <nall/run.hpp>
 #include <nall/serializer.hpp>
-#include <nall/set.hpp>
-#include <nall/shared-pointer.hpp>
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>
 #include <nall/terminal.hpp>
 #include <nall/thread.hpp>
 #include <nall/traits.hpp>
-#include <nall/unique-pointer.hpp>
+#include <memory>
 #include <nall/utility.hpp>
 #include <nall/variant.hpp>
 #include <nall/varint.hpp>
-#include <nall/view.hpp>
 #include <nall/arguments.hpp>  //todo: compilation errors when included earlier
 #include <nall/decode/base.hpp>
 #include <nall/decode/base64.hpp>

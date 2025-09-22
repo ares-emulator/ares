@@ -16,10 +16,10 @@ struct mTreeView : mWidget {
   auto item(const string& path) const -> TreeViewItem;
   auto itemCount() const -> u32;
   auto items() const -> std::vector<TreeViewItem>;
-  auto onActivate(const function<void ()>& callback = {}) -> type&;
-  auto onChange(const function<void ()>& callback = {}) -> type&;
-  auto onContext(const function<void ()>& callback = {}) -> type&;
-  auto onToggle(const function<void (sTreeViewItem)>& callback = {}) -> type&;
+  auto onActivate(const std::function<void ()>& callback = {}) -> type&;
+  auto onChange(const std::function<void ()>& callback = {}) -> type&;
+  auto onContext(const std::function<void ()>& callback = {}) -> type&;
+  auto onToggle(const std::function<void (sTreeViewItem)>& callback = {}) -> type&;
   auto remove(sTreeViewItem item) -> type&;
   auto reset() -> type& override;
   auto selectNone() -> type&;
@@ -35,10 +35,10 @@ struct mTreeView : mWidget {
     Color backgroundColor;
     Color foregroundColor;
     std::vector<sTreeViewItem> items;
-    function<void ()> onActivate;
-    function<void ()> onChange;
-    function<void ()> onContext;
-    function<void (sTreeViewItem)> onToggle;
+    std::function<void ()> onActivate;
+    std::function<void ()> onChange;
+    std::function<void ()> onContext;
+    std::function<void (sTreeViewItem)> onToggle;
     string selectedPath;
   } state;
 

@@ -1,13 +1,14 @@
 #pragma once
 
 #include <nall/hash/hash.hpp>
+#include <span>
 
 namespace nall::Hash {
 
 struct CRC16 : Hash {
   using Hash::input;
 
-  CRC16(array_view<u8> buffer = {}) {
+  CRC16(std::span<const u8> buffer = {}) {
     reset();
     input(buffer);
   }

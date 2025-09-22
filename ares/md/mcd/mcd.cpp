@@ -192,7 +192,7 @@ auto MCD::wait(u32 clocks) -> void {
 }
 
 auto MCD::power(bool reset) -> void {
-  Thread::create(12'500'000, {&MCD::main, this});
+  Thread::create(12'500'000, std::bind_front(&MCD::main, this));
   if(!reset) irq = {};
   resetCpu();
   n32 vec4 = io.vectorLevel4;

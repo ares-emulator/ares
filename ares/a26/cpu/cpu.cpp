@@ -32,7 +32,7 @@ auto CPU::step(u32 clocks) -> void {
 auto CPU::power(bool reset) -> void {
   MOS6502::BCD = 1;
   MOS6502::power();
-  Thread::create(system.frequency() / 3, {&CPU::main, this});
+  Thread::create(system.frequency() / 3, std::bind_front(&CPU::main, this));
 
   io = {};
 }

@@ -1,7 +1,7 @@
 struct Boolean : Setting {
   DeclareClass(Boolean, "setting.boolean")
 
-  Boolean(string name = {}, bool value = {}, function<void (bool)> modify = {}) : Setting(name) {
+  Boolean(string name = {}, bool value = {}, std::function<void (bool)> modify = {}) : Setting(name) {
     _currentValue = value;
     _latchedValue = value;
     _modify = modify;
@@ -11,7 +11,7 @@ struct Boolean : Setting {
   auto value() const -> bool { return _currentValue; }
   auto latch() const -> bool { return _latchedValue; }
 
-  auto setModify(function<void (bool)> modify) { _modify = modify; }
+  auto setModify(std::function<void (bool)> modify) { _modify = modify; }
 
   auto setValue(bool value) -> void {
     _currentValue = value;
@@ -30,7 +30,7 @@ struct Boolean : Setting {
   auto writeValue(string value) -> void override { setValue(value.boolean()); }
 
 protected:
-  function<void (bool)> _modify;
+  std::function<void (bool)> _modify;
   bool _currentValue = {};
   bool _latchedValue = {};
 };

@@ -5,7 +5,7 @@ struct mButton : mWidget {
   auto bordered() const -> bool;
   auto doActivate() const -> void;
   auto icon() const -> multiFactorImage;
-  auto onActivate(const function<void ()>& callback = {}) -> type&;
+  auto onActivate(const std::function<void ()>& callback = {}) -> type&;
   auto orientation() const -> Orientation;
   auto setBordered(bool bordered = true) -> type&;
   auto setIcon(const multiFactorImage& icon = {}) -> type&;
@@ -17,7 +17,7 @@ struct mButton : mWidget {
   struct State {
     bool bordered = true;
     multiFactorImage icon;
-    function<void ()> onActivate;
+    std::function<void ()> onActivate;
     Orientation orientation = Orientation::Horizontal;
     string text;
   } state;

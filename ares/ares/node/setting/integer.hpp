@@ -1,7 +1,7 @@
 struct Integer : Setting {
   DeclareClass(Integer, "setting.integer")
 
-  Integer(string name = {}, s64 value = {}, function<void (s64)> modify = {}) : Setting(name) {
+  Integer(string name = {}, s64 value = {}, std::function<void (s64)> modify = {}) : Setting(name) {
     _currentValue = value;
     _latchedValue = value;
     _modify = modify;
@@ -11,7 +11,7 @@ struct Integer : Setting {
   auto value() const -> s64 { return _currentValue; }
   auto latch() const -> s64 { return _latchedValue; }
 
-  auto setModify(function<void (s64)> modify) { _modify = modify; }
+  auto setModify(std::function<void (s64)> modify) { _modify = modify; }
 
   auto setValue(s64 value) -> void {
     if(!_allowedValues.empty() && !std::ranges::count(_allowedValues, value)) return;
@@ -40,7 +40,7 @@ struct Integer : Setting {
   auto writeValue(string value) -> void override { setValue(value.integer()); }
 
 protected:
-  function<void (s64)> _modify;
+  std::function<void (s64)> _modify;
   s64 _currentValue = {};
   s64 _latchedValue = {};
   std::vector<s64> _allowedValues;

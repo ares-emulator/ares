@@ -3,7 +3,7 @@ struct ZXSpectrum : Emulator {
   auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -57,7 +57,7 @@ auto ZXSpectrum::save() -> bool {
   return true;
 }
 
-auto ZXSpectrum::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto ZXSpectrum::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "ZX Spectrum") return system->pak;
   if(node->name() == "ZX Spectrum Tape") return game->pak;
   return {};

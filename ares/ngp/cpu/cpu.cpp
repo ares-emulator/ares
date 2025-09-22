@@ -76,7 +76,7 @@ auto CPU::pollPowerButton() -> void {
 
 auto CPU::power() -> void {
   TLCS900H::power();
-  Thread::create(system.frequency(), {&CPU::main, this});
+  Thread::create(system.frequency(), std::bind_front(&CPU::main, this));
 
   n24 address;
   //read hardware reset vector.

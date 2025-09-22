@@ -166,54 +166,54 @@ auto Audio::create(string driver) -> bool {
   if(!driver) driver = optimalDriver();
 
   #if defined(AUDIO_ALSA)
-  if(driver == "ALSA") self.instance = new AudioALSA(*this);
+  if(driver == "ALSA") self.instance = std::make_unique<AudioALSA>(*this);
   #endif
 
   #if defined(AUDIO_AO)
-  if(driver == "libao") self.instance = new AudioAO(*this);
+  if(driver == "libao") self.instance = std::make_unique<AudioAO>(*this);
   #endif
 
   #if defined(AUDIO_ASIO)
-  if(driver == "ASIO") self.instance = new AudioASIO(*this);
+  if(driver == "ASIO") self.instance = std::make_unique<AudioASIO>(*this);
   #endif
 
   #if defined(AUDIO_DIRECTSOUND)
-  if(driver == "DirectSound 7.0") self.instance = new AudioDirectSound(*this);
+  if(driver == "DirectSound 7.0") self.instance = std::make_unique<AudioDirectSound>(*this);
   #endif
 
   #if defined(AUDIO_OPENAL)
-  if(driver == "OpenAL") self.instance = new AudioOpenAL(*this);
+  if(driver == "OpenAL") self.instance = std::make_unique<AudioOpenAL>(*this);
   #endif
 
   #if defined(AUDIO_OSS)
-  if(driver == "OSS") self.instance = new AudioOSS(*this);
+  if(driver == "OSS") self.instance = std::make_unique<AudioOSS>(*this);
   #endif
 
   #if defined(AUDIO_PULSEAUDIO)
-  if(driver == "PulseAudio") self.instance = new AudioPulseAudio(*this);
+  if(driver == "PulseAudio") self.instance = std::make_unique<AudioPulseAudio>(*this);
   #endif
 
   #if defined(AUDIO_PULSEAUDIOSIMPLE)
-  if(driver == "PulseAudio Simple") self.instance = new AudioPulseAudioSimple(*this);
+  if(driver == "PulseAudio Simple") self.instance = std::make_unique<AudioPulseAudioSimple>(*this);
   #endif
 
   #if defined(AUDIO_WASAPI)
-  if(driver == "WASAPI") self.instance = new AudioWASAPI(*this);
+  if(driver == "WASAPI") self.instance = std::make_unique<AudioWASAPI>(*this);
   #endif
 
   #if defined(AUDIO_WAVEOUT)
-  if(driver == "waveOut") self.instance = new AudioWaveOut(*this);
+  if(driver == "waveOut") self.instance = std::make_unique<AudioWaveOut>(*this);
   #endif
 
   #if defined(AUDIO_XAUDIO2)
-  if(driver == "XAudio 2.1") self.instance = new AudioXAudio2(*this);
+  if(driver == "XAudio 2.1") self.instance = std::make_unique<AudioXAudio2>(*this);
   #endif
 
 #if defined(AUDIO_SDL)
-  if(driver == "SDL") self.instance = new AudioSDL(*this);
+  if(driver == "SDL") self.instance = std::make_unique<AudioSDL>(*this);
 #endif
 
-  if(!self.instance) self.instance = new AudioDriver(*this);
+  if(!self.instance) self.instance = std::make_unique<AudioDriver>(*this);
 
   return self.instance->create();
 }

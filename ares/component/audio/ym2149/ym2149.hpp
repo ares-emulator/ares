@@ -6,7 +6,7 @@ namespace ares {
 
 struct YM2149 {
   //ym2149.cpp
-  auto clock() -> array<n5[3]>;
+  auto clock() -> std::array<n5, 3>;
   auto read() -> n8;
   auto write(n8 data) -> void;
   auto select(n4 data) -> void;

@@ -1,5 +1,5 @@
 #include <nall/nall.hpp>
-#include <nall/map.hpp>
+#include <map>
 #include <nall/string/markup/json.hpp>
 using namespace nall;
 
@@ -9,17 +9,16 @@ using namespace nall;
 #include <component/processor/m68000/m68000.hpp>
 
 template<typename T, typename U> struct MemMap {
-  auto reset() -> void {
-    _m.reset();
-  }
+  auto reset() -> void { _m.clear(); }
 
   auto operator[](T index) -> U& {
-    if(auto found = _m.find(index)) return found();
-    _m.insert(index, {});
-    return _m.find(index)();
+    auto it = _m.find(index);
+    if(it != _m.end()) return it->second;
+    it = _m.emplace(index, U{}).first;
+    return it->second;
   }
 
-  map<T, U> _m;
+  std::map<T, U> _m;
 };
 
 struct TestState {
@@ -29,8 +28,8 @@ struct TestState {
   u32 sr;
   u32 usp;
   u32 ssp;
-  array<u32[2]> prefetch;
-  std::vector<array<u32[2]>> ram;
+  std::array<u32, 2> prefetch;
+  std::vector<std::array<u32, 2>> ram;
 };
 
 struct TestCase {
@@ -44,7 +43,7 @@ enum TestResult {
   pass, fail, skip
 };
 
-using TestResults = array<u32[3]>;
+using TestResults = std::array<u32, 3>;
 
 struct CPU : ares::M68000 {
   u32 clock = 0;

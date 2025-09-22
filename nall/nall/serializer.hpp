@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 //serializer: a class designed to save and restore the state of classes.
 //
 //benefits:
@@ -11,7 +13,7 @@
 //- only plain-old-data can be stored. complex classes must provide serialize(serializer&);
 //- floating-point usage is not portable across different implementations
 
-#include <nall/array.hpp>
+#include <array>
 #include <nall/bit.hpp>
 #include <nall/range.hpp>
 #include <nall/stdint.hpp>
@@ -92,7 +94,7 @@ struct serializer {
     return *this;
   }
 
-  template<typename T> auto operator()(array_span<T> array) -> serializer& {
+  template<typename T> auto operator()(std::span<T> array) -> serializer& {
     for(auto& value : array) operator()(value);
     return *this;
   }

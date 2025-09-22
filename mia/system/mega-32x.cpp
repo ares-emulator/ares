@@ -6,7 +6,7 @@ struct Mega32X : System {
 
 auto Mega32X::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("tmss.rom", Resource::MegaDrive::TMSS);
   pak->append("vector.rom", Resource::Mega32X::Vector);
   pak->append("sh2.boot.mrom", Resource::Mega32X::SH2BootM);

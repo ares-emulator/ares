@@ -15,8 +15,8 @@ auto KGE::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("KGE");
 
   screen = node->append<Node::Video::Screen>("Screen", 160, 152);
-  if(Model::NeoGeoPocket()) screen->colors(1 << 3, {&KGE::colorNeoGeoPocket, this});
-  if(Model::NeoGeoPocketColor()) screen->colors(1 << 12, {&KGE::colorNeoGeoPocketColor, this});
+  if(Model::NeoGeoPocket()) screen->colors(1 << 3, std::bind_front(&KGE::colorNeoGeoPocket, this));
+  if(Model::NeoGeoPocketColor()) screen->colors(1 << 12, std::bind_front(&KGE::colorNeoGeoPocketColor, this));
   screen->setSize(160, 152);
   screen->setViewport(0, 0, 160, 152);
   screen->setScale(1.0, 1.0);
@@ -87,7 +87,7 @@ auto KGE::step(u32 clocks) -> void {
 }
 
 auto KGE::power() -> void {
-  Thread::create(system.frequency(), {&KGE::main, this});
+  Thread::create(system.frequency(), std::bind_front(&KGE::main, this));
   screen->power();
 
   window.power();

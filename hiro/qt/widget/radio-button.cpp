@@ -46,8 +46,8 @@ auto pRadioButton::setGroup(sGroup group) -> void {
   if(auto& group = state().group) {
     group->self()->lock();
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioButton = dynamic_cast<mRadioButton*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioButton = dynamic_cast<mRadioButton*>(object.get())) {
           if(auto self = radioButton->self()) {
             self->qtRadioButton->setChecked(radioButton->state.checked = first);
             first = false;
@@ -75,8 +75,8 @@ auto pRadioButton::_setState() -> void {
   if(auto& group = state().group) {
     group->self()->lock();
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioButton = dynamic_cast<mRadioButton*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioButton = dynamic_cast<mRadioButton*>(object.get())) {
           if(auto self = radioButton->self()) {
             self->qtRadioButton->setChecked(radioButton->state.checked);
           }

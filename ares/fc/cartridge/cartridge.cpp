@@ -18,7 +18,7 @@ auto Cartridge::connect() -> void {
   information.title  = pak->attribute("title");
   information.region = pak->attribute("region");
 
-  board = Board::Interface::create(pak->attribute("board"));
+  board.reset(Board::Interface::create(pak->attribute("board")));
   board->pak = pak;
   board->load();
 
@@ -47,7 +47,7 @@ auto Cartridge::save() -> void {
 }
 
 auto Cartridge::power() -> void {
-  Thread::create(system.frequency(), {&Cartridge::main, this});
+  Thread::create(system.frequency(), std::bind_front(&Cartridge::main, this));
   board->power();
 }
 

@@ -36,7 +36,7 @@ auto PPU::load(Node::Object parent) -> void {
       colorEmulationDMG->setAllowedValues({"Game Boy", "Game Boy Pocket", "RGB"});
       colorEmulationDMG->setDynamic(true);
 
-      screen->colors(1 << 2, {&PPU::colorGameBoy, this});
+      screen->colors(1 << 2, std::bind_front(&PPU::colorGameBoy, this));
       screen->setFillColor(0);
 
       interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
@@ -51,7 +51,7 @@ auto PPU::load(Node::Object parent) -> void {
       });
       colorEmulationCGB->setDynamic(true);
 
-      screen->colors(1 << 15, {&PPU::colorGameBoyColor, this});
+      screen->colors(1 << 15, std::bind_front(&PPU::colorGameBoyColor, this));
       screen->setFillColor(0x7fff);
 
       interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
@@ -214,15 +214,15 @@ auto PPU::hflip(n16 tiledata) const -> n16 {
 }
 
 auto PPU::power() -> void {
-  Thread::create(4 * 1024 * 1024, {&PPU::main, this});
+  Thread::create(4 * 1024 * 1024, std::bind_front(&PPU::main, this));
   if(screen) screen->power();
 
   if(Model::GameBoyColor()) {
-    scanline = {&PPU::scanlineCGB, this};
-    run = {&PPU::runCGB, this};
+    scanline = std::bind_front(&PPU::scanlineCGB, this);
+    run = std::bind_front(&PPU::runCGB, this);
   } else {
-    scanline = {&PPU::scanlineDMG, this};
-    run = {&PPU::runDMG, this};
+    scanline = std::bind_front(&PPU::scanlineDMG, this);
+    run = std::bind_front(&PPU::runDMG, this);
   }
 
   for(auto& n : vram) n = 0x00;

@@ -50,17 +50,17 @@ auto mTabFrame::navigation() const -> Navigation {
   return state.navigation;
 }
 
-auto mTabFrame::onChange(const function<void ()>& callback) -> type& {
+auto mTabFrame::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }
 
-auto mTabFrame::onClose(const function<void (TabFrameItem)>& callback) -> type& {
+auto mTabFrame::onClose(const std::function<void (TabFrameItem)>& callback) -> type& {
   state.onClose = callback;
   return *this;
 }
 
-auto mTabFrame::onMove(const function<void (TabFrameItem, TabFrameItem)>& callback) -> type& {
+auto mTabFrame::onMove(const std::function<void (TabFrameItem, TabFrameItem)>& callback) -> type& {
   state.onMove = callback;
   return *this;
 }

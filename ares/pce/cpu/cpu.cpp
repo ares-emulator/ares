@@ -61,7 +61,7 @@ auto CPU::step(u32 clocks) -> void {
 
 auto CPU::power() -> void {
   HuC6280::power();
-  Thread::create(system.colorburst() * 6.0, {&CPU::main, this});
+  Thread::create(system.colorburst() * 6.0, std::bind_front(&CPU::main, this));
 
   r.pc.byte(0) = read(r.mpr[reset.vector >> 13], n13(reset.vector + 0));
   r.pc.byte(1) = read(r.mpr[reset.vector >> 13], n13(reset.vector + 1));

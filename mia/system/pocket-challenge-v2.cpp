@@ -6,7 +6,7 @@ struct PocketChallengeV2 : System {
 
 auto PocketChallengeV2::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("boot.rom", Resource::PocketChallengeV2::Boot);
 
   return successful;

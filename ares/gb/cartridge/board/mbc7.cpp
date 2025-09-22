@@ -120,13 +120,13 @@ struct MBC7 : Interface {
         u32 size  = fp->size();
         u32 width = fp->attribute("width").natural();
         allocate(size, width, 0, 0xff);
-        fp->read({data, min(fp->size(), sizeof(data))});
+        fp->read(data, min(fp->size(), sizeof(data)));
       }
     }
 
     auto save() -> void {
       if(auto fp = self.pak->write("save.eeprom")) {
-        fp->write({data, size});
+        fp->write(data, size);
       }
     }
 

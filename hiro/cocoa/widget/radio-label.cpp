@@ -57,7 +57,7 @@ auto pRadioLabel::setGeometry(Geometry geometry) -> void {
 auto pRadioLabel::setGroup(sGroup group) -> void {
   if(!group) return;
   for(auto& weak : group->state.objects) {
-    if(auto object = weak.acquire()) {
+    if(auto object = weak.lock()) {
       if(auto self = object->self()) {
         if(auto p = dynamic_cast<pRadioLabel*>(self)) {
           auto state = p->state().checked ? NSControlStateValueOn : NSControlStateValueOff;

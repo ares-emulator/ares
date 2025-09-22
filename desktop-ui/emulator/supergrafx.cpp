@@ -2,7 +2,7 @@ struct SuperGrafx : PCEngine {
   SuperGrafx();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 };
 
 SuperGrafx::SuperGrafx() {
@@ -44,7 +44,7 @@ auto SuperGrafx::save() -> bool {
   return true;
 }
 
-auto SuperGrafx::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto SuperGrafx::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "SuperGrafx") return system->pak;
   if(node->name() == "SuperGrafx Card") return game->pak;
   return {};

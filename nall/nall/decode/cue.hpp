@@ -62,10 +62,10 @@ inline auto CUE::load(const string& location, const Decode::ZIP* archive, const 
     auto rawDataBuffer = archive->extract(*compressedFile);
     // Currently (2025-08-14) there is no way to construct a nall::string from a fixed-length buffer using
     // nall::string_view, as the variadic constructor overrides "string_view(const char* data, u32 size)",
-    // meaning we can't create a string_view from a fixed-length input. We use an array_view here as a
+    // meaning we can't create a string_view from a fixed-length input. We use a std::span here as a
     // workaround.
-    auto rawDataBufferAsArrayView = array_view<u8>(rawDataBuffer.data(), rawDataBuffer.size());
-    auto splitLines = nall::split(string(rawDataBufferAsArrayView).replace("\r", ""), "\n");
+    auto rawDataBufferAsSpan = std::span<const u8>(rawDataBuffer.data(), rawDataBuffer.size());
+    auto splitLines = nall::split(string(rawDataBufferAsSpan).replace("\r", ""), "\n");
     lines.clear();
     lines.reserve(splitLines.size());
     for (u32 i = 0; i < splitLines.size(); i++) lines.push_back(splitLines[i]);

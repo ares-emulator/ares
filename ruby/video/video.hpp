@@ -92,7 +92,7 @@ struct Video {
 
   Video() : self(*this) { reset(); }
   explicit operator bool() { return instance->driver() != "None"; }
-  auto reset() -> void { instance = new VideoDriver(*this); }
+  auto reset() -> void { instance = std::make_unique<VideoDriver>(*this); }
   auto create(string driver = "") -> bool;
   auto driver() -> string { return instance->driver(); }
   auto ready() -> bool { return instance->ready(); }
@@ -153,7 +153,7 @@ struct Video {
   auto output(u32 width = 0, u32 height = 0) -> void;
   auto poll() -> void;
 
-  auto onUpdate(const function<void (u32, u32)>&) -> void;
+  auto onUpdate(const std::function<void (u32, u32)>&) -> void;
   auto doUpdate(u32 width, u32 height) -> void;
 
   auto lock() -> void { mutex.lock(); }
@@ -161,8 +161,8 @@ struct Video {
 
 protected:
   Video& self;
-  unique_pointer<VideoDriver> instance;
-  function<void (u32, u32)> update;
+  std::unique_ptr<VideoDriver> instance;
+  std::function<void (u32, u32)> update;
 
 private:
   std::recursive_mutex mutex;

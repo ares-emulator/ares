@@ -6,18 +6,18 @@
 #include <vector>
 #include <ranges>
 #include <algorithm>
+#include <array>
+#include <unordered_map>
 
 #include <nall/platform.hpp>
 #include <nall/adaptive-array.hpp>
 #include <nall/any.hpp>
-#include <nall/array.hpp>
 #include <nall/bump-allocator.hpp>
 #include <nall/case-range.hpp>
 #include <nall/chrono.hpp>
 #include <nall/directory.hpp>
 #include <nall/dl.hpp>
 #include <nall/endian.hpp>
-#include <nall/hashset.hpp>
 #include <nall/image.hpp>
 #include <nall/instruction-set.hpp>
 #include <nall/literals.hpp>
@@ -25,13 +25,12 @@
 #include <nall/queue.hpp>
 #include <nall/random.hpp>
 #include <nall/serializer.hpp>
-#include <nall/set.hpp>
-#include <nall/shared-pointer.hpp>
+#include <nall/span-helpers.hpp>
 #include <nall/string.hpp>
 #include <nall/terminal.hpp>
 #include <nall/thread.hpp>
 #include <nall/traits.hpp>
-#include <nall/unique-pointer.hpp>
+#include <memory>
 #include <nall/variant.hpp>
 #include <nall/vfs.hpp>
 #include <nall/cd.hpp>
@@ -54,8 +53,8 @@ namespace ares {
   extern const u32 SerializerSignature;
 
   namespace VFS {
-    using Pak = shared_pointer<vfs::directory>;
-    using File = shared_pointer<vfs::file>;
+    using Pak = std::shared_ptr<vfs::directory>;
+    using File = std::shared_ptr<vfs::file>;
   }
 
   namespace Video {

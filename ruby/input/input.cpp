@@ -49,7 +49,7 @@ auto Input::release() -> bool {
   return instance->release();
 }
 
-auto Input::poll() -> std::vector<shared_pointer<nall::HID::Device>> {
+auto Input::poll() -> std::vector<std::shared_ptr<nall::HID::Device>> {
   return instance->poll();
 }
 
@@ -59,11 +59,11 @@ auto Input::rumble(u64 id, u16 strong, u16 weak) -> bool {
 
 //
 
-auto Input::onChange(const function<void (shared_pointer<HID::Device>, u32, u32, s16, s16)>& onChange) -> void {
+auto Input::onChange(const std::function<void (std::shared_ptr<HID::Device>, u32, u32, s16, s16)>& onChange) -> void {
   change = onChange;
 }
 
-auto Input::doChange(shared_pointer<HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue) -> void {
+auto Input::doChange(std::shared_ptr<HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue) -> void {
   if(change) change(device, group, input, oldValue, newValue);
 }
 
@@ -74,34 +74,34 @@ auto Input::create(string driver) -> bool {
   if(!driver) driver = optimalDriver();
 
   #if defined(INPUT_WINDOWS)
-  if(driver == "Windows") self.instance = new InputWindows(*this);
+  if(driver == "Windows") self.instance = std::make_unique<InputWindows>(*this);
   #endif
 
   #if defined(INPUT_QUARTZ)
-  if(driver == "Quartz") self.instance = new InputQuartz(*this);
+  if(driver == "Quartz") self.instance = std::make_unique<InputQuartz>(*this);
   #endif
 
   #if defined(INPUT_CARBON)
-  if(driver == "Carbon") self.instance = new InputCarbon(*this);
+  if(driver == "Carbon") self.instance = std::make_unique<InputCarbon>(*this);
   #endif
 
   #if defined(INPUT_UDEV)
-  if(driver == "udev") self.instance = new InputUdev(*this);
+  if(driver == "udev") self.instance = std::make_unique<InputUdev>(*this);
   #endif
 
   #if defined(INPUT_UHID)
-  if(driver == "uhid") self.instance = new InputUHID(*this);
+  if(driver == "uhid") self.instance = std::make_unique<InputUHID>(*this);
   #endif
 
   #if defined(INPUT_SDL)
-  if(driver == "SDL") self.instance = new InputSDL(*this);
+  if(driver == "SDL") self.instance = std::make_unique<InputSDL>(*this);
   #endif
 
   #if defined(INPUT_XLIB)
-  if(driver == "Xlib") self.instance = new InputXlib(*this);
+  if(driver == "Xlib") self.instance = std::make_unique<InputXlib>(*this);
   #endif
 
-  if(!self.instance) self.instance = new InputDriver(*this);
+  if(!self.instance) self.instance = std::make_unique<InputDriver>(*this);
 
   return self.instance->create();
 }

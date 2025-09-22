@@ -6,7 +6,7 @@ struct SuperFamicom : System {
 
 auto SuperFamicom::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("ipl.rom", Resource::SuperFamicom::IPLROM);
   auto romLocation = mia::locate("Database/Super Famicom Boards.bml");
   if(!romLocation) return { databaseNotFound, "Super Famicom Boards.bml" };

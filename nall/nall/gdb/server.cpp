@@ -519,15 +519,15 @@ namespace nall::GDB {
   }
 
   auto Server::reset() -> void {
-    hooks.read.reset();
-    hooks.write.reset();
-    hooks.normalizeAddress.reset();
-    hooks.regReadGeneral.reset();
-    hooks.regWriteGeneral.reset();
-    hooks.regRead.reset();
-    hooks.regWrite.reset();
-    hooks.emuCacheInvalidate.reset();
-    hooks.targetXML.reset();
+    hooks.read = nullptr;
+    hooks.write = nullptr;
+    hooks.normalizeAddress = nullptr;
+    hooks.regReadGeneral = nullptr;
+    hooks.regWriteGeneral = nullptr;
+    hooks.regRead = nullptr;
+    hooks.regWrite = nullptr;
+    hooks.emuCacheInvalidate = nullptr;
+    hooks.targetXML = nullptr;
 
     resetClientData();
   }

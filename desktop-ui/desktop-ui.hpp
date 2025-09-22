@@ -12,6 +12,7 @@ using namespace hiro;
 #include <nall/instance.hpp>
 #include <nall/encode/png.hpp>
 #include <nall/hash/crc16.hpp>
+#include <map>
 
 namespace ruby {
   extern Video video;

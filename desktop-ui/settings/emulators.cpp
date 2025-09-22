@@ -11,7 +11,7 @@ auto EmulatorSettings::construct() -> void {
   for(auto& emulator : emulators) {
     TableViewItem item{&emulatorList};
     TableViewCell visible{&item};
-    visible.setAttribute<shared_pointer<Emulator>>("emulator", emulator);
+    visible.setAttribute<std::shared_ptr<Emulator>>("emulator", emulator);
     visible.setCheckable();
     visible.setChecked(emulator->configuration.visible);
     TableViewCell name{&item};
@@ -24,7 +24,7 @@ auto EmulatorSettings::construct() -> void {
 }
 
 auto EmulatorSettings::eventToggle(TableViewCell cell) -> void {
-  if(auto emulator = cell.attribute<shared_pointer<Emulator>>("emulator")) {
+  if(auto emulator = cell.attribute<std::shared_ptr<Emulator>>("emulator")) {
     emulator->configuration.visible = cell.checked();
     presentation.loadEmulators();
   }

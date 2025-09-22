@@ -10,7 +10,7 @@ namespace nall::XML {
 //  1 = attribute
 
 struct ManagedNode;
-using SharedNode = shared_pointer<ManagedNode>;
+using SharedNode = std::shared_ptr<ManagedNode>;
 
 struct ManagedNode : Markup::ManagedNode {
 protected:
@@ -205,15 +205,15 @@ protected:
 };
 
 inline auto unserialize(const string& markup) -> Markup::Node {
-  SharedNode node(new ManagedNode);
+  SharedNode node = std::make_shared<ManagedNode>();
+  SharedNode node1 = std::make_shared<ManagedNode>();
   try {
-
     const char* p = markup;
-    node->parse(p);
+    node1->parse(p);
   } catch(const char* error) {
-    node.reset();
+    node1.reset();
   }
-  return Markup::SharedNode(node);
+  return Markup::SharedNode(node1);
 }
 
 }

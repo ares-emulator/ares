@@ -31,7 +31,7 @@ struct pWidget : pSizable {
   WindowProc defaultWindowProc = nullptr;
   HWND hwnd = nullptr;
   HFONT hfont = nullptr;
-  unique_pointer<pToolTip> toolTip;
+  std::unique_ptr<pToolTip> toolTip;
 };
 
 }

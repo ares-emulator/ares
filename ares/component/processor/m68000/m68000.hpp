@@ -300,7 +300,7 @@ struct M68000 {
     bool reset;
   } r;
 
-  function<void ()> instructionTable[65536];
+  std::function<void ()> instructionTable[65536];
 
 private:
   //disassembler.cpp
@@ -434,7 +434,7 @@ private:
   auto _condition(n4 condition) -> string;
 
   n32 _pc;
-  function<string ()> disassembleTable[65536];
+  std::function<string ()> disassembleTable[65536];
 };
 
 }

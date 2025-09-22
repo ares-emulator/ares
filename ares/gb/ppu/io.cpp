@@ -146,7 +146,7 @@ auto PPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
 
       //restart cothread to begin new frame
       auto clock = Thread::clock();
-      Thread::create(4 * 1024 * 1024, {&PPU::main, this});
+      Thread::create(4 * 1024 * 1024, std::bind_front(&PPU::main, this));
       Thread::setClock(clock);
     }
 

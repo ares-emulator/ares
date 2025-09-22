@@ -6,7 +6,7 @@ struct Properties : Debugger {
 
   auto query() const -> string { if(_query) return _query(); return {}; }
 
-  auto setQuery(function<string ()> query) -> void { _query = query; }
+  auto setQuery(std::function<string ()> query) -> void { _query = query; }
 
   auto serialize(string& output, string depth) -> void override {
     Debugger::serialize(output, depth);
@@ -17,5 +17,5 @@ struct Properties : Debugger {
   }
 
 protected:
-  function<string ()> _query;
+  std::function<string ()> _query;
 };
