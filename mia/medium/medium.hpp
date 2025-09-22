@@ -55,6 +55,6 @@ struct Tape : Medium {
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   // TODO: add support for more tape formats
-  auto extensions() -> vector<string> override { return {"wav"}; }
+  auto extensions() -> std::vector<string> override { return {"wav"}; }
   auto analyze(string location) -> string;
 };

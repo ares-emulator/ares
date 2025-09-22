@@ -101,8 +101,10 @@ auto FamilyBasicKeyboard::loadSetting(Markup::Node *node) -> void {
     string node_name = string{"Famicom/", name, "/", input.name}.replace(" ", ".");
     if (auto subnode = (*node)[node_name]) {
       string value = subnode.string();
+      auto parts = nall::split(value, ";");
+      parts.resize(BindingLimit);
       for (u32 binding : range(BindingLimit)) {
-        input.mapping->assignments[binding] = value.split(";")(binding);
+        input.mapping->assignments[binding] = parts[binding];
       }
     }
   }
@@ -169,7 +171,7 @@ Famicom::Famicom() {
   {
     InputPort port{"Expansion Port"};
     port.append(familyBasicKeyboard);
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 

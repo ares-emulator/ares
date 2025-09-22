@@ -377,12 +377,12 @@ auto Tape::load(string location) -> LoadResult {
     if(location.iendsWith(".wav")) {
       Decode::WAV wav;
       if (wav.open(location)) {
-        vector <u8> data;
+        std::vector <u8> data;
         for (int i = 0; i < wav.sample_length(); i++) {
           u64 sample = wav.read();
 
           for (int byte = 0; byte < sizeof(u64); byte++) {
-            data.append((sample & (0xff << (byte * 8))) >> (byte * 8));
+            data.push_back((sample & (0xff << (byte * 8))) >> (byte * 8));
           }
         }
         pak->append("program.tape", data);
@@ -398,10 +398,10 @@ auto Tape::save(string location) -> bool {
   if (directory::exists(location)) {
     Pak::save("program.tape", ".sav");
   } else if (file::exists(location)) {
-    vector<s16> data;
+    std::vector<s16> data;
     auto fd = pak->read("program.tape");
     for (u32 i = 0; i < fd->size() / sizeof(u64); i++) {
-      data.append((s16)fd->readl(8));
+      data.push_back((s16)fd->readl(8));
     }
     fd.reset();
     Encode::WAV::mono_16bit(
