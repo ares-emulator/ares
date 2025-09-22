@@ -2,6 +2,7 @@
 
 #include <fc/system/system.cpp>
 #include <fc/controller/controller.cpp>
+#include <fc/tape/tape.cpp>
 #include <fc/expansion/expansion.cpp>
 #include <fc/cartridge/cartridge.cpp>
 #include <fc/cpu/cpu.cpp>
