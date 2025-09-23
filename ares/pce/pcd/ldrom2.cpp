@@ -2942,7 +2942,7 @@ auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {
   const int VideoFrameLeftBorderWidth = 118;
   const int VideoFrameRightBorderWidth = 0;
   size_t channelCount = 3;
-  size_t targetLineInSourceImage = (targetScanLine + (useEvenField ? 263 : 0));
+  size_t targetLineInSourceImage = std::min((targetScanLine + (useEvenField ? 263 : 0)), (u32)524);
   size_t sourceLinePos = ((targetLineInSourceImage * video.videoFrameHeader.width) + VideoFrameLeftBorderWidth) * channelCount;
   size_t pixelsInSourceLine = std::max(2, (int)video.videoFrameHeader.width - (VideoFrameLeftBorderWidth + VideoFrameRightBorderWidth));
   size_t targetLinePos = targetScanLine * video.FrameBufferWidth;
