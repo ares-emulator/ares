@@ -2614,15 +2614,34 @@ auto PCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   // image hold off and on again after a seek however, the frame at the new location will be latched, and the updated
   // frame will be shown when we turn the image hold bit back on again. This shows that we do need to latch new frames
   // when the player is paused, even if the output is normally blanked in pause mode.
-  // -Note that there is additional interaction with input reg 0x0C bit 2, the video disable flag. If image hold off
+  // -Note that there is additional interaction with input reg 0x0C bit 2, the video disable flag. If image hold is off
   // when the video is disabled, then image hold is turned on, with video disable still active, a new frame cannot be
   // latched yet. If we then perform a seek for example, then turn off the video disable bit, the next frame to be shown
   // will be latched and held. This shows us that while image hold can latch a new frame during pause, it cannot latch a
-  // new frame when the video disable bit is set, and remains in a "pending" state until the next frame arrives.
-  // -Note that merely toggling the video disable bit on and off doesn't clear the image held in the digital memory
-  // -Note that toggling digital memory off then back on doesn't clear the held image either
+  // new frame when the video disable bit is set, and remains in a "pending" state until the next frame arrives. Note
+  // that Triad Stone relies on this to get the title screen to appear when a button is pressed to skip the intro video.
+  // It writes 0x94, 0xBC, 0xBF, 0x9F, 0xBF, 0xBB to this register in sequence, performing a seek operation just before
+  // the write of 0xBB. It expects a new frame will be latched when 0xBB is written. The act of writing 0x9F to turn off
+  // image hold while the video disable bit is set, then turning image hold back on while video disable is still set, is
+  // enough to cause the frame to be latched when the video disable bit is later cleared by the 0xBB write.
+  // -Note that merely toggling the video disable bit on and off doesn't clear the image held in the digital memory if
+  // image hold is still on. If image hold is turned off while video disable is set however, that will cause the digital
+  // memory to be cleared.
+  // -Note that toggling digital memory off then back on doesn't clear the held image either.
+  // -Note that enabling image hold when no playback is occurring, but a previously valid frame is still latched in the
+  // digital framebuffer, will cause that previous image to be latched and used. Vajra relies on this when starting a
+  // new level to not show the "Pioneer" video data during loading when the image of the boss you're going to fight is
+  // on the screen.
   //##TODO## Determine how this interacts with picture stop codes once we go to implement them
-  if ((inputRegs[0x0C].bit(5) && video.imageHoldFrameLatched) || inputRegs[0x0C].bit(2)) {
+  //##TODO## Confirm if disabling digital memory in the various different ways with image hold off causes the current
+  //frame to be cleared from memory, and trigger a new latch again on the next frame after being re-enabled, like
+  //happens with the video disable flag.
+  if ((inputRegs[0x0C].bit(5) && video.digitalMemoryFrameLatched) || inputRegs[0x0C].bit(2)) {
+    // If the video stream has been disabled, and image hold is off, any currently latched frame in the memory buffer is
+    // cleared.
+    if (inputRegs[0x0C].bit(2) && !inputRegs[0x0C].bit(5)) {
+      video.digitalMemoryFrameLatched = false;
+    }
     return;
   }
 
@@ -2640,8 +2659,8 @@ auto PCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
     video.currentVideoFrameFieldSelectionEvenField[buildIndex] = newFieldSelectionEvenField;
   }
 
-  // Mark this frame as latched if we're in image hold mode, otherwise clear the latch.
-  video.imageHoldFrameLatched = inputRegs[0x0C].bit(5);
+  // Mark a frame as latched in the digital memory buffer
+  video.digitalMemoryFrameLatched = true;
 
   // At the end of all the above state updates, if we're still showing the same frame (but not necessarily the same
   // field), abort any further processing, since the correct full frame is already latched.
@@ -2840,7 +2859,7 @@ auto PCD::LD::power() -> void {
   video.videoFrameBuffers[0].clear();
   video.videoFrameBuffers[1].clear();
   video.currentVideoFrameBlanked = false;
-  video.imageHoldFrameLatched = false;
+  video.digitalMemoryFrameLatched = false;
 }
 
 auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {

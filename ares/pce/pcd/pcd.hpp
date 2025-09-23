@@ -403,7 +403,7 @@ struct PCD : Thread {
       n1 currentVideoFrameOnEvenField;
       n1 currentVideoFrameBlanked;
       n1 currentVideoFrameInterlaced;
-      n1 imageHoldFrameLatched;
+      n1 digitalMemoryFrameLatched;
       qon_desc videoFileHeader;
       qoi2_desc videoFrameHeader;
       int drawIndex;

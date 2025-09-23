@@ -165,7 +165,7 @@ auto PCD::LD::serialize(serializer& s) -> void {
   s(video.currentVideoFrameOnEvenField);
   s(video.currentVideoFrameBlanked);
   s(video.currentVideoFrameInterlaced);
-  s(video.imageHoldFrameLatched);
+  s(video.digitalMemoryFrameLatched);
 
   // Restore the current video frame into the display buffer
   if (Model::LaserActive() && s.reading()) {
