@@ -16,9 +16,6 @@ auto PPU::Objects::scanline(u32 y) -> void {
     if(object.affine == 0 && object.affineSize == 1) continue;  //hidden
     if(py >= object.height << object.affineSize) continue;  //offscreen
 
-    u32 rowSize = io.mapping == 0 ? 32 >> object.colors : object.width >> 3;
-    u32 baseAddress = object.character << 5;
-
     if(object.mosaic && io.mosaicHeight) {
       s32 mosaicY = (y / (1 + io.mosaicHeight)) * (1 + io.mosaicHeight);
       py = object.y >= 160 || mosaicY - object.y >= 0 ? u32(mosaicY - object.y) : 0;
@@ -42,6 +39,7 @@ auto PPU::Objects::scanline(u32 y) -> void {
     i28 fy = originX * pc + originY * pd;
 
     for(u32 px : range(object.width << object.affineSize)) {
+      //calculate address within tile
       u32 sx, sy;
       if(!object.affine) {
         sx = px ^ (object.hflip ? object.width  - 1 : 0);
@@ -50,14 +48,24 @@ auto PPU::Objects::scanline(u32 y) -> void {
         sx = (fx >> 8) + centerX;
         sy = (fy >> 8) + centerY;
       }
+      n6 subTileAddr = ((sy & 7) * 8 + (sx & 7)) >> !object.colors;
 
+      //calculate address of tile
+      n10 tileAddr;
+      if(io.mapping) {
+        u32 offset = (sy >> 3) * (object.width >> 3) + (sx >> 3);
+        tileAddr = object.character + (offset << object.colors);
+      } else {
+        n5 row = (object.character >> 5) + (sy >> 3);
+        n5 rowEntry = object.character + ((sx >> 3) << object.colors);
+        tileAddr = (row << 5) + rowEntry;
+      }
+
+      //output pixel
+      n8 color = ppu.readObjectVRAM((tileAddr << 5) + subTileAddr);
+      if(object.colors == 0) color = sx & 1 ? color >> 4 : color & 15;
       n9 bx = object.x + px;
       if(bx < 240 && sx < object.width && sy < object.height) {
-        u32 offset = (sy >> 3) * rowSize + (sx >> 3);
-        offset = offset * 64 + (sy & 7) * 8 + (sx & 7);
-
-        n8 color = ppu.readObjectVRAM(baseAddress + (offset >> !object.colors));
-        if(object.colors == 0) color = sx & 1 ? color >> 4 : color & 15;
         if(object.mode & 2) {
           if(color) {
             buffer[bx].window = true;
