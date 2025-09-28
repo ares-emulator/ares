@@ -1,17 +1,19 @@
 find_package(X11)
 
+option(USE_GTK2 "Use GTK2 UI backend" OFF)
 option(USE_QT6 "Use Qt6 UI backend" OFF)
-mark_as_advanced(USE_QT6)
 
-if(NOT USE_QT6)
-  find_package(GTK REQUIRED)
+mark_as_advanced(USE_GTK2 USE_QT6)
 
-  target_link_libraries(hiro PRIVATE GTK::GTK X11::X11)
+if(USE_GTK2)
+  find_package(GTK2 REQUIRED)
 
-  target_enable_feature(hiro "GTK3 UI backend")
-  target_compile_definitions(hiro PUBLIC HIRO_GTK=3)
-  set(HIRO_BACKEND "GTK3" PARENT_SCOPE)
-else()
+  target_link_libraries(hiro PRIVATE GTK2::GTK2 X11::X11)
+
+  target_enable_feature(hiro "GTK2 UI backend")
+  target_compile_definitions(hiro PUBLIC HIRO_GTK=2)
+  set(HIRO_BACKEND "GTK" PARENT_SCOPE)
+elseif(USE_QT6)
   find_package(Qt6 COMPONENTS Widgets REQUIRED)
 
   get_target_property(QT_MOC_EXECUTABLE Qt6::moc LOCATION)
@@ -31,6 +33,14 @@ else()
   target_enable_feature(hiro "Qt6 UI backend")
   target_compile_definitions(hiro PUBLIC HIRO_QT=6)
   set(HIRO_BACKEND "Qt" PARENT_SCOPE)
+else()
+  find_package(GTK REQUIRED)
+
+  target_link_libraries(hiro PRIVATE GTK::GTK X11::X11)
+
+  target_enable_feature(hiro "GTK3 UI backend")
+  target_compile_definitions(hiro PUBLIC HIRO_GTK=3)
+  set(HIRO_BACKEND "GTK" PARENT_SCOPE)
 endif()
 
 get_target_property(hiro_SOURCES hiro SOURCES)

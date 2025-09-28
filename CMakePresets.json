@@ -178,6 +178,16 @@
       }
     },
     {
+      "name": "ubuntu-ci-gtk2",
+      "displayName": "Ubuntu CI (arm64, gcc, GTK2)",
+      "description": "Single-arch binary for building on Github Actions",
+      "inherits": ["ubuntu-ci"],
+      "cacheVariables": {
+        "USE_GTK2": true,
+        "ARES_BUILD_OPTIONAL_TARGETS": false
+      }
+    },
+    {
       "name": "ubuntu-ci-qt",
       "displayName": "Ubuntu CI (arm64, gcc, Qt)",
       "description": "Single-arch binary for building on Github Actions",
