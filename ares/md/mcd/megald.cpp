@@ -139,10 +139,29 @@ auto MCD::LD::load(string location) -> void {
   // Reset the mechanical drive state to closed
   currentDriveState = 0x02;
   targetDriveState = currentDriveState;
+
+  // Spawn a background thread to prefetch video frames
+  videoFramePrefetchTarget = nullptr;
+  videoFramePrefetchPending.clear();
+  videoFramePrefetchComplete.clear();
+  videoFramePrefetchThreadStarted.clear();
+  videoFramePrefetchThreadShutdownRequested.clear();
+  videoFramePrefetchThreadShutdownComplete.clear();
+  std::thread workerThread(std::bind(std::mem_fn(&MCD::LD::videoFramePrefetchThread), this));
+  workerThread.detach();
+  videoFramePrefetchThreadStarted.wait(false);
 }
 
 auto MCD::LD::unload() -> void {
-  // Open the source archive
+  // Request the prefetch background thread to terminate, and wait for it to complete.
+  if (videoFramePrefetchThreadStarted.test()) {
+    videoFramePrefetchThreadShutdownRequested.test_and_set();
+    videoFramePrefetchPending.test_and_set();
+    videoFramePrefetchPending.notify_all();
+    videoFramePrefetchThreadShutdownComplete.wait(false);
+  }
+
+  // Close the mmi file
   mmi.close();
 }
 
@@ -2736,9 +2755,126 @@ auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
     buildFrameBuffer.resize(video.videoFrameHeader.width * video.videoFrameHeader.height * 3);
   }
 
-  // Decode the QOI2 compressed video frame into the buffer
-  size_t frameSizeCompressed = qon_decode_frame_size(videoFrameCompressed);
-  qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, buildFrameBuffer.data(), 3);
+  // If we were prefetching the wrong frame, or if no prefetch was active, load the required frame immediately here into
+  // the build framebuffer.
+  bool loadedDirectly = false;
+  if ((videoFramePrefetchTarget == nullptr) || (videoFramePrefetchTarget != videoFrameCompressed)) {
+    size_t frameSizeCompressed = qon_decode_frame_size(videoFrameCompressed);
+    qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, buildFrameBuffer.data(), 3);
+    loadedDirectly = true;
+  }
+
+  // Wait for any pending frame prefetch request to be latched, even if we were prefetching the wrong frame. We need to
+  // make sure any pending prefetch request has been latched by the worker thread, so we can queue our next prefetch
+  // operation below. We don't need it to be completed yet if the wrong frame was being prefetched, but we need it to be
+  // latched, otherwise we'd have a race condition where the worker thread might miss our updated latch target, and a
+  // different frame would be in the prefetch buffer to what we think is in there.
+  videoFramePrefetchPending.wait(true);
+
+  // If the prefetch operation is for the correct frame, wait for it to complete, and swap the prefetch buffer with the
+  // build frame buffer. Note that this will exchange memory buffer pointers and not copy the contents themselves, so
+  // it's a quick constant-time operation.
+  if (!loadedDirectly) {
+    videoFramePrefetchComplete.wait(false);
+    videoFramePrefetchComplete.clear();
+    buildFrameBuffer.swap(videoFramePrefetchBuffer);
+  }
+
+  // Calculate the likely next frame to be shown, assuming no changes to playback state.
+  s32 newVideoFrameIndex;
+  bool newVideoFrameLeadIn = false;
+  if (currentPlaybackMode != 0x03) {
+    newVideoFrameIndex = video.currentVideoFrameIndex + 1;
+  } else {
+    // We're in fast forward mode. Take playback speed and direction into account to calculate the next sector that will
+    // be requested.
+    i32 sectorAdvanceOffset = 1;
+    switch (currentPlaybackSpeed) {
+    case 0x01:
+      sectorAdvanceOffset = 2;
+      break;
+    case 0x02:
+      sectorAdvanceOffset = 3;
+      break;
+    case 0x03:
+      sectorAdvanceOffset = 8;
+      break;
+    case 0x04:
+      sectorAdvanceOffset = 14;
+      break;
+    case 0x05:
+      sectorAdvanceOffset = 20;
+      break;
+    }
+    sectorAdvanceOffset = (currentPlaybackDirection ? (i32)(-sectorAdvanceOffset) : sectorAdvanceOffset);
+
+    // Calculate the next likely video frame index, based on the current fast forward settings.
+    auto lba = mcd.cdd.io.sector + sectorAdvanceOffset;
+    newVideoFrameIndex = zeroBasedFrameIndexFromLba(lba, true);
+    newVideoFrameLeadIn = (lba < 0);
+    if (newVideoFrameIndex == video.currentVideoFrameIndex) {
+      newVideoFrameIndex += (newVideoFrameIndex == 0 ? 0 : (currentPlaybackDirection ? -1 : 1));
+    }
+  }
+  bool newVideoFrameLeadOut = (newVideoFrameIndex >= video.activeVideoFrameCount);
+  if (newVideoFrameLeadOut) {
+    newVideoFrameIndex = newVideoFrameIndex - video.activeVideoFrameCount;
+  }
+
+  // Queue a prefetch for the likely next video frame. Note that if we prefetched the wrong frame last time, it's
+  // possible that a prefetch operation is still being performed. This is ok, as we can queue up another prefetch
+  // operation here once the original request has been latched, which we've already tested for above.
+  if (newVideoFrameLeadIn) {
+    videoFrameCompressed = (newVideoFrameIndex < video.leadInFrameCount ? video.leadInFrames[newVideoFrameIndex] : nullptr);
+  } else if (newVideoFrameLeadOut) {
+    videoFrameCompressed = (newVideoFrameIndex < video.leadOutFrameCount ? video.leadOutFrames[newVideoFrameIndex] : nullptr);
+  } else {
+    videoFrameCompressed = (newVideoFrameIndex < video.activeVideoFrameCount ? video.activeVideoFrames[newVideoFrameIndex] : nullptr);
+  }
+  if (videoFrameCompressed == nullptr) {
+    return;
+  }
+  videoFramePrefetchTarget = videoFrameCompressed;
+  videoFramePrefetchPending.test_and_set();
+  videoFramePrefetchPending.notify_all();
+}
+
+auto MCD::LD::videoFramePrefetchThread() -> void {
+  // Trigger a notification that this worker thread has started
+  videoFramePrefetchThreadStarted.test_and_set();
+  videoFramePrefetchThreadStarted.notify_all();
+
+  // Perform prefetch requests as they arrive, and terminate the thread when requested.
+  while (!videoFramePrefetchThreadShutdownRequested.test()) {
+    // Wait for a prefetch request to arrive
+    videoFramePrefetchPending.wait(false);
+
+    // If this thread has been requested to terminate, break out of the prefetch loop.
+    if (videoFramePrefetchThreadShutdownRequested.test()) {
+      break;
+    }
+
+    // Trigger a notification that a prefetch request is no longer pending
+    videoFramePrefetchPending.clear();
+    videoFramePrefetchPending.notify_all();
+
+    // Allocate memory for the prefetch frame buffer if it's currently empty
+    if (videoFramePrefetchBuffer.empty()) {
+      videoFramePrefetchBuffer.resize(video.videoFrameHeader.width * video.videoFrameHeader.height * 3);
+    }
+
+    // Decode the QOI2 compressed video frame into the buffer
+    size_t frameSizeCompressed = qon_decode_frame_size(videoFramePrefetchTarget);
+    qoi2_decode_data(videoFramePrefetchTarget + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, videoFramePrefetchBuffer.data(), 3);
+
+    // Trigger a notification that the prefetch operation is complete
+    videoFramePrefetchComplete.test_and_set();
+    videoFramePrefetchComplete.notify_all();
+  }
+
+  // Trigger a notification that this worker thread has shut down
+  videoFramePrefetchThreadShutdownComplete.test_and_set();
+  videoFramePrefetchThreadShutdownComplete.notify_all();
 }
 
 auto MCD::LD::decodeBiphaseCodeFromScanline(int lineNo) -> u32 {
@@ -2993,42 +3129,62 @@ auto MCD::LD::scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void {
   auto convert1616NormalizedFixedPointTo8BitUnsigned = [](uint32_t val) { return (uint8_t)(((val + 0x80) - ((val + 0x80) >> 8)) >> 8); };
   auto mul1616FixedPoint = [](uint32_t a, uint32_t b) { return (uint32_t)(((uint64_t)a * (uint64_t)b) >> 16); };
 
-  // Mix the analog video stream from the laserdisc with the video output from the Mega Drive VDP
-  //##TODO## Do some work to improve the performance of the linear interpolation code
-  float imageWidthConversionRatio = (float)pixelsInSourceLine / (float)video.FrameBufferWidth;
-  float firstSamplePointX = 0.0f;
-  float lastSamplePointX = 0.0f;
-  float totalDomainInverse = 1.0f / imageWidthConversionRatio;
-  for (size_t i = 0; i < video.FrameBufferWidth; ++i) {
-    // Calculate the pixel value for the laserdisc analog video, using a linear resampling of the source
-    // video line to match the screen output.
-    firstSamplePointX = lastSamplePointX;
-    lastSamplePointX = (float)std::min(i + 1, video.FrameBufferWidth - 1) * imageWidthConversionRatio;
-    size_t firstSamplePosX = (size_t)firstSamplePointX;
-    size_t lastSamplePosX = (size_t)lastSamplePointX;
-    u8 convertedSamples[3] = {};
-    for (unsigned int plane = 0; plane < 3; ++plane)
-    {
-      // Combine sample values from the source line with their respective weightings
-      float finalSample = 0.0f;
-      for (unsigned int currentSampleX = firstSamplePosX; currentSampleX <= lastSamplePosX; ++currentSampleX)
-      {
-        static constexpr float sampleConversion = 1.0f / (float)0xFF;
-        float sampleStartPointX = (currentSampleX == firstSamplePosX) ? (firstSamplePointX - (float)firstSamplePosX) : 0.0f;
-        float sampleEndPointX = (currentSampleX == lastSamplePosX) ? (lastSamplePointX - (float)lastSamplePosX) : 1.0f;
-        float sampleWeightX = sampleEndPointX - sampleStartPointX;
-        float sample = (*(analogVideoFrameData + sourceLinePos + (currentSampleX * channelCount) + plane)) * sampleConversion;
-        finalSample += sample * sampleWeightX;
-      }
+  // Calculate our linear interpolation coefficients if they haven't already been calculated
+  if (video.lineResamplingData.empty()) {
+    // Allocate the buffer for our coefficients
+    video.lineResamplingData.resize(video.FrameBufferWidth);
 
-      // Normalize the sample value back to a single pixel value, by dividing it
-      // by the total area of the sample region in the source image.
-      finalSample *= totalDomainInverse;
-      convertedSamples[plane] = (u8)std::min(std::round(finalSample * 0xFF), (float)0xFF);
+    // Calculate the coefficients to use in our linear resampling code below. We convert input sample values into a
+    // range of 0.0-1.0, attenuate the value of each input pixel based on the proportion of that pixel that maps to the
+    // output pixel value, and finally calculate an overall conversion factor to convert the summed, weighted input
+    // pixel values to an output sample in the range 0x00-0xFF. This conversion approach will give the best possible
+    // results, regardless of the difference in resolution between input and output.
+    float imageWidthConversionRatio = (float)pixelsInSourceLine / (float)video.FrameBufferWidth;
+    float firstSamplePointX = 0.0f;
+    float lastSamplePointX = 0.0f;
+    float totalDomainInverse = 1.0f / imageWidthConversionRatio;
+    for (size_t i = 0; i < video.FrameBufferWidth; ++i) {
+      auto& entry = video.lineResamplingData[i];
+      firstSamplePointX = lastSamplePointX;
+      lastSamplePointX = (float)std::min(i + 1, video.FrameBufferWidth - 1) * imageWidthConversionRatio;
+      size_t firstSamplePosX = (size_t)firstSamplePointX;
+      size_t lastSamplePosX = (size_t)lastSamplePointX;
+      for (unsigned int plane = 0; plane < 3; ++plane) {
+        for (unsigned int currentSampleX = firstSamplePosX; currentSampleX <= lastSamplePosX; ++currentSampleX) {
+          static constexpr float sampleConversion = 1.0f / (float)0xFF;
+          float sampleStartPointX = (currentSampleX == firstSamplePosX) ? (firstSamplePointX - (float)firstSamplePosX) : 0.0f;
+          float sampleEndPointX = (currentSampleX == lastSamplePosX) ? (lastSamplePointX - (float)lastSamplePosX) : 1.0f;
+          float sampleWeightX = sampleEndPointX - sampleStartPointX;
+          entry.sampleWeightX.push_back(sampleConversion * sampleWeightX);
+        }
+      }
+      entry.firstSamplePosX = firstSamplePosX;
+      entry.lastSamplePosX = lastSamplePosX;
+      entry.conversionFactor = totalDomainInverse * (float)0xFF;
     }
-    auto ldr = convertedSamples[0];
-    auto ldg = convertedSamples[1];
-    auto ldb = convertedSamples[2];
+  }
+
+  // Mix the analog video stream from the laserdisc with the video output from the Mega Drive VDP
+  for (size_t i = 0; i < video.FrameBufferWidth; ++i) {
+    // Calculate the pixel value for the laserdisc analog video, using a linear resampling of the source video line to
+    // match the screen output resolution.
+    auto& entry = video.lineResamplingData[i];
+    float convertedSamplesAsFloat[3] = {};
+    size_t sampleWeightIndex = 0;
+    for (unsigned int currentSampleX = entry.firstSamplePosX; currentSampleX <= entry.lastSamplePosX; ++currentSampleX)
+    {
+      auto pixelValuePosInSourceFrame = analogVideoFrameData + sourceLinePos + (currentSampleX * channelCount);
+      convertedSamplesAsFloat[0] += (*(pixelValuePosInSourceFrame + 0)) * entry.sampleWeightX[sampleWeightIndex];
+      convertedSamplesAsFloat[1] += (*(pixelValuePosInSourceFrame + 1)) * entry.sampleWeightX[sampleWeightIndex];
+      convertedSamplesAsFloat[2] += (*(pixelValuePosInSourceFrame + 2)) * entry.sampleWeightX[sampleWeightIndex];
+      ++sampleWeightIndex;
+    }
+    convertedSamplesAsFloat[0] *= entry.conversionFactor;
+    convertedSamplesAsFloat[1] *= entry.conversionFactor;
+    convertedSamplesAsFloat[2] *= entry.conversionFactor;
+    auto ldr = (u8)std::min((convertedSamplesAsFloat[0] + 0.5f), (float)0xFF);
+    auto ldg = (u8)std::min((convertedSamplesAsFloat[1] + 0.5f), (float)0xFF);
+    auto ldb = (u8)std::min((convertedSamplesAsFloat[2] + 0.5f), (float)0xFF);
 
     // Retrieve the output VDP color for this pixel location
     u32 currentPixelValue = ((vdpPixelBuffer != nullptr) && (i >= vdpBorderLeftOffset)) ? vdpPixelBuffer[i - vdpBorderLeftOffset] : 0;

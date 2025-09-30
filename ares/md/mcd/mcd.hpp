@@ -402,6 +402,7 @@ struct MCD : M68000, Thread {
     auto handleStopPointReached(s32 lba) -> void;
     auto updateCurrentVideoFrameNumber(s32 lba) -> void;
     auto loadCurrentVideoFrameIntoBuffer() -> void;
+    auto videoFramePrefetchThread() -> void;
     auto decodeBiphaseCodeFromScanline(int lineNo) -> u32;
     auto power(bool reset) -> void;
     auto scanline(u32 vdpPixelBuffer[1495], u32 vcounter) -> void;
@@ -455,6 +456,14 @@ struct MCD : M68000, Thread {
       double vbiDataBitCellLengthInPixels;
       std::vector<size_t> vbiDataBitSampleOffsets;
 
+      struct LineResamplingData {
+        size_t firstSamplePosX;
+        size_t lastSamplePosX;
+        std::vector<float> sampleWeightX;
+        float conversionFactor;
+      };
+      std::vector<LineResamplingData> lineResamplingData;
+
       static const size_t FrameBufferWidth = 1495;
       static const size_t FrameBufferHeight = 525;
       std::vector<u32> outputFramebuffer;
@@ -506,6 +515,15 @@ struct MCD : M68000, Thread {
     n1 seekPerformedSinceLastFrameUpdate;
     n8 driveStateChangeDelayCounter;
     n8 selectedTrackInfo;
+
+    // Prefetch thread state
+    std::atomic_flag videoFramePrefetchPending;
+    std::atomic_flag videoFramePrefetchComplete;
+    std::atomic_flag videoFramePrefetchThreadStarted;
+    std::atomic_flag videoFramePrefetchThreadShutdownRequested;
+    std::atomic_flag videoFramePrefetchThreadShutdownComplete;
+    const unsigned char* videoFramePrefetchTarget;
+    std::vector<unsigned char> videoFramePrefetchBuffer;
   } ld;
 
   struct Timer {
