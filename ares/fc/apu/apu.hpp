@@ -199,8 +199,8 @@ struct APU : Thread {
     n16 counter;
 
     bool odd;
-    bool delay;
-    n3   delayCounter;
+    bool delayIRQ;
+    bool delayCounter[2];
 
     constexpr static u16 periodNTSC[2][6] = {
       { 7457, 7456, 7458, 7457,    1, 1, },

@@ -2,17 +2,25 @@ auto APU::FrameCounter::main() -> void {
   --counter;
   odd = !odd;
 
-  if (delay && --delayCounter == 0) {
-    delay = false;
-    step = 0;
-    counter = getPeriod() + 2;
-    if (mode == Freq48Hz) {
-      apu.clockHalfFrame();
+  if(!odd) {
+    //IRQ is reset on next GET cycle
+    if(delayIRQ) {
+      delayIRQ = false;
+      irqPending = 0;
+      apu.setIRQ();
     }
+
+    //counter is reloaded on GET cycle after next
+    if(delayCounter[0]) {
+      step = 0;
+      counter = getPeriod();
+      if(mode == Freq48Hz) apu.clockHalfFrame();
+    }
+    delayCounter[0] = delayCounter[1];
+    delayCounter[1] = false;
   }
 
-  if (counter != 0)
-    return;
+  if(counter != 0)  return;
 
   switch(step) {
     case 0:
@@ -29,21 +37,22 @@ auto APU::FrameCounter::main() -> void {
       break;
     case 3:
       step = 4;
-      if (mode == Freq60Hz && irqInhibit == 0)
-        irqPending = 1;
+      if(mode == Freq60Hz) irqPending = 1;
       break;
     case 4:
       step = 5;
       apu.clockHalfFrame();
-      if (mode == Freq60Hz && irqInhibit == 0) {
+      if(mode == Freq60Hz) {
         irqPending = 1;
         apu.setIRQ();
       }
       break;
     case 5:
       step = 0;
-      if (mode == Freq60Hz && irqInhibit == 0)
-        irqPending = 1;
+      if(mode == Freq60Hz) {
+        irqPending = ~irqInhibit;
+        apu.setIRQ();
+      }
       break;
   }
 
@@ -52,30 +61,24 @@ auto APU::FrameCounter::main() -> void {
 
 auto APU::FrameCounter::power(bool reset) -> void {
   irqInhibit = 0;
-  if (!reset) mode = Freq60Hz;
+  if(!reset) mode = Freq60Hz;
 
   irqPending = 0;
   step = 0;
   counter = getPeriod();
 
   odd = true;
-  delay = false;
-  delayCounter = 0;
+  delayIRQ = false;
+  delayCounter[0] = false;
+  delayCounter[1] = false;
 }
 
 auto APU::FrameCounter::write(n8 data) -> void {
   mode = data.bit(7);
-  delay = true;
-
-  // If the write occurs during an APU cycle,
-  // the effects occur 3 CPU cycles after the
-  // $4017 write cycle, and if the write occurs
-  // between APU cycles, the effects occurs 4 CPU
-  // cycles after the write cycle.
-  delayCounter = odd ? 1 : 2;
+  delayCounter[1] = true;
 
   irqInhibit = data.bit(6);
-  if (irqInhibit) {
+  if(irqInhibit) {
     irqPending = 0;
     apu.setIRQ();
   }
