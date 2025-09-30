@@ -3,9 +3,10 @@ auto CPU::read(n16 address) -> n8 {
     dma(address);
   }
 
-  io.openBus = readBus(address);
+  n8 data = readBus(address);
+  if(address != 0x4015) io.openBus = data;
   step(rate());
-  return io.openBus;
+  return data;
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
