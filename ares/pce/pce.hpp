@@ -5,6 +5,7 @@
 #include <nall/decode/mmi.hpp>
 #include <vector>
 #include <cmath>
+#include <functional>
 
 #include <qon/qon.h>
 #include <qon/qoi2.h>
