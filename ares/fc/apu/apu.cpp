@@ -73,7 +73,7 @@ auto APU::tick() -> void {
 }
 
 auto APU::setIRQ() -> void {
-  cpu.apuLine(frame.irqPending | dmc.irqPending);
+  cpu.apuLine((frame.irqPending & ~frame.irqInhibit) | dmc.irqPending);
 }
 
 auto APU::power(bool reset) -> void {
@@ -103,8 +103,7 @@ auto APU::readIO(n16 address) -> n8 {
     //bit 5 is open bus
     data.bit(6) = frame.irqPending;
     data.bit(7) = dmc.irqPending;
-    frame.irqPending = false;
-    setIRQ();
+    frame.delayIRQ = true;
     return data;
   }
 
