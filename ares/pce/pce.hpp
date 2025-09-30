@@ -5,6 +5,8 @@
 #include <nall/decode/mmi.hpp>
 #include <vector>
 #include <cmath>
+#include <thread>
+#include <atomic>
 #include <functional>
 
 #include <qon/qon.h>
