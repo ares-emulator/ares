@@ -2764,19 +2764,25 @@ auto MCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
     loadedDirectly = true;
   }
 
-  // Wait for any pending frame prefetch request to be latched, even if we were prefetching the wrong frame. We need to
-  // make sure any pending prefetch request has been latched by the worker thread, so we can queue our next prefetch
-  // operation below. We don't need it to be completed yet if the wrong frame was being prefetched, but we need it to be
-  // latched, otherwise we'd have a race condition where the worker thread might miss our updated latch target, and a
-  // different frame would be in the prefetch buffer to what we think is in there.
+  // Wait for any pending frame prefetch request to be latched, and the prefetch operation to be completed, even if we
+  // were prefetching the wrong frame. We need to make sure any pending prefetch request has been latched by the worker
+  // thread, so we can queue our next prefetch operation below. We also need to wait for the previous prefetch operation
+  // to complete, even if we were prefetching the wrong frame and loaded the correct one directly above, as while we can
+  // theoretically queue another prefetch operation after the first one has been latched, the worker thread will mark
+  // the prefetch operation as complete when the original prefetch request is processed, leaving it marked as complete
+  // when it starts the new one, as it is our responsibility to clear the prefetch complete state. This means if we
+  // don't wait for the original prefetch to complete here, it would trigger a race condition for the load of the
+  // following frame.
   videoFramePrefetchPending.wait(true);
-
-  // If the prefetch operation is for the correct frame, wait for it to complete, and swap the prefetch buffer with the
-  // build frame buffer. Note that this will exchange memory buffer pointers and not copy the contents themselves, so
-  // it's a quick constant-time operation.
-  if (!loadedDirectly) {
+  if (videoFramePrefetchTarget != nullptr) {
     videoFramePrefetchComplete.wait(false);
     videoFramePrefetchComplete.clear();
+  }
+
+  // If the prefetch operation is for the correct frame, we've just waited for it to complete above, so we now swap the
+  // prefetch buffer with the build frame buffer. Note that this will exchange memory buffer pointers and not copy the
+  // contents themselves, so it's a quick constant-time operation.
+  if (!loadedDirectly) {
     buildFrameBuffer.swap(videoFramePrefetchBuffer);
   }
 
