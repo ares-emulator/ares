@@ -90,17 +90,15 @@ auto GPU::Render::dither(Point p, Color c) const -> Color {
 }
 
 auto GPU::Render::modulate(Color above, Color below) const -> Color {
-  above.r = above.r >> 3; above.g = above.g >> 3; above.b = above.b >> 3;
-  below.r = below.r >> 3; below.g = below.g >> 3; below.b = below.b >> 3;
+  below.r >>= 3;
+  below.g >>= 3;
+  below.b >>= 3;
 
-  above.r = min(31, above.r * below.r >> 4);
-  above.g = min(31, above.g * below.g >> 4);
-  above.b = min(31, above.b * below.b >> 4);
-
-  above.r = above.r << 3 | above.r >> 2;
-  above.g = above.g << 3 | above.g >> 2;
-  above.b = above.b << 3 | above.b >> 2;
-  return above;
+  Color output;
+  output.r = (below.r * above.r) >> 4;
+  output.g = (below.g * above.g) >> 4;
+  output.b = (below.b * above.b) >> 4;
+  return output;
 }
 
 auto GPU::Render::alpha(Color above, Color below) const -> Color {
