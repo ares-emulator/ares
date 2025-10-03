@@ -94,11 +94,11 @@ auto GPU::Render::modulate(Color above, Color below) const -> Color {
   below.g >>= 3;
   below.b >>= 3;
 
-  Color output;
-  output.r = (below.r * above.r) >> 4;
-  output.g = (below.g * above.g) >> 4;
-  output.b = (below.b * above.b) >> 4;
-  return output;
+  above.r = std::min(255, ((u16)below.r * (u16)above.r) >> 4);
+  above.g = std::min(255, ((u16)below.g * (u16)above.g) >> 4);
+  above.b = std::min(255, ((u16)below.b * (u16)above.b) >> 4);
+
+  return above;
 }
 
 auto GPU::Render::alpha(Color above, Color below) const -> Color {
