@@ -139,9 +139,9 @@ auto pWidget::setMouseCursor(const MouseCursor& mouseCursor) -> void {
 
   if(mouseCursor) {
     string name;
-    if(mouseCursor == MouseCursor::Hand) name = "hand1";
-    if(mouseCursor == MouseCursor::HorizontalResize) name = "sb_h_double_arrow";
-    if(mouseCursor == MouseCursor::VerticalResize) name = "sb_v_double_arrow";
+    if(mouseCursor.name() == MouseCursor::Hand) name = "hand1";
+    if(mouseCursor.name() == MouseCursor::HorizontalResize) name = "sb_h_double_arrow";
+    if(mouseCursor.name() == MouseCursor::VerticalResize) name = "sb_v_double_arrow";
     if(name) {
       gdkMouseCursor = gdk_cursor_new_from_name(gdk_display_get_default(), name);
     }
