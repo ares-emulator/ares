@@ -8,7 +8,7 @@ struct T6W28 {
   virtual auto writePitch(u32) -> void = 0;
 
   //t6w28.cpp
-  auto clock() -> array<n4[8]>;
+  auto clock() -> std::array<n4, 8>;
   auto writeLeft(n8 data) -> void;
   auto writeRight(n8 data) -> void;
   auto power() -> void;

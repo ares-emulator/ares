@@ -19,7 +19,6 @@
 #include <nall/stdint.hpp>
 #include <nall/utility.hpp>
 #include <nall/varint.hpp>
-#include <nall/view.hpp>
 #include <span>
 
 namespace nall {

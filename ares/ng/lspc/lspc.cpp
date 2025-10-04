@@ -23,14 +23,14 @@ auto LSPC::load(Node::Object parent) -> void {
 
   debugger.load(node);
 
-  set<u8> bytes;
+  std::set<u8> bytes;
   u64 vbits = bit::reverse<u64>(0x0123456789abcdefULL);
   memory::fill<n8>(vscale, sizeof(vscale), 0xff);
   for(u8 y : range(256)) {
     n4 upper = vbits >> (y & 15 ^ 1) * 4;
     n4 lower = vbits >> (y >> 4 ^ 1) * 4;
     bytes.insert(upper << 4 | lower << 0);
-    u8 x = 0; for(auto& byte : bytes) vscale[y][x++] = byte;
+    u8 x = 0; for(auto byte : bytes) vscale[y][x++] = byte;
   }
 
   u64 hbits = 0x5b1d7f390a6e2c48ULL;

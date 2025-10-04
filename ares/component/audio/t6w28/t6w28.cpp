@@ -5,13 +5,13 @@ namespace ares {
 
 #include "serialization.cpp"
 
-auto T6W28::clock() -> array<n4[8]> {
+auto T6W28::clock() -> std::array<n4, 8> {
   tone0.clock();
   tone1.clock();
   tone2.clock();
   noise.clock();
 
-  array<n4[8]> output{15, 15, 15, 15, 15, 15, 15, 15};
+  std::array<n4, 8> output{15, 15, 15, 15, 15, 15, 15, 15};
   if(tone0.output) output[0] = tone0.volume.left, output[4] = tone0.volume.right;
   if(tone1.output) output[1] = tone1.volume.left, output[5] = tone1.volume.right;
   if(tone2.output) output[2] = tone2.volume.left, output[6] = tone2.volume.right;
@@ -28,7 +28,7 @@ auto T6W28::Tone::clock() -> void {
 
 auto T6W28::Noise::clock() -> void {
   if(!counter--) {
-    counter = array<n10[4]>{0x10, 0x20, 0x40, pitch}[rate];
+    counter = std::array<n10, 4>{0x10, 0x20, 0x40, pitch}[rate];
     if(flip ^= 1) {  //0->1 transition
       output = !lfsr.bit(0);
       lfsr = (lfsr.bit(0) ^ lfsr.bit(2) & enable) << 14 | lfsr >> 1;

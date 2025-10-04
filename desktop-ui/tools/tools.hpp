@@ -39,7 +39,7 @@ struct CheatEditor : VerticalLayout {
     bool enabled;
     string description;
     string code;
-    map<u32, u32> addressValuePairs;
+    std::map<u32, u32> addressValuePairs;
   };
 
   string location;

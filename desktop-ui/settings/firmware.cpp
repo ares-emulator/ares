@@ -120,14 +120,14 @@ auto FirmwareSettings::findFirmware(string hash) -> string {
   for(auto& filename : directory::files(firmwarePath)) {
     auto location = string{firmwarePath, filename};
 
-    if(auto result = fileHashes.find(location)) {
-      if(!file::exists(location)) continue;  //file was removed from disk (or moved)
-      if(*result == hash) return location;
+    if(auto it = fileHashes.find(location); it != fileHashes.end()) {
+      if(!file::exists(location)) continue;
+      if(it->second == hash) return location;
     }
 
     if(file::size(location) >= 10_MiB) continue; //avoid stalling by hashing overly large files
     auto digest = Hash::SHA256(file::read(location)).digest();
-    fileHashes.insert(location, digest);
+    fileHashes.emplace(location, digest);
     if(digest != hash) continue;
     return location;
   }
