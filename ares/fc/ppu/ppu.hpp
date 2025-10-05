@@ -2,7 +2,7 @@ struct PPU : Thread {
   Node::Object node;
   Node::Video::Screen screen;
   Memory::Writable<n8> ciram;
-  Memory::Writable<n8> cgram;
+  Memory::Writable<n6> cgram;
   Memory::Writable<n8> oam;
   Memory::Writable<n8> soam;
 
@@ -39,8 +39,8 @@ struct PPU : Thread {
   auto readCIRAM(n11 address) -> n8;
   auto writeCIRAM(n11 address, n8 data) -> void;
 
-  auto readCGRAM(n5 address) -> n8;
-  auto writeCGRAM(n5 address, n8 data) -> void;
+  auto readCGRAM(n5 address) -> n6;
+  auto writeCGRAM(n5 address, n6 data) -> void;
 
   auto readIO(n16 address) -> n8;
   auto writeIO(n16 address, n8 data) -> void;
