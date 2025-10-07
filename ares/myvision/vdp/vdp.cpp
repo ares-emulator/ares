@@ -59,7 +59,7 @@ auto VDP::frame() -> void {
 
 auto VDP::power() -> void {
   TMS9918::power();
-  Thread::create(Constants::Colorburst::NTSC * 3, [&] { main(); });
+  Thread::create(Constants::Colorburst::NTSC * 2, [&] { main(); });
   screen->power();
 }
 
