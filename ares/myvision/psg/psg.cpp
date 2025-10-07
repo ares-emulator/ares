@@ -12,7 +12,7 @@ namespace ares::MyVision {
 
     stream = node->append < Node::Audio::Stream > ("PSG");
     stream->setChannels(1);
-    stream->setFrequency(10000000 / 8);
+    stream->setFrequency(Constants::Colorburst::NTSC / 16);
   }
 
   auto PSG::unload()->void {
@@ -38,7 +38,8 @@ namespace ares::MyVision {
 
   auto PSG::power()->void {
     AY38910::power();
-    Thread::create(Constants::Colorburst::NTSC / 2, std::bind_front(&PSG::main, this));
+    //real-hardware clock is unknown, we used the same value as spectrum and MSX as placeholder
+    Thread::create(Constants::Colorburst::NTSC / 16, std::bind_front(&PSG::main, this));
 
     for (uint level: range(16)) {
       volume[level] = 1.0 / pow(2, 1.0 / 2 * (15 - level));
