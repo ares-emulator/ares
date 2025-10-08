@@ -82,12 +82,12 @@ auto VDP::power() -> void {
 
   if(Model::MSX()) {
     TMS9918::power();
-    Thread::create(system.colorburst() * 2, [&] { TMS9918::main(); });
+    Thread::create(system.colorburst() * 3, [&] { TMS9918::main(); });
   }
 
   if(Model::MSX2()) {
     V9938::power();
-    Thread::create(system.colorburst() * 2, [&] { V9938::main(); });
+    Thread::create(system.colorburst() * 3, [&] { V9938::main(); });
   }
 }
 
