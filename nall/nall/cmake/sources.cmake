@@ -6,7 +6,6 @@ target_sources(
     any.hpp
     arguments.hpp
     arithmetic.hpp
-    array.hpp
     atoi.hpp
     bcd.hpp
     bit.hpp
@@ -26,7 +25,6 @@ target_sources(
     file.hpp
     float-env.hpp
     galois-field.hpp
-    hashset.hpp
     hid.hpp
     image.hpp
     
@@ -42,7 +40,6 @@ target_sources(
     locale.hpp
     location.hpp
     main.hpp
-    map.hpp
     matrix-multiply.hpp
     matrix.hpp
     maybe.hpp
@@ -68,8 +65,6 @@ target_sources(
     serial.hpp
     serializer.hpp
     
-    set.hpp
-    
     stdint.hpp
     string.hpp
     
@@ -82,7 +77,6 @@ target_sources(
     variant.hpp
     varint.hpp
     vfs.hpp
-    view.hpp
 )
 
 target_sources(nall PRIVATE arithmetic/natural.hpp arithmetic/unsigned.hpp)

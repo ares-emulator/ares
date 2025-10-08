@@ -6,18 +6,18 @@
 #include <vector>
 #include <ranges>
 #include <algorithm>
+#include <array>
+#include <unordered_map>
 
 #include <nall/platform.hpp>
 #include <nall/adaptive-array.hpp>
 #include <nall/any.hpp>
-#include <nall/array.hpp>
 #include <nall/bump-allocator.hpp>
 #include <nall/case-range.hpp>
 #include <nall/chrono.hpp>
 #include <nall/directory.hpp>
 #include <nall/dl.hpp>
 #include <nall/endian.hpp>
-#include <nall/hashset.hpp>
 #include <nall/image.hpp>
 #include <nall/instruction-set.hpp>
 #include <nall/literals.hpp>
@@ -25,7 +25,6 @@
 #include <nall/queue.hpp>
 #include <nall/random.hpp>
 #include <nall/serializer.hpp>
-#include <nall/set.hpp>
 #include <nall/span-helpers.hpp>
 #include <nall/string.hpp>
 #include <nall/terminal.hpp>

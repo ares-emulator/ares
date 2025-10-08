@@ -13,7 +13,7 @@
 //- only plain-old-data can be stored. complex classes must provide serialize(serializer&);
 //- floating-point usage is not portable across different implementations
 
-#include <nall/array.hpp>
+#include <array>
 #include <nall/bit.hpp>
 #include <nall/range.hpp>
 #include <nall/stdint.hpp>

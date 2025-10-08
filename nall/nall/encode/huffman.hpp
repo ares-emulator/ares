@@ -12,7 +12,7 @@ inline auto Huffman(std::span<const u8> input) -> std::vector<u8> {
     u32 lhs = 0;
     u32 rhs = 0;
   };
-  array<Node[512]> nodes;
+  std::array<Node, 512> nodes;
   for(u32 offset : range(input.size())) nodes[input[offset]].frequency++;
 
   u32 count = 0;
