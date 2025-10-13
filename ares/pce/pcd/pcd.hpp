@@ -482,6 +482,15 @@ struct PCD : Thread {
     std::atomic_flag videoFramePrefetchThreadStarted;
     std::atomic_flag videoFramePrefetchThreadShutdownRequested;
     std::atomic_flag videoFramePrefetchThreadShutdownComplete;
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+    // Workaround for bad performance on Windows targets under MSYS2 with libc++ due to https://github.com/llvm/llvm-project/issues/127221
+    std::mutex videoFramePrefetchMutex;
+    std::condition_variable notifyVideoFramePrefetchPending;
+    std::condition_variable notifyVideoFramePrefetchComplete;
+    std::condition_variable notifyVideoFramePrefetchThreadStarted;
+    std::condition_variable notifyVideoFramePrefetchThreadShutdownRequested;
+    std::condition_variable notifyVideoFramePrefetchThreadShutdownComplete;
+#endif
     const unsigned char* videoFramePrefetchTarget;
     std::vector<unsigned char> videoFramePrefetchBuffer;
   } ld;
