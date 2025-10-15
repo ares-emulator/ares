@@ -255,6 +255,7 @@ auto SuperFamicom::analyze(std::vector<u8>& rom) -> string {
   s +={"  board:    ", board(), "\n"};
 
   auto board = nall::split(this->board().trimRight("#A", 1L), "-");
+  if(board.size() <= 1) { board.resize(2); }
 
   if(auto size = romSize()) {
     if(board[0] == "SPC7110" && size > 0x100000) {
