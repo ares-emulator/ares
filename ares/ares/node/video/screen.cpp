@@ -379,10 +379,9 @@ auto Screen::refreshPalette() -> void {
 
     if(_saturation != 1.0) {
       n16 grayscale = uclamp<16>((r + g + b) / 3);
-      f64 inverse = max(0.0, 1.0 - _saturation);
-      r = uclamp<16>(r * _saturation + grayscale * inverse);
-      g = uclamp<16>(g * _saturation + grayscale * inverse);
-      b = uclamp<16>(b * _saturation + grayscale * inverse);
+      r = uclamp<16>(grayscale + (r - grayscale) * _saturation);
+      g = uclamp<16>(grayscale + (g - grayscale) * _saturation);
+      b = uclamp<16>(grayscale + (b - grayscale) * _saturation);
     }
 
     if(_gamma != 1.0) {
