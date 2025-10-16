@@ -124,6 +124,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
         (Region::PAL() && io.ly >= 264 && io.ly <= vlines() - 2)) {
       if (enable()) {
         ++sprite.oamMainCounterIndex;
+        sprite.oamMainCounterTiming = 0;
         return;
       }
     }

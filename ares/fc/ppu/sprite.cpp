@@ -76,7 +76,7 @@ auto PPU::cycleSpriteEvaluation() -> void {
   }
 
   if (io.lx <= 320) {
-    u32 index  = ((io.lx - 257) >> 3) << 2 + min((io.lx - 257) & 7, 3);
+    u32 index  = (((io.lx - 257) >> 3) << 2) + min((io.lx - 257) & 7, 3);
 
     sprite.oamMainCounter = 0;
     sprite.oamTempCounter = 0;
