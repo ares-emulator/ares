@@ -95,7 +95,7 @@ auto InputMapping::Binding::text() -> string {
 
 //
 
-auto InputDigital::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+auto InputDigital::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
@@ -215,7 +215,7 @@ auto InputHotkey::value() -> s16 {
 
 //
 
-auto InputAnalog::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+auto InputAnalog::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
@@ -288,7 +288,7 @@ auto InputAnalog::pressed() -> bool {
 
 //
 
-auto InputAbsolute::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+auto InputAbsolute::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
@@ -347,7 +347,7 @@ auto InputAbsolute::value() -> s16 {
 
 //
 
-auto InputRelative::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+auto InputRelative::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
@@ -406,7 +406,7 @@ auto InputRelative::value() -> s16 {
 
 //
 
-auto InputRumble::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+auto InputRumble::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
@@ -521,7 +521,7 @@ auto InputManager::poll(bool force) -> void {
   }
 }
 
-auto InputManager::eventInput(shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
+auto InputManager::eventInput(std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   inputSettings.eventInput(device, groupID, inputID, oldValue, newValue);
   hotkeySettings.eventInput(device, groupID, inputID, oldValue, newValue);

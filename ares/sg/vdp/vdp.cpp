@@ -12,7 +12,7 @@ auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
 
   screen = node->append<Node::Video::Screen>("Screen", 284, 243);
-  screen->colors(1 << 4, {&VDP::color, this});
+  screen->colors(1 << 4, std::bind_front(&VDP::color, this));
   screen->setSize(284, 243);
   screen->setViewport(0, 0, 284, 243);
   screen->setScale(1.0, 1.0);
@@ -59,7 +59,7 @@ auto VDP::frame() -> void {
 
 auto VDP::power() -> void {
   TMS9918::power();
-  Thread::create(system.colorburst() * 2, [&] { main(); });
+  Thread::create(system.colorburst() * 3, [&] { main(); });
   screen->power();
 }
 

@@ -1,5 +1,5 @@
 struct Pak {
-  static auto create(string name) -> shared_pointer<Pak>;
+  static auto create(string name) -> std::shared_ptr<Pak>;
 
   virtual ~Pak() = default;
   virtual auto type() -> string { return pak->attribute("type"); }
@@ -22,5 +22,5 @@ struct Pak {
 
   string location;
   string manifest;
-  shared_pointer<vfs::directory> pak;
+  std::shared_ptr<vfs::directory> pak;
 };

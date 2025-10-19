@@ -38,8 +38,8 @@ auto pMenuRadioItem::setGroup(sGroup group) -> void {
   bool first = true;
   if(auto& group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.get())) {
           if(auto self = menuRadioItem->self()) {
             self->qtMenuRadioItem->setChecked(menuRadioItem->state.checked = first);
             first = false;
@@ -58,7 +58,7 @@ auto pMenuRadioItem::setText(const string& text) -> void {
 auto pMenuRadioItem::_setState() -> void {
   if(auto& group = state().group) {
     if(auto object = group->object(0)) {
-      if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.data())) {
+      if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.get())) {
         if(auto self = menuRadioItem->self()) {
           qtMenuRadioItem->setActionGroup(self->qtActionGroup);
         }

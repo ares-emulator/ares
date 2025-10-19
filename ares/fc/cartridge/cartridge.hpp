@@ -27,7 +27,7 @@ struct Cartridge : Thread {
   } information;
 
 //privileged:
-  unique_pointer<Board::Interface> board;
+  std::unique_ptr<Board::Interface> board;
 
   auto readPRG(n32 address, n8 data) -> n8;
   auto writePRG(n32 address, n8 data) -> void;

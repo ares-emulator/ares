@@ -10,10 +10,10 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 
   memory.cgram = parent->append<Node::Debugger::Memory>("PPU CGRAM");
   memory.cgram->setSize(ppu.cgram.size());
-  memory.cgram->setRead([&](u32 address) -> u8 {
+  memory.cgram->setRead([&](u32 address) -> u6 {
     return ppu.cgram[address];
   });
-  memory.cgram->setWrite([&](u32 address, u8 data) -> void {
+  memory.cgram->setWrite([&](u32 address, u6 data) -> void {
     ppu.cgram[address] = data;
   });
 

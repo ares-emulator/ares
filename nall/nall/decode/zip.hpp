@@ -3,6 +3,7 @@
 #include <nall/file-map.hpp>
 #include <nall/string.hpp>
 #include <vector>
+#include <span>
 #include <nall/decode/inflate.hpp>
 
 namespace nall::Decode {
@@ -196,11 +197,11 @@ struct ZIP {
     return (file.cmode == 0);
   }
 
-  auto dataViewIfUncompressed(const File& file) const -> array_view<u8> {
+  auto dataViewIfUncompressed(const File& file) const -> std::span<const u8> {
     if(file.cmode == 0) {
-      return array_view<u8>(file.data, file.size);
+      return std::span<const u8>(file.data, file.size);
     }
-    return array_view<u8>();
+    return std::span<const u8>();
   }
 
   auto close() -> void {

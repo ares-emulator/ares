@@ -55,7 +55,7 @@ auto PCD::LD::load(string location) -> void {
       auto tmp = mmi.archive().extract(*analogAudioFile);
       analogAudioDataBuffer.resize(tmp.size());
       if(!tmp.empty()) memcpy(analogAudioDataBuffer.data(), tmp.data(), tmp.size());
-      analogAudioRawDataView = array_view<u8>(analogAudioDataBuffer.data(), analogAudioDataBuffer.size());
+      analogAudioRawDataView = std::span<const u8>(analogAudioDataBuffer.data(), analogAudioDataBuffer.size());
     }
   }
 
@@ -66,7 +66,7 @@ auto PCD::LD::load(string location) -> void {
     if (!mmi.archive().isDataUncompressed(*analogVideoFile)) {
       return;
     }
-    array_view<u8> analogVideoFileView = mmi.archive().dataViewIfUncompressed(*analogVideoFile);
+    std::span<const u8> analogVideoFileView = mmi.archive().dataViewIfUncompressed(*analogVideoFile);
 
     // Read the QON/QOI2 header information for the analog video
     if (!qon_decode_header(analogVideoFileView.data(), analogVideoFileView.size(), &video.videoFileHeader)) {
@@ -139,10 +139,29 @@ auto PCD::LD::load(string location) -> void {
   // Reset the mechanical drive state to closed
   currentDriveState = 0x02;
   targetDriveState = currentDriveState;
+
+  // Spawn a background thread to prefetch video frames
+  videoFramePrefetchTarget = nullptr;
+  videoFramePrefetchPending.clear();
+  videoFramePrefetchComplete.clear();
+  videoFramePrefetchThreadStarted.clear();
+  videoFramePrefetchThreadShutdownRequested.clear();
+  videoFramePrefetchThreadShutdownComplete.clear();
+  std::thread workerThread(std::bind(std::mem_fn(&PCD::LD::videoFramePrefetchThread), this));
+  workerThread.detach();
+  videoFramePrefetchThreadStarted.wait(false);
 }
 
 auto PCD::LD::unload() -> void {
-  // Open the source archive
+  // Request the prefetch background thread to terminate, and wait for it to complete.
+  if (videoFramePrefetchThreadStarted.test()) {
+    videoFramePrefetchThreadShutdownRequested.test_and_set();
+    videoFramePrefetchPending.test_and_set();
+    videoFramePrefetchPending.notify_all();
+    videoFramePrefetchThreadShutdownComplete.wait(false);
+  }
+
+  // Close the mmi file
   mmi.close();
 }
 
@@ -2614,15 +2633,34 @@ auto PCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   // image hold off and on again after a seek however, the frame at the new location will be latched, and the updated
   // frame will be shown when we turn the image hold bit back on again. This shows that we do need to latch new frames
   // when the player is paused, even if the output is normally blanked in pause mode.
-  // -Note that there is additional interaction with input reg 0x0C bit 2, the video disable flag. If image hold off
+  // -Note that there is additional interaction with input reg 0x0C bit 2, the video disable flag. If image hold is off
   // when the video is disabled, then image hold is turned on, with video disable still active, a new frame cannot be
   // latched yet. If we then perform a seek for example, then turn off the video disable bit, the next frame to be shown
   // will be latched and held. This shows us that while image hold can latch a new frame during pause, it cannot latch a
-  // new frame when the video disable bit is set, and remains in a "pending" state until the next frame arrives.
-  // -Note that merely toggling the video disable bit on and off doesn't clear the image held in the digital memory
-  // -Note that toggling digital memory off then back on doesn't clear the held image either
+  // new frame when the video disable bit is set, and remains in a "pending" state until the next frame arrives. Note
+  // that Triad Stone relies on this to get the title screen to appear when a button is pressed to skip the intro video.
+  // It writes 0x94, 0xBC, 0xBF, 0x9F, 0xBF, 0xBB to this register in sequence, performing a seek operation just before
+  // the write of 0xBB. It expects a new frame will be latched when 0xBB is written. The act of writing 0x9F to turn off
+  // image hold while the video disable bit is set, then turning image hold back on while video disable is still set, is
+  // enough to cause the frame to be latched when the video disable bit is later cleared by the 0xBB write.
+  // -Note that merely toggling the video disable bit on and off doesn't clear the image held in the digital memory if
+  // image hold is still on. If image hold is turned off while video disable is set however, that will cause the digital
+  // memory to be cleared.
+  // -Note that toggling digital memory off then back on doesn't clear the held image either.
+  // -Note that enabling image hold when no playback is occurring, but a previously valid frame is still latched in the
+  // digital framebuffer, will cause that previous image to be latched and used. Vajra relies on this when starting a
+  // new level to not show the "Pioneer" video data during loading when the image of the boss you're going to fight is
+  // on the screen.
   //##TODO## Determine how this interacts with picture stop codes once we go to implement them
-  if ((inputRegs[0x0C].bit(5) && video.imageHoldFrameLatched) || inputRegs[0x0C].bit(2)) {
+  //##TODO## Confirm if disabling digital memory in the various different ways with image hold off causes the current
+  //frame to be cleared from memory, and trigger a new latch again on the next frame after being re-enabled, like
+  //happens with the video disable flag.
+  if ((inputRegs[0x0C].bit(5) && video.digitalMemoryFrameLatched) || inputRegs[0x0C].bit(2)) {
+    // If the video stream has been disabled, and image hold is off, any currently latched frame in the memory buffer is
+    // cleared.
+    if (inputRegs[0x0C].bit(2) && !inputRegs[0x0C].bit(5)) {
+      video.digitalMemoryFrameLatched = false;
+    }
     return;
   }
 
@@ -2640,8 +2678,8 @@ auto PCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
     video.currentVideoFrameFieldSelectionEvenField[buildIndex] = newFieldSelectionEvenField;
   }
 
-  // Mark this frame as latched if we're in image hold mode, otherwise clear the latch.
-  video.imageHoldFrameLatched = inputRegs[0x0C].bit(5);
+  // Mark a frame as latched in the digital memory buffer
+  video.digitalMemoryFrameLatched = true;
 
   // At the end of all the above state updates, if we're still showing the same frame (but not necessarily the same
   // field), abort any further processing, since the correct full frame is already latched.
@@ -2721,9 +2759,132 @@ auto PCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
     buildFrameBuffer.resize(video.videoFrameHeader.width * video.videoFrameHeader.height * 3);
   }
 
-  // Decode the QOI2 compressed video frame into the buffer
-  size_t frameSizeCompressed = qon_decode_frame_size(videoFrameCompressed);
-  qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, buildFrameBuffer.data(), 3);
+  // If we were prefetching the wrong frame, or if no prefetch was active, load the required frame immediately here into
+  // the build framebuffer.
+  bool loadedDirectly = false;
+  if ((videoFramePrefetchTarget == nullptr) || (videoFramePrefetchTarget != videoFrameCompressed)) {
+    size_t frameSizeCompressed = qon_decode_frame_size(videoFrameCompressed);
+    qoi2_decode_data(videoFrameCompressed + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, buildFrameBuffer.data(), 3);
+    loadedDirectly = true;
+  }
+
+  // Wait for any pending frame prefetch request to be latched, and the prefetch operation to be completed, even if we
+  // were prefetching the wrong frame. We need to make sure any pending prefetch request has been latched by the worker
+  // thread, so we can queue our next prefetch operation below. We also need to wait for the previous prefetch operation
+  // to complete, even if we were prefetching the wrong frame and loaded the correct one directly above, as while we can
+  // theoretically queue another prefetch operation after the first one has been latched, the worker thread will mark
+  // the prefetch operation as complete when the original prefetch request is processed, leaving it marked as complete
+  // when it starts the new one, as it is our responsibility to clear the prefetch complete state. This means if we
+  // don't wait for the original prefetch to complete here, it would trigger a race condition for the load of the
+  // following frame.
+  videoFramePrefetchPending.wait(true);
+  if (videoFramePrefetchTarget != nullptr) {
+    videoFramePrefetchComplete.wait(false);
+    videoFramePrefetchComplete.clear();
+  }
+
+  // If the prefetch operation is for the correct frame, we've just waited for it to complete above, so we now swap the
+  // prefetch buffer with the build frame buffer. Note that this will exchange memory buffer pointers and not copy the
+  // contents themselves, so it's a quick constant-time operation.
+  if (!loadedDirectly) {
+    buildFrameBuffer.swap(videoFramePrefetchBuffer);
+  }
+
+  // Calculate the likely next frame to be shown, assuming no changes to playback state.
+  s32 newVideoFrameIndex;
+  bool newVideoFrameLeadIn = false;
+  if (currentPlaybackMode != 0x03) {
+    newVideoFrameIndex = video.currentVideoFrameIndex + 1;
+  } else {
+    // We're in fast forward mode. Take playback speed and direction into account to calculate the next sector that will
+    // be requested.
+    i32 sectorAdvanceOffset = 1;
+    switch (currentPlaybackSpeed) {
+    case 0x01:
+      sectorAdvanceOffset = 2;
+      break;
+    case 0x02:
+      sectorAdvanceOffset = 3;
+      break;
+    case 0x03:
+      sectorAdvanceOffset = 8;
+      break;
+    case 0x04:
+      sectorAdvanceOffset = 14;
+      break;
+    case 0x05:
+      sectorAdvanceOffset = 20;
+      break;
+    }
+    sectorAdvanceOffset = (currentPlaybackDirection ? (i32)(-sectorAdvanceOffset) : sectorAdvanceOffset);
+
+    // Calculate the next likely video frame index, based on the current fast forward settings.
+    auto lba = pcd.drive.lba + sectorAdvanceOffset;
+    newVideoFrameIndex = zeroBasedFrameIndexFromLba(lba, true);
+    newVideoFrameLeadIn = (lba < 0);
+    if (newVideoFrameIndex == video.currentVideoFrameIndex) {
+      newVideoFrameIndex += (newVideoFrameIndex == 0 ? 0 : (currentPlaybackDirection ? -1 : 1));
+    }
+  }
+  bool newVideoFrameLeadOut = (newVideoFrameIndex >= video.activeVideoFrameCount);
+  if (newVideoFrameLeadOut) {
+    newVideoFrameIndex = newVideoFrameIndex - video.activeVideoFrameCount;
+  }
+
+  // Queue a prefetch for the likely next video frame. Note that if we prefetched the wrong frame last time, it's
+  // possible that a prefetch operation is still being performed. This is ok, as we can queue up another prefetch
+  // operation here once the original request has been latched, which we've already tested for above.
+  if (newVideoFrameLeadIn) {
+    videoFrameCompressed = (newVideoFrameIndex < video.leadInFrameCount ? video.leadInFrames[newVideoFrameIndex] : nullptr);
+  } else if (newVideoFrameLeadOut) {
+    videoFrameCompressed = (newVideoFrameIndex < video.leadOutFrameCount ? video.leadOutFrames[newVideoFrameIndex] : nullptr);
+  } else {
+    videoFrameCompressed = (newVideoFrameIndex < video.activeVideoFrameCount ? video.activeVideoFrames[newVideoFrameIndex] : nullptr);
+  }
+  if (videoFrameCompressed == nullptr) {
+    return;
+  }
+  videoFramePrefetchTarget = videoFrameCompressed;
+  videoFramePrefetchPending.test_and_set();
+  videoFramePrefetchPending.notify_all();
+}
+
+auto PCD::LD::videoFramePrefetchThread() -> void {
+  // Trigger a notification that this worker thread has started
+  videoFramePrefetchThreadStarted.test_and_set();
+  videoFramePrefetchThreadStarted.notify_all();
+
+  // Perform prefetch requests as they arrive, and terminate the thread when requested.
+  while (!videoFramePrefetchThreadShutdownRequested.test()) {
+    // Wait for a prefetch request to arrive
+    videoFramePrefetchPending.wait(false);
+
+    // If this thread has been requested to terminate, break out of the prefetch loop.
+    if (videoFramePrefetchThreadShutdownRequested.test()) {
+      break;
+    }
+
+    // Trigger a notification that a prefetch request is no longer pending
+    videoFramePrefetchPending.clear();
+    videoFramePrefetchPending.notify_all();
+
+    // Allocate memory for the prefetch frame buffer if it's currently empty
+    if (videoFramePrefetchBuffer.empty()) {
+      videoFramePrefetchBuffer.resize(video.videoFrameHeader.width * video.videoFrameHeader.height * 3);
+    }
+
+    // Decode the QOI2 compressed video frame into the buffer
+    size_t frameSizeCompressed = qon_decode_frame_size(videoFramePrefetchTarget);
+    qoi2_decode_data(videoFramePrefetchTarget + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, videoFramePrefetchBuffer.data(), 3);
+
+    // Trigger a notification that the prefetch operation is complete
+    videoFramePrefetchComplete.test_and_set();
+    videoFramePrefetchComplete.notify_all();
+  }
+
+  // Trigger a notification that this worker thread has shut down
+  videoFramePrefetchThreadShutdownComplete.test_and_set();
+  videoFramePrefetchThreadShutdownComplete.notify_all();
 }
 
 auto PCD::LD::decodeBiphaseCodeFromScanline(int lineNo) -> u32 {
@@ -2840,7 +3001,7 @@ auto PCD::LD::power() -> void {
   video.videoFrameBuffers[0].clear();
   video.videoFrameBuffers[1].clear();
   video.currentVideoFrameBlanked = false;
-  video.imageHoldFrameLatched = false;
+  video.digitalMemoryFrameLatched = false;
 }
 
 auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {
@@ -2923,7 +3084,7 @@ auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {
   const int VideoFrameLeftBorderWidth = 118;
   const int VideoFrameRightBorderWidth = 0;
   size_t channelCount = 3;
-  size_t targetLineInSourceImage = (targetScanLine + (useEvenField ? 263 : 0));
+  size_t targetLineInSourceImage = std::min((targetScanLine + (useEvenField ? 263 : 0)), (u32)524);
   size_t sourceLinePos = ((targetLineInSourceImage * video.videoFrameHeader.width) + VideoFrameLeftBorderWidth) * channelCount;
   size_t pixelsInSourceLine = std::max(2, (int)video.videoFrameHeader.width - (VideoFrameLeftBorderWidth + VideoFrameRightBorderWidth));
   size_t targetLinePos = targetScanLine * video.FrameBufferWidth;
@@ -2956,42 +3117,62 @@ auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {
   auto convert1616NormalizedFixedPointTo8BitUnsigned = [](uint32_t val) { return (uint8_t)(((val + 0x80) - ((val + 0x80) >> 8)) >> 8); };
   auto mul1616FixedPoint = [](uint32_t a, uint32_t b) { return (uint32_t)(((uint64_t)a * (uint64_t)b) >> 16); };
 
-  // Mix the analog video stream from the laserdisc with the video output from the Mega Drive VDP
-  //##TODO## Do some work to improve the performance of the linear interpolation code
-  float imageWidthConversionRatio = (float)pixelsInSourceLine / (float)video.FrameBufferWidth;
-  float firstSamplePointX = 0.0f;
-  float lastSamplePointX = 0.0f;
-  float totalDomainInverse = 1.0f / imageWidthConversionRatio;
-  for (size_t i = 0; i < video.FrameBufferWidth; ++i) {
-    // Calculate the pixel value for the laserdisc analog video, using a linear resampling of the source
-    // video line to match the screen output.
-    firstSamplePointX = lastSamplePointX;
-    lastSamplePointX = (float)std::min(i + 1, video.FrameBufferWidth - 1) * imageWidthConversionRatio;
-    size_t firstSamplePosX = (size_t)firstSamplePointX;
-    size_t lastSamplePosX = (size_t)lastSamplePointX;
-    u8 convertedSamples[3] = {};
-    for (unsigned int plane = 0; plane < 3; ++plane)
-    {
-      // Combine sample values from the source line with their respective weightings
-      float finalSample = 0.0f;
-      for (unsigned int currentSampleX = firstSamplePosX; currentSampleX <= lastSamplePosX; ++currentSampleX)
-      {
-        static constexpr float sampleConversion = 1.0f / (float)0xFF;
-        float sampleStartPointX = (currentSampleX == firstSamplePosX) ? (firstSamplePointX - (float)firstSamplePosX) : 0.0f;
-        float sampleEndPointX = (currentSampleX == lastSamplePosX) ? (lastSamplePointX - (float)lastSamplePosX) : 1.0f;
-        float sampleWeightX = sampleEndPointX - sampleStartPointX;
-        float sample = (*(analogVideoFrameData + sourceLinePos + (currentSampleX * channelCount) + plane)) * sampleConversion;
-        finalSample += sample * sampleWeightX;
-      }
+  // Calculate our linear interpolation coefficients if they haven't already been calculated
+  if (video.lineResamplingData.empty()) {
+    // Allocate the buffer for our coefficients
+    video.lineResamplingData.resize(video.FrameBufferWidth);
 
-      // Normalize the sample value back to a single pixel value, by dividing it
-      // by the total area of the sample region in the source image.
-      finalSample *= totalDomainInverse;
-      convertedSamples[plane] = (u8)std::min(std::round(finalSample * 0xFF), (float)0xFF);
+    // Calculate the coefficients to use in our linear resampling code below. We convert input sample values into a
+    // range of 0.0-1.0, attenuate the value of each input pixel based on the proportion of that pixel that maps to the
+    // output pixel value, and finally calculate an overall conversion factor to convert the summed, weighted input
+    // pixel values to an output sample in the range 0x00-0xFF. This conversion approach will give the best possible
+    // results, regardless of the difference in resolution between input and output.
+    float imageWidthConversionRatio = (float)pixelsInSourceLine / (float)video.FrameBufferWidth;
+    float firstSamplePointX = 0.0f;
+    float lastSamplePointX = 0.0f;
+    float totalDomainInverse = 1.0f / imageWidthConversionRatio;
+    for (size_t i = 0; i < video.FrameBufferWidth; ++i) {
+      auto& entry = video.lineResamplingData[i];
+      firstSamplePointX = lastSamplePointX;
+      lastSamplePointX = (float)std::min(i + 1, video.FrameBufferWidth - 1) * imageWidthConversionRatio;
+      size_t firstSamplePosX = (size_t)firstSamplePointX;
+      size_t lastSamplePosX = (size_t)lastSamplePointX;
+      for (unsigned int plane = 0; plane < 3; ++plane) {
+        for (unsigned int currentSampleX = firstSamplePosX; currentSampleX <= lastSamplePosX; ++currentSampleX) {
+          static constexpr float sampleConversion = 1.0f / (float)0xFF;
+          float sampleStartPointX = (currentSampleX == firstSamplePosX) ? (firstSamplePointX - (float)firstSamplePosX) : 0.0f;
+          float sampleEndPointX = (currentSampleX == lastSamplePosX) ? (lastSamplePointX - (float)lastSamplePosX) : 1.0f;
+          float sampleWeightX = sampleEndPointX - sampleStartPointX;
+          entry.sampleWeightX.push_back(sampleConversion * sampleWeightX);
+        }
+      }
+      entry.firstSamplePosX = firstSamplePosX;
+      entry.lastSamplePosX = lastSamplePosX;
+      entry.conversionFactor = totalDomainInverse * (float)0xFF;
     }
-    auto ldr = convertedSamples[0];
-    auto ldg = convertedSamples[1];
-    auto ldb = convertedSamples[2];
+  }
+
+  // Mix the analog video stream from the laserdisc with the video output from the Mega Drive VDP
+  for (size_t i = 0; i < video.FrameBufferWidth; ++i) {
+    // Calculate the pixel value for the laserdisc analog video, using a linear resampling of the source video line to
+    // match the screen output resolution.
+    auto& entry = video.lineResamplingData[i];
+    float convertedSamplesAsFloat[3] = {};
+    size_t sampleWeightIndex = 0;
+    for (unsigned int currentSampleX = entry.firstSamplePosX; currentSampleX <= entry.lastSamplePosX; ++currentSampleX)
+    {
+      auto pixelValuePosInSourceFrame = analogVideoFrameData + sourceLinePos + (currentSampleX * channelCount);
+      convertedSamplesAsFloat[0] += (*(pixelValuePosInSourceFrame + 0)) * entry.sampleWeightX[sampleWeightIndex];
+      convertedSamplesAsFloat[1] += (*(pixelValuePosInSourceFrame + 1)) * entry.sampleWeightX[sampleWeightIndex];
+      convertedSamplesAsFloat[2] += (*(pixelValuePosInSourceFrame + 2)) * entry.sampleWeightX[sampleWeightIndex];
+      ++sampleWeightIndex;
+    }
+    convertedSamplesAsFloat[0] *= entry.conversionFactor;
+    convertedSamplesAsFloat[1] *= entry.conversionFactor;
+    convertedSamplesAsFloat[2] *= entry.conversionFactor;
+    auto ldr = (u8)std::min((convertedSamplesAsFloat[0] + 0.5f), (float)0xFF);
+    auto ldg = (u8)std::min((convertedSamplesAsFloat[1] + 0.5f), (float)0xFF);
+    auto ldb = (u8)std::min((convertedSamplesAsFloat[2] + 0.5f), (float)0xFF);
 
     // Retrieve the output VDP color for this pixel location
     u32 currentPixelValue = ((vdpPixelBuffer != nullptr) && ((ptrdiff_t)i >= std::max(vdpBorderLeftOffset, (ptrdiff_t)0))) ? vdpPixelBuffer[(ptrdiff_t)i - vdpBorderLeftOffset] : 0x1400;

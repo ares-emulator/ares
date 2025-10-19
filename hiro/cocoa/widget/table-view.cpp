@@ -287,7 +287,7 @@
           if(auto tableViewItem = tableView->item([view rowAtPoint:point])) {
             if(auto tableViewCell = tableViewItem->cell([view columnAtPoint:point])) {
               tableViewCell->state.checked = !tableViewCell->state.checked;
-              tableView->doToggle(tableViewCell->instance);
+              tableView->doToggle(tableViewCell);
             }
           }
         }

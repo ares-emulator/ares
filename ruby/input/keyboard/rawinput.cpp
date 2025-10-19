@@ -13,7 +13,7 @@ struct InputKeyboardRawInput {
   std::vector<Key> keys;
 
   struct Keyboard {
-    shared_pointer<HID::Keyboard> hid{new HID::Keyboard};
+    std::shared_ptr<HID::Keyboard> hid = std::make_shared<HID::Keyboard>();
   } kb;
 
   auto update(RAWINPUT* input) -> void {
@@ -33,13 +33,13 @@ struct InputKeyboardRawInput {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     for(auto n : range(keys.size())) assign(n, keys[n].value);
     devices.push_back(kb.hid);
   }
 
   auto initialize() -> bool {
-    rawinput.updateKeyboard = {&InputKeyboardRawInput::update, this};
+    rawinput.updateKeyboard = std::bind_front(&InputKeyboardRawInput::update, this);
 
     //Pause sends 0x001d,4 + 0x0045,0; NumLock sends only 0x0045,0
     //pressing Pause will falsely trigger NumLock
@@ -172,6 +172,6 @@ struct InputKeyboardRawInput {
   }
 
   auto terminate() -> void {
-    rawinput.updateKeyboard.reset();
+    rawinput.updateKeyboard = {};
   }
 };

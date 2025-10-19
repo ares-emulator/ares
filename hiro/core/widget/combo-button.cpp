@@ -38,7 +38,7 @@ auto mComboButton::items() const -> std::vector<ComboButtonItem> {
   return items;
 }
 
-auto mComboButton::onChange(const function<void ()>& callback) -> type& {
+auto mComboButton::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }

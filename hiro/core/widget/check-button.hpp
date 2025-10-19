@@ -6,7 +6,7 @@ struct mCheckButton : mWidget {
   auto checked() const -> bool;
   auto doToggle() const -> void;
   auto icon() const -> multiFactorImage;
-  auto onToggle(const function<void ()>& callback = {}) -> type&;
+  auto onToggle(const std::function<void ()>& callback = {}) -> type&;
   auto orientation() const -> Orientation;
   auto setBordered(bool bordered = true) -> type&;
   auto setChecked(bool checked = true) -> type&;
@@ -20,7 +20,7 @@ struct mCheckButton : mWidget {
     bool bordered = true;
     bool checked = false;
     multiFactorImage icon;
-    function<void ()> onToggle;
+    std::function<void ()> onToggle;
     Orientation orientation = Orientation::Horizontal;
     string text;
   } state;

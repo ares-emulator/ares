@@ -19,15 +19,15 @@ auto Cartridge::connect() -> void {
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
 
-  if(information.board == "Linear") board = new Board::Linear{*this};
-  if(information.board == "Atari8k") board = new Board::Atari8k{*this};
-  if(information.board == "Atari16k") board = new Board::Atari16k{*this};
-  if(information.board == "Atari32k") board = new Board::Atari32k{*this};
-  if(information.board == "Commavid") board = new Board::Commavid{*this};
-  if(information.board == "ParkerBros8k") board = new Board::ParkerBros{*this};
-  if(information.board == "Tigervision") board = new Board::Tigervision{*this};
+  if(information.board == "Linear") board = std::make_unique<Board::Linear>(*this);
+  if(information.board == "Atari8k") board = std::make_unique<Board::Atari8k>(*this);
+  if(information.board == "Atari16k") board = std::make_unique<Board::Atari16k>(*this);
+  if(information.board == "Atari32k") board = std::make_unique<Board::Atari32k>(*this);
+  if(information.board == "Commavid") board = std::make_unique<Board::Commavid>(*this);
+  if(information.board == "ParkerBros8k") board = std::make_unique<Board::ParkerBros>(*this);
+  if(information.board == "Tigervision") board = std::make_unique<Board::Tigervision>(*this);
 
-  if(!board) board = new Board::Interface{*this};
+  if(!board) board = std::make_unique<Board::Interface>(*this);
   board->pak = pak;
   board->load();
   power();

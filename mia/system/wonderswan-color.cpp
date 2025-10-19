@@ -6,7 +6,7 @@ struct WonderSwanColor : System {
 
 auto WonderSwanColor::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("boot.rom", Resource::WonderSwanColor::Boot);
   pak->append("save.eeprom", 2048);
 

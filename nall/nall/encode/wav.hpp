@@ -3,7 +3,7 @@
 namespace nall::Encode {
 
 struct WAV {
-  static auto stereo_16bit(const string& filename, array_view<s16> left, array_view<s16> right, u32 frequency) -> bool {
+  static auto stereo_16bit(const string& filename, std::span<const s16> left, std::span<const s16> right, u32 frequency) -> bool {
     if(left.size() != right.size()) return false;
     static u32 channels = 2;
     static u32 bits = 16;
@@ -48,7 +48,7 @@ struct WAV {
     return true;
   }
 
-  static auto mono_16bit(const string& filename, array_view<s16> samples, u32 frequency) -> bool {
+  static auto mono_16bit(const string& filename, std::span<s16> samples, u32 frequency) -> bool {
     static u32 channels = 1;
     static u32 bits = 16;
 

@@ -1,6 +1,6 @@
 auto PCD::read(n8 bank, n13 address, n8 data) -> n8 {
   if(bank >= 0x00 && bank <= 0x3f && Model::PCEngineDuo()) {
-    return bios.read(address);
+    return bios.read(bank << 13 | address);
   }
 
   if(bank >= 0x68 && bank <= 0x7f && Model::PCEngineDuo() && sramEnable) {

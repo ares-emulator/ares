@@ -19,7 +19,7 @@ auto CardSlot::unload() -> void {
 }
 
 auto CardSlot::allocate(string name) -> Node::Peripheral {
-  if(name == "Memory Card") device = new Card(port);
+  if(name == "Memory Card") device = std::make_unique<Card>(port);
   if(device) return device->node;
   return {};
 }

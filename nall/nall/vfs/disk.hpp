@@ -5,8 +5,9 @@
 namespace nall::vfs {
 
 struct disk : file {
-  static auto open(string location_, mode mode_) -> shared_pointer<disk> {
-    auto instance = shared_pointer<disk>{new disk};
+  static auto open(string location_, mode mode_) -> std::shared_ptr<disk> {
+    struct enable_make_shared : disk { using disk::disk; };
+    auto instance = std::make_shared<enable_make_shared>();
     if(!instance->_open(location_, mode_)) return {};
     return instance;
   }

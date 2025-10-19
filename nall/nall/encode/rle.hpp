@@ -3,7 +3,7 @@
 namespace nall::Encode {
 
 template<u32 S = 1, u32 M = 4 / S>  //S = word size; M = match length
-inline auto RLE(array_view<u8> input) -> std::vector<u8> {
+inline auto RLE(std::span<const u8> input) -> std::vector<u8> {
   std::vector<u8> output;
   for(u32 byte : range(8)) output.push_back((u8)(input.size() >> (byte * 8)));
 

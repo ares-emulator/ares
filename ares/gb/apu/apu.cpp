@@ -58,7 +58,7 @@ auto APU::main() -> void {
 }
 
 auto APU::power() -> void {
-  Thread::create(2 * 1024 * 1024, {&APU::main, this});
+  Thread::create(2 * 1024 * 1024, std::bind_front(&APU::main, this));
 
   square1.power();
   square2.power();

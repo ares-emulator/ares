@@ -2,7 +2,7 @@ struct GameBoyColor : Emulator {
   GameBoyColor();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 };
 
 GameBoyColor::GameBoyColor() {
@@ -59,7 +59,7 @@ auto GameBoyColor::save() -> bool {
   return true;
 }
 
-auto GameBoyColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto GameBoyColor::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Game Boy Color") return system->pak;
   if(node->name() == "Game Boy Color Cartridge") return game->pak;
   return {};

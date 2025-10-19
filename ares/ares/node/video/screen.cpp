@@ -1,17 +1,18 @@
+#include <memory>
 Screen::Screen(string name, u32 width, u32 height) : Video(name) {
   _canvasWidth  = width;
   _canvasHeight = height;
 
   if(width && height) {
-    _inputA = new u32[width * height]();
-    _inputB = new u32[width * height]();
-    _output = new u32[width * height]();
-    _rotate = new u32[width * height]();
+    _inputA = std::make_unique<u32[]>(width * height);
+    _inputB = std::make_unique<u32[]>(width * height);
+    _output = std::make_unique<u32[]>(width * height);
+    _rotate = std::make_unique<u32[]>(width * height);
     _lineOverrideActive.resize(width * height, false);
     _lineOverride.resize(width * height, nullptr);
 
     if constexpr(ares::Video::Threaded) {
-      _thread = nall::thread::create({&Screen::main, this});
+      _thread = nall::thread::create(std::bind_front(&Screen::main, this));
     }
   }
 }
@@ -48,17 +49,17 @@ auto Screen::quit() -> void {
 
 auto Screen::power() -> void {
   lock_guard<recursive_mutex> lock(_mutex);
-  memory::fill<u32>(_inputA.data(), _canvasWidth * _canvasHeight, _fillColor);
-  memory::fill<u32>(_inputB.data(), _canvasWidth * _canvasHeight, _fillColor);
-  memory::fill<u32>(_output.data(), _canvasWidth * _canvasHeight, _fillColor);
-  memory::fill<u32>(_rotate.data(), _canvasWidth * _canvasHeight, _fillColor);
+  memory::fill<u32>(_inputA.get(), _canvasWidth * _canvasHeight, _fillColor);
+  memory::fill<u32>(_inputB.get(), _canvasWidth * _canvasHeight, _fillColor);
+  memory::fill<u32>(_output.get(), _canvasWidth * _canvasHeight, _fillColor);
+  memory::fill<u32>(_rotate.get(), _canvasWidth * _canvasHeight, _fillColor);
   memory::fill<n1>(_lineOverrideActive.data(), _canvasWidth * _canvasHeight, false);
   memory::fill<const u32*>(_lineOverride.data(), _canvasWidth * _canvasHeight, nullptr);
 }
 
-auto Screen::pixels(bool frame) -> array_span<u32> {
-  if(frame == 0) return {_inputA.data(), _canvasWidth * _canvasHeight};
-  if(frame == 1) return {_inputB.data(), _canvasWidth * _canvasHeight};
+auto Screen::pixels(bool frame) -> std::span<u32> {
+  if(frame == 0) return {_inputA.get(), _canvasWidth * _canvasHeight};
+  if(frame == 1) return {_inputB.get(), _canvasWidth * _canvasHeight};
   return {};
 }
 
@@ -73,7 +74,7 @@ auto Screen::resetSprites() -> void {
   _sprites.clear();
 }
 
-auto Screen::setRefresh(function<void ()> refresh) -> void {
+auto Screen::setRefresh(std::function<void ()> refresh) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _refresh = refresh;
 }
@@ -190,7 +191,7 @@ auto Screen::detach(Node::Video::Sprite sprite) -> void {
   std::erase(_sprites, sprite);
 }
 
-auto Screen::colors(u32 colors, function<n64 (n32)> color) -> void {
+auto Screen::colors(u32 colors, std::function<n64 (n32)> color) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _colors = colors;
   _color = color;
@@ -228,8 +229,8 @@ auto Screen::refresh() -> void {
   auto pitch  = _canvasWidth;
   auto width  = _canvasWidth;
   auto height = _canvasHeight;
-  auto input  = _inputB.data();
-  auto output = _output.data();
+  auto input  = _inputB.get();
+  auto output = _output.get();
 
   for(u32 y : range(height)) {
     auto source = input  + y * pitch;
@@ -310,11 +311,11 @@ auto Screen::refresh() -> void {
     for(u32 y : range(height)) {
       auto source = output + y * width;
       for(u32 x : range(width)) {
-        auto target = _rotate.data() + (width - 1 - x) * height + y;
+        auto target = _rotate.get() + (width - 1 - x) * height + y;
         *target = *source++;
       }
     }
-    output = _rotate.data();
+    output = _rotate.get();
     swap(width, height);
     swap(viewWidth, viewHeight);
   }
@@ -324,11 +325,11 @@ auto Screen::refresh() -> void {
     for(u32 y : range(height)) {
       auto source = output + y * width;
       for(u32 x : range(width)) {
-        auto target = _rotate.data() + (height - 1 - y) * width + (width - 1 - x);
+        auto target = _rotate.get() + (height - 1 - y) * width + (width - 1 - x);
         *target = *source++;
       }
     }
-    output = _rotate.data();
+    output = _rotate.get();
   }
 
   if(_rotation == 270) {
@@ -336,17 +337,17 @@ auto Screen::refresh() -> void {
     for(u32 y : range(height)) {
       auto source = output + y * width;
       for(u32 x : range(width)) {
-        auto target = _rotate.data() + x * height + (height - 1 - y);
+        auto target = _rotate.get() + x * height + (height - 1 - y);
         *target = *source++;
       }
     }
-    output = _rotate.data();
+    output = _rotate.get();
     swap(width, height);
     swap(viewWidth, viewHeight);
   }
 
-  platform->video(shared(), output + viewX + viewY * width, width * sizeof(u32), viewWidth, viewHeight);
-  memory::fill<u32>(_inputB.data(), width * height, _fillColor);
+  platform->video(std::static_pointer_cast<Core::Video::Screen>(shared_from_this()), output + viewX + viewY * width, width * sizeof(u32), viewWidth, viewHeight);
+  memory::fill<u32>(_inputB.get(), width * height, _fillColor);
 }
 
 auto Screen::lookupPalette(u32 index) -> u32 {
@@ -368,7 +369,7 @@ auto Screen::refreshPalette() -> void {
   if(_palette) return;
 
   //generate the color lookup palettes to convert native colors to ARGB8888
-  _palette = new u32[_colors];
+  _palette = std::make_unique<u32[]>(_colors);
   for(u32 index : range(_colors)) {
     n64 color = _color(index);
     n16 b = color.bit( 0,15);
@@ -378,10 +379,9 @@ auto Screen::refreshPalette() -> void {
 
     if(_saturation != 1.0) {
       n16 grayscale = uclamp<16>((r + g + b) / 3);
-      f64 inverse = max(0.0, 1.0 - _saturation);
-      r = uclamp<16>(r * _saturation + grayscale * inverse);
-      g = uclamp<16>(g * _saturation + grayscale * inverse);
-      b = uclamp<16>(b * _saturation + grayscale * inverse);
+      r = uclamp<16>(grayscale + (r - grayscale) * _saturation);
+      g = uclamp<16>(grayscale + (g - grayscale) * _saturation);
+      b = uclamp<16>(grayscale + (b - grayscale) * _saturation);
     }
 
     if(_gamma != 1.0) {

@@ -20,12 +20,12 @@ auto Cartridge::connect() -> void {
   information.board  = pak->attribute("board");
   information.expansionRam = pak->attribute("expansionRam").integer();
 
-  if(information.board == "Linear"   ) board = new Board::Linear{*this};
-  if(information.board == "Taiwan-A" ) board = new Board::TaiwanA{*this};
-  if(information.board == "Taiwan-B" ) board = new Board::TaiwanB{*this};
-  if(information.board == "sega/sg1000a") board = new Board::ArcadeRom{*this};
+  if(information.board == "Linear"   ) board = std::make_unique<Board::Linear>(*this);
+  if(information.board == "Taiwan-A" ) board = std::make_unique<Board::TaiwanA>(*this);
+  if(information.board == "Taiwan-B" ) board = std::make_unique<Board::TaiwanB>(*this);
+  if(information.board == "sega/sg1000a") board = std::make_unique<Board::ArcadeRom>(*this);
 
-  if(!board) board = new Board::Interface{*this};
+  if(!board) board = std::make_unique<Board::Interface>(*this);
   board->pak = pak;
   board->load();
   power();

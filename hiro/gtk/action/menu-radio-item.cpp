@@ -29,8 +29,8 @@ auto pMenuRadioItem::setChecked() -> void {
 auto pMenuRadioItem::setGroup(sGroup group) -> void {
   maybe<GtkRadioMenuItem*> gtkRadioMenuItem;
   for(auto& weak : group->state.objects) {
-    if(auto object = weak.acquire()) {
-      if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.data())) {
+    if(auto object = weak.lock()) {
+      if(auto menuRadioItem = dynamic_cast<mMenuRadioItem*>(object.get())) {
         if(auto self = menuRadioItem->self()) {
           self->lock();
           gtk_radio_menu_item_set_group(self->gtkRadioMenuItem, nullptr);
@@ -55,7 +55,7 @@ auto pMenuRadioItem::setText(const string& text) -> void {
 auto pMenuRadioItem::groupLocked() const -> bool {
   if(auto group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
+      if(auto object = weak.lock()) {
         if(auto self = object->self()) {
           if(self->locked()) return true;
         }

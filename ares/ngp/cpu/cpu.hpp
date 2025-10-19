@@ -653,8 +653,8 @@ struct CPU : TLCS900H, Thread {
 
     n8 width;
     n2 timing;
-    function<n8   (n24)> reader;
-    function<void (n24, n8)> writer;
+    std::function<n8   (n24)> reader;
+    std::function<void (n24, n8)> writer;
 
   //unserialized:
     n1 debugging;

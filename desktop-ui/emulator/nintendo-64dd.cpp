@@ -4,7 +4,7 @@ struct Nintendo64DD : Nintendo64 {
   auto load(Menu) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
   u32 regionID = 0;
   sTimer diskInsertTimer;
@@ -199,7 +199,7 @@ auto Nintendo64DD::save() -> bool {
   return true;
 }
 
-auto Nintendo64DD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto Nintendo64DD::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Nintendo 64") return system->pak;
   if(node->name() == "Nintendo 64DD Disk") return game->pak;
   if(node->name() == "Gamepad") return gamepad->pak;

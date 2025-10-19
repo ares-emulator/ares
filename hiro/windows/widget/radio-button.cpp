@@ -38,8 +38,8 @@ auto pRadioButton::setBordered(bool bordered) -> void {
 auto pRadioButton::setChecked() -> void {
   if(auto& group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioButton = dynamic_cast<mRadioButton*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioButton = dynamic_cast<mRadioButton*>(object.get())) {
           if(auto self = radioButton->self()) {
             SendMessage(self->hwnd, BM_SETCHECK, (WPARAM)(&self->reference == &reference), 0);
           }
@@ -63,8 +63,8 @@ auto pRadioButton::setGroup(sGroup group) -> void {
   bool first = true;
   if(auto& group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioButton = dynamic_cast<mRadioButton*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioButton = dynamic_cast<mRadioButton*>(object.get())) {
           if(auto self = radioButton->self()) {
             SendMessage(self->hwnd, BM_SETCHECK, (WPARAM)(radioButton->state.checked = first), 0);
             first = false;

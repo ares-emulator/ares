@@ -46,48 +46,48 @@ namespace ares::Core {
 }
 
 namespace ares::Node {
-  using Object           = shared_pointer<Core::Object>;
-  using System           = shared_pointer<Core::System>;
-  using Peripheral       = shared_pointer<Core::Peripheral>;
-  using Tape             = shared_pointer<Core::Tape>;
-  using Port             = shared_pointer<Core::Port>;
+  using Object           = std::shared_ptr<Core::Object>;
+  using System           = std::shared_ptr<Core::System>;
+  using Peripheral       = std::shared_ptr<Core::Peripheral>;
+  using Tape             = std::shared_ptr<Core::Tape>;
+  using Port             = std::shared_ptr<Core::Port>;
   namespace Component {
-    using Component      = shared_pointer<Core::Component::Component>;
-    using RealTimeClock  = shared_pointer<Core::Component::RealTimeClock>;
+    using Component      = std::shared_ptr<Core::Component::Component>;
+    using RealTimeClock  = std::shared_ptr<Core::Component::RealTimeClock>;
   }
   namespace Video {
-    using Video          = shared_pointer<Core::Video::Video>;
-    using Sprite         = shared_pointer<Core::Video::Sprite>;
-    using Screen         = shared_pointer<Core::Video::Screen>;
+    using Video          = std::shared_ptr<Core::Video::Video>;
+    using Sprite         = std::shared_ptr<Core::Video::Sprite>;
+    using Screen         = std::shared_ptr<Core::Video::Screen>;
   }
   namespace Audio {
-    using Audio          = shared_pointer<Core::Audio::Audio>;
-    using Stream         = shared_pointer<Core::Audio::Stream>;
+    using Audio          = std::shared_ptr<Core::Audio::Audio>;
+    using Stream         = std::shared_ptr<Core::Audio::Stream>;
   }
   namespace Input {
-    using Input          = shared_pointer<Core::Input::Input>;
-    using Button         = shared_pointer<Core::Input::Button>;
-    using Axis           = shared_pointer<Core::Input::Axis>;
-    using Trigger        = shared_pointer<Core::Input::Trigger>;
-    using Rumble         = shared_pointer<Core::Input::Rumble>;
+    using Input          = std::shared_ptr<Core::Input::Input>;
+    using Button         = std::shared_ptr<Core::Input::Button>;
+    using Axis           = std::shared_ptr<Core::Input::Axis>;
+    using Trigger        = std::shared_ptr<Core::Input::Trigger>;
+    using Rumble         = std::shared_ptr<Core::Input::Rumble>;
   }
   namespace Setting {
-    using Setting        = shared_pointer<Core::Setting::Setting>;
-    using Boolean        = shared_pointer<Core::Setting::Boolean>;
-    using Natural        = shared_pointer<Core::Setting::Natural>;
-    using Integer        = shared_pointer<Core::Setting::Integer>;
-    using Real           = shared_pointer<Core::Setting::Real>;
-    using String         = shared_pointer<Core::Setting::String>;
+    using Setting        = std::shared_ptr<Core::Setting::Setting>;
+    using Boolean        = std::shared_ptr<Core::Setting::Boolean>;
+    using Natural        = std::shared_ptr<Core::Setting::Natural>;
+    using Integer        = std::shared_ptr<Core::Setting::Integer>;
+    using Real           = std::shared_ptr<Core::Setting::Real>;
+    using String         = std::shared_ptr<Core::Setting::String>;
   }
   namespace Debugger {
-    using Debugger       = shared_pointer<Core::Debugger::Debugger>;
-    using Memory         = shared_pointer<Core::Debugger::Memory>;
-    using Graphics       = shared_pointer<Core::Debugger::Graphics>;
-    using Properties     = shared_pointer<Core::Debugger::Properties>;
+    using Debugger       = std::shared_ptr<Core::Debugger::Debugger>;
+    using Memory         = std::shared_ptr<Core::Debugger::Memory>;
+    using Graphics       = std::shared_ptr<Core::Debugger::Graphics>;
+    using Properties     = std::shared_ptr<Core::Debugger::Properties>;
     namespace Tracer {
-      using Tracer       = shared_pointer<Core::Debugger::Tracer::Tracer>;
-      using Notification = shared_pointer<Core::Debugger::Tracer::Notification>;
-      using Instruction  = shared_pointer<Core::Debugger::Tracer::Instruction>;
+      using Tracer       = std::shared_ptr<Core::Debugger::Tracer::Tracer>;
+      using Notification = std::shared_ptr<Core::Debugger::Tracer::Notification>;
+      using Instruction  = std::shared_ptr<Core::Debugger::Tracer::Instruction>;
     }
   }
 }
@@ -167,9 +167,10 @@ namespace ares::Node {
   }
 
   static inline auto parent(Object child) -> Object {
-    if(!child || !child->parent()) return {};
-    if(auto parent = child->parent().acquire()) return parent;
-    return {};
+    if(!child) return {};
+    auto wp = child->parent();
+    if(wp.expired()) return {};
+    return wp.lock();
   }
 
   template<typename T>

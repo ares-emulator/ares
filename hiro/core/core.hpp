@@ -2,7 +2,7 @@
 #include <nall/any.hpp>
 #include <nall/chrono.hpp>
 #include <nall/directory.hpp>
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/image.hpp>
 #include <nall/locale.hpp>
 #include <nall/maybe.hpp>
@@ -11,17 +11,15 @@
 #include <nall/vector-helpers.hpp>
 #include <nall/run.hpp>
 #include <nall/set.hpp>
-#include <nall/shared-pointer.hpp>
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>
 #include <nall/thread.hpp>
 #include <nall/traits.hpp>
-#include <nall/unique-pointer.hpp>
+#include <memory>
 #include <nall/utility.hpp>
 #include <vector>
 
 using nall::any;
-using nall::function;
 using nall::image;
 using nall::index_of;
 using nall::multiFactorImage;
@@ -29,10 +27,7 @@ using nall::Locale;
 using nall::maybe;
 using nall::nothing;
 using nall::set;
-using nall::shared_pointer;
-using nall::shared_pointer_weak;
 using nall::string;
-using nall::unique_pointer;
 
 namespace hiro {
 
@@ -43,8 +38,8 @@ struct Keyboard;
   struct Name; \
   struct m##Name; \
   struct p##Name; \
-  using s##Name = shared_pointer<m##Name>; \
-  using w##Name = shared_pointer_weak<m##Name>; \
+  using s##Name = std::shared_ptr<m##Name>; \
+  using w##Name = std::weak_ptr<m##Name>; \
 
 Declare(Object)
 Declare(Group)
@@ -124,7 +119,7 @@ enum class Sort : u32 { None, Ascending, Descending };
 
 #define Declare(Name) \
   using type = m##Name; \
-  operator s##Name() const { return instance; } \
+  operator s##Name() const { return std::static_pointer_cast<type>(instance.lock()); } \
   auto self() -> p##Name* { return (p##Name*)delegate; } \
   auto self() const -> const p##Name* { return (const p##Name*)delegate; } \
   auto bind(const s##Name& instance) -> void { \
@@ -144,7 +139,7 @@ enum class Sort : u32 { None, Ascending, Descending };
 #undef Declare
 #define Declare(Name) \
   using type = m##Name; \
-  operator s##Name() const { return instance; } \
+  operator s##Name() const { return std::static_pointer_cast<m##Name>(instance.lock()); } \
   auto self() -> p##Name* { return (p##Name*)delegate; } \
   auto self() const -> const p##Name* { return (const p##Name*)delegate; } \
   auto bind(const s##Name& instance) -> void { \

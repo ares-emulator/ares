@@ -21,7 +21,7 @@ auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
 
   screen = node->append<Node::Video::Screen>("Screen", 1280, 480);
-  screen->colors(1 << 16, {&VDP::color, this});
+  screen->colors(1 << 16, std::bind_front(&VDP::color, this));
   screen->setSize(1280, 480);
   screen->setScale(0.25, 0.5);
   screen->setAspect(32, 35);
@@ -49,7 +49,7 @@ auto VDP::frame() -> void {
 }
 
 auto VDP::power(bool reset) -> void {
-  Thread::create(system.frequency() / 2.0, {&VDP::main, this});
+  Thread::create(system.frequency() / 2.0, std::bind_front(&VDP::main, this));
   screen->power();
 
   for(auto& data : vram.pixels) data = 0;

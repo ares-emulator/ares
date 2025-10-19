@@ -319,7 +319,7 @@ auto Presentation::resizeWindow() -> void {
     u32 videoHeight = node->height() * node->scaleY();
     if(settings.video.aspectCorrection != "None")       videoWidth = videoWidth * node->aspectX() / node->aspectY();
     if(settings.video.aspectCorrection == "Anamorphic") videoWidth = videoWidth * 4 / 3;
-    if(node->rotation() == 90 || node->rotation() == 270) swap(videoWidth, videoHeight);
+    if(node->rotation() == 90 || node->rotation() == 270) std::swap(videoWidth, videoHeight);
 
     viewportWidth = videoWidth * multiplier;
     viewportHeight = videoHeight * multiplier;
@@ -669,7 +669,7 @@ auto Presentation::loadShaders() -> void {
   #endif
 
   if(shaderDirectories.size() == 0) {
-    function<void(string)> findShaderDirectories = [&](string path) {
+    std::function<void(string)> findShaderDirectories = [&](string path) {
       for(auto &entry: directory::folders(path)) findShaderDirectories({path, entry});
       auto files = directory::files(path, "*.slangp");
       if(files.size() > 0) shaderDirectories.push_back((string({path}).trimLeft(location, 1L)));

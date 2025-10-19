@@ -1,6 +1,6 @@
 struct TapePort {
   Node::Port port;
-  unique_pointer<Tape> device;
+  std::unique_ptr<Tape> device;
 
   TapePort(string name);
 

@@ -4,8 +4,8 @@
 
 namespace mia {
 
-function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/Systems/"}; };
-function<string ()> saveLocation = [] { return string{}; };
+std::function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/Systems/"}; };
+std::function<string ()> saveLocation = [] { return string{}; };
 std::vector<string> media;
 
 auto locate(const string &name) -> string {
@@ -59,7 +59,7 @@ auto operator+=(string& lhs, const string& rhs) -> string& {
   return lhs;
 }
 
-auto hexString(array_view<u8> view) -> string {
+auto hexString(std::span<const u8> view) -> string {
   string s;
   for(u8 n : view) s.append(hex(n, 2L), " ");
   return s.stripRight();
@@ -73,11 +73,11 @@ auto hexString(array_view<u8> view) -> string {
 #include "program/program.cpp"
 #endif
 
-auto setHomeLocation(function<string ()> callback) -> void {
+auto setHomeLocation(std::function<string ()> callback) -> void {
   homeLocation = callback;
 }
 
-auto setSaveLocation(function<string ()> callback) -> void {
+auto setSaveLocation(std::function<string ()> callback) -> void {
   saveLocation = callback;
 }
 
@@ -157,12 +157,12 @@ auto identify(const string& filename) -> string {
   return {};  //unable to identify
 }
 
-auto import(shared_pointer<Pak> pak, const string& filename) -> bool {
+auto import(std::shared_ptr<Pak> pak, const string& filename) -> bool {
   if(pak->load(filename) == successful) {
     string pathname = {Path::user(), "Emulation/", pak->name(), "/", Location::prefix(filename), ".", pak->extensions().front(), "/"};
     if(!directory::create(pathname)) return false;
     for(auto& node : *pak->pak) {
-      if(auto input = node.cast<vfs::file>()) {
+      if(auto input = std::dynamic_pointer_cast<vfs::file>(node)) {
         if(input->name() == "manifest.bml" && !settings.createManifests) continue;
         if(auto output = file::open({pathname, input->name()}, file::mode::write)) {
           while(!input->end()) output.write(input->read());

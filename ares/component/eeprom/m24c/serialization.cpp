@@ -15,7 +15,7 @@ auto M24C::serialize(serializer& s) -> void {
   s(output);
   s(response);
   s(writable);
-  s(array_span<u8>{memory, size()});
+  s(std::span<n8>{memory, size()});
   if(type >= Type::M24C32) s(idpage);
   s(locked);
 }

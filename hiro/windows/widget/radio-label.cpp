@@ -25,8 +25,8 @@ auto pRadioLabel::minimumSize() const -> Size {
 auto pRadioLabel::setChecked() -> void {
   if(auto& group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.get())) {
           if(auto self = radioLabel->self()) {
             SendMessage(self->hwnd, BM_SETCHECK, (WPARAM)(&self->reference == &reference), 0);
           }
@@ -40,8 +40,8 @@ auto pRadioLabel::setGroup(sGroup group) -> void {
   bool first = true;
   if(auto& group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.get())) {
           if(auto self = radioLabel->self()) {
             SendMessage(self->hwnd, BM_SETCHECK, (WPARAM)(radioLabel->state.checked = first), 0);
             first = false;

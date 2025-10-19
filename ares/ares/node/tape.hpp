@@ -27,8 +27,8 @@ struct Tape : Peripheral {
     }
   }
 
-  auto setLoad(function<bool()> load) -> void { _load = load; }
-  auto setUnload(function<void()> unload) -> void { _unload = unload; }
+  auto setLoad(std::function<bool()> load) -> void { _load = load; }
+  auto setUnload(std::function<void()> unload) -> void { _unload = unload; }
 
   auto setSupportPlay(bool support) -> void { _supportPlay = support; }
   auto setSupportRecord(bool support) -> void { _supportRecord = support; }
@@ -69,6 +69,6 @@ private:
   u64 _length = 0;
   u64 _position = 0;
   u64 _frequency = 1;
-  function<bool()> _load;
-  function<void()> _unload;
+  std::function<bool()> _load;
+  std::function<void()> _unload;
 };

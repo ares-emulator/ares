@@ -27,7 +27,7 @@ auto ZXSpectrum::loadTzx(string location) -> LoadResult {
   if(tzx.DecodeFile(input.data(), input.size()) == FileTypeUndetermined) return invalidROM;
   tzx.GenerateAudioData();
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",     document["game/title"].string());
   pak->setAttribute("range",     (1 << 8) - 1);
   pak->setAttribute("frequency", 44100);
@@ -54,7 +54,7 @@ auto ZXSpectrum::loadWav(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",      document["game/title"].string());
   pak->setAttribute("range",      document["game/range"].natural());
   pak->setAttribute("frequency",  document["game/frequency"].natural());

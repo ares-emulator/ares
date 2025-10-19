@@ -11,18 +11,16 @@
 #include <vector>
 
 #include <nall/platform.hpp>
-#include <nall/array-view.hpp>
 #include <nall/atoi.hpp>
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/intrinsics.hpp>
 #include <nall/memory.hpp>
 #include <nall/primitives.hpp>
-#include <nall/shared-pointer.hpp>
 #include <nall/stdint.hpp>
-#include <nall/unique-pointer.hpp>
 #include <nall/utility.hpp>
 #include <nall/varint.hpp>
 #include <nall/view.hpp>
+#include <span>
 
 namespace nall {
 
@@ -155,10 +153,10 @@ public:
 
   explicit operator bool() const { return _size; }
   operator const char*() const { return (const char*)data(); }
-  operator array_span<char>() { return {(char*)get(), size()}; }
-  operator array_view<char>() const { return {(const char*)data(), size()}; }
-  operator array_span<u8>() { return {(u8*)get(), size()}; }
-  operator array_view<u8>() const { return {(const u8*)data(), size()}; }
+  operator std::span<char>() { return {(char*)get(), size()}; }
+  operator std::span<const char>() const { return {(const char*)data(), size()}; }
+  operator std::span<u8>() { return {(u8*)get(), size()}; }
+  operator std::span<const u8>() const { return {(const u8*)data(), size()}; }
 
   auto operator==(const string& source) const -> bool {
     return size() == source.size() && memory::compare(data(), source.data(), size()) == 0;

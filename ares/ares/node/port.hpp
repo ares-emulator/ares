@@ -7,9 +7,9 @@ struct Port : Object {
   auto hotSwappable() const -> bool { return _hotSwappable; }
   auto supported() const -> std::vector<string> { return _supported; }
 
-  auto setAllocate(function<Node::Peripheral (string)> allocate) -> void { _allocate = allocate; }
-  auto setConnect(function<void ()> connect) -> void { _connect = connect; }
-  auto setDisconnect(function<void ()> disconnect) -> void { _disconnect = disconnect; }
+  auto setAllocate(std::function<Node::Peripheral (string)> allocate) -> void { _allocate = allocate; }
+  auto setConnect(std::function<void ()> connect) -> void { _connect = connect; }
+  auto setDisconnect(std::function<void ()> disconnect) -> void { _disconnect = disconnect; }
   auto setType(string type) -> void { _type = type; }
   auto setFamily(string family) -> void { _family = family; }
   auto setHotSwappable(bool hotSwappable) -> void { _hotSwappable = hotSwappable; }
@@ -64,9 +64,9 @@ struct Port : Object {
   }
 
 protected:
-  function<Node::Peripheral (string)> _allocate;
-  function<void ()> _connect;
-  function<void ()> _disconnect;
+  std::function<Node::Peripheral (string)> _allocate;
+  std::function<void ()> _connect;
+  std::function<void ()> _disconnect;
   string _type;
   string _family;
   bool _hotSwappable = false;

@@ -2,9 +2,9 @@ struct PCEngineCD : PCEngine {
   PCEngineCD();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> bios;
+  std::shared_ptr<mia::Pak> bios;
   u32 biosID = 0;
 };
 
@@ -13,7 +13,7 @@ PCEngineCD::PCEngineCD() {
   name = "PC Engine CD";
 
   firmware.push_back({"System-Card 1.0", "Japan", "afe9f27f91ac918348555b86298b4f984643eafa2773196f2c5441ea84f0c3bb"});
-  firmware.push_back({"Arcade Card"    , "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});
+  firmware.push_back({"System Card 3.0", "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});
   firmware.push_back({"System Card 3.0", "US",    "cadac2725711b3c442bcf237b02f5a5210c96f17625c35fa58f009e0ed39e4db"});
   firmware.push_back({"Games Express"  , "Japan", "4b86bb96a48a4ca8375fc0109631d0b1d64f255a03b01de70594d40788ba6c3d"});
 
@@ -21,7 +21,7 @@ PCEngineCD::PCEngineCD() {
 }
 
 auto PCEngineCD::load() -> LoadResult {
-  game = mia::Medium::create("PC Engine CD");
+  game = std::dynamic_pointer_cast<mia::Pak>(mia::Medium::create("PC Engine CD"));
   string location = Emulator::load(game, configuration.game);
   if(!location) return noFileSelected;
   LoadResult result = game->load(location);
@@ -41,7 +41,7 @@ auto PCEngineCD::load() -> LoadResult {
     }
   }
 
-  bios = mia::Medium::create("PC Engine");
+  bios = std::dynamic_pointer_cast<mia::Pak>(mia::Medium::create("PC Engine"));
   result = bios->load(firmware[biosID].location);
   if(result != successful) {
     result.firmwareSystemName = "PC Engine";
@@ -83,7 +83,7 @@ auto PCEngineCD::save() -> bool {
   return true;
 }
 
-auto PCEngineCD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto PCEngineCD::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "PC Engine") return system->pak;
   if(node->name() == "PC Engine Card") return bios->pak;
   if(node->name() == "PC Engine CD Disc") return game->pak;

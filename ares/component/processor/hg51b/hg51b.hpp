@@ -180,8 +180,8 @@ protected:
   } io;
 
   n23 stack[8];
-  function<void   ()> instructionTable[65536];
-  function<string ()> disassembleTable[65536];
+  std::function<void   ()> instructionTable[65536];
+  std::function<string ()> disassembleTable[65536];
 
   auto disassembleADD(n7 reg, n5 shift) -> string;
   auto disassembleADD(n8 imm, n5 shift) -> string;

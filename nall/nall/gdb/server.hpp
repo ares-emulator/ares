@@ -2,6 +2,7 @@
 
 #include <nall/tcptext/tcptext-server.hpp>
 #include <nall/gdb/watchpoint.hpp>
+#include <functional>
 
 namespace nall::GDB {
 
@@ -66,24 +67,24 @@ class Server : public nall::TCPText::Server {
 
     struct {
       // Memory
-      function<string(u64 address, u32 byteCount)> read{};
-      function<void(u64 address, std::vector<u8> value)> write{};
-      function<u64(u64 address)> normalizeAddress{};
+      std::function<string(u64 address, u32 byteCount)> read{};
+      std::function<void(u64 address, std::vector<u8> value)> write{};
+      std::function<u64(u64 address)> normalizeAddress{};
 
       // Registers
-      function<string()> regReadGeneral{};
-      function<void(const string &regData)> regWriteGeneral{};
-      function<string(u32 regIdx)> regRead{};
-      function<bool(u32 regIdx, u64 regValue)> regWrite{};
+      std::function<string()> regReadGeneral{};
+      std::function<void(const string &regData)> regWriteGeneral{};
+      std::function<string(u32 regIdx)> regRead{};
+      std::function<bool(u32 regIdx, u64 regValue)> regWrite{};
 
       // Emulator
-      function<void(u64 address)> emuCacheInvalidate{};
-      function<string()> targetXML{};
+      std::function<void(u64 address)> emuCacheInvalidate{};
+      std::function<string()> targetXML{};
 
 
     } hooks{};
 
-    function<void()> onClientConnectCallback{};
+    std::function<void()> onClientConnectCallback{};
 
     // Exception
     auto reportSignal(Signal sig, u64 originPC) -> bool;

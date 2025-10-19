@@ -17,7 +17,7 @@ auto TapePort::unload() -> void {
 }
 
 auto TapePort::allocate(string name) -> Node::Peripheral {
-  if (name == "Family BASIC Data Recorder") device = new FamilyBasicDataRecorder(port);
+  if (name == "Family BASIC Data Recorder") device = std::make_unique<FamilyBasicDataRecorder>(port);
   if (device) return device->node;
   return {};
 }

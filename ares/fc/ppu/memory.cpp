@@ -6,14 +6,14 @@ auto PPU::writeCIRAM(n11 address, n8 data) -> void {
   ciram[address] = data;
 }
 
-auto PPU::readCGRAM(n5 address) -> n8 {
+auto PPU::readCGRAM(n5 address) -> n6 {
   if((address & 0x3) == 0x0) address &= ~0x10;
   n8 data = cgram[address];
   if(io.grayscale) data &= 0x30;
   return data;
 }
 
-auto PPU::writeCGRAM(n5 address, n8 data) -> void {
+auto PPU::writeCGRAM(n5 address, n6 data) -> void {
   cgram[address] = data;
 
   if((address & 0x3) == 0x0)
@@ -124,6 +124,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
         (Region::PAL() && io.ly >= 264 && io.ly <= vlines() - 2)) {
       if (enable()) {
         ++sprite.oamMainCounterIndex;
+        sprite.oamMainCounterTiming = 0;
         return;
       }
     }

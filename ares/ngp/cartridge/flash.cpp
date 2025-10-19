@@ -21,13 +21,13 @@ auto Flash::allocate(natural size) -> bool {
   return true;
 }
 
-auto Flash::load(shared_pointer<vfs::file> fp) -> void {
-  fp->read({rom.data(), rom.size()});
+auto Flash::load(VFS::File fp) -> void {
+  fp->read(rom.data(), rom.size());
   modified = false;
 }
 
-auto Flash::save(shared_pointer<vfs::file> fp) -> void {
-  fp->write({rom.data(), rom.size()});
+auto Flash::save(VFS::File fp) -> void {
+  fp->write(rom.data(), rom.size());
   modified = false;
 }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 namespace nall {
 
 //RS(n,k) = ReedSolomon<Length, Inputs>
@@ -134,7 +136,7 @@ struct ReedSolomon {
   }
 
   template<u32 Size>
-  static auto calculateErasures(array_view<u8> errors) -> maybe<Polynomial<Size, Size>> {
+  static auto calculateErasures(std::span<const u8> errors) -> maybe<Polynomial<Size, Size>> {
     Polynomial<Size, Size> matrix{};
     for(u32 row : range(Size)) {
       for(u32 col : range(Size)) {
@@ -146,7 +148,7 @@ struct ReedSolomon {
   }
 
   template<u32 Size>
-  auto correctErasures(array_view<u8> errors) -> s32 {
+  auto correctErasures(std::span<const u8> errors) -> s32 {
     calculateSyndromes();
     if(syndromesAreZero()) return 0;  //no errors detected
     if(auto matrix = calculateErasures<Size>(errors)) {
@@ -167,7 +169,7 @@ struct ReedSolomon {
   //because this is a template parameter, and the actual number of errors may very, this function is needed.
   //the alternative would be to convert Matrix<Rows, Cols> to a dynamically sized Matrix(Rows, Cols) type,
   //but this would require heap memory allocations and would be a massive performance penalty.
-  auto correctErrata(array_view<u8> errors) -> s32 {
+  auto correctErrata(std::span<const u8> errors) -> s32 {
     if(errors.size() >= Parity) return -errors.size();  //too many errors to be correctable
 
     switch(errors.size()) {

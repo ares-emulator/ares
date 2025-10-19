@@ -75,7 +75,7 @@ auto Gamepad::connect() -> void {
         u32 bank_size;
 
         fp->seek(0x20 + 0x1A);
-        fp->read(array_span<u8>{&banks, sizeof(banks)});
+        fp->read(&banks, sizeof(banks));
         fp->seek(0);
 
         if (banks < 1) {
@@ -256,7 +256,7 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
 read_pak_data_crc:
     //calculate the data CRC if we have enough recv bytes
     if(valid && recv >= 33) {
-      output[32] = pif.dataCRC({&output[0], 32});
+      output[32] = pif.dataCRC({(const u8*)&output[0], 32});
       if (data_crc_no_pak) output[32] ^= 0xFF;
     }
   }
@@ -340,7 +340,7 @@ write_pak_data_crc:
     if(valid) {
       output[0] = 0x00; //zero out the data CRC
       //calculate the data CRC if we have enough send bytes
-      if (send_data_len == 32) output[0] = pif.dataCRC({send_data, send_data_len});
+      if (send_data_len == 32) output[0] = pif.dataCRC({(const u8*)send_data, send_data_len});
       if (data_crc_no_pak) output[0] ^= 0xFF;
     }
   }

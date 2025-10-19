@@ -20,13 +20,13 @@ auto ControllerPort::unload() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Gamepad") device = new Gamepad(port);
-  if(name == "Light Phaser") device = new LightPhaser(port);
-  if(name == "Paddle") device = new Paddle(port);
-  if(name == "Sports Pad") device = new SportsPad(port);
-  if(name == "MD Control Pad") device = new MdControlPad(port);
-  if(name == "MD Fighting Pad") device = new MdFightingPad(port);
-  if(name == "Mega Mouse") device = new MegaMouse(port);
+  if(name == "Gamepad") device = std::make_unique<Gamepad>(port);
+  if(name == "Light Phaser") device = std::make_unique<LightPhaser>(port);
+  if(name == "Paddle") device = std::make_unique<Paddle>(port);
+  if(name == "Sports Pad") device = std::make_unique<SportsPad>(port);
+  if(name == "MD Control Pad") device = std::make_unique<MdControlPad>(port);
+  if(name == "MD Fighting Pad") device = std::make_unique<MdFightingPad>(port);
+  if(name == "Mega Mouse") device = std::make_unique<MegaMouse>(port);
   if(device) return device->node;
   return {};
 }

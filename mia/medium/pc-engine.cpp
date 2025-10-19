@@ -20,7 +20,7 @@ auto PCEngine::load(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("board",  document["game/board"].string());
@@ -114,15 +114,6 @@ auto PCEngine::analyze(std::vector<u8>& data) -> string {
   //note: because all three cards use the same ROM image, it is not possible to distinguish them here.
   //since the Arcade Card Pro is the most capable card, and is fully backward compatible, that is chosen here.
   if(digest == "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce") board = "Arcade Card Pro", region = "NTSC-J";
-
-  // PAC-N10
-  if(digest == "0e87a3385a27b3a4cac51934819b7eefa5b3d690768d2495633838488cd0e2e4") board = "Arcade Card Pro", region = "NTSC-U";
-
-  // PAC-N1
-  if(digest == "459325690a458baebd77495c91e37c4dddfdd542ba13a821ce954e5bb245627f") board = "Arcade Card Pro", region = "NTSC-J";
-
-  // PCE-LP1
-  if(digest == "3f43b3b577117d84002e99cb0baeb97b0d65b1d70b4adadc68817185c6a687f0") board = "Arcade Card Pro", region = "NTSC-J";
 
   //TurboGrafx System Card 2.00
   if(digest == "edba5be43803b180e1d64ca678c3f8bdbf07180c9e2a65a5db69ad635951e6cc") board = "System Card", region = "NTSC-U";

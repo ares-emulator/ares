@@ -40,7 +40,7 @@ auto PPU::load(Node::Object parent) -> void {
   });
   deepBlackBoost->setDynamic(true);
 
-  screen->colors(1 << 19, {&PPU::color, this});
+  screen->colors(1 << 19, std::bind_front(&PPU::color, this));
   screen->setSize(564, height() * 2);
   screen->setScale(0.5, 0.5);
   Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
@@ -71,8 +71,8 @@ auto PPU::unload() -> void {
 }
 
 auto PPU::map() -> void {
-  function<n8   (n24, n8)> reader{&PPU::readIO, this};
-  function<void (n24, n8)> writer{&PPU::writeIO, this};
+  std::function<n8   (n24, n8)> reader{std::bind_front(&PPU::readIO, this)};
+  std::function<void (n24, n8)> writer{std::bind_front(&PPU::writeIO, this)};
   bus.map(reader, writer, "00-3f,80-bf:2100-213f");
 }
 
@@ -92,11 +92,11 @@ inline auto PPU::step(u32 clocks) -> void {
 }
 
 auto PPU::power(bool reset) -> void {
-  Thread::create(system.cpuFrequency(), {&PPU::main, this});
+  Thread::create(system.cpuFrequency(), std::bind_front(&PPU::main, this));
   PPUcounter::reset();
   screen->power();
 
-  if(!reset) random.array({vram.data, sizeof(vram.data)});
+  if(!reset) random.array({(u8*)vram.data, sizeof(vram.data)});
 
   ppu1.version = versionPPU1->value();
   ppu1.mdr = random.bias(0xff);
@@ -120,7 +120,7 @@ auto PPU::power(bool reset) -> void {
   }
 
   if(!reset) {
-    random.array({cgram, sizeof(cgram)});
+    random.array({(u8*)cgram, sizeof(cgram)});
     for(auto& word : cgram) word &= 0x7fff;
   }
 

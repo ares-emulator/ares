@@ -9,8 +9,8 @@ struct mHexEdit : mWidget {
   auto doWrite(u32 offset, u8 data) const -> void;
   auto foregroundColor() const -> Color;
   auto length() const -> u32;
-  auto onRead(const function<u8 (u32)>& callback = {}) -> type&;
-  auto onWrite(const function<void (u32, u8)>& callback = {}) -> type&;
+  auto onRead(const std::function<u8 (u32)>& callback = {}) -> type&;
+  auto onWrite(const std::function<void (u32, u8)>& callback = {}) -> type&;
   auto rows() const -> u32;
   auto setAddress(u32 address = 0) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
@@ -27,8 +27,8 @@ struct mHexEdit : mWidget {
     u32 columns = 16;
     Color foregroundColor;
     u32 length = 0;
-    function<u8 (u32)> onRead;
-    function<void (u32, u8)> onWrite;
+    std::function<u8 (u32)> onRead;
+    std::function<void (u32, u8)> onWrite;
     u32 rows = 16;
   } state;
 };

@@ -1,6 +1,6 @@
 struct PeripheralPort {
   Node::Port port;
-  unique_pointer<PeripheralDevice> device;
+  std::unique_ptr<PeripheralDevice> device;
 
   //port.cpp
   PeripheralPort(string name, string type);

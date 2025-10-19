@@ -77,22 +77,22 @@ auto mTreeView::items() const -> std::vector<TreeViewItem> {
   return items;
 }
 
-auto mTreeView::onActivate(const function<void ()>& callback) -> type& {
+auto mTreeView::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }
 
-auto mTreeView::onChange(const function<void ()>& callback) -> type& {
+auto mTreeView::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }
 
-auto mTreeView::onContext(const function<void ()>& callback) -> type& {
+auto mTreeView::onContext(const std::function<void ()>& callback) -> type& {
   state.onContext = callback;
   return *this;
 }
 
-auto mTreeView::onToggle(const function<void (sTreeViewItem)>& callback) -> type& {
+auto mTreeView::onToggle(const std::function<void (sTreeViewItem)>& callback) -> type& {
   state.onToggle = callback;
   return *this;
 }

@@ -10,7 +10,7 @@ auto ARMDSP::firmware() const -> std::vector<n8> {
 auto ARMDSP::serialize(serializer& s) -> void {
   ARM7TDMI::serialize(s);
   Thread::serialize(s);
-  s(array_span<u8>{programRAM, 16_KiB});
+  s(std::span<n8>{programRAM, 16_KiB});
   s(bridge.cputoarm.ready);
   s(bridge.cputoarm.data);
   s(bridge.armtocpu.ready);

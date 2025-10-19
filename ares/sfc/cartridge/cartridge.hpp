@@ -66,7 +66,7 @@ private:
   auto loadCartridge() -> void;
   auto loadMemory(AbstractMemory&, Markup::Node) -> void;
   template<typename T> auto loadMap(Markup::Node, T&) -> n32;
-  auto loadMap(Markup::Node, const function<n8 (n24, n8)>&, const function<void (n24, n8)>&) -> n32;
+  auto loadMap(Markup::Node, const std::function<n8 (n24, n8)>&, const std::function<void (n24, n8)>&) -> n32;
 
   auto loadROM(Markup::Node) -> void;
   auto loadRAM(Markup::Node) -> void;

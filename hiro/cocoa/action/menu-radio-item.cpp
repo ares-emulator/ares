@@ -37,7 +37,7 @@ auto pMenuRadioItem::destruct() -> void {
 auto pMenuRadioItem::setChecked() -> void {
   if(auto group = state().group) {
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
+      if(auto object = weak.lock()) {
         if(auto self = object->self()) {
           if(auto p = dynamic_cast<pMenuRadioItem*>(self)) {
             auto state = this == p ? NSControlStateValueOn : NSControlStateValueOff;

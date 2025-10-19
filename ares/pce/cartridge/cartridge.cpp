@@ -19,16 +19,16 @@ auto Cartridge::connect() -> void {
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
 
-  if(information.board == "Linear") board = new Board::Linear{*this};
-  if(information.board == "Split") board = new Board::Split{*this};
-  if(information.board == "Banked") board = new Board::Banked{*this};
-  if(information.board == "RAM") board = new Board::RAM{*this};
-  if(information.board == "System Card") board = new Board::SystemCard{*this};
-  if(information.board == "Super System Card") board = new Board::SuperSystemCard{*this};
-  if(information.board == "Arcade Card Duo") board = new Board::ArcadeCardDuo{*this};
-  if(information.board == "Arcade Card Pro") board = new Board::ArcadeCardPro{*this};
-  if(information.board == "Games Express") board = new Board::GamesExpress{*this};
-  if(!board) board = new Board::Interface{*this};
+  if(information.board == "Linear") board = std::make_unique<Board::Linear>(*this);
+  if(information.board == "Split") board = std::make_unique<Board::Split>(*this);
+  if(information.board == "Banked") board = std::make_unique<Board::Banked>(*this);
+  if(information.board == "RAM") board = std::make_unique<Board::RAM>(*this);
+  if(information.board == "System Card") board = std::make_unique<Board::SystemCard>(*this);
+  if(information.board == "Super System Card") board = std::make_unique<Board::SuperSystemCard>(*this);
+  if(information.board == "Arcade Card Duo") board = std::make_unique<Board::ArcadeCardDuo>(*this);
+  if(information.board == "Arcade Card Pro") board = std::make_unique<Board::ArcadeCardPro>(*this);
+  if(information.board == "Games Express") board = std::make_unique<Board::GamesExpress>(*this);
+  if(!board) board = std::make_unique<Board::Interface>(*this);
   board->pak = pak;
   board->load();
   power();

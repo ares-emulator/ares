@@ -33,9 +33,9 @@ auto ControllerPort::save() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Gamepad") device = new Gamepad(port);
-  if(name == "Mouse"  ) device = new Mouse(port);
-  if(name == "Aleck64") device = new Aleck64Controls(port);
+  if(name == "Gamepad") device = std::make_unique<Gamepad>(port);
+  if(name == "Mouse"  ) device = std::make_unique<Mouse>(port);
+  if(name == "Aleck64") device = std::make_unique<Aleck64Controls>(port);
   if(device) return device->node;
   return {};
 }

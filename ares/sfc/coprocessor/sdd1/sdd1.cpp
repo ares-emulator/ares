@@ -9,7 +9,7 @@ auto SDD1::unload() -> void {
 auto SDD1::power() -> void {
   //hook S-CPU DMA MMIO registers to gather information for struct dma[];
   //buffer address and transfer size information for use in SDD1::mcuRead()
-  bus.map({&SDD1::dmaRead, &sdd1}, {&SDD1::dmaWrite, &sdd1}, "00-3f,80-bf:4300-437f");
+  bus.map(std::bind_front(&SDD1::dmaRead, &sdd1), std::bind_front(&SDD1::dmaWrite, &sdd1), "00-3f,80-bf:4300-437f");
 
   r4800 = 0x00;
   r4801 = 0x00;

@@ -30,7 +30,7 @@ auto VDP::load(Node::Object parent) -> void {
   });
   colorEmulation->setDynamic(true);
 
-  screen->colors(1 << 10, {&VDP::color, this});
+  screen->colors(1 << 10, std::bind_front(&VDP::color, this));
   screen->setSize(1128, 263);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
@@ -119,7 +119,7 @@ auto VDP::step(u32 clocks) -> void {
 }
 
 auto VDP::power() -> void {
-  Thread::create(system.colorburst() * 6.0, {&VDP::main, this});
+  Thread::create(system.colorburst() * 6.0, std::bind_front(&VDP::main, this));
   screen->power();
 
   vce.power();

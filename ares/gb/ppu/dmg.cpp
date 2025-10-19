@@ -57,7 +57,7 @@ auto PPU::scanlineDMG() -> void {
   }
 
   //sort by X-coordinate
-  sort(sprite, sprites, [](auto l, auto r) { return l.x < r.x; });
+  std::stable_sort(sprite, sprite + sprites, [](auto l, auto r) { return l.x < r.x; });
 }
 
 auto PPU::runDMG() -> void {

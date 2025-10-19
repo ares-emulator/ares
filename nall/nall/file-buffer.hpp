@@ -1,9 +1,9 @@
 #pragma once
 
 #include <nall/platform.hpp>
-#include <nall/array-span.hpp>
-#include <nall/array-view.hpp>
+#include <span>
 #include <nall/inode.hpp>
+#include <nall/iterator.hpp>
 #include <nall/range.hpp>
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>
@@ -90,7 +90,7 @@ struct file_buffer {
     return result;
   }
 
-  auto read(array_span<u8> memory) -> void {
+  auto read(std::span<u8> memory) -> void {
     for(auto& byte : memory) byte = read();
   }
 
@@ -120,7 +120,7 @@ struct file_buffer {
     for(auto& byte : s) write(byte);
   }
 
-  auto write(array_view<u8> memory) -> void {
+  auto write(std::span<const u8> memory) -> void {
     for(auto& byte : memory) write(byte);
   }
 

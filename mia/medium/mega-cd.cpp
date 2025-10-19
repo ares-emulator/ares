@@ -20,7 +20,7 @@ auto MegaCD::load(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("serial", document["game/serial"].string());
   pak->setAttribute("region", document["game/region"].string());

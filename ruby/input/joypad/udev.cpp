@@ -24,7 +24,7 @@ struct InputJoypadUdev {
   };
 
   struct Joypad {
-    shared_pointer<HID::Joypad> hid{new HID::Joypad};
+    std::shared_ptr<HID::Joypad> hid = std::make_shared<HID::Joypad>();
 
     s32 fd = -1;
     dev_t device = 0;
@@ -52,14 +52,14 @@ struct InputJoypadUdev {
   };
   std::vector<Joypad> joypads;
 
-  auto assign(shared_pointer<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
+  auto assign(std::shared_ptr<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
     group.input(inputID).setValue(value);
   }
 
-  auto poll(std::vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     while(hotplugDevicesAvailable()) hotplugDevice();
 
     for(auto& jp : joypads) {

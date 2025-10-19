@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ares/memory/memory.hpp>
+#include <span>
 
 namespace ares::Memory {
 
@@ -32,7 +33,7 @@ struct Readable {
 
   auto load(VFS::File fp) -> void {
     if(!self.size) allocate(fp->size());
-    fp->read({self.data, min(fp->size(), self.size * sizeof(T))});
+    fp->read({(u8*)self.data, min(fp->size(), self.size * sizeof(T))});
     for(u32 address = self.size; address <= self.mask; address++) {
       self.data[address] = self.data[mirror(address, self.size)];
     }
@@ -59,7 +60,7 @@ struct Readable {
   auto end() const -> const T* { return &self.data[self.size]; }
 
   auto serialize(serializer& s) -> void {
-    s(array_span<T>{self.data, self.size});
+    s(std::span<T>{self.data, self.size});
   }
 
 //private:

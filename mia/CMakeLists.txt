@@ -103,6 +103,7 @@ target_sources(
     system/nintendo-64.cpp
     system/nintendo-64dd.cpp
     system/pc-engine.cpp
+    system/pc-engine-ld.cpp
     system/playstation.cpp
     system/pocket-challenge-v2.cpp
     system/saturn.cpp

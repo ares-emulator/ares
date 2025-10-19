@@ -13,7 +13,7 @@ FamilyBasicDataRecorder::FamilyBasicDataRecorder(Node::Port parent) {
   node->setLength(0);
   node->setFrequency(1);
   enable = false;
-  Thread::create(system.frequency(), {&FamilyBasicDataRecorder::main, this});
+  Thread::create(system.frequency(), std::bind_front(&FamilyBasicDataRecorder::main, this));
 }
 
 FamilyBasicDataRecorder::~FamilyBasicDataRecorder() {

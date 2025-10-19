@@ -4,7 +4,7 @@
 #include <nall/chrono.hpp>
 #include <nall/directory.hpp>
 #include <nall/file.hpp>
-#include <nall/function.hpp>
+#include <functional>
 #include <nall/hid.hpp>
 #include <nall/image.hpp>
 #include <nall/matrix.hpp>
@@ -13,26 +13,22 @@
 #include <nall/range.hpp>
 #include <nall/vector-helpers.hpp>
 #include <nall/set.hpp>
-#include <nall/shared-pointer.hpp>
 #include <nall/string.hpp>
 #include <nall/thread.hpp>
-#include <nall/unique-pointer.hpp>
+#include <memory>
 #include <vector>
 #include <ranges>
 #include <nall/dsp/resampler/cubic.hpp>
 #include <nall/hash/crc32.hpp>
 
 using nall::atomic;
-using nall::function;
 using nall::index_of;
 using nall::lock_guard;
 using nall::mutex;
 using nall::queue;
 using nall::recursive_mutex;
-using nall::shared_pointer;
 using nall::string;
 using nall::tuple;
-using nall::unique_pointer;
 
 namespace ruby {
 

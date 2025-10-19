@@ -2,9 +2,9 @@ struct MegaDrive : Emulator {
   MegaDrive();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> disc;
+  std::shared_ptr<mia::Pak> disc;
   u32 regionID = 0;
 };
 
@@ -130,7 +130,7 @@ auto MegaDrive::save() -> bool {
   return true;
 }
 
-auto MegaDrive::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto MegaDrive::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Mega Drive") return system->pak;
   if(node->name() == "Mega Drive Cartridge") return game->pak;
   if(node->name() == "Mega CD Disc" && disc) return disc->pak;

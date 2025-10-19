@@ -6,8 +6,8 @@ struct ListViewItem;
 struct mListView;
 struct mListViewItem;
 
-using sListView = shared_pointer<mListView>;
-using sListViewItem = shared_pointer<mListViewItem>;
+using sListView = std::shared_ptr<mListView>;
+using sListViewItem = std::shared_ptr<mListViewItem>;
 
 struct mListView : mTableView {
   using type = mListView;
@@ -22,10 +22,10 @@ struct mListView : mTableView {
   auto doToggle(ListViewItem) const -> void;
   auto item(u32 position) const -> ListViewItem;
   auto items() const -> std::vector<ListViewItem>;
-  auto onActivate(const function<void ()>& callback) -> type&;
-  auto onChange(const function<void ()>& callback) -> type&;
-  auto onContext(const function<void ()>& callback) -> type&;
-  auto onToggle(const function<void (ListViewItem)>& callback) -> type&;
+  auto onActivate(const std::function<void ()>& callback) -> type&;
+  auto onChange(const std::function<void ()>& callback) -> type&;
+  auto onContext(const std::function<void ()>& callback) -> type&;
+  auto onToggle(const std::function<void (ListViewItem)>& callback) -> type&;
   auto reset() -> type& override;
   auto resizeColumn() -> type&;
   auto selected() const -> ListViewItem;
@@ -33,10 +33,10 @@ struct mListView : mTableView {
 
 //private:
   struct State {
-    function<void ()> onActivate;
-    function<void ()> onChange;
-    function<void ()> onContext;
-    function<void (ListViewItem)> onToggle;
+    std::function<void ()> onActivate;
+    std::function<void ()> onChange;
+    std::function<void ()> onContext;
+    std::function<void (ListViewItem)> onToggle;
   } state;
 };
 

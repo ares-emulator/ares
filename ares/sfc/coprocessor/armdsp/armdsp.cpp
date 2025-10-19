@@ -45,7 +45,7 @@ auto ARMDSP::step(u32 clocks) -> void {
 }
 
 auto ARMDSP::power() -> void {
-  random.array({programRAM, sizeof(programRAM)});
+  random.array({(u8*)programRAM, sizeof(programRAM)});
   bridge.reset = false;
   reset();
 }

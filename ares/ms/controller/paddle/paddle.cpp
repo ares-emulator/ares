@@ -5,7 +5,7 @@ Paddle::Paddle(Node::Port parent) {
   axis   = node->append<Node::Input::Axis>  ("X-Axis");
 
   // 18kHz - As measured on real hardware
-  Thread::create(18000, {&Paddle::main, this});
+  Thread::create(18000, std::bind_front(&Paddle::main, this));
 }
 
 Paddle::~Paddle() {

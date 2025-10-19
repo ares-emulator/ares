@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 //httpMessage: base class for httpRequest and httpResponse
 //provides shared functionality
 
@@ -11,7 +13,7 @@ struct Variable {
 };
 
 struct SharedVariable {
-  SharedVariable(const nall::string& name = "", const nall::string& value = "") : shared(new Variable{name, value}) {}
+  SharedVariable(const nall::string& name = "", const nall::string& value = "") : shared(std::make_shared<Variable>(Variable{name, value})) {}
 
   explicit operator bool() const { return (bool)shared->name; }
   auto operator()() const { return shared->value; }
@@ -28,7 +30,7 @@ struct SharedVariable {
   auto& setName(const nall::string& name) { shared->name = name; return *this; }
   auto& setValue(const nall::string& value = "") { shared->value = value; return *this; }
 
-  shared_pointer<Variable> shared;
+  std::shared_ptr<Variable> shared;
 };
 
 struct Variables {
@@ -88,10 +90,10 @@ struct Variables {
 struct Message {
   using type = Message;
 
-  virtual auto head(const function<bool (const u8* data, u32 size)>& callback) const -> bool = 0;
+  virtual auto head(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool = 0;
   virtual auto setHead() -> bool = 0;
 
-  virtual auto body(const function<bool (const u8* data, u32 size)>& callback) const -> bool = 0;
+  virtual auto body(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool = 0;
   virtual auto setBody() -> bool = 0;
 
   Variables header;

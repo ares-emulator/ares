@@ -1,6 +1,6 @@
 struct CardSlot {
   Node::Port port;
-  unique_pointer<Card> device;
+  std::unique_ptr<Card> device;
 
   //slot.cpp
   auto load(Node::Object) -> void;

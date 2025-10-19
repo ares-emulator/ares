@@ -6,7 +6,7 @@ struct Thread {
 
   struct EntryPoint {
     cothread_t handle = nullptr;
-    function<void ()> entryPoint;
+    std::function<void ()> entryPoint;
   };
 
   static auto EntryPoints() -> std::vector<EntryPoint>&;
@@ -29,8 +29,8 @@ struct Thread {
   auto setScalar(u64 scalar) -> void;
   auto setClock(u64 clock) -> void;
 
-  auto create(double frequency, function<void ()> entryPoint) -> void;
-  auto restart(function<void ()> entryPoint) -> void;
+  auto create(double frequency, std::function<void ()> entryPoint) -> void;
+  auto restart(std::function<void ()> entryPoint) -> void;
   auto destroy() -> void;
 
   auto step(u32 clocks) -> void;

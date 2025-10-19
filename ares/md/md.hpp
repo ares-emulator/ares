@@ -6,6 +6,9 @@
 #include <nall/dsp/iir/dc-removal.hpp>
 #include <vector>
 #include <cmath>
+#include <thread>
+#include <atomic>
+#include <functional>
 
 #include <qon/qon.h>
 #include <qon/qoi2.h>

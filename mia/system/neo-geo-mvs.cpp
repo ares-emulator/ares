@@ -7,7 +7,7 @@ struct NeoGeoMVS : System {
 
 auto NeoGeoMVS::load(string location) -> LoadResult {
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
 
   if(location.iendsWith(".zip")) {
     Decode::ZIP archive;

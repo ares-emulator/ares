@@ -31,8 +31,8 @@ auto pRadioLabel::setGroup(sGroup group) -> void {
   if(auto& group = state().group) {
     group->self()->lock();
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.get())) {
           if(auto self = radioLabel->self()) {
             self->qtRadioLabel->setChecked(radioLabel->state.checked = first);
             first = false;
@@ -52,8 +52,8 @@ auto pRadioLabel::_setState() -> void {
   if(auto& group = state().group) {
     group->self()->lock();
     for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.data())) {
+      if(auto object = weak.lock()) {
+        if(auto radioLabel = dynamic_cast<mRadioLabel*>(object.get())) {
           if(auto self = radioLabel->self()) {
             self->qtRadioLabel->setChecked(radioLabel->state.checked);
           }

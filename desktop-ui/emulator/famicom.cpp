@@ -127,7 +127,7 @@ struct Famicom : Emulator {
   Famicom();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
   auto loadTape(ares::Node::Object node, string location) -> bool override;
   auto unloadTape(ares::Node::Object node) -> void override;
@@ -137,7 +137,7 @@ struct Famicom : Emulator {
   auto bindInput() -> void override;
 
   FamilyBasicKeyboard familyBasicKeyboard;
-  shared_pointer<mia::Pak> familyBasicDataRecorder{};
+  std::shared_ptr<mia::Pak> familyBasicDataRecorder{};
 };
 
 Famicom::Famicom() {
@@ -163,7 +163,8 @@ Famicom::Famicom() {
     device.relative("X",         virtualPorts[id].mouse.x);
     device.relative("Y",         virtualPorts[id].mouse.y);
     device.digital ("Trigger",   virtualPorts[id].mouse.left);
-    port.append(device); }
+    port.append(device);
+    }
 
     ports.push_back(port);
   }
@@ -237,7 +238,7 @@ auto Famicom::save() -> bool {
   return true;
 }
 
-auto Famicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto Famicom::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Famicom") return system->pak;
   if(node->name() == "Famicom Cartridge") return game->pak;
   if(node->name() == "Family BASIC Data Recorder") return familyBasicDataRecorder->pak;

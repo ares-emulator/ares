@@ -1,13 +1,14 @@
 #pragma once
 
 #include <nall/hash/hash.hpp>
+#include <nall/iterator.hpp>
 
 namespace nall::Hash {
 
 struct SHA256 : Hash {
   using Hash::input;
 
-  SHA256(array_view<u8> buffer = {}) {
+  SHA256(std::span<const u8> buffer = {}) {
     reset();
     input(buffer);
   }
