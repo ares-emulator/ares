@@ -25,6 +25,7 @@ auto VDC::vsync() -> void {
   }
 
   latch.burstMode = !background.enable && !sprite.enable;
+  background.burstMode = sprite.burstMode = latch.burstMode;
 }
 
 auto VDC::hclock() -> void {
