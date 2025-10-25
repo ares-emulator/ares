@@ -12,15 +12,18 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
   tracer.instruction->setAddressBits(20);
 
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "CPU");
+  tracer.ports = parent->append<Node::Debugger::Tracer::Notification>("I/O Port Access", "CPU");
 }
 
 auto CPU::Debugger::unload(Node::Object parent) -> void {
   parent->remove(memory.ram);
   parent->remove(tracer.instruction);
   parent->remove(tracer.interrupt);
+  parent->remove(tracer.ports);
   memory.ram.reset();
   tracer.instruction.reset();
   tracer.interrupt.reset();
+  tracer.ports.reset();
 }
 
 auto CPU::Debugger::ports() -> string {
@@ -104,4 +107,14 @@ auto CPU::Debugger::interrupt(n3 type) -> void {
     "HblankTimer"
   };
   tracer.interrupt->notify(name[type]);
+}
+
+auto CPU::Debugger::portRead(n16 port, n8 data) -> void {
+  if(likely(!tracer.ports->enabled())) return;
+  tracer.ports->notify({hex(port, 4), " == ", hex(data, 2)});
+}
+
+auto CPU::Debugger::portWrite(n16 port, n8 data) -> void {
+  if(likely(!tracer.ports->enabled())) return;
+  tracer.ports->notify({hex(port, 4), " <= ", hex(data, 2)});
 }

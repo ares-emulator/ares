@@ -10,6 +10,8 @@ struct CPU : V30MZ, Thread, IO {
     auto ports() -> string;
     auto instruction() -> void;
     auto interrupt(n3) -> void;
+    auto portRead(n16, n8) -> void;
+    auto portWrite(n16, n8) -> void;
 
     struct Memory {
       Node::Debugger::Memory ram;
@@ -18,6 +20,7 @@ struct CPU : V30MZ, Thread, IO {
     struct Tracer {
       Node::Debugger::Tracer::Instruction instruction;
       Node::Debugger::Tracer::Notification interrupt;
+      Node::Debugger::Tracer::Notification ports;
     } tracer;
   } debugger{*this};
 
