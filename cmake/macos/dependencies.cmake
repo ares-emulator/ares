@@ -15,11 +15,16 @@ function(_check_dependencies_macos)
   set(prebuilt_filename "ares-deps-macos-ARCH.tar.xz")
   set(prebuilt_destination "ares-deps-macos-ARCH")
   set(dependencies_list prebuilt)
+  if(ARES_DEBUG_DEPENDENCIES)
+    set(source_filename "ares-deps-macos-ARCH-source.tar.xz")
+    set(source_destination "ares-deps-macos-ARCH-source")
+    list(APPEND dependencies_list source)
+  endif()
 
   _check_dependencies()
 
   execute_process(
-    COMMAND "xattr" -r -d com.apple.quarantine "${dependencies_dir}/${destination}"
+    COMMAND "xattr" -r -s -d com.apple.quarantine "${dependencies_dir}/${destination}"
     RESULT_VARIABLE result
     COMMAND_ERROR_IS_FATAL ANY
   )
