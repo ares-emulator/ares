@@ -28,15 +28,22 @@ The following cache variables may also be set:
 
 #]=======================================================================]
 
+set(_slang_shaders_path_hints)
+foreach(path IN ITEMS ${CMAKE_PREFIX_PATH})
+  list(APPEND _slang_shaders_path_hints "${path}/share/libretro/shaders/shaders_slang")
+endforeach()
+
 find_path(
   slang_shaders_LOCATION
   NAMES bilinear.slangp nearest.slangp
   PATHS
     /usr/share/libretro/shaders/shaders_slang
     /usr/local/share/libretro/shaders/shaders_slang
-    ${CMAKE_PREFIX_PATH}/share/libretro/shaders/shaders_slang
+    ${_slang_shaders_path_hints}
   DOC "slang-shaders collection location"
 )
+
+unset(_slang_shaders_path_hints)
 
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin|Windows")
   set(SLANG_ERROR_REASON "Ensure that ares-deps are provided as part of CMAKE_PREFIX_PATH.")
