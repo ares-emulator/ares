@@ -165,3 +165,6 @@ set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Framework
 if(ARES_DEBUG_DEPENDENCIES)
   set(CMAKE_XCODE_SCHEME_LLDB_INIT_FILE ${CMAKE_BINARY_DIR}/.lldbinit)
 endif()
+
+# Enabling GPU capture in Xcode 16+ can result in runaway memory use even when not capturing. Disable by default.
+set(CMAKE_XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE Disabled)
