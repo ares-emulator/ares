@@ -5,7 +5,11 @@ include_guard(GLOBAL)
 option(ARES_SKIP_DEPS "Do not fetch prebuilt dependencies" OFF)
 mark_as_advanced(ARES_SKIP_DEPS)
 
-option(ARES_DEBUG_DEPENDENCIES "Fetch precompiled dependency source code and populate debugger initialization files for source view debugging" OFF)
+option(
+  ARES_DEBUG_DEPENDENCIES
+  "Fetch precompiled dependency source code and populate debugger initialization files for source view debugging"
+  OFF
+)
 
 # _check_dependencies: Fetch and extract pre-built ares build dependencies
 function(_check_dependencies)
