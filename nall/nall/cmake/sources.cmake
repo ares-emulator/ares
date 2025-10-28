@@ -69,7 +69,8 @@ target_sources(
     serializer.hpp
     
     set.hpp
-    
+    span-helpers.hpp
+
     stdint.hpp
     string.hpp
     
@@ -82,6 +83,7 @@ target_sources(
     variant.hpp
     varint.hpp
     vfs.hpp
+    vector-helpers.hpp
     view.hpp
 )
 
