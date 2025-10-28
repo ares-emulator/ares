@@ -23,10 +23,7 @@ else()
     COMMAND ${QT_MOC_EXECUTABLE} -i -o ${CMAKE_CURRENT_SOURCE_DIR}/qt/qt.moc ${CMAKE_CURRENT_SOURCE_DIR}/qt/qt.hpp
   )
 
-  target_link_libraries(
-    hiro
-    PRIVATE X11::X11 Qt6::Core Qt6::Gui Qt6::Widgets
-  )
+  target_link_libraries(hiro PRIVATE X11::X11 Qt6::Core Qt6::Gui Qt6::Widgets)
 
   target_enable_feature(hiro "Qt6 UI backend")
   target_compile_definitions(hiro PUBLIC HIRO_QT=6)
