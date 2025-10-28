@@ -138,6 +138,7 @@ component_sources(
   INCLUDED
     processor/arm7tdmi/algorithms.cpp
     processor/arm7tdmi/arm7tdmi.hpp
+    processor/arm7tdmi/coprocessor.cpp
     processor/arm7tdmi/disassembler.cpp
     processor/arm7tdmi/instruction.cpp
     processor/arm7tdmi/instructions-arm.cpp
