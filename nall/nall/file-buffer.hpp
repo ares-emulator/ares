@@ -2,6 +2,7 @@
 
 #include <nall/platform.hpp>
 #include <span>
+#include <array>
 #include <nall/inode.hpp>
 #include <nall/iterator.hpp>
 #include <nall/range.hpp>
@@ -219,7 +220,7 @@ struct file_buffer {
   }
 
 private:
-  array<u8[4096]> buffer;
+  std::array<u8, 4096> buffer;
   s64 bufferOffset = -1LL;
   bool bufferDirty = false;
   FILE* fileHandle = nullptr;

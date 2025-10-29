@@ -44,9 +44,9 @@ struct InputJoypadUdev {
     string vendorID;
     string productID;
 
-    set<JoypadInput> axes;
-    set<JoypadInput> hats;
-    set<JoypadInput> buttons;
+    std::unordered_map<s32, JoypadInput> axes;
+    std::unordered_map<s32, JoypadInput> hats;
+    std::unordered_map<s32, JoypadInput> buttons;
     bool rumble = false;
     s32 effectID = -1;
   };
@@ -73,19 +73,21 @@ struct InputJoypadUdev {
           s32 value = events[i].value;
 
           if(type == EV_ABS) {
-            if(auto input = jp.axes.find({code})) {
-              s32 range = input().info.maximum - input().info.minimum;
-              value = (value - input().info.minimum) * 65535ll / range - 32767;
-              assign(jp.hid, HID::Joypad::GroupID::Axis, input().id, sclamp<16>(value));
-            } else if(auto input = jp.hats.find({code})) {
-              s32 range = input().info.maximum - input().info.minimum;
-              value = (value - input().info.minimum) * 65535ll / range - 32767;
-              assign(jp.hid, HID::Joypad::GroupID::Hat, input().id, sclamp<16>(value));
+            if(auto it = jp.axes.find(code); it != jp.axes.end()) {
+              auto& input = it->second;
+              s32 range = input.info.maximum - input.info.minimum;
+              value = (value - input.info.minimum) * 65535ll / range - 32767;
+              assign(jp.hid, HID::Joypad::GroupID::Axis, input.id, sclamp<16>(value));
+            } else if(auto it = jp.hats.find(code); it != jp.hats.end()) {
+              auto& input = it->second;
+              s32 range = input.info.maximum - input.info.minimum;
+              value = (value - input.info.minimum) * 65535ll / range - 32767;
+              assign(jp.hid, HID::Joypad::GroupID::Hat, input.id, sclamp<16>(value));
             }
           } else if(type == EV_KEY) {
             if(code >= BTN_MISC) {
-              if(auto input = jp.buttons.find({code})) {
-                assign(jp.hid, HID::Joypad::GroupID::Button, input().id, (bool)value);
+              if(auto it = jp.buttons.find(code); it != jp.buttons.end()) {
+                assign(jp.hid, HID::Joypad::GroupID::Button, it->second.id, (bool)value);
               }
             }
           }
@@ -234,24 +236,22 @@ private:
       for(s32 i = 0; i < ABS_MISC; i++) {
         if(testBit(jp.absbit, i)) {
           if(i >= ABS_HAT0X && i <= ABS_HAT3Y) {
-            if(auto hat = jp.hats.insert({i, hats++})) {
-              ioctl(jp.fd, EVIOCGABS(i), &hat().info);
-            }
+            auto [it, inserted] = jp.hats.emplace(i, JoypadInput{i, hats++});
+            if(inserted) ioctl(jp.fd, EVIOCGABS(i), &it->second.info);
           } else {
-            if(auto axis = jp.axes.insert({i, axes++})) {
-              ioctl(jp.fd, EVIOCGABS(i), &axis().info);
-            }
+            auto [it, inserted] = jp.axes.emplace(i, JoypadInput{i, axes++});
+            if(inserted) ioctl(jp.fd, EVIOCGABS(i), &it->second.info);
           }
         }
       }
       for(s32 i = BTN_JOYSTICK; i < KEY_MAX; i++) {
         if(testBit(jp.keybit, i)) {
-          jp.buttons.insert({i, buttons++});
+          jp.buttons.emplace(i, JoypadInput{i, buttons++});
         }
       }
       for(s32 i = BTN_MISC; i < BTN_JOYSTICK; i++) {
         if(testBit(jp.keybit, i)) {
-          jp.buttons.insert({i, buttons++});
+          jp.buttons.emplace(i, JoypadInput{i, buttons++});
         }
       }
       jp.rumble = jp.effects >= 2 && testBit(jp.ffbit, FF_RUMBLE);

@@ -7,7 +7,7 @@
 #include <nall/algorithm.hpp>
 #include <nall/any.hpp>
 #include <nall/arithmetic.hpp>
-#include <nall/array.hpp>
+#include <array>
 #include <nall/atoi.hpp>
 #include <nall/bit.hpp>
 #include <nall/chrono.hpp>
@@ -19,7 +19,6 @@
 #include <nall/file-map.hpp>
 #include <functional>
 #include <nall/galois-field.hpp>
-#include <nall/hashset.hpp>
 #include <nall/hid.hpp>
 #include <nall/image.hpp>
 #include <nall/inode.hpp>
@@ -30,7 +29,6 @@
 #include <nall/literals.hpp>
 #include <nall/locale.hpp>
 #include <nall/location.hpp>
-#include <nall/map.hpp>
 #include <nall/matrix.hpp>
 #include <nall/matrix-multiply.hpp>
 #include <nall/maybe.hpp>
@@ -45,7 +43,6 @@
 #include <nall/reed-solomon.hpp>
 #include <nall/run.hpp>
 #include <nall/serializer.hpp>
-#include <nall/set.hpp>
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>
 #include <nall/terminal.hpp>
@@ -54,7 +51,6 @@
 #include <nall/utility.hpp>
 #include <nall/variant.hpp>
 #include <nall/varint.hpp>
-#include <nall/view.hpp>
 #include <nall/arguments.hpp>
 #include <nall/decode/base.hpp>
 #include <nall/decode/base64.hpp>

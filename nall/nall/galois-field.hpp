@@ -30,12 +30,12 @@ struct GaloisField {
 
   static auto log(u32 x) -> u32 {
     enum : u32 { Size = bit::round(Elements), Mask = Size - 1 };
-    static array<field[Size]> log = [] {
+    static std::array<field, Size> log = [] {
       u32 shift = 0, polynomial = Polynomial;
       while(polynomial >>= 1) shift++;
       shift--;
 
-      array<field[Size]> log;
+      std::array<field, Size> log;
       field x = 1;
       for(u32 n : range(Elements)) {
         log[x] = n;
@@ -48,12 +48,12 @@ struct GaloisField {
   }
 
   static auto exp(u32 x) -> u32 {
-    static array<field[Elements]> exp = [] {
+    static std::array<field, Elements> exp = [] {
       u32 shift = 0, polynomial = Polynomial;
       while(polynomial >>= 1) shift++;
       shift--;
 
-      array<field[Elements]> exp;
+      std::array<field, Elements> exp;
       field x = 1;
       for(u32 n : range(Elements)) {
         exp[n] = x;

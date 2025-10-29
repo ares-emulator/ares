@@ -5,14 +5,14 @@ namespace ares {
 
 #include "serialization.cpp"
 
-auto AY38910::clock() -> array<n4[3]> {
+auto AY38910::clock() -> std::array<n4, 3> {
   toneA.clock();
   toneB.clock();
   toneC.clock();
   noise.clock();
   envelope.clock();
 
-  array<n4[3]> output;
+  std::array<n4, 3> output{};
   if((toneA.output | channelA.tone) & (noise.output | channelA.noise)) {
     output[0] = channelA.envelope ? envelope.output : channelA.volume;
   }

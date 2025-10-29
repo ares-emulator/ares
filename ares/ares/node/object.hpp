@@ -152,27 +152,26 @@ struct Object : std::enable_shared_from_this<Object> {
 
   template<typename T = string>
   auto attribute(const string& name) const -> T {
-    if(auto attribute = _attributes.find(name)) {
-      if(attribute->value.is<T>()) return attribute->value.get<T>();
-    }
+    auto it = _attributes.find({name});
+    if(it != _attributes.end()) if(it->value.is<T>()) return it->value.get<T>();
     return {};
   }
 
   template<typename T = string>
   auto hasAttribute(const string& name) const -> bool {
-    if(auto attribute = _attributes.find(name)) {
-      if(attribute->value.is<T>()) return true;
-    }
+    auto it = _attributes.find({name});
+    if(it != _attributes.end()) if(it->value.is<T>()) return true;
     return false;
   }
 
   template<typename T = string, typename U = string>
   auto setAttribute(const string& name, const U& value = {}) -> void {
     if constexpr(is_same_v<T, string> && !is_same_v<U, string>) return setAttribute(name, string{value});
-    if(auto attribute = _attributes.find(name)) {
-      if((const T&)value) attribute->value = (const T&)value;
-      else _attributes.remove(*attribute);
-    } else {
+    auto it = _attributes.find({name});
+    if(it != _attributes.end()) { 
+      if((const T&)value) const_cast<any&>(it->value) = (const T&)value;
+      else _attributes.erase(it);
+    } else { 
       if((const T&)value) _attributes.insert({name, (const T&)value});
     }
   }
@@ -207,7 +206,7 @@ struct Object : std::enable_shared_from_this<Object> {
   virtual auto unserialize(Markup::Node markup) -> void {
     if(!markup) return;
     _name = markup["name"].string();
-    _attributes.reset();
+    _attributes.clear();
     for(auto& attribute : markup.find("attribute")) {
       _attributes.insert({attribute["name"].string(), attribute["value"].string()});
     }
@@ -236,7 +235,7 @@ struct Object : std::enable_shared_from_this<Object> {
 protected:
   string _name;
   VFS::Pak _pak;
-  set<Attribute> _attributes;
+  std::set<Attribute> _attributes;
   std::weak_ptr<Object> _parent;
   std::vector<Node::Object> _nodes;
 };

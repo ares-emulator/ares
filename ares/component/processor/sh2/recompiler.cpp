@@ -73,13 +73,12 @@ auto SH2::Recompiler::block(u32 address) -> Block* {
   auto size = measure(address);
   auto hashcode = hash(address, size);
 
-  BlockHashPair pair;
-  pair.hashcode = hashcode;
-  if(auto result = blocks.find(pair)) {
+  auto it = blocks.find(hashcode);
+  if(it != blocks.end()) {
     memory::jitprotect(false);
-    pool(address)->blocks[address >> 1 & 0x7f] = result->block;
+    pool(address)->blocks[address >> 1 & 0x7f] = it->second;
     memory::jitprotect(true);
-    return result->block;
+    return it->second;
   }
 
   auto block = emit(address);
@@ -87,8 +86,7 @@ auto SH2::Recompiler::block(u32 address) -> Block* {
   pool(address)->blocks[address >> 1 & 0x7f] = block;
   memory::jitprotect(true);
 
-  pair.block = block;
-  blocks.insert(pair);
+  blocks.emplace(hashcode, block);
 
   return block;
 }

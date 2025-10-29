@@ -5,12 +5,12 @@ auto CheatEditor::Cheat::update(string description, string code, bool enabled) -
 
   //TODO: support other code formats based on the game system (e.g. GameShark, Game-Genie, etc.)
 
-  addressValuePairs.reset();
+  addressValuePairs.clear();
   auto codes = nall::split(code, "+");
   for(auto& code : codes) {
     auto parts = nall::split(code, ":");
     if(parts.size() != 2) continue;
-    addressValuePairs.insert(string{"0x", parts[0]}.natural(), string{"0x",parts[1]}.natural());
+    addressValuePairs.emplace(string{"0x", parts[0]}.natural(), string{"0x",parts[1]}.natural());
   }
 
   return *this;
@@ -149,7 +149,8 @@ auto CheatEditor::find(uint address) -> maybe<u32> {
   Program::Guard guard;
   for(auto& cheat : cheats) {
     if(!cheat.enabled) continue;
-    if(auto result = cheat.addressValuePairs.find(address)) return result();
+    auto it = cheat.addressValuePairs.find(address);
+    if(it != cheat.addressValuePairs.end()) return it->second;
   }
   return nothing;
 }

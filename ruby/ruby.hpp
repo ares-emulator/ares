@@ -12,7 +12,7 @@
 #include <nall/queue.hpp>
 #include <nall/range.hpp>
 #include <nall/vector-helpers.hpp>
-#include <nall/set.hpp>
+#include <set>
 #include <nall/string.hpp>
 #include <nall/thread.hpp>
 #include <memory>

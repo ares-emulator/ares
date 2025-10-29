@@ -6,7 +6,7 @@ namespace ares {
 
 struct SN76489 {
   //sn76489.cpp
-  auto clock() -> array<n4[4]>;
+  auto clock() -> std::array<n4, 4>;
   auto write(n8 data) -> void;
   auto power() -> void;
 

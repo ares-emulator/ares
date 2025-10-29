@@ -1,3 +1,5 @@
+#include <set>
+
 #if defined(DISPLAY_XORG)
   #include <GL/gl.h>
   #include <GL/glx.h>
@@ -78,7 +80,7 @@ struct OpenGL : OpenGLSurface {
     Setting(const string& name) : name(name) {}
     Setting(const string& name, const string& value) : name(name), value(value) {}
   };
-  set<Setting> settings;
+  std::set<Setting> settings;
   bool initialized = false;
 };
 

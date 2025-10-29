@@ -40,20 +40,15 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
   auto hashcode = hash(address, size);
   hashcode ^= self.pipeline.hash();
 
-  BlockHashPair pair;
-  pair.hashcode = hashcode;
-  if(auto result = blocks.find(pair)) {
-    return context[address >> 2] = result->block;
-  }
+  auto it = blocks.find(hashcode);
+  if(it != blocks.end()) return context[address >> 2] = it->second;
 
   auto block = emit(address);
   assert(block->size == size);
   memory::jitprotect(true);
 
-  pair.block = block;
-  if(auto result = blocks.insert(pair)) {
-    return context[address >> 2] = result->block;
-  }
+  blocks.emplace(hashcode, block);
+  return context[address >> 2] = block;
 
   throw;  //should never occur
 }

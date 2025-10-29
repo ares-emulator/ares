@@ -1,5 +1,5 @@
 #include <nall/instruction-set.hpp>
-#include <nall/array.hpp>
+#include <array>
 #include <nall/memory.hpp>
 #include <vector>
 
@@ -25,13 +25,13 @@ namespace nall {
 
 NALL_HEADER_INLINE instruction_set::information::information() {
 #if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_AMD64)
-  array<int[4]> cpui;
+  std::array<int, 4> cpui;
 
   //get the number of the highest valid function ID
   cpuidex(cpui.data(), 0, 0);
   int maxId = cpui[0];
 
-  std::vector<array<int[4]>> data;
+  std::vector<std::array<int, 4>> data;
   for(int i = 0; i <= maxId; i++) {
     cpuidex(cpui.data(), i, 0);
     data.push_back(cpui);
@@ -65,7 +65,7 @@ NALL_HEADER_INLINE instruction_set::information::information() {
   cpuidex(cpui.data(), 0x80000000, 0);
   int maxExId = cpui[0];
 
-  std::vector<array<int[4]>> extdata;
+  std::vector<std::array<int, 4>> extdata;
   for(int i = 0x80000000; i <= maxExId; i++) {
     cpuidex(cpui.data(), i, 0);
     extdata.push_back(cpui);
