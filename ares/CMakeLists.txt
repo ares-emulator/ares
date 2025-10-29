@@ -60,6 +60,7 @@ target_sources(
     ares/node/node.hpp
     ares/node/object.hpp
     ares/node/peripheral.hpp
+    ares/node/tape.hpp
     ares/node/port.hpp
     ares/node/system.hpp
 )

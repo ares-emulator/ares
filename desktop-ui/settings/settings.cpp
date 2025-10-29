@@ -164,6 +164,14 @@ auto Settings::process(bool load) -> void {
     }
   }
 
+  for (auto emulator : emulators) {
+    if (load) {
+      emulator->loadSetting(this);
+    } else {
+      emulator->saveSetting(this);
+    }
+  }
+
   for(auto& mapping : inputManager.hotkeys) {
     string name = {"Hotkey/", string{mapping.name}.replace(" ", "")}, value;
     if(load == 0) for(auto& assignment : mapping.assignments) value.append(assignment, ";");

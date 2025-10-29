@@ -11,6 +11,7 @@ using namespace hiro;
 
 #include <nall/instance.hpp>
 #include <nall/encode/png.hpp>
+#include <nall/encode/wav.hpp>
 #include <nall/hash/crc16.hpp>
 
 namespace ruby {

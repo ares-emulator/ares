@@ -1,5 +1,5 @@
-FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
-  node = parent->append<Node::Peripheral>("Family Keyboard");
+FamilyBasicKeyboard::FamilyBasicKeyboard(Node::Port parent) {
+  node = parent->append<Node::Peripheral>("Family BASIC Keyboard");
 
   key.f1 = node->append<Node::Input::Button>("F1");
   key.f2 = node->append<Node::Input::Button>("F2");
@@ -10,18 +10,18 @@ FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
   key.f7 = node->append<Node::Input::Button>("F7");
   key.f8 = node->append<Node::Input::Button>("F8");
 
-  key.one   = node->append<Node::Input::Button>("1");
-  key.two   = node->append<Node::Input::Button>("2");
-  key.three = node->append<Node::Input::Button>("3");
-  key.four  = node->append<Node::Input::Button>("4");
-  key.five  = node->append<Node::Input::Button>("5");
-  key.six   = node->append<Node::Input::Button>("6");
-  key.seven = node->append<Node::Input::Button>("7");
-  key.eight = node->append<Node::Input::Button>("8");
-  key.nine  = node->append<Node::Input::Button>("9");
-  key.zero  = node->append<Node::Input::Button>("0");
+  key.one   = node->append<Node::Input::Button>("Num1");
+  key.two   = node->append<Node::Input::Button>("Num2");
+  key.three = node->append<Node::Input::Button>("Num3");
+  key.four  = node->append<Node::Input::Button>("Num4");
+  key.five  = node->append<Node::Input::Button>("Num5");
+  key.six   = node->append<Node::Input::Button>("Num6");
+  key.seven = node->append<Node::Input::Button>("Num7");
+  key.eight = node->append<Node::Input::Button>("Num8");
+  key.nine  = node->append<Node::Input::Button>("Num9");
+  key.zero  = node->append<Node::Input::Button>("Num0");
   key.minus = node->append<Node::Input::Button>("Minus");
-  key.power = node->append<Node::Input::Button>("^");
+  key.power = node->append<Node::Input::Button>("Power");
   key.yen   = node->append<Node::Input::Button>("Yen");
   key.stop  = node->append<Node::Input::Button>("Stop");
 
@@ -36,8 +36,8 @@ FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
   key.i      = node->append<Node::Input::Button>("I");
   key.o      = node->append<Node::Input::Button>("O");
   key.p      = node->append<Node::Input::Button>("P");
-  key.at     = node->append<Node::Input::Button>("@");
-  key.lbrace = node->append<Node::Input::Button>("[");
+  key.at     = node->append<Node::Input::Button>("At");
+  key.lbrace = node->append<Node::Input::Button>("Left Brace");
   key.enter  = node->append<Node::Input::Button>("Return");
 
   key.control   = node->append<Node::Input::Button>("Control");
@@ -50,9 +50,9 @@ FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
   key.j         = node->append<Node::Input::Button>("J");
   key.k         = node->append<Node::Input::Button>("K");
   key.l         = node->append<Node::Input::Button>("L");
-  key.semicolon = node->append<Node::Input::Button>(";");
-  key.colon     = node->append<Node::Input::Button>(":");
-  key.rbrace    = node->append<Node::Input::Button>("]");
+  key.semicolon = node->append<Node::Input::Button>("Semicolon");
+  key.colon     = node->append<Node::Input::Button>("Colon");
+  key.rbrace    = node->append<Node::Input::Button>("Right Brace");
   key.kana      = node->append<Node::Input::Button>("Kana");
 
   key.lshift     = node->append<Node::Input::Button>("Left Shift");
@@ -63,10 +63,10 @@ FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
   key.b          = node->append<Node::Input::Button>("B");
   key.n          = node->append<Node::Input::Button>("N");
   key.m          = node->append<Node::Input::Button>("M");
-  key.comma      = node->append<Node::Input::Button>(",");
-  key.period     = node->append<Node::Input::Button>(".");
-  key.slash      = node->append<Node::Input::Button>("/");
-  key.underscore = node->append<Node::Input::Button>("_");
+  key.comma      = node->append<Node::Input::Button>("Comma");
+  key.period     = node->append<Node::Input::Button>("Period");
+  key.slash      = node->append<Node::Input::Button>("Slash");
+  key.underscore = node->append<Node::Input::Button>("Underscore");
   key.rshift     = node->append<Node::Input::Button>("Right Shift");
 
   key.graph    = node->append<Node::Input::Button>("Graph");
@@ -74,21 +74,26 @@ FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
 
   key.home      = node->append<Node::Input::Button>("Home");
   key.insert    = node->append<Node::Input::Button>("Insert");
-  key.backspace = node->append<Node::Input::Button>("Delete");
+  key.backspace = node->append<Node::Input::Button>("Backspace");
 
   key.up    = node->append<Node::Input::Button>("Up");
   key.down  = node->append<Node::Input::Button>("Down");
   key.left  = node->append<Node::Input::Button>("Left");
   key.right = node->append<Node::Input::Button>("Right");
+
+  tapePort.load(node);
 }
 
-auto FamilyKeyboard::read1() -> n1 {
-  n1 data;
-  //data recorder (unsupported)
-  return data;
+FamilyBasicKeyboard::~FamilyBasicKeyboard() {
+  tapePort.unload();
+  node.reset();
 }
 
-auto FamilyKeyboard::read2() -> n5 {
+auto FamilyBasicKeyboard::read1() -> n1 {
+  return tapePort.read();
+}
+
+auto FamilyBasicKeyboard::read2() -> n5 {
   if(!latch.bit(2)) return 0b00000;
 
   #define poll(id, name) \
@@ -214,9 +219,10 @@ auto FamilyKeyboard::read2() -> n5 {
   return data;
 }
 
-auto FamilyKeyboard::write(n8 data) -> void {
+auto FamilyBasicKeyboard::write(n8 data) -> void {
   latch = data.bit(0,2);
   if(column && !latch.bit(1)) row = (row + 1) % 10;
   column = latch.bit(1);
   if(latch.bit(0)) row = 0;
+  tapePort.write(latch);
 }

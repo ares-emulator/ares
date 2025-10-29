@@ -31,6 +31,7 @@ auto Famicom::load(string location) -> LoadResult {
   pak->setAttribute("board", document["game/board"].string());
   pak->setAttribute("mirror", document["game/board/mirror/mode"].string());
   pak->setAttribute("system", document["game/system"].string());
+  pak->setAttribute("input", document["game/input"].string());
   pak->setAttribute("chip", document["game/board/chip/type"].string());
   pak->setAttribute("chip/key", document["game/board/chip/key"].natural());
   pak->setAttribute("pinout/a0", document["game/board/chip/pinout/a0"].natural());
@@ -176,6 +177,7 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
   u32 chrnvram = 0u;
   u32 submapper = 0u;
   string system = "Regular";
+  string input = "Unspecified";
   bool battery = (data[6] & 0x02) != 0;
   bool eepromMapper = false;
   bool prgromFlash = false;
@@ -209,6 +211,33 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
     chrram   = chrramShift   == 0 ? 0 : 64 << chrramShift;
     chrnvram = chrnvramShift == 0 ? 0 : 64 << chrnvramShift;
 
+    string inputTypes[0x2e] = {
+      "Unspecified",                  "Standard",
+      "Four Score",                   "Four Player Adapter",
+      "Vs. System",                   "Vs. System (Swapped)",
+      "Vs. System (Swap A/B)",        "Vs. Zapper", "Zapper",
+      "Two Zappers",                  "Bandai Hypershot",
+      "Power Pad Side A",             "Power Pad Side B",
+      "Family Trainer Side A",        "Family Trainer Side B",
+      "Arkanoid Controller (NES)",    "Arkanoid Controller (Famicom)",
+      "Double Arkanoid Controller",   "Konami Hyper Shot",
+      "Pachinko Controller",          "Exciting Boxing",
+      "Jissen Mahjong",               "Party Tap",
+      "Oeka Kids Tablet",             "Barcode Battler",
+      "Miracle Piano",                "Pokkun Moguraa",
+      "Top Rider",                    "Double Fisted",
+      "Famicom 3D System",            "Doremikko Keyboard",
+      "ROB", "Famicom Data Recorder", "Turbo File",
+      "Battle Box",                   "Family BASIC Keyboard",
+      "Pec586 Keyboard",              "Bit79 Keyboard",
+      "Subor Keyboard",               "Subor Keyboard + Mouse 1",
+      "Subor Keyboard + Mouse 2",     "SNES Mouse",
+      "Generic Multicart",            "SNES Controllers",
+      "Racermate Bicycle",            "U-Force",
+    };
+    u32 inputId = data[15];
+    input = inputId < 0x2e ? inputTypes[inputId] : inputTypes[0];
+
     u32 timing = data[12] & 3;
 
     // TODO: add DENDY (pirate famiclone) timing
@@ -224,6 +253,7 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
   s +={"  title:  ", Medium::name(location), "\n"};
   s +={"  region: ", region, "\n"};
   s +={"  system: ", system, "\n"};
+  s +={"  input:  ", input, "\n"};
 
   switch(mapper) {
 

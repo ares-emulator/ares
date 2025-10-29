@@ -96,6 +96,13 @@ struct InputPair {
 };
 
 struct InputDevice {
+  InputDevice(string name) : name(name) {}
+  InputDevice(const InputDevice& device) {
+    name = device.name;
+    inputs = device.inputs;
+    pairs = device.pairs;
+  }
+
   auto digital(string name, InputMapping& mapping) -> void {
     inputs.push_back({InputNode::Type::Digital, name, &mapping});
   }

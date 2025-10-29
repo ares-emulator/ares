@@ -222,6 +222,9 @@ Presentation::Presentation() {
   traceLoggerAction.setText("Tracer").setIcon(Icon::Emblem::Script).onActivate([&] {
     toolsWindow.show("Tracer");
   });
+  tapeViewerAction.setText("Tape").setIcon(Icon::Device::Tape).onActivate([&] {
+    toolsWindow.show("Tape");
+  });
 
   helpMenu.setText("Help");
   aboutAction.setText("About" ELLIPSIS).setIcon(Icon::Prompt::Question).onActivate([&] {
@@ -245,7 +248,7 @@ Presentation::Presentation() {
       program.load(emulator, filenames.front());
     }
   });
-    
+
   Application::onOpenFile([&](auto filename) {
     Program::Guard guard;
     if(auto emulator = program.identify(filename)) {
@@ -519,7 +522,7 @@ auto Presentation::refreshSystemMenu() -> void {
   if(auto dipSwitches = ares::Node::find<ares::Node::Object>(emulator->root, "DIP Switches")) {
     Menu dipSwitchMenu;
     dipSwitchMenu.setText("DIP Switches");
-    
+
     for(auto dip : ares::Node::enumerate<ares::Node::Setting::Boolean>(emulator->root)) {
       MenuCheckItem item{&dipSwitchMenu};
       item.setText(dip->name());
@@ -559,12 +562,13 @@ auto Presentation::refreshSystemMenu() -> void {
     if(std::ranges::find(emulator->portBlacklist, portName) != emulator->portBlacklist.end()) continue;
 
     if(!port->hotSwappable()) continue;
-    if(port->type() != "Controller" && port->type() != "Expansion") continue;
+    if(port->type() != "Controller" && port->type() != "Expansion" && port->type() != "Tape") continue;
 
     portsFound++;
     Menu portMenu{&systemMenu};
     if(port->type() == "Controller") portMenu.setIcon(Icon::Device::Joypad);
     if(port->type() == "Expansion" ) portMenu.setIcon(Icon::Device::Storage);
+    if(port->type() == "Tape"      ) portMenu.setIcon(Icon::Device::Tape);
     portMenu.setText(port->name());
 
     Group peripheralGroup;

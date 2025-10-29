@@ -103,10 +103,6 @@ auto InputDigital::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 gr
     return unbind(binding), true;
   }
 
-  if(device->isKeyboard() && device->group(groupID).input(inputID).name() == "Escape") {
-    return unbind(binding), true;
-  }
-
   if(device->isKeyboard() && oldValue == 0 && newValue != 0) {
     return bind(binding, assignment), true;
   }
@@ -442,8 +438,7 @@ auto InputRumble::rumble(u16 strong, u16 weak) -> void {
 
 //
 
-VirtualPad::VirtualPad() {
-  InputDevice::name = "Virtual Gamepad";
+VirtualPad::VirtualPad() : InputDevice("Virtual Gamepad") {
   InputDevice::digital("Pad Up",          up);
   InputDevice::digital("Pad Down",        down);
   InputDevice::digital("Pad Left",        left);
@@ -473,8 +468,7 @@ VirtualPad::VirtualPad() {
 
 //
 
-VirtualMouse::VirtualMouse() {
-  InputDevice::name = "Mouse";
+VirtualMouse::VirtualMouse() : InputDevice("Mouse") {
   InputDevice::relative("X",      x);
   InputDevice::relative("Y",      y);
   InputDevice::digital ("Left",   left);
@@ -495,6 +489,9 @@ auto InputManager::bind() -> void {
   for(auto& port : virtualPorts) {
     for(auto& input : port.pad.inputs) input.mapping->bind();
     for(auto& input : port.mouse.inputs) input.mapping->bind();
+  }
+  for(auto emulator : emulators) {
+    emulator->bindInput();
   }
   for(auto& mapping : hotkeys) mapping.bind();
 }

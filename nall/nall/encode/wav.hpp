@@ -31,8 +31,8 @@ struct WAV {
     fp.writel(1, 2);
     fp.writel(channels, 2);
     fp.writel(frequency, 4);
-    fp.writel(frequency * channels * bits, 4);
-    fp.writel(channels * bits, 2);
+    fp.writel(frequency * channels * bits / 8, 4);
+    fp.writel(channels * bits / 8, 2);
     fp.writel(bits, 2);
 
     fp.write('d');
@@ -43,6 +43,49 @@ struct WAV {
     for(u32 sample : range(samples)) {
       fp.writel(left[sample], 2);
       fp.writel(right[sample], 2);
+    }
+
+    return true;
+  }
+
+  static auto mono_16bit(const string& filename, std::span<s16> samples, u32 frequency) -> bool {
+    static u32 channels = 1;
+    static u32 bits = 16;
+
+    file_buffer fp;
+    if(!fp.open(filename, file::mode::write)) return false;
+
+    fp.write('R');
+    fp.write('I');
+    fp.write('F');
+    fp.write('F');
+
+    fp.writel(4 + (8 + 16) + (8 + samples.size() * 2), 4);
+
+    fp.write('W');
+    fp.write('A');
+    fp.write('V');
+    fp.write('E');
+
+    fp.write('f');
+    fp.write('m');
+    fp.write('t');
+    fp.write(' ');
+    fp.writel(16, 4);
+    fp.writel(1, 2);
+    fp.writel(channels, 2);
+    fp.writel(frequency, 4);
+    fp.writel(frequency * channels * bits / 8, 4);
+    fp.writel(channels * bits / 8, 2);
+    fp.writel(bits, 2);
+
+    fp.write('d');
+    fp.write('a');
+    fp.write('t');
+    fp.write('a');
+    fp.writel(samples.size() * 2, 4);
+    for(u32 sample : range(samples.size())) {
+      fp.writel(samples[sample], 2);
     }
 
     return true;
