@@ -115,15 +115,21 @@ struct Cartridge : IO, Thread {
     //karnak.cpp
     auto power() -> void;
     auto reset() -> void;
+    auto adpcmReset() -> void;
+    auto adpcmNext(n4 sample) -> void;
     auto main() -> void;
     auto step(u32 clocks) -> void;
 
     //serialization.cpp
     auto serialize(serializer& s) -> void;
 
-    n1 timerEnable;
+    n1 enable;
     n7 timerPeriod;
     n9 timerCounter;
+
+    n10 adpcmAccumulator;
+    i5 adpcmStepIndex;
+    n1 adpcmInputShift;
   } karnak;
 
   struct FLASH {

@@ -77,17 +77,19 @@ auto Cartridge::readIO(n16 address) -> n8 {
     break;
     
   case 0x00d6:  //KARNAK_TIMER
-    data.bit(7) = karnak.timerEnable;
+    data.bit(7) = karnak.enable;
     data.bit(6, 0) = karnak.timerPeriod;
     break;
 
-  case 0x00d7:  //KARNAK
+  case 0x00d7:
+  case 0x00d8:  //KARNAK_ADPCM_INPUT
     data = 0xFF;
     break;
 
-  case 0x00d8:
-  case 0x00d9:
-    debug(unimplemented, "[KARNAK] ADPCM read ", hex(address, 2L));
+  case 0x00d9:  //KARNAK_ADPCM_OUTPUT
+    if (karnak.adpcmAccumulator >= 0x300) data = 0x00;
+    else if (karnak.adpcmAccumulator >= 0x200) data = 0xFF;
+    else data = karnak.adpcmAccumulator >> 1;
     break;
 
   }
@@ -174,13 +176,15 @@ auto Cartridge::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x00d6:  //KARNAK_TIMER
-    karnak.timerEnable = data.bit(7);
+    karnak.enable = data.bit(7);
     karnak.timerPeriod = data.bit(6, 0);
+    if (!karnak.enable) karnak.adpcmReset();
     break;
 
-  case 0x00d8:
-  case 0x00d9:
-    debug(unimplemented, "[KARNAK] ADPCM write ", hex(address, 2L), "=", hex(data, 2L));
+  case 0x00d8:  //KARNAK_ADPCM_INPUT
+    if (!karnak.enable) return;
+    karnak.adpcmNext(data >> (karnak.adpcmInputShift ? 0 : 4));
+    karnak.adpcmInputShift ^= 1;
     break;
 
   }
