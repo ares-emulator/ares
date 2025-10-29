@@ -2,7 +2,6 @@
 import argparse, glob, os, re, sys, subprocess
 from pathlib import Path
 
-
 def parse_depfile(p):
     s = Path(p).read_text(errors='ignore').replace('\\\n', ' ')
     i = s.find(':')
@@ -29,16 +28,6 @@ def parse_depfile(p):
     return [str(Path(x).resolve()) for x in out]
 
 
-def parse_dependinfo(p):
-    txt = Path(p).read_text(errors='ignore')
-    deps = []
-    for m in re.finditer(r'set\(CMAKE_DEPENDS_DEPENDENCY_FILES\s*"([^"]*)"\)', txt):
-        deps.extend(m.group(1).split(';'))
-    for m in re.finditer(r'set\([A-Z_]+_DEPENDS_DEPENDENCY_FILES\s*"([^"]*)"\)', txt):
-        deps.extend(m.group(1).split(';'))
-    return [str(Path(x).resolve()) for x in deps if x]
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--build-dir', required=True)
@@ -60,12 +49,6 @@ def main():
         os.path.join(args.build_dir, f'**/CMakeFiles/**/*.d'), recursive=True
     ):
         for dep in parse_depfile(d):
-            used.add(dep)
-    for d in glob.glob(
-        os.path.join(args.build_dir, f'**/CMakeFiles/**/DependInfo.cmake'),
-        recursive=True,
-    ):
-        for dep in parse_dependinfo(d):
             used.add(dep)
 
     if args.ninja:
