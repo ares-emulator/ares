@@ -50,7 +50,11 @@ auto Cartridge::RTC::serialize(serializer& s) -> void {
 auto Cartridge::KARNAK::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s(timerEnable);
+  s(enable);
   s(timerPeriod);
   s(timerCounter);
+
+  s(adpcmAccumulator);
+  s(adpcmStepIndex);
+  s(adpcmInputShift);
 }
