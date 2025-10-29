@@ -79,6 +79,10 @@ jobs:
       run: |
         brew uninstall --ignore-dependencies cmake
         brew install ${{ matrix.platform.install }}
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
     - name: "Build: Windows"
       if: runner.os != 'macOS' && runner.os != 'Linux'
       run: .github/scripts/build_windows.sh
@@ -107,6 +111,12 @@ jobs:
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
         MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
         MACOS_NOTARIZATION_TEAMID: ${{ secrets.MACOS_NOTARIZATION_TEAMID }}
+    - name: Verify declared sources (Linux)
+      if: runner.os == 'Linux'
+      run: cmake --build build --target verify-sources
+    - name: Verify declared sources (macOS/Windows)
+      if: runner.os != 'Linux'
+      run: cmake --build build --config RelWithDebInfo --target verify-sources
     - name: "Compress Build Artifact (macOS)"
       if: runner.os == 'macOS'
       run: |
