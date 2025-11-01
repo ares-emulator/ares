@@ -149,16 +149,37 @@ auto PCD::LD::load(string location) -> void {
   videoFramePrefetchThreadShutdownComplete.clear();
   std::thread workerThread(std::bind(std::mem_fn(&PCD::LD::videoFramePrefetchThread), this));
   workerThread.detach();
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+  {
+    std::unique_lock lock(videoFramePrefetchMutex);
+    while (!videoFramePrefetchThreadStarted.test()) {
+      notifyVideoFramePrefetchThreadStarted.wait(lock);
+    }
+  }
+#else
   videoFramePrefetchThreadStarted.wait(false);
+#endif
 }
 
 auto PCD::LD::unload() -> void {
   // Request the prefetch background thread to terminate, and wait for it to complete.
   if (videoFramePrefetchThreadStarted.test()) {
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+    {
+      std::unique_lock lock(videoFramePrefetchMutex);
+      videoFramePrefetchThreadShutdownRequested.test_and_set();
+      videoFramePrefetchPending.test_and_set();
+      notifyVideoFramePrefetchPending.notify_all();
+      while (!videoFramePrefetchThreadShutdownComplete.test()) {
+        notifyVideoFramePrefetchThreadShutdownComplete.wait(lock);
+      }
+    }
+#else
     videoFramePrefetchThreadShutdownRequested.test_and_set();
     videoFramePrefetchPending.test_and_set();
     videoFramePrefetchPending.notify_all();
     videoFramePrefetchThreadShutdownComplete.wait(false);
+#endif
   }
 
   // Close the mmi file
@@ -2777,11 +2798,26 @@ auto PCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
   // when it starts the new one, as it is our responsibility to clear the prefetch complete state. This means if we
   // don't wait for the original prefetch to complete here, it would trigger a race condition for the load of the
   // following frame.
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+  {
+    std::unique_lock lock(videoFramePrefetchMutex);
+    while (videoFramePrefetchPending.test()) {
+      notifyVideoFramePrefetchPending.wait(lock);
+    }
+    if (videoFramePrefetchTarget != nullptr) {
+      while (!videoFramePrefetchComplete.test()) {
+        notifyVideoFramePrefetchComplete.wait(lock);
+      }
+      videoFramePrefetchComplete.clear();
+    }
+  }
+#else
   videoFramePrefetchPending.wait(true);
   if (videoFramePrefetchTarget != nullptr) {
     videoFramePrefetchComplete.wait(false);
     videoFramePrefetchComplete.clear();
   }
+#endif
 
   // If the prefetch operation is for the correct frame, we've just waited for it to complete above, so we now swap the
   // prefetch buffer with the build frame buffer. Note that this will exchange memory buffer pointers and not copy the
@@ -2845,19 +2881,44 @@ auto PCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
     return;
   }
   videoFramePrefetchTarget = videoFrameCompressed;
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+  {
+    std::unique_lock lock(videoFramePrefetchMutex);
+    videoFramePrefetchPending.test_and_set();
+    notifyVideoFramePrefetchPending.notify_all();
+  }
+#else
   videoFramePrefetchPending.test_and_set();
   videoFramePrefetchPending.notify_all();
+#endif
 }
 
 auto PCD::LD::videoFramePrefetchThread() -> void {
   // Trigger a notification that this worker thread has started
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+  {
+    std::unique_lock lock(videoFramePrefetchMutex);
+    videoFramePrefetchThreadStarted.test_and_set();
+    notifyVideoFramePrefetchThreadStarted.notify_all();
+  }
+#else
   videoFramePrefetchThreadStarted.test_and_set();
   videoFramePrefetchThreadStarted.notify_all();
+#endif
 
   // Perform prefetch requests as they arrive, and terminate the thread when requested.
   while (!videoFramePrefetchThreadShutdownRequested.test()) {
     // Wait for a prefetch request to arrive
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+    {
+      std::unique_lock lock(videoFramePrefetchMutex);
+      while (!videoFramePrefetchPending.test()) {
+        notifyVideoFramePrefetchPending.wait(lock);
+      }
+    }
+#else
     videoFramePrefetchPending.wait(false);
+#endif
 
     // If this thread has been requested to terminate, break out of the prefetch loop.
     if (videoFramePrefetchThreadShutdownRequested.test()) {
@@ -2865,8 +2926,16 @@ auto PCD::LD::videoFramePrefetchThread() -> void {
     }
 
     // Trigger a notification that a prefetch request is no longer pending
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+    {
+      std::unique_lock lock(videoFramePrefetchMutex);
+      videoFramePrefetchPending.clear();
+      notifyVideoFramePrefetchPending.notify_all();
+    }
+#else
     videoFramePrefetchPending.clear();
     videoFramePrefetchPending.notify_all();
+#endif
 
     // Allocate memory for the prefetch frame buffer if it's currently empty
     if (videoFramePrefetchBuffer.empty()) {
@@ -2878,13 +2947,29 @@ auto PCD::LD::videoFramePrefetchThread() -> void {
     qoi2_decode_data(videoFramePrefetchTarget + QON_FRAME_SIZE_SIZE, frameSizeCompressed, &video.videoFrameHeader, nullptr, videoFramePrefetchBuffer.data(), 3);
 
     // Trigger a notification that the prefetch operation is complete
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+    {
+      std::unique_lock lock(videoFramePrefetchMutex);
+      videoFramePrefetchComplete.test_and_set();
+      notifyVideoFramePrefetchComplete.notify_all();
+    }
+#else
     videoFramePrefetchComplete.test_and_set();
     videoFramePrefetchComplete.notify_all();
+#endif
   }
 
   // Trigger a notification that this worker thread has shut down
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+  {
+    std::unique_lock lock(videoFramePrefetchMutex);
+    videoFramePrefetchThreadShutdownComplete.test_and_set();
+    notifyVideoFramePrefetchThreadShutdownComplete.notify_all();
+  }
+#else
   videoFramePrefetchThreadShutdownComplete.test_and_set();
   videoFramePrefetchThreadShutdownComplete.notify_all();
+#endif
 }
 
 auto PCD::LD::decodeBiphaseCodeFromScanline(int lineNo) -> u32 {
