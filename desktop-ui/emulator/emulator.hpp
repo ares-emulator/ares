@@ -26,6 +26,8 @@ struct Emulator {
   auto handleLoadResult(LoadResult result) -> void;
   virtual auto load(Menu) -> void {}
   virtual auto load() -> LoadResult = 0;
+  virtual auto loadTape(ares::Node::Object node, string location) -> bool { return false; }
+  virtual auto unloadTape(ares::Node::Object node) -> void {}
   virtual auto save() -> bool { return true; }
   virtual auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> = 0;
   virtual auto notify(const string& message) -> void {}

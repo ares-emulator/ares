@@ -222,6 +222,9 @@ Presentation::Presentation() {
   traceLoggerAction.setText("Tracer").setIcon(Icon::Emblem::Script).onActivate([&] {
     toolsWindow.show("Tracer");
   });
+  tapeViewerAction.setText("Tape").setIcon(Icon::Device::Tape).onActivate([&] {
+    toolsWindow.show("Tape");
+  });
 
   helpMenu.setText("Help");
   aboutAction.setText("About" ELLIPSIS).setIcon(Icon::Prompt::Question).onActivate([&] {

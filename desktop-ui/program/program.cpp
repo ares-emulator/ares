@@ -137,6 +137,7 @@ auto Program::main() -> void {
   memoryEditor.liveRefresh();
   graphicsViewer.liveRefresh();
   propertiesViewer.liveRefresh();
+  tapeViewer.liveRefresh();
 }
 
 auto Program::quit() -> void {
