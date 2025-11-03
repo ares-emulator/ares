@@ -1,3 +1,9 @@
+struct Tape {
+    virtual ~Tape() = default;
+    virtual auto read() -> n1 = 0;
+    virtual auto write(n1 data) -> void = 0;
+};
+
 struct FamilyKeyboard : Expansion {
   struct Key {
     Node::Input::Button f1, f2, f3, f4, f5, f6, f7, f8;
@@ -16,7 +22,10 @@ struct FamilyKeyboard : Expansion {
   auto write(n8 data) -> void override;
 
 private:
+  std::unique_ptr<Tape> tape;
   n3 latch;
   n1 column;
   n4 row;
 };
+
+#include "famicom-data-recorder.hpp"

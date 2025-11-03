@@ -76,6 +76,8 @@ namespace name=Icon
     binary name=Speaker2x file=icon@2x/device/speaker.png
     binary name=Storage1x file=icon/device/storage.png
     binary name=Storage2x file=icon@2x/device/storage.png
+    binary name=Tape1x file=icon/device/tape.png
+    binary name=Tape2x file=icon@2x/device/tape.png
   namespace name=Edit
     binary name=Clear1x file=icon/edit/clear.png
     binary name=Clear2x file=icon@2x/edit/clear.png

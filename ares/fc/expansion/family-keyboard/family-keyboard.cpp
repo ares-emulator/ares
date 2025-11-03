@@ -1,3 +1,5 @@
+#include "famicom-data-recorder.cpp"
+
 FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Family Keyboard");
 
@@ -80,12 +82,13 @@ FamilyKeyboard::FamilyKeyboard(Node::Port parent) {
   key.down  = node->append<Node::Input::Button>("Down");
   key.left  = node->append<Node::Input::Button>("Left");
   key.right = node->append<Node::Input::Button>("Right");
+
+  tape = std::make_unique<FamicomDataRecorder>(parent);
 }
 
 auto FamilyKeyboard::read1() -> n1 {
-  n1 data;
-  //data recorder (unsupported)
-  return data;
+  if (!latch.bit(2)) return 0b0;
+  return tape->read();
 }
 
 auto FamilyKeyboard::read2() -> n5 {
@@ -219,4 +222,6 @@ auto FamilyKeyboard::write(n8 data) -> void {
   if(column && !latch.bit(1)) row = (row + 1) % 10;
   column = latch.bit(1);
   if(latch.bit(0)) row = 0;
+
+  tape->write(data.bit(0));
 }

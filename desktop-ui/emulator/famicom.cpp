@@ -4,6 +4,10 @@ struct Famicom : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+  auto loadTape(ares::Node::Object node, string location) -> bool override;
+  auto unloadTape(ares::Node::Object node) -> void override;
+
+  std::shared_ptr<mia::Pak> famicomDataRecorder{};
 };
 
 Famicom::Famicom() {
@@ -85,6 +89,7 @@ auto Famicom::save() -> bool {
 auto Famicom::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Famicom") return system->pak;
   if(node->name() == "Famicom Cartridge") return game->pak;
+  if(node->name() == "Famicom Data Recorder") return famicomDataRecorder->pak;
   return {};
 }
 
@@ -179,4 +184,30 @@ auto Famicom::input(ares::Node::Input::Input input) -> void {
   if (input->name() == "Down")        return button->setValue(inputKeyboard("Down"));
   if (input->name() == "Left")        return button->setValue(inputKeyboard("Left"));
   if (input->name() == "Right")       return button->setValue(inputKeyboard("Right"));
+}
+
+auto Famicom::loadTape(ares::Node::Object node, string location) -> bool {
+  if (node->name() == "Famicom Data Recorder") {
+    famicomDataRecorder = mia::Medium::create("Tape");
+    if (!location) {
+      location = Emulator::load(famicomDataRecorder, settings.paths.home);
+      if (!location) return false;
+    }
+    LoadResult result = famicomDataRecorder->load(location);
+    if (result != successful) {
+      famicomDataRecorder.reset();
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+auto Famicom::unloadTape(ares::Node::Object node) -> void {
+  if (node->name() == "Famicom Data Recorder") {
+    famicomDataRecorder->save(famicomDataRecorder->location);
+    famicomDataRecorder.reset();
+  }
 }

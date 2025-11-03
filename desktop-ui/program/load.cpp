@@ -72,6 +72,7 @@ auto Program::load(string location) -> bool {
   streamManager.reload();
   propertiesViewer.reload();
   traceLogger.reload();
+  tapeViewer.reload();
   state = {};  //reset hotkey state slot to 1
   if(settings.boot.debugger) {
     pause(true);
@@ -130,6 +131,7 @@ auto Program::unload() -> void {
   streamManager.unload();
   propertiesViewer.unload();
   traceLogger.unload();
+  tapeViewer.unload();
   message.text = "";
   configuration = "";
   ruby::video.clear();
