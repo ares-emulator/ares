@@ -99,19 +99,21 @@ auto FamicomDataRecorder::main() -> void {
   if (node->recording()) {
     u64 frequency = node->frequency();
     if (length <= position) {
-      length = (position / frequency + 1) * frequency;
       auto fd = pak->write("program.tape");
-      fd->resize(length);
+      fd->resize(data.size() * sizeof(u64));
       data.save(fd);
+      fd.reset();
 
+      length = (position / frequency + 1) * frequency;
+      fd = pak->read("program.tape");
       data.allocate(length, 0);
       data.load(fd);
       fd.reset();
+      node->setLength(length);
     }
 
     data[position++] = (range >> 1) + (input ? 1 : 0);
     node->setPosition(position);
-    node->setLength(length);
     return step();
   }
 
