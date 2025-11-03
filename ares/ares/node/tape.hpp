@@ -1,6 +1,10 @@
 struct Tape : Peripheral {
   DeclareClass(Tape, "tape") using Peripheral::Peripheral;
 
+  ~Tape() {
+    unload();
+  }
+
   auto play() -> void { _playing = true; }
   auto record() -> void { _recording = true; }
   auto stop() -> void {
