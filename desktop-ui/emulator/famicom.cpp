@@ -83,6 +83,7 @@ auto Famicom::save() -> bool {
   root->save();
   system->save(system->location);
   game->save(game->location);
+  if (famicomDataRecorder) famicomDataRecorder->save();
   return true;
 }
 
