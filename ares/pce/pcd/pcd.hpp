@@ -386,6 +386,7 @@ struct PCD : Thread {
 
     struct AnalogVideoFrameIndex {
       bool isCLV;
+      int sideNo;
       bool hasDigitalAudio;
       size_t leadInFrameCount;
       size_t activeVideoFrameCount;

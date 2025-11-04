@@ -20,6 +20,7 @@ auto PCD::LD::load(string location) -> void {
   string analogAudioFileName;
   string analogVideoFileName;
   video.isCLV = false;
+  video.sideNo = 0;
   video.leadInFrameCount = 0;
   video.activeVideoFrameCount = 0;
   video.leadOutFrameCount = 0;
@@ -36,6 +37,7 @@ auto PCD::LD::load(string location) -> void {
         video.activeVideoFrameCount = stream.framesInActiveRegion;
         video.leadOutFrameCount = stream.framesInLeadOutRegion;
         video.isCLV = mmi.media()[mediaIndex].format.endsWith("CLV");
+        video.sideNo = mmi.media()[mediaIndex].sideNo;
       }
     }
   } else {
@@ -418,21 +420,38 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     //         --------------------------------- (Buffered in $5913)
     // Output  | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x03|-------------------------------|
-    // 0xFDFE87| ? |*U6| ? |*U4|*U3| ? | ? | ? |
+    // 0xFDFE87| *U67  | ? |*U4|*U3| ? | ? | ? |
     //         ---------------------------------
     // ##NEW## 2025
     // *U3: Set during spinup of 30/20cm CAV/CLV disc a bit after U6, and a CD without U6. Cleared when drive tray opened.
     // *U4: Set during spinup of 20cm disc a bit after U6, very slightly before U3 but almost same time. Cleared when drive tray opened.
-    // *U6: Set during spinup of 30/20cm CAV/CLV disc. Cleared when drive tray opened.
+    // *U67: Set during spinup of 30/20cm CAV/CLV disc. Cleared when drive tray opened.
+    //       -Set to 01 for side A(1) of a Laserdisc
+    //       -Set to 10 for side B(2) of a Laserdisc
+    //       -When tested on a video Laserdisc title which had two double-sided discs in the set, for disc 2 side A,
+    //        which is marked as side "3" on the label, it came up as side 1 in this register, with side 4 being side 2.
+    //       -When tested on Myst B2 prototype, which has two identical "side A" sides pressed together, both sides
+    //        reported as side A (01) as expected.
     // ##OLD## Pre 2025
     // *U4: Unknown. DRVINIT tests this, and only reads TOC info from the loaded disk if it is set to 0. It's possible this
     //      is an error in the bios routines however, and they meant to test U4 in the above output register 0x02. This would
     //      make sense.
-
-    //##FIX## This is supposed to be latched until the tray is ejected
-    //##FIX## Do this properly
-    data.bit(6) = (currentDriveState >= 0x04) && pcd.drive.isDiscLoaded() && pcd.drive.isDiscLaserdisc();
-    data.bit(3) = currentDriveState >= 0x04;
+    if (currentDriveState < 0x02) {
+      // Clear all flags to 0 when tray open
+      data = 0;
+    } else if (currentDriveState < 0x04) {
+      // Retain previous state when a disc is spun down, don't update anything.
+    } else { // currentDriveState >= 0x04
+      // Update disc present flag
+      data.bit(3) = pcd.drive.isDiscLoaded();
+      // Update disc side flags
+      if (pcd.drive.isDiscLoaded() && pcd.drive.isDiscLaserdisc())
+      {
+        data.bit(6, 7) = (video.sideNo > 1 ? 0b10 : 0b01);
+      } else {
+        data.bit(6, 7) = 0;
+      }
+    }
     break;
   case 0x04:
     //         --------------------------------- (Buffered in $5914)
@@ -457,9 +476,9 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     if (!pcd.drive.isDiscLoaded() || pcd.drive.isDiscLaserdisc() || (currentDriveState < 0x02)) {
       data.bit(7) = inputRegs[0x0D].bit(4);
     }
-    if (!pcd.drive.isDiscLoaded() || pcd.drive.isDiscLaserdisc() || (currentDriveState >= 0x05)) {
+    if (!pcd.drive.isDiscLoaded() || pcd.drive.isDiscLaserdisc() || (currentDriveState >= 0x04)) {
       data.bit(0, 3) = (pcd.drive.isTrackAudio(pcd.drive.getCurrentTrack()) ? 0x0C : 0x0E);
-    } else if (pcd.drive.isDiscLoaded() && !pcd.drive.isDiscLaserdisc() && (currentDriveState >= 0x05)) {
+    } else if (pcd.drive.isDiscLoaded() && !pcd.drive.isDiscLaserdisc() && (currentDriveState >= 0x04)) {
       data.bit(0, 3) = 0x2;
     }
     break;
@@ -634,6 +653,9 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     // *U7: Set when an LD starts playing, IE not set at drive state 0x04. Cleared when the disc is spun down. Not set for CD.
     // *U6: For a CD, set when a CD is detected when the drive is closed, IE at drive state 0x02. Retained until the tray is
     //      opened. For an LD, set when the disc is loaded and spinning. Cleared when the disc is spun down.
+    // *U4: Observed to be set (along with U7 and U6) at the very end of side 2 of JB Harold BCB when the track 2 BCD timecode
+    //      rolled over to 59:59:28, and locked there, while the redbook track counter kept on counting. Most likely this gets
+    //      set when we hit the lead-out frames.
     // *U0: Set when a CD or LD is loaded and spinning. Retained until drive tray is opened.
     //##OLD## 2025
     // *U7: Observed to be set when testing bad seeking operations
@@ -772,7 +794,7 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
       data = 0;
     } else {
       auto trackToQuery = (selectedTrackInfo == 0 ? pcd.drive.getCurrentTrack() : (n7)selectedTrackInfo);
-      pcd.drive.getTrackTocData(selectedTrackInfo, flags, minute, second, frame);
+      pcd.drive.getTrackTocData(trackToQuery, flags, minute, second, frame);
       data.bit(4, 7) = flags;
       data.bit(0, 3) = 0x01;
     }

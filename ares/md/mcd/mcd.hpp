@@ -426,6 +426,7 @@ struct MCD : M68000, Thread {
 
     struct AnalogVideoFrameIndex {
       bool isCLV;
+      int sideNo;
       bool hasDigitalAudio;
       size_t leadInFrameCount;
       size_t activeVideoFrameCount;
