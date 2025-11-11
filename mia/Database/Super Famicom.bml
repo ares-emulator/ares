@@ -341,6 +341,114 @@ game
     oscillator
       frequency: 8000000
 
+//sha256 is without firmware
+game
+   sha256:   efa28b9ca1c63d953dacb1f77a50e55c137ed025f2e066282fb3be6412b65489
+   title:    Campus Challenge '92
+   name:     Super Nintendo Campus Challenge 1992
+   region:   NTSC
+   revision:    1.0
+   board:    EVENT-CC92
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-1
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-2
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-3
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+      volatile
+    memory
+      type: ROM
+      size: 0x1800
+      content: Program
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+    memory
+      type: ROM
+      size: 0x800
+      content: Data
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+    memory
+      type: RAM
+      size: 0x200
+      content: Data
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+      volatile
+    oscillator
+      frequency: 8000000
+
+//sha256 is without firmware
+game
+   sha256:   8727da57fefe7fe91655a1c693892a1272a3cda6f1f57b529e06a6617de6ce39
+   title:    Campus Challenge '92
+   name:     Super Nintendo Campus Challenge 1992
+   region:   NTSC
+   revision:    1.0
+   board:    EVENT-CC92
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-1
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-2
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-3
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+      volatile
+    memory
+      type: ROM
+      size: 0x1800
+      content: Program
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+    memory
+      type: ROM
+      size: 0x800
+      content: Data
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+    memory
+      type: RAM
+      size: 0x200
+      content: Data
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+      volatile
+    oscillator
+      frequency: 8000000
+
 game
   sha256:   6e7dcbb4df32903d6ff5da1e308342c0a72f5af3f11479cf49391dc3a17d5d7b
   title:    キャプテンコマンドー
@@ -12192,6 +12300,115 @@ game
       type: ROM
       size: 0x40000
       content: Program
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-1
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-2
+    memory
+      type: ROM
+      size: 0x100000
+      content: Level-3
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+      volatile
+    memory
+      type: ROM
+      size: 0x1800
+      content: Program
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+    memory
+      type: ROM
+      size: 0x800
+      content: Data
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+    memory
+      type: RAM
+      size: 0x200
+      content: Data
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+      volatile
+    oscillator
+      frequency: 8000000
+
+//sha256 is without firmware
+game
+  sha256:   7fa4550886acb4d56b86a848ee1fb92e1cd12b87f1e7c0c510227959c041666f
+  title:    PowerFest '94
+  name:     PowerFest '94
+  region:   NTSC
+  revision: 1.0
+  board: EVENT-PF94 
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-1
+    memory
+      type: ROM
+      size: 0x80000
+      content: Level-2
+    memory
+      type: ROM
+      size: 0x100000
+      content: Level-3
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+      volatile
+    memory
+      type: ROM
+      size: 0x1800
+      content: Program
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+    memory
+      type: ROM
+      size: 0x800
+      content: Data
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+    memory
+      type: RAM
+      size: 0x200
+      content: Data
+      manufacturer: NEC
+      architecture: uPD7725
+      identifier: DSP1
+      volatile
+    oscillator
+      frequency: 8000000
+
+game
+  sha256:   7470271d4cdad5f3406bfe688dca2b5c8d8e6038e39b9714ae70846c808dcc15
+  title:    PowerFest '94
+  name:     PowerFest '94
+  region:   NTSC-U
+  revision: 1.0
+  board: EVENT-PF94 
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+      content: Timer
+      initial: 381
     memory
       type: ROM
       size: 0x80000
