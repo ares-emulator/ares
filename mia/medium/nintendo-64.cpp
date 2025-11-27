@@ -376,6 +376,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   if(id == "NIR") {eeprom = 512; rpak = true;}                             //Utchan Nanchan no Hono no Challenger: Denryuu Ira Ira Bou
   if(id == "NVL") {eeprom = 512; rpak = true;}                             //V-Rally Edition '99
   if(id == "NVY") {eeprom = 512; rpak = true;}                             //V-Rally Edition '99 (J)
+  if(id == "NJK") {eeprom = 512; rpak = true;}                             //Viewpoint 2064 (Master)
   if(id == "NWC") {eeprom = 512; rpak = true;}                             //Wild Choppers
   if(id == "NAD") {eeprom = 512;}                                          //Worms Armageddon (U)
   if(id == "NWU") {eeprom = 512;}                                          //Worms Armageddon (E)
