@@ -180,7 +180,6 @@ auto Nintendo64DD::createErrorTable(std::span<const u8> input) -> std::vector<u8
   //if neither mame or ndd or d64 format, don't do anything
   if (!ndd && !mame && !d64) return {};
 
-  input.begin();
   std::vector<u8> output;
   output.resize(1175*2*2, 0);   //1175 tracks * 2 blocks per track * 2 sides
 
