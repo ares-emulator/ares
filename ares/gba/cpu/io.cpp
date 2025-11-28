@@ -451,8 +451,10 @@ auto CPU::writeIO(n32 address, n8 data) -> void {
     if(data.bit(0)) context.booted = 1;
     return;
   case 0x0400'0301:
-    context.halted  = data.bit(7) == 0;
-    context.stopped = data.bit(7) == 1;
+    if(processor.r15 < 0x0200'0000) {
+      context.halted  = data.bit(7) == 0;
+      context.stopped = data.bit(7) == 1;
+    }
     return;
 
   //MEMCNT_L
