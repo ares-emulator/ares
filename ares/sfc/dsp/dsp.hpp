@@ -77,9 +77,9 @@ private:
   } noise;
 
   struct BRR {
-    n8  bank;
+    n8  page;
 
-    n8  _bank;
+    n8  _page;
     n8  _source;
     n16 _address;
     n16 _nextAddress;
