@@ -158,6 +158,7 @@ struct VDC : VDCBase {
     auto render(n16 y) -> void;
 
     n1  enable;
+    n1  burstMode;
     n2  vramMode;  //partially emulated
     n1  characterMode;
     n10 hscroll;
@@ -207,6 +208,7 @@ struct VDC : VDCBase {
     adaptive_array<Object, 16> objects;
 
     n1 enable;
+    n1 burstMode;
     n2 vramMode;  //partially emulated
 
     struct Latch {
