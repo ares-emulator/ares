@@ -146,7 +146,7 @@ auto PCD::Drive::read() -> bool {
   }
 
   if(auto track = session->inTrack(lba + sectorAdvanceOffset)) {
-    track = track();
+    this->track = *track;
     lba += sectorAdvanceOffset;
 
     if(lba == end) {
@@ -225,7 +225,7 @@ auto PCD::Drive::seekToSector(s32 targetLba, bool startPaused) -> void {
   //##DEBUG##
   end = 0xFFFFFF;
   pcd.cdda.sample.offset = 0;
-  if (auto trackNo = session->inTrack(lba)) track = trackNo();
+  if (auto trackNo = session->inTrack(lba)) track = *trackNo;
 }
 
 auto PCD::Drive::seekToTrack(n7 track, bool startPaused) -> void {
