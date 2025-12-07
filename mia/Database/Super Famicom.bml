@@ -290,9 +290,9 @@ game
 //sha256 is without firmware
 game
    sha256:   67c1a4917f4cd0fd704b83330a7e91763736c2d2a10a7e12318fdac54cd9c6c6
-   title:    Campus Challenge '92
+   title:    Campus Challenge '92 (Original)
    name:     Super Nintendo Campus Challenge 1992
-   region:   Japan
+   region:   NTSC
    revision:    1.0
    board:    EVENT-CC92
     memory
@@ -343,8 +343,8 @@ game
 
 //sha256 is without firmware
 game
-   sha256:   efa28b9ca1c63d953dacb1f77a50e55c137ed025f2e066282fb3be6412b65489
-   title:    Campus Challenge '92
+   sha256:   6c83ee132db777b306caeb2da6f2cd971735fb06805af55979d99028b33bf659
+   title:    Campus Challenge '92 (2nd Screen)
    name:     Super Nintendo Campus Challenge 1992
    region:   NTSC
    revision:    1.0
@@ -398,7 +398,7 @@ game
 //sha256 is without firmware
 game
    sha256:   8727da57fefe7fe91655a1c693892a1272a3cda6f1f57b529e06a6617de6ce39
-   title:    Campus Challenge '92
+   title:    Campus Challenge '92 (Repro)
    name:     Super Nintendo Campus Challenge 1992
    region:   NTSC
    revision:    1.0
@@ -12291,7 +12291,7 @@ game
 //sha256 is without firmware
 game
   sha256:   5443a97e9c40e25821a8fb8c91b63c7bd8c3060d9ff888ee6c573b87b53935f4
-  title:    PowerFest '94
+  title:    PowerFest '94 (10k pts)
   name:     PowerFest '94
   region:   USA
   revision: 1.0
@@ -12345,7 +12345,7 @@ game
 //sha256 is without firmware
 game
   sha256:   7fa4550886acb4d56b86a848ee1fb92e1cd12b87f1e7c0c510227959c041666f
-  title:    PowerFest '94
+  title:    PowerFest '94 (1m pts)
   name:     PowerFest '94
   region:   NTSC
   revision: 1.0
