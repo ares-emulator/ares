@@ -231,8 +231,15 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
   pakMenu.setText("Pak");
   Group pakGroup;
 
+  // Initialize all menu items and add them all to the group for appropriate radio selection behavior
+  MenuRadioItem nothing{&pakMenu}, cpak{&pakMenu}, rpak{&pakMenu}, tpak{&pakMenu}, biosensor{&pakMenu};
+  pakGroup.append(nothing);
+  pakGroup.append(cpak);
+  pakGroup.append(rpak);
+  pakGroup.append(tpak);
+  pakGroup.append(biosensor);
+
   // Show Nothing option
-  MenuRadioItem nothing{&pakMenu};;
   nothing.setText("Nothing");
   nothing.setAttribute<ares::Node::Port>("port", port);
   if(!pak) nothing.setChecked();
@@ -249,10 +256,8 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
     }
     presentation.refreshSystemMenu();
   });
-  pakGroup.append(nothing);
 
   // Show Controller Pak option
-  MenuRadioItem cpak{&pakMenu};
   cpak.setAttribute<ares::Node::Port>("port", port);
   cpak.setText("Controller Pak");
   if(pak && pak->name() == "Controller Pak") cpak.setChecked();
@@ -276,10 +281,8 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
     }
     presentation.refreshSystemMenu();
   });
-  pakGroup.append(cpak);
 
   // Show Rumble Pak option
-  MenuRadioItem rpak{&pakMenu};
   rpak.setAttribute<ares::Node::Port>("port", port);
   rpak.setText("Rumble Pak");
   if(pak && pak->name() == "Rumble Pak") rpak.setChecked();
@@ -298,11 +301,9 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
     }
     presentation.refreshSystemMenu();
   });
-  pakGroup.append(rpak);
 
   // Show Transfer Pak option if Game Boy core is available
 #if defined(CORE_GB)
-  MenuRadioItem tpak{&pakMenu};
   tpak.setAttribute<ares::Node::Port>("port", port);
   tpak.setText("Transfer Pak");
   if(pak && pak->name() == "Transfer Pak") tpak.setChecked();
@@ -334,11 +335,9 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
     }
     presentation.refreshSystemMenu();
   });
-  pakGroup.append(tpak);
 #endif
 
   // Show Bio Sensor option
-  MenuRadioItem biosensor{&pakMenu};
   biosensor.setAttribute<ares::Node::Port>("port", port);
   biosensor.setText("Bio Sensor");
   if(pak && pak->name() == "Bio Sensor") biosensor.setChecked();
@@ -357,7 +356,6 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
     }
     presentation.refreshSystemMenu();
   });
-  pakGroup.append(biosensor);
   
   // Show Bio Sensor BPM menu if Bio Sensor is connected
   if(pak && pak->name() == "Bio Sensor") {
