@@ -142,7 +142,7 @@ set(CMAKE_XCODE_ATTRIBUTE_CLANG_WARN_UNGUARDED_AVAILABILITY YES)
 
 # set(CMAKE_XCODE_ATTRIBUTE_CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS YES)
 
-# Add other warnings, downgrade errors to warnings where necessary 
+# Add other warnings, downgrade errors to warnings where necessary
 set(
   CMAKE_XCODE_ATTRIBUTE_WARNING_CFLAGS
   "-Wvla
@@ -161,3 +161,10 @@ set(CMAKE_COLOR_DIAGNOSTICS TRUE)
 set(CMAKE_SKIP_RPATH TRUE)
 # Have Xcode set default RPATH entries
 set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
+
+if(ARES_DEBUG_DEPENDENCIES)
+  set(CMAKE_XCODE_SCHEME_LLDB_INIT_FILE ${CMAKE_BINARY_DIR}/.lldbinit)
+endif()
+
+# Enabling GPU capture in Xcode 16+ can result in runaway memory use even when not capturing. Disable by default.
+set(CMAKE_XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE Disabled)

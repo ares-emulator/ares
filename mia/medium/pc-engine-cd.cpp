@@ -1,6 +1,6 @@
 struct PCEngineCD : CompactDisc {
   auto name() -> string override { return "PC Engine CD"; }
-  auto extensions() -> vector<string> override {
+  auto extensions() -> std::vector<string> override {
 #if defined(ARES_ENABLE_CHD)
     return {"cue", "chd"};
 #else
@@ -20,7 +20,7 @@ auto PCEngineCD::load(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("card",   document["game/card"].string());
@@ -43,15 +43,15 @@ auto PCEngineCD::save(string location) -> bool {
 }
 
 auto PCEngineCD::analyze(string location) -> string {
-  vector<u8> sectors[2];
+  std::vector<u8> sectors[2];
 
   sectors[0] = readDataSector(location, 0);
   sectors[1] = readDataSector(location, 16);
 
-  if(!sectors[0] && !sectors[1]) return CompactDisc::manifestAudio(location);
+  if(sectors[0].empty() && sectors[1].empty()) return CompactDisc::manifestAudio(location);
 
-  bool isNEC = sectors[0] && (memory::compare(sectors[0].data() + 0x264, "NEC Home Electoronics", 21) == 0);
-  bool isGamesExpress = sectors[1] &&(memory::compare(sectors[1].data() + 0x1, "CD001", 5) == 0);
+  bool isNEC = !sectors[0].empty() && (memory::compare(sectors[0].data() + 0x264, "NEC Home Electoronics", 21) == 0);
+  bool isGamesExpress = !sectors[1].empty() && (memory::compare(sectors[1].data() + 0x1, "CD001", 5) == 0);
 
   if(!isGamesExpress && !isNEC) return CompactDisc::manifestAudio(location);
 

@@ -1,5 +1,5 @@
 inline auto Scheduler::reset() -> void {
-  _threads.reset();
+  _threads.clear();
 }
 
 inline auto Scheduler::threads() const -> u32 {
@@ -41,15 +41,15 @@ inline auto Scheduler::maximum() const -> u64 {
 }
 
 inline auto Scheduler::append(Thread& thread) -> bool {
-  if(_threads.find(&thread)) return false;
+  if(std::ranges::find(_threads, &thread) != _threads.end()) return false;
   thread._uniqueID = uniqueID();
   thread._clock = maximum() + thread._uniqueID;
-  _threads.append(&thread);
+  _threads.push_back(&thread);
   return true;
 }
 
 inline auto Scheduler::remove(Thread& thread) -> void {
-  _threads.removeByValue(&thread);
+  std::erase(_threads, &thread);
 }
 
 //power cycle and soft reset events: assigns the primary thread and resets all thread clocks.

@@ -1,8 +1,8 @@
 struct MROM {
   //mrom.cpp
-  auto read(u32 mode, n32 address) -> n16;
-  auto write(u32 mode, n32 address, n16 half) -> void;
-  auto burstAddr(u32 mode, n32 address) -> n32;
+  auto read(n32 address) -> n16;
+  auto write(n32 address, n16 half) -> void;
+  auto burstAddr(n32 address) -> n32;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -18,7 +18,7 @@ struct MROM {
 struct SRAM {
   //sram.cpp
   auto read(n32 address) -> n8;
-  auto write(n32 address, n32 word) -> void;
+  auto write(n32 address, n8 byte) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

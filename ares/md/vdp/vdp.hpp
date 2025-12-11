@@ -52,7 +52,7 @@ struct VDP : Thread {
   auto screenWidth() const -> u32 { return latch.displayWidth ? 320 : 256; }
   auto screenHeight() const -> u32 { return io.overscan ? 240 : 224; }
   auto frameHeight() const -> u32 { return Region::PAL() ? 313 : 262; }
-  auto visibleHeight() const -> u32 { return Region::PAL() ? 294 : 243; }
+  auto visibleHeight() const -> u32 { return MegaLD() ? frameHeight() : (Region::PAL() ? 294 : 243); }
 
   //vdp.cpp
   auto load(Node::Object) -> void;

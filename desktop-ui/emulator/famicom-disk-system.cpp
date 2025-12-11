@@ -4,11 +4,11 @@ struct FamicomDiskSystem : Emulator {
   auto load() -> LoadResult override;
   auto unload() -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto notify(const string& message) -> void override;
   auto changeDiskState(const string state) -> void;
 
-  shared_pointer<mia::Pak> bios;
+  std::shared_ptr<mia::Pak> bios;
   sTimer diskChangeTimer;
 };
 
@@ -16,7 +16,7 @@ FamicomDiskSystem::FamicomDiskSystem() {
   manufacturer = "Nintendo";
   name = "Famicom Disk System";
 
-  firmware.append({"BIOS", "Japan", "fdc1a76e654feea993fcb38366e05ee5f4eb641f86fe6bebaeefd412e112dd72"});
+  firmware.push_back({"BIOS", "Japan", "fdc1a76e654feea993fcb38366e05ee5f4eb641f86fe6bebaeefd412e112dd72"});
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -33,7 +33,7 @@ FamicomDiskSystem::FamicomDiskSystem() {
     device.digital("Microphone", virtualPorts[id].pad.north);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -70,13 +70,15 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
 
 auto FamicomDiskSystem::changeDiskState(string state) -> void
 {
+  Program::Guard guard;
   print("Changing disk state to: ", state, "\n");
   //Eject the disk and give the emulator time to react before re-inserting
   print("Ejecting disk\n");
   emulator->notify("Ejected");
   if(state != "Ejected") {
     print("Setting disk change timer\n");
-    diskChangeTimer->onActivate([=] {
+    diskChangeTimer->onActivate([=, this] {
+      Program::Guard guard;
       print("Disk change timer activated, setting disk state to: ", state, "\n");
       diskChangeTimer->setEnabled(false);
       emulator->notify(state);
@@ -85,13 +87,13 @@ auto FamicomDiskSystem::changeDiskState(string state) -> void
 }
 
 auto FamicomDiskSystem::load() -> LoadResult {
-  game = mia::Medium::create("Famicom Disk System");
+  game = std::dynamic_pointer_cast<mia::Pak>(mia::Medium::create("Famicom Disk System"));
   string location = Emulator::load(game, configuration.game);
   if(!location) return noFileSelected;
   LoadResult result = game->load(location);
   if(result != successful) return result;
 
-  bios = mia::Medium::create("Famicom");
+  bios = std::dynamic_pointer_cast<mia::Pak>(mia::Medium::create("Famicom"));
   result = bios->load(firmware[0].location);
   if(result != successful) {
     result.firmwareSystemName = "Famicom";
@@ -149,7 +151,7 @@ auto FamicomDiskSystem::save() -> bool {
   return true;
 }
 
-auto FamicomDiskSystem::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto FamicomDiskSystem::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Famicom") return system->pak;
   if(node->name() == "Famicom Cartridge") return bios->pak;
   if(node->name() == "Famicom Disk System") return game->pak;

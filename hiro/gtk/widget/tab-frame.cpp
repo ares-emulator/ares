@@ -36,8 +36,12 @@ static auto TabFrame_move(GtkNotebook* notebook, GtkWidget* page, u32 moveTo, pT
     }
   }
   if(moveFrom) {
-    p->state().items.insert(moveTo, p->state().items.take(*moveFrom));
-    p->tabs.insert(moveTo, p->tabs.take(*moveFrom));
+    auto item = p->state().items[*moveFrom];
+    p->state().items.erase(p->state().items.begin() + *moveFrom);
+    p->state().items.insert(p->state().items.begin() + moveTo, item);
+    auto tab = p->tabs[*moveFrom];
+    p->tabs.erase(p->tabs.begin() + *moveFrom);
+    p->tabs.insert(p->tabs.begin() + moveTo, tab);
     if(!p->locked()) p->self().doMove(p->self().item(*moveFrom), p->self().item(moveTo));
   }
 }
@@ -47,7 +51,7 @@ auto pTabFrame::construct() -> void {
   gtk_notebook_set_show_border(GTK_NOTEBOOK(gtkWidget), false);
   gtk_notebook_set_tab_pos(GTK_NOTEBOOK(gtkWidget), GTK_POS_TOP);
 
-  tabs.reset();  //todo: memory leak, need to release each tab
+  tabs.clear();  //todo: memory leak, need to release each tab
   for(auto& item : state().items) append(item);
   setNavigation(state().navigation);
 
@@ -85,7 +89,7 @@ auto pTabFrame::container(mWidget& widget) -> GtkWidget* {
 
   u32 position = 0;
   for(auto& item : state().items) {
-    if(item->state.sizable.data() == object) return tabs[position].child;
+    if(item->state.sizable.get() == object) return tabs[position].child;
     position++;
   }
 
@@ -105,7 +109,7 @@ auto pTabFrame::remove(sTabFrameItem item) -> void {
       setItemSelected(item->offset() + displacement);
     }
   }
-  tabs.remove(item->offset());
+  tabs.erase(tabs.begin() + item->offset());
   gtk_notebook_remove_page(GTK_NOTEBOOK(gtkWidget), item->offset());
 
   u32 position = gtk_notebook_get_current_page(GTK_NOTEBOOK(gtkWidget));
@@ -200,7 +204,7 @@ auto pTabFrame::_append() -> void {
   pFont::setFont(tab.close, Font("sans", 9).setBold());
   auto color = CreateColor({255, 0, 0});
   gtk_widget_modify_fg(gtk_bin_get_child(GTK_BIN(tab.close)), GTK_STATE_PRELIGHT, &color);
-  tabs.append(tab);
+  tabs.push_back(tab);
 
   gtk_widget_show(tab.child);
   gtk_widget_show(tab.container);

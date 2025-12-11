@@ -23,7 +23,7 @@ auto Cartridge::saveMemory(AbstractMemory& ram, Markup::Node node) -> void {
   name.downcase();
 
   if(auto fp = pak->write(name)) {
-    fp->write({ram.data(), ram.size()});
+    fp->write(ram.data(), ram.size());
   }
 }
 
@@ -98,7 +98,7 @@ auto Cartridge::saveEpsonRTC(Markup::Node node) -> void {
   if(auto fp = pak->write("time.rtc")) {
     n8 data[16];
     epsonrtc.save(data);
-    fp->write({data, 16});
+    fp->write(data, 16);
   }
 }
 
@@ -107,7 +107,7 @@ auto Cartridge::saveSharpRTC(Markup::Node node) -> void {
   if(auto fp = pak->write("time.rtc")) {
     n8 data[16];
     sharprtc.save(data);
-    fp->write({data, 16});
+    fp->write(data, 16);
   }
 }
 

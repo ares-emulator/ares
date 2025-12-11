@@ -2,7 +2,7 @@ struct PCEngine : Emulator {
   PCEngine();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto allocatePorts() -> void;
   auto connectPorts() -> void;
 };
@@ -15,7 +15,7 @@ PCEngine::PCEngine() {
 }
 
 auto PCEngine::allocatePorts() -> void {
-  ports.reset();
+  ports.clear();
 
   InputPort port{string{"Controller Port"}};
 
@@ -45,7 +45,7 @@ auto PCEngine::allocatePorts() -> void {
     device.digital("Run",   virtualPorts[0].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
 
   for(auto id : range(5)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -76,7 +76,7 @@ auto PCEngine::allocatePorts() -> void {
     device.digital("Run",   virtualPorts[id].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -121,7 +121,7 @@ auto PCEngine::save() -> bool {
   return true;
 }
 
-auto PCEngine::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto PCEngine::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "PC Engine") return system->pak;
   if(node->name() == "PC Engine Card") return game->pak;
   return {};

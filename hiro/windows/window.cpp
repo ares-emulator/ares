@@ -41,11 +41,11 @@ auto pWindow::construct() -> void {
   setDroppable(state().droppable);
   setGeometry({128, 128, 256, 256});
 
-  windows.append(self().instance);
+  windows.push_back(self().instance);
 }
 
 auto pWindow::destruct() -> void {
-  if(auto position = windows.find(self().instance)) windows.remove(*position);
+  std::erase_if(windows, [&](const auto& w) { return !w.owner_before(self().instance) && !self().instance.owner_before(w); });
 
   if(hbrush) { DeleteObject(hbrush); hbrush = nullptr; }
   DestroyWindow(hwnd);
@@ -315,7 +315,8 @@ auto pWindow::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> m
   }
 
   if(msg == WM_DROPFILES) {
-    if(auto paths = DropPaths(wparam)) self().doDrop(paths);
+    auto paths = DropPaths(wparam);
+    if(!paths.empty()) self().doDrop(paths);
     return false;
   }
 
@@ -380,8 +381,8 @@ auto pWindow::_geometry() -> Geometry {
 auto pWindow::_modalityCount() -> u32 {
   u32 modalWindows = 0;
   for(auto& weak : windows) {
-    if(auto object = weak.acquire()) {
-      if(auto window = dynamic_cast<mWindow*>(object.data())) {
+    if(auto object = weak.lock()) {
+      if(auto window = dynamic_cast<mWindow*>(object.get())) {
         if(window->modal()) modalWindows++;
       }
     }
@@ -397,8 +398,8 @@ auto pWindow::_modalityDisabled() -> bool {
 auto pWindow::_modalityUpdate() -> void {
   u32 modalWindows = _modalityCount();
   for(auto& weak : windows) {
-    if(auto object = weak.acquire()) {
-      if(auto window = dynamic_cast<mWindow*>(object.data())) {
+    if(auto object = weak.lock()) {
+      if(auto window = dynamic_cast<mWindow*>(object.get())) {
         if(auto self = window->self()) {
           bool enabled = !modalWindows || window->modal();
           if(IsWindowEnabled(self->hwnd) != enabled) {

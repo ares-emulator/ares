@@ -18,7 +18,7 @@ auto Player::step(u32 clocks) -> void {
 }
 
 auto Player::power() -> void {
-  Thread::create(1000, {&Player::main, this});
+  Thread::create(1000, std::bind_front(&Player::main, this));
 
   status.enable = false;
   status.rumble = false;
@@ -35,7 +35,7 @@ auto Player::power() -> void {
 
 auto Player::frame() -> void {
   //todo: this is not a very performant way of detecting the GBP logo ...
-  u32 hash = Hash::CRC32({ppu.screen->pixels(1).data(), 240 * 160 * sizeof(u32)}).value();
+  u32 hash = Hash::CRC32({(const u8*)ppu.screen->pixels(1).data(), 240 * 160 * sizeof(u32)}).value();
   status.logoDetected = (hash == 0x7776eb55);
 
   if(status.logoDetected) {

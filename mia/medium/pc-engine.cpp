@@ -1,26 +1,26 @@
 struct PCEngine : Cartridge {
   auto name() -> string override { return "PC Engine"; }
-  auto extensions() -> vector<string> override { return {"pce"}; }
+  auto extensions() -> std::vector<string> override { return {"pce"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
 };
 
 auto PCEngine::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("board",  document["game/board"].string());
@@ -50,7 +50,7 @@ auto PCEngine::save(string location) -> bool {
   return true;
 }
 
-auto PCEngine::analyze(vector<u8>& data) -> string {
+auto PCEngine::analyze(std::vector<u8>& data) -> string {
   if((data.size() & 0x1fff) == 512) {
     //remove header if present
     memory::move(&data[0], &data[512], data.size() - 512);

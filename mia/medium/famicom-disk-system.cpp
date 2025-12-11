@@ -1,10 +1,10 @@
 struct FamicomDiskSystem : FloppyDisk {
   auto name() -> string override { return "Famicom Disk System"; }
-  auto extensions() -> vector<string> override { return {"fds"}; }
+  auto extensions() -> std::vector<string> override { return {"fds"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze() -> string;
-  auto transform(array_view<u8> input) -> vector<u8>;
+  auto transform(std::span<const u8> input) -> std::vector<u8>;
 };
 
 auto FamicomDiskSystem::load(string location) -> LoadResult {
@@ -12,11 +12,12 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     this->location = location;
     this->manifest = analyze();
 
-    pak = new vfs::directory;
+    pak = std::make_shared<vfs::directory>();
     pak->setAttribute("title", Medium::name(location));
     pak->append("manifest.bml", manifest);
     for(auto& filename : directory::files(location, "disk?*.side?*")) {
-      pak->append(filename, file::read({location, filename}));
+      auto mem = file::read({location, filename});
+      pak->append(filename, mem);
     }
   }
 
@@ -24,22 +25,25 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     this->location = location;
     this->manifest = analyze();
 
-    pak = new vfs::directory;
+    pak = std::make_shared<vfs::directory>();
     pak->setAttribute("title", Medium::name(location));
     pak->append("manifest.bml", manifest);
 
-    vector<u8> input = FloppyDisk::read(location);
-    array_view<u8> view{input};
-    if(view.size() % 65500 == 16) view += 16;  //skip iNES / fwNES header
+    std::vector<u8> input = FloppyDisk::read(location);
+    std::span<const u8> view{input};
+    if(view.size() % 65500 == 16) view = view.subspan(16);  //skip iNES / fwNES header
     u32 index = 0;
-    while(auto output = transform(view)) {
+
+    auto output = transform(view);
+    do {
       string name;
       name.append("disk", (char)('1' + index / 2), ".");
       name.append("side", (char)('A' + index % 2));
       pak->append(name, output);
-      view += 65500;
+      view = view.subspan(65500);
       index++;
-    }
+      output = transform(view);
+    } while (!output.empty());
   }
 
   if(!pak) return romNotFound;
@@ -71,17 +75,18 @@ auto FamicomDiskSystem::analyze() -> string {
   return s;
 }
 
-auto FamicomDiskSystem::transform(array_view<u8> input) -> vector<u8> {
+auto FamicomDiskSystem::transform(std::span<const u8> input) -> std::vector<u8> {
   if(input.size() < 65500) return {};
 
-  array_view<u8> data{input.data(), 65500};
+  std::span<const u8> data{input.data(), 65500};
   if(data[0x00] != 0x01) return {};
   if(data[0x38] != 0x02) return {};
   if(data[0x3a] != 0x03) return {};
   if(data[0x4a] != 0x04) return {};
 
-  vector<u8> output;
+  std::vector<u8> output;
   u16 crc16 = 0;
+  u32 offset = 0;
   auto hash = [&](u8 byte) {
     for(u32 bit : range(8)) {
       bool carry = crc16 & 1;
@@ -91,48 +96,48 @@ auto FamicomDiskSystem::transform(array_view<u8> input) -> vector<u8> {
   };
   auto write = [&](u8 byte) {
     hash(byte);
-    output.append(byte);
+    output.push_back(byte);
   };
   auto flush = [&] {
     hash(0x00);
     hash(0x00);
-    output.append(crc16 >> 0);
-    output.append(crc16 >> 8);
+    output.push_back(crc16 >> 0);
+    output.push_back(crc16 >> 8);
     crc16 = 0;
   };
 
   //block 1
   for(u32 n : range(0xe00)) write(0x00);  //pregap
   write(0x80);
-  for(u32 n : range(0x38)) write(*data++);
+  for(u32 n : range(0x38)) write(data[offset++]);
   flush();
 
   //block 2
   for(u32 n : range(0x80)) write(0x00);  //gap
   write(0x80);
-  for(u32 n : range(0x02)) write(*data++);
+  for(u32 n : range(0x02)) write(data[offset++]);
   flush();
 
   while(true) {
-    if(data[0x00] != 0x03 || data.size() < 0x11) break;
-    u16 size = data[0x0d] << 0 | data[0x0e] << 8;
-    if(data[0x10] != 0x04 || data.size() < 0x11 + size) break;
+    if(offset >= data.size() || data[offset] != 0x03 || data.size() < offset + 0x11) break;
+    u16 size = data[offset + 0x0d] << 0 | data[offset + 0x0e] << 8;
+    if(data[offset + 0x10] != 0x04 || data.size() < offset + 0x11 + size) break;
 
     //block 3
     for(u32 n : range(0x80)) write(0x00);  //gap
     write(0x80);
-    for(u32 n : range(0x10)) write(*data++);
+    for(u32 n : range(0x10)) write(data[offset++]);
     flush();
 
     //block 4
     for(u32 n : range(0x80)) write(0x00);  //gap
     write(0x80);
-    for(u32 n : range(1 + size)) write(*data++);
+    for(u32 n : range(1 + size)) write(data[offset++]);
     flush();
   }
 
   //note: actual maximum capacity of a Famicom Disk is currently unknown
-  while(output.size() < 0x12000) output.append(0x00);  //expand if too small
+  while(output.size() < 0x12000) output.push_back(0x00);  //expand if too small
   output.resize(0x12000);  //shrink if too large
   return output;
 }

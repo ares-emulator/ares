@@ -9,7 +9,7 @@ struct InputJoypadDirectInput {
   InputJoypadDirectInput(Input& input) : input(input) {}
 
   struct Joypad {
-    shared_pointer<HID::Joypad> hid{new HID::Joypad};
+    std::shared_ptr<HID::Joypad> hid = std::make_shared<HID::Joypad>();
 
     LPDIRECTINPUTDEVICE8 device = nullptr;
     LPDIRECTINPUTEFFECT effect = nullptr;
@@ -19,7 +19,7 @@ struct InputJoypadDirectInput {
     u16 productID = 0;
     bool isXInputDevice = false;
   };
-  vector<Joypad> joypads;
+  std::vector<Joypad> joypads;
 
   uintptr handle = 0;
   LPDIRECTINPUT8 context = nullptr;
@@ -27,14 +27,14 @@ struct InputJoypadDirectInput {
   bool xinputAvailable = false;
   u32 effects = 0;
 
-  auto assign(shared_pointer<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
+  auto assign(std::shared_ptr<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     for(auto& jp : joypads) {
       if(FAILED(jp.device->Poll())) jp.device->Acquire();
 
@@ -68,7 +68,7 @@ struct InputJoypadDirectInput {
         assign(jp.hid, HID::Joypad::GroupID::Button, n, (bool)state.rgbButtons[n]);
       }
 
-      devices.append(jp.hid);
+      devices.push_back(jp.hid);
     }
   }
 
@@ -101,7 +101,7 @@ struct InputJoypadDirectInput {
       if(jp.effect) jp.effect->Release();
       jp.device->Release();
     }
-    joypads.reset();
+    joypads.clear();
     context = nullptr;
   }
 
@@ -181,7 +181,7 @@ struct InputJoypadDirectInput {
     for(auto n : range(6)) jp.hid->axes().append(n);
     for(auto n : range(8)) jp.hid->hats().append(n);
     for(auto n : range(128)) jp.hid->buttons().append(n);
-    joypads.append(jp);
+    joypads.push_back(jp);
 
     return DIENUM_CONTINUE;
   }

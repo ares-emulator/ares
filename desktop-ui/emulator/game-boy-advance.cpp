@@ -3,7 +3,7 @@ struct GameBoyAdvance : Emulator {
   auto load(Menu) -> void override;
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   string deviceName;
 };
 
@@ -11,7 +11,7 @@ GameBoyAdvance::GameBoyAdvance() {
   manufacturer = "Nintendo";
   name = "Game Boy Advance";
 
-  firmware.append({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
+  firmware.push_back({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
 
   { InputPort port{string{"Game Boy Advance"}};
 
@@ -29,7 +29,7 @@ GameBoyAdvance::GameBoyAdvance() {
     device.rumble ("Rumble", virtualPorts[0].pad.rumble);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -41,7 +41,8 @@ auto GameBoyAdvance::load(Menu menu) -> void {
     for(auto& orientation : orientations->readAllowedValues()) {
       MenuRadioItem item{&orientationMenu};
       item.setText(orientation);
-      item.onActivate([=] {
+      item.onActivate([=, this] {
+        Program::Guard guard;
         if(auto orientations = root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
           orientations->setValue(orientation);
         }
@@ -87,7 +88,7 @@ auto GameBoyAdvance::save() -> bool {
   return true;
 }
 
-auto GameBoyAdvance::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto GameBoyAdvance::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Game Boy Advance") return system->pak;
   if(node->name() == "Game Boy Advance Cartridge") return game->pak;
   return {};

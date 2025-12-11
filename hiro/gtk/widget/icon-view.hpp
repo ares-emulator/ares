@@ -15,7 +15,7 @@ struct pIconView : pWidget {
   auto setGeometry(Geometry geometry) -> void override;
   auto setItemIcon(u32 position, const image& icon) -> void;
   auto setItemSelected(u32 position, bool selected) -> void;
-  auto setItemSelected(const vector<s32>& selections) -> void;
+  auto setItemSelected(const std::vector<s32>& selections) -> void;
   auto setItemSelectedAll() -> void;
   auto setItemSelectedNone() -> void;
   auto setItemText(u32 position, const string& text) -> void;
@@ -25,7 +25,7 @@ struct pIconView : pWidget {
 
   GtkWidget* subWidget = nullptr;
   GtkListStore* store = nullptr;
-  vector<u32> currentSelection;
+  std::vector<u32> currentSelection;
 };
 
 }

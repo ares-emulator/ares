@@ -7,7 +7,7 @@ auto Cartridge::RTC::irqLevel(bool value) -> void {
 
 auto Cartridge::RTC::power() -> void {
   S3511A::power();
-  Thread::create(32'768, {&Cartridge::RTC::main, this});
+  Thread::create(32'768, std::bind_front(&Cartridge::RTC::main, this));
 }
 
 auto Cartridge::RTC::main() -> void {

@@ -8,7 +8,7 @@ struct InputMapping {
   auto unbind() -> void;
   auto unbind(u32 binding) -> void;
 
-  virtual auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool = 0;
+  virtual auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool = 0;
   virtual auto value() -> s16 = 0;
   virtual auto pressed() -> bool { return false; }
 
@@ -18,7 +18,7 @@ struct InputMapping {
     auto icon() -> multiFactorImage;
     auto text() -> string;
 
-    shared_pointer<HID::Device> device;
+    std::shared_ptr<HID::Device> device;
     u64 deviceID;
     u32 groupID;
     u32 inputID;
@@ -30,7 +30,7 @@ struct InputMapping {
 //0 or 1
 struct InputDigital : InputMapping {
   using InputMapping::bind;
-  auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
+  auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
   auto pressed() -> bool override;
 };
@@ -38,7 +38,7 @@ struct InputDigital : InputMapping {
 //0 ... +32767
 struct InputAnalog : InputMapping {
   using InputMapping::bind;
-  auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
+  auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
   auto pressed() -> bool override;
 };
@@ -46,36 +46,36 @@ struct InputAnalog : InputMapping {
 //-32768 ... +32767
 struct InputAbsolute : InputMapping {
   using InputMapping::bind;
-  auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
+  auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
 };
 
 //-32768 ... +32767
 struct InputRelative : InputMapping {
   using InputMapping::bind;
-  auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
+  auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
 };
 
 //specifies a target joypad for force feedback
 struct InputRumble : InputMapping {
   using InputMapping::bind;
-  auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
+  auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
   auto rumble(u16 strong, u16 weak) -> void;
 };
 
 struct InputHotkey : InputDigital {
   InputHotkey(string name) : name(name) {}
-  auto& onPress(function<void ()> press) { return this->press = press, *this; }
-  auto& onRelease(function<void ()> release) { return this->release = release, *this; }
+  auto& onPress(std::function<void ()> press) { return this->press = press, *this; }
+  auto& onRelease(std::function<void ()> release) { return this->release = release, *this; }
   auto value() -> s16 override;
 
   const string name;
 
 private:
-  function<void ()> press;
-  function<void ()> release;
+  std::function<void ()> press;
+  std::function<void ()> release;
   s16 state = 0;
   friend struct InputManager;
 };
@@ -97,41 +97,41 @@ struct InputPair {
 
 struct InputDevice {
   auto digital(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Digital, name, &mapping});
+    inputs.push_back({InputNode::Type::Digital, name, &mapping});
   }
 
   auto analog(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Analog, name, &mapping});
+    inputs.push_back({InputNode::Type::Analog, name, &mapping});
   }
 
   auto absolute(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Absolute, name, &mapping});
+    inputs.push_back({InputNode::Type::Absolute, name, &mapping});
   }
 
   auto relative(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Relative, name, &mapping});
+    inputs.push_back({InputNode::Type::Relative, name, &mapping});
   }
 
   auto rumble(string name, InputMapping& mapping) -> void {
-    inputs.append({InputNode::Type::Rumble, name, &mapping});
+    inputs.push_back({InputNode::Type::Rumble, name, &mapping});
   }
 
   auto analog(string name, InputMapping& mappingLo, InputMapping& mappingHi) -> void {
-    pairs.append({InputPair::Type::Analog, name, &mappingLo, &mappingHi});
+    pairs.push_back({InputPair::Type::Analog, name, &mappingLo, &mappingHi});
   }
 
   string name;
-  vector<InputNode> inputs;
-  vector<InputPair> pairs;
+  std::vector<InputNode> inputs;
+  std::vector<InputPair> pairs;
 };
 
 struct InputPort {
   auto append(const InputDevice& device) -> void {
-    devices.append(device);
+    devices.push_back(device);
   }
 
   string name;
-  vector<InputDevice> devices;
+  std::vector<InputDevice> devices;
 };
 
 struct VirtualPad : InputDevice {
@@ -203,14 +203,14 @@ struct InputManager {
   auto create() -> void;
   auto bind() -> void;
   auto poll(bool force = false) -> void;
-  auto eventInput(shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
+  auto eventInput(std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
 
   //hotkeys.cpp
   auto createHotkeys() -> void;
   auto pollHotkeys() -> void;
 
-  vector<shared_pointer<HID::Device>> devices;
-  vector<InputHotkey> hotkeys;
+  std::vector<std::shared_ptr<HID::Device>> devices;
+  std::vector<InputHotkey> hotkeys;
 
   u64 pollFrequency = 5;
   u64 lastPoll = 0;

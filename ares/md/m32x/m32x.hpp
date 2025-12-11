@@ -1,5 +1,4 @@
 //Mega 32X
-#include "nall/dsp/iir/dc-removal.hpp"
 
 struct M32X {
   Node::Object node;
@@ -79,8 +78,8 @@ struct M32X {
     maybe<M32X&> self;
     Memory::Writable<n16> dram;
     Memory::Writable<n16> cram;
-    array_span<n16> fbram;  //VDP-side active DRAM bank
-    array_span<n16> bbram;  //CPU-side active DRAM bank
+    std::span<n16> fbram;  //VDP-side active DRAM bank
+    std::span<n16> bbram;  //CPU-side active DRAM bank
 
     struct Debugger {
       //debugger.cpp

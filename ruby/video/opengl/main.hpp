@@ -57,8 +57,8 @@ auto OpenGL::output() -> void {
     u32 width, height;
     GLuint filter, wrap;
   };
-  vector<Source> sources;
-  sources.prepend({texture, width, height, filter, wrap});
+  std::vector<Source> sources;
+  sources.push_back({texture, width, height, filter, wrap});
 
   u32 targetWidth = absoluteWidth ? absoluteWidth : outputWidth;
   u32 targetHeight = absoluteHeight ? absoluteHeight : outputHeight;

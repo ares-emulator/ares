@@ -3,7 +3,7 @@ auto SI::Debugger::load(Node::Object parent) -> void {
 }
 
 auto SI::Debugger::io(bool mode, u32 address, u32 data) -> void {
-  static const vector<string> registerNames = {
+  static const std::vector<string> registerNames = {
     "SI_DRAM_ADDRESS",
     "SI_PIF_ADDRESS_READ64B",
     "SI_INT_ADDRESS_WRITE64B",
@@ -15,12 +15,12 @@ auto SI::Debugger::io(bool mode, u32 address, u32 data) -> void {
 
   if(unlikely(tracer.io->enabled())) {
     string message;
-    string name = registerNames(address, "SI_UNKNOWN");
+    string name = (address < registerNames.size() ? registerNames[address] : string("SI_UNKNOWN"));
     if(mode == Read) {
-      message = {name.split("|").first(), " => ", hex(data, 8L)};
+      message = {nall::split(name, "|").front(), " => ", hex(data, 8L)};
     }
     if(mode == Write) {
-      message = {name.split("|").last(), " <= ", hex(data, 8L)};
+      message = {nall::split(name, "|").back(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }

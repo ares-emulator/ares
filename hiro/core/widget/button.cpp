@@ -18,7 +18,7 @@ auto mButton::icon() const -> multiFactorImage {
   return state.icon;
 }
 
-auto mButton::onActivate(const function<void ()>& callback) -> type& {
+auto mButton::onActivate(const std::function<void ()>& callback) -> type& {
   state.onActivate = callback;
   return *this;
 }

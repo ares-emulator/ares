@@ -2,14 +2,14 @@ struct NeoGeoPocketColor : Emulator {
   NeoGeoPocketColor();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 };
 
 NeoGeoPocketColor::NeoGeoPocketColor() {
   manufacturer = "SNK";
   name = "Neo Geo Pocket Color";
 
-  firmware.append({"BIOS", "World", "8fb845a2f71514cec20728e2f0fecfade69444f8d50898b92c2259f1ba63e10d"});
+  firmware.push_back({"BIOS", "World", "8fb845a2f71514cec20728e2f0fecfade69444f8d50898b92c2259f1ba63e10d"});
 
   { InputPort port{"Neo Geo Pocket Color"};
 
@@ -25,7 +25,7 @@ NeoGeoPocketColor::NeoGeoPocketColor() {
     device.digital("Debugger", virtualPorts[0].pad.r_bumper);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -67,7 +67,7 @@ auto NeoGeoPocketColor::save() -> bool {
   return true;
 }
 
-auto NeoGeoPocketColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto NeoGeoPocketColor::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Neo Geo Pocket Color") return system->pak;
   if(node->name() == "Neo Geo Pocket Color Cartridge") return game->pak;
   return {};

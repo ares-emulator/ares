@@ -13,7 +13,7 @@ auto NECDSP::unload() -> void {
   debugger = {};
   node = {};
 
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
@@ -27,6 +27,6 @@ auto NECDSP::main() -> void {
 
 auto NECDSP::power() -> void {
   uPD96050::power();
-  Thread::create(Frequency, {&NECDSP::main, this});
-  cpu.coprocessors.append(this);
+  Thread::create(Frequency, std::bind_front(&NECDSP::main, this));
+  cpu.coprocessors.push_back(this);
 }

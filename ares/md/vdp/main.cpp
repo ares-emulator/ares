@@ -185,9 +185,10 @@ auto VDP::mainH32() -> void {
   if(dac.pixels) {
     blocks<false, true>();
     if(Mega32X()) m32x.vdp.scanline(pixels + 18, vcounter()); //approx 3 and 1/4 pixel offset
-    if(MegaLD()) mcd.ld.scanline(pixels, vcounter());
+    if(MegaLD()) mcd.ld.scanline(dac.pixels, vcounter());
   } else {
     blocks<false, false>();
+    if(MegaLD()) mcd.ld.scanline(dac.pixels, vcounter());
   }
 
   tick<false>(); slot();
@@ -249,9 +250,10 @@ auto VDP::mainH40() -> void {
   if(dac.pixels) {
     blocks<true, true>();
     if(Mega32X()) m32x.vdp.scanline(pixels, vcounter());
-    if(MegaLD()) mcd.ld.scanline(pixels, vcounter());
+    if(MegaLD()) mcd.ld.scanline(dac.pixels, vcounter());
   } else {
     blocks<true, false>();
+    if(MegaLD()) mcd.ld.scanline(dac.pixels, vcounter());
   }
 
   tick<true>(); slot();

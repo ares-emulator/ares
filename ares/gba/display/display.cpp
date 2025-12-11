@@ -58,8 +58,8 @@ auto Display::main() -> void {
   step(3);
 
   if(io.vcounter == 162) {
-    if(videoCapture) cpu.dma[3].enable = 0;
-    videoCapture = !videoCapture && cpu.dma[3].timingMode == 3 && cpu.dma[3].enable;
+    if(videoCapture) cpu.dmac.channel[3].enable = 0;
+    videoCapture = !videoCapture && cpu.dmac.channel[3].timingMode == 3 && cpu.dmac.channel[3].enable;
   }
   if(io.vcounter >= 2 && io.vcounter < 162 && videoCapture) cpu.dmaHDMA();
 
@@ -79,7 +79,7 @@ auto Display::main() -> void {
 }
 
 auto Display::power() -> void {
-  Thread::create(system.frequency(), {&Display::main, this});
+  Thread::create(system.frequency(), std::bind_front(&Display::main, this));
 
   for(u32 n = 0x004; n <= 0x007; n++) bus.io[n] = this;
 

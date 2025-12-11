@@ -17,7 +17,7 @@ auto ExpansionPort::unload() -> void {
 }
 
 auto ExpansionPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Kempston") device = new Kempston(port);
+  if(name == "Kempston") device = std::make_unique<Kempston>(port);
   if(device) return device->node;
   return {};
 }

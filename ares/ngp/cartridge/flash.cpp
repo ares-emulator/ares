@@ -4,7 +4,7 @@ auto Flash::reset(natural ID) -> void {
   modified = false;
   vendorID = 0;
   deviceID = 0;
-  blocks.reset();
+  blocks.clear();
 }
 
 auto Flash::allocate(natural size) -> bool {
@@ -13,21 +13,21 @@ auto Flash::allocate(natural size) -> bool {
   if(size == 16_Mibit) { rom.allocate(size); vendorID = 0x98; deviceID = 0x2f; }  //vendorID 0xec => Samsung
   if(!rom) return false;
 
-  for(u32 index : range(size / 64_KiB - 1)) blocks.append({true, index * 64_KiB, 64_KiB});
-  blocks.append({true, size - 64_KiB, 32_KiB});
-  blocks.append({true, size - 32_KiB,  8_KiB});
-  blocks.append({true, size - 24_KiB,  8_KiB});
-  blocks.append({true, size - 16_KiB, 16_KiB});
+  for(u32 index : range(size / 64_KiB - 1)) blocks.push_back({true, index * 64_KiB, 64_KiB});
+  blocks.push_back({true, size - 64_KiB, 32_KiB});
+  blocks.push_back({true, size - 32_KiB,  8_KiB});
+  blocks.push_back({true, size - 24_KiB,  8_KiB});
+  blocks.push_back({true, size - 16_KiB, 16_KiB});
   return true;
 }
 
-auto Flash::load(shared_pointer<vfs::file> fp) -> void {
-  fp->read({rom.data(), rom.size()});
+auto Flash::load(VFS::File fp) -> void {
+  fp->read(rom.data(), rom.size());
   modified = false;
 }
 
-auto Flash::save(shared_pointer<vfs::file> fp) -> void {
-  fp->write({rom.data(), rom.size()});
+auto Flash::save(VFS::File fp) -> void {
+  fp->write(rom.data(), rom.size());
   modified = false;
 }
 
@@ -91,7 +91,8 @@ auto Flash::block(n21 address) -> maybe<n6> {
 auto Flash::program(n21 address, n8 data) -> void {
   auto blockID = block(address);
   if(blockID && blocks[*blockID].writable) {
-    if(auto input = rom.read(address); input != (input & data)) {
+    auto input = rom.read(address);
+    if(input != (input & data)) {
       modified = true;
       rom.write(address, input & data);
     }

@@ -1,7 +1,7 @@
 struct String : Setting {
   DeclareClass(String, "setting.string")
 
-  String(string name = {}, string value = {}, function<void (string)> modify = {}) : Setting(name) {
+  String(string name = {}, string value = {}, std::function<void (string)> modify = {}) : Setting(name) {
     _currentValue = value;
     _latchedValue = value;
     _modify = modify;
@@ -11,10 +11,10 @@ struct String : Setting {
   auto value() const -> string { return _currentValue; }
   auto latch() const -> string { return _latchedValue; }
 
-  auto setModify(function<void (string)> modify) { _modify = modify; }
+  auto setModify(std::function<void (string)> modify) { _modify = modify; }
 
   auto setValue(string value) -> void {
-    if(_allowedValues && !_allowedValues.find(value)) return;
+    if(!_allowedValues.empty() && !std::ranges::count(_allowedValues, value)) return;
     _currentValue = value;
     if(_dynamic) setLatch();
   }
@@ -25,19 +25,19 @@ struct String : Setting {
     modify(_latchedValue);
   }
 
-  auto setAllowedValues(vector<string> allowedValues) -> void {
+  auto setAllowedValues(std::vector<string> allowedValues) -> void {
     _allowedValues = allowedValues;
-    if(_allowedValues && !_allowedValues.find(_currentValue)) setValue(_allowedValues.first());
+    if(!_allowedValues.empty() && !std::ranges::count(_allowedValues, _currentValue)) setValue(_allowedValues.front());
   }
 
   auto readValue() const -> string override { return value(); }
   auto readLatch() const -> string override { return latch(); }
-  auto readAllowedValues() const -> vector<string> override { return _allowedValues; }
+  auto readAllowedValues() const -> std::vector<string> override { return _allowedValues; }
   auto writeValue(string value) -> void override { setValue(value); }
 
 protected:
-  function<void (string)> _modify;
+  std::function<void (string)> _modify;
   string _currentValue = {};
   string _latchedValue = {};
-  vector<string> _allowedValues;
+  std::vector<string> _allowedValues;
 };

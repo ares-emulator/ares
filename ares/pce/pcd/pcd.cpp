@@ -7,17 +7,24 @@ PCD pcd;
 #include "drive.cpp"
 #include "scsi.cpp"
 #include "cdda.cpp"
+#include "ldrom2.cpp"
 #include "adpcm.cpp"
 #include "fader.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 
 auto PCD::load(Node::Object parent) -> void {
-  node = parent->append<Node::Object>("PC Engine CD");
-
-  tray = node->append<Node::Port>("Disc Tray");
-  tray->setFamily("PC Engine CD");
-  tray->setType("Compact Disc");
+  if(Model::LaserActive()) {
+    node = parent->append<Node::Object>("PC Engine LD");
+    tray = node->append<Node::Port>("Disc Tray");
+    tray->setFamily("PC Engine LD");
+    tray->setType("Laserdisc");
+  } else {
+    node = parent->append<Node::Object>("PC Engine CD");
+    tray = node->append<Node::Port>("Disc Tray");
+    tray->setFamily("PC Engine CD");
+    tray->setType("Compact Disc");
+  }
   tray->setHotSwappable(true);
   tray->setAllocate([&](auto name) { return allocate(tray); });
   tray->setConnect([&] { return connect(); });
@@ -38,7 +45,11 @@ auto PCD::load(Node::Object parent) -> void {
   wram.allocate(64_KiB);
   bram.allocate( 2_KiB);
   if(Model::PCEngineDuo()) {
-    bios.allocate(256_KiB);
+    if(Model::LaserActive()) {
+      bios.allocate(512_KiB);
+    } else {
+      bios.allocate(256_KiB);
+    }
     sram.allocate(192_KiB);
   }
 
@@ -80,12 +91,18 @@ auto PCD::unload() -> void {
 
   cdda.unload(node);
   adpcm.unload(node);
+  if (Model::LaserActive()) {
+    ld.unload();
+  }
 
   tray.reset();
   node.reset();
 }
 
 auto PCD::allocate(Node::Port parent) -> Node::Peripheral {
+  if (Model::LaserActive()) {
+    return disc = parent->append<Node::Peripheral>("Laserdisc");
+  }
   return disc = parent->append<Node::Peripheral>("PC Engine CD Disc");
 }
 
@@ -95,18 +112,27 @@ auto PCD::connect() -> void {
   information = {};
   information.title = pak->attribute("title");
 
-  fd = pak->read("cd.rom");
+  if (Model::LaserActive()) {
+    ld.load(pak->attribute("location"));
+  } else {
+    fd = pak->read("cd.rom");
+  }
   if(!fd) return disconnect();
 
   //read TOC (table of contents) from disc lead-in
   u32 sectors = fd->size() / 2448;
-  vector<u8> subchannel;
+  std::vector<u8> subchannel;
   subchannel.resize(sectors * 96);
   for(u32 sector : range(sectors)) {
     fd->seek(sector * 2448 + 2352);
     fd->read({subchannel.data() + sector * 96, 96});
   }
   session.decode(subchannel, 96);
+
+  drive.laserdiscLoaded = false;
+  if ((pak->attribute("system") == "LDROM2") && (ld.mmi.media().size() > 0)) {
+    drive.laserdiscLoaded = ld.mmi.media()[0].type.match("LD");
+  }
 }
 
 auto PCD::disconnect() -> void {
@@ -169,7 +195,7 @@ auto PCD::irqLine() const -> bool {
 }
 
 auto PCD::power() -> void {
-  Thread::create(9'216'900, {&PCD::main, this});
+  Thread::create(9'216'900, std::bind_front(&PCD::main, this));
   drive.power();
   scsi.power();
   cdda.power();
@@ -183,6 +209,10 @@ auto PCD::power() -> void {
     if(auto fp = system.pak->read("bios.rom")) {
       bios.load(fp);
     }
+  }
+
+  if(Model::LaserActive()) {
+    ld.power();
   }
 }
 

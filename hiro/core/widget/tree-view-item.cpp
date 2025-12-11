@@ -12,7 +12,7 @@ auto mTreeViewItem::destruct() -> void {
 //
 
 auto mTreeViewItem::append(sTreeViewItem item) -> type& {
-  state.items.append(item);
+  state.items.push_back(item);
   item->setParent(this, itemCount() - 1);
   signal(append, item);
   return *this;
@@ -74,20 +74,22 @@ auto mTreeViewItem::icon() const -> multiFactorImage {
 
 auto mTreeViewItem::item(const string& path) const -> TreeViewItem {
   if(!path) return {};
-  auto paths = path.split("/");
-  u32 position = paths.takeLeft().natural();
+  auto paths = nall::split(path, "/");
+  if(paths.empty()) return {};
+  u32 position = paths.front().natural();
+  paths.erase(paths.begin());
   if(position >= itemCount()) return {};
-  if(!paths) return state.items[position];
-  return state.items[position]->item(paths.merge("/"));
+  if(paths.empty()) return state.items[position];
+  return state.items[position]->item(nall::merge(paths, "/"));
 }
 
 auto mTreeViewItem::itemCount() const -> u32 {
   return state.items.size();
 }
 
-auto mTreeViewItem::items() const -> vector<TreeViewItem> {
-  vector<TreeViewItem> items;
-  for(auto& item : state.items) items.append(item);
+auto mTreeViewItem::items() const -> std::vector<TreeViewItem> {
+  std::vector<TreeViewItem> items;
+  for(auto& item : state.items) items.push_back(item);
   return items;
 }
 
@@ -104,7 +106,7 @@ auto mTreeViewItem::remove() -> type& {
 
 auto mTreeViewItem::remove(sTreeViewItem item) -> type& {
   signal(remove, item);
-  state.items.remove(item->offset());
+  state.items.erase(state.items.begin() + item->offset());
   for(auto n : range(item->offset(), itemCount())) {
     state.items[n]->adjustOffset(-1);
   }
@@ -161,7 +163,7 @@ auto mTreeViewItem::setIcon(const multiFactorImage& icon) -> type& {
 }
 
 auto mTreeViewItem::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& item : reverse(state.items)) item->destruct();
+  for(auto& item : state.items | std::views::reverse) item->destruct();
   mObject::setParent(parent, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());
   return *this;

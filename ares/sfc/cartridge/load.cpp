@@ -13,9 +13,10 @@ auto Cartridge::loadBoard(string board) -> Markup::Node {
       auto id = leaf.text();
       bool matched = id == board;
       if(!matched && id.match("*(*)*")) {
-        auto part = id.transform("()", "||").split("|");
-        for(auto& revision : part(1).split(",")) {
-          if(string{part(0), revision, part(2)} == board) matched = true;
+        auto part = nall::split(id.transform("()", "||"), "|");
+        part.resize(3);
+        for(auto& revision : nall::split(part[1], ",")) {
+          if(string{part[0], revision, part[2]} == board) matched = true;
         }
       }
       if(matched) return leaf;
@@ -66,7 +67,7 @@ auto Cartridge::loadMemory(AbstractMemory& ram, Markup::Node node) -> void {
 
   if(auto fp = pak->read(name)) {
     ram.allocate(fp->size());
-    fp->read({ram.data(), min(fp->size(), ram.size())});
+    fp->read(ram.data(), min(fp->size(), ram.size()));
   }
 }
 
@@ -77,11 +78,11 @@ auto Cartridge::loadMap(Markup::Node map, T& memory) -> n32 {
   auto base = map["base"].natural();
   auto mask = map["mask"].natural();
   if(size == 0) size = memory.size();
-  return bus.map({&T::read, &memory}, {&T::write, &memory}, address, size, base, mask);
+  return bus.map(std::bind_front(&T::read, &memory), std::bind_front(&T::write, &memory), address, size, base, mask);
 }
 
 auto Cartridge::loadMap(
-  Markup::Node map, const function<n8 (n24, n8)>& reader, const function<void (n24, n8)>& writer
+  Markup::Node map, const std::function<n8 (n24, n8)>& reader, const std::function<void (n24, n8)>& writer
 ) -> n32 {
   auto address = map["address"].text();
   auto size = map["size"].natural();
@@ -116,7 +117,7 @@ auto Cartridge::loadICD(Markup::Node node) -> void {
 
   //Game Boy core loads data through ICD interface
   for(auto map : node.find("map")) {
-    loadMap(map, {&ICD::readIO, &icd}, {&ICD::writeIO, &icd});
+    loadMap(map, std::bind_front(&ICD::readIO, &icd), std::bind_front(&ICD::writeIO, &icd));
   }
 }
 
@@ -125,12 +126,12 @@ auto Cartridge::loadMCC(Markup::Node node) -> void {
   has.MCC = true;
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&MCC::read, &mcc}, {&MCC::write, &mcc});
+    loadMap(map, std::bind_front(&MCC::read, &mcc), std::bind_front(&MCC::write, &mcc));
   }
 
   if(auto mcu = node["mcu"]) {
     for(auto map : mcu.find("map")) {
-      loadMap(map, {&MCC::mcuRead, &mcc}, {&MCC::mcuWrite, &mcc});
+      loadMap(map, std::bind_front(&MCC::mcuRead, &mcc), std::bind_front(&MCC::mcuWrite, &mcc));
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
       loadMemory(mcc.rom, memory);
@@ -150,7 +151,7 @@ auto Cartridge::loadBSMemory(Markup::Node node) -> void {
 
   if(auto node = board["slot(type=BSMemory)"]) {
     for(auto map : node.find("map")) {
-      loadMap(map, {&BSMemoryCartridge::read, &bsmemory}, {&BSMemoryCartridge::write, &bsmemory});
+      loadMap(map, std::bind_front(&BSMemoryCartridge::read, &bsmemory), std::bind_front(&BSMemoryCartridge::write, &bsmemory));
     }
   }
 }
@@ -160,11 +161,11 @@ auto Cartridge::loadSufamiTurboA(Markup::Node node) -> void {
   has.SufamiTurboSlotA = true;
 
   for(auto map : node.find("rom/map")) {
-    loadMap(map, {&SufamiTurboCartridge::readROM, &sufamiturboA}, {&SufamiTurboCartridge::writeROM, &sufamiturboA});
+    loadMap(map, std::bind_front(&SufamiTurboCartridge::readROM, &sufamiturboA), std::bind_front(&SufamiTurboCartridge::writeROM, &sufamiturboA));
   }
 
   for(auto map : node.find("ram/map")) {
-    loadMap(map, {&SufamiTurboCartridge::readRAM, &sufamiturboA}, {&SufamiTurboCartridge::writeRAM, &sufamiturboA});
+    loadMap(map, std::bind_front(&SufamiTurboCartridge::readRAM, &sufamiturboA), std::bind_front(&SufamiTurboCartridge::writeRAM, &sufamiturboA));
   }
 }
 
@@ -173,11 +174,11 @@ auto Cartridge::loadSufamiTurboB(Markup::Node node) -> void {
   has.SufamiTurboSlotB = true;
 
   for(auto map : node.find("rom/map")) {
-    loadMap(map, {&SufamiTurboCartridge::readROM, &sufamiturboB}, {&SufamiTurboCartridge::writeROM, &sufamiturboB});
+    loadMap(map, std::bind_front(&SufamiTurboCartridge::readROM, &sufamiturboB), std::bind_front(&SufamiTurboCartridge::writeROM, &sufamiturboB));
   }
 
   for(auto map : node.find("ram/map")) {
-    loadMap(map, {&SufamiTurboCartridge::readROM, &sufamiturboB}, {&SufamiTurboCartridge::writeROM, &sufamiturboB});
+    loadMap(map, std::bind_front(&SufamiTurboCartridge::readROM, &sufamiturboB), std::bind_front(&SufamiTurboCartridge::writeROM, &sufamiturboB));
   }
 }
 
@@ -187,7 +188,7 @@ auto Cartridge::loadDIP(Markup::Node node) -> void {
   dip.value = 0;  //todo
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&DIP::read, &dip}, {&DIP::write, &dip});
+    loadMap(map, std::bind_front(&DIP::read, &dip), std::bind_front(&DIP::write, &dip));
   }
 }
 
@@ -199,12 +200,12 @@ auto Cartridge::loadCompetition(Markup::Node node) -> void {
   if(node["identifier"].text() == "PowerFest '94") competition.board = Competition::Board::PowerFest94;
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&Competition::read, &competition}, {&Competition::write, &competition});
+    loadMap(map, std::bind_front(&Competition::read, &competition), std::bind_front(&Competition::write, &competition));
   }
 
   if(auto mcu = node["mcu"]) {
     for(auto map : mcu.find("map")) {
-      loadMap(map, {&Competition::mcuRead, &competition}, {&Competition::mcuWrite, &competition});
+      loadMap(map, std::bind_front(&Competition::mcuRead, &competition), std::bind_front(&Competition::mcuWrite, &competition));
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
       loadMemory(competition.rom[0], memory);
@@ -226,12 +227,12 @@ auto Cartridge::loadSA1(Markup::Node node) -> void {
   has.SA1 = true;
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&SA1::readIOCPU, &sa1}, {&SA1::writeIOCPU, &sa1});
+    loadMap(map, std::bind_front(&SA1::readIOCPU, &sa1), std::bind_front(&SA1::writeIOCPU, &sa1));
   }
 
   if(auto mcu = node["mcu"]) {
     for(auto map : mcu.find("map")) {
-      loadMap(map, {&SA1::ROM::readCPU, &sa1.rom}, {&SA1::ROM::writeCPU, &sa1.rom});
+      loadMap(map, std::bind_front(&SA1::ROM::readCPU, &sa1.rom), std::bind_front(&SA1::ROM::writeCPU, &sa1.rom));
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
       loadMemory(sa1.rom, memory);
@@ -244,14 +245,14 @@ auto Cartridge::loadSA1(Markup::Node node) -> void {
   if(auto memory = node["memory(type=RAM,content=Save)"]) {
     loadMemory(sa1.bwram, memory);
     for(auto map : memory.find("map")) {
-      loadMap(map, {&SA1::BWRAM::readCPU, &sa1.bwram}, {&SA1::BWRAM::writeCPU, &sa1.bwram});
+      loadMap(map, std::bind_front(&SA1::BWRAM::readCPU, &sa1.bwram), std::bind_front(&SA1::BWRAM::writeCPU, &sa1.bwram));
     }
   }
 
   if(auto memory = node["memory(type=RAM,content=Internal)"]) {
     loadMemory(sa1.iram, memory);
     for(auto map : memory.find("map")) {
-      loadMap(map, {&SA1::IRAM::readCPU, &sa1.iram}, {&SA1::IRAM::writeCPU, &sa1.iram});
+      loadMap(map, std::bind_front(&SA1::IRAM::readCPU, &sa1.iram), std::bind_front(&SA1::IRAM::writeCPU, &sa1.iram));
     }
   }
 }
@@ -267,7 +268,7 @@ auto Cartridge::loadSuperFX(Markup::Node node) -> void {
   }
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&SuperFX::readIO, &superfx}, {&SuperFX::writeIO, &superfx});
+    loadMap(map, std::bind_front(&SuperFX::readIO, &superfx), std::bind_front(&SuperFX::writeIO, &superfx));
   }
 
   if(auto memory = node["memory(type=ROM,content=Program)"]) {
@@ -307,7 +308,7 @@ auto Cartridge::loadARMDSP(Markup::Node node) -> void {
   }
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&ARMDSP::read, &armdsp}, {&ARMDSP::write, &armdsp});
+    loadMap(map, std::bind_front(&ARMDSP::read, &armdsp), std::bind_front(&ARMDSP::write, &armdsp));
   }
 
   if(auto fp = pak->read("arm6.program.rom")) {
@@ -339,20 +340,20 @@ auto Cartridge::loadHitachiDSP(Markup::Node node, n32 roms) -> void {
   hitachidsp.Mapping = 0;  //0 or 1
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&HitachiDSP::readIO, &hitachidsp}, {&HitachiDSP::writeIO, &hitachidsp});
+    loadMap(map, std::bind_front(&HitachiDSP::readIO, &hitachidsp), std::bind_front(&HitachiDSP::writeIO, &hitachidsp));
   }
 
   if(auto memory = node["memory(type=ROM,content=Program)"]) {
     loadMemory(hitachidsp.rom, memory);
     for(auto map : memory.find("map")) {
-      loadMap(map, {&HitachiDSP::readROM, &hitachidsp}, {&HitachiDSP::writeROM, &hitachidsp});
+      loadMap(map, std::bind_front(&HitachiDSP::readROM, &hitachidsp), std::bind_front(&HitachiDSP::writeROM, &hitachidsp));
     }
   }
 
   if(auto memory = node["memory(type=RAM,content=Save)"]) {
     loadMemory(hitachidsp.ram, memory);
     for(auto map : memory.find("map")) {
-      loadMap(map, {&HitachiDSP::readRAM, &hitachidsp}, {&HitachiDSP::writeRAM, &hitachidsp});
+      loadMap(map, std::bind_front(&HitachiDSP::readRAM, &hitachidsp), std::bind_front(&HitachiDSP::writeRAM, &hitachidsp));
     }
   }
 
@@ -365,7 +366,7 @@ auto Cartridge::loadHitachiDSP(Markup::Node node, n32 roms) -> void {
       for(u32 n : range(3 * 1024)) hitachidsp.dataRAM[n] = fp->readl(1);
     }
     for(auto map : memory.find("map")) {
-      loadMap(map, {&HitachiDSP::readDRAM, &hitachidsp}, {&HitachiDSP::writeDRAM, &hitachidsp});
+      loadMap(map, std::bind_front(&HitachiDSP::readDRAM, &hitachidsp), std::bind_front(&HitachiDSP::writeDRAM, &hitachidsp));
     }
   }
 }
@@ -386,7 +387,7 @@ auto Cartridge::loaduPD7725(Markup::Node node) -> void {
   }
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&NECDSP::read, &necdsp}, {&NECDSP::write, &necdsp});
+    loadMap(map, std::bind_front(&NECDSP::read, &necdsp), std::bind_front(&NECDSP::write, &necdsp));
   }
 
   if(auto fp = pak->read("upd7725.program.rom")) {
@@ -402,7 +403,7 @@ auto Cartridge::loaduPD7725(Markup::Node node) -> void {
       for(u32 n : range(256)) necdsp.dataRAM[n] = fp->readl(2);
     }
     for(auto map : memory.find("map")) {
-      loadMap(map, {&NECDSP::readRAM, &necdsp}, {&NECDSP::writeRAM, &necdsp});
+      loadMap(map, std::bind_front(&NECDSP::readRAM, &necdsp), std::bind_front(&NECDSP::writeRAM, &necdsp));
     }
   }
 }
@@ -423,7 +424,7 @@ auto Cartridge::loaduPD96050(Markup::Node node) -> void {
   }
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&NECDSP::read, &necdsp}, {&NECDSP::write, &necdsp});
+    loadMap(map, std::bind_front(&NECDSP::read, &necdsp), std::bind_front(&NECDSP::write, &necdsp));
   }
 
   if(auto fp = pak->read("upd96050.program.rom")) {
@@ -439,7 +440,7 @@ auto Cartridge::loaduPD96050(Markup::Node node) -> void {
       for(u32 n : range(2048)) necdsp.dataRAM[n] = fp->readl(2);
     }
     for(auto map : memory.find("map")) {
-      loadMap(map, {&NECDSP::readRAM, &necdsp}, {&NECDSP::writeRAM, &necdsp});
+      loadMap(map, std::bind_front(&NECDSP::readRAM, &necdsp), std::bind_front(&NECDSP::writeRAM, &necdsp));
     }
   }
 }
@@ -451,7 +452,7 @@ auto Cartridge::loadEpsonRTC(Markup::Node node) -> void {
   epsonrtc.initialize();
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&EpsonRTC::read, &epsonrtc}, {&EpsonRTC::write, &epsonrtc});
+    loadMap(map, std::bind_front(&EpsonRTC::read, &epsonrtc), std::bind_front(&EpsonRTC::write, &epsonrtc));
   }
 
   if(auto fp = pak->read("time.rtc")) {
@@ -468,7 +469,7 @@ auto Cartridge::loadSharpRTC(Markup::Node node) -> void {
   sharprtc.initialize();
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&SharpRTC::read, &sharprtc}, {&SharpRTC::write, &sharprtc});
+    loadMap(map, std::bind_front(&SharpRTC::read, &sharprtc), std::bind_front(&SharpRTC::write, &sharprtc));
   }
 
   if(auto fp = pak->read("time.rtc")) {
@@ -483,12 +484,12 @@ auto Cartridge::loadSPC7110(Markup::Node node) -> void {
   has.SPC7110 = true;
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&SPC7110::read, &spc7110}, {&SPC7110::write, &spc7110});
+    loadMap(map, std::bind_front(&SPC7110::read, &spc7110), std::bind_front(&SPC7110::write, &spc7110));
   }
 
   if(auto mcu = node["mcu"]) {
     for(auto map : mcu.find("map")) {
-      loadMap(map, {&SPC7110::mcuromRead, &spc7110}, {&SPC7110::mcuromWrite, &spc7110});
+      loadMap(map, std::bind_front(&SPC7110::mcuromRead, &spc7110), std::bind_front(&SPC7110::mcuromWrite, &spc7110));
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
       loadMemory(spc7110.prom, memory);
@@ -501,7 +502,7 @@ auto Cartridge::loadSPC7110(Markup::Node node) -> void {
   if(auto memory = node["memory(type=RAM,content=Save)"]) {
     loadMemory(spc7110.ram, memory);
     for(auto map : memory.find("map")) {
-      loadMap(map, {&SPC7110::mcuramRead, &spc7110}, {&SPC7110::mcuramWrite, &spc7110});
+      loadMap(map, std::bind_front(&SPC7110::mcuramRead, &spc7110), std::bind_front(&SPC7110::mcuramWrite, &spc7110));
     }
   }
 }
@@ -511,12 +512,12 @@ auto Cartridge::loadSDD1(Markup::Node node) -> void {
   has.SDD1 = true;
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&SDD1::ioRead, &sdd1}, {&SDD1::ioWrite, &sdd1});
+    loadMap(map, std::bind_front(&SDD1::ioRead, &sdd1), std::bind_front(&SDD1::ioWrite, &sdd1));
   }
 
   if(auto mcu = node["mcu"]) {
     for(auto map : mcu.find("map")) {
-      loadMap(map, {&SDD1::mcuRead, &sdd1}, {&SDD1::mcuWrite, &sdd1});
+      loadMap(map, std::bind_front(&SDD1::mcuRead, &sdd1), std::bind_front(&SDD1::mcuWrite, &sdd1));
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
       loadMemory(sdd1.rom, memory);
@@ -529,7 +530,7 @@ auto Cartridge::loadOBC1(Markup::Node node) -> void {
   has.OBC1 = true;
 
   for(auto map : node.find("map")) {
-    loadMap(map, {&OBC1::read, &obc1}, {&OBC1::write, &obc1});
+    loadMap(map, std::bind_front(&OBC1::read, &obc1), std::bind_front(&OBC1::write, &obc1));
   }
 
   if(auto memory = node["memory(type=RAM,content=Save)"]) {
@@ -541,5 +542,5 @@ auto Cartridge::loadOBC1(Markup::Node node) -> void {
 auto Cartridge::loadMSU1() -> void {
   has.MSU1 = true;
 
-  bus.map({&MSU1::readIO, &msu1}, {&MSU1::writeIO, &msu1}, "00-3f,80-bf:2000-2007");
+  bus.map(std::bind_front(&MSU1::readIO, &msu1), std::bind_front(&MSU1::writeIO, &msu1), "00-3f,80-bf:2000-2007");
 }

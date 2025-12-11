@@ -11,8 +11,8 @@ struct Hotkey {
 
   auto doPress() const -> void;
   auto doRelease() const -> void;
-  auto onPress(const function<void ()>& callback = {}) -> type&;
-  auto onRelease(const function<void ()>& callback = {}) -> type&;
+  auto onPress(const std::function<void ()>& callback = {}) -> type&;
+  auto onRelease(const std::function<void ()>& callback = {}) -> type&;
   auto reset() -> type&;
   auto sequence() const -> string;
   auto setSequence(const string& sequence = "") -> type&;
@@ -20,11 +20,11 @@ struct Hotkey {
 //private:
   struct State {
     bool active = false;
-    vector<u32> keys;
-    function<void ()> onPress;
-    function<void ()> onRelease;
+    std::vector<u32> keys;
+    std::function<void ()> onPress;
+    std::function<void ()> onRelease;
     string sequence;
   };
-  shared_pointer<State> state;
+  std::shared_ptr<State> state;
 };
 #endif

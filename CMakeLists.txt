@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28...4.0)
+cmake_minimum_required(VERSION 3.28...4.1)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/bootstrap.cmake" NO_POLICY_SCOPE)
 
@@ -7,8 +7,6 @@ project(ares VERSION ${ARES_VERSION_CANONICAL})
 include(compilerconfig)
 include(defaults)
 include(helpers)
-
-add_subdirectory(cmake)
 
 add_subdirectory(thirdparty)
 
@@ -21,7 +19,7 @@ add_subdirectory(hiro)
 set(
   ARES_CORES
   a26 fc sfc sg ms md ps1 pce ng msx cv myvision gb gba ws ngp spec n64
-  CACHE STRING LIST
+  CACHE STRING "List of systems to be built by the project"
 )
 # gersemi: on
 
@@ -35,7 +33,7 @@ if(ARES_BUILD_OPTIONAL_TARGETS)
   add_subdirectory(tests/arm7tdmi)
   add_subdirectory(tests/i8080)
   add_subdirectory(tests/m68000)
-  if(NOT OS_WINDOWS AND NOT OS_MACOS)
+  if(HIRO_BACKEND STREQUAL "GTK3")
     add_subdirectory(tools/genius)
   else()
     target_disable_subproject(genius "genius (database editor)")
@@ -52,4 +50,7 @@ endif()
 add_subdirectory(tools/sourcery)
 
 message_configuration()
+
+add_subdirectory(.github)
+add_subdirectory(cmake)
 return()

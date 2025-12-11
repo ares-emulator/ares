@@ -6,7 +6,7 @@ struct mIconView : mWidget {
   auto append(sIconViewItem item) -> type&;
   auto backgroundColor() const -> Color;
   auto batchable() const -> bool;
-  auto batched() const -> vector<IconViewItem>;
+  auto batched() const -> std::vector<IconViewItem>;
   auto doActivate() const -> void;
   auto doChange() const -> void;
   auto doContext() const -> void;
@@ -14,10 +14,10 @@ struct mIconView : mWidget {
   auto foregroundColor() const -> Color;
   auto item(u32 position) const -> IconViewItem;
   auto itemCount() const -> u32;
-  auto items() const -> vector<IconViewItem>;
-  auto onActivate(const function<void ()>& callback = {}) -> type&;
-  auto onChange(const function<void ()>& callback = {}) -> type&;
-  auto onContext(const function<void ()>& callback = {}) -> type&;
+  auto items() const -> std::vector<IconViewItem>;
+  auto onActivate(const std::function<void ()>& callback = {}) -> type&;
+  auto onChange(const std::function<void ()>& callback = {}) -> type&;
+  auto onContext(const std::function<void ()>& callback = {}) -> type&;
   auto orientation() const -> Orientation;
   auto remove(sIconViewItem item) -> type&;
   auto reset() -> type& override;
@@ -28,7 +28,7 @@ struct mIconView : mWidget {
   auto setForegroundColor(Color color = {}) -> type&;
   auto setOrientation(Orientation orientation = Orientation::Horizontal) -> type&;
   auto setParent(mObject* object = nullptr, s32 offset = -1) -> type& override;
-  auto setSelected(const vector<s32>& selections) -> type&;
+  auto setSelected(const std::vector<s32>& selections) -> type&;
 
 //private:
   struct State {
@@ -36,10 +36,10 @@ struct mIconView : mWidget {
     bool batchable = false;
     Color foregroundColor;
     Orientation flow = Orientation::Vertical;
-    vector<sIconViewItem> items;
-    function<void ()> onActivate;
-    function<void ()> onChange;
-    function<void ()> onContext;
+    std::vector<sIconViewItem> items;
+    std::function<void ()> onActivate;
+    std::function<void ()> onChange;
+    std::function<void ()> onContext;
     Orientation orientation = Orientation::Horizontal;
   } state;
 

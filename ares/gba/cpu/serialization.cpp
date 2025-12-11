@@ -5,31 +5,36 @@ auto CPU::serialize(serializer& s) -> void {
   s(iwram);
   s(ewram);
 
-  for(auto& dma : this->dma) {
-    s(dma.id);
-    s(dma.active);
-    s(dma.waiting);
-    s(dma.targetMode);
-    s(dma.sourceMode);
-    s(dma.repeat);
-    s(dma.size);
-    s(dma.drq);
-    s(dma.timingMode);
-    s(dma.irq);
-    s(dma.enable);
-    s(dma.source.data);
-    s(dma.source.mask);
-    s(dma.target.data);
-    s(dma.target.mask);
-    s(dma.length.data);
-    s(dma.length.mask);
-    s(dma.latch.source.data);
-    s(dma.latch.source.mask);
-    s(dma.latch.target.data);
-    s(dma.latch.target.mask);
-    s(dma.latch.length.data);
-    s(dma.latch.length.mask);
-    s(dma.latch.data);
+  s(dmac.romBurst);
+  s(dmac.active);
+  s(dmac.activeChannel);
+  s(dmac.stallingCPU);
+  s(dmac.writeCycle);
+  for(auto& channel : this->dmac.channel) {
+    s(channel.id);
+    s(channel.active);
+    s(channel.waiting);
+    s(channel.targetMode);
+    s(channel.sourceMode);
+    s(channel.repeat);
+    s(channel.size);
+    s(channel.drq);
+    s(channel.timingMode);
+    s(channel.irq);
+    s(channel.enable);
+    s(channel.source.data);
+    s(channel.source.mask);
+    s(channel.target.data);
+    s(channel.target.mask);
+    s(channel.length.data);
+    s(channel.length.mask);
+    s(channel.latch.source.data);
+    s(channel.latch.source.mask);
+    s(channel.latch.target.data);
+    s(channel.latch.target.mask);
+    s(channel.latch.length.data);
+    s(channel.latch.length.mask);
+    s(channel.latch.data);
   }
 
   for(auto& timer : this->timer) {
@@ -96,6 +101,7 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(memory.biosSwap);
   s(memory.unknown1);
+  s(memory.cgbBootRomDisable);
   s(memory.ewram);
   s(memory.ewramWait);
   s(memory.unknown2);
@@ -115,11 +121,8 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.stopped);
   s(context.booted);
   s(context.romAccess);
-  s(context.dmaRomAccess);
-  s(context.dmaRan);
-  s(context.dmaActive);
-  s(context.dmaActiveChannel);
   s(context.timerLatched);
   s(context.busLocked);
+  s(context.burstActive);
   s(context.hcounter);
 }

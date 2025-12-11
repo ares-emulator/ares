@@ -1,8 +1,9 @@
 #include <a26/a26.hpp>
+#include <algorithm>
 
 namespace ares::Atari2600 {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Atari] Atari 2600 (NTSC)",
     "[Atari] Atari 2600 (PAL)",
@@ -11,7 +12,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 
@@ -53,15 +55,15 @@ auto System::load(Node::System& root, string name) -> bool {
     information.frequency = 3546894;
   }
 
-  node = Node::System::create(information.name);
+  node = std::make_shared<Core::System>(information.name);
   node->setAttribute("configuration", name);
-  node->setGame({&System::game, this});
-  node->setRun({&System::run, this});
-  node->setPower({&System::power, this});
-  node->setSave({&System::save, this});
-  node->setUnload({&System::unload, this});
-  node->setSerialize({&System::serialize, this});
-  node->setUnserialize({&System::unserialize, this});
+  node->setGame(std::bind_front(&System::game, this));
+  node->setRun(std::bind_front(&System::run, this));
+  node->setPower(std::bind_front(&System::power, this));
+  node->setSave(std::bind_front(&System::save, this));
+  node->setUnload(std::bind_front(&System::unload, this));
+  node->setSerialize([this](bool s){ return this->serialize(s); });
+  node->setUnserialize([this](serializer& s){ return this->unserialize(s); });
   root = node;
 
   scheduler.reset();

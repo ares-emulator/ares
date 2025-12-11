@@ -24,7 +24,7 @@ auto MOS6502::reset() -> void {
   read(0x0100 | S--); // Dummy push (P)
   I = 1;
   PCL = read(vector++);
-  L PCH = read(vector++);
+L PCH = read(vector++);
   resetting = 0;
 }
 
@@ -42,7 +42,7 @@ auto MOS6502::instruction() -> void {
   op(0x07, Modify, addr(ZeroPage),       fp(SLO))
   op(0x08, None,   addr(Implied),        fp(PHP))
   op(0x09, Load,   addr(Immediate),      fp(ORA))
-  op(0x0a, Load,   addr(Accumulator),    fp(ASLA))
+  op(0x0a, Load,   addr(Implied),        fp(ASLA))
   op(0x0b, Load,   addr(Immediate),      fp(AAC))
   op(0x0c, Load,   addr(Absolute),       fp(NOP))
   op(0x0d, Load,   addr(Absolute),       fp(ORA))
@@ -64,7 +64,7 @@ auto MOS6502::instruction() -> void {
   op(0x1d, Load,   addr(AbsoluteXRead),  fp(ORA))
   op(0x1e, Modify, addr(AbsoluteXWrite), fp(ASLM))
   op(0x1f, Modify, addr(AbsoluteXWrite), fp(SLO))
-  op(0x20, Load,   addr(Absolute),       fp(JSR))
+  op(0x20, None,   addr(Implied),        fp(JSR))
   op(0x21, Load,   addr(IndirectX),      fp(AND))
   op(0x22, None,   addr(Implied),        fp(JAM))
   op(0x23, Modify, addr(IndirectX),      fp(RLA))

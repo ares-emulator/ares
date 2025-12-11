@@ -6,9 +6,9 @@ auto CheatEditor::Cheat::update(string description, string code, bool enabled) -
   //TODO: support other code formats based on the game system (e.g. GameShark, Game-Genie, etc.)
 
   addressValuePairs.reset();
-  vector<string> codes = code.split("+");
+  auto codes = nall::split(code, "+");
   for(auto& code : codes) {
-    auto parts = code.split(":");
+    auto parts = nall::split(code, ":");
     if(parts.size() != 2) continue;
     addressValuePairs.insert(string{"0x", parts[0]}.natural(), string{"0x",parts[1]}.natural());
   }
@@ -27,10 +27,11 @@ auto CheatEditor::construct() -> void {
     Program::Guard guard;
     if(auto item = cheatList.selected()) {
       if(auto cheat = item.attribute<Cheat*>("cheat")) {
-        if(auto c = cheats.find([cheat](auto& c) { return &c == cheat; })) {
+        auto it = std::ranges::find_if(cheats, [cheat](auto& c) { return &c == cheat; });
+        if(it != cheats.end()) {
           descriptionEdit.setText("");
           codeEdit.setText("");
-          cheats.remove(*c);
+          cheats.erase(it);
           deleteButton.setEnabled(false);
           refresh();
         }
@@ -43,10 +44,11 @@ auto CheatEditor::construct() -> void {
     string description = descriptionEdit.text();
     string code = codeEdit.text();
 
-    if(auto c = cheats.find([description](auto& c) { return c.description == description; })) {
-      cheats[*c].update(description, code);
+    auto it = std::ranges::find_if(cheats, [description](auto& c) { return c.description == description; });
+    if(it != cheats.end()) {
+      it->update(description, code);
     } else {
-      cheats.append(Cheat().update(description, code));
+      cheats.push_back(Cheat().update(description, code));
     }
 
     refresh();
@@ -79,13 +81,13 @@ auto CheatEditor::construct() -> void {
 
 auto CheatEditor::reload() -> void {
   Program::Guard guard;
-  cheats.reset();
+  cheats.clear();
 
   location = emulator->locate(emulator->game->location, {".cheats.bml"});
   if(file::exists(location)) {
     auto document = BML::unserialize(string::read(location), " ");
     for(auto cheatNode : document.find("cheat")) {
-      cheats.append(Cheat().update(
+      cheats.push_back(Cheat().update(
         cheatNode["description"].text(),
         cheatNode["code"].text(),
         cheatNode["enabled"].boolean()

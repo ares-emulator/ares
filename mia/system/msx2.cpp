@@ -1,20 +1,20 @@
 struct MSX2 : System {
   auto name() -> string override { return "MSX2"; }
-  auto loadMultiple(vector<string> location) -> bool override;
+  auto loadMultiple(std::vector<string> location) -> bool override;
   auto save(string location) -> bool override;
 };
 
-auto MSX2::loadMultiple(vector<string> location) -> bool {
+auto MSX2::loadMultiple(std::vector<string> location) -> bool {
   if(location.size() != 2) return false;
 
   auto bios = Pak::read(location[0]);
-  if(!bios) return false;
+  if(bios.empty()) return false;
 
   auto sub = Pak::read(location[1]);
-  if(!sub) return false;
+  if(sub.empty()) return false;
 
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("bios.rom", bios);
   pak->append("sub.rom", sub);
 

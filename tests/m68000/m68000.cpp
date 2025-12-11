@@ -30,7 +30,7 @@ struct TestState {
   u32 usp;
   u32 ssp;
   array<u32[2]> prefetch;
-  vector<array<u32[2]>> ram;
+  std::vector<array<u32[2]>> ram;
 };
 
 struct TestCase {
@@ -101,9 +101,9 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
 
   instruction();
 
-  vector<string> errors;
+  std::vector<string> errors;
   auto error = [&](auto&&... p) -> void {
-    errors.append(string{std::forward<decltype(p)>(p)...});
+    errors.push_back(string{std::forward<decltype(p)>(p)...});
   };
 
   if(!r.s) swap(r.a[7], r.sp);  //swap back to match test format
@@ -148,7 +148,7 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
     }
   }
 
-  if(errors) {
+  if(!errors.empty()) {
     if(logErrors) {
       print("\n");
       print(test.name, "\n");
@@ -235,26 +235,26 @@ auto test(string path) -> TestResults {
   return results;
 }
 
-auto addDirectory(vector<string>& files, string location) -> void {
+auto addDirectory(std::vector<string>& files, string location) -> void {
   auto filenames = directory::files(location, "*.json");
-  if(!filenames) {
+  if(filenames.empty()) {
     print("no tests found in ", location, "\n");
     return;
   }
   for(auto& filename : filenames) {
-    files.append({location, filename});
+    files.push_back({location, filename});
   }
 }
 
 auto nall::main(Arguments arguments) -> void {
-  vector<string> files;
+  std::vector<string> files;
 
   if(arguments) {
     for(auto argument : arguments) {
       if(directory::exists(argument)) {
         addDirectory(files, argument);
       } else if(file::exists(argument)) {
-        files.append(argument);
+        files.push_back(argument);
       } else {
         print("unknown argument: ", argument, "\n");
       }

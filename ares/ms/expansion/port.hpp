@@ -1,6 +1,6 @@
 struct ExpansionPort {
   Node::Port port;
-  unique_pointer<Expansion> device;
+  std::unique_ptr<Expansion> device;
 
   ExpansionPort(string name);
   auto load(Node::Object parent) -> void;

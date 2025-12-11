@@ -124,6 +124,7 @@ ares_add_sources(
   CORE #
     n64
   INCLUDED #
+    controller/gamepad/bio-sensor.cpp
     controller/gamepad/gamepad.cpp
     controller/gamepad/gamepad.hpp
     controller/gamepad/transfer-pak.cpp

@@ -68,13 +68,13 @@ auto EpsonRTC::initialize() -> void {
 }
 
 auto EpsonRTC::unload() -> void {
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
 auto EpsonRTC::power() -> void {
-  Thread::create(32'768 * 64, {&EpsonRTC::main, this});
-  cpu.coprocessors.append(this);
+  Thread::create(32'768 * 64, std::bind_front(&EpsonRTC::main, this));
+  cpu.coprocessors.push_back(this);
 
   clocks = 0;
   seconds = 0;

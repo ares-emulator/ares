@@ -3,6 +3,10 @@
 #include <libco/libco.h>
 #include <sljit.h>
 
+#include <vector>
+#include <ranges>
+#include <algorithm>
+
 #include <nall/platform.hpp>
 #include <nall/adaptive-array.hpp>
 #include <nall/any.hpp>
@@ -22,14 +26,13 @@
 #include <nall/random.hpp>
 #include <nall/serializer.hpp>
 #include <nall/set.hpp>
-#include <nall/shared-pointer.hpp>
+#include <nall/span-helpers.hpp>
 #include <nall/string.hpp>
 #include <nall/terminal.hpp>
 #include <nall/thread.hpp>
 #include <nall/traits.hpp>
-#include <nall/unique-pointer.hpp>
+#include <memory>
 #include <nall/variant.hpp>
-#include <nall/vector.hpp>
 #include <nall/vfs.hpp>
 #include <nall/cd.hpp>
 #include <nall/dsp/iir/one-pole.hpp>
@@ -51,8 +54,8 @@ namespace ares {
   extern const u32 SerializerSignature;
 
   namespace VFS {
-    using Pak = shared_pointer<vfs::directory>;
-    using File = shared_pointer<vfs::file>;
+    using Pak = std::shared_ptr<vfs::directory>;
+    using File = std::shared_ptr<vfs::file>;
   }
 
   namespace Video {

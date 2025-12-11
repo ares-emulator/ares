@@ -84,6 +84,7 @@ struct Settings : Markup::Node {
   struct Boot {
     bool fast = false;
     bool debugger = false;
+    bool awaitGDBClient = false;
     string prefer = "NTSC-U";
   } boot;
 
@@ -220,7 +221,7 @@ struct InputSettings : VerticalLayout {
   auto eventClear() -> void;
   auto eventAssign(TableViewCell, string binding) -> void;
   auto eventAssign(TableViewCell) -> void;
-  auto eventInput(shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
+  auto eventInput(std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
   auto setVisible(bool visible = true) -> InputSettings&;
 
   HorizontalLayout indexLayout{this, Size{~0, 0}};
@@ -316,7 +317,7 @@ struct HotkeySettings : VerticalLayout {
   auto eventChange() -> void;
   auto eventClear() -> void;
   auto eventAssign(TableViewCell) -> void;
-  auto eventInput(shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
+  auto eventInput(std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
   auto setVisible(bool visible = true) -> HotkeySettings&;
 
   TableView inputList{this, Size{~0, ~0}};
@@ -448,7 +449,6 @@ struct DriverSettings : VerticalLayout {
   HorizontalLayout videoDriverLayout{this, Size{~0, 0}};
     Label videoDriverLabel{&videoDriverLayout, Size{0, 0}};
     ComboButton videoDriverList{&videoDriverLayout, Size{0, 0}};
-    Button videoDriverAssign{&videoDriverLayout, Size{0, 0}};
     Label videoDriverActive{&videoDriverLayout, Size{0, 0}};
   HorizontalLayout videoPropertyLayout{this, Size{~0, 0}};
     Label videoMonitorLabel{&videoPropertyLayout, Size{0, 0}};
@@ -471,7 +471,6 @@ struct DriverSettings : VerticalLayout {
   HorizontalLayout audioDriverLayout{this, Size{~0, 0}};
     Label audioDriverLabel{&audioDriverLayout, Size{0, 0}};
     ComboButton audioDriverList{&audioDriverLayout, Size{0, 0}};
-    Button audioDriverAssign{&audioDriverLayout, Size{0, 0}};
     Label audioDriverActive{&audioDriverLayout, Size{0, 0}};
   HorizontalLayout audioDeviceLayout{this, Size{~0, 0}};
     Label audioDeviceLabel{&audioDeviceLayout, Size{0, 0}};
@@ -490,7 +489,6 @@ struct DriverSettings : VerticalLayout {
   HorizontalLayout inputDriverLayout{this, Size{~0, 0}};
     Label inputDriverLabel{&inputDriverLayout, Size{0, 0}};
     ComboButton inputDriverList{&inputDriverLayout, Size{0, 0}};
-    Button inputDriverAssign{&inputDriverLayout, Size{0, 0}};
     Label inputDriverActive{&inputDriverLayout, Size{0, 0}};
   HorizontalLayout inputDefocusLayout{this, Size{~0, 0}};
     Label inputDefocusLabel{&inputDefocusLayout, Size{0, 0}};
@@ -498,8 +496,6 @@ struct DriverSettings : VerticalLayout {
     RadioLabel inputDefocusBlock{&inputDefocusLayout, Size{0, 0}};
     RadioLabel inputDefocusAllow{&inputDefocusLayout, Size{0, 0}};
     Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
-  //
-  Label driverApplyHint{this, Size{0, 35}};
 };
 
 struct DebugSettings : VerticalLayout {

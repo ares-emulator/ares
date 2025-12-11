@@ -33,7 +33,7 @@ auto RDRAM::Debugger::load(Node::Object parent) -> void {
 }
 
 auto RDRAM::Debugger::io(bool mode, u32 chipID, u32 address, u32 data) -> void {
-  static const vector<string> registerNames = {
+  static const std::vector<string> registerNames = {
     "RDRAM_DEVICE_TYPE",
     "RDRAM_DEVICE_ID",
     "RDRAM_DELAY",
@@ -48,13 +48,13 @@ auto RDRAM::Debugger::io(bool mode, u32 chipID, u32 address, u32 data) -> void {
 
   if(unlikely(tracer.io->enabled())) {
     string message;
-    string name = registerNames(address, "RDRAM_UNKNOWN");
+    string name = (address < registerNames.size() ? registerNames[address] : string("RDRAM_UNKNOWN"));
     name.append("[", chipID, "]");
     if(mode == Read) {
-      message = {name.split("|").first(), " => ", hex(data, 8L)};
+      message = {nall::split(name, "|").front(), " => ", hex(data, 8L)};
     }
     if(mode == Write) {
-      message = {name.split("|").last(), " <= ", hex(data, 8L)};
+      message = {nall::split(name, "|").back(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }

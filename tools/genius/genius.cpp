@@ -103,11 +103,11 @@ auto ListWindow::updateWindow() -> void {
   removeButton.setEnabled((bool)gameList.selected());
   string name = Location::base(location);
   if(!name) name = "(Untitled)";
-  setTitle({modified ? "*" : "", name, " [", games.size(), "] - genius"});
+  setTitle({modified ? "*" : string{}, name, " [", games.size(), "] - genius"});
 }
 
 auto ListWindow::newDatabase() -> void {
-  games.reset();
+  games.clear();
   modified = false;
   location = "";
   reloadList();
@@ -117,7 +117,7 @@ auto ListWindow::newDatabase() -> void {
 auto ListWindow::loadDatabase(string location) -> void {
   auto document = BML::unserialize(string::read(location));
 
-  games.reset();
+  games.clear();
   for(auto node : document.find("game")) {
     Game game;
     game.sha256 = node["sha256"].text();
@@ -142,10 +142,10 @@ auto ListWindow::loadDatabase(string location) -> void {
         component.type = Component::Type::Oscillator;
         component.oscillator.frequency = object["frequency"].text();
       }
-      game.components.append(component);
+      game.components.push_back(component);
     }
     game.note = node["note"].text();
-    games.append(game);
+    games.push_back(game);
   }
 
   modified = false;
@@ -162,11 +162,10 @@ auto ListWindow::saveDatabase(string location) -> void {
   }).error(), void();
 
   auto copy = games;
-  copy.sort([](auto x, auto y) {
-    return string::icompare(
-      string{x.name, "\n", x.region, "\n", x.revision},
-      string{y.name, "\n", y.region, "\n", y.revision}
-    ) < 0;
+  std::sort(copy.begin(), copy.end(), [](const Game& x, const Game& y) {
+    string a = { x.name, "\n", x.region, "\n", x.revision };
+    string b = { y.name, "\n", y.region, "\n", y.revision };
+    return string::icompare(a, b) < 0;
   });
 
   fp.print("database\n");
@@ -182,7 +181,7 @@ auto ListWindow::saveDatabase(string location) -> void {
     fp.print("  revision: ", game.revision, "\n");
   if(game.board)
     fp.print("  board:    ", game.board, "\n");
-  else if(game.components)
+  else if(!game.components.empty())
     fp.print("  board\n");
     for(auto& component : game.components) {
       if(component.type == Component::Type::Memory) {
@@ -218,7 +217,7 @@ auto ListWindow::saveDatabase(string location) -> void {
 auto ListWindow::appendGame(Game game) -> void {
   modified = true;
   auto offset = games.size();
-  games.append(game);
+  games.push_back(game);
   reloadList();
   gameList.item(offset).setSelected().setFocused();
   updateWindow();
@@ -242,7 +241,7 @@ auto ListWindow::removeGame() -> void {
       "Name: ", item.cell(0).text()
     }).question() == "Yes") {
       modified = true;
-      games.remove(item.offset());
+      games.erase(games.begin() + item.offset());
       reloadList();
       updateWindow();
     }
@@ -281,8 +280,9 @@ GameWindow::GameWindow() {
   modifyComponentButton.setText("Modify").onActivate([&] {
     if(auto item = componentTree.selected()) {
       setEnabled(false);
-      auto path = item.path().split("/");
-      auto offset = path(0).natural();
+      auto itemPath = item.path();
+      auto path     = nall::split(itemPath, "/");
+      auto offset   = path.empty() ? 0u : path[0].natural();
       Component component = game.components[offset];
       if(component.type == Component::Type::Memory) {
         memoryWindow.show(component.memory);
@@ -416,7 +416,7 @@ auto GameWindow::updateWindow() -> void {
 auto GameWindow::appendComponent(Component component) -> void {
   modified = true;
   auto offset = game.components.size();
-  game.components.append(component);
+  game.components.push_back(component);
   reloadList();
   componentTree.item(offset).setSelected().setFocused();
   updateWindow();
@@ -425,8 +425,9 @@ auto GameWindow::appendComponent(Component component) -> void {
 auto GameWindow::modifyComponent(Component component) -> void {
   if(auto item = componentTree.selected()) {
     modified = true;
-    auto path = item.path().split("/");
-    auto offset = path(0).natural();
+    auto itemPath = item.path();
+    auto path     = nall::split(itemPath, "/");
+    auto offset   = path.empty() ? 0u : path[0].natural();
     game.components[offset] = component;
     reloadList();
     componentTree.item(offset).setSelected().setFocused();
@@ -440,9 +441,10 @@ auto GameWindow::removeComponent() -> void {
       "Are you sure you want to permanently remove this component?"
     }).question() == "Yes") {
       modified = true;
-      auto path = item.path().split("/");
-      auto offset = path(0).natural();
-      game.components.remove(offset);
+      auto itemPath = item.path();
+      auto path     = nall::split(itemPath, "/");
+      auto offset   = path.empty() ? 0u : path[0].natural();
+      game.components.erase(game.components.begin() + offset);
       reloadList();
       updateWindow();
     }

@@ -137,7 +137,7 @@ auto RDP::IO::readWord(u32 address, Thread& thread) -> u32 {
 
   if(address == 3) {
     //DPS_BUFTEST_DATA
-    data.bit(0,31) = test.data;
+    data.bit(0,31) = test.data[test.address];
   }
 
   self.debugger.ioDPS(Read, address, data);
@@ -167,7 +167,16 @@ auto RDP::IO::writeWord(u32 address, u32 data_, Thread& thread) -> void {
 
   if(address == 3) {
     //DPS_BUFTEST_DATA
-    test.data = data.bit(0,31);
+    u32 value = data.bit(0,31);
+    u32 column = test.address % 4;
+    
+    if(column == 2) {
+      value &= 0xFF;
+    } else if(column == 3) {
+      value = 0;
+    }
+
+    test.data[test.address] = value;
   }
 
   self.debugger.ioDPS(Write, address, data);

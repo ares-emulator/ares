@@ -135,10 +135,10 @@ auto YM2149::read() -> n8 {
     data.bit(4,7) = envelope.unused;
     break;
   case 14:
-    data.bit(0,7) = portA.data;
+    data.bit(0,7) = readIO(0);
     break;
   case 15:
-    data.bit(0,7) = portB.data;
+    data.bit(0,7) = readIO(1);
     break;
   }
 
@@ -215,9 +215,11 @@ auto YM2149::write(n8 data) -> void {
     break;
   case 14:
     portA.data = data;
+    writeIO(0, data);
     break;
   case 15:
     portB.data = data;
+    writeIO(1, data);
     break;
   }
 }

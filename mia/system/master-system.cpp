@@ -8,8 +8,8 @@ auto MasterSystem::load(string location) -> LoadResult {
   auto bios = Pak::read(location);  //optional
 
   this->location = locate();
-  pak = new vfs::directory;
-  if(bios) pak->append("bios.rom", bios);
+  pak = std::make_shared<vfs::directory>();
+  if(!bios.empty()) pak->append("bios.rom", bios);
 
   return successful;
 }

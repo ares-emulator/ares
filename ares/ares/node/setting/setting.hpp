@@ -12,12 +12,12 @@ struct Setting : Object {
 
   virtual auto readValue() const -> string { return {}; }
   virtual auto readLatch() const -> string { return {}; }
-  virtual auto readAllowedValues() const -> vector<string> { return {}; }
+  virtual auto readAllowedValues() const -> std::vector<string> { return {}; }
   virtual auto writeValue(string value) -> void {}
 
   auto load(Node::Object source) -> bool override {
     if(!Object::load(source)) return false;
-    if(auto setting = source->cast<shared_pointer<Setting>>()) writeValue(setting->readValue());
+    if(auto setting = source->cast<Node::Setting::Setting>()) writeValue(setting->readValue());
     return true;
   }
 

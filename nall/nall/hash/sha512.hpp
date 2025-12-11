@@ -7,7 +7,7 @@ namespace nall::Hash {
 struct SHA512 : Hash {
   using Hash::input;
 
-  SHA512(array_view<u8> buffer = {}) {
+  SHA512(std::span<const u8> buffer = {}) {
     reset();
     input(buffer);
   }
@@ -24,12 +24,13 @@ struct SHA512 : Hash {
     length++;
   }
 
-  auto output() const -> vector<u8> override {
+  auto output() const -> std::vector<u8> override {
     SHA512 self(*this);
     self.finish();
-    vector<u8> result;
+    std::vector<u8> result;
+    result.reserve(8 * 8);
     for(auto h : self.h) {
-      for(auto n : reverse(range(8))) result.append(h >> n * 8);
+      for(auto n : reverse(range(8))) result.push_back((u8)(h >> (n * 8)));
     }
     return result;
   }

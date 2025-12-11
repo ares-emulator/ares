@@ -15,10 +15,10 @@ struct Response : Message {
   explicit operator bool() const { return responseType() != 0; }
   auto operator()(u32 responseType) -> type& { return setResponseType(responseType); }
 
-  auto head(const function<bool (const u8* data, u32 size)>& callback) const -> bool override;
+  auto head(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool override;
   auto setHead() -> bool override;
 
-  auto body(const function<bool (const u8* data, u32 size)>& callback) const -> bool override;
+  auto body(const std::function<bool (const u8* data, u32 size)>& callback) const -> bool override;
   auto setBody() -> bool override;
 
   auto request() const -> const Request* { return _request; }
@@ -28,8 +28,8 @@ struct Response : Message {
   auto setResponseType(u32 value) -> type& { _responseType = value; return *this; }
 
   auto hasData() const -> bool { return (bool)_data; }
-  auto data() const -> const vector<u8>& { return _data; }
-  auto setData(const vector<u8>& value) -> type&;
+  auto data() const -> const std::vector<u8>& { return _data; }
+  auto setData(const std::vector<u8>& value) -> type&;
 
   auto hasFile() const -> bool { return (bool)_file; }
   auto file() const -> const string& { return _file; }
@@ -49,12 +49,12 @@ struct Response : Message {
 
   const Request* _request = nullptr;
   u32 _responseType = 0;
-  vector<u8> _data;
+  std::vector<u8> _data;
   string _file;
   string _text;
 };
 
-inline auto Response::head(const function<bool (const u8*, u32)>& callback) const -> bool {
+inline auto Response::head(const std::function<bool (const u8*, u32)>& callback) const -> bool {
   if(!callback) return false;
   string output;
 
@@ -109,7 +109,7 @@ inline auto Response::setHead() -> bool {
   return true;
 }
 
-inline auto Response::body(const function<bool (const u8*, u32)>& callback) const -> bool {
+inline auto Response::body(const std::function<bool (const u8*, u32)>& callback) const -> bool {
   if(!callback) return false;
   if(!hasBody()) return true;
   bool chunked = header["Transfer-Encoding"].value() == "chunked";
@@ -242,7 +242,7 @@ inline auto Response::findResponseTypeVerbose() const -> string {
   return findResponseType();  //fallback for uncommon responses
 }
 
-inline auto Response::setData(const vector<u8>& value) -> type& {
+inline auto Response::setData(const std::vector<u8>& value) -> type& {
   _data = value;
   header.assign("Content-Length", value.size());
   return *this;

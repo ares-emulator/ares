@@ -1,5 +1,5 @@
 auto CPU::readIO(n32 address) -> n8 {
-  auto dma = [&]() -> DMA& { return this->dma[address / 12 & 3]; };
+  auto channel = [&]() -> DMAC::Channel& { return this->dmac.channel[address / 12 & 3]; };
   auto timer = [&]() -> Timer& { return this->timer[address.bit(2,3)]; };
 
   switch(address) {
@@ -10,17 +10,17 @@ auto CPU::readIO(n32 address) -> n8 {
 
   //DMA0CNT_H, DMA1CNT_H, DMA2CNT_H, DMA3CNT_H
   case 0x0400'00ba: case 0x0400'00c6: case 0x0400'00d2: case 0x0400'00de: return (
-    dma().targetMode        << 5
-  | dma().sourceMode.bit(0) << 7
+    channel().targetMode        << 5
+  | channel().sourceMode.bit(0) << 7
   );
   case 0x0400'00bb: case 0x0400'00c7: case 0x0400'00d3: case 0x0400'00df: return (
-    dma().sourceMode.bit(1) << 0
-  | dma().repeat            << 1
-  | dma().size              << 2
-  | dma().drq               << 3
-  | dma().timingMode        << 4
-  | dma().irq               << 6
-  | dma().enable            << 7
+    channel().sourceMode.bit(1) << 0
+  | channel().repeat            << 1
+  | channel().size              << 2
+  | channel().drq               << 3
+  | channel().timingMode        << 4
+  | channel().irq               << 6
+  | channel().enable            << 7
   );
 
   //TM0CNT_L, TM1CNT_L, TM2CNT_L, TM3CNT_L
@@ -229,9 +229,10 @@ auto CPU::readIO(n32 address) -> n8 {
 
   //MEMCNT_L
   case 0x0400'0800: return (
-    memory.biosSwap << 0
-  | memory.unknown1 << 1
-  | memory.ewram    << 5
+    memory.biosSwap          << 0
+  | memory.unknown1          << 1
+  | memory.cgbBootRomDisable << 3
+  | memory.ewram             << 5
   );
   case 0x0400'0801: return 0;
 
@@ -248,54 +249,54 @@ auto CPU::readIO(n32 address) -> n8 {
 }
 
 auto CPU::writeIO(n32 address, n8 data) -> void {
-  auto dma = [&]() -> DMA& { return this->dma[address / 12 & 3]; };
+  auto channel = [&]() -> DMAC::Channel& { return this->dmac.channel[address / 12 & 3]; };
   auto timer = [&]() -> Timer& { return this->timer[address.bit(2,3)]; };
 
   switch(address) {
 
   //DMA0SAD, DMA1SAD, DMA2SAD, DMA3SAD
-  case 0x0400'00b0: case 0x0400'00bc: case 0x0400'00c8: case 0x0400'00d4: dma().source.data.byte(0) = data; return;
-  case 0x0400'00b1: case 0x0400'00bd: case 0x0400'00c9: case 0x0400'00d5: dma().source.data.byte(1) = data; return;
-  case 0x0400'00b2: case 0x0400'00be: case 0x0400'00ca: case 0x0400'00d6: dma().source.data.byte(2) = data; return;
-  case 0x0400'00b3: case 0x0400'00bf: case 0x0400'00cb: case 0x0400'00d7: dma().source.data.byte(3) = data; return;
+  case 0x0400'00b0: case 0x0400'00bc: case 0x0400'00c8: case 0x0400'00d4: channel().source.data.byte(0) = data; return;
+  case 0x0400'00b1: case 0x0400'00bd: case 0x0400'00c9: case 0x0400'00d5: channel().source.data.byte(1) = data; return;
+  case 0x0400'00b2: case 0x0400'00be: case 0x0400'00ca: case 0x0400'00d6: channel().source.data.byte(2) = data; return;
+  case 0x0400'00b3: case 0x0400'00bf: case 0x0400'00cb: case 0x0400'00d7: channel().source.data.byte(3) = data; return;
 
   //DMA0DAD, DMA1DAD, DMA2DAD, DMA3DAD
-  case 0x0400'00b4: case 0x0400'00c0: case 0x0400'00cc: case 0x0400'00d8: dma().target.data.byte(0) = data; return;
-  case 0x0400'00b5: case 0x0400'00c1: case 0x0400'00cd: case 0x0400'00d9: dma().target.data.byte(1) = data; return;
-  case 0x0400'00b6: case 0x0400'00c2: case 0x0400'00ce: case 0x0400'00da: dma().target.data.byte(2) = data; return;
-  case 0x0400'00b7: case 0x0400'00c3: case 0x0400'00cf: case 0x0400'00db: dma().target.data.byte(3) = data; return;
+  case 0x0400'00b4: case 0x0400'00c0: case 0x0400'00cc: case 0x0400'00d8: channel().target.data.byte(0) = data; return;
+  case 0x0400'00b5: case 0x0400'00c1: case 0x0400'00cd: case 0x0400'00d9: channel().target.data.byte(1) = data; return;
+  case 0x0400'00b6: case 0x0400'00c2: case 0x0400'00ce: case 0x0400'00da: channel().target.data.byte(2) = data; return;
+  case 0x0400'00b7: case 0x0400'00c3: case 0x0400'00cf: case 0x0400'00db: channel().target.data.byte(3) = data; return;
 
   //DMA0CNT_L, DMA1CNT_L, DMA2CNT_L, DMA3CNT_L
-  case 0x0400'00b8: case 0x0400'00c4: case 0x0400'00d0: case 0x0400'00dc: dma().length.data.byte(0) = data; return;
-  case 0x0400'00b9: case 0x0400'00c5: case 0x0400'00d1: case 0x0400'00dd: dma().length.data.byte(1) = data; return;
+  case 0x0400'00b8: case 0x0400'00c4: case 0x0400'00d0: case 0x0400'00dc: channel().length.data.byte(0) = data; return;
+  case 0x0400'00b9: case 0x0400'00c5: case 0x0400'00d1: case 0x0400'00dd: channel().length.data.byte(1) = data; return;
 
   //DMA0CNT_H, DMA1CNT_H, DMA2CNT_H, DMA3CNT_H
   case 0x0400'00ba: case 0x0400'00c6: case 0x0400'00d2: case 0x0400'00de:
-    dma().targetMode        = data.bit(5,6);
-    dma().sourceMode.bit(0) = data.bit(7);
+    channel().targetMode        = data.bit(5,6);
+    channel().sourceMode.bit(0) = data.bit(7);
     return;
   case 0x0400'00bb: case 0x0400'00c7: case 0x0400'00d3: case 0x0400'00df: {
-    bool enable = dma().enable;
+    bool enable = channel().enable;
     if(address != 0x0400'00df) data.bit(3) = 0;  //gamepad DRQ valid for DMA3 only
 
-    dma().sourceMode.bit(1) = data.bit(0);
-    dma().repeat            = data.bit(1);
-    dma().size              = data.bit(2);
-    dma().drq               = data.bit(3);
-    dma().timingMode        = data.bit(4,5);
-    dma().irq               = data.bit(6);
-    dma().enable            = data.bit(7);
+    channel().sourceMode.bit(1) = data.bit(0);
+    channel().repeat            = data.bit(1);
+    channel().size              = data.bit(2);
+    channel().drq               = data.bit(3);
+    channel().timingMode        = data.bit(4,5);
+    channel().irq               = data.bit(6);
+    channel().enable            = data.bit(7);
 
-    if(!enable && dma().enable) {  //0->1 transition
-      if(dma().timingMode == 0) {
-        dma().active = true;  //immediate transfer mode
-        dma().waiting = 2;
+    if(!enable && channel().enable) {  //0->1 transition
+      if(channel().timingMode == 0) {
+        channel().active = true;  //immediate transfer mode
+        channel().waiting = 2;
       }
-      dma().latch.source = dma().source;
-      dma().latch.target = dma().target;
-      dma().latch.length = dma().length;
-    } else if(!dma().enable) {
-      dma().active = false;
+      channel().latch.source = channel().source;
+      channel().latch.target = channel().target;
+      channel().latch.length = channel().length;
+    } else if(!channel().enable) {
+      channel().active = false;
     }
     return;
   }
@@ -450,16 +451,19 @@ auto CPU::writeIO(n32 address, n8 data) -> void {
     if(data.bit(0)) context.booted = 1;
     return;
   case 0x0400'0301:
-    context.halted  = data.bit(7) == 0;
-    context.stopped = data.bit(7) == 1;
+    if(processor.r15 < 0x0200'0000) {
+      context.halted  = data.bit(7) == 0;
+      context.stopped = data.bit(7) == 1;
+    }
     return;
 
   //MEMCNT_L
   //MEMCNT_H
   case 0x0400'0800:
-    memory.biosSwap = data.bit(0);
-    memory.unknown1 = data.bit(1,3);
-    memory.ewram    = data.bit(5);
+    memory.biosSwap          = data.bit(0);
+    memory.unknown1          = data.bit(1,2);
+    memory.cgbBootRomDisable = data.bit(3);
+    memory.ewram             = data.bit(5);
     return;
   case 0x0400'0801: return;
   case 0x0400'0802: return;

@@ -2,13 +2,13 @@
 
 namespace nall::Beat::Single {
 
-inline auto apply(array_view<u8> source, array_view<u8> beat, maybe<string&> manifest = {}, maybe<string&> result = {}) -> maybe<vector<u8>> {
+inline auto apply(std::span<const u8> source, std::span<const u8> beat, maybe<string&> manifest = {}, maybe<string&> result = {}) -> maybe<std::vector<u8>> {
   #define error(text) { if(result) *result = {"error: ", text}; return {}; }
   #define warning(text) { if(result) *result = {"warning: ", text}; return target; }
   #define success() { if(result) *result = ""; return target; }
   if(beat.size() < 19) error("beat size mismatch");
 
-  vector<u8> target;
+  std::vector<u8> target;
 
   u32 beatOffset = 0;
   auto read = [&]() -> u8 {
@@ -28,7 +28,7 @@ inline auto apply(array_view<u8> source, array_view<u8> beat, maybe<string&> man
   };
 
   auto write = [&](u8 data) {
-    target.append(data);
+    target.push_back(data);
   };
 
   if(read() != 'B') error("beat header invalid");

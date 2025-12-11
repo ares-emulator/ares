@@ -6,8 +6,7 @@ static auto Widget_drop(GtkWidget* widget, GdkDragContext* context, s32 x, s32 y
 GtkSelectionData* data, u32 type, u32 timestamp, pWidget* p) -> void {
   if(!p->state().droppable) return;
   auto paths = DropPaths(data);
-  if(!paths) return;
-  p->self().doDrop(paths);
+  if(!paths.empty()) p->self().doDrop(paths);
 }
 
 static auto Widget_mouseEnter(GtkWidget* widget, GdkEventButton* event, pWidget* p) -> s32 {
@@ -140,9 +139,9 @@ auto pWidget::setMouseCursor(const MouseCursor& mouseCursor) -> void {
 
   if(mouseCursor) {
     string name;
-    if(mouseCursor == MouseCursor::Hand) name = "hand1";
-    if(mouseCursor == MouseCursor::HorizontalResize) name = "sb_h_double_arrow";
-    if(mouseCursor == MouseCursor::VerticalResize) name = "sb_v_double_arrow";
+    if(mouseCursor.name() == MouseCursor::Hand) name = "hand1";
+    if(mouseCursor.name() == MouseCursor::HorizontalResize) name = "sb_h_double_arrow";
+    if(mouseCursor.name() == MouseCursor::VerticalResize) name = "sb_v_double_arrow";
     if(name) {
       gdkMouseCursor = gdk_cursor_new_from_name(gdk_display_get_default(), name);
     }

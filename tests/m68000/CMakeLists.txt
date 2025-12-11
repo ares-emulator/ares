@@ -30,7 +30,7 @@ if(m68000 IN_LIST ARES_COMPONENTS_LIST)
 
   target_enable_subproject(m68000 "m68000 processor test harness")
 
-  target_link_libraries(m68000 PRIVATE ares::ares)
+  target_link_libraries(m68000 PRIVATE ares::ares ares::nall)
   set(CONSOLE TRUE)
   ares_configure_executable(m68000)
 

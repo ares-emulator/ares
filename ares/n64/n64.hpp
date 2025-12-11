@@ -10,6 +10,8 @@
 #include <nall/queue.hpp>
 #include <nall/recompiler/generic/generic.hpp>
 #include <component/processor/sm5k/sm5k.hpp>
+#include <span>
+#include <vector>
 
 #if defined(ARCHITECTURE_AMD64)
 #include <nmmintrin.h>
@@ -37,7 +39,7 @@ using v128 = __m128i;
 #endif
 
 namespace ares::Nintendo64 {
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 

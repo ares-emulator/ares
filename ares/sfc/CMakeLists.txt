@@ -63,6 +63,8 @@ ares_add_sources(
     controller/justifiers/justifiers.hpp
     controller/mouse/mouse.cpp
     controller/mouse/mouse.hpp
+    controller/rumble-gamepad/rumble-gamepad.cpp
+    controller/rumble-gamepad/rumble-gamepad.hpp
     controller/ntt-data-keypad/ntt-data-keypad.cpp
     controller/ntt-data-keypad/ntt-data-keypad.hpp
     controller/super-multitap/super-multitap.cpp

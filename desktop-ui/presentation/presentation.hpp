@@ -10,7 +10,7 @@ struct Presentation : Window {
   auto loadShaders() -> void;
   auto refreshSystemMenu() -> void;
 
-  vector<string> shaderDirectories;
+  std::vector<string> shaderDirectories;
 
   MenuBar menuBar{this};
     Menu loadMenu{&menuBar};
@@ -36,6 +36,7 @@ struct Presentation : Window {
       Menu bootOptionsMenu{&settingsMenu};
         MenuCheckItem fastBoot{&bootOptionsMenu};
         MenuCheckItem launchDebugger{&bootOptionsMenu};
+        MenuCheckItem awaitGDBClient{&bootOptionsMenu};
         MenuSeparator bootOptionsSeparator{&bootOptionsMenu};
         Menu bootOptionsRegionMenu{&bootOptionsMenu};
           MenuRadioItem regionUJE{&bootOptionsRegionMenu};

@@ -5,6 +5,9 @@ namespace ares {
 //Yamaha YM2149 (General Instrument AY-3-8910 derivative)
 
 struct YM2149 {
+  virtual auto readIO(n1 port) -> n8 { return 0xff; }
+  virtual auto writeIO(n1 port, n8 data) -> void {}
+
   //ym2149.cpp
   auto clock() -> array<n5[3]>;
   auto read() -> n8;

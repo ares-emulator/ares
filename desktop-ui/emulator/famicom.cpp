@@ -2,7 +2,8 @@ struct Famicom : Emulator {
   Famicom();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 Famicom::Famicom() {
@@ -31,7 +32,7 @@ Famicom::Famicom() {
     port.append(device);
     }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -81,8 +82,101 @@ auto Famicom::save() -> bool {
   return true;
 }
 
-auto Famicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto Famicom::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Famicom") return system->pak;
   if(node->name() == "Famicom Cartridge") return game->pak;
   return {};
+}
+
+auto Famicom::input(ares::Node::Input::Input input) -> void {
+  auto device = ares::Node::parent(input);
+  if (!device) return;
+
+  auto port = ares::Node::parent(device);
+  if (!port) return;
+
+  if (device->name() != "Family Keyboard") return Emulator::input(input);
+
+  if (!program.keyboardCaptured) return;
+  auto button = input->cast<ares::Node::Input::Button>();
+
+  if (input->name() == "F1")          return button->setValue(inputKeyboard("F1"));
+  if (input->name() == "F2")          return button->setValue(inputKeyboard("F2"));
+  if (input->name() == "F3")          return button->setValue(inputKeyboard("F3"));
+  if (input->name() == "F4")          return button->setValue(inputKeyboard("F4"));
+  if (input->name() == "F5")          return button->setValue(inputKeyboard("F5"));
+  if (input->name() == "F6")          return button->setValue(inputKeyboard("F6"));
+  if (input->name() == "F7")          return button->setValue(inputKeyboard("F7"));
+  if (input->name() == "F8")          return button->setValue(inputKeyboard("F8"));
+
+  if (input->name() == "1")           return button->setValue(inputKeyboard("Num1"));
+  if (input->name() == "2")           return button->setValue(inputKeyboard("Num2"));
+  if (input->name() == "3")           return button->setValue(inputKeyboard("Num3"));
+  if (input->name() == "4")           return button->setValue(inputKeyboard("Num4"));
+  if (input->name() == "5")           return button->setValue(inputKeyboard("Num5"));
+  if (input->name() == "6")           return button->setValue(inputKeyboard("Num6"));
+  if (input->name() == "7")           return button->setValue(inputKeyboard("Num7"));
+  if (input->name() == "8")           return button->setValue(inputKeyboard("Num8"));
+  if (input->name() == "9")           return button->setValue(inputKeyboard("Num9"));
+  if (input->name() == "0")           return button->setValue(inputKeyboard("Num0"));
+  if (input->name() == "Minus")       return button->setValue(inputKeyboard("Dash"));
+  if (input->name() == "^")           return button->setValue(inputKeyboard("Tilde"));
+  if (input->name() == "Yen")         return button->setValue(inputKeyboard("Backslash"));
+  if (input->name() == "Stop")        return button->setValue(inputKeyboard("Delete"));
+
+  if (input->name() == "Escape")      return button->setValue(inputKeyboard("Escape"));
+  if (input->name() == "Q")           return button->setValue(inputKeyboard("Q"));
+  if (input->name() == "W")           return button->setValue(inputKeyboard("W"));
+  if (input->name() == "E")           return button->setValue(inputKeyboard("E"));
+  if (input->name() == "R")           return button->setValue(inputKeyboard("R"));
+  if (input->name() == "T")           return button->setValue(inputKeyboard("T"));
+  if (input->name() == "Y")           return button->setValue(inputKeyboard("Y"));
+  if (input->name() == "U")           return button->setValue(inputKeyboard("U"));
+  if (input->name() == "I")           return button->setValue(inputKeyboard("I"));
+  if (input->name() == "O")           return button->setValue(inputKeyboard("O"));
+  if (input->name() == "P")           return button->setValue(inputKeyboard("P"));
+  if (input->name() == "@")           return button->setValue(inputKeyboard("F9"));
+  if (input->name() == "[")           return button->setValue(inputKeyboard("LeftBracket"));
+  if (input->name() == "Return")      return button->setValue(inputKeyboard("Return"));
+
+  if (input->name() == "Control")     return button->setValue(inputKeyboard("LeftControl"));
+  if (input->name() == "A")           return button->setValue(inputKeyboard("A"));
+  if (input->name() == "S")           return button->setValue(inputKeyboard("S"));
+  if (input->name() == "D")           return button->setValue(inputKeyboard("D"));
+  if (input->name() == "F")           return button->setValue(inputKeyboard("F"));
+  if (input->name() == "G")           return button->setValue(inputKeyboard("G"));
+  if (input->name() == "H")           return button->setValue(inputKeyboard("H"));
+  if (input->name() == "J")           return button->setValue(inputKeyboard("J"));
+  if (input->name() == "K")           return button->setValue(inputKeyboard("K"));
+  if (input->name() == "L")           return button->setValue(inputKeyboard("L"));
+  if (input->name() == ";")           return button->setValue(inputKeyboard("Semicolon"));
+  if (input->name() == ":")           return button->setValue(inputKeyboard("Apostrophe"));
+  if (input->name() == "]")           return button->setValue(inputKeyboard("RightBracket"));
+  if (input->name() == "Kana")        return button->setValue(inputKeyboard("End"));
+
+  if (input->name() == "Left Shift")  return button->setValue(inputKeyboard("LeftShift"));
+  if (input->name() == "Z")           return button->setValue(inputKeyboard("Z"));
+  if (input->name() == "X")           return button->setValue(inputKeyboard("X"));
+  if (input->name() == "C")           return button->setValue(inputKeyboard("C"));
+  if (input->name() == "V")           return button->setValue(inputKeyboard("V"));
+  if (input->name() == "B")           return button->setValue(inputKeyboard("B"));
+  if (input->name() == "N")           return button->setValue(inputKeyboard("N"));
+  if (input->name() == "M")           return button->setValue(inputKeyboard("M"));
+  if (input->name() == ",")           return button->setValue(inputKeyboard("Comma"));
+  if (input->name() == ".")           return button->setValue(inputKeyboard("Period"));
+  if (input->name() == "/")           return button->setValue(inputKeyboard("Slash"));
+  if (input->name() == "_")           return button->setValue(inputKeyboard("Equal"));
+  if (input->name() == "Right Shift") return button->setValue(inputKeyboard("RightShift"));
+
+  if (input->name() == "Graph")       return button->setValue(inputKeyboard("LeftAlt"));
+  if (input->name() == "Spacebar")    return button->setValue(inputKeyboard("Space"));
+
+  if (input->name() == "Home")        return button->setValue(inputKeyboard("Home"));
+  if (input->name() == "Insert")      return button->setValue(inputKeyboard("Insert"));
+  if (input->name() == "Delete")      return button->setValue(inputKeyboard("Backspace"));
+
+  if (input->name() == "Up")          return button->setValue(inputKeyboard("Up"));
+  if (input->name() == "Down")        return button->setValue(inputKeyboard("Down"));
+  if (input->name() == "Left")        return button->setValue(inputKeyboard("Left"));
+  if (input->name() == "Right")       return button->setValue(inputKeyboard("Right"));
 }

@@ -23,7 +23,7 @@ auto ICD::unload() -> void {
   GameBoy::system.unload();
   GameBoy::superGameBoy = nullptr;
 
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 
   node.reset();
@@ -52,7 +52,7 @@ auto ICD::power(bool reset) -> void {
       main();
     }
   });
-  cpu.coprocessors.append(this);
+  cpu.coprocessors.push_back(this);
 
   for(auto& packet : this->packet) packet = {};
   packetSize = 0;

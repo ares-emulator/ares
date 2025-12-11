@@ -8,21 +8,21 @@ struct BrowserDialog {
   BrowserDialog();
   auto alignment() const -> Alignment;
   auto alignmentWindow() const -> Window;
-  auto filters() const -> vector<string>;
+  auto filters() const -> std::vector<string>;
   auto openFile() -> string;           //one existing file
-  auto openFiles() -> vector<string>;  //any existing files
+  auto openFiles() -> std::vector<string>;  //any existing files
   auto openFolder() -> string;         //one existing folder
   auto openObject() -> string;         //one existing file or folder
   auto option() -> string;
   auto path() const -> string;
   auto saveFile() -> string;           //one file
-  auto selected() -> vector<string>;
+  auto selected() -> std::vector<string>;
   auto selectFolder() -> string;       //one existing folder
   auto setAlignment(Alignment = Alignment::Center) -> type&;
   auto setAlignment(sWindow relativeTo, Alignment = Alignment::Center) -> type&;
-  auto setFilters(const vector<string>& filters = {}) -> type&;
+  auto setFilters(const std::vector<string>& filters = {}) -> type&;
   auto setName(const string& name = "") -> type&;
-  auto setOptions(const vector<string>& options = {}) -> type&;
+  auto setOptions(const std::vector<string>& options = {}) -> type&;
   auto setPath(const string& path = "") -> type&;
   auto setTitle(const string& title = "") -> type&;
   auto title() const -> string;
@@ -31,9 +31,9 @@ private:
   struct State {
     string action;
     Alignment alignment = Alignment::Center;
-    vector<string> filters = {"*"};
+    std::vector<string> filters = {"*"};
     string name;
-    vector<string> options;
+    std::vector<string> options;
     string path;
     sWindow relativeTo;
     string title;
@@ -41,10 +41,10 @@ private:
 
   struct Response {
     string option;
-    vector<string> selected;
+    std::vector<string> selected;
   } response;
 
-  auto _run() -> vector<string>;
+  auto _run() -> std::vector<string>;
 
   friend struct BrowserDialogWindow;
 };

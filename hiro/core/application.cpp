@@ -34,20 +34,16 @@ auto Application::name() -> string {
   return state().name;
 }
 
-auto Application::onMain(const function<void ()>& callback) -> void {
+auto Application::onMain(const std::function<void ()>& callback) -> void {
   state().onMain = callback;
 }
 
-auto Application::onOpenFile(const function<void (const string& path)>& callback) -> void {
+auto Application::onOpenFile(const std::function<void (const string& path)>& callback) -> void {
   state().onOpenFile = callback;
 }
 
 auto Application::run() -> void {
   return pApplication::run();
-}
-
-auto Application::pendingEvents() -> bool {
-  return pApplication::pendingEvents();
 }
 
 auto Application::processEvents() -> void {
@@ -125,19 +121,19 @@ auto Application::Cocoa::doQuit() -> void {
   if(state().cocoa.onQuit) return state().cocoa.onQuit();
 }
 
-auto Application::Cocoa::onAbout(const function<void ()>& callback) -> void {
+auto Application::Cocoa::onAbout(const std::function<void ()>& callback) -> void {
   state().cocoa.onAbout = callback;
 }
 
-auto Application::Cocoa::onActivate(const function<void ()>& callback) -> void {
+auto Application::Cocoa::onActivate(const std::function<void ()>& callback) -> void {
   state().cocoa.onActivate = callback;
 }
 
-auto Application::Cocoa::onPreferences(const function<void ()>& callback) -> void {
+auto Application::Cocoa::onPreferences(const std::function<void ()>& callback) -> void {
   state().cocoa.onPreferences = callback;
 }
 
-auto Application::Cocoa::onQuit(const function<void ()>& callback) -> void {
+auto Application::Cocoa::onQuit(const std::function<void ()>& callback) -> void {
   state().cocoa.onQuit = callback;
 }
 

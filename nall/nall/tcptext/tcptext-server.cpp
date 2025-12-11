@@ -5,7 +5,7 @@ namespace nall::TCPText {
     sendData((const u8*)text.data(), text.size());
   }
 
-  NALL_HEADER_INLINE auto Server::onData(const vector<u8> &data) -> void {
+  NALL_HEADER_INLINE auto Server::onData(const std::vector<u8> &data) -> void {
     string_view dataStr((const char*)data.data(), (u32)data.size());
 
     if(!hadHandshake) {

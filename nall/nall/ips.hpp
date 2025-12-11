@@ -2,13 +2,13 @@
 
 namespace nall::IPS {
 
-inline auto apply(array_view<u8> source, array_view<u8> patch, maybe<string&> result = {}) -> maybe<vector<u8>> {
+inline auto apply(std::span<const u8> source, std::span<const u8> patch, maybe<string&> result = {}) -> maybe<std::vector<u8>> {
     #define error(text) { if(result) *result = {"error: ", text}; return {}; }
     #define success() { if(result) *result = ""; return target; }
 
-    vector<u8> target;
+    std::vector<u8> target;
     for (u32 i : range(source.size())) {
-        target.append(source[i]);
+        target.push_back(source[i]);
     }
 
     u32 patchOffset = 0;

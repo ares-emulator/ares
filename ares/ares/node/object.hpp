@@ -3,13 +3,13 @@
 
 #define DeclareClass(Type, Name) \
   static auto identifier() -> string { return Name; } \
-  static auto create() -> Node::Object { return new Type; } \
+  static auto create() -> Node::Object { return std::make_shared<Type>(); } \
   auto identity() const -> string override { return Name; } \
   private: static inline Class::Register<Type> register; public: \
 
-struct Object : shared_pointer_this<Object> {
+struct Object : std::enable_shared_from_this<Object> {
   static auto identifier() -> string { return "Object"; }
-  static auto create() -> Node::Object { return new Object; }
+  static auto create() -> Node::Object { return std::make_shared<Object>(); }
   virtual auto identity() const -> string { return "Object"; }
   private: static inline Class::Register<Object> register; public:
 //DeclareClass(Object, "object")
@@ -18,44 +18,47 @@ struct Object : shared_pointer_this<Object> {
   virtual ~Object() = default;
 
   auto name() const -> string { return _name; }
-  auto parent() const -> shared_pointer_weak<Object> { return _parent; }
+  auto parent() const -> std::weak_ptr<Object> { return _parent; }
 
   auto setName(string_view name) -> void { _name = name; }
 
   auto prepend(Node::Object node) -> Node::Object {
     if(auto found = find(node)) return found;
-    _nodes.prepend(node);
-    node->_parent = shared();
+    _nodes.insert(_nodes.begin(), node);
+    node->_parent = shared_from_this();
     PlatformAttach(node);
     return node;
   }
 
   template<typename T, typename... P>
-  auto prepend(P&&... p) -> Node::Object {
-    using Type = typename T::type;
-    return prepend(shared_pointer<Type>::create(std::forward<P>(p)...));
+  auto prepend(P&&... p) -> std::shared_ptr<typename T::element_type> {
+    using Type = typename T::element_type;
+    auto node = std::make_shared<Type>(std::forward<P>(p)...);
+    prepend(node);
+    return node;
   }
 
   auto append(Node::Object node) -> Node::Object {
     if(auto found = find(node)) return found;
-    _nodes.append(node);
-    node->_parent = shared();
+    _nodes.push_back(node);
+    node->_parent = shared_from_this();
     PlatformAttach(node);
     return node;
   }
 
   template<typename T, typename... P>
-  auto append(P&&... p) -> Node::Object {
-    using Type = typename T::type;
-    return append(shared_pointer<Type>::create(std::forward<P>(p)...));
+  auto append(P&&... p) -> std::shared_ptr<typename T::element_type> {
+    using Type = typename T::element_type;
+    auto node = std::make_shared<Type>(std::forward<P>(p)...);
+    append(node);
+    return node;
   }
 
   auto remove(Node::Object node) -> void {
-    if(auto index = _nodes.find(node)) {
+    if(std::erase(_nodes, node)) {
       PlatformDetach(node);
       node->reset();
       node->_parent.reset();
-      _nodes.remove(*index);
     }
   }
 
@@ -65,13 +68,12 @@ struct Object : shared_pointer_this<Object> {
       node->reset();
       node->_parent.reset();
     }
-    _nodes.reset();
+    _nodes.clear();
   }
 
   template<typename T>
-  auto cast() -> shared_pointer<typename T::type> {
-    if(dynamic_cast<typename T::type*>(this)) return shared();
-    return {};
+  auto cast() -> std::shared_ptr<typename T::element_type> {
+    return std::dynamic_pointer_cast<typename T::element_type>(shared_from_this());
   }
 
   template<typename T>
@@ -80,17 +82,20 @@ struct Object : shared_pointer_this<Object> {
   }
 
   template<typename T>
-  auto find() -> vector<shared_pointer<typename T::type>> {
-    vector<shared_pointer<typename T::type>> result;
-    if(dynamic_cast<typename T::type*>(this)) {
-      if(auto instance = shared()) result.append(instance);
+  auto find() -> std::vector<std::shared_ptr<typename T::element_type>> {
+    std::vector<std::shared_ptr<typename T::element_type>> result;
+    if(dynamic_cast<typename T::element_type*>(this)) {
+      if(auto instance = cast<T>()) result.push_back(instance);
     }
-    for(auto& node : _nodes) result.append(node->find<T>());
+    for(auto& node : _nodes) {
+      auto sub = node->find<T>();
+      std::ranges::copy(sub, std::back_inserter(result));
+    }
     return result;
   }
 
   template<typename T>
-  auto find(u32 index) -> shared_pointer<typename T::type> {
+  auto find(u32 index) -> std::shared_ptr<typename T::element_type> {
     auto result = find<T>();
     if(index < result.size()) return result[index];
     return {};
@@ -106,31 +111,33 @@ struct Object : shared_pointer_this<Object> {
 
   template<typename T = Node::Object>
   auto find(string name) -> T {
-    using Type = typename T::type;
-    auto path = name.split("/");
-    name = path.takeFirst();
+    using Type = typename T::element_type;
+    auto path = nall::split(name, "/");
+    if(path.empty()) return {};
+    name = path.front();
+    path.erase(path.begin());
     for(auto& node : _nodes) {
       if(node->_name != name) continue;
-      if(path) return node->find<T>(path.merge("/"));
-      if(node->identity() == Type::identifier()) return node;
+      if(!path.empty()) return node->find<T>(nall::merge(path, "/"));
+      if(node->identity() == Type::identifier()) return node->template cast<T>();
     }
     return {};
   }
 
   template<typename T = Node::Object>
   auto scan(string name) -> T {
-    using Type = typename T::type;
+    using Type = typename T::element_type;
     for(auto& node : _nodes) {
-      if(node->identity() == Type::identifier() && node->_name == name) return node;
+      if(node->identity() == Type::identifier() && node->_name == name) return node->template cast<T>();
       if(auto result = node->scan<T>(name)) return result;
     }
     return {};
   }
 
   template<typename T>
-  auto enumerate(vector<T>& objects) -> void {
-    using Type = typename T::type;
-    if(auto instance = cast<T>()) objects.append(instance);
+  auto enumerate(std::vector<T>& objects) -> void {
+    using Type = typename T::element_type;
+    if(auto instance = cast<T>()) objects.push_back(instance);
     for(auto& node : _nodes) node->enumerate<T>(objects);
   }
 
@@ -230,6 +237,6 @@ protected:
   string _name;
   VFS::Pak _pak;
   set<Attribute> _attributes;
-  shared_pointer_weak<Object> _parent;
-  vector<Node::Object> _nodes;
+  std::weak_ptr<Object> _parent;
+  std::vector<Node::Object> _nodes;
 };

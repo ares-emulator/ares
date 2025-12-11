@@ -1,16 +1,16 @@
 struct MegaDrive : Cartridge {
   auto name() -> string override { return "Mega Drive"; }
-  auto extensions() -> vector<string> override { return {"md", "gen", "bin"}; }
+  auto extensions() -> std::vector<string> override { return {"md", "gen", "bin"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
-  auto analyzeStorage(vector<u8>& rom, string hash) -> void;
-  auto analyzePeripherals(vector<u8>& rom, string hash) -> void;
-  auto analyzeCopyProtection(vector<u8>& rom, string hash) -> void;
-  auto analyzeRegion(vector<u8>& rom, string hash) -> void;
+  auto analyze(std::vector<u8>& rom) -> string;
+  auto analyzeStorage(std::vector<u8>& rom, string hash) -> void;
+  auto analyzePeripherals(std::vector<u8>& rom, string hash) -> void;
+  auto analyzeCopyProtection(std::vector<u8>& rom, string hash) -> void;
+  auto analyzeRegion(std::vector<u8>& rom, string hash) -> void;
 
   string board;
-  vector<string> regions;
+  std::vector<string> regions;
 
   struct RAM {
     explicit operator bool() const { return mode && size != 0; }
@@ -38,25 +38,27 @@ struct MegaDrive : Cartridge {
 };
 
 auto MegaDrive::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",    document["game/title"].string());
   pak->setAttribute("region",   document["game/region"].string());
   pak->setAttribute("board",    document["game/board"].string());
   pak->setAttribute("bootable", true);
-  pak->setAttribute("megacd",   (bool)document["game/device"].string().split(", ").find("Mega CD"));
+  auto deviceList = document["game/device"].string();
+  auto devices = nall::split(deviceList, ", ");
+  pak->setAttribute("megacd",   (bool)(std::ranges::find(devices, string{"Mega CD"}) != devices.end()));
   pak->append("manifest.bml", manifest);
 
   //add SVP ROM to image if it is missing
@@ -67,13 +69,13 @@ auto MegaDrive::load(string location) -> LoadResult {
     }
   }
 
-  array_view<u8> view{rom};
+  std::span<const u8> view{rom};
   for(auto node : document.find("game/board/memory(type=ROM)")) {
     string name = {node["content"].string().downcase(), ".rom"};
     u32 size = node["size"].natural();
     if(view.size() < size) break;  //missing firmware
     pak->append(name, {view.data(), size});
-    view += size;
+    view = view.subspan(size);
   }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
@@ -117,7 +119,7 @@ auto MegaDrive::save(string location) -> bool {
   return true;
 }
 
-auto MegaDrive::analyze(vector<u8>& rom) -> string {
+auto MegaDrive::analyze(std::vector<u8>& rom) -> string {
   if(rom.size() < 0x800) {
     print("[mia] Loading rom failed. Minimum expected rom size is 2048 (0x800) bytes. Rom size: ", rom.size(), " (0x", hex(rom.size()), ") bytes.\n");
     return {};
@@ -134,7 +136,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
   analyzeCopyProtection(rom, hash);
   analyzeRegion(rom, hash);
 
-  vector<string> devices;
+  std::vector<string> devices;
   string device = slice((const char*)&rom[0x190], 0, 16).trimRight(" ");
   if(device == "OJKRPTBVFCA") {
     //ignore erroneous device string used by Codemasters
@@ -146,7 +148,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
     if(id == '6');  //6-button controller
     if(id == 'A');  //analog joystick
     if(id == 'B');  //trackball
-    if(id == 'C') devices.append("Mega CD");
+    if(id == 'C') devices.push_back("Mega CD");
     if(id == 'D');  //download?
     if(id == 'F');  //floppy drive
     if(id == 'G');  //light gun
@@ -189,9 +191,9 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
   s +={"  label:  ", domesticName, "\n"};
   s +={"  label:  ", internationalName, "\n"};
   s +={"  serial: ", serialNumber, "\n"};
-  s +={"  region: ", regions.merge(", "), "\n"};
-  if(devices)
-  s +={"  device: ", devices.merge(", "), "\n"};
+  s +={"  region: ", nall::merge(regions, ", "), "\n"};
+  if(!devices.empty())
+  s +={"  device: ", nall::merge(devices, ", "), "\n"};
   if(board)
   s +={"  board:  ", board, "\n"};
   s += "  board\n";
@@ -246,7 +248,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
   return s;
 }
 
-auto MegaDrive::analyzeRegion(vector<u8>& rom, string hash) -> void {
+auto MegaDrive::analyzeRegion(std::vector<u8>& rom, string hash) -> void {
   string serial = slice((const char*)&rom[0x0180], 0, 14);
 
   int offset = 0;
@@ -256,38 +258,38 @@ auto MegaDrive::analyzeRegion(vector<u8>& rom, string hash) -> void {
   }
 
   string region = slice((const char*)&rom[0x01f0 + offset], 0, 16).trimRight(" ");
-  if(!regions) {
-    if(region == "JAPAN" ) regions.append("NTSC-J");
-    if(region == "EUROPE") regions.append("PAL");
+  if(regions.empty()) {
+    if(region == "JAPAN" ) regions.push_back("NTSC-J");
+    if(region == "EUROPE") regions.push_back("PAL");
   }
-  if(!regions) {
+  if(regions.empty()) {
     if(region.find("J")
-    || region.find("K")) regions.append("NTSC-J");
-    if(region.find("U")) regions.append("NTSC-U");
-    if(region.find("E")) regions.append("PAL");
+    || region.find("K")) regions.push_back("NTSC-J");
+    if(region.find("U")) regions.push_back("NTSC-U");
+    if(region.find("E")) regions.push_back("PAL");
   }
-  if(!regions && region.size() == 1) {
+  if(regions.empty() && region.size() == 1) {
     maybe<u8> bits;
     u8 field = region(0);
     if(field >= '0' && field <= '9') bits = field - '0';
     if(field >= 'A' && field <= 'F') bits = field - 'A' + 10;
-    if(bits && *bits & 1) regions.append("NTSC-J");  //domestic 60hz
-    if(bits && *bits & 2);                           //domestic 50hz
-    if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
-    if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
+    if(bits && *bits & 1) regions.push_back("NTSC-J");  //domestic 60hz
+    if(bits && *bits & 2);                              //domestic 50hz
+    if(bits && *bits & 4) regions.push_back("NTSC-U");  //overseas 60hz
+    if(bits && *bits & 8) regions.push_back("PAL");     //overseas 50hz
   }
-  if(!regions) {
-    regions.append("NTSC-J", "NTSC-U", "PAL");
+  if(regions.empty()) {
+    regions.insert(regions.end(), {"NTSC-J", "NTSC-U", "PAL"});
   }
 
   // Many PAL games have incorrect headers, so force PAL based on name
   if(location.ifind("(Europe)") || location.ifind("(PAL)")) {
-    regions.reset();
-    regions.append("PAL");
+    regions.clear();
+    regions.push_back("PAL");
   }
 }
 
-auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
+auto MegaDrive::analyzeStorage(std::vector<u8>& rom, string hash) -> void {
   string serial = slice((const char*)&rom[0x0180], 0, 14);
   int offset = 0; 
 
@@ -837,7 +839,7 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   }
 }
 
-auto MegaDrive::analyzePeripherals(vector<u8>& rom, string hash) -> void {
+auto MegaDrive::analyzePeripherals(std::vector<u8>& rom, string hash) -> void {
   //J-Cart
   //======
 
@@ -892,7 +894,7 @@ auto MegaDrive::analyzePeripherals(vector<u8>& rom, string hash) -> void {
   }
 }
 
-auto MegaDrive::analyzeCopyProtection(vector<u8>& rom, string hash) -> void {
+auto MegaDrive::analyzeCopyProtection(std::vector<u8>& rom, string hash) -> void {
   //Super Bubble Bobble (Taiwan)
   if(hash == "e0a310c89961d781432715f71ce92d2d559fc272a7b46ea7b77383365b27ce21") {
     rom[0x0123e4] = 0x60;

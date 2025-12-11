@@ -13,7 +13,7 @@ enum class Event : u32 {
 struct Platform {
   virtual auto attach(Node::Object) -> void {}
   virtual auto detach(Node::Object) -> void {}
-  virtual auto pak(Node::Object) -> shared_pointer<vfs::directory> { return {}; }
+  virtual auto pak(Node::Object) -> std::shared_ptr<vfs::directory> { return {}; }
   virtual auto event(Event) -> void {}
   virtual auto log(Node::Debugger::Tracer::Tracer, string_view message) -> void {}
   virtual auto status(string_view message) -> void {}

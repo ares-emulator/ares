@@ -752,7 +752,12 @@ template<u32 Size> auto M68000::instructionMOVEM_TO_MEM(EffectiveAddress to) -> 
 
     if(to.mode == AddressRegisterIndirectWithPreDecrement) addr -= bytes<Size>();
     auto data = index < 8 ? read<Size>(DataRegister{index}) : read<Size>(AddressRegister{index});
-    write<Size>(addr, data);
+    if(to.mode == AddressRegisterIndirectWithPreDecrement) {
+        //pre-decrement mode writes longwords in reverse-word order (low word before high)
+        write<Size, Reverse>(addr, data);
+    } else {
+        write<Size>(addr, data);
+    }
     if(to.mode != AddressRegisterIndirectWithPreDecrement) addr += bytes<Size>();
   }
 

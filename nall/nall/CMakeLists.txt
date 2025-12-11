@@ -1,6 +1,21 @@
 add_library(nall OBJECT main.cpp nall.cpp sljitAllocator.cpp)
 add_library(ares::nall ALIAS nall)
 
+add_library(nall-headers INTERFACE)
+add_library(ares::nall::headers ALIAS nall-headers)
+target_link_libraries(nall PUBLIC ares::nall::headers)
+if(ARES_ENABLE_CHD)
+  target_compile_definitions(nall-headers INTERFACE ARES_ENABLE_CHD)
+endif()
+target_compile_definitions(
+  nall-headers
+  INTERFACE
+    $<$<CONFIG:Debug>:BUILD_DEBUG>
+    $<$<CONFIG:Release>:BUILD_RELEASE>
+    $<$<CONFIG:RelWithDebInfo>:BUILD_RELEASE>
+    $<$<CONFIG:MinSizeRel>:BUILD_MINIFIED>
+)
+
 include(cmake/sources.cmake)
 
 find_package(Threads REQUIRED)
@@ -9,9 +24,7 @@ target_link_libraries(nall PRIVATE Threads::Threads)
 target_link_libraries(nall PUBLIC sljit)
 if(ARES_ENABLE_CHD)
   target_link_libraries(nall PUBLIC chdr-static)
-  target_compile_definitions(nall PUBLIC ARES_ENABLE_CHD)
 endif()
-target_compile_definitions(nall PUBLIC CMAKE)
 target_compile_options(
   nall
   PRIVATE
@@ -38,7 +51,9 @@ option(ARES_TREAT_NALL_AS_SYSTEM "Enable system library semantics for nall in ot
 mark_as_advanced(ARES_TREAT_NALL_AS_SYSTEM)
 
 if(ARES_TREAT_NALL_AS_SYSTEM)
-  target_sources(nall PRIVATE cmake/headers.cpp)
+  add_library(nall-static-compile-test STATIC cmake/headers.cpp)
+  set_target_properties(nall-static-compile-test PROPERTIES FOLDER "generated" PREFIX "")
+  target_include_directories(nall-static-compile-test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/..")
 endif()
 
 get_target_property(nall_SOURCES nall SOURCES)
@@ -47,29 +62,11 @@ set_source_files_properties(${nall_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
 set_source_files_properties(nall nall.cpp main.cpp sljitAllocator.cpp PROPERTIES HEADER_FILE_ONLY FALSE)
 
 if(ARES_TREAT_NALL_AS_SYSTEM)
-  target_include_directories(nall SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")
-  target_include_directories(nall PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/..")
-  set_source_files_properties(nall cmake/headers.cpp PROPERTIES HEADER_FILE_ONLY FALSE)
+  target_include_directories(nall-headers SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")
 else()
-  target_include_directories(nall PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
+  target_include_directories(nall-headers PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
 endif()
 
-# global compiler flags
-target_compile_features(nall PUBLIC c_std_11)
-set_target_properties(nall PROPERTIES C_EXTENSIONS OFF)
-
-target_compile_features(nall PUBLIC cxx_std_17)
-set_target_properties(nall PROPERTIES CXX_EXTENSIONS OFF)
-
-target_compile_definitions(
-  nall
-  PUBLIC
-    $<$<CONFIG:Debug>:BUILD_DEBUG>
-    $<$<CONFIG:Release>:BUILD_RELEASE>
-    $<$<CONFIG:RelWithDebInfo>:BUILD_RELEASE>
-    $<$<CONFIG:MinSizeRel>:BUILD_MINIFIED>
-)
-
 if(ARES_BUILD_LOCAL)
-  target_compile_definitions(nall PUBLIC BUILD_LOCAL)
+  target_compile_definitions(nall-headers INTERFACE BUILD_LOCAL)
 endif()

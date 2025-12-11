@@ -5,8 +5,8 @@ struct AbstractMemory {
   virtual auto reset() -> void {}
   virtual auto allocate(u32, n8 = 0xff) -> void {}
 
-  virtual auto load(shared_pointer<vfs::file> fp) -> void {}
-  virtual auto save(shared_pointer<vfs::file> fp) -> void {}
+  virtual auto load(VFS::File fp) -> void {}
+  virtual auto save(VFS::File fp) -> void {}
 
   virtual auto data() -> n8* = 0;
   virtual auto size() const -> u32 = 0;
@@ -36,8 +36,8 @@ struct Bus {
   //memory.cpp
   auto reset() -> void;
   auto map(
-    const function<n8   (n24, n8)>& read,
-    const function<void (n24, n8)>& write,
+    const std::function<n8   (n24, n8)>& read,
+    const std::function<void (n24, n8)>& write,
     const string& address, u32 size = 0, u32 base = 0, u32 mask = 0
   ) -> u32;
   auto unmap(const string& address) -> void;
@@ -46,8 +46,8 @@ private:
   n8*  lookup = nullptr;
   n32* target = nullptr;
 
-  function<n8   (n24, n8)> reader[256];
-  function<void (n24, n8)> writer[256];
+  std::function<n8   (n24, n8)> reader[256];
+  std::function<void (n24, n8)> writer[256];
   n24 counter[256];
 };
 

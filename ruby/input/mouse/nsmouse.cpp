@@ -4,7 +4,7 @@ struct InputMouseNS {
   Input& input;
   InputMouseNS(Input& input) : input(input) {}
   NSPoint previousLocation = {0,0};
-  shared_pointer<HID::Mouse> hid{new HID::Mouse};
+  std::shared_ptr<HID::Mouse> hid = std::make_shared<HID::Mouse>();
   bool isAcquired = false;
 
   auto acquired() -> bool {
@@ -30,7 +30,7 @@ struct InputMouseNS {
     group.input(inputID).setValue(value);
   }
     
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     NSUInteger mouseButtons = [NSEvent pressedMouseButtons];
     NSPoint mouseLocation = [NSEvent mouseLocation];
     float deltaX = (previousLocation.x - mouseLocation.x) * -1;
@@ -42,7 +42,7 @@ struct InputMouseNS {
     assign(HID::Mouse::GroupID::Axis, 0, deltaX);
     assign(HID::Mouse::GroupID::Axis, 1, deltaY);
 
-    devices.append(hid);
+    devices.push_back(hid);
     previousLocation = mouseLocation;
   }
 

@@ -1,6 +1,6 @@
 struct Saturn : CompactDisc {
   auto name() -> string override { return "Saturn"; }
-  auto extensions() -> vector<string> override { return {"cue", "chd"}; }
+  auto extensions() -> std::vector<string> override { return {"cue", "chd"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
@@ -14,7 +14,7 @@ auto Saturn::load(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("audio", (bool)document["game/audio"]);

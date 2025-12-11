@@ -3,7 +3,7 @@ struct MSX : Emulator {
   auto load() -> LoadResult override;
   auto load(Menu) -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -12,7 +12,7 @@ MSX::MSX() {
   name = "MSX";
 
   // TODO: Support other region bios versions
-  firmware.append({"BIOS", "Japan", "413a2b601a94b3792e054be2439cc77a1819cceadbfa9542f88d51c7480f2ef0"});
+  firmware.push_back({"BIOS", "Japan", "413a2b601a94b3792e054be2439cc77a1819cceadbfa9542f88d51c7480f2ef0"});
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -33,7 +33,7 @@ MSX::MSX() {
     device.digital("Button",  virtualPorts[id].pad.south);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -92,7 +92,7 @@ auto MSX::load() -> LoadResult {
 auto MSX::load(Menu menu) -> void {
   if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
     MenuCheckItem playingItem{&menu};
-    playingItem.setText("Play Tape").setChecked(playing->value()).onToggle([=] {
+    playingItem.setText("Play Tape").setChecked(playing->value()).onToggle([=, this] {
       if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
         playing->setValue(playingItem.checked());
       }
@@ -108,7 +108,7 @@ auto MSX::save() -> bool {
   return true;
 }
 
-auto MSX::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto MSX::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "MSX") return system->pak;
   if(node->name() == "MSX Cartridge") return game->pak;
   if(node->name() == "MSX Tape") return game->pak;

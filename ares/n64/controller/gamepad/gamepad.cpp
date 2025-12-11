@@ -1,4 +1,5 @@
 #include "transfer-pak.cpp"
+#include "bio-sensor.cpp"
 
 Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
@@ -10,7 +11,7 @@ Gamepad::Gamepad(Node::Port parent) {
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setConnect([&] { return connect(); });
   port->setDisconnect([&] { return disconnect(); });
-  port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak"});
+  port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak", "Bio Sensor"});
 
   bank = 0;
 
@@ -54,11 +55,13 @@ auto Gamepad::allocate(string name) -> Node::Peripheral {
   if(name == "Controller Pak") return slot = port->append<Node::Peripheral>("Controller Pak");
   if(name == "Rumble Pak"    ) return slot = port->append<Node::Peripheral>("Rumble Pak");
   if(name == "Transfer Pak"  ) return slot = port->append<Node::Peripheral>("Transfer Pak");
+  if(name == "Bio Sensor"    ) return slot = port->append<Node::Peripheral>("Bio Sensor");
   return {};
 }
 
 auto Gamepad::connect() -> void {
   if(!slot) return;
+  pakDetectLatched = true;
   if(slot->name() == "Controller Pak") {
     bool create = true;
 
@@ -74,7 +77,7 @@ auto Gamepad::connect() -> void {
         u32 bank_size;
 
         fp->seek(0x20 + 0x1A);
-        fp->read(array_span<u8>{&banks, sizeof(banks)});
+        fp->read(&banks, sizeof(banks));
         fp->seek(0);
 
         if (banks < 1) {
@@ -119,10 +122,22 @@ auto Gamepad::connect() -> void {
   if(slot->name() == "Transfer Pak") {
     transferPak.load(slot);
   }
+  if(slot->name() == "Bio Sensor") {
+    bioSensor.load();
+    // Bio Sensor BPM setting node
+    bioSensorBpm = slot->append<Node::Setting::Integer>(
+      "Bio Sensor BPM",
+      bioSensor.beatsPerMinute,
+      [&](s64 value) { bioSensor.beatsPerMinute = value; }
+    );
+    bioSensorBpm->setDynamic(true);
+    bioSensorBpm->setAllowedValues({30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180});
+  }
 }
 
 auto Gamepad::disconnect() -> void {
   if(!slot) return;
+  pakDetectLatched = true;
   if(slot->name() == "Controller Pak") {
     save();
     ram.reset();
@@ -134,6 +149,13 @@ auto Gamepad::disconnect() -> void {
   }
   if(slot->name() == "Transfer Pak") {
     transferPak.unload();
+  }
+  if(slot->name() == "Bio Sensor") {
+    bioSensor.unload();
+    if(bioSensorBpm) {
+      slot->remove(bioSensorBpm);
+      bioSensorBpm.reset();
+    }
   }
   port->remove(slot);
   slot.reset();
@@ -153,10 +175,16 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   if(input[0] == 0x00 || input[0] == 0xff) {
     output[0] = 0x05;  //0x05 = gamepad; 0x02 = mouse
     output[1] = 0x00;
-    output[2] = 0x02;  //0x02 = nothing present in controller slot
-    if(ram || motor || (slot && slot->name() == "Transfer Pak")) {
-      output[2] = 0x01;  //0x01 = pak present
+    if(slot) {
+      if(pakDetectLatched) {
+        output[2] = 0x03;  //0x03 = pak inserted
+      } else {
+        output[2] = 0x01;  //0x01 = pak present
+      }
+    } else {
+      output[2] = 0x02;  //0x02 = pak absent
     }
+    pakDetectLatched = false;  //reset flag after reporting pak status
     valid = 1;
   }
 
@@ -177,116 +205,145 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
 
   //read pak
   if(input[0] == 0x02 && send >= 3 && recv >= 1) {
+    u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+
+    //NUS-CNT only touches the first 33 bytes of output (32 data + 1 data CRC);
+    //reads of less than 32 bytes are technically possible, but with no data CRC
+    n8 recv_data_len = min(recv, 32);
+    for(u32 index : range(min(recv, 33))) output[index] = 0x00; //zero out up to 33 bytes
+
+    //check if no pak is connected, DETECT is latched, or address CRC is invalid
+    b1 data_crc_no_pak = 0;
+    if(!slot || pakDetectLatched || pif.addressCRC(address) != (n5)input[2]) {
+      data_crc_no_pak = 1;
+      valid = 1;
+      goto read_pak_data_crc;
+    }
+
     //controller pak
     if(ram) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(recv - 1)) {
-          // read into current bank
-          if(address <= 0x7FFF) output[index] = ram.read<Byte>(bank * 32_KiB + address);
-          else output[index] = 0;
-          address++;
-        }
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
-        valid = 1;
+      for(u32 index : range(recv_data_len)) {
+        // read into current bank
+        if(address <= 0x7FFF) output[index] = ram.read<Byte>(bank * 32_KiB + address);
+        else output[index] = 0;
+        address++;
       }
+      valid = 1;
     }
 
     //rumble pak
     if(motor) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(recv - 1)) {
-          if(address <= 0x7FFF) output[index] = 0;
-          else if(address <= 0x8FFF) output[index] = 0x80;
-          else output[index] = motor->enable() ? 0xFF : 0x00;
-          address++;
-        }
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
-        valid = 1;
+      for(u32 index : range(recv_data_len)) {
+        if(address <= 0x7FFF) output[index] = 0;
+        else if(address <= 0x8FFF) output[index] = 0x80;
+        else output[index] = motor->enable() ? 0xFF : 0x00;
+        address++;
       }
+      valid = 1;
     }
 
     //transfer pak
     if(slot && slot->name() == "Transfer Pak") {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(recv - 1)) output[index] = transferPak.read(address++);
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
-        valid = 1;
-      }
+      for(u32 index : range(recv_data_len)) output[index] = transferPak.read(address++);
+      valid = 1;
+    }
+
+    //bio sensor
+    if(slot && slot->name() == "Bio Sensor") {
+      bioSensor.update();
+      for(u32 index : range(recv_data_len)) output[index] = bioSensor.read(address++);
+      valid = 1;
+    }
+
+read_pak_data_crc:
+    //calculate the data CRC if we have enough recv bytes
+    if(valid && recv >= 33) {
+      output[32] = pif.dataCRC({(const u8*)&output[0], 32});
+      if (data_crc_no_pak) output[32] ^= 0xFF;
     }
   }
 
   //write pak
-  if(input[0] == 0x03 && send >= 3 && recv >= 1) {
+  if(input[0] == 0x03 && send >= 4 && recv >= 1) {
+    u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+    n8 *send_data = &input[3];
+    n8 send_data_len = min(send - 3, (n8)32); //max of 32 bytes can be written at once
+
+    //check if no pak is connected, DETECT is latched, or address CRC is invalid
+    b1 data_crc_no_pak = 0;
+    if(!slot || pakDetectLatched || pif.addressCRC(address) != (n5)input[2]) {
+      data_crc_no_pak = 1;
+      valid = 1;
+      goto write_pak_data_crc;
+    }
+
     //controller pak
     if(ram) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        //check if address is bank switch command
-        if (address == 0x8000) {
-          if (send >= 4) {
-            u8 reqBank = input[3];
-            if (reqBank < system.controllerPakBankCount) {
-              bank = reqBank;
+      //check if address is bank switch command
+      if (address == 0x8000) {
+        if (send >= 4) {
+          u8 reqBank = input[3];
+          if (reqBank < system.controllerPakBankCount) {
+            bank = reqBank;
+          }
+        } else {
+          if (system.homebrewMode) {
+            debug(unusual, "Controller Pak bank switch command with no bank specified");
+          }
+          bank = 0;
+        }
+
+        if (system.homebrewMode) {
+          //Verify we have 32 bytes (1 block) input and each value is the same bank
+          if (send == 35) {
+            u8 bank = input[3];
+            for (u32 i = 4; i < 35; i++) {
+              if (input[i] != bank) {
+                debug(unusual, "Controller Pak bank switch command with mismatched data");
+                break;
+              }
             }
           } else {
-            if (system.homebrewMode) {
-              debug(unusual, "Controller Pak bank switch command with no bank specified");
-            }
-            bank = 0;
+            debug(unusual, "Controller Pak bank switch command with unusual data length");
           }
-
-          if (system.homebrewMode) {
-            //Verify we have 32 bytes (1 block) input and each value is the same bank
-            if (send == 35) {
-              u8 bank = input[3];
-              for (u32 i = 4; i < 35; i++) {
-                if (input[i] != bank) {
-                  debug(unusual, "Controller Pak bank switch command with mismatched data");
-                  break;
-                }
-              }
-            } else {
-              debug(unusual, "Controller Pak bank switch command with invalid data length");
-            }
-          }
-
-
-          output[0] = pif.dataCRC({&input[3], send - 3u});
-          valid = 1;
-        } else {
-          for(u32 index : range(send - 3)) {
-            if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, input[3 + index]);
-            address++;
-          }
-          output[0] = pif.dataCRC({&input[3], send - 3u});
-          valid = 1;
         }
+
+        valid = 1;
+      } else {
+        for(u32 index : range(send_data_len)) {
+          if(address <= 0x7FFF) ram.write<Byte>(bank * 32_KiB + address, send_data[index]);
+          address++;
+        }
+        valid = 1;
       }
     }
 
     //rumble pak
     if(motor) {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        output[0] = pif.dataCRC({&input[3], send - 3u});
-        valid = 1;
-        if(address >= 0xC000) rumble(input[3] & 1);
-      }
+      if(address >= 0xC000) rumble((*send_data) & 1);
+      valid = 1;
     }
 
     //transfer pak
     if(slot && slot->name() == "Transfer Pak") {
-      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
-      if(pif.addressCRC(address) == (n5)input[2]) {
-        for(u32 index : range(send - 3)) {
-          transferPak.write(address++, input[3 + index]);
-        }
-        output[0] = pif.dataCRC({&input[3], send - 3u});
-        valid = 1;
+      for(u32 index : range(send_data_len)) {
+        transferPak.write(address++, send_data[index]);
       }
+      valid = 1;
+    }
+
+    //bio sensor
+    if(slot && slot->name() == "Bio Sensor") {
+      //Bio Sensor is read-only; writes are ignored
+      valid = 1;
+    }
+
+write_pak_data_crc:
+    if(valid) {
+      output[0] = 0x00; //zero out the data CRC
+      //calculate the data CRC if we have enough send bytes
+      if (send_data_len == 32) output[0] = pif.dataCRC({(const u8*)send_data, send_data_len});
+      if (data_crc_no_pak) output[0] ^= 0xFF;
     }
   }
 

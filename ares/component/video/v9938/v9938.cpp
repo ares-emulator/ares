@@ -34,9 +34,9 @@ auto V9938::main() -> void {
       tick(1);
     }
 
-    tick(200);
+    tick(86);
   } else {
-    tick(456);
+    tick(342);
   }
 
   io.hcounter = 0;
@@ -71,7 +71,7 @@ auto V9938::tick(u32 clocks) -> void {
   io.hcounter += clocks;
   while(clocks--) {
     command();
-    step(1);
+    step(2);
   }
 }
 

@@ -6,10 +6,10 @@ struct MSX : System {
 
 auto MSX::load(string location) -> LoadResult {
   auto bios = Pak::read(location);
-  if(!bios) return romNotFound;
+  if(bios.empty()) return romNotFound;
 
   this->location = locate();
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->append("bios.rom", bios);
   return successful;
 }

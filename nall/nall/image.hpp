@@ -47,7 +47,7 @@ struct image {
   image(bool endian, u32 depth, u64 alphaMask, u64 redMask, u64 greenMask, u64 blueMask);
   image(const string& filename);
   image(const void* data, u32 size);
-  image(const vector<u8>& buffer);
+  image(const std::vector<u8>& buffer);
   template<u32 Size> image(const u8 (&Name)[Size]);
   image();
   ~image();
@@ -70,7 +70,7 @@ struct image {
   //fill.hpp
   auto fill(u64 color = 0) -> void;
   auto gradient(u64 a, u64 b, u64 c, u64 d) -> void;
-  auto gradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY, function<f64 (f64, f64)> callback) -> void;
+  auto gradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY, std::function<f64 (f64, f64)> callback) -> void;
   auto crossGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
   auto diamondGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
   auto horizontalGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;

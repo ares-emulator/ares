@@ -98,6 +98,7 @@ ares_add_sources(
     pcd/drive.cpp
     pcd/fader.cpp
     pcd/io.cpp
+    pcd/ldrom2.cpp
     pcd/pcd.hpp
     pcd/scsi.cpp
     pcd/serialization.cpp

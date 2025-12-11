@@ -13,11 +13,11 @@ struct ReadableMemory : AbstractMemory {
 
   auto load(VFS::File fp) -> void override {
     if(!self.size) allocate(fp->size());
-    fp->read({self.data, min(fp->size(), self.size)});
+    fp->read(self.data, min(fp->size(), self.size));
   }
 
   auto save(VFS::File fp) -> void override {
-    fp->write({self.data, min(fp->size(), self.size)});
+    fp->write(self.data, min(fp->size(), self.size));
   }
 
   auto data() -> n8* override {
@@ -44,7 +44,7 @@ struct ReadableMemory : AbstractMemory {
   }
 
   auto serialize(serializer& s) -> void {
-    s(array_span<n8>{self.data, self.size});
+    s(std::span<n8>{self.data, self.size});
   }
 
 private:

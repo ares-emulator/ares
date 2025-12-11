@@ -10,12 +10,11 @@ struct Application {
   static auto locale() -> Locale&;
   static auto modal() -> bool;
   static auto name() -> string;
-  static auto onMain(const function<void ()>& callback = {}) -> void;
-  static auto onOpenFile(const function<void (const string& path)>& callback = {}) -> void;
+  static auto onMain(const std::function<void ()>& callback = {}) -> void;
+  static auto onOpenFile(const std::function<void (const string& path)>& callback = {}) -> void;
   static auto run() -> void;
   static auto scale() -> f32;
   static auto scale(f32 value) -> f32;
-  static auto pendingEvents() -> bool;
   static auto processEvents() -> void;
   static auto quit() -> void;
   static auto screenSaver() -> bool;
@@ -32,10 +31,10 @@ struct Application {
     static auto doActivate() -> void;
     static auto doPreferences() -> void;
     static auto doQuit() -> void;
-    static auto onAbout(const function<void ()>& callback = {}) -> void;
-    static auto onActivate(const function<void ()>& callback = {}) -> void;
-    static auto onPreferences(const function<void ()>& callback = {}) -> void;
-    static auto onQuit(const function<void ()>& callback = {}) -> void;
+    static auto onAbout(const std::function<void ()>& callback = {}) -> void;
+    static auto onActivate(const std::function<void ()>& callback = {}) -> void;
+    static auto onPreferences(const std::function<void ()>& callback = {}) -> void;
+    static auto onQuit(const std::function<void ()>& callback = {}) -> void;
   };
 
   struct Namespace : Locale::Namespace {
@@ -49,18 +48,18 @@ struct Application {
     Locale locale;
     s32 modal = 0;
     string name;
-    function<void ()> onMain;
-    function<void (const string& path)> onOpenFile;
+    std::function<void ()> onMain;
+    std::function<void (const string& path)> onOpenFile;
     bool quit = false;
     f32 scale = 1.0;
     bool screenSaver = true;
     bool toolTips = true;
 
     struct Cocoa {
-      function<void ()> onAbout;
-      function<void ()> onActivate;
-      function<void ()> onPreferences;
-      function<void ()> onQuit;
+      std::function<void ()> onAbout;
+      std::function<void ()> onActivate;
+      std::function<void ()> onPreferences;
+      std::function<void ()> onQuit;
     } cocoa;
   };
 

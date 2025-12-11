@@ -1,8 +1,9 @@
 #include <ws/ws.hpp>
+#include <algorithm>
 
 namespace ares::WonderSwan {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Bandai] WonderSwan",
     "[Bandai] WonderSwan Color",
@@ -12,7 +13,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 
@@ -73,15 +75,15 @@ auto System::load(Node::System& root, string name) -> bool {
     information.model = Model::PocketChallengeV2;
   }
 
-  node = Node::System::create(information.name);
+  node = std::make_shared<Core::System>(information.name);
   node->setAttribute("configuration", name);
-  node->setGame({&System::game, this});
-  node->setRun({&System::run, this});
-  node->setPower({&System::power, this});
-  node->setSave({&System::save, this});
-  node->setUnload({&System::unload, this});
-  node->setSerialize({&System::serialize, this});
-  node->setUnserialize({&System::unserialize, this});
+  node->setGame(std::bind_front(&System::game, this));
+  node->setRun(std::bind_front(&System::run, this));
+  node->setPower(std::bind_front(&System::power, this));
+  node->setSave(std::bind_front(&System::save, this));
+  node->setUnload(std::bind_front(&System::unload, this));
+  node->setSerialize([this](bool save) -> serializer { return serialize(save); });
+  node->setUnserialize(std::bind_front(&System::unserialize, this));
   root = node;
   if(!node->setPak(pak = platform->pak(node))) return false;
 
@@ -166,7 +168,7 @@ auto System::load(Node::System& root, string name) -> bool {
 
   if(auto fp = pak->read("save.eeprom")) {
     if(fp->attribute("loaded").boolean()) {
-      fp->read({eeprom.data, eeprom.size});
+      fp->read(eeprom.data, eeprom.size);
     }
   }
 
@@ -185,7 +187,7 @@ auto System::save() -> void {
   if(!node) return;
 
   if(auto fp = pak->write("save.eeprom")) {
-    fp->write({eeprom.data, eeprom.size});
+    fp->write(eeprom.data, eeprom.size);
   }
 
   cartridge.save();

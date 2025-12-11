@@ -18,11 +18,13 @@ auto Program::create() -> void {
   inputDriverUpdate();
 
   _isRunning = true;
-  worker = thread::create({&Program::emulatorRunLoop, this});
+  worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
+  program.rewindReset();
 
-  if(startGameLoad) {
+  if(!startGameLoad.empty()) {
     Program::Guard guard;
-    auto gameToLoad = startGameLoad.takeFirst();
+    auto gameToLoad = startGameLoad.front();
+    startGameLoad.erase(startGameLoad.begin());
     if(startSystem) {
       for(auto &emulator: emulators) {
         if(emulator->name == startSystem) {

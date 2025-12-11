@@ -1,10 +1,12 @@
 #pragma once
 
+#include <algorithm>
+
 namespace nall::Markup {
 
 struct Node;
 struct ManagedNode;
-using SharedNode = shared_pointer<ManagedNode>;
+using SharedNode = std::shared_ptr<ManagedNode>;
 
 struct ManagedNode {
   ManagedNode() = default;
@@ -14,7 +16,7 @@ struct ManagedNode {
   auto clone() const -> SharedNode {
     SharedNode clone{new ManagedNode(_name, _value)};
     for(auto& child : _children) {
-      clone->_children.append(child->clone());
+      clone->_children.push_back(child->clone());
     }
     return clone;
   }
@@ -23,9 +25,9 @@ struct ManagedNode {
     _name = source->_name;
     _value = source->_value;
     _metadata = source->_metadata;
-    _children.reset();
+    _children.clear();
     for(auto child : source->_children) {
-      _children.append(child->clone());
+      _children.push_back(child->clone());
     }
   }
 
@@ -33,10 +35,10 @@ protected:
   string _name;
   string _value;
   uintptr _metadata = 0;
-  vector<SharedNode> _children;
+  std::vector<SharedNode> _children;
 
   auto _evaluate(string query) const -> bool;
-  auto _find(const string& query) const -> vector<Node>;
+  auto _find(const string& query) const -> std::vector<Node>;
   auto _lookup(const string& path) const -> Node;
   auto _create(const string& path) -> Node;
 
@@ -44,16 +46,16 @@ protected:
 };
 
 struct Node {
-  Node() : shared(new ManagedNode) {}
-  Node(const SharedNode& source) : shared(source ? source : new ManagedNode) {}
-  Node(const nall::string& name) : shared(new ManagedNode(name)) {}
-  Node(const nall::string& name, const nall::string& value) : shared(new ManagedNode(name, value)) {}
+  Node() : shared(std::make_shared<ManagedNode>()) {}
+  Node(const SharedNode& source) : shared(source ? source : std::make_shared<ManagedNode>()) {}
+  Node(const nall::string& name) : shared(std::make_shared<ManagedNode>(name)) {}
+  Node(const nall::string& name, const nall::string& value) : shared(std::make_shared<ManagedNode>(name, value)) {}
 
-  auto unique() const -> bool { return shared.unique(); }
+  auto unique() const -> bool { return shared.use_count() == 1; }
   auto clone() const -> Node { return shared->clone(); }
   auto copy(Node source) -> void { return shared->copy(source.shared); }
 
-  explicit operator bool() const { return shared->_name || shared->_children; }
+  explicit operator bool() const { return shared->_name || !shared->_children.empty(); }
   auto name() const -> nall::string { return shared->_name; }
   auto value() const -> nall::string { return shared->_value; }
 
@@ -80,15 +82,15 @@ struct Node {
   auto setName(const nall::string& name = "") -> Node& { shared->_name = name; return *this; }
   auto setValue(const nall::string& value = "") -> Node& { shared->_value = value; return *this; }
 
-  auto reset() -> void { shared->_children.reset(); }
+  auto reset() -> void { shared->_children.clear(); }
   auto size() const -> u32 { return shared->_children.size(); }
 
-  auto prepend(const Node& node) -> void { shared->_children.prepend(node.shared); }
-  auto append(const Node& node) -> void { shared->_children.append(node.shared); }
+  auto prepend(const Node& node) -> void { shared->_children.insert(shared->_children.begin(), node.shared); }
+  auto append(const Node& node) -> void { shared->_children.push_back(node.shared); }
   auto remove(const Node& node) -> bool {
     for(auto n : range(size())) {
       if(node.shared == shared->_children[n]) {
-        return shared->_children.remove(n), true;
+        return shared->_children.erase(shared->_children.begin() + n), true;
       }
     }
     return false;
@@ -96,12 +98,12 @@ struct Node {
 
   auto insert(u32 position, const Node& node) -> bool {
     if(position > size()) return false;  //used > instead of >= to allow indexed-equivalent of append()
-    return shared->_children.insert(position, node.shared), true;
+    return shared->_children.insert(shared->_children.begin() + position, node.shared), true;
   }
 
   auto remove(u32 position) -> bool {
     if(position >= size()) return false;
-    return shared->_children.remove(position), true;
+    return shared->_children.erase(shared->_children.begin() + position), true;
   }
 
   auto swap(u32 x, u32 y) -> bool {
@@ -113,8 +115,8 @@ struct Node {
     return nall::string::compare(shared->_name, node.shared->_name) < 0;
   }
 
-  auto sort(function<bool (Node, Node)> comparator = [](auto x, auto y) { return x < y; }) -> void {
-    nall::sort(shared->_children.data(), shared->_children.size(), [&](auto x, auto y) {
+  auto sort(std::function<bool (Node, Node)> comparator = [](auto x, auto y) { return x < y; }) -> void {
+    std::sort(shared->_children.begin(), shared->_children.end(), [&](auto x, auto y) {
       return comparator(x, y);  //this call converts SharedNode objects to Node objects
     });
   }
@@ -126,7 +128,7 @@ struct Node {
 
   auto operator[](const nall::string& path) const -> Node { return shared->_lookup(path); }
   auto operator()(const nall::string& path) -> Node { return shared->_create(path); }
-  auto find(const nall::string& query) const -> vector<Node> { return shared->_find(query); }
+  auto find(const nall::string& query) const -> std::vector<Node> { return shared->_find(query); }
 
   struct iterator {
     auto operator*() -> Node { return {source.shared->_children[position]}; }

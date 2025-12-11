@@ -2,7 +2,7 @@ struct Atari2600 : Emulator {
   Atari2600();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 };
 
 Atari2600::Atari2600() {
@@ -19,7 +19,7 @@ Atari2600::Atari2600() {
     device.digital("TV Type",          virtualPorts[0].pad.north);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 
   for(auto id : range(2)) {
@@ -34,7 +34,7 @@ Atari2600::Atari2600() {
 
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -77,7 +77,7 @@ auto Atari2600::save() -> bool {
   return true;
 }
 
-auto Atari2600::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto Atari2600::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Atari 2600") return system->pak;
   if(node->name() == "Atari 2600 Cartridge") return game->pak;
   return {};

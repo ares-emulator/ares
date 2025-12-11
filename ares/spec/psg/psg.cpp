@@ -35,7 +35,7 @@ auto PSG::step(uint clocks) -> void {
 
 auto PSG::power() -> void {
   AY38910::power();
-  Thread::create(system.frequency() / 16, {&PSG::main, this});
+  Thread::create(system.frequency() / 16, std::bind_front(&PSG::main, this));
 
   for(uint level : range(16)) {
     volume[level] = 1.0 / pow(2, 1.0 / 2 * (15 - level));

@@ -349,8 +349,9 @@ struct RDP : Thread, Memory::RCP<RDP> {
     struct Test {
       n1  enable;
       n7  address;
-      n32 data;
+      array<u32[128]> data;
     } test;
+
   } io{*this};
 };
 

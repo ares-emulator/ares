@@ -2,9 +2,9 @@
 
 namespace nall::Encode {
 
-inline auto Huffman(array_view<u8> input) -> vector<u8> {
-  vector<u8> output;
-  for(u32 byte : range(8)) output.append(input.size() >> byte * 8);
+inline auto Huffman(std::span<const u8> input) -> std::vector<u8> {
+  std::vector<u8> output;
+  for(u32 byte : range(8)) output.push_back((u8)(input.size() >> (byte * 8)));
 
   struct Node {
     u32 frequency = 0;
@@ -50,7 +50,7 @@ inline auto Huffman(array_view<u8> input) -> vector<u8> {
   u32 byte = 0, bits = 0;
   auto write = [&](bool bit) {
     byte = byte << 1 | bit;
-    if(++bits == 8) output.append(byte), bits = 0;
+    if(++bits == 8) output.push_back((u8)byte), bits = 0;
   };
 
   //only the upper half of the table is needed for decompression

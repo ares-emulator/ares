@@ -3,7 +3,7 @@ struct PocketChallengeV2 : Emulator {
   auto load(Menu) -> void override;
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 };
 
 PocketChallengeV2::PocketChallengeV2() {
@@ -24,7 +24,7 @@ PocketChallengeV2::PocketChallengeV2() {
     device.digital("Escape", virtualPorts[0].pad.select);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -64,7 +64,7 @@ auto PocketChallengeV2::save() -> bool {
   return true;
 }
 
-auto PocketChallengeV2::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto PocketChallengeV2::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Pocket Challenge V2") return system->pak;
   if(node->name() == "Pocket Challenge V2 Cartridge") return game->pak;
   return {};

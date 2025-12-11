@@ -1,8 +1,9 @@
 #include <gba/gba.hpp>
+#include <algorithm>
 
 namespace ares::GameBoyAdvance {
 
-auto enumerate() -> vector<string> {
+auto enumerate() -> std::vector<string> {
   return {
     "[Nintendo] Game Boy Advance",
     "[Nintendo] Game Boy Player",
@@ -10,7 +11,8 @@ auto enumerate() -> vector<string> {
 }
 
 auto load(Node::System& node, string name) -> bool {
-  if(!enumerate().find(name)) return false;
+  auto list = enumerate();
+  if(std::find(list.begin(), list.end(), name) == list.end()) return false;
   return system.load(node, name);
 }
 
@@ -52,15 +54,15 @@ auto System::load(Node::System& root, string name) -> bool {
     information.model = Model::GameBoyPlayer;
   }
 
-  node = Node::System::create(information.name);
+  node = std::make_shared<Core::System>(information.name);
   node->setAttribute("configuration", name);
-  node->setGame({&System::game, this});
-  node->setRun({&System::run, this});
-  node->setPower({&System::power, this});
-  node->setSave({&System::save, this});
-  node->setUnload({&System::unload, this});
-  node->setSerialize({&System::serialize, this});
-  node->setUnserialize({&System::unserialize, this});
+  node->setGame(std::bind_front(&System::game, this));
+  node->setRun(std::bind_front(&System::run, this));
+  node->setPower(std::bind_front(&System::power, this));
+  node->setSave(std::bind_front(&System::save, this));
+  node->setUnload(std::bind_front(&System::unload, this));
+  node->setSerialize([this](bool save) -> serializer { return serialize(save); });
+  node->setUnserialize(std::bind_front(&System::unserialize, this));
   root = node;
   if(!node->setPak(pak = platform->pak(node))) return false;
 

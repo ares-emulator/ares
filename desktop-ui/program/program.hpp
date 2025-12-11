@@ -6,7 +6,7 @@ struct Program : ares::Platform {
   //platform.cpp
   auto attach(ares::Node::Object) -> void override;
   auto detach(ares::Node::Object) -> void override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto event(ares::Event) -> void override;
   auto log(ares::Node::Debugger::Tracer::Tracer tracer, string_view message) -> void override;
   auto status(string_view message) -> void override;
@@ -17,8 +17,8 @@ struct Program : ares::Platform {
   auto cheat(u32 address) -> maybe<u32> override;
 
   //load.cpp
-  auto identify(const string& filename) -> shared_pointer<Emulator>;
-  auto load(shared_pointer<Emulator> emulator, string location = {}) -> bool;
+  auto identify(const string& filename) -> std::shared_ptr<Emulator>;
+  auto load(std::shared_ptr<Emulator> emulator, string location = {}) -> bool;
   auto load(string location) -> bool;
   auto unload() -> void;
 
@@ -57,14 +57,14 @@ struct Program : ares::Platform {
   auto inputDriverUpdate() -> void;
 
   bool startFullScreen = false;
-  vector<string> startGameLoad;
+  std::vector<string> startGameLoad;
   bool noFilePrompt = false;
 
   string startSystem;
   string startShader;
 
-  vector<ares::Node::Video::Screen> screens;
-  vector<ares::Node::Audio::Stream> streams;
+  std::vector<ares::Node::Video::Screen> screens;
+  std::vector<ares::Node::Audio::Stream> streams;
 
   bool paused = false;
   bool fastForwarding = false;
@@ -82,7 +82,7 @@ struct Program : ares::Platform {
   //rewind.cpp
   struct Rewind {
     enum class Mode : u32 { Playing, Rewinding } mode = Mode::Playing;
-    vector<serializer> history;
+    std::vector<serializer> history;
     u32 length = 0;
     u32 frequency = 0;
     u32 counter = 0;
@@ -98,7 +98,7 @@ struct Program : ares::Platform {
 
   class Guard;
 
-  vector<Message> messages;
+  std::vector<Message> messages;
   string configuration;
   atomic<u64> vblanksPerSecond = 0;
 

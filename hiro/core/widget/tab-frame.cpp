@@ -12,8 +12,8 @@ auto mTabFrame::destruct() -> void {
 //
 
 auto mTabFrame::append(sTabFrameItem item) -> type& {
-  if(!state.items) item->state.selected = true;
-  state.items.append(item);
+  if(state.items.empty()) item->state.selected = true;
+  state.items.push_back(item);
   item->setParent(this, itemCount() - 1);
   signal(append, item);
   return *this;
@@ -32,16 +32,17 @@ auto mTabFrame::doMove(sTabFrameItem from, sTabFrameItem to) const -> void {
 }
 
 auto mTabFrame::item(unsigned position) const -> TabFrameItem {
-  return state.items(position, {});
+  if(position < state.items.size()) return state.items[position];
+  return {};
 }
 
 auto mTabFrame::itemCount() const -> unsigned {
   return state.items.size();
 }
 
-auto mTabFrame::items() const -> vector<TabFrameItem> {
-  vector<TabFrameItem> items;
-  for(auto& item : state.items) items.append(item);
+auto mTabFrame::items() const -> std::vector<TabFrameItem> {
+  std::vector<TabFrameItem> items;
+  for(auto& item : state.items) items.push_back(item);
   return items;
 }
 
@@ -49,17 +50,17 @@ auto mTabFrame::navigation() const -> Navigation {
   return state.navigation;
 }
 
-auto mTabFrame::onChange(const function<void ()>& callback) -> type& {
+auto mTabFrame::onChange(const std::function<void ()>& callback) -> type& {
   state.onChange = callback;
   return *this;
 }
 
-auto mTabFrame::onClose(const function<void (TabFrameItem)>& callback) -> type& {
+auto mTabFrame::onClose(const std::function<void (TabFrameItem)>& callback) -> type& {
   state.onClose = callback;
   return *this;
 }
 
-auto mTabFrame::onMove(const function<void (TabFrameItem, TabFrameItem)>& callback) -> type& {
+auto mTabFrame::onMove(const std::function<void (TabFrameItem, TabFrameItem)>& callback) -> type& {
   state.onMove = callback;
   return *this;
 }
@@ -68,7 +69,7 @@ auto mTabFrame::remove(sTabFrameItem item) -> type& {
   auto offset = item->offset();
   item->setParent();
   signal(remove, item);
-  state.items.remove(item->offset());
+  state.items.erase(state.items.begin() + item->offset());
   for(auto n : range(offset, itemCount())) {
     state.items[n]->adjustOffset(-1);
   }
@@ -76,7 +77,7 @@ auto mTabFrame::remove(sTabFrameItem item) -> type& {
 }
 
 auto mTabFrame::reset() -> type& {
-  while(state.items) remove(state.items.right());
+  while(!state.items.empty()) remove(state.items.back());
   return *this;
 }
 
@@ -106,7 +107,7 @@ auto mTabFrame::setNavigation(Navigation navigation) -> type& {
 }
 
 auto mTabFrame::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& item : reverse(state.items)) item->destruct();
+  for(auto& item : state.items | std::views::reverse) item->destruct();
   mObject::setParent(parent, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());
   return *this;

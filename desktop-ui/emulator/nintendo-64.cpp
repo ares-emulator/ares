@@ -5,9 +5,9 @@ struct Nintendo64 : Emulator {
   auto portMenu(Menu& portMenu, ares::Node::Port port) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> disk;
+  std::shared_ptr<mia::Pak> disk;
   u32 regionID = 0;
   sTimer diskInsertTimer;
 };
@@ -52,7 +52,7 @@ Nintendo64::Nintendo64() {
     device.digital ("Right", virtualPorts[id].mouse.right);
     port.append(device); }
   
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -68,11 +68,11 @@ auto Nintendo64::load() -> LoadResult {
   string name;
   if(game->pak->attribute("dd").boolean()) {
     //use 64DD firmware settings
-    vector<Firmware> firmware;
+    std::vector<Firmware> firmware;
     for(auto& emulator : emulators) {
       if(emulator->name == "Nintendo 64DD") firmware = emulator->firmware;
     }
-    if(!firmware) return otherError;  //should never occur
+    if(firmware.empty()) return otherError;  //should never occur
     name = "Nintendo 64DD";
 
     disk = mia::Medium::create("Nintendo 64DD");
@@ -174,6 +174,9 @@ auto Nintendo64::load() -> LoadResult {
           } else if(game->pak->attribute({"port", id+1, "/rpak"}).boolean()) {
             port->allocate("Rumble Pak");
             port->connect();
+          } else if(game->pak->attribute({"port", id+1, "/biosensor"}).boolean()) {
+            port->allocate("Bio Sensor");
+            port->connect();
           }
         }
       }
@@ -190,6 +193,7 @@ auto Nintendo64::load(Menu menu) -> void {
     MenuItem changeDisk{&menu};
     changeDisk.setIcon(Icon::Device::Optical);
     changeDisk.setText("Change Disk").onActivate([&] {
+      Program::Guard guard;
       save();
       auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
       drive->disconnect();
@@ -200,6 +204,7 @@ auto Nintendo64::load(Menu menu) -> void {
 
       //give the emulator core a few seconds to notice an empty drive state before reconnecting
       diskInsertTimer->onActivate([&] {
+        Program::Guard guard;
         diskInsertTimer->setEnabled(false);
         auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
         drive->allocate();
@@ -211,86 +216,110 @@ auto Nintendo64::load(Menu menu) -> void {
 
 auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
   if(port->type() != "Controller") return;
+  auto peripheral = port->connected();
+  // Only show Pak menu if a Gamepad is connected
+  if(!peripheral || peripheral->name() != "Gamepad") return;
+  
+  // Check what pak is currently connected
+  ares::Node::Peripheral pak = nullptr;
+  if(auto pakPort = peripheral->find<ares::Node::Port>("Pak")) {
+    pak = pakPort->connected();
+  }
 
   const string portNum = port->name()[port->name().length() - 1];
 
-  // remove this check to enable pak menu option for all 4 controllers
-  if(portNum == "1") {
+  if(portMenu.actionCount() > 0) portMenu.append(MenuSeparator());
+  Menu pakMenu{&portMenu};
+  pakMenu.setText("Pak");
+  Group pakGroup;
 
-    if(portMenu.actionCount() > 0) portMenu.append(MenuSeparator());
-    Menu pakMenu{&portMenu};
-    pakMenu.setText("Pak");
-    Group pakGroup;
-    MenuRadioItem nothing{&pakMenu};;
-    nothing.setText("Nothing");
-    nothing.setAttribute<ares::Node::Port>("port", port);
-    nothing.onActivate([=] {
-      auto port = nothing.attribute<ares::Node::Port>("port");
-      const string portName = port->name();
-      if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
-        port->disconnect();
-        auto peripheral = port->allocate("Gamepad");
-        port->connect();
+  // Initialize all menu items and add them all to the group for appropriate radio selection behavior
+  MenuRadioItem nothing{&pakMenu}, cpak{&pakMenu}, rpak{&pakMenu}, tpak{&pakMenu}, biosensor{&pakMenu};
+  pakGroup.append(nothing);
+  pakGroup.append(cpak);
+  pakGroup.append(rpak);
+  pakGroup.append(tpak);
+  pakGroup.append(biosensor);
+
+  // Show Nothing option
+  nothing.setText("Nothing");
+  nothing.setAttribute<ares::Node::Port>("port", port);
+  if(!pak) nothing.setChecked();
+  nothing.onActivate([=] {
+    Program::Guard guard;
+    auto port = nothing.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      if(auto peripheral = port->connected()) {
+        if(auto pakPort = peripheral->find<ares::Node::Port>("Pak")) {
+          pakPort->disconnect();
+        }
       }
-    });
-    pakGroup.append(nothing);
+    }
+    presentation.refreshSystemMenu();
+  });
 
-    MenuRadioItem cpak{&pakMenu};
-    cpak.setAttribute<ares::Node::Port>("port", port);
-    cpak.setText("Controller Pak");
-    cpak.onActivate([=] {
-      auto port = cpak.attribute<ares::Node::Port>("port");
-      const string portName = port->name();
-      if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
-        port->disconnect();
-        auto peripheral = port->allocate("Gamepad");
-        port->connect();
-        if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+  // Show Controller Pak option
+  cpak.setAttribute<ares::Node::Port>("port", port);
+  cpak.setText("Controller Pak");
+  if(pak && pak->name() == "Controller Pak") cpak.setChecked();
+  cpak.onActivate([=] {
+    Program::Guard guard;
+    auto port = cpak.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      if(auto peripheral = port->connected()) {
+        if(auto pakPort = peripheral->find<ares::Node::Port>("Pak")) {
+          pakPort->disconnect();
           emulator->gamepad = mia::Pak::create("Nintendo 64");
           emulator->gamepad->pak->append("save.pak", 32_KiB);
           string pakExt = ".pak";
           if(portNum != "1") { pakExt = string(".", portNum, ".pak");}
           emulator->gamepad->load("save.pak", pakExt, emulator->game->location);
-          port->allocate("Controller Pak");
-          port->connect();
+          pakPort->allocate("Controller Pak");
+          pakPort->connect();
         }
       }
-    });
-    pakGroup.append(cpak);
+    }
+    presentation.refreshSystemMenu();
+  });
 
-    MenuRadioItem rpak{&pakMenu};
-    rpak.setAttribute<ares::Node::Port>("port", port);
-    rpak.setText("Rumble Pak");
-    rpak.onActivate([=] {
-      auto port = rpak.attribute<ares::Node::Port>("port");
-      const string portName = port->name();
-      if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
-        port->disconnect();
-        auto peripheral = port->allocate("Gamepad");
-        port->connect();
-        if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-          port->allocate("Rumble Pak");
-          port->connect();
+  // Show Rumble Pak option
+  rpak.setAttribute<ares::Node::Port>("port", port);
+  rpak.setText("Rumble Pak");
+  if(pak && pak->name() == "Rumble Pak") rpak.setChecked();
+  rpak.onActivate([=] {
+    Program::Guard guard;
+    auto port = rpak.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      if(auto peripheral = port->connected()) {
+        if(auto pakPort = peripheral->find<ares::Node::Port>("Pak")) {
+          pakPort->disconnect();
+          pakPort->allocate("Rumble Pak");
+          pakPort->connect();
         }
       }
-    });
-    pakGroup.append(rpak);
+    }
+    presentation.refreshSystemMenu();
+  });
 
-    MenuRadioItem tpak{&pakMenu};
-    tpak.setAttribute<ares::Node::Port>("port", port);
-    tpak.setText("Transfer Pak");
-    tpak.onActivate([=] {
-      auto port = tpak.attribute<ares::Node::Port>("port");
-      const string portName = port->name();
-      if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
-        port->disconnect();
-        auto peripheral = port->allocate("Gamepad");
-        port->connect();
-        if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+  // Show Transfer Pak option if Game Boy core is available
 #if defined(CORE_GB)
+  tpak.setAttribute<ares::Node::Port>("port", port);
+  tpak.setText("Transfer Pak");
+  if(pak && pak->name() == "Transfer Pak") tpak.setChecked();
+  tpak.onActivate([=] {
+    Program::Guard guard;
+    auto port = tpak.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      if(auto peripheral = port->connected()) {
+        if(auto pakPort = peripheral->find<ares::Node::Port>("Pak")) {
+          pakPort->disconnect();
           emulator->gb.reset();
-          auto transferPak = port->allocate("Transfer Pak");
-          port->connect();
+          auto transferPak = pakPort->allocate("Transfer Pak");
+          pakPort->connect();
 
           if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
             emulator->gb = mia::Medium::create("Game Boy Color");
@@ -299,22 +328,57 @@ auto Nintendo64::portMenu(Menu& portMenu, ares::Node::Port port) -> void {
               slot->allocate();
               slot->connect();
             } else {
-              port->disconnect();
+              pakPort->disconnect();
               emulator->gb.reset();
             }
           }
-#endif
         }
       }
-    });
-    pakGroup.append(tpak);
+    }
+    presentation.refreshSystemMenu();
+  });
+#endif
 
-    // set currently enabled pak
-    // Note: based on initialization routine in desktop-ui/emulator/nintendo-64.cpp & nintedo-64dd.cpp
-    if(emulator->game->pak->attribute("tpak").boolean() && portNum == "1") tpak.setChecked();
-    else if(emulator->game->pak->attribute("cpak").boolean() && portNum == "1") cpak.setChecked();
-    else if(emulator->game->pak->attribute("rpak").boolean()) rpak.setChecked();
-    else nothing.setChecked();
+  // Show Bio Sensor option
+  biosensor.setAttribute<ares::Node::Port>("port", port);
+  biosensor.setText("Bio Sensor");
+  if(pak && pak->name() == "Bio Sensor") biosensor.setChecked();
+  biosensor.onActivate([=] {
+    Program::Guard guard;
+    auto port = biosensor.attribute<ares::Node::Port>("port");
+    const string portName = port->name();
+    if(auto port = emulator->root->find<ares::Node::Port>(portName)) {
+      if(auto peripheral = port->connected()) {
+        if(auto pakPort = peripheral->find<ares::Node::Port>("Pak")) {
+          pakPort->disconnect();
+          pakPort->allocate("Bio Sensor");
+          pakPort->connect();
+        }
+      }
+    }
+    presentation.refreshSystemMenu();
+  });
+  
+  // Show Bio Sensor BPM menu if Bio Sensor is connected
+  if(pak && pak->name() == "Bio Sensor") {
+    // Find BPM setting directly from the Bio Sensor pak
+    if(auto bpmSetting = pak->find<ares::Node::Setting::Integer>("Bio Sensor BPM")) {
+      portMenu.append(MenuSeparator());
+      Menu bpmMenu{&portMenu};
+      bpmMenu.setText(bpmSetting->name());
+      
+      Group bpmGroup;
+      for(auto value : bpmSetting->readAllowedValues()) {
+        MenuRadioItem item{&bpmMenu};
+        item.setText({value, " BPM"});
+        s64 bpmValue = value.integer();
+        if(bpmSetting->value() == bpmValue) item.setChecked();
+        item.onActivate([bpmSetting, bpmValue]() mutable {
+          bpmSetting->setValue(bpmValue);
+        });
+        bpmGroup.append(item);
+      }
+    }
   }
 }
 
@@ -338,7 +402,7 @@ auto Nintendo64::save() -> bool {
   return true;
 }
 
-auto Nintendo64::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto Nintendo64::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Nintendo 64") return system->pak;
   if(node->name() == "Nintendo 64 Cartridge") return game->pak;
   if(node->name() == "Nintendo 64DD Disk" && disk) return disk->pak;

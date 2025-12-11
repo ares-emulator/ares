@@ -2,9 +2,9 @@ struct Mega32X : Emulator {
   Mega32X();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> disc;
+  std::shared_ptr<mia::Pak> disc;
   u32 regionID = 0;
 };
 
@@ -39,7 +39,7 @@ Mega32X::Mega32X() {
     device.digital ("Start",  virtualPorts[id].mouse.extra);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -59,11 +59,11 @@ auto Mega32X::load() -> LoadResult {
   string name;
   if(game->pak->attribute("megacd").boolean()) {
     //use Mega CD firmware settings
-    vector<Firmware> firmware;
+    std::vector<Firmware> firmware;
     for(auto& emulator : emulators) {
       if(emulator->name == "Mega CD") firmware = emulator->firmware;
     }
-    if(!firmware) return otherError;  //should never occur
+    if(firmware.empty()) return otherError;  //should never occur
     name = "Mega CD 32X";
     system = mia::System::create("Mega CD 32X");
     result = system->load(firmware[regionID].location);
@@ -119,7 +119,7 @@ auto Mega32X::save() -> bool {
   return true;
 }
 
-auto Mega32X::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto Mega32X::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Mega Drive") return system->pak;
   if(node->name() == "Mega Drive Cartridge") return game->pak;
   if(node->name() == "Mega CD Disc" && disc) return disc->pak;

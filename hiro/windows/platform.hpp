@@ -11,7 +11,7 @@ struct AppMessage {
 
 using WindowProc = auto (CALLBACK *)(HWND, UINT, WPARAM, LPARAM) -> LRESULT;
 
-static vector<wObject> windows;
+static std::vector<wObject> windows;
 
 }
 

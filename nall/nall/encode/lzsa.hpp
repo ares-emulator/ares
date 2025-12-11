@@ -8,25 +8,25 @@
 
 namespace nall::Encode {
 
-inline auto LZSA(array_view<u8> input) -> vector<u8> {
-  vector<u8> output;
-  for(u32 byte : range(8)) output.append(input.size() >> byte * 8);
+inline auto LZSA(std::span<const u8> input) -> std::vector<u8> {
+  std::vector<u8> output;
+  for(u32 byte : range(8)) output.push_back((u8)(input.size() >> (byte * 8)));
 
   auto suffixArray = SuffixArray(input).lpf();
   u32 index = 0;
-  vector<u8> flags;
-  vector<u8> literals;
-  vector<u8> stringLengths;
-  vector<u8> stringOffsets;
+  std::vector<u8> flags;
+  std::vector<u8> literals;
+  std::vector<u8> stringLengths;
+  std::vector<u8> stringOffsets;
 
   u32 byte = 0, bits = 0;
   auto flagWrite = [&](bool bit) {
     byte = byte << 1 | bit;
-    if(++bits == 8) flags.append(byte), bits = 0;
+    if(++bits == 8) flags.push_back((u8)byte), bits = 0;
   };
 
   auto literalWrite = [&](u8 literal) {
-    literals.append(literal);
+    literals.push_back(literal);
   };
 
   auto lengthWrite = [&](u64 length) {
@@ -35,14 +35,14 @@ inline auto LZSA(array_view<u8> input) -> vector<u8> {
     else if(length < 1 << 21) length = length << 3 |   0b100;
     else if(length < 1 << 28) length = length << 4 |  0b1000;
     else  /*length < 1 << 35*/length = length << 5 | 0b10000;
-    while(length) stringLengths.append(length), length >>= 8;
+    while(length) stringLengths.push_back((u8)length), length >>= 8;
   };
 
   auto offsetWrite = [&](u32 offset) {
-    stringOffsets.append(offset >>  0); if(index < 1 <<  8) return;
-    stringOffsets.append(offset >>  8); if(index < 1 << 16) return;
-    stringOffsets.append(offset >> 16); if(index < 1 << 24) return;
-    stringOffsets.append(offset >> 24);
+    stringOffsets.push_back((u8)(offset >>  0)); if(index < 1 <<  8) return;
+    stringOffsets.push_back((u8)(offset >>  8)); if(index < 1 << 16) return;
+    stringOffsets.push_back((u8)(offset >> 16)); if(index < 1 << 24) return;
+    stringOffsets.push_back((u8)(offset >> 24));
   };
 
   while(index < input.size()) {
@@ -70,15 +70,15 @@ inline auto LZSA(array_view<u8> input) -> vector<u8> {
   }
   while(bits) flagWrite(0);
 
-  auto save = [&](const vector<u8>& buffer) {
-    for(u32 byte : range(8)) output.append(buffer.size() >> byte * 8);
-    output.append(buffer);
+  auto save = [&](const std::vector<u8>& buffer) {
+    for(u32 byte : range(8)) output.push_back((u8)(buffer.size() >> (byte * 8)));
+    std::ranges::copy(buffer, std::back_inserter(output));
   };
 
-  save(Encode::Huffman(flags));
-  save(Encode::Huffman(literals));
-  save(Encode::Huffman(stringLengths));
-  save(Encode::Huffman(stringOffsets));
+  save(Encode::Huffman({flags.data(), flags.size()}));
+  save(Encode::Huffman({literals.data(), literals.size()}));
+  save(Encode::Huffman({stringLengths.data(), stringLengths.size()}));
+  save(Encode::Huffman({stringOffsets.data(), stringOffsets.size()}));
 
   return output;
 }

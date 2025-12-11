@@ -68,16 +68,19 @@ auto CPU::ioSpeed(n16 port) -> n32 {
 }
 
 auto CPU::in(n16 port) -> n8 {
-  return bus.readIO(port);
+  n8 data = bus.readIO(port);
+  debugger.portRead(port, data);
+  return data;
 }
 
 auto CPU::out(n16 port, n8 data) -> void {
+  debugger.portWrite(port, data);
   return bus.writeIO(port, data);
 }
 
 auto CPU::power() -> void {
   V30MZ::power();
-  Thread::create(3'072'000, {&CPU::main, this});
+  Thread::create(3'072'000, std::bind_front(&CPU::main, this));
 
   bus.map(this, 0x00a0);
   bus.map(this, 0x00b0);

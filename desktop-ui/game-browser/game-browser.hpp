@@ -7,7 +7,7 @@ struct GameBrowserEntry {
 
 struct GameBrowserWindow : Window {
   GameBrowserWindow();
-  auto show(shared_pointer<Emulator> emulator) -> void;
+  auto show(std::shared_ptr<Emulator> emulator) -> void;
   auto refresh() -> void;
 
   VerticalLayout layout{this};
@@ -16,8 +16,8 @@ struct GameBrowserWindow : Window {
     LineEdit searchInput{&searchLayout, Size{~0, 0}};
   TableView gameList{&layout, Size{~0, ~0}};
 
-  vector<GameBrowserEntry> games;
-  shared_pointer<Emulator> emulator;
+  std::vector<GameBrowserEntry> games;
+  std::shared_ptr<Emulator> emulator;
 };
 
 namespace Instances { extern Instance<GameBrowserWindow> gameBrowserWindow; }

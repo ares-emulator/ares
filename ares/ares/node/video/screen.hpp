@@ -18,7 +18,7 @@ struct Screen : Video {
   auto aspectY() const -> f64 { return _aspectY; }
   auto overscan() const -> bool { return _overscan; }
   auto colors() const -> u32 { return _colors; }
-  auto pixels(bool frame = 0) -> array_span<u32>;
+  auto pixels(bool frame = 0) -> std::span<u32>;
 
   auto saturation() const -> double { return _saturation; }
   auto gamma() const -> double { return _gamma; }
@@ -32,7 +32,7 @@ struct Screen : Video {
   auto resetPalette() -> void;
   auto resetSprites() -> void;
 
-  auto setRefresh(function<void ()> refresh) -> void;
+  auto setRefresh(std::function<void ()> refresh) -> void;
   auto setViewport(u32 x, u32 y, u32 width, u32 height) -> void;
   auto refreshRateHint(double refreshRate) -> void;
   auto refreshRateHint(double pixelFrequency, int dotsPerLine, int linesPerFrame) -> void;
@@ -58,11 +58,12 @@ struct Screen : Video {
   auto attach(Node::Video::Sprite) -> void;
   auto detach(Node::Video::Sprite) -> void;
 
-  auto colors(u32 colors, function<n64 (n32)> color) -> void;
+  auto colors(u32 colors, std::function<n64 (n32)> color) -> void;
   auto frame() -> void;
   auto refresh() -> void;
   auto lookupPalette(u32 index) -> u32;
-  auto overrideLineNextDraw(u32 y, const u32* source) -> void;
+  auto overrideLineDraw(u32 y, const u32* source) -> void;
+  auto clearOverrideLineDraw(u32 y) -> void;
 
   auto serialize(string& output, string depth) -> void override;
   auto unserialize(Markup::Node node) -> void override;
@@ -90,15 +91,15 @@ protected:
   bool _overscan = true;
   u32  _rotation = 0;  //counter-clockwise (90 = left, 270 = right)
 
-  function<n64 (n32)> _color;
-  unique_pointer<u32[]> _inputA;
-  unique_pointer<u32[]> _inputB;
-  unique_pointer<u32[]> _output;
-  unique_pointer<u32[]> _rotate;
-  unique_pointer<u32[]> _palette;
-  vector<n1> _lineOverrideActive;
-  vector<const u32*> _lineOverride;
-  vector<Node::Video::Sprite> _sprites;
+  std::function<n64 (n32)> _color;
+  std::unique_ptr<u32[]> _inputA;
+  std::unique_ptr<u32[]> _inputB;
+  std::unique_ptr<u32[]> _output;
+  std::unique_ptr<u32[]> _rotate;
+  std::unique_ptr<u32[]> _palette;
+  std::vector<n1> _lineOverrideActive;
+  std::vector<const u32*> _lineOverride;
+  std::vector<Node::Video::Sprite> _sprites;
 
 //unserialized:
   nall::thread _thread;
@@ -107,7 +108,7 @@ protected:
   condition_variable _frameCondition;
   atomic<bool> _kill = false;
   atomic<bool> _frame = false;
-  function<void ()> _refresh;
+  std::function<void ()> _refresh;
   bool _progressive = false;
   bool _progressiveDouble = false;
   bool _interlace = false;

@@ -4,13 +4,13 @@ struct InputKeyboardQuartz {
   Input& input;
   InputKeyboardQuartz(Input& input) : input(input) {}
 
-  shared_pointer<HID::Keyboard> hid{new HID::Keyboard};
+  std::shared_ptr<HID::Keyboard> hid = std::make_shared<HID::Keyboard>();
 
   struct Key {
     string name;
     u32 id = 0;
   };
-  vector<Key> keys;
+  std::vector<Key> keys;
 
   auto assign(u32 inputID, bool value) -> void {
     auto& group = hid->buttons();
@@ -19,128 +19,128 @@ struct InputKeyboardQuartz {
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     u32 inputID = 0;
     for(auto& key : keys) {
       bool value = CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, key.id);
       assign(inputID++, value);
     }
-    devices.append(hid);
+    devices.push_back(hid);
   }
 
   auto initialize() -> bool {
-    keys.append({"Escape", kVK_Escape});
-    keys.append({"F1", kVK_F1});
-    keys.append({"F2", kVK_F2});
-    keys.append({"F3", kVK_F3});
-    keys.append({"F4", kVK_F4});
-    keys.append({"F5", kVK_F5});
-    keys.append({"F6", kVK_F6});
-    keys.append({"F7", kVK_F7});
-    keys.append({"F8", kVK_F8});
-    keys.append({"F9", kVK_F9});
-    keys.append({"F10", kVK_F10});
-    keys.append({"F11", kVK_F11});
-    keys.append({"F12", kVK_F12});
-    keys.append({"F13", kVK_F13});
-    keys.append({"F14", kVK_F14});
-    keys.append({"F15", kVK_F15});
-    keys.append({"F16", kVK_F16});
-    keys.append({"F17", kVK_F17});
-    keys.append({"F18", kVK_F18});
-    keys.append({"F19", kVK_F19});
-    keys.append({"F20", kVK_F20});
+    keys.push_back({"Escape", kVK_Escape});
+    keys.push_back({"F1", kVK_F1});
+    keys.push_back({"F2", kVK_F2});
+    keys.push_back({"F3", kVK_F3});
+    keys.push_back({"F4", kVK_F4});
+    keys.push_back({"F5", kVK_F5});
+    keys.push_back({"F6", kVK_F6});
+    keys.push_back({"F7", kVK_F7});
+    keys.push_back({"F8", kVK_F8});
+    keys.push_back({"F9", kVK_F9});
+    keys.push_back({"F10", kVK_F10});
+    keys.push_back({"F11", kVK_F11});
+    keys.push_back({"F12", kVK_F12});
+    keys.push_back({"F13", kVK_F13});
+    keys.push_back({"F14", kVK_F14});
+    keys.push_back({"F15", kVK_F15});
+    keys.push_back({"F16", kVK_F16});
+    keys.push_back({"F17", kVK_F17});
+    keys.push_back({"F18", kVK_F18});
+    keys.push_back({"F19", kVK_F19});
+    keys.push_back({"F20", kVK_F20});
 
-    keys.append({"Tilde", kVK_ANSI_Grave});
-    keys.append({"Num1", kVK_ANSI_1});
-    keys.append({"Num2", kVK_ANSI_2});
-    keys.append({"Num3", kVK_ANSI_3});
-    keys.append({"Num4", kVK_ANSI_4});
-    keys.append({"Num5", kVK_ANSI_5});
-    keys.append({"Num6", kVK_ANSI_6});
-    keys.append({"Num7", kVK_ANSI_7});
-    keys.append({"Num8", kVK_ANSI_8});
-    keys.append({"Num9", kVK_ANSI_9});
-    keys.append({"Num0", kVK_ANSI_0});
+    keys.push_back({"Tilde", kVK_ANSI_Grave});
+    keys.push_back({"Num1", kVK_ANSI_1});
+    keys.push_back({"Num2", kVK_ANSI_2});
+    keys.push_back({"Num3", kVK_ANSI_3});
+    keys.push_back({"Num4", kVK_ANSI_4});
+    keys.push_back({"Num5", kVK_ANSI_5});
+    keys.push_back({"Num6", kVK_ANSI_6});
+    keys.push_back({"Num7", kVK_ANSI_7});
+    keys.push_back({"Num8", kVK_ANSI_8});
+    keys.push_back({"Num9", kVK_ANSI_9});
+    keys.push_back({"Num0", kVK_ANSI_0});
 
-    keys.append({"Dash", kVK_ANSI_Minus});
-    keys.append({"Equal", kVK_ANSI_Equal});
-    keys.append({"Delete", kVK_Delete});
+    keys.push_back({"Dash", kVK_ANSI_Minus});
+    keys.push_back({"Equal", kVK_ANSI_Equal});
+    keys.push_back({"Delete", kVK_Delete});
 
-    keys.append({"Erase", kVK_ForwardDelete});
-    keys.append({"Home", kVK_Home});
-    keys.append({"End", kVK_End});
-    keys.append({"PageUp", kVK_PageUp});
-    keys.append({"PageDown", kVK_PageDown});
+    keys.push_back({"Erase", kVK_ForwardDelete});
+    keys.push_back({"Home", kVK_Home});
+    keys.push_back({"End", kVK_End});
+    keys.push_back({"PageUp", kVK_PageUp});
+    keys.push_back({"PageDown", kVK_PageDown});
 
-    keys.append({"A", kVK_ANSI_A});
-    keys.append({"B", kVK_ANSI_B});
-    keys.append({"C", kVK_ANSI_C});
-    keys.append({"D", kVK_ANSI_D});
-    keys.append({"E", kVK_ANSI_E});
-    keys.append({"F", kVK_ANSI_F});
-    keys.append({"G", kVK_ANSI_G});
-    keys.append({"H", kVK_ANSI_H});
-    keys.append({"I", kVK_ANSI_I});
-    keys.append({"J", kVK_ANSI_J});
-    keys.append({"K", kVK_ANSI_K});
-    keys.append({"L", kVK_ANSI_L});
-    keys.append({"M", kVK_ANSI_M});
-    keys.append({"N", kVK_ANSI_N});
-    keys.append({"O", kVK_ANSI_O});
-    keys.append({"P", kVK_ANSI_P});
-    keys.append({"Q", kVK_ANSI_Q});
-    keys.append({"R", kVK_ANSI_R});
-    keys.append({"S", kVK_ANSI_S});
-    keys.append({"T", kVK_ANSI_T});
-    keys.append({"U", kVK_ANSI_U});
-    keys.append({"V", kVK_ANSI_V});
-    keys.append({"W", kVK_ANSI_W});
-    keys.append({"X", kVK_ANSI_X});
-    keys.append({"Y", kVK_ANSI_Y});
-    keys.append({"Z", kVK_ANSI_Z});
+    keys.push_back({"A", kVK_ANSI_A});
+    keys.push_back({"B", kVK_ANSI_B});
+    keys.push_back({"C", kVK_ANSI_C});
+    keys.push_back({"D", kVK_ANSI_D});
+    keys.push_back({"E", kVK_ANSI_E});
+    keys.push_back({"F", kVK_ANSI_F});
+    keys.push_back({"G", kVK_ANSI_G});
+    keys.push_back({"H", kVK_ANSI_H});
+    keys.push_back({"I", kVK_ANSI_I});
+    keys.push_back({"J", kVK_ANSI_J});
+    keys.push_back({"K", kVK_ANSI_K});
+    keys.push_back({"L", kVK_ANSI_L});
+    keys.push_back({"M", kVK_ANSI_M});
+    keys.push_back({"N", kVK_ANSI_N});
+    keys.push_back({"O", kVK_ANSI_O});
+    keys.push_back({"P", kVK_ANSI_P});
+    keys.push_back({"Q", kVK_ANSI_Q});
+    keys.push_back({"R", kVK_ANSI_R});
+    keys.push_back({"S", kVK_ANSI_S});
+    keys.push_back({"T", kVK_ANSI_T});
+    keys.push_back({"U", kVK_ANSI_U});
+    keys.push_back({"V", kVK_ANSI_V});
+    keys.push_back({"W", kVK_ANSI_W});
+    keys.push_back({"X", kVK_ANSI_X});
+    keys.push_back({"Y", kVK_ANSI_Y});
+    keys.push_back({"Z", kVK_ANSI_Z});
 
-    keys.append({"LeftBracket", kVK_ANSI_LeftBracket});
-    keys.append({"RightBracket", kVK_ANSI_RightBracket});
-    keys.append({"Backslash", kVK_ANSI_Backslash});
-    keys.append({"Semicolon", kVK_ANSI_Semicolon});
-    keys.append({"Apostrophe", kVK_ANSI_Quote});
-    keys.append({"Comma", kVK_ANSI_Comma});
-    keys.append({"Period", kVK_ANSI_Period});
-    keys.append({"Slash", kVK_ANSI_Slash});
+    keys.push_back({"LeftBracket", kVK_ANSI_LeftBracket});
+    keys.push_back({"RightBracket", kVK_ANSI_RightBracket});
+    keys.push_back({"Backslash", kVK_ANSI_Backslash});
+    keys.push_back({"Semicolon", kVK_ANSI_Semicolon});
+    keys.push_back({"Apostrophe", kVK_ANSI_Quote});
+    keys.push_back({"Comma", kVK_ANSI_Comma});
+    keys.push_back({"Period", kVK_ANSI_Period});
+    keys.push_back({"Slash", kVK_ANSI_Slash});
 
-    keys.append({"Keypad1", kVK_ANSI_Keypad1});
-    keys.append({"Keypad2", kVK_ANSI_Keypad2});
-    keys.append({"Keypad3", kVK_ANSI_Keypad3});
-    keys.append({"Keypad4", kVK_ANSI_Keypad4});
-    keys.append({"Keypad5", kVK_ANSI_Keypad5});
-    keys.append({"Keypad6", kVK_ANSI_Keypad6});
-    keys.append({"Keypad7", kVK_ANSI_Keypad7});
-    keys.append({"Keypad8", kVK_ANSI_Keypad8});
-    keys.append({"Keypad9", kVK_ANSI_Keypad9});
-    keys.append({"Keypad0", kVK_ANSI_Keypad0});
+    keys.push_back({"Keypad1", kVK_ANSI_Keypad1});
+    keys.push_back({"Keypad2", kVK_ANSI_Keypad2});
+    keys.push_back({"Keypad3", kVK_ANSI_Keypad3});
+    keys.push_back({"Keypad4", kVK_ANSI_Keypad4});
+    keys.push_back({"Keypad5", kVK_ANSI_Keypad5});
+    keys.push_back({"Keypad6", kVK_ANSI_Keypad6});
+    keys.push_back({"Keypad7", kVK_ANSI_Keypad7});
+    keys.push_back({"Keypad8", kVK_ANSI_Keypad8});
+    keys.push_back({"Keypad9", kVK_ANSI_Keypad9});
+    keys.push_back({"Keypad0", kVK_ANSI_Keypad0});
 
-    keys.append({"Clear", kVK_ANSI_KeypadClear});
-    keys.append({"Equals", kVK_ANSI_KeypadEquals});
-    keys.append({"Divide", kVK_ANSI_KeypadDivide});
-    keys.append({"Multiply", kVK_ANSI_KeypadMultiply});
-    keys.append({"Subtract", kVK_ANSI_KeypadMinus});
-    keys.append({"Add", kVK_ANSI_KeypadPlus});
-    keys.append({"Enter", kVK_ANSI_KeypadEnter});
-    keys.append({"Decimal", kVK_ANSI_KeypadDecimal});
+    keys.push_back({"Clear", kVK_ANSI_KeypadClear});
+    keys.push_back({"Equals", kVK_ANSI_KeypadEquals});
+    keys.push_back({"Divide", kVK_ANSI_KeypadDivide});
+    keys.push_back({"Multiply", kVK_ANSI_KeypadMultiply});
+    keys.push_back({"Subtract", kVK_ANSI_KeypadMinus});
+    keys.push_back({"Add", kVK_ANSI_KeypadPlus});
+    keys.push_back({"Enter", kVK_ANSI_KeypadEnter});
+    keys.push_back({"Decimal", kVK_ANSI_KeypadDecimal});
 
-    keys.append({"Up", kVK_UpArrow});
-    keys.append({"Down", kVK_DownArrow});
-    keys.append({"Left", kVK_LeftArrow});
-    keys.append({"Right", kVK_RightArrow});
+    keys.push_back({"Up", kVK_UpArrow});
+    keys.push_back({"Down", kVK_DownArrow});
+    keys.push_back({"Left", kVK_LeftArrow});
+    keys.push_back({"Right", kVK_RightArrow});
 
-    keys.append({"Tab", kVK_Tab});
-    keys.append({"Return", kVK_Return});
-    keys.append({"Spacebar", kVK_Space});
-    keys.append({"Shift", kVK_Shift});
-    keys.append({"Control", kVK_Control});
-    keys.append({"Option", kVK_Option});
-    keys.append({"Command", kVK_Command});
+    keys.push_back({"Tab", kVK_Tab});
+    keys.push_back({"Return", kVK_Return});
+    keys.push_back({"Spacebar", kVK_Space});
+    keys.push_back({"Shift", kVK_Shift});
+    keys.push_back({"Control", kVK_Control});
+    keys.push_back({"Option", kVK_Option});
+    keys.push_back({"Command", kVK_Command});
 
     hid->setVendorID(HID::Keyboard::GenericVendorID);
     hid->setProductID(HID::Keyboard::GenericProductID);

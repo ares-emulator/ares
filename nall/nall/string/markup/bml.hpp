@@ -8,7 +8,7 @@ namespace nall::BML {
 //metadata is used to store nesting level
 
 struct ManagedNode;
-using SharedNode = shared_pointer<ManagedNode>;
+using SharedNode = std::shared_ptr<ManagedNode>;
 
 struct ManagedNode : Markup::ManagedNode {
 protected:
@@ -68,19 +68,19 @@ protected:
       while(*p == ' ') p++;  //skip excess spaces
       if(*(p + 0) == '/' && *(p + 1) == '/') break;  //skip comments
 
-      SharedNode node(new ManagedNode);
+      SharedNode node = std::make_shared<ManagedNode>();
       u32 length = 0;
       while(valid(p[length])) length++;
       if(length == 0) throw "Invalid attribute name";
       node->_name = slice(p, 0, length);
       node->parseData(p += length, spacing);
       node->_value.trimRight("\n", 1L);
-      _children.append(node);
+      _children.push_back(node);
     }
   }
 
   //read a node and all of its child nodes
-  auto parseNode(const vector<string>& text, u32& y, string_view spacing) -> void {
+  auto parseNode(const std::vector<string>& text, u32& y, string_view spacing) -> void {
     const char* p = text[y++];
     _metadata = parseDepth(p);
     parseName(p);
@@ -96,9 +96,9 @@ protected:
         continue;
       }
 
-      SharedNode node(new ManagedNode);
+      SharedNode node = std::make_shared<ManagedNode>();
       node->parseNode(text, y, spacing);
-      _children.append(node);
+      _children.push_back(node);
     }
 
     _value.trimRight("\n", 1L);
@@ -130,13 +130,13 @@ protected:
     document.resize(document.size() - (p - output)).trimRight("\n");
     if(document.size() == 0) return;  //empty document
 
-    auto text = document.split("\n");
+    auto text = nall::split(document, "\n");
     u32 y = 0;
     while(y < text.size()) {
       SharedNode node(new ManagedNode);
       node->parseNode(text, y, spacing);
       if(node->_metadata > 0) throw "Root nodes cannot be indented";
-      _children.append(node);
+      _children.push_back(node);
     }
   }
 
@@ -144,7 +144,7 @@ protected:
 };
 
 inline auto unserialize(const string& markup, string_view spacing = {}) -> Markup::Node {
-  SharedNode node(new ManagedNode);
+  SharedNode node = std::make_shared<ManagedNode>();
   try {
     node->parse(markup, spacing);
   } catch(const char* error) {
@@ -166,8 +166,8 @@ inline auto serialize(const Markup::Node& node, string_view spacing = {}, u32 de
   padding.resize(depth * 2);
   padding.fill(' ');
 
-  vector<string> lines;
-  if(auto value = node.value()) lines = value.split("\n");
+  std::vector<string> lines;
+  if(auto value = node.value()) lines = nall::split(value, "\n");
 
   string result;
   result.append(padding);

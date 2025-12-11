@@ -24,16 +24,17 @@ auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
 
   screen = node->append<Node::Video::Screen>("Screen", 1365, 263);
-  screen->colors(1 << 10, {&VDP::color, this});
-  screen->setSize(1128, 263);
-  screen->setScale(0.25, 1.0);
-  screen->setAspect(8.0, 7.0);
-  screen->refreshRateHint(60); // TODO: More accurate refresh rate hint
 
   colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
+
+  screen->colors(1 << 10, std::bind_front(&VDP::color, this));
+  screen->setSize(1128, 263);
+  screen->setScale(0.25, 1.0);
+  screen->setAspect(8.0, 7.0);
+  screen->refreshRateHint(60); // TODO: More accurate refresh rate hint
 
   vce.debugger.load(vce, parent);
   vdc0.debugger.load(vdc0, parent); if(Model::SuperGrafx())
@@ -118,7 +119,7 @@ auto VDP::step(u32 clocks) -> void {
 }
 
 auto VDP::power() -> void {
-  Thread::create(system.colorburst() * 6.0, {&VDP::main, this});
+  Thread::create(system.colorburst() * 6.0, std::bind_front(&VDP::main, this));
   screen->power();
 
   vce.power();

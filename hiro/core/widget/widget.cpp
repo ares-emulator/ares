@@ -6,7 +6,7 @@ auto mWidget::allocate() -> pObject* {
 
 //
 
-auto mWidget::doDrop(vector<string> names) const -> void {
+auto mWidget::doDrop(std::vector<string> names) const -> void {
   if(state.onDrop) return state.onDrop(names);
 }
 
@@ -42,32 +42,32 @@ auto mWidget::mouseCursor() const -> MouseCursor {
   return state.mouseCursor;
 }
 
-auto mWidget::onDrop(const function<void (vector<string>)>& callback) -> type& {
+auto mWidget::onDrop(const std::function<void (std::vector<string>)>& callback) -> type& {
   state.onDrop = callback;
   return *this;
 }
 
-auto mWidget::onMouseEnter(const function<void ()>& callback) -> type& {
+auto mWidget::onMouseEnter(const std::function<void ()>& callback) -> type& {
   state.onMouseEnter = callback;
   return *this;
 }
 
-auto mWidget::onMouseLeave(const function<void ()>& callback) -> type& {
+auto mWidget::onMouseLeave(const std::function<void ()>& callback) -> type& {
   state.onMouseLeave = callback;
   return *this;
 }
 
-auto mWidget::onMouseMove(const function<void (Position)>& callback) -> type& {
+auto mWidget::onMouseMove(const std::function<void (Position)>& callback) -> type& {
   state.onMouseMove = callback;
   return *this;
 }
 
-auto mWidget::onMousePress(const function<void (Mouse::Button)>& callback) -> type& {
+auto mWidget::onMousePress(const std::function<void (Mouse::Button)>& callback) -> type& {
   state.onMousePress = callback;
   return *this;
 }
 
-auto mWidget::onMouseRelease(const function<void (Mouse::Button)>& callback) -> type& {
+auto mWidget::onMouseRelease(const std::function<void (Mouse::Button)>& callback) -> type& {
   state.onMouseRelease = callback;
   return *this;
 }

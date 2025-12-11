@@ -8,6 +8,7 @@
 
     cocoaMenu = [[NSMenu alloc] initWithTitle:@""];
     [self setSubmenu:cocoaMenu];
+    [cocoaMenu setAutoenablesItems:NO];
   }
   return self;
 }

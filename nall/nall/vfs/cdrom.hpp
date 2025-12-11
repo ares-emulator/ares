@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nall/array-span.hpp>
 #include <nall/cd.hpp>
 #include <nall/file.hpp>
 #include <nall/string.hpp>
@@ -11,6 +10,7 @@
 #include <nall/decode/wav.hpp>
 #include <nall/decode/zip.hpp>
 #include <utility>
+#include <vector>
 
 namespace nall::vfs {
 
@@ -19,8 +19,9 @@ struct cdrom : file {
     _thread.join();
   }
 
-  static auto open(const string& location, const string& pathWithinArchive) -> shared_pointer<cdrom> {
-    auto instance = shared_pointer<cdrom>{new cdrom};
+  static auto open(const string& location, const string& pathWithinArchive) -> std::shared_ptr<cdrom> {
+    struct enable_make_shared : cdrom { using cdrom::cdrom; };
+    auto instance = std::make_shared<enable_make_shared>();
 
     if (location.iendsWith(".mmi")) {
       instance->_archive = std::make_unique<Decode::ZIP>();
@@ -33,8 +34,9 @@ struct cdrom : file {
     return {};
   }
 
-  static auto open(const string& location) -> shared_pointer<cdrom> {
-    auto instance = shared_pointer<cdrom>{new cdrom};
+  static auto open(const string& location) -> std::shared_ptr<cdrom> {
+    struct enable_make_shared : cdrom { using cdrom::cdrom; };
+    auto instance = std::make_shared<enable_make_shared>();
     if(location.iendsWith(".cue") && instance->loadCue(location, nullptr, nullptr)) return instance;
 #if defined(ARES_ENABLE_CHD)
     if(location.iendsWith(".chd") && instance->loadChd(location)) return instance;
@@ -85,7 +87,7 @@ struct cdrom : file {
 
 private:
   auto loadCue(const string& cueLocation, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
-    auto cuesheet = shared_pointer<Decode::CUE>::create();
+    auto cuesheet = std::make_shared<Decode::CUE>();
     if(!cuesheet->load(cueLocation, archive, compressedFile)) return false;
 
     CD::Session session;
@@ -176,8 +178,8 @@ private:
       bool usingFileBuffer = false;
       size_t fileDataReadPos = 0;
       file_buffer fileBuffer;
-      vector<u8> rawDataBuffer;
-      array_view<u8> rawDataView;
+      std::vector<u8> rawDataBuffer;
+      std::span<const u8> rawDataView;
       const Decode::ZIP::File* fileEntry = nullptr;
       if (compressedFile != nullptr) {
         auto filePathInArchive = file.archiveFolder;
@@ -188,7 +190,7 @@ private:
             rawDataView = archive->dataViewIfUncompressed(*fileEntry);
           } else {
             rawDataBuffer = archive->extract(*fileEntry);
-            rawDataView = rawDataBuffer;
+            rawDataView = {rawDataBuffer.data(), rawDataBuffer.size()};
           }
         }
       } else {
@@ -239,7 +241,7 @@ private:
         }
         if(track.postgap) lbaFileBase += track.postgap();
       }
-      lbaFileBase += file.tracks.last().indices.last().end + 1;
+      lbaFileBase += file.tracks.back().indices.back().end + 1;
     }
     _loadOffset = _image.size();
 
@@ -249,7 +251,7 @@ private:
   }
 #if defined(ARES_ENABLE_CHD)
   auto loadChd(const string& location) -> bool {
-    auto chd = shared_pointer<Decode::CHD>::create();
+    auto chd = std::make_shared<Decode::CHD>();
     if(!chd->load(location)) return false;
 
     CD::Session session;
@@ -342,7 +344,8 @@ private:
         memory::copy(target, length, rawDataBuffer.data(), rawDataBuffer.size());
       }
     } else {
-      if(auto overlay = nall::file::read(location)) {
+      auto overlay = nall::file::read(location);
+      if(!overlay.empty()) {
         auto target = subchannel.data() + 96 * (LeadInSectors + Track1Pregap);
         auto length = (s64)subchannel.size() - 96 * (LeadInSectors + Track1Pregap);
         memory::copy(target, length, overlay.data(), overlay.size());
@@ -356,7 +359,7 @@ private:
     }
   }
 
-  vector<u8> _image;
+  std::vector<u8> _image;
   u64 _offset = 0;
   atomic<u64> _loadOffset = 0;
   thread _thread;

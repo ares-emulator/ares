@@ -1,7 +1,7 @@
 add_library(hiro STATIC)
 add_library(ares::hiro ALIAS hiro)
 
-target_link_libraries(hiro PUBLIC ares::nall)
+target_link_libraries(hiro PRIVATE ares::nall::headers)
 
 include(cmake/sources.cmake)
 

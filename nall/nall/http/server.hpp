@@ -10,13 +10,13 @@ namespace nall::HTTP {
 
 struct Server : Role, service {
   auto open(u16 port = 8080, const string& serviceName = "", const string& command = "") -> bool;
-  auto main(const function<Response (Request&)>& function = {}) -> void;
+  auto main(const std::function<Response (Request&)>& function = {}) -> void;
   auto scan() -> string;
   auto close() -> void;
   ~Server() { close(); }
 
 private:
-  function<Response (Request&)> callback;
+  std::function<Response (Request&)> callback;
   std::atomic<s32> connections{0};
 
   s32 fd4 = -1;
@@ -36,7 +36,7 @@ private:
   auto ipv6_scan() -> bool;
 };
 
-inline auto Server::main(const function<Response (Request&)>& function) -> void {
+inline auto Server::main(const std::function<Response (Request&)>& function) -> void {
   callback = function;
 }
 

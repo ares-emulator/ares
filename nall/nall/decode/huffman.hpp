@@ -2,16 +2,16 @@
 
 namespace nall::Decode {
 
-inline auto Huffman(array_view<u8> input) -> vector<u8> {
-  vector<u8> output;
+inline auto Huffman(std::span<const u8> input) -> std::vector<u8> {
+  std::vector<u8> output;
 
   u32 size = 0;
-  for(u32 byte : range(8)) size |= *input++ << byte * 8;
+  for(u32 byte : range(8)) size |= consume_front(input) << byte * 8;
   output.reserve(size);
 
   u32 byte = 0, bits = 0;
   auto read = [&]() -> bool {
-    if(bits == 0) bits = 8, byte = *input++;
+    if(bits == 0) bits = 8, byte = consume_front(input);
     return byte >> --bits & 1;
   };
 
@@ -25,7 +25,7 @@ inline auto Huffman(array_view<u8> input) -> vector<u8> {
   while(output.size() < size) {
     node = nodes[node - 256][read()];
     if(node < 256) {
-      output.append(node);
+      output.push_back((u8)node);
       node = 511;
     }
   }

@@ -42,7 +42,7 @@ struct TestCase {
   u32 index;
   TestState initial;
   TestState final;
-  vector<Transaction> transactions;
+  std::vector<Transaction> transactions;
   u32 opcode;
   u32 base_addr;
 };
@@ -56,14 +56,14 @@ using TestResults = array<u32[3]>;
 struct CPU : ares::ARM7TDMI {
   u32 clock = 0;
   int tindex = 0;
-  vector<string> errors;
+  std::vector<string> errors;
   maybe<const TestCase&> test;
 
   auto power(const TestCase& test) -> void {
     ARM7TDMI::power();
     clock = 0;
     tindex = 0;
-    errors.reset();
+    errors.clear();
     this->test = test;
   }
 
@@ -131,7 +131,7 @@ struct CPU : ares::ARM7TDMI {
 
   template<typename... P>
   auto error(P&&... p) -> void {
-    errors.append(string{std::forward<P>(p)...});
+    errors.push_back(string{std::forward<P>(p)...});
   }
 } cpu;
 
@@ -333,7 +333,7 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
     error("transactions: ", tindex, " != ", test.transactions.size(), "\n");
   }
 
-  if(errors) {
+  if(!errors.empty()) {
     if(logErrors) {
       print("\n");
       print("test: ", test.index, "\n");
@@ -469,26 +469,26 @@ auto test(string path) -> TestResults {
   return results;
 }
 
-auto addDirectory(vector<string>& files, string location) -> void {
+auto addDirectory(std::vector<string>& files, string location) -> void {
   auto filenames = directory::files(location, "*.json");
-  if(!filenames) {
+  if(filenames.empty()) {
     print("no tests found in ", location, "\n");
     return;
   }
   for(auto& filename : filenames) {
-    files.append({location, filename});
+    files.push_back({location, filename});
   }
 }
 
 auto nall::main(Arguments arguments) -> void {
-  vector<string> files;
+  std::vector<string> files;
 
   if(arguments) {
     for(auto argument : arguments) {
       if(directory::exists(argument)) {
         addDirectory(files, argument);
       } else if(file::exists(argument)) {
-        files.append(argument);
+        files.push_back(argument);
       } else {
         print("unknown argument: ", argument, "\n");
       }

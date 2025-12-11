@@ -1,14 +1,14 @@
 struct MasterSystem : Cartridge {
   auto name() -> string override { return "Master System"; }
-  auto extensions() -> vector<string> override { return {"ms", "sms"}; }
+  auto extensions() -> std::vector<string> override { return {"ms", "sms"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
-  auto validateHeader(vector<u8>& rom) -> bool;
+  auto analyze(std::vector<u8>& rom) -> string;
+  auto validateHeader(std::vector<u8>& rom) -> bool;
 };
 
 auto MasterSystem::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
@@ -22,7 +22,7 @@ auto MasterSystem::load(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("board",  document["game/board" ].string());
   pak->setAttribute("title",  document["game/title" ].string());
   pak->setAttribute("region", document["game/region"].string());
@@ -48,7 +48,7 @@ auto MasterSystem::save(string location) -> bool {
   return true;
 }
 
-auto MasterSystem::analyze(vector<u8>& rom) -> string {
+auto MasterSystem::analyze(std::vector<u8>& rom) -> string {
   string hash   = Hash::SHA256(rom).digest();
   string board  = "Sega";
   string region = "NTSC-J, NTSC-U, PAL";  //database required to detect region
@@ -490,7 +490,7 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
 
 // Validate header: returns true if the header will be accepted by international bios versions
 // NOTE: This does not validate checksum, only region code and 'TMR SEGA' presence
-auto MasterSystem::validateHeader(vector<u8>& rom) -> bool {
+auto MasterSystem::validateHeader(std::vector<u8>& rom) -> bool {
   if(rom.size() < 0x200) return false;
 
   //Locate "TMR SEGA" header

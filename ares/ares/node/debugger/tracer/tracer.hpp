@@ -12,7 +12,7 @@ struct Tracer : Debugger {
   auto file() const -> bool { return _file; }
   auto autoLineBreak() const -> bool { return _autoLineBreak; }
 
-  auto setToggle(function<void ()> toggle) -> void { _toggle = toggle; }
+  auto setToggle(std::function<void ()> toggle) -> void { _toggle = toggle; }
   auto setComponent(string component) -> void { _component = component; }
   auto setPrefix(bool prefix) -> void { _prefix = prefix; }
   auto setTerminal(bool terminal) -> void { _terminal = terminal; if(_toggle) _toggle(); }
@@ -36,7 +36,7 @@ struct Tracer : Debugger {
   }
 
 protected:
-  function<void ()> _toggle;
+  std::function<void ()> _toggle;
   string _component;
   bool _prefix = false;
   bool _terminal = false;

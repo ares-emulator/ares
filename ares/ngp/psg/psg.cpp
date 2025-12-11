@@ -6,7 +6,8 @@ PSG psg;
 #include "serialization.cpp"
 
 auto PSG::writePitch(u32 pitch) -> void {
-  apu.debugger.interrupt(string{"writePitch ", pitch & 15, " ", pitch >> 4 & 63});
+  auto message = string{ "writePitch ", pitch & 15, " ", pitch >> 4 & 63 };
+  apu.debugger.interrupt(message);
 }
 
 auto PSG::load(Node::Object parent) -> void {
@@ -72,7 +73,7 @@ auto PSG::writeRightDAC(n8 data) -> void {
 }
 
 auto PSG::power() -> void {
-  Thread::create(system.frequency() / 32.0, {&PSG::main, this});
+  Thread::create(system.frequency() / 32.0, std::bind_front(&PSG::main, this));
 
   psg = {};
   dac = {};

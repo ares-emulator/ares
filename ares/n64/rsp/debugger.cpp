@@ -61,7 +61,7 @@ auto RSP::Debugger::instruction() -> void {
 }
 
 auto RSP::Debugger::ioSCC(bool mode, u32 address, u32 data) -> void {
-  static const vector<string> registerNames = {
+  static const std::vector<string> registerNames = {
     "SP_PBUS_ADDRESS",
     "SP_DRAM_ADDRESS",
     "SP_READ_LENGTH",
@@ -74,31 +74,31 @@ auto RSP::Debugger::ioSCC(bool mode, u32 address, u32 data) -> void {
 
   if(unlikely(tracer.io->enabled())) {
     string message;
-    string name = registerNames(address, "SP_UNKNOWN");
+    string name = (address < registerNames.size() ? registerNames[address] : string("SP_UNKNOWN"));
     if(mode == Read) {
-      message = {name.split("|").first(), " => ", hex(data, 8L)};
+      message = {nall::split(name, "|").front(), " => ", hex(data, 8L)};
     }
     if(mode == Write) {
-      message = {name.split("|").last(), " <= ", hex(data, 8L)};
+      message = {nall::split(name, "|").back(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }
 }
 
 auto RSP::Debugger::ioStatus(bool mode, u32 address, u32 data) -> void {
-  static const vector<string> registerNames = {
+  static const std::vector<string> registerNames = {
     "SP_PC_REG",
     "SP_IBIST",
   };
 
   if(unlikely(tracer.io->enabled())) {
     string message;
-    string name = registerNames(address, "SP_UNKNOWN");
+    string name = (address < registerNames.size() ? registerNames[address] : string("SP_UNKNOWN"));
     if(mode == Read) {
-      message = {name.split("|").first(), " => ", hex(data, 8L)};
+      message = {nall::split(name, "|").front(), " => ", hex(data, 8L)};
     }
     if(mode == Write) {
-      message = {name.split("|").last(), " <= ", hex(data, 8L)};
+      message = {nall::split(name, "|").back(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }

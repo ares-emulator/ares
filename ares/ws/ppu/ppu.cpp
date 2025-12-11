@@ -28,16 +28,17 @@ auto PPU::load(Node::Object parent) -> void {
   const u32 height = 144 + (Model::WonderSwan() ? 13 : 0);
 
   screen = node->append<Node::Video::Screen>("Screen", width, height);
-  screen->colors(1 << 12, {&PPU::color, this});
-  screen->setSize(width, height);
-  screen->setScale(1.0, 1.0);
-  screen->setAspect(1.0, 1.0);
-  screen->setFillColor(SoC::ASWAN() ? 0xfff : 0);
 
   colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
+
+  screen->colors(1 << 12, std::bind_front(&PPU::color, this));
+  screen->setSize(width, height);
+  screen->setScale(1.0, 1.0);
+  screen->setAspect(1.0, 1.0);
+  screen->setFillColor(SoC::ASWAN() ? 0xfff : 0);
 
   interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
     screen->setInterframeBlending(value);
@@ -234,7 +235,7 @@ auto PPU::step(u32 clocks) -> void {
 }
 
 auto PPU::power() -> void {
-  Thread::create(3'072'000, {&PPU::main, this});
+  Thread::create(3'072'000, std::bind_front(&PPU::main, this));
   screen->power();
 
   bus.map(this, 0x0000, 0x0017);

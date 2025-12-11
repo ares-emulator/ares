@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 //subchannel processor
 //note: this code is not tolerant to subchannel data that violates the Redbook standard
 
@@ -143,18 +145,18 @@ struct Session {
     return {};
   }
 
-  auto encode(u32 sectors) const -> vector<u8> {
+  auto encode(u32 sectors) const -> std::vector<u8> {
     if(sectors < abs(leadIn.lba) + leadOut.lba) return {};  //not enough sectors
 
-    vector<u8> data;
+    std::vector<u8> data;
     data.resize(sectors * 96 + 96);  //add one sector for P shift
 
-    auto toP = [&](s32 lba) -> array_span<u8> {
+    auto toP = [&](s32 lba) -> std::span<u8> {
       //P is encoded one sector later than Q
       return {&data[(lba + abs(leadIn.lba) + 1) * 96], 12};
     };
 
-    auto toQ = [&](s32 lba) -> array_span<u8> {
+    auto toQ = [&](s32 lba) -> std::span<u8> {
       return {&data[(lba + abs(leadIn.lba)) * 96 + 12], 12};
     };
 
@@ -330,7 +332,7 @@ struct Session {
     return data;
   }
 
-  auto decode(array_view<u8> data, u32 size, u32 leadOutSectors = 0) -> bool {
+  auto decode(std::span<const u8> data, u32 size, u32 leadOutSectors = 0) -> bool {
     *this = {};  //reset session
     //three data[] types supported: subcode Q only, subcode P-W only, data+subcode complete image
     if(size != 12 && size != 96 && size != 2448) return false;
@@ -342,7 +344,7 @@ struct Session {
       if(size ==   96) offset += 12;
       if(size == 2448) offset += 12 + 2352;
       if(offset + 12 > data.size()) break;
-      auto q = array_view<u8>{&data[offset], 12};
+      auto q = std::span<const u8>{&data[offset], 12};
       auto crc16 = CRC16({q.data(), 10});
       if(q[10] != u8(crc16 >> 8)) continue;
       if(q[11] != u8(crc16 >> 0)) continue;
@@ -358,7 +360,7 @@ struct Session {
     }
     if(leadIn.lba == InvalidLBA || leadIn.lba >= 0) return false;
 
-    auto toQ = [&](s32 lba) -> array_view<u8> {
+    auto toQ = [&](s32 lba) -> std::span<const u8> {
       u32 offset = (lba + abs(leadIn.lba)) * size;
       if(size ==   96) offset += 12;
       if(size == 2448) offset += 12 + 2352;
@@ -370,7 +372,7 @@ struct Session {
     leadOut.lba = InvalidLBA;
     for(s32 lba = leadIn.lba; lba < 0; lba++) {
       auto q = toQ(lba);
-      if(!q) break;
+      if(q.size() == 0) break;
       auto crc16 = CRC16({q.data(), 10});
       if(q[10] != u8(crc16 >> 8)) continue;
       if(q[11] != u8(crc16 >> 0)) continue;
@@ -406,7 +408,7 @@ struct Session {
     //tracks
     for(s32 lba = 0; lba < leadOut.lba; lba++) {
       auto q = toQ(lba);
-      if(!q) break;
+      if(q.size() == 0) break;
       auto crc16 = CRC16({q.data(), 10});
       if(q[10] != u8(crc16 >> 8)) continue;
       if(q[11] != u8(crc16 >> 0)) continue;

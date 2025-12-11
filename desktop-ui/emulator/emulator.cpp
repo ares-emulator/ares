@@ -1,20 +1,20 @@
 #include "../desktop-ui.hpp"
 #include "emulators.cpp"
 
-vector<shared_pointer<Emulator>> emulators;
-shared_pointer<Emulator> emulator;
+std::vector<std::shared_ptr<Emulator>> emulators;
+std::shared_ptr<Emulator> emulator;
 
-auto Emulator::enumeratePorts(string name) -> vector<InputPort>& {
+auto Emulator::enumeratePorts(string name) -> std::vector<InputPort>& {
   for(auto& emulator : emulators) {
-    if(emulator->name == name && emulator->ports) return emulator->ports;
+    if(emulator->name == name && !emulator->ports.empty()) return emulator->ports;
   }
-  static vector<InputPort> ports;
-  if(!ports) {
+  static std::vector<InputPort> ports;
+  if(ports.empty()) {
     for(auto id : range(5)) {
       InputPort port{string{"Controller Port ", 1 + id}};
       port.append(virtualPorts[id].pad);
       port.append(virtualPorts[id].mouse);
-      ports.append(port);
+      ports.push_back(port);
     }
   }
   return ports;
@@ -38,20 +38,22 @@ auto Emulator::locate(const string& location, const string& suffix, const string
 
 //handles region selection when games support multiple regions
 auto Emulator::region() -> string {
-  auto preferredRegions = settings.boot.prefer.split(",").strip();
+  auto preferredRegions = nall::split_and_strip(settings.boot.prefer, ",");
   if(game && game->pak) {
-    if(auto regions = game->pak->attribute("region").split(",").strip()) {
+    auto regionList = game->pak->attribute("region");
+    auto regions = nall::split_and_strip(regionList, ",");
+    if(!regions.empty()) {
       for(auto &prefer: preferredRegions) {
-        if(regions.find(prefer)) return prefer; //NTSC-U, NTSC-J or PAL
+        if(std::ranges::find(regions, prefer) != regions.end()) return prefer; //NTSC-U, NTSC-J or PAL
       }
 
       //Handle generic "NTSC" region.
       //NOTE: we don't need to check PAL because the above check covered it
-      if(regions.find("NTSC")) return "NTSC";
+      if(std::ranges::find(regions, string{"NTSC"}) != regions.end()) return "NTSC";
 
       //If no preferred region was found, return the first region in the list
       //NOTE: required for 'unsual' regions like NTSC-DEV for 64DD
-      return regions.first();
+      return regions.front();
     }
   }
 
@@ -117,7 +119,7 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
 
 auto Emulator::load(const string& location) -> bool {
   Program::Guard guard;
-  if(inode::exists(location)) locationQueue.append(location);
+  if(inode::exists(location)) locationQueue.push_back(location);
   
   LoadResult result = load();
   handleLoadResult(result);
@@ -148,13 +150,15 @@ auto Emulator::load(const string& location) -> bool {
   return true;
 }
 
-auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
+auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
   Program::Guard guard;
   string location;
-  if(locationQueue) {
-    location = locationQueue.takeFirst();  //pull from the game queue if an entry is available
-  } else if(program.startGameLoad) {
-    location = program.startGameLoad.takeFirst(); //pull from the command line if an entry is available
+  if(!locationQueue.empty()) {
+    location = locationQueue.front();
+    locationQueue.erase(locationQueue.begin());  //pull from the game queue if an entry is available
+  } else if(!program.startGameLoad.empty()) {
+    location = program.startGameLoad.front();
+    program.startGameLoad.erase(program.startGameLoad.begin()); //pull from the command line if an entry is available
   } else if(!program.noFilePrompt) {
     BrowserDialog dialog;
     dialog.setTitle({"Load ", pak->name(), " Game"});
@@ -179,16 +183,19 @@ auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
   return {};
 }
 
-auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::file> {
+auto Emulator::loadFirmware(const Firmware& firmware) -> std::shared_ptr<vfs::file> {
   Program::Guard guard;
   if(firmware.location.iendsWith(".zip")) {
     Decode::ZIP archive;
-    if(archive.open(firmware.location) && archive.file) {
-      auto image = archive.extract(archive.file.first());
+    if(archive.open(firmware.location) && !archive.file.empty()) {
+      auto image = archive.extract(archive.file.front());
       return vfs::memory::open(image);
     }
-  } else if(auto image = file::read(firmware.location)) {
-    return vfs::memory::open(image);
+  } else {
+    auto image = file::read(firmware.location); 
+    if(!image.empty()) {
+      return vfs::memory::open(image);
+    }
   }
   return {};
 }
@@ -200,13 +207,14 @@ auto Emulator::unload() -> void {
   game = {};
   system = {};
   root.reset();
-  locationQueue.reset();
+  locationQueue.clear();
 }
 
 auto Emulator::load(mia::Pak& node, string name) -> bool {
   Program::Guard guard;
   if(auto fp = node.pak->read(name)) {
-    if(auto memory = file::read({node.location, name})) {
+    auto memory = file::read({node.location, name});
+    if(!memory.empty()) {
       fp->read(memory);
       return true;
     }
@@ -419,7 +427,8 @@ auto Emulator::inputKeyboard(string name) -> bool {
   for (auto& device : inputManager.devices) {
     if (!device->isKeyboard()) continue;
 
-    auto keyboard = (shared_pointer<HID::Keyboard>)device;
+    auto keyboard = std::dynamic_pointer_cast<HID::Keyboard>(device);
+    if (!keyboard) continue;
 
     auto key = keyboard->buttons().find(name);
     if (!key) return false;

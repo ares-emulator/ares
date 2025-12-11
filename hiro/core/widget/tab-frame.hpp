@@ -10,11 +10,11 @@ struct mTabFrame : mWidget {
   auto doMove(sTabFrameItem from, sTabFrameItem to) const -> void;
   auto item(uint position) const -> TabFrameItem;
   auto itemCount() const -> uint;
-  auto items() const -> vector<TabFrameItem>;
+  auto items() const -> std::vector<TabFrameItem>;
   auto navigation() const -> Navigation;
-  auto onChange(const function<void ()>& callback = {}) -> type&;
-  auto onClose(const function<void (TabFrameItem)>& callback = {}) -> type&;
-  auto onMove(const function<void (TabFrameItem, TabFrameItem)>& callback = {}) -> type&;
+  auto onChange(const std::function<void ()>& callback = {}) -> type&;
+  auto onClose(const std::function<void (TabFrameItem)>& callback = {}) -> type&;
+  auto onMove(const std::function<void (TabFrameItem, TabFrameItem)>& callback = {}) -> type&;
   auto remove(sTabFrameItem item) -> type&;
   auto reset() -> type& override;
   auto selected() const -> TabFrameItem;
@@ -26,11 +26,11 @@ struct mTabFrame : mWidget {
 
 //private:
   struct State {
-    vector<sTabFrameItem> items;
+    std::vector<sTabFrameItem> items;
     Navigation navigation = Navigation::Top;
-    function<void ()> onChange;
-    function<void (TabFrameItem)> onClose;
-    function<void (TabFrameItem, TabFrameItem)> onMove;
+    std::function<void ()> onChange;
+    std::function<void (TabFrameItem)> onClose;
+    std::function<void (TabFrameItem, TabFrameItem)> onMove;
   } state;
 
   auto destruct() -> void override;

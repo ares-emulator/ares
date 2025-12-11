@@ -2,7 +2,7 @@ struct MSX2 : MSX {
   MSX2();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -12,8 +12,8 @@ MSX2::MSX2() {
 
   // TODO: Support other region bios versions
   firmware = {};
-  firmware.append({"MAIN", "Japan", "0c672d86ead61a97f49a583b88b7c1905da120645cd44f0c9f2baf4f4631e0b1"});
-  firmware.append({"SUB", "Japan", "6c6f421a10c428d960b7ecc990f99af1c638147f747bddca7b0bf0e2ab738300"});
+  firmware.push_back({"MAIN", "Japan", "0c672d86ead61a97f49a583b88b7c1905da120645cd44f0c9f2baf4f4631e0b1"});
+  firmware.push_back({"SUB", "Japan", "6c6f421a10c428d960b7ecc990f99af1c638147f747bddca7b0bf0e2ab738300"});
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -27,7 +27,7 @@ MSX2::MSX2() {
     device.digital("B",     virtualPorts[id].pad.south);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -86,7 +86,7 @@ auto MSX2::save() -> bool {
   return true;
 }
 
-auto MSX2::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto MSX2::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "MSX2") return system->pak;
   if(node->name() == "MSX2 Cartridge") return game->pak;
   if(node->name() == "MSX Tape") return game->pak;

@@ -29,13 +29,13 @@ auto SPC7110::unload() -> void {
   drom.reset();
   ram.reset();
 
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
 auto SPC7110::power() -> void {
-  Thread::create(21'477'272, {&SPC7110::main, this});
-  cpu.coprocessors.append(this);
+  Thread::create(21'477'272, std::bind_front(&SPC7110::main, this));
+  cpu.coprocessors.push_back(this);
 
   r4801 = 0x00;
   r4802 = 0x00;

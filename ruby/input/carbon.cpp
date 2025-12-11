@@ -16,8 +16,8 @@ struct InputCarbon : InputDriver {
   auto acquire() -> bool override { return false; }
   auto release() -> bool override { return false; }
 
-  auto poll() -> vector<shared_pointer<HID::Device>> override {
-    vector<shared_pointer<HID::Device>> devices;
+  auto poll() -> std::vector<std::shared_ptr<HID::Device>> override {
+    std::vector<std::shared_ptr<HID::Device>> devices;
     keyboard.poll(devices);
     return devices;
   }

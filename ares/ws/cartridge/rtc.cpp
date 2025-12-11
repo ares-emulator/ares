@@ -248,7 +248,7 @@ auto Cartridge::RTC::initRegs(bool reset) -> void {
 }
 
 auto Cartridge::RTC::power() -> void {
-  Thread::create(32'768, {&Cartridge::RTC::main, this});
+  Thread::create(32'768, std::bind_front(&Cartridge::RTC::main, this));
   
   command = 0;
   active = 0;

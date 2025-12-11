@@ -26,13 +26,13 @@ auto Competition::unload() -> void {
   rom[1].reset();
   rom[2].reset();
   rom[3].reset();
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
 auto Competition::power() -> void {
-  Thread::create(1, {&Competition::main, this});
-  cpu.coprocessors.append(this);
+  Thread::create(1, std::bind_front(&Competition::main, this));
+  cpu.coprocessors.push_back(this);
 
   //DIP switches 0-3 control the time: 3 minutes + 0-15 extra minutes
   timer = (3 + dip.value.bit(0,3)) * 60;  //in seconds

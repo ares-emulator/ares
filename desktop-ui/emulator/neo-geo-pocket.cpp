@@ -2,14 +2,14 @@ struct NeoGeoPocket : Emulator {
   NeoGeoPocket();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 };
 
 NeoGeoPocket::NeoGeoPocket() {
   manufacturer = "SNK";
   name = "Neo Geo Pocket";
 
-  firmware.append({"BIOS", "World", "0293555b21c4fac516d25199df7809b26beeae150e1d4504a050db32264a6ad7"});
+  firmware.push_back({"BIOS", "World", "0293555b21c4fac516d25199df7809b26beeae150e1d4504a050db32264a6ad7"});
 
   { InputPort port{"Neo Geo Pocket"};
 
@@ -25,7 +25,7 @@ NeoGeoPocket::NeoGeoPocket() {
     device.digital("Debugger", virtualPorts[0].pad.r_bumper);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -67,7 +67,7 @@ auto NeoGeoPocket::save() -> bool {
   return true;
 }
 
-auto NeoGeoPocket::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto NeoGeoPocket::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Neo Geo Pocket") return system->pak;
   if(node->name() == "Neo Geo Pocket Cartridge") return game->pak;
   return {};

@@ -1,16 +1,16 @@
 struct Famicom : Cartridge {
   auto name() -> string override { return "Famicom"; }
-  auto extensions() -> vector<string> override { return {"fc", "nes", "unf", "unif", "unh"}; }
+  auto extensions() -> std::vector<string> override { return {"fc", "nes", "unf", "unif", "unh"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& data) -> string;
-  auto analyzeFDS(vector<u8>& data) -> string;
-  auto analyzeINES(vector<u8>& data) -> string;
-  auto analyzeUNIF(vector<u8>& data) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
+  auto analyzeFDS(std::vector<u8>& data) -> string;
+  auto analyzeINES(std::vector<u8>& data) -> string;
+  auto analyzeUNIF(std::vector<u8>& data) -> string;
 };
 
 auto Famicom::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "ines.rom"});
     append(rom, {location, "program.rom"});
@@ -18,14 +18,14 @@ auto Famicom::load(string location) -> LoadResult {
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title", document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("board", document["game/board"].string());
@@ -38,26 +38,26 @@ auto Famicom::load(string location) -> LoadResult {
   pak->setAttribute("pinout/va10", document["game/board/pinout/va10"].natural());
   pak->append("manifest.bml", manifest);
 
-  array_view<u8> view{rom};
+  std::span<const u8> view{rom};
   if(auto node = document["game/board/memory(type=ROM,content=iNES)"]) {
     pak->append("ines.rom", {view.data(), node["size"].natural()});
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   }
   if(auto node = document["game/board/memory(type=Flash,content=Program)"]) {
     pak->append("program.flash", {view.data(), node["size"].natural()});
     Pak::load("program.flash", ".flash");
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   } else if(auto node = document["game/board/memory(type=ROM,content=Program)"]) {
     pak->append("program.rom", {view.data(), node["size"].natural()});
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   }
   if(auto node = document["game/board/memory(type=ROM,content=Option)"]) {
     pak->append("option.rom", {view.data(), node["size"].natural()});
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   }
   if(auto node = document["game/board/memory(type=ROM,content=Character)"]) {
     pak->append("character.rom", {view.data(), node["size"].natural()});
-    view += node["size"].natural();
+    view = view.subspan(node["size"].natural());
   }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
@@ -89,7 +89,7 @@ auto Famicom::save(string location) -> bool {
   return true;
 }
 
-auto Famicom::analyze(vector<u8>& data) -> string {
+auto Famicom::analyze(std::vector<u8>& data) -> string {
   if(data.size() < 256) {
     print("[mia] Loading rom failed. Minimum expected rom size is 256 (0x100) bytes. Rom size: ", data.size(), " (0x", hex(data.size()), ") bytes.\n");
     return {};
@@ -119,7 +119,7 @@ auto Famicom::analyze(vector<u8>& data) -> string {
 }
 
 //Famicom Disk System (BIOS)
-auto Famicom::analyzeFDS(vector<u8>& data) -> string {
+auto Famicom::analyzeFDS(std::vector<u8>& data) -> string {
   string s;
   s += "game\n";
   s +={"  name:   ", Medium::name(location), "\n"};
@@ -154,7 +154,7 @@ static u32 calculateNes2RomSize(u8 lsb, u8 msb, u32 multiplier) {
   }
 }
 
-auto Famicom::analyzeINES(vector<u8>& data) -> string {
+auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
   string hash = Hash::SHA256({data.data() + 16, data.size() - 16}).digest();
   string manifest = Medium::manifestDatabase(hash);
   if(manifest) {
@@ -810,13 +810,13 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   return s;
 }
 
-auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
+auto Famicom::analyzeUNIF(std::vector<u8>& data) -> string {
   string board;
   string region = "NTSC-J, NTSC-U";  //fallback
   bool battery = false;
   string mirroring;
-  vector<u8> programROMs[8];
-  vector<u8> characterROMs[8];
+  std::vector<u8> programROMs[8];
+  std::vector<u8> characterROMs[8];
 
   u32 offset = 32;
   while(offset + 8 < data.size()) {
@@ -879,10 +879,14 @@ auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
     offset += 8 + size;
   }
 
-  vector<u8> programROM;
-  vector<u8> characterROM;
-  for(u32 id : range(8)) programROM.append(programROMs[id]);
-  for(u32 id : range(8)) characterROM.append(characterROMs[id]);
+  std::vector<u8> programROM;
+  std::vector<u8> characterROM;
+  for(u32 id : range(8)) {
+    std::ranges::copy(programROMs[id], std::back_inserter(programROM));
+  }
+  for(u32 id : range(8)) {
+    std::ranges::copy(characterROMs[id], std::back_inserter(characterROM));
+  }
 
   u32 programRAM = 0;
   u32 characterRAM = 0;
@@ -895,7 +899,7 @@ auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
 
   //ensure required chucks were found
   if(!board) return {};
-  if(!programROM) return {};
+  if(programROM.empty()) return {};
 
   string s;
   s += "game\n";
@@ -906,7 +910,7 @@ auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
   if(mirroring) {
     s +={"    mirror mode=", mirroring, "\n"};
   }
-  if(programROM) {
+  if(!programROM.empty()) {
     s += "    memory\n";
     s += "      type: ROM\n";
     s +={"      size: 0x", hex(programROM.size()), "\n"};
@@ -921,7 +925,7 @@ auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
       s += "      volatile\n";
     }
   }
-  if(characterROM) {
+  if(!characterROM.empty()) {
     s += "    memory\n";
     s += "      type: ROM\n";
     s +={"      size: 0x", hex(characterROM.size()), "\n"};
@@ -935,9 +939,9 @@ auto Famicom::analyzeUNIF(vector<u8>& data) -> string {
     s += "      volatile\n";
   }
 
-  data.reset();
-  data.append(programROM);
-  data.append(characterROM);
+  data.clear();
+  std::ranges::copy(programROM, std::back_inserter(data));
+  std::ranges::copy(characterROM, std::back_inserter(data));
 
   return s;
 }

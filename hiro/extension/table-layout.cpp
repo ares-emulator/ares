@@ -13,16 +13,18 @@ auto mTableLayout::append(sSizable sizable, Size size) -> type& {
   cell->setSizable(sizable);
   cell->setSize(size);
   cell->setParent(this, cellCount());
-  state.cells.append(cell);
+  state.cells.push_back(cell);
   return *this;
 }
 
 auto mTableLayout::cell(u32 position) const -> TableLayoutCell {
-  return state.cells(position, {});
+  if(position < state.cells.size()) return state.cells[position];
+  return {};
 }
 
 auto mTableLayout::cell(u32 x, u32 y) const -> TableLayoutCell {
-  if(auto cell = state.cells(y * columnCount() + x, {})) return cell;
+  auto index = y * columnCount() + x;
+  if(index < state.cells.size()) return state.cells[index];
   return {};
 }
 
@@ -33,7 +35,7 @@ auto mTableLayout::cell(sSizable sizable) const -> TableLayoutCell {
   return {};
 }
 
-auto mTableLayout::cells() const -> vector<TableLayoutCell> {
+auto mTableLayout::cells() const -> std::vector<TableLayoutCell> {
   return state.cells;
 }
 
@@ -42,10 +44,11 @@ auto mTableLayout::cellCount() const -> u32 {
 }
 
 auto mTableLayout::column(u32 position) const -> TableLayoutColumn {
-  return state.columns(position, {});
+  if(position < state.columns.size()) return state.columns[position];
+  return {};
 }
 
-auto mTableLayout::columns() const -> vector<TableLayoutColumn> {
+auto mTableLayout::columns() const -> std::vector<TableLayoutColumn> {
   return state.columns;
 }
 
@@ -116,13 +119,13 @@ auto mTableLayout::remove(sTableLayoutCell cell) -> type& {
   if(cell->parent() != this) return *this;
   auto offset = cell->offset();
   cell->setParent();
-  state.cells.remove(offset);
+  state.cells.erase(state.cells.begin() + offset);
   for(u32 n : range(offset, cellCount())) state.cells[n]->adjustOffset(-1);
   return synchronize();
 }
 
 auto mTableLayout::reset() -> type& {
-  while(state.cells) remove(state.cells.right());
+  while(!state.cells.empty()) remove(state.cells.back());
   return synchronize();
 }
 
@@ -132,10 +135,11 @@ auto mTableLayout::resize() -> type& {
 }
 
 auto mTableLayout::row(u32 position) const -> TableLayoutRow {
-  return state.rows(position, {});
+  if(position < state.rows.size()) return state.rows[position];
+  return {};
 }
 
-auto mTableLayout::rows() const -> vector<TableLayoutRow> {
+auto mTableLayout::rows() const -> std::vector<TableLayoutRow> {
   return state.rows;
 }
 
@@ -169,7 +173,7 @@ auto mTableLayout::setGeometry(Geometry requestedGeometry) -> type& {
   geometry.setWidth (geometry.width()  - padding().x() - padding().width());
   geometry.setHeight(geometry.height() - padding().y() - padding().height());
 
-  vector<f32> widths;
+  std::vector<f32> widths;
   widths.resize(columnCount());
   u32 maximumWidths = 0;
   for(u32 x : range(columnCount())) {
@@ -192,7 +196,7 @@ auto mTableLayout::setGeometry(Geometry requestedGeometry) -> type& {
     widths[x] = width;
   }
 
-  vector<f32> heights;
+  std::vector<f32> heights;
   heights.resize(rowCount());
   u32 maximumHeights = 0;
   for(u32 y : range(rowCount())) {
@@ -277,9 +281,9 @@ auto mTableLayout::setPadding(Geometry padding) -> type& {
 }
 
 auto mTableLayout::setParent(mObject* parent, s32 offset) -> type& {
-  for(auto& cell : reverse(state.cells)) cell->destruct();
-  for(auto& column : reverse(state.columns)) column->destruct();
-  for(auto& row : reverse(state.rows)) row->destruct();
+  for(auto& cell : state.cells | std::views::reverse) cell->destruct();
+  for(auto& column : state.columns | std::views::reverse) column->destruct();
+  for(auto& row : state.rows | std::views::reverse) row->destruct();
   mObject::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());
   for(auto& column : state.columns) column->setParent(this, column->offset());
@@ -289,10 +293,10 @@ auto mTableLayout::setParent(mObject* parent, s32 offset) -> type& {
 
 auto mTableLayout::setSize(Size size) -> type& {
   state.size = size;
-  state.columns.reset();
-  state.rows.reset();
-  for(auto x : range(size.width())) state.columns.append(TableLayoutColumn());
-  for(auto y : range(size.height())) state.rows.append(TableLayoutRow());
+  state.columns.clear();
+  state.rows.clear();
+  for(auto x : range(size.width())) state.columns.push_back(TableLayoutColumn());
+  for(auto y : range(size.height())) state.rows.push_back(TableLayoutRow());
   return synchronize();
 }
 

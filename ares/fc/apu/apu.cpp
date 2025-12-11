@@ -73,11 +73,11 @@ auto APU::tick() -> void {
 }
 
 auto APU::setIRQ() -> void {
-  cpu.apuLine(frame.irqPending | dmc.irqPending);
+  cpu.apuLine((frame.irqPending & ~frame.irqInhibit) | dmc.irqPending);
 }
 
 auto APU::power(bool reset) -> void {
-  Thread::create(system.frequency(), {&APU::main, this});
+  Thread::create(system.frequency(), std::bind_front(&APU::main, this));
 
   pulse1.power(reset);
   pulse2.power(reset);
@@ -100,11 +100,10 @@ auto APU::readIO(n16 address) -> n8 {
     data.bit(2) = (bool)triangle.length.counter;
     data.bit(3) = (bool)noise.length.counter;
     data.bit(4) = (bool)dmc.lengthCounter;
-    data.bit(5) = 0;
+    //bit 5 is open bus
     data.bit(6) = frame.irqPending;
     data.bit(7) = dmc.irqPending;
-    frame.irqPending = false;
-    setIRQ();
+    frame.delayIRQ = true;
     return data;
   }
 

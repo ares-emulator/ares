@@ -174,10 +174,28 @@ function(_bundle_dependencies target)
       add_custom_command(
         TARGET ${target}
         POST_BUILD
-        COMMAND ditto ${library_paths} "$<TARGET_BUNDLE_CONTENT_DIR:${target}>/Frameworks/"
-        WORKING_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:${target}>"
-        COMMENT "Copying dynamic libraries into app bundle"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_BUNDLE_CONTENT_DIR:${target}>/Frameworks/"
+        VERBATIM
       )
+      foreach(dep IN LISTS library_paths)
+        cmake_path(GET dep FILENAME filename)
+        add_custom_command(
+          TARGET ${target}
+          POST_BUILD
+          COMMAND ditto "${dep}" "$<TARGET_BUNDLE_CONTENT_DIR:${target}>/Frameworks/${filename}"
+          COMMENT "Copying ${dep} into app bundle"
+          VERBATIM
+        )
+        if(EXISTS "${dep}.dSYM" AND ARES_DEBUG_DEPENDENCIES)
+          add_custom_command(
+            TARGET ${target}
+            POST_BUILD
+            COMMAND ditto "${dep}.dSYM" "$<TARGET_BUNDLE_CONTENT_DIR:${target}>/Frameworks/${filename}.dSYM"
+            COMMENT "Copying ${dep}.dSYM into app bundle"
+            VERBATIM
+          )
+        endif()
+      endforeach()
       # Add an rpath for the bundled dynamic libraries
       add_custom_command(
         TARGET ${target}

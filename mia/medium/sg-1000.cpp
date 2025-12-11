@@ -1,26 +1,26 @@
 struct SG1000 : Cartridge {
   auto name() -> string override { return "SG-1000"; }
-  auto extensions() -> vector<string> override { return {"sg1000", "sg"}; }
+  auto extensions() -> std::vector<string> override { return {"sg1000", "sg"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
 };
 
 auto SG1000::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->location = location;
   this->manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("board",  document["game/board" ].string());  
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
@@ -45,7 +45,7 @@ auto SG1000::save(string location) -> bool {
   return true;
 }
 
-auto SG1000::analyze(vector<u8>& rom) -> string {
+auto SG1000::analyze(std::vector<u8>& rom) -> string {
   string hash   = Hash::SHA256(rom).digest();
   string board  = "Linear";
 

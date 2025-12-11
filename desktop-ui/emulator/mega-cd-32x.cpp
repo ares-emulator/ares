@@ -4,7 +4,7 @@ struct MegaCD32X : Emulator {
   auto load(Menu) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
   u32 regionID = 0;
   sTimer discTrayTimer;
@@ -41,7 +41,7 @@ MegaCD32X::MegaCD32X() {
     device.digital ("Start",  virtualPorts[id].mouse.extra);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -59,11 +59,11 @@ auto MegaCD32X::load() -> LoadResult {
   if(region == "NTSC-U") regionID = 0;
 
   //use Mega CD firmware settings
-  vector<Firmware> firmware;
+  std::vector<Firmware> firmware;
   for(auto& emulator : emulators) {
     if(emulator->name == "Mega CD") firmware = emulator->firmware;
   }
-  if(!firmware) return otherError;  //should never occur
+  if(firmware.empty()) return otherError;  //should never occur
 
   system = mia::System::create("Mega CD 32X");
   result = system->load(firmware[regionID].location);
@@ -116,6 +116,7 @@ auto MegaCD32X::load(Menu menu) -> void {
   MenuItem changeDisc{&menu};
   changeDisc.setIcon(Icon::Device::Optical);
   changeDisc.setText("Change Disc").onActivate([&] {
+    Program::Guard guard;
     save();
     auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
     tray->disconnect();
@@ -126,6 +127,7 @@ auto MegaCD32X::load(Menu menu) -> void {
 
     //give the emulator core a few seconds to notice an empty drive state before reconnecting
     discTrayTimer->onActivate([&] {
+      Program::Guard guard;
       discTrayTimer->setEnabled(false);
       auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
       tray->allocate();
@@ -146,7 +148,7 @@ auto MegaCD32X::save() -> bool {
   return true;
 }
 
-auto MegaCD32X::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto MegaCD32X::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Mega Drive") return system->pak;
   if(node->name() == "Mega CD Disc") return game->pak;
   return {};

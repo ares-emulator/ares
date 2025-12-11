@@ -51,7 +51,7 @@ struct emitter {
     byte(scale << 6 | index << 3 | base << 0);
   }
 
-  array_span<u8> span, origin;
+  std::span<u8> span, origin;
 } emit;
 
 struct label {
@@ -68,7 +68,7 @@ struct fixup {
 vector<u32> labelOffsets;
 vector<fixup> fixups;
 
-alwaysinline auto bind(array_span<u8> span) {
+alwaysinline auto bind(std::span<u8> span) {
   emit.span = span;
   emit.origin = span;
   labelOffsets.reset();

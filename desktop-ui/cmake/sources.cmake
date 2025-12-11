@@ -85,6 +85,7 @@ target_sources(
     emulator/nintendo-64.cpp
     emulator/nintendo-64dd.cpp
     emulator/pc-engine-cd.cpp
+    emulator/pc-engine-ld.cpp
     emulator/pc-engine.cpp
     emulator/playstation.cpp
     emulator/pocket-challenge-v2.cpp

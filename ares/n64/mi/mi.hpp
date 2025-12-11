@@ -29,6 +29,8 @@ struct MI : Memory::RCP<MI> {
   //io.cpp
   auto readWord(u32 address, Thread& thread) -> u32;
   auto writeWord(u32 address, u32 data, Thread& thread) -> void;
+  auto initializeMode() -> bool { bool m = io.initializeMode; io.initializeMode = 0; return m; }
+  auto initializeLength() -> n7 { return io.initializeLength; }
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

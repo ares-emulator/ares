@@ -14,7 +14,7 @@ auto ARMDSP::unload() -> void {
   debugger = {};
   node = {};
 
-  cpu.coprocessors.removeByValue(this);
+  std::erase(cpu.coprocessors, this);
   Thread::destroy();
 }
 
@@ -45,7 +45,7 @@ auto ARMDSP::step(u32 clocks) -> void {
 }
 
 auto ARMDSP::power() -> void {
-  random.array({programRAM, sizeof(programRAM)});
+  random.array({(u8*)programRAM, sizeof(programRAM)});
   bridge.reset = false;
   reset();
 }
@@ -56,7 +56,7 @@ auto ARMDSP::reset() -> void {
     boot();
     while(true) scheduler.synchronize(), main();
   });
-  cpu.coprocessors.append(this);
+  cpu.coprocessors.push_back(this);
 
   bridge.ready = false;
   bridge.signal = false;

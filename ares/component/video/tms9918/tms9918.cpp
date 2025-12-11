@@ -27,11 +27,11 @@ auto TMS9918::main() -> void {
       background.run(x, y);
       sprite.run(x, y);
       dac.run(x, y);
-      step(1);
+      step(2);
     }
-    step(200);
+    step(172);
   } else {
-    step(456);
+    step(684);
   }
 
   io.vcounter++;

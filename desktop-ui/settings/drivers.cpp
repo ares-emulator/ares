@@ -4,17 +4,16 @@ auto DriverSettings::construct() -> void {
 
   videoLabel.setText("Video").setFont(Font().setBold());
   videoDriverList.onChange([&] {
-    bool enabled = false;
-    if(videoDriverList.selected().text() != settings.video.driver) { enabled = true; }
-    videoDriverAssign.setEnabled(enabled);
-  });
-  videoDriverLabel.setText("Driver:");
-  videoDriverAssign.setText("Apply").setEnabled(false).onActivate([&] {
-    settings.video.driver = videoDriverList.selected().text();
-    if (videoDriverUpdate()) {
-      videoDriverAssign.setEnabled(false);
+    if(videoDriverList.selected().text() != settings.video.driver) {
+      auto previous = settings.video.driver;
+      settings.video.driver = videoDriverList.selected().text();
+      if (!videoDriverUpdate()) {
+        settings.video.driver = previous;
+        videoRefresh();
+      }
     }
   });
+  videoDriverLabel.setText("Driver:");
   videoMonitorLabel.setText("Fullscreen monitor:");
   videoMonitorList.onChange([&] {
     settings.video.monitor = videoMonitorList.selected().text();
@@ -59,17 +58,16 @@ auto DriverSettings::construct() -> void {
 
   audioLabel.setText("Audio").setFont(Font().setBold());
   audioDriverList.onChange([&] {
-    bool enabled = false;
-    if(audioDriverList.selected().text() != settings.audio.driver) { enabled = true; }
-    audioDriverAssign.setEnabled(enabled);
-  });
-  audioDriverLabel.setText("Driver:");
-  audioDriverAssign.setText("Apply").setEnabled(false).onActivate([&] {
-    settings.audio.driver = audioDriverList.selected().text();
-    if (audioDriverUpdate()) {
-      audioDriverAssign.setEnabled(false);
+    if(audioDriverList.selected().text() != settings.audio.driver) {
+      auto previous = settings.audio.driver;
+      settings.audio.driver = audioDriverList.selected().text();
+      if (!audioDriverUpdate()) {
+        settings.audio.driver = previous;
+        audioRefresh();
+      }
     }
   });
+  audioDriverLabel.setText("Driver:");
   audioDeviceLabel.setText("Output device:");
   audioDeviceList.onChange([&] {
     settings.audio.device = audioDeviceList.selected().text();
@@ -106,17 +104,16 @@ auto DriverSettings::construct() -> void {
 
   inputLabel.setText("Input").setFont(Font().setBold());
   inputDriverList.onChange([&] {
-    bool enabled = false;
-    if(inputDriverList.selected().text() != settings.input.driver) { enabled = true; }
-    inputDriverAssign.setEnabled(enabled);
-  });
-  inputDriverLabel.setText("Driver:");
-  inputDriverAssign.setText("Apply").setEnabled(false).onActivate([&] {
-    settings.input.driver = inputDriverList.selected().text();
-    if (inputDriverUpdate()) {
-      inputDriverAssign.setEnabled(false);
+    if(inputDriverList.selected().text() != settings.input.driver) {
+      auto previous = settings.input.driver;
+      settings.input.driver = inputDriverList.selected().text();
+      if (!inputDriverUpdate()) {
+        settings.input.driver = previous;
+        inputRefresh();
+      }
     }
   });
+  inputDriverLabel.setText("Driver:");
   inputDefocusLabel.setText("When focus is lost:");
   inputDefocusPause.setText("Pause emulation").onActivate([&] {
     settings.input.defocus = "Pause";
@@ -130,8 +127,6 @@ auto DriverSettings::construct() -> void {
   if(settings.input.defocus == "Pause") inputDefocusPause.setChecked();
   if(settings.input.defocus == "Block") inputDefocusBlock.setChecked();
   if(settings.input.defocus == "Allow") inputDefocusAllow.setChecked();
-
-  driverApplyHint.setText("Note: You must click on the 'Apply' button to update and save changes to driver selection.").setFont(Font().setSize(8.0)).setForegroundColor(SystemColor::Sublabel);
     
   videoDriverLayout.setPadding(12_sx, 0);
   videoPropertyLayout.setPadding(12_sx, 0);
@@ -150,9 +145,6 @@ auto DriverSettings::videoRefresh() -> void {
     ComboButtonItem item{&videoDriverList};
     item.setText(driver);
     if(driver == ruby::video.driver()) item.setSelected();
-    if(settings.video.driver == ruby::video.driver()) {
-      videoDriverAssign.setEnabled(false);
-    }
   }
   videoMonitorList.reset();
   for(auto& monitor : ruby::video.hasMonitors()) {
@@ -198,9 +190,6 @@ auto DriverSettings::audioRefresh() -> void {
     ComboButtonItem item{&audioDriverList};
     item.setText(driver);
     if(driver == ruby::audio.driver()) item.setSelected();
-    if(settings.audio.driver == ruby::audio.driver()) {
-      audioDriverAssign.setEnabled(false);
-    }
   }
   audioDeviceList.reset();
   for(auto& device : ruby::audio.hasDevices()) {
@@ -244,9 +233,6 @@ auto DriverSettings::inputRefresh() -> void {
     ComboButtonItem item{&inputDriverList};
     item.setText(driver);
     if(driver == ruby::input.driver()) item.setSelected();
-    if(settings.input.driver == ruby::input.driver()) {
-      inputDriverAssign.setEnabled(false);
-    }
   }
   VerticalLayout::resize();
 }

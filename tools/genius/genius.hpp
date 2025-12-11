@@ -30,7 +30,7 @@ struct Game {
   string name;
   string label;
   string note;
-  vector<Component> components;
+  std::vector<Component> components;
 };
 
 struct ListWindow : Window {
@@ -47,7 +47,7 @@ struct ListWindow : Window {
 
 private:
   bool modified = false;
-  vector<Game> games;
+  std::vector<Game> games;
   string location;
 
   MenuBar menuBar{this};

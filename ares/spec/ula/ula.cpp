@@ -10,7 +10,7 @@ auto ULA::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("ULA");
 
   screen = node->append<Node::Video::Screen>("Screen", 352, 296);
-  screen->colors(16, {&ULA::color, this});
+  screen->colors(16, std::bind_front(&ULA::color, this));
   screen->setSize(352, 296);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);

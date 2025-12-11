@@ -28,12 +28,12 @@ auto Hotkey::doRelease() const -> void {
   if(state->onRelease) state->onRelease();
 }
 
-auto Hotkey::onPress(const function<void ()>& callback) -> type& {
+auto Hotkey::onPress(const std::function<void ()>& callback) -> type& {
   state->onPress = callback;
   return *this;
 }
 
-auto Hotkey::onRelease(const function<void ()>& callback) -> type& {
+auto Hotkey::onRelease(const std::function<void ()>& callback) -> type& {
   state->onRelease = callback;
   return *this;
 }
@@ -50,11 +50,9 @@ auto Hotkey::sequence() const -> string {
 auto Hotkey::setSequence(const string& sequence) -> type& {
   state->active = false;
   state->sequence = sequence;
-  state->keys.reset();
-  for(auto& key : sequence.split("+")) {
-    if(auto position = Keyboard::keys.find(key)) {
-      state->keys.append(*position);
-    }
+  state->keys.clear();
+  for(auto& key : nall::split(sequence, "+")) {
+    if (auto idx = nall::index_of(Keyboard::keys, key)) state->keys.push_back((u32)*idx);
   }
   return *this;
 }

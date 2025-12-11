@@ -342,7 +342,7 @@ auto PCD::SCSI::commandReadSubchannel() -> void {
   if(drive->paused())  mode = 2;
   if(drive->stopped()) mode = 3;
 
-  array_view<u8> q{pcd.drive.sector + 2364, 12};
+  std::span<const u8> q{(const u8*)(pcd.drive.sector + 2364), 12};
   response.write(mode);  //CDDA mode
   response.write(q[0]);  //control + address
   response.write(q[1]);  //track#

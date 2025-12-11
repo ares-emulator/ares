@@ -2,7 +2,7 @@ struct SC3000 : Emulator {
   SC3000();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -22,7 +22,7 @@ SC3000::SC3000() {
     device.digital("2",     virtualPorts[id].pad.east);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -65,7 +65,7 @@ auto SC3000::save() -> bool {
   return true;
 }
 
-auto SC3000::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto SC3000::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "SC-3000") return system->pak;
   if(node->name() == "SC-3000 Cartridge") return game->pak;
   return {};

@@ -287,7 +287,7 @@
           if(auto tableViewItem = tableView->item([view rowAtPoint:point])) {
             if(auto tableViewCell = tableViewItem->cell([view columnAtPoint:point])) {
               tableViewCell->state.checked = !tableViewCell->state.checked;
-              tableView->doToggle(tableViewCell->instance);
+              tableView->doToggle(tableViewCell);
             }
           }
         }
@@ -343,12 +343,12 @@ auto pTableView::remove(sTableViewItem item) -> void {
 }
 
 auto pTableView::resizeColumns() -> void {
-  vector<s32> widths;
+  std::vector<s32> widths;
   s32 minimumWidth = 0;
   s32 expandable = 0;
   for(u32 column : range(self().columnCount())) {
     s32 width = _width(column);
-    widths.append(width);
+    widths.push_back(width);
     minimumWidth += width;
     if(state().columns[column]->expandable()) expandable++;
   }

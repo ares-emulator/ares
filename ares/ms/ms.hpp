@@ -2,6 +2,7 @@
 //started: 2016-08-17
 
 #include <ares/ares.hpp>
+#include <vector>
 
 #include <component/processor/z80/z80.hpp>
 #include <component/audio/sn76489/sn76489.hpp>
@@ -9,7 +10,7 @@
 
 namespace ares::MasterSystem {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
 
   struct Model {

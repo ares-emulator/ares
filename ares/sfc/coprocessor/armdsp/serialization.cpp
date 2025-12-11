@@ -1,16 +1,16 @@
-auto ARMDSP::firmware() const -> vector<n8> {
-  vector<n8> buffer;
+auto ARMDSP::firmware() const -> std::vector<n8> {
+  std::vector<n8> buffer;
   if(!cartridge.has.ARMDSP) return buffer;
   buffer.reserve(128_KiB + 32_KiB);
-  for(u32 n : range(128_KiB)) buffer.append(programROM[n]);
-  for(u32 n : range( 32_KiB)) buffer.append(dataROM[n]);
+  for(u32 n : range(128_KiB)) buffer.push_back(programROM[n]);
+  for(u32 n : range( 32_KiB)) buffer.push_back(dataROM[n]);
   return buffer;
 }
 
 auto ARMDSP::serialize(serializer& s) -> void {
   ARM7TDMI::serialize(s);
   Thread::serialize(s);
-  s(array_span<u8>{programRAM, 16_KiB});
+  s(std::span<n8>{programRAM, 16_KiB});
   s(bridge.cputoarm.ready);
   s(bridge.cputoarm.data);
   s(bridge.armtocpu.ready);

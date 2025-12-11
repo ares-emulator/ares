@@ -1,20 +1,20 @@
 struct BSMemory : Cartridge {
   auto name() -> string override { return "BS Memory"; }
-  auto extensions() -> vector<string> override { return {"bs"}; }
+  auto extensions() -> std::vector<string> override { return {"bs"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(std::vector<u8>& rom) -> string;
 };
 
 auto BSMemory::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
     append(rom, {location, "program.flash"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
   this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
@@ -25,7 +25,7 @@ auto BSMemory::load(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title", document["game/title"].string());
   pak->append("manifest.bml", manifest);
   if(document["game/board/memory(type=ROM)"]) {
@@ -49,7 +49,7 @@ auto BSMemory::save(string location) -> bool {
   return true;
 }
 
-auto BSMemory::analyze(vector<u8>& rom) -> string {
+auto BSMemory::analyze(std::vector<u8>& rom) -> string {
   if(rom.size() < 0x8000) {
     print("[mia] Loading rom failed. Minimum expected rom size is 32768 (0x8000) bytes. Rom size: ", rom.size(), " (0x", hex(rom.size()), ") bytes.\n");
     return {};

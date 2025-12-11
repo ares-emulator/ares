@@ -46,7 +46,6 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto unload() -> void;
 
   auto main() -> void;
-  auto dmaRun() -> void;
   auto setInterruptFlag(u32 source) -> void;
   auto stepIRQ() -> void;
   auto step(u32 clocks) -> void override;
@@ -61,24 +60,26 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   //bus.cpp
   auto sleep() -> void override;
-  template<bool UseDebugger> auto getBus(u32 mode, n32 address) -> n32;
+  template<bool isDMA, bool UseDebugger> auto getBus(u32 mode, n32 address) -> n32;
   auto get(u32 mode, n32 address) -> n32 override;
+  auto getDMA(u32 mode, n32 address) -> n32;
   auto getDebugger(u32 mode, n32 address) -> n32 override;
+  template<bool IsDMA> auto setBus(u32 mode, n32 address, n32 word) -> void;
   auto set(u32 mode, n32 address, n32 word) -> void override;
+  auto setDMA(u32 mode, n32 address, n32 word) -> void;
   auto lock() -> void override;
   auto unlock() -> void override;
-  auto waitEWRAM(u32 mode) -> u32;
-  auto waitCartridge(u32 mode, n32 address) -> u32;
-  auto cartMode(u32 mode, n32 address) -> u32;
+  auto waitCartridge(n32 address, bool sequential) -> u32;
+  template<bool IsDMA> auto checkBurst(u32 mode) -> bool;
 
   //io.cpp
   auto readIO(n32 address) -> n8 override;
   auto writeIO(n32 address, n8 byte) -> void override;
 
-  auto readIWRAM(u32 mode, n32 address) -> n32;
+  template<bool UseDebugger> auto readIWRAM(u32 mode, n32 address) -> n32;
   auto writeIWRAM(u32 mode, n32 address, n32 word) -> void;
 
-  auto readEWRAM(u32 mode, n32 address) -> n32;
+  template<bool UseDebugger> auto readEWRAM(u32 mode, n32 address) -> n32;
   auto writeEWRAM(u32 mode, n32 address, n32 word) -> void;
 
   template<bool UseDebugger> auto readPRAM(u32 mode, n32 address) -> n32;
@@ -86,6 +87,9 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   template<bool UseDebugger> auto readVRAM(u32 mode, n32 address) -> n32;
   auto writeVRAM(u32 mode, n32 address, n32 word) -> void;
+
+  template<bool UseDebugger> auto readROM(u32 mode, n32 address) -> n32;
+  auto writeROM(u32 mode, n32 address, n32 word) -> void;
 
   //dma.cpp
   auto dmaVblank() -> void;
@@ -107,36 +111,48 @@ struct CPU : ARM7TDMI, Thread, IO {
     n32 mask;
   };
 
-  struct DMA {
+  struct DMAC {
     //dma.cpp
-    auto run() -> bool;
-    auto transfer() -> void;
+    auto step() -> bool;
+    auto runPending() -> void;
 
-    n2 id;
+    n1  romBurst;
+    n1  active;
+    n2  activeChannel;
+    n1  stallingCPU;
+    n1  writeCycle;
 
-    n1 active;
-    i32 waiting;
+    struct Channel {
+      auto ready() -> bool;
+      auto read() -> void;
+      auto write() -> void;
 
-    n2 targetMode;
-    n2 sourceMode;
-    n1 repeat;
-    n1 size;
-    n1 drq;
-    n2 timingMode;
-    n1 irq;
-    n1 enable;
+      n2 id;
 
-    uintVN source;
-    uintVN target;
-    uintVN length;
+      n1 active;
+      i32 waiting;
 
-    struct Latch {
+      n2 targetMode;
+      n2 sourceMode;
+      n1 repeat;
+      n1 size;
+      n1 drq;
+      n2 timingMode;
+      n1 irq;
+      n1 enable;
+
       uintVN source;
       uintVN target;
       uintVN length;
-      u32 data;
-    } latch;
-  } dma[4];
+
+      struct Latch {
+        uintVN source;
+        uintVN target;
+        uintVN length;
+        u32 data;
+      } latch;
+    } channel[4];
+  } dmac;
 
   struct Timer {
     //timer.cpp
@@ -232,7 +248,8 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   struct Memory {
     n1 biosSwap;
-    n3 unknown1;
+    n2 unknown1;
+    n1 cgbBootRomDisable;
     n1 ewram = 1;
     n4 ewramWait = 13;
     n4 unknown2;
@@ -271,12 +288,9 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  stopped;
     n1  booted;  //set to true by the GBA BIOS
     n1  romAccess;
-    n1  dmaRomAccess;
-    n1  dmaRan;
-    n1  dmaActive;
-    n2  dmaActiveChannel;
     n1  timerLatched;
     n1  busLocked;
+    n1  burstActive;
     n32 hcounter;
   } context;
 };

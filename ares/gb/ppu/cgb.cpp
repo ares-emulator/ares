@@ -71,7 +71,7 @@ auto PPU::scanlineCGB() -> void {
   }
 
   //sort by X-coordinate if opri (DMG priority) is enabled
-  if(cpu.status.opri) sort(sprite, sprites, [](auto l, auto r) { return l.x < r.x; });
+  if(cpu.status.opri) std::stable_sort(sprite, sprite + sprites, [](auto l, auto r) { return l.x < r.x; });
 }
 
 auto PPU::runCGB() -> void {

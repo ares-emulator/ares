@@ -15,13 +15,13 @@ auto Cartridge::MROM::serialize(serializer& s) -> void {
 }
 
 auto Cartridge::SRAM::serialize(serializer& s) -> void {
-  s(array_span<u8>{data, size});
+  s(std::span<n8>{data, size});
   s(size);
   s(mask);
 }
 
 auto Cartridge::EEPROM::serialize(serializer& s) -> void {
-  s(array_span<u8>{data, size});
+  s(std::span<n8>{data, size});
   s(size);
   s(mask);
   s(test);
@@ -33,7 +33,7 @@ auto Cartridge::EEPROM::serialize(serializer& s) -> void {
 }
 
 auto Cartridge::FLASH::serialize(serializer& s) -> void {
-  s(array_span<u8>{data, size});
+  s(std::span<n8>{data, size});
   s(size);
   s(id);
   s(unlockhi);

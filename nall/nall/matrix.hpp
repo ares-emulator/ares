@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 namespace nall {
 
 template<typename T, u32 Rows, u32 Cols>
@@ -16,8 +18,8 @@ struct Matrix {
     }
   }
 
-  operator array_span<T>() { return {values, Rows * Cols}; }
-  operator array_view<T>() const { return {values, Rows * Cols}; }
+  operator std::span<T>() { return {(T*)values, Rows * Cols}; }
+  operator std::span<const T>() const { return {(const T*)values, Rows * Cols}; }
 
   //1D matrices (for polynomials, etc)
   auto operator[](u32 row) -> T& { return values[row][0]; }

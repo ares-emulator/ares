@@ -7,8 +7,8 @@ struct RawInput {
   HWND hwnd = nullptr;
   bool ready = false;
   bool initialized = false;
-  function<void (RAWINPUT*)> updateKeyboard;
-  function<void (RAWINPUT*)> updateMouse;
+  std::function<void (RAWINPUT*)> updateKeyboard;
+  std::function<void (RAWINPUT*)> updateMouse;
 
   struct Device {
     HANDLE handle = nullptr;
@@ -18,7 +18,7 @@ struct RawInput {
     u16 productID = 0;
     bool isXInputDevice = false;
   };
-  vector<Device> devices;
+  std::vector<Device> devices;
 
   auto find(u16 vendorID, u16 productID) -> maybe<Device&> {
     for(auto& device : devices) {
@@ -28,7 +28,7 @@ struct RawInput {
   }
 
   auto scanDevices() -> void {
-    devices.reset();
+    devices.clear();
 
     u32 deviceCount = 0;
     GetRawInputDeviceList(NULL, &deviceCount, sizeof(RAWINPUTDEVICELIST));
@@ -70,7 +70,7 @@ struct RawInput {
         if(device.path.find("IG_")) device.isXInputDevice = true;  //"IG_" is only found inside XInput device paths
       }
 
-      devices.append(device);
+      devices.push_back(device);
     }
 
     delete[] list;

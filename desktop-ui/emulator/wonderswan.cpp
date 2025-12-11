@@ -3,7 +3,7 @@ struct WonderSwan : Emulator {
   auto load(Menu) -> void override;
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 };
 
 WonderSwan::WonderSwan() {
@@ -26,7 +26,7 @@ WonderSwan::WonderSwan() {
     device.digital("Start", virtualPorts[0].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -38,7 +38,8 @@ auto WonderSwan::load(Menu menu) -> void {
     for(auto& orientation : orientations->readAllowedValues()) {
       MenuRadioItem item{&orientationMenu};
       item.setText(orientation);
-      item.onActivate([=] {
+      item.onActivate([=, this] {
+        Program::Guard guard;
         if(auto orientations = root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
           orientations->setValue(orientation);
         }
@@ -49,7 +50,7 @@ auto WonderSwan::load(Menu menu) -> void {
 
   if(auto headphones = root->find<ares::Node::Setting::Boolean>("Headphones")) {
     MenuCheckItem headphoneItem{&menu};
-    headphoneItem.setText("Headphones").setChecked(headphones->value()).onToggle([=] {
+    headphoneItem.setText("Headphones").setChecked(headphones->value()).onToggle([=, this] {
       if(auto headphones = root->find<ares::Node::Setting::Boolean>("Headphones")) {
         headphones->setValue(headphoneItem.checked());
       }
@@ -87,7 +88,7 @@ auto WonderSwan::save() -> bool {
   return true;
 }
 
-auto WonderSwan::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto WonderSwan::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "WonderSwan") return system->pak;
   if(node->name() == "WonderSwan Cartridge") return game->pak;
   return {};

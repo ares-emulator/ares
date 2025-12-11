@@ -2,6 +2,7 @@ struct Gamepad : Controller {
   Node::Port port;
   Node::Peripheral slot;
   VFS::Pak pak;
+  b1 pakDetectLatched;
   u8 bank;
   Memory::Writable ram;  //Toshiba TC55257DFL-85V
   Node::Input::Rumble motor;
@@ -25,6 +26,8 @@ struct Gamepad : Controller {
   Node::Input::Button start;
   Node::Input::Button maxOutputReducer1;
   Node::Input::Button maxOutputReducer2;
+
+  Node::Setting::Integer bioSensorBpm;
 
   Gamepad(Node::Port);
   ~Gamepad();
@@ -74,4 +77,16 @@ struct Gamepad : Controller {
     AggressiveToLinear,
     LinearToAggressive,
   } response = Response::Linear;
+  
+  struct BioSensor {
+    auto load() -> void;
+    auto unload() -> void;
+    auto update() -> void;
+    auto read(u16 address) -> u8;
+
+    b1 isPulsing;
+    u8 beatsPerMinute;
+    u64 pulseNext;
+    u64 pulseStart;
+  } bioSensor;
 };

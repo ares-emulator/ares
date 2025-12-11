@@ -3,8 +3,12 @@
 
 #include <ares/ares.hpp>
 #include <nall/decode/mmi.hpp>
+#include <nall/dsp/iir/dc-removal.hpp>
 #include <vector>
 #include <cmath>
+#include <thread>
+#include <atomic>
+#include <functional>
 
 #include <qon/qon.h>
 #include <qon/qoi2.h>
@@ -16,10 +20,11 @@
 #include <component/audio/sn76489/sn76489.hpp>
 #include <component/audio/ym2612/ym2612.hpp>
 #include <component/eeprom/m24c/m24c.hpp>
+#include <vector>
 
 namespace ares::MegaDrive {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 

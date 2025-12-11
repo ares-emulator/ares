@@ -1,6 +1,6 @@
 struct GameImporter : Panel {
   GameImporter(View*);
-  auto import(string system, const vector<string>& files) -> void;
+  auto import(string system, const std::vector<string>& files) -> void;
   auto eventChange() -> void;
   auto eventClose() -> void;
 

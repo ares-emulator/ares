@@ -2,14 +2,14 @@ struct ColecoVision : Emulator {
   ColecoVision();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 };
 
 ColecoVision::ColecoVision() {
   manufacturer = "Coleco";
   name = "ColecoVision";
 
-  firmware.append({"BIOS", "World", "990bf1956f10207d8781b619eb74f89b00d921c8d45c95c334c16c8cceca09ad"});
+  firmware.push_back({"BIOS", "World", "990bf1956f10207d8781b619eb74f89b00d921c8d45c95c334c16c8cceca09ad"});
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -35,7 +35,7 @@ ColecoVision::ColecoVision() {
     device.digital("#",     virtualPorts[id].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -83,7 +83,7 @@ auto ColecoVision::save() -> bool {
   return true;
 }
 
-auto ColecoVision::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto ColecoVision::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "ColecoVision") return system->pak;
   if(node->name() == "ColecoVision Cartridge") return game->pak;
   return {};

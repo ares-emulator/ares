@@ -31,7 +31,7 @@ auto MegaLD::load(string location) -> LoadResult {
     medium += media.name;
   }
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("title", {mmiArchive.name(), " [", mmiArchive.catalogId(), "]"});
   pak->setAttribute("region", region);
   pak->setAttribute("location", location);
@@ -55,4 +55,3 @@ auto MegaLD::save(string location) -> bool {
 
   return true;
 }
-

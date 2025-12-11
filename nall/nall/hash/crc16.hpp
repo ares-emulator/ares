@@ -1,13 +1,14 @@
 #pragma once
 
 #include <nall/hash/hash.hpp>
+#include <span>
 
 namespace nall::Hash {
 
 struct CRC16 : Hash {
   using Hash::input;
 
-  CRC16(array_view<u8> buffer = {}) {
+  CRC16(std::span<const u8> buffer = {}) {
     reset();
     input(buffer);
   }
@@ -20,9 +21,10 @@ struct CRC16 : Hash {
     checksum = (checksum >> 8) ^ table(checksum ^ value);
   }
 
-  auto output() const -> vector<u8> override {
-    vector<u8> result;
-    for(auto n : reverse(range(2))) result.append(~checksum >> n * 8);
+  auto output() const -> std::vector<u8> override {
+    std::vector<u8> result;
+    result.reserve(2);
+    for(auto n : reverse(range(2))) result.push_back((u8)(~checksum >> (n * 8)));
     return result;
   }
 

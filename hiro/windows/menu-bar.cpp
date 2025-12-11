@@ -7,7 +7,8 @@ auto pMenuBar::construct() -> void {
 }
 
 auto pMenuBar::destruct() -> void {
-  pApplication::state().menuBarsToRebuild.removeByValue(this);
+  auto& menuBarsToRebuild = pApplication::state().menuBarsToRebuild;
+  std::erase(menuBarsToRebuild, this);
   if(hmenu) { DestroyMenu(hmenu); hmenu = nullptr; }
   if(auto parent = _parent()) {
     SetMenu(parent->hwnd, nullptr);
@@ -61,7 +62,7 @@ auto pMenuBar::_rebuild() -> void {
 
     MENUITEMINFO mii{sizeof(MENUITEMINFO)};
     mii.fMask = MIIM_DATA;
-    mii.dwItemData = (ULONG_PTR)menu.data();
+    mii.dwItemData = (ULONG_PTR)menu.get();
 
     if(menu->visible()) {
       if(auto self = menu->self()) {
@@ -86,8 +87,9 @@ auto pMenuBar::_update() -> void {
   }
 
   //otherwise, defer the menu bar update for later to reduce flickering
-  pApplication::state().menuBarsToRebuild.removeByValue(this);
-  pApplication::state().menuBarsToRebuild.append(this);
+  auto& menuBarsToRebuild = pApplication::state().menuBarsToRebuild;
+  std::erase(menuBarsToRebuild, this);
+  menuBarsToRebuild.push_back(this);
 }
 
 }

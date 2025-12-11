@@ -14,7 +14,7 @@ elseif(OS_LINUX OR OS_FREEBSD OR OS_OPENBSD)
   include(cmake/os-linux.cmake)
 endif()
 
-target_link_libraries(genius PRIVATE nall ares::hiro)
+target_link_libraries(genius PRIVATE ares::nall ares::nall::headers ares::hiro)
 
 ares_configure_executable(genius)
 set_target_properties(genius PROPERTIES FOLDER tools PREFIX "")

@@ -4,7 +4,7 @@ struct MegaLD : Emulator {
   auto load(Menu) -> void override;
   auto unload() -> void override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto changeDiskState(const string state) -> void;
 
   u32 regionID = 0;
@@ -12,11 +12,11 @@ struct MegaLD : Emulator {
 };
 
 MegaLD::MegaLD() {
-  manufacturer = "Sega";
-  name = "Mega LD";
+  manufacturer = "Pioneer";
+  name = "LaserActive (SEGA PAC)";
 
-  firmware.append({"BIOS", "US"});      //NTSC-U
-  firmware.append({"BIOS", "Japan"});   //NTSC-J
+  firmware.push_back({"BIOS", "US"});      //NTSC-U
+  firmware.push_back({"BIOS", "Japan"});   //NTSC-J
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -36,7 +36,7 @@ MegaLD::MegaLD() {
     device.digital("Start", virtualPorts[id].pad.start);
     port.append(device); }
 
-    ports.append(port);
+    ports.push_back(port);
   }
 }
 
@@ -62,7 +62,7 @@ auto MegaLD::load() -> LoadResult {
     return result;
   }
 
-  if(!ares::MegaDrive::load(root, {"[Sega] Mega LD (", region, ")"})) return otherError;
+  if(!ares::MegaDrive::load(root, {"[Pioneer] LaserActive (SEGA PAC) (", region, ")"})) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Mega CD/Disc Tray")) {
     port->allocate();
@@ -88,7 +88,8 @@ auto MegaLD::load(Menu menu) -> void {
   Menu changeSideMenu{&menu};
   changeSideMenu.setIcon(Icon::Device::Optical);
   changeSideMenu.setText("Change Side");
-  auto sides = game->pak->attribute("medium").split(",").strip();
+  auto medium = game->pak->attribute("medium");
+  auto sides = nall::split_and_strip(medium, ",");
 
   MenuRadioItem noDiscItem{&changeSideMenu};
   noDiscItem.setText("No Disc").onActivate([&] {
@@ -106,6 +107,7 @@ auto MegaLD::load(Menu menu) -> void {
 }
 
 auto MegaLD::changeDiskState(const string state) -> void {
+  Program::Guard guard;
   discTrayTimer->setEnabled(false);
   save();
   auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
@@ -114,6 +116,7 @@ auto MegaLD::changeDiskState(const string state) -> void {
   if(state == "No Disc") return;
 
   discTrayTimer->onActivate([&, state] {
+    Program::Guard guard;
     discTrayTimer->setEnabled(false);
     auto tray = root->find<ares::Node::Port>("Mega CD/Disc Tray");
     tray->allocate(state);
@@ -133,7 +136,7 @@ auto MegaLD::save() -> bool {
   return true;
 }
 
-auto MegaLD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto MegaLD::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Mega Drive") return system->pak;
   if(node->name() == "Mega CD Disc") return game->pak;
   return {};

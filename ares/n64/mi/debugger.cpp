@@ -17,7 +17,7 @@ auto MI::Debugger::interrupt(u8 source) -> void {
 }
 
 auto MI::Debugger::io(bool mode, u32 address, u32 data) -> void {
-  static const vector<string> registerNames = {
+  static const std::vector<string> registerNames = {
     "MI_INIT_MODE",
     "MI_VERSION",
     "MI_INTR",
@@ -26,12 +26,12 @@ auto MI::Debugger::io(bool mode, u32 address, u32 data) -> void {
 
   if(unlikely(tracer.io->enabled())) {
     string message;
-    string name = registerNames(address, "MI_UNKNOWN");
+    string name = (address < registerNames.size() ? registerNames[address] : string("MI_UNKNOWN"));
     if(mode == Read) {
-      message = {name.split("|").first(), " => ", hex(data, 8L)};
+      message = {nall::split(name, "|").front(), " => ", hex(data, 8L)};
     }
     if(mode == Write) {
-      message = {name.split("|").last(), " <= ", hex(data, 8L)};
+      message = {nall::split(name, "|").back(), " <= ", hex(data, 8L)};
     }
     tracer.io->notify(message);
   }

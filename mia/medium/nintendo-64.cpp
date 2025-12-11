@@ -1,14 +1,14 @@
 struct Nintendo64 : Cartridge {
   auto name() -> string override { return "Nintendo 64"; }
-  auto extensions() -> vector<string> override { return {"n64", "v64", "z64"}; }
+  auto extensions() -> std::vector<string> override { return {"n64", "v64", "z64"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
-  auto cic_detect(array_view<u8> ipl3) -> string;
-  auto ipl2checksum(u32 seed, array_view<u8> rom) -> u64;
+  auto analyze(std::vector<u8>& rom) -> string;
+  auto cic_detect(std::span<const u8> ipl3) -> string;
+  auto ipl2checksum(u32 seed, std::span<const u8> rom) -> u64;
 };
 
-auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
+auto Nintendo64::ipl2checksum(u32 seed, std::span<const u8> rom) -> u64 {
   auto rotl = [](u32 value, u32 shift) -> u32 {
     return (value << shift) | (value >> (-shift&31));
   };
@@ -27,7 +27,7 @@ auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
 
   // create the initialization data
   u32 init = 0x6c078965 * (seed & 0xff) + 1;
-  u32 data = rom.readm(4);
+  u32 data = readm<u32>(rom, 4);
   init ^= data;
 
   // copy to the state
@@ -54,7 +54,7 @@ auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
 
       if (loop == 1008) break;
 
-      dataNext   = rom.readm(4);
+      dataNext   = readm<u32>(rom, 4);
       state[15]  = csum(csum(state[15], rotl(data, dataLast  >> 27), loop), rotl(dataNext, data  >> 27), loop);
       state[14]  = csum(csum(state[14], rotr(data, dataLast & 0x1f), loop), rotr(dataNext, data & 0x1f), loop);
       state[13] += rotr(data, data & 0x1f) + rotr(dataNext, dataNext & 0x1f);
@@ -84,13 +84,13 @@ auto Nintendo64::ipl2checksum(u32 seed, array_view<u8> rom) -> u64 {
 }
 
 auto Nintendo64::load(string location) -> LoadResult {
-  vector<u8> rom;
+  std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
-  if(!rom) return romNotFound;
+  if(rom.empty()) return romNotFound;
 
 
   this->sha256   = Hash::SHA256(rom).digest();
@@ -99,7 +99,7 @@ auto Nintendo64::load(string location) -> LoadResult {
   auto document = BML::unserialize(manifest);
   if(!document) return couldNotParseManifest;
 
-  pak = new vfs::directory;
+  pak = std::make_shared<vfs::directory>();
   pak->setAttribute("id",     document["game/id"].string());
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
@@ -150,7 +150,7 @@ auto Nintendo64::save(string location) -> bool {
   return true;
 }
 
-auto Nintendo64::cic_detect(array_view<u8> ipl3) -> string
+auto Nintendo64::cic_detect(std::span<const u8> ipl3) -> string
 {
   bool ntsc = true;
   string cic = "";
@@ -181,7 +181,7 @@ auto Nintendo64::cic_detect(array_view<u8> ipl3) -> string
   return cic;
 }
 
-auto Nintendo64::analyze(vector<u8>& data) -> string {
+auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   if(data.size() < 0x1000) {
     print("[mia] Loading rom failed. Minimum expected rom size is 4096 (0x1000) bytes. Rom size: ", data.size(), " (0x", hex(data.size()), ") bytes.\n");
     return {};
@@ -193,7 +193,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   //and running the checksum again.
   //this also works for modern IPL3s variants (proprietary or open source),
   //as long as they are used with a CIC we know of.
-  string cic = cic_detect(array_view<u8>(&data[0x40], 0xfc0));
+  string cic = cic_detect({&data[0x40], 0xfc0});
   if (cic == "") {
     //check if byte-swapped
     for(u32 index = 0; index < data.size(); index += 2) {
@@ -203,7 +203,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
       data[index + 1] = d0;
     }
 
-    cic = cic_detect(array_view<u8>(&data[0x40], 0xfc0));
+    cic = cic_detect({&data[0x40], 0xfc0});
     if (cic == "") {
       //check if little-endian
       for(u32 index = 0; index < data.size(); index += 4) {
@@ -217,7 +217,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
         data[index + 3] = d1;
       }
 
-      cic = cic_detect(array_view<u8>(&data[0x40], 0xfc0));
+      cic = cic_detect({&data[0x40], 0xfc0});
       if (cic == "") {
         //no match is found. Fallback to CIC 6102, big-endian.
         cic = "CIC-NUS-6102";
@@ -376,6 +376,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NIR") {eeprom = 512; rpak = true;}                             //Utchan Nanchan no Hono no Challenger: Denryuu Ira Ira Bou
   if(id == "NVL") {eeprom = 512; rpak = true;}                             //V-Rally Edition '99
   if(id == "NVY") {eeprom = 512; rpak = true;}                             //V-Rally Edition '99 (J)
+  if(id == "NJK") {eeprom = 512; rpak = true;}                             //Viewpoint 2064 (Master)
   if(id == "NWC") {eeprom = 512; rpak = true;}                             //Wild Choppers
   if(id == "NAD") {eeprom = 512;}                                          //Worms Armageddon (U)
   if(id == "NWU") {eeprom = 512;}                                          //Worms Armageddon (E)
@@ -747,7 +748,9 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   bool cpaks[4] = {false, false, false, false};
   bool rpaks[4] = {false, false, false, false};
   bool tpaks[4] = {false, false, false, false};
-  if(cpak && rpak) {
+  if (tpak) {
+    tpaks[0] = true; //default controller with Transfer Pak
+  } else if(cpak && rpak) {
     cpaks[0] = true; //default controller with Rumble Pak
     rpaks[1] = true;
   } else if(cpak) {

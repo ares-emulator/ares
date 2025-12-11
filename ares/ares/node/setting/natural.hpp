@@ -1,7 +1,7 @@
 struct Natural : Setting {
   DeclareClass(Natural, "setting.natural")
 
-  Natural(string name = {}, u64 value = {}, function<void (u64)> modify = {}) : Setting(name) {
+  Natural(string name = {}, u64 value = {}, std::function<void (u64)> modify = {}) : Setting(name) {
     _currentValue = value;
     _latchedValue = value;
     _modify = modify;
@@ -11,10 +11,10 @@ struct Natural : Setting {
   auto value() const -> u64 { return _currentValue; }
   auto latch() const -> u64 { return _latchedValue; }
 
-  auto setModify(function<void (u64)> modify) { _modify = modify; }
+  auto setModify(std::function<void (u64)> modify) { _modify = modify; }
 
   auto setValue(u64 value) -> void {
-    if(_allowedValues && !_allowedValues.find(value)) return;
+    if(!_allowedValues.empty() && !std::ranges::count(_allowedValues, value)) return;
     _currentValue = value;
     if(_dynamic) setLatch();
   }
@@ -25,23 +25,23 @@ struct Natural : Setting {
     modify(_latchedValue);
   }
 
-  auto setAllowedValues(vector<u64> allowedValues) -> void {
+  auto setAllowedValues(std::vector<u64> allowedValues) -> void {
     _allowedValues = allowedValues;
-    if(_allowedValues && !_allowedValues.find(_currentValue)) setValue(_allowedValues.first());
+    if(!_allowedValues.empty() && !std::ranges::count(_allowedValues, _currentValue)) setValue(_allowedValues.front());
   }
 
   auto readValue() const -> string override { return value(); }
   auto readLatch() const -> string override { return latch(); }
-  auto readAllowedValues() const -> vector<string> override {
-    vector<string> values;
-    for(auto value : _allowedValues) values.append(value);
+  auto readAllowedValues() const -> std::vector<string> override {
+    std::vector<string> values;
+    for(auto value : _allowedValues) values.push_back(value);
     return values;
   }
   auto writeValue(string value) -> void override { setValue(value.natural()); }
 
 protected:
-  function<void (u64)> _modify;
+  std::function<void (u64)> _modify;
   u64 _currentValue = {};
   u64 _latchedValue = {};
-  vector<u64> _allowedValues;
+  std::vector<u64> _allowedValues;
 };

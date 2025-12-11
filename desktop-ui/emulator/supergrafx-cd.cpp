@@ -2,9 +2,9 @@ struct SuperGrafxCD : PCEngine {
   SuperGrafxCD();
   auto load() -> LoadResult override;
   auto save() -> bool override;
-  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
-  shared_pointer<mia::Pak> bios;
+  std::shared_ptr<mia::Pak> bios;
   u32 regionID = 0;
 };
 
@@ -12,19 +12,19 @@ SuperGrafxCD::SuperGrafxCD() {
   manufacturer = "NEC";
   name = "SuperGrafx CD";
 
-  firmware.append({"Arcade Card", "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});
+  firmware.push_back({"Arcade Card", "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});
 
   allocatePorts();
 }
 
 auto SuperGrafxCD::load() -> LoadResult {
-  game = mia::Medium::create("PC Engine CD");
+  game = std::dynamic_pointer_cast<mia::Pak>(mia::Medium::create("PC Engine CD"));
   string location = Emulator::load(game, configuration.game);
   if(!location) return noFileSelected;
   LoadResult result = game->load(location);
   if(result != successful) return result;
 
-  bios = mia::Medium::create("PC Engine");
+  bios = std::dynamic_pointer_cast<mia::Pak>(mia::Medium::create("PC Engine"));
   result = bios->load(firmware[0].location);
   if(result != successful) {
     result.firmwareSystemName = "SuperGrafx CD";
@@ -65,7 +65,7 @@ auto SuperGrafxCD::save() -> bool {
   return true;
 }
 
-auto SuperGrafxCD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+auto SuperGrafxCD::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "SuperGrafx") return system->pak;
   if(node->name() == "SuperGrafx Card") return bios->pak;
   if(node->name() == "PC Engine CD Disc") return game->pak;

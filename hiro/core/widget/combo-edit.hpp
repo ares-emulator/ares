@@ -11,9 +11,9 @@ struct mComboEdit : mWidget {
   auto foregroundColor() const -> Color;
   auto item(u32 position) const -> ComboEditItem;
   auto itemCount() const -> u32;
-  auto items() const -> vector<ComboEditItem>;
-  auto onActivate(const function<void ()>& callback = {}) -> type&;
-  auto onChange(const function<void ()>& callback = {}) -> type&;
+  auto items() const -> std::vector<ComboEditItem>;
+  auto onActivate(const std::function<void ()>& callback = {}) -> type&;
+  auto onChange(const std::function<void ()>& callback = {}) -> type&;
   auto remove(sComboEditItem item) -> type&;
   auto reset() -> type& override;
   auto setBackgroundColor(Color color = {}) -> type&;
@@ -28,9 +28,9 @@ struct mComboEdit : mWidget {
     Color backgroundColor;
     bool editable = true;
     Color foregroundColor;
-    vector<sComboEditItem> items;
-    function<void ()> onActivate;
-    function<void ()> onChange;
+    std::vector<sComboEditItem> items;
+    std::function<void ()> onActivate;
+    std::function<void ()> onChange;
     string text;
   } state;
 

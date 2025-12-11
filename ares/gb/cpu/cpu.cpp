@@ -129,7 +129,7 @@ auto CPU::stoppable() -> bool {
 }
 
 auto CPU::power() -> void {
-  Thread::create(4 * 1024 * 1024, {&CPU::main, this});
+  Thread::create(4 * 1024 * 1024, std::bind_front(&CPU::main, this));
   SM83::power();
 
   for(auto& n : wram) n = 0x00;

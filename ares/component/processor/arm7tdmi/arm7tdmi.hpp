@@ -136,7 +136,7 @@ struct ARM7TDMI {
     }
 
     n32 data;
-    function<auto () -> void> modify;
+    std::function<auto () -> void> modify;
   };
 
   struct PSR {
@@ -248,17 +248,17 @@ struct ARM7TDMI {
   b1  irq;
   b1  nonsequential;
 
-  function<void (n32 opcode)> armInstruction[4096];
-  function<void ()> thumbInstruction[65536];
+  std::function<void (n32 opcode)> armInstruction[4096];
+  std::function<void ()> thumbInstruction[65536];
 
   //coprocessor.cpp
-  auto bindCDP(n4 id, function<void (n4 cm, n3 op2, n4 cd, n4 cn, n4 op1)> handler) -> void;
-  auto bindMCR(n4 id, function<void (n32 data, n4 cm, n3 op2, n4 cn, n3 op1)> handler) -> void;
-  auto bindMRC(n4 id, function<n32 (n4 cm, n3 op2, n4 cn, n3 op1)> handler) -> void;
+  auto bindCDP(n4 id, std::function<void (n4 cm, n3 op2, n4 cd, n4 cn, n4 op1)> handler) -> void;
+  auto bindMCR(n4 id, std::function<void (n32 data, n4 cm, n3 op2, n4 cn, n3 op1)> handler) -> void;
+  auto bindMRC(n4 id, std::function<n32 (n4 cm, n3 op2, n4 cn, n3 op1)> handler) -> void;
 
-  function<void (n4 cm, n3 op2, n4 cd, n4 cn, n4 op1)> CDP[16];
-  function<void (n32 data, n4 cm, n3 op2, n4 cn, n3 op1)> MCR[16];
-  function<n32 (n4 cm, n3 op2, n4 cn, n3 op1)> MRC[16];
+  std::function<void (n4 cm, n3 op2, n4 cd, n4 cn, n4 op1)> CDP[16];
+  std::function<void (n32 data, n4 cm, n3 op2, n4 cn, n3 op1)> MCR[16];
+  std::function<n32 (n4 cm, n3 op2, n4 cn, n3 op1)> MRC[16];
 
   //disassembler.cpp
   auto armDisassembleBranch(i24, n1) -> string;
@@ -310,8 +310,8 @@ struct ARM7TDMI {
   auto thumbDisassembleStackMultiple(n8, n1, n1) -> string;
   auto thumbDisassembleUndefined() -> string;
 
-  function<string (n32 opcode)> armDisassemble[4096];
-  function<string ()> thumbDisassemble[65536];
+  std::function<string (n32 opcode)> armDisassemble[4096];
+  std::function<string ()> thumbDisassemble[65536];
 
   n32 _pc;
   string _c;

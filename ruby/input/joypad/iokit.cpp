@@ -46,7 +46,7 @@ struct InputJoypadIOKit {
 
     auto appendAxis(IOHIDElementRef element) -> void {
       IOHIDElementCookie cookie = IOHIDElementGetCookie(element);
-      if(auto duplicate = axes.find([cookie](auto axis) { return IOHIDElementGetCookie(axis) == cookie; })) {
+      if(std::ranges::find_if(axes, [cookie](auto axis) { return IOHIDElementGetCookie(axis) == cookie; }) != axes.end()) {
         return;
       }
 
@@ -56,51 +56,51 @@ struct InputJoypadIOKit {
       if(range == 0) return;
 
       hid->axes().append(axes.size());
-      axes.append(element);
+      axes.push_back(element);
     }
 
     auto appendHat(IOHIDElementRef element) -> void {
       IOHIDElementCookie cookie = IOHIDElementGetCookie(element);
-      if(auto duplicate = hats.find([cookie](auto hat) { return IOHIDElementGetCookie(hat) == cookie; })) {
+      if(std::ranges::find_if(hats, [cookie](auto hat) { return IOHIDElementGetCookie(hat) == cookie; }) != hats.end()) {
         return;
       }
 
       u32 n = hats.size() * 2;
       hid->hats().append(n + 0);
       hid->hats().append(n + 1);
-      hats.append(element);
+      hats.push_back(element);
     }
 
     auto appendButton(IOHIDElementRef element) -> void {
       IOHIDElementCookie cookie = IOHIDElementGetCookie(element);
-      if(auto duplicate = buttons.find([cookie](auto button) { return IOHIDElementGetCookie(button) == cookie; })) {
+      if(std::ranges::find_if(buttons, [cookie](auto button) { return IOHIDElementGetCookie(button) == cookie; }) != buttons.end()) {
         return;
       }
 
       hid->buttons().append(buttons.size());
-      buttons.append(element);
+      buttons.push_back(element);
     }
 
-    shared_pointer<HID::Joypad> hid{new HID::Joypad};
+    std::shared_ptr<HID::Joypad> hid = std::make_shared<HID::Joypad>();
 
     IOHIDDeviceRef device = nullptr;
-    vector<IOHIDElementRef> axes;
-    vector<IOHIDElementRef> hats;
-    vector<IOHIDElementRef> buttons;
+    std::vector<IOHIDElementRef> axes;
+    std::vector<IOHIDElementRef> hats;
+    std::vector<IOHIDElementRef> buttons;
   };
-  vector<Joypad> joypads;
+  std::vector<Joypad> joypads;
   IOHIDManagerRef manager = nullptr;
 
   enum : s32 { Center = 0, Up = -1, Down = +1, Left = -1, Right = +1 };
 
-  auto assign(shared_pointer<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
+  auto assign(std::shared_ptr<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
     group.input(inputID).setValue(value);
   }
 
-  auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
+  auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
     for(auto& jp : joypads) {
       IOHIDDeviceRef device = jp.device;
 
@@ -157,7 +157,7 @@ struct InputJoypadIOKit {
         assign(jp.hid, HID::Joypad::GroupID::Button, n, (bool)value);
       }
 
-      devices.append(jp.hid);
+      devices.push_back(jp.hid);
     }
   }
 
@@ -211,14 +211,14 @@ struct InputJoypadIOKit {
     if(elements) {
       jp.appendElements(elements);
       CFRelease(elements);
-      joypads.append(jp);
+      joypads.push_back(jp);
     }
   }
 
   auto removeJoypad(IOHIDDeviceRef device) -> void {
     for(u32 n : range(joypads.size())) {
       if(joypads[n].device == device) {
-        joypads.remove(n);
+        joypads.erase(joypads.begin() + n);
         return;
       }
     }

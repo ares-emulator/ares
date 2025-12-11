@@ -16,21 +16,22 @@ auto Cartridge::connect() -> void {
 
   information = {};
   information.title    = pak->attribute("title");
-  information.regions  = pak->attribute("region").split(",").strip();
+  auto region = pak->attribute("region");
+  information.regions  = nall::split_and_strip(region, ",");
   information.bootable = pak->attribute("bootable").boolean();
 
   if(pak->attribute("mega32x").boolean()) {
-    board = new Board::Mega32X{*this};
+    board = std::make_unique<Board::Mega32X>(*this);
   } else if(pak->read("svp.rom")) {
-    board = new Board::SVP(*this);
+    board = std::make_unique<Board::SVP>(*this);
   } else if(pak->attribute("label") == "Game Genie") {
-    board = new Board::GameGenie(*this);
+    board = std::make_unique<Board::GameGenie>(*this);
   } else if(pak->attribute("jcart").boolean()) {
-    board = new Board::JCart(*this);
+    board = std::make_unique<Board::JCart>(*this);
   } else if(pak->attribute("board") == "REALTEC") {
-    board = new Board::Realtec(*this);
+    board = std::make_unique<Board::Realtec>(*this);
   } else {
-    board = new Board::Standard(*this);
+    board = std::make_unique<Board::Standard>(*this);
   }
   board->pak = pak;
   board->load();
@@ -66,14 +67,14 @@ auto Cartridge::step(u32 clocks) -> void {
 auto Cartridge::power(bool reset) -> void {
   if(!board) {
     if(Mega32X()) {
-      board = new Board::Mega32X{*this};
+      board = std::make_unique<Board::Mega32X>(*this);
     } else {
-      board = new Board::Interface(*this);
+      board = std::make_unique<Board::Interface>(*this);
     }
 
     board->load();
   }
-  Thread::create(board->frequency(), {&Cartridge::main, this});
+  Thread::create(board->frequency(), std::bind_front(&Cartridge::main, this));
   board->power(reset);
 }
 

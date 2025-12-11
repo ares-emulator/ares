@@ -185,7 +185,7 @@ auto InputSettings::eventAssign(TableViewCell cell) -> void {
   }
 }
 
-auto InputSettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
+auto InputSettings::eventInput(std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
   if(!activeMapping) return;
   if(!settingsWindow.focused()) return;
   if(device->isMouse()) return;
@@ -204,7 +204,7 @@ auto InputSettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, 
 
 auto InputSettings::setVisible(bool visible) -> InputSettings& {
   if(visible == 1) {
-    systemList.items().first().setSelected();
+    systemList.items().front().setSelected();
     if(emulator) {
       for(auto item : systemList.items()) {
         if(item.text() == emulator->name) item.setSelected();

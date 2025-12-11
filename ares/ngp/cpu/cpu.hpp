@@ -29,7 +29,7 @@ struct CPU : TLCS900H, Thread {
       Node::Debugger::Tracer::Notification io;
     } tracer;
 
-    vector<n24> vectors;
+    std::vector<n24> vectors;
   } debugger{*this};
 
   //Neo Geo Pocket Color: 0x87e2 (K2GE mode selection) is a privileged register.
@@ -653,8 +653,8 @@ struct CPU : TLCS900H, Thread {
 
     n8 width;
     n2 timing;
-    function<n8   (n24)> reader;
-    function<void (n24, n8)> writer;
+    std::function<n8   (n24)> reader;
+    std::function<void (n24, n8)> writer;
 
   //unserialized:
     n1 debugging;

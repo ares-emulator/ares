@@ -2,12 +2,13 @@
 //started: 2010-12-27
 
 #include <ares/ares.hpp>
+#include <vector>
 #include <component/processor/sm83/sm83.hpp>
 #include <component/eeprom/m93lcx6/m93lcx6.hpp>
 
 namespace ares::GameBoy {
   #include <ares/inline.hpp>
-  auto enumerate() -> vector<string>;
+  auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
 
   struct Model {

@@ -12,12 +12,12 @@ auto BrowserWindow::save() -> string {
   return pBrowserWindow::save(state);
 }
 
-auto BrowserWindow::setFilters(const vector<string>& filters) -> type& {
+auto BrowserWindow::setFilters(const std::vector<string>& filters) -> type& {
   state.filters = filters;
   return *this;
 }
 
-auto BrowserWindow::setParent(shared_pointer<mWindow> parent) -> type& {
+auto BrowserWindow::setParent(std::shared_ptr<mWindow> parent) -> type& {
   state.parent = parent;
   return *this;
 }

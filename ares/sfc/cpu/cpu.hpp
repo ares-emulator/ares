@@ -86,8 +86,8 @@ struct CPU : WDC65816, Thread, PPUcounter {
   auto serialize(serializer&) -> void;
 
   n8 wram[128_KiB];
-  vector<Thread*> coprocessors;
-  vector<Thread*> peripherals;
+  std::vector<Thread*> coprocessors;
+  std::vector<Thread*> peripherals;
 
 private:
   struct Counter {
