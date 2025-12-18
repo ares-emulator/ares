@@ -3,6 +3,7 @@ auto APU::serialize(serializer& s) -> void {
   s(pulse1);
   s(pulse2);
   s(triangle);
+  s(noise);
   s(dmc);
   s(frame);
 }
