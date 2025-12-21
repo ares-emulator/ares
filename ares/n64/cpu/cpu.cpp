@@ -112,7 +112,7 @@ auto CPU::instruction() -> void {
 
   if(Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
     if(vaddrAlignedError<Word>(access.vaddr, false)) return;
-    auto block = recompiler.block(ipu.pc, access.paddr, GDB::server.hasBreakpoints());
+    auto block = recompiler.block(ipu.pc, access.paddr);
     if(block) {
       block->execute(*this);
       return;
