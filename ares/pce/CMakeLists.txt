@@ -1,5 +1,7 @@
 ares_components(huc6280 msm5205)
 
+target_link_libraries(ares PRIVATE qon)
+
 ares_add_sources(
   CORE #
     pce
