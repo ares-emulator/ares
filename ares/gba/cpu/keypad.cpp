@@ -12,13 +12,16 @@ auto CPU::Keypad::run() -> void {
     system.controls.l->value(),
   };
 
+  bool inputHasChanged = false;
   conditionMet = condition;  //0 = OR, 1 = AND
   for(u32 index : range(10)) {
+    if(lookup[index] != keyStates[index]) inputHasChanged = true;
+    keyStates[index] = lookup[index];
     if(!flag[index]) continue;
     n1 input = lookup[index];
     if(condition == 0) conditionMet |= input;
     if(condition == 1) conditionMet &= input;
   }
   
-  if(conditionMet && enable) cpu.setInterruptFlag(CPU::Interrupt::Keypad);
+  if(inputHasChanged && conditionMet && enable) cpu.setInterruptFlag(CPU::Interrupt::Keypad);
 }
