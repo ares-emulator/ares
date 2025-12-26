@@ -202,6 +202,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1 enable;
     n1 condition;
     n1 flag[10];
+    n1 keyStates[10];
 
     n1 conditionMet;
   } keypad;
