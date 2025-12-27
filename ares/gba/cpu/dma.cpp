@@ -93,8 +93,11 @@ auto CPU::DMAC::Channel::write() -> void {
   if(!latch.length()) {
     active = false;
     if(targetMode == 3) latch.target = target;
-    if(repeat == 1) latch.length = length;
-    if(repeat == 0) enable = false;
+    if(repeat == 0 || timingMode == 0) {
+      enable = false;
+    } else {
+      latch.length = length;
+    }
   }
 
   cpu.dmac.writeCycle = false;
