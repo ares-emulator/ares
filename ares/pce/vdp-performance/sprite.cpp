@@ -53,7 +53,8 @@ auto VDC::Sprite::scanline(n16 y) -> void {
 }
 
 auto VDC::Sprite::render(n16 y) -> void {
-  if(!enable) return (void)memset(&output, 0, sizeof(output));
+  // The burstMode check fixes a glitch in the intro of City Hunter. It hasn't been tested in other games.
+  if(!enable || burstMode) return (void)memset(&output, 0, sizeof(output));
 
   y += 64;
 
