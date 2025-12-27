@@ -66,6 +66,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(keypad.enable);
   s(keypad.condition);
   for(auto& flag : keypad.flag) s(flag);
+  for(auto& keyState : keypad.keyStates) s(keyState);
   s(keypad.conditionMet);
 
   s(joybus.sc);
