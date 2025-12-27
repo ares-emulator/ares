@@ -83,6 +83,7 @@ auto Medium::create(string name) -> std::shared_ptr<Pak> {
   if(name == "WonderSwan Color") return std::make_shared<Media::WonderSwanColor>();
   if(name == "Pocket Challenge V2") return std::make_shared<Media::PocketChallengeV2>();
   if(name == "ZX Spectrum") return std::make_shared<Media::ZXSpectrum>();
+  if(name == "Tape") return std::make_shared<Tape>();
   return {};
 }
 
@@ -351,4 +352,83 @@ auto LaserDisc::readDataSector(string mmiPath, string cuePath, u32 sectorID) -> 
   }
 
   return {};
+}
+
+auto Tape::load(string location) -> LoadResult {
+  if(!inode::exists(location)) return romNotFound;
+
+  this->location = location;
+  this->manifest = analyze(location);
+  auto document = BML::unserialize(manifest);
+  if (!document) return couldNotParseManifest;
+
+  pak = std::make_shared<vfs::directory>();
+  pak->setAttribute("title",      document["game/title"].string());
+  pak->setAttribute("region",     document["game/region"].string());
+  pak->setAttribute("range",      document["game/range"].natural());
+  pak->setAttribute("frequency",  document["game/frequency"].natural());
+  pak->setAttribute("length",     document["game/length"].natural());
+  pak->setAttribute("tape", true);
+  pak->append("manifest.bml", manifest);
+
+  if (directory::exists(location)) {
+    pak->append("program.tape", vfs::disk::open({location, "program.tape"}, vfs::read));
+  } else if (file::exists(location)) {
+    if(location.iendsWith(".wav")) {
+      Decode::WAV wav;
+      if (wav.open(location)) {
+        std::vector <u8> data;
+        for (int i = 0; i < wav.sample_length(); i++) {
+          u64 sample = wav.read();
+
+          for (int byte = 0; byte < sizeof(u64); byte++) {
+            data.push_back((sample & (0xff << (byte * 8))) >> (byte * 8));
+          }
+        }
+        pak->append("program.tape", data);
+      }
+    }
+  }
+
+  return successful;
+}
+
+auto Tape::save(string location) -> bool {
+  auto document = BML::unserialize(manifest);
+  if (directory::exists(location)) {
+    Pak::save("program.tape", ".sav");
+  } else if (file::exists(location)) {
+    std::vector<s16> data;
+    auto fd = pak->read("program.tape");
+    for (u32 i = 0; i < fd->size() / sizeof(u64); i++) {
+      data.push_back((s16)fd->readl(8));
+    }
+    fd.reset();
+    Encode::WAV::mono<s16>(
+      location,
+      data,
+      pak->attribute("frequency").natural());
+  }
+
+  return true;
+}
+
+auto Tape::analyze(string location) -> string {
+  string s;
+  s += "game\n";
+  s +={"  name:   ", Medium::name(location), "\n"};
+  s +={"  title:  ", Medium::name(location), "\n"};
+  s += "  region: NTSC\n";  //database required to detect region
+
+  if (location.iendsWith(".wav")) {
+    Decode::WAV wav;
+    if (wav.open(location)) {
+      s +={"  range:     ", ((1 << wav.bitrate) - 1), "\n"};
+      s +={"  frequency: ", wav.frequency, "\n"};
+      s +={"  length:    ", wav.sample_length(), "\n"};
+      wav.close();
+    }
+  }
+
+  return s;
 }
