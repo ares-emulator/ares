@@ -38,6 +38,7 @@ When started from the command-line, ares accepts a few options.
 Usage: ./ares [options] game(s)
 
   --help                 Displays available options and exit
+  --terminal             Create new terminal window (Windows only)
   --fullscreen           Start in full screen mode
   --system system        Specify the system name
   --shader shader        Specify a slang shader to load (requires OpenGL or Metal)

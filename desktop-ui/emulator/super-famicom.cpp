@@ -130,7 +130,7 @@ auto SuperFamicom::load() -> LoadResult {
     port->connect();
 
     if(auto slot = cartridge->find<ares::Node::Port>("Super Game Boy/Cartridge Slot")) {
-      gb = mia::Medium::create("Game Boy");
+      gb = mia::Medium::create("Game Boy Color");
       if(gb->load(Emulator::load(gb, settings.paths.superFamicom.gameBoy)) == successful) {
         slot->allocate();
         slot->connect();
