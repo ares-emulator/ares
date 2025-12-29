@@ -24,9 +24,7 @@
 #endif
 
 #if __STDC_VERSION__ >= 201112L
-  #if !defined(_MSC_VER)
-    #include <stdalign.h>
-  #endif
+  #include <stdalign.h>
 #else
   #define alignas(bytes)
 #endif
