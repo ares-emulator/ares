@@ -3,6 +3,7 @@ namespace ares::Core {
   struct System;
   struct Peripheral;
   struct Port;
+  struct Tape;
   namespace Component {
     struct Component;
     struct RealTimeClock;
@@ -49,6 +50,7 @@ namespace ares::Node {
   using System           = std::shared_ptr<Core::System>;
   using Peripheral       = std::shared_ptr<Core::Peripheral>;
   using Port             = std::shared_ptr<Core::Port>;
+  using Tape             = std::shared_ptr<Core::Tape>;
   namespace Component {
     using Component      = std::shared_ptr<Core::Component::Component>;
     using RealTimeClock  = std::shared_ptr<Core::Component::RealTimeClock>;
@@ -102,6 +104,7 @@ namespace ares::Core {
   #include <ares/node/system.hpp>
   #include <ares/node/peripheral.hpp>
   #include <ares/node/port.hpp>
+  #include <ares/node/tape.hpp>
   namespace Component {
     #include <ares/node/component/component.hpp>
     #include <ares/node/component/real-time-clock.hpp>
