@@ -45,9 +45,9 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
     if constexpr(UseDebugger) return readROM<true>(mode, address);
     context.burstActive = checkBurst<IsDMA>(mode);
     context.romAccess = true;
-    if(mode & Prefetch && wait.prefetch) {
-      if(address == prefetch.addr && (!prefetch.empty() || prefetch.ahead)) {
-        prefetchStepInternal(1);
+    if(mode & Prefetch) {
+      if((address & 0x1fffe) && wait.prefetch && address == prefetch.addr && (!prefetch.empty() || prefetch.ahead)) {
+        prefetchStep(1);
         word = prefetchRead();
         if(mode & Word) word |= prefetchRead() << 16;
       } else {
