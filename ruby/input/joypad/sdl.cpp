@@ -1,4 +1,5 @@
 #pragma once
+#include ".deps/ares-deps-windows-x64/include/SDL3/SDL_joystick.h"
 
 struct InputJoypadSDL {
   Input& input;
@@ -84,13 +85,25 @@ struct InputJoypadSDL {
   }
 
 private:
+  auto crc32(const string& s) -> u32 {
+    return Hash::CRC32({(const u8*)s.data(), s.size()}).value();
+  }
+
+  static auto guidString(SDL_Joystick* js) -> string {
+    SDL_GUID guid = SDL_GetJoystickGUID(js);
+    char buffer[64]{};
+    SDL_GUIDToString(guid, buffer, sizeof(buffer));
+    return buffer;
+  }
+
   auto enumerate() -> void {
-    for(auto& joypad : joypads) {
-      SDL_CloseJoystick(joypad.handle);
-    }
     joypads.clear();
     int num_joysticks;
-    SDL_JoystickID *joysticks = SDL_GetJoysticks(&num_joysticks);
+    SDL_JoystickID* joysticks = SDL_GetJoysticks(&num_joysticks);
+
+    // Track the number of devices per model to assign unique path IDs
+    std::unordered_map<u32, u32> deviceSlotIndex;
+
     for(int i = 0; i < num_joysticks; i++) {
       SDL_JoystickID id = joysticks[i];
       Joypad jp;
@@ -116,9 +129,28 @@ private:
       if(vid == 0) vid = HID::Joypad::GenericVendorID;
       if(pid == 0) pid = HID::Joypad::GenericProductID;
 
+      string path = "";
+      if(const char* serial = SDL_GetJoystickSerial(jp.handle); serial && *serial) {
+        path = string{"SER:", serial, "|VID:", vid, "|PID:", pid};
+      } else if(const char* path = SDL_GetJoystickPath(jp.handle); path && *path) {
+        path = string{"PATH:", path, "|VID:", vid, "|PID:", pid};
+      } else {
+        string modelKey = {"GUID:", guidString(jp.handle), "|VID:", vid, "|PID:", pid};
+        u32 modelID = crc32(modelKey);
+        u32 slot = deviceSlotIndex[modelID]++;
+        path = string{modelKey, "|SLOT:", slot};
+      }
+
+      u32 pathID = crc32(path);
+
+      string name = SDL_GetJoystickName(jp.handle);
+      if(!name) name = "Joypad";
+      int playerIndex = SDL_GetJoystickPlayerIndex(jp.handle) ;
+      int index = playerIndex >= 0 ? playerIndex + 1 : SDL_GetJoystickID(jp.handle);;
+      jp.hid->setName({name, " ", index});
       jp.hid->setVendorID(vid);
       jp.hid->setProductID(pid);
-      jp.hid->setPathID(jp.id);
+      jp.hid->setPathID(pathID);
       for(u32 n : range(axes)) jp.hid->axes().append(n);
       for(u32 n : range(hats)) jp.hid->hats().append(n);
       for(u32 n : range(buttons)) jp.hid->buttons().append(n);
@@ -126,6 +158,7 @@ private:
 
       joypads.push_back(jp);
     }
+
     SDL_free(joysticks);
     SDL_UpdateJoysticks();
   }
