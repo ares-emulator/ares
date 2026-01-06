@@ -1,5 +1,4 @@
 #pragma once
-#include ".deps/ares-deps-windows-x64/include/SDL3/SDL_joystick.h"
 
 struct InputJoypadSDL {
   Input& input;
