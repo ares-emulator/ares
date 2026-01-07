@@ -162,7 +162,7 @@ namespace ares::ZXSpectrum {
 #include "arcade.cpp"
 
 auto Emulator::construct() -> void {
-  emulators.push_back(std::make_shared<Arcade>());
+  if(Arcade::available()) emulators.push_back(std::make_shared<Arcade>());
 
   #ifdef CORE_A26
   emulators.push_back(std::make_shared<Atari2600>());
