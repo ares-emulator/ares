@@ -37,7 +37,7 @@ else()
   endif()
 endif()
 
-add_compile_definitions(_WIN32_WINNT=0x0601) #global
+add_compile_definitions(_WIN32_WINNT=0x0A00) #global
 
 option(
   ARES_MINGW_USE_DWARF_SYMBOLS

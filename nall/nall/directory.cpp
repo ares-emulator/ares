@@ -87,4 +87,30 @@ NALL_HEADER_INLINE auto directory::ufiles(const string& pathname, const string& 
 
 #endif
 
+NALL_HEADER_INLINE auto directory::resolveSymLink(const string& pathname) -> string {
+  string result = pathname;
+#if defined (PLATFORM_WINDOWS)
+  HANDLE hFile = CreateFile(utf16_t(result.data()), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+  if (hFile != INVALID_HANDLE_VALUE)
+  {
+      wchar_t buffer [MAX_PATH];
+      memset(buffer, 0, MAX_PATH * sizeof(wchar_t));
+      if (GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, 0) < MAX_PATH) {
+        result = slice((const char*)utf8_t(buffer), 4, wcslen(buffer) - 4); //remove "\\?\" prefix
+      }
+      CloseHandle(hFile);
+  }
+#else
+  struct stat sb = {};
+  if (lstat(result.data(), &sb) != -1 && S_ISLNK(sb.st_mode)) {
+    char buffer[PATH_MAX];
+    memset(buffer, 0, PATH_MAX);
+    if(readlink(result.data(), buffer, PATH_MAX) < PATH_MAX) {
+      result = string{buffer};
+    }
+  }
+#endif
+  return result;
+}
+
 }
