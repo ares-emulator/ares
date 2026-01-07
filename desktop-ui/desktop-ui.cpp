@@ -90,8 +90,14 @@ auto nall::main(Arguments arguments) -> void {
     program.noFilePrompt = true;
   }
 
+  settings.filePath = locate("settings.bml");
+  if(string settingsFile; arguments.take("--settings-file", settingsFile)) {
+    settings.filePath = settingsFile;
+  }
+
   inputManager.create();
   Emulator::construct();
+
   settings.load();
 
   if(arguments.find("--setting")) {

@@ -5,6 +5,8 @@ struct Settings : Markup::Node {
   auto save() -> void;
   auto process(bool load) -> void;
 
+  string filePath;
+
   struct Video {
     string driver;
     string monitor;

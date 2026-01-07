@@ -27,16 +27,14 @@ DebugSettings& debugSettings = settingsWindow.debugSettings;
 DriverSettings& driverSettings = settingsWindow.driverSettings;
 
 auto Settings::load() -> void {
-  auto settingsPath = locate("settings.bml");
-  Markup::Node::operator=(BML::unserialize(string::read(settingsPath), " "));
+  Markup::Node::operator=(BML::unserialize(string::read(filePath), " "));
   process(true);
   save();
 }
 
 auto Settings::save() -> void {
   process(false);
-  auto settingsPath = locate("settings.bml");
-  file::write(settingsPath, BML::serialize(*this, " "));
+  file::write(filePath, BML::serialize(*this, " "));
 }
 
 auto Settings::process(bool load) -> void {
