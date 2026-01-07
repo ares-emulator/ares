@@ -160,7 +160,7 @@ auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
     filters.trimRight(":", 1L);
     filters.prepend(pak->name(), "|");
     dialog.setFilters({filters, "All|*"});
-    location = program.openFile(dialog);
+    location = directory::resolveSymLink(program.openFile(dialog));
   }
 
   if(location) {

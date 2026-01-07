@@ -1,7 +1,6 @@
 #pragma once
 
 #include <nall/file.hpp>
-#include <functional>
 #include <nall/inode.hpp>
 #include <nall/intrinsics.hpp>
 #include <nall/string.hpp>
@@ -26,6 +25,7 @@ struct directory : inode {
   static auto create(const string& pathname, u32 permissions = 0755) -> bool;  //recursive
   static auto remove(const string& pathname) -> bool;  //recursive
   static auto exists(const string& pathname) -> bool;
+  static auto resolveSymLink(const string& pathname) -> string;
 
   static auto folders(const string& pathname, const string& pattern = "*") -> std::vector<string> {
     auto folders = directory::ufolders(pathname, pattern);
