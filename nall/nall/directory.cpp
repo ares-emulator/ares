@@ -96,7 +96,7 @@ NALL_HEADER_INLINE auto directory::resolveSymLink(const string& pathname) -> str
       wchar_t buffer[MAX_PATH];
       memset(buffer, 0, MAX_PATH * sizeof(wchar_t));
       if(GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, 0) < MAX_PATH) {
-        result = slice((const char*)utf8_t(buffer), 4, wcslen(buffer) - 4); //remove "\\?\" prefix
+        result = (slice((const char*)utf8_t(buffer), 4, wcslen(buffer) - 4)).transform("\\", "/"); //remove "\\?\" prefix
       }
       CloseHandle(hFile);
   }
