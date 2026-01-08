@@ -11,6 +11,7 @@ struct Presentation : Window {
   auto refreshSystemMenu() -> void;
 
   std::vector<string> shaderDirectories;
+  static inline bool shaderArgApplied = false;
 
   MenuBar menuBar{this};
     Menu loadMenu{&menuBar};
