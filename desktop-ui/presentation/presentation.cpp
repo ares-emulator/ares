@@ -730,16 +730,18 @@ auto Presentation::loadShaders() -> void {
     }
   }
 
-  if(program.startShader) {
+  if(program.startShader && !shaderArgApplied) {
+    shaderArgApplied = true;
     string existingShader = settings.video.shader;
 
+    program.startShader.transform("\\", "/");
     if(!program.startShader.imatch("None")) {
-      settings.video.shader = {location, program.startShader, ".slangp"};
+      settings.video.shader = {program.startShader, ".slangp"};
     } else {
       settings.video.shader = program.startShader;
     }
 
-    if(inode::exists(settings.video.shader)) {
+    if(inode::exists({location, settings.video.shader})) {
       ruby::video.setShader({location, settings.video.shader});
       loadShaders();
     } else if(settings.video.shader.imatch("None")) {
@@ -749,7 +751,8 @@ auto Presentation::loadShaders() -> void {
       hiro::MessageDialog()
           .setTitle("Warning")
           .setAlignment(hiro::Alignment::Center)
-          .setText({ "Requested shader not found: ", settings.video.shader , "\nUsing existing defined shader: ", existingShader })
+          .setText({"Requested shader not found: ", location, settings.video.shader , 
+            "\nUsing existing defined shader: ", location, existingShader})
           .warning();
       settings.video.shader = existingShader;
     }
