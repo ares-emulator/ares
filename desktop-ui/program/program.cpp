@@ -30,6 +30,7 @@ auto Program::create() -> void {
         if(emulator->name == startSystem) {
           if(load(emulator, gameToLoad)) {
             if(startFullScreen) videoFullScreenToggle();
+            if(startPseudoFullScreen) videoPseudoFullScreenToggle();
           }
           return;
         }
@@ -39,6 +40,7 @@ auto Program::create() -> void {
     if(auto emulator = identify(gameToLoad)) {
       if(load(emulator, gameToLoad)) {
         if(startFullScreen) videoFullScreenToggle();
+        if(startPseudoFullScreen) videoPseudoFullScreenToggle();
       }
     }
   }
@@ -130,7 +132,7 @@ auto Program::main() -> void {
   //Window operations must be performed from the main thread.
   
   if(_needsResize) {
-    if(settings.video.adaptiveSizing) presentation.resizeWindow();
+    if(settings.video.adaptiveSizing && !startPseudoFullScreen) presentation.resizeWindow();
     _needsResize = false;
   }
 

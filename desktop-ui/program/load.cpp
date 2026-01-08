@@ -64,7 +64,7 @@ auto Program::load(string location) -> bool {
   runAheadUpdate();
   presentation.loadEmulator();
   presentation.showIcon(false);
-  if(settings.video.adaptiveSizing) presentation.resizeWindow();
+  if(settings.video.adaptiveSizing  && !startPseudoFullScreen) presentation.resizeWindow();
   manifestViewer.reload();
   cheatEditor.reload();
   memoryEditor.reload();

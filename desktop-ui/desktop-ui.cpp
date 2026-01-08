@@ -76,6 +76,8 @@ auto nall::main(Arguments arguments) -> void {
 
   if(arguments.take("--fullscreen")) {
     program.startFullScreen = true;
+  } else if(arguments.take("--pseudofullscreen")) {
+    program.startPseudoFullScreen = true;
   }
 
   if(string system; arguments.take("--system", system)) {
@@ -128,6 +130,7 @@ auto nall::main(Arguments arguments) -> void {
     print("  --terminal           Create new terminal window\n");
 #endif
     print("  --fullscreen         Start in full screen mode\n");
+    print("  --pseudofullscreen   Start in psuedo full screen mode\n");
     print("  --system name        Specify the system name\n");
     print("  --shader name        Specify the name of the shader to use\n");
     print("  --setting name=value Specify a value for a setting\n");

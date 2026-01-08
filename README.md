@@ -40,6 +40,7 @@ Usage: ./ares [options] game(s)
   --help                 Displays available options and exit
   --terminal             Create new terminal window (Windows only)
   --fullscreen           Start in full screen mode
+  --pseudofullscreen     Start in pseudo full screen mode
   --system system        Specify the system name
   --shader shader        Specify a slang shader to load (requires OpenGL or Metal)
   --setting name=value   Specify a value for a setting
