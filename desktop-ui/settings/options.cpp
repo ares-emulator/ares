@@ -9,32 +9,39 @@ auto OptionSettings::construct() -> void {
     program.rewindReset();
   }).doToggle();
   rewindLayout.setAlignment(1).setPadding(12_sx, 0);
-      rewindHint.setText("Allows you to reverse time via the rewind hotkey").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    rewindHint.setText("Allows you to reverse time via the rewind hotkey").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   runAhead.setText("Run-Ahead").setEnabled(co_serializable()).setChecked(settings.general.runAhead && co_serializable()).onToggle([&] {
     settings.general.runAhead = runAhead.checked() && co_serializable();
     program.runAheadUpdate();
   });
   runAheadLayout.setAlignment(1).setPadding(12_sx, 0);
-      runAheadHint.setText("Removes one frame of input lag, but doubles system requirements").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    runAheadHint.setText("Removes one frame of input lag, but doubles system requirements").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   autoSaveMemory.setText("Auto-Save Memory Periodically").setChecked(settings.general.autoSaveMemory).onToggle([&] {
     settings.general.autoSaveMemory = autoSaveMemory.checked();
   });
   autoSaveMemoryLayout.setAlignment(1).setPadding(12_sx, 0);
-      autoSaveMemoryHint.setText("Helps safeguard game saves from being lost").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    autoSaveMemoryHint.setText("Helps safeguard game saves from being lost").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   homebrewMode.setText("Homebrew Development Mode").setChecked(settings.general.homebrewMode).onToggle([&] {
     settings.general.homebrewMode = homebrewMode.checked();
   });
   homebrewModeLayout.setAlignment(1).setPadding(12_sx, 0);
-      homebrewModeHint.setText("Activate core-specific features to help homebrew developers").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    homebrewModeHint.setText("Activate core-specific features to help homebrew developers").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   forceInterpreter.setText("Force Interpreter").setChecked(settings.general.forceInterpreter).onToggle([&] {
     settings.general.forceInterpreter = forceInterpreter.checked();
   });
   forceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
-      forceInterpreterHint.setText("(Slow) Enable interpreter for cores that default to a recompiler").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    forceInterpreterHint.setText("(Slow) Enable interpreter for cores that default to a recompiler").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
+  noFilePromptOption.setText("Disable requests for loading additional media").setChecked(settings.general.noFilePrompt).onToggle([&] {
+    settings.general.noFilePrompt = noFilePromptOption.checked();
+    
+  });
+  noFilePromptLayout.setAlignment(1).setPadding(12_sx, 0);
+    noFilePromptHint.setText("Suppress secondary file load prompts (equivalent to --no-file-prompt)").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   nintendo64SettingsLabel.setText("Nintendo 64 Settings").setFont(Font().setBold());
 
@@ -42,7 +49,7 @@ auto OptionSettings::construct() -> void {
     settings.nintendo64.expansionPak = nintendo64ExpansionPakOption.checked();
   });
   nintendo64ExpansionPakLayout.setAlignment(1).setPadding(12_sx, 0);
-      nintendo64ExpansionPakHint.setText("Enable/Disable the 4MB Expansion Pak").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    nintendo64ExpansionPakHint.setText("Enable/Disable the 4MB Expansion Pak").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   for (auto& opt : array<string[4]>{"32KiB (Default)", "128KiB (Datel 1Meg)", "512KiB (Datel 4Meg)", "1984KiB (Maximum)"}) {
     ComboButtonItem item{&nintendo64ControllerPakBankOption};
@@ -79,8 +86,8 @@ auto OptionSettings::construct() -> void {
     }
   });
   nintendo64ControllerPakBankLayout.setAlignment(1).setPadding(12_sx, 0);
-      nintendo64ControllerPakBankLabel.setText("Controller Pak Size:");
-      nintendo64ControllerPakBankHint.setText("Sets the size of a newly created Controller Pak's available memory").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    nintendo64ControllerPakBankLabel.setText("Controller Pak Size:");
+    nintendo64ControllerPakBankHint.setText("Sets the size of a newly created Controller Pak's available memory").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   gameBoyAdvanceSettingsLabel.setText("Game Boy Advance Settings").setFont(Font().setBold());
 
