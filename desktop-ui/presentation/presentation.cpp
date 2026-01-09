@@ -520,7 +520,7 @@ auto Presentation::refreshSystemMenu() -> void {
 
   //Build the Dip Switch menu if the emulator core has a DIP Switches node
   if(auto dipSwitches = ares::Node::find<ares::Node::Object>(emulator->root, "DIP Switches")) {
-    Menu dipSwitchMenu;
+    Menu dipSwitchMenu{&systemMenu};
     dipSwitchMenu.setText("DIP Switches");
     
     for(auto dip : ares::Node::enumerate<ares::Node::Setting::Boolean>(emulator->root)) {
@@ -550,8 +550,6 @@ auto Presentation::refreshSystemMenu() -> void {
         });
       }
     }
-
-    if(dipSwitchMenu.actionCount() > 0) systemMenu.append(dipSwitchMenu);
   }
   if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
 
