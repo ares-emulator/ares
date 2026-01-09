@@ -146,7 +146,7 @@ auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
   } else if(!program.startGameLoad.empty()) {
     location = program.startGameLoad.front();
     program.startGameLoad.erase(program.startGameLoad.begin()); //pull from the command line if an entry is available
-  } else if(!program.noFilePrompt) {
+  } else if(!program.noFilePrompt && !settings.general.noFilePrompt) {
     BrowserDialog dialog;
     dialog.setTitle({"Load ", pak->name(), " Game"});
     dialog.setPath(path ? path : Path::desktop());

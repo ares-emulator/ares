@@ -73,6 +73,7 @@ struct Settings : Markup::Node {
     bool autoSaveMemory = true;
     bool homebrewMode = false;
     bool forceInterpreter = false;
+    bool noFilePrompt = false;
   } general;
 
   struct Rewind {
@@ -267,6 +268,9 @@ struct OptionSettings : VerticalLayout {
     HorizontalLayout forceInterpreterLayout{this, Size{~0, 0}, 5};
       CheckLabel forceInterpreter{&forceInterpreterLayout, Size{0, 0}, 5};
       Label forceInterpreterHint{&forceInterpreterLayout, Size{0, 0}};
+    HorizontalLayout noFilePromptLayout{this, Size{~0, 0}, 5};
+      CheckLabel noFilePromptOption{&noFilePromptLayout, Size{0, 0}, 5};
+      Label noFilePromptHint{&noFilePromptLayout, Size{0, 0}};
   Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
@@ -274,7 +278,6 @@ struct OptionSettings : VerticalLayout {
     HorizontalLayout nintendo64ControllerPakBankLayout{this, Size{~0, 0}, 5};
       Label nintendo64ControllerPakBankLabel{&nintendo64ControllerPakBankLayout, Size{0, 0}};
       ComboButton nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{0, 0}};
-      // LineEdit nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{40, 0}};
       Label nintendo64ControllerPakBankHint{&nintendo64ControllerPakBankLayout, Size{0, 0}};
 
   Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
