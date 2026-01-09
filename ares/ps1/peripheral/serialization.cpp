@@ -1,6 +1,4 @@
 auto Peripheral::serialize(serializer& s) -> void {
-  Thread::serialize(s);
-
   s(io.receiveData);
   s(io.receiveSize);
   s(io.transmitData);

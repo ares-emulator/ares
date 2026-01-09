@@ -1,4 +1,4 @@
-struct Disc : Thread, Memory::Interface {
+struct Disc : Memory::Interface {
   Node::Object node;
   Node::Port tray;
   Node::Peripheral cd;

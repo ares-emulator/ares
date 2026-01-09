@@ -1,6 +1,4 @@
 auto Disc::serialize(serializer& s) -> void {
-  Thread::serialize(s);
-
   s(drive.lba.current);
   s(drive.lba.request);
   s(drive.lba.seeking);
