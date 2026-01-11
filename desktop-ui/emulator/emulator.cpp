@@ -45,11 +45,10 @@ auto Emulator::region() -> string {
     if(!regions.empty()) {
       for(auto &prefer: preferredRegions) {
         if(std::ranges::find(regions, prefer) != regions.end()) return prefer; //NTSC-U, NTSC-J or PAL
+        if(prefer == "NTSC-U" || prefer == "NTSC-J") {
+          if(std::ranges::find(regions, string("NTSC")) != regions.end()) return "NTSC";
+        }
       }
-
-      //Handle generic "NTSC" region.
-      //NOTE: we don't need to check PAL because the above check covered it
-      if(std::ranges::find(regions, string{"NTSC"}) != regions.end()) return "NTSC";
 
       //If no preferred region was found, return the first region in the list
       //NOTE: required for 'unsual' regions like NTSC-DEV for 64DD
