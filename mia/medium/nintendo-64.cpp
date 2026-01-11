@@ -258,6 +258,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   case 'X': region = "PAL";  break;  //Europe
   case 'Y': region = "PAL";  break;  //Europe
   case 'Z': region = "PAL";  break;  //Europe
+  case 0:   region = "NTSC,PAL,MPAL"; break;  //region free (respect user preference)
   }
 
   if(region != "NTSC") {
@@ -771,7 +772,16 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
     if(config.bit(4,7) == 6) {sram = 128_KiB;}
     if(config.bit(0) == 1)   {rtc = true;}
 
-    //Advanced Homebrew ROM Header
+    //region free. The ROM will work on any region, irrespective of what is
+    //specified in the region code byte. So declare all regions (keeping 
+    //implicit preference for original region), so that Ares will respect
+    //user's preference.
+    if(config.bit(1) == 1) {
+      if(region == "NTSC") region = "NTSC,PAL,MPAL";
+      if(region == "PAL")  region = "PAL,NTSC,MPAL";
+      if(region == "MPAL") region = "MPAL,NTSC,PAL";
+    }
+
     //Controllers
     n8 controller_1 = data[0x34];
     n8 controller_2 = data[0x35];
