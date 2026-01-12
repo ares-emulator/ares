@@ -1,4 +1,34 @@
 #include <nall/directory.hpp>
+#if defined(PLATFORM_WINDOWS)
+  #include <winioctl.h>
+
+  //normally defined in ntifs.h (WDK)
+  typedef struct _REPARSE_DATA_BUFFER {
+    unsigned long  ReparseTag;
+    unsigned short ReparseDataLength;
+    unsigned short Reserved;
+    union {
+      struct {
+        unsigned short   SubstituteNameOffset;
+        unsigned short   SubstituteNameLength;
+        unsigned short   PrintNameOffset;
+        unsigned short   PrintNameLength;
+        unsigned long    Flags;
+        wchar_t          PathBuffer[1];
+      } SymbolicLinkReparseBuffer;
+      struct {
+        unsigned short   SubstituteNameOffset;
+        unsigned short   SubstituteNameLength;
+        unsigned short   PrintNameOffset;
+        unsigned short   PrintNameLength;
+        wchar_t          PathBuffer[1];
+      } MountPointReparseBuffer;
+      struct {
+        unsigned char    DataBuffer[1];
+      } GenericReparseBuffer;
+    } DUMMYUNIONNAME;
+  } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+#endif
 
 namespace nall {
 
@@ -90,15 +120,31 @@ NALL_HEADER_INLINE auto directory::ufiles(const string& pathname, const string& 
 NALL_HEADER_INLINE auto directory::resolveSymLink(const string& pathname) -> string {
   string result = pathname;
 #if defined (PLATFORM_WINDOWS)
-  HANDLE hFile = CreateFile(utf16_t(result.data()), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+  HANDLE hFile = CreateFile(utf16_t(result.data()), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 
+                            NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
   if(hFile != INVALID_HANDLE_VALUE)
   {
-      wchar_t buffer[MAX_PATH];
-      memset(buffer, 0, MAX_PATH * sizeof(wchar_t));
-      if(GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, 0) < MAX_PATH) {
-        result = (slice((const char*)utf8_t(buffer), 4, wcslen(buffer) - 4)).transform("\\", "/"); //remove "\\?\" prefix
+    BYTE buffer[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
+    memset(buffer, 0, MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+    if(DeviceIoControl(hFile, FSCTL_GET_REPARSE_POINT, NULL, 0, buffer, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, NULL, NULL)) {
+      REPARSE_DATA_BUFFER* reparseData = (REPARSE_DATA_BUFFER*)buffer;
+      u16 substituteNameOffset = 0, substituteNameLength = 0;
+      wchar_t* pathBuffer = nullptr;
+      if(reparseData->ReparseTag == IO_REPARSE_TAG_SYMLINK) {
+        pathBuffer = reparseData->SymbolicLinkReparseBuffer.PathBuffer;
+        substituteNameOffset = reparseData->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(wchar_t);
+        substituteNameLength = reparseData->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
+        result = (slice((const char*)utf8_t(pathBuffer) + substituteNameOffset, 0, substituteNameLength)).transform("\\", "/");
+        if(result.beginsWith("/??/")) result = result.slice(4);
+      } else if (reparseData->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT) {
+        pathBuffer = reparseData->MountPointReparseBuffer.PathBuffer;
+        substituteNameOffset = reparseData->MountPointReparseBuffer.SubstituteNameOffset / sizeof(wchar_t);
+        substituteNameLength = reparseData->MountPointReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
+        result = (slice((const char*)utf8_t(pathBuffer) + substituteNameOffset, 0, substituteNameLength)).transform("\\", "/");
+        if(result.beginsWith("/??/")) result = result.slice(4);
       }
-      CloseHandle(hFile);
+    }
+    CloseHandle(hFile);
   }
 #else
   struct stat sb = {};
