@@ -2,7 +2,7 @@ auto InputManager::createHotkeys() -> void {
   static bool fastForwardVideoBlocking;
   static bool fastForwardAudioBlocking;
   static bool fastForwardAudioDynamic;
-  
+
   hotkeys.push_back(InputHotkey("Toggle Fullscreen").onPress([&] {
     program.videoFullScreenToggle();
   }));
