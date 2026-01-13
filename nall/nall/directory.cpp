@@ -130,19 +130,23 @@ NALL_HEADER_INLINE auto directory::resolveSymLink(const string& pathname) -> str
       REPARSE_DATA_BUFFER* reparseData = (REPARSE_DATA_BUFFER*)buffer;
       u16 substituteNameOffset = 0, substituteNameLength = 0;
       wchar_t* pathBuffer = nullptr;
-      if(reparseData->ReparseTag == IO_REPARSE_TAG_SYMLINK) {
-        pathBuffer = reparseData->SymbolicLinkReparseBuffer.PathBuffer;
-        substituteNameOffset = reparseData->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(wchar_t);
-        substituteNameLength = reparseData->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
-        result = (slice((const char*)utf8_t(pathBuffer) + substituteNameOffset, 0, substituteNameLength)).transform("\\", "/");
-        if(result.beginsWith("/??/")) result = result.slice(4);
-      } else if (reparseData->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT) {
-        pathBuffer = reparseData->MountPointReparseBuffer.PathBuffer;
-        substituteNameOffset = reparseData->MountPointReparseBuffer.SubstituteNameOffset / sizeof(wchar_t);
-        substituteNameLength = reparseData->MountPointReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
-        result = (slice((const char*)utf8_t(pathBuffer) + substituteNameOffset, 0, substituteNameLength)).transform("\\", "/");
-        if(result.beginsWith("/??/")) result = result.slice(4);
+      switch(reparseData->ReparseTag) {
+        case IO_REPARSE_TAG_SYMLINK:
+          pathBuffer = reparseData->SymbolicLinkReparseBuffer.PathBuffer;
+          substituteNameOffset = reparseData->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(wchar_t);
+          substituteNameLength = reparseData->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
+          break;
+        case IO_REPARSE_TAG_MOUNT_POINT:
+          pathBuffer = reparseData->MountPointReparseBuffer.PathBuffer;
+          substituteNameOffset = reparseData->MountPointReparseBuffer.SubstituteNameOffset / sizeof(wchar_t);
+          substituteNameLength = reparseData->MountPointReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
+          break;
+        default:
+          CloseHandle(hFile);
+          return result; 
       }
+      result = (slice((const char*)utf8_t(pathBuffer) + substituteNameOffset, 0, substituteNameLength)).transform("\\", "/");
+      if(result.beginsWith("/??/")) result = result.slice(4);
     }
     CloseHandle(hFile);
   }
