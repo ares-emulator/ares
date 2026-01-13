@@ -2,7 +2,7 @@ auto InputManager::createHotkeys() -> void {
   static bool fastForwardVideoBlocking;
   static bool fastForwardAudioBlocking;
   static bool fastForwardAudioDynamic;
-
+  
   hotkeys.push_back(InputHotkey("Toggle Fullscreen").onPress([&] {
     program.videoFullScreenToggle();
   }));
@@ -156,6 +156,17 @@ auto InputManager::createHotkeys() -> void {
   hotkeys.push_back(InputHotkey("Decrease Audio").onPress([&] {
     if(!emulator) return;
     if(settings.audio.volume >= (f64)(0.1)) settings.audio.volume -= (f64)(0.1);
+  }));
+
+  hotkeys.push_back(InputHotkey("Enable/Disable Shader").onPress([&] {
+    if(!emulator) return;
+    if(!settings.video.shader.imatch("None")) {
+      if(ruby::video.shader().imatch("None")) {
+        ruby::video.setShader({locate("Shaders/"), settings.video.shader});
+      } else {
+        ruby::video.setShader("None");
+      }
+    }
   }));
 }
 
