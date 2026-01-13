@@ -63,6 +63,7 @@ struct Program : ares::Platform {
 
   string startSystem;
   string startShader;
+  string startSaveStateSlot;
 
   std::vector<ares::Node::Video::Screen> screens;
   std::vector<ares::Node::Audio::Stream> streams;
