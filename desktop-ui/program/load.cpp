@@ -103,6 +103,10 @@ auto Program::load(string location) -> bool {
 
   configuration = emulator->root->attribute("configuration");
 
+  if(program.startSaveStateSlot) {
+    stateLoad(program.startSaveStateSlot.integer());
+  }
+
   return true;
 }
 

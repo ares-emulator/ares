@@ -47,6 +47,7 @@ Usage: ./ares [options] game(s)
   --dump-all-settings    Show a list of all existing settings and exit
   --no-file-prompt       Do not prompt to load (optional) additional roms (eg: 64DD)
   --settings-file path   Specify a settings file override (settings.bml)
+  --save-state slot      Specify a save state slot to load (1-9)
 ```
 
 The --system option is useful when the system type cannot be auto-detected.

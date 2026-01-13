@@ -97,6 +97,12 @@ auto nall::main(Arguments arguments) -> void {
     settings.filePath = settingsFile;
   }
 
+  if(string savestate; arguments.take("--save-state", savestate)) {
+    if(savestate.length() == 1 && savestate[0] >= '1' && savestate[0] <= '9') {
+      program.startSaveStateSlot = savestate;
+    }
+  }
+
   inputManager.create();
   Emulator::construct();
 
@@ -125,17 +131,19 @@ auto nall::main(Arguments arguments) -> void {
   if(arguments.take("--help")) {
     print("Usage: ares [OPTIONS]... game(s)\n\n");
     print("Options:\n");
-    print("  --help               Displays available options and exit\n");
+    print("  --help                Displays available options and exit\n");
 #if defined(PLATFORM_WINDOWS)
-    print("  --terminal           Create new terminal window\n");
+    print("  --terminal            Create new terminal window\n");
 #endif
-    print("  --fullscreen         Start in full screen mode\n");
-    print("  --pseudofullscreen   Start in psuedo full screen mode\n");
-    print("  --system name        Specify the system name\n");
-    print("  --shader name        Specify the name of the shader to use\n");
-    print("  --setting name=value Specify a value for a setting\n");
-    print("  --dump-all-settings  Show a list of all existing settings and exit\n");
-    print("  --no-file-prompt     Do not prompt to load (optional) additional roms (eg: 64DD)\n");
+    print("  --fullscreen          Start in full screen mode\n");
+    print("  --pseudofullscreen    Start in psuedo full screen mode\n");
+    print("  --system name         Specify the system name\n");
+    print("  --shader name         Specify the name of the shader to use\n");
+    print("  --setting name=value  Specify a value for a setting\n");
+    print("  --dump-all-settings   Show a list of all existing settings and exit\n");
+    print("  --no-file-prompt      Do not prompt to load (optional) additional roms (eg: 64DD)\n");
+    print("  --settings-file path  Specify a settings file override (settings.bml)\n");
+    print("  --save-state slot     Specify a save state slot to load (1-9)\n");
     print("\n");
     print("Available Systems:\n");
     print("  ");
