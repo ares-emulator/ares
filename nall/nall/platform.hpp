@@ -159,8 +159,13 @@ namespace nall {
   #define MSG_NOSIGNAL 0
 #endif
 
-#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+#if defined(COMPILER_CLANG) 
   #define no_optimize __attribute__((optnone))
+#elif defined(COMPILER_GCC)
+  #define no_optimize __attribute__((optimize("O0")))
+#endif 
+
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
   #define NALL_NOINLINE __attribute__((noinline))
   #define alwaysinline inline __attribute__((always_inline))
   #define NALL_USED __attribute__((used))
