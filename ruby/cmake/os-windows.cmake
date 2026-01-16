@@ -57,7 +57,6 @@ target_link_libraries(
     ole32
     dinput8
     dxguid
-	xaudio2_9
 	ksuser
 )
 
