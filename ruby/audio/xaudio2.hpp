@@ -3,11 +3,8 @@
 #include <xaudio2.h>
 #include <mmdeviceapi.h>
 #include <functiondiscoverykeys_devpkey.h>
-#include <propvarutil.h>
 #include <audioclient.h>
 #include <mmreg.h>
-#include <ks.h>
-#include <ksmedia.h>
 
 struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   enum : u32 { Buffers = 32 };
