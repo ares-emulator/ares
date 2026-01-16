@@ -60,3 +60,17 @@ target_link_libraries(
 	xaudio2_9
 	ksuser
 )
+
+if(MSVC) 
+  target_link_libraries(
+    ruby
+	PRIVATE
+	  xaudio2
+  )
+else()
+  target_link_libraries(
+    ruby
+	PRIVATE
+	  xaudio2_9
+  )
+endif()
