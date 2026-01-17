@@ -69,6 +69,7 @@ auto Program::videoPseudoFullScreenToggle() -> void {
     if(!ruby::input.acquired() && ruby::video.hasMonitors().size() == 1) {
       ruby::input.acquire();
     }
+    startPseudoFullScreen = true;
   } else {
     if(ruby::input.acquired()) {
       ruby::input.release();
@@ -76,6 +77,7 @@ auto Program::videoPseudoFullScreenToggle() -> void {
     presentation.menuBar.setVisible(true);
     presentation.setFullScreen(false);
     presentation.viewport.setFocused();
+    startPseudoFullScreen = false;
   }
 }
 
