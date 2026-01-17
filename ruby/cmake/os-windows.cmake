@@ -7,7 +7,7 @@ target_sources(
 
 target_sources(
   ruby
-  PRIVATE audio/wasapi.cpp audio/xaudio2.cpp audio/xaudio2.hpp audio/directsound.cpp audio/waveout.cpp audio/sdl.cpp
+  PRIVATE audio/wasapi.cpp audio/xaudio2.cpp audio/directsound.cpp audio/waveout.cpp audio/sdl.cpp
 )
 
 target_sources(
