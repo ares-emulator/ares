@@ -49,6 +49,14 @@ endif()
 
 add_subdirectory(tools/sourcery)
 
+include(cmake/common/verify_sources.cmake)
+ares_register_verify(nall ${CMAKE_SOURCE_DIR}/nall)
+ares_register_verify(ares ${CMAKE_SOURCE_DIR}/ares)
+ares_register_verify(ruby ${CMAKE_SOURCE_DIR}/ruby)
+ares_register_verify(hiro ${CMAKE_SOURCE_DIR}/hiro)
+ares_register_verify(mia  ${CMAKE_SOURCE_DIR}/mia)
+ares_define_verify_aggregate()
+
 message_configuration()
 
 add_subdirectory(.github)
