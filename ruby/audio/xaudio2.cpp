@@ -1,4 +1,8 @@
-#include "xaudio2.hpp"
+#include <xaudio2.h>
+#include <mmdeviceapi.h>
+#include <functiondiscoverykeys_devpkey.h>
+#include <audioclient.h>
+#include <mmreg.h>
 
 struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   enum : u32 { Buffers = 32 };
@@ -16,31 +20,12 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
     return initialize();
   }
 
-  auto driver() -> string override { return "XAudio 2.1"; }
-  auto ready() -> bool override { return self.isReady; }
-
-  auto hasBlocking() -> bool override { return true; }
-  auto hasDynamic() -> bool override { return true; }
-
   auto hasDevices() -> std::vector<string> override {
     std::vector<string> devices;
     for(auto& device : self.devices) devices.push_back(device.name);
     return devices;
   }
-
-  auto hasFrequencies() -> std::vector<u32> override {
-    return {44100, 48000, 96000};
-  }
-
-  auto hasLatencies() -> std::vector<u32> override {
-    return {20, 40, 60, 80, 100};
-  }
-
-  auto setDevice(string device) -> bool override { return initialize(); }
-  auto setBlocking(bool blocking) -> bool override { return true; }
-  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
-  auto setLatency(u32 latency) -> bool override { return initialize(); }
-
+  
   auto clear() -> void override {
     if(self.sourceVoice) {
       self.sourceVoice->Stop(0);
@@ -53,7 +38,7 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
 
     if(self.sourceVoice) self.sourceVoice->Start(0);
   }
-
+  
   auto level() -> f64 override {
     XAUDIO2_VOICE_STATE state{};
     self.sourceVoice->GetState(&state);
@@ -85,47 +70,69 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
     write(buffer.data(), buffer.capacity<u8>());
     self.index = (self.index + 1) % Buffers;
   }
+  
+  auto driver() -> string override { return "XAudio 2.9"; }
+  auto ready() -> bool override { return self.isReady; }
+  auto hasBlocking() -> bool override { return true; }
+  auto hasDynamic() -> bool override { return true; }
+  auto hasFrequencies() -> std::vector<u32> override { return {44100, 48000, 96000}; }
+  auto hasLatencies() -> std::vector<u32> override { return {10, 20, 40, 60, 80, 100}; }
+  auto setDevice(string device) -> bool override { return initialize(); }
+  auto setBlocking(bool blocking) -> bool override { return true; }
+  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
+  auto setLatency(u32 latency) -> bool override { return initialize(); }
 
 private:
   struct Device {
-    u32 id = 0;
+    string id;
     u32 channels = 0;
     u32 frequency = 0;
     Format format = Format::none;
     string name;
   };
-  std::vector<Device> devices;
 
-  auto construct() -> void {
-    if(FAILED(XAudio2Create(&self.xa2Interface, 0 , XAUDIO2_DEFAULT_PROCESSOR))) return;
-
-    u32 deviceCount = 0;
-    self.xa2Interface->GetDeviceCount(&deviceCount);
-    for(u32 deviceIndex : range(deviceCount)) {
-      XAUDIO2_DEVICE_DETAILS deviceDetails{};
-      self.xa2Interface->GetDeviceDetails(deviceIndex, &deviceDetails);
-      auto format = deviceDetails.OutputFormat.Format.wFormatTag;
-      auto bits = deviceDetails.OutputFormat.Format.wBitsPerSample;
-
-      Device device;
-      device.id = deviceIndex;
-      device.name = (const char*)utf8_t(deviceDetails.DisplayName);
-      device.channels = deviceDetails.OutputFormat.Format.nChannels;
-      device.frequency = deviceDetails.OutputFormat.Format.nSamplesPerSec;
-      if(format == WAVE_FORMAT_PCM) {
-        if(bits == 16) device.format = Format::int16;
-        if(bits == 32) device.format = Format::int32;
-      } else if(format == WAVE_FORMAT_IEEE_FLOAT) {
-        if(bits == 32) device.format = Format::float32;
+  auto construct() -> bool {
+    bool result = false;
+    if(XAudio2Create(&self.xa2Interface, 0 , XAUDIO2_DEFAULT_PROCESSOR) != S_OK) return result;
+ 
+    IMMDeviceEnumerator* pEnumerator = nullptr;
+    if(SUCCEEDED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&pEnumerator)))) {
+      IMMDeviceCollection* pCollection = nullptr;
+      if(SUCCEEDED(pEnumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &pCollection))) {
+        u32 deviceCount = 0;
+        if(SUCCEEDED(pCollection->GetCount(&deviceCount))) {
+          for(u32 deviceIndex : range(deviceCount)) {
+            IMMDevice* pIMMDevice = nullptr;
+            if(SUCCEEDED(pCollection->Item(deviceIndex, &pIMMDevice))) {
+              IPropertyStore* pProps = nullptr;
+              if(SUCCEEDED(pIMMDevice->OpenPropertyStore(STGM_READ, &pProps))) {
+                PROPVARIANT varName = {};
+                PropVariantInit(&varName);
+                if(SUCCEEDED(pProps->GetValue(PKEY_Device_FriendlyName, &varName))) {
+                  Device device = {};
+                  LPWSTR pwstrId = nullptr;
+                  if(SUCCEEDED(pIMMDevice->GetId(&pwstrId))) {
+                    device.id = (const char*)utf8_t(pwstrId);
+                    device.name = (const char*)utf8_t(varName.pwszVal);
+                    if(self.queryDeviceDetails(pIMMDevice, device)) {
+                      devices.push_back(device);
+                      result = true;
+                    }
+                    CoTaskMemFree(pwstrId);
+                  }
+                }
+                PropVariantClear(&varName);
+              }
+              pProps->Release();
+            }
+            pIMMDevice->Release();
+          }
+        }
       }
-
-      //ensure devices.first() is the default device
-      if(deviceDetails.Role & DefaultGameDevice) {
-        devices.insert(devices.begin(), device);
-      } else {
-        devices.push_back(device);
-      }
+      pCollection->Release();
     }
+    pEnumerator->Release();
+    return result;
   }
 
   auto destruct() -> void {
@@ -135,6 +142,7 @@ private:
       self.xa2Interface->Release();
       self.xa2Interface = nullptr;
     }
+    CoUninitialize();
   }
 
   auto initialize() -> bool {
@@ -148,15 +156,14 @@ private:
 
     auto names = hasDevices();
     u32 idx = (u32)index_of(names, self.device).value_or(0);
-    u32 deviceID = devices[idx].id;
-    if(FAILED(self.xa2Interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, deviceID, nullptr))) return terminate(), false;
+    if(FAILED(self.xa2Interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, (LPCWSTR)utf16_t(devices[idx].id.data()), nullptr))) return terminate(), false;
 
-    WAVEFORMATEX waveFormat{};
+    WAVEFORMATEX waveFormat = {};
     waveFormat.wFormatTag = WAVE_FORMAT_PCM;
     waveFormat.nChannels = self.channels;
     waveFormat.nSamplesPerSec = self.frequency;
-    waveFormat.nBlockAlign = 4;
     waveFormat.wBitsPerSample = 16;
+    waveFormat.nBlockAlign = (waveFormat.nChannels * waveFormat.wBitsPerSample) / 8;
     waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
     waveFormat.cbSize = 0;
 
@@ -181,6 +188,33 @@ private:
     }
   }
 
+  auto queryDeviceDetails(IMMDevice* pIMMDevice, Device& device) -> bool {
+    IAudioClient* pAudioClient = nullptr;
+    if(pIMMDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, reinterpret_cast<void**>(&pAudioClient)) != S_OK) return false;
+    WAVEFORMATEX* pwfx = nullptr;
+    if(pAudioClient->GetMixFormat(&pwfx) !=S_OK) return pAudioClient->Release(), false;
+
+    if (pwfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE && pwfx->cbSize >= sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX)) {
+      PWAVEFORMATEXTENSIBLE pExt = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(pwfx);
+      if (IsEqualGUID(pExt->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
+        if(pExt->Format.wBitsPerSample == 32) device.format = Format::float32;
+      } else if(IsEqualGUID(pExt->SubFormat, KSDATAFORMAT_SUBTYPE_PCM)) {
+        if(pExt->Format.wBitsPerSample == 16) device.format = Format::int16;
+        if(pExt->Format.wBitsPerSample == 32) device.format = Format::int32;
+      }
+        device.channels = pExt->Format.nChannels;
+        device.frequency = pExt->Format.nSamplesPerSec;
+    } else {
+      if(pwfx->wBitsPerSample == 16) device.format = Format::int16;
+      if(pwfx->wBitsPerSample == 32) device.format = Format::int32;
+      device.channels = pwfx->nChannels;
+      device.frequency = pwfx->nSamplesPerSec;
+    }     
+    CoTaskMemFree(pwfx);
+    pAudioClient->Release();
+    return true;
+  }
+
   auto write(const u32* audioData, u32 bytes) -> void {
     XAUDIO2_BUFFER buffer{};
     buffer.AudioBytes = bytes;
@@ -190,8 +224,9 @@ private:
     self.sourceVoice->SubmitSourceBuffer(&buffer);
   }
 
-  bool isReady = false;
+  std::vector<Device> devices;
 
+  bool isReady = false;
   queue<u32> buffers[Buffers];
   u32 period = 0;          //amount (in 32-bit frames) of samples per buffer
   u32 index = 0;           //current buffer for writing samples to
@@ -208,8 +243,5 @@ private:
   STDMETHODIMP_(void) OnVoiceError(void* pBufferContext, HRESULT Error) noexcept override {}
   STDMETHODIMP_(void) OnVoiceProcessingPassEnd() noexcept override {}
   STDMETHODIMP_(void) OnVoiceProcessingPassStart(UINT32 BytesRequired) noexcept override {}
-
-  STDMETHODIMP_(void) OnBufferEnd(void* pBufferContext) noexcept override {
-    InterlockedDecrement(&self.queue);
-  }
+  STDMETHODIMP_(void) OnBufferEnd(void* pBufferContext) noexcept override { InterlockedDecrement(&self.queue); }
 };

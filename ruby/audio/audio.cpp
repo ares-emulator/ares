@@ -206,7 +206,7 @@ auto Audio::create(string driver) -> bool {
   #endif
 
   #if defined(AUDIO_XAUDIO2)
-  if(driver == "XAudio 2.1") self.instance = std::make_unique<AudioXAudio2>(*this);
+  if(driver == "XAudio 2.9") self.instance = std::make_unique<AudioXAudio2>(*this);
   #endif
 
 #if defined(AUDIO_SDL)
@@ -230,7 +230,7 @@ auto Audio::hasDrivers() -> std::vector<string> {
   #endif
 
   #if defined(AUDIO_XAUDIO2)
-  "XAudio 2.1",
+  "XAudio 2.9",
   #endif
 
 #if defined(AUDIO_SDL)
@@ -278,7 +278,7 @@ auto Audio::optimalDriver() -> string {
   #elif defined(AUDIO_ASIO)
   return "ASIO";
   #elif defined(AUDIO_XAUDIO2)
-  return "XAudio 2.1";
+  return "XAudio 2.9";
   #elif defined(AUDIO_SDL)
   return "SDL";
   #elif defined(AUDIO_DIRECTSOUND)
@@ -310,7 +310,7 @@ auto Audio::safestDriver() -> string {
   #elif defined(AUDIO_WASAPI)
   return "WASAPI";
   #elif defined(AUDIO_XAUDIO2)
-  return "XAudio 2.1";
+  return "XAudio 2.9";
   #elif defined(AUDIO_SDL)
   return "SDL";
   #elif defined(AUDIO_ALSA)

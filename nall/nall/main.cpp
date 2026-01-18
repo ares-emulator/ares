@@ -12,7 +12,7 @@ namespace nall {
 
 auto main(int argc, char** argv) -> int {
   #if defined(PLATFORM_WINDOWS)
-  CoInitialize(0);
+  CoInitializeEx(nullptr, COINIT_MULTITHREADED);
   WSAData wsaData{0};
   WSAStartup(MAKEWORD(2, 2), &wsaData);
   _setmode(_fileno(stdin ), O_BINARY);
@@ -36,6 +36,9 @@ auto main(int argc, char** argv) -> int {
   if(data) putchar('\r');  //ensures PS1 is printed at the start of the line
   #endif
 
+  #if defined(PLATFORM_WINDOWS)
+  CoUninitialize();
+  #endif
   return EXIT_SUCCESS;
 }
 

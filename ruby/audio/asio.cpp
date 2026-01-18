@@ -8,7 +8,7 @@ struct AudioASIO : AudioDriver {
   ~AudioASIO() { terminate(); }
 
   auto create() -> bool override {
-    super.setDevice(hasDevices().first());
+    super.setDevice(hasDevices().front());
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(2048);
@@ -56,7 +56,7 @@ struct AudioASIO : AudioDriver {
     if(std::ranges::find(latencies, self.activeDevice.minimumBufferSize) == latencies.end()) latencies.push_back(self.activeDevice.minimumBufferSize);
     if(std::ranges::find(latencies, self.activeDevice.maximumBufferSize) == latencies.end()) latencies.push_back(self.activeDevice.maximumBufferSize);
     if(std::ranges::find(latencies, self.activeDevice.preferredBufferSize) == latencies.end()) latencies.push_back(self.activeDevice.preferredBufferSize);
-    latencies.sort();
+    std::sort(latencies.begin(), latencies.end());
     return latencies;
   }
 
@@ -104,7 +104,7 @@ private:
     terminate();
 
     hasDevices();  //this call populates self.devices
-    if(!self.devices) return false;
+    if(self.devices.empty()) return false;
 
     self.activeDevice = {};
     for(auto& device : self.devices) {
@@ -114,7 +114,7 @@ private:
       }
     }
     if(!self.activeDevice) {
-      self.activeDevice = self.devices.first();
+      self.activeDevice = self.devices.front();
       self.device = self.activeDevice.name;
     }
 

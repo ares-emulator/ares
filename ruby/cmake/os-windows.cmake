@@ -7,7 +7,7 @@ target_sources(
 
 target_sources(
   ruby
-  PRIVATE audio/wasapi.cpp audio/xaudio2.cpp audio/xaudio2.hpp audio/directsound.cpp audio/waveout.cpp audio/sdl.cpp
+  PRIVATE audio/wasapi.cpp audio/xaudio2.cpp audio/directsound.cpp audio/waveout.cpp audio/sdl.cpp
 )
 
 target_sources(
@@ -57,4 +57,19 @@ target_link_libraries(
     ole32
     dinput8
     dxguid
+	ksuser
 )
+
+if(MSVC) 
+  target_link_libraries(
+    ruby
+	PRIVATE
+	  xaudio2
+  )
+else()
+  target_link_libraries(
+    ruby
+	PRIVATE
+	  xaudio2_9
+  )
+endif()

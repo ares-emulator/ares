@@ -8,6 +8,7 @@ static auto CALLBACK Window_windowProc(HWND, UINT, WPARAM, LPARAM) -> LRESULT;
 
 auto pApplication::exit() -> void {
   quit();
+  CoUninitialize();
   auto processID = GetCurrentProcessId();
   auto handle = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, true, processID);
   TerminateProcess(handle, 0);
@@ -76,7 +77,7 @@ auto pApplication::setScreenSaver(bool screenSaver) -> void {
 }
 
 auto pApplication::initialize() -> void {
-  CoInitialize(0);
+  CoInitializeEx(nullptr, COINIT_MULTITHREADED);
   InitCommonControls();
 
   WNDCLASS wc{};
