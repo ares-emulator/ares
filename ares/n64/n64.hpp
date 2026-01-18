@@ -12,6 +12,7 @@
 #include <component/processor/sm5k/sm5k.hpp>
 #include <span>
 #include <vector>
+#include <unordered_map>
 
 #if defined(ARCHITECTURE_AMD64)
 #include <nmmintrin.h>
