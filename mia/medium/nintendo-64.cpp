@@ -829,9 +829,9 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
     read_controller_config(3, controller_4);
 
     if (controller_1 == 0x00 && controller_2 == 0x00 && controller_3 == 0x00 && controller_4 == 0x00) {
-      // No controllers configured, set default used for years as backward compatibility
-      cpaks[0] = true;
-      rpaks[1] = true;
+      // No controllers configured. By default, just enable Rumble Pak as that
+      // doesn't hurt in any way, nor create save files.
+      rpaks[0] = true;
     }
   }
 
