@@ -229,6 +229,7 @@ Presentation::Presentation() {
   helpMenu.setText("Help");
   aboutAction.setText("About" ELLIPSIS).setIcon(Icon::Prompt::Question).onActivate([&] {
     multiFactorImage logo(Resource::Ares::Logo1x, Resource::Ares::Logo2x);
+    Program::Guard guard;
     AboutDialog()
     .setName(ares::Name)
     .setLogo(logo)

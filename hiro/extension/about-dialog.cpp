@@ -148,7 +148,7 @@ auto AboutDialog::show() -> void {
   if(!state.website) websiteLayout.setVisible(false);
 
   window.setTitle({"About ", state.name ? state.name : Application::name()});
-  window.setSize({max(320_sx, layout.minimumSize().width()), layout.minimumSize().height()});
+  window.setSize({max(480_sx, layout.minimumSize().width()), layout.minimumSize().height()});
   window.setResizable(false);
   window.setAlignment(state.relativeTo, state.alignment);
   window.setDismissable();
