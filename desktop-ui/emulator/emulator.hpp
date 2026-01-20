@@ -34,7 +34,6 @@ struct Emulator {
   virtual auto arcade() -> bool { return false; }
   virtual auto group() -> string { return manufacturer; }
   virtual auto portMenu(Menu& portMenu, ares::Node::Port port) -> void {}
-  static auto emuComparer(std::shared_ptr<Emulator> a, std::shared_ptr<Emulator> b) -> bool { return (a->name < b->name); }
 
   struct Firmware {
     string type;
