@@ -300,7 +300,6 @@ struct FirmwareSettings : VerticalLayout {
   auto eventClear() -> void;
   auto eventScan() -> void;
   auto findFirmware(string sha256) -> string;
-  static auto fwComparer(std::shared_ptr<Emulator> a, std::shared_ptr<Emulator> b) -> bool { return (a->name < b->name); }
 
   Label firmwareLabel{this, Size{~0, 0}, 5};
   TableView firmwareList{this, Size{~0, ~0}};

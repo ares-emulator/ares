@@ -8,6 +8,7 @@ auto EmulatorSettings::construct() -> void {
   emulatorList.append(TableViewColumn().setText("Name").setExpandable());
   emulatorList.append(TableViewColumn().setText("Manufacturer").setAlignment(1.0));
   emulatorList.setHeadered();
+  std::sort(emulators.begin(), emulators.end(), Emulator::emuComparer);
   for(auto& emulator : emulators) {
     TableViewItem item{&emulatorList};
     TableViewCell visible{&item};
