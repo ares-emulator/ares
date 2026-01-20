@@ -259,5 +259,7 @@ auto Emulator::construct() -> void {
   emulators.push_back(std::make_shared<ZXSpectrum128>());
   #endif
 
-  std::sort(emulators.begin(), emulators.end(), emuComparer);
+  std::sort(emulators.begin(), emulators.end(), [](std::shared_ptr<Emulator> a, std::shared_ptr<Emulator> b) { 
+    return (a->name < b->name); 
+  });
 }
