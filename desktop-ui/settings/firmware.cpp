@@ -21,7 +21,6 @@ auto FirmwareSettings::refresh() -> void {
   firmwareList.append(TableViewColumn().setText("Region"));
   firmwareList.append(TableViewColumn().setText("Location").setExpandable());
 
-  std::sort(emulators.begin(), emulators.end(), Emulator::emuComparer);
   for(auto& emulator : emulators) {
     for(auto& firmware : emulator->firmware) {
       TableViewItem item{&firmwareList};
