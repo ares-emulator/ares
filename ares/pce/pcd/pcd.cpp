@@ -26,7 +26,7 @@ auto PCD::load(Node::Object parent) -> void {
     tray->setType("Compact Disc");
   }
   tray->setHotSwappable(true);
-  tray->setAllocate([&](auto name) { return allocate(tray); });
+  tray->setAllocate([&](auto name) { return allocate(tray, name); });
   tray->setConnect([&] { return connect(); });
   tray->setDisconnect([&] { return disconnect(); });
 
@@ -99,9 +99,11 @@ auto PCD::unload() -> void {
   node.reset();
 }
 
-auto PCD::allocate(Node::Port parent) -> Node::Peripheral {
+auto PCD::allocate(Node::Port parent, string name) -> Node::Peripheral {
   if (Model::LaserActive()) {
-    return disc = parent->append<Node::Peripheral>("Laserdisc");
+    disc = parent->append<Node::Peripheral>("Laserdisc");
+    disc->setAttribute("media", name);
+    return disc;
   }
   return disc = parent->append<Node::Peripheral>("PC Engine CD Disc");
 }
@@ -142,6 +144,9 @@ auto PCD::disconnect() -> void {
   fd.reset();
   pak.reset();
   disc.reset();
+  if(Model::LaserActive()) {
+    ld.notifyDiscEjected();
+  }
 }
 
 auto PCD::save() -> void {
