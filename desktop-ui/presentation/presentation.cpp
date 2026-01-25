@@ -551,8 +551,9 @@ auto Presentation::refreshSystemMenu() -> void {
         });
       }
     }
+
+    systemMenu.append(MenuSeparator());
   }
-  if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
 
   u32 portsFound = 0;
   for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {

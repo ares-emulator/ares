@@ -37,6 +37,7 @@ auto main(int argc, char** argv) -> int {
   #endif
 
   #if defined(PLATFORM_WINDOWS)
+  WSACleanup();
   CoUninitialize();
   #endif
   return EXIT_SUCCESS;

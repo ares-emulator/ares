@@ -38,6 +38,7 @@ When started from the command-line, ares accepts a few options.
 Usage: ./ares [options] game(s)
 
   --help                 Displays available options and exit
+  --version              Displays the version string of the application
   --terminal             Create new terminal window (Windows only)
   --fullscreen           Start in full screen mode
   --pseudofullscreen     Start in pseudo full screen mode
