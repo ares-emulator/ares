@@ -132,6 +132,7 @@ auto nall::main(Arguments arguments) -> void {
     print("Usage: ares [OPTIONS]... game(s)\n\n");
     print("Options:\n");
     print("  --help                Displays available options and exit\n");
+    print("  --version             Displays the version string of the application");
 #if defined(PLATFORM_WINDOWS)
     print("  --terminal            Create new terminal window\n");
 #endif
@@ -151,6 +152,11 @@ auto nall::main(Arguments arguments) -> void {
       print(emulator->name, ", ");
     }
     print("\n");
+    return;
+  }
+
+  if(arguments.take("--version")) {
+    print("\n", ares::Version, "\n");
     return;
   }
 
