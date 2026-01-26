@@ -66,6 +66,7 @@ auto AboutDialog::show() -> void {
   nameLabel.setVisible((bool)state.name && !(bool)state.logo);
 
   Canvas logoCanvas{&layout, Size{~0, state.logo.height()}, 5_sy};
+  logoCanvas.setAlignment(0.5);
   logoCanvas.setCollapsible();
   if(state.logo) {
     logoCanvas.setIcon(state.logo);
