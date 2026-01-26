@@ -82,7 +82,7 @@ auto AboutDialog::show() -> void {
 
   HorizontalLayout versionLayout{&layout, Size{~0, 0}, 0};
   versionLayout.setCollapsible();
-  Label versionLabel{&versionLayout, Size{~0, 0}, 3_sx};
+  Label versionLabel{&versionLayout, Size{160, 0}, 3_sx};
   versionLabel.setAlignment(1.0);
   versionLabel.setFont(Font().setBold());
   versionLabel.setText("Version:");
@@ -93,7 +93,7 @@ auto AboutDialog::show() -> void {
 
   HorizontalLayout copyrightLayout{&layout, Size{~0, 0}, 0};
   copyrightLayout.setCollapsible();
-  Label copyrightLabel{&copyrightLayout, Size{~0, 0}, 3_sx};
+  Label copyrightLabel{&copyrightLayout, Size{160, 0}, 3_sx};
   copyrightLabel.setAlignment(1.0);
   copyrightLabel.setFont(Font().setBold());
   copyrightLabel.setText("Copyright:");
@@ -112,7 +112,7 @@ auto AboutDialog::show() -> void {
 
   HorizontalLayout licenseLayout{&layout, Size{~0, 0}, 0};
   licenseLayout.setCollapsible();
-  Label licenseLabel{&licenseLayout, Size{~0, 0}, 3_sx};
+  Label licenseLabel{&licenseLayout, Size{160, 0}, 3_sx};
   licenseLabel.setAlignment(1.0);
   licenseLabel.setFont(Font().setBold());
   licenseLabel.setText("License:");
@@ -131,7 +131,7 @@ auto AboutDialog::show() -> void {
 
   HorizontalLayout websiteLayout{&layout, Size{~0, 0}, 0};
   websiteLayout.setCollapsible();
-  Label websiteLabel{&websiteLayout, Size{~0, 0}, 3_sx};
+  Label websiteLabel{&websiteLayout, Size{160, 0}, 3_sx};
   websiteLabel.setAlignment(1.0);
   websiteLabel.setFont(Font().setBold());
   websiteLabel.setText("Website:");
