@@ -102,7 +102,7 @@ auto PPU::Objects::outputPixel(u32 x, u32 y) -> void {
   if(!mosaicOffset) {
     mosaicOffset = 1 + io.mosaicWidth;
     mosaic = output;
-  } else if(!mosaic.mosaic || !output.mosaic) {
+  } else if(!mosaic.mosaic || !output.mosaic || (output.priority < mosaic.priority)) {
     mosaic = output;
   }
   mosaicOffset--;
