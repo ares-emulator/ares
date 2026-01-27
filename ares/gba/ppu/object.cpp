@@ -6,7 +6,14 @@ auto PPU::Objects::setEnable(n1 status) -> void {
 auto PPU::Objects::scanline(u32 y) -> void {
   if(y >= 160) return;
 
-  mosaicOffset = 0;
+  hmosaicOffset = io.mosaicWidth;
+  if(y == 0 || vmosaicOffset == io.mosaicHeight) {
+    vmosaicOffset = 0;
+    mosaicY = y;
+  } else {
+    vmosaicOffset++;
+  }
+
   auto& buffer = lineBuffers[y & 1];
   for(auto& pixel : buffer) pixel = {};
   if(ppu.io.forceBlank[1] || cpu.stopped() || !io.enable[1]) return;  //checks if display conditions will be met next scanline
@@ -16,8 +23,7 @@ auto PPU::Objects::scanline(u32 y) -> void {
     if(object.affine == 0 && object.affineSize == 1) continue;  //hidden
     if(py >= object.height << object.affineSize) continue;  //offscreen
 
-    if(object.mosaic && io.mosaicHeight) {
-      s32 mosaicY = (y / (1 + io.mosaicHeight)) * (1 + io.mosaicHeight);
+    if(object.mosaic) {
       py = object.y >= 160 || mosaicY - object.y >= 0 ? u32(mosaicY - object.y) : 0;
     }
 
@@ -97,15 +103,17 @@ auto PPU::Objects::outputPixel(u32 x, u32 y) -> void {
 
   auto& buffer = lineBuffers[y & 1];
   output = buffer[x];
-  
-  //horizontal mosaic
-  if(!mosaicOffset) {
-    mosaicOffset = 1 + io.mosaicWidth;
+
+  if(hmosaicOffset == io.mosaicWidth) {
+    hmosaicOffset = 0;
     mosaic = output;
-  } else if(!mosaic.mosaic || !output.mosaic || (output.priority < mosaic.priority)) {
+  } else {
+    hmosaicOffset++;
+  }
+
+  if(!mosaic.mosaic || !output.mosaic || (output.priority < mosaic.priority)) {
     mosaic = output;
   }
-  mosaicOffset--;
 }
 
 auto PPU::Objects::power() -> void {
@@ -115,5 +123,7 @@ auto PPU::Objects::power() -> void {
   }
   output = {};
   mosaic = {};
-  mosaicOffset = 0;
+  mosaicY = 0;
+  hmosaicOffset = 0;
+  vmosaicOffset = 0;
 }

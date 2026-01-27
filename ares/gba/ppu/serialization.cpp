@@ -66,7 +66,9 @@ auto PPU::Objects::serialize(serializer& s) -> void {
   s(io.mosaicWidth);
   s(io.mosaicHeight);
 
-  s(mosaicOffset);
+  s(mosaicY);
+  s(hmosaicOffset);
+  s(vmosaicOffset);
 }
 
 auto PPU::Window::serialize(serializer& s) -> void {
