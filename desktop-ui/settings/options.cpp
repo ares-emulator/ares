@@ -41,7 +41,7 @@ auto OptionSettings::construct() -> void {
     
   });
   noFilePromptLayout.setAlignment(1).setPadding(12_sx, 0);
-    noFilePromptHint.setText("Suppress secondary file load prompts (equivalent to --no-file-prompt)").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    noFilePromptHint.setText("Suppress secondary media file load prompts").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   nintendo64SettingsLabel.setText("Nintendo 64 Settings").setFont(Font().setBold());
 

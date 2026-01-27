@@ -115,7 +115,7 @@ auto CheatEditor::refresh() -> void {
   }
 
   cheatList.resizeColumns();
-  cheatList.column(0).setWidth(16);
+  cheatList.column(0).setWidth(24);
 }
 
 auto CheatEditor::unload() -> void {
