@@ -202,14 +202,16 @@ private:
 
       n1 hblank;   //1 = allow access to OAM during Hblank
       n1 mapping;  //0 = two-dimensional, 1 = one-dimensional
-      n5 mosaicWidth;
-      n5 mosaicHeight;
+      n4 mosaicWidth;
+      n4 mosaicHeight;
     } io;
 
     Pixel lineBuffers[2][240];
     Pixel output;
     Pixel mosaic;
-    u32 mosaicOffset;
+    s32 mosaicY;
+    n4 hmosaicOffset;
+    n4 vmosaicOffset;
   } objects;
 
   struct Window {
