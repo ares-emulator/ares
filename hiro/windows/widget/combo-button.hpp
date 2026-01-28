@@ -9,7 +9,6 @@ struct pComboButton : pWidget {
   auto minimumSize() const -> Size override;
   auto remove(sComboButtonItem item) -> void;
   auto reset() -> void override;
-  auto setGeometry(Geometry geometry) -> void override;
 
   auto onChange() -> void;
 };
