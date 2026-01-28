@@ -1,4 +1,4 @@
-#if defined(PLATFORM_WINDOWS)
+#if defined(PLATFORM_WINDOWS) || defined(PLATFORM_MACOS)
   constexpr u32 layoutVertSize = 14;
 #else
   constexpr u32 layoutVertSize = 18;
