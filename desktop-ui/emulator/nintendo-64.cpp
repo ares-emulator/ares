@@ -64,7 +64,7 @@ auto Nintendo64::load() -> LoadResult {
   auto region = Emulator::region();
 
   string name;
-  if(game->pak->attribute("dd").boolean()) {
+  if(game->pak->attribute("dd").boolean() && !settings.general.noFilePrompt) {
     //use 64DD firmware settings
     std::vector<Firmware> firmware;
     for(auto& emulator : emulators) {
@@ -140,7 +140,7 @@ auto Nintendo64::load() -> LoadResult {
       port->connect();
       bool transferPakConnected = false;
       if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-        if(game->pak->attribute({"port", id+1, "/tpak"}).boolean()) {
+        if(game->pak->attribute({"port", id+1, "/tpak"}).boolean() && !settings.general.noFilePrompt) {
           #if defined(CORE_GB)
           auto transferPak = port->allocate("Transfer Pak");
           port->connect();
