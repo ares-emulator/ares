@@ -110,7 +110,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(openBus.data);
   s(openBus.iwramData);
 
-  s(prefetch.slot);
+  for(auto& slot : prefetch.slot) s(slot);
   s(prefetch.addr);
   s(prefetch.load);
   s(prefetch.wait);

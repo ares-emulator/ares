@@ -182,6 +182,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(ff6.flipOnCompare7);
   s(ff6.flipOnCapture3);
   s(ff6.flipOnCapture4);
+  s(ff6.output);
 
   s(t5.enable);
   s(t5.mode);
@@ -254,8 +255,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(adc.repeat);
   s(adc.busy);
   s(adc.end);
-  s(adc.result);
-
+  for(auto& r : adc.result) s(r);
   s(rtc.counter);
   s(rtc.enable);
   s(rtc.second);

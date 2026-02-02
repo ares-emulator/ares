@@ -58,8 +58,12 @@ auto KGE::Plane::serialize(serializer& s) -> void {
 
   s(hscroll);
   s(vscroll);
-  s(palette[0]);
-  s(palette[1]);
+  
+  for(auto& p : palette) {
+    for(auto& q : p) {
+      s(q);
+    }
+  }
 }
 
 auto KGE::Sprite::serialize(serializer& s) -> void {
@@ -91,11 +95,16 @@ auto KGE::Sprite::serialize(serializer& s) -> void {
 
   s(hscroll);
   s(vscroll);
-  s(palette);
+
+  for(auto& p : palette) {
+    for(auto& q : p) {
+      s(q);
+    }
+  }
 }
 
 auto KGE::DAC::serialize(serializer& s) -> void {
-  s(colors);
+  for(auto& color : colors) s(color);
   s(colorMode);
   s(negate);
 }
