@@ -1,4 +1,6 @@
 auto Player::serialize(serializer& s) -> void {
+  Thread::serialize(s);
+  
   s(status.enable);
   s(status.rumble);
 
