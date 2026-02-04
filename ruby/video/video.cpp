@@ -197,7 +197,8 @@ auto Video::create(string driver) -> bool {
   #endif
 
   #if defined(VIDEO_WGL)
-  if(driver == "OpenGL 3.2") self.instance = std::make_unique<VideoWGL>(*this);
+  if(driver == "OpenGL 3.2") self.instance = std::make_unique<VideoWGL>(*this, 3, 2);
+  if(driver == "OpenGL 4.6") self.instance = std::make_unique<VideoWGL>(*this, 4, 6);
   #endif
   
   #if defined(VIDEO_METAL)
@@ -213,7 +214,7 @@ auto Video::hasDrivers() -> std::vector<string> {
   return {
 
   #if defined(VIDEO_WGL)
-  "OpenGL 3.2",
+  "OpenGL 3.2", "OpenGL 4.6",
   #endif
 
   #if defined(VIDEO_DIRECT3D9)
