@@ -276,6 +276,8 @@ private:
       return false;
     }
 
+    print("OpenGL Version: ", (const char*)glGetString(GL_VERSION), ", GLSL: ", (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION),"\n");
+
     glXSwapInterval(self.blocking);
 
     //read attributes of frame buffer for later use, as requested attributes from above are not always granted
