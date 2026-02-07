@@ -41,6 +41,7 @@ struct Program : ares::Platform {
   auto captureScreenshot(const u32* data, u32 pitch, u32 width, u32 height) -> void;
   auto openFile(BrowserDialog&) -> string;
   auto selectFolder(BrowserDialog&) -> string;
+  auto saveFile(BrowserDialog& dialog) -> string;
 
   //drivers.cpp
   auto videoDriverUpdate() -> void;
