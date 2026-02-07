@@ -12,8 +12,8 @@ jobs:
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
-      codesign: true
-      official: ${{ github.ref_name == 'master' || github.ref_type == 'tag' }}
+      codesign: false
+      official: false
   build-aux:
     name: Build ares (auxiliary)
     uses: ./.github/workflows/build-aux.yml
@@ -24,4 +24,4 @@ jobs:
     secrets: inherit
     uses: ./.github/workflows/release.yml
     with:
-      notarize: true
+      notarize: false

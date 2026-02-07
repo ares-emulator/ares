@@ -1,23 +1,14 @@
-auto AI::serialize(serializer& s) -> void {
-  Thread::serialize(s);
-
-  s(fifo[0].address);
-  s(fifo[1].address);
-
-  s(io.dmaEnable);
-  s(io.dmaAddress);
-  s(io.dmaAddressCarry);
-  s(io.dmaLength);
-  s(io.dmaCount);
-  s(io.dmaOriginPc);
-  s(io.dacRate);
-  s(io.bitRate);
-
-  s(dac.frequency);
-  s(dac.precision);
-  s(dac.period);
-
-  if(s.reading() && stream->frequency() != dac.frequency) {
-    stream->setFrequency(dac.frequency);
-  }
+auto AI::serialization(serializer& s) -> void {
+	s.integer(io.dacRate);
+	s.integer(io.bitRate);
+	s.integer(io.dmaEnable);
+	s.integer(io.dmaCount);
+	for (auto& address : io.dmaAddress) s.integer(address);
+	for (auto& length : io.dmaLength) s.integer(length);
+	for (auto& pc : io.dmaOriginPc) s.integer(pc);
+	s.integer(dac.frequency);
+	s.integer(dac.precision);
+	s.integer(dac.period);	
+	s.real(outputLeft);
+	s.real(outputRight);
 }
