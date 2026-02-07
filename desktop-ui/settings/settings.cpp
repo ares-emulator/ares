@@ -10,6 +10,7 @@
 #include "paths.cpp"
 #include "drivers.cpp"
 #include "debug.cpp"
+#include "importexport.cpp"
 #include "home.cpp"
 
 Settings settings;
@@ -25,6 +26,7 @@ FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
 DebugSettings& debugSettings = settingsWindow.debugSettings;
 DriverSettings& driverSettings = settingsWindow.driverSettings;
+ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
 auto Settings::load() -> void {
   Markup::Node::operator=(BML::unserialize(string::read(filePath), " "));
@@ -215,6 +217,7 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Drivers").setIcon(Icon::Place::Settings));
   panelList.append(ListViewItem().setText("Debug").setIcon(Icon::Device::Network));
+  panelList.append(ListViewItem().setText("Settings File").setIcon(Icon::Action::Save));
   panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
 
@@ -228,6 +231,7 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(pathSettings, Size{~0, ~0});
   panelContainer.append(driverSettings, Size{~0, ~0});
   panelContainer.append(debugSettings, Size{~0, ~0});
+  panelContainer.append(importExportSettings, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
   videoSettings.construct();
@@ -240,6 +244,7 @@ auto SettingsWindow::initialize() -> void {
   pathSettings.construct();
   driverSettings.construct();
   debugSettings.construct();
+  importExportSettings.construct();
   homePanel.construct();
 
   setDismissable();
@@ -279,6 +284,7 @@ auto SettingsWindow::eventChange() -> void {
   pathSettings.setVisible(false);
   driverSettings.setVisible(false);
   debugSettings.setVisible(false);
+  importExportSettings.setVisible(false);
   homePanel.setVisible(false);
 
   bool found = false;
@@ -293,6 +299,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
     if(item.text() == "Drivers"  ) found = true, driverSettings.setVisible();
     if(item.text() == "Debug"    ) found = true, debugSettings.setVisible();
+    if(item.text() == "Settings File") found = true, importExportSettings.setVisible(); 
   }
   if(!found) homePanel.setVisible();
 

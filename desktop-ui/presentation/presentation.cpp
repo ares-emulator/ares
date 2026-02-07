@@ -150,6 +150,9 @@ Presentation::Presentation() {
   debugSettingsAction.setText("Debug" ELLIPSIS).setIcon(Icon::Device::Network).onActivate([&] {
     settingsWindow.show("Debug");
   });
+  importExportAction.setText("Settings File" ELLIPSIS).setIcon(Icon::Action::Save).onActivate([&] {
+    settingsWindow.show("Settings File");
+  });
 
   toolsMenu.setVisible(false).setText("Tools");
   saveStateMenu.setText("Save State").setIcon(Icon::Media::Record);

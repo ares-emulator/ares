@@ -16,7 +16,7 @@ auto TapeViewer::construct() -> void {
     dialog.setTitle("New Tape");
     dialog.setPath(settings.paths.home);
     dialog.setAlignment(presentation);
-    dialog.setFilters({"*.wav"});
+    dialog.setFilters({"wav|*.wav"});
     if (auto location = dialog.saveFile()) {
       if (Encode::WAV::mono<s16>(location, std::span<s16>(), 44100)) {
         if (emulator->loadTape(tape, location)) {
