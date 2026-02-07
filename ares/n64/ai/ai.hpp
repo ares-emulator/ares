@@ -42,9 +42,7 @@ struct AI : Thread {
 
     f64 outputLeft = 0.0;
     f64 outputRight = 0.0;
-
     f64 dac_clock = 0.0;
-    bool isDecaying = false;
 };
 
 extern AI ai;
