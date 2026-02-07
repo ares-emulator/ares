@@ -35,7 +35,7 @@ struct AI : Thread {
         u32 period;
     } dac;
 
-    // analog decay registers
+    // analog decay registers 
     f64 outputLeft = 0.0;
     f64 outputRight = 0.0;
 };
