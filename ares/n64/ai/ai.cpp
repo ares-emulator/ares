@@ -30,42 +30,59 @@ namespace ares::Nintendo64 {
             f64 left = 0, right = 0;
             sample(left, right);
             stream->frame(left, right);
-            step(dac.period);
+            // Step 1 clock at a time for precise decay integration
+            step(1);
         }
     }
 
     auto AI::sample(f64& left, f64& right) -> void {
-        //if DMA has data, update latches (outputLeft/Right)
-        if (io.dmaCount > 0 && io.dmaLength[0] > 0) {
-            auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
-            outputLeft = (f64)s16(data >> 16) / 32768.0;
-            outputRight = (f64)s16(data >> 0) / 32768.0;
+        // 1. Check if it's time to process a new sample from DMA
+        if (dac_clock <= 0) {
+            dac_clock += (f64)dac.period; // Cast to f64 for math safety
 
-            io.dmaAddress[0] += 4;
-            io.dmaLength[0] -= 4;
+            if (io.dmaCount > 0 && io.dmaLength[0] > 0) {
+                // Read the 32-bit word from RDRAM
+                auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
 
-            if (!io.dmaLength[0]) {
-                if (--io.dmaCount) {
+                // Convert s16 to f64 (-1.0 to +1.0)
+                outputLeft = (f64)s16(data >> 16) / 32768.0;
+                outputRight = (f64)s16(data >> 0) / 32768.0;
+
+                io.dmaAddress[0] += 4;
+                io.dmaLength[0] -= 4;
+
+                if (io.dmaLength[0] == 0) {
+                    // Shift DMA slots
                     io.dmaAddress[0] = io.dmaAddress[1];
                     io.dmaLength[0] = io.dmaLength[1];
                     io.dmaOriginPc[0] = io.dmaOriginPc[1];
+
+                    if (--io.dmaCount) {
+                        // There was another buffer waiting
+                    }
                     mi.raise(MI::IRQ::AI);
                 }
+                isDecaying = false; // We have active audio
+            }
+            else {
+                isDecaying = true;  // Buffer is empty, start the fade-out
             }
         }
-        else {
-            //if buffer is dry, apply the 8ms decay
-            //dac.period / system.frequency() = time elapsed
-            f64 decay = std::exp(-((f64)dac.period / system.frequency()) / 0.008);
-            outputLeft *= decay;
-            outputRight *= decay;
 
-            //prevent denormals
+        // 2. Apply Decay if we are in decay mode
+        if (isDecaying) {
+            // Pre-calculated constant (1 tick's worth of decay in an 8ms window)
+            static const f64 tickDecay = std::exp(-(1.0 / 93750000.0) / 0.008);
+            outputLeft *= tickDecay;
+            outputRight *= tickDecay;
+
+            // Prevent denormals (CPU performance killer)
             if (std::abs(outputLeft) < 1e-6) outputLeft = 0.0;
             if (std::abs(outputRight) < 1e-6) outputRight = 0.0;
         }
 
-        //report persistent state
+        // 3. Finalize state
+        dac_clock -= 1.0;
         left = outputLeft;
         right = outputRight;
     }
@@ -79,6 +96,11 @@ namespace ares::Nintendo64 {
         io = {};
         outputLeft = 0.0;
         outputRight = 0.0;
+
+        // Initialize new state variables
+        dac_clock = 0.0;
+        isDecaying = false;
+
         dac.frequency = 44100;
         dac.precision = 16;
         dac.period = system.frequency() / dac.frequency;
