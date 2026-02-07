@@ -28,40 +28,42 @@ namespace ares::Nintendo64 {
             f64 left = 0, right = 0;
             sample(left, right);
             stream->frame(left, right);
-            step(1); // Keep the 1-tick precision for the smoothest slope
+
+            // Safety: Ensure we always step at least 1 cycle
+            step(dac.period > 0 ? dac.period : 2125);
         }
     }
 
     auto AI::sample(f64& left, f64& right) -> void {
-        // 1. If the audio period is up, try to get fresh data
-        if (dac_clock <= 0) {
-            dac_clock += (f64)dac.period;
+        // 1. DATA PRESENT: Process as normal
+        if (io.dmaCount > 0 && io.dmaLength[0] > 0) {
+            auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
+            outputLeft = (f64)s16(data >> 16) / 32768.0;
+            outputRight = (f64)s16(data >> 0) / 32768.0;
 
-            if (io.dmaCount > 0 && io.dmaLength[0] > 0) {
-                auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
-                outputLeft = (f64)s16(data >> 16) / 32768.0;
-                outputRight = (f64)s16(data >> 0) / 32768.0;
+            io.dmaAddress[0] += 4;
+            io.dmaLength[0] -= 4;
 
-                io.dmaAddress[0] += 4;
-                io.dmaLength[0] -= 4;
+            if (io.dmaLength[0] == 0) {
+                // Shift the DMA registers to the next slot
+                io.dmaAddress[0] = io.dmaAddress[1];
+                io.dmaLength[0] = io.dmaLength[1];
+                io.dmaOriginPc[0] = io.dmaOriginPc[1]; // Restored
 
-                if (io.dmaLength[0] == 0) {
-                    io.dmaAddress[0] = io.dmaAddress[1];
-                    io.dmaLength[0] = io.dmaLength[1];
-                    io.dmaOriginPc[0] = io.dmaOriginPc[1];
-                    io.dmaCount--;
-                    mi.raise(MI::IRQ::AI);
-                }
+                io.dmaCount--;
+                mi.raise(MI::IRQ::AI);
             }
         }
+        // 2. DATA ABSENT: Apply the 8ms Tau decay at 44.1kHz rate
+        else {
+            outputLeft *= 0.997;
+            outputRight *= 0.997;
 
-        // 2. ALWAYS apply a tiny decay. 
-        // If we just got data, this is negligible. 
-        // If the buffer is dry, this creates the 'thud' slope.
-        outputLeft *= 0.999995;
-        outputRight *= 0.999995;
+            // Floor it at zero once it's quiet enough
+            if (std::abs(outputLeft) < 0.0001) outputLeft = 0.0;
+            if (std::abs(outputRight) < 0.0001) outputRight = 0.0;
+        }
 
-        dac_clock -= 1.0;
         left = outputLeft;
         right = outputRight;
     }
