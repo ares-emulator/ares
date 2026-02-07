@@ -20,8 +20,8 @@ struct AI : Thread {
     auto step(u32 clocks) -> void;
     auto power(bool reset) -> void;
     
-    auto read(u32 address) -> u32;
-    auto write(u32 address, u32 data) -> void;
+    template<u32 Size> auto read(u32 address, Thread& thread) -> u32;
+    template<u32 Size> auto write(u32 address, u32 data, Thread& thread) -> void;
 
     auto serialization(serializer&) -> void;
 
