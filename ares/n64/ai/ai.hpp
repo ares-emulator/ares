@@ -26,7 +26,7 @@ struct AI : Thread, Memory::RCP<AI> {
   auto writeWord(u32 address, u32 data, Thread& thread) -> void;
 
   //serialization.cpp
-  auto serialization(serializer&) -> void;
+  auto serialize(serializer&) -> void;
 
   struct FIFO {
       n24 address;
