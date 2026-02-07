@@ -443,31 +443,35 @@ auto InputRumble::rumble(u16 strong, u16 weak) -> void {
 
 VirtualPad::VirtualPad() {
   InputDevice::name = "Virtual Gamepad";
-  InputDevice::digital("Pad Up",          up);
-  InputDevice::digital("Pad Down",        down);
-  InputDevice::digital("Pad Left",        left);
-  InputDevice::digital("Pad Right",       right);
-  InputDevice::digital("Select",          select);
-  InputDevice::digital("Start",           start);
-  InputDevice::digital("A (South)",       south);
-  InputDevice::digital("B (East)",        east);
-  InputDevice::digital("X (West)",        west);
-  InputDevice::digital("Y (North)",       north);
-  InputDevice::digital("L-Bumper",        l_bumper);
-  InputDevice::digital("R-Bumper",        r_bumper);
-  InputDevice::digital("L-Trigger",       l_trigger);
-  InputDevice::digital("R-Trigger",       r_trigger);
-  InputDevice::digital("L-Stick (Click)", lstick_click);
-  InputDevice::digital("R-Stick (Click)", rstick_click);
-  InputDevice::analog ("L-Up",            lstick_up);
-  InputDevice::analog ("L-Down",          lstick_down);
-  InputDevice::analog ("L-Left",          lstick_left);
-  InputDevice::analog ("L-Right",         lstick_right);
-  InputDevice::analog ("R-Up",            rstick_up);
-  InputDevice::analog ("R-Down",          rstick_down);
-  InputDevice::analog ("R-Left",          rstick_left);
-  InputDevice::analog ("R-Right",         rstick_right);
-  InputDevice::rumble ("Rumble",          rumble);
+  InputDevice::digital("Pad Up",                       up);
+  InputDevice::digital("Pad Down",                     down);
+  InputDevice::digital("Pad Left",                     left);
+  InputDevice::digital("Pad Right",                    right);
+  InputDevice::digital("Select",                       select);
+  InputDevice::digital("Start",                        start);
+  InputDevice::digital("A (South)",                    south);
+  InputDevice::digital("B (East)",                     east);
+  InputDevice::digital("X (West)",                     west);
+  InputDevice::digital("Y (North)",                    north);
+  InputDevice::digital("L-Bumper",                     l_bumper);
+  InputDevice::digital("R-Bumper",                     r_bumper);
+  InputDevice::digital("L-Trigger",                    l_trigger);
+  InputDevice::digital("R-Trigger",                    r_trigger);
+  InputDevice::digital("L-Stick (Click)",              lstick_click);
+  InputDevice::digital("R-Stick (Click)",              rstick_click);
+  InputDevice::analog ("L-Up",                         lstick_up);
+  InputDevice::analog ("L-Down",                       lstick_down);
+  InputDevice::analog ("L-Left",                       lstick_left);
+  InputDevice::analog ("L-Right",                      lstick_right);
+  InputDevice::analog ("R-Up",                         rstick_up);
+  InputDevice::analog ("R-Down",                       rstick_down);
+  InputDevice::analog ("R-Left",                       rstick_left);
+  InputDevice::analog ("R-Right",                      rstick_right);
+  InputDevice::rumble ("Rumble",                       rumble);
+  InputDevice::digital("L-Stick Max Output Reducer 1", lstick_max_output_reduce_1);
+  InputDevice::digital("L-Stick Max Output Reducer 2", lstick_max_output_reduce_2);
+  InputDevice::digital("R-Stick Max Output Reducer 1", rstick_max_output_reduce_1);
+  InputDevice::digital("R-Stick Max Output Reducer 2", rstick_max_output_reduce_2);
 }
 
 //

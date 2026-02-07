@@ -65,6 +65,30 @@ struct Settings : Markup::Node {
     string defocus = "Pause";
   } input;
 
+  struct Stick {
+    string outputStyleString = "Octagon (Virtual) (Default)";
+    string outputStyleChoice = "Octagon (Virtual) (Default)";
+    f64 maxOutputReducerOneFactor = 0.5;
+    f64 maxOutputReducerTwoFactor = 0.25;
+    f64 preservedCustomMaxOutput = 85.0;
+    f64 customMaxOutput = 85.0;
+    string deadzoneShape = "Axial";
+    f64 deadzoneSize = 7.0;
+    f64 proportionalSensitivity = 1.0;
+    string responseCurveString = "Linear (Default)";
+    string responseCurveChoice = "Linear (Default)";
+    string responsePresetString = "None";
+    string responsePresetChoice = "None";
+    string preservedResponseCurveChoice = "Linear (Default)";
+    f64 preservedRangeNormalizedSwitchDistance = 0.5;
+    f64 preservedResponseStrength = 0.0;
+    f64 rangeNormalizedSwitchDistance = 0.5;
+    f64 responseStrength = 0.0;
+    bool virtualNotch = false;
+    f64 notchLengthFromEdge = 0.1;
+    f64 notchAngularSnappingDistance = 0.0;
+  } stick;
+
   struct Boot {
     bool fast = false;
     bool debugger = false;
@@ -224,6 +248,75 @@ struct InputSettings : VerticalLayout {
   u32 activeBinding = 0;
   Timer timer;
   PopupMenu menu;
+};
+
+struct StickSettings : VerticalLayout {
+  auto construct() -> void;
+  auto updateSlider() -> void;
+
+  Label analogStickSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout outputStyleLayout{this, Size{~0, 0}, 5};
+      Label outputStyleLabel{&outputStyleLayout, Size{0, 0}};
+      ComboButton outputStyleOption{&outputStyleLayout, Size{0, 0}};
+      Label outputStyleHint{&outputStyleLayout, Size{0, 0}};
+    TableLayout analogStickSettingsLayout{this, Size{~0, 0}};
+      Label maxOutputReducerOneFactorLabel{&analogStickSettingsLayout, Size{0, 0}};
+      Label maxOutputReducerOneFactorValue{&analogStickSettingsLayout, Size{120_sx, 0}};
+      HorizontalSlider maxOutputReducerOneFactorSlider{&analogStickSettingsLayout, Size{~0, 0}};
+      //
+      Label maxOutputReducerTwoFactorLabel{&analogStickSettingsLayout, Size{0, 0}};
+      Label maxOutputReducerTwoFactorValue{&analogStickSettingsLayout, Size{120_sx, 0}};
+      HorizontalSlider maxOutputReducerTwoFactorSlider{&analogStickSettingsLayout, Size{~0, 0}};
+      //
+      Label customMaxOutputLabel{&analogStickSettingsLayout, Size{0, 0}};
+      Label customMaxOutputValue{&analogStickSettingsLayout, Size{120_sx, 0}};
+      HorizontalSlider customMaxOutputSlider{&analogStickSettingsLayout, Size{~0, 0}};
+    Canvas customMaxOutputSpacer{this, Size{~0, 1}};
+    HorizontalLayout deadzoneShapeLayout{this, Size{~0, 0}, 5};
+      Label deadzoneShapeLabel{&deadzoneShapeLayout, Size{0, 0}};
+      RadioLabel deadzoneShapeAxial{&deadzoneShapeLayout, Size{0, 0}};
+      RadioLabel deadzoneShapeRadial{&deadzoneShapeLayout, Size{0, 0}};
+      Group deadzoneShapeGroup{&deadzoneShapeAxial, &deadzoneShapeRadial};
+    TableLayout analogStickSettingsTwoLayout{this, Size{~0, 0}};
+      Label deadzoneSizeLabel{&analogStickSettingsTwoLayout, Size{0, 0}};
+      Label deadzoneSizeValue{&analogStickSettingsTwoLayout, Size{50_sx, 0}};
+      HorizontalSlider deadzoneSizeSlider{&analogStickSettingsTwoLayout, Size{~0, 0}};
+    Label deadzoneSizeHint{this, Size{400, 0}};
+    Canvas deadzoneSpacer{this, Size{~0, 1}};
+    TableLayout analogStickSettingsThreeLayout{ this, Size{~0, 0} };
+      Label proportionalSensitivityLabel{&analogStickSettingsThreeLayout, Size{0, 0}};
+      Label proportionalSensitivityValue{&analogStickSettingsThreeLayout, Size{50_sx, 0}};
+      HorizontalSlider proportionalSensitivitySlider{&analogStickSettingsThreeLayout, Size{~0, 0}};
+    HorizontalLayout responsePresetLayout{this, Size{~0, 0}, 5};
+      Label responsePresetLabel{&responsePresetLayout, Size{0, 0}};
+      ComboButton responsePresetOption{&responsePresetLayout, Size{0, 0}};
+    HorizontalLayout responseCurveLayout{this, Size{~0, 0}, 5};
+      Label responseCurveLabel{&responseCurveLayout, Size{0, 0}};
+      ComboButton responseCurveOption{&responseCurveLayout, Size{0, 0}};
+      Label responseCurveHint{&responseCurveLayout, Size{0, 0}};
+    TableLayout analogStickSettingsFourLayout{ this, Size{~0, 0} };
+      Label rangeNormalizedSwitchDistanceLabel{&analogStickSettingsFourLayout, Size{0, 0}};
+      Label rangeNormalizedSwitchDistanceValue{&analogStickSettingsFourLayout, Size{50_sx, 0}};
+      HorizontalSlider rangeNormalizedSwitchDistanceSlider{&analogStickSettingsFourLayout, Size{~0, 0}};
+      //
+      Label responseStrengthLabel{&analogStickSettingsFourLayout, Size{0, 0}};
+      Label responseStrengthValue{&analogStickSettingsFourLayout, Size{50_sx, 0}};
+      HorizontalSlider responseStrengthSlider{&analogStickSettingsFourLayout, Size{~0, 0}};
+    Label responseStrengthHint{this, Size{900, 0}};
+    Canvas responseSpacer{this, Size{~0, 1}};
+    HorizontalLayout virtualNotchLayout{this, Size{~0, 0}, 5};
+      CheckLabel virtualNotchOption{&virtualNotchLayout, Size{0, 0}, 5};
+      Label virtualNotchHint{&virtualNotchLayout, Size{~0, 0}};
+    TableLayout analogStickSettingsFiveLayout{ this, Size{~0, 0} };
+      Label notchLengthFromEdgeLabel{&analogStickSettingsFiveLayout, Size{0, 0}};
+      Label notchLengthFromEdgeValue{&analogStickSettingsFiveLayout, Size{50_sx, 0}};
+      HorizontalSlider notchLengthFromEdgeSlider{&analogStickSettingsFiveLayout, Size{~0, 0}};
+      //
+      Label notchAngularSnappingDistanceLabel{&analogStickSettingsFiveLayout, Size{0, 0}};
+      Label notchAngularSnappingDistanceValue{&analogStickSettingsFiveLayout, Size{50_sx, 0}};
+      HorizontalSlider notchAngularSnappingDistanceSlider{&analogStickSettingsFiveLayout, Size{~0, 0}};
+      Widget spacer{this, Size{~0, ~0}, 0};
+    Label advisoryHint{this, Size{850, 0}};
 };
 
 struct HotkeySettings : VerticalLayout {
@@ -453,6 +546,7 @@ struct SettingsWindow : Window {
       VideoSettings videoSettings;
       AudioSettings audioSettings;
       InputSettings inputSettings;
+      StickSettings stickSettings;
       HotkeySettings hotkeySettings;
       EmulatorSettings emulatorSettings;
       OptionSettings optionSettings;
@@ -474,6 +568,7 @@ extern SettingsWindow& settingsWindow;
 extern VideoSettings& videoSettings;
 extern AudioSettings& audioSettings;
 extern InputSettings& inputSettings;
+extern StickSettings& stickSettings;
 extern HotkeySettings& hotkeySettings;
 extern EmulatorSettings& emulatorSettings;
 extern OptionSettings& optionSettings;
