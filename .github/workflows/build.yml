@@ -78,12 +78,10 @@ jobs:
       run: |
         brew uninstall --ignore-dependencies cmake
         brew install ${{ matrix.platform.install }}
+
     - name: "Build: Windows"
       if: runner.os != 'macOS' && runner.os != 'Linux'
-      run: |
-        # N64 only
-        sed -i 's/set(ARES_CORES .*)/set(ARES_CORES "n64")/' CMakeLists.txt
-        .github/scripts/build_windows.sh
+      run: .github/scripts/build_windows.sh
       env:
         ARES_BUILD_OFFICIAL: ${{ inputs.official }}
         ARES_PLATFORM_NAME: ${{ matrix.platform.name }}
@@ -91,6 +89,7 @@ jobs:
         CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
         NATIVE_PRESET: ${{ matrix.platform.native-cmake-preset }}
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
+
     - name: "Windows: sign"
       if: runner.os == 'Windows' && inputs.codesign
       continue-on-error: true
