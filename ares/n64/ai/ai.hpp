@@ -49,7 +49,6 @@ struct AI : Thread, Memory::RCP<AI> {
     u32 period;
   } dac;
 
-  // For audio ramping during buffer starvation
   f64 outputLeft = 0.0;
   f64 outputRight = 0.0;
 };

@@ -34,39 +34,37 @@ auto AI::main() -> void {
 }
 
 auto AI::sample(f64& left, f64& right) -> void {
-  if(io.dmaCount == 0) {
-    // Buffer starvation: decay instead of snap to zero
-    outputLeft *= 0.997;
-    outputRight *= 0.997;
+    //check DMA
+    if (io.dmaCount > 0 && io.dmaLength[0] && io.dmaEnable) {
+        io.dmaAddress[0].bit(13, 23) += io.dmaAddressCarry;
+        auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
+
+        //persist state
+        outputLeft = (s16(data >> 16)) / 32768.0;
+        outputRight = (s16(data >> 0)) / 32768.0;
+
+        io.dmaAddress[0].bit(0, 12) += 4;
+        io.dmaAddressCarry = io.dmaAddress[0].bit(0, 12) == 0;
+        io.dmaLength[0] -= 4;
+
+        if (!io.dmaLength[0]) {
+            if (--io.dmaCount) {
+                io.dmaAddress[0] = io.dmaAddress[1];
+                io.dmaLength[0] = io.dmaLength[1];
+                io.dmaOriginPc[0] = io.dmaOriginPc[1];
+                mi.raise(MI::IRQ::AI);
+            }
+        }
+    }
+    else {
+        //decay
+        outputLeft *= 0.997;
+        outputRight *= 0.997;
+    }
+
+    //assign
     left = outputLeft;
     right = outputRight;
-    return;
-  }
-
-  if(io.dmaLength[0] && io.dmaEnable) {
-    io.dmaAddress[0].bit(13,23) += io.dmaAddressCarry;
-    auto data  = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
-    auto l     = s16(data >> 16);
-    auto r     = s16(data >>  0);
-    left       = l / 32768.0;
-    right      = r / 32768.0;
-    
-    // Track outputs for ramping during starvation
-    outputLeft = left;
-    outputRight = right;
-
-    io.dmaAddress[0].bit(0,12) += 4;
-    io.dmaAddressCarry          = io.dmaAddress[0].bit(0,12) == 0;
-    io.dmaLength[0]            -= 4;
-  }
-  if(!io.dmaLength[0]) {
-    if(--io.dmaCount) {
-      io.dmaAddress[0]  = io.dmaAddress[1];
-      io.dmaLength [0]  = io.dmaLength [1];
-      io.dmaOriginPc[0] = io.dmaOriginPc[1];
-      mi.raise(MI::IRQ::AI);
-    }
-  }
 }
 
 auto AI::power(bool reset) -> void {
@@ -75,12 +73,11 @@ auto AI::power(bool reset) -> void {
   fifo[0] = {};
   fifo[1] = {};
   io = {};
+  outputLeft = 0.0;
+  outputRight = 0.0;
   dac.frequency = 44100;
   dac.precision = 16;
   dac.period    = system.frequency() / dac.frequency;
-  
-  outputLeft = 0.0;
-  outputRight = 0.0;
 }
 
 }
