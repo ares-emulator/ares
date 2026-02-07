@@ -34,18 +34,27 @@ auto AI::main() -> void {
 }
 
 auto AI::sample(f64& left, f64& right) -> void {
-    if (io.dmaCount > 0 && io.dmaLength[0] > 0 && io.dmaEnable) {
-        io.dmaAddress[0].bit(13, 23) += io.dmaAddressCarry;
-        auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
+    bool active = false;
 
-        outputLeft = (f64)((s16)(data >> 16)) / 32768.0;
-        outputRight = (f64)((s16)(data >> 0)) / 32768.0;
+    // 1. BUFFER MANAGEMENT & DATA READING
+    if (io.dmaCount > 0) {
+        // A: READ DATA (Only if length > 0 and Enabled)
+        if (io.dmaLength[0] > 0 && io.dmaEnable) {
+            io.dmaAddress[0].bit(13, 23) += io.dmaAddressCarry;
+            auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
 
-        io.dmaAddress[0].bit(0, 12) += 4;
-        io.dmaAddressCarry = io.dmaAddress[0].bit(0, 12) == 0;
-        io.dmaLength[0] -= 4;
+            outputLeft = (f64)((s16)(data >> 16)) / 32768.0;
+            outputRight = (f64)((s16)(data >> 0)) / 32768.0;
 
-        if (!io.dmaLength[0]) {
+            io.dmaAddress[0].bit(0, 12) += 4;
+            io.dmaAddressCarry = io.dmaAddress[0].bit(0, 12) == 0;
+            io.dmaLength[0] -= 4;
+
+            active = true; // We successfully read a sample
+        }
+
+        // B: SWAP BUFFER (Must run even if we didn't read data this cycle!)
+        if (io.dmaLength[0] == 0) {
             if (--io.dmaCount) {
                 io.dmaAddress[0] = io.dmaAddress[1];
                 io.dmaLength[0] = io.dmaLength[1];
@@ -54,11 +63,14 @@ auto AI::sample(f64& left, f64& right) -> void {
             mi.raise(MI::IRQ::AI);
         }
     }
-    else {
+
+    // 2. THE RAMP (If we didn't read a sample, decay the old one)
+    if (!active) {
         outputLeft *= 0.997;
         outputRight *= 0.997;
     }
 
+    // 3. OUTPUT
     left = outputLeft;
     right = outputRight;
 }
