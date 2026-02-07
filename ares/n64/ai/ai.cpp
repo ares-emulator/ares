@@ -25,12 +25,12 @@ auto AI::unload() -> void {
 }
 
 auto AI::main() -> void {
-  while(Thread::clock < 0) {
-    f64 left = 0, right = 0;
-    sample(left, right);
-    stream->frame(left, right);
-    step(dac.period);
-  }
+    while (Thread::clock < 0) {
+        f64 left = 0, right = 0;
+        sample(left, right);
+        stream->frame(left, right);
+        step(dac.period);
+    }
 }
 
 auto AI::sample(f64& left, f64& right) -> void {
@@ -67,9 +67,14 @@ auto AI::sample(f64& left, f64& right) -> void {
         if (std::abs(outputRight) < 1e-6) outputRight = 0.0;
     }
 
-    // report persistent state back to caller
+    // report persistent state
     left = outputLeft;
     right = outputRight;
+}
+
+auto AI::step(u32 clocks) -> void {
+    Thread::step(clocks);
+    Thread::synchronize();
 }
 
 auto AI::power(bool reset) -> void {
