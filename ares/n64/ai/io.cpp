@@ -40,7 +40,6 @@ template<u32 Size> auto AI::write(u32 address, u32 data, Thread& thread) -> void
         // AI_LENGTH
         u32 length = (data & 0x3'ffff) & ~7;
         if (io.dmaCount < 2) {
-            if (io.dmaCount == 0) mi.raise(MI::IRQ::AI);
             io.dmaLength[io.dmaCount] = length;
             io.dmaOriginPc[io.dmaCount] = cpu.ipu.pc;
             io.dmaCount++;
@@ -61,7 +60,9 @@ template<u32 Size> auto AI::write(u32 address, u32 data, Thread& thread) -> void
         // AI_DACRATE
         auto frequency = dac.frequency;
         io.dacRate = data & 0x3fff;
-        dac.frequency = nall::max(1, system.videoFrequency() / (io.dacRate + 1));
+        // BUGFIX: Use system.frequency() (CPU freq) not system.videoFrequency()
+        // N64 AI DAC rate is derived from CPU clock, not video clock
+        dac.frequency = nall::max(1u, (u32)(system.frequency() / (f64)(io.dacRate + 1)));
         dac.period = system.frequency() / dac.frequency;
         if (frequency != dac.frequency) stream->setFrequency(dac.frequency);
     }

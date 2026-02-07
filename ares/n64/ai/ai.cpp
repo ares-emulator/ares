@@ -29,13 +29,11 @@ namespace ares::Nintendo64 {
             sample(left, right);
             stream->frame(left, right);
 
-            // Safety: Ensure we always step at least 1 cycle
-            step(dac.period > 0 ? dac.period : 2125);
+            step(dac.period);
         }
     }
 
     auto AI::sample(f64& left, f64& right) -> void {
-        // 1. DATA PRESENT: Process as normal
         if (io.dmaCount > 0 && io.dmaLength[0] > 0) {
             auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
             outputLeft = (f64)s16(data >> 16) / 32768.0;
@@ -45,23 +43,17 @@ namespace ares::Nintendo64 {
             io.dmaLength[0] -= 4;
 
             if (io.dmaLength[0] == 0) {
-                // Shift the DMA registers to the next slot
                 io.dmaAddress[0] = io.dmaAddress[1];
                 io.dmaLength[0] = io.dmaLength[1];
-                io.dmaOriginPc[0] = io.dmaOriginPc[1]; // Restored
-
+                io.dmaOriginPc[0] = io.dmaOriginPc[1];
                 io.dmaCount--;
                 mi.raise(MI::IRQ::AI);
             }
         }
-        // 2. DATA ABSENT: Apply the 8ms Tau decay at 44.1kHz rate
         else {
+            //decay instead of snap
             outputLeft *= 0.997;
             outputRight *= 0.997;
-
-            // Floor it at zero once it's quiet enough
-            if (std::abs(outputLeft) < 0.0001) outputLeft = 0.0;
-            if (std::abs(outputRight) < 0.0001) outputRight = 0.0;
         }
 
         left = outputLeft;
@@ -77,10 +69,15 @@ namespace ares::Nintendo64 {
         io = {};
         outputLeft = 0.0;
         outputRight = 0.0;
-        dac_clock = 0.0;
+
+        // Initialize to safe defaults - will be properly set when game writes AI_DACRATE
         dac.frequency = 44100;
         dac.precision = 16;
-        dac.period = system.frequency() / dac.frequency;
+        // Calculate initial period based on typical N64 CPU frequency (93.75 MHz)
+        // This will be recalculated when AI_DACRATE is written
+        // Using system.frequency() / 44100 as the default
+        // Typical N64: 93750000 / 44100 ≈ 2125.85
+        dac.period = 2125;
     }
 
 }
