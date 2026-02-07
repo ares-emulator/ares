@@ -74,7 +74,6 @@ auto AI::sample(f64& left, f64& right) -> void {
 
 auto AI::step(u32 clocks) -> void {
     Thread::step(clocks);
-    Thread::synchronize();
 }
 
 auto AI::power(bool reset) -> void {
