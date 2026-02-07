@@ -34,16 +34,13 @@ auto AI::main() -> void {
 }
 
 auto AI::sample(f64& left, f64& right) -> void {
-    // If data is available and enabled, update our persistent variables
     if (io.dmaCount > 0 && io.dmaLength[0] > 0 && io.dmaEnable) {
         io.dmaAddress[0].bit(13, 23) += io.dmaAddressCarry;
         auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
 
-        // Convert and save to persistent state
-        outputLeft = (s16(data >> 16)) / 32768.0;
-        outputRight = (s16(data >> 0)) / 32768.0;
+        outputLeft = (f64)((s16)(data >> 16)) / 32768.0;
+        outputRight = (f64)((s16)(data >> 0)) / 32768.0;
 
-        // Upstream pointer/length maintenance
         io.dmaAddress[0].bit(0, 12) += 4;
         io.dmaAddressCarry = io.dmaAddress[0].bit(0, 12) == 0;
         io.dmaLength[0] -= 4;
@@ -58,27 +55,24 @@ auto AI::sample(f64& left, f64& right) -> void {
         }
     }
     else {
-        // RAMP: Decay the existing voltage toward zero
         outputLeft *= 0.997;
         outputRight *= 0.997;
     }
 
-    // Always output the current state of our persistent variables
     left = outputLeft;
     right = outputRight;
 }
 
 auto AI::power(bool reset) -> void {
-  Thread::reset();
-
-  fifo[0] = {};
-  fifo[1] = {};
-  io = {};
-  outputLeft = 0.0;
-  outputRight = 0.0;
-  dac.frequency = 44100;
-  dac.precision = 16;
-  dac.period    = system.frequency() / dac.frequency;
+    Thread::reset();
+    fifo[0] = {};
+    fifo[1] = {};
+    io = {};
+    outputLeft = 0.0;
+    outputRight = 0.0;
+    dac.frequency = 44100;
+    dac.precision = 16;
+    dac.period = system.frequency() / dac.frequency;
 }
 
 }

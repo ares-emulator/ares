@@ -26,27 +26,27 @@ struct AI : Thread, Memory::RCP<AI> {
   auto writeWord(u32 address, u32 data, Thread& thread) -> void;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
+  auto serialization(serializer&) -> void;
 
   struct FIFO {
-    n24 address;
+      n24 address;
   } fifo[2];
 
   struct IO {
-    n1  dmaEnable;
-    n24 dmaAddress[2];
-    n1  dmaAddressCarry;
-    n18 dmaLength[2];
-    n2  dmaCount;
-    u64 dmaOriginPc[2];
-    n14 dacRate;
-    n4  bitRate;
+      n1  dmaEnable;
+      n24 dmaAddress[2];
+      n1  dmaAddressCarry;
+      n18 dmaLength[2];
+      n2  dmaCount;
+      u64 dmaOriginPc[2];
+      n14 dacRate;
+      n4  bitRate;
   } io;
 
   struct DAC {
-    u32 frequency;
-    u32 precision;
-    u32 period;
+      u32 frequency;
+      u32 precision;
+      u32 period;
   } dac;
 
   f64 outputLeft = 0.0;
