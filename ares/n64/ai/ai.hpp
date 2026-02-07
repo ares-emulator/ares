@@ -3,7 +3,15 @@
 struct AI : Thread {
     Node::Object node;
     Node::Audio::Stream stream;
-    Debugger debugger;
+
+    struct Debugger {
+        auto load(Node::Object) -> void;
+        auto io(bool mode, u32 address, u32 data) -> void;
+
+        struct Tracer {
+            Node::Debugger::Tracer::Notification io;
+        } tracer;
+    } debugger;
 
     auto load(Node::Object) -> void;
     auto unload() -> void;
@@ -11,12 +19,10 @@ struct AI : Thread {
     auto sample(f64& left, f64& right) -> void;
     auto step(u32 clocks) -> void;
     auto power(bool reset) -> void;
+    
+    auto read(u32 address) -> u32;
+    auto write(u32 address, u32 data) -> void;
 
-    // io.cpp
-    auto readWord(u32 address, Thread& thread) -> u32;
-    auto writeWord(u32 address, u32 data, Thread& thread) -> void;
-
-    // serialization.cpp
     auto serialization(serializer&) -> void;
 
     struct IO {
@@ -35,7 +41,6 @@ struct AI : Thread {
         u32 period;
     } dac;
 
-    // analog decay registers 
     f64 outputLeft = 0.0;
     f64 outputRight = 0.0;
 };

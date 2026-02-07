@@ -1,6 +1,6 @@
-auto AI::readWord(u32 address, Thread& thread) -> u32 {
-  address = (address & 0x1f) >> 2;
-  n32 data;
+auto AI::read(u32 address) -> u32 {
+    u32 data = 0;
+    if (address == 0x00) data = io.dmaAddress[0];
 
   if(address != 3) {
     //AI_LENGTH (mirrored)
@@ -21,7 +21,7 @@ auto AI::readWord(u32 address, Thread& thread) -> u32 {
   return data;
 }
 
-auto AI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
+auto AI::write(u32 address, u32 data) -> void {
   address = (address & 0x1f) >> 2;
   n32 data = data_;
 
