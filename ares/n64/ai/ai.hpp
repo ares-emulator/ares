@@ -1,48 +1,57 @@
 //Audio Interface
 
-struct AI : Thread {
-    Node::Object node;
-    Node::Audio::Stream stream;
+struct AI : Thread, Memory::RCP<AI> {
+  Node::Object node;
+  Node::Audio::Stream stream;
 
-    struct Debugger {
-        auto load(Node::Object) -> void;
-        auto io(bool mode, u32 address, u32 data) -> void;
-        struct Tracer {
-            Node::Debugger::Tracer::Notification io;
-        } tracer;
-    } debugger;
-
+  struct Debugger {
+    //debugger.cpp
     auto load(Node::Object) -> void;
-    auto unload() -> void;
-    auto main() -> void;
-    auto sample(f64& left, f64& right) -> void;
-    auto step(u32 clocks) -> void;
-    auto power(bool reset) -> void;
+    auto io(bool mode, u32 address, u32 data) -> void;
 
-    template<u32 Size> auto read(u32 address, Thread& thread) -> u32;
-    template<u32 Size> auto write(u32 address, u32 data, Thread& thread) -> void;
+    struct Tracer {
+      Node::Debugger::Tracer::Notification io;
+    } tracer;
+  } debugger;
 
-    auto serialization(serializer&) -> void;
+  //ai.cpp
+  auto load(Node::Object) -> void;
+  auto unload() -> void;
+  auto main() -> void;
+  auto sample(f64& left, f64& right) -> void;
+  auto power(bool reset) -> void;
 
-    struct IO {
-        u32 dacRate;
-        u32 bitRate;
-        u32 dmaEnable;
-        u32 dmaCount;
-        u32 dmaAddress[2];
-        u32 dmaLength[2];
-        u32 dmaOriginPc[2];
-    } io;
+  //io.cpp
+  auto readWord(u32 address, Thread& thread) -> u32;
+  auto writeWord(u32 address, u32 data, Thread& thread) -> void;
 
-    struct DAC {
-        u32 frequency;
-        u32 precision;
-        u32 period;
-    } dac;
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
 
-    f64 outputLeft = 0.0;
-    f64 outputRight = 0.0;
-    f64 dac_clock = 0.0;
+  struct FIFO {
+    n24 address;
+  } fifo[2];
+
+  struct IO {
+    n1  dmaEnable;
+    n24 dmaAddress[2];
+    n1  dmaAddressCarry;
+    n18 dmaLength[2];
+    n2  dmaCount;
+    u64 dmaOriginPc[2];
+    n14 dacRate;
+    n4  bitRate;
+  } io;
+
+  struct DAC {
+    u32 frequency;
+    u32 precision;
+    u32 period;
+  } dac;
+
+  // For audio ramping during buffer starvation
+  f64 outputLeft = 0.0;
+  f64 outputRight = 0.0;
 };
 
 extern AI ai;
