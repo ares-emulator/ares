@@ -78,13 +78,19 @@ jobs:
       run: |
         brew uninstall --ignore-dependencies cmake
         brew install ${{ matrix.platform.install }}
-    - name: "Build: Windows"
+- name: "Build: Windows"
       if: runner.os != 'macOS' && runner.os != 'Linux'
-      run: .github/scripts/build_windows.sh
+      run: |
+        # Force the project to only see N64 by patching the CMake configuration
+        # This replaces the default cores list with just "n64"
+        sed -i 's/set(ARES_CORES .*)/set(ARES_CORES "n64")/' CMakeLists.txt
+        
+        # Now run the script as normal
+        .github/scripts/build_windows.sh
       env:
         ARES_BUILD_OFFICIAL: ${{ inputs.official }}
         ARES_PLATFORM_NAME: ${{ matrix.platform.name }}
-        ARES_CORES: n64  # N64 TESTING
+        ARES_CORES: n64
         CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
         NATIVE_PRESET: ${{ matrix.platform.native-cmake-preset }}
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
