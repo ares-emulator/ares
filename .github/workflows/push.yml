@@ -14,10 +14,10 @@ jobs:
     with:
       codesign: false
       official: false
-  build-aux:
-    name: Build ares (auxiliary)
-    uses: ./.github/workflows/build-aux.yml
-    secrets: inherit
+#  build-aux:
+#    name: Build ares (auxiliary)
+#    uses: ./.github/workflows/build-aux.yml
+#    secrets: inherit
   release:
     name: Release
     needs: build

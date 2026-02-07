@@ -55,18 +55,19 @@ auto AI::sample(f64& left, f64& right) -> void {
         }
     }
 
-    // Analog discharge logic
+    // analog decay only when DMA buffer is empty
     if (!hasData) {
         f64 freq = dac.frequency > 0 ? (f64)dac.frequency : 44100.0;
-        // k = e^(-1 / (RC * Fs)) where RC (Tau) = 0.008 seconds
-        f64 k = nall::exp(-1.0 / (0.008 * freq));
+        f64 k = std::exp(-1.0 / (0.008 * freq));
         outputLeft *= k;
         outputRight *= k;
 
-        if (nall::abs(outputLeft) < 1e-6) outputLeft = 0.0;
-        if (nall::abs(outputRight) < 1e-6) outputRight = 0.0;
+        // prevent denormals
+        if (std::abs(outputLeft) < 1e-6) outputLeft = 0.0;
+        if (std::abs(outputRight) < 1e-6) outputRight = 0.0;
     }
 
+    // report persistent state back to caller
     left = outputLeft;
     right = outputRight;
 }

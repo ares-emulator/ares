@@ -84,6 +84,7 @@ jobs:
       env:
         ARES_BUILD_OFFICIAL: ${{ inputs.official }}
         ARES_PLATFORM_NAME: ${{ matrix.platform.name }}
+        ARES_CORES: n64  # N64 TESTING
         CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
         NATIVE_PRESET: ${{ matrix.platform.native-cmake-preset }}
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
