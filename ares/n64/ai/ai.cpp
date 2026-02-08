@@ -76,15 +76,15 @@ auto AI::sample(f64& left, f64& right) -> void {
 }
 
 auto AI::power(bool reset) -> void {
-    Thread::reset();
-    fifo[0] = {};
-    fifo[1] = {};
-    io = {};
-    outputLeft = 0.0;
-    outputRight = 0.0;
-    dac.frequency = 44100;
-    dac.precision = 16;
-    dac.period = system.frequency() / dac.frequency;
+  Thread::reset();
+  fifo[0] = {};
+  fifo[1] = {};
+  io = {};
+  outputLeft = 0.0;
+  outputRight = 0.0;
+  dac.frequency = 44100;
+  dac.precision = 16;
+  dac.period = system.frequency() / dac.frequency;
 }
 
 }
