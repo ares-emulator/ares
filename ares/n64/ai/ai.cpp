@@ -27,71 +27,58 @@ auto AI::unload() -> void {
 
 auto AI::main() -> void {
   while(Thread::clock < 0) {
-    f64 left = 0, right = 0;
-    sample(left, right);
-    stream->frame(left, right);
+    sample();
+    stream->frame(dac.left, dac.right);
     step(dac.period);
   }
 }
 
-auto AI::sample(f64& left, f64& right) -> void {
-    bool active = false;
+auto AI::sample() -> void {
+  if(io.dmaCount && io.dmaLength[0] && io.dmaEnable) {
+    io.dmaAddress[0].bit(13,23) += io.dmaAddressCarry;
+    auto data = rdram.ram.read<Word>(io.dmaAddress[0], RBusDevice::AI_DMA);
+    auto l = s16(data >> 16);
+    auto r = s16(data >> 0);
+    dac.left = l / 32768.0;
+    dac.right = r / 32768.0;
 
-    // 1. BUFFER MANAGEMENT & DATA READING
-    if (io.dmaCount > 0) {
-        // A: READ DATA (Only if length > 0 and Enabled)
-        if (io.dmaLength[0] > 0 && io.dmaEnable) {
-            io.dmaAddress[0].bit(13, 23) += io.dmaAddressCarry;
-            auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
+    io.dmaAddress[0].bit(0,12) += 4;
+    io.dmaAddressCarry = io.dmaAddress[0].bit(0,12) == 0;
+    io.dmaLength[0] -= 4;
+  } else {
+    dac.left *= dac.decayFactor;
+    dac.right *= dac.decayFactor;
+    if(fabs(dac.left) < 1e-7) dac.left = 0.0;
+    if(fabs(dac.right) < 1e-7) dac.right = 0.0;
+  }
 
-            outputLeft = (f64)((s16)(data >> 16)) / 32768.0;
-            outputRight = (f64)((s16)(data >> 0)) / 32768.0;
-
-            io.dmaAddress[0].bit(0, 12) += 4;
-            io.dmaAddressCarry = io.dmaAddress[0].bit(0, 12) == 0;
-            io.dmaLength[0] -= 4;
-
-            active = true; // We successfully read a sample
-        }
-
-        // B: SWAP BUFFER (Must run even if we didn't read data this cycle!)
-        if (io.dmaLength[0] == 0) {
-            if (--io.dmaCount) {
-                io.dmaAddress[0] = io.dmaAddress[1];
-                io.dmaLength[0] = io.dmaLength[1];
-                io.dmaOriginPc[0] = io.dmaOriginPc[1];
-            }
-            mi.raise(MI::IRQ::AI);
-        }
+  if(io.dmaCount && !io.dmaLength[0]) {
+    mi.raise(MI::IRQ::AI);
+    if(--io.dmaCount) {
+      io.dmaAddress[0] = io.dmaAddress[1];
+      io.dmaLength[0] = io.dmaLength[1];
+      io.dmaOriginPc[0] = io.dmaOriginPc[1];
     }
+  }
+}
 
-    // 2. SAMPLE RATE INDEPENDENT EXPONENTIAL DECAY
-    // When buffer starves, decay using exponential factor calculated from sample rate
-    if (!active) {
-        outputLeft *= dac.decayFactor;
-        outputRight *= dac.decayFactor;
-    }
-
-    // 3. OUTPUT
-    left = outputLeft;
-    right = outputRight;
+auto AI::updateDecay() -> void {
+  f64 time = 0.003;
+  dac.decayFactor = exp(-1.0 / (dac.frequency * time));
 }
 
 auto AI::power(bool reset) -> void {
   Thread::reset();
+
   fifo[0] = {};
   fifo[1] = {};
   io = {};
-  outputLeft = 0.0;
-  outputRight = 0.0;
   dac.frequency = 44100;
   dac.precision = 16;
   dac.period = system.frequency() / dac.frequency;
-  
-  // Calculate sample rate independent decay factor
-  // Decay time of 0.003 seconds (3ms) - exp(-1.0 / (frequency * time))
-  f64 decayTime = 0.003;
-  dac.decayFactor = exp(-1.0 / (dac.frequency * decayTime));
+  dac.left = 0.0;
+  dac.right = 0.0;
+  updateDecay();
 }
 
 }
