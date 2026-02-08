@@ -36,7 +36,7 @@ auto AI::main() -> void {
 auto AI::sample() -> void {
   if(io.dmaCount && io.dmaLength[0] && io.dmaEnable) {
     io.dmaAddress[0].bit(13,23) += io.dmaAddressCarry;
-    auto data = rdram.ram.read<Word>(io.dmaAddress[0], RBusDevice::AI_DMA);
+    auto data = rdram.ram.read<Word>(io.dmaAddress[0], "AI");
     auto l = s16(data >> 16);
     auto r = s16(data >> 0);
     dac.left = l / 32768.0;
