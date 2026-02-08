@@ -1,4 +1,5 @@
 #include <n64/n64.hpp>
+#include <cmath>
 
 namespace ares::Nintendo64 {
 
@@ -64,10 +65,11 @@ auto AI::sample(f64& left, f64& right) -> void {
         }
     }
 
-    // 2. THE RAMP (If we didn't read a sample, decay the old one)
+    // 2. SAMPLE RATE INDEPENDENT EXPONENTIAL DECAY
+    // When buffer starves, decay using exponential factor calculated from sample rate
     if (!active) {
-        outputLeft *= 0.997;
-        outputRight *= 0.997;
+        outputLeft *= dac.decayFactor;
+        outputRight *= dac.decayFactor;
     }
 
     // 3. OUTPUT
@@ -85,6 +87,11 @@ auto AI::power(bool reset) -> void {
   dac.frequency = 44100;
   dac.precision = 16;
   dac.period = system.frequency() / dac.frequency;
+  
+  // Calculate sample rate independent decay factor
+  // Decay time of 0.003 seconds (3ms) - exp(-1.0 / (frequency * time))
+  f64 decayTime = 0.003;
+  dac.decayFactor = exp(-1.0 / (dac.frequency * decayTime));
 }
 
 }

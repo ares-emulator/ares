@@ -1,3 +1,5 @@
+#include <cmath>
+
 auto AI::readWord(u32 address, Thread& thread) -> u32 {
   address = (address & 0x1f) >> 2;
   n32 data;
@@ -59,7 +61,12 @@ auto AI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
     io.dacRate = data.bit(0,13);
     dac.frequency = max(1, system.videoFrequency() / (io.dacRate + 1));
     dac.period = system.frequency() / dac.frequency;
-    if(frequency != dac.frequency) stream->setFrequency(dac.frequency);
+    if(frequency != dac.frequency) {
+      stream->setFrequency(dac.frequency);
+      //recalculate sample rate independent decay factor when frequency changes
+      f64 decayTime = 0.003;
+      dac.decayFactor = exp(-1.0 / (dac.frequency * decayTime));
+    }
   }
 
   if(address == 5) {

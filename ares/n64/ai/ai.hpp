@@ -47,6 +47,7 @@ struct AI : Thread, Memory::RCP<AI> {
     u32 frequency;
     u32 precision;
     u32 period;
+    f64 decayFactor;
   } dac;
 
   f64 outputLeft = 0.0;
