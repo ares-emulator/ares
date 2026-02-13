@@ -18,6 +18,8 @@ auto CPU::Context::setMode() -> void {
     break;
   }
 
+  self.recompiler.jitContext.update(self);
+
   if(bits == 32) {
     physMask = 0x1fff'ffff;
     segment[0] = Segment::Mapped;
