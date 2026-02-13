@@ -168,7 +168,7 @@ auto VDP::main() -> void {
   if(h40()) mainH40();
   if(vcounter() == state.bottomline) {
     screen->setColorBleedWidth(latch.displayWidth ? 4 : 5);
-    latch.interlace = io.interlaceMode == 3;
+    latch.interlace = io.interlaceMode.bit(0);
     latch.overscan  = io.overscan;
     frame();
     state.field ^= 1;
