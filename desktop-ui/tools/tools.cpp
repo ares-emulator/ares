@@ -8,6 +8,7 @@
 #include "tracer.cpp"
 #include "tape.cpp"
 
+Tools tools;
 namespace Instances { Instance<ToolsWindow> toolsWindow; }
 ToolsWindow& toolsWindow = Instances::toolsWindow();
 ManifestViewer& manifestViewer = toolsWindow.manifestViewer;

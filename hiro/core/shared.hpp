@@ -387,6 +387,7 @@ struct HexEdit : sHexEdit {
 
   auto address() const { return self().address(); }
   auto backgroundColor() const { return self().backgroundColor(); }
+  auto base() const { return self().base(); }
   auto columns() const { return self().columns(); }
   auto doRead(u32 offset) const { return self().doRead(offset); }
   auto doWrite(u32 offset, u8 data) const { return self().doWrite(offset, data); }
@@ -397,6 +398,7 @@ struct HexEdit : sHexEdit {
   auto rows() const { return self().rows(); }
   auto setAddress(u32 address) { return self().setAddress(address), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
+  auto setBase(u16 base = 16) { return self().setBase(base), *this; }
   auto setColumns(u32 columns = 16) { return self().setColumns(columns), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
   auto setLength(u32 length) { return self().setLength(length), *this; }

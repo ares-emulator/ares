@@ -1,11 +1,35 @@
 #if defined(Hiro_HexEdit)
 
+@implementation CocoaHexEditTableView
+
+- (void)mouseDown:(NSEvent *)event {
+  NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
+  NSInteger row = [self rowAtPoint:point];
+  NSInteger column = [self columnAtPoint:point];
+
+  [super mouseDown:event]; // handle selection
+
+  if (row >= 0 && column >= 0) {
+    // Begin editing the clicked cell
+    NSTableColumn *tableColumn = [self tableColumns][column];
+    NSString *identifier = tableColumn.identifier;
+
+    // Skip editing if column is not editable (e.g., Address/Char)
+    if (![identifier isEqualToString:@"Address"] && ![identifier isEqualToString:@"Char"]) {
+      [self editColumn:column row:row withEvent:event select:YES];
+    }
+  }
+}
+
+@end
+
 @implementation CocoaHexEdit
 
 -(id) initWith:(hiro::mHexEdit&)hexEditReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
     hexEdit = &hexEditReference;
-    if (tableView = [[NSTableView alloc] initWithFrame:[self bounds]]) {
+    if (tableView = [[CocoaHexEditTableView alloc] initWithFrame:[self bounds]]) {
+      [tableView setDelegate:self];
       [tableView setDataSource:self];
       // [tableView setHeaderView:nil];
       [tableView setUsesAlternatingRowBackgroundColors:true];
@@ -82,7 +106,24 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
     address += columnNumber;
     if (address < hexEdit->length()) {
       u8 data = hexEdit->doRead(address);
-      return [NSString stringWithUTF8String:hex(data, 2L).data()];
+      switch(hexEdit->base()) {
+        case 2: {
+          NSMutableString *binary = [NSMutableString stringWithCapacity:8];
+          for(int bit = 7; bit >= 0; bit--) {
+            [binary appendFormat:@"%c", (data & (1 << bit)) ? '1' : '0'];
+          }
+          return binary;
+        }
+        case 8:
+          return [NSString stringWithFormat:@"%03o", data];
+        case 16:
+          return [NSString stringWithFormat:@"%02X", data];
+        default:
+          @throw [NSException exceptionWithName:@"InvalidBaseException"
+                                         reason:@"The base for the Hex Editor was neither 2, 8, nor 16."
+                                       userInfo:@{
+                  @"filename": @"hiro/cocoa/widget/hex-edit.cpp"}];
+      }
     } else {
       return @"  ";
     }
@@ -98,16 +139,69 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
   u32 address = row * hexEdit->columns() + colNumber;
   
   if (address < hexEdit->length()) {
-    // only get the first 2 characters
-    NSString* newVal = [(NSString *)object substringToIndex:2];
-    NSScanner* hexScanner = [NSScanner scannerWithString:newVal];
+    NSString* newVal = (NSString *)object;
+    newVal = [newVal stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    // Make sure code converts Single Digit by appending zero.
     unsigned int data = 0;
-    if ([hexScanner scanHexInt:&data]) {
+    BOOL boolSucceed = YES;
+    switch(hexEdit->base()) {
+      case 2: {
+        if (newVal.length > 8) {
+          newVal = [newVal substringToIndex:8];  // truncate to 8 chars max for Binary
+        }
+        
+        // Converts Binary to Integer
+        for (NSUInteger i = 0; i < newVal.length; i++) {
+          unichar digit = [newVal characterAtIndex:i];
+          if (digit != '0' && digit != '1') {
+            boolSucceed = NO; break;
+          }
+          data = data * 2 + (digit - '0');
+        }
+        break;
+      }
+      case 8:{
+        if (newVal.length > 3) {
+          newVal = [newVal substringToIndex:3];  // truncate to 3 chars max for Octal
+        }
+
+        // Converts Octal to Integer
+        for (NSUInteger i = 0; i < newVal.length; i++) {
+            unichar digit = [newVal characterAtIndex:i];
+            if (digit < '0' || digit > '7') {
+              boolSucceed = NO; break;
+            }
+          data = data * 8 + (digit - '0');
+        }
+        data &= 0xFF;
+        break;
+      }
+      case 16:{
+        if (newVal.length > 2) {
+          newVal = [newVal substringToIndex:2];  // truncate to 2 chars max
+        }
+        NSScanner* hexScanner = [NSScanner scannerWithString:newVal];
+        
+        // Converts Hex to Integer
+        boolSucceed = [hexScanner scanHexInt:&data];
+        break;
+      }
+      default:
+        @throw [NSException exceptionWithName:@"InvalidBaseException"
+                                       reason:@"The base for the Hex Editor was neither 2, 8, nor 16."
+                                     userInfo:@{
+                @"filename": @"hiro/cocoa/widget/hex-edit.cpp"}];
+    }
+    if (boolSucceed) {
       // this.......is probably ok....???
       hexEdit->doWrite(address, (u8)data);
     }
   }
   [tableView reloadData];
+}
+
+- (BOOL)tableView:(NSTableView *)tableView shouldEditTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
+    return YES;
 }
 
 @end
@@ -143,7 +237,11 @@ namespace hiro {
   auto pHexEdit::setBackgroundColor(Color color) -> void {
     update();
   }
-  
+
+  auto pHexEdit::setBase(u8 base) -> void {
+    update();
+  }
+
   auto pHexEdit::setColumns(u32 columns) -> void {
     update();
   }
