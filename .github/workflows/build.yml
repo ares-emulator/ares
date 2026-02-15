@@ -9,8 +9,8 @@ on:
         type: boolean
       official:
         description: Use official version strings
-        required: false
-        default: false
+        required: true
+        default: true
         type: boolean
 jobs:
   build:
@@ -56,6 +56,7 @@ jobs:
     - name: "macOS: Import Certificate"
       if: runner.os == 'macOS' && inputs.codesign
       uses: apple-actions/import-codesign-certs@65cfbc37e1464d733524cb555b724878f278b8c3
+      continue-on-error: ${{ secrets.MACOS_CERTIFICATE_NAME == '' }}
       with:
         p12-file-base64: ${{ secrets.MACOS_CERTIFICATE_DATA }}
         p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSPHRASE }}
@@ -78,18 +79,15 @@ jobs:
       run: |
         brew uninstall --ignore-dependencies cmake
         brew install ${{ matrix.platform.install }}
-
     - name: "Build: Windows"
       if: runner.os != 'macOS' && runner.os != 'Linux'
       run: .github/scripts/build_windows.sh
       env:
         ARES_BUILD_OFFICIAL: ${{ inputs.official }}
         ARES_PLATFORM_NAME: ${{ matrix.platform.name }}
-        ARES_CORES: n64
         CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
         NATIVE_PRESET: ${{ matrix.platform.native-cmake-preset }}
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
-
     - name: "Windows: sign"
       if: runner.os == 'Windows' && inputs.codesign
       continue-on-error: true
