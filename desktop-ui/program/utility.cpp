@@ -73,3 +73,13 @@ auto Program::selectFolder(BrowserDialog& dialog) -> string {
   window.setParent(dialog.alignmentWindow());
   return window.directory();
 }
+
+auto Program::saveFile(BrowserDialog& dialog) -> string {
+  Program::Guard guard;
+  BrowserWindow window;
+  window.setTitle(dialog.title());
+  window.setPath(dialog.path());
+  window.setFilters(dialog.filters());
+  window.setParent(dialog.alignmentWindow());
+  return window.save();
+}
