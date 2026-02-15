@@ -237,6 +237,7 @@ auto System::initDebugHooks() -> void {
         resPtr += 8;
         address += 4;
       }
+      return res;
     }
     return {};
   };
