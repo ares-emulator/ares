@@ -45,12 +45,12 @@ struct AI : Thread, Memory::RCP<AI> {
   } io;
 
   struct DAC {
-      u32 frequency;
-      u32 precision;
-      u32 period;
-      f64 left;
-      f64 right;
-      f64 decayFactor;
+    u32 frequency;
+    u32 precision;
+    u32 period;
+    f64 left;
+    f64 right;
+    f64 decayFactor;
   } dac;
 };
 
