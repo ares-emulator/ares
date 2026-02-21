@@ -74,7 +74,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 
   }
 
-  openBus.set(mode, address, word);
+  if constexpr(!UseDebugger) openBus.set(mode, address, word);
 
   if(auto result = platform->cheat(address)) return *result;
   return word;
