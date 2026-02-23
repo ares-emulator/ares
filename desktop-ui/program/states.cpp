@@ -10,6 +10,7 @@ auto Program::stateSave(u32 slot) -> bool {
 
   if(auto state = emulator->root->serialize()) {
     if(file::write(location, {state.data(), state.size()})) {
+      presentation.refreshStateMenus();
       showMessage({"Saved state to slot ", slot});
       return true;
     }
@@ -50,6 +51,7 @@ auto Program::undoStateSave() -> bool {
   auto undoLocation = emulator->locate(emulator->game->location, ".bsu", settings.paths.saves);
   string location = {undoLocation.slice(0, (undoLocation.size() - 1)), state.undoSlot};
   if(file::move(undoLocation, location)) {
+    presentation.refreshStateMenus();
     showMessage({"Reverted to previous version in slot ", state.undoSlot, " of save file ", location});
       return true;
   } else {
