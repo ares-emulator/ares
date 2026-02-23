@@ -4,16 +4,26 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/bootstrap.cmake" NO_POLICY_SCO
 
 project(ares VERSION ${ARES_VERSION_CANONICAL})
 
+set(ARES_FRONTEND "desktop-ui" CACHE STRING "Select frontend to compile (desktop-ui, ...)")
+
+# Frontends that require prebuilt dependencies (librashader, SDL, etc.)
+set(_ARES_FRONTENDS_REQUIRING_DEPS desktop-ui)
+
+if(NOT ARES_FRONTEND IN_LIST _ARES_FRONTENDS_REQUIRING_DEPS AND NOT DEFINED CACHE{ARES_SKIP_DEPS})
+  set(ARES_SKIP_DEPS ON)
+  message(STATUS "Auto-skipping prebuilt dependencies (frontend '${ARES_FRONTEND}' does not require them)")
+endif()
+
 include(compilerconfig)
 include(defaults)
 include(helpers)
 
 add_subdirectory(thirdparty)
 
-add_subdirectory(nall/nall)
-add_subdirectory(libco)
-add_subdirectory(ruby)
-add_subdirectory(hiro)
+add_subdirectory(libs/nall/nall)
+add_subdirectory(libs/libco)
+add_subdirectory(libs/ruby EXCLUDE_FROM_ALL)
+add_subdirectory(libs/hiro EXCLUDE_FROM_ALL)
 
 # gersemi: off
 set(
@@ -23,9 +33,14 @@ set(
 )
 # gersemi: on
 
-add_subdirectory(ares)
-add_subdirectory(mia)
-add_subdirectory(desktop-ui)
+add_subdirectory(libs/ares)
+add_subdirectory(libs/mia)
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/frontends/${ARES_FRONTEND}/CMakeLists.txt")
+  add_subdirectory("frontends/${ARES_FRONTEND}")
+else()
+  message(FATAL_ERROR "Frontend '${ARES_FRONTEND}' not found in frontends/")
+endif()
 
 option(ARES_BUILD_OPTIONAL_TARGETS "Include supplemental tools and tests" OFF)
 

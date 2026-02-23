@@ -45,7 +45,7 @@ elseif(OS_LINUX OR OS_FREEBSD OR OS_OPENBSD)
   include(cmake/os-linux.cmake)
 endif()
 
-target_include_directories(desktop-ui PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(desktop-ui PRIVATE ${ARES_LIBS_SOURCE_DIR})
 target_link_libraries(
   desktop-ui
   PRIVATE ares::ruby ares::hiro ares::ares ares::mia ares::nall

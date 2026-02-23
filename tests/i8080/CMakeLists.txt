@@ -1,6 +1,6 @@
 # NOTE: This file should be restructured similarly to the other tests if the i8080 is ever used in an ares core.
 
-add_executable(i8080 i8080.cpp ../../ares/component/processor/i8080/i8080.cpp)
+add_executable(i8080 i8080.cpp ../../libs/ares/component/processor/i8080/i8080.cpp)
 
 target_include_directories(i8080 PRIVATE ${CMAKE_SOURCE_DIR})
 

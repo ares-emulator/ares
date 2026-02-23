@@ -37,6 +37,8 @@ function(message_configuration)
     "=================================================================================="
   )
 
+  message(NOTICE "Frontend : ${ARES_FRONTEND}")
+
   get_property(ARES_FEATURES_ENABLED GLOBAL PROPERTY ARES_FEATURES_ENABLED)
   list(SORT ARES_FEATURES_ENABLED COMPARE NATURAL CASE SENSITIVE ORDER ASCENDING)
 

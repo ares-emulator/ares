@@ -44,7 +44,7 @@ target_sources(ruby PRIVATE cmake/os-macos.cmake cmake/os-windows.cmake cmake/os
 
 target_link_libraries(ruby PRIVATE ares::nall::headers)
 
-target_include_directories(ruby PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(ruby PRIVATE ${ARES_LIBS_SOURCE_DIR})
 
 get_target_property(ruby_SOURCES ruby SOURCES)
 

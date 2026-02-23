@@ -6,6 +6,10 @@ set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL MinSizeRel Release RelWithDebInfo None 
 set(CMAKE_MAP_IMPORTED_CONFIG_RELEASE Release RelWithDebInfo MinSizeRel None "")
 # gersemi: on
 
+if(NOT DEFINED ARES_LIBS_SOURCE_DIR)
+  set(ARES_LIBS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
+endif()
+
 # Prohibit in-source builds
 if("${CMAKE_CURRENT_BINARY_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   message(

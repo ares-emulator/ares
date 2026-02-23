@@ -25,7 +25,7 @@ set_target_properties(
     XCODE_EMBED_PLUGINS_CODE_SIGN_ON_COPY YES
 )
 
-target_add_resource(desktop-ui "${CMAKE_SOURCE_DIR}/ruby/video/metal/Shaders.metal" "Shaders")
+target_add_resource(desktop-ui "${ARES_LIBS_SOURCE_DIR}/ruby/video/metal/Shaders.metal" "Shaders")
 if(ACTOOL_PROGRAM)
   target_add_resource(desktop-ui "${CMAKE_CURRENT_SOURCE_DIR}/resource/Assets.xcassets")
 else()
@@ -48,13 +48,13 @@ endfunction()
 
 function(target_install_database target)
   message(DEBUG "Installing shaders for target ${target}...")
-  if(EXISTS "${CMAKE_SOURCE_DIR}/mia/Database")
-    file(GLOB_RECURSE data_files "${CMAKE_SOURCE_DIR}/mia/Database/*")
+  if(EXISTS "${ARES_LIBS_SOURCE_DIR}/mia/Database")
+    file(GLOB_RECURSE data_files "${ARES_LIBS_SOURCE_DIR}/mia/Database/*")
     foreach(data_file IN LISTS data_files)
       cmake_path(
         RELATIVE_PATH
         data_file
-        BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/mia/Database/"
+        BASE_DIRECTORY "${ARES_LIBS_SOURCE_DIR}/mia/Database/"
         OUTPUT_VARIABLE relative_path
       )
       cmake_path(GET relative_path PARENT_PATH relative_path)
@@ -95,7 +95,7 @@ add_custom_command(
   POST_BUILD
   COMMAND $<$<CONFIG:Debug>:ditto>
   ARGS
-    "${CMAKE_SOURCE_DIR}/ruby/video/metal/Shaders.metallib" "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>/Resources/Shaders/"
+    "${ARES_LIBS_SOURCE_DIR}/ruby/video/metal/Shaders.metallib" "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>/Resources/Shaders/"
   WORKING_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:desktop-ui>"
   COMMENT "Copying debug .metallib to app bundle"
 )

@@ -3,14 +3,9 @@
 
 # Except for default project files
 !/.github
-!/ares
-!/desktop-ui
-!/hiro
+!/libs
+!/frontends
 !/cmake
-!/libco
-!/mia
-!/nall
-!/ruby
 !/scripts
 !/tests
 !/thirdparty
@@ -30,16 +25,16 @@
 .DS_Store
 
 # Exclude generated sources that still reside in-tree
-ruby/video/metal/shaders.metallib
-ruby/video/metal/shaders.ir
-ares/ares/resource/resource.cpp
-ares/ares/resource/resource.hpp
-hiro/resource/resource.cpp
-hiro/resource/resource.hpp
-desktop-ui/resource/resource.cpp
-desktop-ui/resource/resource.hpp
-mia/resource/resource.cpp
-mia/resource/resource.hpp
+libs/ruby/video/metal/shaders.metallib
+libs/ruby/video/metal/shaders.ir
+libs/ares/ares/resource/resource.cpp
+libs/ares/ares/resource/resource.hpp
+libs/hiro/resource/resource.cpp
+libs/hiro/resource/resource.hpp
+frontends/desktop-ui/resource/resource.cpp
+frontends/desktop-ui/resource/resource.hpp
+libs/mia/resource/resource.cpp
+libs/mia/resource/resource.hpp
 
 # Exclude fetched third-party processor test binaries
 tests/arm7tdmi/tests

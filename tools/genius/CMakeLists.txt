@@ -4,7 +4,7 @@ target_sources(genius PRIVATE genius.hpp)
 
 target_enable_subproject(genius "genius (database editor)")
 
-target_include_directories(genius PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(genius PRIVATE ${CMAKE_SOURCE_DIR} ${ARES_LIBS_SOURCE_DIR})
 
 if(OS_WINDOWS)
   include(cmake/os-windows.cmake)

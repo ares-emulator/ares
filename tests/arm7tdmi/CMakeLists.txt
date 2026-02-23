@@ -3,7 +3,7 @@ if(arm7tdmi IN_LIST ARES_COMPONENTS_LIST)
 
   target_include_directories(arm7tdmi PRIVATE ${CMAKE_SOURCE_DIR})
 
-  set(ARM7TDMI_SOURCE_DIR "${CMAKE_SOURCE_DIR}/ares/component/processor/arm7tdmi")
+  set(ARM7TDMI_SOURCE_DIR "${CMAKE_SOURCE_DIR}/libs/ares/component/processor/arm7tdmi")
 
   target_sources(
     arm7tdmi

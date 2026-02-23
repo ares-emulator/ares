@@ -3,7 +3,7 @@ if(m68000 IN_LIST ARES_COMPONENTS_LIST)
 
   target_include_directories(m68000 PRIVATE ${CMAKE_SOURCE_DIR})
 
-  set(M68000_SOURCE_DIR "${CMAKE_SOURCE_DIR}/ares/component/processor/m68000")
+  set(M68000_SOURCE_DIR "${CMAKE_SOURCE_DIR}/libs/ares/component/processor/m68000")
 
   target_sources(
     m68000
