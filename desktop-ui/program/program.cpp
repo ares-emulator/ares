@@ -145,7 +145,9 @@ auto Program::main() -> void {
 auto Program::quit() -> void {
   Program::Guard guard;
   _quitting = true;
-  lock.unlock();
+  if(lock.owns_lock()) {
+    lock.unlock();
+  }
   _programConditionVariable.notify_all();
   worker.join();
   program._isRunning = false;
