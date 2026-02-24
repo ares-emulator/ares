@@ -17,7 +17,7 @@ auto Program::create() -> void {
   audioDriverUpdate();
   inputDriverUpdate();
 
-  if(batchMode) {
+  if(kioskMode) {
     if(startFullScreen) videoFullScreenToggle();
     if(startPseudoFullScreen) videoPseudoFullScreenToggle();
   }
@@ -34,7 +34,7 @@ auto Program::create() -> void {
       for(auto &emulator: emulators) {
         if(emulator->name == startSystem) {
           if(load(emulator, gameToLoad)) {
-            if(!batchMode) {
+            if(!kioskMode) {
               if(startFullScreen) videoFullScreenToggle();
               if(startPseudoFullScreen) videoPseudoFullScreenToggle();
             }
@@ -46,7 +46,7 @@ auto Program::create() -> void {
 
     if(auto emulator = identify(gameToLoad)) {
       if(load(emulator, gameToLoad)) {
-        if(!batchMode) {
+        if(!kioskMode) {
           if(startFullScreen) videoFullScreenToggle();
           if(startPseudoFullScreen) videoPseudoFullScreenToggle();
         }
@@ -132,8 +132,8 @@ auto Program::main() -> void {
     return;
   }
 
-  if(pendingBatchExit) {
-    pendingBatchExit = false;
+  if(pendingKioskExit) {
+    pendingKioskExit = false;
     quit();
     return;
   }

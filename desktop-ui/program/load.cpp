@@ -11,7 +11,7 @@ auto Program::identify(const string& filename) -> std::shared_ptr<Emulator> {
     "Unable to determine what type of game this file is.\n"
     "Please use the load menu to choose the appropriate game system instead."
   }).setAlignment(presentation).error();
-  if(batchMode) pendingBatchExit = true;
+  if(kioskMode) pendingKioskExit = true;
   return {};
 }
 
@@ -25,8 +25,8 @@ auto Program::load(std::shared_ptr<Emulator> emulator, string location) -> bool 
   // For arcade systems, show the game browser dialog as we're using MAME-compatible roms
   if(emulator->arcade() && !location) {
     if(!gameBrowserWindowConstructed) {
-      if(batchMode) {
-        showMessage("Batch mode does not support the arcade game browser. Specify a game path.");
+      if(kioskMode) {
+        showMessage("Kiosk mode does not support the arcade game browser. Specify a game path.");
       }
       ::emulator.reset();
       return false;
@@ -61,7 +61,7 @@ auto Program::load(string location) -> bool {
   string savesPath = settings.paths.saves;
   if(!savesPath) savesPath = Location::path(location);
   if(!directory::writable(savesPath)) {
-    if(batchMode) {
+    if(kioskMode) {
       showMessage({
         "Current save path is read-only; progress may be lost. Save location: ", savesPath
       });

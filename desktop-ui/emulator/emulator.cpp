@@ -254,7 +254,7 @@ auto Emulator::setColorBleed(bool value) -> bool {
 
 auto Emulator::error(const string& text) -> void {
   MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
-  if(program.batchMode) program.pendingBatchExit = true;
+  if(program.kioskMode) program.pendingKioskExit = true;
 }
 
 auto Emulator::input(ares::Node::Input::Input input) -> void {

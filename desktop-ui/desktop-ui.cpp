@@ -80,8 +80,8 @@ auto nall::main(Arguments arguments) -> void {
     program.startPseudoFullScreen = true;
   }
 
-  if(arguments.take("--batch")) {
-    program.batchMode = true;
+  if(arguments.take("--kiosk")) {
+    program.kioskMode = true;
     program.noFilePrompt = true;
   }
 
@@ -145,7 +145,7 @@ auto nall::main(Arguments arguments) -> void {
 #endif
     print("  --fullscreen          Start in full screen mode\n");
     print("  --pseudofullscreen    Start in psuedo full screen mode\n");
-    print("  --batch               Start in minimal UI mode (implies --no-file-prompt)\n");
+    print("  --kiosk               Start in minimal UI mode (implies --no-file-prompt)\n");
     print("  --system name         Specify the system name\n");
     print("  --shader name         Specify the name of the shader to use\n");
     print("  --setting name=value  Specify a value for a setting\n");
@@ -181,28 +181,28 @@ auto nall::main(Arguments arguments) -> void {
   }
 
   program.startGameLoad.clear();
-  std::vector<string> invalidBatchPaths;
+  std::vector<string> invalidKioskPaths;
   for(auto argument : arguments) {
     if(file::exists(argument) || directory::exists(argument)) {
       program.startGameLoad.push_back(argument);
-    } else if(program.batchMode) {
-      invalidBatchPaths.push_back(argument);
+    } else if(program.kioskMode) {
+      invalidKioskPaths.push_back(argument);
     }
   }
 
-  if(program.batchMode) {
-    if(!invalidBatchPaths.empty()) {
-      print("Batch mode error: path does not exist: ", invalidBatchPaths.front(), "\n");
+  if(program.kioskMode) {
+    if(!invalidKioskPaths.empty()) {
+      print("Kiosk mode error: path does not exist: ", invalidKioskPaths.front(), "\n");
       return;
     }
     if(program.startGameLoad.empty()) {
-      print("Batch mode error: provide a valid game file or directory.\n");
+      print("Kiosk mode error: provide a valid game file or directory.\n");
       return;
     }
   }
 
   Instances::presentation.construct();
-  if(!program.batchMode) {
+  if(!program.kioskMode) {
     Instances::settingsWindow.construct();
     program.settingsWindowConstructed = true;
     Instances::gameBrowserWindow.construct();

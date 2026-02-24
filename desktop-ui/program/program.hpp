@@ -59,7 +59,7 @@ struct Program : ares::Platform {
 
   bool startFullScreen = false;
   bool startPseudoFullScreen = false;
-  bool batchMode = false;
+  bool kioskMode = false;
   std::vector<string> startGameLoad;
   bool noFilePrompt = false;
   bool settingsWindowConstructed = false;
@@ -80,7 +80,7 @@ struct Program : ares::Platform {
   bool requestFrameAdvance = false;
   bool requestScreenshot = false;
   bool keyboardCaptured = false;
-  atomic<bool> pendingBatchExit = false;
+  atomic<bool> pendingKioskExit = false;
 
   struct State {
     u32 slot = 1;

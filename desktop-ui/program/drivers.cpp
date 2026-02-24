@@ -14,7 +14,7 @@ auto Program::videoDriverUpdate() -> void {
 
   if(!ruby::video.ready()) {
     MessageDialog().setText({"Failed to initialize ", settings.video.driver, " video driver."}).setAlignment(presentation).error();
-    if(batchMode) pendingBatchExit = true;
+    if(kioskMode) pendingKioskExit = true;
     settings.video.driver = "None";
     if(settingsWindowConstructed) driverSettings.videoDriverUpdate();
     return;
@@ -40,7 +40,7 @@ auto Program::videoDriverUpdate() -> void {
     } else if(settings.video.shader.imatch("None")) {
       ruby::video.setShader("None");
     } else {
-      if(batchMode) {
+      if(kioskMode) {
         showMessage({"Requested shader not found: ", location, settings.video.shader, ". Using existing shader."});
       } else {
         hiro::MessageDialog()
@@ -130,7 +130,7 @@ auto Program::audioDriverUpdate() -> void {
 
   if(!ruby::audio.ready()) {
     MessageDialog().setText({"Failed to initialize ", settings.audio.driver, " audio driver."}).setAlignment(presentation).error();
-    if(batchMode) pendingBatchExit = true;
+    if(kioskMode) pendingKioskExit = true;
     settings.audio.driver = "None";
     if(settingsWindowConstructed) driverSettings.audioDriverUpdate();
   }
@@ -174,7 +174,7 @@ auto Program::inputDriverUpdate() -> void {
 
   if(!ruby::input.ready()) {
     MessageDialog().setText({"Failed to initialize ", settings.input.driver, " input driver."}).setAlignment(presentation).error();
-    if(batchMode) pendingBatchExit = true;
+    if(kioskMode) pendingKioskExit = true;
     settings.input.driver = "None";
     if(settingsWindowConstructed) driverSettings.inputDriverUpdate();
   }
