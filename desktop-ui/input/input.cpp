@@ -15,6 +15,96 @@ auto digitalAxisMode(const string& name) -> DigitalAxisMode {
   return DigitalAxisMode::Immediate;
 }
 
+static auto lookupDevice(const InputMapping::Binding::Chord& key) -> std::shared_ptr<HID::Device> {
+  for(auto& device : inputManager.devices) {
+    if(key.deviceIdentifier && key.deviceIdentifier == device->identifier()) return device;
+    if(!key.deviceIdentifier && key.deviceID == device->id()) return device;
+  }
+  return {};
+}
+
+static auto parseBindingChord(string_view assignment, InputMapping::Qualifier& qualifier, std::vector<InputMapping::Binding::Chord>& chord) -> bool {
+  if(assignment.size() == 0) return false;
+
+  auto segments = nall::split(assignment, "+");
+  if(segments.empty()) return false;
+
+  qualifier = InputMapping::Qualifier::None;
+  chord.clear();
+  chord.reserve(segments.size());
+
+  for(auto& rawSegment : segments) {
+    auto segment = string{rawSegment}.strip();
+    if(segment.size() == 0) continue;
+
+    auto token = nall::split(segment, "/");
+    if(token.size() < 3) {
+      chord.clear();
+      return false;
+    }
+
+    InputMapping::Binding::Chord key;
+    u32 qualifierIndex = 3;
+    if(token[0].beginsWith("0x")) {
+      key.deviceID = token[0].natural();
+      key.groupID = token[1].natural();
+      key.inputID = token[2].natural();
+    } else {
+      if(token.size() < 4) {
+        chord.clear();
+        return false;
+      }
+      key.deviceIdentifier = {token[0], "/", token[1]};
+      key.groupID = token[2].natural();
+      key.inputID = token[3].natural();
+      qualifierIndex = 4;
+    }
+    key.device = lookupDevice(key);
+    if(key.device) key.deviceID = key.device->id();
+    chord.push_back(key);
+
+    if(chord.size() == 1 && token.size() > qualifierIndex) {
+      if(token[qualifierIndex] == "Lo") qualifier = InputMapping::Qualifier::Lo;
+      if(token[qualifierIndex] == "Hi") qualifier = InputMapping::Qualifier::Hi;
+      if(token[qualifierIndex] == "Rumble") qualifier = InputMapping::Qualifier::Rumble;
+    }
+  }
+
+  return !chord.empty();
+}
+
+static auto chordPressed(const InputMapping::Binding::Chord& key, InputMapping::Qualifier qualifier, bool suppressKeyboardWhenCaptured) -> bool {
+  if(!key.device) return false;
+
+  auto& device = key.device;
+  auto groupID = key.groupID;
+  auto inputID = key.inputID;
+
+  if(suppressKeyboardWhenCaptured && device->isKeyboard() && program.keyboardCaptured) return false;
+
+  s16 value = device->group(groupID).input(inputID).value();
+  if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) return value != 0;
+  if(device->isMouse() && groupID == HID::Mouse::GroupID::Button && inputManager.acquired()) return value != 0;
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button) return value != 0;
+
+  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button) {
+    if(qualifier == InputMapping::Qualifier::Lo) return value < -16384;
+    if(qualifier == InputMapping::Qualifier::Hi) return value > +16384;
+  }
+
+  return false;
+}
+
+static auto bindingActive(const InputMapping::Binding& binding, bool suppressKeyboardWhenCaptured) -> bool {
+  if(binding.chord.empty()) return false;
+  if(binding.chord.size() == 1) return chordPressed(binding.chord[0], binding.qualifier, suppressKeyboardWhenCaptured);
+  for(auto index : range(binding.chord.size())) {
+    auto qualifier = index == 0 ? binding.qualifier : InputMapping::Qualifier::None;
+    if(!chordPressed(binding.chord[index], qualifier, suppressKeyboardWhenCaptured)) return false;
+  }
+  return true;
+}
+
 auto InputMapping::bind() -> void {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   for(auto& binding : bindings) binding = {};
@@ -22,38 +112,7 @@ auto InputMapping::bind() -> void {
   for(u32 index : range(BindingLimit)) {
     auto& assignment = assignments[index];
     auto& binding = bindings[index];
-
-    auto token = nall::split(assignment, "/");
-    if(token.size() < 3) continue;  //ignore invalid mappings
-
-    u32 qualifierIndex = 3;
-    if(token[0].beginsWith("0x")) {
-      binding.deviceID = token[0].natural();
-      binding.groupID = token[1].natural();
-      binding.inputID = token[2].natural();
-    } else {
-      if(token.size() < 4) continue;  //ignore invalid mappings
-      binding.deviceIdentifier = {token[0], "/", token[1]};
-      binding.groupID = token[2].natural();
-      binding.inputID = token[3].natural();
-      qualifierIndex = 4;
-    }
-
-    binding.qualifier = Qualifier::None;
-    if(token.size() > qualifierIndex && token[qualifierIndex] == "Lo") binding.qualifier = Qualifier::Lo;
-    if(token.size() > qualifierIndex && token[qualifierIndex] == "Hi") binding.qualifier = Qualifier::Hi;
-    if(token.size() > qualifierIndex && token[qualifierIndex] == "Rumble") binding.qualifier = Qualifier::Rumble;
-
-    for(auto& device : inputManager.devices) {
-      if(binding.deviceIdentifier && binding.deviceIdentifier == device->identifier()) {
-        binding.device = device;
-        binding.deviceID = device->id();
-        break;
-      } else if(!binding.deviceIdentifier && binding.deviceID == device->id()) {
-        binding.device = device;
-        break;
-      }
-    }
+    parseBindingChord(assignment, binding.qualifier, binding.chord);
   }
 }
 
@@ -84,38 +143,62 @@ auto InputMapping::assigned() -> bool {
   return false;
 }
 
+auto InputMapping::Binding::primary() const -> const Chord* {
+  if(chord.empty()) return nullptr;
+  return &chord[0];
+}
+
 auto InputMapping::Binding::icon() -> multiFactorImage {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  if(!device && (deviceID || deviceIdentifier)) return Icon::Device::Joypad;
-  if(!device) return {};
-  if(device->isKeyboard()) return Icon::Device::Keyboard;
-  if(device->isMouse()) return Icon::Device::Mouse;
-  if(device->isJoypad()) return Icon::Device::Joypad;
+  auto key = primary();
+  if(!key) return {};
+  if(!key->device && (key->deviceID || key->deviceIdentifier)) return Icon::Device::Joypad;
+  if(!key->device) return {};
+  if(key->device->isKeyboard()) return Icon::Device::Keyboard;
+  if(key->device->isMouse()) return Icon::Device::Mouse;
+  if(key->device->isJoypad()) return Icon::Device::Joypad;
   return {};
 }
 
 auto InputMapping::Binding::text() -> string {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  if(!device && (deviceID || deviceIdentifier)) return "(disconnected)";
-  if(!device) return {};
-  if(groupID >= device->size()) return {};
-  if(inputID >= device->group(groupID).size()) return {};
+  if(chord.empty()) return {};
 
-  if(device->isKeyboard()) {
-    return device->group(groupID).input(inputID).name();
-  }
-
-  if(device->isMouse()) {
-    return device->group(groupID).input(inputID).name();
-  }
-
-  if(device->isJoypad()) {
-    string name = device->name();
-    if(name == "Joypad") {
-      name.append(string{"{", Hash::CRC16(string{device->id()}).digest().upcase(), "}"});
+  if(chord.size() > 1) {
+    string output;
+    for(auto index : range(chord.size())) {
+      auto& key = chord[index];
+      if(!key.device && (key.deviceID || key.deviceIdentifier)) return "(disconnected)";
+      if(!key.device) return {};
+      if(key.groupID >= key.device->size()) return {};
+      if(key.inputID >= key.device->group(key.groupID).size()) return {};
+      if(index) output.append("+");
+      output.append(key.device->group(key.groupID).input(key.inputID).name());
     }
-    name.append(" ", device->group(groupID).name());
-    name.append(" ", device->group(groupID).input(inputID).name());
+    return output;
+  }
+
+  auto& key = chord[0];
+  if(!key.device && (key.deviceID || key.deviceIdentifier)) return "(disconnected)";
+  if(!key.device) return {};
+  if(key.groupID >= key.device->size()) return {};
+  if(key.inputID >= key.device->group(key.groupID).size()) return {};
+
+  if(key.device->isKeyboard()) {
+    return key.device->group(key.groupID).input(key.inputID).name();
+  }
+
+  if(key.device->isMouse()) {
+    return key.device->group(key.groupID).input(key.inputID).name();
+  }
+
+  if(key.device->isJoypad()) {
+    string name = key.device->name();
+    if(name == "Joypad") {
+      name.append(string{"{", Hash::CRC16(string{key.device->id()}).digest().upcase(), "}"});
+    }
+    name.append(" ", key.device->group(key.groupID).name());
+    name.append(" ", key.device->group(key.groupID).input(key.inputID).name());
     if(qualifier == Qualifier::Lo) name.append(".Lo");
     if(qualifier == Qualifier::Hi) name.append(".Hi");
     if(qualifier == Qualifier::Rumble) name.append(".Rumble");
@@ -169,38 +252,7 @@ auto InputDigital::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 gr
 auto InputDigital::value() -> s16 {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   s16 result = 0;
-
-  for(auto& binding : bindings) {
-    if(!binding.device) continue;  //unbound
-
-    auto& device = binding.device;
-    auto& groupID = binding.groupID;
-    auto& inputID = binding.inputID;
-    auto& qualifier = binding.qualifier;
-    if (device->isKeyboard() && program.keyboardCaptured) continue;
-    s16 value = device->group(groupID).input(inputID).value();
-    s16 output = 0;
-
-    if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
-      output = value != 0;
-    }
-
-    if(device->isMouse() && groupID == HID::Mouse::GroupID::Button && inputManager.acquired()) {
-      output = value != 0;
-    }
-
-    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button) {
-      output = value != 0;
-    }
-
-    if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button) {
-      if(qualifier == Qualifier::Lo) output = value < -16384;
-      if(qualifier == Qualifier::Hi) output = value > +16384;
-    }
-
-    result |= output;
-  }
-
+  for(auto& binding : bindings) result |= bindingActive(binding, true);
   return result;
 }
 
@@ -213,38 +265,7 @@ auto InputDigital::pressed() -> bool {
 auto InputHotkey::value() -> s16 {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   s16 result = 0;
-
-  for(auto& binding : bindings) {
-    if(!binding.device) continue;  //unbound
-
-    auto& device = binding.device;
-    auto& groupID = binding.groupID;
-    auto& inputID = binding.inputID;
-    auto& qualifier = binding.qualifier;
-
-    s16 value = device->group(groupID).input(inputID).value();
-    s16 output = 0;
-
-    if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
-      output = value != 0;
-    }
-
-    if(device->isMouse() && groupID == HID::Mouse::GroupID::Button && inputManager.acquired()) {
-      output = value != 0;
-    }
-
-    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button) {
-      output = value != 0;
-    }
-
-    if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button) {
-      if(qualifier == Qualifier::Lo) output = value < -16384;
-      if(qualifier == Qualifier::Hi) output = value > +16384;
-    }
-
-    result |= output;
-  }
-
+  for(auto& binding : bindings) result |= bindingActive(binding, false);
   return result;
 }
 
@@ -293,11 +314,12 @@ auto InputAnalog::sample() -> Sample {
   bool digitalPressed = false;
 
   for(auto& binding : bindings) {
-    if(!binding.device) continue;  //unbound
+    auto key = binding.primary();
+    if(!key || !key->device) continue;  //unbound
 
-    auto& device = binding.device;
-    auto& groupID = binding.groupID;
-    auto& inputID = binding.inputID;
+    auto& device = key->device;
+    auto& groupID = key->groupID;
+    auto& inputID = key->inputID;
     auto& qualifier = binding.qualifier;
     if (device->isKeyboard() && program.keyboardCaptured) continue;    
     s16 value = device->group(groupID).input(inputID).value();
@@ -428,12 +450,12 @@ auto InputAbsolute::value() -> s16 {
   s32 result = 0;
 
   for(auto& binding : bindings) {
-    if(!binding.device) continue;  //unbound
+    auto key = binding.primary();
+    if(!key || !key->device) continue;  //unbound
 
-    auto& device = binding.device;
-    auto& groupID = binding.groupID;
-    auto& inputID = binding.inputID;
-    auto& qualifier = binding.qualifier;
+    auto& device = key->device;
+    auto& groupID = key->groupID;
+    auto& inputID = key->inputID;
     if (device->isKeyboard() && program.keyboardCaptured) continue;
     s16 value = device->group(groupID).input(inputID).value();
 
@@ -479,12 +501,13 @@ auto InputRelative::synchronize() -> void {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   for(u32 index : range(BindingLimit)) {
     auto& binding = bindings[index];
-    if(!binding.device || !binding.device->isMouse()) continue;
-    if(binding.groupID != HID::Mouse::GroupID::Axis) continue;
+    auto key = binding.primary();
+    if(!key || !key->device || !key->device->isMouse()) continue;
+    if(key->groupID != HID::Mouse::GroupID::Axis) continue;
 
-    auto& mouse = static_cast<HID::Mouse&>(*binding.device);
-    if(binding.inputID >= mouse.axes().size()) continue;
-    mouse.motion(binding.inputID).synchronize(previous[index]);
+    auto& mouse = static_cast<HID::Mouse&>(*key->device);
+    if(key->inputID >= mouse.axes().size()) continue;
+    mouse.motion(key->inputID).synchronize(previous[index]);
   }
 }
 
@@ -494,11 +517,12 @@ auto InputRelative::value() -> s16 {
 
   for(u32 index : range(BindingLimit)) {
     auto& binding = bindings[index];
-    if(!binding.device) continue;  //unbound
+    auto key = binding.primary();
+    if(!key || !key->device) continue;  //unbound
 
-    auto& device = binding.device;
-    auto& groupID = binding.groupID;
-    auto& inputID = binding.inputID;
+    auto& device = key->device;
+    auto& groupID = key->groupID;
+    auto& inputID = key->inputID;
     if (device->isKeyboard() && program.keyboardCaptured) continue;
 
     if(device->isMouse() && groupID == HID::Mouse::GroupID::Axis && inputManager.acquired()) {
@@ -541,8 +565,9 @@ auto InputRumble::value() -> s16 {
 
 auto InputRumble::rumble(u16 strong, u16 weak) -> void {
   for(auto& binding : bindings) {
-    if(!binding.device) continue;
-    ruby::input.rumble(binding.deviceID, strong, weak);
+    auto key = binding.primary();
+    if(!key || !key->device) continue;
+    ruby::input.rumble(key->deviceID, strong, weak);
   }
 }
 
