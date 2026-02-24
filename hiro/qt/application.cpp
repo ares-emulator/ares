@@ -89,6 +89,20 @@ auto pApplication::initialize() -> void {
   setenv("QTCOMPOSE", "/usr/local/lib/X11/locale/", 0);
   #endif
 
+  #if (defined(PLATFORM_LINUX) || defined(PLATFORM_BSD))
+  // ruby's Linux video backend is GLX/X11-based, so default Qt to X11 under Wayland
+  // unless the user explicitly requested a Qt platform plugin.
+  if(!getenv("QT_QPA_PLATFORM")) {
+    if(getenv("WAYLAND_DISPLAY")) {
+      setenv("QT_QPA_PLATFORM", "xcb", 0);
+    } else if(auto sessionType = getenv("XDG_SESSION_TYPE")) {
+      if(string{sessionType}.iequals("wayland")) {
+        setenv("QT_QPA_PLATFORM", "xcb", 0);
+      }
+    }
+  }
+  #endif
+
   #if defined(DISPLAY_XORG)
   XInitThreads();
   state().display = XOpenDisplay(nullptr);
