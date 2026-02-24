@@ -57,10 +57,16 @@ struct Program : ares::Platform {
 
   auto inputDriverUpdate() -> void;
 
+  auto driverInitFailed(nall::string& driver, const char* kind, auto&& updateSettingsWindow) -> void;
+  
   bool startFullScreen = false;
   bool startPseudoFullScreen = false;
+  bool kiosk = false;
   std::vector<string> startGameLoad;
   bool noFilePrompt = false;
+  bool settingsWindowConstructed = false;
+  bool gameBrowserWindowConstructed = false;
+  bool toolsWindowConstructed = false;
 
   string startSystem;
   string startShader;
@@ -76,6 +82,7 @@ struct Program : ares::Platform {
   bool requestFrameAdvance = false;
   bool requestScreenshot = false;
   bool keyboardCaptured = false;
+  atomic<bool> pendingKioskExit = false;
 
   struct State {
     u32 slot = 1;
@@ -84,7 +91,7 @@ struct Program : ares::Platform {
 
   //rewind.cpp
   struct Rewind {
-    enum class Mode : u32 { Playing, Rewinding } mode = Mode::Playing;
+  enum class Mode : u32 { Playing, Rewinding } mode = Mode::Playing;
     std::vector<serializer> history;
     u32 length = 0;
     u32 frequency = 0;
