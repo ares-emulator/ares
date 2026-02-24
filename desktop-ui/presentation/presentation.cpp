@@ -5,6 +5,37 @@ Presentation& presentation = Instances::presentation();
 #define ELLIPSIS "\u2026"
 
 Presentation::Presentation() {
+  if(program.batchMode) {
+    viewport.setDroppable().onDrop([&](std::vector<string> filenames) {
+      Program::Guard guard;
+      if(filenames.size() != 1) return;
+      if(auto emulator = program.identify(filenames.front())) {
+        program.load(emulator, filenames.front());
+      }
+    });
+
+    Application::onOpenFile([&](auto filename) {
+      Program::Guard guard;
+      if(auto emulator = program.identify(filename)) {
+        program.load(emulator, filename);
+      }
+    });
+
+    onClose([&] {
+      program.quit();
+    });
+
+    menuBar.setVisible(false);
+    layout.remove(statusLayout);
+    resizeWindow();
+    setTitle({ares::Name, " ", ares::Version});
+    setAssociatedFile();
+    setBackgroundColor({0, 0, 0});
+    setAlignment(Alignment::Center);
+    setVisible();
+    return;
+  }
+
   loadMenu.setText("Load");
 
   systemMenu.setVisible(false);
@@ -329,7 +360,7 @@ auto Presentation::resizeWindow() -> void {
     viewportHeight = videoHeight * multiplier;
   }
 
-  u32 statusHeight = showStatusBarSetting.checked() ? StatusHeight : 0;
+  u32 statusHeight = (!program.batchMode && showStatusBarSetting.checked()) ? StatusHeight : 0;
 
   // Prevent the window frame from going out of bounds
   u32 monitorHeight = 1;
@@ -358,6 +389,7 @@ auto Presentation::resizeWindow() -> void {
 }
 
 auto Presentation::loadEmulators() -> void {
+  if(program.batchMode) return;
   loadMenu.reset();
 
   //clean up the recent games history first
@@ -500,6 +532,13 @@ auto Presentation::loadEmulators() -> void {
 }
 
 auto Presentation::loadEmulator() -> void {
+  if(program.batchMode) {
+    setTitle(emulator->root->game());
+    setAssociatedFile(emulator->game->location);
+    setFocused();
+    viewport.setFocused();
+    return;
+  }
   setTitle(emulator->root->game());
   setAssociatedFile(emulator->game->location);
   systemMenu.setText(emulator->name);
@@ -515,6 +554,7 @@ auto Presentation::loadEmulator() -> void {
 }
 
 auto Presentation::refreshSystemMenu() -> void {
+  if(program.batchMode) return;
   systemMenu.reset();
 
   //allow each emulator core to create any specialized menus necessary:
@@ -635,6 +675,7 @@ auto Presentation::refreshSystemMenu() -> void {
 auto Presentation::unloadEmulator(bool reloading) -> void {
   setTitle({ares::Name, " ", ares::Version});
   setAssociatedFile();
+  if(program.batchMode) return;
   systemMenu.setVisible(false);
   systemMenu.reset();
 
@@ -650,6 +691,7 @@ auto Presentation::showIcon(bool visible) -> void {
 }
 
 auto Presentation::loadShaders() -> void {
+  if(program.batchMode) return;
   videoShaderMenu.reset();
   videoShaderMenu.setEnabled(ruby::video.hasShader());
   if(!ruby::video.hasShader()) return;

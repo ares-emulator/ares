@@ -14,8 +14,44 @@ auto Program::videoDriverUpdate() -> void {
 
   if(!ruby::video.ready()) {
     MessageDialog().setText({"Failed to initialize ", settings.video.driver, " video driver."}).setAlignment(presentation).error();
+    if(batchMode) pendingBatchExit = true;
     settings.video.driver = "None";
-    driverSettings.videoDriverUpdate();
+    if(settingsWindowConstructed) driverSettings.videoDriverUpdate();
+    return;
+  }
+
+  if(startShader && !Presentation::shaderArgApplied) {
+    Presentation::shaderArgApplied = true;
+    string location = locate("Shaders/");
+    #if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
+    if(!inode::exists(location)) location = locate("../libretro/shaders/shaders_slang/");
+    #endif
+
+    string existingShader = settings.video.shader;
+    startShader.transform("\\", "/");
+    if(!startShader.imatch("None")) {
+      settings.video.shader = {startShader, ".slangp"};
+    } else {
+      settings.video.shader = startShader;
+    }
+
+    if(inode::exists({location, settings.video.shader})) {
+      ruby::video.setShader({location, settings.video.shader});
+    } else if(settings.video.shader.imatch("None")) {
+      ruby::video.setShader("None");
+    } else {
+      if(batchMode) {
+        showMessage({"Requested shader not found: ", location, settings.video.shader, ". Using existing shader."});
+      } else {
+        hiro::MessageDialog()
+          .setTitle("Warning")
+          .setAlignment(hiro::Alignment::Center)
+          .setText({"Requested shader not found: ", location, settings.video.shader,
+            "\nUsing existing defined shader: ", location, existingShader})
+          .warning();
+      }
+      settings.video.shader = existingShader;
+    }
   }
 
   presentation.loadShaders();
@@ -94,8 +130,9 @@ auto Program::audioDriverUpdate() -> void {
 
   if(!ruby::audio.ready()) {
     MessageDialog().setText({"Failed to initialize ", settings.audio.driver, " audio driver."}).setAlignment(presentation).error();
+    if(batchMode) pendingBatchExit = true;
     settings.audio.driver = "None";
-    driverSettings.audioDriverUpdate();
+    if(settingsWindowConstructed) driverSettings.audioDriverUpdate();
   }
 }
 
@@ -137,8 +174,9 @@ auto Program::inputDriverUpdate() -> void {
 
   if(!ruby::input.ready()) {
     MessageDialog().setText({"Failed to initialize ", settings.input.driver, " input driver."}).setAlignment(presentation).error();
+    if(batchMode) pendingBatchExit = true;
     settings.input.driver = "None";
-    driverSettings.inputDriverUpdate();
+    if(settingsWindowConstructed) driverSettings.inputDriverUpdate();
   }
 
   inputManager.poll(true);

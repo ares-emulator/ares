@@ -11,6 +11,7 @@ auto Program::identify(const string& filename) -> std::shared_ptr<Emulator> {
     "Unable to determine what type of game this file is.\n"
     "Please use the load menu to choose the appropriate game system instead."
   }).setAlignment(presentation).error();
+  if(batchMode) pendingBatchExit = true;
   return {};
 }
 
@@ -23,6 +24,13 @@ auto Program::load(std::shared_ptr<Emulator> emulator, string location) -> bool 
 
   // For arcade systems, show the game browser dialog as we're using MAME-compatible roms
   if(emulator->arcade() && !location) {
+    if(!gameBrowserWindowConstructed) {
+      if(batchMode) {
+        showMessage("Batch mode does not support the arcade game browser. Specify a game path.");
+      }
+      ::emulator.reset();
+      return false;
+    }
     gameBrowserWindow.show(emulator);
     
     // Temporarily pretend that the load failed to prevent crash
@@ -53,11 +61,17 @@ auto Program::load(string location) -> bool {
   string savesPath = settings.paths.saves;
   if(!savesPath) savesPath = Location::path(location);
   if(!directory::writable(savesPath)) {
-    MessageDialog().setTitle(ares::Name).setText({
-      "The current save path is read-only; please choose a writable save path now.\n"
-      "Otherwise, any in-game progress will be lost once this game is unloaded!\n\n"
-      "Current save location: ", savesPath
-    }).warning();
+    if(batchMode) {
+      showMessage({
+        "Current save path is read-only; progress may be lost. Save location: ", savesPath
+      });
+    } else {
+      MessageDialog().setTitle(ares::Name).setText({
+        "The current save path is read-only; please choose a writable save path now.\n"
+        "Otherwise, any in-game progress will be lost once this game is unloaded!\n\n"
+        "Current save location: ", savesPath
+      }).warning();
+    }
   }
 
   paletteUpdate();
@@ -65,18 +79,20 @@ auto Program::load(string location) -> bool {
   presentation.loadEmulator();
   presentation.showIcon(false);
   if(settings.video.adaptiveSizing  && !startPseudoFullScreen) presentation.resizeWindow();
-  manifestViewer.reload();
-  cheatEditor.reload();
-  memoryEditor.reload();
-  graphicsViewer.reload();
-  streamManager.reload();
-  propertiesViewer.reload();
-  traceLogger.reload();
-  tapeViewer.reload();
+  if(toolsWindowConstructed) {
+    manifestViewer.reload();
+    cheatEditor.reload();
+    memoryEditor.reload();
+    graphicsViewer.reload();
+    streamManager.reload();
+    propertiesViewer.reload();
+    traceLogger.reload();
+    tapeViewer.reload();
+  }
   state = {};  //reset hotkey state slot to 1
   if(settings.boot.debugger) {
     pause(true);
-    toolsWindow.show("Tracer");
+    if(toolsWindowConstructed) toolsWindow.show("Tracer");
     presentation.setFocused();
   } else if (settings.boot.awaitGDBClient) {
     pause(true);
@@ -128,16 +144,18 @@ auto Program::unload() -> void {
   emulator.reset();
   rewindReset();
   presentation.unloadEmulator();
-  toolsWindow.setVisible(false);
-  gameBrowserWindow.setVisible(false);
-  manifestViewer.unload();
-  cheatEditor.unload();
-  memoryEditor.unload();
-  graphicsViewer.unload();
-  streamManager.unload();
-  propertiesViewer.unload();
-  traceLogger.unload();
-  tapeViewer.unload();
+  if(toolsWindowConstructed) {
+    toolsWindow.setVisible(false);
+    manifestViewer.unload();
+    cheatEditor.unload();
+    memoryEditor.unload();
+    graphicsViewer.unload();
+    streamManager.unload();
+    propertiesViewer.unload();
+    traceLogger.unload();
+    tapeViewer.unload();
+  }
+  if(gameBrowserWindowConstructed) gameBrowserWindow.setVisible(false);
   message.text = "";
   configuration = "";
   ruby::video.clear();

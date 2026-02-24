@@ -254,6 +254,7 @@ auto Emulator::setColorBleed(bool value) -> bool {
 
 auto Emulator::error(const string& text) -> void {
   MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
+  if(program.batchMode) program.pendingBatchExit = true;
 }
 
 auto Emulator::input(ares::Node::Input::Input input) -> void {
@@ -319,4 +320,3 @@ auto Emulator::inputKeyboard(string name) -> bool {
 
   return false;
 }
-
