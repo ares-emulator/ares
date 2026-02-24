@@ -144,7 +144,7 @@ auto InputDigital::value() -> s16 {
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
     auto& qualifier = binding.qualifier;
-    if (device->isKeyboard() && program.keyboardCaptured) continue;
+    if (device->isKeyboard() && (program.keyboardCaptured || (!presentation.focused() && !ruby::video.fullScreen()))) continue;
     s16 value = device->group(groupID).input(inputID).value();
     s16 output = 0;
 
@@ -178,6 +178,7 @@ auto InputDigital::pressed() -> bool {
 
 
 auto InputHotkey::value() -> s16 {
+  if(!presentation.focused() && !ruby::video.fullScreen()) return 0;
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   s16 result = 0;
 
@@ -264,7 +265,7 @@ auto InputAnalog::value() -> s16 {
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
     auto& qualifier = binding.qualifier;
-    if (device->isKeyboard() && program.keyboardCaptured) continue;    
+    if (device->isKeyboard() && (program.keyboardCaptured || !presentation.focused())) continue;    
     s16 value = device->group(groupID).input(inputID).value();
 
     if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
@@ -333,7 +334,7 @@ auto InputAbsolute::value() -> s16 {
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
     auto& qualifier = binding.qualifier;
-    if (device->isKeyboard() && program.keyboardCaptured) continue;
+    if (device->isKeyboard() && (program.keyboardCaptured || (!presentation.focused() && !ruby::video.fullScreen()))) continue;
     s16 value = device->group(groupID).input(inputID).value();
 
     if(device->isMouse() && groupID == HID::Joypad::GroupID::Axis && ruby::input.acquired()) {
@@ -392,7 +393,7 @@ auto InputRelative::value() -> s16 {
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
     auto& qualifier = binding.qualifier;
-    if (device->isKeyboard() && program.keyboardCaptured) continue;
+    if (device->isKeyboard() && (program.keyboardCaptured || (!presentation.focused() && !ruby::video.fullScreen()))) continue;
     s16 value = device->group(groupID).input(inputID).value();
 
     if(device->isMouse() && groupID == HID::Joypad::GroupID::Axis && ruby::input.acquired()) {
