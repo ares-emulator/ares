@@ -246,6 +246,8 @@ struct HotkeySettings : VerticalLayout {
   maybe<InputHotkey&> activeMapping;
   u32 activeBinding = 0;
   Timer timer;
+  Timer chordTimer;
+  std::vector<InputMapping::Binding::Chord> pendingKeyboardChord;
 };
 
 struct EmulatorSettings : VerticalLayout {
