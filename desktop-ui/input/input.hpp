@@ -15,19 +15,14 @@ struct InputMapping {
   string assignments[BindingLimit];
 
   struct Binding {
-    struct Chord {
-      std::shared_ptr<HID::Device> device;
-      u64 deviceID;
-      u32 groupID;
-      u32 inputID;
-    };
-
     auto icon() -> multiFactorImage;
     auto text() -> string;
-    auto primary() const -> const Chord*;
 
+    std::shared_ptr<HID::Device> device;
+    u64 deviceID;
+    u32 groupID;
+    u32 inputID;
     Qualifier qualifier = Qualifier::None;
-    std::vector<Chord> chord;
   };
   Binding bindings[BindingLimit];
 };
