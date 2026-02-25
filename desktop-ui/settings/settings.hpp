@@ -266,6 +266,13 @@ struct InputSettings : VerticalLayout {
 };
 
 struct HotkeySettings : VerticalLayout {
+  struct ChordKey {
+    std::shared_ptr<HID::Device> device;
+    u64 deviceID = 0;
+    u32 groupID = 0;
+    u32 inputID = 0;
+  };
+
   auto construct() -> void;
   auto reload() -> void;
   auto refresh() -> void;
@@ -286,7 +293,7 @@ struct HotkeySettings : VerticalLayout {
   u32 activeBinding = 0;
   Timer timer;
   Timer chordTimer;
-  std::vector<InputMapping::Binding::Chord> pendingKeyboardChord;
+  std::vector<ChordKey> pendingKeyboardChord;
 };
 
 struct EmulatorSettings : VerticalLayout {

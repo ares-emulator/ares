@@ -18,7 +18,7 @@ static auto keyboardName(std::shared_ptr<HID::Device> device, u32 groupID, u32 i
   return device->group(groupID).input(inputID).name();
 }
 
-static auto keyboardChordText(const std::vector<InputMapping::Binding::Chord>& chord) -> string {
+static auto keyboardChordText(const std::vector<HotkeySettings::ChordKey>& chord) -> string {
   string output;
   for(auto index : range(chord.size())) {
     auto name = keyboardName(chord[index].device, chord[index].groupID, chord[index].inputID);
@@ -29,7 +29,7 @@ static auto keyboardChordText(const std::vector<InputMapping::Binding::Chord>& c
   return output;
 }
 
-static auto keyboardChordAssignment(const std::vector<InputMapping::Binding::Chord>& chord) -> string {
+static auto keyboardChordAssignment(const std::vector<HotkeySettings::ChordKey>& chord) -> string {
   if(chord.empty()) return {};
 
   string output;
@@ -41,11 +41,42 @@ static auto keyboardChordAssignment(const std::vector<InputMapping::Binding::Cho
   return output;
 }
 
-static auto keyboardChordContains(const std::vector<InputMapping::Binding::Chord>& chord, u32 groupID, u32 inputID) -> bool {
+static auto keyboardChordContains(const std::vector<HotkeySettings::ChordKey>& chord, u32 groupID, u32 inputID) -> bool {
   for(auto& key : chord) {
     if(key.groupID == groupID && key.inputID == inputID) return true;
   }
   return false;
+}
+
+static auto hotkeyAssignmentText(string_view assignment) -> string {
+  if(!assignment) return {};
+
+  string output;
+  auto parts = nall::split(assignment, "+");
+  for(auto index : range(parts.size())) {
+    auto token = nall::split(parts[index].strip(), "/");
+    if(token.size() < 3) return {};
+
+    u64 deviceID = token[0].natural();
+    u32 groupID = token[1].natural();
+    u32 inputID = token[2].natural();
+
+    std::shared_ptr<HID::Device> device;
+    for(auto& candidate : inputManager.devices) {
+      if(candidate->id() == deviceID) {
+        device = candidate;
+        break;
+      }
+    }
+    if(!device) return "(disconnected)";
+    if(groupID >= device->size()) return {};
+    if(inputID >= device->group(groupID).size()) return {};
+
+    if(index) output.append("+");
+    output.append(device->group(groupID).input(inputID).name());
+  }
+
+  return output;
 }
 
 auto HotkeySettings::construct() -> void {
@@ -90,8 +121,14 @@ auto HotkeySettings::refresh() -> void {
       //do not remove identifier from mappings currently being assigned
       if(activeMapping && &activeMapping() == &mapping && activeBinding == binding) continue;
       auto cell = inputList.item(index).cell(1 + binding);
-      cell.setIcon(mapping.bindings[binding].icon());
-      cell.setText(mapping.bindings[binding].text());
+      auto assignment = mapping.assignments[binding];
+      if(nall::split(assignment, "+").size() > 1) {
+        cell.setIcon(Icon::Device::Keyboard);
+        cell.setText(hotkeyAssignmentText(assignment));
+      } else {
+        cell.setIcon(mapping.bindings[binding].icon());
+        cell.setText(mapping.bindings[binding].text());
+      }
     }
     index++;
   }
