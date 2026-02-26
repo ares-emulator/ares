@@ -6,6 +6,7 @@ Presentation& presentation = Instances::presentation();
 
 Presentation::Presentation() {
   if(program.kiosk) {
+    iconLayout.setCollapsible();
     viewport.setDroppable().onDrop([&](std::vector<string> filenames) {
       Program::Guard guard;
       if(filenames.size() != 1) return;
