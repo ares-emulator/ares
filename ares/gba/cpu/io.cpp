@@ -245,7 +245,7 @@ auto CPU::readIO(n32 address) -> n8 {
 
   }
 
-  return cpu.openBus.get(Byte, address);
+  return mdr >> (8 * (address & 3));
 }
 
 auto CPU::writeIO(n32 address, n8 data) -> void {

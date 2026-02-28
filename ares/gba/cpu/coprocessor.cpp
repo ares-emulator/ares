@@ -12,5 +12,5 @@ auto CPU::Coprocessor::debugMCR() -> void {
 }
 
 auto CPU::Coprocessor::debugMRC() -> n32 {
-  return cpu.openBus.get(Word, 0);
+  return cpu.mdr;
 }

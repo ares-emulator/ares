@@ -20,7 +20,7 @@ auto Display::readIO(n32 address) -> n8 {
 
   }
 
-  return cpu.openBus.get(Byte, address);
+  return cpu.mdr >> (8 * (address & 3));
 }
 
 auto Display::writeIO(n32 address, n8 data) -> void {

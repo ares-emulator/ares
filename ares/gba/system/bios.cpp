@@ -16,9 +16,7 @@ auto BIOS::readROM(n25 address) -> n32 {
 
 auto BIOS::read(u32 mode, n25 address) -> n32 {
   //unmapped memory
-  if(address >= 0x0000'4000) {
-    return cpu.openBus.get(mode, address);  //0000'4000-01ff'ffff
-  }
+  if(address >= 0x0000'4000) return cpu.mdr;  //0000'4000-01ff'ffff
 
   //GBA BIOS is read-protected; only the BIOS itself can read its own memory
   //when accessed elsewhere; this should return the last value read by the BIOS program
@@ -27,10 +25,7 @@ auto BIOS::read(u32 mode, n25 address) -> n32 {
   } else {
     if(cpu.processor.r15 > 0x01ff'ffff && cpu.processor.r15 < 0x0200'4000) mdr = readROM(address);
   }
-
-  if(mode & Word) address &= ~3;
-  if(mode & Half) address &= ~1;
-  return mdr >> (8 * (address & 3));
+  return mdr;
 }
 
 auto BIOS::write(u32 mode, n25 address, n32 word) -> void {
