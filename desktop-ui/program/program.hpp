@@ -91,7 +91,7 @@ struct Program : ares::Platform {
 
   //rewind.cpp
   struct Rewind {
-  enum class Mode : u32 { Playing, Rewinding } mode = Mode::Playing;
+    enum class Mode : u32 { Playing, Rewinding } mode = Mode::Playing;
     std::vector<serializer> history;
     u32 length = 0;
     u32 frequency = 0;

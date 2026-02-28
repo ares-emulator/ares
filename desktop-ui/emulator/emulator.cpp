@@ -104,6 +104,12 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
   
   switch (result.result) {
     case noFirmware:
+      if(program.kiosk) {
+        error({"firmware is missing or invalid.\n",
+          result.firmwareSystemName, " - ", result.firmwareType, " (", result.firmwareRegion, ") is required to play this game."
+        });
+        break;
+      }
       if(MessageDialog().setText({
         errorText
       }).question() == "Yes") {
