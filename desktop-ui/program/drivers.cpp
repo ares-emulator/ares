@@ -174,14 +174,7 @@ auto Program::inputDriverUpdate() -> void {
 }
 
 auto Program::driverInitFailed(nall::string& driver, const char* kind, auto&& updateSettingsWindow) -> void {
-  if(kiosk) {
-    error({"failed to initialize ", driver, " ", kind, " driver."});
-  } else {
-    MessageDialog()
-      .setText({"Failed to initialize ", driver, " ", kind, " driver."})
-      .setAlignment(presentation)
-      .error();
-  }
+  error({"Failed to initialize ", driver, " ", kind, " driver."});
 
   driver = "None";
   if(settingsWindowConstructed) updateSettingsWindow();
