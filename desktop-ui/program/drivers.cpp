@@ -51,7 +51,7 @@ auto Program::videoDriverUpdate() -> void {
     }
   }
 
-  presentation.loadShaders();
+  if(!kiosk) presentation.loadShaders();
 }
 
 auto Program::videoMonitorUpdate() -> void {
