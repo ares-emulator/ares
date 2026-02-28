@@ -107,9 +107,6 @@ auto CPU::serialize(serializer& s) -> void {
   s(memory.ewramWait);
   s(memory.unknown2);
 
-  s(openBus.data);
-  s(openBus.iwramData);
-
   for(auto& slot : prefetch.slot) s(slot);
   s(prefetch.addr);
   s(prefetch.load);
@@ -126,4 +123,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.busLocked);
   s(context.burstActive);
   s(context.hcounter);
+
+  s(iwramBus);
+  s(mdr);
 }

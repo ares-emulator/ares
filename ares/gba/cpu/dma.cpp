@@ -59,7 +59,10 @@ auto CPU::DMAC::Channel::read() -> void {
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
     latch.data = cpu.getDMA(mode, addr);
-    if(mode & Half) latch.data |= latch.data << 16;
+    if(mode & Half) {
+      latch.data &= 0xffff;
+      latch.data |= latch.data << 16;
+    }
   }
 
   switch(sourceMode) {

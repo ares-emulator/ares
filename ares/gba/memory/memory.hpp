@@ -6,8 +6,6 @@ struct IO {
 };
 
 struct Bus {
-  static auto mirror(n32 address, n32 size) -> n32;
-
   auto power() -> void;
 
   IO* io[0x400] = {nullptr};

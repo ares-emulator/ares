@@ -17,8 +17,11 @@ auto IO::readIO(u32 mode, n32 address) -> n32 {
     address &= ~1;
     word.byte(0) = readIO(address + 0);
     word.byte(1) = readIO(address + 1);
+    word |= word << 16;
   } else if(mode & Byte) {
-    word.byte(0) = readIO(address + 0);
+    word = readIO(address + 0);
+    word |= word <<  8;
+    word |= word << 16;
   }
 
   return word;
@@ -42,7 +45,7 @@ auto IO::writeIO(u32 mode, n32 address, n32 word) -> void {
 
 struct UnmappedIO : IO {
   auto readIO(n32 address) -> n8 override {
-    return cpu.openBus.get(Byte, address);
+    return cpu.mdr >> (8 * (address & 3));
   }
 
   auto writeIO(n32 address, n8 byte) -> void override {
@@ -50,24 +53,6 @@ struct UnmappedIO : IO {
 };
 
 static UnmappedIO unmappedIO;
-
-auto Bus::mirror(n32 address, n32 size) -> n32 {
-  n32 base = 0;
-  if(size) {
-    n32 mask = 1 << 27;  //28-bit bus
-    while(address >= size) {
-      while(!(address & mask)) mask >>= 1;
-      address -= mask;
-      if(size > mask) {
-        size -= mask;
-        base += mask;
-      }
-      mask >>= 1;
-    }
-    base += address;
-  }
-  return base;
-}
 
 auto Bus::power() -> void {
   for(u32 n : range(0x400)) io[n] = &unmappedIO;

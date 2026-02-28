@@ -84,7 +84,7 @@ auto PPU::readIO(n32 address) -> n8 {
 
   }
 
-  return cpu.openBus.get(Byte, address);
+  return cpu.mdr >> (8 * (address & 3));
 }
 
 auto PPU::writeIO(n32 address, n8 data) -> void {
