@@ -42,6 +42,7 @@ auto Program::create() -> void {
           return;
         }
       }
+      return;
     }
 
     if(auto emulator = identify(gameToLoad)) {

@@ -201,6 +201,26 @@ auto nall::main(Arguments arguments) -> void {
     }
   }
 
+  if(program.startSystem && !program.startGameLoad.empty()) {
+    bool foundSystem = false;
+    for(auto& emulator : emulators) {
+      if(emulator->name == program.startSystem) {
+        foundSystem = true;
+        break;
+      }
+    }
+    if(!foundSystem) {
+      auto text = string{"Unrecognized argument for --system: ", program.startSystem, "\n"
+                         "Use --help to list all valid systems supported by ares."};
+      if(program.kiosk) {
+        fprintf(stderr, "error: %s\n", text.data());
+        return;
+      } else {
+        MessageDialog().setTitle("Error").setText(text).error();
+      }
+    }
+  }
+
   Instances::presentation.construct();
   if(!program.kiosk) {
     Instances::settingsWindow.construct();
