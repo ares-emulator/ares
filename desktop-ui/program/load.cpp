@@ -7,8 +7,7 @@ auto Program::identify(const string& filename) -> std::shared_ptr<Emulator> {
   }
 
   if(kiosk) {
-    fprintf(stderr, "error: unable to determine game type for: %s\n", Location::file(filename).data());
-    pendingKioskExit = true;
+    error({"unable to determine game type for: ", Location::file(filename)});
   } else {
     MessageDialog().setTitle(ares::Name).setText({
       "Filename: ", Location::file(filename), "\n\n"

@@ -175,8 +175,7 @@ auto Program::inputDriverUpdate() -> void {
 
 auto Program::driverInitFailed(nall::string& driver, const char* kind, auto&& updateSettingsWindow) -> void {
   if(kiosk) {
-    fprintf(stderr, "error: failed to initialize %s %s driver.\n", driver.data(), kind);
-    pendingKioskExit = true;
+    error({"failed to initialize ", driver, " ", kind, " driver."});
   } else {
     MessageDialog()
       .setText({"Failed to initialize ", driver, " ", kind, " driver."})

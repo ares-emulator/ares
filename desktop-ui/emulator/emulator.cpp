@@ -259,12 +259,7 @@ auto Emulator::setColorBleed(bool value) -> bool {
 }
 
 auto Emulator::error(const string& text) -> void {
-  if(program.kiosk) {
-    fprintf(stderr, "error: %s\n", text.data());
-    program.pendingKioskExit = true;
-  } else {
-    MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
-  }
+  program.error(text);
 }
 
 auto Emulator::input(ares::Node::Input::Input input) -> void {

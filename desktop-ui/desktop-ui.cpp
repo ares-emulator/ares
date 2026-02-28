@@ -192,11 +192,11 @@ auto nall::main(Arguments arguments) -> void {
 
   if(program.kiosk) {
     if(!invalidKioskPaths.empty()) {
-      fprintf(stderr, "error: path does not exist: %s\n", invalidKioskPaths.front().data());
+      program.error({"path does not exist: ", invalidKioskPaths.front()});
       return;
     }
     if(program.startGameLoad.empty()) {
-      fprintf(stderr, "error: provide a valid game file or directory.\n");
+      program.error("provide a valid game file or directory.");
       return;
     }
   }
@@ -212,12 +212,8 @@ auto nall::main(Arguments arguments) -> void {
     if(!foundSystem) {
       auto text = string{"Unrecognized argument for --system: ", program.startSystem, "\n"
                          "Use --help to list all valid systems supported by ares."};
-      if(program.kiosk) {
-        fprintf(stderr, "error: %s\n", text.data());
-        return;
-      } else {
-        MessageDialog().setTitle("Error").setText(text).error();
-      }
+      program.error(text);
+      if(program.kiosk) return;
     }
   }
 

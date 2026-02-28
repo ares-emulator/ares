@@ -32,6 +32,7 @@ struct Program : ares::Platform {
   //status.cpp
   auto updateMessage() -> void;
   auto showMessage(const string&) -> void;
+  auto error(const string&) -> void;
 
   //utility.cpp
   auto pause(bool) -> void;
