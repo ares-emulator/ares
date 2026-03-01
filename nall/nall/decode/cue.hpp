@@ -92,18 +92,6 @@ inline auto CUE::load(const string& location, const Decode::ZIP* archive, const 
   if(files.front().tracks.empty()) return false;
   if(files.front().tracks.front().indices.empty()) return false;
 
-  // calculate index ends for all but the last index
-  for(auto& file : files) {
-    maybe<Index&> previous;
-    for(auto& track : file.tracks) {
-      for(auto& index : track.indices) {
-        if(index.lba < 0) continue; // ignore gaps (not in file)
-        if(previous) previous->end = index.lba - 1;
-        previous = index;
-      }
-    }
-  }
-
   for(auto& file : files) {
     if(!file.scan(Location::path(location), archiveFolder, archive)) return false;
   }
@@ -152,8 +140,6 @@ inline auto CUE::loadTrack(std::vector<string>& lines, u32& offset) -> Track {
     if(lines[offset].ibeginsWith("TRACK ")) break;
     if(lines[offset].ibeginsWith("INDEX ")) {
       auto index = loadIndex(lines, offset);
-      if(index.number == 0 && track.number == 1)
-        index.lba = 0; // ignore track 1 index 0 (assume 1st pregap always starts at origin)
       track.indices.push_back(index);
       continue;
     }
@@ -171,6 +157,10 @@ inline auto CUE::loadTrack(std::vector<string>& lines, u32& offset) -> Track {
     }
     offset++;
   }
+
+  std::sort(track.indices.begin(), track.indices.end(),[](const Index& a, const Index& b) {
+    return a.number < b.number;
+  });
 
   if(track.number == 0 || track.number > 99) return {};
   return track;
@@ -222,11 +212,7 @@ inline auto CUE::File::scan(const string& pathname, const string& archiveFolderP
   u64 size = 0;
 
   if(type == "binary") {
-    if(zipFileEntry) {
-      size = zipFileEntry->size;
-    } else {
-      size = file::size(location);
-    }
+    size = zipFileEntry ? zipFileEntry->size : file::size(location);
   } else if(type == "wave") {
     //##TODO## Do we bother to support wav files in our zip bundles?
     Decode::WAV wav;
@@ -239,15 +225,62 @@ inline auto CUE::File::scan(const string& pathname, const string& archiveFolderP
     return false;
   }
 
-  // calculate last index end for the file
-  for(auto& track : tracks) {
+  auto firstInFileLBA = [&](const auto& track) -> s32 {
+    s32 first = -1;
     for(auto& index : track.indices) {
-      if(index.lba < 0) continue; // ignore gaps (not in file)
-      if(index.end >= 0) {
-        size -= track.sectorSize() * index.sectorCount();
-      } else {
-        index.end = index.lba + size / track.sectorSize() - 1;
-      }
+      if(index.lba < 0) continue;
+      if(first < 0 || index.lba < first) first = index.lba;
+    }
+    return first;
+  };
+
+  auto lastSectorInFile = [&](const auto& track) -> s32 {
+    auto bytesPerSector = track.sectorSize();
+    if(!bytesPerSector) return -1;
+    return (s32)(size / bytesPerSector) - 1;
+  };
+
+  auto nextTrackStartLBA = [&](u32 t) -> s32 {
+    auto thisStart = firstInFileLBA(tracks[t]);
+    if(thisStart < 0) return -1;
+
+    s32 next = -1;
+    for(u32 n : range(tracks.size())) {
+      auto start = firstInFileLBA(tracks[n]);
+      if(start < 0) continue;
+      if(start <= thisStart) continue;
+      if(next < 0 || start < next) next = start;
+    }
+    return next;
+  };
+
+  auto nextIndexStartLBA = [&](const auto& track, s32 lba) -> s32 {
+    s32 next = -1;
+    for(auto& candidate : track.indices) {
+      if(candidate.lba < 0) continue;
+      if(candidate.lba <= lba) continue;
+      if(next < 0 || candidate.lba < next) next = candidate.lba;
+    }
+    return next;
+  };
+
+  for(u32 t : range(tracks.size())) {
+    auto& track = tracks[t];
+
+    auto start = firstInFileLBA(track);
+    if(start < 0) continue;
+
+    auto nextTrack = nextTrackStartLBA(t);
+    auto trackEnd  = nextTrack >= 0 ? nextTrack - 1 : lastSectorInFile(track);
+    if(trackEnd < 0) continue;
+
+    for(auto& index : track.indices) {
+      if(index.lba < 0) continue;
+
+      auto nextIndex = nextIndexStartLBA(track, index.lba);
+      index.end = nextIndex >= 0 ? nextIndex - 1 : trackEnd;
+
+      if(index.end < index.lba) index.end = index.lba - 1;
     }
   }
 

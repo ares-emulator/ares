@@ -153,12 +153,12 @@ auto MemoryControl::writeWord(u32 address, u32 value) -> void {
     port.wait           = data.bit(31);
   };
 
-  if(address == 0x1f80'1008) return;writePort(exp1);
-  if(address == 0x1f80'100c) return;writePort(exp3);
-  if(address == 0x1f80'1010) return;writePort(bios);
-  if(address == 0x1f80'1014) return;writePort(spu);
-  if(address == 0x1f80'1018) return;writePort(cdrom);
-  if(address == 0x1f80'101c) return;writePort(exp2);
+  if(address == 0x1f80'1008) return writePort(exp1);
+  if(address == 0x1f80'100c) return writePort(exp3);
+  if(address == 0x1f80'1010) return writePort(bios);
+  if(address == 0x1f80'1014) return writePort(spu);
+  if(address == 0x1f80'1018) return writePort(cdrom);
+  if(address == 0x1f80'101c) return writePort(exp2);
 
   if(address == 0x1f80'1020) {  // COM delays
     common.com0   = data.bit(0,3);

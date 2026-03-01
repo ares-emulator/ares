@@ -110,7 +110,7 @@ auto DMA::readWord(u32 address) -> u32 {
   ) {
     data.bit( 0)    = channel.direction;
     data.bit( 1)    = channel.decrement;
-    data.bit( 2)    = channel.chopping.enable;
+    data.bit( 8)    = channel.chopping.enable;
     data.bit( 9,10) = channel.synchronization;
     data.bit(16,18) = channel.chopping.dmaWindow;
     data.bit(20,22) = channel.chopping.cpuWindow;
@@ -237,7 +237,7 @@ auto DMA::writeWord(u32 address, u32 value) -> void {
   ) {
     channel.direction          = data.bit( 0);
     channel.decrement          = data.bit( 1);
-    channel.chopping.enable    = data.bit( 2);
+    channel.chopping.enable    = data.bit( 8);
     channel.synchronization    = data.bit( 9,10);
     channel.chopping.dmaWindow = data.bit(16,18);
     channel.chopping.cpuWindow = data.bit(20,22);

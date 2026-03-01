@@ -10,11 +10,11 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
   string name;
 
   if(operation == 0x01) {
-    name = "GetStatus";
+    name = "Nop";
   }
 
   if(operation == 0x02) {
-    name = "SetLocation";
+    name = "Setloc";
   }
 
   if(operation == 0x03) {
@@ -22,19 +22,19 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
   }
 
   if(operation == 0x04) {
-    name = "FastForward";
+    name = "Forward";
   }
 
   if(operation == 0x05) {
-    name = "Rewind";
+    name = "Backward";
   }
 
   if(operation == 0x06) {
-    name = "ReadWithRetry";
+    name = "ReadN";
   }
 
   if(operation == 0x07) {
-    name = "MotorOn";
+    name = "Standby";
   }
 
   if(operation == 0x08) {
@@ -46,7 +46,7 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
   }
 
   if(operation == 0x0a) {
-    name = "Initialize";
+    name = "Init";
   }
 
   if(operation == 0x0b) {
@@ -54,7 +54,7 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
   }
 
   if(operation == 0x0c) {
-    name = "Unmute";
+    name = "Demute";
   }
 
   if(operation == 0x0d) {
@@ -66,15 +66,15 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
   }
 
   if(operation == 0x0f) {
-    name = "GetParameter";
+    name = "Getparam";
   }
 
   if(operation == 0x10) {
-    name = "GetLocationReading";
+    name = "GetlocL";
   }
 
   if(operation == 0x11) {
-    name = "GetLocationPlaying";
+    name = "GetlocP";
   }
 
   if(operation == 0x12) {
@@ -82,19 +82,19 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
   }
 
   if(operation == 0x13) {
-    name = "GetFirstAndLastTrackNumbers";
+    name = "GetTN";
   }
 
   if(operation == 0x14) {
-    name = "GetTrackStart";
+    name = "GetTD";
   }
 
   if(operation == 0x15) {
-    name = "SeekData";
+    name = "SeekL";
   }
 
   if(operation == 0x16) {
-    name = "SeekCDDA";
+    name = "SeekP";
   }
 
   if(operation == 0x19 && *suboperation == 0x20) {
@@ -106,7 +106,11 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
   }
 
   if(operation == 0x1b) {
-    name = "ReadWithoutRetry";
+    name = "ReadS";
+  }
+
+  if(operation == 0x1c) {
+    name = "Reset";
   }
 
   if(operation == 0x1e) {
@@ -146,9 +150,9 @@ auto Disc::Debugger::commandEpilogue(u8 operation, maybe<u8> suboperation) -> vo
 auto Disc::Debugger::read(s32 lba) -> void {
   if(!tracer.read->enabled()) return;
 
-  auto [minute, second, frame] = CD::MSF::fromLBA(lba);
-  minute = BCD::encode(minute);
-  second = BCD::encode(second);
-  frame  = BCD::encode(frame);
+  auto msf = CD::MSF::fromLBA(lba);
+  u8 minute = BCD::encode(msf.minute);
+  u8 second = BCD::encode(msf.second);
+  u8 frame  = BCD::encode(msf.frame);
   tracer.read->notify({hex(minute, 2L), ":", hex(second, 2L), ":", hex(frame, 2L)});
 }

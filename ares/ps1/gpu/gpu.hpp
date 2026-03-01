@@ -25,7 +25,7 @@ struct GPU : Thread, Memory::Interface {
   auto vblank() const -> bool { return io.vcounter < vstart() || io.vcounter >= vend(); }
   auto interlace() const -> bool { return io.verticalResolution && io.interlace; }
   auto htotal() const -> u32 { return io.videoMode ? 3406 : 3413; }
-  auto hblankStart() const -> u32 { return displayWidth() * dotclockDivider(); }
+  auto hblankStart() const -> u32 { return io.displayRangeX2; }
   auto displayWidth() const -> u32 { return io.horizontalResolution < 4 ? displayWidths[io.horizontalResolution] : displayWidths[4]; }
   auto dotclockDivider() const -> u32 { return io.horizontalResolution < 4 ? dotclockDividers[io.horizontalResolution] : dotclockDividers[4]; }
 

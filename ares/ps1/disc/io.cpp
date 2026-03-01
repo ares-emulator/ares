@@ -1,5 +1,5 @@
 auto Disc::canReadDMA() -> bool {
-  return !fifo.data.empty();
+  return io.sectorBufferReadRequest && !fifo.data.empty();
 }
 
 auto Disc::readDMA() -> u32 {
@@ -21,8 +21,8 @@ auto Disc::readByte(u32 address) -> u32 {
     data.bit(3) = fifo.parameter.empty();  //1 when empty
     data.bit(4) = !fifo.parameter.full();  //0 when full
     data.bit(5) = !fifo.response.empty();  //0 when empty
-    data.bit(6) = !fifo.data.empty();      //0 when empty
-    data.bit(7) = (event.counter > 0);     //command/parameter busy (0 = ready)
+    data.bit(6) = io.sectorBufferReadRequest && !fifo.data.empty();      //0 when empty
+    data.bit(7) = command.transfer.started; //command/parameter busy (0 = ready)
     return data;
   }
 
@@ -92,17 +92,13 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //command register
   if(address == 0x1f80'1801 && io.index == 0) {
-    if(event.counter) {
-      if(!event.queued) {
-        event.queued = data;
-      } else {
-        debug(unhandled, "CDROM: command dropped while busy: ", hex(data,2L));
-      }
-      return;
+    if(!command.transfer.started) {
+      command.transfer.started = 1;
+      command.transfer.counter = 40'000;
     }
-    event.command = data;
-    event.counter = 50'000;
-    event.invocation = 0;
+
+    command.transfer.command = data;
+    ssr.error = 0;
     return;
   }
 
@@ -160,7 +156,9 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //request register
   if(address == 0x1f80'1803 && io.index == 0) {
-    debug(unimplemented, "Disc::writeByte(): request register = ", hex(data, 2L));
+    io.soundMapEnable = data.bit(5);
+    io.sectorBufferWriteRequest = data.bit(6);
+    io.sectorBufferReadRequest = data.bit(7);
     return;
   }
 
@@ -177,6 +175,7 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
     if(data.bit(4)) irq.error.flag = 0;
     if(data.bit(6)) fifo.parameter.flush();
     irq.poll();
+    flushDeferredResponse();
     return;
   }
 

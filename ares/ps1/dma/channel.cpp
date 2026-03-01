@@ -194,8 +194,8 @@ auto DMA::Channel::transferBlock() -> void {
     }
   }
 
-  dma.counter = wordsTransferred;
-  dma.step(wordsTransferred);
+  dma.counter = clocks;
+  dma.step(clocks);
 
   if(synchronization == 0) {
     if(chopping.enable == 1) {

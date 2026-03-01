@@ -1,8 +1,9 @@
 auto Disc::serialize(serializer& s) -> void {
   s(drive.lba.current);
   s(drive.lba.request);
-  s(drive.lba.seeking);
+  s(drive.lba.pending);
   s(drive.sector.data);
+  s(drive.sector.subq);
   s(drive.sector.offset);
   s(drive.mode.cdda);
   s(drive.mode.autoPause);
@@ -13,6 +14,10 @@ auto Disc::serialize(serializer& s) -> void {
   s(drive.mode.xaADPCM);
   s(drive.mode.speed);
   s(drive.seeking);
+  s(drive.seekDelay);
+  s(drive.seekRetries);
+  s(drive.seekType);
+  s(drive.pendingOperation);
 
   s(audio.mute);
   s(audio.muteADPCM);
@@ -31,10 +36,15 @@ auto Disc::serialize(serializer& s) -> void {
   s(cdxa.samples);
   s(cdxa.previousSamples);
 
-  s(event.command);
-  s(event.counter);
-  s(event.invocation);
-  s(event.queued);
+  s(command.current.command);
+  s(command.current.invocation);
+  s(command.current.pending);
+  s(command.current.counter);
+  s(command.queued.command);
+  s(command.queued.pending);
+  s(command.transfer.counter);
+  s(command.transfer.started);;
+  s(command.transfer.command);
 
   s(irq.flag);
   s(irq.mask);
@@ -56,6 +66,12 @@ auto Disc::serialize(serializer& s) -> void {
   s(fifo.parameter);
   s(fifo.response);
   s(fifo.data);
+  s(fifo.deferred.ready.type);
+  s(fifo.deferred.ready.data);
+  s(fifo.deferred.complete.type);
+  s(fifo.deferred.complete.data);
+  s(fifo.deferred.acknowledge.type);
+  s(fifo.deferred.acknowledge.data);
 
   s(ssr.error);
   s(ssr.motorOn);
@@ -63,10 +79,12 @@ auto Disc::serialize(serializer& s) -> void {
   s(ssr.idError);
   s(ssr.shellOpen);
   s(ssr.reading);
-  s(ssr.seeking);
   s(ssr.playingCDDA);
 
   s(io.index);
+  s(io.soundMapEnable);
+  s(io.sectorBufferReadRequest);
+  s(io.sectorBufferWriteRequest);
 
   s(counter.sector);
   s(counter.cdda);
