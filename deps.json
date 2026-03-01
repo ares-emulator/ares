@@ -1,25 +1,27 @@
 {
     "dependencies": {
         "prebuilt": {
-            "version": "2026-01-02",
+            "version": "2026-02-05",
             "baseUrl": "https://github.com/ares-emulator/ares-deps/releases/download",
             "label": "ares-deps libraries",
             "hashes": {
-                "linux-universal": "a01100967780507b9c4c3c5833a15b7a58c259ac8974ebc775eef75781b2fbfa",
-                "macos-universal": "a8f5496b0c88c0e68f20249ec98b1ef2b8e34b891265a712d60556672cb91192",
-                "windows-arm64": "7e5a98fa0acf977aa9200fb75a97a0df66d49842d734f47436d02100ff18d373",
-                "windows-x64": "42e191ef53e5c00fd5f9ad46a332fdadddf21a87f263e80daa1fceaaa15a5b0d"
+                "linux-x64": "5fc1a3056614d0f594522f0accea8f0530becd436d40e913289ed3c1268c454e",
+                "linux-arm64": "0598c0ab9ba7882bb0514c20f0dd7d752128af96ffb79e27831f9d7bdfcc4e4f",
+                "macos-universal": "7b0f2b5c758b76775005c7b348bd03794202a0cb1f6e0c17cfd351b570bf5d0f",
+                "windows-arm64": "5129dfc88afb369c3a66429ee9174e11683201fc5653e18470b76a4f1cfa4b5e",
+                "windows-x64": "8d6027f5fbf897f7feb7dbae62da64ade8a9be9dadbaafb5943f21ce49bbf2a7"
             }
         },
         "source": {
-            "version": "2026-01-02",
+            "version": "2026-02-05",
             "baseUrl": "https://github.com/ares-emulator/ares-deps/releases/download",
             "label": "ares-deps source code",
             "hashes": {
-                "linux-universal": "5cf8e0e6380d3024cdc8be4b7c0c29bee7400cfe75d3901b0301ca1d73486659",
-                "macos-universal": "5146d32e63fcd7cbffed42104d1dda6a73f1069e5bcf5f31e7fdcf91997ca44d",
-                "windows-arm64": "8c41ccbc643f7a7deec63117159078b096974ffd5b67f7900413ed3b53ecc358",
-                "windows-x64": "263b0ef48e639db921a1d2ed24ec2fe127654ec0ceca79522b95417affe1d42e"
+                "linux-x64": "b6130c5b164669803696936f24e1f3463f27add56a297fcec727bb9822ce4f88",
+                "linux-arm64": "1f4f046279a418dc36729afe4b8d0526b46cc7d5c67b768a4fe11677e555f56f",
+                "macos-universal": "86f3bfbabc52cf82770d019a5bdbd35312c635ee87300343200ddb5886c0886f",
+                "windows-arm64": "5a9122d33d6d478971edf30516238c6a9a03ec2ffcb76c2c477fc018a467fb34",
+                "windows-x64": "f18ea849d839cf0c78b4b8af1aac2503761282f493acef4ce0bdf1d445e7b3a9"
             }
         }
     },
