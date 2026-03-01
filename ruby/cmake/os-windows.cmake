@@ -2,6 +2,8 @@ target_sources(
   ruby
   PRIVATE #
     video/direct3d9.cpp
+    video/direct3d11.cpp
+    video/direct3d11/d3d11device.cpp
     video/wgl.cpp
 )
 
@@ -25,6 +27,7 @@ find_package(SDL)
 find_package(librashader)
 
 target_enable_feature(ruby "Direct3D 9 video driver" VIDEO_DIRECT3D9)
+target_enable_feature(ruby "Direct3D 11 video driver" VIDEO_DIRECT3D11)
 target_enable_feature(ruby "OpenGL video driver" VIDEO_WGL)
 target_enable_feature(ruby "WASAPI audio driver" AUDIO_WASAPI)
 target_enable_feature(ruby "XAudio2 audio driver" AUDIO_XAUDIO2)
@@ -39,8 +42,10 @@ endif()
 
 if(librashader_FOUND AND ARES_ENABLE_LIBRASHADER)
   target_enable_feature(ruby "librashader OpenGL runtime" LIBRA_RUNTIME_OPENGL)
+  target_enable_feature(ruby "librashader Direct3D11 runtime" LIBRA_RUNTIME_D3D11)
 else()
   target_compile_definitions(ruby PRIVATE LIBRA_RUNTIME_OPENGL)
+  target_compile_definitions(ruby PRIVATE LIBRA_RUNTIME_D3D11)
 endif()
 
 target_link_libraries(
@@ -49,6 +54,8 @@ target_link_libraries(
     $<$<BOOL:TRUE>:librashader::librashader>
     $<$<BOOL:${SDL_FOUND}>:SDL::SDL>
     d3d9
+    d3d11
+    d3dcompiler
     opengl32
     dsound
     uuid
