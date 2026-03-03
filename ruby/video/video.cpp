@@ -1,16 +1,3 @@
-#if defined(VIDEO_CGL)
-  #if defined(__APPLE__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  #endif
-
-  #include <ruby/video/cgl.cpp>
-
-  #if defined(__APPLE__)
-    #pragma clang diagnostic pop
-  #endif
-#endif
-
 #if defined(VIDEO_DIRECT3D9)
   #include <ruby/video/direct3d9.cpp>
 #endif
@@ -184,10 +171,6 @@ auto Video::create(string driver) -> bool {
   self.instance.reset();
   if(!driver) driver = optimalDriver();
 
-  #if defined(VIDEO_CGL)
-  if(driver == "OpenGL 3.2") self.instance = std::make_unique<VideoCGL>(*this);
-  #endif
-
   #if defined(VIDEO_DIRECT3D9)
   if(driver == "Direct3D 9.0") self.instance = std::make_unique<VideoDirect3D9>(*this);
   #endif
@@ -221,10 +204,6 @@ auto Video::hasDrivers() -> std::vector<string> {
   "Direct3D 9.0",
   #endif
 
-  #if defined(VIDEO_CGL)
-  "OpenGL 3.2",
-  #endif
-
   #if defined(VIDEO_GLX)
   "OpenGL 3.2",
   #endif
@@ -245,8 +224,6 @@ auto Video::optimalDriver() -> string {
   return "OpenGL 3.2";
   #elif defined(VIDEO_DIRECT3D9)
   return "Direct3D 9.0";
-  #elif defined(VIDEO_CGL)
-  return "OpenGL 3.2";
   #else
   return "None";
   #endif
@@ -258,8 +235,6 @@ auto Video::safestDriver() -> string {
   #elif defined(VIDEO_DIRECT3D9)
   return "Direct3D 9.0";
   #elif defined(VIDEO_WGL)
-  return "OpenGL 3.2";
-  #elif defined(VIDEO_CGL)
   return "OpenGL 3.2";
   #elif defined(VIDEO_GLX)
   return "OpenGL 3.2";

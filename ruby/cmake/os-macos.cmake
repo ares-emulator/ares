@@ -7,7 +7,7 @@ endif()
 
 target_sources(
   ruby
-  PRIVATE video/cgl.cpp video/metal/metal.cpp video/metal/metal.hpp video/metal/Shaders.metal video/metal/ShaderTypes.h
+  PRIVATE video/metal/metal.cpp video/metal/metal.hpp video/metal/Shaders.metal video/metal/ShaderTypes.h
 )
 
 # todo address
@@ -35,7 +35,6 @@ target_link_libraries(
     "$<LINK_LIBRARY:FRAMEWORK,IOKit.framework>"
     "$<LINK_LIBRARY:FRAMEWORK,QuartzCore.framework>"
     "$<LINK_LIBRARY:FRAMEWORK,OpenAL.framework>"
-    "$<LINK_LIBRARY:FRAMEWORK,OpenGL.framework>"
     "$<LINK_LIBRARY:WEAK_FRAMEWORK,Metal.framework>"
     "$<LINK_LIBRARY:WEAK_FRAMEWORK,MetalKit.framework>"
 )
@@ -52,7 +51,6 @@ if(librashader_FOUND)
   )
 endif()
 
-target_enable_feature(ruby "OpenGL video driver" VIDEO_CGL)
 target_enable_feature(ruby "Metal video driver" VIDEO_METAL)
 target_enable_feature(ruby "OpenAL audio driver" AUDIO_OPENAL)
 if(SDL_FOUND)
@@ -60,10 +58,9 @@ if(SDL_FOUND)
   target_enable_feature(ruby "SDL audio driver" AUDIO_SDL)
 endif()
 if(librashader_FOUND AND ARES_ENABLE_LIBRASHADER)
-  target_enable_feature(ruby "librashader OpenGL runtime" LIBRA_RUNTIME_OPENGL)
   target_enable_feature(ruby "librashader Metal runtime" LIBRA_RUNTIME_METAL)
 else()
-  target_compile_definitions(ruby PRIVATE LIBRA_RUNTIME_OPENGL LIBRA_RUNTIME_METAL)
+  target_compile_definitions(ruby PRIVATE LIBRA_RUNTIME_METAL)
 endif()
 target_enable_feature(ruby "Quartz input driver" INPUT_QUARTZ)
 
