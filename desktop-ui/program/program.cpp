@@ -17,6 +17,11 @@ auto Program::create() -> void {
   audioDriverUpdate();
   inputDriverUpdate();
 
+  if(kiosk) {
+    if(startFullScreen) videoFullScreenToggle();
+    if(startPseudoFullScreen) videoPseudoFullScreenToggle();
+  }
+
   _isRunning = true;
   worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
   program.rewindReset();
@@ -29,18 +34,23 @@ auto Program::create() -> void {
       for(auto &emulator: emulators) {
         if(emulator->name == startSystem) {
           if(load(emulator, gameToLoad)) {
-            if(startFullScreen) videoFullScreenToggle();
-            if(startPseudoFullScreen) videoPseudoFullScreenToggle();
+            if(!kiosk) {
+              if(startFullScreen) videoFullScreenToggle();
+              if(startPseudoFullScreen) videoPseudoFullScreenToggle();
+            }
           }
           return;
         }
       }
+      return;
     }
 
     if(auto emulator = identify(gameToLoad)) {
       if(load(emulator, gameToLoad)) {
-        if(startFullScreen) videoFullScreenToggle();
-        if(startPseudoFullScreen) videoPseudoFullScreenToggle();
+        if(!kiosk) {
+          if(startFullScreen) videoFullScreenToggle();
+          if(startPseudoFullScreen) videoPseudoFullScreenToggle();
+        }
       }
     }
   }
@@ -73,7 +83,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
       continue;
     }
 
-    bool defocused = driverSettings.inputDefocusPause.checked() && !ruby::video.fullScreen() && !presentation.focused();
+    bool defocused = settings.input.defocus == "Pause" && !ruby::video.fullScreen() && !presentation.focused();
 
     if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
       ruby::audio.clear();
@@ -122,6 +132,12 @@ auto Program::main() -> void {
     ruby::audio.clear();
     return;
   }
+
+  if(pendingKioskExit) {
+    pendingKioskExit = false;
+    quit();
+    return;
+  }
   
   inputManager.poll();
   inputManager.pollHotkeys();
@@ -136,10 +152,12 @@ auto Program::main() -> void {
     _needsResize = false;
   }
 
-  memoryEditor.liveRefresh();
-  graphicsViewer.liveRefresh();
-  propertiesViewer.liveRefresh();
-  tapeViewer.liveRefresh();
+  if(toolsWindowConstructed) {
+    memoryEditor.liveRefresh();
+    graphicsViewer.liveRefresh();
+    propertiesViewer.liveRefresh();
+    tapeViewer.liveRefresh();
+  }
 }
 
 auto Program::quit() -> void {

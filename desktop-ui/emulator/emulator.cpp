@@ -104,6 +104,12 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
   
   switch (result.result) {
     case noFirmware:
+      if(program.kiosk) {
+        error({"firmware is missing or invalid.\n",
+          result.firmwareSystemName, " - ", result.firmwareType, " (", result.firmwareRegion, ") is required to play this game."
+        });
+        break;
+      }
       if(MessageDialog().setText({
         errorText
       }).question() == "Yes") {
@@ -253,7 +259,7 @@ auto Emulator::setColorBleed(bool value) -> bool {
 }
 
 auto Emulator::error(const string& text) -> void {
-  MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
+  program.error(text);
 }
 
 auto Emulator::input(ares::Node::Input::Input input) -> void {
@@ -319,4 +325,3 @@ auto Emulator::inputKeyboard(string name) -> bool {
 
   return false;
 }
-

@@ -169,7 +169,7 @@ auto Program::audio(ares::Node::Audio::Stream node) -> void {
 }
 
 auto Program::input(ares::Node::Input::Input node) -> void {
-  if(!driverSettings.inputDefocusAllow.checked()) {
+  if(settings.input.defocus != "Allow") {
     if(!ruby::video.fullScreen() && !presentation.focused()) {
       //treat the input as not being active
       if(auto button = node->cast<ares::Node::Input::Button>()) button->setValue(0);

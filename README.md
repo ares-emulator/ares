@@ -42,6 +42,7 @@ Usage: ./ares [options] game(s)
   --terminal             Create new terminal window (Windows only)
   --fullscreen           Start in full screen mode
   --pseudofullscreen     Start in pseudo full screen mode
+  --kiosk                Start in minimal UI mode (implies --no-file-prompt)
   --system system        Specify the system name
   --shader shader        Specify a slang shader to load (requires OpenGL or Metal)
   --setting name=value   Specify a value for a setting
