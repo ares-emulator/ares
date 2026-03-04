@@ -12,8 +12,15 @@ add_subdirectory(thirdparty)
 
 add_subdirectory(nall/nall)
 add_subdirectory(libco)
-add_subdirectory(ruby)
-add_subdirectory(hiro)
+
+option(ARES_BUILD_DESKTOP_UI "Build desktop frontend and GUI dependencies (ruby/hiro/desktop-ui)" ON)
+
+if(ARES_BUILD_DESKTOP_UI)
+  add_subdirectory(ruby)
+  add_subdirectory(hiro)
+else()
+  target_disable_subproject(desktop-ui "desktop-ui frontend")
+endif()
 
 # gersemi: off
 set(
@@ -25,7 +32,10 @@ set(
 
 add_subdirectory(ares)
 add_subdirectory(mia)
-add_subdirectory(desktop-ui)
+if(ARES_BUILD_DESKTOP_UI)
+  add_subdirectory(desktop-ui)
+endif()
+add_subdirectory(nogui)
 
 option(ARES_BUILD_OPTIONAL_TARGETS "Include supplemental tools and tests" OFF)
 
