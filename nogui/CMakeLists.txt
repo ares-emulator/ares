@@ -1,4 +1,4 @@
-add_executable(nogui nogui.cpp emulator.cpp)
+add_executable(nogui nogui.cpp emulator.cpp settings.cpp)
 
 target_include_directories(nogui PRIVATE ${CMAKE_SOURCE_DIR})
 target_compile_definitions(nogui PRIVATE MIA_LIBRARY=1)
