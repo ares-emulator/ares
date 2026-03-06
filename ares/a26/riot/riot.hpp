@@ -10,7 +10,8 @@ struct RIOT : Thread {
   auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
-  auto decrementTimer() -> void;
+  auto clockTimer() -> void;
+  auto reloadTimer(n8 data, n16 interval, n1 interruptEnable) -> void;
 
   //io.cpp
   auto readRam(n8 address) -> n8;
@@ -27,11 +28,14 @@ struct RIOT : Thread {
   auto serialize(serializer&) -> void;
 
   struct {
-    u8 counter;
+    n8  counter;
     n16 interval;
-    n16 reload;
-    n1 interruptEnable;
-    n1 interruptFlag;
+    n16 prescaler;
+    n1  interruptEnable;
+    n1  interruptFlag;
+    n1  underflow;
+    n1  holdZero;
+    n1  justWrapped;
   } timer;
 
   struct Port {
