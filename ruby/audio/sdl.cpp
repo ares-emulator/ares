@@ -6,6 +6,7 @@ struct AudioSDL : AudioDriver {
   ~AudioSDL() { terminate(); }
 
   auto create() -> bool override {
+    SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1");
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(20);
