@@ -40,7 +40,7 @@ auto Cartridge::joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
         cartridge.eeprom.write<Byte>(address++, input[2 + index]);
       }
       eepromBusy = 1;
-      queue.insert(Queue::EEPROM_Write, 187'500 * 25); //25ms
+      queue.insert(Queue::EEPROM_Write, 187'500 * 6); //6ms
     }
   }
 
