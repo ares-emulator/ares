@@ -13,6 +13,7 @@ struct Emulator {
   auto load(const string& location) -> bool;
   auto load(std::shared_ptr<mia::Pak> pak, string& path) -> string;
   auto loadFirmware(const Firmware&) -> std::shared_ptr<vfs::file>;
+  auto applyPortSettings() -> void;
   virtual auto unload() -> void;
   auto refresh() -> void;
   auto setBoolean(const string& name, bool value) -> bool;
