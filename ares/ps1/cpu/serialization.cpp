@@ -5,6 +5,8 @@ auto CPU::serialize(serializer& s) -> void {
   s(scratchpad);
 
   s(exeLoaded);
+  s(accruedCycles);
+  s(cyclesUntilForcedSync);
 
   s(pipeline.address);
   s(pipeline.instruction);
@@ -32,7 +34,7 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(breakpoint.lastPC);
 
-  s(ipu.r);
+  for(auto& r : ipu.r) s(r);
   s(ipu.lo);
   s(ipu.hi);
   s(ipu.pb);
@@ -118,7 +120,10 @@ auto CPU::serialize(serializer& s) -> void {
   s(gte.screen[3].x);
   s(gte.screen[3].y);
   s(gte.screen[3].z);
-  s(gte.rgb);
+  s(gte.rgb[0]);
+  s(gte.rgb[1]);
+  s(gte.rgb[2]);
+  s(gte.rgb[3]);
   s(gte.mac.x);
   s(gte.mac.y);
   s(gte.mac.z);
