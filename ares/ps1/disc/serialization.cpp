@@ -5,6 +5,7 @@ auto Disc::serialize(serializer& s) -> void {
   s(drive.sector.data);
   s(drive.sector.subq);
   s(drive.sector.offset);
+  s(drive.sector.track);
   s(drive.mode.cdda);
   s(drive.mode.autoPause);
   s(drive.mode.report);
@@ -13,6 +14,7 @@ auto Disc::serialize(serializer& s) -> void {
   s(drive.mode.sectorSize);
   s(drive.mode.xaADPCM);
   s(drive.mode.speed);
+  s(drive.recentlyReset);
   s(drive.seeking);
   s(drive.seekDelay);
   s(drive.seekRetries);

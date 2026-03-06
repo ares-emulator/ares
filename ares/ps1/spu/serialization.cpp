@@ -42,13 +42,16 @@ auto SPU::serialize(serializer& s) -> void {
 
   s(cdaudio.enable);
   s(cdaudio.reverb);
-  s(cdaudio.volume);
+  s(cdaudio.volume[0]);
+  s(cdaudio.volume[1]);
 
   s(external.enable);
   s(external.reverb);
-  s(external.volume);
+  s(external.volume[0]);
+  s(external.volume[1]);
 
-  s(current.volume);
+  s(current.volume[0]);
+  s(current.volume[1]);
 
   s(reverb.enable);
   s(reverb.vLOUT);
@@ -86,10 +89,16 @@ auto SPU::serialize(serializer& s) -> void {
   s(reverb.MIX_DEST_B1);
   s(reverb.IN_COEF_L);
   s(reverb.IN_COEF_R);
-  s(reverb.lastInput);
-  s(reverb.lastOutput);
-  s(reverb.downsampleBuffer[0]);
-  s(reverb.downsampleBuffer[1]);
+  s(reverb.lastInput[0]);
+  s(reverb.lastInput[1]);
+  s(reverb.lastOutput[0]);
+  s(reverb.lastOutput[1]);
+  for(auto& d : reverb.downsampleBuffer) {
+    for(auto& e : d) s(e);
+  }
+  for(auto& u : reverb.upsampleBuffer) {
+    for(auto& v : u) s(v);
+  }
   s(reverb.upsampleBuffer[0]);
   s(reverb.upsampleBuffer[1]);
   s(reverb.resamplePosition);
@@ -103,16 +112,19 @@ auto SPU::serialize(serializer& s) -> void {
     s(v.adpcm.currentAddress);
     s(v.adpcm.hasSamples);
     s(v.adpcm.ignoreLoopAddress);
-    s(v.adpcm.lastSamples);
-    s(v.adpcm.previousSamples);
-    s(v.adpcm.currentSamples);
-
+    s(v.adpcm.lastSamples[0]);
+    s(v.adpcm.lastSamples[1]);
+    s(v.adpcm.previousSamples[0]);
+    s(v.adpcm.previousSamples[1]);
+    s(v.adpcm.previousSamples[2]);
+    for(auto& c : v.adpcm.currentSamples) s(c);
+  
     s(v.block.shift);
     s(v.block.filter);
     s(v.block.loopEnd);
     s(v.block.loopRepeat);
     s(v.block.loopStart);
-    s(v.block.brr);
+    for(auto& b : v.block.brr) s(b);
 
     s(v.attack.rate);
     s(v.attack.exponential);
@@ -133,7 +145,8 @@ auto SPU::serialize(serializer& s) -> void {
     s(v.adsr.lastVolume);
     s(v.adsr.target);
 
-    s(v.current.volume);
+    s(v.current.volume[0]);
+    s(v.current.volume[1]);
 
     for(auto& v : v.volume) {
       s(v.counter);
