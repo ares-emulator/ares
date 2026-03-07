@@ -16,7 +16,7 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
     if(!devices.empty()) super.setDevice(devices.front());
     super.setChannels(2);
     super.setFrequency(48000);
-    super.setLatency(40);
+    super.setLatency(20);
     return initialize();
   }
 
@@ -76,7 +76,7 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   auto hasBlocking() -> bool override { return true; }
   auto hasDynamic() -> bool override { return true; }
   auto hasFrequencies() -> std::vector<u32> override { return {44100, 48000, 96000}; }
-  auto hasLatencies() -> std::vector<u32> override { return {10, 20, 40, 60, 80, 100}; }
+  auto hasLatencies() -> std::vector<u32> override { return {20, 40, 60, 80}; }
   auto setDevice(string device) -> bool override { return initialize(); }
   auto setBlocking(bool blocking) -> bool override { return true; }
   auto setFrequency(u32 frequency) -> bool override { return initialize(); }
