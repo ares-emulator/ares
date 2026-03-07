@@ -3,6 +3,7 @@
 #include "video.cpp"
 #include "audio.cpp"
 #include "input.cpp"
+#include "stick.cpp"
 #include "hotkeys.cpp"
 #include "emulators.cpp"
 #include "options.cpp"
@@ -19,6 +20,7 @@ SettingsWindow& settingsWindow = Instances::settingsWindow();
 VideoSettings& videoSettings = settingsWindow.videoSettings;
 AudioSettings& audioSettings = settingsWindow.audioSettings;
 InputSettings& inputSettings = settingsWindow.inputSettings;
+StickSettings& stickSettings = settingsWindow.stickSettings;
 HotkeySettings& hotkeySettings = settingsWindow.hotkeySettings;
 EmulatorSettings& emulatorSettings = settingsWindow.emulatorSettings;
 OptionSettings& optionSettings = settingsWindow.optionSettings;
@@ -96,6 +98,25 @@ auto Settings::process(bool load) -> void {
 
   bind(string,  "Input/Driver", input.driver);
   bind(string,  "Input/Defocus", input.defocus);
+
+  bind(string,  "Stick/OutputStyleString", stick.outputStyleString);
+  bind(real,    "Stick/MaxOutputReducerOneFactor", stick.maxOutputReducerOneFactor);
+  bind(real,    "Stick/MaxOutputReducerTwoFactor", stick.maxOutputReducerTwoFactor);
+  bind(real,    "Stick/PreservedCustomMaxOutput", stick.preservedCustomMaxOutput);
+  bind(real,    "Stick/CustomMaxOutput", stick.customMaxOutput);
+  bind(string,  "Stick/DeadzoneShape", stick.deadzoneShape);
+  bind(real,    "Stick/DeadzoneSize", stick.deadzoneSize);
+  bind(real,    "Stick/ProportionalSensitivity", stick.proportionalSensitivity);
+  bind(string,  "Stick/ResponsePresetString", stick.responsePresetString);
+  bind(string,  "Stick/PreservedResponseCurveChoice", stick.preservedResponseCurveChoice);
+  bind(real,    "Stick/PreservedRangeNormalizedSwitchDistance", stick.preservedRangeNormalizedSwitchDistance);
+  bind(real,    "Stick/PreservedResponseStrength", stick.preservedResponseStrength);
+  bind(string,  "Stick/ResponseCurveString", stick.responseCurveString);
+  bind(real,    "Stick/RangeNormalizedSwitchDistance", stick.rangeNormalizedSwitchDistance);
+  bind(real,    "Stick/ResponseStrength", stick.responseStrength);
+  bind(boolean, "Stick/VirtualNotch", stick.virtualNotch);
+  bind(real,    "Stick/NotchLengthFromEdge", stick.notchLengthFromEdge);
+  bind(real,    "Stick/NotchAngularSnappingDistance", stick.notchAngularSnappingDistance);
 
   bind(boolean, "Boot/Fast", boot.fast);
   bind(boolean, "Boot/Debugger", boot.debugger);
@@ -210,6 +231,7 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Video").setIcon(Icon::Device::Display));
   panelList.append(ListViewItem().setText("Audio").setIcon(Icon::Device::Speaker));
   panelList.append(ListViewItem().setText("Input").setIcon(Icon::Device::Joypad));
+  panelList.append(ListViewItem().setText("Stick").setIcon(Icon::Device::Joypad));
   panelList.append(ListViewItem().setText("Hotkeys").setIcon(Icon::Device::Keyboard));
   panelList.append(ListViewItem().setText("Emulators").setIcon(Icon::Place::Server));
   panelList.append(ListViewItem().setText("Options").setIcon(Icon::Action::Settings));
@@ -224,6 +246,7 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(videoSettings, Size{~0, ~0});
   panelContainer.append(audioSettings, Size{~0, ~0});
   panelContainer.append(inputSettings, Size{~0, ~0});
+  panelContainer.append(stickSettings, Size{~0, ~0});
   panelContainer.append(hotkeySettings, Size{~0, ~0});
   panelContainer.append(emulatorSettings, Size{~0, ~0});
   panelContainer.append(optionSettings, Size{~0, ~0});
@@ -237,6 +260,7 @@ auto SettingsWindow::initialize() -> void {
   videoSettings.construct();
   audioSettings.construct();
   inputSettings.construct();
+  stickSettings.construct();
   hotkeySettings.construct();
   emulatorSettings.construct();
   optionSettings.construct();
@@ -249,7 +273,7 @@ auto SettingsWindow::initialize() -> void {
 
   setDismissable();
   setTitle("Configuration");
-  setSize({700_sx, 425_sy});
+  setSize({825_sx, 560_sy});
   setAlignment({0.0, 1.0});
   setResizable(false);
   
@@ -277,6 +301,7 @@ auto SettingsWindow::eventChange() -> void {
   videoSettings.setVisible(false);
   audioSettings.setVisible(false);
   inputSettings.setVisible(false);
+  stickSettings.setVisible(false);
   hotkeySettings.setVisible(false);
   emulatorSettings.setVisible(false);
   optionSettings.setVisible(false);
@@ -292,6 +317,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Video"    ) found = true, videoSettings.setVisible();
     if(item.text() == "Audio"    ) found = true, audioSettings.setVisible();
     if(item.text() == "Input"    ) found = true, inputSettings.setVisible();
+    if(item.text() == "Stick"    ) found = true, stickSettings.setVisible();
     if(item.text() == "Hotkeys"  ) found = true, hotkeySettings.setVisible();
     if(item.text() == "Emulators") found = true, emulatorSettings.setVisible();
     if(item.text() == "Options"  ) found = true, optionSettings.setVisible();
