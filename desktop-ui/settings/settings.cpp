@@ -249,7 +249,7 @@ auto SettingsWindow::initialize() -> void {
 
   setDismissable();
   setTitle("Configuration");
-  setSize({700_sx, 425_sy});
+  setSize({775_sx, 425_sy});
   setAlignment({0.0, 1.0});
   setResizable(false);
   
