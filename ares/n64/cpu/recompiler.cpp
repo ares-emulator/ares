@@ -1,3 +1,4 @@
+
 auto CPU::Recompiler::pool(u32 address) -> Pool* {
   auto& pool = pools[address >> 8 & 0x1fffff];
   if(!pool) {
@@ -9,14 +10,69 @@ auto CPU::Recompiler::pool(u32 address) -> Pool* {
   return pool;
 }
 
-auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> Block* {
-  if(auto block = pool(address)->blocks[address >> 2 & 0x3f]) return block;
-  auto block = emit(vaddr, address, singleInstruction);
-  if(block) {
-    pool(address)->blocks[address >> 2 & 0x3f] = block;
+auto CPU::Recompiler::blockCacheKey(u32 address, u32 state) -> u64 {
+  return u64(address) | (u64(state) << 32);
+}
+
+auto CPU::Recompiler::block(u64 vaddr, u32 address) -> Block* {
+  u32 state = jitContext.stateBits;
+  u32 idx = (address >> 2) & 0x3f;
+  assert(idx < sizeof(Pool::rows)/sizeof(Pool::rows[0]));
+
+  {
+    Pool* p = pool(address);
+    if (auto row = p->rows[idx]) {
+      if (row->stateBits == state) {
+        assert(row->block);
+        return row->block;
+      } else {
+        auto blockIt = blockCache.find(blockCacheKey(address, state));
+        if (blockIt != blockCache.end()) {
+          row->block = blockIt->second;
+          row->stateBits = state;
+          return row->block;
+        }
+      }
+    }
+  }
+
+  auto block = emit(vaddr, address);
+  if (block) {
+    Pool* p = pool(address);
+    auto row = (PoolRow*)allocator.acquire(sizeof(PoolRow));
+    row->block = block;
+    row->stateBits = state;
+    p->rows[idx] = row;
+
+    u32 poolIdx = address >> 8 & 0x1fffff;
+    u64 key = blockCacheKey(address, state);
+    blockCache[key] = block;
+    poolBlockKeys.insert({poolIdx, key});
     memory::jitprotect(true);
   }
   return block;
+}
+
+auto CPU::Recompiler::JITContext::update(const CPU& cpu) -> void {
+  singleInstruction = GDB::server.hasBreakpoints();
+  endian = Context::Endian(cpu.context.endian);
+  mode = Context::Mode(cpu.context.mode);
+  cop1Enabled = cpu.scc.status.enable.coprocessor1 > 0;
+  floatingPointMode = cpu.scc.status.floatingPointMode > 0;
+  is64bit = cpu.context.bits == 64;
+
+  stateBits = toBits();
+}
+
+auto CPU::Recompiler::JITContext::toBits() const -> u32 {
+  u32 bits = 1; // first bit always set to make 0 invalid
+  bits |= singleInstruction ? 1 << 1 : 0;
+  bits |= endian ? 1 << 2 : 0;
+  bits |= (mode & 0x03) << 3;
+  bits |= cop1Enabled ? 1 << 5 : 0;
+  // bits |= floatingPointMode ? 1 << 6 : 0;
+  bits |= is64bit ? 1 << 7 : 0;
+  return bits;
 }
 
 #define IpuBase        offsetof(IPU, r[16])
@@ -27,7 +83,7 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #endif
-auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Block* {
+auto CPU::Recompiler::emit(u64 vaddr, u32 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
     allocator.release();
@@ -39,6 +95,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
     return nullptr;
 
   bool abort = false;
+
   beginFunction(3);
 
   Thread thread;
@@ -78,7 +135,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
     vaddr += 4;
     address += 4;
     jumpToSelf += 4;
-    if(hasBranched || (address & 0xfc) == 0 || singleInstruction) break;  //block boundary
+    if(hasBranched || (address & 0xfc) == 0 || jitContext.singleInstruction) break;  //block boundary
     hasBranched = branched;
     jumpEpilog(flag_nz);
   }
@@ -89,7 +146,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
   auto block = (Block*)allocator.acquire(sizeof(Block));
   block->code = endFunction();
 
-//print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
+  //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;
 }
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
@@ -124,6 +181,24 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
 
 auto CPU::Recompiler::emitZeroClear(u32 n) -> void {
   if(n == 0) mov64(mem(IpuReg(r[0])), imm(0));
+}
+
+auto CPU::Recompiler::emitOverflowCheck() -> sljit_jump* {
+    // If overflow flag set: throw an exception, skip the instruction via the 'end' label.
+    auto didntOverflow = jump(flag_no);
+    call(&CPU::arithmeticOverflowException);
+    auto end = jump();
+    setLabel(didntOverflow);
+    return end;
+}
+
+auto CPU::Recompiler::checkDualAllowed() -> bool {
+  if (jitContext.mode != Context::Mode::Kernel && !jitContext.is64bit) {
+    call(&CPU::reservedInstructionException);
+    return false;
+  }
+
+  return true;
 }
 
 auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
@@ -282,15 +357,21 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //DADDI Rt,Rs,i16
   case 0x18: {
-    callf(&CPU::DADDI, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    if (!checkDualAllowed()) return 1;
+    add64(reg(0), mem(Rs), imm(i16), set_o);
+    auto skip = emitOverflowCheck();
+    if(Rtn > 0) mov64(mem(Rt), reg(0));
+    setLabel(skip);
     return 0;
   }
 
   //DADDIU Rt,Rs,i16
   case 0x19: {
-    callf(&CPU::DADDIU, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    if (!checkDualAllowed()) return 1;
+    if(Rtn > 0) {
+      add64(reg(0), mem(Rs), imm(i16));
+      mov64(mem(Rt), reg(0));
+    }
     return 0;
   }
 
@@ -664,8 +745,10 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DSLLV Rd,Rt,Rs
   case 0x14: {
-    callf(&CPU::DSLLV, mem(Rd), mem(Rt), mem(Rs));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) return 1;
+    if (Rdn == 0) return 0;
+    and64(reg(0), mem(Rs32), imm(63));
+    shl64(mem(Rd), mem(Rt), reg(0));
     return 0;
   }
 
@@ -677,15 +760,19 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DSRLV Rd,Rt,Rs
   case 0x16: {
-    callf(&CPU::DSRLV, mem(Rd), mem(Rt), mem(Rs));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) return 1;
+    if (Rdn == 0) return 0;
+    and64(reg(0), mem(Rs32), imm(63));
+    lshr64(mem(Rd), mem(Rt), reg(0));
     return 0;
   }
 
   //DSRAV Rd,Rt,Rs
   case 0x17: {
-    callf(&CPU::DSRAV, mem(Rd), mem(Rt), mem(Rs));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) return 1;
+    if (Rdn == 0) return 0;
+    and64(reg(0), mem(Rs32), imm(63));
+    ashr64(mem(Rd), mem(Rt), reg(0));
     return 0;
   }
 
@@ -823,29 +910,44 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DADD Rd,Rs,Rt
   case 0x2c: {
-    callf(&CPU::DADD, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) return 1;
+    add64(reg(0), mem(Rs), mem(Rt), set_o);
+    auto skip = emitOverflowCheck();
+    if(Rdn > 0) mov64(mem(Rd), reg(0));
+    setLabel(skip);
     return 0;
   }
 
   //DADDU Rd,Rs,Rt
   case 0x2d: {
-    callf(&CPU::DADDU, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) {
+      return 1;
+    }
+
+    if(Rdn == 0) return 0;
+
+    add64(reg(0), mem(Rs), mem(Rt));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
   //DSUB Rd,Rs,Rt
   case 0x2e: {
-    callf(&CPU::DSUB, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) return 1;
+    sub64(reg(0), mem(Rs), mem(Rt), set_o);
+    auto skip = emitOverflowCheck();
+    if(Rdn > 0) mov64(mem(Rd), reg(0));
+    setLabel(skip);
     return 0;
   }
 
   //DSUBU Rd,Rs,Rt
   case 0x2f: {
-    callf(&CPU::DSUBU, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) return 1;
+    if(Rdn > 0) {
+      sub64(reg(0), mem(Rs), mem(Rt));
+      mov64(mem(Rd), reg(0));
+    }
     return 0;
   }
 
@@ -898,8 +1000,9 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
   //DSLL Rd,Rt,Sa
   case 0x38: {
-    callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) return 1;
+    if (Rdn == 0) return 0;
+    shl64(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
 
@@ -918,15 +1021,17 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DSRA Rd,Rt,Sa
   case 0x3b: {
-    callf(&CPU::DSRA, mem(Rd), mem(Rt), imm(Sa));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) return 1;
+    if (Rdn == 0) return 0;
+    ashr64(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
 
   //DSLL32 Rd,Rt,Sa
   case 0x3c: {
-    callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa+32));
-    emitZeroClear(Rdn);
+    if (!checkDualAllowed()) return 1;
+    if (Rdn == 0) return 0;
+    shl64(mem(Rd), mem(Rt), imm(Sa+32));
     return 0;
   }
 
