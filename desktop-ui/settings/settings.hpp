@@ -108,6 +108,12 @@ struct Settings : Markup::Node {
     bool forceInterpreter = false;
   } developer;
 
+  struct NCI {
+    u32 port = 55355;
+    bool enabled = false;
+    bool useIPv4 = false;
+  } nci;
+
   struct Nintendo64 {
     bool expansionPak = true;
     u8 controllerPakBankCount = 1;
@@ -440,6 +446,27 @@ struct DeveloperSettings : VerticalLayout {
     Label forceInterpreterHint{&forceInterpreterLayout, Size{0, layoutVertSize}};
 };
 
+struct NCISettings : VerticalLayout {
+  auto construct() -> void;
+  auto infoRefresh() -> void;
+  auto serverRefresh() -> void;
+
+  Label nciLabel{this, Size{~0, 0}, 5};
+
+  HorizontalLayout portLayout{this, Size{~0, 0}};
+    Label portLabel{&portLayout, Size{48, 20}};
+    LineEdit port{&portLayout, Size{~0, 0}};
+    Label portHint{&portLayout, Size{~0, layoutVertSize}};
+
+  HorizontalLayout ipv4Layout{this, Size{~0, 0}};
+    CheckLabel ipv4{&ipv4Layout, Size{~0, 0}};
+
+  HorizontalLayout enabledLayout{this, Size{~0, 0}};
+    CheckLabel enabled{&enabledLayout, Size{~0, 0}};
+
+  Label connectInfo{this, Size{~0, 30}, 5};
+};
+
 struct ImportExportSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
@@ -479,6 +506,7 @@ struct SettingsWindow : Window {
       PathSettings pathSettings;
       CoreSettings coreSettings;
       DeveloperSettings developerSettings;
+      NCISettings nciSettings;
       ImportExportSettings importExportSettings;
       HomePanel homePanel;
   
@@ -501,4 +529,5 @@ extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
 extern CoreSettings& coreSettings;
 extern DeveloperSettings& developerSettings;
+extern NCISettings& nciSettings;
 extern ImportExportSettings& importExportSettings;
