@@ -1,4 +1,5 @@
 #include "desktop-ui.hpp"
+#include <nall/udp/udp-server.hpp>
 
 namespace ruby {
   Video video;
@@ -135,6 +136,64 @@ auto nall::main(Arguments arguments) -> void {
 
   if(program.noFilePrompt) settings.general.noFilePrompt = true;
 
+  // --command: send a UDP command to a running ares instance and exit
+  if(string commandArg; arguments.take("--command", commandArg)) {
+    // Format: "COMMAND" or "COMMAND;HOST" or "COMMAND;HOST;PORT"
+    string command, host = "localhost";
+    u32 port = 55355;
+
+    auto parts = nall::split(commandArg, ";");
+    command = parts[0];
+    if(parts.size() >= 2 && parts[1]) host = parts[1];
+    if(parts.size() >= 3 && parts[2]) port = parts[2].natural();
+
+    // resolve host
+    struct addrinfo hints{}, *res = nullptr;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_DGRAM;
+    if(getaddrinfo(host.data(), string{port}.data(), &hints, &res) != 0 || !res) {
+      print("Error: could not resolve host ", host, "\n");
+      return;
+    }
+
+    s32 fd = ::socket(res->ai_family, SOCK_DGRAM, IPPROTO_UDP);
+    if(fd < 0) {
+      freeaddrinfo(res);
+      print("Error: could not create socket\n");
+      return;
+    }
+
+    // set receive timeout (1 second)
+    #if defined(PLATFORM_WINDOWS)
+      DWORD rcvTimeMs = 1000;
+      setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&rcvTimeMs, sizeof(rcvTimeMs));
+    #else
+      struct timeval tv;
+      tv.tv_sec = 1;
+      tv.tv_usec = 0;
+      setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    #endif
+
+    ::sendto(fd, command.data(), command.size(), 0, res->ai_addr, res->ai_addrlen);
+    freeaddrinfo(res);
+
+    char buf[4096];
+    auto len = ::recvfrom(fd, buf, sizeof(buf) - 1, 0, nullptr, nullptr);
+    if(len > 0) {
+      buf[len] = 0;
+      print(buf, "\n");
+    } else {
+      print("No response (timeout)\n");
+    }
+
+    #if defined(PLATFORM_WINDOWS)
+      ::closesocket(fd);
+    #else
+      ::close(fd);
+    #endif
+    return;
+  }
+
   if(arguments.take("--help")) {
     print("\n Usage: ares [OPTIONS]... game(s)\n\n");
     print("Options:\n");
@@ -153,6 +212,7 @@ auto nall::main(Arguments arguments) -> void {
     print("  --no-file-prompt      Do not prompt to load (optional) additional roms (eg: 64DD)\n");
     print("  --settings-file path  Specify a settings file override (settings.bml)\n");
     print("  --save-state slot     Specify a save state slot to load (1-9)\n");
+    print("  --command cmd         Send NCI command to running ares (cmd;host;port)\n");
     print("\n");
     print("Available Systems:\n");
     print("  ");
