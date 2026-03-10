@@ -10,9 +10,11 @@ auto CPU::read(n16 address) -> n8 {
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
+  io.rwLine = 1;
   writeBus(address, data);
   io.openBus = data;
   step(rate());
+  io.rwLine = 0;
 }
 
 auto CPU::lastCycle() -> void {
