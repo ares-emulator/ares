@@ -179,6 +179,7 @@ auto InputManager::createHotkeys() -> void {
 
 auto InputManager::pollHotkeys() -> void {
   if(Application::modal()) return;
+  if(settingsWindow.focused()) return;
 
   if(settings.input.defocus != "Allow") {
     if (!presentation.focused() && !ruby::video.fullScreen()) return;
