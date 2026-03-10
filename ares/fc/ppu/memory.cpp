@@ -54,7 +54,9 @@ auto PPU::readIO(n16 address) -> n8 {
 
     address = io.busAddress;
     result = var.latchData;
+    io.renderingRead = 0;
     var.latchData = cartridge.readCHR(address);
+    io.renderingRead = 1;
     if (address >= 0x3f00)
       result = readCGRAM(address) | (io.mdr & 0xc0);
 

@@ -115,8 +115,10 @@ ares_add_sources(
     cartridge/board/taito-x1-017.cpp
     cartridge/board/tengen-80003x.cpp
     cartridge/board/unl-bmc.cpp
+    cartridge/board/unl-jy.cpp
     cartridge/board/unl-sachen-74ls374n.cpp
     cartridge/board/unl-sachen-sa0037.cpp
+    cartridge/board/unl-sc127.cpp
     cartridge/board/unl-txc.cpp
     cartridge/board/unrom-512.cpp
 )

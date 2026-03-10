@@ -71,6 +71,10 @@ struct PPU : Thread {
   auto cycleSpriteEvaluation() -> void;
   auto cyclePrepareSpriteEvaluation() -> void;
 
+  auto isRenderingRead() const -> bool {
+    return io.renderingRead;
+  }
+
   struct ScrollRegisters {
     n15 data;
 
@@ -120,6 +124,8 @@ struct PPU : Thread {
 
     n1  nmiHold;
     n1  nmiFlag;
+
+    n1  renderingRead;
 
     //$2000
     n6  vramIncrement = 1;  //1 or 32

@@ -56,6 +56,10 @@ struct CPU : MOS6502, Thread {
   auto irqLine(bool) -> void;
   auto apuLine(bool) -> void;
 
+  auto isWriting() -> bool {
+    return io.rwLine == 0;
+  }
+
 //protected:
   struct IO {
     n1  interruptPending;
@@ -69,6 +73,7 @@ struct CPU : MOS6502, Thread {
     n1  oamDMAPending;
     n8  oamDMAPage;
     n8  openBus;
+    n1  rwLine;
   } io;
 };
 
