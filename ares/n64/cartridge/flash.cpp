@@ -112,3 +112,10 @@ auto Cartridge::Flash::writeDual(u32 address, u64 data) -> void {
   debug(unusual, "[Cartridge::Flash::writeDual] mode=", (u32)mode);
   return;
 }
+
+auto Cartridge::Flash::serialize(serializer& s) -> void {
+  s((u32&)mode);
+  s(status);
+  s(source);
+  s(offset);
+}
