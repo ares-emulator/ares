@@ -10,13 +10,13 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.physMask);
   s(context.mode);
   s(context.bits);
-  s(context.segment);
+  for(auto& con : context.segment) s(con);
 
   for(auto& line : icache.lines) {
     s(line.valid);
     s(line.tag);
     s(line.index);
-    s(line.words);
+    for(auto& word : line.words) s(word);
   }
 
   for(auto& line : dcache.lines) {
@@ -24,15 +24,22 @@ auto CPU::serialize(serializer& s) -> void {
     s(line.dirty);
     s(line.tag);
     s(line.index);
-    s(line.words);
+    s(line.fillPc);
+    s(line.dirtyPc);
+    for(auto& word : line.words) s(word);
   }
 
   for(auto& e : tlb.entry) {
-    s(e.global);
-    s(e.valid);
-    s(e.dirty);
-    s(e.cacheAlgorithm);
-    s(e.physicalAddress);
+    s(e.global[0]);
+    s(e.global[1]);
+    s(e.valid[0]);
+    s(e.valid[1]);
+    s(e.dirty[0]);
+    s(e.dirty[1]);
+    s(e.cacheAlgorithm[0]);
+    s(e.cacheAlgorithm[1]);
+    s(e.physicalAddress[0]);
+    s(e.physicalAddress[1]);
     s(e.pageMask);
     s(e.virtualAddress);
     s(e.addressSpaceID);
@@ -51,11 +58,16 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(scc.index.tlbEntry);
   s(scc.index.probeFailure);
-  s(scc.tlb.global);
-  s(scc.tlb.valid);
-  s(scc.tlb.dirty);
-  s(scc.tlb.cacheAlgorithm);
-  s(scc.tlb.physicalAddress);
+  s(scc.tlb.global[0]);
+  s(scc.tlb.global[1]);
+  s(scc.tlb.valid[0]);
+  s(scc.tlb.valid[1]);
+  s(scc.tlb.dirty[0]);
+  s(scc.tlb.dirty[1]);
+  s(scc.tlb.cacheAlgorithm[0]);
+  s(scc.tlb.cacheAlgorithm[1]);
+  s(scc.tlb.physicalAddress[0]);
+  s(scc.tlb.physicalAddress[1]);
   s(scc.tlb.pageMask);
   s(scc.tlb.virtualAddress);
   s(scc.tlb.addressSpaceID);
@@ -75,6 +87,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.status.errorLevel);
   s(scc.status.privilegeMode);
   s(scc.status.userExtendedAddressing);
+  s(scc.status.supervisorExtendedAddressing);
   s(scc.status.kernelExtendedAddressing);
   s(scc.status.interruptMask);
   s(scc.status.de);
@@ -117,6 +130,8 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.latch);
   s(scc.nmiPending);
   s(scc.sysadFrozen);
+
+  s(fenv.control);
 
   for(auto& r : fpu.r) s(r.u64);
   s(fpu.csr.roundMode);

@@ -5,11 +5,14 @@ auto AI::serialize(serializer& s) -> void {
   s(fifo[1].address);
 
   s(io.dmaEnable);
-  s(io.dmaAddress);
+  s(io.dmaAddress[0]);
+  s(io.dmaAddress[1]);
   s(io.dmaAddressCarry);
-  s(io.dmaLength);
+  s(io.dmaLength[0]);
+  s(io.dmaLength[1]);
   s(io.dmaCount);
-  s(io.dmaOriginPc);
+  s(io.dmaOriginPc[0]);
+  s(io.dmaOriginPc[1]);
   s(io.dacRate);
   s(io.bitRate);
 
@@ -18,6 +21,7 @@ auto AI::serialize(serializer& s) -> void {
   s(dac.period);
   s(dac.left);
   s(dac.right);
+  s(dac.decayFactor);
 
   if(s.reading() && stream->frequency() != dac.frequency) {
     stream->setFrequency(dac.frequency);
