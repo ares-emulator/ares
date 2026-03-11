@@ -40,7 +40,7 @@ auto parseSettingValue(std::uint32_t& out, const string& value) -> bool {
 }
 
 auto applySettingOverride(
-  nogui::LaunchSettings& settings,
+  headless::LaunchSettings& settings,
   const string& name,
   const string& value
 ) -> bool {
@@ -81,7 +81,7 @@ auto applySettingOverride(
   return false;
 }
 
-auto loadSettingsFileDefaults(nogui::LaunchSettings& settings) -> void {
+auto loadSettingsFileDefaults(headless::LaunchSettings& settings) -> void {
   auto settingsFile = settings.settingsPath;
   if(!settingsFile) settingsFile = {Path::userData(), "ares/settings.bml"};
   if(!file::exists(settingsFile)) return;
@@ -92,7 +92,7 @@ auto loadSettingsFileDefaults(nogui::LaunchSettings& settings) -> void {
 
 }
 
-namespace nogui {
+namespace headless {
 
 auto parseLaunchSettings(Arguments& arguments, LaunchSettings& settings, string& error) -> bool {
   while(arguments.find("--settings-file")) arguments.take("--settings-file", settings.settingsPath);

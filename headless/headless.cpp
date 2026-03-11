@@ -1,5 +1,5 @@
 #include <ares/ares.hpp>
-#include "emulator.hpp"
+#include "emulators.hpp"
 #include "settings.hpp"
 #include <mia/mia.hpp>
 #include <nall/encode/png.hpp>
@@ -259,12 +259,12 @@ auto nall::main(Arguments arguments) -> void {
   u32 verbosity = 1;
   string saveLastFramePath;
   bool videoChecksum = false;
-  nogui::LaunchSettings launchSettings;
+  headless::LaunchSettings launchSettings;
 
   while(arguments.find("--system")) arguments.take("--system", systemOverride);
   {
     string settingError;
-    if(!nogui::parseLaunchSettings(arguments, launchSettings, settingError)) {
+    if(!headless::parseLaunchSettings(arguments, launchSettings, settingError)) {
       fprintf(stderr, "error: %s\n", settingError.data());
       return;
     }
@@ -317,7 +317,7 @@ auto nall::main(Arguments arguments) -> void {
   videoChecksum = arguments.take("--video-checksum");
 
   if(arguments.take("--help")) {
-    print("\n Usage: ares-nogui [OPTIONS]... game\n\n");
+    print("\n Usage: ares-headless [OPTIONS]... game\n\n");
     print("Options:\n");
     print("  --help                Displays available options and exit\n");
     print("  --version             Displays the version string of the application\n");
@@ -384,7 +384,7 @@ auto nall::main(Arguments arguments) -> void {
     return;
   }
 
-  auto systemName = nogui::defaultSystemNameForMedium(runtime.medium);
+  auto systemName = headless::defaultSystemNameForMedium(runtime.medium);
 
   runtime.systemPak = mia::System::create(systemName);
   if(!runtime.systemPak || runtime.systemPak->load() != successful) {
@@ -392,21 +392,21 @@ auto nall::main(Arguments arguments) -> void {
     return;
   }
 
-  auto region = runtime.gamePak->pak ? nogui::normalizeRegion(runtime.gamePak->pak->attribute("region")) : string{};
-  runtime.profile = nogui::defaultProfileForMedium(runtime.medium, region, launchSettings.coreOptions.gameBoyAdvancePlayer);
+  auto region = runtime.gamePak->pak ? headless::normalizeRegion(runtime.gamePak->pak->attribute("region")) : string{};
+  runtime.profile = headless::defaultProfileForMedium(runtime.medium, region, launchSettings.coreOptions.gameBoyAdvancePlayer);
   if(!runtime.profile) {
     fprintf(stderr, "error: no default core profile for system: %s\n", runtime.medium.data());
     return;
   }
 
   ares::platform = &runtime;
-  nogui::configureCoreOptionsForMedium(runtime.medium, launchSettings.coreOptions);
-  if(!nogui::loadCoreForMedium(runtime.medium, runtime.root, runtime.profile)) {
+  headless::configureCoreOptionsForMedium(runtime.medium, launchSettings.coreOptions);
+  if(!headless::loadCoreForMedium(runtime.medium, runtime.root, runtime.profile)) {
     fprintf(stderr, "error: failed to load ares core profile: %s\n", runtime.profile.data());
     return;
   }
 
-  nogui::connectDefaultPorts(runtime.root);
+  headless::connectDefaultPorts(runtime.root);
 
   if(runtime.gdbEnabled) {
     nall::GDB::server.reset();

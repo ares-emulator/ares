@@ -2,7 +2,7 @@
 
 #include <ares/ares.hpp>
 
-namespace nogui {
+namespace headless {
 
 struct CoreOptions {
   bool videoPixelAccuracy = false;

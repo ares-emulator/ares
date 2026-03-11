@@ -10,7 +10,7 @@
 !/libco
 !/mia
 !/nall
-!/nogui
+!/headless
 !/ruby
 !/scripts
 !/tests

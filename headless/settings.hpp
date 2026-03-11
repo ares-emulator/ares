@@ -1,10 +1,10 @@
 #pragma once
 
-#include "emulator.hpp"
+#include "emulators.hpp"
 #include <nall/arguments.hpp>
 #include <cstdint>
 
-namespace nogui {
+namespace headless {
 
 struct LaunchSettings {
   CoreOptions coreOptions;

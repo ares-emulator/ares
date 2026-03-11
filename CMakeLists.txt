@@ -35,7 +35,7 @@ add_subdirectory(mia)
 if(ARES_BUILD_DESKTOP_UI)
   add_subdirectory(desktop-ui)
 endif()
-add_subdirectory(nogui)
+add_subdirectory(headless)
 
 option(ARES_BUILD_OPTIONAL_TARGETS "Include supplemental tools and tests" OFF)
 

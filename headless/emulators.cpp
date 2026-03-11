@@ -1,4 +1,4 @@
-#include "emulator.hpp"
+#include "emulators.hpp"
 
 using namespace nall;
 
@@ -81,7 +81,7 @@ auto tryConnectPort(ares::Node::System& root, const string& name, maybe<string> 
 
 }
 
-namespace nogui {
+namespace headless {
 
 auto normalizeRegion(const string& region) -> string {
   if(!region) return {};
