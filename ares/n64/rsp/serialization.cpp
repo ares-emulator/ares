@@ -31,7 +31,7 @@ auto RSP::serialize(serializer& s) -> void {
   s(status.full);
   s(status.singleStep);
   s(status.interruptOnBreak);
-  for(auto& sig : status.signal) s(sig);
+  s(status.signal);
 
   for(auto& r : ipu.r) s(r.u32);
   s(ipu.pc);

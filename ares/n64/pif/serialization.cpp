@@ -8,10 +8,10 @@ auto PIF::serialize(serializer& s) -> void {
 }
 
 auto PIF::Intram::serialize(serializer& s) -> void {
-  for(auto& os : osInfo) s(os);
-  for(auto& cpu : cpuChecksum) s(cpu);
-  for(auto& cic : cicChecksum) s(cic);
+  s(osInfo);
+  s(cpuChecksum);
+  s(cicChecksum);
   s(bootTimeout);
-  for(auto& joy : joyAddress) s(joy);
+  s(joyAddress);
   for(auto i: range(5)) s(joyStatus[i].skip), s(joyStatus[i].reset);
 }

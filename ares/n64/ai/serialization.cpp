@@ -5,14 +5,11 @@ auto AI::serialize(serializer& s) -> void {
   s(fifo[1].address);
 
   s(io.dmaEnable);
-  s(io.dmaAddress[0]);
-  s(io.dmaAddress[1]);
+  s(io.dmaAddress);
   s(io.dmaAddressCarry);
-  s(io.dmaLength[0]);
-  s(io.dmaLength[1]);
+  s(io.dmaLength);
   s(io.dmaCount);
-  s(io.dmaOriginPc[0]);
-  s(io.dmaOriginPc[1]);
+  s(io.dmaOriginPc);
   s(io.dacRate);
   s(io.bitRate);
 
