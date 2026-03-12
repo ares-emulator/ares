@@ -1,4 +1,14 @@
-add_executable(headless headless.cpp emulators.cpp settings.cpp)
+add_executable(
+  headless
+  headless.cpp
+  cli.cpp
+  emulators.cpp
+  parse.cpp
+  runtime.cpp
+  states.cpp
+  settings.cpp
+  video-output.cpp
+)
 
 target_include_directories(headless PRIVATE ${CMAKE_SOURCE_DIR})
 target_compile_definitions(headless PRIVATE MIA_LIBRARY=1)

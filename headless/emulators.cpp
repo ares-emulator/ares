@@ -79,6 +79,50 @@ auto tryConnectPort(ares::Node::System& root, const string& name, maybe<string> 
   }
 }
 
+auto isFamicomFamily(const string& medium) -> bool {
+  return medium == "Famicom" || medium == "Famicom Disk System";
+}
+
+auto isGameBoyFamily(const string& medium) -> bool {
+  return medium == "Game Boy" || medium == "Game Boy Color";
+}
+
+auto isMasterSystemFamily(const string& medium) -> bool {
+  return medium == "Master System" || medium == "Game Gear";
+}
+
+auto isMegaDriveFamily(const string& medium) -> bool {
+  return medium == "Mega Drive" || medium == "Mega 32X" || medium == "Mega CD" || medium == "Mega LD" || medium == "Mega CD 32X";
+}
+
+auto isMSXFamily(const string& medium) -> bool {
+  return medium == "MSX" || medium == "MSX2";
+}
+
+auto isNintendo64Family(const string& medium) -> bool {
+  return medium == "Nintendo 64" || medium == "Nintendo 64DD";
+}
+
+auto isPCEFamily(const string& medium) -> bool {
+  return medium == "PC Engine" || medium == "PC Engine CD" || medium == "PC Engine LD" || medium == "SuperGrafx";
+}
+
+auto isWonderSwanFamily(const string& medium) -> bool {
+  return medium == "Pocket Challenge V2" || medium == "WonderSwan" || medium == "WonderSwan Color";
+}
+
+auto isNeoGeoPocketFamily(const string& medium) -> bool {
+  return medium == "Neo Geo Pocket" || medium == "Neo Geo Pocket Color";
+}
+
+auto isSG1000Family(const string& medium) -> bool {
+  return medium == "SG-1000" || medium == "SC-3000";
+}
+
+auto isZXSpectrumFamily(const string& medium) -> bool {
+  return medium == "ZX Spectrum" || medium == "ZX Spectrum 128";
+}
+
 }
 
 namespace headless {
@@ -91,14 +135,12 @@ auto normalizeRegion(const string& region) -> string {
 }
 
 auto defaultSystemNameForMedium(const string& medium) -> string {
-  auto systemName = medium;
-  if(systemName == "Game Boy Color") systemName = "Game Boy";
-  if(systemName == "Famicom Disk System") systemName = "Famicom";
-  if(systemName == "PC Engine CD") systemName = "PC Engine";
-  if(systemName == "Pocket Challenge V2") systemName = "WonderSwan";
-  if(systemName == "WonderSwan Color") systemName = "WonderSwan";
-  if(systemName == "ZX Spectrum 128") systemName = "ZX Spectrum";
-  return systemName;
+  if(isGameBoyFamily(medium)) return "Game Boy";
+  if(isFamicomFamily(medium)) return "Famicom";
+  if(isPCEFamily(medium)) return "PC Engine";
+  if(isWonderSwanFamily(medium)) return "WonderSwan";
+  if(isZXSpectrumFamily(medium)) return "ZX Spectrum";
+  return medium;
 }
 
 auto defaultProfileForMedium(const string& medium, const string& region, bool gameBoyAdvancePlayer) -> string {
@@ -106,7 +148,7 @@ auto defaultProfileForMedium(const string& medium, const string& region, bool ga
   if(medium == "Atari 2600") return string{"[Atari] Atari 2600 (", effectiveRegion, ")"};
   if(medium == "ColecoVision") return string{"[Coleco] ColecoVision (", effectiveRegion, ")"};
   if(medium == "MyVision") return string{"[Nichibutsu] My Vision (", region ? region : string{"NTSC-J"}, ")"};
-  if(medium == "Famicom" || medium == "Famicom Disk System") return string{"[Nintendo] Famicom (", region ? region : string{"NTSC-J"}, ")"};
+  if(isFamicomFamily(medium)) return string{"[Nintendo] Famicom (", region ? region : string{"NTSC-J"}, ")"};
   if(medium == "Game Boy") return string{"[Nintendo] Game Boy"};
   if(medium == "Game Boy Color") return string{"[Nintendo] Game Boy Color"};
   if(medium == "Game Boy Advance") {
@@ -151,13 +193,13 @@ auto configureCoreOptionsForMedium(const string& medium, const CoreOptions& opti
   }
 #endif
 #ifdef CORE_MD
-  if(medium == "Mega Drive" || medium == "Mega 32X" || medium == "Mega CD" || medium == "Mega LD" || medium == "Mega CD 32X") {
+  if(isMegaDriveFamily(medium)) {
     ares::MegaDrive::option("TMSS", options.megadriveTMSS);
     ares::MegaDrive::option("Recompiler", !options.generalForceInterpreter);
   }
 #endif
 #ifdef CORE_PCE
-  if(medium == "PC Engine" || medium == "PC Engine CD" || medium == "PC Engine LD" || medium == "SuperGrafx") {
+  if(isPCEFamily(medium)) {
     ares::PCEngine::option("Pixel Accuracy", options.videoPixelAccuracy);
   }
 #endif
@@ -173,12 +215,12 @@ auto configureCoreOptionsForMedium(const string& medium, const CoreOptions& opti
   }
 #endif
 #ifdef CORE_WS
-  if(medium == "Pocket Challenge V2" || medium == "WonderSwan" || medium == "WonderSwan Color") {
+  if(isWonderSwanFamily(medium)) {
     ares::WonderSwan::option("Pixel Accuracy", options.videoPixelAccuracy);
   }
 #endif
 #ifdef CORE_N64
-  if(medium == "Nintendo 64" || medium == "Nintendo 64DD") {
+  if(isNintendo64Family(medium)) {
     ares::Nintendo64::option("Quality", options.videoQuality);
     ares::Nintendo64::option("Supersampling", options.videoSupersampling);
 #if defined(VULKAN)
@@ -207,36 +249,36 @@ auto loadCoreForMedium(const string& medium, ares::Node::System& root, const str
   if(medium == "MyVision") return ares::MyVision::load(root, profile);
 #endif
 #ifdef CORE_FC
-  if(medium == "Famicom" || medium == "Famicom Disk System") return ares::Famicom::load(root, profile);
+  if(isFamicomFamily(medium)) return ares::Famicom::load(root, profile);
 #endif
 #ifdef CORE_GB
-  if(medium == "Game Boy" || medium == "Game Boy Color") return ares::GameBoy::load(root, profile);
+  if(isGameBoyFamily(medium)) return ares::GameBoy::load(root, profile);
 #endif
 #ifdef CORE_GBA
   if(medium == "Game Boy Advance") return ares::GameBoyAdvance::load(root, profile);
 #endif
 #ifdef CORE_MS
-  if(medium == "Master System" || medium == "Game Gear") return ares::MasterSystem::load(root, profile);
+  if(isMasterSystemFamily(medium)) return ares::MasterSystem::load(root, profile);
 #endif
 #ifdef CORE_MD
-  if(medium == "Mega Drive" || medium == "Mega 32X" || medium == "Mega CD" || medium == "Mega LD" || medium == "Mega CD 32X") {
+  if(isMegaDriveFamily(medium)) {
     return ares::MegaDrive::load(root, profile);
   }
 #endif
 #ifdef CORE_MSX
-  if(medium == "MSX" || medium == "MSX2") return ares::MSX::load(root, profile);
+  if(isMSXFamily(medium)) return ares::MSX::load(root, profile);
 #endif
 #ifdef CORE_NG
   if(medium == "Neo Geo") return ares::NeoGeo::load(root, profile);
 #endif
 #ifdef CORE_NGP
-  if(medium == "Neo Geo Pocket" || medium == "Neo Geo Pocket Color") return ares::NeoGeoPocket::load(root, profile);
+  if(isNeoGeoPocketFamily(medium)) return ares::NeoGeoPocket::load(root, profile);
 #endif
 #ifdef CORE_N64
-  if(medium == "Nintendo 64" || medium == "Nintendo 64DD") return ares::Nintendo64::load(root, profile);
+  if(isNintendo64Family(medium)) return ares::Nintendo64::load(root, profile);
 #endif
 #ifdef CORE_PCE
-  if(medium == "PC Engine" || medium == "PC Engine CD" || medium == "PC Engine LD" || medium == "SuperGrafx") {
+  if(isPCEFamily(medium)) {
     return ares::PCEngine::load(root, profile);
   }
 #endif
@@ -244,7 +286,7 @@ auto loadCoreForMedium(const string& medium, ares::Node::System& root, const str
   if(medium == "PlayStation") return ares::PlayStation::load(root, profile);
 #endif
 #ifdef CORE_WS
-  if(medium == "Pocket Challenge V2" || medium == "WonderSwan" || medium == "WonderSwan Color") {
+  if(isWonderSwanFamily(medium)) {
     return ares::WonderSwan::load(root, profile);
   }
 #endif
@@ -252,13 +294,13 @@ auto loadCoreForMedium(const string& medium, ares::Node::System& root, const str
   if(medium == "Saturn") return ares::Saturn::load(root, profile);
 #endif
 #ifdef CORE_SG
-  if(medium == "SG-1000" || medium == "SC-3000") return ares::SG1000::load(root, profile);
+  if(isSG1000Family(medium)) return ares::SG1000::load(root, profile);
 #endif
 #ifdef CORE_SFC
   if(medium == "Super Famicom") return ares::SuperFamicom::load(root, profile);
 #endif
 #ifdef CORE_SPEC
-  if(medium == "ZX Spectrum" || medium == "ZX Spectrum 128") return ares::ZXSpectrum::load(root, profile);
+  if(isZXSpectrumFamily(medium)) return ares::ZXSpectrum::load(root, profile);
 #endif
   return false;
 }

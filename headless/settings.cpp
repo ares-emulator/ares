@@ -1,4 +1,5 @@
 #include "settings.hpp"
+#include "parse.hpp"
 #include <limits>
 #include <nall/file.hpp>
 #include <nall/path.hpp>
@@ -7,20 +8,6 @@
 using namespace nall;
 
 namespace {
-
-auto parsePositiveInteger(const string& value, u64& out) -> bool {
-  if(value.length() == 0) return false;
-  u64 parsed = 0;
-  for(auto ch : value) {
-    if(ch < '0' || ch > '9') return false;
-    u64 digit = ch - '0';
-    if(parsed > (std::numeric_limits<u64>::max() - digit) / 10) return false;
-    parsed = parsed * 10 + digit;
-  }
-  if(parsed == 0) return false;
-  out = parsed;
-  return true;
-}
 
 auto parseSettingValue(bool& out, const string& value) -> bool {
   out = value.boolean();
@@ -34,7 +21,7 @@ auto parseSettingValue(string& out, const string& value) -> bool {
 
 auto parseSettingValue(std::uint32_t& out, const string& value) -> bool {
   u64 parsed = 0;
-  if(!parsePositiveInteger(value, parsed) || parsed > std::numeric_limits<std::uint32_t>::max()) return false;
+  if(!headless::parsePositiveInteger(value, parsed) || parsed > std::numeric_limits<std::uint32_t>::max()) return false;
   out = (std::uint32_t)parsed;
   return true;
 }
