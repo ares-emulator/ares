@@ -1,4 +1,5 @@
 auto PIF::serialize(serializer& s) -> void {
+  Thread::serialize(s);
   s(ram);
   s(state);
   s(intram);

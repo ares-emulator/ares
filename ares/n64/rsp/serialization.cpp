@@ -5,12 +5,17 @@ auto RSP::serialize(serializer& s) -> void {
 
   s(pipeline.address);
   s(pipeline.instruction);
+  s(pipeline.clocks);
   s(pipeline.singleIssue);
   for(auto& p : pipeline.previous) {
     s(p.load);
     s(p.rWrite);
     s(p.vWrite);
   }
+  s(pipeline.current.store);
+  s(pipeline.current.branch);
+  s(pipeline.current.rRead);
+  s(pipeline.current.vRead);
 
   s(dma.pending);
   s(dma.current);
@@ -59,6 +64,8 @@ auto RSP::DMA::Regs::serialize(serializer& s) -> void {
   s(length);
   s(skip);
   s(count);
+  s(originPc);
+  s(originCpu);
 }
 
 auto RSP::r128::serialize(serializer& s) -> void {

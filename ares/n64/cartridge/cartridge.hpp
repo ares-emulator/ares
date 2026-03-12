@@ -30,6 +30,8 @@ struct Cartridge {
     auto writeHalf(u32 address, u64 data) -> void;
     auto writeWord(u32 address, u64 data) -> void;
     auto writeDual(u32 address, u64 data) -> void;
+    
+    auto serialize(serializer& s) -> void;
 
     enum class Mode : u32 { Idle, Erase, Write, Read, Status };
     Mode mode = Mode::Idle;
