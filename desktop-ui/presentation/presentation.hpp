@@ -68,7 +68,7 @@ struct Presentation : Window {
         MenuItem saveStateSlots[9];
       Menu loadStateMenu{&toolsMenu};
         MenuItem loadStateSlots[9];
-      MenuItem undoSaveStateMenu{&toolsMenu};
+      MenuItem revertSaveStateMenu{&toolsMenu};
       MenuItem undoLoadStateMenu{&toolsMenu};
       MenuItem captureScreenshot{&toolsMenu};
       MenuSeparator toolsMenuSeparatorA{&toolsMenu};

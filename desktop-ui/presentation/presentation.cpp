@@ -192,9 +192,7 @@ Presentation::Presentation() {
     saveStateMenu.append(saveStateSlots[slot]);
     saveStateSlots[slot].setText({"Slot ", 1 + slot}).onActivate([=, this] {
       Program::Guard guard;
-      if(program.stateSave(1 + slot)) {
-        undoSaveStateMenu.setEnabled(true);
-      }
+      program.stateSave(1 + slot);
     });
   }
   loadStateMenu.setText("Load State").setIcon(Icon::Media::Rewind);
@@ -202,22 +200,18 @@ Presentation::Presentation() {
     loadStateMenu.append(loadStateSlots[slot]);
     loadStateSlots[slot].setText({"Slot ", 1 + slot}).onActivate([=, this] {
       Program::Guard guard;
-      if(program.stateLoad(1 + slot)) {
-        undoLoadStateMenu.setEnabled(true);
-      }
+      program.stateLoad(1 + slot);
     });
   }
-  undoSaveStateMenu.setText("Undo Last Save State").setIcon(Icon::Edit::Undo).setEnabled(false);
-  undoSaveStateMenu.onActivate([&] {
+  revertSaveStateMenu.setText("Revert Last Save State").setIcon(Icon::Edit::Undo).setEnabled(false);
+  revertSaveStateMenu.onActivate([&] {
     Program::Guard guard;
-    program.undoStateSave();
-    undoSaveStateMenu.setEnabled(false);
+    program.revertStateSave();
   });
   undoLoadStateMenu.setText("Undo Last Load State").setIcon(Icon::Edit::Undo).setEnabled(false);
   undoLoadStateMenu.onActivate([&] {
     Program::Guard guard;
     program.undoStateLoad();
-    undoLoadStateMenu.setEnabled(false);
   });
   captureScreenshot.setText("Capture Screenshot").setIcon(Icon::Emblem::Image).onActivate([&] {
     Program::Guard guard;
