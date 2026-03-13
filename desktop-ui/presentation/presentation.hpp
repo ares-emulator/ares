@@ -54,6 +54,7 @@ struct Presentation : Window {
       MenuItem videoSettingsAction{&settingsMenu};
       MenuItem audioSettingsAction{&settingsMenu};
       MenuItem inputSettingsAction{&settingsMenu};
+      MenuItem stickSettingsAction{&settingsMenu};
       MenuItem hotkeySettingsAction{&settingsMenu};
       MenuItem emulatorSettingsAction{&settingsMenu};
       MenuItem optionSettingsAction{&settingsMenu};
