@@ -143,5 +143,6 @@ auto CPU::serialize(serializer& s) -> void {
 
   if constexpr(Accuracy::CPU::Recompiler) {
     recompiler.reset();
+    recompiler.jitContext.update(*this);
   }
 }
