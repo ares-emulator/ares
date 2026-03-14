@@ -227,12 +227,21 @@ struct InputSettings : VerticalLayout {
 };
 
 struct HotkeySettings : VerticalLayout {
+  struct ChordKey {
+    std::shared_ptr<HID::Device> device;
+    u64 deviceID = 0;
+    u32 groupID = 0;
+    u32 inputID = 0;
+  };
+
   auto construct() -> void;
   auto reload() -> void;
   auto refresh() -> void;
   auto eventChange() -> void;
   auto eventClear() -> void;
   auto eventAssign(TableViewCell) -> void;
+  auto eventNew() -> void;
+  auto eventNew(InputHotkey::CustomType type, u32 slot) -> void;
   auto eventInput(std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
   auto setVisible(bool visible = true) -> HotkeySettings&;
 
@@ -240,12 +249,16 @@ struct HotkeySettings : VerticalLayout {
   HorizontalLayout controlLayout{this, Size{~0, 0}};
     Label assignLabel{&controlLayout, Size{~0, 0}};
     Canvas spacer{&controlLayout, Size{1, 0}};
+    Button newButton{&controlLayout, Size{80, 0}};
     Button assignButton{&controlLayout, Size{80, 0}};
     Button clearButton{&controlLayout, Size{80, 0}};
 
   maybe<InputHotkey&> activeMapping;
   u32 activeBinding = 0;
   Timer timer;
+  Timer chordTimer;
+  PopupMenu newMenu;
+  std::vector<ChordKey> pendingKeyboardChord;
 };
 
 struct EmulatorSettings : VerticalLayout {
