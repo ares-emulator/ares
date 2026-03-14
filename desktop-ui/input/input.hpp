@@ -66,12 +66,18 @@ struct InputRumble : InputMapping {
 };
 
 struct InputHotkey : InputDigital {
+  enum class CustomType : u32 { None, SaveStateSlot, LoadStateSlot };
+
   InputHotkey(string name) : name(name) {}
   auto& onPress(std::function<void ()> press) { return this->press = press, *this; }
   auto& onRelease(std::function<void ()> release) { return this->release = release, *this; }
+  auto& setCustom(CustomType type, u32 slot) { customType = type, customSlot = slot; return *this; }
+  auto isCustom() const -> bool { return customType != CustomType::None; }
   auto value() -> s16 override;
 
   const string name;
+  CustomType customType = CustomType::None;
+  u32 customSlot = 0;
 
 private:
   std::function<void ()> press;
@@ -203,10 +209,14 @@ struct InputManager {
 
   //hotkeys.cpp
   auto createHotkeys() -> void;
+  auto appendCustomHotkey(InputHotkey::CustomType type, u32 slot) -> bool;
+  auto resetCustomHotkeys() -> void;
+  auto hasCustomHotkey(InputHotkey::CustomType type, u32 slot) -> bool;
   auto pollHotkeys() -> void;
 
   std::vector<std::shared_ptr<HID::Device>> devices;
   std::vector<InputHotkey> hotkeys;
+  u32 builtinHotkeyCount = 0;
 
   u64 pollFrequency = 5;
   u64 lastPoll = 0;
