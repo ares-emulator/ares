@@ -525,6 +525,19 @@ auto InputManager::poll(bool force) -> void {
 
 auto InputManager::eventInput(std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
+
+  if(settings.prefs.doubleClickFullScreen && ruby::video.fullScreen() && device->isMouse() && groupID == HID::Mouse::GroupID::Button && inputID == 0) {
+    if(oldValue == 0 && newValue != 0) {
+      auto current = chrono::millisecond();
+      if(current - presentation.lastViewportLeftClick <= 500) {
+        program.pendingVideoFullScreenToggle = true;
+        presentation.lastViewportLeftClick = 0;
+      } else {
+        presentation.lastViewportLeftClick = current;
+      }
+    }
+  }
+
   inputSettings.eventInput(device, groupID, inputID, oldValue, newValue);
   hotkeySettings.eventInput(device, groupID, inputID, oldValue, newValue);
 }

@@ -90,6 +90,24 @@ struct Settings : Markup::Node {
   struct Prefs {
     static constexpr u32 maxRecentGames = 30;
     u32 recentGamesLimit = 9;
+    bool showDisabledEmulators = false;
+    bool restoreWindowState = false;
+    bool implicitKiosk = false;
+    bool startGameFullScreen = false;
+    bool startGamePseudoFullScreen = false;
+    bool resumeLastGame = false;
+    bool resumeLastGamePaused = false;
+    bool doubleClickFullScreen = false;
+    string lastGame;
+    struct Window {
+      s32 x = 0;
+      s32 y = 0;
+      s32 width = 0;
+      s32 height = 0;
+      bool maximized = false;
+      bool fullScreen = false;
+      bool pseudoFullScreen = false;
+    } window;
   } prefs;
 
   struct Paths {
@@ -307,6 +325,7 @@ struct PreferenceSettings : VerticalLayout {
   auto refresh() -> void;
   auto readRecentGamesLimit() const -> maybe<u32>;
   auto applyRecentGamesLimit(bool normalizeField) -> void;
+  auto updateResumeLastGamePausedState() -> void;
 
   Label historyLabel{this, Size{~0, 0}, 5};
   HorizontalLayout recentGamesLayout{this, Size{~0, 0}, 5};
@@ -316,6 +335,32 @@ struct PreferenceSettings : VerticalLayout {
   HorizontalLayout recentGamesHintLayout{this, Size{~0, 0}, 5};
     Canvas recentGamesHintIndent{&recentGamesHintLayout, Size{12_sx, 0}};
     Label recentGamesHint{&recentGamesHintLayout, Size{~0, layoutVertSize}};
+  Label startupLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout restoreWindowStateLayout{this, Size{~0, 0}, 5};
+    CheckLabel restoreWindowStateOption{&restoreWindowStateLayout, Size{0, 0}, 5};
+    Label restoreWindowStateHint{&restoreWindowStateLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout implicitKioskLayout{this, Size{~0, 0}, 5};
+    CheckLabel implicitKioskOption{&implicitKioskLayout, Size{0, 0}, 5};
+    Label implicitKioskHint{&implicitKioskLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout startGameFullScreenLayout{this, Size{~0, 0}, 5};
+    CheckLabel startGameFullScreenOption{&startGameFullScreenLayout, Size{0, 0}, 5};
+    Label startGameFullScreenHint{&startGameFullScreenLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout startGamePseudoFullScreenLayout{this, Size{~0, 0}, 5};
+    CheckLabel startGamePseudoFullScreenOption{&startGamePseudoFullScreenLayout, Size{0, 0}, 5};
+    Label startGamePseudoFullScreenHint{&startGamePseudoFullScreenLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout resumeLastGameLayout{this, Size{~0, 0}, 5};
+    CheckLabel resumeLastGameOption{&resumeLastGameLayout, Size{0, 0}, 5};
+    Label resumeLastGameHint{&resumeLastGameLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout resumeLastGamePausedLayout{this, Size{~0, 0}, 5};
+    CheckLabel resumeLastGamePausedOption{&resumeLastGamePausedLayout, Size{0, 0}, 5};
+    Label resumeLastGamePausedHint{&resumeLastGamePausedLayout, Size{~0, layoutVertSize}};
+  Label menuLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout showDisabledEmulatorsLayout{this, Size{~0, 0}, 5};
+    CheckLabel showDisabledEmulatorsOption{&showDisabledEmulatorsLayout, Size{0, 0}, 5};
+    Label showDisabledEmulatorsHint{&showDisabledEmulatorsLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout doubleClickFullScreenLayout{this, Size{~0, 0}, 5};
+    CheckLabel doubleClickFullScreenOption{&doubleClickFullScreenLayout, Size{0, 0}, 5};
+    Label doubleClickFullScreenHint{&doubleClickFullScreenLayout, Size{~0, layoutVertSize}};
 };
 
 struct FirmwareSettings : VerticalLayout {
