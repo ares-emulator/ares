@@ -87,6 +87,11 @@ struct Settings : Markup::Node {
     u32 frequency = 10;
   } rewind;
 
+  struct Prefs {
+    static constexpr u32 maxRecentGames = 30;
+    u32 recentGamesLimit = 9;
+  } prefs;
+
   struct Paths {
     string home;
     string firmware;
@@ -102,7 +107,7 @@ struct Settings : Markup::Node {
   } paths;
 
   struct Recent {
-    string game[9];
+    string game[Prefs::maxRecentGames];
   } recent;
 
   struct DebugServer {
@@ -297,6 +302,22 @@ struct OptionSettings : VerticalLayout {
       Label megaDriveTmssHint{&megaDriveTmssLayout, Size{0, layoutVertSize}};
 };
 
+struct PreferenceSettings : VerticalLayout {
+  auto construct() -> void;
+  auto refresh() -> void;
+  auto readRecentGamesLimit() const -> maybe<u32>;
+  auto applyRecentGamesLimit(bool normalizeField) -> void;
+
+  Label historyLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout recentGamesLayout{this, Size{~0, 0}, 5};
+    Label recentGamesLabel{&recentGamesLayout, Size{0, layoutVertSize}};
+    LineEdit recentGamesValue{&recentGamesLayout, Size{36_sx, 0}};
+    Canvas recentGamesSpacer{&recentGamesLayout, Size{~0, 0}};
+  HorizontalLayout recentGamesHintLayout{this, Size{~0, 0}, 5};
+    Canvas recentGamesHintIndent{&recentGamesHintLayout, Size{12_sx, 0}};
+    Label recentGamesHint{&recentGamesHintLayout, Size{~0, layoutVertSize}};
+};
+
 struct FirmwareSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
@@ -472,6 +493,7 @@ struct SettingsWindow : Window {
       HotkeySettings hotkeySettings;
       EmulatorSettings emulatorSettings;
       OptionSettings optionSettings;
+      PreferenceSettings preferenceSettings;
       FirmwareSettings firmwareSettings;
       PathSettings pathSettings;
       DriverSettings driverSettings;
@@ -494,6 +516,7 @@ extern InputSettings& inputSettings;
 extern HotkeySettings& hotkeySettings;
 extern EmulatorSettings& emulatorSettings;
 extern OptionSettings& optionSettings;
+extern PreferenceSettings& preferenceSettings;
 extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
 extern DriverSettings& driverSettings;

@@ -170,6 +170,9 @@ Presentation::Presentation() {
   optionSettingsAction.setText("Options" ELLIPSIS).setIcon(Icon::Action::Settings).onActivate([&] {
     settingsWindow.show("Options");
   });
+  preferenceSettingsAction.setText("Preferences" ELLIPSIS).setIcon(Icon::Place::Settings).onActivate([&] {
+    settingsWindow.show("Preferences");
+  });
   firmwareSettingsAction.setText("Firmware" ELLIPSIS).setIcon(Icon::Emblem::Binary).onActivate([&] {
     settingsWindow.show("Firmware");
   });
@@ -395,7 +398,7 @@ auto Presentation::loadEmulators() -> void {
 
   //clean up the recent games history first
   std::vector<string> recentGames;
-  for(u32 index : range(9)) {
+  for(u32 index : range(Settings::Prefs::maxRecentGames)) {
     auto entry = settings.recent.game[index];
     auto parts = nall::split(entry, ";", 1L);
     parts.resize(2);
@@ -411,7 +414,9 @@ auto Presentation::loadEmulators() -> void {
 
   //build recent games list
   u32 count = 0;
+  auto recentGamesLimit = max(1u, min(Settings::Prefs::maxRecentGames, settings.prefs.recentGamesLimit));
   for(auto& game : recentGames) {
+    if(count >= recentGamesLimit) break;
     settings.recent.game[count++] = game;
   }
   { Menu recentGames{&loadMenu};
@@ -458,7 +463,7 @@ auto Presentation::loadEmulators() -> void {
       clearHistory.setText("Clear Menu");
       #endif
       clearHistory.onActivate([&] {
-        for(u32 index : range(9)) settings.recent.game[index] = {};
+        for(u32 index : range(Settings::Prefs::maxRecentGames)) settings.recent.game[index] = {};
         loadEmulators();
       });
     } else {
