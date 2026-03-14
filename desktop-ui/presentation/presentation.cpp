@@ -189,35 +189,29 @@ Presentation::Presentation() {
   toolsMenu.setVisible(false).setText("Tools");
   saveStateMenu.setText("Save State").setIcon(Icon::Media::Record);
   for(u32 slot : range(9)) {
-    MenuItem item{&saveStateMenu};
-    item.setText({"Slot ", 1 + slot}).onActivate([=, this] {
+    saveStateMenu.append(saveStateSlots[slot]);
+    saveStateSlots[slot].setText({"Slot ", 1 + slot}).onActivate([=, this] {
       Program::Guard guard;
-      if(program.stateSave(1 + slot)) {
-        undoSaveStateMenu.setEnabled(true);
-      }
+      program.stateSave(1 + slot);
     });
   }
   loadStateMenu.setText("Load State").setIcon(Icon::Media::Rewind);
   for(u32 slot : range(9)) {
-    MenuItem item{&loadStateMenu};
-    item.setText({"Slot ", 1 + slot}).onActivate([=, this] {
+    loadStateMenu.append(loadStateSlots[slot]);
+    loadStateSlots[slot].setText({"Slot ", 1 + slot}).onActivate([=, this] {
       Program::Guard guard;
-      if(program.stateLoad(1 + slot)) {
-        undoLoadStateMenu.setEnabled(true);
-      }
+      program.stateLoad(1 + slot);
     });
   }
-  undoSaveStateMenu.setText("Undo Last Save State").setIcon(Icon::Edit::Undo).setEnabled(false);
-  undoSaveStateMenu.onActivate([&] {
+  revertSaveStateMenu.setText("Revert Last Save State").setIcon(Icon::Edit::Undo).setEnabled(false);
+  revertSaveStateMenu.onActivate([&] {
     Program::Guard guard;
-    program.undoStateSave();
-    undoSaveStateMenu.setEnabled(false);
+    program.revertStateSave();
   });
   undoLoadStateMenu.setText("Undo Last Load State").setIcon(Icon::Edit::Undo).setEnabled(false);
   undoLoadStateMenu.onActivate([&] {
     Program::Guard guard;
     program.undoStateLoad();
-    undoLoadStateMenu.setEnabled(false);
   });
   captureScreenshot.setText("Capture Screenshot").setIcon(Icon::Emblem::Image).onActivate([&] {
     Program::Guard guard;
@@ -541,6 +535,7 @@ auto Presentation::loadEmulator() -> void {
     systemMenu.setVisible();
 
     refreshSystemMenu();
+    refreshStateMenus();
 
     toolsMenu.setVisible(true);
     pauseEmulation.setChecked(false);
@@ -675,6 +670,7 @@ auto Presentation::unloadEmulator(bool reloading) -> void {
   if(program.kiosk) return;
   systemMenu.setVisible(false);
   systemMenu.reset();
+  refreshStateMenus();
 
   toolsMenu.setVisible(false);
 }
@@ -807,5 +803,21 @@ auto Presentation::loadShaders() -> void {
       settings.video.shader = item.attribute("file");
       ruby::video.setShader({location, settings.video.shader});
     }
+  }
+}
+
+auto Presentation::refreshStateMenus() -> void {
+  if(!emulator || !emulator->game) {
+    for(u32 slot : range(9)) {
+      saveStateSlots[slot].setEnabled(false);
+      loadStateSlots[slot].setEnabled(false);
+    }
+    return;
+  }
+
+  for(u32 slot : range(9)) {
+    saveStateSlots[slot].setEnabled(true);
+    auto location = emulator->locate(emulator->game->location, {".bs", 1 + slot}, settings.paths.saves);
+    loadStateSlots[slot].setEnabled(file::exists(location));
   }
 }

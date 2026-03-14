@@ -9,6 +9,7 @@ struct Presentation : Window {
   auto showIcon(bool visible) -> void;
   auto loadShaders() -> void;
   auto refreshSystemMenu() -> void;
+  auto refreshStateMenus() -> void;
 
   std::vector<string> shaderDirectories;
   static inline bool shaderArgApplied = false;
@@ -64,8 +65,10 @@ struct Presentation : Window {
       MenuItem importExportAction{&settingsMenu};
     Menu toolsMenu{&menuBar};
       Menu saveStateMenu{&toolsMenu};
+        MenuItem saveStateSlots[9];
       Menu loadStateMenu{&toolsMenu};
-      MenuItem undoSaveStateMenu{&toolsMenu};
+        MenuItem loadStateSlots[9];
+      MenuItem revertSaveStateMenu{&toolsMenu};
       MenuItem undoLoadStateMenu{&toolsMenu};
       MenuItem captureScreenshot{&toolsMenu};
       MenuSeparator toolsMenuSeparatorA{&toolsMenu};
