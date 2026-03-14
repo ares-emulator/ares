@@ -1,4 +1,11 @@
+static auto customHotkeyName(InputHotkey::CustomType type, u32 slot) -> string {
+  if(type == InputHotkey::CustomType::SaveStateSlot) return {"Save State Slot ", slot};
+  if(type == InputHotkey::CustomType::LoadStateSlot) return {"Load State Slot ", slot};
+  return {};
+}
+
 auto InputManager::createHotkeys() -> void {
+  hotkeys.clear();
   static bool fastForwardVideoBlocking;
   static bool fastForwardAudioBlocking;
   static bool fastForwardAudioDynamic;
@@ -175,6 +182,50 @@ auto InputManager::createHotkeys() -> void {
       }
     }
   }));
+
+  builtinHotkeyCount = hotkeys.size();
+}
+
+auto InputManager::appendCustomHotkey(InputHotkey::CustomType type, u32 slot) -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  if(type == InputHotkey::CustomType::None) return false;
+  if(slot < 1 || slot > 9) return false;
+  if(hasCustomHotkey(type, slot)) return false;
+
+  auto name = customHotkeyName(type, slot);
+  if(!name) return false;
+
+  if(type == InputHotkey::CustomType::SaveStateSlot) {
+    hotkeys.push_back(InputHotkey(name).setCustom(type, slot).onPress([slot] {
+      Program::Guard guard;
+      if(!emulator) return;
+      program.stateSave(slot);
+    }));
+  }
+
+  if(type == InputHotkey::CustomType::LoadStateSlot) {
+    hotkeys.push_back(InputHotkey(name).setCustom(type, slot).onPress([slot] {
+      Program::Guard guard;
+      if(!emulator) return;
+      program.stateLoad(slot);
+    }));
+  }
+
+  hotkeys.back().bind();
+  return true;
+}
+
+auto InputManager::resetCustomHotkeys() -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  while(hotkeys.size() > builtinHotkeyCount) hotkeys.pop_back();
+}
+
+auto InputManager::hasCustomHotkey(InputHotkey::CustomType type, u32 slot) -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  for(auto& hotkey : hotkeys) {
+    if(hotkey.customType == type && hotkey.customSlot == slot) return true;
+  }
+  return false;
 }
 
 auto InputManager::pollHotkeys() -> void {
