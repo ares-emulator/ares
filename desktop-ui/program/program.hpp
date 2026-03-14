@@ -84,6 +84,7 @@ struct Program : ares::Platform {
   bool requestScreenshot = false;
   bool keyboardCaptured = false;
   atomic<bool> pendingKioskExit = false;
+  std::atomic<bool> pendingVideoFullScreenToggle = false;
 
   struct State {
     u32 slot = 1;

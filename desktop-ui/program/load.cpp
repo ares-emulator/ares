@@ -111,6 +111,7 @@ auto Program::load(string location) -> bool {
     settings.recent.game[index + 1] = settings.recent.game[index];
   }
   settings.recent.game[0] = {emulator->name, ";", location};
+  settings.prefs.lastGame = settings.recent.game[0];
   presentation.loadEmulators();
 
   configuration = emulator->root->attribute("configuration");

@@ -116,6 +116,20 @@ auto Settings::process(bool load) -> void {
   bind(natural, "Rewind/Frequency", rewind.frequency);
 
   bind(natural, "Prefs/RecentGamesLimit", prefs.recentGamesLimit);
+  bind(boolean, "Prefs/ShowDisabledEmulators", prefs.showDisabledEmulators);
+  bind(boolean, "Prefs/RestoreWindowState", prefs.restoreWindowState);
+  bind(boolean, "Prefs/ImplicitKiosk", prefs.implicitKiosk);
+  bind(boolean, "Prefs/StartGameFullScreen", prefs.startGameFullScreen);
+  bind(boolean, "Prefs/StartGamePseudoFullScreen", prefs.startGamePseudoFullScreen);
+  bind(boolean, "Prefs/ResumeLastGame", prefs.resumeLastGame);
+  bind(boolean, "Prefs/ResumeLastGamePaused", prefs.resumeLastGamePaused);
+  bind(boolean, "Prefs/DoubleClickFullScreen", prefs.doubleClickFullScreen);
+  bind(string,  "Prefs/LastGame", prefs.lastGame);
+  bind(integer, "Prefs/Window/X", prefs.window.x);
+  bind(integer, "Prefs/Window/Y", prefs.window.y);
+  bind(integer, "Prefs/Window/Width", prefs.window.width);
+  bind(integer, "Prefs/Window/Height", prefs.window.height);
+  bind(boolean, "Prefs/Window/Maximized", prefs.window.maximized);
 
   bind(string,  "Paths/Home", paths.home);
   bind(string,  "Paths/Firmware", paths.firmware);
@@ -139,6 +153,10 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
 
   prefs.recentGamesLimit = max(1u, min(Prefs::maxRecentGames, prefs.recentGamesLimit));
+  if(!prefs.resumeLastGame) prefs.resumeLastGamePaused = false;
+  prefs.window.width = max(0, prefs.window.width);
+  prefs.window.height = max(0, prefs.window.height);
+  if(prefs.startGameFullScreen) prefs.startGamePseudoFullScreen = false;
 
   for(u32 index : range(Prefs::maxRecentGames)) {
     string name = {"Recent/Game-", 1 + index};
