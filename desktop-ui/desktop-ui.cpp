@@ -131,56 +131,52 @@ auto nall::main(Arguments arguments) -> void {
   inputManager.create();
   Emulator::construct();
 
+  static const std::vector<std::pair<string, std::vector<string>>> systemAliases = {
+    {"Arcade", {"arc"}},
+    {"Atari 2600", {"a2600"}},
+    {"ColecoVision", {"cv"}},
+    {"Famicom", {"fc", "nes"}},
+    {"Famicom Disk System", {"fds"}},
+    {"Game Boy", {"dmg", "gb"}},
+    {"Game Boy Advance", {"agb", "gba"}},
+    {"Game Boy Color", {"cgb", "gbc"}},
+    {"Game Gear", {"gg"}},
+    {"LaserActive (NEC PAC)", {"lnec", "pacn1", "pacn10"}},
+    {"LaserActive (SEGA PAC)", {"lsega", "pacs1", "pacs10"}},
+    {"MSX", {"msx"}},
+    {"MSX2", {"msx2"}},
+    {"Master System", {"ms", "sms"}},
+    {"Mega 32X", {"32x"}},
+    {"Mega CD", {"mcd"}},
+    {"Mega CD 32X", {"mcd32x"}},
+    {"Mega Drive", {"gen", "genesis", "md", "sg"}},
+    {"MyVision", {"mv"}},
+    {"Neo Geo AES", {"aes", "ngaes"}},
+    {"Neo Geo MVS", {"mvs", "ngmvs"}},
+    {"Neo Geo Pocket", {"ngp"}},
+    {"Neo Geo Pocket Color", {"ngpc"}},
+    {"Nintendo 64", {"n64"}},
+    {"Nintendo 64DD", {"n64dd"}},
+    {"PC Engine", {"pce"}},
+    {"PC Engine CD", {"pcecd"}},
+    {"PlayStation", {"ps", "ps1", "psx"}},
+    {"Pocket Challenge V2", {"pcv2"}},
+    {"SC-3000", {"sc3000"}},
+    {"SG-1000", {"sg1000"}},
+    {"Saturn", {"sat", "ss"}},
+    {"Super Famicom", {"sfc", "snes"}},
+    {"SuperGrafx", {"sgx"}},
+    {"SuperGrafx CD", {"sgxcd"}},
+    {"WonderSwan", {"ws"}},
+    {"WonderSwan Color", {"wsc"}},
+    {"ZX Spectrum", {"zx"}},
+    {"ZX Spectrum 128", {"zx128"}},
+  };
+
   auto resolveSystemName = [&](const string& name) -> string {
     auto alias = string{name}.downcase();
-
-    static const std::map<string, string> aliases = {
-      {"a2600", "Atari 2600"},
-      {"aes", "Neo Geo AES"},
-      {"arc", "Arcade"},
-      {"cv", "ColecoVision"},
-      {"fc", "Famicom"},
-      {"fds", "Famicom Disk System"},
-      {"gb", "Game Boy"},
-      {"gba", "Game Boy Advance"},
-      {"gbc", "Game Boy Color"},
-      {"gcv", "ColecoVision"},
-      {"gg", "Game Gear"},
-      {"gen", "Mega Drive"},
-      {"genesis", "Mega Drive"},
-      {"m32x", "Mega 32X"},
-      {"mcd", "Mega CD"},
-      {"md", "Mega Drive"},
-      {"ms", "Master System"},
-      {"mvs", "Neo Geo MVS"},
-      {"nes", "Famicom"},
-      {"ngaes", "Neo Geo AES"},
-      {"ngmvs", "Neo Geo MVS"},
-      {"ngp", "Neo Geo Pocket"},
-      {"ngpc", "Neo Geo Pocket Color"},
-      {"n64", "Nintendo 64"},
-      {"n64dd", "Nintendo 64DD"},
-      {"pce", "PC Engine"},
-      {"pcecd", "PC Engine CD"},
-      {"pcv2", "Pocket Challenge V2"},
-      {"ps", "PlayStation"},
-      {"ps1", "PlayStation"},
-      {"psx", "PlayStation"},
-      {"sc3000", "SC-3000"},
-      {"sfc", "Super Famicom"},
-      {"sg", "SG-1000"},
-      {"sg1000", "SG-1000"},
-      {"sms", "Master System"},
-      {"snes", "Super Famicom"},
-      {"sufami", "Super Famicom"},
-      {"ws", "WonderSwan"},
-      {"wsc", "WonderSwan Color"},
-      {"zx", "ZX Spectrum"},
-      {"zx128", "ZX Spectrum 128"},
-    };
-
-    if(auto match = aliases.find(alias); match != aliases.end()) {
-      return match->second;
+    for(const auto& [system, aliases] : systemAliases) {
+      if(std::ranges::find(aliases, alias) != aliases.end()) return system;
     }
 
     return name;
@@ -286,6 +282,7 @@ auto nall::main(Arguments arguments) -> void {
     print("  --dump-settings       Print the current settings and exit\n");
     print("  --list-settings       Print all configurable setting keys and exit\n");
     print("  --list-setting-values Print valid values for each setting key and exit\n");
+    print("  --list-sys-aliases    Print valid system aliases and exit\n");
     print("  --no-file-prompt      Do not prompt to load (optional) additional roms (eg: 64DD)\n");
     print("  --settings-file path  Specify a settings file override (settings.bml)\n");
     print("  --save-state slot     Specify a save state slot to load (1-9)\n");
@@ -307,6 +304,18 @@ auto nall::main(Arguments arguments) -> void {
   if(arguments.take("--list-settings")) {
     for(const auto& path : enumerateDumpableSettings()) {
       print(path, "\n");
+    }
+    return;
+  }
+
+  if(arguments.take("--list-sys-aliases")) {
+    for(const auto& [system, aliases] : systemAliases) {
+      print(system, ": ");
+      for(u32 index : range(aliases.size())) {
+        if(index) print(", ");
+        print(aliases[index]);
+      }
+      print("\n");
     }
     return;
   }

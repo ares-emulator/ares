@@ -49,6 +49,7 @@ Usage: ./ares [options] game(s)
   --dump-settings        Print the current settings and exit
   --list-settings        Print all configurable setting keys and exit
   --list-setting-values  Print valid values for each setting key and exit
+  --list-sys-aliases     Print valid system aliases and exit
   --no-file-prompt       Do not prompt to load (optional) additional roms (eg: 64DD)
   --settings-file path   Specify a settings file override (settings.bml)
   --save-state slot      Specify a save state slot to load (1-9)
