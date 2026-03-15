@@ -77,6 +77,8 @@ auto Program::videoFullScreenToggle() -> void {
   ruby::video.clear();
   if(!ruby::video.fullScreen()) {
     ruby::video.setFullScreen(true);
+    startFullScreen = true;
+    startPseudoFullScreen = false;
     if(!ruby::input.acquired()) {
       if(ruby::video.exclusive() || ruby::video.hasMonitors().size() == 1) {
         ruby::input.acquire();
@@ -87,6 +89,7 @@ auto Program::videoFullScreenToggle() -> void {
       ruby::input.release();
     }
     ruby::video.setFullScreen(false);
+    startFullScreen = false;
     presentation.viewport.setFocused();
   }
 }
@@ -102,6 +105,7 @@ auto Program::videoPseudoFullScreenToggle() -> void {
     if(!ruby::input.acquired() && ruby::video.hasMonitors().size() == 1) {
       ruby::input.acquire();
     }
+    startFullScreen = false;
     startPseudoFullScreen = true;
   } else {
     if(ruby::input.acquired()) {

@@ -6,6 +6,7 @@
 #include "hotkeys.cpp"
 #include "emulators.cpp"
 #include "options.cpp"
+#include "preferences.cpp"
 #include "firmware.cpp"
 #include "paths.cpp"
 #include "drivers.cpp"
@@ -22,6 +23,7 @@ InputSettings& inputSettings = settingsWindow.inputSettings;
 HotkeySettings& hotkeySettings = settingsWindow.hotkeySettings;
 EmulatorSettings& emulatorSettings = settingsWindow.emulatorSettings;
 OptionSettings& optionSettings = settingsWindow.optionSettings;
+PreferenceSettings& preferenceSettings = settingsWindow.preferenceSettings;
 FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
 DebugSettings& debugSettings = settingsWindow.debugSettings;
@@ -113,6 +115,22 @@ auto Settings::process(bool load) -> void {
   bind(natural, "Rewind/Length", rewind.length);
   bind(natural, "Rewind/Frequency", rewind.frequency);
 
+  bind(natural, "Prefs/RecentGamesLimit", prefs.recentGamesLimit);
+  bind(boolean, "Prefs/ShowDisabledEmulators", prefs.showDisabledEmulators);
+  bind(boolean, "Prefs/RestoreWindowState", prefs.restoreWindowState);
+  bind(boolean, "Prefs/ImplicitKiosk", prefs.implicitKiosk);
+  bind(boolean, "Prefs/StartGameFullScreen", prefs.startGameFullScreen);
+  bind(boolean, "Prefs/StartGamePseudoFullScreen", prefs.startGamePseudoFullScreen);
+  bind(boolean, "Prefs/ResumeLastGame", prefs.resumeLastGame);
+  bind(boolean, "Prefs/ResumeLastGamePaused", prefs.resumeLastGamePaused);
+  bind(boolean, "Prefs/DoubleClickFullScreen", prefs.doubleClickFullScreen);
+  bind(string,  "Prefs/LastGame", prefs.lastGame);
+  bind(integer, "Prefs/Window/X", prefs.window.x);
+  bind(integer, "Prefs/Window/Y", prefs.window.y);
+  bind(integer, "Prefs/Window/Width", prefs.window.width);
+  bind(integer, "Prefs/Window/Height", prefs.window.height);
+  bind(boolean, "Prefs/Window/Maximized", prefs.window.maximized);
+
   bind(string,  "Paths/Home", paths.home);
   bind(string,  "Paths/Firmware", paths.firmware);
   bind(string,  "Paths/Saves", paths.saves);
@@ -134,7 +152,13 @@ auto Settings::process(bool load) -> void {
 
   bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
 
-  for(u32 index : range(9)) {
+  prefs.recentGamesLimit = max(1u, min(Prefs::maxRecentGames, prefs.recentGamesLimit));
+  if(!prefs.resumeLastGame) prefs.resumeLastGamePaused = false;
+  prefs.window.width = max(0, prefs.window.width);
+  prefs.window.height = max(0, prefs.window.height);
+  if(prefs.startGameFullScreen) prefs.startGamePseudoFullScreen = false;
+
+  for(u32 index : range(Prefs::maxRecentGames)) {
     string name = {"Recent/Game-", 1 + index};
     bind(string, name, recent.game[index]);
   }
@@ -199,6 +223,7 @@ auto Settings::process(bool load) -> void {
 auto SettingsWindow::initialize() -> void {
   onClose([&] {
     settings.save();
+    presentation.loadEmulators();
     setVisible(false);
     //cancel any pending input assignment requests, if any
     inputSettings.setVisible(false);
@@ -213,6 +238,7 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Hotkeys").setIcon(Icon::Device::Keyboard));
   panelList.append(ListViewItem().setText("Emulators").setIcon(Icon::Place::Server));
   panelList.append(ListViewItem().setText("Options").setIcon(Icon::Action::Settings));
+  panelList.append(ListViewItem().setText("Preferences").setIcon(Icon::Place::Settings));
   panelList.append(ListViewItem().setText("Firmware").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Drivers").setIcon(Icon::Place::Settings));
@@ -227,6 +253,7 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(hotkeySettings, Size{~0, ~0});
   panelContainer.append(emulatorSettings, Size{~0, ~0});
   panelContainer.append(optionSettings, Size{~0, ~0});
+  panelContainer.append(preferenceSettings, Size{~0, ~0});
   panelContainer.append(firmwareSettings, Size{~0, ~0});
   panelContainer.append(pathSettings, Size{~0, ~0});
   panelContainer.append(driverSettings, Size{~0, ~0});
@@ -240,6 +267,7 @@ auto SettingsWindow::initialize() -> void {
   hotkeySettings.construct();
   emulatorSettings.construct();
   optionSettings.construct();
+  preferenceSettings.construct();
   firmwareSettings.construct();
   pathSettings.construct();
   driverSettings.construct();
@@ -280,6 +308,7 @@ auto SettingsWindow::eventChange() -> void {
   hotkeySettings.setVisible(false);
   emulatorSettings.setVisible(false);
   optionSettings.setVisible(false);
+  preferenceSettings.setVisible(false);
   firmwareSettings.setVisible(false);
   pathSettings.setVisible(false);
   driverSettings.setVisible(false);
@@ -295,6 +324,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Hotkeys"  ) found = true, hotkeySettings.setVisible();
     if(item.text() == "Emulators") found = true, emulatorSettings.setVisible();
     if(item.text() == "Options"  ) found = true, optionSettings.setVisible();
+    if(item.text() == "Preferences") found = true, preferenceSettings.refresh(), preferenceSettings.setVisible();
     if(item.text() == "Firmware" ) found = true, firmwareSettings.setVisible();
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
     if(item.text() == "Drivers"  ) found = true, driverSettings.setVisible();
