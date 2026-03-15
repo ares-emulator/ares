@@ -1,4 +1,5 @@
 #include "desktop-ui.hpp"
+#include <map>
 
 namespace ruby {
   Video video;
@@ -108,10 +109,137 @@ auto nall::main(Arguments arguments) -> void {
     }
   }
 
+  if(arguments.take("--dump-settings")) {
+    auto settingsFile = BML::unserialize(string::read(settings.filePath), " ");
+    std::function<void(const Markup::Node&, string)> dump;
+    dump = [&](const Markup::Node& node, string prefix) -> void {
+      for(const auto& setting : node) {
+        string path = prefix ? string{prefix, "/", setting.name()} : setting.name();
+        if(setting.size() == 0) {
+          string value = string{setting.string()}.strip();
+          //empty mappings like ";;" represent unset bindings and should be omitted
+          string mappingProbe = string{value}.replace(";", "").strip();
+          if(value && mappingProbe) print(path, "=", value, "\n");
+        }
+        dump(setting, path);
+      }
+    };
+    dump(settingsFile, {});
+    return;
+  }
+
   inputManager.create();
   Emulator::construct();
 
+  static const std::vector<std::pair<string, std::vector<string>>> systemAliases = {
+    {"Arcade", {"arc"}},
+    {"Atari 2600", {"a2600"}},
+    {"ColecoVision", {"cv"}},
+    {"Famicom", {"fc", "nes"}},
+    {"Famicom Disk System", {"fds"}},
+    {"Game Boy", {"dmg", "gb"}},
+    {"Game Boy Advance", {"agb", "gba"}},
+    {"Game Boy Color", {"cgb", "gbc"}},
+    {"Game Gear", {"gg"}},
+    {"LaserActive (NEC PAC)", {"lnec", "pacn1", "pacn10"}},
+    {"LaserActive (SEGA PAC)", {"lsega", "pacs1", "pacs10"}},
+    {"MSX", {"msx"}},
+    {"MSX2", {"msx2"}},
+    {"Master System", {"ms", "sms"}},
+    {"Mega 32X", {"32x"}},
+    {"Mega CD", {"mcd"}},
+    {"Mega CD 32X", {"mcd32x"}},
+    {"Mega Drive", {"gen", "genesis", "md", "sg"}},
+    {"MyVision", {"mv"}},
+    {"Neo Geo AES", {"aes", "ngaes"}},
+    {"Neo Geo MVS", {"mvs", "ngmvs"}},
+    {"Neo Geo Pocket", {"ngp"}},
+    {"Neo Geo Pocket Color", {"ngpc"}},
+    {"Nintendo 64", {"n64"}},
+    {"Nintendo 64DD", {"n64dd"}},
+    {"PC Engine", {"pce"}},
+    {"PC Engine CD", {"pcecd"}},
+    {"PlayStation", {"ps", "ps1", "psx"}},
+    {"Pocket Challenge V2", {"pcv2"}},
+    {"SC-3000", {"sc3000"}},
+    {"SG-1000", {"sg1000"}},
+    {"Saturn", {"sat", "ss"}},
+    {"Super Famicom", {"sfc", "snes"}},
+    {"SuperGrafx", {"sgx"}},
+    {"SuperGrafx CD", {"sgxcd"}},
+    {"WonderSwan", {"ws"}},
+    {"WonderSwan Color", {"wsc"}},
+    {"ZX Spectrum", {"zx"}},
+    {"ZX Spectrum 128", {"zx128"}},
+  };
+
+  auto resolveSystemName = [&](const string& name) -> string {
+    auto alias = string{name}.downcase();
+    for(const auto& [system, aliases] : systemAliases) {
+      if(std::ranges::find(aliases, alias) != aliases.end()) return system;
+    }
+
+    return name;
+  };
+
+  if(program.startSystem) {
+    program.startSystem = resolveSystemName(program.startSystem);
+  }
+
   settings.load();
+
+  //normalize for the setting key. "LaserActive (NEC PAC)" => "LaserActiveNECPAC"
+  auto settingKey = [](string text) -> string {
+    return string{text}.replace(" ", "").replace("(", "").replace(")", "").replace("/", "").replace("\\", "");
+  };
+
+  std::vector<string> portSettings;
+  std::vector<string> peripheralSettings;
+  for(auto& emulator : emulators) {
+    string core = settingKey(emulator->name);
+    for(auto& port : emulator->ports) {
+      if(port.devices.size() <= 1) continue;
+      portSettings.push_back({"Ports/", core, "/", settingKey(port.name)});
+    }
+
+    if(core == "Nintendo64" || core == "Nintendo64DD") {
+      for(auto& port : emulator->ports) {
+        string portKey = settingKey(port.name);
+        if(!portKey.beginsWith("ControllerPort")) continue;
+        peripheralSettings.push_back({"Peripherals/", core, "/", portKey});
+      }
+    }
+  }
+
+  //for settings that don't persist in settings.bml because they are dynamically generated
+  //based on the loaded core
+  auto isDynamicSetting = [&](const string& path) -> bool {
+    if(std::ranges::find(portSettings, path) != portSettings.end()) return true;
+    if(std::ranges::find(peripheralSettings, path) != peripheralSettings.end()) return true;
+    return false;
+  };
+
+  auto enumerateDumpableSettings = [&]() -> std::vector<string> {
+    std::vector<string> dumpableSettings;
+    std::function<void(const Markup::Node&, string)> dump;
+    dump = [&](const Markup::Node& node, string prefix) -> void {
+      for(const auto& setting : node) {
+        string path = prefix ? string{prefix, "/", setting.name()} : setting.name();
+        bool isLeaf = setting.size() == 0;
+        if(isLeaf) {
+          auto parts = nall::split(path, "/");
+          if(!parts.empty() && parts[0] != "Ports" && parts[0] != "Peripherals") {
+            dumpableSettings.push_back(path);
+          }
+        }
+        dump(setting, path);
+      }
+    };
+    dump(settings, {});
+    for(auto& path : portSettings) dumpableSettings.push_back(path);
+    for(auto& path : peripheralSettings) dumpableSettings.push_back(path);
+    return dumpableSettings;
+  };
 
   if(arguments.find("--setting")) {
     string settingValue;
@@ -121,6 +249,8 @@ auto nall::main(Arguments arguments) -> void {
         auto node = settings[kv[0]];
         if(node) {
           node.setValue(kv[1]);
+        } else if(isDynamicSetting(kv[0])) {
+          settings(kv[0]).setValue(kv[1]);
         } else {
           print("Invalid setting: ", settingValue, "\n");
           return;
@@ -146,10 +276,13 @@ auto nall::main(Arguments arguments) -> void {
     print("  --fullscreen          Start in full screen mode\n");
     print("  --pseudofullscreen    Start in psuedo full screen mode\n");
     print("  --kiosk               Start in minimal UI mode (implies --no-file-prompt)\n");
-    print("  --system name         Specify the system name\n");
+    print("  --system name         Specify the system name (supports aliases, eg: fc, n64 etc.)\n");
     print("  --shader name         Specify the name of the shader to use\n");
     print("  --setting name=value  Specify a value for a setting\n");
-    print("  --dump-all-settings   Show a list of all existing settings and exit\n");
+    print("  --dump-settings       Print the current settings and exit\n");
+    print("  --list-settings       Print all configurable setting keys and exit\n");
+    print("  --list-setting-values Print valid values for each setting key and exit\n");
+    print("  --list-sys-aliases    Print valid system aliases and exit\n");
     print("  --no-file-prompt      Do not prompt to load (optional) additional roms (eg: 64DD)\n");
     print("  --settings-file path  Specify a settings file override (settings.bml)\n");
     print("  --save-state slot     Specify a save state slot to load (1-9)\n");
@@ -168,15 +301,104 @@ auto nall::main(Arguments arguments) -> void {
     return;
   }
 
-  if(arguments.take("--dump-all-settings")) {
-    std::function<void(const Markup::Node&, string)> dump;
-    dump = [&](const Markup::Node& node, string prefix) -> void {
-      for(const auto& setting : node) {
-        print(prefix, setting.name(), "\n");
-        dump(setting, string(prefix, setting.name(), "/"));
+  if(arguments.take("--list-settings")) {
+    for(const auto& path : enumerateDumpableSettings()) {
+      print(path, "\n");
+    }
+    return;
+  }
+
+  if(arguments.take("--list-sys-aliases")) {
+    for(const auto& [system, aliases] : systemAliases) {
+      print(system, ": ");
+      for(u32 index : range(aliases.size())) {
+        if(index) print(", ");
+        print(aliases[index]);
       }
+      print("\n");
+    }
+    return;
+  }
+
+  if(arguments.take("--list-setting-values")) {
+    auto joinChoices = [](const std::vector<string>& values) -> string {
+      string output;
+      for(size_t index = 0; index < values.size(); ++index) {
+        if(index) output.append("|");
+        output.append(values[index]);
+      }
+      return output;
     };
-    dump(settings, "");
+
+    std::map<string, std::vector<string>> choiceMap;
+    auto appendChoice = [&](const string& path, const string& value) -> void {
+      auto& choices = choiceMap[path];
+      if(std::ranges::find(choices, value) == choices.end()) choices.push_back(value);
+    };
+    auto appendChoices = [&](const string& path, const std::vector<string>& values) -> void {
+      for(const auto& value : values) appendChoice(path, value);
+    };
+
+    appendChoices("Video/Driver", ruby::video.hasDrivers());
+    appendChoice("Video/Monitor", "Primary");
+    if(settings.video.monitor && settings.video.monitor != "Primary") appendChoice("Video/Monitor", settings.video.monitor);
+    appendChoices("Video/Format", ruby::video.hasFormats());
+    appendChoices("Audio/Driver", ruby::audio.hasDrivers());
+    appendChoices("Audio/Device", ruby::audio.hasDevices());
+    for(auto frequency : ruby::audio.hasFrequencies()) appendChoice("Audio/Frequency", frequency);
+    for(auto latency : ruby::audio.hasLatencies()) appendChoice("Audio/Latency", latency);
+    appendChoices("Input/Driver", ruby::input.hasDrivers());
+    appendChoices("Input/Defocus", {"Pause", "Block", "Allow"});
+    appendChoices("Video/Quality", {"SD", "HD", "UHD"});
+    appendChoices("Video/Output", {"Scale", "Integer", "Stretch"});
+    appendChoices("Video/AspectCorrectionMode", {"None", "Standard", "Anamorphic"});
+    appendChoices("Boot/Prefer", {
+      "NTSC-U,NTSC-J,PAL",
+      "NTSC-U,PAL,NTSC-J",
+      "NTSC-J,NTSC-U,PAL",
+      "NTSC-J,PAL,NTSC-U",
+      "PAL,NTSC-U,NTSC-J",
+      "PAL,NTSC-J,NTSC-U"
+    });
+    appendChoices("Nintendo64/ControllerPakBankString", {
+      "32KiB (Default)",
+      "128KiB (Datel 1Meg)",
+      "512KiB (Datel 4Meg)",
+      "1984KiB (Maximum)"
+    });
+
+    for(auto& emulator : emulators) {
+      string core = settingKey(emulator->name);
+      for(auto& port : emulator->ports) {
+        if(port.devices.size() <= 1) continue;
+        string path = {"Ports/", core, "/", settingKey(port.name)};
+        for(auto& device : port.devices) appendChoice(path, device.name);
+      }
+
+      if(core == "Nintendo64" || core == "Nintendo64DD") {
+        for(auto& port : emulator->ports) {
+          string portKey = settingKey(port.name);
+          if(!portKey.beginsWith("ControllerPort")) continue;
+          string path = {"Peripherals/", core, "/", portKey};
+          appendChoices(path, {"Rumble Pak", "Controller Pak", "Transfer Pak", "Bio Sensor", "None"});
+        }
+      }
+    }
+
+    for(const auto& path : enumerateDumpableSettings()) {
+      std::vector<string> choices;
+      if(choiceMap.contains(path)) {
+        choices = choiceMap[path];
+      } else {
+        auto value = settings[path].string();
+        if(value == "true" || value == "false") {
+          choices = {"true", "false"};
+        } else {
+          choices = {"<value>"};
+        }
+      }
+      print(path, "=", joinChoices(choices), "\n");
+    }
     return;
   }
 

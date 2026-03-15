@@ -4,6 +4,11 @@
 std::vector<std::shared_ptr<Emulator>> emulators;
 std::shared_ptr<Emulator> emulator;
 
+//normalize for the setting key. "LaserActive (NEC PAC)" => "LaserActiveNECPAC"
+static auto settingKey(string text) -> string {
+  return string{text}.replace(" ", "").replace("(", "").replace(")", "").replace("/", "").replace("\\", "");
+}
+
 auto Emulator::enumeratePorts(string name) -> std::vector<InputPort>& {
   for(auto& emulator : emulators) {
     if(emulator->name == name && !emulator->ports.empty()) return emulator->ports;
@@ -131,6 +136,9 @@ auto Emulator::load(const string& location) -> bool {
   if(result != successful) {
     return false;
   }
+
+  applyPortSettings();
+
   setBoolean("Color Emulation", settings.video.colorEmulation);
   setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
@@ -140,6 +148,91 @@ auto Emulator::load(const string& location) -> bool {
   latch = {};
   root->power();
   return true;
+}
+
+auto Emulator::applyPortSettings() -> void {
+  auto core = settingKey(name);
+  auto resolveSupported = [&](const std::vector<string>& supported, string value) -> string {
+    value = value.strip();
+    if(!value) return {};
+    auto normalizedValue = settingKey(value);
+    for(auto& option : supported) {
+      if(option == value) return option;
+    }
+    for(auto& option : supported) {
+      auto normalizedOption = settingKey(option);
+      if(normalizedOption.imatch(normalizedValue)) return option;
+    }
+    return {};
+  };
+
+  for(auto port : ares::Node::enumerate<ares::Node::Port>(root)) {
+    if(!port->hotSwappable()) continue;
+    if(port->type() != "Controller" && port->type() != "Expansion") continue;
+
+    auto portKey = settingKey(port->name());
+    auto path = string{"Ports/", core, "/", portKey};
+
+    string device;
+    if(auto node = settings[path]) device = string{node.string()}.strip();
+    if(!device) continue;
+
+    auto supportedDevices = port->supported();
+    device = resolveSupported(supportedDevices, device);
+    bool supported = !!device;
+    bool blacklisted = std::ranges::find(inputBlacklist, device) != inputBlacklist.end();
+    if(!supported || blacklisted) continue;
+
+    port->disconnect();
+    if(port->allocate(device)) port->connect();
+  }
+
+  // apply Nintendo 64 controller pak/peripheral settings
+  if(core == "Nintendo64" || core == "Nintendo64DD") {
+    for(auto port : ares::Node::enumerate<ares::Node::Port>(root)) {
+      if(port->type() != "Controller") continue;
+
+      auto controller = port->connected();
+      if(!controller || controller->name() != "Gamepad") continue;
+
+      auto pakPort = controller->find<ares::Node::Port>("Pak");
+      if(!pakPort || !pakPort->hotSwappable()) continue;
+
+      auto peripheralKey = settingKey(port->name());
+      auto peripheralPath = string{"Peripherals/", core, "/", peripheralKey};
+
+      string peripheral;
+      if(auto node = settings[peripheralPath]) peripheral = string{node.string()}.strip();
+      if(!peripheral) continue;
+
+      if(settingKey(peripheral).imatch("None")) {
+        pakPort->disconnect();
+        continue;
+      }
+
+      auto supportedPeripherals = pakPort->supported();
+      peripheral = resolveSupported(supportedPeripherals, peripheral);
+      if(!peripheral) continue;
+
+      if(peripheral == "Controller Pak") {
+        if(auto n64 = dynamic_cast<Nintendo64*>(this)) {
+          n64->gamepad = mia::Pak::create("Nintendo 64");
+          n64->gamepad->pak->append("save.pak", 32_KiB);
+
+          string pakExt = ".pak";
+          auto portName = string{port->name()};
+          if(portName.size()) {
+            string portNum = portName[portName.size() - 1];
+            if(portNum != "1") pakExt = string{".", portNum, ".pak"};
+          }
+          if(n64->game) n64->gamepad->load("save.pak", pakExt, n64->game->location);
+        }
+      }
+
+      pakPort->disconnect();
+      if(pakPort->allocate(peripheral)) pakPort->connect();
+    }
+  }
 }
 
 auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
