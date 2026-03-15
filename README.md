@@ -43,7 +43,7 @@ Usage: ./ares [options] game(s)
   --fullscreen           Start in full screen mode
   --pseudofullscreen     Start in pseudo full screen mode
   --kiosk                Start in minimal UI mode (implies --no-file-prompt)
-  --system system        Specify the system name
+  --system system        Specify the system name (supports aliases, eg: fc, n64 etc.)
   --shader shader        Specify a slang shader to load (requires OpenGL or Metal)
   --setting name=value   Specify a value for a setting
   --dump-settings        Print the current settings and exit

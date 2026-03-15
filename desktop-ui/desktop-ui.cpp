@@ -131,6 +131,65 @@ auto nall::main(Arguments arguments) -> void {
   inputManager.create();
   Emulator::construct();
 
+  auto resolveSystemName = [&](const string& name) -> string {
+    auto alias = string{name}.downcase();
+
+    static const std::map<string, string> aliases = {
+      {"a2600", "Atari 2600"},
+      {"aes", "Neo Geo AES"},
+      {"arc", "Arcade"},
+      {"cv", "ColecoVision"},
+      {"fc", "Famicom"},
+      {"fds", "Famicom Disk System"},
+      {"gb", "Game Boy"},
+      {"gba", "Game Boy Advance"},
+      {"gbc", "Game Boy Color"},
+      {"gcv", "ColecoVision"},
+      {"gg", "Game Gear"},
+      {"gen", "Mega Drive"},
+      {"genesis", "Mega Drive"},
+      {"m32x", "Mega 32X"},
+      {"mcd", "Mega CD"},
+      {"md", "Mega Drive"},
+      {"ms", "Master System"},
+      {"mvs", "Neo Geo MVS"},
+      {"nes", "Famicom"},
+      {"ngaes", "Neo Geo AES"},
+      {"ngmvs", "Neo Geo MVS"},
+      {"ngp", "Neo Geo Pocket"},
+      {"ngpc", "Neo Geo Pocket Color"},
+      {"n64", "Nintendo 64"},
+      {"n64dd", "Nintendo 64DD"},
+      {"pce", "PC Engine"},
+      {"pcecd", "PC Engine CD"},
+      {"pcv2", "Pocket Challenge V2"},
+      {"ps", "PlayStation"},
+      {"ps1", "PlayStation"},
+      {"psx", "PlayStation"},
+      {"sc3000", "SC-3000"},
+      {"sfc", "Super Famicom"},
+      {"sg", "SG-1000"},
+      {"sg1000", "SG-1000"},
+      {"sms", "Master System"},
+      {"snes", "Super Famicom"},
+      {"sufami", "Super Famicom"},
+      {"ws", "WonderSwan"},
+      {"wsc", "WonderSwan Color"},
+      {"zx", "ZX Spectrum"},
+      {"zx128", "ZX Spectrum 128"},
+    };
+
+    if(auto match = aliases.find(alias); match != aliases.end()) {
+      return match->second;
+    }
+
+    return name;
+  };
+
+  if(program.startSystem) {
+    program.startSystem = resolveSystemName(program.startSystem);
+  }
+
   settings.load();
 
   //normalize for the setting key. "LaserActive (NEC PAC)" => "LaserActiveNECPAC"
@@ -221,7 +280,7 @@ auto nall::main(Arguments arguments) -> void {
     print("  --fullscreen          Start in full screen mode\n");
     print("  --pseudofullscreen    Start in psuedo full screen mode\n");
     print("  --kiosk               Start in minimal UI mode (implies --no-file-prompt)\n");
-    print("  --system name         Specify the system name\n");
+    print("  --system name         Specify the system name (supports aliases, eg: fc, n64 etc.)\n");
     print("  --shader name         Specify the name of the shader to use\n");
     print("  --setting name=value  Specify a value for a setting\n");
     print("  --dump-settings       Print the current settings and exit\n");
