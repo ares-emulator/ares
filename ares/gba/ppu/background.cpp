@@ -13,12 +13,19 @@ auto PPU::Background::scanline(u32 y) -> void {
   mosaicOffset = 0;
   for(auto& pixel : output) pixel = {};
   latch.active = false;
+  if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
+    vmosaic = y;
+    affine.hmosaic = io.lx;
+    affine.vmosaic = io.ly;
+  }
 }
 
 auto PPU::Background::outputPixel(u32 x, u32 y) -> void {
   //horizontal mosaic
-  if(!io.mosaic || !mosaicOffset) {
+  if(!mosaicOffset) {
     mosaicOffset = 1 + io.mosaicWidth;
+    mosaic = output[x];
+  } else if(!io.mosaic) {
     mosaic = output[x];
   }
   mosaicOffset--;
@@ -49,12 +56,6 @@ auto PPU::Background::run(s32 x, u32 y) -> void {
 
 auto PPU::Background::linearFetchTileMap(s32 x, u32 y) -> void {
   if(ppu.blank() || !io.enable[0]) return;
-
-  if(x == -7) {
-    if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
-      vmosaic = y;
-    }
-  }
 
   fx = x + io.hoffset;
   fy = vmosaic + io.voffset;
@@ -128,12 +129,8 @@ auto PPU::Background::affineFetchTileMap(u32 x, u32 y) -> void {
   if(ppu.blank() || !io.enable[0]) return;
 
   if(x == 0) {
-    if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
-      hmosaic = io.lx;
-      vmosaic = io.ly;
-    }
-    fx = hmosaic;
-    fy = vmosaic;
+    fx = affine.hmosaic;
+    fy = affine.vmosaic;
   }
 
   affine.screenSize = 16 << io.screenSize;
@@ -178,12 +175,8 @@ auto PPU::Background::bitmap(u32 x, u32 y) -> void {
   if(ppu.blank() || !io.enable[0]) return;
 
   if(x == 0) {
-    if(!io.mosaic || (y % (1 + io.mosaicHeight)) == 0) {
-      hmosaic = io.lx;
-      vmosaic = io.ly;
-    }
-    fx = hmosaic;
-    fy = vmosaic;
+    fx = affine.hmosaic;
+    fy = affine.vmosaic;
   }
 
   n1  depth = io.mode != 4;  //0 = 8-bit (mode 4); 1 = 15-bit (mode 3, mode 5)
@@ -224,10 +217,10 @@ auto PPU::Background::power(u32 id) -> void {
 
   io = {};
   latch = {};
+  affine = {};
   for(auto& pixel : output) pixel = {};
   mosaic = {};
   mosaicOffset = 0;
-  hmosaic = 0;
   vmosaic = 0;
   fx = 0;
   fy = 0;

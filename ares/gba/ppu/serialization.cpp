@@ -53,7 +53,6 @@ auto PPU::Background::serialize(serializer& s) -> void {
   s(io.ly);
 
   s(mosaicOffset);
-  s(hmosaic);
   s(vmosaic);
   s(fx);
   s(fy);
