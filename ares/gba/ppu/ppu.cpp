@@ -144,8 +144,6 @@ auto PPU::main() -> void {
     bg3.io.ly = bg3.io.y;
   }
 
-  step(3);
-
   u32 y = display.io.vcounter;
   memory::move(io.forceBlank, io.forceBlank + 1, sizeof(io.forceBlank) - 1);
   memory::move(bg0.io.enable, bg0.io.enable + 1, sizeof(bg0.io.enable) - 1);
@@ -159,6 +157,8 @@ auto PPU::main() -> void {
   bg3.scanline(y);
   objects.scanline((y + 1) % 228);
   dac.scanline(y);
+
+  step(4);
 
   if(y < 160) {
     if(accurate) {
@@ -230,7 +230,7 @@ auto PPU::main() -> void {
     step(1035);
   }
 
-  step(194);
+  step(193);
 }
 
 auto PPU::frame() -> void {
@@ -264,7 +264,7 @@ auto PPU::power() -> void {
   window3.power(OUT);
   dac.power();
 
-  renderingCycle = 43;  //by default, render at first cycle of pixel output
+  renderingCycle = 42;  //by default, render at first cycle of pixel output
   string gameID;
   for(u32 index : range(4)) {
     n32 address = 0xac + index;
