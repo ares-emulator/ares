@@ -169,6 +169,8 @@ private:
     struct Affine {
       u32 screenSize;
       u32 screenWrap;
+      u32 hmosaic;
+      u32 vmosaic;
       u32 cx;
       u32 cy;
       u32 tx;
@@ -179,8 +181,6 @@ private:
     Pixel output[240];
     Pixel mosaic;
     u32 mosaicOffset;
-
-    u32 hmosaic;
     u32 vmosaic;
 
     i28 fx;
