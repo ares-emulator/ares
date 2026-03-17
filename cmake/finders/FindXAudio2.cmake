@@ -11,7 +11,12 @@
 
 include(FindPackageHandleStandardArgs)
 
-if(MINGW)
+if(MSVC)
+  # On MSVC toolchains the umbrella import library is
+  # provided by the Windows SDK and requires no extra detection.
+  set(XAudio2_LIBRARY "xaudio2")
+else()
+  # On other non-MSVC toolchain
   include(CheckCXXSourceCompiles)
   include(CMakePushCheckState)
 
@@ -44,10 +49,6 @@ if(MINGW)
   endforeach()
 
   cmake_pop_check_state()
-else()
-  # On MSVC and other non-MinGW toolchains the umbrella import library is
-  # provided by the Windows SDK and requires no extra detection.
-  set(XAudio2_LIBRARY "xaudio2")
 endif()
 
 find_package_handle_standard_args(XAudio2
