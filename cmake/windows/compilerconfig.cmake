@@ -75,6 +75,19 @@ if(MSVC)
   string(REPLACE "/Ob1" "/Ob2" CMAKE_C_FLAGS_RELWITHDEBINFO ${CMAKE_C_FLAGS_RELWITHDEBINFO})
 endif()
 
+# Detect -gcodeview support at configure time.
+# This flag is supported by LLVM-based MinGW toolchains but not all g++ variants.
+# Result cached in ARES_COMPILER_SUPPORTS_GCODEVIEW.
+if(NOT MSVC)
+  include(CheckCXXCompilerFlag)
+  check_cxx_compiler_flag(-gcodeview ARES_COMPILER_SUPPORTS_GCODEVIEW)
+  if(ARES_COMPILER_SUPPORTS_GCODEVIEW)
+    message(STATUS "Checking for -gcodeview support: YES")
+  else()
+    message(STATUS "Checking for -gcodeview support: NO")
+  endif()
+endif()
+
 # add general compiler flags and optimizations
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # we are on either msys2/mingw clang, or clang-cl
@@ -88,19 +101,26 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # statically link libc++
     add_link_options(-static-libstdc++)
 
-    # msys2/mingw-specific invocations to make clang emit debug symbols
+    # msys2/mingw-specific invocations to make clang emit debug symbols.
+    # Default: use CodeView (-gcodeview) for better WinDbg/Visual Studio integration.
+    # Set ARES_MINGW_USE_DWARF_SYMBOLS=ON to use DWARF instead (e.g. for gdb/lldb workflows).
     if(NOT DEFINED ARES_MINGW_USE_DWARF_SYMBOLS)
       set(ARES_MINGW_USE_DWARF_SYMBOLS OFF)
     endif()
 
-    set(_ares_mingw_clang_debug_compile_options -g "$<IF:$<BOOL:${ARES_MINGW_USE_DWARF_SYMBOLS}>,-gdwarf,-gcodeview>")
-    set(
-      _ares_mingw_clang_debug_link_options
-      -g
-      "$<IF:$<BOOL:${ARES_MINGW_USE_DWARF_SYMBOLS}>,-gdwarf,-fuse-ld=lld;-Wl$<COMMA>--pdb=>"
-    )
-    add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_clang_debug_compile_options}>")
-    add_link_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_clang_debug_link_options}>")
+    if(NOT ARES_MINGW_USE_DWARF_SYMBOLS AND ARES_COMPILER_SUPPORTS_GCODEVIEW)
+      set(_ares_mingw_clang_debug_compile_options -gcodeview)
+    elseif(NOT ARES_COMPILER_SUPPORTS_GCODEVIEW AND NOT ARES_MINGW_USE_DWARF_SYMBOLS)
+      # CodeView requested but compiler does not support it; fall back silently to DWARF
+      message(STATUS "-gcodeview not supported by this toolchain; falling back to DWARF debug symbols")
+      set(_ares_mingw_clang_debug_compile_options "")
+    else()
+      set(_ares_mingw_clang_debug_compile_options "")
+    endif()
+
+    if(_ares_mingw_clang_debug_compile_options)
+      add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_clang_debug_compile_options}>")
+    endif()
 
     add_compile_options(-fwrapv)
   else()
@@ -132,14 +152,26 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_link_options(/WX)
   endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # msys2/mingw GCC — default to DWARF since most GCC versions don't support -gcodeview.
   if(NOT DEFINED ARES_MINGW_USE_DWARF_SYMBOLS)
     set(ARES_MINGW_USE_DWARF_SYMBOLS ON)
   endif()
 
-  set(_ares_mingw_gcc_debug_compile_options -g "$<IF:$<BOOL:${ARES_MINGW_USE_DWARF_SYMBOLS}>,-gdwarf,-gcodeview>")
-  set(_ares_mingw_gcc_debug_link_options -g "$<IF:$<BOOL:${ARES_MINGW_USE_DWARF_SYMBOLS}>,-gdwarf,-Wl$<COMMA>--pdb=>")
-  add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_gcc_debug_compile_options}>")
-  add_link_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_gcc_debug_link_options}>")
+  if(NOT ARES_MINGW_USE_DWARF_SYMBOLS)
+    # User explicitly disabled DWARF; try CodeView.
+    if(ARES_COMPILER_SUPPORTS_GCODEVIEW)
+      set(_ares_mingw_gcc_debug_compile_options -gcodeview)
+    else()
+      message(STATUS "-gcodeview not supported by this GCC toolchain; using default DWARF debug symbols")
+      set(_ares_mingw_gcc_debug_compile_options "")
+    endif()
+  else()
+    set(_ares_mingw_gcc_debug_compile_options "")
+  endif()
+
+  if(_ares_mingw_gcc_debug_compile_options)
+    add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:${_ares_mingw_gcc_debug_compile_options}>")
+  endif()
 
   add_compile_options(${_ares_gcc_common_options})
   add_link_options(-static-libstdc++)
