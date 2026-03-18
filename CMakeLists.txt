@@ -14,6 +14,7 @@ add_subdirectory(nall/nall)
 add_subdirectory(libco)
 
 option(ARES_BUILD_DESKTOP_UI "Build desktop frontend and GUI dependencies (ruby/hiro/desktop-ui)" ON)
+option(ARES_BUILD_HEADLESS "Build headless" OFF)
 
 if(ARES_BUILD_DESKTOP_UI)
   add_subdirectory(ruby)
@@ -35,7 +36,11 @@ add_subdirectory(mia)
 if(ARES_BUILD_DESKTOP_UI)
   add_subdirectory(desktop-ui)
 endif()
-add_subdirectory(headless)
+if(ARES_BUILD_HEADLESS)
+  add_subdirectory(headless)
+else()
+  target_disable_subproject(headless "headless")
+endif()
 
 option(ARES_BUILD_OPTIONAL_TARGETS "Include supplemental tools and tests" OFF)
 
