@@ -120,6 +120,12 @@ auto Program::load(string location) -> bool {
     if(stateLoad(program.startSaveStateSlot.integer())) {
       state.slot = program.startSaveStateSlot.integer();
     }
+  } else if(settings.prefs.loadMostRecentState) {
+    if(auto slot = mostRecentStateSlot()) {
+      if(stateLoad(*slot)) {
+        state.slot = *slot;
+      }
+    }
   }
 
   return true;

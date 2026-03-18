@@ -70,6 +70,12 @@ auto PreferenceSettings::construct() -> void {
     });
     startGamePseudoFullScreenHint.setText("Apply pseudo-fullscreen after launching or reopening a game").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  loadMostRecentStateLayout.setAlignment(1).setPadding(12_sx, 0);
+    loadMostRecentStateOption.setText("Load most recent save state on game launch").setChecked(settings.prefs.loadMostRecentState).onToggle([&] {
+      settings.prefs.loadMostRecentState = loadMostRecentStateOption.checked();
+    });
+    loadMostRecentStateHint.setText("When a game opens, restore the newest existing save state slot for that game").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
   resumeLastGameLayout.setAlignment(1).setPadding(12_sx, 0);
     resumeLastGameOption.setText("Reopen last loaded game on startup").setChecked(settings.prefs.resumeLastGame).onToggle([&] {
       settings.prefs.resumeLastGame = resumeLastGameOption.checked();
@@ -147,6 +153,7 @@ auto PreferenceSettings::refresh() -> void {
   implicitKioskOption.setChecked(settings.prefs.implicitKiosk);
   startGameFullScreenOption.setChecked(settings.prefs.startGameFullScreen);
   startGamePseudoFullScreenOption.setChecked(settings.prefs.startGamePseudoFullScreen);
+  loadMostRecentStateOption.setChecked(settings.prefs.loadMostRecentState);
   implicitKioskHint.setEnabled(true);
   resumeLastGameOption.setChecked(settings.prefs.resumeLastGame);
   showDisabledEmulatorsOption.setChecked(settings.prefs.showDisabledEmulators);

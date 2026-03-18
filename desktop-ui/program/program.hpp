@@ -25,6 +25,7 @@ struct Program : ares::Platform {
   //states.cpp
   auto stateSave(u32 slot) -> bool;
   auto stateLoad(u32 slot) -> bool;
+  auto mostRecentStateSlot() -> maybe<u32>;
   auto undoStateSave() -> bool;
   auto undoStateLoad() -> bool;
   auto clearUndoStates() -> void;

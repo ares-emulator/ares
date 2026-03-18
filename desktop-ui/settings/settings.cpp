@@ -121,6 +121,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Prefs/ImplicitKiosk", prefs.implicitKiosk);
   bind(boolean, "Prefs/StartGameFullScreen", prefs.startGameFullScreen);
   bind(boolean, "Prefs/StartGamePseudoFullScreen", prefs.startGamePseudoFullScreen);
+  bind(boolean, "Prefs/LoadMostRecentState", prefs.loadMostRecentState);
   bind(boolean, "Prefs/ResumeLastGame", prefs.resumeLastGame);
   bind(boolean, "Prefs/ResumeLastGamePaused", prefs.resumeLastGamePaused);
   bind(boolean, "Prefs/DoubleClickFullScreen", prefs.doubleClickFullScreen);

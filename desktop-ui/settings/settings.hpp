@@ -95,6 +95,7 @@ struct Settings : Markup::Node {
     bool implicitKiosk = false;
     bool startGameFullScreen = false;
     bool startGamePseudoFullScreen = false;
+    bool loadMostRecentState = false;
     bool resumeLastGame = false;
     bool resumeLastGamePaused = false;
     bool doubleClickFullScreen = false;
@@ -348,6 +349,9 @@ struct PreferenceSettings : VerticalLayout {
   HorizontalLayout startGamePseudoFullScreenLayout{this, Size{~0, 0}, 5};
     CheckLabel startGamePseudoFullScreenOption{&startGamePseudoFullScreenLayout, Size{0, 0}, 5};
     Label startGamePseudoFullScreenHint{&startGamePseudoFullScreenLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout loadMostRecentStateLayout{this, Size{~0, 0}, 5};
+    CheckLabel loadMostRecentStateOption{&loadMostRecentStateLayout, Size{0, 0}, 5};
+    Label loadMostRecentStateHint{&loadMostRecentStateLayout, Size{~0, layoutVertSize}};
   HorizontalLayout resumeLastGameLayout{this, Size{~0, 0}, 5};
     CheckLabel resumeLastGameOption{&resumeLastGameLayout, Size{0, 0}, 5};
     Label resumeLastGameHint{&resumeLastGameLayout, Size{~0, layoutVertSize}};

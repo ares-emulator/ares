@@ -43,6 +43,27 @@ auto Program::stateLoad(u32 slot) -> bool {
   return false;
 }
 
+auto Program::mostRecentStateSlot() -> maybe<u32> {
+  Program::Guard guard;
+  if(!emulator) return {};
+
+  maybe<u32> newestSlot;
+  u64 newestTimestamp = 0;
+
+  for(u32 slot : range(1, 10)) {
+    auto location = emulator->locate(emulator->game->location, {".bs", slot}, settings.paths.saves);
+    if(!inode::exists(location)) continue;
+
+    auto timestamp = inode::timestamp(location);
+    if(!newestSlot || timestamp > newestTimestamp) {
+      newestSlot = slot;
+      newestTimestamp = timestamp;
+    }
+  }
+
+  return newestSlot;
+}
+
 auto Program::undoStateSave() -> bool {
   Program::Guard guard;
   if(!emulator) return false;
