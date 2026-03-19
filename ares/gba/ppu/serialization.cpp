@@ -80,7 +80,9 @@ auto PPU::Window::serialize(serializer& s) -> void {
   s(io.y1);
   s(io.y2);
 
-  s(output);
+  for(auto& flag : output) s(flag);
+  s(h);
+  s(v);
 }
 
 auto PPU::DAC::serialize(serializer& s) -> void {
