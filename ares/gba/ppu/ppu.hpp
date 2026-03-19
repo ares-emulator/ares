@@ -41,6 +41,7 @@ struct PPU : Thread, IO {
   template<s32> auto cycleLinearRender(s32 x, u32 y) -> void;
   template<s32> auto cycleAffine(u32 x, u32 y) -> void;
   auto cycleBitmap(u32 x, u32 y) -> void;
+  auto cycleWindow(u32 x, u32 y) -> void;
   auto cycleUpperLayer(u32 x, u32 y) -> void;
   template<s32> auto cycle(u32 y) -> void;
   auto main() -> void;
@@ -216,6 +217,7 @@ private:
 
   struct Window {
     //window.cpp
+    auto scanline(u32 y) -> void;
     auto run(u32 x, u32 y) -> void;
     auto power(u32 id) -> void;
 
@@ -235,7 +237,9 @@ private:
       n8 y2;
     } io;
 
-    n1 output;  //IN0, IN1, IN2 only
+    n1 output[256];  //IN0, IN1, IN2 only
+    n1 h;  //IN0, IN1 only
+    n1 v;  //IN0, IN1 only
   } window0, window1, window2, window3;
 
   struct DAC {

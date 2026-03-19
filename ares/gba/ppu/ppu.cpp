@@ -108,16 +108,18 @@ auto PPU::cycleBitmap(u32 x, u32 y) -> void {
   if(mode >= 3 && mode <= 5) bg2.bitmap(x, y);
 }
 
+auto PPU::cycleWindow(u32 x, u32 y) -> void {
+  window0.run(x, y);
+  window1.run(x, y);
+}
+
 auto PPU::cycleUpperLayer(u32 x, u32 y) -> void {
   ppu.bg0.outputPixel(x, y);
   ppu.bg1.outputPixel(x, y);
   ppu.bg2.outputPixel(x, y);
   ppu.bg3.outputPixel(x, y);
   ppu.objects.outputPixel(x, y);
-  window0.run(x, y);
-  window1.run(x, y);
-  window2.output = objects.output.window;
-  window3.output = true;
+  window2.output[x] = objects.output.window;
   dac.upperLayer(x, y);
 }
 
@@ -127,6 +129,7 @@ auto PPU::cycle(u32 y) -> void {
   if constexpr(Cycle >=  3 && Cycle <= 1005                         ) cycleLinearMap<(Cycle -  3) & 3>((Cycle - 31) >> 2, y);
   if constexpr(Cycle >= 31 && Cycle <= 1005                         ) cycleAffine<(Cycle - 31) & 3>((Cycle - 31) >> 2, y);
   if constexpr(Cycle >= 31 && Cycle <= 1005 && (Cycle - 31) % 4 == 3) cycleBitmap((Cycle - 31) >> 2, y);
+  if constexpr(Cycle >=  3 && Cycle <= 1026 && (Cycle -  3) % 4 == 0) cycleWindow((Cycle -  3) / 4, y);
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 0) cycleUpperLayer((Cycle - 46) / 4, y);
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 2) dac.lowerLayer((Cycle - 46) / 4, y);
   step(1);
@@ -156,6 +159,8 @@ auto PPU::main() -> void {
   bg2.scanline(y);
   bg3.scanline(y);
   objects.scanline((y + 1) % 228);
+  window0.scanline(y);
+  window1.scanline(y);
   dac.scanline(y);
 
   step(4);
@@ -219,6 +224,7 @@ auto PPU::main() -> void {
         bg2.run(x - 7, y);
         bg3.run(x - 7, y);
       }
+      for(u32 x : range(256)) cycleWindow(x, y);
       for(u32 x : range(240)) {
         cycleUpperLayer(x, y);
         dac.lowerLayer(x, y);

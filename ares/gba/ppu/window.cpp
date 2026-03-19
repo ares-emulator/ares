@@ -1,16 +1,19 @@
+auto PPU::Window::scanline(u32 y) -> void {
+  if(y == io.y1) v = true;
+  if(y == io.y2) v = false;
+}
+
 auto PPU::Window::run(u32 x, u32 y) -> void {
-  auto x1 = io.x1, x2 = io.x2;
-  auto y1 = io.y1, y2 = io.y2;
-
-  if(x2 < x1 || x2 > 240) x2 = 240;
-  if(y2 < y1 || y2 > 160) y2 = 160;
-
-  output = (x >= x1 && x < x2 && y >= y1 && y < y2);
+  if(x == io.x1) h = true;
+  if(x == io.x2) h = false;
+  output[x] = h && v;
 }
 
 auto PPU::Window::power(u32 id) -> void {
   this->id = id;
 
   io = {};
-  output = 0;
+  for(auto& flag : output) flag = 0;
+  h = 0;
+  v = 0;
 }
