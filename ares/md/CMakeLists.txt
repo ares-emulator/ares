@@ -111,6 +111,14 @@ ares_add_sources(
   CORE #
     md
   INCLUDED #
+    controller/mega-mouse/mega-mouse.cpp
+    controller/mega-mouse/mega-mouse.hpp
+)
+
+ares_add_sources(
+  CORE #
+    md
+  INCLUDED #
     cpu/bus.cpp
     cpu/cpu.hpp
     cpu/debugger.cpp
