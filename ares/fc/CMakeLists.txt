@@ -152,6 +152,14 @@ ares_add_sources(
   CORE #
     fc
   INCLUDED #
+    controller/zapper/zapper.cpp
+    controller/zapper/zapper.hpp
+)
+
+ares_add_sources(
+  CORE #
+    fc
+  INCLUDED #
     cpu/cpu.hpp
     cpu/debugger.cpp
     cpu/memory.cpp
@@ -182,6 +190,8 @@ ares_add_sources(
   INCLUDED #
     expansion/family-keyboard/family-keyboard.cpp
     expansion/family-keyboard/family-keyboard.hpp
+    expansion/family-keyboard/famicom-data-recorder.cpp
+    expansion/family-keyboard/famicom-data-recorder.hpp
 )
 
 ares_add_sources(
