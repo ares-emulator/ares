@@ -1,7 +1,7 @@
 static auto finishAssignment(HotkeySettings& self) -> void {
   self.chordTimer.setEnabled(false);
   self.activeMapping.reset();
-  self.pendingKeyboardChord.clear();
+  self.pendingChord.clear();
   self.assignLabel.setText();
   self.refresh();
   self.timer.onActivate([&] {
@@ -11,17 +11,33 @@ static auto finishAssignment(HotkeySettings& self) -> void {
   }).setInterval(200).setEnabled();
 }
 
-static auto keyboardName(std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID) -> string {
+static auto chordKeyText(const HotkeySettings::ChordKey& key) -> string {
+  auto device = key.device;
   if(!device) return {};
-  if(groupID >= device->size()) return {};
-  if(inputID >= device->group(groupID).size()) return {};
-  return device->group(groupID).input(inputID).name();
+  if(key.groupID >= device->size()) return {};
+  if(key.inputID >= device->group(key.groupID).size()) return {};
+
+  auto name = device->group(key.groupID).input(key.inputID).name();
+
+  if(device->isKeyboard()) {
+    return name;
+  }
+
+  if(device->isJoypad()) {
+    string output = device->group(key.groupID).name();
+    output.append(" ", name);
+    if(key.qualifier == InputMapping::Qualifier::Lo) output.append(".Lo");
+    if(key.qualifier == InputMapping::Qualifier::Hi) output.append(".Hi");
+    return output;
+  }
+
+  return name;
 }
 
-static auto keyboardChordText(const std::vector<HotkeySettings::ChordKey>& chord) -> string {
+static auto chordText(const std::vector<HotkeySettings::ChordKey>& chord) -> string {
   string output;
   for(auto index : range(chord.size())) {
-    auto name = keyboardName(chord[index].device, chord[index].groupID, chord[index].inputID);
+    auto name = chordKeyText(chord[index]);
     if(!name) continue;
     if(index) output.append("+");
     output.append(name);
@@ -29,7 +45,7 @@ static auto keyboardChordText(const std::vector<HotkeySettings::ChordKey>& chord
   return output;
 }
 
-static auto keyboardChordAssignment(const std::vector<HotkeySettings::ChordKey>& chord) -> string {
+static auto chordAssignment(const std::vector<HotkeySettings::ChordKey>& chord) -> string {
   if(chord.empty()) return {};
 
   string output;
@@ -37,15 +53,53 @@ static auto keyboardChordAssignment(const std::vector<HotkeySettings::ChordKey>&
     auto& key = chord[index];
     if(index) output.append("+");
     output.append(string{"0x", hex(key.deviceID), "/", key.groupID, "/", key.inputID});
+    if(key.qualifier == InputMapping::Qualifier::Lo) output.append("/Lo");
+    if(key.qualifier == InputMapping::Qualifier::Hi) output.append("/Hi");
   }
   return output;
 }
 
-static auto keyboardChordContains(const std::vector<HotkeySettings::ChordKey>& chord, u32 groupID, u32 inputID) -> bool {
+static auto chordContains(const std::vector<HotkeySettings::ChordKey>& chord, const HotkeySettings::ChordKey& candidate) -> bool {
   for(auto& key : chord) {
-    if(key.groupID == groupID && key.inputID == inputID) return true;
+    if(key.deviceID == candidate.deviceID && key.groupID == candidate.groupID && key.inputID == candidate.inputID
+    && key.qualifier == candidate.qualifier) return true;
   }
   return false;
+}
+
+static auto chordKeyFromEvent(std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> maybe<HotkeySettings::ChordKey> {
+  if(!device) return {};
+
+  HotkeySettings::ChordKey key;
+  key.device = device;
+  key.deviceID = device->id();
+  key.groupID = groupID;
+  key.inputID = inputID;
+
+  if(device->isKeyboard()) {
+    if(groupID != HID::Keyboard::GroupID::Button) return {};
+    if(oldValue == 0 && newValue != 0) return key;
+    return {};
+  }
+
+  if(device->isJoypad()) {
+    if(groupID == HID::Joypad::GroupID::Button) {
+      if(oldValue == 0 && newValue != 0) return key;
+      return {};
+    }
+
+    if(oldValue >= -16384 && newValue < -16384) {
+      key.qualifier = InputMapping::Qualifier::Lo;
+      return key;
+    }
+
+    if(oldValue <= +16384 && newValue > +16384) {
+      key.qualifier = InputMapping::Qualifier::Hi;
+      return key;
+    }
+  }
+
+  return {};
 }
 
 static auto hotkeyAssignmentText(string_view assignment) -> string {
@@ -54,29 +108,57 @@ static auto hotkeyAssignmentText(string_view assignment) -> string {
   string output;
   auto parts = nall::split(assignment, "+");
   for(auto index : range(parts.size())) {
-    auto token = nall::split(parts[index].strip(), "/");
-    if(token.size() < 3) return {};
+    auto binding = InputMapping::assignment(parts[index].strip());
+    if(!binding) return {};
+    if(!binding->device) return "(disconnected)";
+    if(binding->groupID >= binding->device->size()) return {};
+    if(binding->inputID >= binding->device->group(binding->groupID).size()) return {};
 
-    u64 deviceID = token[0].natural();
-    u32 groupID = token[1].natural();
-    u32 inputID = token[2].natural();
-
-    std::shared_ptr<HID::Device> device;
-    for(auto& candidate : inputManager.devices) {
-      if(candidate->id() == deviceID) {
-        device = candidate;
-        break;
-      }
-    }
-    if(!device) return "(disconnected)";
-    if(groupID >= device->size()) return {};
-    if(inputID >= device->group(groupID).size()) return {};
+    HotkeySettings::ChordKey key;
+    key.device = binding->device;
+    key.deviceID = binding->deviceID;
+    key.groupID = binding->groupID;
+    key.inputID = binding->inputID;
+    key.qualifier = binding->qualifier;
 
     if(index) output.append("+");
-    output.append(device->group(groupID).input(inputID).name());
+    output.append(chordKeyText(key));
   }
 
   return output;
+}
+
+static auto hotkeyAssignmentIcon(string_view assignment) -> multiFactorImage {
+  if(!assignment) return {};
+
+  bool hasKeyboard = false;
+  bool hasMouse = false;
+  bool hasJoypad = false;
+  bool hasUnknown = false;
+
+  auto parts = nall::split(assignment, "+");
+  for(auto& part : parts) {
+    auto binding = InputMapping::assignment(part.strip());
+    if(!binding) return {};
+    auto device = binding->device;
+
+    if(!device) {
+      hasUnknown = true;
+      continue;
+    }
+
+    if(device->isKeyboard()) hasKeyboard = true;
+    else if(device->isMouse()) hasMouse = true;
+    else if(device->isJoypad()) hasJoypad = true;
+    else hasUnknown = true;
+  }
+
+  u32 kinds = hasKeyboard + hasMouse + hasJoypad + hasUnknown;
+  if(kinds > 1) return Icon::Place::Settings;
+  if(hasKeyboard) return Icon::Device::Keyboard;
+  if(hasMouse) return Icon::Device::Mouse;
+  if(hasJoypad) return Icon::Device::Joypad;
+  return Icon::Place::Settings;
 }
 
 auto HotkeySettings::construct() -> void {
@@ -214,7 +296,7 @@ auto HotkeySettings::eventAssign(TableViewCell cell) -> void {
     chordTimer.setEnabled(false);
     activeMapping = inputManager.hotkeys[item.offset()];
     activeBinding = max(0, (s32)cell.offset() - 1);
-    pendingKeyboardChord.clear();
+    pendingChord.clear();
 
     item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText("(assign ...)");
     assignLabel.setText({"Press a key or button for mapping #", 1 + activeBinding, " [", activeMapping->name, "] ..."});
@@ -232,8 +314,8 @@ auto HotkeySettings::eventInput(std::shared_ptr<HID::Device> device, u32 groupID
 
   auto commitPendingChord = [&] {
     chordTimer.setEnabled(false);
-    if(!activeMapping || pendingKeyboardChord.empty()) return;
-    activeMapping->bind(activeBinding, keyboardChordAssignment(pendingKeyboardChord));
+    if(!activeMapping || pendingChord.empty()) return;
+    activeMapping->bind(activeBinding, chordAssignment(pendingChord));
     finishAssignment(*this);
   };
   auto armChordCommit = [&] {
@@ -243,36 +325,29 @@ auto HotkeySettings::eventInput(std::shared_ptr<HID::Device> device, u32 groupID
   if(device->isKeyboard()) {
     if(groupID != HID::Keyboard::GroupID::Button) return;
 
-    auto name = keyboardName(device, groupID, inputID);
+    auto name = device->group(groupID).input(inputID).name();
     if(name == "Escape" && oldValue == 0 && newValue != 0) {
       activeMapping->unbind(activeBinding);
       finishAssignment(*this);
       return;
     }
+  }
 
-    if(oldValue == 0 && newValue != 0) {
-      if(!pendingKeyboardChord.empty() && pendingKeyboardChord[0].deviceID != device->id()) return;
-
-      if(!keyboardChordContains(pendingKeyboardChord, groupID, inputID)) {
-        pendingKeyboardChord.push_back({device, device->id(), groupID, inputID});
-      }
-
-      if(auto item = inputList.selected()) {
-        item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText({"(", keyboardChordText(pendingKeyboardChord), ")"});
-      }
-
-      armChordCommit();
-      return;
+  if(auto key = chordKeyFromEvent(device, groupID, inputID, oldValue, newValue)) {
+    if(!chordContains(pendingChord, *key)) {
+      pendingChord.push_back(*key);
     }
 
-    if(oldValue != 0 && newValue == 0 && !pendingKeyboardChord.empty()) {
-      armChordCommit();
+    if(auto item = inputList.selected()) {
+      item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText({"(", chordText(pendingChord), ")"});
     }
+
+    armChordCommit();
     return;
   }
 
-  if(activeMapping->bind(activeBinding, device, groupID, inputID, oldValue, newValue)) {
-    finishAssignment(*this);
+  if(oldValue != 0 && newValue == 0 && !pendingChord.empty()) {
+    armChordCommit();
   }
 }
 
@@ -281,7 +356,7 @@ auto HotkeySettings::setVisible(bool visible) -> HotkeySettings& {
   if(visible == 0) {
     chordTimer.setEnabled(false);
     activeMapping.reset();
-    pendingKeyboardChord.clear();
+    pendingChord.clear();
     assignLabel.setText();
     settingsWindow.setDismissable(true);
   }

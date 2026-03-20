@@ -252,9 +252,10 @@ auto InputManager::pollHotkeys() -> void {
     u64 deviceID = 0;
     u32 groupID = 0;
     u32 inputID = 0;
+    InputMapping::Qualifier qualifier = InputMapping::Qualifier::None;
 
     auto operator==(const PhysicalKey& other) const -> bool {
-      return deviceID == other.deviceID && groupID == other.groupID && inputID == other.inputID;
+      return deviceID == other.deviceID && groupID == other.groupID && inputID == other.inputID && qualifier == other.qualifier;
     }
   };
 
@@ -263,6 +264,7 @@ auto InputManager::pollHotkeys() -> void {
       auto hash = (size_t)key.deviceID;
       hash ^= (size_t)key.groupID + 0x9e3779b9 + (hash << 6) + (hash >> 2);
       hash ^= (size_t)key.inputID + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+      hash ^= (size_t)key.qualifier + 0x9e3779b9 + (hash << 6) + (hash >> 2);
       return hash;
     }
   };
@@ -295,28 +297,18 @@ auto InputManager::pollHotkeys() -> void {
     auto parts = nall::split(assignment, "+");
     result.reserve(parts.size());
     for(auto& part : parts) {
-      auto token = nall::split(part.strip(), "/");
-      if(token.size() < 3) {
+      auto parsed = InputMapping::assignment(part.strip());
+      if(!parsed) {
         result.clear();
         return result;
       }
 
       KeyBinding key;
-      key.deviceID = token[0].natural();
-      key.groupID = token[1].natural();
-      key.inputID = token[2].natural();
-      if(result.empty() && token.size() > 3) {
-        if(token[3] == "Lo") key.qualifier = InputMapping::Qualifier::Lo;
-        if(token[3] == "Hi") key.qualifier = InputMapping::Qualifier::Hi;
-        if(token[3] == "Rumble") key.qualifier = InputMapping::Qualifier::Rumble;
-      }
-
-      for(auto& device : devices) {
-        if(device->id() == key.deviceID) {
-          key.device = device;
-          break;
-        }
-      }
+      key.device = parsed->device;
+      key.deviceID = parsed->deviceID;
+      key.groupID = parsed->groupID;
+      key.inputID = parsed->inputID;
+      key.qualifier = parsed->qualifier;
       result.push_back(key);
     }
 
@@ -368,7 +360,7 @@ auto InputManager::pollHotkeys() -> void {
       parsedBindings[index] = std::move(parsed);
 
       for(auto& key : parsedBindings[index]) {
-        auto physical = PhysicalKey{key.deviceID, key.groupID, key.inputID};
+        auto physical = PhysicalKey{key.deviceID, key.groupID, key.inputID, key.qualifier};
         if(referencedKeys.find(physical) == referencedKeys.end()) referencedKeys.emplace(physical, key);
       }
     }
@@ -383,7 +375,7 @@ auto InputManager::pollHotkeys() -> void {
   }
 
   auto edgeOf = [&](const KeyBinding& key) -> KeyEdge {
-    auto found = keyEdges.find(PhysicalKey{key.deviceID, key.groupID, key.inputID});
+    auto found = keyEdges.find(PhysicalKey{key.deviceID, key.groupID, key.inputID, key.qualifier});
     if(found == keyEdges.end()) return {};
     return found->second;
   };
@@ -468,7 +460,7 @@ auto InputManager::pollHotkeys() -> void {
         } else if(edgeOf(keys[keys.size() - 1]).pressed) {
           bindingActivated[index] = true;
           auto key = keys[keys.size() - 1];
-          claimedSuffixPress[PhysicalKey{key.deviceID, key.groupID, key.inputID}] = true;
+          claimedSuffixPress[PhysicalKey{key.deviceID, key.groupID, key.inputID, key.qualifier}] = true;
         }
       }
       previousBindingActive[index] = down;
@@ -490,7 +482,7 @@ auto InputManager::pollHotkeys() -> void {
       if(bindingActivated[index]) {
         if(keys.size() == 1) {
           auto key = keys[0];
-          if(claimedSuffixPress.find(PhysicalKey{key.deviceID, key.groupID, key.inputID}) != claimedSuffixPress.end()) {
+          if(claimedSuffixPress.find(PhysicalKey{key.deviceID, key.groupID, key.inputID, key.qualifier}) != claimedSuffixPress.end()) {
             continue;
           }
         }
