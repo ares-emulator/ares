@@ -4,13 +4,35 @@
 #include "runtime.hpp"
 #include "states.hpp"
 #include "video-output.hpp"
+#include <nall/encode/wav.hpp>
 #include <nall/gdb/server.hpp>
 #include <nall/main.hpp>
 
 using namespace nall;
 
+namespace {
+
+auto writeStereoWav(const string& path, const std::vector<i16>& interleavedSamples, u32 frequency) -> bool {
+  if(interleavedSamples.size() % 2 != 0) return false;
+
+  std::vector<i16> left;
+  std::vector<i16> right;
+  left.reserve(interleavedSamples.size() / 2);
+  right.reserve(interleavedSamples.size() / 2);
+
+  for(u32 index : range(0U, (u32)interleavedSamples.size(), 2U)) {
+    left.push_back(interleavedSamples[index + 0]);
+    right.push_back(interleavedSamples[index + 1]);
+  }
+
+  return nall::Encode::WAV::stereo<i16>(path, left, right, frequency);
+}
+
+}
+
 auto nall::main(Arguments arguments) -> void {
   ares::Memory::FixedAllocator::get();
+  ares::Random::setOverride(ares::Random::Default);
 
   headless::CliOptions cli;
   string parseError;
@@ -31,6 +53,12 @@ auto nall::main(Arguments arguments) -> void {
 
   mia::setHomeLocation([]() -> string { return {Path::userData(), "ares/Systems/"}; });
   mia::setSaveLocation([&cli]() -> string { return cli.launchSettings.savesPath; });
+  // TODO: isolate save roots per headless worker/run for determinism testing.
+  // Shared save paths can make parallel boot tests nondeterministic on platforms
+  // that persist battery-backed or clock-backed state. At minimum this affects:
+  // Game Boy, Game Boy Advance, Famicom, Super Famicom, Mega Drive,
+  // Master System, WonderSwan, Neo Geo Pocket, MSX, PlayStation, Saturn,
+  // PC Engine, Mega CD, and Mega 32X.
 
   headless::Runtime runtime;
   runtime.runFramesTarget = cli.runFramesTarget;
@@ -41,6 +69,8 @@ auto nall::main(Arguments arguments) -> void {
   runtime.awaitGdbClient = cli.launchSettings.awaitGdbClient;
   runtime.verbosity = cli.verbosity;
   runtime.saveLastFramePath = cli.saveLastFramePath;
+  runtime.audioDumpPath = cli.audioDumpPath;
+  runtime.audioChecksum = cli.audioChecksum;
   runtime.videoChecksum = cli.videoChecksum;
   runtime.benchmarkDuration = cli.benchmarkDuration;
   runtime.benchmarkFrameTarget = cli.benchmarkFrameTarget;
@@ -124,10 +154,16 @@ auto nall::main(Arguments arguments) -> void {
       nall::GDB::server.updateLoop();
     }
     runtime.root->run();
+    runtime.flushPendingAudio();
+    if(runtime.stopRequested) {
+      runtime.shouldExit = true;
+    }
     if(runtime.gdbEnabled) {
       nall::GDB::server.updateLoop();
     }
   }
+
+  runtime.finalizeAudioCapture();
 
   if(cli.saveOnExit) {
     if(headless::saveState(runtime.root, runtime.gamePak->location, cli.saveOnExitSlot, cli.launchSettings.savesPath)) {
@@ -138,6 +174,11 @@ auto nall::main(Arguments arguments) -> void {
   }
 
   runtime.root->save();
+  if(runtime.audioDumpPath) {
+    if(!writeStereoWav(runtime.audioDumpPath, runtime.audioSamples, runtime.audioFrequency)) {
+      fprintf(stderr, "warning: failed to write WAV: %s\n", runtime.audioDumpPath.data());
+    }
+  }
   if(runtime.saveLastFramePath) {
     auto result = headless::saveCapturedFramePng(
       runtime.saveLastFramePath,

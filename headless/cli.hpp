@@ -8,6 +8,7 @@ namespace headless {
 struct CliOptions {
   nall::string systemOverride;
   nall::string gamePath;
+  nall::string audioDumpPath;
   double benchmarkDuration = 0.0;
   u64 benchmarkFrameTarget = 0;
   u64 runFramesTarget = 0;
@@ -16,6 +17,7 @@ struct CliOptions {
   u32 saveOnExitSlot = 1;
   u32 verbosity = 1;
   nall::string saveLastFramePath;
+  bool audioChecksum = false;
   bool videoChecksum = false;
   bool showHelp = false;
   bool showVersion = false;

@@ -2,6 +2,7 @@
 
 #include <ares/ares.hpp>
 #include <mia/mia.hpp>
+#include <nall/string.hpp>
 #include <vector>
 
 namespace headless {
@@ -14,6 +15,7 @@ struct Runtime : ares::Platform {
   nall::string profile;
 
   std::vector<ares::Node::Video::Screen> screens;
+  std::vector<ares::Node::Audio::Stream> streams;
 
   u64 runFramesTarget = 0;
   u32 stateSlot = 0;
@@ -28,12 +30,17 @@ struct Runtime : ares::Platform {
   u64 benchmarkFrameTarget = 0;
   u64 benchmarkFrameCount = 0;
   u64 benchmarkStartTime = 0;
+  bool stopRequested = false;
   bool shouldExit = false;
   nall::string saveLastFramePath;
+  nall::string audioDumpPath;
   std::vector<u32> lastFrame;
   u32 lastFramePitch = 0;
   u32 lastFrameWidth = 0;
   u32 lastFrameHeight = 0;
+  bool audioChecksum = false;
+  u32 audioFrequency = 48000;
+  std::vector<i16> audioSamples;
 
   auto attach(ares::Node::Object node) -> void override;
   auto detach(ares::Node::Object node) -> void override;
@@ -42,6 +49,12 @@ struct Runtime : ares::Platform {
   auto video(ares::Node::Video::Screen node, const u32* data, u32 pitch, u32 width, u32 height) -> void override;
   auto audio(ares::Node::Audio::Stream node) -> void override;
   auto input(ares::Node::Input::Input node) -> void override;
+  auto flushPendingAudio() -> void;
+  auto finalizeAudioCapture() -> void;
+
+private:
+  auto mixPendingAudioFrames() -> void;
+  auto appendMixedAudioFrame(const f64 samples[2]) -> void;
 };
 
 }

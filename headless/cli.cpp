@@ -114,6 +114,11 @@ auto parseCliOptions(Arguments& arguments, CliOptions& options, string& error) -
     error = "--save-last-frame requires an output .png path.";
     return false;
   }
+  if(arguments.find("--dump-audio") && !arguments.take("--dump-audio", options.audioDumpPath)) {
+    error = "--dump-audio requires an output .wav path.";
+    return false;
+  }
+  options.audioChecksum = arguments.take("--audio-checksum");
   options.videoChecksum = arguments.take("--video-checksum");
 
   options.showHelp = arguments.take("--help");
@@ -147,6 +152,8 @@ auto printHeadlessUsage() -> void {
   print("  --quiet               Suppress non-essential runtime logging\n");
   print("  --verbose             Alias for --verbosity verbose\n");
   print("  --verbosity level     quiet|normal|verbose (or 0|1|2)\n");
+  print("  --dump-audio path     Save mixed audio from boot to shutdown as a WAV\n");
+  print("  --audio-checksum      Print XXH64 of mixed stereo PCM from boot to shutdown\n");
   print("  --video-checksum      Print the final frame buffer checksum on exit (XXH64 hash)\n");
   print("  --load-state slot     Load save state slot (default: 1)\n");
   print("  --save-on-exit slot   Save state on exit (default: 1)\n");

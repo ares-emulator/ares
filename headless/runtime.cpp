@@ -1,4 +1,6 @@
 #include "runtime.hpp"
+#include <algorithm>
+#include <nall/file.hpp>
 #include <nall/location.hpp>
 #define XXH_INLINE_ALL
 #include <thirdparty/xxhash.h>
@@ -7,9 +9,62 @@ using namespace nall;
 
 namespace headless {
 
+namespace {
+
+auto nodeOrderKey(ares::Node::Object node) -> string {
+  if(!node) return {};
+
+  // Build a stable tree path so audio/video node ordering does not depend on
+  // attach timing or container traversal details when we enumerate nodes.
+  string path;
+  if(auto parent = node->parent().lock()) {
+    path = nodeOrderKey(parent);
+
+    u32 siblingIndex = 0;
+    for(auto& sibling : *parent) {
+      if(sibling == node) break;
+      if(sibling->identity() == node->identity() && sibling->name() == node->name()) siblingIndex++;
+    }
+
+    path.append("/");
+    path.append(node->identity());
+    path.append(":");
+    path.append(node->name());
+    path.append("#");
+    path.append(siblingIndex);
+    return path;
+  }
+
+  path.append(node->identity());
+  path.append(":");
+  path.append(node->name());
+  path.append("#0");
+  return path;
+}
+
+template<typename T>
+auto sortNodes(std::vector<T>& nodes) -> void {
+  std::sort(nodes.begin(), nodes.end(), [](const T& lhs, const T& rhs) {
+    auto lhsKey = nodeOrderKey(lhs);
+    auto rhsKey = nodeOrderKey(rhs);
+    return lhsKey < rhsKey;
+  });
+}
+
+}
+
 auto Runtime::attach(ares::Node::Object node) -> void {
   if(node->cast<ares::Node::Video::Screen>()) {
     screens = root->find<ares::Node::Video::Screen>();
+    sortNodes(screens);
+  }
+
+  if(auto stream = node->cast<ares::Node::Audio::Stream>()) {
+    streams = root->find<ares::Node::Audio::Stream>();
+    sortNodes(streams);
+    for(auto& stream : streams) {
+      stream->setResamplerFrequency(audioFrequency);
+    }
   }
 }
 
@@ -17,6 +72,13 @@ auto Runtime::detach(ares::Node::Object node) -> void {
   if(auto screen = node->cast<ares::Node::Video::Screen>()) {
     screens = root->find<ares::Node::Video::Screen>();
     std::erase(screens, screen);
+    sortNodes(screens);
+  }
+
+  if(auto stream = node->cast<ares::Node::Audio::Stream>()) {
+    streams = root->find<ares::Node::Audio::Stream>();
+    std::erase(streams, stream);
+    sortNodes(streams);
   }
 }
 
@@ -56,7 +118,7 @@ auto Runtime::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
         auto checksum = XXH64(data, (size_t)pitch * height, 0);
         print(hex(checksum, 16L), "\n");
       }
-      shouldExit = true;
+      stopRequested = true;
     }
   }
 
@@ -79,22 +141,73 @@ auto Runtime::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
       print("  \"frames_rendered\": ", benchmarkFrameCount, ",\n");
       print("  \"average_fps\": ", fps, "\n");
       print("}\n");
-      shouldExit = true;
+      stopRequested = true;
     }
   }
 }
 
 auto Runtime::audio(ares::Node::Audio::Stream node) -> void {
-  while(node->pending()) {
-    f64 buffer[2];
-    node->read(buffer);
-  }
+  (void)node;
+  mixPendingAudioFrames();
 }
 
 auto Runtime::input(ares::Node::Input::Input node) -> void {
   if(auto button = node->cast<ares::Node::Input::Button>()) button->setValue(0);
   if(auto axis = node->cast<ares::Node::Input::Axis>()) axis->setValue(0);
   if(auto trigger = node->cast<ares::Node::Input::Trigger>()) trigger->setValue(0);
+}
+
+auto Runtime::flushPendingAudio() -> void {
+  mixPendingAudioFrames();
+}
+
+auto Runtime::mixPendingAudioFrames() -> void {
+  if(streams.empty()) return;
+
+  while(true) {
+    // Match the desktop frontend's behavior: only mix when every stream has at
+    // least one resampled frame ready, so multi-stream systems stay aligned.
+    for(auto& stream : streams) {
+      if(!stream->pending()) return;
+    }
+
+    f64 samples[2] = {0.0, 0.0};
+    for(auto& stream : streams) {
+      f64 buffer[2] = {0.0, 0.0};
+      u32 channels = stream->read(buffer);
+      if(channels <= 1) {
+        samples[0] += buffer[0];
+        samples[1] += buffer[0];
+      } else {
+        samples[0] += buffer[0];
+        samples[1] += buffer[1];
+      }
+    }
+
+    appendMixedAudioFrame(samples);
+  }
+}
+
+auto Runtime::appendMixedAudioFrame(const f64 samples[2]) -> void {
+  i16 pcm[2];
+  // Canonicalize the captured output as clamped stereo 16-bit PCM so hashes and
+  // WAV dumps operate on the exact same sample representation.
+  for(u32 channel : range(2)) {
+    auto sample = max(-1.0, min(+1.0, samples[channel]));
+    pcm[channel] = sclamp<16>(sample * 32767.0);
+  }
+
+  if(audioDumpPath || audioChecksum) {
+    audioSamples.push_back(pcm[0]);
+    audioSamples.push_back(pcm[1]);
+  }
+}
+
+auto Runtime::finalizeAudioCapture() -> void {
+  if(audioChecksum) {
+    auto checksum = XXH64(audioSamples.data(), audioSamples.size() * sizeof(i16), 0);
+    print(hex(checksum, 16L), "\n");
+  }
 }
 
 }
