@@ -97,15 +97,61 @@ auto nall::main(Arguments arguments) -> void {
     return;
   }
 
+  auto region = runtime.gamePak->pak ? headless::normalizeRegion(runtime.gamePak->pak->attribute("region")) : string{};
   auto systemName = headless::defaultSystemNameForMedium(runtime.medium);
 
   runtime.systemPak = mia::System::create(systemName);
-  if(!runtime.systemPak || runtime.systemPak->load() != successful) {
+  if(!runtime.systemPak) {
     fprintf(stderr, "error: failed to load system data for: %s\n", systemName.data());
     return;
   }
 
-  auto region = runtime.gamePak->pak ? headless::normalizeRegion(runtime.gamePak->pak->attribute("region")) : string{};
+  auto firmwareQueries = headless::firmwareQueriesForMedium(runtime.medium, region);
+  LoadResult systemLoad = successful;
+  if(runtime.medium == "MSX2" && firmwareQueries.size() == 2) {
+    std::vector<string> firmwareLocations;
+    firmwareLocations.reserve(firmwareQueries.size());
+    for(const auto& firmware : firmwareQueries) {
+      auto location = headless::lookupFirmwareLocation(
+        cli.launchSettings,
+        firmware.systemName,
+        firmware.type,
+        firmware.region
+      );
+      if(!location) {
+        firmwareLocations.clear();
+        break;
+      }
+      firmwareLocations.push_back(location);
+    }
+
+    if(firmwareLocations.size() == firmwareQueries.size()) {
+      if(!runtime.systemPak->loadMultiple(firmwareLocations)) systemLoad = romNotFound;
+    } else if(headless::firmwareIsOptionalForMedium(runtime.medium)) {
+      systemLoad = runtime.systemPak->load();
+    } else {
+      systemLoad = romNotFound;
+    }
+  } else if(!firmwareQueries.empty()) {
+    auto firmware = firmwareQueries.front();
+    auto location = headless::lookupFirmwareLocation(
+      cli.launchSettings,
+      firmware.systemName,
+      firmware.type,
+      firmware.region
+    );
+    if(location) systemLoad = runtime.systemPak->load(location);
+    else if(headless::firmwareIsOptionalForMedium(runtime.medium)) systemLoad = runtime.systemPak->load();
+    else systemLoad = romNotFound;
+  } else {
+    systemLoad = runtime.systemPak->load();
+  }
+
+  if(systemLoad != successful) {
+    fprintf(stderr, "error: failed to load system data for: %s\n", systemName.data());
+    return;
+  }
+
   runtime.profile = headless::defaultProfileForMedium(runtime.medium, region, cli.launchSettings.coreOptions.gameBoyAdvancePlayer);
   if(!runtime.profile) {
     fprintf(stderr, "error: no default core profile for system: %s\n", runtime.medium.data());

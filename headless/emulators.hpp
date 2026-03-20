@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ares/ares.hpp>
+#include <vector>
 
 namespace headless {
 
@@ -21,10 +22,26 @@ struct CoreOptions {
   bool megadriveTMSS = false;
 };
 
+struct FirmwareQuery {
+  nall::string systemName;
+  nall::string type;
+  nall::string region;
+};
+
 auto normalizeRegion(const nall::string& region) -> nall::string;
 auto resolveSystemAlias(const nall::string& name) -> nall::string;
 auto printSystemAliases() -> void;
 auto defaultSystemNameForMedium(const nall::string& medium) -> nall::string;
+auto firmwareSettingPath(
+  const nall::string& systemName,
+  const nall::string& type,
+  const nall::string& region
+) -> nall::string;
+auto firmwareQueriesForMedium(
+  const nall::string& medium,
+  const nall::string& region
+) -> std::vector<FirmwareQuery>;
+auto firmwareIsOptionalForMedium(const nall::string& medium) -> bool;
 auto defaultProfileForMedium(
   const nall::string& medium,
   const nall::string& region,

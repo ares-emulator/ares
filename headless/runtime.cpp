@@ -86,6 +86,18 @@ auto Runtime::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(!systemPak || !gamePak) return {};
   auto name = node->name();
 
+  if(
+    medium == "Mega Drive" || medium == "Mega 32X" || medium == "Mega CD" ||
+    medium == "Mega LD" || medium == "Mega CD 32X"
+  ) {
+    // Mega Drive family cores ask for the base console pak as "Mega Drive",
+    // even when the loaded medium is 32X/CD-backed. Route those names the
+    // same way as desktop-ui so the core sees system ROMs instead of the cart.
+    if(name == "Mega Drive") return systemPak->pak;
+    if(name == "Mega Drive Cartridge") return gamePak->pak;
+    if(name == "Mega CD Disc") return gamePak->pak;
+  }
+
   if(name == medium || name == profile) return systemPak->pak;
   if(name.find("Cartridge") || name.find("Disc") || name.find("Disk") || name.find("Tape") || name.find("Cassette")) return gamePak->pak;
   if(name.find("Controller Pak") || name.find("Memory Card")) return systemPak->pak;

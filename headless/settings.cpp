@@ -55,6 +55,7 @@ auto applySettingOverride(
   bind("DebugServer/Enabled", settings.gdbEnabled);
   bind("DebugServer/Port", settings.gdbPort);
   bind("DebugServer/UseIPv4", settings.gdbUseIPv4);
+  bind("Paths/Firmware", settings.firmwarePath);
   bind("Paths/Saves", settings.savesPath);
 
   #undef bind
@@ -69,12 +70,8 @@ auto applySettingOverride(
 }
 
 auto loadSettingsFileDefaults(headless::LaunchSettings& settings) -> void {
-  auto settingsFile = settings.settingsPath;
-  if(!settingsFile) settingsFile = {Path::userData(), "ares/settings.bml"};
-  if(!file::exists(settingsFile)) return;
-
-  auto document = BML::unserialize(string::read(settingsFile), " ");
-  if(auto node = document["Paths/Saves"]) settings.savesPath = node.string();
+  if(auto value = headless::lookupSettingFileValue(settings, "Paths/Firmware")) settings.firmwarePath = value;
+  if(auto value = headless::lookupSettingFileValue(settings, "Paths/Saves")) settings.savesPath = value;
 }
 
 }
@@ -97,6 +94,25 @@ auto parseLaunchSettings(Arguments& arguments, LaunchSettings& settings, string&
   }
 
   return true;
+}
+
+auto lookupSettingFileValue(const LaunchSettings& settings, const string& path) -> string {
+  auto settingsFile = settings.settingsPath;
+  if(!settingsFile) settingsFile = {Path::userData(), "ares/settings.bml"};
+  if(!file::exists(settingsFile)) return {};
+
+  auto document = BML::unserialize(string::read(settingsFile), " ");
+  if(auto node = document[path]) return node.string();
+  return {};
+}
+
+auto lookupFirmwareLocation(
+  const LaunchSettings& settings,
+  const string& systemName,
+  const string& type,
+  const string& region
+) -> string {
+  return lookupSettingFileValue(settings, firmwareSettingPath(systemName, type, region));
 }
 
 }

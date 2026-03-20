@@ -162,6 +162,20 @@ auto isZXSpectrumFamily(const string& medium) -> bool {
   return medium == "ZX Spectrum" || medium == "ZX Spectrum 128";
 }
 
+auto firmwareRegionForMedium(const string& medium, const string& region) -> string {
+  if(medium == "Nintendo 64DD" && region == "NTSC-DEV") return "DEV";
+  if(region == "NTSC-J") return "Japan";
+  if(region == "PAL") return "Europe";
+  if(region == "NTSC-U") return "US";
+
+  if(medium == "ColecoVision") return "World";
+  if(medium == "Game Boy Advance") return "World";
+  if(medium == "Game Gear") return "World";
+  if(isNeoGeoPocketFamily(medium)) return "World";
+  if(isMSXFamily(medium)) return "Japan";
+  return {};
+}
+
 }
 
 namespace headless {
@@ -199,6 +213,43 @@ auto defaultSystemNameForMedium(const string& medium) -> string {
   if(isWonderSwanFamily(medium)) return "WonderSwan";
   if(isZXSpectrumFamily(medium)) return "ZX Spectrum";
   return medium;
+}
+
+auto firmwareSettingPath(const string& systemName, const string& type, const string& region) -> string {
+  // Desktop settings store firmware paths under a normalized
+  // "<System>/Firmware/<Type>.<Region>" key. Headless reuses that exact path.
+  auto base = string{systemName}.replace(" ", "");
+  base.replace("(", "").replace(")", "");
+
+  auto path = string{base, "/Firmware/", type, ".", region};
+  path.replace(" ", "-");
+  return path;
+}
+
+auto firmwareQueriesForMedium(const string& medium, const string& region) -> std::vector<FirmwareQuery> {
+  auto firmwareRegion = firmwareRegionForMedium(medium, region);
+  if(medium == "ColecoVision") return {FirmwareQuery{"ColecoVision", "BIOS", firmwareRegion}};
+  if(medium == "Game Boy Advance") return {FirmwareQuery{"GameBoyAdvance", "BIOS", firmwareRegion}};
+  if(medium == "Game Gear") return {FirmwareQuery{"GameGear", "BIOS", firmwareRegion}};
+  if(medium == "Master System") return {FirmwareQuery{"MasterSystem", "BIOS", firmwareRegion}};
+  if(medium == "Mega CD") return {FirmwareQuery{"MegaCD", "BIOS", firmwareRegion}};
+  if(medium == "Mega CD 32X") return {FirmwareQuery{"MegaCD", "BIOS", firmwareRegion}};
+  if(medium == "Mega LD") return {FirmwareQuery{"MegaLD", "BIOS", firmwareRegion}};
+  if(medium == "MSX") return {FirmwareQuery{"MSX", "BIOS", firmwareRegion}};
+  if(medium == "MSX2") return {
+    FirmwareQuery{"MSX2", "MAIN", firmwareRegion},
+    FirmwareQuery{"MSX2", "SUB", firmwareRegion},
+  };
+  if(medium == "Neo Geo Pocket") return {FirmwareQuery{"NeoGeoPocket", "BIOS", firmwareRegion}};
+  if(medium == "Neo Geo Pocket Color") return {FirmwareQuery{"NeoGeoPocketColor", "BIOS", firmwareRegion}};
+  if(medium == "Nintendo 64DD") return {FirmwareQuery{"Nintendo64DD", "BIOS", firmwareRegion}};
+  if(medium == "PlayStation") return {FirmwareQuery{"PlayStation", "BIOS", firmwareRegion}};
+  if(medium == "Saturn") return {FirmwareQuery{"Saturn", "BIOS", firmwareRegion}};
+  return {};
+}
+
+auto firmwareIsOptionalForMedium(const string& medium) -> bool {
+  return medium == "Game Gear" || medium == "Master System";
 }
 
 auto defaultProfileForMedium(const string& medium, const string& region, bool gameBoyAdvancePlayer) -> string {
