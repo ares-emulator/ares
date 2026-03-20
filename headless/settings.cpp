@@ -52,6 +52,7 @@ auto applySettingOverride(
   bind("GameBoyAdvance/Player", settings.coreOptions.gameBoyAdvancePlayer);
   bind("MegaDrive/TMSS", settings.coreOptions.megadriveTMSS);
 
+  bind("Boot/Fast", settings.fastBoot);
   bind("DebugServer/Enabled", settings.gdbEnabled);
   bind("DebugServer/Port", settings.gdbPort);
   bind("DebugServer/UseIPv4", settings.gdbUseIPv4);
@@ -70,6 +71,7 @@ auto applySettingOverride(
 }
 
 auto loadSettingsFileDefaults(headless::LaunchSettings& settings) -> void {
+  if(auto value = headless::lookupSettingFileValue(settings, "Boot/Fast")) settings.fastBoot = value.boolean();
   if(auto value = headless::lookupSettingFileValue(settings, "Paths/Firmware")) settings.firmwarePath = value;
   if(auto value = headless::lookupSettingFileValue(settings, "Paths/Saves")) settings.savesPath = value;
 }

@@ -165,6 +165,10 @@ auto nall::main(Arguments arguments) -> void {
     return;
   }
 
+  if(auto fastBoot = runtime.root->find<ares::Node::Setting::Boolean>("Fast Boot")) {
+    fastBoot->setValue(cli.launchSettings.fastBoot);
+  }
+
   headless::connectDefaultPorts(runtime.root);
 
   if(runtime.gdbEnabled) {

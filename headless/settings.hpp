@@ -8,6 +8,7 @@ namespace headless {
 
 struct LaunchSettings {
   CoreOptions coreOptions;
+  bool fastBoot = false;
   bool gdbEnabled = false;
   std::uint32_t gdbPort = 9123;
   bool gdbUseIPv4 = false;

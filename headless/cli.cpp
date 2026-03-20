@@ -1,6 +1,7 @@
 #include "cli.hpp"
 #include "parse.hpp"
 #include <ares/ares.hpp>
+#include <limits>
 #include <nall/inode.hpp>
 
 using namespace nall;
@@ -62,6 +63,28 @@ namespace headless {
 auto parseCliOptions(Arguments& arguments, CliOptions& options, string& error) -> bool {
   while(arguments.find("--system")) arguments.take("--system", options.systemOverride);
   if(!parseLaunchSettings(arguments, options.launchSettings, error)) return false;
+
+  if(arguments.take("--gdb")) options.launchSettings.gdbEnabled = true;
+  if(arguments.find("--gdb-port")) {
+    string portValue;
+    u64 parsed = 0;
+    if(!arguments.take("--gdb-port", portValue) || !headless::parsePositiveInteger(portValue, parsed) || parsed < 1 || parsed > 65535) {
+      error = "--gdb-port requires a valid TCP port.";
+      return false;
+    }
+    options.launchSettings.gdbPort = (u32)parsed;
+    options.launchSettings.gdbEnabled = true;
+  }
+  if(arguments.take("--gdb-ipv4")) {
+    options.launchSettings.gdbUseIPv4 = true;
+    options.launchSettings.gdbEnabled = true;
+  }
+  if(arguments.take("--wait-on-gdb")) {
+    options.launchSettings.awaitGdbClient = true;
+    options.launchSettings.gdbEnabled = true;
+  }
+  if(arguments.take("--fast-boot")) options.launchSettings.fastBoot = true;
+  if(arguments.take("--homebrew-mode")) options.launchSettings.coreOptions.generalHomebrewMode = true;
 
   if(string benchmarkSpec; arguments.take("--benchmark", benchmarkSpec)) {
     if(!parseBenchmarkSpec(benchmarkSpec, options.benchmarkDuration, options.benchmarkFrameTarget)) {
@@ -143,24 +166,42 @@ auto parseCliOptions(Arguments& arguments, CliOptions& options, string& error) -
 
 auto printHeadlessUsage() -> void {
   print("\n Usage: ares-headless [OPTIONS]... game\n\n");
-  print("Options:\n");
+
+  print("General:\n");
   print("  --help                Displays available options and exit\n");
-  print("  --version             Displays the version string of the application\n");
+  print("  --version             Displays the version string of the application and exit\n");
   print("  --list-sys-aliases    Print valid system aliases and exit\n");
+
+  print("\nCore options:\n");
   print("  --system name         Override auto-detected system (supports aliases, eg: fc, n64)\n");
+  print("  --fast-boot           Enable core fast boot when supported\n");
+  print("  --homebrew-mode       Enable homebrew mode for supported cores\n");
   print("  --setting name=value  Override supported core settings\n");
+
+  print("\nDebugging:\n");
+  print("  --gdb                 Enable the GDB server\n");
+  print("  --gdb-port port       Set the GDB server port\n");
+  print("  --gdb-ipv4            Bind the GDB server using IPv4\n");
+  print("  --wait-on-gdb         Wait for a GDB client before running\n");
+
+  print("\nExecution:\n");
   print("  --benchmark value     Run benchmark for N seconds (eg 5s / 5) or N frames (eg 300f)\n");
   print("  --run-frames frames   Run for exactly N frames and then exit\n");
+
+  print("\nLogging:\n");
   print("  --quiet               Suppress non-essential runtime logging\n");
   print("  --verbose             Alias for --verbosity verbose\n");
   print("  --verbosity level     quiet|normal|verbose (or 0|1|2)\n");
+
+  print("\nOutput:\n");
   print("  --dump-audio path     Save mixed audio from boot to shutdown as a WAV\n");
   print("  --audio-checksum      Print XXH64 of mixed stereo PCM from boot to shutdown\n");
   print("  --video-checksum      Print the final frame buffer checksum on exit (XXH64 hash)\n");
-  print("  --load-state slot     Load save state slot (default: 1)\n");
-  print("  --save-on-exit slot   Save state on exit (default: 1)\n");
   print("  --save-last-frame p   Save final rendered frame to PNG path\n");
-  print("  --settings-file path  (only reads savestates location for now)\n");
-}
 
+  print("\nSave States:\n");
+  print("  --load-state slot     Load save state slot (default if set: slot 1)\n");
+  print("  --save-on-exit slot   Save state on exit (default if set: slot 1)\n");
+  print("  --settings-file path  Reads: saves & BIOS location, boot options, and some debug settings\n");
+}
 }
