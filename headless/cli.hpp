@@ -20,6 +20,7 @@ struct CliOptions {
   bool audioChecksum = false;
   bool videoChecksum = false;
   bool showHelp = false;
+  bool listSystemAliases = false;
   bool showVersion = false;
   LaunchSettings launchSettings;
 };

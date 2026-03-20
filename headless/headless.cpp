@@ -51,6 +51,11 @@ auto nall::main(Arguments arguments) -> void {
     return;
   }
 
+  if(cli.listSystemAliases) {
+    headless::printSystemAliases();
+    return;
+  }
+
   mia::setHomeLocation([]() -> string { return {Path::userData(), "ares/Systems/"}; });
   mia::setSaveLocation([&cli]() -> string { return cli.launchSettings.savesPath; });
   // TODO: isolate save roots per headless worker/run for determinism testing.
@@ -75,7 +80,7 @@ auto nall::main(Arguments arguments) -> void {
   runtime.benchmarkDuration = cli.benchmarkDuration;
   runtime.benchmarkFrameTarget = cli.benchmarkFrameTarget;
 
-  runtime.medium = cli.systemOverride ? cli.systemOverride : mia::identify(cli.gamePath);
+  runtime.medium = cli.systemOverride ? headless::resolveSystemAlias(cli.systemOverride) : mia::identify(cli.gamePath);
   if(!runtime.medium) {
     fprintf(stderr, "error: unable to determine game type for: %s\n", Location::file(cli.gamePath).data());
     return;

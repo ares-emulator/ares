@@ -22,6 +22,8 @@ struct CoreOptions {
 };
 
 auto normalizeRegion(const nall::string& region) -> nall::string;
+auto resolveSystemAlias(const nall::string& name) -> nall::string;
+auto printSystemAliases() -> void;
 auto defaultSystemNameForMedium(const nall::string& medium) -> nall::string;
 auto defaultProfileForMedium(
   const nall::string& medium,

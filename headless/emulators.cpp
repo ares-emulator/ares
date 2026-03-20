@@ -71,6 +71,45 @@ namespace ares::WonderSwan { auto option(string name, string value) -> bool; }
 
 namespace {
 
+const std::vector<std::pair<string, std::vector<string>>> systemAliases = {
+  {"Atari 2600", {"a2600"}},
+  {"ColecoVision", {"cv"}},
+  {"Famicom", {"fc", "nes"}},
+  {"Famicom Disk System", {"fds"}},
+  {"Game Boy", {"dmg", "gb"}},
+  {"Game Boy Advance", {"agb", "gba"}},
+  {"Game Boy Color", {"cgb", "gbc"}},
+  {"Game Gear", {"gg"}},
+  {"Mega 32X", {"32x", "m32x"}},
+  {"Mega CD", {"mcd"}},
+  {"Mega CD 32X", {"mcd32x"}},
+  {"Mega Drive", {"gen", "genesis", "md"}},
+  {"Mega LD", {"lasega", "lsega", "pacs1", "pacs10"}},
+  {"MSX", {"msx"}},
+  {"MSX2", {"msx2"}},
+  {"Master System", {"ms", "sms"}},
+  {"MyVision", {"mv"}},
+  {"Neo Geo", {"aes", "mvs", "ng", "ngaes", "ngmvs"}},
+  {"Neo Geo Pocket", {"ngp"}},
+  {"Neo Geo Pocket Color", {"ngpc"}},
+  {"Nintendo 64", {"n64"}},
+  {"Nintendo 64DD", {"n64dd"}},
+  {"PC Engine", {"pce"}},
+  {"PC Engine CD", {"pcecd"}},
+  {"PC Engine LD", {"lnec", "pacn1", "pacn10"}},
+  {"PlayStation", {"ps", "ps1", "psx"}},
+  {"Pocket Challenge V2", {"pcv2"}},
+  {"Saturn", {"sat", "ss"}},
+  {"SC-3000", {"sc3000"}},
+  {"SG-1000", {"sg", "sg1000"}},
+  {"Super Famicom", {"sfc", "snes", "sufami"}},
+  {"SuperGrafx", {"sgx"}},
+  {"WonderSwan", {"ws"}},
+  {"WonderSwan Color", {"wsc"}},
+  {"ZX Spectrum", {"zx"}},
+  {"ZX Spectrum 128", {"zx128"}},
+};
+
 auto tryConnectPort(ares::Node::System& root, const string& name, maybe<string> device = {}) -> void {
   if(auto port = root->find<ares::Node::Port>(name)) {
     if(device) port->allocate(*device);
@@ -132,6 +171,25 @@ auto normalizeRegion(const string& region) -> string {
   auto regions = split_and_strip(region, ",");
   if(regions.empty()) return string{region}.strip();
   return regions[0];
+}
+
+auto resolveSystemAlias(const string& name) -> string {
+  auto alias = string{name}.downcase();
+  for(const auto& [system, aliases] : systemAliases) {
+    if(std::ranges::find(aliases, alias) != aliases.end()) return system;
+  }
+  return name;
+}
+
+auto printSystemAliases() -> void {
+  for(const auto& [system, aliases] : systemAliases) {
+    print(system, ": ");
+    for(u32 index : range(aliases.size())) {
+      if(index) print(", ");
+      print(aliases[index]);
+    }
+    print("\n");
+  }
 }
 
 auto defaultSystemNameForMedium(const string& medium) -> string {

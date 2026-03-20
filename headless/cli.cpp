@@ -122,8 +122,9 @@ auto parseCliOptions(Arguments& arguments, CliOptions& options, string& error) -
   options.videoChecksum = arguments.take("--video-checksum");
 
   options.showHelp = arguments.take("--help");
+  options.listSystemAliases = arguments.take("--list-sys-aliases");
   options.showVersion = arguments.take("--version");
-  if(options.showHelp || options.showVersion) return true;
+  if(options.showHelp || options.showVersion || options.listSystemAliases) return true;
 
   for(auto arg : arguments) {
     if(!arg.beginsWith("--")) {
@@ -145,7 +146,8 @@ auto printHeadlessUsage() -> void {
   print("Options:\n");
   print("  --help                Displays available options and exit\n");
   print("  --version             Displays the version string of the application\n");
-  print("  --system name         Override auto-detected system\n");
+  print("  --list-sys-aliases    Print valid system aliases and exit\n");
+  print("  --system name         Override auto-detected system (supports aliases, eg: fc, n64)\n");
   print("  --setting name=value  Override supported core settings\n");
   print("  --benchmark value     Run benchmark for N seconds (eg 5s / 5) or N frames (eg 300f)\n");
   print("  --run-frames frames   Run for exactly N frames and then exit\n");
