@@ -232,6 +232,7 @@ struct HotkeySettings : VerticalLayout {
     u64 deviceID = 0;
     u32 groupID = 0;
     u32 inputID = 0;
+    InputMapping::Qualifier qualifier = InputMapping::Qualifier::None;
   };
 
   auto construct() -> void;
@@ -258,7 +259,7 @@ struct HotkeySettings : VerticalLayout {
   Timer timer;
   Timer chordTimer;
   PopupMenu newMenu;
-  std::vector<ChordKey> pendingKeyboardChord;
+  std::vector<ChordKey> pendingChord;
 };
 
 struct EmulatorSettings : VerticalLayout {
