@@ -273,6 +273,7 @@ Presentation::Presentation() {
     .setCopyright(ares::Copyright)
     .setLicense(ares::License, ares::LicenseURI)
     .setWebsite(ares::Website, ares::WebsiteURI)
+    .setGitHub(ares::GitHub, ares::GitHubURI)
     .setAlignment(presentation)
     .show();
   });
@@ -284,7 +285,7 @@ Presentation::Presentation() {
       program.load(emulator, filenames.front());
     }
   });
-    
+
   Application::onOpenFile([&](auto filename) {
     Program::Guard guard;
     if(auto emulator = program.identify(filename)) {
@@ -563,7 +564,7 @@ auto Presentation::refreshSystemMenu() -> void {
   if(auto dipSwitches = ares::Node::find<ares::Node::Object>(emulator->root, "DIP Switches")) {
     Menu dipSwitchMenu{&systemMenu};
     dipSwitchMenu.setText("DIP Switches");
-    
+
     for(auto dip : ares::Node::enumerate<ares::Node::Setting::Boolean>(emulator->root)) {
       MenuCheckItem item{&dipSwitchMenu};
       item.setText(dip->name());
@@ -792,7 +793,7 @@ auto Presentation::loadShaders() -> void {
       hiro::MessageDialog()
           .setTitle("Warning")
           .setAlignment(hiro::Alignment::Center)
-          .setText({"Requested shader not found: ", location, settings.video.shader , 
+          .setText({"Requested shader not found: ", location, settings.video.shader ,
             "\nUsing existing defined shader: ", location, existingShader})
           .warning();
       settings.video.shader = existingShader;
