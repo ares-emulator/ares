@@ -28,22 +28,6 @@ DebugSettings& debugSettings = settingsWindow.debugSettings;
 DriverSettings& driverSettings = settingsWindow.driverSettings;
 ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
-static auto hotkeySettingName(const InputHotkey& mapping) -> string {
-  return string{mapping.name}.replace(" ", "");
-}
-
-static auto hotkeyCustomTypeName(InputHotkey::CustomType type) -> string {
-  if(type == InputHotkey::CustomType::SaveStateSlot) return "SaveStateSlot";
-  if(type == InputHotkey::CustomType::LoadStateSlot) return "LoadStateSlot";
-  return {};
-}
-
-static auto hotkeyCustomTypeFromName(string_view name) -> InputHotkey::CustomType {
-  if(name == "SaveStateSlot") return InputHotkey::CustomType::SaveStateSlot;
-  if(name == "LoadStateSlot") return InputHotkey::CustomType::LoadStateSlot;
-  return InputHotkey::CustomType::None;
-}
-
 auto Settings::load() -> void {
   Markup::Node::operator=(BML::unserialize(string::read(filePath), " "));
   process(true);
@@ -155,28 +139,6 @@ auto Settings::process(bool load) -> void {
     bind(string, name, recent.game[index]);
   }
 
-  if(load) {
-    inputManager.resetCustomHotkeys();
-    if(auto customHotkeys = operator[]("Hotkey/Custom")) {
-      for(auto customHotkey : customHotkeys) {
-        auto customTypeName = customHotkey["Type"].text();
-        auto type = hotkeyCustomTypeFromName(customTypeName);
-        auto slot = customHotkey["Slot"].natural();
-        inputManager.appendCustomHotkey(type, slot);
-      }
-    }
-  } else {
-    auto customHotkeys = operator()("Hotkey/Custom");
-    customHotkeys.reset();
-    for(auto& mapping : inputManager.hotkeys) {
-      if(!mapping.isCustom()) continue;
-      Markup::Node node{"Mapping"};
-      node("Type").setValue(hotkeyCustomTypeName(mapping.customType));
-      node("Slot").setValue(mapping.customSlot);
-      customHotkeys.append(node);
-    }
-  }
-
   for(u32 index : range(5)) {
     auto& port = virtualPorts[index];
     for(auto& input : port.pad.inputs) {
@@ -204,7 +166,7 @@ auto Settings::process(bool load) -> void {
   }
 
   for(auto& mapping : inputManager.hotkeys) {
-    string name = {"Hotkey/", hotkeySettingName(mapping)}, value;
+    string name = {"Hotkey/", string{mapping.name}.replace(" ", "")}, value;
     if(load == 0) for(auto& assignment : mapping.assignments) value.append(assignment, ";");
     if(load == 0) value.trimRight(";", 1L);
     bind(string, name, value);

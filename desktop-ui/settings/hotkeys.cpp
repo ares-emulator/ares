@@ -174,7 +174,6 @@ auto HotkeySettings::construct() -> void {
 
   assignLabel.setFont(Font().setBold());
   spacer.setFocusable();
-  newButton.setText("New").onActivate([&] { eventNew(); });
   assignButton.setText("Assign").onActivate([&] { eventAssign(inputList.selected().cell(0)); });
   clearButton.setText("Clear").onActivate([&] { eventClear(); });
 }
@@ -219,60 +218,8 @@ auto HotkeySettings::refresh() -> void {
 
 auto HotkeySettings::eventChange() -> void {
   Program::Guard guard;
-  newButton.setEnabled(newMenu.actionCount() || [&] {
-    for(u32 slot : range(1, 10)) {
-      if(!inputManager.hasCustomHotkey(InputHotkey::CustomType::SaveStateSlot, slot)) return true;
-      if(!inputManager.hasCustomHotkey(InputHotkey::CustomType::LoadStateSlot, slot)) return true;
-    }
-    return false;
-  }());
   assignButton.setEnabled(inputList.batched().size() == 1);
   clearButton.setEnabled(inputList.batched().size() >= 1);
-}
-
-auto HotkeySettings::eventNew() -> void {
-  newMenu.setVisible(false);
-  newMenu.reset();
-
-  Menu saveStateMenu{&newMenu};
-  saveStateMenu.setText("Save State");
-  for(u32 slot : range(1, 10)) {
-    if(inputManager.hasCustomHotkey(InputHotkey::CustomType::SaveStateSlot, slot)) continue;
-    MenuItem item{&saveStateMenu};
-    item.setText({"Slot ", slot}).onActivate([this, slot] {
-      eventNew(InputHotkey::CustomType::SaveStateSlot, slot);
-    });
-  }
-  if(!saveStateMenu.actionCount()) newMenu.remove(saveStateMenu);
-
-  Menu loadStateMenu{&newMenu};
-  loadStateMenu.setText("Load State");
-  for(u32 slot : range(1, 10)) {
-    if(inputManager.hasCustomHotkey(InputHotkey::CustomType::LoadStateSlot, slot)) continue;
-    MenuItem item{&loadStateMenu};
-    item.setText({"Slot ", slot}).onActivate([this, slot] {
-      eventNew(InputHotkey::CustomType::LoadStateSlot, slot);
-    });
-  }
-  if(!loadStateMenu.actionCount()) newMenu.remove(loadStateMenu);
-
-  if(newMenu.actionCount()) newMenu.setVisible(true);
-  eventChange();
-}
-
-auto HotkeySettings::eventNew(InputHotkey::CustomType type, u32 slot) -> void {
-  if(!inputManager.appendCustomHotkey(type, slot)) return;
-
-  reload();
-
-  for(u32 index : range(inputManager.hotkeys.size())) {
-    auto& mapping = inputManager.hotkeys[index];
-    if(mapping.customType != type || mapping.customSlot != slot) continue;
-    inputList.item(index).setSelected();
-    inputList.setFocused();
-    break;
-  }
-  eventChange();
 }
 
 auto HotkeySettings::eventClear() -> void {
