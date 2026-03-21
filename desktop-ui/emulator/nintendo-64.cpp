@@ -7,6 +7,37 @@ struct Nintendo64 : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
+  struct GamepadMappings {
+    InputAnalog lstickUp;
+    InputAnalog lstickDown;
+    InputAnalog lstickLeft;
+    InputAnalog lstickRight;
+    InputDigital up;
+    InputDigital down;
+    InputDigital left;
+    InputDigital right;
+    InputDigital b;
+    InputDigital a;
+    InputDigital cUp;
+    InputDigital cDown;
+    InputDigital cLeft;
+    InputDigital cRight;
+    InputDigital l;
+    InputDigital r;
+    InputDigital z;
+    InputDigital start;
+    InputRumble rumble;
+  };
+
+  struct MouseMappings {
+    InputRelative x;
+    InputRelative y;
+    InputDigital left;
+    InputDigital right;
+  };
+
+  GamepadMappings gamepadMappings[4];
+  MouseMappings mouseMappings[4];
   std::shared_ptr<mia::Pak> disk;
   u32 regionID = 0;
   sTimer diskInsertTimer;
@@ -17,37 +48,64 @@ Nintendo64::Nintendo64() {
   name = "Nintendo 64";
 
   for(auto id : range(4)) {
+    auto& gamepad = gamepadMappings[id];
+    gamepad.lstickUp.fallback = &virtualPorts[id].pad.lstick_up;
+    gamepad.lstickDown.fallback = &virtualPorts[id].pad.lstick_down;
+    gamepad.lstickLeft.fallback = &virtualPorts[id].pad.lstick_left;
+    gamepad.lstickRight.fallback = &virtualPorts[id].pad.lstick_right;
+    gamepad.up.fallback = &virtualPorts[id].pad.up;
+    gamepad.down.fallback = &virtualPorts[id].pad.down;
+    gamepad.left.fallback = &virtualPorts[id].pad.left;
+    gamepad.right.fallback = &virtualPorts[id].pad.right;
+    gamepad.b.fallback = &virtualPorts[id].pad.west;
+    gamepad.a.fallback = &virtualPorts[id].pad.south;
+    gamepad.cUp.fallback = &virtualPorts[id].pad.rstick_up;
+    gamepad.cDown.fallback = &virtualPorts[id].pad.rstick_down;
+    gamepad.cLeft.fallback = &virtualPorts[id].pad.rstick_left;
+    gamepad.cRight.fallback = &virtualPorts[id].pad.rstick_right;
+    gamepad.l.fallback = &virtualPorts[id].pad.l_bumper;
+    gamepad.r.fallback = &virtualPorts[id].pad.r_bumper;
+    gamepad.z.fallback = &virtualPorts[id].pad.r_trigger;
+    gamepad.start.fallback = &virtualPorts[id].pad.start;
+    gamepad.rumble.fallback = &virtualPorts[id].pad.rumble;
+
+    auto& mouse = mouseMappings[id];
+    mouse.x.fallback = &virtualPorts[id].mouse.x;
+    mouse.y.fallback = &virtualPorts[id].mouse.y;
+    mouse.left.fallback = &virtualPorts[id].mouse.left;
+    mouse.right.fallback = &virtualPorts[id].mouse.right;
+
     InputPort port{string{"Controller Port ", 1 + id}};
 
   { InputDevice device{"Gamepad"};
-    device.analog ("L-Up",    virtualPorts[id].pad.lstick_up);
-    device.analog ("L-Down",  virtualPorts[id].pad.lstick_down);
-    device.analog ("L-Left",  virtualPorts[id].pad.lstick_left);
-    device.analog ("L-Right", virtualPorts[id].pad.lstick_right);
-    device.digital("Up",      virtualPorts[id].pad.up);
-    device.digital("Down",    virtualPorts[id].pad.down);
-    device.digital("Left",    virtualPorts[id].pad.left);
-    device.digital("Right",   virtualPorts[id].pad.right);
-    device.digital("B",       virtualPorts[id].pad.west);
-    device.digital("A",       virtualPorts[id].pad.south);
-    device.digital("C-Up",    virtualPorts[id].pad.rstick_up);
-    device.digital("C-Down",  virtualPorts[id].pad.rstick_down);
-    device.digital("C-Left",  virtualPorts[id].pad.rstick_left);
-    device.digital("C-Right", virtualPorts[id].pad.rstick_right);
-    device.digital("L",       virtualPorts[id].pad.l_bumper);
-    device.digital("R",       virtualPorts[id].pad.r_bumper);
-    device.digital("Z",       virtualPorts[id].pad.r_trigger);
-    device.digital("Start",   virtualPorts[id].pad.start);
-    device.rumble ("Rumble",  virtualPorts[id].pad.rumble);
-    device.analog ("X-Axis",  virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
-    device.analog ("Y-Axis",  virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
+    device.analog ("L-Up",    gamepad.lstickUp);
+    device.analog ("L-Down",  gamepad.lstickDown);
+    device.analog ("L-Left",  gamepad.lstickLeft);
+    device.analog ("L-Right", gamepad.lstickRight);
+    device.digital("Up",      gamepad.up);
+    device.digital("Down",    gamepad.down);
+    device.digital("Left",    gamepad.left);
+    device.digital("Right",   gamepad.right);
+    device.digital("B",       gamepad.b);
+    device.digital("A",       gamepad.a);
+    device.digital("C-Up",    gamepad.cUp);
+    device.digital("C-Down",  gamepad.cDown);
+    device.digital("C-Left",  gamepad.cLeft);
+    device.digital("C-Right", gamepad.cRight);
+    device.digital("L",       gamepad.l);
+    device.digital("R",       gamepad.r);
+    device.digital("Z",       gamepad.z);
+    device.digital("Start",   gamepad.start);
+    device.rumble ("Rumble",  gamepad.rumble);
+    device.analog ("X-Axis",  gamepad.lstickLeft, gamepad.lstickRight);
+    device.analog ("Y-Axis",  gamepad.lstickUp,   gamepad.lstickDown);
     port.append(device); }
 
   { InputDevice device{"Mouse"};
-    device.relative("X",     virtualPorts[id].mouse.x);
-    device.relative("Y",     virtualPorts[id].mouse.y);
-    device.digital ("Left",  virtualPorts[id].mouse.left);
-    device.digital ("Right", virtualPorts[id].mouse.right);
+    device.relative("X",     mouse.x);
+    device.relative("Y",     mouse.y);
+    device.digital ("Left",  mouse.left);
+    device.digital ("Right", mouse.right);
     port.append(device); }
   
     ports.push_back(port);
