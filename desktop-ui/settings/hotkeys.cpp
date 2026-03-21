@@ -67,10 +67,28 @@ static auto chordContains(const std::vector<HotkeySettings::ChordKey>& chord, co
   return false;
 }
 
+static auto chordFromAssignment(string_view assignment) -> std::vector<HotkeySettings::ChordKey> {
+  std::vector<HotkeySettings::ChordKey> chord;
+  if(!assignment) return chord;
+
+  auto parts = nall::split(assignment, "+");
+  chord.reserve(parts.size());
+  for(auto& part : parts) {
+    auto binding = InputMapping::assignment(part.strip());
+    if(!binding) {
+      chord.clear();
+      return chord;
+    }
+    chord.push_back(*binding);
+  }
+
+  return chord;
+}
+
 static auto chordKeyFromEvent(std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> maybe<HotkeySettings::ChordKey> {
   if(!device) return {};
 
-  HotkeySettings::ChordKey key;
+  auto key = HotkeySettings::ChordKey{};
   key.device = device;
   key.deviceID = device->id();
   key.groupID = groupID;
@@ -105,22 +123,15 @@ static auto chordKeyFromEvent(std::shared_ptr<HID::Device> device, u32 groupID, 
 static auto hotkeyAssignmentText(string_view assignment) -> string {
   if(!assignment) return {};
 
+  auto chord = chordFromAssignment(assignment);
+  if(chord.empty()) return {};
+
   string output;
-  auto parts = nall::split(assignment, "+");
-  for(auto index : range(parts.size())) {
-    auto binding = InputMapping::assignment(parts[index].strip());
-    if(!binding) return {};
-    if(!binding->device) return "(disconnected)";
-    if(binding->groupID >= binding->device->size()) return {};
-    if(binding->inputID >= binding->device->group(binding->groupID).size()) return {};
-
-    HotkeySettings::ChordKey key;
-    key.device = binding->device;
-    key.deviceID = binding->deviceID;
-    key.groupID = binding->groupID;
-    key.inputID = binding->inputID;
-    key.qualifier = binding->qualifier;
-
+  for(auto index : range(chord.size())) {
+    auto& key = chord[index];
+    if(!key.device) return "(disconnected)";
+    if(key.groupID >= key.device->size()) return {};
+    if(key.inputID >= key.device->group(key.groupID).size()) return {};
     if(index) output.append("+");
     output.append(chordKeyText(key));
   }
@@ -136,11 +147,11 @@ static auto hotkeyAssignmentIcon(string_view assignment) -> multiFactorImage {
   bool hasJoypad = false;
   bool hasUnknown = false;
 
-  auto parts = nall::split(assignment, "+");
-  for(auto& part : parts) {
-    auto binding = InputMapping::assignment(part.strip());
-    if(!binding) return {};
-    auto device = binding->device;
+  auto chord = chordFromAssignment(assignment);
+  if(chord.empty()) return {};
+
+  for(auto& key : chord) {
+    auto device = key.device;
 
     if(!device) {
       hasUnknown = true;
@@ -161,10 +172,23 @@ static auto hotkeyAssignmentIcon(string_view assignment) -> multiFactorImage {
   return Icon::Place::Settings;
 }
 
+static constexpr u32 ChordKeyLimit = 3;
+
+static auto isStateSlotHotkeyName(string_view name) -> bool {
+  string suffix{name};
+  if(suffix.beginsWith("Save State ")) suffix.trimLeft("Save State ", 1L);
+  else if(suffix.beginsWith("Load State ")) suffix.trimLeft("Load State ", 1L);
+  else return false;
+
+  auto slot = suffix.natural();
+  return slot >= 1 && slot <= 9;
+}
+
 auto HotkeySettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
+  stateSlotHotkeysToggle.setText("Show Save/Load Slot Hotkeys").onToggle([&] { eventToggleStateSlotHotkeys(); });
   inputList.setBatchable();
   inputList.setHeadered();
   inputList.onChange([&] { eventChange(); });
@@ -180,12 +204,16 @@ auto HotkeySettings::construct() -> void {
 
 auto HotkeySettings::reload() -> void {
   inputList.reset();
+  visibleHotkeyIndices.clear();
   inputList.append(TableViewColumn().setText("Name"));
   for(u32 binding : range(BindingLimit)) {
     inputList.append(TableViewColumn().setText({"Mapping #", 1 + binding}).setExpandable());
   }
 
-  for(auto& mapping : inputManager.hotkeys) {
+  for(u32 index : range(inputManager.hotkeys.size())) {
+    auto& mapping = inputManager.hotkeys[index];
+    if(!showStateSlotHotkeys && isStateSlotHotkeyName(mapping.name)) continue;
+    visibleHotkeyIndices.push_back(index);
     TableViewItem item{&inputList};
     item.append(TableViewCell().setText(mapping.name).setFont(Font().setBold()));
     for(u32 binding : range(BindingLimit)) item.append(TableViewCell());
@@ -197,12 +225,12 @@ auto HotkeySettings::reload() -> void {
 }
 
 auto HotkeySettings::refresh() -> void {
-  u32 index = 0;
-  for(auto& mapping : inputManager.hotkeys) {
+  for(u32 row : range(visibleHotkeyIndices.size())) {
+    auto& mapping = inputManager.hotkeys[visibleHotkeyIndices[row]];
     for(u32 binding : range(BindingLimit)) {
       //do not remove identifier from mappings currently being assigned
       if(activeMapping && &activeMapping() == &mapping && activeBinding == binding) continue;
-      auto cell = inputList.item(index).cell(1 + binding);
+      auto cell = inputList.item(row).cell(1 + binding);
       auto assignment = mapping.assignments[binding];
       if(nall::split(assignment, "+").size() > 1) {
         cell.setIcon(Icon::Device::Keyboard);
@@ -212,7 +240,6 @@ auto HotkeySettings::refresh() -> void {
         cell.setText(mapping.bindings[binding].text());
       }
     }
-    index++;
   }
 }
 
@@ -222,9 +249,23 @@ auto HotkeySettings::eventChange() -> void {
   clearButton.setEnabled(inputList.batched().size() >= 1);
 }
 
+auto HotkeySettings::eventToggleStateSlotHotkeys() -> void {
+  showStateSlotHotkeys = stateSlotHotkeysToggle.checked();
+
+  if(activeMapping && !showStateSlotHotkeys && isStateSlotHotkeyName(activeMapping->name)) {
+    chordTimer.setEnabled(false);
+    activeMapping.reset();
+    pendingChord.clear();
+    assignLabel.setText();
+    settingsWindow.setDismissable(true);
+  }
+
+  reload();
+}
+
 auto HotkeySettings::eventClear() -> void {
   for(auto& item : inputList.batched()) {
-    auto& mapping = inputManager.hotkeys[item.offset()];
+    auto& mapping = inputManager.hotkeys[visibleHotkeyIndices[item.offset()]];
     mapping.unbind();
   }
   refresh();
@@ -241,7 +282,7 @@ auto HotkeySettings::eventAssign(TableViewCell cell) -> void {
   if(auto item = inputList.selected()) {
     if(activeMapping) refresh();  //clear any previous assign arrow prompts
     chordTimer.setEnabled(false);
-    activeMapping = inputManager.hotkeys[item.offset()];
+    activeMapping = inputManager.hotkeys[visibleHotkeyIndices[item.offset()]];
     activeBinding = max(0, (s32)cell.offset() - 1);
     pendingChord.clear();
 
@@ -281,12 +322,17 @@ auto HotkeySettings::eventInput(std::shared_ptr<HID::Device> device, u32 groupID
   }
 
   if(auto key = chordKeyFromEvent(device, groupID, inputID, oldValue, newValue)) {
-    if(!chordContains(pendingChord, *key)) {
+    if(!chordContains(pendingChord, *key) && pendingChord.size() < ChordKeyLimit) {
       pendingChord.push_back(*key);
     }
 
     if(auto item = inputList.selected()) {
       item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText({"(", chordText(pendingChord), ")"});
+    }
+
+    if(pendingChord.size() >= ChordKeyLimit) {
+      commitPendingChord();
+      return;
     }
 
     armChordCommit();

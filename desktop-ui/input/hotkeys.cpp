@@ -114,6 +114,20 @@ auto InputManager::createHotkeys() -> void {
     program.stateLoad(program.state.slot);
   }));
 
+  for(u32 slot : range(1, 10)) {
+    hotkeys.push_back(InputHotkey({"Save State ", slot}).onPress([slot] {
+      Program::Guard guard;
+      if(!emulator) return;
+      program.stateSave(slot);
+    }));
+
+    hotkeys.push_back(InputHotkey({"Load State ", slot}).onPress([slot] {
+      Program::Guard guard;
+      if(!emulator) return;
+      program.stateLoad(slot);
+    }));
+  }
+
   hotkeys.push_back(InputHotkey("Decrement State Slot").onPress([&] {
     if(!emulator) return;
     if(program.state.slot == 1) program.state.slot = 9;
@@ -210,13 +224,7 @@ auto InputManager::pollHotkeys() -> void {
     }
   };
 
-  struct KeyBinding {
-    std::shared_ptr<HID::Device> device;
-    u64 deviceID = 0;
-    u32 groupID = 0;
-    u32 inputID = 0;
-    InputMapping::Qualifier qualifier = InputMapping::Qualifier::None;
-  };
+  using KeyBinding = InputMapping::Binding;
 
   struct KeyEdge {
     bool down = false;
@@ -229,6 +237,9 @@ auto InputManager::pollHotkeys() -> void {
 
   auto stateIndex = [&](u32 hotkeyIndex, u32 bindingIndex) -> u32 {
     return hotkeyIndex * BindingLimit + bindingIndex;
+  };
+  auto physicalKeyOf = [&](const KeyBinding& key) -> PhysicalKey {
+    return {key.deviceID, key.groupID, key.inputID, key.qualifier};
   };
 
   auto parseAssignment = [&](string_view assignment) -> std::vector<KeyBinding> {
@@ -243,14 +254,7 @@ auto InputManager::pollHotkeys() -> void {
         result.clear();
         return result;
       }
-
-      KeyBinding key;
-      key.device = parsed->device;
-      key.deviceID = parsed->deviceID;
-      key.groupID = parsed->groupID;
-      key.inputID = parsed->inputID;
-      key.qualifier = parsed->qualifier;
-      result.push_back(key);
+      result.push_back(*parsed);
     }
 
     return result;
@@ -301,7 +305,7 @@ auto InputManager::pollHotkeys() -> void {
       parsedBindings[index] = std::move(parsed);
 
       for(auto& key : parsedBindings[index]) {
-        auto physical = PhysicalKey{key.deviceID, key.groupID, key.inputID, key.qualifier};
+        auto physical = physicalKeyOf(key);
         if(referencedKeys.find(physical) == referencedKeys.end()) referencedKeys.emplace(physical, key);
       }
     }
@@ -316,7 +320,7 @@ auto InputManager::pollHotkeys() -> void {
   }
 
   auto edgeOf = [&](const KeyBinding& key) -> KeyEdge {
-    auto found = keyEdges.find(PhysicalKey{key.deviceID, key.groupID, key.inputID, key.qualifier});
+    auto found = keyEdges.find(physicalKeyOf(key));
     if(found == keyEdges.end()) return {};
     return found->second;
   };
@@ -400,8 +404,7 @@ auto InputManager::pollHotkeys() -> void {
           bindingActivated[index] = true;
         } else if(edgeOf(keys[keys.size() - 1]).pressed) {
           bindingActivated[index] = true;
-          auto key = keys[keys.size() - 1];
-          claimedSuffixPress[PhysicalKey{key.deviceID, key.groupID, key.inputID, key.qualifier}] = true;
+          claimedSuffixPress[physicalKeyOf(keys[keys.size() - 1])] = true;
         }
       }
       previousBindingActive[index] = down;
@@ -422,8 +425,7 @@ auto InputManager::pollHotkeys() -> void {
 
       if(bindingActivated[index]) {
         if(keys.size() == 1) {
-          auto key = keys[0];
-          if(claimedSuffixPress.find(PhysicalKey{key.deviceID, key.groupID, key.inputID, key.qualifier}) != claimedSuffixPress.end()) {
+          if(claimedSuffixPress.find(physicalKeyOf(keys[0])) != claimedSuffixPress.end()) {
             continue;
           }
         }
