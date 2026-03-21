@@ -75,8 +75,8 @@ auto InputSettings::refresh() -> void {
       //do not remove identifier from mappings currently being assigned
       if(activeMapping && &activeMapping() == &input && activeBinding == binding) continue;
       auto cell = inputList.item(index).cell(1 + binding);
-      cell.setIcon(input.mapping->bindings[binding].icon());
-      cell.setText(input.mapping->bindings[binding].text());
+      cell.setIcon(input.mapping->icon(binding));
+      cell.setText(input.mapping->text(binding));
     }
     index++;
   }

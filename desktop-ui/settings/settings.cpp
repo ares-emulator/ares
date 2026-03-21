@@ -189,6 +189,35 @@ auto Settings::process(bool load) -> void {
       name.replace(" ", "-");
       bind(string, name, firmware.location);
     }
+
+    // normalize port/device/input labels using the same compact style as other
+    // settings keys. for ex: "LaserActive (SEGA PAC)" becomes "LaserActiveSEGAPAC"
+    auto sanitizeInputName = [](string name) -> string {
+      return string{name}.replace(" ", "").replace("(", "").replace(")", "");
+    };
+
+    for(auto& port : emulator->ports) {
+      auto portName = sanitizeInputName(port.name);
+      for(auto& device : port.devices) {
+        auto deviceName = sanitizeInputName(device.name);
+        for(auto& input : device.inputs) {
+          if(!input.mapping->fallback) continue;
+          string value;
+          name = {base, "/Input/", portName, "/", deviceName, "/", sanitizeInputName(input.name)};
+          if(load == 0) {
+            if(!input.mapping->hasAssignments()) continue;
+            for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
+            value.trimRight(";", 1L);
+          }
+          bind(string, name, value);
+          if(load == 1) {
+            auto parts = nall::split(value, ";");
+            parts.resize(BindingLimit);
+            for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = parts[binding];
+          }
+        }
+      }
+    }
   }
 
   #undef bind
