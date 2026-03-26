@@ -17,6 +17,8 @@ auto PPU::Background::scanline(u32 y) -> void {
     vmosaic = y;
     affine.hmosaic = io.lx;
     affine.vmosaic = io.ly;
+    io.lx += io.pb;
+    io.ly += io.pd;
   }
 }
 
@@ -164,11 +166,6 @@ auto PPU::Background::affineFetchTileData(u32 x, u32 y) -> void {
 
   fx += io.pa;
   fy += io.pc;
-
-  if(x == 239) {
-    io.lx += io.pb;
-    io.ly += io.pd;
-  }
 }
 
 auto PPU::Background::bitmap(u32 x, u32 y) -> void {
@@ -205,11 +202,6 @@ auto PPU::Background::bitmap(u32 x, u32 y) -> void {
 
   fx += io.pa;
   fy += io.pc;
-
-  if(x == 239) {
-    io.lx += io.pb;
-    io.ly += io.pd;
-  }
 }
 
 auto PPU::Background::power(u32 id) -> void {
