@@ -190,6 +190,11 @@ auto nall::main(Arguments arguments) -> void {
     }
   }
 
+  if(settings.prefs.implicitKiosk && !program.kiosk && !program.startGameLoad.empty()) {
+    program.kiosk = true;
+    program.noFilePrompt = true;
+  }
+
   if(program.kiosk) {
     if(!invalidKioskPaths.empty()) {
       program.error({"path does not exist: ", invalidKioskPaths.front()});

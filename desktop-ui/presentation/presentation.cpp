@@ -21,6 +21,17 @@ Presentation::Presentation() {
         program.load(emulator, filename);
       }
     });
+    viewport.onMousePress([&](auto button) {
+      if(button != Mouse::Button::Left || !settings.prefs.doubleClickFullScreen) return;
+      auto current = chrono::millisecond();
+      if(current - lastViewportLeftClick <= 500) {
+        if(ruby::video.hasFullScreen()) program.videoFullScreenToggle();
+        else program.videoPseudoFullScreenToggle();
+        lastViewportLeftClick = 0;
+      } else {
+        lastViewportLeftClick = current;
+      }
+    });
 
     onClose([&] {
       program.quit();
@@ -169,6 +180,9 @@ Presentation::Presentation() {
   });
   optionSettingsAction.setText("Options" ELLIPSIS).setIcon(Icon::Action::Settings).onActivate([&] {
     settingsWindow.show("Options");
+  });
+  preferenceSettingsAction.setText("Preferences" ELLIPSIS).setIcon(Icon::Place::Settings).onActivate([&] {
+    settingsWindow.show("Preferences");
   });
   firmwareSettingsAction.setText("Firmware" ELLIPSIS).setIcon(Icon::Emblem::Binary).onActivate([&] {
     settingsWindow.show("Firmware");
@@ -319,26 +333,67 @@ Presentation::Presentation() {
 
   statusLeft .setAlignment(0.0).setFont(Font().setBold());
   statusRight.setAlignment(1.0).setFont(Font().setBold());
+  viewport.onMousePress([&](auto button) {
+    if(button != Mouse::Button::Left || !settings.prefs.doubleClickFullScreen) return;
+    auto current = chrono::millisecond();
+    if(current - lastViewportLeftClick <= 500) {
+      if(ruby::video.hasFullScreen()) program.videoFullScreenToggle();
+      else program.videoPseudoFullScreenToggle();
+      lastViewportLeftClick = 0;
+    } else {
+      lastViewportLeftClick = current;
+    }
+  });
 
   onClose([&] {
+    saveWindowState();
     program.quit();
   });
+  onMove([&] { saveWindowState(); });
+  onSize([&] { saveWindowState(); });
 
   loadEmulators();
 
-  resizeWindow();
+  if(settings.prefs.restoreWindowState && settings.prefs.window.width > 0 && settings.prefs.window.height > 0) {
+    setGeometry({
+      settings.prefs.window.x,
+      settings.prefs.window.y,
+      settings.prefs.window.width,
+      settings.prefs.window.height
+    });
+    if(settings.prefs.window.maximized) {
+      setMaximized(true);
+    }
+  } else {
+    resizeWindow();
+  }
   setTitle({ares::Name, " ", ares::Version});
   setAssociatedFile();
   setBackgroundColor({0, 0, 0});
-  setAlignment(Alignment::Center);
+  if(!settings.prefs.restoreWindowState || settings.prefs.window.width <= 0 || settings.prefs.window.height <= 0) {
+    setAlignment(Alignment::Center);
+  }
   setVisible();
 
   #if defined(PLATFORM_MACOS)
   Application::Cocoa::onAbout([&] { aboutAction.doActivate(); });
   Application::Cocoa::onActivate([&] { setFocused(); });
-  Application::Cocoa::onPreferences([&] { settingsWindow.show("Video"); });
+  Application::Cocoa::onPreferences([&] { settingsWindow.show("Preferences"); });
   Application::Cocoa::onQuit([&] { doClose(); });
   #endif
+}
+
+auto Presentation::saveWindowState() -> void {
+  if(program.kiosk) return;
+
+  settings.prefs.window.maximized = maximized();
+  if(maximized()) return;
+
+  auto geometry = this->geometry();
+  settings.prefs.window.x = geometry.x();
+  settings.prefs.window.y = geometry.y();
+  settings.prefs.window.width = geometry.width();
+  settings.prefs.window.height = geometry.height();
 }
 
 auto Presentation::resizeWindow() -> void {
@@ -395,7 +450,7 @@ auto Presentation::loadEmulators() -> void {
 
   //clean up the recent games history first
   std::vector<string> recentGames;
-  for(u32 index : range(9)) {
+  for(u32 index : range(Settings::Prefs::maxRecentGames)) {
     auto entry = settings.recent.game[index];
     auto parts = nall::split(entry, ";", 1L);
     parts.resize(2);
@@ -411,7 +466,9 @@ auto Presentation::loadEmulators() -> void {
 
   //build recent games list
   u32 count = 0;
+  auto recentGamesLimit = max(1u, min(Settings::Prefs::maxRecentGames, settings.prefs.recentGamesLimit));
   for(auto& game : recentGames) {
+    if(count >= recentGamesLimit) break;
     settings.recent.game[count++] = game;
   }
   { Menu recentGames{&loadMenu};
@@ -458,7 +515,7 @@ auto Presentation::loadEmulators() -> void {
       clearHistory.setText("Clear Menu");
       #endif
       clearHistory.onActivate([&] {
-        for(u32 index : range(9)) settings.recent.game[index] = {};
+        for(u32 index : range(Settings::Prefs::maxRecentGames)) settings.recent.game[index] = {};
         loadEmulators();
       });
     } else {
@@ -468,11 +525,11 @@ auto Presentation::loadEmulators() -> void {
   loadMenu.append(MenuSeparator());
 
   //build emulator load list
-  u32 enabled = 0;
+  u32 shown = 0;
 
   //first pass; make sure "Arcade" is start of list
   for(auto& emulator : emulators) {
-    if(!emulator->configuration.visible) continue;
+    if(!settings.prefs.showDisabledEmulators && !emulator->configuration.visible) continue;
     if(emulator->group() == "Arcade") {
       Menu menu;
       menu.setIcon(Icon::Emblem::Folder);
@@ -483,12 +540,11 @@ auto Presentation::loadEmulators() -> void {
   }
 
   for(auto& emulator : emulators) {
-    if (!emulator->configuration.visible) continue;
-    enabled++;
+    if(!settings.prefs.showDisabledEmulators && !emulator->configuration.visible) continue;
+    shown++;
     MenuItem item;
     item.setIcon(Icon::Place::Server);
     item.setText({emulator->name, ELLIPSIS});
-    item.setVisible(emulator->configuration.visible);
     item.onActivate([=] {
       program.load(emulator);
     });
@@ -509,7 +565,7 @@ auto Presentation::loadEmulators() -> void {
     }
     menu.append(item);
   }
-  if(enabled == 0) {
+  if(shown == 0) {
     //if the user disables every system, give an indication for how to re-add systems to the load menu
     MenuItem item{&loadMenu};
     item.setIcon(Icon::Action::Add);

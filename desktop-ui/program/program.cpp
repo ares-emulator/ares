@@ -13,18 +13,70 @@ thread worker;
 auto Program::create() -> void {
   ares::platform = this;
 
+  auto applyGameStartupWindowPreference = [&] {
+    if(settings.prefs.startGameFullScreen) {
+      startFullScreen = true;
+      startPseudoFullScreen = false;
+      return;
+    }
+
+    if(settings.prefs.startGamePseudoFullScreen) {
+      startFullScreen = false;
+      startPseudoFullScreen = true;
+    }
+  };
+
   videoDriverUpdate();
   audioDriverUpdate();
   inputDriverUpdate();
 
-  if(kiosk) {
-    if(startFullScreen) videoFullScreenToggle();
-    if(startPseudoFullScreen) videoPseudoFullScreenToggle();
-  }
+  auto restoreStartWindowMode = [&] {
+    if(startFullScreen && !ruby::video.fullScreen()) {
+      videoFullScreenToggle();
+    }
+    if(startPseudoFullScreen && !presentation.fullScreen()) {
+      videoPseudoFullScreenToggle();
+    }
+  };
+
+  restoreStartWindowMode();
 
   _isRunning = true;
   worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
   program.rewindReset();
+
+  auto resumeLastGame = [&] {
+    if(startSystem || !startGameLoad.empty() || !settings.prefs.resumeLastGame || !settings.prefs.lastGame) {
+      return false;
+    }
+
+    auto parts = nall::split(settings.prefs.lastGame, ";", 1L);
+    parts.resize(2);
+    auto system = parts[0];
+    auto location = parts[1];
+    if(!system || !location || !inode::exists(location)) {
+      return false;
+    }
+
+    for(auto& emulator : emulators) {
+      if(emulator->name != system) continue;
+      if(load(emulator, location)) {
+        if(settings.prefs.resumeLastGamePaused) {
+          pause(true);
+        }
+        applyGameStartupWindowPreference();
+        restoreStartWindowMode();
+        return true;
+      }
+      break;
+    }
+
+    return false;
+  };
+
+  if(resumeLastGame()) {
+    return;
+  }
 
   if(!startGameLoad.empty()) {
     Program::Guard guard;
@@ -34,10 +86,8 @@ auto Program::create() -> void {
       for(auto &emulator: emulators) {
         if(emulator->name == startSystem) {
           if(load(emulator, gameToLoad)) {
-            if(!kiosk) {
-              if(startFullScreen) videoFullScreenToggle();
-              if(startPseudoFullScreen) videoPseudoFullScreenToggle();
-            }
+            applyGameStartupWindowPreference();
+            restoreStartWindowMode();
           }
           return;
         }
@@ -47,10 +97,8 @@ auto Program::create() -> void {
 
     if(auto emulator = identify(gameToLoad)) {
       if(load(emulator, gameToLoad)) {
-        if(!kiosk) {
-          if(startFullScreen) videoFullScreenToggle();
-          if(startPseudoFullScreen) videoPseudoFullScreenToggle();
-        }
+        applyGameStartupWindowPreference();
+        restoreStartWindowMode();
       }
     }
   }
@@ -142,6 +190,10 @@ auto Program::main() -> void {
   inputManager.poll();
   inputManager.pollHotkeys();
 
+  if(pendingVideoFullScreenToggle.exchange(false)) {
+    videoFullScreenToggle();
+  }
+
   updateMessage();
 
   //If Platform::video() changed the screen resolution, resize the presentation window here.
@@ -161,6 +213,7 @@ auto Program::main() -> void {
 }
 
 auto Program::quit() -> void {
+  presentation.saveWindowState();
   Program::Guard guard;
   _quitting = true;
   if(lock.owns_lock()) {

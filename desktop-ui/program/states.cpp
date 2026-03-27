@@ -34,6 +34,14 @@ auto Program::stateLoad(u32 slot) -> bool {
   if(!memory.empty()) {
     serializer state{memory.data(), (u32)memory.size()};
     if(emulator->root->unserialize(state)) {
+      if(emulator->name == "WonderSwan" || emulator->name == "WonderSwan Color") {
+        if(auto orientation = emulator->root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
+          auto value = orientation->value();
+          orientation->setValue(value);
+          orientation->modify(value);
+        }
+      }
+
       showMessage({"Loaded state from slot ", slot});
       return true;
     }
@@ -41,6 +49,27 @@ auto Program::stateLoad(u32 slot) -> bool {
 
   showMessage({"Failed to load state from slot ", slot});
   return false;
+}
+
+auto Program::mostRecentStateSlot() -> maybe<u32> {
+  Program::Guard guard;
+  if(!emulator) return {};
+
+  maybe<u32> newestSlot;
+  u64 newestTimestamp = 0;
+
+  for(u32 slot : range(1, 10)) {
+    auto location = emulator->locate(emulator->game->location, {".bs", slot}, settings.paths.saves);
+    if(!inode::exists(location)) continue;
+
+    auto timestamp = inode::timestamp(location);
+    if(!newestSlot || timestamp > newestTimestamp) {
+      newestSlot = slot;
+      newestTimestamp = timestamp;
+    }
+  }
+
+  return newestSlot;
 }
 
 auto Program::undoStateSave() -> bool {

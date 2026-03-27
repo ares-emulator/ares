@@ -22,6 +22,7 @@ auto ImportExportSettings::construct() -> void {
       hotkeySettings.construct();
       emulatorSettings.construct();
       optionSettings.construct();
+      preferenceSettings.construct();
       firmwareSettings.construct();
       pathSettings.construct();
       driverSettings.construct();

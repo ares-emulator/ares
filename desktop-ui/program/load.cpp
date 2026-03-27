@@ -107,10 +107,11 @@ auto Program::load(string location) -> bool {
   }
 
   //update recent games list
-  for(s32 index = 7; index >= 0; index--) {
+  for(s32 index = Settings::Prefs::maxRecentGames - 2; index >= 0; index--) {
     settings.recent.game[index + 1] = settings.recent.game[index];
   }
   settings.recent.game[0] = {emulator->name, ";", location};
+  settings.prefs.lastGame = settings.recent.game[0];
   presentation.loadEmulators();
 
   configuration = emulator->root->attribute("configuration");
@@ -118,6 +119,12 @@ auto Program::load(string location) -> bool {
   if(program.startSaveStateSlot) {
     if(stateLoad(program.startSaveStateSlot.integer())) {
       state.slot = program.startSaveStateSlot.integer();
+    }
+  } else if(settings.prefs.loadMostRecentState) {
+    if(auto slot = mostRecentStateSlot()) {
+      if(stateLoad(*slot)) {
+        state.slot = *slot;
+      }
     }
   }
 

@@ -25,6 +25,7 @@ struct Program : ares::Platform {
   //states.cpp
   auto stateSave(u32 slot) -> bool;
   auto stateLoad(u32 slot) -> bool;
+  auto mostRecentStateSlot() -> maybe<u32>;
   auto undoStateSave() -> bool;
   auto undoStateLoad() -> bool;
   auto clearUndoStates() -> void;
@@ -84,6 +85,7 @@ struct Program : ares::Platform {
   bool requestScreenshot = false;
   bool keyboardCaptured = false;
   atomic<bool> pendingKioskExit = false;
+  std::atomic<bool> pendingVideoFullScreenToggle = false;
 
   struct State {
     u32 slot = 1;

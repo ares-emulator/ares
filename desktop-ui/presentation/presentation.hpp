@@ -9,9 +9,11 @@ struct Presentation : Window {
   auto showIcon(bool visible) -> void;
   auto loadShaders() -> void;
   auto refreshSystemMenu() -> void;
+  auto saveWindowState() -> void;
 
   std::vector<string> shaderDirectories;
   static inline bool shaderArgApplied = false;
+  u64 lastViewportLeftClick = 0;
 
   MenuBar menuBar{this};
     Menu loadMenu{&menuBar};
@@ -57,6 +59,7 @@ struct Presentation : Window {
       MenuItem hotkeySettingsAction{&settingsMenu};
       MenuItem emulatorSettingsAction{&settingsMenu};
       MenuItem optionSettingsAction{&settingsMenu};
+      MenuItem preferenceSettingsAction{&settingsMenu};
       MenuItem firmwareSettingsAction{&settingsMenu};
       MenuItem pathSettingsAction{&settingsMenu};
       MenuItem driverSettingsAction{&settingsMenu};
