@@ -203,13 +203,24 @@ auto Settings::process(bool load) -> void {
         for(auto& input : device.inputs) {
           if(!input.mapping->fallback) continue;
           string value;
-          name = {base, "/Input/", portName, "/", deviceName, "/", sanitizeInputName(input.name)};
+          auto inputName = sanitizeInputName(input.name);
+          auto overrideSettingsPrefix = string{base, "/Input/"};
+          if(portName != base) overrideSettingsPrefix.append(portName, "/");
+          auto overrideSettingsPath = string{overrideSettingsPrefix, deviceName, "/", inputName};
+          auto fallbackSettingsPath = string{base, "/Input/", portName, "/", deviceName, "/", inputName};
           if(load == 0) {
             if(!input.mapping->hasAssignments()) continue;
             for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
             value.trimRight(";", 1L);
           }
-          bind(string, name, value);
+          if(load) {
+            if(auto node = operator[](overrideSettingsPath)) value = node.string();
+            else if(overrideSettingsPath != fallbackSettingsPath) {
+              if(auto fallbackNode = operator[](fallbackSettingsPath)) value = fallbackNode.string();
+            }
+          } else {
+            operator()(overrideSettingsPath).setValue(value);
+          }
           if(load == 1) {
             auto parts = nall::split(value, ";");
             parts.resize(BindingLimit);
