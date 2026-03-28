@@ -69,6 +69,18 @@ struct InputRumble : InputMapping {
   auto rumble(u16 strong, u16 weak) -> void;
 };
 
+template<typename Mapping, typename Fallback>
+inline auto link(Mapping& mapping, Fallback& fallback) -> void {
+  mapping.fallback = &fallback;
+}
+
+struct Dpad {
+  InputDigital up;
+  InputDigital down;
+  InputDigital left;
+  InputDigital right;
+};
+
 struct InputHotkey : InputDigital {
   InputHotkey(string name) : name(name) {}
   auto& onPress(std::function<void ()> press) { return this->press = press, *this; }

@@ -5,10 +5,7 @@ struct SuperFamicom : Emulator {
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
   struct GamepadMappings {
-    InputDigital up;
-    InputDigital down;
-    InputDigital left;
-    InputDigital right;
+    Dpad dpad;
     InputDigital b;
     InputDigital a;
     InputDigital y;
@@ -20,10 +17,7 @@ struct SuperFamicom : Emulator {
   };
 
   struct RumbleGamepadMappings {
-    InputDigital up;
-    InputDigital down;
-    InputDigital left;
-    InputDigital right;
+    Dpad dpad;
     InputDigital b;
     InputDigital a;
     InputDigital y;
@@ -60,10 +54,7 @@ struct SuperFamicom : Emulator {
   };
 
   struct NttDataKeypadMappings {
-    InputDigital up;
-    InputDigital down;
-    InputDigital left;
-    InputDigital right;
+    Dpad dpad;
     InputDigital b;
     InputDigital a;
     InputDigital y;
@@ -110,94 +101,94 @@ SuperFamicom::SuperFamicom() {
 
   for(auto id : range(2)) {
     auto& gamepad = gamepadMappings[id];
-    gamepad.up.fallback = &virtualPorts[id].pad.up;
-    gamepad.down.fallback = &virtualPorts[id].pad.down;
-    gamepad.left.fallback = &virtualPorts[id].pad.left;
-    gamepad.right.fallback = &virtualPorts[id].pad.right;
-    gamepad.b.fallback = &virtualPorts[id].pad.south;
-    gamepad.a.fallback = &virtualPorts[id].pad.east;
-    gamepad.y.fallback = &virtualPorts[id].pad.west;
-    gamepad.x.fallback = &virtualPorts[id].pad.north;
-    gamepad.l.fallback = &virtualPorts[id].pad.l_bumper;
-    gamepad.r.fallback = &virtualPorts[id].pad.r_bumper;
-    gamepad.select.fallback = &virtualPorts[id].pad.select;
-    gamepad.start.fallback = &virtualPorts[id].pad.start;
+    link(gamepad.dpad.up, virtualPorts[id].pad.up);
+    link(gamepad.dpad.down, virtualPorts[id].pad.down);
+    link(gamepad.dpad.left, virtualPorts[id].pad.left);
+    link(gamepad.dpad.right, virtualPorts[id].pad.right);
+    link(gamepad.b, virtualPorts[id].pad.south);
+    link(gamepad.a, virtualPorts[id].pad.east);
+    link(gamepad.y, virtualPorts[id].pad.west);
+    link(gamepad.x, virtualPorts[id].pad.north);
+    link(gamepad.l, virtualPorts[id].pad.l_bumper);
+    link(gamepad.r, virtualPorts[id].pad.r_bumper);
+    link(gamepad.select, virtualPorts[id].pad.select);
+    link(gamepad.start, virtualPorts[id].pad.start);
 
     auto& rumbleGamepad = rumbleGamepadMappings[id];
-    rumbleGamepad.up.fallback = &virtualPorts[id].pad.up;
-    rumbleGamepad.down.fallback = &virtualPorts[id].pad.down;
-    rumbleGamepad.left.fallback = &virtualPorts[id].pad.left;
-    rumbleGamepad.right.fallback = &virtualPorts[id].pad.right;
-    rumbleGamepad.b.fallback = &virtualPorts[id].pad.south;
-    rumbleGamepad.a.fallback = &virtualPorts[id].pad.east;
-    rumbleGamepad.y.fallback = &virtualPorts[id].pad.west;
-    rumbleGamepad.x.fallback = &virtualPorts[id].pad.north;
-    rumbleGamepad.l.fallback = &virtualPorts[id].pad.l_bumper;
-    rumbleGamepad.r.fallback = &virtualPorts[id].pad.r_bumper;
-    rumbleGamepad.select.fallback = &virtualPorts[id].pad.select;
-    rumbleGamepad.start.fallback = &virtualPorts[id].pad.start;
-    rumbleGamepad.rumble.fallback = &virtualPorts[id].pad.rumble;
+    link(rumbleGamepad.dpad.up, virtualPorts[id].pad.up);
+    link(rumbleGamepad.dpad.down, virtualPorts[id].pad.down);
+    link(rumbleGamepad.dpad.left, virtualPorts[id].pad.left);
+    link(rumbleGamepad.dpad.right, virtualPorts[id].pad.right);
+    link(rumbleGamepad.b, virtualPorts[id].pad.south);
+    link(rumbleGamepad.a, virtualPorts[id].pad.east);
+    link(rumbleGamepad.y, virtualPorts[id].pad.west);
+    link(rumbleGamepad.x, virtualPorts[id].pad.north);
+    link(rumbleGamepad.l, virtualPorts[id].pad.l_bumper);
+    link(rumbleGamepad.r, virtualPorts[id].pad.r_bumper);
+    link(rumbleGamepad.select, virtualPorts[id].pad.select);
+    link(rumbleGamepad.start, virtualPorts[id].pad.start);
+    link(rumbleGamepad.rumble, virtualPorts[id].pad.rumble);
 
     auto& mouse = mouseMappings[id];
-    mouse.x.fallback = &virtualPorts[id].mouse.x;
-    mouse.y.fallback = &virtualPorts[id].mouse.y;
-    mouse.left.fallback = &virtualPorts[id].mouse.left;
-    mouse.right.fallback = &virtualPorts[id].mouse.right;
+    link(mouse.x, virtualPorts[id].mouse.x);
+    link(mouse.y, virtualPorts[id].mouse.y);
+    link(mouse.left, virtualPorts[id].mouse.left);
+    link(mouse.right, virtualPorts[id].mouse.right);
 
     auto& justifier = justifierMappings[id];
-    justifier.x.fallback = &virtualPorts[id].mouse.x;
-    justifier.y.fallback = &virtualPorts[id].mouse.y;
-    justifier.trigger.fallback = &virtualPorts[id].mouse.left;
-    justifier.start.fallback = &virtualPorts[id].mouse.right;
+    link(justifier.x, virtualPorts[id].mouse.x);
+    link(justifier.y, virtualPorts[id].mouse.y);
+    link(justifier.trigger, virtualPorts[id].mouse.left);
+    link(justifier.start, virtualPorts[id].mouse.right);
 
     auto& superScope = superScopeMappings[id];
-    superScope.x.fallback = &virtualPorts[id].mouse.x;
-    superScope.y.fallback = &virtualPorts[id].mouse.y;
-    superScope.trigger.fallback = &virtualPorts[id].mouse.left;
-    superScope.cursor.fallback = &virtualPorts[id].mouse.middle;
-    superScope.turbo.fallback = &virtualPorts[id].mouse.right;
-    superScope.pause.fallback = &virtualPorts[id].pad.start;
+    link(superScope.x, virtualPorts[id].mouse.x);
+    link(superScope.y, virtualPorts[id].mouse.y);
+    link(superScope.trigger, virtualPorts[id].mouse.left);
+    link(superScope.cursor, virtualPorts[id].mouse.middle);
+    link(superScope.turbo, virtualPorts[id].mouse.right);
+    link(superScope.pause, virtualPorts[id].pad.start);
 
     auto& keypad = keypadMappings[id];
-    keypad.up.fallback = &virtualPorts[id].pad.up;
-    keypad.down.fallback = &virtualPorts[id].pad.down;
-    keypad.left.fallback = &virtualPorts[id].pad.left;
-    keypad.right.fallback = &virtualPorts[id].pad.right;
-    keypad.b.fallback = &virtualPorts[id].pad.south;
-    keypad.a.fallback = &virtualPorts[id].pad.east;
-    keypad.y.fallback = &virtualPorts[id].pad.west;
-    keypad.x.fallback = &virtualPorts[id].pad.north;
-    keypad.l.fallback = &virtualPorts[id].pad.l_bumper;
-    keypad.r.fallback = &virtualPorts[id].pad.r_bumper;
-    keypad.back.fallback = &virtualPorts[id].pad.select;
-    keypad.next.fallback = &virtualPorts[id].pad.start;
-    keypad.one.fallback = &virtualPorts[id].pad.one;
-    keypad.two.fallback = &virtualPorts[id].pad.two;
-    keypad.three.fallback = &virtualPorts[id].pad.three;
-    keypad.four.fallback = &virtualPorts[id].pad.four;
-    keypad.five.fallback = &virtualPorts[id].pad.five;
-    keypad.six.fallback = &virtualPorts[id].pad.six;
-    keypad.seven.fallback = &virtualPorts[id].pad.seven;
-    keypad.eight.fallback = &virtualPorts[id].pad.eight;
-    keypad.nine.fallback = &virtualPorts[id].pad.nine;
-    keypad.zero.fallback = &virtualPorts[id].pad.zero;
-    keypad.star.fallback = &virtualPorts[id].pad.star;
-    keypad.clear.fallback = &virtualPorts[id].pad.clear;
-    keypad.pound.fallback = &virtualPorts[id].pad.pound;
-    keypad.point.fallback = &virtualPorts[id].pad.point;
-    keypad.end.fallback = &virtualPorts[id].pad.end;
+    link(keypad.dpad.up, virtualPorts[id].pad.up);
+    link(keypad.dpad.down, virtualPorts[id].pad.down);
+    link(keypad.dpad.left, virtualPorts[id].pad.left);
+    link(keypad.dpad.right, virtualPorts[id].pad.right);
+    link(keypad.b, virtualPorts[id].pad.south);
+    link(keypad.a, virtualPorts[id].pad.east);
+    link(keypad.y, virtualPorts[id].pad.west);
+    link(keypad.x, virtualPorts[id].pad.north);
+    link(keypad.l, virtualPorts[id].pad.l_bumper);
+    link(keypad.r, virtualPorts[id].pad.r_bumper);
+    link(keypad.back, virtualPorts[id].pad.select);
+    link(keypad.next, virtualPorts[id].pad.start);
+    link(keypad.one, virtualPorts[id].pad.one);
+    link(keypad.two, virtualPorts[id].pad.two);
+    link(keypad.three, virtualPorts[id].pad.three);
+    link(keypad.four, virtualPorts[id].pad.four);
+    link(keypad.five, virtualPorts[id].pad.five);
+    link(keypad.six, virtualPorts[id].pad.six);
+    link(keypad.seven, virtualPorts[id].pad.seven);
+    link(keypad.eight, virtualPorts[id].pad.eight);
+    link(keypad.nine, virtualPorts[id].pad.nine);
+    link(keypad.zero, virtualPorts[id].pad.zero);
+    link(keypad.star, virtualPorts[id].pad.star);
+    link(keypad.clear, virtualPorts[id].pad.clear);
+    link(keypad.pound, virtualPorts[id].pad.pound);
+    link(keypad.point, virtualPorts[id].pad.point);
+    link(keypad.end, virtualPorts[id].pad.end);
 
     auto& twinTap = twinTapMappings[id];
-    twinTap.one.fallback = &virtualPorts[id].pad.south;
-    twinTap.two.fallback = &virtualPorts[id].pad.east;
+    link(twinTap.one, virtualPorts[id].pad.south);
+    link(twinTap.two, virtualPorts[id].pad.east);
 
     InputPort port{string{"Controller Port ", 1 + id}};
 
   { InputDevice device{"Gamepad"};
-    device.digital("Up",     gamepad.up);
-    device.digital("Down",   gamepad.down);
-    device.digital("Left",   gamepad.left);
-    device.digital("Right",  gamepad.right);
+    device.digital("Up",     gamepad.dpad.up);
+    device.digital("Down",   gamepad.dpad.down);
+    device.digital("Left",   gamepad.dpad.left);
+    device.digital("Right",  gamepad.dpad.right);
     device.digital("B",      gamepad.b);
     device.digital("A",      gamepad.a);
     device.digital("Y",      gamepad.y);
@@ -209,10 +200,10 @@ SuperFamicom::SuperFamicom() {
     port.append(device); }
 
   { InputDevice device{"Rumble Gamepad"};
-    device.digital("Up",     rumbleGamepad.up);
-    device.digital("Down",   rumbleGamepad.down);
-    device.digital("Left",   rumbleGamepad.left);
-    device.digital("Right",  rumbleGamepad.right);
+    device.digital("Up",     rumbleGamepad.dpad.up);
+    device.digital("Down",   rumbleGamepad.dpad.down);
+    device.digital("Left",   rumbleGamepad.dpad.left);
+    device.digital("Right",  rumbleGamepad.dpad.right);
     device.digital("B",      rumbleGamepad.b);
     device.digital("A",      rumbleGamepad.a);
     device.digital("Y",      rumbleGamepad.y);
@@ -239,10 +230,10 @@ SuperFamicom::SuperFamicom() {
     port.append(device); }
 
   { InputDevice device{"NTT Data Keypad"};
-    device.digital("Up", keypad.up);
-    device.digital("Down", keypad.down);
-    device.digital("Left", keypad.left);
-    device.digital("Right", keypad.right);
+    device.digital("Up", keypad.dpad.up);
+    device.digital("Down", keypad.dpad.down);
+    device.digital("Left", keypad.dpad.left);
+    device.digital("Right", keypad.dpad.right);
     device.digital("B", keypad.b);
     device.digital("A", keypad.a);
     device.digital("Y", keypad.y);

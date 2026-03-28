@@ -12,10 +12,7 @@ struct Nintendo64 : Emulator {
     InputAnalog lstickDown;
     InputAnalog lstickLeft;
     InputAnalog lstickRight;
-    InputDigital up;
-    InputDigital down;
-    InputDigital left;
-    InputDigital right;
+    Dpad dpad;
     InputDigital b;
     InputDigital a;
     InputDigital cUp;
@@ -49,31 +46,31 @@ Nintendo64::Nintendo64() {
 
   for(auto id : range(4)) {
     auto& gamepad = gamepadMappings[id];
-    gamepad.lstickUp.fallback = &virtualPorts[id].pad.lstick_up;
-    gamepad.lstickDown.fallback = &virtualPorts[id].pad.lstick_down;
-    gamepad.lstickLeft.fallback = &virtualPorts[id].pad.lstick_left;
-    gamepad.lstickRight.fallback = &virtualPorts[id].pad.lstick_right;
-    gamepad.up.fallback = &virtualPorts[id].pad.up;
-    gamepad.down.fallback = &virtualPorts[id].pad.down;
-    gamepad.left.fallback = &virtualPorts[id].pad.left;
-    gamepad.right.fallback = &virtualPorts[id].pad.right;
-    gamepad.b.fallback = &virtualPorts[id].pad.west;
-    gamepad.a.fallback = &virtualPorts[id].pad.south;
-    gamepad.cUp.fallback = &virtualPorts[id].pad.rstick_up;
-    gamepad.cDown.fallback = &virtualPorts[id].pad.rstick_down;
-    gamepad.cLeft.fallback = &virtualPorts[id].pad.rstick_left;
-    gamepad.cRight.fallback = &virtualPorts[id].pad.rstick_right;
-    gamepad.l.fallback = &virtualPorts[id].pad.l_bumper;
-    gamepad.r.fallback = &virtualPorts[id].pad.r_bumper;
-    gamepad.z.fallback = &virtualPorts[id].pad.r_trigger;
-    gamepad.start.fallback = &virtualPorts[id].pad.start;
-    gamepad.rumble.fallback = &virtualPorts[id].pad.rumble;
+    link(gamepad.lstickUp, virtualPorts[id].pad.lstick_up);
+    link(gamepad.lstickDown, virtualPorts[id].pad.lstick_down);
+    link(gamepad.lstickLeft, virtualPorts[id].pad.lstick_left);
+    link(gamepad.lstickRight, virtualPorts[id].pad.lstick_right);
+    link(gamepad.dpad.up, virtualPorts[id].pad.up);
+    link(gamepad.dpad.down, virtualPorts[id].pad.down);
+    link(gamepad.dpad.left, virtualPorts[id].pad.left);
+    link(gamepad.dpad.right, virtualPorts[id].pad.right);
+    link(gamepad.b, virtualPorts[id].pad.west);
+    link(gamepad.a, virtualPorts[id].pad.south);
+    link(gamepad.cUp, virtualPorts[id].pad.rstick_up);
+    link(gamepad.cDown, virtualPorts[id].pad.rstick_down);
+    link(gamepad.cLeft, virtualPorts[id].pad.rstick_left);
+    link(gamepad.cRight, virtualPorts[id].pad.rstick_right);
+    link(gamepad.l, virtualPorts[id].pad.l_bumper);
+    link(gamepad.r, virtualPorts[id].pad.r_bumper);
+    link(gamepad.z, virtualPorts[id].pad.r_trigger);
+    link(gamepad.start, virtualPorts[id].pad.start);
+    link(gamepad.rumble, virtualPorts[id].pad.rumble);
 
     auto& mouse = mouseMappings[id];
-    mouse.x.fallback = &virtualPorts[id].mouse.x;
-    mouse.y.fallback = &virtualPorts[id].mouse.y;
-    mouse.left.fallback = &virtualPorts[id].mouse.left;
-    mouse.right.fallback = &virtualPorts[id].mouse.right;
+    link(mouse.x, virtualPorts[id].mouse.x);
+    link(mouse.y, virtualPorts[id].mouse.y);
+    link(mouse.left, virtualPorts[id].mouse.left);
+    link(mouse.right, virtualPorts[id].mouse.right);
 
     InputPort port{string{"Controller Port ", 1 + id}};
 
@@ -82,10 +79,10 @@ Nintendo64::Nintendo64() {
     device.analog ("L-Down",  gamepad.lstickDown);
     device.analog ("L-Left",  gamepad.lstickLeft);
     device.analog ("L-Right", gamepad.lstickRight);
-    device.digital("Up",      gamepad.up);
-    device.digital("Down",    gamepad.down);
-    device.digital("Left",    gamepad.left);
-    device.digital("Right",   gamepad.right);
+    device.digital("Up",      gamepad.dpad.up);
+    device.digital("Down",    gamepad.dpad.down);
+    device.digital("Left",    gamepad.dpad.left);
+    device.digital("Right",   gamepad.dpad.right);
     device.digital("B",       gamepad.b);
     device.digital("A",       gamepad.a);
     device.digital("C-Up",    gamepad.cUp);

@@ -6,10 +6,7 @@ struct GameBoyAdvance : Emulator {
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   string deviceName;
 
-  InputDigital up;
-  InputDigital down;
-  InputDigital left;
-  InputDigital right;
+  Dpad dpad;
   InputDigital a;
   InputDigital b;
   InputDigital l;
@@ -25,25 +22,25 @@ GameBoyAdvance::GameBoyAdvance() {
 
   firmware.push_back({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
 
-  up.fallback = &virtualPorts[0].pad.up;
-  down.fallback = &virtualPorts[0].pad.down;
-  left.fallback = &virtualPorts[0].pad.left;
-  right.fallback = &virtualPorts[0].pad.right;
-  a.fallback = &virtualPorts[0].pad.south;
-  b.fallback = &virtualPorts[0].pad.east;
-  l.fallback = &virtualPorts[0].pad.l_bumper;
-  r.fallback = &virtualPorts[0].pad.r_bumper;
-  select.fallback = &virtualPorts[0].pad.select;
-  start.fallback = &virtualPorts[0].pad.start;
-  rumble.fallback = &virtualPorts[0].pad.rumble;
+  link(dpad.up, virtualPorts[0].pad.up);
+  link(dpad.down, virtualPorts[0].pad.down);
+  link(dpad.left, virtualPorts[0].pad.left);
+  link(dpad.right, virtualPorts[0].pad.right);
+  link(a, virtualPorts[0].pad.south);
+  link(b, virtualPorts[0].pad.east);
+  link(l, virtualPorts[0].pad.l_bumper);
+  link(r, virtualPorts[0].pad.r_bumper);
+  link(select, virtualPorts[0].pad.select);
+  link(start, virtualPorts[0].pad.start);
+  link(rumble, virtualPorts[0].pad.rumble);
 
   { InputPort port{string{"Game Boy Advance"}};
 
   { InputDevice device{"Controls"};
-    device.digital("Up",     up);
-    device.digital("Down",   down);
-    device.digital("Left",   left);
-    device.digital("Right",  right);
+    device.digital("Up",     dpad.up);
+    device.digital("Down",   dpad.down);
+    device.digital("Left",   dpad.left);
+    device.digital("Right",  dpad.right);
     device.digital("B",      b);
     device.digital("A",      a);
     device.digital("L",      l);
