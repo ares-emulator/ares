@@ -7,12 +7,7 @@ struct GameBoyAdvance : Emulator {
   string deviceName;
 
   Dpad dpad;
-  InputDigital a;
-  InputDigital b;
-  InputDigital l;
-  InputDigital r;
-  InputDigital select;
-  InputDigital start;
+  InputDigital a, b, l, r, select, start;
   InputRumble rumble;
 };
 

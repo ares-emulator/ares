@@ -6,83 +6,39 @@ struct SuperFamicom : Emulator {
 
   struct GamepadMappings {
     Dpad dpad;
-    InputDigital b;
-    InputDigital a;
-    InputDigital y;
-    InputDigital x;
-    InputDigital l;
-    InputDigital r;
-    InputDigital select;
-    InputDigital start;
+    InputDigital b, a, y, x, l, r, select, start;
   };
 
   struct RumbleGamepadMappings {
     Dpad dpad;
-    InputDigital b;
-    InputDigital a;
-    InputDigital y;
-    InputDigital x;
-    InputDigital l;
-    InputDigital r;
-    InputDigital select;
-    InputDigital start;
+    InputDigital b, a, y, x, l, r, select, start;
     InputRumble rumble;
   };
 
   struct PointerMappings {
-    InputRelative x;
-    InputRelative y;
-    InputDigital left;
-    InputDigital middle;
-    InputDigital right;
+    InputRelative x, y;
+    InputDigital left, middle, right;
   };
 
   struct JustifierMappings {
-    InputRelative x;
-    InputRelative y;
-    InputDigital trigger;
-    InputDigital start;
+    InputRelative x, y;
+    InputDigital trigger, start;
   };
 
   struct SuperScopeMappings {
-    InputRelative x;
-    InputRelative y;
-    InputDigital trigger;
-    InputDigital cursor;
-    InputDigital turbo;
-    InputDigital pause;
+    InputRelative x, y;
+    InputDigital trigger, cursor, turbo, pause;
   };
 
   struct NttDataKeypadMappings {
     Dpad dpad;
-    InputDigital b;
-    InputDigital a;
-    InputDigital y;
-    InputDigital x;
-    InputDigital l;
-    InputDigital r;
-    InputDigital back;
-    InputDigital next;
-    InputDigital one;
-    InputDigital two;
-    InputDigital three;
-    InputDigital four;
-    InputDigital five;
-    InputDigital six;
-    InputDigital seven;
-    InputDigital eight;
-    InputDigital nine;
-    InputDigital zero;
-    InputDigital star;
-    InputDigital clear;
-    InputDigital pound;
-    InputDigital point;
-    InputDigital end;
+    InputDigital b, a, y, x, l, r, back, next;
+    InputDigital one, two, three, four, five, six, seven, eight, nine, zero;
+    InputDigital star, clear, pound, point, end;
   };
 
   struct TwinTapMappings {
-    InputDigital one;
-    InputDigital two;
+    InputDigital one, two;
   };
 
   GamepadMappings gamepadMappings[2];

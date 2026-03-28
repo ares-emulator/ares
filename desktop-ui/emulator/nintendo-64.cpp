@@ -8,29 +8,15 @@ struct Nintendo64 : Emulator {
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
 
   struct GamepadMappings {
-    InputAnalog lstickUp;
-    InputAnalog lstickDown;
-    InputAnalog lstickLeft;
-    InputAnalog lstickRight;
+    InputAnalog lstickUp, lstickDown, lstickLeft, lstickRight;
     Dpad dpad;
-    InputDigital b;
-    InputDigital a;
-    InputDigital cUp;
-    InputDigital cDown;
-    InputDigital cLeft;
-    InputDigital cRight;
-    InputDigital l;
-    InputDigital r;
-    InputDigital z;
-    InputDigital start;
+    InputDigital b, a, cUp, cDown, cLeft, cRight, l, r, z, start;
     InputRumble rumble;
   };
 
   struct MouseMappings {
-    InputRelative x;
-    InputRelative y;
-    InputDigital left;
-    InputDigital right;
+    InputRelative x, y;
+    InputDigital left, right;
   };
 
   GamepadMappings gamepadMappings[4];
