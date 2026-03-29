@@ -29,6 +29,10 @@ auto RSP::Debugger::load(Node::Object parent) -> void {
     });
   }
 
+  tracer.emux = parent->append<Node::Debugger::Tracer::Notification>("EMUX", "RSP");
+  tracer.emux->setAutoLineBreak(false);
+  tracer.emux->setTerminal(true);
+
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "RSP");
 
   if (system.homebrewMode) {
@@ -45,6 +49,7 @@ auto RSP::Debugger::unload() -> void {
   memory.dmem.reset();
   memory.imem.reset();
   tracer.instruction.reset();
+  tracer.emux.reset();
   tracer.io.reset();
 }
 
@@ -52,11 +57,30 @@ auto RSP::Debugger::instruction() -> void {
   if(unlikely(tracer.instruction->enabled())) {
     u32 address = rsp.pipeline.address & 0xfff;
     u32 instruction = rsp.pipeline.instruction;
+    u32 cycle = rsp.pipeline.clocksTotal / 3 - tracer.traceStartCycle;
+
+    bool hasDblIssues = rsp.pipeline.dblIssueCount > 0 && cycle != 0;
+    string cycleStr = hasDblIssues
+      ? string{"   ^"}
+      : pad(cycle, 4, ' ');
+
     if(tracer.instruction->address(address)) {
       rsp.disassembler.showColors = 0;
-      tracer.instruction->notify(rsp.disassembler.disassemble(address, instruction), {});
+      string res{"[", cycleStr, "] ", 
+        "\033[A", // cursor up
+          pad(pad("", rsp.pipeline.stallCount, '*'), 3, ' '),
+        "\033[B", // cursor down
+        " | ",
+        rsp.disassembler.disassemble(address, instruction)
+      };
+      tracer.instruction->notify(res, {});
       rsp.disassembler.showColors = 1;
     }
+  }
+
+  if(tracer.instructionCountdown) {
+    if (--tracer.instructionCountdown == 0)
+      tracer.instruction->setEnabled(false);
   }
 }
 
