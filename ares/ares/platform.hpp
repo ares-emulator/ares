@@ -8,6 +8,7 @@ enum class Event : u32 {
   Frame,
   Power,
   Synchronize,
+  Shutdown
 };
 
 struct Platform {

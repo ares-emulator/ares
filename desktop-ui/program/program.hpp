@@ -126,6 +126,7 @@ private:
 
   atomic<bool> _quitting = false;
   atomic<bool> _needsResize = false;
+  atomic<bool> _quitRequested = false;  // quit requested by emulator thread
 
   /// Mutex used to manage access to the status message queue.
   std::recursive_mutex _messageMutex;
