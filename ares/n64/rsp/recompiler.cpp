@@ -128,12 +128,17 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 #define Rdn (instruction >> 11 & 31)
 #define Rtn (instruction >> 16 & 31)
 #define Rsn (instruction >> 21 & 31)
+#define XRtn (instruction >> 15 & 31)
+#define XRdn (instruction >> 20 & 31)
+#define XCODE (instruction >> 6 & 511)
 #define Vdn (instruction >>  6 & 31)
 #define Vsn (instruction >> 11 & 31)
 #define Vtn (instruction >> 16 & 31)
 #define Rd  IpuReg(r[0]) + Rdn * sizeof(r32)
 #define Rt  IpuReg(r[0]) + Rtn * sizeof(r32)
 #define Rs  IpuReg(r[0]) + Rsn * sizeof(r32)
+#define XRd IpuReg(r[0]) + XRdn * sizeof(r32)
+#define XRt IpuReg(r[0]) + XRtn * sizeof(r32)
 #define Vd  VuReg(r[0]) + Vdn * sizeof(r128)
 #define Vs  VuReg(r[0]) + Vsn * sizeof(r128)
 #define Vt  VuReg(r[0]) + Vtn * sizeof(r128)
@@ -517,7 +522,6 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
-
   }
 
   return 0;
@@ -587,6 +591,70 @@ auto RSP::Recompiler::emitSCC(u32 instruction) -> bool {
 
   //INVALID
   case range27(0x05, 0x1f): {
+    return 0;
+  }
+
+  }
+
+  switch(instruction & 0x3f) {
+
+  //XDETECT
+  case 0x20: {
+    callf(&RSP::XDETECT, mem(XRd), imm(XCODE));
+    return 0;
+  }
+
+  //XTRACE-START
+  case 0x23: {
+    callf(&RSP::XTRACESTART, imm(XCODE));
+    return 0;
+  }
+
+  //XTRACE-STOP
+  case 0x24: {
+    callf(&RSP::XTRACESTOP);
+    return 0;
+  }
+
+  //XLOG
+  case 0x25: {
+    callf(&RSP::XLOG, mem(XRd), mem(XRt), imm(XCODE));
+    return 0;
+  }
+
+  //XLOGREGS
+  case 0x26: {
+    callf(&RSP::XLOGREGS, mem(XRd), imm(XCODE));
+    return 0;
+  }
+
+  //XHEXDUMP
+  case 0x27: {
+    callf(&RSP::XHEXDUMP, mem(XRd), mem(XRt), imm(XCODE));
+    return 0;
+  }
+
+  //XPROF
+  case 0x28: {
+    callf(&RSP::XPROF, mem(XRd), imm(XCODE));
+    return 0;
+  }
+
+  //XPROFREAD
+  case 0x29: {
+    callf(&RSP::XPROFREAD, mem(XRd), mem(XRt));
+    return 0;
+  }
+
+  //XEXCEPTION
+  case 0x2a: {
+    callf(&RSP::XEXCEPTION, mem(XRt));
+    return 0;
+  }
+
+  //XIOCTL
+  case 0x2c: {
+    callf(&RSP::XIOCTL, imm(XCODE));
     return 0;
   }
 
@@ -1208,12 +1276,17 @@ auto RSP::Recompiler::isTerminal(u32 instruction) -> bool {
 #undef Rdn
 #undef Rtn
 #undef Rsn
+#undef XRtn
+#undef XRdn
+#undef XCODE
 #undef Vdn
 #undef Vsn
 #undef Vtn
 #undef Rd
 #undef Rt
 #undef Rs
+#undef XRd
+#undef XRt
 #undef Vd
 #undef Vs
 #undef Vt
