@@ -132,8 +132,8 @@ inline auto CPU::busWrite(u32 address, u64 data) -> void {
 }
 
 template<u32 Size>
-inline auto CPU::busWriteBurst(u32 address, u32 *data) -> void {
-  bus.writeBurst<Size>(address, data, *this);
+inline auto CPU::busWriteBurst(u32 address, u32 *data) -> bool {
+  return bus.writeBurst<Size>(address, data, *this);
 }
 
 template<u32 Size>
@@ -142,7 +142,7 @@ inline auto CPU::busRead(u32 address) -> u64 {
 }
 
 template<u32 Size>
-inline auto CPU::busReadBurst(u32 address, u32 *data) -> void {
+inline auto CPU::busReadBurst(u32 address, u32 *data) -> bool {
   return bus.readBurst<Size>(address, data, *this);
 }
 
@@ -217,6 +217,10 @@ auto CPU::addressException(u64 vaddr) -> void {
   scc.context.badVirtualAddress = vaddr >> 13;
   scc.xcontext.badVirtualAddress = vaddr >> 13;
   scc.xcontext.region = vaddr >> 62;
+}
+
+auto CPU::emuxException(u8 kind) -> void {
+  scc.cacheError.unused = kind;
 }
 
 template auto CPU::writeDebug<Byte>(u64, u64) -> bool;

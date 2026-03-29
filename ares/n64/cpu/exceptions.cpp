@@ -53,6 +53,7 @@ auto CPU::Exception::arithmeticOverflow()      -> void { trigger(12); }
 auto CPU::Exception::trap()                    -> void { trigger(13); }
 auto CPU::Exception::floatingPoint()           -> void { trigger(15); }
 auto CPU::Exception::watchAddress()            -> void { trigger(23); }
+auto CPU::Exception::emux()                    -> void { trigger(24); }
 
 auto CPU::Exception::nmi() -> void {
   self.scc.status.vectorLocation = 1;
