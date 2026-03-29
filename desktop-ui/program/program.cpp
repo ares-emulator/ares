@@ -158,10 +158,18 @@ auto Program::main() -> void {
     propertiesViewer.liveRefresh();
     tapeViewer.liveRefresh();
   }
+  if (_quitRequested) {
+    quit();
+  }
 }
 
 auto Program::quit() -> void {
+  if (_programThread) {
+    _quitRequested = true;
+    return;
+  }
   Program::Guard guard;
+  _quitRequested = false;
   _quitting = true;
   if(lock.owns_lock()) {
     lock.unlock();

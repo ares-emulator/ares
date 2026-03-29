@@ -27,6 +27,9 @@ auto Program::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
 }
 
 auto Program::event(ares::Event event) -> void {
+  if(event == ares::Event::Shutdown) {
+    quit();
+  }
 }
 
 auto Program::log(ares::Node::Debugger::Tracer::Tracer node, string_view message) -> void {
