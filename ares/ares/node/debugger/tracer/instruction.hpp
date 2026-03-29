@@ -28,6 +28,15 @@ struct Instruction : Tracer {
     for(auto& history : _history) history = ~0ull;
   }
 
+  auto setEnabled(bool enabled) -> void {
+    Tracer::setTerminal(enabled);
+    if(!enabled) {
+      _omitted = 0;
+      setMask(_mask);
+      setDepth(_depth);
+    }
+  }
+
   auto address(u64 address) -> bool {
     address &= ~0ull >> (64 - _addressBits);  //mask upper bits of address
     _address = address;

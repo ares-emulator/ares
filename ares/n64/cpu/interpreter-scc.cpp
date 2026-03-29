@@ -114,7 +114,7 @@ auto CPU::getControlRegister(n5 index) -> u64 {
     data.bit(0,7) = scc.parityError.diagnostic;
     break;
   case 27:  //cache error (unused)
-    data.bit(0,31) = 0;
+    data.bit(0,31) = scc.cacheError.unused;
     break;
   case 28:  //taglo
     data.bit(6, 7) = scc.tagLo.primaryCacheState;
@@ -250,6 +250,7 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.parityError.diagnostic = data.bit(0,7);
     break;
   case 27:  //cache error (unused)
+    scc.cacheError.unused = 0; // emux spec: writes reset this register to the hardware value (0)
     break;
   case 28:  //taglo
     scc.tagLo.primaryCacheState          = data.bit(6, 7);

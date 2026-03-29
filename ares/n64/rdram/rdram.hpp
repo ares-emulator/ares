@@ -13,6 +13,7 @@ struct RDRAM : Memory::RCP<RDRAM> {
       if (address >= size) return 0;
       if (unlikely(system.homebrewMode)) {
         self.debugger.readWord(address, Size, device);
+        self.profile.metrics[(u32)device].reads += Size;
       }
       return Memory::Writable::read<Size>(address);
     }
@@ -82,15 +83,25 @@ struct RDRAM : Memory::RCP<RDRAM> {
         self.debugger.writeWord(address, Size, value, device);
       }
       if (unlikely(mi.initializeMode())) {
-        writeRepeat<Size>(address, value, mi.initializeLength()+1);
+        u32 len = mi.initializeLength() + 1;
+        writeRepeat<Size>(address, value, len);
+        if(unlikely(system.homebrewMode)) {
+          self.profile.metrics[(u32)device].writes += len;
+        }
       } else {
         Memory::Writable::write<Size>(address, value);
+        if(unlikely(system.homebrewMode)) {
+          self.profile.metrics[(u32)device].writes += Size;
+        }
       }
     }
 
     template<u32 Size>
     auto writeBurst(u32 address, u32 *value, RBusDevice device) -> void {
       if (address >= size) return;
+      if (unlikely(system.homebrewMode)) {
+        self.profile.metrics[(u32)device].writes += Size;
+      }
       Memory::Writable::write<Word>(address | 0x00, value[0]);
       Memory::Writable::write<Word>(address | 0x04, value[1]);
       Memory::Writable::write<Word>(address | 0x08, value[2]);
@@ -110,6 +121,9 @@ struct RDRAM : Memory::RCP<RDRAM> {
         if (Size == ICache)
           value[4] = value[5] = value[6] = value[7] = 0;
         return;
+      }
+      if (unlikely(system.homebrewMode)) {
+        self.profile.metrics[(u32)device].reads += Size;
       }
       value[0] = Memory::Writable::read<Word>(address | 0x00);
       value[1] = Memory::Writable::read<Word>(address | 0x04);
@@ -165,6 +179,25 @@ struct RDRAM : Memory::RCP<RDRAM> {
       default:                          return "Unknown";
     }
   }
+
+  struct Metric {
+    u64 reads, writes;
+    auto total() const -> u64 { return reads + writes; }
+  };
+  
+  struct Profile {
+    Metric metrics[(u32)RBusDevice::NUM_RBUS_DEVICES];
+
+    auto total() -> Metric {
+      Metric total;
+      for(u32 n = 0; n < (u32)RBusDevice::NUM_RBUS_HW_DEVICES; n++) {
+        total.reads  += metrics[n].reads;
+        total.writes += metrics[n].writes;
+      }
+      return total;
+    }
+  } profile;
+
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto power(bool reset) -> void;

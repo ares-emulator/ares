@@ -64,11 +64,11 @@ auto RDRAM::Debugger::cacheErrorContext(string peripheral) -> string {
   if(peripheral == "CPU") {
     return { "\tCurrent CPU PC: 0x", hex(cpu.ipu.pc, 16L), "\n" };
   }
-  if(peripheral == "RSP DMA") {
+  if(peripheral == "SP DMA") {
     if(rsp.dma.current.originCpu) {
-      return { "\tRSP DMA started at CPU PC: 0x", hex(rsp.dma.current.originPc, 16L), "\n" };
+      return { "\tSP DMA started at CPU PC: 0x", hex(rsp.dma.current.originPc, 16L), "\n" };
     } else {
-      return { "\tRSP DMA started at RSP PC: 0x", hex(rsp.dma.current.originPc,  3L), "\n" };
+      return { "\tSP DMA started at RSP PC: 0x", hex(rsp.dma.current.originPc,  3L), "\n" };
     }
   }
   if(peripheral == "PI DMA") {
@@ -86,6 +86,7 @@ auto RDRAM::Debugger::readWord(u32 address, int size, RBusDevice device) -> void
     auto& line = cpu.dcache.line(address);
     u16 dirtyMask = ((1 << size) - 1) << (address & 0xF);
     if (line.hit(address) && (line.dirty & dirtyMask)) {
+      if(device == RBusDevice::SP_DMA) return; // ignore: prefer deferring to actual DMEM access, see RSP::Debugger::dmemReadWord
       string msg = { rdram.requestorName(device), " reading from RDRAM address 0x", hex(address), " which is modified in the cache (missing cache writeback?)\n"};
       msg.append(string{ "\tCacheline was loaded at CPU PC: 0x", hex(line.fillPc, 16L), "\n" });
       msg.append(string{ "\tCacheline was last written at CPU PC: 0x", hex(line.dirtyPc, 16L), "\n" });

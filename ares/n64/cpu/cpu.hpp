@@ -25,6 +25,7 @@ struct CPU : Thread {
       Node::Debugger::Tracer::Notification exception;
       Node::Debugger::Tracer::Notification interrupt;
       Node::Debugger::Tracer::Notification tlb;
+      Node::Debugger::Tracer::Notification emux;
     } tracer;
   } debugger;
 
@@ -114,22 +115,14 @@ struct CPU : Thread {
     struct Line;
     auto line(u64 vaddr) -> Line& { return lines[vaddr >> 5 & 0x1ff]; }
 
-    //used by the recompiler to simulate instruction cache fetch timing
-    auto step(u64 vaddr, u32 paddr) -> void {
-      auto& line = this->line(vaddr);
-      if(!line.hit(paddr)) {
-        self.step(48 * 2);
-        line.valid = 1;
-        line.tag   = paddr & ~0x0000'0fff;
-      } else {
-        self.step(1 * 2);
-      }
-    }
-
+    //call by recompiled blocks to prefetch instructions into the cache
     auto jitFetch(u64 vaddr, u32 paddr, CPU& cpu) -> void {
       auto& line = this->line(vaddr);
       if(!line.hit(paddr)) {
+        self.profile.icacheMisses++;
         line.fill(paddr, cpu);
+      } else {
+        self.profile.icacheHits++;
       }
     }
 
@@ -137,7 +130,10 @@ struct CPU : Thread {
     auto fetch(u64 vaddr, u32 paddr, CPU& cpu) -> u32 {
       auto& line = this->line(vaddr);
       if(!line.hit(paddr)) {
+        self.profile.icacheMisses++;
         line.fill(paddr, cpu);
+      } else {
+        self.profile.icacheHits++;
       }
       return line.read(paddr);
     }
@@ -190,6 +186,7 @@ struct CPU : Thread {
 
   //dcache.cpp
   struct DataCache {
+    CPU& self;
     struct Line;
     auto line(u64 vaddr) -> Line&;
     template<u32 Size> auto read(u64 vaddr, u32 paddr) -> u64;
@@ -219,7 +216,7 @@ struct CPU : Thread {
         u32 words[4];
       };
     } lines[512];
-  } dcache;
+  } dcache{*this};
 
   //tlb.cpp: Translation Lookaside Buffer
   struct TLB {
@@ -305,8 +302,8 @@ struct CPU : Thread {
   }
   template<u32 Size> auto busWrite(u32 address, u64 data) -> void;
   template<u32 Size> auto busRead(u32 address) -> u64;
-  template<u32 Size> auto busWriteBurst(u32 address, u32 *data) -> void;
-  template<u32 Size> auto busReadBurst(u32 address, u32 *data) -> void;
+  template<u32 Size> auto busWriteBurst(u32 address, u32 *data) -> bool;
+  template<u32 Size> auto busReadBurst(u32 address, u32 *data) -> bool;
   template<u32 Size> auto read(PhysAccess access) -> maybe<u64>;
   template<u32 Size> auto write(PhysAccess access, u64 data) -> bool;
   template<u32 Size> auto read(u64 vaddr) -> maybe<u64> {
@@ -317,6 +314,7 @@ struct CPU : Thread {
   }
   template<u32 Size> auto vaddrAlignedError(u64 vaddr, bool write) -> bool;
   auto addressException(u64 vaddr) -> void;
+  auto emuxException(u8 kind) -> void;
 
   template <u32 Size> auto readDebug(u64 vaddr) -> u64;
   template <u32 Size> auto writeDebug(u64 vaddr, u64 data) -> bool;
@@ -352,6 +350,7 @@ struct CPU : Thread {
     auto coprocessor3() -> void;
     auto arithmeticOverflow() -> void;
     auto trap() -> void;
+    auto emux() -> void;
     auto floatingPoint() -> void;
     auto watchAddress() -> void;
     auto nmi() -> void;
@@ -639,6 +638,11 @@ struct CPU : Thread {
     struct ParityError {
       n8 diagnostic;  //unused; for R4000 compatibility only
     } parityError;
+
+    //27
+    struct CacheError {
+      n32 unused;     //unused; for R4000 compatibility only
+    } cacheError;
 
     //28
     struct TagLo {
@@ -974,6 +978,40 @@ struct CPU : Thread {
     uint64_t vbase;
     uint64_t pbase;
   } devirtualizeCache;
+
+  //emux.cpp
+  union Profile {
+    struct {
+      s64 cpuCycles;
+      s64 cpuCyclesExc;
+      s64 icacheHits, icacheMisses, icacheWritebacks;
+      s64 dcacheHits, dcacheMisses, dcacheWritebacks;
+    };
+    s64 data[8];
+    Profile() : data{0} {}
+  } profile;
+
+  struct ProfileSlot {
+    Profile cpu;
+    RDRAM::Profile rdram;
+    n1 started = 0;
+
+    static auto global() -> ProfileSlot;
+  };
+
+  std::vector<ProfileSlot> profileSlots;
+
+  struct EmuxState {
+    n64 excMask;
+  } emuxState;
+
+  auto XDETECT(r64& rd, u64 code) -> void;
+  auto XLOG(cr64& rd, cr64& rt, u64 code) -> void;
+  auto XHEXDUMP(cr64& rd, cr64& rt) -> void;
+  auto XPROF(cr64& rd, u64 code) -> void;
+  auto XPROFREAD(cr64& rd, r64& rt) -> void;
+  auto XEXCEPTION(r64& rt) -> void;
+  auto XIOCTL(u64 code) -> void;
 };
 
 extern CPU cpu;
