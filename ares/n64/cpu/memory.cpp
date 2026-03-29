@@ -128,7 +128,7 @@ auto CPU::devirtualizeDebug(u64 vaddr) -> u64 {
 
 template<u32 Size>
 inline auto CPU::busWrite(u32 address, u64 data) -> void {
-  bus.write<Size>(address, data, *this, "CPU");
+  bus.write<Size>(address, data, *this, RBusDevice::VR4300_UNCACHED);
 }
 
 template<u32 Size>
@@ -138,7 +138,7 @@ inline auto CPU::busWriteBurst(u32 address, u32 *data) -> void {
 
 template<u32 Size>
 inline auto CPU::busRead(u32 address) -> u64 {
-  return bus.read<Size>(address, *this, "CPU");
+  return bus.read<Size>(address, *this, RBusDevice::VR4300_UNCACHED);
 }
 
 template<u32 Size>
@@ -167,7 +167,7 @@ auto CPU::readDebug(u64 vaddr) -> u64 {
   auto access = devirtualize<Read, Size>(vaddr, false, false);
   if(!access) return 0;
   if(access.cache) return dcache.readDebug<Size>(access.vaddr, access.paddr);
-  return bus.read<Size>(access.paddr, dummyThread, "Ares Debugger");
+  return bus.read<Size>(access.paddr, dummyThread, RBusDevice::ARES_DEBUGGER);
 }
 
 
@@ -186,7 +186,7 @@ auto CPU::writeDebug(u64 vaddr, u64 data) -> bool {
   if(!access) return false;
   GDB::server.reportMemWrite(access.vaddr, Size);
   if(access.cache) return dcache.writeDebug<Size>(access.vaddr, access.paddr, data), true;
-  return bus.write<Size>(access.paddr, data, dummyThread, "Ares Debugger"), true;
+  return bus.write<Size>(access.paddr, data, dummyThread, RBusDevice::ARES_DEBUGGER), true;
 }
 
 template<u32 Size>
