@@ -47,7 +47,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
   constexpr u32 branchToSelf = 0x1000'ffff;  //beq 0,0,<pc>
   u32 jumpToSelf = 2 << 26 | vaddr >> 2 & 0x3ff'ffff;  //j <pc>
   while(true) {
-    u32 instruction = bus.read<Word>(address, thread, "Ares Recompiler");
+    u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
     mov32(PipelineReg(nstate), imm(0));
     mov64(reg(0), PipelineReg(nextpc));
     mov64(PipelineReg(pc), reg(0));
