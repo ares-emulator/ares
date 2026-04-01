@@ -12,6 +12,9 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
   tracer.exception = parent->append<Node::Debugger::Tracer::Notification>("Exception", "CPU");
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "CPU");
   tracer.tlb = parent->append<Node::Debugger::Tracer::Notification>("TLB", "CPU");
+  tracer.emux = parent->append<Node::Debugger::Tracer::Notification>("EMUX", "CPU");
+  tracer.emux->setAutoLineBreak(false);
+  tracer.emux->setTerminal(true);
 }
 
 auto CPU::Debugger::unload() -> void {

@@ -217,7 +217,7 @@ auto System::initDebugHooks() -> void {
     } else if (address >= 0xffff'ffff'a000'0000ull && address + byteCount <= 0xffff'ffff'a3ef'ffffull) {
       Thread dummyThread{};
       for(u32 i : range(byteCount)) {
-        auto val = bus.read<Byte>(address & 0x1fff'ffff, dummyThread, "Ares Debugger");
+        auto val = bus.read<Byte>(address & 0x1fff'ffff, dummyThread, RBusDevice::ARES_DEBUGGER);
         hexByte(resPtr, val);
         resPtr += 2;
         address++;
@@ -229,7 +229,7 @@ auto System::initDebugHooks() -> void {
       // as the user would expect.
       Thread dummyThread{};
       for(u32 i : range(byteCount / 4)) {
-        u64 value = bus.read<Word>(address & 0x1fff'ffff, dummyThread, "Ares Debugger");
+        u64 value = bus.read<Word>(address & 0x1fff'ffff, dummyThread, RBusDevice::ARES_DEBUGGER);
         hexByte(resPtr + 0, (value >> 24) & 0xff);
         hexByte(resPtr + 2, (value >> 16) & 0xff);
         hexByte(resPtr + 4, (value >> 8) & 0xff);
@@ -278,7 +278,7 @@ auto System::initDebugHooks() -> void {
     } else if (address >= 0xffff'ffff'a000'0000ull && address + data.size() <= 0xffff'ffff'a3ef'ffffull) {
       Thread dummyThread{};
       for(auto b : data) {
-        bus.write<Byte>(address & 0x1fff'ffff, b, dummyThread, "Ares Debugger");
+        bus.write<Byte>(address & 0x1fff'ffff, b, dummyThread, RBusDevice::ARES_DEBUGGER);
         address++;
       }
     } else if (address >= 0xffff'ffff'a400'0000ull && address + data.size() <= 0xffff'ffff'bfff'ffffull) {
@@ -288,7 +288,7 @@ auto System::initDebugHooks() -> void {
       Thread dummyThread{};
       for(u32 i = 0; i < data.size() / 4; i++) {
         u64 value = ((u64)data[i*4+0]<<24) | ((u64)data[i*4+1]<<16) | ((u64)data[i*4+2]<<8) | ((u64)data[i*4+3]<<0);
-        bus.write<Word>(address & 0x1fff'ffff, value, dummyThread, "Ares Debugger");
+        bus.write<Word>(address & 0x1fff'ffff, value, dummyThread, RBusDevice::ARES_DEBUGGER);
         address += 4;
       }
     }

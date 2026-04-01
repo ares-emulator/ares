@@ -1,8 +1,8 @@
 template<u32 Size>
-inline auto Bus::read(u32 address, Thread& thread, const char *peripheral) -> u64 {
+inline auto Bus::read(u32 address, Thread& thread, RBusDevice device) -> u64 {
   static_assert(Size == Byte || Size == Half || Size == Word || Size == Dual);
 
-  if(address <= 0x03ef'ffff) return rdram.ram.read<Size>(address, peripheral);
+  if(address <= 0x03ef'ffff) return rdram.ram.read<Size>(address, device);
   if(address <= 0x03ff'ffff) return rdram.read<Size>(address, thread);
   if(Size == Dual)           return freezeDualRead(address), 0;
   if(address <= 0x0407'ffff) return rsp.read<Size>(address, thread);
@@ -25,10 +25,13 @@ inline auto Bus::read(u32 address, Thread& thread, const char *peripheral) -> u6
 }
 
 template<u32 Size>
-inline auto Bus::readBurst(u32 address, u32 *data, Thread& thread) -> void {
+inline auto Bus::readBurst(u32 address, u32 *data, Thread& thread) -> bool {
   static_assert(Size == DCache || Size == ICache);
+  RBusDevice device;
+  if constexpr(Size == DCache) device = RBusDevice::VR4300_DCACHE;
+  if constexpr(Size == ICache) device = RBusDevice::VR4300_ICACHE;
 
-  if(address <= 0x03ef'ffff) return rdram.ram.readBurst<Size>(address, data, "CPU");
+  if(address <= 0x03ef'ffff) return rdram.ram.readBurst<Size>(address, data, device), true;
   if(address <= 0x03ff'ffff) {
     // FIXME: not hardware validated, no idea of the behavior
     data[0] = rdram.readWord(address | 0x0, thread);
@@ -41,26 +44,26 @@ inline auto Bus::readBurst(u32 address, u32 *data, Thread& thread) -> void {
       data[6] = 0;
       data[7] = 0;
     }
-    return;
+    return true;
   }
 
   if(Model::Aleck64()) {
-    if(address <= 0xbfff'ffff) return freezeUncached(address);
-    if(address <= 0xc07f'ffff) return aleck64.sdram.readBurst<Size>(address, data, "CPU");
+    if(address <= 0xbfff'ffff) return freezeUncached(address), false;
+    if(address <= 0xc07f'ffff) return aleck64.sdram.readBurst<Size>(address, data, device), true;
   }
 
-  return freezeUncached(address);
+  return freezeUncached(address), false;
 }
 
 template<u32 Size>
-inline auto Bus::write(u32 address, u64 data, Thread& thread, const char *peripheral) -> void {
+inline auto Bus::write(u32 address, u64 data, Thread& thread, RBusDevice device) -> void {
   static_assert(Size == Byte || Size == Half || Size == Word || Size == Dual);
   if constexpr(Accuracy::CPU::Recompiler) {
     cpu.recompiler.invalidate(address + 0); if constexpr(Size == Dual)
     cpu.recompiler.invalidate(address + 4);
   }
 
-  if(address <= 0x03ef'ffff) return rdram.ram.write<Size>(address, data, peripheral);
+  if(address <= 0x03ef'ffff) return rdram.ram.write<Size>(address, data, device);
   if(address <= 0x03ff'ffff) return rdram.write<Size>(address, data, thread);
   if(address <= 0x0407'ffff) return rsp.write<Size>(address, data, thread);
   if(address <= 0x040b'ffff) return rsp.status.write<Size>(address, data, thread);
@@ -82,38 +85,57 @@ inline auto Bus::write(u32 address, u64 data, Thread& thread, const char *periph
 }
 
 template<u32 Size>
-inline auto Bus::writeBurst(u32 address, u32 *data, Thread& thread) -> void {
+inline auto Bus::writeBurst(u32 address, u32 *data, Thread& thread) -> bool {
   static_assert(Size == DCache || Size == ICache);
+  RBusDevice device;
+  if constexpr(Size == DCache) device = RBusDevice::VR4300_DCACHE;
+  if constexpr(Size == ICache) device = RBusDevice::VR4300_ICACHE;
+
   if constexpr(Accuracy::CPU::Recompiler) {
     cpu.recompiler.invalidateRange(address, Size == DCache ? 16 : 32);
   }
 
-  if(address <= 0x03ef'ffff) return rdram.ram.writeBurst<Size>(address, data, "CPU");
+  if(address <= 0x03ef'ffff) return rdram.ram.writeBurst<Size>(address, data, device), true;
   if(address <= 0x03ff'ffff) {
     // FIXME: not hardware validated, but a good guess
     rdram.writeWord(address | 0x0, data[0], thread);
-    return;
+    return true;
   }
 
   if(Model::Aleck64()) {
-    if(address <= 0xbfff'ffff) return freezeUncached(address);
-    if(address <= 0xc07f'ffff) return aleck64.sdram.writeBurst<Size>(address, data, "CPU");
+    if(address <= 0xbfff'ffff) return freezeUncached(address), false;
+    if(address <= 0xc07f'ffff) return aleck64.sdram.writeBurst<Size>(address, data, device), true;
   }
 
-  return freezeUncached(address);
+  return freezeUncached(address), false;
 }
 
 inline auto Bus::freezeUnmapped(u32 address) -> void {
-  debug(unusual, "[Bus::freezeUnmapped] CPU frozen because of access to RCP unmapped area: 0x", hex(address, 8L));
+  debug(unusual, "[Bus::freezeUnmapped] CPU frozen because of access to RCP unmapped area: 0x", hex(address, 8L), " (PC: ", hex(cpu.ipu.pc, 8L), ")");
+  if(system.homebrewMode && cpu.emuxState.excMask.bit(3)) {
+    cpu.emuxException(3);
+    cpu.exception.emux();
+    return;
+  }
   cpu.scc.sysadFrozen = true;
 }
 
 inline auto Bus::freezeUncached(u32 address) -> void {
-  debug(unusual, "[Bus::freezeUncached] CPU frozen because of cached access to non-RDRAM area: 0x", hex(address, 8L));
+  debug(unusual, "[Bus::freezeUncached] CPU frozen because of cached access to non-RDRAM area: 0x", hex(address, 8L), " (PC: ", hex(cpu.ipu.pc, 8L), ")");
+  if(system.homebrewMode && cpu.emuxState.excMask.bit(1)) {
+    cpu.emuxException(1);
+    cpu.exception.emux();
+    return;
+  }
   cpu.scc.sysadFrozen = true;
 }
 
 inline auto Bus::freezeDualRead(u32 address) -> void {
-  debug(unusual, "[Bus::freezeDualRead] CPU frozen because of 64-bit read from non-RDRAM area: 0x ", hex(address, 8L));
+  debug(unusual, "[Bus::freezeDualRead] CPU frozen because of 64-bit read from non-RDRAM area: 0x ", hex(address, 8L), " (PC: ", hex(cpu.ipu.pc, 8L), ")");
+  if(system.homebrewMode && cpu.emuxState.excMask.bit(2)) {
+    cpu.emuxException(2);
+    cpu.exception.emux();
+    return;
+  }
   cpu.scc.sysadFrozen = true;
 }

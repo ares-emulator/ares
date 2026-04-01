@@ -8,7 +8,7 @@ struct Aleck64 {
     Writable(Aleck64& self) : self(self) {}
 
     template<u32 Size>
-    auto writeBurst(u32 address, u32 *value, const char *peripheral) -> void {
+    auto writeBurst(u32 address, u32 *value, RBusDevice device) -> void {
       address = address & 0x00ff'ffff;
       if(address >= size) return;
       Memory::Writable::write<Word>(address | 0x00, value[0]);
@@ -24,7 +24,7 @@ struct Aleck64 {
     }
 
     template<u32 Size>
-    auto readBurst(u32 address, u32 *value, const char *peripheral) -> void {
+    auto readBurst(u32 address, u32 *value, RBusDevice device) -> void {
       address = address & 0x00ff'ffff;
       if(address >= size) {
         value[0] = value[1] = value[2] = value[3] = 0;

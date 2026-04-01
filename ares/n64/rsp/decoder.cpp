@@ -4,6 +4,9 @@
 #define RD    (instruction >> 11 & 31)
 #define RT    (instruction >> 16 & 31)
 #define RS    (instruction >> 21 & 31)
+#define XRT   (instruction >> 15 & 31)
+#define XRD   (instruction >> 20 & 31)
+#define XCODE (instruction >> 6  & 511)
 #define VD    (instruction >>  6 & 31)
 #define VS    (instruction >> 11 & 31)
 #define VT    (instruction >> 16 & 31)
@@ -226,6 +229,19 @@ auto RSP::decoderSCC(u32 instruction) const -> OpInfo {
   op(0x0e, INVALID);
   op(0x0f, INVALID);
   }
+
+  switch(instruction & 0x3f) {
+  op(0x20, XDETECT, RDefB(XRD));
+  op(0x23, XTRACESTART);
+  op(0x24, XTRACESTOP);
+  op(0x25, XLOG, RUse(XRD), RUse(XRT));
+  op(0x26, XLOGREGS, RUse(XRD));
+  op(0x27, XHEXDUMP, RUse(XRD), RUse(XRT));
+  op(0x28, XPROF, RUse(XRD));
+  op(0x29, XPROFREAD, RUse(XRD), RUse(XRT), RDefB(XRT));
+  op(0x2a, XEXCEPTION, RUse(XRT));
+  op(0x2c, XIOCTL);
+  }
   return {};
 }
 
@@ -378,6 +394,9 @@ auto RSP::decoderSWC2(u32 instruction) const -> OpInfo {
 #undef RD
 #undef RT
 #undef RS
+#undef XRT
+#undef XRD
+#undef XCODE
 #undef VD
 #undef VS
 #undef VT

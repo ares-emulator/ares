@@ -47,7 +47,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
   constexpr u32 branchToSelf = 0x1000'ffff;  //beq 0,0,<pc>
   u32 jumpToSelf = 2 << 26 | vaddr >> 2 & 0x3ff'ffff;  //j <pc>
   while(true) {
-    u32 instruction = bus.read<Word>(address, thread, "Ares Recompiler");
+    u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
     mov32(PipelineReg(nstate), imm(0));
     mov64(reg(0), PipelineReg(nextpc));
     mov64(PipelineReg(pc), reg(0));
@@ -103,6 +103,9 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
 #define Fdn (instruction >>  6 & 31)
 #define Fsn (instruction >> 11 & 31)
 #define Ftn (instruction >> 16 & 31)
+#define XRtn   (instruction >> 15 & 31)
+#define XRdn   (instruction >> 20 & 31)
+#define XCODE  (instruction >> 6  & 511)
 
 #define Rd        IpuReg(r[0]) + Rdn * sizeof(r64)
 #define Rt        IpuReg(r[0]) + Rtn * sizeof(r64)
@@ -117,6 +120,9 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
 #define Fd        FpuReg(r[0]) + Fdn * sizeof(r64)
 #define Fs        FpuReg(r[0]) + Fsn * sizeof(r64)
 #define Ft        FpuReg(r[0]) + Ftn * sizeof(r64)
+
+#define XRd       IpuReg(r[0]) + XRdn * sizeof(r64)
+#define XRt       IpuReg(r[0]) + XRtn * sizeof(r64)
 
 #define i16 s16(instruction)
 #define n16 u16(instruction)
@@ -1145,6 +1151,48 @@ auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
     return 1;
   }
 
+  //XDETECT
+  case 0x20: {
+    callf(&CPU::XDETECT, mem(XRd), imm(XCODE));
+    return 0;
+  }
+
+  //XLOG
+  case 0x25: {
+    callf(&CPU::XLOG, mem(XRd), mem(XRt), imm(XCODE));
+    return 0;
+  }
+
+  //XHEXDUMP
+  case 0x27: {
+    callf(&CPU::XHEXDUMP, mem(XRd), mem(XRt));
+    return 0;
+  }
+
+  //XPROF
+  case 0x28: {
+    callf(&CPU::XPROF, mem(XRd), imm(XCODE));
+    return 0;
+  }
+
+  //XPROFREAD
+  case 0x29: {
+    callf(&CPU::XPROFREAD, mem(XRd), mem(XRt));
+    return 0;
+  }
+
+  //XEXCEPTION
+  case 0x2a: {
+    callf(&CPU::XEXCEPTION, mem(XRt));
+    return 0;
+  }
+
+  //XIOCTL
+  case 0x2c: {
+    callf(&CPU::XIOCTL, imm(XCODE));
+    return 0;
+  }
+
   }
 
   return 0;
@@ -1781,6 +1829,9 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
 #undef Fdn
 #undef Fsn
 #undef Ftn
+#undef XRtn
+#undef XRdn
+#undef XCODE
 #undef Rd
 #undef Rt
 #undef Rt32
@@ -1793,6 +1844,8 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
 #undef Fd
 #undef Fs
 #undef Ft
+#undef XRd
+#undef XRt
 #undef i16
 #undef n16
 #undef n26

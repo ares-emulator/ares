@@ -5,7 +5,7 @@ auto RSP::Disassembler::disassemble(u32 address, u32 instruction) -> string {
   auto v = EXECUTE();
   if(v.empty()) v = {"invalid", string{"$", hex(instruction, 8L)}};
   if(!instruction) v = {"nop"};
-  auto s = pad(v.front(), -8L);
+  auto s = pad(v.front(), -12L);
   v.erase(v.begin());
   return {s, nall::merge(v, ",")};
 }
@@ -284,10 +284,41 @@ auto RSP::Disassembler::SCC() -> std::vector<string> {
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto sdName  = [&] { return sccRegisterName (instruction >> 11 & 31); };
   auto sdValue = [&] { return sccRegisterValue(instruction >> 11 & 31); };
+  auto xrtName = [&] { return ipuRegisterName (instruction >> 15 & 31); };
+  auto xrtValue = [&] { return ipuRegisterValue(instruction >> 15 & 31); };
+  auto xrdValue = [&] { return ipuRegisterValue(instruction >> 20 & 31); };
+  auto xcode = [&] { return instruction >> 6 & 511; };
+  auto xcodeImm = [&] { return immediate(xcode(), 9L); };
 
   switch(instruction >> 21 & 0x1f) {
   case 0x00: return {"mfc0", rtName(), sdValue()};
   case 0x04: return {"mtc0", sdName(), rtValue()};
+  }
+
+  switch(instruction & 0x3f) {
+  case 0x20:
+    if(xcode() == 1) return {"xdetect", xrdValue()};
+    return {"xdetect", xrdValue(), xcodeImm()};
+  case 0x23:
+    if(xcode() == 0) return {"xtrace-start"};
+    return {"xtrace-start", xcodeImm()};
+  case 0x24: return {"xtrace-stop"};
+  case 0x25:
+    if(xcode() == 0) return {"xlog", xrdValue()};
+    return {"xlog", xrdValue(), xrtValue(), xcodeImm()};
+  case 0x26:
+    if(!(instruction >> 20 & 31)) return {"xlogregs", xcodeImm()};
+    return {"xlogregs", xrdValue(), xcodeImm()};
+  case 0x27: return {"xhexdump", xrdValue(), xrtValue(), xcodeImm()};
+  case 0x28: return {"xprof", xrdValue(), xcodeImm()};
+  case 0x29: return {"xprof-read", xrdValue(), xrtName()};
+  case 0x2a: return {"xexception", xrtValue()};
+  case 0x2c:
+    if(xcode() == 1) return {"xioctl", "exit"};
+    if(xcode() == 2) return {"xioctl", "fast"};
+    if(xcode() == 3) return {"xioctl", "slow"};
+    if(xcode() == 4) return {"xioctl", "pause"};
+    return {"xioctl", xcodeImm()};
   }
 
   return {};

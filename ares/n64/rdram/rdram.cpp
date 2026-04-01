@@ -32,6 +32,7 @@ auto RDRAM::power(bool reset) -> void {
     ram.fill();
     for(auto& chip : chips) chip = {};
   }
+  profile = {};
 }
 
 }

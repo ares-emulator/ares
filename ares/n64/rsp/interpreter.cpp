@@ -2,6 +2,8 @@
 #define RD ipu.r[RDn]
 #define RT ipu.r[RTn]
 #define RS ipu.r[RSn]
+#define XRT ipu.r[XRTn]
+#define XRD ipu.r[XRDn]
 #define VD vpu.r[VDn]
 #define VS vpu.r[VSn]
 #define VT vpu.r[VTn]
@@ -34,6 +36,9 @@
 #define RDn    (OP >> 11 & 31)
 #define RTn    (OP >> 16 & 31)
 #define RSn    (OP >> 21 & 31)
+#define XRTn   (OP >> 15 & 31)
+#define XRDn   (OP >> 20 & 31)
+#define XCODE  (OP >> 6  & 511)
 #define VDn    (OP >>  6 & 31)
 #define VSn    (OP >> 11 & 31)
 #define VTn    (OP >> 16 & 31)
@@ -235,6 +240,19 @@ auto RSP::interpreterSCC() -> void {
   op(0x0e, INVALID);
   op(0x0f, INVALID);
   }
+
+  switch(OP & 0x3f) {
+  op(0x20, XDETECT, XRD, XCODE);
+  op(0x23, XTRACESTART, XCODE);
+  op(0x24, XTRACESTOP);
+  op(0x25, XLOG, XRD, XRT, XCODE);
+  op(0x26, XLOGREGS, XRD, XCODE);
+  op(0x27, XHEXDUMP, XRD, XRT, XCODE);
+  op(0x28, XPROF, XRD, XCODE);
+  op(0x29, XPROFREAD, XRD, XRT);
+  op(0x2a, XEXCEPTION, XRT);
+  op(0x2c, XIOCTL, XCODE);
+  }
 }
 
 auto RSP::interpreterVU() -> void {
@@ -380,6 +398,9 @@ auto RSP::INVALID() -> void {
 #undef RDn
 #undef RTn
 #undef RSn
+#undef XRTn
+#undef XRDn
+#undef XCODE
 #undef VDn
 #undef VSn
 #undef VTn
@@ -396,6 +417,8 @@ auto RSP::INVALID() -> void {
 #undef RD
 #undef RT
 #undef RS
+#undef XRT
+#undef XRD
 #undef VD
 #undef VS
 #undef VT
