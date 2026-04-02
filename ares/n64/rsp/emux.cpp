@@ -16,19 +16,22 @@ auto toSignedOrHex(u32 value, bool decimal) -> string {
 auto RSP::XDETECT(r32& rd, u32 code) -> void {
   if(!system.homebrewMode) return;
   n64 detect = 0;
-  detect.bit(0x20) = 1;
-  detect.bit(0x23) = 1;
-  detect.bit(0x24) = 1;
-  detect.bit(0x25) = 1;
-  detect.bit(0x26) = 1;
-  detect.bit(0x27) = 1;
-  detect.bit(0x28) = 1;
-  detect.bit(0x29) = 1;
-  detect.bit(0x2a) = 1;
-  detect.bit(0x2c) = 1;
+  n64 ioctl = 0;
+  detect.bit(0x20) = 1;  // XDETECT
+  detect.bit(0x23) = 1;  // XTRACE-START
+  detect.bit(0x24) = 1;  // XTRACE-STOP
+  detect.bit(0x25) = 1;  // XLOG
+  detect.bit(0x26) = 1;  // XLOGREGS
+  detect.bit(0x27) = 1;  // XHEXDUMP
+  detect.bit(0x28) = 1;  // XPROF
+  detect.bit(0x29) = 1;  // XPROFREAD
+  detect.bit(0x2a) = 1;  // XEXCEPTION
+  detect.bit(0x2c) = 1;  // XIOCTL
+  ioctl.bit(0x01) = 1;   // XIOCTL exit
   switch(code) {
   case 0x00: rd.u32 = detect.bit(0x00, 0x1f); break;
   case 0x01: rd.u32 = detect.bit(0x20, 0x3f); break;
+  case 0x02: rd.u32 = ioctl.bit(0x00, 0x1f); break;
   default:   rd.u32 = 0; break;
   }
 }
