@@ -167,7 +167,7 @@ auto Vulkan::scanoutAsync(bool field) -> bool {
   options.downscale_steps = supersampleScanout ? 16 : 0;
   options.persist_frame_on_invalid_input = true;  //this is a compatibility hack, but I'm not sure what for ...
   if(disableVideoInterfaceProcessing) {
-    options.vi = {false, false, false, false, false, false};
+    options.vi = {false, false, true, false, false, false};
   }
   if(!supersampleScanout){
     options.blend_previous_frame = weaveDeinterlacing;
