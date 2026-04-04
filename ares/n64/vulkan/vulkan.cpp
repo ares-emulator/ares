@@ -163,11 +163,11 @@ auto Vulkan::scanoutAsync(bool field) -> bool {
 
   //0 steps if scanning out at upscaled resolution.
   //each downscale step reduces output resolution to [width, height] * max(1, upscale >> downscale_steps)
-  ::RDP::ScanoutOptions options;
+  ::RDP::ScanoutOptions options{};
   options.downscale_steps = supersampleScanout ? 16 : 0;
   options.persist_frame_on_invalid_input = true;  //this is a compatibility hack, but I'm not sure what for ...
   if(disableVideoInterfaceProcessing) {
-    options.vi = {false, false, true, false, false, false};
+    options.vi = {false, false, false, false, false, false};
   }
   if(!supersampleScanout){
     options.blend_previous_frame = weaveDeinterlacing;

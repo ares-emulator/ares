@@ -85,8 +85,8 @@ auto VI::main() -> void {
         if(++io.leapCounter == 5) io.leapCounter = 0;
         #if defined(VULKAN)
         if (vulkan.enable) {
-          gpuOutputValid = vulkan.scanoutAsync(io.field);
           vulkan.frame();
+          gpuOutputValid = vulkan.scanoutAsync(io.field);
         }
         #endif
         refreshed = true;

@@ -89,7 +89,7 @@ auto VideoSettings::construct() -> void {
   weaveDeinterlacingOption.setText("Weave Deinterlacing").setChecked(settings.video.weaveDeinterlacing).onToggle([&] {
     settings.video.weaveDeinterlacing = weaveDeinterlacingOption.checked();
     Program::Guard guard;
-    if(emulator) emulator->setBoolean("(Experimental) Double the perceived vertical resolution; disabled when supersampling is used", settings.video.weaveDeinterlacing);
+    if(emulator) emulator->setBoolean("Weave Deinterlacing", settings.video.weaveDeinterlacing);
     if(weaveDeinterlacingOption.checked() == true) {
       renderSupersamplingOption.setChecked(false).setEnabled(false);
       settings.video.supersampling = false;
