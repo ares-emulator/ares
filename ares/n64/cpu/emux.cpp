@@ -11,6 +11,7 @@ auto CPU::ProfileSlot::global() -> ProfileSlot
 auto CPU::XDETECT(r64& rd, u64 code) -> void {
   if(!system.homebrewMode) return;
   n64 detect = 0;
+  n64 ioctl = 0;
   detect.bit(0x20) = 1;  // XDETECT
   detect.bit(0x25) = 1;  // XLOG
   detect.bit(0x27) = 1;  // XHEXDUMP
@@ -18,9 +19,11 @@ auto CPU::XDETECT(r64& rd, u64 code) -> void {
   detect.bit(0x29) = 1;  // XPROFREAD
   detect.bit(0x2a) = 1;  // XEXCEPTION
   detect.bit(0x2c) = 1;  // XIOCTL
+  ioctl.bit(0x01) = 1;   // XIOCTL exit
   switch(code) {
   case 0x00: rd.s64 = (s32)detect.bit(0x00, 0x1F); break;
   case 0x01: rd.s64 = (s32)detect.bit(0x20, 0x3F); break;
+  case 0x02: rd.s64 = (s32)ioctl.bit(0x00, 0x1F); break;
   default:   rd.s64 = 0; break;
   }
 }
