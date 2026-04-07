@@ -28,6 +28,8 @@ auto RSP::XDETECT(r32& rd, u32 code) -> void {
   detect.bit(0x2a) = 1;  // XEXCEPTION
   detect.bit(0x2c) = 1;  // XIOCTL
   ioctl.bit(0x01) = 1;   // XIOCTL exit
+  ioctl.bit(0x02) = 1;   // XIOCTL fast
+  ioctl.bit(0x03) = 1;   // XIOCTL slow
   switch(code) {
   case 0x00: rd.u32 = detect.bit(0x00, 0x1f); break;
   case 0x01: rd.u32 = detect.bit(0x20, 0x3f); break;
