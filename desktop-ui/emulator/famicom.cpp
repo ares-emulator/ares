@@ -6,6 +6,7 @@ struct Famicom : Emulator {
   auto input(ares::Node::Input::Input) -> void override;
   auto loadTape(ares::Node::Object node, string location) -> bool override;
   auto unloadTape(ares::Node::Object node) -> void override;
+  auto allocatePorts(bool withMicrophone) -> void;
 
   std::shared_ptr<mia::Pak> famicomDataRecorder{};
 };
@@ -14,30 +15,7 @@ Famicom::Famicom() {
   manufacturer = "Nintendo";
   name = "Famicom";
 
-  for(auto id : range(2)) {
-    InputPort port{string{"Controller Port ", 1 + id}};
-
-  { InputDevice device{"Gamepad"};
-    device.digital("Up",         virtualPorts[id].pad.up);
-    device.digital("Down",       virtualPorts[id].pad.down);
-    device.digital("Left",       virtualPorts[id].pad.left);
-    device.digital("Right",      virtualPorts[id].pad.right);
-    device.digital("B",          virtualPorts[id].pad.west);
-    device.digital("A",          virtualPorts[id].pad.south);
-    device.digital("Select",     virtualPorts[id].pad.select);
-    device.digital("Start",      virtualPorts[id].pad.start);
-    device.digital("Microphone", virtualPorts[id].pad.north);
-    port.append(device); }
-
-  { InputDevice device{"Zapper"};
-    device.relative("X",         virtualPorts[id].mouse.x);
-    device.relative("Y",         virtualPorts[id].mouse.y);
-    device.digital ("Trigger",   virtualPorts[id].mouse.left);
-    port.append(device);
-    }
-
-    ports.push_back(port);
-  }
+  allocatePorts(true);
 }
 
 auto Famicom::load() -> LoadResult {
@@ -212,3 +190,32 @@ auto Famicom::unloadTape(ares::Node::Object node) -> void {
     famicomDataRecorder.reset();
   }
 }
+
+auto Famicom::allocatePorts(bool withMicrophone) -> void {
+  for(auto id : range(2)) {
+    InputPort port{string{"Controller Port ", 1 + id}};
+
+  { InputDevice device{"Gamepad"};
+    device.digital("Up",     virtualPorts[id].pad.up);
+    device.digital("Down",   virtualPorts[id].pad.down);
+    device.digital("Left",   virtualPorts[id].pad.left);
+    device.digital("Right",  virtualPorts[id].pad.right);
+    device.digital("B",      virtualPorts[id].pad.west);
+    device.digital("A",      virtualPorts[id].pad.south);
+    device.digital("Select", virtualPorts[id].pad.select);
+    device.digital("Start",  virtualPorts[id].pad.start);
+    if (withMicrophone) {
+      device.digital("Microphone", virtualPorts[id].pad.north);
+    }
+    port.append(device); }
+
+  { InputDevice device{"Zapper"};
+    device.relative("X",       virtualPorts[id].mouse.x);
+    device.relative("Y",       virtualPorts[id].mouse.y);
+    device.digital ("Trigger", virtualPorts[id].mouse.left);
+    port.append(device); }
+
+    ports.push_back(port);
+  }
+}
+

@@ -19,9 +19,10 @@ struct PPU : Thread {
     } memory;
   } debugger;
 
-  auto rate() const -> u32 { return Region::PAL() ? 5 : 4; }
-  auto vlines() const -> u32 { return Region::PAL() ? 312 : 262; }
+  auto rate()          const -> u32 { return Region::PAL() || Region::Dendy() ? 5 : 4; }
+  auto vlines()        const -> u32 { return Region::PAL() || Region::Dendy() ? 312 : 262; }
   auto displayHeight() const -> u32 { return Region::PAL() ? 288 : 242; }
+  auto vblankScanline() const -> u32 { return Region::Dendy() ? 291 : 241; }
 
   //ppu.cpp
   auto load(Node::Object) -> void;
