@@ -204,6 +204,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1 keyStates[10];
 
     n1 conditionMet;
+    n1 irq;
   } keypad;
 
   struct Joybus {
