@@ -18,7 +18,7 @@ struct CPU : MOS6502, Thread {
     } tracer;
   } debugger;
 
-  auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
+  auto rate() const -> u32 { return system.cpuDivider(); }
 
   //cpu.cpp
   auto load(Node::Object) -> void;
