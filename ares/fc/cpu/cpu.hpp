@@ -63,6 +63,7 @@ struct CPU : MOS6502, Thread {
 //protected:
   struct IO {
     n1  interruptPending;
+    n1  resetPending;
     n1  nmiPending;
     n1  nmiLine;
     n1  irqLine;
