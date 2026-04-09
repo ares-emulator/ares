@@ -77,9 +77,11 @@ auto InputSettings::refresh() -> void {
       auto cell = inputList.item(index).cell(1 + binding);
       auto mapping = input.mapping;
       if(mapping->assignments[binding] || !mapping->fallback) {
+        cell.setForegroundColor();
         cell.setIcon(mapping->icon(binding));
         cell.setText(mapping->text(binding));
       } else {
+        cell.setForegroundColor(SystemColor::PlaceholderText);
         cell.setIcon(mapping->fallback->icon(binding));
         cell.setText(mapping->fallback->text(binding));
       }
@@ -182,7 +184,7 @@ auto InputSettings::eventAssign(TableViewCell cell) -> void {
     activeMapping = device.inputs[item.offset()];
     activeBinding = max(0, (s32)cell.offset() - 1);
 
-    item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText("(assign ...)");
+    item.cell(1 + activeBinding).setForegroundColor().setIcon(Icon::Go::Right).setText("(assign ...)");
     assignLabel.setText({"Press a key or button for mapping #", 1 + activeBinding, " [", activeMapping->name, "] ..."});
     refresh();
     settingsWindow.setDismissable(false);
