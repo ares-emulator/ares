@@ -18,11 +18,11 @@ auto CPU::write(n16 address, n8 data) -> void {
 }
 
 auto CPU::lastCycle() -> void {
-  io.interruptPending = ((io.irqLine | io.apuLine) & !P.i) | io.nmiPending;
+  io.interruptPending = irqPending() | io.nmiPending;
 }
 
 auto CPU::cancelNmi() -> void {
-  io.interruptPending = ((io.irqLine | io.apuLine) & !P.i);
+  io.interruptPending = irqPending();
 }
 
 auto CPU::delayIrq() -> void {
@@ -35,6 +35,7 @@ auto CPU::irqPending() -> bool {
 
 auto CPU::nmi(n16& vector) -> void {
   if(io.nmiPending) {
+    if(irqPending()) debugger.interrupt("Haijack IRQ by NMI");
     io.nmiPending = false;
     vector = 0xfffa;
   }

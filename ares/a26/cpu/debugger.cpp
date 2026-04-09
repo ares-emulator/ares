@@ -9,4 +9,8 @@ auto CPU::Debugger::instruction() -> void {
   }
 }
 
-
+auto CPU::Debugger::interrupt(string_view type) -> void {
+  if(tracer.interrupt->enabled()) {
+    tracer.interrupt->notify(type);
+  }
+}
