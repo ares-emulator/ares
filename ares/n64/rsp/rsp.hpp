@@ -295,15 +295,22 @@ struct RSP : Thread, Memory::RCP<RSP> {
   } ipu;
 
   struct Branch {
-    enum : u32 { Step, Take, DelaySlot };
+    enum : u32 {
+      EndBlock  = 1 << 0,
+      DelaySlot = 1 << 1,
+    };
 
-    auto inDelaySlot() const -> bool { return state == DelaySlot; }
-    auto reset() -> void { state = Step; }
-    auto take(u12 address) -> void { state = Take; pc = address; }
-    auto delaySlot() -> void { state = DelaySlot; }
+    auto inDelaySlot() const -> bool { return state & DelaySlot; }
+    auto setPc(u12 address) -> void { pc = address; nextpc = address + 4; state = nstate = 0; }
+    auto reset() -> void { setPc(0); }
+    auto begin() -> void { nstate = 0; pc = nextpc; nextpc = pc + 4; }
+    auto end() -> void { state = nstate; }
+    auto take(u12 address) -> void { nextpc = address; nstate |= DelaySlot | EndBlock; }
 
     u12 pc = 0;
-    u32 state = Step;
+    u12 nextpc = 4;
+    u32 state = 0;
+    u32 nstate = 0;
   } branch;
 
   //cpu-instructions.cpp
