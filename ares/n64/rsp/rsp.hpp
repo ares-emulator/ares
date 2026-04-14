@@ -301,14 +301,14 @@ struct RSP : Thread, Memory::RCP<RSP> {
     };
 
     auto inDelaySlot() const -> bool { return state & DelaySlot; }
-    auto setPc(u12 address) -> void { pc = address; nextpc = address + 4; state = nstate = 0; }
+    auto setPc(u12 address) -> void { pc = u12(address); nextpc = u12(address + 4); state = nstate = 0; }
     auto reset() -> void { setPc(0); }
-    auto begin() -> void { nstate = 0; pc = nextpc; nextpc = pc + 4; }
+    auto begin() -> void { nstate = 0; pc = u12(nextpc); nextpc = u12(pc + 4); }
     auto end() -> void { state = nstate; }
-    auto take(u12 address) -> void { nextpc = address; nstate |= DelaySlot | EndBlock; }
+    auto take(u12 address) -> void { nextpc = u12(address); nstate |= DelaySlot | EndBlock; }
 
-    u12 pc = 0;
-    u12 nextpc = 4;
+    u32 pc = 0;
+    u32 nextpc = 4;
     u32 state = 0;
     u32 nstate = 0;
   } branch;
@@ -601,6 +601,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
     bool enabled = false;
     bool callInstructionPrologue = false;
+    bool fastInstructionEpilogue = true;
     Pipeline pipeline;
     bump_allocator allocator;
     array<Block*[1024]> context;

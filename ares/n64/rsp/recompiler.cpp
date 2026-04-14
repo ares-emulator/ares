@@ -60,7 +60,9 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 
 #define IpuReg(r) sreg(1), offsetof(IPU, r)
 #define VuReg(r)  sreg(2), offsetof(VU, r)
+#define PipelineReg(x) mem(sreg(0), offsetof(RSP, pipeline) + offsetof(Pipeline, x))
 #define BranchReg(x) mem(sreg(0), offsetof(RSP, branch) + offsetof(Branch, x))
+#define StatusReg(x) mem(sreg(0), offsetof(RSP, status) + offsetof(Status, x))
 #define R0        IpuReg(r[0])
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
@@ -78,6 +80,37 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(3);
+  bool fastInstructionEpilogue = this->fastInstructionEpilogue;
+
+  auto emitInstructionEpilogue = [&](u32 clocks, bool exit) -> void {
+    if(!fastInstructionEpilogue) {
+      callf(&RSP::instructionEpilogue<1>, imm(clocks));
+      if(exit) testJumpEpilog();
+      return;
+    }
+
+    cmp32(BranchReg(state), imm(0), set_z);
+    auto slowPath = jump(flag_nz);
+
+    if(clocks) {
+      callf(&RSP::step, imm(clocks));
+      add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), imm(clocks));
+    }
+
+    mov32(BranchReg(state), BranchReg(nstate));
+    mov32(mem(IpuReg(pc)), BranchReg(pc));
+    if(exit) {
+      and32(reg(0), StatusReg(halted), imm(1));
+      cmp32(reg(0), imm(0), set_z);
+      jumpEpilog(flag_nz);
+    }
+    auto done = jump();
+
+    setLabel(slowPath);
+    callf(&RSP::instructionEpilogue<1>, imm(clocks));
+    if(exit) testJumpEpilog();
+    setLabel(done);
+  };
 
   u12 start = address;
   bool hasBranched = 0;
@@ -101,7 +134,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
       OpInfo op1 = self.decoderEXECUTE(instruction);
 
       if(RSP::canDualIssue(op0, op1)) {
-        callf(&RSP::instructionEpilogue<1>, imm(0));
+        emitInstructionEpilogue(0, 0);
         if(callInstructionPrologue) {
           callf(&RSP::instructionPrologue, imm(instruction));
         }
@@ -117,11 +150,10 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     }
 
     pipeline.end();
-    callf(&RSP::instructionEpilogue<1>, imm(pipeline.clocks));
+    emitInstructionEpilogue(pipeline.clocks, 1);
     address += 4;
     if(hasBranched || address == start) break;
     hasBranched = branched;
-    testJumpEpilog();
   }
   jumpEpilog();
 
@@ -1287,7 +1319,9 @@ auto RSP::Recompiler::isTerminal(u32 instruction) -> bool {
 
 #undef IpuReg
 #undef VuReg
+#undef PipelineReg
 #undef BranchReg
+#undef StatusReg
 #undef R0
 #undef Sa
 #undef Rdn
