@@ -119,7 +119,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     pipeline.begin();
     OpInfo op0 = self.decoderEXECUTE(instruction);
     pipeline.issue(op0);
-    bool branched = emitEXECUTE(instruction);
+    bool branched = emitEXECUTE(instruction, address);
     if(op0.r.def & 1) mov32(mem(R0), imm(0));
 
     if(!pipeline.singleIssue && !branched && u12(address + 4) != start) {
@@ -136,7 +136,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
         mov32(BranchReg(pc), BranchReg(nextpc));
         add32(BranchReg(nextpc), BranchReg(nextpc), imm(4));
         pipeline.issue(op1);
-        branched = emitEXECUTE(instruction);
+        branched = emitEXECUTE(instruction, address);
         if(op1.r.def & 1) mov32(mem(R0), imm(0));
       }
     }
@@ -208,7 +208,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   case 0xf: callf(name<0xf>, __VA_ARGS__); break; \
   }
 
-auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
+auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc) -> bool {
   auto emitConditionalTake = [&](u32 flag, bool invert = 0) -> void {
     mov32_f(reg(0), flag);
     if(invert) xor32(reg(0), reg(0), imm(1));
@@ -229,12 +229,12 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //SPECIAL
   case 0x00: {
-    return emitSPECIAL(instruction);
+    return emitSPECIAL(instruction, pc);
   }
 
   //REGIMM
   case 0x01: {
-    return emitREGIMM(instruction);
+    return emitREGIMM(instruction, pc);
   }
 
   //J n26
@@ -246,8 +246,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //JAL n26
   case 0x03: {
-    and32(reg(0), BranchReg(nextpc), imm(0x0fff));
-    mov32(mem(IpuReg(r[31])), reg(0));
+    mov32(mem(IpuReg(r[31])), imm(u32(u12(pc + 8))));
     mov32(BranchReg(nextpc), imm(u32(u12(n26 << 2))));
     mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
@@ -444,7 +443,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   return 0;
 }
 
-auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
+auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc) -> bool {
   switch(instruction & 0x3f) {
 
   //SLL Rd,Rt,Sa
@@ -506,8 +505,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //JALR Rd,Rs
   case 0x09: {
     and32(reg(0), mem(Rs), imm(0x0fff));
-    and32(reg(1), BranchReg(nextpc), imm(0x0fff));
-    mov32(mem(Rd), reg(1));
+    mov32(mem(Rd), imm(u32(u12(pc + 8))));
     mov32(BranchReg(nextpc), reg(0));
     mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
@@ -599,7 +597,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   return 0;
 }
 
-auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
+auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc) -> bool {
   auto emitConditionalTake = [&](u32 flag) -> void {
     mov32_f(reg(0), flag);
     xor32(reg(0), reg(0), imm(1));
@@ -638,7 +636,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BLTZAL Rs,i16
   case 0x10: {
-    and32(reg(3), BranchReg(nextpc), imm(0x0fff));
+    mov32(reg(3), imm(u32(u12(pc + 8))));
     cmp32(mem(Rs), imm(0), set_slt);
     emitConditionalTake(flag_slt);
     mov32(mem(IpuReg(r[31])), reg(3));
@@ -647,7 +645,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BGEZAL Rs,i16
   case 0x11: {
-    and32(reg(3), BranchReg(nextpc), imm(0x0fff));
+    mov32(reg(3), imm(u32(u12(pc + 8))));
     cmp32(mem(Rs), imm(0), set_sge);
     emitConditionalTake(flag_sge);
     mov32(mem(IpuReg(r[31])), reg(3));
