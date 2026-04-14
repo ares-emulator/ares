@@ -82,7 +82,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(3);
 
-  auto emitInstructionEpilogue = [&](u32 clocks, bool exit, bool delaySlot, bool commit) -> void {
+  auto emitInstructionEpilogue = [&](u32 clocks, bool exit, bool delaySlot, bool commit, u32 nextpc) -> void {
     if(delaySlot) {
       callf(&RSP::instructionEpilogue<1>, imm(clocks));
       if(exit) testJumpEpilog();
@@ -96,7 +96,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
     if(commit) {
       mov32(BranchReg(state), BranchReg(nstate));
-      mov32(mem(IpuReg(pc)), BranchReg(pc));
+      mov32(mem(IpuReg(pc)), imm(nextpc));
     }
 
     if(exit) {
@@ -115,8 +115,10 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
       callf(&RSP::instructionPrologue, imm(instruction));
     }
     mov32(BranchReg(nstate), imm(0));
-    mov32(BranchReg(pc), BranchReg(nextpc));
-    add32(BranchReg(nextpc), BranchReg(nextpc), imm(4));
+    if(delaySlot) {
+      mov32(BranchReg(pc), BranchReg(nextpc));
+      add32(BranchReg(nextpc), BranchReg(nextpc), imm(4));
+    }
     pipeline.begin();
     OpInfo op0 = self.decoderEXECUTE(instruction);
     pipeline.issue(op0);
@@ -128,14 +130,16 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
       OpInfo op1 = self.decoderEXECUTE(instruction);
 
       if(RSP::canDualIssue(op0, op1)) {
-        emitInstructionEpilogue(0, 0, delaySlot, callInstructionPrologue);
+        emitInstructionEpilogue(0, 0, delaySlot, callInstructionPrologue, u32(u12(address + 4)));
         if(callInstructionPrologue) {
           callf(&RSP::instructionPrologue, imm(instruction));
         }
         address += 4;
         mov32(BranchReg(nstate), imm(0));
-        mov32(BranchReg(pc), BranchReg(nextpc));
-        add32(BranchReg(nextpc), BranchReg(nextpc), imm(4));
+        if(delaySlot) {
+          mov32(BranchReg(pc), BranchReg(nextpc));
+          add32(BranchReg(nextpc), BranchReg(nextpc), imm(4));
+        }
         pipeline.issue(op1);
         branched = emitEXECUTE(instruction, address);
         if(op1.r.def & 1) mov32(mem(R0), imm(0));
@@ -145,7 +149,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     pipeline.end();
     bool terminal = hasBranched || u12(address + 4) == start;
     bool commit = callInstructionPrologue || branched || terminal;
-    emitInstructionEpilogue(pipeline.clocks, 1, delaySlot, commit);
+    emitInstructionEpilogue(pipeline.clocks, 1, delaySlot, commit, u32(u12(address + 4)));
     address += 4;
     if(hasBranched || address == start) break;
     hasBranched = branched;
@@ -216,8 +220,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc) -> bool {
     u32 selectMask  = fallthrough ^ target;
     mov32_f(reg(0), flag);
     if(invert) xor32(reg(0), reg(0), imm(1));
-    xor32(reg(0), reg(0), imm(1));
-    add32(reg(0), reg(0), imm(-1));
+    sub32(reg(0), imm(0), reg(0));
     and32(reg(1), reg(0), imm(selectMask));
     xor32(reg(1), reg(1), imm(fallthrough));
     mov32(BranchReg(nextpc), reg(1));
@@ -603,8 +606,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc) -> bool {
     u32 fallthrough = u32(u12(pc + 8));
     u32 selectMask  = fallthrough ^ target;
     mov32_f(reg(0), flag);
-    xor32(reg(0), reg(0), imm(1));
-    add32(reg(0), reg(0), imm(-1));
+    sub32(reg(0), imm(0), reg(0));
     and32(reg(1), reg(0), imm(selectMask));
     xor32(reg(1), reg(1), imm(fallthrough));
     mov32(BranchReg(nextpc), reg(1));
