@@ -8,6 +8,8 @@ enum class Event : u32 {
   Frame,
   Power,
   Synchronize,
+  FastForwardOn,
+  FastForwardOff,
   Shutdown
 };
 

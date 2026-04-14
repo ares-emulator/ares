@@ -27,6 +27,22 @@ auto Program::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
 }
 
 auto Program::event(ares::Event event) -> void {
+  if(event == ares::Event::FastForwardOn) {
+    fastForwarding = true;
+    ruby::video.setBlocking(false);
+    ruby::audio.setBlocking(false);
+    ruby::audio.setDynamic(false);
+    return;
+  }
+
+  if(event == ares::Event::FastForwardOff) {
+    fastForwarding = false;
+    ruby::video.setBlocking(true);
+    ruby::audio.setBlocking(true);
+    ruby::audio.setDynamic(true);
+    return;
+  }
+
   if(event == ares::Event::Shutdown) {
     quit();
   }

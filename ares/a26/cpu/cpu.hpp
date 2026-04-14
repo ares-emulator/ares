@@ -5,9 +5,11 @@ struct CPU : MOS6502, Thread {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto instruction() -> void;
+    auto interrupt(string_view) -> void;
 
     struct Tracer {
       Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 
@@ -39,6 +41,7 @@ struct CPU : MOS6502, Thread {
 
 //protected:
   struct IO {
+    n1  resetPending = 0;
     n1  rdyLine = 1;
     n32 scanlineCycles = 0;
     n8 openBus = 0;

@@ -13,5 +13,4 @@ auto MOS6502::serialize(serializer& s) -> void {
   s(PC);
   s(MAR);
   s(MDR);
-  s(resetting);
 }

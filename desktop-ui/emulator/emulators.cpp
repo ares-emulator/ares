@@ -26,6 +26,7 @@ namespace ares::Atari2600 {
   }
   #include "famicom.cpp"
   #include "famicom-disk-system.cpp"
+  #include "dendy.cpp"
 #endif
 
 #ifdef CORE_GB
@@ -198,6 +199,7 @@ auto Emulator::construct() -> void {
   #ifdef CORE_FC
   emulators.push_back(std::make_shared<Famicom>());
   emulators.push_back(std::make_shared<FamicomDiskSystem>());
+  emulators.push_back(std::make_shared<Dendy>());
   #endif
 
   #ifdef CORE_SFC

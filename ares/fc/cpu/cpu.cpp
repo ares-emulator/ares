@@ -24,8 +24,17 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   if(io.interruptPending) {
-    debugger.interrupt("IRQ");
-    interrupt();
+    if(io.resetPending) {
+      debugger.interrupt("Reset");
+      reset();
+      io.resetPending = 0;
+    } else if(io.nmiPending) {
+      debugger.interrupt("NMI");
+      interrupt();
+    } else {
+      debugger.interrupt("IRQ");
+      interrupt();
+    }
   }
 
   debugger.instruction();
@@ -41,7 +50,7 @@ auto CPU::step(u32 clocks) -> void {
 
 auto CPU::power(bool reset) -> void {
   MOS6502::BCD = 0;
-  MOS6502::power(reset);
+  if(!reset) MOS6502::power();
   Thread::create(system.frequency(), std::bind_front(&CPU::main, this));
 
   if(!reset) {
@@ -49,6 +58,8 @@ auto CPU::power(bool reset) -> void {
   }
 
   io = {};
+  io.resetPending = 1;
+  io.interruptPending = 1;
 }
 
 }

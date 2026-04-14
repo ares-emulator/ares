@@ -2,7 +2,7 @@ struct APU : Thread {
   Node::Object node;
   Node::Audio::Stream stream;
 
-  auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
+  auto rate() const -> u32 { return system.cpuDivider(); }
 
   //apu.cpp
   auto load(Node::Object) -> void;

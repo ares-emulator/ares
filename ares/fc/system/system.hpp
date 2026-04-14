@@ -10,14 +10,16 @@ struct System {
 
     //controls.cpp
     auto load(Node::Object) -> void;
+    auto unload() -> void;
     auto poll() -> void;
   } controls;
 
-  enum class Region : u32 { NTSCJ, NTSCU, PAL };
+  enum class Region : u32 { NTSCJ, NTSCU, PAL, Dendy };
 
-  auto name() const -> string { return information.name; }
-  auto region() const -> Region { return information.region; }
-  auto frequency() const -> f64 { return information.frequency; }
+  auto name()      const -> string { return information.name;      }
+  auto region()    const -> Region { return information.region;    }
+  auto frequency() const -> f64    { return information.frequency; }
+  auto cpuDivider() const -> u8    { return information.cpuDivider; }
 
   //system.cpp
   auto game() -> string;
@@ -34,9 +36,10 @@ struct System {
 
 private:
   struct Information {
-    string name = "Famicom";
-    Region region = Region::NTSCJ;
-    f64 frequency = Constants::Colorburst::NTSC * 6.0;
+    string name       = "Famicom";
+    Region region     = Region::NTSCJ;
+    f64    frequency  = Constants::Colorburst::NTSC * 6.0;
+    u8     cpuDivider = 12;
   } information;
 
   //serialization.cpp
@@ -47,4 +50,5 @@ extern System system;
 
 auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }
 auto Region::NTSCU() -> bool { return system.region() == System::Region::NTSCU; }
-auto Region::PAL() -> bool { return system.region() == System::Region::PAL; }
+auto Region::PAL()   -> bool { return system.region() == System::Region::PAL;   }
+auto Region::Dendy() -> bool { return system.region() == System::Region::Dendy; }
