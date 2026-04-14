@@ -291,7 +291,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     };
 
     r32 r[32];
-    u16 pc; // previously u12; now u16 for performance.
+    u32 pc;
   } ipu;
 
   struct Branch {
