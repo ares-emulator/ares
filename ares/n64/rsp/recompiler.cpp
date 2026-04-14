@@ -206,6 +206,22 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   }
 
 auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
+  auto emitConditionalTake = [&](u32 flag, bool invert = 0) -> void {
+    mov32_f(reg(0), flag);
+    if(invert) xor32(reg(0), reg(0), imm(1));
+    xor32(reg(0), reg(0), imm(1));
+    add32(reg(0), reg(0), imm(-1));
+    add32(reg(2), BranchReg(pc), imm(s32(i16) * 4));
+    and32(reg(2), reg(2), imm(0x0fff));
+    and32(reg(2), reg(2), reg(0));
+    xor32(reg(1), reg(0), imm(-1));
+    and32(reg(1), BranchReg(nextpc), reg(1));
+    or32(reg(1), reg(1), reg(2));
+    mov32(BranchReg(nextpc), reg(1));
+    and32(reg(0), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
+    mov32(BranchReg(nstate), reg(0));
+  };
+
   switch(instruction >> 26) {
 
   //SPECIAL
@@ -236,25 +252,29 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //BEQ Rs,Rt,i16
   case 0x04: {
-    callf(&RSP::BEQ, mem(Rs), mem(Rt), imm(i16));
+    cmp32(mem(Rs), mem(Rt), set_z);
+    emitConditionalTake(flag_z);
     return 1;
   }
 
   //BNE Rs,Rt,i16
   case 0x05: {
-    callf(&RSP::BNE, mem(Rs), mem(Rt), imm(i16));
+    cmp32(mem(Rs), mem(Rt), set_z);
+    emitConditionalTake(flag_z, 1);
     return 1;
   }
 
   //BLEZ Rs,i16
   case 0x06: {
-    callf(&RSP::BLEZ, mem(Rs), imm(i16));
+    cmp32(mem(Rs), imm(0), set_sgt);
+    emitConditionalTake(flag_sgt, 1);
     return 1;
   }
 
   //BGTZ Rs,i16
   case 0x07: {
-    callf(&RSP::BGTZ, mem(Rs), imm(i16));
+    cmp32(mem(Rs), imm(0), set_sgt);
+    emitConditionalTake(flag_sgt);
     return 1;
   }
 
@@ -577,17 +597,34 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 }
 
 auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
+  auto emitConditionalTake = [&](u32 flag) -> void {
+    mov32_f(reg(0), flag);
+    xor32(reg(0), reg(0), imm(1));
+    add32(reg(0), reg(0), imm(-1));
+    add32(reg(2), BranchReg(pc), imm(s32(i16) * 4));
+    and32(reg(2), reg(2), imm(0x0fff));
+    and32(reg(2), reg(2), reg(0));
+    xor32(reg(1), reg(0), imm(-1));
+    and32(reg(1), BranchReg(nextpc), reg(1));
+    or32(reg(1), reg(1), reg(2));
+    mov32(BranchReg(nextpc), reg(1));
+    and32(reg(0), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
+    mov32(BranchReg(nstate), reg(0));
+  };
+
   switch(instruction >> 16 & 0x1f) {
 
   //BLTZ Rs,i16
   case 0x00: {
-    callf(&RSP::BLTZ, mem(Rs), imm(i16));
+    cmp32(mem(Rs), imm(0), set_slt);
+    emitConditionalTake(flag_slt);
     return 1;
   }
 
   //BGEZ Rs,i16
   case 0x01: {
-    callf(&RSP::BGEZ, mem(Rs), imm(i16));
+    cmp32(mem(Rs), imm(0), set_sge);
+    emitConditionalTake(flag_sge);
     return 1;
   }
 
@@ -598,13 +635,19 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BLTZAL Rs,i16
   case 0x10: {
-    callf(&RSP::BLTZAL, mem(Rs), imm(i16));
+    and32(reg(1), BranchReg(nextpc), imm(0x0fff));
+    mov32(mem(IpuReg(r[31])), reg(1));
+    cmp32(mem(Rs), imm(0), set_slt);
+    emitConditionalTake(flag_slt);
     return 1;
   }
 
   //BGEZAL Rs,i16
   case 0x11: {
-    callf(&RSP::BGEZAL, mem(Rs), imm(i16));
+    and32(reg(1), BranchReg(nextpc), imm(0x0fff));
+    mov32(mem(IpuReg(r[31])), reg(1));
+    cmp32(mem(Rs), imm(0), set_sge);
+    emitConditionalTake(flag_sge);
     return 1;
   }
 
