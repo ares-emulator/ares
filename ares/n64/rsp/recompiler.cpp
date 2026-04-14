@@ -39,6 +39,7 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
   auto size = measure(address);
   auto hashcode = hash(address, size);
   hashcode ^= self.pipeline.hash();
+  hashcode ^= address;
 
   BlockHashPair pair;
   pair.hashcode = hashcode;
@@ -210,13 +211,12 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
 auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc) -> bool {
   auto emitConditionalTake = [&](u32 flag, bool invert = 0) -> void {
+    u32 target = u32(u12(pc + 4 + s32(i16) * 4));
     mov32_f(reg(0), flag);
     if(invert) xor32(reg(0), reg(0), imm(1));
     xor32(reg(0), reg(0), imm(1));
     add32(reg(0), reg(0), imm(-1));
-    add32(reg(2), BranchReg(pc), imm(s32(i16) * 4));
-    and32(reg(2), reg(2), imm(0x0fff));
-    and32(reg(2), reg(2), reg(0));
+    and32(reg(2), reg(0), imm(target));
     xor32(reg(1), reg(0), imm(-1));
     and32(reg(1), BranchReg(nextpc), reg(1));
     or32(reg(1), reg(1), reg(2));
@@ -599,12 +599,11 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc) -> bool {
 
 auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc) -> bool {
   auto emitConditionalTake = [&](u32 flag) -> void {
+    u32 target = u32(u12(pc + 4 + s32(i16) * 4));
     mov32_f(reg(0), flag);
     xor32(reg(0), reg(0), imm(1));
     add32(reg(0), reg(0), imm(-1));
-    add32(reg(2), BranchReg(pc), imm(s32(i16) * 4));
-    and32(reg(2), reg(2), imm(0x0fff));
-    and32(reg(2), reg(2), reg(0));
+    and32(reg(2), reg(0), imm(target));
     xor32(reg(1), reg(0), imm(-1));
     and32(reg(1), BranchReg(nextpc), reg(1));
     or32(reg(1), reg(1), reg(2));
