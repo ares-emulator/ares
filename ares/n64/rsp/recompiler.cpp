@@ -107,7 +107,11 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     auto done = jump();
 
     setLabel(slowPath);
-    callf(&RSP::instructionEpilogue<1>, imm(clocks));
+    if(clocks) {
+      callf(&RSP::step, imm(clocks));
+      add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), imm(clocks));
+    }
+    callf(&RSP::instructionBranchEpilogue);
     if(exit) testJumpEpilog();
     setLabel(done);
   };
