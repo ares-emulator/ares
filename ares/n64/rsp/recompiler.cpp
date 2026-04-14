@@ -220,13 +220,17 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //J n26
   case 0x02: {
-    callf(&RSP::J, imm(n26));
+    mov32(BranchReg(nextpc), imm(u32(u12(n26 << 2))));
+    mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
   }
 
   //JAL n26
   case 0x03: {
-    callf(&RSP::JAL, imm(n26));
+    and32(reg(0), BranchReg(nextpc), imm(0x0fff));
+    mov32(mem(IpuReg(r[31])), reg(0));
+    mov32(BranchReg(nextpc), imm(u32(u12(n26 << 2))));
+    mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
   }
 
@@ -470,13 +474,19 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //JR Rs
   case 0x08: {
-    callf(&RSP::JR, mem(Rs));
+    and32(reg(0), mem(Rs), imm(0x0fff));
+    mov32(BranchReg(nextpc), reg(0));
+    mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
   }
 
   //JALR Rd,Rs
   case 0x09: {
-    callf(&RSP::JALR, mem(Rd), mem(Rs));
+    and32(reg(0), mem(Rs), imm(0x0fff));
+    and32(reg(1), BranchReg(nextpc), imm(0x0fff));
+    mov32(mem(Rd), reg(1));
+    mov32(BranchReg(nextpc), reg(0));
+    mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
   }
 
