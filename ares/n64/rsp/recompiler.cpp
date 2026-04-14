@@ -60,7 +60,13 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 
 #define IpuReg(r) sreg(1), offsetof(IPU, r)
 #define VuReg(r)  sreg(2), offsetof(VU, r)
+#define BranchReg(x) mem(sreg(0), offsetof(RSP, branch) + offsetof(Branch, x))
 #define R0        IpuReg(r[0])
+
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#endif
 auto RSP::Recompiler::emit(u12 address) -> Block* {
   if(unlikely(allocator.available() < 128_KiB)) {
     print("RSP allocator flush\n");
@@ -80,6 +86,10 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     if(callInstructionPrologue) {
       callf(&RSP::instructionPrologue, imm(instruction));
     }
+    mov32(BranchReg(nstate), imm(0));
+    mov32(reg(0), BranchReg(nextpc));
+    mov32(BranchReg(pc), reg(0));
+    add32(BranchReg(nextpc), reg(0), imm(4));
     pipeline.begin();
     OpInfo op0 = self.decoderEXECUTE(instruction);
     pipeline.issue(op0);
@@ -96,6 +106,10 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
           callf(&RSP::instructionPrologue, imm(instruction));
         }
         address += 4;
+        mov32(BranchReg(nstate), imm(0));
+        mov32(reg(0), BranchReg(nextpc));
+        mov32(BranchReg(pc), reg(0));
+        add32(BranchReg(nextpc), reg(0), imm(4));
         pipeline.issue(op1);
         branched = emitEXECUTE(instruction);
         if(op1.r.def & 1) mov32(mem(R0), imm(0));
@@ -122,6 +136,9 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;
 }
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+#pragma GCC diagnostic pop
+#endif
 
 #define Sa  (instruction >>  6 & 31)
 #define Rdn (instruction >> 11 & 31)
@@ -1270,6 +1287,7 @@ auto RSP::Recompiler::isTerminal(u32 instruction) -> bool {
 
 #undef IpuReg
 #undef VuReg
+#undef BranchReg
 #undef R0
 #undef Sa
 #undef Rdn
