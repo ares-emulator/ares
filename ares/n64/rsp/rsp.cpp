@@ -86,17 +86,7 @@ auto RSP::instructionPrologue(u32 instruction) -> void {
   debugger.instruction();
 }
 
-template<bool Recompiled>
-auto RSP::instructionEpilogue(u32 clocks) -> s32 {
-  if constexpr(Recompiled) {
-    step(clocks);
-    pipeline.clocksTotal += clocks;
-
-    assert(ipu.r[0].u32 == 0);
-  } else {
-    ipu.r[0].u32 = 0;
-  }
-
+auto RSP::instructionBranchEpilogue() -> s32 {
   switch(branch.state) {
   case Branch::Step: ipu.pc += 4; return status.halted;
   case Branch::Take: ipu.pc += 4; branch.delaySlot(); return status.halted;
@@ -109,6 +99,20 @@ auto RSP::instructionEpilogue(u32 clocks) -> s32 {
   }
 
   unreachable;
+}
+
+template<bool Recompiled>
+auto RSP::instructionEpilogue(u32 clocks) -> s32 {
+  if constexpr(Recompiled) {
+    step(clocks);
+    pipeline.clocksTotal += clocks;
+
+    assert(ipu.r[0].u32 == 0);
+  } else {
+    ipu.r[0].u32 = 0;
+  }
+
+  return instructionBranchEpilogue();
 }
 
 auto RSP::power(bool reset) -> void {

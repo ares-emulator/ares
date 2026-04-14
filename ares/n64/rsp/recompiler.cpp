@@ -61,7 +61,6 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 #define IpuReg(r) sreg(1), offsetof(IPU, r)
 #define VuReg(r)  sreg(2), offsetof(VU, r)
 #define R0        IpuReg(r[0])
-
 auto RSP::Recompiler::emit(u12 address) -> Block* {
   if(unlikely(allocator.available() < 128_KiB)) {
     print("RSP allocator flush\n");
