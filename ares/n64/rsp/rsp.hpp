@@ -601,7 +601,6 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
     bool enabled = false;
     bool callInstructionPrologue = false;
-    bool fastInstructionEpilogue = true;
     Pipeline pipeline;
     bump_allocator allocator;
     array<Block*[1024]> context;

@@ -80,15 +80,8 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(3);
-  bool fastInstructionEpilogue = this->fastInstructionEpilogue;
 
   auto emitInstructionEpilogue = [&](u32 clocks, bool exit, bool delaySlot) -> void {
-    if(!fastInstructionEpilogue) {
-      callf(&RSP::instructionEpilogue<1>, imm(clocks));
-      if(exit) testJumpEpilog();
-      return;
-    }
-
     if(delaySlot) {
       callf(&RSP::instructionEpilogue<1>, imm(clocks));
       if(exit) testJumpEpilog();
