@@ -211,16 +211,15 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
 auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc) -> bool {
   auto emitConditionalTake = [&](u32 flag, bool invert = 0) -> void {
-    u32 target = u32(u12(pc + 4 + s32(i16) * 4));
+    u32 target      = u32(u12(pc + 4 + s32(i16) * 4));
     u32 fallthrough = u32(u12(pc + 8));
+    u32 selectMask  = fallthrough ^ target;
     mov32_f(reg(0), flag);
     if(invert) xor32(reg(0), reg(0), imm(1));
     xor32(reg(0), reg(0), imm(1));
     add32(reg(0), reg(0), imm(-1));
-    and32(reg(2), reg(0), imm(target));
-    xor32(reg(1), reg(0), imm(-1));
-    and32(reg(1), reg(1), imm(fallthrough));
-    or32(reg(1), reg(1), reg(2));
+    and32(reg(1), reg(0), imm(selectMask));
+    xor32(reg(1), reg(1), imm(fallthrough));
     mov32(BranchReg(nextpc), reg(1));
     and32(reg(0), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
     mov32(BranchReg(nstate), reg(0));
@@ -600,15 +599,14 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc) -> bool {
 
 auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc) -> bool {
   auto emitConditionalTake = [&](u32 flag) -> void {
-    u32 target = u32(u12(pc + 4 + s32(i16) * 4));
+    u32 target      = u32(u12(pc + 4 + s32(i16) * 4));
     u32 fallthrough = u32(u12(pc + 8));
+    u32 selectMask  = fallthrough ^ target;
     mov32_f(reg(0), flag);
     xor32(reg(0), reg(0), imm(1));
     add32(reg(0), reg(0), imm(-1));
-    and32(reg(2), reg(0), imm(target));
-    xor32(reg(1), reg(0), imm(-1));
-    and32(reg(1), reg(1), imm(fallthrough));
-    or32(reg(1), reg(1), reg(2));
+    and32(reg(1), reg(0), imm(selectMask));
+    xor32(reg(1), reg(1), imm(fallthrough));
     mov32(BranchReg(nextpc), reg(1));
     and32(reg(0), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
     mov32(BranchReg(nstate), reg(0));
