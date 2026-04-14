@@ -82,15 +82,18 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   beginFunction(3);
   bool fastInstructionEpilogue = this->fastInstructionEpilogue;
 
-  auto emitInstructionEpilogue = [&](u32 clocks, bool exit) -> void {
+  auto emitInstructionEpilogue = [&](u32 clocks, bool exit, bool delaySlot) -> void {
     if(!fastInstructionEpilogue) {
       callf(&RSP::instructionEpilogue<1>, imm(clocks));
       if(exit) testJumpEpilog();
       return;
     }
 
-    cmp32(BranchReg(state), imm(0), set_z);
-    auto slowPath = jump(flag_nz);
+    if(delaySlot) {
+      callf(&RSP::instructionEpilogue<1>, imm(clocks));
+      if(exit) testJumpEpilog();
+      return;
+    }
 
     if(clocks) {
       callf(&RSP::step, imm(clocks));
@@ -104,21 +107,12 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
       cmp32(reg(0), imm(0), set_z);
       jumpEpilog(flag_nz);
     }
-    auto done = jump();
-
-    setLabel(slowPath);
-    if(clocks) {
-      callf(&RSP::step, imm(clocks));
-      add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), imm(clocks));
-    }
-    callf(&RSP::instructionBranchEpilogue);
-    if(exit) testJumpEpilog();
-    setLabel(done);
   };
 
   u12 start = address;
   bool hasBranched = 0;
   while(true) {
+    bool delaySlot = hasBranched;
     u32 instruction = self.imem.read<Word>(address);
     if(callInstructionPrologue) {
       callf(&RSP::instructionPrologue, imm(instruction));
@@ -138,7 +132,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
       OpInfo op1 = self.decoderEXECUTE(instruction);
 
       if(RSP::canDualIssue(op0, op1)) {
-        emitInstructionEpilogue(0, 0);
+        emitInstructionEpilogue(0, 0, delaySlot);
         if(callInstructionPrologue) {
           callf(&RSP::instructionPrologue, imm(instruction));
         }
@@ -154,7 +148,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     }
 
     pipeline.end();
-    emitInstructionEpilogue(pipeline.clocks, 1);
+    emitInstructionEpilogue(pipeline.clocks, 1, delaySlot);
     address += 4;
     if(hasBranched || address == start) break;
     hasBranched = branched;
