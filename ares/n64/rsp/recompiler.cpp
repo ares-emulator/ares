@@ -67,6 +67,11 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 #define StatusReg(x) mem(sreg(0), offsetof(RSP, status) + offsetof(Status, x))
 #define RecompilerReg(x) mem(sreg(0), offsetof(RSP, recompiler) + offsetof(Recompiler, x))
 #define R0        IpuReg(r[0])
+#if defined(ARCHITECTURE_AMD64) || defined(ARCHITECTURE_ARM64)
+  #define RSP_JIT_SUPPORTS_MISALIGNED_MEMORY_ACCESSES 1
+#else
+  #define RSP_JIT_SUPPORTS_MISALIGNED_MEMORY_ACCESSES 0
+#endif
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
 #pragma GCC diagnostic push
@@ -305,6 +310,22 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     cmp32(reg(0), imm(0), set_z);
     return jump(flag_nz);
   };
+  auto emitDmemHalfSlowPathJump = [&]() -> sljit_jump* {
+    if constexpr(RSP_JIT_SUPPORTS_MISALIGNED_MEMORY_ACCESSES) {
+      cmp32(reg(1), imm(0x0fff), set_z);
+      return jump(flag_z);
+    } else {
+      return emitDmemUnalignedJump(1);
+    }
+  };
+  auto emitDmemWordSlowPathJump = [&]() -> sljit_jump* {
+    if constexpr(RSP_JIT_SUPPORTS_MISALIGNED_MEMORY_ACCESSES) {
+      cmp32(reg(1), imm(0x0ffd), set_uge);
+      return jump(flag_uge);
+    } else {
+      return emitDmemUnalignedJump(3);
+    }
+  };
   auto deferSlowPath = [&](sljit_jump* enter) -> void {
     auto& slow = slowPaths.emplace_back();
     slow.enter = enter;
@@ -468,7 +489,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
       return 0;
     }
     emitDmemAddress();
-    auto rare = emitDmemUnalignedJump(1);
+    auto rare = emitDmemHalfSlowPathJump();
     mov32_u16(reg(3), memReg2(reg(2), reg(1)));
     rev32_s16(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
@@ -488,7 +509,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
       return 0;
     }
     emitDmemAddress();
-    auto rare = emitDmemUnalignedJump(3);
+    auto rare = emitDmemWordSlowPathJump();
     mov32(reg(3), memReg2(reg(2), reg(1)));
     rev32(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
@@ -511,7 +532,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
       return 0;
     }
     emitDmemAddress();
-    auto rare = emitDmemUnalignedJump(1);
+    auto rare = emitDmemHalfSlowPathJump();
     mov32_u16(reg(3), memReg2(reg(2), reg(1)));
     rev32_u16(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
@@ -531,7 +552,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
       return 0;
     }
     emitDmemAddress();
-    auto rare = emitDmemUnalignedJump(3);
+    auto rare = emitDmemWordSlowPathJump();
     mov32(reg(3), memReg2(reg(2), reg(1)));
     rev32(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
@@ -554,7 +575,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
       return 0;
     }
     emitDmemAddress();
-    auto rare = emitDmemUnalignedJump(1);
+    auto rare = emitDmemHalfSlowPathJump();
     mov32(reg(3), mem(Rt));
     rev32_u16(reg(3), reg(3));
     mov64_u16(memReg2(reg(2), reg(1)), reg(3));
@@ -574,7 +595,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
       return 0;
     }
     emitDmemAddress();
-    auto rare = emitDmemUnalignedJump(3);
+    auto rare = emitDmemWordSlowPathJump();
     mov32(reg(3), mem(Rt));
     rev32(reg(3), reg(3));
     mov32(memReg2(reg(2), reg(1)), reg(3));
