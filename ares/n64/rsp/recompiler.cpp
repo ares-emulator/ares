@@ -217,9 +217,8 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot) -> bo
     xor32(reg(1), reg(1), imm(fallthrough));
     if(delaySlot) mov32(BranchReg(nextpc), reg(1));
     else          mov32(BranchReg(pc), reg(1));
-    and32(reg(0), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
-    if(delaySlot) mov32(BranchReg(nstate), reg(0));
-    else          mov32(BranchReg(state), reg(0));
+    if(delaySlot) and32(BranchReg(nstate), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
+    else          and32(BranchReg(state), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
   };
 
   switch(instruction >> 26) {
@@ -615,9 +614,8 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> boo
     xor32(reg(1), reg(1), imm(fallthrough));
     if(delaySlot) mov32(BranchReg(nextpc), reg(1));
     else          mov32(BranchReg(pc), reg(1));
-    and32(reg(0), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
-    if(delaySlot) mov32(BranchReg(nstate), reg(0));
-    else          mov32(BranchReg(state), reg(0));
+    if(delaySlot) and32(BranchReg(nstate), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
+    else          and32(BranchReg(state), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
   };
 
   switch(instruction >> 16 & 0x1f) {
