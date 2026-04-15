@@ -10,25 +10,60 @@ struct RSP : Thread, Memory::RCP<RSP> {
     template<u32 Size>
     auto read(u32 address) -> u64 {
       if (system.homebrewMode) self.debugger.dmemReadWord(address, Size, "RSP");
-      return Memory::Writable::read<Size>(address);
+      if constexpr(Size == Byte) return        (*(u8* )&data[address & maskByte]);
+      if constexpr(Size == Half) return bswap16(*(u16*)&data[address & maskHalf]);
+      if constexpr(Size == Word) return bswap32(*(u32*)&data[address & maskWord]);
+      if constexpr(Size == Dual) return bswap64(*(u64*)&data[address & maskDual]);
+      unreachable;
     }
 
     template<u32 Size>
     auto readUnaligned(u32 address) -> u64 {
       if (system.homebrewMode) self.debugger.dmemReadUnalignedWord(address, Size, "RSP");
-      return Memory::Writable::readUnaligned<Size>(address);
+      static_assert(Size == Half || Size == Word || Size == Dual);
+      if constexpr(Size == Half) {
+        u16 upper = read<Byte>(address + 0);
+        u16 lower = read<Byte>(address + 1);
+        return upper << 8 | lower;
+      }
+      if constexpr(Size == Word) {
+        u32 upper = readUnaligned<Half>(address + 0);
+        u32 lower = readUnaligned<Half>(address + 2);
+        return upper << 16 | lower;
+      }
+      if constexpr(Size == Dual) {
+        u64 upper = readUnaligned<Word>(address + 0);
+        u64 lower = readUnaligned<Word>(address + 4);
+        return upper << 32 | lower;
+      }
+      unreachable;
     }
 
     template<u32 Size>
     auto write(u32 address, u64 value) -> void {
       if (system.homebrewMode) self.debugger.dmemWriteWord(address, Size, value);
-      Memory::Writable::write<Size>(address, value);
+      if constexpr(Size == Byte) *(u8* )&data[address & maskByte] =        (value);
+      if constexpr(Size == Half) *(u16*)&data[address & maskHalf] = bswap16(value);
+      if constexpr(Size == Word) *(u32*)&data[address & maskWord] = bswap32(value);
+      if constexpr(Size == Dual) *(u64*)&data[address & maskDual] = bswap64(value);
     }
     
     template<u32 Size>
     auto writeUnaligned(u32 address, u64 value) -> void {
       if (system.homebrewMode) self.debugger.dmemWriteUnalignedWord(address, Size, value);
-      Memory::Writable::writeUnaligned<Size>(address, value);
+      static_assert(Size == Half || Size == Word || Size == Dual);
+      if constexpr(Size == Half) {
+        write<Byte>(address + 0, value >> 8);
+        write<Byte>(address + 1, value >> 0);
+      }
+      if constexpr(Size == Word) {
+        writeUnaligned<Half>(address + 0, value >> 16);
+        writeUnaligned<Half>(address + 2, value >> 0);
+      }
+      if constexpr(Size == Dual) {
+        writeUnaligned<Word>(address + 0, value >> 32);
+        writeUnaligned<Word>(address + 4, value >> 0);
+      }
     }
 
   } dmem{*this};
