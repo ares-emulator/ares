@@ -579,9 +579,9 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto block(u12 address) -> Block*;
 
     auto emit(u12 address) -> Block*;
-    auto emitEXECUTE(u32 instruction, u32 pc) -> bool;
-    auto emitSPECIAL(u32 instruction, u32 pc) -> bool;
-    auto emitREGIMM(u32 instruction, u32 pc) -> bool;
+    auto emitEXECUTE(u32 instruction, u32 pc, bool delaySlot) -> bool;
+    auto emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bool;
+    auto emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> bool;
     auto emitSCC(u32 instruction) -> bool;
     auto emitVU(u32 instruction) -> bool;
     auto emitLWC2(u32 instruction) -> bool;
