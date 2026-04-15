@@ -576,7 +576,10 @@ struct RSP : Thread, Memory::RCP<RSP> {
   //recompiler.cpp
   struct Recompiler : recompiler::generic {
     RSP& self;
-    Recompiler(RSP& self) : self(self), generic(allocator) {}
+    Recompiler(RSP& self) : self(self), generic(allocator) {
+      haltSlowPaths.reserve(256);
+      slowPaths.reserve(256);
+    }
 
     struct Block {
       auto execute(RSP& self) -> void {
@@ -598,6 +601,19 @@ struct RSP : Thread, Memory::RCP<RSP> {
       u64 hashcode;
     };
 
+    struct SlowPath {
+      sljit_jump* enter = nullptr;
+      sljit_label* resume = nullptr;
+      u32 instruction = 0;
+      u32 pc = 0;
+      bool delaySlot = 0;
+    };
+
+    struct HaltSlowPath {
+      sljit_jump* enter = nullptr;
+      u32 clocks = 0;
+    };
+
     auto reset() -> void {
       context.fill();
       blocks.reset();
@@ -614,7 +630,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto block(u12 address) -> Block*;
 
     auto emit(u12 address) -> Block*;
-    auto emitEXECUTE(u32 instruction, u32 pc, bool delaySlot) -> bool;
+    auto emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath) -> bool;
     auto emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bool;
     auto emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> bool;
     auto emitSCC(u32 instruction) -> bool;
@@ -641,6 +657,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
     array<Block*[1024]> context;
     hashset<BlockHashPair> blocks;
     u64 dirty;
+    std::vector<HaltSlowPath> haltSlowPaths;
+    std::vector<SlowPath> slowPaths;
   } recompiler{*this};
 
   struct Disassembler {
