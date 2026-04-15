@@ -101,13 +101,10 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     case 0x00: return (instruction & 0x3f) == 0x0d;  //BREAK
     case 0x10: return 1;  //SCC/XBUS
     case 0x12: return 1;  //VU
-    case 0x20: return 1;  //LB
     case 0x21: return 1;  //LH
     case 0x23: return 1;  //LW
-    case 0x24: return 1;  //LBU
     case 0x25: return 1;  //LHU
     case 0x27: return 1;  //LWU
-    case 0x28: return 1;  //SB
     case 0x29: return 1;  //SH
     case 0x2b: return 1;  //SW
     case 0x32: return 1;  //LWC2
@@ -265,6 +262,16 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   auto memReg2 = [&](reg base, reg index) -> op_base {
     return {SLJIT_MEM2(base.fst, index.fst), 0};
   };
+  auto emitDmemAddress = [&]() -> void {
+    mov64(reg(2), mem(sreg(0), offsetof(RSP, dmem) + offsetof(Writable, data)));
+    add32(reg(1), mem(Rs), imm(i16));
+    and32(reg(1), reg(1), imm(0x0fff));
+  };
+  auto emitDmemUnalignedJump = [&](u32 mask) -> sljit_jump* {
+    and32(reg(0), reg(1), imm(mask));
+    cmp32(reg(0), imm(0), set_z);
+    return jump(flag_nz);
+  };
   auto deferSlowPath = [&](sljit_jump* enter) -> void {
     auto& slow = slowPaths.emplace_back();
     slow.enter = enter;
@@ -414,13 +421,24 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LB Rt,Rs,i16
   case 0x20: {
-    callf(&RSP::LB, mem(Rt), mem(Rs), imm(i16));
+    emitDmemAddress();
+    mov32_s8(reg(3), memReg2(reg(2), reg(1)));
+    mov32(mem(Rt), reg(3));
     return 0;
   }
 
   //LH Rt,Rs,i16
   case 0x21: {
-    callf(&RSP::LH, mem(Rt), mem(Rs), imm(i16));
+    if(emitSlowPath) {
+      callf(&RSP::LH, mem(Rt), mem(Rs), imm(i16));
+      return 0;
+    }
+    emitDmemAddress();
+    auto rare = emitDmemUnalignedJump(1);
+    mov32_u16(reg(3), memReg2(reg(2), reg(1)));
+    rev32_s16(reg(3), reg(3));
+    mov32(mem(Rt), reg(3));
+    deferSlowPath(rare);
     return 0;
   }
 
@@ -435,12 +453,8 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
       callf(&RSP::LW, mem(Rt), mem(Rs), imm(i16));
       return 0;
     }
-    mov64(reg(2), mem(sreg(0), offsetof(RSP, dmem) + offsetof(Writable, data)));
-    add32(reg(1), mem(Rs), imm(i16));
-    and32(reg(1), reg(1), imm(0x0fff));
-    and32(reg(0), reg(1), imm(3));
-    cmp32(reg(0), imm(0), set_z);
-    auto rare = jump(flag_nz);
+    emitDmemAddress();
+    auto rare = emitDmemUnalignedJump(3);
     mov32(reg(3), memReg2(reg(2), reg(1)));
     rev32(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
@@ -450,13 +464,24 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LBU Rt,Rs,i16
   case 0x24: {
-    callf(&RSP::LBU, mem(Rt), mem(Rs), imm(i16));
+    emitDmemAddress();
+    mov32_u8(reg(3), memReg2(reg(2), reg(1)));
+    mov32(mem(Rt), reg(3));
     return 0;
   }
 
   //LHU Rt,Rs,i16
   case 0x25: {
-    callf(&RSP::LHU, mem(Rt), mem(Rs), imm(i16));
+    if(emitSlowPath) {
+      callf(&RSP::LHU, mem(Rt), mem(Rs), imm(i16));
+      return 0;
+    }
+    emitDmemAddress();
+    auto rare = emitDmemUnalignedJump(1);
+    mov32_u16(reg(3), memReg2(reg(2), reg(1)));
+    rev32_u16(reg(3), reg(3));
+    mov32(mem(Rt), reg(3));
+    deferSlowPath(rare);
     return 0;
   }
 
@@ -467,19 +492,39 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LWU Rt,Rs,i16
   case 0x27: {
-    callf(&RSP::LWU, mem(Rt), mem(Rs), imm(i16));
+    if(emitSlowPath) {
+      callf(&RSP::LWU, mem(Rt), mem(Rs), imm(i16));
+      return 0;
+    }
+    emitDmemAddress();
+    auto rare = emitDmemUnalignedJump(3);
+    mov32(reg(3), memReg2(reg(2), reg(1)));
+    rev32(reg(3), reg(3));
+    mov32(mem(Rt), reg(3));
+    deferSlowPath(rare);
     return 0;
   }
 
   //SB Rt,Rs,i16
   case 0x28: {
-    callf(&RSP::SB, mem(Rt), mem(Rs), imm(i16));
+    emitDmemAddress();
+    mov32(reg(3), mem(Rt));
+    mov64_u8(memReg2(reg(2), reg(1)), reg(3));
     return 0;
   }
 
   //SH Rt,Rs,i16
   case 0x29: {
-    callf(&RSP::SH, mem(Rt), mem(Rs), imm(i16));
+    if(emitSlowPath) {
+      callf(&RSP::SH, mem(Rt), mem(Rs), imm(i16));
+      return 0;
+    }
+    emitDmemAddress();
+    auto rare = emitDmemUnalignedJump(1);
+    mov32(reg(3), mem(Rt));
+    rev32_u16(reg(3), reg(3));
+    mov64_u16(memReg2(reg(2), reg(1)), reg(3));
+    deferSlowPath(rare);
     return 0;
   }
 
@@ -490,7 +535,16 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //SW Rt,Rs,i16
   case 0x2b: {
-    callf(&RSP::SW, mem(Rt), mem(Rs), imm(i16));
+    if(emitSlowPath) {
+      callf(&RSP::SW, mem(Rt), mem(Rs), imm(i16));
+      return 0;
+    }
+    emitDmemAddress();
+    auto rare = emitDmemUnalignedJump(3);
+    mov32(reg(3), mem(Rt));
+    rev32(reg(3), reg(3));
+    mov32(memReg2(reg(2), reg(1)), reg(3));
+    deferSlowPath(rare);
     return 0;
   }
 
