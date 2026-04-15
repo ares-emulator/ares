@@ -130,6 +130,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
       Vector    = 1 << 3,
       VNopGroup = 1 << 4,  //dual issue conflicts with VNOP
       Bypass    = 1 << 5,
+      UsesDmem  = 1 << 6,
+      MayHalt   = 1 << 7,
     };
 
     u32 flags;
@@ -143,6 +145,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto branch() const -> bool { return flags & Branch; }
     auto vector() const -> bool { return flags & Vector; }
     auto bypass() const -> bool { return flags & Bypass; }
+    auto usesDmem() const -> bool { return flags & UsesDmem; }
+    auto mayHalt() const -> bool { return flags & MayHalt; }
   };
 
   static auto canDualIssue(const OpInfo& op0, const OpInfo& op1) -> bool {
