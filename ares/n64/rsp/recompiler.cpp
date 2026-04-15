@@ -482,6 +482,16 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     if(delaySlot) and32(BranchReg(nstate), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
     else          and32(BranchReg(state), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
   };
+  auto emitKnownConditionalTake = [&](bool take) -> void {
+    u32 target      = u32(u12(pc + 4 + s32(i16) * 4));
+    u32 fallthrough = u32(u12(pc + 8));
+    u32 destination = take ? target : fallthrough;
+    u32 state       = take ? Branch::DelaySlot | Branch::EndBlock : 0;
+    if(delaySlot) mov32(BranchReg(nextpc), imm(destination));
+    else          mov32(BranchReg(pc), imm(destination));
+    if(delaySlot) mov32(BranchReg(nstate), imm(state));
+    else          mov32(BranchReg(state), imm(state));
+  };
 
   switch(instruction >> 26) {
 
@@ -516,6 +526,9 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //BEQ Rs,Rt,i16
   case 0x04: {
+    if(Rsn == Rtn) return emitKnownConditionalTake(1), 1;
+    if(!Rsn)      return cmp32(mem(Rt), imm(0), set_z), emitConditionalTake(flag_z), 1;
+    if(!Rtn)      return cmp32(mem(Rs), imm(0), set_z), emitConditionalTake(flag_z), 1;
     cmp32(mem(Rs), mem(Rt), set_z);
     emitConditionalTake(flag_z);
     return 1;
@@ -523,6 +536,9 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //BNE Rs,Rt,i16
   case 0x05: {
+    if(Rsn == Rtn) return emitKnownConditionalTake(0), 1;
+    if(!Rsn)      return cmp32(mem(Rt), imm(0), set_z), emitConditionalTake(flag_z, 1), 1;
+    if(!Rtn)      return cmp32(mem(Rs), imm(0), set_z), emitConditionalTake(flag_z, 1), 1;
     cmp32(mem(Rs), mem(Rt), set_z);
     emitConditionalTake(flag_z, 1);
     return 1;
@@ -530,6 +546,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //BLEZ Rs,i16
   case 0x06: {
+    if(!Rsn) return emitKnownConditionalTake(1), 1;
     cmp32(mem(Rs), imm(0), set_sgt);
     emitConditionalTake(flag_sgt, 1);
     return 1;
@@ -537,6 +554,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //BGTZ Rs,i16
   case 0x07: {
+    if(!Rsn) return emitKnownConditionalTake(0), 1;
     cmp32(mem(Rs), imm(0), set_sgt);
     emitConditionalTake(flag_sgt);
     return 1;
@@ -545,6 +563,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   //ADDIU Rt,Rs,i16
   case range2(0x08, 0x09): {
     if(!Rtn) return 0;
+    if(!Rsn) return mov32(mem(Rt), imm(i16)), 0;
     add32(mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
@@ -552,6 +571,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   //SLTI Rt,Rs,i16
   case 0x0a: {
     if(!Rtn) return 0;
+    if(!Rsn) return mov32(mem(Rt), imm(i16 > 0)), 0;
     cmp32(mem(Rs), imm(i16), set_slt);
     mov32_f(mem(Rt), flag_slt);
     return 0;
@@ -560,6 +580,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   //SLTIU Rt,Rs,i16
   case 0x0b: {
     if(!Rtn) return 0;
+    if(!Rsn) return mov32(mem(Rt), imm(i16 != 0)), 0;
     cmp32(mem(Rs), imm(i16), set_ult);
     mov32_f(mem(Rt), flag_ult);
     return 0;
@@ -568,6 +589,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   //ANDI Rt,Rs,n16
   case 0x0c: {
     if(!Rtn) return 0;
+    if(!Rsn) return mov32(mem(Rt), imm(0)), 0;
     and32(mem(Rt), mem(Rs), imm(n16));
     return 0;
   }
@@ -575,6 +597,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   //ORI Rt,Rs,n16
   case 0x0d: {
     if(!Rtn) return 0;
+    if(!Rsn) return mov32(mem(Rt), imm(n16)), 0;
     or32(mem(Rt), mem(Rs), imm(n16));
     return 0;
   }
@@ -582,6 +605,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   //XORI Rt,Rs,n16
   case 0x0e: {
     if(!Rtn) return 0;
+    if(!Rsn) return mov32(mem(Rt), imm(n16)), 0;
     xor32(mem(Rt), mem(Rs), imm(n16));
     return 0;
   }
@@ -708,7 +732,8 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   //SB Rt,Rs,i16
   case 0x28: {
     emitDmemAddress();
-    mov32(reg(3), mem(Rt));
+    if(!Rtn) mov32(reg(3), imm(0));
+    else     mov32(reg(3), mem(Rt));
     mov64_u8(memReg2(reg(2), reg(1)), reg(3));
     return 0;
   }
@@ -721,7 +746,8 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     }
     emitDmemAddress();
     auto rare = emitDmemHalfSlowPathJump();
-    mov32(reg(3), mem(Rt));
+    if(!Rtn) mov32(reg(3), imm(0));
+    else     mov32(reg(3), mem(Rt));
     rev32_u16(reg(3), reg(3));
     mov64_u16(memReg2(reg(2), reg(1)), reg(3));
     deferSlowPath(rare);
@@ -741,7 +767,8 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     }
     emitDmemAddress();
     auto rare = emitDmemWordSlowPathJump();
-    mov32(reg(3), mem(Rt));
+    if(!Rtn) mov32(reg(3), imm(0));
+    else     mov32(reg(3), mem(Rt));
     rev32(reg(3), reg(3));
     mov32(memReg2(reg(2), reg(1)), reg(3));
     deferSlowPath(rare);
@@ -784,6 +811,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //SLL Rd,Rt,Sa
   case 0x00: {
     if(!Rdn) return 0;
+    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
     shl32(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
@@ -798,6 +826,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //SRL Rd,Rt,Sa
   case 0x02: {
     if(!Rdn) return 0;
+    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
     lshr32(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
@@ -805,6 +834,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //SRA Rd,Rt,Sa
   case 0x03: {
     if(!Rdn) return 0;
+    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
     ashr32(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
@@ -812,6 +842,8 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //SLLV Rd,Rt,Rs
   case 0x04: {
     if(!Rdn) return 0;
+    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rsn) return mov32(mem(Rd), mem(Rt)), 0;
     mshl32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
@@ -826,6 +858,8 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //SRLV Rd,Rt,Rs
   case 0x06: {
     if(!Rdn) return 0;
+    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rsn) return mov32(mem(Rd), mem(Rt)), 0;
     mlshr32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
@@ -833,13 +867,16 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //SRAV Rd,Rt,Rs
   case 0x07: {
     if(!Rdn) return 0;
+    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rsn) return mov32(mem(Rd), mem(Rt)), 0;
     mashr32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
 
   //JR Rs
   case 0x08: {
-    and32(reg(0), mem(Rs), imm(0x0fff));
+    if(!Rsn)      mov32(reg(0), imm(0));
+    else          and32(reg(0), mem(Rs), imm(0x0fff));
     if(delaySlot) mov32(BranchReg(nextpc), reg(0));
     else          mov32(BranchReg(pc), reg(0));
     if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
@@ -849,8 +886,9 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
 
   //JALR Rd,Rs
   case 0x09: {
-    and32(reg(0), mem(Rs), imm(0x0fff));
-    if(Rdn) mov32(mem(Rd), imm(u32(u12(pc + 8))));
+    if(!Rsn)      mov32(reg(0), imm(0));
+    else          and32(reg(0), mem(Rs), imm(0x0fff));
+    if(Rdn)       mov32(mem(Rd), imm(u32(u12(pc + 8))));
     if(delaySlot) mov32(BranchReg(nextpc), reg(0));
     else          mov32(BranchReg(pc), reg(0));
     if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
@@ -883,6 +921,9 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //ADDU Rd,Rs,Rt
   case range2(0x20, 0x21): {
     if(!Rdn) return 0;
+    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rsn)         return mov32(mem(Rd), mem(Rt)), 0;
+    if(!Rtn)         return mov32(mem(Rd), mem(Rs)), 0;
     add32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
@@ -890,6 +931,9 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //SUBU Rd,Rs,Rt
   case range2(0x22, 0x23): {
     if(!Rdn) return 0;
+    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rsn)         return sub32(mem(Rd), imm(0), mem(Rt)), 0;
+    if(!Rtn)         return mov32(mem(Rd), mem(Rs)), 0;
     sub32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
@@ -897,6 +941,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //AND Rd,Rs,Rt
   case 0x24: {
     if(!Rdn) return 0;
+    if(!Rsn || !Rtn) return mov32(mem(Rd), imm(0)), 0;
     and32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
@@ -904,6 +949,9 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //OR Rd,Rs,Rt
   case 0x25: {
     if(!Rdn) return 0;
+    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rsn)         return mov32(mem(Rd), mem(Rt)), 0;
+    if(!Rtn)         return mov32(mem(Rd), mem(Rs)), 0;
     or32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
@@ -911,6 +959,9 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //XOR Rd,Rs,Rt
   case 0x26: {
     if(!Rdn) return 0;
+    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rsn)         return mov32(mem(Rd), mem(Rt)), 0;
+    if(!Rtn)         return mov32(mem(Rd), mem(Rs)), 0;
     xor32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
@@ -918,6 +969,9 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //NOR Rd,Rs,Rt
   case 0x27: {
     if(!Rdn) return 0;
+    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(-1)), 0;
+    if(!Rsn)         return xor32(mem(Rd), mem(Rt), imm(-1)), 0;
+    if(!Rtn)         return xor32(mem(Rd), mem(Rs), imm(-1)), 0;
     or32(reg(0), mem(Rs), mem(Rt));
     xor32(reg(0), reg(0), imm(-1));
     mov32(mem(Rd), reg(0));
@@ -934,6 +988,9 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //SLT Rd,Rs,Rt
   case 0x2a: {
     if(!Rdn) return 0;
+    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rsn)         return cmp32(mem(Rt), imm(0), set_sgt), mov32_f(mem(Rd), flag_sgt), 0;
+    if(!Rtn)         return cmp32(mem(Rs), imm(0), set_slt), mov32_f(mem(Rd), flag_slt), 0;
     cmp32(mem(Rs), mem(Rt), set_slt);
     mov32_f(mem(Rd), flag_slt);
     return 0;
@@ -942,6 +999,8 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //SLTU Rd,Rs,Rt
   case 0x2b: {
     if(!Rdn) return 0;
+    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rsn) return cmp32(mem(Rt), imm(0), set_ugt), mov32_f(mem(Rd), flag_ugt), 0;
     cmp32(mem(Rs), mem(Rt), set_ult);
     mov32_f(mem(Rd), flag_ult);
     return 0;
@@ -972,11 +1031,22 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> boo
     if(delaySlot) and32(BranchReg(nstate), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
     else          and32(BranchReg(state), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
   };
+  auto emitKnownConditionalTake = [&](bool take) -> void {
+    u32 target      = u32(u12(pc + 4 + s32(i16) * 4));
+    u32 fallthrough = u32(u12(pc + 8));
+    u32 destination = take ? target : fallthrough;
+    u32 state       = take ? Branch::DelaySlot | Branch::EndBlock : 0;
+    if(delaySlot) mov32(BranchReg(nextpc), imm(destination));
+    else          mov32(BranchReg(pc), imm(destination));
+    if(delaySlot) mov32(BranchReg(nstate), imm(state));
+    else          mov32(BranchReg(state), imm(state));
+  };
 
   switch(instruction >> 16 & 0x1f) {
 
   //BLTZ Rs,i16
   case 0x00: {
+    if(!Rsn) return emitKnownConditionalTake(0), 1;
     cmp32(mem(Rs), imm(0), set_slt);
     emitConditionalTake(flag_slt);
     return 1;
@@ -984,6 +1054,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> boo
 
   //BGEZ Rs,i16
   case 0x01: {
+    if(!Rsn) return emitKnownConditionalTake(1), 1;
     cmp32(mem(Rs), imm(0), set_sge);
     emitConditionalTake(flag_sge);
     return 1;
@@ -997,6 +1068,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> boo
   //BLTZAL Rs,i16
   case 0x10: {
     mov32(reg(3), imm(u32(u12(pc + 8))));
+    if(!Rsn) return emitKnownConditionalTake(0), mov32(mem(IpuReg(r[31])), reg(3)), 1;
     cmp32(mem(Rs), imm(0), set_slt);
     emitConditionalTake(flag_slt);
     mov32(mem(IpuReg(r[31])), reg(3));
@@ -1006,6 +1078,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> boo
   //BGEZAL Rs,i16
   case 0x11: {
     mov32(reg(3), imm(u32(u12(pc + 8))));
+    if(!Rsn) return emitKnownConditionalTake(1), mov32(mem(IpuReg(r[31])), reg(3)), 1;
     cmp32(mem(Rs), imm(0), set_sge);
     emitConditionalTake(flag_sge);
     mov32(mem(IpuReg(r[31])), reg(3));
