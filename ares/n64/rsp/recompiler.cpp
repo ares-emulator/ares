@@ -1,3 +1,119 @@
+/*
+RSP Recompiler: Architecture and Optimization Notes
+===================================================
+
+Overview
+--------
+This file implements the Nintendo 64 RSP recompiler backend built on top of
+nall::recompiler (SLJIT). The recompiler translates IMEM instructions into host
+code blocks and executes them through RSP::Recompiler::Block::execute().
+
+The design goal is to keep the hot path as close as possible to pure opcode
+semantics, moving uncommon behaviors out of line and minimizing helper calls.
+Correctness is preserved by matching interpreter-visible branch, delay-slot, and
+clock behavior.
+
+Block lifecycle
+---------------
+1) Block discovery
+   - measure(): determines block size from a start PC until terminal condition.
+   - isTerminal(): identifies opcodes that end a scheduling window.
+
+2) Block identity and reuse
+   - hash(): hashes IMEM bytes for the measured range.
+   - block(): combines IMEM hash + pipeline hash + start address.
+   - context[] is a direct PC-indexed cache; blocks hashset handles dedup.
+   - dirty mask invalidates overlapping cached blocks when IMEM changes.
+
+3) Block emission and finalization
+   - emit(): builds host code with beginFunction()/endFunction().
+   - block->pipeline stores end-of-block pipeline state used by execute().
+
+Execution model inside emit()
+-----------------------------
+The main emission loop models RSP scheduling semantics:
+- decode current instruction to OpInfo (decoderEXECUTE()).
+- begin pipeline window, issue first op, and emit host code via emitEXECUTE().
+- opportunistically decode/issue a second opcode if canDualIssue() allows it.
+- end pipeline window, update branch/state/PC bookkeeping, and exit if needed.
+
+Instruction emission is split by decode family:
+- emitEXECUTE(): top-level primary opcode dispatch.
+- emitSPECIAL(), emitREGIMM(), emitSCC(), emitVU(), emitLWC2(), emitSWC2():
+  specialized sub-decoders.
+
+Delay slots and branch commit
+-----------------------------
+Branch handling is explicit:
+- branch target/state are emitted directly into BranchReg(...) fields.
+- delay-slot completion can call instructionBranchEpilogue() where needed.
+- commit logic updates architectural PC and branch state at controlled points.
+
+This keeps branch behavior deterministic while avoiding per-opcode generic
+epilogue calls on the common non-branch path.
+
+Out-of-line slow paths
+----------------------
+Rare paths are emitted after the main block body:
+- slowPaths: deferred uncommon opcode cases (for example memory wraparound
+  fallbacks that call interpreter helpers).
+- haltSlowPaths: deferred exits when halted state must terminate execution.
+
+Fast path emits a conditional jump to the slow-path section, then continues.
+Each slow path jumps back to a resume label in the hot region after completion.
+This reduces instruction cache pressure in the hot stream.
+
+Key optimizations
+-----------------
+1) Deferred clock accounting (clock cache)
+   - JIT-time: the emitter tracks pending cycles in deferredClocks instead of
+     emitting per-opcode clock updates in the hot path.
+   - Runtime applies pending cycles ("flushes them") to ThreadReg(clock) and
+     PipelineReg(clocksTotal) by executing the emitted add instructions.
+   - Flushes are emitted only at synchronization points (helper-call boundaries,
+     block end, and slow-path transitions).
+   - slowPathFlushedClocks prevents double-accounting when runtime control
+     enters a slow path and later reaches another flush point.
+
+2) Call-boundary synchronization only when needed
+   - instructionMayCallf() identifies opcodes that execute C++ helpers.
+   - JIT-time: a flush sequence is emitted only before helper calls that need
+     an up-to-date clock value at runtime.
+
+3) Selective halted checks
+   - OpInfo::MayHalt limits halted-state exit checks to opcodes that can
+     actually modify status.halted (for example BREAK or MTC0 to SP_STATUS).
+
+4) R0 write suppression
+   - JIT paths avoid emitting writes when destination is register 0.
+   - C++ helper paths guard writeback so architectural R0 remains immutable.
+
+5) Scalar DMEM fast paths + endian-aware ops
+   - LB/LH/LW/LBU/LHU/LWU/SB/SH/SW are emitted directly in JIT fast paths.
+   - Byte swap helpers are used where required by DMEM big-endian semantics.
+   - Uncommon wraparound/alignment fallback is handled via deferred slow paths.
+
+6) Lazy DMEM base pointer cache
+   - Host register reg(2) caches dmem.data for scalar memory ops.
+   - OpInfo::UsesDmem (from decoder metadata) marks opcodes that need it.
+   - Cache is loaded lazily on first use and invalidated only when an emitted
+     instruction can clobber temporary registers.
+
+7) Compile-time virtual PC usage
+   - Many branch/link/fallthrough values are emitted as immediates derived from
+     compile-time PC, reducing runtime state traffic in common paths.
+   - This also removes the need to update architectural PC after every opcode;
+     PC is committed only at explicit block/branch commit points.
+   - Block hashing includes the block start address, so identical opcode bytes
+     at different addresses cannot alias to the same compiled block by mistake.
+
+Maintenance guidelines
+----------------------
+- Preserve interpreter-visible behavior first (branching, delay slots, clocks).
+- Keep uncommon logic in slow paths whenever possible.
+- If adding new helper calls, ensure clock synchronization remains correct.
+*/
+
 auto RSP::Recompiler::measure(u12 address) -> u12 {
   u12 start = address;
   bool hasBranched = 0;
@@ -89,9 +205,17 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(3);
   u32 deferredClocks = 0;
+  bool dmemDataLoaded = 0;
   mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
   haltSlowPaths.clear();
   slowPaths.clear();
+  auto loadDmemData = [&]() -> void {
+    mov64(reg(2), mem(sreg(0), offsetof(RSP, dmem) + offsetof(Writable, data)));
+    dmemDataLoaded = 1;
+  };
+  auto invalidateDmemData = [&]() -> void {
+    dmemDataLoaded = 0;
+  };
 
   auto emitClockFlush = [&](u32 clocks) -> void {
     if(!clocks) return;
@@ -103,21 +227,18 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     add64(ThreadReg(clock), ThreadReg(clock), reg(1));
     add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), clocks);
   };
-  auto resetSlowPathFlushedClocks = [&]() -> void {
-    mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
-  };
   auto flushDeferredForCallf = [&]() -> void {
     if(!deferredClocks) return;
     sub32(reg(0), imm(deferredClocks), RecompilerReg(slowPathFlushedClocks));
     emitClockFlushRegister(reg(0));
-    resetSlowPathFlushedClocks();
+    mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
     deferredClocks = 0;
   };
   auto flushDeferredAtBlockEnd = [&]() -> void {
     if(!deferredClocks) return;
     sub32(reg(0), imm(deferredClocks), RecompilerReg(slowPathFlushedClocks));
     emitClockFlushRegister(reg(0));
-    resetSlowPathFlushedClocks();
+    mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
   };
   auto flushDeferredForSlowPath = [&](u32 clocks) -> void {
     sub32(reg(0), imm(clocks), RecompilerReg(slowPathFlushedClocks));
@@ -138,14 +259,15 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     }
     return 0;
   };
-  auto instructionMaySetHalted = [&](u32 instruction) -> bool {
+  auto ensureDmemData = [&](const OpInfo& op) -> void {
+    if(!op.usesDmem()) return;
+    if(dmemDataLoaded) return;
+    loadDmemData();
+  };
+  auto instructionMayClobberTempRegisters = [&](u32 instruction) -> bool {
+    if(instructionMayCallf(instruction)) return 1;
     switch(instruction >> 26) {
-    case 0x00: return (instruction & 0x3f) == 0x0d;  //BREAK
-    case 0x10: {
-      if((instruction >> 21 & 0x1f) != 0x04) return 0;  //MTC0
-      u32 rd = instruction >> 11 & 0x1f;
-      return (rd & 8) == 0 && (rd & 7) == 4;  //SP_STATUS
-    }
+    case 0x12: return 1;  //VU
     }
     return 0;
   };
@@ -176,21 +298,23 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   };
 
   u12 start = address;
-  bool hasBranched = 0;
+  bool delaySlot = 0;
   while(true) {
-    bool delaySlot = hasBranched;
     u32 instruction = self.imem.read<Word>(address);
-    bool checkHalted = instructionMaySetHalted(instruction);
+    bool instructionClobbersTempRegisters = instructionMayClobberTempRegisters(instruction);
     if(instructionMayCallf(instruction)) {
       flushDeferredForCallf();
     }
     if(callInstructionPrologue) {
       callf(&RSP::instructionPrologue, imm(instruction));
+      invalidateDmemData();
     }
     if(delaySlot) mov32(BranchReg(nstate), imm(0));
     pipeline.begin();
     OpInfo op0 = self.decoderEXECUTE(instruction);
+    bool checkHalted = op0.mayHalt();
     pipeline.issue(op0);
+    ensureDmemData(op0);
     bool branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
 
     if(!pipeline.singleIssue && !branched && u12(address + 4) != start) {
@@ -199,27 +323,33 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
       if(RSP::canDualIssue(op0, op1)) {
         emitInstructionEpilogue(0, 0, delaySlot, callInstructionPrologue, 0, u32(u12(address + 4)), 0);
+        if(delaySlot) invalidateDmemData();
         if(instructionMayCallf(instruction)) {
           flushDeferredForCallf();
         }
         if(callInstructionPrologue) {
           callf(&RSP::instructionPrologue, imm(instruction));
+          invalidateDmemData();
         }
-        checkHalted |= instructionMaySetHalted(instruction);
+        checkHalted |= op1.mayHalt();
         address += 4;
         if(delaySlot) mov32(BranchReg(nstate), imm(0));
+        if(instructionClobbersTempRegisters) invalidateDmemData();
         pipeline.issue(op1);
+        ensureDmemData(op1);
         branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
+        if(instructionMayClobberTempRegisters(instruction)) invalidateDmemData();
       }
     }
+    if(instructionClobbersTempRegisters) invalidateDmemData();
 
     pipeline.end();
-    bool terminal = hasBranched || u12(address + 4) == start;
+    bool terminal = delaySlot || u12(address + 4) == start;
     bool commit = callInstructionPrologue || branched || terminal;
     emitInstructionEpilogue(pipeline.clocks, 1, delaySlot, commit, branched, u32(u12(address + 4)), checkHalted);
     address += 4;
-    if(hasBranched || address == start) break;
-    hasBranched = branched;
+    if(delaySlot || address == start) break;
+    delaySlot = branched;
   }
   flushDeferredAtBlockEnd();
   deferredClocks = 0;
@@ -227,13 +357,14 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   for(auto& slow : haltSlowPaths) {
     setLabel(slow.enter);
     flushDeferredForSlowPath(slow.clocks);
-    resetSlowPathFlushedClocks();
+    mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
     jumpEpilog();
   }
   for(auto& slow : slowPaths) {
     setLabel(slow.enter);
     flushDeferredForSlowPath(slow.clocks);
     emitEXECUTE(slow.instruction, slow.pc, slow.delaySlot, 1, 0);
+    loadDmemData();
     sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
   }
 
@@ -299,9 +430,12 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     return {SLJIT_MEM2(base.fst, index.fst), 0};
   };
   auto emitDmemAddress = [&]() -> void {
-    mov64(reg(2), mem(sreg(0), offsetof(RSP, dmem) + offsetof(Writable, data)));
-    add32(reg(1), mem(Rs), imm(i16));
-    and32(reg(1), reg(1), imm(0x0fff));
+    if(!Rsn) {
+      mov32(reg(1), imm(u32(u12(i16))));
+    } else {
+      add32(reg(1), mem(Rs), imm(i16));
+      and32(reg(1), reg(1), imm(0x0fff));
+    }
   };
   auto emitDmemUnalignedJump = [&](u32 mask) -> sljit_jump* {
     and32(reg(0), reg(1), imm(mask));

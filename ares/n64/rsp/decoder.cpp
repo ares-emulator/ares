@@ -31,6 +31,8 @@
 #define Branch    info.flags |= OpInfo::Branch
 #define Vector    info.flags |= OpInfo::Vector
 #define VNopGroup info.flags |= OpInfo::VNopGroup
+#define UsesDmem  info.flags |= OpInfo::UsesDmem
+#define MayHalt   info.flags |= OpInfo::MayHalt
 
 auto RSP::decoderEXECUTE(u32 instruction) const -> OpInfo {
   switch(instruction >> 26) {
@@ -66,18 +68,18 @@ auto RSP::decoderEXECUTE(u32 instruction) const -> OpInfo {
   op(0x1d, INVALID);
   op(0x1e, INVALID);
   op(0x1f, INVALID);
-  op(0x20, LB, RDef(RT), RUse(RS), Load);
-  op(0x21, LH, RDef(RT), RUse(RS), Load);
+  op(0x20, LB, RDef(RT), RUse(RS), Load, UsesDmem);
+  op(0x21, LH, RDef(RT), RUse(RS), Load, UsesDmem);
   op(0x22, INVALID);  //LWL
-  op(0x23, LW, RDef(RT), RUse(RS), Load);
-  op(0x24, LBU, RDef(RT), RUse(RS), Load);
-  op(0x25, LHU, RDef(RT), RUse(RS), Load);
+  op(0x23, LW, RDef(RT), RUse(RS), Load, UsesDmem);
+  op(0x24, LBU, RDef(RT), RUse(RS), Load, UsesDmem);
+  op(0x25, LHU, RDef(RT), RUse(RS), Load, UsesDmem);
   op(0x26, INVALID);  //LWR
-  op(0x27, LWU, RDef(RT), RUse(RS), Load);
-  op(0x28, SB, RUse(RT), RUse(RS), Store);
-  op(0x29, SH, RUse(RT), RUse(RS), Store);
+  op(0x27, LWU, RDef(RT), RUse(RS), Load, UsesDmem);
+  op(0x28, SB, RUse(RT), RUse(RS), Store, UsesDmem);
+  op(0x29, SH, RUse(RT), RUse(RS), Store, UsesDmem);
   op(0x2a, INVALID);  //SWL
-  op(0x2b, SW, RUse(RT), RUse(RS), Store);
+  op(0x2b, SW, RUse(RT), RUse(RS), Store, UsesDmem);
   op(0x2c, INVALID);  //SDL
   op(0x2d, INVALID);  //SDR
   op(0x2e, INVALID);  //SWR
@@ -117,7 +119,7 @@ auto RSP::decoderSPECIAL(u32 instruction) const -> OpInfo {
   op(0x0a, INVALID);
   op(0x0b, INVALID);
   op(0x0c, INVALID);  //SYSCALL
-  op(0x0d, BREAK, Branch);
+  op(0x0d, BREAK, Branch, MayHalt);
   op(0x0e, INVALID);
   op(0x0f, INVALID);  //SYNC
   op(0x10, INVALID);  //MFHI
@@ -216,7 +218,7 @@ auto RSP::decoderSCC(u32 instruction) const -> OpInfo {
   op(0x01, INVALID);  //DMFC0
   op(0x02, INVALID);  //CFC0
   op(0x03, INVALID);
-  op(0x04, MTC0, RUse(RT), Load, Store);
+  op(0x04, MTC0, RUse(RT), Load, Store, ((RD & 8) == 0 && (RD & 7) == 4) ? (MayHalt) : 0);
   op(0x05, INVALID);  //DMTC0
   op(0x06, INVALID);  //CTC0
   op(0x07, INVALID);
@@ -386,6 +388,8 @@ auto RSP::decoderSWC2(u32 instruction) const -> OpInfo {
 #undef Branch
 #undef Vector
 #undef VNopGroup
+#undef UsesDmem
+#undef MayHalt
 
 #undef VCO
 #undef VCC
