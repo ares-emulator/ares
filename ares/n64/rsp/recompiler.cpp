@@ -95,8 +95,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     }
 
     if(commit) {
-      if(branched) mov32(BranchReg(state), BranchReg(nstate));
-      else         mov32(BranchReg(state), imm(0));
+      if(!branched) mov32(BranchReg(state), imm(0));
       mov32(mem(IpuReg(pc)), imm(nextpc));
     }
 
@@ -219,7 +218,8 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot) -> bo
     if(delaySlot) mov32(BranchReg(nextpc), reg(1));
     else          mov32(BranchReg(pc), reg(1));
     and32(reg(0), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
-    mov32(BranchReg(nstate), reg(0));
+    if(delaySlot) mov32(BranchReg(nstate), reg(0));
+    else          mov32(BranchReg(state), reg(0));
   };
 
   switch(instruction >> 26) {
@@ -238,7 +238,8 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot) -> bo
   case 0x02: {
     if(delaySlot) mov32(BranchReg(nextpc), imm(u32(u12(n26 << 2))));
     else          mov32(BranchReg(pc), imm(u32(u12(n26 << 2))));
-    mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
+    if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
+    else          mov32(BranchReg(state), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
   }
 
@@ -247,7 +248,8 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot) -> bo
     mov32(mem(IpuReg(r[31])), imm(u32(u12(pc + 8))));
     if(delaySlot) mov32(BranchReg(nextpc), imm(u32(u12(n26 << 2))));
     else          mov32(BranchReg(pc), imm(u32(u12(n26 << 2))));
-    mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
+    if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
+    else          mov32(BranchReg(state), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
   }
 
@@ -498,7 +500,8 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
     and32(reg(0), mem(Rs), imm(0x0fff));
     if(delaySlot) mov32(BranchReg(nextpc), reg(0));
     else          mov32(BranchReg(pc), reg(0));
-    mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
+    if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
+    else          mov32(BranchReg(state), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
   }
 
@@ -508,7 +511,8 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
     mov32(mem(Rd), imm(u32(u12(pc + 8))));
     if(delaySlot) mov32(BranchReg(nextpc), reg(0));
     else          mov32(BranchReg(pc), reg(0));
-    mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
+    if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
+    else          mov32(BranchReg(state), imm(Branch::DelaySlot | Branch::EndBlock));
     return 1;
   }
 
@@ -521,7 +525,8 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //BREAK
   case 0x0d: {
     callf(&RSP::BREAK);
-    mov32(BranchReg(nstate), imm(0));
+    if(delaySlot) mov32(BranchReg(nstate), imm(0));
+    else          mov32(BranchReg(state), imm(0));
     return 1;
   }
 
@@ -611,7 +616,8 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> boo
     if(delaySlot) mov32(BranchReg(nextpc), reg(1));
     else          mov32(BranchReg(pc), reg(1));
     and32(reg(0), reg(0), imm(Branch::DelaySlot | Branch::EndBlock));
-    mov32(BranchReg(nstate), reg(0));
+    if(delaySlot) mov32(BranchReg(nstate), reg(0));
+    else          mov32(BranchReg(state), reg(0));
   };
 
   switch(instruction >> 16 & 0x1f) {
