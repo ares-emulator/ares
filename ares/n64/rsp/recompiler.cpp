@@ -113,7 +113,8 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     if(delaySlot) {
       emitClockFlush(deferredClocks);
       deferredClocks = 0;
-      callf(&RSP::instructionEpilogue<1>, imm(clocks));
+      emitClockFlush(clocks);
+      callf(&RSP::instructionBranchEpilogue);
       if(exit) testJumpEpilog();
       return;
     }
