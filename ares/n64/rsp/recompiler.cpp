@@ -81,18 +81,44 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(3);
+  u32 deferredClocks = 0;
+
+  auto emitClockFlush = [&](u32 clocks) -> void {
+    if(!clocks) return;
+    callf(&RSP::step, imm(clocks));
+    add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), imm(clocks));
+  };
+  auto instructionMayCallf = [&](u32 instruction) -> bool {
+    switch(instruction >> 26) {
+    case 0x00: return (instruction & 0x3f) == 0x0d;  //BREAK
+    case 0x10: return 1;  //SCC/XBUS
+    case 0x12: return 1;  //VU
+    case 0x20: return 1;  //LB
+    case 0x21: return 1;  //LH
+    case 0x23: return 1;  //LW
+    case 0x24: return 1;  //LBU
+    case 0x25: return 1;  //LHU
+    case 0x27: return 1;  //LWU
+    case 0x28: return 1;  //SB
+    case 0x29: return 1;  //SH
+    case 0x2b: return 1;  //SW
+    case 0x32: return 1;  //LWC2
+    case 0x3a: return 1;  //SWC2
+    }
+    return 0;
+  };
 
   auto emitInstructionEpilogue = [&](u32 clocks, bool exit, bool delaySlot, bool commit, bool branched, u32 nextpc) -> void {
     if(delaySlot) {
+      emitClockFlush(deferredClocks);
+      deferredClocks = 0;
       callf(&RSP::instructionEpilogue<1>, imm(clocks));
       if(exit) testJumpEpilog();
       return;
     }
 
-    if(clocks) {
-      callf(&RSP::step, imm(clocks));
-      add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), imm(clocks));
-    }
+    if(callInstructionPrologue) emitClockFlush(clocks);
+    else                        deferredClocks += clocks;
 
     if(commit) {
       if(!branched) mov32(BranchReg(state), imm(0));
@@ -102,7 +128,10 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     if(exit) {
       and32(reg(0), StatusReg(halted), imm(1));
       cmp32(reg(0), imm(0), set_z);
-      jumpEpilog(flag_nz);
+      auto noHalt = jump(flag_z);
+      emitClockFlush(deferredClocks);
+      jumpEpilog();
+      setLabel(noHalt);
     }
   };
 
@@ -111,6 +140,10 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   while(true) {
     bool delaySlot = hasBranched;
     u32 instruction = self.imem.read<Word>(address);
+    if(instructionMayCallf(instruction)) {
+      emitClockFlush(deferredClocks);
+      deferredClocks = 0;
+    }
     if(callInstructionPrologue) {
       callf(&RSP::instructionPrologue, imm(instruction));
     }
@@ -127,6 +160,10 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
       if(RSP::canDualIssue(op0, op1)) {
         emitInstructionEpilogue(0, 0, delaySlot, callInstructionPrologue, 0, u32(u12(address + 4)));
+        if(instructionMayCallf(instruction)) {
+          emitClockFlush(deferredClocks);
+          deferredClocks = 0;
+        }
         if(callInstructionPrologue) {
           callf(&RSP::instructionPrologue, imm(instruction));
         }
@@ -146,6 +183,8 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     if(hasBranched || address == start) break;
     hasBranched = branched;
   }
+  emitClockFlush(deferredClocks);
+  deferredClocks = 0;
   jumpEpilog();
 
   //reset clocks to zero every time block is executed
