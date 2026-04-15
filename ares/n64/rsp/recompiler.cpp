@@ -133,8 +133,19 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     }
     return 0;
   };
+  auto instructionMaySetHalted = [&](u32 instruction) -> bool {
+    switch(instruction >> 26) {
+    case 0x00: return (instruction & 0x3f) == 0x0d;  //BREAK
+    case 0x10: {
+      if((instruction >> 21 & 0x1f) != 0x04) return 0;  //MTC0
+      u32 rd = instruction >> 11 & 0x1f;
+      return (rd & 8) == 0 && (rd & 7) == 4;  //SP_STATUS
+    }
+    }
+    return 0;
+  };
 
-  auto emitInstructionEpilogue = [&](u32 clocks, bool exit, bool delaySlot, bool commit, bool branched, u32 nextpc) -> void {
+  auto emitInstructionEpilogue = [&](u32 clocks, bool exit, bool delaySlot, bool commit, bool branched, u32 nextpc, bool checkHalted) -> void {
     if(delaySlot) {
       flushDeferredForCallf();
       emitClockFlush(clocks);
@@ -151,7 +162,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
       mov32(mem(IpuReg(pc)), imm(nextpc));
     }
 
-    if(exit) {
+    if(exit && checkHalted) {
       and32(reg(0), StatusReg(halted), imm(1));
       cmp32(reg(0), imm(0), set_z);
       auto rare = jump(flag_nz);
@@ -164,6 +175,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   while(true) {
     bool delaySlot = hasBranched;
     u32 instruction = self.imem.read<Word>(address);
+    bool checkHalted = instructionMaySetHalted(instruction);
     if(instructionMayCallf(instruction)) {
       flushDeferredForCallf();
     }
@@ -182,13 +194,14 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
       OpInfo op1 = self.decoderEXECUTE(instruction);
 
       if(RSP::canDualIssue(op0, op1)) {
-        emitInstructionEpilogue(0, 0, delaySlot, callInstructionPrologue, 0, u32(u12(address + 4)));
+        emitInstructionEpilogue(0, 0, delaySlot, callInstructionPrologue, 0, u32(u12(address + 4)), 0);
         if(instructionMayCallf(instruction)) {
           flushDeferredForCallf();
         }
         if(callInstructionPrologue) {
           callf(&RSP::instructionPrologue, imm(instruction));
         }
+        checkHalted |= instructionMaySetHalted(instruction);
         address += 4;
         if(delaySlot) mov32(BranchReg(nstate), imm(0));
         pipeline.issue(op1);
@@ -200,7 +213,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     pipeline.end();
     bool terminal = hasBranched || u12(address + 4) == start;
     bool commit = callInstructionPrologue || branched || terminal;
-    emitInstructionEpilogue(pipeline.clocks, 1, delaySlot, commit, branched, u32(u12(address + 4)));
+    emitInstructionEpilogue(pipeline.clocks, 1, delaySlot, commit, branched, u32(u12(address + 4)), checkHalted);
     address += 4;
     if(hasBranched || address == start) break;
     hasBranched = branched;
