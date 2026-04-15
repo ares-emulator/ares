@@ -128,7 +128,6 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     switch(instruction >> 26) {
     case 0x00: return (instruction & 0x3f) == 0x0d;  //BREAK
     case 0x10: return 1;  //SCC/XBUS
-    case 0x12: return 1;  //VU
     case 0x32: return 1;  //LWC2
     case 0x3a: return 1;  //SWC2
     }
