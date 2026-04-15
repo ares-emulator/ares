@@ -40,7 +40,7 @@ auto DriverSettings::construct() -> void {
     settings.video.flush = videoFlushToggle.checked();
     ruby::video.setFlush(settings.video.flush);
   });
-#if defined(PLATFORM_MACOS)
+#if defined(PLATFORM_WINDOWS) || defined(PLATFORM_MACOS)
   videoColorSpaceToggle.setText("Force sRGB").onToggle([&] {
     settings.video.forceSRGB = videoColorSpaceToggle.checked();
     ruby::video.setForceSRGB(settings.video.forceSRGB);
@@ -164,10 +164,14 @@ auto DriverSettings::videoRefresh() -> void {
   videoExclusiveToggle.setChecked(ruby::video.exclusive()).setEnabled(ruby::video.hasExclusive());
 #endif
   videoBlockingToggle.setChecked(ruby::video.blocking()).setEnabled(ruby::video.hasBlocking());
-#if defined(PLATFORM_MACOS)
-  videoColorSpaceToggle.setChecked(ruby::video.forceSRGB()).setEnabled(ruby::video.hasForceSRGB());
-  videoThreadedRendererToggle.setChecked(ruby::video.threadedRenderer()).setEnabled(ruby::video.hasThreadedRenderer());
-  videoNativeFullScreenToggle.setChecked(ruby::video.nativeFullScreen()).setEnabled(ruby::video.hasNativeFullScreen());
+#if defined(PLATFORM_WINDOWS) || defined(PLATFORM_MACOS)
+  auto hasForceSRGB = ruby::video.hasForceSRGB();
+  auto hasThreadedRenderer = ruby::video.hasThreadedRenderer();
+  auto hasNativeFullScreen = ruby::video.hasNativeFullScreen();
+
+  videoColorSpaceToggle.setChecked(ruby::video.forceSRGB()).setEnabled(hasForceSRGB);
+  videoThreadedRendererToggle.setChecked(ruby::video.threadedRenderer()).setEnabled(hasThreadedRenderer);
+  videoNativeFullScreenToggle.setChecked(ruby::video.nativeFullScreen()).setEnabled(hasNativeFullScreen);
 #endif
   videoFlushToggle.setChecked(ruby::video.flush()).setEnabled(ruby::video.hasFlush());
   VerticalLayout::resize();
