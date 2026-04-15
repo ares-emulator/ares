@@ -607,6 +607,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
       u32 instruction = 0;
       u32 pc = 0;
       bool delaySlot = 0;
+      u32 clocks = 0;
     };
 
     struct HaltSlowPath {
@@ -630,7 +631,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto block(u12 address) -> Block*;
 
     auto emit(u12 address) -> Block*;
-    auto emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath) -> bool;
+    auto emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool;
     auto emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bool;
     auto emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> bool;
     auto emitSCC(u32 instruction) -> bool;
@@ -657,6 +658,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     array<Block*[1024]> context;
     hashset<BlockHashPair> blocks;
     u64 dirty;
+    u32 slowPathFlushedClocks = 0;
     std::vector<HaltSlowPath> haltSlowPaths;
     std::vector<SlowPath> slowPaths;
   } recompiler{*this};
