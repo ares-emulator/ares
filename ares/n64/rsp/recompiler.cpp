@@ -65,6 +65,7 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 #define PipelineReg(x) mem(sreg(0), offsetof(RSP, pipeline) + offsetof(Pipeline, x))
 #define BranchReg(x) mem(sreg(0), offsetof(RSP, branch) + offsetof(Branch, x))
 #define StatusReg(x) mem(sreg(0), offsetof(RSP, status) + offsetof(Status, x))
+#define RecompilerReg(x) mem(sreg(0), offsetof(RSP, recompiler) + offsetof(Recompiler, x))
 #define R0        IpuReg(r[0])
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
@@ -83,6 +84,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(3);
   u32 deferredClocks = 0;
+  mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
   haltSlowPaths.clear();
   slowPaths.clear();
 
@@ -90,6 +92,32 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     if(!clocks) return;
     add64(ThreadReg(clock), ThreadReg(clock), imm(clocks));
     add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), imm(clocks));
+  };
+  auto emitClockFlushRegister = [&](reg clocks) -> void {
+    mov64_u32(reg(1), clocks);
+    add64(ThreadReg(clock), ThreadReg(clock), reg(1));
+    add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), clocks);
+  };
+  auto resetSlowPathFlushedClocks = [&]() -> void {
+    mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
+  };
+  auto flushDeferredForCallf = [&]() -> void {
+    if(!deferredClocks) return;
+    sub32(reg(0), imm(deferredClocks), RecompilerReg(slowPathFlushedClocks));
+    emitClockFlushRegister(reg(0));
+    resetSlowPathFlushedClocks();
+    deferredClocks = 0;
+  };
+  auto flushDeferredAtBlockEnd = [&]() -> void {
+    if(!deferredClocks) return;
+    sub32(reg(0), imm(deferredClocks), RecompilerReg(slowPathFlushedClocks));
+    emitClockFlushRegister(reg(0));
+    resetSlowPathFlushedClocks();
+  };
+  auto flushDeferredForSlowPath = [&](u32 clocks) -> void {
+    sub32(reg(0), imm(clocks), RecompilerReg(slowPathFlushedClocks));
+    emitClockFlushRegister(reg(0));
+    mov32(RecompilerReg(slowPathFlushedClocks), imm(clocks));
   };
   auto enqueueHaltSlowPath = [&](sljit_jump* enter, u32 clocks) -> void {
     auto& slow = haltSlowPaths.emplace_back();
@@ -101,12 +129,6 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     case 0x00: return (instruction & 0x3f) == 0x0d;  //BREAK
     case 0x10: return 1;  //SCC/XBUS
     case 0x12: return 1;  //VU
-    case 0x21: return 1;  //LH
-    case 0x23: return 1;  //LW
-    case 0x25: return 1;  //LHU
-    case 0x27: return 1;  //LWU
-    case 0x29: return 1;  //SH
-    case 0x2b: return 1;  //SW
     case 0x32: return 1;  //LWC2
     case 0x3a: return 1;  //SWC2
     }
@@ -115,8 +137,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
   auto emitInstructionEpilogue = [&](u32 clocks, bool exit, bool delaySlot, bool commit, bool branched, u32 nextpc) -> void {
     if(delaySlot) {
-      emitClockFlush(deferredClocks);
-      deferredClocks = 0;
+      flushDeferredForCallf();
       emitClockFlush(clocks);
       callf(&RSP::instructionBranchEpilogue);
       if(exit) testJumpEpilog();
@@ -145,8 +166,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     bool delaySlot = hasBranched;
     u32 instruction = self.imem.read<Word>(address);
     if(instructionMayCallf(instruction)) {
-      emitClockFlush(deferredClocks);
-      deferredClocks = 0;
+      flushDeferredForCallf();
     }
     if(callInstructionPrologue) {
       callf(&RSP::instructionPrologue, imm(instruction));
@@ -155,7 +175,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     pipeline.begin();
     OpInfo op0 = self.decoderEXECUTE(instruction);
     pipeline.issue(op0);
-    bool branched = emitEXECUTE(instruction, address, delaySlot, 0);
+    bool branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
     if(op0.r.def & 1) mov32(mem(R0), imm(0));
 
     if(!pipeline.singleIssue && !branched && u12(address + 4) != start) {
@@ -165,8 +185,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
       if(RSP::canDualIssue(op0, op1)) {
         emitInstructionEpilogue(0, 0, delaySlot, callInstructionPrologue, 0, u32(u12(address + 4)));
         if(instructionMayCallf(instruction)) {
-          emitClockFlush(deferredClocks);
-          deferredClocks = 0;
+          flushDeferredForCallf();
         }
         if(callInstructionPrologue) {
           callf(&RSP::instructionPrologue, imm(instruction));
@@ -174,7 +193,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
         address += 4;
         if(delaySlot) mov32(BranchReg(nstate), imm(0));
         pipeline.issue(op1);
-        branched = emitEXECUTE(instruction, address, delaySlot, 0);
+        branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
         if(op1.r.def & 1) mov32(mem(R0), imm(0));
       }
     }
@@ -187,17 +206,19 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     if(hasBranched || address == start) break;
     hasBranched = branched;
   }
-  emitClockFlush(deferredClocks);
+  flushDeferredAtBlockEnd();
   deferredClocks = 0;
   jumpEpilog();
   for(auto& slow : haltSlowPaths) {
     setLabel(slow.enter);
-    emitClockFlush(slow.clocks);
+    flushDeferredForSlowPath(slow.clocks);
+    resetSlowPathFlushedClocks();
     jumpEpilog();
   }
   for(auto& slow : slowPaths) {
     setLabel(slow.enter);
-    emitEXECUTE(slow.instruction, slow.pc, slow.delaySlot, 1);
+    flushDeferredForSlowPath(slow.clocks);
+    emitEXECUTE(slow.instruction, slow.pc, slow.delaySlot, 1, 0);
     sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
   }
 
@@ -258,7 +279,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   case 0xf: callf(name<0xf>, __VA_ARGS__); break; \
   }
 
-auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath) -> bool {
+auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool {
   auto memReg2 = [&](reg base, reg index) -> op_base {
     return {SLJIT_MEM2(base.fst, index.fst), 0};
   };
@@ -279,6 +300,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     slow.instruction = instruction;
     slow.pc = pc;
     slow.delaySlot = delaySlot;
+    slow.clocks = slowPathClocks;
   };
 
   auto emitConditionalTake = [&](u32 flag, bool invert = 0) -> void {
