@@ -61,6 +61,7 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 
 #define IpuReg(r) sreg(1), offsetof(IPU, r)
 #define VuReg(r)  sreg(2), offsetof(VU, r)
+#define ThreadReg(x) mem(sreg(0), offsetof(RSP, x))
 #define PipelineReg(x) mem(sreg(0), offsetof(RSP, pipeline) + offsetof(Pipeline, x))
 #define BranchReg(x) mem(sreg(0), offsetof(RSP, branch) + offsetof(Branch, x))
 #define StatusReg(x) mem(sreg(0), offsetof(RSP, status) + offsetof(Status, x))
@@ -85,7 +86,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
   auto emitClockFlush = [&](u32 clocks) -> void {
     if(!clocks) return;
-    callf(&RSP::step, imm(clocks));
+    add64(ThreadReg(clock), ThreadReg(clock), imm(clocks));
     add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), imm(clocks));
   };
   auto instructionMayCallf = [&](u32 instruction) -> bool {
@@ -1408,6 +1409,7 @@ auto RSP::Recompiler::isTerminal(u32 instruction) -> bool {
 
 #undef IpuReg
 #undef VuReg
+#undef ThreadReg
 #undef PipelineReg
 #undef BranchReg
 #undef StatusReg
