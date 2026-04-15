@@ -192,7 +192,6 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     OpInfo op0 = self.decoderEXECUTE(instruction);
     pipeline.issue(op0);
     bool branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
-    if(op0.r.def & 1) mov32(mem(R0), imm(0));
 
     if(!pipeline.singleIssue && !branched && u12(address + 4) != start) {
       u32 instruction = self.imem.read<Word>(address + 4);
@@ -211,7 +210,6 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
         if(delaySlot) mov32(BranchReg(nstate), imm(0));
         pipeline.issue(op1);
         branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
-        if(op1.r.def & 1) mov32(mem(R0), imm(0));
       }
     }
 
@@ -412,12 +410,14 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //ADDIU Rt,Rs,i16
   case range2(0x08, 0x09): {
+    if(!Rtn) return 0;
     add32(mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
 
   //SLTI Rt,Rs,i16
   case 0x0a: {
+    if(!Rtn) return 0;
     cmp32(mem(Rs), imm(i16), set_slt);
     mov32_f(mem(Rt), flag_slt);
     return 0;
@@ -425,6 +425,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //SLTIU Rt,Rs,i16
   case 0x0b: {
+    if(!Rtn) return 0;
     cmp32(mem(Rs), imm(i16), set_ult);
     mov32_f(mem(Rt), flag_ult);
     return 0;
@@ -432,24 +433,28 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //ANDI Rt,Rs,n16
   case 0x0c: {
+    if(!Rtn) return 0;
     and32(mem(Rt), mem(Rs), imm(n16));
     return 0;
   }
 
   //ORI Rt,Rs,n16
   case 0x0d: {
+    if(!Rtn) return 0;
     or32(mem(Rt), mem(Rs), imm(n16));
     return 0;
   }
 
   //XORI Rt,Rs,n16
   case 0x0e: {
+    if(!Rtn) return 0;
     xor32(mem(Rt), mem(Rs), imm(n16));
     return 0;
   }
 
   //LUI Rt,n16
   case 0x0f: {
+    if(!Rtn) return 0;
     mov32(mem(Rt), imm(s32(n16 << 16)));
     return 0;
   }
@@ -476,6 +481,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LB Rt,Rs,i16
   case 0x20: {
+    if(!Rtn) return 0;
     emitDmemAddress();
     mov32_s8(reg(3), memReg2(reg(2), reg(1)));
     mov32(mem(Rt), reg(3));
@@ -484,6 +490,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LH Rt,Rs,i16
   case 0x21: {
+    if(!Rtn) return 0;
     if(emitSlowPath) {
       callf(&RSP::LH, mem(Rt), mem(Rs), imm(i16));
       return 0;
@@ -504,6 +511,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LW Rt,Rs,i16
   case 0x23: {
+    if(!Rtn) return 0;
     if(emitSlowPath) {
       callf(&RSP::LW, mem(Rt), mem(Rs), imm(i16));
       return 0;
@@ -519,6 +527,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LBU Rt,Rs,i16
   case 0x24: {
+    if(!Rtn) return 0;
     emitDmemAddress();
     mov32_u8(reg(3), memReg2(reg(2), reg(1)));
     mov32(mem(Rt), reg(3));
@@ -527,6 +536,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LHU Rt,Rs,i16
   case 0x25: {
+    if(!Rtn) return 0;
     if(emitSlowPath) {
       callf(&RSP::LHU, mem(Rt), mem(Rs), imm(i16));
       return 0;
@@ -547,6 +557,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LWU Rt,Rs,i16
   case 0x27: {
+    if(!Rtn) return 0;
     if(emitSlowPath) {
       callf(&RSP::LWU, mem(Rt), mem(Rs), imm(i16));
       return 0;
@@ -638,48 +649,56 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
 
   //SLL Rd,Rt,Sa
   case 0x00: {
+    if(!Rdn) return 0;
     shl32(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
 
   //INVALID
   case 0x01: {
+    if(!Rdn) return 0;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
   //SRL Rd,Rt,Sa
   case 0x02: {
+    if(!Rdn) return 0;
     lshr32(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
 
   //SRA Rd,Rt,Sa
   case 0x03: {
+    if(!Rdn) return 0;
     ashr32(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
 
   //SLLV Rd,Rt,Rs
   case 0x04: {
+    if(!Rdn) return 0;
     mshl32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
 
   //INVALID
   case 0x05: {
+    if(!Rdn) return 0;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
   //SRLV Rd,Rt,Rs
   case 0x06: {
+    if(!Rdn) return 0;
     mlshr32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
 
   //SRAV Rd,Rt,Rs
   case 0x07: {
+    if(!Rdn) return 0;
     mashr32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
@@ -697,7 +716,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
   //JALR Rd,Rs
   case 0x09: {
     and32(reg(0), mem(Rs), imm(0x0fff));
-    mov32(mem(Rd), imm(u32(u12(pc + 8))));
+    if(Rdn) mov32(mem(Rd), imm(u32(u12(pc + 8))));
     if(delaySlot) mov32(BranchReg(nextpc), reg(0));
     else          mov32(BranchReg(pc), reg(0));
     if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
@@ -707,6 +726,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
 
   //INVALID
   case range3(0x0a, 0x0c): {
+    if(!Rdn) return 0;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
@@ -721,42 +741,49 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
 
   //INVALID
   case range18(0x0e, 0x1f): {
+    if(!Rdn) return 0;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
   //ADDU Rd,Rs,Rt
   case range2(0x20, 0x21): {
+    if(!Rdn) return 0;
     add32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //SUBU Rd,Rs,Rt
   case range2(0x22, 0x23): {
+    if(!Rdn) return 0;
     sub32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //AND Rd,Rs,Rt
   case 0x24: {
+    if(!Rdn) return 0;
     and32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //OR Rd,Rs,Rt
   case 0x25: {
+    if(!Rdn) return 0;
     or32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //XOR Rd,Rs,Rt
   case 0x26: {
+    if(!Rdn) return 0;
     xor32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //NOR Rd,Rs,Rt
   case 0x27: {
+    if(!Rdn) return 0;
     or32(reg(0), mem(Rs), mem(Rt));
     xor32(reg(0), reg(0), imm(-1));
     mov32(mem(Rd), reg(0));
@@ -765,12 +792,14 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
 
   //INVALID
   case range2(0x28, 0x29): {
+    if(!Rdn) return 0;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
 
   //SLT Rd,Rs,Rt
   case 0x2a: {
+    if(!Rdn) return 0;
     cmp32(mem(Rs), mem(Rt), set_slt);
     mov32_f(mem(Rd), flag_slt);
     return 0;
@@ -778,6 +807,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
 
   //SLTU Rd,Rs,Rt
   case 0x2b: {
+    if(!Rdn) return 0;
     cmp32(mem(Rs), mem(Rt), set_ult);
     mov32_f(mem(Rd), flag_ult);
     return 0;
@@ -785,6 +815,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
 
   //INVALID
   case range20(0x2c, 0x3f): {
+    if(!Rdn) return 0;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
     return 0;
   }
