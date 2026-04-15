@@ -1,6 +1,8 @@
 auto RSP::MFC0(r32& rt, u8 rd) -> void {
-  if((rd & 8) == 0) rt.u32 = Nintendo64::rsp.ioRead  ((rd & 7) << 2, *this);
-  if((rd & 8) != 0) rt.u32 = Nintendo64::rdp.readWord((rd & 7) << 2, *this);
+  u32 data = 0;
+  if((rd & 8) == 0) data = Nintendo64::rsp.ioRead  ((rd & 7) << 2, *this);
+  if((rd & 8) != 0) data = Nintendo64::rdp.readWord((rd & 7) << 2, *this);
+  if(&rt != &ipu.r[0]) rt.u32 = data;
 }
 
 auto RSP::MTC0(cr32& rt, u8 rd) -> void {
