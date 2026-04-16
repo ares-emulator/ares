@@ -54,16 +54,13 @@ auto ICD::power(bool reset) -> void {
   });
   cpu.coprocessors.push_back(this);
 
-  for(auto& packet : this->packet) packet = {};
-  packetSize = 0;
-
   joypID = 3;
   joypLock = 1;
   pulseLock = 1;
   strobeLock = 0;
   packetLock = 0;
-  joypPacket = {};
   packetOffset = 0;
+  packetReady = 0;
   bitData = 0;
   bitOffset = 0;
 
