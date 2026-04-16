@@ -94,11 +94,11 @@ Key optimizations
    - Byte swap helpers are used where required by DMEM big-endian semantics.
    - Uncommon wraparound/alignment fallback is handled via deferred slow paths.
 
-6) Lazy DMEM base pointer cache
-   - Host register reg(2) caches dmem.data for scalar memory ops.
-   - OpInfo::UsesDmem (from decoder metadata) marks opcodes that need it.
-   - Cache is loaded lazily on first use and invalidated only when an emitted
-     instruction can clobber temporary registers.
+6) Dedicated DMEM base saved register
+   - Host saved register sreg(3) holds dmem.data for the whole compiled block.
+   - Scalar and vector DMEM fast paths address memory from this fixed base.
+   - Because sreg(3) is callee-saved, helper calls do not require cache
+     invalidation/reload logic.
 
 7) Compile-time virtual PC usage
    - Many branch/link/fallthrough values are emitted as immediates derived from
@@ -319,6 +319,7 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 
 #define IpuReg(r) sreg(1), offsetof(IPU, r)
 #define VuReg(r)  sreg(2), offsetof(VU, r)
+#define DmemReg   sreg(3)
 #define ThreadReg(x) mem(sreg(0), offsetof(RSP, x))
 #define PipelineReg(x) mem(sreg(0), offsetof(RSP, pipeline) + offsetof(Pipeline, x))
 #define BranchReg(x) mem(sreg(0), offsetof(RSP, branch) + offsetof(Branch, x))
@@ -345,20 +346,13 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   pipeline = self.pipeline;
 
   auto block = (Block*)allocator.acquire(sizeof(Block));
-  beginFunction(3);
+  beginFunction(3, 4);
   u32 deferredClocks = 0;
-  bool dmemDataLoaded = 0;
   mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
   haltSlowPaths.clear();
   slowPaths.clear();
   constRegs.reset();
-  auto loadDmemData = [&]() -> void {
-    mov64(reg(2), mem(sreg(0), offsetof(RSP, dmem) + offsetof(Writable, data)));
-    dmemDataLoaded = 1;
-  };
-  auto invalidateDmemData = [&]() -> void {
-    dmemDataLoaded = 0;
-  };
+  mov64(DmemReg, mem(sreg(0), offsetof(RSP, dmem) + offsetof(Writable, data)));
 
   auto emitClockFlush = [&](u32 clocks) -> void {
     if(!clocks) return;
@@ -402,19 +396,6 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     }
     return 0;
   };
-  auto ensureDmemData = [&](const OpInfo& op) -> void {
-    if(!op.usesDmem()) return;
-    if(dmemDataLoaded) return;
-    loadDmemData();
-  };
-  auto instructionMayClobberTempRegisters = [&](u32 instruction) -> bool {
-    if(instructionMayCallf(instruction)) return 1;
-    switch(instruction >> 26) {
-    case 0x12: return 1;  //VU
-    }
-    return 0;
-  };
-
   auto emitInstructionEpilogue = [&](u32 clocks, bool exit, bool delaySlot, bool commit, bool branched, u32 nextpc, bool checkHalted) -> void {
     if(delaySlot) {
       flushDeferredForCallf();
@@ -444,20 +425,17 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   bool delaySlot = 0;
   while(true) {
     u32 instruction = self.imem.read<Word>(address);
-    bool instructionClobbersTempRegisters = instructionMayClobberTempRegisters(instruction);
     if(instructionMayCallf(instruction)) {
       flushDeferredForCallf();
     }
     if(callInstructionPrologue) {
       callf(&RSP::instructionPrologue, imm(instruction));
-      invalidateDmemData();
     }
     if(delaySlot) mov32(BranchReg(nstate), imm(0));
     pipeline.begin();
     OpInfo op0 = self.decoderEXECUTE(instruction);
     bool checkHalted = op0.mayHalt();
     pipeline.issue(op0);
-    ensureDmemData(op0);
     bool branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
     constRegs.track(instruction, address);
 
@@ -467,26 +445,20 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
 
       if(RSP::canDualIssue(op0, op1)) {
         emitInstructionEpilogue(0, 0, delaySlot, callInstructionPrologue, 0, u32(u12(address + 4)), 0);
-        if(delaySlot) invalidateDmemData();
         if(instructionMayCallf(instruction)) {
           flushDeferredForCallf();
         }
         if(callInstructionPrologue) {
           callf(&RSP::instructionPrologue, imm(instruction));
-          invalidateDmemData();
         }
         checkHalted |= op1.mayHalt();
         address += 4;
         if(delaySlot) mov32(BranchReg(nstate), imm(0));
-        if(instructionClobbersTempRegisters) invalidateDmemData();
         pipeline.issue(op1);
-        ensureDmemData(op1);
         branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
         constRegs.track(instruction, address);
-        if(instructionMayClobberTempRegisters(instruction)) invalidateDmemData();
       }
     }
-    if(instructionClobbersTempRegisters) invalidateDmemData();
 
     pipeline.end();
     bool terminal = delaySlot || u12(address + 4) == start;
@@ -509,7 +481,6 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     setLabel(slow.enter);
     flushDeferredForSlowPath(slow.clocks);
     emitEXECUTE(slow.instruction, slow.pc, slow.delaySlot, 1, 0);
-    loadDmemData();
     sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
   }
 
@@ -571,7 +542,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   }
 
 auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool {
-  auto memReg2 = [&](reg base, reg index) -> op_base {
+  auto memReg2 = [&](const op_base& base, const op_base& index) -> op_base {
     return {SLJIT_MEM2(base.fst, index.fst), 0};
   };
   auto emitDmemAddress = [&]() -> void {
@@ -788,7 +759,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   case 0x20: {
     if(!Rtn) return 0;
     emitDmemAddress();
-    mov32_s8(reg(3), memReg2(reg(2), reg(1)));
+    mov32_s8(reg(3), memReg2(DmemReg, reg(1)));
     mov32(mem(Rt), reg(3));
     return 0;
   }
@@ -802,7 +773,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     }
     emitDmemAddress();
     auto rare = emitDmemHalfSlowPathJump();
-    mov32_u16(reg(3), memReg2(reg(2), reg(1)));
+    mov32_u16(reg(3), memReg2(DmemReg, reg(1)));
     rev32_s16(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
     deferSlowPath(rare);
@@ -823,7 +794,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     }
     emitDmemAddress();
     auto rare = emitDmemWordSlowPathJump();
-    mov32(reg(3), memReg2(reg(2), reg(1)));
+    mov32(reg(3), memReg2(DmemReg, reg(1)));
     rev32(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
     deferSlowPath(rare);
@@ -834,7 +805,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   case 0x24: {
     if(!Rtn) return 0;
     emitDmemAddress();
-    mov32_u8(reg(3), memReg2(reg(2), reg(1)));
+    mov32_u8(reg(3), memReg2(DmemReg, reg(1)));
     mov32(mem(Rt), reg(3));
     return 0;
   }
@@ -848,7 +819,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     }
     emitDmemAddress();
     auto rare = emitDmemHalfSlowPathJump();
-    mov32_u16(reg(3), memReg2(reg(2), reg(1)));
+    mov32_u16(reg(3), memReg2(DmemReg, reg(1)));
     rev32_u16(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
     deferSlowPath(rare);
@@ -869,7 +840,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     }
     emitDmemAddress();
     auto rare = emitDmemWordSlowPathJump();
-    mov32(reg(3), memReg2(reg(2), reg(1)));
+    mov32(reg(3), memReg2(DmemReg, reg(1)));
     rev32(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
     deferSlowPath(rare);
@@ -881,7 +852,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     emitDmemAddress();
     if(!Rtn) mov32(reg(3), imm(0));
     else     mov32(reg(3), mem(Rt));
-    mov64_u8(memReg2(reg(2), reg(1)), reg(3));
+    mov64_u8(memReg2(DmemReg, reg(1)), reg(3));
     return 0;
   }
 
@@ -896,7 +867,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     if(!Rtn) mov32(reg(3), imm(0));
     else     mov32(reg(3), mem(Rt));
     rev32_u16(reg(3), reg(3));
-    mov64_u16(memReg2(reg(2), reg(1)), reg(3));
+    mov64_u16(memReg2(DmemReg, reg(1)), reg(3));
     deferSlowPath(rare);
     return 0;
   }
@@ -917,7 +888,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     if(!Rtn) mov32(reg(3), imm(0));
     else     mov32(reg(3), mem(Rt));
     rev32(reg(3), reg(3));
-    mov32(memReg2(reg(2), reg(1)), reg(3));
+    mov32(memReg2(DmemReg, reg(1)), reg(3));
     deferSlowPath(rare);
     return 0;
   }
@@ -1786,7 +1757,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         callvu(&RSP::LQV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      add64(reg(3), reg(2), imm(address));
+      add64(reg(3), DmemReg, imm(address));
       add64(reg(0), sreg(2), imm(offsetof(VU, r[0]) + Vtn * sizeof(r128) + (15 - E)));
       if(E == 0) {
         if((address & 15) == 0) callf(&RSP::fastLQVSimd, mem(Vt), reg(3));
@@ -1802,7 +1773,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff0), set_ugt);
     auto slow = jump(flag_ugt);
-    add64(reg(3), reg(2), reg(1));
+    add64(reg(3), DmemReg, reg(1));
     add64(reg(0), sreg(2), imm(offsetof(VU, r[0]) + Vtn * sizeof(r128) + (15 - E)));
     if(E == 0) {
       and32(reg(2), reg(1), imm(0x0f));
@@ -1955,7 +1926,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       }
       u32 size = 16 - (constantAddress & 15);
       if(size == 16) {
-        add64(reg(3), reg(2), imm(constantAddress));
+        add64(reg(3), DmemReg, imm(constantAddress));
         add64(reg(0), sreg(2), imm(vectorBase));
         callf(&RSP::fastSQVSimd, reg(0), reg(3));
       } else {
@@ -1972,7 +1943,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       deferSlowPath(slow);
       return 0;
     }
-    add64(reg(3), reg(2), reg(1));
+    add64(reg(3), DmemReg, reg(1));
     and32(reg(0), reg(1), imm(0x0f));
     sub32(reg(0), imm(16), reg(0));
     cmp32(reg(0), imm(16), set_z);
@@ -2209,6 +2180,7 @@ auto RSP::fastSQVSimd(u8 const* source, u8* target) -> void {
 
 #undef IpuReg
 #undef VuReg
+#undef DmemReg
 #undef ThreadReg
 #undef PipelineReg
 #undef BranchReg
