@@ -466,6 +466,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
   template<u8 e> auto LLV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LPV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LQV(r128& vt, cr32& rs, s8 imm) -> void;
+  auto fastLQVTable(u32 size, u8* target, u8* source) -> void;
+  auto fastLQVSimd(r128& vt, u8* source) -> void;
   template<u8 e> auto LRV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LSV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LTV(u8 vt, cr32& rs, s8 imm) -> void;
@@ -480,6 +482,9 @@ struct RSP : Thread, Memory::RCP<RSP> {
   template<u8 e> auto SLV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto SPV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto SQV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto fastSQV(cr128& vt, u32 address) -> void;
+  auto fastSQVTable(u32 size, u8* target, u8 const* source) -> void;
+  auto fastSQVSimd(u8 const* source, u8* target) -> void;
   template<u8 e> auto SRV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto SSV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto STV(u8 vt, cr32& rs, s8 imm) -> void;
@@ -640,8 +645,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> bool;
     auto emitSCC(u32 instruction) -> bool;
     auto emitVU(u32 instruction) -> bool;
-    auto emitLWC2(u32 instruction) -> bool;
-    auto emitSWC2(u32 instruction) -> bool;
+    auto emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool;
+    auto emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool;
 
     auto isTerminal(u32 instruction) -> bool;
 

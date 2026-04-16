@@ -338,36 +338,36 @@ auto RSP::decoderVU(u32 instruction) const -> OpInfo {
 
 auto RSP::decoderLWC2(u32 instruction) const -> OpInfo {
   switch(instruction >> 11 & 0x1f) {
-  op(0x00, LBV, VDef(VT), RUse(RS), Load);
-  op(0x01, LSV, VDef(VT), RUse(RS), Load);
-  op(0x02, LLV, VDef(VT), RUse(RS), Load);
-  op(0x03, LDV, VDef(VT), RUse(RS), Load);
-  op(0x04, LQV, VDef(VT), RUse(RS), Load);
-  op(0x05, LRV, VDef(VT), RUse(RS), Load);
-  op(0x06, LPV, VDef(VT), RUse(RS), Load);
-  op(0x07, LUV, VDef(VT), RUse(RS), Load);
-  op(0x08, LHV, VDef(VT), RUse(RS), Load);
-  op(0x09, LFV, VDef(VT), RUse(RS), Load);
+  op(0x00, LBV, VDef(VT), RUse(RS), Load, UsesDmem);
+  op(0x01, LSV, VDef(VT), RUse(RS), Load, UsesDmem);
+  op(0x02, LLV, VDef(VT), RUse(RS), Load, UsesDmem);
+  op(0x03, LDV, VDef(VT), RUse(RS), Load, UsesDmem);
+  op(0x04, LQV, VDef(VT), RUse(RS), Load, UsesDmem);
+  op(0x05, LRV, VDef(VT), RUse(RS), Load, UsesDmem);
+  op(0x06, LPV, VDef(VT), RUse(RS), Load, UsesDmem);
+  op(0x07, LUV, VDef(VT), RUse(RS), Load, UsesDmem);
+  op(0x08, LHV, VDef(VT), RUse(RS), Load, UsesDmem);
+  op(0x09, LFV, VDef(VT), RUse(RS), Load, UsesDmem);
 //op(0x0a, LWV, VDef(VT), RUse(RS), Load);  //not present on N64 RSP
-  op(0x0b, LTV, VGDef(VT), RUse(RS), Load, VNopGroup);
+  op(0x0b, LTV, VGDef(VT), RUse(RS), Load, VNopGroup, UsesDmem);
   }
   return {};
 }
 
 auto RSP::decoderSWC2(u32 instruction) const -> OpInfo {
   switch(instruction >> 11 & 0x1f) {
-  op(0x00, SBV, VUse(VT), RUse(RS), Store);
-  op(0x01, SSV, VUse(VT), RUse(RS), Store);
-  op(0x02, SLV, VUse(VT), RUse(RS), Store);
-  op(0x03, SDV, VUse(VT), RUse(RS), Store);
-  op(0x04, SQV, VUse(VT), RUse(RS), Store);
-  op(0x05, SRV, VUse(VT), RUse(RS), Store);
-  op(0x06, SPV, VUse(VT), RUse(RS), Store);
-  op(0x07, SUV, VUse(VT), RUse(RS), Store);
-  op(0x08, SHV, VUse(VT), RUse(RS), Store);
-  op(0x09, SFV, VUse(VT), RUse(RS), Store);
-  op(0x0a, SWV, VUse(VT), RUse(RS), Store);
-  op(0x0b, STV, VGUse(VT), RUse(RS), Store);
+  op(0x00, SBV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x01, SSV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x02, SLV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x03, SDV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x04, SQV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x05, SRV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x06, SPV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x07, SUV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x08, SHV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x09, SFV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x0a, SWV, VUse(VT), RUse(RS), Store, UsesDmem);
+  op(0x0b, STV, VGUse(VT), RUse(RS), Store, UsesDmem);
   }
   return {};
 }

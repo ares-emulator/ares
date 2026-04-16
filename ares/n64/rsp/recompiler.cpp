@@ -577,6 +577,8 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
   auto emitDmemAddress = [&]() -> void {
     if(!Rsn) {
       mov32(reg(1), imm(u32(u12(i16))));
+    } else if(constRegs.has(Rsn)) {
+      mov32(reg(1), imm(u32(u12(constRegs.get(Rsn) + i16))));
     } else {
       add32(reg(1), mem(Rs), imm(i16));
       and32(reg(1), reg(1), imm(0x0fff));
@@ -927,7 +929,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //LWC2
   case 0x32: {
-    return emitLWC2(instruction);
+    return emitLWC2(instruction, pc, delaySlot, emitSlowPath, slowPathClocks);
   }
 
   //INVALID
@@ -937,7 +939,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //SWC2
   case 0x3a: {
-    return emitSWC2(instruction);
+    return emitSWC2(instruction, pc, delaySlot, emitSlowPath, slowPathClocks);
   }
 
   //INVALID
@@ -1707,7 +1709,16 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   return 0;
 }
 
-auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
+auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool {
+  auto deferSlowPath = [&](sljit_jump* enter) -> void {
+    auto& slow = slowPaths.emplace_back();
+    slow.enter = enter;
+    slow.resume = sljit_emit_label(compiler);
+    slow.instruction = instruction;
+    slow.pc = pc;
+    slow.delaySlot = delaySlot;
+    slow.clocks = slowPathClocks;
+  };
   #define E  (instruction >> 7 & 15)
   #define i7 (s8(instruction << 1) >> 1)
   switch(instruction >> 11 & 0x1f) {
@@ -1738,7 +1749,83 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LQV Vt(e),Rs,i7
   case 0x04: {
-    callvu(&RSP::LQV, mem(Vt), mem(Rs), imm(i7));
+    // JIT pseudocode:
+    // if(emitSlowPath) { LQV(Vt, Rs, i7); return; }
+    // if(Rs is constant) {
+    //   address = u12(constRs + i7 * 16);
+    //   if(address > 0x0ff0) { LQV(Vt, Rs, i7); return; }  // wrap case
+    //   source = dmem_data + address;
+    //   target = &Vt.byte(e);
+    //   if(e == 0) {
+    //     if((address & 15) == 0) fastLQVSimd(vt, source);
+    //     else                    fastLQVTable(16 - (address & 15), target, source);
+    //   } else {
+    //     size = min(16 - (address & 15), 16 - e);
+    //     fastLQVTable(size, target, source);
+    //   }
+    //   return;
+    // }
+    // address = u12(Rs + i7 * 16);
+    // if(address > 0x0ff0) defer slow: LQV(Vt, Rs, i7);
+    // source = dmem_data + address;
+    // target = &Vt.byte(e);
+    // if(e == 0) {
+    //   if((address & 15) == 0) fastLQVSimd(vt, source);
+    //   else                    fastLQVTable(16 - (address & 15), target, source);
+    // } else {
+    //   size = min(16 - (address & 15), 16 - e);
+    //   fastLQVTable(size, target, source);
+    // }
+    if(emitSlowPath) {
+      callvu(&RSP::LQV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    if(constRegs.has(Rsn)) {
+      u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
+      if(address > 0x0ff0) {
+        callvu(&RSP::LQV, mem(Vt), mem(Rs), imm(i7));
+        return 0;
+      }
+      add64(reg(3), reg(2), imm(address));
+      add64(reg(0), sreg(2), imm(offsetof(VU, r[0]) + Vtn * sizeof(r128) + (15 - E)));
+      if(E == 0) {
+        if((address & 15) == 0) callf(&RSP::fastLQVSimd, mem(Vt), reg(3));
+        else                    callf(&RSP::fastLQVTable, imm(16 - (address & 15)), reg(0), reg(3));
+      } else {
+        u32 size = 16 - (address & 15);
+        if(size > 16 - E) size = 16 - E;
+        callf(&RSP::fastLQVTable, imm(size), reg(0), reg(3));
+      }
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 16));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff0), set_ugt);
+    auto slow = jump(flag_ugt);
+    add64(reg(3), reg(2), reg(1));
+    add64(reg(0), sreg(2), imm(offsetof(VU, r[0]) + Vtn * sizeof(r128) + (15 - E)));
+    if(E == 0) {
+      and32(reg(2), reg(1), imm(0x0f));
+      cmp32(reg(2), imm(0), set_z);
+      auto simd = jump(flag_z);
+      sub32(reg(2), imm(16), reg(2));
+      callf(&RSP::fastLQVTable, reg(2), reg(0), reg(3));
+      auto doneFast = jump();
+      setLabel(simd);
+      callf(&RSP::fastLQVSimd, mem(Vt), reg(3));
+      setLabel(doneFast);
+    } else {
+      and32(reg(2), reg(1), imm(0x0f));
+      sub32(reg(2), imm(16), reg(2));
+      cmp32(reg(2), imm(16 - E), set_ugt);
+      auto clamp = jump(flag_ugt);
+      auto sizeDone = jump();
+      setLabel(clamp);
+      mov32(reg(2), imm(16 - E));
+      setLabel(sizeDone);
+      callf(&RSP::fastLQVTable, reg(2), reg(0), reg(3));
+    }
+    deferSlowPath(slow);
     return 0;
   }
 
@@ -1794,7 +1881,16 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
   return 0;
 }
 
-auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
+auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool {
+  auto deferSlowPath = [&](sljit_jump* enter) -> void {
+    auto& slow = slowPaths.emplace_back();
+    slow.enter = enter;
+    slow.resume = sljit_emit_label(compiler);
+    slow.instruction = instruction;
+    slow.pc = pc;
+    slow.delaySlot = delaySlot;
+    slow.clocks = slowPathClocks;
+  };
   #define E  (instruction >> 7 & 15)
   #define i7 (s8(instruction << 1) >> 1)
   switch(instruction >> 11 & 0x1f) {
@@ -1825,7 +1921,69 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SQV Vt(e),Rs,i7
   case 0x04: {
-    callvu(&RSP::SQV, mem(Vt), mem(Rs), imm(i7));
+    // JIT pseudocode:
+    // if(emitSlowPath) { SQV(Vt, Rs, i7); return; }
+    // if(Rs is constant) {
+    //   address = u12(constRs + i7 * 16);
+    //   if(address > 0x0ff0) { SQV(Vt, Rs, i7); return; }  // wrap case
+    //   if(e != 0) { fastSQV<e>(Vt, address); return; }
+    //   size = 16 - (address & 15);
+    //   if(size == 16) fastSQVSimd(&Vt, dmem_data + address);
+    //   else           fastSQV<0>(Vt, address);
+    //   return;
+    // }
+    // address = u12(Rs + i7 * 16);
+    // if(address > 0x0ff0) defer slow: SQV(Vt, Rs, i7);
+    // if(e != 0) { fastSQV<e>(Vt, address); return; }
+    // size = 16 - (address & 15);
+    // if(size == 16) fastSQVSimd(&Vt, dmem_data + address);
+    // else           fastSQV<0>(Vt, address);
+    if(emitSlowPath) {
+      callvu(&RSP::SQV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    auto vectorBase = offsetof(VU, r[0]) + Vtn * sizeof(r128);
+    if(constRegs.has(Rsn)) {
+      u32 constantAddress = u32(u12(constRegs.get(Rsn) + i7 * 16));
+      if(constantAddress > 0x0ff0) {
+        callvu(&RSP::SQV, mem(Vt), mem(Rs), imm(i7));
+        return 0;
+      }
+      if(E != 0) {
+        callvu(&RSP::fastSQV, mem(Vt), imm(constantAddress));
+        return 0;
+      }
+      u32 size = 16 - (constantAddress & 15);
+      if(size == 16) {
+        add64(reg(3), reg(2), imm(constantAddress));
+        add64(reg(0), sreg(2), imm(vectorBase));
+        callf(&RSP::fastSQVSimd, reg(0), reg(3));
+      } else {
+        callvu(&RSP::fastSQV, mem(Vt), imm(constantAddress));
+      }
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 16));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff0), set_ugt);
+    auto slow = jump(flag_ugt);
+    if(E != 0) {
+      callvu(&RSP::fastSQV, mem(Vt), reg(1));
+      deferSlowPath(slow);
+      return 0;
+    }
+    add64(reg(3), reg(2), reg(1));
+    and32(reg(0), reg(1), imm(0x0f));
+    sub32(reg(0), imm(16), reg(0));
+    cmp32(reg(0), imm(16), set_z);
+    auto simd = jump(flag_z);
+    callvu(&RSP::fastSQV, mem(Vt), reg(1));
+    auto doneFast = jump();
+    setLabel(simd);
+    add64(reg(0), sreg(2), imm(vectorBase));
+    callf(&RSP::fastSQVSimd, reg(0), reg(3));
+    setLabel(doneFast);
+    deferSlowPath(slow);
     return 0;
   }
 
@@ -1938,6 +2096,115 @@ auto RSP::Recompiler::isTerminal(u32 instruction) -> bool {
   }
 
   return 0;
+}
+
+auto RSP::fastLQVTable(u32 size, u8* target, u8* source) -> void {
+  switch(size) {
+  case 16: target[-15] = source[15]; [[fallthrough]];
+  case 15: target[-14] = source[14]; [[fallthrough]];
+  case 14: target[-13] = source[13]; [[fallthrough]];
+  case 13: target[-12] = source[12]; [[fallthrough]];
+  case 12: target[-11] = source[11]; [[fallthrough]];
+  case 11: target[-10] = source[10]; [[fallthrough]];
+  case 10: target[ -9] = source[ 9]; [[fallthrough]];
+  case  9: target[ -8] = source[ 8]; [[fallthrough]];
+  case  8: target[ -7] = source[ 7]; [[fallthrough]];
+  case  7: target[ -6] = source[ 6]; [[fallthrough]];
+  case  6: target[ -5] = source[ 5]; [[fallthrough]];
+  case  5: target[ -4] = source[ 4]; [[fallthrough]];
+  case  4: target[ -3] = source[ 3]; [[fallthrough]];
+  case  3: target[ -2] = source[ 2]; [[fallthrough]];
+  case  2: target[ -1] = source[ 1]; [[fallthrough]];
+  case  1: target[  0] = source[ 0]; [[fallthrough]];
+  default: return;
+  }
+}
+
+auto RSP::fastLQVSimd(r128& vt, u8* source) -> void {
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  static const __m128i reverse = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+  auto value = _mm_loadu_si128((const __m128i*)source);
+  value = _mm_shuffle_epi8(value, reverse);
+  _mm_storeu_si128((__m128i*)&vt.u128, value);
+#else
+  vt.byte(15) = source[15];
+  vt.byte(14) = source[14];
+  vt.byte(13) = source[13];
+  vt.byte(12) = source[12];
+  vt.byte(11) = source[11];
+  vt.byte(10) = source[10];
+  vt.byte( 9) = source[ 9];
+  vt.byte( 8) = source[ 8];
+  vt.byte( 7) = source[ 7];
+  vt.byte( 6) = source[ 6];
+  vt.byte( 5) = source[ 5];
+  vt.byte( 4) = source[ 4];
+  vt.byte( 3) = source[ 3];
+  vt.byte( 2) = source[ 2];
+  vt.byte( 1) = source[ 1];
+  vt.byte( 0) = source[ 0];
+#endif
+}
+
+auto RSP::fastSQVTable(u32 size, u8* target, u8 const* source) -> void {
+  switch(size) {
+  case 16: target[15] = source[-15]; [[fallthrough]];
+  case 15: target[14] = source[-14]; [[fallthrough]];
+  case 14: target[13] = source[-13]; [[fallthrough]];
+  case 13: target[12] = source[-12]; [[fallthrough]];
+  case 12: target[11] = source[-11]; [[fallthrough]];
+  case 11: target[10] = source[-10]; [[fallthrough]];
+  case 10: target[ 9] = source[ -9]; [[fallthrough]];
+  case  9: target[ 8] = source[ -8]; [[fallthrough]];
+  case  8: target[ 7] = source[ -7]; [[fallthrough]];
+  case  7: target[ 6] = source[ -6]; [[fallthrough]];
+  case  6: target[ 5] = source[ -5]; [[fallthrough]];
+  case  5: target[ 4] = source[ -4]; [[fallthrough]];
+  case  4: target[ 3] = source[ -3]; [[fallthrough]];
+  case  3: target[ 2] = source[ -2]; [[fallthrough]];
+  case  2: target[ 1] = source[ -1]; [[fallthrough]];
+  case  1: target[ 0] = source[  0]; [[fallthrough]];
+  default: break;
+  }
+}
+
+template<u8 e>
+auto RSP::fastSQV(cr128& vt, u32 address) -> void {
+  auto size = 16 - (address & 15);
+  auto target = dmem.data + address;
+  auto source = (u8 const*)&vt.u128 + (15 - e);
+  auto first = min(size, u32(16 - e));
+  fastSQVTable(first, target, source);
+  if(first == size) return;
+  target += first;
+  source = (u8 const*)&vt.u128 + 15;
+  fastSQVTable(size - first, target, source);
+}
+
+auto RSP::fastSQVSimd(u8 const* source, u8* target) -> void {
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  static const __m128i reverse = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+  auto value = _mm_loadu_si128((const __m128i*)source);
+  value = _mm_shuffle_epi8(value, reverse);
+  _mm_storeu_si128((__m128i*)target, value);
+#else
+  target[15] = source[ 0];
+  target[14] = source[ 1];
+  target[13] = source[ 2];
+  target[12] = source[ 3];
+  target[11] = source[ 4];
+  target[10] = source[ 5];
+  target[ 9] = source[ 6];
+  target[ 8] = source[ 7];
+  target[ 7] = source[ 8];
+  target[ 6] = source[ 9];
+  target[ 5] = source[10];
+  target[ 4] = source[11];
+  target[ 3] = source[12];
+  target[ 2] = source[13];
+  target[ 1] = source[14];
+  target[ 0] = source[15];
+#endif
 }
 
 #undef IpuReg
