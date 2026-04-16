@@ -663,6 +663,35 @@ struct RSP : Thread, Memory::RCP<RSP> {
     hashset<BlockHashPair> blocks;
     u64 dirty;
     u32 slowPathFlushedClocks = 0;
+    struct ConstRegs {
+      u32 mask;
+      array<u32[32]> value;
+
+      auto reset() -> void {
+        mask = 1;
+        for(auto& value : value) value = 0;
+      }
+
+      auto set(u32 index, u32 value) -> void {
+        mask |= 1u << index;
+        this->value[index] = value;
+      }
+
+      auto clear(u32 index) -> void {
+        mask &= ~(1u << index);
+      }
+
+      auto has(u32 index) const -> bool {
+        return mask & (1u << index);
+      }
+
+      auto get(u32 index) const -> u32 {
+        return value[index];
+      }
+
+      auto track(u32 instruction, u32 pc) -> void;
+    } constRegs;
+
     std::vector<HaltSlowPath> haltSlowPaths;
     std::vector<SlowPath> slowPaths;
   } recompiler{*this};

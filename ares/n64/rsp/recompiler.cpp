@@ -35,6 +35,7 @@ The main emission loop models RSP scheduling semantics:
 - decode current instruction to OpInfo (decoderEXECUTE()).
 - begin pipeline window, issue first op, and emit host code via emitEXECUTE().
 - opportunistically decode/issue a second opcode if canDualIssue() allows it.
+- update constant-register tracking state with constRegs.track() per issued op.
 - end pipeline window, update branch/state/PC bookkeeping, and exit if needed.
 
 Instruction emission is split by decode family:
@@ -107,6 +108,16 @@ Key optimizations
    - Block hashing includes the block start address, so identical opcode bytes
      at different addresses cannot alias to the same compiled block by mistake.
 
+8) Intra-block constant-register tracking
+   - constRegs tracks which GPRs hold compile-time-known values while a block is
+     emitted, propagating constants through a selected subset of IPU opcodes.
+   - The tracker treats R0 as always constant zero and clears destinations when
+     an opcode does not preserve constantness.
+   - JIT address generation can fold base+offset immediates when Rs is known,
+     reducing runtime arithmetic in scalar DMEM ops and vector fast paths.
+   - When constantness is unknown or invalidated, emission falls back to regular
+     runtime address computation without changing architectural behavior.
+
 Maintenance guidelines
 ----------------------
 - Preserve interpreter-visible behavior first (branching, delay slots, clocks).
@@ -135,6 +146,137 @@ auto RSP::Recompiler::hash(u12 address, u12 size) -> u64 {
   } else {
     return XXH3_64bits(self.imem.data + address, self.imem.size - address)
          ^ XXH3_64bits(self.imem.data, end);
+  }
+}
+
+auto RSP::Recompiler::ConstRegs::track(u32 instruction, u32 pc) -> void {
+  auto setKnownBinary = [&](u32 rd, u32 rs, u32 rt, auto&& op) -> void {
+    if(!rd) return;
+    if(!has(rs) || !has(rt)) return clear(rd);
+    set(rd, op(get(rs), get(rt)));
+  };
+  auto setKnownShiftImmediate = [&](u32 rd, u32 rt, auto&& op) -> void {
+    if(!rd) return;
+    if(!has(rt)) return clear(rd);
+    set(rd, op(get(rt)));
+  };
+  auto setKnownShiftVariable = [&](u32 rd, u32 rt, u32 rs, auto&& op) -> void {
+    if(!rd) return;
+    if(!has(rt) || !has(rs)) return clear(rd);
+    set(rd, op(get(rt), get(rs) & 31));
+  };
+  auto setKnownImmediateBinary = [&](u32 rt, u32 rs, auto&& op) -> void {
+    if(!rt) return;
+    if(!rs) return set(rt, op(0));
+    if(!has(rs)) return clear(rt);
+    set(rt, op(get(rs)));
+  };
+
+  u32 opcode = instruction >> 26;
+  u32 rs = instruction >> 21 & 31;
+  u32 rt = instruction >> 16 & 31;
+  u32 rd = instruction >> 11 & 31;
+  u32 sa = instruction >> 6 & 31;
+  s32 imm = s16(instruction);
+  u32 n16 = u16(instruction);
+
+  switch(opcode) {
+  // SPECIAL
+  case 0x00: {
+    u32 function = instruction & 0x3f;
+    switch(function) {
+    // SLL
+    case 0x00: return setKnownShiftImmediate(rd, rt, [&](u32 rtValue) { return rtValue << sa; });
+    // SRL
+    case 0x02: return setKnownShiftImmediate(rd, rt, [&](u32 rtValue) { return rtValue >> sa; });
+    // SRA
+    case 0x03: return setKnownShiftImmediate(rd, rt, [&](u32 rtValue) { return s32(rtValue) >> sa; });
+    // SLLV
+    case 0x04: return setKnownShiftVariable(rd, rt, rs, [&](u32 rtValue, u32 rsValue) { return rtValue << rsValue; });
+    // SRLV
+    case 0x06: return setKnownShiftVariable(rd, rt, rs, [&](u32 rtValue, u32 rsValue) { return rtValue >> rsValue; });
+    // SRAV
+    case 0x07: return setKnownShiftVariable(rd, rt, rs, [&](u32 rtValue, u32 rsValue) { return s32(rtValue) >> rsValue; });
+    // JALR
+    case 0x09: {
+      if(rd) set(rd, u32(u12(pc + 8)));
+      return;
+    }
+    // ADD / ADDU
+    case 0x20:
+    case 0x21: return setKnownBinary(rd, rs, rt, [&](u32 rsValue, u32 rtValue) { return rsValue + rtValue; });
+    // SUB / SUBU
+    case 0x22:
+    case 0x23: return setKnownBinary(rd, rs, rt, [&](u32 rsValue, u32 rtValue) { return rsValue - rtValue; });
+    // AND
+    case 0x24: return setKnownBinary(rd, rs, rt, [&](u32 rsValue, u32 rtValue) { return rsValue & rtValue; });
+    // OR
+    case 0x25: return setKnownBinary(rd, rs, rt, [&](u32 rsValue, u32 rtValue) { return rsValue | rtValue; });
+    // XOR
+    case 0x26: return setKnownBinary(rd, rs, rt, [&](u32 rsValue, u32 rtValue) { return rsValue ^ rtValue; });
+    // NOR
+    case 0x27: return setKnownBinary(rd, rs, rt, [&](u32 rsValue, u32 rtValue) { return ~(rsValue | rtValue); });
+    // SLT
+    case 0x2a: return setKnownBinary(rd, rs, rt, [&](u32 rsValue, u32 rtValue) { return u32(s32(rsValue) < s32(rtValue)); });
+    // SLTU
+    case 0x2b: return setKnownBinary(rd, rs, rt, [&](u32 rsValue, u32 rtValue) { return u32(rsValue < rtValue); });
+    // JR / BREAK
+    case 0x08:
+    case 0x0d:
+      return;
+    default:
+      if(rd) clear(rd);
+      return;
+    }
+  }
+  // REGIMM (BLTZAL / BGEZAL)
+  case 0x01: {
+    if(rt == 0x10 || rt == 0x11 || rt == 0x12 || rt == 0x13) set(31, u32(u12(pc + 8)));
+    return;
+  }
+  // JAL
+  case 0x03:
+    set(31, u32(u12(pc + 8)));
+    return;
+  // ADDI / ADDIU
+  case 0x08:
+  case 0x09:
+    return setKnownImmediateBinary(rt, rs, [&](u32 rsValue) { return rsValue + imm; });
+  // SLTI
+  case 0x0a:
+    return setKnownImmediateBinary(rt, rs, [&](u32 rsValue) { return u32(s32(rsValue) < imm); });
+  // SLTIU
+  case 0x0b:
+    return setKnownImmediateBinary(rt, rs, [&](u32 rsValue) { return u32(rsValue < u32(imm)); });
+  // ANDI
+  case 0x0c:
+    return setKnownImmediateBinary(rt, rs, [&](u32 rsValue) { return rsValue & n16; });
+  // ORI
+  case 0x0d:
+    return setKnownImmediateBinary(rt, rs, [&](u32 rsValue) { return rsValue | n16; });
+  // XORI
+  case 0x0e:
+    return setKnownImmediateBinary(rt, rs, [&](u32 rsValue) { return rsValue ^ n16; });
+  // LUI
+  case 0x0f:
+    if(rt) set(rt, s32(n16 << 16));
+    return;
+  // COP0 / COP2
+  case 0x10:
+  case 0x12:
+    if(rt) clear(rt);
+    return;
+  // LB / LH / LW / LBU / LHU / LWU
+  case 0x20:
+  case 0x21:
+  case 0x23:
+  case 0x24:
+  case 0x25:
+  case 0x27:
+    if(rt) clear(rt);
+    return;
+  default:
+    return;
   }
 }
 
@@ -209,6 +351,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
   haltSlowPaths.clear();
   slowPaths.clear();
+  constRegs.reset();
   auto loadDmemData = [&]() -> void {
     mov64(reg(2), mem(sreg(0), offsetof(RSP, dmem) + offsetof(Writable, data)));
     dmemDataLoaded = 1;
@@ -316,6 +459,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     pipeline.issue(op0);
     ensureDmemData(op0);
     bool branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
+    constRegs.track(instruction, address);
 
     if(!pipeline.singleIssue && !branched && u12(address + 4) != start) {
       u32 instruction = self.imem.read<Word>(address + 4);
@@ -338,6 +482,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
         pipeline.issue(op1);
         ensureDmemData(op1);
         branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
+        constRegs.track(instruction, address);
         if(instructionMayClobberTempRegisters(instruction)) invalidateDmemData();
       }
     }
