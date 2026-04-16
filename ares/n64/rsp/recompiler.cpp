@@ -1804,7 +1804,59 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
 
   //LDV Vt(e),Rs,i7
   case 0x03: {
-    callvu(&RSP::LDV, mem(Vt), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::LDV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    u32 size = 16 - E;
+    if(size > 8) size = 8;
+    if(size != 8 && size != 4 && size != 2 && size != 1) {
+      callvu(&RSP::LDV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    auto vectorBase = offsetof(VU, r[0]) + Vtn * sizeof(r128);
+    u32 addr = 0;
+    if(constRegs.has(Rsn)) {
+      addr = u32(u12(constRegs.get(Rsn) + i7 * 8));
+      mov32(reg(1), imm(addr));
+    } else {
+      add32(reg(1), mem(Rs), imm(i7 * 8));
+      and32(reg(1), reg(1), imm(0x0fff));
+    }
+    sljit_jump* slow = nullptr;
+    if(size > 1) {
+      u32 wrapLimit = 0x1000 - size;
+      if(constRegs.has(Rsn)) {
+        if(addr > wrapLimit) {
+          callvu(&RSP::LDV, mem(Vt), mem(Rs), imm(i7));
+          return 0;
+        }
+      } else {
+        cmp32(reg(1), imm(wrapLimit), set_ugt);
+        slow = jump(flag_ugt);
+      }
+    }
+    if(size == 8) {
+      mov32(reg(0), memReg2(DmemReg, reg(1)));
+      rev32(reg(0), reg(0));
+      mov32(mem(sreg(2), vectorBase + (12 - E)), reg(0));
+      add32(reg(1), reg(1), imm(4));
+      mov32(reg(0), memReg2(DmemReg, reg(1)));
+      rev32(reg(0), reg(0));
+      mov32(mem(sreg(2), vectorBase + (8 - E)), reg(0));
+    } else if(size == 4) {
+      mov32(reg(0), memReg2(DmemReg, reg(1)));
+      rev32(reg(0), reg(0));
+      mov32(mem(sreg(2), vectorBase + (12 - E)), reg(0));
+    } else if(size == 2) {
+      mov32_u16(reg(0), memReg2(DmemReg, reg(1)));
+      rev32_u16(reg(0), reg(0));
+      mov64_u16(mem(sreg(2), vectorBase + (14 - E)), reg(0));
+    } else {
+      mov32_u8(reg(0), memReg2(DmemReg, reg(1)));
+      mov64_u8(mem(sreg(2), vectorBase + (15 - E)), reg(0));
+    }
+    if(slow) deferSlowPath(slow);
     return 0;
   }
 
@@ -2124,7 +2176,37 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
 
   //SDV Vt(e),Rs,i7
   case 0x03: {
-    callvu(&RSP::SDV, mem(Vt), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::SDV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    if(E > 8) {
+      callvu(&RSP::SDV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    auto vectorBase = offsetof(VU, r[0]) + Vtn * sizeof(r128);
+    if(constRegs.has(Rsn)) {
+      u32 addr = u32(u12(constRegs.get(Rsn) + i7 * 8));
+      if(addr > 0x0ff8) {
+        callvu(&RSP::SDV, mem(Vt), mem(Rs), imm(i7));
+        return 0;
+      }
+      mov32(reg(1), imm(addr));
+    } else {
+      add32(reg(1), mem(Rs), imm(i7 * 8));
+      and32(reg(1), reg(1), imm(0x0fff));
+      cmp32(reg(1), imm(0x0ff8), set_ugt);
+    }
+    sljit_jump* slow = nullptr;
+    if(!constRegs.has(Rsn)) slow = jump(flag_ugt);
+    mov32(reg(0), mem(sreg(2), vectorBase + (12 - E)));
+    rev32(reg(0), reg(0));
+    mov32(memReg2(DmemReg, reg(1)), reg(0));
+    add32(reg(1), reg(1), imm(4));
+    mov32(reg(0), mem(sreg(2), vectorBase + (8 - E)));
+    rev32(reg(0), reg(0));
+    mov32(memReg2(DmemReg, reg(1)), reg(0));
+    if(slow) deferSlowPath(slow);
     return 0;
   }
 
