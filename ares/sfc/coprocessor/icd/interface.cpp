@@ -83,7 +83,7 @@ auto ICD::joypWrite(n1 p14, n1 p15) -> void {
 
   if(packetLock == 1) {
     if(p14 == 0 && p15 == 1) {
-      if(packetSize < 64) packet[packetSize++] = joypPacket;
+      packetReady = 1;
       packetLock = 0;
       pulseLock = 1;
     }
@@ -93,7 +93,7 @@ auto ICD::joypWrite(n1 p14, n1 p15) -> void {
   bitData = bit << 7 | bitData >> 1;
   if(++bitOffset) return;
 
-  joypPacket[packetOffset] = bitData;
+  r7000[packetOffset] = bitData;
   if(++packetOffset) return;
 
   packetLock = 1;

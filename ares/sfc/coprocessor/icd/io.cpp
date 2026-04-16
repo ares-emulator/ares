@@ -8,13 +8,7 @@ auto ICD::readIO(n24 address, n8 data) -> n8 {
 
   //command ready port
   if(address == 0x6002) {
-    data = packetSize > 0;
-    if(data) {
-      for(auto n : range(16)) r7000[n] = packet[0][n];
-      packetSize--;
-      for(auto n : range(packetSize)) packet[n] = packet[n + 1];
-    }
-    return data;
+    return packetReady;
   }
 
   //ICD2 revision
@@ -24,6 +18,9 @@ auto ICD::readIO(n24 address, n8 data) -> n8 {
 
   //command port
   if((address & 0x40fff0) == 0x7000) {
+    if ((address & 15) == 0) {
+      packetReady = false;
+    }
     return r7000[address & 15];
   }
 
