@@ -1728,7 +1728,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     //   source = dmem_data + address;
     //   target = &Vt.byte(e);
     //   if(e == 0) {
-    //     if((address & 15) == 0) fastLQVSimd(vt, source);
+    //     if((address & 15) == 0) fastLQV0Simd(vt, source);
     //     else                    fastLQVTable(16 - (address & 15), target, source);
     //   } else {
     //     size = min(16 - (address & 15), 16 - e);
@@ -1741,7 +1741,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     // source = dmem_data + address;
     // target = &Vt.byte(e);
     // if(e == 0) {
-    //   if((address & 15) == 0) fastLQVSimd(vt, source);
+    //   if((address & 15) == 0) fastLQV0Simd(vt, source);
     //   else                    fastLQVTable(16 - (address & 15), target, source);
     // } else {
     //   size = min(16 - (address & 15), 16 - e);
@@ -1760,7 +1760,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       add64(reg(3), DmemReg, imm(address));
       add64(reg(0), sreg(2), imm(offsetof(VU, r[0]) + Vtn * sizeof(r128) + (15 - E)));
       if(E == 0) {
-        if((address & 15) == 0) callf(&RSP::fastLQVSimd, mem(Vt), reg(3));
+        if((address & 15) == 0) callf(&RSP::fastLQV0Simd, mem(Vt), reg(3));
         else                    callf(&RSP::fastLQVTable, imm(16 - (address & 15)), reg(0), reg(3));
       } else {
         u32 size = 16 - (address & 15);
@@ -1783,7 +1783,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       callf(&RSP::fastLQVTable, reg(2), reg(0), reg(3));
       auto doneFast = jump();
       setLabel(simd);
-      callf(&RSP::fastLQVSimd, mem(Vt), reg(3));
+      callf(&RSP::fastLQV0Simd, mem(Vt), reg(3));
       setLabel(doneFast);
     } else {
       and32(reg(2), reg(1), imm(0x0f));
@@ -1808,13 +1808,89 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
 
   //LPV Vt(e),Rs,i7
   case 0x06: {
-    callvu(&RSP::LPV, mem(Vt), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::LPV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    if(E == 0) {
+      if(constRegs.has(Rsn)) {
+        u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
+        if(address > 0x0ff7) {
+          callvu(&RSP::LPV, mem(Vt), mem(Rs), imm(i7));
+          return 0;
+        }
+        add64(reg(3), DmemReg, imm(address));
+        callf(&RSP::fastLPV0Simd, mem(Vt), reg(3));
+        return 0;
+      }
+      add32(reg(1), mem(Rs), imm(i7 * 8));
+      and32(reg(1), reg(1), imm(0x0fff));
+      cmp32(reg(1), imm(0x0ff7), set_ugt);
+      auto slow = jump(flag_ugt);
+      add64(reg(3), DmemReg, reg(1));
+      callf(&RSP::fastLPV0Simd, mem(Vt), reg(3));
+      deferSlowPath(slow);
+      return 0;
+    }
+    if(constRegs.has(Rsn)) {
+      u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
+      if(address > 0x0ff7) {
+        callvu(&RSP::LPV, mem(Vt), mem(Rs), imm(i7));
+        return 0;
+      }
+      callvu(&RSP::fastLPV, mem(Vt), imm(address));
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 8));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff7), set_ugt);
+    auto slow = jump(flag_ugt);
+    callvu(&RSP::fastLPV, mem(Vt), reg(1));
+    deferSlowPath(slow);
     return 0;
   }
 
   //LUV Vt(e),Rs,i7
   case 0x07: {
-    callvu(&RSP::LUV, mem(Vt), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::LUV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    if(E == 0) {
+      if(constRegs.has(Rsn)) {
+        u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
+        if(address > 0x0ff7) {
+          callvu(&RSP::LUV, mem(Vt), mem(Rs), imm(i7));
+          return 0;
+        }
+        add64(reg(3), DmemReg, imm(address));
+        callf(&RSP::fastLUV0Simd, mem(Vt), reg(3));
+        return 0;
+      }
+      add32(reg(1), mem(Rs), imm(i7 * 8));
+      and32(reg(1), reg(1), imm(0x0fff));
+      cmp32(reg(1), imm(0x0ff7), set_ugt);
+      auto slow = jump(flag_ugt);
+      add64(reg(3), DmemReg, reg(1));
+      callf(&RSP::fastLUV0Simd, mem(Vt), reg(3));
+      deferSlowPath(slow);
+      return 0;
+    }
+    if(constRegs.has(Rsn)) {
+      u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
+      if(address > 0x0ff7) {
+        callvu(&RSP::LUV, mem(Vt), mem(Rs), imm(i7));
+        return 0;
+      }
+      callvu(&RSP::fastLUV, mem(Vt), imm(address));
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 8));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff7), set_ugt);
+    auto slow = jump(flag_ugt);
+    callvu(&RSP::fastLUV, mem(Vt), reg(1));
+    deferSlowPath(slow);
     return 0;
   }
 
@@ -1899,7 +1975,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     //   if(address > 0x0ff0) { SQV(Vt, Rs, i7); return; }  // wrap case
     //   if(e != 0) { fastSQV<e>(Vt, address); return; }
     //   size = 16 - (address & 15);
-    //   if(size == 16) fastSQVSimd(&Vt, dmem_data + address);
+    //   if(size == 16) fastSQV0Simd(&Vt, dmem_data + address);
     //   else           fastSQV<0>(Vt, address);
     //   return;
     // }
@@ -1907,7 +1983,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     // if(address > 0x0ff0) defer slow: SQV(Vt, Rs, i7);
     // if(e != 0) { fastSQV<e>(Vt, address); return; }
     // size = 16 - (address & 15);
-    // if(size == 16) fastSQVSimd(&Vt, dmem_data + address);
+    // if(size == 16) fastSQV0Simd(&Vt, dmem_data + address);
     // else           fastSQV<0>(Vt, address);
     if(emitSlowPath) {
       callvu(&RSP::SQV, mem(Vt), mem(Rs), imm(i7));
@@ -1928,7 +2004,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       if(size == 16) {
         add64(reg(3), DmemReg, imm(constantAddress));
         add64(reg(0), sreg(2), imm(vectorBase));
-        callf(&RSP::fastSQVSimd, reg(0), reg(3));
+        callf(&RSP::fastSQV0Simd, reg(0), reg(3));
       } else {
         callvu(&RSP::fastSQV, mem(Vt), imm(constantAddress));
       }
@@ -1952,7 +2028,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     auto doneFast = jump();
     setLabel(simd);
     add64(reg(0), sreg(2), imm(vectorBase));
-    callf(&RSP::fastSQVSimd, reg(0), reg(3));
+    callf(&RSP::fastSQV0Simd, reg(0), reg(3));
     setLabel(doneFast);
     deferSlowPath(slow);
     return 0;
@@ -1966,13 +2042,89 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
 
   //SPV Vt(e),Rs,i7
   case 0x06: {
-    callvu(&RSP::SPV, mem(Vt), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::SPV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    if(E == 0) {
+      if(constRegs.has(Rsn)) {
+        u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
+        if(address > 0x0ff8) {
+          callvu(&RSP::SPV, mem(Vt), mem(Rs), imm(i7));
+          return 0;
+        }
+        add64(reg(3), DmemReg, imm(address));
+        callf(&RSP::fastSPV0Simd, mem(Vt), reg(3));
+        return 0;
+      }
+      add32(reg(1), mem(Rs), imm(i7 * 8));
+      and32(reg(1), reg(1), imm(0x0fff));
+      cmp32(reg(1), imm(0x0ff8), set_ugt);
+      auto slow = jump(flag_ugt);
+      add64(reg(3), DmemReg, reg(1));
+      callf(&RSP::fastSPV0Simd, mem(Vt), reg(3));
+      deferSlowPath(slow);
+      return 0;
+    }
+    if(constRegs.has(Rsn)) {
+      u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
+      if(address > 0x0ff8) {
+        callvu(&RSP::SPV, mem(Vt), mem(Rs), imm(i7));
+        return 0;
+      }
+      callvu(&RSP::fastSPV, mem(Vt), imm(address));
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 8));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff8), set_ugt);
+    auto slow = jump(flag_ugt);
+    callvu(&RSP::fastSPV, mem(Vt), reg(1));
+    deferSlowPath(slow);
     return 0;
   }
 
   //SUV Vt(e),Rs,i7
   case 0x07: {
-    callvu(&RSP::SUV, mem(Vt), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::SUV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    if(E == 0) {
+      if(constRegs.has(Rsn)) {
+        u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
+        if(address > 0x0ff8) {
+          callvu(&RSP::SUV, mem(Vt), mem(Rs), imm(i7));
+          return 0;
+        }
+        add64(reg(3), DmemReg, imm(address));
+        callf(&RSP::fastSUV0Simd, mem(Vt), reg(3));
+        return 0;
+      }
+      add32(reg(1), mem(Rs), imm(i7 * 8));
+      and32(reg(1), reg(1), imm(0x0fff));
+      cmp32(reg(1), imm(0x0ff8), set_ugt);
+      auto slow = jump(flag_ugt);
+      add64(reg(3), DmemReg, reg(1));
+      callf(&RSP::fastSUV0Simd, mem(Vt), reg(3));
+      deferSlowPath(slow);
+      return 0;
+    }
+    if(constRegs.has(Rsn)) {
+      u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
+      if(address > 0x0ff8) {
+        callvu(&RSP::SUV, mem(Vt), mem(Rs), imm(i7));
+        return 0;
+      }
+      callvu(&RSP::fastSUV, mem(Vt), imm(address));
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 8));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff8), set_ugt);
+    auto slow = jump(flag_ugt);
+    callvu(&RSP::fastSUV, mem(Vt), reg(1));
+    deferSlowPath(slow);
     return 0;
   }
 
@@ -2069,6 +2221,17 @@ auto RSP::Recompiler::isTerminal(u32 instruction) -> bool {
   return 0;
 }
 
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+alignas(16) static constexpr u8 simdShuffleIdentity[16] = {
+  15, 14, 13, 12, 11, 10,  9,  8,
+   7,  6,  5,  4,  3,  2,  1,  0,
+};
+alignas(16) static constexpr u8 simdShuffleSwapWords[16] = {
+  14, 15, 12, 13, 10, 11,  8,  9,
+   6,  7,  4,  5,  2,  3,  0,  1,
+};
+#endif
+
 auto RSP::fastLQVTable(u32 size, u8* target, u8* source) -> void {
   switch(size) {
   case 16: target[-15] = source[15]; [[fallthrough]];
@@ -2091,10 +2254,10 @@ auto RSP::fastLQVTable(u32 size, u8* target, u8* source) -> void {
   }
 }
 
-auto RSP::fastLQVSimd(r128& vt, u8* source) -> void {
+auto RSP::fastLQV0Simd(r128& vt, u8* source) -> void {
 #if ARCHITECTURE_SUPPORTS_SSE4_1
-  static const __m128i reverse = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
   auto value = _mm_loadu_si128((const __m128i*)source);
+  auto reverse = _mm_load_si128((const __m128i*)simdShuffleIdentity);
   value = _mm_shuffle_epi8(value, reverse);
   _mm_storeu_si128((__m128i*)&vt.u128, value);
 #else
@@ -2114,6 +2277,62 @@ auto RSP::fastLQVSimd(r128& vt, u8* source) -> void {
   vt.byte( 2) = source[ 2];
   vt.byte( 1) = source[ 1];
   vt.byte( 0) = source[ 0];
+#endif
+}
+
+template<u8 e>
+auto RSP::fastLPV(r128& vt, u32 address) -> void {
+  auto source = dmem.data + (address & ~7);
+  s32 index = s32(address & 7) - e;
+  for(u32 offset = 0; offset < 8; offset++) {
+    vt.element(offset) = source[(index + s32(offset)) & 15] << 8;
+  }
+}
+
+auto RSP::fastLPV0Simd(r128& vt, u8 const* source) -> void {
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  auto bytes = _mm_loadl_epi64((__m128i const*)source);
+  auto words = _mm_cvtepu8_epi16(bytes);
+  words = _mm_slli_epi16(words, 8);
+  auto reverseWords = _mm_load_si128((const __m128i*)simdShuffleSwapWords);
+  vt = _mm_shuffle_epi8(words, reverseWords);
+#else
+  vt.element(0) = source[0] << 8;
+  vt.element(1) = source[1] << 8;
+  vt.element(2) = source[2] << 8;
+  vt.element(3) = source[3] << 8;
+  vt.element(4) = source[4] << 8;
+  vt.element(5) = source[5] << 8;
+  vt.element(6) = source[6] << 8;
+  vt.element(7) = source[7] << 8;
+#endif
+}
+
+template<u8 e>
+auto RSP::fastLUV(r128& vt, u32 address) -> void {
+  auto source = dmem.data + (address & ~7);
+  s32 index = s32(address & 7) - e;
+  for(u32 offset = 0; offset < 8; offset++) {
+    vt.element(offset) = source[(index + s32(offset)) & 15] << 7;
+  }
+}
+
+auto RSP::fastLUV0Simd(r128& vt, u8 const* source) -> void {
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  auto bytes = _mm_loadl_epi64((__m128i const*)source);
+  auto words = _mm_cvtepu8_epi16(bytes);
+  words = _mm_slli_epi16(words, 7);
+  auto reverseWords = _mm_load_si128((const __m128i*)simdShuffleSwapWords);
+  vt = _mm_shuffle_epi8(words, reverseWords);
+#else
+  vt.element(0) = source[0] << 7;
+  vt.element(1) = source[1] << 7;
+  vt.element(2) = source[2] << 7;
+  vt.element(3) = source[3] << 7;
+  vt.element(4) = source[4] << 7;
+  vt.element(5) = source[5] << 7;
+  vt.element(6) = source[6] << 7;
+  vt.element(7) = source[7] << 7;
 #endif
 }
 
@@ -2152,10 +2371,10 @@ auto RSP::fastSQV(cr128& vt, u32 address) -> void {
   fastSQVTable(size - first, target, source);
 }
 
-auto RSP::fastSQVSimd(u8 const* source, u8* target) -> void {
+auto RSP::fastSQV0Simd(u8 const* source, u8* target) -> void {
 #if ARCHITECTURE_SUPPORTS_SSE4_1
-  static const __m128i reverse = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
   auto value = _mm_loadu_si128((const __m128i*)source);
+  auto reverse = _mm_load_si128((const __m128i*)simdShuffleIdentity);
   value = _mm_shuffle_epi8(value, reverse);
   _mm_storeu_si128((__m128i*)target, value);
 #else
@@ -2175,6 +2394,62 @@ auto RSP::fastSQVSimd(u8 const* source, u8* target) -> void {
   target[ 2] = source[13];
   target[ 1] = source[14];
   target[ 0] = source[15];
+#endif
+}
+
+template<u8 e>
+auto RSP::fastSPV(cr128& vt, u32 address) -> void {
+  fastSUV<(e + 8) & 15>(vt, address);
+}
+
+auto RSP::fastSPV0Simd(cr128& vt, u8* target) -> void {
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  auto reverseWords = _mm_load_si128((const __m128i*)simdShuffleSwapWords);
+  auto words = _mm_shuffle_epi8(vt, reverseWords);
+  words = _mm_srli_epi16(words, 8);
+  words = _mm_and_si128(words, _mm_set1_epi16(0x00ff));
+  auto bytes = _mm_packus_epi16(words, _mm_setzero_si128());
+  _mm_storel_epi64((__m128i*)target, bytes);
+#else
+  target[0] = vt.byte( 0);
+  target[1] = vt.byte( 2);
+  target[2] = vt.byte( 4);
+  target[3] = vt.byte( 6);
+  target[4] = vt.byte( 8);
+  target[5] = vt.byte(10);
+  target[6] = vt.byte(12);
+  target[7] = vt.byte(14);
+#endif
+}
+
+template<u8 e>
+auto RSP::fastSUV(cr128& vt, u32 address) -> void {
+  auto target = dmem.data + address;
+  auto start = e;
+  auto end = start + 8;
+  for(u32 offset = start; offset < end; offset++) {
+    if((offset & 15) < 8) *target++ = vt.element(offset & 7) >> 7;
+    else                  *target++ = vt.byte((offset & 7) << 1);
+  }
+}
+
+auto RSP::fastSUV0Simd(cr128& vt, u8* target) -> void {
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  auto reverseWords = _mm_load_si128((const __m128i*)simdShuffleSwapWords);
+  auto words = _mm_shuffle_epi8(vt, reverseWords);
+  words = _mm_srli_epi16(words, 7);
+  words = _mm_and_si128(words, _mm_set1_epi16(0x00ff));
+  auto bytes = _mm_packus_epi16(words, _mm_setzero_si128());
+  _mm_storel_epi64((__m128i*)target, bytes);
+#else
+  target[0] = vt.element(0) >> 7;
+  target[1] = vt.element(1) >> 7;
+  target[2] = vt.element(2) >> 7;
+  target[3] = vt.element(3) >> 7;
+  target[4] = vt.element(4) >> 7;
+  target[5] = vt.element(5) >> 7;
+  target[6] = vt.element(6) >> 7;
+  target[7] = vt.element(7) >> 7;
 #endif
 }
 
