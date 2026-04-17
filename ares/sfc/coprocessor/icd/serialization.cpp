@@ -3,7 +3,6 @@ auto ICD::serialize(serializer& s) -> void {
   GameBoy::system.serialize(s, scheduler.getSynchronize());
 
   s(joypID);
-  s(joypLock);
   s(pulseLock);
   s(strobeLock);
   s(packetLock);
@@ -11,6 +10,7 @@ auto ICD::serialize(serializer& s) -> void {
   s(packetReady);
   s(bitData);
   s(bitOffset);
+  s(previousP15);
 
   s(output);
   s(readBank);

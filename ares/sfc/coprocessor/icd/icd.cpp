@@ -55,7 +55,6 @@ auto ICD::power(bool reset) -> void {
   cpu.coprocessors.push_back(this);
 
   joypID = 3;
-  joypLock = 1;
   pulseLock = 1;
   strobeLock = 0;
   packetLock = 0;
@@ -63,6 +62,7 @@ auto ICD::power(bool reset) -> void {
   packetReady = 0;
   bitData = 0;
   bitOffset = 0;
+  previousP15 = 0;
 
   for(auto& n : output) n = 0xff;
   readBank = 0;

@@ -31,7 +31,6 @@ struct ICD : Platform, GameBoy::SuperGameBoyInterface, Thread {
 
 private:
   n2 joypID;
-  n1 joypLock;
   n1 pulseLock;
   n1 strobeLock;
   n1 packetLock;
@@ -39,6 +38,7 @@ private:
   n1 packetReady;
   n8 bitData;
   n3 bitOffset;
+  n1 previousP15;
 
   n8 output[4 * 512];
   n2 readBank;
