@@ -1681,6 +1681,8 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
 }
 
 alignas(16) extern u8 const simdLHVSource[16][8];
+alignas(16) extern u8 const simdLFVData[16][32];
+alignas(16) extern u8 const simdSFVSource[16][4];
 alignas(16) extern u8 const simdSUVSource[16][8];
 alignas(16) extern u8 const simdSHVSource[16][32];
 
@@ -2026,7 +2028,25 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
 
   //LFV Vt(e),Rs,i7
   case 0x09: {
-    callvu(&RSP::LFV, mem(Vt), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::LFV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    if(constRegs.has(Rsn)) {
+      u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
+      if(address > 0x0ff7) {
+        callvu(&RSP::LFV, mem(Vt), mem(Rs), imm(i7));
+        return 0;
+      }
+      callf(&RSP::fastLFV, mem(Vt), imm(address), imm64((u8 const*)simdLFVData[E & 15]));
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 16));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff7), set_ugt);
+    auto slow = jump(flag_ugt);
+    callf(&RSP::fastLFV, mem(Vt), reg(1), imm64((u8 const*)simdLFVData[E & 15]));
+    deferSlowPath(slow);
     return 0;
   }
 
@@ -2340,7 +2360,25 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
 
   //SFV Vt(e),Rs,i7
   case 0x09: {
-    callvu(&RSP::SFV, mem(Vt), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::SFV, mem(Vt), mem(Rs), imm(i7));
+      return 0;
+    }
+    if(constRegs.has(Rsn)) {
+      u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
+      if(address > 0x0ff7) {
+        callvu(&RSP::SFV, mem(Vt), mem(Rs), imm(i7));
+        return 0;
+      }
+      callf(&RSP::fastSFV, mem(Vt), imm(address), imm64((u8 const*)simdSFVSource[E & 15]));
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 16));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff7), set_ugt);
+    auto slow = jump(flag_ugt);
+    callf(&RSP::fastSFV, mem(Vt), reg(1), imm64((u8 const*)simdSFVSource[E & 15]));
+    deferSlowPath(slow);
     return 0;
   }
 
@@ -2434,6 +2472,10 @@ alignas(16) static constexpr u8 simdShuffleSwapWords[16] = {
   14, 15, 12, 13, 10, 11,  8,  9,
    6,  7,  4,  5,  2,  3,  0,  1,
 };
+alignas(16) static constexpr u8 simdShuffleSwapBytes[16] = {
+   1,  0,  3,  2,  5,  4,  7,  6,
+   9,  8, 11, 10, 13, 12, 15, 14,
+};
 #endif
 
 alignas(16) u8 const simdLHVSource[16][8] = {
@@ -2453,6 +2495,60 @@ alignas(16) u8 const simdLHVSource[16][8] = {
   { 3,  4,  5,  6,  7,  8,  9, 10},
   { 2,  3,  4,  5,  6,  7,  8,  9},
   { 1,  2,  3,  4,  5,  6,  7,  8},
+};
+
+alignas(16) u8 const simdLFVData[16][32] = {
+  { 0,  1,  2,  3,  4,  5,  6,  7, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,    0,    0,    0,    0,    0,    0,    0,    0},
+  {15,  0,  1,  2,  3,  4,  5,  6, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,    0,    0,    0,    0,    0,    0,    0},
+  {14, 15,  0,  1,  2,  3,  4,  5, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,    0,    0,    0,    0,    0,    0},
+  {13, 14, 15,  0,  1,  2,  3,  4, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,    0,    0,    0,    0,    0},
+  {12, 13, 14, 15,  0,  1,  2,  3, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,    0,    0,    0,    0},
+  {11, 12, 13, 14, 15,  0,  1,  2, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,    0,    0,    0},
+  {10, 11, 12, 13, 14, 15,  0,  1, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,    0,    0},
+  { 9, 10, 11, 12, 13, 14, 15,  0, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0,    0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,    0},
+  { 8,  9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0,    0,    0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+  { 7,  8,  9, 10, 11, 12, 13, 14, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0,    0,    0,    0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+  { 6,  7,  8,  9, 10, 11, 12, 13, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+  { 5,  6,  7,  8,  9, 10, 11, 12, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 0xff, 0xff, 0xff, 0xff, 0xff},
+  { 4,  5,  6,  7,  8,  9, 10, 11, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 0xff, 0xff, 0xff, 0xff},
+  { 3,  4,  5,  6,  7,  8,  9, 10, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 0xff, 0xff, 0xff},
+  { 2,  3,  4,  5,  6,  7,  8,  9, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 0xff, 0xff},
+  { 1,  2,  3,  4,  5,  6,  7,  8, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 0xff},
+};
+
+alignas(16) u8 const simdSFVSource[16][4] = {
+  {0x00, 0x01, 0x02, 0x03},
+  {0x06, 0x07, 0x04, 0x05},
+  {0xff, 0xff, 0xff, 0xff},
+  {0xff, 0xff, 0xff, 0xff},
+  {0x01, 0x02, 0x03, 0x00},
+  {0x07, 0x04, 0x05, 0x06},
+  {0xff, 0xff, 0xff, 0xff},
+  {0xff, 0xff, 0xff, 0xff},
+  {0x04, 0x05, 0x06, 0x07},
+  {0xff, 0xff, 0xff, 0xff},
+  {0xff, 0xff, 0xff, 0xff},
+  {0x03, 0x00, 0x01, 0x02},
+  {0x05, 0x06, 0x07, 0x04},
+  {0xff, 0xff, 0xff, 0xff},
+  {0xff, 0xff, 0xff, 0xff},
+  {0x00, 0x01, 0x02, 0x03},
 };
 
 alignas(16) u8 const simdSUVSource[16][8] = {
@@ -2529,6 +2625,47 @@ alignas(16) static constexpr u8 simdSHVMask[8][16] = {
   {0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff},
   {0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0},
   {0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff},
+};
+
+alignas(16) static constexpr u8 simdLFVSource[16][16] = {
+  { 0,  4,  8, 12,  8, 12,  0,  4, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  { 1,  5,  9, 13,  9, 13,  1,  5, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  { 2,  6, 10, 14, 10, 14,  2,  6, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  { 3,  7, 11, 15, 11, 15,  3,  7, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  { 4,  8, 12,  0, 12,  0,  4,  8, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  { 5,  9, 13,  1, 13,  1,  5,  9, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  { 6, 10, 14,  2, 14,  2,  6, 10, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  { 7, 11, 15,  3, 15,  3,  7, 11, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  { 8, 12,  0,  4,  0,  4,  8, 12, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  { 9, 13,  1,  5,  1,  5,  9, 13, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  {10, 14,  2,  6,  2,  6, 10, 14, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  {11, 15,  3,  7,  3,  7, 11, 15, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  {12,  0,  4,  8,  4,  8, 12,  0, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  {13,  1,  5,  9,  5,  9, 13,  1, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  {14,  2,  6, 10,  6, 10, 14,  2, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+  {15,  3,  7, 11,  7, 11, 15,  3, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80},
+};
+
+alignas(16) static constexpr u8 simdSFVDestination[8][16] = {
+  {0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80},
+  {0x80, 0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80, 0x80},
+  {0x80, 0x80, 0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80},
+  {0x80, 0x80, 0x80, 0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3},
+  {3, 0x80, 0x80, 0x80, 0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80},
+  {0x80, 3, 0x80, 0x80, 0x80, 0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80},
+  {0x80, 0x80, 3, 0x80, 0x80, 0x80, 0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80},
+  {0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80, 0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2},
+};
+
+alignas(16) static constexpr u8 simdSFVMask[8][16] = {
+  {0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0},
+  {0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0},
+  {0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0},
+  {0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff},
+  {0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0},
+  {0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0},
+  {0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0},
+  {0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0, 0, 0, 0xff},
 };
 #endif
 
@@ -2639,6 +2776,38 @@ auto RSP::fastLUV0Simd(r128& vt, u8 const* source) -> void {
   vt.element(5) = source[5] << 7;
   vt.element(6) = source[6] << 7;
   vt.element(7) = source[7] << 7;
+#endif
+}
+
+auto RSP::fastLFV(r128& vt, u32 address, u8 const* source) -> void {
+  auto target = dmem.data + (address & ~7);
+  u32 index = source[address & 7];
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  auto reverse = _mm_load_si128((const __m128i*)simdShuffleIdentity);
+  auto current = _mm_shuffle_epi8(vt, reverse);
+  auto select = _mm_load_si128((const __m128i*)simdLFVSource[index]);
+  auto bytes = _mm_loadu_si128((const __m128i*)target);
+  bytes = _mm_shuffle_epi8(bytes, select);
+  auto words = _mm_cvtepu8_epi16(bytes);
+  words = _mm_slli_epi16(words, 7);
+  auto swapBytes = _mm_load_si128((const __m128i*)simdShuffleSwapBytes);
+  auto value = _mm_shuffle_epi8(words, swapBytes);
+  auto mask = _mm_load_si128((const __m128i*)(source + 16));
+  auto merged = _mm_andnot_si128(mask, current);
+  merged = _mm_or_si128(merged, _mm_and_si128(mask, value));
+  vt = _mm_shuffle_epi8(merged, reverse);
+#else
+  u32 start = ((address & 7) - index) & 15;
+  u32 end = start + 8;
+  if(end > 16) end = 16;
+  r128 tmp;
+  for(u32 offset = 0; offset < 4; offset++) {
+    tmp.element(offset + 0) = target[(index + offset * 4 + 0) & 15] << 7;
+    tmp.element(offset + 4) = target[(index + offset * 4 + 8) & 15] << 7;
+  }
+  for(u32 offset = start; offset < end; offset++) {
+    vt.byte(offset) = tmp.byte(offset);
+  }
 #endif
 }
 
@@ -2761,6 +2930,32 @@ auto RSP::fastSUV(cr128& vt, u32 address, u8 const* source) -> void {
     u32 code = source[offset];
     if(code < 8) *target++ = vt.element(code) >> 7;
     else         *target++ = vt.byte((code - 8) << 1);
+  }
+#endif
+}
+
+auto RSP::fastSFV(cr128& vt, u32 address, u8 const* source) -> void {
+  auto target = dmem.data + (address & ~7);
+  auto base = address & 7;
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  auto reverseWords = _mm_load_si128((const __m128i*)simdShuffleSwapWords);
+  auto words = _mm_shuffle_epi8(vt, reverseWords);
+  auto elements = _mm_srli_epi16(words, 7);
+  elements = _mm_and_si128(elements, _mm_set1_epi16(0x00ff));
+  auto elements8 = _mm_packus_epi16(elements, _mm_setzero_si128());
+  u32 selectWord = u32(source[0]) << 0 | u32(source[1]) << 8 | u32(source[2]) << 16 | u32(source[3]) << 24;
+  auto select = _mm_cvtsi32_si128(selectWord);
+  auto values = _mm_shuffle_epi8(elements8, select);
+  auto destination = _mm_load_si128((const __m128i*)simdSFVDestination[base]);
+  auto mask = _mm_load_si128((const __m128i*)simdSFVMask[base]);
+  auto merged = _mm_andnot_si128(mask, _mm_loadu_si128((const __m128i*)target));
+  merged = _mm_or_si128(merged, _mm_and_si128(mask, _mm_shuffle_epi8(values, destination)));
+  _mm_storeu_si128((__m128i*)target, merged);
+#else
+  for(u32 offset = 0; offset < 4; offset++) {
+    u32 code = source[offset];
+    if(code < 8) target[(base + offset * 4) & 15] = vt.element(code) >> 7;
+    else         target[(base + offset * 4) & 15] = 0;
   }
 #endif
 }
