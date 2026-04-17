@@ -1,5 +1,5 @@
 auto ICD::readIO(n24 address, n8 data) -> n8 {
-  address &= 0x40ffff;
+  address &= 0x40f80f;
 
   //LY counter
   if(address == 0x6000) {
@@ -17,7 +17,7 @@ auto ICD::readIO(n24 address, n8 data) -> n8 {
   }
 
   //command port
-  if((address & 0x40fff0) == 0x7000) {
+  if(address >= 0x7000 && address <= 0x700f) {
     if ((address & 15) == 0) {
       packetReady = false;
     }
@@ -25,7 +25,7 @@ auto ICD::readIO(n24 address, n8 data) -> n8 {
   }
 
   //VRAM port
-  if(address == 0x7800) {
+  if(address >= 0x7800 && address <= 0x780f) {
     data = output[readBank * 512 + readAddress++];
     return data;
   }
