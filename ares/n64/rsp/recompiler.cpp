@@ -2057,7 +2057,28 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
 
   //LTV Vt(e),Rs,i7
   case 0x0b: {
-    callvu(&RSP::LTV, imm(Vtn), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::LTV, imm(Vtn), mem(Rs), imm(i7));
+      return 0;
+    }
+    auto vectorBase = offsetof(VU, r[0]) + (Vtn & ~7) * sizeof(r128);
+    if(constRegs.has(Rsn)) {
+      u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
+      if(address > 0x0ff7) {
+        callvu(&RSP::LTV, imm(Vtn), mem(Rs), imm(i7));
+        return 0;
+      }
+      add64(reg(0), sreg(2), imm(vectorBase));
+      callvu(&RSP::fastLTV, reg(0), imm(address));
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 16));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff7), set_ugt);
+    auto slow = jump(flag_ugt);
+    add64(reg(0), sreg(2), imm(vectorBase));
+    callvu(&RSP::fastLTV, reg(0), reg(1));
+    deferSlowPath(slow);
     return 0;
   }
 
@@ -2390,7 +2411,28 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
 
   //STV Vt(e),Rs,i7
   case 0x0b: {
-    callvu(&RSP::STV, imm(Vtn), mem(Rs), imm(i7));
+    if(emitSlowPath) {
+      callvu(&RSP::STV, imm(Vtn), mem(Rs), imm(i7));
+      return 0;
+    }
+    auto vectorBase = offsetof(VU, r[0]) + (Vtn & ~7) * sizeof(r128);
+    if(constRegs.has(Rsn)) {
+      u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
+      if(address > 0x0ff7) {
+        callvu(&RSP::STV, imm(Vtn), mem(Rs), imm(i7));
+        return 0;
+      }
+      add64(reg(0), sreg(2), imm(vectorBase));
+      callvu(&RSP::fastSTV, reg(0), imm(address));
+      return 0;
+    }
+    add32(reg(1), mem(Rs), imm(i7 * 16));
+    and32(reg(1), reg(1), imm(0x0fff));
+    cmp32(reg(1), imm(0x0ff7), set_ugt);
+    auto slow = jump(flag_ugt);
+    add64(reg(0), sreg(2), imm(vectorBase));
+    callvu(&RSP::fastSTV, reg(0), reg(1));
+    deferSlowPath(slow);
     return 0;
   }
   //INVALID
@@ -2532,6 +2574,41 @@ alignas(16) u8 const simdLFVData[16][32] = {
       0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 0xff},
 };
 
+alignas(16) u8 const simdLTVData[16][32] = {
+  { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
+    8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7},
+  { 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,
+    9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8},
+  { 2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,
+   10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9},
+  { 3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,
+   11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10},
+  { 4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,
+   12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11},
+  { 5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,
+   13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12},
+  { 6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,
+   14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13},
+  { 7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,
+   15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14},
+  { 8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15},
+  { 9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,
+    1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0},
+  {10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+    2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1},
+  {11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+    3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2},
+  {12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,
+    4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3},
+  {13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12,
+    5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4},
+  {14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13,
+    6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5},
+  {15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+    7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6},
+};
+
 alignas(16) u8 const simdSFVSource[16][4] = {
   {0x00, 0x01, 0x02, 0x03},
   {0x06, 0x07, 0x04, 0x05},
@@ -2625,6 +2702,25 @@ alignas(16) static constexpr u8 simdSHVMask[8][16] = {
   {0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff},
   {0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0},
   {0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff},
+};
+
+alignas(16) static constexpr u8 simdSTVDestination[16][16] = {
+  { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15},
+  {15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14},
+  {14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13},
+  {13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12},
+  {12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11},
+  {11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10},
+  {10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9},
+  { 9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7,  8},
+  { 8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6,  7},
+  { 7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5,  6},
+  { 6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4,  5},
+  { 5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3,  4},
+  { 4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3},
+  { 3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2},
+  { 2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1},
+  { 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0},
 };
 
 alignas(16) static constexpr u8 simdLFVSource[16][16] = {
@@ -2779,6 +2875,37 @@ auto RSP::fastLUV0Simd(r128& vt, u8 const* source) -> void {
 #endif
 }
 
+template<u8 e>
+auto RSP::fastLTV(r128* vtbase, u32 address) -> void {
+  constexpr u32 vtoff = e >> 1;
+  auto target = dmem.data + (address & ~7);
+  auto select = simdLTVData[e] + ((address & 8) ? 16 : 0);
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  auto bytes = _mm_loadu_si128((const __m128i*)target);
+  auto shuffle = _mm_load_si128((const __m128i*)select);
+  bytes = _mm_shuffle_epi8(bytes, shuffle);
+  alignas(16) u16 data[8];
+  _mm_store_si128((__m128i*)data, bytes);
+  vtbase[(vtoff + 0) & 7].u16(0) = bswap16(data[0]);
+  vtbase[(vtoff + 1) & 7].u16(1) = bswap16(data[1]);
+  vtbase[(vtoff + 2) & 7].u16(2) = bswap16(data[2]);
+  vtbase[(vtoff + 3) & 7].u16(3) = bswap16(data[3]);
+  vtbase[(vtoff + 4) & 7].u16(4) = bswap16(data[4]);
+  vtbase[(vtoff + 5) & 7].u16(5) = bswap16(data[5]);
+  vtbase[(vtoff + 6) & 7].u16(6) = bswap16(data[6]);
+  vtbase[(vtoff + 7) & 7].u16(7) = bswap16(data[7]);
+#else
+  vtbase[(vtoff + 0) & 7].u16(0) = u16(target[select[ 0]]) << 8 | u16(target[select[ 1]]);
+  vtbase[(vtoff + 1) & 7].u16(1) = u16(target[select[ 2]]) << 8 | u16(target[select[ 3]]);
+  vtbase[(vtoff + 2) & 7].u16(2) = u16(target[select[ 4]]) << 8 | u16(target[select[ 5]]);
+  vtbase[(vtoff + 3) & 7].u16(3) = u16(target[select[ 6]]) << 8 | u16(target[select[ 7]]);
+  vtbase[(vtoff + 4) & 7].u16(4) = u16(target[select[ 8]]) << 8 | u16(target[select[ 9]]);
+  vtbase[(vtoff + 5) & 7].u16(5) = u16(target[select[10]]) << 8 | u16(target[select[11]]);
+  vtbase[(vtoff + 6) & 7].u16(6) = u16(target[select[12]]) << 8 | u16(target[select[13]]);
+  vtbase[(vtoff + 7) & 7].u16(7) = u16(target[select[14]]) << 8 | u16(target[select[15]]);
+#endif
+}
+
 auto RSP::fastLFV(r128& vt, u32 address, u8 const* source) -> void {
   auto target = dmem.data + (address & ~7);
   u32 index = source[address & 7];
@@ -2907,6 +3034,43 @@ auto RSP::fastSPV0Simd(cr128& vt, u8* target) -> void {
   target[5] = vt.byte(10);
   target[6] = vt.byte(12);
   target[7] = vt.byte(14);
+#endif
+}
+
+template<u8 e>
+auto RSP::fastSTV(r128* vtbase, u32 address) -> void {
+  constexpr u32 ee = e & ~1;
+  constexpr u32 element = (16 - ee) & 15;
+  constexpr u32 element16 = element >> 1;
+  alignas(16) u16 data[8];
+  auto& v0 = vtbase[0];
+  auto& v1 = vtbase[1];
+  auto& v2 = vtbase[2];
+  auto& v3 = vtbase[3];
+  auto& v4 = vtbase[4];
+  auto& v5 = vtbase[5];
+  auto& v6 = vtbase[6];
+  auto& v7 = vtbase[7];
+  data[0] = bswap16(v0.u16((element16 + 0) & 7));
+  data[1] = bswap16(v1.u16((element16 + 1) & 7));
+  data[2] = bswap16(v2.u16((element16 + 2) & 7));
+  data[3] = bswap16(v3.u16((element16 + 3) & 7));
+  data[4] = bswap16(v4.u16((element16 + 4) & 7));
+  data[5] = bswap16(v5.u16((element16 + 5) & 7));
+  data[6] = bswap16(v6.u16((element16 + 6) & 7));
+  data[7] = bswap16(v7.u16((element16 + 7) & 7));
+  auto target = dmem.data + (address & ~7);
+  u32 base = (address & 7) - ee & 15;
+#if ARCHITECTURE_SUPPORTS_SSE4_1
+  auto bytes = _mm_load_si128((const __m128i*)data);
+  auto destination = _mm_load_si128((const __m128i*)simdSTVDestination[base]);
+  bytes = _mm_shuffle_epi8(bytes, destination);
+  _mm_storeu_si128((__m128i*)target, bytes);
+#else
+  auto output = (u8 const*)data;
+  for(u32 i = 0; i < 16; i++) {
+    target[(base + i) & 15] = output[i];
+  }
 #endif
 }
 

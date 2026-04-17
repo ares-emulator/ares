@@ -475,6 +475,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
   template<u8 e> auto LRV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LSV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LTV(u8 vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto fastLTV(r128* vtbase, u32 address) -> void;
   template<u8 e> auto LUV(r128& vt, cr32& rs, s8 imm) -> void;
   auto fastLUV(r128& vt, u32 address, u8 const* source) -> void;
   auto fastLUV0Simd(r128& vt, u8 const* source) -> void;
@@ -497,6 +498,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
   template<u8 e> auto SRV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto SSV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto STV(u8 vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto fastSTV(r128* vtbase, u32 address) -> void;
   template<u8 e> auto SUV(cr128& vt, cr32& rs, s8 imm) -> void;
   auto fastSUV(cr128& vt, u32 address, u8 const* source) -> void;
   template<u8 e> auto SWV(cr128& vt, cr32& rs, s8 imm) -> void;
