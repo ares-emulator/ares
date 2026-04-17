@@ -473,6 +473,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
   auto fastLQVTable(u32 size, u8* target, u8* source) -> void;
   auto fastLQV0Simd(r128& vt, u8* source) -> void;
   template<u8 e> auto LRV(r128& vt, cr32& rs, s8 imm) -> void;
+  auto fastLRV(r128& vt, u32 address, u8 const* source) -> void;
   template<u8 e> auto LSV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LTV(u8 vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto fastLTV(r128* vtbase, u32 address) -> void;
@@ -496,12 +497,14 @@ struct RSP : Thread, Memory::RCP<RSP> {
   auto fastSQVTable(u32 size, u8* target, u8 const* source) -> void;
   auto fastSQV0Simd(u8 const* source, u8* target) -> void;
   template<u8 e> auto SRV(cr128& vt, cr32& rs, s8 imm) -> void;
+  auto fastSRV(cr128& vt, u32 address, u8 const* source) -> void;
   template<u8 e> auto SSV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto STV(u8 vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto fastSTV(r128* vtbase, u32 address) -> void;
   template<u8 e> auto SUV(cr128& vt, cr32& rs, s8 imm) -> void;
   auto fastSUV(cr128& vt, u32 address, u8 const* source) -> void;
   template<u8 e> auto SWV(cr128& vt, cr32& rs, s8 imm) -> void;
+  auto fastSWV(cr128& vt, u32 address, u8 const* source) -> void;
   template<u8 e> auto VABS(r128& vd, cr128& vs, cr128& vt) -> void;
   template<u8 e> auto VADD(r128& vd, cr128& vs, cr128& vt) -> void;
   template<u8 e> auto VADDC(r128& vd, cr128& vs, cr128& vt) -> void;
