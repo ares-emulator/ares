@@ -149,26 +149,39 @@
     //    We first capture all register->register dependencies before emitting
     //    any move, so we can schedule them safely.
     auto tuple = std::forward_as_tuple(args...);
-    auto destinations = std::array<reg, 3>{reg(arg1_reg), reg(arg2_reg), reg(arg3_reg)};
-    auto registerArg = std::array<bool, 3>{0, 0, 0};
-    auto pending     = std::array<bool, 3>{0, 0, 0};
-    auto srcfst      = std::array<sljit_s32, 3>{0, 0, 0};
-    auto srcsnd      = std::array<sljit_sw, 3>{0, 0, 0};
+    reg destinations[3] = {reg(arg1_reg), reg(arg2_reg), reg(arg3_reg)};
+    bool registerArg[3] = {0, 0, 0};
+    bool pending[3]     = {0, 0, 0};
+    sljit_s32 srcfst[3] = {0, 0, 0};
+    sljit_sw srcsnd[3]  = {0, 0, 0};
 
-    auto initializeRegisterArg = [&]<u32 index>() -> void {
-      if constexpr(sizeof...(P) > index) {
-        using A = std::remove_cvref_t<decltype(std::get<index>(tuple))>;
-        if constexpr(std::is_same_v<A, reg> || std::is_same_v<A, sreg>) {
-          registerArg[index] = 1;
-          pending[index] = 1;
-          srcfst[index] = std::get<index>(tuple).fst;
-          srcsnd[index] = std::get<index>(tuple).snd;
-        }
+    if constexpr(sizeof...(P) > 0) {
+      using A0 = std::remove_cvref_t<std::tuple_element_t<0, decltype(tuple)>>;
+      if constexpr(std::is_same_v<A0, reg> || std::is_same_v<A0, sreg>) {
+        registerArg[0] = 1;
+        pending[0] = 1;
+        srcfst[0] = std::get<0>(tuple).fst;
+        srcsnd[0] = std::get<0>(tuple).snd;
       }
-    };
-    initializeRegisterArg.template operator()<0>();
-    initializeRegisterArg.template operator()<1>();
-    initializeRegisterArg.template operator()<2>();
+    }
+    if constexpr(sizeof...(P) > 1) {
+      using A1 = std::remove_cvref_t<std::tuple_element_t<1, decltype(tuple)>>;
+      if constexpr(std::is_same_v<A1, reg> || std::is_same_v<A1, sreg>) {
+        registerArg[1] = 1;
+        pending[1] = 1;
+        srcfst[1] = std::get<1>(tuple).fst;
+        srcsnd[1] = std::get<1>(tuple).snd;
+      }
+    }
+    if constexpr(sizeof...(P) > 2) {
+      using A2 = std::remove_cvref_t<std::tuple_element_t<2, decltype(tuple)>>;
+      if constexpr(std::is_same_v<A2, reg> || std::is_same_v<A2, sreg>) {
+        registerArg[2] = 1;
+        pending[2] = 1;
+        srcfst[2] = std::get<2>(tuple).fst;
+        srcsnd[2] = std::get<2>(tuple).snd;
+      }
+    }
 
     // Helpers to track unresolved register moves.
     auto sourceUsedPending = [&](sljit_s32 fst, sljit_sw snd) -> bool {
@@ -219,7 +232,7 @@
       //    If no move can progress, dependencies form a cycle (e.g. swap).
       //    We break the cycle by spilling one pending source to a temporary
       //    register that is not currently used by any pending source.
-      auto candidates = std::array<reg, 4>{reg(arg0_reg), reg(arg1_reg), reg(arg2_reg), reg(arg3_reg)};
+      reg candidates[4] = {reg(arg0_reg), reg(arg1_reg), reg(arg2_reg), reg(arg3_reg)};
       sljit_s32 tempFst = 0;
       sljit_sw tempSnd = 0;
       bool hasTemp = 0;
