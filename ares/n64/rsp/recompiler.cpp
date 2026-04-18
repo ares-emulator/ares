@@ -125,6 +125,11 @@ Maintenance guidelines
 - If adding new helper calls, ensure clock synchronization remains correct.
 */
 
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#endif
+
 auto RSP::Recompiler::measure(u12 address) -> u12 {
   u12 start = address;
   bool hasDelaySlot = 0;
@@ -339,10 +344,6 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
   #define RSP_JIT_SUPPORTS_MISALIGNED_MEMORY_ACCESSES 0
 #endif
 
-#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Winvalid-offsetof"
-#endif
 auto RSP::Recompiler::emit(u12 address, bool callInstructionPrologue) -> Block* {
   if(unlikely(allocator.available() < 128_KiB)) {
     print("RSP JIT: flushing all blocks\n");
@@ -505,9 +506,6 @@ auto RSP::Recompiler::emit(u12 address, bool callInstructionPrologue) -> Block* 
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;
 }
-#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
-#pragma GCC diagnostic pop
-#endif
 
 #define Sa  (instruction >>  6 & 31)
 #define Rdn (instruction >> 11 & 31)
@@ -3378,3 +3376,7 @@ auto RSP::fastSHV(cr128& vt, u8* target, u32 code) -> void {
 #undef n16
 #undef n26
 #undef callvu
+
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+#pragma GCC diagnostic pop
+#endif
