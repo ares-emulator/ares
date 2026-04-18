@@ -17,7 +17,7 @@ Block lifecycle
 ---------------
 1) Block discovery
    - measure(): determines block size from a start PC until terminal condition.
-   - isTerminal(): identifies opcodes that end a scheduling window.
+   - decoder flags decide branch/end-block boundaries.
 
 2) Block identity and reuse
    - hash(): hashes IMEM bytes for the measured range.
@@ -127,13 +127,15 @@ Maintenance guidelines
 
 auto RSP::Recompiler::measure(u12 address) -> u12 {
   u12 start = address;
-  bool hasBranched = 0;
+  bool hasDelaySlot = 0;
   while(true) {
     u32 instruction = self.imem.read<Word>(address);
-    bool branched = isTerminal(instruction);
+    OpInfo op = self.decoderEXECUTE(instruction);
+    bool branched = op.branch();
+    bool endBlock = op.endBlock();
     address += 4;
-    if(hasBranched || address == start) break;
-    hasBranched = branched;
+    if(hasDelaySlot || endBlock || address == start) break;
+    hasDelaySlot = branched;
   }
 
   return address - start;
@@ -199,8 +201,7 @@ auto RSP::Recompiler::ConstRegs::track(u32 instruction, u32 pc) -> void {
     case 0x07: return setKnownShiftVariable(rd, rt, rs, [&](u32 rtValue, u32 rsValue) { return s32(rtValue) >> rsValue; });
     // JALR
     case 0x09: {
-      if(rd) set(rd, u32(u12(pc + 8)));
-      return;
+      if(rd) { set(rd, u32(u12(pc + 8))); return; }
     }
     // ADD / ADDU
     case 0x20:
@@ -225,14 +226,12 @@ auto RSP::Recompiler::ConstRegs::track(u32 instruction, u32 pc) -> void {
     case 0x0d:
       return;
     default:
-      if(rd) clear(rd);
-      return;
+      if(rd) { clear(rd); return; }
     }
   }
   // REGIMM (BLTZAL / BGEZAL)
   case 0x01: {
-    if(rt == 0x10 || rt == 0x11 || rt == 0x12 || rt == 0x13) set(31, u32(u12(pc + 8)));
-    return;
+    if(rt == 0x10 || rt == 0x11 || rt == 0x12 || rt == 0x13) { set(31, u32(u12(pc + 8))); return; }
   }
   // JAL
   case 0x03:
@@ -259,13 +258,11 @@ auto RSP::Recompiler::ConstRegs::track(u32 instruction, u32 pc) -> void {
     return setKnownImmediateBinary(rt, rs, [&](u32 rsValue) { return rsValue ^ n16; });
   // LUI
   case 0x0f:
-    if(rt) set(rt, s32(n16 << 16));
-    return;
+    if(rt) { set(rt, s32(n16 << 16)); return; }
   // COP0 / COP2
   case 0x10:
   case 0x12:
-    if(rt) clear(rt);
-    return;
+    if(rt) { clear(rt); return; }
   // LB / LH / LW / LBU / LHU / LWU
   case 0x20:
   case 0x21:
@@ -273,45 +270,55 @@ auto RSP::Recompiler::ConstRegs::track(u32 instruction, u32 pc) -> void {
   case 0x24:
   case 0x25:
   case 0x27:
-    if(rt) clear(rt);
-    return;
+    if(rt) { clear(rt); return; }
   default:
     return;
   }
 }
 
 auto RSP::Recompiler::block(u12 address) -> Block* {
+  auto contextIndex = [&](u12 address, u32 callInstructionPrologue) -> u32 {
+    return callInstructionPrologue * 1024 + (address >> 2);
+  };
+
   if(dirty) {
-    u12 address = 0;
-    for(auto& block : context) {
-      if(block && (dirty & mask(address, block->size)) != 0) {
-        block = nullptr;
+    for(u32 callInstructionPrologue : range(2)) {
+      u12 pc = 0;
+      for(u32 n : range(1024)) {
+        auto& block = context[callInstructionPrologue * 1024 + n];
+        if(block && (dirty & mask(pc, block->size)) != 0) {
+          block = nullptr;
+        }
+        pc += 4;
       }
-      address += 4;
     }
     dirty = 0;
   }
 
-  if(auto block = context[address >> 2]) return block;
+  bool traceMode = self.debugger.tracer.instruction->enabled();
+  bool callInstructionPrologue = traceMode;
+  u32 index = contextIndex(address, callInstructionPrologue);
+  if(auto block = context[index]) return block;
 
   auto size = measure(address);
   auto hashcode = hash(address, size);
   hashcode ^= self.pipeline.hash();
   hashcode ^= address;
+  hashcode ^= callInstructionPrologue ? 0x6a09e667f3bcc909ull : 0;
 
   BlockHashPair pair;
   pair.hashcode = hashcode;
   if(auto result = blocks.find(pair)) {
-    return context[address >> 2] = result->block;
+    return context[index] = result->block;
   }
 
-  auto block = emit(address);
+  auto block = emit(address, callInstructionPrologue);
   assert(block->size == size);
   memory::jitprotect(true);
 
   pair.block = block;
   if(auto result = blocks.insert(pair)) {
-    return context[address >> 2] = result->block;
+    return context[index] = result->block;
   }
 
   throw;  //should never occur
@@ -336,9 +343,9 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #endif
-auto RSP::Recompiler::emit(u12 address) -> Block* {
+auto RSP::Recompiler::emit(u12 address, bool callInstructionPrologue) -> Block* {
   if(unlikely(allocator.available() < 128_KiB)) {
-    print("RSP allocator flush\n");
+    print("RSP JIT: flushing all blocks\n");
     allocator.release();
     reset();
   }
@@ -401,8 +408,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
       flushDeferredForCallf();
       emitClockFlush(clocks);
       callf(&RSP::instructionBranchEpilogue);
-      if(exit) testJumpEpilog();
-      return;
+      if(exit) { testJumpEpilog(); return; }
     }
 
     if(callInstructionPrologue) emitClockFlush(clocks);
@@ -434,12 +440,14 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     if(delaySlot) mov32(BranchReg(nstate), imm(0));
     pipeline.begin();
     OpInfo op0 = self.decoderEXECUTE(instruction);
+    bool branched = op0.branch();
+    bool endBlock = op0.endBlock();
     bool checkHalted = op0.mayHalt();
     pipeline.issue(op0);
-    bool branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
+    emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
     constRegs.track(instruction, address);
 
-    if(!pipeline.singleIssue && !branched && u12(address + 4) != start) {
+    if(!pipeline.singleIssue && !branched && !endBlock && u12(address + 4) != start) {
       u32 instruction = self.imem.read<Word>(address + 4);
       OpInfo op1 = self.decoderEXECUTE(instruction);
 
@@ -455,17 +463,19 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
         address += 4;
         if(delaySlot) mov32(BranchReg(nstate), imm(0));
         pipeline.issue(op1);
-        branched = emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
+        emitEXECUTE(instruction, address, delaySlot, 0, deferredClocks);
+        branched = op1.branch();
+        endBlock = op1.endBlock();
         constRegs.track(instruction, address);
       }
     }
 
     pipeline.end();
-    bool terminal = delaySlot || u12(address + 4) == start;
+    bool terminal = delaySlot || endBlock || u12(address + 4) == start;
     bool commit = callInstructionPrologue || branched || terminal;
     emitInstructionEpilogue(pipeline.clocks, 1, delaySlot, commit, branched, u32(u12(address + 4)), checkHalted);
     address += 4;
-    if(delaySlot || address == start) break;
+    if(delaySlot || endBlock || address == start) break;
     delaySlot = branched;
   }
   flushDeferredAtBlockEnd();
@@ -541,7 +551,7 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   case 0xf: callf(name<0xf>, __VA_ARGS__); break; \
   }
 
-auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool {
+auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> void {
   auto memReg2 = [&](const op_base& base, const op_base& index) -> op_base {
     return {SLJIT_MEM2(base.fst, index.fst), 0};
   };
@@ -615,12 +625,12 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
 
   //SPECIAL
   case 0x00: {
-    return emitSPECIAL(instruction, pc, delaySlot);
+    emitSPECIAL(instruction, pc, delaySlot); return;
   }
 
   //REGIMM
   case 0x01: {
-    return emitREGIMM(instruction, pc, delaySlot);
+    emitREGIMM(instruction, pc, delaySlot); return;
   }
 
   //J n26
@@ -629,7 +639,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     else          mov32(BranchReg(pc), imm(u32(u12(n26 << 2))));
     if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     else          mov32(BranchReg(state), imm(Branch::DelaySlot | Branch::EndBlock));
-    return 1;
+    return;
   }
 
   //JAL n26
@@ -639,137 +649,137 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     else          mov32(BranchReg(pc), imm(u32(u12(n26 << 2))));
     if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     else          mov32(BranchReg(state), imm(Branch::DelaySlot | Branch::EndBlock));
-    return 1;
+    return;
   }
 
   //BEQ Rs,Rt,i16
   case 0x04: {
-    if(Rsn == Rtn) return emitKnownConditionalTake(1), 1;
-    if(!Rsn)      return cmp32(mem(Rt), imm(0), set_z), emitConditionalTake(flag_z), 1;
-    if(!Rtn)      return cmp32(mem(Rs), imm(0), set_z), emitConditionalTake(flag_z), 1;
+    if(Rsn == Rtn) { emitKnownConditionalTake(1); return; }
+    if(!Rsn) { cmp32(mem(Rt), imm(0), set_z), emitConditionalTake(flag_z); return; }
+    if(!Rtn) { cmp32(mem(Rs), imm(0), set_z), emitConditionalTake(flag_z); return; }
     cmp32(mem(Rs), mem(Rt), set_z);
     emitConditionalTake(flag_z);
-    return 1;
+    return;
   }
 
   //BNE Rs,Rt,i16
   case 0x05: {
-    if(Rsn == Rtn) return emitKnownConditionalTake(0), 1;
-    if(!Rsn)      return cmp32(mem(Rt), imm(0), set_z), emitConditionalTake(flag_z, 1), 1;
-    if(!Rtn)      return cmp32(mem(Rs), imm(0), set_z), emitConditionalTake(flag_z, 1), 1;
+    if(Rsn == Rtn) { emitKnownConditionalTake(0); return; }
+    if(!Rsn) { cmp32(mem(Rt), imm(0), set_z), emitConditionalTake(flag_z, 1); return; }
+    if(!Rtn) { cmp32(mem(Rs), imm(0), set_z), emitConditionalTake(flag_z, 1); return; }
     cmp32(mem(Rs), mem(Rt), set_z);
     emitConditionalTake(flag_z, 1);
-    return 1;
+    return;
   }
 
   //BLEZ Rs,i16
   case 0x06: {
-    if(!Rsn) return emitKnownConditionalTake(1), 1;
+    if(!Rsn) { emitKnownConditionalTake(1); return; }
     cmp32(mem(Rs), imm(0), set_sgt);
     emitConditionalTake(flag_sgt, 1);
-    return 1;
+    return;
   }
 
   //BGTZ Rs,i16
   case 0x07: {
-    if(!Rsn) return emitKnownConditionalTake(0), 1;
+    if(!Rsn) { emitKnownConditionalTake(0); return; }
     cmp32(mem(Rs), imm(0), set_sgt);
     emitConditionalTake(flag_sgt);
-    return 1;
+    return;
   }
 
   //ADDIU Rt,Rs,i16
   case range2(0x08, 0x09): {
-    if(!Rtn) return 0;
-    if(!Rsn) return mov32(mem(Rt), imm(i16)), 0;
+    if(!Rtn) return;
+    if(!Rsn) { mov32(mem(Rt), imm(i16)); return; }
     add32(mem(Rt), mem(Rs), imm(i16));
-    return 0;
+    return;
   }
 
   //SLTI Rt,Rs,i16
   case 0x0a: {
-    if(!Rtn) return 0;
-    if(!Rsn) return mov32(mem(Rt), imm(i16 > 0)), 0;
+    if(!Rtn) return;
+    if(!Rsn) { mov32(mem(Rt), imm(i16 > 0)); return; }
     cmp32(mem(Rs), imm(i16), set_slt);
     mov32_f(mem(Rt), flag_slt);
-    return 0;
+    return;
   }
 
   //SLTIU Rt,Rs,i16
   case 0x0b: {
-    if(!Rtn) return 0;
-    if(!Rsn) return mov32(mem(Rt), imm(i16 != 0)), 0;
+    if(!Rtn) return;
+    if(!Rsn) { mov32(mem(Rt), imm(i16 != 0)); return; }
     cmp32(mem(Rs), imm(i16), set_ult);
     mov32_f(mem(Rt), flag_ult);
-    return 0;
+    return;
   }
 
   //ANDI Rt,Rs,n16
   case 0x0c: {
-    if(!Rtn) return 0;
-    if(!Rsn) return mov32(mem(Rt), imm(0)), 0;
+    if(!Rtn) return;
+    if(!Rsn) { mov32(mem(Rt), imm(0)); return; }
     and32(mem(Rt), mem(Rs), imm(n16));
-    return 0;
+    return;
   }
 
   //ORI Rt,Rs,n16
   case 0x0d: {
-    if(!Rtn) return 0;
-    if(!Rsn) return mov32(mem(Rt), imm(n16)), 0;
+    if(!Rtn) return;
+    if(!Rsn) { mov32(mem(Rt), imm(n16)); return; }
     or32(mem(Rt), mem(Rs), imm(n16));
-    return 0;
+    return;
   }
 
   //XORI Rt,Rs,n16
   case 0x0e: {
-    if(!Rtn) return 0;
-    if(!Rsn) return mov32(mem(Rt), imm(n16)), 0;
+    if(!Rtn) return;
+    if(!Rsn) { mov32(mem(Rt), imm(n16)); return; }
     xor32(mem(Rt), mem(Rs), imm(n16));
-    return 0;
+    return;
   }
 
   //LUI Rt,n16
   case 0x0f: {
-    if(!Rtn) return 0;
+    if(!Rtn) return;
     mov32(mem(Rt), imm(s32(n16 << 16)));
-    return 0;
+    return;
   }
 
   //SCC
   case 0x10: {
-    return emitSCC(instruction);
+    emitSCC(instruction); return;
   }
 
   //INVALID
   case 0x11: {
-    return 0;
+    return;
   }
 
   //VPU
   case 0x12: {
-    return emitVU(instruction);
+    emitVU(instruction); return;
   }
 
   //INVALID
   case range13(0x13, 0x1f): {
-    return 0;
+    return;
   }
 
   //LB Rt,Rs,i16
   case 0x20: {
-    if(!Rtn) return 0;
+    if(!Rtn) return;
     emitDmemAddress();
     mov32_s8(reg(3), memReg2(DmemReg, reg(1)));
     mov32(mem(Rt), reg(3));
-    return 0;
+    return;
   }
 
   //LH Rt,Rs,i16
   case 0x21: {
-    if(!Rtn) return 0;
+    if(!Rtn) return;
     if(emitSlowPath) {
       callf(&RSP::LH, mem(Rt), mem(Rs), imm(i16));
-      return 0;
+      return;
     }
     emitDmemAddress();
     auto rare = emitDmemHalfSlowPathJump();
@@ -777,20 +787,20 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     rev32_s16(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
     deferSlowPath(rare);
-    return 0;
+    return;
   }
 
   //INVALID
   case 0x22: {
-    return 0;
+    return;
   }
 
   //LW Rt,Rs,i16
   case 0x23: {
-    if(!Rtn) return 0;
+    if(!Rtn) return;
     if(emitSlowPath) {
       callf(&RSP::LW, mem(Rt), mem(Rs), imm(i16));
-      return 0;
+      return;
     }
     emitDmemAddress();
     auto rare = emitDmemWordSlowPathJump();
@@ -798,24 +808,24 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     rev32(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
     deferSlowPath(rare);
-    return 0;
+    return;
   }
 
   //LBU Rt,Rs,i16
   case 0x24: {
-    if(!Rtn) return 0;
+    if(!Rtn) return;
     emitDmemAddress();
     mov32_u8(reg(3), memReg2(DmemReg, reg(1)));
     mov32(mem(Rt), reg(3));
-    return 0;
+    return;
   }
 
   //LHU Rt,Rs,i16
   case 0x25: {
-    if(!Rtn) return 0;
+    if(!Rtn) return;
     if(emitSlowPath) {
       callf(&RSP::LHU, mem(Rt), mem(Rs), imm(i16));
-      return 0;
+      return;
     }
     emitDmemAddress();
     auto rare = emitDmemHalfSlowPathJump();
@@ -823,20 +833,20 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     rev32_u16(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
     deferSlowPath(rare);
-    return 0;
+    return;
   }
 
   //INVALID
   case 0x26: {
-    return 0;
+    return;
   }
 
   //LWU Rt,Rs,i16
   case 0x27: {
-    if(!Rtn) return 0;
+    if(!Rtn) return;
     if(emitSlowPath) {
       callf(&RSP::LWU, mem(Rt), mem(Rs), imm(i16));
-      return 0;
+      return;
     }
     emitDmemAddress();
     auto rare = emitDmemWordSlowPathJump();
@@ -844,7 +854,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     rev32(reg(3), reg(3));
     mov32(mem(Rt), reg(3));
     deferSlowPath(rare);
-    return 0;
+    return;
   }
 
   //SB Rt,Rs,i16
@@ -853,14 +863,14 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     if(!Rtn) mov32(reg(3), imm(0));
     else     mov32(reg(3), mem(Rt));
     mov64_u8(memReg2(DmemReg, reg(1)), reg(3));
-    return 0;
+    return;
   }
 
   //SH Rt,Rs,i16
   case 0x29: {
     if(emitSlowPath) {
       callf(&RSP::SH, mem(Rt), mem(Rs), imm(i16));
-      return 0;
+      return;
     }
     emitDmemAddress();
     auto rare = emitDmemHalfSlowPathJump();
@@ -869,19 +879,19 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     rev32_u16(reg(3), reg(3));
     mov64_u16(memReg2(DmemReg, reg(1)), reg(3));
     deferSlowPath(rare);
-    return 0;
+    return;
   }
 
   //INVALID
   case 0x2a: {
-    return 0;
+    return;
   }
 
   //SW Rt,Rs,i16
   case 0x2b: {
     if(emitSlowPath) {
       callf(&RSP::SW, mem(Rt), mem(Rs), imm(i16));
-      return 0;
+      return;
     }
     emitDmemAddress();
     auto rare = emitDmemWordSlowPathJump();
@@ -890,105 +900,105 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool 
     rev32(reg(3), reg(3));
     mov32(memReg2(DmemReg, reg(1)), reg(3));
     deferSlowPath(rare);
-    return 0;
+    return;
   }
 
   //INVALID
   case range6(0x2c, 0x31): {
-    return 0;
+    return;
   }
 
   //LWC2
   case 0x32: {
-    return emitLWC2(instruction, pc, delaySlot, emitSlowPath, slowPathClocks);
+    emitLWC2(instruction, pc, delaySlot, emitSlowPath, slowPathClocks); return;
   }
 
   //INVALID
   case range7(0x33, 0x39): {
-    return 0;
+    return;
   }
 
   //SWC2
   case 0x3a: {
-    return emitSWC2(instruction, pc, delaySlot, emitSlowPath, slowPathClocks);
+    emitSWC2(instruction, pc, delaySlot, emitSlowPath, slowPathClocks); return;
   }
 
   //INVALID
   case range5(0x3b, 0x3f): {
-    return 0;
+    return;
   }
 
   }
 
-  return 0;
+  return;
 }
 
-auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bool {
+auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> void {
   switch(instruction & 0x3f) {
 
   //SLL Rd,Rt,Sa
   case 0x00: {
-    if(!Rdn) return 0;
-    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rdn) return;
+    if(!Rtn) { mov32(mem(Rd), imm(0)); return; }
     shl32(mem(Rd), mem(Rt), imm(Sa));
-    return 0;
+    return;
   }
 
   //INVALID
   case 0x01: {
-    if(!Rdn) return 0;
+    if(!Rdn) return;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
-    return 0;
+    return;
   }
 
   //SRL Rd,Rt,Sa
   case 0x02: {
-    if(!Rdn) return 0;
-    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rdn) return;
+    if(!Rtn) { mov32(mem(Rd), imm(0)); return; }
     lshr32(mem(Rd), mem(Rt), imm(Sa));
-    return 0;
+    return;
   }
 
   //SRA Rd,Rt,Sa
   case 0x03: {
-    if(!Rdn) return 0;
-    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rdn) return;
+    if(!Rtn) { mov32(mem(Rd), imm(0)); return; }
     ashr32(mem(Rd), mem(Rt), imm(Sa));
-    return 0;
+    return;
   }
 
   //SLLV Rd,Rt,Rs
   case 0x04: {
-    if(!Rdn) return 0;
-    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
-    if(!Rsn) return mov32(mem(Rd), mem(Rt)), 0;
+    if(!Rdn) return;
+    if(!Rtn) { mov32(mem(Rd), imm(0)); return; }
+    if(!Rsn) { mov32(mem(Rd), mem(Rt)); return; }
     mshl32(mem(Rd), mem(Rt), mem(Rs));
-    return 0;
+    return;
   }
 
   //INVALID
   case 0x05: {
-    if(!Rdn) return 0;
+    if(!Rdn) return;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
-    return 0;
+    return;
   }
 
   //SRLV Rd,Rt,Rs
   case 0x06: {
-    if(!Rdn) return 0;
-    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
-    if(!Rsn) return mov32(mem(Rd), mem(Rt)), 0;
+    if(!Rdn) return;
+    if(!Rtn) { mov32(mem(Rd), imm(0)); return; }
+    if(!Rsn) { mov32(mem(Rd), mem(Rt)); return; }
     mlshr32(mem(Rd), mem(Rt), mem(Rs));
-    return 0;
+    return;
   }
 
   //SRAV Rd,Rt,Rs
   case 0x07: {
-    if(!Rdn) return 0;
-    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
-    if(!Rsn) return mov32(mem(Rd), mem(Rt)), 0;
+    if(!Rdn) return;
+    if(!Rtn) { mov32(mem(Rd), imm(0)); return; }
+    if(!Rsn) { mov32(mem(Rd), mem(Rt)); return; }
     mashr32(mem(Rd), mem(Rt), mem(Rs));
-    return 0;
+    return;
   }
 
   //JR Rs
@@ -999,7 +1009,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
     else          mov32(BranchReg(pc), reg(0));
     if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     else          mov32(BranchReg(state), imm(Branch::DelaySlot | Branch::EndBlock));
-    return 1;
+    return;
   }
 
   //JALR Rd,Rs
@@ -1011,14 +1021,14 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
     else          mov32(BranchReg(pc), reg(0));
     if(delaySlot) mov32(BranchReg(nstate), imm(Branch::DelaySlot | Branch::EndBlock));
     else          mov32(BranchReg(state), imm(Branch::DelaySlot | Branch::EndBlock));
-    return 1;
+    return;
   }
 
   //INVALID
   case range3(0x0a, 0x0c): {
-    if(!Rdn) return 0;
+    if(!Rdn) return;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
-    return 0;
+    return;
   }
 
   //BREAK
@@ -1026,116 +1036,116 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bo
     callf(&RSP::BREAK);
     if(delaySlot) mov32(BranchReg(nstate), imm(0));
     else          mov32(BranchReg(state), imm(0));
-    return 1;
+    return;
   }
 
   //INVALID
   case range18(0x0e, 0x1f): {
-    if(!Rdn) return 0;
+    if(!Rdn) return;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
-    return 0;
+    return;
   }
 
   //ADDU Rd,Rs,Rt
   case range2(0x20, 0x21): {
-    if(!Rdn) return 0;
-    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
-    if(!Rsn)         return mov32(mem(Rd), mem(Rt)), 0;
-    if(!Rtn)         return mov32(mem(Rd), mem(Rs)), 0;
+    if(!Rdn) return;
+    if(!Rsn && !Rtn) { mov32(mem(Rd), imm(0)); return; }
+    if(!Rsn) { mov32(mem(Rd), mem(Rt)); return; }
+    if(!Rtn) { mov32(mem(Rd), mem(Rs)); return; }
     add32(mem(Rd), mem(Rs), mem(Rt));
-    return 0;
+    return;
   }
 
   //SUBU Rd,Rs,Rt
   case range2(0x22, 0x23): {
-    if(!Rdn) return 0;
-    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
-    if(!Rsn)         return sub32(mem(Rd), imm(0), mem(Rt)), 0;
-    if(!Rtn)         return mov32(mem(Rd), mem(Rs)), 0;
+    if(!Rdn) return;
+    if(!Rsn && !Rtn) { mov32(mem(Rd), imm(0)); return; }
+    if(!Rsn) { sub32(mem(Rd), imm(0), mem(Rt)); return; }
+    if(!Rtn) { mov32(mem(Rd), mem(Rs)); return; }
     sub32(mem(Rd), mem(Rs), mem(Rt));
-    return 0;
+    return;
   }
 
   //AND Rd,Rs,Rt
   case 0x24: {
-    if(!Rdn) return 0;
-    if(!Rsn || !Rtn) return mov32(mem(Rd), imm(0)), 0;
+    if(!Rdn) return;
+    if(!Rsn || !Rtn) { mov32(mem(Rd), imm(0)); return; }
     and32(mem(Rd), mem(Rs), mem(Rt));
-    return 0;
+    return;
   }
 
   //OR Rd,Rs,Rt
   case 0x25: {
-    if(!Rdn) return 0;
-    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
-    if(!Rsn)         return mov32(mem(Rd), mem(Rt)), 0;
-    if(!Rtn)         return mov32(mem(Rd), mem(Rs)), 0;
+    if(!Rdn) return;
+    if(!Rsn && !Rtn) { mov32(mem(Rd), imm(0)); return; }
+    if(!Rsn) { mov32(mem(Rd), mem(Rt)); return; }
+    if(!Rtn) { mov32(mem(Rd), mem(Rs)); return; }
     or32(mem(Rd), mem(Rs), mem(Rt));
-    return 0;
+    return;
   }
 
   //XOR Rd,Rs,Rt
   case 0x26: {
-    if(!Rdn) return 0;
-    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
-    if(!Rsn)         return mov32(mem(Rd), mem(Rt)), 0;
-    if(!Rtn)         return mov32(mem(Rd), mem(Rs)), 0;
+    if(!Rdn) return;
+    if(!Rsn && !Rtn) { mov32(mem(Rd), imm(0)); return; }
+    if(!Rsn) { mov32(mem(Rd), mem(Rt)); return; }
+    if(!Rtn) { mov32(mem(Rd), mem(Rs)); return; }
     xor32(mem(Rd), mem(Rs), mem(Rt));
-    return 0;
+    return;
   }
 
   //NOR Rd,Rs,Rt
   case 0x27: {
-    if(!Rdn) return 0;
-    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(-1)), 0;
-    if(!Rsn)         return xor32(mem(Rd), mem(Rt), imm(-1)), 0;
-    if(!Rtn)         return xor32(mem(Rd), mem(Rs), imm(-1)), 0;
+    if(!Rdn) return;
+    if(!Rsn && !Rtn) { mov32(mem(Rd), imm(-1)); return; }
+    if(!Rsn) { xor32(mem(Rd), mem(Rt), imm(-1)); return; }
+    if(!Rtn) { xor32(mem(Rd), mem(Rs), imm(-1)); return; }
     or32(reg(0), mem(Rs), mem(Rt));
     xor32(reg(0), reg(0), imm(-1));
     mov32(mem(Rd), reg(0));
-    return 0;
+    return;
   }
 
   //INVALID
   case range2(0x28, 0x29): {
-    if(!Rdn) return 0;
+    if(!Rdn) return;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
-    return 0;
+    return;
   }
 
   //SLT Rd,Rs,Rt
   case 0x2a: {
-    if(!Rdn) return 0;
-    if(!Rsn && !Rtn) return mov32(mem(Rd), imm(0)), 0;
-    if(!Rsn)         return cmp32(mem(Rt), imm(0), set_sgt), mov32_f(mem(Rd), flag_sgt), 0;
-    if(!Rtn)         return cmp32(mem(Rs), imm(0), set_slt), mov32_f(mem(Rd), flag_slt), 0;
+    if(!Rdn) return;
+    if(!Rsn && !Rtn) { mov32(mem(Rd), imm(0)); return; }
+    if(!Rsn) { cmp32(mem(Rt), imm(0), set_sgt), mov32_f(mem(Rd), flag_sgt); return; }
+    if(!Rtn) { cmp32(mem(Rs), imm(0), set_slt), mov32_f(mem(Rd), flag_slt); return; }
     cmp32(mem(Rs), mem(Rt), set_slt);
     mov32_f(mem(Rd), flag_slt);
-    return 0;
+    return;
   }
 
   //SLTU Rd,Rs,Rt
   case 0x2b: {
-    if(!Rdn) return 0;
-    if(!Rtn) return mov32(mem(Rd), imm(0)), 0;
-    if(!Rsn) return cmp32(mem(Rt), imm(0), set_ugt), mov32_f(mem(Rd), flag_ugt), 0;
+    if(!Rdn) return;
+    if(!Rtn) { mov32(mem(Rd), imm(0)); return; }
+    if(!Rsn) { cmp32(mem(Rt), imm(0), set_ugt), mov32_f(mem(Rd), flag_ugt); return; }
     cmp32(mem(Rs), mem(Rt), set_ult);
     mov32_f(mem(Rd), flag_ult);
-    return 0;
+    return;
   }
 
   //INVALID
   case range20(0x2c, 0x3f): {
-    if(!Rdn) return 0;
+    if(!Rdn) return;
     mlshr32(mem(Rd), mem(Rs), mem(Rs));
-    return 0;
+    return;
   }
   }
 
-  return 0;
+  return;
 }
 
-auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> bool {
+auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> void {
   auto emitConditionalTake = [&](u32 flag) -> void {
     u32 target      = u32(u12(pc + 4 + s32(i16) * 4));
     u32 fallthrough = u32(u12(pc + 8));
@@ -1164,78 +1174,78 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> boo
 
   //BLTZ Rs,i16
   case 0x00: {
-    if(!Rsn) return emitKnownConditionalTake(0), 1;
+    if(!Rsn) { emitKnownConditionalTake(0); return; }
     cmp32(mem(Rs), imm(0), set_slt);
     emitConditionalTake(flag_slt);
-    return 1;
+    return;
   }
 
   //BGEZ Rs,i16
   case 0x01: {
-    if(!Rsn) return emitKnownConditionalTake(1), 1;
+    if(!Rsn) { emitKnownConditionalTake(1); return; }
     cmp32(mem(Rs), imm(0), set_sge);
     emitConditionalTake(flag_sge);
-    return 1;
+    return;
   }
 
   //INVALID
   case range14(0x02, 0x0f): {
-    return 0;
+    return;
   }
 
   //BLTZAL Rs,i16
   case 0x10: {
     mov32(reg(3), imm(u32(u12(pc + 8))));
-    if(!Rsn) return emitKnownConditionalTake(0), mov32(mem(IpuReg(r[31])), reg(3)), 1;
+    if(!Rsn) { emitKnownConditionalTake(0), mov32(mem(IpuReg(r[31])), reg(3)); return; }
     cmp32(mem(Rs), imm(0), set_slt);
     emitConditionalTake(flag_slt);
     mov32(mem(IpuReg(r[31])), reg(3));
-    return 1;
+    return;
   }
 
   //BGEZAL Rs,i16
   case 0x11: {
     mov32(reg(3), imm(u32(u12(pc + 8))));
-    if(!Rsn) return emitKnownConditionalTake(1), mov32(mem(IpuReg(r[31])), reg(3)), 1;
+    if(!Rsn) { emitKnownConditionalTake(1), mov32(mem(IpuReg(r[31])), reg(3)); return; }
     cmp32(mem(Rs), imm(0), set_sge);
     emitConditionalTake(flag_sge);
     mov32(mem(IpuReg(r[31])), reg(3));
-    return 1;
+    return;
   }
 
   //INVALID
   case range14(0x12, 0x1f): {
-    return 0;
+    return;
   }
 
   }
 
-  return 0;
+  return;
 }
 
-auto RSP::Recompiler::emitSCC(u32 instruction) -> bool {
+auto RSP::Recompiler::emitSCC(u32 instruction) -> void {
   switch(instruction >> 21 & 0x1f) {
 
   //MFC0 Rt,Rd
   case 0x00: {
     callf(&RSP::MFC0, mem(Rt), imm(Rdn));
-    return 0;
+    return;
   }
 
   //INVALID
   case range3(0x01, 0x03): {
-    return 0;
+    return;
   }
 
   //MTC0 Rt,Rd
   case 0x04: {
     callf(&RSP::MTC0, mem(Rt), imm(Rdn));
-    return 0;
+    return;
   }
 
   //INVALID
-  case range27(0x05, 0x1f): {
-    return 0;
+  case range11(0x05, 0x0f): {
+    return;
   }
 
   }
@@ -1245,114 +1255,114 @@ auto RSP::Recompiler::emitSCC(u32 instruction) -> bool {
   //XDETECT
   case 0x20: {
     callf(&RSP::XDETECT, mem(XRd), imm(XCODE));
-    return 0;
+    return;
   }
 
   //XTRACE-START
   case 0x23: {
     callf(&RSP::XTRACESTART, imm(XCODE));
-    return 0;
+    return;
   }
 
   //XTRACE-STOP
   case 0x24: {
     callf(&RSP::XTRACESTOP);
-    return 0;
+    return;
   }
 
   //XLOG
   case 0x25: {
     callf(&RSP::XLOG, mem(XRd), mem(XRt), imm(XCODE));
-    return 0;
+    return;
   }
 
   //XLOGREGS
   case 0x26: {
     callf(&RSP::XLOGREGS, mem(XRd), imm(XCODE));
-    return 0;
+    return;
   }
 
   //XHEXDUMP
   case 0x27: {
     callf(&RSP::XHEXDUMP, mem(XRd), mem(XRt), imm(XCODE));
-    return 0;
+    return;
   }
 
   //XPROF
   case 0x28: {
     callf(&RSP::XPROF, mem(XRd), imm(XCODE));
-    return 0;
+    return;
   }
 
   //XPROFREAD
   case 0x29: {
     callf(&RSP::XPROFREAD, mem(XRd), mem(XRt));
-    return 0;
+    return;
   }
 
   //XEXCEPTION
   case 0x2a: {
     callf(&RSP::XEXCEPTION, mem(XRt));
-    return 0;
+    return;
   }
 
   //XIOCTL
   case 0x2c: {
     callf(&RSP::XIOCTL, imm(XCODE));
-    return 0;
+    return;
   }
 
   }
 
-  return 0;
+  return;
 }
 
-auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
+auto RSP::Recompiler::emitVU(u32 instruction) -> void {
   #define E (instruction >> 7 & 15)
   switch(instruction >> 21 & 0x1f) {
 
   //MFC2 Rt,Vs(e)
   case 0x00: {
     callvu(&RSP::MFC2, mem(Rt), mem(Vs));
-    return 0;
+    return;
   }
 
   //INVALID
   case 0x01: {
-    return 0;
+    return;
   }
 
   //CFC2 Rt,Rd
   case 0x02: {
     callf(&RSP::CFC2, mem(Rt), imm(Rdn));
-    return 0;
+    return;
   }
 
   //INVALID
   case 0x03: {
-    return 0;
+    return;
   }
 
   //MTC2 Rt,Vs(e)
   case 0x04: {
     callvu(&RSP::MTC2, mem(Rt), mem(Vs));
-    return 0;
+    return;
   }
 
   //INVALID
   case 0x05: {
-    return 0;
+    return;
   }
 
   //CTC2 Rt,Rd
   case 0x06: {
     callf(&RSP::CTC2, mem(Rt), imm(Rdn));
-    return 0;
+    return;
   }
 
   //INVALID
   case range9(0x07, 0x0f): {
-    return 0;
+    return;
   }
 
   }
@@ -1365,319 +1375,319 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   //VMULF Vd,Vs,Vt(e)
   case 0x00: {
     callvu(&RSP::VMULF, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMULU Vd,Vs,Vt(e)
   case 0x01: {
     callvu(&RSP::VMULU, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VRNDP Vd,Vs,Vt(e)
   case 0x02: {
     callvu(&RSP::VRNDP, mem(Vd), imm(Vsn), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMULQ Vd,Vs,Vt(e)
   case 0x03: {
     callvu(&RSP::VMULQ, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMUDL Vd,Vs,Vt(e)
   case 0x04: {
     callvu(&RSP::VMUDL, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMUDM Vd,Vs,Vt(e)
   case 0x05: {
     callvu(&RSP::VMUDM, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMUDN Vd,Vs,Vt(e)
   case 0x06: {
     callvu(&RSP::VMUDN, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMUDH Vd,Vs,Vt(e)
   case 0x07: {
     callvu(&RSP::VMUDH, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMACF Vd,Vs,Vt(e)
   case 0x08: {
     callvu(&RSP::VMACF, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMACU Vd,Vs,Vt(e)
   case 0x09: {
     callvu(&RSP::VMACU, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VRNDN Vd,Vs,Vt(e)
   case 0x0a: {
     callvu(&RSP::VRNDN, mem(Vd), imm(Vsn), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMACQ Vd
   case 0x0b: {
     callf(&RSP::VMACQ, mem(Vd));
-    return 0;
+    return;
   }
 
   //VMADL Vd,Vs,Vt(e)
   case 0x0c: {
     callvu(&RSP::VMADL, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMADM Vd,Vs,Vt(e)
   case 0x0d: {
     callvu(&RSP::VMADM, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMADN Vd,Vs,Vt(e)
   case 0x0e: {
     callvu(&RSP::VMADN, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMADH Vd,Vs,Vt(e)
   case 0x0f: {
     callvu(&RSP::VMADH, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VADD Vd,Vs,Vt(e)
   case 0x10: {
     callvu(&RSP::VADD, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VSUB Vd,Vs,Vt(e)
   case 0x11: {
     callvu(&RSP::VSUB, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VSUT (broken)
   case 0x12: {
     callvu(&RSP::VZERO, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VABS Vd,Vs,Vt(e)
   case 0x13: {
     callvu(&RSP::VABS, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VADDC Vd,Vs,Vt(e)
   case 0x14: {
     callvu(&RSP::VADDC, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VSUBC Vd,Vs,Vt(e)
   case 0x15: {
     callvu(&RSP::VSUBC, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //Broken opcodes: VADDB, VSUBB, VACCB, VSUCB, VSAD, VSAC, VSUM
   case range7(0x16, 0x1c): {
     callvu(&RSP::VZERO, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VSAR Vd,Vs,E
   case 0x1d: {
     callvu(&RSP::VSAR, mem(Vd), mem(Vs));
-    return 0;
+    return;
   }
 
   //Invalid opcodes
   case range2(0x1e, 0x1f): {
     callvu(&RSP::VZERO, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VLT Vd,Vs,Vt(e)
   case 0x20: {
     callvu(&RSP::VLT, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VEQ Vd,Vs,Vt(e)
   case 0x21: {
     callvu(&RSP::VEQ, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VNE Vd,Vs,Vt(e)
   case 0x22: {
     callvu(&RSP::VNE, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VGE Vd,Vs,Vt(e)
   case 0x23: {
     callvu(&RSP::VGE, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VCL Vd,Vs,Vt(e)
   case 0x24: {
     callvu(&RSP::VCL, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VCH Vd,Vs,Vt(e)
   case 0x25: {
     callvu(&RSP::VCH, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VCR Vd,Vs,Vt(e)
   case 0x26: {
     callvu(&RSP::VCR, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMRG Vd,Vs,Vt(e)
   case 0x27: {
     callvu(&RSP::VMRG, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VAND Vd,Vs,Vt(e)
   case 0x28: {
     callvu(&RSP::VAND, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VNAND Vd,Vs,Vt(e)
   case 0x29: {
     callvu(&RSP::VNAND, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VOR Vd,Vs,Vt(e)
   case 0x2a: {
     callvu(&RSP::VOR, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VNOR Vd,Vs,Vt(e)
   case 0x2b: {
     callvu(&RSP::VNOR, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VXOR Vd,Vs,Vt(e)
   case 0x2c: {
     callvu(&RSP::VXOR, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VNXOR Vd,Vs,Vt(e)
   case 0x2d: {
     callvu(&RSP::VNXOR, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //INVALID
   case range2(0x2e, 0x2f): {
     callvu(&RSP::VZERO, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //VCRP Vd(de),Vt(e)
   case 0x30: {
     callvu(&RSP::VRCP, mem(Vd), imm(DE), mem(Vt));
-    return 0;
+    return;
   }
 
   //VRCPL Vd(de),Vt(e)
   case 0x31: {
     callvu(&RSP::VRCPL, mem(Vd), imm(DE), mem(Vt));
-    return 0;
+    return;
   }
 
   //VRCPH Vd(de),Vt(e)
   case 0x32: {
     callvu(&RSP::VRCPH, mem(Vd), imm(DE), mem(Vt));
-    return 0;
+    return;
   }
 
   //VMOV Vd(de),Vt(e)
   case 0x33: {
     callvu(&RSP::VMOV, mem(Vd), imm(DE), mem(Vt));
-    return 0;
+    return;
   }
 
   //VRSQ Vd(de),Vt(e)
   case 0x34: {
     callvu(&RSP::VRSQ, mem(Vd), imm(DE), mem(Vt));
-    return 0;
+    return;
   }
 
   //VRSQL Vd(de),Vt(e)
   case 0x35: {
     callvu(&RSP::VRSQL, mem(Vd), imm(DE), mem(Vt));
-    return 0;
+    return;
   }
 
   //VRSQH Vd(de),Vt(e)
   case 0x36: {
     callvu(&RSP::VRSQH, mem(Vd), imm(DE), mem(Vt));
-    return 0;
+    return;
   }
 
   //VNOP
   case 0x37: {
     callf(&RSP::VNOP);
-    return 0;
+    return;
   }
 //Broken opcodes: VEXTT, VEXTQ, VEXTN
   case range3(0x38, 0x3a): {
     callvu(&RSP::VZERO, mem(Vd), mem(Vs), mem(Vt));
-    return 0;        
+    return;        
   }
 
   //INVALID
   case 0x3b: {
     callvu(&RSP::VZERO, mem(Vd), mem(Vs), mem(Vt));
-    return 0;
+    return;
   }
 
   //Broken opcodes: VINST, VINSQ, VINSN
   case range3(0x3c, 0x3e): {
     callvu(&RSP::VZERO, mem(Vd), mem(Vs), mem(Vt));
-    return 0;        
+    return;        
   }
 
   //VNULL
   case 0x3f: {
     callf(&RSP::VNOP);
-    return 0;
+    return;
   }
 
   }
   #undef E
   #undef DE
 
-  return 0;
+  return;
 }
 
 alignas(16) extern u8 const simdLHVSource[16][8];
@@ -1689,7 +1699,7 @@ alignas(16) extern u8 const simdSUVSource[16][8];
 alignas(16) extern u8 const simdSWVSource[16][8];
 alignas(16) extern u8 const simdSHVSource[16][32];
 
-auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool {
+auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> void {
   auto memReg2 = [&](const op_base& base, const op_base& index) -> op_base {
     return {SLJIT_MEM2(base.fst, index.fst), 0};
   };
@@ -1712,14 +1722,14 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     else                   add32(reg(1), mem(Rs), imm(i7)), and32(reg(1), reg(1), imm(0x0fff));
     mov32_u8(reg(0), memReg2(DmemReg, reg(1)));
     mov64_u8(mem(sreg(2), offsetof(VU, r[0]) + Vtn * sizeof(r128) + (15 - E)), reg(0));
-    return 0;
+    return;
   }
 
   //LSV Vt(e),Rs,i7
   case 0x01: {
     if(emitSlowPath) {
       callvu(&RSP::LSV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     u32 size = 16 - E;
     if(size > 2) size = 2;
@@ -1738,7 +1748,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       if(constRegs.has(Rsn)) {
         if(addr > wrapLimit) {
           callvu(&RSP::LSV, mem(Vt), mem(Rs), imm(i7));
-          return 0;
+          return;
         }
       } else {
         cmp32(reg(1), imm(wrapLimit), set_ugt);
@@ -1753,15 +1763,15 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       mov32_u8(reg(0), memReg2(DmemReg, reg(1)));
       mov64_u8(mem(sreg(2), vectorBase + (15 - E)), reg(0));
     }
-    if(slow) deferSlowPath(slow);
-    return 0;
+    if(slow) { deferSlowPath(slow); return; }
+    return;
   }
 
   //LLV Vt(e),Rs,i7
   case 0x02: {
     if(emitSlowPath) {
       callvu(&RSP::LLV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     u32 size = 16 - E;
     if(size > 4) size = 4;
@@ -1780,7 +1790,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       if(constRegs.has(Rsn)) {
         if(addr > wrapLimit) {
           callvu(&RSP::LLV, mem(Vt), mem(Rs), imm(i7));
-          return 0;
+          return;
         }
       } else {
         cmp32(reg(1), imm(wrapLimit), set_ugt);
@@ -1807,21 +1817,21 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         mov64_u8(mem(sreg(2), vectorBase + (15 - ((E + 2) & 15))), reg(0));
       }
     }
-    if(slow) deferSlowPath(slow);
-    return 0;
+    if(slow) { deferSlowPath(slow); return; }
+    return;
   }
 
   //LDV Vt(e),Rs,i7
   case 0x03: {
     if(emitSlowPath) {
       callvu(&RSP::LDV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     u32 size = 16 - E;
     if(size > 8) size = 8;
     if(size != 8 && size != 4 && size != 2 && size != 1) {
       callvu(&RSP::LDV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     auto vectorBase = offsetof(VU, r[0]) + Vtn * sizeof(r128);
     u32 addr = 0;
@@ -1838,7 +1848,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       if(constRegs.has(Rsn)) {
         if(addr > wrapLimit) {
           callvu(&RSP::LDV, mem(Vt), mem(Rs), imm(i7));
-          return 0;
+          return;
         }
       } else {
         cmp32(reg(1), imm(wrapLimit), set_ugt);
@@ -1865,8 +1875,8 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       mov32_u8(reg(0), memReg2(DmemReg, reg(1)));
       mov64_u8(mem(sreg(2), vectorBase + (15 - E)), reg(0));
     }
-    if(slow) deferSlowPath(slow);
-    return 0;
+    if(slow) { deferSlowPath(slow); return; }
+    return;
   }
 
   //LQV Vt(e),Rs,i7
@@ -1900,13 +1910,13 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     // }
     if(emitSlowPath) {
       callvu(&RSP::LQV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       if(address > 0x0ff0) {
         callvu(&RSP::LQV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       add64(reg(3), DmemReg, imm(address));
       add64(reg(0), sreg(2), imm(offsetof(VU, r[0]) + Vtn * sizeof(r128) + (15 - E)));
@@ -1918,7 +1928,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         if(size > 16 - E) size = 16 - E;
         callf(&RSP::fastLQVTable, imm(size), reg(0), reg(3));
       }
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -1948,22 +1958,22 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       callf(&RSP::fastLQVTable, reg(2), reg(0), reg(3));
     }
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //LRV Vt(e),Rs,i7
   case 0x05: {
     if(emitSlowPath) {
       callvu(&RSP::LRV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       u32 size = (address & 15) > E ? (address & 15) - E : 0;
-      if(!size) return 0;
+      if(!size) return;
       add64(reg(3), DmemReg, imm(address & ~15));
       callf(&RSP::fastLRV, mem(Vt), reg(3), imm(size));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -1980,24 +1990,24 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     and32(reg(2), reg(1), imm(0xff0));
     add64(reg(3), DmemReg, reg(2));
     callf(&RSP::fastLRV, mem(Vt), reg(3), reg(0));
-    return 0;
+    return;
   }
 
   //LPV Vt(e),Rs,i7
   case 0x06: {
     if(emitSlowPath) {
       callvu(&RSP::LPV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
       if(address > 0x0ff7) {
         callvu(&RSP::LPV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       add64(reg(3), DmemReg, imm(address & ~7));
       callf(&RSP::fastLPV, mem(Vt), reg(3), imm(u8((address & 7) - E) & 15));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 8));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2012,24 +2022,24 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(3), DmemReg, reg(2));
     callf(&RSP::fastLPV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //LUV Vt(e),Rs,i7
   case 0x07: {
     if(emitSlowPath) {
       callvu(&RSP::LUV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
       if(address > 0x0ff7) {
         callvu(&RSP::LUV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       add64(reg(3), DmemReg, imm(address & ~7));
       callf(&RSP::fastLUV, mem(Vt), reg(3), imm(u8((address & 7) - E) & 15));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 8));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2044,24 +2054,24 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(3), DmemReg, reg(2));
     callf(&RSP::fastLUV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //LHV Vt(e),Rs,i7
   case 0x08: {
     if(emitSlowPath) {
       callvu(&RSP::LHV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       if(address > 0x0ff7) {
         callvu(&RSP::LHV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       add64(reg(3), DmemReg, imm(address & ~7));
       callf(&RSP::fastLHV, mem(Vt), reg(3), imm(u8((address & 7) - E) & 15));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2076,27 +2086,27 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(3), DmemReg, reg(2));
     callf(&RSP::fastLHV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //LFV Vt(e),Rs,i7
   case 0x09: {
     if(emitSlowPath) {
       callvu(&RSP::LFV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       if(address > 0x0ff7) {
         callvu(&RSP::LFV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       u32 base = address & 7;
       u32 index = u8(base - E) & 15;
       u32 code = base | index << 4;
       add64(reg(3), DmemReg, imm(address & ~7));
       callf(&RSP::fastLFV, mem(Vt), reg(3), imm(code));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2114,30 +2124,30 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(3), DmemReg, reg(0));
     callf(&RSP::fastLFV, mem(Vt), reg(3), reg(2));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //LWV (not present on N64 RSP)
   case 0x0a: {
-    return 0;
+    return;
   }
 
   //LTV Vt(e),Rs,i7
   case 0x0b: {
     if(emitSlowPath) {
       callvu(&RSP::LTV, imm(Vtn), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     auto vectorBase = offsetof(VU, r[0]) + (Vtn & ~7) * sizeof(r128);
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       if(address > 0x0ff7) {
         callvu(&RSP::LTV, imm(Vtn), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       add64(reg(0), sreg(2), imm(vectorBase));
       callvu(&RSP::fastLTV, reg(0), imm(address));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2146,21 +2156,21 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(0), sreg(2), imm(vectorBase));
     callvu(&RSP::fastLTV, reg(0), reg(1));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //INVALID
   case range20(0x0c, 0x1f): {
-    return 0;
+    return;
   }
   }
   #undef E
   #undef i7
 
-  return 0;
+  return;
 }
 
-auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool {
+auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> void {
   auto memReg2 = [&](const op_base& base, const op_base& index) -> op_base {
     return {SLJIT_MEM2(base.fst, index.fst), 0};
   };
@@ -2183,21 +2193,21 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     else                   add32(reg(1), mem(Rs), imm(i7)), and32(reg(1), reg(1), imm(0x0fff));
     mov32_u8(reg(0), mem(sreg(2), offsetof(VU, r[0]) + Vtn * sizeof(r128) + (15 - E)));
     mov64_u8(memReg2(DmemReg, reg(1)), reg(0));
-    return 0;
+    return;
   }
 
   //SSV Vt(e),Rs,i7
   case 0x01: {
     if(emitSlowPath) {
       callvu(&RSP::SSV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     auto vectorBase = offsetof(VU, r[0]) + Vtn * sizeof(r128);
     if(constRegs.has(Rsn)) {
       u32 addr = u32(u12(constRegs.get(Rsn) + i7 * 2));
       if(addr > 0x0ffe) {
         callvu(&RSP::SSV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       mov32(reg(1), imm(addr));
     } else {
@@ -2218,22 +2228,22 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       mov32_u8(reg(0), mem(sreg(2), vectorBase + (15 - ((E + 1) & 15))));
       mov64_u8(memReg2(DmemReg, reg(1)), reg(0));
     }
-    if(slow) deferSlowPath(slow);
-    return 0;
+    if(slow) { deferSlowPath(slow); return; }
+    return;
   }
 
   //SLV Vt(e),Rs,i7
   case 0x02: {
     if(emitSlowPath) {
       callvu(&RSP::SLV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     auto vectorBase = offsetof(VU, r[0]) + Vtn * sizeof(r128);
     if(constRegs.has(Rsn)) {
       u32 addr = u32(u12(constRegs.get(Rsn) + i7 * 4));
       if(addr > 0x0ffc) {
         callvu(&RSP::SLV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       mov32(reg(1), imm(addr));
     } else {
@@ -2260,26 +2270,26 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       mov32_u8(reg(0), mem(sreg(2), vectorBase + (15 - ((E + 3) & 15))));
       mov64_u8(memReg2(DmemReg, reg(1)), reg(0));
     }
-    if(slow) deferSlowPath(slow);
-    return 0;
+    if(slow) { deferSlowPath(slow); return; }
+    return;
   }
 
   //SDV Vt(e),Rs,i7
   case 0x03: {
     if(emitSlowPath) {
       callvu(&RSP::SDV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(E > 8) {
       callvu(&RSP::SDV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     auto vectorBase = offsetof(VU, r[0]) + Vtn * sizeof(r128);
     if(constRegs.has(Rsn)) {
       u32 addr = u32(u12(constRegs.get(Rsn) + i7 * 8));
       if(addr > 0x0ff8) {
         callvu(&RSP::SDV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       mov32(reg(1), imm(addr));
     } else {
@@ -2296,8 +2306,8 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     mov32(reg(0), mem(sreg(2), vectorBase + (8 - E)));
     rev32(reg(0), reg(0));
     mov32(memReg2(DmemReg, reg(1)), reg(0));
-    if(slow) deferSlowPath(slow);
-    return 0;
+    if(slow) { deferSlowPath(slow); return; }
+    return;
   }
 
   //SQV Vt(e),Rs,i7
@@ -2321,18 +2331,18 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     // else           fastSQV<0>(Vt, address);
     if(emitSlowPath) {
       callvu(&RSP::SQV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     auto vectorBase = offsetof(VU, r[0]) + Vtn * sizeof(r128);
     if(constRegs.has(Rsn)) {
       u32 constantAddress = u32(u12(constRegs.get(Rsn) + i7 * 16));
       if(constantAddress > 0x0ff0) {
         callvu(&RSP::SQV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       if(E != 0) {
         callvu(&RSP::fastSQV, mem(Vt), imm(constantAddress));
-        return 0;
+        return;
       }
       u32 size = 16 - (constantAddress & 15);
       if(size == 16) {
@@ -2342,7 +2352,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       } else {
         callvu(&RSP::fastSQV, mem(Vt), imm(constantAddress));
       }
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2351,7 +2361,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     if(E != 0) {
       callvu(&RSP::fastSQV, mem(Vt), reg(1));
       deferSlowPath(slow);
-      return 0;
+      return;
     }
     add64(reg(3), DmemReg, reg(1));
     and32(reg(0), reg(1), imm(0x0f));
@@ -2365,24 +2375,24 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     callf(&RSP::fastSQV0Simd, reg(0), reg(3));
     setLabel(doneFast);
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //SRV Vt(e),Rs,i7
   case 0x05: {
     if(emitSlowPath) {
       callvu(&RSP::SRV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       u32 size = address & 15;
-      if(!size) return 0;
+      if(!size) return;
       u32 start = u8(E - size) & 15;
       u32 code = size | start << 4;
       add64(reg(3), DmemReg, imm(address & ~15));
       callf(&RSP::fastSRV, mem(Vt), reg(3), imm(code));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2395,25 +2405,25 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     and32(reg(1), reg(1), imm(0xff0));
     add64(reg(3), DmemReg, reg(1));
     callf(&RSP::fastSRV, mem(Vt), reg(3), reg(2));
-    return 0;
+    return;
   }
 
   //SPV Vt(e),Rs,i7
   case 0x06: {
     if(emitSlowPath) {
       callvu(&RSP::SPV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     auto source = (u8 const*)simdSUVSource[(E + 8) & 15];
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
       if(address > 0x0ff8) {
         callvu(&RSP::SPV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       add64(reg(3), DmemReg, imm(address));
       callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 8));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2422,25 +2432,25 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(3), DmemReg, reg(1));
     callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //SUV Vt(e),Rs,i7
   case 0x07: {
     if(emitSlowPath) {
       callvu(&RSP::SUV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     auto source = (u8 const*)simdSUVSource[E & 15];
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
       if(address > 0x0ff8) {
         callvu(&RSP::SUV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       add64(reg(3), DmemReg, imm(address));
       callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 8));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2449,25 +2459,25 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(3), DmemReg, reg(1));
     callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //SHV Vt(e),Rs,i7
   case 0x08: {
     if(emitSlowPath) {
       callvu(&RSP::SHV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       if(address > 0x0ff7) {
         callvu(&RSP::SHV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       u32 code = (address & 7) | E << 4;
       add64(reg(3), DmemReg, imm(address & ~7));
       callf(&RSP::fastSHV, mem(Vt), reg(3), imm(code));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2481,25 +2491,25 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(3), DmemReg, reg(2));
     callf(&RSP::fastSHV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //SFV Vt(e),Rs,i7
   case 0x09: {
     if(emitSlowPath) {
       callvu(&RSP::SFV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       if(address > 0x0ff7) {
         callvu(&RSP::SFV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       u32 code = (address & 7) | E << 4;
       add64(reg(3), DmemReg, imm(address & ~7));
       callf(&RSP::fastSFV, mem(Vt), reg(3), imm(code));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2513,27 +2523,27 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(3), DmemReg, reg(2));
     callf(&RSP::fastSFV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //SWV Vt(e),Rs,i7
   case 0x0a: {
     if(emitSlowPath) {
       callvu(&RSP::SWV, mem(Vt), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       if(address > 0x0ff7) {
         callvu(&RSP::SWV, mem(Vt), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       u32 base = address & 7;
       u32 index = u8(base - E) & 15;
       u32 code = base | index << 4;
       add64(reg(3), DmemReg, imm(address & ~7));
       callf(&RSP::fastSWV, mem(Vt), reg(3), imm(code));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2551,25 +2561,25 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(3), DmemReg, reg(0));
     callf(&RSP::fastSWV, mem(Vt), reg(3), reg(2));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
 
   //STV Vt(e),Rs,i7
   case 0x0b: {
     if(emitSlowPath) {
       callvu(&RSP::STV, imm(Vtn), mem(Rs), imm(i7));
-      return 0;
+      return;
     }
     auto vectorBase = offsetof(VU, r[0]) + (Vtn & ~7) * sizeof(r128);
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
       if(address > 0x0ff7) {
         callvu(&RSP::STV, imm(Vtn), mem(Rs), imm(i7));
-        return 0;
+        return;
       }
       add64(reg(0), sreg(2), imm(vectorBase));
       callvu(&RSP::fastSTV, reg(0), imm(address));
-      return 0;
+      return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
@@ -2578,76 +2588,18 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     add64(reg(0), sreg(2), imm(vectorBase));
     callvu(&RSP::fastSTV, reg(0), reg(1));
     deferSlowPath(slow);
-    return 0;
+    return;
   }
   //INVALID
   case range20(0x0c, 0x1f): {
-    return 0;
+    return;
   }
 
   }
   #undef E
   #undef i7
 
-  return 0;
-}
-
-auto RSP::Recompiler::isTerminal(u32 instruction) -> bool {
-  switch(instruction >> 26) {
-
-  //SPECIAL
-  case 0x00: {
-    switch(instruction & 0x3f) {
-
-    //JR Rs
-    case 0x08:
-    //JALR Rd,Rs
-    case 0x09:
-    //BREAK
-    case 0x0d:
-      return 1;
-
-    }
-
-    break;
-  }
-
-  //REGIMM
-  case 0x01: {
-    switch(instruction >> 16 & 0x1f) {
-
-    //BLTZ Rs,i16
-    case 0x00:
-    //BGEZ Rs,i16
-    case 0x01:
-    //BLTZAL Rs,i16
-    case 0x10:
-    //BGEZAL Rs,i16
-    case 0x11:
-      return 1;
-
-    }
-
-    break;
-  }
-
-  //J n26
-  case 0x02:
-  //JAL n26
-  case 0x03:
-  //BEQ Rs,Rt,i16
-  case 0x04:
-  //BNE Rs,Rt,i16
-  case 0x05:
-  //BLEZ Rs,i16
-  case 0x06:
-  //BGTZ Rs,i16
-  case 0x07:
-    return 1;
-
-  }
-
-  return 0;
+  return;
 }
 
 #if ARCHITECTURE_SUPPORTS_SSE4_1
