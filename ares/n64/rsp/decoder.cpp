@@ -33,6 +33,7 @@
 #define VNopGroup info.flags |= OpInfo::VNopGroup
 #define UsesDmem  info.flags |= OpInfo::UsesDmem
 #define MayHalt   info.flags |= OpInfo::MayHalt
+#define EndBlock  info.flags |= OpInfo::EndBlock
 
 auto RSP::decoderEXECUTE(u32 instruction) const -> OpInfo {
   switch(instruction >> 26) {
@@ -234,8 +235,8 @@ auto RSP::decoderSCC(u32 instruction) const -> OpInfo {
 
   switch(instruction & 0x3f) {
   op(0x20, XDETECT, RDefB(XRD));
-  op(0x23, XTRACESTART);
-  op(0x24, XTRACESTOP);
+  op(0x23, XTRACESTART, EndBlock);
+  op(0x24, XTRACESTOP, EndBlock);
   op(0x25, XLOG, RUse(XRD), RUse(XRT));
   op(0x26, XLOGREGS, RUse(XRD));
   op(0x27, XHEXDUMP, RUse(XRD), RUse(XRT));
@@ -390,6 +391,7 @@ auto RSP::decoderSWC2(u32 instruction) const -> OpInfo {
 #undef VNopGroup
 #undef UsesDmem
 #undef MayHalt
+#undef EndBlock
 
 #undef VCO
 #undef VCC

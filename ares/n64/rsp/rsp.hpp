@@ -132,6 +132,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
       Bypass    = 1 << 5,
       UsesDmem  = 1 << 6,
       MayHalt   = 1 << 7,
+      EndBlock  = 1 << 8,
     };
 
     u32 flags;
@@ -147,6 +148,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto bypass() const -> bool { return flags & Bypass; }
     auto usesDmem() const -> bool { return flags & UsesDmem; }
     auto mayHalt() const -> bool { return flags & MayHalt; }
+    auto endBlock() const -> bool { return flags & EndBlock; }
   };
 
   static auto canDualIssue(const OpInfo& op0, const OpInfo& op1) -> bool {
@@ -654,16 +656,14 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
     auto block(u12 address) -> Block*;
 
-    auto emit(u12 address) -> Block*;
-    auto emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool;
-    auto emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> bool;
-    auto emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> bool;
-    auto emitSCC(u32 instruction) -> bool;
-    auto emitVU(u32 instruction) -> bool;
-    auto emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool;
-    auto emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> bool;
-
-    auto isTerminal(u32 instruction) -> bool;
+    auto emit(u12 address, bool callInstructionPrologue) -> Block*;
+    auto emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> void;
+    auto emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> void;
+    auto emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> void;
+    auto emitSCC(u32 instruction) -> void;
+    auto emitVU(u32 instruction) -> void;
+    auto emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> void;
+    auto emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> void;
 
     static auto mask(u12 address, u12 size) -> u64 {
       //1 bit per 64 bytes
@@ -676,10 +676,9 @@ struct RSP : Thread, Memory::RCP<RSP> {
     }
 
     bool enabled = false;
-    bool callInstructionPrologue = false;
     Pipeline pipeline;
     bump_allocator allocator;
-    array<Block*[1024]> context;
+    array<Block*[2048]> context;
     hashset<BlockHashPair> blocks;
     u64 dirty;
     u32 slowPathFlushedClocks = 0;

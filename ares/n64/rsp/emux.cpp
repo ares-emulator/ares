@@ -39,14 +39,14 @@ auto RSP::XDETECT(r32& rd, u32 code) -> void {
 
 auto RSP::XTRACESTART(u32 code) -> void {
   if(!system.homebrewMode) return;
-  debugger.tracer.instruction->setEnabled(true);
+  if(!debugger.tracer.instruction->enabled()) debugger.tracer.instruction->setEnabled(true);
   debugger.tracer.instructionCountdown = code;
   debugger.tracer.traceStartCycle = pipeline.clocksTotal / 3;
 }
 
 auto RSP::XTRACESTOP() -> void {
   if(!system.homebrewMode) return;
-  debugger.tracer.instruction->setEnabled(false);
+  if(debugger.tracer.instruction->enabled()) debugger.tracer.instruction->setEnabled(false);
 }
 
 auto RSP::XLOG(cr32& rd, cr32& rt, u32 code) -> void {
