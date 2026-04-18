@@ -1959,12 +1959,27 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
-      callf(&RSP::fastLRV, mem(Vt), imm(address), imm64((u8 const*)simdLRVSize[E & 15]));
+      u32 size = (address & 15) > E ? (address & 15) - E : 0;
+      if(!size) return 0;
+      add64(reg(3), DmemReg, imm(address & ~15));
+      callf(&RSP::fastLRV, mem(Vt), reg(3), imm(size));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
-    callf(&RSP::fastLRV, mem(Vt), reg(1), imm64((u8 const*)simdLRVSize[E & 15]));
+    and32(reg(0), reg(1), imm(0x0f));
+    if(E != 0) {
+      cmp32(reg(0), imm(E), set_ult);
+      auto zero = jump(flag_ult);
+      sub32(reg(0), reg(0), imm(E));
+      auto sizeDone = jump();
+      setLabel(zero);
+      mov32(reg(0), imm(0));
+      setLabel(sizeDone);
+    }
+    and32(reg(2), reg(1), imm(0xff0));
+    add64(reg(3), DmemReg, reg(2));
+    callf(&RSP::fastLRV, mem(Vt), reg(3), reg(0));
     return 0;
   }
 
@@ -1980,14 +1995,22 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         callvu(&RSP::LPV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      callf(&RSP::fastLPV, mem(Vt), imm(address), imm64((u8 const*)simdLHVSource[E & 15]));
+      add64(reg(3), DmemReg, imm(address & ~7));
+      callf(&RSP::fastLPV, mem(Vt), reg(3), imm(u8((address & 7) - E) & 15));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 8));
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff7), set_ugt);
     auto slow = jump(flag_ugt);
-    callf(&RSP::fastLPV, mem(Vt), reg(1), imm64((u8 const*)simdLHVSource[E & 15]));
+    and32(reg(0), reg(1), imm(0x07));
+    if(E != 0) {
+      sub32(reg(0), reg(0), imm(E));
+      and32(reg(0), reg(0), imm(0x0f));
+    }
+    and32(reg(2), reg(1), imm(0xff8));
+    add64(reg(3), DmemReg, reg(2));
+    callf(&RSP::fastLPV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
     return 0;
   }
@@ -2004,14 +2027,22 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         callvu(&RSP::LUV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      callf(&RSP::fastLUV, mem(Vt), imm(address), imm64((u8 const*)simdLHVSource[E & 15]));
+      add64(reg(3), DmemReg, imm(address & ~7));
+      callf(&RSP::fastLUV, mem(Vt), reg(3), imm(u8((address & 7) - E) & 15));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 8));
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff7), set_ugt);
     auto slow = jump(flag_ugt);
-    callf(&RSP::fastLUV, mem(Vt), reg(1), imm64((u8 const*)simdLHVSource[E & 15]));
+    and32(reg(0), reg(1), imm(0x07));
+    if(E != 0) {
+      sub32(reg(0), reg(0), imm(E));
+      and32(reg(0), reg(0), imm(0x0f));
+    }
+    and32(reg(2), reg(1), imm(0xff8));
+    add64(reg(3), DmemReg, reg(2));
+    callf(&RSP::fastLUV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
     return 0;
   }
@@ -2028,14 +2059,22 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         callvu(&RSP::LHV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      callf(&RSP::fastLHV, mem(Vt), imm(address), imm64((u8 const*)simdLHVSource[E & 15]));
+      add64(reg(3), DmemReg, imm(address & ~7));
+      callf(&RSP::fastLHV, mem(Vt), reg(3), imm(u8((address & 7) - E) & 15));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff7), set_ugt);
     auto slow = jump(flag_ugt);
-    callf(&RSP::fastLHV, mem(Vt), reg(1), imm64((u8 const*)simdLHVSource[E & 15]));
+    and32(reg(0), reg(1), imm(0x07));
+    if(E != 0) {
+      sub32(reg(0), reg(0), imm(E));
+      and32(reg(0), reg(0), imm(0x0f));
+    }
+    and32(reg(2), reg(1), imm(0xff8));
+    add64(reg(3), DmemReg, reg(2));
+    callf(&RSP::fastLHV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
     return 0;
   }
@@ -2052,14 +2091,28 @@ auto RSP::Recompiler::emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         callvu(&RSP::LFV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      callf(&RSP::fastLFV, mem(Vt), imm(address), imm64((u8 const*)simdLFVData[E & 15]));
+      u32 base = address & 7;
+      u32 index = u8(base - E) & 15;
+      u32 code = base | index << 4;
+      add64(reg(3), DmemReg, imm(address & ~7));
+      callf(&RSP::fastLFV, mem(Vt), reg(3), imm(code));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff7), set_ugt);
     auto slow = jump(flag_ugt);
-    callf(&RSP::fastLFV, mem(Vt), reg(1), imm64((u8 const*)simdLFVData[E & 15]));
+    and32(reg(0), reg(1), imm(0x07));
+    mov32(reg(2), reg(0));
+    if(E != 0) {
+      sub32(reg(2), reg(2), imm(E));
+      and32(reg(2), reg(2), imm(0x0f));
+    }
+    shl32(reg(2), reg(2), imm(4));
+    or32(reg(2), reg(2), reg(0));
+    and32(reg(0), reg(1), imm(0xff8));
+    add64(reg(3), DmemReg, reg(0));
+    callf(&RSP::fastLFV, mem(Vt), reg(3), reg(2));
     deferSlowPath(slow);
     return 0;
   }
@@ -2323,12 +2376,25 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     }
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 16));
-      callf(&RSP::fastSRV, mem(Vt), imm(address), imm64((u8 const*)simdSRVStart[E & 15]));
+      u32 size = address & 15;
+      if(!size) return 0;
+      u32 start = u8(E - size) & 15;
+      u32 code = size | start << 4;
+      add64(reg(3), DmemReg, imm(address & ~15));
+      callf(&RSP::fastSRV, mem(Vt), reg(3), imm(code));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
-    callf(&RSP::fastSRV, mem(Vt), reg(1), imm64((u8 const*)simdSRVStart[E & 15]));
+    and32(reg(0), reg(1), imm(0x0f));
+    mov32(reg(2), imm(E));
+    sub32(reg(2), reg(2), reg(0));
+    and32(reg(2), reg(2), imm(0x0f));
+    shl32(reg(2), reg(2), imm(4));
+    or32(reg(2), reg(2), reg(0));
+    and32(reg(1), reg(1), imm(0xff0));
+    add64(reg(3), DmemReg, reg(1));
+    callf(&RSP::fastSRV, mem(Vt), reg(3), reg(2));
     return 0;
   }
 
@@ -2338,20 +2404,23 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       callvu(&RSP::SPV, mem(Vt), mem(Rs), imm(i7));
       return 0;
     }
+    auto source = (u8 const*)simdSUVSource[(E + 8) & 15];
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
       if(address > 0x0ff8) {
         callvu(&RSP::SPV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      callf(&RSP::fastSUV, mem(Vt), imm(address), imm64((u8 const*)simdSUVSource[(E + 8) & 15]));
+      add64(reg(3), DmemReg, imm(address));
+      callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 8));
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff8), set_ugt);
     auto slow = jump(flag_ugt);
-    callf(&RSP::fastSUV, mem(Vt), reg(1), imm64((u8 const*)simdSUVSource[(E + 8) & 15]));
+    add64(reg(3), DmemReg, reg(1));
+    callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
     deferSlowPath(slow);
     return 0;
   }
@@ -2362,20 +2431,23 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
       callvu(&RSP::SUV, mem(Vt), mem(Rs), imm(i7));
       return 0;
     }
+    auto source = (u8 const*)simdSUVSource[E & 15];
     if(constRegs.has(Rsn)) {
       u32 address = u32(u12(constRegs.get(Rsn) + i7 * 8));
       if(address > 0x0ff8) {
         callvu(&RSP::SUV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      callf(&RSP::fastSUV, mem(Vt), imm(address), imm64((u8 const*)simdSUVSource[E & 15]));
+      add64(reg(3), DmemReg, imm(address));
+      callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 8));
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff8), set_ugt);
     auto slow = jump(flag_ugt);
-    callf(&RSP::fastSUV, mem(Vt), reg(1), imm64((u8 const*)simdSUVSource[E & 15]));
+    add64(reg(3), DmemReg, reg(1));
+    callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
     deferSlowPath(slow);
     return 0;
   }
@@ -2392,14 +2464,22 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         callvu(&RSP::SHV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      callf(&RSP::fastSHV, mem(Vt), imm(address), imm64((u8 const*)simdSHVSource[E & 15]));
+      u32 code = (address & 7) | E << 4;
+      add64(reg(3), DmemReg, imm(address & ~7));
+      callf(&RSP::fastSHV, mem(Vt), reg(3), imm(code));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff7), set_ugt);
     auto slow = jump(flag_ugt);
-    callf(&RSP::fastSHV, mem(Vt), reg(1), imm64((u8 const*)simdSHVSource[E & 15]));
+    and32(reg(0), reg(1), imm(0x07));
+    if(E != 0) {
+      or32(reg(0), reg(0), imm(E << 4));
+    }
+    and32(reg(2), reg(1), imm(0xff8));
+    add64(reg(3), DmemReg, reg(2));
+    callf(&RSP::fastSHV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
     return 0;
   }
@@ -2416,14 +2496,22 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         callvu(&RSP::SFV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      callf(&RSP::fastSFV, mem(Vt), imm(address), imm64((u8 const*)simdSFVSource[E & 15]));
+      u32 code = (address & 7) | E << 4;
+      add64(reg(3), DmemReg, imm(address & ~7));
+      callf(&RSP::fastSFV, mem(Vt), reg(3), imm(code));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff7), set_ugt);
     auto slow = jump(flag_ugt);
-    callf(&RSP::fastSFV, mem(Vt), reg(1), imm64((u8 const*)simdSFVSource[E & 15]));
+    and32(reg(0), reg(1), imm(0x07));
+    if(E != 0) {
+      or32(reg(0), reg(0), imm(E << 4));
+    }
+    and32(reg(2), reg(1), imm(0xff8));
+    add64(reg(3), DmemReg, reg(2));
+    callf(&RSP::fastSFV, mem(Vt), reg(3), reg(0));
     deferSlowPath(slow);
     return 0;
   }
@@ -2440,14 +2528,28 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         callvu(&RSP::SWV, mem(Vt), mem(Rs), imm(i7));
         return 0;
       }
-      callf(&RSP::fastSWV, mem(Vt), imm(address), imm64((u8 const*)simdSWVSource[E & 15]));
+      u32 base = address & 7;
+      u32 index = u8(base - E) & 15;
+      u32 code = base | index << 4;
+      add64(reg(3), DmemReg, imm(address & ~7));
+      callf(&RSP::fastSWV, mem(Vt), reg(3), imm(code));
       return 0;
     }
     add32(reg(1), mem(Rs), imm(i7 * 16));
     and32(reg(1), reg(1), imm(0x0fff));
     cmp32(reg(1), imm(0x0ff7), set_ugt);
     auto slow = jump(flag_ugt);
-    callf(&RSP::fastSWV, mem(Vt), reg(1), imm64((u8 const*)simdSWVSource[E & 15]));
+    and32(reg(0), reg(1), imm(0x07));
+    mov32(reg(2), reg(0));
+    if(E != 0) {
+      sub32(reg(2), reg(2), imm(E));
+      and32(reg(2), reg(2), imm(0x0f));
+    }
+    shl32(reg(2), reg(2), imm(4));
+    or32(reg(2), reg(2), reg(0));
+    and32(reg(0), reg(1), imm(0xff8));
+    add64(reg(3), DmemReg, reg(0));
+    callf(&RSP::fastSWV, mem(Vt), reg(3), reg(2));
     deferSlowPath(slow);
     return 0;
   }
@@ -2913,21 +3015,17 @@ auto RSP::fastLQV0Simd(r128& vt, u8* source) -> void {
 #endif
 }
 
-auto RSP::fastLRV(r128& vt, u32 address, u8 const* source) -> void {
-  u32 size = source[address & 15];
+auto RSP::fastLRV(r128& vt, u8* source, u32 size) -> void {
   if(!size) return;
   auto target = (u8*)&vt.u128 + (size - 1);
-  auto input = dmem.data + (address & ~15);
-  fastLQVTable(size, target, input);
+  fastLQVTable(size, target, source);
 }
 
-auto RSP::fastLPV(r128& vt, u32 address, u8 const* source) -> void {
-  if(source == simdLHVSource[0]) {
-    fastLPV0Simd(vt, dmem.data + address);
+auto RSP::fastLPV(r128& vt, u8 const* target, u32 index) -> void {
+  if(!index) {
+    fastLPV0Simd(vt, target);
     return;
   }
-  auto target = dmem.data + (address & ~7);
-  u32 index = source[address & 7];
   for(u32 offset = 0; offset < 8; offset++) {
     vt.element(offset) = target[(index + offset) & 15] << 8;
   }
@@ -2952,13 +3050,11 @@ auto RSP::fastLPV0Simd(r128& vt, u8 const* source) -> void {
 #endif
 }
 
-auto RSP::fastLUV(r128& vt, u32 address, u8 const* source) -> void {
-  if(source == simdLHVSource[0]) {
-    fastLUV0Simd(vt, dmem.data + address);
+auto RSP::fastLUV(r128& vt, u8 const* target, u32 index) -> void {
+  if(!index) {
+    fastLUV0Simd(vt, target);
     return;
   }
-  auto target = dmem.data + (address & ~7);
-  u32 index = source[address & 7];
   for(u32 offset = 0; offset < 8; offset++) {
     vt.element(offset) = target[(index + offset) & 15] << 7;
   }
@@ -3014,9 +3110,10 @@ auto RSP::fastLTV(r128* vtbase, u32 address) -> void {
 #endif
 }
 
-auto RSP::fastLFV(r128& vt, u32 address, u8 const* source) -> void {
-  auto target = dmem.data + (address & ~7);
-  u32 index = source[address & 7];
+auto RSP::fastLFV(r128& vt, u8 const* target, u32 code) -> void {
+  u32 base = code & 15;
+  u32 index = code >> 4;
+  u32 e = (base - index) & 15;
 #if ARCHITECTURE_SUPPORTS_SSE4_1
   auto reverse = _mm_load_si128((const __m128i*)simdShuffleIdentity);
   auto current = _mm_shuffle_epi8(vt, reverse);
@@ -3027,12 +3124,12 @@ auto RSP::fastLFV(r128& vt, u32 address, u8 const* source) -> void {
   words = _mm_slli_epi16(words, 7);
   auto swapBytes = _mm_load_si128((const __m128i*)simdShuffleSwapBytes);
   auto value = _mm_shuffle_epi8(words, swapBytes);
-  auto mask = _mm_load_si128((const __m128i*)(source + 16));
+  auto mask = _mm_load_si128((const __m128i*)(simdLFVData[e] + 16));
   auto merged = _mm_andnot_si128(mask, current);
   merged = _mm_or_si128(merged, _mm_and_si128(mask, value));
   vt = _mm_shuffle_epi8(merged, reverse);
 #else
-  u32 start = ((address & 7) - index) & 15;
+  u32 start = e;
   u32 end = start + 8;
   if(end > 16) end = 16;
   r128 tmp;
@@ -3046,9 +3143,7 @@ auto RSP::fastLFV(r128& vt, u32 address, u8 const* source) -> void {
 #endif
 }
 
-auto RSP::fastLHV(r128& vt, u32 address, u8 const* source) -> void {
-  auto target = dmem.data + (address & ~7);
-  u32 index = source[address & 7];
+auto RSP::fastLHV(r128& vt, u8 const* target, u32 index) -> void {
 #if ARCHITECTURE_SUPPORTS_SSE4_1
   auto select = _mm_load_si128((const __m128i*)simdSHVSource[index]);
   auto bytes = _mm_loadu_si128((const __m128i*)target);
@@ -3125,10 +3220,9 @@ auto RSP::fastSQV0Simd(u8 const* source, u8* target) -> void {
 #endif
 }
 
-auto RSP::fastSRV(cr128& vt, u32 address, u8 const* source) -> void {
-  auto target = dmem.data + (address & ~15);
-  u32 size = address & 15;
-  u32 start = source[size];
+auto RSP::fastSRV(cr128& vt, u8* target, u32 code) -> void {
+  u32 size = code & 15;
+  u32 start = code >> 4;
   switch(size) {
   case 15: target[14] = vt.byte((start + 14) & 15); [[fallthrough]];
   case 14: target[13] = vt.byte((start + 13) & 15); [[fallthrough]];
@@ -3206,10 +3300,9 @@ auto RSP::fastSTV(r128* vtbase, u32 address) -> void {
 #endif
 }
 
-auto RSP::fastSWV(cr128& vt, u32 address, u8 const* source) -> void {
-  auto target = dmem.data + (address & ~7);
-  u32 base = address & 7;
-  u32 index = source[base];
+auto RSP::fastSWV(cr128& vt, u8* target, u32 code) -> void {
+  u32 base = code & 15;
+  u32 index = code >> 4;
 #if ARCHITECTURE_SUPPORTS_SSE4_1
   auto reverse = _mm_load_si128((const __m128i*)simdShuffleIdentity);
   auto bytes = _mm_shuffle_epi8(vt, reverse);
@@ -3224,8 +3317,7 @@ auto RSP::fastSWV(cr128& vt, u32 address, u8 const* source) -> void {
 #endif
 }
 
-auto RSP::fastSUV(cr128& vt, u32 address, u8 const* source) -> void {
-  auto target = dmem.data + address;
+auto RSP::fastSUV(cr128& vt, u8* target, u8 const* source) -> void {
 #if ARCHITECTURE_SUPPORTS_SSE4_1
   auto reverseWords = _mm_load_si128((const __m128i*)simdShuffleSwapWords);
   auto words = _mm_shuffle_epi8(vt, reverseWords);
@@ -3248,9 +3340,9 @@ auto RSP::fastSUV(cr128& vt, u32 address, u8 const* source) -> void {
 #endif
 }
 
-auto RSP::fastSFV(cr128& vt, u32 address, u8 const* source) -> void {
-  auto target = dmem.data + (address & ~7);
-  auto base = address & 7;
+auto RSP::fastSFV(cr128& vt, u8* target, u32 code) -> void {
+  u32 base = code & 15;
+  auto source = simdSFVSource[code >> 4];
 #if ARCHITECTURE_SUPPORTS_SSE4_1
   auto reverseWords = _mm_load_si128((const __m128i*)simdShuffleSwapWords);
   auto words = _mm_shuffle_epi8(vt, reverseWords);
@@ -3274,7 +3366,9 @@ auto RSP::fastSFV(cr128& vt, u32 address, u8 const* source) -> void {
 #endif
 }
 
-auto RSP::fastSHV(cr128& vt, u32 address, u8 const* source) -> void {
+auto RSP::fastSHV(cr128& vt, u8* target, u32 code) -> void {
+  u32 index = code & 15;
+  auto source = simdSHVSource[code >> 4];
 #if ARCHITECTURE_SUPPORTS_SSE4_1
   auto reverse = _mm_load_si128((const __m128i*)simdShuffleIdentity);
   auto vtb = _mm_shuffle_epi8(vt, reverse);
@@ -3287,16 +3381,12 @@ auto RSP::fastSHV(cr128& vt, u32 address, u8 const* source) -> void {
   auto words = _mm_or_si128(_mm_slli_epi16(wordsA, 1), _mm_srli_epi16(wordsB, 7));
   words = _mm_and_si128(words, _mm_set1_epi16(0x00ff));
   auto bytes = _mm_packus_epi16(words, _mm_setzero_si128());
-  auto target = dmem.data + (address & ~7);
-  auto index = address & 7;
   auto destination = _mm_load_si128((const __m128i*)simdSHVDestination[index]);
   auto mask = _mm_load_si128((const __m128i*)simdSHVMask[index]);
   auto merged = _mm_andnot_si128(mask, _mm_loadu_si128((const __m128i*)target));
   merged = _mm_or_si128(merged, _mm_and_si128(mask, _mm_shuffle_epi8(bytes, destination)));
   _mm_storeu_si128((__m128i*)target, merged);
 #else
-  auto target = dmem.data + (address & ~7);
-  auto index = address & 7;
   for(u32 offset = 0; offset < 8; offset++) {
     u32 byteA = source[offset +  0];
     u32 byteB = source[offset + 16];
