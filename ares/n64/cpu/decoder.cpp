@@ -49,10 +49,10 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
   jp(0x11, FPU);
   jp(0x12, COP2);
   op(0x13, COP3, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x14, BEQL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x15, BNEL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x16, BLEZL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x17, BGTZL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x14, BEQL, Branch, LikelyBranch, EndBlock);
+  op(0x15, BNEL, Branch, LikelyBranch, EndBlock);
+  op(0x16, BLEZL, Branch, LikelyBranch, EndBlock);
+  op(0x17, BGTZL, Branch, LikelyBranch, EndBlock);
   op(0x18, DADDI, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x19, DADDIU, JitMayCallf, JitMustFlushBeforeCall);
   op(0x1a, LDL, Load, MayException, MayFault, JitMayCallf, JitMustFlushBeforeCall);
@@ -108,7 +108,7 @@ auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
   op(0x06, SRLV);
   op(0x07, SRAV);
   op(0x08, JR, Branch, EndBlock);
-  op(0x09, JALR, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x09, JALR, Branch, EndBlock);
   op(0x0a, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x0b, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x0c, SYSCALL, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
@@ -171,8 +171,8 @@ auto CPU::decoderREGIMMInfo(u32 instruction) const -> OpInfo {
   switch(instruction >> 16 & 0x1f) {
   op(0x00, BLTZ, Branch, EndBlock);
   op(0x01, BGEZ, Branch, EndBlock);
-  op(0x02, BLTZL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x03, BGEZL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x02, BLTZL, Branch, LikelyBranch, EndBlock);
+  op(0x03, BGEZL, Branch, LikelyBranch, EndBlock);
   op(0x04, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x05, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x06, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
@@ -185,10 +185,10 @@ auto CPU::decoderREGIMMInfo(u32 instruction) const -> OpInfo {
   op(0x0d, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x0e, TNEI, MayTrap, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x0f, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x10, BLTZAL, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x11, BGEZAL, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x12, BLTZALL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x13, BGEZALL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x10, BLTZAL, Branch, EndBlock);
+  op(0x11, BGEZAL, Branch, EndBlock);
+  op(0x12, BLTZALL, Branch, LikelyBranch, EndBlock);
+  op(0x13, BGEZALL, Branch, LikelyBranch, EndBlock);
   op(0x14, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x15, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x16, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);

@@ -323,25 +323,69 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //BEQL Rs,Rt,i16
   case 0x14: {
-    callf(&CPU::BEQL, mem(Rs), mem(Rt), imm(i16));
+    cmp64(mem(Rs), mem(Rt), set_z);
+    auto taken = jump(flag_z);
+    add64(reg(0), PipelineReg(pc), imm(4));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(taken);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
   //BNEL Rs,Rt,i16
   case 0x15: {
-    callf(&CPU::BNEL, mem(Rs), mem(Rt), imm(i16));
+    cmp64(mem(Rs), mem(Rt), set_z);
+    auto notTaken = jump(flag_z);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(notTaken);
+    add64(reg(0), PipelineReg(pc), imm(4));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
   //BLEZL Rs,i16
   case 0x16: {
-    callf(&CPU::BLEZL, mem(Rs), imm(i16));
+    cmp64(mem(Rs), imm(0), set_sgt);
+    auto notTaken = jump(flag_sgt);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(notTaken);
+    add64(reg(0), PipelineReg(pc), imm(4));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
   //BGTZL Rs,i16
   case 0x17: {
-    callf(&CPU::BGTZL, mem(Rs), imm(i16));
+    cmp64(mem(Rs), imm(0), set_sgt);
+    auto taken = jump(flag_sgt);
+    add64(reg(0), PipelineReg(pc), imm(4));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(taken);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
@@ -667,8 +711,11 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //JALR Rd,Rs
   case 0x09: {
-    callf(&CPU::JALR, mem(Rd), mem(Rs));
-    emitZeroClear(Rdn);
+    mov64(reg(1), mem(Rs));
+    add64(reg(0), PipelineReg(pc), imm(4));
+    if(Rdn) mov64(mem(Rd), reg(0));
+    mov64(PipelineReg(nextpc), reg(1));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     return 1;
   }
 
@@ -1054,13 +1101,35 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BLTZL Rs,i16
   case 0x02: {
-    callf(&CPU::BLTZL, mem(Rs), imm(i16));
+    cmp64(mem(Rs), imm(0), set_slt);
+    auto taken = jump(flag_slt);
+    add64(reg(0), PipelineReg(pc), imm(4));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(taken);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
   //BGEZL Rs,i16
   case 0x03: {
-    callf(&CPU::BGEZL, mem(Rs), imm(i16));
+    cmp64(mem(Rs), imm(0), set_slt);
+    auto notTaken = jump(flag_slt);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(notTaken);
+    add64(reg(0), PipelineReg(pc), imm(4));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
@@ -1120,25 +1189,75 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BLTZAL Rs,i16
   case 0x10: {
-    callf(&CPU::BLTZAL, mem(Rs), imm(i16));
+    add32(reg(0), PipelineReg(pc), imm(4));
+    mov64_s32(reg(0), reg(0));
+    mov64(mem(IpuReg(r[31])), reg(0));
+    cmp64(mem(Rs), imm(0), set_slt);
+    auto taken = jump(flag_slt);
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
+    auto done = jump();
+    setLabel(taken);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
   //BGEZAL Rs,i16
   case 0x11: {
-    callf(&CPU::BGEZAL, mem(Rs), imm(i16));
+    cmp64(mem(Rs), imm(0), set_slt);
+    auto notTaken = jump(flag_slt);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(notTaken);
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
+    setLabel(done);
+    add32(reg(0), PipelineReg(pc), imm(4));
+    mov64_s32(reg(0), reg(0));
+    mov64(mem(IpuReg(r[31])), reg(0));
     return 1;
   }
 
   //BLTZALL Rs,i16
   case 0x12: {
-    callf(&CPU::BLTZALL, mem(Rs), imm(i16));
+    add32(reg(0), PipelineReg(pc), imm(4));
+    mov64_s32(reg(0), reg(0));
+    mov64(mem(IpuReg(r[31])), reg(0));
+    cmp64(mem(Rs), imm(0), set_slt);
+    auto taken = jump(flag_slt);
+    add64(reg(0), PipelineReg(pc), imm(4));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(taken);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
   //BGEZALL Rs,i16
   case 0x13: {
-    callf(&CPU::BGEZALL, mem(Rs), imm(i16));
+    add32(reg(0), PipelineReg(pc), imm(4));
+    mov64_s32(reg(0), reg(0));
+    mov64(mem(IpuReg(r[31])), reg(0));
+    cmp64(mem(Rs), imm(0), set_slt);
+    auto notTaken = jump(flag_slt);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(notTaken);
+    add64(reg(0), PipelineReg(pc), imm(4));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
