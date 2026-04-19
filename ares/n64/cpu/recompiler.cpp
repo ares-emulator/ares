@@ -49,6 +49,10 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
     flushDeferredCycles(deferredCycles);
     deferredCycles = 0;
   };
+  auto commitArchitecturalState = [&]() -> void {
+    mov32(PipelineReg(state), PipelineReg(nstate));
+    mov64(mem(IpuReg(pc)), PipelineReg(pc));
+  };
 
   Thread thread;
   bool hasBranched = 0;
@@ -93,7 +97,10 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
     vaddr += 4;
     address += 4;
     jumpToSelf += 4;
-    if(hasBranched || (address & 0xfc) == 0 || singleInstruction) break;  //block boundary
+    bool terminal = hasBranched || (address & 0xfc) == 0 || singleInstruction;
+    bool commitNow = info.jitMayCallf() || branched || terminal;
+    if(commitNow) commitArchitecturalState();
+    if(terminal) break;  //block boundary
     hasBranched = branched;
     jumpEpilog(flag_nz);
   }
@@ -175,7 +182,15 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //BEQ Rs,Rt,i16
   case 0x04: {
-    callf(&CPU::BEQ, mem(Rs), mem(Rt), imm(i16));
+    cmp64(mem(Rs), mem(Rt), set_z);
+    auto notTaken = jump(flag_nz);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(notTaken);
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
+    setLabel(done);
     return 1;
   }
 

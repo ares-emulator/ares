@@ -33,7 +33,7 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
   jp(0x01, REGIMM);
   op(0x02, J, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
   op(0x03, JAL, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x04, BEQ, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x04, BEQ, Branch, EndBlock);
   op(0x05, BNE, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
   op(0x06, BLEZ, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
   op(0x07, BGTZ, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
