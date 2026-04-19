@@ -41,6 +41,9 @@ struct CPU : Thread {
   auto instruction() -> void;
   auto instructionPrologue(u64 address, u32 instruction) -> void;
   template<bool Recompiled> auto instructionEpilogue() -> void;
+  auto jitClockTargetExpired() -> bool;
+  auto jitQueueTargetExpired() -> bool;
+  auto jitLinkedCode() -> u8*;
 
   auto power(bool reset) -> void;
 
@@ -937,19 +940,42 @@ struct CPU : Thread {
     };
 
     struct Block {
+      enum : u8 {
+        NoCandidateNone,
+        NoCandidateSectionBoundary,
+        NoCandidateSingleInstruction,
+        NoCandidateStateKeyMayChange,
+        NoCandidateCountCompareWrite,
+        NoCandidateNoDirectTarget,
+        NoCandidateOther,
+      };
+
       auto execute(CPU& self) -> void {
+        self.recompiler.activeBlock = this;
         ((void (*)(CPU*, r64*, r64*))code)(&self, &self.ipu.r[16], &self.fpu.r[16]);
       }
 
       u8* code = nullptr;
       Block* next = nullptr;
+      Block* linkedBlock = nullptr;
       u64 stateKey = 0;
       u32 startAddress = 0;
       u32 endAddress = 0;
+      u32 linkAddress = ~0u;
+      u8* sectionDirty = nullptr;
+      u8 noCandidateReason = NoCandidateNone;
+    };
+
+    struct Pending {
+      Block* source = nullptr;
+      Pending* next = nullptr;
+      u64 expectedStateKey = 0;
+      u32 expectedTargetAddress = 0;
     };
 
     struct Section {
       Block* blocks[SectionWords];
+      Pending* pending[SectionWords];
     };
 
     struct Metrics {
@@ -965,6 +991,24 @@ struct CPU : Thread {
       u64 emitSuccess = 0;
       u64 emitAbortIcache = 0;
       u64 allocatorFlushes = 0;
+      u64 linkCandidates = 0;
+      u64 linkInstalledDirect = 0;
+      u64 linkPendingQueued = 0;
+      u64 linkInstalledBackpatch = 0;
+      u64 linkTaken = 0;
+      u64 linkAbortDirty = 0;
+      u64 linkAbortBudget = 0;
+      u64 linkAbortQueue = 0;
+      u64 linkAbortNoTarget = 0;
+      u64 linkAbortNoCandidate = 0;
+      u64 linkAbortNoResolvedTarget = 0;
+      u64 linkCandidateUnsafeDelaySlot = 0;
+      u64 linkNoCandidateSectionBoundary = 0;
+      u64 linkNoCandidateSingleInstruction = 0;
+      u64 linkNoCandidateStateKeyMayChange = 0;
+      u64 linkNoCandidateCountCompareWrite = 0;
+      u64 linkNoCandidateNoDirectTarget = 0;
+      u64 linkNoCandidateOther = 0;
     };
 
     auto reset() -> void {
@@ -972,6 +1016,7 @@ struct CPU : Thread {
       sectionDirty.resize(SectionCount);
       std::ranges::fill(sections, nullptr);
       std::ranges::fill(sectionDirty, 0);
+      activeBlock = nullptr;
     }
 
     auto isRdramAddress(u32 address) const -> bool {
@@ -1025,11 +1070,13 @@ struct CPU : Thread {
 
     bool enabled = false;
     bool callInstructionPrologue = false;
+    Block* activeBlock = nullptr;
     bump_allocator allocator;
     std::vector<Section*> sections;
     std::vector<u8> sectionDirty;
     Metrics metrics;
   } recompiler{*this};
+  s64 clockTarget = 0;
 
   struct Disassembler {
     CPU& self;

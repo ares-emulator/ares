@@ -119,6 +119,11 @@ auto CPU::instruction() -> void {
     if(vaddrAlignedError<Word>(access.vaddr, false)) return;
     auto block = recompiler.block(ipu.pc, access.paddr, GDB::server.hasBreakpoints());
     if(block) {
+      s64 timerDelta = (s64)scc.compare - (s64)scc.count;
+      if(timerDelta < 0) timerDelta = 0;
+      s64 capBudget = 4096 * 2;
+      if(timerDelta < capBudget) capBudget = timerDelta;
+      clockTarget = Thread::clock + capBudget;
       block->execute(*this);
       return;
     } 
@@ -142,6 +147,68 @@ auto CPU::instructionEpilogue() -> void {
   if constexpr(!Recompiled) {
     ipu.r[0].u64 = 0;
   }
+}
+
+auto CPU::jitClockTargetExpired() -> bool {
+  return Thread::clock >= clockTarget;
+}
+
+auto CPU::jitQueueTargetExpired() -> bool {
+  return queue.timeToNextEvent() <= 0;
+}
+
+auto CPU::jitLinkedCode() -> u8* {
+  auto block = recompiler.activeBlock;
+  if(!block) return nullptr;
+  if(*block->sectionDirty) {
+    recompiler.metrics.linkAbortDirty++;
+    return nullptr;
+  }
+  if(jitClockTargetExpired()) {
+    recompiler.metrics.linkAbortBudget++;
+    return nullptr;
+  }
+  if(jitQueueTargetExpired()) {
+    recompiler.metrics.linkAbortQueue++;
+    return nullptr;
+  }
+  if(block->linkAddress == ~0u) {
+    recompiler.metrics.linkAbortNoCandidate++;
+    recompiler.metrics.linkAbortNoTarget++;
+    switch(block->noCandidateReason) {
+    case Recompiler::Block::NoCandidateSectionBoundary:
+      recompiler.metrics.linkNoCandidateSectionBoundary++;
+      break;
+    case Recompiler::Block::NoCandidateSingleInstruction:
+      recompiler.metrics.linkNoCandidateSingleInstruction++;
+      break;
+    case Recompiler::Block::NoCandidateStateKeyMayChange:
+      recompiler.metrics.linkNoCandidateStateKeyMayChange++;
+      break;
+    case Recompiler::Block::NoCandidateCountCompareWrite:
+      recompiler.metrics.linkNoCandidateCountCompareWrite++;
+      break;
+    case Recompiler::Block::NoCandidateNoDirectTarget:
+      recompiler.metrics.linkNoCandidateNoDirectTarget++;
+      break;
+    case Recompiler::Block::NoCandidateNone:
+      recompiler.metrics.linkNoCandidateOther++;
+      break;
+    default:
+      recompiler.metrics.linkNoCandidateOther++;
+      break;
+    }
+    return nullptr;
+  }
+  auto linked = block->linkedBlock;
+  if(!linked) {
+    recompiler.metrics.linkAbortNoResolvedTarget++;
+    recompiler.metrics.linkAbortNoTarget++;
+    return nullptr;
+  }
+  recompiler.metrics.linkTaken++;
+  recompiler.activeBlock = linked;
+  return linked->code;
 }
 
 auto CPU::power(bool reset) -> void {

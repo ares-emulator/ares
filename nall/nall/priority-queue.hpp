@@ -93,6 +93,11 @@ struct priority_queue<T[Size]> {
     return cycles;
   }
 
+  auto timeToNextEvent() const -> s32 {
+    if(!size) return 0x7fff'ffff;
+    return (s32)(heap[0].clock - clock);
+  }
+
   auto serialize(serializer& s) -> void {
     s(clock);
     s(size);
