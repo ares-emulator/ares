@@ -379,8 +379,9 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     } else {
       deferredCycles += 1 * 2;
     }
+    bool stateEndBlockCheck = hasBranched || info.jitMayCallf();
     flushDeferred();
-    test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
+    if(stateEndBlockCheck) test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
     mov32(PipelineReg(state), PipelineReg(nstate));
     mov64(mem(IpuReg(pc)), PipelineReg(pc));
 
@@ -403,7 +404,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     bool hasLastLink = lastBranchLinkAddressTaken != ~0u || lastBranchLinkAddressNotTaken != ~0u;
     bool blockedUnsafeDelaySlot = delaySlotLinkEligible && !safeDelaySlotLink && hasLastLink;
     if(terminal) {
-      if(!hasBranched) jumpEpilog(flag_nz);
+      if(!hasBranched && stateEndBlockCheck) jumpEpilog(flag_nz);
       bool hasLinkCandidate = linkAddressTaken != ~0u || linkAddressNotTaken != ~0u;
       if(hasLinkCandidate) {
         noCandidateReason = Block::NoCandidateNone;
@@ -432,7 +433,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     lastBranchLinkVaddrTaken = branchLinks.takenVaddr;
     lastBranchLinkVaddrNotTaken = branchLinks.notTakenVaddr;
     lastBranchNoDirectReason = branchLinks.noDirectReason;
-    jumpEpilog(flag_nz);
+    if(stateEndBlockCheck) jumpEpilog(flag_nz);
   }
 
   flushDeferred();
