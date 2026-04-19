@@ -1,3 +1,65 @@
+/*
+CPU Recompiler: Architecture and Execution Model
+================================================
+
+Overview
+--------
+This file implements the N64 CPU JIT backend on top of nall::recompiler
+(SLJIT). It translates guest instructions into host blocks that operate
+directly on CPU/IPU/FPU/Pipeline state.
+
+Main goals:
+- keep the hot path inlined (minimal per-opcode overhead);
+- preserve exact MIPS-visible behavior (delay slots, exceptions, timing);
+- fall back to helpers/interpreter paths where complexity is still high.
+
+Block lifecycle
+---------------
+1) Lookup:
+   - block(vaddr, paddr, singleInstruction) probes a per-pool cache
+     (64 entries per 256-byte pool shard).
+2) Emit:
+   - on miss, emit() builds host code with beginFunction()/endFunction().
+3) Publish:
+   - compiled code is stored in the pool and later executed via Block::execute().
+
+Codegen model inside emit()
+---------------------------
+For each instruction in the block:
+- decode metadata with decoderEXECUTEInfo() (OpInfo);
+- load/advance virtual pipeline PC window (pc/nextpc/nstate);
+- emit opcode body via emitEXECUTE()/emitSPECIAL()/...;
+- account clocks in deferredCycles (flush only at synchronization boundaries);
+- test EndBlock only when needed, then branch to epilogue;
+- commit architectural state at explicit commit points.
+
+The hot loop avoids per-opcode generic helper calls when possible. Branch
+families are emitted directly in JIT, including likely/link behavior and
+delay-slot state transitions.
+
+State and timing model
+----------------------
+- PipelineReg(pc/nextpc/state/nstate) holds transient control-flow state.
+- Architectural commit writes pipeline state and ipu.pc only at controlled
+  points (helper boundaries, branch boundaries, block termination).
+- CPU::step() is emitted through deferred flushes, not per instruction.
+
+JIT <-> interpreter interop
+---------------------------
+The dispatcher in cpu.cpp chooses JIT only when conditions allow it:
+- dynamic recompiler enabled;
+- instruction is in cacheable memory;
+- fetch/devirtualization checks pass.
+
+If JIT compilation cannot proceed (for example icache incoherence), emit()
+returns nullptr and execution immediately falls back to interpreter decode for
+that instruction stream.
+
+Even inside JIT blocks, opcodes may still call C++ helpers (callf) for complex
+or exceptional behavior. Those helpers share the same CPU state objects, so
+exceptions/traps/faults naturally rejoin the normal interpreter-visible flow.
+*/
+
 auto CPU::Recompiler::pool(u32 address) -> Pool* {
   auto& pool = pools[address >> 8 & 0x1fffff];
   if(!pool) {
