@@ -25,6 +25,40 @@ Block lifecycle
 3) Publish:
    - compiled code is inserted at head(entry) and later executed via Block::execute().
 
+Block linking
+-------------
+Goal:
+- avoid dispatcher round-trips by chaining compatible blocks directly.
+- keep correctness constraints explicit (state, invalidation, timing budget, queue events).
+
+Candidate extraction (emit):
+- links are only considered inside the same 4 KiB section.
+- when a block terminates after a branch delay-slot, emit() records up to two successors:
+  taken and not-taken (dual-edge model).
+- link candidates are disabled for boundaries that may change execution mode
+  (single-instruction mode, state-key-changing opcodes, SCC count/compare writes).
+- delay-slot safety gating is applied: if the delay-slot instruction may call helpers,
+  raise exceptions, or fault, linking is not installed for that block.
+
+Resolution model (block + section metadata):
+- each section owns per-word pending lists keyed by target physical address.
+- on publish, each candidate edge tries direct resolution first:
+  source(stateKey) -> target(startAddress, same stateKey).
+- unresolved edges are queued as pending records.
+- when any target block is later published, pending predecessors are backpatched lazily.
+- if taken/not-taken collapse to the same target, only one lookup/pending entry is used.
+
+Runtime gate (jitLinkedCode):
+- verify current section is still valid (dirty flag check).
+- enforce slice limits (clock target and queue next-event checks).
+- select taken/not-taken edge by final architectural PC.
+- follow link only if resolved; otherwise return to epilogue and re-enter dispatcher.
+
+Observability:
+- metrics distinguish installation (direct/pending/backpatch), runtime usage (taken),
+  abort causes (dirty/budget/queue/unresolved), and no-candidate reasons
+  (state/section/no-direct sub-reasons/unsafe delay-slot).
+
  Invalidation model
  ------------------
  - every memory write marks the touched section as dirty (hot path: one flag write).
@@ -128,6 +162,12 @@ auto CPU::Recompiler::reportMetrics() -> void {
         " nocandstate=", metrics.linkNoCandidateStateKeyMayChange,
         " nocandcountcmp=", metrics.linkNoCandidateCountCompareWrite,
         " nocandnodirect=", metrics.linkNoCandidateNoDirectTarget,
+        " ndunsup=", metrics.linkNoCandidateNoDirectUnsupported,
+        " ndunmap=", metrics.linkNoCandidateNoDirectUnmapped,
+        " nduncache=", metrics.linkNoCandidateNoDirectUncached,
+        " ndcross=", metrics.linkNoCandidateNoDirectCrossSection,
+        " ndunsafe=", metrics.linkNoCandidateNoDirectUnsafeDelaySlot,
+        " ndother=", metrics.linkNoCandidateNoDirectOther,
         " nocandother=", metrics.linkNoCandidateOther, "\n");
 }
 
@@ -198,7 +238,8 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
     while(*pending) {
       auto entry = *pending;
       if(entry->expectedStateKey == target->stateKey && entry->expectedTargetAddress == target->startAddress) {
-        entry->source->linkedBlock = target;
+        if(entry->source->linkAddressTaken == target->startAddress) entry->source->linkedBlockTaken = target;
+        if(entry->source->linkAddressNotTaken == target->startAddress) entry->source->linkedBlockNotTaken = target;
         metrics.linkInstalledBackpatch++;
         *pending = entry->next;
         continue;
@@ -212,19 +253,30 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
     block->next = section->blocks[index];
     section->blocks[index] = block;
     block->sectionDirty = sectionDirty.data() + sectionIndex(block->startAddress);
-    if(block->linkAddress != ~0u) {
-      metrics.linkCandidates++;
-      if(auto target = findLinked(block->linkAddress, block->stateKey)) {
-        block->linkedBlock = target;
+    bool hasTaken = block->linkAddressTaken != ~0u;
+    bool hasNotTaken = block->linkAddressNotTaken != ~0u;
+    auto linkTarget = [&](u32 targetAddress) -> Block* {
+      auto target = findLinked(targetAddress, block->stateKey);
+      if(target) {
         metrics.linkInstalledDirect++;
-      } else {
-        auto pending = (Pending*)allocator.acquire(sizeof(Pending));
-        pending->source = block;
-        pending->next = section->pending[blockIndex(block->linkAddress)];
-        pending->expectedStateKey = block->stateKey;
-        pending->expectedTargetAddress = block->linkAddress;
-        section->pending[blockIndex(block->linkAddress)] = pending;
-        metrics.linkPendingQueued++;
+        return target;
+      }
+      auto pending = (Pending*)allocator.acquire(sizeof(Pending));
+      pending->source = block;
+      pending->next = section->pending[blockIndex(targetAddress)];
+      pending->expectedStateKey = block->stateKey;
+      pending->expectedTargetAddress = targetAddress;
+      section->pending[blockIndex(targetAddress)] = pending;
+      metrics.linkPendingQueued++;
+      return nullptr;
+    };
+    if(hasTaken || hasNotTaken) {
+      metrics.linkCandidates++;
+      if(hasTaken) block->linkedBlockTaken = linkTarget(block->linkAddressTaken);
+      if(hasNotTaken && block->linkAddressNotTaken == block->linkAddressTaken) {
+        block->linkedBlockNotTaken = block->linkedBlockTaken;
+      } else if(hasNotTaken) {
+        block->linkedBlockNotTaken = linkTarget(block->linkAddressNotTaken);
       }
     }
     resolvePending(block);
@@ -243,6 +295,7 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #endif
 auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction) -> Block* {
   metrics.emitCalls++;
+  emitStateKey = stateKey;
   if(unlikely(allocator.available() < 1_MiB)) {
     metrics.allocatorFlushes++;
     print("CPU allocator flush\n");
@@ -276,12 +329,26 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   u32 startAddress = address;
   u32 startSection = sectionIndex(address);
   bool hasBranched = 0;
-  u32 lastBranchLinkAddress = ~0u;
-  u32 linkAddress = ~0u;
+  u64 lastBranchLinkVaddrTaken = ~0ull;
+  u64 lastBranchLinkVaddrNotTaken = ~0ull;
+  u32 lastBranchLinkAddressTaken = ~0u;
+  u32 lastBranchLinkAddressNotTaken = ~0u;
+  u64 linkVaddrTaken = ~0ull;
+  u64 linkVaddrNotTaken = ~0ull;
+  u32 linkAddressTaken = ~0u;
+  u32 linkAddressNotTaken = ~0u;
+  u8 lastBranchNoDirectReason = Block::NoCandidateNoDirectOther;
   u8 noCandidateReason = Block::NoCandidateNone;
   int numInsn = 0;
   constexpr u32 branchToSelf = 0x1000'ffff;  //beq 0,0,<pc>
   u32 jumpToSelf = 2 << 26 | vaddr >> 2 & 0x3ff'ffff;  //j <pc>
+  struct BranchLinks {
+    u64 takenVaddr = ~0ull;
+    u64 notTakenVaddr = ~0ull;
+    u32 takenAddress = ~0u;
+    u32 notTakenAddress = ~0u;
+    u8 noDirectReason = Block::NoCandidateNoDirectUnsupported;
+  };
   auto writesCountCompare = [](u32 instruction) -> bool {
     if(instruction >> 26 != 0x10) return false;
     auto op = instruction >> 21 & 0x1f;
@@ -289,47 +356,68 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     auto rd = instruction >> 11 & 31;
     return rd == 9 || rd == 11;
   };
-  auto linkAddressFromVaddr = [&](u64 targetVaddr) -> u32 {
+  auto fillLinkFromVaddr = [&](BranchLinks& links, bool taken, u64 targetVaddr) -> u8 {
     auto access = self.devirtualize<Read, Word>(targetVaddr, false, false);
-    if(!access || !access.cache) return ~0u;
-    if(sectionIndex(access.paddr) != startSection) return ~0u;
-    return access.paddr;
+    if(!access) return Block::NoCandidateNoDirectUnmapped;
+    if(!access.cache) return Block::NoCandidateNoDirectUncached;
+    if(sectionIndex(access.paddr) != startSection) return Block::NoCandidateNoDirectCrossSection;
+    if(taken) {
+      links.takenAddress = access.paddr;
+      links.takenVaddr = targetVaddr;
+      return Block::NoCandidateNone;
+    }
+    links.notTakenAddress = access.paddr;
+    links.notTakenVaddr = targetVaddr;
+    return Block::NoCandidateNone;
   };
-  auto directBranchLinkAddress = [&](u64 branchVaddr, u32 instruction) -> u32 {
+  auto mergeNoDirectReason = [&](u8 left, u8 right) -> u8 {
+    if(left == Block::NoCandidateNone || right == Block::NoCandidateNone) return Block::NoCandidateNone;
+    if(left == Block::NoCandidateNoDirectCrossSection || right == Block::NoCandidateNoDirectCrossSection) {
+      return Block::NoCandidateNoDirectCrossSection;
+    }
+    if(left == Block::NoCandidateNoDirectUncached || right == Block::NoCandidateNoDirectUncached) {
+      return Block::NoCandidateNoDirectUncached;
+    }
+    if(left == Block::NoCandidateNoDirectUnmapped || right == Block::NoCandidateNoDirectUnmapped) {
+      return Block::NoCandidateNoDirectUnmapped;
+    }
+    return Block::NoCandidateNoDirectOther;
+  };
+  auto directBranchLinkAddress = [&](u64 branchVaddr, u32 instruction) -> BranchLinks {
+    BranchLinks links;
     auto opcode = instruction >> 26;
-    auto rs = instruction >> 21 & 31;
     auto rt = instruction >> 16 & 31;
     auto branchTargetVaddr = branchVaddr + 4 + (s64(s16(instruction)) << 2);
     auto fallthroughVaddr = branchVaddr + 8;
     if(opcode == 0x02 || opcode == 0x03) {
       auto targetVaddr = (branchVaddr & 0xffff'ffff'f000'0000ull) | (u64(instruction & 0x03ff'ffff) << 2);
-      return linkAddressFromVaddr(targetVaddr);
+      links.noDirectReason = fillLinkFromVaddr(links, true, targetVaddr);
+      return links;
     }
-    if(opcode == 0x04 || opcode == 0x14) {
-      if(rs != rt) return ~0u;
-      return linkAddressFromVaddr(branchTargetVaddr);
+    if(opcode == 0x04 || opcode == 0x05 || opcode == 0x06 || opcode == 0x07
+    || opcode == 0x14 || opcode == 0x15 || opcode == 0x16 || opcode == 0x17) {
+      auto reasonTaken = fillLinkFromVaddr(links, true, branchTargetVaddr);
+      auto reasonNotTaken = fillLinkFromVaddr(links, false, fallthroughVaddr);
+      links.noDirectReason = mergeNoDirectReason(reasonTaken, reasonNotTaken);
+      return links;
     }
-    if(opcode == 0x05 || opcode == 0x15) {
-      if(rs != rt) return ~0u;
-      return linkAddressFromVaddr(fallthroughVaddr);
+    if(opcode == 0x01) {
+      if(rt == 0x00 || rt == 0x01 || rt == 0x02 || rt == 0x03
+      || rt == 0x10 || rt == 0x11 || rt == 0x12 || rt == 0x13) {
+        auto reasonTaken = fillLinkFromVaddr(links, true, branchTargetVaddr);
+        auto reasonNotTaken = fillLinkFromVaddr(links, false, fallthroughVaddr);
+        links.noDirectReason = mergeNoDirectReason(reasonTaken, reasonNotTaken);
+      }
+      return links;
     }
-    if(opcode == 0x06 || opcode == 0x16) {
-      if(rs != 0) return ~0u;
-      return linkAddressFromVaddr(branchTargetVaddr);
+    if(opcode == 0x11 && (instruction >> 21 & 31) == 0x08) {
+      if(!(emitStateKey & 1)) return links;
+      auto reasonTaken = fillLinkFromVaddr(links, true, branchTargetVaddr);
+      auto reasonNotTaken = fillLinkFromVaddr(links, false, fallthroughVaddr);
+      links.noDirectReason = mergeNoDirectReason(reasonTaken, reasonNotTaken);
+      return links;
     }
-    if(opcode == 0x07 || opcode == 0x17) {
-      if(rs != 0) return ~0u;
-      return linkAddressFromVaddr(fallthroughVaddr);
-    }
-    if(opcode != 0x01) return ~0u;
-    if(rs != 0) return ~0u;
-    if(rt == 0x00 || rt == 0x02 || rt == 0x10 || rt == 0x12) {
-      return linkAddressFromVaddr(fallthroughVaddr);
-    }
-    if(rt == 0x01 || rt == 0x03 || rt == 0x11 || rt == 0x13) {
-      return linkAddressFromVaddr(branchTargetVaddr);
-    }
-    return ~0u;
+    return links;
   };
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
@@ -357,8 +445,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     }
     numInsn++;
     bool branched = emitEXECUTE(instruction);
-    u32 branchLinkAddress = ~0u;
-    if(branched) branchLinkAddress = directBranchLinkAddress(vaddr, instruction);
+    BranchLinks branchLinks;
+    if(branched) branchLinks = directBranchLinkAddress(vaddr, instruction);
     if(unlikely(instruction == branchToSelf || instruction == jumpToSelf)) {
       deferredCycles += 64 * 2;
     } else {
@@ -382,14 +470,20 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     bool delaySlotLinkEligible = terminal && hasBranched && !singleInstruction
     && !info.jitStateKeyMayChange() && !countCompareWrite;
     if(delaySlotLinkEligible && safeDelaySlotLink) {
-      linkAddress = lastBranchLinkAddress;
+      linkAddressTaken = lastBranchLinkAddressTaken;
+      linkAddressNotTaken = lastBranchLinkAddressNotTaken;
+      linkVaddrTaken = lastBranchLinkVaddrTaken;
+      linkVaddrNotTaken = lastBranchLinkVaddrNotTaken;
     }
-    if(delaySlotLinkEligible && !safeDelaySlotLink && lastBranchLinkAddress != ~0u) {
+    bool hasLastLink = lastBranchLinkAddressTaken != ~0u || lastBranchLinkAddressNotTaken != ~0u;
+    bool blockedUnsafeDelaySlot = delaySlotLinkEligible && !safeDelaySlotLink && hasLastLink;
+    if(blockedUnsafeDelaySlot) {
       metrics.linkCandidateUnsafeDelaySlot++;
     }
     if(terminal) {
       if(!hasBranched) jumpEpilog(flag_nz);
-      if(linkAddress != ~0u) {
+      bool hasLinkCandidate = linkAddressTaken != ~0u || linkAddressNotTaken != ~0u;
+      if(hasLinkCandidate) {
         noCandidateReason = Block::NoCandidateNone;
       } else if(singleInstruction) {
         noCandidateReason = Block::NoCandidateSingleInstruction;
@@ -398,7 +492,11 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       } else if(countCompareWrite) {
         noCandidateReason = Block::NoCandidateCountCompareWrite;
       } else if(hasBranched) {
-        noCandidateReason = Block::NoCandidateNoDirectTarget;
+        if(blockedUnsafeDelaySlot) {
+          noCandidateReason = Block::NoCandidateNoDirectUnsafeDelaySlot;
+        } else {
+          noCandidateReason = lastBranchNoDirectReason;
+        }
       } else if(sectionBoundary) {
         noCandidateReason = Block::NoCandidateSectionBoundary;
       } else {
@@ -407,7 +505,11 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       break;
     }
     hasBranched = branched;
-    lastBranchLinkAddress = branchLinkAddress;
+    lastBranchLinkAddressTaken = branchLinks.takenAddress;
+    lastBranchLinkAddressNotTaken = branchLinks.notTakenAddress;
+    lastBranchLinkVaddrTaken = branchLinks.takenVaddr;
+    lastBranchLinkVaddrNotTaken = branchLinks.notTakenVaddr;
+    lastBranchNoDirectReason = branchLinks.noDirectReason;
     jumpEpilog(flag_nz);
   }
 
@@ -428,11 +530,15 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   auto block = (Block*)allocator.acquire(sizeof(Block));
   block->code = endFunction();
   block->next = nullptr;
-  block->linkedBlock = nullptr;
+  block->linkedBlockTaken = nullptr;
+  block->linkedBlockNotTaken = nullptr;
   block->stateKey = stateKey;
   block->startAddress = startAddress;
   block->endAddress = address;
-  block->linkAddress = linkAddress;
+  block->linkVaddrTaken = linkVaddrTaken;
+  block->linkVaddrNotTaken = linkVaddrNotTaken;
+  block->linkAddressTaken = linkAddressTaken;
+  block->linkAddressNotTaken = linkAddressNotTaken;
   block->sectionDirty = sectionDirty.data() + startSection;
   block->noCandidateReason = noCandidateReason;
   metrics.emitSuccess++;
@@ -464,6 +570,18 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
 #define Fd        FpuReg(r[0]) + Fdn * sizeof(r64)
 #define Fs        FpuReg(r[0]) + Fsn * sizeof(r64)
 #define Ft        FpuReg(r[0]) + Ftn * sizeof(r64)
+static constexpr s32 FpuCsrBaseOffset = offsetof(CPU, fpu) + offsetof(CPU::FPU, csr);
+static constexpr s32 FpuCsrCauseOffset = FpuCsrBaseOffset + offsetof(CPU::FPU::ControlStatus, cause);
+#define FpuCsrCompare mem(sreg(0), FpuCsrBaseOffset + offsetof(CPU::FPU::ControlStatus, compare))
+
+static_assert(sizeof(n1) == 1);
+static_assert(offsetof(CPU::FPU::ControlStatus::Cause, inexact) == 0);
+static_assert(offsetof(CPU::FPU::ControlStatus::Cause, underflow) == 1);
+static_assert(offsetof(CPU::FPU::ControlStatus::Cause, overflow) == 2);
+static_assert(offsetof(CPU::FPU::ControlStatus::Cause, divisionByZero) == 3);
+static_assert(offsetof(CPU::FPU::ControlStatus::Cause, invalidOperation) == 4);
+static_assert(offsetof(CPU::FPU::ControlStatus::Cause, unimplementedOperation) == 5);
+static_assert(sizeof(CPU::FPU::ControlStatus::Cause) == 6);
 
 #define XRd       IpuReg(r[0]) + XRdn * sizeof(r64)
 #define XRt       IpuReg(r[0]) + XRtn * sizeof(r64)
@@ -1719,6 +1837,29 @@ auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
 }
 
 auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
+  auto movzeron = [&](s32 offset, u32 size) -> void {
+    if constexpr(sizeof(void*) == 8) {
+      while(size >= 8) {
+        sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(sreg(0).fst), offset, SLJIT_IMM, 0);
+        offset += 8;
+        size -= 8;
+      }
+    }
+    if(size >= 4) {
+      sljit_emit_op1(compiler, SLJIT_MOV32, SLJIT_MEM1(sreg(0).fst), offset, SLJIT_IMM, 0);
+      offset += 4;
+      size -= 4;
+    }
+    if(size >= 2) {
+      sljit_emit_op1(compiler, SLJIT_MOV_U16, SLJIT_MEM1(sreg(0).fst), offset, SLJIT_IMM, 0);
+      offset += 2;
+      size -= 2;
+    }
+    if(size) {
+      sljit_emit_op1(compiler, SLJIT_MOV_U8, SLJIT_MEM1(sreg(0).fst), offset, SLJIT_IMM, 0);
+    }
+  };
+
   switch(instruction >> 21 & 0x1f) {
 
   //MFC1 Rt,Fs
@@ -1774,7 +1915,31 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //BC1 offset
   case 0x08: {
-    callf(&CPU::BC1, imm(instruction >> 16 & 1), imm(instruction >> 17 & 1), imm(i16));
+    bool value = instruction >> 16 & 1;
+    bool likely = instruction >> 17 & 1;
+    if(!(emitStateKey & 1)) {
+      callf(&CPU::BC1, imm(value), imm(likely), imm(i16));
+      return 1;
+    }
+    movzeron(FpuCsrCauseOffset, sizeof(CPU::FPU::ControlStatus::Cause));
+    mov32(reg(0), FpuCsrCompare);
+    and32(reg(0), reg(0), imm(1));
+    cmp32(reg(0), imm(value), set_z);
+    auto taken = jump(flag_z);
+    if(likely) {
+      add64(reg(0), PipelineReg(pc), imm(4));
+      mov64(PipelineReg(pc), reg(0));
+      add64(PipelineReg(nextpc), reg(0), imm(4));
+      or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    } else {
+      mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
+    }
+    auto done = jump();
+    setLabel(taken);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 

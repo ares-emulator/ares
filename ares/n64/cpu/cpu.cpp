@@ -149,6 +149,10 @@ auto CPU::instructionEpilogue() -> void {
   }
 }
 
+auto CPU::raiseCoprocessor1Exception() -> void {
+  exception.coprocessor1();
+}
+
 auto CPU::jitClockTargetExpired() -> bool {
   return Thread::clock >= clockTarget;
 }
@@ -172,7 +176,9 @@ auto CPU::jitLinkedCode() -> u8* {
     recompiler.metrics.linkAbortQueue++;
     return nullptr;
   }
-  if(block->linkAddress == ~0u) {
+  bool hasTaken = block->linkAddressTaken != ~0u;
+  bool hasNotTaken = block->linkAddressNotTaken != ~0u;
+  if(!hasTaken && !hasNotTaken) {
     recompiler.metrics.linkAbortNoCandidate++;
     recompiler.metrics.linkAbortNoTarget++;
     switch(block->noCandidateReason) {
@@ -191,6 +197,30 @@ auto CPU::jitLinkedCode() -> u8* {
     case Recompiler::Block::NoCandidateNoDirectTarget:
       recompiler.metrics.linkNoCandidateNoDirectTarget++;
       break;
+    case Recompiler::Block::NoCandidateNoDirectUnsupported:
+      recompiler.metrics.linkNoCandidateNoDirectTarget++;
+      recompiler.metrics.linkNoCandidateNoDirectUnsupported++;
+      break;
+    case Recompiler::Block::NoCandidateNoDirectUnmapped:
+      recompiler.metrics.linkNoCandidateNoDirectTarget++;
+      recompiler.metrics.linkNoCandidateNoDirectUnmapped++;
+      break;
+    case Recompiler::Block::NoCandidateNoDirectUncached:
+      recompiler.metrics.linkNoCandidateNoDirectTarget++;
+      recompiler.metrics.linkNoCandidateNoDirectUncached++;
+      break;
+    case Recompiler::Block::NoCandidateNoDirectCrossSection:
+      recompiler.metrics.linkNoCandidateNoDirectTarget++;
+      recompiler.metrics.linkNoCandidateNoDirectCrossSection++;
+      break;
+    case Recompiler::Block::NoCandidateNoDirectUnsafeDelaySlot:
+      recompiler.metrics.linkNoCandidateNoDirectTarget++;
+      recompiler.metrics.linkNoCandidateNoDirectUnsafeDelaySlot++;
+      break;
+    case Recompiler::Block::NoCandidateNoDirectOther:
+      recompiler.metrics.linkNoCandidateNoDirectTarget++;
+      recompiler.metrics.linkNoCandidateNoDirectOther++;
+      break;
     case Recompiler::Block::NoCandidateNone:
       recompiler.metrics.linkNoCandidateOther++;
       break;
@@ -200,7 +230,15 @@ auto CPU::jitLinkedCode() -> u8* {
     }
     return nullptr;
   }
-  auto linked = block->linkedBlock;
+  auto linked = (Recompiler::Block*)nullptr;
+  if(hasTaken && ipu.pc == block->linkVaddrTaken) linked = block->linkedBlockTaken;
+  if(!linked && hasNotTaken && ipu.pc == block->linkVaddrNotTaken) linked = block->linkedBlockNotTaken;
+  bool missTaken = !hasTaken || ipu.pc != block->linkVaddrTaken;
+  bool missNotTaken = !hasNotTaken || ipu.pc != block->linkVaddrNotTaken;
+  if(!linked && missTaken && missNotTaken) {
+    recompiler.metrics.linkAbortNoTarget++;
+    return nullptr;
+  }
   if(!linked) {
     recompiler.metrics.linkAbortNoResolvedTarget++;
     recompiler.metrics.linkAbortNoTarget++;

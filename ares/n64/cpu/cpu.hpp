@@ -41,6 +41,7 @@ struct CPU : Thread {
   auto instruction() -> void;
   auto instructionPrologue(u64 address, u32 instruction) -> void;
   template<bool Recompiled> auto instructionEpilogue() -> void;
+  auto raiseCoprocessor1Exception() -> void;
   auto jitClockTargetExpired() -> bool;
   auto jitQueueTargetExpired() -> bool;
   auto jitLinkedCode() -> u8*;
@@ -778,7 +779,6 @@ struct CPU : Thread {
   auto fpuCheckInputs(T& f1, T& f2) -> bool;
   auto fpuCheckOutput(f32& f) -> bool;
   auto fpuCheckOutput(f64& f) -> bool;
-  auto fpuClearCause() -> void;
   template<typename DST, typename SF>
   auto fpuCheckInputConv(SF& f) -> bool;
 
@@ -947,6 +947,12 @@ struct CPU : Thread {
         NoCandidateStateKeyMayChange,
         NoCandidateCountCompareWrite,
         NoCandidateNoDirectTarget,
+        NoCandidateNoDirectUnsupported,
+        NoCandidateNoDirectUnmapped,
+        NoCandidateNoDirectUncached,
+        NoCandidateNoDirectCrossSection,
+        NoCandidateNoDirectUnsafeDelaySlot,
+        NoCandidateNoDirectOther,
         NoCandidateOther,
       };
 
@@ -957,11 +963,15 @@ struct CPU : Thread {
 
       u8* code = nullptr;
       Block* next = nullptr;
-      Block* linkedBlock = nullptr;
+      Block* linkedBlockTaken = nullptr;
+      Block* linkedBlockNotTaken = nullptr;
       u64 stateKey = 0;
       u32 startAddress = 0;
       u32 endAddress = 0;
-      u32 linkAddress = ~0u;
+      u64 linkVaddrTaken = ~0ull;
+      u64 linkVaddrNotTaken = ~0ull;
+      u32 linkAddressTaken = ~0u;
+      u32 linkAddressNotTaken = ~0u;
       u8* sectionDirty = nullptr;
       u8 noCandidateReason = NoCandidateNone;
     };
@@ -1008,6 +1018,12 @@ struct CPU : Thread {
       u64 linkNoCandidateStateKeyMayChange = 0;
       u64 linkNoCandidateCountCompareWrite = 0;
       u64 linkNoCandidateNoDirectTarget = 0;
+      u64 linkNoCandidateNoDirectUnsupported = 0;
+      u64 linkNoCandidateNoDirectUnmapped = 0;
+      u64 linkNoCandidateNoDirectUncached = 0;
+      u64 linkNoCandidateNoDirectCrossSection = 0;
+      u64 linkNoCandidateNoDirectUnsafeDelaySlot = 0;
+      u64 linkNoCandidateNoDirectOther = 0;
       u64 linkNoCandidateOther = 0;
     };
 
@@ -1070,6 +1086,7 @@ struct CPU : Thread {
 
     bool enabled = false;
     bool callInstructionPrologue = false;
+    u64 emitStateKey = 0;
     Block* activeBlock = nullptr;
     bump_allocator allocator;
     std::vector<Section*> sections;
