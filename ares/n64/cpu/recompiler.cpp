@@ -54,11 +54,6 @@ Runtime gate (jitLinkedCode):
 - select taken/not-taken edge by final architectural PC.
 - follow link only if resolved; otherwise return to epilogue and re-enter dispatcher.
 
-Observability:
-- metrics distinguish installation (direct/pending/backpatch), runtime usage (taken),
-  abort causes (dirty/budget/queue/unresolved), and no-candidate reasons
-  (state/section/no-direct sub-reasons/unsafe delay-slot).
-
  Invalidation model
  ------------------
  - every memory write marks the touched section as dirty (hot path: one flag write).
@@ -103,12 +98,10 @@ Even inside JIT blocks, opcodes may still call C++ helpers (callf) for complex
 or exceptional behavior. Those helpers share the same CPU state objects, so
 exceptions/traps/faults naturally rejoin the normal interpreter-visible flow.
 
- State key and metrics
- ---------------------
+ State key
+ ---------
  - computeStateKey() packs slow-changing CPU/FPU mode bits into an n64 key.
  - blocks are specialized by stateKey to remove avoidable runtime checks.
- - reportMetrics() prints coarse JIT health counters every fixed number of
-   block() calls (hit/miss, list depth, emits, allocator flushes, etc.).
 */
 
 auto CPU::Recompiler::computeStateKey() const -> u64 {
@@ -133,44 +126,6 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   return stateKey;
 }
 
-auto CPU::Recompiler::reportMetrics() -> void {
-  auto calls = metrics.blockCalls;
-  if(!calls) return;
-  auto hitPermille = metrics.blockHits * 1000 / calls;
-  auto avgLookupMilli = metrics.lookupSteps * 1000 / calls;
-  print("CPU JIT metrics calls=", calls, " hit=", metrics.blockHits, " miss=", metrics.blockMisses,
-        " hitpermille=", hitPermille, " lookupmilli=", avgLookupMilli,
-        " lookupmax=", metrics.lookupStepsMax,
-        " secalloc=", metrics.sectionAllocations, " secclear=", metrics.sectionDirtyClears,
-        " secdrop=", metrics.sectionDirtyDrops, " emit=", metrics.emitCalls,
-        " emitok=", metrics.emitSuccess, " emitabort=", metrics.emitAbortIcache,
-        " flush=", metrics.allocatorFlushes,
-        " linkcand=", metrics.linkCandidates,
-        " linkdir=", metrics.linkInstalledDirect,
-        " linkpend=", metrics.linkPendingQueued,
-        " linkbp=", metrics.linkInstalledBackpatch,
-        " linktaken=", metrics.linkTaken,
-        " linkdirty=", metrics.linkAbortDirty,
-        " linkbudget=", metrics.linkAbortBudget,
-        " linkqueue=", metrics.linkAbortQueue,
-        " linkmiss=", metrics.linkAbortNoTarget,
-        " linkmissnocand=", metrics.linkAbortNoCandidate,
-        " linkmissunresolved=", metrics.linkAbortNoResolvedTarget,
-        " linkcandunsafe=", metrics.linkCandidateUnsafeDelaySlot,
-        " nocandsec=", metrics.linkNoCandidateSectionBoundary,
-        " nocandsingle=", metrics.linkNoCandidateSingleInstruction,
-        " nocandstate=", metrics.linkNoCandidateStateKeyMayChange,
-        " nocandcountcmp=", metrics.linkNoCandidateCountCompareWrite,
-        " nocandnodirect=", metrics.linkNoCandidateNoDirectTarget,
-        " ndunsup=", metrics.linkNoCandidateNoDirectUnsupported,
-        " ndunmap=", metrics.linkNoCandidateNoDirectUnmapped,
-        " nduncache=", metrics.linkNoCandidateNoDirectUncached,
-        " ndcross=", metrics.linkNoCandidateNoDirectCrossSection,
-        " ndunsafe=", metrics.linkNoCandidateNoDirectUnsafeDelaySlot,
-        " ndother=", metrics.linkNoCandidateNoDirectOther,
-        " nocandother=", metrics.linkNoCandidateOther, "\n");
-}
-
 auto CPU::Recompiler::section(u32 address) -> Section* {
   assert(isRdramAddress(address));
   if(!isRdramAddress(address)) return nullptr;
@@ -178,19 +133,16 @@ auto CPU::Recompiler::section(u32 address) -> Section* {
   auto& section = sections[index];
   auto dirty = sectionDirty[index];
   if(!section) {
-    metrics.sectionAllocations++;
     section = (Section*)allocator.acquire(sizeof(Section));
     memory::jitprotect(false);
     *section = {};
     memory::jitprotect(true);
     if(dirty) {
-      metrics.sectionDirtyDrops++;
       sectionDirty[index] = 0;
     }
     return section;
   }
   if(dirty) {
-    metrics.sectionDirtyClears++;
     memory::jitprotect(false);
     *section = {};
     memory::jitprotect(true);
@@ -200,27 +152,16 @@ auto CPU::Recompiler::section(u32 address) -> Section* {
 }
 
 auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> Block* {
-  metrics.blockCalls++;
-  if((metrics.blockCalls & (MetricsReportInterval - 1)) == 0) reportMetrics();
-
   auto section = this->section(address);
   if(!section) return nullptr;
 
   auto index = blockIndex(address);
   auto stateKey = computeStateKey();
-  u64 lookupSteps = 0;
   for(auto block = section->blocks[index]; block; block = block->next) {
-    lookupSteps++;
     if(block->stateKey == stateKey) {
-      metrics.blockHits++;
-      metrics.lookupSteps += lookupSteps;
-      if(lookupSteps > metrics.lookupStepsMax) metrics.lookupStepsMax = lookupSteps;
       return block;
     }
   }
-  metrics.blockMisses++;
-  metrics.lookupSteps += lookupSteps;
-  if(lookupSteps > metrics.lookupStepsMax) metrics.lookupStepsMax = lookupSteps;
 
   auto findLinked = [&](u32 targetAddress, u64 targetStateKey) -> Block* {
     auto targetIndex = blockIndex(targetAddress);
@@ -240,7 +181,6 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
       if(entry->expectedStateKey == target->stateKey && entry->expectedTargetAddress == target->startAddress) {
         if(entry->source->linkAddressTaken == target->startAddress) entry->source->linkedBlockTaken = target;
         if(entry->source->linkAddressNotTaken == target->startAddress) entry->source->linkedBlockNotTaken = target;
-        metrics.linkInstalledBackpatch++;
         *pending = entry->next;
         continue;
       }
@@ -257,21 +197,16 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
     bool hasNotTaken = block->linkAddressNotTaken != ~0u;
     auto linkTarget = [&](u32 targetAddress) -> Block* {
       auto target = findLinked(targetAddress, block->stateKey);
-      if(target) {
-        metrics.linkInstalledDirect++;
-        return target;
-      }
+      if(target) return target;
       auto pending = (Pending*)allocator.acquire(sizeof(Pending));
       pending->source = block;
       pending->next = section->pending[blockIndex(targetAddress)];
       pending->expectedStateKey = block->stateKey;
       pending->expectedTargetAddress = targetAddress;
       section->pending[blockIndex(targetAddress)] = pending;
-      metrics.linkPendingQueued++;
       return nullptr;
     };
     if(hasTaken || hasNotTaken) {
-      metrics.linkCandidates++;
       if(hasTaken) block->linkedBlockTaken = linkTarget(block->linkAddressTaken);
       if(hasNotTaken && block->linkAddressNotTaken == block->linkAddressTaken) {
         block->linkedBlockNotTaken = block->linkedBlockTaken;
@@ -294,10 +229,8 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #endif
 auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction) -> Block* {
-  metrics.emitCalls++;
   emitStateKey = stateKey;
   if(unlikely(allocator.available() < 1_MiB)) {
-    metrics.allocatorFlushes++;
     print("CPU allocator flush\n");
     allocator.release();
     reset();
@@ -305,7 +238,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
 
   // abort compilation of block asap if the instruction cache is not coherent
   if(!self.icache.coherent(vaddr, address)) {
-    metrics.emitAbortIcache++;
     return nullptr;
   }
 
@@ -319,10 +251,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   auto flushDeferred = [&]() -> void {
     flushDeferredCycles(deferredCycles);
     deferredCycles = 0;
-  };
-  auto commitArchitecturalState = [&]() -> void {
-    mov32(PipelineReg(state), PipelineReg(nstate));
-    mov64(mem(IpuReg(pc)), PipelineReg(pc));
   };
 
   Thread thread;
@@ -434,7 +362,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       flushDeferred();
       //abort compilation of block if the instruction cache is not coherent
       if(!self.icache.coherent(vaddr, address)) {
-        metrics.emitAbortIcache++;
         resetCompiler();
         return nullptr;
       }
@@ -464,8 +391,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     bool sectionBoundary = sectionIndex(address) != startSection;
     bool terminal = hasBranched || sectionBoundary || singleInstruction;
     terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
-    bool commitNow = info.jitMayCallf() || branched || terminal;
-    if(commitNow) commitArchitecturalState();
     bool safeDelaySlotLink = !info.jitMayCallf() && !info.mayException() && !info.mayFault();
     bool delaySlotLinkEligible = terminal && hasBranched && !singleInstruction
     && !info.jitStateKeyMayChange() && !countCompareWrite;
@@ -477,9 +402,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     }
     bool hasLastLink = lastBranchLinkAddressTaken != ~0u || lastBranchLinkAddressNotTaken != ~0u;
     bool blockedUnsafeDelaySlot = delaySlotLinkEligible && !safeDelaySlotLink && hasLastLink;
-    if(blockedUnsafeDelaySlot) {
-      metrics.linkCandidateUnsafeDelaySlot++;
-    }
     if(terminal) {
       if(!hasBranched) jumpEpilog(flag_nz);
       bool hasLinkCandidate = linkAddressTaken != ~0u || linkAddressNotTaken != ~0u;
@@ -541,7 +463,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   block->linkAddressNotTaken = linkAddressNotTaken;
   block->sectionDirty = sectionDirty.data() + startSection;
   block->noCandidateReason = noCandidateReason;
-  metrics.emitSuccess++;
 
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;

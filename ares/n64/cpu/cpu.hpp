@@ -936,7 +936,6 @@ struct CPU : Thread {
       RdramSize    = 8_MiB,
       RdramMask    = RdramSize - 1,
       SectionCount = RdramSize / SectionSize,
-      MetricsReportInterval = 1 << 24,
     };
 
     struct Block {
@@ -988,45 +987,6 @@ struct CPU : Thread {
       Pending* pending[SectionWords];
     };
 
-    struct Metrics {
-      u64 blockCalls = 0;
-      u64 blockHits = 0;
-      u64 blockMisses = 0;
-      u64 lookupSteps = 0;
-      u64 lookupStepsMax = 0;
-      u64 sectionAllocations = 0;
-      u64 sectionDirtyClears = 0;
-      u64 sectionDirtyDrops = 0;
-      u64 emitCalls = 0;
-      u64 emitSuccess = 0;
-      u64 emitAbortIcache = 0;
-      u64 allocatorFlushes = 0;
-      u64 linkCandidates = 0;
-      u64 linkInstalledDirect = 0;
-      u64 linkPendingQueued = 0;
-      u64 linkInstalledBackpatch = 0;
-      u64 linkTaken = 0;
-      u64 linkAbortDirty = 0;
-      u64 linkAbortBudget = 0;
-      u64 linkAbortQueue = 0;
-      u64 linkAbortNoTarget = 0;
-      u64 linkAbortNoCandidate = 0;
-      u64 linkAbortNoResolvedTarget = 0;
-      u64 linkCandidateUnsafeDelaySlot = 0;
-      u64 linkNoCandidateSectionBoundary = 0;
-      u64 linkNoCandidateSingleInstruction = 0;
-      u64 linkNoCandidateStateKeyMayChange = 0;
-      u64 linkNoCandidateCountCompareWrite = 0;
-      u64 linkNoCandidateNoDirectTarget = 0;
-      u64 linkNoCandidateNoDirectUnsupported = 0;
-      u64 linkNoCandidateNoDirectUnmapped = 0;
-      u64 linkNoCandidateNoDirectUncached = 0;
-      u64 linkNoCandidateNoDirectCrossSection = 0;
-      u64 linkNoCandidateNoDirectUnsafeDelaySlot = 0;
-      u64 linkNoCandidateNoDirectOther = 0;
-      u64 linkNoCandidateOther = 0;
-    };
-
     auto reset() -> void {
       sections.resize(SectionCount);
       sectionDirty.resize(SectionCount);
@@ -1071,7 +1031,6 @@ struct CPU : Thread {
     }
 
     auto computeStateKey() const -> u64;
-    auto reportMetrics() -> void;
     auto section(u32 address) -> Section*;
     auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
 
@@ -1091,7 +1050,6 @@ struct CPU : Thread {
     bump_allocator allocator;
     std::vector<Section*> sections;
     std::vector<u8> sectionDirty;
-    Metrics metrics;
   } recompiler{*this};
   s64 clockTarget = 0;
 
