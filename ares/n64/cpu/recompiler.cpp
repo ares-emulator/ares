@@ -16,12 +16,20 @@ Main goals:
 Block lifecycle
 ---------------
 1) Lookup:
-   - block(vaddr, paddr, singleInstruction) probes a per-pool cache
-     (64 entries per 256-byte pool shard).
+   - block(vaddr, paddr, singleInstruction) probes a per-section cache:
+     4 KiB logical sections, 1024 entry slots per section (word indexed).
+   - each entry slot stores a linked list of Block keyed by stateKey.
+   - lookup is O(1) to entry head + short linear scan on stateKey collisions.
 2) Emit:
    - on miss, emit() builds host code with beginFunction()/endFunction().
 3) Publish:
-   - compiled code is stored in the pool and later executed via Block::execute().
+   - compiled code is inserted at head(entry) and later executed via Block::execute().
+
+ Invalidation model
+ ------------------
+ - every memory write marks the touched section as dirty (hot path: one flag write).
+ - section cleanup is lazy: the next lookup on that section clears its entry table.
+ - Section metadata remains allocated and is reused; only block links are dropped.
 
 Codegen model inside emit()
 ---------------------------
@@ -32,6 +40,8 @@ For each instruction in the block:
 - account clocks in deferredCycles (flush only at synchronization boundaries);
 - test EndBlock only when needed, then branch to epilogue;
 - commit architectural state at explicit commit points.
+- stop block at 4 KiB section boundary;
+- stop block on opcodes marked JitStateKeyMayChange.
 
 The hot loop avoids per-opcode generic helper calls when possible. Branch
 families are emitted directly in JIT, including likely/link behavior and
@@ -58,24 +68,106 @@ that instruction stream.
 Even inside JIT blocks, opcodes may still call C++ helpers (callf) for complex
 or exceptional behavior. Those helpers share the same CPU state objects, so
 exceptions/traps/faults naturally rejoin the normal interpreter-visible flow.
+
+ State key and metrics
+ ---------------------
+ - computeStateKey() packs slow-changing CPU/FPU mode bits into an n64 key.
+ - blocks are specialized by stateKey to remove avoidable runtime checks.
+ - reportMetrics() prints coarse JIT health counters every fixed number of
+   block() calls (hit/miss, list depth, emits, allocator flushes, etc.).
 */
 
-auto CPU::Recompiler::pool(u32 address) -> Pool* {
-  auto& pool = pools[address >> 8 & 0x1fffff];
-  if(!pool) {
-    pool = (Pool*)allocator.acquire(sizeof(Pool));
+auto CPU::Recompiler::computeStateKey() const -> u64 {
+  n64 stateKey = 0;
+  stateKey.bit( 0)     = self.scc.status.enable.coprocessor1;
+  stateKey.bit( 1)     = self.scc.status.floatingPointMode;
+  stateKey.bit( 2)     = self.scc.status.exceptionLevel;
+  stateKey.bit( 3)     = self.scc.status.errorLevel;
+  stateKey.bit( 4,  5) = self.scc.status.privilegeMode;
+  stateKey.bit( 6)     = self.scc.status.userExtendedAddressing;
+  stateKey.bit( 7)     = self.scc.status.supervisorExtendedAddressing;
+  stateKey.bit( 8)     = self.scc.status.kernelExtendedAddressing;
+  stateKey.bit( 9)     = self.scc.status.reverseEndian;
+  stateKey.bit(10)     = self.scc.status.enable.coprocessor0;
+  stateKey.bit(11, 12) = self.fpu.csr.roundMode;
+  stateKey.bit(13)     = self.fpu.csr.flushSubnormals;
+  stateKey.bit(14)     = self.fpu.csr.enable.inexact;
+  stateKey.bit(15)     = self.fpu.csr.enable.underflow;
+  stateKey.bit(16)     = self.fpu.csr.enable.overflow;
+  stateKey.bit(17)     = self.fpu.csr.enable.divisionByZero;
+  stateKey.bit(18)     = self.fpu.csr.enable.invalidOperation;
+  return stateKey;
+}
+
+auto CPU::Recompiler::reportMetrics() -> void {
+  auto calls = metrics.blockCalls;
+  if(!calls) return;
+  auto hitPermille = metrics.blockHits * 1000 / calls;
+  auto avgLookupMilli = metrics.lookupSteps * 1000 / calls;
+  print("CPU JIT metrics calls=", calls, " hit=", metrics.blockHits, " miss=", metrics.blockMisses,
+        " hitpermille=", hitPermille, " lookupmilli=", avgLookupMilli,
+        " lookupmax=", metrics.lookupStepsMax,
+        " secalloc=", metrics.sectionAllocations, " secclear=", metrics.sectionDirtyClears,
+        " secdrop=", metrics.sectionDirtyDrops, " emit=", metrics.emitCalls,
+        " emitok=", metrics.emitSuccess, " emitabort=", metrics.emitAbortIcache,
+        " flush=", metrics.allocatorFlushes, "\n");
+}
+
+auto CPU::Recompiler::section(u32 address) -> Section* {
+  assert(isRdramAddress(address));
+  if(!isRdramAddress(address)) return nullptr;
+  auto index = sectionIndex(address);
+  auto& section = sections[index];
+  auto dirty = sectionDirty[index];
+  if(!section) {
+    metrics.sectionAllocations++;
+    section = (Section*)allocator.acquire(sizeof(Section));
     memory::jitprotect(false);
-    *pool = {};
+    *section = {};
     memory::jitprotect(true);
+    if(dirty) {
+      metrics.sectionDirtyDrops++;
+      sectionDirty[index] = 0;
+    }
+    return section;
   }
-  return pool;
+  if(dirty) {
+    metrics.sectionDirtyClears++;
+    memory::jitprotect(false);
+    *section = {};
+    memory::jitprotect(true);
+    sectionDirty[index] = 0;
+  }
+  return section;
 }
 
 auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> Block* {
-  if(auto block = pool(address)->blocks[address >> 2 & 0x3f]) return block;
-  auto block = emit(vaddr, address, singleInstruction);
+  metrics.blockCalls++;
+  if((metrics.blockCalls & (MetricsReportInterval - 1)) == 0) reportMetrics();
+
+  auto section = this->section(address);
+  if(!section) return nullptr;
+
+  auto index = blockIndex(address);
+  auto stateKey = computeStateKey();
+  u64 lookupSteps = 0;
+  for(auto block = section->blocks[index]; block; block = block->next) {
+    lookupSteps++;
+    if(block->stateKey == stateKey) {
+      metrics.blockHits++;
+      metrics.lookupSteps += lookupSteps;
+      if(lookupSteps > metrics.lookupStepsMax) metrics.lookupStepsMax = lookupSteps;
+      return block;
+    }
+  }
+  metrics.blockMisses++;
+  metrics.lookupSteps += lookupSteps;
+  if(lookupSteps > metrics.lookupStepsMax) metrics.lookupStepsMax = lookupSteps;
+
+  auto block = emit(vaddr, address, stateKey, singleInstruction);
   if(block) {
-    pool(address)->blocks[address >> 2 & 0x3f] = block;
+    block->next = section->blocks[index];
+    section->blocks[index] = block;
     memory::jitprotect(true);
   }
   return block;
@@ -89,16 +181,20 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #endif
-auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Block* {
+auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction) -> Block* {
+  metrics.emitCalls++;
   if(unlikely(allocator.available() < 1_MiB)) {
+    metrics.allocatorFlushes++;
     print("CPU allocator flush\n");
     allocator.release();
     reset();
   }
 
   // abort compilation of block asap if the instruction cache is not coherent
-  if(!self.icache.coherent(vaddr, address))
+  if(!self.icache.coherent(vaddr, address)) {
+    metrics.emitAbortIcache++;
     return nullptr;
+  }
 
   beginFunction(3);
 
@@ -117,6 +213,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
   };
 
   Thread thread;
+  u32 startAddress = address;
+  u32 startSection = sectionIndex(address);
   bool hasBranched = 0;
   int numInsn = 0;
   constexpr u32 branchToSelf = 0x1000'ffff;  //beq 0,0,<pc>
@@ -136,6 +234,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
       flushDeferred();
       //abort compilation of block if the instruction cache is not coherent
       if(!self.icache.coherent(vaddr, address)) {
+        metrics.emitAbortIcache++;
         resetCompiler();
         return nullptr;
       }
@@ -159,7 +258,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
     vaddr += 4;
     address += 4;
     jumpToSelf += 4;
-    bool terminal = hasBranched || (address & 0xfc) == 0 || singleInstruction;
+    bool sectionBoundary = sectionIndex(address) != startSection;
+    bool terminal = hasBranched || sectionBoundary || singleInstruction || info.jitStateKeyMayChange();
     bool commitNow = info.jitMayCallf() || branched || terminal;
     if(commitNow) commitArchitecturalState();
     if(terminal) break;  //block boundary
@@ -173,6 +273,11 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
   memory::jitprotect(false);
   auto block = (Block*)allocator.acquire(sizeof(Block));
   block->code = endFunction();
+  block->next = nullptr;
+  block->stateKey = stateKey;
+  block->startAddress = startAddress;
+  block->endAddress = address;
+  metrics.emitSuccess++;
 
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;

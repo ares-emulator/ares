@@ -93,6 +93,7 @@ struct CPU : Thread {
       JitMayCallf   = 1 << 15,
       JitMustFlushBeforeCall = 1 << 16,
       JitAddsExtraCyclesInternally = 1 << 17,
+      JitStateKeyMayChange = 1 << 18,
     };
 
     u32 flags = 0;
@@ -109,6 +110,7 @@ struct CPU : Thread {
     auto jitMayCallf() const -> bool { return flags & JitMayCallf; }
     auto jitMustFlushBeforeCall() const -> bool { return flags & JitMustFlushBeforeCall; }
     auto jitAddsExtraCyclesInternally() const -> bool { return flags & JitAddsExtraCyclesInternally; }
+    auto jitStateKeyMayChange() const -> bool { return flags & JitStateKeyMayChange; }
   };
 
   struct PhysAccess {
@@ -923,55 +925,96 @@ struct CPU : Thread {
     CPU& self;
     Recompiler(CPU& self) : self(self), generic(allocator) {}
 
+    enum : u32 {
+      SectionSize  = 4_KiB,
+      SectionShift = 12,
+      SectionMask  = SectionSize - 1,
+      SectionWords = SectionSize / sizeof(u32),
+      RdramSize    = 8_MiB,
+      RdramMask    = RdramSize - 1,
+      SectionCount = RdramSize / SectionSize,
+      MetricsReportInterval = 1 << 24,
+    };
+
     struct Block {
       auto execute(CPU& self) -> void {
         ((void (*)(CPU*, r64*, r64*))code)(&self, &self.ipu.r[16], &self.fpu.r[16]);
       }
 
-      u8* code;
+      u8* code = nullptr;
+      Block* next = nullptr;
+      u64 stateKey = 0;
+      u32 startAddress = 0;
+      u32 endAddress = 0;
     };
 
-    struct Pool {
-      Block* blocks[1 << 6];
+    struct Section {
+      Block* blocks[SectionWords];
+    };
+
+    struct Metrics {
+      u64 blockCalls = 0;
+      u64 blockHits = 0;
+      u64 blockMisses = 0;
+      u64 lookupSteps = 0;
+      u64 lookupStepsMax = 0;
+      u64 sectionAllocations = 0;
+      u64 sectionDirtyClears = 0;
+      u64 sectionDirtyDrops = 0;
+      u64 emitCalls = 0;
+      u64 emitSuccess = 0;
+      u64 emitAbortIcache = 0;
+      u64 allocatorFlushes = 0;
     };
 
     auto reset() -> void {
-      pools.resize(1 << 21);  //2_MiB * sizeof(void*) == 16_MiB
-      std::ranges::fill(pools, nullptr);
+      sections.resize(SectionCount);
+      sectionDirty.resize(SectionCount);
+      std::ranges::fill(sections, nullptr);
+      std::ranges::fill(sectionDirty, 0);
+    }
+
+    auto isRdramAddress(u32 address) const -> bool {
+      return address < RdramSize;
+    }
+
+    auto rdramAddress(u32 address) const -> u32 {
+      return address & RdramMask;
+    }
+
+    auto sectionIndex(u32 address) const -> u32 {
+      return rdramAddress(address) >> SectionShift;
+    }
+
+    auto sectionOffset(u32 address) const -> u32 {
+      return rdramAddress(address) & SectionMask;
+    }
+
+    auto blockIndex(u32 address) const -> u32 {
+      return sectionOffset(address) >> 2;
     }
 
     auto invalidate(u32 address) -> void {
-      /* FIXME: Recompiler shouldn't be so aggressive with pool eviction
-       * Sometimes there are overlapping blocks, so clearing just one block
-       * isn't sufficient and causes some games to crash (Jet Force Gemini)
-       * the recompiler needs to be smarter with block tracking
-       * Until then, clear the entire pool and live with the performance hit.
-      */
-      #if 1
-      invalidatePool(address);
-      #else
-      auto pool = pools[address >> 8 & 0x1fffff];
-      if(!pool) return;
-      memory::jitprotect(false);
-      pool->blocks[address >> 2 & 0x3f] = nullptr;
-      memory::jitprotect(true);
-      #endif
+      invalidateSection(address);
     }
 
-    auto invalidatePool(u32 address) -> void {
-      pools[address >> 8 & 0x1fffff] = nullptr;
+    auto invalidateSection(u32 address) -> void {
+      if(!isRdramAddress(address)) return;
+      sectionDirty[sectionIndex(address)] = 1;
     }
 
     auto invalidateRange(u32 address, u32 length) -> void {
-      for (u32 s = 0; s < length; s += 256)
-        invalidatePool(address + s);
-      invalidatePool(address + length - 1);
+      if(!length) return;
+      for(u32 s = 0; s < length; s += SectionSize) invalidateSection(address + s);
+      invalidateSection(address + length - 1);
     }
 
-    auto pool(u32 address) -> Pool*;
+    auto computeStateKey() const -> u64;
+    auto reportMetrics() -> void;
+    auto section(u32 address) -> Section*;
     auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
 
-    auto emit(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
+    auto emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction = false) -> Block*;
     auto emitZeroClear(u32 n) -> void;
     auto emitEXECUTE(u32 instruction) -> bool;
     auto emitSPECIAL(u32 instruction) -> bool;
@@ -983,7 +1026,9 @@ struct CPU : Thread {
     bool enabled = false;
     bool callInstructionPrologue = false;
     bump_allocator allocator;
-    std::vector<Pool*> pools;
+    std::vector<Section*> sections;
+    std::vector<u8> sectionDirty;
+    Metrics metrics;
   } recompiler{*this};
 
   struct Disassembler {

@@ -19,6 +19,7 @@
 #define JitMayCallf                       info.flags |= OpInfo::JitMayCallf
 #define JitMustFlushBeforeCall            info.flags |= OpInfo::JitMustFlushBeforeCall
 #define JitAddsExtraCyclesInternally      info.flags |= OpInfo::JitAddsExtraCyclesInternally
+#define JitStateKeyMayChange              info.flags |= OpInfo::JitStateKeyMayChange
 #define LikelyIf(x)                       if(x) LikelyBranch
 #define FPUCall                           Cop1, MayException, JitMayCallf, JitAddsExtraCyclesInternally
 #define FPUBranchCall                     \
@@ -211,8 +212,10 @@ auto CPU::decoderSCCInfo(u32 instruction) const -> OpInfo {
   op(0x01, DMFC0, Cop0, Privileged, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x02, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x03, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x04, MTC0, Cop0, Privileged, MayException, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x05, DMTC0, Cop0, Privileged, MayException, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x04, MTC0, Cop0, Privileged, MayException, JitMayCallf, JitMustFlushBeforeCall,
+     JitStateKeyMayChange);
+  op(0x05, DMTC0, Cop0, Privileged, MayException, JitMayCallf, JitMustFlushBeforeCall,
+     JitStateKeyMayChange);
   op(0x06, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x07, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x08, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
@@ -230,7 +233,8 @@ auto CPU::decoderSCCInfo(u32 instruction) const -> OpInfo {
   op(0x02, TLBWI, Cop0, Privileged, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x06, TLBWR, Cop0, Privileged, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x08, TLBP, Cop0, Privileged, MayException, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x18, ERET, Cop0, Privileged, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x18, ERET, Cop0, Privileged, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall,
+     JitStateKeyMayChange);
   op(0x20, XDETECT, JitMayCallf, JitMustFlushBeforeCall);
   op(0x25, XLOG, JitMayCallf, JitMustFlushBeforeCall);
   op(0x27, XHEXDUMP, JitMayCallf, JitMustFlushBeforeCall);
@@ -251,7 +255,7 @@ auto CPU::decoderFPUInfo(u32 instruction) const -> OpInfo {
   op(0x03, DCFC1, FPUInvalid);
   op(0x04, MTC1, FPUCall);
   op(0x05, DMTC1, FPUCall);
-  op(0x06, CTC1, FPUCall);
+  op(0x06, CTC1, FPUCall, JitStateKeyMayChange);
   op(0x07, DCTC1, FPUInvalid);
   case 0x08: {
     OpInfo info = {};
@@ -426,6 +430,7 @@ auto CPU::decoderCOP2Info(u32 instruction) const -> OpInfo {
 #undef JitMayCallf
 #undef JitMustFlushBeforeCall
 #undef JitAddsExtraCyclesInternally
+#undef JitStateKeyMayChange
 #undef LikelyIf
 #undef FPUCall
 #undef FPUBranchCall
