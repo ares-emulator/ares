@@ -38,8 +38,17 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
   if(!self.icache.coherent(vaddr, address))
     return nullptr;
 
-  bool abort = false;
   beginFunction(3);
+
+  u32 deferredCycles = 0;
+  auto flushDeferredCycles = [&](u32 clocks) -> void {
+    if(!clocks) return;
+    callf(&CPU::step, imm(clocks));
+  };
+  auto flushDeferred = [&]() -> void {
+    flushDeferredCycles(deferredCycles);
+    deferredCycles = 0;
+  };
 
   Thread thread;
   bool hasBranched = 0;
@@ -48,14 +57,17 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
   u32 jumpToSelf = 2 << 26 | vaddr >> 2 & 0x3ff'ffff;  //j <pc>
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
+    OpInfo info = self.decoderEXECUTEInfo(instruction);
     mov32(PipelineReg(nstate), imm(0));
     mov64(reg(0), PipelineReg(nextpc));
     mov64(PipelineReg(pc), reg(0));
     add64(PipelineReg(nextpc), reg(0), imm(4));
     if(callInstructionPrologue) {
+      flushDeferred();
       callf(&CPU::instructionPrologue, imm64(vaddr), imm(instruction));
     }
     if(numInsn == 0 || (vaddr&0x1f)==0){
+      flushDeferred();
       //abort compilation of block if the instruction cache is not coherent
       if(!self.icache.coherent(vaddr, address)) {
         resetCompiler();
@@ -63,14 +75,17 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
       }
       callf(&CPU::jitFetch, imm64(vaddr), imm(address));
     }
+    if(info.jitMustFlushBeforeCall() || info.jitAddsExtraCyclesInternally()) {
+      flushDeferred();
+    }
     numInsn++;
     bool branched = emitEXECUTE(instruction);
     if(unlikely(instruction == branchToSelf || instruction == jumpToSelf)) {
-      //accelerate idle loops
-      callf(&CPU::step, imm(64 * 2));
+      deferredCycles += 64 * 2;
     } else {
-      callf(&CPU::step, imm(1 * 2));
+      deferredCycles += 1 * 2;
     }
+    flushDeferred();
     test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
     mov32(PipelineReg(state), PipelineReg(nstate));
     mov64(mem(IpuReg(pc)), PipelineReg(pc));
@@ -83,6 +98,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
     jumpEpilog(flag_nz);
   }
 
+  flushDeferred();
   jumpEpilog();
 
   memory::jitprotect(false);
@@ -967,25 +983,25 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   //BLTZ Rs,i16
   case 0x00: {
     callf(&CPU::BLTZ, mem(Rs), imm(i16));
-    return 0;
+    return 1;
   }
 
   //BGEZ Rs,i16
   case 0x01: {
     callf(&CPU::BGEZ, mem(Rs), imm(i16));
-    return 0;
+    return 1;
   }
 
   //BLTZL Rs,i16
   case 0x02: {
     callf(&CPU::BLTZL, mem(Rs), imm(i16));
-    return 0;
+    return 1;
   }
 
   //BGEZL Rs,i16
   case 0x03: {
     callf(&CPU::BGEZL, mem(Rs), imm(i16));
-    return 0;
+    return 1;
   }
 
   //INVALID
@@ -1045,25 +1061,25 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   //BLTZAL Rs,i16
   case 0x10: {
     callf(&CPU::BLTZAL, mem(Rs), imm(i16));
-    return 0;
+    return 1;
   }
 
   //BGEZAL Rs,i16
   case 0x11: {
     callf(&CPU::BGEZAL, mem(Rs), imm(i16));
-    return 0;
+    return 1;
   }
 
   //BLTZALL Rs,i16
   case 0x12: {
     callf(&CPU::BLTZALL, mem(Rs), imm(i16));
-    return 0;
+    return 1;
   }
 
   //BGEZALL Rs,i16
   case 0x13: {
     callf(&CPU::BGEZALL, mem(Rs), imm(i16));
-    return 0;
+    return 1;
   }
 
   //INVALID

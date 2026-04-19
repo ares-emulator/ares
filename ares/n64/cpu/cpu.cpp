@@ -11,6 +11,7 @@ CPU cpu;
 #include "exceptions.cpp"
 #include "algorithms.cpp"
 #include "interpreter.cpp"
+#include "decoder.cpp"
 #include "interpreter-ipu.cpp"
 #include "interpreter-scc.cpp"
 #include "interpreter-fpu.cpp"
