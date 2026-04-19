@@ -115,10 +115,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, bool singleInstruction) -> Bl
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;
 }
-#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
-#pragma GCC diagnostic pop
-#endif
-
 #define Sa  (instruction >>  6 & 31)
 #define Rdn (instruction >> 11 & 31)
 #define Rtn (instruction >> 16 & 31)
@@ -232,7 +228,15 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //BGTZ Rs,i16
   case 0x07: {
-    callf(&CPU::BGTZ, mem(Rs), imm(i16));
+    cmp64(mem(Rs), imm(0), set_sgt);
+    auto taken = jump(flag_sgt);
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
+    auto done = jump();
+    setLabel(taken);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
@@ -656,7 +660,8 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //JR Rs
   case 0x08: {
-    callf(&CPU::JR, mem(Rs));
+    mov64(PipelineReg(nextpc), mem(Rs));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     return 1;
   }
 
@@ -1021,13 +1026,29 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BLTZ Rs,i16
   case 0x00: {
-    callf(&CPU::BLTZ, mem(Rs), imm(i16));
+    cmp64(mem(Rs), imm(0), set_slt);
+    auto taken = jump(flag_slt);
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
+    auto done = jump();
+    setLabel(taken);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    setLabel(done);
     return 1;
   }
 
   //BGEZ Rs,i16
   case 0x01: {
-    callf(&CPU::BGEZ, mem(Rs), imm(i16));
+    cmp64(mem(Rs), imm(0), set_slt);
+    auto notTaken = jump(flag_slt);
+    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
+    mov64(PipelineReg(nextpc), reg(0));
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    auto done = jump();
+    setLabel(notTaken);
+    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
+    setLabel(done);
     return 1;
   }
 
@@ -1904,3 +1925,7 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
 #undef i16
 #undef n16
 #undef n26
+
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+#pragma GCC diagnostic pop
+#endif

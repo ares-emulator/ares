@@ -36,7 +36,7 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
   op(0x04, BEQ, Branch, EndBlock);
   op(0x05, BNE, Branch, EndBlock);
   op(0x06, BLEZ, Branch, EndBlock);
-  op(0x07, BGTZ, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x07, BGTZ, Branch, EndBlock);
   op(0x08, ADDI, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x09, ADDIU);
   op(0x0a, SLTI);
@@ -107,7 +107,7 @@ auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
   op(0x05, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x06, SRLV);
   op(0x07, SRAV);
-  op(0x08, JR, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x08, JR, Branch, EndBlock);
   op(0x09, JALR, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
   op(0x0a, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
   op(0x0b, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
@@ -169,8 +169,8 @@ auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
 
 auto CPU::decoderREGIMMInfo(u32 instruction) const -> OpInfo {
   switch(instruction >> 16 & 0x1f) {
-  op(0x00, BLTZ, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
-  op(0x01, BGEZ, Branch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
+  op(0x00, BLTZ, Branch, EndBlock);
+  op(0x01, BGEZ, Branch, EndBlock);
   op(0x02, BLTZL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
   op(0x03, BGEZL, Branch, LikelyBranch, EndBlock, JitMayCallf, JitMustFlushBeforeCall);
   op(0x04, INVALID, IsInvalid, EndBlock, MayException, JitMayCallf, JitMustFlushBeforeCall);
