@@ -1,6 +1,6 @@
 /*
-CPU Recompiler: Architecture and Execution Model
-================================================
+CPU Recompiler: Architecture and Optimization Notes
+===================================================
 
 Overview
 --------
@@ -8,121 +8,130 @@ This file implements the N64 CPU JIT backend on top of nall::recompiler
 (SLJIT). It translates guest instructions into host blocks that operate
 directly on CPU/IPU/FPU/Pipeline state.
 
-Main goals:
-- keep the hot path inlined (minimal per-opcode overhead);
-- preserve exact MIPS-visible behavior (delay slots, exceptions, timing);
-- fall back to helpers/interpreter paths where complexity is still high.
+Goals:
+- keep the common path close to pure opcode semantics;
+- preserve MIPS-visible behavior (delay slots, exceptions, timing);
+- keep uncommon behavior in helper calls or guarded slow paths.
+
+State key specialization
+------------------------
+- computeStateKey() packs slow-changing CPU/FPU mode bits into a compact key.
+- block cache entries are specialized by stateKey to avoid repeated runtime
+  checks in compiled code.
 
 Block lifecycle
 ---------------
-1) Lookup:
-   - block(vaddr, paddr, singleInstruction) probes a per-section cache:
-     4 KiB logical sections, 1024 entry slots per section (word indexed).
+1) Lookup
+   - block(vaddr, paddr, singleInstruction) probes a per-section cache.
+   - sections are 4 KiB; each section has 1024 word-indexed entry slots.
    - each entry slot stores a linked list of Block keyed by stateKey.
-   - lookup is O(1) to entry head + short linear scan on stateKey collisions.
-2) Emit:
-   - on miss, emit() builds host code with beginFunction()/endFunction().
-3) Publish:
-   - compiled code is inserted at head(entry) and later executed via Block::execute().
+2) Emit
+   - on cache miss, emit() builds host code with beginFunction()/endFunction().
+3) Publish
+   - compiled block is inserted at entry head and later executed by
+     Block::execute().
 
-Block linking
--------------
-Goal:
-- avoid dispatcher round-trips by chaining compatible blocks directly.
-- keep correctness constraints explicit (state, invalidation, timing budget, queue events).
+Execution model inside emit()
+-----------------------------
+For each instruction in a block, the emitter:
+- decodes metadata with decoderEXECUTEInfo() (OpInfo);
+- updates virtual pipeline window (pc/nextpc/state/nstate) only when needed;
+- emits opcode body via emitEXECUTE()/emitSPECIAL()/...;
+- accumulates cycles and nextpc advances in deferred form;
+- synchronizes state/timing only at explicit boundaries;
+- stops block at section boundary or on JitStateKeyMayChange.
 
-Candidate extraction (emit):
-- links are only considered inside the same 4 KiB section.
-- when a block terminates after a branch delay-slot, emit() records up to two successors:
-  taken and not-taken (dual-edge model).
-- link candidates are disabled for boundaries that may change execution mode
-  (single-instruction mode, state-key-changing opcodes, SCC count/compare writes).
-- delay-slot safety gating is applied: if the delay-slot instruction may call helpers,
-  raise exceptions, or fault, linking is not installed for that block.
-
-Resolution model (block + section metadata):
-- each section owns per-word pending lists keyed by target physical address.
-- on publish, each candidate edge tries direct resolution first:
-  source(stateKey) -> target(startAddress, same stateKey).
-- unresolved edges are queued as pending records.
-- when any target block is later published, pending predecessors are backpatched lazily.
-- if taken/not-taken collapse to the same target, only one lookup/pending entry is used.
-
-Runtime gate (jitLinkedCode):
-- verify current section is still valid (dirty flag check).
-- enforce slice limits (clock target and queue next-event checks).
-- select taken/not-taken edge by final architectural PC.
-- follow link only if resolved; otherwise return to epilogue and re-enter dispatcher.
-
- Invalidation model
- ------------------
- - every memory write marks the touched section as dirty (hot path: one flag write).
- - section cleanup is lazy: the next lookup on that section clears its entry table.
- - Section metadata remains allocated and is reused; only block links are dropped.
-
-Codegen model inside emit()
----------------------------
-For each instruction in the block:
-- decode metadata with decoderEXECUTEInfo() (OpInfo);
-- load/advance virtual pipeline PC window (pc/nextpc/nstate);
-- emit opcode body via emitEXECUTE()/emitSPECIAL()/...;
-- account clocks in deferredCycles (flush only at synchronization boundaries);
-- test EndBlock only when needed, then branch to epilogue;
-- commit architectural state at explicit commit points.
-- stop block at 4 KiB section boundary;
-- stop block on opcodes marked JitStateKeyMayChange.
-
-The hot loop avoids per-opcode generic helper calls when possible. Branch
-families are emitted directly in JIT, including likely/link behavior and
-delay-slot state transitions.
-
-State and timing model
+Hot-loop optimizations
 ----------------------
-- PipelineReg(pc/nextpc/state/nstate) holds transient control-flow state.
-- Architectural commit writes pipeline state and ipu.pc only at controlled
-  points (helper boundaries, branch boundaries, block termination).
-- CPU::step() is emitted through deferred flushes, not per instruction.
+1) Deferred cycle accounting
+   - per-opcode cycles are accumulated in deferredCycles;
+   - CPU::step() is emitted only at synchronization boundaries
+     (helper/branch/terminal transitions).
+
+2) Virtual PC with selective architectural commit
+   - ipu.pc is not written on every opcode;
+   - commit happens only at correctness boundaries:
+     block entry, branch/helper opcodes, and terminal paths.
+
+3) Deferred nextpc materialization
+   - linear-path nextpc increments are accumulated in deferredNextPc;
+   - nextpc is written back only when current PC materialization is needed,
+     or once at block end.
+
+4) On-demand pipeline state machinery
+   - nstate clear, EndBlock test, state<-nstate commit, and
+     jumpEpilog(flag_nz) are emitted only when needsStateMachinery is true;
+   - linear non-branch/non-helper opcodes skip this machinery entirely.
+
+5) Helper-call PC rematerialization
+   - in linear non-delay-slot helper paths, ipu.pc is rematerialized from the
+     compile-time vaddr immediate;
+   - delay-slot/branch-sensitive cases still use runtime pipeline state to
+     preserve precise exception PC behavior.
+
+Block linking model
+-------------------
+Goal:
+- reduce dispatcher round-trips by chaining compatible blocks directly.
+
+How linking is built:
+- only intra-section edges are considered;
+- at branch termination, emit() may record taken and not-taken successors;
+- links are disabled on boundaries that may change execution mode
+  (single-instruction mode, state-key-changing ops, SCC count/compare writes);
+- delay-slot linking is gated by safety (no helper call, exception, or fault
+  risk in delay-slot opcode).
+
+How linking is resolved:
+- each section maintains pending predecessor lists by target word index;
+- publish attempts direct target resolution first (stateKey + startAddress);
+- unresolved edges are queued and backpatched when the target is later emitted;
+- if taken/not-taken collapse to same target, only one pending lookup is used.
+
+Runtime link gate (jitLinkedCode):
+- reject links on dirty sections;
+- reject links when clock/queue budget says return to dispatcher;
+- choose taken/not-taken edge from final architectural PC;
+- chain only if resolved, otherwise return to epilogue.
+
+Invalidation model
+------------------
+- memory writes mark the touched section dirty (hot path: one flag write);
+- cleanup is lazy: next lookup on that section clears its entry table;
+- section metadata is reused, while block/link contents are dropped.
 
 JIT <-> interpreter interop
 ---------------------------
-The dispatcher in cpu.cpp chooses JIT only when conditions allow it:
-- dynamic recompiler enabled;
-- instruction is in cacheable memory;
-- fetch/devirtualization checks pass.
+The dispatcher (cpu.cpp) enters JIT only when dynamic recompiler mode,
+cacheability, and fetch/devirtualization preconditions are satisfied.
 
-If JIT compilation cannot proceed (for example icache incoherence), emit()
-returns nullptr and execution immediately falls back to interpreter decode for
-that instruction stream.
+emit() may still return nullptr (for example icache incoherence), in which case
+execution immediately falls back to interpreter decode for that stream.
 
-Even inside JIT blocks, opcodes may still call C++ helpers (callf) for complex
-or exceptional behavior. Those helpers share the same CPU state objects, so
-exceptions/traps/faults naturally rejoin the normal interpreter-visible flow.
-
- State key
- ---------
- - computeStateKey() packs slow-changing CPU/FPU mode bits into an n64 key.
- - blocks are specialized by stateKey to remove avoidable runtime checks.
+Even inside JIT blocks, complex/exceptional opcodes may call C++ helpers.
+Helpers share the same CPU state objects, so exceptions/traps/faults naturally
+rejoin interpreter-visible control flow.
 */
 
 auto CPU::Recompiler::computeStateKey() const -> u64 {
-  n64 stateKey = 0;
-  stateKey.bit( 0)     = self.scc.status.enable.coprocessor1;
-  stateKey.bit( 1)     = self.scc.status.floatingPointMode;
-  stateKey.bit( 2)     = self.scc.status.exceptionLevel;
-  stateKey.bit( 3)     = self.scc.status.errorLevel;
-  stateKey.bit( 4,  5) = self.scc.status.privilegeMode;
-  stateKey.bit( 6)     = self.scc.status.userExtendedAddressing;
-  stateKey.bit( 7)     = self.scc.status.supervisorExtendedAddressing;
-  stateKey.bit( 8)     = self.scc.status.kernelExtendedAddressing;
-  stateKey.bit( 9)     = self.scc.status.reverseEndian;
-  stateKey.bit(10)     = self.scc.status.enable.coprocessor0;
-  stateKey.bit(11, 12) = self.fpu.csr.roundMode;
-  stateKey.bit(13)     = self.fpu.csr.flushSubnormals;
-  stateKey.bit(14)     = self.fpu.csr.enable.inexact;
-  stateKey.bit(15)     = self.fpu.csr.enable.underflow;
-  stateKey.bit(16)     = self.fpu.csr.enable.overflow;
-  stateKey.bit(17)     = self.fpu.csr.enable.divisionByZero;
-  stateKey.bit(18)     = self.fpu.csr.enable.invalidOperation;
+  StateKey stateKey = 0;
+  stateKey.setCoprocessor1Enabled(self.scc.status.enable.coprocessor1);
+  stateKey.setFloatingPointMode(self.scc.status.floatingPointMode);
+  stateKey.setExceptionLevel(self.scc.status.exceptionLevel);
+  stateKey.setErrorLevel(self.scc.status.errorLevel);
+  stateKey.setPrivilegeMode(self.scc.status.privilegeMode);
+  stateKey.setUserExtendedAddressing(self.scc.status.userExtendedAddressing);
+  stateKey.setSupervisorExtendedAddressing(self.scc.status.supervisorExtendedAddressing);
+  stateKey.setKernelExtendedAddressing(self.scc.status.kernelExtendedAddressing);
+  stateKey.setReverseEndian(self.scc.status.reverseEndian);
+  stateKey.setCoprocessor0Enabled(self.scc.status.enable.coprocessor0);
+  stateKey.setFpuRoundMode(self.fpu.csr.roundMode);
+  stateKey.setFpuFlushSubnormals(self.fpu.csr.flushSubnormals);
+  stateKey.setFpuInexactEnabled(self.fpu.csr.enable.inexact);
+  stateKey.setFpuUnderflowEnabled(self.fpu.csr.enable.underflow);
+  stateKey.setFpuOverflowEnabled(self.fpu.csr.enable.overflow);
+  stateKey.setFpuDivisionByZeroEnabled(self.fpu.csr.enable.divisionByZero);
+  stateKey.setFpuInvalidOperationEnabled(self.fpu.csr.enable.invalidOperation);
   return stateKey;
 }
 
@@ -242,6 +251,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   }
 
   beginFunction(3);
+  slowPaths.clear();
 
   u32 deferredCycles = 0;
   u32 deferredNextPc = 0;
@@ -326,7 +336,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       return links;
     }
     if(opcode == 0x11 && (instruction >> 21 & 31) == 0x08) {
-      if(!(emitStateKey & 1)) return links;
+      if(!emitStateKey.coprocessor1Enabled()) return links;
       fillLinkFromVaddr(links, true, branchTargetVaddr);
       fillLinkFromVaddr(links, false, fallthroughVaddr);
       return links;
@@ -374,7 +384,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       flushDeferred();
     }
     numInsn++;
-    bool branched = emitEXECUTE(instruction);
+    bool branched = emitEXECUTE(instruction, false);
     BranchLinks branchLinks;
     if(branched) branchLinks = directBranchLinkAddress(vaddr, instruction);
     if(unlikely(instruction == branchToSelf || instruction == jumpToSelf)) {
@@ -426,6 +436,11 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
                      | SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 3);
   sljit_emit_icall(compiler, SLJIT_CALL | SLJIT_CALL_RETURN, linkArgs, reg(3).fst, reg(3).snd);
   jumpEpilog();
+  for(auto& slow : slowPaths) {
+    setLabel(slow.enter);
+    emitEXECUTE(slow.instruction, true);
+    sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
+  }
 
   memory::jitprotect(false);
   auto block = (Block*)allocator.acquire(sizeof(Block));
@@ -493,7 +508,15 @@ auto CPU::Recompiler::emitZeroClear(u32 n) -> void {
   if(n == 0) mov64(mem(IpuReg(r[0])), imm(0));
 }
 
-auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
+auto CPU::Recompiler::deferSlowPath(sljit_jump* enter, u32 instruction) -> void {
+  auto& slow = slowPaths.emplace_back();
+  slow.enter = enter;
+  slow.resume = sljit_emit_label(compiler);
+  slow.instruction = instruction;
+}
+
+auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
+  emitSlowPathSection = emitSlowPath;
   switch(instruction >> 26) {
 
   //SPECIAL
@@ -584,8 +607,17 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //ADDI Rt,Rs,i16
   case 0x08: {
-    callf(&CPU::ADDI, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    if(emitSlowPath) {
+      callf(&CPU::ADDI, mem(Rt), mem(Rs), imm(i16));
+      return 0;
+    }
+    add32(reg(0), mem(Rs32), imm(i16), set_o);
+    auto overflow = jump(flag_o);
+    if(Rtn != 0) {
+      mov64_s32(reg(0), reg(0));
+      mov64(mem(Rt), reg(0));
+    }
+    deferSlowPath(overflow, instruction);
     return 0;
   }
 
@@ -733,8 +765,24 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //DADDI Rt,Rs,i16
   case 0x18: {
-    callf(&CPU::DADDI, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    bool reservedInstruction = 0;
+    if(!emitStateKey.exceptionLevel() && !emitStateKey.errorLevel()) {
+      auto privilegeMode = emitStateKey.privilegeMode();
+      if(privilegeMode == 1) reservedInstruction = !emitStateKey.supervisorExtendedAddressing();
+      if(privilegeMode >= 2) reservedInstruction = !emitStateKey.userExtendedAddressing();
+    }
+    if(emitSlowPath) {
+      callf(&CPU::DADDI, mem(Rt), mem(Rs), imm(i16));
+      return 0;
+    }
+    if(reservedInstruction) {
+      callf(&CPU::DADDI, mem(Rt), mem(Rs), imm(i16));
+      return 0;
+    }
+    add64(reg(0), mem(Rs), imm(i16), set_o);
+    auto overflow = jump(flag_o);
+    if(Rtn != 0) mov64(mem(Rt), reg(0));
+    deferSlowPath(overflow, instruction);
     return 0;
   }
 
@@ -1194,8 +1242,17 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //ADD Rd,Rs,Rt
   case 0x20: {
-    callf(&CPU::ADD, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    if(emitSlowPathSection) {
+      callf(&CPU::ADD, mem(Rd), mem(Rs), mem(Rt));
+      return 0;
+    }
+    add32(reg(0), mem(Rs32), mem(Rt32), set_o);
+    auto overflow = jump(flag_o);
+    if(Rdn != 0) {
+      mov64_s32(reg(0), reg(0));
+      mov64(mem(Rd), reg(0));
+    }
+    deferSlowPath(overflow, instruction);
     return 0;
   }
 
@@ -1278,8 +1335,24 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DADD Rd,Rs,Rt
   case 0x2c: {
-    callf(&CPU::DADD, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = 0;
+    if(!emitStateKey.exceptionLevel() && !emitStateKey.errorLevel()) {
+      auto privilegeMode = emitStateKey.privilegeMode();
+      if(privilegeMode == 1) reservedInstruction = !emitStateKey.supervisorExtendedAddressing();
+      if(privilegeMode >= 2) reservedInstruction = !emitStateKey.userExtendedAddressing();
+    }
+    if(emitSlowPathSection) {
+      callf(&CPU::DADD, mem(Rd), mem(Rs), mem(Rt));
+      return 0;
+    }
+    if(reservedInstruction) {
+      callf(&CPU::DADD, mem(Rd), mem(Rs), mem(Rt));
+      return 0;
+    }
+    add64(reg(0), mem(Rs), mem(Rt), set_o);
+    auto overflow = jump(flag_o);
+    if(Rdn != 0) mov64(mem(Rd), reg(0));
+    deferSlowPath(overflow, instruction);
     return 0;
   }
 
@@ -1816,7 +1889,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   case 0x08: {
     bool value = instruction >> 16 & 1;
     bool likely = instruction >> 17 & 1;
-    if(!(emitStateKey & 1)) {
+    if(!emitStateKey.coprocessor1Enabled()) {
       callf(&CPU::BC1, imm(value), imm(likely), imm(i16));
       return 1;
     }

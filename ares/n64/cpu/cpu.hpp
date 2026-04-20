@@ -926,7 +926,9 @@ struct CPU : Thread {
   //recompiler.cpp
   struct Recompiler : recompiler::generic {
     CPU& self;
-    Recompiler(CPU& self) : self(self), generic(allocator) {}
+    Recompiler(CPU& self) : self(self), generic(allocator) {
+      slowPaths.reserve(128);
+    }
 
     enum : u32 {
       SectionSize  = 4_KiB,
@@ -936,6 +938,66 @@ struct CPU : Thread {
       RdramSize    = 8_MiB,
       RdramMask    = RdramSize - 1,
       SectionCount = RdramSize / SectionSize,
+    };
+
+    struct StateKey {
+      StateKey() = default;
+      StateKey(u64 data) : data(data) {}
+
+      operator u64() const { return data; }
+
+      auto coprocessor1Enabled() const -> bool { return data.bit(0); }
+      auto setCoprocessor1Enabled(bool value) -> void { data.bit(0) = value; }
+
+      auto floatingPointMode() const -> bool { return data.bit(1); }
+      auto setFloatingPointMode(bool value) -> void { data.bit(1) = value; }
+
+      auto exceptionLevel() const -> bool { return data.bit(2); }
+      auto setExceptionLevel(bool value) -> void { data.bit(2) = value; }
+
+      auto errorLevel() const -> bool { return data.bit(3); }
+      auto setErrorLevel(bool value) -> void { data.bit(3) = value; }
+
+      auto privilegeMode() const -> u32 { return data.bit(4, 5); }
+      auto setPrivilegeMode(u32 value) -> void { data.bit(4, 5) = value; }
+
+      auto userExtendedAddressing() const -> bool { return data.bit(6); }
+      auto setUserExtendedAddressing(bool value) -> void { data.bit(6) = value; }
+
+      auto supervisorExtendedAddressing() const -> bool { return data.bit(7); }
+      auto setSupervisorExtendedAddressing(bool value) -> void { data.bit(7) = value; }
+
+      auto kernelExtendedAddressing() const -> bool { return data.bit(8); }
+      auto setKernelExtendedAddressing(bool value) -> void { data.bit(8) = value; }
+
+      auto reverseEndian() const -> bool { return data.bit(9); }
+      auto setReverseEndian(bool value) -> void { data.bit(9) = value; }
+
+      auto coprocessor0Enabled() const -> bool { return data.bit(10); }
+      auto setCoprocessor0Enabled(bool value) -> void { data.bit(10) = value; }
+
+      auto fpuRoundMode() const -> u32 { return data.bit(11, 12); }
+      auto setFpuRoundMode(u32 value) -> void { data.bit(11, 12) = value; }
+
+      auto fpuFlushSubnormals() const -> bool { return data.bit(13); }
+      auto setFpuFlushSubnormals(bool value) -> void { data.bit(13) = value; }
+
+      auto fpuInexactEnabled() const -> bool { return data.bit(14); }
+      auto setFpuInexactEnabled(bool value) -> void { data.bit(14) = value; }
+
+      auto fpuUnderflowEnabled() const -> bool { return data.bit(15); }
+      auto setFpuUnderflowEnabled(bool value) -> void { data.bit(15) = value; }
+
+      auto fpuOverflowEnabled() const -> bool { return data.bit(16); }
+      auto setFpuOverflowEnabled(bool value) -> void { data.bit(16) = value; }
+
+      auto fpuDivisionByZeroEnabled() const -> bool { return data.bit(17); }
+      auto setFpuDivisionByZeroEnabled(bool value) -> void { data.bit(17) = value; }
+
+      auto fpuInvalidOperationEnabled() const -> bool { return data.bit(18); }
+      auto setFpuInvalidOperationEnabled(bool value) -> void { data.bit(18) = value; }
+
+      n64 data = 0;
     };
 
     struct Block {
@@ -968,6 +1030,12 @@ struct CPU : Thread {
     struct Section {
       Block* blocks[SectionWords];
       Pending* pending[SectionWords];
+    };
+
+    struct SlowPath {
+      sljit_jump* enter = nullptr;
+      sljit_label* resume = nullptr;
+      u32 instruction = 0;
     };
 
     auto reset() -> void {
@@ -1017,9 +1085,10 @@ struct CPU : Thread {
     auto section(u32 address) -> Section*;
     auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
 
+    auto deferSlowPath(sljit_jump* enter, u32 instruction) -> void;
     auto emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction = false) -> Block*;
     auto emitZeroClear(u32 n) -> void;
-    auto emitEXECUTE(u32 instruction) -> bool;
+    auto emitEXECUTE(u32 instruction, bool emitSlowPath = false) -> bool;
     auto emitSPECIAL(u32 instruction) -> bool;
     auto emitREGIMM(u32 instruction) -> bool;
     auto emitSCC(u32 instruction) -> bool;
@@ -1028,9 +1097,11 @@ struct CPU : Thread {
 
     bool enabled = false;
     bool callInstructionPrologue = false;
-    u64 emitStateKey = 0;
+    bool emitSlowPathSection = false;
+    StateKey emitStateKey = 0;
     Block* activeBlock = nullptr;
     bump_allocator allocator;
+    std::vector<SlowPath> slowPaths;
     std::vector<Section*> sections;
     std::vector<u8> sectionDirty;
   } recompiler{*this};
