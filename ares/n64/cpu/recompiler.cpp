@@ -265,8 +265,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   u64 linkVaddrNotTaken = ~0ull;
   u32 linkAddressTaken = ~0u;
   u32 linkAddressNotTaken = ~0u;
-  u8 lastBranchNoDirectReason = Block::NoCandidateNoDirectOther;
-  u8 noCandidateReason = Block::NoCandidateNone;
   int numInsn = 0;
   constexpr u32 branchToSelf = 0x1000'ffff;  //beq 0,0,<pc>
   u32 jumpToSelf = 2 << 26 | vaddr >> 2 & 0x3ff'ffff;  //j <pc>
@@ -275,7 +273,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     u64 notTakenVaddr = ~0ull;
     u32 takenAddress = ~0u;
     u32 notTakenAddress = ~0u;
-    u8 noDirectReason = Block::NoCandidateNoDirectUnsupported;
   };
   auto writesCountCompare = [](u32 instruction) -> bool {
     if(instruction >> 26 != 0x10) return false;
@@ -284,32 +281,18 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     auto rd = instruction >> 11 & 31;
     return rd == 9 || rd == 11;
   };
-  auto fillLinkFromVaddr = [&](BranchLinks& links, bool taken, u64 targetVaddr) -> u8 {
+  auto fillLinkFromVaddr = [&](BranchLinks& links, bool taken, u64 targetVaddr) -> void {
     auto access = self.devirtualize<Read, Word>(targetVaddr, false, false);
-    if(!access) return Block::NoCandidateNoDirectUnmapped;
-    if(!access.cache) return Block::NoCandidateNoDirectUncached;
-    if(sectionIndex(access.paddr) != startSection) return Block::NoCandidateNoDirectCrossSection;
+    if(!access) return;
+    if(!access.cache) return;
+    if(sectionIndex(access.paddr) != startSection) return;
     if(taken) {
       links.takenAddress = access.paddr;
       links.takenVaddr = targetVaddr;
-      return Block::NoCandidateNone;
+      return;
     }
     links.notTakenAddress = access.paddr;
     links.notTakenVaddr = targetVaddr;
-    return Block::NoCandidateNone;
-  };
-  auto mergeNoDirectReason = [&](u8 left, u8 right) -> u8 {
-    if(left == Block::NoCandidateNone || right == Block::NoCandidateNone) return Block::NoCandidateNone;
-    if(left == Block::NoCandidateNoDirectCrossSection || right == Block::NoCandidateNoDirectCrossSection) {
-      return Block::NoCandidateNoDirectCrossSection;
-    }
-    if(left == Block::NoCandidateNoDirectUncached || right == Block::NoCandidateNoDirectUncached) {
-      return Block::NoCandidateNoDirectUncached;
-    }
-    if(left == Block::NoCandidateNoDirectUnmapped || right == Block::NoCandidateNoDirectUnmapped) {
-      return Block::NoCandidateNoDirectUnmapped;
-    }
-    return Block::NoCandidateNoDirectOther;
   };
   auto directBranchLinkAddress = [&](u64 branchVaddr, u32 instruction) -> BranchLinks {
     BranchLinks links;
@@ -319,30 +302,27 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     auto fallthroughVaddr = branchVaddr + 8;
     if(opcode == 0x02 || opcode == 0x03) {
       auto targetVaddr = (branchVaddr & 0xffff'ffff'f000'0000ull) | (u64(instruction & 0x03ff'ffff) << 2);
-      links.noDirectReason = fillLinkFromVaddr(links, true, targetVaddr);
+      fillLinkFromVaddr(links, true, targetVaddr);
       return links;
     }
     if(opcode == 0x04 || opcode == 0x05 || opcode == 0x06 || opcode == 0x07
     || opcode == 0x14 || opcode == 0x15 || opcode == 0x16 || opcode == 0x17) {
-      auto reasonTaken = fillLinkFromVaddr(links, true, branchTargetVaddr);
-      auto reasonNotTaken = fillLinkFromVaddr(links, false, fallthroughVaddr);
-      links.noDirectReason = mergeNoDirectReason(reasonTaken, reasonNotTaken);
+      fillLinkFromVaddr(links, true, branchTargetVaddr);
+      fillLinkFromVaddr(links, false, fallthroughVaddr);
       return links;
     }
     if(opcode == 0x01) {
       if(rt == 0x00 || rt == 0x01 || rt == 0x02 || rt == 0x03
       || rt == 0x10 || rt == 0x11 || rt == 0x12 || rt == 0x13) {
-        auto reasonTaken = fillLinkFromVaddr(links, true, branchTargetVaddr);
-        auto reasonNotTaken = fillLinkFromVaddr(links, false, fallthroughVaddr);
-        links.noDirectReason = mergeNoDirectReason(reasonTaken, reasonNotTaken);
+        fillLinkFromVaddr(links, true, branchTargetVaddr);
+        fillLinkFromVaddr(links, false, fallthroughVaddr);
       }
       return links;
     }
     if(opcode == 0x11 && (instruction >> 21 & 31) == 0x08) {
       if(!(emitStateKey & 1)) return links;
-      auto reasonTaken = fillLinkFromVaddr(links, true, branchTargetVaddr);
-      auto reasonNotTaken = fillLinkFromVaddr(links, false, fallthroughVaddr);
-      links.noDirectReason = mergeNoDirectReason(reasonTaken, reasonNotTaken);
+      fillLinkFromVaddr(links, true, branchTargetVaddr);
+      fillLinkFromVaddr(links, false, fallthroughVaddr);
       return links;
     }
     return links;
@@ -403,30 +383,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       linkVaddrTaken = lastBranchLinkVaddrTaken;
       linkVaddrNotTaken = lastBranchLinkVaddrNotTaken;
     }
-    bool hasLastLink = lastBranchLinkAddressTaken != ~0u || lastBranchLinkAddressNotTaken != ~0u;
-    bool blockedUnsafeDelaySlot = delaySlotLinkEligible && !safeDelaySlotLink && hasLastLink;
     if(terminal) {
       if(!hasBranched && stateEndBlockCheck) jumpEpilog(flag_nz);
-      bool hasLinkCandidate = linkAddressTaken != ~0u || linkAddressNotTaken != ~0u;
-      if(hasLinkCandidate) {
-        noCandidateReason = Block::NoCandidateNone;
-      } else if(singleInstruction) {
-        noCandidateReason = Block::NoCandidateSingleInstruction;
-      } else if(info.jitStateKeyMayChange()) {
-        noCandidateReason = Block::NoCandidateStateKeyMayChange;
-      } else if(countCompareWrite) {
-        noCandidateReason = Block::NoCandidateCountCompareWrite;
-      } else if(hasBranched) {
-        if(blockedUnsafeDelaySlot) {
-          noCandidateReason = Block::NoCandidateNoDirectUnsafeDelaySlot;
-        } else {
-          noCandidateReason = lastBranchNoDirectReason;
-        }
-      } else if(sectionBoundary) {
-        noCandidateReason = Block::NoCandidateSectionBoundary;
-      } else {
-        noCandidateReason = Block::NoCandidateOther;
-      }
       break;
     }
     hasBranched = branched;
@@ -434,7 +392,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     lastBranchLinkAddressNotTaken = branchLinks.notTakenAddress;
     lastBranchLinkVaddrTaken = branchLinks.takenVaddr;
     lastBranchLinkVaddrNotTaken = branchLinks.notTakenVaddr;
-    lastBranchNoDirectReason = branchLinks.noDirectReason;
     if(stateEndBlockCheck) jumpEpilog(flag_nz);
   }
 
@@ -465,7 +422,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   block->linkAddressTaken = linkAddressTaken;
   block->linkAddressNotTaken = linkAddressNotTaken;
   block->sectionDirty = sectionDirty.data() + startSection;
-  block->noCandidateReason = noCandidateReason;
 
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;

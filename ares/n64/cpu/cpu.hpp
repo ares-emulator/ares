@@ -939,22 +939,6 @@ struct CPU : Thread {
     };
 
     struct Block {
-      enum : u8 {
-        NoCandidateNone,
-        NoCandidateSectionBoundary,
-        NoCandidateSingleInstruction,
-        NoCandidateStateKeyMayChange,
-        NoCandidateCountCompareWrite,
-        NoCandidateNoDirectTarget,
-        NoCandidateNoDirectUnsupported,
-        NoCandidateNoDirectUnmapped,
-        NoCandidateNoDirectUncached,
-        NoCandidateNoDirectCrossSection,
-        NoCandidateNoDirectUnsafeDelaySlot,
-        NoCandidateNoDirectOther,
-        NoCandidateOther,
-      };
-
       auto execute(CPU& self) -> void {
         self.recompiler.activeBlock = this;
         ((void (*)(CPU*, r64*, r64*))code)(&self, &self.ipu.r[16], &self.fpu.r[16]);
@@ -972,7 +956,6 @@ struct CPU : Thread {
       u32 linkAddressTaken = ~0u;
       u32 linkAddressNotTaken = ~0u;
       u8* sectionDirty = nullptr;
-      u8 noCandidateReason = NoCandidateNone;
     };
 
     struct Pending {
