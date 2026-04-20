@@ -244,9 +244,15 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   beginFunction(3);
 
   u32 deferredCycles = 0;
+  u32 deferredNextPc = 0;
   auto flushDeferredCycles = [&](u32 clocks) -> void {
     if(!clocks) return;
     callf(&CPU::step, imm(clocks));
+  };
+  auto flushDeferredNextPc = [&]() -> void {
+    if(!deferredNextPc) return;
+    add64(PipelineReg(nextpc), PipelineReg(nextpc), imm(deferredNextPc));
+    deferredNextPc = 0;
   };
   auto flushDeferred = [&]() -> void {
     flushDeferredCycles(deferredCycles);
@@ -336,14 +342,19 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
     bool needsPipelinePc = hasBranched || info.branch() || info.jitMayCallf();
     bool commitIpuPc = numInsn == 0 || info.branch() || info.jitMayCallf() || terminal;
+    bool needCurrentPc = commitIpuPc || needsPipelinePc;
     mov32(PipelineReg(nstate), imm(0));
-    mov64(reg(0), PipelineReg(nextpc));
-    if(commitIpuPc && !needsPipelinePc) mov64(mem(IpuReg(pc)), reg(0));
-    if(needsPipelinePc) mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
+    if(needCurrentPc) {
+      flushDeferredNextPc();
+      mov64(reg(0), PipelineReg(nextpc));
+      if(commitIpuPc && !needsPipelinePc) mov64(mem(IpuReg(pc)), reg(0));
+      if(needsPipelinePc) mov64(PipelineReg(pc), reg(0));
+      add64(PipelineReg(nextpc), reg(0), imm(4));
+    } else {
+      deferredNextPc += 4;
+    }
     if(info.jitMayCallf() && numInsn != 0 && !hasBranched) {
-      sub64(reg(1), reg(0), imm(4));
-      mov64(mem(IpuReg(pc)), reg(1));
+      mov64(mem(IpuReg(pc)), imm(vaddr));
     }
     if(callInstructionPrologue) {
       flushDeferred();
@@ -399,6 +410,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     jumpEpilog(flag_nz);
   }
 
+  flushDeferredNextPc();
   flushDeferred();
   callf(&CPU::jitLinkedCode);
   sljit_set_label(sljit_emit_cmp(compiler, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0), epilogue);
