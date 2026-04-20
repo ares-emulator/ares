@@ -341,9 +341,10 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     bool terminal = hasBranched || sectionBoundary || singleInstruction;
     terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
     bool needsPipelinePc = hasBranched || info.branch() || info.jitMayCallf();
+    bool needsStateMachinery = numInsn == 0 || needsPipelinePc;
     bool commitIpuPc = numInsn == 0 || info.branch() || info.jitMayCallf() || terminal;
     bool needCurrentPc = commitIpuPc || needsPipelinePc;
-    mov32(PipelineReg(nstate), imm(0));
+    if(needsStateMachinery) mov32(PipelineReg(nstate), imm(0));
     if(needCurrentPc) {
       flushDeferredNextPc();
       mov64(reg(0), PipelineReg(nextpc));
@@ -382,9 +383,11 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       deferredCycles += 1 * 2;
     }
     if(hasBranched || info.branch() || info.jitMayCallf()) flushDeferred();
-    test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
-    mov32(PipelineReg(state), PipelineReg(nstate));
-    if(commitIpuPc && needsPipelinePc) mov64(mem(IpuReg(pc)), PipelineReg(pc));
+    if(needsStateMachinery) {
+      test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
+      mov32(PipelineReg(state), PipelineReg(nstate));
+      if(commitIpuPc && needsPipelinePc) mov64(mem(IpuReg(pc)), PipelineReg(pc));
+    }
 
     vaddr += 4;
     address += 4;
@@ -399,7 +402,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       linkVaddrNotTaken = lastBranchLinkVaddrNotTaken;
     }
     if(terminal) {
-      if(!hasBranched) jumpEpilog(flag_nz);
+      if(!hasBranched && needsStateMachinery) jumpEpilog(flag_nz);
       break;
     }
     hasBranched = branched;
@@ -407,7 +410,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     lastBranchLinkAddressNotTaken = branchLinks.notTakenAddress;
     lastBranchLinkVaddrTaken = branchLinks.takenVaddr;
     lastBranchLinkVaddrNotTaken = branchLinks.notTakenVaddr;
-    jumpEpilog(flag_nz);
+    if(needsStateMachinery) jumpEpilog(flag_nz);
   }
 
   flushDeferredNextPc();
