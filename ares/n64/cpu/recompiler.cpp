@@ -260,22 +260,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
 
   beginFunction(3);
   slowPaths.clear();
-
-  u32 deferredCycles = 0;
-  u32 deferredNextPc = 0;
-  auto flushDeferredCycles = [&](u32 clocks) -> void {
-    if(!clocks) return;
-    callf(&CPU::step, imm(clocks));
-  };
-  auto flushDeferredNextPc = [&]() -> void {
-    if(!deferredNextPc) return;
-    add64(PipelineReg(nextpc), PipelineReg(nextpc), imm(deferredNextPc));
-    deferredNextPc = 0;
-  };
-  auto flushDeferred = [&]() -> void {
-    flushDeferredCycles(deferredCycles);
-    deferredCycles = 0;
-  };
+  emitDeferredCycles = 0;
+  emitDeferredNextPc = 0;
 
   Thread thread;
   u32 startAddress = address;
@@ -354,6 +340,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
     OpInfo info = self.decoderEXECUTEInfo(instruction);
+    emitVaddr = vaddr;
+    emitCallfSetupDone = false;
     bool countCompareWrite = writesCountCompare(instruction);
     bool sectionBoundary = sectionIndex(address + 4) != startSection;
     bool terminal = hasBranched || sectionBoundary || singleInstruction;
@@ -370,7 +358,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       if(needsPipelinePc) mov64(PipelineReg(pc), reg(0));
       add64(PipelineReg(nextpc), reg(0), imm(4));
     } else {
-      deferredNextPc += 4;
+      emitDeferredNextPc += 4;
     }
     if(info.jitMayCallf() && numInsn != 0 && !hasBranched) {
       mov64(mem(IpuReg(pc)), imm(vaddr));
@@ -396,9 +384,9 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     BranchLinks branchLinks;
     if(branched) branchLinks = directBranchLinkAddress(vaddr, instruction);
     if(unlikely(instruction == branchToSelf || instruction == jumpToSelf)) {
-      deferredCycles += 64 * 2;
+      emitDeferredCycles += 64 * 2;
     } else {
-      deferredCycles += 1 * 2;
+      emitDeferredCycles += 1 * 2;
     }
     if(hasBranched || info.branch() || info.jitMayCallf()) flushDeferred();
     if(needsStateMachinery) {
@@ -446,6 +434,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   jumpEpilog();
   for(auto& slow : slowPaths) {
     setLabel(slow.enter);
+    emitVaddr = slow.vaddr;
+    emitCallfSetupDone = false;
     emitEXECUTE(slow.instruction, true);
     sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
   }
@@ -516,12 +506,38 @@ auto CPU::Recompiler::emitZeroClear(u32 n) -> void {
   if(n == 0) mov64(mem(IpuReg(r[0])), imm(0));
 }
 
+auto CPU::Recompiler::flushDeferredCycles() -> void {
+  if(!emitDeferredCycles) return;
+  callf(&CPU::step, imm(emitDeferredCycles));
+  emitDeferredCycles = 0;
+}
+
+auto CPU::Recompiler::flushDeferredNextPc() -> void {
+  if(!emitDeferredNextPc) return;
+  add64(PipelineReg(nextpc), PipelineReg(nextpc), imm(emitDeferredNextPc));
+  emitDeferredNextPc = 0;
+}
+
+auto CPU::Recompiler::flushDeferred() -> void {
+  flushDeferredCycles();
+}
+
+auto CPU::Recompiler::setupCallf() -> void {
+  if(emitCallfSetupDone) return;
+  flushDeferred();
+  mov64(mem(IpuReg(pc)), imm(emitVaddr));
+  emitCallfSetupDone = true;
+}
+
 auto CPU::Recompiler::deferSlowPath(sljit_jump* enter, u32 instruction) -> void {
   auto& slow = slowPaths.emplace_back();
   slow.enter = enter;
   slow.resume = sljit_emit_label(compiler);
   slow.instruction = instruction;
+  slow.vaddr = emitVaddr;
 }
+
+#define callf callOpcode
 
 auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   emitSlowPathSection = emitSlowPath;
@@ -616,6 +632,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   //ADDI Rt,Rs,i16
   case 0x08: {
     if(emitSlowPath) {
+      setupCallf();
       callf(&CPU::ADDI, mem(Rt), mem(Rs), imm(i16));
       return 0;
     }
@@ -775,6 +792,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   case 0x18: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPath || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DADDI, mem(Rt), mem(Rs), imm(i16));
       return 0;
     }
@@ -789,6 +807,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   case 0x19: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPath || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DADDIU, mem(Rt), mem(Rs), imm(i16));
       return 0;
     }
@@ -1173,6 +1192,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x14: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSLLV, mem(Rd), mem(Rt), mem(Rs));
       return 0;
     }
@@ -1193,6 +1213,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x16: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSRLV, mem(Rd), mem(Rt), mem(Rs));
       return 0;
     }
@@ -1207,6 +1228,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x17: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSRAV, mem(Rd), mem(Rt), mem(Rs));
       return 0;
     }
@@ -1268,6 +1290,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //ADD Rd,Rs,Rt
   case 0x20: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::ADD, mem(Rd), mem(Rs), mem(Rt));
       return 0;
     }
@@ -1293,6 +1316,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //SUB Rd,Rs,Rt
   case 0x22: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::SUB, mem(Rd), mem(Rs), mem(Rt));
       return 0;
     }
@@ -1371,6 +1395,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x2c: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DADD, mem(Rd), mem(Rs), mem(Rt));
       return 0;
     }
@@ -1385,6 +1410,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x2d: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DADDU, mem(Rd), mem(Rs), mem(Rt));
       return 0;
     }
@@ -1398,6 +1424,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x2e: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSUB, mem(Rd), mem(Rs), mem(Rt));
       return 0;
     }
@@ -1412,6 +1439,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x2f: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSUBU, mem(Rd), mem(Rs), mem(Rt));
       return 0;
     }
@@ -1424,6 +1452,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //TGE Rs,Rt
   case 0x30: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TGE, mem(Rs), mem(Rt));
       return 0;
     }
@@ -1436,6 +1465,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //TGEU Rs,Rt
   case 0x31: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TGEU, mem(Rs), mem(Rt));
       return 0;
     }
@@ -1448,6 +1478,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //TLT Rs,Rt
   case 0x32: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TLT, mem(Rs), mem(Rt));
       return 0;
     }
@@ -1460,6 +1491,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //TLTU Rs,Rt
   case 0x33: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TLTU, mem(Rs), mem(Rt));
       return 0;
     }
@@ -1472,6 +1504,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //TEQ Rs,Rt
   case 0x34: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TEQ, mem(Rs), mem(Rt));
       return 0;
     }
@@ -1490,6 +1523,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //TNE Rs,Rt
   case 0x36: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TNE, mem(Rs), mem(Rt));
       return 0;
     }
@@ -1508,6 +1542,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x38: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa));
       return 0;
     }
@@ -1527,6 +1562,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x3a: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSRL, mem(Rd), mem(Rt), imm(Sa));
       return 0;
     }
@@ -1540,6 +1576,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x3b: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSRA, mem(Rd), mem(Rt), imm(Sa));
       return 0;
     }
@@ -1553,6 +1590,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x3c: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa+32));
       return 0;
     }
@@ -1572,6 +1610,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x3e: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSRL, mem(Rd), mem(Rt), imm(Sa+32));
       return 0;
     }
@@ -1585,6 +1624,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   case 0x3f: {
     bool reservedInstruction = reservedInstruction64();
     if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
       callf(&CPU::DSRA, mem(Rd), mem(Rt), imm(Sa+32));
       return 0;
     }
@@ -1673,6 +1713,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   //TGEI Rs,i16
   case 0x08: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TGEI, mem(Rs), imm(i16));
       return 0;
     }
@@ -1685,6 +1726,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   //TGEIU Rs,i16
   case 0x09: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TGEIU, mem(Rs), imm(i16));
       return 0;
     }
@@ -1697,6 +1739,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   //TLTI Rs,i16
   case 0x0a: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TLTI, mem(Rs), imm(i16));
       return 0;
     }
@@ -1709,6 +1752,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   //TLTIU Rs,i16
   case 0x0b: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TLTIU, mem(Rs), imm(i16));
       return 0;
     }
@@ -1721,6 +1765,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   //TEQI Rs,i16
   case 0x0c: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TEQI, mem(Rs), imm(i16));
       return 0;
     }
@@ -1739,6 +1784,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   //TNEI Rs,i16
   case 0x0e: {
     if(emitSlowPathSection) {
+      setupCallf();
       callf(&CPU::TNEI, mem(Rs), imm(i16));
       return 0;
     }
@@ -2627,6 +2673,8 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
   }
   return 0;
 }
+
+#undef callf
 
 #undef IpuBase
 #undef IpuReg

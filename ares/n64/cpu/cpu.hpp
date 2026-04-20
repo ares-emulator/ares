@@ -1036,6 +1036,7 @@ struct CPU : Thread {
       sljit_jump* enter = nullptr;
       sljit_label* resume = nullptr;
       u32 instruction = 0;
+      u64 vaddr = 0;
     };
 
     auto reset() -> void {
@@ -1086,6 +1087,11 @@ struct CPU : Thread {
     auto section(u32 address) -> Section*;
     auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
 
+    auto flushDeferredCycles() -> void;
+    auto flushDeferredNextPc() -> void;
+    auto flushDeferred() -> void;
+    auto setupCallf() -> void;
+    template<typename... P> auto callOpcode(P... p) -> void { setupCallf(); callf(p...); }
     auto deferSlowPath(sljit_jump* enter, u32 instruction) -> void;
     auto emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction = false) -> Block*;
     auto emitZeroClear(u32 n) -> void;
@@ -1099,7 +1105,11 @@ struct CPU : Thread {
     bool enabled = false;
     bool callInstructionPrologue = false;
     bool emitSlowPathSection = false;
+    bool emitCallfSetupDone = false;
     StateKey emitStateKey = 0;
+    u64 emitVaddr = 0;
+    u32 emitDeferredCycles = 0;
+    u32 emitDeferredNextPc = 0;
     Block* activeBlock = nullptr;
     bump_allocator allocator;
     std::vector<SlowPath> slowPaths;
