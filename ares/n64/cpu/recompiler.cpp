@@ -1261,49 +1261,135 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //MULT Rs,Rt
   case 0x18: {
-    callf(&CPU::MULT, mem(Rs), mem(Rt));
+    mov64(reg(0), mem(Rt));
+    shl64(reg(0), reg(0), imm(29));
+    ashr64(reg(0), reg(0), imm(29));
+    mul64(reg(0), mem(Rs), reg(0));
+    mov64_s32(reg(1), reg(0));
+    mov64(mem(Lo), reg(1));
+    ashr64(reg(1), reg(0), imm(32));
+    mov64(mem(Hi), reg(1));
+    emitDeferredCycles += (5 - 1) * 2;
     return 0;
   }
 
   //MULTU Rs,Rt
   case 0x19: {
-    callf(&CPU::MULTU, mem(Rs), mem(Rt));
+    mov64_u32(reg(0), mem(Rs32));
+    mov64_u32(reg(1), mem(Rt32));
+    mul64(reg(0), reg(0), reg(1));
+    mov64_s32(reg(1), reg(0));
+    mov64(mem(Lo), reg(1));
+    ashr64(reg(1), reg(0), imm(32));
+    mov64(mem(Hi), reg(1));
+    emitDeferredCycles += (5 - 1) * 2;
     return 0;
   }
 
   //DIV Rs,Rt
   case 0x1a: {
-    callf(&CPU::DIV, mem(Rs), mem(Rt));
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
+      callf(&CPU::DIV, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp64(mem(Rt), imm(0), set_z);
+    auto divByZero = jump(flag_z);
+    mov64_s32(reg(2), mem(Rs32));
+    divmod64_sw(reg(0), reg(1), reg(2), mem(Rt));
+    mov64_s32(reg(0), reg(0));
+    mov64_s32(reg(1), reg(1));
+    mov64(mem(Lo), reg(0));
+    mov64(mem(Hi), reg(1));
+    deferSlowPath(divByZero, instruction);
+    emitDeferredCycles += (37 - 1) * 2;
     return 0;
   }
 
   //DIVU Rs,Rt
   case 0x1b: {
-    callf(&CPU::DIVU, mem(Rs), mem(Rt));
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
+      callf(&CPU::DIVU, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp32(mem(Rt32), imm(0), set_z);
+    auto divByZero = jump(flag_z);
+    divmod32_uw(reg(0), reg(1), mem(Rs32), mem(Rt32));
+    mov64(mem(Lo), reg(0));
+    mov64(mem(Hi), reg(1));
+    deferSlowPath(divByZero, instruction);
+    emitDeferredCycles += (37 - 1) * 2;
     return 0;
   }
 
   //DMULT Rs,Rt
   case 0x1c: {
-    callf(&CPU::DMULT, mem(Rs), mem(Rt));
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
+      callf(&CPU::DMULT, mem(Rs), mem(Rt));
+      return 0;
+    }
+    lmul64_sw(mem(Lo), mem(Hi), mem(Rs), mem(Rt));
+    emitDeferredCycles += (8 - 1) * 2;
     return 0;
   }
 
   //DMULTU Rs,Rt
   case 0x1d: {
-    callf(&CPU::DMULTU, mem(Rs), mem(Rt));
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
+      callf(&CPU::DMULTU, mem(Rs), mem(Rt));
+      return 0;
+    }
+    lmul64_uw(mem(Lo), mem(Hi), mem(Rs), mem(Rt));
+    emitDeferredCycles += (8 - 1) * 2;
     return 0;
   }
 
   //DDIV Rs,Rt
   case 0x1e: {
-    callf(&CPU::DDIV, mem(Rs), mem(Rt));
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
+      callf(&CPU::DDIV, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp64(mem(Rt), imm(0), set_z);
+    auto divByZero = jump(flag_z);
+    cmp64(mem(Rs), imm((sljit_sw)0x8000'0000'0000'0000ull), set_z);
+    auto rsNotMin = jump(flag_ne);
+    cmp64(mem(Rt), imm(-1), set_z);
+    auto notSpecial = jump(flag_ne);
+    mov64(mem(Lo), mem(Rs));
+    mov64(mem(Hi), imm(0));
+    auto afterDdiv = jump();
+    setLabel(rsNotMin);
+    setLabel(notSpecial);
+    divmod64_sw(mem(Lo), mem(Hi), mem(Rs), mem(Rt));
+    setLabel(afterDdiv);
+    deferSlowPath(divByZero, instruction);
+    emitDeferredCycles += (69 - 1) * 2;
     return 0;
   }
 
   //DDIVU Rs,Rt
   case 0x1f: {
-    callf(&CPU::DDIVU, mem(Rs), mem(Rt));
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      setupCallf();
+      callf(&CPU::DDIVU, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp64(mem(Rt), imm(0), set_z);
+    auto divByZero = jump(flag_z);
+    divmod64_uw(mem(Lo), mem(Hi), mem(Rs), mem(Rt));
+    deferSlowPath(divByZero, instruction);
+    emitDeferredCycles += (69 - 1) * 2;
     return 0;
   }
 

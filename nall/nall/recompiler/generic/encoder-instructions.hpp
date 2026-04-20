@@ -35,6 +35,60 @@
   OP1(rev32_s16, REV32_S16)
 #undef OP1
 
+  template<typename T, typename U, typename V, typename W>
+  auto lmul64_uw(T lo, U hi, V x, W y) {
+    mov64(reg(0), x);
+    mov64(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_LMUL_UW);
+    mov64(lo, reg(0));
+    mov64(hi, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto lmul64_sw(T lo, U hi, V x, W y) {
+    mov64(reg(0), x);
+    mov64(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_LMUL_SW);
+    mov64(lo, reg(0));
+    mov64(hi, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto divmod64_sw(T quotient, U remainder, V x, W y) {
+    mov64(reg(0), x);
+    mov64(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_DIVMOD_SW);
+    mov64(quotient, reg(0));
+    mov64(remainder, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto divmod64_uw(T quotient, U remainder, V x, W y) {
+    mov64(reg(0), x);
+    mov64(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_DIVMOD_UW);
+    mov64(quotient, reg(0));
+    mov64(remainder, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto divmod32_sw(T quotient, U remainder, V x, W y) {
+    mov64_s32(reg(0), x);
+    mov64_s32(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_DIVMOD_S32);
+    mov64_s32(quotient, reg(0));
+    mov64_s32(remainder, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto divmod32_uw(T quotient, U remainder, V x, W y) {
+    mov64_u32(reg(0), x);
+    mov64_u32(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_DIVMOD_U32);
+    mov64_s32(quotient, reg(0));
+    mov64_s32(remainder, reg(1));
+  }
+
   //2 operand instructions
 
 #define OP2(name, op) \
