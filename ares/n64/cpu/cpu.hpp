@@ -1082,6 +1082,7 @@ struct CPU : Thread {
     }
 
     auto computeStateKey() const -> u64;
+    auto reservedInstruction64() const -> bool;
     auto section(u32 address) -> Section*;
     auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
 

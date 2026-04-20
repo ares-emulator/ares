@@ -135,6 +135,14 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   return stateKey;
 }
 
+auto CPU::Recompiler::reservedInstruction64() const -> bool {
+  if(emitStateKey.exceptionLevel() || emitStateKey.errorLevel()) return 0;
+  auto privilegeMode = emitStateKey.privilegeMode();
+  if(privilegeMode == 1) return !emitStateKey.supervisorExtendedAddressing();
+  if(privilegeMode >= 2) return !emitStateKey.userExtendedAddressing();
+  return 0;
+}
+
 auto CPU::Recompiler::section(u32 address) -> Section* {
   assert(isRdramAddress(address));
   if(!isRdramAddress(address)) return nullptr;
@@ -765,17 +773,8 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //DADDI Rt,Rs,i16
   case 0x18: {
-    bool reservedInstruction = 0;
-    if(!emitStateKey.exceptionLevel() && !emitStateKey.errorLevel()) {
-      auto privilegeMode = emitStateKey.privilegeMode();
-      if(privilegeMode == 1) reservedInstruction = !emitStateKey.supervisorExtendedAddressing();
-      if(privilegeMode >= 2) reservedInstruction = !emitStateKey.userExtendedAddressing();
-    }
-    if(emitSlowPath) {
-      callf(&CPU::DADDI, mem(Rt), mem(Rs), imm(i16));
-      return 0;
-    }
-    if(reservedInstruction) {
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPath || reservedInstruction) {
       callf(&CPU::DADDI, mem(Rt), mem(Rs), imm(i16));
       return 0;
     }
@@ -788,8 +787,13 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //DADDIU Rt,Rs,i16
   case 0x19: {
-    callf(&CPU::DADDIU, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPath || reservedInstruction) {
+      callf(&CPU::DADDIU, mem(Rt), mem(Rs), imm(i16));
+      return 0;
+    }
+    add64(reg(0), mem(Rs), imm(i16));
+    if(Rtn != 0) mov64(mem(Rt), reg(0));
     return 0;
   }
 
@@ -1167,8 +1171,15 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DSLLV Rd,Rt,Rs
   case 0x14: {
-    callf(&CPU::DSLLV, mem(Rd), mem(Rt), mem(Rs));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSLLV, mem(Rd), mem(Rt), mem(Rs));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    and64(reg(1), mem(Rs), imm(63));
+    shl64(reg(0), mem(Rt), reg(1));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
@@ -1180,15 +1191,29 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DSRLV Rd,Rt,Rs
   case 0x16: {
-    callf(&CPU::DSRLV, mem(Rd), mem(Rt), mem(Rs));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSRLV, mem(Rd), mem(Rt), mem(Rs));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    and64(reg(1), mem(Rs), imm(63));
+    lshr64(reg(0), mem(Rt), reg(1));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
   //DSRAV Rd,Rt,Rs
   case 0x17: {
-    callf(&CPU::DSRAV, mem(Rd), mem(Rt), mem(Rs));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSRAV, mem(Rd), mem(Rt), mem(Rs));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    and64(reg(1), mem(Rs), imm(63));
+    ashr64(reg(0), mem(Rt), reg(1));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
@@ -1267,8 +1292,17 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SUB Rd,Rs,Rt
   case 0x22: {
-    callf(&CPU::SUB, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    if(emitSlowPathSection) {
+      callf(&CPU::SUB, mem(Rd), mem(Rs), mem(Rt));
+      return 0;
+    }
+    sub32(reg(0), mem(Rs32), mem(Rt32), set_o);
+    auto overflow = jump(flag_o);
+    if(Rdn != 0) {
+      mov64_s32(reg(0), reg(0));
+      mov64(mem(Rd), reg(0));
+    }
+    deferSlowPath(overflow, instruction);
     return 0;
   }
 
@@ -1335,17 +1369,8 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DADD Rd,Rs,Rt
   case 0x2c: {
-    bool reservedInstruction = 0;
-    if(!emitStateKey.exceptionLevel() && !emitStateKey.errorLevel()) {
-      auto privilegeMode = emitStateKey.privilegeMode();
-      if(privilegeMode == 1) reservedInstruction = !emitStateKey.supervisorExtendedAddressing();
-      if(privilegeMode >= 2) reservedInstruction = !emitStateKey.userExtendedAddressing();
-    }
-    if(emitSlowPathSection) {
-      callf(&CPU::DADD, mem(Rd), mem(Rs), mem(Rt));
-      return 0;
-    }
-    if(reservedInstruction) {
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
       callf(&CPU::DADD, mem(Rd), mem(Rs), mem(Rt));
       return 0;
     }
@@ -1358,22 +1383,41 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DADDU Rd,Rs,Rt
   case 0x2d: {
-    callf(&CPU::DADDU, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DADDU, mem(Rd), mem(Rs), mem(Rt));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    add64(reg(0), mem(Rs), mem(Rt));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
   //DSUB Rd,Rs,Rt
   case 0x2e: {
-    callf(&CPU::DSUB, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSUB, mem(Rd), mem(Rs), mem(Rt));
+      return 0;
+    }
+    sub64(reg(0), mem(Rs), mem(Rt), set_o);
+    auto overflow = jump(flag_o);
+    if(Rdn != 0) mov64(mem(Rd), reg(0));
+    deferSlowPath(overflow, instruction);
     return 0;
   }
 
   //DSUBU Rd,Rs,Rt
   case 0x2f: {
-    callf(&CPU::DSUBU, mem(Rd), mem(Rs), mem(Rt));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSUBU, mem(Rd), mem(Rs), mem(Rt));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    sub64(reg(0), mem(Rs), mem(Rt));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
