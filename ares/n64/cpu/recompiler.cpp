@@ -359,11 +359,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     } else {
       deferredCycles += 1 * 2;
     }
-    bool stateEndBlockCheck = hasBranched || info.jitMayCallf();
-    if(stateEndBlockCheck) {
-      flushDeferred();
-      test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
-    }
+    flushDeferred();
+    test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
     mov32(PipelineReg(state), PipelineReg(nstate));
     mov64(mem(IpuReg(pc)), PipelineReg(pc));
 
@@ -384,7 +381,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       linkVaddrNotTaken = lastBranchLinkVaddrNotTaken;
     }
     if(terminal) {
-      if(!hasBranched && stateEndBlockCheck) jumpEpilog(flag_nz);
+      if(!hasBranched) jumpEpilog(flag_nz);
       break;
     }
     hasBranched = branched;
@@ -392,7 +389,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     lastBranchLinkAddressNotTaken = branchLinks.notTakenAddress;
     lastBranchLinkVaddrTaken = branchLinks.takenVaddr;
     lastBranchLinkVaddrNotTaken = branchLinks.notTakenVaddr;
-    if(stateEndBlockCheck) jumpEpilog(flag_nz);
+    jumpEpilog(flag_nz);
   }
 
   flushDeferred();
