@@ -94,7 +94,7 @@ struct CPU : Thread {
       WritesHiLo    = 1 << 12,
       Privileged    = 1 << 13,
       IsInvalid     = 1 << 14,
-      JitMayCallf   = 1 << 15,
+      JitUseCallf   = 1 << 15,
       JitMustFlushBeforeCall = 1 << 16,
       JitAddsExtraCyclesInternally = 1 << 17,
       JitStateKeyMayChange = 1 << 18,
@@ -111,7 +111,7 @@ struct CPU : Thread {
     auto load() const -> bool { return flags & Load; }
     auto store() const -> bool { return flags & Store; }
     auto memory() const -> bool { return flags & (Load | Store); }
-    auto jitMayCallf() const -> bool { return flags & JitMayCallf; }
+    auto jitUseCallf() const -> bool { return flags & JitUseCallf; }
     auto jitMustFlushBeforeCall() const -> bool { return flags & JitMustFlushBeforeCall; }
     auto jitAddsExtraCyclesInternally() const -> bool { return flags & JitAddsExtraCyclesInternally; }
     auto jitStateKeyMayChange() const -> bool { return flags & JitStateKeyMayChange; }
@@ -1037,6 +1037,10 @@ struct CPU : Thread {
       sljit_label* resume = nullptr;
       u32 instruction = 0;
       u64 vaddr = 0;
+      u32 deferredCycles = 0;
+      u32 deferredNextPc = 0;
+      bool needCurrentPc = false;
+      bool needsStateMachinery = false;
     };
 
     auto reset() -> void {
@@ -1106,6 +1110,9 @@ struct CPU : Thread {
     bool callInstructionPrologue = false;
     bool emitSlowPathSection = false;
     bool emitCallfSetupDone = false;
+    bool emitCallfEmitted = false;
+    bool emitNeedCurrentPc = false;
+    bool emitNeedsStateMachinery = false;
     StateKey emitStateKey = 0;
     u64 emitVaddr = 0;
     u32 emitDeferredCycles = 0;

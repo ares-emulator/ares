@@ -342,14 +342,17 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     OpInfo info = self.decoderEXECUTEInfo(instruction);
     emitVaddr = vaddr;
     emitCallfSetupDone = false;
+    emitCallfEmitted = false;
     bool countCompareWrite = writesCountCompare(instruction);
     bool sectionBoundary = sectionIndex(address + 4) != startSection;
     bool terminal = hasBranched || sectionBoundary || singleInstruction;
     terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
-    bool needsPipelinePc = hasBranched || info.branch() || info.jitMayCallf();
+    bool needsPipelinePc = hasBranched || info.branch() || info.jitUseCallf();
     bool needsStateMachinery = numInsn == 0 || needsPipelinePc;
-    bool commitIpuPc = numInsn == 0 || info.branch() || info.jitMayCallf() || terminal;
+    bool commitIpuPc = numInsn == 0 || info.branch() || info.jitUseCallf() || terminal;
     bool needCurrentPc = commitIpuPc || needsPipelinePc;
+    emitNeedCurrentPc = needCurrentPc;
+    emitNeedsStateMachinery = needsStateMachinery;
     if(needsStateMachinery) mov32(PipelineReg(nstate), imm(0));
     if(needCurrentPc) {
       flushDeferredNextPc();
@@ -359,9 +362,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       add64(PipelineReg(nextpc), reg(0), imm(4));
     } else {
       emitDeferredNextPc += 4;
-    }
-    if(info.jitMayCallf() && numInsn != 0 && !hasBranched) {
-      mov64(mem(IpuReg(pc)), imm(vaddr));
     }
     if(callInstructionPrologue) {
       flushDeferred();
@@ -377,6 +377,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       callf(&CPU::jitFetch, imm64(vaddr), imm(address));
     }
     if(info.jitMustFlushBeforeCall() || info.jitAddsExtraCyclesInternally()) {
+      if(emitDeferredCycles && !needCurrentPc) mov64(mem(IpuReg(pc)), imm(vaddr));
       flushDeferred();
     }
     numInsn++;
@@ -388,8 +389,10 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     } else {
       emitDeferredCycles += 1 * 2;
     }
-    if(hasBranched || info.branch() || info.jitMayCallf()) flushDeferred();
-    if(needsStateMachinery) {
+    bool emittedCallf = emitCallfEmitted;
+    if(hasBranched || info.branch() || emittedCallf) flushDeferred();
+    bool needsStatePost = needsStateMachinery || emittedCallf;
+    if(needsStatePost) {
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
       mov32(PipelineReg(state), PipelineReg(nstate));
       if(commitIpuPc && needsPipelinePc) mov64(mem(IpuReg(pc)), PipelineReg(pc));
@@ -398,7 +401,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     vaddr += 4;
     address += 4;
     jumpToSelf += 4;
-    bool safeDelaySlotLink = !info.jitMayCallf() && !info.mayException() && !info.mayFault();
+    bool safeDelaySlotLink = !info.jitUseCallf() && !info.mayException() && !info.mayFault();
     bool delaySlotLinkEligible = terminal && hasBranched && !singleInstruction
     && !info.jitStateKeyMayChange() && !countCompareWrite;
     if(delaySlotLinkEligible && safeDelaySlotLink) {
@@ -408,7 +411,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       linkVaddrNotTaken = lastBranchLinkVaddrNotTaken;
     }
     if(terminal) {
-      if(!hasBranched && needsStateMachinery) jumpEpilog(flag_nz);
+      if(!hasBranched && needsStatePost) jumpEpilog(flag_nz);
       break;
     }
     hasBranched = branched;
@@ -416,7 +419,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     lastBranchLinkAddressNotTaken = branchLinks.notTakenAddress;
     lastBranchLinkVaddrTaken = branchLinks.takenVaddr;
     lastBranchLinkVaddrNotTaken = branchLinks.notTakenVaddr;
-    if(needsStateMachinery) jumpEpilog(flag_nz);
+    if(needsStatePost) jumpEpilog(flag_nz);
   }
 
   flushDeferredNextPc();
@@ -435,7 +438,12 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   for(auto& slow : slowPaths) {
     setLabel(slow.enter);
     emitVaddr = slow.vaddr;
+    emitDeferredCycles = slow.deferredCycles;
+    emitDeferredNextPc = slow.deferredNextPc;
+    emitNeedCurrentPc = slow.needCurrentPc;
+    emitNeedsStateMachinery = slow.needsStateMachinery;
     emitCallfSetupDone = false;
+    emitCallfEmitted = false;
     emitEXECUTE(slow.instruction, true);
     sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
   }
@@ -524,17 +532,29 @@ auto CPU::Recompiler::flushDeferred() -> void {
 
 auto CPU::Recompiler::setupCallf() -> void {
   if(emitCallfSetupDone) return;
+  if(!emitNeedsStateMachinery) mov32(PipelineReg(nstate), imm(0));
+  if(!emitNeedCurrentPc) {
+    mov64(PipelineReg(pc), imm(emitVaddr));
+    mov64(PipelineReg(nextpc), imm(emitVaddr + 4));
+    emitDeferredNextPc = 0;
+  }
   flushDeferred();
   mov64(mem(IpuReg(pc)), imm(emitVaddr));
   emitCallfSetupDone = true;
+  emitCallfEmitted = true;
 }
 
 auto CPU::Recompiler::deferSlowPath(sljit_jump* enter, u32 instruction) -> void {
+  emitCallfEmitted = true;
   auto& slow = slowPaths.emplace_back();
   slow.enter = enter;
   slow.resume = sljit_emit_label(compiler);
   slow.instruction = instruction;
   slow.vaddr = emitVaddr;
+  slow.deferredCycles = emitDeferredCycles;
+  slow.deferredNextPc = emitDeferredNextPc;
+  slow.needCurrentPc = emitNeedCurrentPc;
+  slow.needsStateMachinery = emitNeedsStateMachinery;
 }
 
 #define callf callOpcode
@@ -1706,7 +1726,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //INVALID
   case range4(0x04, 0x07): {
-    call(&CPU::INVALID);
+    callf(&CPU::INVALID);
     return 1;
   }
 
@@ -2565,12 +2585,12 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   if((instruction >> 21 & 31) == 20)
   switch(instruction & 0x3f) {
   case range8(0x08, 0x0f): {
-    call(&CPU::COP1UNIMPLEMENTED);
+    callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
 
   case range2(0x24, 0x25): {
-    call(&CPU::COP1UNIMPLEMENTED);
+    callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
 
@@ -2591,11 +2611,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   if((instruction >> 21 & 31) == 21)
   switch(instruction & 0x3f) {
   case range8(0x08, 0x0f): {
-    call(&CPU::COP1UNIMPLEMENTED);
+    callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
   case range2(0x24, 0x25): {
-    call(&CPU::COP1UNIMPLEMENTED);
+    callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
 
