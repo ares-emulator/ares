@@ -1423,31 +1423,61 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //TGE Rs,Rt
   case 0x30: {
-    callf(&CPU::TGE, mem(Rs), mem(Rt));
+    if(emitSlowPathSection) {
+      callf(&CPU::TGE, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp64(mem(Rs), mem(Rt), set_slt);
+    auto trap = jump(flag_sge);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
   //TGEU Rs,Rt
   case 0x31: {
-    callf(&CPU::TGEU, mem(Rs), mem(Rt));
+    if(emitSlowPathSection) {
+      callf(&CPU::TGEU, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp64(mem(Rs), mem(Rt), set_ult);
+    auto trap = jump(flag_uge);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
   //TLT Rs,Rt
   case 0x32: {
-    callf(&CPU::TLT, mem(Rs), mem(Rt));
+    if(emitSlowPathSection) {
+      callf(&CPU::TLT, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp64(mem(Rs), mem(Rt), set_slt);
+    auto trap = jump(flag_slt);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
   //TLTU Rs,Rt
   case 0x33: {
-    callf(&CPU::TLTU, mem(Rs), mem(Rt));
+    if(emitSlowPathSection) {
+      callf(&CPU::TLTU, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp64(mem(Rs), mem(Rt), set_ult);
+    auto trap = jump(flag_ult);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
   //TEQ Rs,Rt
   case 0x34: {
-    callf(&CPU::TEQ, mem(Rs), mem(Rt));
+    if(emitSlowPathSection) {
+      callf(&CPU::TEQ, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp64(mem(Rs), mem(Rt), set_z);
+    auto trap = jump(flag_z);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
@@ -1459,7 +1489,13 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //TNE Rs,Rt
   case 0x36: {
-    callf(&CPU::TNE, mem(Rs), mem(Rt));
+    if(emitSlowPathSection) {
+      callf(&CPU::TNE, mem(Rs), mem(Rt));
+      return 0;
+    }
+    cmp64(mem(Rs), mem(Rt), set_z);
+    auto trap = jump(flag_nz);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
@@ -1470,8 +1506,14 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
   //DSLL Rd,Rt,Sa
   case 0x38: {
-    callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    shl64(reg(0), mem(Rt), imm(Sa));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
@@ -1483,22 +1525,40 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DSRL Rd,Rt,Sa
   case 0x3a: {
-    callf(&CPU::DSRL, mem(Rd), mem(Rt), imm(Sa));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSRL, mem(Rd), mem(Rt), imm(Sa));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    lshr64(reg(0), mem(Rt), imm(Sa));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
   //DSRA Rd,Rt,Sa
   case 0x3b: {
-    callf(&CPU::DSRA, mem(Rd), mem(Rt), imm(Sa));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSRA, mem(Rd), mem(Rt), imm(Sa));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    ashr64(reg(0), mem(Rt), imm(Sa));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
   //DSLL32 Rd,Rt,Sa
   case 0x3c: {
-    callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa+32));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa+32));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    shl64(reg(0), mem(Rt), imm(Sa + 32));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
@@ -1510,15 +1570,27 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //DSRL32 Rd,Rt,Sa
   case 0x3e: {
-    callf(&CPU::DSRL, mem(Rd), mem(Rt), imm(Sa+32));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSRL, mem(Rd), mem(Rt), imm(Sa+32));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    lshr64(reg(0), mem(Rt), imm(Sa + 32));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
   //DSRA32 Rd,Rt,Sa
   case 0x3f: {
-    callf(&CPU::DSRA, mem(Rd), mem(Rt), imm(Sa+32));
-    emitZeroClear(Rdn);
+    bool reservedInstruction = reservedInstruction64();
+    if(emitSlowPathSection || reservedInstruction) {
+      callf(&CPU::DSRA, mem(Rd), mem(Rt), imm(Sa+32));
+      return 0;
+    }
+    if(Rdn == 0) return 0;
+    ashr64(reg(0), mem(Rt), imm(Sa + 32));
+    mov64(mem(Rd), reg(0));
     return 0;
   }
 
@@ -1600,31 +1672,61 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //TGEI Rs,i16
   case 0x08: {
-    callf(&CPU::TGEI, mem(Rs), imm(i16));
+    if(emitSlowPathSection) {
+      callf(&CPU::TGEI, mem(Rs), imm(i16));
+      return 0;
+    }
+    cmp64(mem(Rs), imm(i16), set_slt);
+    auto trap = jump(flag_sge);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
   //TGEIU Rs,i16
   case 0x09: {
-    callf(&CPU::TGEIU, mem(Rs), imm(i16));
+    if(emitSlowPathSection) {
+      callf(&CPU::TGEIU, mem(Rs), imm(i16));
+      return 0;
+    }
+    cmp64(mem(Rs), imm(i16), set_ult);
+    auto trap = jump(flag_uge);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
   //TLTI Rs,i16
   case 0x0a: {
-    callf(&CPU::TLTI, mem(Rs), imm(i16));
+    if(emitSlowPathSection) {
+      callf(&CPU::TLTI, mem(Rs), imm(i16));
+      return 0;
+    }
+    cmp64(mem(Rs), imm(i16), set_slt);
+    auto trap = jump(flag_slt);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
   //TLTIU Rs,i16
   case 0x0b: {
-    callf(&CPU::TLTIU, mem(Rs), imm(i16));
+    if(emitSlowPathSection) {
+      callf(&CPU::TLTIU, mem(Rs), imm(i16));
+      return 0;
+    }
+    cmp64(mem(Rs), imm(i16), set_ult);
+    auto trap = jump(flag_ult);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
   //TEQI Rs,i16
   case 0x0c: {
-    callf(&CPU::TEQI, mem(Rs), imm(i16));
+    if(emitSlowPathSection) {
+      callf(&CPU::TEQI, mem(Rs), imm(i16));
+      return 0;
+    }
+    cmp64(mem(Rs), imm(i16), set_z);
+    auto trap = jump(flag_z);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
@@ -1636,7 +1738,13 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //TNEI Rs,i16
   case 0x0e: {
-    callf(&CPU::TNEI, mem(Rs), imm(i16));
+    if(emitSlowPathSection) {
+      callf(&CPU::TNEI, mem(Rs), imm(i16));
+      return 0;
+    }
+    cmp64(mem(Rs), imm(i16), set_z);
+    auto trap = jump(flag_nz);
+    deferSlowPath(trap, instruction);
     return 0;
   }
 
