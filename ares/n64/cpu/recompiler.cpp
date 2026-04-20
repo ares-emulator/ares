@@ -330,9 +330,10 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
     OpInfo info = self.decoderEXECUTEInfo(instruction);
+    bool needsPipelinePc = hasBranched || info.branch() || info.jitMayCallf();
     mov32(PipelineReg(nstate), imm(0));
     mov64(reg(0), PipelineReg(nextpc));
-    mov64(PipelineReg(pc), reg(0));
+    if(needsPipelinePc) mov64(PipelineReg(pc), reg(0));
     add64(PipelineReg(nextpc), reg(0), imm(4));
     if(callInstructionPrologue) {
       flushDeferred();
@@ -362,7 +363,12 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     if(hasBranched || info.branch() || info.jitMayCallf()) flushDeferred();
     test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
     mov32(PipelineReg(state), PipelineReg(nstate));
-    mov64(mem(IpuReg(pc)), PipelineReg(pc));
+    if(needsPipelinePc) {
+      mov64(mem(IpuReg(pc)), PipelineReg(pc));
+    } else {
+      sub64(reg(0), PipelineReg(nextpc), imm(4));
+      mov64(mem(IpuReg(pc)), reg(0));
+    }
 
     vaddr += 4;
     address += 4;
