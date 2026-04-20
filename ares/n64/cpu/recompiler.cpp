@@ -330,11 +330,21 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
     OpInfo info = self.decoderEXECUTEInfo(instruction);
+    bool countCompareWrite = writesCountCompare(instruction);
+    bool sectionBoundary = sectionIndex(address + 4) != startSection;
+    bool terminal = hasBranched || sectionBoundary || singleInstruction;
+    terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
     bool needsPipelinePc = hasBranched || info.branch() || info.jitMayCallf();
+    bool commitIpuPc = numInsn == 0 || info.branch() || info.jitMayCallf() || terminal;
     mov32(PipelineReg(nstate), imm(0));
     mov64(reg(0), PipelineReg(nextpc));
+    if(commitIpuPc && !needsPipelinePc) mov64(mem(IpuReg(pc)), reg(0));
     if(needsPipelinePc) mov64(PipelineReg(pc), reg(0));
     add64(PipelineReg(nextpc), reg(0), imm(4));
+    if(info.jitMayCallf() && numInsn != 0 && !hasBranched) {
+      sub64(reg(1), reg(0), imm(4));
+      mov64(mem(IpuReg(pc)), reg(1));
+    }
     if(callInstructionPrologue) {
       flushDeferred();
       callf(&CPU::instructionPrologue, imm64(vaddr), imm(instruction));
@@ -363,20 +373,11 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     if(hasBranched || info.branch() || info.jitMayCallf()) flushDeferred();
     test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
     mov32(PipelineReg(state), PipelineReg(nstate));
-    if(needsPipelinePc) {
-      mov64(mem(IpuReg(pc)), PipelineReg(pc));
-    } else {
-      sub64(reg(0), PipelineReg(nextpc), imm(4));
-      mov64(mem(IpuReg(pc)), reg(0));
-    }
+    if(commitIpuPc && needsPipelinePc) mov64(mem(IpuReg(pc)), PipelineReg(pc));
 
     vaddr += 4;
     address += 4;
     jumpToSelf += 4;
-    bool countCompareWrite = writesCountCompare(instruction);
-    bool sectionBoundary = sectionIndex(address) != startSection;
-    bool terminal = hasBranched || sectionBoundary || singleInstruction;
-    terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
     bool safeDelaySlotLink = !info.jitMayCallf() && !info.mayException() && !info.mayFault();
     bool delaySlotLinkEligible = terminal && hasBranched && !singleInstruction
     && !info.jitStateKeyMayChange() && !countCompareWrite;
