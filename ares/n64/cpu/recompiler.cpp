@@ -359,7 +359,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     } else {
       deferredCycles += 1 * 2;
     }
-    flushDeferred();
+    if(hasBranched || info.branch() || info.jitMayCallf()) flushDeferred();
     test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
     mov32(PipelineReg(state), PipelineReg(nstate));
     mov64(mem(IpuReg(pc)), PipelineReg(pc));
