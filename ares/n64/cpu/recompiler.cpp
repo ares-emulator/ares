@@ -240,6 +240,12 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #define IpuBase        offsetof(IPU, r[16])
 #define IpuReg(r)      sreg(1), offsetof(IPU, r) - IpuBase
 #define PipelineReg(x) mem(sreg(0), offsetof(CPU, pipeline) + offsetof(Pipeline, x))
+#define CpuIcacheLineBytes sizeof(CPU::InstructionCache::Line)
+#define CpuIcacheTagKey0Off offsetof(CPU, icache.lines[0].tagKey)
+#define IcacheTagKeyMem(lineIndex) \
+  mem(sreg(0), sljit_sw(CpuIcacheTagKey0Off) + sljit_sw(lineIndex) * sljit_sw(CpuIcacheLineBytes))
+#define CpuProfileIcacheHitsOff (offsetof(CPU, profile) + offsetof(CPU::Profile, icacheHits))
+#define ProfileIcacheHitsMem mem(sreg(0), CpuProfileIcacheHitsOff)
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
 #pragma GCC diagnostic push
@@ -358,21 +364,29 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       emitDeferredNextPc += 4;
     }
     if(callInstructionPrologue) {
-      flushDeferred();
+      flushDeferredCycles();
       callf(&CPU::instructionPrologue, imm64(vaddr), imm(instruction));
     }
     if(numInsn == 0 || (vaddr&0x1f)==0){
-      flushDeferred();
-      //abort compilation of block if the instruction cache is not coherent
+      flushDeferredCycles();
       if(!self.icache.coherent(vaddr, address)) {
         resetCompiler();
         return nullptr;
       }
-      callf(&CPU::jitFetch, imm64(vaddr), imm(address));
+      const u32 lineIndex = u32(vaddr >> 5) & 0x1ffu;
+      const u32 expectedTagKey = (address & ~0xfffu) | 1u;
+      cmp32(IcacheTagKeyMem(lineIndex), imm(expectedTagKey), set_z);
+      auto icacheMiss = jump(flag_ne);
+      if(system.homebrewMode) {
+        mov64(reg(4), ProfileIcacheHitsMem);
+        add64(reg(4), reg(4), imm(1));
+        mov64(ProfileIcacheHitsMem, reg(4));
+      }
+      deferSlowPathCacheMiss(icacheMiss, address);
     }
     if(info.jitMustFlushBeforeCall() || info.jitAddsExtraCyclesInternally()) {
       if(emitDeferredCycles && !needCurrentPc) mov64(mem(IpuReg(pc)), imm(vaddr));
-      flushDeferred();
+      flushDeferredCycles();
     }
     numInsn++;
     bool branched = emitEXECUTE(instruction, false);
@@ -383,7 +397,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       emitDeferredCycles += 1 * 2;
     }
     bool emittedCallf = emitCallfEmitted;
-    if(hasBranched || info.branch() || emittedCallf) flushDeferred();
+    if(hasBranched || info.branch() || emittedCallf) flushDeferredCycles();
     bool needsStatePost = needsStateMachinery || emittedCallf;
     if(needsStatePost) {
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
@@ -407,7 +421,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   }
 
   flushDeferredNextPc();
-  flushDeferred();
+  flushDeferredCycles();
   callf(&CPU::jitLinkedCode);
   sljit_set_label(sljit_emit_cmp(compiler, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0), epilogue);
   mov64(reg(3), reg(0));
@@ -428,7 +442,11 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     emitNeedsStateMachinery = slow.needsStateMachinery;
     emitCallfSetupDone = false;
     emitCallfEmitted = false;
-    emitEXECUTE(slow.instruction, true);
+    if(slow.icacheMiss) {
+      callf(&CPU::jitIcacheFillMiss, imm64(slow.vaddr), imm(slow.icachePaddr));
+    } else {
+      emitEXECUTE(slow.instruction, true);
+    }
     sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
   }
 
@@ -510,10 +528,6 @@ auto CPU::Recompiler::flushDeferredNextPc() -> void {
   emitDeferredNextPc = 0;
 }
 
-auto CPU::Recompiler::flushDeferred() -> void {
-  flushDeferredCycles();
-}
-
 auto CPU::Recompiler::setupCallf() -> void {
   if(emitCallfSetupDone) return;
   if(!emitNeedsStateMachinery) mov32(PipelineReg(nstate), imm(0));
@@ -522,7 +536,7 @@ auto CPU::Recompiler::setupCallf() -> void {
     mov64(PipelineReg(nextpc), imm(emitVaddr + 4));
     emitDeferredNextPc = 0;
   }
-  flushDeferred();
+  flushDeferredCycles();
   mov64(mem(IpuReg(pc)), imm(emitVaddr));
   emitCallfSetupDone = true;
   emitCallfEmitted = true;
@@ -534,6 +548,21 @@ auto CPU::Recompiler::deferSlowPath(sljit_jump* enter, u32 instruction) -> void 
   slow.enter = enter;
   slow.resume = sljit_emit_label(compiler);
   slow.instruction = instruction;
+  slow.icacheMiss = false;
+  slow.vaddr = emitVaddr;
+  slow.deferredCycles = emitDeferredCycles;
+  slow.deferredNextPc = emitDeferredNextPc;
+  slow.needCurrentPc = emitNeedCurrentPc;
+  slow.needsStateMachinery = emitNeedsStateMachinery;
+}
+
+auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> void {
+  emitCallfEmitted = true;
+  auto& slow = slowPaths.emplace_back();
+  slow.enter = enter;
+  slow.resume = sljit_emit_label(compiler);
+  slow.icacheMiss = true;
+  slow.icachePaddr = paddr;
   slow.vaddr = emitVaddr;
   slow.deferredCycles = emitDeferredCycles;
   slow.deferredNextPc = emitDeferredNextPc;

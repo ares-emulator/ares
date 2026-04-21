@@ -197,8 +197,7 @@ struct CPU : Thread {
     auto power(bool reset) -> void {
       u32 index = 0;
       for(auto& line : lines) {
-        line.valid = 0;
-        line.tag   = 0;
+        line.tagKey = 0;
         line.index = index++ << 5 & 0xfe0;
         for(auto& word : line.words) word = 0;
        }
@@ -206,23 +205,35 @@ struct CPU : Thread {
 
     //16KB
     struct Line {
-      auto hit(u32 paddr) const -> bool { return valid && tag == (paddr & ~0x0000'0fff); }
+      auto valid() const -> bool { return tagKey & 1u; }
+
+      auto setValid(bool on) -> void {
+        if(on) tagKey |= 1u;
+        else tagKey &= ~1u;
+      }
+
+      auto hit(u32 paddr) const -> bool {
+        const u32 t = paddr & ~0x0000'0fffu;
+        return valid() && (tagKey & ~1u) == t;
+      }
+
       auto fill(u32 paddr, CPU& cpu) -> void {
         cpu.step(48 * 2);
-        valid = 1;
-        tag   = paddr & ~0x0000'0fff;
+        const u32 tag = paddr & ~0x0000'0fffu;
+        tagKey = tag;
+        setValid(true);
         cpu.busReadBurst<ICache>(tag | index, words);
       }
 
       auto writeBack(CPU& cpu) -> void {
         cpu.step(48 * 2);
+        const u32 tag = tagKey & ~0x0000'0fffu;
         cpu.busWriteBurst<ICache>(tag | index, words);
       }
 
       auto read(u32 paddr) const -> u32 { return words[paddr >> 2 & 7]; }
 
-      bool valid;
-      u32  tag;
+      u32  tagKey;    // valid bit (bit 0) + tag
       u16  index;
       u32  words[8];
     } lines[512];
@@ -343,6 +354,12 @@ struct CPU : Thread {
   auto fetch(PhysAccess access) -> maybe<u32>;
   auto jitFetch(u64 vaddr, u32 addr) -> void {
     icache.jitFetch(vaddr, addr, *this);
+  }
+
+  auto jitIcacheFillMiss(u64 vaddr, u32 paddr) -> void {
+    auto& line = icache.line(vaddr);
+    profile.icacheMisses++;
+    line.fill(paddr, *this);
   }
   template<u32 Size> auto busWrite(u32 address, u64 data) -> void;
   template<u32 Size> auto busRead(u32 address) -> u64;
@@ -1041,6 +1058,8 @@ struct CPU : Thread {
       u32 deferredNextPc = 0;
       bool needCurrentPc = false;
       bool needsStateMachinery = false;
+      bool icacheMiss = false;
+      u32 icachePaddr = 0;
     };
 
     auto reset() -> void {
@@ -1093,10 +1112,10 @@ struct CPU : Thread {
 
     auto flushDeferredCycles() -> void;
     auto flushDeferredNextPc() -> void;
-    auto flushDeferred() -> void;
     auto setupCallf() -> void;
     template<typename... P> auto callOpcode(P... p) -> void { setupCallf(); callf(p...); }
     auto deferSlowPath(sljit_jump* enter, u32 instruction) -> void;
+    auto deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> void;
     auto emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction = false) -> Block*;
     auto emitZeroClear(u32 n) -> void;
     auto emitEXECUTE(u32 instruction, bool emitSlowPath = false) -> bool;

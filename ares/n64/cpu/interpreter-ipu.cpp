@@ -128,21 +128,26 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x00: {  //icache index invalidate
     auto& line = icache.line(access.vaddr);
-    line.valid = 0;
+    line.setValid(false);
     break;
   }
 
   case 0x04: {  //icache load tag
     auto& line = icache.line(access.vaddr);
-    scc.tagLo.primaryCacheState = line.valid << 1;
-    scc.tagLo.physicalAddress   = line.tag;
+    scc.tagLo.primaryCacheState = line.valid() ? 2 : 0;
+    scc.tagLo.physicalAddress   = line.tagKey & ~0xfffu;
     break;
   }
 
   case 0x08: {  //icache store tag
     auto& line = icache.line(access.vaddr);
-    line.valid = scc.tagLo.primaryCacheState.bit(1);
-    line.tag   = scc.tagLo.physicalAddress;
+    const bool v = scc.tagLo.primaryCacheState.bit(1);
+    if(v) {
+      line.tagKey = scc.tagLo.physicalAddress & ~0xfffu;
+      line.setValid(true);
+    } else {
+      line.tagKey = 0;
+    }
     if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE CPCS=1");
     if(scc.tagLo.primaryCacheState == 0b11) debug(unusual, "[CPU] CACHE CPCS=3");
     break;
@@ -150,7 +155,7 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x10: {  //icache hit invalidate
     auto& line = icache.line(access.vaddr);
-    if(line.hit(access.paddr)) line.valid = 0;
+    if(line.hit(access.paddr)) line.setValid(false);
     break;
   }
 

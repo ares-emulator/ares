@@ -13,8 +13,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.segment);
 
   for(auto& line : icache.lines) {
-    s(line.valid);
-    s(line.tag);
+    s(line.tagKey);
     s(line.index);
     s(line.words);
   }
