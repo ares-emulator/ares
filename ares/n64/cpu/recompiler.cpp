@@ -267,14 +267,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   u32 startAddress = address;
   u32 startSection = sectionIndex(address);
   bool hasBranched = 0;
-  u64 lastBranchLinkVaddrTaken = ~0ull;
-  u64 lastBranchLinkVaddrNotTaken = ~0ull;
-  u32 lastBranchLinkAddressTaken = ~0u;
-  u32 lastBranchLinkAddressNotTaken = ~0u;
-  u64 linkVaddrTaken = ~0ull;
-  u64 linkVaddrNotTaken = ~0ull;
-  u32 linkAddressTaken = ~0u;
-  u32 linkAddressNotTaken = ~0u;
   int numInsn = 0;
   constexpr u32 branchToSelf = 0x1000'ffff;  //beq 0,0,<pc>
   u32 jumpToSelf = 2 << 26 | vaddr >> 2 & 0x3ff'ffff;  //j <pc>
@@ -337,6 +329,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     }
     return links;
   };
+  BranchLinks links;
+  bool branchLinksValid = false;
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
     OpInfo info = self.decoderEXECUTEInfo(instruction);
@@ -382,8 +376,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     }
     numInsn++;
     bool branched = emitEXECUTE(instruction, false);
-    BranchLinks branchLinks;
-    if(branched) branchLinks = directBranchLinkAddress(vaddr, instruction);
+    if(branched) links = directBranchLinkAddress(vaddr, instruction);
     if(unlikely(instruction == branchToSelf || instruction == jumpToSelf)) {
       emitDeferredCycles += 64 * 2;
     } else {
@@ -404,21 +397,12 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     bool safeDelaySlotLink = !info.jitUseCallf() && !info.mayException() && !info.mayFault();
     bool delaySlotLinkEligible = terminal && hasBranched && !singleInstruction
     && !info.jitStateKeyMayChange() && !countCompareWrite;
-    if(delaySlotLinkEligible && safeDelaySlotLink) {
-      linkAddressTaken = lastBranchLinkAddressTaken;
-      linkAddressNotTaken = lastBranchLinkAddressNotTaken;
-      linkVaddrTaken = lastBranchLinkVaddrTaken;
-      linkVaddrNotTaken = lastBranchLinkVaddrNotTaken;
-    }
+    if(delaySlotLinkEligible && safeDelaySlotLink) branchLinksValid = true;
     if(terminal) {
       if(!hasBranched && needsStatePost) jumpEpilog(flag_nz);
       break;
     }
     hasBranched = branched;
-    lastBranchLinkAddressTaken = branchLinks.takenAddress;
-    lastBranchLinkAddressNotTaken = branchLinks.notTakenAddress;
-    lastBranchLinkVaddrTaken = branchLinks.takenVaddr;
-    lastBranchLinkVaddrNotTaken = branchLinks.notTakenVaddr;
     if(needsStatePost) jumpEpilog(flag_nz);
   }
 
@@ -457,10 +441,10 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   block->stateKey = stateKey;
   block->startAddress = startAddress;
   block->endAddress = address;
-  block->linkVaddrTaken = linkVaddrTaken;
-  block->linkVaddrNotTaken = linkVaddrNotTaken;
-  block->linkAddressTaken = linkAddressTaken;
-  block->linkAddressNotTaken = linkAddressNotTaken;
+  block->linkVaddrTaken      = branchLinksValid ? links.takenVaddr      : ~0ull;
+  block->linkVaddrNotTaken   = branchLinksValid ? links.notTakenVaddr   : ~0ull;
+  block->linkAddressTaken    = branchLinksValid ? links.takenAddress    : ~0u;
+  block->linkAddressNotTaken = branchLinksValid ? links.notTakenAddress : ~0u;
   block->sectionDirty = sectionDirty.data() + startSection;
 
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
