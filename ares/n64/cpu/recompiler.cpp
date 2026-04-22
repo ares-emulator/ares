@@ -45,8 +45,8 @@ Hot-loop optimizations
 ----------------------
 1) Deferred cycle accounting
    - per-opcode cycles are accumulated in deferredCycles;
-   - CPU::step() is emitted only at synchronization boundaries
-     (helper/branch/terminal transitions).
+   - emitCpuStep / deferred flush applies Thread::clock only at synchronization
+     boundaries (helper/branch/terminal transitions).
 
 2) Virtual PC with selective architectural commit
    - ipu.pc is not written on every opcode;
@@ -246,6 +246,14 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
   mem(sreg(0), sljit_sw(CpuIcacheTagKey0Off) + sljit_sw(lineIndex) * sljit_sw(CpuIcacheLineBytes))
 #define CpuProfileIcacheHitsOff (offsetof(CPU, profile) + offsetof(CPU::Profile, icacheHits))
 #define ProfileIcacheHitsMem mem(sreg(0), CpuProfileIcacheHitsOff)
+#define CpuProfileIcacheMissesOff (offsetof(CPU, profile) + offsetof(CPU::Profile, icacheMisses))
+#define ProfileIcacheMissesMem mem(sreg(0), CpuProfileIcacheMissesOff)
+#define RdramRbusIcacheReadsAddr \
+  ((sljit_sw)(uintptr_t)&rdram.profile.metrics[(u32)RBusDevice::VR4300_ICACHE].reads)
+#define CpuClockMem mem(sreg(0), offsetof(CPU, clock))
+#define CpuIcacheWords0Off offsetof(CPU, icache.lines[0].words[0])
+#define IcacheLineWordsMem(lineIndex, byteOff) \
+  mem(sreg(0), sljit_sw(CpuIcacheWords0Off + CpuIcacheLineBytes * (lineIndex) + (byteOff)))
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
 #pragma GCC diagnostic push
@@ -259,7 +267,14 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     reset();
   }
 
-  // abort compilation of block asap if the instruction cache is not coherent
+  // abort compilation if outside of RAM or not cache-coherent
+  const u32 icacheTag = address & ~0xfffu;
+  const u32 icacheBurstHi = icacheTag + 0xfe0u;
+  const bool icacheBurstOk = 
+    icacheBurstHi <= 0x07ff'ffffu
+    || (Model::Aleck64() && icacheTag > 0xbfff'ffffu && icacheBurstHi <= 0xc07f'ffffu);
+  if(!icacheBurstOk) return nullptr;
+
   if(!self.icache.coherent(vaddr, address)) {
     return nullptr;
   }
@@ -378,9 +393,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       cmp32(IcacheTagKeyMem(lineIndex), imm(expectedTagKey), set_z);
       auto icacheMiss = jump(flag_ne);
       if(system.homebrewMode) {
-        mov64(reg(4), ProfileIcacheHitsMem);
-        add64(reg(4), reg(4), imm(1));
-        mov64(ProfileIcacheHitsMem, reg(4));
+        add64(ProfileIcacheHitsMem, ProfileIcacheHitsMem, imm(1));
       }
       deferSlowPathCacheMiss(icacheMiss, address);
     }
@@ -443,7 +456,22 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     emitCallfSetupDone = false;
     emitCallfEmitted = false;
     if(slow.icacheMiss) {
-      callf(&CPU::jitIcacheFillMiss, imm64(slow.vaddr), imm(slow.icachePaddr));
+      const u32 lineIndex = u32(slow.vaddr >> 5) & 0x1ffu;
+      const u32 burst = (slow.icachePaddr & ~0xfffu) | ((lineIndex << 5) & 0xfe0u);
+      const u32 tagKey = (slow.icachePaddr & ~0xfffu) | 1u;
+      const bool sdram = Model::Aleck64() && burst > 0xbfff'ffffu;
+      const sljit_sw ramDataField = sdram ? (sljit_sw)(uintptr_t)&aleck64.sdram.data
+                                           : (sljit_sw)(uintptr_t)&rdram.ram.data;
+      const u32 ramByteOff = sdram ? (burst & 0xffffffu) : burst;
+      if(system.homebrewMode) {
+        add64(ProfileIcacheMissesMem, ProfileIcacheMissesMem, imm(1));
+        if(!sdram) add64(mem0(RdramRbusIcacheReadsAddr), mem0(RdramRbusIcacheReadsAddr), imm(ICache));
+      }
+      emitCpuStep(96);
+      mov32(IcacheTagKeyMem(lineIndex), imm(tagKey));
+      mov64(reg(1), mem0(ramDataField));
+      mov128(IcacheLineWordsMem(lineIndex, 0x00), mem(reg(1), sljit_sw(ramByteOff + 0x00)));
+      mov128(IcacheLineWordsMem(lineIndex, 0x10), mem(reg(1), sljit_sw(ramByteOff + 0x10)));
     } else {
       emitEXECUTE(slow.instruction, true);
     }
@@ -516,9 +544,13 @@ auto CPU::Recompiler::emitZeroClear(u32 n) -> void {
   if(n == 0) mov64(mem(IpuReg(r[0])), imm(0));
 }
 
+auto CPU::Recompiler::emitCpuStep(u32 clocks) -> void {
+  add64(CpuClockMem, CpuClockMem, imm(clocks));
+}
+
 auto CPU::Recompiler::flushDeferredCycles() -> void {
   if(!emitDeferredCycles) return;
-  callf(&CPU::step, imm(emitDeferredCycles));
+  emitCpuStep(emitDeferredCycles);
   emitDeferredCycles = 0;
 }
 
