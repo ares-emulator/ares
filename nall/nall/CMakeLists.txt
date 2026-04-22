@@ -22,6 +22,7 @@ find_package(Threads REQUIRED)
 target_link_libraries(nall PRIVATE Threads::Threads)
 
 target_link_libraries(nall PUBLIC sljit)
+target_link_libraries(nall PUBLIC sevenzip-sdk)
 if(ARES_ENABLE_CHD)
   target_link_libraries(nall PUBLIC chdr-static)
 endif()
@@ -59,7 +60,14 @@ endif()
 get_target_property(nall_SOURCES nall SOURCES)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${nall_SOURCES})
 set_source_files_properties(${nall_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
-set_source_files_properties(nall nall.cpp main.cpp sljitAllocator.cpp PROPERTIES HEADER_FILE_ONLY FALSE)
+set_source_files_properties(
+  ${CMAKE_CURRENT_SOURCE_DIR}/nall
+  ${CMAKE_CURRENT_SOURCE_DIR}/nall.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/sljitAllocator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/sevenzip.cpp
+  PROPERTIES HEADER_FILE_ONLY FALSE
+)
 
 if(ARES_TREAT_NALL_AS_SYSTEM)
   target_include_directories(nall-headers SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")

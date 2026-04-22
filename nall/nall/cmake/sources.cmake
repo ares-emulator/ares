@@ -138,10 +138,12 @@ target_sources(
     decode/mmi.hpp
     decode/mtf.hpp
     decode/png.hpp
-    decode/rle.hpp
+    decode/archive.hpp
+    decode/sevenzip.hpp
     decode/url.hpp
     decode/wav.hpp
     decode/zip.hpp
+    sevenzip.cpp
 )
 
 target_sources(
