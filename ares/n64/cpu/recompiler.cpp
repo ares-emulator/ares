@@ -522,6 +522,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
 #define Ft        FpuReg(r[0]) + Ftn * sizeof(r64)
 static constexpr s32 FpuCsrBaseOffset = offsetof(CPU, fpu) + offsetof(CPU::FPU, csr);
 static constexpr s32 FpuCsrCauseOffset = FpuCsrBaseOffset + offsetof(CPU::FPU::ControlStatus, cause);
+static constexpr s32 FpuR64S32Off  = offsetof(CPU::r64, s32);
+static constexpr s32 FpuR64S32hOff = offsetof(CPU::r64, s32h);
 #define FpuCsrCompare mem(sreg(0), FpuCsrBaseOffset + offsetof(CPU::FPU::ControlStatus, compare))
 
 static_assert(sizeof(n1) == 1);
@@ -2185,15 +2187,41 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //MFC1 Rt,Fs
   case 0x00: {
-    callf(&CPU::MFC1, mem(Rt), imm(Fsn));
-    emitZeroClear(Rtn);
+    if(!emitStateKey.coprocessor1Enabled()) {
+      callf(&CPU::MFC1, mem(Rt), imm(Fsn));
+      return 0;
+    }
+    if(Rtn == 0) return 0;
+    s32 fsn = instruction >> 11 & 31;
+    s32 fpuWordOff;
+    if(emitStateKey.floatingPointMode()) {
+      fpuWordOff = (fsn - 16) * 8 + FpuR64S32Off;
+      mov32(reg(0), mem(sreg(2), fpuWordOff));
+    } else {
+      s32 paired = fsn & ~1;
+      fpuWordOff = (paired - 16) * 8;
+      if(fsn & 1) fpuWordOff += FpuR64S32hOff;
+      else fpuWordOff += FpuR64S32Off;
+      mov32(reg(0), mem(sreg(2), fpuWordOff));
+    }
+    mov64_s32(reg(0), reg(0));
+    mov64(mem(Rt), reg(0));
     return 0;
   }
 
   //DMFC1 Rt,Fs
   case 0x01: {
-    callf(&CPU::DMFC1, mem(Rt), imm(Fsn));
-    emitZeroClear(Rtn);
+    if(!emitStateKey.coprocessor1Enabled()) {
+      callf(&CPU::DMFC1, mem(Rt), imm(Fsn));
+      return 0;
+    }
+    if(Rtn == 0) return 0;
+    s32 fsn = instruction >> 11 & 31;
+    s32 fpu64Off;
+    if(emitStateKey.floatingPointMode()) fpu64Off = (fsn - 16) * 8;
+    else fpu64Off = ((fsn & ~1) - 16) * 8;
+    mov64(reg(0), mem(sreg(2), fpu64Off));
+    mov64(mem(Rt), reg(0));
     return 0;
   }
 
@@ -2212,13 +2240,38 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //MTC1 Rt,Fs
   case 0x04: {
-    callf(&CPU::MTC1, mem(Rt), imm(Fsn));
+    if(!emitStateKey.coprocessor1Enabled()) {
+      callf(&CPU::MTC1, mem(Rt), imm(Fsn));
+      return 0;
+    }
+    mov32(reg(0), mem(Rt32));
+    s32 fsn = instruction >> 11 & 31;
+    s32 fpuWordOff;
+    if(emitStateKey.floatingPointMode()) {
+      fpuWordOff = (fsn - 16) * 8 + FpuR64S32Off;
+      mov32(mem(sreg(2), fpuWordOff), reg(0));
+    } else {
+      s32 paired = fsn & ~1;
+      fpuWordOff = (paired - 16) * 8;
+      if(fsn & 1) fpuWordOff += FpuR64S32hOff;
+      else fpuWordOff += FpuR64S32Off;
+      mov32(mem(sreg(2), fpuWordOff), reg(0));
+    }
     return 0;
   }
 
   //DMTC1 Rt,Fs
   case 0x05: {
-    callf(&CPU::DMTC1, mem(Rt), imm(Fsn));
+    if(!emitStateKey.coprocessor1Enabled()) {
+      callf(&CPU::DMTC1, mem(Rt), imm(Fsn));
+      return 0;
+    }
+    s32 fsn = instruction >> 11 & 31;
+    s32 fpu64Off;
+    if(emitStateKey.floatingPointMode()) fpu64Off = (fsn - 16) * 8;
+    else fpu64Off = ((fsn & ~1) - 16) * 8;
+    mov64(reg(0), mem(Rt));
+    mov64(mem(sreg(2), fpu64Off), reg(0));
     return 0;
   }
 
