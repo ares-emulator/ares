@@ -54,6 +54,11 @@
 
   struct mem : public op_base {
     mem(sreg base, sljit_sw offset) : op_base(SLJIT_MEM1(base.fst), offset) {}
+    mem(reg base, sljit_sw offset) : op_base(SLJIT_MEM1(base.fst), offset) {}
+  };
+
+  struct mem0 : public op_base {
+    explicit mem0(sljit_sw address) : op_base(SLJIT_MEM0(), address) {}
   };
 
   struct unused {

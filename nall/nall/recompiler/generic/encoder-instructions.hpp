@@ -194,4 +194,11 @@
   auto lea(reg r, sreg base, sljit_sw offset) {
     add64(r, base, imm(offset));
   }
+
+  auto mov128(mem dst, mem src) -> void {
+    static constexpr sljit_s32 kSimdTmp = SLJIT_FR(6);
+    static constexpr sljit_s32 kSimdType = SLJIT_SIMD_REG_128 | SLJIT_SIMD_ELEM_8 | SLJIT_SIMD_MEM_UNALIGNED;
+    sljit_emit_simd_mov(compiler, SLJIT_SIMD_LOAD | kSimdType, kSimdTmp, src.fst, src.snd);
+    sljit_emit_simd_mov(compiler, SLJIT_SIMD_STORE | kSimdType, kSimdTmp, dst.fst, dst.snd);
+  }
 //};
