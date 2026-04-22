@@ -34,8 +34,8 @@ auto Pak::read(string location, std::vector<string> match) -> std::vector<u8> {
       ips_patch = file::read({Location::notsuffix(location), ".ips"});
     }
 
-    if(location.iendsWith(".zip")) {
-      Decode::ZIP archive;
+    if(Decode::Archive::supported(location)) {
+      Decode::Archive archive;
       if(archive.open(location)) {
         for(auto& file : archive.file) {
           for(auto& pattern : match) {
@@ -47,12 +47,12 @@ auto Pak::read(string location, std::vector<string> match) -> std::vector<u8> {
           if(!memory.empty()) break;
         }
         if(!memory.empty()) {
-          //support BPS patches inside the ZIP archive
+          //support BPS patches inside ROM archives
           for(auto& file : archive.file) {
             if(file.name.imatch("*.bps")) {
               bps_patch = archive.extract(file);
               break;
-            } else if (file.name.imatch("*.ips")) {
+            } else if(file.name.imatch("*.ips")) {
               ips_patch = archive.extract(file);
               break;
             }

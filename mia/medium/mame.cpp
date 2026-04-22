@@ -8,9 +8,7 @@ struct Mame : Medium {
 auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> std::vector<u8> {
   std::vector<u8> output;
 
-  Decode::ZIP archive;
-  if(!location.iendsWith(".zip")) return output;
-  if(!archive.open(location)) return output;
+  if(!location.iendsWith(".zip") && !location.iendsWith(".7z")) return output;
 
   string filename = {};
   std::vector<u8> input = {};
@@ -62,12 +60,14 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> 
 }
 
 auto Mame::loadRomFile(string location, string filename, Markup::Node& info) -> std::vector<u8> {
-  Decode::ZIP archive;
-  if(!archive.open(location)) return {};
-
-  for(auto& file : archive.file) {
-    if(file.name.iequals(filename)) {
-      return archive.extract(file);
+  if(Decode::Archive::supported(location)) {
+    Decode::Archive archive;
+    if(archive.open(location)) {
+      for(auto& file : archive.file) {
+        if(file.name.iequals(filename)) {
+          return archive.extract(file);
+        }
+      }
     }
   }
 
@@ -75,8 +75,18 @@ auto Mame::loadRomFile(string location, string filename, Markup::Node& info) -> 
     auto manifest = manifestDatabaseArcade(parent);
     auto document = BML::unserialize(manifest);
     if(!document) return {};
-    location = {Location::path(location), "/", document["game/name"].string(), ".zip"};
-    return loadRomFile(location, filename, document);
+
+    auto parentName = document["game/name"].string();
+    string parentZip = {Location::path(location), "/", parentName, ".zip"};
+    string parent7z = {Location::path(location), "/", parentName, ".7z"};
+
+    if(location.iendsWith(".7z")) {
+      if(auto output = loadRomFile(parent7z, filename, document); !output.empty()) return output;
+      return loadRomFile(parentZip, filename, document);
+    }
+
+    if(auto output = loadRomFile(parentZip, filename, document); !output.empty()) return output;
+    return loadRomFile(parent7z, filename, document);
   }
 
   return {};

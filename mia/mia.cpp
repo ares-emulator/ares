@@ -128,8 +128,8 @@ auto identify(const string& filename) -> string {
   construct();
   auto extension = Location::suffix(filename).trimLeft(".", 1L).downcase();
 
-  if(extension == "zip") {
-    Decode::ZIP archive;
+  if(extension == "zip" || extension == "7z") {
+    Decode::Archive archive;
     if(archive.open(filename)) {
       for(auto& file : archive.file) {
         auto match = Location::suffix(file.name).trimLeft(".", 1L).downcase();

@@ -156,7 +156,7 @@ auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
     dialog.setTitle({"Load ", pak->name(), " Game"});
     dialog.setPath(path ? path : Path::desktop());
     dialog.setAlignment(presentation);
-    string filters{"*.zip:"};
+    string filters{"*.zip:*.7z:"};
     for(auto& extension : pak->extensions()) {
       filters.append("*.", extension, ":");
     }
@@ -177,8 +177,8 @@ auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
 
 auto Emulator::loadFirmware(const Firmware& firmware) -> std::shared_ptr<vfs::file> {
   Program::Guard guard;
-  if(firmware.location.iendsWith(".zip")) {
-    Decode::ZIP archive;
+  if(Decode::Archive::supported(firmware.location)) {
+    Decode::Archive archive;
     if(archive.open(firmware.location) && !archive.file.empty()) {
       auto image = archive.extract(archive.file.front());
       return vfs::memory::open(image);

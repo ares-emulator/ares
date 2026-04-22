@@ -9,8 +9,8 @@ auto NeoGeoAES::load(string location) -> LoadResult {
   this->location = locate();
   pak = std::make_shared<vfs::directory>();
 
-  if(location.iendsWith(".zip")) {
-    Decode::ZIP archive;
+  if(Decode::Archive::supported(location)) {
+    Decode::Archive archive;
     if(archive.open(location)) {
       for(auto& file : archive.file) {
         if(file.name == "neo-epo.bin") {
