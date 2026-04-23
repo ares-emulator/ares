@@ -3,5 +3,6 @@ auto Cartridge::serialize(serializer& s) -> void {
   s(eeprom);
   s(eepromBusy);
   s(flash);
+  s(isviewer.ram);
   s(rtc);
 }
