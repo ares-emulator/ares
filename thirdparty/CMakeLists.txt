@@ -3,37 +3,37 @@ add_library(sljit STATIC sljit/sljit_src/sljitLir.c)
 add_library(
   sevenzip-sdk
   STATIC
-  lzma-sdk-26.00/C/7zAlloc.c
-  lzma-sdk-26.00/C/7zArcIn.c
-  lzma-sdk-26.00/C/7zBuf.c
-  lzma-sdk-26.00/C/7zBuf2.c
-  lzma-sdk-26.00/C/7zCrc.c
-  lzma-sdk-26.00/C/7zCrcOpt.c
-  lzma-sdk-26.00/C/7zDec.c
-  lzma-sdk-26.00/C/7zFile.c
-  lzma-sdk-26.00/C/7zStream.c
-  lzma-sdk-26.00/C/Aes.c
-  lzma-sdk-26.00/C/AesOpt.c
-  lzma-sdk-26.00/C/Bcj2.c
-  lzma-sdk-26.00/C/Bra.c
-  lzma-sdk-26.00/C/Bra86.c
-  lzma-sdk-26.00/C/BraIA64.c
-  lzma-sdk-26.00/C/CpuArch.c
-  lzma-sdk-26.00/C/Delta.c
-  lzma-sdk-26.00/C/Lzma2Dec.c
-  lzma-sdk-26.00/C/LzmaDec.c
-  lzma-sdk-26.00/C/Ppmd7.c
-  lzma-sdk-26.00/C/Ppmd7Dec.c
-  lzma-sdk-26.00/C/Sha256.c
-  lzma-sdk-26.00/C/Sha256Opt.c
-  lzma-sdk-26.00/C/Sort.c
-  lzma-sdk-26.00/C/SwapBytes.c
-  lzma-sdk-26.00/C/Threads.c
-  lzma-sdk-26.00/C/MtDec.c
+  libchdr/deps/lzma-24.05/src/7zAlloc.c
+  libchdr/deps/lzma-24.05/src/7zArcIn.c
+  libchdr/deps/lzma-24.05/src/7zBuf.c
+  libchdr/deps/lzma-24.05/src/7zBuf2.c
+  libchdr/deps/lzma-24.05/src/7zCrc.c
+  libchdr/deps/lzma-24.05/src/7zCrcOpt.c
+  libchdr/deps/lzma-24.05/src/7zDec.c
+  libchdr/deps/lzma-24.05/src/7zFile.c
+  libchdr/deps/lzma-24.05/src/7zStream.c
+  libchdr/deps/lzma-24.05/src/Aes.c
+  libchdr/deps/lzma-24.05/src/AesOpt.c
+  libchdr/deps/lzma-24.05/src/Bcj2.c
+  libchdr/deps/lzma-24.05/src/Bra.c
+  libchdr/deps/lzma-24.05/src/Bra86.c
+  libchdr/deps/lzma-24.05/src/BraIA64.c
+  libchdr/deps/lzma-24.05/src/CpuArch.c
+  libchdr/deps/lzma-24.05/src/Delta.c
+  libchdr/deps/lzma-24.05/src/Lzma2Dec.c
+  libchdr/deps/lzma-24.05/src/LzmaDec.c
+  libchdr/deps/lzma-24.05/src/Ppmd7.c
+  libchdr/deps/lzma-24.05/src/Ppmd7Dec.c
+  libchdr/deps/lzma-24.05/src/Sha256.c
+  libchdr/deps/lzma-24.05/src/Sha256Opt.c
+  libchdr/deps/lzma-24.05/src/Sort.c
+  libchdr/deps/lzma-24.05/src/SwapBytes.c
+  libchdr/deps/lzma-24.05/src/Threads.c
+  libchdr/deps/lzma-24.05/src/MtDec.c
 )
 
 target_include_directories(sljit PUBLIC ../thirdparty)
-target_include_directories(sevenzip-sdk PUBLIC ../thirdparty/lzma-sdk-26.00/C)
+target_include_directories(sevenzip-sdk PUBLIC ../thirdparty/libchdr/deps/lzma-24.05/include)
 target_compile_definitions(sljit PUBLIC SLJIT_HAVE_CONFIG_PRE=1 SLJIT_HAVE_CONFIG_POST=1)
 target_compile_definitions(sevenzip-sdk PRIVATE Z7_ST Z7_EXTRACT_ONLY Z7_PPMD_SUPPORT)
 target_compile_options(sljit PRIVATE $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-conditional-uninitialized>)
