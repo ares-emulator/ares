@@ -42,12 +42,11 @@
 #ifndef __CHD_H__
 #define __CHD_H__
 
+#include "coretypes.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <libchdr/coretypes.h>
-#include <libchdr/chdconfig.h>
 
 /***************************************************************************
 
@@ -130,17 +129,17 @@ extern "C" {
     V5 header:
 
     [  0] char   tag[8];        // 'MComprHD'
-    [  8] uint32_t_t length;        // length of header (including tag and length fields)
-    [ 12] uint32_t_t version;       // drive format version
-    [ 16] uint32_t_t compressors[4];// which custom compressors are used?
-    [ 32] uint64_t_t logicalbytes;  // logical size of the data (in bytes)
-    [ 40] uint64_t_t mapoffset;     // offset to the map
-    [ 48] uint64_t_t metaoffset;    // offset to the first blob of metadata
-    [ 56] uint32_t_t hunkbytes;     // number of bytes per hunk (512k maximum)
-    [ 60] uint32_t_t unitbytes;     // number of bytes per unit within each hunk
-    [ 64] uint8_t_t  rawsha1[20];   // raw data SHA1
-    [ 84] uint8_t_t  sha1[20];      // combined raw+meta SHA1
-    [104] uint8_t_t  parentsha1[20];// combined raw+meta SHA1 of parent
+    [  8] uint32_t length;        // length of header (including tag and length fields)
+    [ 12] uint32_t version;       // drive format version
+    [ 16] uint32_t compressors[4];// which custom compressors are used?
+    [ 32] uint64_t logicalbytes;  // logical size of the data (in bytes)
+    [ 40] uint64_t mapoffset;     // offset to the map
+    [ 48] uint64_t metaoffset;    // offset to the first blob of metadata
+    [ 56] uint32_t hunkbytes;     // number of bytes per hunk (512k maximum)
+    [ 60] uint32_t unitbytes;     // number of bytes per unit within each hunk
+    [ 64] uint8_t  rawsha1[20];   // raw data SHA1
+    [ 84] uint8_t  sha1[20];      // combined raw+meta SHA1
+    [104] uint8_t  parentsha1[20];// combined raw+meta SHA1 of parent
     [124] (V5 header length)
 
     If parentsha1 != 0, we have a parent (no need for flags)
@@ -148,22 +147,22 @@ extern "C" {
 
     V5 uncompressed map format:
 
-    [  0] uint32_t_t offset;        // starting offset / hunk size
+    [  0] uint32_t offset;        // starting offset / hunk size
 
     V5 compressed map format header:
 
-    [  0] uint32_t_t length;        // length of compressed map
+    [  0] uint32_t length;        // length of compressed map
     [  4] UINT48 datastart;     // offset of first block
     [ 10] uint16_t crc;           // crc-16 of the map
-    [ 12] uint8_t_t lengthbits;     // bits used to encode complength
-    [ 13] uint8_t_t hunkbits;       // bits used to encode self-refs
-    [ 14] uint8_t_t parentunitbits; // bits used to encode parent unit refs
-    [ 15] uint8_t_t reserved;       // future use
+    [ 12] uint8_t lengthbits;     // bits used to encode complength
+    [ 13] uint8_t hunkbits;       // bits used to encode self-refs
+    [ 14] uint8_t parentunitbits; // bits used to encode parent unit refs
+    [ 15] uint8_t reserved;       // future use
     [ 16] (compressed header length)
 
     Each compressed map entry, once expanded, looks like:
 
-    [  0] uint8_t_t compression;    // compression type
+    [  0] uint8_t compression;    // compression type
     [  1] UINT24 complength;    // compressed length
     [  4] UINT48 offset;        // offset
     [ 10] uint16_t crc;           // crc-16 of the data
@@ -254,6 +253,9 @@ extern "C" {
 
 /* A/V laserdisc frame metadata */
 #define AV_LD_METADATA_TAG			CHD_MAKE_TAG('A','V','L','D')
+
+/* DVD metadata */
+#define DVD_METADATA_TAG			CHD_MAKE_TAG('D','V','D',' ')
 
 /* CHD open values */
 #define CHD_OPEN_READ				1
@@ -346,6 +348,8 @@ struct _chd_verify_result
 	uint8_t		metasha1[CHD_SHA1_BYTES];	/* SHA1 checksum of metadata */
 };
 
+typedef chd_error (*chd_codec_interface_decompress)(void *codec, const uint8_t *src, uint32_t complen, uint8_t *dest, uint32_t destlen);
+
 
 
 /***************************************************************************
@@ -375,7 +379,8 @@ struct _chd_verify_result
 /* chd_error chd_create_file(core_file *file, uint64_t logicalbytes, uint32_t hunkbytes, uint32_t compression, chd_file *parent); */
 
 /* open an existing CHD file */
-CHD_EXPORT chd_error chd_open_core_file(core_file *file, int mode, chd_file *parent, chd_file **chd);
+CHD_EXPORT chd_error chd_open_core_file_callbacks(const core_file_callbacks *callbacks, const void *user_data, int mode, chd_file *parent, chd_file **chd);
+CHD_EXPORT chd_error chd_open_core_file(core_file *file, int mode, chd_file *parent, chd_file **chd); /* Legacy; use chd_open_core_file_callbacks instead! */
 CHD_EXPORT chd_error chd_open_file(FILE *file, int mode, chd_file *parent, chd_file **chd);
 CHD_EXPORT chd_error chd_open(const char *filename, int mode, chd_file *parent, chd_file **chd);
 
@@ -399,6 +404,9 @@ CHD_EXPORT const char *chd_error_string(chd_error err);
 CHD_EXPORT const chd_header *chd_get_header(chd_file *chd);
 
 /* read CHD header data from file into the pointed struct */
+CHD_EXPORT chd_error chd_read_header_core_file_callbacks(const core_file_callbacks *callback, const void *user_data, chd_header *header);
+CHD_EXPORT chd_error chd_read_header_core_file(core_file *file, chd_header *header); /* Legacy; use chd_read_header_core_file_callbacks instead! */
+CHD_EXPORT chd_error chd_read_header_file(FILE *file, chd_header *header);
 CHD_EXPORT chd_error chd_read_header(const char *filename, chd_header *header);
 
 
@@ -414,17 +422,6 @@ CHD_EXPORT chd_error chd_read(chd_file *chd, uint32_t hunknum, void *buffer);
 
 /* get indexed metadata of a particular sort */
 CHD_EXPORT chd_error chd_get_metadata(chd_file *chd, uint32_t searchtag, uint32_t searchindex, void *output, uint32_t outputlen, uint32_t *resultlen, uint32_t *resulttag, uint8_t *resultflags);
-
-
-
-
-/* ----- codec interfaces ----- */
-
-/* set internal codec parameters */
-CHD_EXPORT chd_error chd_codec_config(chd_file *chd, int param, void *config);
-
-/* return a string description of a codec */
-CHD_EXPORT const char *chd_get_codec_name(uint32_t codec);
 
 #ifdef __cplusplus
 }

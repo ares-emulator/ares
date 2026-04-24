@@ -14,7 +14,9 @@
 #define __CDROM_H__
 
 #include <stdint.h>
-#include <libchdr/chdconfig.h>
+#include "chd.h"
+#include "chdconfig.h"
+#include "macros.h"
 
 /***************************************************************************
     CONSTANTS
@@ -59,25 +61,32 @@ enum
     FUNCTION PROTOTYPES
 ***************************************************************************/
 
-#ifdef WANT_RAW_DATA_SECTOR
+#if WANT_RAW_DATA_SECTOR
 /* ECC utilities */
 int ecc_verify(const uint8_t *sector);
 void ecc_generate(uint8_t *sector);
 void ecc_clear(uint8_t *sector);
 #endif
 
+chd_error cd_codec_decompress(
+	uint8_t *buffer,
+	void *base_decompressor, chd_codec_interface_decompress base_decompress,
+#if WANT_SUBCODE
+	void *subcode_decompressor, chd_codec_interface_decompress subcode_decompress,
+#endif
+	const uint8_t *src, uint32_t complen, uint8_t *dest, uint32_t destlen);
 
 
 /***************************************************************************
     INLINE FUNCTIONS
 ***************************************************************************/
 
-static inline uint32_t msf_to_lba(uint32_t msf)
+static CHDR_INLINE uint32_t msf_to_lba(uint32_t msf)
 {
 	return ( ((msf&0x00ff0000)>>16) * 60 * 75) + (((msf&0x0000ff00)>>8) * 75) + ((msf&0x000000ff)>>0);
 }
 
-static inline uint32_t lba_to_msf(uint32_t lba)
+static CHDR_INLINE uint32_t lba_to_msf(uint32_t lba)
 {
 	uint8_t m, s, f;
 
@@ -96,7 +105,7 @@ static inline uint32_t lba_to_msf(uint32_t lba)
  * Angelo also says PCE tracks often start playing at the
  * wrong address.. related?
  **/
-static inline uint32_t lba_to_msf_alt(int lba)
+static CHDR_INLINE uint32_t lba_to_msf_alt(int lba)
 {
 	uint32_t ret = 0;
 

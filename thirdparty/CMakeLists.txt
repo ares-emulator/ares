@@ -3,37 +3,37 @@ add_library(sljit STATIC sljit/sljit_src/sljitLir.c)
 add_library(
   sevenzip-sdk
   STATIC
-  libchdr/deps/lzma-24.05/src/7zAlloc.c
-  libchdr/deps/lzma-24.05/src/7zArcIn.c
-  libchdr/deps/lzma-24.05/src/7zBuf.c
-  libchdr/deps/lzma-24.05/src/7zBuf2.c
-  libchdr/deps/lzma-24.05/src/7zCrc.c
-  libchdr/deps/lzma-24.05/src/7zCrcOpt.c
-  libchdr/deps/lzma-24.05/src/7zDec.c
-  libchdr/deps/lzma-24.05/src/7zFile.c
-  libchdr/deps/lzma-24.05/src/7zStream.c
-  libchdr/deps/lzma-24.05/src/Aes.c
-  libchdr/deps/lzma-24.05/src/AesOpt.c
-  libchdr/deps/lzma-24.05/src/Bcj2.c
-  libchdr/deps/lzma-24.05/src/Bra.c
-  libchdr/deps/lzma-24.05/src/Bra86.c
-  libchdr/deps/lzma-24.05/src/BraIA64.c
-  libchdr/deps/lzma-24.05/src/CpuArch.c
-  libchdr/deps/lzma-24.05/src/Delta.c
-  libchdr/deps/lzma-24.05/src/Lzma2Dec.c
-  libchdr/deps/lzma-24.05/src/LzmaDec.c
-  libchdr/deps/lzma-24.05/src/Ppmd7.c
-  libchdr/deps/lzma-24.05/src/Ppmd7Dec.c
-  libchdr/deps/lzma-24.05/src/Sha256.c
-  libchdr/deps/lzma-24.05/src/Sha256Opt.c
-  libchdr/deps/lzma-24.05/src/Sort.c
-  libchdr/deps/lzma-24.05/src/SwapBytes.c
-  libchdr/deps/lzma-24.05/src/Threads.c
-  libchdr/deps/lzma-24.05/src/MtDec.c
+  libchdr/deps/lzma-25.01/src/real/7zAlloc.c
+  libchdr/deps/lzma-25.01/src/real/7zArcIn.c
+  libchdr/deps/lzma-25.01/src/real/7zBuf.c
+  libchdr/deps/lzma-25.01/src/real/7zBuf2.c
+  libchdr/deps/lzma-25.01/src/real/7zCrc.c
+  libchdr/deps/lzma-25.01/src/real/7zCrcOpt.c
+  libchdr/deps/lzma-25.01/src/real/7zDec.c
+  libchdr/deps/lzma-25.01/src/real/7zFile.c
+  libchdr/deps/lzma-25.01/src/real/7zStream.c
+  libchdr/deps/lzma-25.01/src/real/Aes.c
+  libchdr/deps/lzma-25.01/src/real/AesOpt.c
+  libchdr/deps/lzma-25.01/src/real/Bcj2.c
+  libchdr/deps/lzma-25.01/src/real/Bra.c
+  libchdr/deps/lzma-25.01/src/real/Bra86.c
+  libchdr/deps/lzma-25.01/src/real/BraIA64.c
+  libchdr/deps/lzma-25.01/src/real/CpuArch.c
+  libchdr/deps/lzma-25.01/src/real/Delta.c
+  libchdr/deps/lzma-25.01/src/real/Lzma2Dec.c
+  libchdr/deps/lzma-25.01/src/real/LzmaDec.c
+  libchdr/deps/lzma-25.01/src/real/MtDec.c
+  libchdr/deps/lzma-25.01/src/real/Ppmd7.c
+  libchdr/deps/lzma-25.01/src/real/Ppmd7Dec.c
+  libchdr/deps/lzma-25.01/src/real/Sha256.c
+  libchdr/deps/lzma-25.01/src/real/Sha256Opt.c
+  libchdr/deps/lzma-25.01/src/real/Sort.c
+  libchdr/deps/lzma-25.01/src/real/SwapBytes.c
+  libchdr/deps/lzma-25.01/src/real/Threads.c
 )
 
 target_include_directories(sljit PUBLIC ../thirdparty)
-target_include_directories(sevenzip-sdk PUBLIC ../thirdparty/libchdr/deps/lzma-24.05/include)
+target_include_directories(sevenzip-sdk PUBLIC ../thirdparty/libchdr/deps/lzma-25.01/include/real)
 target_compile_definitions(sljit PUBLIC SLJIT_HAVE_CONFIG_PRE=1 SLJIT_HAVE_CONFIG_POST=1)
 target_compile_definitions(sevenzip-sdk PRIVATE Z7_ST Z7_EXTRACT_ONLY Z7_PPMD_SUPPORT)
 target_compile_options(sljit PRIVATE $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-conditional-uninitialized>)
@@ -42,9 +42,8 @@ option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
 
 if(ARES_ENABLE_CHD)
   # lzma
-  add_subdirectory(libchdr/deps/lzma-24.05 EXCLUDE_FROM_ALL)
-  list(APPEND CHDR_LIBS lzma)
-  list(APPEND CHDR_INCLUDES lzma)
+  add_subdirectory(libchdr/deps/lzma-25.01 EXCLUDE_FROM_ALL)
+  list(APPEND CHDR_LIBS chdr-lzma)
 
   if(OS_MACOS)
     option(WITH_SYSTEM_ZLIB "Use system zlib" ON)
@@ -53,21 +52,15 @@ if(ARES_ENABLE_CHD)
   if(WITH_SYSTEM_ZLIB)
     find_package(ZLIB REQUIRED)
     list(APPEND PLATFORM_LIBS ZLIB::ZLIB)
+    list(APPEND CHDR_DEFINES CHDR_SYSTEM_ZLIB)
   else()
-    option(ZLIB_BUILD_EXAMPLES "Enable Zlib Examples" OFF)
-    add_subdirectory(libchdr/deps/zlib-1.3.1 EXCLUDE_FROM_ALL)
-    set_target_properties(
-      zlibstatic
-      PROPERTIES POSITION_INDEPENDENT_CODE ON FOLDER thirdparty PREFIX ""
-    )
-    list(APPEND CHDR_LIBS zlibstatic)
+    add_subdirectory(libchdr/deps/miniz-3.1.1 EXCLUDE_FROM_ALL)
+    list(APPEND CHDR_LIBS miniz)
   endif()
 
   # zstd
-  option(ZSTD_BUILD_SHARED "BUILD SHARED LIBRARIES" OFF)
-  option(ZSTD_BUILD_PROGRAMS "BUILD PROGRAMS" OFF)
-  add_subdirectory(libchdr/deps/zstd-1.5.6/build/cmake EXCLUDE_FROM_ALL)
-  list(APPEND CHDR_LIBS libzstd_static)
+  add_subdirectory(libchdr/deps/zstd-1.5.7 EXCLUDE_FROM_ALL)
+  list(APPEND CHDR_LIBS zstd)
   #--------------------------------------------------
   # chdr
   #--------------------------------------------------
@@ -77,15 +70,23 @@ if(ARES_ENABLE_CHD)
     libchdr/src/libchdr_bitstream.c
     libchdr/src/libchdr_cdrom.c
     libchdr/src/libchdr_chd.c
+    libchdr/src/libchdr_codec_cdfl.c
+    libchdr/src/libchdr_codec_cdlz.c
+    libchdr/src/libchdr_codec_cdzl.c
+    libchdr/src/libchdr_codec_cdzs.c
+    libchdr/src/libchdr_codec_flac.c
+    libchdr/src/libchdr_codec_huff.c
+    libchdr/src/libchdr_codec_lzma.c
+    libchdr/src/libchdr_codec_zlib.c
+    libchdr/src/libchdr_codec_zstd.c
     libchdr/src/libchdr_flac.c
     libchdr/src/libchdr_huffman.c
   )
 
-  list(APPEND CHDR_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/libchdr/include)
-
   add_library(chdr-static STATIC ${CHDR_SOURCES})
-  target_include_directories(chdr-static PUBLIC ${CHDR_INCLUDES} PUBLIC libchdr/include)
+  target_include_directories(chdr-static PUBLIC libchdr/include)
   target_link_libraries(chdr-static PRIVATE ${CHDR_LIBS} ${PLATFORM_LIBS})
+  target_compile_definitions(chdr-static PRIVATE ${CHDR_DEFINES})
   target_compile_options(
     chdr-static
     PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-unreachable-code -Wno-unused-function>
@@ -145,9 +146,9 @@ set_target_properties(sevenzip-sdk PROPERTIES FOLDER thirdparty PREFIX "")
 if(ARES_ENABLE_CHD)
   set_target_properties(chdr-static PROPERTIES FOLDER thirdparty PREFIX "")
   if(NOT WITH_SYSTEM_ZLIB)
-    set_target_properties(zlib PROPERTIES FOLDER thirdparty PREFIX "")
+    set_target_properties(miniz PROPERTIES FOLDER thirdparty PREFIX "")
   endif()
-  set_target_properties(lzma PROPERTIES FOLDER thirdparty PREFIX "")
-  set_target_properties(libzstd_static PROPERTIES FOLDER thirdparty PREFIX "")
+  set_target_properties(chdr-lzma PROPERTIES FOLDER thirdparty PREFIX "")
+  set_target_properties(zstd PROPERTIES FOLDER thirdparty PREFIX "")
 endif()
 set_target_properties(qon PROPERTIES FOLDER thirdparty PREFIX "")

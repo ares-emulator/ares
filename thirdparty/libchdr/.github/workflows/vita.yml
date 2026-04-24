@@ -8,7 +8,7 @@ jobs:
     container: vitasdk/vitasdk:latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake
