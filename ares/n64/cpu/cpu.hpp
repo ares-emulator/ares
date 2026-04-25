@@ -253,15 +253,20 @@ struct CPU : Thread {
 
     //8KB
     struct Line {
+      auto valid() const -> bool { return tagKey & 1u; }
+      auto setValid(bool on) -> void {
+        if(on) tagKey |= 1u;
+        else tagKey &= ~1u;
+      }
+
       auto hit(u32 paddr) const -> bool;
       auto fill(u32 paddr) -> void;
       auto writeBack() -> void;
       template<u32 Size> auto read(u32 paddr) const -> u64;
       template<u32 Size> auto write(u32 paddr, u64 data) -> void;
 
-      bool valid;
+      u32  tagKey;
       u16  dirty;
-      u32  tag;
       u16  index;
       u64  fillPc;
       u64  dirtyPc;

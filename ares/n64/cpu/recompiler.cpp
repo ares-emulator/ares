@@ -256,8 +256,7 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
   mem(sreg(0), sljit_sw(CpuIcacheWords0Off + CpuIcacheLineBytes * (lineIndex) + (byteOff)))
 #define CpuDcacheLineBytes sizeof(CPU::DataCache::Line)
 #define CpuDcacheLine0Off offsetof(CPU, dcache.lines[0])
-#define DcacheLineValidOff offsetof(CPU::DataCache::Line, valid)
-#define DcacheLineTagOff offsetof(CPU::DataCache::Line, tag)
+#define DcacheLineTagKeyOff offsetof(CPU::DataCache::Line, tagKey)
 #define DcacheLineWordsOff offsetof(CPU::DataCache::Line, words[0])
 #define CpuProfileDcacheHitsOff (offsetof(CPU, profile) + offsetof(CPU::Profile, dcacheHits))
 #define ProfileDcacheHitsMem mem(sreg(0), CpuProfileDcacheHitsOff)
@@ -940,12 +939,14 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   }
   //LW Rt,Rs,i16
   case 0x23: {
+    // Slow-path emission and debugger single-step mode must keep using the shared interpreter helper.
     if(emitSlowPath || emitSingleInstruction) {
       callf(&CPU::LW, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
       return 0;
     }
 
+    // The state key lets us specialize the virtual address checks for the current address width.
     auto extendedAddressing = [&] {
       if(emitStateKey.exceptionLevel() || emitStateKey.errorLevel()) return emitStateKey.kernelExtendedAddressing();
       auto privilegeMode = emitStateKey.privilegeMode();
@@ -954,6 +955,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
       return emitStateKey.kernelExtendedAddressing();
     }();
 
+    // Compute the virtual address and reject anything outside cached RDRAM, or not 32-bit sign-extended.
     add64(reg(0), mem(Rs), imm(i16));
     if(extendedAddressing) {
       sub64(reg(1), reg(0), imm((sljit_sw)0xffff'ffff'8000'0000ull));
@@ -968,25 +970,26 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
       cmp32(reg(1), imm(0x007f'ffff), set_ugt);
     }
     auto addressOutOfRange = !extendedAddressing ? jump(flag_ugt) : nullptr;
+
+    // Hardware raises AdEL before any cache lookup on unaligned LW.
     test32(reg(0), imm(3), set_z);
     auto addressUnaligned = jump(flag_nz);
 
+    // Convert the cached virtual address to an RDRAM physical address and locate its dcache line.
     and32(reg(0), reg(0), imm(0x007f'ffff));
     lshr32(reg(1), reg(0), imm(4));
     and32(reg(1), reg(1), imm(0x1ff));
-    shl64(reg(2), reg(1), imm(5));
-    shl64(reg(3), reg(1), imm(4));
-    add64(reg(2), reg(2), reg(3));
+    mul64(reg(2), reg(1), imm(CpuDcacheLineBytes));
     add64(reg(2), reg(2), imm(CpuDcacheLine0Off));
     add64(reg(2), reg(2), sreg(0));
 
-    mov32_u8(reg(3), mem(reg(2), DcacheLineValidOff));
-    cmp32(reg(3), imm(0), set_z);
-    auto cacheInvalid = jump(flag_z);
+    // Compare tag and valid bit together; misses fall back to the interpreter to fill/write back.
     and32(reg(3), reg(0), imm((sljit_sw)0xffff'f000u));
-    cmp32(mem(reg(2), DcacheLineTagOff), reg(3), set_z);
+    or32(reg(3), reg(3), imm(1));
+    cmp32(mem(reg(2), DcacheLineTagKeyOff), reg(3), set_z);
     auto cacheMiss = jump(flag_nz);
 
+    // Cache hit: account for the hit latency, then read and sign-extend the cached word.
     emitCpuStep(2);
     if(system.homebrewMode) {
       add64(ProfileDcacheHitsMem, ProfileDcacheHitsMem, imm(1));
@@ -997,8 +1000,9 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
       mov64_s32(reg(3), mem(reg(3), DcacheLineWordsOff));
       mov64(mem(Rt), reg(3));
     }
-    emitZeroClear(Rtn);
-    deferSlowPath({addressMismatch, addressOutOfRange, addressUnaligned, cacheInvalid, cacheMiss}, instruction);
+
+    // All failed fast-path guards share one generated slow path and return here afterwards.
+    deferSlowPath({addressMismatch, addressOutOfRange, addressUnaligned, cacheMiss}, instruction);
     return 0;
   }
 

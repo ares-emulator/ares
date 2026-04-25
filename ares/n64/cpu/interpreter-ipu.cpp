@@ -177,26 +177,26 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x01: {  //dcache index write back invalidate
     auto& line = dcache.line(access.vaddr);
-    if(line.valid && line.dirty) {
+    if(line.valid() && line.dirty) {
       line.writeBack();
       profile.dcacheWritebacks++;
     }
-    line.valid = 0;
+    line.setValid(false);
     break;
   }
 
   case 0x05: {  //dcache index load tag
     auto& line = dcache.line(access.vaddr);
-    scc.tagLo.primaryCacheState = line.valid << 1 | line.dirty << 0;
-    scc.tagLo.physicalAddress   = line.tag;
+    scc.tagLo.primaryCacheState = line.valid() << 1 | (line.dirty != 0);
+    scc.tagLo.physicalAddress   = line.tagKey & ~0xfffu;
     break;
   }
 
   case 0x09: {  //dcache index store tag
     auto& line = dcache.line(access.vaddr);
-    line.valid = scc.tagLo.primaryCacheState.bit(1);
+    line.tagKey = scc.tagLo.physicalAddress & ~0xfffu;
+    line.setValid(scc.tagLo.primaryCacheState.bit(1));
     line.dirty = scc.tagLo.primaryCacheState.bit(0);
-    line.tag   = scc.tagLo.physicalAddress;
     if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE DPCS=1");
     if(scc.tagLo.primaryCacheState == 0b10) debug(unusual, "[CPU] CACHE DPCS=2");
     break;
@@ -208,16 +208,16 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
       line.writeBack();
       profile.dcacheWritebacks++;
     }
-    line.tag   = access.paddr & ~0xfff;
-    line.valid = 1;
-    line.dirty = 1;
+    line.tagKey = access.paddr & ~0xfff;
+    line.setValid(true);
+    line.dirty  = 1;
     break;
   }
 
   case 0x11: {  //dcache hit invalidate
     auto& line = dcache.line(access.vaddr);
     if(line.hit(access.paddr)) {
-      line.valid = 0;
+      line.setValid(false);
       line.dirty = 0;
     }
     break;
@@ -230,7 +230,7 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
         line.writeBack();
         profile.dcacheWritebacks++;
       }
-      line.valid = 0;
+      line.setValid(false);
     }
     break;
   }

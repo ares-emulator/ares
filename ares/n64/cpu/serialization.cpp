@@ -19,9 +19,8 @@ auto CPU::serialize(serializer& s) -> void {
   }
 
   for(auto& line : dcache.lines) {
-    s(line.valid);
+    s(line.tagKey);
     s(line.dirty);
-    s(line.tag);
     s(line.index);
     s(line.fillPc);
     s(line.dirtyPc);
