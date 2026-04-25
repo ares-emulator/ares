@@ -254,6 +254,13 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #define CpuIcacheWords0Off offsetof(CPU, icache.lines[0].words[0])
 #define IcacheLineWordsMem(lineIndex, byteOff) \
   mem(sreg(0), sljit_sw(CpuIcacheWords0Off + CpuIcacheLineBytes * (lineIndex) + (byteOff)))
+#define CpuDcacheLineBytes sizeof(CPU::DataCache::Line)
+#define CpuDcacheLine0Off offsetof(CPU, dcache.lines[0])
+#define DcacheLineValidOff offsetof(CPU::DataCache::Line, valid)
+#define DcacheLineTagOff offsetof(CPU::DataCache::Line, tag)
+#define DcacheLineWordsOff offsetof(CPU::DataCache::Line, words[0])
+#define CpuProfileDcacheHitsOff (offsetof(CPU, profile) + offsetof(CPU::Profile, dcacheHits))
+#define ProfileDcacheHitsMem mem(sreg(0), CpuProfileDcacheHitsOff)
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
 #pragma GCC diagnostic push
@@ -261,6 +268,7 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #endif
 auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction) -> Block* {
   emitStateKey = stateKey;
+  emitSingleInstruction = singleInstruction;
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
     allocator.release();
@@ -447,7 +455,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   sljit_emit_icall(compiler, SLJIT_CALL | SLJIT_CALL_RETURN, linkArgs, reg(3).fst, reg(3).snd);
   jumpEpilog();
   for(auto& slow : slowPaths) {
-    setLabel(slow.enter);
+    auto enter = sljit_emit_label(compiler);
+    for(auto jump : slow.enters) sljit_set_label(jump, enter);
     emitVaddr = slow.vaddr;
     emitDeferredCycles = slow.deferredCycles;
     emitDeferredNextPc = slow.deferredNextPc;
@@ -577,9 +586,15 @@ auto CPU::Recompiler::setupCallf() -> void {
 }
 
 auto CPU::Recompiler::deferSlowPath(sljit_jump* enter, u32 instruction) -> void {
+  deferSlowPath({enter}, instruction);
+}
+
+auto CPU::Recompiler::deferSlowPath(std::initializer_list<sljit_jump*> enters, u32 instruction) -> void {
   emitCallfEmitted = true;
   auto& slow = slowPaths.emplace_back();
-  slow.enter = enter;
+  for(auto enter : enters) {
+    if(enter) slow.enters.push_back(enter);
+  }
   slow.resume = sljit_emit_label(compiler);
   slow.instruction = instruction;
   slow.icacheMiss = false;
@@ -593,7 +608,7 @@ auto CPU::Recompiler::deferSlowPath(sljit_jump* enter, u32 instruction) -> void 
 auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> void {
   emitCallfEmitted = true;
   auto& slow = slowPaths.emplace_back();
-  slow.enter = enter;
+  slow.enters.push_back(enter);
   slow.resume = sljit_emit_label(compiler);
   slow.icacheMiss = true;
   slow.icachePaddr = paddr;
@@ -925,8 +940,65 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   }
   //LW Rt,Rs,i16
   case 0x23: {
-    callf(&CPU::LW, mem(Rt), mem(Rs), imm(i16));
+    if(emitSlowPath || emitSingleInstruction) {
+      callf(&CPU::LW, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+      return 0;
+    }
+
+    auto extendedAddressing = [&] {
+      if(emitStateKey.exceptionLevel() || emitStateKey.errorLevel()) return emitStateKey.kernelExtendedAddressing();
+      auto privilegeMode = emitStateKey.privilegeMode();
+      if(privilegeMode == 1) return emitStateKey.supervisorExtendedAddressing();
+      if(privilegeMode >= 2) return emitStateKey.userExtendedAddressing();
+      return emitStateKey.kernelExtendedAddressing();
+    }();
+
+    add64(reg(0), mem(Rs), imm(i16));
+    if(extendedAddressing) {
+      sub64(reg(1), reg(0), imm((sljit_sw)0xffff'ffff'8000'0000ull));
+      cmp64(reg(1), imm(0x007f'ffff), set_ugt);
+    } else {
+      mov64_s32(reg(1), reg(0));
+      cmp64(reg(0), reg(1), set_z);
+    }
+    auto addressMismatch = jump(extendedAddressing ? flag_ugt : flag_nz);
+    if(!extendedAddressing) {
+      sub32(reg(1), reg(0), imm((sljit_sw)0x8000'0000u));
+      cmp32(reg(1), imm(0x007f'ffff), set_ugt);
+    }
+    auto addressOutOfRange = !extendedAddressing ? jump(flag_ugt) : nullptr;
+    test32(reg(0), imm(3), set_z);
+    auto addressUnaligned = jump(flag_nz);
+
+    and32(reg(0), reg(0), imm(0x007f'ffff));
+    lshr32(reg(1), reg(0), imm(4));
+    and32(reg(1), reg(1), imm(0x1ff));
+    shl64(reg(2), reg(1), imm(5));
+    shl64(reg(3), reg(1), imm(4));
+    add64(reg(2), reg(2), reg(3));
+    add64(reg(2), reg(2), imm(CpuDcacheLine0Off));
+    add64(reg(2), reg(2), sreg(0));
+
+    mov32_u8(reg(3), mem(reg(2), DcacheLineValidOff));
+    cmp32(reg(3), imm(0), set_z);
+    auto cacheInvalid = jump(flag_z);
+    and32(reg(3), reg(0), imm((sljit_sw)0xffff'f000u));
+    cmp32(mem(reg(2), DcacheLineTagOff), reg(3), set_z);
+    auto cacheMiss = jump(flag_nz);
+
+    emitCpuStep(2);
+    if(system.homebrewMode) {
+      add64(ProfileDcacheHitsMem, ProfileDcacheHitsMem, imm(1));
+    }
+    if(Rtn != 0) {
+      and32(reg(3), reg(0), imm(0x0c));
+      add64(reg(3), reg(2), reg(3));
+      mov64_s32(reg(3), mem(reg(3), DcacheLineWordsOff));
+      mov64(mem(Rt), reg(3));
+    }
     emitZeroClear(Rtn);
+    deferSlowPath({addressMismatch, addressOutOfRange, addressUnaligned, cacheInvalid, cacheMiss}, instruction);
     return 0;
   }
 
