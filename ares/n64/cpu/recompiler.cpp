@@ -257,6 +257,8 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #define CpuDcacheLineBytes sizeof(CPU::DataCache::Line)
 #define CpuDcacheLine0Off offsetof(CPU, dcache.lines[0])
 #define DcacheLineTagKeyOff offsetof(CPU::DataCache::Line, tagKey)
+#define DcacheLineDirtyOff offsetof(CPU::DataCache::Line, dirty)
+#define DcacheLineDirtyPcOff offsetof(CPU::DataCache::Line, dirtyPc)
 #define DcacheLineWordsOff offsetof(CPU::DataCache::Line, words[0])
 #define CpuProfileDcacheHitsOff (offsetof(CPU, profile) + offsetof(CPU::Profile, dcacheHits))
 #define ProfileDcacheHitsMem mem(sreg(0), CpuProfileDcacheHitsOff)
@@ -618,12 +620,17 @@ auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> vo
   slow.needsStateMachinery = emitNeedsStateMachinery;
 }
 
-auto CPU::Recompiler::jitLoadOpcode(u32 instruction, u32 size, bool sign, bool require64,
-  void (CPU::*interpreter)(r64&, cr64&, s16), bool emitSlowPath) -> void {
+auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, bool sign, bool require64, bool store,
+  void (CPU::*loadInterpreter)(r64&, cr64&, s16),
+  void (CPU::*storeInterpreter)(cr64&, cr64&, s16), bool emitSlowPath) -> void {
   if(emitSlowPath || emitSingleInstruction || (require64 && reservedInstruction64())) {
     setupCallf();
-    callf(interpreter, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    if(store) {
+      callf(storeInterpreter, mem(Rt), mem(Rs), imm(i16));
+    } else {
+      callf(loadInterpreter, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }
     return;
   }
 
@@ -652,7 +659,7 @@ auto CPU::Recompiler::jitLoadOpcode(u32 instruction, u32 size, bool sign, bool r
   }
   auto addressOutOfRange = !extendedAddressing ? jump(flag_ugt) : nullptr;
 
-  // Hardware raises AdEL before any cache lookup on unaligned loads.
+  // Hardware raises address errors before any cache lookup on unaligned accesses.
   sljit_jump* addressUnaligned = nullptr;
   if(size > Byte) {
     test32(reg(0), imm(size - 1), set_z);
@@ -673,12 +680,50 @@ auto CPU::Recompiler::jitLoadOpcode(u32 instruction, u32 size, bool sign, bool r
   cmp32(mem(reg(2), DcacheLineTagKeyOff), reg(3), set_z);
   auto cacheMiss = jump(flag_nz);
 
-  // Cache hit: account for the hit latency, then read and extend the cached value.
+  // Cache hit: account for the hit latency, then read/write the cached value.
   emitCpuStep(2);
   if(system.homebrewMode) {
     add64(ProfileDcacheHitsMem, ProfileDcacheHitsMem, imm(1));
   }
-  if(Rtn != 0) {
+  if(store) {
+    if(system.homebrewMode) {
+      and32(reg(3), reg(0), imm(0x0f));
+      mov32(reg(1), imm((1 << size) - 1));
+      shl32(reg(1), reg(1), reg(3));
+    }
+
+    if(size == Byte) {
+      and32(reg(3), reg(0), imm(0x0f));
+      xor32(reg(3), reg(3), imm(3));
+      add64(reg(3), reg(2), reg(3));
+      mov32_u8(mem(reg(3), DcacheLineWordsOff), mem(Rt32));
+    } else if(size == Half) {
+      and32(reg(3), reg(0), imm(0x0e));
+      xor32(reg(3), reg(3), imm(2));
+      add64(reg(3), reg(2), reg(3));
+      mov32_u16(mem(reg(3), DcacheLineWordsOff), mem(Rt32));
+    } else if(size == Word) {
+      and32(reg(3), reg(0), imm(0x0c));
+      add64(reg(3), reg(2), reg(3));
+      mov32(mem(reg(3), DcacheLineWordsOff), mem(Rt32));
+    } else if(size == Dual) {
+      and32(reg(3), reg(0), imm(0x08));
+      add64(reg(3), reg(2), reg(3));
+      mov64(reg(0), mem(Rt));
+      lshr64(reg(0), reg(0), imm(32));
+      mov32(mem(reg(3), DcacheLineWordsOff + 0), reg(0));
+      mov32(mem(reg(3), DcacheLineWordsOff + 4), mem(Rt32));
+    }
+
+    if(system.homebrewMode) {
+      mov32_u16(reg(0), mem(reg(2), DcacheLineDirtyOff));
+      or32(reg(1), reg(1), reg(0));
+      mov32_u16(mem(reg(2), DcacheLineDirtyOff), reg(1));
+      mov64(mem(reg(2), DcacheLineDirtyPcOff), imm(emitVaddr));
+    } else {
+      mov32_u16(mem(reg(2), DcacheLineDirtyOff), imm(1));
+    }
+  } else if(Rtn != 0) {
     if(size == Byte) {
       and32(reg(3), reg(0), imm(0x0f));
       xor32(reg(3), reg(3), imm(3));
@@ -1015,13 +1060,13 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LB Rt,Rs,i16
   case 0x20: {
-    jitLoadOpcode(instruction, Byte, true, false, &CPU::LB, emitSlowPath);
+    jitMemoryOpcode(instruction, Byte, true, false, false, &CPU::LB, nullptr, emitSlowPath);
     return 0;
   }
 
   //LH Rt,Rs,i16
   case 0x21: {
-    jitLoadOpcode(instruction, Half, true, false, &CPU::LH, emitSlowPath);
+    jitMemoryOpcode(instruction, Half, true, false, false, &CPU::LH, nullptr, emitSlowPath);
     return 0;
   }
 
@@ -1034,19 +1079,19 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   }
   //LW Rt,Rs,i16
   case 0x23: {
-    jitLoadOpcode(instruction, Word, true, false, &CPU::LW, emitSlowPath);
+    jitMemoryOpcode(instruction, Word, true, false, false, &CPU::LW, nullptr, emitSlowPath);
     return 0;
   }
 
   //LBU Rt,Rs,i16
   case 0x24: {
-    jitLoadOpcode(instruction, Byte, false, false, &CPU::LBU, emitSlowPath);
+    jitMemoryOpcode(instruction, Byte, false, false, false, &CPU::LBU, nullptr, emitSlowPath);
     return 0;
   }
 
   //LHU Rt,Rs,i16
   case 0x25: {
-    jitLoadOpcode(instruction, Half, false, false, &CPU::LHU, emitSlowPath);
+    jitMemoryOpcode(instruction, Half, false, false, false, &CPU::LHU, nullptr, emitSlowPath);
     return 0;
   }
 
@@ -1060,21 +1105,19 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LWU Rt,Rs,i16
   case 0x27: {
-    jitLoadOpcode(instruction, Word, false, false, &CPU::LWU, emitSlowPath);
+    jitMemoryOpcode(instruction, Word, false, false, false, &CPU::LWU, nullptr, emitSlowPath);
     return 0;
   }
 
   //SB Rt,Rs,i16
   case 0x28: {
-    setupCallf();
-    callf(&CPU::SB, mem(Rt), mem(Rs), imm(i16));
+    jitMemoryOpcode(instruction, Byte, false, false, true, nullptr, &CPU::SB, emitSlowPath);
     return 0;
   }
 
   //SH Rt,Rs,i16
   case 0x29: {
-    setupCallf();
-    callf(&CPU::SH, mem(Rt), mem(Rs), imm(i16));
+    jitMemoryOpcode(instruction, Half, false, false, true, nullptr, &CPU::SH, emitSlowPath);
     return 0;
   }
 
@@ -1087,8 +1130,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //SW Rt,Rs,i16
   case 0x2b: {
-    setupCallf();
-    callf(&CPU::SW, mem(Rt), mem(Rs), imm(i16));
+    jitMemoryOpcode(instruction, Word, false, false, true, nullptr, &CPU::SW, emitSlowPath);
     return 0;
   }
 
@@ -1173,7 +1215,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LD Rt,Rs,i16
   case 0x37: {
-    jitLoadOpcode(instruction, Dual, false, true, &CPU::LD, emitSlowPath);
+    jitMemoryOpcode(instruction, Dual, false, true, false, &CPU::LD, nullptr, emitSlowPath);
     return 0;
   }
 
@@ -1230,8 +1272,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //SD Rt,Rs,i16
   case 0x3f: {
-    setupCallf();
-    callf(&CPU::SD, mem(Rt), mem(Rs), imm(i16));
+    jitMemoryOpcode(instruction, Dual, false, true, true, nullptr, &CPU::SD, emitSlowPath);
     return 0;
   }
 
