@@ -1119,7 +1119,6 @@ struct CPU : Thread {
     auto flushDeferredNextPc() -> void;
     auto setupCallf() -> void;
     auto emitCpuStep(u32 clocks) -> void;
-    template<typename... P> auto callOpcode(P... p) -> void { setupCallf(); callf(p...); }
     auto deferSlowPath(sljit_jump* enter, u32 instruction) -> void;
     auto deferSlowPath(std::initializer_list<sljit_jump*> enters, u32 instruction) -> void;
     auto deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> void;

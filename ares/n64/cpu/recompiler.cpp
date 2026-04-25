@@ -618,7 +618,6 @@ auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> vo
   slow.needsStateMachinery = emitNeedsStateMachinery;
 }
 
-#define callf callOpcode
 
 auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   emitSlowPathSection = emitSlowPath;
@@ -797,6 +796,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //COP3
   case 0x13: {
+    setupCallf();
     callf(&CPU::COP3);
     return 1;
   }
@@ -899,6 +899,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LDL Rt,Rs,i16
   case 0x1a: {
+    setupCallf();
     callf(&CPU::LDL, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -906,6 +907,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LDR Rt,Rs,i16
   case 0x1b: {
+    setupCallf();
     callf(&CPU::LDR, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -913,12 +915,14 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //INVALID
   case range4(0x1c, 0x1f): {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
 
   //LB Rt,Rs,i16
   case 0x20: {
+    setupCallf();
     callf(&CPU::LB, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -926,6 +930,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LH Rt,Rs,i16
   case 0x21: {
+    setupCallf();
     callf(&CPU::LH, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -933,6 +938,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LWL Rt,Rs,i16
   case 0x22: {
+    setupCallf();
     callf(&CPU::LWL, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -941,6 +947,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   case 0x23: {
     // Slow-path emission and debugger single-step mode must keep using the shared interpreter helper.
     if(emitSlowPath || emitSingleInstruction) {
+      setupCallf();
       callf(&CPU::LW, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
       return 0;
@@ -1008,6 +1015,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LBU Rt,Rs,i16
   case 0x24: {
+    setupCallf();
     callf(&CPU::LBU, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -1015,6 +1023,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LHU Rt,Rs,i16
   case 0x25: {
+    setupCallf();
     callf(&CPU::LHU, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -1022,6 +1031,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LWR Rt,Rs,i16
   case 0x26: {
+    setupCallf();
     callf(&CPU::LWR, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -1029,6 +1039,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LWU Rt,Rs,i16
   case 0x27: {
+    setupCallf();
     callf(&CPU::LWU, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -1036,54 +1047,63 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //SB Rt,Rs,i16
   case 0x28: {
+    setupCallf();
     callf(&CPU::SB, mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
 
   //SH Rt,Rs,i16
   case 0x29: {
+    setupCallf();
     callf(&CPU::SH, mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
 
   //SWL Rt,Rs,i16
   case 0x2a: {
+    setupCallf();
     callf(&CPU::SWL, mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
 
   //SW Rt,Rs,i16
   case 0x2b: {
+    setupCallf();
     callf(&CPU::SW, mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
 
   //SDL Rt,Rs,i16
   case 0x2c: {
+    setupCallf();
     callf(&CPU::SDL, mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
 
   //SDR Rt,Rs,i16
   case 0x2d: {
+    setupCallf();
     callf(&CPU::SDR, mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
 
   //SWR Rt,Rs,i16
   case 0x2e: {
+    setupCallf();
     callf(&CPU::SWR, mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
 
   //CACHE op(offset),base
   case 0x2f: {
+    setupCallf();
     callf(&CPU::CACHE, imm(instruction >> 16 & 31), mem(Rs), imm(i16));
     return 0;
   }
 
   //LL Rt,Rs,i16
   case 0x30: {
+    setupCallf();
     callf(&CPU::LL, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -1091,24 +1111,28 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LWC1 Ft,Rs,i16
   case 0x31: {
+    setupCallf();
     callf(&CPU::LWC1, imm(Ftn), mem(Rs), imm(i16));
     return 0;
   }
 
   //LWC2
   case 0x32: {
+    setupCallf();
     callf(&CPU::COP2INVALID);
     return 1;
   }
 
   //LWC3
   case 0x33: {
+    setupCallf();
     callf(&CPU::COP3);
     return 1;
   }
 
   //LLD Rt,Rs,i16
   case 0x34: {
+    setupCallf();
     callf(&CPU::LLD, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -1116,18 +1140,21 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LDC1 Ft,Rs,i16
   case 0x35: {
+    setupCallf();
     callf(&CPU::LDC1, imm(Ftn), mem(Rs), imm(i16));
     return 0;
   }
 
   //LDC2
   case 0x36: {
+    setupCallf();
     callf(&CPU::COP2INVALID);
     return 1;
   }
 
   //LD Rt,Rs,i16
   case 0x37: {
+    setupCallf();
     callf(&CPU::LD, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -1135,6 +1162,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //SC Rt,Rs,i16
   case 0x38: {
+    setupCallf();
     callf(&CPU::SC, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -1142,24 +1170,28 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //SWC1 Ft,Rs,i16
   case 0x39: {
+    setupCallf();
     callf(&CPU::SWC1, imm(Ftn), mem(Rs), imm(i16));
     return 0;
   }
 
   //SWC2
   case 0x3a: {
+    setupCallf();
     callf(&CPU::COP2INVALID);
     return 1;
   }
 
   //SWC3
   case 0x3b: {
+    setupCallf();
     callf(&CPU::COP3);
     return 1;
   }
 
   //SCD Rt,Rs,i16
   case 0x3c: {
+    setupCallf();
     callf(&CPU::SCD, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
     return 0;
@@ -1167,18 +1199,21 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //SDC1 Ft,Rs,i16
   case 0x3d: {
+    setupCallf();
     callf(&CPU::SDC1, imm(Ftn), mem(Rs), imm(i16));
     return 0;
   }
 
   //SDC2
   case 0x3e: {
+    setupCallf();
     callf(&CPU::COP2INVALID);
     return 1;
   }
 
   //SD Rt,Rs,i16
   case 0x3f: {
+    setupCallf();
     callf(&CPU::SD, mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
@@ -1202,6 +1237,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case 0x01: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -1235,6 +1271,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case 0x05: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -1277,30 +1314,35 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case range2(0x0a, 0x0b): {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
 
   //SYSCALL
   case 0x0c: {
+    setupCallf();
     callf(&CPU::SYSCALL);
     return 1;
   }
 
   //BREAK
   case 0x0d: {
+    setupCallf();
     callf(&CPU::BREAK);
     return 1;
   }
 
   //INVALID
   case 0x0e: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
 
   //SYNC
   case 0x0f: {
+    setupCallf();
     callf(&CPU::SYNC);
     return 0;
   }
@@ -1348,6 +1390,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case 0x15: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -1600,6 +1643,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case range2(0x28, 0x29): {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -1745,6 +1789,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case 0x35: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -1764,6 +1809,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case 0x37: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -1783,6 +1829,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case 0x39: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -1831,6 +1878,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //INVALID
   case 0x3d: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -1935,6 +1983,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //INVALID
   case range4(0x04, 0x07): {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -2006,6 +2055,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //INVALID
   case 0x0d: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -2025,6 +2075,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //INVALID
   case 0x0f: {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -2105,6 +2156,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //INVALID
   case range12(0x14, 0x1f): {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -2118,6 +2170,7 @@ auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
 
 //MFC0 Rt,Rd
   case 0x00: {
+    setupCallf();
     callf(&CPU::MFC0, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
     return 0;
@@ -2125,6 +2178,7 @@ auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
 
   //DMFC0 Rt,Rd
   case 0x01: {
+    setupCallf();
     callf(&CPU::DMFC0, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
     return 0;
@@ -2132,24 +2186,28 @@ auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
 
   //INVALID
   case range2(0x02, 0x03): {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
 
   //MTC0 Rt,Rd
   case 0x04: {
+    setupCallf();
     callf(&CPU::MTC0, mem(Rt), imm(Rdn));
     return 0;
   }
 
   //DMTC0 Rt,Rd
   case 0x05: {
+    setupCallf();
     callf(&CPU::DMTC0, mem(Rt), imm(Rdn));
     return 0;
   }
 
   //INVALID
   case range10(0x06, 0x0f): {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -2160,72 +2218,84 @@ auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
 
   //TLBR
   case 0x01: {
+    setupCallf();
     callf(&CPU::TLBR);
     return 0;
   }
 
   //TLBWI
   case 0x02: {
+    setupCallf();
     callf(&CPU::TLBWI);
     return 0;
   }
 
   //TLBWR
   case 0x06: {
+    setupCallf();
     callf(&CPU::TLBWR);
     return 0;
   }
 
   //TLBP
   case 0x08: {
+    setupCallf();
     callf(&CPU::TLBP);
     return 0;
   }
 
   //ERET
   case 0x18: {
+    setupCallf();
     callf(&CPU::ERET);
     return 1;
   }
 
   //XDETECT
   case 0x20: {
+    setupCallf();
     callf(&CPU::XDETECT, mem(XRd), imm(XCODE));
     return 0;
   }
 
   //XLOG
   case 0x25: {
+    setupCallf();
     callf(&CPU::XLOG, mem(XRd), mem(XRt), imm(XCODE));
     return 0;
   }
 
   //XHEXDUMP
   case 0x27: {
+    setupCallf();
     callf(&CPU::XHEXDUMP, mem(XRd), mem(XRt));
     return 0;
   }
 
   //XPROF
   case 0x28: {
+    setupCallf();
     callf(&CPU::XPROF, mem(XRd), imm(XCODE));
     return 0;
   }
 
   //XPROFREAD
   case 0x29: {
+    setupCallf();
     callf(&CPU::XPROFREAD, mem(XRd), mem(XRt));
     return 0;
   }
 
   //XEXCEPTION
   case 0x2a: {
+    setupCallf();
     callf(&CPU::XEXCEPTION, mem(XRt));
     return 0;
   }
 
   //XIOCTL
   case 0x2c: {
+    setupCallf();
     callf(&CPU::XIOCTL, imm(XCODE));
     return 0;
   }
@@ -2264,6 +2334,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   //MFC1 Rt,Fs
   case 0x00: {
     if(!emitStateKey.coprocessor1Enabled()) {
+      setupCallf();
       callf(&CPU::MFC1, mem(Rt), imm(Fsn));
       return 0;
     }
@@ -2288,6 +2359,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   //DMFC1 Rt,Fs
   case 0x01: {
     if(!emitStateKey.coprocessor1Enabled()) {
+      setupCallf();
       callf(&CPU::DMFC1, mem(Rt), imm(Fsn));
       return 0;
     }
@@ -2303,6 +2375,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //CFC1 Rt,Rd
   case 0x02: {
+    setupCallf();
     callf(&CPU::CFC1, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
     return 0;
@@ -2310,6 +2383,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //DCFC1 Rt,Rd
   case 0x03: {
+    setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
@@ -2317,6 +2391,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   //MTC1 Rt,Fs
   case 0x04: {
     if(!emitStateKey.coprocessor1Enabled()) {
+      setupCallf();
       callf(&CPU::MTC1, mem(Rt), imm(Fsn));
       return 0;
     }
@@ -2339,6 +2414,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   //DMTC1 Rt,Fs
   case 0x05: {
     if(!emitStateKey.coprocessor1Enabled()) {
+      setupCallf();
       callf(&CPU::DMTC1, mem(Rt), imm(Fsn));
       return 0;
     }
@@ -2353,12 +2429,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //CTC1 Rt,Rd
   case 0x06: {
+    setupCallf();
     callf(&CPU::CTC1, mem(Rt), imm(Rdn));
     return 0;
   }
 
   //DCTC1 Rt,Rd
   case 0x07: {
+    setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
@@ -2368,6 +2446,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     bool value = instruction >> 16 & 1;
     bool likely = instruction >> 17 & 1;
     if(!emitStateKey.coprocessor1Enabled()) {
+      setupCallf();
       callf(&CPU::BC1, imm(value), imm(likely), imm(i16));
       return 1;
     }
@@ -2395,6 +2474,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //INVALID
   case range7(0x09, 0x0f): {
+    setupCallf();
     callf(&CPU::INVALID);
     return 1;
   }
@@ -2406,216 +2486,252 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FADD.S Fd,Fs,Ft
   case 0x00: {
+    setupCallf();
     callf(&CPU::FADD_S, imm(Fdn), imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FSUB.S Fd,Fs,Ft
   case 0x01: {
+    setupCallf();
     callf(&CPU::FSUB_S, imm(Fdn), imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FMUL.S Fd,Fs,Ft
   case 0x02: {
+    setupCallf();
     callf(&CPU::FMUL_S, imm(Fdn), imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FDIV.S Fd,Fs,Ft
   case 0x03: {
+    setupCallf();
     callf(&CPU::FDIV_S, imm(Fdn), imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FSQRT.S Fd,Fs
   case 0x04: {
+    setupCallf();
     callf(&CPU::FSQRT_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FABS.S Fd,Fs
   case 0x05: {
+    setupCallf();
     callf(&CPU::FABS_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FMOV.S Fd,Fs
   case 0x06: {
+    setupCallf();
     callf(&CPU::FMOV_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FNEG.S Fd,Fs
   case 0x07: {
+    setupCallf();
     callf(&CPU::FNEG_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FROUND.L.S Fd,Fs
   case 0x08: {
+    setupCallf();
     callf(&CPU::FROUND_L_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FTRUNC.L.S Fd,Fs
   case 0x09: {
+    setupCallf();
     callf(&CPU::FTRUNC_L_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCEIL.L.S Fd,Fs
   case 0x0a: {
+    setupCallf();
     callf(&CPU::FCEIL_L_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FFLOOR.L.S Fd,Fs
   case 0x0b: {
+    setupCallf();
     callf(&CPU::FFLOOR_L_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FROUND.W.S Fd,Fs
   case 0x0c: {
+    setupCallf();
     callf(&CPU::FROUND_W_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FTRUNC.W.S Fd,Fs
   case 0x0d: {
+    setupCallf();
     callf(&CPU::FTRUNC_W_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCEIL.W.S Fd,Fs
   case 0x0e: {
+    setupCallf();
     callf(&CPU::FCEIL_W_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FFLOOR.W.S Fd,Fs
   case 0x0f: {
+    setupCallf();
     callf(&CPU::FFLOOR_W_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.S.S Fd,Fs
   case 0x20: {
+    setupCallf();
     callf(&CPU::FCVT_S_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.D.S Fd,Fs
   case 0x21: {
+    setupCallf();
     callf(&CPU::FCVT_D_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.W.S Fd,Fs
   case 0x24: {
+    setupCallf();
     callf(&CPU::FCVT_W_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.L.S Fd,Fs
   case 0x25: {
+    setupCallf();
     callf(&CPU::FCVT_L_S, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FC.F.S Fs,Ft
   case 0x30: {
+    setupCallf();
     callf(&CPU::FC_F_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.UN.S Fs,Ft
   case 0x31: {
+    setupCallf();
     callf(&CPU::FC_UN_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.EQ.S Fs,Ft
   case 0x32: {
+    setupCallf();
     callf(&CPU::FC_EQ_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.UEQ.S Fs,Ft
   case 0x33: {
+    setupCallf();
     callf(&CPU::FC_UEQ_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.OLT.S Fs,Ft
   case 0x34: {
+    setupCallf();
     callf(&CPU::FC_OLT_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.ULT.S Fs,Ft
   case 0x35: {
+    setupCallf();
     callf(&CPU::FC_ULT_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.OLE.S Fs,Ft
   case 0x36: {
+    setupCallf();
     callf(&CPU::FC_OLE_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.ULE.S Fs,Ft
   case 0x37: {
+    setupCallf();
     callf(&CPU::FC_ULE_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.SF.S Fs,Ft
   case 0x38: {
+    setupCallf();
     callf(&CPU::FC_SF_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.NGLE.S Fs,Ft
   case 0x39: {
+    setupCallf();
     callf(&CPU::FC_NGLE_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.SEQ.S Fs,Ft
   case 0x3a: {
+    setupCallf();
     callf(&CPU::FC_SEQ_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.NGL.S Fs,Ft
   case 0x3b: {
+    setupCallf();
     callf(&CPU::FC_NGL_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.LT.S Fs,Ft
   case 0x3c: {
+    setupCallf();
     callf(&CPU::FC_LT_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.NGE.S Fs,Ft
   case 0x3d: {
+    setupCallf();
     callf(&CPU::FC_NGE_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.LE.S Fs,Ft
   case 0x3e: {
+    setupCallf();
     callf(&CPU::FC_LE_S, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.NGT.S Fs,Ft
   case 0x3f: {
+    setupCallf();
     callf(&CPU::FC_NGT_S, imm(Fsn), imm(Ftn));
     return 0;
   }
@@ -2626,216 +2742,252 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
 //FADD.D Fd,Fs,Ft
   case 0x00: {
+    setupCallf();
     callf(&CPU::FADD_D, imm(Fdn), imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FSUB.D Fd,Fs,Ft
   case 0x01: {
+    setupCallf();
     callf(&CPU::FSUB_D, imm(Fdn), imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FMUL.D Fd,Fs,Ft
   case 0x02: {
+    setupCallf();
     callf(&CPU::FMUL_D, imm(Fdn), imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FDIV.D Fd,Fs,Ft
   case 0x03: {
+    setupCallf();
     callf(&CPU::FDIV_D, imm(Fdn), imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FSQRT.D Fd,Fs
   case 0x04: {
+    setupCallf();
     callf(&CPU::FSQRT_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FABS.D Fd,Fs
   case 0x05: {
+    setupCallf();
     callf(&CPU::FABS_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FMOV.D Fd,Fs
   case 0x06: {
+    setupCallf();
     callf(&CPU::FMOV_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FNEG.D Fd,Fs
   case 0x07: {
+    setupCallf();
     callf(&CPU::FNEG_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FROUND.L.D Fd,Fs
   case 0x08: {
+    setupCallf();
     callf(&CPU::FROUND_L_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FTRUNC.L.D Fd,Fs
   case 0x09: {
+    setupCallf();
     callf(&CPU::FTRUNC_L_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCEIL.L.D Fd,Fs
   case 0x0a: {
+    setupCallf();
     callf(&CPU::FCEIL_L_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FFLOOR.L.D Fd,Fs
   case 0x0b: {
+    setupCallf();
     callf(&CPU::FFLOOR_L_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FROUND.W.D Fd,Fs
   case 0x0c: {
+    setupCallf();
     callf(&CPU::FROUND_W_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FTRUNC.W.D Fd,Fs
   case 0x0d: {
+    setupCallf();
     callf(&CPU::FTRUNC_W_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCEIL.W.D Fd,Fs
   case 0x0e: {
+    setupCallf();
     callf(&CPU::FCEIL_W_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FFLOOR.W.D Fd,Fs
   case 0x0f: {
+    setupCallf();
     callf(&CPU::FFLOOR_W_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.S.D Fd,Fs
   case 0x20: {
+    setupCallf();
     callf(&CPU::FCVT_S_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.D.D Fd,Fs
   case 0x21: {
+    setupCallf();
     callf(&CPU::FCVT_D_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.W.D Fd,Fs
   case 0x24: {
+    setupCallf();
     callf(&CPU::FCVT_W_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.L.D Fd,Fs
   case 0x25: {
+    setupCallf();
     callf(&CPU::FCVT_L_D, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FC.F.D Fs,Ft
   case 0x30: {
+    setupCallf();
     callf(&CPU::FC_F_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.UN.D Fs,Ft
   case 0x31: {
+    setupCallf();
     callf(&CPU::FC_UN_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.EQ.D Fs,Ft
   case 0x32: {
+    setupCallf();
     callf(&CPU::FC_EQ_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.UEQ.D Fs,Ft
   case 0x33: {
+    setupCallf();
     callf(&CPU::FC_UEQ_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.OLT.D Fs,Ft
   case 0x34: {
+    setupCallf();
     callf(&CPU::FC_OLT_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.ULT.D Fs,Ft
   case 0x35: {
+    setupCallf();
     callf(&CPU::FC_ULT_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.OLE.D Fs,Ft
   case 0x36: {
+    setupCallf();
     callf(&CPU::FC_OLE_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.ULE.D Fs,Ft
   case 0x37: {
+    setupCallf();
     callf(&CPU::FC_ULE_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.SF.D Fs,Ft
   case 0x38: {
+    setupCallf();
     callf(&CPU::FC_SF_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.NGLE.D Fs,Ft
   case 0x39: {
+    setupCallf();
     callf(&CPU::FC_NGLE_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.SEQ.D Fs,Ft
   case 0x3a: {
+    setupCallf();
     callf(&CPU::FC_SEQ_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.NGL.D Fs,Ft
   case 0x3b: {
+    setupCallf();
     callf(&CPU::FC_NGL_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.LT.D Fs,Ft
   case 0x3c: {
+    setupCallf();
     callf(&CPU::FC_LT_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.NGE.D Fs,Ft
   case 0x3d: {
+    setupCallf();
     callf(&CPU::FC_NGE_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.LE.D Fs,Ft
   case 0x3e: {
+    setupCallf();
     callf(&CPU::FC_LE_D, imm(Fsn), imm(Ftn));
     return 0;
   }
 
   //FC.NGT.D Fs,Ft
   case 0x3f: {
+    setupCallf();
     callf(&CPU::FC_NGT_D, imm(Fsn), imm(Ftn));
     return 0;
   }
@@ -2845,23 +2997,27 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   if((instruction >> 21 & 31) == 20)
   switch(instruction & 0x3f) {
   case range8(0x08, 0x0f): {
+    setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
 
   case range2(0x24, 0x25): {
+    setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
 
   //FCVT.S.W Fd,Fs
   case 0x20: {
+    setupCallf();
     callf(&CPU::FCVT_S_W, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.D.W Fd,Fs
   case 0x21: {
+    setupCallf();
     callf(&CPU::FCVT_D_W, imm(Fdn), imm(Fsn));
     return 0;
   }
@@ -2871,22 +3027,26 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   if((instruction >> 21 & 31) == 21)
   switch(instruction & 0x3f) {
   case range8(0x08, 0x0f): {
+    setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
   case range2(0x24, 0x25): {
+    setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
 
   //FCVT.S.L
   case 0x20: {
+    setupCallf();
     callf(&CPU::FCVT_S_L, imm(Fdn), imm(Fsn));
     return 0;
   }
 
   //FCVT.D.L
   case 0x21: {
+    setupCallf();
     callf(&CPU::FCVT_D_L, imm(Fdn), imm(Fsn));
     return 0;
   }
@@ -2901,6 +3061,7 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
 
   //MFC2 Rt,Rd
   case 0x00: {
+    setupCallf();
     callf(&CPU::MFC2, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
     return 0;
@@ -2908,6 +3069,7 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
 
   //DMFC2 Rt,Rd
   case 0x01: {
+    setupCallf();
     callf(&CPU::DMFC2, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
     return 0;
@@ -2915,6 +3077,7 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
 
   //CFC2 Rt,Rd
   case 0x02: {
+    setupCallf();
     callf(&CPU::CFC2, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
     return 0;
@@ -2922,30 +3085,35 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
 
   //INVALID
   case 0x03: {
+    setupCallf();
     callf(&CPU::COP2INVALID);
     return 1;
   }
 
   //MTC0 Rt,Rd
   case 0x04: {
+    setupCallf();
     callf(&CPU::MTC2, mem(Rt), imm(Rdn));
     return 0;
   }
 
   //DMTC2 Rt,Rd
   case 0x05: {
+    setupCallf();
     callf(&CPU::DMTC2, mem(Rt), imm(Rdn));
     return 0;
   }
 
   //CTC2 Rt,Rd
   case 0x06: {
+    setupCallf();
     callf(&CPU::CTC2, mem(Rt), imm(Rdn));
     return 0;
   }
 
   //INVALID
   case range9(0x07, 0x0f): {
+    setupCallf();
     callf(&CPU::COP2INVALID);
     return 1;
   }
