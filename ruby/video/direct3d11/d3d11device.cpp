@@ -349,14 +349,16 @@ auto D3D11Device::render(u32 width, u32 height,  u32 windowWidth, u32 windowHeig
   _pDeviceContext->DrawIndexed(6, 0, 0);
 
   // Apply Shader
-  libra_viewport_t viewport = {};
-  viewport.x = offsetX;
-  viewport.y = offsetY;
-  viewport.width = width;
-  viewport.height = height;
-  if(auto error =_libra.d3d11_filter_chain_frame(&_filterChain,  _pDeviceContext.Get(), _frameCount, _pShaderResourceView.Get(),
-                                                _pRenderTargetView.Get(), &viewport, nullptr, nullptr)) {
-    _libra.error_print(error);
+  if(_shader != "" && _filterChain != nullptr) {
+    libra_viewport_t viewport = {};
+    viewport.x = offsetX;
+    viewport.y = offsetY;
+    viewport.width = width;
+    viewport.height = height;
+    if(auto error =_libra.d3d11_filter_chain_frame(&_filterChain,  _pDeviceContext.Get(), _frameCount, _pShaderResourceView.Get(),
+                                                  _pRenderTargetView.Get(), &viewport, nullptr, nullptr)) {
+      _libra.error_print(error);
+    }
   }
 
   // Present
