@@ -9,18 +9,25 @@ auto D3D11Device::initialize(HWND context, bool blocking) -> bool {
   _libra = librashader_load_instance();
   if(!_libra.instance_loaded) {
     print("D3D11: Failed to load librashader: shaders will be disabled\n");
+  } else {
+    setShader(_shader);
   }
 
-    return true;
+  return true;
 }
 
 auto D3D11Device::shutdown(void) -> void {
+  if(_filterChain != nullptr) _libra.d3d11_filter_chain_free(&_filterChain);
+  if(_shaderPreset != nullptr) _libra.preset_free(&_shaderPreset);
+  clearRenderTarget(true);
   resetRenderTargetView();
-  if(_pDeviceContext) { 
+  if(_pSwapChain1) _pSwapChain1.Reset();
+  if(_pDeviceContext) {
     _pDeviceContext->ClearState(); 
     _pDeviceContext->Flush();
+    _pDeviceContext.Reset();
   }
-  if(_pSwapChain1) _pSwapChain1->SetFullscreenState(false, nullptr);
+  if(_pDevice) _pDevice.Reset();
 }
 
 auto D3D11Device::createDeviceAndSwapChain(HWND context, bool blocking) -> bool {
@@ -43,6 +50,9 @@ auto D3D11Device::createDeviceAndSwapChain(HWND context, bool blocking) -> bool 
   _pDevice.As(&dxgiDevice);
   ComPtr<IDXGIAdapter> dxgiAdapter;
   dxgiDevice->GetAdapter(&dxgiAdapter);
+  DXGI_ADAPTER_DESC adapterDesc;
+  dxgiAdapter->GetDesc(&adapterDesc);
+  print("Direct3D11 Graphics Device: ", (const char*)utf8_t(adapterDesc.Description), ", VRAM: ", adapterDesc.DedicatedVideoMemory, "\n");
   dxgiAdapter->GetParent(IID_PPV_ARGS(&_dxgiFactory2));
   if(_dxgiFactory2) {
     // Check runtime support for allowing tearing (variable refresh / uncapped presents)
@@ -97,6 +107,11 @@ auto D3D11Device::createRenderTarget(void) -> bool {
   }
   
  return true;
+}
+
+auto D3D11Device::resetRenderTargetView(void) -> void { 
+  if(_pRenderTargetView) _pRenderTargetView.Reset(); 
+  if(_pDeviceContext) _pDeviceContext->OMSetRenderTargets(0, nullptr, nullptr); 
 }
 
 auto D3D11Device::compileShaders(void) -> bool {
@@ -289,11 +304,12 @@ auto D3D11Device::render(u32 width, u32 height,  u32 windowWidth, u32 windowHeig
   u32 offsetY = (windowHeight > height) ? ((windowHeight - height) / 2) : 0;
   u32 bufferWidth = width + offsetX, bufferHeight = height + offsetY;
 
-  DXGI_SWAP_CHAIN_DESC1 sd1 = {};
   if(!_pSwapChain1) {
     clearRenderTarget(true);
     return;
   }
+
+  DXGI_SWAP_CHAIN_DESC1 sd1 = {};
   _pSwapChain1->GetDesc1(&sd1);
   if(sd1.Width != bufferWidth || sd1.Height != bufferHeight) {
     clearRenderTarget(false);
@@ -332,34 +348,57 @@ auto D3D11Device::render(u32 width, u32 height,  u32 windowWidth, u32 windowHeig
   // Draw
   _pDeviceContext->DrawIndexed(6, 0, 0);
 
+  // Apply Shader
+  libra_viewport_t viewport = {};
+  viewport.x = offsetX;
+  viewport.y = offsetY;
+  viewport.width = width;
+  viewport.height = height;
+  if(auto error =_libra.d3d11_filter_chain_frame(&_filterChain,  _pDeviceContext.Get(), _frameCount, _pShaderResourceView.Get(),
+                                                _pRenderTargetView.Get(), &viewport, nullptr, nullptr)) {
+    _libra.error_print(error);
+  }
+
   // Present
   DXGI_PRESENT_PARAMETERS pp = { 0 };
   u32 flags = 0;
   if(!_vsyncEnabled) flags = sd1.Flags & DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING ? DXGI_PRESENT_ALLOW_TEARING : 0;
   _pSwapChain1->Present1(_vsyncEnabled ? 1 : 0, flags, &pp);
+  _frameCount++;
 }
 
 auto D3D11Device::setShader(const string& pathname) -> void {
-  if(_chain != NULL) {
-    _libra.d3d11_filter_chain_free(&_chain);
+  if(_filterChain != NULL) {
+    _libra.d3d11_filter_chain_free(&_filterChain);
   }
 
-  if(_preset != NULL) {
-    _libra.preset_free(&_preset);
+  if(_shaderPreset != NULL) {
+    _libra.preset_free(&_shaderPreset);
   }
 
   if(file::exists(pathname)) {
-    if(_libra.preset_create(pathname.data(), &_preset) != NULL) {
+    if(_libra.preset_create(pathname.data(), &_shaderPreset) != NULL) {
       print(string{"D3D11Device: Failed to load shader: ", pathname, "\n"});
       setShader("");
       return;
     }
-    /*
-    if(auto error = _libra.d3d11_filter_chain_create(&_preset, resolveSymbol, NULL, &_chain)) {
+
+    _shader = pathname;
+    string shaderName = Location::file(_shader);
+    print("Applying shader: ", slice(shaderName, 0, shaderName.length() - 7), "\n");
+    if(_libra.preset_create(pathname.data(), &_shaderPreset) != nullptr) {
+      print(string{"D3D11Device: Failed to load shader: ", pathname, "\n"});
+      setShader("");
+      return;
+    }
+    
+    if(auto error = _libra.d3d11_filter_chain_create(&_shaderPreset, _pDevice.Get(), nullptr, &_filterChain)) {
       print(string{"D3D11Device: Failed to create filter chain for: ", pathname, "\n"});
       _libra.error_print(error);
       setShader("");
       return;
-    }*/
+    }
+  } else {
+    _shader = "";
   }
 }

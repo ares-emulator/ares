@@ -20,13 +20,13 @@ struct VideoDirect3D11 : VideoDriver {
   auto hasMonitor() -> bool override { return true; }
   auto hasContext() -> bool override { return true; }
   auto hasBlocking() -> bool override { return true; }
-  auto hasShader() -> bool override { return false; }
+  auto hasShader() -> bool override { return true; }
 
   auto setFullScreen(bool fullScreen) -> bool override { return initialize(); }
   auto setMonitor(string monitor) -> bool override { return initialize(); }
   auto setContext(uintptr context) -> bool override { return initialize(); }
   auto setBlocking(bool blocking) -> bool override { _blocking = blocking; return initialize(); }
-  auto setShader(string shader) -> bool override { return updateFilter(); }
+  auto setShader(string shader) -> bool override { return updateFilter(shader); }
 
   auto focused() -> bool override {
     if(self.fullScreen && self.exclusive) return true;
@@ -86,12 +86,10 @@ private:
     _device = std::make_unique<D3D11Device>();
   }
 
-  auto updateFilter() -> bool {
+  auto updateFilter(string shader) -> bool {
     if(!_device) return false;
    
-    //acquireContext();
-    _device->setShader(self.shader);
-    //releaseContext();
+    _device->setShader(shader);
     return true;
   }
     
