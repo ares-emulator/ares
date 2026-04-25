@@ -95,9 +95,7 @@ struct CPU : Thread {
       Privileged    = 1 << 13,
       IsInvalid     = 1 << 14,
       JitUseCallf   = 1 << 15,
-      JitMustFlushBeforeCall = 1 << 16,
-      JitAddsExtraCyclesInternally = 1 << 17,
-      JitStateKeyMayChange = 1 << 18,
+      JitStateKeyMayChange = 1 << 16,
     };
 
     u32 flags = 0;
@@ -112,8 +110,6 @@ struct CPU : Thread {
     auto store() const -> bool { return flags & Store; }
     auto memory() const -> bool { return flags & (Load | Store); }
     auto jitUseCallf() const -> bool { return flags & JitUseCallf; }
-    auto jitMustFlushBeforeCall() const -> bool { return flags & JitMustFlushBeforeCall; }
-    auto jitAddsExtraCyclesInternally() const -> bool { return flags & JitAddsExtraCyclesInternally; }
     auto jitStateKeyMayChange() const -> bool { return flags & JitStateKeyMayChange; }
   };
 
@@ -1079,8 +1075,12 @@ struct CPU : Thread {
       u64 vaddr = 0;
       u32 deferredCycles = 0;
       u32 deferredNextPc = 0;
+      u32 instructionCycles = 0;
       bool needCurrentPc = false;
       bool needsStateMachinery = false;
+      bool needsPipelinePc = false;
+      bool commitIpuPc = false;
+      bool jumpEpilog = false;
       bool icacheMiss = false;
       u32 icachePaddr = 0;
     };

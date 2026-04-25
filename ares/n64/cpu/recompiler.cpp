@@ -383,6 +383,18 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   };
   BranchLinks links;
   bool branchLinksValid = false;
+  auto bindSlowPaths = [&](size_t first, sljit_label* resume, u32 deferredCycles, bool needsPipelinePc,
+    bool commitIpuPc, bool jumpEpilog) -> void {
+    for(auto n = first; n < slowPaths.size(); n++) {
+      auto& slow = slowPaths[n];
+      if(slow.icacheMiss) continue;
+      slow.resume = resume;
+      slow.instructionCycles = deferredCycles - slow.deferredCycles;
+      slow.needsPipelinePc = needsPipelinePc;
+      slow.commitIpuPc = commitIpuPc;
+      slow.jumpEpilog = jumpEpilog;
+    }
+  };
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
     OpInfo info = self.decoderEXECUTEInfo(instruction);
@@ -428,18 +440,15 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       }
       deferSlowPathCacheMiss(icacheMiss, address);
     }
-    if(info.jitMustFlushBeforeCall() || info.jitAddsExtraCyclesInternally()) {
-      if(emitDeferredCycles && !needCurrentPc) mov64(mem(IpuReg(pc)), imm(vaddr));
-      flushDeferredCycles();
-    }
+    auto slowPathStart = slowPaths.size();
     numInsn++;
     bool branched = emitEXECUTE(instruction, false);
     if(branched) links = directBranchLinkAddress(vaddr, instruction);
+    u32 instructionCycles = 1 * 2;
     if(unlikely(instruction == branchToSelf || instruction == jumpToSelf)) {
-      emitDeferredCycles += 64 * 2;
-    } else {
-      emitDeferredCycles += 1 * 2;
+      instructionCycles = 64 * 2;
     }
+    emitDeferredCycles += instructionCycles;
     bool emittedCallf = emitCallfEmitted;
     if(hasBranched || info.branch() || emittedCallf) flushDeferredCycles();
     bool needsStatePost = needsStateMachinery || emittedCallf;
@@ -458,10 +467,18 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     if(delaySlotLinkEligible && safeDelaySlotLink) branchLinksValid = true;
     if(terminal) {
       if(!hasBranched && needsStatePost) jumpEpilog(flag_nz);
+      if(slowPaths.size() != slowPathStart) {
+        auto resume = sljit_emit_label(compiler);
+        bindSlowPaths(slowPathStart, resume, emitDeferredCycles, needsPipelinePc, commitIpuPc, !hasBranched);
+      }
       break;
     }
     hasBranched = branched;
     if(needsStatePost) jumpEpilog(flag_nz);
+    if(slowPaths.size() != slowPathStart) {
+      auto resume = sljit_emit_label(compiler);
+      bindSlowPaths(slowPathStart, resume, emitDeferredCycles, needsPipelinePc, commitIpuPc, true);
+    }
   }
 
   flushDeferredNextPc();
@@ -506,6 +523,12 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       mov128(IcacheLineWordsMem(lineIndex, 0x10), mem(reg(1), sljit_sw(ramByteOff + 0x10)));
     } else {
       emitEXECUTE(slow.instruction, true);
+      emitDeferredCycles += slow.instructionCycles;
+      flushDeferredCycles();
+      test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
+      mov32(PipelineReg(state), PipelineReg(nstate));
+      if(slow.commitIpuPc && slow.needsPipelinePc) mov64(mem(IpuReg(pc)), PipelineReg(pc));
+      if(slow.jumpEpilog) jumpEpilog(flag_nz);
     }
     sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
   }
@@ -613,12 +636,10 @@ auto CPU::Recompiler::deferSlowPath(sljit_jump* enter, u32 instruction) -> void 
 }
 
 auto CPU::Recompiler::deferSlowPath(std::initializer_list<sljit_jump*> enters, u32 instruction) -> void {
-  emitCallfEmitted = true;
   auto& slow = slowPaths.emplace_back();
   for(auto enter : enters) {
     if(enter) slow.enters.push_back(enter);
   }
-  slow.resume = sljit_emit_label(compiler);
   slow.instruction = instruction;
   slow.icacheMiss = false;
   slow.vaddr = emitVaddr;
@@ -629,7 +650,6 @@ auto CPU::Recompiler::deferSlowPath(std::initializer_list<sljit_jump*> enters, u
 }
 
 auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> void {
-  emitCallfEmitted = true;
   auto& slow = slowPaths.emplace_back();
   slow.enters.push_back(enter);
   slow.resume = sljit_emit_label(compiler);
