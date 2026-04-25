@@ -1124,6 +1124,8 @@ struct CPU : Thread {
     auto deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> void;
     auto emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction = false) -> Block*;
     auto emitZeroClear(u32 n) -> void;
+    auto jitLoadOpcode(u32 instruction, u32 size, bool sign, bool require64,
+      void (CPU::*interpreter)(r64&, cr64&, s16), bool emitSlowPath) -> void;
     auto emitEXECUTE(u32 instruction, bool emitSlowPath = false) -> bool;
     auto emitSPECIAL(u32 instruction) -> bool;
     auto emitREGIMM(u32 instruction) -> bool;

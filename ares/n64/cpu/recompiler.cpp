@@ -618,6 +618,99 @@ auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> vo
   slow.needsStateMachinery = emitNeedsStateMachinery;
 }
 
+auto CPU::Recompiler::jitLoadOpcode(u32 instruction, u32 size, bool sign, bool require64,
+  void (CPU::*interpreter)(r64&, cr64&, s16), bool emitSlowPath) -> void {
+  if(emitSlowPath || emitSingleInstruction || (require64 && reservedInstruction64())) {
+    setupCallf();
+    callf(interpreter, mem(Rt), mem(Rs), imm(i16));
+    emitZeroClear(Rtn);
+    return;
+  }
+
+  // The state key lets us specialize the virtual address checks for the current address width.
+  auto extendedAddressing = [&] {
+    if(emitStateKey.exceptionLevel() || emitStateKey.errorLevel()) return emitStateKey.kernelExtendedAddressing();
+    auto privilegeMode = emitStateKey.privilegeMode();
+    if(privilegeMode == 1) return emitStateKey.supervisorExtendedAddressing();
+    if(privilegeMode >= 2) return emitStateKey.userExtendedAddressing();
+    return emitStateKey.kernelExtendedAddressing();
+  }();
+
+  // Compute the virtual address and reject anything outside cached RDRAM, or not 32-bit sign-extended.
+  add64(reg(0), mem(Rs), imm(i16));
+  if(extendedAddressing) {
+    sub64(reg(1), reg(0), imm((sljit_sw)0xffff'ffff'8000'0000ull));
+    cmp64(reg(1), imm(0x007f'ffff), set_ugt);
+  } else {
+    mov64_s32(reg(1), reg(0));
+    cmp64(reg(0), reg(1), set_z);
+  }
+  auto addressMismatch = jump(extendedAddressing ? flag_ugt : flag_nz);
+  if(!extendedAddressing) {
+    sub32(reg(1), reg(0), imm((sljit_sw)0x8000'0000u));
+    cmp32(reg(1), imm(0x007f'ffff), set_ugt);
+  }
+  auto addressOutOfRange = !extendedAddressing ? jump(flag_ugt) : nullptr;
+
+  // Hardware raises AdEL before any cache lookup on unaligned loads.
+  sljit_jump* addressUnaligned = nullptr;
+  if(size > Byte) {
+    test32(reg(0), imm(size - 1), set_z);
+    addressUnaligned = jump(flag_nz);
+  }
+
+  // Convert the cached virtual address to an RDRAM physical address and locate its dcache line.
+  and32(reg(0), reg(0), imm(0x007f'ffff));
+  lshr32(reg(1), reg(0), imm(4));
+  and32(reg(1), reg(1), imm(0x1ff));
+  mul64(reg(2), reg(1), imm(CpuDcacheLineBytes));
+  add64(reg(2), reg(2), imm(CpuDcacheLine0Off));
+  add64(reg(2), reg(2), sreg(0));
+
+  // Compare tag and valid bit together; misses fall back to the interpreter to fill/write back.
+  and32(reg(3), reg(0), imm((sljit_sw)0xffff'f000u));
+  or32(reg(3), reg(3), imm(1));
+  cmp32(mem(reg(2), DcacheLineTagKeyOff), reg(3), set_z);
+  auto cacheMiss = jump(flag_nz);
+
+  // Cache hit: account for the hit latency, then read and extend the cached value.
+  emitCpuStep(2);
+  if(system.homebrewMode) {
+    add64(ProfileDcacheHitsMem, ProfileDcacheHitsMem, imm(1));
+  }
+  if(Rtn != 0) {
+    if(size == Byte) {
+      and32(reg(3), reg(0), imm(0x0f));
+      xor32(reg(3), reg(3), imm(3));
+      add64(reg(3), reg(2), reg(3));
+      if(sign) mov64_s8(reg(3), mem(reg(3), DcacheLineWordsOff));
+      else     mov64_u8(reg(3), mem(reg(3), DcacheLineWordsOff));
+    } else if(size == Half) {
+      and32(reg(3), reg(0), imm(0x0e));
+      xor32(reg(3), reg(3), imm(2));
+      add64(reg(3), reg(2), reg(3));
+      if(sign) mov64_s16(reg(3), mem(reg(3), DcacheLineWordsOff));
+      else     mov64_u16(reg(3), mem(reg(3), DcacheLineWordsOff));
+    } else if(size == Word) {
+      and32(reg(3), reg(0), imm(0x0c));
+      add64(reg(3), reg(2), reg(3));
+      if(sign) mov64_s32(reg(3), mem(reg(3), DcacheLineWordsOff));
+      else     mov64_u32(reg(3), mem(reg(3), DcacheLineWordsOff));
+    } else if(size == Dual) {
+      and32(reg(3), reg(0), imm(0x08));
+      add64(reg(3), reg(2), reg(3));
+      mov64_u32(reg(0), mem(reg(3), DcacheLineWordsOff + 0));
+      mov64_u32(reg(1), mem(reg(3), DcacheLineWordsOff + 4));
+      shl64(reg(0), reg(0), imm(32));
+      or64(reg(3), reg(0), reg(1));
+    }
+    mov64(mem(Rt), reg(3));
+  }
+
+  // All failed fast-path guards share one generated slow path and return here afterwards.
+  deferSlowPath({addressMismatch, addressOutOfRange, addressUnaligned, cacheMiss}, instruction);
+}
+
 
 auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   emitSlowPathSection = emitSlowPath;
@@ -922,17 +1015,13 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LB Rt,Rs,i16
   case 0x20: {
-    setupCallf();
-    callf(&CPU::LB, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitLoadOpcode(instruction, Byte, true, false, &CPU::LB, emitSlowPath);
     return 0;
   }
 
   //LH Rt,Rs,i16
   case 0x21: {
-    setupCallf();
-    callf(&CPU::LH, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitLoadOpcode(instruction, Half, true, false, &CPU::LH, emitSlowPath);
     return 0;
   }
 
@@ -945,87 +1034,19 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   }
   //LW Rt,Rs,i16
   case 0x23: {
-    // Slow-path emission and debugger single-step mode must keep using the shared interpreter helper.
-    if(emitSlowPath || emitSingleInstruction) {
-      setupCallf();
-      callf(&CPU::LW, mem(Rt), mem(Rs), imm(i16));
-      emitZeroClear(Rtn);
-      return 0;
-    }
-
-    // The state key lets us specialize the virtual address checks for the current address width.
-    auto extendedAddressing = [&] {
-      if(emitStateKey.exceptionLevel() || emitStateKey.errorLevel()) return emitStateKey.kernelExtendedAddressing();
-      auto privilegeMode = emitStateKey.privilegeMode();
-      if(privilegeMode == 1) return emitStateKey.supervisorExtendedAddressing();
-      if(privilegeMode >= 2) return emitStateKey.userExtendedAddressing();
-      return emitStateKey.kernelExtendedAddressing();
-    }();
-
-    // Compute the virtual address and reject anything outside cached RDRAM, or not 32-bit sign-extended.
-    add64(reg(0), mem(Rs), imm(i16));
-    if(extendedAddressing) {
-      sub64(reg(1), reg(0), imm((sljit_sw)0xffff'ffff'8000'0000ull));
-      cmp64(reg(1), imm(0x007f'ffff), set_ugt);
-    } else {
-      mov64_s32(reg(1), reg(0));
-      cmp64(reg(0), reg(1), set_z);
-    }
-    auto addressMismatch = jump(extendedAddressing ? flag_ugt : flag_nz);
-    if(!extendedAddressing) {
-      sub32(reg(1), reg(0), imm((sljit_sw)0x8000'0000u));
-      cmp32(reg(1), imm(0x007f'ffff), set_ugt);
-    }
-    auto addressOutOfRange = !extendedAddressing ? jump(flag_ugt) : nullptr;
-
-    // Hardware raises AdEL before any cache lookup on unaligned LW.
-    test32(reg(0), imm(3), set_z);
-    auto addressUnaligned = jump(flag_nz);
-
-    // Convert the cached virtual address to an RDRAM physical address and locate its dcache line.
-    and32(reg(0), reg(0), imm(0x007f'ffff));
-    lshr32(reg(1), reg(0), imm(4));
-    and32(reg(1), reg(1), imm(0x1ff));
-    mul64(reg(2), reg(1), imm(CpuDcacheLineBytes));
-    add64(reg(2), reg(2), imm(CpuDcacheLine0Off));
-    add64(reg(2), reg(2), sreg(0));
-
-    // Compare tag and valid bit together; misses fall back to the interpreter to fill/write back.
-    and32(reg(3), reg(0), imm((sljit_sw)0xffff'f000u));
-    or32(reg(3), reg(3), imm(1));
-    cmp32(mem(reg(2), DcacheLineTagKeyOff), reg(3), set_z);
-    auto cacheMiss = jump(flag_nz);
-
-    // Cache hit: account for the hit latency, then read and sign-extend the cached word.
-    emitCpuStep(2);
-    if(system.homebrewMode) {
-      add64(ProfileDcacheHitsMem, ProfileDcacheHitsMem, imm(1));
-    }
-    if(Rtn != 0) {
-      and32(reg(3), reg(0), imm(0x0c));
-      add64(reg(3), reg(2), reg(3));
-      mov64_s32(reg(3), mem(reg(3), DcacheLineWordsOff));
-      mov64(mem(Rt), reg(3));
-    }
-
-    // All failed fast-path guards share one generated slow path and return here afterwards.
-    deferSlowPath({addressMismatch, addressOutOfRange, addressUnaligned, cacheMiss}, instruction);
+    jitLoadOpcode(instruction, Word, true, false, &CPU::LW, emitSlowPath);
     return 0;
   }
 
   //LBU Rt,Rs,i16
   case 0x24: {
-    setupCallf();
-    callf(&CPU::LBU, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitLoadOpcode(instruction, Byte, false, false, &CPU::LBU, emitSlowPath);
     return 0;
   }
 
   //LHU Rt,Rs,i16
   case 0x25: {
-    setupCallf();
-    callf(&CPU::LHU, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitLoadOpcode(instruction, Half, false, false, &CPU::LHU, emitSlowPath);
     return 0;
   }
 
@@ -1039,9 +1060,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LWU Rt,Rs,i16
   case 0x27: {
-    setupCallf();
-    callf(&CPU::LWU, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitLoadOpcode(instruction, Word, false, false, &CPU::LWU, emitSlowPath);
     return 0;
   }
 
@@ -1154,9 +1173,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //LD Rt,Rs,i16
   case 0x37: {
-    setupCallf();
-    callf(&CPU::LD, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitLoadOpcode(instruction, Dual, false, true, &CPU::LD, emitSlowPath);
     return 0;
   }
 
