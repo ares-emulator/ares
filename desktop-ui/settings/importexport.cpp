@@ -1,7 +1,7 @@
 auto ImportExportSettings::construct() -> void {
   setCollapsible();
   useImported.setText("Set Imported File As Current Settings File");
-  useImported.setChecked(settings.video.colorBleed).onToggle([&] { imported = useImported.checked(); });
+  useImported.setChecked(false).onToggle([&] { imported = useImported.checked(); });
   refresh();
 
   importButton.setText("Import" ELLIPSIS).onActivate([&] {

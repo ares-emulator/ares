@@ -15,6 +15,7 @@ auto toSignedOrHex(u32 value, bool decimal) -> string {
 
 auto RSP::XDETECT(r32& rd, u32 code) -> void {
   if(!system.homebrewMode) return;
+  if(&rd == &ipu.r[0]) return;
   n64 detect = 0;
   n64 ioctl = 0;
   detect.bit(0x20) = 1;  // XDETECT
@@ -40,14 +41,14 @@ auto RSP::XDETECT(r32& rd, u32 code) -> void {
 
 auto RSP::XTRACESTART(u32 code) -> void {
   if(!system.homebrewMode) return;
-  debugger.tracer.instruction->setEnabled(true);
+  if(!debugger.tracer.instruction->enabled()) debugger.tracer.instruction->setEnabled(true);
   debugger.tracer.instructionCountdown = code;
   debugger.tracer.traceStartCycle = pipeline.clocksTotal / 3;
 }
 
 auto RSP::XTRACESTOP() -> void {
   if(!system.homebrewMode) return;
-  debugger.tracer.instruction->setEnabled(false);
+  if(debugger.tracer.instruction->enabled()) debugger.tracer.instruction->setEnabled(false);
 }
 
 auto RSP::XLOG(cr32& rd, cr32& rt, u32 code) -> void {
@@ -212,7 +213,7 @@ auto RSP::XPROFREAD(cr32& rd, r32& rt) -> void {
   slot.s64 = s32(rd.u32);
   metric.u64 = rt.u32;
   cpu.XPROFREAD(slot, metric);
-  rt.u32 = metric.u64;
+  if(&rt != &ipu.r[0]) rt.u32 = metric.u64;
 }
 
 auto RSP::XEXCEPTION(cr32& rt) -> void {

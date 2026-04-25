@@ -21,13 +21,7 @@ auto RSP::Debugger::load(Node::Object parent) -> void {
 
   tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "RSP");
   tracer.instruction->setAddressBits(12, 2);
-  tracer.instruction->setDepth(64);
-  if constexpr(Accuracy::RSP::Recompiler) {
-    tracer.instruction->setToggle([&] {
-      rsp.recompiler.reset();
-      rsp.recompiler.callInstructionPrologue = tracer.instruction->enabled();
-    });
-  }
+  tracer.instruction->setDepth(0);
 
   tracer.emux = parent->append<Node::Debugger::Tracer::Notification>("EMUX", "RSP");
   tracer.emux->setAutoLineBreak(false);

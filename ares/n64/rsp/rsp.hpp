@@ -10,25 +10,60 @@ struct RSP : Thread, Memory::RCP<RSP> {
     template<u32 Size>
     auto read(u32 address) -> u64 {
       if (system.homebrewMode) self.debugger.dmemReadWord(address, Size, "RSP");
-      return Memory::Writable::read<Size>(address);
+      if constexpr(Size == Byte) return        (*(u8* )&data[address & maskByte]);
+      if constexpr(Size == Half) return bswap16(*(u16*)&data[address & maskHalf]);
+      if constexpr(Size == Word) return bswap32(*(u32*)&data[address & maskWord]);
+      if constexpr(Size == Dual) return bswap64(*(u64*)&data[address & maskDual]);
+      unreachable;
     }
 
     template<u32 Size>
     auto readUnaligned(u32 address) -> u64 {
       if (system.homebrewMode) self.debugger.dmemReadUnalignedWord(address, Size, "RSP");
-      return Memory::Writable::readUnaligned<Size>(address);
+      static_assert(Size == Half || Size == Word || Size == Dual);
+      if constexpr(Size == Half) {
+        u16 upper = read<Byte>(address + 0);
+        u16 lower = read<Byte>(address + 1);
+        return upper << 8 | lower;
+      }
+      if constexpr(Size == Word) {
+        u32 upper = readUnaligned<Half>(address + 0);
+        u32 lower = readUnaligned<Half>(address + 2);
+        return upper << 16 | lower;
+      }
+      if constexpr(Size == Dual) {
+        u64 upper = readUnaligned<Word>(address + 0);
+        u64 lower = readUnaligned<Word>(address + 4);
+        return upper << 32 | lower;
+      }
+      unreachable;
     }
 
     template<u32 Size>
     auto write(u32 address, u64 value) -> void {
       if (system.homebrewMode) self.debugger.dmemWriteWord(address, Size, value);
-      Memory::Writable::write<Size>(address, value);
+      if constexpr(Size == Byte) *(u8* )&data[address & maskByte] =        (value);
+      if constexpr(Size == Half) *(u16*)&data[address & maskHalf] = bswap16(value);
+      if constexpr(Size == Word) *(u32*)&data[address & maskWord] = bswap32(value);
+      if constexpr(Size == Dual) *(u64*)&data[address & maskDual] = bswap64(value);
     }
     
     template<u32 Size>
     auto writeUnaligned(u32 address, u64 value) -> void {
       if (system.homebrewMode) self.debugger.dmemWriteUnalignedWord(address, Size, value);
-      Memory::Writable::writeUnaligned<Size>(address, value);
+      static_assert(Size == Half || Size == Word || Size == Dual);
+      if constexpr(Size == Half) {
+        write<Byte>(address + 0, value >> 8);
+        write<Byte>(address + 1, value >> 0);
+      }
+      if constexpr(Size == Word) {
+        writeUnaligned<Half>(address + 0, value >> 16);
+        writeUnaligned<Half>(address + 2, value >> 0);
+      }
+      if constexpr(Size == Dual) {
+        writeUnaligned<Word>(address + 0, value >> 32);
+        writeUnaligned<Word>(address + 4, value >> 0);
+      }
     }
 
   } dmem{*this};
@@ -82,6 +117,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
   auto instruction() -> void;
   auto instructionPrologue(u32 instruction) -> void;
+  auto instructionBranchEpilogue() -> s32;
   template<bool Recompiled> auto instructionEpilogue(u32 clocks) -> s32;
 
   auto power(bool reset) -> void;
@@ -94,6 +130,9 @@ struct RSP : Thread, Memory::RCP<RSP> {
       Vector    = 1 << 3,
       VNopGroup = 1 << 4,  //dual issue conflicts with VNOP
       Bypass    = 1 << 5,
+      UsesDmem  = 1 << 6,
+      MayHalt   = 1 << 7,
+      EndBlock  = 1 << 8,
     };
 
     u32 flags;
@@ -107,6 +146,9 @@ struct RSP : Thread, Memory::RCP<RSP> {
     auto branch() const -> bool { return flags & Branch; }
     auto vector() const -> bool { return flags & Vector; }
     auto bypass() const -> bool { return flags & Bypass; }
+    auto usesDmem() const -> bool { return flags & UsesDmem; }
+    auto mayHalt() const -> bool { return flags & MayHalt; }
+    auto endBlock() const -> bool { return flags & EndBlock; }
   };
 
   static auto canDualIssue(const OpInfo& op0, const OpInfo& op1) -> bool {
@@ -290,19 +332,26 @@ struct RSP : Thread, Memory::RCP<RSP> {
     };
 
     r32 r[32];
-    u16 pc; // previously u12; now u16 for performance.
+    u32 pc;
   } ipu;
 
   struct Branch {
-    enum : u32 { Step, Take, DelaySlot };
+    enum : u32 {
+      EndBlock  = 1 << 0,
+      DelaySlot = 1 << 1,
+    };
 
-    auto inDelaySlot() const -> bool { return state == DelaySlot; }
-    auto reset() -> void { state = Step; }
-    auto take(u12 address) -> void { state = Take; pc = address; }
-    auto delaySlot() -> void { state = DelaySlot; }
+    auto inDelaySlot() const -> bool { return state & DelaySlot; }
+    auto setPc(u12 address) -> void { pc = u12(address); nextpc = u12(address + 4); state = nstate = 0; }
+    auto reset() -> void { setPc(0); }
+    auto begin() -> void { nstate = 0; pc = u12(nextpc); nextpc = u12(pc + 4); }
+    auto end() -> void { state = nstate; }
+    auto take(u12 address) -> void { nextpc = u12(address); nstate |= DelaySlot | EndBlock; }
 
-    u12 pc = 0;
-    u32 state = Step;
+    u32 pc = 0;
+    u32 nextpc = 4;
+    u32 state = 0;
+    u32 nstate = 0;
   } branch;
 
   //cpu-instructions.cpp
@@ -415,29 +464,49 @@ struct RSP : Thread, Memory::RCP<RSP> {
   template<u8 e> auto LBV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LDV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LFV(r128& vt, cr32& rs, s8 imm) -> void;
+  auto fastLFV(r128& vt, u8 const* target, u32 code) -> void;
   template<u8 e> auto LHV(r128& vt, cr32& rs, s8 imm) -> void;
+  auto fastLHV(r128& vt, u8 const* target, u32 index) -> void;
   template<u8 e> auto LLV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LPV(r128& vt, cr32& rs, s8 imm) -> void;
+  auto fastLPV(r128& vt, u8 const* target, u32 index) -> void;
+  auto fastLPV0Simd(r128& vt, u8 const* source) -> void;
   template<u8 e> auto LQV(r128& vt, cr32& rs, s8 imm) -> void;
+  auto fastLQVTable(u32 size, u8* target, u8* source) -> void;
+  auto fastLQV0Simd(r128& vt, u8* source) -> void;
   template<u8 e> auto LRV(r128& vt, cr32& rs, s8 imm) -> void;
+  auto fastLRV(r128& vt, u8* source, u32 size) -> void;
   template<u8 e> auto LSV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto LTV(u8 vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto fastLTV(r128* vtbase, u32 address) -> void;
   template<u8 e> auto LUV(r128& vt, cr32& rs, s8 imm) -> void;
+  auto fastLUV(r128& vt, u8 const* target, u32 index) -> void;
+  auto fastLUV0Simd(r128& vt, u8 const* source) -> void;
   template<u8 e> auto LWV(r128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto MFC2(r32& rt, cr128& vs) -> void;
   template<u8 e> auto MTC2(cr32& rt, r128& vs) -> void;
   template<u8 e> auto SBV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto SDV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto SFV(cr128& vt, cr32& rs, s8 imm) -> void;
+  auto fastSFV(cr128& vt, u8* target, u32 code) -> void;
   template<u8 e> auto SHV(cr128& vt, cr32& rs, s8 imm) -> void;
+  auto fastSHV(cr128& vt, u8* target, u32 code) -> void;
   template<u8 e> auto SLV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto SPV(cr128& vt, cr32& rs, s8 imm) -> void;
+  auto fastSPV0Simd(cr128& vt, u8* target) -> void;
   template<u8 e> auto SQV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto fastSQV(cr128& vt, u32 address) -> void;
+  auto fastSQVTable(u32 size, u8* target, u8 const* source) -> void;
+  auto fastSQV0Simd(u8 const* source, u8* target) -> void;
   template<u8 e> auto SRV(cr128& vt, cr32& rs, s8 imm) -> void;
+  auto fastSRV(cr128& vt, u8* target, u32 code) -> void;
   template<u8 e> auto SSV(cr128& vt, cr32& rs, s8 imm) -> void;
   template<u8 e> auto STV(u8 vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto fastSTV(r128* vtbase, u32 address) -> void;
   template<u8 e> auto SUV(cr128& vt, cr32& rs, s8 imm) -> void;
+  auto fastSUV(cr128& vt, u8* target, u8 const* source) -> void;
   template<u8 e> auto SWV(cr128& vt, cr32& rs, s8 imm) -> void;
+  auto fastSWV(cr128& vt, u8* target, u32 code) -> void;
   template<u8 e> auto VABS(r128& vd, cr128& vs, cr128& vt) -> void;
   template<u8 e> auto VADD(r128& vd, cr128& vs, cr128& vt) -> void;
   template<u8 e> auto VADDC(r128& vd, cr128& vs, cr128& vt) -> void;
@@ -533,7 +602,10 @@ struct RSP : Thread, Memory::RCP<RSP> {
   //recompiler.cpp
   struct Recompiler : recompiler::generic {
     RSP& self;
-    Recompiler(RSP& self) : self(self), generic(allocator) {}
+    Recompiler(RSP& self) : self(self), generic(allocator) {
+      haltSlowPaths.reserve(256);
+      slowPaths.reserve(256);
+    }
 
     struct Block {
       auto execute(RSP& self) -> void {
@@ -555,6 +627,20 @@ struct RSP : Thread, Memory::RCP<RSP> {
       u64 hashcode;
     };
 
+    struct SlowPath {
+      sljit_jump* enter = nullptr;
+      sljit_label* resume = nullptr;
+      u32 instruction = 0;
+      u32 pc = 0;
+      bool delaySlot = 0;
+      u32 clocks = 0;
+    };
+
+    struct HaltSlowPath {
+      sljit_jump* enter = nullptr;
+      u32 clocks = 0;
+    };
+
     auto reset() -> void {
       context.fill();
       blocks.reset();
@@ -570,16 +656,14 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
     auto block(u12 address) -> Block*;
 
-    auto emit(u12 address) -> Block*;
-    auto emitEXECUTE(u32 instruction) -> bool;
-    auto emitSPECIAL(u32 instruction) -> bool;
-    auto emitREGIMM(u32 instruction) -> bool;
-    auto emitSCC(u32 instruction) -> bool;
-    auto emitVU(u32 instruction) -> bool;
-    auto emitLWC2(u32 instruction) -> bool;
-    auto emitSWC2(u32 instruction) -> bool;
-
-    auto isTerminal(u32 instruction) -> bool;
+    auto emit(u12 address, bool callInstructionPrologue) -> Block*;
+    auto emitEXECUTE(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> void;
+    auto emitSPECIAL(u32 instruction, u32 pc, bool delaySlot) -> void;
+    auto emitREGIMM(u32 instruction, u32 pc, bool delaySlot) -> void;
+    auto emitSCC(u32 instruction) -> void;
+    auto emitVU(u32 instruction) -> void;
+    auto emitLWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> void;
+    auto emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emitSlowPath, u32 slowPathClocks) -> void;
 
     static auto mask(u12 address, u12 size) -> u64 {
       //1 bit per 64 bytes
@@ -592,12 +676,43 @@ struct RSP : Thread, Memory::RCP<RSP> {
     }
 
     bool enabled = false;
-    bool callInstructionPrologue = false;
     Pipeline pipeline;
     bump_allocator allocator;
-    array<Block*[1024]> context;
+    array<Block*[2048]> context;
     hashset<BlockHashPair> blocks;
     u64 dirty;
+    u32 slowPathFlushedClocks = 0;
+    struct ConstRegs {
+      u32 mask;
+      array<u32[32]> value;
+
+      auto reset() -> void {
+        mask = 1;
+        for(auto& value : value) value = 0;
+      }
+
+      auto set(u32 index, u32 value) -> void {
+        mask |= 1u << index;
+        this->value[index] = value;
+      }
+
+      auto clear(u32 index) -> void {
+        mask &= ~(1u << index);
+      }
+
+      auto has(u32 index) const -> bool {
+        return mask & (1u << index);
+      }
+
+      auto get(u32 index) const -> u32 {
+        return value[index];
+      }
+
+      auto track(u32 instruction, u32 pc) -> void;
+    } constRegs;
+
+    std::vector<HaltSlowPath> haltSlowPaths;
+    std::vector<SlowPath> slowPaths;
   } recompiler{*this};
 
   struct Disassembler {
