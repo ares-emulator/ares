@@ -21,6 +21,19 @@
 #define JitAddsExtraCyclesInternally      info.flags |= OpInfo::JitAddsExtraCyclesInternally
 #define JitStateKeyMayChange              info.flags |= OpInfo::JitStateKeyMayChange
 #define LikelyIf(x)                       if(x) LikelyBranch
+#define WritesGpSp(n)                     (((n) == 28 || (n) == 29) \
+                                            ? (JitStateKeyMayChange) : info.flags)
+#define WritesGpSpRt                      WritesGpSp(instruction >> 16 & 31)
+#define WritesGpSpRtExceptSpSelf          (((instruction >> 16 & 31) == 28 \
+                                            || ((instruction >> 16 & 31) == 29 \
+                                            && (instruction >> 21 & 31) != 29)) \
+                                            ? (JitStateKeyMayChange) : info.flags)
+#define WritesGpSpRd                      WritesGpSp(instruction >> 11 & 31)
+#define WritesGpSpXrt                     WritesGpSp(instruction >> 15 & 31)
+#define LoadToGpr                         Load, MayException, MayFault, JitUseCallf, \
+                                            JitMustFlushBeforeCall, WritesGpSpRt
+#define StoreToGpr                        Store, MayException, MayFault, JitUseCallf, \
+                                            JitMustFlushBeforeCall, WritesGpSpRt
 #define FPUCall                           Cop1, MayException, JitUseCallf, JitAddsExtraCyclesInternally
 #define FPUBranchCall                     \
   Cop1, Branch, EndBlock, MayException, JitUseCallf, JitAddsExtraCyclesInternally
@@ -38,14 +51,14 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
   op(0x05, BNE, Branch, EndBlock);
   op(0x06, BLEZ, Branch, EndBlock);
   op(0x07, BGTZ, Branch, EndBlock);
-  op(0x08, ADDI, MayException, JitMustFlushBeforeCall);
-  op(0x09, ADDIU);
-  op(0x0a, SLTI);
-  op(0x0b, SLTIU);
-  op(0x0c, ANDI);
-  op(0x0d, ORI);
-  op(0x0e, XORI);
-  op(0x0f, LUI);
+  op(0x08, ADDI, MayException, JitMustFlushBeforeCall, WritesGpSpRt);
+  op(0x09, ADDIU, WritesGpSpRtExceptSpSelf);
+  op(0x0a, SLTI, WritesGpSpRt);
+  op(0x0b, SLTIU, WritesGpSpRt);
+  op(0x0c, ANDI, WritesGpSpRt);
+  op(0x0d, ORI, WritesGpSpRt);
+  op(0x0e, XORI, WritesGpSpRt);
+  op(0x0f, LUI, WritesGpSpRt);
   jp(0x10, SCC);
   jp(0x11, FPU);
   jp(0x12, COP2);
@@ -54,22 +67,22 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
   op(0x15, BNEL, Branch, LikelyBranch, EndBlock);
   op(0x16, BLEZL, Branch, LikelyBranch, EndBlock);
   op(0x17, BGTZL, Branch, LikelyBranch, EndBlock);
-  op(0x18, DADDI, MayException, JitMustFlushBeforeCall);
-  op(0x19, DADDIU, JitMustFlushBeforeCall);
-  op(0x1a, LDL, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x1b, LDR, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
+  op(0x18, DADDI, MayException, JitMustFlushBeforeCall, WritesGpSpRt);
+  op(0x19, DADDIU, JitMustFlushBeforeCall, WritesGpSpRtExceptSpSelf);
+  op(0x1a, LDL, LoadToGpr);
+  op(0x1b, LDR, LoadToGpr);
   op(0x1c, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x1d, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x1e, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x1f, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x20, LB, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x21, LH, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x22, LWL, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x23, LW, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x24, LBU, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x25, LHU, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x26, LWR, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x27, LWU, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
+  op(0x20, LB, LoadToGpr);
+  op(0x21, LH, LoadToGpr);
+  op(0x22, LWL, LoadToGpr);
+  op(0x23, LW, LoadToGpr);
+  op(0x24, LBU, LoadToGpr);
+  op(0x25, LHU, LoadToGpr);
+  op(0x26, LWR, LoadToGpr);
+  op(0x27, LWU, LoadToGpr);
   op(0x28, SB, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
   op(0x29, SH, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
   op(0x2a, SWL, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
@@ -78,19 +91,19 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
   op(0x2d, SDR, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
   op(0x2e, SWR, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
   op(0x2f, CACHE, Store, MayException, MayFault, JitUseCallf, JitAddsExtraCyclesInternally);
-  op(0x30, LL, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
+  op(0x30, LL, LoadToGpr);
   op(0x31, LWC1, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
   op(0x32, LWC2, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x33, LWC3, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x34, LLD, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
+  op(0x34, LLD, LoadToGpr);
   op(0x35, LDC1, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
   op(0x36, LDC2, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x37, LD, Load, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x38, SC, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
+  op(0x37, LD, LoadToGpr);
+  op(0x38, SC, StoreToGpr);
   op(0x39, SWC1, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
   op(0x3a, SWC2, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x3b, SWC3, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x3c, SCD, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
+  op(0x3c, SCD, StoreToGpr);
   op(0x3d, SDC1, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
   op(0x3e, SDC2, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x3f, SD, Store, MayException, MayFault, JitUseCallf, JitMustFlushBeforeCall);
@@ -100,30 +113,30 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
 
 auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
   switch(instruction & 0x3f) {
-  op(0x00, SLL);
+  op(0x00, SLL, WritesGpSpRd);
   op(0x01, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x02, SRL);
-  op(0x03, SRA);
-  op(0x04, SLLV);
+  op(0x02, SRL, WritesGpSpRd);
+  op(0x03, SRA, WritesGpSpRd);
+  op(0x04, SLLV, WritesGpSpRd);
   op(0x05, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x06, SRLV);
-  op(0x07, SRAV);
+  op(0x06, SRLV, WritesGpSpRd);
+  op(0x07, SRAV, WritesGpSpRd);
   op(0x08, JR, Branch, EndBlock);
-  op(0x09, JALR, Branch, EndBlock);
+  op(0x09, JALR, Branch, EndBlock, WritesGpSpRd);
   op(0x0a, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x0b, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x0c, SYSCALL, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x0d, BREAK, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x0e, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x0f, SYNC, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x10, MFHI, ReadsHiLo);
+  op(0x10, MFHI, ReadsHiLo, WritesGpSpRd);
   op(0x11, MTHI, WritesHiLo);
-  op(0x12, MFLO, ReadsHiLo);
+  op(0x12, MFLO, ReadsHiLo, WritesGpSpRd);
   op(0x13, MTLO, WritesHiLo);
-  op(0x14, DSLLV, JitMustFlushBeforeCall);
+  op(0x14, DSLLV, JitMustFlushBeforeCall, WritesGpSpRd);
   op(0x15, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x16, DSRLV, JitMustFlushBeforeCall);
-  op(0x17, DSRAV, JitMustFlushBeforeCall);
+  op(0x16, DSRLV, JitMustFlushBeforeCall, WritesGpSpRd);
+  op(0x17, DSRAV, JitMustFlushBeforeCall, WritesGpSpRd);
   op(0x18, MULT, WritesHiLo);
   op(0x19, MULTU, WritesHiLo);
   op(0x1a, DIV, WritesHiLo);
@@ -132,22 +145,22 @@ auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
   op(0x1d, DMULTU, WritesHiLo);
   op(0x1e, DDIV, WritesHiLo);
   op(0x1f, DDIVU, WritesHiLo);
-  op(0x20, ADD, MayException, JitMustFlushBeforeCall);
-  op(0x21, ADDU);
-  op(0x22, SUB, MayException, JitMustFlushBeforeCall);
-  op(0x23, SUBU);
-  op(0x24, AND);
-  op(0x25, OR);
-  op(0x26, XOR);
-  op(0x27, NOR);
+  op(0x20, ADD, MayException, JitMustFlushBeforeCall, WritesGpSpRd);
+  op(0x21, ADDU, WritesGpSpRd);
+  op(0x22, SUB, MayException, JitMustFlushBeforeCall, WritesGpSpRd);
+  op(0x23, SUBU, WritesGpSpRd);
+  op(0x24, AND, WritesGpSpRd);
+  op(0x25, OR, WritesGpSpRd);
+  op(0x26, XOR, WritesGpSpRd);
+  op(0x27, NOR, WritesGpSpRd);
   op(0x28, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x29, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x2a, SLT);
-  op(0x2b, SLTU);
-  op(0x2c, DADD, MayException, JitMustFlushBeforeCall);
-  op(0x2d, DADDU, JitMustFlushBeforeCall);
-  op(0x2e, DSUB, MayException, JitMustFlushBeforeCall);
-  op(0x2f, DSUBU, JitMustFlushBeforeCall);
+  op(0x2a, SLT, WritesGpSpRd);
+  op(0x2b, SLTU, WritesGpSpRd);
+  op(0x2c, DADD, MayException, JitMustFlushBeforeCall, WritesGpSpRd);
+  op(0x2d, DADDU, JitMustFlushBeforeCall, WritesGpSpRd);
+  op(0x2e, DSUB, MayException, JitMustFlushBeforeCall, WritesGpSpRd);
+  op(0x2f, DSUBU, JitMustFlushBeforeCall, WritesGpSpRd);
   op(0x30, TGE, MayTrap, MayException, JitMustFlushBeforeCall);
   op(0x31, TGEU, MayTrap, MayException, JitMustFlushBeforeCall);
   op(0x32, TLT, MayTrap, MayException, JitMustFlushBeforeCall);
@@ -156,14 +169,14 @@ auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
   op(0x35, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x36, TNE, MayTrap, MayException, JitMustFlushBeforeCall);
   op(0x37, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x38, DSLL, JitMustFlushBeforeCall);
+  op(0x38, DSLL, JitMustFlushBeforeCall, WritesGpSpRd);
   op(0x39, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x3a, DSRL, JitMustFlushBeforeCall);
-  op(0x3b, DSRA, JitMustFlushBeforeCall);
-  op(0x3c, DSLL32, JitMustFlushBeforeCall);
+  op(0x3a, DSRL, JitMustFlushBeforeCall, WritesGpSpRd);
+  op(0x3b, DSRA, JitMustFlushBeforeCall, WritesGpSpRd);
+  op(0x3c, DSLL32, JitMustFlushBeforeCall, WritesGpSpRd);
   op(0x3d, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x3e, DSRL32, JitMustFlushBeforeCall);
-  op(0x3f, DSRA32, JitMustFlushBeforeCall);
+  op(0x3e, DSRL32, JitMustFlushBeforeCall, WritesGpSpRd);
+  op(0x3f, DSRA32, JitMustFlushBeforeCall, WritesGpSpRd);
   }
   return {};
 }
@@ -208,8 +221,8 @@ auto CPU::decoderREGIMMInfo(u32 instruction) const -> OpInfo {
 
 auto CPU::decoderSCCInfo(u32 instruction) const -> OpInfo {
   switch(instruction >> 21 & 0x1f) {
-  op(0x00, MFC0, Cop0, Privileged, MayException, JitUseCallf, JitMustFlushBeforeCall);
-  op(0x01, DMFC0, Cop0, Privileged, MayException, JitUseCallf, JitMustFlushBeforeCall);
+  op(0x00, MFC0, Cop0, Privileged, MayException, JitUseCallf, JitMustFlushBeforeCall, WritesGpSpRt);
+  op(0x01, DMFC0, Cop0, Privileged, MayException, JitUseCallf, JitMustFlushBeforeCall, WritesGpSpRt);
   op(0x02, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x03, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf, JitMustFlushBeforeCall);
   op(0x04, MTC0, Cop0, Privileged, MayException, JitUseCallf, JitMustFlushBeforeCall,
@@ -249,9 +262,9 @@ auto CPU::decoderSCCInfo(u32 instruction) const -> OpInfo {
 
 auto CPU::decoderFPUInfo(u32 instruction) const -> OpInfo {
   switch(instruction >> 21 & 0x1f) {
-  op(0x00, MFC1, FPUCall);
-  op(0x01, DMFC1, FPUCall);
-  op(0x02, CFC1, FPUCall);
+  op(0x00, MFC1, FPUCall, WritesGpSpRt);
+  op(0x01, DMFC1, FPUCall, WritesGpSpRt);
+  op(0x02, CFC1, FPUCall, WritesGpSpRt);
   op(0x03, DCFC1, FPUInvalid);
   op(0x04, MTC1, FPUCall);
   op(0x05, DMTC1, FPUCall);
@@ -389,9 +402,9 @@ auto CPU::decoderFPUInfo(u32 instruction) const -> OpInfo {
 
 auto CPU::decoderCOP2Info(u32 instruction) const -> OpInfo {
   switch(instruction >> 21 & 0x1f) {
-  op(0x00, MFC2, COP2Call);
-  op(0x01, DMFC2, COP2Call);
-  op(0x02, CFC2, COP2Call);
+  op(0x00, MFC2, COP2Call, WritesGpSpXrt);
+  op(0x01, DMFC2, COP2Call, WritesGpSpXrt);
+  op(0x02, CFC2, COP2Call, WritesGpSpXrt);
   op(0x03, COP2INVALID, COP2Invalid);
   op(0x04, MTC2, COP2Call);
   op(0x05, DMTC2, COP2Call);
@@ -432,6 +445,13 @@ auto CPU::decoderCOP2Info(u32 instruction) const -> OpInfo {
 #undef JitAddsExtraCyclesInternally
 #undef JitStateKeyMayChange
 #undef LikelyIf
+#undef WritesGpSp
+#undef WritesGpSpRt
+#undef WritesGpSpRtExceptSpSelf
+#undef WritesGpSpRd
+#undef WritesGpSpXrt
+#undef LoadToGpr
+#undef StoreToGpr
 #undef FPUCall
 #undef FPUBranchCall
 #undef FPUInvalid

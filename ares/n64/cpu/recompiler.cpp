@@ -132,6 +132,17 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   stateKey.setFpuOverflowEnabled(self.fpu.csr.enable.overflow);
   stateKey.setFpuDivisionByZeroEnabled(self.fpu.csr.enable.divisionByZero);
   stateKey.setFpuInvalidOperationEnabled(self.fpu.csr.enable.invalidOperation);
+  const u64 cachedBase = 0xffff'ffff'8000'0000ull;
+  const u64 cachedEnd  = 0xffff'ffff'807f'ffffull;
+  auto gp = self.ipu.r[28].u64;
+  auto sp = self.ipu.r[29].u64;
+  bool gpCached = gp >= cachedBase && gp <= cachedEnd;
+  stateKey.setGpCachedRdram(gpCached);
+  stateKey.setGpCachedRdramOff16(gp >= cachedBase + 0x8000 && gp <= cachedEnd - 0x7fff);
+  stateKey.setGpAligned4((gp & 3) == 0);
+  stateKey.setGpAligned8((gp & 7) == 0);
+  stateKey.setSpAligned4((sp & 3) == 0);
+  stateKey.setSpAligned8((sp & 7) == 0);
   return stateKey;
 }
 
@@ -141,6 +152,16 @@ auto CPU::Recompiler::reservedInstruction64() const -> bool {
   if(privilegeMode == 1) return !emitStateKey.supervisorExtendedAddressing();
   if(privilegeMode >= 2) return !emitStateKey.userExtendedAddressing();
   return 0;
+}
+
+auto CPU::Recompiler::updateStackPointerStateKey(s16 offset) -> void {
+  bool oldAligned4 = emitStateKey.spAligned4();
+  bool oldAligned8 = emitStateKey.spAligned8();
+  bool newAligned4 = oldAligned4 && (offset & 3) == 0;
+  bool newAligned8 = oldAligned8 && (offset & 7) == 0;
+  emitStateKey.setSpAligned4(newAligned4);
+  emitStateKey.setSpAligned8(newAligned8);
+  emitStateKeyChanged = emitStateKeyChanged || oldAligned4 != newAligned4 || oldAligned8 != newAligned8;
 }
 
 auto CPU::Recompiler::section(u32 address) -> Section* {
@@ -270,6 +291,7 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction) -> Block* {
   emitStateKey = stateKey;
   emitSingleInstruction = singleInstruction;
+  emitStateKeyChanged = false;
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
     allocator.release();
@@ -432,7 +454,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     jumpToSelf += 4;
     bool safeDelaySlotLink = !info.jitUseCallf() && !info.mayException() && !info.mayFault();
     bool delaySlotLinkEligible = terminal && hasBranched && !singleInstruction
-    && !info.jitStateKeyMayChange() && !countCompareWrite;
+    && !info.jitStateKeyMayChange() && !countCompareWrite && !emitStateKeyChanged;
     if(delaySlotLinkEligible && safeDelaySlotLink) branchLinksValid = true;
     if(terminal) {
       if(!hasBranched && needsStatePost) jumpEpilog(flag_nz);
@@ -644,24 +666,40 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, bool sign, bool
   }();
 
   // Compute the virtual address and reject anything outside cached RDRAM, or not 32-bit sign-extended.
+  bool gpBase = Rsn == 28;
+  bool spBase = Rsn == 29;
+  bool rangeKnown = gpBase && emitStateKey.gpCachedRdramOff16();
+  auto alignmentKnown = [&] {
+    if(size == Byte) return true;
+    bool aligned4 = gpBase ? emitStateKey.gpAligned4() : spBase && emitStateKey.spAligned4();
+    bool aligned8 = gpBase ? emitStateKey.gpAligned8() : spBase && emitStateKey.spAligned8();
+    if(size == Half) return aligned4 && (i16 & 1) == 0;
+    if(size == Word) return aligned4 && (i16 & 3) == 0;
+    if(size == Dual) return aligned8 && (i16 & 7) == 0;
+    return false;
+  }();
   add64(reg(0), mem(Rs), imm(i16));
-  if(extendedAddressing) {
-    sub64(reg(1), reg(0), imm((sljit_sw)0xffff'ffff'8000'0000ull));
-    cmp64(reg(1), imm(0x007f'ffff), set_ugt);
-  } else {
-    mov64_s32(reg(1), reg(0));
-    cmp64(reg(0), reg(1), set_z);
+  sljit_jump* addressMismatch = nullptr;
+  sljit_jump* addressOutOfRange = nullptr;
+  if(!rangeKnown) {
+    if(extendedAddressing) {
+      sub64(reg(1), reg(0), imm((sljit_sw)0xffff'ffff'8000'0000ull));
+      cmp64(reg(1), imm(0x007f'ffff), set_ugt);
+    } else {
+      mov64_s32(reg(1), reg(0));
+      cmp64(reg(0), reg(1), set_z);
+    }
+    addressMismatch = jump(extendedAddressing ? flag_ugt : flag_nz);
+    if(!extendedAddressing) {
+      sub32(reg(1), reg(0), imm((sljit_sw)0x8000'0000u));
+      cmp32(reg(1), imm(0x007f'ffff), set_ugt);
+    }
+    addressOutOfRange = !extendedAddressing ? jump(flag_ugt) : nullptr;
   }
-  auto addressMismatch = jump(extendedAddressing ? flag_ugt : flag_nz);
-  if(!extendedAddressing) {
-    sub32(reg(1), reg(0), imm((sljit_sw)0x8000'0000u));
-    cmp32(reg(1), imm(0x007f'ffff), set_ugt);
-  }
-  auto addressOutOfRange = !extendedAddressing ? jump(flag_ugt) : nullptr;
 
   // Hardware raises address errors before any cache lookup on unaligned accesses.
   sljit_jump* addressUnaligned = nullptr;
-  if(size > Byte) {
+  if(size > Byte && !alignmentKnown) {
     test32(reg(0), imm(size - 1), set_z);
     addressUnaligned = jump(flag_nz);
   }
@@ -870,6 +908,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
     add32(reg(0), mem(Rs32), imm(i16));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rt), reg(0));
+    if(Rtn == 29 && Rsn == 29) updateStackPointerStateKey(i16);
     return 0;
   }
 
@@ -1032,6 +1071,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
     }
     add64(reg(0), mem(Rs), imm(i16));
     if(Rtn != 0) mov64(mem(Rt), reg(0));
+    if(Rtn == 29 && Rsn == 29) updateStackPointerStateKey(i16);
     return 0;
   }
 

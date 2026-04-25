@@ -1019,6 +1019,24 @@ struct CPU : Thread {
       auto fpuInvalidOperationEnabled() const -> bool { return data.bit(18); }
       auto setFpuInvalidOperationEnabled(bool value) -> void { data.bit(18) = value; }
 
+      auto gpCachedRdram() const -> bool { return data.bit(19); }
+      auto setGpCachedRdram(bool value) -> void { data.bit(19) = value; }
+
+      auto gpCachedRdramOff16() const -> bool { return data.bit(20); }
+      auto setGpCachedRdramOff16(bool value) -> void { data.bit(20) = value; }
+
+      auto gpAligned4() const -> bool { return data.bit(21); }
+      auto setGpAligned4(bool value) -> void { data.bit(21) = value; }
+
+      auto gpAligned8() const -> bool { return data.bit(22); }
+      auto setGpAligned8(bool value) -> void { data.bit(22) = value; }
+
+      auto spAligned4() const -> bool { return data.bit(23); }
+      auto setSpAligned4(bool value) -> void { data.bit(23) = value; }
+
+      auto spAligned8() const -> bool { return data.bit(24); }
+      auto setSpAligned8(bool value) -> void { data.bit(24) = value; }
+
       n64 data = 0;
     };
 
@@ -1112,6 +1130,7 @@ struct CPU : Thread {
 
     auto computeStateKey() const -> u64;
     auto reservedInstruction64() const -> bool;
+    auto updateStackPointerStateKey(s16 offset) -> void;
     auto section(u32 address) -> Section*;
     auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
 
@@ -1142,6 +1161,7 @@ struct CPU : Thread {
     bool emitNeedCurrentPc = false;
     bool emitNeedsStateMachinery = false;
     bool emitSingleInstruction = false;
+    bool emitStateKeyChanged = false;
     StateKey emitStateKey = 0;
     u64 emitVaddr = 0;
     u32 emitDeferredCycles = 0;
