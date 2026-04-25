@@ -5,7 +5,7 @@ namespace hiro {
 auto pViewport::construct() -> void {
   qtWidget = qtViewport = new QtViewport(*this);
   qtViewport->setMouseTracking(true);
-  qtViewport->setAttribute(Qt::WA_PaintOnScreen, true);
+  qtViewport->setAttribute(Qt::WA_PaintOnScreen, QT_VERSION < 0x050000 ? true : false);
   qtViewport->setStyleSheet("background: #000000");
 
   pWidget::construct();
