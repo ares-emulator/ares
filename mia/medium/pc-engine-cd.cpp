@@ -1,12 +1,5 @@
 struct PCEngineCD : CompactDisc {
   auto name() -> string override { return "PC Engine CD"; }
-  auto extensions() -> std::vector<string> override {
-#if defined(ARES_ENABLE_CHD)
-    return {"cue", "chd"};
-#else
-    return {"cue"};
-#endif
-  }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;

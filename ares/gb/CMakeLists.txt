@@ -40,6 +40,20 @@ ares_add_sources(
   CORE #
     gb
   INCLUDED #
+    ppu/cgb.cpp
+    ppu/color.cpp
+    ppu/debugger.cpp
+    ppu/dmg.cpp
+    ppu/io.cpp
+    ppu/ppu.hpp
+    ppu/serialization.cpp
+    ppu/timing.cpp
+)
+
+ares_add_sources(
+  CORE #
+    gb
+  INCLUDED #
     bus/bus.hpp
 )
 

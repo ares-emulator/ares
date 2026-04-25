@@ -13,12 +13,45 @@ auto Program::videoDriverUpdate() -> void {
   ruby::video.setNativeFullScreen(settings.video.nativeFullScreen);
 
   if(!ruby::video.ready()) {
-    MessageDialog().setText({"Failed to initialize ", settings.video.driver, " video driver."}).setAlignment(presentation).error();
-    settings.video.driver = "None";
-    driverSettings.videoDriverUpdate();
+    driverInitFailed(settings.video.driver, "video", [&] { driverSettings.videoDriverUpdate(); });
+    return;
   }
 
-  presentation.loadShaders();
+  if(startShader && !Presentation::shaderArgApplied) {
+    Presentation::shaderArgApplied = true;
+    string location = locate("Shaders/");
+    #if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
+    if(!inode::exists(location)) location = locate("../libretro/shaders/shaders_slang/");
+    #endif
+
+    string existingShader = settings.video.shader;
+    startShader.transform("\\", "/");
+    if(!startShader.imatch("None")) {
+      settings.video.shader = {startShader, ".slangp"};
+    } else {
+      settings.video.shader = startShader;
+    }
+
+    if(inode::exists({location, settings.video.shader})) {
+      ruby::video.setShader({location, settings.video.shader});
+    } else if(settings.video.shader.imatch("None")) {
+      ruby::video.setShader("None");
+    } else {
+      if(kiosk) {
+        showMessage({"Requested shader not found: ", location, settings.video.shader, ". Using existing shader."});
+      } else {
+        hiro::MessageDialog()
+          .setTitle("Warning")
+          .setAlignment(hiro::Alignment::Center)
+          .setText({"Requested shader not found: ", location, settings.video.shader,
+            "\nUsing existing defined shader: ", location, existingShader})
+          .warning();
+      }
+      settings.video.shader = existingShader;
+    }
+  }
+
+  if(!kiosk) presentation.loadShaders();
 }
 
 auto Program::videoMonitorUpdate() -> void {
@@ -74,7 +107,7 @@ auto Program::videoPseudoFullScreenToggle() -> void {
     if(ruby::input.acquired()) {
       ruby::input.release();
     }
-    presentation.menuBar.setVisible(true);
+    if(!kiosk) presentation.menuBar.setVisible(true);
     presentation.setFullScreen(false);
     presentation.viewport.setFocused();
     startPseudoFullScreen = false;
@@ -93,9 +126,8 @@ auto Program::audioDriverUpdate() -> void {
   ruby::audio.setDynamic(settings.audio.dynamic);
 
   if(!ruby::audio.ready()) {
-    MessageDialog().setText({"Failed to initialize ", settings.audio.driver, " audio driver."}).setAlignment(presentation).error();
-    settings.audio.driver = "None";
-    driverSettings.audioDriverUpdate();
+    driverInitFailed(settings.audio.driver, "audio", [&] { driverSettings.audioDriverUpdate(); });
+    return;
   }
 }
 
@@ -127,8 +159,6 @@ auto Program::audioLatencyUpdate() -> void {
   ruby::audio.setLatency(settings.audio.latency);
 }
 
-//
-
 auto Program::inputDriverUpdate() -> void {
   Program::Guard guard;
   ruby::input.create(settings.input.driver);
@@ -136,10 +166,16 @@ auto Program::inputDriverUpdate() -> void {
   ruby::input.onChange(std::bind_front(&InputManager::eventInput, &inputManager));
 
   if(!ruby::input.ready()) {
-    MessageDialog().setText({"Failed to initialize ", settings.input.driver, " input driver."}).setAlignment(presentation).error();
-    settings.input.driver = "None";
-    driverSettings.inputDriverUpdate();
+    driverInitFailed(settings.input.driver, "input", [&] { driverSettings.inputDriverUpdate(); });
+    return;
   }
 
   inputManager.poll(true);
+}
+
+auto Program::driverInitFailed(nall::string& driver, const char* kind, auto&& updateSettingsWindow) -> void {
+  error({"Failed to initialize ", driver, " ", kind, " driver."});
+
+  driver = "None";
+  if(settingsWindowConstructed) updateSettingsWindow();
 }

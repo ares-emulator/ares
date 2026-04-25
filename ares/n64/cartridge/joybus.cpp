@@ -8,7 +8,7 @@ auto Cartridge::joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
     if(cartridge.eeprom.size == 512) {
       output[0] = 0x00;
       output[1] = 0x80;
-      output[2] = 0x00;
+      output[2] = eepromBusy ? 0x80 : 0x00;
       valid = 1;
     }
 
@@ -16,7 +16,7 @@ auto Cartridge::joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
     if(cartridge.eeprom.size == 2048) {
       output[0] = 0x00;
       output[1] = 0xc0;
-      output[2] = 0x00;
+      output[2] = eepromBusy ? 0x80 : 0x00;
       valid = 1;
     }
   }
@@ -25,19 +25,23 @@ auto Cartridge::joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   if(input[0] == 0x04 && send >= 2) {
     u32 address = input[1] * 8;
     for(u32 index : range(recv)) {
-      output[index] = cartridge.eeprom.read<Byte>(address++);
+      output[index] = !eepromBusy ? cartridge.eeprom.read<Byte>(address++) : 0xff;
     }
     valid = 1;
   }
 
   //write EEPROM
   if(input[0] == 0x05 && send >= 2 && recv >= 1) {
-    u32 address = input[1] * 8;
-    for(u32 index : range(send - 2)) {
-      cartridge.eeprom.write<Byte>(address++, input[2 + index]);
-    }
-    output[0] = 0x00;
+    output[0] = eepromBusy ? 0x80 : 0x00;
     valid = 1;
+    if(!eepromBusy) {
+      u32 address = input[1] * 8;
+      for(u32 index : range(send - 2)) {
+        cartridge.eeprom.write<Byte>(address++, input[2 + index]);
+      }
+      eepromBusy = 1;
+      queue.insert(Queue::EEPROM_Write, 187'500 * 6); //6ms
+    }
   }
 
   //RTC status
@@ -72,4 +76,8 @@ auto Cartridge::joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   status.bit(0) = valid;
   status.bit(1) = over;
   return status;
+}
+
+auto Cartridge::eepromFinish() -> void {
+  eepromBusy = 0;
 }

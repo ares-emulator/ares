@@ -83,6 +83,7 @@ namespace ares::Nintendo64 {
       SI_DMA_Write,
       SI_BUS_Write,
       RTC_Tick,
+      EEPROM_Write,
       DD_Clock_Tick,
       DD_MECHA_Response,
       DD_BM_Request,
@@ -95,6 +96,31 @@ namespace ares::Nintendo64 {
   struct BCD {
     static auto encode(u8 value) -> u8 { return value / 10 << 4 | value % 10; }
     static auto decode(u8 value) -> u8 { return (value >> 4) * 10 + (value & 15); }
+  };
+
+  //Devices that can request RI to access RDRAM
+  enum class RBusDevice {
+    UNKNOWN,
+    VR4300_ICACHE,
+    VR4300_DCACHE,
+    VR4300_UNCACHED,
+    SP_DMA,
+    PI_DMA,
+    SI_DMA,
+    VI_DMA,
+    AI_DMA,
+    DP_DMA,
+    DP_DRAW,
+
+    NUM_RBUS_HW_DEVICES,
+    
+    //Virtual devices (internal to Ares)
+    ARES_DEBUGGER = NUM_RBUS_HW_DEVICES,
+    ARES_JIT,
+    ARES_IPL3,
+    ARES_FLASH,
+
+    NUM_RBUS_DEVICES,
   };
 
   #include <n64/accuracy.hpp>
@@ -112,8 +138,8 @@ namespace ares::Nintendo64 {
   #include <n64/pif/pif.hpp>
   #include <n64/ri/ri.hpp>
   #include <n64/si/si.hpp>
-  #include <n64/cpu/cpu.hpp>
   #include <n64/rdram/rdram.hpp>
+  #include <n64/cpu/cpu.hpp>
   #include <n64/rsp/rsp.hpp>
   #include <n64/rdp/rdp.hpp>
   #include <n64/memory/bus.hpp>

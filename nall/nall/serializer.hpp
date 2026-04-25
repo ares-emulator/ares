@@ -78,14 +78,19 @@ struct serializer {
   }
 
   template<typename T> auto operator()(T& value) -> serializer& {
-    static_assert(has_serialize_v<T> || is_integral_v<T> || is_floating_point_v<T>);
+    static_assert(has_serialize_v<T> || is_integral_v<T> || is_floating_point_v<T> || std::is_enum_v<T>);
     if constexpr(has_serialize_v<T>) {
       value.serialize(*this);
     } else if constexpr(is_integral_v<T>) {
       integer(value);
     } else if constexpr(is_floating_point_v<T>) {
       real(value);
+    } else if constexpr(std::is_enum_v<T>) {
+      auto tmp = (std::underlying_type_t<T>)value;
+      integer(tmp);
+      value = (T)tmp;
     }
+
     return *this;
   }
 

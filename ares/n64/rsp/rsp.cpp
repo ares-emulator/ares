@@ -14,6 +14,7 @@ RSP rsp;
 #include "debugger.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"
+#include "emux.cpp"
 
 auto RSP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("RSP");
@@ -48,8 +49,10 @@ auto RSP::instruction() -> void {
     auto block = recompiler.block(ipu.pc);
     block->execute(*this);
   } else {
+    pipeline.dblIssueCount = 0;
     u32 instruction = imem.read<Word>(ipu.pc);
     instructionPrologue(instruction);
+    branch.begin();
     pipeline.begin();
     OpInfo op0 = decoderEXECUTE(instruction);
     pipeline.issue(op0);
@@ -60,8 +63,10 @@ auto RSP::instruction() -> void {
       OpInfo op1 = decoderEXECUTE(instruction);
 
       if(canDualIssue(op0, op1)) {
+        pipeline.dblIssueCount = 1;
         instructionEpilogue<0>(0);
         instructionPrologue(instruction);
+        branch.begin();
         pipeline.issue(op1);
         interpreterEXECUTE();
       }
@@ -74,6 +79,7 @@ auto RSP::instruction() -> void {
   //this handles all stepping for the interpreter
   //with the recompiler, it only steps for taken branch stalls
   step(pipeline.clocks);
+  pipeline.clocksTotal += pipeline.clocks;
 }
 
 auto RSP::instructionPrologue(u32 instruction) -> void {
@@ -82,28 +88,30 @@ auto RSP::instructionPrologue(u32 instruction) -> void {
   debugger.instruction();
 }
 
+auto RSP::instructionBranchEpilogue() -> s32 {
+  bool endBlock = branch.state & Branch::EndBlock;
+  if(branch.inDelaySlot()) {
+    pipeline.stall();
+    if(branch.pc & 4) pipeline.singleIssue = 1;
+  }
+
+  branch.end();
+  ipu.pc = branch.pc;
+  return status.halted || endBlock;
+}
+
 template<bool Recompiled>
 auto RSP::instructionEpilogue(u32 clocks) -> s32 {
   if constexpr(Recompiled) {
     step(clocks);
+    pipeline.clocksTotal += clocks;
 
     assert(ipu.r[0].u32 == 0);
   } else {
     ipu.r[0].u32 = 0;
   }
 
-  switch(branch.state) {
-  case Branch::Step: ipu.pc += 4; return status.halted;
-  case Branch::Take: ipu.pc += 4; branch.delaySlot(); return status.halted;
-  case Branch::DelaySlot:
-    ipu.pc = branch.pc;
-    branch.reset();
-    pipeline.stall();
-    if(branch.pc & 4) pipeline.singleIssue = 1;
-    return 1;
-  }
-
-  unreachable;
+  return instructionBranchEpilogue();
 }
 
 auto RSP::power(bool reset) -> void {
@@ -122,7 +130,7 @@ auto RSP::power(bool reset) -> void {
   for(auto& signal : status.signal) signal = 0;
   for(auto& r : ipu.r) r.u32 = 0;
   ipu.pc = 0;
-  branch = {};
+  branch.setPc(ipu.pc);
   for(auto& r : vpu.r) r = zero;
   vpu.acch = zero;
   vpu.accm = zero;

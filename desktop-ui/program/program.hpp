@@ -32,6 +32,7 @@ struct Program : ares::Platform {
   //status.cpp
   auto updateMessage() -> void;
   auto showMessage(const string&) -> void;
+  auto error(const string&) -> void;
 
   //utility.cpp
   auto pause(bool) -> void;
@@ -57,10 +58,16 @@ struct Program : ares::Platform {
 
   auto inputDriverUpdate() -> void;
 
+  auto driverInitFailed(nall::string& driver, const char* kind, auto&& updateSettingsWindow) -> void;
+  
   bool startFullScreen = false;
   bool startPseudoFullScreen = false;
+  bool kiosk = false;
   std::vector<string> startGameLoad;
   bool noFilePrompt = false;
+  bool settingsWindowConstructed = false;
+  bool gameBrowserWindowConstructed = false;
+  bool toolsWindowConstructed = false;
 
   string startSystem;
   string startShader;
@@ -76,6 +83,7 @@ struct Program : ares::Platform {
   bool requestFrameAdvance = false;
   bool requestScreenshot = false;
   bool keyboardCaptured = false;
+  atomic<bool> pendingKioskExit = false;
 
   struct State {
     u32 slot = 1;
@@ -118,6 +126,7 @@ private:
 
   atomic<bool> _quitting = false;
   atomic<bool> _needsResize = false;
+  atomic<bool> _quitRequested = false;  // quit requested by emulator thread
 
   /// Mutex used to manage access to the status message queue.
   std::recursive_mutex _messageMutex;

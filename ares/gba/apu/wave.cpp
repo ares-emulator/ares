@@ -66,7 +66,7 @@ auto APU::Wave::write(u32 address, n8 byte) -> void {
 }
 
 auto APU::Wave::freeBank() const -> n1 {
-  return bank && apu.sequencer.masterenable;
+  return !(bank && apu.sequencer.masterenable);
 }
 
 auto APU::Wave::readRAM(u32 address) const -> n8 {

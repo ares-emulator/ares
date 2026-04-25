@@ -22,6 +22,7 @@ struct InputSDL : InputDriver {
   ~InputSDL() { terminate(); }
 
   auto create() -> bool override {
+    SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1");
     return initialize();
   }
 

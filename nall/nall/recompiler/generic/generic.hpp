@@ -1,4 +1,6 @@
 #pragma once
+#include <tuple>
+#include <type_traits>
 
 #if defined(SLJIT)
 namespace nall::recompiler {
@@ -12,8 +14,9 @@ namespace nall::recompiler {
     generic(bump_allocator& alloc) : allocator(alloc) {}
     ~generic() { resetCompiler(); }
 
-    auto beginFunction(int args) -> void {
+    auto beginFunction(int args, int savedRegs = 3) -> void {
       assert(args <= 3);
+      assert(savedRegs >= 3);
       resetCompiler();
       compiler = sljit_create_compiler(nullptr);
 
@@ -21,7 +24,7 @@ namespace nall::recompiler {
       if(args >= 1) options |= SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 1);
       if(args >= 2) options |= SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 2);
       if(args >= 3) options |= SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 3);
-      sljit_emit_enter(compiler, 0, options, 4, 3, 0);
+      sljit_emit_enter(compiler, 0, options, 4, savedRegs, 0);
       sljit_jump* entry = sljit_emit_jump(compiler, SLJIT_JUMP);
       epilogue = sljit_emit_label(compiler);
       sljit_emit_return_void(compiler);

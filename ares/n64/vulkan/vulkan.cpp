@@ -95,8 +95,8 @@ auto Vulkan::render() -> bool {
 
   if(!command.source) {
     do {
-      buffer[queueSize * 2 + 0] = rdram.ram.read<Word>(current, "RDP DMA"); current += 4;
-      buffer[queueSize * 2 + 1] = rdram.ram.read<Word>(current, "RDP DMA"); current += 4;
+      buffer[queueSize * 2 + 0] = rdram.ram.read<Word>(current, RBusDevice::DP_DMA); current += 4;
+      buffer[queueSize * 2 + 1] = rdram.ram.read<Word>(current, RBusDevice::DP_DMA); current += 4;
       queueSize++;
     } while(--length);
   } else {

@@ -1,11 +1,9 @@
 auto SPU::canReadDMA() -> bool {
-  //TODO: SPUSTAT.bit9 && transfer.mode.bit(1);
-  return transfer.mode.bit(1);
+  return transfer.mode == 3;
 }
 
 auto SPU::canWriteDMA() -> bool {
-  //TODO: SPUSTAT.bit8 && transfer.mode.bit(1);
-  return transfer.mode.bit(1);
+  return transfer.mode == 2;
 }
 
 auto SPU::readRAM(u32 address) -> u16 {
@@ -247,8 +245,8 @@ auto SPU::readHalf(u32 address) -> u32 {
     data.bit( 4, 5) = transfer.mode;
     data.bit( 6)    = irq.flag;
     data.bit( 7)    = transfer.mode.bit(1);
-    data.bit( 8)    = 0;  //DMA read request
-    data.bit( 9)    = 0;  //DMA write request
+    data.bit( 8)    = transfer.mode == 2;
+    data.bit( 9)    = transfer.mode == 3;
     data.bit(10)    = 0;  //transfer busy
     data.bit(11)    = capture.address.bit(9);  //in second-half of capture buffer
     return data;

@@ -245,13 +245,6 @@ auto PCD::SCSI::commandAudioSetStartPosition() -> void {
 
   pcd.drive.start = *lba;
   pcd.drive.end = session->leadOut.lba;
-  if(auto trackID = session->inTrack(*lba)) {
-    if(auto track = session->track(*trackID)) {
-      if(auto index = track->index(track->lastIndex)) {
-        pcd.drive.end = index->end;
-      }
-    }
-  }
 
   if(request.data[1].bit(0) == 0) {
     drive->seekPause();
@@ -372,7 +365,7 @@ auto PCD::SCSI::commandGetDirectoryInformation() -> void {
   }
 
   if(request.data[1].bit(0,1) == 1) {
-    auto [minute, second, frame] = CD::MSF(session->leadOut.lba);
+    auto [minute, second, frame] = CD::MSF::fromLBA(session->leadOut.lba);
     response.write(BCD::encode(minute));
     response.write(BCD::encode(second));
     response.write(BCD::encode(frame));

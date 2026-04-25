@@ -22,6 +22,15 @@ struct Disc : Memory::Interface {
     string _command;
   } debugger;
 
+  enum ErrorCode : u8 {
+    ErrorCode_InvalidParameterValue = 0x10,
+    ErrorCode_InvalidParameterCount = 0x20,
+    ErrorCode_InvalidCommand = 0x40,
+    ErrorCode_CannotRespondYet = 0x80,
+    ErrorCode_SeekFailed = 0x04,
+    ErrorCode_DoorOpen = 0x08,
+  };
+
   auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
   auto audioCD() const -> bool { return information.audio; }
@@ -50,39 +59,53 @@ struct Disc : Memory::Interface {
   auto writeHalf(u32 address, u32 data) -> void;
   auto writeWord(u32 address, u32 data) -> void;
 
+  enum class ResponseType : u8 {
+    None,
+    Ready,       //INT 1
+    Complete,    //INT 2
+    Acknowledge, //INT 3
+    End,         //INT 4
+    Error,       //INT 5
+  };
+
   //command.cpp
   auto status() -> u8;
   auto mode() -> u8;
-  auto command(u8 operation) -> void;
+  auto ack() -> void;
+  auto error(u8 code) -> void;
+  auto queueResponse(ResponseType type, std::initializer_list<u8> response) -> void;
+  auto flushDeferredResponse() -> void;
+
+  auto executeCommand(u8 operation) -> void;
   auto commandTest() -> void;
   auto commandInvalid() -> void;
-  auto commandGetStatus() -> void;
-  auto commandSetLocation() -> void;
+  auto commandNop() -> void;
+  auto commandSetLoc() -> void;
   auto commandPlay() -> void;
-  auto commandFastForward() -> void;
-  auto commandRewind() -> void;
-  auto commandReadWithRetry() -> void;
-  auto commandMotorOn() -> void;
+  auto commandForward() -> void;
+  auto commandBackward() -> void;
+  auto commandReadN() -> void;
+  auto commandStandby() -> void;
   auto commandStop() -> void;
   auto commandPause() -> void;
-  auto commandInitialize() -> void;
+  auto commandInit() -> void;
   auto commandMute() -> void;
-  auto commandUnmute() -> void;
+  auto commandDemute() -> void;
   auto commandSetFilter() -> void;
   auto commandSetMode() -> void;
   auto commandGetParam() -> void;
-  auto commandGetLocationReading() -> void;
-  auto commandGetLocationPlaying() -> void;
+  auto commandGetlocL() -> void;
+  auto commandGetlocP() -> void;
   auto commandSetSession() -> void;
-  auto commandGetFirstAndLastTrackNumbers() -> void;
-  auto commandGetTrackStart() -> void;
-  auto commandSeekData() -> void;
-  auto commandSeekCDDA() -> void;
+  auto commandGetTN() -> void;
+  auto commandGetTD() -> void;
+  auto commandSeekL() -> void;
+  auto commandSeekP() -> void;
   auto commandTestStartReadSCEX() -> void;
   auto commandTestStopReadSCEX() -> void;
   auto commandTestControllerDate() -> void;
   auto commandGetID() -> void;
-  auto commandReadWithoutRetry() -> void;
+  auto commandReadS() -> void;
   auto commandReadToc() -> void;
   auto commandUnimplemented(u8, maybe<u8> = nothing) -> void;
 
@@ -97,22 +120,27 @@ struct Disc : Memory::Interface {
     Disc& self;
     Drive(Disc& self) : self(self) {}
 
+    enum class SeekType : u8 { None, SeekL, SeekP };
+    enum class PendingOperation : u8 { None, Read, Play};
+
     maybe<CD::Session&> session;
     maybe<CDDA&> cdda;
     maybe<CDXA&> cdxa;
 
     //drive.cpp
     auto distance() const -> u32;
+    auto updateSubQ() -> void;
     auto clockSector() -> void;
 
     struct LBA {
       s32 current;
       s32 request;
-      s32 seeking;
+      n1  pending; //unprocessed setLoc
     } lba;
 
     struct Sector {
       u8  data[2448];
+      u8  subq[10];
       u16 offset;
       u8 track;
     } sector;
@@ -128,7 +156,12 @@ struct Disc : Memory::Interface {
       n1 speed;
     } mode;
 
-    n32 seeking;
+    u32 recentlyReset;
+    u32 seeking;
+    u32 seekDelay;
+    u16 seekRetries;
+    SeekType seekType = SeekType::None;
+    PendingOperation pendingOperation = PendingOperation::None;
   } drive{*this};
 
   struct Audio {
@@ -195,12 +228,27 @@ struct Disc : Memory::Interface {
     s32 previousSamples[4];
   } cdxa{*this};
 
-  struct Event {
-     u8 command;
-    s32 counter;
-     u8 invocation;
-     u8 queued;
-  } event;
+  struct Command {
+    struct Current {
+      u8  command;
+      u8  invocation;
+      n1  pending;
+      s32 counter;
+    } current;
+
+    struct Pending {
+      u8 command;
+      n1 pending;
+    } queued;
+
+    struct Transfer {
+      s32 counter;
+      n1  started;
+      u8  command;
+    } transfer;
+
+  } command;
+
 
   struct IRQ {
     //irq.cpp
@@ -228,6 +276,17 @@ struct Disc : Memory::Interface {
     queue<u8[16]> parameter;
     queue<u8[16]> response;
     queue<u8[2340]> data;
+
+    struct DeferredData {
+      ResponseType type;
+      queue<u8[16]> data;
+    };
+
+    struct Deferred {
+      DeferredData ready;       //INT1
+      DeferredData complete;    //INT2
+      DeferredData acknowledge; //INT3,4,5
+    } deferred;
   } fifo;
 
   struct PrimaryStatusRegister {
@@ -240,12 +299,14 @@ struct Disc : Memory::Interface {
     n1 idError;
     n1 shellOpen;
     n1 reading;
-    n1 seeking;
     n1 playingCDDA;
   } ssr;
 
   struct IO {
     n2 index;
+    n1 soundMapEnable;
+    n1 sectorBufferReadRequest;
+    n1 sectorBufferWriteRequest;
   } io;
 
   struct Counter {

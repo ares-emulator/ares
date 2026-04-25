@@ -48,15 +48,15 @@ auto System::load(Node::System& root, string name) -> bool {
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;
-    information.gpuFrequency = 53'690'000;
+    information.gpuFrequency = 53'693'175;
   }
   if(name.find("NTSC-U")) {
     information.region = Region::NTSCU;
-    information.gpuFrequency = 53'690'000;
+    information.gpuFrequency = 53'693'175;
   }
   if(name.find("PAL")) {
     information.region = Region::PAL;
-    information.gpuFrequency = 53'200'000;
+    information.gpuFrequency = 53'693'175;
   }
 
   node = std::make_shared<Core::System>(information.name);

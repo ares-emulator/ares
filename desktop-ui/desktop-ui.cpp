@@ -80,6 +80,11 @@ auto nall::main(Arguments arguments) -> void {
     program.startPseudoFullScreen = true;
   }
 
+  if(arguments.take("--kiosk")) {
+    program.kiosk = true;
+    program.noFilePrompt = true;
+  }
+
   if(string system; arguments.take("--system", system)) {
     program.startSystem = system;
   }
@@ -128,6 +133,8 @@ auto nall::main(Arguments arguments) -> void {
     settings.process(true);
   }
 
+  if(program.noFilePrompt) settings.general.noFilePrompt = true;
+
   if(arguments.take("--help")) {
     print("\n Usage: ares [OPTIONS]... game(s)\n\n");
     print("Options:\n");
@@ -138,6 +145,7 @@ auto nall::main(Arguments arguments) -> void {
 #endif
     print("  --fullscreen          Start in full screen mode\n");
     print("  --pseudofullscreen    Start in psuedo full screen mode\n");
+    print("  --kiosk               Start in minimal UI mode (implies --no-file-prompt)\n");
     print("  --system name         Specify the system name\n");
     print("  --shader name         Specify the name of the shader to use\n");
     print("  --setting name=value  Specify a value for a setting\n");
@@ -173,14 +181,51 @@ auto nall::main(Arguments arguments) -> void {
   }
 
   program.startGameLoad.clear();
+  std::vector<string> invalidKioskPaths;
   for(auto argument : arguments) {
-    if(file::exists(argument) || directory::exists(argument)) program.startGameLoad.push_back(argument);
+    if(file::exists(argument) || directory::exists(argument)) {
+      program.startGameLoad.push_back(argument);
+    } else if(program.kiosk) {
+      invalidKioskPaths.push_back(argument);
+    }
+  }
+
+  if(program.kiosk) {
+    if(!invalidKioskPaths.empty()) {
+      program.error({"path does not exist: ", invalidKioskPaths.front()});
+      return;
+    }
+    if(program.startGameLoad.empty()) {
+      program.error("provide a valid game file or directory.");
+      return;
+    }
+  }
+
+  if(program.startSystem && !program.startGameLoad.empty()) {
+    bool foundSystem = false;
+    for(auto& emulator : emulators) {
+      if(emulator->name == program.startSystem) {
+        foundSystem = true;
+        break;
+      }
+    }
+    if(!foundSystem) {
+      auto text = string{"Unrecognized argument for --system: ", program.startSystem, "\n"
+                         "Use --help to list all valid systems supported by ares."};
+      program.error(text);
+      if(program.kiosk) return;
+    }
   }
 
   Instances::presentation.construct();
-  Instances::settingsWindow.construct();
-  Instances::gameBrowserWindow.construct();
-  Instances::toolsWindow.construct();
+  if(!program.kiosk) {
+    Instances::settingsWindow.construct();
+    program.settingsWindowConstructed = true;
+    Instances::gameBrowserWindow.construct();
+    program.gameBrowserWindowConstructed = true;
+    Instances::toolsWindow.construct();
+    program.toolsWindowConstructed = true;
+  }
 
   program.create();
   Application::onMain(std::bind_front(&Program::main, &program));
@@ -189,9 +234,9 @@ auto nall::main(Arguments arguments) -> void {
   settings.save();
 
   Instances::presentation.destruct();
-  Instances::settingsWindow.destruct();
-  Instances::toolsWindow.destruct();
-  Instances::gameBrowserWindow.destruct();
+  if(program.settingsWindowConstructed) Instances::settingsWindow.destruct();
+  if(program.toolsWindowConstructed) Instances::toolsWindow.destruct();
+  if(program.gameBrowserWindowConstructed) Instances::gameBrowserWindow.destruct();
 }
 
 #if defined(PLATFORM_WINDOWS) && defined(ARCHITECTURE_AMD64) && !defined(BUILD_LOCAL)

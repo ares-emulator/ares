@@ -165,6 +165,7 @@ auto CompactDisc::manifestAudio(string location) -> string {
   manifest += "game\n";
   manifest +={"  name:  ", Medium::name(location), "\n"};
   manifest +={"  title: ", Medium::name(location), "\n"};
+  manifest +=   "  region: NTSC, NTSC-J, NTSC-U, PAL\n"; // We need a region to bootstrap
   manifest += "  audio\n";
   return manifest;
 }

@@ -17,7 +17,7 @@ auto MCD::CDC::clock() -> void {
 auto MCD::CDC::decode(s32 sector) -> void {
   if(!decoder.enable || !mcd.fd) return;
 
-  auto [minute, second, frame] = CD::MSF(sector);
+  auto [minute, second, frame] = CD::MSF::fromLBA(sector);
   header.minute = minute / 10 << 4 | minute % 10;
   header.second = second / 10 << 4 | second % 10;
   header.frame  = frame  / 10 << 4 | frame  % 10;
@@ -32,7 +32,7 @@ auto MCD::CDC::decode(s32 sector) -> void {
     transfer.target  += 2352;
 
     //the sync header is written at the tail instead of head.
-    mcd.fd->seek((abs(mcd.cdd.session.leadIn.lba) + sector) * 2448);
+    mcd.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(sector)));
     for(u32 index = 0; index <   12; index += 2) {
       ram[n13(transfer.pointer + index + 2340 >> 1)] = mcd.fd->readm(2);
     }
