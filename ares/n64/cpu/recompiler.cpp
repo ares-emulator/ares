@@ -552,6 +552,9 @@ static constexpr s32 FpuCsrBaseOffset = offsetof(CPU, fpu) + offsetof(CPU::FPU, 
 static constexpr s32 FpuCsrCauseOffset = FpuCsrBaseOffset + offsetof(CPU::FPU::ControlStatus, cause);
 static constexpr s32 FpuR64S32Off  = offsetof(CPU::r64, s32);
 static constexpr s32 FpuR64S32hOff = offsetof(CPU::r64, s32h);
+static constexpr s32 RecompilerBaseOffset = offsetof(CPU, recompiler);
+static constexpr s32 RecompilerFpuFastMxcsrOffset = RecompilerBaseOffset + offsetof(CPU::Recompiler, emitFpuFastMxcsr);
+static constexpr s32 RecompilerFpuSaveMxcsrOffset = RecompilerBaseOffset + offsetof(CPU::Recompiler, emitFpuSaveMxcsr);
 #define FpuCsrCompare mem(sreg(0), FpuCsrBaseOffset + offsetof(CPU::FPU::ControlStatus, compare))
 
 static_assert(sizeof(n1) == 1);
@@ -562,6 +565,8 @@ static_assert(offsetof(CPU::FPU::ControlStatus::Cause, divisionByZero) == 3);
 static_assert(offsetof(CPU::FPU::ControlStatus::Cause, invalidOperation) == 4);
 static_assert(offsetof(CPU::FPU::ControlStatus::Cause, unimplementedOperation) == 5);
 static_assert(sizeof(CPU::FPU::ControlStatus::Cause) == 6);
+static_assert((RecompilerFpuFastMxcsrOffset & 3) == 0);
+static_assert((RecompilerFpuSaveMxcsrOffset & 3) == 0);
 
 #define XRd       IpuReg(r[0]) + XRdn * sizeof(r64)
 #define XRt       IpuReg(r[0]) + XRtn * sizeof(r64)
@@ -2401,6 +2406,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       sljit_emit_op1(compiler, SLJIT_MOV_U8, SLJIT_MEM1(sreg(0).fst), offset, SLJIT_IMM, 0);
     }
   };
+#if defined(ARCHITECTURE_ARM64) || defined(ARCHITECTURE_AMD64)
 #if defined(ARCHITECTURE_ARM64)
   auto arm64RegIndex = [&](reg r) -> s32 {
     return sljit_get_register_index(SLJIT_GP_REGISTER, r.fst);
@@ -2457,6 +2463,102 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   auto arm64FpuFastFpcr = [&]() -> u32 {
     return 0x0180'0000u | arm64RoundModeBits();
   };
+#elif defined(ARCHITECTURE_AMD64)
+  auto amd64RegIndex = [&](reg r) -> s32 {
+    return sljit_get_register_index(SLJIT_GP_REGISTER, r.fst);
+  };
+  auto amd64Emit = [&](std::initializer_list<u8> bytes) -> void {
+    u8 opcode[16];
+    assert(bytes.size() <= sizeof(opcode));
+    u32 n = 0;
+    for(auto byte : bytes) opcode[n++] = byte;
+    sljit_emit_op_custom(compiler, opcode, n);
+  };
+  auto amd64EmitModRMDisp32 = [&](u32 ext, s32 offset) -> void {
+    s32 base = sljit_get_register_index(SLJIT_GP_REGISTER, sreg(0).fst);
+    assert(base >= 0);
+    u8 opcode[10];
+    u32 n = 0;
+    u8 rex = 0x40u | (u8(base) >> 3 & 1);
+    if(rex != 0x40u) opcode[n++] = rex;
+    opcode[n++] = 0x0f;
+    opcode[n++] = 0xae;
+    opcode[n++] = 0x80u | (u8(ext & 7) << 3) | (u8(base) & 7);
+    if((u8(base) & 7) == 4) opcode[n++] = 0x24;
+    u32 disp = u32(offset);
+    opcode[n++] = disp >> 0;
+    opcode[n++] = disp >> 8;
+    opcode[n++] = disp >> 16;
+    opcode[n++] = disp >> 24;
+    sljit_emit_op_custom(compiler, opcode, n);
+  };
+  auto amd64MoveWToS = [&](u32 sd, reg rt) -> void {
+    s32 src = amd64RegIndex(rt);
+    assert(src >= 0);
+    u8 opcode[8];
+    u32 n = 0;
+    opcode[n++] = 0x66;
+    u8 rex = 0x40u | (u8(sd) >> 3 & 1) << 2 | (u8(src) >> 3 & 1);
+    if(rex != 0x40u) opcode[n++] = rex;
+    opcode[n++] = 0x0f;
+    opcode[n++] = 0x6e;
+    opcode[n++] = 0xc0u | (u8(sd) & 7) << 3 | (u8(src) & 7);
+    sljit_emit_op_custom(compiler, opcode, n);
+  };
+  auto amd64MoveSToW = [&](reg rt, u32 ss) -> void {
+    s32 dst = amd64RegIndex(rt);
+    assert(dst >= 0);
+    u8 opcode[8];
+    u32 n = 0;
+    opcode[n++] = 0x66;
+    u8 rex = 0x40u | (u8(ss) >> 3 & 1) << 2 | (u8(dst) >> 3 & 1);
+    if(rex != 0x40u) opcode[n++] = rex;
+    opcode[n++] = 0x0f;
+    opcode[n++] = 0x7e;
+    opcode[n++] = 0xc0u | (u8(ss) & 7) << 3 | (u8(dst) & 7);
+    sljit_emit_op_custom(compiler, opcode, n);
+  };
+  auto amd64Stmxcsr = [&](s32 offset) -> void {
+    amd64EmitModRMDisp32(3, offset);
+  };
+  auto amd64Ldmxcsr = [&](s32 offset) -> void {
+    amd64EmitModRMDisp32(2, offset);
+  };
+  auto amd64MoveWToS0 = [&](reg rt) -> void {
+    amd64MoveWToS(0, rt);
+  };
+  auto amd64MoveWToS1 = [&](reg rt) -> void {
+    amd64MoveWToS(1, rt);
+  };
+  auto amd64MoveS0ToW = [&](reg rt) -> void {
+    amd64MoveSToW(rt, 0);
+  };
+  auto amd64FsqrtS0 = [&]() -> void {
+    amd64Emit({0xf3, 0x0f, 0x51, 0xc0});
+  };
+  auto amd64FabsS0 = [&]() -> void {
+    mov32(reg(2), imm(0x7fff'ffff));
+    amd64MoveWToS1(reg(2));
+    amd64Emit({0x0f, 0x54, 0xc1});
+  };
+  auto amd64FnegS0 = [&]() -> void {
+    mov32(reg(2), imm(0x8000'0000));
+    amd64MoveWToS1(reg(2));
+    amd64Emit({0x0f, 0x57, 0xc1});
+  };
+  auto amd64RoundModeBits = [&]() -> u32 {
+    switch(emitStateKey.fpuRoundMode()) {
+    case 0: return 0x0000'0000u;
+    case 1: return 0x0000'6000u;
+    case 2: return 0x0000'4000u;
+    case 3: return 0x0000'2000u;
+    }
+    unreachable;
+  };
+  auto amd64FpuFastMxcsr = [&]() -> u32 {
+    return 0x0000'9f80u | amd64RoundModeBits();
+  };
+#endif
   auto fpuSingleSourceWordOffset = [&](u32 fsn) -> s32 {
     if(emitStateKey.floatingPointMode()) return (fsn - 16) * 8 + FpuR64S32Off;
     return ((fsn & ~1) - 16) * 8 + FpuR64S32Off;
@@ -2474,7 +2576,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     FpuCheckSubnormal = 1 << 2,
   };
   auto emitFpuOpcode = [&](
-    void (CPU::*slowPath)(u8, u8), u32 fdn, u32 fsn, u32 fpsrMask, u32 cycles,
+    void (CPU::*slowPath)(u8, u8), u32 fdn, u32 fsn, u32 cycles,
     u32 inputChecks, auto&& emitHostOpcode
   ) -> void {
     if(emitSlowPathSection || !emitStateKey.coprocessor1Enabled()) {
@@ -2524,6 +2626,9 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       setLabel(expNotAllOnes);
     }
 
+    sljit_jump* weird = nullptr;
+#if defined(ARCHITECTURE_ARM64)
+    constexpr u32 fpuStatusMask = 0xbf; // stick bits (0x80 is for denormals)
     arm64ReadFpcr(reg(2));
     mov64(reg(3), imm(arm64FpuFastFpcr()));
     arm64WriteFpcr(reg(3));
@@ -2536,8 +2641,24 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
     arm64ReadFpsr(reg(3));
     arm64WriteFpcr(reg(2));
-    test64(reg(3), imm(fpsrMask), set_z);
-    auto weird = jump(flag_nz);
+    test64(reg(3), imm(fpuStatusMask), set_z);
+    weird = jump(flag_nz);
+#elif defined(ARCHITECTURE_AMD64)
+    constexpr u32 fpuStatusMask = 0x3f;
+    amd64Stmxcsr(RecompilerFpuSaveMxcsrOffset);
+    mov32(mem(sreg(0), RecompilerFpuFastMxcsrOffset), imm(amd64FpuFastMxcsr()));
+    amd64Ldmxcsr(RecompilerFpuFastMxcsrOffset);
+
+    amd64MoveWToS0(reg(0));
+    emitHostOpcode();
+    amd64MoveS0ToW(reg(1));
+
+    amd64Stmxcsr(RecompilerFpuFastMxcsrOffset);
+    amd64Ldmxcsr(RecompilerFpuSaveMxcsrOffset);
+    mov32(reg(3), mem(sreg(0), RecompilerFpuFastMxcsrOffset));
+    test32(reg(3), imm(fpuStatusMask), set_z);
+    weird = jump(flag_nz);
+#endif
 
     mov32(mem(sreg(2), fdWordOff), reg(1));
     mov32(mem(sreg(2), fdWordhOff), imm(0));
@@ -2732,10 +2853,16 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FSQRT.S Fd,Fs
   case 0x04: {
-#if defined(ARCHITECTURE_ARM64)
+#if defined(ARCHITECTURE_ARM64) || defined(ARCHITECTURE_AMD64)
     emitFpuOpcode(
-      &CPU::FSQRT_S, Fdn, Fsn, 0xbf, (29 - 1) * 2, FpuCheckQnan,
-      [&]() -> void { arm64FsqrtS0(); }
+      &CPU::FSQRT_S, Fdn, Fsn, (29 - 1) * 2, FpuCheckQnan,
+      [&]() -> void {
+#if defined(ARCHITECTURE_ARM64)
+        arm64FsqrtS0();
+#elif defined(ARCHITECTURE_AMD64)
+        amd64FsqrtS0();
+#endif
+      }
     );
     return 0;
 #else
@@ -2747,10 +2874,16 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FABS.S Fd,Fs
   case 0x05: {
-#if defined(ARCHITECTURE_ARM64)
+#if defined(ARCHITECTURE_ARM64) || defined(ARCHITECTURE_AMD64)
     emitFpuOpcode(
-      &CPU::FABS_S, Fdn, Fsn, 0xbf, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
-      [&]() -> void { arm64FabsS0(); }
+      &CPU::FABS_S, Fdn, Fsn, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      [&]() -> void {
+#if defined(ARCHITECTURE_ARM64)
+        arm64FabsS0();
+#elif defined(ARCHITECTURE_AMD64)
+        amd64FabsS0();
+#endif
+      }
     );
     return 0;
 #else
@@ -2769,10 +2902,16 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FNEG.S Fd,Fs
   case 0x07: {
-#if defined(ARCHITECTURE_ARM64)
+#if defined(ARCHITECTURE_ARM64) || defined(ARCHITECTURE_AMD64)
     emitFpuOpcode(
-      &CPU::FNEG_S, Fdn, Fsn, 0xbf, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
-      [&]() -> void { arm64FnegS0(); }
+      &CPU::FNEG_S, Fdn, Fsn, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      [&]() -> void {
+#if defined(ARCHITECTURE_ARM64)
+        arm64FnegS0();
+#elif defined(ARCHITECTURE_AMD64)
+        amd64FnegS0();
+#endif
+      }
     );
     return 0;
 #else

@@ -1155,6 +1155,8 @@ struct CPU : Thread {
     StateKey emitStateKey = 0;
     u64 emitVaddr = 0;
     u32 emitDeferredCycles = 0;
+    u32 emitFpuFastMxcsr = 0;
+    u32 emitFpuSaveMxcsr = 0;
     Block* activeBlock = nullptr;
     bump_allocator allocator;
     std::vector<SlowPath> slowPaths;
