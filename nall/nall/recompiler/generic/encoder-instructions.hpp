@@ -35,6 +35,14 @@
   OP1(rev32_s16, REV32_S16)
 #undef OP1
 
+  auto mov32(freg x, reg y) -> void {
+    sljit_emit_fcopy(compiler, SLJIT_COPY32_TO_F32, x.fst, y.fst);
+  }
+
+  auto mov32(reg x, freg y) -> void {
+    sljit_emit_fcopy(compiler, SLJIT_COPY32_FROM_F32, y.fst, x.fst);
+  }
+
   template<typename T, typename U, typename V, typename W>
   auto lmul64_uw(T lo, U hi, V x, W y) {
     mov64(reg(0), x);
@@ -200,5 +208,25 @@
     static constexpr sljit_s32 kSimdType = SLJIT_SIMD_REG_128 | SLJIT_SIMD_ELEM_8 | SLJIT_SIMD_MEM_UNALIGNED;
     sljit_emit_simd_mov(compiler, SLJIT_SIMD_LOAD | kSimdType, kSimdTmp, src.fst, src.snd);
     sljit_emit_simd_mov(compiler, SLJIT_SIMD_STORE | kSimdType, kSimdTmp, dst.fst, dst.snd);
+  }
+
+  auto fsqrt32_f0() -> void {
+#if defined(ARCHITECTURE_ARM64)
+    u32 opcode = 0x1e21c000u;
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+#elif defined(ARCHITECTURE_AMD64)
+    u8 opcode[] = {0xf3, 0x0f, 0x51, 0xc0};
+    sljit_emit_op_custom(compiler, opcode, sizeof(opcode));
+#endif
+  }
+
+  template<typename T, typename U>
+  auto fabs32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_ABS_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fneg32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_NEG_F32, x.fst, x.snd, y.fst, y.snd);
   }
 //};

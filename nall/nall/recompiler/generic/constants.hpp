@@ -52,6 +52,10 @@
     explicit sreg(sljit_s32 index) : op_base(SLJIT_S(index), 0) {}
   };
 
+  struct freg : public op_base {
+    explicit freg(sljit_s32 index) : op_base(SLJIT_FR(index), 0) {}
+  };
+
   struct mem : public op_base {
     mem(sreg base, sljit_sw offset) : op_base(SLJIT_MEM1(base.fst), offset) {}
     mem(reg base, sljit_sw offset) : op_base(SLJIT_MEM1(base.fst), offset) {}
