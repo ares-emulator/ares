@@ -3,10 +3,10 @@
 #include <nall/decode/zip.hpp>
 
 extern "C" {
-#include <7z.h>
-#include <7zAlloc.h>
-#include <7zCrc.h>
-#include <7zFile.h>
+#include <lzma/C/7z.h>
+#include <lzma/C/7zAlloc.h>
+#include <lzma/C/7zCrc.h>
+#include <lzma/C/7zFile.h>
 }
 
 struct ZipArchive final : Archive {
