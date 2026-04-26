@@ -2401,6 +2401,151 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       sljit_emit_op1(compiler, SLJIT_MOV_U8, SLJIT_MEM1(sreg(0).fst), offset, SLJIT_IMM, 0);
     }
   };
+#if defined(ARCHITECTURE_ARM64)
+  auto arm64RegIndex = [&](reg r) -> s32 {
+    return sljit_get_register_index(SLJIT_GP_REGISTER, r.fst);
+  };
+  auto arm64RegBits0 = [&](reg r) -> u32 {
+    auto index = arm64RegIndex(r);
+    assert(index >= 0);
+    return u32(index);
+  };
+  auto arm64RegBits5 = [&](reg r) -> u32 {
+    auto index = arm64RegIndex(r);
+    assert(index >= 0);
+    return u32(index) << 5;
+  };
+  auto arm64Emit = [&](u32 opcode) -> void {
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+  };
+  auto arm64ReadFpcr = [&](reg rt) -> void {
+    arm64Emit(0xd53b4400u | arm64RegBits0(rt));
+  };
+  auto arm64WriteFpcr = [&](reg rt) -> void {
+    arm64Emit(0xd51b4400u | arm64RegBits0(rt));
+  };
+  auto arm64ReadFpsr = [&](reg rt) -> void {
+    arm64Emit(0xd53b4420u | arm64RegBits0(rt));
+  };
+  auto arm64WriteFpsr = [&](reg rt) -> void {
+    arm64Emit(0xd51b4420u | arm64RegBits0(rt));
+  };
+  auto arm64MoveWToS0 = [&](reg rt) -> void {
+    arm64Emit(0x1e270000u | arm64RegBits5(rt));
+  };
+  auto arm64MoveS0ToW = [&](reg rt) -> void {
+    arm64Emit(0x1e260000u | arm64RegBits0(rt));
+  };
+  auto arm64FsqrtS0 = [&]() -> void {
+    arm64Emit(0x1e21c000u);
+  };
+  auto arm64FabsS0 = [&]() -> void {
+    arm64Emit(0x1e20c000u);
+  };
+  auto arm64FnegS0 = [&]() -> void {
+    arm64Emit(0x1e214000u);
+  };
+  auto arm64RoundModeBits = [&]() -> u32 {
+    switch(emitStateKey.fpuRoundMode()) {
+    case 0: return 0x0000'0000u;
+    case 1: return 0x00c0'0000u;
+    case 2: return 0x0040'0000u;
+    case 3: return 0x0080'0000u;
+    }
+    unreachable;
+  };
+  auto arm64FpuFastFpcr = [&]() -> u32 {
+    return 0x0180'0000u | arm64RoundModeBits();
+  };
+  auto fpuSingleSourceWordOffset = [&](u32 fsn) -> s32 {
+    if(emitStateKey.floatingPointMode()) return (fsn - 16) * 8 + FpuR64S32Off;
+    return ((fsn & ~1) - 16) * 8 + FpuR64S32Off;
+  };
+  auto fpuSingleDestWordOffset = [&](u32 fdn) -> s32 {
+    return (fdn - 16) * 8 + FpuR64S32Off;
+  };
+  auto fpuSingleDestWordhOffset = [&](u32 fdn) -> s32 {
+    return (fdn - 16) * 8 + FpuR64S32hOff;
+  };
+  enum FpuInputCheck : u32 {
+    FpuCheckNone = 0,
+    FpuCheckQnan = 1 << 0,
+    FpuCheckSnan = 1 << 1,
+    FpuCheckSubnormal = 1 << 2,
+  };
+  auto emitFpuOpcode = [&](
+    void (CPU::*slowPath)(u8, u8), u32 fdn, u32 fsn, u32 fpsrMask, u32 cycles,
+    u32 inputChecks, auto&& emitHostOpcode
+  ) -> void {
+    if(emitSlowPathSection || !emitStateKey.coprocessor1Enabled()) {
+      setupCallf();
+      callf(slowPath, imm(fdn), imm(fsn));
+      return;
+    }
+
+    s32 fsWordOff = fpuSingleSourceWordOffset(fsn);
+    s32 fdWordOff = fpuSingleDestWordOffset(fdn);
+    s32 fdWordhOff = fpuSingleDestWordhOffset(fdn);
+
+    movzeron(FpuCsrCauseOffset, sizeof(CPU::FPU::ControlStatus::Cause));
+    mov32(reg(0), mem(sreg(2), fsWordOff));
+
+    bool checkQnan = inputChecks & FpuCheckQnan;
+    bool checkSnan = inputChecks & FpuCheckSnan;
+    bool checkSubnormal = inputChecks & FpuCheckSubnormal;
+    sljit_jump* qnan = nullptr;
+    sljit_jump* snan = nullptr;
+    sljit_jump* subnormal = nullptr;
+    if(checkSubnormal) {
+      and32(reg(1), reg(0), imm(0x7f80'0000));
+      cmp32(reg(1), imm(0), set_z);
+      auto expNonZero = jump(flag_nz);
+      and32(reg(1), reg(0), imm(0x007f'ffff));
+      cmp32(reg(1), imm(0), set_z);
+      subnormal = jump(flag_nz);
+      setLabel(expNonZero);
+    }
+    if(checkQnan && !checkSnan) {
+      and32(reg(1), reg(0), imm(0x7fc0'0000));
+      cmp32(reg(1), imm(0x7fc0'0000), set_z);
+      qnan = jump(flag_z);
+    } else if(checkQnan || checkSnan) {
+      and32(reg(1), reg(0), imm(0x7f80'0000));
+      cmp32(reg(1), imm(0x7f80'0000), set_z);
+      auto expNotAllOnes = jump(flag_nz);
+      and32(reg(1), reg(0), imm(0x007f'ffff));
+      cmp32(reg(1), imm(0), set_z);
+      auto inf = jump(flag_z);
+      and32(reg(1), reg(0), imm(0x0040'0000));
+      cmp32(reg(1), imm(0), set_z);
+      if(checkQnan) qnan = jump(flag_nz);
+      if(checkSnan) snan = jump(flag_z);
+      setLabel(inf);
+      setLabel(expNotAllOnes);
+    }
+
+    arm64ReadFpcr(reg(2));
+    mov64(reg(3), imm(arm64FpuFastFpcr()));
+    arm64WriteFpcr(reg(3));
+    mov64(reg(3), imm(0));
+    arm64WriteFpsr(reg(3));
+
+    arm64MoveWToS0(reg(0));
+    emitHostOpcode();
+    arm64MoveS0ToW(reg(1));
+
+    arm64ReadFpsr(reg(3));
+    arm64WriteFpcr(reg(2));
+    test64(reg(3), imm(fpsrMask), set_z);
+    auto weird = jump(flag_nz);
+
+    mov32(mem(sreg(2), fdWordOff), reg(1));
+    mov32(mem(sreg(2), fdWordhOff), imm(0));
+
+    deferSlowPath({qnan, snan, subnormal, weird}, instruction);
+    emitDeferredCycles += cycles;
+  };
+#endif
 
   switch(instruction >> 21 & 0x1f) {
 
@@ -2587,16 +2732,32 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FSQRT.S Fd,Fs
   case 0x04: {
+#if defined(ARCHITECTURE_ARM64)
+    emitFpuOpcode(
+      &CPU::FSQRT_S, Fdn, Fsn, 0xbf, (29 - 1) * 2, FpuCheckQnan,
+      [&]() -> void { arm64FsqrtS0(); }
+    );
+    return 0;
+#else
     setupCallf();
     callf(&CPU::FSQRT_S, imm(Fdn), imm(Fsn));
     return 0;
+#endif
   }
 
   //FABS.S Fd,Fs
   case 0x05: {
+#if defined(ARCHITECTURE_ARM64)
+    emitFpuOpcode(
+      &CPU::FABS_S, Fdn, Fsn, 0xbf, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      [&]() -> void { arm64FabsS0(); }
+    );
+    return 0;
+#else
     setupCallf();
     callf(&CPU::FABS_S, imm(Fdn), imm(Fsn));
     return 0;
+#endif
   }
 
   //FMOV.S Fd,Fs
@@ -2608,9 +2769,17 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FNEG.S Fd,Fs
   case 0x07: {
+#if defined(ARCHITECTURE_ARM64)
+    emitFpuOpcode(
+      &CPU::FNEG_S, Fdn, Fsn, 0xbf, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      [&]() -> void { arm64FnegS0(); }
+    );
+    return 0;
+#else
     setupCallf();
     callf(&CPU::FNEG_S, imm(Fdn), imm(Fsn));
     return 0;
+#endif
   }
 
   //FROUND.L.S Fd,Fs
