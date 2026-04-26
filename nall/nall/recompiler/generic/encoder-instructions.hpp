@@ -43,6 +43,74 @@
     sljit_emit_fcopy(compiler, SLJIT_COPY32_FROM_F32, y.fst, x.fst);
   }
 
+#if defined(ARCHITECTURE_ARM64)
+  auto arm64ReadFpcr(reg x) -> void {
+    s32 index = sljit_get_register_index(SLJIT_GP_REGISTER, x.fst);
+    assert(index >= 0);
+    u32 opcode = 0xd53b4400u | u32(index);
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+  }
+
+  auto arm64WriteFpcr(reg x) -> void {
+    s32 index = sljit_get_register_index(SLJIT_GP_REGISTER, x.fst);
+    assert(index >= 0);
+    u32 opcode = 0xd51b4400u | u32(index);
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+  }
+
+  auto arm64ReadFpsr(reg x) -> void {
+    s32 index = sljit_get_register_index(SLJIT_GP_REGISTER, x.fst);
+    assert(index >= 0);
+    u32 opcode = 0xd53b4420u | u32(index);
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+  }
+
+  auto arm64WriteFpsr(reg x) -> void {
+    s32 index = sljit_get_register_index(SLJIT_GP_REGISTER, x.fst);
+    assert(index >= 0);
+    u32 opcode = 0xd51b4420u | u32(index);
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+  }
+#elif defined(ARCHITECTURE_AMD64)
+  auto amd64Stmxcsr(s32 offset) -> void {
+    s32 base = sljit_get_register_index(SLJIT_GP_REGISTER, sreg(0).fst);
+    assert(base >= 0);
+    u8 opcode[10];
+    u32 n = 0;
+    u8 rex = 0x40u | (u8(base) >> 3 & 1);
+    if(rex != 0x40u) opcode[n++] = rex;
+    opcode[n++] = 0x0f;
+    opcode[n++] = 0xae;
+    opcode[n++] = 0x80u | (u8(3) << 3) | (u8(base) & 7);
+    if((u8(base) & 7) == 4) opcode[n++] = 0x24;
+    u32 disp = u32(offset);
+    opcode[n++] = disp >> 0;
+    opcode[n++] = disp >> 8;
+    opcode[n++] = disp >> 16;
+    opcode[n++] = disp >> 24;
+    sljit_emit_op_custom(compiler, opcode, n);
+  }
+
+  auto amd64Ldmxcsr(s32 offset) -> void {
+    s32 base = sljit_get_register_index(SLJIT_GP_REGISTER, sreg(0).fst);
+    assert(base >= 0);
+    u8 opcode[10];
+    u32 n = 0;
+    u8 rex = 0x40u | (u8(base) >> 3 & 1);
+    if(rex != 0x40u) opcode[n++] = rex;
+    opcode[n++] = 0x0f;
+    opcode[n++] = 0xae;
+    opcode[n++] = 0x80u | (u8(2) << 3) | (u8(base) & 7);
+    if((u8(base) & 7) == 4) opcode[n++] = 0x24;
+    u32 disp = u32(offset);
+    opcode[n++] = disp >> 0;
+    opcode[n++] = disp >> 8;
+    opcode[n++] = disp >> 16;
+    opcode[n++] = disp >> 24;
+    sljit_emit_op_custom(compiler, opcode, n);
+  }
+#endif
+
   template<typename T, typename U, typename V, typename W>
   auto lmul64_uw(T lo, U hi, V x, W y) {
     mov64(reg(0), x);

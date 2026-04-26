@@ -2425,29 +2425,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   };
 #if defined(ARCHITECTURE_ARM64) || defined(ARCHITECTURE_AMD64)
 #if defined(ARCHITECTURE_ARM64)
-  auto arm64RegIndex = [&](reg r) -> s32 {
-    return sljit_get_register_index(SLJIT_GP_REGISTER, r.fst);
-  };
-  auto arm64RegBits0 = [&](reg r) -> u32 {
-    auto index = arm64RegIndex(r);
-    assert(index >= 0);
-    return u32(index);
-  };
-  auto arm64Emit = [&](u32 opcode) -> void {
-    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
-  };
-  auto arm64ReadFpcr = [&](reg rt) -> void {
-    arm64Emit(0xd53b4400u | arm64RegBits0(rt));
-  };
-  auto arm64WriteFpcr = [&](reg rt) -> void {
-    arm64Emit(0xd51b4400u | arm64RegBits0(rt));
-  };
-  auto arm64ReadFpsr = [&](reg rt) -> void {
-    arm64Emit(0xd53b4420u | arm64RegBits0(rt));
-  };
-  auto arm64WriteFpsr = [&](reg rt) -> void {
-    arm64Emit(0xd51b4420u | arm64RegBits0(rt));
-  };
   auto arm64RoundModeBits = [&]() -> u32 {
     switch(emitStateKey.fpuRoundMode()) {
     case 0: return 0x0000'0000u;
@@ -2457,34 +2434,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     }
     unreachable;
   };
+  // FPCR value to be used during fast path execution
   auto arm64FpuFastFpcr = [&]() -> u32 {
     return 0x0100'0000u | arm64RoundModeBits();
   };
 #elif defined(ARCHITECTURE_AMD64)
-  auto amd64EmitModRMDisp32 = [&](u32 ext, s32 offset) -> void {
-    s32 base = sljit_get_register_index(SLJIT_GP_REGISTER, sreg(0).fst);
-    assert(base >= 0);
-    u8 opcode[10];
-    u32 n = 0;
-    u8 rex = 0x40u | (u8(base) >> 3 & 1);
-    if(rex != 0x40u) opcode[n++] = rex;
-    opcode[n++] = 0x0f;
-    opcode[n++] = 0xae;
-    opcode[n++] = 0x80u | (u8(ext & 7) << 3) | (u8(base) & 7);
-    if((u8(base) & 7) == 4) opcode[n++] = 0x24;
-    u32 disp = u32(offset);
-    opcode[n++] = disp >> 0;
-    opcode[n++] = disp >> 8;
-    opcode[n++] = disp >> 16;
-    opcode[n++] = disp >> 24;
-    sljit_emit_op_custom(compiler, opcode, n);
-  };
-  auto amd64Stmxcsr = [&](s32 offset) -> void {
-    amd64EmitModRMDisp32(3, offset);
-  };
-  auto amd64Ldmxcsr = [&](s32 offset) -> void {
-    amd64EmitModRMDisp32(2, offset);
-  };
   auto amd64RoundModeBits = [&]() -> u32 {
     switch(emitStateKey.fpuRoundMode()) {
     case 0: return 0x0000'0000u;
@@ -2494,67 +2448,46 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     }
     unreachable;
   };
+  // MXCSR value to be used during fast path execution
   auto amd64FpuFastMxcsr = [&]() -> u32 {
     return 0x0000'9f80u | amd64RoundModeBits();
   };
 #endif
-  auto fpuSingleSourceWordOffset = [&](u32 fsn) -> s32 {
-    if(emitStateKey.floatingPointMode()) return (fsn - 16) * 8 + FpuR64S32Off;
-    return ((fsn & ~1) - 16) * 8 + FpuR64S32Off;
-  };
-  auto fpuSingleTargetWordOffset = [&](u32 ftn) -> s32 {
-    return (ftn - 16) * 8 + FpuR64S32Off;
-  };
-  auto fpuSingleDestWordOffset = [&](u32 fdn) -> s32 {
-    return (fdn - 16) * 8 + FpuR64S32Off;
-  };
-  auto fpuSingleDestWordhOffset = [&](u32 fdn) -> s32 {
-    return (fdn - 16) * 8 + FpuR64S32hOff;
-  };
-  auto emitUnderflowFixup = [&](u32 passthroughMask, reg status, reg value, reg scratch) -> void {
-    constexpr u32 underflowMask = 1u << CPU::FPU::ControlStatus::UnderflowBit;
-    if(!(passthroughMask & underflowMask)) return;
-    test32(status, imm(underflowMask), set_z);
-    auto noUnderflow = jump(flag_z);
-    switch(emitStateKey.fpuRoundMode()) {
-    case 0:
-    case 1:
-      and32(value, value, imm(0x8000'0000u));
-      break;
-    case 2: {
-      and32(scratch, value, imm(0x8000'0000u));
-      cmp32(scratch, imm(0), set_z);
-      auto positive = jump(flag_z);
-      mov32(value, imm(0x8000'0000u));
-      auto done = jump();
-      setLabel(positive);
-      mov32(value, imm(0x0080'0000u));
-      setLabel(done);
-      break;
-    }
-    case 3: {
-      and32(scratch, value, imm(0x8000'0000u));
-      cmp32(scratch, imm(0), set_z);
-      auto positive = jump(flag_z);
-      mov32(value, imm(0x8080'0000u));
-      auto done = jump();
-      setLabel(positive);
-      mov32(value, imm(0x0000'0000u));
-      setLabel(done);
-      break;
-    }
-    }
-    setLabel(noUnderflow);
-  };
   enum FpuInputCheck : u32 {
     FpuCheckNone = 0,
     FpuCheckQnan = 1 << 0,
     FpuCheckSnan = 1 << 1,
     FpuCheckSubnormal = 1 << 2,
   };
+
+  constexpr u32 fpuInvalidMask    = 1u << CPU::FPU::ControlStatus::InvalidOperationBit;
+  constexpr u32 fpuDiv0Mask       = 1u << CPU::FPU::ControlStatus::DivisionByZeroBit;
+  constexpr u32 fpuOverflowMask   = 1u << CPU::FPU::ControlStatus::OverflowBit;
+  constexpr u32 fpuUnderflowMask  = 1u << CPU::FPU::ControlStatus::UnderflowBit;
+  constexpr u32 fpuInexactMask    = 1u << CPU::FPU::ControlStatus::InexactBit;
+  constexpr u32 fpuDenormalMask   = 1u << CPU::FPU::ControlStatus::DenormalBit;
+  constexpr u32 fpuIeeeMask       = fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask;
+
+  // Helper function to emit a FPU opcode.
+  // The main idea is to run an equivalent FPU opcode directly on the host FPU,
+  // with the same control configuration as the MIPS code. After running the
+  // opcode, control flags are collected. Since VR4300 was "mostly" following
+  // the same IEEE 754-1985 standard as modern CPUs, the flags will be very very
+  // close. 
+  // If the VR4300 was configured to raise exceptions for certain conditions,
+  // and those conditions were signaled in the control flags, we just go into a
+  // slow path that calls into the interpreter.
+  // Otherwise, we complete the fast path by mapping the host FPU flags into the
+  // VR4300 control registers, handling a few semantic differences, and write the
+  // result into the destination register.
   auto emitFpuOpcode = [&](
-    auto&& callSlowPath, u32 fdn, std::initializer_list<u32> inputs,
-    u32 cycles, u32 inputChecks, u32 passthroughMask, auto&& emitHostOpcode
+    auto&& callSlowPath,                // Function pointer to call into the interpreter for slow path
+    u32 fdn,                            // Destination register
+    std::initializer_list<u32> inputs,  // List of source registers
+    u32 cycles,                         // Cycles that the opcode takes to execute
+    u32 inputChecks,                    // Bitmask of checks to perform on input operand(s)
+    u32 passthroughMask,                // Bitmask of host FPU flags that can be safely masked to VR4300 FPU flags
+    auto&& emitHostOpcode               // Function pointer to emit the host FPU opcode
   ) -> void {
 #if !defined(ARCHITECTURE_ARM64) && !defined(ARCHITECTURE_AMD64)
     callSlowPath();
@@ -2566,56 +2499,56 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     }
 
     u32 inputCount = (u32)inputs.size();
-    if(inputCount == 0 || inputCount > 2) {
-      callSlowPath();
-      return;
-    }
+    assert(inputCount == 1 || inputCount == 2);
 
+    // Decode opcode input fields into actual register numbers (using also
+    // the FR bit that determines register layout).
     auto input = inputs.begin();
     u32 fsn = *input++;
     u32 ftn = inputCount == 2 ? *input : 0;
-    s32 fsWordOff = fpuSingleSourceWordOffset(fsn);
-    s32 ftWordOff = inputCount == 2 ? fpuSingleTargetWordOffset(ftn) : 0;
-    s32 fdWordOff = fpuSingleDestWordOffset(fdn);
-    s32 fdWordhOff = fpuSingleDestWordhOffset(fdn);
+    s32 fsWordOff;
+    if(emitStateKey.floatingPointMode())
+      fsWordOff = (fsn - 16) * 8 + FpuR64S32Off;
+    else
+      fsWordOff = ((fsn & ~1) - 16) * 8 + FpuR64S32Off;
+    s32 ftWordOff = inputCount == 2 ? (ftn - 16) * 8 + FpuR64S32Off : 0;
+    s32 fdWordOff = (fdn - 16) * 8 + FpuR64S32Off;
+    s32 fdWordhOff = (fdn - 16) * 8 + FpuR64S32hOff;
 
-    movzeron(FpuCsrCauseOffset, sizeof(CPU::FPU::ControlStatus::Cause));
+    // EMIT: read input(s)
     mov32(reg(0), mem(sreg(2), fsWordOff));
     if(inputCount == 2) mov32(reg(1), mem(sreg(2), ftWordOff));
 
-    bool checkQnan = inputChecks & FpuCheckQnan;
-    bool checkSnan = inputChecks & FpuCheckSnan;
+    // Implement the requested input checks. VR4300 has some unimplemented cases
+    // (whose list depends on the opcode), that must be explicitly checked here
+    // because our host FPU would instead handle them just fine.
+    // If we meet one of these conditions, we jump to the slow path.
+    bool checkQnan      = inputChecks & FpuCheckQnan;
+    bool checkSnan      = inputChecks & FpuCheckSnan;
     bool checkSubnormal = inputChecks & FpuCheckSubnormal;
     auto emitInputChecks = [&](reg source, sljit_jump*& qnan, sljit_jump*& snan, sljit_jump*& subnormal) -> void {
+      if (inputChecks == 0) return;
+      shl32(reg(2), source, imm(1));
+
       if(checkSubnormal) {
-        and32(reg(2), source, imm(0x7f80'0000));
-        cmp32(reg(2), imm(0), set_z);
-        auto expNonZero = jump(flag_nz);
-        and32(reg(2), source, imm(0x007f'ffff));
-        cmp32(reg(2), imm(0), set_z);
-        subnormal = jump(flag_nz);
-        setLabel(expNonZero);
+        sub32(reg(3), reg(2), imm(1));
+        cmp32(reg(3), imm(0x00ff'ffffu), set_ult);
+        subnormal = jump(flag_ult);
       }
       if(checkQnan && !checkSnan) {
-        and32(reg(2), source, imm(0x7fc0'0000));
-        cmp32(reg(2), imm(0x7fc0'0000), set_z);
-        qnan = jump(flag_z);
-      } else if(checkQnan || checkSnan) {
-        and32(reg(2), source, imm(0x7f80'0000));
-        cmp32(reg(2), imm(0x7f80'0000), set_z);
-        auto expNotAllOnes = jump(flag_nz);
-        and32(reg(2), source, imm(0x007f'ffff));
-        cmp32(reg(2), imm(0), set_z);
-        auto inf = jump(flag_z);
-        and32(reg(2), source, imm(0x0040'0000));
-        cmp32(reg(2), imm(0), set_z);
-        if(checkQnan) qnan = jump(flag_nz);
-        if(checkSnan) snan = jump(flag_z);
-        setLabel(inf);
-        setLabel(expNotAllOnes);
+        cmp32(reg(2), imm(0xff80'0000u), set_uge);
+        qnan = jump(flag_uge);
+      } else if(!checkQnan && checkSnan) {
+        xor32(reg(3), reg(2), imm(0x0040'0000u));
+        cmp32(reg(3), imm(0xff80'0000u), set_ugt);
+        snan = jump(flag_ugt);
+      } else if(checkQnan && checkSnan) {
+        cmp32(reg(2), imm(0xff00'0000u), set_ugt);
+        snan = jump(flag_ugt);
       }
     };
 
+    // Run input checks for each input operand
     sljit_jump* qnanFs = nullptr;
     sljit_jump* snanFs = nullptr;
     sljit_jump* subnormalFs = nullptr;
@@ -2626,70 +2559,113 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     sljit_jump* subnormalFt = nullptr;
     if(inputCount == 2) emitInputChecks(reg(1), qnanFt, snanFt, subnormalFt);
 
-    constexpr u32 fpuInvalidMask = 1u << CPU::FPU::ControlStatus::InvalidOperationBit;
-    constexpr u32 fpuDiv0Mask = 1u << CPU::FPU::ControlStatus::DivisionByZeroBit;
-    constexpr u32 fpuOverflowMask = 1u << CPU::FPU::ControlStatus::OverflowBit;
-    constexpr u32 fpuUnderflowMask = 1u << CPU::FPU::ControlStatus::UnderflowBit;
-    constexpr u32 fpuInexactMask = 1u << CPU::FPU::ControlStatus::InexactBit;
-    constexpr u32 fpuDenormalMask = 1u << CPU::FPU::ControlStatus::DenormalBit;
-    constexpr u32 fpuIeeeMask = fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask;
+    // Compute the trap mask and passthrough mask.
+    // The trap mask is the bitmask of FPU flags that would trigger a VR4300 exception when signaled.
+    // The passthrough mask is the bitmask of FPU flags that can be safely written back into
+    // VR4300 FPU flags, as they won't trigger a VR4300 exception.
     u32 trapMask = 0;
     if(emitStateKey.fpuInvalidOperationEnabled()) trapMask |= fpuInvalidMask;
-    if(emitStateKey.fpuDivisionByZeroEnabled()) trapMask |= fpuDiv0Mask;
-    if(emitStateKey.fpuOverflowEnabled()) trapMask |= fpuOverflowMask;
-    if(emitStateKey.fpuUnderflowEnabled()) trapMask |= fpuUnderflowMask;
-    if(emitStateKey.fpuInexactEnabled()) trapMask |= fpuInexactMask;
+    if(emitStateKey.fpuDivisionByZeroEnabled())   trapMask |= fpuDiv0Mask;
+    if(emitStateKey.fpuOverflowEnabled())         trapMask |= fpuOverflowMask;
+    if(emitStateKey.fpuUnderflowEnabled())        trapMask |= fpuUnderflowMask;
+    if(emitStateKey.fpuInexactEnabled())          trapMask |= fpuInexactMask;
     u32 passthrough = passthroughMask & fpuIeeeMask;
-    if(!emitStateKey.fpuFlushSubnormals()) passthrough &= ~fpuUnderflowMask;
+    if(!emitStateKey.fpuFlushSubnormals())        passthrough &= ~fpuUnderflowMask;
     u32 fallbackMask = trapMask | fpuDenormalMask | (fpuIeeeMask & ~passthrough);
-    u32 stickyMask = passthrough & ~trapMask;
+    u32 stickyMask   = passthrough & ~trapMask;
+
+    // EMIT: run the host FPU opcode
     sljit_jump* weird = nullptr;
 #if defined(ARCHITECTURE_ARM64)
+    // EMIT: backup FPCR, set it to the fast path value, and clear FPSR
     arm64ReadFpcr(reg(2));
     mov64(reg(3), imm(arm64FpuFastFpcr()));
     arm64WriteFpcr(reg(3));
     mov64(reg(3), imm(0));
     arm64WriteFpsr(reg(3));
 
+    // EMIT: execute the host FPU opcode
     mov32(freg(0), reg(0));
     if(inputCount == 2) mov32(freg(1), reg(1));
     emitHostOpcode();
     mov32(reg(1), freg(0));
 
+    // EMIT: read FPSR and restore FPCR
     arm64ReadFpsr(reg(3));
     arm64WriteFpcr(reg(2));
+
+    // Special ARM64 compatibility fixup. In ARM64, when an underflow occurs,
+    // the inexact flag is not set. Instead, in VR4300 and AMD64, it is set.
     if(passthrough & fpuUnderflowMask) {
+      // EMIT: set the inexact flag if the underflow flag is set
       or32(reg(2), reg(3), imm(fpuInexactMask));
       test32(reg(3), imm(fpuUnderflowMask), set_z);
       cmov32(reg(3), reg(2), reg(3), flag_nz);
     }
-    test32(reg(3), imm(fallbackMask), set_z);
-    weird = jump(flag_nz);
 #elif defined(ARCHITECTURE_AMD64)
+    // EMIT: backup MXCSR, set it to the fast path value (which includes empty flags)
     amd64Stmxcsr(RecompilerFpuSaveMxcsrOffset);
     mov32(mem(sreg(0), RecompilerFpuFastMxcsrOffset), imm(amd64FpuFastMxcsr()));
     amd64Ldmxcsr(RecompilerFpuFastMxcsrOffset);
 
+    // EMIT: execute the host FPU opcode
     mov32(freg(0), reg(0));
     if(inputCount == 2) mov32(freg(1), reg(1));
     emitHostOpcode();
     mov32(reg(1), freg(0));
 
+    // EMIT: read MXCSR and restore it
     amd64Stmxcsr(RecompilerFpuFastMxcsrOffset);
     amd64Ldmxcsr(RecompilerFpuSaveMxcsrOffset);
     mov32(reg(3), mem(sreg(0), RecompilerFpuFastMxcsrOffset));
-    test32(reg(3), imm(fallbackMask), set_z);
-    weird = jump(flag_nz);
 #endif
 
-    and32(reg(0), reg(3), imm(stickyMask));
-    or8(mem(sreg(0), FpuCsrCauseDataOffset), mem(sreg(0), FpuCsrCauseDataOffset), reg(0), reg(2));
-    or8(mem(sreg(0), FpuCsrFlagDataOffset), mem(sreg(0), FpuCsrFlagDataOffset), reg(0), reg(2));
-    emitUnderflowFixup(passthrough, reg(3), reg(1), reg(0));
+    // EMIT: check if any FPU flags were signaled for which we must fallback
+    // to the interpreter. If so, we jump to the slow path.
+    test32(reg(3), imm(fallbackMask), set_z);
+    weird = jump(flag_nz);
 
+    // EMIT: update VR4300 FPU flags. Isolate the sticky bits (the safe passthrough ones),
+    // and write them to the CAUSE bits. Then also update the FLAGS bits (with an OR,
+    // because they are sticky across multiple instructions).
+    and32(reg(0), reg(3), imm(stickyMask));
+    mov32_u8(mem(sreg(0), FpuCsrCauseDataOffset), reg(0));
+    or8(mem(sreg(0), FpuCsrFlagDataOffset), mem(sreg(0), FpuCsrFlagDataOffset), reg(0), reg(2));
+
+    // Sanitize a different between VR4300 and AMD64/ARM64. In VR4300, when an underflow occurs and
+    // subnormals are flushed, the resulting number is rounded according to the rounding mode. So it
+    // can be either +0/-0, or the smallest-magnitude positive/negative number. Instead, on
+    // AMD64/ARM64, the resulting number is always +0/-0.
+    // So we need to sanitize the result accordingly. We check if passthrough was requested for the
+    // underflow flag (can only happen if subnormals are flushed anyway).
+    bool roundToInf = emitStateKey.fpuRoundMode() == 2 || emitStateKey.fpuRoundMode() == 3;
+    if((passthrough & fpuUnderflowMask) && roundToInf) {
+      test32(reg(3), imm(fpuUnderflowMask), set_z);
+      auto noUnderflow = jump(flag_z);
+      switch(emitStateKey.fpuRoundMode()) {
+      case 2: {
+        cmp32(reg(1), imm(0), set_slt);
+        mov32(reg(1), imm(0x8000'0000u));
+        mov32(reg(2), imm(0x0080'0000u));
+        cmov32(reg(1), reg(2), reg(1), flag_sge);
+        break;
+      }
+      case 3: {
+        cmp32(reg(1), imm(0), set_slt);
+        mov32(reg(1), imm(0x8080'0000u));
+        mov32(reg(2), imm(0x0000'0000u));
+        cmov32(reg(1), reg(2), reg(1), flag_sge);
+        break;
+      }
+      }
+      setLabel(noUnderflow);
+    }
+
+    // EMIT: write the result to the destination register.
     mov32(mem(sreg(2), fdWordOff), reg(1));
     mov32(mem(sreg(2), fdWordhOff), imm(0));
 
+    // Defer the slow paths.
     if(inputCount == 1) {
       deferSlowPath({qnanFs, snanFs, subnormalFs, weird}, instruction);
     } else {
@@ -2699,6 +2675,8 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         weird
       }, instruction);
     }
+
+    // Account for the cycles taken by the slow path.
     emitDeferredCycles += cycles;
   };
 #endif
@@ -2867,10 +2845,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       },
       Fdn, {Fsn, Ftn}, (5 - 1) * 2,
       FpuCheckQnan,
-      (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
-    | (1u << CPU::FPU::ControlStatus::OverflowBit)
-    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
-    | (1u << CPU::FPU::ControlStatus::InexactBit),
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fadd32(freg(0), freg(0), freg(1));
       }
@@ -2887,10 +2862,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       },
       Fdn, {Fsn, Ftn}, (5 - 1) * 2,
       FpuCheckQnan,
-      (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
-    | (1u << CPU::FPU::ControlStatus::OverflowBit)
-    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
-    | (1u << CPU::FPU::ControlStatus::InexactBit),
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fsub32(freg(0), freg(0), freg(1));
       }
@@ -2907,10 +2879,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       },
       Fdn, {Fsn, Ftn}, (5 - 1) * 2,
       FpuCheckQnan,
-      (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
-    | (1u << CPU::FPU::ControlStatus::OverflowBit)
-    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
-    | (1u << CPU::FPU::ControlStatus::InexactBit),
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fmul32(freg(0), freg(0), freg(1));
       }
@@ -2927,10 +2896,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       },
       Fdn, {Fsn, Ftn}, (29 - 1) * 2,
       FpuCheckQnan,
-      (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
-    | (1u << CPU::FPU::ControlStatus::OverflowBit)
-    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
-    | (1u << CPU::FPU::ControlStatus::InexactBit),
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fdiv32(freg(0), freg(0), freg(1));
       }
@@ -2946,10 +2912,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FSQRT_S, imm(Fdn), imm(Fsn));
       },
       Fdn, {Fsn}, (29 - 1) * 2, FpuCheckQnan,
-      (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
-    | (1u << CPU::FPU::ControlStatus::OverflowBit)
-    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
-    | (1u << CPU::FPU::ControlStatus::InexactBit),
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fsqrt32_f0();
       }
@@ -2965,11 +2928,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FABS_S, imm(Fdn), imm(Fsn));
       },
       Fdn, {Fsn}, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
-      (1u << CPU::FPU::ControlStatus::InvalidOperationBit)
-    | (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
-    | (1u << CPU::FPU::ControlStatus::OverflowBit)
-    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
-    | (1u << CPU::FPU::ControlStatus::InexactBit),
+      fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fabs32(freg(0), freg(0));
       }
@@ -2992,11 +2951,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FNEG_S, imm(Fdn), imm(Fsn));
       },
       Fdn, {Fsn}, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
-      (1u << CPU::FPU::ControlStatus::InvalidOperationBit)
-    | (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
-    | (1u << CPU::FPU::ControlStatus::OverflowBit)
-    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
-    | (1u << CPU::FPU::ControlStatus::InexactBit),
+      fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fneg32(freg(0), freg(0));
       }
