@@ -255,6 +255,16 @@
   }
 
   template<typename T, typename U, typename V>
+  auto fadd32(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_ADD_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fsub32(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_SUB_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
   auto fmul32(T x, U y, V z) -> void {
     sljit_emit_fop2(compiler, SLJIT_MUL_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
   }

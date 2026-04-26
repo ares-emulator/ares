@@ -2860,15 +2860,41 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FADD.S Fd,Fs,Ft
   case 0x00: {
-    setupCallf();
-    callf(&CPU::FADD_S, imm(Fdn), imm(Fsn), imm(Ftn));
+    emitFpuOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FADD_S, imm(Fdn), imm(Fsn), imm(Ftn));
+      },
+      Fdn, {Fsn, Ftn}, (5 - 1) * 2,
+      FpuCheckQnan,
+      (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
+    | (1u << CPU::FPU::ControlStatus::OverflowBit)
+    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
+    | (1u << CPU::FPU::ControlStatus::InexactBit),
+      [&]() -> void {
+        fadd32(freg(0), freg(0), freg(1));
+      }
+    );
     return 0;
   }
 
   //FSUB.S Fd,Fs,Ft
   case 0x01: {
-    setupCallf();
-    callf(&CPU::FSUB_S, imm(Fdn), imm(Fsn), imm(Ftn));
+    emitFpuOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FSUB_S, imm(Fdn), imm(Fsn), imm(Ftn));
+      },
+      Fdn, {Fsn, Ftn}, (5 - 1) * 2,
+      FpuCheckQnan,
+      (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
+    | (1u << CPU::FPU::ControlStatus::OverflowBit)
+    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
+    | (1u << CPU::FPU::ControlStatus::InexactBit),
+      [&]() -> void {
+        fsub32(freg(0), freg(0), freg(1));
+      }
+    );
     return 0;
   }
 
