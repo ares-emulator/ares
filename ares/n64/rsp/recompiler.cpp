@@ -2420,7 +2420,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
         return;
       }
       add64(reg(3), DmemReg, imm(address));
-      callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
+      callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source)); //not a typo: implementation shared by SPV and SUV
       return;
     }
     add32(reg(1), mem(Rs), imm(i7 * 8));
@@ -2428,7 +2428,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction, u32 pc, bool delaySlot, bool emi
     cmp32(reg(1), imm(0x0ff8), set_ugt);
     auto slow = jump(flag_ugt);
     add64(reg(3), DmemReg, reg(1));
-    callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source));
+    callf(&RSP::fastSUV, mem(Vt), reg(3), imm64(source)); //see above comment
     deferSlowPath(slow);
     return;
   }
