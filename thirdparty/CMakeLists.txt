@@ -4,16 +4,23 @@ target_include_directories(sljit PUBLIC ../thirdparty)
 target_compile_definitions(sljit PUBLIC SLJIT_HAVE_CONFIG_PRE=1 SLJIT_HAVE_CONFIG_POST=1)
 target_compile_options(sljit PRIVATE $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-conditional-uninitialized>)
 
-# Standalone latest LZMA SDK for 7z container support in mia.
-add_subdirectory(lzma EXCLUDE_FROM_ALL)
-
 option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
+
+# Standalone latest LZMA SDK for 7z container support in mia.
+# ARES_ENABLE_CHD must be declared before this so lzma/CMakeLists.txt can
+# exclude source files that are also compiled by libchdr's lzma dependency,
+# avoiding duplicate symbol errors at link time.
+add_subdirectory(lzma EXCLUDE_FROM_ALL)
 
 if(ARES_ENABLE_CHD)
   # lzma
   add_subdirectory(libchdr/deps/lzma-24.05 EXCLUDE_FROM_ALL)
   list(APPEND CHDR_LIBS lzma)
   list(APPEND CHDR_INCLUDES lzma)
+  # lzma_sdk_standalone omits source files duplicated by chdr's lzma (see
+  # thirdparty/lzma/CMakeLists.txt).  Propagate lzma as an interface dep so
+  # any target linking lzma_sdk_standalone also gets those symbols.
+  target_link_libraries(lzma_sdk_standalone INTERFACE lzma)
 
   if(OS_MACOS)
     option(WITH_SYSTEM_ZLIB "Use system zlib" ON)

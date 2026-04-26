@@ -141,6 +141,8 @@ if(ARES_BUILD_OPTIONAL_TARGETS)
       "$<$<PLATFORM_ID:Darwin>:$<LINK_LIBRARY:FRAMEWORK,Security.framework>>"
       "$<$<PLATFORM_ID:Darwin>:mia>"
   )
+  target_include_directories(mia-ui PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty)
+  target_link_libraries(mia-ui PRIVATE lzma_sdk_standalone $<$<BOOL:${ARES_ENABLE_CHD}>:chdr-static>)
 
   if(WIN32)
     target_sources(mia-ui PRIVATE resource/mia.rc resource/mia.Manifest)
