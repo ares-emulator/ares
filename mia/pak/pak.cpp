@@ -34,28 +34,21 @@ auto Pak::read(string location, std::vector<string> match) -> std::vector<u8> {
       ips_patch = file::read({Location::notsuffix(location), ".ips"});
     }
 
-    if(location.iendsWith(".zip")) {
-      Decode::ZIP archive;
-      if(archive.open(location)) {
-        for(auto& file : archive.file) {
-          for(auto& pattern : match) {
-            if(file.name.imatch(pattern)) {
-              memory = archive.extract(file);
-              break;
-            }
+    if(auto archive = openArchive(location)) {
+      memory = archiveExtractFirstMatching(archive, match);
+
+      if(!memory.empty()) {
+        //support BPS patches inside supported archives
+        auto& entries = archive->entries();
+        for(u32 index = 0; index < entries.size(); index++) {
+          auto& filename = entries[index];
+          if(filename.imatch("*.bps")) {
+            bps_patch = archive->extract(index);
+            break;
           }
-          if(!memory.empty()) break;
-        }
-        if(!memory.empty()) {
-          //support BPS patches inside the ZIP archive
-          for(auto& file : archive.file) {
-            if(file.name.imatch("*.bps")) {
-              bps_patch = archive.extract(file);
-              break;
-            } else if (file.name.imatch("*.ips")) {
-              ips_patch = archive.extract(file);
-              break;
-            }
+          if(filename.imatch("*.ips")) {
+            ips_patch = archive->extract(index);
+            break;
           }
         }
       }

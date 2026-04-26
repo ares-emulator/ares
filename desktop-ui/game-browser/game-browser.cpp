@@ -45,10 +45,13 @@ auto GameBrowserWindow::show(std::shared_ptr<Emulator> emulator) -> void {
     auto path = settings.paths.arcadeRoms;
     if(!path) path = {mia::homeLocation(), "Arcade"};
 
-    path = {path, "/", node["name"].string(), ".zip"};
-
-    if(inode::exists(path)) {
-      games.push_back({node["title"].string(), node["name"].string(), node["board"].string(), path});
+    string base = {path, "/", node["name"].string()};
+    for(auto extension : {string{".zip"}, string{".7z"}}) {
+      string location = {base, extension};
+      if(inode::exists(location)) {
+        games.push_back({node["title"].string(), node["name"].string(), node["board"].string(), location});
+        break;
+      }
     }
   }
 

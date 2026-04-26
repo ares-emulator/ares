@@ -23,7 +23,7 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
     auto files = BrowserDialog()
     .setTitle({"Import ", system, " Games"})
     .setPath(settings.recent)
-    .setFilters({{system, "|", nall::merge(extensions, ":"), ":*.zip:", nall::merge(extensions, ":").upcase(), ":*.ZIP"}, "All|*"})
+    .setFilters({{system, "|", nall::merge(extensions, ":"), ":*.zip:*.7z:", nall::merge(extensions, ":").upcase(), ":*.ZIP:*.7Z"}, "All|*"})
     .setAlignment(programWindow)
     .openFiles();
     if(!files.empty()) {

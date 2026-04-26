@@ -37,8 +37,7 @@ struct NeoGeo : Mame {
 };
 
 auto NeoGeo::read(string location, string match) -> std::vector<u8> {
-  // we expect mame style .zip rom images
-  if(!location.iendsWith(".zip")) {}
+  // we expect MAME-style archive ROM images.
 
   if(info) {
     if(match == "program.rom")   return loadRoms(location, info, "maincpu");
@@ -79,7 +78,7 @@ auto NeoGeo::load(string location) -> LoadResult {
     voiceBROM    = NeoGeo::read(location, "voice-b.rom");
   }
   
-  string invalidRomInfo = "Ensure your ROM is in a MAME-compatible .zip format.";
+  string invalidRomInfo = "Ensure your ROM is in a MAME-compatible .zip or .7z format.";
 
   if(programROM.empty()  ) return { invalidROM, invalidRomInfo };
   if(musicROM.empty()    ) return { invalidROM, invalidRomInfo };

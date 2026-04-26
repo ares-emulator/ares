@@ -59,6 +59,7 @@ struct LoadResult {
 
 namespace mia {
   #include "settings/settings.hpp"
+  #include "pak/archive.hpp"
   #include "pak/pak.hpp"
   #include "system/system.hpp"
   #include "medium/medium.hpp"

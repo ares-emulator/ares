@@ -9,19 +9,10 @@ auto NeoGeoAES::load(string location) -> LoadResult {
   this->location = locate();
   pak = std::make_shared<vfs::directory>();
 
-  if(location.iendsWith(".zip")) {
-    Decode::ZIP archive;
-    if(archive.open(location)) {
-      for(auto& file : archive.file) {
-        if(file.name == "neo-epo.bin") {
-          auto extracted = archive.extract(file);
-          std::vector<u8> memory;
-          memory.resize(extracted.size());
-          if(!extracted.empty()) memcpy(memory.data(), extracted.data(), extracted.size());
-          endianSwap(memory);
-          pak->append("bios.rom", memory);
-        }
-      }
+  if(auto archive = openArchive(location)) {
+    if(auto memory = archiveExtractByName(archive, "neo-epo.bin"); !memory.empty()) {
+      endianSwap(memory);
+      pak->append("bios.rom", memory);
     }
   } else {
     auto bios = Pak::read(location);

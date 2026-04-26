@@ -4,6 +4,9 @@ target_include_directories(sljit PUBLIC ../thirdparty)
 target_compile_definitions(sljit PUBLIC SLJIT_HAVE_CONFIG_PRE=1 SLJIT_HAVE_CONFIG_POST=1)
 target_compile_options(sljit PRIVATE $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-conditional-uninitialized>)
 
+# Standalone latest LZMA SDK for 7z container support in mia.
+add_subdirectory(lzma EXCLUDE_FROM_ALL)
+
 option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
 
 if(ARES_ENABLE_CHD)
@@ -107,6 +110,7 @@ add_library(qon STATIC qon/qon.cpp)
 set_target_properties(ymfm PROPERTIES FOLDER thirdparty PREFIX "")
 set_target_properties(tzxfile PROPERTIES FOLDER thirdparty PREFIX "")
 set_target_properties(sljit PROPERTIES FOLDER thirdparty PREFIX "")
+set_target_properties(lzma_sdk_standalone PROPERTIES FOLDER thirdparty PREFIX "")
 if(ARES_ENABLE_CHD)
   set_target_properties(chdr-static PROPERTIES FOLDER thirdparty PREFIX "")
   if(NOT WITH_SYSTEM_ZLIB)

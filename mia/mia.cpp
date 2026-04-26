@@ -68,6 +68,7 @@ auto hexString(std::span<const u8> view) -> string {
 #include "settings/settings.cpp"
 #include "system/system.cpp"
 #include "medium/medium.cpp"
+#include "pak/archive.cpp"
 #include "pak/pak.cpp"
 #if !defined(MIA_LIBRARY)
 #include "program/program.cpp"
@@ -128,11 +129,10 @@ auto identify(const string& filename) -> string {
   construct();
   auto extension = Location::suffix(filename).trimLeft(".", 1L).downcase();
 
-  if(extension == "zip") {
-    Decode::ZIP archive;
-    if(archive.open(filename)) {
-      for(auto& file : archive.file) {
-        auto match = Location::suffix(file.name).trimLeft(".", 1L).downcase();
+  if(extension == "zip" || extension == "7z") {
+    if(auto archive = openArchive(filename)) {
+      for(auto& file : archive->entries()) {
+        auto match = Location::suffix(file).trimLeft(".", 1L).downcase();
         for(auto& medium : media) {
           auto pak = mia::Medium::create(medium);
           auto exts = pak->extensions();
