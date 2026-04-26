@@ -2459,6 +2459,10 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     FpuCheckSnan = 1 << 1,
     FpuCheckSubnormal = 1 << 2,
   };
+  enum FpuWidth : u32 {
+    FpuWidth32 = 0,
+    FpuWidth64 = 1,
+  };
 
   constexpr u32 fpuInvalidMask    = 1u << CPU::FPU::ControlStatus::InvalidOperationBit;
   constexpr u32 fpuDiv0Mask       = 1u << CPU::FPU::ControlStatus::DivisionByZeroBit;
@@ -2484,6 +2488,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     auto&& callSlowPath,                // Function pointer to call into the interpreter for slow path
     u32 fdn,                            // Destination register
     std::initializer_list<u32> inputs,  // List of source registers
+    u32 width,                          // Operand width
     u32 cycles,                         // Cycles that the opcode takes to execute
     u32 inputChecks,                    // Bitmask of checks to perform on input operand(s)
     u32 passthroughMask,                // Bitmask of host FPU flags that can be safely masked to VR4300 FPU flags
@@ -2500,6 +2505,8 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
     u32 inputCount = (u32)inputs.size();
     assert(inputCount == 1 || inputCount == 2);
+    assert(width == FpuWidth32 || width == FpuWidth64);
+    bool isDouble = width == FpuWidth64;
 
     // Decode opcode input fields into actual register numbers (using also
     // the FR bit that determines register layout).
@@ -2507,17 +2514,31 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     u32 fsn = *input++;
     u32 ftn = inputCount == 2 ? *input : 0;
     s32 fsWordOff;
-    if(emitStateKey.floatingPointMode())
-      fsWordOff = (fsn - 16) * 8 + FpuR64S32Off;
-    else
-      fsWordOff = ((fsn & ~1) - 16) * 8 + FpuR64S32Off;
-    s32 ftWordOff = inputCount == 2 ? (ftn - 16) * 8 + FpuR64S32Off : 0;
-    s32 fdWordOff = (fdn - 16) * 8 + FpuR64S32Off;
+    if(isDouble) {
+      if(emitStateKey.floatingPointMode()) fsWordOff = (fsn - 16) * 8;
+      else fsWordOff = ((fsn & ~1) - 16) * 8;
+    } else {
+      if(emitStateKey.floatingPointMode()) fsWordOff = (fsn - 16) * 8 + FpuR64S32Off;
+      else fsWordOff = ((fsn & ~1) - 16) * 8 + FpuR64S32Off;
+    }
+    s32 ftWordOff = 0;
+    if(inputCount == 2) {
+      if(isDouble) ftWordOff = (ftn - 16) * 8;
+      else ftWordOff = (ftn - 16) * 8 + FpuR64S32Off;
+    }
+    s32 fdWordOff;
+    if(isDouble) fdWordOff = (fdn - 16) * 8;
+    else fdWordOff = (fdn - 16) * 8 + FpuR64S32Off;
     s32 fdWordhOff = (fdn - 16) * 8 + FpuR64S32hOff;
 
     // EMIT: read input(s)
-    mov32(reg(0), mem(sreg(2), fsWordOff));
-    if(inputCount == 2) mov32(reg(1), mem(sreg(2), ftWordOff));
+    if(isDouble) {
+      mov64(reg(0), mem(sreg(2), fsWordOff));
+      if(inputCount == 2) mov64(reg(1), mem(sreg(2), ftWordOff));
+    } else {
+      mov32(reg(0), mem(sreg(2), fsWordOff));
+      if(inputCount == 2) mov32(reg(1), mem(sreg(2), ftWordOff));
+    }
 
     // Implement the requested input checks. VR4300 has some unimplemented cases
     // (whose list depends on the opcode), that must be explicitly checked here
@@ -2528,23 +2549,42 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     bool checkSubnormal = inputChecks & FpuCheckSubnormal;
     auto emitInputChecks = [&](reg source, sljit_jump*& qnan, sljit_jump*& snan, sljit_jump*& subnormal) -> void {
       if (inputChecks == 0) return;
-      shl32(reg(2), source, imm(1));
-
-      if(checkSubnormal) {
-        sub32(reg(3), reg(2), imm(1));
-        cmp32(reg(3), imm(0x00ff'ffffu), set_ult);
-        subnormal = jump(flag_ult);
-      }
-      if(checkQnan && !checkSnan) {
-        cmp32(reg(2), imm(0xff80'0000u), set_uge);
-        qnan = jump(flag_uge);
-      } else if(!checkQnan && checkSnan) {
-        xor32(reg(3), reg(2), imm(0x0040'0000u));
-        cmp32(reg(3), imm(0xff80'0000u), set_ugt);
-        snan = jump(flag_ugt);
-      } else if(checkQnan && checkSnan) {
-        cmp32(reg(2), imm(0xff00'0000u), set_ugt);
-        snan = jump(flag_ugt);
+      if(isDouble) {
+        shl64(reg(2), source, imm(1));
+        if(checkSubnormal) {
+          sub64(reg(3), reg(2), imm(1));
+          cmp64(reg(3), imm(0x001f'ffff'ffff'ffffull), set_ult);
+          subnormal = jump(flag_ult);
+        }
+        if(checkQnan && !checkSnan) {
+          cmp64(reg(2), imm(0xfff0'0000'0000'0000ull), set_uge);
+          qnan = jump(flag_uge);
+        } else if(!checkQnan && checkSnan) {
+          xor64(reg(3), reg(2), imm(0x0008'0000'0000'0000ull));
+          cmp64(reg(3), imm(0xfff0'0000'0000'0000ull), set_ugt);
+          snan = jump(flag_ugt);
+        } else if(checkQnan && checkSnan) {
+          cmp64(reg(2), imm(0xffe0'0000'0000'0000ull), set_ugt);
+          snan = jump(flag_ugt);
+        }
+      } else {
+        shl32(reg(2), source, imm(1));
+        if(checkSubnormal) {
+          sub32(reg(3), reg(2), imm(1));
+          cmp32(reg(3), imm(0x00ff'ffffu), set_ult);
+          subnormal = jump(flag_ult);
+        }
+        if(checkQnan && !checkSnan) {
+          cmp32(reg(2), imm(0xff80'0000u), set_uge);
+          qnan = jump(flag_uge);
+        } else if(!checkQnan && checkSnan) {
+          xor32(reg(3), reg(2), imm(0x0040'0000u));
+          cmp32(reg(3), imm(0xff80'0000u), set_ugt);
+          snan = jump(flag_ugt);
+        } else if(checkQnan && checkSnan) {
+          cmp32(reg(2), imm(0xff00'0000u), set_ugt);
+          snan = jump(flag_ugt);
+        }
       }
     };
 
@@ -2585,10 +2625,16 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     arm64WriteFpsr(reg(3));
 
     // EMIT: execute the host FPU opcode
-    mov32(freg(0), reg(0));
-    if(inputCount == 2) mov32(freg(1), reg(1));
+    if(isDouble) {
+      mov64(freg(0), reg(0));
+      if(inputCount == 2) mov64(freg(1), reg(1));
+    } else {
+      mov32(freg(0), reg(0));
+      if(inputCount == 2) mov32(freg(1), reg(1));
+    }
     emitHostOpcode();
-    mov32(reg(1), freg(0));
+    if(isDouble) mov64(reg(1), freg(0));
+    else mov32(reg(1), freg(0));
 
     // EMIT: read FPSR and restore FPCR
     arm64ReadFpsr(reg(3));
@@ -2609,10 +2655,17 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     amd64Ldmxcsr(RecompilerFpuFastMxcsrOffset);
 
     // EMIT: execute the host FPU opcode
-    mov32(freg(0), reg(0));
-    if(inputCount == 2) mov32(freg(1), reg(1));
-    emitHostOpcode();
-    mov32(reg(1), freg(0));
+    if(isDouble) {
+      mov64(freg(0), reg(0));
+      if(inputCount == 2) mov64(freg(1), reg(1));
+      emitHostOpcode();
+      mov64(reg(1), freg(0));
+    } else {
+      mov32(freg(0), reg(0));
+      if(inputCount == 2) mov32(freg(1), reg(1));
+      emitHostOpcode();
+      mov32(reg(1), freg(0));
+    }
 
     // EMIT: read MXCSR and restore it
     amd64Stmxcsr(RecompilerFpuFastMxcsrOffset);
@@ -2644,17 +2697,31 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       auto noUnderflow = jump(flag_z);
       switch(emitStateKey.fpuRoundMode()) {
       case 2: {
-        cmp32(reg(1), imm(0), set_slt);
-        mov32(reg(1), imm(0x8000'0000u));
-        mov32(reg(2), imm(0x0080'0000u));
-        cmov32(reg(1), reg(2), reg(1), flag_sge);
+        if(isDouble) {
+          cmp64(reg(1), imm(0), set_slt);
+          mov64(reg(1), imm(-0x8000'0000'0000'0000ll));
+          mov64(reg(2), imm(0x0010'0000'0000'0000ull));
+          cmov64(reg(1), reg(2), reg(1), flag_sge);
+        } else {
+          cmp32(reg(1), imm(0), set_slt);
+          mov32(reg(1), imm(0x8000'0000u));
+          mov32(reg(2), imm(0x0080'0000u));
+          cmov32(reg(1), reg(2), reg(1), flag_sge);
+        }
         break;
       }
       case 3: {
-        cmp32(reg(1), imm(0), set_slt);
-        mov32(reg(1), imm(0x8080'0000u));
-        mov32(reg(2), imm(0x0000'0000u));
-        cmov32(reg(1), reg(2), reg(1), flag_sge);
+        if(isDouble) {
+          cmp64(reg(1), imm(0), set_sge);
+          mov64(reg(1), imm(-0x7ff0'0000'0000'0000ll));
+          mov64(reg(2), imm(0));
+          cmov64(reg(1), reg(2), reg(1), flag_sge);
+        } else {
+          cmp32(reg(1), imm(0), set_slt);
+          mov32(reg(1), imm(0x8080'0000u));
+          mov32(reg(2), imm(0x0000'0000u));
+          cmov32(reg(1), reg(2), reg(1), flag_sge);
+        }
         break;
       }
       }
@@ -2662,8 +2729,12 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     }
 
     // EMIT: write the result to the destination register.
-    mov32(mem(sreg(2), fdWordOff), reg(1));
-    mov32(mem(sreg(2), fdWordhOff), imm(0));
+    if(isDouble) {
+      mov64(mem(sreg(2), fdWordOff), reg(1));
+    } else {
+      mov32(mem(sreg(2), fdWordOff), reg(1));
+      mov32(mem(sreg(2), fdWordhOff), imm(0));
+    }
 
     // Defer the slow paths.
     if(inputCount == 1) {
@@ -2843,7 +2914,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         setupCallf();
         callf(&CPU::FADD_S, imm(Fdn), imm(Fsn), imm(Ftn));
       },
-      Fdn, {Fsn, Ftn}, (5 - 1) * 2,
+      Fdn, {Fsn, Ftn}, FpuWidth32, (5 - 1) * 2,
       FpuCheckQnan,
       fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
@@ -2860,7 +2931,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         setupCallf();
         callf(&CPU::FSUB_S, imm(Fdn), imm(Fsn), imm(Ftn));
       },
-      Fdn, {Fsn, Ftn}, (5 - 1) * 2,
+      Fdn, {Fsn, Ftn}, FpuWidth32, (5 - 1) * 2,
       FpuCheckQnan,
       fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
@@ -2877,7 +2948,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         setupCallf();
         callf(&CPU::FMUL_S, imm(Fdn), imm(Fsn), imm(Ftn));
       },
-      Fdn, {Fsn, Ftn}, (5 - 1) * 2,
+      Fdn, {Fsn, Ftn}, FpuWidth32, (5 - 1) * 2,
       FpuCheckQnan,
       fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
@@ -2894,7 +2965,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         setupCallf();
         callf(&CPU::FDIV_S, imm(Fdn), imm(Fsn), imm(Ftn));
       },
-      Fdn, {Fsn, Ftn}, (29 - 1) * 2,
+      Fdn, {Fsn, Ftn}, FpuWidth32, (29 - 1) * 2,
       FpuCheckQnan,
       fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
@@ -2911,7 +2982,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         setupCallf();
         callf(&CPU::FSQRT_S, imm(Fdn), imm(Fsn));
       },
-      Fdn, {Fsn}, (29 - 1) * 2, FpuCheckQnan,
+      Fdn, {Fsn}, FpuWidth32, (29 - 1) * 2, FpuCheckQnan,
       fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fsqrt32_f0();
@@ -2927,7 +2998,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         setupCallf();
         callf(&CPU::FABS_S, imm(Fdn), imm(Fsn));
       },
-      Fdn, {Fsn}, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      Fdn, {Fsn}, FpuWidth32, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fabs32(freg(0), freg(0));
@@ -2950,7 +3021,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         setupCallf();
         callf(&CPU::FNEG_S, imm(Fdn), imm(Fsn));
       },
-      Fdn, {Fsn}, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      Fdn, {Fsn}, FpuWidth32, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
       [&]() -> void {
         fneg32(freg(0), freg(0));
@@ -3161,43 +3232,101 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
 //FADD.D Fd,Fs,Ft
   case 0x00: {
-    setupCallf();
-    callf(&CPU::FADD_D, imm(Fdn), imm(Fsn), imm(Ftn));
+    emitFpuOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FADD_D, imm(Fdn), imm(Fsn), imm(Ftn));
+      },
+      Fdn, {Fsn, Ftn}, FpuWidth64, (3 - 1) * 2,
+      FpuCheckQnan,
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
+      [&]() -> void {
+        fadd64(freg(0), freg(0), freg(1));
+      }
+    );
     return 0;
   }
 
   //FSUB.D Fd,Fs,Ft
   case 0x01: {
-    setupCallf();
-    callf(&CPU::FSUB_D, imm(Fdn), imm(Fsn), imm(Ftn));
+    emitFpuOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FSUB_D, imm(Fdn), imm(Fsn), imm(Ftn));
+      },
+      Fdn, {Fsn, Ftn}, FpuWidth64, (3 - 1) * 2,
+      FpuCheckQnan,
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
+      [&]() -> void {
+        fsub64(freg(0), freg(0), freg(1));
+      }
+    );
     return 0;
   }
 
   //FMUL.D Fd,Fs,Ft
   case 0x02: {
-    setupCallf();
-    callf(&CPU::FMUL_D, imm(Fdn), imm(Fsn), imm(Ftn));
+    emitFpuOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FMUL_D, imm(Fdn), imm(Fsn), imm(Ftn));
+      },
+      Fdn, {Fsn, Ftn}, FpuWidth64, (8 - 1) * 2,
+      FpuCheckQnan,
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
+      [&]() -> void {
+        fmul64(freg(0), freg(0), freg(1));
+      }
+    );
     return 0;
   }
 
   //FDIV.D Fd,Fs,Ft
   case 0x03: {
-    setupCallf();
-    callf(&CPU::FDIV_D, imm(Fdn), imm(Fsn), imm(Ftn));
+    emitFpuOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FDIV_D, imm(Fdn), imm(Fsn), imm(Ftn));
+      },
+      Fdn, {Fsn, Ftn}, FpuWidth64, (58 - 1) * 2,
+      FpuCheckQnan,
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
+      [&]() -> void {
+        fdiv64(freg(0), freg(0), freg(1));
+      }
+    );
     return 0;
   }
 
   //FSQRT.D Fd,Fs
   case 0x04: {
-    setupCallf();
-    callf(&CPU::FSQRT_D, imm(Fdn), imm(Fsn));
+    emitFpuOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FSQRT_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, {Fsn}, FpuWidth64, (58 - 1) * 2, FpuCheckQnan,
+      fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
+      [&]() -> void {
+        fsqrt64_f0();
+      }
+    );
     return 0;
   }
 
   //FABS.D Fd,Fs
   case 0x05: {
-    setupCallf();
-    callf(&CPU::FABS_D, imm(Fdn), imm(Fsn));
+    emitFpuOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FABS_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, {Fsn}, FpuWidth64, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
+      [&]() -> void {
+        fabs64(freg(0), freg(0));
+      }
+    );
     return 0;
   }
 
@@ -3210,8 +3339,17 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FNEG.D Fd,Fs
   case 0x07: {
-    setupCallf();
-    callf(&CPU::FNEG_D, imm(Fdn), imm(Fsn));
+    emitFpuOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FNEG_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, {Fsn}, FpuWidth64, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
+      [&]() -> void {
+        fneg64(freg(0), freg(0));
+      }
+    );
     return 0;
   }
 

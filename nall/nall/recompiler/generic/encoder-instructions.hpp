@@ -43,6 +43,14 @@
     sljit_emit_fcopy(compiler, SLJIT_COPY32_FROM_F32, y.fst, x.fst);
   }
 
+  auto mov64(freg x, reg y) -> void {
+    sljit_emit_fcopy(compiler, SLJIT_COPY_TO_F64, x.fst, y.fst);
+  }
+
+  auto mov64(reg x, freg y) -> void {
+    sljit_emit_fcopy(compiler, SLJIT_COPY_FROM_F64, y.fst, x.fst);
+  }
+
 #if defined(ARCHITECTURE_ARM64)
   auto arm64ReadFpcr(reg x) -> void {
     s32 index = sljit_get_register_index(SLJIT_GP_REGISTER, x.fst);
@@ -269,6 +277,11 @@
     sljit_emit_select(compiler, SLJIT_32 | flags, x.fst, y.fst, y.snd, z.fst);
   }
 
+  template<typename T, typename U, typename V>
+  auto cmov64(T x, U y, V z, sljit_s32 flags) -> void {
+    sljit_emit_select(compiler, flags, x.fst, y.fst, y.snd, z.fst);
+  }
+
   //meta instructions
 
 
@@ -322,9 +335,24 @@
 #endif
   }
 
+  auto fsqrt64_f0() -> void {
+#if defined(ARCHITECTURE_ARM64)
+    u32 opcode = 0x1e61c000u;
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+#elif defined(ARCHITECTURE_AMD64)
+    u8 opcode[] = {0xf2, 0x0f, 0x51, 0xc0};
+    sljit_emit_op_custom(compiler, opcode, sizeof(opcode));
+#endif
+  }
+
   template<typename T, typename U, typename V>
   auto fadd32(T x, U y, V z) -> void {
     sljit_emit_fop2(compiler, SLJIT_ADD_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fadd64(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_ADD_F64, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
   }
 
   template<typename T, typename U, typename V>
@@ -333,13 +361,28 @@
   }
 
   template<typename T, typename U, typename V>
+  auto fsub64(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_SUB_F64, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
   auto fmul32(T x, U y, V z) -> void {
     sljit_emit_fop2(compiler, SLJIT_MUL_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
   }
 
   template<typename T, typename U, typename V>
+  auto fmul64(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_MUL_F64, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
   auto fdiv32(T x, U y, V z) -> void {
     sljit_emit_fop2(compiler, SLJIT_DIV_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fdiv64(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_DIV_F64, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
   }
 
   template<typename T, typename U>
@@ -348,7 +391,17 @@
   }
 
   template<typename T, typename U>
+  auto fabs64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_ABS_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
   auto fneg32(T x, U y) -> void {
     sljit_emit_fop1(compiler, SLJIT_NEG_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fneg64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_NEG_F64, x.fst, x.snd, y.fst, y.snd);
   }
 //};
