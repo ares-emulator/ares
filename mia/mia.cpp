@@ -1,8 +1,8 @@
+#include "pak/archive.cpp"
+
 #include "mia.hpp"
 
 #include <TZXFile.h>
-
-#include "pak/archive.cpp"
 
 namespace mia {
 
