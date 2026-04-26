@@ -16,7 +16,6 @@
 #define WritesHiLo                        info.flags |= OpInfo::WritesHiLo
 #define Privileged                        info.flags |= OpInfo::Privileged
 #define IsInvalid                         info.flags |= OpInfo::IsInvalid
-#define JitUseCallf                       info.flags |= OpInfo::JitUseCallf
 #define JitStateKeyMayChange              info.flags |= OpInfo::JitStateKeyMayChange
 #define LikelyIf(x)                       if(x) LikelyBranch
 #define WritesGpSp(n)                     (((n) == 28 || (n) == 29) \
@@ -28,14 +27,14 @@
                                             ? (JitStateKeyMayChange) : info.flags)
 #define WritesGpSpRd                      WritesGpSp(instruction >> 11 & 31)
 #define WritesGpSpXrt                     WritesGpSp(instruction >> 15 & 31)
-#define LoadToGpr                         Load, MayException, MayFault, JitUseCallf, WritesGpSpRt
-#define StoreToGpr                        Store, MayException, MayFault, JitUseCallf, WritesGpSpRt
-#define FPUCall                           Cop1, MayException, JitUseCallf
+#define LoadToGpr                         Load, MayException, MayFault, WritesGpSpRt
+#define StoreToGpr                        Store, MayException, MayFault, WritesGpSpRt
+#define FPUCall                           Cop1, MayException
 #define FPUBranchCall                     \
-  Cop1, Branch, EndBlock, MayException, JitUseCallf
-#define FPUInvalid                        Cop1, IsInvalid, EndBlock, MayException, JitUseCallf
-#define COP2Call                          Cop2, MayException, JitUseCallf
-#define COP2Invalid                       Cop2, IsInvalid, EndBlock, MayException, JitUseCallf
+  Cop1, Branch, EndBlock, MayException
+#define FPUInvalid                        Cop1, IsInvalid, EndBlock, MayException
+#define COP2Call                          Cop2, MayException
+#define COP2Invalid                       Cop2, IsInvalid, EndBlock, MayException
 
 auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
   switch(instruction >> 26) {
@@ -58,51 +57,51 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
   jp(0x10, SCC);
   jp(0x11, FPU);
   jp(0x12, COP2);
-  op(0x13, COP3, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x13, COP3, IsInvalid, EndBlock, MayException);
   op(0x14, BEQL, Branch, LikelyBranch, EndBlock);
   op(0x15, BNEL, Branch, LikelyBranch, EndBlock);
   op(0x16, BLEZL, Branch, LikelyBranch, EndBlock);
   op(0x17, BGTZL, Branch, LikelyBranch, EndBlock);
   op(0x18, DADDI, MayException, WritesGpSpRt);
   op(0x19, DADDIU, WritesGpSpRtExceptSpSelf);
-  op(0x1a, LDL, Load, MayException, MayFault, JitUseCallf, WritesGpSpRt);
-  op(0x1b, LDR, Load, MayException, MayFault, JitUseCallf, WritesGpSpRt);
-  op(0x1c, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x1d, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x1e, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x1f, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x1a, LDL, Load, MayException, MayFault, WritesGpSpRt);
+  op(0x1b, LDR, Load, MayException, MayFault, WritesGpSpRt);
+  op(0x1c, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x1d, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x1e, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x1f, INVALID, IsInvalid, EndBlock, MayException);
   op(0x20, LB, LoadToGpr);
   op(0x21, LH, LoadToGpr);
-  op(0x22, LWL, Load, MayException, MayFault, JitUseCallf, WritesGpSpRt);
+  op(0x22, LWL, Load, MayException, MayFault, WritesGpSpRt);
   op(0x23, LW, LoadToGpr);
   op(0x24, LBU, LoadToGpr);
   op(0x25, LHU, LoadToGpr);
-  op(0x26, LWR, Load, MayException, MayFault, JitUseCallf, WritesGpSpRt);
+  op(0x26, LWR, Load, MayException, MayFault, WritesGpSpRt);
   op(0x27, LWU, LoadToGpr);
-  op(0x28, SB, Store, MayException, MayFault, JitUseCallf);
-  op(0x29, SH, Store, MayException, MayFault, JitUseCallf);
-  op(0x2a, SWL, Store, MayException, MayFault, JitUseCallf);
-  op(0x2b, SW, Store, MayException, MayFault, JitUseCallf);
-  op(0x2c, SDL, Store, MayException, MayFault, JitUseCallf);
-  op(0x2d, SDR, Store, MayException, MayFault, JitUseCallf);
-  op(0x2e, SWR, Store, MayException, MayFault, JitUseCallf);
-  op(0x2f, CACHE, Store, MayException, MayFault, JitUseCallf);
+  op(0x28, SB, Store, MayException, MayFault);
+  op(0x29, SH, Store, MayException, MayFault);
+  op(0x2a, SWL, Store, MayException, MayFault);
+  op(0x2b, SW, Store, MayException, MayFault);
+  op(0x2c, SDL, Store, MayException, MayFault);
+  op(0x2d, SDR, Store, MayException, MayFault);
+  op(0x2e, SWR, Store, MayException, MayFault);
+  op(0x2f, CACHE, Store, MayException, MayFault);
   op(0x30, LL, LoadToGpr);
-  op(0x31, LWC1, Load, MayException, MayFault, JitUseCallf);
-  op(0x32, LWC2, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x33, LWC3, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x31, LWC1, Load, MayException, MayFault);
+  op(0x32, LWC2, IsInvalid, EndBlock, MayException);
+  op(0x33, LWC3, IsInvalid, EndBlock, MayException);
   op(0x34, LLD, LoadToGpr);
-  op(0x35, LDC1, Load, MayException, MayFault, JitUseCallf);
-  op(0x36, LDC2, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x35, LDC1, Load, MayException, MayFault);
+  op(0x36, LDC2, IsInvalid, EndBlock, MayException);
   op(0x37, LD, LoadToGpr);
   op(0x38, SC, StoreToGpr);
-  op(0x39, SWC1, Store, MayException, MayFault, JitUseCallf);
-  op(0x3a, SWC2, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x3b, SWC3, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x39, SWC1, Store, MayException, MayFault);
+  op(0x3a, SWC2, IsInvalid, EndBlock, MayException);
+  op(0x3b, SWC3, IsInvalid, EndBlock, MayException);
   op(0x3c, SCD, StoreToGpr);
-  op(0x3d, SDC1, Store, MayException, MayFault, JitUseCallf);
-  op(0x3e, SDC2, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x3f, SD, Store, MayException, MayFault, JitUseCallf);
+  op(0x3d, SDC1, Store, MayException, MayFault);
+  op(0x3e, SDC2, IsInvalid, EndBlock, MayException);
+  op(0x3f, SD, Store, MayException, MayFault);
   }
   return {};
 }
@@ -110,27 +109,27 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
 auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
   switch(instruction & 0x3f) {
   op(0x00, SLL, WritesGpSpRd);
-  op(0x01, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x01, INVALID, IsInvalid, EndBlock, MayException);
   op(0x02, SRL, WritesGpSpRd);
   op(0x03, SRA, WritesGpSpRd);
   op(0x04, SLLV, WritesGpSpRd);
-  op(0x05, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x05, INVALID, IsInvalid, EndBlock, MayException);
   op(0x06, SRLV, WritesGpSpRd);
   op(0x07, SRAV, WritesGpSpRd);
   op(0x08, JR, Branch, EndBlock);
   op(0x09, JALR, Branch, EndBlock, WritesGpSpRd);
-  op(0x0a, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x0b, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x0c, SYSCALL, EndBlock, MayException, JitUseCallf);
-  op(0x0d, BREAK, EndBlock, MayException, JitUseCallf);
-  op(0x0e, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x0f, SYNC, JitUseCallf);
+  op(0x0a, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x0b, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x0c, SYSCALL, EndBlock, MayException);
+  op(0x0d, BREAK, EndBlock, MayException);
+  op(0x0e, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x0f, SYNC);
   op(0x10, MFHI, ReadsHiLo, WritesGpSpRd);
   op(0x11, MTHI, WritesHiLo);
   op(0x12, MFLO, ReadsHiLo, WritesGpSpRd);
   op(0x13, MTLO, WritesHiLo);
   op(0x14, DSLLV, WritesGpSpRd);
-  op(0x15, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x15, INVALID, IsInvalid, EndBlock, MayException);
   op(0x16, DSRLV, WritesGpSpRd);
   op(0x17, DSRAV, WritesGpSpRd);
   op(0x18, MULT, WritesHiLo);
@@ -149,8 +148,8 @@ auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
   op(0x25, OR, WritesGpSpRd);
   op(0x26, XOR, WritesGpSpRd);
   op(0x27, NOR, WritesGpSpRd);
-  op(0x28, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x29, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x28, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x29, INVALID, IsInvalid, EndBlock, MayException);
   op(0x2a, SLT, WritesGpSpRd);
   op(0x2b, SLTU, WritesGpSpRd);
   op(0x2c, DADD, MayException, WritesGpSpRd);
@@ -162,15 +161,15 @@ auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
   op(0x32, TLT, MayTrap, MayException);
   op(0x33, TLTU, MayTrap, MayException);
   op(0x34, TEQ, MayTrap, MayException);
-  op(0x35, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x35, INVALID, IsInvalid, EndBlock, MayException);
   op(0x36, TNE, MayTrap, MayException);
-  op(0x37, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x37, INVALID, IsInvalid, EndBlock, MayException);
   op(0x38, DSLL, WritesGpSpRd);
-  op(0x39, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x39, INVALID, IsInvalid, EndBlock, MayException);
   op(0x3a, DSRL, WritesGpSpRd);
   op(0x3b, DSRA, WritesGpSpRd);
   op(0x3c, DSLL32, WritesGpSpRd);
-  op(0x3d, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x3d, INVALID, IsInvalid, EndBlock, MayException);
   op(0x3e, DSRL32, WritesGpSpRd);
   op(0x3f, DSRA32, WritesGpSpRd);
   }
@@ -183,74 +182,74 @@ auto CPU::decoderREGIMMInfo(u32 instruction) const -> OpInfo {
   op(0x01, BGEZ, Branch, EndBlock);
   op(0x02, BLTZL, Branch, LikelyBranch, EndBlock);
   op(0x03, BGEZL, Branch, LikelyBranch, EndBlock);
-  op(0x04, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x05, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x06, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x07, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x04, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x05, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x06, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x07, INVALID, IsInvalid, EndBlock, MayException);
   op(0x08, TGEI, MayTrap, MayException);
   op(0x09, TGEIU, MayTrap, MayException);
   op(0x0a, TLTI, MayTrap, MayException);
   op(0x0b, TLTIU, MayTrap, MayException);
   op(0x0c, TEQI, MayTrap, MayException);
-  op(0x0d, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x0d, INVALID, IsInvalid, EndBlock, MayException);
   op(0x0e, TNEI, MayTrap, MayException);
-  op(0x0f, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x0f, INVALID, IsInvalid, EndBlock, MayException);
   op(0x10, BLTZAL, Branch, EndBlock);
   op(0x11, BGEZAL, Branch, EndBlock);
   op(0x12, BLTZALL, Branch, LikelyBranch, EndBlock);
   op(0x13, BGEZALL, Branch, LikelyBranch, EndBlock);
-  op(0x14, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x15, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x16, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x17, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x18, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x19, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x1a, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x1b, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x1c, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x1d, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x1e, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x1f, INVALID, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x14, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x15, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x16, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x17, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x18, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x19, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x1a, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x1b, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x1c, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x1d, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x1e, INVALID, IsInvalid, EndBlock, MayException);
+  op(0x1f, INVALID, IsInvalid, EndBlock, MayException);
   }
   return {};
 }
 
 auto CPU::decoderSCCInfo(u32 instruction) const -> OpInfo {
   switch(instruction >> 21 & 0x1f) {
-  op(0x00, MFC0, Cop0, Privileged, MayException, JitUseCallf, WritesGpSpRt);
-  op(0x01, DMFC0, Cop0, Privileged, MayException, JitUseCallf, WritesGpSpRt);
-  op(0x02, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x03, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x04, MTC0, Cop0, Privileged, MayException, JitUseCallf,
+  op(0x00, MFC0, Cop0, Privileged, MayException, WritesGpSpRt);
+  op(0x01, DMFC0, Cop0, Privileged, MayException, WritesGpSpRt);
+  op(0x02, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x03, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x04, MTC0, Cop0, Privileged, MayException,
      JitStateKeyMayChange);
-  op(0x05, DMTC0, Cop0, Privileged, MayException, JitUseCallf,
+  op(0x05, DMTC0, Cop0, Privileged, MayException,
      JitStateKeyMayChange);
-  op(0x06, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x07, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x08, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x09, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x0a, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x0b, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x0c, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x0d, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x0e, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
-  op(0x0f, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException, JitUseCallf);
+  op(0x06, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x07, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x08, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x09, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x0a, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x0b, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x0c, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x0d, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x0e, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
+  op(0x0f, INVALID, Cop0, Privileged, IsInvalid, EndBlock, MayException);
   }
 
   switch(instruction & 0x3f) {
-  op(0x01, TLBR, Cop0, Privileged, MayException, JitUseCallf);
-  op(0x02, TLBWI, Cop0, Privileged, MayException, JitUseCallf);
-  op(0x06, TLBWR, Cop0, Privileged, MayException, JitUseCallf);
-  op(0x08, TLBP, Cop0, Privileged, MayException, JitUseCallf);
-  op(0x18, ERET, Cop0, Privileged, EndBlock, MayException, JitUseCallf,
+  op(0x01, TLBR, Cop0, Privileged, MayException);
+  op(0x02, TLBWI, Cop0, Privileged, MayException);
+  op(0x06, TLBWR, Cop0, Privileged, MayException);
+  op(0x08, TLBP, Cop0, Privileged, MayException);
+  op(0x18, ERET, Cop0, Privileged, EndBlock, MayException,
      JitStateKeyMayChange);
-  op(0x20, XDETECT, JitUseCallf);
-  op(0x25, XLOG, JitUseCallf);
-  op(0x27, XHEXDUMP, JitUseCallf);
-  op(0x28, XPROF, JitUseCallf);
-  op(0x29, XPROFREAD, JitUseCallf);
-  op(0x2a, XEXCEPTION, MayException, JitUseCallf);
-  op(0x2c, XIOCTL, JitUseCallf);
+  op(0x20, XDETECT);
+  op(0x25, XLOG);
+  op(0x27, XHEXDUMP);
+  op(0x28, XPROF);
+  op(0x29, XPROFREAD);
+  op(0x2a, XEXCEPTION, MayException);
+  op(0x2c, XIOCTL);
   }
 
   return {};

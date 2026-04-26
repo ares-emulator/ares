@@ -94,8 +94,7 @@ struct CPU : Thread {
       WritesHiLo    = 1 << 12,
       Privileged    = 1 << 13,
       IsInvalid     = 1 << 14,
-      JitUseCallf   = 1 << 15,
-      JitStateKeyMayChange = 1 << 16,
+      JitStateKeyMayChange = 1 << 15,
     };
 
     u32 flags = 0;
@@ -109,7 +108,6 @@ struct CPU : Thread {
     auto load() const -> bool { return flags & Load; }
     auto store() const -> bool { return flags & Store; }
     auto memory() const -> bool { return flags & (Load | Store); }
-    auto jitUseCallf() const -> bool { return flags & JitUseCallf; }
     auto jitStateKeyMayChange() const -> bool { return flags & JitStateKeyMayChange; }
   };
 
@@ -1074,12 +1072,7 @@ struct CPU : Thread {
       u32 instruction = 0;
       u64 vaddr = 0;
       u32 deferredCycles = 0;
-      u32 deferredNextPc = 0;
       u32 instructionCycles = 0;
-      bool needCurrentPc = false;
-      bool needsStateMachinery = false;
-      bool needsPipelinePc = false;
-      bool commitIpuPc = false;
       bool jumpEpilog = false;
       bool icacheMiss = false;
       u32 icachePaddr = 0;
@@ -1135,7 +1128,6 @@ struct CPU : Thread {
     auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
 
     auto flushDeferredCycles() -> void;
-    auto flushDeferredNextPc() -> void;
     auto setupCallf() -> void;
     auto emitCpuStep(u32 clocks) -> void;
     auto deferSlowPath(sljit_jump* enter, u32 instruction) -> void;
@@ -1158,14 +1150,11 @@ struct CPU : Thread {
     bool emitSlowPathSection = false;
     bool emitCallfSetupDone = false;
     bool emitCallfEmitted = false;
-    bool emitNeedCurrentPc = false;
-    bool emitNeedsStateMachinery = false;
     bool emitSingleInstruction = false;
     bool emitStateKeyChanged = false;
     StateKey emitStateKey = 0;
     u64 emitVaddr = 0;
     u32 emitDeferredCycles = 0;
-    u32 emitDeferredNextPc = 0;
     Block* activeBlock = nullptr;
     bump_allocator allocator;
     std::vector<SlowPath> slowPaths;

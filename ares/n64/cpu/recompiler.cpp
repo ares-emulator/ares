@@ -53,15 +53,12 @@ Hot-loop optimizations
    - commit happens only at correctness boundaries:
      block entry, branch/helper opcodes, and terminal paths.
 
-3) Deferred nextpc materialization
-   - linear-path nextpc increments are accumulated in deferredNextPc;
-   - nextpc is written back only when current PC materialization is needed,
-     or once at block end.
+3) Eager pc/nextpc materialization
+   - each opcode materializes pipeline pc/nextpc directly in the main emit loop.
 
-4) On-demand pipeline state machinery
+4) Pipeline state machinery
    - nstate clear, EndBlock test, state<-nstate commit, and
-     jumpEpilog(flag_nz) are emitted only when needsStateMachinery is true;
-   - linear non-branch/non-helper opcodes skip this machinery entirely.
+     jumpEpilog(flag_nz) are emitted in the main loop.
 
 5) Helper-call PC rematerialization
    - in linear non-delay-slot helper paths, ipu.pc is rematerialized from the
@@ -313,7 +310,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   beginFunction(3);
   slowPaths.clear();
   emitDeferredCycles = 0;
-  emitDeferredNextPc = 0;
 
   Thread thread;
   u32 startAddress = address;
@@ -383,15 +379,12 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   };
   BranchLinks links;
   bool branchLinksValid = false;
-  auto bindSlowPaths = [&](size_t first, sljit_label* resume, u32 deferredCycles, bool needsPipelinePc,
-    bool commitIpuPc, bool jumpEpilog) -> void {
+  auto bindSlowPaths = [&](size_t first, sljit_label* resume, u32 deferredCycles, bool jumpEpilog) -> void {
     for(auto n = first; n < slowPaths.size(); n++) {
       auto& slow = slowPaths[n];
       if(slow.icacheMiss) continue;
       slow.resume = resume;
       slow.instructionCycles = deferredCycles - slow.deferredCycles;
-      slow.needsPipelinePc = needsPipelinePc;
-      slow.commitIpuPc = commitIpuPc;
       slow.jumpEpilog = jumpEpilog;
     }
   };
@@ -405,22 +398,10 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     bool sectionBoundary = sectionIndex(address + 4) != startSection;
     bool terminal = hasBranched || sectionBoundary || singleInstruction;
     terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
-    bool needsPipelinePc = hasBranched || info.branch() || info.jitUseCallf();
-    bool needsStateMachinery = numInsn == 0 || needsPipelinePc;
-    bool commitIpuPc = numInsn == 0 || info.branch() || info.jitUseCallf() || terminal;
-    bool needCurrentPc = commitIpuPc || needsPipelinePc;
-    emitNeedCurrentPc = needCurrentPc;
-    emitNeedsStateMachinery = needsStateMachinery;
-    if(needsStateMachinery) mov32(PipelineReg(nstate), imm(0));
-    if(needCurrentPc) {
-      flushDeferredNextPc();
-      mov64(reg(0), PipelineReg(nextpc));
-      if(commitIpuPc && !needsPipelinePc) mov64(mem(IpuReg(pc)), reg(0));
-      if(needsPipelinePc) mov64(PipelineReg(pc), reg(0));
-      add64(PipelineReg(nextpc), reg(0), imm(4));
-    } else {
-      emitDeferredNextPc += 4;
-    }
+    mov32(PipelineReg(nstate), imm(0));
+    mov64(reg(0), PipelineReg(nextpc));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
     if(callInstructionPrologue) {
       flushDeferredCycles();
       callf(&CPU::instructionPrologue, imm64(vaddr), imm(instruction));
@@ -449,39 +430,34 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       instructionCycles = 64 * 2;
     }
     emitDeferredCycles += instructionCycles;
-    bool emittedCallf = emitCallfEmitted;
-    if(hasBranched || info.branch() || emittedCallf) flushDeferredCycles();
-    bool needsStatePost = needsStateMachinery || emittedCallf;
-    if(needsStatePost) {
-      test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
-      mov32(PipelineReg(state), PipelineReg(nstate));
-      if(commitIpuPc && needsPipelinePc) mov64(mem(IpuReg(pc)), PipelineReg(pc));
-    }
+    if(hasBranched || info.branch() || emitCallfEmitted) flushDeferredCycles();
+    test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
+    mov32(PipelineReg(state), PipelineReg(nstate));
+    mov64(mem(IpuReg(pc)), PipelineReg(pc));
 
     vaddr += 4;
     address += 4;
     jumpToSelf += 4;
-    bool safeDelaySlotLink = !info.jitUseCallf() && !info.mayException() && !info.mayFault();
+    bool safeDelaySlotLink = false;
     bool delaySlotLinkEligible = terminal && hasBranched && !singleInstruction
     && !info.jitStateKeyMayChange() && !countCompareWrite && !emitStateKeyChanged;
     if(delaySlotLinkEligible && safeDelaySlotLink) branchLinksValid = true;
     if(terminal) {
-      if(!hasBranched && needsStatePost) jumpEpilog(flag_nz);
+      if(!hasBranched) jumpEpilog(flag_nz);
       if(slowPaths.size() != slowPathStart) {
         auto resume = sljit_emit_label(compiler);
-        bindSlowPaths(slowPathStart, resume, emitDeferredCycles, needsPipelinePc, commitIpuPc, !hasBranched);
+        bindSlowPaths(slowPathStart, resume, emitDeferredCycles, !hasBranched);
       }
       break;
     }
     hasBranched = branched;
-    if(needsStatePost) jumpEpilog(flag_nz);
+    jumpEpilog(flag_nz);
     if(slowPaths.size() != slowPathStart) {
       auto resume = sljit_emit_label(compiler);
-      bindSlowPaths(slowPathStart, resume, emitDeferredCycles, needsPipelinePc, commitIpuPc, true);
+      bindSlowPaths(slowPathStart, resume, emitDeferredCycles, true);
     }
   }
 
-  flushDeferredNextPc();
   flushDeferredCycles();
   callf(&CPU::jitLinkedCode);
   sljit_set_label(sljit_emit_cmp(compiler, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0), epilogue);
@@ -499,9 +475,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     for(auto jump : slow.enters) sljit_set_label(jump, enter);
     emitVaddr = slow.vaddr;
     emitDeferredCycles = slow.deferredCycles;
-    emitDeferredNextPc = slow.deferredNextPc;
-    emitNeedCurrentPc = slow.needCurrentPc;
-    emitNeedsStateMachinery = slow.needsStateMachinery;
     emitCallfSetupDone = false;
     emitCallfEmitted = false;
     if(slow.icacheMiss) {
@@ -527,7 +500,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       flushDeferredCycles();
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
       mov32(PipelineReg(state), PipelineReg(nstate));
-      if(slow.commitIpuPc && slow.needsPipelinePc) mov64(mem(IpuReg(pc)), PipelineReg(pc));
+      mov64(mem(IpuReg(pc)), PipelineReg(pc));
       if(slow.jumpEpilog) jumpEpilog(flag_nz);
     }
     sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
@@ -611,20 +584,8 @@ auto CPU::Recompiler::flushDeferredCycles() -> void {
   emitDeferredCycles = 0;
 }
 
-auto CPU::Recompiler::flushDeferredNextPc() -> void {
-  if(!emitDeferredNextPc) return;
-  add64(PipelineReg(nextpc), PipelineReg(nextpc), imm(emitDeferredNextPc));
-  emitDeferredNextPc = 0;
-}
-
 auto CPU::Recompiler::setupCallf() -> void {
   if(emitCallfSetupDone) return;
-  if(!emitNeedsStateMachinery) mov32(PipelineReg(nstate), imm(0));
-  if(!emitNeedCurrentPc) {
-    mov64(PipelineReg(pc), imm(emitVaddr));
-    mov64(PipelineReg(nextpc), imm(emitVaddr + 4));
-    emitDeferredNextPc = 0;
-  }
   flushDeferredCycles();
   mov64(mem(IpuReg(pc)), imm(emitVaddr));
   emitCallfSetupDone = true;
@@ -644,9 +605,6 @@ auto CPU::Recompiler::deferSlowPath(std::initializer_list<sljit_jump*> enters, u
   slow.icacheMiss = false;
   slow.vaddr = emitVaddr;
   slow.deferredCycles = emitDeferredCycles;
-  slow.deferredNextPc = emitDeferredNextPc;
-  slow.needCurrentPc = emitNeedCurrentPc;
-  slow.needsStateMachinery = emitNeedsStateMachinery;
 }
 
 auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> void {
@@ -657,9 +615,6 @@ auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> vo
   slow.icachePaddr = paddr;
   slow.vaddr = emitVaddr;
   slow.deferredCycles = emitDeferredCycles;
-  slow.deferredNextPc = emitDeferredNextPc;
-  slow.needCurrentPc = emitNeedCurrentPc;
-  slow.needsStateMachinery = emitNeedsStateMachinery;
 }
 
 auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, bool sign, bool require64, bool store,
