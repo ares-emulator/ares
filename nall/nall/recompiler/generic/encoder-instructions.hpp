@@ -196,6 +196,11 @@
   OPF(xor64_f, XOR)
 #undef OPF
 
+  template<typename T, typename U, typename V>
+  auto cmov32(T x, U y, V z, sljit_s32 flags) -> void {
+    sljit_emit_select(compiler, SLJIT_32 | flags, x.fst, y.fst, y.snd, z.fst);
+  }
+
   //meta instructions
 
 
@@ -247,6 +252,16 @@
     u8 opcode[] = {0xf3, 0x0f, 0x51, 0xc0};
     sljit_emit_op_custom(compiler, opcode, sizeof(opcode));
 #endif
+  }
+
+  template<typename T, typename U, typename V>
+  auto fmul32(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_MUL_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fdiv32(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_DIV_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
   }
 
   template<typename T, typename U>
