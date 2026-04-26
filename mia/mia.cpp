@@ -2,6 +2,8 @@
 
 #include <TZXFile.h>
 
+#include "pak/archive.cpp"
+
 namespace mia {
 
 std::function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/Systems/"}; };
@@ -68,7 +70,6 @@ auto hexString(std::span<const u8> view) -> string {
 #include "settings/settings.cpp"
 #include "system/system.cpp"
 #include "medium/medium.cpp"
-#include "pak/archive.cpp"
 #include "pak/pak.cpp"
 #if !defined(MIA_LIBRARY)
 #include "program/program.cpp"

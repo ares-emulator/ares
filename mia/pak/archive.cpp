@@ -3,11 +3,17 @@
 #include <nall/decode/zip.hpp>
 
 extern "C" {
+// Keep LZMA SDK C headers at global scope.
+// If these are included inside namespace mia on Windows, WinAPI declarations
+// from windows.h (pulled in via 7zFile.h -> 7zWindows.h) become mia:: symbols
+// and conflict with nall's WinMain wrapper.
 #include <lzma/C/7z.h>
 #include <lzma/C/7zAlloc.h>
 #include <lzma/C/7zCrc.h>
 #include <lzma/C/7zFile.h>
 }
+
+namespace mia {
 
 struct ZipArchive final : Archive {
   auto entries() const -> const std::vector<nall::string>& override { return fileNames; }
@@ -170,3 +176,5 @@ auto archiveExtractByName(const std::shared_ptr<Archive>& archive, const nall::s
 
   return {};
 }
+
+}  // namespace mia
