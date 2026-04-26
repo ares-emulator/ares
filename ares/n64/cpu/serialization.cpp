@@ -124,22 +124,9 @@ auto CPU::serialize(serializer& s) -> void {
 
   for(auto& r : fpu.r) s(r.u64);
   s(fpu.csr.roundMode);
-  s(fpu.csr.flag.inexact);
-  s(fpu.csr.flag.underflow);
-  s(fpu.csr.flag.overflow);
-  s(fpu.csr.flag.divisionByZero);
-  s(fpu.csr.flag.invalidOperation);
-  s(fpu.csr.enable.inexact);
-  s(fpu.csr.enable.underflow);
-  s(fpu.csr.enable.overflow);
-  s(fpu.csr.enable.divisionByZero);
-  s(fpu.csr.enable.invalidOperation);
-  s(fpu.csr.cause.inexact);
-  s(fpu.csr.cause.underflow);
-  s(fpu.csr.cause.overflow);
-  s(fpu.csr.cause.divisionByZero);
-  s(fpu.csr.cause.invalidOperation);
-  s(fpu.csr.cause.unimplementedOperation);
+  s(fpu.csr.flag.data);
+  s(fpu.csr.enable.data);
+  s(fpu.csr.cause.data);
   s(fpu.csr.compare);
   s(fpu.csr.flushSubnormals);
 

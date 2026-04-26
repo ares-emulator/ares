@@ -101,22 +101,22 @@ auto CPU::getControlRegisterFPU(n5 index) -> u32 {
   case 31:  //control / status register
     data.bit( 0) = fpu.csr.roundMode.bit(0);
     data.bit( 1) = fpu.csr.roundMode.bit(1);
-    data.bit( 2) = fpu.csr.flag.inexact;
-    data.bit( 3) = fpu.csr.flag.underflow;
-    data.bit( 4) = fpu.csr.flag.overflow;
-    data.bit( 5) = fpu.csr.flag.divisionByZero;
-    data.bit( 6) = fpu.csr.flag.invalidOperation;
-    data.bit( 7) = fpu.csr.enable.inexact;
-    data.bit( 8) = fpu.csr.enable.underflow;
-    data.bit( 9) = fpu.csr.enable.overflow;
-    data.bit(10) = fpu.csr.enable.divisionByZero;
-    data.bit(11) = fpu.csr.enable.invalidOperation;
-    data.bit(12) = fpu.csr.cause.inexact;
-    data.bit(13) = fpu.csr.cause.underflow;
-    data.bit(14) = fpu.csr.cause.overflow;
-    data.bit(15) = fpu.csr.cause.divisionByZero;
-    data.bit(16) = fpu.csr.cause.invalidOperation;
-    data.bit(17) = fpu.csr.cause.unimplementedOperation;
+    data.bit( 2) = fpu.csr.flag.inexact();
+    data.bit( 3) = fpu.csr.flag.underflow();
+    data.bit( 4) = fpu.csr.flag.overflow();
+    data.bit( 5) = fpu.csr.flag.divisionByZero();
+    data.bit( 6) = fpu.csr.flag.invalidOperation();
+    data.bit( 7) = fpu.csr.enable.inexact();
+    data.bit( 8) = fpu.csr.enable.underflow();
+    data.bit( 9) = fpu.csr.enable.overflow();
+    data.bit(10) = fpu.csr.enable.divisionByZero();
+    data.bit(11) = fpu.csr.enable.invalidOperation();
+    data.bit(12) = fpu.csr.cause.inexact();
+    data.bit(13) = fpu.csr.cause.underflow();
+    data.bit(14) = fpu.csr.cause.overflow();
+    data.bit(15) = fpu.csr.cause.divisionByZero();
+    data.bit(16) = fpu.csr.cause.invalidOperation();
+    data.bit(17) = fpu.csr.cause.unimplementedOperation();
     data.bit(23) = fpu.csr.compare;
     data.bit(24) = fpu.csr.flushSubnormals;
     break;
@@ -136,22 +136,22 @@ auto CPU::setControlRegisterFPU(n5 index, n32 data) -> void {
     u32 flushSubnormalsPrevious = fpu.csr.flushSubnormals;
     fpu.csr.roundMode.bit(0)             = data.bit( 0);
     fpu.csr.roundMode.bit(1)             = data.bit( 1);
-    fpu.csr.flag.inexact                 = data.bit( 2);
-    fpu.csr.flag.underflow               = data.bit( 3);
-    fpu.csr.flag.overflow                = data.bit( 4);
-    fpu.csr.flag.divisionByZero          = data.bit( 5);
-    fpu.csr.flag.invalidOperation        = data.bit( 6);
-    fpu.csr.enable.inexact               = data.bit( 7);
-    fpu.csr.enable.underflow             = data.bit( 8);
-    fpu.csr.enable.overflow              = data.bit( 9);
-    fpu.csr.enable.divisionByZero        = data.bit(10);
-    fpu.csr.enable.invalidOperation      = data.bit(11);
-    fpu.csr.cause.inexact                = data.bit(12);
-    fpu.csr.cause.underflow              = data.bit(13);
-    fpu.csr.cause.overflow               = data.bit(14);
-    fpu.csr.cause.divisionByZero         = data.bit(15);
-    fpu.csr.cause.invalidOperation       = data.bit(16);
-    fpu.csr.cause.unimplementedOperation = data.bit(17);
+    fpu.csr.flag.setInexact(data.bit( 2));
+    fpu.csr.flag.setUnderflow(data.bit( 3));
+    fpu.csr.flag.setOverflow(data.bit( 4));
+    fpu.csr.flag.setDivisionByZero(data.bit( 5));
+    fpu.csr.flag.setInvalidOperation(data.bit( 6));
+    fpu.csr.enable.setInexact(data.bit( 7));
+    fpu.csr.enable.setUnderflow(data.bit( 8));
+    fpu.csr.enable.setOverflow(data.bit( 9));
+    fpu.csr.enable.setDivisionByZero(data.bit(10));
+    fpu.csr.enable.setInvalidOperation(data.bit(11));
+    fpu.csr.cause.setInexact(data.bit(12));
+    fpu.csr.cause.setUnderflow(data.bit(13));
+    fpu.csr.cause.setOverflow(data.bit(14));
+    fpu.csr.cause.setDivisionByZero(data.bit(15));
+    fpu.csr.cause.setInvalidOperation(data.bit(16));
+    fpu.csr.cause.setUnimplementedOperation(data.bit(17));
     fpu.csr.compare                      = data.bit(23);
     fpu.csr.flushSubnormals              = data.bit(24);
 
@@ -164,54 +164,54 @@ auto CPU::setControlRegisterFPU(n5 index, n32 data) -> void {
       }
     }
 
-    if(fpu.csr.cause.inexact          && fpu.csr.enable.inexact)          return exception.floatingPoint();
-    if(fpu.csr.cause.underflow        && fpu.csr.enable.underflow)        return exception.floatingPoint();
-    if(fpu.csr.cause.overflow         && fpu.csr.enable.overflow)         return exception.floatingPoint();
-    if(fpu.csr.cause.divisionByZero   && fpu.csr.enable.divisionByZero)   return exception.floatingPoint();
-    if(fpu.csr.cause.invalidOperation && fpu.csr.enable.invalidOperation) return exception.floatingPoint();
-    if(fpu.csr.cause.unimplementedOperation)                              return exception.floatingPoint();
+    if(fpu.csr.cause.inexact()          && fpu.csr.enable.inexact())          return exception.floatingPoint();
+    if(fpu.csr.cause.underflow()        && fpu.csr.enable.underflow())        return exception.floatingPoint();
+    if(fpu.csr.cause.overflow()         && fpu.csr.enable.overflow())         return exception.floatingPoint();
+    if(fpu.csr.cause.divisionByZero()   && fpu.csr.enable.divisionByZero())   return exception.floatingPoint();
+    if(fpu.csr.cause.invalidOperation() && fpu.csr.enable.invalidOperation()) return exception.floatingPoint();
+    if(fpu.csr.cause.unimplementedOperation())                                 return exception.floatingPoint();
 
   } break;
   }
 }
 
 auto CPU::fpeDivisionByZero() -> bool {
-  fpu.csr.cause.divisionByZero = 1;
-  if(fpu.csr.enable.divisionByZero) return true;
-  fpu.csr.flag.divisionByZero = 1;
+  fpu.csr.cause.setDivisionByZero(1);
+  if(fpu.csr.enable.divisionByZero()) return true;
+  fpu.csr.flag.setDivisionByZero(1);
   return false;
 }
 
 auto CPU::fpeInexact() -> bool {
-  fpu.csr.cause.inexact = 1;
-  if(fpu.csr.enable.inexact) return true;
-  fpu.csr.flag.inexact = 1;
+  fpu.csr.cause.setInexact(1);
+  if(fpu.csr.enable.inexact()) return true;
+  fpu.csr.flag.setInexact(1);
   return false;
 }
 
 auto CPU::fpeUnderflow() -> bool {
-  fpu.csr.cause.underflow = 1;
-  if(fpu.csr.enable.underflow) return true;
-  fpu.csr.flag.underflow = 1;
+  fpu.csr.cause.setUnderflow(1);
+  if(fpu.csr.enable.underflow()) return true;
+  fpu.csr.flag.setUnderflow(1);
   return false;
 }
 
 auto CPU::fpeOverflow() -> bool {
-  fpu.csr.cause.overflow = 1;
-  if(fpu.csr.enable.overflow) return true;
-  fpu.csr.flag.overflow = 1;
+  fpu.csr.cause.setOverflow(1);
+  if(fpu.csr.enable.overflow()) return true;
+  fpu.csr.flag.setOverflow(1);
   return false;
 }
 
 auto CPU::fpeInvalidOperation() -> bool {
-  fpu.csr.cause.invalidOperation = 1;
-  if(fpu.csr.enable.invalidOperation) return true;
-  fpu.csr.flag.invalidOperation = 1;
+  fpu.csr.cause.setInvalidOperation(1);
+  if(fpu.csr.enable.invalidOperation()) return true;
+  fpu.csr.flag.setInvalidOperation(1);
   return false;
 }
 
 auto CPU::fpeUnimplemented() -> bool {
-  fpu.csr.cause.unimplementedOperation = 1;
+  fpu.csr.cause.setUnimplementedOperation(1);
   return true;
 }
 
@@ -232,7 +232,7 @@ auto CPU::checkFPUExceptions() -> bool {
   }
 
   if(exc & float_env::underflow) {
-    if(!fpu.csr.flushSubnormals || fpu.csr.enable.underflow || fpu.csr.enable.inexact) {
+    if(!fpu.csr.flushSubnormals || fpu.csr.enable.underflow() || fpu.csr.enable.inexact()) {
       if(fpeUnimplemented()) exception.floatingPoint();
       return true;
     }
@@ -277,7 +277,7 @@ auto qnan(f64 f) -> bool {
 
 auto CPU::fpuCheckStart() -> bool {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1(), false;
-  fpu.csr.cause = {0};
+  fpu.csr.cause.reset();
   return true;
 }
 
@@ -331,7 +331,7 @@ auto fpuFlushResult(T f, u32 roundMode) -> T
 auto CPU::fpuCheckOutput(f32& f) -> bool {
   switch (fpclassify(f)) {
   case FP_SUBNORMAL:
-    if(!fpu.csr.flushSubnormals || fpu.csr.enable.underflow || fpu.csr.enable.inexact) {
+    if(!fpu.csr.flushSubnormals || fpu.csr.enable.underflow() || fpu.csr.enable.inexact()) {
       if(fpeUnimplemented()) exception.floatingPoint();
       return false;
     }
@@ -350,7 +350,7 @@ auto CPU::fpuCheckOutput(f32& f) -> bool {
 auto CPU::fpuCheckOutput(f64& f) -> bool {
   switch (fpclassify(f)) {
   case FP_SUBNORMAL:
-    if(!fpu.csr.flushSubnormals || fpu.csr.enable.underflow || fpu.csr.enable.inexact) {
+    if(!fpu.csr.flushSubnormals || fpu.csr.enable.underflow() || fpu.csr.enable.inexact()) {
       if(fpeUnimplemented()) exception.floatingPoint();
       return false;
     }

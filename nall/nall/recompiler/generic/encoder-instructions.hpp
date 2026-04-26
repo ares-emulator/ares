@@ -210,6 +210,35 @@
     sljit_emit_simd_mov(compiler, SLJIT_SIMD_STORE | kSimdType, kSimdTmp, dst.fst, dst.snd);
   }
 
+  template<typename T, typename U, typename V>
+  auto or8(T x, U y, V z, reg scratch) -> void {
+#if defined(ARCHITECTURE_AMD64)
+    if(SLJIT_IS_MEM(x.fst) && SLJIT_IS_MEM1(x.fst) && x.fst == y.fst && x.snd == y.snd && SLJIT_IS_REG(z.fst)) {
+      s32 base = sljit_get_register_index(SLJIT_GP_REGISTER, SLJIT_EXTRACT_REG(x.fst));
+      s32 src = sljit_get_register_index(SLJIT_GP_REGISTER, z.fst);
+      if(base >= 0 && src >= 0 && (sljit_sw)(s32)x.snd == x.snd) {
+        u8 opcode[10];
+        u32 n = 0;
+        u8 rex = 0x40u | (u8(src) >> 3 & 1) << 2 | (u8(base) >> 3 & 1);
+        if(rex != 0x40u || (u8(src) & 7) >= 4) opcode[n++] = rex;
+        opcode[n++] = 0x08;
+        opcode[n++] = 0x80u | (u8(src) & 7) << 3 | (u8(base) & 7);
+        if((u8(base) & 7) == 4) opcode[n++] = 0x24;
+        u32 disp = (u32)(s32)x.snd;
+        opcode[n++] = disp >> 0;
+        opcode[n++] = disp >> 8;
+        opcode[n++] = disp >> 16;
+        opcode[n++] = disp >> 24;
+        sljit_emit_op_custom(compiler, opcode, n);
+        return;
+      }
+    }
+#endif
+    mov32_u8(scratch, y);
+    or32(scratch, scratch, z);
+    mov32_u8(x, scratch);
+  }
+
   auto fsqrt32_f0() -> void {
 #if defined(ARCHITECTURE_ARM64)
     u32 opcode = 0x1e21c000u;

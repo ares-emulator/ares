@@ -124,11 +124,11 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   stateKey.setCoprocessor0Enabled(self.scc.status.enable.coprocessor0);
   stateKey.setFpuRoundMode(self.fpu.csr.roundMode);
   stateKey.setFpuFlushSubnormals(self.fpu.csr.flushSubnormals);
-  stateKey.setFpuInexactEnabled(self.fpu.csr.enable.inexact);
-  stateKey.setFpuUnderflowEnabled(self.fpu.csr.enable.underflow);
-  stateKey.setFpuOverflowEnabled(self.fpu.csr.enable.overflow);
-  stateKey.setFpuDivisionByZeroEnabled(self.fpu.csr.enable.divisionByZero);
-  stateKey.setFpuInvalidOperationEnabled(self.fpu.csr.enable.invalidOperation);
+  stateKey.setFpuInexactEnabled(self.fpu.csr.enable.inexact());
+  stateKey.setFpuUnderflowEnabled(self.fpu.csr.enable.underflow());
+  stateKey.setFpuOverflowEnabled(self.fpu.csr.enable.overflow());
+  stateKey.setFpuDivisionByZeroEnabled(self.fpu.csr.enable.divisionByZero());
+  stateKey.setFpuInvalidOperationEnabled(self.fpu.csr.enable.invalidOperation());
   const u64 cachedBase = 0xffff'ffff'8000'0000ull;
   const u64 cachedEnd  = 0xffff'ffff'807f'ffffull;
   auto gp = self.ipu.r[28].u64;
@@ -549,7 +549,11 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
 #define Fs        FpuReg(r[0]) + Fsn * sizeof(r64)
 #define Ft        FpuReg(r[0]) + Ftn * sizeof(r64)
 static constexpr s32 FpuCsrBaseOffset = offsetof(CPU, fpu) + offsetof(CPU::FPU, csr);
+static constexpr s32 FpuCsrFlagDataOffset = FpuCsrBaseOffset
+                                          + offsetof(CPU::FPU::ControlStatus, flag)
+                                          + offsetof(CPU::FPU::ControlStatus::Flag, data);
 static constexpr s32 FpuCsrCauseOffset = FpuCsrBaseOffset + offsetof(CPU::FPU::ControlStatus, cause);
+static constexpr s32 FpuCsrCauseDataOffset = FpuCsrCauseOffset + offsetof(CPU::FPU::ControlStatus::Cause, data);
 static constexpr s32 FpuR64S32Off  = offsetof(CPU::r64, s32);
 static constexpr s32 FpuR64S32hOff = offsetof(CPU::r64, s32h);
 static constexpr s32 RecompilerBaseOffset = offsetof(CPU, recompiler);
@@ -558,13 +562,26 @@ static constexpr s32 RecompilerFpuSaveMxcsrOffset = RecompilerBaseOffset + offse
 #define FpuCsrCompare mem(sreg(0), FpuCsrBaseOffset + offsetof(CPU::FPU::ControlStatus, compare))
 
 static_assert(sizeof(n1) == 1);
-static_assert(offsetof(CPU::FPU::ControlStatus::Cause, inexact) == 0);
-static_assert(offsetof(CPU::FPU::ControlStatus::Cause, underflow) == 1);
-static_assert(offsetof(CPU::FPU::ControlStatus::Cause, overflow) == 2);
-static_assert(offsetof(CPU::FPU::ControlStatus::Cause, divisionByZero) == 3);
-static_assert(offsetof(CPU::FPU::ControlStatus::Cause, invalidOperation) == 4);
-static_assert(offsetof(CPU::FPU::ControlStatus::Cause, unimplementedOperation) == 5);
-static_assert(sizeof(CPU::FPU::ControlStatus::Cause) == 6);
+static_assert(sizeof(CPU::FPU::ControlStatus::Flag) == 1);
+static_assert(sizeof(CPU::FPU::ControlStatus::Enable) == 1);
+static_assert(sizeof(CPU::FPU::ControlStatus::Cause) == 1);
+static_assert(offsetof(CPU::FPU::ControlStatus::Flag, data) == 0);
+static_assert(offsetof(CPU::FPU::ControlStatus::Enable, data) == 0);
+static_assert(offsetof(CPU::FPU::ControlStatus::Cause, data) == 0);
+static_assert(CPU::FPU::ControlStatus::InvalidOperationBit == 0);
+#if defined(ARCHITECTURE_ARM64)
+static_assert(CPU::FPU::ControlStatus::DivisionByZeroBit == 1);
+static_assert(CPU::FPU::ControlStatus::OverflowBit == 2);
+static_assert(CPU::FPU::ControlStatus::UnderflowBit == 3);
+static_assert(CPU::FPU::ControlStatus::InexactBit == 4);
+static_assert(CPU::FPU::ControlStatus::DenormalBit == 7);
+#else
+static_assert(CPU::FPU::ControlStatus::DenormalBit == 1);
+static_assert(CPU::FPU::ControlStatus::DivisionByZeroBit == 2);
+static_assert(CPU::FPU::ControlStatus::OverflowBit == 3);
+static_assert(CPU::FPU::ControlStatus::UnderflowBit == 4);
+static_assert(CPU::FPU::ControlStatus::InexactBit == 5);
+#endif
 static_assert((RecompilerFpuFastMxcsrOffset & 3) == 0);
 static_assert((RecompilerFpuSaveMxcsrOffset & 3) == 0);
 
@@ -2441,7 +2458,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     unreachable;
   };
   auto arm64FpuFastFpcr = [&]() -> u32 {
-    return 0x0180'0000u | arm64RoundModeBits();
+    return 0x0100'0000u | arm64RoundModeBits();
   };
 #elif defined(ARCHITECTURE_AMD64)
   auto amd64EmitModRMDisp32 = [&](u32 ext, s32 offset) -> void {
@@ -2499,7 +2516,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   };
   auto emitFpuOpcode = [&](
     void (CPU::*slowPath)(u8, u8), u32 fdn, u32 fsn, u32 cycles,
-    u32 inputChecks, auto&& emitHostOpcode
+    u32 inputChecks, u32 passthroughMask, auto&& emitHostOpcode
   ) -> void {
 #if !defined(ARCHITECTURE_ARM64) && !defined(ARCHITECTURE_AMD64)
     setupCallf();
@@ -2553,9 +2570,24 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       setLabel(expNotAllOnes);
     }
 
+    constexpr u32 fpuInvalidMask = 1u << CPU::FPU::ControlStatus::InvalidOperationBit;
+    constexpr u32 fpuDiv0Mask = 1u << CPU::FPU::ControlStatus::DivisionByZeroBit;
+    constexpr u32 fpuOverflowMask = 1u << CPU::FPU::ControlStatus::OverflowBit;
+    constexpr u32 fpuUnderflowMask = 1u << CPU::FPU::ControlStatus::UnderflowBit;
+    constexpr u32 fpuInexactMask = 1u << CPU::FPU::ControlStatus::InexactBit;
+    constexpr u32 fpuDenormalMask = 1u << CPU::FPU::ControlStatus::DenormalBit;
+    constexpr u32 fpuIeeeMask = fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask;
+    u32 trapMask = 0;
+    if(emitStateKey.fpuInvalidOperationEnabled()) trapMask |= fpuInvalidMask;
+    if(emitStateKey.fpuDivisionByZeroEnabled()) trapMask |= fpuDiv0Mask;
+    if(emitStateKey.fpuOverflowEnabled()) trapMask |= fpuOverflowMask;
+    if(emitStateKey.fpuUnderflowEnabled()) trapMask |= fpuUnderflowMask;
+    if(emitStateKey.fpuInexactEnabled()) trapMask |= fpuInexactMask;
+    u32 passthrough = passthroughMask & fpuIeeeMask;
+    u32 fallbackMask = trapMask | fpuDenormalMask | (fpuIeeeMask & ~passthrough);
+    u32 stickyMask = passthrough & ~trapMask;
     sljit_jump* weird = nullptr;
 #if defined(ARCHITECTURE_ARM64)
-    constexpr u32 fpuStatusMask = 0xbf; // stick bits (0x80 is for denormals)
     arm64ReadFpcr(reg(2));
     mov64(reg(3), imm(arm64FpuFastFpcr()));
     arm64WriteFpcr(reg(3));
@@ -2568,10 +2600,9 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
     arm64ReadFpsr(reg(3));
     arm64WriteFpcr(reg(2));
-    test64(reg(3), imm(fpuStatusMask), set_z);
+    test32(reg(3), imm(fallbackMask), set_z);
     weird = jump(flag_nz);
 #elif defined(ARCHITECTURE_AMD64)
-    constexpr u32 fpuStatusMask = 0x3f;
     amd64Stmxcsr(RecompilerFpuSaveMxcsrOffset);
     mov32(mem(sreg(0), RecompilerFpuFastMxcsrOffset), imm(amd64FpuFastMxcsr()));
     amd64Ldmxcsr(RecompilerFpuFastMxcsrOffset);
@@ -2583,9 +2614,13 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     amd64Stmxcsr(RecompilerFpuFastMxcsrOffset);
     amd64Ldmxcsr(RecompilerFpuSaveMxcsrOffset);
     mov32(reg(3), mem(sreg(0), RecompilerFpuFastMxcsrOffset));
-    test32(reg(3), imm(fpuStatusMask), set_z);
+    test32(reg(3), imm(fallbackMask), set_z);
     weird = jump(flag_nz);
 #endif
+
+    and32(reg(0), reg(3), imm(stickyMask));
+    or8(mem(sreg(0), FpuCsrCauseDataOffset), mem(sreg(0), FpuCsrCauseDataOffset), reg(0), reg(2));
+    or8(mem(sreg(0), FpuCsrFlagDataOffset), mem(sreg(0), FpuCsrFlagDataOffset), reg(0), reg(2));
 
     mov32(mem(sreg(2), fdWordOff), reg(1));
     mov32(mem(sreg(2), fdWordhOff), imm(0));
@@ -2782,6 +2817,10 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   case 0x04: {
     emitFpuOpcode(
       &CPU::FSQRT_S, Fdn, Fsn, (29 - 1) * 2, FpuCheckQnan,
+      (1u << CPU::FPU::ControlStatus::InexactBit)
+    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
+    | (1u << CPU::FPU::ControlStatus::OverflowBit)
+    | (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
       [&]() -> void {
         fsqrt32_f0();
       }
@@ -2793,6 +2832,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   case 0x05: {
     emitFpuOpcode(
       &CPU::FABS_S, Fdn, Fsn, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      (1u << CPU::FPU::ControlStatus::InvalidOperationBit)
+    | (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
+    | (1u << CPU::FPU::ControlStatus::OverflowBit)
+    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
+    | (1u << CPU::FPU::ControlStatus::InexactBit),
       [&]() -> void {
         fabs32(freg(0), freg(0));
       }
@@ -2811,6 +2855,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   case 0x07: {
     emitFpuOpcode(
       &CPU::FNEG_S, Fdn, Fsn, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      (1u << CPU::FPU::ControlStatus::InvalidOperationBit)
+    | (1u << CPU::FPU::ControlStatus::DivisionByZeroBit)
+    | (1u << CPU::FPU::ControlStatus::OverflowBit)
+    | (1u << CPU::FPU::ControlStatus::UnderflowBit)
+    | (1u << CPU::FPU::ControlStatus::InexactBit),
       [&]() -> void {
         fneg32(freg(0), freg(0));
       }

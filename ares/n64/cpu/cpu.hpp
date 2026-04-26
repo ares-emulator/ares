@@ -746,28 +746,62 @@ struct CPU : Thread {
 
     struct ControlStatus {
       n2 roundMode = 0;
-      struct Flag {
-        n1 inexact = 0;
-        n1 underflow = 0;
-        n1 overflow = 0;
-        n1 divisionByZero = 0;
-        n1 invalidOperation = 0;
-      } flag;
-      struct Enable {
-        n1 inexact = 0;
-        n1 underflow = 0;
-        n1 overflow = 0;
-        n1 divisionByZero = 0;
-        n1 invalidOperation = 0;
-      } enable;
-      struct Cause {
-        n1 inexact = 0;
-        n1 underflow = 0;
-        n1 overflow = 0;
-        n1 divisionByZero = 0;
-        n1 invalidOperation = 0;
-        n1 unimplementedOperation = 0;
-      } cause;
+#if defined(ARCHITECTURE_ARM64)
+      enum : u32 {
+        InvalidOperationBit       = 0,
+        DivisionByZeroBit         = 1,
+        OverflowBit               = 2,
+        UnderflowBit              = 3,
+        InexactBit                = 4,
+        DenormalBit               = 7,
+        UnimplementedOperationBit = 6,
+      };
+#else
+      enum : u32 {
+        InvalidOperationBit       = 0,
+        DenormalBit               = 1,
+        DivisionByZeroBit         = 2,
+        OverflowBit               = 3,
+        UnderflowBit              = 4,
+        InexactBit                = 5,
+        UnimplementedOperationBit = 6,
+      };
+#endif
+      template<bool HasUnimplemented>
+      struct ExceptionBits {
+        n8 data = 0;
+
+        auto inexact() const -> bool { return data.bit(InexactBit); }
+        auto setInexact(bool value) -> void { data.bit(InexactBit) = value; }
+
+        auto underflow() const -> bool { return data.bit(UnderflowBit); }
+        auto setUnderflow(bool value) -> void { data.bit(UnderflowBit) = value; }
+
+        auto overflow() const -> bool { return data.bit(OverflowBit); }
+        auto setOverflow(bool value) -> void { data.bit(OverflowBit) = value; }
+
+        auto divisionByZero() const -> bool { return data.bit(DivisionByZeroBit); }
+        auto setDivisionByZero(bool value) -> void { data.bit(DivisionByZeroBit) = value; }
+
+        auto invalidOperation() const -> bool { return data.bit(InvalidOperationBit); }
+        auto setInvalidOperation(bool value) -> void { data.bit(InvalidOperationBit) = value; }
+
+        auto unimplementedOperation() const -> bool {
+          if constexpr(HasUnimplemented) return data.bit(UnimplementedOperationBit);
+          return 0;
+        }
+        auto setUnimplementedOperation(bool value) -> void {
+          if constexpr(HasUnimplemented) data.bit(UnimplementedOperationBit) = value;
+        }
+
+        auto reset() -> void { data = 0; }
+      };
+      using Flag = ExceptionBits<false>;
+      using Enable = ExceptionBits<false>;
+      using Cause = ExceptionBits<true>;
+      Flag flag;
+      Enable enable;
+      Cause cause;
       n1 compare = 0;
       n1 flushSubnormals = 0;
     } csr;
