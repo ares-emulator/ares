@@ -79,6 +79,42 @@
     u32 opcode = 0xd51b4420u | u32(index);
     sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
   }
+
+  auto arm64FcvtS32FromF32(reg d, freg s, u32 fcsrRoundMode) -> void {
+    static const u32 rmBase[4] = {0x1E200000u, 0x1E380000u, 0x1E280000u, 0x1E300000u};
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u32 w = rmBase[fcsrRoundMode & 3u] | (u32)g | ((u32)f << 5u);
+    sljit_emit_op_custom(compiler, &w, sizeof(w));
+  }
+
+  auto arm64FcvtS64FromF32(reg d, freg s, u32 fcsrRoundMode) -> void {
+    static const u32 rmBase[4] = {0x9E200000u, 0x9E380000u, 0x9E280000u, 0x9E300000u};
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u32 w = rmBase[fcsrRoundMode & 3u] | (u32)g | ((u32)f << 5u);
+    sljit_emit_op_custom(compiler, &w, sizeof(w));
+  }
+
+  auto arm64FcvtS32FromF64(reg d, freg s, u32 fcsrRoundMode) -> void {
+    static const u32 rmBase[4] = {0x1E600000u, 0x1E780000u, 0x1E680000u, 0x1E700000u};
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u32 w = rmBase[fcsrRoundMode & 3u] | (u32)g | ((u32)f << 5u);
+    sljit_emit_op_custom(compiler, &w, sizeof(w));
+  }
+
+  auto arm64FcvtS64FromF64(reg d, freg s, u32 fcsrRoundMode) -> void {
+    static const u32 rmBase[4] = {0x9E600000u, 0x9E780000u, 0x9E680000u, 0x9E700000u};
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u32 w = rmBase[fcsrRoundMode & 3u] | (u32)g | ((u32)f << 5u);
+    sljit_emit_op_custom(compiler, &w, sizeof(w));
+  }
 #elif defined(ARCHITECTURE_AMD64)
   auto amd64Stmxcsr(s32 offset) -> void {
     s32 base = sljit_get_register_index(SLJIT_GP_REGISTER, sreg(0).fst);
@@ -116,6 +152,74 @@
     opcode[n++] = disp >> 16;
     opcode[n++] = disp >> 24;
     sljit_emit_op_custom(compiler, opcode, n);
+  }
+
+  auto amd64Cvtss2si32(reg d, freg s) -> void {
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u8 op[6];
+    u32 n = 0;
+    u8 rex = 0x40u;
+    if((g & 8) != 0) rex |= 0x4u;
+    if((f & 8) != 0) rex |= 0x1u;
+    op[n++] = 0xF3;
+    if(rex != 0x40u) op[n++] = rex;
+    op[n++] = 0x0F;
+    op[n++] = 0x2D;
+    op[n++] = 0xC0u | (u8((g & 7) << 3)) | u8(f & 7);
+    sljit_emit_op_custom(compiler, op, n);
+  }
+
+  auto amd64Cvtss2si64(reg d, freg s) -> void {
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u8 op[6];
+    u32 n = 0;
+    u8 rex = 0x48u;
+    if((g & 8) != 0) rex |= 0x4u;
+    if((f & 8) != 0) rex |= 0x1u;
+    op[n++] = 0xF3;
+    op[n++] = rex;
+    op[n++] = 0x0F;
+    op[n++] = 0x2D;
+    op[n++] = 0xC0u | (u8((g & 7) << 3)) | u8(f & 7);
+    sljit_emit_op_custom(compiler, op, n);
+  }
+
+  auto amd64Cvtsd2si32(reg d, freg s) -> void {
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u8 op[6];
+    u32 n = 0;
+    u8 rex = 0x40u;
+    if((g & 8) != 0) rex |= 0x4u;
+    if((f & 8) != 0) rex |= 0x1u;
+    op[n++] = 0xF2;
+    if(rex != 0x40u) op[n++] = rex;
+    op[n++] = 0x0F;
+    op[n++] = 0x2D;
+    op[n++] = 0xC0u | (u8((g & 7) << 3)) | u8(f & 7);
+    sljit_emit_op_custom(compiler, op, n);
+  }
+
+  auto amd64Cvtsd2si64(reg d, freg s) -> void {
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u8 op[6];
+    u32 n = 0;
+    u8 rex = 0x48u;
+    if((g & 8) != 0) rex |= 0x4u;
+    if((f & 8) != 0) rex |= 0x1u;
+    op[n++] = 0xF2;
+    op[n++] = rex;
+    op[n++] = 0x0F;
+    op[n++] = 0x2D;
+    op[n++] = 0xC0u | (u8((g & 7) << 3)) | u8(f & 7);
+    sljit_emit_op_custom(compiler, op, n);
   }
 #endif
 
