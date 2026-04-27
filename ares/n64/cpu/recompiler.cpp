@@ -1437,8 +1437,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SYNC
   case 0x0f: {
-    setupCallf();
-    callf(&CPU::SYNC);
+    // no operation
     return 0;
   }
 
@@ -3299,8 +3298,16 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FMOV.S Fd,Fs
   case 0x06: {
-    setupCallf();
-    callf(&CPU::FMOV_S, imm(Fdn), imm(Fsn));
+    if(!emitStateKey.coprocessor1Enabled()) {
+      setupCallf();
+      callf(&CPU::FMOV_S, imm(Fdn), imm(Fsn));
+      return 0;
+    }
+    s32 fsn = Fsn, fdn = Fdn;
+    s32 fsWordOff = emitStateKey.floatingPointMode() ? (fsn - 16) * 8 : ((fsn & ~1) - 16) * 8;
+    s32 fdWordOff = (fdn - 16) * 8;
+    mov64(reg(0), mem(sreg(2), fsWordOff));
+    mov64(mem(sreg(2), fdWordOff), reg(0));
     return 0;
   }
 
@@ -3718,8 +3725,16 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FMOV.D Fd,Fs
   case 0x06: {
-    setupCallf();
-    callf(&CPU::FMOV_D, imm(Fdn), imm(Fsn));
+    if(!emitStateKey.coprocessor1Enabled()) {
+      setupCallf();
+      callf(&CPU::FMOV_D, imm(Fdn), imm(Fsn));
+      return 0;
+    }
+    s32 fsn = Fsn, fdn = Fdn;
+    s32 fsWordOff = emitStateKey.floatingPointMode() ? (fsn - 16) * 8 : ((fsn & ~1) - 16) * 8;
+    s32 fdWordOff = (fdn - 16) * 8;
+    mov64(reg(0), mem(sreg(2), fsWordOff));
+    mov64(mem(sreg(2), fdWordOff), reg(0));
     return 0;
   }
 
