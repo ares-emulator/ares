@@ -760,7 +760,7 @@ auto CPU::FCVT_D_L(u8 fd, u8 fs) -> void {
   }
   CHECK_FPE(f64, ffd, (f64)ffs);
   if(!fpuCheckOutput(ffd)) return;
-  FD(f64) = ffs;
+  FD(f64) = ffd;
   step((5 - 1) * 2);
 }
 
