@@ -3137,21 +3137,17 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       if(isDouble) {
         mov64(freg(0), reg(0));
         mov64(freg(1), reg(1));
-        auto yes = fcmp64_jump(freg(0), freg(1), flag_foeq);
+        fcmp64(freg(0), freg(1));
         mov32(reg(2), imm(0));
-        auto done = jump();
-        setLabel(yes);
-        mov32(reg(2), imm(1));
-        setLabel(done);
+        mov32(reg(3), imm(1));
+        cmov32(reg(2), reg(3), reg(2), flag_feq);
       } else {
         mov32(freg(0), reg(0));
         mov32(freg(1), reg(1));
-        auto yes = fcmp32_jump(freg(0), freg(1), flag_foeq);
+        fcmp32(freg(0), freg(1));
         mov32(reg(2), imm(0));
-        auto done = jump();
-        setLabel(yes);
-        mov32(reg(2), imm(1));
-        setLabel(done);
+        mov32(reg(3), imm(1));
+        cmov32(reg(2), reg(3), reg(2), flag_feq);
       }
       break;
     }
@@ -3159,21 +3155,17 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       if(isDouble) {
         mov64(freg(0), reg(0));
         mov64(freg(1), reg(1));
-        auto yes = fcmp64_jump(freg(0), freg(1), flag_folt);
+        fcmp64(freg(0), freg(1));
         mov32(reg(2), imm(0));
-        auto done = jump();
-        setLabel(yes);
-        mov32(reg(2), imm(1));
-        setLabel(done);
+        mov32(reg(3), imm(1));
+        cmov32(reg(2), reg(3), reg(2), flag_flt);
       } else {
         mov32(freg(0), reg(0));
         mov32(freg(1), reg(1));
-        auto yes = fcmp32_jump(freg(0), freg(1), flag_folt);
+        fcmp32(freg(0), freg(1));
         mov32(reg(2), imm(0));
-        auto done = jump();
-        setLabel(yes);
-        mov32(reg(2), imm(1));
-        setLabel(done);
+        mov32(reg(3), imm(1));
+        cmov32(reg(2), reg(3), reg(2), flag_flt);
       }
       break;
     }
@@ -3181,21 +3173,17 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       if(isDouble) {
         mov64(freg(0), reg(0));
         mov64(freg(1), reg(1));
-        auto yes = fcmp64_jump(freg(0), freg(1), flag_fole);
+        fcmp64(freg(0), freg(1));
         mov32(reg(2), imm(0));
-        auto done = jump();
-        setLabel(yes);
-        mov32(reg(2), imm(1));
-        setLabel(done);
+        mov32(reg(3), imm(1));
+        cmov32(reg(2), reg(3), reg(2), flag_fle);
       } else {
         mov32(freg(0), reg(0));
         mov32(freg(1), reg(1));
-        auto yes = fcmp32_jump(freg(0), freg(1), flag_fole);
+        fcmp32(freg(0), freg(1));
         mov32(reg(2), imm(0));
-        auto done = jump();
-        setLabel(yes);
-        mov32(reg(2), imm(1));
-        setLabel(done);
+        mov32(reg(3), imm(1));
+        cmov32(reg(2), reg(3), reg(2), flag_fle);
       }
       break;
     }
@@ -3205,40 +3193,30 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     mov32_u8(FpuCsrCompare, reg(2));
     auto done = jump();
 
-    sljit_jump* trap = nullptr;
     if(nanInvalidPolicy == FpuCompareUnordered) {
-      setLabel(qnanFs);
-      setLabel(qnanFt);
-      if(emitStateKey.fpuInvalidOperationEnabled()) {
-        trap = jump();
-      } else {
+      if(!emitStateKey.fpuInvalidOperationEnabled()) {
+        setLabel(qnanFs); qnanFs = nullptr;
+        setLabel(qnanFt); qnanFt = nullptr;
         mov32_u8(mem(sreg(0), FpuCsrCauseDataOffset), imm(fpuInvalidMask));
         or8(mem(sreg(0), FpuCsrFlagDataOffset), mem(sreg(0), FpuCsrFlagDataOffset), imm(fpuInvalidMask), reg(2));
+        setLabel(nanFs); nanFs = nullptr;
+        setLabel(nanFt); nanFt = nullptr;
+        mov32_u8(FpuCsrCompare, imm(nanResult & 1));
       }
-      mov32(reg(2), imm(nanResult & 1));
-      mov32_u8(FpuCsrCompare, reg(2));
-      auto doneQnan = jump();
-      setLabel(nanFs);
-      setLabel(nanFt);
-      mov32(reg(2), imm(nanResult & 1));
-      mov32_u8(FpuCsrCompare, reg(2));
-      setLabel(doneQnan);
-    } else {
-      setLabel(qnanFs);
-      setLabel(qnanFt);
-      setLabel(nanFs);
-      setLabel(nanFt);
-      if(emitStateKey.fpuInvalidOperationEnabled()) {
-        trap = jump();
-      } else {
+    }
+    if(nanInvalidPolicy == FpuCompareOrdered) {
+      if(!emitStateKey.fpuInvalidOperationEnabled()) {
+        setLabel(qnanFs); qnanFs = nullptr;
+        setLabel(qnanFt); qnanFt = nullptr;
+        setLabel(nanFs); nanFs = nullptr;
+        setLabel(nanFt); nanFt = nullptr;
         mov32_u8(mem(sreg(0), FpuCsrCauseDataOffset), imm(fpuInvalidMask));
         or8(mem(sreg(0), FpuCsrFlagDataOffset), mem(sreg(0), FpuCsrFlagDataOffset), imm(fpuInvalidMask), reg(2));
-        mov32(reg(2), imm(nanResult & 1));
-        mov32_u8(FpuCsrCompare, reg(2));
+        mov32_u8(FpuCsrCompare, imm(nanResult & 1));
       }
     }
     setLabel(done);
-    deferSlowPath(trap, instruction);
+    deferSlowPath({ qnanFs, qnanFt, nanFs, nanFt }, instruction);
     emitDeferredCycles += cycles;
   };
 #endif

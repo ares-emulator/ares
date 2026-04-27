@@ -356,6 +356,16 @@
   }
 
   template<typename T, typename U>
+  auto fcmp32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CMP_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fcmp64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CMP_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
   auto fcmp32_jump(T x, U y, sljit_s32 flags) -> sljit_jump* {
     return sljit_emit_fcmp(compiler,
                            SLJIT_32 | flags,
