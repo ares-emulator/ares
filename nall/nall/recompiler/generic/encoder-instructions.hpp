@@ -404,4 +404,54 @@
   auto fneg64(T x, U y) -> void {
     sljit_emit_fop1(compiler, SLJIT_NEG_F64, x.fst, x.snd, y.fst, y.snd);
   }
+
+  template<typename T, typename U>
+  auto conv_f64_from_f32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F64_FROM_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f32_from_f64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F32_FROM_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_sw_from_f64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_SW_FROM_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_sw_from_f32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_SW_FROM_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_s32_from_f64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_S32_FROM_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_s32_from_f32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_S32_FROM_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f64_from_sw(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F64_FROM_SW, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f32_from_sw(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F32_FROM_SW, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f64_from_s32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F64_FROM_S32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f32_from_s32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F32_FROM_S32, x.fst, x.snd, y.fst, y.snd);
+  }
 //};

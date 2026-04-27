@@ -2458,10 +2458,18 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     FpuCheckQnan = 1 << 0,
     FpuCheckSnan = 1 << 1,
     FpuCheckSubnormal = 1 << 2,
+    FpuCheckSourceLRange = 1 << 3,
+    FpuCheckConvertRange = 1 << 4,
   };
   enum FpuWidth : u32 {
     FpuWidth32 = 0,
     FpuWidth64 = 1,
+  };
+  enum FpuConvertType : u32 {
+    FpuConvertF32 = 0,
+    FpuConvertF64 = 1,
+    FpuConvertS32 = 2,
+    FpuConvertS64 = 3,
   };
 
   constexpr u32 fpuInvalidMask    = 1u << CPU::FPU::ControlStatus::InvalidOperationBit;
@@ -2750,6 +2758,202 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     // Account for the cycles taken by the slow path.
     emitDeferredCycles += cycles;
   };
+
+  auto emitFpuConvertOpcode = [&](
+    auto&& callSlowPath,
+    u32 fdn,
+    u32 fsn,
+    u32 sourceType,
+    u32 destinationType,
+    u32 cycles,
+    u32 inputChecks,
+    auto&& emitHostOpcode
+  ) -> void {
+#if !defined(ARCHITECTURE_ARM64) && !defined(ARCHITECTURE_AMD64)
+    callSlowPath();
+    return;
+#endif
+    if(emitSlowPathSection || !emitStateKey.coprocessor1Enabled()) {
+      callSlowPath();
+      return;
+    }
+
+    bool sourceIsInteger      = sourceType      == FpuConvertS32 || sourceType      == FpuConvertS64;
+    bool sourceIs64Bit        = sourceType      == FpuConvertF64 || sourceType      == FpuConvertS64;
+    bool destinationIsInteger = destinationType == FpuConvertS32 || destinationType == FpuConvertS64;
+    bool destinationIs64Bit   = destinationType == FpuConvertF64 || destinationType == FpuConvertS64;
+
+    s32 fsWordOff;
+    if(sourceIs64Bit) {
+      if(emitStateKey.floatingPointMode()) fsWordOff = (fsn - 16) * 8;
+      else fsWordOff = ((fsn & ~1) - 16) * 8;
+    } else {
+      if(emitStateKey.floatingPointMode()) fsWordOff = (fsn - 16) * 8 + FpuR64S32Off;
+      else fsWordOff = ((fsn & ~1) - 16) * 8 + FpuR64S32Off;
+    }
+    s32 fdWordOff = destinationIs64Bit ? (fdn - 16) * 8 : (fdn - 16) * 8 + FpuR64S32Off;
+    s32 fdWordhOff = (fdn - 16) * 8 + FpuR64S32hOff;
+
+    if(sourceIs64Bit) mov64(reg(0), mem(sreg(2), fsWordOff));
+    else mov32(reg(0), mem(sreg(2), fsWordOff));
+
+    bool checkQnan      = inputChecks & FpuCheckQnan;
+    bool checkSnan      = inputChecks & FpuCheckSnan;
+    bool checkSubnormal = inputChecks & FpuCheckSubnormal;
+    bool checkSourceLRange = inputChecks & FpuCheckSourceLRange;
+    bool checkConvertRange = inputChecks & FpuCheckConvertRange;
+    auto emitInputChecks = [&](reg source, sljit_jump*& qnan, sljit_jump*& snan, sljit_jump*& subnormal) -> void {
+      if(sourceIsInteger || inputChecks == 0) return;
+      if(sourceIs64Bit) {
+        shl64(reg(2), source, imm(1));
+        if(checkSubnormal) {
+          sub64(reg(3), reg(2), imm(1));
+          cmp64(reg(3), imm(0x001f'ffff'ffff'ffffull), set_ult);
+          subnormal = jump(flag_ult);
+        }
+        if(checkQnan && !checkSnan) {
+          cmp64(reg(2), imm(0xfff0'0000'0000'0000ull), set_uge);
+          qnan = jump(flag_uge);
+        } else if(!checkQnan && checkSnan) {
+          xor64(reg(3), reg(2), imm(0x0008'0000'0000'0000ull));
+          cmp64(reg(3), imm(0xfff0'0000'0000'0000ull), set_ugt);
+          snan = jump(flag_ugt);
+        } else if(checkQnan && checkSnan) {
+          cmp64(reg(2), imm(0xffe0'0000'0000'0000ull), set_ugt);
+          snan = jump(flag_ugt);
+        }
+      } else {
+        shl32(reg(2), source, imm(1));
+        if(checkSubnormal) {
+          sub32(reg(3), reg(2), imm(1));
+          cmp32(reg(3), imm(0x00ff'ffffu), set_ult);
+          subnormal = jump(flag_ult);
+        }
+        if(checkQnan && !checkSnan) {
+          cmp32(reg(2), imm(0xff80'0000u), set_uge);
+          qnan = jump(flag_uge);
+        } else if(!checkQnan && checkSnan) {
+          xor32(reg(3), reg(2), imm(0x0040'0000u));
+          cmp32(reg(3), imm(0xff80'0000u), set_ugt);
+          snan = jump(flag_ugt);
+        } else if(checkQnan && checkSnan) {
+          cmp32(reg(2), imm(0xff00'0000u), set_ugt);
+          snan = jump(flag_ugt);
+        }
+      }
+    };
+
+    sljit_jump* qnanFs = nullptr;
+    sljit_jump* snanFs = nullptr;
+    sljit_jump* subnormalFs = nullptr;
+    emitInputChecks(reg(0), qnanFs, snanFs, subnormalFs);
+
+    sljit_jump* outOfRangeHigh = nullptr;
+    sljit_jump* outOfRangeLow = nullptr;
+    if(checkSourceLRange) {
+      assert(sourceType == FpuConvertS64);
+      cmp64(reg(0), imm(0x0080'0000'0000'0000ull), set_sge);
+      outOfRangeHigh = jump(flag_sge);
+      cmp64(reg(0), imm(-0x0080'0000'0000'0000ll), set_slt);
+      outOfRangeLow = jump(flag_slt);
+    }
+    if(checkConvertRange && sourceType == FpuConvertF32 && destinationType == FpuConvertS32) {
+      shl32(reg(2), reg(0), imm(1));
+      cmp32(reg(2), imm(0x9e00'0000u), set_ugt);
+      outOfRangeHigh = jump(flag_ugt);
+      cmp32(reg(2), imm(0x9e00'0000u), set_z);
+      auto noEdge = jump(flag_nz);
+      cmp32(reg(0), imm(0), set_sge);
+      outOfRangeLow = jump(flag_sge);
+      setLabel(noEdge);
+    }
+    if(checkConvertRange && sourceType == FpuConvertF64 && destinationType == FpuConvertS32) {
+      shl64(reg(2), reg(0), imm(1));
+      cmp64(reg(2), imm(0x83c0'0000'0000'0000ull), set_ugt);
+      outOfRangeHigh = jump(flag_ugt);
+      cmp64(reg(2), imm(0x83c0'0000'0000'0000ull), set_z);
+      auto noEdge = jump(flag_nz);
+      cmp64(reg(0), imm(0), set_sge);
+      outOfRangeLow = jump(flag_sge);
+      setLabel(noEdge);
+    }
+    if(checkConvertRange && sourceType == FpuConvertF32 && destinationType == FpuConvertS64) {
+      shl32(reg(2), reg(0), imm(1));
+      cmp32(reg(2), imm(0xb400'0000u), set_uge);
+      outOfRangeHigh = jump(flag_uge);
+    }
+    if(checkConvertRange && sourceType == FpuConvertF64 && destinationType == FpuConvertS64) {
+      shl64(reg(2), reg(0), imm(1));
+      cmp64(reg(2), imm(0x8680'0000'0000'0000ull), set_uge);
+      outOfRangeHigh = jump(flag_uge);
+    }
+
+    u32 trapMask = 0;
+    if(emitStateKey.fpuInvalidOperationEnabled()) trapMask |= fpuInvalidMask;
+    if(emitStateKey.fpuDivisionByZeroEnabled())   trapMask |= fpuDiv0Mask;
+    if(emitStateKey.fpuOverflowEnabled())         trapMask |= fpuOverflowMask;
+    if(emitStateKey.fpuUnderflowEnabled())        trapMask |= fpuUnderflowMask;
+    if(emitStateKey.fpuInexactEnabled())          trapMask |= fpuInexactMask;
+    u32 fallbackMask = trapMask | fpuDenormalMask | fpuIeeeMask;
+
+    sljit_jump* weird = nullptr;
+#if defined(ARCHITECTURE_ARM64)
+    arm64ReadFpcr(reg(2));
+    mov64(reg(3), imm(arm64FpuFastFpcr()));
+    arm64WriteFpcr(reg(3));
+    mov64(reg(3), imm(0));
+    arm64WriteFpsr(reg(3));
+
+    if(!sourceIsInteger) {
+      if(sourceIs64Bit) mov64(freg(0), reg(0));
+      else mov32(freg(0), reg(0));
+    }
+    emitHostOpcode();
+    if(!destinationIsInteger) {
+      if(destinationIs64Bit) mov64(reg(1), freg(0));
+      else mov32(reg(1), freg(0));
+    }
+    arm64ReadFpsr(reg(3));
+    arm64WriteFpcr(reg(2));
+#elif defined(ARCHITECTURE_AMD64)
+    amd64Stmxcsr(RecompilerFpuSaveMxcsrOffset);
+    mov32(mem(sreg(0), RecompilerFpuFastMxcsrOffset), imm(amd64FpuFastMxcsr()));
+    amd64Ldmxcsr(RecompilerFpuFastMxcsrOffset);
+
+    if(!sourceIsInteger) {
+      if(sourceIs64Bit) mov64(freg(0), reg(0));
+      else mov32(freg(0), reg(0));
+    }
+    emitHostOpcode();
+    if(!destinationIsInteger) {
+      if(destinationIs64Bit) mov64(reg(1), freg(0));
+      else mov32(reg(1), freg(0));
+    }
+    amd64Stmxcsr(RecompilerFpuFastMxcsrOffset);
+    amd64Ldmxcsr(RecompilerFpuSaveMxcsrOffset);
+    mov32(reg(3), mem(sreg(0), RecompilerFpuFastMxcsrOffset));
+#endif
+
+    test32(reg(3), imm(fallbackMask), set_z);
+    weird = jump(flag_nz);
+
+    mov32(reg(0), imm(0));
+    mov32_u8(mem(sreg(0), FpuCsrCauseDataOffset), reg(0));
+
+    if(destinationIs64Bit) {
+      mov64(mem(sreg(2), fdWordOff), reg(1));
+    } else {
+      mov32(mem(sreg(2), fdWordOff), reg(1));
+      mov32(mem(sreg(2), fdWordhOff), imm(0));
+    }
+
+    deferSlowPath({
+      qnanFs, snanFs, subnormalFs,
+      outOfRangeHigh, outOfRangeLow,
+      weird
+    }, instruction);
+    emitDeferredCycles += cycles;
+  };
 #endif
 
   switch(instruction >> 21 & 0x1f) {
@@ -3032,57 +3236,129 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FROUND.L.S Fd,Fs
   case 0x08: {
-    setupCallf();
-    callf(&CPU::FROUND_L_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FROUND_L_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FTRUNC.L.S Fd,Fs
   case 0x09: {
-    setupCallf();
-    callf(&CPU::FTRUNC_L_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FTRUNC_L_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FCEIL.L.S Fd,Fs
   case 0x0a: {
-    setupCallf();
-    callf(&CPU::FCEIL_L_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCEIL_L_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FFLOOR.L.S Fd,Fs
   case 0x0b: {
-    setupCallf();
-    callf(&CPU::FFLOOR_L_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FFLOOR_L_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FROUND.W.S Fd,Fs
   case 0x0c: {
-    setupCallf();
-    callf(&CPU::FROUND_W_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FROUND_W_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FTRUNC.W.S Fd,Fs
   case 0x0d: {
-    setupCallf();
-    callf(&CPU::FTRUNC_W_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FTRUNC_W_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FCEIL.W.S Fd,Fs
   case 0x0e: {
-    setupCallf();
-    callf(&CPU::FCEIL_W_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCEIL_W_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FFLOOR.W.S Fd,Fs
   case 0x0f: {
-    setupCallf();
-    callf(&CPU::FFLOOR_W_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FFLOOR_W_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
@@ -3095,22 +3371,49 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FCVT.D.S Fd,Fs
   case 0x21: {
-    setupCallf();
-    callf(&CPU::FCVT_D_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_D_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertF64, 0,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      [&]() -> void {
+        conv_f64_from_f32(freg(0), freg(0));
+      }
+    );
     return 0;
   }
 
   //FCVT.W.S Fd,Fs
   case 0x24: {
-    setupCallf();
-    callf(&CPU::FCVT_W_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_W_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FCVT.L.S Fd,Fs
   case 0x25: {
-    setupCallf();
-    callf(&CPU::FCVT_L_S, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_L_S, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f32(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
@@ -3355,64 +3658,145 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FROUND.L.D Fd,Fs
   case 0x08: {
-    setupCallf();
-    callf(&CPU::FROUND_L_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FROUND_L_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FTRUNC.L.D Fd,Fs
   case 0x09: {
-    setupCallf();
-    callf(&CPU::FTRUNC_L_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FTRUNC_L_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FCEIL.L.D Fd,Fs
   case 0x0a: {
-    setupCallf();
-    callf(&CPU::FCEIL_L_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCEIL_L_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FFLOOR.L.D Fd,Fs
   case 0x0b: {
-    setupCallf();
-    callf(&CPU::FFLOOR_L_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FFLOOR_L_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FROUND.W.D Fd,Fs
   case 0x0c: {
-    setupCallf();
-    callf(&CPU::FROUND_W_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FROUND_W_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FTRUNC.W.D Fd,Fs
   case 0x0d: {
-    setupCallf();
-    callf(&CPU::FTRUNC_W_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FTRUNC_W_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FCEIL.W.D Fd,Fs
   case 0x0e: {
-    setupCallf();
-    callf(&CPU::FCEIL_W_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCEIL_W_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FFLOOR.W.D Fd,Fs
   case 0x0f: {
-    setupCallf();
-    callf(&CPU::FFLOOR_W_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FFLOOR_W_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FCVT.S.D Fd,Fs
   case 0x20: {
-    setupCallf();
-    callf(&CPU::FCVT_S_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_S_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertF32, (2 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
+      [&]() -> void {
+        conv_f32_from_f64(freg(0), freg(0));
+      }
+    );
     return 0;
   }
 
@@ -3425,15 +3809,33 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FCVT.W.D Fd,Fs
   case 0x24: {
-    setupCallf();
-    callf(&CPU::FCVT_W_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_W_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_s32_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
   //FCVT.L.D Fd,Fs
   case 0x25: {
-    setupCallf();
-    callf(&CPU::FCVT_L_D, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_L_D, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
+      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal | FpuCheckConvertRange,
+      [&]() -> void {
+        conv_sw_from_f64(reg(1), freg(0));
+      }
+    );
     return 0;
   }
 
@@ -3567,15 +3969,33 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FCVT.S.W Fd,Fs
   case 0x20: {
-    setupCallf();
-    callf(&CPU::FCVT_S_W, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_S_W, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertS32, FpuConvertF32, (5 - 1) * 2,
+      FpuCheckNone,
+      [&]() -> void {
+        conv_f32_from_s32(freg(0), reg(0));
+      }
+    );
     return 0;
   }
 
   //FCVT.D.W Fd,Fs
   case 0x21: {
-    setupCallf();
-    callf(&CPU::FCVT_D_W, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_D_W, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertS32, FpuConvertF64, (5 - 1) * 2,
+      FpuCheckNone,
+      [&]() -> void {
+        conv_f64_from_s32(freg(0), reg(0));
+      }
+    );
     return 0;
   }
 
@@ -3596,15 +4016,33 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FCVT.S.L
   case 0x20: {
-    setupCallf();
-    callf(&CPU::FCVT_S_L, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_S_L, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertS64, FpuConvertF32, (5 - 1) * 2,
+      FpuCheckSourceLRange,
+      [&]() -> void {
+        conv_f32_from_sw(freg(0), reg(0));
+      }
+    );
     return 0;
   }
 
   //FCVT.D.L
   case 0x21: {
-    setupCallf();
-    callf(&CPU::FCVT_D_L, imm(Fdn), imm(Fsn));
+    emitFpuConvertOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FCVT_D_L, imm(Fdn), imm(Fsn));
+      },
+      Fdn, Fsn, FpuConvertS64, FpuConvertF64, (5 - 1) * 2,
+      FpuCheckSourceLRange,
+      [&]() -> void {
+        conv_f64_from_sw(freg(0), reg(0));
+      }
+    );
     return 0;
   }
 
