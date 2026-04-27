@@ -2488,43 +2488,46 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   constexpr u32 fpuDenormalMask   = 1u << CPU::FPU::ControlStatus::DenormalBit;
   constexpr u32 fpuIeeeMask       = fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask;
 
-  auto emitFpuUnderflowFlushFixup = [&](u32 passthrough, reg status, reg value, bool resultIsDouble) -> void {
-    if(!(passthrough & fpuUnderflowMask)) return;
-    if(emitStateKey.fpuRoundMode() != 2 && emitStateKey.fpuRoundMode() != 3) return;
-    test32(status, imm(fpuUnderflowMask), set_z);
-    auto noUnderflow = jump(flag_z);
-    switch(emitStateKey.fpuRoundMode()) {
-    case 2: {
-      if(resultIsDouble) {
-        cmp64(value, imm(0), set_slt);
-        mov64(value, imm(-0x8000'0000'0000'0000ll));
-        mov64(reg(2), imm(0x0010'0000'0000'0000ull));
-        cmov64(value, reg(2), value, flag_sge);
-      } else {
-        cmp32(value, imm(0), set_slt);
-        mov32(value, imm(0x8000'0000u));
-        mov32(reg(2), imm(0x0080'0000u));
-        cmov32(value, reg(2), value, flag_sge);
+    // Sanitize a difference between VR4300 and AMD64/ARM64. In VR4300, when an underflow occurs and
+    // subnormals are flushed, the resulting number is rounded according to the rounding mode. So it
+    // can be either +0/-0, or the smallest-magnitude positive/negative number. Instead, on
+    // AMD64/ARM64, the resulting number is always +0/-0.
+    auto emitFpuUnderflowFlushFixup = [&](reg status, reg value, bool resultIsDouble) -> void {
+      if(emitStateKey.fpuRoundMode() != 2 && emitStateKey.fpuRoundMode() != 3) return;
+      test32(status, imm(fpuUnderflowMask), set_z);
+      auto noUnderflow = jump(flag_z);
+      switch(emitStateKey.fpuRoundMode()) {
+      case 2: {
+        if(resultIsDouble) {
+          cmp64(value, imm(0), set_slt);
+          mov64(value, imm(-0x8000'0000'0000'0000ll));
+          mov64(reg(2), imm(0x0010'0000'0000'0000ull));
+          cmov64(value, reg(2), value, flag_sge);
+        } else {
+          cmp32(value, imm(0), set_slt);
+          mov32(value, imm(0x8000'0000u));
+          mov32(reg(2), imm(0x0080'0000u));
+          cmov32(value, reg(2), value, flag_sge);
+        }
+        break;
       }
-      break;
-    }
-    case 3: {
-      if(resultIsDouble) {
-        cmp64(value, imm(0), set_sge);
-        mov64(value, imm(-0x7ff0'0000'0000'0000ll));
-        mov64(reg(2), imm(0));
-        cmov64(value, reg(2), value, flag_sge);
-      } else {
-        cmp32(value, imm(0), set_slt);
-        mov32(value, imm(0x8080'0000u));
-        mov32(reg(2), imm(0x0000'0000u));
-        cmov32(value, reg(2), value, flag_sge);
+      case 3: {
+        if(resultIsDouble) {
+          cmp64(value, imm(0), set_sge);
+          mov64(value, imm(-0x7ff0'0000'0000'0000ll));
+          mov64(reg(2), imm(0));
+          cmov64(value, reg(2), value, flag_sge);
+        } else {
+          cmp32(value, imm(0), set_slt);
+          mov32(value, imm(0x8080'0000u));
+          mov32(reg(2), imm(0x0000'0000u));
+          cmov32(value, reg(2), value, flag_sge);
+        }
+        break;
       }
-      break;
-    }
-    }
-    setLabel(noUnderflow);
-  };
+      }
+      setLabel(noUnderflow);
+    };
 
   // Helper function to emit a FPU opcode.
   // The main idea is to run an equivalent FPU opcode directly on the host FPU,
@@ -2739,13 +2742,9 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     mov32_u8(mem(sreg(0), FpuCsrCauseDataOffset), reg(0));
     or8(mem(sreg(0), FpuCsrFlagDataOffset), mem(sreg(0), FpuCsrFlagDataOffset), reg(0), reg(2));
 
-    // Sanitize a different between VR4300 and AMD64/ARM64. In VR4300, when an underflow occurs and
-    // subnormals are flushed, the resulting number is rounded according to the rounding mode. So it
-    // can be either +0/-0, or the smallest-magnitude positive/negative number. Instead, on
-    // AMD64/ARM64, the resulting number is always +0/-0.
-    // So we need to sanitize the result accordingly. We check if passthrough was requested for the
-    // underflow flag (can only happen if subnormals are flushed anyway).
-    emitFpuUnderflowFlushFixup(passthrough, reg(3), reg(1), isDouble);
+    // EMIT: generate fixup to align the result to that expected by VR4300 in case of underflow
+    if (passthrough & fpuUnderflowMask)
+      emitFpuUnderflowFlushFixup(reg(3), reg(1), isDouble);
 
     // EMIT: write the result to the destination register.
     if(isDouble) {
@@ -2829,11 +2828,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       return;
     }
 
-    bool sourceIsInteger      = sourceType      == FpuConvertS32 || sourceType      == FpuConvertS64;
-    bool sourceIs64Bit        = sourceType      == FpuConvertF64 || sourceType      == FpuConvertS64;
-    bool destinationIsInteger = destinationType == FpuConvertS32 || destinationType == FpuConvertS64;
-    bool destinationIs64Bit   = destinationType == FpuConvertF64 || destinationType == FpuConvertS64;
+    // Conversion opcodes are fp<->integer or fp<->fp or int<->int. Create a few booleans to make
+    // the code easier to read.
+    const bool sourceIsInteger      = sourceType      == FpuConvertS32 || sourceType      == FpuConvertS64;
+    const bool sourceIs64Bit        = sourceType      == FpuConvertF64 || sourceType      == FpuConvertS64;
+    const bool destinationIsInteger = destinationType == FpuConvertS32 || destinationType == FpuConvertS64;
+    const bool destinationIs64Bit   = destinationType == FpuConvertF64 || destinationType == FpuConvertS64;
 
+    // Calculate input and output register offsets.
     s32 fsWordOff;
     if(sourceIs64Bit) {
       if(emitStateKey.floatingPointMode()) fsWordOff = (fsn - 16) * 8;
@@ -2845,27 +2847,34 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     s32 fdWordOff = destinationIs64Bit ? (fdn - 16) * 8 : (fdn - 16) * 8 + FpuR64S32Off;
     s32 fdWordhOff = (fdn - 16) * 8 + FpuR64S32hOff;
 
-    if(sourceIs64Bit) mov64(reg(0), mem(sreg(2), fsWordOff));
-    else mov32(reg(0), mem(sreg(2), fsWordOff));
+    // EMIT: load the source operand
+    if(sourceIs64Bit)
+      mov64(reg(0), mem(sreg(2), fsWordOff));
+    else
+      mov32(reg(0), mem(sreg(2), fsWordOff));
 
-    // On AMD64 and ARM64, all conversion opcodes raise an invlid operation flag on sNaN inputs.
-    bool checkSnan      = false;
+    // On AMD64 and ARM64, all conversion opcodes raise an invlid operation flag on sNaN inputs. So there
+    // is no need to make an explicit check.
+    const bool checkSnan      = false;
 
     // On AMD64 and ARM64, the conversion opcodes for float<->double conversion do not raise any flag on qNaN inputs.
     // Thus, we do need to do an explicit check to fallback to the interpreter to mirror the actual behavior.
-    bool checkQnan      = !sourceIsInteger && !destinationIsInteger;
+    const bool checkQnan      = !sourceIsInteger && !destinationIsInteger;
 
   #if defined(ARCHITECTURE_ARM64) 
     // On ARM64, input subnormals in conversion opcodes always raise the denormal flag in FPSR,
     // so there is not need to make an explicit check. The flag is not passhtorugh, so it will
     // force a fallback to the interpreter, as VR4300 instead always raises an unimplemented exception.
-    bool checkSubnormal = false;
+    const bool checkSubnormal = false;
   #elif defined(ARCHITECTURE_AMD64)
     // On AMD64, input subnormals in conversion opcodes are silently flushed to zero even without
     // explicitly requesting subnormal flushing (DAZ/FTZ). So we need to make an explicit check
     // to fallback to the interpreter, as VR4300 instead always raises an unimplemented exception.
-    bool checkSubnormal = true;
+    const bool checkSubnormal = true;
   #endif
+
+    // EMIT: emit the input checks, required to fallback to the interpreter for inputs for which
+    // the FPU behavior is different from VR4300.
     auto emitInputChecks = [&](reg source, sljit_jump*& qnan, sljit_jump*& snan, sljit_jump*& subnormal) -> void {
       if(sourceIsInteger) return;
       if(!checkSubnormal && !checkQnan && !checkSnan) return;
@@ -2917,6 +2926,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     sljit_jump* outOfRangeLow = nullptr;
 
     // Enforce VR4300-specific limit of |src| <= 2^55 for conversion from integers
+    // For this, we fallback to the interpreter to raise an unimplemented exception.
     if(sourceType == FpuConvertS64) {
       assert(destinationType == FpuConvertF32 || destinationType == FpuConvertF64);
       cmp64(reg(0), imm(0x0080'0000'0000'0000ull), set_sge);
@@ -2926,6 +2936,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     }
 
     // EMIT: enforce VR4300-specific limit of |src| <= 2^53 for conversion to integers.
+    // For this, we fallback to the interpreter to raise an unimplemented exception.
     if(sourceType == FpuConvertF32 && destinationType == FpuConvertS64) {
       shl32(reg(2), reg(0), imm(1));
       cmp32(reg(2), imm(0xb400'0000u), set_uge);
@@ -2937,6 +2948,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
       outOfRangeHigh = jump(flag_uge);
     }
 
+    // Calculate the fallback mask and passthrough mask.
+    // passhtrough mask: bits that when flagged by the host FPU, can be safely
+    //   passthrough to the control register of the emulated FPU.
+    // fallback mask: bits that when flagged by the host FPU, must force a fallback
+    //   to the interpreter for proper behavior.
     u32 trapMask = 0;
     if(emitStateKey.fpuInvalidOperationEnabled()) trapMask |= fpuInvalidMask;
     if(emitStateKey.fpuDivisionByZeroEnabled())   trapMask |= fpuDiv0Mask;
@@ -2945,6 +2961,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     if(emitStateKey.fpuInexactEnabled())          trapMask |= fpuInexactMask;
     u32 passthrough = fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask;
     if(!sourceIsInteger && !emitStateKey.fpuFlushSubnormals()) passthrough &= ~fpuUnderflowMask;
+    // Fallback is required for:
+    // - Any bit where the VR4300 is configured to trap (trapMask)
+    // - Invalid operation. This is raised on sNaN for instance.
+    // - Denormal. On VR4300, all denormals cause not implemented exception.
+    // - Any bit that cannot be safely passthrough.
     u32 fallbackMask = trapMask | fpuInvalidMask | fpuDenormalMask | (fpuIeeeMask & ~passthrough);
     u32 stickyMask   = passthrough & ~trapMask;
 
@@ -2991,16 +3012,20 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     mov32(reg(3), mem(sreg(0), RecompilerFpuFastMxcsrOffset));
 #endif
 
+    // EMIT: if any flag in the fallback mask is set, we need to fallback to the interpreter.
     test32(reg(3), imm(fallbackMask), set_z);
     weird = jump(flag_nz);
 
+    // EMIT: store flags into the emulated Cause and Flag bits
     and32(reg(0), reg(3), imm(stickyMask));
     mov32_u8(mem(sreg(0), FpuCsrCauseDataOffset), reg(0));
     or8(mem(sreg(0), FpuCsrFlagDataOffset), mem(sreg(0), FpuCsrFlagDataOffset), reg(0), reg(2));
 
-    if(!destinationIsInteger)
-      emitFpuUnderflowFlushFixup(passthrough, reg(3), reg(1), destinationType == FpuConvertF64);
+    // EMIT: generate fixup to align the result to that expected by VR4300 in case of underflow
+    if(!sourceIsInteger && !destinationIsInteger && (passthrough & fpuUnderflowMask))
+      emitFpuUnderflowFlushFixup(reg(3), reg(1), destinationType == FpuConvertF64);
 
+    // EMIT: store the result
     if(destinationIs64Bit) {
       mov64(mem(sreg(2), fdWordOff), reg(1));
     } else {
