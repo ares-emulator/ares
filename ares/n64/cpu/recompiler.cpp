@@ -2818,7 +2818,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     u32 sourceType,
     u32 destinationType,
     u32 cycles,
-    u32 inputChecks,
     auto&& emitHostOpcode
   ) -> void {
 #if !defined(ARCHITECTURE_ARM64) && !defined(ARCHITECTURE_AMD64)
@@ -2849,11 +2848,27 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     if(sourceIs64Bit) mov64(reg(0), mem(sreg(2), fsWordOff));
     else mov32(reg(0), mem(sreg(2), fsWordOff));
 
-    bool checkQnan      = inputChecks & FpuCheckQnan;
-    bool checkSnan      = inputChecks & FpuCheckSnan;
-    bool checkSubnormal = inputChecks & FpuCheckSubnormal;
+    // On AMD64 and ARM64, all conversion opcodes raise an invlid operation flag on sNaN inputs.
+    bool checkSnan      = false;
+
+    // On AMD64 and ARM64, the conversion opcodes for float<->double conversion do not raise any flag on qNaN inputs.
+    // Thus, we do need to do an explicit check to fallback to the interpreter to mirror the actual behavior.
+    bool checkQnan      = !sourceIsInteger && !destinationIsInteger;
+
+  #if defined(ARCHITECTURE_ARM64) 
+    // On ARM64, input subnormals in conversion opcodes always raise the denormal flag in FPSR,
+    // so there is not need to make an explicit check. The flag is not passhtorugh, so it will
+    // force a fallback to the interpreter, as VR4300 instead always raises an unimplemented exception.
+    bool checkSubnormal = false;
+  #elif defined(ARCHITECTURE_AMD64)
+    // On AMD64, input subnormals in conversion opcodes are silently flushed to zero even without
+    // explicitly requesting subnormal flushing (DAZ/FTZ). So we need to make an explicit check
+    // to fallback to the interpreter, as VR4300 instead always raises an unimplemented exception.
+    bool checkSubnormal = true;
+  #endif
     auto emitInputChecks = [&](reg source, sljit_jump*& qnan, sljit_jump*& snan, sljit_jump*& subnormal) -> void {
-      if(sourceIsInteger || inputChecks == 0) return;
+      if(sourceIsInteger) return;
+      if(!checkSubnormal && !checkQnan && !checkSnan) return;
       if(sourceIs64Bit) {
         shl64(reg(2), source, imm(1));
         if(checkSubnormal) {
@@ -2928,11 +2943,9 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     if(emitStateKey.fpuOverflowEnabled())         trapMask |= fpuOverflowMask;
     if(emitStateKey.fpuUnderflowEnabled())        trapMask |= fpuUnderflowMask;
     if(emitStateKey.fpuInexactEnabled())          trapMask |= fpuInexactMask;
-    u32 passthrough = fpuIeeeMask;
-    if((sourceType == FpuConvertF32 || sourceType == FpuConvertF64) && destinationType == FpuConvertS32)
-      passthrough &= ~fpuInvalidMask;
+    u32 passthrough = fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask;
     if(!sourceIsInteger && !emitStateKey.fpuFlushSubnormals()) passthrough &= ~fpuUnderflowMask;
-    u32 fallbackMask = trapMask | fpuDenormalMask | (fpuIeeeMask & ~passthrough);
+    u32 fallbackMask = trapMask | fpuInvalidMask | fpuDenormalMask | (fpuIeeeMask & ~passthrough);
     u32 stickyMask   = passthrough & ~trapMask;
 
     sljit_jump* weird = nullptr;
@@ -3290,7 +3303,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FROUND_L_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF32S64(0u);
       }
@@ -3306,7 +3318,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FTRUNC_L_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF32S64(1u);
       }
@@ -3322,7 +3333,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCEIL_L_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF32S64(2u);
       }
@@ -3338,7 +3348,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FFLOOR_L_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF32S64(3u);
       }
@@ -3354,7 +3363,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FROUND_W_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF32S32(0u);
       }
@@ -3370,7 +3378,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FTRUNC_W_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF32S32(1u);
       }
@@ -3386,7 +3393,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCEIL_W_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF32S32(2u);
       }
@@ -3402,7 +3408,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FFLOOR_W_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF32S32(3u);
       }
@@ -3425,7 +3430,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_D_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertF64, 0,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         conv_f64_from_f32(freg(0), freg(0));
       }
@@ -3441,7 +3445,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_W_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
 #if defined(ARCHITECTURE_ARM64)
         arm64FcvtS32FromF32(reg(1), freg(0), (u32)emitStateKey.fpuRoundMode() & 3u);
@@ -3461,7 +3464,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_L_S, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
 #if defined(ARCHITECTURE_ARM64)
         arm64FcvtS64FromF32(reg(1), freg(0), (u32)emitStateKey.fpuRoundMode() & 3u);
@@ -3720,7 +3722,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FROUND_L_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF64S64(0u);
       }
@@ -3736,7 +3737,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FTRUNC_L_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF64S64(1u);
       }
@@ -3752,7 +3752,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCEIL_L_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF64S64(2u);
       }
@@ -3768,7 +3767,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FFLOOR_L_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF64S64(3u);
       }
@@ -3784,7 +3782,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FROUND_W_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF64S32(0u);
       }
@@ -3800,7 +3797,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FTRUNC_W_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF64S32(1u);
       }
@@ -3816,7 +3812,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCEIL_W_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF64S32(2u);
       }
@@ -3832,7 +3827,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FFLOOR_W_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         emitFpuFixedRmToIntF64S32(3u);
       }
@@ -3848,7 +3842,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_S_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertF32, (2 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
         conv_f32_from_f64(freg(0), freg(0));
       }
@@ -3871,7 +3864,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_W_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
 #if defined(ARCHITECTURE_ARM64)
         arm64FcvtS32FromF64(reg(1), freg(0), (u32)emitStateKey.fpuRoundMode() & 3u);
@@ -3891,7 +3883,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_L_D, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
-      FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       [&]() -> void {
 #if defined(ARCHITECTURE_ARM64)
         arm64FcvtS64FromF64(reg(1), freg(0), (u32)emitStateKey.fpuRoundMode() & 3u);
@@ -4039,7 +4030,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_S_W, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertS32, FpuConvertF32, (5 - 1) * 2,
-      FpuCheckNone,
       [&]() -> void {
         conv_f32_from_s32(freg(0), reg(0));
       }
@@ -4055,7 +4045,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_D_W, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertS32, FpuConvertF64, (5 - 1) * 2,
-      FpuCheckNone,
       [&]() -> void {
         conv_f64_from_s32(freg(0), reg(0));
       }
@@ -4086,7 +4075,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_S_L, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertS64, FpuConvertF32, (5 - 1) * 2,
-      FpuCheckNone,
       [&]() -> void {
         conv_f32_from_sw(freg(0), reg(0));
       }
@@ -4102,7 +4090,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
         callf(&CPU::FCVT_D_L, imm(Fdn), imm(Fsn));
       },
       Fdn, Fsn, FpuConvertS64, FpuConvertF64, (5 - 1) * 2,
-      FpuCheckNone,
       [&]() -> void {
         conv_f64_from_sw(freg(0), reg(0));
       }
