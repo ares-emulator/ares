@@ -32,6 +32,11 @@
     flag_no = SLJIT_NOT_OVERFLOW,
     flag_c = SLJIT_CARRY,
     flag_nc = SLJIT_NOT_CARRY,
+    flag_fun = SLJIT_UNORDERED,
+    flag_for = SLJIT_ORDERED,
+    flag_foeq = SLJIT_ORDERED_EQUAL,
+    flag_folt = SLJIT_ORDERED_LESS,
+    flag_fole = SLJIT_ORDERED_LESS_EQUAL,
   };
 
   struct op_base {

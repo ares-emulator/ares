@@ -2478,6 +2478,16 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     FpuConvertS32 = 2,
     FpuConvertS64 = 3,
   };
+  enum FpuCompareNanPolicy : u32 {
+    FpuCompareOrdered = 0,
+    FpuCompareUnordered = 1,
+  };
+  enum FpuCompareKind : u32 {
+    FpuCompareFalse = 0,
+    FpuCompareEq = 1,
+    FpuCompareLt = 2,
+    FpuCompareLe = 3,
+  };
 
   constexpr u32 fpuInvalidMask    = 1u << CPU::FPU::ControlStatus::InvalidOperationBit;
   constexpr u32 fpuDiv0Mask       = 1u << CPU::FPU::ControlStatus::DivisionByZeroBit;
@@ -3039,6 +3049,198 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     }, instruction);
     emitDeferredCycles += cycles;
   };
+
+  auto emitFpuCompareOpcode = [&](
+    auto&& callSlowPath,
+    u32 fsn,
+    u32 ftn,
+    u32 width,
+    u32 cycles,
+    u32 inputChecks,
+    u32 nanResult,
+    u32 nanInvalidPolicy,
+    u32 compareKind
+  ) -> void {
+#if !defined(ARCHITECTURE_ARM64) && !defined(ARCHITECTURE_AMD64)
+    callSlowPath();
+    return;
+#endif
+    if(emitSlowPathSection || !emitStateKey.coprocessor1Enabled()) {
+      callSlowPath();
+      return;
+    }
+
+    assert(width == FpuWidth32 || width == FpuWidth64);
+    assert(inputChecks & FpuCheckQnan);
+    assert(inputChecks & FpuCheckSnan);
+    bool isDouble = width == FpuWidth64;
+    s32 fsWordOff;
+    s32 ftWordOff;
+    if(isDouble) {
+      if(emitStateKey.floatingPointMode()) fsWordOff = (fsn - 16) * 8;
+      else fsWordOff = ((fsn & ~1) - 16) * 8;
+      ftWordOff = (ftn - 16) * 8;
+    } else {
+      if(emitStateKey.floatingPointMode()) {
+        fsWordOff = (fsn - 16) * 8 + FpuR64S32Off;
+      } else {
+        fsWordOff = ((fsn & ~1) - 16) * 8 + FpuR64S32Off;
+      }
+      ftWordOff = (ftn - 16) * 8 + FpuR64S32Off;
+    }
+
+    if(isDouble) {
+      mov64(reg(0), mem(sreg(2), fsWordOff));
+      mov64(reg(1), mem(sreg(2), ftWordOff));
+    } else {
+      mov32(reg(0), mem(sreg(2), fsWordOff));
+      mov32(reg(1), mem(sreg(2), ftWordOff));
+    }
+    mov32_u8(mem(sreg(0), FpuCsrCauseDataOffset), imm(0));
+
+    sljit_jump* nanFs = nullptr;
+    sljit_jump* nanFt = nullptr;
+    sljit_jump* qnanFs = nullptr;
+    sljit_jump* qnanFt = nullptr;
+    auto emitQnanCheck = [&](reg source, sljit_jump*& qnan) -> void {
+      if(isDouble) {
+        shl64(reg(2), source, imm(1));
+        cmp64(reg(2), imm(0xfff0'0000'0000'0000ull), set_uge);
+        qnan = jump(flag_uge);
+      } else {
+        shl32(reg(2), source, imm(1));
+        cmp32(reg(2), imm(0xff80'0000u), set_uge);
+        qnan = jump(flag_uge);
+      }
+    };
+    auto emitNanCheck = [&](reg source, sljit_jump*& nan) -> void {
+      if(isDouble) {
+        shl64(reg(2), source, imm(1));
+        cmp64(reg(2), imm(0xffe0'0000'0000'0000ull), set_ugt);
+        nan = jump(flag_ugt);
+      } else {
+        shl32(reg(2), source, imm(1));
+        cmp32(reg(2), imm(0xff00'0000u), set_ugt);
+        nan = jump(flag_ugt);
+      }
+    };
+    emitQnanCheck(reg(0), qnanFs);
+    emitQnanCheck(reg(1), qnanFt);
+    emitNanCheck(reg(0), nanFs);
+    emitNanCheck(reg(1), nanFt);
+
+    switch(compareKind) {
+    case FpuCompareFalse:
+      mov32(reg(2), imm(0));
+      break;
+    case FpuCompareEq: {
+      if(isDouble) {
+        mov64(freg(0), reg(0));
+        mov64(freg(1), reg(1));
+        auto yes = fcmp64_jump(freg(0), freg(1), flag_foeq);
+        mov32(reg(2), imm(0));
+        auto done = jump();
+        setLabel(yes);
+        mov32(reg(2), imm(1));
+        setLabel(done);
+      } else {
+        mov32(freg(0), reg(0));
+        mov32(freg(1), reg(1));
+        auto yes = fcmp32_jump(freg(0), freg(1), flag_foeq);
+        mov32(reg(2), imm(0));
+        auto done = jump();
+        setLabel(yes);
+        mov32(reg(2), imm(1));
+        setLabel(done);
+      }
+      break;
+    }
+    case FpuCompareLt: {
+      if(isDouble) {
+        mov64(freg(0), reg(0));
+        mov64(freg(1), reg(1));
+        auto yes = fcmp64_jump(freg(0), freg(1), flag_folt);
+        mov32(reg(2), imm(0));
+        auto done = jump();
+        setLabel(yes);
+        mov32(reg(2), imm(1));
+        setLabel(done);
+      } else {
+        mov32(freg(0), reg(0));
+        mov32(freg(1), reg(1));
+        auto yes = fcmp32_jump(freg(0), freg(1), flag_folt);
+        mov32(reg(2), imm(0));
+        auto done = jump();
+        setLabel(yes);
+        mov32(reg(2), imm(1));
+        setLabel(done);
+      }
+      break;
+    }
+    case FpuCompareLe: {
+      if(isDouble) {
+        mov64(freg(0), reg(0));
+        mov64(freg(1), reg(1));
+        auto yes = fcmp64_jump(freg(0), freg(1), flag_fole);
+        mov32(reg(2), imm(0));
+        auto done = jump();
+        setLabel(yes);
+        mov32(reg(2), imm(1));
+        setLabel(done);
+      } else {
+        mov32(freg(0), reg(0));
+        mov32(freg(1), reg(1));
+        auto yes = fcmp32_jump(freg(0), freg(1), flag_fole);
+        mov32(reg(2), imm(0));
+        auto done = jump();
+        setLabel(yes);
+        mov32(reg(2), imm(1));
+        setLabel(done);
+      }
+      break;
+    }
+    default:
+      unreachable;
+    }
+    mov32_u8(FpuCsrCompare, reg(2));
+    auto done = jump();
+
+    sljit_jump* trap = nullptr;
+    if(nanInvalidPolicy == FpuCompareUnordered) {
+      setLabel(qnanFs);
+      setLabel(qnanFt);
+      if(emitStateKey.fpuInvalidOperationEnabled()) {
+        trap = jump();
+      } else {
+        mov32_u8(mem(sreg(0), FpuCsrCauseDataOffset), imm(fpuInvalidMask));
+        or8(mem(sreg(0), FpuCsrFlagDataOffset), mem(sreg(0), FpuCsrFlagDataOffset), imm(fpuInvalidMask), reg(2));
+      }
+      mov32(reg(2), imm(nanResult & 1));
+      mov32_u8(FpuCsrCompare, reg(2));
+      auto doneQnan = jump();
+      setLabel(nanFs);
+      setLabel(nanFt);
+      mov32(reg(2), imm(nanResult & 1));
+      mov32_u8(FpuCsrCompare, reg(2));
+      setLabel(doneQnan);
+    } else {
+      setLabel(qnanFs);
+      setLabel(qnanFt);
+      setLabel(nanFs);
+      setLabel(nanFt);
+      if(emitStateKey.fpuInvalidOperationEnabled()) {
+        trap = jump();
+      } else {
+        mov32_u8(mem(sreg(0), FpuCsrCauseDataOffset), imm(fpuInvalidMask));
+        or8(mem(sreg(0), FpuCsrFlagDataOffset), mem(sreg(0), FpuCsrFlagDataOffset), imm(fpuInvalidMask), reg(2));
+        mov32(reg(2), imm(nanResult & 1));
+        mov32_u8(FpuCsrCompare, reg(2));
+      }
+    }
+    setLabel(done);
+    deferSlowPath(trap, instruction);
+    emitDeferredCycles += cycles;
+  };
 #endif
 
   switch(instruction >> 21 & 0x1f) {
@@ -3509,113 +3711,209 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FC.F.S Fs,Ft
   case 0x30: {
-    setupCallf();
-    callf(&CPU::FC_F_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_F_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareUnordered, FpuCompareFalse
+    );
     return 0;
   }
 
   //FC.UN.S Fs,Ft
   case 0x31: {
-    setupCallf();
-    callf(&CPU::FC_UN_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_UN_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareUnordered, FpuCompareFalse
+    );
     return 0;
   }
 
   //FC.EQ.S Fs,Ft
   case 0x32: {
-    setupCallf();
-    callf(&CPU::FC_EQ_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_EQ_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareUnordered, FpuCompareEq
+    );
     return 0;
   }
 
   //FC.UEQ.S Fs,Ft
   case 0x33: {
-    setupCallf();
-    callf(&CPU::FC_UEQ_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_UEQ_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareUnordered, FpuCompareEq
+    );
     return 0;
   }
 
   //FC.OLT.S Fs,Ft
   case 0x34: {
-    setupCallf();
-    callf(&CPU::FC_OLT_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_OLT_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareUnordered, FpuCompareLt
+    );
     return 0;
   }
 
   //FC.ULT.S Fs,Ft
   case 0x35: {
-    setupCallf();
-    callf(&CPU::FC_ULT_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_ULT_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareUnordered, FpuCompareLt
+    );
     return 0;
   }
 
   //FC.OLE.S Fs,Ft
   case 0x36: {
-    setupCallf();
-    callf(&CPU::FC_OLE_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_OLE_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareUnordered, FpuCompareLe
+    );
     return 0;
   }
 
   //FC.ULE.S Fs,Ft
   case 0x37: {
-    setupCallf();
-    callf(&CPU::FC_ULE_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_ULE_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareUnordered, FpuCompareLe
+    );
     return 0;
   }
 
   //FC.SF.S Fs,Ft
   case 0x38: {
-    setupCallf();
-    callf(&CPU::FC_SF_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_SF_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareOrdered, FpuCompareFalse
+    );
     return 0;
   }
 
   //FC.NGLE.S Fs,Ft
   case 0x39: {
-    setupCallf();
-    callf(&CPU::FC_NGLE_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_NGLE_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareOrdered, FpuCompareFalse
+    );
     return 0;
   }
 
   //FC.SEQ.S Fs,Ft
   case 0x3a: {
-    setupCallf();
-    callf(&CPU::FC_SEQ_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_SEQ_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareOrdered, FpuCompareEq
+    );
     return 0;
   }
 
   //FC.NGL.S Fs,Ft
   case 0x3b: {
-    setupCallf();
-    callf(&CPU::FC_NGL_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_NGL_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareOrdered, FpuCompareEq
+    );
     return 0;
   }
 
   //FC.LT.S Fs,Ft
   case 0x3c: {
-    setupCallf();
-    callf(&CPU::FC_LT_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_LT_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareOrdered, FpuCompareLt
+    );
     return 0;
   }
 
   //FC.NGE.S Fs,Ft
   case 0x3d: {
-    setupCallf();
-    callf(&CPU::FC_NGE_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_NGE_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareOrdered, FpuCompareLt
+    );
     return 0;
   }
 
   //FC.LE.S Fs,Ft
   case 0x3e: {
-    setupCallf();
-    callf(&CPU::FC_LE_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_LE_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareOrdered, FpuCompareLe
+    );
     return 0;
   }
 
   //FC.NGT.S Fs,Ft
   case 0x3f: {
-    setupCallf();
-    callf(&CPU::FC_NGT_S, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_NGT_S, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareOrdered, FpuCompareLe
+    );
     return 0;
   }
   }
@@ -3936,113 +4234,209 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //FC.F.D Fs,Ft
   case 0x30: {
-    setupCallf();
-    callf(&CPU::FC_F_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_F_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareUnordered, FpuCompareFalse
+    );
     return 0;
   }
 
   //FC.UN.D Fs,Ft
   case 0x31: {
-    setupCallf();
-    callf(&CPU::FC_UN_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_UN_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareUnordered, FpuCompareFalse
+    );
     return 0;
   }
 
   //FC.EQ.D Fs,Ft
   case 0x32: {
-    setupCallf();
-    callf(&CPU::FC_EQ_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_EQ_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareUnordered, FpuCompareEq
+    );
     return 0;
   }
 
   //FC.UEQ.D Fs,Ft
   case 0x33: {
-    setupCallf();
-    callf(&CPU::FC_UEQ_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_UEQ_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareUnordered, FpuCompareEq
+    );
     return 0;
   }
 
   //FC.OLT.D Fs,Ft
   case 0x34: {
-    setupCallf();
-    callf(&CPU::FC_OLT_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_OLT_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareUnordered, FpuCompareLt
+    );
     return 0;
   }
 
   //FC.ULT.D Fs,Ft
   case 0x35: {
-    setupCallf();
-    callf(&CPU::FC_ULT_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_ULT_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareUnordered, FpuCompareLt
+    );
     return 0;
   }
 
   //FC.OLE.D Fs,Ft
   case 0x36: {
-    setupCallf();
-    callf(&CPU::FC_OLE_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_OLE_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareUnordered, FpuCompareLe
+    );
     return 0;
   }
 
   //FC.ULE.D Fs,Ft
   case 0x37: {
-    setupCallf();
-    callf(&CPU::FC_ULE_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_ULE_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareUnordered, FpuCompareLe
+    );
     return 0;
   }
 
   //FC.SF.D Fs,Ft
   case 0x38: {
-    setupCallf();
-    callf(&CPU::FC_SF_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_SF_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareOrdered, FpuCompareFalse
+    );
     return 0;
   }
 
   //FC.NGLE.D Fs,Ft
   case 0x39: {
-    setupCallf();
-    callf(&CPU::FC_NGLE_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_NGLE_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareOrdered, FpuCompareFalse
+    );
     return 0;
   }
 
   //FC.SEQ.D Fs,Ft
   case 0x3a: {
-    setupCallf();
-    callf(&CPU::FC_SEQ_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_SEQ_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareOrdered, FpuCompareEq
+    );
     return 0;
   }
 
   //FC.NGL.D Fs,Ft
   case 0x3b: {
-    setupCallf();
-    callf(&CPU::FC_NGL_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_NGL_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareOrdered, FpuCompareEq
+    );
     return 0;
   }
 
   //FC.LT.D Fs,Ft
   case 0x3c: {
-    setupCallf();
-    callf(&CPU::FC_LT_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_LT_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareOrdered, FpuCompareLt
+    );
     return 0;
   }
 
   //FC.NGE.D Fs,Ft
   case 0x3d: {
-    setupCallf();
-    callf(&CPU::FC_NGE_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_NGE_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareOrdered, FpuCompareLt
+    );
     return 0;
   }
 
   //FC.LE.D Fs,Ft
   case 0x3e: {
-    setupCallf();
-    callf(&CPU::FC_LE_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_LE_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
+      FpuCompareOrdered, FpuCompareLe
+    );
     return 0;
   }
 
   //FC.NGT.D Fs,Ft
   case 0x3f: {
-    setupCallf();
-    callf(&CPU::FC_NGT_D, imm(Fsn), imm(Ftn));
+    emitFpuCompareOpcode(
+      [&]() -> void {
+        setupCallf();
+        callf(&CPU::FC_NGT_D, imm(Fsn), imm(Ftn));
+      },
+      Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
+      FpuCompareOrdered, FpuCompareLe
+    );
     return 0;
   }
 

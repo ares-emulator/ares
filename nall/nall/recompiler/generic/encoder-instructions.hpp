@@ -355,6 +355,22 @@
                           y.fst, y.snd);
   }
 
+  template<typename T, typename U>
+  auto fcmp32_jump(T x, U y, sljit_s32 flags) -> sljit_jump* {
+    return sljit_emit_fcmp(compiler,
+                           SLJIT_32 | flags,
+                           x.fst, x.snd,
+                           y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fcmp64_jump(T x, U y, sljit_s32 flags) -> sljit_jump* {
+    return sljit_emit_fcmp(compiler,
+                           flags,
+                           x.fst, x.snd,
+                           y.fst, y.snd);
+  }
+
   //flag instructions
 
 #define OPF(name, op) \
