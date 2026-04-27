@@ -379,7 +379,7 @@ struct DriverSettings : VerticalLayout {
 #endif
     CheckLabel videoBlockingToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoFlushToggle{&videoToggleLayout, Size{0, 0}};
-#if defined(PLATFORM_MACOS)
+#if defined(PLATFORM_WINDOWS) || defined(PLATFORM_MACOS)
     CheckLabel videoColorSpaceToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoThreadedRendererToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoNativeFullScreenToggle{&videoToggleLayout, Size{0, 0}};
