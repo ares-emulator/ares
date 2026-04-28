@@ -1172,9 +1172,17 @@ struct CPU : Thread {
     auto deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> void;
     auto emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction = false) -> Block*;
     auto emitZeroClear(u32 n) -> void;
-    auto jitMemoryOpcode(u32 instruction, u32 size, bool sign, bool require64, bool store,
-      void (CPU::*loadInterpreter)(r64&, cr64&, s16),
-      void (CPU::*storeInterpreter)(cr64&, cr64&, s16), bool emitSlowPath) -> void;
+    enum JitMemoryOpcodeMode : u32 {
+      SignExtend = 1 << 0,
+      Require64  = 1 << 1,
+      Store      = 1 << 2,
+      LoadLeft   = 1 << 3,
+      LoadRight  = 1 << 4,
+      Floating   = 1 << 5,
+    };
+
+    auto jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
+      const std::function<void()>& fallback, bool emitSlowPath) -> void;
     auto emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode pcMode) -> bool;
     auto emitSPECIAL(u32 instruction) -> bool;
     auto emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool;

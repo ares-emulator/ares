@@ -642,17 +642,29 @@ auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> vo
   slow.deferredCycles = emitDeferredCycles;
 }
 
-auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, bool sign, bool require64, bool store,
-  void (CPU::*loadInterpreter)(r64&, cr64&, s16),
-  void (CPU::*storeInterpreter)(cr64&, cr64&, s16), bool emitSlowPath) -> void {
-  if(emitSlowPath || emitSingleInstruction || (require64 && reservedInstruction64())) {
-    setupCallf();
-    if(store) {
-      callf(storeInterpreter, mem(Rt), mem(Rs), imm(i16));
+auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
+  const std::function<void()>& fallback, bool emitSlowPath) -> void {
+  bool sign      = mode & SignExtend;
+  bool require64 = mode & Require64;
+  bool store     = mode & Store;
+  bool loadLeft  = mode & LoadLeft;
+  bool loadRight = mode & LoadRight;
+  bool floating  = mode & Floating;
+  s32 floatingWordOff = 0;
+  s32 floatingDualOff = 0;
+  if(floating) {
+    floatingDualOff = emitStateKey.floatingPointMode() ? Ftn * sizeof(r64) : (Ftn & ~1) * sizeof(r64);
+    if(emitStateKey.floatingPointMode()) {
+      floatingWordOff = Ftn * sizeof(r64) + FpuR64S32Off;
     } else {
-      callf(loadInterpreter, mem(Rt), mem(Rs), imm(i16));
-      emitZeroClear(Rtn);
+      floatingWordOff = (Ftn & ~1) * sizeof(r64);
+      floatingWordOff += Ftn & 1 ? FpuR64S32hOff : FpuR64S32Off;
     }
+  }
+  if(emitSlowPath || emitSingleInstruction || (require64 && reservedInstruction64())
+  || ((loadLeft || loadRight) && emitStateKey.reverseEndian())
+  || (floating && !emitStateKey.coprocessor1Enabled())) {
+    fallback();
     return;
   }
 
@@ -699,7 +711,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, bool sign, bool
 
   // Hardware raises address errors before any cache lookup on unaligned accesses.
   sljit_jump* addressUnaligned = nullptr;
-  if(size > Byte && !alignmentKnown) {
+  if(!(loadLeft || loadRight) && size > Byte && !alignmentKnown) {
     test32(reg(0), imm(size - 1), set_z);
     addressUnaligned = jump(flag_nz);
   }
@@ -761,8 +773,74 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, bool sign, bool
     } else {
       mov32_u16(mem(reg(2), DcacheLineDirtyOff), imm(1));
     }
+  } else if(floating) {
+    and32(reg(3), reg(0), imm(size == Dual ? 0x08 : 0x0c));
+    add64(reg(3), reg(2), reg(3));
+    if(size == Dual) {
+      mov64(reg(3), mem(reg(3), DcacheLineWordsOff));
+      rotr64(reg(3), reg(3), imm(32));
+      mov64(mem(sreg(2), offsetof(FPU, r[0]) - FpuBase + floatingDualOff), reg(3));
+    } else {
+      mov32(reg(3), mem(reg(3), DcacheLineWordsOff));
+      mov32(mem(sreg(2), offsetof(FPU, r[0]) - FpuBase + floatingWordOff), reg(3));
+    }
   } else if(Rtn != 0) {
-    if(size == Byte) {
+    if(loadLeft && size == Word) {
+      and32(reg(3), reg(0), imm(0x0c));
+      add64(reg(3), reg(2), reg(3));
+      mov32(reg(3), mem(reg(3), DcacheLineWordsOff));
+      and32(reg(1), reg(0), imm(3));
+      shl32(reg(1), reg(1), imm(3));
+      shl32(reg(3), reg(3), reg(1));
+      mov32(reg(0), imm(1));
+      shl32(reg(0), reg(0), reg(1));
+      sub32(reg(0), reg(0), imm(1));
+      and32(reg(0), mem(Rt32), reg(0));
+      or32(reg(3), reg(3), reg(0));
+      mov64_s32(reg(3), reg(3));
+    } else if(loadLeft && size == Dual) {
+      and32(reg(1), reg(0), imm(7));
+      shl32(reg(1), reg(1), imm(3));
+      and32(reg(3), reg(0), imm(0x08));
+      add64(reg(3), reg(2), reg(3));
+      mov64(reg(3), mem(reg(3), DcacheLineWordsOff));
+      rotr64(reg(3), reg(3), imm(32));
+      shl64(reg(3), reg(3), reg(1));
+      mov64(reg(0), imm(1));
+      shl64(reg(0), reg(0), reg(1));
+      sub64(reg(0), reg(0), imm(1));
+      and64(reg(0), mem(Rt), reg(0));
+      or64(reg(3), reg(3), reg(0));
+    } else if(loadRight && size == Word) {
+      and32(reg(3), reg(0), imm(0x0c));
+      add64(reg(3), reg(2), reg(3));
+      mov32(reg(3), mem(reg(3), DcacheLineWordsOff));
+      and32(reg(1), reg(0), imm(3));
+      xor32(reg(1), reg(1), imm(3));
+      shl32(reg(1), reg(1), imm(3));
+      lshr32(reg(3), reg(3), reg(1));
+      mov32(reg(2), imm((sljit_sw)0xffff'ffffu));
+      lshr32(reg(0), reg(2), reg(1));
+      xor32(reg(0), reg(0), imm((sljit_sw)0xffff'ffffu));
+      and32(reg(0), mem(Rt32), reg(0));
+      or32(reg(3), reg(3), reg(0));
+      if(extendedAddressing) mov64_s32(reg(3), reg(3));
+      else                   mov64_u32(reg(3), reg(3));
+    } else if(loadRight && size == Dual) {
+      and32(reg(1), reg(0), imm(7));
+      xor32(reg(1), reg(1), imm(7));
+      shl32(reg(1), reg(1), imm(3));
+      and32(reg(3), reg(0), imm(0x08));
+      add64(reg(3), reg(2), reg(3));
+      mov64(reg(3), mem(reg(3), DcacheLineWordsOff));
+      rotr64(reg(3), reg(3), imm(32));
+      lshr64(reg(3), reg(3), reg(1));
+      mov64(reg(2), imm((sljit_sw)-1));
+      lshr64(reg(0), reg(2), reg(1));
+      xor64(reg(0), reg(0), imm((sljit_sw)-1));
+      and64(reg(0), mem(Rt), reg(0));
+      or64(reg(3), reg(3), reg(0));
+    } else if(size == Byte) {
       and32(reg(3), reg(0), imm(0x0f));
       xor32(reg(3), reg(3), imm(3));
       add64(reg(3), reg(2), reg(3));
@@ -782,10 +860,8 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, bool sign, bool
     } else if(size == Dual) {
       and32(reg(3), reg(0), imm(0x08));
       add64(reg(3), reg(2), reg(3));
-      mov64_u32(reg(0), mem(reg(3), DcacheLineWordsOff + 0));
-      mov64_u32(reg(1), mem(reg(3), DcacheLineWordsOff + 4));
-      shl64(reg(0), reg(0), imm(32));
-      or64(reg(3), reg(0), reg(1));
+      mov64(reg(3), mem(reg(3), DcacheLineWordsOff));
+      rotr64(reg(3), reg(3), imm(32));
     }
     mov64(mem(Rt), reg(3));
   }
@@ -1085,17 +1161,21 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //LDL Rt,Rs,i16
   case 0x1a: {
-    setupCallf();
-    callf(&CPU::LDL, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitMemoryOpcode(instruction, Dual, Require64 | LoadLeft, [&] {
+      setupCallf();
+      callf(&CPU::LDL, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
   //LDR Rt,Rs,i16
   case 0x1b: {
-    setupCallf();
-    callf(&CPU::LDR, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitMemoryOpcode(instruction, Dual, Require64 | LoadRight, [&] {
+      setupCallf();
+      callf(&CPU::LDR, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
@@ -1108,64 +1188,98 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //LB Rt,Rs,i16
   case 0x20: {
-    jitMemoryOpcode(instruction, Byte, true, false, false, &CPU::LB, nullptr, emitSlowPath);
+    jitMemoryOpcode(instruction, Byte, SignExtend, [&] {
+      setupCallf();
+      callf(&CPU::LB, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
   //LH Rt,Rs,i16
   case 0x21: {
-    jitMemoryOpcode(instruction, Half, true, false, false, &CPU::LH, nullptr, emitSlowPath);
+    jitMemoryOpcode(instruction, Half, SignExtend, [&] {
+      setupCallf();
+      callf(&CPU::LH, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
   //LWL Rt,Rs,i16
   case 0x22: {
-    setupCallf();
-    callf(&CPU::LWL, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitMemoryOpcode(instruction, Word, SignExtend | LoadLeft, [&] {
+      setupCallf();
+      callf(&CPU::LWL, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
   //LW Rt,Rs,i16
   case 0x23: {
-    jitMemoryOpcode(instruction, Word, true, false, false, &CPU::LW, nullptr, emitSlowPath);
+    jitMemoryOpcode(instruction, Word, SignExtend, [&] {
+      setupCallf();
+      callf(&CPU::LW, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
   //LBU Rt,Rs,i16
   case 0x24: {
-    jitMemoryOpcode(instruction, Byte, false, false, false, &CPU::LBU, nullptr, emitSlowPath);
+    jitMemoryOpcode(instruction, Byte, 0, [&] {
+      setupCallf();
+      callf(&CPU::LBU, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
   //LHU Rt,Rs,i16
   case 0x25: {
-    jitMemoryOpcode(instruction, Half, false, false, false, &CPU::LHU, nullptr, emitSlowPath);
+    jitMemoryOpcode(instruction, Half, 0, [&] {
+      setupCallf();
+      callf(&CPU::LHU, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
   //LWR Rt,Rs,i16
   case 0x26: {
-    setupCallf();
-    callf(&CPU::LWR, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
+    jitMemoryOpcode(instruction, Word, SignExtend | LoadRight, [&] {
+      setupCallf();
+      callf(&CPU::LWR, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
   //LWU Rt,Rs,i16
   case 0x27: {
-    jitMemoryOpcode(instruction, Word, false, false, false, &CPU::LWU, nullptr, emitSlowPath);
+    jitMemoryOpcode(instruction, Word, 0, [&] {
+      setupCallf();
+      callf(&CPU::LWU, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
   //SB Rt,Rs,i16
   case 0x28: {
-    jitMemoryOpcode(instruction, Byte, false, false, true, nullptr, &CPU::SB, emitSlowPath);
+    jitMemoryOpcode(instruction, Byte, Store, [&] {
+      setupCallf();
+      callf(&CPU::SB, mem(Rt), mem(Rs), imm(i16));
+    }, emitSlowPath);
     return 0;
   }
 
   //SH Rt,Rs,i16
   case 0x29: {
-    jitMemoryOpcode(instruction, Half, false, false, true, nullptr, &CPU::SH, emitSlowPath);
+    jitMemoryOpcode(instruction, Half, Store, [&] {
+      setupCallf();
+      callf(&CPU::SH, mem(Rt), mem(Rs), imm(i16));
+    }, emitSlowPath);
     return 0;
   }
 
@@ -1178,7 +1292,10 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //SW Rt,Rs,i16
   case 0x2b: {
-    jitMemoryOpcode(instruction, Word, false, false, true, nullptr, &CPU::SW, emitSlowPath);
+    jitMemoryOpcode(instruction, Word, Store, [&] {
+      setupCallf();
+      callf(&CPU::SW, mem(Rt), mem(Rs), imm(i16));
+    }, emitSlowPath);
     return 0;
   }
 
@@ -1220,8 +1337,10 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //LWC1 Ft,Rs,i16
   case 0x31: {
-    setupCallf();
-    callf(&CPU::LWC1, imm(Ftn), mem(Rs), imm(i16));
+    jitMemoryOpcode(instruction, Word, Floating, [&] {
+      setupCallf();
+      callf(&CPU::LWC1, imm(Ftn), mem(Rs), imm(i16));
+    }, emitSlowPath);
     return 0;
   }
 
@@ -1249,8 +1368,10 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //LDC1 Ft,Rs,i16
   case 0x35: {
-    setupCallf();
-    callf(&CPU::LDC1, imm(Ftn), mem(Rs), imm(i16));
+    jitMemoryOpcode(instruction, Dual, Floating, [&] {
+      setupCallf();
+      callf(&CPU::LDC1, imm(Ftn), mem(Rs), imm(i16));
+    }, emitSlowPath);
     return 0;
   }
 
@@ -1263,7 +1384,11 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //LD Rt,Rs,i16
   case 0x37: {
-    jitMemoryOpcode(instruction, Dual, false, true, false, &CPU::LD, nullptr, emitSlowPath);
+    jitMemoryOpcode(instruction, Dual, Require64, [&] {
+      setupCallf();
+      callf(&CPU::LD, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+    }, emitSlowPath);
     return 0;
   }
 
@@ -1320,7 +1445,10 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //SD Rt,Rs,i16
   case 0x3f: {
-    jitMemoryOpcode(instruction, Dual, false, true, true, nullptr, &CPU::SD, emitSlowPath);
+    jitMemoryOpcode(instruction, Dual, Require64 | Store, [&] {
+      setupCallf();
+      callf(&CPU::SD, mem(Rt), mem(Rs), imm(i16));
+    }, emitSlowPath);
     return 0;
   }
 
