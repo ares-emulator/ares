@@ -3,13 +3,18 @@ auto Program::stateSave(u32 slot) -> bool {
   if(!emulator) return false;
 
   auto location = emulator->locate(emulator->game->location, {".bs", slot}, settings.paths.saves);
-  string undoLocation = {location.slice(0, (location.size() - 1)), "u"};
-  if(file::move(location, undoLocation)) {
-    state.undoSlot = slot;
+  if(file::exists(location)) {
+    auto undoLocation = emulator->locate(emulator->game->location, ".bsu", settings.paths.saves);
+    file::remove(undoLocation);
+    if(file::move(location, undoLocation)) {
+      state.undoSlot = slot;
+      presentation.revertSaveStateMenu.setEnabled(true);
+    }
   }
 
   if(auto state = emulator->root->serialize()) {
     if(file::write(location, {state.data(), state.size()})) {
+      presentation.refreshStateMenus();
       showMessage({"Saved state to slot ", slot});
       return true;
     }
@@ -26,7 +31,9 @@ auto Program::stateLoad(u32 slot) -> bool {
   //Store current state for undo
   auto undoLocation = emulator->locate(emulator->game->location, {".blu"}, settings.paths.saves);
   if(auto state = emulator->root->serialize()) {
-    file::write(undoLocation, {state.data(), state.size()});
+    if(file::write(undoLocation, {state.data(), state.size()})) {
+      presentation.undoLoadStateMenu.setEnabled(true);
+    }
   }
 
   auto location = emulator->locate(emulator->game->location, {".bs", slot}, settings.paths.saves);
@@ -43,19 +50,21 @@ auto Program::stateLoad(u32 slot) -> bool {
   return false;
 }
 
-auto Program::undoStateSave() -> bool {
+auto Program::revertStateSave() -> bool {
   Program::Guard guard;
   if(!emulator) return false;
 
+  auto location = emulator->locate(emulator->game->location, {".bs", state.undoSlot}, settings.paths.saves);
   auto undoLocation = emulator->locate(emulator->game->location, ".bsu", settings.paths.saves);
-  string location = {undoLocation.slice(0, (undoLocation.size() - 1)), state.undoSlot};
   if(file::move(undoLocation, location)) {
+    presentation.refreshStateMenus();
     showMessage({"Reverted to previous version in slot ", state.undoSlot, " of save file ", location});
-      return true;
-  } else {
-    showMessage({"Unable to revert to previous version of save file ", location});
-    return false;
+    presentation.revertSaveStateMenu.setEnabled(false);
+    return true;
   }
+
+  showMessage({"Unable to revert to previous version of save file ", location});
+  return false;
 }
 
 auto Program::undoStateLoad() -> bool {
@@ -69,6 +78,7 @@ auto Program::undoStateLoad() -> bool {
     if(emulator->root->unserialize(state)) {
       showMessage({"Loaded state from undo load file ", undoLocation});
       file::remove(undoLocation);
+      presentation.undoLoadStateMenu.setEnabled(false);
       return true;
     } else {
       showMessage({"Failed to unserialize state from undo load file ", undoLocation});
@@ -89,4 +99,7 @@ auto Program::clearUndoStates() -> void {
 
   location = emulator->locate(emulator->game->location, ".bsu", settings.paths.saves);
   file::remove(location);
+
+  presentation.revertSaveStateMenu.setEnabled(false);
+  presentation.undoLoadStateMenu.setEnabled(false);
 }
