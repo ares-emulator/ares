@@ -1176,8 +1176,8 @@ struct CPU : Thread {
       SignExtend = 1 << 0,
       Require64  = 1 << 1,
       Store      = 1 << 2,
-      LoadLeft   = 1 << 3,
-      LoadRight  = 1 << 4,
+      PartialLeft = 1 << 3,
+      PartialRight = 1 << 4,
       Floating   = 1 << 5,
     };
 
