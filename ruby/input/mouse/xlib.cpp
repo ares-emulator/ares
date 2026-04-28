@@ -13,6 +13,10 @@ struct InputMouseXlib {
   Cursor invisibleCursor = 0;
   u32 screenWidth = 0;
   u32 screenHeight = 0;
+  // Focus gate: drop pointer grab when the active X11 window is not ours
+  Atom netActiveWindow = 0;
+  Atom netWmPid = 0;
+  u32 selfPid = 0;
 
   struct Mouse {
     bool acquired = false;
@@ -26,6 +30,16 @@ struct InputMouseXlib {
 
   auto acquired() -> bool {
     return ms.acquired;
+  }
+
+  // Return _NET_WM_PID for an X11 window (0 if missing/invalid)
+  auto getNetWmPid(Window window) -> u32 {
+    Atom actualType; int actualFormat; unsigned long nItems, bytesAfter; unsigned char* propValue = nullptr; u32 pid = 0;
+    if(XGetWindowProperty(display, window, netWmPid, 0, 1, False, XA_CARDINAL, &actualType, &actualFormat, &nItems, &bytesAfter, &propValue) == Success && propValue) {
+      pid = *(u32*)propValue;
+      XFree(propValue);
+    }
+    return pid;
   }
 
   auto acquire() -> bool {
@@ -65,6 +79,25 @@ struct InputMouseXlib {
   }
 
   auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
+    // If the mouse is grabbed (relative mode), only keep the grab while this window
+    // (or another window owned by this process) is the active/focused window.
+    // Prevents stuck mouse capture after alt-tabbing out of fullscreen
+    if(acquired()) {
+      Atom actualType; int actualFormat; unsigned long nItems, bytesAfter; unsigned char* propValue = nullptr; Window activeWindow = None;
+      if(XGetWindowProperty(display, rootWindow, netActiveWindow, 0, 1, False, XA_WINDOW, &actualType, &actualFormat, &nItems, &bytesAfter, &propValue) == Success && propValue) {
+        activeWindow = *(Window*)propValue;
+        XFree(propValue);
+      }
+
+      // keep grab if our GLX child window is active, or if the active window belongs to our PID.
+      bool processInput = false;
+      if(activeWindow == handle) processInput = true;
+      else if(activeWindow != None && getNetWmPid(activeWindow) == selfPid) processInput = true;
+
+      // focus left ares' process: drop the grab so the user regains the cursor
+      if(!processInput && activeWindow != None) release();
+    }
+
     Window rootReturn;
     Window childReturn;
     s32 rootXReturn = 0;
@@ -124,6 +157,9 @@ struct InputMouseXlib {
     this->handle = handle;
     display = XOpenDisplay(0);
     rootWindow = DefaultRootWindow(display);
+    netActiveWindow = XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
+    netWmPid = XInternAtom(display, "_NET_WM_PID", False);
+    selfPid = (u32)getpid();
 
     XWindowAttributes attributes;
     XGetWindowAttributes(display, rootWindow, &attributes);
