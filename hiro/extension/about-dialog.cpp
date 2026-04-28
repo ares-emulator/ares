@@ -51,6 +51,12 @@ auto AboutDialog::setWebsite(const string& website, const string& uri) -> type& 
   return *this;
 }
 
+auto AboutDialog::setGitHub(const string& github, const string& uri) -> type& {
+  state.github = github;
+  state.githubURI = uri;
+  return *this;
+}
+
 auto AboutDialog::show() -> void {
   Window window;
   window.onClose([&] { window.setModal(false); });
@@ -147,6 +153,25 @@ auto AboutDialog::show() -> void {
     });
   }
   if(!state.website) websiteLayout.setVisible(false);
+
+  HorizontalLayout githubLayout{&layout, Size{~0, 0}, 0};
+  githubLayout.setCollapsible();
+  Label githubLabel{&githubLayout, Size{160, 0}, 3_sx};
+  githubLabel.setAlignment(1.0);
+  githubLabel.setFont(Font().setBold());
+  githubLabel.setText("GitHub:");
+  HorizontalLayout githubValueLayout{&githubLayout, Size{~0, 0}};
+  Label githubValue{&githubValueLayout, Size{0, 0}};
+  githubValue.setAlignment(0.0);
+  githubValue.setText(state.github);
+  if(state.githubURI) {
+    githubValue.setForegroundColor(SystemColor::Link).setFont(Font().setBold());
+    githubValue.setMouseCursor(MouseCursor::Hand);
+    githubValue.onMouseRelease([&](auto button) {
+      if(button == Mouse::Button::Left) invoke(state.githubURI);
+    });
+  }
+  if(!state.github) githubLayout.setVisible(false);
 
   window.setTitle({"About ", state.name ? state.name : Application::name()});
   window.setSize({max(480_sx, layout.minimumSize().width()), layout.minimumSize().height()});
