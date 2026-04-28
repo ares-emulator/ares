@@ -423,7 +423,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     }
     auto slowPathStart = slowPaths.size();
     numInsn++;
-    bool branched = emitEXECUTE(instruction, false);
+    emitPcMode = hasBranched ? EmitPcMode::Runtime : EmitPcMode::JitTime;
+    bool branched = emitEXECUTE(instruction, false, emitPcMode);
     if(branched) links = directBranchLinkAddress(vaddr, instruction);
     u32 instructionCycles = 1 * 2;
     if(unlikely(instruction == branchToSelf || instruction == jumpToSelf)) {
@@ -495,7 +496,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       mov128(IcacheLineWordsMem(lineIndex, 0x00), mem(reg(1), sljit_sw(ramByteOff + 0x00)));
       mov128(IcacheLineWordsMem(lineIndex, 0x10), mem(reg(1), sljit_sw(ramByteOff + 0x10)));
     } else {
-      emitEXECUTE(slow.instruction, true);
+      emitPcMode = slow.runtimePc ? EmitPcMode::Runtime : EmitPcMode::JitTime;
+      emitEXECUTE(slow.instruction, true, emitPcMode);
       emitDeferredCycles += slow.instructionCycles;
       flushDeferredCycles();
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
@@ -625,6 +627,7 @@ auto CPU::Recompiler::deferSlowPath(std::initializer_list<sljit_jump*> enters, u
   }
   slow.instruction = instruction;
   slow.icacheMiss = false;
+  slow.runtimePc = emitPcMode == EmitPcMode::Runtime;
   slow.vaddr = emitVaddr;
   slow.deferredCycles = emitDeferredCycles;
 }
@@ -792,8 +795,36 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, bool sign, bool
 }
 
 
-auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
+auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode pcMode) -> bool {
   emitSlowPathSection = emitSlowPath;
+  auto emitJumpTarget = [&](u32 target) -> void {
+    if(pcMode == EmitPcMode::Runtime) {
+      and64(reg(0), PipelineReg(pc), imm(0xffff'ffff'f000'0000ull));
+      or64(reg(0), reg(0), imm(target << 2));
+      mov64(PipelineReg(nextpc), reg(0));
+      return;
+    }
+    mov64(PipelineReg(nextpc), imm(((emitVaddr + 4) & 0xffff'ffff'f000'0000ull) | (u64(target) << 2)));
+  };
+  auto emitBranchTarget = [&](s16 offset) -> void {
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(0), PipelineReg(pc), imm(s32(offset) * 4));
+      mov64(PipelineReg(nextpc), reg(0));
+      return;
+    }
+    mov64(PipelineReg(nextpc), imm(emitVaddr + 4 + s64(s32(offset) * 4)));
+  };
+  auto emitLikelyNotTaken = [&] {
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(0), PipelineReg(pc), imm(4));
+      mov64(PipelineReg(pc), reg(0));
+      add64(PipelineReg(nextpc), reg(0), imm(4));
+    } else {
+      mov64(PipelineReg(pc), imm(emitVaddr + 8));
+      mov64(PipelineReg(nextpc), imm(emitVaddr + 12));
+    }
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+  };
   switch(instruction >> 26) {
 
   //SPECIAL
@@ -803,25 +834,25 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //REGIMM
   case 0x01: {
-    return emitREGIMM(instruction);
+    return emitREGIMM(instruction, pcMode);
   }
 
   //J n26
   case 0x02: {
-    and64(reg(0), PipelineReg(pc), imm(0xffff'ffff'f000'0000ull));
-    or64(reg(0), reg(0), imm(n26 << 2));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitJumpTarget(n26);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     return 1;
   }
 
   //JAL n26
   case 0x03: {
-    add64(reg(1), PipelineReg(pc), imm(4));
-    mov64(mem(IpuReg(r[31])), reg(1));
-    and64(reg(0), PipelineReg(pc), imm(0xffff'ffff'f000'0000ull));
-    or64(reg(0), reg(0), imm(n26 << 2));
-    mov64(PipelineReg(nextpc), reg(0));
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(1), PipelineReg(pc), imm(4));
+      mov64(mem(IpuReg(r[31])), reg(1));
+    } else {
+      mov64(mem(IpuReg(r[31])), imm(emitVaddr + 8));
+    }
+    emitJumpTarget(n26);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     return 1;
   }
@@ -830,8 +861,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   case 0x04: {
     cmp64(mem(Rs), mem(Rt), set_z);
     auto notTaken = jump(flag_nz);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     auto done = jump();
     setLabel(notTaken);
@@ -847,8 +877,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     auto done = jump();
     setLabel(taken);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
     return 1;
@@ -858,8 +887,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   case 0x06: {
     cmp64(mem(Rs), imm(0), set_sgt);
     auto notTaken = jump(flag_sgt);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     auto done = jump();
     setLabel(notTaken);
@@ -875,8 +903,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     auto done = jump();
     setLabel(taken);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
     return 1;
@@ -955,12 +982,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
 
   //SCC
   case 0x10: {
-    return emitSCC(instruction);
+    return emitSCC(instruction, pcMode);
   }
 
   //FPU
   case 0x11: {
-    return emitFPU(instruction);
+    return emitFPU(instruction, pcMode);
   }
 
   //COP2
@@ -979,14 +1006,10 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   case 0x14: {
     cmp64(mem(Rs), mem(Rt), set_z);
     auto taken = jump(flag_z);
-    add64(reg(0), PipelineReg(pc), imm(4));
-    mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    emitLikelyNotTaken();
     auto done = jump();
     setLabel(taken);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
     return 1;
@@ -996,15 +1019,11 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   case 0x15: {
     cmp64(mem(Rs), mem(Rt), set_z);
     auto notTaken = jump(flag_z);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     auto done = jump();
     setLabel(notTaken);
-    add64(reg(0), PipelineReg(pc), imm(4));
-    mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    emitLikelyNotTaken();
     setLabel(done);
     return 1;
   }
@@ -1013,15 +1032,11 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   case 0x16: {
     cmp64(mem(Rs), imm(0), set_sgt);
     auto notTaken = jump(flag_sgt);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     auto done = jump();
     setLabel(notTaken);
-    add64(reg(0), PipelineReg(pc), imm(4));
-    mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    emitLikelyNotTaken();
     setLabel(done);
     return 1;
   }
@@ -1030,14 +1045,10 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath) -> bool {
   case 0x17: {
     cmp64(mem(Rs), imm(0), set_sgt);
     auto taken = jump(flag_sgt);
-    add64(reg(0), PipelineReg(pc), imm(4));
-    mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    emitLikelyNotTaken();
     auto done = jump();
     setLabel(taken);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
     return 1;
@@ -1400,8 +1411,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //JALR Rd,Rs
   case 0x09: {
     mov64(reg(1), mem(Rs));
-    add64(reg(0), PipelineReg(pc), imm(4));
-    if(Rdn) mov64(mem(Rd), reg(0));
+    if(emitPcMode == EmitPcMode::Runtime) {
+      add64(reg(0), PipelineReg(pc), imm(4));
+      if(Rdn) mov64(mem(Rd), reg(0));
+    } else {
+      if(Rdn) mov64(mem(Rd), imm(emitVaddr + 8));
+    }
     mov64(PipelineReg(nextpc), reg(1));
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     return 1;
@@ -2010,7 +2025,35 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   return 0;
 }
 
-auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
+auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
+  auto emitBranchTarget = [&](s16 offset) -> void {
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(0), PipelineReg(pc), imm(s32(offset) * 4));
+      mov64(PipelineReg(nextpc), reg(0));
+      return;
+    }
+    mov64(PipelineReg(nextpc), imm(emitVaddr + 4 + s64(s32(offset) * 4)));
+  };
+  auto emitLikelyNotTaken = [&] {
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(0), PipelineReg(pc), imm(4));
+      mov64(PipelineReg(pc), reg(0));
+      add64(PipelineReg(nextpc), reg(0), imm(4));
+    } else {
+      mov64(PipelineReg(pc), imm(emitVaddr + 8));
+      mov64(PipelineReg(nextpc), imm(emitVaddr + 12));
+    }
+    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+  };
+  auto emitLink31 = [&] {
+    if(pcMode == EmitPcMode::Runtime) {
+      add32(reg(0), PipelineReg(pc), imm(4));
+      mov64_s32(reg(0), reg(0));
+      mov64(mem(IpuReg(r[31])), reg(0));
+      return;
+    }
+    mov64(mem(IpuReg(r[31])), imm(s64(s32(u32(emitVaddr + 8)))));
+  };
   switch(instruction >> 16 & 0x1f) {
 
   //BLTZ Rs,i16
@@ -2020,8 +2063,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     auto done = jump();
     setLabel(taken);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
     return 1;
@@ -2031,8 +2073,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   case 0x01: {
     cmp64(mem(Rs), imm(0), set_slt);
     auto notTaken = jump(flag_slt);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     auto done = jump();
     setLabel(notTaken);
@@ -2045,14 +2086,10 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   case 0x02: {
     cmp64(mem(Rs), imm(0), set_slt);
     auto taken = jump(flag_slt);
-    add64(reg(0), PipelineReg(pc), imm(4));
-    mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    emitLikelyNotTaken();
     auto done = jump();
     setLabel(taken);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
     return 1;
@@ -2062,15 +2099,11 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   case 0x03: {
     cmp64(mem(Rs), imm(0), set_slt);
     auto notTaken = jump(flag_slt);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     auto done = jump();
     setLabel(notTaken);
-    add64(reg(0), PipelineReg(pc), imm(4));
-    mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    emitLikelyNotTaken();
     setLabel(done);
     return 1;
   }
@@ -2176,16 +2209,13 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BLTZAL Rs,i16
   case 0x10: {
-    add32(reg(0), PipelineReg(pc), imm(4));
-    mov64_s32(reg(0), reg(0));
-    mov64(mem(IpuReg(r[31])), reg(0));
+    emitLink31();
     cmp64(mem(Rs), imm(0), set_slt);
     auto taken = jump(flag_slt);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     auto done = jump();
     setLabel(taken);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
     return 1;
@@ -2195,34 +2225,25 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   case 0x11: {
     cmp64(mem(Rs), imm(0), set_slt);
     auto notTaken = jump(flag_slt);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     auto done = jump();
     setLabel(notTaken);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     setLabel(done);
-    add32(reg(0), PipelineReg(pc), imm(4));
-    mov64_s32(reg(0), reg(0));
-    mov64(mem(IpuReg(r[31])), reg(0));
+    emitLink31();
     return 1;
   }
 
   //BLTZALL Rs,i16
   case 0x12: {
-    add32(reg(0), PipelineReg(pc), imm(4));
-    mov64_s32(reg(0), reg(0));
-    mov64(mem(IpuReg(r[31])), reg(0));
+    emitLink31();
     cmp64(mem(Rs), imm(0), set_slt);
     auto taken = jump(flag_slt);
-    add64(reg(0), PipelineReg(pc), imm(4));
-    mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    emitLikelyNotTaken();
     auto done = jump();
     setLabel(taken);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
     return 1;
@@ -2230,20 +2251,14 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BGEZALL Rs,i16
   case 0x13: {
-    add32(reg(0), PipelineReg(pc), imm(4));
-    mov64_s32(reg(0), reg(0));
-    mov64(mem(IpuReg(r[31])), reg(0));
+    emitLink31();
     cmp64(mem(Rs), imm(0), set_slt);
     auto notTaken = jump(flag_slt);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     auto done = jump();
     setLabel(notTaken);
-    add64(reg(0), PipelineReg(pc), imm(4));
-    mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    emitLikelyNotTaken();
     setLabel(done);
     return 1;
   }
@@ -2259,7 +2274,8 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
   return 0;
 }
 
-auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
+auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> bool {
+  (void)pcMode;
   switch(instruction >> 21 & 0x1f) {
 
 //MFC0 Rt,Rd
@@ -2399,7 +2415,7 @@ auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
   return 0;
 }
 
-auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
+auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
   auto movzeron = [&](s32 offset, u32 size) -> void {
     if constexpr(sizeof(void*) == 8) {
       while(size >= 8) {
@@ -3335,6 +3351,25 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //BC1 offset
   case 0x08: {
+    auto emitBranchTarget = [&](s16 offset) -> void {
+      if(pcMode == EmitPcMode::Runtime) {
+        add64(reg(0), PipelineReg(pc), imm(s32(offset) * 4));
+        mov64(PipelineReg(nextpc), reg(0));
+        return;
+      }
+      mov64(PipelineReg(nextpc), imm(emitVaddr + 4 + s64(s32(offset) * 4)));
+    };
+    auto emitLikelyNotTaken = [&] {
+      if(pcMode == EmitPcMode::Runtime) {
+        add64(reg(0), PipelineReg(pc), imm(4));
+        mov64(PipelineReg(pc), reg(0));
+        add64(PipelineReg(nextpc), reg(0), imm(4));
+      } else {
+        mov64(PipelineReg(pc), imm(emitVaddr + 8));
+        mov64(PipelineReg(nextpc), imm(emitVaddr + 12));
+      }
+      or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    };
     bool value = instruction >> 16 & 1;
     bool likely = instruction >> 17 & 1;
     if(!emitStateKey.coprocessor1Enabled()) {
@@ -3348,17 +3383,13 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     cmp32(reg(0), imm(value), set_z);
     auto taken = jump(flag_z);
     if(likely) {
-      add64(reg(0), PipelineReg(pc), imm(4));
-      mov64(PipelineReg(pc), reg(0));
-      add64(PipelineReg(nextpc), reg(0), imm(4));
-      or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+      emitLikelyNotTaken();
     } else {
       mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     }
     auto done = jump();
     setLabel(taken);
-    add64(reg(0), PipelineReg(pc), imm(s32(i16) * 4));
-    mov64(PipelineReg(nextpc), reg(0));
+    emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
     return 1;
