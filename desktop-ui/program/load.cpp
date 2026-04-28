@@ -1,11 +1,45 @@
 auto Program::identify(const string& filename) -> std::shared_ptr<Emulator> {
   Program::Guard guard;
-  if(auto system = mia::identify(filename)) {
+
+  std::vector<std::shared_ptr<Emulator>> matches;
+
+  for(auto& system : mia::identify(filename)) {
     for(auto& emulator : emulators) {
-      if(emulator->name == system) return emulator;
+      if(!emulator->configuration.visible) continue;
+      if(emulator->name != system) continue;
+
+      if(std::ranges::find(matches, emulator) == matches.end()) {
+        matches.push_back(emulator);
+      }
     }
   }
 
+  if(matches.size() == 1)  return matches.front();
+
+  if(matches.size() > 1) {
+    if(kiosk) {
+      error({"Multiple possible game types detected for: ", Location::file(filename), "\n\n",});
+      return {};
+    }
+
+    std::vector<string> buttons;
+    for(auto& emulator : matches) buttons.push_back(emulator->name);
+    buttons.push_back("Cancel");
+
+    auto choice = MessageDialog().setTitle(ares::Name).setText({
+      "Filename: ", Location::file(filename), "\n\n",
+      "Multiple possible systems were detected.\n",
+      "Please choose which system to launch this file with."
+    }).setAlignment(presentation).question(buttons);
+
+    for(auto& emulator : matches) {
+      if(emulator->name == choice) return emulator;
+    }
+
+    return {};
+  }
+
+  // No matches → existing error path
   if(kiosk) {
     error({"unable to determine game type for: ", Location::file(filename)});
   } else {
@@ -15,6 +49,7 @@ auto Program::identify(const string& filename) -> std::shared_ptr<Emulator> {
       "Please use the load menu to choose the appropriate game system instead."
     }).setAlignment(presentation).error();
   }
+
   return {};
 }
 

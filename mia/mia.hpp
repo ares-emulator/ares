@@ -71,7 +71,7 @@ namespace mia {
   auto setHomeLocation(std::function<string ()>) -> void;
   auto setSaveLocation(std::function<string ()>) -> void;
   auto construct() -> void;
-  auto identify(const string& filename) -> string;
+  auto identify(const string& filename) -> std::vector<string>;
   auto import(std::shared_ptr<Pak>, const string& filename) -> bool;
 
 }
