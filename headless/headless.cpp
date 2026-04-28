@@ -1,0 +1,259 @@
+#include <ares/ares.hpp>
+#include "cli.hpp"
+#include "emulators.hpp"
+#include "runtime.hpp"
+#include "states.hpp"
+#include "video-output.hpp"
+#include <nall/encode/wav.hpp>
+#include <nall/gdb/server.hpp>
+#include <nall/main.hpp>
+
+using namespace nall;
+
+namespace {
+
+auto writeStereoWav(const string& path, const std::vector<i16>& interleavedSamples, u32 frequency) -> bool {
+  if(interleavedSamples.size() % 2 != 0) return false;
+
+  std::vector<i16> left;
+  std::vector<i16> right;
+  left.reserve(interleavedSamples.size() / 2);
+  right.reserve(interleavedSamples.size() / 2);
+
+  for(u32 index : range(0U, (u32)interleavedSamples.size(), 2U)) {
+    left.push_back(interleavedSamples[index + 0]);
+    right.push_back(interleavedSamples[index + 1]);
+  }
+
+  return nall::Encode::WAV::stereo<i16>(path, left, right, frequency);
+}
+
+}
+
+auto nall::main(Arguments arguments) -> void {
+  ares::Memory::FixedAllocator::get();
+  ares::Random::setOverride(ares::Random::Default);
+
+  headless::CliOptions cli;
+  string parseError;
+  if(!headless::parseCliOptions(arguments, cli, parseError)) {
+    fprintf(stderr, "error: %s\n", parseError.data());
+    return;
+  }
+
+  if(cli.showHelp) {
+    headless::printHeadlessUsage();
+    return;
+  }
+
+  if(cli.showVersion) {
+    print(ares::Version, "\n");
+    return;
+  }
+
+  if(cli.listSystemAliases) {
+    headless::printSystemAliases();
+    return;
+  }
+
+  mia::setHomeLocation([]() -> string { return {Path::userData(), "ares/Systems/"}; });
+  mia::setSaveLocation([&cli]() -> string { return cli.launchSettings.savesPath; });
+  // TODO: isolate save roots per headless worker/run for determinism testing.
+  // Shared save paths can make parallel boot tests nondeterministic on platforms
+  // that persist battery-backed or clock-backed state. At minimum this affects:
+  // Game Boy, Game Boy Advance, Famicom, Super Famicom, Mega Drive,
+  // Master System, WonderSwan, Neo Geo Pocket, MSX, PlayStation, Saturn,
+  // PC Engine, Mega CD, and Mega 32X.
+
+  headless::Runtime runtime;
+  runtime.runFramesTarget = cli.runFramesTarget;
+  runtime.stateSlot = cli.stateSlot;
+  runtime.gdbEnabled = cli.launchSettings.gdbEnabled;
+  runtime.gdbPort = cli.launchSettings.gdbPort;
+  runtime.gdbUseIPv4 = cli.launchSettings.gdbUseIPv4;
+  runtime.awaitGdbClient = cli.launchSettings.awaitGdbClient;
+  runtime.verbosity = cli.verbosity;
+  runtime.saveLastFramePath = cli.saveLastFramePath;
+  runtime.audioDumpPath = cli.audioDumpPath;
+  runtime.audioChecksum = cli.audioChecksum;
+  runtime.videoChecksum = cli.videoChecksum;
+  runtime.benchmarkDuration = cli.benchmarkDuration;
+  runtime.benchmarkFrameTarget = cli.benchmarkFrameTarget;
+
+  runtime.medium = cli.systemOverride ? headless::resolveSystemAlias(cli.systemOverride) : mia::identify(cli.gamePath);
+  if(!runtime.medium) {
+    fprintf(stderr, "error: unable to determine game type for: %s\n", Location::file(cli.gamePath).data());
+    return;
+  }
+
+  runtime.gamePak = mia::Medium::create(runtime.medium);
+  if(!runtime.gamePak) {
+    fprintf(stderr, "error: unsupported system: %s\n", runtime.medium.data());
+    return;
+  }
+  auto gameLoad = runtime.gamePak->load(cli.gamePath);
+  if(gameLoad != successful) {
+    fprintf(stderr, "error: failed to load game media.\n");
+    return;
+  }
+
+  auto region = runtime.gamePak->pak ? headless::normalizeRegion(runtime.gamePak->pak->attribute("region")) : string{};
+  auto systemName = headless::defaultSystemNameForMedium(runtime.medium);
+
+  runtime.systemPak = mia::System::create(systemName);
+  if(!runtime.systemPak) {
+    fprintf(stderr, "error: failed to load system data for: %s\n", systemName.data());
+    return;
+  }
+
+  auto firmwareQueries = headless::firmwareQueriesForMedium(runtime.medium, region);
+  LoadResult systemLoad = successful;
+  if(runtime.medium == "MSX2" && firmwareQueries.size() == 2) {
+    std::vector<string> firmwareLocations;
+    firmwareLocations.reserve(firmwareQueries.size());
+    for(const auto& firmware : firmwareQueries) {
+      auto location = headless::lookupFirmwareLocation(
+        cli.launchSettings,
+        firmware.systemName,
+        firmware.type,
+        firmware.region
+      );
+      if(!location) {
+        firmwareLocations.clear();
+        break;
+      }
+      firmwareLocations.push_back(location);
+    }
+
+    if(firmwareLocations.size() == firmwareQueries.size()) {
+      if(!runtime.systemPak->loadMultiple(firmwareLocations)) systemLoad = romNotFound;
+    } else if(headless::firmwareIsOptionalForMedium(runtime.medium)) {
+      systemLoad = runtime.systemPak->load();
+    } else {
+      systemLoad = romNotFound;
+    }
+  } else if(!firmwareQueries.empty()) {
+    auto firmware = firmwareQueries.front();
+    auto location = headless::lookupFirmwareLocation(
+      cli.launchSettings,
+      firmware.systemName,
+      firmware.type,
+      firmware.region
+    );
+    if(location) systemLoad = runtime.systemPak->load(location);
+    else if(headless::firmwareIsOptionalForMedium(runtime.medium)) systemLoad = runtime.systemPak->load();
+    else systemLoad = romNotFound;
+  } else {
+    systemLoad = runtime.systemPak->load();
+  }
+
+  if(systemLoad != successful) {
+    fprintf(stderr, "error: failed to load system data for: %s\n", systemName.data());
+    return;
+  }
+
+  runtime.profile = headless::defaultProfileForMedium(runtime.medium, region, cli.launchSettings.coreOptions.gameBoyAdvancePlayer);
+  if(!runtime.profile) {
+    fprintf(stderr, "error: no default core profile for system: %s\n", runtime.medium.data());
+    return;
+  }
+
+  ares::platform = &runtime;
+  headless::configureCoreOptionsForMedium(runtime.medium, cli.launchSettings.coreOptions);
+  if(!headless::loadCoreForMedium(runtime.medium, runtime.root, runtime.profile)) {
+    fprintf(stderr, "error: failed to load ares core profile: %s\n", runtime.profile.data());
+    return;
+  }
+
+  if(auto fastBoot = runtime.root->find<ares::Node::Setting::Boolean>("Fast Boot")) {
+    fastBoot->setValue(cli.launchSettings.fastBoot);
+  }
+
+  headless::connectDefaultPorts(runtime.root);
+
+  if(runtime.gdbEnabled) {
+    nall::GDB::server.reset();
+    nall::GDB::server.open(runtime.gdbPort, runtime.gdbUseIPv4);
+    nall::GDB::server.onClientConnectCallback = []() {
+      fprintf(stderr, "GDB client connected\n");
+    };
+
+    if(runtime.awaitGdbClient) {
+      fprintf(stderr, "Waiting for GDB client on port %u...\n", runtime.gdbPort);
+      while(!runtime.shouldExit && !nall::GDB::server.hasClient()) {
+        nall::GDB::server.updateLoop();
+        usleep(20 * 1000);
+      }
+    }
+  }
+
+  if(cli.verbosity == 0) {
+    freopen("/dev/null", "w", stderr);
+  }
+
+  runtime.root->power();
+  if(runtime.stateSlot) {
+    if(!headless::loadState(runtime.root, runtime.gamePak->location, runtime.stateSlot, cli.launchSettings.savesPath)) {
+      fprintf(stderr, "warning: failed to load state from slot %u\n", runtime.stateSlot);
+    } else {
+      if(cli.verbosity >= 1) print("Loaded state from slot ", runtime.stateSlot, "\n");
+    }
+  }
+  while(!runtime.shouldExit) {
+    if(runtime.gdbEnabled && nall::GDB::server.isHalted()) {
+      nall::GDB::server.updateLoop();
+      usleep(1000);
+      continue;
+    }
+    if(runtime.gdbEnabled) {
+      nall::GDB::server.updateLoop();
+    }
+    runtime.root->run();
+    runtime.flushPendingAudio();
+    if(runtime.stopRequested) {
+      runtime.shouldExit = true;
+    }
+    if(runtime.gdbEnabled) {
+      nall::GDB::server.updateLoop();
+    }
+  }
+
+  runtime.finalizeAudioCapture();
+
+  if(cli.saveOnExit) {
+    if(headless::saveState(runtime.root, runtime.gamePak->location, cli.saveOnExitSlot, cli.launchSettings.savesPath)) {
+      if(cli.verbosity >= 1) print("Saved state to slot ", cli.saveOnExitSlot, "\n");
+    } else {
+      fprintf(stderr, "warning: failed to save state to slot %u\n", cli.saveOnExitSlot);
+    }
+  }
+
+  runtime.root->save();
+  if(runtime.audioDumpPath) {
+    if(!writeStereoWav(runtime.audioDumpPath, runtime.audioSamples, runtime.audioFrequency)) {
+      fprintf(stderr, "warning: failed to write WAV: %s\n", runtime.audioDumpPath.data());
+    }
+  }
+  if(runtime.saveLastFramePath) {
+    auto result = headless::saveCapturedFramePng(
+      runtime.saveLastFramePath,
+      runtime.lastFrame,
+      runtime.lastFramePitch,
+      runtime.lastFrameWidth,
+      runtime.lastFrameHeight,
+      runtime.screens
+    );
+    if(result == headless::SaveFrameResult::NoFrameCaptured) {
+      fprintf(stderr, "warning: no video frame captured, PNG not written.\n");
+    } else if(result == headless::SaveFrameResult::EncodeFailed) {
+      fprintf(stderr, "warning: failed to write PNG: %s\n", runtime.saveLastFramePath.data());
+    }
+  }
+  runtime.gamePak->save(runtime.gamePak->location);
+  runtime.systemPak->save(runtime.systemPak->location);
+  runtime.root->unload();
+  if(runtime.gdbEnabled) {
+    nall::GDB::server.close();
+    nall::GDB::server.reset();
+  }
+}
