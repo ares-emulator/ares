@@ -227,15 +227,19 @@ struct InputSettings : VerticalLayout {
 };
 
 struct HotkeySettings : VerticalLayout {
+  using ChordKey = InputMapping::Binding;
+
   auto construct() -> void;
   auto reload() -> void;
   auto refresh() -> void;
   auto eventChange() -> void;
   auto eventClear() -> void;
   auto eventAssign(TableViewCell) -> void;
+  auto eventToggleStateSlotHotkeys() -> void;
   auto eventInput(std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
   auto setVisible(bool visible = true) -> HotkeySettings&;
 
+  CheckLabel stateSlotHotkeysToggle{this, Size{~0, 0}, 5};
   TableView inputList{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
     Label assignLabel{&controlLayout, Size{~0, 0}};
@@ -246,6 +250,10 @@ struct HotkeySettings : VerticalLayout {
   maybe<InputHotkey&> activeMapping;
   u32 activeBinding = 0;
   Timer timer;
+  Timer chordTimer;
+  std::vector<ChordKey> pendingChord;
+  std::vector<u32> visibleHotkeyIndices;
+  bool showStateSlotHotkeys = false;
 };
 
 struct EmulatorSettings : VerticalLayout {
