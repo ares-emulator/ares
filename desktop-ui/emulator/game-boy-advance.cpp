@@ -5,6 +5,10 @@ struct GameBoyAdvance : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   string deviceName;
+
+  Dpad dpad;
+  InputDigital a, b, l, r, select, start;
+  InputRumble rumble;
 };
 
 GameBoyAdvance::GameBoyAdvance() {
@@ -13,20 +17,32 @@ GameBoyAdvance::GameBoyAdvance() {
 
   firmware.push_back({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
 
+  link(dpad.up, virtualPorts[0].pad.up);
+  link(dpad.down, virtualPorts[0].pad.down);
+  link(dpad.left, virtualPorts[0].pad.left);
+  link(dpad.right, virtualPorts[0].pad.right);
+  link(a, virtualPorts[0].pad.south);
+  link(b, virtualPorts[0].pad.east);
+  link(l, virtualPorts[0].pad.l_bumper);
+  link(r, virtualPorts[0].pad.r_bumper);
+  link(select, virtualPorts[0].pad.select);
+  link(start, virtualPorts[0].pad.start);
+  link(rumble, virtualPorts[0].pad.rumble);
+
   { InputPort port{string{"Game Boy Advance"}};
 
   { InputDevice device{"Controls"};
-    device.digital("Up",     virtualPorts[0].pad.up);
-    device.digital("Down",   virtualPorts[0].pad.down);
-    device.digital("Left",   virtualPorts[0].pad.left);
-    device.digital("Right",  virtualPorts[0].pad.right);
-    device.digital("B",      virtualPorts[0].pad.south);
-    device.digital("A",      virtualPorts[0].pad.east);
-    device.digital("L",      virtualPorts[0].pad.l_bumper);
-    device.digital("R",      virtualPorts[0].pad.r_bumper);
-    device.digital("Select", virtualPorts[0].pad.select);
-    device.digital("Start",  virtualPorts[0].pad.start);
-    device.rumble ("Rumble", virtualPorts[0].pad.rumble);
+    device.digital("Up",     dpad.up);
+    device.digital("Down",   dpad.down);
+    device.digital("Left",   dpad.left);
+    device.digital("Right",  dpad.right);
+    device.digital("B",      b);
+    device.digital("A",      a);
+    device.digital("L",      l);
+    device.digital("R",      r);
+    device.digital("Select", select);
+    device.digital("Start",  start);
+    device.rumble ("Rumble", rumble);
     port.append(device); }
 
     ports.push_back(port);

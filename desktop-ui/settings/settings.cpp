@@ -189,6 +189,46 @@ auto Settings::process(bool load) -> void {
       name.replace(" ", "-");
       bind(string, name, firmware.location);
     }
+
+    // normalize port/device/input labels using the same compact style as other
+    // settings keys. for ex: "LaserActive (SEGA PAC)" becomes "LaserActiveSEGAPAC"
+    auto sanitizeInputName = [](string name) -> string {
+      return string{name}.replace(" ", "").replace("(", "").replace(")", "");
+    };
+
+    for(auto& port : emulator->ports) {
+      auto portName = sanitizeInputName(port.name);
+      for(auto& device : port.devices) {
+        auto deviceName = sanitizeInputName(device.name);
+        for(auto& input : device.inputs) {
+          if(!input.mapping->fallback) continue;
+          string value;
+          auto inputName = sanitizeInputName(input.name);
+          auto overrideSettingsPrefix = string{base, "/Input/"};
+          if(portName != base) overrideSettingsPrefix.append(portName, "/");
+          auto overrideSettingsPath = string{overrideSettingsPrefix, deviceName, "/", inputName};
+          auto fallbackSettingsPath = string{base, "/Input/", portName, "/", deviceName, "/", inputName};
+          if(load == 0) {
+            if(!input.mapping->hasAssignments()) continue;
+            for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
+            value.trimRight(";", 1L);
+          }
+          if(load) {
+            if(auto node = operator[](overrideSettingsPath)) value = node.string();
+            else if(overrideSettingsPath != fallbackSettingsPath) {
+              if(auto fallbackNode = operator[](fallbackSettingsPath)) value = fallbackNode.string();
+            }
+          } else {
+            operator()(overrideSettingsPath).setValue(value);
+          }
+          if(load == 1) {
+            auto parts = nall::split(value, ";");
+            parts.resize(BindingLimit);
+            for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = parts[binding];
+          }
+        }
+      }
+    }
   }
 
   #undef bind
