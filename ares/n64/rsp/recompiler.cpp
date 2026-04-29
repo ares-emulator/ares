@@ -1256,13 +1256,13 @@ auto RSP::Recompiler::emitSCC(u32 instruction) -> void {
     return;
   }
 
-  //XTRACE-START
+  //XTRACESTART
   case 0x23: {
     callf(&RSP::XTRACESTART, imm(XCODE));
     return;
   }
 
-  //XTRACE-STOP
+  //XTRACESTOP
   case 0x24: {
     callf(&RSP::XTRACESTOP);
     return;

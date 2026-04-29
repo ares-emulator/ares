@@ -300,9 +300,9 @@ auto RSP::Disassembler::SCC() -> std::vector<string> {
     if(xcode() == 1) return {"xdetect", xrdValue()};
     return {"xdetect", xrdValue(), xcodeImm()};
   case 0x23:
-    if(xcode() == 0) return {"xtrace-start"};
-    return {"xtrace-start", xcodeImm()};
-  case 0x24: return {"xtrace-stop"};
+    if(xcode() == 0) return {"xtracestart"};
+    return {"xtracestart", xcodeImm()};
+  case 0x24: return {"xtracestop"};
   case 0x25:
     if(xcode() == 0) return {"xlog", xrdValue()};
     return {"xlog", xrdValue(), xrtValue(), xcodeImm()};
@@ -311,7 +311,7 @@ auto RSP::Disassembler::SCC() -> std::vector<string> {
     return {"xlogregs", xrdValue(), xcodeImm()};
   case 0x27: return {"xhexdump", xrdValue(), xrtValue(), xcodeImm()};
   case 0x28: return {"xprof", xrdValue(), xcodeImm()};
-  case 0x29: return {"xprof-read", xrdValue(), xrtName()};
+  case 0x29: return {"xprofread", xrdValue(), xrtName()};
   case 0x2a: return {"xexception", xrtValue()};
   case 0x2c:
     if(xcode() == 1) return {"xioctl", "exit"};

@@ -19,8 +19,8 @@ auto RSP::XDETECT(r32& rd, u32 code) -> void {
   n64 detect = 0;
   n64 ioctl = 0;
   detect.bit(0x20) = 1;  // XDETECT
-  detect.bit(0x23) = 1;  // XTRACE-START
-  detect.bit(0x24) = 1;  // XTRACE-STOP
+  detect.bit(0x23) = 1;  // XTRACESTART
+  detect.bit(0x24) = 1;  // XTRACESTOP
   detect.bit(0x25) = 1;  // XLOG
   detect.bit(0x26) = 1;  // XLOGREGS
   detect.bit(0x27) = 1;  // XHEXDUMP
