@@ -286,12 +286,6 @@ struct EmitPlannedInstruction {
   u32 address = 0;
   u32 instruction = 0;
   ares::Nintendo64::CPU::OpInfo info = {};
-  bool countCompareWrite = false;
-  bool isUnconditional = false;
-  u64 branchTakenVaddr = ~0ull;
-  u64 branchFallthroughVaddr = ~0ull;
-  bool branchTakenInternal = false;
-  bool branchFallthroughInternal = false;
 };
 
 struct EmitPlan {
@@ -366,21 +360,13 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
       pi.address = currentAddress;
       pi.instruction = instruction;
       pi.info = info;
-      pi.countCompareWrite = info.countCompareWrite();
-      pi.isUnconditional = info.unconditionalJump();
-      if(info.branch()) {
-        // Branch-like instructions get explicit taken/fallthrough targets.
-        auto [taken, fallthrough] = computeBranchTargets(recompiler.emitStateKey.coprocessor1Enabled(), currentVaddr, instruction);
-        pi.branchTakenVaddr = taken;
-        pi.branchFallthroughVaddr = fallthrough;
-      }
       plan.instructions.push_back(pi);
       // Stop one instruction after an unconditional jump to include its delay slot.
       if(prevIsUncondBranch) break;
       // Hard boundaries that must terminate the planning window.
-      if(!info.branch() && (info.jitStateKeyMayChange() || pi.countCompareWrite)) break;
+      if(!info.branch() && (info.jitStateKeyMayChange() || info.countCompareWrite())) break;
       if(recompiler.sectionIndex(currentAddress + 4) != plan.startSection) break;
-      prevIsUncondBranch = pi.isUnconditional;
+      prevIsUncondBranch = info.unconditionalJump();
       currentVaddr += 4;
       currentAddress += 4;
     }
@@ -403,9 +389,16 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
     return false;
   };
 
+  auto addInternalEntry = [&](u64 targetVaddr) {
+    for(auto v : plan.internalEntryVaddrs) if(v == targetVaddr) return;
+    plan.internalEntryVaddrs.push_back(targetVaddr);
+  };
+
   for(auto& instruction : plan.instructions) {
     // Second pass: classify each conditional edge as internal or external.
-    if(!instruction.info.branch() || instruction.isUnconditional) continue;
+    if(!instruction.info.branch() || instruction.info.unconditionalJump()) continue;
+    auto [branchTakenVaddr, branchFallthroughVaddr] =
+      computeBranchTargets(recompiler.emitStateKey.coprocessor1Enabled(), instruction.vaddr, instruction.instruction);
     auto isInternal = [&](u64 targetVaddr) -> bool {
       // Reject null / out-of-window / unaligned candidate targets.
       if(targetVaddr == ~0ull) return false;
@@ -413,37 +406,22 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
       if((targetVaddr & 3) != 0) return false;
       if(!isValidEntry(targetVaddr)) return false;
       if(GDB::server.hasBreakpointAt(u32(targetVaddr))) return false;
-      // Internal edges must stay cacheable and in the same 4 KiB section.
-      auto access = recompiler.self.devirtualize<Read, Word>(targetVaddr, false, false);
-      if(!access || !access.cache) return false;
-      if(recompiler.sectionIndex(access.paddr) != plan.startSection) return false;
+      u32 targetAddress = plan.startAddress + u32(targetVaddr - plan.startVaddr);
+      if(recompiler.sectionIndex(targetAddress) != plan.startSection) return false;
       return true;
     };
-    instruction.branchTakenInternal = isInternal(instruction.branchTakenVaddr);
-    instruction.branchFallthroughInternal = isInternal(instruction.branchFallthroughVaddr);
+    if(isInternal(branchTakenVaddr)) addInternalEntry(branchTakenVaddr);
+    if(isInternal(branchFallthroughVaddr)) addInternalEntry(branchFallthroughVaddr);
   }
 
-  auto addInternalEntry = [&](u64 targetVaddr) {
-    for(auto v : plan.internalEntryVaddrs) if(v == targetVaddr) return;
-    plan.internalEntryVaddrs.push_back(targetVaddr);
-  };
   auto addAliasAddress = [&](u32 targetAddress) {
     for(auto a : aliasAddresses) if(a == targetAddress) return;
     aliasAddresses.push_back(targetAddress);
   };
-
-  for(auto& instruction : plan.instructions) {
-    // Third pass: collect entry vaddrs for internal edges.
-    if(!instruction.info.branch() || instruction.isUnconditional) continue;
-    if(instruction.branchTakenInternal) addInternalEntry(instruction.branchTakenVaddr);
-    if(instruction.branchFallthroughInternal) addInternalEntry(instruction.branchFallthroughVaddr);
-  }
   for(auto targetVaddr : plan.internalEntryVaddrs) {
-    // Publish physical addresses for alias block registration.
-    auto access = recompiler.self.devirtualize<Read, Word>(targetVaddr, false, false);
-    if(!access || !access.cache) continue;
-    if(recompiler.sectionIndex(access.paddr) != plan.startSection) continue;
-    addAliasAddress(access.paddr);
+    u32 targetAddress = plan.startAddress + u32(targetVaddr - plan.startVaddr);
+    if(recompiler.sectionIndex(targetAddress) != plan.startSection) continue;
+    addAliasAddress(targetAddress);
   }
 
   return plan;
@@ -530,35 +508,41 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
   auto emitInternalDispatch = [&](EmitPlannedInstruction& br) {
     cmp64(CpuClockMem, CpuJitClockTargetMem, set_uge);
     jumpEpilog(flag_uge);
+    auto [branchTakenVaddr, branchFallthroughVaddr] =
+      computeBranchTargets(emitStateKey.coprocessor1Enabled(), br.vaddr, br.instruction);
+    bool tInt = false;
+    bool fInt = false;
+    for(auto target : plan.internalEntryVaddrs) {
+      if(target == branchTakenVaddr) tInt = true;
+      if(target == branchFallthroughVaddr) fInt = true;
+    }
     // This runs right after the branch delay slot.
-    bool tInt = br.branchTakenInternal;
-    bool fInt = br.branchFallthroughInternal;
     // No internal edge: return to dispatcher.
     if(!tInt && !fInt) { jumpEpilog(); return; }
     if(tInt && fInt) {
       // Both edges internal: choose taken/fallthrough from runtime pipeline PC.
-      cmp64(PipelineReg(pc), imm(s64(br.branchTakenVaddr)), set_z);
+      cmp64(PipelineReg(pc), imm(s64(branchTakenVaddr)), set_z);
       auto takenJ = jump(flag_z);
-      cmp64(PipelineReg(pc), imm(s64(br.branchFallthroughVaddr)), set_z);
+      cmp64(PipelineReg(pc), imm(s64(branchFallthroughVaddr)), set_z);
       auto fallJ = jump(flag_z);
       jumpEpilog();
-      setLabelOrDefer(takenJ, br.branchTakenVaddr);
-      setLabelOrDefer(fallJ, br.branchFallthroughVaddr);
+      setLabelOrDefer(takenJ, branchTakenVaddr);
+      setLabelOrDefer(fallJ, branchFallthroughVaddr);
       return;
     }
     if(tInt) {
       // Taken internal, fallthrough external.
-      cmp64(PipelineReg(pc), imm(s64(br.branchTakenVaddr)), set_z);
+      cmp64(PipelineReg(pc), imm(s64(branchTakenVaddr)), set_z);
       auto takenJ = jump(flag_z);
       jumpEpilog();
-      setLabelOrDefer(takenJ, br.branchTakenVaddr);
+      setLabelOrDefer(takenJ, branchTakenVaddr);
       return;
     }
     // Fallthrough internal, taken external.
-    cmp64(PipelineReg(pc), imm(s64(br.branchFallthroughVaddr)), set_z);
+    cmp64(PipelineReg(pc), imm(s64(branchFallthroughVaddr)), set_z);
     auto fJ = jump(flag_z);
     jumpEpilog();
-    setLabelOrDefer(fJ, br.branchFallthroughVaddr);
+    setLabelOrDefer(fJ, branchFallthroughVaddr);
   };
 
   for(auto& [targetVaddr, targetLabel] : internalLabels) {
@@ -579,7 +563,6 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
     bool sectionBoundary = sectionIndex(ii.address + 4) != startSection;
     u32 instruction = ii.instruction;
     OpInfo info = ii.info;
-    bool countCompareWrite = ii.countCompareWrite;
 
     // Runtime PC mode is needed at block entry and in delay slots.
     emitVaddr = ii.vaddr;
@@ -646,7 +629,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
     // Commit architectural pipeline state only where correctness requires it.
     bool needPipelineCommit = needEndBlockCheck || info.branch() || sectionBoundary
                             || info.jitStateKeyMayChange()
-                            || countCompareWrite;
+                            || info.countCompareWrite();
     if(needPipelineCommit) setupPipeline();
     if(needEndBlockCheck) {
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
@@ -666,7 +649,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
     }
 
     bool prevIsConditionalBranch = delaySlot && idx > 0
-      && plan.instructions[idx - 1].info.branch() && !plan.instructions[idx - 1].isUnconditional;
+      && plan.instructions[idx - 1].info.branch() && !plan.instructions[idx - 1].info.unconditionalJump();
     if(prevIsConditionalBranch) {
       // Conditional branch dispatch happens after its delay slot.
       emitInternalDispatch(plan.instructions[idx - 1]);
