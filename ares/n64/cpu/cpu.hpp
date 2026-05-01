@@ -42,9 +42,6 @@ struct CPU : Thread {
   auto instructionPrologue(u64 address, u32 instruction) -> void;
   template<bool Recompiled> auto instructionEpilogue() -> void;
   auto raiseCoprocessor1Exception() -> void;
-  auto jitClockTargetExpired() -> bool;
-  auto jitQueueTargetExpired() -> bool;
-  auto jitLinkedCode() -> u8*;
 
   auto power(bool reset) -> void;
 
@@ -1079,28 +1076,14 @@ struct CPU : Thread {
 
       u8* code = nullptr;
       Block* next = nullptr;
-      Block* linkedBlockTaken = nullptr;
-      Block* linkedBlockNotTaken = nullptr;
       u64 stateKey = 0;
       u32 startAddress = 0;
       u32 endAddress = 0;
-      u64 linkVaddrTaken = ~0ull;
-      u64 linkVaddrNotTaken = ~0ull;
-      u32 linkAddressTaken = ~0u;
-      u32 linkAddressNotTaken = ~0u;
       u8* sectionDirty = nullptr;
-    };
-
-    struct Pending {
-      Block* source = nullptr;
-      Pending* next = nullptr;
-      u64 expectedStateKey = 0;
-      u32 expectedTargetAddress = 0;
     };
 
     struct Section {
       Block* blocks[SectionWords];
-      Pending* pending[SectionWords];
       u8 lineBlocks[SectionLineCount];
     };
 
@@ -1240,6 +1223,7 @@ struct CPU : Thread {
     u32 emitFpuSaveMxcsr = 0;
     Block* activeBlock = nullptr;
     bump_allocator allocator;
+    std::vector<u32> emitAliasAddresses;
     std::vector<SlowPath> slowPaths;
     std::vector<Section*> sections;
     std::vector<u8> sectionDirty;

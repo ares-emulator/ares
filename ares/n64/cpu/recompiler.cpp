@@ -26,20 +26,49 @@ Block lifecycle
    - sections are 4 KiB; each section has 1024 word-indexed entry slots.
    - each entry slot stores a linked list of Block keyed by stateKey.
 2) Emit
-   - on cache miss, emit() builds host code with beginFunction()/endFunction().
+   - on cache miss, emit() first runs a prepass, then builds host code.
 3) Publish
-   - compiled block is inserted at entry head and later executed by
-     Block::execute().
+   - the main block is inserted at startAddress.
+   - internal branch targets are also published as alias entries that point to
+     the same generated host function.
 
-Execution model inside emit()
+Block definition (current)
+--------------------------
+A compiled block is now a planned linear window of guest instructions plus
+internal entry aliases:
+- startAddress is the lookup address used to build the primary block entry;
+- the window may include many conditional branches (including likely variants);
+- the window closes on hard boundaries:
+  section boundary, single-instruction mode, non-branch stateKey-changing ops,
+  SCC Count/Compare writes, and delay-slot completion after unconditional jumps.
+
+Emission pipeline inside emit()
+------------------------------
+emit() runs in phases:
+1) Validation:
+   - reject non-cacheable or incoherent starts.
+2) Prepass planning:
+   - decode OpInfo for each instruction in the linear window;
+   - compute branch taken/fallthrough targets;
+   - classify conditional branch edges as internal or external;
+   - collect internal entry vaddrs and alias addresses.
+3) Host emission:
+   - emit an entry dispatcher that can jump directly to internal labels when
+     ipu.pc matches an internal target;
+   - emit each planned instruction body via emitEXECUTE()/emitSPECIAL()/...;
+   - after each conditional branch delay slot, dispatch to internal targets or
+     return to epilogue for external flow.
+4) Finalization:
+   - emit common epilogue and deferred slow paths;
+   - publish block metadata.
+
+Control-flow policy (current)
 -----------------------------
-For each instruction in a block, the emitter:
-- decodes metadata with decoderEXECUTEInfo() (OpInfo);
-- updates virtual pipeline window (pc/nextpc/state/nstate) only when needed;
-- emits opcode body via emitEXECUTE()/emitSPECIAL()/...;
-- accumulates cycles and nextpc advances in deferred form;
-- synchronizes state/timing only at explicit boundaries;
-- stops block at section boundary or on JitStateKeyMayChange.
+- Conditional branches are not terminals by default.
+- Internal conditional edges are resolved immediately with host-side jumps.
+- External conditional edges return to dispatcher at block epilogue.
+- Unconditional branch delay-slot completion is a hard planning boundary.
+- Opportunistic runtime branch chaining is intentionally disabled.
 
 Hot-loop optimizations
 ----------------------
@@ -65,31 +94,6 @@ Hot-loop optimizations
      compile-time vaddr immediate;
    - delay-slot/branch-sensitive cases still use runtime pipeline state to
      preserve precise exception PC behavior.
-
-Block linking model
--------------------
-Goal:
-- reduce dispatcher round-trips by chaining compatible blocks directly.
-
-How linking is built:
-- only intra-section edges are considered;
-- at branch termination, emit() may record taken and not-taken successors;
-- links are disabled on boundaries that may change execution mode
-  (single-instruction mode, state-key-changing ops, SCC count/compare writes);
-- delay-slot linking is gated by safety (no helper call, exception, or fault
-  risk in delay-slot opcode).
-
-How linking is resolved:
-- each section maintains pending predecessor lists by target word index;
-- publish attempts direct target resolution first (stateKey + startAddress);
-- unresolved edges are queued and backpatched when the target is later emitted;
-- if taken/not-taken collapse to same target, only one pending lookup is used.
-
-Runtime link gate (jitLinkedCode):
-- reject links on dirty sections;
-- reject links when clock/queue budget says return to dispatcher;
-- choose taken/not-taken edge from final architectural PC;
-- chain only if resolved, otherwise return to epilogue.
 
 Invalidation model
 ------------------
@@ -198,31 +202,6 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
     }
   }
 
-  auto findLinked = [&](u32 targetAddress, u64 targetStateKey) -> Block* {
-    auto targetIndex = blockIndex(targetAddress);
-    for(auto target = section->blocks[targetIndex]; target; target = target->next) {
-      if(target->stateKey != targetStateKey) continue;
-      if(target->startAddress != targetAddress) continue;
-      return target;
-    }
-    return nullptr;
-  };
-
-  auto resolvePending = [&](Block* target) -> void {
-    auto targetIndex = blockIndex(target->startAddress);
-    auto* pending = &section->pending[targetIndex];
-    while(*pending) {
-      auto entry = *pending;
-      if(entry->expectedStateKey == target->stateKey && entry->expectedTargetAddress == target->startAddress) {
-        if(entry->source->linkAddressTaken == target->startAddress) entry->source->linkedBlockTaken = target;
-        if(entry->source->linkAddressNotTaken == target->startAddress) entry->source->linkedBlockNotTaken = target;
-        *pending = entry->next;
-        continue;
-      }
-      pending = &entry->next;
-    }
-  };
-
   auto block = emit(vaddr, address, stateKey, singleInstruction);
   if(block) {
     if(emitAllocatorFlushed) {
@@ -237,28 +216,28 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
       section->lineBlocks[line] = 1;
     }
     block->sectionDirty = sectionDirty.data() + sectionIndex(block->startAddress);
-    bool hasTaken = block->linkAddressTaken != ~0u;
-    bool hasNotTaken = block->linkAddressNotTaken != ~0u;
-    auto linkTarget = [&](u32 targetAddress) -> Block* {
-      auto target = findLinked(targetAddress, block->stateKey);
-      if(target) return target;
-      auto pending = (Pending*)allocator.acquire(sizeof(Pending));
-      pending->source = block;
-      pending->next = section->pending[blockIndex(targetAddress)];
-      pending->expectedStateKey = block->stateKey;
-      pending->expectedTargetAddress = targetAddress;
-      section->pending[blockIndex(targetAddress)] = pending;
-      return nullptr;
-    };
-    if(hasTaken || hasNotTaken) {
-      if(hasTaken) block->linkedBlockTaken = linkTarget(block->linkAddressTaken);
-      if(hasNotTaken && block->linkAddressNotTaken == block->linkAddressTaken) {
-        block->linkedBlockNotTaken = block->linkedBlockTaken;
-      } else if(hasNotTaken) {
-        block->linkedBlockNotTaken = linkTarget(block->linkAddressNotTaken);
+    auto registerAlias = [&](u32 aliasAddress) -> Block* {
+      if(aliasAddress == block->startAddress) return block;
+      auto aliasIndex = blockIndex(aliasAddress);
+      for(auto alias = section->blocks[aliasIndex]; alias; alias = alias->next) {
+        if(alias->stateKey != block->stateKey) continue;
+        if(alias->startAddress != aliasAddress) continue;
+        return alias;
       }
+      auto alias = (Block*)allocator.acquire(sizeof(Block));
+      alias->code = block->code;
+      alias->next = section->blocks[aliasIndex];
+      alias->stateKey = block->stateKey;
+      alias->startAddress = aliasAddress;
+      alias->endAddress = block->endAddress;
+      alias->sectionDirty = block->sectionDirty;
+      section->blocks[aliasIndex] = alias;
+      section->lineBlocks[sectionLineIndex(aliasAddress)] = 1;
+      return alias;
+    };
+    for(auto aliasAddress : emitAliasAddresses) {
+      registerAlias(aliasAddress);
     }
-    resolvePending(block);
     memory::jitprotect(true);
   }
   return block;
@@ -294,11 +273,209 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #endif
+
+namespace {
+
+struct EmitPlannedInstruction {
+  u64 vaddr = 0;
+  u32 address = 0;
+  u32 instruction = 0;
+  ares::Nintendo64::CPU::OpInfo info = {};
+  bool countCompareWrite = false;
+  bool isUnconditional = false;
+  u64 branchTakenVaddr = ~0ull;
+  u64 branchFallthroughVaddr = ~0ull;
+  bool branchTakenInternal = false;
+  bool branchFallthroughInternal = false;
+};
+
+struct EmitPlan {
+  u32 startAddress = 0;
+  u32 startSection = 0;
+  u64 startVaddr = 0;
+  u32 windowEndAddress = 0;
+  u64 windowEndVaddr = 0;
+  std::vector<EmitPlannedInstruction> instructions;
+  std::vector<u64> internalEntryVaddrs;
+};
+
+// SCC Count/Compare writes force a hard block boundary.
+auto writesCountCompare(u32 instruction) -> bool {
+  // 0x10 = COP0.
+  if(instruction >> 26 != 0x10) return false;
+  auto op = instruction >> 21 & 0x1f;
+  // MTC0 / DMTC0.
+  if(op != 0x04 && op != 0x05) return false;
+  auto rd = instruction >> 11 & 31;
+  // Count / Compare.
+  return rd == 9 || rd == 11;
+}
+
+// Hard terminals for the aggressive linker model.
+auto isUnconditionalJump(u32 instruction) -> bool {
+  auto op = instruction >> 26;
+  if(op == 0x02 || op == 0x03) return true;  //J, JAL
+  if(op == 0x00) {
+    // SPECIAL function space.
+    auto fn = instruction & 0x3f;
+    if(fn == 0x08 || fn == 0x09) return true;  //JR, JALR
+  }
+  return false;
+}
+
+// Decode branch-like instructions into taken/fallthrough virtual targets.
+auto computeBranchTargets(bool coprocessor1Enabled, u64 branchVaddr, u32 instruction) -> std::pair<u64, u64> {
+  // The plan stage keeps target decoding local and deterministic.
+  auto opcode = instruction >> 26;
+  auto rt = instruction >> 16 & 31;
+  auto branchTargetVaddr = branchVaddr + 4 + (s64(s16(instruction)) << 2);
+  auto fallthroughVaddr = branchVaddr + 8;
+  if(opcode == 0x02 || opcode == 0x03) {
+    // Absolute jump within the current 256 MiB region.
+    auto t = (branchVaddr & 0xffff'ffff'f000'0000ull) | (u64(instruction & 0x03ff'ffff) << 2);
+    return {t, ~0ull};
+  }
+  if(opcode == 0x04 || opcode == 0x05 || opcode == 0x06 || opcode == 0x07
+  || opcode == 0x14 || opcode == 0x15 || opcode == 0x16 || opcode == 0x17) {
+    return {branchTargetVaddr, fallthroughVaddr};
+  }
+  if(opcode == 0x01) {
+    // REGIMM branch family.
+    if(rt == 0x00 || rt == 0x01 || rt == 0x02 || rt == 0x03
+    || rt == 0x10 || rt == 0x11 || rt == 0x12 || rt == 0x13) {
+      return {branchTargetVaddr, fallthroughVaddr};
+    }
+    return {~0ull, ~0ull};
+  }
+  if(opcode == 0x11 && (instruction >> 21 & 31) == 0x08) {
+    // COP1 BC1* branch family is valid only with COP1 enabled.
+    if(!coprocessor1Enabled) return {~0ull, ~0ull};
+    return {branchTargetVaddr, fallthroughVaddr};
+  }
+  return {~0ull, ~0ull};
+}
+
+// Build the static compilation plan before host code emission:
+// - choose the linear window,
+// - classify internal/external conditional edges,
+// - collect internal JIT entry targets and alias addresses.
+auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32 address, bool singleInstruction,
+                   std::vector<u32>& aliasAddresses) -> EmitPlan {
+  EmitPlan plan = {};
+  plan.startAddress = address;
+  plan.startSection = recompiler.sectionIndex(address);
+  plan.startVaddr = vaddr;
+  plan.instructions.reserve(64);
+  aliasAddresses.clear();
+
+  Thread thread;
+  {
+    // First pass: grow a linear window until a hard stop condition.
+    u64 currentVaddr = vaddr;
+    u32 currentAddress = address;
+    bool prevIsUncondBranch = false;
+    while(true) {
+      if(recompiler.sectionIndex(currentAddress) != plan.startSection) break;
+      if(singleInstruction && !plan.instructions.empty()) break;
+      u32 instruction = bus.read<Word>(currentAddress, thread, RBusDevice::ARES_JIT);
+      auto info = recompiler.self.decoderEXECUTEInfo(instruction);
+      // Materialize one prepass record per guest instruction.
+      EmitPlannedInstruction pi;
+      pi.vaddr = currentVaddr;
+      pi.address = currentAddress;
+      pi.instruction = instruction;
+      pi.info = info;
+      pi.countCompareWrite = writesCountCompare(instruction);
+      pi.isUnconditional = info.branch() && isUnconditionalJump(instruction);
+      if(info.branch()) {
+        // Branch-like instructions get explicit taken/fallthrough targets.
+        auto [taken, fallthrough] = computeBranchTargets(recompiler.emitStateKey.coprocessor1Enabled(), currentVaddr, instruction);
+        pi.branchTakenVaddr = taken;
+        pi.branchFallthroughVaddr = fallthrough;
+      }
+      plan.instructions.push_back(pi);
+      // Stop one instruction after an unconditional jump to include its delay slot.
+      if(prevIsUncondBranch) break;
+      // Hard boundaries that must terminate the planning window.
+      if(!info.branch() && (info.jitStateKeyMayChange() || pi.countCompareWrite)) break;
+      if(recompiler.sectionIndex(currentAddress + 4) != plan.startSection) break;
+      prevIsUncondBranch = pi.isUnconditional;
+      currentVaddr += 4;
+      currentAddress += 4;
+    }
+  }
+
+  if(plan.instructions.empty()) return plan;
+  plan.windowEndVaddr = plan.instructions.back().vaddr + 4;
+  plan.windowEndAddress = plan.instructions.back().address + 4;
+
+  // Delay-slot addresses are not legal direct entry points.
+  std::vector<u64> validEntryVaddrs;
+  validEntryVaddrs.reserve(plan.instructions.size());
+  for(size_t i = 0; i < plan.instructions.size(); i++) {
+    bool delaySlot = i > 0 && plan.instructions[i - 1].info.branch();
+    if(!delaySlot) validEntryVaddrs.push_back(plan.instructions[i].vaddr);
+  }
+  auto isValidEntry = [&](u64 targetVaddr) -> bool {
+    // Internal targets can never point into a delay slot.
+    for(auto v : validEntryVaddrs) if(v == targetVaddr) return true;
+    return false;
+  };
+
+  for(auto& instruction : plan.instructions) {
+    // Second pass: classify each conditional edge as internal or external.
+    if(!instruction.info.branch() || instruction.isUnconditional) continue;
+    auto isInternal = [&](u64 targetVaddr) -> bool {
+      // Reject null / out-of-window / unaligned candidate targets.
+      if(targetVaddr == ~0ull) return false;
+      if(targetVaddr < plan.startVaddr || targetVaddr >= plan.windowEndVaddr) return false;
+      if((targetVaddr & 3) != 0) return false;
+      if(!isValidEntry(targetVaddr)) return false;
+      // Internal edges must stay cacheable and in the same 4 KiB section.
+      auto access = recompiler.self.devirtualize<Read, Word>(targetVaddr, false, false);
+      if(!access || !access.cache) return false;
+      if(recompiler.sectionIndex(access.paddr) != plan.startSection) return false;
+      return true;
+    };
+    instruction.branchTakenInternal = isInternal(instruction.branchTakenVaddr);
+    instruction.branchFallthroughInternal = isInternal(instruction.branchFallthroughVaddr);
+  }
+
+  auto addInternalEntry = [&](u64 targetVaddr) {
+    for(auto v : plan.internalEntryVaddrs) if(v == targetVaddr) return;
+    plan.internalEntryVaddrs.push_back(targetVaddr);
+  };
+  auto addAliasAddress = [&](u32 targetAddress) {
+    for(auto a : aliasAddresses) if(a == targetAddress) return;
+    aliasAddresses.push_back(targetAddress);
+  };
+
+  for(auto& instruction : plan.instructions) {
+    // Third pass: collect entry vaddrs for internal edges.
+    if(!instruction.info.branch() || instruction.isUnconditional) continue;
+    if(instruction.branchTakenInternal) addInternalEntry(instruction.branchTakenVaddr);
+    if(instruction.branchFallthroughInternal) addInternalEntry(instruction.branchFallthroughVaddr);
+  }
+  for(auto targetVaddr : plan.internalEntryVaddrs) {
+    // Publish physical addresses for alias block registration.
+    auto access = recompiler.self.devirtualize<Read, Word>(targetVaddr, false, false);
+    if(!access || !access.cache) continue;
+    if(recompiler.sectionIndex(access.paddr) != plan.startSection) continue;
+    addAliasAddress(access.paddr);
+  }
+
+  return plan;
+}
+
+}
+
 auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction) -> Block* {
+  // Phase 0: initialize emit state and clear temporary outputs.
   emitStateKey = stateKey;
   emitSingleInstruction = singleInstruction;
   emitStateKeyChanged = false;
   emitAllocatorFlushed = false;
+  emitAliasAddresses.clear();
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
     allocator.release();
@@ -306,146 +483,186 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     emitAllocatorFlushed = true;
   }
 
-  // abort compilation if outside of RAM or not cache-coherent
+  // Phase 1: reject impossible/non-coherent compilation targets.
   const u32 icacheTag = address & ~0xfffu;
   const u32 icacheBurstHi = icacheTag + 0xfe0u;
-  const bool icacheBurstOk = 
+  const bool icacheBurstOk =
     icacheBurstHi <= 0x07ff'ffffu
     || (Model::Aleck64() && icacheTag > 0xbfff'ffffu && icacheBurstHi <= 0xc07f'ffffu);
   if(!icacheBurstOk) return nullptr;
 
   if(!self.icache.coherent(vaddr, address)) {
+    // Fallback to interpreter path if the first line is already incoherent.
     return nullptr;
   }
 
+  // Phase 2: prepass planning (window + edge classification + alias list).
+  auto plan = buildEmitPlan(*this, vaddr, address, singleInstruction, emitAliasAddresses);
+  if(plan.instructions.empty()) return nullptr;
+
+  u32 startAddress = plan.startAddress;
+  u32 startSection = plan.startSection;
+  u32 windowEndAddress = plan.windowEndAddress;
+  constexpr u32 branchToSelf = 0x1000'ffff;  //beq 0,0,<pc>
+
+  // Internal entry labels are bound lazily when their instruction is emitted.
+  std::vector<std::pair<u64, sljit_label*>> internalLabels;
+  internalLabels.reserve(plan.internalEntryVaddrs.size());
+  for(auto targetVaddr : plan.internalEntryVaddrs) {
+    internalLabels.push_back({targetVaddr, nullptr});
+  }
+  auto findInternalLabel = [&](u64 targetVaddr) -> sljit_label** {
+    for(auto& [vaddr, label] : internalLabels) {
+      if(vaddr == targetVaddr) return &label;
+    }
+    return nullptr;
+  };
+
+  // Phase 3: begin host emission.
   beginFunction(3);
   slowPaths.clear();
   emitDeferredCycles = 0;
 
-  Thread thread;
-  u32 startAddress = address;
-  u32 startSection = sectionIndex(address);
-  bool delaySlot = false;
-  int numInsn = 0;
-  constexpr u32 branchToSelf = 0x1000'ffff;  //beq 0,0,<pc>
-  u32 jumpToSelf = 2 << 26 | vaddr >> 2 & 0x3ff'ffff;  //j <pc>
-  struct BranchLinks {
-    u64 takenVaddr = ~0ull;
-    u64 notTakenVaddr = ~0ull;
-    u32 takenAddress = ~0u;
-    u32 notTakenAddress = ~0u;
-  };
-  auto writesCountCompare = [](u32 instruction) -> bool {
-    if(instruction >> 26 != 0x10) return false;
-    auto op = instruction >> 21 & 0x1f;
-    if(op != 0x04 && op != 0x05) return false;
-    auto rd = instruction >> 11 & 31;
-    return rd == 9 || rd == 11;
-  };
-  auto fillLinkFromVaddr = [&](BranchLinks& links, bool taken, u64 targetVaddr) -> void {
-    auto access = self.devirtualize<Read, Word>(targetVaddr, false, false);
-    if(!access) return;
-    if(!access.cache) return;
-    if(sectionIndex(access.paddr) != startSection) return;
-    if(taken) {
-      links.takenAddress = access.paddr;
-      links.takenVaddr = targetVaddr;
-      return;
-    }
-    links.notTakenAddress = access.paddr;
-    links.notTakenVaddr = targetVaddr;
-  };
-  auto directBranchLinkAddress = [&](u64 branchVaddr, u32 instruction) -> BranchLinks {
-    BranchLinks links;
-    auto opcode = instruction >> 26;
-    auto rt = instruction >> 16 & 31;
-    auto branchTargetVaddr = branchVaddr + 4 + (s64(s16(instruction)) << 2);
-    auto fallthroughVaddr = branchVaddr + 8;
-    if(opcode == 0x02 || opcode == 0x03) {
-      auto targetVaddr = (branchVaddr & 0xffff'ffff'f000'0000ull) | (u64(instruction & 0x03ff'ffff) << 2);
-      fillLinkFromVaddr(links, true, targetVaddr);
-      return links;
-    }
-    if(opcode == 0x04 || opcode == 0x05 || opcode == 0x06 || opcode == 0x07
-    || opcode == 0x14 || opcode == 0x15 || opcode == 0x16 || opcode == 0x17) {
-      fillLinkFromVaddr(links, true, branchTargetVaddr);
-      fillLinkFromVaddr(links, false, fallthroughVaddr);
-      return links;
-    }
-    if(opcode == 0x01) {
-      if(rt == 0x00 || rt == 0x01 || rt == 0x02 || rt == 0x03
-      || rt == 0x10 || rt == 0x11 || rt == 0x12 || rt == 0x13) {
-        fillLinkFromVaddr(links, true, branchTargetVaddr);
-        fillLinkFromVaddr(links, false, fallthroughVaddr);
-      }
-      return links;
-    }
-    if(opcode == 0x11 && (instruction >> 21 & 31) == 0x08) {
-      if(!emitStateKey.coprocessor1Enabled()) return links;
-      fillLinkFromVaddr(links, true, branchTargetVaddr);
-      fillLinkFromVaddr(links, false, fallthroughVaddr);
-      return links;
-    }
-    return links;
-  };
-  BranchLinks links;
-  bool branchLinksValid = false;
-  auto bindSlowPaths = [&](size_t first, sljit_label* resume, u32 deferredCycles, bool jumpEpilog) -> void {
+  // Pending forward jumps to internal labels not yet resolved (parallel vectors).
+  std::vector<u64>          pendingJumpVaddrs;
+  std::vector<sljit_jump*>  pendingJumpJumps;
+
+  auto bindSlowPaths = [&](size_t first, sljit_label* resume, u32 deferredCycles, bool jumpEpilogFlag) -> void {
+    // Convert deferred slow-path placeholders into concrete resumes.
     for(auto n = first; n < slowPaths.size(); n++) {
       auto& slow = slowPaths[n];
       if(slow.icacheMiss) continue;
       slow.resume = resume;
       slow.instructionCycles = deferredCycles - slow.deferredCycles;
-      slow.jumpEpilog = jumpEpilog;
+      slow.jumpEpilog = jumpEpilogFlag;
     }
   };
-  while(true) {
-    bool firstInstruction = numInsn == 0;
-    u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
-    OpInfo info = self.decoderEXECUTEInfo(instruction);
-    emitVaddr = vaddr;
+
+  auto setLabelOrDefer = [&](sljit_jump* j, u64 targetVaddr) {
+    // Forward internal jumps are patched when their label is emitted.
+    auto* slot = findInternalLabel(targetVaddr);
+    if(slot && *slot) { sljit_set_label(j, *slot); return; }
+    pendingJumpVaddrs.push_back(targetVaddr);
+    pendingJumpJumps.push_back(j);
+  };
+
+  auto emitInternalDispatch = [&](EmitPlannedInstruction& br) {
+    // This runs right after the branch delay slot.
+    bool tInt = br.branchTakenInternal;
+    bool fInt = br.branchFallthroughInternal;
+    // No internal edge: return to dispatcher.
+    if(!tInt && !fInt) { jumpEpilog(); return; }
+    if(tInt && fInt) {
+      // Both edges internal: choose taken/fallthrough from runtime pipeline PC.
+      cmp64(PipelineReg(pc), imm(s64(br.branchTakenVaddr)), set_z);
+      auto takenJ = jump(flag_z);
+      cmp64(PipelineReg(pc), imm(s64(br.branchFallthroughVaddr)), set_z);
+      auto fallJ = jump(flag_z);
+      jumpEpilog();
+      setLabelOrDefer(takenJ, br.branchTakenVaddr);
+      setLabelOrDefer(fallJ, br.branchFallthroughVaddr);
+      return;
+    }
+    if(tInt) {
+      // Taken internal, fallthrough external.
+      cmp64(PipelineReg(pc), imm(s64(br.branchTakenVaddr)), set_z);
+      auto takenJ = jump(flag_z);
+      jumpEpilog();
+      setLabelOrDefer(takenJ, br.branchTakenVaddr);
+      return;
+    }
+    // Fallthrough internal, taken external.
+    cmp64(PipelineReg(pc), imm(s64(br.branchFallthroughVaddr)), set_z);
+    auto fJ = jump(flag_z);
+    jumpEpilog();
+    setLabelOrDefer(fJ, br.branchFallthroughVaddr);
+  };
+
+  for(auto& [targetVaddr, targetLabel] : internalLabels) {
+    (void)targetLabel;
+    // Entry dispatcher allows external lookup to jump into internal targets.
+    cmp64(mem(IpuReg(pc)), imm(s64(targetVaddr)), set_z);
+    auto entryJump = jump(flag_z);
+    setLabelOrDefer(entryJump, targetVaddr);
+  }
+
+  // Phase 4: emit the planned instruction sequence.
+  bool prevBranched = false;
+  for(size_t idx = 0; idx < plan.instructions.size(); idx++) {
+    auto& ii = plan.instructions[idx];
+    bool firstInstruction = (idx == 0);
+    bool delaySlot = prevBranched;
+    bool isInternalEntry = findInternalLabel(ii.vaddr) != nullptr;
+    bool sectionBoundary = sectionIndex(ii.address + 4) != startSection;
+    u32 instruction = ii.instruction;
+    OpInfo info = ii.info;
+    bool countCompareWrite = ii.countCompareWrite;
+
+    // Runtime PC mode is needed at block entry and in delay slots.
+    emitVaddr = ii.vaddr;
     emitPcMode = (delaySlot || firstInstruction) ? EmitPcMode::Runtime : EmitPcMode::JitTime;
     emitPipelineSetupDone = false;
     emitCallfSetupDone = false;
     emitCallfEmitted = false;
-    bool countCompareWrite = writesCountCompare(instruction);
-    bool sectionBoundary = sectionIndex(address + 4) != startSection;
-    bool terminal = delaySlot || sectionBoundary || singleInstruction;
-    terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
+
     if(callInstructionPrologue) {
+      // Optional debugger/profiler instruction hook.
       flushDeferredCycles();
-      callf(&CPU::instructionPrologue, imm64(vaddr), imm(instruction));
+      callf(&CPU::instructionPrologue, imm64(ii.vaddr), imm(instruction));
     }
-    if(firstInstruction || (vaddr&0x1f)==0){
+
+    if(isInternalEntry) {
+      // Resolve this internal entry and patch all pending forward jumps.
+      auto lbl = sljit_emit_label(compiler);
+      *findInternalLabel(ii.vaddr) = lbl;
+      for(size_t k = 0; k < pendingJumpVaddrs.size();) {
+        if(pendingJumpVaddrs[k] == ii.vaddr) {
+          sljit_set_label(pendingJumpJumps[k], lbl);
+          pendingJumpVaddrs[k] = pendingJumpVaddrs.back(); pendingJumpVaddrs.pop_back();
+          pendingJumpJumps[k]  = pendingJumpJumps.back();  pendingJumpJumps.pop_back();
+        } else {
+          k++;
+        }
+      }
+    }
+
+    if(firstInstruction || (ii.vaddr & 0x1f) == 0) {
+      // Keep icache tag/coherency checks in sync with interpreter behavior.
       flushDeferredCycles();
-      if(!self.icache.coherent(vaddr, address)) {
+      if(!self.icache.coherent(ii.vaddr, ii.address)) {
         resetCompiler();
         return nullptr;
       }
-      const u32 lineIndex = u32(vaddr >> 5) & 0x1ffu;
-      const u32 expectedTagKey = (address & ~0xfffu) | 1u;
+      const u32 lineIndex = u32(ii.vaddr >> 5) & 0x1ffu;
+      const u32 expectedTagKey = (ii.address & ~0xfffu) | 1u;
       cmp32(IcacheTagKeyMem(lineIndex), imm(expectedTagKey), set_z);
       auto icacheMiss = jump(flag_ne);
       if(system.homebrewMode) {
         add64(ProfileIcacheHitsMem, ProfileIcacheHitsMem, imm(1));
       }
-      deferSlowPathCacheMiss(icacheMiss, address);
+      deferSlowPathCacheMiss(icacheMiss, ii.address);
     }
+
     auto slowPathStart = slowPaths.size();
-    numInsn++;
+    // Branch emitters require a ready pipeline window.
     if(info.branch()) setupPipeline();
     auto emitResult = emitEXECUTE(instruction, false, emitPcMode);
     bool branched = emitResult == EmitExecuteResult::MayBranch;
-    if(branched) links = directBranchLinkAddress(vaddr, instruction);
     u32 instructionCycles = 1 * 2;
+    u32 jumpToSelf = 2 << 26 | u32(ii.vaddr >> 2 & 0x3ff'ffff);
     if(unlikely(instruction == branchToSelf || instruction == jumpToSelf)) {
       instructionCycles = 64 * 2;
     }
     emitDeferredCycles += instructionCycles;
+    // Synchronize cycles before any branch/helper boundary.
     if(delaySlot || info.branch() || emitCallfEmitted) flushDeferredCycles();
 
+    // EndBlock must be observed at entry, delay-slot completion, likely-branch flows and helpers.
     bool needEndBlockCheck = firstInstruction || delaySlot || info.likelyBranch() || emitCallfEmitted;
-    bool needPipelineCommit = needEndBlockCheck || info.branch() || terminal;
+    // Commit architectural pipeline state only where correctness requires it.
+    bool needPipelineCommit = needEndBlockCheck || info.branch() || sectionBoundary
+                            || singleInstruction || info.jitStateKeyMayChange()
+                            || countCompareWrite;
     if(needPipelineCommit) setupPipeline();
     if(needEndBlockCheck) {
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
@@ -458,35 +675,26 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       jumpEpilog(flag_nz);
     }
 
-    vaddr += 4;
-    address += 4;
-    jumpToSelf += 4;
-    bool safeDelaySlotLink = false;
-    bool delaySlotLinkEligible = terminal && delaySlot && !singleInstruction
-    && !info.jitStateKeyMayChange() && !countCompareWrite && !emitStateKeyChanged;
-    if(delaySlotLinkEligible && safeDelaySlotLink) branchLinksValid = true;
-    
     if(slowPaths.size() != slowPathStart) {
+      // New slow paths created by this opcode resume right after it.
       auto resume = sljit_emit_label(compiler);
-      bindSlowPaths(slowPathStart, resume, emitDeferredCycles, terminal ? !delaySlot : true);
+      bindSlowPaths(slowPathStart, resume, emitDeferredCycles, !delaySlot);
     }
-    if(terminal) break;
-    delaySlot = branched;
+
+    bool prevIsConditionalBranch = delaySlot && idx > 0
+      && plan.instructions[idx - 1].info.branch() && !plan.instructions[idx - 1].isUnconditional;
+    if(prevIsConditionalBranch) {
+      // Conditional branch dispatch happens after its delay slot.
+      emitInternalDispatch(plan.instructions[idx - 1]);
+    }
+    prevBranched = branched;
   }
 
+  // Phase 5: emit epilogue and deferred slow paths.
   flushDeferredCycles();
-  callf(&CPU::jitLinkedCode);
-  sljit_set_label(sljit_emit_cmp(compiler, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0), epilogue);
-  mov64(reg(3), reg(0));
-  mov64(reg(0), sreg(0));
-  mov64(reg(1), sreg(1));
-  mov64(reg(2), sreg(2));
-  sljit_s32 linkArgs = SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 1)
-                     | SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 2)
-                     | SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 3);
-  sljit_emit_icall(compiler, SLJIT_CALL | SLJIT_CALL_RETURN, linkArgs, reg(3).fst, reg(3).snd);
   jumpEpilog();
   for(auto& slow : slowPaths) {
+    // Every deferred slow path gets a dedicated entry trampoline.
     auto enter = sljit_emit_label(compiler);
     for(auto jump : slow.enters) sljit_set_label(jump, enter);
     emitVaddr = slow.vaddr;
@@ -494,6 +702,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     emitCallfSetupDone = false;
     emitCallfEmitted = false;
     if(slow.icacheMiss) {
+      // I-cache refill slow path.
       const u32 lineIndex = u32(slow.vaddr >> 5) & 0x1ffu;
       const u32 burst = (slow.icachePaddr & ~0xfffu) | ((lineIndex << 5) & 0xfe0u);
       const u32 tagKey = (slow.icachePaddr & ~0xfffu) | 1u;
@@ -511,6 +720,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       mov128(IcacheLineWordsMem(lineIndex, 0x00), mem(reg(1), sljit_sw(ramByteOff + 0x00)));
       mov128(IcacheLineWordsMem(lineIndex, 0x10), mem(reg(1), sljit_sw(ramByteOff + 0x10)));
     } else {
+      // Generic opcode slow path.
       emitPcMode = slow.runtimePc ? EmitPcMode::Runtime : EmitPcMode::JitTime;
       emitPipelineSetupDone = false;
       OpInfo info = self.decoderEXECUTEInfo(slow.instruction);
@@ -528,21 +738,15 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   }
 
   memory::jitprotect(false);
+  // Phase 6: publish block metadata.
   auto block = (Block*)allocator.acquire(sizeof(Block));
   block->code = endFunction();
   block->next = nullptr;
-  block->linkedBlockTaken = nullptr;
-  block->linkedBlockNotTaken = nullptr;
   block->stateKey = stateKey;
   block->startAddress = startAddress;
-  block->endAddress = address;
-  block->linkVaddrTaken      = branchLinksValid ? links.takenVaddr      : ~0ull;
-  block->linkVaddrNotTaken   = branchLinksValid ? links.notTakenVaddr   : ~0ull;
-  block->linkAddressTaken    = branchLinksValid ? links.takenAddress    : ~0u;
-  block->linkAddressNotTaken = branchLinksValid ? links.notTakenAddress : ~0u;
+  block->endAddress = windowEndAddress;
   block->sectionDirty = sectionDirty.data() + startSection;
 
-//print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;
 }
 #define Sa  (instruction >>  6 & 31)

@@ -153,34 +153,6 @@ auto CPU::raiseCoprocessor1Exception() -> void {
   exception.coprocessor1();
 }
 
-auto CPU::jitClockTargetExpired() -> bool {
-  return Thread::clock >= clockTarget;
-}
-
-auto CPU::jitQueueTargetExpired() -> bool {
-  return queue.timeToNextEvent() <= 0;
-}
-
-auto CPU::jitLinkedCode() -> u8* {
-  auto block = recompiler.activeBlock;
-  if(!block) return nullptr;
-  if(*block->sectionDirty) return nullptr;
-  if(jitClockTargetExpired()) return nullptr;
-  if(jitQueueTargetExpired()) return nullptr;
-  bool hasTaken = block->linkAddressTaken != ~0u;
-  bool hasNotTaken = block->linkAddressNotTaken != ~0u;
-  if(!hasTaken && !hasNotTaken) return nullptr;
-  auto linked = (Recompiler::Block*)nullptr;
-  if(hasTaken && ipu.pc == block->linkVaddrTaken) linked = block->linkedBlockTaken;
-  if(!linked && hasNotTaken && ipu.pc == block->linkVaddrNotTaken) linked = block->linkedBlockNotTaken;
-  bool missTaken = !hasTaken || ipu.pc != block->linkVaddrTaken;
-  bool missNotTaken = !hasNotTaken || ipu.pc != block->linkVaddrNotTaken;
-  if(!linked && missTaken && missNotTaken) return nullptr;
-  if(!linked) return nullptr;
-  recompiler.activeBlock = linked;
-  return linked->code;
-}
-
 auto CPU::power(bool reset) -> void {
   Thread::reset();
 
