@@ -393,16 +393,14 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
     OpInfo info = self.decoderEXECUTEInfo(instruction);
     emitVaddr = vaddr;
+    emitPcMode = (delaySlot || firstInstruction) ? EmitPcMode::Runtime : EmitPcMode::JitTime;
+    emitPipelineSetupDone = false;
     emitCallfSetupDone = false;
     emitCallfEmitted = false;
     bool countCompareWrite = writesCountCompare(instruction);
     bool sectionBoundary = sectionIndex(address + 4) != startSection;
     bool terminal = delaySlot || sectionBoundary || singleInstruction;
     terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
-    mov32(PipelineReg(nstate), imm(0));
-    mov64(reg(0), PipelineReg(nextpc));
-    mov64(PipelineReg(pc), reg(0));
-    add64(PipelineReg(nextpc), reg(0), imm(4));
     if(callInstructionPrologue) {
       flushDeferredCycles();
       callf(&CPU::instructionPrologue, imm64(vaddr), imm(instruction));
@@ -424,7 +422,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     }
     auto slowPathStart = slowPaths.size();
     numInsn++;
-    emitPcMode = (delaySlot || firstInstruction) ? EmitPcMode::Runtime : EmitPcMode::JitTime;
+    if(info.branch()) setupPipeline();
     auto emitResult = emitEXECUTE(instruction, false, emitPcMode);
     bool branched = emitResult == EmitExecuteResult::MayBranch;
     if(branched) links = directBranchLinkAddress(vaddr, instruction);
@@ -437,6 +435,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
 
     bool needEndBlockCheck = firstInstruction || delaySlot || info.likelyBranch() || emitCallfEmitted;
     bool needPipelineCommit = needEndBlockCheck || info.branch() || terminal;
+    if(needPipelineCommit) setupPipeline();
     if(needEndBlockCheck) {
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
     }
@@ -502,9 +501,13 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       mov128(IcacheLineWordsMem(lineIndex, 0x10), mem(reg(1), sljit_sw(ramByteOff + 0x10)));
     } else {
       emitPcMode = slow.runtimePc ? EmitPcMode::Runtime : EmitPcMode::JitTime;
+      emitPipelineSetupDone = false;
+      OpInfo info = self.decoderEXECUTEInfo(slow.instruction);
+      if(info.branch()) setupPipeline();
       emitEXECUTE(slow.instruction, true, emitPcMode);
       emitDeferredCycles += slow.instructionCycles;
       flushDeferredCycles();
+      if(!emitPipelineSetupDone) setupPipeline();
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
       mov32(PipelineReg(state), PipelineReg(nstate));
       mov64(mem(IpuReg(pc)), PipelineReg(pc));
@@ -613,8 +616,23 @@ auto CPU::Recompiler::flushDeferredCycles() -> void {
   emitDeferredCycles = 0;
 }
 
+auto CPU::Recompiler::setupPipeline() -> void {
+  if(emitPipelineSetupDone) return;
+  mov32(PipelineReg(nstate), imm(0));
+  if(emitPcMode == EmitPcMode::Runtime) {
+    mov64(reg(0), PipelineReg(nextpc));
+    mov64(PipelineReg(pc), reg(0));
+    add64(PipelineReg(nextpc), reg(0), imm(4));
+  } else {
+    mov64(PipelineReg(pc), imm(emitVaddr + 4));
+    mov64(PipelineReg(nextpc), imm(emitVaddr + 8));
+  }
+  emitPipelineSetupDone = true;
+}
+
 auto CPU::Recompiler::setupCallf() -> void {
   if(emitCallfSetupDone) return;
+  setupPipeline();
   flushDeferredCycles();
   mov64(mem(IpuReg(pc)), imm(emitVaddr));
   emitCallfSetupDone = true;

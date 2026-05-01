@@ -1166,6 +1166,7 @@ struct CPU : Thread {
     auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
 
     auto flushDeferredCycles() -> void;
+    auto setupPipeline() -> void;
     auto setupCallf() -> void;
     auto emitCpuStep(u32 clocks) -> void;
     auto deferSlowPath(sljit_jump* enter, u32 instruction) -> void;
@@ -1194,6 +1195,7 @@ struct CPU : Thread {
     bool enabled = false;
     bool callInstructionPrologue = false;
     bool emitSlowPathSection = false;
+    bool emitPipelineSetupDone = false;
     bool emitCallfSetupDone = false;
     bool emitCallfEmitted = false;
     bool emitSingleInstruction = false;
