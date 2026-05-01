@@ -59,8 +59,7 @@ template<u32 Size>
 inline auto Bus::write(u32 address, u64 data, Thread& thread, RBusDevice device) -> void {
   static_assert(Size == Byte || Size == Half || Size == Word || Size == Dual);
   if constexpr(Accuracy::CPU::Recompiler) {
-    cpu.recompiler.invalidate(address + 0); if constexpr(Size == Dual)
-    cpu.recompiler.invalidate(address + 4);
+    cpu.recompiler.invalidateRange(address, Size);
   }
 
   if(address <= 0x03ef'ffff) return rdram.ram.write<Size>(address, data, device);

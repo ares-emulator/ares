@@ -984,6 +984,9 @@ struct CPU : Thread {
       SectionSize  = 4_KiB,
       SectionShift = 12,
       SectionMask  = SectionSize - 1,
+      SectionLineSize = 32,
+      SectionLineShift = 5,
+      SectionLineCount = SectionSize / SectionLineSize,
       SectionWords = SectionSize / sizeof(u32),
       RdramSize    = 8_MiB,
       RdramMask    = RdramSize - 1,
@@ -1098,6 +1101,7 @@ struct CPU : Thread {
     struct Section {
       Block* blocks[SectionWords];
       Pending* pending[SectionWords];
+      u8 lineBlocks[SectionLineCount];
     };
 
     struct SlowPath {
@@ -1144,19 +1148,46 @@ struct CPU : Thread {
       return sectionOffset(address) >> 2;
     }
 
+    auto sectionLineIndex(u32 address) const -> u32 {
+      return sectionOffset(address) >> SectionLineShift;
+    }
+
     auto invalidate(u32 address) -> void {
       invalidateSection(address);
     }
 
     auto invalidateSection(u32 address) -> void {
       if(!isRdramAddress(address)) return;
-      sectionDirty[sectionIndex(address)] = 1;
+      auto index = sectionIndex(address);
+      auto section = sections[index];
+      if(!section) return;
+      if(!section->lineBlocks[sectionLineIndex(address)]) return;
+      sectionDirty[index] = 1;
     }
 
     auto invalidateRange(u32 address, u32 length) -> void {
       if(!length) return;
-      for(u32 s = 0; s < length; s += SectionSize) invalidateSection(address + s);
-      invalidateSection(address + length - 1);
+      u64 start = address;
+      u64 end = start + length - 1;
+      if(start >= RdramSize) return;
+      if(end >= RdramSize) end = RdramSize - 1;
+      u32 firstSection = u32(start >> SectionShift);
+      u32 lastSection  = u32(end >> SectionShift);
+      for(u32 sidx = firstSection; sidx <= lastSection; sidx++) {
+        if(sectionDirty[sidx]) continue;
+        auto section = sections[sidx];
+        if(!section) continue;
+        u32 firstLine = 0;
+        u32 lastLine  = SectionLineCount - 1;
+        if(sidx == firstSection) firstLine = u32((start & SectionMask) >> SectionLineShift);
+        if(sidx == lastSection)  lastLine  = u32((end   & SectionMask) >> SectionLineShift);
+        for(u32 line = firstLine; line <= lastLine; line++) {
+          if(section->lineBlocks[line]) {
+            sectionDirty[sidx] = 1;
+            break;
+          }
+        }
+      }
     }
 
     auto computeStateKey() const -> u64;
@@ -1200,6 +1231,7 @@ struct CPU : Thread {
     bool emitCallfEmitted = false;
     bool emitSingleInstruction = false;
     bool emitStateKeyChanged = false;
+    bool emitAllocatorFlushed = false;
     EmitPcMode emitPcMode = EmitPcMode::JitTime;
     StateKey emitStateKey = 0;
     u64 emitVaddr = 0;

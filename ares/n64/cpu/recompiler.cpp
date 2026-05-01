@@ -225,8 +225,17 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 
   auto block = emit(vaddr, address, stateKey, singleInstruction);
   if(block) {
+    if(emitAllocatorFlushed) {
+      section = this->section(address);
+      if(!section) return nullptr;
+    }
     block->next = section->blocks[index];
     section->blocks[index] = block;
+    u32 firstLine = sectionLineIndex(block->startAddress);
+    u32 lastLine = sectionLineIndex(block->endAddress - 1);
+    for(u32 line = firstLine; line <= lastLine; line++) {
+      section->lineBlocks[line] = 1;
+    }
     block->sectionDirty = sectionDirty.data() + sectionIndex(block->startAddress);
     bool hasTaken = block->linkAddressTaken != ~0u;
     bool hasNotTaken = block->linkAddressNotTaken != ~0u;
@@ -289,10 +298,12 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   emitStateKey = stateKey;
   emitSingleInstruction = singleInstruction;
   emitStateKeyChanged = false;
+  emitAllocatorFlushed = false;
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
     allocator.release();
     reset();
+    emitAllocatorFlushed = true;
   }
 
   // abort compilation if outside of RAM or not cache-coherent
