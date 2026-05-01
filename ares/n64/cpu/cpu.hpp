@@ -39,7 +39,7 @@ struct CPU : Thread {
   auto gdbPoll() -> void;
   auto queueInsert(u32 event, u32 clocks) -> void;
 
-  auto instruction() -> void;
+  auto instruction() -> bool;
   auto instructionPrologue(u64 address, u32 instruction) -> void;
   template<bool Recompiled> auto instructionEpilogue() -> void;
   auto raiseCoprocessor1Exception() -> void;

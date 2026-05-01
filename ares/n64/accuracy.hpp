@@ -6,6 +6,9 @@ struct Accuracy {
     static constexpr bool Interpreter = 0 | Reference | !recompiler::generic::supported;
     static constexpr bool Recompiler = !Interpreter;
 
+    //Maximum number of cycles to run the CPU without synchronization
+    static constexpr s64 JitInterleaving = 1024 * 2;
+
     //exceptions when the CPU accesses unaligned memory addresses
     static constexpr bool AddressErrors = 1 | Reference;
   };

@@ -36,8 +36,7 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   while(!vi.refreshed && GDB::server.reportPC(ipu.pc & 0xFFFFFFFF)) {
-    instruction();
-    synchronize();
+    if(instruction()) synchronize();
   }
 
   vi.refreshed = false;
@@ -65,6 +64,7 @@ auto CPU::queueInsert(u32 event, u32 clocks) -> void {
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock;
   Thread::clock = 0;
+  jitClockTarget = 0;
 
    vi.clock -= clocks;
    ai.clock -= clocks;
@@ -104,51 +104,54 @@ auto CPU::synchronize() -> void {
   if (scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
 }
 
-auto CPU::instruction() -> void {
+auto CPU::instruction() -> bool {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
       debugger.interrupt(scc.cause.interruptPending);
       step(1 * 2);
-      return exception.interrupt();
+      exception.interrupt();
+      return true;
     }
   }
   if (scc.nmiPending) {
     debugger.nmi();
     step(1 * 2);
-    return exception.nmi();
+    exception.nmi();
+    return true;
   }
   if (scc.sysadFrozen) {
     step(1 * 2);
-    return;
+    return true;
   }
 
   auto access = devirtualize<Read, Word>(ipu.pc);
-  if(!access) return;
+  if(!access) return true;
 
   if(Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
-    if(vaddrAlignedError<Word>(access.vaddr, false)) return;
+    if(vaddrAlignedError<Word>(access.vaddr, false)) return true;
     auto block = recompiler.block(ipu.pc, access.paddr);
     if(block) {
-      s64 timerDelta = (s64)scc.compare - (s64)scc.count;
-      if(timerDelta < 0) timerDelta = 0;
-      s64 capBudget = 4096 * 2;
-      if(timerDelta < capBudget) capBudget = timerDelta;
-      s64 queueDelta = queue.timeToNextEvent();
-      if(queueDelta < 0) queueDelta = 0;
-      if(queueDelta < capBudget) capBudget = queueDelta;
-      jitClockTarget = Thread::clock + capBudget;
+      if(Thread::clock >= jitClockTarget) {
+        s64 timerDelta = (s64)scc.compare - (s64)scc.count;
+        if(timerDelta < 0) timerDelta = 0;
+        s64 queueDelta = queue.timeToNextEvent();
+        if(queueDelta < 0) queueDelta = 0;
+        s64 capBudget = min<s64>(Accuracy::CPU::JitInterleaving, min(timerDelta, queueDelta));
+        jitClockTarget = Thread::clock + capBudget;
+      }
       block->execute(*this);
-      return;
+      return Thread::clock >= jitClockTarget;
     }
   }
 
   auto data = fetch(access);
-  if (!data) return;
+  if (!data) return true;
   pipeline.begin();
   instructionPrologue(ipu.pc, *data);
   decoderEXECUTE(*data);
   instructionEpilogue<0>();
   pipeline.end();
+  return true;
 }
 
 auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
