@@ -1114,6 +1114,7 @@ struct CPU : Thread {
     };
 
     enum class EmitPcMode : bool { JitTime, Runtime };
+    enum class EmitExecuteResult : u8 { Linear, MayBranch, MayFault };
 
     auto reset() -> void {
       sections.resize(SectionCount);
@@ -1182,13 +1183,13 @@ struct CPU : Thread {
     };
 
     auto jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
-      const std::function<void()>& fallback, bool emitSlowPath) -> void;
-    auto emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode pcMode) -> bool;
-    auto emitSPECIAL(u32 instruction) -> bool;
-    auto emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool;
-    auto emitSCC(u32 instruction, EmitPcMode pcMode) -> bool;
-    auto emitFPU(u32 instruction, EmitPcMode pcMode) -> bool;
-    auto emitCOP2(u32 instruction) -> bool;
+      const std::function<EmitExecuteResult()>& fallback, bool emitSlowPath) -> EmitExecuteResult;
+    auto emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode pcMode) -> EmitExecuteResult;
+    auto emitSPECIAL(u32 instruction) -> EmitExecuteResult;
+    auto emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExecuteResult;
+    auto emitSCC(u32 instruction, EmitPcMode pcMode) -> EmitExecuteResult;
+    auto emitFPU(u32 instruction, EmitPcMode pcMode) -> EmitExecuteResult;
+    auto emitCOP2(u32 instruction) -> EmitExecuteResult;
 
     bool enabled = false;
     bool callInstructionPrologue = false;

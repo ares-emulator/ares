@@ -424,7 +424,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     auto slowPathStart = slowPaths.size();
     numInsn++;
     emitPcMode = hasBranched ? EmitPcMode::Runtime : EmitPcMode::JitTime;
-    bool branched = emitEXECUTE(instruction, false, emitPcMode);
+    auto emitResult = emitEXECUTE(instruction, false, emitPcMode);
+    bool branched = emitResult == EmitExecuteResult::MayBranch;
     if(branched) links = directBranchLinkAddress(vaddr, instruction);
     u32 instructionCycles = 1 * 2;
     if(unlikely(instruction == branchToSelf || instruction == jumpToSelf)) {
@@ -643,7 +644,7 @@ auto CPU::Recompiler::deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> vo
 }
 
 auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
-  const std::function<void()>& fallback, bool emitSlowPath) -> void {
+  const std::function<EmitExecuteResult()>& fallback, bool emitSlowPath) -> EmitExecuteResult {
   bool sign      = mode & SignExtend;
   bool require64 = mode & Require64;
   bool store     = mode & Store;
@@ -665,8 +666,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
   || ((partialLeft || partialRight) && emitStateKey.reverseEndian())
   || (store && size == Dual && (partialLeft || partialRight) && system.homebrewMode)
   || (floating && !emitStateKey.coprocessor1Enabled())) {
-    fallback();
-    return;
+    return fallback();
   }
 
   // The state key lets us specialize the virtual address checks for the current address width.
@@ -959,10 +959,11 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
 
   // All failed fast-path guards share one generated slow path and return here afterwards.
   deferSlowPath({addressMismatch, addressOutOfRange, addressUnaligned, cacheMiss}, instruction);
+  return EmitExecuteResult::Linear;
 }
 
 
-auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode pcMode) -> bool {
+auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode pcMode) -> EmitExecuteResult {
   emitSlowPathSection = emitSlowPath;
   auto emitJumpTarget = [&](u32 target) -> void {
     if(pcMode == EmitPcMode::Runtime) {
@@ -1008,7 +1009,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
   case 0x02: {
     emitJumpTarget(n26);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //JAL n26
@@ -1021,7 +1022,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     }
     emitJumpTarget(n26);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BEQ Rs,Rt,i16
@@ -1034,7 +1035,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     setLabel(notTaken);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BNE Rs,Rt,i16
@@ -1047,7 +1048,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BLEZ Rs,i16
@@ -1060,7 +1061,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     setLabel(notTaken);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BGTZ Rs,i16
@@ -1073,7 +1074,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //ADDI Rt,Rs,i16
@@ -1081,7 +1082,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     if(emitSlowPath) {
       setupCallf();
       callf(&CPU::ADDI, mem(Rt), mem(Rs), imm(i16));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     add32(reg(0), mem(Rs32), imm(i16), set_o);
     auto overflow = jump(flag_o);
@@ -1090,61 +1091,61 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
       mov64(mem(Rt), reg(0));
     }
     deferSlowPath(overflow, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //ADDIU Rt,Rs,i16
   case 0x09: {
-    if(Rtn == 0) return 0;
+    if(Rtn == 0) return EmitExecuteResult::Linear;
     add32(reg(0), mem(Rs32), imm(i16));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rt), reg(0));
     if(Rtn == 29 && Rsn == 29) updateStackPointerStateKey(i16);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //SLTI Rt,Rs,i16
   case 0x0a: {
-    if(Rtn == 0) return 0;
+    if(Rtn == 0) return EmitExecuteResult::Linear;
     cmp64(mem(Rs), imm(i16), set_slt);
     mov64_f(mem(Rt), flag_slt);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //SLTIU Rt,Rs,i16
   case 0x0b: {
-    if(Rtn == 0) return 0;
+    if(Rtn == 0) return EmitExecuteResult::Linear;
     cmp64(mem(Rs), imm(i16), set_ult);
     mov64_f(mem(Rt), flag_ult);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //ANDI Rt,Rs,n16
   case 0x0c: {
-    if(Rtn == 0) return 0;
+    if(Rtn == 0) return EmitExecuteResult::Linear;
     and64(mem(Rt), mem(Rs), imm(n16));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //ORI Rt,Rs,n16
   case 0x0d: {
-    if(Rtn == 0) return 0;
+    if(Rtn == 0) return EmitExecuteResult::Linear;
     or64(mem(Rt), mem(Rs), imm(n16));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //XORI Rt,Rs,n16
   case 0x0e: {
-    if(Rtn == 0) return 0;
+    if(Rtn == 0) return EmitExecuteResult::Linear;
     xor64(mem(Rt), mem(Rs), imm(n16));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //LUI Rt,n16
   case 0x0f: {
-    if(Rtn == 0) return 0;
+    if(Rtn == 0) return EmitExecuteResult::Linear;
     mov64(mem(Rt), imm(s32(n16 << 16)));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //SCC
@@ -1166,7 +1167,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
   case 0x13: {
     setupCallf();
     callf(&CPU::COP3);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //BEQL Rs,Rt,i16
@@ -1179,7 +1180,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BNEL Rs,Rt,i16
@@ -1192,7 +1193,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     setLabel(notTaken);
     emitLikelyNotTaken();
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BLEZL Rs,i16
@@ -1205,7 +1206,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     setLabel(notTaken);
     emitLikelyNotTaken();
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BGTZL Rs,i16
@@ -1218,7 +1219,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //DADDI Rt,Rs,i16
@@ -1227,13 +1228,13 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     if(emitSlowPath || reservedInstruction) {
       setupCallf();
       callf(&CPU::DADDI, mem(Rt), mem(Rs), imm(i16));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     add64(reg(0), mem(Rs), imm(i16), set_o);
     auto overflow = jump(flag_o);
     if(Rtn != 0) mov64(mem(Rt), reg(0));
     deferSlowPath(overflow, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DADDIU Rt,Rs,i16
@@ -1242,188 +1243,188 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     if(emitSlowPath || reservedInstruction) {
       setupCallf();
       callf(&CPU::DADDIU, mem(Rt), mem(Rs), imm(i16));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     add64(reg(0), mem(Rs), imm(i16));
     if(Rtn != 0) mov64(mem(Rt), reg(0));
     if(Rtn == 29 && Rsn == 29) updateStackPointerStateKey(i16);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //LDL Rt,Rs,i16
   case 0x1a: {
-    jitMemoryOpcode(instruction, Dual, Require64 | PartialLeft, [&] {
+    return jitMemoryOpcode(instruction, Dual, Require64 | PartialLeft, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LDL, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //LDR Rt,Rs,i16
   case 0x1b: {
-    jitMemoryOpcode(instruction, Dual, Require64 | PartialRight, [&] {
+    return jitMemoryOpcode(instruction, Dual, Require64 | PartialRight, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LDR, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //INVALID
   case range4(0x1c, 0x1f): {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //LB Rt,Rs,i16
   case 0x20: {
-    jitMemoryOpcode(instruction, Byte, SignExtend, [&] {
+    return jitMemoryOpcode(instruction, Byte, SignExtend, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LB, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //LH Rt,Rs,i16
   case 0x21: {
-    jitMemoryOpcode(instruction, Half, SignExtend, [&] {
+    return jitMemoryOpcode(instruction, Half, SignExtend, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LH, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //LWL Rt,Rs,i16
   case 0x22: {
-    jitMemoryOpcode(instruction, Word, SignExtend | PartialLeft, [&] {
+    return jitMemoryOpcode(instruction, Word, SignExtend | PartialLeft, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LWL, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
   //LW Rt,Rs,i16
   case 0x23: {
-    jitMemoryOpcode(instruction, Word, SignExtend, [&] {
+    return jitMemoryOpcode(instruction, Word, SignExtend, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LW, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //LBU Rt,Rs,i16
   case 0x24: {
-    jitMemoryOpcode(instruction, Byte, 0, [&] {
+    return jitMemoryOpcode(instruction, Byte, 0, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LBU, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //LHU Rt,Rs,i16
   case 0x25: {
-    jitMemoryOpcode(instruction, Half, 0, [&] {
+    return jitMemoryOpcode(instruction, Half, 0, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LHU, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //LWR Rt,Rs,i16
   case 0x26: {
-    jitMemoryOpcode(instruction, Word, SignExtend | PartialRight, [&] {
+    return jitMemoryOpcode(instruction, Word, SignExtend | PartialRight, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LWR, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //LWU Rt,Rs,i16
   case 0x27: {
-    jitMemoryOpcode(instruction, Word, 0, [&] {
+    return jitMemoryOpcode(instruction, Word, 0, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LWU, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SB Rt,Rs,i16
   case 0x28: {
-    jitMemoryOpcode(instruction, Byte, Store, [&] {
+    return jitMemoryOpcode(instruction, Byte, Store, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SB, mem(Rt), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SH Rt,Rs,i16
   case 0x29: {
-    jitMemoryOpcode(instruction, Half, Store, [&] {
+    return jitMemoryOpcode(instruction, Half, Store, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SH, mem(Rt), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SWL Rt,Rs,i16
   case 0x2a: {
-    jitMemoryOpcode(instruction, Word, Store | PartialLeft, [&] {
+    return jitMemoryOpcode(instruction, Word, Store | PartialLeft, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SWL, mem(Rt), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SW Rt,Rs,i16
   case 0x2b: {
-    jitMemoryOpcode(instruction, Word, Store, [&] {
+    return jitMemoryOpcode(instruction, Word, Store, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SW, mem(Rt), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SDL Rt,Rs,i16
   case 0x2c: {
-    jitMemoryOpcode(instruction, Dual, Store | PartialLeft | Require64, [&] {
+    return jitMemoryOpcode(instruction, Dual, Store | PartialLeft | Require64, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SDL, mem(Rt), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SDR Rt,Rs,i16
   case 0x2d: {
-    jitMemoryOpcode(instruction, Dual, Store | PartialRight | Require64, [&] {
+    return jitMemoryOpcode(instruction, Dual, Store | PartialRight | Require64, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SDR, mem(Rt), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SWR Rt,Rs,i16
   case 0x2e: {
-    jitMemoryOpcode(instruction, Word, Store | PartialRight, [&] {
+    return jitMemoryOpcode(instruction, Word, Store | PartialRight, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SWR, mem(Rt), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //CACHE op(offset),base
   case 0x2f: {
     setupCallf();
     callf(&CPU::CACHE, imm(instruction >> 16 & 31), mem(Rs), imm(i16));
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //LL Rt,Rs,i16
@@ -1431,30 +1432,30 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     setupCallf();
     callf(&CPU::LL, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //LWC1 Ft,Rs,i16
   case 0x31: {
-    jitMemoryOpcode(instruction, Word, Floating, [&] {
+    return jitMemoryOpcode(instruction, Word, Floating, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LWC1, imm(Ftn), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //LWC2
   case 0x32: {
     setupCallf();
     callf(&CPU::COP2INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //LWC3
   case 0x33: {
     setupCallf();
     callf(&CPU::COP3);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //LLD Rt,Rs,i16
@@ -1462,33 +1463,33 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     setupCallf();
     callf(&CPU::LLD, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //LDC1 Ft,Rs,i16
   case 0x35: {
-    jitMemoryOpcode(instruction, Dual, Floating, [&] {
+    return jitMemoryOpcode(instruction, Dual, Floating, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LDC1, imm(Ftn), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //LDC2
   case 0x36: {
     setupCallf();
     callf(&CPU::COP2INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //LD Rt,Rs,i16
   case 0x37: {
-    jitMemoryOpcode(instruction, Dual, Require64, [&] {
+    return jitMemoryOpcode(instruction, Dual, Require64, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::LD, mem(Rt), mem(Rs), imm(i16));
       emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SC Rt,Rs,i16
@@ -1496,30 +1497,30 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     setupCallf();
     callf(&CPU::SC, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //SWC1 Ft,Rs,i16
   case 0x39: {
-    jitMemoryOpcode(instruction, Word, Store | Floating, [&] {
+    return jitMemoryOpcode(instruction, Word, Store | Floating, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SWC1, imm(Ftn), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SWC2
   case 0x3a: {
     setupCallf();
     callf(&CPU::COP2INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //SWC3
   case 0x3b: {
     setupCallf();
     callf(&CPU::COP3);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //SCD Rt,Rs,i16
@@ -1527,116 +1528,116 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     setupCallf();
     callf(&CPU::SCD, mem(Rt), mem(Rs), imm(i16));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //SDC1 Ft,Rs,i16
   case 0x3d: {
-    jitMemoryOpcode(instruction, Dual, Store | Floating, [&] {
+    return jitMemoryOpcode(instruction, Dual, Store | Floating, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SDC1, imm(Ftn), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   //SDC2
   case 0x3e: {
     setupCallf();
     callf(&CPU::COP2INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //SD Rt,Rs,i16
   case 0x3f: {
-    jitMemoryOpcode(instruction, Dual, Require64 | Store, [&] {
+    return jitMemoryOpcode(instruction, Dual, Require64 | Store, [&]() -> EmitExecuteResult {
       setupCallf();
       callf(&CPU::SD, mem(Rt), mem(Rs), imm(i16));
+      return EmitExecuteResult::MayFault;
     }, emitSlowPath);
-    return 0;
   }
 
   }
 
-  return 0;
+  return EmitExecuteResult::Linear;
 }
 
-auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
+auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> EmitExecuteResult {
   switch(instruction & 0x3f) {
 
   //SLL Rd,Rt,Sa
   case 0x00: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     shl32(reg(0), mem(Rt32), imm(Sa));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case 0x01: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //SRL Rd,Rt,Sa
   case 0x02: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     lshr32(reg(0), mem(Rt32), imm(Sa));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //SRA Rd,Rt,Sa
   case 0x03: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     ashr64(reg(0), mem(Rt), imm(Sa));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //SLLV Rd,Rt,Rs
   case 0x04: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     mshl32(reg(0), mem(Rt32), mem(Rs32));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case 0x05: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //SRLV Rd,Rt,RS
   case 0x06: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     mlshr32(reg(0), mem(Rt32), mem(Rs32));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //SRAV Rd,Rt,Rs
   case 0x07: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     and64(reg(1), mem(Rs), imm(31));
     ashr64(reg(0), mem(Rt), reg(1));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //JR Rs
   case 0x08: {
     mov64(PipelineReg(nextpc), mem(Rs));
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //JALR Rd,Rs
@@ -1650,67 +1651,67 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     }
     mov64(PipelineReg(nextpc), reg(1));
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //INVALID
   case range2(0x0a, 0x0b): {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //SYSCALL
   case 0x0c: {
     setupCallf();
     callf(&CPU::SYSCALL);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //BREAK
   case 0x0d: {
     setupCallf();
     callf(&CPU::BREAK);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //INVALID
   case 0x0e: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //SYNC
   case 0x0f: {
     // no operation
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //MFHI Rd
   case 0x10: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     mov64(mem(Rd), mem(Hi));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //MTHI Rs
   case 0x11: {
     mov64(mem(Hi), mem(Rs));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //MFLO Rd
   case 0x12: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     mov64(mem(Rd), mem(Lo));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //MTLO Rs
   case 0x13: {
     mov64(mem(Lo), mem(Rs));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DSLLV Rd,Rt,Rs
@@ -1719,20 +1720,20 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSLLV, mem(Rd), mem(Rt), mem(Rs));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     and64(reg(1), mem(Rs), imm(63));
     shl64(reg(0), mem(Rt), reg(1));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case 0x15: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //DSRLV Rd,Rt,Rs
@@ -1741,13 +1742,13 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSRLV, mem(Rd), mem(Rt), mem(Rs));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     and64(reg(1), mem(Rs), imm(63));
     lshr64(reg(0), mem(Rt), reg(1));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DSRAV Rd,Rt,Rs
@@ -1756,13 +1757,13 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSRAV, mem(Rd), mem(Rt), mem(Rs));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     and64(reg(1), mem(Rs), imm(63));
     ashr64(reg(0), mem(Rt), reg(1));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //MULT Rs,Rt
@@ -1776,7 +1777,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     ashr64(reg(1), reg(0), imm(32));
     mov64(mem(Hi), reg(1));
     emitDeferredCycles += (5 - 1) * 2;
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //MULTU Rs,Rt
@@ -1789,7 +1790,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     ashr64(reg(1), reg(0), imm(32));
     mov64(mem(Hi), reg(1));
     emitDeferredCycles += (5 - 1) * 2;
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DIV Rs,Rt
@@ -1798,7 +1799,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DIV, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rt), imm(0), set_z);
     auto divByZero = jump(flag_z);
@@ -1810,7 +1811,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     mov64(mem(Hi), reg(1));
     deferSlowPath(divByZero, instruction);
     emitDeferredCycles += (37 - 1) * 2;
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DIVU Rs,Rt
@@ -1819,7 +1820,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DIVU, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp32(mem(Rt32), imm(0), set_z);
     auto divByZero = jump(flag_z);
@@ -1828,7 +1829,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     mov64(mem(Hi), reg(1));
     deferSlowPath(divByZero, instruction);
     emitDeferredCycles += (37 - 1) * 2;
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DMULT Rs,Rt
@@ -1837,11 +1838,11 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DMULT, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     lmul64_sw(mem(Lo), mem(Hi), mem(Rs), mem(Rt));
     emitDeferredCycles += (8 - 1) * 2;
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DMULTU Rs,Rt
@@ -1850,11 +1851,11 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DMULTU, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     lmul64_uw(mem(Lo), mem(Hi), mem(Rs), mem(Rt));
     emitDeferredCycles += (8 - 1) * 2;
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DDIV Rs,Rt
@@ -1863,7 +1864,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DDIV, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rt), imm(0), set_z);
     auto divByZero = jump(flag_z);
@@ -1880,7 +1881,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     setLabel(afterDdiv);
     deferSlowPath(divByZero, instruction);
     emitDeferredCycles += (69 - 1) * 2;
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DDIVU Rs,Rt
@@ -1889,14 +1890,14 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DDIVU, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rt), imm(0), set_z);
     auto divByZero = jump(flag_z);
     divmod64_uw(mem(Lo), mem(Hi), mem(Rs), mem(Rt));
     deferSlowPath(divByZero, instruction);
     emitDeferredCycles += (69 - 1) * 2;
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //ADD Rd,Rs,Rt
@@ -1904,7 +1905,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::ADD, mem(Rd), mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     add32(reg(0), mem(Rs32), mem(Rt32), set_o);
     auto overflow = jump(flag_o);
@@ -1913,16 +1914,16 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
       mov64(mem(Rd), reg(0));
     }
     deferSlowPath(overflow, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //ADDU Rd,Rs,Rt
   case 0x21: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     add32(reg(0), mem(Rs32), mem(Rt32));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //SUB Rd,Rs,Rt
@@ -1930,7 +1931,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::SUB, mem(Rd), mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     sub32(reg(0), mem(Rs32), mem(Rt32), set_o);
     auto overflow = jump(flag_o);
@@ -1939,69 +1940,69 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
       mov64(mem(Rd), reg(0));
     }
     deferSlowPath(overflow, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //SUBU Rd,Rs,Rt
   case 0x23: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     sub32(reg(0), mem(Rs32), mem(Rt32));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //AND Rd,Rs,Rt
   case 0x24: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     and64(mem(Rd), mem(Rs), mem(Rt));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //OR Rd,Rs,Rt
   case 0x25: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     or64(mem(Rd), mem(Rs), mem(Rt));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //XOR Rd,Rs,Rt
   case 0x26: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     xor64(mem(Rd), mem(Rs), mem(Rt));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //NOR Rd,Rs,Rt
   case 0x27: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     or64(reg(0), mem(Rs), mem(Rt));
     xor64(reg(0), reg(0), imm(-1));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case range2(0x28, 0x29): {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //SLT Rd,Rs,Rt
   case 0x2a: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     cmp64(mem(Rs), mem(Rt), set_slt);
     mov64_f(mem(Rd), flag_slt);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //SLTU Rd,Rs,Rt
   case 0x2b: {
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     cmp64(mem(Rs), mem(Rt), set_ult);
     mov64_f(mem(Rd), flag_ult);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DADD Rd,Rs,Rt
@@ -2010,13 +2011,13 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DADD, mem(Rd), mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     add64(reg(0), mem(Rs), mem(Rt), set_o);
     auto overflow = jump(flag_o);
     if(Rdn != 0) mov64(mem(Rd), reg(0));
     deferSlowPath(overflow, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DADDU Rd,Rs,Rt
@@ -2025,12 +2026,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DADDU, mem(Rd), mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     add64(reg(0), mem(Rs), mem(Rt));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DSUB Rd,Rs,Rt
@@ -2039,13 +2040,13 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSUB, mem(Rd), mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     sub64(reg(0), mem(Rs), mem(Rt), set_o);
     auto overflow = jump(flag_o);
     if(Rdn != 0) mov64(mem(Rd), reg(0));
     deferSlowPath(overflow, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DSUBU Rd,Rs,Rt
@@ -2054,12 +2055,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSUBU, mem(Rd), mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     sub64(reg(0), mem(Rs), mem(Rt));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //TGE Rs,Rt
@@ -2067,12 +2068,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TGE, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), mem(Rt), set_slt);
     auto trap = jump(flag_sge);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //TGEU Rs,Rt
@@ -2080,12 +2081,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TGEU, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), mem(Rt), set_ult);
     auto trap = jump(flag_uge);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //TLT Rs,Rt
@@ -2093,12 +2094,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TLT, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), mem(Rt), set_slt);
     auto trap = jump(flag_slt);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //TLTU Rs,Rt
@@ -2106,12 +2107,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TLTU, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), mem(Rt), set_ult);
     auto trap = jump(flag_ult);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //TEQ Rs,Rt
@@ -2119,19 +2120,19 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TEQ, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), mem(Rt), set_z);
     auto trap = jump(flag_z);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case 0x35: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //TNE Rs,Rt
@@ -2139,19 +2140,19 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TNE, mem(Rs), mem(Rt));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), mem(Rt), set_z);
     auto trap = jump(flag_nz);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case 0x37: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
   //DSLL Rd,Rt,Sa
   case 0x38: {
@@ -2159,19 +2160,19 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     shl64(reg(0), mem(Rt), imm(Sa));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case 0x39: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //DSRL Rd,Rt,Sa
@@ -2180,12 +2181,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSRL, mem(Rd), mem(Rt), imm(Sa));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     lshr64(reg(0), mem(Rt), imm(Sa));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DSRA Rd,Rt,Sa
@@ -2194,12 +2195,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSRA, mem(Rd), mem(Rt), imm(Sa));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     ashr64(reg(0), mem(Rt), imm(Sa));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DSLL32 Rd,Rt,Sa
@@ -2208,19 +2209,19 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSLL, mem(Rd), mem(Rt), imm(Sa+32));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     shl64(reg(0), mem(Rt), imm(Sa + 32));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case 0x3d: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //DSRL32 Rd,Rt,Sa
@@ -2229,12 +2230,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSRL, mem(Rd), mem(Rt), imm(Sa+32));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     lshr64(reg(0), mem(Rt), imm(Sa + 32));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DSRA32 Rd,Rt,Sa
@@ -2243,20 +2244,20 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
     if(emitSlowPathSection || reservedInstruction) {
       setupCallf();
       callf(&CPU::DSRA, mem(Rd), mem(Rt), imm(Sa+32));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rdn == 0) return 0;
+    if(Rdn == 0) return EmitExecuteResult::Linear;
     ashr64(reg(0), mem(Rt), imm(Sa + 32));
     mov64(mem(Rd), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   }
 
-  return 0;
+  return EmitExecuteResult::Linear;
 }
 
-auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
+auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExecuteResult {
   auto emitBranchTarget = [&](s16 offset) -> void {
     if(pcMode == EmitPcMode::Runtime) {
       add64(reg(0), PipelineReg(pc), imm(s32(offset) * 4));
@@ -2297,7 +2298,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BGEZ Rs,i16
@@ -2310,7 +2311,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     setLabel(notTaken);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BLTZL Rs,i16
@@ -2323,7 +2324,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BGEZL Rs,i16
@@ -2336,14 +2337,14 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     setLabel(notTaken);
     emitLikelyNotTaken();
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //INVALID
   case range4(0x04, 0x07): {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //TGEI Rs,i16
@@ -2351,12 +2352,12 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TGEI, mem(Rs), imm(i16));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), imm(i16), set_slt);
     auto trap = jump(flag_sge);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //TGEIU Rs,i16
@@ -2364,12 +2365,12 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TGEIU, mem(Rs), imm(i16));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), imm(i16), set_ult);
     auto trap = jump(flag_uge);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //TLTI Rs,i16
@@ -2377,12 +2378,12 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TLTI, mem(Rs), imm(i16));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), imm(i16), set_slt);
     auto trap = jump(flag_slt);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //TLTIU Rs,i16
@@ -2390,12 +2391,12 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TLTIU, mem(Rs), imm(i16));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), imm(i16), set_ult);
     auto trap = jump(flag_ult);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //TEQI Rs,i16
@@ -2403,19 +2404,19 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TEQI, mem(Rs), imm(i16));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), imm(i16), set_z);
     auto trap = jump(flag_z);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case 0x0d: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //TNEI Rs,i16
@@ -2423,19 +2424,19 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::TNEI, mem(Rs), imm(i16));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     cmp64(mem(Rs), imm(i16), set_z);
     auto trap = jump(flag_nz);
     deferSlowPath(trap, instruction);
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //INVALID
   case 0x0f: {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //BLTZAL Rs,i16
@@ -2449,7 +2450,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BGEZAL Rs,i16
@@ -2463,7 +2464,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
     setLabel(done);
     emitLink31();
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BLTZALL Rs,i16
@@ -2477,7 +2478,7 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //BGEZALL Rs,i16
@@ -2491,30 +2492,30 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> bool {
     setLabel(notTaken);
     emitLikelyNotTaken();
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //INVALID
   case range12(0x14, 0x1f): {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
   }
 
-  return 0;
+  return EmitExecuteResult::Linear;
 }
 
-auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> bool {
+auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> EmitExecuteResult {
   (void)pcMode;
   switch(instruction >> 21 & 0x1f) {
 
-//MFC0 Rt,Rd
+  //MFC0 Rt,Rd
   case 0x00: {
     setupCallf();
     callf(&CPU::MFC0, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //DMFC0 Rt,Rd
@@ -2522,35 +2523,35 @@ auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> bool {
     setupCallf();
     callf(&CPU::DMFC0, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //INVALID
   case range2(0x02, 0x03): {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //MTC0 Rt,Rd
   case 0x04: {
     setupCallf();
     callf(&CPU::MTC0, mem(Rt), imm(Rdn));
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //DMTC0 Rt,Rd
   case 0x05: {
     setupCallf();
     callf(&CPU::DMTC0, mem(Rt), imm(Rdn));
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //INVALID
   case range10(0x06, 0x0f): {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   }
@@ -2561,92 +2562,92 @@ auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> bool {
   case 0x01: {
     setupCallf();
     callf(&CPU::TLBR);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //TLBWI
   case 0x02: {
     setupCallf();
     callf(&CPU::TLBWI);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //TLBWR
   case 0x06: {
     setupCallf();
     callf(&CPU::TLBWR);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //TLBP
   case 0x08: {
     setupCallf();
     callf(&CPU::TLBP);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //ERET
   case 0x18: {
     setupCallf();
     callf(&CPU::ERET);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //XDETECT
   case 0x20: {
     setupCallf();
     callf(&CPU::XDETECT, mem(XRd), imm(XCODE));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //XLOG
   case 0x25: {
     setupCallf();
     callf(&CPU::XLOG, mem(XRd), mem(XRt), imm(XCODE));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //XHEXDUMP
   case 0x27: {
     setupCallf();
     callf(&CPU::XHEXDUMP, mem(XRd), mem(XRt));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //XPROF
   case 0x28: {
     setupCallf();
     callf(&CPU::XPROF, mem(XRd), imm(XCODE));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //XPROFREAD
   case 0x29: {
     setupCallf();
     callf(&CPU::XPROFREAD, mem(XRd), mem(XRt));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //XEXCEPTION
   case 0x2a: {
     setupCallf();
     callf(&CPU::XEXCEPTION, mem(XRt));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //XIOCTL
   case 0x2c: {
     setupCallf();
     callf(&CPU::XIOCTL, imm(XCODE));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   }
 
-  return 0;
+  return EmitExecuteResult::Linear;
 }
 
-auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
+auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> EmitExecuteResult {
   auto movzeron = [&](s32 offset, u32 size) -> void {
     if constexpr(sizeof(void*) == 8) {
       while(size >= 8) {
@@ -2806,14 +2807,12 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     u32 inputChecks,                    // Bitmask of checks to perform on input operand(s)
     u32 passthroughMask,                // Bitmask of host FPU flags that can be safely masked to VR4300 FPU flags
     auto&& emitHostOpcode               // Function pointer to emit the host FPU opcode
-  ) -> void {
+  ) -> EmitExecuteResult {
 #if !defined(ARCHITECTURE_ARM64) && !defined(ARCHITECTURE_AMD64)
-    callSlowPath();
-    return;
+    return callSlowPath();
 #endif
     if(emitSlowPathSection || !emitStateKey.coprocessor1Enabled()) {
-      callSlowPath();
-      return;
+      return callSlowPath();
     }
 
     u32 inputCount = (u32)inputs.size();
@@ -3023,6 +3022,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
 
     // Account for the cycles taken by the slow path.
     emitDeferredCycles += cycles;
+    return EmitExecuteResult::Linear;
   };
 
   auto emitFpuFixedRmToIntF32S32 = [&](u32 fixedRm) -> void {
@@ -3074,14 +3074,12 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     u32 destinationType,
     u32 cycles,
     auto&& emitHostOpcode
-  ) -> void {
+  ) -> EmitExecuteResult {
 #if !defined(ARCHITECTURE_ARM64) && !defined(ARCHITECTURE_AMD64)
-    callSlowPath();
-    return;
+    return callSlowPath();
 #endif
     if(emitSlowPathSection || !emitStateKey.coprocessor1Enabled()) {
-      callSlowPath();
-      return;
+      return callSlowPath();
     }
 
     // Conversion opcodes are fp<->integer or fp<->fp or int<->int. Create a few booleans to make
@@ -3295,6 +3293,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
       weird
     }, instruction);
     emitDeferredCycles += cycles;
+    return EmitExecuteResult::Linear;
   };
 
   auto emitFpuCompareOpcode = [&](
@@ -3307,14 +3306,12 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     u32 nanResult,
     u32 nanInvalidPolicy,
     u32 compareKind
-  ) -> void {
+  ) -> EmitExecuteResult {
 #if !defined(ARCHITECTURE_ARM64) && !defined(ARCHITECTURE_AMD64)
-    callSlowPath();
-    return;
+    return callSlowPath();
 #endif
     if(emitSlowPathSection || !emitStateKey.coprocessor1Enabled()) {
-      callSlowPath();
-      return;
+      return callSlowPath();
     }
 
     assert(width == FpuWidth32 || width == FpuWidth64);
@@ -3465,6 +3462,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     setLabel(done);
     deferSlowPath({ qnanFs, qnanFt, nanFs, nanFt }, instruction);
     emitDeferredCycles += cycles;
+    return EmitExecuteResult::Linear;
   };
 #endif
 
@@ -3475,9 +3473,9 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     if(!emitStateKey.coprocessor1Enabled()) {
       setupCallf();
       callf(&CPU::MFC1, mem(Rt), imm(Fsn));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rtn == 0) return 0;
+    if(Rtn == 0) return EmitExecuteResult::Linear;
     s32 fsn = instruction >> 11 & 31;
     s32 fpuWordOff;
     if(emitStateKey.floatingPointMode()) {
@@ -3492,7 +3490,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     }
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rt), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DMFC1 Rt,Fs
@@ -3500,16 +3498,16 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     if(!emitStateKey.coprocessor1Enabled()) {
       setupCallf();
       callf(&CPU::DMFC1, mem(Rt), imm(Fsn));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
-    if(Rtn == 0) return 0;
+    if(Rtn == 0) return EmitExecuteResult::Linear;
     s32 fsn = instruction >> 11 & 31;
     s32 fpu64Off;
     if(emitStateKey.floatingPointMode()) fpu64Off = (fsn - 16) * 8;
     else fpu64Off = ((fsn & ~1) - 16) * 8;
     mov64(reg(0), mem(sreg(2), fpu64Off));
     mov64(mem(Rt), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //CFC1 Rt,Rd
@@ -3517,14 +3515,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     setupCallf();
     callf(&CPU::CFC1, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //DCFC1 Rt,Rd
   case 0x03: {
     setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //MTC1 Rt,Fs
@@ -3532,7 +3530,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     if(!emitStateKey.coprocessor1Enabled()) {
       setupCallf();
       callf(&CPU::MTC1, mem(Rt), imm(Fsn));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     mov32(reg(0), mem(Rt32));
     s32 fsn = instruction >> 11 & 31;
@@ -3547,7 +3545,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
       else fpuWordOff += FpuR64S32Off;
       mov32(mem(sreg(2), fpuWordOff), reg(0));
     }
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //DMTC1 Rt,Fs
@@ -3555,7 +3553,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     if(!emitStateKey.coprocessor1Enabled()) {
       setupCallf();
       callf(&CPU::DMTC1, mem(Rt), imm(Fsn));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     s32 fsn = instruction >> 11 & 31;
     s32 fpu64Off;
@@ -3563,21 +3561,21 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     else fpu64Off = ((fsn & ~1) - 16) * 8;
     mov64(reg(0), mem(Rt));
     mov64(mem(sreg(2), fpu64Off), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //CTC1 Rt,Rd
   case 0x06: {
     setupCallf();
     callf(&CPU::CTC1, mem(Rt), imm(Rdn));
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //DCTC1 Rt,Rd
   case 0x07: {
     setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //BC1 offset
@@ -3606,7 +3604,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     if(!emitStateKey.coprocessor1Enabled()) {
       setupCallf();
       callf(&CPU::BC1, imm(value), imm(likely), imm(i16));
-      return 1;
+      return EmitExecuteResult::MayFault;
     }
     movzeron(FpuCsrCauseOffset, sizeof(CPU::FPU::ControlStatus::Cause));
     mov32(reg(0), FpuCsrCompare);
@@ -3623,14 +3621,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     emitBranchTarget(i16);
     mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     setLabel(done);
-    return 1;
+    return EmitExecuteResult::MayBranch;
   }
 
   //INVALID
   case range7(0x09, 0x0f): {
     setupCallf();
     callf(&CPU::INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   }
@@ -3640,10 +3638,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
 
   //FADD.S Fd,Fs,Ft
   case 0x00: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FADD_S, imm(Fdn), imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn, Ftn}, FpuWidth32, (5 - 1) * 2,
       FpuCheckQnan,
@@ -3652,15 +3651,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fadd32(freg(0), freg(0), freg(1));
       }
     );
-    return 0;
   }
 
   //FSUB.S Fd,Fs,Ft
   case 0x01: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FSUB_S, imm(Fdn), imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn, Ftn}, FpuWidth32, (5 - 1) * 2,
       FpuCheckQnan,
@@ -3669,15 +3668,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fsub32(freg(0), freg(0), freg(1));
       }
     );
-    return 0;
   }
 
   //FMUL.S Fd,Fs,Ft
   case 0x02: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FMUL_S, imm(Fdn), imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn, Ftn}, FpuWidth32, (5 - 1) * 2,
       FpuCheckQnan,
@@ -3686,15 +3685,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fmul32(freg(0), freg(0), freg(1));
       }
     );
-    return 0;
   }
 
   //FDIV.S Fd,Fs,Ft
   case 0x03: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FDIV_S, imm(Fdn), imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn, Ftn}, FpuWidth32, (29 - 1) * 2,
       FpuCheckQnan,
@@ -3703,15 +3702,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fdiv32(freg(0), freg(0), freg(1));
       }
     );
-    return 0;
   }
 
   //FSQRT.S Fd,Fs
   case 0x04: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FSQRT_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn}, FpuWidth32, (29 - 1) * 2, FpuCheckQnan,
       fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
@@ -3719,15 +3718,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fsqrt32_f0();
       }
     );
-    return 0;
   }
 
   //FABS.S Fd,Fs
   case 0x05: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FABS_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn}, FpuWidth32, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
@@ -3735,7 +3734,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fabs32(freg(0), freg(0));
       }
     );
-    return 0;
   }
 
   //FMOV.S Fd,Fs
@@ -3743,22 +3741,23 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     if(!emitStateKey.coprocessor1Enabled()) {
       setupCallf();
       callf(&CPU::FMOV_S, imm(Fdn), imm(Fsn));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     s32 fsn = Fsn, fdn = Fdn;
     s32 fsWordOff = emitStateKey.floatingPointMode() ? (fsn - 16) * 8 : ((fsn & ~1) - 16) * 8;
     s32 fdWordOff = (fdn - 16) * 8;
     mov64(reg(0), mem(sreg(2), fsWordOff));
     mov64(mem(sreg(2), fdWordOff), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //FNEG.S Fd,Fs
   case 0x07: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FNEG_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn}, FpuWidth32, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
@@ -3766,157 +3765,157 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fneg32(freg(0), freg(0));
       }
     );
-    return 0;
   }
 
   //FROUND.L.S Fd,Fs
   case 0x08: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FROUND_L_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF32S64(0u);
       }
     );
-    return 0;
   }
 
   //FTRUNC.L.S Fd,Fs
   case 0x09: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FTRUNC_L_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF32S64(1u);
       }
     );
-    return 0;
   }
 
   //FCEIL.L.S Fd,Fs
   case 0x0a: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCEIL_L_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF32S64(2u);
       }
     );
-    return 0;
   }
 
   //FFLOOR.L.S Fd,Fs
   case 0x0b: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FFLOOR_L_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::Linear;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF32S64(3u);
       }
     );
-    return 0;
   }
 
   //FROUND.W.S Fd,Fs
   case 0x0c: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FROUND_W_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF32S32(0u);
       }
     );
-    return 0;
   }
 
   //FTRUNC.W.S Fd,Fs
   case 0x0d: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FTRUNC_W_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF32S32(1u);
       }
     );
-    return 0;
   }
 
   //FCEIL.W.S Fd,Fs
   case 0x0e: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCEIL_W_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF32S32(2u);
       }
     );
-    return 0;
   }
 
   //FFLOOR.W.S Fd,Fs
   case 0x0f: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FFLOOR_W_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF32S32(3u);
       }
     );
-    return 0;
   }
 
   //FCVT.S.S Fd,Fs
   case 0x20: {
     setupCallf();
     callf(&CPU::FCVT_S_S, imm(Fdn), imm(Fsn));
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //FCVT.D.S Fd,Fs
   case 0x21: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_D_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertF64, 0,
       [&]() -> void {
         conv_f64_from_f32(freg(0), freg(0));
       }
     );
-    return 0;
   }
 
   //FCVT.W.S Fd,Fs
   case 0x24: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_W_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
@@ -3927,15 +3926,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
 #endif
       }
     );
-    return 0;
   }
 
   //FCVT.L.S Fd,Fs
   case 0x25: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_L_S, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF32, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
@@ -3946,215 +3945,214 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
 #endif
       }
     );
-    return 0;
   }
 
   //FC.F.S Fs,Ft
   case 0x30: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_F_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareUnordered, FpuCompareFalse
     );
-    return 0;
   }
 
   //FC.UN.S Fs,Ft
   case 0x31: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_UN_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareUnordered, FpuCompareFalse
     );
-    return 0;
   }
 
   //FC.EQ.S Fs,Ft
   case 0x32: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_EQ_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareUnordered, FpuCompareEq
     );
-    return 0;
   }
 
   //FC.UEQ.S Fs,Ft
   case 0x33: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_UEQ_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareUnordered, FpuCompareEq
     );
-    return 0;
   }
 
   //FC.OLT.S Fs,Ft
   case 0x34: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_OLT_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareUnordered, FpuCompareLt
     );
-    return 0;
   }
 
   //FC.ULT.S Fs,Ft
   case 0x35: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_ULT_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareUnordered, FpuCompareLt
     );
-    return 0;
   }
 
   //FC.OLE.S Fs,Ft
   case 0x36: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_OLE_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareUnordered, FpuCompareLe
     );
-    return 0;
   }
 
   //FC.ULE.S Fs,Ft
   case 0x37: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_ULE_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareUnordered, FpuCompareLe
     );
-    return 0;
   }
 
   //FC.SF.S Fs,Ft
   case 0x38: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_SF_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareOrdered, FpuCompareFalse
     );
-    return 0;
   }
 
   //FC.NGLE.S Fs,Ft
   case 0x39: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_NGLE_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareOrdered, FpuCompareFalse
     );
-    return 0;
   }
 
   //FC.SEQ.S Fs,Ft
   case 0x3a: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_SEQ_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareOrdered, FpuCompareEq
     );
-    return 0;
   }
 
   //FC.NGL.S Fs,Ft
   case 0x3b: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_NGL_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareOrdered, FpuCompareEq
     );
-    return 0;
   }
 
   //FC.LT.S Fs,Ft
   case 0x3c: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_LT_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::Linear;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareOrdered, FpuCompareLt
     );
-    return 0;
   }
 
   //FC.NGE.S Fs,Ft
   case 0x3d: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_NGE_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareOrdered, FpuCompareLt
     );
-    return 0;
   }
 
   //FC.LE.S Fs,Ft
   case 0x3e: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_LE_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareOrdered, FpuCompareLe
     );
-    return 0;
   }
 
   //FC.NGT.S Fs,Ft
   case 0x3f: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_NGT_S, imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::Linear;
       },
       Fsn, Ftn, FpuWidth32, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareOrdered, FpuCompareLe
     );
-    return 0;
   }
   }
 
@@ -4163,10 +4161,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
 
 //FADD.D Fd,Fs,Ft
   case 0x00: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FADD_D, imm(Fdn), imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn, Ftn}, FpuWidth64, (3 - 1) * 2,
       FpuCheckQnan,
@@ -4175,15 +4174,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fadd64(freg(0), freg(0), freg(1));
       }
     );
-    return 0;
   }
 
   //FSUB.D Fd,Fs,Ft
   case 0x01: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FSUB_D, imm(Fdn), imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn, Ftn}, FpuWidth64, (3 - 1) * 2,
       FpuCheckQnan,
@@ -4192,15 +4191,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fsub64(freg(0), freg(0), freg(1));
       }
     );
-    return 0;
   }
 
   //FMUL.D Fd,Fs,Ft
   case 0x02: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FMUL_D, imm(Fdn), imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn, Ftn}, FpuWidth64, (8 - 1) * 2,
       FpuCheckQnan,
@@ -4209,15 +4208,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fmul64(freg(0), freg(0), freg(1));
       }
     );
-    return 0;
   }
 
   //FDIV.D Fd,Fs,Ft
   case 0x03: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FDIV_D, imm(Fdn), imm(Fsn), imm(Ftn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn, Ftn}, FpuWidth64, (58 - 1) * 2,
       FpuCheckQnan,
@@ -4226,15 +4225,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fdiv64(freg(0), freg(0), freg(1));
       }
     );
-    return 0;
   }
 
   //FSQRT.D Fd,Fs
   case 0x04: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FSQRT_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn}, FpuWidth64, (58 - 1) * 2, FpuCheckQnan,
       fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
@@ -4242,15 +4241,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fsqrt64_f0();
       }
     );
-    return 0;
   }
 
   //FABS.D Fd,Fs
   case 0x05: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FABS_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn}, FpuWidth64, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
@@ -4258,7 +4257,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fabs64(freg(0), freg(0));
       }
     );
-    return 0;
   }
 
   //FMOV.D Fd,Fs
@@ -4266,22 +4264,23 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
     if(!emitStateKey.coprocessor1Enabled()) {
       setupCallf();
       callf(&CPU::FMOV_D, imm(Fdn), imm(Fsn));
-      return 0;
+      return EmitExecuteResult::MayFault;
     }
     s32 fsn = Fsn, fdn = Fdn;
     s32 fsWordOff = emitStateKey.floatingPointMode() ? (fsn - 16) * 8 : ((fsn & ~1) - 16) * 8;
     s32 fdWordOff = (fdn - 16) * 8;
     mov64(reg(0), mem(sreg(2), fsWordOff));
     mov64(mem(sreg(2), fdWordOff), reg(0));
-    return 0;
+    return EmitExecuteResult::Linear;
   }
 
   //FNEG.D Fd,Fs
   case 0x07: {
-    emitFpuOpcode(
-      [&]() -> void {
+    return emitFpuOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FNEG_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, {Fsn}, FpuWidth64, 0, FpuCheckQnan | FpuCheckSnan | FpuCheckSubnormal,
       fpuInvalidMask | fpuDiv0Mask | fpuOverflowMask | fpuUnderflowMask | fpuInexactMask,
@@ -4289,157 +4288,157 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
         fneg64(freg(0), freg(0));
       }
     );
-    return 0;
   }
 
   //FROUND.L.D Fd,Fs
   case 0x08: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FROUND_L_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF64S64(0u);
       }
     );
-    return 0;
   }
 
   //FTRUNC.L.D Fd,Fs
   case 0x09: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FTRUNC_L_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF64S64(1u);
       }
     );
-    return 0;
   }
 
   //FCEIL.L.D Fd,Fs
   case 0x0a: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCEIL_L_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF64S64(2u);
       }
     );
-    return 0;
   }
 
   //FFLOOR.L.D Fd,Fs
   case 0x0b: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FFLOOR_L_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF64S64(3u);
       }
     );
-    return 0;
   }
 
   //FROUND.W.D Fd,Fs
   case 0x0c: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FROUND_W_D, imm(Fdn), imm(Fsn));
+      return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF64S32(0u);
       }
     );
-    return 0;
   }
 
   //FTRUNC.W.D Fd,Fs
   case 0x0d: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FTRUNC_W_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF64S32(1u);
       }
     );
-    return 0;
   }
 
   //FCEIL.W.D Fd,Fs
   case 0x0e: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCEIL_W_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF64S32(2u);
       }
     );
-    return 0;
   }
 
   //FFLOOR.W.D Fd,Fs
   case 0x0f: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FFLOOR_W_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
         emitFpuFixedRmToIntF64S32(3u);
       }
     );
-    return 0;
   }
 
   //FCVT.S.D Fd,Fs
   case 0x20: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_S_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertF32, (2 - 1) * 2,
       [&]() -> void {
         conv_f32_from_f64(freg(0), freg(0));
       }
     );
-    return 0;
   }
 
   //FCVT.D.D Fd,Fs
   case 0x21: {
     setupCallf();
     callf(&CPU::FCVT_D_D, imm(Fdn), imm(Fsn));
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //FCVT.W.D Fd,Fs
   case 0x24: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_W_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS32, (5 - 1) * 2,
       [&]() -> void {
@@ -4450,15 +4449,15 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
 #endif
       }
     );
-    return 0;
   }
 
   //FCVT.L.D Fd,Fs
   case 0x25: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_L_D, imm(Fdn), imm(Fsn));
+        return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertF64, FpuConvertS64, (5 - 1) * 2,
       [&]() -> void {
@@ -4469,215 +4468,214 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
 #endif
       }
     );
-    return 0;
   }
 
   //FC.F.D Fs,Ft
   case 0x30: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_F_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareUnordered, FpuCompareFalse
     );
-    return 0;
   }
 
   //FC.UN.D Fs,Ft
   case 0x31: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_UN_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareUnordered, FpuCompareFalse
     );
-    return 0;
   }
 
   //FC.EQ.D Fs,Ft
   case 0x32: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_EQ_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareUnordered, FpuCompareEq
     );
-    return 0;
   }
 
   //FC.UEQ.D Fs,Ft
   case 0x33: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_UEQ_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareUnordered, FpuCompareEq
     );
-    return 0;
   }
 
   //FC.OLT.D Fs,Ft
   case 0x34: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_OLT_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareUnordered, FpuCompareLt
     );
-    return 0;
   }
 
   //FC.ULT.D Fs,Ft
   case 0x35: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_ULT_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareUnordered, FpuCompareLt
     );
-    return 0;
   }
 
   //FC.OLE.D Fs,Ft
   case 0x36: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_OLE_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareUnordered, FpuCompareLe
     );
-    return 0;
   }
 
   //FC.ULE.D Fs,Ft
   case 0x37: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_ULE_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareUnordered, FpuCompareLe
     );
-    return 0;
   }
 
   //FC.SF.D Fs,Ft
   case 0x38: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_SF_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareOrdered, FpuCompareFalse
     );
-    return 0;
   }
 
   //FC.NGLE.D Fs,Ft
   case 0x39: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_NGLE_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareOrdered, FpuCompareFalse
     );
-    return 0;
   }
 
   //FC.SEQ.D Fs,Ft
   case 0x3a: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_SEQ_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareOrdered, FpuCompareEq
     );
-    return 0;
   }
 
   //FC.NGL.D Fs,Ft
   case 0x3b: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_NGL_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareOrdered, FpuCompareEq
     );
-    return 0;
   }
 
   //FC.LT.D Fs,Ft
   case 0x3c: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_LT_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareOrdered, FpuCompareLt
     );
-    return 0;
   }
 
   //FC.NGE.D Fs,Ft
   case 0x3d: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_NGE_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareOrdered, FpuCompareLt
     );
-    return 0;
   }
 
   //FC.LE.D Fs,Ft
   case 0x3e: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_LE_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 0,
       FpuCompareOrdered, FpuCompareLe
     );
-    return 0;
   }
 
   //FC.NGT.D Fs,Ft
   case 0x3f: {
-    emitFpuCompareOpcode(
-      [&]() -> void {
+    return emitFpuCompareOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FC_NGT_D, imm(Fsn), imm(Ftn));
+      return EmitExecuteResult::MayFault;
       },
       Fsn, Ftn, FpuWidth64, (3 - 1) * 2, FpuCheckQnan | FpuCheckSnan, 1,
       FpuCompareOrdered, FpuCompareLe
     );
-    return 0;
   }
 
   }
@@ -4687,43 +4685,43 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
   case range8(0x08, 0x0f): {
     setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   case range2(0x24, 0x25): {
     setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //FCVT.S.W Fd,Fs
   case 0x20: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_S_W, imm(Fdn), imm(Fsn));
+      return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertS32, FpuConvertF32, (5 - 1) * 2,
       [&]() -> void {
         conv_f32_from_s32(freg(0), reg(0));
       }
     );
-    return 0;
   }
 
   //FCVT.D.W Fd,Fs
   case 0x21: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_D_W, imm(Fdn), imm(Fsn));
+      return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertS32, FpuConvertF64, (5 - 1) * 2,
       [&]() -> void {
         conv_f64_from_s32(freg(0), reg(0));
       }
     );
-    return 0;
   }
 
   }
@@ -4733,50 +4731,50 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> bool {
   case range8(0x08, 0x0f): {
     setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
   case range2(0x24, 0x25): {
     setupCallf();
     callf(&CPU::COP1UNIMPLEMENTED);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //FCVT.S.L
   case 0x20: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_S_L, imm(Fdn), imm(Fsn));
+      return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertS64, FpuConvertF32, (5 - 1) * 2,
       [&]() -> void {
         conv_f32_from_sw(freg(0), reg(0));
       }
     );
-    return 0;
   }
 
   //FCVT.D.L
   case 0x21: {
-    emitFpuConvertOpcode(
-      [&]() -> void {
+    return emitFpuConvertOpcode(
+      [&]() -> EmitExecuteResult {
         setupCallf();
         callf(&CPU::FCVT_D_L, imm(Fdn), imm(Fsn));
+      return EmitExecuteResult::MayFault;
       },
       Fdn, Fsn, FpuConvertS64, FpuConvertF64, (5 - 1) * 2,
       [&]() -> void {
         conv_f64_from_sw(freg(0), reg(0));
       }
     );
-    return 0;
   }
 
   }
 
-  return 0;
+  return EmitExecuteResult::Linear;
 }
 
-auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
+auto CPU::Recompiler::emitCOP2(u32 instruction) -> EmitExecuteResult {
   switch(instruction >> 21 & 0x1f) {
 
   //MFC2 Rt,Rd
@@ -4784,7 +4782,7 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
     setupCallf();
     callf(&CPU::MFC2, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //DMFC2 Rt,Rd
@@ -4792,7 +4790,7 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
     setupCallf();
     callf(&CPU::DMFC2, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //CFC2 Rt,Rd
@@ -4800,46 +4798,46 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
     setupCallf();
     callf(&CPU::CFC2, mem(Rt), imm(Rdn));
     emitZeroClear(Rtn);
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //INVALID
   case 0x03: {
     setupCallf();
     callf(&CPU::COP2INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   //MTC0 Rt,Rd
   case 0x04: {
     setupCallf();
     callf(&CPU::MTC2, mem(Rt), imm(Rdn));
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //DMTC2 Rt,Rd
   case 0x05: {
     setupCallf();
     callf(&CPU::DMTC2, mem(Rt), imm(Rdn));
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //CTC2 Rt,Rd
   case 0x06: {
     setupCallf();
     callf(&CPU::CTC2, mem(Rt), imm(Rdn));
-    return 0;
+    return EmitExecuteResult::MayFault;
   }
 
   //INVALID
   case range9(0x07, 0x0f): {
     setupCallf();
     callf(&CPU::COP2INVALID);
-    return 1;
+    return EmitExecuteResult::MayFault;
   }
 
   }
-  return 0;
+  return EmitExecuteResult::Linear;
 }
 
 #undef callf
