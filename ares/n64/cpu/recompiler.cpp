@@ -196,8 +196,9 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 
   auto index = blockIndex(address);
   auto stateKey = computeStateKey();
+  auto vaddrPage = vaddr & ~0xfffull;
   for(auto block = section->blocks[index]; block; block = block->next) {
-    if(block->stateKey == stateKey) {
+    if(block->stateKey == stateKey && block->vaddrPage == vaddrPage) {
       return block;
     }
   }
@@ -221,6 +222,7 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
       auto aliasIndex = blockIndex(aliasAddress);
       for(auto alias = section->blocks[aliasIndex]; alias; alias = alias->next) {
         if(alias->stateKey != block->stateKey) continue;
+        if(alias->vaddrPage != block->vaddrPage) continue;
         if(alias->startAddress != aliasAddress) continue;
         return alias;
       }
@@ -228,6 +230,7 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
       alias->code = block->code;
       alias->next = section->blocks[aliasIndex];
       alias->stateKey = block->stateKey;
+      alias->vaddrPage = block->vaddrPage;
       alias->startAddress = aliasAddress;
       alias->endAddress = block->endAddress;
       alias->sectionDirty = block->sectionDirty;
@@ -719,6 +722,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   block->code = endFunction();
   block->next = nullptr;
   block->stateKey = stateKey;
+  block->vaddrPage = plan.startVaddr & ~0xfffull;
   block->startAddress = startAddress;
   block->endAddress = windowEndAddress;
   block->sectionDirty = sectionDirty.data() + startSection;

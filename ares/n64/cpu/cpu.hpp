@@ -1061,6 +1061,7 @@ struct CPU : Thread {
       u8* code = nullptr;
       Block* next = nullptr;
       u64 stateKey = 0;
+      u64 vaddrPage = 0;
       u32 startAddress = 0;
       u32 endAddress = 0;
       u8* sectionDirty = nullptr;
