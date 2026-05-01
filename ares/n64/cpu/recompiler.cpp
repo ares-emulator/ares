@@ -314,7 +314,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   Thread thread;
   u32 startAddress = address;
   u32 startSection = sectionIndex(address);
-  bool hasBranched = 0;
+  bool delaySlot = false;
   int numInsn = 0;
   constexpr u32 branchToSelf = 0x1000'ffff;  //beq 0,0,<pc>
   u32 jumpToSelf = 2 << 26 | vaddr >> 2 & 0x3ff'ffff;  //j <pc>
@@ -389,6 +389,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     }
   };
   while(true) {
+    bool firstInstruction = numInsn == 0;
     u32 instruction = bus.read<Word>(address, thread, RBusDevice::ARES_JIT);
     OpInfo info = self.decoderEXECUTEInfo(instruction);
     emitVaddr = vaddr;
@@ -396,7 +397,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     emitCallfEmitted = false;
     bool countCompareWrite = writesCountCompare(instruction);
     bool sectionBoundary = sectionIndex(address + 4) != startSection;
-    bool terminal = hasBranched || sectionBoundary || singleInstruction;
+    bool terminal = delaySlot || sectionBoundary || singleInstruction;
     terminal = terminal || info.jitStateKeyMayChange() || countCompareWrite;
     mov32(PipelineReg(nstate), imm(0));
     mov64(reg(0), PipelineReg(nextpc));
@@ -406,7 +407,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       flushDeferredCycles();
       callf(&CPU::instructionPrologue, imm64(vaddr), imm(instruction));
     }
-    if(numInsn == 0 || (vaddr&0x1f)==0){
+    if(firstInstruction || (vaddr&0x1f)==0){
       flushDeferredCycles();
       if(!self.icache.coherent(vaddr, address)) {
         resetCompiler();
@@ -423,7 +424,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     }
     auto slowPathStart = slowPaths.size();
     numInsn++;
-    emitPcMode = hasBranched ? EmitPcMode::Runtime : EmitPcMode::JitTime;
+    emitPcMode = (delaySlot || firstInstruction) ? EmitPcMode::Runtime : EmitPcMode::JitTime;
     auto emitResult = emitEXECUTE(instruction, false, emitPcMode);
     bool branched = emitResult == EmitExecuteResult::MayBranch;
     if(branched) links = directBranchLinkAddress(vaddr, instruction);
@@ -432,32 +433,35 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       instructionCycles = 64 * 2;
     }
     emitDeferredCycles += instructionCycles;
-    if(hasBranched || info.branch() || emitCallfEmitted) flushDeferredCycles();
-    test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
-    mov32(PipelineReg(state), PipelineReg(nstate));
-    mov64(mem(IpuReg(pc)), PipelineReg(pc));
+    if(delaySlot || info.branch() || emitCallfEmitted) flushDeferredCycles();
+
+    bool needEndBlockCheck = firstInstruction || delaySlot || info.likelyBranch() || emitCallfEmitted;
+    bool needPipelineCommit = needEndBlockCheck || info.branch() || terminal;
+    if(needEndBlockCheck) {
+      test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
+    }
+    if(needPipelineCommit) {
+      mov64(mem(IpuReg(pc)), PipelineReg(pc));
+      mov32(PipelineReg(state), PipelineReg(nstate));
+    }
+    if(needEndBlockCheck) {
+      jumpEpilog(flag_nz);
+    }
 
     vaddr += 4;
     address += 4;
     jumpToSelf += 4;
     bool safeDelaySlotLink = false;
-    bool delaySlotLinkEligible = terminal && hasBranched && !singleInstruction
+    bool delaySlotLinkEligible = terminal && delaySlot && !singleInstruction
     && !info.jitStateKeyMayChange() && !countCompareWrite && !emitStateKeyChanged;
     if(delaySlotLinkEligible && safeDelaySlotLink) branchLinksValid = true;
-    if(terminal) {
-      if(!hasBranched) jumpEpilog(flag_nz);
-      if(slowPaths.size() != slowPathStart) {
-        auto resume = sljit_emit_label(compiler);
-        bindSlowPaths(slowPathStart, resume, emitDeferredCycles, !hasBranched);
-      }
-      break;
-    }
-    hasBranched = branched;
-    jumpEpilog(flag_nz);
+    
     if(slowPaths.size() != slowPathStart) {
       auto resume = sljit_emit_label(compiler);
-      bindSlowPaths(slowPathStart, resume, emitDeferredCycles, true);
+      bindSlowPaths(slowPathStart, resume, emitDeferredCycles, terminal ? !delaySlot : true);
     }
+    if(terminal) break;
+    delaySlot = branched;
   }
 
   flushDeferredCycles();
@@ -504,7 +508,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
       test32(PipelineReg(state), imm(Pipeline::EndBlock), set_z);
       mov32(PipelineReg(state), PipelineReg(nstate));
       mov64(mem(IpuReg(pc)), PipelineReg(pc));
-      if(slow.jumpEpilog) jumpEpilog(flag_nz);
+      /*if(slow.jumpEpilog)*/ jumpEpilog(flag_nz);
     }
     sljit_set_label(sljit_emit_jump(compiler, SLJIT_JUMP), slow.resume);
   }
