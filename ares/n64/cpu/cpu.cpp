@@ -17,6 +17,8 @@ CPU cpu;
 #include "interpreter-fpu.cpp"
 #include "interpreter-cop2.cpp"
 #include "recompiler.cpp"
+#include "recompiler-fpu.cpp"
+#include "recompiler-ipu.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"

@@ -955,7 +955,7 @@ struct CPU : Thread {
   auto COP3() -> void;
   auto INVALID() -> void;
 
-  //recompiler.cpp
+  //recompiler.cpp, recompiler-fpu.cpp, recompiler-ipu.cpp
   struct Recompiler : recompiler::generic {
     CPU& self;
     Recompiler(CPU& self) : self(self), generic(allocator) {
