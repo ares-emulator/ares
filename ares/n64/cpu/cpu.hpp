@@ -37,6 +37,7 @@ struct CPU : Thread {
   auto synchronize() -> void;
 
   auto gdbPoll() -> void;
+  auto queueInsert(u32 event, u32 clocks) -> void;
 
   auto instruction() -> void;
   auto instructionPrologue(u64 address, u32 instruction) -> void;
@@ -1213,7 +1214,7 @@ struct CPU : Thread {
     std::vector<Section*> sections;
     std::vector<u8> sectionDirty;
   } recompiler{*this};
-  s64 clockTarget = 0;
+  s64 jitClockTarget = 0;
 
   struct Disassembler {
     CPU& self;

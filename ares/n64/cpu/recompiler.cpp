@@ -271,6 +271,7 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
 #define DcacheLineWordsOff offsetof(CPU::DataCache::Line, words[0])
 #define CpuProfileDcacheHitsOff (offsetof(CPU, profile) + offsetof(CPU::Profile, dcacheHits))
 #define ProfileDcacheHitsMem mem(sreg(0), CpuProfileDcacheHitsOff)
+#define CpuJitClockTargetMem mem(sreg(0), offsetof(CPU, jitClockTarget))
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
 #pragma GCC diagnostic push
@@ -526,6 +527,8 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   };
 
   auto emitInternalDispatch = [&](EmitPlannedInstruction& br) {
+    cmp64(CpuClockMem, CpuJitClockTargetMem, set_uge);
+    jumpEpilog(flag_uge);
     // This runs right after the branch delay slot.
     bool tInt = br.branchTakenInternal;
     bool fInt = br.branchFallthroughInternal;
@@ -592,6 +595,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
 
     if(isInternalEntry) {
       // Resolve this internal entry and patch all pending forward jumps.
+      flushDeferredCycles();
       auto lbl = sljit_emit_label(compiler);
       *findInternalLabel(ii.vaddr) = lbl;
       for(size_t k = 0; k < pendingJumpVaddrs.size();) {

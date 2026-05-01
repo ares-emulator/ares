@@ -30,7 +30,7 @@ auto DD::readHalf(u32 address) -> u16 {
     //acknowledge bm interrupt (tested on real hardware)
     if(irq.bm.line) {
       //TODO: proper research into seek and access times
-      queue.insert(Queue::DD_BM_Request, 38'000 + (io.currentTrack.bit(0,11) / 15));
+      cpu.queueInsert(Queue::DD_BM_Request, 38'000 + (io.currentTrack.bit(0,11) / 15));
       lower(IRQ::BM);
     }
   }
@@ -175,7 +175,7 @@ auto DD::writeHalf(u32 address, u16 data_) -> void {
       //start BM
       io.bm.start |= data.bit(15);
       //TODO: proper research into seek and access times
-      queue.insert(Queue::DD_BM_Request, 50'000 + (io.currentTrack.bit(0,11) / 15));
+      cpu.queueInsert(Queue::DD_BM_Request, 50'000 + (io.currentTrack.bit(0,11) / 15));
     }
   }
 

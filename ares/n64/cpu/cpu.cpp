@@ -41,15 +41,23 @@ auto CPU::main() -> void {
   vi.refreshed = false;
   queue.remove(Queue::GDB_Poll);
   if(GDB::server.hasClient()) {
-    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+    queueInsert(Queue::GDB_Poll, (93750000*2)/60/240);
   }
 }
 
 auto CPU::gdbPoll() -> void {
   if(GDB::server.hasClient()) {
     GDB::server.updateLoop();
-    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+    queueInsert(Queue::GDB_Poll, (93750000*2)/60/240);
   }
+}
+
+auto CPU::queueInsert(u32 event, u32 clocks) -> void {
+  if(!queue.insert(event, clocks)) return;
+  s64 queueDelta = queue.timeToNextEvent();
+  if(queueDelta < 0) queueDelta = 0;
+  s64 queueTarget = Thread::clock + queueDelta;
+  if(queueTarget < jitClockTarget) jitClockTarget = queueTarget;
 }
 
 auto CPU::synchronize() -> void {
@@ -123,10 +131,13 @@ auto CPU::instruction() -> void {
       if(timerDelta < 0) timerDelta = 0;
       s64 capBudget = 4096 * 2;
       if(timerDelta < capBudget) capBudget = timerDelta;
-      clockTarget = Thread::clock + capBudget;
+      s64 queueDelta = queue.timeToNextEvent();
+      if(queueDelta < 0) queueDelta = 0;
+      if(queueDelta < capBudget) capBudget = queueDelta;
+      jitClockTarget = Thread::clock + capBudget;
       block->execute(*this);
       return;
-    } 
+    }
   }
 
   auto data = fetch(access);
