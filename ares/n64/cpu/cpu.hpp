@@ -77,35 +77,19 @@ struct CPU : Thread {
   struct OpInfo {
     enum : u32 {
       Branch        = 1 << 0,
-      EndBlock      = 1 << 1,
-      LikelyBranch  = 1 << 2,
-      MayTrap       = 1 << 3,
-      MayException  = 1 << 4,
-      MayFault      = 1 << 5,
-      Load          = 1 << 6,
-      Store         = 1 << 7,
-      Cop0          = 1 << 8,
-      Cop1          = 1 << 9,
-      Cop2          = 1 << 10,
-      ReadsHiLo     = 1 << 11,
-      WritesHiLo    = 1 << 12,
-      Privileged    = 1 << 13,
-      IsInvalid     = 1 << 14,
-      JitStateKeyMayChange = 1 << 15,
+      LikelyBranch  = 1 << 1,
+      JitStateKeyMayChange = 1 << 2,
+      CountCompareWrite = 1 << 3,
+      UnconditionalJump = 1 << 4,
     };
 
     u32 flags = 0;
 
     auto branch() const -> bool { return flags & Branch; }
-    auto endBlock() const -> bool { return flags & EndBlock; }
     auto likelyBranch() const -> bool { return flags & LikelyBranch; }
-    auto mayTrap() const -> bool { return flags & MayTrap; }
-    auto mayException() const -> bool { return flags & MayException; }
-    auto mayFault() const -> bool { return flags & MayFault; }
-    auto load() const -> bool { return flags & Load; }
-    auto store() const -> bool { return flags & Store; }
-    auto memory() const -> bool { return flags & (Load | Store); }
     auto jitStateKeyMayChange() const -> bool { return flags & JitStateKeyMayChange; }
+    auto countCompareWrite() const -> bool { return flags & CountCompareWrite; }
+    auto unconditionalJump() const -> bool { return flags & UnconditionalJump; }
   };
 
   struct PhysAccess {

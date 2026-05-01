@@ -299,30 +299,6 @@ struct EmitPlan {
   std::vector<u64> internalEntryVaddrs;
 };
 
-// SCC Count/Compare writes force a hard block boundary.
-auto writesCountCompare(u32 instruction) -> bool {
-  // 0x10 = COP0.
-  if(instruction >> 26 != 0x10) return false;
-  auto op = instruction >> 21 & 0x1f;
-  // MTC0 / DMTC0.
-  if(op != 0x04 && op != 0x05) return false;
-  auto rd = instruction >> 11 & 31;
-  // Count / Compare.
-  return rd == 9 || rd == 11;
-}
-
-// Hard terminals for the aggressive linker model.
-auto isUnconditionalJump(u32 instruction) -> bool {
-  auto op = instruction >> 26;
-  if(op == 0x02 || op == 0x03) return true;  //J, JAL
-  if(op == 0x00) {
-    // SPECIAL function space.
-    auto fn = instruction & 0x3f;
-    if(fn == 0x08 || fn == 0x09) return true;  //JR, JALR
-  }
-  return false;
-}
-
 // Decode branch-like instructions into taken/fallthrough virtual targets.
 auto computeBranchTargets(bool coprocessor1Enabled, u64 branchVaddr, u32 instruction) -> std::pair<u64, u64> {
   // The plan stage keeps target decoding local and deterministic.
@@ -385,8 +361,8 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
       pi.address = currentAddress;
       pi.instruction = instruction;
       pi.info = info;
-      pi.countCompareWrite = writesCountCompare(instruction);
-      pi.isUnconditional = info.branch() && isUnconditionalJump(instruction);
+      pi.countCompareWrite = info.countCompareWrite();
+      pi.isUnconditional = info.unconditionalJump();
       if(info.branch()) {
         // Branch-like instructions get explicit taken/fallthrough targets.
         auto [taken, fallthrough] = computeBranchTargets(recompiler.emitStateKey.coprocessor1Enabled(), currentVaddr, instruction);
