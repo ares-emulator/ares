@@ -125,7 +125,7 @@ auto CPU::instruction() -> void {
 
   if(Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
     if(vaddrAlignedError<Word>(access.vaddr, false)) return;
-    auto block = recompiler.block(ipu.pc, access.paddr, GDB::server.hasBreakpoints());
+    auto block = recompiler.block(ipu.pc, access.paddr);
     if(block) {
       s64 timerDelta = (s64)scc.compare - (s64)scc.count;
       if(timerDelta < 0) timerDelta = 0;

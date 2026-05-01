@@ -22,7 +22,7 @@ State key specialization
 Block lifecycle
 ---------------
 1) Lookup
-   - block(vaddr, paddr, singleInstruction) probes a per-section cache.
+   - block(vaddr, paddr) probes a per-section cache.
    - sections are 4 KiB; each section has 1024 word-indexed entry slots.
    - each entry slot stores a linked list of Block keyed by stateKey.
 2) Emit
@@ -39,8 +39,8 @@ internal entry aliases:
 - startAddress is the lookup address used to build the primary block entry;
 - the window may include many conditional branches (including likely variants);
 - the window closes on hard boundaries:
-  section boundary, single-instruction mode, non-branch stateKey-changing ops,
-  SCC Count/Compare writes, and delay-slot completion after unconditional jumps.
+  section boundary, non-branch stateKey-changing ops, SCC Count/Compare writes,
+  breakpoint barriers, and delay-slot completion after unconditional jumps.
 
 Emission pipeline inside emit()
 ------------------------------
@@ -144,6 +144,7 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   stateKey.setGpAligned8((gp & 7) == 0);
   stateKey.setSpAligned4((sp & 3) == 0);
   stateKey.setSpAligned8((sp & 7) == 0);
+  stateKey.setWatchpointsActive(GDB::server.hasWatchpoints());
   return stateKey;
 }
 
@@ -190,7 +191,7 @@ auto CPU::Recompiler::section(u32 address) -> Section* {
   return section;
 }
 
-auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> Block* {
+auto CPU::Recompiler::block(u64 vaddr, u32 address) -> Block* {
   auto section = this->section(address);
   if(!section) return nullptr;
 
@@ -203,7 +204,7 @@ auto CPU::Recompiler::block(u64 vaddr, u32 address, bool singleInstruction) -> B
     }
   }
 
-  auto block = emit(vaddr, address, stateKey, singleInstruction);
+  auto block = emit(vaddr, address, stateKey);
   if(block) {
     if(emitAllocatorFlushed) {
       section = this->section(address);
@@ -339,7 +340,7 @@ auto computeBranchTargets(bool coprocessor1Enabled, u64 branchVaddr, u32 instruc
 // - choose the linear window,
 // - classify internal/external conditional edges,
 // - collect internal JIT entry targets and alias addresses.
-auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32 address, bool singleInstruction,
+auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32 address,
                    std::vector<u32>& aliasAddresses) -> EmitPlan {
   EmitPlan plan = {};
   plan.startAddress = address;
@@ -356,7 +357,7 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
     bool prevIsUncondBranch = false;
     while(true) {
       if(recompiler.sectionIndex(currentAddress) != plan.startSection) break;
-      if(singleInstruction && !plan.instructions.empty()) break;
+      if(!plan.instructions.empty() && GDB::server.hasBreakpointAt(u32(currentVaddr))) break;
       u32 instruction = bus.read<Word>(currentAddress, thread, RBusDevice::ARES_JIT);
       auto info = recompiler.self.decoderEXECUTEInfo(instruction);
       // Materialize one prepass record per guest instruction.
@@ -411,6 +412,7 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
       if(targetVaddr < plan.startVaddr || targetVaddr >= plan.windowEndVaddr) return false;
       if((targetVaddr & 3) != 0) return false;
       if(!isValidEntry(targetVaddr)) return false;
+      if(GDB::server.hasBreakpointAt(u32(targetVaddr))) return false;
       // Internal edges must stay cacheable and in the same 4 KiB section.
       auto access = recompiler.self.devirtualize<Read, Word>(targetVaddr, false, false);
       if(!access || !access.cache) return false;
@@ -449,10 +451,9 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
 
 }
 
-auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction) -> Block* {
+auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
   // Phase 0: initialize emit state and clear temporary outputs.
   emitStateKey = stateKey;
-  emitSingleInstruction = singleInstruction;
   emitStateKeyChanged = false;
   emitAllocatorFlushed = false;
   emitAliasAddresses.clear();
@@ -477,7 +478,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
   }
 
   // Phase 2: prepass planning (window + edge classification + alias list).
-  auto plan = buildEmitPlan(*this, vaddr, address, singleInstruction, emitAliasAddresses);
+  auto plan = buildEmitPlan(*this, vaddr, address, emitAliasAddresses);
   if(plan.instructions.empty()) return nullptr;
 
   u32 startAddress = plan.startAddress;
@@ -644,7 +645,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey, bool singleInst
     bool needEndBlockCheck = firstInstruction || delaySlot || info.likelyBranch() || emitCallfEmitted;
     // Commit architectural pipeline state only where correctness requires it.
     bool needPipelineCommit = needEndBlockCheck || info.branch() || sectionBoundary
-                            || singleInstruction || info.jitStateKeyMayChange()
+                            || info.jitStateKeyMayChange()
                             || countCompareWrite;
     if(needPipelineCommit) setupPipeline();
     if(needEndBlockCheck) {
@@ -883,7 +884,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       floatingWordOff += Ftn & 1 ? FpuR64S32hOff : FpuR64S32Off;
     }
   }
-  if(emitSlowPath || emitSingleInstruction || (require64 && reservedInstruction64())
+  if(emitSlowPath || emitStateKey.watchpointsActive() || (require64 && reservedInstruction64())
   || ((partialLeft || partialRight) && emitStateKey.reverseEndian())
   || (store && size == Dual && (partialLeft || partialRight) && system.homebrewMode)
   || (floating && !emitStateKey.coprocessor1Enabled())) {

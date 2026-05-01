@@ -375,7 +375,7 @@ auto System::initDebugHooks() -> void {
 
   if constexpr(Accuracy::CPU::Recompiler) {
     GDB::server.hooks.emuCacheInvalidate = [](u64 address) {
-      cpu.recompiler.invalidate(address);
+      cpu.recompiler.invalidateSection((u32)address);
     };
   }
 }

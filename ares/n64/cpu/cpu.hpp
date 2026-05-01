@@ -1050,6 +1050,9 @@ struct CPU : Thread {
       auto spAligned8() const -> bool { return data.bit(24); }
       auto setSpAligned8(bool value) -> void { data.bit(24) = value; }
 
+      auto watchpointsActive() const -> bool { return data.bit(25); }
+      auto setWatchpointsActive(bool value) -> void { data.bit(25) = value; }
+
       n64 data = 0;
     };
 
@@ -1163,7 +1166,7 @@ struct CPU : Thread {
     auto reservedInstruction64() const -> bool;
     auto updateStackPointerStateKey(s16 offset) -> void;
     auto section(u32 address) -> Section*;
-    auto block(u64 vaddr, u32 address, bool singleInstruction = false) -> Block*;
+    auto block(u64 vaddr, u32 address) -> Block*;
 
     auto flushDeferredCycles() -> void;
     auto setupPipeline() -> void;
@@ -1172,7 +1175,7 @@ struct CPU : Thread {
     auto deferSlowPath(sljit_jump* enter, u32 instruction) -> void;
     auto deferSlowPath(std::initializer_list<sljit_jump*> enters, u32 instruction) -> void;
     auto deferSlowPathCacheMiss(sljit_jump* enter, u32 paddr) -> void;
-    auto emit(u64 vaddr, u32 address, u64 stateKey, bool singleInstruction = false) -> Block*;
+    auto emit(u64 vaddr, u32 address, u64 stateKey) -> Block*;
     auto emitZeroClear(u32 n) -> void;
     enum JitMemoryOpcodeMode : u32 {
       SignExtend = 1 << 0,
@@ -1198,7 +1201,6 @@ struct CPU : Thread {
     bool emitPipelineSetupDone = false;
     bool emitCallfSetupDone = false;
     bool emitCallfEmitted = false;
-    bool emitSingleInstruction = false;
     bool emitStateKeyChanged = false;
     bool emitAllocatorFlushed = false;
     EmitPcMode emitPcMode = EmitPcMode::JitTime;
