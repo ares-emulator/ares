@@ -394,24 +394,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     }
     mov64(PipelineReg(nextpc), imm(((emitVaddr + 4) & 0xffff'ffff'f000'0000ull) | (u64(target) << 2)));
   };
-  auto emitBranchTarget = [&](s16 offset) -> void {
+  auto emitBranchTargetReg = [&](reg target, s16 offset) -> void {
     if(pcMode == EmitPcMode::Runtime) {
-      add64(reg(0), PipelineReg(pc), imm(s32(offset) * 4));
-      mov64(PipelineReg(nextpc), reg(0));
+      add64(target, PipelineReg(pc), imm(s32(offset) * 4));
       return;
     }
-    mov64(PipelineReg(nextpc), imm(emitVaddr + 4 + s64(s32(offset) * 4)));
-  };
-  auto emitLikelyNotTaken = [&] {
-    if(pcMode == EmitPcMode::Runtime) {
-      add64(reg(0), PipelineReg(pc), imm(4));
-      mov64(PipelineReg(pc), reg(0));
-      add64(PipelineReg(nextpc), reg(0), imm(4));
-    } else {
-      mov64(PipelineReg(pc), imm(emitVaddr + 8));
-      mov64(PipelineReg(nextpc), imm(emitVaddr + 12));
-    }
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    mov64(target, imm(emitVaddr + 4 + s64(s32(offset) * 4)));
   };
   switch(instruction >> 26) {
 
@@ -447,53 +435,57 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //BEQ Rs,Rt,i16
   case 0x04: {
+    mov64(reg(0), PipelineReg(nextpc));
+    emitBranchTargetReg(reg(1), i16);
     cmp64(mem(Rs), mem(Rt), set_z);
-    auto notTaken = jump(flag_nz);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    auto done = jump();
-    setLabel(notTaken);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
-    setLabel(done);
+    cmov64(reg(2), reg(1), reg(0), flag_z);
+    mov64(PipelineReg(nextpc), reg(2));
+    mov32(reg(0), imm(Pipeline::DelaySlot));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_z);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BNE Rs,Rt,i16
   case 0x05: {
+    mov64(reg(0), PipelineReg(nextpc));
+    emitBranchTargetReg(reg(1), i16);
     cmp64(mem(Rs), mem(Rt), set_z);
-    auto taken = jump(flag_nz);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
-    auto done = jump();
-    setLabel(taken);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    setLabel(done);
+    cmov64(reg(2), reg(1), reg(0), flag_nz);
+    mov64(PipelineReg(nextpc), reg(2));
+    mov32(reg(0), imm(Pipeline::DelaySlot));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_nz);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BLEZ Rs,i16
   case 0x06: {
+    mov64(reg(0), PipelineReg(nextpc));
+    emitBranchTargetReg(reg(1), i16);
     cmp64(mem(Rs), imm(0), set_sgt);
-    auto notTaken = jump(flag_sgt);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    auto done = jump();
-    setLabel(notTaken);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
-    setLabel(done);
+    cmov64(reg(2), reg(1), reg(0), flag_sle);
+    mov64(PipelineReg(nextpc), reg(2));
+    mov32(reg(0), imm(Pipeline::DelaySlot));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_sle);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BGTZ Rs,i16
   case 0x07: {
+    mov64(reg(0), PipelineReg(nextpc));
+    emitBranchTargetReg(reg(1), i16);
     cmp64(mem(Rs), imm(0), set_sgt);
-    auto taken = jump(flag_sgt);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
-    auto done = jump();
-    setLabel(taken);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    setLabel(done);
+    cmov64(reg(2), reg(1), reg(0), flag_sgt);
+    mov64(PipelineReg(nextpc), reg(2));
+    mov32(reg(0), imm(Pipeline::DelaySlot));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_sgt);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
@@ -592,53 +584,109 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //BEQL Rs,Rt,i16
   case 0x14: {
+    mov64(reg(0), PipelineReg(pc));
+    mov64(reg(1), PipelineReg(state));
+    emitBranchTargetReg(reg(2), i16);
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(3), reg(0), imm(4));
+      add64(reg(4), reg(3), imm(4));
+    } else {
+      mov64(reg(3), imm(emitVaddr + 8));
+      mov64(reg(4), imm(emitVaddr + 12));
+    }
+    or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), mem(Rt), set_z);
-    auto taken = jump(flag_z);
-    emitLikelyNotTaken();
-    auto done = jump();
-    setLabel(taken);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    setLabel(done);
+    cmov64(reg(6), reg(0), reg(3), flag_z);
+    mov64(PipelineReg(pc), reg(6));
+    cmov64(reg(6), reg(2), reg(4), flag_z);
+    mov64(PipelineReg(nextpc), reg(6));
+    cmov32(reg(6), reg(1), reg(5), flag_z);
+    mov32(PipelineReg(state), reg(6));
+    mov32(reg(0), imm(0));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_z);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BNEL Rs,Rt,i16
   case 0x15: {
+    mov64(reg(0), PipelineReg(pc));
+    mov64(reg(1), PipelineReg(state));
+    emitBranchTargetReg(reg(2), i16);
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(3), reg(0), imm(4));
+      add64(reg(4), reg(3), imm(4));
+    } else {
+      mov64(reg(3), imm(emitVaddr + 8));
+      mov64(reg(4), imm(emitVaddr + 12));
+    }
+    or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), mem(Rt), set_z);
-    auto notTaken = jump(flag_z);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    auto done = jump();
-    setLabel(notTaken);
-    emitLikelyNotTaken();
-    setLabel(done);
+    cmov64(reg(6), reg(0), reg(3), flag_nz);
+    mov64(PipelineReg(pc), reg(6));
+    cmov64(reg(6), reg(2), reg(4), flag_nz);
+    mov64(PipelineReg(nextpc), reg(6));
+    cmov32(reg(6), reg(1), reg(5), flag_nz);
+    mov32(PipelineReg(state), reg(6));
+    mov32(reg(0), imm(0));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_nz);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BLEZL Rs,i16
   case 0x16: {
+    mov64(reg(0), PipelineReg(pc));
+    mov64(reg(1), PipelineReg(state));
+    emitBranchTargetReg(reg(2), i16);
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(3), reg(0), imm(4));
+      add64(reg(4), reg(3), imm(4));
+    } else {
+      mov64(reg(3), imm(emitVaddr + 8));
+      mov64(reg(4), imm(emitVaddr + 12));
+    }
+    or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_sgt);
-    auto notTaken = jump(flag_sgt);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    auto done = jump();
-    setLabel(notTaken);
-    emitLikelyNotTaken();
-    setLabel(done);
+    cmov64(reg(6), reg(0), reg(3), flag_sle);
+    mov64(PipelineReg(pc), reg(6));
+    cmov64(reg(6), reg(2), reg(4), flag_sle);
+    mov64(PipelineReg(nextpc), reg(6));
+    cmov32(reg(6), reg(1), reg(5), flag_sle);
+    mov32(PipelineReg(state), reg(6));
+    mov32(reg(0), imm(0));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_sle);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BGTZL Rs,i16
   case 0x17: {
+    mov64(reg(0), PipelineReg(pc));
+    mov64(reg(1), PipelineReg(state));
+    emitBranchTargetReg(reg(2), i16);
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(3), reg(0), imm(4));
+      add64(reg(4), reg(3), imm(4));
+    } else {
+      mov64(reg(3), imm(emitVaddr + 8));
+      mov64(reg(4), imm(emitVaddr + 12));
+    }
+    or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_sgt);
-    auto taken = jump(flag_sgt);
-    emitLikelyNotTaken();
-    auto done = jump();
-    setLabel(taken);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    setLabel(done);
+    cmov64(reg(6), reg(0), reg(3), flag_sgt);
+    mov64(PipelineReg(pc), reg(6));
+    cmov64(reg(6), reg(2), reg(4), flag_sgt);
+    mov64(PipelineReg(nextpc), reg(6));
+    cmov32(reg(6), reg(1), reg(5), flag_sgt);
+    mov32(PipelineReg(state), reg(6));
+    mov32(reg(0), imm(0));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_sgt);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
@@ -1678,24 +1726,12 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> EmitExecuteResult {
 }
 
 auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExecuteResult {
-  auto emitBranchTarget = [&](s16 offset) -> void {
+  auto emitBranchTargetReg = [&](reg target, s16 offset) -> void {
     if(pcMode == EmitPcMode::Runtime) {
-      add64(reg(0), PipelineReg(pc), imm(s32(offset) * 4));
-      mov64(PipelineReg(nextpc), reg(0));
+      add64(target, PipelineReg(pc), imm(s32(offset) * 4));
       return;
     }
-    mov64(PipelineReg(nextpc), imm(emitVaddr + 4 + s64(s32(offset) * 4)));
-  };
-  auto emitLikelyNotTaken = [&] {
-    if(pcMode == EmitPcMode::Runtime) {
-      add64(reg(0), PipelineReg(pc), imm(4));
-      mov64(PipelineReg(pc), reg(0));
-      add64(PipelineReg(nextpc), reg(0), imm(4));
-    } else {
-      mov64(PipelineReg(pc), imm(emitVaddr + 8));
-      mov64(PipelineReg(nextpc), imm(emitVaddr + 12));
-    }
-    or32(PipelineReg(state), PipelineReg(state), imm(Pipeline::EndBlock));
+    mov64(target, imm(emitVaddr + 4 + s64(s32(offset) * 4)));
   };
   auto emitLink31 = [&] {
     if(pcMode == EmitPcMode::Runtime) {
@@ -1710,53 +1746,83 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExec
 
   //BLTZ Rs,i16
   case 0x00: {
+    mov64(reg(0), PipelineReg(nextpc));
+    emitBranchTargetReg(reg(1), i16);
     cmp64(mem(Rs), imm(0), set_slt);
-    auto taken = jump(flag_slt);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
-    auto done = jump();
-    setLabel(taken);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    setLabel(done);
+    cmov64(reg(2), reg(1), reg(0), flag_slt);
+    mov64(PipelineReg(nextpc), reg(2));
+    mov32(reg(0), imm(Pipeline::DelaySlot));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_slt);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BGEZ Rs,i16
   case 0x01: {
+    mov64(reg(0), PipelineReg(nextpc));
+    emitBranchTargetReg(reg(1), i16);
     cmp64(mem(Rs), imm(0), set_slt);
-    auto notTaken = jump(flag_slt);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    auto done = jump();
-    setLabel(notTaken);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
-    setLabel(done);
+    cmov64(reg(2), reg(1), reg(0), flag_sge);
+    mov64(PipelineReg(nextpc), reg(2));
+    mov32(reg(0), imm(Pipeline::DelaySlot));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_sge);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BLTZL Rs,i16
   case 0x02: {
+    mov64(reg(0), PipelineReg(pc));
+    mov64(reg(1), PipelineReg(state));
+    emitBranchTargetReg(reg(2), i16);
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(3), reg(0), imm(4));
+      add64(reg(4), reg(3), imm(4));
+    } else {
+      mov64(reg(3), imm(emitVaddr + 8));
+      mov64(reg(4), imm(emitVaddr + 12));
+    }
+    or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_slt);
-    auto taken = jump(flag_slt);
-    emitLikelyNotTaken();
-    auto done = jump();
-    setLabel(taken);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    setLabel(done);
+    cmov64(reg(6), reg(0), reg(3), flag_slt);
+    mov64(PipelineReg(pc), reg(6));
+    cmov64(reg(6), reg(2), reg(4), flag_slt);
+    mov64(PipelineReg(nextpc), reg(6));
+    cmov32(reg(6), reg(1), reg(5), flag_slt);
+    mov32(PipelineReg(state), reg(6));
+    mov32(reg(0), imm(0));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_slt);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BGEZL Rs,i16
   case 0x03: {
+    mov64(reg(0), PipelineReg(pc));
+    mov64(reg(1), PipelineReg(state));
+    emitBranchTargetReg(reg(2), i16);
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(3), reg(0), imm(4));
+      add64(reg(4), reg(3), imm(4));
+    } else {
+      mov64(reg(3), imm(emitVaddr + 8));
+      mov64(reg(4), imm(emitVaddr + 12));
+    }
+    or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_slt);
-    auto notTaken = jump(flag_slt);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    auto done = jump();
-    setLabel(notTaken);
-    emitLikelyNotTaken();
-    setLabel(done);
+    cmov64(reg(6), reg(0), reg(3), flag_sge);
+    mov64(PipelineReg(pc), reg(6));
+    cmov64(reg(6), reg(2), reg(4), flag_sge);
+    mov64(PipelineReg(nextpc), reg(6));
+    cmov32(reg(6), reg(1), reg(5), flag_sge);
+    mov32(PipelineReg(state), reg(6));
+    mov32(reg(0), imm(0));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_sge);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
@@ -1862,27 +1928,29 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExec
   //BLTZAL Rs,i16
   case 0x10: {
     emitLink31();
+    mov64(reg(0), PipelineReg(nextpc));
+    emitBranchTargetReg(reg(1), i16);
     cmp64(mem(Rs), imm(0), set_slt);
-    auto taken = jump(flag_slt);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
-    auto done = jump();
-    setLabel(taken);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    setLabel(done);
+    cmov64(reg(2), reg(1), reg(0), flag_slt);
+    mov64(PipelineReg(nextpc), reg(2));
+    mov32(reg(0), imm(Pipeline::DelaySlot));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_slt);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BGEZAL Rs,i16
   case 0x11: {
+    mov64(reg(0), PipelineReg(nextpc));
+    emitBranchTargetReg(reg(1), i16);
     cmp64(mem(Rs), imm(0), set_slt);
-    auto notTaken = jump(flag_slt);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    auto done = jump();
-    setLabel(notTaken);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot));
-    setLabel(done);
+    cmov64(reg(2), reg(1), reg(0), flag_sge);
+    mov64(PipelineReg(nextpc), reg(2));
+    mov32(reg(0), imm(Pipeline::DelaySlot));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_sge);
+    mov32(PipelineReg(nstate), reg(2));
     emitLink31();
     return EmitExecuteResult::MayBranch;
   }
@@ -1890,28 +1958,56 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExec
   //BLTZALL Rs,i16
   case 0x12: {
     emitLink31();
+    mov64(reg(0), PipelineReg(pc));
+    mov64(reg(1), PipelineReg(state));
+    emitBranchTargetReg(reg(2), i16);
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(3), reg(0), imm(4));
+      add64(reg(4), reg(3), imm(4));
+    } else {
+      mov64(reg(3), imm(emitVaddr + 8));
+      mov64(reg(4), imm(emitVaddr + 12));
+    }
+    or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_slt);
-    auto taken = jump(flag_slt);
-    emitLikelyNotTaken();
-    auto done = jump();
-    setLabel(taken);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    setLabel(done);
+    cmov64(reg(6), reg(0), reg(3), flag_slt);
+    mov64(PipelineReg(pc), reg(6));
+    cmov64(reg(6), reg(2), reg(4), flag_slt);
+    mov64(PipelineReg(nextpc), reg(6));
+    cmov32(reg(6), reg(1), reg(5), flag_slt);
+    mov32(PipelineReg(state), reg(6));
+    mov32(reg(0), imm(0));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_slt);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
   //BGEZALL Rs,i16
   case 0x13: {
     emitLink31();
+    mov64(reg(0), PipelineReg(pc));
+    mov64(reg(1), PipelineReg(state));
+    emitBranchTargetReg(reg(2), i16);
+    if(pcMode == EmitPcMode::Runtime) {
+      add64(reg(3), reg(0), imm(4));
+      add64(reg(4), reg(3), imm(4));
+    } else {
+      mov64(reg(3), imm(emitVaddr + 8));
+      mov64(reg(4), imm(emitVaddr + 12));
+    }
+    or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_slt);
-    auto notTaken = jump(flag_slt);
-    emitBranchTarget(i16);
-    mov32(PipelineReg(nstate), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
-    auto done = jump();
-    setLabel(notTaken);
-    emitLikelyNotTaken();
-    setLabel(done);
+    cmov64(reg(6), reg(0), reg(3), flag_sge);
+    mov64(PipelineReg(pc), reg(6));
+    cmov64(reg(6), reg(2), reg(4), flag_sge);
+    mov64(PipelineReg(nextpc), reg(6));
+    cmov32(reg(6), reg(1), reg(5), flag_sge);
+    mov32(PipelineReg(state), reg(6));
+    mov32(reg(0), imm(0));
+    mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
+    cmov32(reg(2), reg(1), reg(0), flag_sge);
+    mov32(PipelineReg(nstate), reg(2));
     return EmitExecuteResult::MayBranch;
   }
 
