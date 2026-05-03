@@ -61,6 +61,10 @@ auto CPU::queueInsert(u32 event, u32 clocks) -> void {
   if(queueTarget < jitClockTarget) jitClockTarget = queueTarget;
 }
 
+auto CPU::forceSynchronize() -> void {
+  jitClockTarget = 0;
+}
+
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock;
   Thread::clock = 0;

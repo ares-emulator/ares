@@ -45,6 +45,7 @@ auto RSP::ioRead(u32 address, Thread &thread) -> u32 {
     data.bit(12) = status.signal[5];
     data.bit(13) = status.signal[6];
     data.bit(14) = status.signal[7];
+    cpu.forceSynchronize();
   }
 
   if(address == 5) {
@@ -61,6 +62,7 @@ auto RSP::ioRead(u32 address, Thread &thread) -> u32 {
     //SP_SEMAPHORE
     data.bit(0) = status.semaphore;
     status.semaphore = 1;
+    cpu.forceSynchronize();
   }
 
   debugger.ioSCC(Read, address, data);
@@ -142,6 +144,7 @@ auto RSP::ioWrite(u32 address, u32 data_, Thread& thread) -> void {
     if(data.bit(22) && !data.bit(21)) status.signal[6] = 1;
     if(data.bit(23) && !data.bit(24)) status.signal[7] = 0;
     if(data.bit(24) && !data.bit(23)) status.signal[7] = 1;
+    cpu.forceSynchronize();
   }
 
   if(address == 5) {
@@ -155,6 +158,7 @@ auto RSP::ioWrite(u32 address, u32 data_, Thread& thread) -> void {
   if(address == 7) {
     //SP_SEMAPHORE
     status.semaphore = 0;
+    cpu.forceSynchronize();
   }
 
   debugger.ioSCC(Write, address, data);

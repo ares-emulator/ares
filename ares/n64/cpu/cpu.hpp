@@ -35,6 +35,7 @@ struct CPU : Thread {
 
   auto main() -> void;
   auto synchronize() -> void;
+  auto forceSynchronize() -> void;
 
   auto gdbPoll() -> void;
   auto queueInsert(u32 event, u32 clocks) -> void;
