@@ -1187,6 +1187,7 @@ struct CPU : Thread {
       PartialLeft = 1 << 3,
       PartialRight = 1 << 4,
       Floating   = 1 << 5,
+      LinkedConditional = 1 << 6,
     };
 
     auto jitMemoryOpcode(u32 instruction, u32 size, u32 mode,

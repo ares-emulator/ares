@@ -41,6 +41,10 @@ static constexpr s32 RecompilerBaseOffset = offsetof(CPU, recompiler);
 static constexpr s32 RecompilerFpuFastMxcsrOffset = RecompilerBaseOffset + offsetof(CPU::Recompiler, emitFpuFastMxcsr);
 static constexpr s32 RecompilerFpuSaveMxcsrOffset = RecompilerBaseOffset + offsetof(CPU::Recompiler, emitFpuSaveMxcsr);
 #define FpuCsrCompare mem(sreg(0), FpuCsrBaseOffset + offsetof(CPU::FPU::ControlStatus, compare))
+#define SccBase  offsetof(CPU, scc)
+#define SccReg(r) mem(sreg(0), SccBase + offsetof(SCC, r))
+#define SccLl    SccReg(ll)
+#define SccLlbit SccReg(llbit)
 
 static_assert(sizeof(n1) == 1);
 static_assert(sizeof(CPU::FPU::ControlStatus::Flag) == 1);

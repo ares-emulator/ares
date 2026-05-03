@@ -69,6 +69,9 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
   bool partialLeft = mode & PartialLeft;
   bool partialRight = mode & PartialRight;
   bool floating  = mode & Floating;
+  bool linkedConditional = mode & LinkedConditional;
+  bool loadLinked = linkedConditional && !store;
+  bool storeConditional = linkedConditional && store;
   s32 floatingWordOff = 0;
   s32 floatingDualOff = 0;
   if(floating) {
@@ -154,8 +157,47 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
   if(system.homebrewMode) {
     add64(ProfileDcacheHitsMem, ProfileDcacheHitsMem, imm(1));
   }
+  if(loadLinked) {
+    lshr32(reg(4), reg(0), imm(4));
+    mov32(SccLl, reg(4));
+    mov32_u8(SccLlbit, imm(1));
+  }
   if(store) {
-    if(floating && size == Word) {
+    if(storeConditional && size == Word) {
+      and32(reg(3), reg(0), imm(0x0c));
+      add64(reg(3), reg(2), reg(3));
+      mov32(reg(0), mem(reg(3), DcacheLineWordsOff));
+      mov32(reg(1), mem(Rt32));
+      mov32_u8(reg(4), SccLlbit);
+      and32(reg(4), reg(4), imm(1));
+      mov32(reg(5), imm(0));
+      sub32(reg(5), reg(5), reg(4));
+      and32(reg(1), reg(1), reg(5));
+      xor32(reg(5), reg(5), imm((sljit_sw)0xffff'ffffu));
+      and32(reg(0), reg(0), reg(5));
+      or32(reg(0), reg(0), reg(1));
+      mov32(mem(reg(3), DcacheLineWordsOff), reg(0));
+      mov32(reg(5), reg(4));
+      if(Rtn != 0) mov64(mem(Rt), reg(4));
+    } else if(storeConditional && size == Dual) {
+      and32(reg(3), reg(0), imm(0x08));
+      add64(reg(3), reg(2), reg(3));
+      mov32(reg(0), mem(reg(3), DcacheLineWordsOff + 0));
+      mov32(reg(1), mem(reg(3), DcacheLineWordsOff + 4));
+      mov32_u8(reg(4), SccLlbit);
+      and32(reg(4), reg(4), imm(1));
+      mov64(reg(5), mem(Rt));
+      lshr64(reg(5), reg(5), imm(32));
+      mov32(reg(5), reg(5));
+      cmp32(reg(4), imm(0), set_z);
+      cmov32(reg(0), reg(5), reg(0), flag_nz);
+      mov32(reg(5), mem(Rt32));
+      cmov32(reg(1), reg(5), reg(1), flag_nz);
+      mov32(mem(reg(3), DcacheLineWordsOff + 0), reg(0));
+      mov32(mem(reg(3), DcacheLineWordsOff + 4), reg(1));
+      mov32(reg(5), reg(4));
+      if(Rtn != 0) mov64(mem(Rt), reg(4));
+    } else if(floating && size == Word) {
       and32(reg(3), reg(0), imm(0x0c));
       add64(reg(3), reg(2), reg(3));
       mov32(reg(0), mem(sreg(2), offsetof(FPU, r[0]) - FpuBase + floatingWordOff));
@@ -274,12 +316,33 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
         shl32(reg(1), reg(1), reg(4));
       }
       mov32_u16(reg(0), mem(reg(2), DcacheLineDirtyOff));
+      if(storeConditional && (size == Word || size == Dual)) {
+        mov32(reg(4), imm(0));
+        sub32(reg(4), reg(4), reg(5));
+        and32(reg(1), reg(1), reg(4));
+      }
       or32(reg(1), reg(1), reg(0));
       mov32_u16(mem(reg(2), DcacheLineDirtyOff), reg(1));
-      mov64(mem(reg(2), DcacheLineDirtyPcOff), imm(emitVaddr));
+      if(storeConditional && (size == Word || size == Dual)) {
+        mov64(reg(0), mem(reg(2), DcacheLineDirtyPcOff));
+        mov64(reg(1), imm(emitVaddr));
+        cmp32(reg(5), imm(0), set_z);
+        cmov64(reg(0), reg(1), reg(0), flag_nz);
+        mov64(mem(reg(2), DcacheLineDirtyPcOff), reg(0));
+      } else {
+        mov64(mem(reg(2), DcacheLineDirtyPcOff), imm(emitVaddr));
+      }
     } else {
-      mov32_u16(mem(reg(2), DcacheLineDirtyOff), imm(1));
+      if(storeConditional && (size == Word || size == Dual)) {
+        mov32_u16(reg(0), mem(reg(2), DcacheLineDirtyOff));
+        mov32(reg(1), reg(5));
+        or32(reg(1), reg(1), reg(0));
+        mov32_u16(mem(reg(2), DcacheLineDirtyOff), reg(1));
+      } else {
+        mov32_u16(mem(reg(2), DcacheLineDirtyOff), imm(1));
+      }
     }
+    if(storeConditional && (size == Word || size == Dual)) mov32_u8(SccLlbit, imm(0));
   } else if(floating) {
     and32(reg(3), reg(0), imm(size == Dual ? 0x08 : 0x0c));
     add64(reg(3), reg(2), reg(3));
@@ -897,10 +960,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //LL Rt,Rs,i16
   case 0x30: {
-    setupCallf();
-    callf(&CPU::LL, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
-    return EmitExecuteResult::MayFault;
+    return jitMemoryOpcode(instruction, Word, SignExtend | LinkedConditional, [&]() -> EmitExecuteResult {
+      setupCallf();
+      callf(&CPU::LL, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
+    }, emitSlowPath);
   }
 
   //LWC1 Ft,Rs,i16
@@ -928,10 +993,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //LLD Rt,Rs,i16
   case 0x34: {
-    setupCallf();
-    callf(&CPU::LLD, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
-    return EmitExecuteResult::MayFault;
+    return jitMemoryOpcode(instruction, Dual, Require64 | LinkedConditional, [&]() -> EmitExecuteResult {
+      setupCallf();
+      callf(&CPU::LLD, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
+    }, emitSlowPath);
   }
 
   //LDC1 Ft,Rs,i16
@@ -962,10 +1029,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //SC Rt,Rs,i16
   case 0x38: {
-    setupCallf();
-    callf(&CPU::SC, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
-    return EmitExecuteResult::MayFault;
+    return jitMemoryOpcode(instruction, Word, Store | LinkedConditional, [&]() -> EmitExecuteResult {
+      setupCallf();
+      callf(&CPU::SC, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
+    }, emitSlowPath);
   }
 
   //SWC1 Ft,Rs,i16
@@ -993,10 +1062,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
 
   //SCD Rt,Rs,i16
   case 0x3c: {
-    setupCallf();
-    callf(&CPU::SCD, mem(Rt), mem(Rs), imm(i16));
-    emitZeroClear(Rtn);
-    return EmitExecuteResult::MayFault;
+    return jitMemoryOpcode(instruction, Dual, Require64 | Store | LinkedConditional, [&]() -> EmitExecuteResult {
+      setupCallf();
+      callf(&CPU::SCD, mem(Rt), mem(Rs), imm(i16));
+      emitZeroClear(Rtn);
+      return EmitExecuteResult::MayFault;
+    }, emitSlowPath);
   }
 
   //SDC1 Ft,Rs,i16
