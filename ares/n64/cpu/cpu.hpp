@@ -83,6 +83,7 @@ struct CPU : Thread {
       JitStateKeyMayChange = 1 << 2,
       CountCompareWrite = 1 << 3,
       UnconditionalJump = 1 << 4,
+      UnconditionalJumpAndLink = 1 << 5,
     };
 
     u32 flags = 0;
@@ -92,6 +93,7 @@ struct CPU : Thread {
     auto jitStateKeyMayChange() const -> bool { return flags & JitStateKeyMayChange; }
     auto countCompareWrite() const -> bool { return flags & CountCompareWrite; }
     auto unconditionalJump() const -> bool { return flags & UnconditionalJump; }
+    auto unconditionalJumpAndLink() const -> bool { return flags & UnconditionalJumpAndLink; }
   };
 
   struct PhysAccess {

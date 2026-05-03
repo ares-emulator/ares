@@ -330,6 +330,12 @@ auto computeBranchTargets(bool coprocessor1Enabled, u64 branchVaddr, u32 instruc
   return {~0ull, ~0ull};
 }
 
+auto endsBlockAfterDelaySlot(ares::Nintendo64::CPU::OpInfo info) -> bool {
+  if(!info.unconditionalJump()) return false;
+  if(info.unconditionalJumpAndLink()) return false;
+  return true;
+}
+
 // Build the static compilation plan before host code emission:
 // - choose the linear window,
 // - classify internal/external conditional edges,
@@ -348,7 +354,7 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
     // First pass: grow a linear window until a hard stop condition.
     u64 currentVaddr = vaddr;
     u32 currentAddress = address;
-    bool prevIsUncondBranch = false;
+    bool prevEndsBlockAfterDelaySlot = false;
     while(true) {
       if(recompiler.sectionIndex(currentAddress) != plan.startSection) break;
       if(!plan.instructions.empty() && GDB::server.hasBreakpointAt(u32(currentVaddr))) break;
@@ -361,12 +367,11 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
       pi.instruction = instruction;
       pi.info = info;
       plan.instructions.push_back(pi);
-      // Stop one instruction after an unconditional jump to include its delay slot.
-      if(prevIsUncondBranch) break;
+      if(prevEndsBlockAfterDelaySlot) break;
       // Hard boundaries that must terminate the planning window.
       if(!info.branch() && (info.jitStateKeyMayChange() || info.countCompareWrite())) break;
       if(recompiler.sectionIndex(currentAddress + 4) != plan.startSection) break;
-      prevIsUncondBranch = info.unconditionalJump();
+      prevEndsBlockAfterDelaySlot = endsBlockAfterDelaySlot(info);
       currentVaddr += 4;
       currentAddress += 4;
     }
@@ -395,10 +400,6 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
   };
 
   for(auto& instruction : plan.instructions) {
-    // Second pass: classify each conditional edge as internal or external.
-    if(!instruction.info.branch() || instruction.info.unconditionalJump()) continue;
-    auto [branchTakenVaddr, branchFallthroughVaddr] =
-      computeBranchTargets(recompiler.emitStateKey.coprocessor1Enabled(), instruction.vaddr, instruction.instruction);
     auto isInternal = [&](u64 targetVaddr) -> bool {
       // Reject null / out-of-window / unaligned candidate targets.
       if(targetVaddr == ~0ull) return false;
@@ -410,6 +411,16 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
       if(recompiler.sectionIndex(targetAddress) != plan.startSection) return false;
       return true;
     };
+    if(!instruction.info.branch()) continue;
+    if(instruction.info.unconditionalJump()) {
+      if(!instruction.info.unconditionalJumpAndLink()) continue;
+      u64 returnVaddr = instruction.vaddr + 8;
+      if(isInternal(returnVaddr)) addInternalEntry(returnVaddr);
+      continue;
+    }
+    // Second pass: classify each conditional edge as internal or external.
+    auto [branchTakenVaddr, branchFallthroughVaddr] =
+      computeBranchTargets(recompiler.emitStateKey.coprocessor1Enabled(), instruction.vaddr, instruction.instruction);
     if(isInternal(branchTakenVaddr)) addInternalEntry(branchTakenVaddr);
     if(isInternal(branchFallthroughVaddr)) addInternalEntry(branchFallthroughVaddr);
   }

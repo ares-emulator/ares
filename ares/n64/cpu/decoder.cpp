@@ -6,6 +6,7 @@
 #define JitStateKeyMayChange              info.flags |= OpInfo::JitStateKeyMayChange
 #define CountCompareWrite                 info.flags |= OpInfo::CountCompareWrite
 #define UnconditionalJump                 info.flags |= OpInfo::UnconditionalJump
+#define UnconditionalJumpAndLink          info.flags |= OpInfo::UnconditionalJumpAndLink
 #define LikelyIf(x)                       if(x) LikelyBranch
 #define WritesGpSp(n)                     (((n) == 28 || (n) == 29) \
                                             ? (JitStateKeyMayChange) : info.flags)
@@ -24,7 +25,7 @@ auto CPU::decoderEXECUTEInfo(u32 instruction) const -> OpInfo {
   jp(0x00, SPECIAL);
   jp(0x01, REGIMM);
   op(0x02, J, Branch, UnconditionalJump);
-  op(0x03, JAL, Branch, UnconditionalJump);
+  op(0x03, JAL, Branch, UnconditionalJump, UnconditionalJumpAndLink);
   op(0x04, BEQ, Branch);
   op(0x05, BNE, Branch);
   op(0x06, BLEZ, Branch);
@@ -100,7 +101,7 @@ auto CPU::decoderSPECIALInfo(u32 instruction) const -> OpInfo {
   op(0x06, SRLV, WritesGpSpRd);
   op(0x07, SRAV, WritesGpSpRd);
   op(0x08, JR, Branch, UnconditionalJump);
-  op(0x09, JALR, Branch, UnconditionalJump, WritesGpSpRd);
+  op(0x09, JALR, Branch, UnconditionalJump, UnconditionalJumpAndLink, WritesGpSpRd);
   op(0x0a, INVALID);
   op(0x0b, INVALID);
   op(0x0c, SYSCALL);
@@ -405,6 +406,7 @@ auto CPU::decoderCOP2Info(u32 instruction) const -> OpInfo {
 #undef JitStateKeyMayChange
 #undef CountCompareWrite
 #undef UnconditionalJump
+#undef UnconditionalJumpAndLink
 #undef LikelyIf
 #undef WritesGpSp
 #undef WritesGpSpRt
