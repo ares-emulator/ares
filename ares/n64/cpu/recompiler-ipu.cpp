@@ -155,28 +155,6 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
     add64(ProfileDcacheHitsMem, ProfileDcacheHitsMem, imm(1));
   }
   if(store) {
-    if(system.homebrewMode) {
-      if(partialLeft && size == Word) {
-        and32(reg(3), reg(0), imm(3));
-        mov32(reg(1), imm(0x0f));
-        lshr32(reg(1), reg(1), reg(3));
-        and32(reg(3), reg(0), imm(0x0c));
-        shl32(reg(1), reg(1), reg(3));
-      } else if(partialRight && size == Word) {
-        and32(reg(3), reg(0), imm(3));
-        add32(reg(3), reg(3), imm(1));
-        mov32(reg(1), imm(1));
-        shl32(reg(1), reg(1), reg(3));
-        sub32(reg(1), reg(1), imm(1));
-        and32(reg(3), reg(0), imm(0x0c));
-        shl32(reg(1), reg(1), reg(3));
-      } else {
-        and32(reg(3), reg(0), imm(0x0f));
-        mov32(reg(1), imm((1 << size) - 1));
-        shl32(reg(1), reg(1), reg(3));
-      }
-    }
-
     if(floating && size == Word) {
       and32(reg(3), reg(0), imm(0x0c));
       add64(reg(3), reg(2), reg(3));
@@ -275,6 +253,26 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
     }
 
     if(system.homebrewMode) {
+      add64(reg(4), mem(Rs), imm(i16));
+      and32(reg(4), reg(4), imm(0x0f));
+      if(partialLeft && size == Word) {
+        and32(reg(3), reg(4), imm(3));
+        mov32(reg(1), imm(0x0f));
+        lshr32(reg(1), reg(1), reg(3));
+        and32(reg(3), reg(4), imm(0x0c));
+        shl32(reg(1), reg(1), reg(3));
+      } else if(partialRight && size == Word) {
+        and32(reg(3), reg(4), imm(3));
+        add32(reg(3), reg(3), imm(1));
+        mov32(reg(1), imm(1));
+        shl32(reg(1), reg(1), reg(3));
+        sub32(reg(1), reg(1), imm(1));
+        and32(reg(3), reg(4), imm(0x0c));
+        shl32(reg(1), reg(1), reg(3));
+      } else {
+        mov32(reg(1), imm((1 << size) - 1));
+        shl32(reg(1), reg(1), reg(4));
+      }
       mov32_u16(reg(0), mem(reg(2), DcacheLineDirtyOff));
       or32(reg(1), reg(1), reg(0));
       mov32_u16(mem(reg(2), DcacheLineDirtyOff), reg(1));
