@@ -715,6 +715,7 @@ auto CPU::LWL(r64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::LWR(r64& rt, cr64& rs, s16 imm) -> void {
   u64 vaddr = rs.u64 + imm;
+  u64 upper = rt.u64 & 0xffffffff00000000ull;
   u32 data = rt.u32;
   auto mem = read<Word>(vaddr & ~3);
   if (!mem) return;
@@ -731,22 +732,19 @@ auto CPU::LWR(r64& rt, cr64& rs, s16 imm) -> void {
     data &= 0xff000000;
     *mem >>= 8;
     data |= *mem;
-    if(context.bits == 32) rt.u32 = data;
-    if(context.bits == 64) rt.s64 = (s32)data;
+    rt.u64 = upper | data;
     break;
   case 2:
     data &= 0xffff0000;
     *mem >>= 16;
     data |= *mem;
-    if(context.bits == 32) rt.u32 = data;
-    if(context.bits == 64) rt.s64 = (s32)data;
+    rt.u64 = upper | data;
     break;
   case 3:
     data &= 0xffffff00;
     *mem >>= 24;
     data |= *mem;
-    if(context.bits == 32) rt.u32 = data;
-    if(context.bits == 64) rt.s64 = (s32)data;
+    rt.u64 = upper | data;
     break;
   }
 
@@ -756,22 +754,19 @@ auto CPU::LWR(r64& rt, cr64& rs, s16 imm) -> void {
     data &= 0xffffff00;
     *mem >>= 24;
     data |= *mem;
-    if(context.bits == 32) rt.u32 = data;
-    if(context.bits == 64) rt.s64 = (s32)data;
+    rt.u64 = upper | data;
     break;
   case 1:
     data &= 0xffff0000;
     *mem >>= 16;
     data |= *mem;
-    if(context.bits == 32) rt.u32 = data;
-    if(context.bits == 64) rt.s64 = (s32)data;
+    rt.u64 = upper | data;
     break;
   case 2:
     data &= 0xff000000;
     *mem >>= 8;
     data |= *mem;
-    if(context.bits == 32) rt.u32 = data;
-    if(context.bits == 64) rt.s64 = (s32)data;
+    rt.u64 = upper | data;
     break;
   case 3:
     data &= 0x00000000;

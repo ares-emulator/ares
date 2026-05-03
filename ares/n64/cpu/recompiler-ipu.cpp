@@ -331,8 +331,12 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       xor32(reg(0), reg(0), imm((sljit_sw)0xffff'ffffu));
       and32(reg(0), mem(Rt32), reg(0));
       or32(reg(3), reg(3), reg(0));
-      if(extendedAddressing) mov64_s32(reg(3), reg(3));
-      else                   mov64_u32(reg(3), reg(3));
+      mov64_s32(reg(2), reg(3));
+      lshr64(reg(0), mem(Rt), imm(32));
+      shl64(reg(0), reg(0), imm(32));
+      or64(reg(3), reg(3), reg(0));
+      cmp32(reg(1), imm(0), set_z);
+      cmov64(reg(3), reg(2), reg(3), flag_z);
     } else if(partialRight && size == Dual) {
       and32(reg(1), reg(0), imm(7));
       xor32(reg(1), reg(1), imm(7));
