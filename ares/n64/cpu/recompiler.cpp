@@ -489,7 +489,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
   };
 
   // Phase 3: begin host emission.
-  beginFunction(3);
+  beginFunction(3, 3, 6);
   slowPaths.clear();
   emitDeferredCycles = 0;
 

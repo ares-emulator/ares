@@ -659,12 +659,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     }
     or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), mem(Rt), set_z);
-    cmov64(reg(6), reg(0), reg(3), flag_z);
-    mov64(PipelineReg(pc), reg(6));
-    cmov64(reg(6), reg(2), reg(4), flag_z);
-    mov64(PipelineReg(nextpc), reg(6));
-    cmov32(reg(6), reg(1), reg(5), flag_z);
-    mov32(PipelineReg(state), reg(6));
+    cmov64(reg(0), reg(0), reg(3), flag_z);
+    mov64(PipelineReg(pc), reg(0));
+    cmov64(reg(0), reg(2), reg(4), flag_z);
+    mov64(PipelineReg(nextpc), reg(0));
+    cmov32(reg(0), reg(1), reg(5), flag_z);
+    mov32(PipelineReg(state), reg(0));
     mov32(reg(0), imm(0));
     mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     cmov32(reg(2), reg(1), reg(0), flag_z);
@@ -686,12 +686,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     }
     or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), mem(Rt), set_z);
-    cmov64(reg(6), reg(0), reg(3), flag_nz);
-    mov64(PipelineReg(pc), reg(6));
-    cmov64(reg(6), reg(2), reg(4), flag_nz);
-    mov64(PipelineReg(nextpc), reg(6));
-    cmov32(reg(6), reg(1), reg(5), flag_nz);
-    mov32(PipelineReg(state), reg(6));
+    cmov64(reg(0), reg(0), reg(3), flag_nz);
+    mov64(PipelineReg(pc), reg(0));
+    cmov64(reg(0), reg(2), reg(4), flag_nz);
+    mov64(PipelineReg(nextpc), reg(0));
+    cmov32(reg(0), reg(1), reg(5), flag_nz);
+    mov32(PipelineReg(state), reg(0));
     mov32(reg(0), imm(0));
     mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     cmov32(reg(2), reg(1), reg(0), flag_nz);
@@ -713,12 +713,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     }
     or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_sgt);
-    cmov64(reg(6), reg(0), reg(3), flag_sle);
-    mov64(PipelineReg(pc), reg(6));
-    cmov64(reg(6), reg(2), reg(4), flag_sle);
-    mov64(PipelineReg(nextpc), reg(6));
-    cmov32(reg(6), reg(1), reg(5), flag_sle);
-    mov32(PipelineReg(state), reg(6));
+    cmov64(reg(0), reg(0), reg(3), flag_sle);
+    mov64(PipelineReg(pc), reg(0));
+    cmov64(reg(0), reg(2), reg(4), flag_sle);
+    mov64(PipelineReg(nextpc), reg(0));
+    cmov32(reg(0), reg(1), reg(5), flag_sle);
+    mov32(PipelineReg(state), reg(0));
     mov32(reg(0), imm(0));
     mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     cmov32(reg(2), reg(1), reg(0), flag_sle);
@@ -740,12 +740,12 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction, bool emitSlowPath, EmitPcMode
     }
     or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_sgt);
-    cmov64(reg(6), reg(0), reg(3), flag_sgt);
-    mov64(PipelineReg(pc), reg(6));
-    cmov64(reg(6), reg(2), reg(4), flag_sgt);
-    mov64(PipelineReg(nextpc), reg(6));
-    cmov32(reg(6), reg(1), reg(5), flag_sgt);
-    mov32(PipelineReg(state), reg(6));
+    cmov64(reg(0), reg(0), reg(3), flag_sgt);
+    mov64(PipelineReg(pc), reg(0));
+    cmov64(reg(0), reg(2), reg(4), flag_sgt);
+    mov64(PipelineReg(nextpc), reg(0));
+    cmov32(reg(0), reg(1), reg(5), flag_sgt);
+    mov32(PipelineReg(state), reg(0));
     mov32(reg(0), imm(0));
     mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     cmov32(reg(2), reg(1), reg(0), flag_sgt);
@@ -1857,12 +1857,12 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExec
     }
     or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_slt);
-    cmov64(reg(6), reg(0), reg(3), flag_slt);
-    mov64(PipelineReg(pc), reg(6));
-    cmov64(reg(6), reg(2), reg(4), flag_slt);
-    mov64(PipelineReg(nextpc), reg(6));
-    cmov32(reg(6), reg(1), reg(5), flag_slt);
-    mov32(PipelineReg(state), reg(6));
+    cmov64(reg(0), reg(0), reg(3), flag_slt);
+    mov64(PipelineReg(pc), reg(0));
+    cmov64(reg(0), reg(2), reg(4), flag_slt);
+    mov64(PipelineReg(nextpc), reg(0));
+    cmov32(reg(0), reg(1), reg(5), flag_slt);
+    mov32(PipelineReg(state), reg(0));
     mov32(reg(0), imm(0));
     mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     cmov32(reg(2), reg(1), reg(0), flag_slt);
@@ -1884,12 +1884,12 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExec
     }
     or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_slt);
-    cmov64(reg(6), reg(0), reg(3), flag_sge);
-    mov64(PipelineReg(pc), reg(6));
-    cmov64(reg(6), reg(2), reg(4), flag_sge);
-    mov64(PipelineReg(nextpc), reg(6));
-    cmov32(reg(6), reg(1), reg(5), flag_sge);
-    mov32(PipelineReg(state), reg(6));
+    cmov64(reg(0), reg(0), reg(3), flag_sge);
+    mov64(PipelineReg(pc), reg(0));
+    cmov64(reg(0), reg(2), reg(4), flag_sge);
+    mov64(PipelineReg(nextpc), reg(0));
+    cmov32(reg(0), reg(1), reg(5), flag_sge);
+    mov32(PipelineReg(state), reg(0));
     mov32(reg(0), imm(0));
     mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     cmov32(reg(2), reg(1), reg(0), flag_sge);
@@ -2041,12 +2041,12 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExec
     }
     or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_slt);
-    cmov64(reg(6), reg(0), reg(3), flag_slt);
-    mov64(PipelineReg(pc), reg(6));
-    cmov64(reg(6), reg(2), reg(4), flag_slt);
-    mov64(PipelineReg(nextpc), reg(6));
-    cmov32(reg(6), reg(1), reg(5), flag_slt);
-    mov32(PipelineReg(state), reg(6));
+    cmov64(reg(0), reg(0), reg(3), flag_slt);
+    mov64(PipelineReg(pc), reg(0));
+    cmov64(reg(0), reg(2), reg(4), flag_slt);
+    mov64(PipelineReg(nextpc), reg(0));
+    cmov32(reg(0), reg(1), reg(5), flag_slt);
+    mov32(PipelineReg(state), reg(0));
     mov32(reg(0), imm(0));
     mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     cmov32(reg(2), reg(1), reg(0), flag_slt);
@@ -2069,12 +2069,12 @@ auto CPU::Recompiler::emitREGIMM(u32 instruction, EmitPcMode pcMode) -> EmitExec
     }
     or32(reg(5), reg(1), imm(Pipeline::EndBlock));
     cmp64(mem(Rs), imm(0), set_slt);
-    cmov64(reg(6), reg(0), reg(3), flag_sge);
-    mov64(PipelineReg(pc), reg(6));
-    cmov64(reg(6), reg(2), reg(4), flag_sge);
-    mov64(PipelineReg(nextpc), reg(6));
-    cmov32(reg(6), reg(1), reg(5), flag_sge);
-    mov32(PipelineReg(state), reg(6));
+    cmov64(reg(0), reg(0), reg(3), flag_sge);
+    mov64(PipelineReg(pc), reg(0));
+    cmov64(reg(0), reg(2), reg(4), flag_sge);
+    mov64(PipelineReg(nextpc), reg(0));
+    cmov32(reg(0), reg(1), reg(5), flag_sge);
+    mov32(PipelineReg(state), reg(0));
     mov32(reg(0), imm(0));
     mov32(reg(1), imm(Pipeline::DelaySlot | Pipeline::EndBlock));
     cmov32(reg(2), reg(1), reg(0), flag_sge);
