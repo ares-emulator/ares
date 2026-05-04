@@ -668,6 +668,19 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
     prevBranched = branched;
   }
 
+  for(auto& [targetVaddr, targetLabel] : internalLabels) {
+    if(targetLabel) continue;
+    print("CPU JIT: unresolved internal label at vaddr=", hex(targetVaddr), ", block=", hex(vaddr), "\n");
+    resetCompiler();
+    return nullptr;
+  }
+  if(!pendingJumpVaddrs.empty()) {
+    print("CPU JIT: unresolved internal jumps=", pendingJumpVaddrs.size(),
+          ", block=", hex(vaddr), ", paddr=", hex(address, 8L), "\n");
+    resetCompiler();
+    return nullptr;
+  }
+
   // Phase 5: emit epilogue and deferred slow paths.
   flushDeferredCycles();
   jumpEpilog();
