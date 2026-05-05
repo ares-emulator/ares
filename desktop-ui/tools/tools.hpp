@@ -127,6 +127,31 @@ struct TraceLogger : VerticalLayout {
   HorizontalLayout controlLayout{this, Size{~0, 0}};
 };
 
+struct TapeViewer : VerticalLayout {
+  auto construct() -> void;
+  auto reload() -> void;
+  auto unload() -> void;
+  auto refresh() -> void;
+  auto liveRefresh() -> void;
+  auto eventChange() -> void;
+
+  bool stopped;
+
+  Label tapeLabel{this, Size{~0, 0}, 5};
+  ComboButton tapeList{this, Size{~0, 0}};
+  VerticalLayout tapeLayout{this, Size{~0, ~0}};
+  Label statusLabel{&tapeLayout, Size{~0, 0}, 5};
+  Label lengthLabel{&tapeLayout, Size{~0, 0}, 5};
+  Button newButton{&tapeLayout, Size{~0, 0}};
+  Button loadButton{&tapeLayout, Size{~0, 0}};
+  Button unloadButton{&tapeLayout, Size{~0, 0}};
+  Button playButton{&tapeLayout, Size{~0, 0}};
+  Button recordButton{&tapeLayout, Size{~0, 0}};
+  Button fastForwardButton{&tapeLayout, Size{~0, 0}};
+  Button rewindButton{&tapeLayout, Size{~0, 0}};
+  Button stopButton{&tapeLayout, Size{~0, 0}};
+};
+
 struct ToolsWindow : Window {
   ToolsWindow();
   auto show(const string& panel) -> void;
@@ -142,6 +167,7 @@ struct ToolsWindow : Window {
       StreamManager streamManager;
       PropertiesViewer propertiesViewer;
       TraceLogger traceLogger;
+      TapeViewer tapeViewer;
       HomePanel homePanel;
 };
 
@@ -154,3 +180,4 @@ extern GraphicsViewer& graphicsViewer;
 extern StreamManager& streamManager;
 extern PropertiesViewer& propertiesViewer;
 extern TraceLogger& traceLogger;
+extern TapeViewer& tapeViewer;

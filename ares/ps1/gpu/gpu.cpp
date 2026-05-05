@@ -61,59 +61,41 @@ auto GPU::unload() -> void {
 }
 
 auto GPU::main() -> void {
-  step(12);
+  io.hcounter = 0;
 
-  if(io.hcounter == 1800) {
-    //hsync signal is sent even during vertical blanking period
-    timer.hsync(1);
+  step(hblankStart());
+  io.hcounter += hblankStart();
+  timer.hsync(1);
+  Thread::synchronize();
+
+  step(htotal() - hblankStart());
+  io.hcounter = htotal();
+  timer.hsync(0);
+  io.hcounter = 0;
+
+  if(++io.vcounter == vtotal()) {
+    io.vcounter = 0;
+    io.field = !io.field;
+    frame();
   }
 
-  if(io.hcounter == 2172) {
-    io.hcounter = 0;
-    timer.hsync(0);
+  if(io.vcounter == vstart()) {
+    timer.vsync(0);
+    interrupt.lower(Interrupt::Vblank);
+  }
 
-    if(++io.vcounter == vtotal()) {
-      io.vcounter = 0;
-      io.field = !io.field;
-      frame();
-    }
-
-    if(io.vcounter == vstart()) {
-      timer.vsync(0);
-      interrupt.lower(Interrupt::Vblank);
-    }
-
-    if(io.vcounter == vend()) {
-      timer.vsync(1);
-      interrupt.raise(Interrupt::Vblank);
-      blitter.queue();
-    }
+  if(io.vcounter == vend()) {
+    timer.vsync(1);
+    interrupt.raise(Interrupt::Vblank);
+    blitter.queue();
   }
 }
 
 auto GPU::frame() -> void {
-  switch(io.horizontalResolution) {
-  case 0:
-    display.dotclock = 10;
-    display.width = 256;
-    break;
-  case 1:
-    display.dotclock = 8;
-    display.width = 320;
-    break;
-  case 2:
-    display.dotclock = 5;
-    display.width = 512;
-    break;
-  case 3:
-    display.dotclock = 4;
-    display.width = 640;
-    break;
-  case 4: case 5: case 6: case 7:
-    display.dotclock = 7;
-    display.width = 368;
-    break;
-  }
+  auto newDivider = dotclockDivider();
+  if(display.dotclock != newDivider) io.dotcounter = 0;
+  display.dotclock = newDivider;
+  display.width = displayWidth();
 
   if(io.verticalResolution && io.interlace) {
     display.height = io.videoMode ? 512 : 480;
@@ -125,22 +107,30 @@ auto GPU::frame() -> void {
 }
 
 auto GPU::step(u32 clocks) -> void {
-  Thread::clock += clocks;
-  io.hcounter += clocks;
+  if(timer.timers[0].clock == 1) {
+    u32 div = dotclockDivider();
+    if(div == 0) div = 1;
+    io.dotcounter += clocks;
+    u32 dots = io.dotcounter / div;
+    io.dotcounter -= dots * div;
+    if(dots) timer.timers[0].step(dots);
+  }
+
+  Thread::step(clocks);
   io.pcounter -= clocks;
   if(io.pcounter < 0) io.pcounter = 0;
+  Thread::synchronize();
 }
 
 auto GPU::power(bool reset) -> void {
-  Thread::reset();
-  Memory::Interface::setWaitStates(4, 4, 4);
+  Thread::create(system.gpuFrequency(), std::bind_front(&GPU::main, this));
   screen->power();
   refreshed = false;
 
   random.array({vram.data, vram.size});
-  display.dotclock = 0;
-  display.width = 0;
-  display.height = 0;
+  display.dotclock = 10;
+  display.width = 256;
+  display.height = 240;
   display.interlace = 0;
   display.previous.x = 0;
   display.previous.y = 0;

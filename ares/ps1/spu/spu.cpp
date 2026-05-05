@@ -45,7 +45,7 @@ auto SPU::unload() -> void {
 
 auto SPU::main() -> void {
   sample();
-  step(33'868'800 / 44'100);
+  step(1);
 }
 
 auto SPU::sample() -> void {
@@ -98,12 +98,12 @@ auto SPU::sample() -> void {
 }
 
 auto SPU::step(u32 clocks) -> void {
-  Thread::clock += clocks;
+  Thread::step(clocks);
+  Thread::synchronize();
 }
 
 auto SPU::power(bool reset) -> void {
-  Thread::reset();
-  Memory::Interface::setWaitStates(18, 18, 45);
+  Thread::create(44'100, std::bind_front(&SPU::main, this));
   random.array({ram.data, ram.size});
 
   master = {};

@@ -10,17 +10,19 @@ auto CPU::read(n16 address) -> n8 {
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
+  io.rwLine = 1;
   writeBus(address, data);
   io.openBus = data;
   step(rate());
+  io.rwLine = 0;
 }
 
 auto CPU::lastCycle() -> void {
-  io.interruptPending = ((io.irqLine | io.apuLine) & !P.i) | io.nmiPending;
+  io.interruptPending = irqPending() | io.nmiPending;
 }
 
 auto CPU::cancelNmi() -> void {
-  io.interruptPending = ((io.irqLine | io.apuLine) & !P.i);
+  io.interruptPending = irqPending();
 }
 
 auto CPU::delayIrq() -> void {
@@ -33,6 +35,7 @@ auto CPU::irqPending() -> bool {
 
 auto CPU::nmi(n16& vector) -> void {
   if(io.nmiPending) {
+    if(irqPending()) debugger.interrupt("Haijack IRQ by NMI");
     io.nmiPending = false;
     vector = 0xfffa;
   }

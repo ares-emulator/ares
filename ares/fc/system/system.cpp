@@ -8,6 +8,7 @@ auto enumerate() -> std::vector<string> {
     "[Nintendo] Famicom (NTSC-J)",
     "[Nintendo] Famicom (NTSC-U)",
     "[Nintendo] Famicom (PAL)",
+    "[Dendy] Dendy",
   };
 }
 
@@ -47,19 +48,28 @@ auto System::load(Node::System& root, string name) -> bool {
 
   information = {};
   if(name.find("NTSC-J")) {
-    information.name = "Famicom";
-    information.region = Region::NTSCJ;
-    information.frequency = Constants::Colorburst::NTSC * 6.0;
+    information.name        = "Famicom";
+    information.region      = Region::NTSCJ;
+    information.frequency   = Constants::Colorburst::NTSC * 6.0;
+    information.cpuDivider  = 12;
   }
   if(name.find("NTSC-U")) {
-    information.name = "Famicom";
-    information.region = Region::NTSCU;
-    information.frequency = Constants::Colorburst::NTSC * 6.0;
+    information.name        = "Famicom";
+    information.region      = Region::NTSCU;
+    information.frequency   = Constants::Colorburst::NTSC * 6.0;
+    information.cpuDivider  = 12;
   }
   if(name.find("PAL")) {
-    information.name = "Famicom";
-    information.region = Region::PAL;
-    information.frequency = Constants::Colorburst::PAL * 6.0;
+    information.name        = "Famicom";
+    information.region      = Region::PAL;
+    information.frequency   = Constants::Colorburst::PAL * 6.0;
+    information.cpuDivider  = 16;
+  }
+  if(name.find("Dendy")) {
+    information.name        = "Famicom";
+    information.region      = Region::Dendy;
+    information.frequency   = Constants::Colorburst::PAL * 6.0;
+    information.cpuDivider  = 15;
   }
 
   node = std::make_shared<Core::System>(information.name);
@@ -94,6 +104,7 @@ auto System::save() -> void {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  controls.unload();
   cpu.unload();
   apu.unload();
   ppu.unload();

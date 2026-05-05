@@ -5,6 +5,38 @@ Presentation& presentation = Instances::presentation();
 #define ELLIPSIS "\u2026"
 
 Presentation::Presentation() {
+  if(program.kiosk) {
+    iconLayout.setCollapsible();
+    viewport.setDroppable().onDrop([&](std::vector<string> filenames) {
+      Program::Guard guard;
+      if(filenames.size() != 1) return;
+      if(auto emulator = program.identify(filenames.front())) {
+        program.load(emulator, filenames.front());
+      }
+    });
+
+    Application::onOpenFile([&](auto filename) {
+      Program::Guard guard;
+      if(auto emulator = program.identify(filename)) {
+        program.load(emulator, filename);
+      }
+    });
+
+    onClose([&] {
+      program.quit();
+    });
+
+    menuBar.setVisible(false);
+    layout.remove(statusLayout);
+    resizeWindow();
+    setTitle({ares::Name, " ", ares::Version});
+    setAssociatedFile();
+    setBackgroundColor({0, 0, 0});
+    setAlignment(Alignment::Center);
+    setVisible();
+    return;
+  }
+
   loadMenu.setText("Load");
 
   systemMenu.setVisible(false);
@@ -153,6 +185,9 @@ Presentation::Presentation() {
   debugSettingsAction.setText("Debug" ELLIPSIS).setIcon(Icon::Device::Network).onActivate([&] {
     settingsWindow.show("Debug");
   });
+  importExportAction.setText("Settings File" ELLIPSIS).setIcon(Icon::Action::Save).onActivate([&] {
+    settingsWindow.show("Settings File");
+  });
 
   toolsMenu.setVisible(false).setText("Tools");
   saveStateMenu.setText("Save State").setIcon(Icon::Media::Record);
@@ -225,10 +260,14 @@ Presentation::Presentation() {
   traceLoggerAction.setText("Tracer").setIcon(Icon::Emblem::Script).onActivate([&] {
     toolsWindow.show("Tracer");
   });
+  tapeViewerAction.setText("Tape").setIcon(Icon::Device::Tape).onActivate([&] {
+    toolsWindow.show("Tape");
+  });
 
   helpMenu.setText("Help");
   aboutAction.setText("About" ELLIPSIS).setIcon(Icon::Prompt::Question).onActivate([&] {
     multiFactorImage logo(Resource::Ares::Logo1x, Resource::Ares::Logo2x);
+    Program::Guard guard;
     AboutDialog()
     .setName(ares::Name)
     .setLogo(logo)
@@ -325,7 +364,7 @@ auto Presentation::resizeWindow() -> void {
     viewportHeight = videoHeight * multiplier;
   }
 
-  u32 statusHeight = showStatusBarSetting.checked() ? StatusHeight : 0;
+  u32 statusHeight = (!program.kiosk && showStatusBarSetting.checked()) ? StatusHeight : 0;
 
   // Prevent the window frame from going out of bounds
   u32 monitorHeight = 1;
@@ -354,6 +393,7 @@ auto Presentation::resizeWindow() -> void {
 }
 
 auto Presentation::loadEmulators() -> void {
+  if(program.kiosk) return;
   loadMenu.reset();
 
   //clean up the recent games history first
@@ -498,19 +538,23 @@ auto Presentation::loadEmulators() -> void {
 auto Presentation::loadEmulator() -> void {
   setTitle(emulator->root->game());
   setAssociatedFile(emulator->game->location);
-  systemMenu.setText(emulator->name);
-  systemMenu.setVisible();
 
-  refreshSystemMenu();
+  if(!program.kiosk) {
+    systemMenu.setText(emulator->name);
+    systemMenu.setVisible();
 
-  toolsMenu.setVisible(true);
-  pauseEmulation.setChecked(false);
+    refreshSystemMenu();
+
+    toolsMenu.setVisible(true);
+    pauseEmulation.setChecked(false);
+  }
 
   setFocused();
   viewport.setFocused();
 }
 
 auto Presentation::refreshSystemMenu() -> void {
+  if(program.kiosk) return;
   systemMenu.reset();
 
   //allow each emulator core to create any specialized menus necessary:
@@ -520,7 +564,7 @@ auto Presentation::refreshSystemMenu() -> void {
 
   //Build the Dip Switch menu if the emulator core has a DIP Switches node
   if(auto dipSwitches = ares::Node::find<ares::Node::Object>(emulator->root, "DIP Switches")) {
-    Menu dipSwitchMenu;
+    Menu dipSwitchMenu{&systemMenu};
     dipSwitchMenu.setText("DIP Switches");
     
     for(auto dip : ares::Node::enumerate<ares::Node::Setting::Boolean>(emulator->root)) {
@@ -551,9 +595,8 @@ auto Presentation::refreshSystemMenu() -> void {
       }
     }
 
-    if(dipSwitchMenu.actionCount() > 0) systemMenu.append(dipSwitchMenu);
+    systemMenu.append(MenuSeparator());
   }
-  if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
 
   u32 portsFound = 0;
   for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {
@@ -632,6 +675,7 @@ auto Presentation::refreshSystemMenu() -> void {
 auto Presentation::unloadEmulator(bool reloading) -> void {
   setTitle({ares::Name, " ", ares::Version});
   setAssociatedFile();
+  if(program.kiosk) return;
   systemMenu.setVisible(false);
   systemMenu.reset();
 
@@ -730,16 +774,18 @@ auto Presentation::loadShaders() -> void {
     }
   }
 
-  if(program.startShader) {
+  if(program.startShader && !shaderArgApplied) {
+    shaderArgApplied = true;
     string existingShader = settings.video.shader;
 
+    program.startShader.transform("\\", "/");
     if(!program.startShader.imatch("None")) {
-      settings.video.shader = {location, program.startShader, ".slangp"};
+      settings.video.shader = {program.startShader, ".slangp"};
     } else {
       settings.video.shader = program.startShader;
     }
 
-    if(inode::exists(settings.video.shader)) {
+    if(inode::exists({location, settings.video.shader})) {
       ruby::video.setShader({location, settings.video.shader});
       loadShaders();
     } else if(settings.video.shader.imatch("None")) {
@@ -749,7 +795,8 @@ auto Presentation::loadShaders() -> void {
       hiro::MessageDialog()
           .setTitle("Warning")
           .setAlignment(hiro::Alignment::Center)
-          .setText({ "Requested shader not found: ", settings.video.shader , "\nUsing existing defined shader: ", existingShader })
+          .setText({"Requested shader not found: ", location, settings.video.shader , 
+            "\nUsing existing defined shader: ", location, existingShader})
           .warning();
       settings.video.shader = existingShader;
     }

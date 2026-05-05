@@ -91,22 +91,10 @@ private:
     if(!cuesheet->load(cueLocation, archive, compressedFile)) return false;
 
     CD::Session session;
-    session.leadIn.lba = -LeadInSectors;
-    session.leadIn.end = -1;
+    session.leadIn.lba = -(CD::LeadInSectors + CD::Track1Pregap);
+    session.leadIn.end = -CD::Track1Pregap - 1;
+
     s32 lbaFileBase = 0;
-
-    // add 2 sec pregap to 1st track
-    if(!cuesheet->files[0].tracks[0].pregap)
-      cuesheet->files[0].tracks[0].pregap = Track1Pregap;
-    else
-      cuesheet->files[0].tracks[0].pregap = Track1Pregap + cuesheet->files[0].tracks[0].pregap();
-
-    if(cuesheet->files[0].tracks[0].indices[0].number == 1) {
-      session.tracks[1].indices[0].lba = 0;
-      session.tracks[1].indices[0].end =
-          cuesheet->files[0].tracks[0].pregap() + cuesheet->files[0].tracks[0].indices[0].lba - 1;
-    }
-
     s32 lbaIndex = 0;
     for(auto& file : cuesheet->files) {
       for(auto& track : file.tracks) {
@@ -135,7 +123,7 @@ private:
       lbaFileBase = lbaIndex;
     }
     session.leadOut.lba = lbaFileBase;
-    session.leadOut.end = lbaFileBase + LeadOutSectors - 1;
+    session.leadOut.end = lbaFileBase + CD::LeadOutSectors - 1;
 
     // determine track and index ranges
     session.firstTrack = 0xff;
@@ -155,7 +143,7 @@ private:
       session.lastTrack = track;
     }
 
-    _image.resize(2448 * (LeadInSectors + lbaFileBase + LeadOutSectors));
+    _image.resize(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lbaFileBase) + CD::LeadOutSectors));
 
     //preload subchannel data
     if (compressedFile != nullptr) {
@@ -163,7 +151,7 @@ private:
       if (subFile) {
         loadSub(cueLocation, archive, &subFile.get(), session);
       } else {
-        loadSub(cueLocation, archive, nullptr, session);
+        loadSub({ Location::notsuffix(cueLocation), ".sub" }, nullptr, nullptr, session);
       }
     } else {
       loadSub({ Location::notsuffix(cueLocation), ".sub" }, archive, compressedFile, session);
@@ -180,13 +168,12 @@ private:
       file_buffer fileBuffer;
       std::vector<u8> rawDataBuffer;
       std::span<const u8> rawDataView;
-      const Decode::ZIP::File* fileEntry = nullptr;
-      if (compressedFile != nullptr) {
+      if(compressedFile != nullptr) {
         auto filePathInArchive = file.archiveFolder;
         filePathInArchive.append(file.name);
         auto fileEntry = archive->findFile(filePathInArchive);
-        if (fileEntry) {
-          if (archive->isDataUncompressed(*fileEntry)) {
+        if(fileEntry) {
+          if(archive->isDataUncompressed(*fileEntry)) {
             rawDataView = archive->dataViewIfUncompressed(*fileEntry);
           } else {
             rawDataBuffer = archive->extract(*fileEntry);
@@ -198,8 +185,8 @@ private:
         fileBuffer = nall::file::open(location, nall::file::mode::read);
         usingFileBuffer = true;
       }
-      if (file.type == "wave") {
-        if (usingFileBuffer) fileBuffer.seek(44);  //skip RIFF header
+      if(file.type == "wave") {
+        if(usingFileBuffer) fileBuffer.seek(44); //skip RIFF header
         else fileDataReadPos = 44;
       }
       for(auto& track : file.tracks) {
@@ -207,19 +194,20 @@ private:
         for(auto& index : track.indices) {
           if(index.lba < 0) continue; // ignore gaps (not in file)
           for(s32 sector : range(index.sectorCount())) {
-            auto offset = 2448ull * (LeadInSectors + lbaFileBase + index.lba + sector);
+            auto lba = lbaFileBase + index.lba + sector;
+            auto offset = 2448ull * (CD::LeadInSectors + (u64)CD::LBAtoABA(lba));
             auto target = _image.data() + offset;
             auto length = track.sectorSize();
             if(length == 2048) {
               //ISO: generate header + parity data
-              memory::assign(target + 0, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff);  //sync
-              memory::assign(target + 6, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00);  //sync
-              auto [minute, second, frame] = CD::MSF(lbaFileBase + index.lba + sector);
-              target[12] = BCD::encode(minute);
-              target[13] = BCD::encode(second);
-              target[14] = BCD::encode(frame);
-              target[15] = 0x01;  //mode
-              if (usingFileBuffer) {
+              memory::assign(target + 0,  0x00, 0xff, 0xff, 0xff, 0xff, 0xff);  //sync
+              memory::assign(target + 6,  0xff, 0xff, 0xff, 0xff, 0xff, 0x00);  //sync
+              auto msf = CD::MSF::fromABA(CD::LBAtoABA(lba));
+              target[12] = BCD::encode(msf.minute);
+              target[13] = BCD::encode(msf.second);
+              target[14] = BCD::encode(msf.frame);
+              target[15] = 0x01;  // mode
+              if(usingFileBuffer) {
                 fileBuffer.read({ target + 16, length });
               } else {
                 memcpy(target + 16, rawDataView.data() + fileDataReadPos, length);
@@ -229,7 +217,7 @@ private:
             }
             if(length == 2352) {
               //BIN + WAV: direct copy
-              if (usingFileBuffer) {
+              if(usingFileBuffer) {
                 fileBuffer.read({target, length});
               } else {
                 memcpy(target, rawDataView.data() + fileDataReadPos, length);
@@ -241,7 +229,7 @@ private:
         }
         if(track.postgap) lbaFileBase += track.postgap();
       }
-      lbaFileBase += file.tracks.back().indices.back().end + 1;
+      lbaFileBase += file.sectorCount();
     }
     _loadOffset = _image.size();
 
@@ -255,8 +243,8 @@ private:
     if(!chd->load(location)) return false;
 
     CD::Session session;
-    session.leadIn.lba = -LeadInSectors;
-    session.leadIn.end = -1;
+    session.leadIn.lba = -(CD::LeadInSectors + CD::Track1Pregap);
+    session.leadIn.end = -CD::Track1Pregap - 1;
 
     s32 lbaIndex = 0;
     for(auto& track : chd->tracks) {
@@ -269,7 +257,7 @@ private:
     }
 
     session.leadOut.lba = lbaIndex;
-    session.leadOut.end = lbaIndex + LeadOutSectors - 1;
+    session.leadOut.end = lbaIndex + CD::LeadOutSectors - 1;
 
     // determine track and index ranges
     session.firstTrack = 0xff;
@@ -289,7 +277,7 @@ private:
       session.lastTrack = track;
     }
 
-    _image.resize(2448 * (LeadInSectors + lbaIndex + LeadOutSectors));
+    _image.resize(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lbaIndex) + CD::LeadOutSectors));
 
     //preload subchannel data
     loadSub({Location::notsuffix(location), ".sub"}, nullptr, nullptr, session);
@@ -298,28 +286,29 @@ private:
     _thread = thread::create(
     [this, chd = std::move(chd)](uintptr) -> void {
 
-    s32 lba = 0;
+    s32 lbaFileBase = 0;
     for(auto& track : chd->tracks) {
       for(auto& index : track.indices) {
         for(s32 sector : range(index.sectorCount())) {
-          auto offset = 2448ull * (LeadInSectors + index.lba + sector);
+          auto lba = index.lba + sector;
+          auto offset = 2448ull * (CD::LeadInSectors + (u64)CD::LBAtoABA(lba));
           auto target = _image.data() + offset;
-          auto sectorData = chd->read(lba);
+          auto sectorData = chd->read(lbaFileBase);
           if(sectorData.size() == 2048) {
             //ISO: generate header + parity data
-            memory::assign(target + 0, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff);  //sync
-            memory::assign(target + 6, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00);  //sync
-            auto [minute, second, frame] = CD::MSF(index.lba + sector);
-            target[12] = BCD::encode(minute);
-            target[13] = BCD::encode(second);
-            target[14] = BCD::encode(frame);
-            target[15] = 0x01;  //mode
+            memory::assign(target + 0,  0x00, 0xff, 0xff, 0xff, 0xff, 0xff);  //sync
+            memory::assign(target + 6,  0xff, 0xff, 0xff, 0xff, 0xff, 0x00);  //sync
+            auto msf = CD::MSF::fromABA(CD::LBAtoABA(lba));
+            target[12] = BCD::encode(msf.minute);
+            target[13] = BCD::encode(msf.second);
+            target[14] = BCD::encode(msf.frame);
+            target[15] = 0x01;  // mode
             memory::copy(target + 16, 2048, sectorData.data(), sectorData.size());
             CD::RSPC::encodeMode1({target, 2352});
           } else {
             memory::copy(target, 2352, sectorData.data(), sectorData.size());
           }
-          lba++;
+          lbaFileBase++;
           _loadOffset = offset + 2448;
         }
       }
@@ -332,31 +321,39 @@ private:
   }
 #endif
 
-private:
-  void loadSub(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile, const CD::Session& session) {
-    auto subchannel = session.encode(LeadInSectors + session.leadOut.end + 1);
-
-    if (archive != nullptr) {
-      if (compressedFile != nullptr) {
-        auto rawDataBuffer = archive->extract(*compressedFile);
-        auto target = subchannel.data() + 96 * (LeadInSectors + Track1Pregap);
-        auto length = (s64)subchannel.size() - 96 * (LeadInSectors + Track1Pregap);
-        memory::copy(target, length, rawDataBuffer.data(), rawDataBuffer.size());
+  void loadSub(const string& location, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile, CD::Session& session) {
+    auto subchannel = session.encode((u32)abs(session.leadIn.lba) + (u32)session.leadOut.end + 1);
+    const u64 overlayStartSectors = (u64)CD::LeadInSectors + (u64)CD::Track1Pregap;
+    const u64 overlayStartBytes   = overlayStartSectors * 96;
+    if(archive != nullptr && compressedFile != nullptr) {
+      auto rawDataBuffer = archive->extract(*compressedFile);
+      if(!rawDataBuffer.empty() && overlayStartBytes < subchannel.size()) {
+        auto target = subchannel.data() + overlayStartBytes;
+        auto maxLen = subchannel.size() - overlayStartBytes;
+        auto length = std::min<u64>(maxLen, rawDataBuffer.size());
+        memory::copy(target, (s64)length, rawDataBuffer.data(), length);
       }
     } else {
       auto overlay = nall::file::read(location);
-      if(!overlay.empty()) {
-        auto target = subchannel.data() + 96 * (LeadInSectors + Track1Pregap);
-        auto length = (s64)subchannel.size() - 96 * (LeadInSectors + Track1Pregap);
-        memory::copy(target, length, overlay.data(), overlay.size());
+      if(!overlay.empty() && overlayStartBytes < subchannel.size()) {
+        auto target = subchannel.data() + overlayStartBytes;
+        auto maxLen = subchannel.size() - overlayStartBytes;
+        auto length = std::min<u64>(maxLen, overlay.size());
+        memory::copy(target, length, overlay.data(), length);
       }
     }
 
-    for(u64 sector : range(size() / 2448)) {
-      auto source = subchannel.data() + sector * 96;
-      auto target = _image.data() + sector * 2448 + 2352;
-      memory::copy(target, source, 96);
+    const u64 sectorCount = subchannel.size() / 96;
+    for(u64 sector : range(sectorCount)) {
+      auto* source = subchannel.data() + sector * 96;
+      auto* target = _image.data() + sector * 2448 + 2352;
+      memory::copy(target, 96, source, 96);
     }
+
+    // Diagnostic: decode what we generated and dump it
+    CD::Session finalSession;
+    finalSession.decode(subchannel, 96);
+    print(finalSession.serialize());
   }
 
   std::vector<u8> _image;
@@ -364,10 +361,6 @@ private:
   atomic<u64> _loadOffset = 0;
   thread _thread;
   std::unique_ptr<Decode::ZIP> _archive;
-
-  static constexpr s32 LeadInSectors  = 7500;
-  static constexpr s32 Track1Pregap   =  150;
-  static constexpr s32 LeadOutSectors = 6750;
 };
 
 }

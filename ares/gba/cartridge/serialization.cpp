@@ -12,6 +12,7 @@ auto Cartridge::MROM::serialize(serializer& s) -> void {
   s(mask);
   s(pageAddr);
   s(burst);
+  s(mirror);
 }
 
 auto Cartridge::SRAM::serialize(serializer& s) -> void {

@@ -34,7 +34,7 @@ struct PCD : Thread {
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
-  auto allocate(Node::Port) -> Node::Peripheral;
+  auto allocate(Node::Port, string name) -> Node::Peripheral;
   auto connect() -> void;
   auto disconnect() -> void;
 

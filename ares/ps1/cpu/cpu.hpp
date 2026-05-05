@@ -4,6 +4,7 @@ struct CPU : Thread {
   Node::Object node;
   Memory::Writable ram;
   Memory::Writable scratchpad;
+  Memory::Readable exe;
 
   struct Debugger {
     //debugger.cpp
@@ -41,10 +42,11 @@ struct CPU : Thread {
 
   auto main() -> void;
   auto step(u32 clocks) -> void;
-  auto addWaitCyles(u32 clocks) -> void { waitCycles += clocks; }
   auto synchronize() -> void;
+  auto ioSynchronize() -> void;
+  auto waitDMA() -> void;
 
-  auto instruction() -> void;
+  alwaysinline auto instruction() -> void;
   auto instructionPrologue(u32 instruction) -> void;
   auto instructionEpilogue() -> void;
   auto instructionHook() -> void;
@@ -52,7 +54,12 @@ struct CPU : Thread {
   auto power(bool reset) -> void;
 
   n1 exeLoaded = 0;
-  u32 waitCycles = 0;
+
+  u32 accruedCycles = 0;
+  s32 cyclesUntilForcedSync = 0;
+  const s32 forceSyncInterval = 1024;
+  const s32 branchCooldownCycles = 512;
+  const s32 ioCooldownCycles = 128;
 
   struct Pipeline {
     u32 address = 0;

@@ -106,7 +106,7 @@ auto GPU::writeGP1(u32 value) -> void {
     io.displayRangeY2 =  16 + 240;
 
     //GP1(08)
-    io.horizontalResolution = 1;
+    io.horizontalResolution = 0;
     io.verticalResolution = 0;
     io.videoMode = 0;
     io.colorDepth = 0;

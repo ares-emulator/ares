@@ -18,8 +18,9 @@ struct AI : Thread, Memory::RCP<AI> {
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto main() -> void;
-  auto sample(f64& left, f64& right) -> void;
+  auto sample() -> void;
   auto power(bool reset) -> void;
+  auto updateDecay() -> void;
 
   //io.cpp
   auto readWord(u32 address, Thread& thread) -> u32;
@@ -47,6 +48,9 @@ struct AI : Thread, Memory::RCP<AI> {
     u32 frequency;
     u32 precision;
     u32 period;
+    f64 left;
+    f64 right;
+    f64 decayFactor;
   } dac;
 };
 

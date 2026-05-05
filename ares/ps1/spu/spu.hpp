@@ -27,6 +27,8 @@ struct SPU : Thread, Memory::Interface {
   //io.cpp
   auto readRAM(u32 address) -> u16;
   auto writeRAM(u32 address, u16 data) -> void;
+  auto canReadDMA() -> bool;
+  auto canWriteDMA() -> bool;
   auto readDMA() -> u32;
   auto writeDMA(u32 data) -> void;
   auto readByte(u32 address) -> u32;

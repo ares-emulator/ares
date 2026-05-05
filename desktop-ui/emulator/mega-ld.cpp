@@ -15,8 +15,8 @@ MegaLD::MegaLD() {
   manufacturer = "Pioneer";
   name = "LaserActive (SEGA PAC)";
 
-  firmware.push_back({"BIOS", "US"});      //NTSC-U
-  firmware.push_back({"BIOS", "Japan"});   //NTSC-J
+  firmware.push_back({"BIOS", "US", "e89b5a319f66406611ec82fe5c4aa6827c175a05135bd7bd177366cba0465021"});     //NTSC-U v1.04
+  firmware.push_back({"BIOS", "Japan", "dca942d977217f703d8d1c6eb1aeb6b32c78ecc421486bbb46c459d385161c94"});  //NTSC-J v1.02
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};

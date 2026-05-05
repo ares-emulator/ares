@@ -184,7 +184,7 @@ and is therefore not needed here.
 
 ### Halted `isHalted() -> bool`
 Returns if the game should be currently halted or not.<br>
-For convenience, the same value gets directly returned from `reportPC`.<br>
+Note that for convenience, `reportPC` returns `false` if the game should be halted.<br>
 
 ### Breakpoints `hasBreakpoints() -> bool`
 Return `true` if at least one break- or watch-point is set.<br>

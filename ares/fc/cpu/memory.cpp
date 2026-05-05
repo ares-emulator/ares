@@ -35,10 +35,10 @@ auto CPU::readIO(n16 address) -> n8 {
   case 0x4016: {
     auto port1 = controllerPort1.data();
     auto port3 = expansionPort.read1();
-    platform->input(system.controls.microphone);
+    if(system.controls.microphone) platform->input(system.controls.microphone);
     data.bit(0) = port1.bit(0);
     data.bit(1) = port3.bit(0);
-    data.bit(2) = system.controls.microphone->value() ? random().bit(0) : 0;
+    data.bit(2) = system.controls.microphone && system.controls.microphone->value() ? random().bit(0) : 0;
     data.bit(3) = port1.bit(1);
     data.bit(4) = port1.bit(2);
     return data;

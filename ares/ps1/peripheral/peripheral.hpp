@@ -9,7 +9,7 @@ struct PeripheralDevice {
   virtual auto bus(u8 data) -> u8 { return 0xff; }
 };
 
-struct Peripheral : Thread, Memory::Interface {
+struct Peripheral : Memory::Interface {
   Node::Object node;
 
   //peripheral.cpp

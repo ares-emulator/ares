@@ -23,7 +23,7 @@ auto PPU::load(Node::Object parent) -> void {
   screen->colors(1 << 9, std::bind_front(&PPU::color, this));
   screen->setSize(283, displayHeight());
   screen->setScale(1.0, 1.0);
-  Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
+  (Region::PAL() || Region::Dendy()) ? screen->setAspect(55.0, 43.0) : screen->setAspect(8.0, 7.0);
   screen->refreshRateHint(system.frequency() / rate(), 341, vlines());
 
   debugger.load(node);
@@ -61,10 +61,11 @@ auto PPU::step(u32 clocks) -> void {
     if (enable() && (io.ly < 240 || io.ly == L - 1))
       cycleScroll();
 
-    if(io.ly == 240 && io.lx ==   1) io.busAddress = var.address, cartridge.ppuAddressBus(io.busAddress);
-    if(io.ly == 240 && io.lx == 340) io.nmiHold = 1;
-    if(io.ly == 241 && io.lx ==   0) io.nmiFlag = io.nmiHold;
-    if(io.ly == 241 && io.lx ==   2) cpu.nmiLine(io.nmiEnable && io.nmiFlag);
+    u32 vbs = vblankScanline();
+    if(io.ly == vbs - 1 && io.lx ==   1) io.busAddress = var.address, cartridge.ppuAddressBus(io.busAddress);
+    if(io.ly == vbs - 1 && io.lx == 340) io.nmiHold = 1;
+    if(io.ly == vbs     && io.lx ==   0) io.nmiFlag = io.nmiHold;
+    if(io.ly == vbs     && io.lx ==   2) cpu.nmiLine(io.nmiEnable && io.nmiFlag);
 
     if(io.ly == L-2 && io.lx == 340) io.spriteZeroHit = 0, sprite.spriteOverflow = 0;
 

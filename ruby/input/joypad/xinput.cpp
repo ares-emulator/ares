@@ -123,6 +123,7 @@ struct InputJoypadXInput {
       jp.hid->setProductID(0x028e);
       jp.hid->setPathID(id);
       jp.hid->setRumble(true);
+      jp.hid->setName({"Xbox 360 Controller ", id});
 
       jp.hid->axes().append("LeftThumbX");
       jp.hid->axes().append("LeftThumbY");

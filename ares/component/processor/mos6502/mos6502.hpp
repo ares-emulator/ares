@@ -18,7 +18,7 @@ struct MOS6502 {
   virtual auto readDebugger(n16 addr) -> n8 { return 0; }
 
   //mos6502.cpp
-  auto power(bool reset = false) -> void;
+  auto power() -> void;
 
   //memory.cpp
   auto idle() -> void;
@@ -189,7 +189,6 @@ struct MOS6502 {
   n16 PC;
   n16 MAR;
   n8  MDR;
-  n1  resetting = 0;
 };
 
 }

@@ -26,6 +26,7 @@ namespace ares::Atari2600 {
   }
   #include "famicom.cpp"
   #include "famicom-disk-system.cpp"
+  #include "dendy.cpp"
 #endif
 
 #ifdef CORE_GB
@@ -162,7 +163,7 @@ namespace ares::ZXSpectrum {
 #include "arcade.cpp"
 
 auto Emulator::construct() -> void {
-  emulators.push_back(std::make_shared<Arcade>());
+  if(Arcade::available()) emulators.push_back(std::make_shared<Arcade>());
 
   #ifdef CORE_A26
   emulators.push_back(std::make_shared<Atari2600>());
@@ -198,6 +199,7 @@ auto Emulator::construct() -> void {
   #ifdef CORE_FC
   emulators.push_back(std::make_shared<Famicom>());
   emulators.push_back(std::make_shared<FamicomDiskSystem>());
+  emulators.push_back(std::make_shared<Dendy>());
   #endif
 
   #ifdef CORE_SFC
@@ -258,4 +260,8 @@ auto Emulator::construct() -> void {
   emulators.push_back(std::make_shared<ZXSpectrum>());
   emulators.push_back(std::make_shared<ZXSpectrum128>());
   #endif
+
+  std::ranges::sort(emulators, [](std::shared_ptr<Emulator> a, std::shared_ptr<Emulator> b) { 
+    return (a->manufacturer < b->manufacturer); 
+  });
 }

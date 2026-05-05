@@ -8,6 +8,8 @@ struct Arcade : Emulator {
   auto input(ares::Node::Input::Input) -> void override;
   string systemPakName = "Arcade";
   string gamePakName = "Arcade";
+
+  static auto available() -> bool;
 };
 
 Arcade::Arcade() {
@@ -47,6 +49,13 @@ Arcade::Arcade() {
 
     ports.push_back(port);
   }
+}
+
+auto Arcade::available() -> bool {
+#if defined(CORE_SG) || defined(CORE_N64)
+  return true;
+#endif
+  return false;
 }
 
 auto Arcade::load() -> LoadResult {

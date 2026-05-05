@@ -11,9 +11,6 @@ auto MDEC::serialize(serializer& s) -> void {
   s(status.outputDepth);
   s(status.outputRequest);
   s(status.inputRequest);
-  s(status.commandBusy);
-  s(status.inputFull);
-  s(status.outputEmpty);
 
   s((u32&)io.mode);
   s(io.offset);
@@ -27,4 +24,6 @@ auto MDEC::serialize(serializer& s) -> void {
   s(block.y1);
   s(block.y2);
   s(block.y3);
+
+  s(output);
 }

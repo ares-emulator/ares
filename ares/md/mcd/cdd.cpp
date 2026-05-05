@@ -180,7 +180,7 @@ auto MCD::CDD::sample() -> void {
   if (io.status == Status::Playing) {
     if (MegaLD() || session.tracks[io.track].isAudio()) {
       if (session.tracks[io.track].isAudio()) {
-        mcd.fd->seek((abs(session.leadIn.lba) + io.sector) * 2448 + io.sample);
+        mcd.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(io.sector)) + io.sample);
         digitalSampleLeft  = mcd.fd->readl(2);
         digitalSampleRight = mcd.fd->readl(2);
       }
@@ -301,8 +301,7 @@ auto MCD::CDD::position(s32 sector) -> double {
 
 auto MCD::CDD::readSubcode() -> void {
   if(!mcd.fd) return;
-
-  mcd.fd->seek(((abs(mcd.cdd.session.leadIn.lba) + io.sector) * 2448) + 2352);
+  mcd.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(io.sector)) + 2352);
   std::vector<u8> subchannel;
   subchannel.resize(96);
   mcd.fd->read({subchannel.data(), 96});
@@ -360,7 +359,7 @@ auto MCD::CDD::process() -> void {
     switch(command[3]) {
 
     case Request::AbsoluteTime: {
-      auto [minute, second, frame] = CD::MSF(io.sector);
+      auto [minute, second, frame] = CD::MSF::fromLBA(io.sector);
       status[1] = command[3];
       status[2] = minute / 10; status[3] = minute % 10;
       status[4] = second / 10; status[5] = second % 10;
@@ -369,7 +368,7 @@ auto MCD::CDD::process() -> void {
     } break;
 
     case Request::RelativeTime: {
-      auto [minute, second, frame] = CD::MSF(io.sector - session.tracks[io.track].indices[1].lba);
+      auto [minute, second, frame] = CD::MSF::fromABA(io.sector - session.tracks[io.track].indices[1].lba); //fromABA to offset by 2s
       status[1] = command[3];
       status[2] = minute / 10; status[3] = minute % 10;
       status[4] = second / 10; status[5] = second % 10;
@@ -388,7 +387,7 @@ auto MCD::CDD::process() -> void {
     } break;
 
     case Request::DiscCompletionTime: {  //time in mm:ss:ff
-      auto [minute, second, frame] = CD::MSF(session.leadOut.lba);
+      auto [minute, second, frame] = CD::MSF::fromLBA(session.leadOut.lba);
       status[1] = command[3];
       status[2] = minute / 10; status[3] = minute % 10;
       status[4] = second / 10; status[5] = second % 10;
@@ -409,7 +408,7 @@ auto MCD::CDD::process() -> void {
     case Request::TrackStartTime: {
       if(command[4] > 9 || command[5] > 9) break;
       u32 track  = command[4] * 10 + command[5];
-      auto [minute, second, frame] = CD::MSF(session.tracks[track].indices[1].lba);
+      auto [minute, second, frame] = CD::MSF::fromLBA(session.tracks[track].indices[1].lba);
       status[1] = command[3];
       status[2] = minute / 10; status[3] = minute % 10;
       status[4] = second / 10; status[5] = second % 10;
@@ -434,7 +433,7 @@ auto MCD::CDD::process() -> void {
     u32 minute = command[2] * 10 + command[3];
     u32 second = command[4] * 10 + command[5];
     u32 frame  = command[6] * 10 + command[7];
-    s32 lba    = minute * 60 * 75 + second * 75 + frame - 3;
+    s32 lba    = CD::MSF(minute, second, frame).toLBA() - 3;
 
     counter    = 0;
     io.status  = Status::Seeking;
@@ -454,7 +453,7 @@ auto MCD::CDD::process() -> void {
     u32 minute = command[2] * 10 + command[3];
     u32 second = command[4] * 10 + command[5];
     u32 frame  = command[6] * 10 + command[7];
-    s32 lba    = minute * 60 * 75 + second * 75 + frame - 3;
+    s32 lba    = CD::MSF(minute, second, frame).toLBA() - 3;
 
     counter    = 0;
     io.status  = Status::Seeking;
@@ -652,28 +651,28 @@ auto MCD::CDD::getCurrentSector() -> s32 {
 }
 
 auto MCD::CDD::getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void {
-  auto [lminute, lsecond, lframe] = CD::MSF(io.sector);
+  auto [lminute, lsecond, lframe] = CD::MSF::fromLBA(io.sector);
   minute = lminute;
   second = lsecond;
   frame = lframe;
 }
 
 auto MCD::CDD::getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void {
-  auto [lminute, lsecond, lframe] = CD::MSF(io.sector - session.tracks[io.track].indices[1].lba);
+  auto [lminute, lsecond, lframe] = CD::MSF::fromABA(io.sector - session.tracks[io.track].indices[1].lba);
   minute = lminute;
   second = lsecond;
   frame = lframe;
 }
 
 auto MCD::CDD::getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void {
-  auto [lminute, lsecond, lframe] = CD::MSF(session.leadOut.lba);
+  auto [lminute, lsecond, lframe] = CD::MSF::fromLBA(session.leadOut.lba);
   minute = lminute;
   second = lsecond;
   frame = lframe;
 }
 
 auto MCD::CDD::getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void {
-  auto [lminute, lsecond, lframe] = CD::MSF(session.tracks[track].indices[1].lba);
+  auto [lminute, lsecond, lframe] = CD::MSF::fromLBA(session.tracks[track].indices[1].lba);
   minute = lminute;
   second = lsecond;
   frame = lframe;
@@ -681,8 +680,8 @@ auto MCD::CDD::getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& 
 }
 
 auto MCD::CDD::lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
-  s32 lba = ((((((s32)hour * 60) + (s32)minute) * 60) + (s32)second) * 75) + (s32)frame;
-  return lba;
+  s32 aba = ((((((s32)hour * 60) + (s32)minute) * 60) + (s32)second) * 75) + (s32)frame;
+  return aba - CD::Track1Pregap;
 }
 
 auto MCD::CDD::isTrackAudio(n7 track) -> bool {

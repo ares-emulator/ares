@@ -18,7 +18,7 @@ if(ARES_ENABLE_LIBRASHADER)
       add_dependencies(desktop-ui bundled_shaders)
       set_target_properties(bundled_shaders PROPERTIES FOLDER "generated" PREFIX "")
       install(
-        DIRECTORY "${slang_shaders_LOCATION}"
+        DIRECTORY "${slang_shaders_LOCATION}/"
         DESTINATION "${ARES_INSTALL_DATA_DESTINATION}/Shaders"
         USE_SOURCE_PERMISSIONS
         COMPONENT desktop-ui

@@ -57,7 +57,7 @@ auto APU::serialize(serializer& s) -> void {
   s(wave.frequency);
   s(wave.counter);
   s(wave.initialize);
-  s(wave.pattern);
+  for(auto& p : wave.pattern) s(p);
   s(wave.enable);
   s(wave.output);
   s(wave.patternaddr);
@@ -85,8 +85,8 @@ auto APU::serialize(serializer& s) -> void {
   s(sequencer.volume);
   s(sequencer.lvolume);
   s(sequencer.rvolume);
-  s(sequencer.lenable);
-  s(sequencer.renable);
+  for(auto& l :sequencer.lenable) s(l);
+  for(auto& r: sequencer.renable) s(r);
   s(sequencer.masterenable);
   s(sequencer.base);
   s(sequencer.step);
@@ -97,7 +97,7 @@ auto APU::serialize(serializer& s) -> void {
 
   for(auto& f : fifo) {
     s(f.buffer);
-    s(f.samples);
+    for(auto& sa : f.samples) s(sa);
     s(f.active);
     s(f.output);
     s(f.rdoffset);

@@ -5,7 +5,7 @@ struct Cartridge : Thread {
   Node::Peripheral node;
   VFS::Pak pak;
 
-  auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
+  auto rate() const -> u32 { return system.cpuDivider(); }
   auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
 

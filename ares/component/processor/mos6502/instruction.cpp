@@ -25,12 +25,9 @@ auto MOS6502::reset() -> void {
   I = 1;
   PCL = read(vector++);
 L PCH = read(vector++);
-  resetting = 0;
 }
 
 auto MOS6502::instruction() -> void {
-  if(resetting) reset();
-
   switch(opcode()) {
   op(0x00, None,   addr(Implied),        fp(BRK))
   op(0x01, Load,   addr(IndirectX),      fp(ORA))

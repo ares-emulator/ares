@@ -1,3 +1,11 @@
+auto MDEC::canReadDMA() -> bool {
+  return status.outputRequest && fifo.output.size() >= 32;
+}
+
+auto MDEC::canWriteDMA() -> bool {
+  return status.inputRequest && fifo.input.empty();
+}
+
 auto MDEC::readDMA() -> u32 {
   return readWord(0x1f80'1820);
 }
@@ -20,24 +28,29 @@ auto MDEC::readWord(u32 address) -> u32 {
   n32 data;
 
   if(address == 0x1f80'1820) {
+    if(fifo.output.empty()) {
+      debug(unusual, "MDEC: fifo read while empty!");
+    }
     data = fifo.output.read(data);
-    if(fifo.output.empty()) status.outputEmpty = 1;
+    return data;
   }
 
   if(address == 0x1f80'1824) {
-    data.bit( 0,15) = status.remaining - 1;
+    data.bit( 0,15) = (status.remaining / 2) - 1;
     data.bit(16,18) = status.currentBlock;
     data.bit(19,22) = 0;  //unused
-    data.bit(23)    = status.outputMaskBit;
-    data.bit(24)    = status.outputSigned;
+    data.bit(23)     = status.outputMaskBit;
+    data.bit(24)     = status.outputSigned;
     data.bit(25,26) = status.outputDepth;
-    data.bit(27)    = status.outputRequest;
-    data.bit(28)    = status.inputRequest;
-    data.bit(29)    = status.commandBusy;
-    data.bit(30)    = status.inputFull;
-    data.bit(31)    = status.outputEmpty;
+    data.bit(27)     = canReadDMA();
+    data.bit(28)     = canWriteDMA();
+    data.bit(29)     = io.mode != Mode::Idle;
+    data.bit(30)     = fifo.input.size() >= 64;
+    data.bit(31)     = fifo.output.empty();
+    return data;
   }
 
+  debug(unhandled, "MDEC::readWord(", hex(address, 8L), ") -> ", hex(data, 8L));
   return data;
 }
 
@@ -60,7 +73,7 @@ auto MDEC::writeWord(u32 address, u32 value) -> void {
       case 1:
         io.mode = Mode::DecodeMacroblock;
         io.offset = 0;
-        status.remaining = data.bit(0,15);
+        status.remaining = data.bit(0,15) * 2;
         if(status.remaining == 0) {
           io.mode = Mode::Idle;  //treat as 0; though it may be 65536
           debug(unhandled, "MDEC macroblock length=0");
@@ -69,31 +82,25 @@ auto MDEC::writeWord(u32 address, u32 value) -> void {
       case 2:
         io.mode = Mode::SetQuantTable;
         io.offset = 0;
-        status.remaining = (data.bit(0) ? 128 : 64) / 4;
+        status.remaining = (data.bit(0) ? 128 : 64) / 2;
         break;
       case 3:
         io.mode = Mode::SetScaleTable;
         io.offset = 0;
-        status.remaining = 64 / 2;
+        status.remaining = 64;
         break;
       }
 
-      //if a valid command was decoded above:
       if(io.mode != Mode::Idle) {
         //output bits are set in status register regardless of mode
         status.outputMaskBit = data.bit(25);
         status.outputSigned  = data.bit(26);
         status.outputDepth   = data.bit(27,28);
-        status.commandBusy   = 1;
+        fifo.output.flush();
       }
     } else if(io.mode == Mode::DecodeMacroblock) {
       fifo.input.write(data >>  0);
       fifo.input.write(data >> 16);
-      if(!--status.remaining) {
-        io.mode = Mode::Idle;
-        status.commandBusy = 0;
-        decodeMacroblocks();
-      }
     } else if(io.mode == Mode::SetQuantTable) {
       if(io.offset < 64) {
         block.luma[io.offset++ & 63] = data >>  0;
@@ -106,18 +113,21 @@ auto MDEC::writeWord(u32 address, u32 value) -> void {
         block.chroma[io.offset++ & 63] = data >> 16;
         block.chroma[io.offset++ & 63] = data >> 24;
       }
-      if(!--status.remaining) {
+
+      status.remaining -= 2;
+      if(!status.remaining) {
         io.mode = Mode::Idle;
-        status.commandBusy = 0;
       }
     } else if(io.mode == Mode::SetScaleTable) {
       block.scale[io.offset++ & 63] = data >>  0;
       block.scale[io.offset++ & 63] = data >> 16;
-      if(!--status.remaining) {
+      status.remaining -= 2;
+      if(!status.remaining) {
         io.mode = Mode::Idle;
-        status.commandBusy = 0;
       }
     }
+
+    return;
   }
 
   if(address == 0x1f80'1824) {
@@ -132,12 +142,33 @@ auto MDEC::writeWord(u32 address, u32 value) -> void {
       status.outputDepth   = 0;
       status.outputRequest = 0;
       status.inputRequest  = 0;
-      status.commandBusy   = 0;
-      status.inputFull     = 0;
-      status.outputEmpty   = 1;
     }
 
     status.outputRequest = data.bit(29);
     status.inputRequest  = data.bit(30);
+    return;
   }
+
+  debug(unhandled, "MDEC::writeWord(", hex(address, 8L), ", ", hex(value, 8L), ")");
 }
+
+auto MDEC::readInputFifo() -> maybe<u16> {
+  if(status.remaining == 0) {
+    return nothing;
+  }
+
+  while(fifo.input.empty()) {
+    step(128);
+  }
+
+  step(1);
+  auto data = *fifo.input.read();
+  --status.remaining;
+  return data;
+}
+
+
+auto MDEC::writeOutputFifo(u32 data) -> void {
+  fifo.output.write(data);
+}
+

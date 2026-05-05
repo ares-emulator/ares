@@ -19,6 +19,7 @@ CPU cpu;
 #include "debugger.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"
+#include "emux.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("CPU");
@@ -74,6 +75,7 @@ auto CPU::synchronize() -> void {
     case Queue::SI_DMA_Write:  return si.dmaWrite();
     case Queue::SI_BUS_Write:  return si.writeFinished();
     case Queue::RTC_Tick:      return cartridge.rtc.tick();
+    case Queue::EEPROM_Write:  return cartridge.eepromFinish();
     case Queue::DD_Clock_Tick:  return dd.rtc.tickClock();
     case Queue::DD_MECHA_Response:  return dd.mechaResponse();
     case Queue::DD_BM_Request:  return dd.bmRequest();
@@ -87,6 +89,8 @@ auto CPU::synchronize() -> void {
     scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
   }
   scc.count += clocks;
+  profile.cpuCycles += clocks;
+  if (scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
 }
 
 auto CPU::instruction() -> void {
@@ -159,6 +163,7 @@ auto CPU::power(bool reset) -> void {
   for(auto& r : fpu.r) r.u64 = 0;
   fpu.csr = {};
   cop2 = {};
+  emuxState = {};
   fenv.setRound(float_env::toNearest);
   context.setMode();
 

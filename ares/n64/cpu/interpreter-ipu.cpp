@@ -157,18 +157,25 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
   case 0x14: {  //icache fill
     auto& line = icache.line(access.vaddr);
     line.fill(access.paddr, cpu);
+    profile.icacheMisses++;
     break;
   }
 
   case 0x18: {  //icache hit write back
     auto& line = icache.line(access.vaddr);
-    if(line.hit(access.paddr)) line.writeBack(cpu);
+    if(line.hit(access.paddr)) {
+      line.writeBack(cpu);
+      profile.icacheWritebacks++;
+    }
     break;
   }
 
   case 0x01: {  //dcache index write back invalidate
     auto& line = dcache.line(access.vaddr);
-    if(line.valid && line.dirty) line.writeBack();
+    if(line.valid && line.dirty) {
+      line.writeBack();
+      profile.dcacheWritebacks++;
+    }
     line.valid = 0;
     break;
   }
@@ -192,7 +199,10 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x0d: {  //dcache create dirty exclusive
     auto& line = dcache.line(access.vaddr);
-    if(!line.hit(access.paddr) && line.dirty) line.writeBack();
+    if(!line.hit(access.paddr) && line.dirty) {
+      line.writeBack();
+      profile.dcacheWritebacks++;
+    }
     line.tag   = access.paddr & ~0xfff;
     line.valid = 1;
     line.dirty = 1;
@@ -211,7 +221,10 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
   case 0x15: {  //dcache hit write back invalidate
     auto& line = dcache.line(access.vaddr);
     if(line.hit(access.paddr)) {
-      if(line.dirty) line.writeBack();
+      if(line.dirty) {
+        line.writeBack();
+        profile.dcacheWritebacks++;
+      }
       line.valid = 0;
     }
     break;
@@ -220,7 +233,10 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
   case 0x19: {  //dcache hit write back
     auto& line = dcache.line(access.vaddr);
     if(line.hit(access.paddr)) {
-      if(line.dirty) line.writeBack();
+      if(line.dirty) {
+        line.writeBack();
+        profile.dcacheWritebacks++;
+      }
     }
     break;
   }

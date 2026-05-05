@@ -42,6 +42,7 @@ ares_add_sources(
     n64
   INCLUDED #
     n64.hpp
+    accuracy.hpp
     CMakeLists.txt
 )
 
@@ -360,12 +361,16 @@ endif()
 ares_add_sources(
   CORE #
     n64
-  PRIMARY #
+  INCLUDED #
+    vulkan/parallel-rdp/parallel-rdp/luts.hpp
     vulkan/parallel-rdp/parallel-rdp/command_ring.hpp
+    vulkan/parallel-rdp/parallel-rdp/rdp_common.hpp
+    vulkan/parallel-rdp/parallel-rdp/rdp_data_structures.hpp
     vulkan/parallel-rdp/parallel-rdp/rdp_device.hpp
     vulkan/parallel-rdp/parallel-rdp/rdp_dump_write.hpp
     vulkan/parallel-rdp/parallel-rdp/rdp_renderer.hpp
     vulkan/parallel-rdp/parallel-rdp/video_interface.hpp
+    vulkan/parallel-rdp/parallel-rdp/worker_thread.hpp
     vulkan/parallel-rdp/vulkan/buffer.hpp
     vulkan/parallel-rdp/vulkan/buffer_pool.hpp
     vulkan/parallel-rdp/vulkan/command_buffer.hpp
@@ -388,6 +393,15 @@ ares_add_sources(
     vulkan/parallel-rdp/vulkan/semaphore_manager.hpp
     vulkan/parallel-rdp/vulkan/shader.hpp
     vulkan/parallel-rdp/vulkan/texture/texture_format.hpp
+    vulkan/parallel-rdp/vulkan/quirks.hpp
+    vulkan/parallel-rdp/vulkan/vulkan_common.hpp
+    vulkan/parallel-rdp/vulkan/limits.hpp
+    vulkan/parallel-rdp/vulkan/wsi.hpp
+    vulkan/parallel-rdp/vulkan/type_to_string.hpp
+    vulkan/parallel-rdp/vulkan/vulkan_headers.hpp
+    vulkan/parallel-rdp/vulkan/vulkan_prerotate.hpp
+    vulkan/parallel-rdp/vulkan/format.hpp
+    vulkan/parallel-rdp/vulkan/device_fossilize.hpp
     vulkan/parallel-rdp/util/arena_allocator.hpp
     vulkan/parallel-rdp/util/logging.hpp
     vulkan/parallel-rdp/util/thread_id.hpp
@@ -396,6 +410,18 @@ ares_add_sources(
     vulkan/parallel-rdp/util/timeline_trace_file.hpp
     vulkan/parallel-rdp/util/thread_name.hpp
     vulkan/parallel-rdp/util/environment.hpp
+    vulkan/parallel-rdp/util/hash.hpp
+    vulkan/parallel-rdp/util/intrusive.hpp
+    vulkan/parallel-rdp/util/intrusive_hash_map.hpp
+    vulkan/parallel-rdp/util/read_write_lock.hpp
+    vulkan/parallel-rdp/util/bitops.hpp
+    vulkan/parallel-rdp/util/small_vector.hpp
+    vulkan/parallel-rdp/util/intrusive_list.hpp
+    vulkan/parallel-rdp/util/object_pool.hpp
+    vulkan/parallel-rdp/util/temporary_hashmap.hpp
+    vulkan/parallel-rdp/util/enum_cast.hpp
+    vulkan/parallel-rdp/util/stack_allocator.hpp
+    vulkan/parallel-rdp/util/dynamic_array.hpp
 )
 
 target_include_directories(

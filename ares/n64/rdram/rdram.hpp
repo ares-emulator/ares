@@ -9,10 +9,11 @@ struct RDRAM : Memory::RCP<RDRAM> {
     Writable(RDRAM& self) : self(self) {}
 
     template<u32 Size>
-    auto read(u32 address, const char *peripheral) -> u64 {
+    auto read(u32 address, RBusDevice device) -> u64 {
       if (address >= size) return 0;
-      if (unlikely(peripheral && system.homebrewMode)) {
-        self.debugger.readWord(address, Size, peripheral);
+      if (unlikely(system.homebrewMode)) {
+        self.debugger.readWord(address, Size, device);
+        self.profile.metrics[(u32)device].reads += Size;
       }
       return Memory::Writable::read<Size>(address);
     }
@@ -76,21 +77,31 @@ struct RDRAM : Memory::RCP<RDRAM> {
     }
 
     template<u32 Size>
-    auto write(u32 address, u64 value, const char *peripheral) -> void {
+    auto write(u32 address, u64 value, RBusDevice device) -> void {
       if (address >= size) return;
-      if (unlikely(peripheral && system.homebrewMode)) {
-        self.debugger.writeWord(address, Size, value, peripheral);
+      if (unlikely(system.homebrewMode)) {
+        self.debugger.writeWord(address, Size, value, device);
       }
       if (unlikely(mi.initializeMode())) {
-        writeRepeat<Size>(address, value, mi.initializeLength()+1);
+        u32 len = mi.initializeLength() + 1;
+        writeRepeat<Size>(address, value, len);
+        if(unlikely(system.homebrewMode)) {
+          self.profile.metrics[(u32)device].writes += len;
+        }
       } else {
         Memory::Writable::write<Size>(address, value);
+        if(unlikely(system.homebrewMode)) {
+          self.profile.metrics[(u32)device].writes += Size;
+        }
       }
     }
 
     template<u32 Size>
-    auto writeBurst(u32 address, u32 *value, const char *peripheral) -> void {
+    auto writeBurst(u32 address, u32 *value, RBusDevice device) -> void {
       if (address >= size) return;
+      if (unlikely(system.homebrewMode)) {
+        self.profile.metrics[(u32)device].writes += Size;
+      }
       Memory::Writable::write<Word>(address | 0x00, value[0]);
       Memory::Writable::write<Word>(address | 0x04, value[1]);
       Memory::Writable::write<Word>(address | 0x08, value[2]);
@@ -104,12 +115,15 @@ struct RDRAM : Memory::RCP<RDRAM> {
     }
 
     template<u32 Size>
-    auto readBurst(u32 address, u32 *value, const char *peripheral) -> void {
+    auto readBurst(u32 address, u32 *value, RBusDevice device) -> void {
       if (address >= size) {
         value[0] = value[1] = value[2] = value[3] = 0;
         if (Size == ICache)
           value[4] = value[5] = value[6] = value[7] = 0;
         return;
+      }
+      if (unlikely(system.homebrewMode)) {
+        self.profile.metrics[(u32)device].reads += Size;
       }
       value[0] = Memory::Writable::read<Word>(address | 0x00);
       value[1] = Memory::Writable::read<Word>(address | 0x04);
@@ -132,9 +146,9 @@ struct RDRAM : Memory::RCP<RDRAM> {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto io(bool mode, u32 chipID, u32 address, u32 data) -> void;
-    auto readWord(u32 address, int size, const char *peripheral) -> void;
-    auto writeWord(u32 address, int size, u64 value, const char *peripheral) -> void;
-    auto cacheErrorContext(string peripheral) -> string;
+    auto readWord(u32 address, int size, RBusDevice device) -> void;
+    auto writeWord(u32 address, int size, u64 value, RBusDevice device) -> void;
+    auto cacheErrorContext(string device) -> string;
 
     struct Memory {
       Node::Debugger::Memory ram;
@@ -147,6 +161,43 @@ struct RDRAM : Memory::RCP<RDRAM> {
   } debugger;
 
   //rdram.cpp
+  auto requestorName(RBusDevice requestor) -> const char* {
+    switch(requestor) {
+      case RBusDevice::VR4300_ICACHE:   return "VR4300 ICache";
+      case RBusDevice::VR4300_DCACHE:   return "VR4300 DCache";
+      case RBusDevice::VR4300_UNCACHED: return "VR4300 Uncached";
+      case RBusDevice::SP_DMA:          return "SP DMA";
+      case RBusDevice::PI_DMA:          return "PI DMA";
+      case RBusDevice::SI_DMA:          return "SI DMA";
+      case RBusDevice::VI_DMA:          return "VI DMA";
+      case RBusDevice::AI_DMA:          return "AI DMA";
+      case RBusDevice::DP_DMA:          return "DP DMA";
+      case RBusDevice::DP_DRAW:         return "DP Draw";
+      case RBusDevice::ARES_DEBUGGER:   return "Ares Debugger";
+      case RBusDevice::ARES_JIT:        return "Ares JIT";
+      case RBusDevice::ARES_IPL3:       return "Ares IPL3";
+      default:                          return "Unknown";
+    }
+  }
+
+  struct Metric {
+    u64 reads, writes;
+    auto total() const -> u64 { return reads + writes; }
+  };
+  
+  struct Profile {
+    Metric metrics[(u32)RBusDevice::NUM_RBUS_DEVICES];
+
+    auto total() -> Metric {
+      Metric total;
+      for(u32 n = 0; n < (u32)RBusDevice::NUM_RBUS_HW_DEVICES; n++) {
+        total.reads  += metrics[n].reads;
+        total.writes += metrics[n].writes;
+      }
+      return total;
+    }
+  } profile;
+
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto power(bool reset) -> void;

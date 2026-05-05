@@ -13,9 +13,9 @@ auto PPU::DAC::upperLayer(u32 x, u32 y) -> void {
   n1 active[6] = {true, true, true, true, true, true};  //enable all layers if no windows are enabled
   if(ppu.window0.io.enable || ppu.window1.io.enable || ppu.window2.io.enable) {
     memory::copy(&active, &ppu.window3.io.active, sizeof(active));
-    if(ppu.window2.io.enable && ppu.window2.output) memory::copy(&active, &ppu.window2.io.active, sizeof(active));
-    if(ppu.window1.io.enable && ppu.window1.output) memory::copy(&active, &ppu.window1.io.active, sizeof(active));
-    if(ppu.window0.io.enable && ppu.window0.output) memory::copy(&active, &ppu.window0.io.active, sizeof(active));
+    if(ppu.window2.io.enable && ppu.window2.output[x]) memory::copy(&active, &ppu.window2.io.active, sizeof(active));
+    if(ppu.window1.io.enable && ppu.window1.output[x]) memory::copy(&active, &ppu.window1.io.active, sizeof(active));
+    if(ppu.window0.io.enable && ppu.window0.output[x]) memory::copy(&active, &ppu.window0.io.active, sizeof(active));
   }
 
   //priority sorting: find topmost two pixels

@@ -53,7 +53,6 @@ auto PPU::Background::serialize(serializer& s) -> void {
   s(io.ly);
 
   s(mosaicOffset);
-  s(hmosaic);
   s(vmosaic);
   s(fx);
   s(fy);
@@ -66,7 +65,9 @@ auto PPU::Objects::serialize(serializer& s) -> void {
   s(io.mosaicWidth);
   s(io.mosaicHeight);
 
-  s(mosaicOffset);
+  s(mosaicY);
+  s(hmosaicOffset);
+  s(vmosaicOffset);
 }
 
 auto PPU::Window::serialize(serializer& s) -> void {
@@ -79,7 +80,9 @@ auto PPU::Window::serialize(serializer& s) -> void {
   s(io.y1);
   s(io.y2);
 
-  s(output);
+  for(auto& flag : output) s(flag);
+  s(h);
+  s(v);
 }
 
 auto PPU::DAC::serialize(serializer& s) -> void {

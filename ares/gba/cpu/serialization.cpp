@@ -66,7 +66,9 @@ auto CPU::serialize(serializer& s) -> void {
   s(keypad.enable);
   s(keypad.condition);
   for(auto& flag : keypad.flag) s(flag);
+  for(auto& keyState : keypad.keyStates) s(keyState);
   s(keypad.conditionMet);
+  s(keypad.irq);
 
   s(joybus.sc);
   s(joybus.sd);
@@ -106,10 +108,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(memory.ewramWait);
   s(memory.unknown2);
 
-  s(openBus.data);
-  s(openBus.iwramData);
-
-  s(prefetch.slot);
+  for(auto& slot : prefetch.slot) s(slot);
   s(prefetch.addr);
   s(prefetch.load);
   s(prefetch.wait);
@@ -125,4 +124,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.busLocked);
   s(context.burstActive);
   s(context.hcounter);
+
+  s(iwramBus);
+  s(mdr);
 }

@@ -53,7 +53,6 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   //prefetch.cpp
   auto prefetchSync(u32 mode, n32 address) -> void;
-  auto prefetchStepInternal(u32 clocks) -> void;
   auto prefetchStep(u32 clocks) -> void;
   auto prefetchReset() -> void;
   auto prefetchRead() -> n16;
@@ -202,8 +201,10 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1 enable;
     n1 condition;
     n1 flag[10];
+    n1 keyStates[10];
 
     n1 conditionMet;
+    n1 irq;
   } keypad;
 
   struct Joybus {
@@ -255,17 +256,9 @@ struct CPU : ARM7TDMI, Thread, IO {
     n4 unknown2;
   } memory;
 
-  struct OpenBus {
-    auto get(u32 mode, n32 address) -> n32;
-    auto set(u32 mode, n32 address, n32 word) -> void;
-    n32 data;
-    n32 iwramData;
-  } openBus;
-
   struct {
     auto empty() const { return addr == load; }
     auto full() const { return load - addr == 16; }
-    auto size() const { return (load - addr) >> 1; }
 
     n16 slot[8];
     n32 addr;      //read location of slot buffer
@@ -293,6 +286,9 @@ struct CPU : ARM7TDMI, Thread, IO {
     n1  burstActive;
     n32 hcounter;
   } context;
+
+  n32 iwramBus;
+  n32 mdr;
 };
 
 extern CPU cpu;

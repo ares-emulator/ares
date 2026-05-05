@@ -188,7 +188,7 @@ auto RSP::Status::writeWord(u32 address, u32 data_, Thread& thread) -> void {
   if(address == 0) {
     //SP_PC_REG
     self.ipu.pc = data.bit(0,11) & ~3;
-    self.branch.reset();
+    self.branch.setPc(self.ipu.pc);
   }
 
   if(address == 1) {

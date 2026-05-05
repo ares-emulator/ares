@@ -17,7 +17,6 @@ auto Timer::unload() -> void {
 }
 
 auto Timer::step(u32 clocks) -> void {
-  counter.dotclock += clocks;
   counter.divclock += clocks;
 
   {
@@ -33,13 +32,6 @@ auto Timer::step(u32 clocks) -> void {
       if(timers[2].synchronize == 0 || timers[2].mode == 1 || timers[2].mode == 2) {
         timers[2].step(clocks - timers[2].wait);
       }
-    }
-  }
-
-  while(counter.dotclock >= 5) {
-    counter.dotclock -= 5;
-    if(timers[0].clock == 1) {
-      timers[0].step();
     }
   }
 
@@ -82,9 +74,6 @@ auto Timer::vsync(bool line) -> void {
 }
 
 auto Timer::power(bool reset) -> void {
-  Memory::Interface::setWaitStates(2, 2, 2);
-
-  counter.dotclock = 0;
   counter.divclock = 0;
   for(auto& timer : timers) {
     timer.counter = 0;
@@ -110,11 +99,21 @@ auto Timer::power(bool reset) -> void {
 auto Timer::Source::step(u32 clocks) -> void {
   if((synchronize && paused) || wait) return;
 
-  while(clocks--) {
-    counter++;
+  while(clocks > 0) {
+    u16 counter16 = u16(counter);
+
+    u32 toTarget   = ((target + 1 - counter16) & 0xffff);
+    u32 toSaturate = ((0x10000 - counter16) & 0xffff);
+
+    u32 stepClocks = std::max<u32>(1, std::min(clocks, std::min(toTarget, toSaturate)));
+
+    counter += stepClocks;
+    clocks -= stepClocks;
 
     //counter value can be read in the range of 0..target (inclusive)
-    if(u16(counter - 1) == target) {
+    u16 last = u16(counter - 1);
+
+    if(last == target) {
       reachedTarget = 1;
       if(resetMode == 1) {
         wait = WAIT_CYCLES;
@@ -123,7 +122,7 @@ auto Timer::Source::step(u32 clocks) -> void {
       if(irqOnTarget) irq();
     }
 
-    if(u16(counter - 1) == 0xffff) {
+    if(last == 0xffff) {
       reachedSaturate = 1;
       wait = 1;
       if(resetMode == 0) counter = 0;
@@ -138,7 +137,8 @@ auto Timer::Source::irq() -> void {
       interrupt.pulse(Interrupt::Timer0 + id);
     } else {
       irqLine = !irqLine;
-      if(!irqLine) interrupt.pulse(Interrupt::Timer0 + id);
+      if(!irqLine) interrupt.raise(Interrupt::Timer0 + id);
+      if( irqLine) interrupt.lower(Interrupt::Timer0 + id);
     }
     if(!irqRepeat) irqTriggered = 1;
   }

@@ -67,6 +67,7 @@ struct Device {
   virtual auto isJoypad() const -> bool { return false; }
 
   auto name() const -> string { return _name; }
+  auto setName(const string& name) -> void { _name = name; }
   auto id() const -> u64 { return _id; }
   auto setID(u64 id) -> void { _id = id; }
   auto group(u32 id) -> Group& { return _groups[id]; }

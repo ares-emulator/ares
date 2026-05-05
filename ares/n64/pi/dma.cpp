@@ -3,7 +3,7 @@ auto PI::dmaRead() -> void {
 
   u32 lastCacheline = 0xffff'ffff;
   for(u32 address = 0; address < io.readLength; address += 2) {
-    u16 data = rdram.ram.read<Half>(io.dramAddress + address, "PI DMA");
+    u16 data = rdram.ram.read<Half>(io.dramAddress + address, RBusDevice::PI_DMA);
     busWrite<Half>(io.pbusAddress + address, data);
   }
 }
@@ -34,12 +34,12 @@ auto PI::dmaWrite() -> void {
 
     if (firstBlock && curLen < 127-misalign) {
       for (i32 i = 0; i < curLen-misalign; i++) {
-        rdram.ram.write<Byte>(io.dramAddress++, mem[i], "PI DMA");
+        rdram.ram.write<Byte>(io.dramAddress++, mem[i], RBusDevice::PI_DMA);
       }
     } else {
       for (i32 i = 0; i < curLen-misalign; i+=2) {
-        rdram.ram.write<Byte>(io.dramAddress++, mem[i+0], "PI DMA");
-        rdram.ram.write<Byte>(io.dramAddress++, mem[i+1], "PI DMA");
+        rdram.ram.write<Byte>(io.dramAddress++, mem[i+0], RBusDevice::PI_DMA);
+        rdram.ram.write<Byte>(io.dramAddress++, mem[i+1], RBusDevice::PI_DMA);
       }
     }
 

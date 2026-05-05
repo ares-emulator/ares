@@ -48,7 +48,7 @@ auto PCD::Drive::read() -> bool {
 
 //print("* ", reading() ? "data" : "cdda", " read ", lba, " to ", end - 1, "\n");
 
-  pcd.fd->seek(2448 * (abs(session->leadIn.lba) + lba + 150));
+  pcd.fd->seek(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lba)));
   pcd.fd->read(sector, 2448);
 
   // Calculate the sector advance amount based on the MegaLD playback modes, if applicable. Note that if a SCSI read
@@ -254,28 +254,28 @@ auto PCD::Drive::getCurrentSector() -> s32 {
 }
 
 auto PCD::Drive::getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void {
-  auto [lminute, lsecond, lframe] = CD::MSF(lba);
+  auto [lminute, lsecond, lframe] = CD::MSF::fromLBA(lba);
   minute = lminute;
   second = lsecond;
   frame = lframe;
 }
 
 auto PCD::Drive::getCurrentTrackRelativeTimecode(u8& minute, u8& second, u8& frame) -> void {
-  auto [lminute, lsecond, lframe] = CD::MSF(lba - session->tracks[track].indices[1].lba);
+  auto [lminute, lsecond, lframe] = CD::MSF::fromABA(lba - session->tracks[track].indices[1].lba);
   minute = lminute;
   second = lsecond;
   frame = lframe;
 }
 
 auto PCD::Drive::getLeadOutTimecode(u8& minute, u8& second, u8& frame) -> void {
-  auto [lminute, lsecond, lframe] = CD::MSF(session->leadOut.lba);
+  auto [lminute, lsecond, lframe] = CD::MSF::fromLBA(session->leadOut.lba);
   minute = lminute;
   second = lsecond;
   frame = lframe;
 }
 
 auto PCD::Drive::getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& frame) -> void {
-  auto [lminute, lsecond, lframe] = CD::MSF(session->tracks[track].indices[1].lba);
+  auto [lminute, lsecond, lframe] = CD::MSF::fromLBA(session->tracks[track].indices[1].lba);
   minute = lminute;
   second = lsecond;
   frame = lframe;
@@ -283,8 +283,8 @@ auto PCD::Drive::getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8
 }
 
 auto PCD::Drive::lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
-  s32 lba = ((((((s32)hour * 60) + (s32)minute) * 60) + (s32)second) * 75) + (s32)frame;
-  return lba;
+  s32 aba = ((((((s32)hour * 60) + (s32)minute) * 60) + (s32)second) * 75) + (s32)frame;
+  return aba - CD::Track1Pregap;
 }
 
 auto PCD::Drive::isTrackAudio(n7 track) -> bool {

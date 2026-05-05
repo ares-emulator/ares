@@ -32,6 +32,7 @@ struct Program : ares::Platform {
   //status.cpp
   auto updateMessage() -> void;
   auto showMessage(const string&) -> void;
+  auto error(const string&) -> void;
 
   //utility.cpp
   auto pause(bool) -> void;
@@ -41,6 +42,7 @@ struct Program : ares::Platform {
   auto captureScreenshot(const u32* data, u32 pitch, u32 width, u32 height) -> void;
   auto openFile(BrowserDialog&) -> string;
   auto selectFolder(BrowserDialog&) -> string;
+  auto saveFile(BrowserDialog& dialog) -> string;
 
   //drivers.cpp
   auto videoDriverUpdate() -> void;
@@ -56,12 +58,20 @@ struct Program : ares::Platform {
 
   auto inputDriverUpdate() -> void;
 
+  auto driverInitFailed(nall::string& driver, const char* kind, auto&& updateSettingsWindow) -> void;
+  
   bool startFullScreen = false;
+  bool startPseudoFullScreen = false;
+  bool kiosk = false;
   std::vector<string> startGameLoad;
   bool noFilePrompt = false;
+  bool settingsWindowConstructed = false;
+  bool gameBrowserWindowConstructed = false;
+  bool toolsWindowConstructed = false;
 
   string startSystem;
   string startShader;
+  string startSaveStateSlot;
 
   std::vector<ares::Node::Video::Screen> screens;
   std::vector<ares::Node::Audio::Stream> streams;
@@ -73,6 +83,7 @@ struct Program : ares::Platform {
   bool requestFrameAdvance = false;
   bool requestScreenshot = false;
   bool keyboardCaptured = false;
+  atomic<bool> pendingKioskExit = false;
 
   struct State {
     u32 slot = 1;
@@ -115,6 +126,7 @@ private:
 
   atomic<bool> _quitting = false;
   atomic<bool> _needsResize = false;
+  atomic<bool> _quitRequested = false;  // quit requested by emulator thread
 
   /// Mutex used to manage access to the status message queue.
   std::recursive_mutex _messageMutex;

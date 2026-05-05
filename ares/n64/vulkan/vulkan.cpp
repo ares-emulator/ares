@@ -95,8 +95,8 @@ auto Vulkan::render() -> bool {
 
   if(!command.source) {
     do {
-      buffer[queueSize * 2 + 0] = rdram.ram.read<Word>(current, "RDP DMA"); current += 4;
-      buffer[queueSize * 2 + 1] = rdram.ram.read<Word>(current, "RDP DMA"); current += 4;
+      buffer[queueSize * 2 + 0] = rdram.ram.read<Word>(current, RBusDevice::DP_DMA); current += 4;
+      buffer[queueSize * 2 + 1] = rdram.ram.read<Word>(current, RBusDevice::DP_DMA); current += 4;
       queueSize++;
     } while(--length);
   } else {
@@ -167,7 +167,7 @@ auto Vulkan::scanoutAsync(bool field) -> bool {
   options.downscale_steps = supersampleScanout ? 16 : 0;
   options.persist_frame_on_invalid_input = true;  //this is a compatibility hack, but I'm not sure what for ...
   if(disableVideoInterfaceProcessing) {
-    options.vi = {false, false, false, false, false, false};
+    options.vi = {false, false, true, false, false, false};
   }
   if(!supersampleScanout){
     options.blend_previous_frame = weaveDeinterlacing;

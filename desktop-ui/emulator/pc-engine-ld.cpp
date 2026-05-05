@@ -1,12 +1,16 @@
 struct PCEngineLD : PCEngine {
   PCEngineLD();
   auto load() -> LoadResult override;
+  auto load(Menu) -> void override;
+  auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
+  auto changeDiskState(const string state) -> void;
 
   std::shared_ptr<mia::Pak> hucard;
   u32 internalBiosId = 0;
   maybe<u32> hucardBiosId;
+  sTimer discTrayTimer;
 };
 
 PCEngineLD::PCEngineLD() {
@@ -89,8 +93,54 @@ auto PCEngineLD::load() -> LoadResult {
   }
 
   connectPorts();
+  discTrayTimer = Timer{};
 
   return successful;
+}
+
+auto PCEngineLD::load(Menu menu) -> void {
+  Group group;
+  Menu changeSideMenu{&menu};
+  changeSideMenu.setIcon(Icon::Device::Optical);
+  changeSideMenu.setText("Change Side");
+  auto medium = game->pak->attribute("medium");
+  auto sides = nall::split_and_strip(medium, ",");
+
+  MenuRadioItem noDiscItem{&changeSideMenu};
+  noDiscItem.setText("No Disc").onActivate([&] {
+    changeDiskState("No Disc");
+  });
+  group.append(noDiscItem);
+
+  auto checkedItemIndex = group.objectCount();
+  for(auto side : sides) {
+    MenuRadioItem item{&changeSideMenu};
+    group.append(item);
+    item.setText(side).onActivate([this, side] {changeDiskState(side);});
+  }
+  group.objects<MenuRadioItem>()[checkedItemIndex].setChecked();
+}
+
+auto PCEngineLD::changeDiskState(const string state) -> void {
+  Program::Guard guard;
+  discTrayTimer->setEnabled(false);
+  save();
+  auto tray = root->find<ares::Node::Port>("PC Engine LD/Disc Tray");
+  tray->disconnect();
+
+  if(state == "No Disc") return;
+
+  discTrayTimer->onActivate([&, state] {
+    discTrayTimer->setEnabled(false);
+    auto tray = root->find<ares::Node::Port>("PC Engine LD/Disc Tray");
+    tray->allocate(state);
+    tray->connect();
+  }).setInterval(3000).setEnabled();
+}
+
+auto PCEngineLD::unload() -> void {
+  Emulator::unload();
+  discTrayTimer.reset();
 }
 
 auto PCEngineLD::save() -> bool {

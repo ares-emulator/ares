@@ -21,10 +21,8 @@ auto DebugSettings::construct() -> void {
 
     portHint.setText("Safe range: 1024 - 32767").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  ipv4Layout.setAlignment(1);
-    ipv4Label.setText("Use IPv4");
-
     ipv4.setEnabled(true);
+    ipv4.setText("Use IPv4");
     ipv4.setChecked(settings.debugServer.useIPv4);
     ipv4.onToggle([&](){
       settings.debugServer.useIPv4 = ipv4.checked();
@@ -32,10 +30,8 @@ auto DebugSettings::construct() -> void {
       infoRefresh();
     });
 
-  enabledLayout.setAlignment(1);
-    enabledLabel.setText("Enabled");
-
     enabled.setEnabled(true);
+    enabled.setText("Enabled");
     enabled.setChecked(settings.debugServer.enabled);
     enabled.onToggle([&](){
       settings.debugServer.enabled = enabled.checked();

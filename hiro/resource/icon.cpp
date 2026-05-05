@@ -44,6 +44,7 @@ ICON(Optical);
 ICON(Printer);
 ICON(Speaker);
 ICON(Storage);
+ICON(Tape);
 }
 namespace Edit {
 ICON(Clear);

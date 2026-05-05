@@ -45,11 +45,10 @@ auto Emulator::region() -> string {
     if(!regions.empty()) {
       for(auto &prefer: preferredRegions) {
         if(std::ranges::find(regions, prefer) != regions.end()) return prefer; //NTSC-U, NTSC-J or PAL
+        if(prefer == "NTSC-U" || prefer == "NTSC-J") {
+          if(std::ranges::find(regions, string("NTSC")) != regions.end()) return "NTSC";
+        }
       }
-
-      //Handle generic "NTSC" region.
-      //NOTE: we don't need to check PAL because the above check covered it
-      if(std::ranges::find(regions, string{"NTSC"}) != regions.end()) return "NTSC";
 
       //If no preferred region was found, return the first region in the list
       //NOTE: required for 'unsual' regions like NTSC-DEV for 64DD
@@ -105,6 +104,12 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
   
   switch (result.result) {
     case noFirmware:
+      if(program.kiosk) {
+        error({"firmware is missing or invalid.\n",
+          result.firmwareSystemName, " - ", result.firmwareType, " (", result.firmwareRegion, ") is required to play this game."
+        });
+        break;
+      }
       if(MessageDialog().setText({
         errorText
       }).question() == "Yes") {
@@ -173,7 +178,7 @@ auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
     filters.trimRight(":", 1L);
     filters.prepend(pak->name(), "|");
     dialog.setFilters({filters, "All|*"});
-    location = program.openFile(dialog);
+    location = directory::resolveSymLink(program.openFile(dialog));
   }
 
   if(location) {
@@ -372,7 +377,7 @@ auto Emulator::setNotchAngularSnappingDistance(f64 value) -> bool {
 }
 
 auto Emulator::error(const string& text) -> void {
-  MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
+  program.error(text);
 }
 
 auto Emulator::input(ares::Node::Input::Input input) -> void {

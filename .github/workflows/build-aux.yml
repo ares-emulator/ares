@@ -105,12 +105,12 @@ jobs:
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
     - name: "Build: FreeBSD"
       if: matrix.platform.name == 'freebsd'
-      uses: cross-platform-actions/action@e8a7b572196ff79ded1979dc2bb9ee67d1ddb252
+      uses: cross-platform-actions/action@492b0c80085400348c599edace11141a4ee73524
       env:
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
       with:
         operating_system: freebsd
-        version: 14.3
+        version: '15.0'
         environment_variables: TARGET_PRESET
         run: |
           sudo pkg install -y cmake pkgconf ccache ninja gtk3 libX11 libXext libXrandr libXrender libglvnd alsa-lib libao libudev-devd librashader openal-soft pulseaudio sdl3 vulkan-loader

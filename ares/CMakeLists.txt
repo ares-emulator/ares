@@ -99,6 +99,18 @@ target_sources(
     ares/node/video/video.hpp
 )
 
+target_sources(
+  ares
+  PRIVATE
+    ares/node/debugger/debugger.hpp
+    ares/node/debugger/graphics.hpp
+    ares/node/debugger/memory.hpp
+    ares/node/debugger/properties.hpp
+    ares/node/debugger/tracer/tracer.hpp
+    ares/node/debugger/tracer/instruction.hpp
+    ares/node/debugger/tracer/notification.hpp
+)
+
 if(OS_WINDOWS)
   include(cmake/os-windows.cmake)
 elseif(OS_MACOS)

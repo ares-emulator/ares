@@ -24,6 +24,8 @@ auto CPU::serialize(serializer& s) -> void {
     s(line.dirty);
     s(line.tag);
     s(line.index);
+    s(line.fillPc);
+    s(line.dirtyPc);
     s(line.words);
   }
 
@@ -75,6 +77,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.status.errorLevel);
   s(scc.status.privilegeMode);
   s(scc.status.userExtendedAddressing);
+  s(scc.status.supervisorExtendedAddressing);
   s(scc.status.kernelExtendedAddressing);
   s(scc.status.interruptMask);
   s(scc.status.de);
@@ -111,12 +114,15 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.xcontext.region);
   s(scc.xcontext.pageTableEntryBase);
   s(scc.parityError.diagnostic);
+  s(scc.cacheError.unused);
   s(scc.tagLo.primaryCacheState);
   s(scc.tagLo.physicalAddress);
   s(scc.epcError);
   s(scc.latch);
   s(scc.nmiPending);
   s(scc.sysadFrozen);
+
+  s(fenv.control);
 
   for(auto& r : fpu.r) s(r.u64);
   s(fpu.csr.roundMode);

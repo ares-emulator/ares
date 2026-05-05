@@ -106,6 +106,7 @@ auto RSP::accumulatorSaturate(u32 index, bool slice, u16 negative, u16 positive)
 }
 
 auto RSP::CFC2(r32& rt, u8 rd) -> void {
+  if(&rt == &ipu.r[0]) return;
   r128 hi, lo;
   switch(rd & 3) {
   case 0x00: hi = VCOH; lo = VCOL; break;
@@ -290,6 +291,7 @@ auto RSP::LWV(r128& vt, cr32& rs, s8 imm) -> void {
 
 template<u8 e>
 auto RSP::MFC2(r32& rt, cr128& vs) -> void {
+  if(&rt == &ipu.r[0]) return;
   auto hi = vs.byte(e + 0 & 15);
   auto lo = vs.byte(e + 1 & 15);
   rt.u32 = s16(hi << 8 | lo << 0);

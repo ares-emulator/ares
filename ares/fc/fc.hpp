@@ -19,7 +19,8 @@ namespace ares::Famicom {
   struct Region {
     static inline auto NTSCJ() -> bool;
     static inline auto NTSCU() -> bool;
-    static inline auto PAL() -> bool;
+    static inline auto PAL()   -> bool;
+    static inline auto Dendy() -> bool;
   };
 
   #include <fc/controller/controller.hpp>

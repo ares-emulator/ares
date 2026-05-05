@@ -124,37 +124,54 @@ auto construct() -> void {
   media.push_back("ZX Spectrum");
 }
 
-auto identify(const string& filename) -> string {
+  auto identify(const string& filename) -> std::vector<string> {
   construct();
+
+  std::vector<string> matches;
   auto extension = Location::suffix(filename).trimLeft(".", 1L).downcase();
+
+  auto addMatch = [&](const string& medium) {
+    auto pak = mia::Medium::create(medium);
+    auto exts = pak->extensions();
+
+    if(std::ranges::find(exts, extension) == exts.end()) return;
+
+    if(pak->load(filename) != successful) return;              // Skip media that cannot load this file
+    if(pak->pak->attribute("audio").boolean()) return;       // Skip audio-only media
+
+    auto name = pak->name();
+    if(std::ranges::find(matches, name) == matches.end()) {
+      matches.push_back(name);
+    }
+  };
 
   if(extension == "zip") {
     Decode::ZIP archive;
+
     if(archive.open(filename)) {
       for(auto& file : archive.file) {
-        auto match = Location::suffix(file.name).trimLeft(".", 1L).downcase();
+        auto zippedExtension = Location::suffix(file.name).trimLeft(".", 1L).downcase();
+
         for(auto& medium : media) {
           auto pak = mia::Medium::create(medium);
           auto exts = pak->extensions();
-          if(std::ranges::find(exts, match) != exts.end()) {
-            extension = match;
+
+          if(std::ranges::find(exts, zippedExtension) != exts.end()) {
+            extension = zippedExtension;
+            addMatch(medium);
           }
         }
       }
     }
+
+    return matches;
   }
 
   for(auto& medium : media) {
-    auto pak = mia::Medium::create(medium);
-    auto exts = pak->extensions();
-    if(std::ranges::find(exts, extension) != exts.end()) {
-      if(pak->load(filename) != successful) continue; // Skip medium that the system cannot load
-      if(pak->pak->attribute("audio").boolean()) continue; // Skip audio-only media to give the next system a chance to match
-      return pak->name();
-    }
+    addMatch(medium);
   }
 
-  return {};  //unable to identify
+  return matches;
 }
 
 auto import(std::shared_ptr<Pak> pak, const string& filename) -> bool {

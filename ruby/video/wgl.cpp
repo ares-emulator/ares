@@ -2,6 +2,9 @@
 
 #define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
+#define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x1
+#define WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x2
 
 static LRESULT CALLBACK VideoOpenGL32_WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
   if(msg == WM_SYSKEYDOWN && wparam == VK_F4) return false;
@@ -10,14 +13,18 @@ static LRESULT CALLBACK VideoOpenGL32_WindowProcedure(HWND hwnd, UINT msg, WPARA
 
 struct VideoWGL : VideoDriver, OpenGL {
   VideoWGL& self = *this;
-  VideoWGL(Video& super) : VideoDriver(super) { construct(); }
+  VideoWGL(Video& super, u8 glMajor, u8 glMinor) : VideoDriver(super) { 
+    glMajorVersion = glMajor;
+    glMinorVersion = glMinor;
+    construct(); 
+  }
   ~VideoWGL() { destruct(); }
 
   auto create() -> bool override {
     return initialize();
   }
 
-  auto driver() -> string override { return "OpenGL 3.2"; }
+  auto driver() -> string override { return string{"OpenGL ", glMajorVersion, ".", glMinorVersion}; }
   auto ready() -> bool override { return _ready; }
 
   auto hasFullScreen() -> bool override { return true; }
@@ -177,8 +184,9 @@ private:
 
     if(wglCreateContextAttribs) {
       s32 attributeList[] = {
-        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-        WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+        WGL_CONTEXT_MAJOR_VERSION_ARB, glMajorVersion,
+        WGL_CONTEXT_MINOR_VERSION_ARB, glMinorVersion,
+        WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
         0
       };
       HGLRC context = wglCreateContextAttribs(_display, 0, attributeList);
@@ -188,6 +196,8 @@ private:
         wglMakeCurrent(_display, _wglContext = context);
       }
     }
+
+    print("\nOpenGL Version: ", (const char*)glGetString(GL_VERSION), ", GLSL: ", (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION),"\n");
 
     if(wglSwapInterval) wglSwapInterval(self.blocking);
     _ready = OpenGL::initialize(self.shader);
@@ -222,6 +232,9 @@ private:
   s32 _monitorY = 0;
   s32 _monitorWidth = 0;
   s32 _monitorHeight = 0;
+
+  u8 glMajorVersion = 0;
+  u8 glMinorVersion = 0;
 
   HWND _window = nullptr;
   HWND _context = nullptr;

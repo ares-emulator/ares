@@ -72,7 +72,7 @@ auto PPU::renderPixel() -> void {
     color = io.emphasis << 6 | readCGRAM((n5)var.address);
   }
 
-  if(Region::PAL())
+  if(Region::PAL() || Region::Dendy())
     output[(x + 18) % 283] = color;
   else
     output[(x + 16) % 283] = color;
@@ -188,7 +188,7 @@ auto PPU::renderScanline() -> void {
 
   //337-338
   loadCHR(0x2000 | (n12)var.address);
-  bool skip = !Region::PAL() && enable() && io.field == 1 && io.ly == vlines() - 1;
+  bool skip = !Region::PAL() && !Region::Dendy() && enable() && io.field == 1 && io.ly == vlines() - 1;
   step(2);
 
   //339

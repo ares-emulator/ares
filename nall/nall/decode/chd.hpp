@@ -118,9 +118,7 @@ inline auto CHD::load(const string& location) -> bool {
     }
 
     const bool pregap_in_file = (pregap_frames > 0 && pgtype[0] == 'V');
-
-    // First track should have 2 second pregap as standard
-    if(track_no == 1 && !pregap_in_file) pregap_frames = 2 * 75;
+    const int track1_pregap = (track_no == 1 && !pregap_in_file) ? 2 * 75 : 0;
 
     // Add the new track
     Track track;
@@ -130,25 +128,31 @@ inline auto CHD::load(const string& location) -> bool {
     track.postgap = postgap_frames;
 
     // index0 = Pregap
-    if (pregap_frames > 0) {
+    if (pregap_frames > 0 || track1_pregap > 0) {
       Index index;
       index.number = 0;
-      index.lba = disc_lba;
-      index.end = disc_lba + pregap_frames - 1;
 
       if (pregap_in_file) {
+        index.lba = disc_lba;
+        index.end = disc_lba + pregap_frames - 1;
+        index.chd_lba = chd_lba;
+
         if (pregap_frames > frames) {
           print("CHD: pregap length ", pregap_frames, " exceeds track length ", frames, "\n");
           return false;
         }
 
-        index.chd_lba = chd_lba;
-        chd_lba += pregap_frames;
-        frames -= pregap_frames;
-      }
+        disc_lba += pregap_frames;
+        chd_lba  += pregap_frames;
+        frames   -= pregap_frames;
 
-      disc_lba += pregap_frames;
-      track.indices.push_back(index);
+        track.indices.push_back(index);
+      } else if(track_no == 1 && track1_pregap) {
+        index.lba = -track1_pregap;
+        index.end = -1;
+        index.chd_lba = -1;
+        track.indices.push_back(index);
+      }
     }
 
     // index1 = track data
@@ -172,6 +176,7 @@ inline auto CHD::load(const string& location) -> bool {
       index.number = 2;
       index.lba = disc_lba;
       index.end = disc_lba + postgap_frames - 1;
+      index.chd_lba = -1;
       track.indices.push_back(index);
       disc_lba += postgap_frames;
     }
@@ -187,6 +192,7 @@ inline auto CHD::read(u32 sector) const -> std::vector<u8> {
   for(auto& track : tracks) {
     for(auto& index : track.indices) {
       if (sector >= index.lba && sector <= index.end) {
+        if (index.chd_lba < 0) return {};
         auto chd_lba = (sector - index.lba) + index.chd_lba;
 
         std::vector<u8> output;

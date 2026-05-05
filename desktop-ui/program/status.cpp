@@ -41,3 +41,12 @@ auto Program::showMessage(const string& text) -> void {
   messages.push_back({chrono::millisecond(), text});
   printf("%s\n", (const char*)text);
 }
+
+auto Program::error(const string& text) -> void {
+  if(kiosk) {
+    fprintf(stderr, "error: %s\n", text.data());
+    pendingKioskExit = true;
+  } else {
+    MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
+  }
+}

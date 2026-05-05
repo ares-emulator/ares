@@ -115,8 +115,10 @@ ares_add_sources(
     cartridge/board/taito-x1-017.cpp
     cartridge/board/tengen-80003x.cpp
     cartridge/board/unl-bmc.cpp
+    cartridge/board/unl-jy.cpp
     cartridge/board/unl-sachen-74ls374n.cpp
     cartridge/board/unl-sachen-sa0037.cpp
+    cartridge/board/unl-sc127.cpp
     cartridge/board/unl-txc.cpp
     cartridge/board/unrom-512.cpp
 )
@@ -144,6 +146,14 @@ ares_add_sources(
   INCLUDED #
     controller/gamepad/gamepad.cpp
     controller/gamepad/gamepad.hpp
+)
+
+ares_add_sources(
+  CORE #
+    fc
+  INCLUDED #
+    controller/zapper/zapper.cpp
+    controller/zapper/zapper.hpp
 )
 
 ares_add_sources(
@@ -180,6 +190,8 @@ ares_add_sources(
   INCLUDED #
     expansion/family-keyboard/family-keyboard.cpp
     expansion/family-keyboard/family-keyboard.hpp
+    expansion/family-keyboard/famicom-data-recorder.cpp
+    expansion/family-keyboard/famicom-data-recorder.hpp
 )
 
 ares_add_sources(

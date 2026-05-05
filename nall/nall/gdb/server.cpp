@@ -115,7 +115,7 @@ namespace nall::GDB {
     char cmdPrefix = cmdName.size() > 0 ? cmdName(0) : ' ';
 
     if constexpr(GDB_LOG_MESSAGES) {
-      print("GDB <: %s\n", cmdBuffer.data());
+      printf("GDB <: %s\n", cmdBuffer.data());
     }
 
     switch(cmdPrefix)

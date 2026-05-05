@@ -30,22 +30,15 @@ struct ICD : Platform, GameBoy::SuperGameBoyInterface, Thread {
   n32 Frequency = 0;
 
 private:
-  struct Packet {
-    auto operator[](n4 address) -> n8& { return data[address]; }
-    n8 data[16];
-  };
-  Packet packet[64];
-  n7 packetSize;
-
   n2 joypID;
-  n1 joypLock;
   n1 pulseLock;
   n1 strobeLock;
   n1 packetLock;
-  Packet joypPacket;
   n4 packetOffset;
+  n1 packetReady;
   n8 bitData;
   n3 bitOffset;
+  n1 previousP15;
 
   n8 output[4 * 512];
   n2 readBank;

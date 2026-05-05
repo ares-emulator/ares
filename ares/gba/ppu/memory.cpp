@@ -28,23 +28,20 @@ auto PPU::readVRAM_BG(u32 mode, n32 address) -> n16 {
   else if(address >= 0x14000) return 0;
   vramAccessedBG = true;
 
-  return readVRAM(mode, address);
+  n16 half = readVRAM(mode, address);
+  if(mode & Byte) {
+    if(address & 1) half >>= 8;
+    half = (n8)half;
+  }
+  return half;
 }
 
 auto PPU::readVRAM(u32 mode, n32 address) -> n16 {
   address &= 0x1ffff;
   if(Background::IO::mode >= 3 && address < 0x1c000 && address >= 0x18000) return 0;
 
-  address &= (address & 0x10000) ? 0x17fff : 0x0ffff;
-
-  if(mode & Half) {
-    address &= ~1;
-    return vram[address + 0] << 0 | vram[address + 1] << 8;
-  } else if(mode & Byte) {
-    return vram[address];
-  }
-
-  unreachable;
+  address &= (address & 0x10000) ? 0x17ffe : 0x0fffe;
+  return vram[address + 0] << 0 | vram[address + 1] << 8;
 }
 
 auto PPU::writeVRAM(u32 mode, n32 address, n16 half) -> void {
@@ -69,7 +66,6 @@ auto PPU::writeVRAM(u32 mode, n32 address, n16 half) -> void {
 }
 
 auto PPU::readPRAM(u32 mode, n32 address) -> n16 {
-  if(mode & Byte) return readPRAM(Half, address) >> ((address & 1) * 8);
   return pram[address >> 1 & 511];
 }
 
@@ -83,45 +79,39 @@ auto PPU::writePRAM(u32 mode, n32 address, n16 half) -> void {
 }
 
 auto PPU::readOAM(u32 mode, n32 address) -> n32 {
-  if(mode & Word) return readOAM(Half, address & ~2) << 0 | readOAM(Half, address | 2) << 16;
-  if(mode & Byte) return readOAM(Half, address) >> ((address & 1) * 8);
-
   auto& obj = object[address >> 3 & 127];
   auto& par = objectParam[address >> 5 & 31];
+  n16 param;
+  switch(address >> 3 & 3) {
+  case 0: param = par.pa; break;
+  case 1: param = par.pb; break;
+  case 2: param = par.pc; break;
+  case 3: param = par.pd; break;
+  }
 
-  switch(address & 6) {
+  switch(address & 4) {
 
   case 0: return (
-    (obj.y          <<  0)
-  | (obj.affine     <<  8)
-  | (obj.affineSize <<  9)
-  | (obj.mode       << 10)
-  | (obj.mosaic     << 12)
-  | (obj.colors     << 13)
-  | (obj.shape      << 14)
-  );
-
-  case 2: return (
-    (obj.x           <<  0)
-  | (obj.affineParam <<  9)
-  | (obj.hflip       << 12)
-  | (obj.vflip       << 13)
-  | (obj.size        << 14)
+    (obj.y           <<  0)
+  | (obj.affine      <<  8)
+  | (obj.affineSize  <<  9)
+  | (obj.mode        << 10)
+  | (obj.mosaic      << 12)
+  | (obj.colors      << 13)
+  | (obj.shape       << 14)
+  | (obj.x           << 16)
+  | (obj.affineParam << 25)
+  | (obj.hflip       << 28)
+  | (obj.vflip       << 29)
+  | (obj.size        << 30)
   );
 
   case 4: return (
     (obj.character <<  0)
   | (obj.priority  << 10)
   | (obj.palette   << 12)
+  | (param         << 16)
   );
-
-  case 6:
-    switch(address >> 3 & 3) {
-    case 0: return par.pa;
-    case 1: return par.pb;
-    case 2: return par.pc;
-    case 3: return par.pd;
-    }
 
   }
 

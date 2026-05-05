@@ -41,6 +41,7 @@ extern const nall::multiFactorImage Optical;
 extern const nall::multiFactorImage Printer;
 extern const nall::multiFactorImage Speaker;
 extern const nall::multiFactorImage Storage;
+extern const nall::multiFactorImage Tape;
 }
 namespace Edit {
 extern const nall::multiFactorImage Clear;

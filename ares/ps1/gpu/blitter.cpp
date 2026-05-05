@@ -6,6 +6,7 @@ auto GPU::Blitter::queue() -> void {
   //if the display is disabled, output a black screen image
   if(blank = self.io.displayDisable) {
     self.screen->frame();
+    scheduler.exit(Event::Frame);
     return;
   }
 
@@ -82,6 +83,7 @@ auto GPU::Blitter::queue() -> void {
 
   self.screen->setViewport(0, 0, width, height);
   self.screen->frame();
+  scheduler.exit(Event::Frame);
 }
 
 auto GPU::Blitter::refresh() -> void {

@@ -31,6 +31,8 @@ target_sources(
     inode.cpp
     inode.hpp
     instance.hpp
+    instruction-set.cpp
+    instruction-set.hpp
     interpolation.hpp
     intrinsics.hpp
     ips.hpp
@@ -64,6 +66,8 @@ target_sources(
     serial.hpp
     serializer.hpp
     set.hpp
+    smtp.cpp
+    smtp.hpp
     span-helpers.hpp
     stdint.hpp
     string.hpp
@@ -91,6 +95,7 @@ target_sources(
   nall
   PRIVATE #
     beat/single/apply.hpp
+    beat/single/create.hpp
 )
 
 target_sources(
@@ -128,9 +133,12 @@ target_sources(
     decode/cue.hpp
     decode/gzip.hpp
     decode/html.hpp
+    decode/huffman.hpp
     decode/inflate.hpp
     decode/mmi.hpp
+    decode/mtf.hpp
     decode/png.hpp
+    decode/rle.hpp
     decode/url.hpp
     decode/wav.hpp
     decode/zip.hpp
@@ -157,9 +165,15 @@ target_sources(
   PRIVATE #
     encode/base.hpp
     encode/base64.hpp
+    encode/bwt.hpp
     encode/html.hpp
+    encode/huffman.hpp
+    encode/lzsa.hpp
+    encode/mtf.hpp
     encode/png.hpp
+    encode/rle.hpp
     encode/url.hpp
+    encode/wav.hpp
     encode/zip.hpp
 )
 
@@ -179,7 +193,22 @@ target_sources(
     hash/crc32.hpp
     hash/crc64.hpp
     hash/hash.hpp
+    hash/sha224.hpp
     hash/sha256.hpp
+    hash/sha384.hpp
+    hash/sha512.hpp
+)
+
+
+target_sources(
+  nall
+  PRIVATE #
+    http/message.hpp
+    http/server.cpp
+    http/server.hpp
+    http/response.hpp
+    http/request.hpp
+    http/role.hpp
 )
 
 target_sources(
@@ -228,8 +257,13 @@ target_sources(
     recompiler/amd64/amd64.hpp
     recompiler/amd64/constants.hpp
     recompiler/amd64/emitter.hpp
+    recompiler/amd64/encoder-calls-windows.hpp
+    recompiler/amd64/encoder-calls-systemv.hpp
+    recompiler/amd64/encoder-instructions.hpp
     recompiler/generic/constants.hpp
     recompiler/generic/generic.hpp
+    recompiler/generic/encoder-calls.hpp
+    recompiler/generic/encoder-instructions.hpp
 )
 
 target_sources(
@@ -259,8 +293,11 @@ target_sources(
     string/eval/parser.hpp
     string/markup/bml.hpp
     string/markup/find.hpp
+    string/markup/json.hpp
     string/markup/node.hpp
     string/markup/xml.hpp
+    string/transform/dml.hpp
+    string/transform/cml.hpp
 )
 
 target_sources(

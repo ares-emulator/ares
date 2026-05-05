@@ -94,11 +94,13 @@ auto VDC::serialize(serializer& s) -> void {
   s(background.height);
   s(background.hoffset);
   s(background.voffset);
+  s(background.burstMode);
   s(background.latch.vramMode);
   s(background.latch.characterMode);
 
   s(sprite.enable);
   s(sprite.vramMode);
+  s(sprite.burstMode);
   s(sprite.latch.vramMode);
 }
 

@@ -1,16 +1,55 @@
 auto Program::identify(const string& filename) -> std::shared_ptr<Emulator> {
   Program::Guard guard;
-  if(auto system = mia::identify(filename)) {
+
+  std::vector<std::shared_ptr<Emulator>> matches;
+
+  for(auto& system : mia::identify(filename)) {
     for(auto& emulator : emulators) {
-      if(emulator->name == system) return emulator;
+      if(!emulator->configuration.visible) continue;
+      if(emulator->name != system) continue;
+
+      if(std::ranges::find(matches, emulator) == matches.end()) {
+        matches.push_back(emulator);
+      }
     }
   }
 
-  MessageDialog().setTitle(ares::Name).setText({
-    "Filename: ", Location::file(filename), "\n\n"
-    "Unable to determine what type of game this file is.\n"
-    "Please use the load menu to choose the appropriate game system instead."
-  }).setAlignment(presentation).error();
+  if(matches.size() == 1)  return matches.front();
+
+  if(matches.size() > 1) {
+    if(kiosk) {
+      error({"Multiple possible game types detected for: ", Location::file(filename), "\n\n",});
+      return {};
+    }
+
+    std::vector<string> buttons;
+    for(auto& emulator : matches) buttons.push_back(emulator->name);
+    buttons.push_back("Cancel");
+
+    auto choice = MessageDialog().setTitle(ares::Name).setText({
+      "Filename: ", Location::file(filename), "\n\n",
+      "Multiple possible systems were detected.\n",
+      "Please choose which system to launch this file with."
+    }).setAlignment(presentation).question(buttons);
+
+    for(auto& emulator : matches) {
+      if(emulator->name == choice) return emulator;
+    }
+
+    return {};
+  }
+
+  // No matches → existing error path
+  if(kiosk) {
+    error({"unable to determine game type for: ", Location::file(filename)});
+  } else {
+    MessageDialog().setTitle(ares::Name).setText({
+      "Filename: ", Location::file(filename), "\n\n"
+      "Unable to determine what type of game this file is.\n"
+      "Please use the load menu to choose the appropriate game system instead."
+    }).setAlignment(presentation).error();
+  }
+
   return {};
 }
 
@@ -53,29 +92,38 @@ auto Program::load(string location) -> bool {
   string savesPath = settings.paths.saves;
   if(!savesPath) savesPath = Location::path(location);
   if(!directory::writable(savesPath)) {
-    MessageDialog().setTitle(ares::Name).setText({
-      "The current save path is read-only; please choose a writable save path now.\n"
-      "Otherwise, any in-game progress will be lost once this game is unloaded!\n\n"
-      "Current save location: ", savesPath
-    }).warning();
+    if(kiosk) {
+      showMessage({
+        "Current save path is read-only; progress may be lost. Save location: ", savesPath
+      });
+    } else {
+      MessageDialog().setTitle(ares::Name).setText({
+        "The current save path is read-only; please choose a writable save path now.\n"
+        "Otherwise, any in-game progress will be lost once this game is unloaded!\n\n"
+        "Current save location: ", savesPath
+      }).warning();
+    }
   }
 
   paletteUpdate();
   runAheadUpdate();
   presentation.loadEmulator();
   presentation.showIcon(false);
-  if(settings.video.adaptiveSizing) presentation.resizeWindow();
-  manifestViewer.reload();
-  cheatEditor.reload();
-  memoryEditor.reload();
-  graphicsViewer.reload();
-  streamManager.reload();
-  propertiesViewer.reload();
-  traceLogger.reload();
+  if(settings.video.adaptiveSizing  && !startPseudoFullScreen) presentation.resizeWindow();
+  if(toolsWindowConstructed) {
+    manifestViewer.reload();
+    cheatEditor.reload();
+    memoryEditor.reload();
+    graphicsViewer.reload();
+    streamManager.reload();
+    propertiesViewer.reload();
+    traceLogger.reload();
+    tapeViewer.reload();
+  }
   state = {};  //reset hotkey state slot to 1
   if(settings.boot.debugger) {
     pause(true);
-    toolsWindow.show("Tracer");
+    if(toolsWindowConstructed) toolsWindow.show("Tracer");
     presentation.setFocused();
   } else if (settings.boot.awaitGDBClient) {
     pause(true);
@@ -102,6 +150,12 @@ auto Program::load(string location) -> bool {
 
   configuration = emulator->root->attribute("configuration");
 
+  if(program.startSaveStateSlot) {
+    if(stateLoad(program.startSaveStateSlot.integer())) {
+      state.slot = program.startSaveStateSlot.integer();
+    }
+  }
+
   return true;
 }
 
@@ -121,15 +175,18 @@ auto Program::unload() -> void {
   emulator.reset();
   rewindReset();
   presentation.unloadEmulator();
-  toolsWindow.setVisible(false);
-  gameBrowserWindow.setVisible(false);
-  manifestViewer.unload();
-  cheatEditor.unload();
-  memoryEditor.unload();
-  graphicsViewer.unload();
-  streamManager.unload();
-  propertiesViewer.unload();
-  traceLogger.unload();
+  if(toolsWindowConstructed) {
+    toolsWindow.setVisible(false);
+    manifestViewer.unload();
+    cheatEditor.unload();
+    memoryEditor.unload();
+    graphicsViewer.unload();
+    streamManager.unload();
+    propertiesViewer.unload();
+    traceLogger.unload();
+    tapeViewer.unload();
+  }
+  if(gameBrowserWindowConstructed) gameBrowserWindow.setVisible(false);
   message.text = "";
   configuration = "";
   ruby::video.clear();

@@ -3,6 +3,7 @@ auto CPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
   s(ram);
   s(io.interruptPending);
+  s(io.resetPending);
   s(io.nmiPending);
   s(io.nmiLine);
   s(io.irqLine);

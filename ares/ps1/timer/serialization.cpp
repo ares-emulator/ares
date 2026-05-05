@@ -1,5 +1,4 @@
 auto Timer::serialize(serializer& s) -> void {
-  s(counter.dotclock);
   s(counter.divclock);
 
   for(auto& t : timers) {

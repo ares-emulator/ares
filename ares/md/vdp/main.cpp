@@ -168,7 +168,7 @@ auto VDP::main() -> void {
   if(h40()) mainH40();
   if(vcounter() == state.bottomline) {
     screen->setColorBleedWidth(latch.displayWidth ? 4 : 5);
-    latch.interlace = io.interlaceMode == 3;
+    latch.interlace = io.interlaceMode.bit(0);
     latch.overscan  = io.overscan;
     frame();
     state.field ^= 1;
@@ -184,7 +184,7 @@ auto VDP::mainH32() -> void {
   sprite.begin();
   if(dac.pixels) {
     blocks<false, true>();
-    if(Mega32X()) m32x.vdp.scanline(pixels + 18, vcounter()); //approx 3 and 1/4 pixel offset
+    if(Mega32X()) m32x.vdp.scanline(pixels + 13, vcounter()); //approx 3 and 1/4 pixel offset in H40 pixels
     if(MegaLD()) mcd.ld.scanline(dac.pixels, vcounter());
   } else {
     blocks<false, false>();

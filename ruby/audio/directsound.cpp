@@ -18,7 +18,7 @@ struct AudioDirectSound : AudioDriver {
   auto hasBlocking() -> bool override { return true; }
 
   auto hasFrequencies() -> std::vector<u32> override {
-    return {44100, 48000, 96000};
+    return {22050, 44100, 48000, 96000};
   }
 
   auto hasLatencies() -> std::vector<u32> override {

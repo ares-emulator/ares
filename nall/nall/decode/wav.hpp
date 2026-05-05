@@ -11,6 +11,7 @@ struct WAV {
   auto read() -> u64;
   auto end() const -> bool;
   auto size() const -> u64;
+  auto sample_length() const -> u64;
 
   file_buffer fp;
   u32 channels = 0;
@@ -88,6 +89,10 @@ inline auto WAV::end() const -> bool {
 
 inline auto WAV::size() const -> u64 {
   return samples * (bitrate / 8) * channels;
+}
+
+inline auto WAV::sample_length() const -> u64 {
+  return samples;
 }
 
 }

@@ -11,6 +11,7 @@
 #include "paths.cpp"
 #include "drivers.cpp"
 #include "debug.cpp"
+#include "importexport.cpp"
 #include "home.cpp"
 
 Settings settings;
@@ -27,18 +28,17 @@ FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
 DebugSettings& debugSettings = settingsWindow.debugSettings;
 DriverSettings& driverSettings = settingsWindow.driverSettings;
+ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
 auto Settings::load() -> void {
-  auto settingsPath = locate("settings.bml");
-  Markup::Node::operator=(BML::unserialize(string::read(settingsPath), " "));
+  Markup::Node::operator=(BML::unserialize(string::read(filePath), " "));
   process(true);
   save();
 }
 
 auto Settings::save() -> void {
   process(false);
-  auto settingsPath = locate("settings.bml");
-  file::write(settingsPath, BML::serialize(*this, " "));
+  file::write(filePath, BML::serialize(*this, " "));
 }
 
 auto Settings::process(bool load) -> void {
@@ -129,6 +129,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "General/AutoSaveMemory", general.autoSaveMemory);
   bind(boolean, "General/HomebrewMode", general.homebrewMode);
   bind(boolean, "General/ForceInterpreter", general.forceInterpreter);
+  bind(boolean, "General/NoFilePrompt", general.noFilePrompt);
 
   bind(natural, "Rewind/Length", rewind.length);
   bind(natural, "Rewind/Frequency", rewind.frequency);
@@ -238,6 +239,7 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Drivers").setIcon(Icon::Place::Settings));
   panelList.append(ListViewItem().setText("Debug").setIcon(Icon::Device::Network));
+  panelList.append(ListViewItem().setText("Settings File").setIcon(Icon::Action::Save));
   panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
 
@@ -252,6 +254,7 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(pathSettings, Size{~0, ~0});
   panelContainer.append(driverSettings, Size{~0, ~0});
   panelContainer.append(debugSettings, Size{~0, ~0});
+  panelContainer.append(importExportSettings, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
   videoSettings.construct();
@@ -265,6 +268,7 @@ auto SettingsWindow::initialize() -> void {
   pathSettings.construct();
   driverSettings.construct();
   debugSettings.construct();
+  importExportSettings.construct();
   homePanel.construct();
 
   setDismissable();
@@ -305,6 +309,7 @@ auto SettingsWindow::eventChange() -> void {
   pathSettings.setVisible(false);
   driverSettings.setVisible(false);
   debugSettings.setVisible(false);
+  importExportSettings.setVisible(false);
   homePanel.setVisible(false);
 
   bool found = false;
@@ -320,6 +325,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
     if(item.text() == "Drivers"  ) found = true, driverSettings.setVisible();
     if(item.text() == "Debug"    ) found = true, debugSettings.setVisible();
+    if(item.text() == "Settings File") found = true, importExportSettings.setVisible(); 
   }
   if(!found) homePanel.setVisible();
 

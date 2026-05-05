@@ -9,7 +9,8 @@ auto VDC::Background::scanline(n16 y) -> void {
 }
 
 auto VDC::Background::render(n16 y) -> void {
-  if(!enable) return (void)memset(&output, 0, sizeof(output));
+  // The burstMode check fixes a glitch in the intro of City Hunter. It hasn't been tested in other games.
+  if(!enable || burstMode) return (void)memset(&output, 0, sizeof(output));
 
   for(u32 x = 0; x < vdp.vce.width();) {
     n8  tileX = hoffset >> 3 & width  - 1;

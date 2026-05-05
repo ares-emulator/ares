@@ -1,13 +1,16 @@
-//serialization.cpp
 auto RIOT::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
   s(ram);
+
   s(timer.counter);
   s(timer.interval);
-  s(timer.reload);
+  s(timer.prescaler);
   s(timer.interruptEnable);
   s(timer.interruptFlag);
+  s(timer.underflow);
+  s(timer.holdZero);
+  s(timer.justWrapped);
 
   for(auto n : range(2)) {
     s(port[n].data);

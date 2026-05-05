@@ -59,7 +59,10 @@ auto CPU::DMAC::Channel::read() -> void {
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
     latch.data = cpu.getDMA(mode, addr);
-    if(mode & Half) latch.data |= latch.data << 16;
+    if(mode & Half) {
+      latch.data &= 0xffff;
+      latch.data |= latch.data << 16;
+    }
   }
 
   switch(sourceMode) {
@@ -93,8 +96,11 @@ auto CPU::DMAC::Channel::write() -> void {
   if(!latch.length()) {
     active = false;
     if(targetMode == 3) latch.target = target;
-    if(repeat == 1) latch.length = length;
-    if(repeat == 0) enable = false;
+    if(repeat == 0 || timingMode == 0) {
+      enable = false;
+    } else {
+      latch.length = length;
+    }
   }
 
   cpu.dmac.writeCycle = false;

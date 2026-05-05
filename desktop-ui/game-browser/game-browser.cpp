@@ -35,7 +35,7 @@ auto GameBrowserWindow::show(std::shared_ptr<Emulator> emulator) -> void {
   auto tmp = std::dynamic_pointer_cast<mia::Medium>(mia::Medium::create(emulator->medium));
   if(!tmp) {
     string text = {"Failed to load Medium: ", emulator->medium};
-    MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
+    program.error(text);
     return;
   }
 

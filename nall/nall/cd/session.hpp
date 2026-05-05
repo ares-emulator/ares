@@ -9,6 +9,10 @@ namespace nall::CD {
 
 enum : s32 { InvalidLBA = 100 * 60 * 75 };
 
+static constexpr s32 LeadInSectors  = 7500;
+static constexpr s32 Track1Pregap   =  150;
+static constexpr s32 LeadOutSectors = 6750;
+
 struct MSF {
   u8 minute;        //00-99
   u8 second;        //00-59
@@ -16,7 +20,6 @@ struct MSF {
 
   MSF() = default;
   MSF(u8 m, u8 s, u8 f) : minute(m), second(s), frame(f) {}
-  MSF(s32 lba) { *this = fromLBA(lba); }
 
   explicit operator bool() const {
     return minute <= 99 && second <= 59 && frame <= 74;
@@ -26,19 +29,42 @@ struct MSF {
     return {BCD::decode(minute), BCD::decode(second), BCD::decode(frame)};
   }
 
+  static auto isNegativeMSF(u8 minute) -> bool {
+    return minute >= 90 && minute <= 99;
+  }
+
   static auto fromLBA(s32 lba) -> MSF {
-    if(lba < 0) lba = 100 * 60 * 75 + lba;
-    if(lba >= 100 * 60 * 75) return {};
-    u8 minute = lba / 75 / 60 % 100;
-    u8 second = lba / 75 % 60;
-    u8 frame  = lba % 75;
+    s32 frames = lba + Track1Pregap;
+    if(frames < 0) frames = 100 * 60 * 75 + frames;
+    if(frames < 0 || frames >= 100 * 60 * 75) return {};
+    u8 minute = frames / (75 * 60) % 100;
+    u8 second = frames / 75 % 60;
+    u8 frame  = frames % 75;
     return {minute, second, frame};
   }
 
   auto toLBA() const -> s32 {
-    s32 lba = minute * 60 * 75 + second * 75 + frame;
-    if(minute < 90) return lba;
-    return -(100 * 60 * 75 - lba);
+    if(!operator bool()) return InvalidLBA;
+    s32 frames = minute * 60 * 75 + second * 75 + frame;
+    if(isNegativeMSF(minute)) frames -= 100 * 60 * 75;
+    return frames - Track1Pregap;
+  }
+
+  static auto fromABA(s32 aba) -> MSF {
+    s32 frames = aba;
+    if(frames < 0) frames = 100 * 60 * 75 + frames;
+    if(frames < 0 || frames >= 100 * 60 * 75) return {};
+    u8 minute = frames / (60 * 75) % 100;
+    u8 second = frames / 75 % 60;
+    u8 frame  = frames % 75;
+    return {minute, second, frame};
+  }
+
+  auto toABA() const -> s32 {
+    if(!operator bool()) return InvalidLBA;
+    s32 frames = (s32)minute * 60 * 75 + (s32)second * 75 + (s32)frame;
+    if(isNegativeMSF(minute)) frames -= 100 * 60 * 75;
+    return frames;
   }
 
   //for debugging purposes
@@ -47,6 +73,9 @@ struct MSF {
     return {pad(minute, 2, '0'), ":", pad(second, 2, '0'), ":", pad(frame, 2, '0')};
   }
 };
+
+static s32 ABAtoLBA(s32 aba) { return aba - Track1Pregap; }
+static s32 LBAtoABA(s32 lba) { return lba + Track1Pregap; }
 
 struct Index {
   s32 lba = InvalidLBA;
@@ -125,7 +154,7 @@ struct Session {
   u8 lastTrack  = 0xff;
 
   auto inLeadIn(s32 lba) const -> bool {
-    return leadIn && lba <= leadIn.end;
+    return leadIn && lba >= leadIn.lba && lba <= leadIn.end;
   }
 
   auto inTrack(s32 lba) const -> maybe<u8> {
@@ -137,7 +166,7 @@ struct Session {
   }
 
   auto inLeadOut(s32 lba) const -> bool {
-    return leadOut && lba >= leadOut.lba;
+    return leadOut && lba >= leadOut.lba && lba <= leadOut.end;
   }
 
   auto track(u8 trackID) -> maybe<Track&> {
@@ -146,7 +175,7 @@ struct Session {
   }
 
   auto encode(u32 sectors) const -> std::vector<u8> {
-    if(sectors < abs(leadIn.lba) + leadOut.lba) return {};  //not enough sectors
+    if(sectors < abs(leadIn.lba) + leadOut.end + 1) return {};  //not enough sectors
 
     std::vector<u8> data;
     data.resize(sectors * 96 + 96);  //add one sector for P shift
@@ -172,12 +201,12 @@ struct Session {
         q[0] = track.control << 4 | 1;
         q[1] = 0x00;
         q[2] = BCD::encode(trackID);
-        auto msf = MSF(lba);
+        auto msf = MSF::fromLBA(lba);
         q[3] = BCD::encode(msf.minute);
         q[4] = BCD::encode(msf.second);
         q[5] = BCD::encode(msf.frame);
         q[6] = 0x00;
-        msf = MSF(track.indices[1].lba);
+        msf = MSF::fromABA(LBAtoABA(track.indices[1].lba));
         q[7] = BCD::encode(msf.minute);
         q[8] = BCD::encode(msf.second);
         q[9] = BCD::encode(msf.frame);
@@ -194,7 +223,7 @@ struct Session {
         q[0] = 0x01;  //control value unverified; address = 1
         q[1] = 0x00;  //track# = 00 (TOC)
         q[2] = 0xa0;  //first track
-        auto msf = MSF(lba);
+        auto msf = MSF::fromLBA(lba);
         q[3] = BCD::encode(msf.minute);
         q[4] = BCD::encode(msf.second);
         q[5] = BCD::encode(msf.frame);
@@ -214,7 +243,7 @@ struct Session {
         q[0] = 0x01;
         q[1] = 0x00;
         q[2] = 0xa1;  //last track
-        auto msf = MSF(lba);
+        auto msf = MSF::fromLBA(lba);
         q[3] = BCD::encode(msf.minute);
         q[4] = BCD::encode(msf.second);
         q[5] = BCD::encode(msf.frame);
@@ -234,12 +263,12 @@ struct Session {
         q[0] = 0x01;
         q[1] = 0x00;
         q[2] = 0xa2;  //lead-out point
-        auto msf = MSF(lba);
+        auto msf = MSF::fromLBA(lba);
         q[3] = BCD::encode(msf.minute);
         q[4] = BCD::encode(msf.second);
         q[5] = BCD::encode(msf.frame);
         q[6] = 0x00;
-        msf = MSF(leadOut.lba);
+        msf = MSF::fromABA(LBAtoABA(leadOut.lba));
         q[7] = BCD::encode(msf.minute);
         q[8] = BCD::encode(msf.second);
         q[9] = BCD::encode(msf.frame);
@@ -264,20 +293,26 @@ struct Session {
         for(s32 lba = index.lba; lba < end; lba++) {
           auto p = toP(lba);
           u8 byte = indexID == 0 ? 0xff : 0x00;
-          for(u32 index : range(12)) p[index] = byte;
-
+          for(u32 i : range(12)) p[i] = byte;
           auto q = toQ(lba);
           q[0] = track.control << 4 | 1;
           q[1] = BCD::encode(trackID);
           q[2] = BCD::encode(indexID);
-          auto msf = indexID == 0
-          ? MSF(track.indices[0].end - lba)
-          : MSF(lba - track.indices[1].lba);
+          MSF msf;
+          if(indexID == 0 && track.indices[1]) {
+            s32 remaining = (track.indices[1].lba) - lba;
+            if(remaining < 0) remaining = 0;
+            msf = MSF::fromABA(remaining);
+          } else {
+            s32 elapsed = lba - track.indices[1].lba;
+            if(elapsed < 0) elapsed = 0;
+            msf = MSF::fromABA(elapsed);
+          }
           q[3] = BCD::encode(msf.minute);
           q[4] = BCD::encode(msf.second);
           q[5] = BCD::encode(msf.frame);
           q[6] = 0x00;
-          msf = MSF(lba);
+          msf = MSF::fromABA(LBAtoABA(lba));
           q[7] = BCD::encode(msf.minute);
           q[8] = BCD::encode(msf.second);
           q[9] = BCD::encode(msf.frame);
@@ -291,35 +326,36 @@ struct Session {
     }
 
     //pre-lead-out (2-3s at the end of last track)
-    for(auto i : range(150)) {
-      auto p = toP(leadOut.lba - 150 + i);
+    for(auto i : range(Track1Pregap)) {
+      auto p = toP(leadOut.lba - Track1Pregap + i);
       for(auto sig : range(12)) {
-        p[sig]= 0xff;
-    }}
+        p[sig] = 0xff;
+      }
+    }
 
     //lead-out
-    for(s32 lba : range(sectors - abs(leadIn.lba) - leadOut.lba)) {
-      auto p = toP(leadOut.lba + lba);
+    for(s32 rel : range(sectors - abs(leadIn.lba) - leadOut.lba)) {
+      auto p = toP(leadOut.lba + rel);
       u8 byte;
-      if(lba < 150) {
+      if(rel < Track1Pregap) {
         //2s start (standard specifies 2-3s start)
         byte = 0x00;
       } else {
         //2hz duty cycle; rounded downward (standard specifies 2% tolerance)
-        byte = (lba - 150) / (75 >> 1) & 1 ? 0x00 : 0xff;
+        byte = (rel - Track1Pregap) / (75 >> 1) & 1 ? 0x00 : 0xff;
       }
-      for(u32 index : range(12)) p[index] = byte;
+      for(u32 i : range(12)) p[i] = byte;
 
-      auto q = toQ(leadOut.lba + lba);
+      auto q = toQ(leadOut.lba + rel);
       q[0] = 0x01;
       q[1] = 0xaa;  //lead-out track#
       q[2] = 0x01;  //lead-out index#
-      auto msf = MSF(lba);
+      auto msf = MSF::fromABA(rel);
       q[3] = BCD::encode(msf.minute);
       q[4] = BCD::encode(msf.second);
       q[5] = BCD::encode(msf.frame);
       q[6] = 0x00;
-      msf = MSF(leadOut.lba + lba);
+      msf = MSF::fromABA(LBAtoABA(leadOut.lba + rel));
       q[7] = BCD::encode(msf.minute);
       q[8] = BCD::encode(msf.second);
       q[9] = BCD::encode(msf.frame);
@@ -339,7 +375,7 @@ struct Session {
 
     //determine lead-in sector count
     leadIn.lba = InvalidLBA;
-    for(s32 lba : range(7500)) {  //7500 max sectors scanned
+    for(s32 lba : range(LeadInSectors + Track1Pregap)) { //7500 max sectors scanned + pregap
       u32 offset = lba * size;
       if(size ==   96) offset += 12;
       if(size == 2448) offset += 12 + 2352;
@@ -355,7 +391,8 @@ struct Session {
       if(address != 1) continue;
       if(trackID != 0) continue;
 
-      leadIn.lba = lba - 7500;
+      leadIn.lba = lba - LeadInSectors + Track1Pregap;
+      leadIn.end = -Track1Pregap - 1;
       break;
     }
     if(leadIn.lba == InvalidLBA || leadIn.lba >= 0) return false;
@@ -379,28 +416,28 @@ struct Session {
 
       u8 control = q[0] >> 4;
       u8 address = q[0] & 15;
-      u8 trackID = q[1];
+      u8 tocTNO  = q[1];  //should be 00
       if(address != 1) continue;
-      if(trackID != 0) continue;
+      if(tocTNO != 0) continue;
+      u8 point = q[2];
 
-      trackID = BCD::decode(q[2]);
-
-      if(trackID <=  99) {  //00-99
+      if(BCD::valid(point) && BCD::decode(point) <= 99) {
+        u8 trackID = BCD::decode(point);
         auto& track = tracks[trackID];
         track.control = control;
-        track.indices[1].lba = MSF::fromBCD(q[7], q[8], q[9]).toLBA();
+        track.indices[1].lba = ABAtoLBA(MSF::fromBCD(q[7], q[8], q[9]).toABA());
       }
 
-      if(trackID == 100) {  //a0
+      if(point == 0xa0) {  //first track
         firstTrack = BCD::decode(q[7]);
       }
 
-      if(trackID == 101) {  //a1
+      if(point == 0xa1) {  //last track
         lastTrack = BCD::decode(q[7]);
       }
 
-      if(trackID == 102) {  //a2
-        leadOut.lba = MSF::fromBCD(q[7], q[8], q[9]).toLBA();
+      if(point == 0xa2) {  //lead-out start
+        leadOut.lba = ABAtoLBA(MSF::fromBCD(q[7], q[8], q[9]).toABA());
       }
     }
     if(leadOut.lba == InvalidLBA) return false;
@@ -426,7 +463,11 @@ struct Session {
       auto& index = track.indices[indexID];
       if(index) continue;   //index already decoded?
 
-      index.lba = MSF::fromBCD(q[7], q[8], q[9]).toLBA();
+      index.lba = ABAtoLBA(MSF::fromBCD(q[7], q[8], q[9]).toABA());
+    }
+
+    if(tracks[1].indices[1] && !tracks[1].indices[0]) {
+      tracks[1].indices[0].lba = tracks[1].indices[1].lba - Track1Pregap;
     }
 
     synchronize(leadOutSectors);
@@ -436,7 +477,10 @@ struct Session {
   //calculates Index::end variables:
   //needed for Session::isTrack() and Track::isIndex() to function.
   auto synchronize(u32 leadOutSectors = 0) -> void {
-    leadIn.end = -1;
+    if(leadIn && leadIn.end == InvalidLBA) {
+      leadIn.end = -1; //fallback
+    }
+
     s32 end = leadOut.lba - 1;
     for(u32 trackID : reverse(range(100))) {
       auto& track = tracks[trackID];
@@ -468,7 +512,7 @@ struct Session {
     string s;
     s.append("session\n");
     s.append("  leadIn: ");
-    s.append(MSF(leadIn.lba).toString(), " - ", MSF(leadIn.end).toString(), "\n");
+    s.append(MSF::fromLBA(leadIn.lba).toString(), " - ", MSF::fromLBA(leadIn.end).toString(), "\n");
     for(u32 trackID : range(100)) {
       auto& track = tracks[trackID];
       if(!track) continue;
@@ -481,11 +525,11 @@ struct Session {
         auto& index = track.indices[indexID];
         if(!index) continue;
         s.append("    index", pad(indexID, 2, '0'), ": ");
-        s.append(MSF(index.lba).toString(), " - ", MSF(index.end).toString(), "\n");
+        s.append(MSF::fromLBA(index.lba).toString(), " - ", MSF::fromLBA(index.end).toString(), "\n");
       }
     }
     s.append("  leadOut: ");
-    s.append(MSF(leadOut.lba).toString(), " - ", MSF(leadOut.end).toString(), "\n");
+    s.append(MSF::fromLBA(leadOut.lba).toString(), " - ", MSF::fromLBA(leadOut.end).toString(), "\n");
     return s;
   }
 };

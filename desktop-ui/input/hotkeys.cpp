@@ -2,6 +2,7 @@ auto InputManager::createHotkeys() -> void {
   static bool fastForwardVideoBlocking;
   static bool fastForwardAudioBlocking;
   static bool fastForwardAudioDynamic;
+  static bool toggleFastForwardState = false;
 
   hotkeys.push_back(InputHotkey("Toggle Fullscreen").onPress([&] {
     program.videoFullScreenToggle();
@@ -31,20 +32,24 @@ auto InputManager::createHotkeys() -> void {
   hotkeys.push_back(InputHotkey("Fast Forward").onPress([&] {
     Program::Guard guard;
     if(!emulator || program.rewinding) return;
-    program.fastForwarding = true;
-    fastForwardVideoBlocking = ruby::video.blocking();
-    fastForwardAudioBlocking = ruby::audio.blocking();
-    fastForwardAudioDynamic  = ruby::audio.dynamic();
-    ruby::video.setBlocking(false);
-    ruby::audio.setBlocking(false);
-    ruby::audio.setDynamic(false);
+    if(!toggleFastForwardState) {
+      program.fastForwarding = true;
+      fastForwardVideoBlocking = ruby::video.blocking();
+      fastForwardAudioBlocking = ruby::audio.blocking();
+      fastForwardAudioDynamic  = ruby::audio.dynamic();
+      ruby::video.setBlocking(false);
+      ruby::audio.setBlocking(false);
+      ruby::audio.setDynamic(false);
+    }
   }).onRelease([&] {
     Program::Guard guard;
     if(!emulator) return;
-    program.fastForwarding = false;
-    ruby::video.setBlocking(fastForwardVideoBlocking);
-    ruby::audio.setBlocking(fastForwardAudioBlocking);
-    ruby::audio.setDynamic(fastForwardAudioDynamic);
+    if(!toggleFastForwardState) {
+      program.fastForwarding = false;
+      ruby::video.setBlocking(fastForwardVideoBlocking);
+      ruby::audio.setBlocking(fastForwardAudioBlocking);
+      ruby::audio.setDynamic(fastForwardAudioDynamic);
+    }
   }));
 
   hotkeys.push_back(InputHotkey("Toggle Fast Forward").onPress([&] {
@@ -53,6 +58,7 @@ auto InputManager::createHotkeys() -> void {
     program.fastForwarding = !program.fastForwarding;
 
     if (program.fastForwarding) {
+      toggleFastForwardState = true;
       fastForwardVideoBlocking = ruby::video.blocking();
       fastForwardAudioBlocking = ruby::audio.blocking();
       fastForwardAudioDynamic  = ruby::audio.dynamic();
@@ -62,6 +68,7 @@ auto InputManager::createHotkeys() -> void {
       return;
     } 
 
+    toggleFastForwardState = false;
     ruby::video.setBlocking(fastForwardVideoBlocking);
     ruby::audio.setBlocking(fastForwardAudioBlocking);
     ruby::audio.setDynamic(fastForwardAudioDynamic);
@@ -157,11 +164,25 @@ auto InputManager::createHotkeys() -> void {
     if(!emulator) return;
     if(settings.audio.volume >= (f64)(0.1)) settings.audio.volume -= (f64)(0.1);
   }));
+
+  hotkeys.push_back(InputHotkey("Toggle Shader Display").onPress([&] {
+    if(!emulator) return;
+    if(!settings.video.shader.imatch("None")) {
+      if(ruby::video.shader().imatch("None")) {
+        ruby::video.setShader({locate("Shaders/"), settings.video.shader});
+      } else {
+        ruby::video.setShader("None");
+      }
+    }
+  }));
 }
 
 auto InputManager::pollHotkeys() -> void {
   if(Application::modal()) return;
-
+  if(
+    program.settingsWindowConstructed && settingsWindow.focused() ||
+    program.toolsWindowConstructed && toolsWindow.focused()
+  ) return;
   if(settings.input.defocus != "Allow") {
     if (!presentation.focused() && !ruby::video.fullScreen()) return;
   }

@@ -433,6 +433,11 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
     }
     break;
 
+  case  35:
+    s += "  board:  UNL-SC-127\n";
+    if(!iNes2) prgram = 8192;
+    break;
+
   case  37:
     s += "  board:  PAL-ZZ\n";
     s += "    chip type=MMC3B\n";
@@ -566,6 +571,10 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
 
   case  89:
     s += "  board:  SUNSOFT-2\n";
+    break;
+
+  case  90:
+    s += "  board:  UNL-JY-COMPANY-A\n";
     break;
 
   case  92:
@@ -717,9 +726,17 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
     if (!iNes2) prgram = 128;
     break;
 
+  case 209:
+    s += "  board:  UNL-JY-COMPANY-C\n";
+    break;
+
   case 210:
     s += "  board:  NAMCO-340\n";
     s += "    chip type=340\n";
+    break;
+
+  case 211:
+    s += "  board:  UNL-JY-COMPANY-B\n";
     break;
 
   case 218:
@@ -752,6 +769,7 @@ auto Famicom::analyzeINES(std::vector<u8>& data) -> string {
 
   case 243:
     s += "  board:  UNL-Sachen-74LS374NA\n";
+    break;
   }
 
   u32 eeprom = 0u;
@@ -896,6 +914,8 @@ auto Famicom::analyzeUNIF(std::vector<u8>& data) -> string {
     programRAM = 8_KiB + 8_KiB;
     characterRAM = 8_KiB;
   }
+
+  if(board == "UNL-TEK90") board = "UNL-JY-COMPANY-A";
 
   //ensure required chucks were found
   if(!board) return {};

@@ -3,7 +3,6 @@ struct Cartridge {
   VFS::Pak pak;
   Memory::Readable16 rom;
   Memory::Writable16 ram;
-  Memory::Writable16 eeprom;
   struct Flash : Memory::Writable {
     template<u32 Size>
     auto read(u32 address) -> u64 {
@@ -31,6 +30,8 @@ struct Cartridge {
     auto writeHalf(u32 address, u64 data) -> void;
     auto writeWord(u32 address, u64 data) -> void;
     auto writeDual(u32 address, u64 data) -> void;
+    
+    auto serialize(serializer& s) -> void;
 
     enum class Mode : u32 { Idle, Erase, Write, Read, Status };
     Mode mode = Mode::Idle;
@@ -39,7 +40,7 @@ struct Cartridge {
     u32  offset = 0;
   } flash;
   struct ISViewer : Memory::PI<ISViewer> {
-    Memory::Writable ram;  //unserialized
+    Memory::Writable ram;
     Node::Debugger::Tracer::Notification tracer;
 
     auto enabled() -> bool { return ram.size; }
@@ -87,6 +88,9 @@ struct Cartridge {
     } memory;
   } debugger;
 
+  Memory::Writable16 eeprom;
+  n1 eepromBusy;
+
   auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
   auto cic() const -> string { return information.cic; }
@@ -100,6 +104,7 @@ struct Cartridge {
 
   //joybus.cpp
   auto joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2;
+  auto eepromFinish() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

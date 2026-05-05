@@ -30,6 +30,9 @@
   OP1(mov64_s16, MOV_S16)
   OP1(mov64_u32, MOV_U32)
   OP1(mov64_s32, MOV_S32)
+  OP1(rev32, REV_U32)
+  OP1(rev32_u16, REV32_U16)
+  OP1(rev32_s16, REV32_S16)
 #undef OP1
 
   //2 operand instructions

@@ -76,6 +76,13 @@ auto nall::main(Arguments arguments) -> void {
 
   if(arguments.take("--fullscreen")) {
     program.startFullScreen = true;
+  } else if(arguments.take("--pseudofullscreen")) {
+    program.startPseudoFullScreen = true;
+  }
+
+  if(arguments.take("--kiosk")) {
+    program.kiosk = true;
+    program.noFilePrompt = true;
   }
 
   if(string system; arguments.take("--system", system)) {
@@ -90,8 +97,20 @@ auto nall::main(Arguments arguments) -> void {
     program.noFilePrompt = true;
   }
 
+  settings.filePath = locate("settings.bml");
+  if(string settingsFile; arguments.take("--settings-file", settingsFile)) {
+    settings.filePath = settingsFile;
+  }
+
+  if(string savestate; arguments.take("--save-state", savestate)) {
+    if(savestate.length() == 1 && savestate[0] >= '1' && savestate[0] <= '9') {
+      program.startSaveStateSlot = savestate;
+    }
+  }
+
   inputManager.create();
   Emulator::construct();
+
   settings.load();
 
   if(arguments.find("--setting")) {
@@ -114,26 +133,38 @@ auto nall::main(Arguments arguments) -> void {
     settings.process(true);
   }
 
+  if(program.noFilePrompt) settings.general.noFilePrompt = true;
+
   if(arguments.take("--help")) {
-    print("Usage: ares [OPTIONS]... game(s)\n\n");
+    print("\n Usage: ares [OPTIONS]... game(s)\n\n");
     print("Options:\n");
-    print("  --help               Displays available options and exit\n");
+    print("  --help                Displays available options and exit\n");
+    print("  --version             Displays the version string of the application\n");
 #if defined(PLATFORM_WINDOWS)
-    print("  --terminal           Create new terminal window\n");
+    print("  --terminal            Create new terminal window\n");
 #endif
-    print("  --fullscreen         Start in full screen mode\n");
-    print("  --system name        Specify the system name\n");
-    print("  --shader name        Specify the name of the shader to use\n");
-    print("  --setting name=value Specify a value for a setting\n");
-    print("  --dump-all-settings  Show a list of all existing settings and exit\n");
-    print("  --no-file-prompt     Do not prompt to load (optional) additional roms (eg: 64DD)\n");
+    print("  --fullscreen          Start in full screen mode\n");
+    print("  --pseudofullscreen    Start in psuedo full screen mode\n");
+    print("  --kiosk               Start in minimal UI mode (implies --no-file-prompt)\n");
+    print("  --system name         Specify the system name\n");
+    print("  --shader name         Specify the name of the shader to use\n");
+    print("  --setting name=value  Specify a value for a setting\n");
+    print("  --dump-all-settings   Show a list of all existing settings and exit\n");
+    print("  --no-file-prompt      Do not prompt to load (optional) additional roms (eg: 64DD)\n");
+    print("  --settings-file path  Specify a settings file override (settings.bml)\n");
+    print("  --save-state slot     Specify a save state slot to load (1-9)\n");
     print("\n");
     print("Available Systems:\n");
     print("  ");
     for(auto& emulator : emulators) {
       print(emulator->name, ", ");
     }
-    print("\n");
+    print("\n\nares version ", ares::Version, "\n");
+    return;
+  }
+
+  if(arguments.take("--version")) {
+    print("\n", ares::Version, "\n");
     return;
   }
 
@@ -150,14 +181,51 @@ auto nall::main(Arguments arguments) -> void {
   }
 
   program.startGameLoad.clear();
+  std::vector<string> invalidKioskPaths;
   for(auto argument : arguments) {
-    if(file::exists(argument) || directory::exists(argument)) program.startGameLoad.push_back(argument);
+    if(file::exists(argument) || directory::exists(argument)) {
+      program.startGameLoad.push_back(argument);
+    } else if(program.kiosk) {
+      invalidKioskPaths.push_back(argument);
+    }
+  }
+
+  if(program.kiosk) {
+    if(!invalidKioskPaths.empty()) {
+      program.error({"path does not exist: ", invalidKioskPaths.front()});
+      return;
+    }
+    if(program.startGameLoad.empty()) {
+      program.error("provide a valid game file or directory.");
+      return;
+    }
+  }
+
+  if(program.startSystem && !program.startGameLoad.empty()) {
+    bool foundSystem = false;
+    for(auto& emulator : emulators) {
+      if(emulator->name == program.startSystem) {
+        foundSystem = true;
+        break;
+      }
+    }
+    if(!foundSystem) {
+      auto text = string{"Unrecognized argument for --system: ", program.startSystem, "\n"
+                         "Use --help to list all valid systems supported by ares."};
+      program.error(text);
+      if(program.kiosk) return;
+    }
   }
 
   Instances::presentation.construct();
-  Instances::settingsWindow.construct();
-  Instances::gameBrowserWindow.construct();
-  Instances::toolsWindow.construct();
+  if(!program.kiosk) {
+    Instances::settingsWindow.construct();
+    program.settingsWindowConstructed = true;
+    Instances::gameBrowserWindow.construct();
+    program.gameBrowserWindowConstructed = true;
+    Instances::toolsWindow.construct();
+    program.toolsWindowConstructed = true;
+  }
 
   program.create();
   Application::onMain(std::bind_front(&Program::main, &program));
@@ -166,9 +234,9 @@ auto nall::main(Arguments arguments) -> void {
   settings.save();
 
   Instances::presentation.destruct();
-  Instances::settingsWindow.destruct();
-  Instances::toolsWindow.destruct();
-  Instances::gameBrowserWindow.destruct();
+  if(program.settingsWindowConstructed) Instances::settingsWindow.destruct();
+  if(program.toolsWindowConstructed) Instances::toolsWindow.destruct();
+  if(program.gameBrowserWindowConstructed) Instances::gameBrowserWindow.destruct();
 }
 
 #if defined(PLATFORM_WINDOWS) && defined(ARCHITECTURE_AMD64) && !defined(BUILD_LOCAL)

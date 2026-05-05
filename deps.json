@@ -1,25 +1,25 @@
 {
     "dependencies": {
         "prebuilt": {
-            "version": "2025-10-27",
+            "version": "2026-04-23",
             "baseUrl": "https://github.com/ares-emulator/ares-deps/releases/download",
             "label": "ares-deps libraries",
             "hashes": {
-                "linux-universal": "0272b4b25bf9dc58891e2528e79f1155b37a961a50fae7980fce9f39ebe29833",
-                "macos-universal": "bc3ceeab928af1d6bf49d6fc3203705f31c98a29f8d78a245dd74eeb53d2d87b",
-                "windows-arm64": "699ef0048030c1d938310db31fe1ae40914ec770bfc70c50c25abd897fb70960",
-                "windows-x64": "cdcf7f73bb2aa77e81842d338d3d38756eed42473ee5d35a220f4f1a7f2113d7"
+                "linux-universal": "3e8c0ef2af9a366e5c81b40592a26c3fdc923b101d8cd47e1ddc0e4f4c080a22",
+                "macos-universal": "696f369c912f62fc750795683708bf7efb2fde780302b5c95f280c1e6464ab9e",
+                "windows-arm64": "5153540389420c45978d506b6279ceead2c42c45649284808da7d7dfe1634a38",
+                "windows-x64": "c35f0a3c72879a9f90c463b25a9ab1363501f27748993a2a56e8f6c420d1905f"
             }
         },
         "source": {
-            "version": "2025-10-27",
+            "version": "2026-04-23",
             "baseUrl": "https://github.com/ares-emulator/ares-deps/releases/download",
             "label": "ares-deps source code",
             "hashes": {
-                "linux-universal": "c8c98300b00c1e0600cef33e98882ec170f51dadf55a4dd72399e59b9e2cc30e",
-                "macos-universal": "59521444a7ef11e7f705b6c10336401d6dc9928934e5fa3e21664d4c0314aa3d",
-                "windows-arm64": "395bab3d1f4bed7ab8280a3de1fb092515018a0dee1ba81763469b6e30c85806",
-                "windows-x64": "f8fff5382a2160118f2f40e061c474259550bb31d8ba5c10629a155a2ea4a53a"
+                "linux-universal": "d557cc3747d7486362917c13456eba3f18d56baf6bcbd8e5e3d985caef10e8cb",
+                "macos-universal": "cb0652431d44ba7536125e4798332f6a7644ed103091711ab4c99c63d8ae85b2",
+                "windows-arm64": "fc87dca142bf4c31ab3b2db074c4432277b7361d5be2e4a71a5d9897c4c974bf",
+                "windows-x64": "bb9385d170f58315f45488175454815e1ed68cac9a8b215354ab6c10b73c8255"
             }
         }
     },

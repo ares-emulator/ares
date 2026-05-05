@@ -18,7 +18,7 @@ struct CPU : MOS6502, Thread {
     } tracer;
   } debugger;
 
-  auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
+  auto rate() const -> u32 { return system.cpuDivider(); }
 
   //cpu.cpp
   auto load(Node::Object) -> void;
@@ -56,9 +56,14 @@ struct CPU : MOS6502, Thread {
   auto irqLine(bool) -> void;
   auto apuLine(bool) -> void;
 
+  auto isWriting() -> bool {
+    return io.rwLine == 0;
+  }
+
 //protected:
   struct IO {
     n1  interruptPending;
+    n1  resetPending;
     n1  nmiPending;
     n1  nmiLine;
     n1  irqLine;
@@ -69,6 +74,7 @@ struct CPU : MOS6502, Thread {
     n1  oamDMAPending;
     n8  oamDMAPage;
     n8  openBus;
+    n1  rwLine;
   } io;
 };
 

@@ -4,36 +4,18 @@ struct Famicom : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+  auto loadTape(ares::Node::Object node, string location) -> bool override;
+  auto unloadTape(ares::Node::Object node) -> void override;
+  auto allocatePorts(bool withMicrophone) -> void;
+
+  std::shared_ptr<mia::Pak> famicomDataRecorder{};
 };
 
 Famicom::Famicom() {
   manufacturer = "Nintendo";
   name = "Famicom";
 
-  for(auto id : range(2)) {
-    InputPort port{string{"Controller Port ", 1 + id}};
-
-  { InputDevice device{"Gamepad"};
-    device.digital("Up",         virtualPorts[id].pad.up);
-    device.digital("Down",       virtualPorts[id].pad.down);
-    device.digital("Left",       virtualPorts[id].pad.left);
-    device.digital("Right",      virtualPorts[id].pad.right);
-    device.digital("B",          virtualPorts[id].pad.west);
-    device.digital("A",          virtualPorts[id].pad.south);
-    device.digital("Select",     virtualPorts[id].pad.select);
-    device.digital("Start",      virtualPorts[id].pad.start);
-    device.digital("Microphone", virtualPorts[id].pad.north);
-    port.append(device); }
-
-  { InputDevice device{"Zapper"};
-    device.relative("X",         virtualPorts[id].mouse.x);
-    device.relative("Y",         virtualPorts[id].mouse.y);
-    device.digital ("Trigger",   virtualPorts[id].mouse.left);
-    port.append(device);
-    }
-
-    ports.push_back(port);
-  }
+  allocatePorts(true);
 }
 
 auto Famicom::load() -> LoadResult {
@@ -79,12 +61,14 @@ auto Famicom::save() -> bool {
   root->save();
   system->save(system->location);
   game->save(game->location);
+  if (famicomDataRecorder) famicomDataRecorder->save();
   return true;
 }
 
 auto Famicom::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Famicom") return system->pak;
   if(node->name() == "Famicom Cartridge") return game->pak;
+  if(node->name() == "Famicom Data Recorder") return famicomDataRecorder->pak;
   return {};
 }
 
@@ -180,3 +164,58 @@ auto Famicom::input(ares::Node::Input::Input input) -> void {
   if (input->name() == "Left")        return button->setValue(inputKeyboard("Left"));
   if (input->name() == "Right")       return button->setValue(inputKeyboard("Right"));
 }
+
+auto Famicom::loadTape(ares::Node::Object node, string location) -> bool {
+  if (node->name() == "Famicom Data Recorder") {
+    famicomDataRecorder = mia::Medium::create("Tape");
+    if (!location) {
+      location = Emulator::load(famicomDataRecorder, settings.paths.home);
+      if (!location) return false;
+    }
+    LoadResult result = famicomDataRecorder->load(location);
+    if (result != successful) {
+      famicomDataRecorder.reset();
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+auto Famicom::unloadTape(ares::Node::Object node) -> void {
+  if (node->name() == "Famicom Data Recorder") {
+    famicomDataRecorder->save(famicomDataRecorder->location);
+    famicomDataRecorder.reset();
+  }
+}
+
+auto Famicom::allocatePorts(bool withMicrophone) -> void {
+  for(auto id : range(2)) {
+    InputPort port{string{"Controller Port ", 1 + id}};
+
+  { InputDevice device{"Gamepad"};
+    device.digital("Up",     virtualPorts[id].pad.up);
+    device.digital("Down",   virtualPorts[id].pad.down);
+    device.digital("Left",   virtualPorts[id].pad.left);
+    device.digital("Right",  virtualPorts[id].pad.right);
+    device.digital("B",      virtualPorts[id].pad.west);
+    device.digital("A",      virtualPorts[id].pad.south);
+    device.digital("Select", virtualPorts[id].pad.select);
+    device.digital("Start",  virtualPorts[id].pad.start);
+    if (withMicrophone) {
+      device.digital("Microphone", virtualPorts[id].pad.north);
+    }
+    port.append(device); }
+
+  { InputDevice device{"Zapper"};
+    device.relative("X",       virtualPorts[id].mouse.x);
+    device.relative("Y",       virtualPorts[id].mouse.y);
+    device.digital ("Trigger", virtualPorts[id].mouse.left);
+    port.append(device); }
+
+    ports.push_back(port);
+  }
+}
+

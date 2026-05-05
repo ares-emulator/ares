@@ -258,6 +258,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
   case 'X': region = "PAL";  break;  //Europe
   case 'Y': region = "PAL";  break;  //Europe
   case 'Z': region = "PAL";  break;  //Europe
+  case 0:   region = "NTSC,PAL,MPAL"; break;  //region free (respect user preference)
   }
 
   if(region != "NTSC") {
@@ -452,6 +453,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
 
   //128KB Flash
   if(id == "NCC") {flash = 128_KiB; rpak = true;}                          //Command & Conquer
+  if(id == "NCV") {flash = 128_KiB;}                                       //Cubivore [English translation/patch of Doubutsu Banchou (J)]
   if(id == "NDA") {flash = 128_KiB; cpak = true;}                          //Derby Stallion 64
   if(id == "NAF") {flash = 128_KiB; cpak = true; rtc = true;}              //Doubutsu no Mori
   if(id == "NJF") {flash = 128_KiB; rpak = true;}                          //Jet Force Gemini [Star Twins (J)]
@@ -770,7 +772,16 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
     if(config.bit(4,7) == 6) {sram = 128_KiB;}
     if(config.bit(0) == 1)   {rtc = true;}
 
-    //Advanced Homebrew ROM Header
+    //region free. The ROM will work on any region, irrespective of what is
+    //specified in the region code byte. So declare all regions (keeping 
+    //implicit preference for original region), so that Ares will respect
+    //user's preference.
+    if(config.bit(1) == 1) {
+      if(region == "NTSC") region = "NTSC,PAL,MPAL";
+      if(region == "PAL")  region = "PAL,NTSC,MPAL";
+      if(region == "MPAL") region = "MPAL,NTSC,PAL";
+    }
+
     //Controllers
     n8 controller_1 = data[0x34];
     n8 controller_2 = data[0x35];
@@ -818,9 +829,9 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
     read_controller_config(3, controller_4);
 
     if (controller_1 == 0x00 && controller_2 == 0x00 && controller_3 == 0x00 && controller_4 == 0x00) {
-      // No controllers configured, set default used for years as backward compatibility
-      cpaks[0] = true;
-      rpaks[1] = true;
+      // No controllers configured. By default, just enable Rumble Pak as that
+      // doesn't hurt in any way, nor create save files.
+      rpaks[0] = true;
     }
   }
 

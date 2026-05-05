@@ -22,6 +22,7 @@ auto Interrupt::readWord(u32 address) -> u32 {
     data.bit( 8) = sio.stat;
     data.bit( 9) = spu.stat;
     data.bit(10) = pio.stat;
+    return data;
   }
 
   //I_MASK
@@ -37,8 +38,10 @@ auto Interrupt::readWord(u32 address) -> u32 {
     data.bit( 8) = sio.mask;
     data.bit( 9) = spu.mask;
     data.bit(10) = pio.mask;
+    return data;
   }
 
+  debug(unhandled, "Interrupt::readWord(", hex(address, 8L), ") -> ", hex(data, 8L));
   return data;
 }
 
@@ -67,6 +70,7 @@ auto Interrupt::writeWord(u32 address, u32 value) -> void {
     if(!data.bit( 9)) spu.acknowledge();
     if(!data.bit(10)) pio.acknowledge();
     poll();
+    return;
   }
 
   //I_MASK
@@ -83,5 +87,8 @@ auto Interrupt::writeWord(u32 address, u32 value) -> void {
     spu.mask        = data.bit( 9);
     pio.mask        = data.bit(10);
     poll();
+    return;
   }
+
+  debug(unhandled, "Interrupt::writeWord(", hex(address, 8L), ", ", hex(value, 8L), ") -> ", hex(data, 8L));
 }

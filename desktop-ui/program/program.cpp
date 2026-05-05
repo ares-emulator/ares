@@ -17,6 +17,11 @@ auto Program::create() -> void {
   audioDriverUpdate();
   inputDriverUpdate();
 
+  if(kiosk) {
+    if(startFullScreen) videoFullScreenToggle();
+    if(startPseudoFullScreen) videoPseudoFullScreenToggle();
+  }
+
   _isRunning = true;
   worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
   program.rewindReset();
@@ -29,16 +34,23 @@ auto Program::create() -> void {
       for(auto &emulator: emulators) {
         if(emulator->name == startSystem) {
           if(load(emulator, gameToLoad)) {
-            if(startFullScreen) videoFullScreenToggle();
+            if(!kiosk) {
+              if(startFullScreen) videoFullScreenToggle();
+              if(startPseudoFullScreen) videoPseudoFullScreenToggle();
+            }
           }
           return;
         }
       }
+      return;
     }
 
     if(auto emulator = identify(gameToLoad)) {
       if(load(emulator, gameToLoad)) {
-        if(startFullScreen) videoFullScreenToggle();
+        if(!kiosk) {
+          if(startFullScreen) videoFullScreenToggle();
+          if(startPseudoFullScreen) videoPseudoFullScreenToggle();
+        }
       }
     }
   }
@@ -71,7 +83,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
       continue;
     }
 
-    bool defocused = driverSettings.inputDefocusPause.checked() && !ruby::video.fullScreen() && !presentation.focused();
+    bool defocused = settings.input.defocus == "Pause" && !ruby::video.fullScreen() && !presentation.focused();
 
     if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
       ruby::audio.clear();
@@ -120,6 +132,12 @@ auto Program::main() -> void {
     ruby::audio.clear();
     return;
   }
+
+  if(pendingKioskExit) {
+    pendingKioskExit = false;
+    quit();
+    return;
+  }
   
   inputManager.poll();
   inputManager.pollHotkeys();
@@ -130,19 +148,32 @@ auto Program::main() -> void {
   //Window operations must be performed from the main thread.
   
   if(_needsResize) {
-    if(settings.video.adaptiveSizing) presentation.resizeWindow();
+    if(settings.video.adaptiveSizing && !startPseudoFullScreen) presentation.resizeWindow();
     _needsResize = false;
   }
 
-  memoryEditor.liveRefresh();
-  graphicsViewer.liveRefresh();
-  propertiesViewer.liveRefresh();
+  if(toolsWindowConstructed) {
+    memoryEditor.liveRefresh();
+    graphicsViewer.liveRefresh();
+    propertiesViewer.liveRefresh();
+    tapeViewer.liveRefresh();
+  }
+  if (_quitRequested) {
+    quit();
+  }
 }
 
 auto Program::quit() -> void {
+  if (_programThread) {
+    _quitRequested = true;
+    return;
+  }
   Program::Guard guard;
+  _quitRequested = false;
   _quitting = true;
-  lock.unlock();
+  if(lock.owns_lock()) {
+    lock.unlock();
+  }
   _programConditionVariable.notify_all();
   worker.join();
   program._isRunning = false;

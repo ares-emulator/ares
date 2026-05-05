@@ -1,4 +1,4 @@
-static const string SerializerVersion = "v144.1";
+static const string SerializerVersion = "v148";
 
 auto System::serialize(bool synchronize) -> serializer {
   serializer s;
@@ -37,6 +37,7 @@ auto System::unserialize(serializer& s) -> bool {
 }
 
 auto System::serialize(serializer& s, bool synchronize) -> void {
+  scheduler.setSynchronize(synchronize);
   s(memory);
   s(cpu);
   s(gpu);

@@ -21,16 +21,14 @@ auto ICD::ppuWrite(n2 color) -> void {
 
 auto ICD::joypWrite(n1 p14, n1 p15) -> void {
   //joypad handling
-  if(p14 == 1 && p15 == 1) {
-    if(joypLock == 0) {
-      joypLock = 1;
-      joypID++;
-      if(mltReq == 0) joypID &= 0;  //1-player mode
-      if(mltReq == 1) joypID &= 1;  //2-player mode
-      if(mltReq == 2) joypID &= 3;  //4-player mode (unverified; but the most likely behavior)
-      if(mltReq == 3) joypID &= 3;  //4-player mode
-    }
+  if (p15 && !previousP15) {
+    joypID++;
+    if (mltReq == 0) joypID &= 0;  //1-player mode
+    if (mltReq == 1) joypID &= 1;  //2-player mode
+    if (mltReq == 2) joypID &= 3;  //4-player mode (unverified; but the most likely behavior)
+    if (mltReq == 3) joypID &= 3;  //4-player mode
   }
+  previousP15 = p15;
 
   n8 joypad;
   if(joypID == 0) joypad = r6004;
@@ -44,9 +42,6 @@ auto ICD::joypWrite(n1 p14, n1 p15) -> void {
   if(p15 == 0) input &= joypad.bit(4,7);  //buttons
 
   GameBoy::cpu.input(input);
-
-  if(p14 == 0 && p15 == 1);
-  if(p14 == 1 && p15 == 0) joypLock ^= 1;
 
   //packet handling
   if(p14 == 0 && p15 == 0) {  //pulse
@@ -83,7 +78,7 @@ auto ICD::joypWrite(n1 p14, n1 p15) -> void {
 
   if(packetLock == 1) {
     if(p14 == 0 && p15 == 1) {
-      if(packetSize < 64) packet[packetSize++] = joypPacket;
+      packetReady = 1;
       packetLock = 0;
       pulseLock = 1;
     }
@@ -93,7 +88,7 @@ auto ICD::joypWrite(n1 p14, n1 p15) -> void {
   bitData = bit << 7 | bitData >> 1;
   if(++bitOffset) return;
 
-  joypPacket[packetOffset] = bitData;
+  r7000[packetOffset] = bitData;
   if(++packetOffset) return;
 
   packetLock = 1;

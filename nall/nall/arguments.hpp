@@ -61,6 +61,7 @@ inline auto Arguments::construct() -> void {
 
   //normalize path and file arguments
   for(auto& argument : arguments) {
+    argument = directory::resolveSymLink(argument);
     if(directory::exists(argument)) {
       argument.transform("\\", "/").trimRight("/").append("/");
       argument = Path::real(argument);

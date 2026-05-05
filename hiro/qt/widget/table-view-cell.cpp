@@ -62,7 +62,7 @@ auto pTableViewCell::_setState() -> void {
       parent->qtItem->setForeground(self().offset(), CreateBrush(self().foregroundColor(true)));
       parent->qtItem->setIcon(self().offset(), CreateIcon(state().icon));
       parent->qtItem->setText(self().offset(), QString::fromUtf8(state().text));
-      parent->qtItem->setTextAlignment(self().offset(), CalculateAlignment(self().alignment(true)));
+      parent->qtItem->setTextAlignment(self().offset(), (Qt::Alignment)CalculateAlignment(self().alignment(true)));
     }
   }
 }

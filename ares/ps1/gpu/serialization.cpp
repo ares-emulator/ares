@@ -17,6 +17,7 @@ auto GPU::serialize(serializer& s) -> void {
   s(io.hcounter);
   s(io.vcounter);
   s(io.pcounter);
+  s(io.dotcounter);
   s(io.copy.x);
   s(io.copy.y);
   s(io.copy.width);

@@ -39,6 +39,7 @@ target_sources(
     settings/paths.cpp
     settings/settings.hpp
     settings/video.cpp
+    settings/importexport.cpp
 )
 
 target_sources(

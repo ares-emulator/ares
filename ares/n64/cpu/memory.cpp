@@ -128,21 +128,21 @@ auto CPU::devirtualizeDebug(u64 vaddr) -> u64 {
 
 template<u32 Size>
 inline auto CPU::busWrite(u32 address, u64 data) -> void {
-  bus.write<Size>(address, data, *this, "CPU");
+  bus.write<Size>(address, data, *this, RBusDevice::VR4300_UNCACHED);
 }
 
 template<u32 Size>
-inline auto CPU::busWriteBurst(u32 address, u32 *data) -> void {
-  bus.writeBurst<Size>(address, data, *this);
+inline auto CPU::busWriteBurst(u32 address, u32 *data) -> bool {
+  return bus.writeBurst<Size>(address, data, *this);
 }
 
 template<u32 Size>
 inline auto CPU::busRead(u32 address) -> u64 {
-  return bus.read<Size>(address, *this, "CPU");
+  return bus.read<Size>(address, *this, RBusDevice::VR4300_UNCACHED);
 }
 
 template<u32 Size>
-inline auto CPU::busReadBurst(u32 address, u32 *data) -> void {
+inline auto CPU::busReadBurst(u32 address, u32 *data) -> bool {
   return bus.readBurst<Size>(address, data, *this);
 }
 
@@ -167,7 +167,7 @@ auto CPU::readDebug(u64 vaddr) -> u64 {
   auto access = devirtualize<Read, Size>(vaddr, false, false);
   if(!access) return 0;
   if(access.cache) return dcache.readDebug<Size>(access.vaddr, access.paddr);
-  return bus.read<Size>(access.paddr, dummyThread, "Ares Debugger");
+  return bus.read<Size>(access.paddr, dummyThread, RBusDevice::ARES_DEBUGGER);
 }
 
 
@@ -186,7 +186,7 @@ auto CPU::writeDebug(u64 vaddr, u64 data) -> bool {
   if(!access) return false;
   GDB::server.reportMemWrite(access.vaddr, Size);
   if(access.cache) return dcache.writeDebug<Size>(access.vaddr, access.paddr, data), true;
-  return bus.write<Size>(access.paddr, data, dummyThread, "Ares Debugger"), true;
+  return bus.write<Size>(access.paddr, data, dummyThread, RBusDevice::ARES_DEBUGGER), true;
 }
 
 template<u32 Size>
@@ -217,6 +217,10 @@ auto CPU::addressException(u64 vaddr) -> void {
   scc.context.badVirtualAddress = vaddr >> 13;
   scc.xcontext.badVirtualAddress = vaddr >> 13;
   scc.xcontext.region = vaddr >> 62;
+}
+
+auto CPU::emuxException(u8 kind) -> void {
+  scc.cacheError.unused = kind;
 }
 
 template auto CPU::writeDebug<Byte>(u64, u64) -> bool;

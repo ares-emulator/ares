@@ -16,10 +16,25 @@ auto MDEC::unload() -> void {
   node.reset();
 }
 
-auto MDEC::power(bool reset) -> void {
-  Thread::reset();
-  Memory::Interface::setWaitStates(4, 4, 4);
+  auto MDEC::main() -> void {
+  if(io.mode == Mode::Idle) { step(128); return; }
 
+  if (io.mode == Mode::DecodeMacroblock) {
+    if(!decodeMacroblock()) {
+      io.mode = Mode::Idle;
+    }
+  }
+
+  step(128);
+}
+
+auto MDEC::step(u32 clocks) -> void {
+  Thread::step(clocks);
+  Thread::synchronize();
+}
+
+auto MDEC::power(bool reset) -> void {
+  Thread::create(system.frequency(), std::bind_front(&MDEC::main, this));
   fifo.input.flush();
   fifo.output.flush();
   status = {};
