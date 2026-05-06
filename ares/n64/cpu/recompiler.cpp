@@ -447,7 +447,7 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
   emitAllocatorFlushed = false;
   emitAliasAddresses.clear();
   if(unlikely(allocator.available() < 1_MiB)) {
-    print("CPU allocator flush\n");
+    print("CPU JIT: flushing all blocks\n");
     allocator.release();
     reset();
     emitAllocatorFlushed = true;
