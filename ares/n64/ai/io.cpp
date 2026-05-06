@@ -15,6 +15,7 @@ auto AI::readWord(u32 address, Thread& thread) -> u32 {
     data.bit(25) = io.dmaEnable;
     data.bit(30) = io.dmaCount > 0;
     data.bit(31) = io.dmaCount > 1;
+    cpu.forceSynchronize();
   }
 
   debugger.io(Read, address, data);

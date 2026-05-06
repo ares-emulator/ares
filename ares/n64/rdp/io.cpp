@@ -5,16 +5,19 @@ auto RDP::readWord(u32 address, Thread& thread) -> u32 {
   if(address == 0) {
     //DPC_START
     data.bit(0,23) = command.start;
+    if(&thread == &cpu) cpu.forceSynchronize();
   }
 
   if(address == 1) {
     //DPC_END
     data.bit(0,23) = command.end;
+    if(&thread == &cpu) cpu.forceSynchronize();
   }
 
   if(address == 2) {
     //DPC_CURRENT
     data.bit(0,23) = command.current;
+    if(&thread == &cpu) cpu.forceSynchronize();
   }
 
   if(address == 3) {
@@ -30,26 +33,32 @@ auto RDP::readWord(u32 address, Thread& thread) -> u32 {
     data.bit( 8) = 0;  //DMA busy
     data.bit( 9) = command.endValid;
     data.bit(10) = command.startValid;
+    if(&thread == &cpu) cpu.forceSynchronize();
   }
 
   if(address == 4) {
     //DPC_CLOCK
     data.bit(0,23) = command.clock - (Thread::clock - thread.clock) / 3;
+    cpu.forceSynchronize();
+    if(&thread == &cpu) cpu.forceSynchronize();
   }
 
   if(address == 5) {
     //DPC_BUSY
     data.bit(0,23) = command.bufferBusy;
+    if(&thread == &cpu) cpu.forceSynchronize();
   }
 
   if(address == 6) {
     //DPC_PIPE_BUSY
     data.bit(0,23) = command.pipeBusy;
+    if(&thread == &cpu) cpu.forceSynchronize();
   }
 
   if(data == 7) {
     //DPC_TMEM_BUSY
     data.bit(0,23) = command.tmemBusy;
+    if(&thread == &cpu) cpu.forceSynchronize();
   }
 
   debugger.ioDPC(Read, address, data);
@@ -74,6 +83,7 @@ auto RDP::writeWord(u32 address, u32 data_, Thread& thread) -> void {
       command.startValid = 0;
     }
     flushCommands();
+    if(&thread == &cpu) cpu.forceSynchronize();
   }
 
   if(address == 2) {

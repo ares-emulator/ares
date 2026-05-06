@@ -48,6 +48,7 @@ auto SI::ioRead(u32 address) -> u32 {
     data.bit( 4, 7) = io.pchState;
     data.bit( 8,11) = io.dmaState;
     data.bit(12)    = io.interrupt;
+    cpu.forceSynchronize();
   }
 
   debugger.io(Read, address, data);
