@@ -43,6 +43,12 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(status.autoJoypadCounter);
 
+  s(status.autoJoypadPort1);
+  s(status.autoJoypadPort2);
+
+  s(status.cpuLatch);
+  s(status.autoJoypadLatch);
+
   s(io.wramAddress);
 
   s(io.hirqEnable);
