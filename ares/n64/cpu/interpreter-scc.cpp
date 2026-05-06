@@ -212,6 +212,7 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     if(scc.status.instructionTracing) {
       debug(unimplemented, "[CPU::setControlRegister] instructionTracing=1");
     }
+    cpu.interruptPoll();
   } break;
   case 13:  //cause
     scc.cause.interruptPending.bit(0) = data.bit(8);
@@ -299,6 +300,7 @@ auto CPU::ERET() -> void {
   pipeline.exception();
   scc.llbit = 0;
   context.setMode();
+  cpu.interruptPoll();
 }
 
 auto CPU::MFC0(r64& rt, u8 rd) -> void {

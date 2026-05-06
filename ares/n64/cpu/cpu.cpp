@@ -108,15 +108,17 @@ auto CPU::synchronize() -> void {
   if (scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
 }
 
-auto CPU::instruction() -> bool {
+auto CPU::interruptPoll() -> void {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
       debugger.interrupt(scc.cause.interruptPending);
       step(1 * 2);
       exception.interrupt();
-      return true;
     }
   }
+}
+
+auto CPU::instruction() -> bool {
   if (scc.nmiPending) {
     debugger.nmi();
     step(1 * 2);
