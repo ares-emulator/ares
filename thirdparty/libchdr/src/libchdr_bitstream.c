@@ -9,7 +9,7 @@
 ***************************************************************************/
 
 #include <stdlib.h>
-#include <libchdr/bitstream.h>
+#include "../include/libchdr/bitstream.h"
 
 /***************************************************************************
  *  INLINE FUNCTIONS

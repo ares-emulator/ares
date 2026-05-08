@@ -1,10 +1,6 @@
 find_package(SDL)
 find_package(librashader)
 
-if(XCODE AND WITH_SYSTEM_ZLIB)
-  set_target_properties(ruby PROPERTIES OUTPUT_NAME "ruby-but-not-the-scripting-language")
-endif()
-
 target_sources(
   ruby
   PRIVATE video/metal/metal.cpp video/metal/metal.hpp video/metal/Shaders.metal video/metal/ShaderTypes.h

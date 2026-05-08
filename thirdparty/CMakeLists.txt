@@ -8,32 +8,23 @@ option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
 
 if(ARES_ENABLE_CHD)
   # lzma
-  add_subdirectory(libchdr/deps/lzma-24.05 EXCLUDE_FROM_ALL)
+  add_subdirectory(libchdr/deps/lzma-25.01 EXCLUDE_FROM_ALL)
   list(APPEND CHDR_LIBS lzma)
   list(APPEND CHDR_INCLUDES lzma)
 
-  if(OS_MACOS)
-    option(WITH_SYSTEM_ZLIB "Use system zlib" ON)
-  endif()
-  # zlib
-  if(WITH_SYSTEM_ZLIB)
-    find_package(ZLIB REQUIRED)
-    list(APPEND PLATFORM_LIBS ZLIB::ZLIB)
-  else()
-    option(ZLIB_BUILD_EXAMPLES "Enable Zlib Examples" OFF)
-    add_subdirectory(libchdr/deps/zlib-1.3.1 EXCLUDE_FROM_ALL)
-    set_target_properties(
-      zlibstatic
-      PROPERTIES POSITION_INDEPENDENT_CODE ON FOLDER thirdparty PREFIX ""
-    )
-    list(APPEND CHDR_LIBS zlibstatic)
-  endif()
-
+  # miniz
+  add_subdirectory(libchdr/deps/miniz-3.1.1 EXCLUDE_FROM_ALL)
+  set_target_properties(
+    miniz
+    PROPERTIES POSITION_INDEPENDENT_CODE ON FOLDER thirdparty PREFIX ""
+  )
+  list(APPEND CHDR_LIBS miniz)
+  
   # zstd
   option(ZSTD_BUILD_SHARED "BUILD SHARED LIBRARIES" OFF)
   option(ZSTD_BUILD_PROGRAMS "BUILD PROGRAMS" OFF)
-  add_subdirectory(libchdr/deps/zstd-1.5.6/build/cmake EXCLUDE_FROM_ALL)
-  list(APPEND CHDR_LIBS libzstd_static)
+  add_subdirectory(libchdr/deps/zstd-1.5.7 EXCLUDE_FROM_ALL)
+  list(APPEND CHDR_LIBS zstd)
   #--------------------------------------------------
   # chdr
   #--------------------------------------------------
@@ -45,6 +36,16 @@ if(ARES_ENABLE_CHD)
     libchdr/src/libchdr_chd.c
     libchdr/src/libchdr_flac.c
     libchdr/src/libchdr_huffman.c
+    libchdr/src/libchdr_codec_cdfl.c
+    libchdr/src/libchdr_codec_cdlz.c
+    libchdr/src/libchdr_codec_cdzl.c
+    libchdr/src/libchdr_codec_cdzs.c
+    libchdr/src/libchdr_codec_flac.c
+    libchdr/src/libchdr_codec_huff.c
+    libchdr/src/libchdr_codec_lzma.c
+    libchdr/src/libchdr_codec_zlib.c
+    libchdr/src/libchdr_codec_zstd.c
+    libchdr/deps/lzma-25.01/src/LzmaDec.c
   )
 
   list(APPEND CHDR_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/libchdr/include)
@@ -109,10 +110,8 @@ set_target_properties(tzxfile PROPERTIES FOLDER thirdparty PREFIX "")
 set_target_properties(sljit PROPERTIES FOLDER thirdparty PREFIX "")
 if(ARES_ENABLE_CHD)
   set_target_properties(chdr-static PROPERTIES FOLDER thirdparty PREFIX "")
-  if(NOT WITH_SYSTEM_ZLIB)
-    set_target_properties(zlib PROPERTIES FOLDER thirdparty PREFIX "")
-  endif()
-  set_target_properties(lzma PROPERTIES FOLDER thirdparty PREFIX "")
-  set_target_properties(libzstd_static PROPERTIES FOLDER thirdparty PREFIX "")
+  set_target_properties(miniz PROPERTIES FOLDER thirdparty PREFIX "")
+  set_target_properties(chdr-lzma PROPERTIES FOLDER thirdparty PREFIX "")
+  set_target_properties(zstd PROPERTIES FOLDER thirdparty PREFIX "")
 endif()
 set_target_properties(qon PROPERTIES FOLDER thirdparty PREFIX "")
