@@ -9,7 +9,6 @@ option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
 if(ARES_ENABLE_CHD)
   # lzma
   add_subdirectory(libchdr/deps/lzma-25.01 EXCLUDE_FROM_ALL)
-  list(APPEND CHDR_LIBS lzma)
   list(APPEND CHDR_INCLUDES lzma)
 
   # miniz
@@ -111,7 +110,6 @@ set_target_properties(sljit PROPERTIES FOLDER thirdparty PREFIX "")
 if(ARES_ENABLE_CHD)
   set_target_properties(chdr-static PROPERTIES FOLDER thirdparty PREFIX "")
   set_target_properties(miniz PROPERTIES FOLDER thirdparty PREFIX "")
-  set_target_properties(chdr-lzma PROPERTIES FOLDER thirdparty PREFIX "")
   set_target_properties(zstd PROPERTIES FOLDER thirdparty PREFIX "")
 endif()
 set_target_properties(qon PROPERTIES FOLDER thirdparty PREFIX "")
