@@ -101,11 +101,16 @@ auto CPU::synchronize() -> void {
 
   clocks >>= 1;
   if(scc.count < scc.compare && scc.count + clocks >= scc.compare) {
-    scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
+    setInterruptPending(Interrupt::Timer, 1);
   }
   scc.count += clocks;
   profile.cpuCycles += clocks;
   if (scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
+}
+
+auto CPU::setInterruptPending(u32 bit, bool value) -> void {
+  scc.cause.interruptPending.bit(bit) = value;
+  interruptPoll();
 }
 
 auto CPU::interruptPoll() -> void {

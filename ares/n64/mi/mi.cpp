@@ -51,8 +51,7 @@ auto MI::poll() -> void {
   line |= irq.vi.line & irq.vi.mask;
   line |= irq.pi.line & irq.pi.mask;
   line |= irq.dp.line & irq.dp.mask;
-  cpu.scc.cause.interruptPending.bit(2) = line;
-  cpu.interruptPoll();
+  cpu.setInterruptPending(CPU::Interrupt::RCP, line);
 }
 
 auto MI::power(bool reset) -> void {

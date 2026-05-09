@@ -36,6 +36,7 @@ struct CPU : Thread {
   auto main() -> void;
   auto synchronize() -> void;
   auto forceSynchronize() -> void;
+  auto setInterruptPending(u32 bit, bool value) -> void;
   auto interruptPoll() -> void;
 
   auto gdbPoll() -> void;

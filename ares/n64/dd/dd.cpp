@@ -176,7 +176,7 @@ auto DD::poll() -> void {
   bool line = 0;
   line |= irq.mecha.line & irq.mecha.mask;
   line |= irq.bm.line & irq.bm.mask;
-  cpu.scc.cause.interruptPending.bit(3) = line;
+  cpu.setInterruptPending(CPU::Interrupt::Cartridge, line);
 }
 
 }
