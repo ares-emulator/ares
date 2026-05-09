@@ -116,14 +116,21 @@ auto CPU::setInterruptPending(u32 bit, bool value) -> void {
 auto CPU::interruptPoll() -> void {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
-      debugger.interrupt(scc.cause.interruptPending);
-      step(1 * 2);
-      exception.interrupt();
+      forceSynchronize();
     }
   }
 }
 
 auto CPU::instruction() -> bool {
+  if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
+    if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
+      debugger.interrupt(scc.cause.interruptPending);
+      step(1 * 2);
+      exception.interrupt();
+      return true;
+    }
+  }
+
   if (scc.nmiPending) {
     debugger.nmi();
     step(1 * 2);
