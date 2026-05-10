@@ -2,116 +2,224 @@
 CPU Recompiler: Architecture and Optimization Notes
 ===================================================
 
-Overview
---------
-This file implements the N64 CPU JIT backend on top of nall::recompiler
-(SLJIT). It translates guest instructions into host blocks that operate
-directly on CPU/IPU/FPU/Pipeline state.
+Purpose and scope
+-----------------
+This file implements the Nintendo 64 CPU dynamic recompiler. "Dynamic
+recompiler" means a just-in-time compiler (JIT): guest instructions are decoded
+at runtime and translated into native host code.
 
-Goals:
-- keep the common path close to pure opcode semantics;
-- preserve MIPS-visible behavior (delay slots, exceptions, timing);
-- keep uncommon behavior in helper calls or guarded slow paths.
+In this document:
+- "guest" means VR4300/MIPS instructions from the emulated system;
+- "host" means machine code executed by the computer running ares.
 
-State key specialization
-------------------------
-- computeStateKey() packs slow-changing CPU/FPU mode bits into a compact key.
-- block cache entries are specialized by stateKey to avoid repeated runtime
-  checks in compiled code.
+The generated host code operates on the same CPU/IPU/FPU/pipeline objects used
+by the interpreter. This shared-state design keeps behavior aligned between JIT
+and interpreter implementations.
 
-Block lifecycle
----------------
+Design goals
+------------
+The implementation balances performance and correctness:
+
+- Performance goal:
+  The common case (straight-line arithmetic, logic, and predictable memory
+  access) should run with minimal branching and minimal helper calls, so most
+  guest instructions execute as short host instruction sequences.
+
+- Correctness goal:
+  The result must stay architecturally equivalent to the VR4300 model, including
+  delay-slot behavior, precise exception-visible state, and timing boundaries
+  that matter for scheduler and interrupt behavior.
+
+- Complexity placement:
+  Rare or expensive behavior (for example cache miss handling, debug-sensitive
+  paths, or corner-case opcode handling) is intentionally moved out of the fast
+  path, normally calling back into the C++ interpreter.
+
+- Runtime maintenance cost:
+  Block lookup, cache specialization, and invalidation are designed so that
+  dynamic code management stays cheap enough during normal emulation, instead of
+  becoming a bottleneck.
+
+Key terms used below
+--------------------
+- Block:
+  One generated host function plus metadata (state key, address range, links).
+- Section:
+  A 4 KiB RDRAM shard used to partition the JIT cache. Each section has 1024
+  word-indexed slots for block lookup.
+- State key:
+  A compact bitfield produced by computeStateKey(). It captures execution state
+  that materially changes how code should be generated.
+- Alias entry:
+  An extra Block node that points to already generated host code but has a
+  different start address, allowing direct entry at internal targets.
+- Slow path:
+  A less frequent execution path emitted separately and reached by jumps from
+  fast code (for example cache misses or helper-heavy behavior).
+- Epilogue:
+  The shared block exit sequence that returns control to the dispatcher.
+
+High-level lifecycle
+--------------------
 1) Lookup
-   - block(vaddr, paddr) probes a per-section cache.
-   - sections are 4 KiB; each section has 1024 word-indexed entry slots.
-   - each entry slot stores a linked list of Block keyed by stateKey.
-2) Emit
-   - on cache miss, emit() first runs a prepass, then builds host code.
+   block(vaddr, paddr) probes the section slot and scans block variants.
+2) Emit on miss
+   emit() validates, plans, and generates host code when possible.
 3) Publish
-   - the main block is inserted at startAddress.
-   - internal branch targets are also published as alias entries that point to
-     the same generated host function.
+   primary entry is linked at startAddress, and internal targets can be linked
+   as alias entries sharing the same code pointer.
+4) Execute
+   dispatcher invokes block->execute(*this) when JIT entry conditions are met.
 
-Block definition (current)
---------------------------
-A compiled block is now a planned linear window of guest instructions plus
-internal entry aliases:
-- startAddress is the lookup address used to build the primary block entry;
-- the window may include many conditional branches (including likely variants);
-- the window closes on hard boundaries:
-  section boundary, non-branch stateKey-changing ops, SCC Count/Compare writes,
-  breakpoint barriers, and delay-slot completion after unconditional jumps.
+State specialization and cache identity
+---------------------------------------
+The state key is the specialization fingerprint for generated code. It answers
+"under which architectural assumptions was this block compiled?".
 
-Emission pipeline inside emit()
-------------------------------
-emit() runs in phases:
-1) Validation:
-   - reject non-cacheable or incoherent starts.
-2) Prepass planning:
-   - decode OpInfo for each instruction in the linear window;
-   - compute branch taken/fallthrough targets;
-   - classify conditional branch edges as internal or external;
-   - collect internal entry vaddrs and alias addresses.
-3) Host emission:
-   - emit an entry dispatcher that can jump directly to internal labels when
-     ipu.pc matches an internal target;
-   - emit each planned instruction body via emitEXECUTE()/emitSPECIAL()/...;
-   - after each conditional branch delay slot, dispatch to internal targets or
-     return to epilogue for external flow.
-4) Finalization:
-   - emit common epilogue and deferred slow paths;
-   - publish block metadata.
+The JIT uses the state key to "specialize" code emission using assumptions that
+are known at JIT time and very rarely change. For instance, VR4300 allows to
+enable or disable FPU. This means that a JIT would have to emit an enable check
+for each FPU instruction. Instead, by putting the FPU enable state in the state key,
+we basically allow to generate two different "variants" of the block: one with
+FPU enabled and one with FPU disabled.
 
-Control-flow policy (current)
------------------------------
-- Conditional branches are not terminals by default.
-- Internal conditional edges are resolved immediately with host-side jumps.
-- External conditional edges return to dispatcher at block epilogue.
-- Unconditional branch delay-slot completion is a hard planning boundary.
-- Opportunistic runtime branch chaining is intentionally disabled.
+At lookup time, block(vaddr, paddr) computes the current key and searches only
+Block variants with matching stateKey. Since each section slot can hold multiple
+variants in a linked list, this is how the JIT safely reuses code without mixing
+different CPU/FPU/debug contexts.
 
-Hot-loop optimizations
-----------------------
-1) Deferred cycle accounting
-   - per-opcode cycles are accumulated in deferredCycles;
-   - emitCpuStep / deferred flush applies Thread::clock only at synchronization
-     boundaries (helper/branch/terminal transitions).
+At emission time, emit() copies the key into emitStateKey and uses it to choose
+specialized fast paths. In practice this turns many checks into compile-time
+decisions (for example address-width handling, coprocessor availability,
+watchpoint-sensitive fallback choices, and GP/SP alignment assumptions) instead
+of paying those checks on every executed instruction.
 
-2) Virtual PC with selective architectural commit
-   - ipu.pc is not written on every opcode;
-   - commit happens only at correctness boundaries:
-     block entry, branch/helper opcodes, and terminal paths.
+To keep one block internally consistent with one specialization, planning stops
+at non-branch opcodes that may change key-relevant state.
 
-3) Eager pc/nextpc materialization
-   - each opcode materializes pipeline pc/nextpc directly in the main emit loop.
+computeStateKey() includes:
+- privilege and addressing-mode context;
+- floating-point mode and exception-control bits;
+- watchpoint activity;
+- GP/SP-derived predicates used by memory fast paths.
 
-4) Pipeline state machinery
-   - nstate clear, EndBlock test, state<-nstate commit, and
-     jumpEpilog(flag_nz) are emitted in the main loop.
+Lookup identity uses both stateKey and vaddrPage. Using both is important:
+different virtual mappings can share the same physical cache section, but still
+require different assumptions in generated code.
 
-5) Helper-call PC rematerialization
-   - in linear non-delay-slot helper paths, ipu.pc is rematerialized from the
-     compile-time vaddr immediate;
-   - delay-slot/branch-sensitive cases still use runtime pipeline state to
-     preserve precise exception PC behavior.
+Compilation window model
+------------------------
+Before emitting host instructions, emit() runs a planning prepass that grows a
+linear guest window. "Linear" means contiguous fetch order from the start point,
+while still allowing conditional control flow inside the generated block.
+
+The window is terminated at hard boundaries where correctness or maintenance
+would become unsafe if code crossed the boundary:
+- 4 KiB section boundary;
+- Unconditional jumps (J/JR/JAL/JALR);
+- breakpoint barrier at a potential entry point;
+- non-branch opcode that may change the current state key;
+- COP0 Count/Compare-sensitive write behavior.
+
+Planning phase responsibilities
+-------------------------------
+The prepass decodes OpInfo once per planned instruction and records enough data
+to avoid repeating structural analysis during emission.
+
+It also computes branch targets and classifies conditional edges:
+- internal edge: target can be resolved inside this block;
+- external edge: control must exit through the epilogue.
+
+A target is accepted as internal only if it is all of the following:
+- within the planned virtual range;
+- aligned and not a delay-slot address;
+- in the same section;
+- not blocked by a debugger breakpoint.
+
+Instruction cache coherency
+---------------------------
+The JIT will only emit and run code that:
+
+* Is being run from RDRAM so it can be cached.
+* Is fully cache coherent at the moment of emission, meaning that either it is
+  not in the ICache, or the ICache is correctly loaded with the correct contents.
+
+In the other cases, the interpreter will be used to run the code. This allows to
+simplify many logics and avoid having to deal with cache coherency issues, such
+as situations where the JIT is running code that was in cache but in RDRAM anymore,
+and then the cache is invalidated.
+
+During block emission, the JIT will emit I-cache guards at entry and line boundaries.
+The guards check if the ICache line is loaded or not. If not, the JIT will emit
+a slow path to load it. This means that the JIT will correctly update the ICache,
+as the code is being run, achieving correct timing behavior.
+
+The guard is a single compare instruction, so it is very cheap.
+
+Emission pipeline in emit()
+---------------------------
+Phase 1: Validation
+  Reject starts that fail coherency assumptions.
+
+Phase 2: Planning
+  Build the static plan and collect internal entries plus alias addresses.
+
+Phase 3: Main host emission
+  - Emit entry dispatcher checks for internal targets.
+  - Emit instruction bodies through emitEXECUTE()/sub-decoders.
+  - Emit I-cache guards at entry and line boundaries.
+  - After each conditional branch delay slot, resolve internal/external flow.
+
+Phase 4: Slow-path emission
+  Emit deferred slow paths and patch their resume labels.
+
+Phase 5: Publish metadata
+  Allocate Block metadata and link entries into section tables.
+
+Control-flow policy
+-------------------
+Conditional branches are not forced block terminals. Instead, control is
+resolved after the delay slot (as required by guest semantics).
+
+- both edges internal: compare runtime pipeline PC and jump to local label;
+- one edge internal: local jump for internal edge, epilogue exit otherwise;
+- no internal edge: exit through epilogue.
+
+Runtime cross-block branch chaining is intentionally disabled in this design.
+The implementation favors predictable exits through the common epilogue path.
+
+Pipeline and PC handling
+------------------------
+The architectural program counter visible to the rest of the emulator is
+ipu.pc. Updating ipu.pc every opcode would add overhead, so the JIT uses a
+selective commit strategy.
+
+setupPipeline() materializes pipeline.pc and pipeline.nextpc lazily, only when
+an opcode or boundary requires pipeline state. Architectural commit from
+pipeline state back to ipu.pc is performed only at correctness boundaries.
+
+For helper calls:
+- linear non-delay-slot helpers can rematerialize PC from compile-time vaddr;
+- delay-slot-sensitive helpers use runtime pipeline state for precise exceptions.
+
+Cycle accounting
+----------------
+Instruction cycle cost is accumulated in emitDeferredCycles. The actual clock
+write is deferred and flushed only at synchronization boundaries, including
+branch boundaries, helper boundaries, and terminal transitions.
+
+This keeps hot loops cheap while preserving externally visible timing behavior
+at points where timing must be observed.
 
 Invalidation model
 ------------------
-- memory writes mark the touched section dirty (hot path: one flag write);
-- cleanup is lazy: next lookup on that section clears its entry table;
-- section metadata is reused, while block/link contents are dropped.
+Invalidation is section-based but line-aware:
+- lineBlocks tracks which lines in a section are covered by compiled entries;
+- a section is marked dirty only if the touched line intersects compiled code;
+- cleanup is lazy, done on next lookup of the dirty section.
 
-JIT <-> interpreter interop
----------------------------
-The dispatcher (cpu.cpp) enters JIT only when dynamic recompiler mode,
-cacheability, and fetch/devirtualization preconditions are satisfied.
-
-emit() may still return nullptr (for example icache incoherence), in which case
-execution immediately falls back to interpreter decode for that stream.
-
-Even inside JIT blocks, complex/exceptional opcodes may call C++ helpers.
-Helpers share the same CPU state objects, so exceptions/traps/faults naturally
-rejoin interpreter-visible control flow.
+This keeps write-side invalidation cheap (since it is bound to memory writes that
+are extremely common) and moves cleanup work to lookup time.
 */
 
 auto CPU::Recompiler::computeStateKey() const -> u64 {
