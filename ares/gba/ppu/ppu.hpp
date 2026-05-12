@@ -6,6 +6,7 @@ struct PPU : Thread, IO {
   Node::Setting::String rotation;
   Memory::Writable<n8 > vram;  //96KB
   Memory::Writable<n16> pram;
+  Memory::Writable<n16> oam;
 
   bool accurate;
 
@@ -17,6 +18,7 @@ struct PPU : Thread, IO {
     struct Memory {
       Node::Debugger::Memory vram;
       Node::Debugger::Memory pram;
+      Node::Debugger::Memory oam;
     } memory;
 
     struct Graphics {
@@ -180,7 +182,7 @@ private:
     } affine;
 
     Pixel output[240];
-    Pixel mosaic;
+    Pixel mosaicLatch;
     u32 mosaicOffset;
     u32 vmosaic;
 
@@ -209,7 +211,7 @@ private:
 
     Pixel lineBuffers[2][240];
     Pixel output;
-    Pixel mosaic;
+    Pixel mosaicLatch;
     s32 mosaicY;
     n4 hmosaicOffset;
     n4 vmosaicOffset;
@@ -273,43 +275,6 @@ private:
 
     u32* line = nullptr;
   } dac;
-
-  struct Object {
-    //serialization.cpp
-    auto serialize(serializer&) -> void;
-
-    n8  y;
-    n1  affine;
-    n1  affineSize;
-    n2  mode;
-    n1  mosaic;
-    n1  colors;  //0 = 16, 1 = 256
-    n2  shape;   //0 = square, 1 = horizontal, 2 = vertical
-
-    n9  x;
-    n5  affineParam;
-    n1  hflip;
-    n1  vflip;
-    n2  size;
-
-    n10 character;
-    n2  priority;
-    n4  palette;
-
-    //ancillary data
-    n32 width;
-    n32 height;
-  } object[128];
-
-  struct ObjectParam {
-    //serialization.cpp
-    auto serialize(serializer&) -> void;
-
-    i16 pa;
-    i16 pb;
-    i16 pc;
-    i16 pd;
-  } objectParam[32];
 
   bool pramAccessed;
   bool vramAccessedBG;

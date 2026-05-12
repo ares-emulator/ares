@@ -3,6 +3,7 @@ auto PPU::serialize(serializer& s) -> void {
 
   s(vram);
   s(pram);
+  s(oam);
 
   s(io.gameBoyColorMode);
   for(auto& flag : io.forceBlank) s(flag);
@@ -22,8 +23,6 @@ auto PPU::serialize(serializer& s) -> void {
   s(window2);
   s(window3);
   s(dac);
-  for(auto& object : this->object) s(object);
-  for(auto& param : this->objectParam) s(param);
 
   s(pramAccessed);
   s(vramAccessedBG);
@@ -92,31 +91,4 @@ auto PPU::DAC::serialize(serializer& s) -> void {
   s(io.blendEVA);
   s(io.blendEVB);
   s(io.blendEVY);
-}
-
-auto PPU::Object::serialize(serializer& s) -> void {
-  s(y);
-  s(affine);
-  s(affineSize);
-  s(mode);
-  s(mosaic);
-  s(colors);
-  s(shape);
-  s(x);
-  s(affineParam);
-  s(hflip);
-  s(vflip);
-  s(size);
-  s(character);
-  s(priority);
-  s(palette);
-  s(width);
-  s(height);
-}
-
-auto PPU::ObjectParam::serialize(serializer& s) -> void {
-  s(pa);
-  s(pb);
-  s(pc);
-  s(pd);
 }

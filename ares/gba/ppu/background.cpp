@@ -26,9 +26,9 @@ auto PPU::Background::outputPixel(u32 x, u32 y) -> void {
   //horizontal mosaic
   if(!mosaicOffset) {
     mosaicOffset = 1 + io.mosaicWidth;
-    mosaic = output[x];
+    mosaicLatch = output[x];
   } else if(!io.mosaic) {
-    mosaic = output[x];
+    mosaicLatch = output[x];
   }
   mosaicOffset--;
 }
@@ -211,7 +211,7 @@ auto PPU::Background::power(u32 id) -> void {
   latch = {};
   affine = {};
   for(auto& pixel : output) pixel = {};
-  mosaic = {};
+  mosaicLatch = {};
   mosaicOffset = 0;
   vmosaic = 0;
   fx = 0;

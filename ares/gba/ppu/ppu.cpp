@@ -20,6 +20,7 @@ auto PPU::setAccurate(bool value) -> void {
 auto PPU::load(Node::Object parent) -> void {
   vram.allocate(96_KiB);
   pram.allocate(512);
+  oam.allocate(512);
 
   node = parent->append<Node::Object>("PPU");
 
@@ -256,8 +257,6 @@ auto PPU::power() -> void {
   for(u32 n = 0; n < 1024; n += 2) writeOAM(Half, n, 0x0000);
 
   io = {};
-  for(auto& object : this->object) object = {};
-  for(auto& param : this->objectParam) param = {};
 
   bg0.power(BG0);
   bg1.power(BG1);

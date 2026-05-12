@@ -19,11 +19,11 @@ auto PPU::DAC::upperLayer(u32 x, u32 y) -> void {
   }
 
   //priority sorting: find topmost two pixels
-  layers[OBJ] = ppu.objects.mosaic;
-  layers[BG0] = ppu.bg0.mosaic;
-  layers[BG1] = ppu.bg1.mosaic;
-  layers[BG2] = ppu.bg2.mosaic;
-  layers[BG3] = ppu.bg3.mosaic;
+  layers[OBJ] = ppu.objects.mosaicLatch;
+  layers[BG0] = ppu.bg0.mosaicLatch;
+  layers[BG1] = ppu.bg1.mosaicLatch;
+  layers[BG2] = ppu.bg2.mosaicLatch;
+  layers[BG3] = ppu.bg3.mosaicLatch;
   layers[SFX] = {true, 3, 0};
 
   aboveLayer = 5;
