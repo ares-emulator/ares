@@ -51,6 +51,27 @@ auto InputMapping::unbind(u32 binding) -> void {
   assignments[binding] = {};
 }
 
+auto InputMapping::hasAssignments() const -> bool {
+  for(auto& assignment : assignments) {
+    if(assignment) return true;
+  }
+  return false;
+}
+
+auto InputMapping::icon(u32 binding) -> multiFactorImage {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  if(binding >= BindingLimit) return {};
+  if(hasAssignments() || !fallback) return bindings[binding].icon();
+  return fallback->icon(binding);
+}
+
+auto InputMapping::text(u32 binding) -> string {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  if(binding >= BindingLimit) return {};
+  if(hasAssignments() || !fallback) return bindings[binding].text();
+  return fallback->text(binding);
+}
+
 auto InputMapping::Binding::icon() -> multiFactorImage {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   if(!device && deviceID) return Icon::Device::Joypad;
@@ -135,6 +156,7 @@ auto InputDigital::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 gr
 
 auto InputDigital::value() -> s16 {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  if(!hasAssignments() && fallback) return fallback->value();
   s16 result = 0;
 
   for(auto& binding : bindings) {
@@ -255,6 +277,7 @@ auto InputAnalog::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 gro
 
 auto InputAnalog::value() -> s16 {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  if(!hasAssignments() && fallback) return fallback->value();
   s32 result = 0;
 
   for(auto& binding : bindings) {
@@ -324,6 +347,7 @@ auto InputAbsolute::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 g
 
 auto InputAbsolute::value() -> s16 {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  if(!hasAssignments() && fallback) return fallback->value();
   s32 result = 0;
 
   for(auto& binding : bindings) {
@@ -383,6 +407,7 @@ auto InputRelative::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 g
 
 auto InputRelative::value() -> s16 {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  if(!hasAssignments() && fallback) return fallback->value();
   s32 result = 0;
 
   for(auto& binding : bindings) {
@@ -433,6 +458,12 @@ auto InputRumble::value() -> s16 {
 }
 
 auto InputRumble::rumble(u16 strong, u16 weak) -> void {
+  if(!hasAssignments() && fallback) {
+    if(auto fallbackRumble = dynamic_cast<InputRumble*>(fallback)) {
+      fallbackRumble->rumble(strong, weak);
+      return;
+    }
+  }
   for(auto& binding : bindings) {
     if(!binding.device) continue;
     ruby::input.rumble(binding.deviceID, strong, weak);
@@ -494,6 +525,13 @@ auto InputManager::bind() -> void {
   for(auto& port : virtualPorts) {
     for(auto& input : port.pad.inputs) input.mapping->bind();
     for(auto& input : port.mouse.inputs) input.mapping->bind();
+  }
+  for(auto& emulator : emulators) {
+    for(auto& port : emulator->ports) {
+      for(auto& device : port.devices) {
+        for(auto& input : device.inputs) input.mapping->bind();
+      }
+    }
   }
   for(auto& mapping : hotkeys) mapping.bind();
 }

@@ -7,12 +7,16 @@ struct InputMapping {
   auto bind(u32 binding, string assignment) -> void;
   auto unbind() -> void;
   auto unbind(u32 binding) -> void;
+  auto hasAssignments() const -> bool;
+  auto icon(u32 binding) -> multiFactorImage;
+  auto text(u32 binding) -> string;
 
   virtual auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool = 0;
   virtual auto value() -> s16 = 0;
   virtual auto pressed() -> bool { return false; }
 
   string assignments[BindingLimit];
+  InputMapping* fallback = nullptr;
 
   struct Binding {
     auto icon() -> multiFactorImage;
@@ -63,6 +67,18 @@ struct InputRumble : InputMapping {
   auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
   auto rumble(u16 strong, u16 weak) -> void;
+};
+
+template<typename Mapping, typename Fallback>
+inline auto link(Mapping& mapping, Fallback& fallback) -> void {
+  mapping.fallback = &fallback;
+}
+
+struct Dpad {
+  InputDigital up;
+  InputDigital down;
+  InputDigital left;
+  InputDigital right;
 };
 
 struct InputHotkey : InputDigital {
