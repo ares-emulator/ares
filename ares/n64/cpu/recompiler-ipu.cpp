@@ -72,6 +72,12 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
   bool linkedConditional = mode & LinkedConditional;
   bool loadLinked = linkedConditional && !store;
   bool storeConditional = linkedConditional && store;
+  u32 reverseEndianXor = 0;
+  if(emitStateKey.reverseEndian()) {
+    if(size == Byte) reverseEndianXor = 7;
+    if(size == Half) reverseEndianXor = 6;
+    if(size == Word) reverseEndianXor = 4;
+  }
   s32 floatingWordOff = 0;
   s32 floatingDualOff = 0;
   if(floating) {
@@ -84,7 +90,6 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
     }
   }
   if(emitSlowPath || emitStateKey.watchpointsActive() || (require64 && reservedInstruction64())
-  || ((partialLeft || partialRight) && emitStateKey.reverseEndian())
   || (store && size == Dual && (partialLeft || partialRight) && system.homebrewMode)
   || (floating && !emitStateKey.coprocessor1Enabled())) {
     return fallback();
@@ -140,6 +145,9 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
 
   // Convert the cached virtual address to an RDRAM physical address and locate its dcache line.
   and32(reg(0), reg(0), imm(0x007f'ffff));
+  if(reverseEndianXor) {
+    xor32(reg(0), reg(0), imm(reverseEndianXor));
+  }
   lshr32(reg(1), reg(0), imm(4));
   and32(reg(1), reg(1), imm(0x1ff));
   mul64(reg(2), reg(1), imm(CpuDcacheLineBytes));
@@ -297,6 +305,9 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
     if(system.homebrewMode) {
       add64(reg(4), mem(Rs), imm(i16));
       and32(reg(4), reg(4), imm(0x0f));
+      if(reverseEndianXor) {
+        xor32(reg(4), reg(4), imm(reverseEndianXor));
+      }
       if(partialLeft && size == Word) {
         and32(reg(3), reg(4), imm(3));
         mov32(reg(1), imm(0x0f));

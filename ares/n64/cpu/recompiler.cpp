@@ -224,6 +224,10 @@ are extremely common) and moves cleanup work to lookup time.
 
 auto CPU::Recompiler::computeStateKey() const -> u64 {
   StateKey stateKey = 0;
+  bool reverseEndian = !self.scc.status.exceptionLevel
+                    && !self.scc.status.errorLevel
+                    && self.scc.status.privilegeMode >= 2
+                    && self.scc.status.reverseEndian;
   stateKey.setCoprocessor1Enabled(self.scc.status.enable.coprocessor1);
   stateKey.setFloatingPointMode(self.scc.status.floatingPointMode);
   stateKey.setExceptionLevel(self.scc.status.exceptionLevel);
@@ -232,7 +236,7 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   stateKey.setUserExtendedAddressing(self.scc.status.userExtendedAddressing);
   stateKey.setSupervisorExtendedAddressing(self.scc.status.supervisorExtendedAddressing);
   stateKey.setKernelExtendedAddressing(self.scc.status.kernelExtendedAddressing);
-  stateKey.setReverseEndian(self.scc.status.reverseEndian);
+  stateKey.setReverseEndian(reverseEndian);
   stateKey.setCoprocessor0Enabled(self.scc.status.enable.coprocessor0);
   stateKey.setFpuRoundMode(self.fpu.csr.roundMode);
   stateKey.setFpuFlushSubnormals(self.fpu.csr.flushSubnormals);
@@ -466,7 +470,8 @@ auto buildEmitPlan(ares::Nintendo64::CPU::Recompiler& recompiler, u64 vaddr, u32
     while(true) {
       if(recompiler.sectionIndex(currentAddress) != plan.startSection) break;
       if(!plan.instructions.empty() && GDB::server.hasBreakpointAt(u32(currentVaddr))) break;
-      u32 instruction = bus.read<Word>(currentAddress, thread, RBusDevice::ARES_JIT);
+      u32 fetchAddress = currentAddress ^ (recompiler.emitStateKey.reverseEndian() ? 4 : 0);
+      u32 instruction = bus.read<Word>(fetchAddress, thread, RBusDevice::ARES_JIT);
       auto info = recompiler.self.decoderEXECUTEInfo(instruction);
       // Materialize one prepass record per guest instruction.
       EmitPlannedInstruction pi;
