@@ -70,10 +70,11 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
   bool partialRight = mode & PartialRight;
   bool floating  = mode & Floating;
   bool linkedConditional = mode & LinkedConditional;
+  bool reverseEndian = emitStateKey.reverseEndian();
   bool loadLinked = linkedConditional && !store;
   bool storeConditional = linkedConditional && store;
   u32 reverseEndianXor = 0;
-  if(emitStateKey.reverseEndian()) {
+  if(reverseEndian) {
     if(size == Byte) reverseEndianXor = 7;
     if(size == Half) reverseEndianXor = 6;
     if(size == Word) reverseEndianXor = 4;
@@ -219,6 +220,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       mov32(mem(reg(3), DcacheLineWordsOff + 4), reg(0));
     } else if(partialLeft && size == Word) {
       and32(reg(1), reg(0), imm(3));
+      if(reverseEndian) xor32(reg(1), reg(1), imm(3));
       shl32(reg(1), reg(1), imm(3));
       and32(reg(0), reg(0), imm(0x0c));
       add64(reg(0), reg(2), reg(0));
@@ -231,7 +233,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       mov32(mem(reg(0), DcacheLineWordsOff), reg(1));
     } else if(partialRight && size == Word) {
       and32(reg(4), reg(0), imm(3));
-      xor32(reg(4), reg(4), imm(3));
+      if(!reverseEndian) xor32(reg(4), reg(4), imm(3));
       shl32(reg(4), reg(4), imm(3));
       and32(reg(3), reg(0), imm(0x0c));
       add64(reg(3), reg(2), reg(3));
@@ -245,6 +247,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       mov32(mem(reg(3), DcacheLineWordsOff), reg(1));
     } else if(partialLeft && size == Dual) {
       and32(reg(1), reg(0), imm(7));
+      if(reverseEndian) xor32(reg(1), reg(1), imm(7));
       shl32(reg(1), reg(1), imm(3));
       and32(reg(0), reg(0), imm(0x08));
       add64(reg(3), reg(2), reg(0));
@@ -262,7 +265,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       mov32(mem(reg(3), DcacheLineWordsOff + 4), reg(0));
     } else if(partialRight && size == Dual) {
       and32(reg(1), reg(0), imm(7));
-      xor32(reg(1), reg(1), imm(7));
+      if(!reverseEndian) xor32(reg(1), reg(1), imm(7));
       shl32(reg(1), reg(1), imm(3));
       and32(reg(0), reg(0), imm(0x08));
       add64(reg(3), reg(2), reg(0));
@@ -310,12 +313,14 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       }
       if(partialLeft && size == Word) {
         and32(reg(3), reg(4), imm(3));
+        if(reverseEndian) xor32(reg(3), reg(3), imm(3));
         mov32(reg(1), imm(0x0f));
         lshr32(reg(1), reg(1), reg(3));
         and32(reg(3), reg(4), imm(0x0c));
         shl32(reg(1), reg(1), reg(3));
       } else if(partialRight && size == Word) {
         and32(reg(3), reg(4), imm(3));
+        if(reverseEndian) xor32(reg(3), reg(3), imm(3));
         add32(reg(3), reg(3), imm(1));
         mov32(reg(1), imm(1));
         shl32(reg(1), reg(1), reg(3));
@@ -371,6 +376,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       add64(reg(3), reg(2), reg(3));
       mov32(reg(3), mem(reg(3), DcacheLineWordsOff));
       and32(reg(1), reg(0), imm(3));
+      if(reverseEndian) xor32(reg(1), reg(1), imm(3));
       shl32(reg(1), reg(1), imm(3));
       shl32(reg(3), reg(3), reg(1));
       mov32(reg(0), imm(1));
@@ -381,6 +387,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       mov64_s32(reg(3), reg(3));
     } else if(partialLeft && size == Dual) {
       and32(reg(1), reg(0), imm(7));
+      if(reverseEndian) xor32(reg(1), reg(1), imm(7));
       shl32(reg(1), reg(1), imm(3));
       and32(reg(3), reg(0), imm(0x08));
       add64(reg(3), reg(2), reg(3));
@@ -397,7 +404,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       add64(reg(3), reg(2), reg(3));
       mov32(reg(3), mem(reg(3), DcacheLineWordsOff));
       and32(reg(1), reg(0), imm(3));
-      xor32(reg(1), reg(1), imm(3));
+      if(!reverseEndian) xor32(reg(1), reg(1), imm(3));
       shl32(reg(1), reg(1), imm(3));
       lshr32(reg(3), reg(3), reg(1));
       mov32(reg(2), imm((sljit_sw)0xffff'ffffu));
@@ -413,7 +420,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
       cmov64(reg(3), reg(2), reg(3), flag_z);
     } else if(partialRight && size == Dual) {
       and32(reg(1), reg(0), imm(7));
-      xor32(reg(1), reg(1), imm(7));
+      if(!reverseEndian) xor32(reg(1), reg(1), imm(7));
       shl32(reg(1), reg(1), imm(3));
       and32(reg(3), reg(0), imm(0x08));
       add64(reg(3), reg(2), reg(3));
