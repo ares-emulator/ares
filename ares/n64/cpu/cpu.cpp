@@ -99,6 +99,10 @@ auto CPU::synchronize() -> void {
     }
   });
 
+  if(clocks > 0 && platform) {
+    platform->emulatedProgressHint((u64)clocks, system.frequency());
+  }
+
   clocks >>= 1;
   if(scc.count < scc.compare && scc.count + clocks >= scc.compare) {
     setInterruptPending(Interrupt::Timer, 1);

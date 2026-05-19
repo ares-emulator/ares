@@ -175,23 +175,39 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
       memory::copy<u32>(output + y * length, data + y * pitch, width);
     }
     ruby::video.release();
-    ruby::video.output(outputWidth, outputHeight);
+    if(ruby::video.blocking()) {
+      auto begin = chrono::nanosecond();
+      ruby::video.output(outputWidth, outputHeight);
+      auto end = chrono::nanosecond();
+      if(end >= begin + 250000) syncWaitEvents++;
+    } else {
+      ruby::video.output(outputWidth, outputHeight);
+    }
   }
   ruby::video.unlock();
 
-  static u64 vblankCounter = 0, previous, current;
-  vblankCounter++;
-
-  current = chrono::timestamp();
-  if(current != previous) {
-    previous = current;
-    vblanksPerSecond = vblankCounter;
-    vblankCounter = 0;
-  }
 }
 
 auto Program::refreshRateHint(double refreshRate) -> void {
   ruby::video.refreshRateHint(refreshRate);
+}
+
+auto Program::emulatedProgressHint(u64 emulatedUnits, u64 unitsPerSecond) -> void {
+  if(emulatedUnits == 0 || unitsPerSecond == 0) return;
+  auto add = [](atomic<f64>& target, f64 value) {
+    auto current = target.load();
+    while(!target.compare_exchange_weak(current, current + value)) {}
+  };
+  add(emulatedSecondsTotal, (f64)emulatedUnits / (f64)unitsPerSecond);
+  auto now = chrono::microsecond();
+  auto last = wallLastTimestampMicroseconds.exchange(now);
+  if(last && now > last) {
+    add(wallSecondsTotal, (f64)(now - last) / 1000000.0);
+  }
+}
+
+auto Program::gameFrameHint() -> void {
+  gameFrameHints++;
 }
 
 auto Program::audio(ares::Node::Audio::Stream node) -> void {
@@ -228,8 +244,9 @@ auto Program::audio(ares::Node::Audio::Stream node) -> void {
       if(balance > 0.0) samples[0] *= 1.0 - balance;
     }
 
-    //send frame to the audio output device
-    ruby::audio.output(samples);
+    //send frame to the audio output device. Count how many times
+    //the backend waited for synchronization.
+    if(ruby::audio.output(samples)) syncWaitEvents++;
   }
 }
 

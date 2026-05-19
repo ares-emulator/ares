@@ -12,6 +12,8 @@ struct Program : ares::Platform {
   auto status(string_view message) -> void override;
   auto video(ares::Node::Video::Screen, const u32* data, u32 pitch, u32 width, u32 height) -> void override;
   auto refreshRateHint(double refreshRate) -> void override;
+  auto emulatedProgressHint(u64 emulatedUnits, u64 unitsPerSecond) -> void override;
+  auto gameFrameHint() -> void override;
   auto audio(ares::Node::Audio::Stream) -> void override;
   auto input(ares::Node::Input::Input) -> void override;
   auto cheat(u32 address) -> maybe<u32> override;
@@ -111,7 +113,16 @@ struct Program : ares::Platform {
 
   std::vector<Message> messages;
   string configuration;
-  atomic<u64> vblanksPerSecond = 0;
+
+  atomic<f64> emulatedSecondsTotal = 0.0;
+  atomic<f64> wallSecondsTotal = 0.0;
+  atomic<u64> wallLastTimestampMicroseconds = 0;
+
+  //Number of times the ruby backend has waited for synchronization.
+  atomic<u64> syncWaitEvents = 0;
+
+  //Number of game frames produced by the core.
+  atomic<u64> gameFrameHints = 0;
 
   bool _isRunning = false;
 

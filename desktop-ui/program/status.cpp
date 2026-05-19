@@ -17,12 +17,54 @@ auto Program::updateMessage() -> void {
     presentation.statusLeft.setText();
   }
 
-  if(vblanksPerSecond > 0 && !paused) {
-    presentation.statusRight.setText({ vblanksPerSecond.load(), " VPS" });
+  static u64 shownAt = 0;
+  static s64 shownSpeed = -1;
+  static s32 shownFps = -1;
+  static string shownStatusRightText;
+  string rightText = {};
+
+  if(emulator && !paused) {
+    auto now = chrono::millisecond();
+    if(shownSpeed < 0 || now - shownAt >= 1000) {
+      auto emulatedSeconds = emulatedSecondsTotal.exchange(0.0);
+      auto wallSeconds = wallSecondsTotal.exchange(0.0);
+      wallLastTimestampMicroseconds = 0;
+      s64 emuSpeed = -1;
+      if(wallSeconds > 0.0) {
+        emuSpeed = (s64)(100.0 * emulatedSeconds / wallSeconds + 0.5);
+      }
+      auto syncWait = syncWaitEvents.exchange(0);
+      if(syncWait > 0) emuSpeed = 100;
+      auto frameHints = gameFrameHints.exchange(0);
+      auto fps = 0;
+      if(emulatedSeconds > 0.0) {
+        fps = (s32)((f64)frameHints / emulatedSeconds + 0.5);
+      }
+      shownSpeed = emuSpeed;
+      shownFps = fps;
+      shownAt = now;
+    }
+
+    if(shownSpeed >= 0) rightText.append("Emu speed: ", shownSpeed, "%");
+    if(shownFps >= 0)   rightText.append("  Game FPS: ", shownFps);
+  } else {
+    shownSpeed = -1;
+    shownFps = -1;
+    shownAt = 0;
+    emulatedSecondsTotal = 0.0;
+    wallSecondsTotal = 0.0;
+    wallLastTimestampMicroseconds = 0;
+    syncWaitEvents = 0;
+    gameFrameHints = 0;
   }
 
   if(!emulator) {
-    presentation.statusRight.setText("Unloaded");
+    rightText = "Unloaded";
+  }
+
+  if(rightText != shownStatusRightText) {
+    presentation.statusRight.setText(rightText);
+    shownStatusRightText = rightText;
   }
 
   if (message.text == "") {
