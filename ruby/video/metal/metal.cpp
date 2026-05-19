@@ -148,7 +148,6 @@ struct VideoMetal : VideoDriver, Metal {
         CFTimeInterval minimumInterval = view.window.screen.minimumRefreshInterval;
         if (_refreshRateHint != 0) {
           _presentInterval = (1.0 / _refreshRateHint);
-          NSLog(@"Refresh rate hint changed to %lf", _refreshRateHint);
           averagePresentDuration = _presentInterval;
         } else {
           _presentInterval = minimumInterval;

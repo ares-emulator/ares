@@ -119,7 +119,21 @@ auto VI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
 
   if(address == 1) {
     //VI_DRAM_ADDRESS
-    io.dramAddress = data.bit(0,23);
+    u32 dramAddress = data.bit(0,23);
+    //count origin changes to estimate game FPS
+    if(metrics.previousDramAddress != dramAddress) {
+      //ignore one-line shifts as they are expected in serrate mode
+      i32 delta = metrics.previousDramAddress - dramAddress;
+      if(delta < 0) delta = -delta;
+      u32 bytesPerPixel = 0;
+      if(io.colorDepth == 2) bytesPerPixel = 2;
+      if(io.colorDepth == 3) bytesPerPixel = 4;
+      u32 lineStride = io.width * bytesPerPixel;
+      bool interlaceLineShift = io.serrate && lineStride > 0 && delta == lineStride;
+      if(!interlaceLineShift) platform->gameFrameHint();
+    }
+    metrics.previousDramAddress = dramAddress;
+    io.dramAddress = dramAddress;
   }
 
   if(address == 2) {
@@ -148,18 +162,21 @@ auto VI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
   if(address == 6) {
     //VI_V_TOTAL
     io.halfLinesPerField = data.bit(0,9);
+    refreshRateHintDirty = true;
   }
 
   if(address == 7) {
     //VI_H_TOTAL
     io.quarterLineDuration = data.bit( 0,11);
     io.leapPattern         = data.bit(16,20);
+    refreshRateHintDirty = true;
   }
 
   if(address == 8) {
     //VI_H_SYNC_LEAP
     io.hsyncLeap[0] = data.bit( 0,11);
     io.hsyncLeap[1] = data.bit(16,27);
+    refreshRateHintDirty = true;
   }
 
   if(address == 9) {
