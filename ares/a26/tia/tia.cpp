@@ -112,6 +112,7 @@ auto TIA::scanline() -> void {
 }
 
 auto TIA::frame() -> void {
+  platform->gameFrameHint();
   screen->refreshRateHint(system.frequency(), 228, io.vcounter);
   screen->frame();
   scheduler.exit(Event::Frame);
