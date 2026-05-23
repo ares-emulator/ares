@@ -53,8 +53,8 @@ auto PPU::Background::render() -> void {
     if(offsetPerTileMode) {
       u32 validBit = 0x2000 << id;
       u32 offsetX = x + (hscroll & 7);
-      if(offsetX >= 8) {  //first column is exempt
-        u32 hlookup = self.bg3.getTile((offsetX - 8) + (self.bg3.io.hoffset & ~7), self.bg3.io.voffset + 0);
+      if(offsetX >= (1 << tileWidth)) {  //first column is exempt
+        u32 hlookup = self.bg3.getTile((offsetX - (1 << tileWidth)) + ((self.bg3.io.hoffset & ~7) << hires), self.bg3.io.voffset + 0);
         if(self.io.bgMode == 4) {
           if(hlookup & validBit) {
             if(!(hlookup & 0x8000)) {
@@ -64,7 +64,7 @@ auto PPU::Background::render() -> void {
             }
           }
         } else {
-          u32 vlookup = self.bg3.getTile((offsetX - 8) + (self.bg3.io.hoffset & ~7), self.bg3.io.voffset + 8);
+          u32 vlookup = self.bg3.getTile((offsetX - (1 << tileWidth)) + ((self.bg3.io.hoffset & ~7) << hires), self.bg3.io.voffset + 8);
           if(hlookup & validBit) {
             hoffset = offsetX + (hlookup & ~7);
           }
