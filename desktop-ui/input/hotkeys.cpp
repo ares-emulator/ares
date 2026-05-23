@@ -1,4 +1,5 @@
 auto InputManager::createHotkeys() -> void {
+  hotkeys.clear();
   static bool fastForwardVideoBlocking;
   static bool fastForwardAudioBlocking;
   static bool fastForwardAudioDynamic;
@@ -113,6 +114,20 @@ auto InputManager::createHotkeys() -> void {
     program.stateLoad(program.state.slot);
   }));
 
+  for(u32 slot : range(1, 10)) {
+    hotkeys.push_back(InputHotkey({"Save State ", slot}).onPress([slot] {
+      Program::Guard guard;
+      if(!emulator) return;
+      program.stateSave(slot);
+    }));
+
+    hotkeys.push_back(InputHotkey({"Load State ", slot}).onPress([slot] {
+      Program::Guard guard;
+      if(!emulator) return;
+      program.stateLoad(slot);
+    }));
+  }
+
   hotkeys.push_back(InputHotkey("Decrement State Slot").onPress([&] {
     if(!emulator) return;
     if(program.state.slot == 1) program.state.slot = 9;
@@ -175,6 +190,7 @@ auto InputManager::createHotkeys() -> void {
       }
     }
   }));
+
 }
 
 auto InputManager::pollHotkeys() -> void {
@@ -187,10 +203,243 @@ auto InputManager::pollHotkeys() -> void {
     if (!presentation.focused() && !ruby::video.fullScreen()) return;
   }
 
-  for(auto& hotkey : hotkeys) {
-    auto state = hotkey.value();
-    if(hotkey.state == 0 && state == 1 && hotkey.press) hotkey.press();
-    if(hotkey.state == 1 && state == 0 && hotkey.release) hotkey.release();
-    hotkey.state = state;
+  struct PhysicalKey {
+    u64 deviceID = 0;
+    u32 groupID = 0;
+    u32 inputID = 0;
+    InputMapping::Qualifier qualifier = InputMapping::Qualifier::None;
+
+    auto operator==(const PhysicalKey& other) const -> bool {
+      return deviceID == other.deviceID && groupID == other.groupID && inputID == other.inputID && qualifier == other.qualifier;
+    }
+  };
+
+  struct PhysicalKeyHash {
+    auto operator()(const PhysicalKey& key) const -> size_t {
+      auto hash = (size_t)key.deviceID;
+      hash ^= (size_t)key.groupID + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+      hash ^= (size_t)key.inputID + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+      hash ^= (size_t)key.qualifier + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+      return hash;
+    }
+  };
+
+  using KeyBinding = InputMapping::Binding;
+
+  struct KeyEdge {
+    bool down = false;
+    bool pressed = false;
+    bool released = false;
+  };
+
+  static std::unordered_map<PhysicalKey, bool, PhysicalKeyHash> previousDown;
+  static std::vector<bool> previousBindingActive;
+
+  auto stateIndex = [&](u32 hotkeyIndex, u32 bindingIndex) -> u32 {
+    return hotkeyIndex * BindingLimit + bindingIndex;
+  };
+  auto physicalKeyOf = [&](const KeyBinding& key) -> PhysicalKey {
+    return {key.deviceID, key.groupID, key.inputID, key.qualifier};
+  };
+
+  auto parseAssignment = [&](string_view assignment) -> std::vector<KeyBinding> {
+    std::vector<KeyBinding> result;
+    if(assignment.size() == 0) return result;
+
+    auto parts = nall::split(assignment, "+");
+    result.reserve(parts.size());
+    for(auto& part : parts) {
+      auto parsed = InputMapping::assignment(part.strip());
+      if(!parsed) {
+        result.clear();
+        return result;
+      }
+      result.push_back(*parsed);
+    }
+
+    return result;
+  };
+
+  auto readDown = [&](const KeyBinding& key) -> bool {
+    if(!key.device) return false;
+    if(key.groupID >= key.device->size()) return false;
+    if(key.inputID >= key.device->group(key.groupID).size()) return false;
+
+    s16 value = key.device->group(key.groupID).input(key.inputID).value();
+    if(key.device->isKeyboard() && key.groupID == HID::Keyboard::GroupID::Button) return value != 0;
+    if(key.device->isMouse() && key.groupID == HID::Mouse::GroupID::Button && ruby::input.acquired()) return value != 0;
+    if(key.device->isJoypad() && key.groupID == HID::Joypad::GroupID::Button) return value != 0;
+    if(key.device->isJoypad() && key.groupID != HID::Joypad::GroupID::Button) {
+      if(key.qualifier == InputMapping::Qualifier::Lo) return value < -16384;
+      if(key.qualifier == InputMapping::Qualifier::Hi) return value > +16384;
+    }
+    return false;
+  };
+
+  auto isKeyboardModifier = [&](const KeyBinding& key) -> bool {
+    if(!key.device || !key.device->isKeyboard()) return false;
+    if(key.groupID != HID::Keyboard::GroupID::Button) return false;
+    if(key.groupID >= key.device->size()) return false;
+    if(key.inputID >= key.device->group(key.groupID).size()) return false;
+
+    auto name = key.device->group(key.groupID).input(key.inputID).name();
+    return name == "Shift" || name == "LeftShift" || name == "RightShift"
+        || name == "Control" || name == "LeftControl" || name == "RightControl"
+        || name == "Option" || name == "LeftAlt" || name == "RightAlt"
+        || name == "Command" || name == "Super" || name == "LeftSuper" || name == "RightSuper";
+  };
+
+  const u32 bindingCount = hotkeys.size() * BindingLimit;
+  if(previousBindingActive.size() != bindingCount) {
+    previousBindingActive.assign(bindingCount, false);
+  }
+
+  std::vector<std::vector<KeyBinding>> parsedBindings(bindingCount);
+  std::unordered_map<PhysicalKey, KeyBinding, PhysicalKeyHash> referencedKeys;
+  for(u32 hotkeyIndex : range(hotkeys.size())) {
+    auto& hotkey = hotkeys[hotkeyIndex];
+    for(u32 bindingIndex : range(BindingLimit)) {
+      auto index = stateIndex(hotkeyIndex, bindingIndex);
+      auto parsed = parseAssignment(hotkey.assignments[bindingIndex]);
+      if(parsed.empty()) continue;
+      parsedBindings[index] = std::move(parsed);
+
+      for(auto& key : parsedBindings[index]) {
+        auto physical = physicalKeyOf(key);
+        if(referencedKeys.find(physical) == referencedKeys.end()) referencedKeys.emplace(physical, key);
+      }
+    }
+  }
+
+  std::unordered_map<PhysicalKey, KeyEdge, PhysicalKeyHash> keyEdges;
+  keyEdges.reserve(referencedKeys.size());
+  for(auto& [physical, key] : referencedKeys) {
+    auto down = readDown(key);
+    auto previous = previousDown.find(physical) != previousDown.end() ? previousDown[physical] : false;
+    keyEdges[physical] = {down, !previous && down, previous && !down};
+  }
+
+  auto edgeOf = [&](const KeyBinding& key) -> KeyEdge {
+    auto found = keyEdges.find(physicalKeyOf(key));
+    if(found == keyEdges.end()) return {};
+    return found->second;
+  };
+
+  auto keyboardModifiersMatchExactly = [&](const std::vector<KeyBinding>& keys) -> bool {
+    std::vector<KeyBinding> keyboardKeys;
+    keyboardKeys.reserve(keys.size());
+    for(auto& key : keys) {
+      if(key.device && key.device->isKeyboard() && key.groupID == HID::Keyboard::GroupID::Button) {
+        keyboardKeys.push_back(key);
+      }
+    }
+    if(keyboardKeys.empty()) return true;
+
+    std::unordered_map<u64, std::vector<PhysicalKey>> expectedModifiers;
+    for(auto& key : keyboardKeys) {
+      if(isKeyboardModifier(key)) {
+        expectedModifiers[key.deviceID].push_back({key.deviceID, key.groupID, key.inputID});
+      } else if(expectedModifiers.find(key.deviceID) == expectedModifiers.end()) {
+        expectedModifiers[key.deviceID] = {};
+      }
+    }
+
+    for(auto& [deviceID, modifiers] : expectedModifiers) {
+      std::shared_ptr<HID::Device> device;
+      for(auto& key : keyboardKeys) {
+        if(key.deviceID == deviceID) {
+          device = key.device;
+          break;
+        }
+      }
+      if(!device) return false;
+
+      for(u32 inputID : range(device->group(HID::Keyboard::GroupID::Button).size())) {
+        KeyBinding candidate;
+        candidate.device = device;
+        candidate.deviceID = deviceID;
+        candidate.groupID = HID::Keyboard::GroupID::Button;
+        candidate.inputID = inputID;
+        if(!isKeyboardModifier(candidate) || !edgeOf(candidate).down) continue;
+
+        bool expected = false;
+        for(auto& modifier : modifiers) {
+          if(modifier.inputID == inputID) {
+            expected = true;
+            break;
+          }
+        }
+        if(!expected) return false;
+      }
+    }
+
+    return true;
+  };
+
+  std::vector<bool> bindingDown(bindingCount, false);
+  std::vector<bool> bindingActivated(bindingCount, false);
+  std::unordered_map<PhysicalKey, bool, PhysicalKeyHash> claimedSuffixPress;
+
+  for(u32 hotkeyIndex : range(hotkeys.size())) {
+    for(u32 bindingIndex : range(BindingLimit)) {
+      auto index = stateIndex(hotkeyIndex, bindingIndex);
+      auto& keys = parsedBindings[index];
+      if(keys.empty()) {
+        previousBindingActive[index] = false;
+        continue;
+      }
+
+      bool down = true;
+      for(auto& key : keys) {
+        if(!edgeOf(key).down) {
+          down = false;
+          break;
+        }
+      }
+      if(down && !keyboardModifiersMatchExactly(keys)) down = false;
+      bindingDown[index] = down;
+
+      if(!previousBindingActive[index] && down) {
+        if(keys.size() == 1) {
+          bindingActivated[index] = true;
+        } else if(edgeOf(keys[keys.size() - 1]).pressed) {
+          bindingActivated[index] = true;
+          claimedSuffixPress[physicalKeyOf(keys[keys.size() - 1])] = true;
+        }
+      }
+      previousBindingActive[index] = down;
+    }
+  }
+
+  for(u32 hotkeyIndex : range(hotkeys.size())) {
+    auto& hotkey = hotkeys[hotkeyIndex];
+    bool wasActive = hotkey.state != 0;
+    bool isActive = false;
+    bool activated = false;
+
+    for(u32 bindingIndex : range(BindingLimit)) {
+      auto index = stateIndex(hotkeyIndex, bindingIndex);
+      auto& keys = parsedBindings[index];
+      if(keys.empty()) continue;
+      isActive |= bindingDown[index];
+
+      if(bindingActivated[index]) {
+        if(keys.size() == 1) {
+          if(claimedSuffixPress.find(physicalKeyOf(keys[0])) != claimedSuffixPress.end()) {
+            continue;
+          }
+        }
+        activated = true;
+      }
+    }
+
+    if(!wasActive && activated && hotkey.press) hotkey.press();
+    if(wasActive && !isActive && hotkey.release) hotkey.release();
+    hotkey.state = isActive ? 1 : 0;
+  }
+
+  previousDown.clear();
+  for(auto& [physical, edge] : keyEdges) {
+    previousDown[physical] = edge.down;
   }
 }

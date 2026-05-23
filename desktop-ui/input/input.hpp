@@ -27,6 +27,8 @@ struct InputMapping {
     u32 inputID = 0;
     Qualifier qualifier = Qualifier::None;
   };
+  static auto qualifier(string_view name) -> Qualifier;
+  static auto assignment(string_view mapping) -> maybe<Binding>;
   Binding bindings[BindingLimit];
 };
 

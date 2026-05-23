@@ -4,6 +4,33 @@
 VirtualPort virtualPorts[5];
 InputManager inputManager;
 
+auto InputMapping::qualifier(string_view name) -> Qualifier {
+  if(name == "Lo") return Qualifier::Lo;
+  if(name == "Hi") return Qualifier::Hi;
+  if(name == "Rumble") return Qualifier::Rumble;
+  return Qualifier::None;
+}
+
+auto InputMapping::assignment(string_view mapping) -> maybe<Binding> {
+  auto token = nall::split(mapping, "/");
+  if(token.size() < 3) return {};
+
+  Binding binding;
+  binding.deviceID = token[0].natural();
+  binding.groupID = token[1].natural();
+  binding.inputID = token[2].natural();
+  if(token.size() > 3) binding.qualifier = qualifier(token[3]);
+
+  for(auto& device : inputManager.devices) {
+    if(binding.deviceID == device->id()) {
+      binding.device = device;
+      break;
+    }
+  }
+
+  return binding;
+}
+
 auto InputMapping::bind() -> void {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   for(auto& binding : bindings) binding = {};
@@ -11,24 +38,7 @@ auto InputMapping::bind() -> void {
   for(u32 index : range(BindingLimit)) {
     auto& assignment = assignments[index];
     auto& binding = bindings[index];
-
-    auto token = nall::split(assignment, "/");
-    if(token.size() < 3) continue;  //ignore invalid mappings
-
-    binding.deviceID = token[0].natural();
-    binding.groupID = token[1].natural();
-    binding.inputID = token[2].natural();
-    binding.qualifier = Qualifier::None;
-    if(token.size() > 3 && token[3] == "Lo") binding.qualifier = Qualifier::Lo;
-    if(token.size() > 3 && token[3] == "Hi") binding.qualifier = Qualifier::Hi;
-    if(token.size() > 3 && token[3] == "Rumble") binding.qualifier = Qualifier::Rumble;
-
-    for(auto& device : inputManager.devices) {
-      if(binding.deviceID == device->id()) {
-        binding.device = device;
-        break;
-      }
-    }
+    if(auto parsed = InputMapping::assignment(assignment)) binding = *parsed;
   }
 }
 
