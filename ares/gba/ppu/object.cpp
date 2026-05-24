@@ -43,7 +43,8 @@ auto PPU::Objects::readA01(u32 y) -> void {
   latch.height = heights[shape * 4 + size];
 
   latch.py = y - ypos;
-  if((latch.affine == 0 && latch.affineSize == 1) || (latch.py >= latch.height << latch.affineSize)) {
+  n9 pxMax = latch.x + (latch.width << latch.affineSize);
+  if((latch.affine == 0 && latch.affineSize == 1) || (latch.py >= latch.height << latch.affineSize) || (latch.x >= 240 && pxMax >= 240)) {
     //object is hidden - skip rendering
     goToNext();
   } else {
