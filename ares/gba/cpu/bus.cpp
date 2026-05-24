@@ -38,11 +38,7 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 
   case 0x05: word = readPRAM<UseDebugger>(mode, address); break;
   case 0x06: word = readVRAM<UseDebugger>(mode, address); break;
-
-  case 0x07:
-    if constexpr(!UseDebugger) prefetchStep(1);
-    word = ppu.readOAM(mode, address);
-    break;
+  case 0x07: word = readOAM<UseDebugger>(mode, address); break;
 
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
     if constexpr(UseDebugger) return readROM<true>(mode, address);
@@ -136,12 +132,7 @@ auto CPU::setBus(u32 mode, n32 address, n32 word) -> void {
 
   case 0x05: writePRAM(mode, address, word); break;
   case 0x06: writeVRAM(mode, address, word); break;
-
-  case 0x07:
-    prefetchStep(1);
-    synchronize(ppu);
-    ppu.writeOAM(mode, address, word);
-    break;
+  case 0x07: writeOAM(mode, address, word); break;
 
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
     context.burstActive = checkBurst<IsDMA>(mode);

@@ -26,6 +26,7 @@ auto PPU::serialize(serializer& s) -> void {
 
   s(pramAccessed);
   s(vramAccessedBG);
+  s(oamAccessed);
 }
 
 auto PPU::Background::serialize(serializer& s) -> void {
@@ -64,9 +65,15 @@ auto PPU::Objects::serialize(serializer& s) -> void {
   s(io.mosaicWidth);
   s(io.mosaicHeight);
 
+  s(renderY);
   s(mosaicY);
   s(hmosaicOffset);
   s(vmosaicOffset);
+  s(objIndex);
+  s(active);
+  s(activeCycle);
+
+  s(state);
 }
 
 auto PPU::Window::serialize(serializer& s) -> void {

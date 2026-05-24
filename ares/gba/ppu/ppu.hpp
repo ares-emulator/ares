@@ -57,9 +57,11 @@ struct PPU : Thread, IO {
   auto writeIO(n32 address, n8 byte) -> void;
 
   //memory.cpp
-  auto releaseBus() -> void;
+  auto bgReleaseBus() -> void;
+  auto objReleaseBus() -> void;
   auto pramContention() -> bool;
   auto vramContention(n32 address) -> bool;
+  auto oamContention() -> bool;
 
   auto readVRAM(u32 mode, n32 address) -> n16;
   auto readVRAM_BG(u32 mode, n32 address) -> n16;
@@ -193,7 +195,13 @@ private:
   struct Objects {
     //object.cpp
     auto setEnable(n1 status) -> void;
+    auto goToNext() -> void;
+    auto readA01(u32 y) -> void;
+    auto readA2() -> void;
+    auto drawObject(u32 y) -> void;
+    auto step() -> void;
     auto scanline(u32 y) -> void;
+    auto renderScanline(u32 y) -> void;
     auto outputPixel(u32 x, u32 y) -> void;
     auto power() -> void;
 
@@ -209,12 +217,46 @@ private:
       n4 mosaicHeight;
     } io;
 
+    struct Latch {
+      n1 affine;
+      n1 affineSize;
+      n2 mode;
+      n1 mosaic;
+      n1 colors;
+
+      n9 x;
+      n5 affineParam;
+      n1 hflip;
+      n1 vflip;
+
+      n10 character;
+      n2  priority;
+      n4  palette;
+
+      n32 width;
+      n32 height;
+      n8  py;
+
+      i16 pa;
+      i16 pb;
+      i16 pc;
+      i16 pd;
+    } latch;
+
     Pixel lineBuffers[2][240];
     Pixel output;
     Pixel mosaicLatch;
+    u32 renderY;
     s32 mosaicY;
-    n4 hmosaicOffset;
-    n4 vmosaicOffset;
+    n4  hmosaicOffset;
+    n4  vmosaicOffset;
+    n7  objIndex;
+    bool active;
+    bool activeCycle;
+
+    enum class State : u32 {
+      ReadA01, ReadA2, ReadPA, ReadPB, ReadPC, ReadPD
+    } state;
   } objects;
 
   struct Window {
@@ -278,6 +320,7 @@ private:
 
   bool pramAccessed;
   bool vramAccessedBG;
+  bool oamAccessed;
   n32  renderingCycle;
 };
 

@@ -1,6 +1,10 @@
-auto PPU::releaseBus() -> void {
+auto PPU::bgReleaseBus() -> void {
   pramAccessed = false;
   vramAccessedBG = false;
+}
+
+auto PPU::objReleaseBus() -> void {
+  oamAccessed = false;
 }
 
 auto PPU::pramContention() -> bool {
@@ -17,10 +21,15 @@ auto PPU::pramContention() -> bool {
 }
 
 auto PPU::vramContention(n32 address) -> bool {
+  //todo: implement OBJ VRAM contention
   address &= 0x1ffff;
   if(Background::IO::mode < 3 && address >= 0x10000) return false;
   else if(address >= 0x14000) return false;
   return vramAccessedBG;
+}
+
+auto PPU::oamContention() -> bool {
+  return oamAccessed;
 }
 
 auto PPU::readVRAM_BG(u32 mode, n32 address) -> n16 {
