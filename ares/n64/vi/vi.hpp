@@ -18,6 +18,8 @@ struct VI : Thread, Memory::RCP<VI> {
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto step(u32 clocks) -> void;
+  auto updateRefreshRateHint() -> void;
+  auto measureRefreshRate() const -> f64;
 
   auto main() -> void;
   auto refresh() -> void;
@@ -70,8 +72,13 @@ struct VI : Thread, Memory::RCP<VI> {
   u32 clockFraction;
   u32 inactiveCounter;
 
+  struct Metrics {
+    n24 previousDramAddress;
+  } metrics;
+
 //unserialized:
   bool refreshed;
+  bool refreshRateHintDirty = false;
 
   #if defined(VULKAN)
   bool gpuOutputValid = false;

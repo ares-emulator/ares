@@ -78,8 +78,8 @@ struct AudioASIO : AudioDriver {
     _queue.count = 0;
   }
 
-  auto output(const f64 samples[]) -> void override {
-    if(!ready()) return;
+  auto output(const f64 samples[]) -> bool override {
+    if(!ready()) return false;
     //defer call to IASIO::start(), because the drivers themselves will sometimes crash internally.
     //if software initializes AudioASIO but does not play music at startup, this can prevent a crash loop.
     if(!_started) {
@@ -89,14 +89,16 @@ struct AudioASIO : AudioDriver {
         return;
       }
     }
+    bool waitedForDrain = false;
     if(self.blocking) {
-      while(_queue.count >= self.latency);
+      while(_queue.count >= self.latency) waitedForDrain = true;
     }
     for(u32 n : range(self.channels)) {
       _queue.samples[_queue.write][n] = samples[n];
     }
     _queue.write++;
     _queue.count++;
+    return waitedForDrain;
   }
 
 private:

@@ -13,6 +13,33 @@ auto VI::step(u32 clocks) -> void {
   clockFraction = scaled % system.videoFrequency();
 }
 
+auto VI::measureRefreshRate() const -> f64 {
+  if(io.halfLinesPerField == 0) return 0.0;
+
+  s64 hTotal = io.quarterLineDuration + 1;
+  s64 vTotal = io.halfLinesPerField + 1;
+  s64 hTotalLeapA = io.hsyncLeap[1];
+  s64 hTotalLeapB = io.hsyncLeap[0];
+  s64 leapBitCount = 0;
+  for(u32 bit = 0; bit < 5; bit++) {
+    leapBitCount += io.leapPattern.bit(bit);
+  }
+  s64 hTotalLeapAverage = (hTotalLeapA * leapBitCount + hTotalLeapB * (5 - leapBitCount)) / 5;
+  s64 denominator = hTotal * (vTotal - 2) / 2 + hTotalLeapAverage;
+  if(denominator <= 0) return 0.0;
+
+  return (f64)system.videoFrequency() / (f64)denominator;
+}
+
+auto VI::updateRefreshRateHint() -> void {
+  auto refreshRate = measureRefreshRate();
+  if(refreshRate > 0.0) {
+    screen->refreshRateHint(refreshRate);
+  } else {
+    screen->refreshRateHint(Region::PAL() ? 50 : 60);
+  }
+}
+
 auto VI::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VI");
 
@@ -27,7 +54,7 @@ auto VI::load(Node::Object parent) -> void {
   #endif
   screen = node->append<Node::Video::Screen>("Screen", width, height);
   screen->setRefresh(std::bind_front(&VI::refresh, this));
-  screen->refreshRateHint(Region::PAL() ? 50 : 60); // TODO: More accurate refresh rate hint
+  updateRefreshRateHint();
   screen->colors((1 << 24) + (1 << 15), [&](n32 color) -> n64 {
     if(color < (1 << 24)) {
       u64 a = 65535;
@@ -76,6 +103,11 @@ auto VI::unload() -> void {
 
 auto VI::main() -> void {
   while(Thread::clock < 0) {
+    if(refreshRateHintDirty) {
+      refreshRateHintDirty = false;
+      updateRefreshRateHint();
+    }
+
     if(active()) {
       ++io.vcounter;
       int halfline = io.vcounter << 1 | io.field;
@@ -231,7 +263,11 @@ auto VI::power(bool reset) -> void {
   screen->power();
   io = {};
   refreshed = false;
+  refreshRateHintDirty = false;
   clockFraction = 0;
+  inactiveCounter = 0;
+  metrics = {};
+  updateRefreshRateHint();
 
   #if defined(VULKAN)
   gpuOutputValid = false;

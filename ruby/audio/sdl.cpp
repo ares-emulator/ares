@@ -38,13 +38,14 @@ struct AudioSDL : AudioDriver {
     SDL_ClearAudioStream(_stream);
   }
 
-  auto output(const f64 samples[]) -> void override {
-    if(!ready()) return;
+  auto output(const f64 samples[]) -> bool override {
+    if(!ready()) return false;
 
+    bool waitedForDrain = false;
     if(self.blocking) {
       auto bytesRemaining = SDL_GetAudioStreamAvailable(_stream);
       while(bytesRemaining > _bufferSize) {
-        //wait for audio to drain
+        waitedForDrain = true;
         auto bytesToWait = bytesRemaining - _bufferSize;
         auto bytesPerSample = bitsPerSample / 8.0;
         auto samplesRemaining = bytesToWait / bytesPerSample;
@@ -57,6 +58,7 @@ struct AudioSDL : AudioDriver {
     std::unique_ptr<f32[]> output = std::make_unique<f32[]>(channels);
     for(auto n : range(channels)) output[n] = samples[n];
     SDL_PutAudioStreamData(_stream, &output[0], channels * sizeof(f32));
+    return waitedForDrain;
   }
 
   auto level() -> f64 override {

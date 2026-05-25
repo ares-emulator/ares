@@ -76,6 +76,11 @@ auto Program::load(std::shared_ptr<Emulator> emulator, string location) -> bool 
 /// Loads a ROM for an already-loaded emulator.
 auto Program::load(string location) -> bool {
   Program::Guard guard;
+  emulatedSecondsTotal = 0.0;
+  wallSecondsTotal = 0.0;
+  wallLastTimestampMicroseconds = 0;
+  syncWaitEvents = 0;
+  gameFrameHints = 0;
   if(settings.debugServer.enabled) {
     nall::GDB::server.reset();
   }
@@ -189,6 +194,11 @@ auto Program::unload() -> void {
   if(gameBrowserWindowConstructed) gameBrowserWindow.setVisible(false);
   message.text = "";
   configuration = "";
+  emulatedSecondsTotal = 0.0;
+  wallSecondsTotal = 0.0;
+  wallLastTimestampMicroseconds = 0;
+  syncWaitEvents = 0;
+  gameFrameHints = 0;
   ruby::video.clear();
   ruby::audio.clear();
 }

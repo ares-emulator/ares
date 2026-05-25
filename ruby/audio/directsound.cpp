@@ -52,17 +52,19 @@ struct AudioDirectSound : AudioDriver {
     _secondary->Play(0, 0, DSBPLAY_LOOPING);
   }
 
-  auto output(const f64 samples[]) -> void override {
-    if(!ready()) return;
+  auto output(const f64 samples[]) -> bool override {
+    if(!ready()) return false;
 
     _buffer[_offset]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
     _buffer[_offset] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
     if(++_offset < _period) return;
     _offset = 0;
 
+    bool waitedForDrain = false;
     if(self.blocking) {
       //wait until playback buffer has an empty ring to write new audio data to
       while(_ringDistance >= _rings - 1) {
+        waitedForDrain = true;
         DWORD position;
         _secondary->GetCurrentPosition(&position, 0);
         u32 ringActive = position / (_period * 4);
@@ -90,6 +92,7 @@ struct AudioDirectSound : AudioDriver {
       memory::copy<u32>(output, _buffer, _period);
       _secondary->Unlock(output, size, 0, 0);
     }
+    return waitedForDrain;
   }
 
 private:

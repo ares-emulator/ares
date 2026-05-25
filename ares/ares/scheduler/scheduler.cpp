@@ -1,5 +1,7 @@
 inline auto Scheduler::reset() -> void {
   _threads.clear();
+  _primaryThread = nullptr;
+  _primaryClock = {};
 }
 
 inline auto Scheduler::threads() const -> u32 {
@@ -55,6 +57,8 @@ inline auto Scheduler::remove(Thread& thread) -> void {
 //power cycle and soft reset events: assigns the primary thread and resets all thread clocks.
 inline auto Scheduler::power(Thread& thread) -> void {
   _primary = _resume = thread.handle();
+  _primaryThread = &thread;
+  _primaryClock = {};
   for(auto& thread : _threads) {
     thread->_clock = thread->_uniqueID;
   }
@@ -99,10 +103,40 @@ inline auto Scheduler::enter(Mode mode) -> Event {
 }
 
 inline auto Scheduler::exit(Event event) -> void {
+  if(platform) {
+    if(!_primaryThread || _primaryThread->handle() != _primary) {
+      _primaryThread = nullptr;
+      for(auto& thread : _threads) {
+        if(thread->handle() == _primary) {
+          _primaryThread = thread;
+          break;
+        }
+      }
+    }
+
+    if(_primaryThread) {
+      u64 primaryClock = _primaryThread->_clock;
+      if(_primaryClock.referenceValid && primaryClock >= _primaryClock.reference) {
+        _primaryClock.pending += primaryClock - _primaryClock.reference;
+      }
+      _primaryClock.reference = primaryClock;
+      _primaryClock.referenceValid = true;
+      if(event == Event::Frame && _primaryClock.pending > 0) {
+        platform->emulatedProgressHint(_primaryClock.pending, Thread::Second);
+        _primaryClock.pending = 0;
+      }
+    } else {
+      _primaryClock = {};
+    }
+  }
+
   //subtract the minimum time from all threads to prevent clock overflow.
   auto reduce = minimum();
   for(auto& thread : _threads) {
     thread->_clock -= reduce;
+  }
+  if(_primaryThread && _primaryClock.referenceValid) {
+    _primaryClock.reference = _primaryThread->_clock;
   }
 
   //return to the thread that entered the scheduler originally.

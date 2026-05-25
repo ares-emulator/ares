@@ -47,28 +47,30 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
     return (f64)level / limit;
   }
 
-  auto output(const f64 samples[]) -> void override {
+  auto output(const f64 samples[]) -> bool override {
     u32 frame = 0;
     frame |= (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
     frame |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
 
     auto& buffer = self.buffers[self.index];
     buffer.write(frame);
-    if(!buffer.full()) return;
+    if(!buffer.full()) return false;
 
     buffer.flush();
+    bool waitedForDrain = false;
     if(self.queue == Buffers - 1) {
       if(self.blocking) {
         //wait until there is at least one other free buffer for the next sample
-        while(self.queue == Buffers - 1);
+        while(self.queue == Buffers - 1) waitedForDrain = true;
       } else {
         //there is no free buffer for the next block, so ignore the current contents
-        return;
+        return false;
       }
     }
 
     write(buffer.data(), buffer.capacity<u8>());
     self.index = (self.index + 1) % Buffers;
+    return waitedForDrain;
   }
   
   auto driver() -> string override { return "XAudio 2.9"; }

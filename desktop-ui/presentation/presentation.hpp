@@ -99,7 +99,7 @@ struct Presentation : Window {
     HorizontalLayout statusLayout{&layout, Size{~0, StatusHeight}, 0};
       Label spacerLeft{&statusLayout, Size{8, ~0}, 0};
       Label statusLeft{&statusLayout, Size{~0, ~0}, 0};
-      Label statusRight{&statusLayout, Size{90, ~0}, 0};
+      Label statusRight{&statusLayout, Size{240, ~0}, 0};
       Label spacerRight{&statusLayout, Size{8, ~0}, 0};
 };
 

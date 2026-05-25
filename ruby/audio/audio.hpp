@@ -47,7 +47,7 @@ struct AudioDriver {
 
   virtual auto clear() -> void {}
   virtual auto level() -> f64 { return 0.5; }
-  virtual auto output(const f64 samples[]) -> void {}
+  virtual auto output(const f64 samples[]) -> bool { return false; }
 
 protected:
   Audio& super;
@@ -116,7 +116,7 @@ struct Audio {
 
   auto clear() -> void;
   auto level() -> double;
-  auto output(const f64 samples[]) -> void;
+  auto output(const f64 samples[]) -> bool;
 
 protected:
   Audio& self;

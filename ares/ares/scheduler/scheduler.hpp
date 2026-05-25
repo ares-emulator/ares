@@ -36,10 +36,16 @@ private:
   cothread_t _host = nullptr;     //program thread (used to exit scheduler)
   cothread_t _resume = nullptr;   //resume thread (used to enter scheduler)
   cothread_t _primary = nullptr;  //primary thread (used to synchronize components)
+  Thread* _primaryThread = nullptr;
   Mode _mode = Mode::Run;
   Event _event = Event::Step;
   std::vector<Thread*> _threads;
   bool _synchronize = false;
+  struct {
+    u64 reference = 0;
+    u64 pending = 0;
+    bool referenceValid = false;
+  } _primaryClock;
 
   friend struct Thread;
 };
