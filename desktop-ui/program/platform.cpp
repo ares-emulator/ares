@@ -244,6 +244,18 @@ auto Program::audio(ares::Node::Audio::Stream node) -> void {
       if(balance > 0.0) samples[0] *= 1.0 - balance;
     }
 
+    if(fastForwarding) {
+      static bool dropAudioFrame = false;
+      static u32 dropAudioCounter = 0;
+      auto level = ruby::audio.level();
+      if(dropAudioFrame  && level <= 0.90) dropAudioFrame = false, dropAudioCounter = 0;
+      if(!dropAudioFrame && level >= 0.97) dropAudioFrame = true;
+      if(dropAudioFrame) {
+        u32 dropRate = (level >= 0.995) ? 1 : (level >= 0.985) ? 2 : 3;
+        if(dropRate == 1 || ++dropAudioCounter % dropRate == 0) continue;
+      }
+    }
+
     //send frame to the audio output device. Count how many times
     //the backend waited for synchronization.
     if(ruby::audio.output(samples)) syncWaitEvents++;
