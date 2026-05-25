@@ -47,7 +47,7 @@ struct AudioWaveOut : AudioDriver {
     return (f64)((blockQueue * frameCount) + frameIndex) / (blockCount * frameCount);
   }
 
-  auto output(const f64 samples[]) -> void override {
+  auto output(const f64 samples[]) -> bool override {
     u16 lsample = sclamp<16>(samples[0] * 32767.0);
     u16 rsample = sclamp<16>(samples[1] * 32767.0);
 
@@ -56,18 +56,24 @@ struct AudioWaveOut : AudioDriver {
 
     if(++frameIndex >= frameCount) {
       frameIndex = 0;
+      bool waitedForDrain = false;
       if(self.dynamic) {
-        while(waveOutWrite(handle, &headers[blockIndex], sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
+        while(waveOutWrite(handle, &headers[blockIndex], sizeof(WAVEHDR)) == WAVERR_STILLPLAYING) {
+          waitedForDrain = true;
+        }
         InterlockedIncrement(&blockQueue);
       } else while(true) {
         auto result = waveOutWrite(handle, &headers[blockIndex], sizeof(WAVEHDR));
         if(!self.blocking || result != WAVERR_STILLPLAYING) break;
+        waitedForDrain = true;
         InterlockedIncrement(&blockQueue);
       }
       if(++blockIndex >= blockCount) {
         blockIndex = 0;
       }
+      return waitedForDrain;
     }
+    return false;
   }
 
 private:

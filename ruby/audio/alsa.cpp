@@ -65,12 +65,13 @@ struct AudioALSA : AudioDriver {
     return (f64)(_bufferSize - available) / _bufferSize;
   }
 
-  auto output(const f64 samples[]) -> void override {
+  auto output(const f64 samples[]) -> bool override {
     _buffer[_offset]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
     _buffer[_offset] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
-    if(++_offset < _periodSize) return;
+    if(++_offset < _periodSize) return false;
 
     snd_pcm_sframes_t available;
+    bool waitedForDrain = false;
     do {
       available = snd_pcm_avail_update(_interface);
       if(available < 0) {
@@ -80,9 +81,10 @@ struct AudioALSA : AudioDriver {
       if(available < _offset) {
         if(!self.blocking) {
           _offset = 0;
-          return;
+          return false;
         }
         s32 error = snd_pcm_wait(_interface, -1);
+        if(error >= 0) waitedForDrain = true;
         if(error < 0) snd_pcm_recover(_interface, error, 1);
       }
     } while(available < _offset);
@@ -108,6 +110,7 @@ struct AudioALSA : AudioDriver {
       }
       memory::move<u32>(_buffer, output, _offset);
     }
+    return waitedForDrain;
   }
 
 private:

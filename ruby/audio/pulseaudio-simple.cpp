@@ -22,8 +22,8 @@ struct AudioPulseAudioSimple : AudioDriver {
 
   auto setFrequency(u32 frequency) -> bool override { return initialize(); }
 
-  auto output(const f64 samples[]) -> void override {
-    if(!ready()) return;
+  auto output(const f64 samples[]) -> bool override {
+    if(!ready()) return false;
 
     _buffer[_offset]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
     _buffer[_offset] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
@@ -32,6 +32,7 @@ struct AudioPulseAudioSimple : AudioDriver {
       pa_simple_write(_interface, (const void*)_buffer, _offset * sizeof(u32), &error);
       _offset = 0;
     }
+    return false;
   }
 
 private:

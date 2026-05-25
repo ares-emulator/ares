@@ -124,22 +124,34 @@ struct AudioWASAPI : AudioDriver {
     }
   }
 
-  auto output(const f64 samples[]) -> void override {
+  auto output(const f64 samples[]) -> bool override {
     self.queue.samples[self.queue.write][0] = samples[0];
     self.queue.samples[self.queue.write][1] = samples[1];
     self.queue.write++;
     self.queue.count++;
 
+    bool waitedForDrain = false;
     if(self.queue.count >= self.bufferSize) {
       //this event is signaled at the device period which is no more than half of bufferSize
       //(in shared mode) or equal to bufferSize (in double-buffered exclusive mode)
-      if(WaitForSingleObject(self.eventHandle, self.blocking ? INFINITE : 0) == WAIT_OBJECT_0) {
+      auto result = WaitForSingleObject(self.eventHandle, 0);
+      if(result == WAIT_TIMEOUT) {
+        if(!self.blocking) {
+          self.queue.read++;
+          self.queue.count--;
+          return false;
+        }
+        waitedForDrain = true;
+        result = WaitForSingleObject(self.eventHandle, INFINITE);
+      }
+      if(result == WAIT_OBJECT_0) {
         write();
       } else {
         self.queue.read++;
         self.queue.count--;
       }
     }
+    return waitedForDrain;
   }
 
 private:

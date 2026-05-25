@@ -142,7 +142,7 @@ auto Audio::level() -> f64 {
   return instance->level();
 }
 
-auto Audio::output(const f64 samples[]) -> void {
+auto Audio::output(const f64 samples[]) -> bool {
   if(!instance->dynamic) return instance->output(samples);
 
   f64 maxDelta = 0.005;
@@ -153,10 +153,12 @@ auto Audio::output(const f64 samples[]) -> void {
     resampler.write(*samples++);
   }
 
+  bool waitedForDrain = false;
   while(!resamplers.empty() && resamplers.front().pending()) {
     for(u32 n : range(instance->channels)) resampleBuffer[n] = resamplers[n].read();
-    instance->output(resampleBuffer.data());
+    waitedForDrain |= instance->output(resampleBuffer.data());
   }
+  return waitedForDrain;
 }
 
 //

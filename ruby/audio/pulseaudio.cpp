@@ -36,25 +36,28 @@ struct AudioPulseAudio : AudioDriver {
     return (double)(_bufferSize - length) / _bufferSize;
   }
 
-  auto output(const double samples[]) -> void override {
+  auto output(const double samples[]) -> bool override {
     pa_stream_begin_write(_stream, (void**)&_buffer, &_period);
     _buffer[_offset]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
     _buffer[_offset] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
-    if((++_offset + 1) * pa_frame_size(&_specification) <= _period) return;
+    if((++_offset + 1) * pa_frame_size(&_specification) <= _period) return false;
 
+    bool waitedForDrain = false;
     while(true) {
       pa_mainloop_iterate(_mainLoop, 0, nullptr);
       auto length = pa_stream_writable_size(_stream);
       if(length >= _offset * pa_frame_size(&_specification)) break;
       if(!self.blocking) {
         _offset = 0;
-        return;
+        return false;
       }
+      waitedForDrain = true;
     }
 
     pa_stream_write(_stream, (const void*)_buffer, _offset * pa_frame_size(&_specification), nullptr, 0LL, PA_SEEK_RELATIVE);
     _buffer = nullptr;
     _offset = 0;
+    return waitedForDrain;
   }
 
 private:

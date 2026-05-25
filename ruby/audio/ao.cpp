@@ -24,11 +24,12 @@ struct AudioAO : AudioDriver {
 
   auto setFrequency(u32 frequency) -> bool override { return initialize(); }
 
-  auto output(const f64 samples[]) -> void override {
+  auto output(const f64 samples[]) -> bool override {
     u32 sample = 0;
     sample |= (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
     sample |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
     ao_play(_interface, (char*)&sample, 4);
+    return false;
   }
 
 private:

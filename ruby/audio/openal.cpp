@@ -53,13 +53,14 @@ struct AudioOpenAL : AudioDriver {
   auto setFrequency(uint frequency) -> bool override { return initialize(); }
   auto setLatency(u32 latency) -> bool override { return updateLatency(); }
 
-  auto output(const f64 samples[]) -> void override {
+  auto output(const f64 samples[]) -> bool override {
     _buffer[_bufferLength]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
     _buffer[_bufferLength] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
-    if(++_bufferLength < _bufferSize) return;
+    if(++_bufferLength < _bufferSize) return false;
 
     ALuint alBuffer = 0;
     s32 processed = 0;
+    bool waitedForDrain = false;
     while(true) {
       alGetSourcei(_source, AL_BUFFERS_PROCESSED, &processed);
       while(processed--) {
@@ -67,9 +68,9 @@ struct AudioOpenAL : AudioDriver {
         alDeleteBuffers(1, &alBuffer);
         _queueLength--;
       }
-      //wait for buffer playback to catch up to sample generation if not synchronizing
-      usleep(1000);
       if(!self.blocking || _queueLength < 3) break;
+      waitedForDrain = true;
+      usleep(1000);
     }
 
     if(_queueLength < 3) {
@@ -83,6 +84,7 @@ struct AudioOpenAL : AudioDriver {
     alGetSourcei(_source, AL_SOURCE_STATE, &playing);
     if(playing != AL_PLAYING) alSourcePlay(_source);
     _bufferLength = 0;
+    return waitedForDrain;
   }
 
 private:

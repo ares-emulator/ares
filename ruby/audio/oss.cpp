@@ -70,8 +70,8 @@ struct AudioOSS : AudioDriver {
     return (double)(_nonBlockBytes - info.bytes) / _nonBlockBytes;
   }
 
-  auto output(const double samples[]) -> void override {
-    if(!_buffer) return;
+  auto output(const double samples[]) -> bool override {
+    if(!_buffer) return false;
     for(u32 n : range(self.channels)) {
       switch(_format) {
         case AFMT_S8: *(s8*)(&_buffer[_offset]) = sclamp<8>(samples[n] * 127.0); break;
@@ -82,7 +82,7 @@ struct AudioOSS : AudioDriver {
 #if defined(AFMT_S32_LE)
         case AFMT_S32_LE: *(s32*)(&_buffer[_offset]) = sclamp<32>(samples[n] * 2147483647.0); break;
 #endif
-        default: return;
+        default: return false;
       }
       _offset += _formatSize;
       if(_offset >= _bufferSize) {
@@ -90,6 +90,7 @@ struct AudioOSS : AudioDriver {
         _offset = 0;
       }
     }
+    return false;
   }
 
 private:
