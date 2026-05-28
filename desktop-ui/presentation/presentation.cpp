@@ -217,33 +217,37 @@ Presentation::Presentation() {
 
   videoOutputMenu.append(videoOutputSeparator);
 
-  if(settings.video.output == "Integer"     ) videoOutputIntegerScale.setChecked();
-  if(settings.video.output == "Scale"       ) videoOutputScale.setChecked();
-  if(settings.video.output == "Stretch"     ) videoOutputStretch.setChecked();
+  if(settings.video.output == "Integer") videoOutputIntegerScale.setChecked();
+  if(settings.video.output == "Scale") videoOutputScale.setChecked();
+  if(settings.video.output == "Stretch") videoOutputStretch.setChecked();
 
   videoAspectCorrectionNone.setText("Aspect: No correction").onActivate([&] {
     settings.video.aspectCorrection = "None";
     if(settings.video.adaptiveSizing) resizeWindow();
   });
+  videoOutputMenu.append(videoAspectCorrectionNone);
+  videoAspectCorrectionGroup.append(videoAspectCorrectionNone);
 
   videoAspectCorrectionStandard.setText("Aspect: Standard").onActivate([&] {
     settings.video.aspectCorrection = "Standard";
     if(settings.video.adaptiveSizing) resizeWindow();
   });
+  videoOutputMenu.append(videoAspectCorrectionStandard);
+  videoAspectCorrectionGroup.append(videoAspectCorrectionStandard);
 
   videoAspectCorrectionAnamorphic.setText("Aspect: Anamorphic (16:9)").onActivate([&] {
     settings.video.aspectCorrection = "Anamorphic";
     if(settings.video.adaptiveSizing) resizeWindow();
   });
-
-  if(settings.video.aspectCorrection == "None")       videoAspectCorrectionNone.setChecked();
-  if(settings.video.aspectCorrection == "Standard")   videoAspectCorrectionStandard.setChecked();
-  if(settings.video.aspectCorrection == "Anamorphic") videoAspectCorrectionAnamorphic.setChecked();
-  videoOutputMenu.append(videoAspectCorrectionNone);
-  videoOutputMenu.append(videoAspectCorrectionStandard);
   videoOutputMenu.append(videoAspectCorrectionAnamorphic);
+  videoAspectCorrectionGroup.append(videoAspectCorrectionAnamorphic);
+
   videoOutputMenu.append(videoOutputSeparator2);
 
+  if(settings.video.aspectCorrection == "None") videoAspectCorrectionNone.setChecked();
+  if(settings.video.aspectCorrection == "Standard") videoAspectCorrectionStandard.setChecked();
+  if(settings.video.aspectCorrection == "Anamorphic") videoAspectCorrectionAnamorphic.setChecked();
+  
   videoAdaptiveSizing.setText("Window: Auto resize to content aspect").setChecked(settings.video.adaptiveSizing).onToggle([&] {
     settings.video.adaptiveSizing = videoAdaptiveSizing.checked();
     if(settings.video.adaptiveSizing) resizeWindow();

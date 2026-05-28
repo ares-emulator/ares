@@ -31,8 +31,7 @@ struct Presentation : Window {
         MenuRadioItem videoAspectCorrectionNone;
         MenuRadioItem videoAspectCorrectionStandard;
         MenuRadioItem videoAspectCorrectionAnamorphic;
-        Group videoAspectCorrectionGroup{&videoAspectCorrectionNone, &videoAspectCorrectionStandard,
-                                         &videoAspectCorrectionAnamorphic};
+        Group videoAspectCorrectionGroup;
         MenuSeparator videoOutputSeparator2;
         MenuCheckItem videoAdaptiveSizing;
         MenuCheckItem videoAutoCentering;
