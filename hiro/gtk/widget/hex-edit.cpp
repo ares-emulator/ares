@@ -94,6 +94,11 @@ auto pHexEdit::setAddress(u32 address) -> void {
   update();
 }
 
+auto pHexEdit::setBase(u8 base) -> void {
+  setScroll();
+  update();
+}
+
 auto pHexEdit::setBackgroundColor(Color color) -> void {
   GdkColor gdkColor = CreateColor(color);
   gtk_widget_modify_base(subWidget, GTK_STATE_NORMAL, color ? &gdkColor : nullptr);
@@ -138,7 +143,19 @@ auto pHexEdit::update() -> void {
     for(auto column : range(state().columns)) {
       if(address < state().length) {
         u8 data = self().doRead(address++);
-        hexdata.append(hex(data, 2L));
+        switch (state().base) {
+          case 2:
+            hexdata.append(binary(data, 2L));
+            break;
+          case 8:
+            hexdata.append(octal(data, 2L));
+            break;
+          case 16:
+            hexdata.append(hex(data, 2L));
+            break;
+          default:
+            throw;
+        }
         hexdata.append(" ");
         ansidata.append(data >= 0x20 && data <= 0x7e ? (char)data : '.');
       } else {

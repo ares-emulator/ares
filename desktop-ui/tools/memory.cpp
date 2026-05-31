@@ -3,6 +3,23 @@ auto MemoryEditor::construct() -> void {
   setVisible(false);
 
   memoryLabel.setText("Memory Editor").setFont(Font().setBold());
+
+  base2Editor.setText("Binary").onActivate([&] {
+    tools.memory.base = 2;
+    memoryEditor.setBase(2);
+  });
+  base8Editor.setText("Octal").onActivate([&] {
+    tools.memory.base = 8;
+    memoryEditor.setBase(8);
+  });
+  base16Editor.setText("Hexadecimal").onActivate([&] {
+    tools.memory.base = 16;
+    memoryEditor.setBase(16);
+  });
+  if(tools.memory.base == 2) base2Editor.setChecked();
+  if(tools.memory.base == 8) base8Editor.setChecked();
+  if(tools.memory.base == 16) base16Editor.setChecked();
+
   memoryList.onChange([&] { eventChange(); });
   memoryEditor.setFont(Font().setFamily(Font::Mono));
   memoryEditor.setRows(24);
