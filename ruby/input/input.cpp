@@ -1,29 +1,5 @@
-#if defined(INPUT_CARBON)
-  #include <ruby/input/carbon.cpp>
-#endif
-
-#if defined(INPUT_QUARTZ)
-  #include <ruby/input/quartz.cpp>
-#endif
-
 #if defined(INPUT_SDL)
   #include <ruby/input/sdl.cpp>
-#endif
-
-#if defined(INPUT_UDEV)
-  #include <ruby/input/udev.cpp>
-#endif
-
-#if defined(INPUT_UHID)
-  #include <ruby/input/uhid.cpp>
-#endif
-
-#if defined(INPUT_WINDOWS)
-  #include <ruby/input/windows.cpp>
-#endif
-
-#if defined(INPUT_XLIB)
-  #include <ruby/input/xlib.cpp>
 #endif
 
 namespace ruby {
@@ -73,32 +49,8 @@ auto Input::create(string driver) -> bool {
   self.instance.reset();
   if(!driver) driver = optimalDriver();
 
-  #if defined(INPUT_WINDOWS)
-  if(driver == "Windows") self.instance = std::make_unique<InputWindows>(*this);
-  #endif
-
-  #if defined(INPUT_QUARTZ)
-  if(driver == "Quartz") self.instance = std::make_unique<InputQuartz>(*this);
-  #endif
-
-  #if defined(INPUT_CARBON)
-  if(driver == "Carbon") self.instance = std::make_unique<InputCarbon>(*this);
-  #endif
-
-  #if defined(INPUT_UDEV)
-  if(driver == "udev") self.instance = std::make_unique<InputUdev>(*this);
-  #endif
-
-  #if defined(INPUT_UHID)
-  if(driver == "uhid") self.instance = std::make_unique<InputUHID>(*this);
-  #endif
-
   #if defined(INPUT_SDL)
   if(driver == "SDL") self.instance = std::make_unique<InputSDL>(*this);
-  #endif
-
-  #if defined(INPUT_XLIB)
-  if(driver == "Xlib") self.instance = std::make_unique<InputXlib>(*this);
   #endif
 
   if(!self.instance) self.instance = std::make_unique<InputDriver>(*this);
@@ -109,32 +61,8 @@ auto Input::create(string driver) -> bool {
 auto Input::hasDrivers() -> std::vector<string> {
   return {
 
-  #if defined(INPUT_WINDOWS)
-  "Windows",
-  #endif
-
-  #if defined(INPUT_QUARTZ)
-  "Quartz",
-  #endif
-
-  #if defined(INPUT_CARBON)
-  "Carbon",
-  #endif
-
-  #if defined(INPUT_UDEV)
-  "udev",
-  #endif
-
-  #if defined(INPUT_UHID)
-  "uhid",
-  #endif
-
   #if defined(INPUT_SDL)
   "SDL",
-  #endif
-
-  #if defined(INPUT_XLIB)
-  "Xlib",
   #endif
 
   "None"};
@@ -143,38 +71,14 @@ auto Input::hasDrivers() -> std::vector<string> {
 auto Input::optimalDriver() -> string {
   #if defined(INPUT_SDL)
   return "SDL";
-  #elif defined(INPUT_WINDOWS)
-  return "Windows";
-  #elif defined(INPUT_QUARTZ)
-  return "Quartz";
-  #elif defined(INPUT_CARBON)
-  return "Carbon";
-  #elif defined(INPUT_UDEV)
-  return "udev";
-  #elif defined(INPUT_UHID)
-  return "uhid";
-  #elif defined(INPUT_XLIB)
-  return "Xlib";
   #else
   return "None";
   #endif
 }
 
 auto Input::safestDriver() -> string {
-  #if defined(INPUT_WINDOWS)
-  return "Windows";
-  #elif defined(INPUT_QUARTZ)
-  return "Quartz";
-  #elif defined(INPUT_CARBON)
-  return "Carbon";
-  #elif defined(INPUT_UDEV)
-  return "udev";
-  #elif defined(INPUT_UHID)
-  return "uhid";
-  #elif defined(INPUT_SDL)
+  #if defined(INPUT_SDL)
   return "SDL";
-  #elif defined(INPUT_XLIB)
-  return "Xlib";
   #else
   return "none";
   #endif

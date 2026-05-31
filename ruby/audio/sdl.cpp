@@ -9,7 +9,7 @@ struct AudioSDL : AudioDriver {
     SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1");
     super.setChannels(2);
     super.setFrequency(48000);
-    super.setLatency(20);
+    super.setLatency(40);
     return initialize();
   }
 
@@ -24,7 +24,7 @@ struct AudioSDL : AudioDriver {
   }
 
   auto hasLatencies() -> std::vector<u32> override {
-    return {10, 20, 40, 60, 80, 100};
+    return {20, 40, 60, 80};
   }
 
   auto setFrequency(u32 frequency) -> bool override { return initialize(); }

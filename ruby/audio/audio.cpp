@@ -1,56 +1,3 @@
-#if defined(AUDIO_ALSA)
-  #include <ruby/audio/alsa.cpp>
-#endif
-
-#if defined(AUDIO_AO)
-  #include <ruby/audio/ao.cpp>
-#endif
-
-#if defined(AUDIO_ASIO)
-  #include <ruby/audio/asio.cpp>
-#endif
-
-#if defined(AUDIO_DIRECTSOUND)
-  #include <ruby/audio/directsound.cpp>
-#endif
-
-#if defined(AUDIO_OPENAL)
-  #if defined(__APPLE__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  #endif
-
-  #include <ruby/audio/openal.cpp>
-
-  #if defined(__APPLE__)
-    #pragma clang diagnostic pop
-  #endif
-#endif
-
-#if defined(AUDIO_OSS)
-  #include <ruby/audio/oss.cpp>
-#endif
-
-#if defined(AUDIO_PULSEAUDIO)
-  #include <ruby/audio/pulseaudio.cpp>
-#endif
-
-#if defined(AUDIO_PULSEAUDIOSIMPLE)
-  #include <ruby/audio/pulseaudio-simple.cpp>
-#endif
-
-#if defined(AUDIO_WASAPI)
-  #include <ruby/audio/wasapi.cpp>
-#endif
-
-#if defined(AUDIO_WAVEOUT)
-  #include <ruby/audio/waveout.cpp>
-#endif
-
-#if defined(AUDIO_XAUDIO2)
-  #include <ruby/audio/xaudio2.cpp>
-#endif
-
 #if defined(AUDIO_SDL)
 #include <ruby/audio/sdl.cpp>
 #endif
@@ -159,59 +106,13 @@ auto Audio::output(const f64 samples[]) -> void {
   }
 }
 
-//
-
 auto Audio::create(string driver) -> bool {
   self.instance.reset();
   if(!driver) driver = optimalDriver();
 
-  #if defined(AUDIO_ALSA)
-  if(driver == "ALSA") self.instance = std::make_unique<AudioALSA>(*this);
-  #endif
-
-  #if defined(AUDIO_AO)
-  if(driver == "libao") self.instance = std::make_unique<AudioAO>(*this);
-  #endif
-
-  #if defined(AUDIO_ASIO)
-  if(driver == "ASIO") self.instance = std::make_unique<AudioASIO>(*this);
-  #endif
-
-  #if defined(AUDIO_DIRECTSOUND)
-  if(driver == "DirectSound 7.0") self.instance = std::make_unique<AudioDirectSound>(*this);
-  #endif
-
-  #if defined(AUDIO_OPENAL)
-  if(driver == "OpenAL") self.instance = std::make_unique<AudioOpenAL>(*this);
-  #endif
-
-  #if defined(AUDIO_OSS)
-  if(driver == "OSS") self.instance = std::make_unique<AudioOSS>(*this);
-  #endif
-
-  #if defined(AUDIO_PULSEAUDIO)
-  if(driver == "PulseAudio") self.instance = std::make_unique<AudioPulseAudio>(*this);
-  #endif
-
-  #if defined(AUDIO_PULSEAUDIOSIMPLE)
-  if(driver == "PulseAudio Simple") self.instance = std::make_unique<AudioPulseAudioSimple>(*this);
-  #endif
-
-  #if defined(AUDIO_WASAPI)
-  if(driver == "WASAPI") self.instance = std::make_unique<AudioWASAPI>(*this);
-  #endif
-
-  #if defined(AUDIO_WAVEOUT)
-  if(driver == "waveOut") self.instance = std::make_unique<AudioWaveOut>(*this);
-  #endif
-
-  #if defined(AUDIO_XAUDIO2)
-  if(driver == "XAudio 2.9") self.instance = std::make_unique<AudioXAudio2>(*this);
-  #endif
-
-#if defined(AUDIO_SDL)
+  #if defined(AUDIO_SDL)
   if(driver == "SDL") self.instance = std::make_unique<AudioSDL>(*this);
-#endif
+  #endif
 
   if(!self.instance) self.instance = std::make_unique<AudioDriver>(*this);
 
@@ -221,112 +122,24 @@ auto Audio::create(string driver) -> bool {
 auto Audio::hasDrivers() -> std::vector<string> {
   return {
 
-  #if defined(AUDIO_ASIO)
-  "ASIO",
-  #endif
-
-  #if defined(AUDIO_WASAPI)
-  "WASAPI",
-  #endif
-
-  #if defined(AUDIO_XAUDIO2)
-  "XAudio 2.9",
-  #endif
-
-#if defined(AUDIO_SDL)
+  #if defined(AUDIO_SDL)
   "SDL",
-#endif
-
-  #if defined(AUDIO_DIRECTSOUND)
-  "DirectSound 7.0",
-  #endif
-
-  #if defined(AUDIO_WAVEOUT)
-  "waveOut",
-  #endif
-
-  #if defined(AUDIO_ALSA)
-  "ALSA",
-  #endif
-
-  #if defined(AUDIO_OSS)
-  "OSS",
-  #endif
-
-  #if defined(AUDIO_OPENAL)
-  "OpenAL",
-  #endif
-
-  #if defined(AUDIO_PULSEAUDIO)
-  "PulseAudio",
-  #endif
-
-  #if defined(AUDIO_PULSEAUDIOSIMPLE)
-  "PulseAudio Simple",
-  #endif
-
-  #if defined(AUDIO_AO)
-  "libao",
   #endif
 
   "None"};
 }
 
 auto Audio::optimalDriver() -> string {
-  #if defined(AUDIO_WASAPI)
-  return "WASAPI";
-  #elif defined(AUDIO_ASIO)
-  return "ASIO";
-  #elif defined(AUDIO_XAUDIO2)
-  return "XAudio 2.9";
-  #elif defined(AUDIO_SDL)
+  #if defined(AUDIO_SDL)
   return "SDL";
-  #elif defined(AUDIO_DIRECTSOUND)
-  return "DirectSound 7.0";
-  #elif defined(AUDIO_WAVEOUT)
-  return "waveOut";
-  #elif defined(AUDIO_PULSEAUDIO)
-  return "PulseAudio";
-  #elif defined(AUDIO_PULSEAUDIOSIMPLE)
-  return "PulseAudio Simple";
-  #elif defined(AUDIO_OPENAL)
-  return "OpenAL";
-  #elif defined(AUDIO_AO)
-  return "libao";
-  #elif defined(AUDIO_ALSA)
-  return "ALSA";
-  #elif defined(AUDIO_OSS)
-  return "OSS";
   #else
   return "None";
   #endif
 }
 
 auto Audio::safestDriver() -> string {
-  #if defined(AUDIO_WAVEOUT)
-  return "waveOut";
-  #elif defined(AUDIO_DIRECTSOUND)
-  return "DirectSound 7.0";
-  #elif defined(AUDIO_WASAPI)
-  return "WASAPI";
-  #elif defined(AUDIO_XAUDIO2)
-  return "XAudio 2.9";
-  #elif defined(AUDIO_SDL)
+  #if defined(AUDIO_SDL)
   return "SDL";
-  #elif defined(AUDIO_ALSA)
-  return "ALSA";
-  #elif defined(AUDIO_OSS)
-  return "OSS";
-  #elif defined(AUDIO_OPENAL)
-  return "OpenAL";
-  #elif defined(AUDIO_PULSEAUDIO)
-  return "PulseAudio";
-  #elif defined(AUDIO_PULSEAUDIOSIMPLE)
-  return "PulseAudio Simple";
-  #elif defined(AUDIO_AO)
-  return "libao";
-  #elif defined(AUDIO_ASIO)
-  return "ASIO";
   #else
   return "None";
   #endif

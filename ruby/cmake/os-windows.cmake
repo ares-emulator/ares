@@ -7,7 +7,7 @@ target_sources(
 
 target_sources(
   ruby
-  PRIVATE audio/wasapi.cpp audio/xaudio2.cpp audio/directsound.cpp audio/waveout.cpp audio/sdl.cpp
+  PRIVATE audio/sdl.cpp
 )
 
 target_sources(
@@ -15,21 +15,15 @@ target_sources(
   PRIVATE
     input/sdl.cpp
     input/shared/rawinput.cpp
-    input/windows.cpp
     input/keyboard/rawinput.cpp
     input/mouse/rawinput.cpp
-    input/joypad/directinput.cpp
 )
 
 find_package(SDL)
 find_package(librashader)
-find_package(XAudio2)
 
 target_enable_feature(ruby "Direct3D 9 video driver" VIDEO_DIRECT3D9)
 target_enable_feature(ruby "OpenGL video driver" VIDEO_WGL)
-target_enable_feature(ruby "WASAPI audio driver" AUDIO_WASAPI)
-target_enable_feature(ruby "DirectSound audio driver" AUDIO_DIRECTSOUND)
-target_enable_feature(ruby "waveOut audio driver" AUDIO_WAVEOUT)
 target_enable_feature(ruby "Windows input driver (XInput/DirectInput)" INPUT_WINDOWS)
 
 if(SDL_FOUND)
@@ -43,24 +37,18 @@ else()
   target_compile_definitions(ruby PRIVATE LIBRA_RUNTIME_OPENGL)
 endif()
 
-if(XAudio2_FOUND)
-  target_enable_feature(ruby "XAudio2 audio driver" AUDIO_XAUDIO2)
-endif()
-
 target_link_libraries(
   ruby
   PRIVATE
     $<$<BOOL:TRUE>:librashader::librashader>
     $<$<BOOL:${SDL_FOUND}>:SDL::SDL>
-    $<$<BOOL:${XAudio2_FOUND}>:XAudio2::XAudio2>
     d3d9
     opengl32
-    dsound
     uuid
     avrt
     winmm
     ole32
     dinput8
     dxguid
-	ksuser
+	  ksuser
 )
