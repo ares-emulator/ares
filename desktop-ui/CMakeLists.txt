@@ -7,6 +7,7 @@ add_executable(
   game-browser/game-browser.cpp
   program/program.cpp
   presentation/presentation.cpp
+  retroachievements/retroachievements.cpp
   settings/settings.cpp
   tools/tools.cpp
 )
@@ -28,6 +29,7 @@ set_source_files_properties(
   game-browser/game-browser.cpp
   program/program.cpp
   presentation/presentation.cpp
+  retroachievements/retroachievements.cpp
   settings/settings.cpp
   tools/tools.cpp
   PROPERTIES HEADER_FILE_ONLY FALSE
