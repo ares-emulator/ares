@@ -25,6 +25,7 @@ auto Program::create() -> void {
   _isRunning = true;
   worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
   program.rewindReset();
+  retroAchievements.initialize();
 
   if(!startGameLoad.empty()) {
     Program::Guard guard;

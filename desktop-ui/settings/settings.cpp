@@ -275,7 +275,9 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Hotkeys").setIcon(Icon::Device::Keyboard));
   panelList.append(ListViewItem().setText("Emulators").setIcon(Icon::Place::Server));
   panelList.append(ListViewItem().setText("Options").setIcon(Icon::Action::Settings));
+#if defined(ARES_ENABLE_RCHEEVOS)
   panelList.append(ListViewItem().setText("Achievements").setIcon(Icon::Action::Bookmark));
+#endif
   panelList.append(ListViewItem().setText("Firmware").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Cores").setIcon(Icon::Place::Settings));
@@ -294,7 +296,9 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(pathSettings, Size{~0, ~0});
   panelContainer.append(coreSettings, Size{~0, ~0});
   panelContainer.append(developerSettings, Size{~0, ~0});
+#if defined(ARES_ENABLE_RCHEEVOS)
   panelContainer.append(retroAchievementsSettings, Size{~0, ~0});
+#endif
   panelContainer.append(importExportSettings, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
@@ -308,7 +312,9 @@ auto SettingsWindow::initialize() -> void {
   pathSettings.construct();
   coreSettings.construct();
   developerSettings.construct();
+#if defined(ARES_ENABLE_RCHEEVOS)
   retroAchievementsSettings.construct();
+#endif
   importExportSettings.construct();
   homePanel.construct();
 
@@ -348,7 +354,9 @@ auto SettingsWindow::eventChange() -> void {
   pathSettings.setVisible(false);
   coreSettings.setVisible(false);
   developerSettings.setVisible(false);
+#if defined(ARES_ENABLE_RCHEEVOS)
   retroAchievementsSettings.setVisible(false);
+#endif
   importExportSettings.setVisible(false);
   homePanel.setVisible(false);
 
@@ -360,7 +368,9 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Hotkeys"  ) found = true, hotkeySettings.setVisible();
     if(item.text() == "Emulators") found = true, emulatorSettings.setVisible();
     if(item.text() == "Options"  ) found = true, optionSettings.setVisible();
+#if defined(ARES_ENABLE_RCHEEVOS)
     if(item.text() == "Achievements") found = true, retroAchievementsSettings.setVisible();
+#endif
     if(item.text() == "Firmware" ) found = true, firmwareSettings.setVisible();
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
     if(item.text() == "Cores"    ) found = true, coreSettings.setVisible();

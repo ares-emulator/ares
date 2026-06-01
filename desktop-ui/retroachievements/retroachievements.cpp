@@ -59,27 +59,34 @@ auto generateHash(const Emulator& emu) -> string {
   return hash;
 }
 
+auto loginMessage(const RetroAchievementsLoginResult& result) -> string {
+  auto name = result.displayName ? result.displayName : result.username;
+  u32 hardcoreScore = result.score >= result.scoreSoftcore ? result.score - result.scoreSoftcore : 0;
+  return {
+    name, " connected (", result.score, " pts. SC: ", result.scoreSoftcore,
+    " pts, HC: ", hardcoreScore, " pts)"
+  };
+}
+
 auto curlWrite(char* data, size_t size, size_t count, void* userdata) -> size_t {
   auto& output = *static_cast<std::string*>(userdata);
   output.append(data, size * count);
   return size * count;
 }
-}
-#endif
 
-auto RetroAchievements::login(const string& username, const string& password) -> RetroAchievementsLoginResult {
+auto loginRequest(const string& username, const string& password, const string& token) -> RetroAchievementsLoginResult {
   RetroAchievementsLoginResult result;
 
-#if defined(ARES_ENABLE_RCHEEVOS)
-  if(!username || !password) {
-    result.message = "Enter username and password";
+  if(!username || (!password && !token)) {
+    result.message = token ? "Saved RetroAchievements login is incomplete" : "Enter username and password";
     return result;
   }
 
   rc_api_request_t request = {};
   rc_api_login_request_t loginRequest = {};
   loginRequest.username = username.data();
-  loginRequest.password = password.data();
+  if(password) loginRequest.password = password.data();
+  if(token) loginRequest.api_token = token.data();
 
   if(auto rc = rc_api_init_login_request(&request, &loginRequest); rc != RC_OK) {
     result.message = {"Login request failed: ", rc_error_str(rc)};
@@ -133,7 +140,10 @@ auto RetroAchievements::login(const string& username, const string& password) ->
     result.success = true;
     result.username = loginResponse.username;
     result.token = loginResponse.api_token;
-    result.message = {"Logged in as ", result.username};
+    result.displayName = loginResponse.display_name;
+    result.score = loginResponse.score;
+    result.scoreSoftcore = loginResponse.score_softcore;
+    result.message = loginMessage(result);
   } else {
     result.message = loginResponse.response.error_message ? loginResponse.response.error_message : rc_error_str(rc);
   }
@@ -141,11 +151,35 @@ auto RetroAchievements::login(const string& username, const string& password) ->
   rc_api_destroy_login_response(&loginResponse);
   curl_easy_cleanup(curl);
   rc_api_destroy_request(&request);
-#else
-  result.message = "Rebuild with ARES_ENABLE_RCHEEVOS to use RetroAchievements";
-#endif
 
   return result;
+}
+}
+#endif
+
+auto RetroAchievements::initialize() -> void {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(!settings.retroAchievements.enabled) return;
+  if(!settings.retroAchievements.username || !settings.retroAchievements.token) return;
+
+  auto result = loginRequest(settings.retroAchievements.username, "", settings.retroAchievements.token);
+  if(result.success) {
+    settings.retroAchievements.username = result.username;
+    settings.retroAchievements.token = result.token;
+    settings.save();
+  }
+  program.showMessage({"[RA] ", result.message});
+#endif
+}
+
+auto RetroAchievements::login(const string& username, const string& password) -> RetroAchievementsLoginResult {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  return loginRequest(username, password, "");
+#else
+  RetroAchievementsLoginResult result;
+  result.message = "Rebuild with ARES_ENABLE_RCHEEVOS to use RetroAchievements";
+  return result;
+#endif
 }
 
 auto RetroAchievements::gameLoaded() -> void {

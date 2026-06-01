@@ -323,9 +323,11 @@ Presentation::Presentation() {
   optionSettingsAction.setText("Options" ELLIPSIS).setIcon(Icon::Action::Settings).onActivate([&] {
     settingsWindow.show("Options");
   });
+#if defined(ARES_ENABLE_RCHEEVOS)
   retroAchievementsSettingsAction.setText("Achievements" ELLIPSIS).setIcon(Icon::Action::Bookmark).onActivate([&] {
     settingsWindow.show("Achievements");
   });
+#endif
   firmwareSettingsAction.setText("Firmware" ELLIPSIS).setIcon(Icon::Emblem::Binary).onActivate([&] {
     settingsWindow.show("Firmware");
   });
