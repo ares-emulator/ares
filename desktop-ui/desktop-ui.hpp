@@ -26,6 +26,7 @@ namespace ruby {
 #include "game-browser/game-browser.hpp"
 #include "program/program.hpp"
 #include "presentation/presentation.hpp"
+#include "retroachievements/retroachievements.hpp"
 #include "settings/settings.hpp"
 #include "tools/tools.hpp"
 
