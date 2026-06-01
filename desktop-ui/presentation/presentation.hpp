@@ -59,7 +59,9 @@ struct Presentation : Window {
       MenuItem hotkeySettingsAction{&settingsMenu};
       MenuItem emulatorSettingsAction{&settingsMenu};
       MenuItem optionSettingsAction{&settingsMenu};
+#if defined(ARES_ENABLE_RCHEEVOS)
       MenuItem retroAchievementsSettingsAction{&settingsMenu};
+#endif
       MenuItem firmwareSettingsAction{&settingsMenu};
       MenuItem pathSettingsAction{&settingsMenu};
       MenuItem driverSettingsAction{&settingsMenu};
