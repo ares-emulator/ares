@@ -132,6 +132,12 @@ struct Settings : Markup::Node {
   struct MegaDrive {
     bool tmss = false;
   } megadrive;
+
+  struct RetroAchievements {
+    bool enabled = false;
+    string username;
+    string token;
+  } retroAchievements;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -457,6 +463,24 @@ struct DeveloperSettings : VerticalLayout {
     Label forceInterpreterHint{&forceInterpreterLayout, Size{0, layoutVertSize}};
 };
 
+struct RetroAchievementsSettings : VerticalLayout {
+  auto construct() -> void;
+
+  Label accountLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout enabledLayout{this, Size{~0, 0}, 5};
+    CheckLabel enabled{&enabledLayout, Size{~0, 0}};
+  HorizontalLayout usernameLayout{this, Size{~0, 0}, 5};
+    Label usernameLabel{&usernameLayout, Size{80, layoutVertSize}};
+    LineEdit usernameValue{&usernameLayout, Size{~0, 0}};
+  HorizontalLayout passwordLayout{this, Size{~0, 0}, 5};
+    Label passwordLabel{&passwordLayout, Size{80, layoutVertSize}};
+    LineEdit passwordValue{&passwordLayout, Size{~0, 0}};
+  HorizontalLayout actionLayout{this, Size{~0, 0}, 5};
+    Label statusLabel{&actionLayout, Size{~0, layoutVertSize}};
+    Button loginButton{&actionLayout, Size{80, 0}};
+    Button clearButton{&actionLayout, Size{80, 0}};
+};
+
 struct ImportExportSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
@@ -496,6 +520,7 @@ struct SettingsWindow : Window {
       PathSettings pathSettings;
       CoreSettings coreSettings;
       DeveloperSettings developerSettings;
+      RetroAchievementsSettings retroAchievementsSettings;
       ImportExportSettings importExportSettings;
       HomePanel homePanel;
   
@@ -518,4 +543,5 @@ extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
 extern CoreSettings& coreSettings;
 extern DeveloperSettings& developerSettings;
+extern RetroAchievementsSettings& retroAchievementsSettings;
 extern ImportExportSettings& importExportSettings;

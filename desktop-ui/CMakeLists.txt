@@ -55,6 +55,11 @@ if(ARES_ENABLE_CHD)
   target_link_libraries(desktop-ui PRIVATE chdr-static)
 endif()
 
+if(ARES_ENABLE_RCHEEVOS)
+  target_compile_definitions(desktop-ui PRIVATE ARES_ENABLE_RCHEEVOS)
+  target_link_libraries(desktop-ui PRIVATE rcheevos)
+endif()
+
 set_target_properties(desktop-ui PROPERTIES OUTPUT_NAME ares)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${desktop-ui_SOURCES})
