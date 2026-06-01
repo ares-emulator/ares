@@ -141,6 +141,7 @@ auto loginRequest(const string& username, const string& password, const string& 
     result.username = loginResponse.username;
     result.token = loginResponse.api_token;
     result.displayName = loginResponse.display_name;
+    result.avatarUrl = loginResponse.avatar_url;
     result.score = loginResponse.score;
     result.scoreSoftcore = loginResponse.score_softcore;
     result.message = loginMessage(result);
@@ -164,6 +165,7 @@ auto RetroAchievements::initialize() -> void {
 
   auto result = loginRequest(settings.retroAchievements.username, "", settings.retroAchievements.token);
   if(result.success) {
+    setUser(result);
     settings.retroAchievements.username = result.username;
     settings.retroAchievements.token = result.token;
     settings.save();
@@ -174,12 +176,42 @@ auto RetroAchievements::initialize() -> void {
 
 auto RetroAchievements::login(const string& username, const string& password) -> RetroAchievementsLoginResult {
 #if defined(ARES_ENABLE_RCHEEVOS)
-  return loginRequest(username, password, "");
+  auto result = loginRequest(username, password, "");
+  if(result.success) setUser(result);
+  return result;
 #else
   RetroAchievementsLoginResult result;
   result.message = "Rebuild with ARES_ENABLE_RCHEEVOS to use RetroAchievements";
   return result;
 #endif
+}
+
+auto RetroAchievements::logout() -> void {
+  clearUser();
+}
+
+auto RetroAchievements::hasUser() const -> bool {
+  return _authenticated;
+}
+
+auto RetroAchievements::username() const -> string {
+  return _username;
+}
+
+auto RetroAchievements::displayName() const -> string {
+  return _displayName ? _displayName : _username;
+}
+
+auto RetroAchievements::userScore() const -> u32 {
+  return _score;
+}
+
+auto RetroAchievements::userScoreSoftcore() const -> u32 {
+  return _scoreSoftcore;
+}
+
+auto RetroAchievements::avatarUrl() const -> string {
+  return _avatarUrl;
 }
 
 auto RetroAchievements::gameLoaded() -> void {
@@ -208,4 +240,22 @@ auto RetroAchievements::gameUnloaded() -> void {
 
 auto RetroAchievements::gameHash() const -> string {
   return _gameHash;
+}
+
+auto RetroAchievements::setUser(const RetroAchievementsLoginResult& result) -> void {
+  _authenticated = true;
+  _username = result.username;
+  _displayName = result.displayName;
+  _avatarUrl = result.avatarUrl;
+  _score = result.score;
+  _scoreSoftcore = result.scoreSoftcore;
+}
+
+auto RetroAchievements::clearUser() -> void {
+  _authenticated = false;
+  _username = {};
+  _displayName = {};
+  _avatarUrl = {};
+  _score = 0;
+  _scoreSoftcore = 0;
 }
