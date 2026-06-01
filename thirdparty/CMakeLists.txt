@@ -5,7 +5,7 @@ target_compile_definitions(sljit PUBLIC SLJIT_HAVE_CONFIG_PRE=1 SLJIT_HAVE_CONFI
 target_compile_options(sljit PRIVATE $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-conditional-uninitialized>)
 
 option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
-option(ARES_ENABLE_RCHEEVOS "Enable RetroAchievements support via rcheevos" OFF)
+option(ARES_ENABLE_RCHEEVOS "Enable RetroAchievements support" OFF)
 
 if(ARES_ENABLE_RCHEEVOS)
   find_package(CURL REQUIRED)
@@ -54,6 +54,9 @@ if(ARES_ENABLE_RCHEEVOS)
       RC_HASH_NO_ENCRYPTED
   )
   target_link_libraries(rcheevos PUBLIC CURL::libcurl)
+  target_enable_feature(rcheevos "RetroAchievements support")
+else()
+  target_disable_feature(sljit "RetroAchievements support")
 endif()
 
 if(ARES_ENABLE_CHD)
