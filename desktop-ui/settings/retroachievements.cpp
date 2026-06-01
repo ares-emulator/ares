@@ -1,3 +1,45 @@
+#if defined(ARES_ENABLE_RCHEEVOS)
+  #include <curl/curl.h>
+#endif
+
+#if defined(ARES_ENABLE_RCHEEVOS)
+namespace {
+auto avatarWrite(char* data, size_t size, size_t count, void* userdata) -> size_t {
+  auto& output = *static_cast<std::vector<u8>*>(userdata);
+  auto bytes = size * count;
+  output.insert(output.end(), data, data + bytes);
+  return bytes;
+}
+
+auto fetchAvatar(const string& avatarUrl) -> image {
+  if(!avatarUrl) return {};
+
+  string url = avatarUrl;
+  if(url.beginsWith("/")) url = {"https://media.retroachievements.org", url};
+
+  CURL* curl = curl_easy_init();
+  if(!curl) return {};
+
+  std::vector<u8> responseBody;
+  curl_easy_setopt(curl, CURLOPT_URL, url.data());
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, avatarWrite);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, "ares");
+  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
+
+  auto curlResult = curl_easy_perform(curl);
+  curl_easy_cleanup(curl);
+  if(curlResult != CURLE_OK || responseBody.empty()) return {};
+
+  image avatar{responseBody};
+  if(!avatar) return {};
+  avatar.scale(48, 48);
+  return avatar;
+}
+}
+#endif
+
 auto RetroAchievementsSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
@@ -8,7 +50,9 @@ auto RetroAchievementsSettings::construct() -> void {
   enabled.setText("Enable RetroAchievements").setChecked(settings.retroAchievements.enabled).onToggle([&] {
     settings.retroAchievements.enabled = enabled.checked();
     settings.save();
+    if(settings.retroAchievements.enabled) retroAchievements.initialize();
     program.showMessage(settings.retroAchievements.enabled ? "[RA] Enabled" : "[RA] Disabled");
+    refresh();
   });
 
   usernameLabel.setText("Username:");
@@ -19,7 +63,10 @@ auto RetroAchievementsSettings::construct() -> void {
   passwordLabel.setText("Password:");
   passwordValue.setText();
 
-  statusLabel.setText(settings.retroAchievements.token ? "Logged in" : "Enter your RA password");
+  statusLabel.setText();
+  profileLayout.setCollapsible();
+  profileName.setFont(Font().setBold());
+  profilePoints.setForegroundColor(SystemColor::Sublabel);
 
   loginButton.setText("Login").onActivate([&] {
     settings.retroAchievements.username = usernameValue.text();
@@ -37,19 +84,21 @@ auto RetroAchievementsSettings::construct() -> void {
 
     statusLabel.setText(result.message);
     program.showMessage({"[RA] ", result.message});
+    refresh();
   });
 
-  clearButton.setText("Clear").onActivate([&] {
-    settings.retroAchievements.enabled = false;
+  clearButton.setText("Logout").onActivate([&] {
+    retroAchievements.logout();
     settings.retroAchievements.username = "";
     settings.retroAchievements.token = "";
-    enabled.setChecked(false);
     usernameValue.setText();
     passwordValue.setText();
     settings.save();
     statusLabel.setText("Logged out");
     program.showMessage("[RA] Login cleared");
+    refresh();
   });
+  refresh();
 #else
   enabled.setText("Enable RetroAchievements").setEnabled(false);
   usernameLabel.setText("Username:");
@@ -67,5 +116,55 @@ auto RetroAchievementsSettings::construct() -> void {
     passwordValue.setText();
     statusLabel.setText("Logged out");
   });
+  profileLayout.setVisible(false);
+#endif
+}
+
+auto RetroAchievementsSettings::refresh() -> void {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(!settings.retroAchievements.enabled || !settings.retroAchievements.username || !settings.retroAchievements.token) {
+    retroAchievements.logout();
+  }
+
+  auto enabledSetting = settings.retroAchievements.enabled;
+  auto loggedIn = enabledSetting && retroAchievements.hasUser() && settings.retroAchievements.username && settings.retroAchievements.token;
+
+  enabled.setChecked(settings.retroAchievements.enabled).setEnabled(true);
+  usernameLayout.setVisible(enabledSetting);
+  passwordLayout.setVisible(enabledSetting);
+  actionLayout.setVisible(enabledSetting);
+  profileLayout.setVisible(enabledSetting && loggedIn);
+  usernameValue.setText(loggedIn ? retroAchievements.username() : settings.retroAchievements.username).setEnabled(enabledSetting && !loggedIn);
+  passwordValue.setEnabled(enabledSetting && !loggedIn);
+  loginButton.setEnabled(enabledSetting && !loggedIn);
+  clearButton.setEnabled(enabledSetting && loggedIn);
+
+  if(loggedIn) {
+    auto score = retroAchievements.userScore();
+    auto softcore = retroAchievements.userScoreSoftcore();
+    auto hardcore = score >= softcore ? score - softcore : 0;
+    profileName.setText(retroAchievements.displayName());
+    profilePoints.setText({score, " points (SC: ", softcore, ", HC: ", hardcore, ")"});
+    statusLabel.setText("Logged in");
+
+    auto avatarUrl = retroAchievements.avatarUrl();
+    if(avatarUrl != cachedAvatarUrl) {
+      cachedAvatarUrl = avatarUrl;
+      cachedAvatarImage = fetchAvatar(avatarUrl);
+    }
+    profileAvatar.setIcon(cachedAvatarImage ? (multiFactorImage)cachedAvatarImage : (multiFactorImage)Icon::Action::Bookmark);
+  } else if(!enabledSetting) {
+    statusLabel.setText();
+    passwordValue.setText();
+    cachedAvatarUrl = {};
+    cachedAvatarImage = {};
+    profileAvatar.setIcon();
+  } else {
+    if(!statusLabel.text()) statusLabel.setText("Enter your RA password");
+    passwordValue.setText();
+    cachedAvatarUrl = {};
+    cachedAvatarImage = {};
+    profileAvatar.setIcon();
+  }
 #endif
 }

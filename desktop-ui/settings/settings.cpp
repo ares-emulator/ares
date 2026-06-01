@@ -357,7 +357,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Emulators") found = true, emulatorSettings.setVisible();
     if(item.text() == "Options"  ) found = true, optionSettings.setVisible();
 #if defined(ARES_ENABLE_RCHEEVOS)
-    if(item.text() == "Achievements") found = true, retroAchievementsSettings.setVisible();
+    if(item.text() == "Achievements") found = true, retroAchievementsSettings.refresh(), retroAchievementsSettings.setVisible();
 #endif
     if(item.text() == "Firmware" ) found = true, firmwareSettings.setVisible();
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
