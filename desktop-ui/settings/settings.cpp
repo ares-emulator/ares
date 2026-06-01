@@ -10,6 +10,7 @@
 #include "paths.cpp"
 #include "drivers.cpp"
 #include "debug.cpp"
+#include "retroachievements.cpp"
 #include "importexport.cpp"
 #include "home.cpp"
 
@@ -25,6 +26,7 @@ OptionSettings& optionSettings = settingsWindow.optionSettings;
 FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
 DebugSettings& debugSettings = settingsWindow.debugSettings;
+RetroAchievementsSettings& retroAchievementsSettings = settingsWindow.retroAchievementsSettings;
 DriverSettings& driverSettings = settingsWindow.driverSettings;
 ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
@@ -135,6 +137,10 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "GameBoyAdvance/Player", gameBoyAdvance.player);
 
   bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
+
+  bind(boolean, "RetroAchievements/Enabled", retroAchievements.enabled);
+  bind(string,  "RetroAchievements/Username", retroAchievements.username);
+  bind(string,  "RetroAchievements/Token", retroAchievements.token);
 
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};
@@ -256,6 +262,7 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Hotkeys").setIcon(Icon::Device::Keyboard));
   panelList.append(ListViewItem().setText("Emulators").setIcon(Icon::Place::Server));
   panelList.append(ListViewItem().setText("Options").setIcon(Icon::Action::Settings));
+  panelList.append(ListViewItem().setText("Achievements").setIcon(Icon::Action::Bookmark));
   panelList.append(ListViewItem().setText("Firmware").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Drivers").setIcon(Icon::Place::Settings));
@@ -274,6 +281,7 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(pathSettings, Size{~0, ~0});
   panelContainer.append(driverSettings, Size{~0, ~0});
   panelContainer.append(debugSettings, Size{~0, ~0});
+  panelContainer.append(retroAchievementsSettings, Size{~0, ~0});
   panelContainer.append(importExportSettings, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
@@ -287,6 +295,7 @@ auto SettingsWindow::initialize() -> void {
   pathSettings.construct();
   driverSettings.construct();
   debugSettings.construct();
+  retroAchievementsSettings.construct();
   importExportSettings.construct();
   homePanel.construct();
 
@@ -327,6 +336,7 @@ auto SettingsWindow::eventChange() -> void {
   pathSettings.setVisible(false);
   driverSettings.setVisible(false);
   debugSettings.setVisible(false);
+  retroAchievementsSettings.setVisible(false);
   importExportSettings.setVisible(false);
   homePanel.setVisible(false);
 
@@ -338,6 +348,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Hotkeys"  ) found = true, hotkeySettings.setVisible();
     if(item.text() == "Emulators") found = true, emulatorSettings.setVisible();
     if(item.text() == "Options"  ) found = true, optionSettings.setVisible();
+    if(item.text() == "Achievements") found = true, retroAchievementsSettings.setVisible();
     if(item.text() == "Firmware" ) found = true, firmwareSettings.setVisible();
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
     if(item.text() == "Drivers"  ) found = true, driverSettings.setVisible();

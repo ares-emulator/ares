@@ -37,6 +37,7 @@ target_sources(
     settings/input.cpp
     settings/options.cpp
     settings/paths.cpp
+    settings/retroachievements.cpp
     settings/settings.hpp
     settings/video.cpp
     settings/importexport.cpp

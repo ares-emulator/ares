@@ -59,6 +59,7 @@ struct Presentation : Window {
       MenuItem hotkeySettingsAction{&settingsMenu};
       MenuItem emulatorSettingsAction{&settingsMenu};
       MenuItem optionSettingsAction{&settingsMenu};
+      MenuItem retroAchievementsSettingsAction{&settingsMenu};
       MenuItem firmwareSettingsAction{&settingsMenu};
       MenuItem pathSettingsAction{&settingsMenu};
       MenuItem driverSettingsAction{&settingsMenu};
