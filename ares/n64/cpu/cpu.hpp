@@ -1275,6 +1275,10 @@ struct CPU : Thread {
 
   struct ProfileSlot {
     Profile cpu;
+    struct {
+      s64 cycles;
+      s64 haltedCycles;
+    } rsp;
     RDRAM::Profile rdram;
     n1 started = 0;
 

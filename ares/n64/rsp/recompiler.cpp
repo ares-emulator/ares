@@ -336,6 +336,7 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 #define PipelineReg(x) mem(sreg(0), offsetof(RSP, pipeline) + offsetof(Pipeline, x))
 #define BranchReg(x) mem(sreg(0), offsetof(RSP, branch) + offsetof(Branch, x))
 #define StatusReg(x) mem(sreg(0), offsetof(RSP, status) + offsetof(Status, x))
+#define ProfileReg(x) mem(sreg(0), offsetof(RSP, profile) + offsetof(Profile, x))
 #define RecompilerReg(x) mem(sreg(0), offsetof(RSP, recompiler) + offsetof(Recompiler, x))
 #define R0        IpuReg(r[0])
 #if defined(ARCHITECTURE_AMD64) || defined(ARCHITECTURE_ARM64)
@@ -356,6 +357,7 @@ auto RSP::Recompiler::emit(u12 address, bool callInstructionPrologue) -> Block* 
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(3, 4);
   u32 deferredClocks = 0;
+  bool emitHomebrewMetrics = system.homebrewMode;
   mov32(RecompilerReg(slowPathFlushedClocks), imm(0));
   haltSlowPaths.clear();
   slowPaths.clear();
@@ -366,11 +368,13 @@ auto RSP::Recompiler::emit(u12 address, bool callInstructionPrologue) -> Block* 
     if(!clocks) return;
     add64(ThreadReg(clock), ThreadReg(clock), imm(clocks));
     add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), imm(clocks));
+    if(emitHomebrewMetrics) add64(ProfileReg(cycles), ProfileReg(cycles), imm(clocks));
   };
   auto emitClockFlushRegister = [&](reg clocks) -> void {
     mov64_u32(reg(1), clocks);
     add64(ThreadReg(clock), ThreadReg(clock), reg(1));
     add32(PipelineReg(clocksTotal), PipelineReg(clocksTotal), clocks);
+    if(emitHomebrewMetrics) add64(ProfileReg(cycles), ProfileReg(cycles), reg(1));
   };
   auto flushDeferredForCallf = [&]() -> void {
     if(!deferredClocks) return;

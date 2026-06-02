@@ -36,6 +36,8 @@ auto RSP::main() -> void {
 
     if(status.halted) {
       step(128);
+      profile.cycles += 128;
+      profile.haltedCycles += 128;
     } else {
       instruction();
     }
@@ -79,6 +81,7 @@ auto RSP::instruction() -> void {
   //this handles all stepping for the interpreter
   //with the recompiler, it only steps for taken branch stalls
   step(pipeline.clocks);
+  profile.cycles += pipeline.clocks;
   pipeline.clocksTotal += pipeline.clocks;
 }
 
@@ -104,6 +107,7 @@ template<bool Recompiled>
 auto RSP::instructionEpilogue(u32 clocks) -> s32 {
   if constexpr(Recompiled) {
     step(clocks);
+    profile.cycles += clocks;
     pipeline.clocksTotal += clocks;
 
     assert(ipu.r[0].u32 == 0);
@@ -120,6 +124,7 @@ auto RSP::power(bool reset) -> void {
   imem.fill();
 
   pipeline = {};
+  profile = {};
   dma = {};
   status.semaphore = 0;
   status.halted = 1;

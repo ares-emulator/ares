@@ -4,6 +4,8 @@ auto CPU::ProfileSlot::global() -> ProfileSlot
 {
   auto p = ProfileSlot{};
   p.cpu = ::ares::Nintendo64::cpu.profile;
+  p.rsp.cycles = ::ares::Nintendo64::rsp.profile.cycles;
+  p.rsp.haltedCycles = ::ares::Nintendo64::rsp.profile.haltedCycles;
   p.rdram = ::ares::Nintendo64::rdram.profile;
   return p;
 }
@@ -102,6 +104,8 @@ auto CPU::XPROF(cr64& rd, u64 code) -> void {
         for (int i=0; i<sizeof(prof.cpu.data)/sizeof(prof.cpu.data[0]); i++) {
             prof.cpu.data[i] -= global.cpu.data[i];
         }
+        prof.rsp.cycles -= global.rsp.cycles;
+        prof.rsp.haltedCycles -= global.rsp.haltedCycles;
         for (int i=0; i<sizeof(prof.rdram.metrics)/sizeof(prof.rdram.metrics[0]); i++) {
             prof.rdram.metrics[i].reads  -= global.rdram.metrics[i].reads;
             prof.rdram.metrics[i].writes -= global.rdram.metrics[i].writes;
@@ -112,6 +116,8 @@ auto CPU::XPROF(cr64& rd, u64 code) -> void {
         for (int i=0; i<sizeof(prof.cpu.data)/sizeof(prof.cpu.data[0]); i++) {
             prof.cpu.data[i] += global.cpu.data[i];
         }
+        prof.rsp.cycles += global.rsp.cycles;
+        prof.rsp.haltedCycles += global.rsp.haltedCycles;
         for (int i=0; i<sizeof(prof.rdram.metrics)/sizeof(prof.rdram.metrics[0]); i++) {
             prof.rdram.metrics[i].reads  += global.rdram.metrics[i].reads;
             prof.rdram.metrics[i].writes += global.rdram.metrics[i].writes;
@@ -147,6 +153,8 @@ auto CPU::XPROFREAD(cr64& rd, r64& rt) -> void {
     case 0x0020: rt.u64 = prof.cpu.dcacheHits; break;
     case 0x0021: rt.u64 = prof.cpu.dcacheMisses; break;
     case 0x0022: rt.u64 = prof.cpu.dcacheWritebacks; break;
+    case 0x0200: rt.u64 = prof.rsp.cycles; break;
+    case 0x0201: rt.u64 = prof.rsp.haltedCycles; break;
     case 0x0300: rt.u64 = prof.rdram.total().total(); break;
     case 0x0301: rt.u64 = prof.rdram.total().reads; break;
     case 0x0302: rt.u64 = prof.rdram.total().writes; break;

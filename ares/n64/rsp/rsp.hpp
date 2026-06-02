@@ -316,6 +316,11 @@ struct RSP : Thread, Memory::RCP<RSP> {
     n1 signal[8];
   } status{*this};
 
+  struct Profile {
+    s64 cycles;
+    s64 haltedCycles;
+  } profile;
+
   //ipu.cpp
   union r32 {
     struct {  int32_t s32; };
