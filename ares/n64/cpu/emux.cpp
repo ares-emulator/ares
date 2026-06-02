@@ -127,12 +127,15 @@ auto CPU::XPROFREAD(cr64& rd, r64& rt) -> void {
   if(!system.homebrewMode) return;
 
   i64 slot = (i64)rd.u64;
-  if (slot >= profileSlots.size()) {
+  ProfileSlot prof;
+  if(slot < 0) {
+    prof = ProfileSlot::global();
+  } else if((u64)slot >= profileSlots.size()) {
     rt.u64 = 0;
     return;
+  } else {
+    prof = profileSlots[slot];
   }
-
-  auto prof = (slot < 0 ? ProfileSlot::global() : profileSlots[slot]);
 
   u64 code = rt.u64;
   switch(code) {
