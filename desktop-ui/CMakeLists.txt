@@ -58,6 +58,13 @@ if(ARES_ENABLE_CHD)
 endif()
 
 if(ARES_ENABLE_RCHEEVOS)
+  target_sources(
+    desktop-ui
+    PRIVATE
+      retroachievements/platform/adapter.cpp
+      retroachievements/platform/adapters/nintendo.cpp
+      retroachievements/platform/adapters/sega.cpp
+  )
   target_compile_definitions(desktop-ui PRIVATE ARES_ENABLE_RCHEEVOS)
   target_link_libraries(desktop-ui PRIVATE rcheevos)
 endif()

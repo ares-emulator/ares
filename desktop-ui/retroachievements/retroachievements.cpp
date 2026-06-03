@@ -1,9 +1,9 @@
 #include "../desktop-ui.hpp"
 
 #if defined(ARES_ENABLE_RCHEEVOS)
+  #include "platform/adapter.hpp"
   #include <curl/curl.h>
   #include <rc_api_user.h>
-  #include <rc_consoles.h>
   #include <rc_hash.h>
 #endif
 
@@ -11,51 +11,15 @@ RetroAchievements retroAchievements;
 
 #if defined(ARES_ENABLE_RCHEEVOS)
 namespace {
-auto appendPakFile(const std::shared_ptr<vfs::directory>& pak, const string& name, std::vector<u8>& out) -> bool {
-  if(!pak) return false;
-  auto fp = pak->read(name);
-  if(!fp) return false;
-  auto offset = out.size();
-  out.resize(offset + fp->size());
-  for(u32 index : range(fp->size())) out[offset + index] = fp->read();
-  return true;
-}
-
-auto consoleId(const Emulator& emu) -> u32 {
-  if(emu.name == "Famicom") return RC_CONSOLE_NINTENDO;
-  if(emu.name == "Mega Drive") return RC_CONSOLE_MEGA_DRIVE;
-  return RC_CONSOLE_UNKNOWN;
-}
-
-auto romData(const Emulator& emu, std::vector<u8>& out) -> bool {
-  out.clear();
-  if(!emu.game || !emu.game->pak) return false;
-
-  if(emu.name == "Famicom") {
-    auto hasInes = appendPakFile(emu.game->pak, "ines.rom", out);
-    auto hasProgramFlash = appendPakFile(emu.game->pak, "program.flash", out);
-    auto hasProgram = appendPakFile(emu.game->pak, "program.rom", out);
-    auto hasOption = appendPakFile(emu.game->pak, "option.rom", out);
-    auto hasCharacter = appendPakFile(emu.game->pak, "character.rom", out);
-    return hasInes || hasProgramFlash || hasProgram || hasOption || hasCharacter;
-  }
-
-  if(emu.name == "Mega Drive") {
-    return appendPakFile(emu.game->pak, "program.rom", out);
-  }
-
-  return false;
-}
-
 auto generateHash(const Emulator& emu) -> string {
-  auto id = consoleId(emu);
-  if(id == RC_CONSOLE_UNKNOWN) return {};
+  auto* adapter = RA::Platform::selectAdapter(emu);
+  if(!adapter) return {};
 
   std::vector<u8> rom;
-  if(!romData(emu, rom) || rom.empty()) return {};
+  if(!adapter->romData(emu, rom) || rom.empty()) return {};
 
   char hash[33] = {};
-  if(!rc_hash_generate_from_buffer(hash, id, rom.data(), rom.size())) return {};
+  if(!rc_hash_generate_from_buffer(hash, adapter->consoleId(emu), rom.data(), rom.size())) return {};
   return hash;
 }
 
@@ -214,6 +178,21 @@ auto RetroAchievements::avatarUrl() const -> string {
   return _avatarUrl;
 }
 
+auto RetroAchievements::readMemory(u32 address, u8* buffer, u32 size) const -> u32 {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(!emulator) return 0;
+  if(!settings.retroAchievements.enabled) return 0;
+  if(auto* adapter = RA::Platform::selectAdapter(*emulator)) {
+    return adapter->readMemory(*emulator, address, buffer, size);
+  }
+#else
+  (void)address;
+  (void)buffer;
+  (void)size;
+#endif
+  return 0;
+}
+
 auto RetroAchievements::gameLoaded() -> void {
   _gameHash = {};
 
@@ -223,7 +202,7 @@ auto RetroAchievements::gameLoaded() -> void {
 
   auto hash = generateHash(*emulator);
   if(!hash) {
-    if(consoleId(*emulator) != RC_CONSOLE_UNKNOWN) {
+    if(RA::Platform::selectAdapter(*emulator)) {
       program.showMessage("[RA] Could not hash loaded game");
     }
     return;
