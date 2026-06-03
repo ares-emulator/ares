@@ -307,7 +307,6 @@ auto CPU::DDIVU(cr64& rs, cr64& rt) -> void {
 }
 
 auto CPU::DIV(cr64& rs, cr64& rt) -> void {
-  if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   if(rt.s64) {
     //using s64 to match hardware behavior when input operands are not properly sign-extended
     //note: this does not give correct results when sgn(rt.s32) != sgn(rt.s64); on hardware this
@@ -322,7 +321,6 @@ auto CPU::DIV(cr64& rs, cr64& rt) -> void {
 }
 
 auto CPU::DIVU(cr64& rs, cr64& rt) -> void {
-  if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   if(rt.u32) {
     LO.u64 = s32(rs.u32 / rt.u32);
     HI.u64 = s32(rs.u32 % rt.u32);

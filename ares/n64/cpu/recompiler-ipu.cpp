@@ -1352,8 +1352,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> EmitExecuteResult {
 
   //DIV Rs,Rt
   case 0x1a: {
-    bool reservedInstruction = reservedInstruction64();
-    if(emitSlowPathSection || reservedInstruction) {
+    if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::DIV, mem(Rs), mem(Rt));
       return EmitExecuteResult::MayFault;
@@ -1373,8 +1372,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> EmitExecuteResult {
 
   //DIVU Rs,Rt
   case 0x1b: {
-    bool reservedInstruction = reservedInstruction64();
-    if(emitSlowPathSection || reservedInstruction) {
+    if(emitSlowPathSection) {
       setupCallf();
       callf(&CPU::DIVU, mem(Rs), mem(Rt));
       return EmitExecuteResult::MayFault;
