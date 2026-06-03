@@ -449,6 +449,7 @@ struct DebugSettings : VerticalLayout {
 struct RetroAchievementsSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
+  auto setVisible(bool visible = true) -> RetroAchievementsSettings&;
 
   Label accountLabel{this, Size{~0, 0}, 5};
   HorizontalLayout enabledLayout{this, Size{~0, 0}, 5};
@@ -468,6 +469,8 @@ struct RetroAchievementsSettings : VerticalLayout {
     VerticalLayout profileTextLayout{&profileLayout, Size{~0, 0}, 2};
       Label profileName{&profileTextLayout, Size{~0, 0}};
       Label profilePoints{&profileTextLayout, Size{~0, 0}};
+    Canvas profileSpacer{&profileLayout, Size{1, 0}};
+    Button profileLogoutButton{&profileLayout, Size{80, 0}};
 
   string cachedAvatarUrl;
   image cachedAvatarImage;

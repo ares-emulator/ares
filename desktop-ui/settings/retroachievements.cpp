@@ -56,14 +56,17 @@ auto RetroAchievementsSettings::construct() -> void {
   });
 
   usernameLabel.setText("Username:");
+  usernameLayout.setCollapsible();
   usernameValue.setText(settings.retroAchievements.username).onChange([&] {
     settings.retroAchievements.username = usernameValue.text();
   });
 
   passwordLabel.setText("Password:");
+  passwordLayout.setCollapsible();
   passwordValue.setText();
 
   statusLabel.setText();
+  actionLayout.setCollapsible();
   profileLayout.setCollapsible();
   profileName.setFont(Font().setBold());
   profilePoints.setForegroundColor(SystemColor::Sublabel);
@@ -87,7 +90,7 @@ auto RetroAchievementsSettings::construct() -> void {
     refresh();
   });
 
-  clearButton.setText("Logout").onActivate([&] {
+  auto logout = [&] {
     retroAchievements.logout();
     settings.retroAchievements.username = "";
     settings.retroAchievements.token = "";
@@ -97,7 +100,9 @@ auto RetroAchievementsSettings::construct() -> void {
     statusLabel.setText("Logged out");
     program.showMessage("[RA] Login cleared");
     refresh();
-  });
+  };
+  clearButton.setText("Logout").onActivate(logout);
+  profileLogoutButton.setText("Logout").onActivate(logout);
   refresh();
 #else
   enabled.setText("Enable RetroAchievements").setEnabled(false);
@@ -107,6 +112,7 @@ auto RetroAchievementsSettings::construct() -> void {
   passwordValue.setText().setEnabled(false);
   statusLabel.setText("Rebuild with ARES_ENABLE_RCHEEVOS to use RetroAchievements");
   loginButton.setText("Login").setEnabled(false);
+  profileLogoutButton.setText("Logout").setEnabled(false);
   clearButton.setText("Clear").onActivate([&] {
     settings.retroAchievements.enabled = false;
     settings.retroAchievements.username = "";
@@ -130,14 +136,15 @@ auto RetroAchievementsSettings::refresh() -> void {
   auto loggedIn = enabledSetting && retroAchievements.hasUser() && settings.retroAchievements.username && settings.retroAchievements.token;
 
   enabled.setChecked(settings.retroAchievements.enabled).setEnabled(true);
-  usernameLayout.setVisible(enabledSetting);
-  passwordLayout.setVisible(enabledSetting);
-  actionLayout.setVisible(enabledSetting);
+  usernameLayout.setVisible(enabledSetting && !loggedIn);
+  passwordLayout.setVisible(enabledSetting && !loggedIn);
+  actionLayout.setVisible(enabledSetting && !loggedIn);
   profileLayout.setVisible(enabledSetting && loggedIn);
   usernameValue.setText(loggedIn ? retroAchievements.username() : settings.retroAchievements.username).setEnabled(enabledSetting && !loggedIn);
   passwordValue.setEnabled(enabledSetting && !loggedIn);
   loginButton.setEnabled(enabledSetting && !loggedIn);
-  clearButton.setEnabled(enabledSetting && loggedIn);
+  clearButton.setEnabled(false);
+  profileLogoutButton.setEnabled(enabledSetting && loggedIn);
 
   if(loggedIn) {
     auto score = retroAchievements.userScore();
@@ -166,5 +173,11 @@ auto RetroAchievementsSettings::refresh() -> void {
     cachedAvatarImage = {};
     profileAvatar.setIcon();
   }
+  settingsWindow.panelContainer.resize();
 #endif
+}
+
+auto RetroAchievementsSettings::setVisible(bool visible) -> RetroAchievementsSettings& {
+  if(visible) refresh();
+  return VerticalLayout::setVisible(visible), *this;
 }
