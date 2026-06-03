@@ -19,6 +19,7 @@ struct RetroAchievements {
   auto userScore() const -> u32;
   auto userScoreSoftcore() const -> u32;
   auto avatarUrl() const -> string;
+  auto readMemory(u32 address, u8* buffer, u32 size) const -> u32;
   auto gameLoaded() -> void;
   auto gameUnloaded() -> void;
   auto gameHash() const -> string;
