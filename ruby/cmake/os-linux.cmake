@@ -13,7 +13,6 @@ target_sources(
 target_sources(
   ruby
   PRIVATE #
-    input/xlib.cpp
     input/sdl.cpp
     input/mouse/xlib.cpp
     input/keyboard/xlib.cpp

@@ -14,7 +14,6 @@ target_sources(ruby PRIVATE audio/openal.cpp audio/sdl.cpp)
 target_sources(
   ruby
   PRIVATE
-    input/quartz.cpp
     input/keyboard/quartz.cpp
     input/sdl.cpp
     input/mouse/nsmouse.cpp
