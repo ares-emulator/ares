@@ -28,6 +28,8 @@ struct RetroAchievements {
   auto readMemory(u32 address, u8* buffer, u32 size) const -> u32;
   auto handleClientLoginResult(int result, const char* errorMessage) -> void;
   auto handleClientGameLoadResult(int result, const char* errorMessage) -> void;
+  auto frame() -> void;
+  auto idle() -> void;
   auto gameLoaded() -> void;
   auto gameUnloaded() -> void;
   auto gameHash() const -> string;
