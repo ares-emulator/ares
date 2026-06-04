@@ -16,6 +16,11 @@ struct ClientCallbackData {
   RetroAchievements* self = nullptr;
 };
 
+struct AchievementCounts {
+  u32 unlocked = 0;
+  u32 total = 0;
+};
+
 auto generateHash(const Emulator& emu) -> string {
   auto* adapter = RA::Platform::selectAdapter(emu);
   if(!adapter) return {};
@@ -35,6 +40,42 @@ auto loginMessage(const RetroAchievementsLoginResult& result) -> string {
     name, " connected (", result.score, " pts. SC: ", result.scoreSoftcore,
     " pts, HC: ", hardcoreScore, " pts)"
   };
+}
+
+auto achievementUnlocked(const rc_client_achievement_t* achievement) -> bool {
+  if(!achievement) return false;
+  return achievement->unlocked & (RC_CLIENT_ACHIEVEMENT_UNLOCKED_SOFTCORE | RC_CLIENT_ACHIEVEMENT_UNLOCKED_HARDCORE);
+}
+
+auto achievementIsWarning(const rc_client_achievement_t* achievement) -> bool {
+  if(!achievement) return false;
+  auto title = achievement->title ? string{achievement->title} : string{};
+  return achievement->id == 101000001 || (achievement->points == 0 && title.beginsWith("Warning:"));
+}
+
+auto visibleAchievementCounts(rc_client_t* client) -> AchievementCounts {
+  AchievementCounts counts;
+  if(!client) return counts;
+
+  auto* list = rc_client_create_achievement_list(
+    client,
+    RC_CLIENT_ACHIEVEMENT_CATEGORY_CORE_AND_UNOFFICIAL,
+    RC_CLIENT_ACHIEVEMENT_LIST_GROUPING_LOCK_STATE
+  );
+  if(!list) return counts;
+
+  for(u32 bucketIndex : range(list->num_buckets)) {
+    auto& bucket = list->buckets[bucketIndex];
+    for(u32 achievementIndex : range(bucket.num_achievements)) {
+      auto* achievement = bucket.achievements[achievementIndex];
+      if(!achievement || achievementIsWarning(achievement)) continue;
+      counts.total++;
+      if(achievementUnlocked(achievement)) counts.unlocked++;
+    }
+  }
+
+  rc_client_destroy_achievement_list(list);
+  return counts;
 }
 
 auto curlWrite(char* data, size_t size, size_t count, void* userdata) -> size_t {
@@ -420,17 +461,34 @@ auto RetroAchievements::handleClientGameLoadResult(int result, const char* error
     rc_client_destroy_subset_list(subsets);
   }
 
-  rc_client_user_game_summary_t summary = {};
-  rc_client_get_user_game_summary(_client, &summary);
+  auto counts = visibleAchievementCounts(_client);
   program.showMessage({
     "[RA] Game loaded: ", title,
-    " (", summary.num_unlocked_achievements, "/",
-    summary.num_core_achievements + summary.num_unofficial_achievements,
+    " (", counts.unlocked, "/", counts.total,
     " achievements, ", subsetCount, " sets)"
   });
 #else
   (void)result;
   (void)errorMessage;
+#endif
+}
+
+auto RetroAchievements::frame() -> void {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(!_client) return;
+  if(!settings.retroAchievements.enabled) return;
+  if(!_authenticated) return;
+  if(_gameReady) rc_client_do_frame(_client);
+  else rc_client_idle(_client);
+#endif
+}
+
+auto RetroAchievements::idle() -> void {
+#if defined(ARES_ENABLE_RCHEEVOS)
+  if(!_client) return;
+  if(!settings.retroAchievements.enabled) return;
+  if(!_authenticated) return;
+  rc_client_idle(_client);
 #endif
 }
 
