@@ -24,7 +24,7 @@ struct AudioSDL : AudioDriver {
   }
 
   auto hasLatencies() -> std::vector<u32> override {
-    return {20, 40, 60, 80};
+    return {10, 20, 40, 60, 80};
   }
 
   auto setFrequency(u32 frequency) -> bool override { return initialize(); }
