@@ -363,7 +363,6 @@ struct DriverSettings : VerticalLayout {
   auto videoDriverUpdate() -> bool;
   auto audioRefresh() -> void;
   auto audioDriverUpdate() -> bool;
-  auto inputRefresh() -> void;
   auto inputDriverUpdate() -> bool;
 
   Label videoLabel{this, Size{~0, 0}, 5};
@@ -389,10 +388,6 @@ struct DriverSettings : VerticalLayout {
 #endif
   //
   Label audioLabel{this, Size{~0, 0}, 5};
-  HorizontalLayout audioDriverLayout{this, Size{~0, 0}};
-    Label audioDriverLabel{&audioDriverLayout, Size{0, 0}};
-    ComboButton audioDriverList{&audioDriverLayout, Size{0, 0}};
-    Label audioDriverActive{&audioDriverLayout, Size{0, 0}};
   HorizontalLayout audioDeviceLayout{this, Size{~0, 0}};
     Label audioDeviceLabel{&audioDeviceLayout, Size{0, 0}};
     ComboButton audioDeviceList{&audioDeviceLayout, Size{0, 0}};
@@ -402,15 +397,10 @@ struct DriverSettings : VerticalLayout {
     Label audioLatencyLabel{&audioPropertyLayout, Size{0, 0}};
     ComboButton audioLatencyList{&audioPropertyLayout, Size{0, 0}};
   HorizontalLayout audioToggleLayout{this, Size{~0, 0}};
-    CheckLabel audioExclusiveToggle{&audioToggleLayout, Size{0, 0}};
     CheckLabel audioBlockingToggle{&audioToggleLayout, Size{0, 0}};
     CheckLabel audioDynamicToggle{&audioToggleLayout, Size{0, 0}};
   //
   Label inputLabel{this, Size{~0, 0}, 5};
-  HorizontalLayout inputDriverLayout{this, Size{~0, 0}};
-    Label inputDriverLabel{&inputDriverLayout, Size{0, 0}};
-    ComboButton inputDriverList{&inputDriverLayout, Size{0, 0}};
-    Label inputDriverActive{&inputDriverLayout, Size{0, 0}};
   HorizontalLayout inputDefocusLayout{this, Size{~0, 0}};
     Label inputDefocusLabel{&inputDefocusLayout, Size{0, 0}};
     RadioLabel inputDefocusPause{&inputDefocusLayout, Size{0, 0}};

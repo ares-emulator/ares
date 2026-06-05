@@ -121,7 +121,6 @@ auto Program::audioDriverUpdate() -> void {
   audioDeviceUpdate();
   audioFrequencyUpdate();
   audioLatencyUpdate();
-  ruby::audio.setExclusive(settings.audio.exclusive);
   ruby::audio.setBlocking(settings.audio.blocking);
   ruby::audio.setDynamic(settings.audio.dynamic);
 

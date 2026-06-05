@@ -85,18 +85,15 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/DisableVideoInterfaceProcessing", video.disableVideoInterfaceProcessing);
   bind(boolean, "Video/WeaveDeinterlacing", video.weaveDeinterlacing);
 
-  bind(string,  "Audio/Driver", audio.driver);
   bind(string,  "Audio/Device", audio.device);
   bind(natural, "Audio/Frequency", audio.frequency);
   bind(natural, "Audio/Latency", audio.latency);
-  bind(boolean, "Audio/Exclusive", audio.exclusive);
   bind(boolean, "Audio/Blocking", audio.blocking);
   bind(boolean, "Audio/Dynamic", audio.dynamic);
   bind(boolean, "Audio/Mute", audio.mute);
   bind(real,    "Audio/Volume", audio.volume);
   bind(real,    "Audio/Balance", audio.balance);
 
-  bind(string,  "Input/Driver", input.driver);
   bind(string,  "Input/Defocus", input.defocus);
 
   bind(boolean, "Boot/Fast", boot.fast);
@@ -298,7 +295,6 @@ auto SettingsWindow::initialize() -> void {
   
   driverSettings.videoRefresh();
   driverSettings.audioRefresh();
-  driverSettings.inputRefresh();
   initialized = true;
 }
 

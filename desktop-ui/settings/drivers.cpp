@@ -57,17 +57,6 @@ auto DriverSettings::construct() -> void {
 #endif
 
   audioLabel.setText("Audio").setFont(Font().setBold());
-  audioDriverList.onChange([&] {
-    if(audioDriverList.selected().text() != settings.audio.driver) {
-      auto previous = settings.audio.driver;
-      settings.audio.driver = audioDriverList.selected().text();
-      if (!audioDriverUpdate()) {
-        settings.audio.driver = previous;
-        audioRefresh();
-      }
-    }
-  });
-  audioDriverLabel.setText("Driver:");
   audioDeviceLabel.setText("Output device:");
   audioDeviceList.onChange([&] {
     settings.audio.device = audioDeviceList.selected().text();
@@ -86,11 +75,6 @@ auto DriverSettings::construct() -> void {
     program.audioLatencyUpdate();
     audioRefresh();
   });
-  audioExclusiveToggle.setText("Exclusive mode").onToggle([&] {
-    Program::Guard guard;
-    settings.audio.exclusive = audioExclusiveToggle.checked();
-    ruby::audio.setExclusive(settings.audio.exclusive);
-  });
   audioBlockingToggle.setText("Synchronize").onToggle([&] {
     Program::Guard guard;
     settings.audio.blocking = audioBlockingToggle.checked();
@@ -103,17 +87,6 @@ auto DriverSettings::construct() -> void {
   });
 
   inputLabel.setText("Input").setFont(Font().setBold());
-  inputDriverList.onChange([&] {
-    if(inputDriverList.selected().text() != settings.input.driver) {
-      auto previous = settings.input.driver;
-      settings.input.driver = inputDriverList.selected().text();
-      if (!inputDriverUpdate()) {
-        settings.input.driver = previous;
-        inputRefresh();
-      }
-    }
-  });
-  inputDriverLabel.setText("Driver:");
   inputDefocusLabel.setText("When focus is lost:");
   inputDefocusPause.setText("Pause emulation").onActivate([&] {
     settings.input.defocus = "Pause";
@@ -131,11 +104,9 @@ auto DriverSettings::construct() -> void {
   videoDriverLayout.setPadding(12_sx, 0);
   videoPropertyLayout.setPadding(12_sx, 0);
   videoToggleLayout.setPadding(12_sx, 0);
-  audioDriverLayout.setPadding(12_sx, 0);
   audioDeviceLayout.setPadding(12_sx, 0);
   audioPropertyLayout.setPadding(12_sx, 0);
   audioToggleLayout.setPadding(12_sx, 0);
-  inputDriverLayout.setPadding(12_sx, 0);
   inputDefocusLayout.setPadding(12_sx, 0);
 }
 
@@ -185,12 +156,6 @@ auto DriverSettings::videoDriverUpdate() -> bool {
 }
 
 auto DriverSettings::audioRefresh() -> void {
-  audioDriverList.reset();
-  for(auto& driver : ruby::audio.hasDrivers()) {
-    ComboButtonItem item{&audioDriverList};
-    item.setText(driver);
-    if(driver == ruby::audio.driver()) item.setSelected();
-  }
   audioDeviceList.reset();
   for(auto& device : ruby::audio.hasDevices()) {
     ComboButtonItem item{&audioDeviceList};
@@ -210,7 +175,6 @@ auto DriverSettings::audioRefresh() -> void {
     if(latency == ruby::audio.latency()) item.setSelected();
   }
   audioDeviceList.setEnabled(audioDeviceList.itemCount() > 1);
-  audioExclusiveToggle.setChecked(ruby::audio.exclusive()).setEnabled(ruby::audio.hasExclusive());
   audioBlockingToggle.setChecked(ruby::audio.blocking()).setEnabled(ruby::audio.hasBlocking());
   audioDynamicToggle.setChecked(ruby::audio.dynamic()).setEnabled(ruby::audio.hasDynamic());
   VerticalLayout::resize();
@@ -218,32 +182,13 @@ auto DriverSettings::audioRefresh() -> void {
 
 auto DriverSettings::audioDriverUpdate() -> bool {
   Program::Guard guard;
-  if(emulator && settings.audio.driver != "None" && MessageDialog(
-    "Warning: incompatible drivers may cause this software to crash.\n"
-    "Are you sure you want to change this driver while a game is loaded?"
-  ).setAlignment(settingsWindow).question() != "Yes") return false;
   program.audioDriverUpdate();
   audioRefresh();
   return true;
 }
 
-auto DriverSettings::inputRefresh() -> void {
-  inputDriverList.reset();
-  for(auto& driver : ruby::input.hasDrivers()) {
-    ComboButtonItem item{&inputDriverList};
-    item.setText(driver);
-    if(driver == ruby::input.driver()) item.setSelected();
-  }
-  VerticalLayout::resize();
-}
-
 auto DriverSettings::inputDriverUpdate() -> bool {
   Program::Guard guard;
-  if(emulator && settings.input.driver != "None" && MessageDialog(
-    "Warning: incompatible drivers may cause this software to crash.\n"
-    "Are you sure you want to change this driver while a game is loaded?"
-  ).setAlignment(settingsWindow).question() != "Yes") return false;
   program.inputDriverUpdate();
-  inputRefresh();
   return true;
 }
