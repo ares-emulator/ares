@@ -58,6 +58,9 @@ if(ARES_ENABLE_CHD)
 endif()
 
 if(ARES_ENABLE_RCHEEVOS)
+  find_package(CURL CONFIG REQUIRED)
+  find_package(rcheevos CONFIG REQUIRED)
+
   target_sources(
     desktop-ui
     PRIVATE
@@ -66,7 +69,8 @@ if(ARES_ENABLE_RCHEEVOS)
       retroachievements/platform/adapters/sega.cpp
   )
   target_compile_definitions(desktop-ui PRIVATE ARES_ENABLE_RCHEEVOS)
-  target_link_libraries(desktop-ui PRIVATE rcheevos)
+  target_link_libraries(desktop-ui PRIVATE rcheevos::rcheevos CURL::libcurl)
+  target_enable_feature(desktop-ui "RetroAchievements support")
 endif()
 
 set_target_properties(desktop-ui PROPERTIES OUTPUT_NAME ares)
