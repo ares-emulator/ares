@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# configure
-cmake --preset $TARGET_PRESET
-
 # clone the SDL repository
 git clone https://github.com/libsdl-org/SDL.git
 # change into the SDL directory
