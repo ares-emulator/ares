@@ -1,6 +1,4 @@
-#if defined(AUDIO_SDL)
 #include <ruby/audio/sdl.cpp>
-#endif
 
 namespace ruby {
 
@@ -108,41 +106,12 @@ auto Audio::output(const f64 samples[]) -> void {
 
 auto Audio::create(string driver) -> bool {
   self.instance.reset();
-  if(!driver) driver = optimalDriver();
-
-  #if defined(AUDIO_SDL)
-  if(driver == "SDL") self.instance = std::make_unique<AudioSDL>(*this);
-  #endif
-
+  
+  self.instance = std::make_unique<AudioSDL>(*this);
+ 
   if(!self.instance) self.instance = std::make_unique<AudioDriver>(*this);
 
   return self.instance->create();
-}
-
-auto Audio::hasDrivers() -> std::vector<string> {
-  return {
-
-  #if defined(AUDIO_SDL)
-  "SDL",
-  #endif
-
-  "None"};
-}
-
-auto Audio::optimalDriver() -> string {
-  #if defined(AUDIO_SDL)
-  return "SDL";
-  #else
-  return "None";
-  #endif
-}
-
-auto Audio::safestDriver() -> string {
-  #if defined(AUDIO_SDL)
-  return "SDL";
-  #else
-  return "None";
-  #endif
 }
 
 }

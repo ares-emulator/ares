@@ -1,6 +1,4 @@
-#if defined(INPUT_SDL)
-  #include <ruby/input/sdl.cpp>
-#endif
+#include <ruby/input/sdl.cpp>
 
 namespace ruby {
 
@@ -47,41 +45,12 @@ auto Input::doChange(std::shared_ptr<HID::Device> device, u32 group, u32 input, 
 
 auto Input::create(string driver) -> bool {
   self.instance.reset();
-  if(!driver) driver = optimalDriver();
 
-  #if defined(INPUT_SDL)
-  if(driver == "SDL") self.instance = std::make_unique<InputSDL>(*this);
-  #endif
+  self.instance = std::make_unique<InputSDL>(*this);
 
   if(!self.instance) self.instance = std::make_unique<InputDriver>(*this);
 
   return self.instance->create();
-}
-
-auto Input::hasDrivers() -> std::vector<string> {
-  return {
-
-  #if defined(INPUT_SDL)
-  "SDL",
-  #endif
-
-  "None"};
-}
-
-auto Input::optimalDriver() -> string {
-  #if defined(INPUT_SDL)
-  return "SDL";
-  #else
-  return "None";
-  #endif
-}
-
-auto Input::safestDriver() -> string {
-  #if defined(INPUT_SDL)
-  return "SDL";
-  #else
-  return "none";
-  #endif
 }
 
 }

@@ -7,6 +7,7 @@ set(.github_sources
     ISSUE_TEMPLATE/feature_request.md
     ISSUE_TEMPLATE/game-issue-report.md
     scripts/build_macos.sh
+    scripts/build_sdl.sh
     scripts/build_ubuntu.sh
     scripts/build_windows.sh
     scripts/package_artifacts.sh

@@ -26,14 +26,6 @@ protected:
 };
 
 struct Input {
-  static auto hasDrivers() -> std::vector<string>;
-  static auto hasDriver(string driver) -> bool {
-    auto drivers = hasDrivers(); 
-    return std::ranges::find(drivers, driver) != drivers.end();
-  }
-  static auto optimalDriver() -> string;
-  static auto safestDriver() -> string;
-
   Input() : self(*this) { reset(); }
   explicit operator bool() { return instance->driver() != "None"; }
   auto reset() -> void { instance = std::make_unique<InputDriver>(*this); }

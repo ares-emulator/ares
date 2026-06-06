@@ -116,7 +116,7 @@ auto Program::videoPseudoFullScreenToggle() -> void {
 
 auto Program::audioDriverUpdate() -> void {
   Program::Guard guard;
-  ruby::audio.create(settings.audio.driver);
+  ruby::audio.create("SDL");
   ruby::audio.setContext(presentation.viewport.handle());
   audioDeviceUpdate();
   audioFrequencyUpdate();
@@ -125,7 +125,8 @@ auto Program::audioDriverUpdate() -> void {
   ruby::audio.setDynamic(settings.audio.dynamic);
 
   if(!ruby::audio.ready()) {
-    driverInitFailed(settings.audio.driver, "audio", [&] { driverSettings.audioDriverUpdate(); });
+    string driver = "SDL";
+    driverInitFailed(driver, "audio", [&] { driverSettings.audioDriverUpdate(); });
     return;
   }
 }
@@ -160,12 +161,13 @@ auto Program::audioLatencyUpdate() -> void {
 
 auto Program::inputDriverUpdate() -> void {
   Program::Guard guard;
-  ruby::input.create(settings.input.driver);
+  ruby::input.create("SDL");
   ruby::input.setContext(presentation.viewport.handle());
   ruby::input.onChange(std::bind_front(&InputManager::eventInput, &inputManager));
 
   if(!ruby::input.ready()) {
-    driverInitFailed(settings.input.driver, "input", [&] { driverSettings.inputDriverUpdate(); });
+    string driver = "SDL";
+    driverInitFailed(driver, "input", [&] { driverSettings.inputDriverUpdate(); });
     return;
   }
 

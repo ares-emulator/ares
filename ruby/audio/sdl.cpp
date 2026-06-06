@@ -16,6 +16,7 @@ struct AudioSDL : AudioDriver {
   auto driver() -> string override { return "SDL"; }
   auto ready() -> bool override { return _ready; }
 
+  auto hasExclusive() -> bool override { return false; }
   auto hasBlocking() -> bool override { return true; }
   auto hasDynamic() -> bool override { return true; }
 

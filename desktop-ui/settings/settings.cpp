@@ -43,8 +43,8 @@ auto Settings::process(bool load) -> void {
   if(load) {
     //initialize non-static default settings
     video.driver = ruby::Video::optimalDriver();
-    audio.driver = ruby::Audio::optimalDriver();
-    input.driver = ruby::Input::optimalDriver();
+    audio.driver = "SDL";
+    input.driver = "SDL";
   }
 
   #define bind(type, path, name) \
