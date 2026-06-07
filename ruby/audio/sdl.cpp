@@ -44,7 +44,7 @@ struct AudioSDL : AudioDriver {
       auto bytesRemaining = SDL_GetAudioStreamQueued(_stream);
       while(bytesRemaining > _bufferSize) {
         // wait for audio to drain
-        auto bytesToWait = bytesRemaining - _bufferSize;
+        auto bytesToWait = (bytesRemaining - _bufferSize) * 4;
         auto framesRemaining = bytesToWait / _bytesPerFrame;
         auto secondsRemaining = framesRemaining / (f64)frequency;
         usleep(max(1.0, secondsRemaining * 1000000.0));
