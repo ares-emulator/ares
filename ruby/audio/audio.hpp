@@ -64,8 +64,6 @@ protected:
 };
 
 struct Audio {
-  static auto hasDriver(string driver) -> bool { return true; }
-
   Audio() : self(*this) { reset(); }
   explicit operator bool() { return instance->driver() != "None"; }
   auto reset() -> void { instance = std::make_unique<AudioDriver>(*this); }
