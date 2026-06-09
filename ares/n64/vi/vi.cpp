@@ -83,6 +83,9 @@ auto VI::main() -> void {
         io.vcounter = 0;
         io.field += !io.halfLinesPerField.bit(0);
         if(++io.leapCounter == 5) io.leapCounter = 0;
+      }
+
+      if(io.vcounter == io.vstart >> 1) {
         #if defined(VULKAN)
         if (vulkan.enable) {
           gpuOutputValid = vulkan.scanoutAsync(io.field);
