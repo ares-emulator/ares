@@ -388,9 +388,6 @@ struct DriverSettings : VerticalLayout {
 #endif
   //
   Label audioLabel{this, Size{~0, 0}, 5};
-  HorizontalLayout audioDeviceLayout{this, Size{~0, 0}};
-    Label audioDeviceLabel{&audioDeviceLayout, Size{0, 0}};
-    ComboButton audioDeviceList{&audioDeviceLayout, Size{0, 0}};
   HorizontalLayout audioPropertyLayout{this, Size{~0, 0}};
     Label audioFrequencyLabel{&audioPropertyLayout, Size{0, 0}};
     ComboButton audioFrequencyList{&audioPropertyLayout, Size{0, 0}};

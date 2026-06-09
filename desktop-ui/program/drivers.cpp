@@ -116,27 +116,12 @@ auto Program::videoPseudoFullScreenToggle() -> void {
 
 auto Program::audioDriverUpdate() -> void {
   Program::Guard guard;
-  ruby::audio.create("SDL");
+  ruby::audio.create();
   ruby::audio.setContext(presentation.viewport.handle());
-  audioDeviceUpdate();
   audioFrequencyUpdate();
   audioLatencyUpdate();
   ruby::audio.setBlocking(settings.audio.blocking);
   ruby::audio.setDynamic(settings.audio.dynamic);
-
-  if(!ruby::audio.ready()) {
-    string driver = "SDL";
-    driverInitFailed(driver, "audio", [&] { driverSettings.audioDriverUpdate(); });
-    return;
-  }
-}
-
-auto Program::audioDeviceUpdate() -> void {
-  Program::Guard guard;
-  if(!ruby::audio.hasDevice(settings.audio.device)) {
-    settings.audio.device = ruby::audio.device();
-  }
-  ruby::audio.setDevice(settings.audio.device);
 }
 
 auto Program::audioFrequencyUpdate() -> void {

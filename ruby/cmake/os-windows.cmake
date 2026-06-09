@@ -7,11 +7,6 @@ target_sources(
 
 target_sources(
   ruby
-  PRIVATE audio/sdl.cpp
-)
-
-target_sources(
-  ruby
   PRIVATE
     input/sdl.cpp
     input/shared/rawinput.cpp

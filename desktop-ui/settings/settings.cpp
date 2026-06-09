@@ -85,7 +85,6 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/DisableVideoInterfaceProcessing", video.disableVideoInterfaceProcessing);
   bind(boolean, "Video/WeaveDeinterlacing", video.weaveDeinterlacing);
 
-  bind(string,  "Audio/Device", audio.device);
   bind(natural, "Audio/Frequency", audio.frequency);
   bind(natural, "Audio/Latency", audio.latency);
   bind(boolean, "Audio/Blocking", audio.blocking);

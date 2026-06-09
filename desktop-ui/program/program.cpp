@@ -182,6 +182,5 @@ auto Program::quit() -> void {
   Application::quit();
 
   ruby::video.reset();
-  ruby::audio.reset();
   ruby::input.reset();
 }

@@ -9,8 +9,6 @@ target_sources(
 # todo address
 target_compile_options(ruby PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-unguarded-availability>)
 
-target_sources(ruby PRIVATE audio/sdl.cpp)
-
 target_sources(
   ruby
   PRIVATE
