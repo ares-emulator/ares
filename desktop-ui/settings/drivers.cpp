@@ -57,6 +57,12 @@ auto DriverSettings::construct() -> void {
 #endif
 
   audioLabel.setText("Audio").setFont(Font().setBold());
+  audioDeviceLabel.setText("Output device:");
+  audioDeviceList.onChange([&] {
+    settings.audio.device = audioDeviceList.selected().text();
+    program.audioDeviceUpdate();
+    audioRefresh();
+  });
   audioFrequencyLabel.setText("Frequency:");
   audioFrequencyList.onChange([&] {
     settings.audio.frequency = audioFrequencyList.selected().text().natural();
@@ -98,6 +104,7 @@ auto DriverSettings::construct() -> void {
   videoDriverLayout.setPadding(12_sx, 0);
   videoPropertyLayout.setPadding(12_sx, 0);
   videoToggleLayout.setPadding(12_sx, 0);
+  audioDeviceLayout.setPadding(12_sx, 0);
   audioPropertyLayout.setPadding(12_sx, 0);
   audioToggleLayout.setPadding(12_sx, 0);
   inputDefocusLayout.setPadding(12_sx, 0);
@@ -149,6 +156,12 @@ auto DriverSettings::videoDriverUpdate() -> bool {
 }
 
 auto DriverSettings::audioRefresh() -> void {
+  audioDeviceList.reset();
+  for(auto& device : ruby::audio.hasDevices()) {
+    ComboButtonItem item{&audioDeviceList};
+    item.setText(device);
+    if(device == ruby::audio.device()) item.setSelected();
+  }
   audioFrequencyList.reset();
   for(auto& frequency : ruby::audio.hasFrequencies()) {
     ComboButtonItem item{&audioFrequencyList};
@@ -161,6 +174,7 @@ auto DriverSettings::audioRefresh() -> void {
     item.setText(latency);
     if(latency == ruby::audio.latency()) item.setSelected();
   }
+  audioDeviceList.setEnabled(audioDeviceList.itemCount() > 1);
   audioBlockingToggle.setChecked(ruby::audio.blocking()).setEnabled(ruby::audio.hasBlocking());
   audioDynamicToggle.setChecked(ruby::audio.dynamic()).setEnabled(ruby::audio.hasDynamic());
   VerticalLayout::resize();

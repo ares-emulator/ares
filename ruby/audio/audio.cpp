@@ -9,6 +9,11 @@ auto Audio::create() -> bool {
   return initialize();
 }
 
+auto Audio::hasDevice(string device) -> bool {
+    auto allDevices = hasDevices();
+    return std::ranges::find(allDevices, device) != allDevices.end();
+}
+
 auto Audio::hasChannels(u32 channels) -> bool {
   auto allChannels = hasChannels();
   return std::ranges::find(allChannels, channels) != allChannels.end();
@@ -28,6 +33,13 @@ auto Audio::setContext(uintptr context) -> bool {
   if(context == _context) return true;
   if(!hasContext()) return false;
   _context = context;
+  return true;
+}
+
+auto Audio::setDevice(string device) -> bool {
+  if(device == _device) return true;
+  if(!hasDevice(device)) return false;
+  _device = device;
   return true;
 }
 
