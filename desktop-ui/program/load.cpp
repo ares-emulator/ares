@@ -149,6 +149,7 @@ auto Program::load(string location) -> bool {
   presentation.loadEmulators();
 
   configuration = emulator->root->attribute("configuration");
+  retroAchievements.gameLoaded();
 
   if(program.startSaveStateSlot) {
     if(stateLoad(program.startSaveStateSlot.integer())) {
@@ -168,6 +169,7 @@ auto Program::unload() -> void {
 
   settings.save();
   clearUndoStates();
+  retroAchievements.gameUnloaded();
   showMessage({"Unloaded ", Location::prefix(emulator->game->location)});
   emulator->unload();
   screens.clear();

@@ -1,0 +1,3 @@
+[submodule "thirdparty/rcheevos"]
+	path = thirdparty/rcheevos
+	url = https://github.com/RetroAchievements/rcheevos.git

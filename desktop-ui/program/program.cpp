@@ -25,6 +25,7 @@ auto Program::create() -> void {
   _isRunning = true;
   worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
   program.rewindReset();
+  retroAchievements.initialize();
 
   if(!startGameLoad.empty()) {
     Program::Guard guard;
@@ -73,6 +74,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
       continue;
     }
     if(!emulator) {
+      retroAchievements.idle();
       usleep(20 * 1000);
       continue;
     }
@@ -88,6 +90,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
     if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
       ruby::audio.clear();
       nall::GDB::server.updateLoop();
+      retroAchievements.idle();
       usleep(20 * 1000);
       continue;
     }
@@ -108,6 +111,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
       state.setReading();
       emulator->root->unserialize(state);
     }
+    retroAchievements.frame();
 
     nall::GDB::server.updateLoop();
 

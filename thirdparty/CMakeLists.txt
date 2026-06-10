@@ -5,6 +5,59 @@ target_compile_definitions(sljit PUBLIC SLJIT_HAVE_CONFIG_PRE=1 SLJIT_HAVE_CONFI
 target_compile_options(sljit PRIVATE $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-conditional-uninitialized>)
 
 option(ARES_ENABLE_CHD "Enable CHD format support via libchdr" ON)
+option(ARES_ENABLE_RCHEEVOS "Enable RetroAchievements support" OFF)
+
+if(ARES_ENABLE_RCHEEVOS)
+  find_package(CURL REQUIRED)
+
+  add_library(
+    rcheevos
+    STATIC
+    rcheevos/src/rapi/rc_api_common.c
+    rcheevos/src/rapi/rc_api_info.c
+    rcheevos/src/rapi/rc_api_runtime.c
+    rcheevos/src/rapi/rc_api_user.c
+    rcheevos/src/rc_client.c
+    rcheevos/src/rc_compat.c
+    rcheevos/src/rc_util.c
+    rcheevos/src/rc_version.c
+    rcheevos/src/rcheevos/alloc.c
+    rcheevos/src/rcheevos/condition.c
+    rcheevos/src/rcheevos/condset.c
+    rcheevos/src/rcheevos/consoleinfo.c
+    rcheevos/src/rcheevos/format.c
+    rcheevos/src/rcheevos/lboard.c
+    rcheevos/src/rcheevos/memref.c
+    rcheevos/src/rcheevos/operand.c
+    rcheevos/src/rcheevos/rc_validate.c
+    rcheevos/src/rcheevos/richpresence.c
+    rcheevos/src/rcheevos/runtime.c
+    rcheevos/src/rcheevos/runtime_progress.c
+    rcheevos/src/rcheevos/trigger.c
+    rcheevos/src/rcheevos/value.c
+    rcheevos/src/rhash/hash.c
+    rcheevos/src/rhash/hash_rom.c
+    rcheevos/src/rhash/md5.c
+  )
+
+  target_include_directories(
+    rcheevos
+    PUBLIC rcheevos/include
+    PRIVATE rcheevos/src
+  )
+  target_compile_definitions(
+    rcheevos
+    PUBLIC
+      RC_CLIENT_SUPPORTS_HASH
+      RC_HASH_NO_DISC
+      RC_HASH_NO_ZIP
+      RC_HASH_NO_ENCRYPTED
+  )
+  target_link_libraries(rcheevos PUBLIC CURL::libcurl)
+  target_enable_feature(rcheevos "RetroAchievements support")
+else()
+  target_disable_feature(sljit "RetroAchievements support")
+endif()
 
 if(ARES_ENABLE_CHD)
   # lzma
@@ -108,6 +161,9 @@ add_library(qon STATIC qon/qon.cpp)
 set_target_properties(ymfm PROPERTIES FOLDER thirdparty PREFIX "")
 set_target_properties(tzxfile PROPERTIES FOLDER thirdparty PREFIX "")
 set_target_properties(sljit PROPERTIES FOLDER thirdparty PREFIX "")
+if(ARES_ENABLE_RCHEEVOS)
+  set_target_properties(rcheevos PROPERTIES FOLDER thirdparty PREFIX "")
+endif()
 if(ARES_ENABLE_CHD)
   set_target_properties(chdr-static PROPERTIES FOLDER thirdparty PREFIX "")
   set_target_properties(miniz PROPERTIES FOLDER thirdparty PREFIX "")

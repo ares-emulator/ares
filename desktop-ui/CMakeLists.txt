@@ -7,6 +7,7 @@ add_executable(
   game-browser/game-browser.cpp
   program/program.cpp
   presentation/presentation.cpp
+  retroachievements/retroachievements.cpp
   settings/settings.cpp
   tools/tools.cpp
 )
@@ -28,6 +29,7 @@ set_source_files_properties(
   game-browser/game-browser.cpp
   program/program.cpp
   presentation/presentation.cpp
+  retroachievements/retroachievements.cpp
   settings/settings.cpp
   tools/tools.cpp
   PROPERTIES HEADER_FILE_ONLY FALSE
@@ -53,6 +55,18 @@ target_link_libraries(
 
 if(ARES_ENABLE_CHD)
   target_link_libraries(desktop-ui PRIVATE chdr-static)
+endif()
+
+if(ARES_ENABLE_RCHEEVOS)
+  target_sources(
+    desktop-ui
+    PRIVATE
+      retroachievements/platform/adapter.cpp
+      retroachievements/platform/adapters/nintendo.cpp
+      retroachievements/platform/adapters/sega.cpp
+  )
+  target_compile_definitions(desktop-ui PRIVATE ARES_ENABLE_RCHEEVOS)
+  target_link_libraries(desktop-ui PRIVATE rcheevos)
 endif()
 
 set_target_properties(desktop-ui PROPERTIES OUTPUT_NAME ares)

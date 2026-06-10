@@ -126,6 +126,12 @@ struct Settings : Markup::Node {
   struct MegaDrive {
     bool tmss = false;
   } megadrive;
+
+  struct RetroAchievements {
+    bool enabled = false;
+    string username;
+    string token;
+  } retroAchievements;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -427,6 +433,36 @@ struct DebugSettings : VerticalLayout {
   Label connectInfo{this, Size{~0, 30}, 5};
 };
 
+struct RetroAchievementsSettings : VerticalLayout {
+  auto construct() -> void;
+  auto refresh() -> void;
+  auto setVisible(bool visible = true) -> RetroAchievementsSettings&;
+
+  Label accountLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout enabledLayout{this, Size{~0, 0}, 5};
+    CheckLabel enabled{&enabledLayout, Size{~0, 0}};
+  HorizontalLayout usernameLayout{this, Size{~0, 0}, 5};
+    Label usernameLabel{&usernameLayout, Size{80, layoutVertSize}};
+    LineEdit usernameValue{&usernameLayout, Size{~0, 0}};
+  HorizontalLayout passwordLayout{this, Size{~0, 0}, 5};
+    Label passwordLabel{&passwordLayout, Size{80, layoutVertSize}};
+    LineEdit passwordValue{&passwordLayout, Size{~0, 0}};
+  HorizontalLayout actionLayout{this, Size{~0, 0}, 5};
+    Label statusLabel{&actionLayout, Size{~0, layoutVertSize}};
+    Button loginButton{&actionLayout, Size{80, 0}};
+    Button clearButton{&actionLayout, Size{80, 0}};
+  HorizontalLayout profileLayout{this, Size{~0, 0}, 5};
+    Canvas profileAvatar{&profileLayout, Size{48, 48}};
+    VerticalLayout profileTextLayout{&profileLayout, Size{~0, 0}, 2};
+      Label profileName{&profileTextLayout, Size{~0, 0}};
+      Label profilePoints{&profileTextLayout, Size{~0, 0}};
+    Canvas profileSpacer{&profileLayout, Size{1, 0}};
+    Button profileLogoutButton{&profileLayout, Size{80, 0}};
+
+  string cachedAvatarUrl;
+  image cachedAvatarImage;
+};
+
 struct ImportExportSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
@@ -466,6 +502,7 @@ struct SettingsWindow : Window {
       PathSettings pathSettings;
       DriverSettings driverSettings;
       DebugSettings debugSettings;
+      RetroAchievementsSettings retroAchievementsSettings;
       ImportExportSettings importExportSettings;
       HomePanel homePanel;
   
@@ -488,4 +525,5 @@ extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
 extern DriverSettings& driverSettings;
 extern DebugSettings& debugSettings;
+extern RetroAchievementsSettings& retroAchievementsSettings;
 extern ImportExportSettings& importExportSettings;
