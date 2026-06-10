@@ -289,12 +289,12 @@ auto SettingsWindow::initialize() -> void {
 
   setDismissable();
   setTitle("Configuration");
-  setSize({700_sx, 425_sy});
+  setSize({700_sx, 450_sy});
   setAlignment({0.0, 1.0});
   setResizable(false);
   
   driverSettings.videoRefresh();
-  driverSettings.audioRefresh();
+  audioSettings.audioRefresh();
   initialized = true;
 }
 

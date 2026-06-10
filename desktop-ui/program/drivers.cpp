@@ -118,7 +118,6 @@ auto Program::audioDriverUpdate() -> void {
   Program::Guard guard;
   ruby::audio.create();
   ruby::audio.setContext(presentation.viewport.handle());
-  audioDeviceUpdate();
   audioFrequencyUpdate();
   audioLatencyUpdate();
   ruby::audio.setBlocking(settings.audio.blocking);
@@ -131,6 +130,7 @@ auto Program::audioDeviceUpdate() -> void {
     settings.audio.device = ruby::audio.device();
   }
   ruby::audio.setDevice(settings.audio.device);
+  ruby::audio.create();
 }
 
 auto Program::audioFrequencyUpdate() -> void {
@@ -161,7 +161,7 @@ auto Program::inputDriverUpdate() -> void {
 
   if(!ruby::input.ready()) {
     string driver = "SDL";
-    driverInitFailed(driver, "input", [&] { driverSettings.inputDriverUpdate(); });
+    driverInitFailed(driver, "input", [&] { inputSettings.inputDriverUpdate(); });
     return;
   }
 

@@ -9,6 +9,18 @@ auto Audio::create() -> bool {
   return initialize();
 }
 
+auto Audio::hasDevices() -> std::vector<string> { 
+  _devices.clear();
+  _devices.push_back("Default");
+  int count = 0;
+  SDL_AudioDeviceID* deviceIds = SDL_GetAudioPlaybackDevices(&count);
+  for(int i = 0; i < count; i++) {
+    _devices.push_back(SDL_GetAudioDeviceName(deviceIds[i]));
+  }
+  SDL_free(deviceIds);
+  return _devices; 
+}
+
 auto Audio::hasDevice(string device) -> bool {
     auto allDevices = hasDevices();
     return std::ranges::find(allDevices, device) != allDevices.end();
@@ -39,7 +51,24 @@ auto Audio::setContext(uintptr context) -> bool {
 auto Audio::setDevice(string device) -> bool {
   if(device == _device) return true;
   if(!hasDevice(device)) return false;
-  _device = device;
+  
+  if(device == "Default") {
+    _deviceId = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;
+    _device = device;
+    return true;
+  }
+
+  int count = 0;
+  SDL_AudioDeviceID* deviceIds = SDL_GetAudioPlaybackDevices(&count);
+  for(auto i = 0; i < count; i++) {
+    if(device == SDL_GetAudioDeviceName(deviceIds[i])) {
+      _deviceId = deviceIds[i];
+      _device = device;
+      break;
+    }
+  }
+
+  SDL_free(deviceIds);
   return true;
 }
 
@@ -131,7 +160,7 @@ auto Audio::initialize() -> bool {
     string desired_samples_string = (string)desired_samples;
     SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, desired_samples_string);
 
-    _stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+    _stream = SDL_OpenAudioDeviceStream(_deviceId, &spec, NULL, NULL);
     if(!_stream) return false;
 
     _deviceId = SDL_GetAudioStreamDevice(static_cast<SDL_AudioStream*>(_stream));
@@ -159,11 +188,11 @@ auto Audio::initialize() -> bool {
     if(_stream) {
       SDL_DestroyAudioStream(static_cast<SDL_AudioStream*>(_stream));
       _stream = nullptr;
-    } else if(_device) {
-      SDL_CloseAudioDevice(static_cast<SDL_AudioDeviceID>(_deviceId));
+    } else if(_deviceId) {
+      SDL_CloseAudioDevice(_deviceId);
     }
 
-    _device = 0;
+    _deviceId = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;
     _bufferSize = 0;
     _bytesPerFrame = 0;
 

@@ -7,7 +7,7 @@ struct Audio {
   auto ready() -> bool { return _ready; }
 
   auto hasContext() -> bool { return false; }
-  auto hasDevices() -> std::vector<string> { return {"Default"}; }
+  auto hasDevices() -> std::vector<string>; 
   auto hasBlocking() -> bool { return true; }
   auto hasDynamic() -> bool { return true; }
   auto hasChannels() -> std::vector<u32> { return { _channels }; }
@@ -50,7 +50,7 @@ private:
   bool _blocking = false;
   bool _dynamic = false;
 
-  u32 _deviceId = 0;
+  u32 _deviceId = 0xFFFFFFFFu; //SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK
   u32 _bufferSize = 0;
   u32 _bytesPerFrame = 0;
   u32 _channels = 2;
@@ -61,6 +61,7 @@ private:
   uintptr _context = 0;
   string _device = "Default";
 
+  std::vector<string> _devices;
   std::vector<nall::DSP::Resampler::Cubic> _resamplers;
   std::vector<f64> _resampleBuffer;
 };

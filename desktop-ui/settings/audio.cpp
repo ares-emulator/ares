@@ -19,4 +19,74 @@ auto AudioSettings::construct() -> void {
     settings.audio.balance = ((s32)balanceSlider.position() - 50.0) / 50.0;
     balanceValue.setText({balanceSlider.position(), "%"});
   }).doChange();
+
+  audioLabel.setText("Device Settings").setFont(Font().setBold());
+  audioDeviceLabel.setText("Output device:");
+  audioDeviceList.onChange([&] {
+    settings.audio.device = audioDeviceList.selected().text();
+    program.audioDeviceUpdate();
+    audioRefresh();
+  });
+
+  audioFrequencyLabel.setText("Frequency:");
+  audioFrequencyList.onChange([&] {
+    settings.audio.frequency = audioFrequencyList.selected().text().natural();
+    program.audioFrequencyUpdate();
+    audioRefresh();
+  });
+
+  audioLatencyLabel.setText("Latency:");
+  audioLatencyList.onChange([&] {
+    settings.audio.latency = audioLatencyList.selected().text().natural();
+    program.audioLatencyUpdate();
+    audioRefresh();
+  });
+
+  audioBlockingToggle.setText("Synchronize").onToggle([&] {
+    Program::Guard guard;
+    settings.audio.blocking = audioBlockingToggle.checked();
+    ruby::audio.setBlocking(settings.audio.blocking);
+  });
+
+  audioDynamicToggle.setText("Dynamic rate").onToggle([&] {
+    Program::Guard guard;
+    settings.audio.dynamic = audioDynamicToggle.checked();
+    ruby::audio.setDynamic(settings.audio.dynamic);
+  });
+
+  audioDeviceLayout.setPadding(12_sx, 0);
+  audioPropertyLayout.setPadding(12_sx, 0);
+  audioToggleLayout.setPadding(12_sx, 0);
+}
+
+auto AudioSettings::audioRefresh() -> void {
+  audioDeviceList.reset();
+  for(auto& device : ruby::audio.hasDevices()) {
+    ComboButtonItem item{&audioDeviceList};
+    item.setText(device);
+    if(device == ruby::audio.device()) item.setSelected();
+  }
+  audioFrequencyList.reset();
+  for(auto& frequency : ruby::audio.hasFrequencies()) {
+    ComboButtonItem item{&audioFrequencyList};
+    item.setText(frequency);
+    if(frequency == ruby::audio.frequency()) item.setSelected();
+  }
+  audioLatencyList.reset();
+  for(auto& latency : ruby::audio.hasLatencies()) {
+    ComboButtonItem item{&audioLatencyList};
+    item.setText(latency);
+    if(latency == ruby::audio.latency()) item.setSelected();
+  }
+  audioDeviceList.setEnabled(audioDeviceList.itemCount() > 1);
+  audioBlockingToggle.setChecked(ruby::audio.blocking()).setEnabled(ruby::audio.hasBlocking());
+  audioDynamicToggle.setChecked(ruby::audio.dynamic()).setEnabled(ruby::audio.hasDynamic());
+  VerticalLayout::resize();
+}
+
+auto AudioSettings::audioDriverUpdate() -> bool {
+  Program::Guard guard;
+  program.audioDriverUpdate();
+  audioRefresh();
+  return true;
 }

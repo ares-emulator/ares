@@ -185,16 +185,29 @@ struct VideoSettings : VerticalLayout {
 
 struct AudioSettings : VerticalLayout {
   auto construct() -> void;
+  auto audioRefresh() -> void;
+  auto audioDriverUpdate() -> bool;
 
   Label effectsLabel{this, Size{~0, 0}, 5};
   TableLayout effectsLayout{this, Size{~0, 0}};
     Label volumeLabel{&effectsLayout, Size{0, 0}};
     Label volumeValue{&effectsLayout, Size{50_sx, 0}};
     HorizontalSlider volumeSlider{&effectsLayout, Size{~0, 0}};
-  //
     Label balanceLabel{&effectsLayout, Size{0, 0}};
     Label balanceValue{&effectsLayout, Size{50_sx, 0}};
     HorizontalSlider balanceSlider{&effectsLayout, Size{~0, 0}};
+  Label audioLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout audioDeviceLayout{this, Size{~0, 0}};
+    Label audioDeviceLabel{&audioDeviceLayout, Size{0, 0}};
+    ComboButton audioDeviceList{&audioDeviceLayout, Size{0, 0}};
+  HorizontalLayout audioPropertyLayout{this, Size{~0, 0}};
+    Label audioFrequencyLabel{&audioPropertyLayout, Size{0, 0}};
+    ComboButton audioFrequencyList{&audioPropertyLayout, Size{0, 0}};
+    Label audioLatencyLabel{&audioPropertyLayout, Size{0, 0}};
+    ComboButton audioLatencyList{&audioPropertyLayout, Size{0, 0}};
+  HorizontalLayout audioToggleLayout{this, Size{~0, 0}};
+    CheckLabel audioBlockingToggle{&audioToggleLayout, Size{0, 0}};
+    CheckLabel audioDynamicToggle{&audioToggleLayout, Size{0, 0}};
 };
 
 struct InputSettings : VerticalLayout {
@@ -210,7 +223,14 @@ struct InputSettings : VerticalLayout {
   auto eventAssign(TableViewCell) -> void;
   auto eventInput(std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
   auto setVisible(bool visible = true) -> InputSettings&;
+  auto inputDriverUpdate() -> bool;
 
+  HorizontalLayout inputDefocusLayout{this, Size{~0, 0}};
+    Label inputDefocusLabel{&inputDefocusLayout, Size{0, 0}};
+    RadioLabel inputDefocusPause{&inputDefocusLayout, Size{0, 0}};
+    RadioLabel inputDefocusBlock{&inputDefocusLayout, Size{0, 0}};
+    RadioLabel inputDefocusAllow{&inputDefocusLayout, Size{0, 0}};
+    Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
   HorizontalLayout indexLayout{this, Size{~0, 0}};
     ComboButton systemList{&indexLayout, Size{~0, 0}};
     ComboButton portList{&indexLayout, Size{~0, 0}};
@@ -361,10 +381,7 @@ struct DriverSettings : VerticalLayout {
   auto construct() -> void;
   auto videoRefresh() -> void;
   auto videoDriverUpdate() -> bool;
-  auto audioRefresh() -> void;
-  auto audioDriverUpdate() -> bool;
-  auto inputDriverUpdate() -> bool;
-
+  
   Label videoLabel{this, Size{~0, 0}, 5};
   HorizontalLayout videoDriverLayout{this, Size{~0, 0}};
     Label videoDriverLabel{&videoDriverLayout, Size{0, 0}};
@@ -386,27 +403,6 @@ struct DriverSettings : VerticalLayout {
     CheckLabel videoThreadedRendererToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoNativeFullScreenToggle{&videoToggleLayout, Size{0, 0}};
 #endif
-  //
-  Label audioLabel{this, Size{~0, 0}, 5};
-  HorizontalLayout audioDeviceLayout{this, Size{~0, 0}};
-    Label audioDeviceLabel{&audioDeviceLayout, Size{0, 0}};
-    ComboButton audioDeviceList{&audioDeviceLayout, Size{0, 0}};
-  HorizontalLayout audioPropertyLayout{this, Size{~0, 0}};
-    Label audioFrequencyLabel{&audioPropertyLayout, Size{0, 0}};
-    ComboButton audioFrequencyList{&audioPropertyLayout, Size{0, 0}};
-    Label audioLatencyLabel{&audioPropertyLayout, Size{0, 0}};
-    ComboButton audioLatencyList{&audioPropertyLayout, Size{0, 0}};
-  HorizontalLayout audioToggleLayout{this, Size{~0, 0}};
-    CheckLabel audioBlockingToggle{&audioToggleLayout, Size{0, 0}};
-    CheckLabel audioDynamicToggle{&audioToggleLayout, Size{0, 0}};
-  //
-  Label inputLabel{this, Size{~0, 0}, 5};
-  HorizontalLayout inputDefocusLayout{this, Size{~0, 0}};
-    Label inputDefocusLabel{&inputDefocusLayout, Size{0, 0}};
-    RadioLabel inputDefocusPause{&inputDefocusLayout, Size{0, 0}};
-    RadioLabel inputDefocusBlock{&inputDefocusLayout, Size{0, 0}};
-    RadioLabel inputDefocusAllow{&inputDefocusLayout, Size{0, 0}};
-    Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
 };
 
 struct DebugSettings : VerticalLayout {
