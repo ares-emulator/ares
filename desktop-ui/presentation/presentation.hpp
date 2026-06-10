@@ -61,7 +61,7 @@ struct Presentation : Window {
       MenuItem optionSettingsAction{&settingsMenu};
       MenuItem firmwareSettingsAction{&settingsMenu};
       MenuItem pathSettingsAction{&settingsMenu};
-      MenuItem driverSettingsAction{&settingsMenu};
+      MenuItem coreSettingsAction{&settingsMenu};
       MenuItem debugSettingsAction{&settingsMenu};
       MenuItem importExportAction{&settingsMenu};
     Menu toolsMenu{&menuBar};

@@ -41,11 +41,6 @@ struct Settings : Markup::Node {
     bool interframeBlending = true;
     bool overscan = true;
     bool pixelAccuracy = false;
-
-    string quality = "SD";
-    bool supersampling = false;
-    bool disableVideoInterfaceProcessing = false;
-    bool weaveDeinterlacing = true;
   } video;
 
   struct Audio {
@@ -80,7 +75,6 @@ struct Settings : Markup::Node {
     bool runAhead = false;
     bool autoSaveMemory = true;
     bool homebrewMode = false;
-    bool forceInterpreter = false;
     bool noFilePrompt = false;
   } general;
 
@@ -114,9 +108,14 @@ struct Settings : Markup::Node {
   } debugServer;
 
   struct Nintendo64 {
+    bool forceInterpreter = false;
     bool expansionPak = true;
     u8 controllerPakBankCount = 1;
     string controllerPakBankString = "32KiB (Default)";
+    string quality = "SD";
+    bool supersampling = false;
+    bool disableVideoInterfaceProcessing = false;
+    bool weaveDeinterlacing = true;
   } nintendo64;
 
   struct GameBoyAdvance {
@@ -126,10 +125,20 @@ struct Settings : Markup::Node {
   struct MegaDrive {
     bool tmss = false;
   } megadrive;
+
+  struct Sega32X {
+    bool forceInterpreter = false;
+  } sega32x;
+
+  struct PlayStation {
+    bool forceInterpreter = false;
+  } playstation;
 };
 
 struct VideoSettings : VerticalLayout {
   auto construct() -> void;
+  auto videoRefresh() -> void;
+  auto videoDriverUpdate() -> bool;
 
   Label colorAdjustmentLabel{this, Size{~0, 0}, 5};
   TableLayout colorAdjustmentLayout{this, Size{~0, 0}};
@@ -144,6 +153,7 @@ struct VideoSettings : VerticalLayout {
     Label gammaLabel{&colorAdjustmentLayout, Size{0, 0}};
     Label gammaValue{&colorAdjustmentLayout, Size{50_sx, 0}};
     HorizontalSlider gammaSlider{&colorAdjustmentLayout, Size{~0, 0}};
+  //
   Label emulatorSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout colorBleedLayout{this, Size{~0, 0}, 5};
       CheckLabel colorBleedOption{&colorBleedLayout, Size{0, 0}, 5};
@@ -164,23 +174,27 @@ struct VideoSettings : VerticalLayout {
       CheckLabel pixelAccuracyOption{&pixelAccuracyLayout, Size{0, 0}, 5};
       Label pixelAccuracyHint{&pixelAccuracyLayout, Size{~0, layoutVertSize}};
   //
-  Label renderSettingsLabel{this, Size{~0, 0}, 5};
-  HorizontalLayout disableVideoInterfaceProcessingLayout{this, Size{~0, 0}, 5};
-    CheckLabel disableVideoInterfaceProcessingOption{&disableVideoInterfaceProcessingLayout, Size{0, 0}, 5};
-    Label disableVideoInterfaceProcessingHint{&disableVideoInterfaceProcessingLayout, Size{0, layoutVertSize}};
-  HorizontalLayout weaveDeinterlacingLayout{this, Size{~0, 0}, 5};
-    CheckLabel weaveDeinterlacingOption{&weaveDeinterlacingLayout, Size{0, 0}, 5};
-    Label weaveDeinterlacingHint{&weaveDeinterlacingLayout, Size{0, layoutVertSize}};
-  HorizontalLayout renderQualityLayout{this, Size{~0, 0}, 5};
-    RadioLabel renderQuality1x{&renderQualityLayout, Size{0, 0}};
-    RadioLabel renderQuality2x{&renderQualityLayout, Size{0, 0}};
-    RadioLabel renderQuality4x{&renderQualityLayout, Size{0, 0}};
-    Group renderQualityGroup{&renderQuality1x, &renderQuality2x, &renderQuality4x};
-  HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 5};
-    CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
-    Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, layoutVertSize}};
-  HorizontalLayout renderSettingsLayout{this, Size{~0, 0}};
-      Label renderSettingsHint{&renderSettingsLayout, Size{0, layoutVertSize}};
+  Label videoLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout videoDriverLayout{this, Size{~0, 0}};
+    Label videoDriverLabel{&videoDriverLayout, Size{0, 0}};
+    ComboButton videoDriverList{&videoDriverLayout, Size{0, 0}};
+    Label videoDriverActive{&videoDriverLayout, Size{0, 0}};
+  HorizontalLayout videoPropertyLayout{this, Size{~0, 0}};
+    Label videoMonitorLabel{&videoPropertyLayout, Size{0, 0}};
+    ComboButton videoMonitorList{&videoPropertyLayout, Size{0, 0}};
+    Label videoFormatLabel{&videoPropertyLayout, Size{0, 0}};
+    ComboButton videoFormatList{&videoPropertyLayout, Size{0, 0}};
+  HorizontalLayout videoToggleLayout{this, Size{~0, 0}};
+#if !defined(PLATFORM_MACOS)
+    CheckLabel videoExclusiveToggle{&videoToggleLayout, Size{0, 0}};
+#endif
+    CheckLabel videoBlockingToggle{&videoToggleLayout, Size{0, 0}};
+    CheckLabel videoFlushToggle{&videoToggleLayout, Size{0, 0}};
+#if defined(PLATFORM_MACOS)
+    CheckLabel videoColorSpaceToggle{&videoToggleLayout, Size{0, 0}};
+    CheckLabel videoThreadedRendererToggle{&videoToggleLayout, Size{0, 0}};
+    CheckLabel videoNativeFullScreenToggle{&videoToggleLayout, Size{0, 0}};
+#endif
 };
 
 struct AudioSettings : VerticalLayout {
@@ -294,30 +308,9 @@ struct OptionSettings : VerticalLayout {
     HorizontalLayout homebrewModeLayout{this, Size{~0, 0}, 5};
       CheckLabel homebrewMode{&homebrewModeLayout, Size{0, 0}, 5};
       Label homebrewModeHint{&homebrewModeLayout, Size{~0, layoutVertSize}};
-    HorizontalLayout forceInterpreterLayout{this, Size{~0, 0}, 5};
-      CheckLabel forceInterpreter{&forceInterpreterLayout, Size{0, 0}, 5};
-      Label forceInterpreterHint{&forceInterpreterLayout, Size{0, layoutVertSize}};
     HorizontalLayout noFilePromptLayout{this, Size{~0, 0}, 5};
       CheckLabel noFilePromptOption{&noFilePromptLayout, Size{0, 0}, 5};
       Label noFilePromptHint{&noFilePromptLayout, Size{0, layoutVertSize}};
-  Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
-      CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
-      Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, layoutVertSize}};
-    HorizontalLayout nintendo64ControllerPakBankLayout{this, Size{~0, 0}, 5};
-      Label nintendo64ControllerPakBankLabel{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
-      ComboButton nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{0, 0}};
-      Label nintendo64ControllerPakBankHint{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
-
-  Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};
-      CheckLabel gameBoyPlayerOption{&gameBoyPlayerLayout, Size{0, 0}, 5};
-      Label gameBoyPlayerHint{&gameBoyPlayerLayout, Size{0, layoutVertSize}};
-
-  Label megaDriveSettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};
-      CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};
-      Label megaDriveTmssHint{&megaDriveTmssLayout, Size{0, layoutVertSize}};
 };
 
 struct FirmwareSettings : VerticalLayout {
@@ -377,32 +370,57 @@ struct PathSettings : VerticalLayout {
     Button arcadeRomsReset{&arcadeRomsLayout, Size{80, 0}};
 };
 
-struct DriverSettings : VerticalLayout {
+struct CoreSettings : VerticalLayout {
   auto construct() -> void;
-  auto videoRefresh() -> void;
-  auto videoDriverUpdate() -> bool;
+
+  HorizontalLayout settingsLayout{this, Size{~0, 0}};
+      Label settingsHint{&settingsLayout, Size{0, layoutVertSize}};
+  //
+  Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout nintendo64ForceInterpreterLayout{this, Size{~0, 0}, 5};
+      CheckLabel nintendo64ForceInterpreter{&nintendo64ForceInterpreterLayout, Size{0, 0}, 5};
+      Label nintendo64ForceInterpreterHint{&nintendo64ForceInterpreterLayout, Size{0, layoutVertSize}};
+    HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
+      CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
+      Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, layoutVertSize}};
+    HorizontalLayout nintendo64ControllerPakBankLayout{this, Size{~0, 0}, 5};
+      Label nintendo64ControllerPakBankLabel{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
+      ComboButton nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{0, 0}};
+      Label nintendo64ControllerPakBankHint{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
+    HorizontalLayout disableVideoInterfaceProcessingLayout{this, Size{~0, 0}, 5};
+      CheckLabel disableVideoInterfaceProcessingOption{&disableVideoInterfaceProcessingLayout, Size{0, 0}, 5};
+      Label disableVideoInterfaceProcessingHint{&disableVideoInterfaceProcessingLayout, Size{0, layoutVertSize}};
+    HorizontalLayout weaveDeinterlacingLayout{this, Size{~0, 0}, 5};
+      CheckLabel weaveDeinterlacingOption{&weaveDeinterlacingLayout, Size{0, 0}, 5};
+      Label weaveDeinterlacingHint{&weaveDeinterlacingLayout, Size{0, layoutVertSize}};
+    HorizontalLayout renderQualityLayout{this, Size{~0, 0}, 5};
+      RadioLabel renderQuality1x{&renderQualityLayout, Size{0, 0}};
+      RadioLabel renderQuality2x{&renderQualityLayout, Size{0, 0}};
+      RadioLabel renderQuality4x{&renderQualityLayout, Size{0, 0}};
+      Group renderQualityGroup{&renderQuality1x, &renderQuality2x, &renderQuality4x};
+    HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 5};
+      CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
+      Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, layoutVertSize}};
+
+  Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};
+      CheckLabel gameBoyPlayerOption{&gameBoyPlayerLayout, Size{0, 0}, 5};
+      Label gameBoyPlayerHint{&gameBoyPlayerLayout, Size{0, layoutVertSize}};
+
+  Label megaDriveSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};
+      CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};
+      Label megaDriveTmssHint{&megaDriveTmssLayout, Size{0, layoutVertSize}};
   
-  Label videoLabel{this, Size{~0, 0}, 5};
-  HorizontalLayout videoDriverLayout{this, Size{~0, 0}};
-    Label videoDriverLabel{&videoDriverLayout, Size{0, 0}};
-    ComboButton videoDriverList{&videoDriverLayout, Size{0, 0}};
-    Label videoDriverActive{&videoDriverLayout, Size{0, 0}};
-  HorizontalLayout videoPropertyLayout{this, Size{~0, 0}};
-    Label videoMonitorLabel{&videoPropertyLayout, Size{0, 0}};
-    ComboButton videoMonitorList{&videoPropertyLayout, Size{0, 0}};
-    Label videoFormatLabel{&videoPropertyLayout, Size{0, 0}};
-    ComboButton videoFormatList{&videoPropertyLayout, Size{0, 0}};
-  HorizontalLayout videoToggleLayout{this, Size{~0, 0}};
-#if !defined(PLATFORM_MACOS)
-    CheckLabel videoExclusiveToggle{&videoToggleLayout, Size{0, 0}};
-#endif
-    CheckLabel videoBlockingToggle{&videoToggleLayout, Size{0, 0}};
-    CheckLabel videoFlushToggle{&videoToggleLayout, Size{0, 0}};
-#if defined(PLATFORM_MACOS)
-    CheckLabel videoColorSpaceToggle{&videoToggleLayout, Size{0, 0}};
-    CheckLabel videoThreadedRendererToggle{&videoToggleLayout, Size{0, 0}};
-    CheckLabel videoNativeFullScreenToggle{&videoToggleLayout, Size{0, 0}};
-#endif
+  Label sega32xSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout sega32xForceInterpreterLayout{this, Size{~0, 0}, 5};
+      CheckLabel sega32xForceInterpreter{&sega32xForceInterpreterLayout, Size{0, 0}, 5};
+      Label sega32xForceInterpreterHint{&sega32xForceInterpreterLayout, Size{0, layoutVertSize}};
+
+  Label playstationSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout playstationForceInterpreterLayout{this, Size{~0, 0}, 5};
+      CheckLabel playstationForceInterpreter{&playstationForceInterpreterLayout, Size{0, 0}, 5};
+      Label playstationForceInterpreterHint{&playstationForceInterpreterLayout, Size{0, layoutVertSize}};
 };
 
 struct DebugSettings : VerticalLayout {
@@ -463,7 +481,7 @@ struct SettingsWindow : Window {
       OptionSettings optionSettings;
       FirmwareSettings firmwareSettings;
       PathSettings pathSettings;
-      DriverSettings driverSettings;
+      CoreSettings coreSettings;
       DebugSettings debugSettings;
       ImportExportSettings importExportSettings;
       HomePanel homePanel;
@@ -485,6 +503,6 @@ extern EmulatorSettings& emulatorSettings;
 extern OptionSettings& optionSettings;
 extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
-extern DriverSettings& driverSettings;
+extern CoreSettings& coreSettings;
 extern DebugSettings& debugSettings;
 extern ImportExportSettings& importExportSettings;

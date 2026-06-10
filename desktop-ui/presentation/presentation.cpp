@@ -329,8 +329,8 @@ Presentation::Presentation() {
   pathSettingsAction.setText("Paths" ELLIPSIS).setIcon(Icon::Emblem::Folder).onActivate([&] {
     settingsWindow.show("Paths");
   });
-  driverSettingsAction.setText("Drivers" ELLIPSIS).setIcon(Icon::Place::Settings).onActivate([&] {
-    settingsWindow.show("Drivers");
+  coreSettingsAction.setText("Cores" ELLIPSIS).setIcon(Icon::Place::Settings).onActivate([&] {
+    settingsWindow.show("Cores");
   });
   debugSettingsAction.setText("Debug" ELLIPSIS).setIcon(Icon::Device::Network).onActivate([&] {
     settingsWindow.show("Debug");

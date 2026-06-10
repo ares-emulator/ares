@@ -13,7 +13,7 @@ auto Program::videoDriverUpdate() -> void {
   ruby::video.setNativeFullScreen(settings.video.nativeFullScreen);
 
   if(!ruby::video.ready()) {
-    driverInitFailed(settings.video.driver, "video", [&] { driverSettings.videoDriverUpdate(); });
+    driverInitFailed(settings.video.driver, "video", [&] { videoSettings.videoDriverUpdate(); });
     return;
   }
 
@@ -118,6 +118,7 @@ auto Program::audioDriverUpdate() -> void {
   Program::Guard guard;
   ruby::audio.create();
   ruby::audio.setContext(presentation.viewport.handle());
+  audioDeviceUpdate();
   audioFrequencyUpdate();
   audioLatencyUpdate();
   ruby::audio.setBlocking(settings.audio.blocking);
@@ -130,7 +131,6 @@ auto Program::audioDeviceUpdate() -> void {
     settings.audio.device = ruby::audio.device();
   }
   ruby::audio.setDevice(settings.audio.device);
-  ruby::audio.create();
 }
 
 auto Program::audioFrequencyUpdate() -> void {

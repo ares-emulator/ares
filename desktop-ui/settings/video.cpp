@@ -74,70 +74,106 @@ auto VideoSettings::construct() -> void {
   pixelAccuracyLayout.setAlignment(1).setPadding(12_sx, 0);
   pixelAccuracyHint.setText("Use pixel-accurate emulation where available").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  renderSettingsLabel.setText("N64 Render Settings").setFont(Font().setBold());
-
-  renderQualityLayout.setPadding(12_sx, 0);
-
-  disableVideoInterfaceProcessingOption.setText("Disable Video Interface Processing").setChecked(settings.video.disableVideoInterfaceProcessing).onToggle([&] {
-    Program::Guard guard;
-    settings.video.disableVideoInterfaceProcessing = disableVideoInterfaceProcessingOption.checked();
-    if(emulator) emulator->setBoolean("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
-  });
-  disableVideoInterfaceProcessingLayout.setAlignment(1).setPadding(12_sx, 0);
-  disableVideoInterfaceProcessingHint.setText("Disables Video Interface post processing to render image from VRAM directly").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-
-  weaveDeinterlacingOption.setText("Weave Deinterlacing").setChecked(settings.video.weaveDeinterlacing).onToggle([&] {
-    settings.video.weaveDeinterlacing = weaveDeinterlacingOption.checked();
-    Program::Guard guard;
-    if(emulator) emulator->setBoolean("(Experimental) Double the perceived vertical resolution; disabled when supersampling is used", settings.video.weaveDeinterlacing);
-    if(weaveDeinterlacingOption.checked() == true) {
-      renderSupersamplingOption.setChecked(false).setEnabled(false);
-      settings.video.supersampling = false;
-    } else {
-      if(settings.video.quality != "SD") renderSupersamplingOption.setEnabled(true);
+  videoLabel.setText("Device Settings").setFont(Font().setBold());
+  videoDriverList.onChange([&] {
+    if(videoDriverList.selected().text() != settings.video.driver) {
+      auto previous = settings.video.driver;
+      settings.video.driver = videoDriverList.selected().text();
+      if (!videoDriverUpdate()) {
+        settings.video.driver = previous;
+        videoRefresh();
+      }
     }
   });
-  weaveDeinterlacingLayout.setAlignment(1).setPadding(12_sx, 0);
-  weaveDeinterlacingHint.setText("Doubles the perceived vertical resolution; incompatible with supersampling").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  videoDriverLabel.setText("Driver:");
+  videoMonitorLabel.setText("Fullscreen monitor:");
+  videoMonitorList.onChange([&] {
+    settings.video.monitor = videoMonitorList.selected().text();
+    program.videoMonitorUpdate();
+    videoRefresh();
+  });
+  videoFormatLabel.setText("Format:");
+  videoFormatList.onChange([&] {
+    settings.video.format = videoFormatList.selected().text();
+    program.videoFormatUpdate();
+    videoRefresh();
+  });
+#if !defined(PLATFORM_MACOS)
+  videoExclusiveToggle.setText("Exclusive mode").onToggle([&] {
+    settings.video.exclusive = videoExclusiveToggle.checked();
+    ruby::video.setExclusive(settings.video.exclusive);
+  });
+#endif
+  videoBlockingToggle.setText("Synchronize").onToggle([&] {
+    settings.video.blocking = videoBlockingToggle.checked();
+    ruby::video.setBlocking(settings.video.blocking);
+  });
+  videoFlushToggle.setText("GPU sync").onToggle([&] {
+    settings.video.flush = videoFlushToggle.checked();
+    ruby::video.setFlush(settings.video.flush);
+  });
+#if defined(PLATFORM_MACOS)
+  videoColorSpaceToggle.setText("Force sRGB").onToggle([&] {
+    settings.video.forceSRGB = videoColorSpaceToggle.checked();
+    ruby::video.setForceSRGB(settings.video.forceSRGB);
+  });
+  videoThreadedRendererToggle.setText("Threaded").onToggle([&] {
+    settings.video.threadedRenderer = videoThreadedRendererToggle.checked();
+    ruby::video.setThreadedRenderer(settings.video.threadedRenderer);
+  });
+  videoNativeFullScreenToggle.setText("Use native fullscreen").onToggle([&] {
+    settings.video.nativeFullScreen = videoNativeFullScreenToggle.checked();
+    ruby::video.setNativeFullScreen(settings.video.nativeFullScreen);
+    videoRefresh();
+  });
+#endif
+   
+  videoDriverLayout.setPadding(12_sx, 0);
+  videoPropertyLayout.setPadding(12_sx, 0);
+  videoToggleLayout.setPadding(12_sx, 0);
+}
 
-  renderQuality1x.setText("1x Native").onActivate([&] {
-    settings.video.quality = "SD";
-    renderSupersamplingOption.setChecked(false).setEnabled(false);
-    settings.video.supersampling = false;
-    weaveDeinterlacingOption.setEnabled(true);
-  });
-  renderQuality2x.setText("2x Native").onActivate([&] {
-    settings.video.quality = "HD";
-    if(weaveDeinterlacingOption.checked() == false) renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
-  });
-  renderQuality4x.setText("4x Native").onActivate([&] {
-    settings.video.quality = "UHD";
-    if(weaveDeinterlacingOption.checked() == false) renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
-  });
-  if(settings.video.quality == "SD") renderQuality1x.setChecked();
-  if(settings.video.quality == "HD") renderQuality2x.setChecked();
-  if(settings.video.quality == "UHD") renderQuality4x.setChecked();
-  renderSupersamplingOption.setText("Supersampling").setChecked(settings.video.supersampling && settings.video.quality != "SD").setEnabled(settings.video.quality != "SD").onToggle([&] {
-    settings.video.supersampling = renderSupersamplingOption.checked();
-    if(renderSupersamplingOption.checked() == true) {
-      weaveDeinterlacingOption.setEnabled(false).setChecked(false);
-      settings.video.weaveDeinterlacing = false;
-    } else {
-      weaveDeinterlacingOption.setEnabled(true);
-    }
-  });
-  renderSupersamplingLayout.setAlignment(1).setPadding(12_sx, 0);
-  renderSupersamplingHint.setText("Scales 2x and 4x resolutions back down to native.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-  renderSettingsLayout.setPadding(12_sx, 0);
-  renderSettingsHint.setText("Note: render settings changes require a game reload to take effect").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+auto VideoSettings::videoRefresh() -> void {
+  videoDriverList.reset();
+  for(auto& driver : ruby::video.hasDrivers()) {
+    ComboButtonItem item{&videoDriverList};
+    item.setText(driver);
+    if(driver == ruby::video.driver()) item.setSelected();
+  }
+  videoMonitorList.reset();
+  for(auto& monitor : ruby::video.hasMonitors()) {
+    ComboButtonItem item{&videoMonitorList};
+    item.setText(monitor.name);
+    if(monitor.name == ruby::video.monitor()) item.setSelected();
+  }
+  videoFormatList.reset();
+  for(auto& format : ruby::video.hasFormats()) {
+    ComboButtonItem item{&videoFormatList};
+    item.setText(format);
+    if(format == ruby::video.format()) item.setSelected();
+  }
+  videoMonitorList.setEnabled(videoMonitorList.itemCount() > 1 && ruby::video.hasMonitor());
+  videoFormatList.setEnabled(0 && videoFormatList.itemCount() > 1);
+#if !defined(PLATFORM_MACOS)
+  videoExclusiveToggle.setChecked(ruby::video.exclusive()).setEnabled(ruby::video.hasExclusive());
+#endif
+  videoBlockingToggle.setChecked(ruby::video.blocking()).setEnabled(ruby::video.hasBlocking());
+#if defined(PLATFORM_MACOS)
+  videoColorSpaceToggle.setChecked(ruby::video.forceSRGB()).setEnabled(ruby::video.hasForceSRGB());
+  videoThreadedRendererToggle.setChecked(ruby::video.threadedRenderer()).setEnabled(ruby::video.hasThreadedRenderer());
+  videoNativeFullScreenToggle.setChecked(ruby::video.nativeFullScreen()).setEnabled(ruby::video.hasNativeFullScreen());
+#endif
+  videoFlushToggle.setChecked(ruby::video.flush()).setEnabled(ruby::video.hasFlush());
+  VerticalLayout::resize();
+}
 
-  #if !defined(VULKAN)
-  //hide Vulkan-specific options if Vulkan is not available
-  renderSettingsLabel.setCollapsible(true).setVisible(false);
-  renderQualityLayout.setCollapsible(true).setVisible(false);
-  renderSupersamplingLayout.setCollapsible(true).setVisible(false);
-  renderSettingsHint.setCollapsible(true).setVisible(false);
-  disableVideoInterfaceProcessingLayout.setCollapsible(true).setVisible(false);
-  weaveDeinterlacingLayout.setCollapsible(true).setVisible(false);
-  #endif
+auto VideoSettings::videoDriverUpdate() -> bool {
+  Program::Guard guard;
+  if(emulator && settings.video.driver != "None" && MessageDialog(
+    "Warning: incompatible drivers may cause this software to crash.\n"
+    "Are you sure you want to change this driver while a game is loaded?"
+  ).setAlignment(settingsWindow).question() != "Yes") return false;
+  program.videoDriverUpdate();
+  videoRefresh();
+  return true;
 }

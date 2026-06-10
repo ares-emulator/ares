@@ -8,7 +8,7 @@
 #include "options.cpp"
 #include "firmware.cpp"
 #include "paths.cpp"
-#include "drivers.cpp"
+#include "cores.cpp"
 #include "debug.cpp"
 #include "importexport.cpp"
 #include "home.cpp"
@@ -25,7 +25,7 @@ OptionSettings& optionSettings = settingsWindow.optionSettings;
 FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
 DebugSettings& debugSettings = settingsWindow.debugSettings;
-DriverSettings& driverSettings = settingsWindow.driverSettings;
+CoreSettings& coreSettings = settingsWindow.coreSettings;
 ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
 auto Settings::load() -> void {
@@ -80,10 +80,6 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/InterframeBlending", video.interframeBlending);
   bind(boolean, "Video/Overscan", video.overscan);
   bind(boolean, "Video/PixelAccuracy", video.pixelAccuracy);
-  bind(string,  "Video/Quality", video.quality);
-  bind(boolean, "Video/Supersampling", video.supersampling);
-  bind(boolean, "Video/DisableVideoInterfaceProcessing", video.disableVideoInterfaceProcessing);
-  bind(boolean, "Video/WeaveDeinterlacing", video.weaveDeinterlacing);
 
   bind(string,  "Audio/Device", audio.device);
   bind(natural, "Audio/Frequency", audio.frequency);
@@ -106,7 +102,6 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "General/RunAhead", general.runAhead);
   bind(boolean, "General/AutoSaveMemory", general.autoSaveMemory);
   bind(boolean, "General/HomebrewMode", general.homebrewMode);
-  bind(boolean, "General/ForceInterpreter", general.forceInterpreter);
   bind(boolean, "General/NoFilePrompt", general.noFilePrompt);
 
   bind(natural, "Rewind/Length", rewind.length);
@@ -126,12 +121,21 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "DebugServer/Enabled", debugServer.enabled);
   bind(boolean, "DebugServer/UseIPv4", debugServer.useIPv4);
 
+  bind(boolean, "Nintendo64/ForceInterpreter", nintendo64.forceInterpreter);
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
-  bind(string, "Nintendo64/ControllerPakBankString", nintendo64.controllerPakBankString);
+  bind(string,  "Nintendo64/ControllerPakBankString", nintendo64.controllerPakBankString);
+  bind(string,  "Nintendo64/Quality", nintendo64.quality);
+  bind(boolean, "Nintendo64/Supersampling", nintendo64.supersampling);
+  bind(boolean, "Nintendo64/DisableVideoInterfaceProcessing", nintendo64.disableVideoInterfaceProcessing);
+  bind(boolean, "Nintendo64/WeaveDeinterlacing", nintendo64.weaveDeinterlacing);
 
   bind(boolean, "GameBoyAdvance/Player", gameBoyAdvance.player);
 
   bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
+
+  bind(boolean, "32X/ForceInterpreter", sega32x.forceInterpreter);
+
+  bind(boolean, "PlayStation/ForceInterpreter", playstation.forceInterpreter);
 
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};
@@ -255,7 +259,7 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Options").setIcon(Icon::Action::Settings));
   panelList.append(ListViewItem().setText("Firmware").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
-  panelList.append(ListViewItem().setText("Drivers").setIcon(Icon::Place::Settings));
+  panelList.append(ListViewItem().setText("Cores").setIcon(Icon::Place::Settings));
   panelList.append(ListViewItem().setText("Debug").setIcon(Icon::Device::Network));
   panelList.append(ListViewItem().setText("Settings File").setIcon(Icon::Action::Save));
   panelList->setUsesSidebarStyle();
@@ -269,7 +273,7 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(optionSettings, Size{~0, ~0});
   panelContainer.append(firmwareSettings, Size{~0, ~0});
   panelContainer.append(pathSettings, Size{~0, ~0});
-  panelContainer.append(driverSettings, Size{~0, ~0});
+  panelContainer.append(coreSettings, Size{~0, ~0});
   panelContainer.append(debugSettings, Size{~0, ~0});
   panelContainer.append(importExportSettings, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
@@ -282,7 +286,7 @@ auto SettingsWindow::initialize() -> void {
   optionSettings.construct();
   firmwareSettings.construct();
   pathSettings.construct();
-  driverSettings.construct();
+  coreSettings.construct();
   debugSettings.construct();
   importExportSettings.construct();
   homePanel.construct();
@@ -293,7 +297,7 @@ auto SettingsWindow::initialize() -> void {
   setAlignment({0.0, 1.0});
   setResizable(false);
   
-  driverSettings.videoRefresh();
+  videoSettings.videoRefresh();
   audioSettings.audioRefresh();
   initialized = true;
 }
@@ -321,7 +325,7 @@ auto SettingsWindow::eventChange() -> void {
   optionSettings.setVisible(false);
   firmwareSettings.setVisible(false);
   pathSettings.setVisible(false);
-  driverSettings.setVisible(false);
+  coreSettings.setVisible(false);
   debugSettings.setVisible(false);
   importExportSettings.setVisible(false);
   homePanel.setVisible(false);
@@ -336,7 +340,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Options"  ) found = true, optionSettings.setVisible();
     if(item.text() == "Firmware" ) found = true, firmwareSettings.setVisible();
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
-    if(item.text() == "Drivers"  ) found = true, driverSettings.setVisible();
+    if(item.text() == "Cores"    ) found = true, coreSettings.setVisible();
     if(item.text() == "Debug"    ) found = true, debugSettings.setVisible();
     if(item.text() == "Settings File") found = true, importExportSettings.setVisible(); 
   }
