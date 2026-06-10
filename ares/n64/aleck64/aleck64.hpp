@@ -174,6 +174,8 @@ struct Aleck64 {
     Node::Input::Button p1[9];
     Node::Input::Button p1start;
     Node::Input::Button p1coin;
+    Node::Input::Button p1maxOutputReducer1;
+    Node::Input::Button p1maxOutputReducer2;
 
     Node::Input::Axis p2x;
     Node::Input::Axis p2y;
@@ -184,6 +186,8 @@ struct Aleck64 {
     Node::Input::Button p2[9];
     Node::Input::Button p2start;
     Node::Input::Button p2coin;
+    Node::Input::Button p2maxOutputReducer1;
+    Node::Input::Button p2maxOutputReducer2;
 
     //controls.cpp
     auto load(Node::Object) -> void;

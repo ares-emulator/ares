@@ -136,6 +136,19 @@ auto Emulator::load(const string& location) -> bool {
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
   setColorBleed(settings.video.colorBleed);
+  setOutputStyle(settings.stick.outputStyleString);
+  setMaxOutputReducerOneFactor(settings.stick.maxOutputReducerOneFactor);
+  setMaxOutputReducerTwoFactor(settings.stick.maxOutputReducerTwoFactor);
+  setCustomMaxOutput(settings.stick.customMaxOutput);
+  setDeadzoneShape(settings.stick.deadzoneShape);
+  setDeadzoneSize(settings.stick.deadzoneSize);
+  setProportionalSensitivity(settings.stick.proportionalSensitivity);
+  setResponseCurve(settings.stick.responseCurveString);
+  setRangeNormalizedSwitchDistance(settings.stick.rangeNormalizedSwitchDistance);
+  setResponseStrength(settings.stick.responseStrength);
+  setVirtualNotch(settings.stick.virtualNotch);
+  setNotchLengthFromEdge(settings.stick.notchLengthFromEdge);
+  setNotchAngularSnappingDistance(settings.stick.notchAngularSnappingDistance);
 
   latch = {};
   root->power();
@@ -255,6 +268,111 @@ auto Emulator::setColorBleed(bool value) -> bool {
     return true;
   }
 
+  return false;
+}
+
+auto Emulator::setOutputStyle(string value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setOutputStyle(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setMaxOutputReducerOneFactor(f64 value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setMaxOutputReducerOneFactor(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setMaxOutputReducerTwoFactor(f64 value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setMaxOutputReducerTwoFactor(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setCustomMaxOutput(f64 value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setCustomMaxOutput(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setDeadzoneShape(string value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setDeadzoneShape(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setDeadzoneSize(f64 value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setDeadzoneSize(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setProportionalSensitivity(f64 value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setProportionalSensitivity(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setResponseCurve(string value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setResponseCurve(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setRangeNormalizedSwitchDistance(f64 value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setRangeNormalizedSwitchDistance(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setResponseStrength(f64 value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setResponseStrength(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setVirtualNotch(bool value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setVirtualNotch(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setNotchLengthFromEdge(f64 value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setNotchLengthFromEdge(value);
+    return true;
+  }
+  return false;
+}
+auto Emulator::setNotchAngularSnappingDistance(f64 value) -> bool {
+  Program::Guard guard;
+  if(auto axis = root->scan<ares::Node::Input::Axis>("Axis")) {
+    axis->setNotchAngularSnappingDistance(value);
+    return true;
+  }
   return false;
 }
 
