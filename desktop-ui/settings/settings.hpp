@@ -73,7 +73,6 @@ struct Settings : Markup::Node {
     bool rewind = false;
     bool runAhead = false;
     bool autoSaveMemory = true;
-    bool homebrewMode = false;
     bool noFilePrompt = false;
   } general;
 
@@ -100,15 +99,15 @@ struct Settings : Markup::Node {
     string game[9];
   } recent;
 
-  struct DebugServer {
-    u32 port = 9123;
-    bool enabled = false; // if enabled, server starts with ares
-    bool useIPv4 = false; // forces IPv4 over IPv6
-  } debugServer;
+  struct Developer {
+    u32  debugServerPort = 9123;
+    bool debugServerEnabled = false; // if enabled, server starts with ares
+    bool debugServerUseIPv4 = false; // forces IPv4 over IPv6
+    bool homebrewMode = false;
+    bool forceInterpreter = false;
+  } developer;
 
   struct Nintendo64 {
-    bool forceInterpreterCPU = false;
-    bool forceInterpreterRSP = false;
     bool expansionPak = true;
     u8 controllerPakBankCount = 1;
     string controllerPakBankString = "32KiB (Default)";
@@ -129,14 +128,6 @@ struct Settings : Markup::Node {
   struct MegaDrive {
     bool tmss = false;
   } megadrive;
-
-  struct Mega32X {
-    bool forceInterpreter = false;
-  } mega32x;
-
-  struct PlayStation {
-    bool forceInterpreter = false;
-  } playstation;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -188,7 +179,6 @@ struct VideoSettings : VerticalLayout {
 #if !defined(PLATFORM_MACOS)
     CheckLabel videoExclusiveToggle{&videoToggleLayout, Size{0, 0}};
 #endif
-    CheckLabel videoFlushToggle{&videoToggleLayout, Size{0, 0}};
 #if defined(PLATFORM_MACOS)
     CheckLabel videoColorSpaceToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoThreadedRendererToggle{&videoToggleLayout, Size{0, 0}};
@@ -306,9 +296,6 @@ struct OptionSettings : VerticalLayout {
     HorizontalLayout autoSaveMemoryLayout{this, Size{~0, 0}, 5};
       CheckLabel autoSaveMemory{&autoSaveMemoryLayout, Size{0, 0}, 5};
       Label autoSaveMemoryHint{&autoSaveMemoryLayout, Size{~0, layoutVertSize}};
-    HorizontalLayout homebrewModeLayout{this, Size{~0, 0}, 5};
-      CheckLabel homebrewMode{&homebrewModeLayout, Size{0, 0}, 5};
-      Label homebrewModeHint{&homebrewModeLayout, Size{~0, layoutVertSize}};
     HorizontalLayout noFilePromptLayout{this, Size{~0, 0}, 5};
       CheckLabel noFilePromptOption{&noFilePromptLayout, Size{0, 0}, 5};
       Label noFilePromptHint{&noFilePromptLayout, Size{0, layoutVertSize}};
@@ -378,11 +365,6 @@ struct CoreSettings : VerticalLayout {
       Label settingsHint{&settingsLayout, Size{0, layoutVertSize}};
   //
   Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout nintendo64ForceInterpreterLayout{this, Size{~0, 0}, 5};
-      CheckLabel nintendo64ForceInterpreterCPU{&nintendo64ForceInterpreterLayout, Size{0, 0}, 5};
-      Label nintendo64ForceInterpreterCPUHint{&nintendo64ForceInterpreterLayout, Size{0, layoutVertSize}};
-      CheckLabel nintendo64ForceInterpreterRSP{&nintendo64ForceInterpreterLayout, Size{0, 0}, 5};
-      Label nintendo64ForceInterpreterRSPHint{&nintendo64ForceInterpreterLayout, Size{0, layoutVertSize}};
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, layoutVertSize}};
@@ -419,24 +401,14 @@ struct CoreSettings : VerticalLayout {
     HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};
       CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};
       Label megaDriveTmssHint{&megaDriveTmssLayout, Size{0, layoutVertSize}};
-  
-  Label mega32xSettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout mega32xForceInterpreterLayout{this, Size{~0, 0}, 5};
-      CheckLabel mega32xForceInterpreter{&mega32xForceInterpreterLayout, Size{0, 0}, 5};
-      Label mega32xForceInterpreterHint{&mega32xForceInterpreterLayout, Size{0, layoutVertSize}};
-
-  Label playstationSettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout playstationForceInterpreterLayout{this, Size{~0, 0}, 5};
-      CheckLabel playstationForceInterpreter{&playstationForceInterpreterLayout, Size{0, 0}, 5};
-      Label playstationForceInterpreterHint{&playstationForceInterpreterLayout, Size{0, layoutVertSize}};
 };
 
-struct DebugSettings : VerticalLayout {
+struct DeveloperSettings : VerticalLayout {
   auto construct() -> void;
   auto infoRefresh() -> void;
   auto serverRefresh() -> void;
 
-  Label debugLabel{this, Size{~0, 0}, 5};
+  Label gdbLabel{this, Size{~0, 0}, 5};
 
   HorizontalLayout portLayout{this, Size{~0, 0}};
     Label portLabel{&portLayout, Size{48, 20}};
@@ -450,6 +422,14 @@ struct DebugSettings : VerticalLayout {
     CheckLabel enabled{&enabledLayout, Size{~0, 0}};
 
   Label connectInfo{this, Size{~0, 30}, 5};
+
+  Label debugOptionsLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout homebrewModeLayout{this, Size{~0, 0}, 5};
+    CheckLabel homebrewMode{&homebrewModeLayout, Size{0, 0}, 5};
+    Label homebrewModeHint{&homebrewModeLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout forceInterpreterLayout{this, Size{~0, 0}, 5};
+    CheckLabel forceInterpreter{&forceInterpreterLayout, Size{0, 0}, 5};
+    Label forceInterpreterHint{&forceInterpreterLayout, Size{0, layoutVertSize}};
 };
 
 struct ImportExportSettings : VerticalLayout {
@@ -490,7 +470,7 @@ struct SettingsWindow : Window {
       FirmwareSettings firmwareSettings;
       PathSettings pathSettings;
       CoreSettings coreSettings;
-      DebugSettings debugSettings;
+      DeveloperSettings developerSettings;
       ImportExportSettings importExportSettings;
       HomePanel homePanel;
   
@@ -512,5 +492,5 @@ extern OptionSettings& optionSettings;
 extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
 extern CoreSettings& coreSettings;
-extern DebugSettings& debugSettings;
+extern DeveloperSettings& developerSettings;
 extern ImportExportSettings& importExportSettings;

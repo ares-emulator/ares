@@ -9,7 +9,7 @@
 #include "firmware.cpp"
 #include "paths.cpp"
 #include "cores.cpp"
-#include "debug.cpp"
+#include "developer.cpp"
 #include "importexport.cpp"
 #include "home.cpp"
 
@@ -24,7 +24,7 @@ EmulatorSettings& emulatorSettings = settingsWindow.emulatorSettings;
 OptionSettings& optionSettings = settingsWindow.optionSettings;
 FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
-DebugSettings& debugSettings = settingsWindow.debugSettings;
+DeveloperSettings& developerSettings = settingsWindow.developerSettings;
 CoreSettings& coreSettings = settingsWindow.coreSettings;
 ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
@@ -100,7 +100,6 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "General/Rewind", general.rewind);
   bind(boolean, "General/RunAhead", general.runAhead);
   bind(boolean, "General/AutoSaveMemory", general.autoSaveMemory);
-  bind(boolean, "General/HomebrewMode", general.homebrewMode);
   bind(boolean, "General/NoFilePrompt", general.noFilePrompt);
 
   bind(natural, "Rewind/Length", rewind.length);
@@ -116,12 +115,12 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Paths/SuperFamicom/BSMemory", paths.superFamicom.bsMemory);
   bind(string,  "Paths/SuperFamicom/SufamiTurbo", paths.superFamicom.sufamiTurbo);
 
-  bind(natural, "DebugServer/Port", debugServer.port);
-  bind(boolean, "DebugServer/Enabled", debugServer.enabled);
-  bind(boolean, "DebugServer/UseIPv4", debugServer.useIPv4);
+  bind(natural, "Developer/DebugServerPort", developer.debugServerPort);
+  bind(boolean, "Developer/DebugServerEnabled", developer.debugServerEnabled);
+  bind(boolean, "Developer/DebugServerUseIPv4", developer.debugServerUseIPv4);
+  bind(boolean, "Developer/HomebrewMode", developer.homebrewMode);
+  bind(boolean, "Developer/ForceInterpreter", developer.forceInterpreter);
 
-  bind(boolean, "Nintendo64/ForceInterpreterCPU", nintendo64.forceInterpreterCPU);
-  bind(boolean, "Nintendo64/ForceInterpreterRSP", nintendo64.forceInterpreterRSP);
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
   bind(string,  "Nintendo64/ControllerPakBankString", nintendo64.controllerPakBankString);
   bind(string,  "Nintendo64/Quality", nintendo64.quality);
@@ -134,10 +133,6 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "SuperFamicom/DeepBlackBoost", superFamicom.deepBlackBoost);
 
   bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
-
-  bind(boolean, "Mega32X/ForceInterpreter", mega32x.forceInterpreter);
-
-  bind(boolean, "PlayStation/ForceInterpreter", playstation.forceInterpreter);
 
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};
@@ -262,7 +257,7 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Firmware").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Cores").setIcon(Icon::Place::Settings));
-  panelList.append(ListViewItem().setText("Debug").setIcon(Icon::Device::Network));
+  panelList.append(ListViewItem().setText("Developer").setIcon(Icon::Device::Network));
   panelList.append(ListViewItem().setText("Settings File").setIcon(Icon::Action::Save));
   panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
@@ -276,7 +271,7 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(firmwareSettings, Size{~0, ~0});
   panelContainer.append(pathSettings, Size{~0, ~0});
   panelContainer.append(coreSettings, Size{~0, ~0});
-  panelContainer.append(debugSettings, Size{~0, ~0});
+  panelContainer.append(developerSettings, Size{~0, ~0});
   panelContainer.append(importExportSettings, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
@@ -289,7 +284,7 @@ auto SettingsWindow::initialize() -> void {
   firmwareSettings.construct();
   pathSettings.construct();
   coreSettings.construct();
-  debugSettings.construct();
+  developerSettings.construct();
   importExportSettings.construct();
   homePanel.construct();
 
@@ -328,7 +323,7 @@ auto SettingsWindow::eventChange() -> void {
   firmwareSettings.setVisible(false);
   pathSettings.setVisible(false);
   coreSettings.setVisible(false);
-  debugSettings.setVisible(false);
+  developerSettings.setVisible(false);
   importExportSettings.setVisible(false);
   homePanel.setVisible(false);
 
@@ -343,7 +338,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Firmware" ) found = true, firmwareSettings.setVisible();
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
     if(item.text() == "Cores"    ) found = true, coreSettings.setVisible();
-    if(item.text() == "Debug"    ) found = true, debugSettings.setVisible();
+    if(item.text() == "Developer"    ) found = true, developerSettings.setVisible();
     if(item.text() == "Settings File") found = true, importExportSettings.setVisible(); 
   }
   if(!found) homePanel.setVisible();

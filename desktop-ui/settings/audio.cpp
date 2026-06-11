@@ -2,7 +2,7 @@ auto AudioSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  effectsLabel.setText("Effects").setFont(Font().setBold());
+  effectsLabel.setText("Sound Effects").setFont(Font().setBold());
   effectsLayout.setSize({3, 2}).setPadding(12_sx, 0);
   effectsLayout.column(0).setAlignment(1.0);
 

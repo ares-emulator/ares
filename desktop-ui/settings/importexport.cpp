@@ -25,7 +25,7 @@ auto ImportExportSettings::construct() -> void {
       firmwareSettings.construct();
       pathSettings.construct();
       coreSettings.construct();
-      debugSettings.construct();
+      developerSettings.construct();
       importExportSettings.construct();
     }
   });

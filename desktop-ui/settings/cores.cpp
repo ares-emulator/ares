@@ -5,17 +5,6 @@ auto CoreSettings::construct() -> void {
   settingsHint.setText("Note: Settings changes require a game reload to take effect").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   nintendo64SettingsLabel.setText("Nintendo 64 Settings").setFont(Font().setBold());
-  nintendo64ForceInterpreterCPU.setText("Force CPU Interpreter").setChecked(settings.nintendo64.forceInterpreterCPU).onToggle([&] {
-    settings.nintendo64.forceInterpreterCPU = nintendo64ForceInterpreterCPU.checked();
-  });
-  nintendo64ForceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
-    nintendo64ForceInterpreterCPUHint.setText("Enable VR4300 interpreter ").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-
-  nintendo64ForceInterpreterRSP.setText("Force RSP Interpreter").setChecked(settings.nintendo64.forceInterpreterRSP).onToggle([&] {
-    settings.nintendo64.forceInterpreterRSP = nintendo64ForceInterpreterRSP.checked();
-  });
-  nintendo64ForceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
-    nintendo64ForceInterpreterRSPHint.setText("Enable RSP interpreter").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   nintendo64ExpansionPakOption.setText("4MB Expansion Pak").setChecked(settings.nintendo64.expansionPak).onToggle([&] {
     settings.nintendo64.expansionPak = nintendo64ExpansionPakOption.checked();
@@ -145,18 +134,4 @@ auto CoreSettings::construct() -> void {
   });
   megaDriveTmssLayout.setAlignment(1).setPadding(12_sx, 0);
     megaDriveTmssHint.setText("Enable/Disable the TMSS Boot Rom at system initialization").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-
-  mega32xSettingsLabel.setText("Mega 32X Settings").setFont(Font().setBold());
-  mega32xForceInterpreter.setText("Force Interpreter").setChecked(settings.mega32x.forceInterpreter).onToggle([&] {
-    settings.mega32x.forceInterpreter = mega32xForceInterpreter.checked();
-  });
-  mega32xForceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
-    mega32xForceInterpreterHint.setText("Enable SH2 interpreters").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-
-  playstationSettingsLabel.setText("PlayStation Settings").setFont(Font().setBold());
-  playstationForceInterpreter.setText("Force Interpreter").setChecked(settings.playstation.forceInterpreter).onToggle([&] {
-    settings.playstation.forceInterpreter = playstationForceInterpreter.checked();
-  });
-  playstationForceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
-    playstationForceInterpreterHint.setText("Enable R3000A interpreter").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 }

@@ -30,7 +30,7 @@ auto VideoSettings::construct() -> void {
     program.paletteUpdate();
   }).doChange();
 
-  emulatorSettingsLabel.setText("Emulator Settings").setFont(Font().setBold());
+  emulatorSettingsLabel.setText("Display Settings").setFont(Font().setBold());
   colorBleedOption.setText("Color Bleed").setChecked(settings.video.colorBleed).onToggle([&] {
     Program::Guard guard;
     settings.video.colorBleed = colorBleedOption.checked();
@@ -97,10 +97,6 @@ auto VideoSettings::construct() -> void {
     ruby::video.setExclusive(settings.video.exclusive);
   });
 #endif
-  videoFlushToggle.setText("GPU sync").onToggle([&] {
-    settings.video.flush = videoFlushToggle.checked();
-    ruby::video.setFlush(settings.video.flush);
-  });
 #if defined(PLATFORM_MACOS)
   videoColorSpaceToggle.setText("Force sRGB").onToggle([&] {
     settings.video.forceSRGB = videoColorSpaceToggle.checked();
@@ -151,7 +147,6 @@ auto VideoSettings::videoRefresh() -> void {
   videoThreadedRendererToggle.setChecked(ruby::video.threadedRenderer()).setEnabled(ruby::video.hasThreadedRenderer());
   videoNativeFullScreenToggle.setChecked(ruby::video.nativeFullScreen()).setEnabled(ruby::video.hasNativeFullScreen());
 #endif
-  videoFlushToggle.setChecked(ruby::video.flush()).setEnabled(ruby::video.hasFlush());
   VerticalLayout::resize();
 }
 

@@ -75,7 +75,7 @@ auto MegaCD32X::load() -> LoadResult {
     return result;
   }
 
-  ares::MegaDrive::option("Recompiler", !settings.mega32x.forceInterpreter);
+  ares::MegaDrive::option("Recompiler", !settings.developer.forceInterpreter);
 
   if(!ares::MegaDrive::load(root, {"[Sega] Mega CD 32X (", region, ")"})) return otherError;
 

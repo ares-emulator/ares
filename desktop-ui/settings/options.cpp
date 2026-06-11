@@ -16,12 +16,15 @@ auto OptionSettings::construct() -> void {
     if(selected == "Sync to Audio") {
       settings.audio.blocking = true;
       settings.video.blocking = false;
+      settings.video.flush = false;
     } else if(selected == "Sync to Video") {
       settings.video.blocking = true;
+      settings.video.flush = true;
       settings.audio.blocking = false;
     }
     ruby::audio.setBlocking(settings.audio.blocking);
     ruby::video.setBlocking(settings.video.blocking);
+    ruby::video.setFlush(settings.video.flush);
   });
 
   synchronizationLayout.setAlignment(1).setPadding(12_sx, 0);
@@ -48,12 +51,6 @@ auto OptionSettings::construct() -> void {
   });
   autoSaveMemoryLayout.setAlignment(1).setPadding(12_sx, 0);
     autoSaveMemoryHint.setText("Helps safeguard game saves from being lost").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-
-  homebrewMode.setText("Homebrew Development Mode").setChecked(settings.general.homebrewMode).onToggle([&] {
-    settings.general.homebrewMode = homebrewMode.checked();
-  });
-  homebrewModeLayout.setAlignment(1).setPadding(12_sx, 0);
-    homebrewModeHint.setText("Activate system-specific features to help homebrew developers").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   noFilePromptOption.setText("Disable requests for loading additional media").setChecked(settings.general.noFilePrompt).onToggle([&] {
     settings.general.noFilePrompt = noFilePromptOption.checked();

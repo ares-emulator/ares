@@ -332,8 +332,8 @@ Presentation::Presentation() {
   coreSettingsAction.setText("Cores" ELLIPSIS).setIcon(Icon::Place::Settings).onActivate([&] {
     settingsWindow.show("Cores");
   });
-  debugSettingsAction.setText("Debug" ELLIPSIS).setIcon(Icon::Device::Network).onActivate([&] {
-    settingsWindow.show("Debug");
+  debugSettingsAction.setText("Developer" ELLIPSIS).setIcon(Icon::Device::Network).onActivate([&] {
+    settingsWindow.show("Developer");
   });
   importExportAction.setText("Settings File" ELLIPSIS).setIcon(Icon::Action::Save).onActivate([&] {
     settingsWindow.show("Settings File");
