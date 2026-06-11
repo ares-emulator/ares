@@ -132,7 +132,7 @@ auto Emulator::load(const string& location) -> bool {
     return false;
   }
   setBoolean("Color Emulation", settings.video.colorEmulation);
-  setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
+  setBoolean("Deep Black Boost", settings.superFamicom.deepBlackBoost);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
   setColorBleed(settings.video.colorBleed);

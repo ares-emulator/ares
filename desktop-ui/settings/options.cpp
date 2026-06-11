@@ -2,6 +2,31 @@ auto OptionSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
+  synchronizationLabel.setText("Synchronization ").setFont(Font().setBold());
+  for(auto& opt : array<string[2]>{"Sync to Audio", "Sync to Video"}) {
+    ComboButtonItem item{&synchronizationList};
+    item.setText(opt);
+    if((settings.video.blocking) && (opt == "Sync to Video")) {
+      item.setSelected();
+    } 
+  }
+  synchronizationList.onChange([&] {
+    Program::Guard guard;
+    auto selected = synchronizationList.selected().text();
+    if(selected == "Sync to Audio") {
+      settings.audio.blocking = true;
+      settings.video.blocking = false;
+    } else if(selected == "Sync to Video") {
+      settings.video.blocking = true;
+      settings.audio.blocking = false;
+    }
+    ruby::audio.setBlocking(settings.audio.blocking);
+    ruby::video.setBlocking(settings.video.blocking);
+  });
+
+  synchronizationLayout.setAlignment(1).setPadding(12_sx, 0);
+  synchronizationHint.setText("Synchronize to audio (Recommended) or to your monitor's refresh rate").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
   commonSettingsLabel.setText("Emulator Options").setFont(Font().setBold());
 
   rewind.setText("Rewind").setChecked(settings.general.rewind).onToggle([&] {

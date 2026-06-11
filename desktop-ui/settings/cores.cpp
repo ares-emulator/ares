@@ -5,12 +5,17 @@ auto CoreSettings::construct() -> void {
   settingsHint.setText("Note: Settings changes require a game reload to take effect").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   nintendo64SettingsLabel.setText("Nintendo 64 Settings").setFont(Font().setBold());
-
-  nintendo64ForceInterpreter.setText("Force Interpreter").setChecked(settings.nintendo64.forceInterpreter).onToggle([&] {
-    settings.nintendo64.forceInterpreter = nintendo64ForceInterpreter.checked();
+  nintendo64ForceInterpreterCPU.setText("Force CPU Interpreter").setChecked(settings.nintendo64.forceInterpreterCPU).onToggle([&] {
+    settings.nintendo64.forceInterpreterCPU = nintendo64ForceInterpreterCPU.checked();
   });
   nintendo64ForceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
-    nintendo64ForceInterpreterHint.setText("(Slow) Enable CPU & RSP interpreters").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    nintendo64ForceInterpreterCPUHint.setText("Enable VR4300 interpreter ").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
+  nintendo64ForceInterpreterRSP.setText("Force RSP Interpreter").setChecked(settings.nintendo64.forceInterpreterRSP).onToggle([&] {
+    settings.nintendo64.forceInterpreterRSP = nintendo64ForceInterpreterRSP.checked();
+  });
+  nintendo64ForceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
+    nintendo64ForceInterpreterRSPHint.setText("Enable RSP interpreter").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   nintendo64ExpansionPakOption.setText("4MB Expansion Pak").setChecked(settings.nintendo64.expansionPak).onToggle([&] {
     settings.nintendo64.expansionPak = nintendo64ExpansionPakOption.checked();
@@ -119,34 +124,39 @@ auto CoreSettings::construct() -> void {
   #endif
 
   gameBoyAdvanceSettingsLabel.setText("Game Boy Advance Settings").setFont(Font().setBold());
-
   gameBoyPlayerOption.setText("Game Boy Player").setChecked(settings.gameBoyAdvance.player).onToggle([&] {
     settings.gameBoyAdvance.player = gameBoyPlayerOption.checked();
   });
   gameBoyPlayerLayout.setAlignment(1).setPadding(12_sx, 0);
     gameBoyPlayerHint.setText("Enable/Disable Game Boy Player rumble").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  megaDriveSettingsLabel.setText("Mega Drive Settings").setFont(Font().setBold());
+  superFamicomSettingsLabel.setText("Super Famicom Settings").setFont(Font().setBold());
+  superFamicomDeepBlackBoostOption.setText("Deep Black Boost").setChecked(settings.superFamicom.deepBlackBoost).onToggle([&] {
+    Program::Guard guard;
+    settings.superFamicom.deepBlackBoost = superFamicomDeepBlackBoostOption.checked();
+    if(emulator) emulator->setBoolean("Deep Black Boost", settings.superFamicom.deepBlackBoost);
+  });
+  superFamicomDeepBlackBoostLayout.setAlignment(1).setPadding(12_sx, 0);
+  superFamicomDeepBlackBoostHint.setText("Applies a gamma ramp to crush black levels").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  megaDriveSettingsLabel.setText("Mega Drive Settings").setFont(Font().setBold());
   megaDriveTmssOption.setText("TMSS Boot Rom").setChecked(settings.megadrive.tmss).onToggle([&] {
     settings.megadrive.tmss = megaDriveTmssOption.checked();
   });
   megaDriveTmssLayout.setAlignment(1).setPadding(12_sx, 0);
     megaDriveTmssHint.setText("Enable/Disable the TMSS Boot Rom at system initialization").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  sega32xSettingsLabel.setText("SEGA 32X Settings").setFont(Font().setBold());
-
-  sega32xForceInterpreter.setText("Force Interpreter").setChecked(settings.sega32x.forceInterpreter).onToggle([&] {
-    settings.sega32x.forceInterpreter = sega32xForceInterpreter.checked();
+  mega32xSettingsLabel.setText("Mega 32X Settings").setFont(Font().setBold());
+  mega32xForceInterpreter.setText("Force Interpreter").setChecked(settings.mega32x.forceInterpreter).onToggle([&] {
+    settings.mega32x.forceInterpreter = mega32xForceInterpreter.checked();
   });
-  sega32xForceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
-    sega32xForceInterpreterHint.setText("(Slow) Enable SH2 interpreter").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  mega32xForceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
+    mega32xForceInterpreterHint.setText("Enable SH2 interpreters").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   playstationSettingsLabel.setText("PlayStation Settings").setFont(Font().setBold());
-
   playstationForceInterpreter.setText("Force Interpreter").setChecked(settings.playstation.forceInterpreter).onToggle([&] {
     settings.playstation.forceInterpreter = playstationForceInterpreter.checked();
   });
   playstationForceInterpreterLayout.setAlignment(1).setPadding(12_sx, 0);
-    playstationForceInterpreterHint.setText("(Slow) Enable MIPS interpreters").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+    playstationForceInterpreterHint.setText("Enable R3000A interpreter").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 }

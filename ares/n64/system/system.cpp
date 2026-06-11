@@ -35,10 +35,12 @@ auto option(string name, string value) -> bool {
   vulkan.outputUpscale = vulkan.supersampleScanout ? 1 : vulkan.internalUpscale;
   #endif
   if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
-  if(name == "Recompiler") {
+  if(name == "CpuRecompiler") {
     if constexpr(Accuracy::CPU::Recompiler) {
       cpu.recompiler.enabled = value.boolean();
     }
+  }
+  if(name == "RspRecompiler") {
     if constexpr(Accuracy::RSP::Recompiler) {
       rsp.recompiler.enabled = value.boolean();
     }

@@ -131,6 +131,7 @@ auto Program::audioDeviceUpdate() -> void {
     settings.audio.device = ruby::audio.device();
   }
   ruby::audio.setDevice(settings.audio.device);
+  ruby::audio.create();
 }
 
 auto Program::audioFrequencyUpdate() -> void {

@@ -37,7 +37,6 @@ struct Settings : Markup::Node {
     f64 gamma = 1.0;
     bool colorBleed = false;
     bool colorEmulation = true;
-    bool deepBlackBoost = false;
     bool interframeBlending = true;
     bool overscan = true;
     bool pixelAccuracy = false;
@@ -108,7 +107,8 @@ struct Settings : Markup::Node {
   } debugServer;
 
   struct Nintendo64 {
-    bool forceInterpreter = false;
+    bool forceInterpreterCPU = false;
+    bool forceInterpreterRSP = false;
     bool expansionPak = true;
     u8 controllerPakBankCount = 1;
     string controllerPakBankString = "32KiB (Default)";
@@ -122,13 +122,17 @@ struct Settings : Markup::Node {
     bool player = false;
   } gameBoyAdvance;
 
+  struct SuperFamicom {
+    bool deepBlackBoost = false;
+  } superFamicom;
+
   struct MegaDrive {
     bool tmss = false;
   } megadrive;
 
-  struct Sega32X {
+  struct Mega32X {
     bool forceInterpreter = false;
-  } sega32x;
+  } mega32x;
 
   struct PlayStation {
     bool forceInterpreter = false;
@@ -161,9 +165,6 @@ struct VideoSettings : VerticalLayout {
     HorizontalLayout colorEmulationLayout{this, Size{~0, 0}, 5};
       CheckLabel colorEmulationOption{&colorEmulationLayout, Size{0, 0}, 5};
       Label colorEmulationHint{&colorEmulationLayout, Size{~0, layoutVertSize}};
-    HorizontalLayout deepBlackBoostLayout{this, Size{~0, 0}, 5};
-      CheckLabel deepBlackBoostOption{&deepBlackBoostLayout, Size{0, 0}, 5};
-      Label deepBlackBoostHint{&deepBlackBoostLayout, Size{~0, layoutVertSize}};
     HorizontalLayout interframeBlendingLayout{this, Size{~0, 0}, 5};
       CheckLabel interframeBlendingOption{&interframeBlendingLayout, Size{0, 0}, 5};
       Label interframeBlendingHint{&interframeBlendingLayout, Size{~0, layoutVertSize}};
@@ -174,21 +175,19 @@ struct VideoSettings : VerticalLayout {
       CheckLabel pixelAccuracyOption{&pixelAccuracyLayout, Size{0, 0}, 5};
       Label pixelAccuracyHint{&pixelAccuracyLayout, Size{~0, layoutVertSize}};
   //
-  Label videoLabel{this, Size{~0, 0}, 5};
-  HorizontalLayout videoDriverLayout{this, Size{~0, 0}};
-    Label videoDriverLabel{&videoDriverLayout, Size{0, 0}};
-    ComboButton videoDriverList{&videoDriverLayout, Size{0, 0}};
-    Label videoDriverActive{&videoDriverLayout, Size{0, 0}};
-  HorizontalLayout videoPropertyLayout{this, Size{~0, 0}};
-    Label videoMonitorLabel{&videoPropertyLayout, Size{0, 0}};
-    ComboButton videoMonitorList{&videoPropertyLayout, Size{0, 0}};
-    Label videoFormatLabel{&videoPropertyLayout, Size{0, 0}};
-    ComboButton videoFormatList{&videoPropertyLayout, Size{0, 0}};
-  HorizontalLayout videoToggleLayout{this, Size{~0, 0}};
+    Label videoLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout videoDriverLayout{this, Size{~0, 0}};
+      Label videoDriverLabel{&videoDriverLayout, Size{0, 0}};
+      ComboButton videoDriverList{&videoDriverLayout, Size{0, 0}};
+    HorizontalLayout videoPropertyLayout{this, Size{~0, 0}};
+      Label videoMonitorLabel{&videoPropertyLayout, Size{0, 0}};
+      ComboButton videoMonitorList{&videoPropertyLayout, Size{0, 0}};
+      Label videoFormatLabel{&videoPropertyLayout, Size{0, 0}};
+      ComboButton videoFormatList{&videoPropertyLayout, Size{0, 0}};
+    HorizontalLayout videoToggleLayout{this, Size{~0, 0}};
 #if !defined(PLATFORM_MACOS)
     CheckLabel videoExclusiveToggle{&videoToggleLayout, Size{0, 0}};
 #endif
-    CheckLabel videoBlockingToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoFlushToggle{&videoToggleLayout, Size{0, 0}};
 #if defined(PLATFORM_MACOS)
     CheckLabel videoColorSpaceToggle{&videoToggleLayout, Size{0, 0}};
@@ -219,9 +218,7 @@ struct AudioSettings : VerticalLayout {
     ComboButton audioFrequencyList{&audioPropertyLayout, Size{0, 0}};
     Label audioLatencyLabel{&audioPropertyLayout, Size{0, 0}};
     ComboButton audioLatencyList{&audioPropertyLayout, Size{0, 0}};
-  HorizontalLayout audioToggleLayout{this, Size{~0, 0}};
-    CheckLabel audioBlockingToggle{&audioToggleLayout, Size{0, 0}};
-    CheckLabel audioDynamicToggle{&audioToggleLayout, Size{0, 0}};
+    CheckLabel audioDynamicToggle{&audioPropertyLayout, Size{0, 0}};
 };
 
 struct InputSettings : VerticalLayout {
@@ -295,6 +292,10 @@ struct EmulatorSettings : VerticalLayout {
 
 struct OptionSettings : VerticalLayout {
   auto construct() -> void;
+  Label synchronizationLabel{this, Size{~0, 0}, 5};
+      HorizontalLayout synchronizationLayout{this, Size{~0, 0}};
+      ComboButton synchronizationList{&synchronizationLayout, Size{0, 0}};
+      Label synchronizationHint{&synchronizationLayout, Size{~0, layoutVertSize}};
   Label commonSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout rewindLayout{this, Size{~0, 0}, 5};
       CheckLabel rewind{&rewindLayout, Size{0, 0}, 5};
@@ -378,8 +379,10 @@ struct CoreSettings : VerticalLayout {
   //
   Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout nintendo64ForceInterpreterLayout{this, Size{~0, 0}, 5};
-      CheckLabel nintendo64ForceInterpreter{&nintendo64ForceInterpreterLayout, Size{0, 0}, 5};
-      Label nintendo64ForceInterpreterHint{&nintendo64ForceInterpreterLayout, Size{0, layoutVertSize}};
+      CheckLabel nintendo64ForceInterpreterCPU{&nintendo64ForceInterpreterLayout, Size{0, 0}, 5};
+      Label nintendo64ForceInterpreterCPUHint{&nintendo64ForceInterpreterLayout, Size{0, layoutVertSize}};
+      CheckLabel nintendo64ForceInterpreterRSP{&nintendo64ForceInterpreterLayout, Size{0, 0}, 5};
+      Label nintendo64ForceInterpreterRSPHint{&nintendo64ForceInterpreterLayout, Size{0, layoutVertSize}};
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, layoutVertSize}};
@@ -407,15 +410,20 @@ struct CoreSettings : VerticalLayout {
       CheckLabel gameBoyPlayerOption{&gameBoyPlayerLayout, Size{0, 0}, 5};
       Label gameBoyPlayerHint{&gameBoyPlayerLayout, Size{0, layoutVertSize}};
 
+  Label superFamicomSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout superFamicomDeepBlackBoostLayout{this, Size{~0, 0}, 5};
+      CheckLabel superFamicomDeepBlackBoostOption{&superFamicomDeepBlackBoostLayout, Size{0, 0}, 5};
+      Label superFamicomDeepBlackBoostHint{&superFamicomDeepBlackBoostLayout, Size{0, layoutVertSize}};
+
   Label megaDriveSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout megaDriveTmssLayout{this, Size{~0, 0}, 5};
       CheckLabel megaDriveTmssOption{&megaDriveTmssLayout, Size{0, 0}, 5};
       Label megaDriveTmssHint{&megaDriveTmssLayout, Size{0, layoutVertSize}};
   
-  Label sega32xSettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout sega32xForceInterpreterLayout{this, Size{~0, 0}, 5};
-      CheckLabel sega32xForceInterpreter{&sega32xForceInterpreterLayout, Size{0, 0}, 5};
-      Label sega32xForceInterpreterHint{&sega32xForceInterpreterLayout, Size{0, layoutVertSize}};
+  Label mega32xSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout mega32xForceInterpreterLayout{this, Size{~0, 0}, 5};
+      CheckLabel mega32xForceInterpreter{&mega32xForceInterpreterLayout, Size{0, 0}, 5};
+      Label mega32xForceInterpreterHint{&mega32xForceInterpreterLayout, Size{0, layoutVertSize}};
 
   Label playstationSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout playstationForceInterpreterLayout{this, Size{~0, 0}, 5};

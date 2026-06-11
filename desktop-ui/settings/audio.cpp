@@ -42,12 +42,6 @@ auto AudioSettings::construct() -> void {
     audioRefresh();
   });
 
-  audioBlockingToggle.setText("Synchronize").onToggle([&] {
-    Program::Guard guard;
-    settings.audio.blocking = audioBlockingToggle.checked();
-    ruby::audio.setBlocking(settings.audio.blocking);
-  });
-
   audioDynamicToggle.setText("Dynamic rate").onToggle([&] {
     Program::Guard guard;
     settings.audio.dynamic = audioDynamicToggle.checked();
@@ -56,7 +50,6 @@ auto AudioSettings::construct() -> void {
 
   audioDeviceLayout.setPadding(12_sx, 0);
   audioPropertyLayout.setPadding(12_sx, 0);
-  audioToggleLayout.setPadding(12_sx, 0);
 }
 
 auto AudioSettings::audioRefresh() -> void {
@@ -79,7 +72,6 @@ auto AudioSettings::audioRefresh() -> void {
     if(latency == ruby::audio.latency()) item.setSelected();
   }
   audioDeviceList.setEnabled(audioDeviceList.itemCount() > 1);
-  audioBlockingToggle.setChecked(ruby::audio.blocking()).setEnabled(ruby::audio.hasBlocking());
   audioDynamicToggle.setChecked(ruby::audio.dynamic()).setEnabled(ruby::audio.hasDynamic());
   VerticalLayout::resize();
 }

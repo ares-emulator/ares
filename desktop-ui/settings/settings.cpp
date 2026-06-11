@@ -76,7 +76,6 @@ auto Settings::process(bool load) -> void {
   bind(real,    "Video/Gamma", video.gamma);
   bind(boolean, "Video/ColorBleed", video.colorBleed);
   bind(boolean, "Video/ColorEmulation", video.colorEmulation);
-  bind(boolean, "Video/DeepBlackBoost", video.deepBlackBoost);
   bind(boolean, "Video/InterframeBlending", video.interframeBlending);
   bind(boolean, "Video/Overscan", video.overscan);
   bind(boolean, "Video/PixelAccuracy", video.pixelAccuracy);
@@ -121,7 +120,8 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "DebugServer/Enabled", debugServer.enabled);
   bind(boolean, "DebugServer/UseIPv4", debugServer.useIPv4);
 
-  bind(boolean, "Nintendo64/ForceInterpreter", nintendo64.forceInterpreter);
+  bind(boolean, "Nintendo64/ForceInterpreterCPU", nintendo64.forceInterpreterCPU);
+  bind(boolean, "Nintendo64/ForceInterpreterRSP", nintendo64.forceInterpreterRSP);
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
   bind(string,  "Nintendo64/ControllerPakBankString", nintendo64.controllerPakBankString);
   bind(string,  "Nintendo64/Quality", nintendo64.quality);
@@ -131,9 +131,11 @@ auto Settings::process(bool load) -> void {
 
   bind(boolean, "GameBoyAdvance/Player", gameBoyAdvance.player);
 
+  bind(boolean, "SuperFamicom/DeepBlackBoost", superFamicom.deepBlackBoost);
+
   bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
 
-  bind(boolean, "32X/ForceInterpreter", sega32x.forceInterpreter);
+  bind(boolean, "Mega32X/ForceInterpreter", mega32x.forceInterpreter);
 
   bind(boolean, "PlayStation/ForceInterpreter", playstation.forceInterpreter);
 

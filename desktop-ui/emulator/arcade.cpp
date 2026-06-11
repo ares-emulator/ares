@@ -163,7 +163,8 @@ auto Arcade::load() -> LoadResult {
     ares::Nintendo64::option("Disable Video Interface Processing", settings.nintendo64.disableVideoInterfaceProcessing);
     ares::Nintendo64::option("Weave Deinterlacing", settings.nintendo64.weaveDeinterlacing);
     ares::Nintendo64::option("Homebrew Mode", settings.general.homebrewMode);
-    ares::Nintendo64::option("Recompiler", !settings.nintendo64.forceInterpreter);
+    ares::Nintendo64::option("CpuRecompiler", !settings.nintendo64.forceInterpreterCPU);
+    ares::Nintendo64::option("RspRecompiler", !settings.nintendo64.forceInterpreterRSP);
 
     return successful;
   }

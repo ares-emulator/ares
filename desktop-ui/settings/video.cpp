@@ -45,13 +45,6 @@ auto VideoSettings::construct() -> void {
   });
   colorEmulationLayout.setAlignment(1).setPadding(12_sx, 0);
   colorEmulationHint.setText("Matches colors to how they look on real hardware").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-  deepBlackBoostOption.setText("Deep Black Boost").setChecked(settings.video.deepBlackBoost).onToggle([&] {
-    Program::Guard guard;
-    settings.video.deepBlackBoost = deepBlackBoostOption.checked();
-    if(emulator) emulator->setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
-  });
-  deepBlackBoostLayout.setAlignment(1).setPadding(12_sx, 0);
-  deepBlackBoostHint.setText("Applies a gamma ramp to crush black levels (SNES/SFC)").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   interframeBlendingOption.setText("Interframe Blending").setChecked(settings.video.interframeBlending).onToggle([&] {
     Program::Guard guard;
     settings.video.interframeBlending = interframeBlendingOption.checked();
@@ -104,10 +97,6 @@ auto VideoSettings::construct() -> void {
     ruby::video.setExclusive(settings.video.exclusive);
   });
 #endif
-  videoBlockingToggle.setText("Synchronize").onToggle([&] {
-    settings.video.blocking = videoBlockingToggle.checked();
-    ruby::video.setBlocking(settings.video.blocking);
-  });
   videoFlushToggle.setText("GPU sync").onToggle([&] {
     settings.video.flush = videoFlushToggle.checked();
     ruby::video.setFlush(settings.video.flush);
@@ -157,7 +146,6 @@ auto VideoSettings::videoRefresh() -> void {
 #if !defined(PLATFORM_MACOS)
   videoExclusiveToggle.setChecked(ruby::video.exclusive()).setEnabled(ruby::video.hasExclusive());
 #endif
-  videoBlockingToggle.setChecked(ruby::video.blocking()).setEnabled(ruby::video.hasBlocking());
 #if defined(PLATFORM_MACOS)
   videoColorSpaceToggle.setChecked(ruby::video.forceSRGB()).setEnabled(ruby::video.hasForceSRGB());
   videoThreadedRendererToggle.setChecked(ruby::video.threadedRenderer()).setEnabled(ruby::video.hasThreadedRenderer());

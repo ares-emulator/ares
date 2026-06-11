@@ -84,7 +84,7 @@ auto Mega32X::load() -> LoadResult {
     if(result != successful) return result;
   }
 
-  ares::MegaDrive::option("Recompiler", !settings.sega32x.forceInterpreter);
+  ares::MegaDrive::option("Recompiler", !settings.mega32x.forceInterpreter);
 
   if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return otherError;
 
