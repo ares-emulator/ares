@@ -105,7 +105,6 @@ auto CoreSettings::construct() -> void {
 
   #if !defined(VULKAN)
   //hide Vulkan-specific options if Vulkan is not available
-  renderSettingsLabel.setCollapsible(true).setVisible(false);
   renderQualityLayout.setCollapsible(true).setVisible(false);
   renderSupersamplingLayout.setCollapsible(true).setVisible(false);
   disableVideoInterfaceProcessingLayout.setCollapsible(true).setVisible(false);
