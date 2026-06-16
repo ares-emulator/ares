@@ -9,7 +9,7 @@ auto Audio::create() -> bool {
   return initialize();
 }
 
-auto Audio::hasDevices() -> std::vector<string> { 
+auto Audio::hasDevices() -> std::vector<string> {
   _devices.clear();
   _devices.push_back("Default");
   int count = 0;
@@ -18,7 +18,7 @@ auto Audio::hasDevices() -> std::vector<string> {
     _devices.push_back(SDL_GetAudioDeviceName(deviceIds[i]));
   }
   SDL_free(deviceIds);
-  return _devices; 
+  return _devices;
 }
 
 auto Audio::hasDevice(string device) -> bool {
@@ -106,7 +106,7 @@ auto Audio::output(const f64 samples[]) -> void {
     auto bytesRemaining = SDL_GetAudioStreamQueued(static_cast<SDL_AudioStream*>(_stream));
     while(bytesRemaining > _bufferSize) {
       // wait for audio to drain
-      auto bytesToWait = (bytesRemaining - _bufferSize) * 4;
+      auto bytesToWait = bytesRemaining - _bufferSize;
       auto framesRemaining = bytesToWait / _bytesPerFrame;
       auto secondsRemaining = framesRemaining / (f64)_frequency;
       usleep(max(1.0, secondsRemaining * 1000000.0));
@@ -139,11 +139,11 @@ auto Audio::initialize() -> bool {
     spec.channels = 2;
     spec.freq = _frequency;
 
-    auto desired_samples = (_latency * _frequency) / 1000;
+    auto desired_samples = _frequency / 100; // 10ms device buffer
     string desired_samples_string = (string)desired_samples;
     SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, desired_samples_string);
 
-    
+
     if(_device == "Default") {
       _deviceId = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;
     } else {
@@ -166,7 +166,7 @@ auto Audio::initialize() -> bool {
     _channels = spec.channels;
 
     _bytesPerFrame = SDL_AUDIO_FRAMESIZE(spec);
-    _bufferSize = desired_samples * _bytesPerFrame;
+    _bufferSize = desired_samples * _bytesPerFrame * (_latency / 10); // (10ms * X) queue buffer
 
     _ready = true;
     clear();

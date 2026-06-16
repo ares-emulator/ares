@@ -7,12 +7,12 @@ struct Audio {
   auto ready() -> bool { return _ready; }
 
   auto hasContext() -> bool { return false; }
-  auto hasDevices() -> std::vector<string>; 
+  auto hasDevices() -> std::vector<string>;
   auto hasBlocking() -> bool { return true; }
   auto hasDynamic() -> bool { return true; }
   auto hasChannels() -> std::vector<u32> { return { _channels }; }
   auto hasFrequencies() -> std::vector<u32> { return {22050, 44100, 48000, 96000}; }
-  auto hasLatencies() -> std::vector<u32> { return {10, 20, 40, 60, 80}; }
+  auto hasLatencies() -> std::vector<u32> { return {10, 20, 30, 40, 60, 80}; }
 
   auto hasDevice(string device) -> bool;
   auto hasChannels(u32 channels) -> bool;
@@ -56,7 +56,7 @@ private:
   u32 _channels = 2;
   u32 _frequency = 48000;
   u32 _latency = 40;
-  
+
   void* _stream = nullptr;
   uintptr _context = 0;
   string _device = "Default";
