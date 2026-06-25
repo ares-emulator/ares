@@ -126,6 +126,10 @@
       sljit_s32 S = SLJIT_EXTRACT_REG(src.fst);
       sljit_s32 i = SLJIT_NUMBER_OF_REGISTERS - S; // inverse of SLJIT_S(i)
       lea(dst, sreg(i), src.snd);
+    } else if constexpr (std::is_same_v<T, reg>) {
+      sljit_emit_op1(compiler, SLJIT_MOV, dst.fst, dst.snd, src.fst, src.snd);
+    } else if constexpr (std::is_same_v<T, sreg>) {
+      sljit_emit_op1(compiler, SLJIT_MOV, dst.fst, dst.snd, src.fst, src.snd);
     } else if constexpr (std::is_same_v<T, imm>) {
       sljit_emit_op1(compiler, SLJIT_MOV32, dst.fst, dst.snd, src.fst, src.snd);
     } else {
@@ -139,18 +143,132 @@
     static_assert(sizeof...(P) <= 3);
     static_assert(sizeof...(P) == sizeof...(Q));
 
+    // 1) Collect register-backed arguments and their sources.
+    //    Problem: argument setup can clobber values when one argument source
+    //    lives in a register that is also a destination for another argument.
+    //    We first capture all register->register dependencies before emitting
+    //    any move, so we can schedule them safely.
+    auto tuple = std::forward_as_tuple(args...);
+    reg destinations[3] = {reg(arg1_reg), reg(arg2_reg), reg(arg3_reg)};
+    bool registerArg[3] = {0, 0, 0};
+    bool pending[3]     = {0, 0, 0};
+    sljit_s32 srcfst[3] = {0, 0, 0};
+    sljit_sw srcsnd[3]  = {0, 0, 0};
+
+    if constexpr(sizeof...(P) > 0) {
+      using A0 = std::remove_cvref_t<std::tuple_element_t<0, decltype(tuple)>>;
+      if constexpr(std::is_same_v<A0, reg> || std::is_same_v<A0, sreg>) {
+        registerArg[0] = 1;
+        pending[0] = 1;
+        srcfst[0] = std::get<0>(tuple).fst;
+        srcsnd[0] = std::get<0>(tuple).snd;
+      }
+    }
+    if constexpr(sizeof...(P) > 1) {
+      using A1 = std::remove_cvref_t<std::tuple_element_t<1, decltype(tuple)>>;
+      if constexpr(std::is_same_v<A1, reg> || std::is_same_v<A1, sreg>) {
+        registerArg[1] = 1;
+        pending[1] = 1;
+        srcfst[1] = std::get<1>(tuple).fst;
+        srcsnd[1] = std::get<1>(tuple).snd;
+      }
+    }
+    if constexpr(sizeof...(P) > 2) {
+      using A2 = std::remove_cvref_t<std::tuple_element_t<2, decltype(tuple)>>;
+      if constexpr(std::is_same_v<A2, reg> || std::is_same_v<A2, sreg>) {
+        registerArg[2] = 1;
+        pending[2] = 1;
+        srcfst[2] = std::get<2>(tuple).fst;
+        srcsnd[2] = std::get<2>(tuple).snd;
+      }
+    }
+
+    // Helpers to track unresolved register moves.
+    auto sourceUsedPending = [&](sljit_s32 fst, sljit_sw snd) -> bool {
+      for(int i = 0; i < 3; i++) {
+        if(!pending[i]) continue;
+        if(srcfst[i] == fst && srcsnd[i] == snd) return 1;
+      }
+      return 0;
+    };
+    auto moveRegister = [&](const reg& dst, sljit_s32 srcFst, sljit_sw srcSnd) -> void {
+      sljit_emit_op1(compiler, SLJIT_MOV, dst.fst, dst.snd, srcFst, srcSnd);
+    };
+    auto resolve = [&](int index) -> void {
+      pending[index] = 0;
+    };
+
+    // 2) Emit non-conflicting moves first, skipping no-op moves.
+    //    A move is blocked if its destination is still needed as a source by
+    //    another pending move. Emitting only unblocked moves guarantees we
+    //    never overwrite a value that has not been consumed yet.
+    for(int step = 0; step < 6; step++) {
+      bool hasPending = 0;
+      for(int i = 0; i < 3; i++) { if(pending[i]) { hasPending = 1; break; } }
+      if(!hasPending) break;
+
+      bool progressed = 0;
+      for(int i = 0; i < 3; i++) {
+        if(!pending[i]) continue;
+        auto dst = destinations[i];
+        if(srcfst[i] == dst.fst && srcsnd[i] == dst.snd) {
+          resolve(i);
+          progressed = 1;
+          continue;
+        }
+        bool blocked = 0;
+        for(int j = 0; j < 3; j++) {
+          if(i == j || !pending[j]) continue;
+          if(srcfst[j] == dst.fst && srcsnd[j] == dst.snd) { blocked = 1; break; }
+        }
+        if(blocked) continue;
+        moveRegister(dst, srcfst[i], srcsnd[i]);
+        resolve(i);
+        progressed = 1;
+      }
+      if(progressed) continue;
+
+      // 3) Cycle detected: move one source to a safe temporary register.
+      //    If no move can progress, dependencies form a cycle (e.g. swap).
+      //    We break the cycle by spilling one pending source to a temporary
+      //    register that is not currently used by any pending source.
+      reg candidates[4] = {reg(arg0_reg), reg(arg1_reg), reg(arg2_reg), reg(arg3_reg)};
+      sljit_s32 tempFst = 0;
+      sljit_sw tempSnd = 0;
+      bool hasTemp = 0;
+      for(auto& candidate : candidates) {
+        if(sourceUsedPending(candidate.fst, candidate.snd)) continue;
+        tempFst = candidate.fst;
+        tempSnd = candidate.snd;
+        hasTemp = 1;
+        break;
+      }
+      assert(hasTemp);
+      for(int i = 0; i < 3; i++) {
+        if(!pending[i]) continue;
+        sljit_emit_op1(compiler, SLJIT_MOV, tempFst, tempSnd, srcfst[i], srcsnd[i]);
+        srcfst[i] = tempFst;
+        srcsnd[i] = tempSnd;
+        break;
+      }
+    }
+
+    // 4) Materialize non-register arguments now that register moves are stable.
+    //    Immediates/memory operands are emitted last because they cannot be
+    //    clobbered by register marshalling and do not participate in cycles.
+    //    At this point register arguments are in final ABI locations.
     sljit_s32 type = SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 1);
 
     if constexpr(sizeof...(P) >= 1) {
-      setup_arg(reg(arg1_reg), std::get<0>(std::forward_as_tuple(args...)));
+      if(!registerArg[0]) setup_arg(reg(arg1_reg), std::get<0>(tuple));
       type |= SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 2);
     }
     if constexpr(sizeof...(P) >= 2) {
-      setup_arg(reg(arg2_reg), std::get<1>(std::forward_as_tuple(args...)));
+      if(!registerArg[1]) setup_arg(reg(arg2_reg), std::get<1>(tuple));
       type |= SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 3);
     }
     if constexpr(sizeof...(P) >= 3) {
-      setup_arg(reg(arg3_reg), std::get<2>(std::forward_as_tuple(args...)));
+      if(!registerArg[2]) setup_arg(reg(arg3_reg), std::get<2>(tuple));
       type |= SLJIT_ARG_VALUE(SLJIT_ARG_TYPE_W, 4);
     }
 

@@ -1,5 +1,5 @@
 struct MegaLD : LaserDisc {
-  auto name() -> string override { return "Mega LD"; }
+  auto name() -> string override { return "LaserActive (SEGA PAC)"; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 };
@@ -10,6 +10,7 @@ auto MegaLD::load(string location) -> LoadResult {
   if(!location.iendsWith(".mmi")) return invalidROM;
   if(!mmiArchive.open(location)) return invalidROM;
   if(!mmiArchive.media().size()) return invalidROM;
+  if(mmiArchive.system() != "MegaLD") return invalidROM;
 
   this->location = location;
   this->manifest = mmiArchive.manifest();

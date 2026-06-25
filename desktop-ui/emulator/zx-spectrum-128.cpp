@@ -23,6 +23,7 @@ auto ZXSpectrum128::load() -> LoadResult {
   if(!ares::ZXSpectrum::load(root, "[Sinclair] ZX Spectrum 128")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Tape Deck/Tray")) {
+    tape = game;
     port->allocate();
     port->connect();
   }
@@ -36,8 +37,7 @@ auto ZXSpectrum128::load() -> LoadResult {
 }
 
 auto ZXSpectrum128::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
-  print(string{node->name(), "\n"});
   if(node->name() == "ZX Spectrum 128") return system->pak;
-  if(node->name() == "ZX Spectrum Tape") return game->pak;
+  if(node->name() == "ZX Spectrum Tape") return tape ? tape->pak : game->pak;
   return {};
 }

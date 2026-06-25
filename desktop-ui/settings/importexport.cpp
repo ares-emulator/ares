@@ -1,7 +1,7 @@
 auto ImportExportSettings::construct() -> void {
   setCollapsible();
   useImported.setText("Set Imported File As Current Settings File");
-  useImported.setChecked(settings.video.colorBleed).onToggle([&] { imported = useImported.checked(); });
+  useImported.setChecked(false).onToggle([&] { imported = useImported.checked(); });
   refresh();
 
   importButton.setText("Import" ELLIPSIS).onActivate([&] {
@@ -24,8 +24,8 @@ auto ImportExportSettings::construct() -> void {
       optionSettings.construct();
       firmwareSettings.construct();
       pathSettings.construct();
-      driverSettings.construct();
-      debugSettings.construct();
+      coreSettings.construct();
+      developerSettings.construct();
       importExportSettings.construct();
     }
   });

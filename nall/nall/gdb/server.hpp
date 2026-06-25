@@ -99,6 +99,8 @@ class Server : public nall::TCPText::Server {
     auto hasBreakpoints() const { 
       return !breakpoints.empty() || singleStepActive || !watchpointRead.empty() || !watchpointWrite.empty();
     }
+    auto hasBreakpointAt(u64 pc) const -> bool;
+    auto hasWatchpoints() const -> bool;
     
     auto getPcOverride() const { return pcOverride; };
 

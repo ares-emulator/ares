@@ -137,10 +137,14 @@ struct InputKeyboardQuartz {
     keys.push_back({"Tab", kVK_Tab});
     keys.push_back({"Return", kVK_Return});
     keys.push_back({"Spacebar", kVK_Space});
-    keys.push_back({"Shift", kVK_Shift});
-    keys.push_back({"Control", kVK_Control});
-    keys.push_back({"Option", kVK_Option});
-    keys.push_back({"Command", kVK_Command});
+    keys.push_back({"LeftShift", kVK_Shift});
+    keys.push_back({"RightShift", kVK_RightShift});
+    keys.push_back({"LeftControl", kVK_Control});
+    keys.push_back({"RightControl", kVK_RightControl});
+    keys.push_back({"LeftAlt", kVK_Option});
+    keys.push_back({"RightAlt", kVK_RightOption});
+    keys.push_back({"LeftSuper", kVK_Command});
+    keys.push_back({"RightSuper", kVK_RightCommand});
 
     hid->setVendorID(HID::Keyboard::GenericVendorID);
     hid->setProductID(HID::Keyboard::GenericProductID);

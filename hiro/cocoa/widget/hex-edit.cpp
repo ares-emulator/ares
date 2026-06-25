@@ -52,11 +52,11 @@
 }
 
 
-- (NSInteger) numberOfRowsInTableView:(NSTableView *)tableView {
+- (NSInteger) numberOfRowsInTableView:(NSTableView *)senderTableView {
   return (max(1, hexEdit->length()) + hexEdit->columns() - 1) / hexEdit->columns();
 }
 
--(id) tableView:(NSTableView *) tableView
+-(id) tableView:(NSTableView *) senderTableView
 objectValueForTableColumn:(NSTableColumn *) tableColumn
             row:(NSInteger) row {
   // return a string with the content of (row, column)
@@ -89,7 +89,7 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
   }
 }
 
--(void) tableView:(NSTableView *) tableView
+-(void) tableView:(NSTableView *) senderTableView
    setObjectValue:(id) object
    forTableColumn:(NSTableColumn *) tableColumn
               row:(NSInteger) row {
@@ -107,7 +107,7 @@ objectValueForTableColumn:(NSTableColumn *) tableColumn
       hexEdit->doWrite(address, (u8)data);
     }
   }
-  [tableView reloadData];
+  [senderTableView reloadData];
 }
 
 @end

@@ -6,6 +6,7 @@ struct PPU : Thread, IO {
   Node::Setting::String rotation;
   Memory::Writable<n8 > vram;  //96KB
   Memory::Writable<n16> pram;
+  Memory::Writable<n16> oam;
 
   bool accurate;
 
@@ -17,6 +18,7 @@ struct PPU : Thread, IO {
     struct Memory {
       Node::Debugger::Memory vram;
       Node::Debugger::Memory pram;
+      Node::Debugger::Memory oam;
     } memory;
 
     struct Graphics {
@@ -55,9 +57,11 @@ struct PPU : Thread, IO {
   auto writeIO(n32 address, n8 byte) -> void;
 
   //memory.cpp
-  auto releaseBus() -> void;
+  auto bgReleaseBus() -> void;
+  auto objReleaseBus() -> void;
   auto pramContention() -> bool;
   auto vramContention(n32 address) -> bool;
+  auto oamContention() -> bool;
 
   auto readVRAM(u32 mode, n32 address) -> n16;
   auto readVRAM_BG(u32 mode, n32 address) -> n16;
@@ -180,7 +184,7 @@ private:
     } affine;
 
     Pixel output[240];
-    Pixel mosaic;
+    Pixel mosaicLatch;
     u32 mosaicOffset;
     u32 vmosaic;
 
@@ -191,7 +195,13 @@ private:
   struct Objects {
     //object.cpp
     auto setEnable(n1 status) -> void;
+    auto goToNext() -> void;
+    auto readA01(u32 y) -> void;
+    auto readA2() -> void;
+    auto drawObject(u32 y) -> void;
+    auto step() -> void;
     auto scanline(u32 y) -> void;
+    auto renderScanline(u32 y) -> void;
     auto outputPixel(u32 x, u32 y) -> void;
     auto power() -> void;
 
@@ -207,12 +217,46 @@ private:
       n4 mosaicHeight;
     } io;
 
+    struct Latch {
+      n1 affine;
+      n1 affineSize;
+      n2 mode;
+      n1 mosaic;
+      n1 colors;
+
+      n9 x;
+      n5 affineParam;
+      n1 hflip;
+      n1 vflip;
+
+      n10 character;
+      n2  priority;
+      n4  palette;
+
+      n32 width;
+      n32 height;
+      n8  py;
+
+      i16 pa;
+      i16 pb;
+      i16 pc;
+      i16 pd;
+    } latch;
+
     Pixel lineBuffers[2][240];
     Pixel output;
-    Pixel mosaic;
+    Pixel mosaicLatch;
+    u32 renderY;
     s32 mosaicY;
-    n4 hmosaicOffset;
-    n4 vmosaicOffset;
+    n4  hmosaicOffset;
+    n4  vmosaicOffset;
+    n7  objIndex;
+    bool active;
+    bool activeCycle;
+
+    enum class State : u32 {
+      ReadA01, ReadA2, ReadPA, ReadPB, ReadPC, ReadPD
+    } state;
   } objects;
 
   struct Window {
@@ -274,45 +318,9 @@ private:
     u32* line = nullptr;
   } dac;
 
-  struct Object {
-    //serialization.cpp
-    auto serialize(serializer&) -> void;
-
-    n8  y;
-    n1  affine;
-    n1  affineSize;
-    n2  mode;
-    n1  mosaic;
-    n1  colors;  //0 = 16, 1 = 256
-    n2  shape;   //0 = square, 1 = horizontal, 2 = vertical
-
-    n9  x;
-    n5  affineParam;
-    n1  hflip;
-    n1  vflip;
-    n2  size;
-
-    n10 character;
-    n2  priority;
-    n4  palette;
-
-    //ancillary data
-    n32 width;
-    n32 height;
-  } object[128];
-
-  struct ObjectParam {
-    //serialization.cpp
-    auto serialize(serializer&) -> void;
-
-    i16 pa;
-    i16 pb;
-    i16 pc;
-    i16 pd;
-  } objectParam[32];
-
   bool pramAccessed;
   bool vramAccessedBG;
+  bool oamAccessed;
   n32  renderingCycle;
 };
 

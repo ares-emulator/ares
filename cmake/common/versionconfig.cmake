@@ -76,7 +76,7 @@ function(ares_populate_version_info)
         OUTPUT_STRIP_TRAILING_WHITESPACE
       )
       execute_process(
-        COMMAND git show -s --format=%cs
+        COMMAND git show -s --no-show-signature --format=%cs
         OUTPUT_VARIABLE ares_git_commit_date
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         OUTPUT_STRIP_TRAILING_WHITESPACE

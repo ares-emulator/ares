@@ -130,6 +130,12 @@ private:
     bool hdmaMode = 0;  //0 = init, 1 = run
 
     u32  autoJoypadCounter = 33;  //state machine; 4224 / 128 = 33 (inactive)
+
+    n2 autoJoypadPort1 = 0;
+    n2 autoJoypadPort2 = 0;
+
+    bool cpuLatch = false;
+    bool autoJoypadLatch = false;
   } status;
 
   struct IO {

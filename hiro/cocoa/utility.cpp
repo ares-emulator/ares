@@ -61,7 +61,7 @@ auto NSMakeImage(multiFactorImage icon, u32 scaleWidth = 0, u32 scaleHeight = 0)
 
 auto DropPathsOperation(id<NSDraggingInfo> sender) -> NSDragOperation {
   NSPasteboard* pboard = [sender draggingPasteboard];
-  if([[pboard types] containsObject:NSFilenamesPboardType]) {
+  if([[pboard types] containsObject:NSPasteboardTypeFileURL]) {
     if([sender draggingSourceOperationMask] & NSDragOperationGeneric) {
       return NSDragOperationGeneric;
     }
@@ -72,10 +72,10 @@ auto DropPathsOperation(id<NSDraggingInfo> sender) -> NSDragOperation {
 auto DropPaths(id<NSDraggingInfo> sender) -> std::vector<string> {
   std::vector<string> paths;
   NSPasteboard* pboard = [sender draggingPasteboard];
-  if([[pboard types] containsObject:NSFilenamesPboardType]) {
-    NSArray* files = [pboard propertyListForType:NSFilenamesPboardType];
+  if([[pboard types] containsObject:NSPasteboardTypeFileURL]) {
+    NSArray* files = [pboard readObjectsForClasses:[NSArray arrayWithObject:[NSURL class]] options:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:NSPasteboardURLReadingFileURLsOnlyKey]];
     for(u32 n = 0; n < [files count]; n++) {
-      string path = [[files objectAtIndex:n] UTF8String];
+      string path = [[[files objectAtIndex:n] path] UTF8String];
       if(directory::exists(path) && !path.endsWith("/")) path.append("/");
       paths.push_back(path);
     }

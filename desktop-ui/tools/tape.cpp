@@ -8,6 +8,15 @@ auto TapeViewer::construct() -> void {
 
   statusLabel.setText("Status: No tape loaded");
   lengthLabel.setText("Length: 0/0");
+  positionSlider.setLength(1).setPosition(0).setEnabled(false).onChange([&] {
+    auto tape = positionSlider.attribute<ares::Node::Tape>("node");
+    if (!tape || !tape->loaded() || tape->playing() || tape->recording())
+      return;
+
+    u64 position = min((u64)positionSlider.position() * tape->frequency(), tape->length());
+    tape->setPosition(position);
+    refresh();
+  });
   newButton.setText("New").setEnabled(true).onActivate([&] {
     auto tape = loadButton.attribute<ares::Node::Tape>("node");
     if (tape->loaded())
@@ -53,7 +62,9 @@ auto TapeViewer::construct() -> void {
     refresh();
   });
   recordButton.setText("Record").setEnabled(false).onActivate([&] {
-    auto tape = playButton.attribute<ares::Node::Tape>("node");
+    auto tape = recordButton.attribute<ares::Node::Tape>("node");
+    if (!tape)
+      return;
     if (!tape->loaded() || tape->playing() || tape->recording())
       return;
     tape->record();
@@ -121,6 +132,9 @@ auto TapeViewer::refresh() -> void {
       u64 position = tape->position() / tape->frequency();
       u64 length = tape->length() / tape->frequency();
       lengthLabel.setText({"Length: ", position, "/", length, " seconds"});
+      positionSlider.setLength((u32)min<u64>(length + 1, ~0u));
+      positionSlider.setPosition((u32)min<u64>(position, positionSlider.length() - 1));
+      positionSlider.setEnabled(tape->loaded() && !tape->playing() && !tape->recording());
       newButton.setEnabled(!tape->loaded());
       loadButton.setEnabled(!tape->loaded());
       unloadButton.setEnabled(tape->loaded());
@@ -148,6 +162,8 @@ auto TapeViewer::liveRefresh() -> void {
         u64 position = tape->position() / tape->frequency();
         u64 length = tape->length() / tape->frequency();
         lengthLabel.setText({"Length: ", position, "/", length, " seconds"});
+        positionSlider.setLength((u32)min<u64>(length + 1, ~0u));
+        positionSlider.setPosition((u32)min<u64>(position, positionSlider.length() - 1));
       } else if (!stopped) {
         refresh();
       }
@@ -164,6 +180,7 @@ auto TapeViewer::eventChange() -> void {
       newButton.setAttribute<ares::Node::Tape>("node", tape);
       loadButton.setAttribute<ares::Node::Tape>("node", tape);
       unloadButton.setAttribute<ares::Node::Tape>("node", tape);
+      positionSlider.setAttribute<ares::Node::Tape>("node", tape);
       playButton.setAttribute<ares::Node::Tape>("node", tape);
       recordButton.setAttribute<ares::Node::Tape>("node", tape);
       fastForwardButton.setAttribute<ares::Node::Tape>("node", tape);

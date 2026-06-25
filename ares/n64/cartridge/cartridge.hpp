@@ -40,7 +40,7 @@ struct Cartridge {
     u32  offset = 0;
   } flash;
   struct ISViewer : Memory::PI<ISViewer> {
-    Memory::Writable ram;  //unserialized
+    Memory::Writable ram;
     Node::Debugger::Tracer::Notification tracer;
 
     auto enabled() -> bool { return ram.size; }

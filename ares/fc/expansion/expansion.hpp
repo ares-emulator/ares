@@ -37,6 +37,7 @@ struct Expansion {
   // required for emulating the EPSM.
   virtual auto write(n8 data) -> void {}
   virtual auto writeIO(n16 address, n8 data) -> void {}
+  virtual auto serialize(serializer&) -> void {}
 };
 
 #include "port.hpp"

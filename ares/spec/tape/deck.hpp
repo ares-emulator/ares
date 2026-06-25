@@ -1,23 +1,17 @@
 struct TapeDeck {
   Node::Peripheral node;
-  Node::Setting::Boolean play;
   TapeDeckTray tray;
 
   TapeDeck(string name);
 
-  auto playing() -> bool { return state.playing; }
-  auto read() -> u1 { return state.output; }
+  auto playing() -> bool { return tray.tape.node && tray.tape.node->playing(); }
+  auto read() -> u1 { return tray.tape.read(); }
 
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto power() -> void;
 
   const string name;
-
-  struct {
-    bool playing;
-    u1 output;
-  } state;
 };
 
 extern TapeDeck tapeDeck;

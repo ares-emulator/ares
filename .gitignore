@@ -41,6 +41,9 @@ desktop-ui/resource/resource.hpp
 mia/resource/resource.cpp
 mia/resource/resource.hpp
 
+# Exclude Qt generated MOC file
+hiro/qt/qt.moc
+
 # Exclude fetched third-party processor test binaries
 tests/arm7tdmi/tests
 tests/m68000/tests

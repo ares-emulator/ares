@@ -1,10 +1,6 @@
 find_package(SDL)
 find_package(librashader)
 
-if(XCODE AND WITH_SYSTEM_ZLIB)
-  set_target_properties(ruby PROPERTIES OUTPUT_NAME "ruby-but-not-the-scripting-language")
-endif()
-
 target_sources(
   ruby
   PRIVATE video/metal/metal.cpp video/metal/metal.hpp video/metal/Shaders.metal video/metal/ShaderTypes.h
@@ -13,16 +9,12 @@ target_sources(
 # todo address
 target_compile_options(ruby PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-unguarded-availability>)
 
-target_sources(ruby PRIVATE audio/openal.cpp audio/sdl.cpp)
-
 target_sources(
   ruby
   PRIVATE
-    input/quartz.cpp
     input/keyboard/quartz.cpp
     input/sdl.cpp
     input/mouse/nsmouse.cpp
-    input/joypad/iokit.cpp
     input/joypad/sdl.cpp
 )
 
@@ -34,7 +26,6 @@ target_link_libraries(
     "$<LINK_LIBRARY:FRAMEWORK,CoreAudio.framework>"
     "$<LINK_LIBRARY:FRAMEWORK,IOKit.framework>"
     "$<LINK_LIBRARY:FRAMEWORK,QuartzCore.framework>"
-    "$<LINK_LIBRARY:FRAMEWORK,OpenAL.framework>"
     "$<LINK_LIBRARY:WEAK_FRAMEWORK,Metal.framework>"
     "$<LINK_LIBRARY:WEAK_FRAMEWORK,MetalKit.framework>"
 )
@@ -52,7 +43,6 @@ if(librashader_FOUND)
 endif()
 
 target_enable_feature(ruby "Metal video driver" VIDEO_METAL)
-target_enable_feature(ruby "OpenAL audio driver" AUDIO_OPENAL)
 if(SDL_FOUND)
   target_enable_feature(ruby "SDL input driver" INPUT_SDL)
   target_enable_feature(ruby "SDL audio driver" AUDIO_SDL)
@@ -62,7 +52,6 @@ if(librashader_FOUND AND ARES_ENABLE_LIBRASHADER)
 else()
   target_compile_definitions(ruby PRIVATE LIBRA_RUNTIME_METAL)
 endif()
-target_enable_feature(ruby "Quartz input driver" INPUT_QUARTZ)
 
 add_custom_command(
   TARGET ruby

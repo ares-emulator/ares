@@ -147,7 +147,7 @@ auto DD::motorActive() -> void {
   io.status.headRetracted = 0;
   io.status.spindleMotorStopped = 0;
   if(!ctl.standbyDelayDisable)
-    queue.insert(Queue::DD_Motor_Mode, (187'500'000 / 0x17) * ctl.standbyDelay);
+    cpu.queueInsert(Queue::DD_Motor_Mode, (187'500'000 / 0x17) * ctl.standbyDelay);
 }
 
 auto DD::motorStandby() -> void {
@@ -155,7 +155,7 @@ auto DD::motorStandby() -> void {
   io.status.headRetracted = 1;
   io.status.spindleMotorStopped = 0;
   if(!ctl.sleepDelayDisable)
-      queue.insert(Queue::DD_Motor_Mode, (187'500'000 / 0x17) * ctl.sleepDelay);
+      cpu.queueInsert(Queue::DD_Motor_Mode, (187'500'000 / 0x17) * ctl.sleepDelay);
 }
 
 auto DD::motorStop() -> void {

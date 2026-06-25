@@ -5,6 +5,10 @@ struct ZXSpectrum : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+  auto loadTape(ares::Node::Object node, string location) -> bool override;
+  auto unloadTape(ares::Node::Object node) -> void override;
+
+  std::shared_ptr<mia::Pak> tape;
 };
 
 ZXSpectrum::ZXSpectrum() {
@@ -26,6 +30,7 @@ auto ZXSpectrum::load() -> LoadResult {
   if(!ares::ZXSpectrum::load(root, "[Sinclair] ZX Spectrum")) return otherError;
 
   if(auto port = root->find<ares::Node::Port>("Tape Deck/Tray")) {
+    tape = game;
     port->allocate();
     port->connect();
   }
@@ -39,12 +44,13 @@ auto ZXSpectrum::load() -> LoadResult {
 }
 
 auto ZXSpectrum::load(Menu menu) -> void {
-  if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
+  if(auto tape = root->find<ares::Node::Tape>("ZX Spectrum Tape")) {
     MenuCheckItem playingItem{&menu};
-    playingItem.setText("Play Tape").setChecked(playing->value()).onToggle([=, this] {
-      if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
-        playing->setValue(playingItem.checked());
-      }
+    playingItem.setText("Play Tape").setChecked(tape->playing()).onToggle([=, this] {
+      if(auto tape = root->find<ares::Node::Tape>("ZX Spectrum Tape")) {
+        if(playingItem.checked()) tape->play();
+        else tape->stop();
+      };
     });
   }
 }
@@ -54,13 +60,40 @@ auto ZXSpectrum::save() -> bool {
   root->save();
   system->save(system->location);
   game->save(game->location);
+  if(tape && tape != game) tape->save(tape->location);
   return true;
 }
 
 auto ZXSpectrum::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "ZX Spectrum") return system->pak;
-  if(node->name() == "ZX Spectrum Tape") return game->pak;
+  if(node->name() == "ZX Spectrum Tape") return tape ? tape->pak : game->pak;
   return {};
+}
+
+auto ZXSpectrum::loadTape(ares::Node::Object node, string location) -> bool {
+  if(node->name() == "ZX Spectrum Tape") {
+    tape = mia::Medium::create("ZX Spectrum");
+    if(!location) {
+      location = Emulator::load(tape, settings.paths.home);
+      if(!location) return false;
+    }
+    LoadResult result = tape->load(location);
+    if(result != successful) {
+      tape.reset();
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+auto ZXSpectrum::unloadTape(ares::Node::Object node) -> void {
+  if(node->name() == "ZX Spectrum Tape") {
+    if(tape) tape->save(tape->location);
+    tape.reset();
+  }
 }
 
 auto ZXSpectrum::input(ares::Node::Input::Input input) -> void {

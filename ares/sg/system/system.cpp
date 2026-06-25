@@ -26,7 +26,15 @@ System system;
 
 auto System::game() -> string {
   if(cartridge.node) {
-    return cartridge.title();
+    string game = cartridge.title();
+    if(tapeDeck.tray.tape.node) {
+      if(auto title = tapeDeck.tray.tape.title()) game.append(" + ", title);
+    }
+    return game;
+  }
+
+  if(tapeDeck.tray.tape.node) {
+    if(auto title = tapeDeck.tray.tape.title()) return title;
   }
 
   return "(no cartridge connected)";
@@ -85,6 +93,7 @@ auto System::load(Node::System& root, string name) -> bool {
   }
   if(information.model == Model::SC3000) {
     keyboard.load(node);
+    tapeDeck.load(node);
   }
   return true;
 }
@@ -107,6 +116,7 @@ auto System::unload() -> void {
     controllerPort2.unload();
   }
   if(information.model == Model::SC3000) {
+    tapeDeck.unload();
     keyboard.unload();
   }
   node = {};
@@ -120,6 +130,7 @@ auto System::power(bool reset) -> void {
   vdp.power();
   psg.power();
   ppi.power();
+  if(information.model == Model::SC3000) tapeDeck.power();
   scheduler.power(cpu);
 }
 

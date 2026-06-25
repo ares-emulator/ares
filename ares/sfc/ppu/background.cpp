@@ -123,14 +123,14 @@ auto PPU::Background::fetchNameTable() -> void {
 auto PPU::Background::fetchOffset(u32 y) -> void {
   if(self.vcounter() == 0) return;
 
-  u32 characterIndex = self.hcounter() >> 5 << hires();
+  u32 characterIndex = self.hcounter() >> 5;
   u32 x = characterIndex << 3;
 
   u32 hoffset = x + (io.hoffset & ~7);
   u32 voffset = y + (io.voffset);
 
   u32 vtiles = 3 + io.tileSize;
-  u32 htiles = !hires() ? vtiles : 4;
+  u32 htiles = !hires() ? vtiles : 3;
 
   u32 htile = hoffset >> htiles;
   u32 vtile = voffset >> vtiles;

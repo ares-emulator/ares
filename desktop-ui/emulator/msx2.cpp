@@ -58,7 +58,10 @@ auto MSX2::load() -> LoadResult {
 
   if(auto port = root->find<ares::Node::Port>("Tape Deck/Tray")) {
     port->allocate();
-    if(isTape) port->connect();
+    if(isTape) {
+      tape = game;
+      port->connect();
+    }
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
@@ -82,6 +85,7 @@ auto MSX2::load() -> LoadResult {
 auto MSX2::save() -> bool {
   root->save();
   system->save(system->location);
+  if(tape && tape != game) tape->save(tape->location);
   game->save(game->location);
   return true;
 }
@@ -89,12 +93,11 @@ auto MSX2::save() -> bool {
 auto MSX2::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "MSX2") return system->pak;
   if(node->name() == "MSX2 Cartridge") return game->pak;
-  if(node->name() == "MSX Tape") return game->pak;
+  if(node->name() == "MSX Tape") return tape ? tape->pak : game->pak;
   return {};
 }
 
 auto MSX2::input(ares::Node::Input::Input input) -> void {
   MSX::input(input);
 }
-
 

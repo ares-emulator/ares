@@ -82,6 +82,9 @@ auto PSG::writeIO(n1 port, n8 data) -> void {
 
   // This bit controls which port is read through PSG register 14
   controllerMux.select(data.bit(6));
+
+  // This bit drives the cassette output signal.
+  tapeDeck.write(data.bit(7));
 }
 
 }

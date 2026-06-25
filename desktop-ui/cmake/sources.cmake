@@ -28,8 +28,8 @@ target_sources(
   desktop-ui
   PRIVATE
     settings/audio.cpp
-    settings/debug.cpp
-    settings/drivers.cpp
+    settings/developer.cpp
+    settings/cores.cpp
     settings/emulators.cpp
     settings/firmware.cpp
     settings/home.cpp

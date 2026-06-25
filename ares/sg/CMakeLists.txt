@@ -10,6 +10,7 @@ ares_add_sources(
     vdp/vdp.cpp
     psg/psg.cpp
     ppi/ppi.cpp
+    tape/tape.cpp
     system/system.cpp
     cartridge/cartridge.cpp
     controller/controller.cpp
@@ -84,6 +85,17 @@ ares_add_sources(
   INCLUDED #
     ppi/ppi.hpp
     ppi/serialization.cpp
+)
+
+ares_add_sources(
+  CORE #
+    sg
+  INCLUDED #
+    tape/deck.cpp
+    tape/deck.hpp
+    tape/tape.hpp
+    tape/tray.cpp
+    tape/tray.hpp
 )
 
 ares_add_sources(

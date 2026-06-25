@@ -142,6 +142,7 @@ struct TapeViewer : VerticalLayout {
   VerticalLayout tapeLayout{this, Size{~0, ~0}};
   Label statusLabel{&tapeLayout, Size{~0, 0}, 5};
   Label lengthLabel{&tapeLayout, Size{~0, 0}, 5};
+  HorizontalSlider positionSlider{&tapeLayout, Size{~0, 0}};
   Button newButton{&tapeLayout, Size{~0, 0}};
   Button loadButton{&tapeLayout, Size{~0, 0}};
   Button unloadButton{&tapeLayout, Size{~0, 0}};

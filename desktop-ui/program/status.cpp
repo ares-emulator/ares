@@ -9,8 +9,8 @@ auto Program::updateMessage() -> void {
 
   if(message.text.length() > 0) {
     presentation.statusLeft.setText(message.text);
-  } else if(settings.debugServer.enabled) {
-    presentation.statusLeft.setText(nall::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4));
+  } else if(settings.developer.debugServerEnabled) {
+    presentation.statusLeft.setText(nall::GDB::server.getStatusText(settings.developer.debugServerPort, settings.developer.debugServerUseIPv4));
   } else if(configuration) {
     presentation.statusLeft.setText(configuration);
   } else {

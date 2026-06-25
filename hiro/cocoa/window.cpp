@@ -158,7 +158,7 @@ auto pWindow::setDismissable(bool dismissable) -> void {
 
 auto pWindow::setDroppable(bool droppable) -> void {
   if(droppable) {
-    [cocoaWindow registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+    [cocoaWindow registerForDraggedTypes:[NSArray arrayWithObject:NSPasteboardTypeFileURL]];
   } else {
     [cocoaWindow unregisterDraggedTypes];
   }

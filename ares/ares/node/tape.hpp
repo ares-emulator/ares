@@ -26,6 +26,7 @@ struct Tape : Peripheral {
   }
   auto unload() -> void {
     if (_loaded) {
+      stop();
       if (_unload) _unload();
       _loaded = false;
     }

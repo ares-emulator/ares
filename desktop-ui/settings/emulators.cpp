@@ -20,7 +20,7 @@ auto EmulatorSettings::construct() -> void {
     manufacturer.setText(emulator->manufacturer);
   }
   emulatorList.resizeColumns();
-  emulatorList.column(0).setWidth(24);
+  emulatorList.column(0).setWidth(32);
 }
 
 auto EmulatorSettings::eventToggle(TableViewCell cell) -> void {

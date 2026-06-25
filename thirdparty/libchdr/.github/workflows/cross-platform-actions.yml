@@ -1,0 +1,45 @@
+name: BSD, Haiku, OmniOS
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        operating_system: [ freebsd, haiku, netbsd, omnios, openbsd ]
+        architecture: [ arm64, x86-64 ]
+        include:
+          - operating_system: freebsd
+            version: '15.0'
+            pkginstall: sudo pkg update && sudo pkg install -y cmake git ninja
+          - operating_system: haiku
+            version: 'r1beta5'
+            pkginstall: pkgman refresh && pkgman install -y cmake git ninja
+          - operating_system: netbsd
+            version: '10.1'
+            pkginstall: sudo pkgin update && sudo pkgin -y install clang cmake git ninja-build
+          - operating_system: omnios
+            version: 'r151056'
+            pkginstall: sudo pkg refresh && sudo pkg install build-essential cmake git ninja
+          - operating_system: openbsd
+            version: '7.8'
+            pkginstall: sudo pkg_add -u && sudo pkg_add cmake git ninja
+        exclude:
+          - operating_system: haiku
+            architecture: arm64
+          - operating_system: omnios
+            architecture: arm64
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: ${{ matrix.operating_system }}
+          architecture: ${{ matrix.architecture }}
+          version: ${{ matrix.version }}
+          run: |
+            ${{ matrix.pkginstall }}
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
+            cmake --build build --config Release

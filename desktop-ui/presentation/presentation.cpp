@@ -4,6 +4,155 @@ Presentation& presentation = Instances::presentation();
 
 #define ELLIPSIS "\u2026"
 
+struct WindowSizePreset {
+  string name;
+  u32 width;
+  u32 height;
+};
+
+static auto maximumViewportSize() -> Size {
+  u32 bestWidth = 1;
+  u32 bestHeight = 1;
+  u64 bestArea = 1;
+  for(u32 monitor : range(Monitor::count())) {
+    auto workspace = Monitor::workspace(monitor);
+    u32 workspaceWidth = (u32)workspace.width();
+    u32 workspaceHeight = (u32)workspace.height();
+    u64 area = (u64)workspaceWidth * (u64)workspaceHeight;
+    if(area >= bestArea) {
+      bestArea = area;
+      bestWidth = workspaceWidth;
+      bestHeight = workspaceHeight;
+    }
+  }
+  return {bestWidth, bestHeight};
+}
+
+static auto minimumConfiguredWindowSize() -> Size {
+  return {160, 144};
+}
+
+static auto windowSizePresets() -> std::vector<WindowSizePreset> {
+  return {
+    {"NTSC 4:3",        640,  480},
+    {"PAL 4:3",         768,  576},
+    {"SVGA 4:3",        800,  600},
+    {"qHD 4:3",         960,  720},
+    {"XGA 4:3",        1024,  768},
+    {"XGA+ 4:3",       1152,  864},
+    {"HD 16:9",        1280,  720},
+    {"SXGA- 4:3",      1280,  960},
+    {"SXGA 5:4",       1280, 1024},
+    {"WXGA 16:9",      1366,  768},
+    {"HDV 4:3",        1440, 1080},
+    {"HD+ 16:9",       1600,  900},
+    {"UXGA 4:3",       1600, 1200},
+    {"FHD 16:9",       1920, 1080},
+    {"WUXGA 16:10",    1920, 1200},
+    {"QXGA 4:3",       2048, 1536},
+    {"QHD 16:9",       2560, 1440},
+    {"WQXGA 16:10",    2560, 1600},
+    {"UHD 4K 16:9",    3840, 2160},
+  };
+}
+
+static auto windowSizeText(u32 width, u32 height) -> string {
+  return {width, "x", height};
+}
+
+static auto setConfiguredWindowSize(u32 width, u32 height) -> void {
+  settings.video.windowWidth = width;
+  settings.video.windowHeight = height;
+}
+
+static auto snapWindowSizeValue(u32 value, u32 minimum, u32 maximum) -> u32 {
+  value = max(minimum, min(maximum, value));
+  return minimum + (value - minimum) / 4 * 4;
+}
+
+static auto customWindowSizeDialog(Window& relativeTo, Size minimumSize, Size maximumSize) -> Size {
+  u32 minimumWidth = (u32)minimumSize.width();
+  u32 minimumHeight = (u32)minimumSize.height();
+  u32 maximumWidth = max(minimumWidth, (u32)maximumSize.width());
+  u32 maximumHeight = max(minimumHeight, (u32)maximumSize.height());
+  u32 defaultWidth = snapWindowSizeValue(settings.video.windowWidth, minimumWidth, maximumWidth);
+  u32 defaultHeight = snapWindowSizeValue(settings.video.windowHeight, minimumHeight, maximumHeight);
+  Size result;
+
+  Window window;
+  VerticalLayout layout{&window};
+  Label textLabel{&layout, Size{~0, 0}};
+  TableLayout sizeLayout{&layout, Size{~0, 0}};
+    Label widthLabel{&sizeLayout, Size{0, 0}};
+    LineEdit widthEdit{&sizeLayout, Size{128_sx, 0}};
+    Label heightLabel{&sizeLayout, Size{0, 0}};
+    LineEdit heightEdit{&sizeLayout, Size{128_sx, 0}};
+  HorizontalLayout buttonLayout{&layout, Size{~0, 0}};
+    Canvas spacer{&buttonLayout, Size{~0, 0}};
+    Button acceptButton{&buttonLayout, Size{80_sx, 0}};
+    Button cancelButton{&buttonLayout, Size{80_sx, 0}};
+
+  layout.setPadding(5_sx, 5_sy);
+  sizeLayout.setSize({2, 2}).setPadding(12_sx, 0);
+  sizeLayout.column(0).setAlignment(1.0);
+  widthLabel.setText("Width:");
+  heightLabel.setText("Height:");
+  widthEdit.setEditable(true).setText(integer(defaultWidth));
+  heightEdit.setEditable(true).setText(integer(defaultHeight));
+  widthEdit.onChange([&] {
+    auto text = widthEdit.text();
+    string filtered;
+    for(auto character : text) {
+      if(character >= '0' && character <= '9') filtered.append(character);
+    }
+    if(filtered != text) widthEdit.setText(filtered);
+  });
+  heightEdit.onChange([&] {
+    auto text = heightEdit.text();
+    string filtered;
+    for(auto character : text) {
+      if(character >= '0' && character <= '9') filtered.append(character);
+    }
+    if(filtered != text) heightEdit.setText(filtered);
+  });
+
+  textLabel.setText({
+    "Choose a viewport size from ",
+    windowSizeText(minimumWidth, minimumHeight),
+    " to ",
+    windowSizeText(maximumWidth, maximumHeight),
+    " (multiples of 8)."
+  });
+
+  acceptButton.setText("Set").onActivate([&] {
+    auto requestedWidth = widthEdit.text().integer();
+    auto requestedHeight = heightEdit.text().integer();
+    u32 width = requestedWidth > 0 ? (u32)requestedWidth : minimumWidth;
+    u32 height = requestedHeight > 0 ? (u32)requestedHeight : minimumHeight;
+    width = snapWindowSizeValue(width, minimumWidth, maximumWidth);
+    height = snapWindowSizeValue(height, minimumHeight, maximumHeight);
+    result = {width, height};
+    window.doClose();
+  });
+  cancelButton.setText("Cancel").onActivate([&] {
+    window.doClose();
+  });
+  window.onClose([&] {
+    window.setModal(false);
+    window.setVisible(false);
+  });
+
+  window.setDismissable();
+  window.setTitle("Custom Window Size");
+  window.setSize({480_sx, layout.minimumSize().height()});
+  window.setAlignment(relativeTo, Alignment::Center);
+  window.setVisible();
+  window.setModal();
+
+  return result;
+}
+
+
 Presentation::Presentation() {
   if(program.kiosk) {
     iconLayout.setCollapsible();
@@ -42,70 +191,73 @@ Presentation::Presentation() {
   systemMenu.setVisible(false);
 
   settingsMenu.setText("Settings");
-  videoSizeMenu.setText("Size").setIcon(Icon::Emblem::Image);
-
-  //generate size menu
-  u32 multipliers = 5;
-  for(u32 multiplier : range(1, multipliers + 1)) {
-    MenuRadioItem item{&videoSizeMenu};
-    item.setText({multiplier, "x"});
-    item.onActivate([=, this] {
-      settings.video.multiplier = multiplier;
-      resizeWindow();
-    });
-
-    videoSizeGroup.append(item);
-  }
-
-  for(auto& item : videoSizeGroup.objects<MenuRadioItem>()) {
-    if(item.text() == string{settings.video.multiplier, "x"}) item.setChecked();
-  }
-
-  videoSizeMenu.append(MenuSeparator());
-  MenuItem centerWindow{&videoSizeMenu};
-  centerWindow.setText("Center Window").setIcon(Icon::Place::Settings).onActivate([&] {
-    setAlignment(Alignment::Center);
-  });
+  videoSizeMenu.setText("Window Size").setIcon(Icon::Emblem::Image);
+  refreshWindowSizeMenu();
   videoOutputMenu.setText("Output").setIcon(Icon::Emblem::Image);
+
   videoOutputScale.setText("Scale: Best Fit").onActivate([&] {
     settings.video.output = "Scale";
   });
-  videoOutputIntegerScale.setText("Scale: Integer").onActivate([&] {
+  videoOutputMenu.append(videoOutputScale);
+  videoOutputGroup.append(videoOutputScale);
+
+  videoOutputIntegerScale.setText("Scale: Integer (auto)").onActivate([&] {
     settings.video.output = "Integer";
   });
+  videoOutputMenu.append(videoOutputIntegerScale);
+  videoOutputGroup.append(videoOutputIntegerScale);
+
+  refreshFixedScaleMenu();
+
   videoOutputStretch.setText("Scale: Stretch to Fill").onActivate([&] {
     settings.video.output = "Stretch";
   });
+  videoOutputMenu.append(videoOutputStretch);
+  videoOutputGroup.append(videoOutputStretch);
 
-  if(settings.video.output == "Integer" ) videoOutputIntegerScale.setChecked();
-  if(settings.video.output == "Scale"   ) videoOutputScale.setChecked();
-  if(settings.video.output == "Stretch" ) videoOutputStretch.setChecked();
+  videoOutputMenu.append(videoOutputSeparator);
+
+  if(settings.video.output == "Integer") videoOutputIntegerScale.setChecked();
+  if(settings.video.output == "Scale") videoOutputScale.setChecked();
+  if(settings.video.output == "Stretch") videoOutputStretch.setChecked();
 
   videoAspectCorrectionNone.setText("Aspect: No correction").onActivate([&] {
     settings.video.aspectCorrection = "None";
     if(settings.video.adaptiveSizing) resizeWindow();
   });
+  videoOutputMenu.append(videoAspectCorrectionNone);
+  videoAspectCorrectionGroup.append(videoAspectCorrectionNone);
 
   videoAspectCorrectionStandard.setText("Aspect: Standard").onActivate([&] {
     settings.video.aspectCorrection = "Standard";
     if(settings.video.adaptiveSizing) resizeWindow();
   });
+  videoOutputMenu.append(videoAspectCorrectionStandard);
+  videoAspectCorrectionGroup.append(videoAspectCorrectionStandard);
 
   videoAspectCorrectionAnamorphic.setText("Aspect: Anamorphic (16:9)").onActivate([&] {
     settings.video.aspectCorrection = "Anamorphic";
     if(settings.video.adaptiveSizing) resizeWindow();
   });
+  videoOutputMenu.append(videoAspectCorrectionAnamorphic);
+  videoAspectCorrectionGroup.append(videoAspectCorrectionAnamorphic);
 
-  if(settings.video.aspectCorrection == "None")       videoAspectCorrectionNone.setChecked();
-  if(settings.video.aspectCorrection == "Standard")   videoAspectCorrectionStandard.setChecked();
+  videoOutputMenu.append(videoOutputSeparator2);
+
+  if(settings.video.aspectCorrection == "None") videoAspectCorrectionNone.setChecked();
+  if(settings.video.aspectCorrection == "Standard") videoAspectCorrectionStandard.setChecked();
   if(settings.video.aspectCorrection == "Anamorphic") videoAspectCorrectionAnamorphic.setChecked();
-
-  videoAdaptiveSizing.setText("Window: Auto resize").setChecked(settings.video.adaptiveSizing).onToggle([&] {
-    if(settings.video.adaptiveSizing = videoAdaptiveSizing.checked()) resizeWindow();
+  
+  videoAdaptiveSizing.setText("Window: Auto resize to content aspect").setChecked(settings.video.adaptiveSizing).onToggle([&] {
+    settings.video.adaptiveSizing = videoAdaptiveSizing.checked();
+    if(settings.video.adaptiveSizing) resizeWindow();
   });
+  videoOutputMenu.append(videoAdaptiveSizing);
   videoAutoCentering.setText("Window: Auto center").setChecked(settings.video.autoCentering).onToggle([&] {
-    if(settings.video.autoCentering = videoAutoCentering.checked()) resizeWindow();
+    settings.video.autoCentering = videoAutoCentering.checked();
+    if(settings.video.autoCentering) resizeWindow();
   });
+  videoOutputMenu.append(videoAutoCentering);
   videoShaderMenu.setText("Shader").setIcon(Icon::Emblem::Image);
   loadShaders();
   bootOptionsMenu.setText("Boot Options").setIcon(Icon::Place::Settings);
@@ -150,6 +302,7 @@ Presentation::Presentation() {
     } else {
       layout.append(statusLayout, Size{~0, StatusHeight});
     }
+    refreshWindowSizeMenu();
     if(visible()) resizeWindow();
   }).doToggle();
   videoSettingsAction.setText("Video" ELLIPSIS).setIcon(Icon::Device::Display).onActivate([&] {
@@ -176,11 +329,11 @@ Presentation::Presentation() {
   pathSettingsAction.setText("Paths" ELLIPSIS).setIcon(Icon::Emblem::Folder).onActivate([&] {
     settingsWindow.show("Paths");
   });
-  driverSettingsAction.setText("Drivers" ELLIPSIS).setIcon(Icon::Place::Settings).onActivate([&] {
-    settingsWindow.show("Drivers");
+  coreSettingsAction.setText("Cores" ELLIPSIS).setIcon(Icon::Place::Settings).onActivate([&] {
+    settingsWindow.show("Cores");
   });
-  debugSettingsAction.setText("Debug" ELLIPSIS).setIcon(Icon::Device::Network).onActivate([&] {
-    settingsWindow.show("Debug");
+  debugSettingsAction.setText("Developer" ELLIPSIS).setIcon(Icon::Device::Network).onActivate([&] {
+    settingsWindow.show("Developer");
   });
   importExportAction.setText("Settings File" ELLIPSIS).setIcon(Icon::Action::Save).onActivate([&] {
     settingsWindow.show("Settings File");
@@ -346,9 +499,13 @@ auto Presentation::resizeWindow() -> void {
   if(fullScreen()) setFullScreen(false);
   if(maximized()) return;
 
-  u32 multiplier = settings.video.multiplier;
-  u32 viewportWidth = 320 * multiplier;
-  u32 viewportHeight = 240 * multiplier;
+  u32 viewportWidth = settings.video.windowWidth;
+  u32 viewportHeight = settings.video.windowHeight;
+  if(!viewportWidth || !viewportHeight) {
+    viewportWidth = 800;
+    viewportHeight = 576;
+    setConfiguredWindowSize(viewportWidth, viewportHeight);
+  }
 
   if(emulator && !program.screens.empty()) {
     auto& node = program.screens.front();
@@ -358,8 +515,21 @@ auto Presentation::resizeWindow() -> void {
     if(settings.video.aspectCorrection == "Anamorphic") videoWidth = videoWidth * 4 / 3;
     if(node->rotation() == 90 || node->rotation() == 270) std::swap(videoWidth, videoHeight);
 
-    viewportWidth = videoWidth * multiplier;
-    viewportHeight = videoHeight * multiplier;
+    if(videoWidth && videoHeight && settings.video.adaptiveSizing) {
+      u32 targetWidth = viewportWidth;
+      u32 targetHeight = viewportHeight;
+
+      if((u64)targetWidth * videoHeight > (u64)targetHeight * videoWidth) {
+        targetWidth = targetHeight * videoWidth / videoHeight;
+      } else if((u64)targetWidth * videoHeight < (u64)targetHeight * videoWidth) {
+        targetHeight = targetWidth * videoHeight / videoWidth;
+      }
+
+      if(targetWidth != viewportWidth || targetHeight != viewportHeight) {
+        viewportWidth = targetWidth;
+        viewportHeight = targetHeight;
+      }
+    }
   }
 
   u32 statusHeight = (!program.kiosk && showStatusBarSetting.checked()) ? StatusHeight : 0;
@@ -375,10 +545,19 @@ auto Presentation::resizeWindow() -> void {
   }
 
   if(viewportWidth > monitorWidth || viewportHeight > monitorHeight) {
-    // setMaximized causes odd window glitches and is not supported on macOS, avoid!
-    // 100px buffer to account for possible taskbars
-    setGeometry(Alignment::Center, {monitorWidth, monitorHeight - statusHeight - 100});
-    return;
+    if(settings.video.adaptiveSizing) {
+      if(viewportWidth > monitorWidth) {
+        viewportHeight = viewportHeight * monitorWidth / viewportWidth;
+        viewportWidth = monitorWidth;
+      }
+      if(viewportHeight > monitorHeight) {
+        viewportWidth = viewportWidth * monitorHeight / viewportHeight;
+        viewportHeight = monitorHeight;
+      }
+    } else {
+      viewportWidth = min(viewportWidth, monitorWidth);
+      viewportHeight = min(viewportHeight, monitorHeight);
+    }
   }
 
   if(settings.video.autoCentering) {
@@ -387,7 +566,137 @@ auto Presentation::resizeWindow() -> void {
     setSize({viewportWidth, viewportHeight + statusHeight});
   }
 
-  setMinimumSize({160, 144 + statusHeight});
+  auto minimumSize = minimumConfiguredWindowSize();
+  u32 minimumWidth = (u32)minimumSize.width();
+  u32 minimumHeight = (u32)minimumSize.height();
+  setMinimumSize({(f32)minimumWidth, (f32)(minimumHeight + statusHeight)});
+}
+
+auto Presentation::refreshWindowSizeMenu() -> void {
+  videoSizeMenu.reset();
+  videoSizeGroup = {};
+
+  auto maximumSize = maximumViewportSize();
+  u32 maximumWidth = (u32)maximumSize.width();
+  u32 maximumHeight = (u32)maximumSize.height();
+  u32 statusHeight = (!program.kiosk && showStatusBarSetting.checked()) ? StatusHeight : 0;
+  auto minimumSize = minimumConfiguredWindowSize();
+  u32 minimumWidth = (u32)minimumSize.width();
+  u32 minimumHeight = (u32)minimumSize.height();
+  std::vector<WindowSizePreset> available;
+
+  for(auto preset : windowSizePresets()) {
+    if(preset.width > maximumWidth) continue;
+    if(preset.height + statusHeight > maximumHeight) continue;
+    available.push_back(preset);
+  }
+
+  if(available.empty()) {
+    u32 maximumAvailableHeight = maximumHeight - min(statusHeight, maximumHeight - 1);
+    setConfiguredWindowSize(
+      max(1u, min(minimumWidth, maximumWidth)),
+      max(1u, min(minimumHeight, maximumAvailableHeight))
+    );
+  } else {
+    bool configuredSizeAvailable = false;
+    for(auto preset : available) {
+      if(settings.video.windowWidth == preset.width && settings.video.windowHeight == preset.height) {
+        configuredSizeAvailable = true;
+      }
+    }
+
+    if(!configuredSizeAvailable) {
+      if(settings.video.windowWidth >= minimumWidth
+      && settings.video.windowHeight >= minimumHeight
+      && settings.video.windowWidth <= maximumWidth
+      && settings.video.windowHeight + statusHeight <= maximumHeight
+      ) {
+      } else {
+        auto fallback = available.front();
+        for(auto preset : available) {
+          if(preset.width == 800 && preset.height == 600) fallback = preset;
+          if(preset.width == 768 && preset.height == 576) fallback = preset;
+        }
+        setConfiguredWindowSize(fallback.width, fallback.height);
+      }
+    }
+  }
+
+  for(auto preset : available) {
+    MenuRadioItem item{&videoSizeMenu};
+    item.setText({preset.name, " (", windowSizeText(preset.width, preset.height), ")"});
+    item.onActivate([=, this] {
+      setConfiguredWindowSize(preset.width, preset.height);
+      resizeWindow();
+    });
+    videoSizeGroup.append(item);
+
+    if(settings.video.windowWidth == preset.width && settings.video.windowHeight == preset.height) item.setChecked();
+  }
+
+  bool presetSelected = false;
+  for(auto item : videoSizeGroup.objects<MenuRadioItem>()) {
+    if(item.checked()) presetSelected = true;
+  }
+  if(!presetSelected
+  && settings.video.windowWidth >= minimumWidth
+  && settings.video.windowHeight >= minimumHeight
+  && settings.video.windowWidth <= maximumWidth
+  && settings.video.windowHeight + statusHeight <= maximumHeight
+  ) {
+    MenuRadioItem item{&videoSizeMenu};
+    item.setText({"Custom (", windowSizeText(settings.video.windowWidth, settings.video.windowHeight), ")"});
+    item.onActivate([&] {
+      resizeWindow();
+    });
+    videoSizeGroup.append(item);
+    item.setChecked();
+  }
+
+  videoSizeMenu.append(MenuSeparator());
+  MenuItem custom{&videoSizeMenu};
+  custom.setText("Custom" ELLIPSIS).onActivate([&, minimumSize, maximumWidth, maximumHeight, statusHeight] {
+    auto maximumCustomSize = Size{(f32)maximumWidth, (f32)(maximumHeight - min(statusHeight, maximumHeight - 1))};
+    auto size = customWindowSizeDialog(*this, minimumSize, maximumCustomSize);
+    if(size.width() <= 0 || size.height() <= 0) return;
+
+    setConfiguredWindowSize((u32)size.width(), (u32)size.height());
+    refreshWindowSizeMenu();
+    resizeWindow();
+  });
+
+  videoSizeMenu.append(MenuSeparator());
+  MenuItem centerWindow{&videoSizeMenu};
+  centerWindow.setText("Center Window").setIcon(Icon::Place::Settings).onActivate([&] {
+    setAlignment(Alignment::Center);
+  });
+}
+
+auto Presentation::refreshFixedScaleMenu() -> void {
+  for(auto item : videoFixedScaleItems) {
+    videoOutputMenu.remove(item);
+    videoOutputGroup.remove(item);
+  }
+  videoFixedScaleItems.clear();
+
+  auto maximumSize = maximumViewportSize();
+  u32 maximumWidth = (u32)maximumSize.width();
+  u32 maximumHeight = (u32)maximumSize.height();
+  u32 maximumScale = max(1u, min(maximumWidth / 160, maximumHeight / 144));
+  maximumScale = min(maximumScale, 16u);
+  settings.video.fixedScale = max(1u, min(maximumScale, settings.video.fixedScale));
+
+  for(u32 scale : range(1, maximumScale + 1)) {
+    MenuRadioItem item{&videoOutputMenu};
+    item.setText({"Scale: Integer (fixed ", scale, "x)"});
+    item.onActivate([=] {
+      settings.video.output = "IntegerFixed";
+      settings.video.fixedScale = scale;
+    });
+    videoOutputGroup.append(item);
+    videoFixedScaleItems.push_back(item);
+    if(settings.video.output == "IntegerFixed" && settings.video.fixedScale == scale) item.setChecked();
+  }
 }
 
 auto Presentation::loadEmulators() -> void {
@@ -652,6 +961,14 @@ auto Presentation::refreshSystemMenu() -> void {
   }
 
   if(portsFound > 0) systemMenu.append(MenuSeparator());
+
+  if(ares::Node::enumerate<ares::Node::Tape>(emulator->root).size() > 0) {
+    MenuItem tapeManager{&systemMenu};
+    tapeManager.setText("Tape Manager").setIcon(Icon::Device::Tape).onActivate([&] {
+      toolsWindow.show("Tape");
+    });
+    systemMenu.append(MenuSeparator());
+  }
 
   MenuItem reset{&systemMenu};
   reset.setText("Reset").setIcon(Icon::Action::Refresh).onActivate([&] {

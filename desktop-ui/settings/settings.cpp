@@ -8,8 +8,8 @@
 #include "options.cpp"
 #include "firmware.cpp"
 #include "paths.cpp"
-#include "drivers.cpp"
-#include "debug.cpp"
+#include "cores.cpp"
+#include "developer.cpp"
 #include "importexport.cpp"
 #include "home.cpp"
 
@@ -24,8 +24,8 @@ EmulatorSettings& emulatorSettings = settingsWindow.emulatorSettings;
 OptionSettings& optionSettings = settingsWindow.optionSettings;
 FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
-DebugSettings& debugSettings = settingsWindow.debugSettings;
-DriverSettings& driverSettings = settingsWindow.driverSettings;
+DeveloperSettings& developerSettings = settingsWindow.developerSettings;
+CoreSettings& coreSettings = settingsWindow.coreSettings;
 ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
 auto Settings::load() -> void {
@@ -43,8 +43,8 @@ auto Settings::process(bool load) -> void {
   if(load) {
     //initialize non-static default settings
     video.driver = ruby::Video::optimalDriver();
-    audio.driver = ruby::Audio::optimalDriver();
-    input.driver = ruby::Input::optimalDriver();
+    audio.driver = "SDL";
+    input.driver = "SDL";
   }
 
   #define bind(type, path, name) \
@@ -64,8 +64,10 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/NativeFullScreen", video.nativeFullScreen);
   bind(boolean, "Video/Flush", video.flush);
   bind(string,  "Video/Shader", video.shader);
-  bind(natural, "Video/Multiplier", video.multiplier);
+  bind(natural, "Video/WindowWidth", video.windowWidth);
+  bind(natural, "Video/WindowHeight", video.windowHeight);
   bind(string,  "Video/Output", video.output);
+  bind(natural, "Video/FixedScale", video.fixedScale);
   bind(string,  "Video/AspectCorrectionMode", video.aspectCorrection);
   bind(boolean, "Video/AdaptiveSizing", video.adaptiveSizing);
   bind(boolean, "Video/AutoCentering", video.autoCentering);
@@ -74,27 +76,19 @@ auto Settings::process(bool load) -> void {
   bind(real,    "Video/Gamma", video.gamma);
   bind(boolean, "Video/ColorBleed", video.colorBleed);
   bind(boolean, "Video/ColorEmulation", video.colorEmulation);
-  bind(boolean, "Video/DeepBlackBoost", video.deepBlackBoost);
   bind(boolean, "Video/InterframeBlending", video.interframeBlending);
   bind(boolean, "Video/Overscan", video.overscan);
   bind(boolean, "Video/PixelAccuracy", video.pixelAccuracy);
-  bind(string,  "Video/Quality", video.quality);
-  bind(boolean, "Video/Supersampling", video.supersampling);
-  bind(boolean, "Video/DisableVideoInterfaceProcessing", video.disableVideoInterfaceProcessing);
-  bind(boolean, "Video/WeaveDeinterlacing", video.weaveDeinterlacing);
 
-  bind(string,  "Audio/Driver", audio.driver);
   bind(string,  "Audio/Device", audio.device);
   bind(natural, "Audio/Frequency", audio.frequency);
   bind(natural, "Audio/Latency", audio.latency);
-  bind(boolean, "Audio/Exclusive", audio.exclusive);
   bind(boolean, "Audio/Blocking", audio.blocking);
   bind(boolean, "Audio/Dynamic", audio.dynamic);
   bind(boolean, "Audio/Mute", audio.mute);
   bind(real,    "Audio/Volume", audio.volume);
   bind(real,    "Audio/Balance", audio.balance);
 
-  bind(string,  "Input/Driver", input.driver);
   bind(string,  "Input/Defocus", input.defocus);
 
   bind(boolean, "Boot/Fast", boot.fast);
@@ -106,12 +100,11 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "General/Rewind", general.rewind);
   bind(boolean, "General/RunAhead", general.runAhead);
   bind(boolean, "General/AutoSaveMemory", general.autoSaveMemory);
-  bind(boolean, "General/HomebrewMode", general.homebrewMode);
-  bind(boolean, "General/ForceInterpreter", general.forceInterpreter);
   bind(boolean, "General/NoFilePrompt", general.noFilePrompt);
 
   bind(natural, "Rewind/Length", rewind.length);
   bind(natural, "Rewind/Frequency", rewind.frequency);
+  bind(boolean, "Rewind/Mute", rewind.mute);
 
   bind(string,  "Paths/Home", paths.home);
   bind(string,  "Paths/Firmware", paths.firmware);
@@ -123,14 +116,22 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Paths/SuperFamicom/BSMemory", paths.superFamicom.bsMemory);
   bind(string,  "Paths/SuperFamicom/SufamiTurbo", paths.superFamicom.sufamiTurbo);
 
-  bind(natural, "DebugServer/Port", debugServer.port);
-  bind(boolean, "DebugServer/Enabled", debugServer.enabled);
-  bind(boolean, "DebugServer/UseIPv4", debugServer.useIPv4);
+  bind(natural, "Developer/DebugServerPort", developer.debugServerPort);
+  bind(boolean, "Developer/DebugServerEnabled", developer.debugServerEnabled);
+  bind(boolean, "Developer/DebugServerUseIPv4", developer.debugServerUseIPv4);
+  bind(boolean, "Developer/HomebrewMode", developer.homebrewMode);
+  bind(boolean, "Developer/ForceInterpreter", developer.forceInterpreter);
 
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
-  bind(string, "Nintendo64/ControllerPakBankString", nintendo64.controllerPakBankString);
+  bind(string,  "Nintendo64/ControllerPakBankString", nintendo64.controllerPakBankString);
+  bind(string,  "Nintendo64/Quality", nintendo64.quality);
+  bind(boolean, "Nintendo64/Supersampling", nintendo64.supersampling);
+  bind(boolean, "Nintendo64/DisableVideoInterfaceProcessing", nintendo64.disableVideoInterfaceProcessing);
+  bind(boolean, "Nintendo64/WeaveDeinterlacing", nintendo64.weaveDeinterlacing);
 
   bind(boolean, "GameBoyAdvance/Player", gameBoyAdvance.player);
+
+  bind(boolean, "SuperFamicom/DeepBlackBoost", superFamicom.deepBlackBoost);
 
   bind(boolean, "MegaDrive/TMSS", megadrive.tmss);
 
@@ -161,6 +162,47 @@ auto Settings::process(bool load) -> void {
         auto parts = nall::split(value, ";");
         parts.resize(BindingLimit);
         for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = parts[binding];
+      }
+    }
+  }
+
+  for(auto& emulator : emulators) {
+    string base = string{emulator->name}.replace(" ", "");
+    base.replace("(", "").replace(")", "");
+    for(auto& port : emulator->ports) {
+      for(auto& device : port.devices) {
+        if(!device.hasDirectMappings()) continue;
+        string portName = string{port.name}.replace(" ", ".").replace("[", "").replace("]", "").replace("(", "").replace(")", "").replace("*", "Star").replace("#", "Pound");
+        string deviceName = string{device.name}.replace(" ", ".").replace("[", "").replace("]", "").replace("(", "").replace(")", "").replace("*", "Star").replace("#", "Pound");
+        for(auto& input : device.inputs) {
+          auto& mapping = input.configuredMapping();
+          string inputName = string{input.name}.replace(" ", ".").replace("[", "").replace("]", "").replace("(", ".").replace(")", "").replace("*", "Star").replace("#", "Pound");
+          string name = {base, "/Input/", portName, "/", deviceName, "/", inputName}, value;
+          if(load == 0) for(auto& assignment : mapping.assignments) value.append(assignment, ";");
+          if(load == 0) value.trimRight(";", 1L);
+          bind(string, name, value);
+          if(load == 1) {
+            auto parts = nall::split(value, ";");
+            parts.resize(BindingLimit);
+            for(u32 binding : range(BindingLimit)) mapping.assignments[binding] = parts[binding];
+          }
+        }
+        for(auto& pair : device.pairs) {
+          string pairName = string{pair.name}.replace(" ", ".").replace("[", "").replace("]", "").replace("(", ".").replace(")", "").replace("*", "Star").replace("#", "Pound");
+          for(auto index : range(2)) {
+            string suffix = index == 0 ? "Lo" : "Hi";
+            auto& mapping = index == 0 ? pair.configuredMappingLo() : pair.configuredMappingHi();
+            string name = {base, "/Input/", portName, "/", deviceName, "/", pairName, "/", suffix}, value;
+            if(load == 0) for(auto& assignment : mapping.assignments) value.append(assignment, ";");
+            if(load == 0) value.trimRight(";", 1L);
+            bind(string, name, value);
+            if(load == 1) {
+              auto parts = nall::split(value, ";");
+              parts.resize(BindingLimit);
+              for(u32 binding : range(BindingLimit)) mapping.assignments[binding] = parts[binding];
+            }
+          }
+        }
       }
     }
   }
@@ -215,8 +257,8 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Options").setIcon(Icon::Action::Settings));
   panelList.append(ListViewItem().setText("Firmware").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
-  panelList.append(ListViewItem().setText("Drivers").setIcon(Icon::Place::Settings));
-  panelList.append(ListViewItem().setText("Debug").setIcon(Icon::Device::Network));
+  panelList.append(ListViewItem().setText("Cores").setIcon(Icon::Place::Settings));
+  panelList.append(ListViewItem().setText("Developer").setIcon(Icon::Device::Network));
   panelList.append(ListViewItem().setText("Settings File").setIcon(Icon::Action::Save));
   panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
@@ -229,8 +271,8 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(optionSettings, Size{~0, ~0});
   panelContainer.append(firmwareSettings, Size{~0, ~0});
   panelContainer.append(pathSettings, Size{~0, ~0});
-  panelContainer.append(driverSettings, Size{~0, ~0});
-  panelContainer.append(debugSettings, Size{~0, ~0});
+  panelContainer.append(coreSettings, Size{~0, ~0});
+  panelContainer.append(developerSettings, Size{~0, ~0});
   panelContainer.append(importExportSettings, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
@@ -242,20 +284,19 @@ auto SettingsWindow::initialize() -> void {
   optionSettings.construct();
   firmwareSettings.construct();
   pathSettings.construct();
-  driverSettings.construct();
-  debugSettings.construct();
+  coreSettings.construct();
+  developerSettings.construct();
   importExportSettings.construct();
   homePanel.construct();
 
   setDismissable();
   setTitle("Configuration");
-  setSize({700_sx, 425_sy});
+  setSize({700_sx, 450_sy});
   setAlignment({0.0, 1.0});
   setResizable(false);
   
-  driverSettings.videoRefresh();
-  driverSettings.audioRefresh();
-  driverSettings.inputRefresh();
+  videoSettings.videoRefresh();
+  audioSettings.audioRefresh();
   initialized = true;
 }
 
@@ -282,8 +323,8 @@ auto SettingsWindow::eventChange() -> void {
   optionSettings.setVisible(false);
   firmwareSettings.setVisible(false);
   pathSettings.setVisible(false);
-  driverSettings.setVisible(false);
-  debugSettings.setVisible(false);
+  coreSettings.setVisible(false);
+  developerSettings.setVisible(false);
   importExportSettings.setVisible(false);
   homePanel.setVisible(false);
 
@@ -297,8 +338,8 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Options"  ) found = true, optionSettings.setVisible();
     if(item.text() == "Firmware" ) found = true, firmwareSettings.setVisible();
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
-    if(item.text() == "Drivers"  ) found = true, driverSettings.setVisible();
-    if(item.text() == "Debug"    ) found = true, debugSettings.setVisible();
+    if(item.text() == "Cores"    ) found = true, coreSettings.setVisible();
+    if(item.text() == "Developer"    ) found = true, developerSettings.setVisible();
     if(item.text() == "Settings File") found = true, importExportSettings.setVisible(); 
   }
   if(!found) homePanel.setVisible();

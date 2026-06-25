@@ -61,7 +61,7 @@ auto pViewport::handle() const -> uintptr_t {
 
 auto pViewport::setDroppable(bool droppable) -> void {
   if(droppable) {
-    [cocoaViewport registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+    [cocoaViewport registerForDraggedTypes:[NSArray arrayWithObject:NSPasteboardTypeFileURL]];
   } else {
     [cocoaViewport unregisterDraggedTypes];
   }

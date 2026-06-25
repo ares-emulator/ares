@@ -46,5 +46,6 @@ void 		flac_decoder_free(flac_decoder* decoder);
 int 		flac_decoder_reset(flac_decoder* decoder, uint32_t sample_rate, uint8_t num_channels, uint32_t block_size, const void *buffer, uint32_t length);
 int 		flac_decoder_decode_interleaved(flac_decoder* decoder, int16_t *samples, uint32_t num_samples, int swap_endian);
 uint32_t 	flac_decoder_finish(flac_decoder* decoder);
+int			flac_decoder_detect_native_endian(void);
 
 #endif /* __FLAC_H__ */

@@ -32,25 +32,6 @@ auto Aleck64::Controls::load(Node::Object parent) -> void {
     p2[n] = node->append<Node::Input::Button>(name);
   }
 
-  mahjongA     = node->append<Node::Input::Button>("Mahjong A");
-  mahjongB     = node->append<Node::Input::Button>("Mahjong B");
-  mahjongC     = node->append<Node::Input::Button>("Mahjong C");
-  mahjongD     = node->append<Node::Input::Button>("Mahjong D");
-  mahjongE     = node->append<Node::Input::Button>("Mahjong E");
-  mahjongF     = node->append<Node::Input::Button>("Mahjong F");
-  mahjongG     = node->append<Node::Input::Button>("Mahjong G");
-  mahjongH     = node->append<Node::Input::Button>("Mahjong H");
-  mahjongI     = node->append<Node::Input::Button>("Mahjong I");
-  mahjongJ     = node->append<Node::Input::Button>("Mahjong J");
-  mahjongK     = node->append<Node::Input::Button>("Mahjong K");
-  mahjongL     = node->append<Node::Input::Button>("Mahjong L");
-  mahjongM     = node->append<Node::Input::Button>("Mahjong M");
-  mahjongN     = node->append<Node::Input::Button>("Mahjong N");
-  mahjongKan   = node->append<Node::Input::Button>("Mahjong カン");
-  mahjongPon   = node->append<Node::Input::Button>("Mahjong ポン");
-  mahjongChi   = node->append<Node::Input::Button>("Mahjong チー");
-  mahjongReach = node->append<Node::Input::Button>("Mahjong リーチ");
-  mahjongRon   = node->append<Node::Input::Button>("Mahjong ロン");
 }
 
 auto Aleck64::Controls::poll() -> void {
@@ -82,26 +63,6 @@ auto Aleck64::Controls::poll() -> void {
   for(auto n : range(9)) {
     platform->input(p2[n]);
   }
-
-  platform->input(mahjongA);
-  platform->input(mahjongB);
-  platform->input(mahjongC);
-  platform->input(mahjongD);
-  platform->input(mahjongE);
-  platform->input(mahjongF);
-  platform->input(mahjongG);
-  platform->input(mahjongH);
-  platform->input(mahjongI);
-  platform->input(mahjongJ);
-  platform->input(mahjongK);
-  platform->input(mahjongL);
-  platform->input(mahjongM);
-  platform->input(mahjongN);
-  platform->input(mahjongKan);
-  platform->input(mahjongPon);
-  platform->input(mahjongChi);
-  platform->input(mahjongReach);
-  platform->input(mahjongRon);
 }
 
 auto Aleck64::Controls::controllerButton(int playerIndex, string button) -> bool {
@@ -146,39 +107,85 @@ auto Aleck64::Controls::controllerAxis(int playerIndex, string axis) -> s64 {
   return 0;
 }
 
-auto Aleck64::Controls::mahjong(n8 row) -> n8 {
+auto Aleck64::Mahjong::load(Node::Object parent) -> void {
+  node = parent->append<Node::Object>("Mahjong");
+
+  a     = node->append<Node::Input::Button>("A");
+  b     = node->append<Node::Input::Button>("B");
+  c     = node->append<Node::Input::Button>("C");
+  d     = node->append<Node::Input::Button>("D");
+  e     = node->append<Node::Input::Button>("E");
+  f     = node->append<Node::Input::Button>("F");
+  g     = node->append<Node::Input::Button>("G");
+  h     = node->append<Node::Input::Button>("H");
+  i     = node->append<Node::Input::Button>("I");
+  j     = node->append<Node::Input::Button>("J");
+  k     = node->append<Node::Input::Button>("K");
+  l     = node->append<Node::Input::Button>("L");
+  m     = node->append<Node::Input::Button>("M");
+  n     = node->append<Node::Input::Button>("N");
+  kan   = node->append<Node::Input::Button>("カン");
+  pon   = node->append<Node::Input::Button>("ポン");
+  chi   = node->append<Node::Input::Button>("チー");
+  reach = node->append<Node::Input::Button>("リーチ");
+  ron   = node->append<Node::Input::Button>("ロン");
+}
+
+auto Aleck64::Mahjong::poll() -> void {
+  platform->input(a);
+  platform->input(b);
+  platform->input(c);
+  platform->input(d);
+  platform->input(e);
+  platform->input(f);
+  platform->input(g);
+  platform->input(h);
+  platform->input(i);
+  platform->input(j);
+  platform->input(k);
+  platform->input(l);
+  platform->input(m);
+  platform->input(n);
+  platform->input(kan);
+  platform->input(pon);
+  platform->input(chi);
+  platform->input(reach);
+  platform->input(ron);
+}
+
+auto Aleck64::Mahjong::read(n8 row) -> n8 {
   n8 value = 0xff;
 
   if(row.bit(0)) {
-    value.bit(1) &= !aleck64.controls.mahjongB->value();
-    value.bit(2) &= !aleck64.controls.mahjongF->value();
-    value.bit(3) &= !aleck64.controls.mahjongJ->value();
-    value.bit(4) &= !aleck64.controls.mahjongN->value();
-    value.bit(5) &= !aleck64.controls.mahjongReach->value();
+    value.bit(1) &= !b->value();
+    value.bit(2) &= !f->value();
+    value.bit(3) &= !j->value();
+    value.bit(4) &= !n->value();
+    value.bit(5) &= !reach->value();
   }
 
   if(row.bit(1)) {
     value.bit(0) &= !aleck64.controls.p1start->value();
-    value.bit(1) &= !aleck64.controls.mahjongA->value();
-    value.bit(2) &= !aleck64.controls.mahjongE->value();
-    value.bit(3) &= !aleck64.controls.mahjongI->value();
-    value.bit(4) &= !aleck64.controls.mahjongM->value();
-    value.bit(5) &= !aleck64.controls.mahjongKan->value();
+    value.bit(1) &= !a->value();
+    value.bit(2) &= !e->value();
+    value.bit(3) &= !i->value();
+    value.bit(4) &= !m->value();
+    value.bit(5) &= !kan->value();
   }
 
   if(row.bit(2)) {
-    value.bit(1) &= !aleck64.controls.mahjongC->value();
-    value.bit(2) &= !aleck64.controls.mahjongG->value();
-    value.bit(3) &= !aleck64.controls.mahjongK->value();
-    value.bit(4) &= !aleck64.controls.mahjongChi->value();
-    value.bit(5) &= !aleck64.controls.mahjongRon->value();
+    value.bit(1) &= !c->value();
+    value.bit(2) &= !g->value();
+    value.bit(3) &= !k->value();
+    value.bit(4) &= !chi->value();
+    value.bit(5) &= !ron->value();
   }
 
   if(row.bit(3)) {
-    value.bit(1) &= !aleck64.controls.mahjongD->value();
-    value.bit(2) &= !aleck64.controls.mahjongH->value();
-    value.bit(3) &= !aleck64.controls.mahjongL->value();
-    value.bit(4) &= !aleck64.controls.mahjongPon->value();
+    value.bit(1) &= !d->value();
+    value.bit(2) &= !h->value();
+    value.bit(3) &= !l->value();
+    value.bit(4) &= !pon->value();
   }
 
   return value;

@@ -13,7 +13,7 @@ auto Program::videoDriverUpdate() -> void {
   ruby::video.setNativeFullScreen(settings.video.nativeFullScreen);
 
   if(!ruby::video.ready()) {
-    driverInitFailed(settings.video.driver, "video", [&] { driverSettings.videoDriverUpdate(); });
+    driverInitFailed(settings.video.driver, "video", [&] { videoSettings.videoDriverUpdate(); });
     return;
   }
 
@@ -116,19 +116,13 @@ auto Program::videoPseudoFullScreenToggle() -> void {
 
 auto Program::audioDriverUpdate() -> void {
   Program::Guard guard;
-  ruby::audio.create(settings.audio.driver);
+  ruby::audio.create();
   ruby::audio.setContext(presentation.viewport.handle());
   audioDeviceUpdate();
   audioFrequencyUpdate();
   audioLatencyUpdate();
-  ruby::audio.setExclusive(settings.audio.exclusive);
   ruby::audio.setBlocking(settings.audio.blocking);
   ruby::audio.setDynamic(settings.audio.dynamic);
-
-  if(!ruby::audio.ready()) {
-    driverInitFailed(settings.audio.driver, "audio", [&] { driverSettings.audioDriverUpdate(); });
-    return;
-  }
 }
 
 auto Program::audioDeviceUpdate() -> void {
@@ -137,6 +131,7 @@ auto Program::audioDeviceUpdate() -> void {
     settings.audio.device = ruby::audio.device();
   }
   ruby::audio.setDevice(settings.audio.device);
+  ruby::audio.create();
 }
 
 auto Program::audioFrequencyUpdate() -> void {
@@ -161,12 +156,13 @@ auto Program::audioLatencyUpdate() -> void {
 
 auto Program::inputDriverUpdate() -> void {
   Program::Guard guard;
-  ruby::input.create(settings.input.driver);
+  ruby::input.create("SDL");
   ruby::input.setContext(presentation.viewport.handle());
   ruby::input.onChange(std::bind_front(&InputManager::eventInput, &inputManager));
 
   if(!ruby::input.ready()) {
-    driverInitFailed(settings.input.driver, "input", [&] { driverSettings.inputDriverUpdate(); });
+    string driver = "SDL";
+    driverInitFailed(driver, "input", [&] { inputSettings.inputDriverUpdate(); });
     return;
   }
 

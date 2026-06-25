@@ -11,11 +11,14 @@ CPU cpu;
 #include "exceptions.cpp"
 #include "algorithms.cpp"
 #include "interpreter.cpp"
+#include "decoder.cpp"
 #include "interpreter-ipu.cpp"
 #include "interpreter-scc.cpp"
 #include "interpreter-fpu.cpp"
 #include "interpreter-cop2.cpp"
 #include "recompiler.cpp"
+#include "recompiler-fpu.cpp"
+#include "recompiler-ipu.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"
@@ -33,27 +36,39 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   while(!vi.refreshed && GDB::server.reportPC(ipu.pc & 0xFFFFFFFF)) {
-    instruction();
-    synchronize();
+    if(instruction()) synchronize();
   }
 
   vi.refreshed = false;
   queue.remove(Queue::GDB_Poll);
   if(GDB::server.hasClient()) {
-    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+    queueInsert(Queue::GDB_Poll, (93750000*2)/60/240);
   }
 }
 
 auto CPU::gdbPoll() -> void {
   if(GDB::server.hasClient()) {
     GDB::server.updateLoop();
-    queue.insert(Queue::GDB_Poll, (93750000*2)/60/240);
+    queueInsert(Queue::GDB_Poll, (93750000*2)/60/240);
   }
+}
+
+auto CPU::queueInsert(u32 event, u32 clocks) -> void {
+  if(!queue.insert(event, clocks)) return;
+  s64 queueDelta = queue.timeToNextEvent();
+  if(queueDelta < 0) queueDelta = 0;
+  s64 queueTarget = Thread::clock + queueDelta;
+  if(queueTarget < jitClockTarget) jitClockTarget = queueTarget;
+}
+
+auto CPU::forceSynchronize() -> void {
+  jitClockTarget = 0;
 }
 
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock;
   Thread::clock = 0;
+  jitClockTarget = 0;
 
    vi.clock -= clocks;
    ai.clock -= clocks;
@@ -86,50 +101,75 @@ auto CPU::synchronize() -> void {
 
   clocks >>= 1;
   if(scc.count < scc.compare && scc.count + clocks >= scc.compare) {
-    scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
+    setInterruptPending(Interrupt::Timer, 1);
   }
   scc.count += clocks;
   profile.cpuCycles += clocks;
   if (scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
 }
 
-auto CPU::instruction() -> void {
+auto CPU::setInterruptPending(u32 bit, bool value) -> void {
+  scc.cause.interruptPending.bit(bit) = value;
+  interruptPoll();
+}
+
+auto CPU::interruptPoll() -> void {
+  if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
+    if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
+      forceSynchronize();
+    }
+  }
+}
+
+auto CPU::instruction() -> bool {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
       debugger.interrupt(scc.cause.interruptPending);
       step(1 * 2);
-      return exception.interrupt();
+      exception.interrupt();
+      return true;
     }
   }
+
   if (scc.nmiPending) {
     debugger.nmi();
     step(1 * 2);
-    return exception.nmi();
+    exception.nmi();
+    return true;
   }
   if (scc.sysadFrozen) {
     step(1 * 2);
-    return;
+    return true;
   }
 
   auto access = devirtualize<Read, Word>(ipu.pc);
-  if(!access) return;
+  if(!access) return true;
 
   if(Accuracy::CPU::Recompiler && recompiler.enabled && access.cache) {
-    if(vaddrAlignedError<Word>(access.vaddr, false)) return;
-    auto block = recompiler.block(ipu.pc, access.paddr, GDB::server.hasBreakpoints());
+    if(vaddrAlignedError<Word>(access.vaddr, false)) return true;
+    auto block = recompiler.block(ipu.pc, access.paddr);
     if(block) {
+      if(Thread::clock >= jitClockTarget) {
+        s64 timerDelta = (s64)scc.compare - (s64)scc.count;
+        if(timerDelta < 0) timerDelta = 0;
+        s64 queueDelta = queue.timeToNextEvent();
+        if(queueDelta < 0) queueDelta = 0;
+        s64 capBudget = min<s64>(Accuracy::CPU::JitInterleaving, min(timerDelta, queueDelta));
+        jitClockTarget = Thread::clock + capBudget;
+      }
       block->execute(*this);
-      return;
-    } 
+      return Thread::clock >= jitClockTarget;
+    }
   }
 
   auto data = fetch(access);
-  if (!data) return;
+  if (!data) return true;
   pipeline.begin();
   instructionPrologue(ipu.pc, *data);
   decoderEXECUTE(*data);
   instructionEpilogue<0>();
   pipeline.end();
+  return true;
 }
 
 auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
@@ -141,6 +181,10 @@ auto CPU::instructionEpilogue() -> void {
   if constexpr(!Recompiled) {
     ipu.r[0].u64 = 0;
   }
+}
+
+auto CPU::raiseCoprocessor1Exception() -> void {
+  exception.coprocessor1();
 }
 
 auto CPU::power(bool reset) -> void {

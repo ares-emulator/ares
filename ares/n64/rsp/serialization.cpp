@@ -37,7 +37,9 @@ auto RSP::serialize(serializer& s) -> void {
   s(ipu.pc);
 
   s(branch.pc);
+  s(branch.nextpc);
   s(branch.state);
+  s(branch.nstate);
 
   for(auto& r : vpu.r) s(r);
   s(vpu.acch);

@@ -12,9 +12,104 @@ using SharedNode = std::shared_ptr<ManagedNode>;
 
 struct ManagedNode : Markup::ManagedNode {
 protected:
-  //test to verify if a valid character for a node name
-  auto valid(char p) const -> bool {  //A-Z, a-z, 0-9, -.
-    return p - 'A' < 26u || p - 'a' < 26u || p - '0' < 10u || p - '-' < 2u;
+  //test to verify if a valid ASCII character for a node name
+  auto validASCII(u8 c) const -> bool {  //A-Z, a-z, 0-9, +-.
+    return c - 'A' < 26u || c - 'a' < 26u || c - '0' < 10u || c - '+' < 4u;
+  }
+
+  auto validContinuation(u8 c) const -> bool {
+    return c >= 0x80 && c <= 0xbf;
+  }
+
+  //determine name length while validating any UTF-8 characters
+  auto parseNameLength(const char* p) const -> u32 {
+    u32 length = 0;
+    while(p[length]) {
+      auto c = (u8)p[length];
+      if(validASCII(c)) {
+        length++;
+        continue;
+      }
+
+      if(c < 0x80) break;
+
+      //U+0080..U+07FF
+      if(c >= 0xc2 && c <= 0xdf) {
+        if(!validContinuation((u8)p[length + 1])) throw "Invalid UTF-8 node name";
+        length += 2;
+        continue;
+      }
+
+      //U+0800..U+0FFF; avoid overlong encodings
+      if(c == 0xe0) {
+        auto c1 = (u8)p[length + 1];
+        if(c1 < 0xa0 || c1 > 0xbf) throw "Invalid UTF-8 node name";
+        auto c2 = (u8)p[length + 2];
+        if(!validContinuation(c2)) throw "Invalid UTF-8 node name";
+        length += 3;
+        continue;
+      }
+
+      //U+1000..U+CFFF, U+E000..U+FFFF; reject surrogates
+      if((c >= 0xe1 && c <= 0xec) || (c >= 0xee && c <= 0xef)) {
+        auto c1 = (u8)p[length + 1];
+        if(!validContinuation(c1)) throw "Invalid UTF-8 node name";
+        auto c2 = (u8)p[length + 2];
+        if(!validContinuation(c2)) throw "Invalid UTF-8 node name";
+        length += 3;
+        continue;
+      }
+
+      //U+D000..U+D7FF; reject U+D800..U+DFFF surrogates
+      if(c == 0xed) {
+        auto c1 = (u8)p[length + 1];
+        if(c1 < 0x80 || c1 > 0x9f) throw "Invalid UTF-8 node name";
+        auto c2 = (u8)p[length + 2];
+        if(!validContinuation(c2)) throw "Invalid UTF-8 node name";
+        length += 3;
+        continue;
+      }
+
+      //U+10000..U+3FFFF; avoid overlong encodings
+      if(c == 0xf0) {
+        auto c1 = (u8)p[length + 1];
+        if(c1 < 0x90 || c1 > 0xbf) throw "Invalid UTF-8 node name";
+        auto c2 = (u8)p[length + 2];
+        if(!validContinuation(c2)) throw "Invalid UTF-8 node name";
+        auto c3 = (u8)p[length + 3];
+        if(!validContinuation(c3)) throw "Invalid UTF-8 node name";
+        length += 4;
+        continue;
+      }
+
+      //U+40000..U+FFFFF
+      if(c >= 0xf1 && c <= 0xf3) {
+        auto c1 = (u8)p[length + 1];
+        if(!validContinuation(c1)) throw "Invalid UTF-8 node name";
+        auto c2 = (u8)p[length + 2];
+        if(!validContinuation(c2)) throw "Invalid UTF-8 node name";
+        auto c3 = (u8)p[length + 3];
+        if(!validContinuation(c3)) throw "Invalid UTF-8 node name";
+        length += 4;
+        continue;
+      }
+
+      //U+100000..U+10FFFF
+      if(c == 0xf4) {
+        auto c1 = (u8)p[length + 1];
+        if(c1 < 0x80 || c1 > 0x8f) throw "Invalid UTF-8 node name";
+        auto c2 = (u8)p[length + 2];
+        if(!validContinuation(c2)) throw "Invalid UTF-8 node name";
+        auto c3 = (u8)p[length + 3];
+        if(!validContinuation(c3)) throw "Invalid UTF-8 node name";
+        length += 4;
+        continue;
+      }
+
+      throw "Invalid UTF-8 node name";
+    }
+
+    return length;
   }
 
   //determine indentation level, without incrementing pointer
@@ -33,8 +128,7 @@ protected:
 
   //read name
   auto parseName(const char*& p) -> void {
-    u32 length = 0;
-    while(valid(p[length])) length++;
+    u32 length = parseNameLength(p);
     if(length == 0) throw "Invalid node name";
     _name = slice(p, 0, length);
     p += length;
@@ -69,8 +163,7 @@ protected:
       if(*(p + 0) == '/' && *(p + 1) == '/') break;  //skip comments
 
       SharedNode node = std::make_shared<ManagedNode>();
-      u32 length = 0;
-      while(valid(p[length])) length++;
+      u32 length = parseNameLength(p);
       if(length == 0) throw "Invalid attribute name";
       node->_name = slice(p, 0, length);
       node->parseData(p += length, spacing);

@@ -4,6 +4,10 @@ struct SC3000 : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+  auto loadTape(ares::Node::Object node, string location) -> bool override;
+  auto unloadTape(ares::Node::Object node) -> void override;
+
+  std::shared_ptr<mia::Pak> tape;
 };
 
 SC3000::SC3000() {
@@ -55,12 +59,17 @@ auto SC3000::load() -> LoadResult {
     port->connect();
   }
 
+  if(auto port = root->find<ares::Node::Port>("Tape Deck/Tray")) {
+    port->allocate();
+  }
+
   return successful;
 }
 
 auto SC3000::save() -> bool {
   root->save();
   system->save(system->location);
+  if(tape) tape->save(tape->location);
   game->save(game->location);
   return true;
 }
@@ -68,9 +77,35 @@ auto SC3000::save() -> bool {
 auto SC3000::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "SC-3000") return system->pak;
   if(node->name() == "SC-3000 Cartridge") return game->pak;
+  if(node->name() == "SC-3000 Tape") return tape ? tape->pak : nullptr;
   return {};
 }
 
+auto SC3000::loadTape(ares::Node::Object node, string location) -> bool {
+  if(node->name() == "SC-3000 Tape") {
+    tape = mia::Medium::create("SC-3000 Tape");
+    if(!location) {
+      location = Emulator::load(tape, settings.paths.home);
+      if(!location) return false;
+    }
+    LoadResult result = tape->load(location);
+    if(result != successful) {
+      tape.reset();
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+auto SC3000::unloadTape(ares::Node::Object node) -> void {
+  if(node->name() == "SC-3000 Tape") {
+    if(tape) tape->save(tape->location);
+    tape.reset();
+  }
+}
 
 auto SC3000::input(ares::Node::Input::Input input) -> void {
   auto device = ares::Node::parent(input);

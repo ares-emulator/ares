@@ -169,6 +169,7 @@ auto ULA::out(n8 data) -> void {
   io.borderColor = data.bit(0, 2);
   io.mic = data.bit(3);
   io.ear = data.bit(4);
+  tapeDeck.tray.tape.write(io.mic);
 }
 
 }

@@ -96,6 +96,7 @@ struct Aleck64 {
     }
 
     controls.poll();
+    mahjong.poll();
     if(address <= 0xc080'0fff) {
       n32 value = 0xffff'ffff;
 
@@ -184,35 +185,45 @@ struct Aleck64 {
     Node::Input::Button p2start;
     Node::Input::Button p2coin;
 
-    Node::Input::Button mahjongA;
-    Node::Input::Button mahjongB;
-    Node::Input::Button mahjongC;
-    Node::Input::Button mahjongD;
-    Node::Input::Button mahjongE;
-    Node::Input::Button mahjongF;
-    Node::Input::Button mahjongG;
-    Node::Input::Button mahjongH;
-    Node::Input::Button mahjongI;
-    Node::Input::Button mahjongJ;
-    Node::Input::Button mahjongK;
-    Node::Input::Button mahjongL;
-    Node::Input::Button mahjongM;
-    Node::Input::Button mahjongN;
-    Node::Input::Button mahjongKan;
-    Node::Input::Button mahjongPon;
-    Node::Input::Button mahjongChi;
-    Node::Input::Button mahjongReach;
-    Node::Input::Button mahjongRon;
-
     //controls.cpp
     auto load(Node::Object) -> void;
     auto poll() -> void;
 
     auto controllerButton(int playerIndex, string button) -> bool;
     auto controllerAxis(int playerIndex, string axis) -> s64;
-    auto mahjong(n8 row) -> n8;
 
   } controls{*this};
+
+  struct Mahjong {
+    Aleck64& self;
+    Node::Object node;
+
+    Node::Input::Button a;
+    Node::Input::Button b;
+    Node::Input::Button c;
+    Node::Input::Button d;
+    Node::Input::Button e;
+    Node::Input::Button f;
+    Node::Input::Button g;
+    Node::Input::Button h;
+    Node::Input::Button i;
+    Node::Input::Button j;
+    Node::Input::Button k;
+    Node::Input::Button l;
+    Node::Input::Button m;
+    Node::Input::Button n;
+    Node::Input::Button kan;
+    Node::Input::Button pon;
+    Node::Input::Button chi;
+    Node::Input::Button reach;
+    Node::Input::Button ron;
+
+    //controls.cpp
+    auto load(Node::Object) -> void;
+    auto poll() -> void;
+    auto read(n8 row) -> n8;
+
+  } mahjong{*this};
 
   struct VDP {
     auto readWord(u32 address) -> u32;

@@ -26,4 +26,5 @@ auto ExpansionPort::allocate(string name) -> Node::Peripheral {
 }
 
 auto ExpansionPort::serialize(serializer& s) -> void {
+  if(device) device->serialize(s);
 }

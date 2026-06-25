@@ -3,6 +3,7 @@ auto InputManager::createHotkeys() -> void {
   static bool fastForwardAudioBlocking;
   static bool fastForwardAudioDynamic;
   static bool toggleFastForwardState = false;
+  static double volume = 0.0;
 
   hotkeys.push_back(InputHotkey("Toggle Fullscreen").onPress([&] {
     program.videoFullScreenToggle();
@@ -77,15 +78,24 @@ auto InputManager::createHotkeys() -> void {
   hotkeys.push_back(InputHotkey("Rewind").onPress([&] {
     Program::Guard guard;
     if(!emulator || program.fastForwarding) return;
-    if(program.rewind.frequency == 0) {
+    if(settings.general.rewind == false) {
       return program.showMessage("Please enable rewind support in the emulator settings first.");
     }
     program.rewinding = true;
     program.rewindSetMode(Program::Rewind::Mode::Rewinding);
+    volume = settings.audio.volume;
+    if(settings.rewind.mute) {
+      settings.audio.volume = 0.0;
+    } else if (!settings.audio.mute) {
+      settings.audio.volume = volume * 0.5;
+    }
   }).onRelease([&] {
     if(!emulator) return;
     program.rewinding = false;
     program.rewindSetMode(Program::Rewind::Mode::Playing);
+    if(!settings.audio.mute) {
+      settings.audio.volume = volume;
+    }
   }));
 
   hotkeys.push_back(InputHotkey("Frame Advance").onPress([&] {

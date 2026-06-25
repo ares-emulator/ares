@@ -88,20 +88,15 @@ private:
     return Hash::CRC32({(const u8*)s.data(), s.size()}).value();
   }
 
-  static auto guidString(SDL_Joystick* js) -> string {
-    SDL_GUID guid = SDL_GetJoystickGUID(js);
-    char buffer[64]{};
-    SDL_GUIDToString(guid, buffer, sizeof(buffer));
-    return buffer;
-  }
-
   auto enumerate() -> void {
+    for(auto& joypad : joypads) {
+      SDL_CloseJoystick(joypad.handle);
+    }
     joypads.clear();
     int num_joysticks;
     SDL_JoystickID* joysticks = SDL_GetJoysticks(&num_joysticks);
 
-    // Track the number of devices per model to assign unique path IDs
-    std::unordered_map<u32, u32> deviceSlotIndex;
+    std::vector<string> identities;
 
     for(int i = 0; i < num_joysticks; i++) {
       SDL_JoystickID id = joysticks[i];
@@ -123,24 +118,28 @@ private:
         continue;
       }
 
-      u16 vid = SDL_GetJoystickVendor(jp.handle);
-      u16 pid = SDL_GetJoystickProduct(jp.handle);
+      u16 vid = SDL_GetJoystickVendorForID(jp.id);
+      u16 pid = SDL_GetJoystickProductForID(jp.id);
       if(vid == 0) vid = HID::Joypad::GenericVendorID;
       if(pid == 0) pid = HID::Joypad::GenericProductID;
 
-      string path = "";
-      if(const char* serial = SDL_GetJoystickSerial(jp.handle); serial && *serial) {
-        path = string{"SER:", serial, "|VID:", vid, "|PID:", pid};
-      } else if(const char* path = SDL_GetJoystickPath(jp.handle); path && *path) {
-        path = string{"PATH:", path, "|VID:", vid, "|PID:", pid};
+      string identity;
+      SDL_GUID guid = SDL_GetJoystickGUIDForID(jp.id);
+      char guidBuffer[64]{};
+      SDL_GUIDToString(guid, guidBuffer, sizeof(guidBuffer));
+      if(*guidBuffer && string{guidBuffer} != "00000000000000000000000000000000") {
+        identity = guidBuffer;
       } else {
-        string modelKey = {"GUID:", guidString(jp.handle), "|VID:", vid, "|PID:", pid};
-        u32 modelID = crc32(modelKey);
-        u32 slot = deviceSlotIndex[modelID]++;
-        path = string{modelKey, "|SLOT:", slot};
+        identity = {"VID:", vid, "|PID:", pid};
       }
 
-      u32 pathID = crc32(path);
+      u32 slot = 0;
+      for(auto& existingIdentity : identities) {
+        if(existingIdentity == identity) slot++;
+      }
+      identities.push_back(identity);
+
+      u32 pathID = crc32({identity, "|SLOT:", slot});
 
       string name = SDL_GetJoystickName(jp.handle);
       if(!name) name = "Joypad";
@@ -150,6 +149,7 @@ private:
       jp.hid->setVendorID(vid);
       jp.hid->setProductID(pid);
       jp.hid->setPathID(pathID);
+      jp.hid->setIdentifier({identity, "/", slot});
       for(u32 n : range(axes)) jp.hid->axes().append(n);
       for(u32 n : range(hats)) jp.hid->hats().append(n);
       for(u32 n : range(buttons)) jp.hid->buttons().append(n);

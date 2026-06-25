@@ -32,6 +32,14 @@
     flag_no = SLJIT_NOT_OVERFLOW,
     flag_c = SLJIT_CARRY,
     flag_nc = SLJIT_NOT_CARRY,
+    flag_feq = SLJIT_F_EQUAL,
+    flag_flt = SLJIT_F_LESS,
+    flag_fle = SLJIT_F_LESS_EQUAL,
+    flag_fun = SLJIT_UNORDERED,
+    flag_for = SLJIT_ORDERED,
+    flag_foeq = SLJIT_ORDERED_EQUAL,
+    flag_folt = SLJIT_ORDERED_LESS,
+    flag_fole = SLJIT_ORDERED_LESS_EQUAL,
   };
 
   struct op_base {
@@ -52,8 +60,17 @@
     explicit sreg(sljit_s32 index) : op_base(SLJIT_S(index), 0) {}
   };
 
+  struct freg : public op_base {
+    explicit freg(sljit_s32 index) : op_base(SLJIT_FR(index), 0) {}
+  };
+
   struct mem : public op_base {
     mem(sreg base, sljit_sw offset) : op_base(SLJIT_MEM1(base.fst), offset) {}
+    mem(reg base, sljit_sw offset) : op_base(SLJIT_MEM1(base.fst), offset) {}
+  };
+
+  struct mem0 : public op_base {
+    explicit mem0(sljit_sw address) : op_base(SLJIT_MEM0(), address) {}
   };
 
   struct unused {

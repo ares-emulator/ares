@@ -580,6 +580,44 @@ int TZXFile::DecodeMessageBlock()
 	return TZX_SUCCESS;
 }
 
+int TZXFile::DecodeKansasCityStandardBlock()
+{
+	unsigned char temp[4];
+	if (!ReadBytes(temp, 4)) return DisplayError(TZX_UNEXPECTED_EOF, NULL);
+
+	int blockLength = temp[0] | (temp[1] << 8) | (temp[2] << 16) | (temp[3] << 24);
+	if (blockLength < 12) return DisplayError(TZX_INVALID_TZX_DATA, NULL);
+
+	TZXBlockKansasCityStandard *p = new TZXBlockKansasCityStandard();
+	p->m_nDataLength = blockLength - 12;
+
+	if (!ReadBytes((unsigned char *)&p->m_nPauseAfterBlock, 2)
+	||  !ReadBytes((unsigned char *)&p->m_nPilotPulseLength, 2)
+	||  !ReadBytes((unsigned char *)&p->m_nPilotPulseCount, 2)
+	||  !ReadBytes((unsigned char *)&p->m_nZeroPulseLength, 2)
+	||  !ReadBytes((unsigned char *)&p->m_nOnePulseLength, 2)
+	||  !ReadBytes((unsigned char *)&p->m_nBitConfig, 1)
+	||  !ReadBytes((unsigned char *)&p->m_nByteConfig, 1))
+	{
+		delete p;
+		return DisplayError(TZX_UNEXPECTED_EOF, NULL);
+	}
+
+	p->m_pData = (unsigned char *)malloc(p->m_nDataLength);
+	if (!ReadBytes((unsigned char *)p->m_pData, p->m_nDataLength))
+	{
+		delete p;
+		return DisplayError(TZX_UNEXPECTED_EOF, NULL);
+	}
+
+	if (!AddToBlockList(p))
+	{
+		delete p;
+		return DisplayError(TZX_BLOCK_LIST_OVERFLOW, NULL);
+	}
+	return TZX_SUCCESS;
+}
+
 
 EFileType TZXFile::DecodeFile(unsigned char *pData, int nFileLength)
 {
@@ -698,7 +736,7 @@ int TZXFile::DecodeTzxFile(unsigned char *pData, int nFileLength)
 	if (!ReadBytes(&m_nMinorRev, 1)) return DisplayError(TZX_UNEXPECTED_EOF, NULL);
 
 	if (m_nMajorRev > 1) return DisplayError(TZX_UNSUPPORTED_REVISION, NULL);
-	if((m_nMajorRev == 1) && (m_nMinorRev > 20)) return DisplayError(TZX_UNSUPPORTED_REVISION, NULL);
+	if((m_nMajorRev == 1) && (m_nMinorRev > 21)) return DisplayError(TZX_UNSUPPORTED_REVISION, NULL);
 
 
 	// Read the blocks...
@@ -759,6 +797,9 @@ int TZXFile::DecodeTzxFile(unsigned char *pData, int nFileLength)
 			break;
 		case TZX_BLOCKID_CUSTOM_INFO: // 0x35
 			result = DecodeCustomInfoBlock();
+			break;
+		case TZX_BLOCKID_KANSAS_CITY_STANDARD: // 0x4B
+			result = DecodeKansasCityStandardBlock();
 			break;
 		default:
 			return DisplayError(TZX_UNHANDLED_BLOCK_TYPE, &nBlockID);
@@ -822,6 +863,5 @@ bool TZXFile::WriteAudioToUncompressedWavFile(const char *filename)
 
 	return m_pAudioGenerator->SaveAsUncompressedWav(filename);
 }
-
 
 

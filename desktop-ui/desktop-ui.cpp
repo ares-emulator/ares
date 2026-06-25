@@ -112,14 +112,31 @@ auto nall::main(Arguments arguments) -> void {
   Emulator::construct();
 
   settings.load();
+  struct CliSettingOverride {
+    string path;
+    string originalValue;
+    string overriddenValue;
+  };
+  std::vector<CliSettingOverride> cliSettingOverrides;
 
   if(arguments.find("--setting")) {
     string settingValue;
     while(arguments.take("--setting", settingValue)) {
       auto kv = nall::split(settingValue, "=", 1L);
       if(kv.size() == 2) {
+        auto path = kv[0];
         auto node = settings[kv[0]];
         if(node) {
+          bool found = false;
+          for(auto& override : cliSettingOverrides) {
+            if(override.path != path) continue;
+            override.overriddenValue = kv[1];
+            found = true;
+            break;
+          }
+          if(!found) {
+            cliSettingOverrides.push_back({path, node.value(), kv[1]});
+          }
           node.setValue(kv[1]);
         } else {
           print("Invalid setting: ", settingValue, "\n");
@@ -231,6 +248,15 @@ auto nall::main(Arguments arguments) -> void {
   Application::onMain(std::bind_front(&Program::main, &program));
   Application::run();
 
+  bool restoredCliOverrides = false;
+  for(auto& override : cliSettingOverrides) {
+    auto node = settings[override.path];
+    if(!node) continue;
+    if(node.value() != override.overriddenValue) continue;
+    node.setValue(override.originalValue);
+    restoredCliOverrides = true;
+  }
+  if(restoredCliOverrides) settings.process(true);
   settings.save();
 
   Instances::presentation.destruct();

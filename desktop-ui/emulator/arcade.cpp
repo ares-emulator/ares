@@ -9,6 +9,28 @@ struct Arcade : Emulator {
   string systemPakName = "Arcade";
   string gamePakName = "Arcade";
 
+  struct Mahjong {
+    InputDigital a;
+    InputDigital b;
+    InputDigital c;
+    InputDigital d;
+    InputDigital e;
+    InputDigital f;
+    InputDigital g;
+    InputDigital h;
+    InputDigital i;
+    InputDigital j;
+    InputDigital k;
+    InputDigital l;
+    InputDigital m;
+    InputDigital n;
+    InputDigital kan;
+    InputDigital pon;
+    InputDigital chi;
+    InputDigital reach;
+    InputDigital ron;
+  } mahjong;
+
   static auto available() -> bool;
 };
 
@@ -45,6 +67,29 @@ Arcade::Arcade() {
       device.analog ({"Player ", n + 1, " X-Axis"  }, virtualPorts[n].pad.lstick_left, virtualPorts[n].pad.lstick_right);
       device.analog ({"Player ", n + 1, " Y-Axis"  }, virtualPorts[n].pad.lstick_up,   virtualPorts[n].pad.lstick_down);
     }
+    port.append(device); }
+
+  { InputDevice device{"Mahjong"};
+    device.setMappingMode(MappingMode::Direct);
+    device.digital("A",      mahjong.a);
+    device.digital("B",      mahjong.b);
+    device.digital("C",      mahjong.c);
+    device.digital("D",      mahjong.d);
+    device.digital("E",      mahjong.e);
+    device.digital("F",      mahjong.f);
+    device.digital("G",      mahjong.g);
+    device.digital("H",      mahjong.h);
+    device.digital("I",      mahjong.i);
+    device.digital("J",      mahjong.j);
+    device.digital("K",      mahjong.k);
+    device.digital("L",      mahjong.l);
+    device.digital("M",      mahjong.m);
+    device.digital("N",      mahjong.n);
+    device.digital("カン",    mahjong.kan);
+    device.digital("ポン",    mahjong.pon);
+    device.digital("チー",    mahjong.chi);
+    device.digital("リーチ",  mahjong.reach);
+    device.digital("ロン",    mahjong.ron);
     port.append(device); }
 
     ports.push_back(port);
@@ -108,17 +153,17 @@ auto Arcade::load() -> LoadResult {
       port->connect();
     }
 
-    ares::Nintendo64::option("Quality", settings.video.quality);
-    ares::Nintendo64::option("Supersampling", settings.video.supersampling);
+    ares::Nintendo64::option("Quality", settings.nintendo64.quality);
+    ares::Nintendo64::option("Supersampling", settings.nintendo64.supersampling);
 #if defined(VULKAN)
     ares::Nintendo64::option("Enable GPU acceleration", true);
 #else
     ares::Nintendo64::option("Enable GPU acceleration", false);
 #endif
-    ares::Nintendo64::option("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
-    ares::Nintendo64::option("Weave Deinterlacing", settings.video.weaveDeinterlacing);
-    ares::Nintendo64::option("Homebrew Mode", settings.general.homebrewMode);
-    ares::Nintendo64::option("Recompiler", !settings.general.forceInterpreter);
+    ares::Nintendo64::option("Disable Video Interface Processing", settings.nintendo64.disableVideoInterfaceProcessing);
+    ares::Nintendo64::option("Weave Deinterlacing", settings.nintendo64.weaveDeinterlacing);
+    ares::Nintendo64::option("Homebrew Mode", settings.developer.homebrewMode);
+    ares::Nintendo64::option("Recompiler", !settings.developer.forceInterpreter);
 
     return successful;
   }
@@ -141,29 +186,6 @@ auto Arcade::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
 }
 
 auto Arcade::input(ares::Node::Input::Input input) -> void {
-  if(input->name().beginsWith("Mahjong")) {
-    auto button = input->cast<ares::Node::Input::Button>();
-    if(input->name() == "Mahjong A")    return button->setValue(inputKeyboard("A"));
-    if(input->name() == "Mahjong B")    return button->setValue(inputKeyboard("B"));
-    if(input->name() == "Mahjong C")    return button->setValue(inputKeyboard("C"));
-    if(input->name() == "Mahjong D")    return button->setValue(inputKeyboard("D"));
-    if(input->name() == "Mahjong E")    return button->setValue(inputKeyboard("E"));
-    if(input->name() == "Mahjong F")    return button->setValue(inputKeyboard("F"));
-    if(input->name() == "Mahjong G")    return button->setValue(inputKeyboard("G"));
-    if(input->name() == "Mahjong H")    return button->setValue(inputKeyboard("H"));
-    if(input->name() == "Mahjong I")    return button->setValue(inputKeyboard("I"));
-    if(input->name() == "Mahjong J")    return button->setValue(inputKeyboard("J"));
-    if(input->name() == "Mahjong K")    return button->setValue(inputKeyboard("K"));
-    if(input->name() == "Mahjong L")    return button->setValue(inputKeyboard("L"));
-    if(input->name() == "Mahjong M")    return button->setValue(inputKeyboard("M"));
-    if(input->name() == "Mahjong N")    return button->setValue(inputKeyboard("N"));
-    if(input->name() == "Mahjong カン")  return button->setValue(inputKeyboard("T"));
-    if(input->name() == "Mahjong ポン")  return button->setValue(inputKeyboard("Y"));
-    if(input->name() == "Mahjong チー")  return button->setValue(inputKeyboard("U"));
-    if(input->name() == "Mahjong リーチ") return button->setValue(inputKeyboard("O"));
-    if(input->name() == "Mahjong ロン")  return button->setValue(inputKeyboard("P"));
-  }
-
   auto device = ares::Node::parent(input);
   if(!device) return;
 

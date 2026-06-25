@@ -71,7 +71,7 @@ struct hipai2 : Aleck64::GameConfig {
 
   auto readExpansionPort() -> u32 {
     n32 value = 0xffff'ffff;
-    value.bit(16, 23) = aleck64.controls.mahjong(mahjongRow);
+    value.bit(16, 23) = aleck64.mahjong.read(mahjongRow);
     return value;
   }
 

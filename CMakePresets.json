@@ -46,7 +46,7 @@
         "rhs": "Windows"
       },
       "binaryDir": "${sourceDir}/build_vsclang",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "toolset": "ClangCL",
       "cacheVariables": {
         "ENABLE_CCACHE": true
@@ -63,7 +63,7 @@
         "rhs": "Windows"
       },
       "binaryDir": "${sourceDir}/build_msvc",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "cacheVariables": {
         "ENABLE_CCACHE": true
       }
@@ -118,7 +118,7 @@
       "name": "windows-ci-cl-native",
       "displayName": "Windows for CI (x64 ClangCL)",
       "description": "Single-arch binary for building on Github Actions",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "inherits": ["windows-ci-base"],
       "toolset": "ClangCL"
     },
@@ -127,7 +127,7 @@
       "displayName": "Windows for CI (arm64 ClangCL)",
       "description": "Single-arch binary for building on Github Actions",
       "inherits": ["windows-ci-base"],
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "architecture": "arm64",
       "toolset": "ClangCL",
       "cacheVariables": {
@@ -138,14 +138,14 @@
       "name": "windows-ci-msvc-native",
       "displayName": "Windows for CI (x64 MSVC)",
       "description": "Single-arch binary for building on Github Actions",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "inherits": ["windows-ci-base"]
     },
     {
       "name": "windows-ci-msvc-cross",
       "displayName": "Windows for CI (arm64 MSVC)",
       "description": "Single-arch binary for building on Github Actions",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "architecture": "arm64",
       "inherits": ["windows-ci-base"],
       "cacheVariables": {

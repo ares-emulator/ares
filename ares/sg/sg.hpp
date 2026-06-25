@@ -32,6 +32,7 @@ namespace ares::SG1000 {
   #include <sg/vdp/vdp.hpp>
   #include <sg/psg/psg.hpp>
   #include <sg/ppi/ppi.hpp>
+  #include <sg/tape/tape.hpp>
 
   #include <sg/system/system.hpp>
   #include <sg/cartridge/cartridge.hpp>

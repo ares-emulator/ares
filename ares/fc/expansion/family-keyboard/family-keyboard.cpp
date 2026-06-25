@@ -225,3 +225,11 @@ auto FamilyKeyboard::write(n8 data) -> void {
 
   tape->write(data.bit(0));
 }
+
+auto FamilyKeyboard::serialize(serializer& s) -> void {
+  s(latch);
+  s(column);
+  s(row);
+
+  tape->serialize(s);
+}

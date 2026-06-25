@@ -34,6 +34,7 @@ auto VI::readWord(u32 address, Thread& thread) -> u32 {
     //VI_V_CURRENT_LINE
     data.bit(0)   = io.field;
     data.bit(1,9) = io.vcounter;
+    cpu.forceSynchronize();
   }
 
   if(address == 5) {

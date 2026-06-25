@@ -26,6 +26,7 @@ namespace ares::Nintendo64 {
     vram.allocate(4_KiB);
     pram.allocate(4_KiB);
     controls.load(parent);
+    mahjong.load(parent);
     gameConfig.reset();
     dipSwitchNode = parent->append<Node::Object>("DIP Switches");
 

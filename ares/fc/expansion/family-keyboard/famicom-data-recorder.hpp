@@ -12,6 +12,7 @@ struct FamicomDataRecorder : Tape, Thread {
 
     auto main() -> void;
     auto step() -> void;
+    auto serialize(serializer&) -> void override;
 
 private:
     VFS::Pak pak;

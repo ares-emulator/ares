@@ -2456,6 +2456,8 @@ auto MCD::LD::zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn) -> s32 {
     return 0;
   }
 
+  lba = CD::LBAtoABA(lba);
+
   // Turn the lba sector number into a frame number. Since there are 30 frames of video per second, and 75 sectors of CD
   // data per second, this will work well enough.
   auto frameIndex = (s32)std::round(((double)lba / 75.0) * videoFramesPerSecond);
@@ -2466,7 +2468,7 @@ auto MCD::LD::zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn) -> s32 {
 // Convert the ZERO-BASED frame number to an LBA.
 auto MCD::LD::lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32 {
   auto lba = (s32)std::round(((double)frameIndex / videoFramesPerSecond) * 75.0);
-  return lba;
+  return CD::ABAtoLBA(lba);
 }
 
 auto MCD::LD::VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void {

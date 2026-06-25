@@ -2,6 +2,7 @@ struct Tape {
     virtual ~Tape() = default;
     virtual auto read() -> n1 = 0;
     virtual auto write(n1 data) -> void = 0;
+    virtual auto serialize(serializer&) -> void {}
 };
 
 struct FamilyKeyboard : Expansion {
@@ -20,6 +21,7 @@ struct FamilyKeyboard : Expansion {
   auto read1() -> n1 override;
   auto read2() -> n5 override;
   auto write(n8 data) -> void override;
+  auto serialize(serializer&) -> void override;
 
 private:
   std::unique_ptr<Tape> tape;

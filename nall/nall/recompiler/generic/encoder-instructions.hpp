@@ -30,7 +30,252 @@
   OP1(mov64_s16, MOV_S16)
   OP1(mov64_u32, MOV_U32)
   OP1(mov64_s32, MOV_S32)
+  OP1(rev32, REV_U32)
+  OP1(rev32_u16, REV32_U16)
+  OP1(rev32_s16, REV32_S16)
 #undef OP1
+
+  auto mov32(freg x, reg y) -> void {
+    sljit_emit_fcopy(compiler, SLJIT_COPY32_TO_F32, x.fst, y.fst);
+  }
+
+  auto mov32(reg x, freg y) -> void {
+    sljit_emit_fcopy(compiler, SLJIT_COPY32_FROM_F32, y.fst, x.fst);
+  }
+
+  auto mov64(freg x, reg y) -> void {
+    sljit_emit_fcopy(compiler, SLJIT_COPY_TO_F64, x.fst, y.fst);
+  }
+
+  auto mov64(reg x, freg y) -> void {
+    sljit_emit_fcopy(compiler, SLJIT_COPY_FROM_F64, y.fst, x.fst);
+  }
+
+#if defined(ARCHITECTURE_ARM64)
+  auto arm64ReadFpcr(reg x) -> void {
+    s32 index = sljit_get_register_index(SLJIT_GP_REGISTER, x.fst);
+    assert(index >= 0);
+    u32 opcode = 0xd53b4400u | u32(index);
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+  }
+
+  auto arm64WriteFpcr(reg x) -> void {
+    s32 index = sljit_get_register_index(SLJIT_GP_REGISTER, x.fst);
+    assert(index >= 0);
+    u32 opcode = 0xd51b4400u | u32(index);
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+  }
+
+  auto arm64ReadFpsr(reg x) -> void {
+    s32 index = sljit_get_register_index(SLJIT_GP_REGISTER, x.fst);
+    assert(index >= 0);
+    u32 opcode = 0xd53b4420u | u32(index);
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+  }
+
+  auto arm64WriteFpsr(reg x) -> void {
+    s32 index = sljit_get_register_index(SLJIT_GP_REGISTER, x.fst);
+    assert(index >= 0);
+    u32 opcode = 0xd51b4420u | u32(index);
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+  }
+
+  auto arm64FcvtS32FromF32(reg d, freg s, u32 fcsrRoundMode) -> void {
+    static const u32 rmBase[4] = {0x1E200000u, 0x1E380000u, 0x1E280000u, 0x1E300000u};
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u32 w = rmBase[fcsrRoundMode & 3u] | (u32)g | ((u32)f << 5u);
+    sljit_emit_op_custom(compiler, &w, sizeof(w));
+  }
+
+  auto arm64FcvtS64FromF32(reg d, freg s, u32 fcsrRoundMode) -> void {
+    static const u32 rmBase[4] = {0x9E200000u, 0x9E380000u, 0x9E280000u, 0x9E300000u};
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u32 w = rmBase[fcsrRoundMode & 3u] | (u32)g | ((u32)f << 5u);
+    sljit_emit_op_custom(compiler, &w, sizeof(w));
+  }
+
+  auto arm64FcvtS32FromF64(reg d, freg s, u32 fcsrRoundMode) -> void {
+    static const u32 rmBase[4] = {0x1E600000u, 0x1E780000u, 0x1E680000u, 0x1E700000u};
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u32 w = rmBase[fcsrRoundMode & 3u] | (u32)g | ((u32)f << 5u);
+    sljit_emit_op_custom(compiler, &w, sizeof(w));
+  }
+
+  auto arm64FcvtS64FromF64(reg d, freg s, u32 fcsrRoundMode) -> void {
+    static const u32 rmBase[4] = {0x9E600000u, 0x9E780000u, 0x9E680000u, 0x9E700000u};
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u32 w = rmBase[fcsrRoundMode & 3u] | (u32)g | ((u32)f << 5u);
+    sljit_emit_op_custom(compiler, &w, sizeof(w));
+  }
+#elif defined(ARCHITECTURE_AMD64)
+  auto amd64Stmxcsr(s32 offset) -> void {
+    s32 base = sljit_get_register_index(SLJIT_GP_REGISTER, sreg(0).fst);
+    assert(base >= 0);
+    u8 opcode[10];
+    u32 n = 0;
+    u8 rex = 0x40u | (u8(base) >> 3 & 1);
+    if(rex != 0x40u) opcode[n++] = rex;
+    opcode[n++] = 0x0f;
+    opcode[n++] = 0xae;
+    opcode[n++] = 0x80u | (u8(3) << 3) | (u8(base) & 7);
+    if((u8(base) & 7) == 4) opcode[n++] = 0x24;
+    u32 disp = u32(offset);
+    opcode[n++] = disp >> 0;
+    opcode[n++] = disp >> 8;
+    opcode[n++] = disp >> 16;
+    opcode[n++] = disp >> 24;
+    sljit_emit_op_custom(compiler, opcode, n);
+  }
+
+  auto amd64Ldmxcsr(s32 offset) -> void {
+    s32 base = sljit_get_register_index(SLJIT_GP_REGISTER, sreg(0).fst);
+    assert(base >= 0);
+    u8 opcode[10];
+    u32 n = 0;
+    u8 rex = 0x40u | (u8(base) >> 3 & 1);
+    if(rex != 0x40u) opcode[n++] = rex;
+    opcode[n++] = 0x0f;
+    opcode[n++] = 0xae;
+    opcode[n++] = 0x80u | (u8(2) << 3) | (u8(base) & 7);
+    if((u8(base) & 7) == 4) opcode[n++] = 0x24;
+    u32 disp = u32(offset);
+    opcode[n++] = disp >> 0;
+    opcode[n++] = disp >> 8;
+    opcode[n++] = disp >> 16;
+    opcode[n++] = disp >> 24;
+    sljit_emit_op_custom(compiler, opcode, n);
+  }
+
+  auto amd64Cvtss2si32(reg d, freg s) -> void {
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u8 op[6];
+    u32 n = 0;
+    u8 rex = 0x40u;
+    if((g & 8) != 0) rex |= 0x4u;
+    if((f & 8) != 0) rex |= 0x1u;
+    op[n++] = 0xF3;
+    if(rex != 0x40u) op[n++] = rex;
+    op[n++] = 0x0F;
+    op[n++] = 0x2D;
+    op[n++] = 0xC0u | (u8((g & 7) << 3)) | u8(f & 7);
+    sljit_emit_op_custom(compiler, op, n);
+  }
+
+  auto amd64Cvtss2si64(reg d, freg s) -> void {
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u8 op[6];
+    u32 n = 0;
+    u8 rex = 0x48u;
+    if((g & 8) != 0) rex |= 0x4u;
+    if((f & 8) != 0) rex |= 0x1u;
+    op[n++] = 0xF3;
+    op[n++] = rex;
+    op[n++] = 0x0F;
+    op[n++] = 0x2D;
+    op[n++] = 0xC0u | (u8((g & 7) << 3)) | u8(f & 7);
+    sljit_emit_op_custom(compiler, op, n);
+  }
+
+  auto amd64Cvtsd2si32(reg d, freg s) -> void {
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u8 op[6];
+    u32 n = 0;
+    u8 rex = 0x40u;
+    if((g & 8) != 0) rex |= 0x4u;
+    if((f & 8) != 0) rex |= 0x1u;
+    op[n++] = 0xF2;
+    if(rex != 0x40u) op[n++] = rex;
+    op[n++] = 0x0F;
+    op[n++] = 0x2D;
+    op[n++] = 0xC0u | (u8((g & 7) << 3)) | u8(f & 7);
+    sljit_emit_op_custom(compiler, op, n);
+  }
+
+  auto amd64Cvtsd2si64(reg d, freg s) -> void {
+    s32 g = sljit_get_register_index(SLJIT_GP_REGISTER, d.fst);
+    s32 f = sljit_get_register_index(SLJIT_FLOAT_REGISTER, s.fst);
+    assert(g >= 0 && f >= 0);
+    u8 op[6];
+    u32 n = 0;
+    u8 rex = 0x48u;
+    if((g & 8) != 0) rex |= 0x4u;
+    if((f & 8) != 0) rex |= 0x1u;
+    op[n++] = 0xF2;
+    op[n++] = rex;
+    op[n++] = 0x0F;
+    op[n++] = 0x2D;
+    op[n++] = 0xC0u | (u8((g & 7) << 3)) | u8(f & 7);
+    sljit_emit_op_custom(compiler, op, n);
+  }
+#endif
+
+  template<typename T, typename U, typename V, typename W>
+  auto lmul64_uw(T lo, U hi, V x, W y) {
+    mov64(reg(0), x);
+    mov64(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_LMUL_UW);
+    mov64(lo, reg(0));
+    mov64(hi, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto lmul64_sw(T lo, U hi, V x, W y) {
+    mov64(reg(0), x);
+    mov64(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_LMUL_SW);
+    mov64(lo, reg(0));
+    mov64(hi, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto divmod64_sw(T quotient, U remainder, V x, W y) {
+    mov64(reg(0), x);
+    mov64(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_DIVMOD_SW);
+    mov64(quotient, reg(0));
+    mov64(remainder, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto divmod64_uw(T quotient, U remainder, V x, W y) {
+    mov64(reg(0), x);
+    mov64(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_DIVMOD_UW);
+    mov64(quotient, reg(0));
+    mov64(remainder, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto divmod32_sw(T quotient, U remainder, V x, W y) {
+    mov64_s32(reg(0), x);
+    mov64_s32(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_DIVMOD_S32);
+    mov64_s32(quotient, reg(0));
+    mov64_s32(remainder, reg(1));
+  }
+
+  template<typename T, typename U, typename V, typename W>
+  auto divmod32_uw(T quotient, U remainder, V x, W y) {
+    mov64_u32(reg(0), x);
+    mov64_u32(reg(1), y);
+    sljit_emit_op0(compiler, SLJIT_DIVMOD_U32);
+    mov64_s32(quotient, reg(0));
+    mov64_s32(remainder, reg(1));
+  }
 
   //2 operand instructions
 
@@ -110,6 +355,32 @@
                           y.fst, y.snd);
   }
 
+  template<typename T, typename U>
+  auto fcmp32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CMP_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fcmp64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CMP_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fcmp32_jump(T x, U y, sljit_s32 flags) -> sljit_jump* {
+    return sljit_emit_fcmp(compiler,
+                           SLJIT_32 | flags,
+                           x.fst, x.snd,
+                           y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fcmp64_jump(T x, U y, sljit_s32 flags) -> sljit_jump* {
+    return sljit_emit_fcmp(compiler,
+                           flags,
+                           x.fst, x.snd,
+                           y.fst, y.snd);
+  }
+
   //flag instructions
 
 #define OPF(name, op) \
@@ -131,10 +402,186 @@
   OPF(xor64_f, XOR)
 #undef OPF
 
+  template<typename T, typename U, typename V>
+  auto cmov32(T x, U y, V z, sljit_s32 flags) -> void {
+    sljit_emit_select(compiler, SLJIT_32 | flags, x.fst, y.fst, y.snd, z.fst);
+  }
+
+  template<typename T, typename U, typename V>
+  auto cmov64(T x, U y, V z, sljit_s32 flags) -> void {
+    sljit_emit_select(compiler, flags, x.fst, y.fst, y.snd, z.fst);
+  }
+
   //meta instructions
 
 
   auto lea(reg r, sreg base, sljit_sw offset) {
     add64(r, base, imm(offset));
+  }
+
+  auto mov128(mem dst, mem src) -> void {
+    static constexpr sljit_s32 kSimdTmp = SLJIT_FR(6);
+    static constexpr sljit_s32 kSimdType = SLJIT_SIMD_REG_128 | SLJIT_SIMD_ELEM_8 | SLJIT_SIMD_MEM_UNALIGNED;
+    sljit_emit_simd_mov(compiler, SLJIT_SIMD_LOAD | kSimdType, kSimdTmp, src.fst, src.snd);
+    sljit_emit_simd_mov(compiler, SLJIT_SIMD_STORE | kSimdType, kSimdTmp, dst.fst, dst.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto or8(T x, U y, V z, reg scratch) -> void {
+#if defined(ARCHITECTURE_AMD64)
+    if(SLJIT_IS_MEM(x.fst) && SLJIT_IS_MEM1(x.fst) && x.fst == y.fst && x.snd == y.snd && SLJIT_IS_REG(z.fst)) {
+      s32 base = sljit_get_register_index(SLJIT_GP_REGISTER, SLJIT_EXTRACT_REG(x.fst));
+      s32 src = sljit_get_register_index(SLJIT_GP_REGISTER, z.fst);
+      if(base >= 0 && src >= 0 && (sljit_sw)(s32)x.snd == x.snd) {
+        u8 opcode[10];
+        u32 n = 0;
+        u8 rex = 0x40u | (u8(src) >> 3 & 1) << 2 | (u8(base) >> 3 & 1);
+        if(rex != 0x40u || (u8(src) & 7) >= 4) opcode[n++] = rex;
+        opcode[n++] = 0x08;
+        opcode[n++] = 0x80u | (u8(src) & 7) << 3 | (u8(base) & 7);
+        if((u8(base) & 7) == 4) opcode[n++] = 0x24;
+        u32 disp = (u32)(s32)x.snd;
+        opcode[n++] = disp >> 0;
+        opcode[n++] = disp >> 8;
+        opcode[n++] = disp >> 16;
+        opcode[n++] = disp >> 24;
+        sljit_emit_op_custom(compiler, opcode, n);
+        return;
+      }
+    }
+#endif
+    mov32_u8(scratch, y);
+    or32(scratch, scratch, z);
+    mov32_u8(x, scratch);
+  }
+
+  auto fsqrt32_f0() -> void {
+#if defined(ARCHITECTURE_ARM64)
+    u32 opcode = 0x1e21c000u;
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+#elif defined(ARCHITECTURE_AMD64)
+    u8 opcode[] = {0xf3, 0x0f, 0x51, 0xc0};
+    sljit_emit_op_custom(compiler, opcode, sizeof(opcode));
+#endif
+  }
+
+  auto fsqrt64_f0() -> void {
+#if defined(ARCHITECTURE_ARM64)
+    u32 opcode = 0x1e61c000u;
+    sljit_emit_op_custom(compiler, &opcode, sizeof(opcode));
+#elif defined(ARCHITECTURE_AMD64)
+    u8 opcode[] = {0xf2, 0x0f, 0x51, 0xc0};
+    sljit_emit_op_custom(compiler, opcode, sizeof(opcode));
+#endif
+  }
+
+  template<typename T, typename U, typename V>
+  auto fadd32(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_ADD_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fadd64(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_ADD_F64, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fsub32(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_SUB_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fsub64(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_SUB_F64, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fmul32(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_MUL_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fmul64(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_MUL_F64, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fdiv32(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_DIV_F32, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U, typename V>
+  auto fdiv64(T x, U y, V z) -> void {
+    sljit_emit_fop2(compiler, SLJIT_DIV_F64, x.fst, x.snd, y.fst, y.snd, z.fst, z.snd);
+  }
+
+  template<typename T, typename U>
+  auto fabs32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_ABS_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fabs64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_ABS_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fneg32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_NEG_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto fneg64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_NEG_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f64_from_f32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F64_FROM_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f32_from_f64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F32_FROM_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_sw_from_f64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_SW_FROM_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_sw_from_f32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_SW_FROM_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_s32_from_f64(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_S32_FROM_F64, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_s32_from_f32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_S32_FROM_F32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f64_from_sw(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F64_FROM_SW, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f32_from_sw(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F32_FROM_SW, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f64_from_s32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F64_FROM_S32, x.fst, x.snd, y.fst, y.snd);
+  }
+
+  template<typename T, typename U>
+  auto conv_f32_from_s32(T x, U y) -> void {
+    sljit_emit_fop1(compiler, SLJIT_CONV_F32_FROM_S32, x.fst, x.snd, y.fst, y.snd);
   }
 //};

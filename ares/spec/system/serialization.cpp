@@ -1,4 +1,4 @@
-static const string SerializerVersion = "v131";
+static const string SerializerVersion = "v132";
 
 auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
@@ -51,6 +51,7 @@ auto System::serializeAll(serializer& s, bool synchronize) -> void {
   system.serialize(s);
   //keyboard.serialize(s);
   cpu.serialize(s);
+  tapeDeck.tray.tape.serialize(s);
   //vdp.serialize(s);
   //psg.serialize(s);
 }

@@ -1,18 +1,23 @@
 struct Tape : Thread {
-  Node::Peripheral node;
+  Node::Tape node;
   Node::Audio::Stream stream;
 
   auto title() const -> string { return information.title; }
 
   //tape.cpp
   auto allocate(Node::Port) -> Node::Peripheral;
-  auto connect() -> void;
+  auto connect() -> bool;
   auto disconnect() -> void;
+  auto load() -> bool;
+  auto unload() -> void;
+  auto read() -> n1;
+  auto write(n1 data) -> void;
 
   auto main() -> void;
   auto step(uint clocks) -> void;
 
   auto save() -> void;
+  auto serialize(serializer&) -> void;
 
 private:
   struct Information {
@@ -20,10 +25,9 @@ private:
   } information;
 
   VFS::Pak pak;
-  u64 position;
-  u64 length;
   u64 range;
-  u64 frequency;
+  n1 output;
+  n1 input;
   Memory::Writable<u64> data;
 
 };

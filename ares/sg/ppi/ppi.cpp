@@ -63,7 +63,7 @@ auto PPI::readPortB() -> n8 {
   if(Model::SC3000()) {
     output.bit(5) = 1; //TODO: Printer Fault
     output.bit(6) = 1; //TODO: Printer Busy
-    output.bit(7) = 0; //TODO: Cassette Pulse
+    output.bit(7) = tapeDeck.read();
   } else {
     output.bit(5) = 1;
     output.bit(6) = 1;
@@ -81,6 +81,7 @@ auto PPI::readPortC() -> n8 {
 auto PPI::writePortC(n8 data) -> void {
   if(Model::SC3000()) {
     io.inputSelect = data.bit(0,2);
+    tapeDeck.write(data.bit(3));
   }
 }
 

@@ -140,6 +140,29 @@ auto CPU::writeVRAM(u32 mode, n32 address, n32 word) -> void {
   ppu.writeVRAM(mode, address, word);
 }
 
+template <bool UseDebugger>
+auto CPU::readOAM(u32 mode, n32 address) -> n32 {
+  //stall until PPU is no longer accessing OAM (minimum 1 cycle)
+  if constexpr(!UseDebugger) {
+    do {
+      prefetchStep(1);
+      synchronize(ppu);
+    } while(ppu.oamContention());
+  }
+
+  return ppu.readOAM(mode, address);
+}
+
+auto CPU::writeOAM(u32 mode, n32 address, n32 word) -> void {
+  //stall until PPU is no longer accessing OAM (minimum 1 cycle)
+  do {
+    prefetchStep(1);
+    synchronize(ppu);
+  } while(ppu.oamContention());
+
+  ppu.writeOAM(mode, address, word);
+}
+
 template<bool UseDebugger>
 auto CPU::readROM(u32 mode, n32 address) -> n32 {
   if(mode & Word) {

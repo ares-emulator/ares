@@ -132,7 +132,7 @@ auto Emulator::load(const string& location) -> bool {
     return false;
   }
   setBoolean("Color Emulation", settings.video.colorEmulation);
-  setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
+  setBoolean("Deep Black Boost", settings.superFamicom.deepBlackBoost);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
   setColorBleed(settings.video.colorBleed);
@@ -285,15 +285,15 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
       for(auto& inputNode : inputDevice.inputs) {
         if(inputNode.name != input->name()) continue;
         if(auto button = input->cast<ares::Node::Input::Button>()) {
-          auto pressed = inputNode.mapping->pressed();
+          auto pressed = inputNode.effectiveMapping().pressed();
           return button->setValue(pressed);
         }
         if(auto axis = input->cast<ares::Node::Input::Axis>()) {
-          auto value = inputNode.mapping->value();
+          auto value = inputNode.effectiveMapping().value();
           return axis->setValue(value);
         }
         if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
-          if(auto target = dynamic_cast<InputRumble*>(inputNode.mapping)) {
+          if(auto target = dynamic_cast<InputRumble*>(&inputNode.effectiveMapping())) {
             return target->rumble(rumble->strongValue(), rumble->weakValue());
           }
         }
@@ -301,7 +301,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
       for(auto& inputPair : inputDevice.pairs) {
         if(inputPair.name != input->name()) continue;
         if(auto axis = input->cast<ares::Node::Input::Axis>()) {
-          auto value = inputPair.mappingHi->value() - inputPair.mappingLo->value();
+          auto value = inputPair.effectiveMappingHi().value() - inputPair.effectiveMappingLo().value();
           return axis->setValue(value);
         }
       }

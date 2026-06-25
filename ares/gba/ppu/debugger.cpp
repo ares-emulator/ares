@@ -9,12 +9,21 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
   });
 
   memory.pram = parent->append<Node::Debugger::Memory>("PPU PRAM");
-  memory.pram->setSize(ppu.pram.size());
+  memory.pram->setSize(ppu.pram.size() * 2);
   memory.pram->setRead([&](u32 address) -> u8 {
     return ppu.pram[address >> 1].byte(address & 1);
   });
   memory.pram->setWrite([&](u32 address, u8 data) -> void {
     ppu.pram[address >> 1].byte(address & 1) = data;
+  });
+
+  memory.oam = parent->append<Node::Debugger::Memory>("PPU OAM");
+  memory.oam->setSize(ppu.oam.size() * 2);
+  memory.oam->setRead([&](u32 address) -> u8 {
+    return ppu.oam[address >> 1].byte(address & 1);
+  });
+  memory.oam->setWrite([&](u32 address, u8 data) -> void {
+    ppu.oam[address >> 1].byte(address & 1) = data;
   });
 
   graphics.tiles4bpp = parent->append<Node::Debugger::Graphics>("4 BPP Tiles");
@@ -134,6 +143,7 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
 auto PPU::Debugger::unload(Node::Object parent) -> void {
   parent->remove(memory.vram);
   parent->remove(memory.pram);
+  parent->remove(memory.oam);
   parent->remove(graphics.tiles4bpp);
   parent->remove(graphics.tiles8bpp);
   parent->remove(graphics.mode3);
@@ -141,6 +151,7 @@ auto PPU::Debugger::unload(Node::Object parent) -> void {
   parent->remove(graphics.mode5);
   memory.vram.reset();
   memory.pram.reset();
+  memory.oam.reset();
   graphics.tiles4bpp.reset();
   graphics.tiles8bpp.reset();
   graphics.mode3.reset();

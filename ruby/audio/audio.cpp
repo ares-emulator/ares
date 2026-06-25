@@ -1,335 +1,211 @@
-#if defined(AUDIO_ALSA)
-  #include <ruby/audio/alsa.cpp>
-#endif
+#include "audio.hpp"
 
-#if defined(AUDIO_AO)
-  #include <ruby/audio/ao.cpp>
-#endif
-
-#if defined(AUDIO_ASIO)
-  #include <ruby/audio/asio.cpp>
-#endif
-
-#if defined(AUDIO_DIRECTSOUND)
-  #include <ruby/audio/directsound.cpp>
-#endif
-
-#if defined(AUDIO_OPENAL)
-  #if defined(__APPLE__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  #endif
-
-  #include <ruby/audio/openal.cpp>
-
-  #if defined(__APPLE__)
-    #pragma clang diagnostic pop
-  #endif
-#endif
-
-#if defined(AUDIO_OSS)
-  #include <ruby/audio/oss.cpp>
-#endif
-
-#if defined(AUDIO_PULSEAUDIO)
-  #include <ruby/audio/pulseaudio.cpp>
-#endif
-
-#if defined(AUDIO_PULSEAUDIOSIMPLE)
-  #include <ruby/audio/pulseaudio-simple.cpp>
-#endif
-
-#if defined(AUDIO_WASAPI)
-  #include <ruby/audio/wasapi.cpp>
-#endif
-
-#if defined(AUDIO_WAVEOUT)
-  #include <ruby/audio/waveout.cpp>
-#endif
-
-#if defined(AUDIO_XAUDIO2)
-  #include <ruby/audio/xaudio2.cpp>
-#endif
-
-#if defined(AUDIO_SDL)
-#include <ruby/audio/sdl.cpp>
-#endif
+#include <SDL3/SDL.h>
 
 namespace ruby {
 
-auto Audio::setExclusive(bool exclusive) -> bool {
-  if(instance->exclusive == exclusive) return true;
-  if(!instance->hasExclusive()) return false;
-  if(!instance->setExclusive(instance->exclusive = exclusive)) return false;
-  return true;
+auto Audio::create() -> bool {
+  SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1");
+  return initialize();
+}
+
+auto Audio::hasDevices() -> std::vector<string> {
+  _devices.clear();
+  _devices.push_back("Default");
+  int count = 0;
+  SDL_AudioDeviceID* deviceIds = SDL_GetAudioPlaybackDevices(&count);
+  for(u32 i = 0; i < count; i++) {
+    _devices.push_back(SDL_GetAudioDeviceName(deviceIds[i]));
+  }
+  SDL_free(deviceIds);
+  return _devices;
+}
+
+auto Audio::hasDevice(string device) -> bool {
+    auto allDevices = hasDevices();
+    return std::ranges::find(allDevices, device) != allDevices.end();
+}
+
+auto Audio::hasChannels(u32 channels) -> bool {
+  auto allChannels = hasChannels();
+  return std::ranges::find(allChannels, channels) != allChannels.end();
+}
+
+auto Audio::hasFrequency(u32 frequency) -> bool {
+  auto allFrequencies = hasFrequencies();
+  return std::ranges::find(allFrequencies, frequency) != allFrequencies.end();
+}
+
+auto Audio::hasLatency(u32 latency) -> bool {
+  auto allLatencies = hasLatencies();
+  return std::ranges::find(allLatencies, latency) != allLatencies.end();
 }
 
 auto Audio::setContext(uintptr context) -> bool {
-  if(instance->context == context) return true;
-  if(!instance->hasContext()) return false;
-  if(!instance->setContext(instance->context = context)) return false;
+  if(context == _context) return true;
+  if(!hasContext()) return false;
+  _context = context;
   return true;
 }
 
 auto Audio::setDevice(string device) -> bool {
-  if(instance->device == device) return true;
-  if(!instance->hasDevice(device)) return false;
-  if(!instance->setDevice(instance->device = device)) return false;
+  if(device == _device) return true;
+  if(!hasDevice(device)) return false;
+  _device = device;
   return true;
 }
 
 auto Audio::setBlocking(bool blocking) -> bool {
-  if(instance->blocking == blocking) return true;
-  if(!instance->hasBlocking()) return false;
-  if(!instance->setBlocking(instance->blocking = blocking)) return false;
-  updateResampleFrequency(instance->frequency);
+  if(blocking == _blocking) return true;
+  if(!hasBlocking()) return false;
+  _blocking = blocking;
+  updateResampleFrequency(_frequency);
+  clear();
   return true;
 }
 
 auto Audio::setDynamic(bool dynamic) -> bool {
-  if(instance->dynamic == dynamic) return true;
-  if(!instance->hasDynamic()) return false;
-  if(!instance->setDynamic(instance->dynamic = dynamic)) return false;
+  if(dynamic == _dynamic) return true;
+  if(!hasDynamic()) return false;
+  _dynamic = dynamic;
   return true;
 }
 
 auto Audio::setChannels(u32 channels) -> bool {
   updateResampleChannels(channels);
-  if(instance->channels == channels) return true;
-  if(!instance->hasChannels(channels)) return false;
-  if(!instance->setChannels(instance->channels = channels)) return false;
+  if(channels == _channels) return true;
+  if(!hasChannels(channels)) return false;
+  _channels = channels;
   return true;
 }
 
 auto Audio::setFrequency(u32 frequency) -> bool {
-  if(instance->frequency == frequency) return true;
-  if(!instance->hasFrequency(frequency)) return false;
-  if(!instance->setFrequency(instance->frequency = frequency)) return false;
-  updateResampleFrequency(instance->frequency);
-  return true;
+  if(frequency == _frequency) return true;
+  if(!hasFrequency(frequency)) return false;
+  _frequency = frequency;
+  updateResampleFrequency(_frequency);
+  return initialize();
 }
 
 auto Audio::setLatency(u32 latency) -> bool {
-  if(instance->latency == latency) return true;
-  if(!instance->hasLatency(latency)) return false;
-  if(!instance->setLatency(instance->latency = latency)) return false;
-  return true;
+  if(latency == _latency) return true;
+  if(!hasLatency(latency)) return false;
+  _latency = latency;
+  return initialize();
 }
 
-//
+auto Audio::clear() -> void{
+  if(!_ready) return;
+  SDL_ClearAudioStream(static_cast<SDL_AudioStream*>(_stream));
+}
+
+auto Audio::output(const f64 samples[]) -> void {
+  if(!_ready) return;
+
+  if(_blocking) {
+    auto bytesRemaining = SDL_GetAudioStreamQueued(static_cast<SDL_AudioStream*>(_stream));
+    while(bytesRemaining > _bufferSize) {
+      // wait for audio to drain
+      auto bytesToWait = bytesRemaining - _bufferSize;
+      auto framesRemaining = bytesToWait / _bytesPerFrame;
+      auto secondsRemaining = framesRemaining / (f64)_frequency;
+      usleep(max(1.0, secondsRemaining * 1000000.0));
+      bytesRemaining = SDL_GetAudioStreamQueued(static_cast<SDL_AudioStream*>(_stream));
+    }
+  }
+
+  f32 output[2];
+  output[0] = samples[0];
+  output[1] = samples[1];
+  SDL_PutAudioStreamData(static_cast<SDL_AudioStream*>(_stream), output, sizeof(output));
+}
+
+auto Audio::level() -> f64 {
+  if(_ready) return 0.0;
+  return SDL_GetAudioStreamQueued(static_cast<SDL_AudioStream*>(_stream)) / ((f64)_bufferSize);
+}
+
+auto Audio::initialize() -> bool {
+    terminate();
+
+#if defined(PLATFORM_WINDOWS)
+    timeBeginPeriod(1);
+#endif
+
+    if(!SDL_InitSubSystem(SDL_INIT_AUDIO)) return false;
+
+    SDL_AudioSpec spec;
+    spec.format = SDL_AUDIO_F32;
+    spec.channels = 2;
+    spec.freq = _frequency;
+
+    auto desired_samples = _frequency / 100; // 10ms device buffer
+    string desired_samples_string = (string)desired_samples;
+    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, desired_samples_string);
+
+
+    if(_device == "Default") {
+      _deviceId = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;
+    } else {
+      s32 count = 0;
+      SDL_AudioDeviceID* deviceIds = SDL_GetAudioPlaybackDevices(&count);
+      for(auto i = 0; i < count; i++) {
+        if(_device == SDL_GetAudioDeviceName(deviceIds[i])) _deviceId = deviceIds[i];
+      }
+      SDL_free(deviceIds);
+    }
+
+    _stream = SDL_OpenAudioDeviceStream(_deviceId, &spec, NULL, NULL);
+    if(!_stream) return false;
+
+    _deviceId = SDL_GetAudioStreamDevice(static_cast<SDL_AudioStream*>(_stream));
+    if(!_deviceId) return false;
+
+    SDL_ResumeAudioDevice(_deviceId);
+    _frequency = spec.freq;
+    _channels = spec.channels;
+
+    _bytesPerFrame = SDL_AUDIO_FRAMESIZE(spec);
+    _bufferSize = desired_samples * _bytesPerFrame * (_latency / 10); // (10ms * X) queue buffer
+
+    _ready = true;
+    clear();
+
+    return true;
+  }
+
+  auto Audio::terminate() -> void {
+#if defined(PLATFORM_WINDOWS)
+    timeEndPeriod(1);
+#endif
+    _ready = false;
+
+    if(_stream) {
+      SDL_DestroyAudioStream(static_cast<SDL_AudioStream*>(_stream));
+      _stream = nullptr;
+    } else if(_deviceId) {
+      SDL_CloseAudioDevice(_deviceId);
+    }
+
+    _bufferSize = 0;
+    _bytesPerFrame = 0;
+
+    if(SDL_WasInit(SDL_INIT_AUDIO)) {
+      SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    }
+  }
 
 auto Audio::updateResampleChannels(u32 channels) -> void {
-  if(resamplers.size() != channels) {
-    resamplers.clear();
-    resamplers.resize(channels);
-    updateResampleFrequency(instance->frequency);
-    resampleBuffer.resize(channels);
+  if(_resamplers.size() != channels) {
+    _resamplers.clear();
+    _resamplers.resize(channels);
+    updateResampleFrequency(_frequency);
+    _resampleBuffer.resize(channels);
   }
 }
 
 auto Audio::updateResampleFrequency(u32 frequency) -> void {
-  for(auto& resampler : resamplers) resampler.reset(frequency);
-}
-
-//
-
-auto Audio::clear() -> void {
-  updateResampleFrequency(instance->frequency);
-  return instance->clear();
-}
-
-auto Audio::level() -> f64 {
-  return instance->level();
-}
-
-auto Audio::output(const f64 samples[]) -> void {
-  if(!instance->dynamic) return instance->output(samples);
-
-  f64 maxDelta = 0.005;
-  f64 fillLevel = instance->level();
-  f64 dynamicFrequency = ((1.0 - maxDelta) + 2.0 * fillLevel * maxDelta) * instance->frequency;
-  for(auto& resampler : resamplers) {
-    resampler.setInputFrequency(dynamicFrequency);
-    resampler.write(*samples++);
-  }
-
-  while(!resamplers.empty() && resamplers.front().pending()) {
-    for(u32 n : range(instance->channels)) resampleBuffer[n] = resamplers[n].read();
-    instance->output(resampleBuffer.data());
-  }
-}
-
-//
-
-auto Audio::create(string driver) -> bool {
-  self.instance.reset();
-  if(!driver) driver = optimalDriver();
-
-  #if defined(AUDIO_ALSA)
-  if(driver == "ALSA") self.instance = std::make_unique<AudioALSA>(*this);
-  #endif
-
-  #if defined(AUDIO_AO)
-  if(driver == "libao") self.instance = std::make_unique<AudioAO>(*this);
-  #endif
-
-  #if defined(AUDIO_ASIO)
-  if(driver == "ASIO") self.instance = std::make_unique<AudioASIO>(*this);
-  #endif
-
-  #if defined(AUDIO_DIRECTSOUND)
-  if(driver == "DirectSound 7.0") self.instance = std::make_unique<AudioDirectSound>(*this);
-  #endif
-
-  #if defined(AUDIO_OPENAL)
-  if(driver == "OpenAL") self.instance = std::make_unique<AudioOpenAL>(*this);
-  #endif
-
-  #if defined(AUDIO_OSS)
-  if(driver == "OSS") self.instance = std::make_unique<AudioOSS>(*this);
-  #endif
-
-  #if defined(AUDIO_PULSEAUDIO)
-  if(driver == "PulseAudio") self.instance = std::make_unique<AudioPulseAudio>(*this);
-  #endif
-
-  #if defined(AUDIO_PULSEAUDIOSIMPLE)
-  if(driver == "PulseAudio Simple") self.instance = std::make_unique<AudioPulseAudioSimple>(*this);
-  #endif
-
-  #if defined(AUDIO_WASAPI)
-  if(driver == "WASAPI") self.instance = std::make_unique<AudioWASAPI>(*this);
-  #endif
-
-  #if defined(AUDIO_WAVEOUT)
-  if(driver == "waveOut") self.instance = std::make_unique<AudioWaveOut>(*this);
-  #endif
-
-  #if defined(AUDIO_XAUDIO2)
-  if(driver == "XAudio 2.9") self.instance = std::make_unique<AudioXAudio2>(*this);
-  #endif
-
-#if defined(AUDIO_SDL)
-  if(driver == "SDL") self.instance = std::make_unique<AudioSDL>(*this);
-#endif
-
-  if(!self.instance) self.instance = std::make_unique<AudioDriver>(*this);
-
-  return self.instance->create();
-}
-
-auto Audio::hasDrivers() -> std::vector<string> {
-  return {
-
-  #if defined(AUDIO_ASIO)
-  "ASIO",
-  #endif
-
-  #if defined(AUDIO_WASAPI)
-  "WASAPI",
-  #endif
-
-  #if defined(AUDIO_XAUDIO2)
-  "XAudio 2.9",
-  #endif
-
-#if defined(AUDIO_SDL)
-  "SDL",
-#endif
-
-  #if defined(AUDIO_DIRECTSOUND)
-  "DirectSound 7.0",
-  #endif
-
-  #if defined(AUDIO_WAVEOUT)
-  "waveOut",
-  #endif
-
-  #if defined(AUDIO_ALSA)
-  "ALSA",
-  #endif
-
-  #if defined(AUDIO_OSS)
-  "OSS",
-  #endif
-
-  #if defined(AUDIO_OPENAL)
-  "OpenAL",
-  #endif
-
-  #if defined(AUDIO_PULSEAUDIO)
-  "PulseAudio",
-  #endif
-
-  #if defined(AUDIO_PULSEAUDIOSIMPLE)
-  "PulseAudio Simple",
-  #endif
-
-  #if defined(AUDIO_AO)
-  "libao",
-  #endif
-
-  "None"};
-}
-
-auto Audio::optimalDriver() -> string {
-  #if defined(AUDIO_WASAPI)
-  return "WASAPI";
-  #elif defined(AUDIO_ASIO)
-  return "ASIO";
-  #elif defined(AUDIO_XAUDIO2)
-  return "XAudio 2.9";
-  #elif defined(AUDIO_SDL)
-  return "SDL";
-  #elif defined(AUDIO_DIRECTSOUND)
-  return "DirectSound 7.0";
-  #elif defined(AUDIO_WAVEOUT)
-  return "waveOut";
-  #elif defined(AUDIO_PULSEAUDIO)
-  return "PulseAudio";
-  #elif defined(AUDIO_PULSEAUDIOSIMPLE)
-  return "PulseAudio Simple";
-  #elif defined(AUDIO_OPENAL)
-  return "OpenAL";
-  #elif defined(AUDIO_AO)
-  return "libao";
-  #elif defined(AUDIO_ALSA)
-  return "ALSA";
-  #elif defined(AUDIO_OSS)
-  return "OSS";
-  #else
-  return "None";
-  #endif
-}
-
-auto Audio::safestDriver() -> string {
-  #if defined(AUDIO_WAVEOUT)
-  return "waveOut";
-  #elif defined(AUDIO_DIRECTSOUND)
-  return "DirectSound 7.0";
-  #elif defined(AUDIO_WASAPI)
-  return "WASAPI";
-  #elif defined(AUDIO_XAUDIO2)
-  return "XAudio 2.9";
-  #elif defined(AUDIO_SDL)
-  return "SDL";
-  #elif defined(AUDIO_ALSA)
-  return "ALSA";
-  #elif defined(AUDIO_OSS)
-  return "OSS";
-  #elif defined(AUDIO_OPENAL)
-  return "OpenAL";
-  #elif defined(AUDIO_PULSEAUDIO)
-  return "PulseAudio";
-  #elif defined(AUDIO_PULSEAUDIOSIMPLE)
-  return "PulseAudio Simple";
-  #elif defined(AUDIO_AO)
-  return "libao";
-  #elif defined(AUDIO_ASIO)
-  return "ASIO";
-  #else
-  return "None";
-  #endif
+  for(auto& resampler : _resamplers) resampler.reset(frequency);
 }
 
 }

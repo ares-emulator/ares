@@ -22,8 +22,6 @@ auto RSP::dmaTransferStart(Thread& thread) -> void {
 }
 
 auto RSP::dmaTransferStep() -> void {
-  auto& region = !dma.current.pbusRegion ? dmem : imem;
-
   if(dma.busy.read) {
     if constexpr(Accuracy::RSP::Recompiler) {
       if(dma.current.pbusRegion) {
@@ -31,21 +29,35 @@ auto RSP::dmaTransferStep() -> void {
       }
     }
     for(u32 i = 0; i <= dma.current.length; i += 8) {
+      if(dma.current.pbusRegion) {
         u64 data = rdram.ram.read<Dual>(dma.current.dramAddress, RBusDevice::SP_DMA);
-        region.write<Dual>(dma.current.pbusAddress, data);
-        if (system.homebrewMode) {
-          rsp.debugger.dmaReadWord(dma.current.dramAddress, dma.current.pbusRegion, dma.current.pbusAddress);
-        }
-        dma.current.dramAddress += 8;
-        dma.current.pbusAddress += 8;
+        imem.write<Dual>(dma.current.pbusAddress, data);
+      } else {
+        u32 dataLo = rdram.ram.read<Word>(dma.current.dramAddress + 0, RBusDevice::SP_DMA);
+        u32 dataHi = rdram.ram.read<Word>(dma.current.dramAddress + 4, RBusDevice::SP_DMA);
+        dmem.write<Word>(dma.current.pbusAddress + 0, dataLo);
+        dmem.write<Word>(dma.current.pbusAddress + 4, dataHi);
+      }
+      if(system.homebrewMode) {
+        rsp.debugger.dmaReadWord(dma.current.dramAddress, dma.current.pbusRegion, dma.current.pbusAddress);
+      }
+      dma.current.dramAddress += 8;
+      dma.current.pbusAddress += 8;
     }
   }
   if(dma.busy.write) {
     for(u32 i = 0; i <= dma.current.length; i += 8) {
-        u64 data = region.read<Dual>(dma.current.pbusAddress);
+      if(dma.current.pbusRegion) {
+        u64 data = imem.read<Dual>(dma.current.pbusAddress);
         rdram.ram.write<Dual>(dma.current.dramAddress, data, RBusDevice::SP_DMA);
-        dma.current.dramAddress += 8;
-        dma.current.pbusAddress += 8;
+      } else {
+        u32 dataLo = dmem.read<Word>(dma.current.pbusAddress + 0);
+        u32 dataHi = dmem.read<Word>(dma.current.pbusAddress + 4);
+        rdram.ram.write<Word>(dma.current.dramAddress + 0, dataLo, RBusDevice::SP_DMA);
+        rdram.ram.write<Word>(dma.current.dramAddress + 4, dataHi, RBusDevice::SP_DMA);
+      }
+      dma.current.dramAddress += 8;
+      dma.current.pbusAddress += 8;
     }
   }
 

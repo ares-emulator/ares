@@ -20,6 +20,7 @@ auto PPU::setAccurate(bool value) -> void {
 auto PPU::load(Node::Object parent) -> void {
   vram.allocate(96_KiB);
   pram.allocate(512);
+  oam.allocate(512);
 
   node = parent->append<Node::Object>("PPU");
 
@@ -72,8 +73,12 @@ inline auto PPU::blank() -> bool {
 }
 
 auto PPU::step(u32 clocks) -> void {
-  Thread::step(clocks);
-  Thread::synchronize(cpu, display);
+  for(auto _ : range(clocks)) {
+    objects.step();
+    Thread::step(1);
+    Thread::synchronize(cpu, display);
+    objReleaseBus();
+  }
 }
 
 template<s32 Cycle>
@@ -133,7 +138,7 @@ auto PPU::cycle(u32 y) -> void {
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 0) cycleUpperLayer((Cycle - 46) / 4, y);
   if constexpr(Cycle >= 46 && Cycle <= 1005 && (Cycle - 46) % 4 == 2) dac.lowerLayer((Cycle - 46) / 4, y);
   step(1);
-  releaseBus();
+  bgReleaseBus();
 }
 
 auto PPU::main() -> void {
@@ -158,7 +163,6 @@ auto PPU::main() -> void {
   bg1.scanline(y);
   bg2.scanline(y);
   bg3.scanline(y);
-  objects.scanline((y + 1) % 228);
   window0.scanline(y);
   window1.scanline(y);
   dac.scanline(y);
@@ -183,9 +187,12 @@ auto PPU::main() -> void {
 
       //cycle 31 - start rendering backgrounds unconditionally
       cycles01( 31);
-      cycles02( 32);
-      cycles04( 34);
-      cycles08( 38);
+      cycles08( 32);
+
+      //cycle 40 - start rendering sprites
+      objects.scanline((y + 1) % 228);
+      cycles02( 40);
+      cycles04( 42);
 
       //cycle 46 - start pixel output
       cycles64( 46);
@@ -218,6 +225,7 @@ auto PPU::main() -> void {
       #undef cycles64
     } else {
       step(renderingCycle);
+      objects.renderScanline((y + 1) % 228);
       for(s32 x : range(247)) {
         bg0.run(x - 7, y);
         bg1.run(x - 7, y);
@@ -229,11 +237,19 @@ auto PPU::main() -> void {
         cycleUpperLayer(x, y);
         dac.lowerLayer(x, y);
       }
-      releaseBus();
+      bgReleaseBus();
       step(1035 - renderingCycle);
     }
   } else {
-    step(1035);
+    if(accurate) {
+      step(37);
+      objects.scanline((y + 1) % 228);
+      step(998);
+    } else {
+      step(renderingCycle);
+      objects.renderScanline((y + 1) % 228);
+      step(1035 - renderingCycle);
+    }
   }
 
   step(193);
@@ -256,8 +272,6 @@ auto PPU::power() -> void {
   for(u32 n = 0; n < 1024; n += 2) writeOAM(Half, n, 0x0000);
 
   io = {};
-  for(auto& object : this->object) object = {};
-  for(auto& param : this->objectParam) param = {};
 
   bg0.power(BG0);
   bg1.power(BG1);

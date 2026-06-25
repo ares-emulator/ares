@@ -68,6 +68,8 @@ struct Device {
 
   auto name() const -> string { return _name; }
   auto setName(const string& name) -> void { _name = name; }
+  auto identifier() const -> string { return _identifier; }
+  auto setIdentifier(const string& identifier) -> void { _identifier = identifier; }
   auto id() const -> u64 { return _id; }
   auto setID(u64 id) -> void { _id = id; }
   auto group(u32 id) -> Group& { return _groups[id]; }
@@ -91,6 +93,7 @@ struct Device {
 private:
   std::vector<Group> _groups;
   string _name;
+  string _identifier;
   u64 _id = 0;
 };
 

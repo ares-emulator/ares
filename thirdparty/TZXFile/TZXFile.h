@@ -21,6 +21,7 @@
 #include "TZXBlockStopTheTape48K.h"
 #include "TZXBlockCustomInfo.h"
 #include "TZXBlockMessage.h"
+#include "TZXBlockKansasCityStandard.h"
 
 #define MAX_TZX_BLOCKS				512
 
@@ -49,6 +50,7 @@
 #define TZX_BLOCKID_ARCHIVE_INFO			0x32
 #define TZX_BLOCKID_HARDWARE_TYPE			0x33
 #define TZX_BLOCKID_CUSTOM_INFO				0x35
+#define TZX_BLOCKID_KANSAS_CITY_STANDARD	0x4B
 
 // Currently unsupported block types
 #define TZX_BLOCKID_DIRECT_RECORDING		0x15
@@ -119,6 +121,7 @@ private:
 	int DecodeStopTheTape48KBlock();
 	int DecodeCustomInfoBlock();
 	int DecodeMessageBlock();
+	int DecodeKansasCityStandardBlock();
     int DecodeTzxFile(unsigned char *pData, int nFileLength);
     int DecodeTapFileData(unsigned char *pData, int nFileLength);
 
@@ -138,5 +141,4 @@ public:
 
 	
 };
-
 

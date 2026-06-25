@@ -3,6 +3,7 @@ auto PPU::serialize(serializer& s) -> void {
 
   s(vram);
   s(pram);
+  s(oam);
 
   s(io.gameBoyColorMode);
   for(auto& flag : io.forceBlank) s(flag);
@@ -22,11 +23,10 @@ auto PPU::serialize(serializer& s) -> void {
   s(window2);
   s(window3);
   s(dac);
-  for(auto& object : this->object) s(object);
-  for(auto& param : this->objectParam) s(param);
 
   s(pramAccessed);
   s(vramAccessedBG);
+  s(oamAccessed);
 }
 
 auto PPU::Background::serialize(serializer& s) -> void {
@@ -65,9 +65,15 @@ auto PPU::Objects::serialize(serializer& s) -> void {
   s(io.mosaicWidth);
   s(io.mosaicHeight);
 
+  s(renderY);
   s(mosaicY);
   s(hmosaicOffset);
   s(vmosaicOffset);
+  s(objIndex);
+  s(active);
+  s(activeCycle);
+
+  s(state);
 }
 
 auto PPU::Window::serialize(serializer& s) -> void {
@@ -92,31 +98,4 @@ auto PPU::DAC::serialize(serializer& s) -> void {
   s(io.blendEVA);
   s(io.blendEVB);
   s(io.blendEVY);
-}
-
-auto PPU::Object::serialize(serializer& s) -> void {
-  s(y);
-  s(affine);
-  s(affineSize);
-  s(mode);
-  s(mosaic);
-  s(colors);
-  s(shape);
-  s(x);
-  s(affineParam);
-  s(hflip);
-  s(vflip);
-  s(size);
-  s(character);
-  s(priority);
-  s(palette);
-  s(width);
-  s(height);
-}
-
-auto PPU::ObjectParam::serialize(serializer& s) -> void {
-  s(pa);
-  s(pb);
-  s(pc);
-  s(pd);
 }

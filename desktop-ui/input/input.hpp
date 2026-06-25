@@ -1,5 +1,7 @@
 enum : u32 { BindingLimit = 3 };
 
+enum class MappingMode : u32 { Direct, VirtualPad };
+
 struct InputMapping {
   enum class Qualifier : u32 { None, Lo, Hi, Rumble };
 
@@ -7,6 +9,7 @@ struct InputMapping {
   auto bind(u32 binding, string assignment) -> void;
   auto unbind() -> void;
   auto unbind(u32 binding) -> void;
+  auto assigned() -> bool;
 
   virtual auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool = 0;
   virtual auto value() -> s16 = 0;
@@ -19,9 +22,10 @@ struct InputMapping {
     auto text() -> string;
 
     std::shared_ptr<HID::Device> device;
-    u64 deviceID;
-    u32 groupID;
-    u32 inputID;
+    string deviceIdentifier;
+    u64 deviceID = 0;
+    u32 groupID = 0;
+    u32 inputID = 0;
     Qualifier qualifier = Qualifier::None;
   };
   Binding bindings[BindingLimit];
@@ -85,6 +89,34 @@ struct InputNode {
   Type type;
   string name;
   InputMapping* mapping;
+  std::shared_ptr<InputMapping> directMapping;
+
+  auto configuredMapping() -> InputMapping& {
+    if(directMapping) return *directMapping;
+    return *mapping;
+  }
+
+  auto effectiveMapping() -> InputMapping& {
+    if(directMapping && directMapping->assigned()) return *directMapping;
+    return *mapping;
+  }
+
+  auto inheritedMapping() -> bool {
+    return directMapping && !directMapping->assigned() && mapping->assigned();
+  }
+
+  auto setMappingMode(MappingMode mode) -> void {
+    mappingMode = mode;
+    if(mode != MappingMode::VirtualPad) return;
+    if(directMapping) return;
+    if(type == Type::Digital ) directMapping = std::make_shared<InputDigital>();
+    if(type == Type::Analog  ) directMapping = std::make_shared<InputAnalog>();
+    if(type == Type::Absolute) directMapping = std::make_shared<InputAbsolute>();
+    if(type == Type::Relative) directMapping = std::make_shared<InputRelative>();
+    if(type == Type::Rumble  ) directMapping = std::make_shared<InputRumble>();
+  }
+
+  MappingMode mappingMode = MappingMode::VirtualPad;
 };
 
 struct InputPair {
@@ -93,34 +125,103 @@ struct InputPair {
   string name;
   InputMapping* mappingLo;
   InputMapping* mappingHi;
+  std::shared_ptr<InputMapping> directMappingLo;
+  std::shared_ptr<InputMapping> directMappingHi;
+
+  auto configuredMappingLo() -> InputMapping& {
+    if(directMappingLo) return *directMappingLo;
+    return *mappingLo;
+  }
+
+  auto configuredMappingHi() -> InputMapping& {
+    if(directMappingHi) return *directMappingHi;
+    return *mappingHi;
+  }
+
+  auto effectiveMappingLo() -> InputMapping& {
+    if(directMappingLo && directMappingLo->assigned()) return *directMappingLo;
+    return *mappingLo;
+  }
+
+  auto effectiveMappingHi() -> InputMapping& {
+    if(directMappingHi && directMappingHi->assigned()) return *directMappingHi;
+    return *mappingHi;
+  }
+
+  auto setMappingMode(MappingMode mode) -> void {
+    mappingMode = mode;
+    if(mode != MappingMode::VirtualPad) return;
+    if(type == Type::Analog) {
+      if(!directMappingLo) directMappingLo = std::make_shared<InputAnalog>();
+      if(!directMappingHi) directMappingHi = std::make_shared<InputAnalog>();
+    }
+  }
+
+  MappingMode mappingMode = MappingMode::VirtualPad;
 };
 
 struct InputDevice {
+  InputDevice() = default;
+  InputDevice(string name) : name(name) {
+    setMappingMode(MappingMode::VirtualPad);
+  }
+
   auto digital(string name, InputMapping& mapping) -> void {
     inputs.push_back({InputNode::Type::Digital, name, &mapping});
+    if(mappingModeConfigured) inputs.back().setMappingMode(mappingMode);
   }
 
   auto analog(string name, InputMapping& mapping) -> void {
     inputs.push_back({InputNode::Type::Analog, name, &mapping});
+    if(mappingModeConfigured) inputs.back().setMappingMode(mappingMode);
   }
 
   auto absolute(string name, InputMapping& mapping) -> void {
     inputs.push_back({InputNode::Type::Absolute, name, &mapping});
+    if(mappingModeConfigured) inputs.back().setMappingMode(mappingMode);
   }
 
   auto relative(string name, InputMapping& mapping) -> void {
     inputs.push_back({InputNode::Type::Relative, name, &mapping});
+    if(mappingModeConfigured) inputs.back().setMappingMode(mappingMode);
   }
 
   auto rumble(string name, InputMapping& mapping) -> void {
     inputs.push_back({InputNode::Type::Rumble, name, &mapping});
+    if(mappingModeConfigured) inputs.back().setMappingMode(mappingMode);
   }
 
   auto analog(string name, InputMapping& mappingLo, InputMapping& mappingHi) -> void {
     pairs.push_back({InputPair::Type::Analog, name, &mappingLo, &mappingHi});
+    if(mappingModeConfigured) pairs.back().setMappingMode(mappingMode);
+    for(auto& input : inputs) {
+      if(input.mapping == &mappingLo && input.directMapping) pairs.back().directMappingLo = input.directMapping;
+      if(input.mapping == &mappingHi && input.directMapping) pairs.back().directMappingHi = input.directMapping;
+    }
+  }
+
+  auto setMappingMode(MappingMode mode) -> void {
+    mappingModeConfigured = true;
+    mappingMode = mode;
+    for(auto& input : inputs) input.setMappingMode(mode);
+    for(auto& pair : pairs) pair.setMappingMode(mode);
+  }
+
+  auto hasDirectMappings() -> bool {
+    if(mappingMode == MappingMode::Direct) return true;
+    for(auto& input : inputs) {
+      if(input.directMapping) return true;
+    }
+    for(auto& pair : pairs) {
+      if(pair.directMappingLo || pair.directMappingHi) return true;
+    }
+
+    return false;
   }
 
   string name;
+  MappingMode mappingMode = MappingMode::VirtualPad;
+  bool mappingModeConfigured = false;
   std::vector<InputNode> inputs;
   std::vector<InputPair> pairs;
 };

@@ -5,6 +5,10 @@ struct MSX : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+  auto loadTape(ares::Node::Object node, string location) -> bool override;
+  auto unloadTape(ares::Node::Object node) -> void override;
+
+  std::shared_ptr<mia::Pak> tape;
 };
 
 MSX::MSX() {
@@ -65,7 +69,10 @@ auto MSX::load() -> LoadResult {
 
   if(auto port = root->find<ares::Node::Port>("Tape Deck/Tray")) {
     port->allocate();
-    if(isTape) port->connect();
+    if(isTape) {
+      tape = game;
+      port->connect();
+    }
   }
 
   auto device = "Gamepad";
@@ -90,12 +97,13 @@ auto MSX::load() -> LoadResult {
 }
 
 auto MSX::load(Menu menu) -> void {
-  if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
+  if(auto tape = root->find<ares::Node::Tape>("MSX Tape")) {
     MenuCheckItem playingItem{&menu};
-    playingItem.setText("Play Tape").setChecked(playing->value()).onToggle([=, this] {
-      if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
-        playing->setValue(playingItem.checked());
-      }
+    playingItem.setText("Play Tape").setChecked(tape->playing()).onToggle([=, this] {
+      if(auto tape = root->find<ares::Node::Tape>("MSX Tape")) {
+        if(playingItem.checked()) tape->play();
+        else tape->stop();
+      };
     });
   }
 }
@@ -104,6 +112,7 @@ auto MSX::load(Menu menu) -> void {
 auto MSX::save() -> bool {
   root->save();
   system->save(system->location);
+  if(tape && tape != game) tape->save(tape->location);
   game->save(game->location);
   return true;
 }
@@ -111,8 +120,34 @@ auto MSX::save() -> bool {
 auto MSX::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "MSX") return system->pak;
   if(node->name() == "MSX Cartridge") return game->pak;
-  if(node->name() == "MSX Tape") return game->pak;
+  if(node->name() == "MSX Tape") return tape ? tape->pak : game->pak;
   return {};
+}
+
+auto MSX::loadTape(ares::Node::Object node, string location) -> bool {
+  if(node->name() == "MSX Tape") {
+    tape = mia::Medium::create(name);
+    if(!location) {
+      location = Emulator::load(tape, settings.paths.home);
+      if(!location) return false;
+    }
+    LoadResult result = tape->load(location);
+    if(result != successful) {
+      tape.reset();
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+auto MSX::unloadTape(ares::Node::Object node) -> void {
+  if(node->name() == "MSX Tape") {
+    if(tape) tape->save(tape->location);
+    tape.reset();
+  }
 }
 
 auto MSX::input(ares::Node::Input::Input input) -> void {

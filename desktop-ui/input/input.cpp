@@ -4,6 +4,11 @@
 VirtualPort virtualPorts[5];
 InputManager inputManager;
 
+static auto inputAssignment(std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID) -> string {
+  if(auto identifier = device->identifier()) return {identifier, "/", groupID, "/", inputID};
+  return {"0x", hex(device->id()), "/", groupID, "/", inputID};
+}
+
 auto InputMapping::bind() -> void {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   for(auto& binding : bindings) binding = {};
@@ -15,16 +20,30 @@ auto InputMapping::bind() -> void {
     auto token = nall::split(assignment, "/");
     if(token.size() < 3) continue;  //ignore invalid mappings
 
-    binding.deviceID = token[0].natural();
-    binding.groupID = token[1].natural();
-    binding.inputID = token[2].natural();
+    u32 qualifierIndex = 3;
+    if(token[0].beginsWith("0x")) {
+      binding.deviceID = token[0].natural();
+      binding.groupID = token[1].natural();
+      binding.inputID = token[2].natural();
+    } else {
+      if(token.size() < 4) continue;  //ignore invalid mappings
+      binding.deviceIdentifier = {token[0], "/", token[1]};
+      binding.groupID = token[2].natural();
+      binding.inputID = token[3].natural();
+      qualifierIndex = 4;
+    }
+
     binding.qualifier = Qualifier::None;
-    if(token.size() > 3 && token[3] == "Lo") binding.qualifier = Qualifier::Lo;
-    if(token.size() > 3 && token[3] == "Hi") binding.qualifier = Qualifier::Hi;
-    if(token.size() > 3 && token[3] == "Rumble") binding.qualifier = Qualifier::Rumble;
+    if(token.size() > qualifierIndex && token[qualifierIndex] == "Lo") binding.qualifier = Qualifier::Lo;
+    if(token.size() > qualifierIndex && token[qualifierIndex] == "Hi") binding.qualifier = Qualifier::Hi;
+    if(token.size() > qualifierIndex && token[qualifierIndex] == "Rumble") binding.qualifier = Qualifier::Rumble;
 
     for(auto& device : inputManager.devices) {
-      if(binding.deviceID == device->id()) {
+      if(binding.deviceIdentifier && binding.deviceIdentifier == device->identifier()) {
+        binding.device = device;
+        binding.deviceID = device->id();
+        break;
+      } else if(!binding.deviceIdentifier && binding.deviceID == device->id()) {
         binding.device = device;
         break;
       }
@@ -51,9 +70,17 @@ auto InputMapping::unbind(u32 binding) -> void {
   assignments[binding] = {};
 }
 
+auto InputMapping::assigned() -> bool {
+  for(auto& assignment : assignments) {
+    if(assignment) return true;
+  }
+
+  return false;
+}
+
 auto InputMapping::Binding::icon() -> multiFactorImage {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  if(!device && deviceID) return Icon::Device::Joypad;
+  if(!device && (deviceID || deviceIdentifier)) return Icon::Device::Joypad;
   if(!device) return {};
   if(device->isKeyboard()) return Icon::Device::Keyboard;
   if(device->isMouse()) return Icon::Device::Mouse;
@@ -63,7 +90,7 @@ auto InputMapping::Binding::icon() -> multiFactorImage {
 
 auto InputMapping::Binding::text() -> string {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  if(!device && deviceID) return "(disconnected)";
+  if(!device && (deviceID || deviceIdentifier)) return "(disconnected)";
   if(!device) return {};
   if(groupID >= device->size()) return {};
   if(inputID >= device->group(groupID).size()) return {};
@@ -96,7 +123,7 @@ auto InputMapping::Binding::text() -> string {
 
 auto InputDigital::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
+  string assignment = inputAssignment(device, groupID, inputID);
 
   if(device->isNull()) {
     return unbind(binding), true;
@@ -220,7 +247,7 @@ auto InputHotkey::value() -> s16 {
 
 auto InputAnalog::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
+  string assignment = inputAssignment(device, groupID, inputID);
 
   if(device->isNull()) {
     return unbind(binding), true;
@@ -293,7 +320,7 @@ auto InputAnalog::pressed() -> bool {
 
 auto InputAbsolute::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
+  string assignment = inputAssignment(device, groupID, inputID);
 
   if(device->isNull()) {
     return unbind(binding), true;
@@ -352,7 +379,7 @@ auto InputAbsolute::value() -> s16 {
 
 auto InputRelative::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
+  string assignment = inputAssignment(device, groupID, inputID);
 
   if(device->isNull()) {
     return unbind(binding), true;
@@ -411,7 +438,7 @@ auto InputRelative::value() -> s16 {
 
 auto InputRumble::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
+  string assignment = inputAssignment(device, groupID, inputID);
 
   if(device->isNull()) {
     return unbind(binding), true;
@@ -494,6 +521,18 @@ auto InputManager::bind() -> void {
   for(auto& port : virtualPorts) {
     for(auto& input : port.pad.inputs) input.mapping->bind();
     for(auto& input : port.mouse.inputs) input.mapping->bind();
+  }
+  for(auto& emulator : emulators) {
+    for(auto& port : emulator->ports) {
+      for(auto& device : port.devices) {
+        if(!device.hasDirectMappings()) continue;
+        for(auto& input : device.inputs) input.configuredMapping().bind();
+        for(auto& pair : device.pairs) {
+          pair.configuredMappingLo().bind();
+          pair.configuredMappingHi().bind();
+        }
+      }
+    }
   }
   for(auto& mapping : hotkeys) mapping.bind();
 }
