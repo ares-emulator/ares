@@ -116,6 +116,11 @@ struct Settings : Markup::Node {
     bool supersampling = false;
     bool disableVideoInterfaceProcessing = false;
     bool weaveDeinterlacing = true;
+    bool enableOverscanCrop = false;
+    u32 overscanCropTop = 0;
+    u32 overscanCropBottom = 0;
+    u32 overscanCropLeft = 0;
+    u32 overscanCropRight = 0;
   } nintendo64;
 
   struct GameBoyAdvance {
@@ -394,6 +399,20 @@ struct CoreSettings : VerticalLayout {
     HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 5};
       CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
       Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, layoutVertSize}};
+    VerticalLayout parallelOverscanCropLayout {this, Size{~0, 0}, 5};
+      HorizontalLayout parallelOverscanCropCheckboxLayout {&parallelOverscanCropLayout, Size{~0, 0}, 5};
+        CheckLabel parallelOverscanCropOption {&parallelOverscanCropCheckboxLayout, Size{0, 0}, 5};
+        Label parallelOverscanCropHint {&parallelOverscanCropCheckboxLayout, Size{0, layoutVertSize}};
+      HorizontalLayout parallelOverscanCropSettingsLayout {&parallelOverscanCropLayout, Size{~0, 0}, 5};
+        Label parallelOverscanCropTopLabel {&parallelOverscanCropSettingsLayout, Size{0, layoutVertSize}};
+        LineEdit parallelOverscanCropTopValue {&parallelOverscanCropSettingsLayout, Size{30, 0}};
+        Label parallelOverscanCropBottomLabel {&parallelOverscanCropSettingsLayout, Size{0, layoutVertSize}};
+        LineEdit parallelOverscanCropBottomValue {&parallelOverscanCropSettingsLayout, Size{30, 0}};
+        Label parallelOverscanCropLeftLabel {&parallelOverscanCropSettingsLayout, Size{0, layoutVertSize}};
+        LineEdit parallelOverscanCropLeftValue {&parallelOverscanCropSettingsLayout, Size{30, 0}};
+        Label parallelOverscanCropRightLabel {&parallelOverscanCropSettingsLayout, Size{0, layoutVertSize}};
+        LineEdit parallelOverscanCropRightValue {&parallelOverscanCropSettingsLayout, Size{30, 0}};
+        Label parallelOverscanCropSettingsHint {&parallelOverscanCropSettingsLayout, Size{0, layoutVertSize}};
 
   Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};
