@@ -116,6 +116,9 @@ struct Settings : Markup::Node {
     bool supersampling = false;
     bool disableVideoInterfaceProcessing = false;
     bool weaveDeinterlacing = true;
+    bool oscEnabled = false;
+    string oscHost = "127.0.0.1";
+    u32 oscPort = 9000;
   } nintendo64;
 
   struct GameBoyAdvance {
@@ -394,6 +397,15 @@ struct CoreSettings : VerticalLayout {
     HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 5};
       CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
       Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, layoutVertSize}};
+    HorizontalLayout nintendo64OscEnabledLayout{this, Size{~0, 0}, 5};
+      CheckLabel nintendo64OscEnabledOption{&nintendo64OscEnabledLayout, Size{0, 0}, 5};
+      Label nintendo64OscEnabledHint{&nintendo64OscEnabledLayout, Size{0, layoutVertSize}};
+    HorizontalLayout nintendo64OscHostLayout{this, Size{~0, 0}, 5};
+      Label nintendo64OscHostLabel{&nintendo64OscHostLayout, Size{0, layoutVertSize}};
+      LineEdit nintendo64OscHostOption{&nintendo64OscHostLayout, Size{~0, 0}};
+    HorizontalLayout nintendo64OscPortLayout{this, Size{~0, 0}, 5};
+      Label nintendo64OscPortLabel{&nintendo64OscPortLayout, Size{0, layoutVertSize}};
+      LineEdit nintendo64OscPortOption{&nintendo64OscPortLayout, Size{~0, 0}};
 
   Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};

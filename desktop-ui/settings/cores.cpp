@@ -103,6 +103,24 @@ auto CoreSettings::construct() -> void {
   renderSupersamplingLayout.setAlignment(1).setPadding(12_sx, 0);
   renderSupersamplingHint.setText("Scales 2x and 4x resolutions back down to native.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  nintendo64OscEnabledOption.setText("Enable OSC Output").setChecked(settings.nintendo64.oscEnabled).onToggle([&] {
+    settings.nintendo64.oscEnabled = nintendo64OscEnabledOption.checked();
+  });
+  nintendo64OscEnabledLayout.setAlignment(1).setPadding(12_sx, 0);
+    nintendo64OscEnabledHint.setText("Sends an OSC \"alive\" message once per frame to the configured host/port").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
+  nintendo64OscHostLayout.setAlignment(0.5).setPadding(12_sx, 0);
+    nintendo64OscHostLabel.setText("OSC Host:");
+    nintendo64OscHostOption.setText(settings.nintendo64.oscHost).setEditable(true).onChange([&] {
+      settings.nintendo64.oscHost = nintendo64OscHostOption.text();
+    });
+
+  nintendo64OscPortLayout.setAlignment(0.5).setPadding(12_sx, 0);
+    nintendo64OscPortLabel.setText("OSC Port:");
+    nintendo64OscPortOption.setText(integer(settings.nintendo64.oscPort)).setEditable(true).onChange([&] {
+      settings.nintendo64.oscPort = nintendo64OscPortOption.text().natural();
+    });
+
   #if !defined(VULKAN)
   //hide Vulkan-specific options if Vulkan is not available
   renderQualityLayout.setCollapsible(true).setVisible(false);

@@ -6,6 +6,11 @@ struct System {
   u8 configuredControllerPakBankCount = 1;
   u8 controllerPakBankCount = 1;
 
+  bool oscEnabled = false;
+  string oscHost = "127.0.0.1";
+  u16 oscPort = 9000;
+  nall::OSC::Socket oscSocket;
+
   enum class Model : u32 { Nintendo64, Aleck64 };
   enum class Region : u32 { NTSC, PAL };
 
@@ -23,6 +28,7 @@ struct System {
   auto unload() -> void;
   auto save() -> void;
   auto power(bool reset) -> void;
+  auto updateOsc() -> void;
 
   //serialization.cpp
   auto serialize(bool synchronize = true) -> serializer;

@@ -35,6 +35,9 @@ auto option(string name, string value) -> bool {
   vulkan.outputUpscale = vulkan.supersampleScanout ? 1 : vulkan.internalUpscale;
   #endif
   if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
+  if(name == "OSC Enabled") { system.oscEnabled = value.boolean(); system.updateOsc(); }
+  if(name == "OSC Host") { system.oscHost = value; system.updateOsc(); }
+  if(name == "OSC Port") { system.oscPort = value.natural(); system.updateOsc(); }
   if(name == "Recompiler") {
     if constexpr(Accuracy::CPU::Recompiler) {
       cpu.recompiler.enabled = value.boolean();
@@ -65,6 +68,11 @@ auto option(string name, string value) -> bool {
 System system;
 Queue queue;
 #include "serialization.cpp"
+
+auto System::updateOsc() -> void {
+  oscSocket.close();
+  if(oscEnabled) oscSocket.open(oscHost, oscPort);
+}
 
 auto System::game() -> string {
   if(dd.node && !cartridge.node) {
@@ -383,6 +391,8 @@ auto System::initDebugHooks() -> void {
 auto System::unload() -> void {
   if(!node) return;
   save();
+
+  oscSocket.close();
   
   if(vi.screen) vi.screen->quit(); //stop video thread
   #if defined(VULKAN)

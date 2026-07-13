@@ -128,6 +128,9 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Nintendo64/Supersampling", nintendo64.supersampling);
   bind(boolean, "Nintendo64/DisableVideoInterfaceProcessing", nintendo64.disableVideoInterfaceProcessing);
   bind(boolean, "Nintendo64/WeaveDeinterlacing", nintendo64.weaveDeinterlacing);
+  bind(boolean, "Nintendo64/OscEnabled", nintendo64.oscEnabled);
+  bind(string,  "Nintendo64/OscHost", nintendo64.oscHost);
+  bind(natural, "Nintendo64/OscPort", nintendo64.oscPort);
 
   bind(boolean, "GameBoyAdvance/Player", gameBoyAdvance.player);
 

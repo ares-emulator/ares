@@ -117,6 +117,9 @@ auto Nintendo64::load() -> LoadResult {
   ares::Nintendo64::option("Recompiler", !settings.developer.forceInterpreter);
   ares::Nintendo64::option("Expansion Pak", settings.nintendo64.expansionPak);
   ares::Nintendo64::option("Controller Pak Banks", settings.nintendo64.controllerPakBankString);
+  ares::Nintendo64::option("OSC Host", settings.nintendo64.oscHost);
+  ares::Nintendo64::option("OSC Port", string{settings.nintendo64.oscPort});
+  ares::Nintendo64::option("OSC Enabled", settings.nintendo64.oscEnabled);
 
   if(!ares::Nintendo64::load(root, {"[Nintendo] ", name, " (", region, ")"})) return otherError;
 
