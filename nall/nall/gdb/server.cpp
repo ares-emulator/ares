@@ -218,7 +218,7 @@ namespace nall::GDB {
 
       case 'p': // read specific register (e.g.: "p15")
         if(hooks.regRead) {
-          u32 regIdx = cmdName.slice(1).integer();
+          u32 regIdx = cmdName.slice(1).hex();
           return hooks.regRead(regIdx);
         } else {
           return "00000000";
