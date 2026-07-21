@@ -31,24 +31,67 @@ struct Cartridge {
   } ramDevice{*this};
 
   struct Flash : Memory::Writable, PIDevice {
+    struct Model {
+      const char* name;
+      u16 manufacturerId;
+      u16 deviceId;
+      bool wordIndexed;
+      u32 sectorEraseClocks;
+      u32 chipEraseClocks;
+      u32 programClocks;
+    };
+    static const Model models[];
+
     auto piAddress(u32 address, PIDeviceTiming timing) -> bool override;
     auto piReadHalf(PIDeviceTiming timing) -> maybe<u16> override;
     auto piWriteHalf(u16 data, PIDeviceTiming timing) -> void override;
 
-    //flash.cpp
-    auto readHalf(u32 address) -> u64;
-    auto writeHalf(u32 address, u64 data) -> void;
-    auto writeWord(u32 address, u64 data) -> void;
+    auto setModel(string name) -> void;
+    auto power(bool reset) -> void;
+    auto finish() -> void;
     auto serialize(serializer& s) -> void;
 
-    enum class Mode : u32 { Idle, Erase, Write, Read, Status };
-    Mode mode = Mode::Idle;
-    u64  status = 0;
-    u32  source = 0;
-    u32  offset = 0;
-    u32  piAddr = 0;
-    u16  writeLatch = 0;
-    n1   writeLatchValid;
+    auto macronix() const -> bool { return model->manufacturerId == 0x00c2; }
+    auto matsushita() const -> bool { return model->manufacturerId == 0x0032; }
+
+    enum class Mode : u32 { ReadArray, Status, SiliconID, LoadBytePage };
+    enum class EraseSetup : u32 { None, Chip, Sector };
+    enum class Busy : u32 { None, Erase, Program };
+
+    struct Status {
+      n8 data = 0;
+      auto wsmReady()     { return data.bit(7); }
+      auto eraseOk()      { return data.bit(3); }
+      auto programOk()    { return data.bit(2); }
+      auto eraseBusy()    { return data.bit(1); }
+      auto programBusy()  { return data.bit(0); }
+      auto ok()           { return data.bit(2, 3); }
+      auto busy()         { return data.bit(0, 1); }
+      auto serialize(serializer& s) -> void { s(data); }
+    };
+
+    const Model* model = &models[3];
+    Mode mode = Mode::ReadArray;
+    Status status;
+    EraseSetup eraseSetup = EraseSetup::None;
+    n3  eraseSector = 0;
+    Busy busy = Busy::None;
+    u8  pageBuffer[128];
+    u32 piOffset = 0;
+    n1  cirHighValid;
+    u16 cirHigh = 0;
+    n1  openBus;
+    n1  statusStale;
+    u16 statusStaleValue = 0;
+    u8  pendingModeCmd = 0;
+    u8  pendingModeCount = 0;
+    u16 burstIndex = 0;
+
+  private:
+    auto command(u32 data) -> void;
+    auto wrapMask() const -> u32 { return model->wordIndexed ? 0x3fff : 0x7fff; }
+    auto arrayOffset(u32 flashOffset) const -> u32;
+    auto siliconHalf(u32 halfIndex) const -> u16;
   } flash;
 
   struct ISViewer : PIDevice {
@@ -91,9 +134,9 @@ struct Cartridge {
   } rtc{*this};
 
   struct Debugger {
-    //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload(Node::Object) -> void;
+    auto flash(u32 command) -> void;
 
     struct Memory {
       Node::Debugger::Memory rom;
@@ -101,6 +144,10 @@ struct Cartridge {
       Node::Debugger::Memory eeprom;
       Node::Debugger::Memory flash;
     } memory;
+
+    struct Tracer {
+      Node::Debugger::Tracer::Notification flash;
+    } tracer;
   } debugger;
 
   Memory::Writable16 eeprom;

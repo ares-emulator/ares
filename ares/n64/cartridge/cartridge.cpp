@@ -43,6 +43,7 @@ auto Cartridge::connect() -> void {
   if(auto fp = pak->read("save.flash")) {
     flash.allocate(fp->size());
     flash.load(fp);
+    flash.setModel(pak->attribute("flash/model"));
   }
 
   rtc.load();
@@ -100,11 +101,7 @@ auto Cartridge::save() -> void {
 }
 
 auto Cartridge::power(bool reset) -> void {
-  flash.mode = Flash::Mode::Idle;
-  flash.status = 0;
-  flash.source = 0;
-  flash.offset = 0;
-  flash.writeLatchValid = false;
+  flash.power(reset);
   isviewer.ram.fill(0);
   rtc.power(reset);
 }

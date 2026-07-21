@@ -91,6 +91,7 @@ auto CPU::synchronize() -> void {
     case Queue::SI_BUS_Write:  return si.writeFinished();
     case Queue::RTC_Tick:      return cartridge.rtc.tick();
     case Queue::EEPROM_Write:  return cartridge.eepromFinish();
+    case Queue::Flash_Complete: return cartridge.flash.finish();
     case Queue::DD_Clock_Tick:  return dd.rtc.tickClock();
     case Queue::DD_MECHA_Response:  return dd.mechaResponse();
     case Queue::DD_BM_Request:  return dd.bmRequest();
