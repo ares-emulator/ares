@@ -128,6 +128,7 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x00: {  //icache index invalidate
     auto& line = icache.line(access.vaddr);
+    line.tagKey = access.paddr & ~0xfff;
     line.setValid(false);
     break;
   }
@@ -141,15 +142,8 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x08: {  //icache store tag
     auto& line = icache.line(access.vaddr);
-    const bool v = scc.tagLo.primaryCacheState.bit(1);
-    if(v) {
-      line.tagKey = scc.tagLo.physicalAddress & ~0xfffu;
-      line.setValid(true);
-    } else {
-      line.tagKey = 0;
-    }
-    if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE CPCS=1");
-    if(scc.tagLo.primaryCacheState == 0b11) debug(unusual, "[CPU] CACHE CPCS=3");
+    line.tagKey = scc.tagLo.physicalAddress & ~0xfffu;
+    line.setValid(scc.tagLo.primaryCacheState.bit(1));
     break;
   }
 
