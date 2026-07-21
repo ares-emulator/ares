@@ -33,12 +33,14 @@ auto DD::load(Node::Object parent) -> void {
   rtc.load();
 
   debugger.load(parent->append<Node::Object>("Nintendo 64DD"));
+  pi.attach(dd, 2);
 }
 
 auto DD::unload() -> void {
   if(!node) return;
   disconnect();
 
+  pi.detach(dd);
   debugger = {};
   iplrom.reset();
   c2s.reset();

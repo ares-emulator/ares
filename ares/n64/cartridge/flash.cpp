@@ -1,6 +1,32 @@
-auto Cartridge::Flash::readByte(u32 address) -> u64 {
-  debug(unusual, "[Cartridge::Flash::readByte] mode=", (u32)mode);
-  return 0;
+auto Cartridge::Flash::piAddress(u32 address, PIDeviceTiming) -> bool {
+  if(address < 0x0800'0000 || address > 0x0fff'ffff) return false;
+  piAddr = address;
+  writeLatchValid = false;
+  return true;
+}
+
+auto Cartridge::Flash::piReadHalf(PIDeviceTiming) -> maybe<u16> {
+  u16 data = readHalf(piAddr);
+  piAddr += 2;
+  return data;
+}
+
+auto Cartridge::Flash::piWriteHalf(u16 data, PIDeviceTiming) -> void {
+  if(mode == Mode::Write) {
+    writeHalf(piAddr, data);
+    piAddr += 2;
+    return;
+  }
+  if(!writeLatchValid) {
+    writeLatch = data;
+    writeLatchValid = true;
+    piAddr += 2;
+    return;
+  }
+  u32 word = (u32)writeLatch << 16 | data;
+  writeWord(piAddr - 2, word);
+  writeLatchValid = false;
+  piAddr += 2;
 }
 
 auto Cartridge::Flash::readHalf(u32 address) -> u64 {
@@ -21,26 +47,8 @@ auto Cartridge::Flash::readHalf(u32 address) -> u64 {
   return 0;
 }
 
-auto Cartridge::Flash::readWord(u32 address) -> u64 {
-  switch(address & 4) { default:
-  case 0: return status >> 32;
-  case 4: return status >>  0;
-  }
-}
-
-auto Cartridge::Flash::readDual(u32 address) -> u64 {
-  debug(unusual, "[Cartridge::Flash::readDual] mode=", (u32)mode);
-  return 0;
-}
-
-auto Cartridge::Flash::writeByte(u32 address, u64 data) -> void {
-  debug(unusual, "[Cartridge::Flash::writeByte] mode=", (u32)mode);
-  return;
-}
-
 auto Cartridge::Flash::writeHalf(u32 address, u64 data) -> void {
   if(mode == Mode::Write) {
-    //writes are deferred until the flash execute command is sent later
     source = pi.io.dramAddress;
     return;
   }
@@ -85,7 +93,6 @@ auto Cartridge::Flash::writeWord(u32 address, u64 data) -> void {
     }
     if(mode == Mode::Write) {
       for(u32 index = 0; index < 128; index += 2) {
-        // FIXME: this is obviously wrong, the flash can't access RDRAM
         u16 half = rdram.ram.read<Half>(source + index, RBusDevice::ARES_FLASH);
         Memory::Writable::write<Half>(offset + index, half);
       }
@@ -106,11 +113,6 @@ auto Cartridge::Flash::writeWord(u32 address, u64 data) -> void {
     debug(unusual, "[Cartridge::Flash::writeWord] command=", hex(command, 2L));
     return;
   }
-}
-
-auto Cartridge::Flash::writeDual(u32 address, u64 data) -> void {
-  debug(unusual, "[Cartridge::Flash::writeDual] mode=", (u32)mode);
-  return;
 }
 
 auto Cartridge::Flash::serialize(serializer& s) -> void {
