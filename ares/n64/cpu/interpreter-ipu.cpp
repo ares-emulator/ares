@@ -135,15 +135,16 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x04: {  //icache load tag
     auto& line = icache.line(access.vaddr);
-    scc.tagLo.primaryCacheState = line.valid() ? 2 : 0;
-    scc.tagLo.physicalAddress   = line.tagKey & ~0xfffu;
+    scc.tagLo.value = 0;
+    scc.tagLo.setPrimaryCacheState(line.valid() ? 2 : 0);
+    scc.tagLo.setPhysicalAddress(line.tagKey);
     break;
   }
 
   case 0x08: {  //icache store tag
     auto& line = icache.line(access.vaddr);
-    line.tagKey = scc.tagLo.physicalAddress & ~0xfffu;
-    line.setValid(scc.tagLo.primaryCacheState.bit(1));
+    line.tagKey = scc.tagLo.physicalAddress();
+    line.setValid(scc.tagLo.primaryCacheState().bit(1));
     break;
   }
 
@@ -183,15 +184,16 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x05: {  //dcache index load tag
     auto& line = dcache.line(access.vaddr);
-    scc.tagLo.primaryCacheState = line.valid() ? 3 : 0;
-    scc.tagLo.physicalAddress   = line.tagKey & ~0xfffu;
+    scc.tagLo.value = 0;
+    scc.tagLo.setPrimaryCacheState(line.valid() ? 3 : 0);
+    scc.tagLo.setPhysicalAddress(line.tagKey);
     break;
   }
 
   case 0x09: {  //dcache index store tag
     auto& line = dcache.line(access.vaddr);
-    line.tagKey = scc.tagLo.physicalAddress & ~0xfffu;
-    line.setValid(scc.tagLo.primaryCacheState.bit(1));
+    line.tagKey = scc.tagLo.physicalAddress();
+    line.setValid(scc.tagLo.primaryCacheState().bit(1));
     break;
   }
 

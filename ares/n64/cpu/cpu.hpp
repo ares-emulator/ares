@@ -694,8 +694,13 @@ struct CPU : Thread {
 
     //28
     struct TagLo {
-      n2  primaryCacheState;
-      n32 physicalAddress;
+      auto primaryCacheState() const -> n2 { return value.bit(6,7); }
+      auto physicalAddress() const -> n32 { return value.bit(8,27) << 12; }
+
+      auto setPrimaryCacheState(n2 state) -> void { value.bit(6,7) = state; }
+      auto setPhysicalAddress(n32 address) -> void { value.bit(8,27) = address >> 12; }
+
+      n32 value;
     } tagLo;
 
     //30: Error Exception Program Counter
