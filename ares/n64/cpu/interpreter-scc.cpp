@@ -117,8 +117,7 @@ auto CPU::getControlRegister(n5 index) -> u64 {
     data.bit(0,31) = scc.cacheError.unused;
     break;
   case 28:  //taglo
-    data.bit(6, 7) = scc.tagLo.primaryCacheState;
-    data.bit(8,27) = scc.tagLo.physicalAddress.bit(12,31);
+    data.bit(0,31) = scc.tagLo.value;
     break;
   case 29:  //taghi
     data.bit(0,31) = 0;
@@ -255,8 +254,7 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.cacheError.unused = 0; // emux spec: writes reset this register to the hardware value (0)
     break;
   case 28:  //taglo
-    scc.tagLo.primaryCacheState          = data.bit(6, 7);
-    scc.tagLo.physicalAddress.bit(12,31) = data.bit(8,27);
+    scc.tagLo.value = data.bit(0,31);
     break;
   case 29:  //taghi
     break;
@@ -315,7 +313,7 @@ auto CPU::MTC0(cr64& rt, u8 rd) -> void {
   if(!context.kernelMode()) {
     if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
   }
-  setControlRegister(rd, s32(rt.u32));
+  setControlRegister(rd, rt.u64);
 }
 
 auto CPU::TLBP() -> void {

@@ -113,8 +113,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.xcontext.pageTableEntryBase);
   s(scc.parityError.diagnostic);
   s(scc.cacheError.unused);
-  s(scc.tagLo.primaryCacheState);
-  s(scc.tagLo.physicalAddress);
+  s(scc.tagLo.value);
   s(scc.epcError);
   s(scc.latch);
   s(scc.nmiPending);
