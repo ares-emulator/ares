@@ -85,6 +85,7 @@ namespace ares::Nintendo64 {
       SI_BUS_Write,
       RTC_Tick,
       EEPROM_Write,
+      Flash_Complete,
       DD_Clock_Tick,
       DD_MECHA_Response,
       DD_BM_Request,
