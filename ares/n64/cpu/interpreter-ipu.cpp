@@ -177,17 +177,19 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x01: {  //dcache index write back invalidate
     auto& line = dcache.line(access.vaddr);
-    if(line.valid() && line.dirty) {
+    bool valid = line.valid();
+    if(valid && line.dirty) {
       line.writeBack();
       profile.dcacheWritebacks++;
     }
+    if(valid) line.tagKey = access.paddr & ~0xfff;
     line.setValid(false);
     break;
   }
 
   case 0x05: {  //dcache index load tag
     auto& line = dcache.line(access.vaddr);
-    scc.tagLo.primaryCacheState = line.valid() << 1 | (line.dirty != 0);
+    scc.tagLo.primaryCacheState = line.valid() ? 3 : 0;
     scc.tagLo.physicalAddress   = line.tagKey & ~0xfffu;
     break;
   }
@@ -196,30 +198,26 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
     auto& line = dcache.line(access.vaddr);
     line.tagKey = scc.tagLo.physicalAddress & ~0xfffu;
     line.setValid(scc.tagLo.primaryCacheState.bit(1));
-    line.dirty = scc.tagLo.primaryCacheState.bit(0);
-    if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE DPCS=1");
-    if(scc.tagLo.primaryCacheState == 0b10) debug(unusual, "[CPU] CACHE DPCS=2");
     break;
   }
 
   case 0x0d: {  //dcache create dirty exclusive
     auto& line = dcache.line(access.vaddr);
-    if(!line.hit(access.paddr) && line.dirty) {
-      line.writeBack();
-      profile.dcacheWritebacks++;
+    if(!line.hit(access.paddr)) {
+      if(line.valid() && line.dirty) {
+        line.writeBack();
+        profile.dcacheWritebacks++;
+      }
+      line.dirty = 0;
     }
     line.tagKey = access.paddr & ~0xfff;
     line.setValid(true);
-    line.dirty  = 1;
     break;
   }
 
   case 0x11: {  //dcache hit invalidate
     auto& line = dcache.line(access.vaddr);
-    if(line.hit(access.paddr)) {
-      line.setValid(false);
-      line.dirty = 0;
-    }
+    if(line.hit(access.paddr)) line.setValid(false);
     break;
   }
 
@@ -240,6 +238,7 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
     if(line.hit(access.paddr)) {
       if(line.dirty) {
         line.writeBack();
+        line.dirty = 0;
         profile.dcacheWritebacks++;
       }
     }
