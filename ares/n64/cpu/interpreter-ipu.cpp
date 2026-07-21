@@ -670,7 +670,6 @@ auto CPU::SB(cr64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::SC(r64& rt, cr64& rs, s16 imm) -> void {
   if(scc.llbit) {
-    scc.llbit = 0;
     rt.u64 = write<Word>(rs.u64 + imm, rt.u32);
   } else {
     rt.u64 = 0;
@@ -680,7 +679,6 @@ auto CPU::SC(r64& rt, cr64& rs, s16 imm) -> void {
 auto CPU::SCD(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   if(scc.llbit) {
-    scc.llbit = 0;
     rt.u64 = write<Dual>(rs.u64 + imm, rt.u64);
   } else {
     rt.u64 = 0;

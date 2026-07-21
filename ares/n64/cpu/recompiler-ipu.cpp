@@ -359,7 +359,6 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
         mov32_u16(mem(reg(2), DcacheLineDirtyOff), imm(1));
       }
     }
-    if(storeConditional && (size == Word || size == Dual)) mov32_u8(SccLlbit, imm(0));
   } else if(floating) {
     and32(reg(3), reg(0), imm(size == Dual ? 0x08 : 0x0c));
     add64(reg(3), reg(2), reg(3));
