@@ -3,34 +3,42 @@ struct Cartridge {
   VFS::Pak pak;
   Memory::Readable16 rom;
   Memory::Writable16 ram;
-  struct Flash : Memory::Writable {
-    template<u32 Size>
-    auto read(u32 address) -> u64 {
-      if constexpr(Size == Byte) return readByte(address);
-      if constexpr(Size == Half) return readHalf(address);
-      if constexpr(Size == Word) return readWord(address);
-      if constexpr(Size == Dual) return readDual(address);
-      unreachable;
-    }
 
-    template<u32 Size>
-    auto write(u32 address, u64 data) -> void {
-      if constexpr(Size == Byte) return writeByte(address, data);
-      if constexpr(Size == Half) return writeHalf(address, data);
-      if constexpr(Size == Word) return writeWord(address, data);
-      if constexpr(Size == Dual) return writeDual(address, data);
+  struct RomDevice : PIDeviceMemory {
+    Cartridge& self;
+    RomDevice(Cartridge& self) : self(self) {}
+    auto piAddress(u32 address, PIDeviceTiming timing) -> bool override {
+      if(!timing.fasterThan(min)) return false;
+      if(address < 0x1000'0000 || address >= 0x1000'0000 + self.rom.size) return false;
+      piView = {self.rom.data, self.rom.size};
+      piViewOffset = address - 0x1000'0000;
+      piViewWritable = false;
+      return true;
     }
+  } romDevice{*this};
+
+  struct RamDevice : PIDeviceMemory {
+    Cartridge& self;
+    RamDevice(Cartridge& self) : self(self) {}
+    auto piAddress(u32 address, PIDeviceTiming timing) -> bool override {
+      if(!timing.fasterThan(min)) return false;
+      if(address < 0x0800'0000 || address > 0x0fff'ffff) return false;
+      piView = {self.ram.data, self.ram.size};
+      piViewOffset = (address - 0x0800'0000) & self.ram.maskByte;
+      piViewWritable = true;
+      return true;
+    }
+  } ramDevice{*this};
+
+  struct Flash : Memory::Writable, PIDevice {
+    auto piAddress(u32 address, PIDeviceTiming timing) -> bool override;
+    auto piReadHalf(PIDeviceTiming timing) -> maybe<u16> override;
+    auto piWriteHalf(u16 data, PIDeviceTiming timing) -> void override;
 
     //flash.cpp
-    auto readByte(u32 adddres) -> u64;
     auto readHalf(u32 address) -> u64;
-    auto readWord(u32 address) -> u64;
-    auto readDual(u32 address) -> u64;
-    auto writeByte(u32 address, u64 data) -> void;
     auto writeHalf(u32 address, u64 data) -> void;
     auto writeWord(u32 address, u64 data) -> void;
-    auto writeDual(u32 address, u64 data) -> void;
-    
     auto serialize(serializer& s) -> void;
 
     enum class Mode : u32 { Idle, Erase, Write, Read, Status };
@@ -38,19 +46,26 @@ struct Cartridge {
     u64  status = 0;
     u32  source = 0;
     u32  offset = 0;
+    u32  piAddr = 0;
+    u16  writeLatch = 0;
+    n1   writeLatchValid;
   } flash;
-  struct ISViewer : Memory::PI<ISViewer> {
+
+  struct ISViewer : PIDevice {
     Memory::Writable ram;
     Node::Debugger::Tracer::Notification tracer;
+    u32 piAddr = 0;
 
     auto enabled() -> bool { return ram.size; }
+
+    auto piAddress(u32 address, PIDeviceTiming timing) -> bool override;
+    auto piReadHalf(PIDeviceTiming timing) -> maybe<u16> override;
+    auto piWriteHalf(u16 data, PIDeviceTiming timing) -> void override;
 
     //isviewer.cpp
     auto messageChar(char c) -> void;
     auto readHalf(u32 address) -> u16;
     auto writeHalf(u32 address, u16 data) -> void;
-    auto readWord(u32 address) -> u32;
-    auto writeWord(u32 address, u32 data) -> void;
   } isviewer;
 
   struct RTC {

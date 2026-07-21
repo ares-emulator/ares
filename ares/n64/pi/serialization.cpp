@@ -19,4 +19,9 @@ auto PI::serialize(serializer& s) -> void {
   s(bsd2.pulseWidth);
   s(bsd2.pageSize);
   s(bsd2.releaseDuration);
+
+  s(busDevice);
+  s(busTiming.latency);
+  s(busTiming.pulseWidth);
+  s(busTiming.releaseDuration);
 }

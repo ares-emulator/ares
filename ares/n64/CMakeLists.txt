@@ -205,6 +205,7 @@ ares_add_sources(
   INCLUDED #
     pi/bus.hpp
     pi/debugger.cpp
+    pi/device.hpp
     pi/dma.cpp
     pi/io.cpp
     pi/pi.hpp
