@@ -101,7 +101,8 @@ computeStateKey() includes:
 - privilege and addressing-mode context;
 - floating-point mode and exception-control bits;
 - watchpoint activity;
-- GP/SP-derived predicates used by memory fast paths.
+- GP/SP-derived predicates used by memory fast paths;
+- RDRAM DeviceId identity mapping (direct ram.data access is only safe when true).
 
 Lookup identity uses both stateKey and vaddrPage. Using both is important:
 different virtual mappings can share the same physical cache section, but still
@@ -257,6 +258,7 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   stateKey.setSpAligned4((sp & 3) == 0);
   stateKey.setSpAligned8((sp & 7) == 0);
   stateKey.setWatchpointsActive(GDB::server.hasWatchpoints());
+  stateKey.setRdramMapIdentity(rdram.mapIdentity);
   return stateKey;
 }
 
@@ -810,19 +812,23 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
       const u32 lineIndex = u32(slow.vaddr >> 5) & 0x1ffu;
       const u32 burst = (slow.icachePaddr & ~0xfffu) | ((lineIndex << 5) & 0xfe0u);
       const u32 tagKey = (slow.icachePaddr & ~0xfffu) | 1u;
-      const bool sdram = Model::Aleck64() && burst > 0xbfff'ffffu;
-      const sljit_sw ramDataField = sdram ? (sljit_sw)(uintptr_t)&aleck64.sdram.data
-                                           : (sljit_sw)(uintptr_t)&rdram.ram.data;
-      const u32 ramByteOff = sdram ? (burst & 0xffffffu) : burst;
-      if(system.homebrewMode) {
-        add64(ProfileIcacheMissesMem, ProfileIcacheMissesMem, imm(1));
-        if(!sdram) add64(mem0(RdramRbusIcacheReadsAddr), mem0(RdramRbusIcacheReadsAddr), imm(ICache));
+      if(!emitStateKey.rdramMapIdentity()) {
+        callf(&CPU::icacheFillLine, imm64(slow.vaddr), imm(slow.icachePaddr));
+      } else {
+        const bool sdram = Model::Aleck64() && burst > 0xbfff'ffffu;
+        const sljit_sw ramDataField = sdram ? (sljit_sw)(uintptr_t)&aleck64.sdram.data
+                                             : (sljit_sw)(uintptr_t)&rdram.ram.data;
+        const u32 ramByteOff = sdram ? (burst & 0xffffffu) : burst;
+        if(system.homebrewMode) {
+          add64(ProfileIcacheMissesMem, ProfileIcacheMissesMem, imm(1));
+          if(!sdram) add64(mem0(RdramRbusIcacheReadsAddr), mem0(RdramRbusIcacheReadsAddr), imm(ICache));
+        }
+        emitCpuStep(96);
+        mov32(IcacheTagKeyMem(lineIndex), imm(tagKey));
+        mov64(reg(1), mem0(ramDataField));
+        mov128(IcacheLineWordsMem(lineIndex, 0x00), mem(reg(1), sljit_sw(ramByteOff + 0x00)));
+        mov128(IcacheLineWordsMem(lineIndex, 0x10), mem(reg(1), sljit_sw(ramByteOff + 0x10)));
       }
-      emitCpuStep(96);
-      mov32(IcacheTagKeyMem(lineIndex), imm(tagKey));
-      mov64(reg(1), mem0(ramDataField));
-      mov128(IcacheLineWordsMem(lineIndex, 0x00), mem(reg(1), sljit_sw(ramByteOff + 0x00)));
-      mov128(IcacheLineWordsMem(lineIndex, 0x10), mem(reg(1), sljit_sw(ramByteOff + 0x10)));
     } else {
       // Generic opcode slow path.
       emitPcMode = slow.runtimePc ? EmitPcMode::Runtime : EmitPcMode::JitTime;

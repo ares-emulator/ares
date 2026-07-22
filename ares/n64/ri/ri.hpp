@@ -17,6 +17,9 @@ struct RI : Memory::RCP<RI> {
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto power(bool reset) -> void;
+  auto active() const -> bool { return io.currentLoaded && io.select == 0x14; }
+  auto ackError() -> void { io.error.bit(0) = 1; }
+  auto checkRefresh() -> void;
 
   //io.cpp
   auto readWord(u32 address, Thread& thread) -> u32;
@@ -32,9 +35,12 @@ struct RI : Memory::RCP<RI> {
     n32 select;
     n32 refresh;
     n32 latency;
-    n32 readError;
-    n32 writeError;
+    n32 error;
+    n32 bankStatus;
+    n1  currentLoaded;
   } io;
+
+  n1 refreshWarned;
 };
 
 extern RI ri;

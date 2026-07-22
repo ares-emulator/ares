@@ -176,6 +176,10 @@ auto CPU::instructionPrologue(u64 address, u32 instruction) -> void {
   debugger.instruction(address, instruction);
 }
 
+auto CPU::icacheFillLine(u64 vaddr, u32 paddr) -> void {
+  icache.line(vaddr).fill(paddr, *this);
+}
+
 template<bool Recompiled>
 auto CPU::instructionEpilogue() -> void {
   if constexpr(!Recompiled) {

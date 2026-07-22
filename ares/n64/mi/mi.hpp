@@ -31,6 +31,7 @@ struct MI : Memory::RCP<MI> {
   auto writeWord(u32 address, u32 data, Thread& thread) -> void;
   auto initializeMode() -> bool { bool m = io.initializeMode; io.initializeMode = 0; return m; }
   auto initializeLength() -> n7 { return io.initializeLength; }
+  auto upperMode() const -> bool { return io.rdramRegisterSelect; }
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
