@@ -769,7 +769,7 @@ auto Nintendo64::analyze(std::vector<u8>& data) -> string {
     if(config.bit(4,7) == 1) {eeprom = 512;}
     if(config.bit(4,7) == 2) {eeprom = 2_KiB;}
     if(config.bit(4,7) == 3) {sram = 32_KiB;}
-    //if(config.bit(4,7) == 4) {sram = 96_KiB;}   //banked SRAM, not supported yet
+    if(config.bit(4,7) == 4) {sram = 96_KiB;}
     if(config.bit(4,7) == 5) {flash = 128_KiB; flashModel = "Unknown";}
     if(config.bit(4,7) == 6) {sram = 128_KiB;}
     if(config.bit(0) == 1)   {rtc = true;}
