@@ -23,8 +23,17 @@ struct Cartridge {
     auto piAddress(u32 address, PIDeviceTiming timing) -> bool override {
       if(!timing.fasterThan(min)) return false;
       if(address < 0x0800'0000 || address > 0x0fff'ffff) return false;
-      piView = {self.ram.data, self.ram.size};
-      piViewOffset = (address - 0x0800'0000) & self.ram.maskByte;
+      u32 offset = address - 0x0800'0000;
+      if(self.ram.size > 32_KiB) {
+        u32 bank = offset >> 18;
+        if(bank >= self.ram.size >> 15) return false;
+        if((offset & 0x3ffff) >= 0x8000) return false;
+        piView = {self.ram.data + (bank << 15), 0x8000};
+        piViewOffset = offset & 0x7fff;
+      } else {
+        piView = {self.ram.data, self.ram.size};
+        piViewOffset = offset & self.ram.maskByte;
+      }
       piViewWritable = true;
       return true;
     }
