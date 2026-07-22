@@ -121,6 +121,7 @@ auto SuperFamicom::load() -> LoadResult {
   if(result != successful) return result;
 
   ares::SuperFamicom::option("Pixel Accuracy", settings.video.pixelAccuracy);
+  ares::SuperFamicom::option("Deterministic Entropy", settings.developer.deterministicEntropy);
 
   auto region = Emulator::region();
   if(!ares::SuperFamicom::load(root, {"[Nintendo] Super Famicom (", region, ")"})) return otherError;

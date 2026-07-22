@@ -18,6 +18,7 @@ auto load(Node::System& node, string name) -> bool {
 
 auto option(string name, string value) -> bool {
   if(name == "Pixel Accuracy") ppu.setAccurate(value.boolean());
+  if(name == "Deterministic Entropy") system.deterministicEntropy = value.boolean();
   return true;
 }
 
@@ -130,6 +131,7 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   random.entropy(Random::Entropy::Low);
+  if(deterministicEntropy) random.seed((n64)0);
 
   cpu.power(reset);
   smp.power(reset);

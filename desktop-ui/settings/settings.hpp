@@ -105,6 +105,7 @@ struct Settings : Markup::Node {
     bool debugServerEnabled = false; // if enabled, server starts with ares
     bool debugServerUseIPv4 = false; // forces IPv4 over IPv6
     bool homebrewMode = false;
+    bool deterministicEntropy = false;
     bool forceInterpreter = false;
   } developer;
 
@@ -435,6 +436,9 @@ struct DeveloperSettings : VerticalLayout {
   HorizontalLayout homebrewModeLayout{this, Size{~0, 0}, 5};
     CheckLabel homebrewMode{&homebrewModeLayout, Size{0, 0}, 5};
     Label homebrewModeHint{&homebrewModeLayout, Size{~0, layoutVertSize}};
+  HorizontalLayout deterministicEntropyLayout{this, Size{~0, 0}, 5};
+    CheckLabel deterministicEntropy{&deterministicEntropyLayout, Size{0, 0}, 5};
+    Label deterministicEntropyHint{&deterministicEntropyLayout, Size{~0, layoutVertSize}};
   HorizontalLayout forceInterpreterLayout{this, Size{~0, 0}, 5};
     CheckLabel forceInterpreter{&forceInterpreterLayout, Size{0, 0}, 5};
     Label forceInterpreterHint{&forceInterpreterLayout, Size{0, layoutVertSize}};
