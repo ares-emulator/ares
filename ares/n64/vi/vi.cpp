@@ -94,6 +94,7 @@ auto VI::main() -> void {
         #endif
         refreshed = true;
         screen->frame();
+        ri.checkRefresh();
       }
 
       if(io.halfLinesPerField.bit(0)) { // progressive

@@ -13,25 +13,17 @@ auto RI::readWord(u32 address, Thread& thread) -> u32 {
   }
 
   if(address == 2) {
-    //RI_CURRENT_LOAD
-    data = io.currentLoad;
+    //RI_CURRENT_LOAD (write-only; unintended read returns mixed bits)
+    data.bit(0) = io.error.bit(0);
+    data.bit(1) = 1;
+    data.bit(2) = 1;
+    data.bit(3) = io.mode.bit(3);
+    data.bit(4) = io.select.bit(4);
   }
 
   if(address == 3) {
     //RI_SELECT
     data = io.select;
-    if constexpr(!Accuracy::RDRAM::Broadcasting) {
-      //this register is read by IPL3 to check if RDRAM initialization should be
-      //skipped. if we are forcing it to be skipped, we should also consume
-      //enough cycles to not inadvertently speed up the boot process.
-      //Wave Race 64 Shindou Pak Taiou Version will freeze on the N64 logo if
-      //the SCC count register, which increments at half the CPU clock rate, has
-      //too small a value.
-      //after a cold boot on real hardware with no expansion pak and using the
-      //CIC-NUS-6102 IPL3, upon reaching the test ROM's entry point the count
-      //register was measured to be ~0x1184000.
-      cpu.step(17'641'000 * 2);
-    }
   }
 
   if(address == 4) {
@@ -45,13 +37,13 @@ auto RI::readWord(u32 address, Thread& thread) -> u32 {
   }
 
   if(address == 6) {
-    //RI_RERROR
-    data = io.readError;
+    //RI_ERROR
+    data = io.error;
   }
 
   if(address == 7) {
-    //RI_WERROR
-    data = io.writeError;
+    //RI_BANK_STATUS
+    data = io.bankStatus;
   }
 
   debugger.io(Read, address, data);
@@ -75,6 +67,7 @@ auto RI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
   if(address == 2) {
     //RI_CURRENT_LOAD
     io.currentLoad = data;
+    io.currentLoaded = 1;
   }
 
   if(address == 3) {
@@ -93,13 +86,13 @@ auto RI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
   }
 
   if(address == 6) {
-    //RI_RERROR
-    io.readError = data;
+    //RI_ERROR
+    io.error = 0;
   }
 
   if(address == 7) {
-    //RI_WERROR
-    io.writeError = data;
+    //RI_BANK_STATUS
+    io.bankStatus = 0x00ff;
   }
 
   debugger.io(Write, address, data);

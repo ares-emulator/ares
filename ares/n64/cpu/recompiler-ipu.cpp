@@ -92,7 +92,8 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
   }
   if(emitSlowPath || emitStateKey.watchpointsActive() || (require64 && reservedInstruction64())
   || (store && size == Dual && (partialLeft || partialRight) && system.homebrewMode)
-  || (floating && !emitStateKey.coprocessor1Enabled())) {
+  || (floating && !emitStateKey.coprocessor1Enabled())
+  || !emitStateKey.rdramMapIdentity()) {
     return fallback();
   }
 

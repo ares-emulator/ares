@@ -18,17 +18,18 @@ auto RI::unload() -> void {
 }
 
 auto RI::power(bool reset) -> void {
-  io = {};
-  if constexpr(!Accuracy::RDRAM::Broadcasting) {
-    //simulate PIF ROM RDRAM power-on self test
-    io.mode    = 0x0e;
-    io.config  = 0x40;
-    io.select  = 0x14;
-    io.refresh = 0x0006'3634;
+  if(!reset) {
+    io = {};
+    refreshWarned = 0;
+  }
+}
 
-    //store RDRAM size result into memory
-    rdram.ram.write<Word>(0x318, rdram.ram.size, RBusDevice::ARES_IPL3);  //CIC-NUS-6102
-    rdram.ram.write<Word>(0x3f0, rdram.ram.size, RBusDevice::ARES_IPL3);  //CIC-NUS-6105
+auto RI::checkRefresh() -> void {
+  if(refreshWarned) return;
+  if(!system.homebrewMode) return;
+  if(!io.refresh.bit(17)) {
+    debug(unusual, "[RI] automatic RDRAM refresh is not enabled");
+    refreshWarned = 1;
   }
 }
 

@@ -197,6 +197,12 @@ auto RDP::flushCommands() -> void {
   command.bufferBusy = 1;
   command.pipeBusy = 1;
   command.startGclk = 1;
-  if(command.end > command.current) render();
+  if(command.end > command.current) {
+    if(!mapIdentityWarned && !rdram.mapIdentity) {
+      debug(unusual, "[RDP] started while RDRAM DeviceId map is non-identity");
+      mapIdentityWarned = 1;
+    }
+    render();
+  }
   command.ready = 1;
 }

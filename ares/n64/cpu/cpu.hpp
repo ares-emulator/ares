@@ -46,6 +46,7 @@ struct CPU : Thread {
   auto instructionPrologue(u64 address, u32 instruction) -> void;
   template<bool Recompiled> auto instructionEpilogue() -> void;
   auto raiseCoprocessor1Exception() -> void;
+  auto icacheFillLine(u64 vaddr, u32 paddr) -> void;
 
   auto power(bool reset) -> void;
 
@@ -1057,6 +1058,9 @@ struct CPU : Thread {
 
       auto watchpointsActive() const -> bool { return data.bit(25); }
       auto setWatchpointsActive(bool value) -> void { data.bit(25) = value; }
+
+      auto rdramMapIdentity() const -> bool { return data.bit(26); }
+      auto setRdramMapIdentity(bool value) -> void { data.bit(26) = value; }
 
       n64 data = 0;
     };

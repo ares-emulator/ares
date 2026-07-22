@@ -10,8 +10,8 @@ auto RI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "RI_SELECT",
     "RI_REFRESH",
     "RI_LATENCY",
-    "RI_RERROR",
-    "RI_WERROR",
+    "RI_ERROR",
+    "RI_BANK_STATUS",
   };
 
   if(unlikely(tracer.io->enabled())) {

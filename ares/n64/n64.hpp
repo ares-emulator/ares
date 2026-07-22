@@ -118,7 +118,6 @@ namespace ares::Nintendo64 {
     //Virtual devices (internal to Ares)
     ARES_DEBUGGER = NUM_RBUS_HW_DEVICES,
     ARES_JIT,
-    ARES_IPL3,
     ARES_FLASH,
 
     NUM_RBUS_DEVICES,
