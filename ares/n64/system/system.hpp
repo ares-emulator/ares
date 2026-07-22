@@ -2,6 +2,7 @@ struct System {
   Node::System node;
   VFS::Pak pak;
   bool homebrewMode = false;
+  bool deterministicEntropy = false;
   bool expansionPak = true;
   u8 configuredControllerPakBankCount = 1;
   u8 controllerPakBankCount = 1;
@@ -48,6 +49,7 @@ private:
 };
 
 extern System system;
+extern Random random;
 
 auto Model::Nintendo64() -> bool { return system.model() == System::Model::Nintendo64; }
 auto Model::Aleck64() -> bool { return system.model() == System::Model::Aleck64; }

@@ -35,6 +35,7 @@ auto option(string name, string value) -> bool {
   vulkan.outputUpscale = vulkan.supersampleScanout ? 1 : vulkan.internalUpscale;
   #endif
   if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
+  if(name == "Deterministic Entropy") system.deterministicEntropy = value.boolean();
   if(name == "Recompiler") {
     if constexpr(Accuracy::CPU::Recompiler) {
       cpu.recompiler.enabled = value.boolean();
@@ -64,6 +65,7 @@ auto option(string name, string value) -> bool {
 
 System system;
 Queue queue;
+Random random;
 #include "serialization.cpp"
 
 auto System::game() -> string {
@@ -428,6 +430,15 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
+
+  if(!reset) {
+    if(deterministicEntropy) {
+      random.entropy(Random::Entropy::High);
+      random.seed((n64)0);
+    } else {
+      random.entropy(Random::Entropy::High);
+    }
+  }
 
   if constexpr(Accuracy::CPU::Recompiler || Accuracy::RSP::Recompiler) {
     ares::Memory::FixedAllocator::get().release();

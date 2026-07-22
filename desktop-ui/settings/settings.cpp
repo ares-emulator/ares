@@ -120,6 +120,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Developer/DebugServerEnabled", developer.debugServerEnabled);
   bind(boolean, "Developer/DebugServerUseIPv4", developer.debugServerUseIPv4);
   bind(boolean, "Developer/HomebrewMode", developer.homebrewMode);
+  bind(boolean, "Developer/DeterministicEntropy", developer.deterministicEntropy);
   bind(boolean, "Developer/ForceInterpreter", developer.forceInterpreter);
 
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
