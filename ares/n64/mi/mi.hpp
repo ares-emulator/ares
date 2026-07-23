@@ -29,9 +29,14 @@ struct MI : Memory::RCP<MI> {
   //io.cpp
   auto readWord(u32 address, Thread& thread) -> u32;
   auto writeWord(u32 address, u32 data, Thread& thread) -> void;
-  auto initializeMode() -> bool { bool m = io.initializeMode; io.initializeMode = 0; return m; }
-  auto initializeLength() -> n7 { return io.initializeLength; }
-  auto upperMode() const -> bool { return io.rdramRegisterSelect; }
+
+  //bus.hpp
+  template<u32 Size> auto readRdram(u32 address, RBusDevice device, Thread& thread) -> u64;
+  template<u32 Size> auto writeRdram(u32 address, u64 value, RBusDevice device, Thread& thread) -> void;
+  template<u32 Size> auto writeRdramRepeat(u32 address, u64 value) -> void;
+  template<u32 Size> auto readRdramBurst(u32 address, u32* data, RBusDevice device, Thread& thread) -> void;
+  template<u32 Size> auto writeRdramBurst(u32 address, u32* data, RBusDevice device, Thread& thread) -> void;
+  auto ebusFreeze() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -52,8 +57,8 @@ private:
   } irq;
 
   struct IO {
-    n7 initializeLength;
-    n1 initializeMode;
+    n7 repeatLength;
+    n1 repeatMode;
     n1 ebusTestMode;
     n1 rdramRegisterSelect;
   } io;
