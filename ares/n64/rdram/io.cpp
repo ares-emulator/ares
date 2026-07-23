@@ -16,11 +16,6 @@ auto RDRAM::readWord(u32 address, Thread& thread) -> u32 {
   }
 
   u32 index = (offset >> 2) & 15;
-  if((index & 1) && !mi.upperMode()) {
-    debugger.io(Read, select, index, 0);
-    return 0;
-  }
-
   auto chip = selectChip(select, false);
   if(!chip) {
     debugger.io(Read, select, index, 0);
@@ -32,11 +27,10 @@ auto RDRAM::readWord(u32 address, Thread& thread) -> u32 {
   return data;
 }
 
-auto RDRAM::writeWord(u32 address, u32 data, Thread& thread) -> void {
+auto RDRAM::writeWord(u32 address, u32 data, Thread& thread, u8 repeatLength) -> void {
   n1 broadcast = address >> 19 & 1;
   u32 select = address >> 10 & 0x1ff;
   u32 offset = address & 0x3ff;
-  n1 repeat = mi.initializeMode();
 
   if(!ri.active()) return;
 
@@ -57,7 +51,7 @@ auto RDRAM::writeWord(u32 address, u32 data, Thread& thread) -> void {
   if(broadcast) {
     for(auto& chip : chips) {
       if(!chip.present) continue;
-      writeRegister(chip, index, data, repeat);
+      writeRegister(chip, index, data, repeatLength);
     }
     debugger.io(Write, 0xff, index, data);
     return;
@@ -66,6 +60,6 @@ auto RDRAM::writeWord(u32 address, u32 data, Thread& thread) -> void {
   auto chip = selectChip(select, false);
   if(!chip) return;
 
-  writeRegister(*chip, index, data, repeat);
+  writeRegister(*chip, index, data, repeatLength);
   debugger.io(Write, chipIndex(chip), index, data);
 }

@@ -56,17 +56,21 @@ auto Vulkan::load(Node::Object) -> bool {
     if (!implementation) {
       platform->status("Vulkan init failed: No RDP rendering support");
       vulkan.enable = false;
+      rdram.hidden.data = nullptr;
     } else {
       platform->status("Vulkan Enabled: using paraLLEl-RDP");
+      rdram.hidden.data = (u8*)implementation->processor->begin_read_hidden_rdram();
     }
   } else {
     platform->status("Vulkan Disabled: No RDP rendering support");
+    rdram.hidden.data = nullptr;
   }
 
   return true;
 }
 
 auto Vulkan::unload() -> void {
+  rdram.hidden.data = nullptr;
   if (implementation) delete implementation;
   implementation = nullptr;
 }
@@ -226,7 +230,7 @@ Vulkan::Implementation::Implementation(u8* data, u32 size) {
   device.set_context(context);
   device.init_frame_contexts(3);
 
-  ::RDP::CommandProcessorFlags flags = 0;
+  ::RDP::CommandProcessorFlags flags = ::RDP::COMMAND_PROCESSOR_FLAG_HOST_VISIBLE_HIDDEN_RDRAM_BIT;
   switch(vulkan.internalUpscale) {
   case 2: flags |= ::RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT; break;
   case 4: flags |= ::RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_4X_BIT; break;

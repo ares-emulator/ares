@@ -1,5 +1,7 @@
 //RAMBUS RAM
 
+#include <n64/rdram/hidden.hpp>
+
 struct RDRAM : Memory::RCP<RDRAM> {
   Node::Object node;
 
@@ -56,60 +58,26 @@ struct RDRAM : Memory::RCP<RDRAM> {
     }
 
     template<u32 Size>
-    auto writeRepeat(u32 address, u64 value, u8 length) -> void {
-      if constexpr(Size == Byte) {
-        value = value & (0xFFFFFFFF >> (24 - (address & 3) * 8));
-        value = (u32)((value << 24) | (value >> 8));
-      } else if constexpr(Size == Half) {
-        value = value & (0xFFFFFFFF >> (16 - (address & 2) * 8));
-        value = (u32)((value << 16) | (value >> 16));
-      }
-      if constexpr(Size != Dual)
-        value = (value << 32) | (u32) value;
-
-      const u32 end = min((address & ~7) + length, size);
-      if(end <= address) return;
-
-      length = end - address;
-
-      if(address & 1) {
-        Memory::Writable::write<Byte>(address, value >> 56);
-        value = (value << 8) | (value >> 56);
-        address = (address & ~0x7FF) | ((address + 1) & 0x7FF);
-        length -= 1;
-      }
-      if((address & 2) && length >= 2) {
-        Memory::Writable::write<Half>(address, value >> 48);
-        value = (value << 16) | (value >> 48);
-        address = (address & ~0x7FF) | ((address + 2) & 0x7FF);
-        length -= 2;
-      }
-      if((address & 4) && length >= 4) {
-        Memory::Writable::write<Word>(address, value >> 32);
-        value = (value << 32) | (value >> 32);
-        address = (address & ~0x7FF) | ((address + 4) & 0x7FF);
-        length -= 4;
+    auto ebusRead(u32 address) -> u64 {
+      u32 mapped = address;
+      if(unlikely(!self.mapIdentity)) {
+        auto m = translate(address);
+        if(!m) {
+          ri.ackError();
+          return 0;
+        }
+        mapped = m();
+      } else {
+        if(address >= size) return 0;
       }
 
-      while(length >= 8) {
-        Memory::Writable::write<Dual>(address, value);
-        address = (address & ~0x7FF) | ((address + 8) & 0x7FF);
-        length -= 8;
-      }
-      if(length >= 4) {
-        Memory::Writable::write<Word>(address, value >> 32);
-        value <<= 32;
-        address += 4;
-        length -= 4;
-      }
-      if(length >= 2) {
-        Memory::Writable::write<Half>(address, value >> 48);
-        value <<= 16;
-        address += 2;
-        length -= 2;
-      }
-      if(length == 1)
-        Memory::Writable::write<Byte>(address, value >> 56);
+      u32 word = self.hidden.nibble(mapped & ~3);
+      if constexpr(Size == Byte) return word >> (24 - 8 * (mapped & 3)) & 0xff;
+      if constexpr(Size == Half) return word >> (16 - 8 * (mapped & 2)) & 0xffff;
+      if constexpr(Size == Word) return word;
+      if constexpr(Size == Dual)
+        return (u64)self.hidden.nibble(mapped + 0) << 32 | self.hidden.nibble(mapped + 4);
+      unreachable;
     }
 
     template<u32 Size>
@@ -118,7 +86,6 @@ struct RDRAM : Memory::RCP<RDRAM> {
         auto mapped = translate(address);
         if(!mapped) {
           if(device < RBusDevice::NUM_RBUS_HW_DEVICES) ri.ackError();
-          mi.initializeMode();
           return;
         }
         address = mapped();
@@ -127,19 +94,30 @@ struct RDRAM : Memory::RCP<RDRAM> {
       }
       if(unlikely(system.homebrewMode)) {
         self.debugger.writeWord(address, Size, value, device);
+        self.profile.metrics[(u32)device].writes += Size;
       }
-      if(unlikely(mi.initializeMode())) {
-        u32 len = mi.initializeLength() + 1;
-        writeRepeat<Size>(address, value, len);
-        if(unlikely(system.homebrewMode)) {
-          self.profile.metrics[(u32)device].writes += len;
+      Memory::Writable::write<Size>(address, value);
+      self.hidden.update<Size>(address, value);
+    }
+
+    template<u32 Size>
+    auto ebusWrite(u32 address, u64 value) -> void {
+      if(unlikely(!self.mapIdentity)) {
+        auto mapped = translate(address);
+        if(!mapped) {
+          ri.ackError();
+          return;
         }
+        address = mapped();
       } else {
-        Memory::Writable::write<Size>(address, value);
-        if(unlikely(system.homebrewMode)) {
-          self.profile.metrics[(u32)device].writes += Size;
-        }
+        if(address >= size) return;
       }
+      if(unlikely(system.homebrewMode)) {
+        self.debugger.writeWord(address, Size, value, RBusDevice::VR4300_UNCACHED);
+        self.profile.metrics[(u32)RBusDevice::VR4300_UNCACHED].writes += Size;
+      }
+      Memory::Writable::write<Size>(address, value);
+      self.hidden.ebusScatter<Size>(address, value);
     }
 
     template<u32 Size>
@@ -167,6 +145,7 @@ struct RDRAM : Memory::RCP<RDRAM> {
         Memory::Writable::write<Word>(address | 0x18, value[6]);
         Memory::Writable::write<Word>(address | 0x1c, value[7]);
       }
+      self.hidden.updateBurst<Size>(address, value);
     }
 
     template<u32 Size>
@@ -284,16 +263,17 @@ struct RDRAM : Memory::RCP<RDRAM> {
   auto selectChip(u32 select, bool broadcast) -> Chip*;
   auto chipIndex(Chip* chip) -> u32;
   auto readRegister(Chip& chip, u32 index) -> u32;
-  auto writeRegister(Chip& chip, u32 index, u32 data, bool repeat) -> void;
+  auto writeRegister(Chip& chip, u32 index, u32 data, u8 repeatLength = 0) -> void;
 
   //io.cpp
   auto readWord(u32 address, Thread& thread) -> u32;
-  auto writeWord(u32 address, u32 data, Thread& thread) -> void;
+  auto writeWord(u32 address, u32 data, Thread& thread, u8 repeatLength = 0) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
   Chip chips[4];
+  HiddenRAM hidden;
   n1 mapIdentity = 0;
 };
 

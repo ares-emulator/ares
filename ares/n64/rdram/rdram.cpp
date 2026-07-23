@@ -143,11 +143,11 @@ auto RDRAM::readRegister(Chip& chip, u32 index) -> u32 {
   return data;
 }
 
-auto RDRAM::writeRegister(Chip& chip, u32 index, u32 data, bool repeat) -> void {
+auto RDRAM::writeRegister(Chip& chip, u32 index, u32 data, u8 repeatLength) -> void {
   if(index >= 10) return;
 
   if(chip.writeDelay != 1) {
-    if(repeat && mi.initializeLength() >= 15) {
+    if(repeatLength >= 16) {
       data = data << 16 | data >> 16;
     } else {
       return;
