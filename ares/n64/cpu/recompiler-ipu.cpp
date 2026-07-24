@@ -2129,8 +2129,13 @@ auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> EmitExecute
     return EmitExecuteResult::MayFault;
   }
 
+  //CFC0
+  case 0x02: {
+    return EmitExecuteResult::Linear;
+  }
+
   //INVALID
-  case range2(0x02, 0x03): {
+  case 0x03: {
     setupCallf();
     callf(&CPU::INVALID);
     return EmitExecuteResult::MayFault;
@@ -2150,8 +2155,25 @@ auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> EmitExecute
     return EmitExecuteResult::MayFault;
   }
 
+  //CTC0
+  case 0x06: {
+    return EmitExecuteResult::Linear;
+  }
+
   //INVALID
-  case range10(0x06, 0x0f): {
+  case 0x07: {
+    setupCallf();
+    callf(&CPU::INVALID);
+    return EmitExecuteResult::MayFault;
+  }
+
+  //BC0
+  case 0x08: {
+    return EmitExecuteResult::Linear;
+  }
+
+  //INVALID
+  case range7(0x09, 0x0f): {
     setupCallf();
     callf(&CPU::INVALID);
     return EmitExecuteResult::MayFault;
@@ -2186,6 +2208,13 @@ auto CPU::Recompiler::emitSCC(u32 instruction, EmitPcMode pcMode) -> EmitExecute
   case 0x08: {
     setupCallf();
     callf(&CPU::TLBP);
+    return EmitExecuteResult::MayFault;
+  }
+
+  //RFE
+  case 0x10: {
+    setupCallf();
+    callf(&CPU::INVALID);
     return EmitExecuteResult::MayFault;
   }
 
