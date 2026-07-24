@@ -82,6 +82,21 @@ auto MCD::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
       && io.pramProtect == 0xff && io.pramBank == 0 && io.wramSwitchRequest) {
         // TODO: reset subcpu-controlled gate array registers (needs confirmation)
         // Notice: the subcpu bus is not released at this time.
+
+        // Normal MegaCD gate aray reset is still not implemented, but for the LaserActive, some work here is required
+        // in order for MegaCD game booting to work. We reset the CDD state here, followed by the PD6103A register
+        // block. This is needed to boot MegaCD games through the LaserActive bios, which performs this reset sequence
+        // when transitioning to the MegaCD subcpu bios. There appears to be an active block waiting for PD6103A output
+        // register 0x00 bit 0 to transition from 1 to 0. This only happens if input register 0x00 bit 0 changes from 1
+        // to 0, which there's no corresponding write to perform. This reset operation, when complete, will accomplish
+        // that, returning the PD6103A register block to defaults. The CDD block is also actively reading from the disc
+        // at the time, having just read the header information from the disc, and also needs to be reset in order for
+        // booting to be successful. When this is complete, the MegaCD subcpu bios will not touch the PD6103A register
+        // block directly anymore.
+        if (MegaLD()) {
+          mcd.cdd.power(true);
+          mcd.ld.power(true, true);
+        }
       } else {
         if(io.run && !data.bit(0)) resetCpu();
         io.run     = data.bit(0);
