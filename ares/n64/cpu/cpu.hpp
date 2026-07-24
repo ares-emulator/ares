@@ -1149,6 +1149,11 @@ struct CPU : Thread {
       if(!section) return;
       if(!section->lineBlocks[sectionLineIndex(address)]) return;
       sectionDirty[index] = 1;
+      // If the code is modifying the current block, we need to end it, as we
+      // have recompiled the previous version of the code.
+      if(activeBlock && activeBlock->sectionDirty == &sectionDirty[index]) {
+        self.pipeline.state |= Pipeline::EndBlock;
+      }
     }
 
     auto invalidateRange(u32 address, u32 length) -> void {
@@ -1160,7 +1165,12 @@ struct CPU : Thread {
       u32 firstSection = u32(start >> SectionShift);
       u32 lastSection  = u32(end >> SectionShift);
       for(u32 sidx = firstSection; sidx <= lastSection; sidx++) {
-        if(sectionDirty[sidx]) continue;
+        if(sectionDirty[sidx]) {
+          if(activeBlock && activeBlock->sectionDirty == &sectionDirty[sidx]) {
+            self.pipeline.state |= Pipeline::EndBlock;
+          }
+          continue;
+        }
         auto section = sections[sidx];
         if(!section) continue;
         u32 firstLine = 0;
@@ -1170,6 +1180,9 @@ struct CPU : Thread {
         for(u32 line = firstLine; line <= lastLine; line++) {
           if(section->lineBlocks[line]) {
             sectionDirty[sidx] = 1;
+            if(activeBlock && activeBlock->sectionDirty == &sectionDirty[sidx]) {
+              self.pipeline.state |= Pipeline::EndBlock;
+            }
             break;
           }
         }
