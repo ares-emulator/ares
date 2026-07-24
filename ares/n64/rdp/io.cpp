@@ -204,5 +204,6 @@ auto RDP::flushCommands() -> void {
     }
     render();
   }
+  command.bufferBusy = 0;
   command.ready = 1;
 }
