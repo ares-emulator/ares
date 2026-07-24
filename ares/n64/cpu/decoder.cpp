@@ -223,6 +223,7 @@ auto CPU::decoderSCCInfo(u32 instruction) const -> OpInfo {
   op(0x02, TLBWI);
   op(0x06, TLBWR);
   op(0x08, TLBP);
+  op(0x10, INVALID);
   op(0x18, ERET, JitStateKeyMayChange);
   op(0x20, XDETECT);
   op(0x25, XLOG);
@@ -247,6 +248,7 @@ auto CPU::decoderFPUInfo(u32 instruction) const -> OpInfo {
   op(0x06, CTC1, JitStateKeyMayChange);
   op(0x07, DCTC1);
   case 0x08: {
+    if((instruction >> 16 & 31) >= 4) return {};
     OpInfo info = {};
     Branch;
     LikelyIf(instruction >> 17 & 1);

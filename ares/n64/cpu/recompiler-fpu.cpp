@@ -1003,6 +1003,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> EmitExecute
 
   //BC1 offset
   case 0x08: {
+    if((instruction >> 16 & 31) >= 4) {
+      setupCallf();
+      callf(&CPU::COP1UNIMPLEMENTED);
+      return EmitExecuteResult::MayFault;
+    }
     auto emitBranchTarget = [&](s16 offset) -> void {
       if(pcMode == EmitPcMode::Runtime) {
         add64(reg(0), PipelineReg(pc), imm(s32(offset) * 4));
@@ -1047,10 +1052,10 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> EmitExecute
     return EmitExecuteResult::MayBranch;
   }
 
-  //INVALID
+  //COP1UNIMPLEMENTED
   case range7(0x09, 0x0f): {
     setupCallf();
-    callf(&CPU::INVALID);
+    callf(&CPU::COP1UNIMPLEMENTED);
     return EmitExecuteResult::MayFault;
   }
 
@@ -2194,5 +2199,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> EmitExecute
 
   }
 
-  return EmitExecuteResult::Linear;
+  setupCallf();
+  callf(&CPU::COP1UNIMPLEMENTED);
+  return EmitExecuteResult::MayFault;
 }
