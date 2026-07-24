@@ -208,7 +208,7 @@ auto MCD::power(bool reset) -> void {
   pcm.power(reset);
   resetPeripheral(reset);
   if (MegaLD()) {
-    ld.power(reset);
+    ld.power(reset, false);
   }
 }
 

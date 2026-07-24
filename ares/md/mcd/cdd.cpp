@@ -155,10 +155,10 @@ auto MCD::CDD::advance() -> void {
     io.sample = 0;
 
     if (MegaLD()) {
-      mcd.ld.updateCurrentVideoFrameNumber(io.sector);
+      mcd.ld.updateCurrentVideoFrameNumber(CD::LBAtoABA(io.sector));
 
-      if (stopPointEnabled && (io.sector == targetStopPoint)) {
-        mcd.ld.handleStopPointReached(io.sector);
+      if (stopPointEnabled && (CD::LBAtoABA(io.sector) == targetStopPoint)) {
+        mcd.ld.handleStopPointReached(CD::LBAtoABA(io.sector));
       }
     }
     return;
@@ -175,7 +175,7 @@ auto MCD::CDD::advance() -> void {
 
 auto MCD::CDD::sample() -> void {
   // Retrieve the next CD digital audio sample
-  i16 digitalSampleLeft  = 0;
+  i16 digitalSampleLeft = 0;
   i16 digitalSampleRight = 0;
   if (io.status == Status::Playing) {
     if (MegaLD() || session.tracks[io.track].isAudio()) {
@@ -232,7 +232,7 @@ auto MCD::CDD::sample() -> void {
     // Retrieve the next analog audio sample
     i16 analogSampleLeft = 0;
     i16 analogSampleRight = 0;
-    auto analogAudioSamplePos = (io.sector * 2352) + io.sample + (mcd.ld.analogAudioLeadingAudioSamples * 4);
+    auto analogAudioSamplePos = (CD::LBAtoABA(io.sector) * 2352) + io.sample + (mcd.ld.analogAudioLeadingAudioSamples * 4);
     if ((analogAudioSamplePos + 3) < mcd.ld.analogAudioRawDataView.size()) {
       analogSampleLeft = (i16)((u16)mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 0] | (u16)(mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 1] << 8));
       analogSampleRight = (i16)((u16)mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 2] | (u16)(mcd.ld.analogAudioRawDataView[analogAudioSamplePos + 3] << 8));
@@ -557,7 +557,7 @@ auto MCD::CDD::insert() -> void {
   io.track   = 0;
 
   laserdiscLoaded = false;
-  if ((mcd.pak->attribute("system") == "MegaLD") && (mcd.ld.mmi.media().size() > 0)) {
+  if (mcd.ld.mmi.media().size() > 0) {
     laserdiscLoaded = mcd.ld.mmi.media()[0].type.match("LD");
   }
 }
@@ -646,8 +646,8 @@ auto MCD::CDD::getCurrentTrack() -> n7 {
   return io.track;
 }
 
-auto MCD::CDD::getCurrentSector() -> s32 {
-  return io.sector;
+auto MCD::CDD::getCurrentSectorAsABA() -> s32 {
+  return CD::LBAtoABA(io.sector);
 }
 
 auto MCD::CDD::getCurrentTimecode(u8& minute, u8& second, u8& frame) -> void {
@@ -679,9 +679,13 @@ auto MCD::CDD::getTrackTocData(n7 track, u8& flags, u8& minute, u8& second, u8& 
   flags = session.tracks[track].control;
 }
 
-auto MCD::CDD::lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
+auto MCD::CDD::abaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
   s32 aba = ((((((s32)hour * 60) + (s32)minute) * 60) + (s32)second) * 75) + (s32)frame;
-  return aba - CD::Track1Pregap;
+  return aba;
+}
+
+auto MCD::CDD::lbaFromTime(u8 hour, u8 minute, u8 second, u8 frame) -> s32 {
+  return CD::ABAtoLBA(abaFromTime(hour, minute, second, frame));
 }
 
 auto MCD::CDD::isTrackAudio(n7 track) -> bool {

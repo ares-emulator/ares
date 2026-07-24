@@ -2,6 +2,15 @@
 auto PCD::LD::load(string location) -> void {
   video.outputFramebuffer.resize(video.FrameBufferWidth * (video.FrameBufferHeight + 1));
 
+  // Request the prefetch background thread to terminate, and wait for it to complete. We need to do this here, as when
+  // changing sides, load() is called again without unload() being called first.
+  if (videoFramePrefetchThreadStarted.test()) {
+    videoFramePrefetchThreadShutdownRequested.test_and_set();
+    videoFramePrefetchPending.test_and_set();
+    videoFramePrefetchPending.notify_all();
+    videoFramePrefetchThreadShutdownComplete.wait(false);
+  }
+
   //Load MMI file only if it has changed or is the first load
   //FIXME: calling mmi.close() during emulation crashes; we don't support changing .mmi file at present in the UI anyway so this doesn't matter (yet)
   if(mmi.location() != location) {
@@ -315,7 +324,9 @@ auto PCD::LD::write(n24 address, n8 data) -> void {
     // Perform writes to the output register block while the register output block is frozen. In this state, most
     // locations can be written to freely.
     if (regNum == 0x00) {
-      // The upper bit of register 0x00 still updates when output registers are frozen
+      // The upper bit (bit 7) of register 0x00 still updates when output registers are frozen. Note that bit 6 does NOT
+      // update when output registers are frozen, and it retains its written state until the output registers are
+      // unfrozen.
       outputFrozenRegs[regNum] = (data & 0x7F) | (outputRegs[regNum] & 0x80);
       // Bits 1-5 are not driven, so writes to them are retained forever.
       outputRegs[regNum] = (data & 0x3E) | (outputRegs[regNum] & 0xC1);
@@ -589,8 +600,14 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
 
     // Update the drive busy and seek in progress flags. Note that some games (IE, Pyramid Patrol) perform unpaused seek
     // operations and spin in a busy loop waiting first for the seek to complete, then for the current frame number to
-    // exactly match the target frame, so we need seek busy state to be accurate here.
-    if ((data.bit(0, 3) == 5) && (pcd.drive.mode == PCD::Drive::Mode::Seeking)) {
+    // exactly match the target frame, so we need seek busy state to be accurate here. Also note that Melon Brains does
+    // extremely quick subsequent seek operations on some menu items, IE, "Social Structure -> Help Each Other", while
+    // expecting a seek operation to latch a video frame in the framebuffer, with the subsequent seek having video
+    // disable set, so we also need to ensure we don't report the seek is complete until the frame number update has
+    // occurred. On the real hardware this would of course be impossible, as we'd need to decode a target frame timecode
+    // from the VBI data before we knew we'd reached it, so this check here is logical. When we didn't also check the
+    // seekPerformedSinceLastFrameUpdate flag here, we missed latching some target frames in Melon Brains.
+    if ((data.bit(0, 3) == 5) && ((pcd.drive.mode == PCD::Drive::Mode::Seeking) || ((pcd.drive.mode == PCD::Drive::Mode::Playing) && seekPerformedSinceLastFrameUpdate))) {
       data.bit(7) = 1;
       data.bit(5) = 1;
     } else {
@@ -663,6 +680,7 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     // *U4: Observed to be set when testing bad seeking operations
     // *U0: Unknown. DRVINIT tests this.
     //##FIX## Retain bit U0 until the drive tray is opened
+    //##FIX## Set U4 when we hit lead-out
     data.bit(7) = pcd.drive.isDiscLoaded() && pcd.drive.isDiscLaserdisc() && (currentDriveState >= 5);
     data.bit(6) = pcd.drive.isDiscLoaded() && ((!pcd.drive.isDiscLaserdisc() && (currentDriveState >= 2)) || (pcd.drive.isDiscLaserdisc() && (currentDriveState >= 4)));
     data.bit(0) = pcd.drive.isDiscLoaded() && (currentDriveState >= 4);
@@ -673,6 +691,22 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     // Reg 0x09|-------------------------------|
     // 0xFDFE93| ? | ? | ? |*U4| ? |*U2|*U1|*U0|
     //         ---------------------------------
+    // ##NEW## 2026
+    // *U4: This register is actually a bit more nuanced still. So the previous example below around behaviour when setting register
+    //      0x02 and 0x03 to invalid values are correct and valid, however there's nuance with how it interacts with bit 0 of
+    //      register 0x00, and how they interact with each other. Setting 0x03 to 0x40 sets U4, that is true, and setting 0x02 to
+    //      0x04 or 0x06 clears it persistently, that is also true. If you THEN toggle bit 0 of 0x00 however, while 0x03 is still set
+    //      to 0x40, U4 gets set again. It's like the register 0x02 change temporarily "masks" the bit, but triggering the seek
+    //      behaviour through bit 0 of 0x00 causes it to be triggered again. It's also worth noting this works in reverse too - if
+    //      you set 0x03 to 0x40 asserting U4, then set 0x02 to 0x05, U4 is cleared, then if you toggle bit 0 of 0x00, it gets set
+    //      again. Also note that U4 doesn't get asserted immediately - there's about a 1 frame lag it appears, so if you do repeated
+    //      writes of invalid values to 0x03, U4 will appear to stay fixed at 0, until you stop doing the writes, then it'll get set
+    //      about a frame afterwards. We also see the same thing with writes to bit 0 of 0x00, it definitely clears the flag, but it
+    //      gets reasserted some time later.
+    // *U2: This error flag definitely exists, but is not currently implemented. It has only been set in conjuction with U1 and U0,
+    //      but in absence of U4, when performing seek operations past the end of the valid region of a disk. Too far and we get U4
+    //      and U0 set, and U2 and U1 unset, but if we aim for the lead-out region, we seem to get this U2/U1/U0 combination. Note
+    //      that earlier notes also indicate it's set automatically when we run off the end of the last last track.
     // ##NEW## 2025
     // *U4: Expanding on the below, this is very much a "last operation failed" type flag. When either register 0x02 or 0x03 are set,
     // they first clear this flag, then set it if there's an error. This means if changing reg 0x03 has flagged an error for example,
@@ -694,6 +728,14 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     // ##NOTE##
     // -U0, U1, and U2, along with U4 in output reg 0x09 have all now seen to be set automatically when the last track on the disk
     //  finishes playing.
+    //##FIX## We currently do NOT emulate the delayed assertion and re-assertion behaviour of U4 described in 2026 notes
+    //for output register 0x09. It is unlikely anything relies on this. Most likely the reassertion is triggered at a
+    //particular point during playback, IE, when decoding the header of a new video frame. More testing would need to be
+    //performed to determine the timing and circumstances when this occurs. For now when the error flag is cleared by
+    //toggling bit 0 of input register 0x00, it stays cleared.
+    //##FIX## Set U2/U1/U0 when we hit lead-out. Note that this seems to be re-asserted once per frame like the re-assertion
+    //behaviour of U4, so it should be handled in the same manner. It makes sense that this is once per frame when the bi-phase
+    //code data from the VBI data of the frame is parsed.
     data.bit(4) = operationErrorFlag1;
     data.bit(1) = operationErrorFlag2;
     data.bit(0) = operationErrorFlag3;
@@ -915,7 +957,7 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     data = 0;
     if (pcd.drive.isDiscLoaded() && (currentDriveState >= 5)) {
       if (pcd.drive.isDiscLaserdisc()) {
-        auto frameNumber = zeroBasedFrameIndexFromLba(pcd.drive.getCurrentSector()) + 1;
+        auto frameNumber = zeroBasedFrameIndexFromABA(pcd.drive.getCurrentSectorAsABA()) + 1;
         if (pcd.drive.isLaserdiscClv()) {
           data = BCD::encode((frameNumber / (60 * 60 * 30)) % 60);
         } else {
@@ -940,7 +982,7 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     data = 0;
     if (pcd.drive.isDiscLoaded() && (currentDriveState >= 5)) {
       if (pcd.drive.isDiscLaserdisc()) {
-        auto frameNumber = zeroBasedFrameIndexFromLba(pcd.drive.getCurrentSector()) + 1;
+        auto frameNumber = zeroBasedFrameIndexFromABA(pcd.drive.getCurrentSectorAsABA()) + 1;
         if (pcd.drive.isLaserdiscClv()) {
           data = BCD::encode((frameNumber / (60 * 30)) % 60);
         } else {
@@ -965,7 +1007,7 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     data = 0;
     if (pcd.drive.isDiscLoaded() && (currentDriveState >= 5)) {
       if (pcd.drive.isDiscLaserdisc()) {
-        auto frameNumber = zeroBasedFrameIndexFromLba(pcd.drive.getCurrentSector()) + 1;
+        auto frameNumber = zeroBasedFrameIndexFromABA(pcd.drive.getCurrentSectorAsABA()) + 1;
         if (pcd.drive.isLaserdiscClv()) {
           data = BCD::encode((frameNumber / 30) % 60);
         } else {
@@ -991,7 +1033,7 @@ auto PCD::LD::getOutputRegisterValue(int regNum) -> n8
     if (pcd.drive.isDiscLoaded() && (currentDriveState >= 5)) {
       if (pcd.drive.isDiscLaserdisc()) {
         if (pcd.drive.isLaserdiscClv()) {
-          auto frameNumber = zeroBasedFrameIndexFromLba(pcd.drive.getCurrentSector()) + 1;
+          auto frameNumber = zeroBasedFrameIndexFromABA(pcd.drive.getCurrentSectorAsABA()) + 1;
           data = BCD::encode(frameNumber % 30);
         } else {
           data = 0x00;
@@ -1105,8 +1147,6 @@ auto PCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
     //       the previously latched value when input registers are being unfrozen, triggers a seek operation.
     //      -It is only the transition that matters for this behaviour, IE, it was 0 but is being set to 1, or it
     //       was 1 but is being set to 0.
-    //      -There is no detected difference between 0 and 1 for this register bit yet, however we expect there may
-    //       be a difference to discover with further testing, now that we know there's a connection with seeking.
     // ##ENDNEW##
     // *U7: Apply register writes. When this bit is cleared, most register writes are not latched, and do not take
     //      effect until this register is modified to set this bit to true, at which point, those register writes
@@ -1138,14 +1178,16 @@ auto PCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
     // *U0: Unknown. When this register is written to with U7 set, the first output register bit 0 latches the value
     //      set in this register location. If U7 is not set, there is no apparent effect.
     //      ##OLD## Preserved when reading, modifying, and writing back this register.
-    if (data.bit(7)) {
-      outputRegs[0] = (outputRegs[0] & 0x3E) | (data & 0xC1);
-    }
 
     // If the state of U0 has changed since the last time it was latched, check for seek and stop point operations
     // to perform.
-    //##TODO## Do more testing around this behaviour
     if (previousData.bit(0) != data.bit(0)) {
+      // Clear the operation error flags when bit 0 has been changed. This has been confirmed through hardware tests,
+      // and "Pretty Illusion" titles rely on this for the title screen to transition to a menu.
+      operationErrorFlag1 = false;
+      operationErrorFlag2 = false;
+      operationErrorFlag3 = false;
+
       // Clear the stop point triggered flag, regardless of whether seeking is enabled or not. This has been
       // confirmed through hardware tests, and Ghost Rush relies on this when moving around the mansion.
       reachedStopPoint = false;
@@ -1186,6 +1228,18 @@ auto PCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
       } else if ((livePlaybackMode == 0x02) && (currentPlaybackMode == 0x02) && (livePlaybackSpeed == 0x01) && (currentPlaybackSpeed == 0x00)) {
         // Trigger single-frame frame step mode to re-latch on the next frame
         currentPlaybackSpeed = 0x01;
+      }
+
+      // If the drive state is in playback mode, we may have just cleared the reachedStopPoint flag above. If we have,
+      // resume playback now. This makes toggling bit 1 of input reg 0x00, while seeking is disabled, an easy way to
+      // resume from hitting a stop point. This has been confirmed through hardware tests, and the title screen of the
+      // "Pretty Illusion" titles rely on this.
+      if (currentDriveState == 0x05) {
+        if (currentPauseState) {
+          pcd.drive.pause();
+        } else {
+          pcd.drive.play();
+        }
       }
     }
     break;
@@ -2093,54 +2147,41 @@ auto PCD::LD::processInputRegisterWrite(int regNum, n8 data, n8 previousData, bo
     //         --------------------------------- (Buffered in $594A (edit buffer)/ and $506A (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x1A|-------------------------------|
-    // 0xFDFE75|   VDPGraphicsFader    | -   - |
+    // 0xFDFE75|   VDPGraphicsFaderA   | -   - |
     //         ---------------------------------
-    // VDPGraphicsFader: Sets the intensity level of the VDP graphics overlay. A higher value gives a stronger VDP image.
-    //                   Set as a register write by $134, with the lower 6 bits shifted up.
-    //                   -Note that even if this fader is set to 0, the VDP overlay can still affect the output image. It
-    //                    appears that if a non-transparent VDP pixel appears on the screen, its opacity level is taken into
-    //                    account, but the opacity of the LD video stream is not, so a non-transparent VDP pixel will always
-    //                    be combined with a full opacity LD video stream, even if the VDP graphics fader is set to 0. This
-    //                    could allow the VDP graphics layer to act as a kind of highlight mask over a shadowed LD video
-    //                    stream.
-    //                   -The previous note is confusing. After new testing, it appears that each colour component is calculated
-    //                    in the following manner:
-    //                    r = (vr*va) + (lr*la) + ((1-((va+la)/2))*vr*lr)
-    //                    where:
-    //                    -r is the resulting colour value
-    //                    -vr is the VDP colour value
-    //                    -lr is the LD video colour value
-    //                    -va is the VDP attenuation
-    //                    -la is the LD video attenuation
-    //                    and all values in this calculation are in the range 0.0-1.0.
+    // VDPGraphicsFaderA: Sets the intensity level of the VDP graphics overlay. A higher value gives a stronger VDP image.
+    //                    - Sega PAC: Controls the intensity of non-backdrop pixels in the active scan area
+    //                    - NEC PAC: Controls the intensity of sprite pixels
     break;
   case 0x1B:
     //         --------------------------------- (Buffered in $594B (edit buffer)/ and $506B (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x1B|-------------------------------|
-    // 0xFDFE77|    LDGraphisFader     | -   - |
+    // 0xFDFE77|    VDPGraphicsFaderB  | -   - |
     //         ---------------------------------
-    // LDGraphicsFader: Sets the intensity level of the LD video signal. A lower value gives a stronger LD image. Set as a register
-    //                  write by $135, with the upper 2 bits masked. Note that this is in fact an error in the BIOS routines There's
-    //                  contradictory information between the status read function $12B and the fader function $135. Hardware testing
-    //                  has shown the lower 2 bits have no apparent effect, and the upper 6 bits are what has an effect. The
-    //                  implementation of $135 appears to be in error.
+    // VDPGraphicsFaderB: Sets the intensity level of the VDP graphics overlay. A higher value gives a stronger VDP image.
+    //                    - Sega PAC: Controls the intensity of backdrop/border/blanking pixels
+    //                    - NEC PAC: Controls the intensity of background pixels
     break;
   case 0x1C:
     //         --------------------------------- (Buffered in $594C (edit buffer)/ and $506C (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x1C|-------------------------------|
-    // 0xFDFE79| ? | ? | ? | ? | ? | ? | ? | ? |
+    // 0xFDFE79|    VDPGraphicsFaderC  | -   - |
     //         ---------------------------------
-    // ##NOTE## No observed effect
+    // VDPGraphicsFaderC: Sets the intensity level of the VDP graphics overlay. A higher value gives a stronger VDP image.
+    //                    - Sega PAC: No effect
+    //                    - NEC PAC: Controls the intensity of backdrop pixels
     break;
   case 0x1D:
     //         --------------------------------- (Buffered in $594D (edit buffer)/ and $506D (last written))
     // Input   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
     // Reg 0x1D|-------------------------------|
-    // 0xFDFE7B| ? | ? | ? | ? | ? | ? | ? | ? |
+    // 0xFDFE7B|    VDPGraphicsFaderD  | -   - |
     //         ---------------------------------
-    // ##NOTE## No observed effect
+    // VDPGraphicsFaderD: Sets the intensity level of the VDP graphics overlay. A higher value gives a stronger VDP image.
+    //                    - Sega PAC: No effect
+    //                    - NEC PAC: Controls the intensity of blanking pixels
     break;
   case 0x1E:
     //         --------------------------------- (Buffered in $594E (edit buffer)/ and $506E (last written))
@@ -2242,18 +2283,18 @@ auto PCD::LD::updateStopPointWithCurrentState() -> void {
     outputRegs[0x1E] = stopPointRegs[(int)SeekPointReg::HoursOrFrameH];
     outputRegs[0x1F] = 0x01;
 
-    // Convert the stop point to an LBA address
+    // Convert the stop point to an ABA address
     //##FIX## This is incorrect for LDs. They should be using the actual frame data to set stop points, not the CD track
     //data.
-    s32 stopLba;
+    s32 stopAba;
     if (!pcd.drive.isDiscLaserdisc()) {
       // CDs set stop points using MM:SS:FF
-      stopLba = pcd.drive.lbaFromTime(0, BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]));
+      stopAba = pcd.drive.abaFromTime(0, BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]), BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]), BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]));
     } else if (!pcd.drive.isLaserdiscClv()) {
       // CAV LDs set stop points using frame numbers
       s32 frameNumber = ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::HoursOrFrameH]) * 10000) + ((s32)BCD::decode(stopPointRegs[(int)SeekPointReg::MinutesOrFrameM]) * 100) + (s32)BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
-      // Convert the frame number to zero-based, then to an LBA.
-      stopLba = lbaFromZeroBasedFrameIndex(frameNumber - 1);
+      // Convert the frame number to zero-based, then to an ABA.
+      stopAba = abaFromZeroBasedFrameIndex(frameNumber - 1);
     } else {
       // CLV LDs set stop points using HH:MM:SS:FF
       u8 videoTimeHours = BCD::decode(stopPointRegs[(int)SeekPointReg::HoursOrFrameH]);
@@ -2261,14 +2302,14 @@ auto PCD::LD::updateStopPointWithCurrentState() -> void {
       u8 videoTimeSeconds = BCD::decode(stopPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
       u8 videoTimeFrames = BCD::decode(stopPointRegs[(int)SeekPointReg::Frames]);
       VideoTimeToRedbookTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
-      stopLba = pcd.drive.lbaFromTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
+      stopAba = pcd.drive.abaFromTime(videoTimeHours, videoTimeMinutes, videoTimeSeconds, videoTimeFrames);
     }
 
     // Apply the stop point to playback control
-    pcd.drive.targetStopPoint = stopLba;
+    pcd.drive.targetStopPoint = stopAba;
     pcd.drive.stopPointEnabled = true;
     reachedStopPointPreviously = false;
-    debug(unverified, "Latched stoppoint: lba:", stopLba, " frame:", zeroBasedFrameIndexFromLba(stopLba, true) + 1, " 0x07=", hex(inputRegs[0x07]), " 0x08=", hex(inputRegs[0x08]), " 0x09=", hex(inputRegs[0x09]), " 0x0A=", hex(inputRegs[0x0A]), " 0x0B=", hex(inputRegs[0x0B]));
+    debug(unverified, "Latched stoppoint: aba:", stopAba, " frame:", zeroBasedFrameIndexFromABA(stopAba, true) + 1, " 0x07=", hex(inputRegs[0x07]), " 0x08=", hex(inputRegs[0x08]), " 0x09=", hex(inputRegs[0x09]), " 0x0A=", hex(inputRegs[0x0A]), " 0x0B=", hex(inputRegs[0x0B]));
 
     // As a special case, if we're currently stopped at our own stop point, and a register write has caused
     // the stop point to be latched again, it's immediately hit again here. Note that this is truly a special
@@ -2276,7 +2317,7 @@ auto PCD::LD::updateStopPointWithCurrentState() -> void {
     // still immediately trip as though we're there already, even though it's the previous location we're at.
     // The character creation screen of Ghost Rush relies on this.
     if (reachedStopPoint) {
-      handleStopPointReached(pcd.drive.lba);
+      handleStopPointReached(pcd.drive.getCurrentSectorAsABA());
     }
   }
 }
@@ -2427,10 +2468,10 @@ auto PCD::LD::performSeekWithLatchedState() -> void {
   case SeekMode::SeekToVideoFrame: {
     //##FIX## This should work on the video stream frame numbers
     s32 frameNumber = ((s32)BCD::decode(seekPointRegs[(int)SeekPointReg::HoursOrFrameH]) * 10000) + ((s32)BCD::decode(seekPointRegs[(int)SeekPointReg::MinutesOrFrameM]) * 100) + (s32)BCD::decode(seekPointRegs[(int)SeekPointReg::SecondsOrFrameL]);
-    // Convert the frame number to zero-based, then to an LBA.
-    auto lba = lbaFromZeroBasedFrameIndex(std::max(1, frameNumber) - 1);
-    debug(unverified, "SeekToVideoFrame: ", frameNumber, " lba:", lba, " paused=", targetPauseState && !reachedStopPoint);
-    pcd.drive.seekToSector(lba, targetPauseState && !reachedStopPoint);
+    // Convert the frame number to zero-based, then to an ABA.
+    auto aba = abaFromZeroBasedFrameIndex(std::max(1, frameNumber) - 1);
+    debug(unverified, "SeekToVideoFrame: ", frameNumber, " aba:", aba, " paused=", targetPauseState && !reachedStopPoint);
+    pcd.drive.seekToSector(CD::ABAtoLBA(aba), targetPauseState && !reachedStopPoint);
     seekPerformedSinceLastFrameUpdate = true;
     break;}
   case SeekMode::SeekToVideoTime: {
@@ -2454,25 +2495,23 @@ auto PCD::LD::performSeekWithLatchedState() -> void {
 // case, but it's technically not guaranteed. In a final implementation, we should be decoding the frame numbers
 // straight from the VBI coded data from the currently displayed frame, that way we'll know that we're actually showing
 // the exact intended frames. This functioned to get us started though.
-auto PCD::LD::zeroBasedFrameIndexFromLba(s32 lba, bool processLeadIn) -> s32 {
+auto PCD::LD::zeroBasedFrameIndexFromABA(s32 aba, bool processLeadIn) -> s32 {
   // If we're in the lead-in and not asked to handle lead-in values, return 0.
-  if (!processLeadIn && (lba < 0)) {
+  if (!processLeadIn && (aba < 0)) {
     return 0;
   }
 
-  lba = CD::LBAtoABA(lba);
-
-  // Turn the lba sector number into a frame number. Since there are 30 frames of video per second, and 75 sectors of CD
+  // Turn the aba sector number into a frame number. Since there are 30 frames of video per second, and 75 sectors of CD
   // data per second, this will work well enough.
-  auto frameIndex = (s32)std::round(((double)lba / 75.0) * videoFramesPerSecond);
-  frameIndex = (processLeadIn && (lba < 0)) ? (-frameIndex) - 1 : frameIndex;
+  auto frameIndex = (s32)std::round(((double)aba / 75.0) * videoFramesPerSecond);
+  frameIndex = (processLeadIn && (aba < 0)) ? (-frameIndex) - 1 : frameIndex;
   return frameIndex;
 }
 
-// Convert the ZERO-BASED frame number to an LBA.
-auto PCD::LD::lbaFromZeroBasedFrameIndex(s32 frameIndex) -> s32 {
-  auto lba = (s32)std::round(((double)frameIndex / videoFramesPerSecond) * 75.0);
-  return CD::ABAtoLBA(lba);
+// Convert the ZERO-BASED frame number to an ABA.
+auto PCD::LD::abaFromZeroBasedFrameIndex(s32 frameIndex) -> s32 {
+  auto aba = (s32)std::round(((double)frameIndex / videoFramesPerSecond) * 75.0);
+  return aba;
 }
 
 auto PCD::LD::VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& frames) -> void {
@@ -2487,7 +2526,7 @@ auto PCD::LD::VideoTimeToRedbookTime(u8& hours, u8& minutes, u8& seconds, u8& fr
   hours = redbookTimeTotalFrames;
 }
 
-auto PCD::LD::handleStopPointReached(s32 lba) -> void {
+auto PCD::LD::handleStopPointReached(s32 aba) -> void {
   // Hardware tests have shown that as a special case, stop points are ignored in still-frame stepping mode. The stop
   // points will remain active and not be latched in this case. Note that this is only if the "true" playback mode is
   // set to this, not when a stop point has been hit and the output registers claim we're in still-frame stepping mode.
@@ -2512,14 +2551,14 @@ auto PCD::LD::handleStopPointReached(s32 lba) -> void {
     // to around 500ms stop frame hold time.
     //##TODO## There are some initial seek latency numbers in the CDD section to handle LaserActive seek latency, but
     //more precise measurements should be taken to tune this more accurately.
-    debug(unverified, "Hit stoppoint - repeat mode: lba:", lba, " frame:", zeroBasedFrameIndexFromLba(lba, true) + 1);
+    debug(unverified, "Hit stoppoint - repeat mode: aba:", aba, " frame:", zeroBasedFrameIndexFromABA(aba, true) + 1);
     //##TODO## Test if the 0x1F output reg gets re-driven here to 0x01
     reachedStopPoint = false;
     pcd.drive.mode = PCD::Drive::Mode::Playing;
     performSeekWithLatchedState();
   } else {
     // Stop mode
-    debug(unverified, "Hit stoppoint - stop mode: lba:", lba, " frame:", zeroBasedFrameIndexFromLba(lba, true) + 1);
+    debug(unverified, "Hit stoppoint - stop mode: aba:", aba, " frame:", zeroBasedFrameIndexFromABA(aba, true) + 1);
     outputRegs[0x1A] = 0xFF;
     outputRegs[0x1B] = 0xFF;
     outputRegs[0x1C] = 0xFF;
@@ -2536,7 +2575,7 @@ auto PCD::LD::handleStopPointReached(s32 lba) -> void {
   }
 }
 
-auto PCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
+auto PCD::LD::updateCurrentVideoFrameNumber(s32 aba) -> void {
   // Detect and clear the state on whether we've displayed the first frame after a seek operation. This is to handle
   // frameskip mode base frame latching behaviour. The way this works is that, if a seek is performed at the same time
   // as frameskip mode is entered, or even if there's a pending seek operation still in progress, the first frame of
@@ -2546,8 +2585,8 @@ auto PCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
   seekPerformedSinceLastFrameUpdate = false;
 
   // Calculate the new video frame index
-  auto newVideoFrameIndex = zeroBasedFrameIndexFromLba(lba, true);
-  bool newVideoFrameLeadIn = (lba < 0);
+  auto newVideoFrameIndex = zeroBasedFrameIndexFromABA(aba, true);
+  bool newVideoFrameLeadIn = (aba < 0);
   bool newVideoFrameLeadOut = (newVideoFrameIndex >= video.activeVideoFrameCount);
   if (newVideoFrameLeadOut) {
     newVideoFrameIndex = newVideoFrameIndex - video.activeVideoFrameCount;
@@ -2758,6 +2797,7 @@ auto PCD::LD::updateCurrentVideoFrameNumber(s32 lba) -> void {
       pcd.drive.mode = PCD::Drive::Mode::Paused;
       //##TODO## Check on the hardware if a stop point is cleared when a picture stop code is triggered
       pcd.drive.stopPointEnabled = false;
+      debug(unverified, "Disabled stoppoint from picture stop code");
     }
   }
 }
@@ -2843,9 +2883,9 @@ auto PCD::LD::loadCurrentVideoFrameIntoBuffer() -> void {
     sectorAdvanceOffset = (currentPlaybackDirection ? (i32)(-sectorAdvanceOffset) : sectorAdvanceOffset);
 
     // Calculate the next likely video frame index, based on the current fast forward settings.
-    auto lba = pcd.drive.lba + sectorAdvanceOffset;
-    newVideoFrameIndex = zeroBasedFrameIndexFromLba(lba, true);
-    newVideoFrameLeadIn = (lba < 0);
+    auto aba = pcd.drive.getCurrentSectorAsABA() + sectorAdvanceOffset;
+    newVideoFrameIndex = zeroBasedFrameIndexFromABA(aba, true);
+    newVideoFrameLeadIn = (aba < 0);
     if (newVideoFrameIndex == video.currentVideoFrameIndex) {
       newVideoFrameIndex += (newVideoFrameIndex == 0 ? 0 : (currentPlaybackDirection ? -1 : 1));
     }
@@ -2979,9 +3019,20 @@ auto PCD::LD::decodeBiphaseCodeFromScanline(int lineNo) -> u32 {
   return biphaseCode;
 }
 
-auto PCD::LD::power() -> void {
-  // Zero all our registers
-  for (auto& data : inputRegs) data = 0x0;
+auto PCD::LD::power(bool gateArrayReset) -> void {
+  // Zero all our registers, unless this is a gate array reset, in which case we only initialize basic drive state and
+  // seek registers.
+  //##TODO## Do more hardware testing on the exact results from doing a gate array forced reset. These results are
+  //derived from observations about what is needed to get MegaCD games booting through the bios, while keeping MegaLD
+  //games working as expected. MegaLD games don't seem to rely on the gate array reset at all, but they do trigger one
+  //during boot. MegaCD games on the other hand need the gate array reset to function in order to boot. We can see in
+  //both cases that all audio/video mixing state needs to be left alone during a gate array reset, while at a minimum,
+  //input register 0x00 bit 0 needs to be cleared. Hardware tests should be performed to determine the exact effects
+  //from performing a gate array reset.
+  for (size_t i = 0; i < 0x0C; ++i) inputRegs[i] = 0x0;
+  if (!gateArrayReset) {
+    for (size_t i = 0x0C; i < inputRegisterCount; ++i) inputRegs[i] = 0x0;
+  }
   for (auto& data : inputFrozenRegs) data = 0x0;
   for (auto& data : outputRegs) data = 0x0;
   for (auto& data : outputFrozenRegs) data = 0x0;
@@ -3014,18 +3065,22 @@ auto PCD::LD::power() -> void {
   // Set the few registers that start with initial values
   currentDriveState = 0x02; // 0x02 = Drive door closed
   targetDriveState = currentDriveState;
-  inputRegs[0x1A] = 0xFF;
-  inputRegs[0x1B] = 0xFF;
-  inputRegs[0x1C] = 0xFF;
-  inputRegs[0x1D] = 0xFF;
+  if (!gateArrayReset) {
+    inputRegs[0x1A] = 0xFF;
+    inputRegs[0x1B] = 0xFF;
+    inputRegs[0x1C] = 0xFF;
+    inputRegs[0x1D] = 0xFF;
+  }
 
   // Clear any currently latched video frame
-  video.currentVideoFrameIndex = -99999999;
-  video.drawIndex = 0;
-  video.videoFrameBuffers[0].clear();
-  video.videoFrameBuffers[1].clear();
-  video.currentVideoFrameBlanked = false;
-  video.digitalMemoryFrameLatched = false;
+  if (!gateArrayReset) {
+    video.currentVideoFrameIndex = -99999999;
+    video.drawIndex = 0;
+    video.videoFrameBuffers[0].clear();
+    video.videoFrameBuffers[1].clear();
+    video.currentVideoFrameBlanked = false;
+    video.digitalMemoryFrameLatched = false;
+  }
 }
 
 auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {
@@ -3194,16 +3249,16 @@ auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {
     convertedSamplesAsFloat[0] *= entry.conversionFactor;
     convertedSamplesAsFloat[1] *= entry.conversionFactor;
     convertedSamplesAsFloat[2] *= entry.conversionFactor;
-    auto ldr = (u8)std::min((convertedSamplesAsFloat[0] + 0.5f), (float)0xFF);
-    auto ldg = (u8)std::min((convertedSamplesAsFloat[1] + 0.5f), (float)0xFF);
-    auto ldb = (u8)std::min((convertedSamplesAsFloat[2] + 0.5f), (float)0xFF);
+    auto ldR = (u8)std::min((convertedSamplesAsFloat[0] + 0.5f), (float)0xFF);
+    auto ldG = (u8)std::min((convertedSamplesAsFloat[1] + 0.5f), (float)0xFF);
+    auto ldB = (u8)std::min((convertedSamplesAsFloat[2] + 0.5f), (float)0xFF);
 
     // Retrieve the output VDP color for this pixel location
     u32 currentPixelValue = ((vdpPixelBuffer != nullptr) && ((ptrdiff_t)i >= std::max(vdpBorderLeftOffset, (ptrdiff_t)0))) ? vdpPixelBuffer[(ptrdiff_t)i - vdpBorderLeftOffset] : 0x1400;
-    auto mdColorPacked = vdpImpl.screen->lookupPalette(currentPixelValue & 0b1111111111);
-    auto mdr = (mdColorPacked >> 16) & 0xFF;
-    auto mdg = (mdColorPacked >> 8) & 0xFF;
-    auto mdb = mdColorPacked & 0xFF;
+    auto vdpColorPacked = vdpImpl.screen->lookupPalette(currentPixelValue & 0b1111111111);
+    auto vdpR = (vdpColorPacked >> 16) & 0xFF;
+    auto vdpG = (vdpColorPacked >> 8) & 0xFF;
+    auto vdpB = vdpColorPacked & 0xFF;
 
     // Extract layer/status flags for this pixel to determine how we're going to mix it
     bool backdrop = (currentPixelValue & 0x800) == 0;
@@ -3213,35 +3268,35 @@ auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {
 
     // Composite the digital VDP graphics with the analog video track
     //##TODO## Implement input reg 0x19 bit 0 properly
-    unsigned int mdGraphicsFader;
+    unsigned int vdpGraphicsFader;
     if (burstMode) {
-      mdGraphicsFader = 0;
+      vdpGraphicsFader = 0;
     } else if (blanking) { // Note that this takes priority over the sprite flag
-      mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1D] >> 2);
+      vdpGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1D] >> 2);
     } else if (sprite) {
-      mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1A] >> 2);
+      vdpGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1A] >> 2);
     } else if (backdrop) {
-      mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1C] >> 2);
+      vdpGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1C] >> 2);
     } else { //background
-      mdGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1B] >> 2);
+      vdpGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1B] >> 2);
     }
-    auto ldNormalizedR = convert8BitUnsignedToNormalized1616FixedPoint(ldr);
-    auto ldNormalizedG = convert8BitUnsignedToNormalized1616FixedPoint(ldg);
-    auto ldNormalizedB = convert8BitUnsignedToNormalized1616FixedPoint(ldb);
-    auto mdNormalizedR = convert8BitUnsignedToNormalized1616FixedPoint(mdr);
-    auto mdNormalizedG = convert8BitUnsignedToNormalized1616FixedPoint(mdg);
-    auto mdNormalizedB = convert8BitUnsignedToNormalized1616FixedPoint(mdb);
-    uint32_t oneMinusMdGraphicsFader = OneIn1616FixedPoint - mdGraphicsFader;
-    uint32_t combinedNormalizedR = mul1616FixedPoint(mdNormalizedR, mdGraphicsFader) + mul1616FixedPoint(ldNormalizedR, oneMinusMdGraphicsFader);
-    uint32_t combinedNormalizedG = mul1616FixedPoint(mdNormalizedG, mdGraphicsFader) + mul1616FixedPoint(ldNormalizedG, oneMinusMdGraphicsFader);
-    uint32_t combinedNormalizedB = mul1616FixedPoint(mdNormalizedB, mdGraphicsFader) + mul1616FixedPoint(ldNormalizedB, oneMinusMdGraphicsFader);
+    auto ldNormalizedR = convert8BitUnsignedToNormalized1616FixedPoint(ldR);
+    auto ldNormalizedG = convert8BitUnsignedToNormalized1616FixedPoint(ldG);
+    auto ldNormalizedB = convert8BitUnsignedToNormalized1616FixedPoint(ldB);
+    auto vdpNormalizedR = convert8BitUnsignedToNormalized1616FixedPoint(vdpR);
+    auto vdpNormalizedG = convert8BitUnsignedToNormalized1616FixedPoint(vdpG);
+    auto vdpNormalizedB = convert8BitUnsignedToNormalized1616FixedPoint(vdpB);
+    uint32_t oneMinusVdpGraphicsFader = OneIn1616FixedPoint - vdpGraphicsFader;
+    uint32_t combinedNormalizedR = mul1616FixedPoint(vdpNormalizedR, vdpGraphicsFader) + mul1616FixedPoint(ldNormalizedR, oneMinusVdpGraphicsFader);
+    uint32_t combinedNormalizedG = mul1616FixedPoint(vdpNormalizedG, vdpGraphicsFader) + mul1616FixedPoint(ldNormalizedG, oneMinusVdpGraphicsFader);
+    uint32_t combinedNormalizedB = mul1616FixedPoint(vdpNormalizedB, vdpGraphicsFader) + mul1616FixedPoint(ldNormalizedB, oneMinusVdpGraphicsFader);
 
     // Write the composited pixel value to the output framebuffer
-    u32 rf = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedR);
-    u32 gf = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedG);
-    u32 bf = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedB);
-    u32 af = 0xFF;
-    video.outputFramebuffer[targetLinePos + i] = ((u32)af << 24) | ((u32)rf << 16) | ((u32)gf << 8) | (u32)bf;
+    u32 finalR = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedR);
+    u32 finalG = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedG);
+    u32 finalB = convert1616NormalizedFixedPointTo8BitUnsigned(combinedNormalizedB);
+    u32 finalA = 0xFF;
+    video.outputFramebuffer[targetLinePos + i] = ((u32)finalA << 24) | ((u32)finalR << 16) | ((u32)finalG << 8) | (u32)finalB;
   }
 
   // Override the line draw for this line of video with our composited line buffer
