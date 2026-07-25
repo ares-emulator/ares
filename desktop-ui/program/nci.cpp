@@ -170,6 +170,9 @@ auto NetworkControlInterface::commandReadCoreMemory(string_view args, sockaddr* 
   }
 
   auto memory = memories.front();
+  for(auto& node : memories) {
+    if(node->name() == "RDRAM") { memory = node; break; }
+  }
   string result = {"READ_CORE_MEMORY ", hex(address, 4L)};
   for(u32 i = 0; i < length; i++) {
     u32 addr = address + i;
@@ -203,6 +206,9 @@ auto NetworkControlInterface::commandWriteCoreMemory(string_view args, sockaddr*
   }
 
   auto memory = memories.front();
+  for(auto& node : memories) {
+    if(node->name() == "RDRAM") { memory = node; break; }
+  }
   for(u32 i = 1; i < parts.size(); i++) {
     u32 addr = address + (i - 1);
     if(addr >= memory->size()) {
