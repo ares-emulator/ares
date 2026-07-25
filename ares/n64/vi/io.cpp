@@ -99,6 +99,7 @@ auto VI::readWord(u32 address, Thread& thread) -> u32 {
 auto VI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
   address = (address & 0x3f) >> 2;
   n32 data = data_;
+  rdp.debugger.captureViRegister(address, data);
 
   #if defined(VULKAN)
   if (vulkan.enable) vulkan.writeWord(address, data);
@@ -120,6 +121,10 @@ auto VI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
   if(address == 1) {
     //VI_DRAM_ADDRESS
     io.dramAddress = data.bit(0,23);
+    //Presenting a framebuffer delimits one frame's rendering from the next; the
+    //capture window is taken from here rather than from scanout. Reported after
+    //the register is latched so a capture starting here snapshots the new origin.
+    rdp.debugger.presentBoundary(io.dramAddress);
   }
 
   if(address == 2) {
@@ -192,5 +197,6 @@ auto VI::writeWord(u32 address, u32 data_, Thread& thread) -> void {
     io.ysubpixel = data.bit(16,27);
   }
 
+  debugger.updateGraphicsSize();
   debugger.io(Write, address, data);
 }
