@@ -8,6 +8,7 @@ auto enumerate() -> std::vector<string> {
     "[Nintendo] Famicom (NTSC-J)",
     "[Nintendo] Famicom (NTSC-U)",
     "[Nintendo] Famicom (PAL)",
+    "[Nintendo] Vs. UniSystem",
     "[Dendy] Dendy",
   };
 }
@@ -70,6 +71,13 @@ auto System::load(Node::System& root, string name) -> bool {
     information.region      = Region::Dendy;
     information.frequency   = Constants::Colorburst::PAL * 6.0;
     information.cpuDivider  = 15;
+  }
+  if(name == "[Nintendo] Vs. UniSystem") {
+    information.model       = Model::VsUniSystem;
+    information.name        = "Famicom";
+    information.region      = Region::NTSCU;
+    information.frequency   = Constants::Colorburst::NTSC * 6.0;
+    information.cpuDivider  = 12;
   }
 
   node = std::make_shared<Core::System>(information.name);

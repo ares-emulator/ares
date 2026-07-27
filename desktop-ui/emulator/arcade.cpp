@@ -97,7 +97,7 @@ Arcade::Arcade() {
 }
 
 auto Arcade::available() -> bool {
-#if defined(CORE_SG) || defined(CORE_N64)
+#if defined(CORE_SG) || defined(CORE_N64) || defined(CORE_FC)
   return true;
 #endif
   return false;
@@ -105,6 +105,7 @@ auto Arcade::available() -> bool {
 
 auto Arcade::load() -> LoadResult {
   systemPakName = "Arcade";
+  gamePakName = "Arcade";
   game = mia::Medium::create("Arcade");
   string location = Emulator::load(game, configuration.game);
   if(!location) return noFileSelected;
@@ -116,6 +117,21 @@ auto Arcade::load() -> LoadResult {
   if(result != successful) return result;
 
   //Determine from the game manifest which core to use for the given arcade rom
+#ifdef CORE_FC
+  if(game->pak->attribute("board") == "nintendo/vs") {
+    if(game->pak->attribute("system") != "Vs. UniSystem") return otherError;
+    if(!ares::Famicom::load(root, {"[Nintendo] Vs. UniSystem"})) return otherError;
+    systemPakName = "Famicom";
+    gamePakName = "Famicom Cartridge";
+
+    if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
+      port->allocate();
+      port->connect();
+    }
+    return successful;
+  }
+#endif
+
 #ifdef CORE_SG
   if(game->pak->attribute("board") == "sega/sg1000a") {
     if(!ares::SG1000::load(root, {"[Sega] SG-1000A"})) return otherError;
