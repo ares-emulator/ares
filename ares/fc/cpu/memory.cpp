@@ -33,6 +33,7 @@ auto CPU::readIO(n16 address) -> n8 {
   switch(address) {
 
   case 0x4016: {
+    if(system.model() == System::Model::VsUniSystem) return vsUniSystem.io.read(address, data);
     auto port1 = controllerPort1.data();
     auto port3 = expansionPort.read1();
     if(system.controls.microphone) platform->input(system.controls.microphone);
@@ -45,6 +46,7 @@ auto CPU::readIO(n16 address) -> n8 {
   }
 
   case 0x4017: {
+    if(system.model() == System::Model::VsUniSystem) return vsUniSystem.io.read(address, data);
     auto port2 = controllerPort2.data();
     auto port3 = expansionPort.read2();
     data.bit(0) = port3.bit(0) | port2.bit(0);
@@ -70,6 +72,7 @@ auto CPU::writeIO(n16 address, n8 data) -> void {
   }
 
   case 0x4016: {
+    if(system.model() == System::Model::VsUniSystem) return vsUniSystem.io.write(data);
     controllerPort1.latch(data.bit(0));
     controllerPort2.latch(data.bit(0));
     expansionPort.write(data);

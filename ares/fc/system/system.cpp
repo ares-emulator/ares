@@ -39,6 +39,7 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   scheduler.enter();
+  if(model() == Model::VsUniSystem) vsUniSystem.frame();
   auto reset = controls.reset->value();
   platform->input(controls.reset);
   if(!reset && controls.reset->value()) power(true);
@@ -97,9 +98,13 @@ auto System::load(Node::System& root, string name) -> bool {
   apu.load(node);
   ppu.load(node);
   cartridgeSlot.load(node);
-  controllerPort1.load(node);
-  controllerPort2.load(node);
-  expansionPort.load(node);
+  if(model() == Model::VsUniSystem) {
+    vsUniSystem.load(node);
+  } else {
+    controllerPort1.load(node);
+    controllerPort2.load(node);
+    expansionPort.load(node);
+  }
   return true;
 }
 
@@ -115,11 +120,17 @@ auto System::unload() -> void {
   controls.unload();
   cpu.unload();
   apu.unload();
-  ppu.unload();
-  cartridgeSlot.unload();
-  controllerPort1.unload();
-  controllerPort2.unload();
-  expansionPort.unload();
+  if(model() == Model::VsUniSystem) {
+    cartridgeSlot.unload();
+    vsUniSystem.unload();
+    ppu.unload();
+  } else {
+    ppu.unload();
+    cartridgeSlot.unload();
+    controllerPort1.unload();
+    controllerPort2.unload();
+    expansionPort.unload();
+  }
   node = {};
 }
 
@@ -127,6 +138,7 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   random.entropy(Random::Entropy::Low);
+  if(model() == Model::VsUniSystem) vsUniSystem.power();
   // The apu should run before the cpu
   apu.power(reset);
   cartridge.power();

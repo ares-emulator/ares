@@ -14,6 +14,7 @@ ares_add_sources(
   UNITY #
     fc.cpp
   PRIMARY #
+    vs/unisystem.cpp
     system/system.cpp
     controller/controller.cpp
     expansion/expansion.cpp
@@ -25,6 +26,18 @@ ares_add_sources(
 )
 
 ares_add_sources(CORE fc INCLUDED fc.hpp CMakeLists.txt)
+
+ares_add_sources(
+  CORE #
+    fc
+  INCLUDED #
+    vs/unisystem.hpp
+    vs/controls.cpp
+    vs/dip-switches.cpp
+    vs/io.cpp
+    vs/standard-input.cpp
+    vs/zapper-input.cpp
+)
 
 ares_add_sources(
   CORE #
