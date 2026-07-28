@@ -125,6 +125,7 @@ auto Settings::process(bool load) -> void {
 
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
   bind(string,  "Nintendo64/ControllerPakBankString", nintendo64.controllerPakBankString);
+  bind(real,    "Nintendo64/Overclock", nintendo64.overclock);
   bind(string,  "Nintendo64/Quality", nintendo64.quality);
   bind(boolean, "Nintendo64/Supersampling", nintendo64.supersampling);
   bind(boolean, "Nintendo64/DisableVideoInterfaceProcessing", nintendo64.disableVideoInterfaceProcessing);
