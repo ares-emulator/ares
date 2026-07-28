@@ -161,7 +161,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -300,7 +300,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -644,7 +644,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: zapper
   dip
@@ -774,7 +774,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -910,7 +910,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -1046,7 +1046,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -1292,7 +1292,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: zapper
   dip
@@ -1423,7 +1423,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: zapper
     upstream-status: not-working
@@ -1554,7 +1554,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -1690,7 +1690,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -1916,7 +1916,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c05_01
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -2052,7 +2052,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -2188,7 +2188,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -2323,7 +2323,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -2459,7 +2459,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -2594,7 +2594,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c05_02
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: swapped
   dip
@@ -3030,7 +3030,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: swapped
   dip
@@ -3165,7 +3165,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -3301,7 +3301,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -3437,7 +3437,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -3572,7 +3572,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -3698,7 +3698,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: swapped
   dip
@@ -3834,7 +3834,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: swapped
   dip
@@ -5083,7 +5083,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c05_03
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: zapper
   dip
@@ -5285,7 +5285,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -5421,7 +5421,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: swap-ab
   dip
@@ -5653,7 +5653,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -5782,7 +5782,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -5913,7 +5913,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip
@@ -6322,7 +6322,7 @@ game
   hardware
     topology: unisystem
     ppu: ppu2c04
-    mapper: mapper-99
+    mapper: standard
     protection: normal
     input: standard
   dip

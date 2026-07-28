@@ -19,7 +19,7 @@ class Machine:
 
 
 def machine(
-    mapper: str = "mapper-99",
+    mapper: str = "standard",
     protection: str = "normal",
     input_mode: str = "standard",
     not_working: bool = False,
