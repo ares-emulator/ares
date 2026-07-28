@@ -134,6 +134,22 @@ ares_add_sources(
     cartridge/board/unl-sc127.cpp
     cartridge/board/unl-txc.cpp
     cartridge/board/unrom-512.cpp
+    cartridge/board/vs-unisystem.cpp
+)
+
+ares_add_sources(
+  CORE #
+    fc
+  INCLUDED #
+    cartridge/board/vs/board.cpp
+    cartridge/board/vs/board.hpp
+    cartridge/board/vs/mmc1.cpp
+    cartridge/board/vs/namco-108.cpp
+    cartridge/board/vs/protection.hpp
+    cartridge/board/vs/standard.cpp
+    cartridge/board/vs/sunsoft-3.cpp
+    cartridge/board/vs/unrom.cpp
+    cartridge/board/vs/vrc1.cpp
 )
 
 ares_add_sources(

@@ -57,6 +57,8 @@ namespace Board {
 #include "taito-x1-017.cpp"
 #include "tengen-80003x.cpp"
 #include "unrom-512.cpp"
+#include "vs/board.cpp"
+#include "vs-unisystem.cpp"
 
 #include "unl-bmc.cpp"
 #include "unl-jy.cpp"
@@ -131,6 +133,8 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = SachenSA0037::create(board);
   if(!p) p = Sc127::create(board);
   if(!p) p = TXC::create(board);
+
+  if(!p) p = VsUniSystem::create(board);
 
   if(!p) p = new Interface;
   return p;
