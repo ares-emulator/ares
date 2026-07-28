@@ -1,23 +1,22 @@
 VsUniSystem::Controls::StandardInput::StandardInput(Node::Object parent, Wiring wiring) : wiring(wiring) {
-  node = parent->append<Node::Object>("Players");
-  loadPlayer(players[0], 1);
-  loadPlayer(players[1], 2);
+  loadPlayer(parent, players[0], 1);
+  loadPlayer(parent, players[1], 2);
 
   if(wiring == Wiring::Standard) live[0] = players[1].a, live[1] = players[0].a;
   if(wiring == Wiring::Swapped)  live[0] = players[0].a, live[1] = players[1].a;
   if(wiring == Wiring::SwapAB)   live[0] = players[1].b, live[1] = players[0].b;
 }
 
-auto VsUniSystem::Controls::StandardInput::loadPlayer(Player& player, u32 id) -> void {
+auto VsUniSystem::Controls::StandardInput::loadPlayer(Node::Object parent, Player& player, u32 id) -> void {
   auto prefix = string{"Player ", id, " "};
 
-  player.up    = node->append<Node::Input::Button>(string{prefix, "Up"      });
-  player.down  = node->append<Node::Input::Button>(string{prefix, "Down"    });
-  player.left  = node->append<Node::Input::Button>(string{prefix, "Left"    });
-  player.right = node->append<Node::Input::Button>(string{prefix, "Right"   });
-  player.a     = node->append<Node::Input::Button>(string{prefix, "Button 1"});
-  player.b     = node->append<Node::Input::Button>(string{prefix, "Button 2"});
-  player.start = node->append<Node::Input::Button>(string{prefix, "Start"   });
+  player.up    = parent->append<Node::Input::Button>(string{prefix, "Up"      });
+  player.down  = parent->append<Node::Input::Button>(string{prefix, "Down"    });
+  player.left  = parent->append<Node::Input::Button>(string{prefix, "Left"    });
+  player.right = parent->append<Node::Input::Button>(string{prefix, "Right"   });
+  player.a     = parent->append<Node::Input::Button>(string{prefix, "Button 1"});
+  player.b     = parent->append<Node::Input::Button>(string{prefix, "Button 2"});
+  player.start = parent->append<Node::Input::Button>(string{prefix, "Start"   });
 }
 
 auto VsUniSystem::Controls::StandardInput::pollPlayer(u32 player) -> n8 {

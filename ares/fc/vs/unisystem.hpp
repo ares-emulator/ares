@@ -12,8 +12,6 @@ struct VsUniSystem {
 
   private:
     struct Input {
-      Node::Object node;
-
       virtual ~Input() = default;
       virtual auto data(u32 stream) -> n1 = 0;
       virtual auto latch() -> std::array<n8, 2> = 0;
@@ -44,11 +42,12 @@ struct VsUniSystem {
       auto latch() -> std::array<n8, 2> override;
 
     private:
-      auto loadPlayer(Player& player, u32 id) -> void;
+      auto loadPlayer(Node::Object parent, Player& player, u32 id) -> void;
       auto pollPlayer(u32 player) -> n8;
     };
 
     struct ZapperInput : Input {
+      Node::Object node;
       Node::Input::Axis x;
       Node::Input::Axis y;
       Node::Input::Button trigger;
