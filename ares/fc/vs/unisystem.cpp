@@ -9,6 +9,7 @@ VsUniSystem vsUniSystem;
 #include "controls.cpp"
 #include "dip-switches.cpp"
 #include "io.cpp"
+#include "serialization.cpp"
 
 auto VsUniSystem::load(Node::Object parent) -> void {
   this->parent = parent;

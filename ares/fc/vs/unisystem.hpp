@@ -8,6 +8,7 @@ struct VsUniSystem {
     auto unload() -> void;
     auto data(u32 stream) -> n1;
     auto latch() -> std::array<n8, 2>;
+    auto serialize(serializer&) -> void;
 
   private:
     struct Input {
@@ -16,6 +17,7 @@ struct VsUniSystem {
       virtual ~Input() = default;
       virtual auto data(u32 stream) -> n1 = 0;
       virtual auto latch() -> std::array<n8, 2> = 0;
+      virtual auto serialize(serializer&) -> void {}
     };
 
     struct StandardInput : Input {
@@ -57,6 +59,7 @@ struct VsUniSystem {
 
       auto data(u32 stream) -> n1 override;
       auto latch() -> std::array<n8, 2> override;
+      auto serialize(serializer&) -> void override;
     };
 
     std::unique_ptr<Input> input;
@@ -81,6 +84,7 @@ struct VsUniSystem {
     auto load(Node::Object parent) -> bool;
     auto unload() -> void;
     auto update(u32 index, string value) -> void;
+    auto serialize(serializer&) -> void;
 
   private:
     struct Definition {
@@ -103,6 +107,7 @@ struct VsUniSystem {
     auto frame() -> void;
     auto read(n16 address, n8 data) -> n8;
     auto write(n8 data) -> void;
+    auto serialize(serializer&) -> void;
 
   private:
     auto readStream(u32 stream) -> n1;
@@ -122,6 +127,7 @@ struct VsUniSystem {
   auto unload() -> void;
   auto power(bool reset) -> void;
   auto frame() -> void;
+  auto serialize(serializer&) -> void;
 };
 
 extern VsUniSystem vsUniSystem;

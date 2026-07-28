@@ -101,6 +101,21 @@ auto LightGun::data() -> n3 {
   return result;
 }
 
+auto LightGun::serialize(serializer& s) -> void {
+  s(cx);
+  s(cy);
+  s(px);
+  s(py);
+  s(nx);
+  s(ny);
+  s(previous);
+
+  if(s.reading() && sprite) {
+    sprite->setPosition(cx, cy);
+    sprite->setVisible(true);
+  }
+}
+
 auto Zapper::data() -> n3 {
   return lightGun.data();
 }

@@ -8,6 +8,7 @@ struct LightGun {
   auto load(Node::Object parent, Node::Input::Axis x, Node::Input::Axis y, Node::Input::Button trigger) -> void;
   auto unload() -> void;
   auto data() -> n3;
+  auto serialize(serializer&) -> void;
 
 private:
   i32 cx = 256 / 2;
