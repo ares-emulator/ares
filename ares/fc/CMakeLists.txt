@@ -241,9 +241,10 @@ ares_add_sources(
   CORE #
     fc
   INCLUDED #
-    ppu/color.cpp
     ppu/debugger.cpp
     ppu/memory.cpp
+    ppu/model.cpp
+    ppu/model.hpp
     ppu/ppu.hpp
     ppu/render.cpp
     ppu/scroll.cpp

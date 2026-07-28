@@ -25,8 +25,7 @@ auto PPU::renderPixel() -> void {
   u32  objectPalette = 0;
   bool objectPriority = 0;
 
-  //PAL systems technically blank the topmost scanline and a 2px column on each side of active display.
-  if(Region::PAL()) if(io.ly == 0 || x < 2 || x > 253) return;
+  if(!model->raster.pixelVisible(x, io.ly)) return;
 
   palette |= latch.tiledataLo & mask ? 1 : 0;
   palette |= latch.tiledataHi & mask ? 2 : 0;
@@ -72,17 +71,14 @@ auto PPU::renderPixel() -> void {
     color = io.emphasis << 6 | readCGRAM((n5)var.address);
   }
 
-  if(Region::PAL() || Region::Dendy())
-    output[(x + 18) % 283] = color;
-  else
-    output[(x + 16) % 283] = color;
+  output[(x + model->raster.outputOffset) % 283] = color;
 }
 
 auto PPU::renderScanline() -> void {
   if(io.ly < screen->canvasHeight()) {
     output = screen->pixels().data() + io.ly * 283;
-    for (auto n : range(283))
-      output[n] = Region::PAL() ? 0x3f : io.emphasis << 6 | readCGRAM(0);
+    auto backdrop = model->raster.backdrop(io.emphasis << 6 | readCGRAM(0));
+    for(auto n : range(283)) output[n] = backdrop;
   }
 
   //Vblank
@@ -188,7 +184,7 @@ auto PPU::renderScanline() -> void {
 
   //337-338
   loadCHR(0x2000 | (n12)var.address);
-  bool skip = !Region::PAL() && !Region::Dendy() && enable() && io.field == 1 && io.ly == vlines() - 1;
+  bool skip = model->raster.oddFrameCycleSkip && enable() && io.field == 1 && io.ly == vlines() - 1;
   step(2);
 
   //339
