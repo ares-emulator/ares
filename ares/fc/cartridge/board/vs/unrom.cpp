@@ -16,6 +16,7 @@ struct UNROM : Interface {
 
   auto power() -> void override {
     initializePRG(programBank);
+    selectPRG16(programBank, 0, 0);
   }
 
   auto serialize(serializer& s) -> void override {

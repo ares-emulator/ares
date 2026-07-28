@@ -13,34 +13,25 @@ VsUniSystem vsUniSystem;
 auto VsUniSystem::load(Node::Object parent) -> void {
   this->parent = parent;
   node = parent->append<Node::Object>("Arcade");
-  controls.load(node);
 }
 
 auto VsUniSystem::unload() -> void {
-  disconnect();
+  dipSwitches.unload();
   controls.unload();
+  io.power();
   node.reset();
   parent.reset();
 }
 
-auto VsUniSystem::connect() -> bool {
-  disconnect();
-  if(!controls.connect()) return false;
-  if(!dipSwitches.connect()) {
-    disconnect();
-    return false;
+auto VsUniSystem::power(bool reset) -> void {
+  io.power();
+  if(reset) return;
+
+  if(!controls.load(node)) return;
+  if(!dipSwitches.load(parent)) {
+    controls.unload();
+    return;
   }
-  return true;
-}
-
-auto VsUniSystem::disconnect() -> void {
-  controls.disconnect();
-  dipSwitches.disconnect();
-  io.power();
-}
-
-auto VsUniSystem::power() -> void {
-  io.power();
 }
 
 auto VsUniSystem::frame() -> void {

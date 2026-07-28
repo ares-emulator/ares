@@ -4,10 +4,8 @@ struct VsUniSystem {
     Node::Input::Button service;
     Node::Input::Button coins[2];
 
-    auto load(Node::Object parent) -> void;
+    auto load(Node::Object parent) -> bool;
     auto unload() -> void;
-    auto connect() -> bool;
-    auto disconnect() -> void;
     auto data(u32 stream) -> n1;
     auto latch() -> std::array<n8, 2>;
 
@@ -80,8 +78,8 @@ struct VsUniSystem {
     std::vector<Setting> settings;
     n8 value = 0;
 
-    auto connect() -> bool;
-    auto disconnect() -> void;
+    auto load(Node::Object parent) -> bool;
+    auto unload() -> void;
     auto update(u32 index, string value) -> void;
 
   private:
@@ -92,7 +90,7 @@ struct VsUniSystem {
       std::vector<Option> options;
     };
 
-    auto load(std::vector<Definition> definitions) -> void;
+    auto create(Node::Object parent, std::vector<Definition> definitions) -> void;
   } dipSwitches;
 
   struct IO {
@@ -122,9 +120,7 @@ struct VsUniSystem {
 
   auto load(Node::Object parent) -> void;
   auto unload() -> void;
-  auto connect() -> bool;
-  auto disconnect() -> void;
-  auto power() -> void;
+  auto power(bool reset) -> void;
   auto frame() -> void;
 };
 

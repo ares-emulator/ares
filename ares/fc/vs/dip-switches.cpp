@@ -25,7 +25,8 @@ static auto parseDipByte(string text, u8& value) -> bool {
   return true;
 }
 
-auto VsUniSystem::DIPSwitches::connect() -> bool {
+auto VsUniSystem::DIPSwitches::load(Node::Object parent) -> bool {
+  unload();
   if(!cartridge.pak) return false;
 
   auto manifestFile = cartridge.pak->read("manifest.bml");
@@ -69,12 +70,12 @@ auto VsUniSystem::DIPSwitches::connect() -> bool {
     definitions.push_back(std::move(definition));
   }
 
-  load(std::move(definitions));
+  create(parent, std::move(definitions));
   return true;
 }
 
-auto VsUniSystem::DIPSwitches::load(std::vector<Definition> definitions) -> void {
-  node = vsUniSystem.parent->append<Node::Object>("DIP Switches");
+auto VsUniSystem::DIPSwitches::create(Node::Object parent, std::vector<Definition> definitions) -> void {
+  node = parent->append<Node::Object>("DIP Switches");
   settings.reserve(definitions.size());
 
   for(auto& definition : definitions) {
@@ -97,8 +98,8 @@ auto VsUniSystem::DIPSwitches::load(std::vector<Definition> definitions) -> void
   }
 }
 
-auto VsUniSystem::DIPSwitches::disconnect() -> void {
-  if(vsUniSystem.parent && node) vsUniSystem.parent->remove(node);
+auto VsUniSystem::DIPSwitches::unload() -> void {
+  if(auto parent = Node::parent(node)) parent->remove(node);
   node.reset();
   settings.clear();
   value = 0;

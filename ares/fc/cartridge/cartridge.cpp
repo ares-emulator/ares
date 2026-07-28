@@ -22,8 +22,6 @@ auto Cartridge::connect() -> void {
   board->pak = pak;
   board->load();
 
-  if(system.model() == System::Model::VsUniSystem && !vsUniSystem.connect()) return;
-
   power();
   if(fds.present) {
     fds.load(node);
@@ -32,7 +30,6 @@ auto Cartridge::connect() -> void {
 
 auto Cartridge::disconnect() -> void {
   if(!node) return;
-  if(system.model() == System::Model::VsUniSystem) vsUniSystem.disconnect();
   if(fds.present) {
     fds.unload();
     fds.present = 0;

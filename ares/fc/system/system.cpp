@@ -135,10 +135,9 @@ auto System::unload() -> void {
 }
 
 auto System::power(bool reset) -> void {
+  if(model() == Model::VsUniSystem) vsUniSystem.power(reset);
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
   random.entropy(Random::Entropy::Low);
-  if(model() == Model::VsUniSystem) vsUniSystem.power();
   // The apu should run before the cpu
   apu.power(reset);
   cartridge.power();
