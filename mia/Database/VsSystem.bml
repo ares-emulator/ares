@@ -1421,86 +1421,8 @@ game
   type:    game
   parent:  hogalley
   hardware
-    topology: unisystem
-    ppu: ppu2c04
-    mapper: standard
-    protection: normal
-    input: zapper
-    upstream-status: not-working
-  dip
-    name: Coinage
-    port: DSW0
-    mask: 0x7
-    default: 0x0
-    option
-      name: 5 Coins/1 Credit
-      value: 0x3
-    option
-      name: 4 Coins/1 Credit
-      value: 0x5
-    option
-      name: 3 Coins/1 Credit
-      value: 0x1
-    option
-      name: 2 Coins/1 Credit
-      value: 0x6
-    option
-      name: 1 Coin/1 Credit
-      value: 0x0
-    option
-      name: 1 Coin/2 Credits
-      value: 0x4
-    option
-      name: 1 Coin/3 Credits
-      value: 0x2
-    option
-      name: Free Play
-      value: 0x7
-  dip
-    name: Difficulty
-    port: DSW0
-    mask: 0x18
-    default: 0x10
-    option
-      name: Easy
-      value: 0x0
-    option
-      name: Normal
-      value: 0x8
-    option
-      name: Medium
-      value: 0x10
-    option
-      name: Hard
-      value: 0x18
-  dip
-    name: Misses per game
-    port: DSW0
-    mask: 0x20
-    default: 0x20
-    option
-      name: 3
-      value: 0x0
-    option
-      name: 5
-      value: 0x20
-  dip
-    name: Bonus Life
-    port: DSW0
-    mask: 0xc0
-    default: 0x0
-    option
-      name: 30000
-      value: 0x0
-    option
-      name: 50000
-      value: 0x40
-    option
-      name: 80000
-      value: 0x80
-    option
-      name: 100000
-      value: 0xc0
+    topology: unsupported
+    reason: dualsystem
   prg
     rom
       name:   mds-ha4_1d_or_6d.6d

@@ -67,13 +67,13 @@ SUPPORTED = {
     "supxevs": machine("namco-108", protection="super-xevious"),
     "duckhunt": machine(input_mode="zapper"),
     "hogalley": machine(input_mode="zapper"),
-    "hogalleyi": machine(input_mode="zapper", not_working=True),
     "vsgshoe": machine(input_mode="zapper"),
     "vsfdf": machine("namco-108", input_mode="zapper"),
 }
 
 UNSUPPORTED = {
     "bnglngby": "raid-protection",
+    "hogalleyi": "dualsystem",
     "suprmriobl": "bootleg-z80",
     "suprmriobl2": "bootleg-z80",
     "vstennis": "dualsystem",
@@ -98,8 +98,8 @@ def require_classification() -> None:
     overlap = SUPPORTED.keys() & UNSUPPORTED.keys()
     if overlap:
         raise MetadataError(f"duplicate Vs classification: {sorted(overlap)[0]}")
-    if len(SUPPORTED) != 42 or len(UNSUPPORTED) != 14:
-        raise MetadataError("expected 42 supported and 14 unsupported Vs machines")
+    if len(SUPPORTED) != 41 or len(UNSUPPORTED) != 15:
+        raise MetadataError("expected 41 supported and 15 unsupported Vs machines")
 
 
 def parse_number(value: Optional[str], field: str, machine_name: str) -> int:
