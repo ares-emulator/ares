@@ -7,6 +7,67 @@ struct InputMouseRawInput {
   uintptr handle = 0;
   bool mouseAcquired = false;
 
+  struct Motion {
+    struct Position {
+      s32 x = 0;
+      s32 y = 0;
+    };
+
+    struct Extent {
+      s32 width = 0;
+      s32 height = 0;
+    };
+
+    struct DesktopExtents {
+      Extent primary;
+      Extent virtualDesktop;
+    };
+
+    enum class DesktopSpace : u32 {
+      Primary,
+      Virtual,
+    };
+
+    auto refresh(DesktopExtents extents) -> void {
+      this->extents = extents;
+      absoluteMode = false;
+      prevPositions[0] = nothing;
+      prevPositions[1] = nothing;
+    }
+
+    auto relative() -> void {
+      if(!absoluteMode) return;
+      absoluteMode = false;
+      prevPositions[0] = nothing;
+      prevPositions[1] = nothing;
+    }
+
+    auto update(u16 flags, s32 normalizedX, s32 normalizedY) -> Position {
+      absoluteMode = true;
+      auto space = flags & MOUSE_VIRTUAL_DESKTOP ? DesktopSpace::Virtual : DesktopSpace::Primary;
+      auto& extent = space == DesktopSpace::Virtual ? extents.virtualDesktop : extents.primary;
+      Position current = {
+        MulDiv(normalizedX, extent.width, 65535),
+        MulDiv(normalizedY, extent.height, 65535),
+      };
+
+      auto& prevPosition = prevPositions[(u32)space];
+      if(!prevPosition) {
+        prevPosition = current;
+        return {};
+      }
+
+      Position delta = {current.x - prevPosition->x, current.y - prevPosition->y};
+      prevPosition = current;
+      return delta;
+    }
+
+  private:
+    bool absoluteMode = false;
+    DesktopExtents extents;
+    maybe<Position> prevPositions[2];
+  } motion;
+
   struct Mouse {
     std::shared_ptr<HID::Mouse> hid = std::make_shared<HID::Mouse>();
 
@@ -16,12 +77,27 @@ struct InputMouseRawInput {
     bool buttons[5] = {0};
   } ms;
 
+  auto desktopExtents() -> Motion::DesktopExtents {
+    return {
+      {GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)},
+      {GetSystemMetrics(SM_CXVIRTUALSCREEN), GetSystemMetrics(SM_CYVIRTUALSCREEN)},
+    };
+  }
+
+  auto refreshDesktopExtents() -> void {
+    auto extents = desktopExtents();
+    WaitForSingleObject(rawinput.mutex, INFINITE);
+    motion.refresh(extents);
+    ReleaseMutex(rawinput.mutex);
+  }
+
   auto acquired() -> bool {
     return mouseAcquired;
   }
 
   auto acquire() -> bool {
     if(!mouseAcquired) {
+      refreshDesktopExtents();
       mouseAcquired = true;
       ShowCursor(false);
     }
@@ -45,25 +121,32 @@ struct InputMouseRawInput {
   }
 
   auto update(RAWINPUT* input) -> void {
-    if((input->data.mouse.usFlags & 1) == MOUSE_MOVE_RELATIVE) {
-      ms.relativeX += input->data.mouse.lLastX;
-      ms.relativeY += input->data.mouse.lLastY;
+    auto& mouse = input->data.mouse;
+
+    if((mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == MOUSE_MOVE_ABSOLUTE) {
+      auto delta = motion.update(mouse.usFlags, mouse.lLastX, mouse.lLastY);
+      ms.relativeX += delta.x;
+      ms.relativeY += delta.y;
+    } else {
+      motion.relative();
+      ms.relativeX += mouse.lLastX;
+      ms.relativeY += mouse.lLastY;
     }
 
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_WHEEL) {
-      ms.relativeZ += (s16)input->data.mouse.usButtonData;
+    if(mouse.usButtonFlags & RI_MOUSE_WHEEL) {
+      ms.relativeZ += (s16)mouse.usButtonData;
     }
 
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_1_DOWN) ms.buttons[0] = 1;
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_1_UP  ) ms.buttons[0] = 0;
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_2_DOWN) ms.buttons[1] = 1;
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_2_UP  ) ms.buttons[1] = 0;
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_3_DOWN) ms.buttons[2] = 1;
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_3_UP  ) ms.buttons[2] = 0;
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_4_DOWN) ms.buttons[3] = 1;
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_4_UP  ) ms.buttons[3] = 0;
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_5_DOWN) ms.buttons[4] = 1;
-    if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_5_UP  ) ms.buttons[4] = 0;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_1_DOWN) ms.buttons[0] = 1;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_1_UP  ) ms.buttons[0] = 0;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_2_DOWN) ms.buttons[1] = 1;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_2_UP  ) ms.buttons[1] = 0;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_3_DOWN) ms.buttons[2] = 1;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_3_UP  ) ms.buttons[2] = 0;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_4_DOWN) ms.buttons[3] = 1;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_4_UP  ) ms.buttons[3] = 0;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_5_DOWN) ms.buttons[4] = 1;
+    if(mouse.usButtonFlags & RI_MOUSE_BUTTON_5_UP  ) ms.buttons[4] = 0;
   }
 
   auto assign(u32 groupID, u32 inputID, s16 value) -> void {
@@ -74,21 +157,28 @@ struct InputMouseRawInput {
   }
 
   auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
-    assign(HID::Mouse::GroupID::Axis, 0, ms.relativeX);
-    assign(HID::Mouse::GroupID::Axis, 1, ms.relativeY);
-    assign(HID::Mouse::GroupID::Axis, 2, ms.relativeZ);
-
-    //keys are intentionally reordered below:
-    //in ruby, button order is {left, middle, right, up, down}
-    assign(HID::Mouse::GroupID::Button, 0, ms.buttons[0]);
-    assign(HID::Mouse::GroupID::Button, 2, ms.buttons[1]);
-    assign(HID::Mouse::GroupID::Button, 1, ms.buttons[2]);
-    assign(HID::Mouse::GroupID::Button, 4, ms.buttons[3]);
-    assign(HID::Mouse::GroupID::Button, 3, ms.buttons[4]);
-
+    WaitForSingleObject(rawinput.mutex, INFINITE);
+    auto relativeX = ms.relativeX;
+    auto relativeY = ms.relativeY;
+    auto relativeZ = ms.relativeZ;
+    bool buttons[5] = {0};
+    for(auto n : range(5)) buttons[n] = ms.buttons[n];
     ms.relativeX = 0;
     ms.relativeY = 0;
     ms.relativeZ = 0;
+    ReleaseMutex(rawinput.mutex);
+
+    assign(HID::Mouse::GroupID::Axis, 0, relativeX);
+    assign(HID::Mouse::GroupID::Axis, 1, relativeY);
+    assign(HID::Mouse::GroupID::Axis, 2, relativeZ);
+
+    //keys are intentionally reordered below:
+    //in ruby, button order is {left, middle, right, up, down}
+    assign(HID::Mouse::GroupID::Button, 0, buttons[0]);
+    assign(HID::Mouse::GroupID::Button, 2, buttons[1]);
+    assign(HID::Mouse::GroupID::Button, 1, buttons[2]);
+    assign(HID::Mouse::GroupID::Button, 4, buttons[3]);
+    assign(HID::Mouse::GroupID::Button, 3, buttons[4]);
 
     devices.push_back(ms.hid);
   }
@@ -96,6 +186,7 @@ struct InputMouseRawInput {
   auto initialize(uintptr handle) -> bool {
     if(!handle) return false;
     this->handle = handle;
+    refreshDesktopExtents();
 
     ms.hid->setVendorID(HID::Mouse::GenericVendorID);
     ms.hid->setProductID(HID::Mouse::GenericProductID);
