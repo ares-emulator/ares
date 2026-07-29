@@ -1,13 +1,16 @@
 VsUniSystem::Controls::ZapperInput::ZapperInput(Node::Object parent) {
-  node = parent->append<Node::Object>("Zapper");
-  x = node->append<Node::Input::Axis>("X-Axis");
-  y = node->append<Node::Input::Axis>("Y-Axis");
-  trigger = node->append<Node::Input::Button>("Trigger");
-  lightGun.load(node, x, y, trigger);
+  x       = parent->append<Node::Input::Axis>  ("X-Axis");
+  y       = parent->append<Node::Input::Axis>  ("Y-Axis");
+  trigger = parent->append<Node::Input::Button>("Trigger");
+  lightGun.load(parent, x, y, trigger);
 }
 
 VsUniSystem::Controls::ZapperInput::~ZapperInput() {
   lightGun.unload();
+}
+
+auto VsUniSystem::Controls::ZapperInput::frame() -> void {
+  lightGun.frame();
 }
 
 auto VsUniSystem::Controls::ZapperInput::data(u32) -> n1 {

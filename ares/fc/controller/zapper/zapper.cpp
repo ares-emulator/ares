@@ -27,7 +27,7 @@ auto LightGun::load(Node::Object parent, Node::Input::Axis x, Node::Input::Axis 
   ny = 240 / 2;
 
   sprite = parent->append<Node::Video::Sprite>("Crosshair");
-  sprite->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
+  sprite->setImage(Resource::Sprite::Famicom::Crosshair);
   ppu.screen->attach(sprite);
 }
 
@@ -45,19 +45,18 @@ auto LightGun::frame() -> void {
   platform->input(x);  //-n = left, 0 = center, +n = right
   platform->input(y);  //-n = up,   0 = center, +n = down
 
-  if(x->value() != px || y->value() != py) {
-    px = x->value();
-    py = y->value();
+  px = x->value();
+  py = y->value();
+  if(!px && !py) return;
 
-    cx = max(-8, min(256 + 8, px + cx));
-    cy = max(-8, min(240 + 8, py + cy));
+  cx = max(-8, min(256 + 8, px + cx));
+  cy = max(-8, min(240 + 8, py + cy));
 
-    sprite->setPosition(cx, cy);
-    sprite->setVisible(true);
+  sprite->setPosition(cx, cy);
+  sprite->setVisible(true);
 
-    nx = cx + 8;
-    ny = cy + 8;
-  }
+  nx = cx + 8;
+  ny = cy + 8;
 }
 
 auto LightGun::data() -> n3 {

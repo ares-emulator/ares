@@ -27,6 +27,10 @@ auto VsUniSystem::Controls::unload() -> void {
   node.reset();
 }
 
+auto VsUniSystem::Controls::frame() -> void {
+  if(input) input->frame();
+}
+
 auto VsUniSystem::Controls::data(u32 stream) -> n1 {
   if(input) return input->data(stream);
   return 0;

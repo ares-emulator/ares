@@ -36,6 +36,7 @@ auto VsUniSystem::power(bool reset) -> void {
 }
 
 auto VsUniSystem::frame() -> void {
+  controls.frame();
   io.frame();
 }
 

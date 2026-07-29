@@ -6,6 +6,7 @@ struct VsUniSystem {
 
     auto load(Node::Object parent) -> bool;
     auto unload() -> void;
+    auto frame() -> void;
     auto data(u32 stream) -> n1;
     auto latch() -> std::array<n8, 2>;
     auto serialize(serializer&) -> void;
@@ -13,6 +14,7 @@ struct VsUniSystem {
   private:
     struct Input {
       virtual ~Input() = default;
+      virtual auto frame() -> void {}
       virtual auto data(u32 stream) -> n1 = 0;
       virtual auto latch() -> std::array<n8, 2> = 0;
       virtual auto serialize(serializer&) -> void {}
@@ -48,7 +50,6 @@ struct VsUniSystem {
     };
 
     struct ZapperInput : Input {
-      Node::Object node;
       Node::Input::Axis x;
       Node::Input::Axis y;
       Node::Input::Button trigger;
@@ -57,6 +58,7 @@ struct VsUniSystem {
       ZapperInput(Node::Object parent);
       ~ZapperInput();
 
+      auto frame() -> void override;
       auto data(u32 stream) -> n1 override;
       auto latch() -> std::array<n8, 2> override;
       auto serialize(serializer&) -> void override;

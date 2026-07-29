@@ -46,6 +46,7 @@ Arcade::Arcade() {
   { InputDevice device{"Controls"} ;
     device.digital("Service", virtualPorts[0].pad.lstick_click);
     device.digital("Test",    virtualPorts[0].pad.rstick_click);
+
     for(auto n : range(2)) {
       device.digital({"Player ", n + 1, " Up"      }, virtualPorts[n].pad.up);
       device.digital({"Player ", n + 1, " Down"    }, virtualPorts[n].pad.down);
@@ -68,6 +69,11 @@ Arcade::Arcade() {
       device.analog ({"Player ", n + 1, " X-Axis"  }, virtualPorts[n].pad.lstick_left, virtualPorts[n].pad.lstick_right);
       device.analog ({"Player ", n + 1, " Y-Axis"  }, virtualPorts[n].pad.lstick_up,   virtualPorts[n].pad.lstick_down);
     }
+
+    device.relative("X-Axis",  virtualPorts[0].mouse.x);
+    device.relative("Y-Axis",  virtualPorts[0].mouse.y);
+    device.digital ("Trigger", virtualPorts[0].mouse.left);
+
     port.append(device); }
 
   { InputDevice device{"Mahjong"};
