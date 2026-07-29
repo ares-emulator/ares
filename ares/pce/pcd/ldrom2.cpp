@@ -221,12 +221,14 @@ auto PCD::LD::write(n24 address, n8 data) -> void {
   static bool includeReg0DebugOutput = false;
   bool isOutput = (address & 0x80);
   u8 regNum = (address & 0x3f) >> 1;
-  //ares::_debug.reset();
+  ares::_debug.reset();
   //debug(unverified, "[PCD::writeLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
   if ((regNum != 0x00) || includeReg0DebugOutput) {
     //debug(unverified, "[PCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
     if (isOutput) {
       debug(unusual, "[PCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
+    } else {
+      debug(unverified, "[PCD::writeLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
     }
   }
 
@@ -3266,12 +3268,14 @@ auto PCD::LD::scanline(u32 vdpPixelBuffer[1128+48], u32 vcounter) -> void {
     bool blanking = (currentPixelValue & 0x1000) != 0;
     bool burstMode = (currentPixelValue & 0x2000) != 0;
 
+    // This is required to make the fade-out/in effects in "Demon's Judgement" work, while keeping the pre-mission info
+    // screen visible in "Vajra".
+    blanking |= burstMode;
+
     // Composite the digital VDP graphics with the analog video track
     //##TODO## Implement input reg 0x19 bit 0 properly
     unsigned int vdpGraphicsFader;
-    if (burstMode) {
-      vdpGraphicsFader = 0;
-    } else if (blanking) { // Note that this takes priority over the sprite flag
+    if (blanking) { // Note that this takes priority over the sprite flag
       vdpGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1D] >> 2);
     } else if (sprite) {
       vdpGraphicsFader = convert6BitUnsignedToNormalized1616FixedPoint(inputRegs[0x1A] >> 2);
