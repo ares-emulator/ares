@@ -104,6 +104,31 @@ Format: `COMMAND[;HOST[;PORT]]` (defaults: localhost, 55355)
 | `READ_CORE_MEMORY <addr> <len>` | `READ_CORE_MEMORY <addr> <hex bytes>` | Read memory (hex address, max 256 bytes) |
 | `WRITE_CORE_MEMORY <addr> <bytes...>` | `WRITE_CORE_MEMORY <addr> <count>` | Write memory (hex address and byte values) |
 
+#### Address interpretation
+
+A plain hex address is interpreted through the emulated system's memory map when one is known, so clients can use the same addresses the running program does. For the Nintendo 64, KSEG0/KSEG1 addresses (`0x80000000`-`0xBFFFFFFF`) are translated to physical, and physical ranges route to the matching debugger memory node:
+
+| Physical range | Node |
+|----------------|------|
+| `0x00000000`-`0x03EFFFFF` | RDRAM |
+| `0x04000000`-`0x04000FFF` | RSP DMEM |
+| `0x04001000`-`0x04001FFF` | RSP IMEM |
+| `0x08000000`-`0x0FFFFFFF` | Cartridge SRAM |
+| `0x10000000`-`0x1FBFFFFF` | Cartridge ROM |
+| `0x1FC007C0`-`0x1FC007FF` | PIF RAM |
+
+Unmapped addresses return `-1`. For systems without a memory map, the address is a raw offset into the first debugger memory node.
+
+#### Explicit node targeting
+
+Any debugger memory node can be addressed directly with a `<node>:<hex offset>` address token, which bypasses the memory map. Node names are matched case-insensitively with spaces and underscores ignored, so `Cartridge_ROM:0`, `cartridgerom:0` and `RSP_DMEM:100` are all valid. This reaches nodes with no bus mapping, such as Cartridge EEPROM or DCache.
+
+```bash
+echo -n "READ_CORE_MEMORY 80000318 4" | nc -u -w1 localhost 55355
+echo -n "READ_CORE_MEMORY Cartridge_ROM:0 16" | nc -u -w1 localhost 55355
+echo -n "WRITE_CORE_MEMORY Cartridge_EEPROM:0 FF FF" | nc -u -w1 localhost 55355
+```
+
 ### Disc Management
 
 | Command | Response | Description |

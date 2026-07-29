@@ -143,6 +143,70 @@ auto NetworkControlInterface::commandSetShader(string_view path, sockaddr* sende
   reply({"SET_SHADER ", shaderPath}, sender, senderLen);
 }
 
+struct NCIMemoryTarget {
+  ares::Node::Debugger::Memory node;
+  u32 offset = 0;
+};
+
+// node names are matched case-insensitively, ignoring spaces and underscores,
+// so "Cartridge_ROM", "cartridgerom" and "Cartridge ROM" are equivalent
+static auto nciNormalizeMemoryNodeName(string name) -> string {
+  name.downcase();
+  name.replace(" ", "");
+  name.replace("_", "");
+  return name;
+}
+
+template<typename T>
+static auto nciFindMemoryNode(T& memories, const string& name) -> ares::Node::Debugger::Memory {
+  auto normalized = nciNormalizeMemoryNodeName(name);
+  for(auto& node : memories) {
+    if(nciNormalizeMemoryNodeName(node->name()) == normalized) return node;
+  }
+  return {};
+}
+
+// Resolves a READ_CORE_MEMORY/WRITE_CORE_MEMORY address token to a debugger
+// memory node and an offset within it. A "<node>:<hex offset>" token targets
+// any node explicitly by name. A plain hex address is interpreted through the
+// emulated system's memory map when one is known; systems without a map fall
+// back to treating the address as a raw offset into the first node.
+static auto nciResolveMemoryTarget(const string& token) -> maybe<NCIMemoryTarget> {
+  auto memories = ares::Node::enumerate<ares::Node::Debugger::Memory>(emulator->root);
+  if(memories.empty()) return nothing;
+
+  if(auto pos = token.find(":")) {
+    string name = slice(token, 0, pos.get());
+    string offset = slice(token, pos.get() + 1);
+    if(auto node = nciFindMemoryNode(memories, name)) {
+      return NCIMemoryTarget{node, (u32)offset.hex()};
+    }
+    return nothing;
+  }
+
+  u32 address = token.hex();
+
+  if(emulator->name.beginsWith("Nintendo 64")) {
+    u32 physical = address;
+    if(address >= 0x80000000u && address <= 0xBFFFFFFFu) physical = address & 0x1FFFFFFFu;  //KSEG0/KSEG1
+    string name;
+    u32 base = 0;
+    if(physical <= 0x03EFFFFFu) { name = "RDRAM"; base = 0; }
+    else if(physical >= 0x04000000u && physical <= 0x04000FFFu) { name = "RSP DMEM"; base = 0x04000000u; }
+    else if(physical >= 0x04001000u && physical <= 0x04001FFFu) { name = "RSP IMEM"; base = 0x04001000u; }
+    else if(physical >= 0x08000000u && physical <= 0x0FFFFFFFu) { name = "Cartridge SRAM"; base = 0x08000000u; }
+    else if(physical >= 0x10000000u && physical <= 0x1FBFFFFFu) { name = "Cartridge ROM"; base = 0x10000000u; }
+    else if(physical >= 0x1FC007C0u && physical <= 0x1FC007FFu) { name = "PIF RAM"; base = 0x1FC007C0u; }
+    else return nothing;
+    if(auto node = nciFindMemoryNode(memories, name)) {
+      return NCIMemoryTarget{node, physical - base};
+    }
+    return nothing;
+  }
+
+  return NCIMemoryTarget{memories.front(), address};
+}
+
 auto NetworkControlInterface::commandReadCoreMemory(string_view args, sockaddr* sender, socklen_t senderLen) -> void {
   if(!emulator) {
     reply("READ_CORE_MEMORY -1", sender, senderLen);
@@ -156,26 +220,22 @@ auto NetworkControlInterface::commandReadCoreMemory(string_view args, sockaddr* 
     return;
   }
 
-  u32 address = parts[0].hex();
   u32 length = parts[1].natural();
   if(length == 0 || length > 256) {
     reply("READ_CORE_MEMORY -1", sender, senderLen);
     return;
   }
 
-  auto memories = ares::Node::enumerate<ares::Node::Debugger::Memory>(emulator->root);
-  if(memories.empty()) {
+  auto target = nciResolveMemoryTarget(parts[0]);
+  if(!target) {
     reply("READ_CORE_MEMORY -1", sender, senderLen);
     return;
   }
 
-  auto memory = memories.front();
-  for(auto& node : memories) {
-    if(node->name() == "RDRAM") { memory = node; break; }
-  }
-  string result = {"READ_CORE_MEMORY ", hex(address, 4L)};
+  auto memory = target->node;
+  string result = {"READ_CORE_MEMORY ", parts[0]};
   for(u32 i = 0; i < length; i++) {
-    u32 addr = address + i;
+    u32 addr = target->offset + i;
     if(addr >= memory->size()) {
       result.append(" -1");
       break;
@@ -198,19 +258,15 @@ auto NetworkControlInterface::commandWriteCoreMemory(string_view args, sockaddr*
     return;
   }
 
-  u32 address = parts[0].hex();
-  auto memories = ares::Node::enumerate<ares::Node::Debugger::Memory>(emulator->root);
-  if(memories.empty()) {
+  auto target = nciResolveMemoryTarget(parts[0]);
+  if(!target) {
     reply("WRITE_CORE_MEMORY -1", sender, senderLen);
     return;
   }
 
-  auto memory = memories.front();
-  for(auto& node : memories) {
-    if(node->name() == "RDRAM") { memory = node; break; }
-  }
+  auto memory = target->node;
   for(u32 i = 1; i < parts.size(); i++) {
-    u32 addr = address + (i - 1);
+    u32 addr = target->offset + (i - 1);
     if(addr >= memory->size()) {
       reply("WRITE_CORE_MEMORY -1", sender, senderLen);
       return;
@@ -218,7 +274,7 @@ auto NetworkControlInterface::commandWriteCoreMemory(string_view args, sockaddr*
     memory->write(addr, parts[i].hex());
   }
 
-  reply({"WRITE_CORE_MEMORY ", hex(address, 4L), " ", parts.size() - 1}, sender, senderLen);
+  reply({"WRITE_CORE_MEMORY ", parts[0], " ", parts.size() - 1}, sender, senderLen);
 }
 
 auto NetworkControlInterface::commandLoadStateSlot(string_view args, sockaddr* sender, socklen_t senderLen) -> void {

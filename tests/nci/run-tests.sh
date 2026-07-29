@@ -145,6 +145,8 @@ test_command "FRAMEADVANCE" "^FRAMEADVANCE -1" "FRAMEADVANCE returns -1 without 
 test_command "REWIND" "^REWIND -1" "REWIND returns -1 without content"
 test_command "READ_CORE_MEMORY 0000 1" "^READ_CORE_MEMORY -1" "READ_CORE_MEMORY returns -1 without content"
 test_command "WRITE_CORE_MEMORY 0000 FF" "^WRITE_CORE_MEMORY -1" "WRITE_CORE_MEMORY returns -1 without content"
+test_command "READ_CORE_MEMORY RDRAM:0 1" "^READ_CORE_MEMORY -1" "READ_CORE_MEMORY node prefix returns -1 without content"
+test_command "WRITE_CORE_MEMORY RDRAM:0 FF" "^WRITE_CORE_MEMORY -1" "WRITE_CORE_MEMORY node prefix returns -1 without content"
 test_command "CLOSE_CONTENT" "^CLOSE_CONTENT -1" "CLOSE_CONTENT returns -1 without content"
 test_command "LOAD_CONTENT /nonexistent/path.rom" "^LOAD_CONTENT -1" "LOAD_CONTENT returns -1 for nonexistent file"
 test_command "LOAD_CONTENT" "^LOAD_CONTENT -1" "LOAD_CONTENT returns -1 with no args"
