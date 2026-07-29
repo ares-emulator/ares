@@ -10,9 +10,10 @@ auto VsUniSystem::Controls::load(Node::Object parent) -> bool {
   coins[0] = node->append<Node::Input::Button>("Player 1 Coin");
   coins[1] = node->append<Node::Input::Button>("Player 2 Coin");
 
-  if(mode == "standard") input = std::make_unique<StandardInput>(node, StandardInput::Wiring::Standard);
-  if(mode == "swapped")  input = std::make_unique<StandardInput>(node, StandardInput::Wiring::Swapped);
-  if(mode == "swap-ab")  input = std::make_unique<StandardInput>(node, StandardInput::Wiring::SwapAB);
+  n8 fixedBits = cartridge.pak->attribute("protection") == "ice-climber" ? 0x08 : 0x00;
+  if(mode == "standard") input = std::make_unique<StandardInput>(node, StandardInput::Wiring::Standard, fixedBits);
+  if(mode == "swapped")  input = std::make_unique<StandardInput>(node, StandardInput::Wiring::Swapped, fixedBits);
+  if(mode == "swap-ab")  input = std::make_unique<StandardInput>(node, StandardInput::Wiring::SwapAB, fixedBits);
   if(mode == "zapper")   input = std::make_unique<ZapperInput>(node);
   return true;
 }

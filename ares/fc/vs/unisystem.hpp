@@ -24,6 +24,7 @@ struct VsUniSystem {
         Swapped,
         SwapAB,
       } wiring;
+      n8 fixedBits;
 
       struct Player {
         Node::Input::Button up;
@@ -36,7 +37,7 @@ struct VsUniSystem {
       } players[2];
       Node::Input::Button live[2];
 
-      StandardInput(Node::Object parent, Wiring wiring);
+      StandardInput(Node::Object parent, Wiring wiring, n8 fixedBits);
 
       auto data(u32 stream) -> n1 override;
       auto latch() -> std::array<n8, 2> override;

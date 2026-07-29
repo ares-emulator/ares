@@ -1555,7 +1555,7 @@ game
     topology: unisystem
     ppu: ppu2c04
     mapper: standard
-    protection: normal
+    protection: ice-climber
     input: standard
   dip
     name: Coinage

@@ -37,7 +37,7 @@ SUPPORTED = {
     "excitebko": machine(),
     "excitebkj": machine(),
     "goonies": machine("vrc1"),
-    "iceclimb": machine(),
+    "iceclimb": machine(protection="ice-climber"),
     "iceclimba": machine(),
     "nvs_machrider": machine(),
     "nvs_machridera": machine(),

@@ -1,4 +1,5 @@
-VsUniSystem::Controls::StandardInput::StandardInput(Node::Object parent, Wiring wiring) : wiring(wiring) {
+VsUniSystem::Controls::StandardInput::StandardInput(Node::Object parent, Wiring wiring, n8 fixedBits)
+  : wiring(wiring), fixedBits(fixedBits) {
   loadPlayer(parent, players[0], 1);
   loadPlayer(parent, players[1], 2);
 
@@ -29,7 +30,7 @@ auto VsUniSystem::Controls::StandardInput::pollPlayer(u32 player) -> n8 {
   platform->input(controls.left);
   platform->input(controls.right);
 
-  n8 data = 0;
+  n8 data = fixedBits;
   data.bit(0) = controls.a->value();
   data.bit(1) = controls.b->value();
   data.bit(2) = controls.start->value();
