@@ -3,6 +3,7 @@ struct GameBrowserEntry {
   string name;
   string board;
   string path;
+  bool available = false;
 };
 
 struct GameBrowserWindow : Window {
@@ -14,7 +15,9 @@ struct GameBrowserWindow : Window {
   HorizontalLayout searchLayout{&layout, Size{~0, 0}, 5};
     Label searchLabel{&searchLayout, Size{100, 0}};
     LineEdit searchInput{&searchLayout, Size{~0, 0}};
-  TableView gameList{&layout, Size{~0, ~0}};
+  HorizontalLayout browserLayout{&layout, Size{~0, ~0}, 5};
+    ListView categoryList{&browserLayout, Size{150_sx, ~0}};
+    TableView gameList{&browserLayout, Size{~0, ~0}};
 
   std::vector<GameBrowserEntry> games;
   std::shared_ptr<Emulator> emulator;

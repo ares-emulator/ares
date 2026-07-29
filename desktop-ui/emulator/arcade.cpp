@@ -5,6 +5,7 @@ struct Arcade : Emulator {
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto group() -> string override { return "Arcade"; }
   auto arcade() -> bool override { return true; }
+  auto gameBrowserCategories() -> std::vector<GameBrowserCategory> override;
   auto input(ares::Node::Input::Input) -> void override;
   string systemPakName = "Arcade";
   string gamePakName = "Arcade";
@@ -101,6 +102,20 @@ auto Arcade::available() -> bool {
   return true;
 #endif
   return false;
+}
+
+auto Arcade::gameBrowserCategories() -> std::vector<GameBrowserCategory> {
+  std::vector<GameBrowserCategory> categories;
+#ifdef CORE_FC
+  categories.push_back({"Nintendo Vs. System", "nintendo/vs"});
+#endif
+#ifdef CORE_N64
+  categories.push_back({"Nintendo Aleck 64", "nintendo/aleck64"});
+#endif
+#ifdef CORE_SG
+  categories.push_back({"Sega SG-1000 Arcade", "sega/sg1000a"});
+#endif
+  return categories;
 }
 
 auto Arcade::load() -> LoadResult {
