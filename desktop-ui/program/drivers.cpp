@@ -77,14 +77,14 @@ auto Program::videoFullScreenToggle() -> void {
   ruby::video.clear();
   if(!ruby::video.fullScreen()) {
     ruby::video.setFullScreen(true);
-    if(!ruby::input.acquired()) {
+    if(!inputManager.acquired()) {
       if(ruby::video.exclusive() || ruby::video.hasMonitors().size() == 1) {
-        ruby::input.acquire();
+        inputManager.acquire();
       }
     }
   } else {
-    if(ruby::input.acquired()) {
-      ruby::input.release();
+    if(inputManager.acquired()) {
+      inputManager.release();
     }
     ruby::video.setFullScreen(false);
     presentation.viewport.setFocused();
@@ -99,13 +99,13 @@ auto Program::videoPseudoFullScreenToggle() -> void {
   if(!presentation.fullScreen()) {
     presentation.setFullScreen(true);
     presentation.menuBar.setVisible(false);
-    if(!ruby::input.acquired() && ruby::video.hasMonitors().size() == 1) {
-      ruby::input.acquire();
+    if(!inputManager.acquired() && ruby::video.hasMonitors().size() == 1) {
+      inputManager.acquire();
     }
     startPseudoFullScreen = true;
   } else {
-    if(ruby::input.acquired()) {
-      ruby::input.release();
+    if(inputManager.acquired()) {
+      inputManager.release();
     }
     if(!kiosk) presentation.menuBar.setVisible(true);
     presentation.setFullScreen(false);
