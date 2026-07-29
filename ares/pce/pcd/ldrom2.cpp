@@ -221,14 +221,12 @@ auto PCD::LD::write(n24 address, n8 data) -> void {
   static bool includeReg0DebugOutput = false;
   bool isOutput = (address & 0x80);
   u8 regNum = (address & 0x3f) >> 1;
-  ares::_debug.reset();
+  //ares::_debug.reset();
   //debug(unverified, "[PCD::writeLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
   if ((regNum != 0x00) || includeReg0DebugOutput) {
     //debug(unverified, "[PCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
     if (isOutput) {
       debug(unusual, "[PCD::writeLD] address=0x", hex(address, 8L), " output=", isOutput, " reg=0x", hex(regNum, 2L), " value=0x", hex(data, 4L));
-    } else {
-      debug(unverified, "[PCD::writeLD] reg=0x", hex(regNum, 2L), " = ", hex(data, 2L));
     }
   }
 
