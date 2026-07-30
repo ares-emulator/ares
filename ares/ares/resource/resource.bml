@@ -5,6 +5,8 @@ namespace name=Resource
     binary name=Logo1x file=logo.png
     binary name=Logo2x file=logo@2x.png
   namespace name=Sprite
+    namespace name=Famicom
+      binary name=Crosshair file=sprite/fc/crosshair.png
     namespace name=SuperFamicom
       binary name=CrosshairBlue file=sprite/sfc/crosshair-blue.png
       binary name=CrosshairGreen file=sprite/sfc/crosshair-green.png

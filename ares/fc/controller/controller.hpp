@@ -24,6 +24,7 @@ struct Controller {
 
   virtual ~Controller() = default;
 
+  virtual auto frame() -> void {}
   virtual auto data() -> n3 { return 0b000; }
   virtual auto latch(n1 data) -> void {}
   virtual auto serialize(serializer&) -> void {}

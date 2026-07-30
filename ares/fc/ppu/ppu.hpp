@@ -1,4 +1,6 @@
 struct PPU : Thread {
+  #include "model.hpp"
+
   Node::Object node;
   Node::Video::Screen screen;
   Memory::Writable<n8> ciram;
@@ -19,10 +21,10 @@ struct PPU : Thread {
     } memory;
   } debugger;
 
-  auto rate()          const -> u32 { return Region::PAL() || Region::Dendy() ? 5 : 4; }
-  auto vlines()        const -> u32 { return Region::PAL() || Region::Dendy() ? 312 : 262; }
-  auto displayHeight() const -> u32 { return Region::PAL() ? 288 : 242; }
-  auto vblankScanline() const -> u32 { return Region::Dendy() ? 291 : 241; }
+  auto rate()           const -> u32 { return model->raster.clockDivider; }
+  auto vlines()         const -> u32 { return model->raster.scanlines; }
+  auto displayHeight()  const -> u32 { return model->raster.canvasHeight; }
+  auto vblankScanline() const -> u32 { return model->raster.vblankScanline; }
 
   //ppu.cpp
   auto load(Node::Object) -> void;
@@ -54,8 +56,8 @@ struct PPU : Thread {
   auto renderPixel() -> void;
   auto renderScanline() -> void;
 
-  //color.cpp
-  auto color(n32) -> n64;
+  //model.cpp
+  auto color(n32 c) -> n64 { return model->color(c); }
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -207,6 +209,13 @@ struct PPU : Thread {
     0x09, 0x01, 0x34, 0x03, 0x00, 0x04, 0x00, 0x14,
     0x08, 0x3A, 0x00, 0x02, 0x00, 0x20, 0x2C, 0x08,
   };
+
+private:
+  auto createBaseModel() -> std::unique_ptr<Model>;
+  auto createVsModel() -> std::unique_ptr<Model>;
+  auto createVsModel(string identifier, const Model::Palette& palette) -> std::unique_ptr<Model>;
+
+  std::unique_ptr<Model> model;
 };
 
 extern PPU ppu;

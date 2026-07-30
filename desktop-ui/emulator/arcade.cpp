@@ -5,6 +5,7 @@ struct Arcade : Emulator {
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
   auto group() -> string override { return "Arcade"; }
   auto arcade() -> bool override { return true; }
+  auto gameBrowserCategories() -> std::vector<GameBrowserCategory> override;
   auto input(ares::Node::Input::Input) -> void override;
   string systemPakName = "Arcade";
   string gamePakName = "Arcade";
@@ -45,6 +46,7 @@ Arcade::Arcade() {
   { InputDevice device{"Controls"} ;
     device.digital("Service", virtualPorts[0].pad.lstick_click);
     device.digital("Test",    virtualPorts[0].pad.rstick_click);
+
     for(auto n : range(2)) {
       device.digital({"Player ", n + 1, " Up"      }, virtualPorts[n].pad.up);
       device.digital({"Player ", n + 1, " Down"    }, virtualPorts[n].pad.down);
@@ -67,6 +69,11 @@ Arcade::Arcade() {
       device.analog ({"Player ", n + 1, " X-Axis"  }, virtualPorts[n].pad.lstick_left, virtualPorts[n].pad.lstick_right);
       device.analog ({"Player ", n + 1, " Y-Axis"  }, virtualPorts[n].pad.lstick_up,   virtualPorts[n].pad.lstick_down);
     }
+
+    device.relative("X-Axis",  virtualPorts[0].mouse.x);
+    device.relative("Y-Axis",  virtualPorts[0].mouse.y);
+    device.digital ("Trigger", virtualPorts[0].mouse.left);
+
     port.append(device); }
 
   { InputDevice device{"Mahjong"};
@@ -97,14 +104,29 @@ Arcade::Arcade() {
 }
 
 auto Arcade::available() -> bool {
-#if defined(CORE_SG) || defined(CORE_N64)
+#if defined(CORE_SG) || defined(CORE_N64) || defined(CORE_FC)
   return true;
 #endif
   return false;
 }
 
+auto Arcade::gameBrowserCategories() -> std::vector<GameBrowserCategory> {
+  std::vector<GameBrowserCategory> categories;
+#ifdef CORE_FC
+  categories.push_back({"Nintendo Vs. System", "nintendo/vs"});
+#endif
+#ifdef CORE_N64
+  categories.push_back({"Nintendo Aleck 64", "nintendo/aleck64"});
+#endif
+#ifdef CORE_SG
+  categories.push_back({"Sega SG-1000 Arcade", "sega/sg1000a"});
+#endif
+  return categories;
+}
+
 auto Arcade::load() -> LoadResult {
   systemPakName = "Arcade";
+  gamePakName = "Arcade";
   game = mia::Medium::create("Arcade");
   string location = Emulator::load(game, configuration.game);
   if(!location) return noFileSelected;
@@ -116,6 +138,21 @@ auto Arcade::load() -> LoadResult {
   if(result != successful) return result;
 
   //Determine from the game manifest which core to use for the given arcade rom
+#ifdef CORE_FC
+  if(game->pak->attribute("board") == "nintendo/vs") {
+    if(game->pak->attribute("system") != "Vs. UniSystem") return otherError;
+    if(!ares::Famicom::load(root, {"[Nintendo] Vs. UniSystem"})) return otherError;
+    systemPakName = "Famicom";
+    gamePakName = "Famicom Cartridge";
+
+    if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
+      port->allocate();
+      port->connect();
+    }
+    return successful;
+  }
+#endif
+
 #ifdef CORE_SG
   if(game->pak->attribute("board") == "sega/sg1000a") {
     if(!ares::SG1000::load(root, {"[Sega] SG-1000A"})) return otherError;

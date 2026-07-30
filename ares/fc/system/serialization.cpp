@@ -1,4 +1,4 @@
-static const string SerializerVersion = "v153";
+static const string SerializerVersion = "v154";
 
 auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
@@ -43,8 +43,12 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cpu);
   s(apu);
   s(ppu);
-  if(fds.present) s(fds);
-  s(controllerPort1);
-  s(controllerPort2);
-  expansionPort.serialize(s);
+  if(model() == Model::VsUniSystem) {
+    s(vsUniSystem);
+  } else {
+    if(fds.present) s(fds);
+    s(controllerPort1);
+    s(controllerPort2);
+    expansionPort.serialize(s);
+  }
 }
