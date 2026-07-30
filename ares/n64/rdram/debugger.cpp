@@ -29,6 +29,13 @@ auto RDRAM::Debugger::load(Node::Object parent) -> void {
     }
   });
 
+  memory.hidden = parent->append<Node::Debugger::Memory>("RDP Hidden RDRAM");
+  memory.hidden->setSize(rdram.ram.size / 2);
+  memory.hidden->setRead([&](u32 address) -> u8 {
+    if(!rdram.hidden.data || address >= rdram.ram.size / 2) return 0;
+    return rdram.hidden.data[address];
+  });
+
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "RDRAM");
 }
 

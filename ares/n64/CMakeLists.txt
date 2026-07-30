@@ -228,6 +228,8 @@ ares_add_sources(
     n64
   INCLUDED #
     rdp/debugger.cpp
+    rdp/capture.cpp
+    rdp/capture.hpp
     rdp/io.cpp
     rdp/rdp.hpp
     rdp/render.cpp
