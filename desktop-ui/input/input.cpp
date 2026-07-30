@@ -179,7 +179,7 @@ auto InputDigital::value() -> s16 {
       output = value != 0;
     }
 
-    if(device->isMouse() && groupID == HID::Mouse::GroupID::Button && ruby::input.acquired()) {
+    if(device->isMouse() && groupID == HID::Mouse::GroupID::Button && inputManager.acquired()) {
       output = value != 0;
     }
 
@@ -223,7 +223,7 @@ auto InputHotkey::value() -> s16 {
       output = value != 0;
     }
 
-    if(device->isMouse() && groupID == HID::Mouse::GroupID::Button && ruby::input.acquired()) {
+    if(device->isMouse() && groupID == HID::Mouse::GroupID::Button && inputManager.acquired()) {
       output = value != 0;
     }
 
@@ -363,7 +363,7 @@ auto InputAbsolute::value() -> s16 {
     if (device->isKeyboard() && program.keyboardCaptured) continue;
     s16 value = device->group(groupID).input(inputID).value();
 
-    if(device->isMouse() && groupID == HID::Joypad::GroupID::Axis && ruby::input.acquired()) {
+    if(device->isMouse() && groupID == HID::Joypad::GroupID::Axis && inputManager.acquired()) {
       result += value;
     }
 
@@ -389,45 +389,51 @@ auto InputRelative::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 g
     return unbind(binding), true;
   }
 
-  if(device->isMouse() && groupID == HID::Mouse::GroupID::Axis) {
-    return bind(binding, assignment), true;
+  bool accepted = device->isMouse() && groupID == HID::Mouse::GroupID::Axis;
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis) {
+    if(oldValue >= -16384 && newValue < -16384) accepted = true;
+    if(oldValue <= +16384 && newValue > +16384) accepted = true;
   }
+  if(!accepted) return false;
 
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis
-  && oldValue >= -16384 && newValue < -16384
-  ) {
-    return bind(binding, assignment), true;
+  InputMapping::bind(binding, assignment);
+  synchronize();
+  return true;
+}
+
+auto InputRelative::synchronize() -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  for(u32 index : range(BindingLimit)) {
+    auto& binding = bindings[index];
+    if(!binding.device || !binding.device->isMouse()) continue;
+    if(binding.groupID != HID::Mouse::GroupID::Axis) continue;
+
+    auto& mouse = static_cast<HID::Mouse&>(*binding.device);
+    if(binding.inputID >= mouse.axes().size()) continue;
+    mouse.motion(binding.inputID).synchronize(previous[index]);
   }
-
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis
-  && oldValue <= +16384 && newValue > +16384
-  ) {
-    return bind(binding, assignment), true;
-  }
-
-  return false;
 }
 
 auto InputRelative::value() -> s16 {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
-  s32 result = 0;
+  s64 result = 0;
 
-  for(auto& binding : bindings) {
+  for(u32 index : range(BindingLimit)) {
+    auto& binding = bindings[index];
     if(!binding.device) continue;  //unbound
 
     auto& device = binding.device;
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
-    auto& qualifier = binding.qualifier;
     if (device->isKeyboard() && program.keyboardCaptured) continue;
-    s16 value = device->group(groupID).input(inputID).value();
 
-    if(device->isMouse() && groupID == HID::Joypad::GroupID::Axis && ruby::input.acquired()) {
-      result += value;
+    if(device->isMouse() && groupID == HID::Mouse::GroupID::Axis && inputManager.acquired()) {
+      auto& mouse = static_cast<HID::Mouse&>(*device);
+      result += mouse.motion(inputID).read(previous[index]);
     }
 
     if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis) {
-      result += value;
+      result += device->group(groupID).input(inputID).value();
     }
   }
 
@@ -535,6 +541,46 @@ auto InputManager::bind() -> void {
     }
   }
   for(auto& mapping : hotkeys) mapping.bind();
+  synchronize();
+}
+
+auto InputManager::acquired() -> bool {
+  return ruby::input.acquired();
+}
+
+auto InputManager::acquire() -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  if(!ruby::input.acquire()) return false;
+  synchronize();
+  return true;
+}
+
+auto InputManager::release() -> bool {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  if(!ruby::input.release()) return false;
+  synchronize();
+  return true;
+}
+
+auto InputManager::synchronize() -> void {
+  lock_guard<recursive_mutex> inputLock(program.inputMutex);
+  for(auto& port : virtualPorts) {
+    for(auto& input : port.mouse.inputs) {
+      if(input.type == InputNode::Type::Relative) static_cast<InputRelative&>(*input.mapping).synchronize();
+    }
+  }
+  for(auto& emulator : emulators) {
+    for(auto& port : emulator->ports) {
+      for(auto& device : port.devices) {
+        if(!device.hasDirectMappings()) continue;
+        for(auto& input : device.inputs) {
+          if(input.type == InputNode::Type::Relative) {
+            static_cast<InputRelative&>(input.configuredMapping()).synchronize();
+          }
+        }
+      }
+    }
+  }
 }
 
 auto InputManager::poll(bool force) -> void {

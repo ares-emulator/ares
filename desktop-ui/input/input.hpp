@@ -58,7 +58,11 @@ struct InputAbsolute : InputMapping {
 struct InputRelative : InputMapping {
   using InputMapping::bind;
   auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
+  auto synchronize() -> void;
   auto value() -> s16 override;
+
+private:
+  s64 previous[BindingLimit] = {};
 };
 
 //specifies a target joypad for force feedback
@@ -299,6 +303,10 @@ struct VirtualPort {
 struct InputManager {
   auto create() -> void;
   auto bind() -> void;
+  auto acquired() -> bool;
+  auto acquire() -> bool;
+  auto release() -> bool;
+  auto synchronize() -> void;
   auto poll(bool force = false) -> void;
   auto eventInput(std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
 

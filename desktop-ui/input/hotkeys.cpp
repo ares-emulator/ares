@@ -16,10 +16,10 @@ auto InputManager::createHotkeys() -> void {
   hotkeys.push_back(InputHotkey("Toggle Mouse Capture").onPress([&] {
     Program::Guard guard;
     if(!emulator) return;
-    if(!ruby::input.acquired()) {
-      ruby::input.acquire();
+    if(!inputManager.acquired()) {
+      inputManager.acquire();
     } else {
-      ruby::input.release();
+      inputManager.release();
     }
   }));
 

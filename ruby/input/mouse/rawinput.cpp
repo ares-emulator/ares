@@ -88,6 +88,9 @@ struct InputMouseRawInput {
     auto extents = desktopExtents();
     WaitForSingleObject(rawinput.mutex, INFINITE);
     motion.refresh(extents);
+    ms.relativeX = 0;
+    ms.relativeY = 0;
+    ms.relativeZ = 0;
     ReleaseMutex(rawinput.mutex);
   }
 
@@ -151,9 +154,10 @@ struct InputMouseRawInput {
 
   auto assign(u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = ms.hid->group(groupID);
-    if(group.input(inputID).value() == value) return;
-    input.doChange(ms.hid, groupID, inputID, group.input(inputID).value(), value);
-    group.input(inputID).setValue(value);
+    auto& target = group.input(inputID);
+    if(target.value() != value) input.doChange(ms.hid, groupID, inputID, target.value(), value);
+    target.setValue(value);
+    if(groupID == HID::Mouse::GroupID::Axis) ms.hid->motion(inputID).move(value);
   }
 
   auto poll(std::vector<std::shared_ptr<HID::Device>>& devices) -> void {
@@ -192,9 +196,9 @@ struct InputMouseRawInput {
     ms.hid->setProductID(HID::Mouse::GenericProductID);
     ms.hid->setPathID(0);
 
-    ms.hid->axes().append("X");
-    ms.hid->axes().append("Y");
-    ms.hid->axes().append("Z");
+    ms.hid->appendAxis("X");
+    ms.hid->appendAxis("Y");
+    ms.hid->appendAxis("Z");
 
     ms.hid->buttons().append("Left");
     ms.hid->buttons().append("Middle");

@@ -117,10 +117,37 @@ struct Mouse : Device {
   enum : u16 { GenericVendorID = 0x0000, GenericProductID = 0x0002 };
   enum GroupID : u32 { Axis, Button };
 
+  struct Motion {
+    auto move(s16 distance) -> void {
+      position += distance;
+    }
+
+    auto synchronize(s64& previous) const -> void {
+      previous = position;
+    }
+
+    auto read(s64& previous) const -> s64 {
+      auto distance = position - previous;
+      previous = position;
+      return distance;
+    }
+
+  private:
+    s64 position = 0;
+  };
+
   Mouse() : Device("Mouse") { append("Axis"), append("Button"); }
   auto isMouse() const -> bool { return true; }
   auto axes() -> Group& { return group(GroupID::Axis); }
   auto buttons() -> Group& { return group(GroupID::Button); }
+  auto appendAxis(const string& name) -> void {
+    axes().append(name);
+    _motion.emplace_back();
+  }
+  auto motion(u32 id) -> Motion& { return _motion[id]; }
+
+private:
+  std::vector<Motion> _motion;
 };
 
 struct Joypad : Device {
