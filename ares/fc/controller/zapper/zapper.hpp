@@ -7,6 +7,7 @@ struct LightGun {
 
   auto load(Node::Object parent, Node::Input::Axis x, Node::Input::Axis y, Node::Input::Button trigger) -> void;
   auto unload() -> void;
+  auto frame() -> void;
   auto data() -> n3;
   auto serialize(serializer&) -> void;
 
@@ -17,7 +18,6 @@ private:
   i32 py = 0;
   u32 nx = 256 / 2;
   u32 ny = 240 / 2;
-  u32 previous = 0;
 };
 
 struct Zapper : Controller {
@@ -29,7 +29,7 @@ struct Zapper : Controller {
   Zapper(Node::Port);
   ~Zapper();
 
-  auto main() -> void;
+  auto frame() -> void override;
   auto data() -> n3 override;
   auto latch(n1 data) -> void override;
   auto serialize(serializer&) -> void override;

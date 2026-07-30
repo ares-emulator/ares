@@ -25,7 +25,6 @@ auto LightGun::load(Node::Object parent, Node::Input::Axis x, Node::Input::Axis 
   py = 0;
   nx = 256 / 2;
   ny = 240 / 2;
-  previous = 0;
 
   sprite = parent->append<Node::Video::Sprite>("Crosshair");
   sprite->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
@@ -42,32 +41,30 @@ auto LightGun::unload() -> void {
   sprite.reset();
 }
 
+auto LightGun::frame() -> void {
+  platform->input(x);  //-n = left, 0 = center, +n = right
+  platform->input(y);  //-n = up,   0 = center, +n = down
+
+  if(x->value() != px || y->value() != py) {
+    px = x->value();
+    py = y->value();
+
+    cx = max(-8, min(256 + 8, px + cx));
+    cy = max(-8, min(240 + 8, py + cy));
+
+    sprite->setPosition(cx, cy);
+    sprite->setVisible(true);
+
+    nx = cx + 8;
+    ny = cy + 8;
+  }
+}
+
 auto LightGun::data() -> n3 {
-  u32 next = ppu.io.ly * 283 + ppu.io.lx;
   n3 result = 0b000;
 
   platform->input(trigger);
   if(trigger->value()) result.bit(2) = 1;
-
-  if(next < previous) {
-    platform->input(x);  //-n = left, 0 = center, +n = right
-    platform->input(y);  //-n = up,   0 = center, +n = down
-
-    if(x->value() != px || y->value() != py) {
-      px = x->value();
-      py = y->value();
-
-      cx = max(-8, min(256 + 8, px + cx));
-      cy = max(-8, min(240 + 8, py + cy));
-
-      sprite->setPosition(cx, cy);
-      sprite->setVisible(true);
-
-      nx = cx + 8;
-      ny = cy + 8;
-    }
-  }
-  previous = next;
 
   bool offscreen = nx < 0 || ny < 0 || nx >= 256 || ny >= 240;
   if(offscreen) {
@@ -108,12 +105,17 @@ auto LightGun::serialize(serializer& s) -> void {
   s(py);
   s(nx);
   s(ny);
-  s(previous);
+  u32 legacyRaster = 0;
+  s(legacyRaster);
 
   if(s.reading() && sprite) {
     sprite->setPosition(cx, cy);
     sprite->setVisible(true);
   }
+}
+
+auto Zapper::frame() -> void {
+  lightGun.frame();
 }
 
 auto Zapper::data() -> n3 {

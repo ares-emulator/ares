@@ -40,6 +40,8 @@ auto System::game() -> string {
 auto System::run() -> void {
   scheduler.enter();
   if(model() == Model::VsUniSystem) vsUniSystem.frame();
+  controllerPort1.frame();
+  controllerPort2.frame();
   auto reset = controls.reset->value();
   platform->input(controls.reset);
   if(!reset && controls.reset->value()) power(true);
