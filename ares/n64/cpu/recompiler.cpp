@@ -247,7 +247,7 @@ auto CPU::Recompiler::computeStateKey() const -> u64 {
   stateKey.setFpuDivisionByZeroEnabled(self.fpu.csr.enable.divisionByZero());
   stateKey.setFpuInvalidOperationEnabled(self.fpu.csr.enable.invalidOperation());
   const u64 cachedBase = 0xffff'ffff'8000'0000ull;
-  const u64 cachedEnd  = 0xffff'ffff'807f'ffffull;
+  const u64 cachedEnd  = cachedBase + rdram.ram.size - 1;
   auto gp = self.ipu.r[28].u64;
   auto sp = self.ipu.r[29].u64;
   bool gpCached = gp >= cachedBase && gp <= cachedEnd;
@@ -281,7 +281,6 @@ auto CPU::Recompiler::updateStackPointerStateKey(s16 offset) -> void {
 }
 
 auto CPU::Recompiler::section(u32 address) -> Section* {
-  assert(isRdramAddress(address));
   if(!isRdramAddress(address)) return nullptr;
   auto index = sectionIndex(address);
   auto& section = sections[index];
@@ -812,10 +811,10 @@ auto CPU::Recompiler::emit(u64 vaddr, u32 address, u64 stateKey) -> Block* {
       const u32 lineIndex = u32(slow.vaddr >> 5) & 0x1ffu;
       const u32 burst = (slow.icachePaddr & ~0xfffu) | ((lineIndex << 5) & 0xfe0u);
       const u32 tagKey = (slow.icachePaddr & ~0xfffu) | 1u;
-      if(!emitStateKey.rdramMapIdentity()) {
+      const bool sdram = Model::Aleck64() && burst > 0xbfff'ffffu;
+      if(!emitStateKey.rdramMapIdentity() || (!sdram && burst + 0x1f >= rdram.ram.size)) {
         callf(&CPU::icacheFillLine, imm64(slow.vaddr), imm(slow.icachePaddr));
       } else {
-        const bool sdram = Model::Aleck64() && burst > 0xbfff'ffffu;
         const sljit_sw ramDataField = sdram ? (sljit_sw)(uintptr_t)&aleck64.sdram.data
                                              : (sljit_sw)(uintptr_t)&rdram.ram.data;
         const u32 ramByteOff = sdram ? (burst & 0xffffffu) : burst;

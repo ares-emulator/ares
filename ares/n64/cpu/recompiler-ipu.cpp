@@ -122,10 +122,11 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
   add64(reg(0), mem(Rs), imm(i16));
   sljit_jump* addressMismatch = nullptr;
   sljit_jump* addressOutOfRange = nullptr;
+  const u32 rdramLimit = rdram.ram.size - 1;
   if(!rangeKnown) {
     if(extendedAddressing) {
       sub64(reg(1), reg(0), imm((sljit_sw)0xffff'ffff'8000'0000ull));
-      cmp64(reg(1), imm(0x007f'ffff), set_ugt);
+      cmp64(reg(1), imm(rdramLimit), set_ugt);
     } else {
       mov64_s32(reg(1), reg(0));
       cmp64(reg(0), reg(1), set_z);
@@ -133,7 +134,7 @@ auto CPU::Recompiler::jitMemoryOpcode(u32 instruction, u32 size, u32 mode,
     addressMismatch = jump(extendedAddressing ? flag_ugt : flag_nz);
     if(!extendedAddressing) {
       sub32(reg(1), reg(0), imm((sljit_sw)0x8000'0000u));
-      cmp32(reg(1), imm(0x007f'ffff), set_ugt);
+      cmp32(reg(1), imm(rdramLimit), set_ugt);
     }
     addressOutOfRange = !extendedAddressing ? jump(flag_ugt) : nullptr;
   }
