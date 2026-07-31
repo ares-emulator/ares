@@ -129,6 +129,11 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Nintendo64/Supersampling", nintendo64.supersampling);
   bind(boolean, "Nintendo64/DisableVideoInterfaceProcessing", nintendo64.disableVideoInterfaceProcessing);
   bind(boolean, "Nintendo64/WeaveDeinterlacing", nintendo64.weaveDeinterlacing);
+  bind(boolean, "Nintendo64/EnableOverscanCrop", nintendo64.enableOverscanCrop);
+  bind(natural, "Nintendo64/OverscanCropTop", nintendo64.overscanCropTop);
+  bind(natural, "Nintendo64/OverscanCropBottom", nintendo64.overscanCropBottom);
+  bind(natural, "Nintendo64/OverscanCropLeft", nintendo64.overscanCropLeft);
+  bind(natural, "Nintendo64/OverscanCropRight", nintendo64.overscanCropRight);
 
   bind(boolean, "GameBoyAdvance/Player", gameBoyAdvance.player);
 

@@ -118,6 +118,11 @@ auto Nintendo64::load() -> LoadResult {
   ares::Nintendo64::option("Recompiler", !settings.developer.forceInterpreter);
   ares::Nintendo64::option("Expansion Pak", settings.nintendo64.expansionPak);
   ares::Nintendo64::option("Controller Pak Banks", settings.nintendo64.controllerPakBankString);
+  ares::Nintendo64::option("Enable Overscan Crop", settings.nintendo64.enableOverscanCrop);
+  ares::Nintendo64::option("Overscan Crop Top", settings.nintendo64.overscanCropTop);
+  ares::Nintendo64::option("Overscan Crop Bottom", settings.nintendo64.overscanCropBottom);
+  ares::Nintendo64::option("Overscan Crop Left", settings.nintendo64.overscanCropLeft);
+  ares::Nintendo64::option("Overscan Crop Right", settings.nintendo64.overscanCropRight);
 
   if(!ares::Nintendo64::load(root, {"[Nintendo] ", name, " (", region, ")"})) return otherError;
 

@@ -24,6 +24,11 @@ struct Vulkan {
   u32  internalUpscale = 1;  //1, 2, 4, 8
   bool supersampleScanout = false;
   u32  outputUpscale = supersampleScanout ? 1 : internalUpscale;
+  bool enableOverscanCrop = false;
+  u32  overscanCropTop = 0;
+  u32  overscanCropBottom = 0;
+  u32  overscanCropLeft = 0;
+  u32  overscanCropRight = 0;
 };
 
 extern Vulkan vulkan;
