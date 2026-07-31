@@ -1115,7 +1115,7 @@ struct CPU : Thread {
     }
 
     auto isRdramAddress(u32 address) const -> bool {
-      return address < RdramSize;
+      return address < rdram.ram.size;
     }
 
     auto rdramAddress(u32 address) const -> u32 {
