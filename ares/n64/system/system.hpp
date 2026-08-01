@@ -6,6 +6,7 @@ struct System {
   bool expansionPak = true;
   u8 configuredControllerPakBankCount = 1;
   u8 controllerPakBankCount = 1;
+  f64 overclock = 1.0;
 
   enum class Model : u32 { Nintendo64, Aleck64 };
   enum class Region : u32 { NTSC, PAL };
@@ -14,7 +15,7 @@ struct System {
   auto model() const -> Model { return information.model; }
   auto region() const -> Region { return information.region; }
   auto _DD() const -> bool { return information.dd; }
-  auto frequency() const -> u32 { return information.frequency; }
+  auto frequency() const -> u32 { return information.frequency * overclock; }
   auto videoFrequency() const -> u32 { return information.videoFrequency; }
 
   //system.cpp
@@ -24,6 +25,7 @@ struct System {
   auto unload() -> void;
   auto save() -> void;
   auto power(bool reset) -> void;
+  auto setOverclock(f64 multiplier) -> void;
 
   //serialization.cpp
   auto serialize(bool synchronize = true) -> serializer;
