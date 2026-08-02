@@ -7,7 +7,15 @@ auto Program::videoDriverUpdate() -> void {
   ruby::video.setExclusive(settings.video.exclusive);
   ruby::video.setBlocking(settings.video.blocking);
   ruby::video.setFlush(settings.video.flush);
-  ruby::video.setShader(settings.video.shader);
+  if(!settings.video.shader.imatch("None")) {
+    string location = locate("Shaders/");
+    #if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
+    if(!inode::exists(location)) location = locate("../libretro/shaders/shaders_slang/");
+    #endif
+    ruby::video.setShader({location, settings.video.shader});
+  } else {
+    ruby::video.setShader(settings.video.shader);
+  }
   ruby::video.setForceSRGB(settings.video.forceSRGB);
   ruby::video.setThreadedRenderer(settings.video.threadedRenderer);
   ruby::video.setNativeFullScreen(settings.video.nativeFullScreen);
