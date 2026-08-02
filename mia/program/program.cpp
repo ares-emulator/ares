@@ -37,6 +37,7 @@ ProgramWindow::ProgramWindow() {
     .setCopyright(ares::Copyright)
     .setLicense(ares::License, ares::LicenseURI)
     .setWebsite(ares::Website, ares::WebsiteURI)
+    .setGitHub(ares::GitHub, ares::GitHubURI)
     .setAlignment(*this)
     .show();
   });

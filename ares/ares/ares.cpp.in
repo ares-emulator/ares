@@ -16,6 +16,8 @@ const string License    = "ISC";
 const string LicenseURI = "https://opensource.org/licenses/ISC";
 const string Website    = "@ARES_WEBSITE@";
 const string WebsiteURI = "https://@ARES_WEBSITE@/";
+const string GitHub     = "@ARES_GITHUB@";
+const string GitHubURI  = "https://@ARES_GITHUB_URI@/";
 const u32    SerializerSignature = 0x31545342;  //"BST1" (little-endian)
 
 }

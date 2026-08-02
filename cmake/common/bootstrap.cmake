@@ -19,6 +19,8 @@ endif()
 # Set default global project variables
 set(ARES_NAME "ares")
 set(ARES_WEBSITE "ares-emu.net")
+set(ARES_GITHUB "ares-emulator/ares")
+set(ARES_GITHUB_URI "github.com/ares-emulator/ares")
 set(
   ARES_COMMENTS
   "ares is a cross-platform, open source, multi-system emulator, focusing on accuracy and preservation."

@@ -51,6 +51,8 @@ namespace ares {
   extern const string LicenseURI;
   extern const string Website;
   extern const string WebsiteURI;
+  extern const string GitHub;
+  extern const string GitHubURI;
   extern const u32 SerializerSignature;
 
   namespace VFS {

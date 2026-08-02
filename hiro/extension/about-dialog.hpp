@@ -12,6 +12,7 @@ struct AboutDialog {
   auto setName(const string& name = "") -> type&;
   auto setVersion(const string& version = "") -> type&;
   auto setWebsite(const string& website = "", const string& uri = "") -> type&;
+  auto setGitHub(const string& github = "", const string& uri = "") -> type&;
   auto show() -> void;
 
 private:
@@ -28,6 +29,8 @@ private:
     string version;
     string website;
     string websiteURI;
+    string github;
+    string githubURI;
   } state;
 };
 
