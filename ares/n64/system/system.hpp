@@ -3,6 +3,8 @@ struct System {
   VFS::Pak pak;
   bool homebrewMode = false;
   bool deterministicEntropy = false;
+  string sc64SDImage;
+  bool sc64SDImageReadOnly = false;
   bool expansionPak = true;
   u8 configuredControllerPakBankCount = 1;
   u8 controllerPakBankCount = 1;

@@ -2,6 +2,9 @@
 
 namespace ares::Nintendo64 {
 
+#include "sc64.hpp"
+#include "sc64.cpp"
+
 Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "slot.cpp"
 #include "flash.cpp"
@@ -55,10 +58,14 @@ auto Cartridge::connect() -> void {
     isviewer.tracer->setTerminal(true);
   }
 
+  sc64 = std::make_unique<SC64>(*this);
+  sc64->open(system.sc64SDImage, system.sc64SDImageReadOnly);
+
   pi.attach(romDevice, 0);
   if(ram) pi.attach(ramDevice, 1);
   if(flash) pi.attach(flash, 1);
   if(isviewer.enabled()) pi.attach(isviewer, 1);
+  if(sc64->enabled) pi.attach(*sc64, 1);
 
   debugger.load(node);
 
@@ -72,12 +79,15 @@ auto Cartridge::disconnect() -> void {
   pi.detach(ramDevice);
   pi.detach(flash);
   pi.detach(isviewer);
+  if(sc64) pi.detach(*sc64);
   debugger.unload(node);
   rom.reset();
   ram.reset();
   eeprom.reset();
   flash.reset();
   isviewer.ram.reset();
+  if(sc64) sc64->close();
+  sc64.reset();
   pak.reset();
   node.reset();
 }

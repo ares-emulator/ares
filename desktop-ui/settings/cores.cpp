@@ -6,6 +6,14 @@ auto CoreSettings::construct() -> void {
 
   nintendo64SettingsLabel.setText("Nintendo 64 Settings").setFont(Font().setBold());
 
+  nintendo64SC64ImageLabel.setText("SC64 SD image:");
+  nintendo64SC64Image.setEditable(true).setText(settings.nintendo64.sc64SDImage).onChange([&] {
+    settings.nintendo64.sc64SDImage = nintendo64SC64Image.text();
+  });
+  nintendo64SC64ReadOnly.setText("SC64 SD image read-only").setChecked(settings.nintendo64.sc64SDImageReadOnly).onToggle([&] {
+    settings.nintendo64.sc64SDImageReadOnly = nintendo64SC64ReadOnly.checked();
+  });
+
   nintendo64ExpansionPakOption.setText("4MB Expansion Pak").setChecked(settings.nintendo64.expansionPak).onToggle([&] {
     settings.nintendo64.expansionPak = nintendo64ExpansionPakOption.checked();
   });

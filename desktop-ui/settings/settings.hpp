@@ -117,6 +117,8 @@ struct Settings : Markup::Node {
     bool supersampling = false;
     bool disableVideoInterfaceProcessing = false;
     bool weaveDeinterlacing = true;
+    string sc64SDImage;
+    bool sc64SDImageReadOnly = false;
   } nintendo64;
 
   struct GameBoyAdvance {
@@ -374,6 +376,11 @@ struct CoreSettings : VerticalLayout {
       Label settingsHint{&settingsLayout, Size{0, layoutVertSize}};
   //
   Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout nintendo64SC64ImageLayout{this, Size{~0, 0}, 5};
+      Label nintendo64SC64ImageLabel{&nintendo64SC64ImageLayout, Size{0, 0}};
+      LineEdit nintendo64SC64Image{&nintendo64SC64ImageLayout, Size{~0, 0}};
+    HorizontalLayout nintendo64SC64ReadOnlyLayout{this, Size{~0, 0}, 5};
+      CheckLabel nintendo64SC64ReadOnly{&nintendo64SC64ReadOnlyLayout, Size{0, 0}, 5};
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, layoutVertSize}};

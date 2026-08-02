@@ -1,3 +1,5 @@
+struct SC64;
+
 struct Cartridge {
   Node::Peripheral node;
   VFS::Pak pak;
@@ -119,6 +121,8 @@ struct Cartridge {
     auto readHalf(u32 address) -> u16;
     auto writeHalf(u32 address, u16 data) -> void;
   } isviewer;
+
+  std::unique_ptr<SC64> sc64;
 
   struct RTC {
     Cartridge& self;
