@@ -6,3 +6,4 @@ Icon=ares
 Terminal=false
 Type=Application
 Categories=Game;Emulator;
+StartupWMClass=Ares
