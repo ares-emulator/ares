@@ -13,6 +13,10 @@ auto CoreSettings::construct() -> void {
   nintendo64SC64ReadOnly.setText("SC64 SD image read-only").setChecked(settings.nintendo64.sc64SDImageReadOnly).onToggle([&] {
     settings.nintendo64.sc64SDImageReadOnly = nintendo64SC64ReadOnly.checked();
   });
+  nintendo64SC64HostPortLabel.setText("SC64 USB host port (0 = disabled):");
+  nintendo64SC64HostPort.setEditable(true).setText(integer(settings.nintendo64.sc64USBHostPort)).onChange([&] {
+    settings.nintendo64.sc64USBHostPort = nintendo64SC64HostPort.text().integer();
+  });
 
   nintendo64ExpansionPakOption.setText("4MB Expansion Pak").setChecked(settings.nintendo64.expansionPak).onToggle([&] {
     settings.nintendo64.expansionPak = nintendo64ExpansionPakOption.checked();

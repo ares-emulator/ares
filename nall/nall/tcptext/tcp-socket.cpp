@@ -18,7 +18,6 @@ namespace {
 
   constexpr u32 TCP_BUFFER_SIZE = 1024 * 16;
   constexpr u32 CLIENT_SLEEP_MS = 10; // ms to sleep while checking for new clients
-  constexpr u32 CYCLES_BEFORE_SLEEP = 100; // how often to do a send/receive check before a sleep
   constexpr u32 RECEIVE_TIMEOUT_SEC = 1; // only important for latency of disconnecting clients, reads are blocming anyways
 
   // A few platform specific socket functions:
@@ -133,15 +132,20 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
       }
 
       // scan for new connections
-      while(fdClient < 0) {
-        fdClient = ::accept(fdServer, nullptr, nullptr);
-        if(fdClient < 0) {
+      while(!stopServer && fdClient < 0) {
+        auto client = ::accept(fdServer, nullptr, nullptr);
+        if(client < 0) {
           if(errno != EAGAIN) {
             if(!stopServer)
               printf("error accepting connection! (%s)\n", strerror(errno));
             break;
           }
           std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
+        } else {
+          // Advance the generation before publishing the descriptor. Worker
+          // threads must never mistake a new client for the old one.
+          clientGeneration++;
+          fdClient = client;
         }
       }
       if (fdClient < 0) {
@@ -155,8 +159,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
       while (!stopServer && fdClient >= 0) {
         // Kick client if we need to
         if(wantKickClient) {
-          socketClose(fdClient);
-          fdClient = -1;
+          invalidateClient();
           wantKickClient = false;
           onDisconnect();
           break;
@@ -168,8 +171,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
     
     printf("Stopping TCP-server...\n");
 
-    socketClose(fdClient);
-    fdClient = -1;
+    invalidateClient();
 
     wantKickClient = false;
 
@@ -180,11 +182,13 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
   auto threadSend = std::thread([this]() 
   {
     std::vector<u8> localSendBuffer{};
-    u32 cycles = 0;
 
     while(!stopServer) 
     {
-      if(fdClient < 0) {
+      auto client = fdClient.load();
+      auto generation = clientGeneration.load();
+      if(client < 0) {
+        localSendBuffer.clear();
         std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
         continue;
       }
@@ -197,11 +201,43 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
         }
       }
 
+      // Do not busy-poll an idle connection.
+      if(localSendBuffer.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        continue;
+      }
+
       // send data
       if(localSendBuffer.size() > 0) {
-        auto bytesWritten = send(fdClient, localSendBuffer.data(), localSendBuffer.size(), 0);
-        if(bytesWritten < localSendBuffer.size()) {
-          printf("Error sending data! (%s)\n", strerror(errno));
+        u32 bytesSent = 0;
+        while(bytesSent < localSendBuffer.size()) {
+          if(clientGeneration != generation || fdClient != client) break;
+
+          auto bytesWritten = send(client, localSendBuffer.data() + bytesSent,
+                                   localSendBuffer.size() - bytesSent, 0);
+          if(bytesWritten < 0) {
+            #if defined(PLATFORM_WINDOWS)
+            auto error = WSAGetLastError();
+            if(error == WSAEINTR || error == WSAEWOULDBLOCK) {
+              std::this_thread::sleep_for(std::chrono::milliseconds(1));
+              continue;
+            }
+            #else
+            if(errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
+              std::this_thread::sleep_for(std::chrono::milliseconds(1));
+              continue;
+            }
+            #endif
+            printf("Error sending data! (%s)\n", strerror(errno));
+            if(clientGeneration == generation && fdClient == client) disconnectClient();
+            break;
+          }
+          if(bytesWritten == 0) {
+            printf("Error sending data: connection closed\n");
+            if(clientGeneration == generation && fdClient == client) disconnectClient();
+            break;
+          }
+          bytesSent += bytesWritten;
         }
 
         if constexpr(TCP_LOG_MESSAGES) {
@@ -209,13 +245,8 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
         }
 
         localSendBuffer.resize(0);
-        cycles = 0; // sending once has a good chance of sending more -> reset sleep timer
       }
 
-      if(cycles++ >= CYCLES_BEFORE_SLEEP) {
-        std::this_thread::sleep_for(std::chrono::microseconds(1));
-        cycles = 0;
-      } 
     }
   });
 
@@ -231,26 +262,36 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
       }
 
       // receive data from connected clients
-      s32 length = recv(fdClient, packet, TCP_BUFFER_SIZE, MSG_NOSIGNAL);
+      auto client = fdClient.load();
+      auto generation = clientGeneration.load();
+      if(client < 0 || wantKickClient) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
+        continue;
+      }
+
+      s32 length = recv(client, packet, TCP_BUFFER_SIZE, MSG_NOSIGNAL);
       if(length > 0) {
         std::lock_guard guard{receiveBufferMutex};
+        if(clientGeneration != generation || fdClient != client || wantKickClient) continue;
         auto oldSize = receiveBuffer.size();
         receiveBuffer.resize(oldSize + length);
         memcpy(receiveBuffer.data() + oldSize, packet, length);
+        receivePending = true;
 
         if constexpr(TCP_LOG_MESSAGES) {
           printf("%.4f | TCP <: [%d]: %.*s ([%d]: %.*s)\n", (f64)chrono::millisecond() / 1000.0, length, length, (char*)receiveBuffer.data(), length, length, (char*)packet);
         }
       } else if(length == 0) {
-        disconnectClient();
+        if(clientGeneration == generation && fdClient == client) disconnectClient();
       } else {
         #if defined(PLATFORM_WINDOWS)
-        if (WSAGetLastError() != WSAETIMEDOUT) {
+        auto error = WSAGetLastError();
+        if (error != WSAETIMEDOUT && error != WSAEINTR) {
         #else
-        if (errno != EAGAIN) {
+        if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
         #endif
           printf("TCP server: error receiving data from client: %s\n", strerror(errno));
-          disconnectClient();
+          if(clientGeneration == generation && fdClient == client) disconnectClient();
         }
       }
     }
@@ -265,13 +306,12 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
 
 NALL_HEADER_INLINE auto Socket::close(bool notifyHandler) -> void {
   stopServer = true;
+  invalidateClient();
 
   // we have to forcefully shut it down here, since otherwise accept() would hang causing a UI crash
   socketShutdown(fdServer);
-  socketClose(fdClient);
   socketClose(fdServer);
   fdServer = -1;
-  fdClient = -1;
 
   while(serverRunning) {
     std::this_thread::sleep_for(std::chrono::milliseconds(250)); // wait for other threads to stop
@@ -282,7 +322,28 @@ NALL_HEADER_INLINE auto Socket::close(bool notifyHandler) -> void {
   }
 }
 
+NALL_HEADER_INLINE auto Socket::invalidateClient() -> void {
+  clientGeneration++;
+  auto client = fdClient.exchange(-1);
+  socketClose(client);
+
+  receivePending = false;
+  {
+    std::lock_guard guard{receiveBufferMutex};
+    receiveBuffer.clear();
+  }
+  {
+    std::lock_guard guard{sendBufferMutex};
+    sendBuffer.clear();
+  }
+}
+
 NALL_HEADER_INLINE auto Socket::update() -> void {
+  // Claim the notification before taking the buffer lock. A receive can
+  // arrive between the old flag check and the later clear, which would leave
+  // bytes queued with no subsequent update notification.
+  if(!receivePending.exchange(false)) return;
+
   std::vector<u8> data{};
   
   { // local copy, minimize lock time

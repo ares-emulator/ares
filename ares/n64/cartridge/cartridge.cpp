@@ -1,4 +1,7 @@
 #include <n64/n64.hpp>
+#include <nall/tcptext/tcp-socket.hpp>
+#include <deque>
+#include <vector>
 
 namespace ares::Nintendo64 {
 
@@ -58,14 +61,18 @@ auto Cartridge::connect() -> void {
     isviewer.tracer->setTerminal(true);
   }
 
-  sc64 = std::make_unique<SC64>(*this);
-  sc64->open(system.sc64SDImage, system.sc64SDImageReadOnly);
+  if(system.sc64SDImage || system.sc64USBHostPort) {
+    auto device = std::make_unique<SC64>(*this);
+    if(device->open(system.sc64SDImage, system.sc64SDImageReadOnly, system.sc64USBHostPort)) {
+      sc64 = std::move(device);
+    }
+  }
 
   pi.attach(romDevice, 0);
   if(ram) pi.attach(ramDevice, 1);
   if(flash) pi.attach(flash, 1);
   if(isviewer.enabled()) pi.attach(isviewer, 1);
-  if(sc64->enabled) pi.attach(*sc64, 1);
+  if(sc64) pi.attach(*sc64, 1);
 
   debugger.load(node);
 
@@ -114,6 +121,10 @@ auto Cartridge::power(bool reset) -> void {
   flash.power(reset);
   isviewer.ram.fill(0);
   rtc.power(reset);
+}
+
+auto Cartridge::pollSc64Host() -> void {
+  if(sc64) sc64->pollHost();
 }
 
 }

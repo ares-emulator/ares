@@ -119,6 +119,7 @@ struct Settings : Markup::Node {
     bool weaveDeinterlacing = true;
     string sc64SDImage;
     bool sc64SDImageReadOnly = false;
+    u32 sc64USBHostPort = 0;
   } nintendo64;
 
   struct GameBoyAdvance {
@@ -381,6 +382,9 @@ struct CoreSettings : VerticalLayout {
       LineEdit nintendo64SC64Image{&nintendo64SC64ImageLayout, Size{~0, 0}};
     HorizontalLayout nintendo64SC64ReadOnlyLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64SC64ReadOnly{&nintendo64SC64ReadOnlyLayout, Size{0, 0}, 5};
+    HorizontalLayout nintendo64SC64HostPortLayout{this, Size{~0, 0}, 5};
+      Label nintendo64SC64HostPortLabel{&nintendo64SC64HostPortLayout, Size{0, 0}};
+      LineEdit nintendo64SC64HostPort{&nintendo64SC64HostPortLayout, Size{~0, 0}};
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, layoutVertSize}};

@@ -131,6 +131,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Nintendo64/WeaveDeinterlacing", nintendo64.weaveDeinterlacing);
   bind(string,  "Nintendo64/SC64SDImage", nintendo64.sc64SDImage);
   bind(boolean, "Nintendo64/SC64SDImageReadOnly", nintendo64.sc64SDImageReadOnly);
+  bind(natural, "Nintendo64/SC64USBHostPort", nintendo64.sc64USBHostPort);
 
   bind(boolean, "GameBoyAdvance/Player", gameBoyAdvance.player);
 

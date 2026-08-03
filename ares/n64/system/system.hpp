@@ -5,6 +5,7 @@ struct System {
   bool deterministicEntropy = false;
   string sc64SDImage;
   bool sc64SDImageReadOnly = false;
+  u32 sc64USBHostPort = 0;
   bool expansionPak = true;
   u8 configuredControllerPakBankCount = 1;
   u8 controllerPakBankCount = 1;

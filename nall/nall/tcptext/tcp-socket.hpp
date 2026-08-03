@@ -29,6 +29,7 @@ class Socket {
 
     auto isStarted() const -> bool { return serverRunning; }
     auto hasClient() const -> bool { return fdClient >= 0; }
+    auto hasReceivedData() const -> bool { return receivePending; }
 
     auto getURL(u32 port, bool useIPv4) const -> string;
 
@@ -50,12 +51,16 @@ class Socket {
 
     std::atomic<s32> fdServer{-1};
     std::atomic<s32> fdClient{-1};
+    std::atomic<u64> clientGeneration{0};
+    std::atomic<bool> receivePending{false};
 
     std::vector<u8> receiveBuffer{};
     std::mutex receiveBufferMutex{};
 
     std::vector<u8> sendBuffer{};
     std::mutex sendBufferMutex{};
+
+    auto invalidateClient() -> void;
 };
 
 }

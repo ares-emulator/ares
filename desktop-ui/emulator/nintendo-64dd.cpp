@@ -95,6 +95,7 @@ auto Nintendo64DD::load() -> LoadResult {
   ares::Nintendo64::option("Controller Pak Banks", settings.nintendo64.controllerPakBankString);
   ares::Nintendo64::option("SC64 SD Image", settings.nintendo64.sc64SDImage);
   ares::Nintendo64::option("SC64 SD Image Read Only", settings.nintendo64.sc64SDImageReadOnly);
+  ares::Nintendo64::option("SC64 USB Host Port", settings.nintendo64.sc64USBHostPort);
 
   if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64DD (", region, ")"})) return otherError;
 

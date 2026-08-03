@@ -26,6 +26,10 @@ struct PI : Memory::RCP<PI> {
     u64 originPc;
   } io;
 
+  // SC64 cart IRQs share MI.PI with PI DMA but are acknowledged through the
+  // SC64 IRQ register rather than PI_STATUS.
+  n1 sc64Interrupt;
+
   struct BSD {
     n8 latency;
     n8 pulseWidth;
@@ -56,6 +60,7 @@ struct PI : Memory::RCP<PI> {
   //io.cpp
   auto ioRead(u32 address) -> u32;
   auto ioWrite(u32 address, u32 data) -> void;
+  auto updateInterrupt() -> void;
 
   //bus.hpp
   auto attach(PIDevice& device, u32 priority) -> void;

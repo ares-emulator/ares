@@ -167,6 +167,7 @@ auto Arcade::load() -> LoadResult {
     ares::Nintendo64::option("Recompiler", !settings.developer.forceInterpreter);
     ares::Nintendo64::option("SC64 SD Image", settings.nintendo64.sc64SDImage);
     ares::Nintendo64::option("SC64 SD Image Read Only", settings.nintendo64.sc64SDImageReadOnly);
+    ares::Nintendo64::option("SC64 USB Host Port", settings.nintendo64.sc64USBHostPort);
 
     return successful;
   }

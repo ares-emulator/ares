@@ -9,6 +9,7 @@ auto PI::serialize(serializer& s) -> void {
   s(io.writeLength);
   s(io.busLatch);
   s(io.originPc);
+  s(sc64Interrupt);
 
   s(bsd1.latency);
   s(bsd1.pulseWidth);
