@@ -81,6 +81,25 @@ auto SC64::pollHost() -> void {
   }
 }
 
+auto SC64::resetConfigs() -> void {
+  configs[0] = 1;
+  configs[1] = 0;
+  configs[2] = 0;
+  configs[3] = 0;
+  configs[4] = 0;
+  configs[5] = 0;
+  configs[6] = self.ram ? 3 : 0;
+  configs[7] = 0xffff;
+  configs[8] = 3;
+  configs[9] = 0;
+  configs[10] = 0;
+  configs[11] = 0;
+  configs[12] = 0;
+  configs[13] = 0;
+  configs[14] = 0;
+  settings[0] = 1;
+}
+
 auto SC64::open(string location, bool readOnly_, u32 hostPort_) -> bool {
   close();
 
@@ -116,22 +135,7 @@ auto SC64::open(string location, bool readOnly_, u32 hostPort_) -> bool {
   byteSwap = false;
   unlocked = false;
   keySequence = 0;
-  configs[0] = 1;
-  configs[1] = 0;
-  configs[2] = 0;
-  configs[3] = 0;
-  configs[4] = 0;
-  configs[5] = 0;
-  configs[6] = self.ram ? 3 : 0;
-  configs[7] = 0xffff;
-  configs[8] = 3;
-  configs[9] = 0;
-  configs[10] = 0;
-  configs[11] = 0;
-  configs[12] = 0;
-  configs[13] = 0;
-  configs[14] = 0;
-  settings[0] = 1;
+  resetConfigs();
   resetUsb();
   registers = {};
   registers.identifier = 0x53437632;
@@ -164,6 +168,42 @@ auto SC64::close() -> void {
   sectorCount = 0;
   usbOutputBusy = false;
   hostLastPoll = 0;
+}
+
+auto SC64::power(bool reset) -> void {
+  // n64_cfg.sv:133-142: N64 reset/NMI relocks the register interface, clears
+  // the pending IRQ flags and usb/aux masks, and resets both key-sequence
+  // counters.
+  unlocked = false;
+  keySequence = 0;
+  registers.scr &= ~((1u << 29) | (1u << 27) | (1u << 25) | (1u << 23)
+                   | (1u << 24) | (1u << 22) | (1u << 8));
+  // cfg.c:134-137: cfg_cmd_check releases the N64-side SD lock while reset is
+  // held.
+  sdReleaseLock(SdLock::N64);
+  target = Target::None;
+  offset = 0;
+  pendingRegister = 0;
+
+  if(!reset) {
+    // Model a console power cycle as a full microcontroller reboot
+    // (cfg_init/cfg_reset_state, cfg.c:519-546). A real cart keeps this state
+    // when powered by an attached USB host; that persistence is not modeled.
+    sdInitialized = false;
+    sdBlockAddressed = false;
+    sdClock50MHz = false;
+    byteSwap = false;
+    sdLock = SdLock::None;
+    sdSector = 0;
+    resetConfigs();
+    registers.data0 = 0;
+    registers.data1 = 0;
+    registers.aux = 0;
+    registers.scr = (1u << 28) | (1u << 26);
+    resetUsb();  // usb_init -> usb_reset (usb.c:744-748)
+  }
+
+  updateInterrupt();
 }
 
 auto SC64::flush() -> void {
@@ -281,7 +321,6 @@ auto SC64::registerWrite(u32 address_, u32 data) -> void {
   case 0x10:
     if(data == 0) {
       keySequence = 0;
-      unlocked = false;
     } else if(data == 0x5f55'4e4c) {
       keySequence = 1;
     } else if(data == 0x4f43'4b5f && keySequence == 1) {
@@ -302,10 +341,10 @@ auto SC64::registerWrite(u32 address_, u32 data) -> void {
     if(data & (1u << 30)) registers.scr &= ~(1u << 27);
     if(data & (1u << 29)) registers.scr &= ~(1u << 25);
     if(data & (1u << 28)) registers.scr &= ~(1u << 23);
-    if(data & (1u << 11)) registers.scr &= ~(1u << 24);
     if(data & (1u << 10)) registers.scr |=  (1u << 24);
-    if(data & (1u << 9))  registers.scr &= ~(1u << 22);
+    if(data & (1u << 11)) registers.scr &= ~(1u << 24);
     if(data & (1u << 8))  registers.scr |=  (1u << 22);
+    if(data & (1u << 9))  registers.scr &= ~(1u << 22);
     updateInterrupt();
     break;
   case 0x18: {
@@ -355,6 +394,14 @@ auto SC64::piMemoryAddress(u32 address_, u32 length) -> u8* {
   if(u64(address_) + length <= 0x1400'0000 && address_ >= 0x1380'0000)
     return sdram.data + 0x0380'0000 + (address_ - 0x1380'0000);
   return nullptr;
+}
+
+// Address-validity check matching writePiMemory's accepted ranges, without
+// its side effects; used to validate SD_CARD_OP_GET_INFO's address ahead of
+// the lock check (cfg.c:662-670).
+auto SC64::piAddressValid(u32 address_, u32 length) -> bool {
+  if(piMemoryAddress(address_, length)) return true;
+  return address_ >= 0x1000'0000 && u64(address_) + length <= u64(0x1000'0000) + self.rom.size;
 }
 
 auto SC64::readPiMemory(u32 address_, u8* data, u32 size) -> bool {
@@ -531,6 +578,7 @@ auto SC64::hostConfigSet(u32 id, u32 value, u32& previous) -> bool {
 auto SC64::hostTransfer(bool write, u32 address_, u32 sector, u32 count) -> u32 {
   if(count > 0x7fffff) return 3;                          // SD_ERROR_INVALID_ARGUMENT
   if(!count || !hostMemoryAddress(address_, u64(count) * 512)) return 4; // SD_ERROR_INVALID_ADDRESS
+  if(auto lock = sdGetLock(SdLock::USB)) return lock;      // SD_ERROR_LOCKED
   if(!sdInserted) return 1;                               // SD_ERROR_NO_CARD_IN_SLOT
   if(!sdInitialized) return 2;                            // SD_ERROR_NOT_INITIALIZED
   if(write && readOnly) return 23;                        // SD_ERROR_CMD25_IO
@@ -583,7 +631,6 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
     hostResponse(command, false, {0, 2, 0, 20, 0, 0, 0, 2});
     return;
   case 'R':
-    configs[0] = 1;
     configs[1] = 0;
     configs[2] = 0;
     configs[3] = 0;
@@ -609,7 +656,7 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
     return;
   case 'c': {
     u32 value = 0;
-    if(!hostConfigGet(data0, value)) hostResponse(command, true, {});
+    if(!hostConfigGet(data0, value)) hostResponse(command, true, word(data1));
     else hostResponse(command, false, word(value));
     return;
   }
@@ -620,7 +667,7 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
     return;
   }
   case 'a':
-    if(data0 != 0) hostResponse(command, true, {});
+    if(data0 != 0) hostResponse(command, true, word(data1));
     else hostResponse(command, false, word(settings[0]));
     return;
   case 'A':
@@ -661,6 +708,7 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
     case 1:
       result = sdTryLock(SdLock::USB);
       if(!result) {
+        byteSwap = false;
         if(!sdInserted) {
           result = 1;
           sdReleaseLock(SdLock::USB);
@@ -673,6 +721,9 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
       break;
     case 2: break;
     case 3:
+      // SD_OP_GET_INFO (usb.c:416-425): address validation happens before
+      // the lock check, so an invalid address is reported even without it.
+      if(!hostMemoryAddress(data0, 32)) { result = 4; break; }
       result = sdGetLock(SdLock::USB);
       if(!result && !sdInitialized) result = 2;
       if(!result) {
@@ -705,8 +756,7 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
       return;
     }
     auto sector = (u32(data[0]) << 24) | (u32(data[1]) << 16) | (u32(data[2]) << 8) | data[3];
-    auto lock = sdGetLock(SdLock::USB);
-    auto result = lock ? lock : hostTransfer(command == 'S', data0, sector, data1);
+    auto result = hostTransfer(command == 'S', data0, sector, data1);
     hostResponse(command, result != 0, word(result));
     return;
   }
@@ -1027,9 +1077,10 @@ auto SC64::execute(u8 command) -> void {
     return;
   case 'i':
     {
-    // SD_CARD_OP (cfg.c:635-694): each sub-operation checks the N64-side
-    // lock before touching card state; DEINIT/INIT try to acquire it,
-    // GET_INFO/BYTE_SWAP_ON/BYTE_SWAP_OFF only check that it is already held.
+    // SD_CARD_OP (cfg.c:635-694): DEINIT/INIT try to acquire the N64-side
+    // lock; GET_STATUS never checks it; BYTE_SWAP_ON/BYTE_SWAP_OFF only
+    // check that it is already held. GET_INFO validates its address before
+    // checking the lock (cfg.c:662-670).
     u32 result = 0;
     switch(registers.data1) {
     case 0:
@@ -1045,6 +1096,7 @@ auto SC64::execute(u8 command) -> void {
     case 1:
       result = sdTryLock(SdLock::N64);
       if(!result) {
+        byteSwap = false;
         if(!sdInserted) {
           result = 1;
           sdReleaseLock(SdLock::N64);
@@ -1055,10 +1107,14 @@ auto SC64::execute(u8 command) -> void {
         }
       }
       break;
-    case 2: break;
+    case 2:
+      registers.data1 = sdStatus();
+      break;
     case 3:
+      if(!piAddressValid(registers.data0, 32)) { result = 4; break; }
       result = sdGetLock(SdLock::N64);
-      if(!result && !writeSdInfo(registers.data0)) result = sdInitialized ? 4 : 2;
+      if(!result && !sdInitialized) result = 2;
+      if(!result && !writeSdInfo(registers.data0)) result = 4;
       break;
     case 4:
       // BYTE_SWAP_ON requires the card to already be initialized (sd.c:524-529,
@@ -1076,8 +1132,6 @@ auto SC64::execute(u8 command) -> void {
       break;
     default: result = 5; break; // SD_ERROR_INVALID_OPERATION
     }
-    registers.data0 = result;
-    registers.data1 = sdStatus();
     if(result) { error(ErrorType::Sd, result); return; }
     complete();
     return;
@@ -1090,16 +1144,14 @@ auto SC64::execute(u8 command) -> void {
     return;
   }
   case 's': {
-    auto lock = sdGetLock(SdLock::N64);
-    auto result = lock ? lock : transfer(false, registers.data0, registers.data1);
+    auto result = transfer(false, registers.data0, registers.data1);
     if(result) { error(ErrorType::Sd, result); return; }
     sdSector += registers.data1;
     complete();
     return;
   }
   case 'S': {
-    auto lock = sdGetLock(SdLock::N64);
-    auto result = lock ? lock : transfer(true, registers.data0, registers.data1);
+    auto result = transfer(true, registers.data0, registers.data1);
     if(result) { error(ErrorType::Sd, result); return; }
     sdSector += registers.data1;
     complete();
@@ -1176,6 +1228,7 @@ auto SC64::transfer(bool write, u32 piAddress, u32 count) -> u32 {
   auto target = address(piAddress, bytes);
   bool romTarget = piAddress >= 0x1000'0000 && u64(piAddress) + bytes <= u64(0x1000'0000) + self.rom.size;
   if(!count || (!target && !romTarget)) return 4;
+  if(auto lock = sdGetLock(SdLock::N64)) return lock;
   if(!sdInserted) return 1;
   if(!sdInitialized) return 2;
   if(write && readOnly) return 23;

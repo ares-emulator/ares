@@ -74,6 +74,7 @@ struct SC64 : PIDevice {
 
   auto open(string location, bool readOnly, u32 hostPort = 0) -> bool;
   auto close() -> void;
+  auto power(bool reset) -> void;
   auto flush() -> void;
   auto pollHost() -> void;
   auto romWriteEnabled() const -> bool { return configs[1]; }
@@ -84,6 +85,7 @@ struct SC64 : PIDevice {
   auto serialize(serializer& s) -> void;
 
 private:
+  auto resetConfigs() -> void;
   auto registerRead(u32 address) -> u32;
   auto registerWrite(u32 address, u32 data) -> void;
   auto hostData(const std::vector<u8>& data) -> void;
@@ -98,6 +100,7 @@ private:
   auto hostConfigSet(u32 id, u32 value, u32& previous) -> bool;
   auto hostMemoryAddress(u32 address, u32 length) -> u8*;
   auto piMemoryAddress(u32 address, u32 length) -> u8*;
+  auto piAddressValid(u32 address, u32 length) -> bool;
   auto readPiMemory(u32 address, u8* data, u32 length) -> bool;
   auto writePiMemory(u32 address, const u8* data, u32 length) -> bool;
   auto hostTransfer(bool write, u32 address, u32 sector, u32 count) -> u32;
