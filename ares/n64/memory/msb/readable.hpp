@@ -57,6 +57,20 @@ struct Readable {
   auto write(u32 address, u64 value) -> void {
   }
 
+  //this memory is read-only from the console's point of view, but not always
+  //in reality: flashcart hardware such as the SC64 can rewrite the storage the
+  //console reads as ROM (for example, an SD card load into cartridge address
+  //space). poke is the storage writer for such devices. it mirrors
+  //Writable::write so the host byte layout stays correct. bus-visible writes
+  //must keep using the write<Size> no-op above.
+  template<u32 Size>
+  auto poke(u32 address, u64 value) -> void {
+    if constexpr(Size == Byte) *(u8* )&data[address & maskByte] =        (value);
+    if constexpr(Size == Half) *(u16*)&data[address & maskHalf] = bswap16(value);
+    if constexpr(Size == Word) *(u32*)&data[address & maskWord] = bswap32(value);
+    if constexpr(Size == Dual) *(u64*)&data[address & maskDual] = bswap64(value);
+  }
+
   template<u32 Size>
   auto readUnaligned(u32 address) -> u64 {
     static_assert(Size == Half || Size == Word || Size == Dual);
