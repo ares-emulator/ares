@@ -68,10 +68,15 @@ auto Cartridge::connect() -> void {
     }
   }
 
-  pi.attach(romDevice, 0);
+  // A real SC64 owns the entire PI ROM window through its own SDRAM; attaching
+  // romDevice as well would only let it shadow that window behind sc64.
+  if(!sc64) pi.attach(romDevice, 0);
   if(ram) pi.attach(ramDevice, 1);
   if(flash) pi.attach(flash, 1);
-  if(isviewer.enabled()) pi.attach(isviewer, 1);
+  // On a real SC64, 0x13FF0000 is plain SDRAM: ISViewer output is captured by
+  // the cart firmware polling that memory (SC64::pollIsViewer), not by bus
+  // hardware, so ares's ISViewer device must not shadow it.
+  if(isviewer.enabled() && !sc64) pi.attach(isviewer, 1);
   if(sc64) pi.attach(*sc64, 1);
 
   debugger.load(node);
