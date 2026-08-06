@@ -61,11 +61,9 @@ auto Cartridge::connect() -> void {
     isviewer.tracer->setTerminal(true);
   }
 
-  if(system.sc64SDImage || system.sc64USBHostPort) {
-    auto device = std::make_unique<SC64>(*this);
-    if(device->open(system.sc64SDImage, system.sc64SDImageReadOnly, system.sc64USBHostPort)) {
-      sc64 = std::move(device);
-    }
+  if(system.sc64Enabled) {
+    sc64 = std::make_unique<SC64>(*this);
+    sc64->open(system.sc64SDImage, system.sc64SDImageReadOnly, system.sc64USBHostPort);
   }
 
   // SC64 maps all of the PI ROM window through its SDRAM.

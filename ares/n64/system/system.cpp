@@ -36,6 +36,7 @@ auto option(string name, string value) -> bool {
   #endif
   if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
   if(name == "Deterministic Entropy") system.deterministicEntropy = value.boolean();
+  if(name == "SC64") system.sc64Enabled = value.boolean();
   if(name == "SC64 SD Image") system.sc64SDImage = value;
   if(name == "SC64 SD Image Read Only") system.sc64SDImageReadOnly = value.boolean();
   if(name == "SC64 USB Host Port") system.sc64USBHostPort = value.integer();

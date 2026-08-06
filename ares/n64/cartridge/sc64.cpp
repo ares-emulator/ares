@@ -151,7 +151,7 @@ auto SC64::resetConfigState() -> void {
   config(Config::RomExtendedEnable) = 0;
 }
 
-auto SC64::open(string location, bool readOnly_, u32 hostPort_) -> bool {
+auto SC64::open(string location, bool readOnly_, u32 hostPort_) -> void {
   close();
 
   readOnly = readOnly_;
@@ -168,8 +168,6 @@ auto SC64::open(string location, bool readOnly_, u32 hostPort_) -> bool {
 
   hostPort = hostPort_ <= 65535 ? hostPort_ : 0;
   if(hostPort) host.open(hostPort, true);
-  enabled = sdInserted || hostPort != 0;
-  if(!enabled) return false;
 
   sdram.allocate(SdramSize, 0);
   if(self.rom.size) {
@@ -187,7 +185,6 @@ auto SC64::open(string location, bool readOnly_, u32 hostPort_) -> bool {
   resetUsb();
   registers = {};
   registers.scr = Scr::BtnIrqMask | Scr::CmdIrqMask;
-  return true;
 }
 
 auto SC64::close() -> void {
@@ -199,7 +196,6 @@ auto SC64::close() -> void {
   image.close();
   sdram.reset();
   buffer.reset();
-  enabled = false;
   sdInserted = false;
   sdInitialized = false;
   sdBlockAddressed = false;
@@ -252,7 +248,7 @@ auto SC64::flush() -> void {
 }
 
 auto SC64::piAddress(u32 address_, PIDeviceTiming timing) -> bool {
-  if(!enabled || !timing.fasterThan({0, 0, 0})) return false;
+  if(!timing.fasterThan({0, 0, 0})) return false;
   address_ &= ~1;
 
   // BlockRAM is visible only when the cart is unlocked.

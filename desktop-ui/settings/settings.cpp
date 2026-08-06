@@ -129,6 +129,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Nintendo64/Supersampling", nintendo64.supersampling);
   bind(boolean, "Nintendo64/DisableVideoInterfaceProcessing", nintendo64.disableVideoInterfaceProcessing);
   bind(boolean, "Nintendo64/WeaveDeinterlacing", nintendo64.weaveDeinterlacing);
+  bind(boolean, "Nintendo64/SC64", nintendo64.sc64Enabled);
   bind(string,  "Nintendo64/SC64SDImage", nintendo64.sc64SDImage);
   bind(boolean, "Nintendo64/SC64SDImageReadOnly", nintendo64.sc64SDImageReadOnly);
   bind(natural, "Nintendo64/SC64USBHostPort", nintendo64.sc64USBHostPort);

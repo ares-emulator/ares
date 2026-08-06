@@ -117,6 +117,7 @@ struct Settings : Markup::Node {
     bool supersampling = false;
     bool disableVideoInterfaceProcessing = false;
     bool weaveDeinterlacing = true;
+    bool sc64Enabled = false;
     string sc64SDImage;
     bool sc64SDImageReadOnly = false;
     u32 sc64USBHostPort = 0;
@@ -372,21 +373,12 @@ struct PathSettings : VerticalLayout {
 
 struct CoreSettings : VerticalLayout {
   auto construct() -> void;
+  auto nintendo64SC64Refresh() -> void;
 
   HorizontalLayout settingsLayout{this, Size{~0, 0}};
       Label settingsHint{&settingsLayout, Size{0, layoutVertSize}};
   //
   Label nintendo64SettingsLabel{this, Size{~0, 0}, 5};
-    HorizontalLayout nintendo64SC64ImageLayout{this, Size{~0, 0}, 5};
-      Label nintendo64SC64ImageLabel{&nintendo64SC64ImageLayout, Size{0, 0}};
-      LineEdit nintendo64SC64Image{&nintendo64SC64ImageLayout, Size{~0, 0}};
-      Button nintendo64SC64ImageAssign{&nintendo64SC64ImageLayout, Size{80, 0}};
-      Button nintendo64SC64ImageReset{&nintendo64SC64ImageLayout, Size{80, 0}};
-    HorizontalLayout nintendo64SC64ReadOnlyLayout{this, Size{~0, 0}, 5};
-      CheckLabel nintendo64SC64ReadOnly{&nintendo64SC64ReadOnlyLayout, Size{0, 0}, 5};
-    HorizontalLayout nintendo64SC64HostPortLayout{this, Size{~0, 0}, 5};
-      Label nintendo64SC64HostPortLabel{&nintendo64SC64HostPortLayout, Size{0, 0}};
-      LineEdit nintendo64SC64HostPort{&nintendo64SC64HostPortLayout, Size{~0, 0}};
     HorizontalLayout nintendo64ExpansionPakLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64ExpansionPakOption{&nintendo64ExpansionPakLayout, Size{0, 0}, 5};
       Label nintendo64ExpansionPakHint{&nintendo64ExpansionPakLayout, Size{0, layoutVertSize}};
@@ -408,6 +400,24 @@ struct CoreSettings : VerticalLayout {
     HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 5};
       CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
       Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, layoutVertSize}};
+    HorizontalLayout nintendo64SC64LabelLayout{this, Size{~0, 0}, 5};
+      CheckLabel nintendo64SC64Enable{&nintendo64SC64LabelLayout, Size{0, 0}, 5};
+      Label nintendo64SC64EnableHint{&nintendo64SC64LabelLayout, Size{~0, layoutVertSize}};
+    HorizontalLayout nintendo64SC64TableLayout{this, Size{~0, 0}, 5};
+      TableLayout nintendo64SC64Layout{&nintendo64SC64TableLayout, Size{~0, 0}};
+        Label nintendo64SC64ImageLabel{&nintendo64SC64Layout, Size{0, 0}};
+        HorizontalLayout nintendo64SC64ImageLayout{&nintendo64SC64Layout, Size{~0, 0}};
+          LineEdit nintendo64SC64Image{&nintendo64SC64ImageLayout, Size{~0, 0}};
+          Button nintendo64SC64ImageAssign{&nintendo64SC64ImageLayout, Size{80, 0}};
+          Button nintendo64SC64ImageReset{&nintendo64SC64ImageLayout, Size{80, 0}};
+        Canvas nintendo64SC64ReadOnlyIndent{&nintendo64SC64Layout, Size{0, 0}};
+        CheckLabel nintendo64SC64ReadOnly{&nintendo64SC64Layout, Size{0, 0}};
+        Canvas nintendo64SC64ReadOnlyHintIndent{&nintendo64SC64Layout, Size{0, 0}};
+        Label nintendo64SC64ReadOnlyHint{&nintendo64SC64Layout, Size{~0, layoutVertSize}};
+        Label nintendo64SC64HostPortLabel{&nintendo64SC64Layout, Size{0, 0}};
+        LineEdit nintendo64SC64HostPort{&nintendo64SC64Layout, Size{60, 0}};
+        Canvas nintendo64SC64HostPortHintIndent{&nintendo64SC64Layout, Size{0, 0}};
+        Label nintendo64SC64HostPortHint{&nintendo64SC64Layout, Size{~0, layoutVertSize}};
 
   Label gameBoyAdvanceSettingsLabel{this, Size{~0, 0}, 5};
     HorizontalLayout gameBoyPlayerLayout{this, Size{~0, 0}, 5};
