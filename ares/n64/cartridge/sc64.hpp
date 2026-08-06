@@ -78,6 +78,7 @@ struct SC64 : PIDevice {
   auto flush() -> void;
   auto pollHost() -> void;
   auto romWriteEnabled() const -> bool { return configs[1]; }
+  auto irqLine() const -> bool;
 
   auto piAddress(u32 address, PIDeviceTiming timing) -> bool override;
   auto piReadHalf(PIDeviceTiming timing) -> maybe<u16> override;

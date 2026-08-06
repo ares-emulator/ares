@@ -133,4 +133,8 @@ auto Cartridge::pollSc64Host() -> void {
   if(sc64) sc64->pollHost();
 }
 
+auto Cartridge::irqLine() const -> bool {
+  return sc64 && sc64->irqLine();
+}
+
 }

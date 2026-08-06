@@ -66,6 +66,12 @@ auto option(string name, string value) -> bool {
   return true;
 }
 
+//the cart INT line is open-drain: it stays asserted while any cartridge bus
+//device (the 64DD or the cartridge slot) drives it
+auto pollCartridgeInterrupt() -> void {
+  cpu.setInterruptPending(CPU::Interrupt::Cartridge, dd.irqLine() || cartridge.irqLine());
+}
+
 System system;
 Queue queue;
 Random random;

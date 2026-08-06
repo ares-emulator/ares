@@ -66,7 +66,7 @@ auto PI::dmaWrite() -> void {
 auto PI::dmaFinished() -> void {
   io.dmaBusy = 0;
   io.interrupt = 1;
-  updateInterrupt();
+  mi.raise(MI::IRQ::PI);
 }
 
 auto PI::dmaDuration(bool read) -> u32 {
