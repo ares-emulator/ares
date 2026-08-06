@@ -380,6 +380,8 @@ struct CoreSettings : VerticalLayout {
     HorizontalLayout nintendo64SC64ImageLayout{this, Size{~0, 0}, 5};
       Label nintendo64SC64ImageLabel{&nintendo64SC64ImageLayout, Size{0, 0}};
       LineEdit nintendo64SC64Image{&nintendo64SC64ImageLayout, Size{~0, 0}};
+      Button nintendo64SC64ImageAssign{&nintendo64SC64ImageLayout, Size{80, 0}};
+      Button nintendo64SC64ImageReset{&nintendo64SC64ImageLayout, Size{80, 0}};
     HorizontalLayout nintendo64SC64ReadOnlyLayout{this, Size{~0, 0}, 5};
       CheckLabel nintendo64SC64ReadOnly{&nintendo64SC64ReadOnlyLayout, Size{0, 0}, 5};
     HorizontalLayout nintendo64SC64HostPortLayout{this, Size{~0, 0}, 5};

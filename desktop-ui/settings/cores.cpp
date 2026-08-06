@@ -10,6 +10,21 @@ auto CoreSettings::construct() -> void {
   nintendo64SC64Image.setEditable(true).setText(settings.nintendo64.sc64SDImage).onChange([&] {
     settings.nintendo64.sc64SDImage = nintendo64SC64Image.text();
   });
+  nintendo64SC64ImageAssign.setText("Assign" ELLIPSIS).onActivate([&] {
+    BrowserDialog dialog;
+    dialog.setTitle("Select SC64 SD Image");
+    dialog.setPath(settings.nintendo64.sc64SDImage ? Location::path(settings.nintendo64.sc64SDImage) : Path::desktop());
+    dialog.setAlignment(settingsWindow);
+    dialog.setFilters({"SD Image|*.img", "All|*"});
+    if(auto location = program.openFile(dialog)) {
+      settings.nintendo64.sc64SDImage = location;
+      nintendo64SC64Image.setText(location);
+    }
+  });
+  nintendo64SC64ImageReset.setText("Reset").onActivate([&] {
+    settings.nintendo64.sc64SDImage = "";
+    nintendo64SC64Image.setText("");
+  });
   nintendo64SC64ReadOnly.setText("SC64 SD image read-only").setChecked(settings.nintendo64.sc64SDImageReadOnly).onToggle([&] {
     settings.nintendo64.sc64SDImageReadOnly = nintendo64SC64ReadOnly.checked();
   });
