@@ -1,6 +1,7 @@
 auto SC64::Host::sendPacket(PacketId id, const std::vector<u8>& data) -> void {
-  // Packets are dropped when no client is attached; queue only between a
-  // client connecting and its transport framing being identified.
+  // If no client is attached, drop the packet.
+  // Queue packets only while a client is connected
+  // but its framing is not yet known.
   if(!self.hostConnected) return;
   if(self.hostMode == HostMode::Unknown) {
     self.hostPendingPackets.push_back({(u8)id, data});
@@ -45,8 +46,8 @@ auto SC64::syncHostConnection() -> void {
 
 auto SC64::pollHost() -> void {
   syncHostConnection();
-  // Skip the receive-buffer mutex while the link is idle; callbacks still
-  // run on the emulation thread.
+  // Do not take the receive-buffer mutex while the link is idle.
+  // Callbacks run on the emulation thread.
   if(host.hasReceivedData()) host.poll();
   syncHostConnection();
 
@@ -62,7 +63,8 @@ auto SC64::pollHost() -> void {
   }
 
   if(!usbInput.empty() && now >= usbInputDeadline) {
-    // Only the unacknowledged head packet expires; later packets stay queued.
+    // The head packet expires when the N64 does not read it in time.
+    // Later packets stay in the queue.
     usbInput.pop_front();
     usbInputOffset = 0;
     usbInputDeadline = usbInput.empty() ? 0 : chrono::microsecond() + UsbInputTimeout;
@@ -75,13 +77,12 @@ auto SC64::pollHost() -> void {
   pollIsViewer();
 }
 
-// ISViewer support is not bus hardware: an IS64 ring buffer in plain SDRAM
-// is polled at the configured address, and new bytes are forwarded over USB.
+// ISViewer support is not bus hardware. The cart polls an IS64 ring buffer
+// in SDRAM at the configured address. It sends new bytes to the USB host.
 auto SC64::pollIsViewer() -> void {
   auto address = config(Config::IsvAddress);
   if(!address) return;
-  // A buffer near the end of SDRAM would spill into flash space, which is
-  // not modeled.
+  // A buffer near the end of SDRAM extends into flash space. Flash is not emulated.
   if(u64(address) + IsvWindowSize > sdram.size) return;
 
   auto get = [&](u32 offset) -> u32 {
@@ -95,8 +96,8 @@ auto SC64::pollIsViewer() -> void {
     sdram.data[offset + 3] = value >> 0;
   };
 
-  // Answer the game's setup token with the PI-visible buffer address and a
-  // ready marker.
+  // Reply to the setup token from the game with the
+  // PI address of the buffer and a ready marker.
   if(get(IsvSetupToken) == IsvToken) {
     set(IsvSetupToken, 0);
     set(IsvSetupAddress, address | PiSdramBase);
@@ -113,8 +114,8 @@ auto SC64::pollIsViewer() -> void {
 
   bool wrap = writePointer < readPointer;
   auto length = (wrap ? bufferSize : writePointer) - readPointer;
-  // With no client attached the bytes are dropped, but the read pointer
-  // still advances.
+  // If no client is attached, the cart drops the bytes.
+  // The read pointer moves forward in both cases.
   if(hostConnected && hostMode != HostMode::Unknown) {
     std::vector<u8> payload(length);
     memcpy(payload.data(), sdram.data + address + IsvBufferOffset + readPointer, length);
@@ -129,16 +130,16 @@ auto SC64::resetConfigs() -> void {
   settings[0] = 1;  // LED enable
 }
 
-// Shared with the host's state-reset command, which preserves the
-// bootloader switch and the LED setting.
+// The state-reset command from the host also uses this function.
+// That command keeps the bootloader switch and the LED setting.
 auto SC64::resetConfigState() -> void {
   config(Config::RomWriteEnable) = 0;
   config(Config::RomShadowEnable) = 0;
   config(Config::DdMode) = 0;
   config(Config::IsvAddress) = 0;
   config(Config::BootMode) = 0;
-  // No bootloader pass exists to re-detect the save type, so keep mirroring
-  // the cartridge's actual save type instead of resetting it to none.
+  // No bootloader stage exists that can find the save type again.
+  // Keep the save type of the loaded cartridge. Do not set it to none.
   config(Config::SaveType) = self.ram ? 3 : 0;  // SRAM
   config(Config::CicSeed) = 0xffff;  // automatic
   config(Config::TvType) = 3;  // passthrough
@@ -216,22 +217,19 @@ auto SC64::close() -> void {
 }
 
 auto SC64::power(bool reset) -> void {
-  // Reset/NMI relocks the register interface, clears the pending IRQ flags
-  // and the usb/aux masks, and restarts the key sequence.
   unlocked = false;
   keySequence = 0;
   registers.scr &= ~(Scr::BtnIrqPending | Scr::CmdIrqPending | Scr::UsbIrqPending
                    | Scr::AuxIrqPending | Scr::UsbIrqMask | Scr::AuxIrqMask
                    | Scr::CmdIrqRequest);
-  // The N64-side SD lock is released while reset is held.
+  // While reset is active, the cart releases the N64 side of the SD lock.
   sdReleaseLock(SdLock::N64);
   target = Target::None;
   offset = 0;
   pendingRegister = 0;
 
   if(!reset) {
-    // A power cycle reboots the cart; state persistence while a USB host
-    // keeps the cart powered is not modeled.
+    // A power cycle restarts the cart.
     sdInitialized = false;
     sdBlockAddressed = false;
     sdClock50MHz = false;
@@ -257,14 +255,14 @@ auto SC64::piAddress(u32 address_, PIDeviceTiming timing) -> bool {
   if(!enabled || !timing.fasterThan({0, 0, 0})) return false;
   address_ &= ~1;
 
-  // BlockRAM is visible only while unlocked.
+  // BlockRAM is visible only when the cart is unlocked.
   if(unlocked && address_ >= PiBlockRamBase && address_ < PiBlockRamBase + BlockRamSize) {
     target = Target::Buffer;
     offset = address_ - PiBlockRamBase;
     return true;
   }
 
-  // The entire PI ROM window maps to SDRAM; writes additionally require
+  // All of the PI ROM window maps to SDRAM. Writes also require
   // ROM_WRITE_ENABLE (piWriteHalf).
   if(address_ >= PiSdramBase && address_ < PiSdramBase + SdramSize) {
     target = Target::Sdram;
@@ -278,7 +276,7 @@ auto SC64::piAddress(u32 address_, PIDeviceTiming timing) -> bool {
     return true;
   }
 
-  // The key register accepts the unlock sequence even while locked.
+  // The key register accepts the unlock sequence when the cart is locked.
   if(address_ == PiRegisterBase + (u32)Register::Key) {
     target = Target::Registers;
     offset = (u32)Register::Key;
@@ -328,7 +326,7 @@ auto SC64::piWriteHalf(u16 data, PIDeviceTiming) -> void {
   }
 
   if(target == Target::Sdram) {
-    // Writes are gated by ROM_WRITE_ENABLE; reads are always allowed.
+    // ROM_WRITE_ENABLE controls writes. Reads are always permitted.
     if(romWriteEnabled() && u64(offset) + 2 <= sdram.size) {
       sdram.data[offset + 0] = data >> 8;
       sdram.data[offset + 1] = data >> 0;
@@ -428,12 +426,13 @@ auto SC64::enqueueUsbInput(u8 type, const std::vector<u8>& data) -> bool {
 
 auto SC64::usbReadStatus() const -> u32 {
   if(usbInput.empty()) return 0;
-  // Bit 31 (DMA busy) is never set: command execution is synchronous.
+  // Bit 31 (DMA busy) is never set. Command execution is synchronous.
   return usbInput.front().type;
 }
 
-// N64-side address translation: the PI ROM window maps onto SDRAM, the data
-// buffer and EEPROM/64DD sections onto BlockRAM. Flash is not modeled.
+// Address translation for the N64 side. The PI ROM window maps to SDRAM.
+// The data buffer and the EEPROM/64DD sections map to BlockRAM.
+// Flash is not currently emulated.
 auto SC64::piMemoryAddress(u32 address_, u32 length) -> u8* {
   if(u64(address_) + length <= PiBlockRamBase + DataBufferSize && address_ >= PiBlockRamBase)
     return buffer.data + (address_ - PiBlockRamBase);
@@ -516,15 +515,14 @@ auto SC64::usbRead(u32 address_, u32 length) -> bool {
 }
 
 auto SC64::irqLine() const -> bool {
-  // Each pending bit sits one above its mask bit, hence the shift.
+  // Each pending bit is one position above its mask bit.
   auto interrupt = ((registers.scr >> 1) & registers.scr)
                 & (Scr::BtnIrqMask | Scr::CmdIrqMask | Scr::UsbIrqMask | Scr::AuxIrqMask);
   return interrupt != 0;
 }
 
 auto SC64::updateInterrupt() -> void {
-  // The cart INT line is shared with the 64DD; pollCartridgeInterrupt
-  // models the wired-OR.
+  // The INT line is shared between the cartridge and the DD.
   pollCartridgeInterrupt();
 }
 
@@ -563,13 +561,13 @@ auto SC64::hostConfigSet(u32 id, u32 value, u32& previous) -> bool {
   case Config::DdMode:  // disabled/regs/IPL/full
     if(value > 3) return false;
     break;
-  case Config::IsvAddress:  // word-aligned, within SDRAM
+  case Config::IsvAddress:  // word-aligned, in SDRAM
     if(value >= SdramSize || value % 4) return false;
     break;
   case Config::BootMode:  // menu/ROM/DD IPL/direct ROM/direct DD IPL
     if(value > 4) return false;
     break;
-  case Config::SaveType:  // none through faked FlashRAM
+  case Config::SaveType:  // none through fake FlashRAM
     if(value > 7) return false;
     break;
   case Config::CicSeed:  // 0x00-0xff, or 0xffff for automatic
@@ -622,7 +620,7 @@ auto SC64::hostTransfer(bool write, u32 address_, u32 sector, u32 count) -> SdEr
   return SdError::Ok;
 }
 
-// Acquire the SD interface if free or already held by this side.
+// Acquire the SD interface if it is free or if this side already holds it.
 auto SC64::sdTryLock(SdLock lock) -> SdError {
   if(sdLock == SdLock::None) sdLock = lock;
   return sdGetLock(lock);
@@ -658,7 +656,7 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
     hostResponse(command, false, {});
     return;
   case HostCommand::CicParamsSet:
-    // CIC parameters have no effect here; acknowledge.
+    // CIC parameters have no effect here. Acknowledge the command.
     hostResponse(command, false, {});
     return;
   case HostCommand::ConfigGet: {
@@ -728,7 +726,7 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
       break;
     case SdOp::GetStatus: break;
     case SdOp::GetInfo:
-      // The address is validated before the lock is checked.
+      // The address check comes before the lock check.
       if(!hostMemoryAddress(data0, SdInfoSize)) { result = SdError::InvalidAddress; break; }
       result = sdGetLock(SdLock::USB);
       if(result == SdError::Ok && !sdInitialized) result = SdError::NotInitialized;
@@ -768,7 +766,8 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
   }
   case HostCommand::DdSetBlockReady:
   case HostCommand::WritebackEnable:
-    // 64DD-over-SC64 and save writeback are not modeled; acknowledge.
+    // 64DD mapping and save writeback are not emulated.
+    // Acknowledge the command.
     hostResponse(command, false, {});
     return;
   case HostCommand::FlashWaitBusy:
@@ -778,19 +777,20 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
     hostResponse(command, false, {0, 0, 0, 0, 0, 0, 0, 0});
     return;
   case HostCommand::DiagnosticGet:
-    // Diagnostic marker and version; voltage/temperature are not modeled.
+    // Diagnostic marker and version.
+    // Voltage and temperature are not emulated.
     hostResponse(command, false, {0x80, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     return;
   case HostCommand::FlashEraseBlock:
-    // Flash is not modeled; fail with no payload.
+    // Flash is not emulated. Fail with no payload.
     hostResponse(command, true, {});
     return;
   case HostCommand::UpdateBackup:
-    // Firmware updates are not modeled; fail.
+    // Firmware updates are not emulated. Fail.
     hostResponse(command, true, {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
     return;
   case HostCommand::UpdatePrepare:
-    // Firmware updates are not modeled; fail.
+    // Firmware updates are not emulated. Fail.
     hostResponse(command, true, {0xff, 0xff, 0xff, 0xff});
     return;
   case HostCommand::MemoryRead: {
@@ -820,20 +820,20 @@ auto SC64::hostCommand(u8 command, u32 data0, u32 data1, const std::vector<u8>& 
     if(data1 == 0 || data1 != data.size() || !enqueueUsbInput(data0 & 0xff, data)) return;
     return;
   default:
-    // Unrecognized commands, including N64-only ones like FlashProgram.
+    // Unknown commands, and N64-only commands such as FlashProgram.
     hostResponse(command, true, {0xff, 0xff, 0xff, 0xff});
     return;
   }
 }
 
 auto SC64::hostCommandDataLength(u8 command, u32 data1) const -> u32 {
-  // The direct framing has no payload length field; commands that carry
-  // data derive it from their arguments.
+  // The direct framing has no payload length field.
+  // Commands with data get the length from their arguments.
   switch((HostCommand)command) {
   case HostCommand::MemoryWrite:
   case HostCommand::UsbWrite:
     return data1;
-  case HostCommand::SdRead:   // the starting sector rides as a data word
+  case HostCommand::SdRead:   // the start sector comes as a data word
   case HostCommand::SdWrite:
     return 4;
   default:
@@ -892,8 +892,7 @@ auto SC64::hostDataRemote() -> void {
 
     auto type = readWord(0);
     if(type == (u32)RemoteType::KeepAlive) {
-      // Keep-alives have no body; accept them to keep the transport
-      // symmetric.
+      // A keep-alive has no body. Accept it to keep the transport symmetric.
       hostInput.erase(hostInput.begin(), hostInput.begin() + 4);
       continue;
     }
@@ -965,8 +964,8 @@ auto SC64::sdStatus() const -> u32 {
 }
 
 auto SC64::sdInfo() const -> std::vector<u8> {
-  // CSD then CID, 16 bytes each: an SDHC CSD synthesized from the image
-  // size; the CID stays zero.
+  // CSD then CID, 16 bytes each.
+  // The SDHC CSD is computed from the image size. The CID stays zero.
   std::vector<u8> info(SdInfoSize);
   info[0] = 0x40;  // CSD structure version 2.0
   u64 csize = sectorCount >= 1024 ? (sectorCount / 1024) - 1 : 0;
@@ -989,7 +988,7 @@ auto SC64::complete() -> void {
   updateInterrupt();
 }
 
-// DATA0 packs the error type and code; DATA1 is always cleared.
+// DATA0 holds the error type and the error code. DATA1 is set to zero.
 auto SC64::error(ErrorType type, u32 code) -> void {
   registers.data0 = (u32(type) << 24) | code;
   registers.data1 = 0;
@@ -1029,7 +1028,7 @@ auto SC64::execute(u8 command) -> void {
     complete();
     return;
   case Command::TimeSet:
-    // Time is read from the host clock, so accept time writes as a no-op.
+    // Time comes from the host clock. Accept time writes and do nothing.
     complete();
     return;
   case Command::ConfigGet:
@@ -1061,12 +1060,12 @@ auto SC64::execute(u8 command) -> void {
     complete();
     return;
   case Command::UsbRead:
-    // The only failure is an untranslatable address.
+    // The command fails only when the address does not translate.
     if(!usbRead(registers.data0, registers.data1)) error(CfgError::InvalidAddress);
     else complete();
     return;
   case Command::UsbWrite:
-    // The only failure is an untranslatable address.
+    // The command fails only when the address does not translate.
     if(!usbWrite(registers.data1 >> 24, registers.data0, registers.data1 & UsbLengthMask)) error(CfgError::InvalidAddress);
     else complete();
     return;
@@ -1076,9 +1075,9 @@ auto SC64::execute(u8 command) -> void {
     return;
   case Command::SdCardOp:
     {
-    // Deinit/init acquire the N64-side lock; get-status skips it; get-info
-    // validates its address first; the byte-swap ops require the lock and
-    // an initialized card.
+    // Deinit and init acquire the N64 lock. Get-status does not use the
+    // lock. Get-info checks its address first. The byte-swap operations
+    // require the lock and an initialized card.
     auto result = SdError::Ok;
     switch((SdOp)registers.data1) {
     case SdOp::Deinit:
@@ -1152,37 +1151,37 @@ auto SC64::execute(u8 command) -> void {
     return;
   }
   case Command::DiskMappingSet:
-    // 64DD disk mapping is not modeled; accept as a no-op.
+    // 64DD disk mapping is not emulated. Accept and do nothing.
     complete();
     return;
   case Command::WritebackPending:
-    // Save writeback is not modeled; never pending.
+    // Save writeback is not emulated. It is never pending.
     registers.data0 = 0;
     complete();
     return;
   case Command::WritebackSdInfo:
-    // Save writeback is not modeled; accept as a no-op.
+    // Save writeback is not emulated. Accept and do nothing.
     complete();
     return;
   case Command::FlashProgram:
-    // Flash is not modeled: oversized lengths are rejected first, then no
-    // address can translate into flash.
+    // Flash is not emulated. Lengths that are too large are rejected
+    // first. Then no address can translate into flash.
     if(registers.data1 >= DataBufferSize) { error(CfgError::InvalidArgument); return; }
     error(CfgError::InvalidAddress);
     return;
   case Command::FlashWaitBusy:
-    // Flash operations complete instantly; report ready and the erase
-    // block size.
+    // Flash operations complete immediately.
+    // Report ready and the erase block size.
     registers.data0 = FlashEraseBlockSize;
     complete();
     return;
   case Command::FlashEraseBlock:
-    // Flash is not modeled.
+    // Flash is not emulated.
     error(CfgError::InvalidAddress);
     return;
   case Command::DiagnosticGet:
-    // Only diagnostic 0 (voltage << 16 | temperature) exists; neither is
-    // modeled, so both fields read zero.
+    // Only diagnostic 0 (voltage << 16 | temperature) exists. Voltage and
+    // temperature are not emulated. Both fields read zero.
     if(registers.data0 != 0) { error(CfgError::InvalidId); return; }
     registers.data1 = 0;
     complete();
@@ -1211,7 +1210,8 @@ auto SC64::transfer(bool write, u32 piAddress, u32 count) -> SdError {
   if(write && readOnly) return SdError::Cmd25Io;
   if(sdSector >= sectorCount || count > sectorCount - sdSector) return SdError::InvalidAddress;
 
-  // The read byte-swap applies only to the SDRAM window, never to BlockRAM.
+  // The read byte-swap applies only to the SDRAM window.
+  // It never applies to BlockRAM.
   bool swapEligible = piAddress >= PiSdramBase && piAddress < PiSdramBase + SdramSize;
 
   u8 sector[SectorSize];
@@ -1250,11 +1250,10 @@ auto SC64::serialize(serializer& s) -> void {
   s(pendingRegister);
   s(buffer);
 
-  // sdram is deliberately absent: like the SD image, it acts as durable
-  // external cart storage, and the USB host link cannot be rewound either.
-  // A state load keeps its live contents; a cross-session load starts from
-  // open()'s ROM seed without any SD or host writes.
+  // sdram is intentionally not serialized.
+  // SC64 SDRAM is too large for savestates or rewind.
 
+  // USB state cannot be serialized reliably.
   if(s.reading()) {
     usbInput.clear();
     usbInputOffset = 0;

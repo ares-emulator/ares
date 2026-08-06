@@ -40,7 +40,7 @@ auto DD::unload() -> void {
   if(!node) return;
   disconnect();
 
-  //the cart INT line is shared: stale drive state must not outlive the 64DD
+  //the 64DD shares the cart INT line: clear drive state on unload
   irq = {};
   poll();
   pi.detach(dd);
