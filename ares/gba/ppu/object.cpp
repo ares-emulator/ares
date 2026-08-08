@@ -5,10 +5,11 @@ auto PPU::Objects::setEnable(n1 status) -> void {
 
 auto PPU::Objects::goToNext() -> void {
   if(!(++objIndex)) active = false;
-  state = State::ReadA01;
 }
 
 auto PPU::Objects::readA01(u32 y) -> void {
+  auto& object = latch[1];
+
   static const u32 widths[] = {
      8, 16, 32, 64,
     16, 32, 32, 64,
@@ -24,45 +25,55 @@ auto PPU::Objects::readA01(u32 y) -> void {
   };
 
   n16 attr0 = ppu.oam[objIndex << 2 | 0];
-  n8 ypos          = attr0 >>  0;
-  latch.affine     = attr0 >>  8;
-  latch.affineSize = attr0 >>  9;
-  latch.mode       = attr0 >> 10;
-  latch.mosaic     = attr0 >> 12;
-  latch.colors     = attr0 >> 13;  //0 = 16, 1 = 256
-  n2 shape         = attr0 >> 14;  //0 = square, 1 = horizontal, 2 = vertical
+  n8 ypos           = attr0 >>  0;
+  object.affine     = attr0 >>  8;
+  object.affineSize = attr0 >>  9;
+  object.mode       = attr0 >> 10;
+  object.mosaic     = attr0 >> 12;
+  object.colors     = attr0 >> 13;  //0 = 16, 1 = 256
+  n2 shape          = attr0 >> 14;  //0 = square, 1 = horizontal, 2 = vertical
 
   n16 attr1 = ppu.oam[objIndex << 2 | 1];
-  latch.x           = attr1 >>  0;
-  latch.affineParam = attr1 >>  9;
-  latch.hflip       = attr1 >> 12;
-  latch.vflip       = attr1 >> 13;
-  n2 size           = attr1 >> 14;
+  object.x           = attr1 >>  0;
+  object.affineParam = attr1 >>  9;
+  object.hflip       = attr1 >> 12;
+  object.vflip       = attr1 >> 13;
+  n2 size            = attr1 >> 14;
 
-  latch.width  = widths [shape * 4 + size];
-  latch.height = heights[shape * 4 + size];
+  object.width  = widths [shape * 4 + size];
+  object.height = heights[shape * 4 + size];
 
-  latch.py = y - ypos;
-  n9 pxMax = latch.x + (latch.width << latch.affineSize);
-  if((latch.affine == 0 && latch.affineSize == 1) || (latch.py >= latch.height << latch.affineSize) || (latch.x >= 240 && pxMax >= 240)) {
+  //clip left edge if offscreen
+  object.px = 0;
+  if(object.x >= 240) object.px -= object.x;
+  if(!object.affine) object.px &= ~1;
+
+  object.py = y - ypos;
+  if((object.affine == 0 && object.affineSize == 1) || (object.py >= object.height << object.affineSize) || (object.px >= object.width << object.affineSize)) {
     //object is hidden - skip rendering
     goToNext();
+    state = State::ReadA01;
   } else {
-    if(latch.mosaic) {
-      latch.py = ypos >= 160 || mosaicY - ypos >= 0 ? u32(mosaicY - ypos) : 0;
+    if(object.mosaic) {
+      object.py = ypos >= 160 || mosaicY - ypos >= 0 ? u32(mosaicY - ypos) : 0;
     }
     state = State::ReadA2;
   }
 }
 
 auto PPU::Objects::readA2() -> void {
-  n16 attr2 = ppu.oam[objIndex << 2 | 2];
-  latch.character = attr2 >>  0;
-  latch.priority  = attr2 >> 10;
-  latch.palette   = attr2 >> 12;
+  latch[0] = latch[1];
+  auto& object = latch[0];
 
-  if(!latch.affine) {
-    drawObject(renderY);
+  n16 attr2 = ppu.oam[objIndex << 2 | 2];
+  object.character = attr2 >>  0;
+  object.priority  = attr2 >> 10;
+  object.palette   = attr2 >> 12;
+
+  if(!object.affine) {
+    goToNext();
+    state = State::ReadA01;
+    vramStageReady = true;
   } else {
     state = State::ReadPA;
   }
@@ -70,99 +81,119 @@ auto PPU::Objects::readA2() -> void {
 
 auto PPU::Objects::drawObject(u32 y) -> void {
   auto& buffer = lineBuffers[y & 1];
+  auto& object = latch[0];
 
   //center-of-sprite coordinates
-  i16 centerX = latch.width  >> 1;
-  i16 centerY = latch.height >> 1;
+  i16 centerX = object.width  >> 1;
+  i16 centerY = object.height >> 1;
 
-  //origin coordinates (top-left of sprite)
-  i28 originX = -(centerX << latch.affineSize);
-  i28 originY = -(centerY << latch.affineSize) + latch.py;
+  //current coordinates
+  i28 currentX = -(centerX << object.affineSize) + object.px;
+  i28 currentY = -(centerY << object.affineSize) + object.py;
 
   //fractional pixel coordinates
-  i28 fx = originX * latch.pa + originY * latch.pb;
-  i28 fy = originX * latch.pc + originY * latch.pd;
+  i28 fx = currentX * object.pa + currentY * object.pb;
+  i28 fy = currentX * object.pc + currentY * object.pd;
 
-  for(u32 px : range(latch.width << latch.affineSize)) {
-    //calculate address within tile
-    u32 sx, sy;
-    if(!latch.affine) {
-      sx =       px ^ (latch.hflip ? latch.width  - 1 : 0);
-      sy = latch.py ^ (latch.vflip ? latch.height - 1 : 0);
-    } else {
-      sx = (fx >> 8) + centerX;
-      sy = (fy >> 8) + centerY;
-    }
-    n6 subTileAddr = ((sy & 7) * 8 + (sx & 7)) >> !latch.colors;
+  //calculate address within tile
+  u32 sx, sy;
+  if(!object.affine) {
+    sx = object.px ^ (object.hflip ? object.width  - 1 : 0);
+    sy = object.py ^ (object.vflip ? object.height - 1 : 0);
+  } else {
+    sx = (fx >> 8) + centerX;
+    sy = (fy >> 8) + centerY;
+  }
+  n6 subTileAddr = ((sy & 7) * 8 + (sx & 7)) >> !object.colors;
 
-    //calculate address of tile
-    n10 tileAddr;
-    if(io.mapping) {
-      u32 offset = (sy >> 3) * (latch.width >> 3) + (sx >> 3);
-      tileAddr = latch.character + (offset << latch.colors);
-    } else {
-      n5 row = (latch.character >> 5) + (sy >> 3);
-      n5 rowEntry = latch.character + ((sx >> 3) << latch.colors);
-      tileAddr = (row << 5) + rowEntry;
-    }
-
-    //output pixel
-    n8 color = ppu.readObjectVRAM((tileAddr << 5) + subTileAddr);
-    if(latch.colors == 0) color = sx & 1 ? color >> 4 : color & 15;
-    n9 bx = latch.x + px;
-    if(bx < 240 && sx < latch.width && sy < latch.height) {
-      if(latch.mode & 2) {
-        if(color) {
-          buffer[bx].window = true;
-        }
-      } else if(!buffer[bx].enable || latch.priority < buffer[bx].priority) {
-        buffer[bx].priority = latch.priority;  //updated regardless of transparency
-        buffer[bx].mosaic = latch.mosaic;  //updated regardless of transparency
-        if(color) {
-          if(latch.colors == 0) color = latch.palette * 16 + color;
-          buffer[bx].enable = true;
-          buffer[bx].color = 256 + color;
-          buffer[bx].translucent = latch.mode == 1;
-        }
-      }
-    }
-
-    fx += latch.pa;
-    fy += latch.pc;
+  //calculate address of tile
+  n10 tileAddr;
+  if(io.mapping) {
+    u32 offset = (sy >> 3) * (object.width >> 3) + (sx >> 3);
+    tileAddr = object.character + (offset << object.colors);
+  } else {
+    n5 row = (object.character >> 5) + (sy >> 3);
+    n5 rowEntry = object.character + ((sx >> 3) << object.colors);
+    tileAddr = (row << 5) + rowEntry;
   }
 
-  goToNext();
+  //output pixel
+  n8 color = ppu.readObjectVRAM((tileAddr << 5) + subTileAddr);
+  if(object.colors == 0) color = sx & 1 ? color >> 4 : color & 15;
+  n9 bx = object.x + object.px;
+  if(bx < 240 && sx < object.width && sy < object.height) {
+    if(object.mode & 2) {
+      if(color) {
+        buffer[bx].window = true;
+      }
+    } else if(!buffer[bx].enable || object.priority < buffer[bx].priority) {
+      buffer[bx].priority = object.priority;  //updated regardless of transparency
+      buffer[bx].mosaic = object.mosaic;  //updated regardless of transparency
+      if(color) {
+        if(object.colors == 0) color = object.palette * 16 + color;
+        buffer[bx].enable = true;
+        buffer[bx].color = 256 + color;
+        buffer[bx].translucent = object.mode == 1;
+      }
+    }
+  }
+
+  object.px++;
+  if(object.px == (object.width << object.affineSize)) vramStageActive = false;
+}
+
+auto PPU::Objects::stepOAM() -> void {
+  if(!active) return;
+  auto& object = latch[0];
+
+  switch(state) {
+  case State::ReadA01:
+    readA01(renderY);
+    break;
+  case State::ReadA2:
+    readA2();
+    break;
+  case State::ReadPA:
+    object.pa = ppu.oam[object.affineParam << 4 | 0x3];
+    state = State::ReadPB;
+    break;
+  case State::ReadPB:
+    object.pb = ppu.oam[object.affineParam << 4 | 0x7];
+    state = State::ReadPC;
+    break;
+  case State::ReadPC:
+    object.pc = ppu.oam[object.affineParam << 4 | 0xb];
+    state = State::ReadPD;
+    break;
+  case State::ReadPD:
+    object.pd = ppu.oam[object.affineParam << 4 | 0xf];
+    goToNext();
+    vramStageReady = true;
+    state = State::ReadA01;
+    break;
+  }
+  ppu.oamAccessed = true;
 }
 
 auto PPU::Objects::step() -> void {
-  if(!active) return;
+  auto& object = latch[0];
 
   if(activeCycle) {
-    switch(state) {
-    case State::ReadA01:
-      readA01(renderY);
-      break;
-    case State::ReadA2:
-      readA2();
-      break;
-    case State::ReadPA:
-      latch.pa = ppu.oam[latch.affineParam << 4 | 0x3];
-      state = State::ReadPB;
-      break;
-    case State::ReadPB:
-      latch.pb = ppu.oam[latch.affineParam << 4 | 0x7];
-      state = State::ReadPC;
-      break;
-    case State::ReadPC:
-      latch.pc = ppu.oam[latch.affineParam << 4 | 0xb];
-      state = State::ReadPD;
-      break;
-    case State::ReadPD:
-      latch.pd = ppu.oam[latch.affineParam << 4 | 0xf];
+    if(vramStageReady) {
+      vramStageReady = false;
+      vramStageActive = true;
+      if(!object.affine) {
+        drawObject(renderY);
+        drawObject(renderY);
+      }
+      stepOAM();
+    } else if(vramStageActive) {
       drawObject(renderY);
-      break;
+      if(!object.affine) drawObject(renderY);
+      if(!vramStageActive) stepOAM();
+    } else {
+      stepOAM();
     }
-    ppu.oamAccessed = true;
   }
   activeCycle = !activeCycle;
 }
@@ -186,6 +217,8 @@ auto PPU::Objects::scanline(u32 y) -> void {
   objIndex = 0;
   active = true;
   activeCycle = true;
+  vramStageReady = false;
+  vramStageActive = false;
   state = State::ReadA01;
 }
 
@@ -220,7 +253,7 @@ auto PPU::Objects::outputPixel(u32 x, u32 y) -> void {
 
 auto PPU::Objects::power() -> void {
   io = {};
-  latch = {};
+  for(auto& object : latch) object = {};
   for(auto& buffer : lineBuffers) {
     for(auto& pixel : buffer) pixel = {};
   }

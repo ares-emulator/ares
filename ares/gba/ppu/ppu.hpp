@@ -73,7 +73,7 @@ struct PPU : Thread, IO {
   auto readOAM(u32 mode, n32 address) -> n32;
   auto writeOAM(u32 mode, n32 address, n32 word) -> void;
 
-  auto readObjectVRAM(u32 address) const -> n8;
+  auto readObjectVRAM(u32 address) -> n8;
 
   //color.cpp
   auto color(n32) -> n64;
@@ -199,6 +199,7 @@ private:
     auto readA01(u32 y) -> void;
     auto readA2() -> void;
     auto drawObject(u32 y) -> void;
+    auto stepOAM() -> void;
     auto step() -> void;
     auto scanline(u32 y) -> void;
     auto renderScanline(u32 y) -> void;
@@ -235,13 +236,14 @@ private:
 
       n32 width;
       n32 height;
+      n9  px;
       n8  py;
 
       i16 pa;
       i16 pb;
       i16 pc;
       i16 pd;
-    } latch;
+    } latch[2];
 
     Pixel lineBuffers[2][240];
     Pixel output;
@@ -253,6 +255,8 @@ private:
     n7  objIndex;
     bool active;
     bool activeCycle;
+    bool vramStageReady;
+    bool vramStageActive;
 
     enum class State : u32 {
       ReadA01, ReadA2, ReadPA, ReadPB, ReadPC, ReadPD
@@ -320,6 +324,7 @@ private:
 
   bool pramAccessed;
   bool vramAccessedBG;
+  bool vramAccessedOBJ;
   bool oamAccessed;
   n32  renderingCycle;
 };
