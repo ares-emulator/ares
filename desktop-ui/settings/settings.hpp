@@ -59,6 +59,7 @@ struct Settings : Markup::Node {
   struct Input {
     string driver;
     string defocus = "Pause";
+    string digitalToAnalog = "Immediate";
   } input;
 
   struct Boot {
@@ -234,6 +235,12 @@ struct InputSettings : VerticalLayout {
     RadioLabel inputDefocusBlock{&inputDefocusLayout, Size{0, 0}};
     RadioLabel inputDefocusAllow{&inputDefocusLayout, Size{0, 0}};
     Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
+  HorizontalLayout digitalToAnalogLayout{this, Size{~0, 0}};
+    Label digitalToAnalogLabel{&digitalToAnalogLayout, Size{0, 0}};
+    RadioLabel digitalToAnalogImmediate{&digitalToAnalogLayout, Size{0, 0}};
+    RadioLabel digitalToAnalogSpring{&digitalToAnalogLayout, Size{0, 0}};
+    RadioLabel digitalToAnalogHold{&digitalToAnalogLayout, Size{0, 0}};
+    Group digitalToAnalogGroup{&digitalToAnalogImmediate, &digitalToAnalogSpring, &digitalToAnalogHold};
   HorizontalLayout indexLayout{this, Size{~0, 0}};
     ComboButton systemList{&indexLayout, Size{~0, 0}};
     ComboButton portList{&indexLayout, Size{~0, 0}};
