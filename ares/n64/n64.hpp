@@ -9,6 +9,7 @@
 #include <nall/hashset.hpp>
 #include <nall/queue.hpp>
 #include <nall/recompiler/generic/generic.hpp>
+#include <nall/tcptext/tcp-socket.hpp>
 #include <component/processor/sm5k/sm5k.hpp>
 #include <functional>
 #include <span>
@@ -130,6 +131,7 @@ namespace ares::Nintendo64 {
   #include <n64/pi/device.hpp>
   #include <n64/system/system.hpp>
   #include <n64/cartridge/cartridge.hpp>
+  #include <n64/sc64/sc64.hpp>
   #include <n64/cic/cic.hpp>
   #include <n64/controller/controller.hpp>
   #include <n64/dd/dd.hpp>

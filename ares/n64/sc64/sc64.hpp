@@ -1,5 +1,4 @@
 struct SC64 : PIDevice {
-  Cartridge& self;
   file_buffer image;
   Memory::Writable sdram;
   Memory::Writable buffer;
@@ -210,6 +209,17 @@ struct SC64 : PIDevice {
     RomExtendedEnable,
   };
 
+  // Config::SaveType values (SC64 firmware save_type_t).
+  enum class SaveType : u32 {
+    None = 0,
+    Eeprom4k = 1,
+    Eeprom16k = 2,
+    Sram = 3,
+    Flashram = 4,
+    SramBanked = 5,
+    Sram1M = 6,
+  };
+
   // Sub-operations of the SdCardOp command.
   // Both sides use the same set.
   enum class SdOp : u32 {
@@ -269,7 +279,7 @@ struct SC64 : PIDevice {
   bool hostConnected = false;
   u64 hostLastKeepAlive = 0;
 
-  SC64(Cartridge& self) : self(self), host(*this) {}
+  SC64() : host(*this) {}
 
   auto open(string location, bool readOnly, u32 hostPort = 0) -> void;
   auto close() -> void;
@@ -329,3 +339,5 @@ private:
   auto transfer(bool write, u32 piAddress, u32 count) -> SdError;
   auto setByteSwap(u8* data, u32 size) -> void;
 };
+
+extern SC64 sc64;

@@ -70,7 +70,7 @@ auto option(string name, string value) -> bool {
 //the cart INT line is open-drain: it stays active while any cartridge bus
 //device (the 64DD or the cartridge slot) drives it
 auto pollCartridgeInterrupt() -> void {
-  cpu.setInterruptPending(CPU::Interrupt::Cartridge, dd.irqLine() || cartridge.irqLine());
+  cpu.setInterruptPending(CPU::Interrupt::Cartridge, dd.irqLine() || sc64.irqLine());
 }
 
 System system;
@@ -96,7 +96,7 @@ auto System::run() -> void {
     _vulkanNeedsLoad = false;
   }
   cpu.main();
-  cartridge.pollSc64Host();
+  sc64.pollHost();
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -456,6 +456,7 @@ auto System::power(bool reset) -> void {
   }
   queue.reset();
   cartridge.power(reset);
+  sc64.power(reset);
   rdram.power(reset);
   if(_DD()) dd.power(reset);
   mi.power(reset);

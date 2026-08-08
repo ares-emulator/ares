@@ -1,5 +1,3 @@
-struct SC64;
-
 struct Cartridge {
   Node::Peripheral node;
   VFS::Pak pak;
@@ -122,8 +120,6 @@ struct Cartridge {
     auto writeHalf(u32 address, u16 data) -> void;
   } isviewer;
 
-  std::unique_ptr<SC64> sc64;
-
   struct RTC {
     Cartridge& self;
     RTC(Cartridge &self) : self(self) {}
@@ -176,8 +172,6 @@ struct Cartridge {
   auto disconnect() -> void;
   auto save() -> void;
   auto power(bool reset) -> void;
-  auto pollSc64Host() -> void;
-  auto irqLine() const -> bool;
 
   //joybus.cpp
   auto joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2;
