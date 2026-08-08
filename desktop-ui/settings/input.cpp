@@ -16,6 +16,20 @@ auto InputSettings::construct() -> void {
   if(settings.input.defocus == "Block") inputDefocusBlock.setChecked();
   if(settings.input.defocus == "Allow") inputDefocusAllow.setChecked();
 
+  digitalToAnalogLabel.setText("Digital to analog:").setFont(Font().setBold());
+  digitalToAnalogImmediate.setText("Immediate").onActivate([&] {
+    settings.input.digitalToAnalog = "Immediate";
+  });
+  digitalToAnalogSpring.setText("Spring (return to center)").onActivate([&] {
+    settings.input.digitalToAnalog = "Spring";
+  });
+  digitalToAnalogHold.setText("Hold position").onActivate([&] {
+    settings.input.digitalToAnalog = "Hold";
+  });
+  if(settings.input.digitalToAnalog == "Spring") digitalToAnalogSpring.setChecked();
+  else if(settings.input.digitalToAnalog == "Hold") digitalToAnalogHold.setChecked();
+  else digitalToAnalogImmediate.setChecked();
+
   systemList.append(ComboButtonItem().setText("Virtual Gamepads"));
   for(auto& emulator : emulators) {
     systemList.append(ComboButtonItem().setText(emulator->name));
