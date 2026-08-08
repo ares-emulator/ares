@@ -209,14 +209,20 @@ auto PPU::main() -> void {
       cycles64(750);
       cycles64(814);
       cycles64(878);
-      cycles64(942);
+      cycles32(942);
+      cycles16(974);
+      cycles08(990);
+      cycles04(998);
+      cycles02(1002);
 
-      //cycle 1006 - finish rendering final background tiles
-      cycles08(1006);
-      cycles08(1014);
-      cycles08(1022);
-      cycles08(1030);
+      //cycle 1004 - finish rendering sprites if HBLANK bit is set
+      objects.scanlineEnd();
+      cycles02(1004);
 
+      //cycle 1006 - finish rendering offscreen background tiles
+      cycles32(1006);
+
+      #undef cycles01
       #undef cycles02
       #undef cycles04
       #undef cycles08
@@ -244,7 +250,9 @@ auto PPU::main() -> void {
     if(accurate) {
       step(37);
       objects.scanline((y + 1) % 228);
-      step(998);
+      step(964);
+      objects.scanlineEnd();
+      step(34);
     } else {
       step(renderingCycle);
       objects.renderScanline((y + 1) % 228);

@@ -202,6 +202,7 @@ private:
     auto stepOAM() -> void;
     auto step() -> void;
     auto scanline(u32 y) -> void;
+    auto scanlineEnd() -> void;
     auto renderScanline(u32 y) -> void;
     auto outputPixel(u32 x, u32 y) -> void;
     auto power() -> void;
