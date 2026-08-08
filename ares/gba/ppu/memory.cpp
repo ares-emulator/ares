@@ -4,6 +4,7 @@ auto PPU::bgReleaseBus() -> void {
 }
 
 auto PPU::objReleaseBus() -> void {
+  vramAccessedOBJ = false;
   oamAccessed = false;
 }
 
@@ -21,10 +22,9 @@ auto PPU::pramContention() -> bool {
 }
 
 auto PPU::vramContention(n32 address) -> bool {
-  //todo: implement OBJ VRAM contention
   address &= 0x1ffff;
-  if(Background::IO::mode < 3 && address >= 0x10000) return false;
-  else if(address >= 0x14000) return false;
+  if(Background::IO::mode < 3 && address >= 0x10000) return vramAccessedOBJ;
+  else if(address >= 0x14000) return vramAccessedOBJ;
   return vramAccessedBG;
 }
 
@@ -103,9 +103,10 @@ auto PPU::writeOAM(u32 mode, n32 address, n32 word) -> void {
   oam[address >> 1 & 511] = word;
 }
 
-auto PPU::readObjectVRAM(u32 address) const -> n8 {
+auto PPU::readObjectVRAM(u32 address) -> n8 {
   if(Background::IO::mode == 3 || Background::IO::mode == 4 || Background::IO::mode == 5) {
     if(address <= 0x3fff) return 0u;
   }
+  vramAccessedOBJ = true;
   return vram[0x10000 + (address & 0x7fff)];
 }
