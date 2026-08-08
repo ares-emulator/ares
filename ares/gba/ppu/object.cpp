@@ -182,6 +182,7 @@ auto PPU::Objects::step() -> void {
     if(vramStageReady) {
       vramStageReady = false;
       vramStageActive = true;
+      //affine sprites do not access VRAM on first cycle
       if(!object.affine) {
         drawObject(renderY);
         drawObject(renderY);
@@ -222,10 +223,20 @@ auto PPU::Objects::scanline(u32 y) -> void {
   state = State::ReadA01;
 }
 
+auto PPU::Objects::scanlineEnd() -> void {
+  if(io.hblank) {
+    active = false;
+    vramStageReady = false;
+    vramStageActive = false;
+  }
+}
+
 auto PPU::Objects::renderScanline(u32 y) -> void {
   scanline(y);
-  for(auto _ : range(1232)) step();
+  for(auto _ : range(io.hblank ? 964 : 1232)) step();
   active = false;
+  vramStageReady = false;
+  vramStageActive = false;
   ppu.objReleaseBus();
 }
 
