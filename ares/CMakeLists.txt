@@ -152,6 +152,13 @@ else()
   disable_core("Atari 2600")
 endif()
 
+if(a52 IN_LIST ARES_CORES)
+  enable_core("Atari 5200")
+  add_subdirectory(a52)
+else()
+  disable_core("Atari 5200")
+endif()
+
 if(fc IN_LIST ARES_CORES)
   enable_core("NES / Famicom")
   add_subdirectory(fc)
