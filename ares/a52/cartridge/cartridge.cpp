@@ -11,13 +11,21 @@ auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Cartridge::connect() -> void {
+  board.reset();
   if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
   information.title = pak->attribute("title");
   information.board = pak->attribute("board");
 
-  if(information.board == "Linear32K") board = std::make_unique<Board::Linear32K>(*this);
+  using Wiring = Board::Linear::Wiring;
+  if(information.board == "Linear4K"      ) board = std::make_unique<Board::Linear>(*this,  4_KiB, Wiring::Upper);
+  if(information.board == "Linear8K"      ) board = std::make_unique<Board::Linear>(*this,  8_KiB, Wiring::Upper);
+  if(information.board == "OneChip16K"    ) board = std::make_unique<Board::Linear>(*this, 16_KiB, Wiring::Full);
+  if(information.board == "TwoChip16K"    ) board = std::make_unique<Board::Linear>(*this, 16_KiB, Wiring::Split);
+  if(information.board == "Overlapping16K") board = std::make_unique<Board::Linear>(*this, 16_KiB, Wiring::Overlapping);
+  if(information.board == "Linear32K"     ) board = std::make_unique<Board::Linear>(*this, 32_KiB, Wiring::Full);
+  if(information.board == "DualWindow40K" ) board = std::make_unique<Board::DualWindow40K>(*this);
   if(!board) return;
 
   board->pak = pak;

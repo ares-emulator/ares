@@ -12,7 +12,6 @@ struct Interface {
   virtual auto read(n16 address, n8 data) -> n8 { return data; }
   virtual auto peek(n16 address, n8 data) const -> n8 { return data; }
   virtual auto write(n16 address, n8 data) -> bool { return false; }
-
   Cartridge& cartridge;
 };
 

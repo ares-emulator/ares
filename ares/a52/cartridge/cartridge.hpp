@@ -7,6 +7,7 @@ struct Cartridge {
 
   auto title() const -> string { return information.title; }
 
+  //cartridge.cpp
   auto allocate(Node::Port parent) -> Node::Peripheral;
   auto connect() -> void;
   auto disconnect() -> void;
