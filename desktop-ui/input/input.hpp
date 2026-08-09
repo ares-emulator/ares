@@ -1,7 +1,7 @@
 enum : u32 { BindingLimit = 3 };
 
 enum class MappingMode : u32 { Direct, VirtualPad };
-enum class DigitalAxisMode : u32 { Immediate, Spring, Hold };
+enum class DigitalAxisMode : u32 { Immediate, GradualReturn, GradualHold };
 
 auto digitalAxisMode(const string& name) -> DigitalAxisMode;
 

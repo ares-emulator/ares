@@ -60,6 +60,7 @@ struct Settings : Markup::Node {
     string driver;
     string defocus = "Pause";
     string digitalToAnalog = "Immediate";
+    u32 digitalToAnalogTime = 500;
   } input;
 
   struct Boot {
@@ -216,6 +217,7 @@ struct AudioSettings : VerticalLayout {
 
 struct InputSettings : VerticalLayout {
   auto construct() -> void;
+  auto refreshDigitalToAnalog() -> void;
   auto systemChange() -> void;
   auto portChange() -> void;
   auto deviceChange() -> void;
@@ -238,9 +240,13 @@ struct InputSettings : VerticalLayout {
   HorizontalLayout digitalToAnalogLayout{this, Size{~0, 0}};
     Label digitalToAnalogLabel{&digitalToAnalogLayout, Size{0, 0}};
     RadioLabel digitalToAnalogImmediate{&digitalToAnalogLayout, Size{0, 0}};
-    RadioLabel digitalToAnalogSpring{&digitalToAnalogLayout, Size{0, 0}};
-    RadioLabel digitalToAnalogHold{&digitalToAnalogLayout, Size{0, 0}};
-    Group digitalToAnalogGroup{&digitalToAnalogImmediate, &digitalToAnalogSpring, &digitalToAnalogHold};
+    RadioLabel digitalToAnalogGradualReturn{&digitalToAnalogLayout, Size{0, 0}};
+    RadioLabel digitalToAnalogGradualHold{&digitalToAnalogLayout, Size{0, 0}};
+    Group digitalToAnalogGroup{&digitalToAnalogImmediate, &digitalToAnalogGradualReturn, &digitalToAnalogGradualHold};
+  HorizontalLayout digitalToAnalogTimeLayout{this, Size{~0, 0}};
+    Label digitalToAnalogTimeLabel{&digitalToAnalogTimeLayout, Size{0, 0}};
+    HorizontalSlider digitalToAnalogTimeSlider{&digitalToAnalogTimeLayout, Size{~0, 0}};
+    Label digitalToAnalogTimeValue{&digitalToAnalogTimeLayout, Size{60, 0}};
   HorizontalLayout indexLayout{this, Size{~0, 0}};
     ComboButton systemList{&indexLayout, Size{~0, 0}};
     ComboButton portList{&indexLayout, Size{~0, 0}};

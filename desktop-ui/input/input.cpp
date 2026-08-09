@@ -10,8 +10,8 @@ static auto inputAssignment(std::shared_ptr<HID::Device> device, u32 groupID, u3
 }
 
 auto digitalAxisMode(const string& name) -> DigitalAxisMode {
-  if(name == "Spring") return DigitalAxisMode::Spring;
-  if(name == "Hold") return DigitalAxisMode::Hold;
+  if(name == "GradualReturn") return DigitalAxisMode::GradualReturn;
+  if(name == "GradualHold") return DigitalAxisMode::GradualHold;
   return DigitalAxisMode::Immediate;
 }
 
@@ -333,11 +333,10 @@ auto InputPair::moveDigital(s32 target, u64 currentTime) -> s16 {
   auto elapsed = min(currentTime - digital.timestamp, MaximumUpdateInterval);
   digital.timestamp = currentTime;
 
-  //One half-second moves the digital approximation from center to either endpoint.
-  constexpr u64 CenterToEndpointTime = 500;
+  auto centerToEdgeTime = max(100u, min(1000u, settings.input.digitalToAnalogTime));
   auto distance = 32767 * elapsed + digital.remainder;
-  auto step = distance / CenterToEndpointTime;
-  digital.remainder = distance % CenterToEndpointTime;
+  auto step = distance / centerToEdgeTime;
+  digital.remainder = distance % centerToEdgeTime;
 
   if(digital.position < target) digital.position = min(target, digital.position + (s32)step);
   if(digital.position > target) digital.position = max(target, digital.position - (s32)step);
@@ -363,11 +362,11 @@ auto InputPair::clockDigital(DigitalAxisMode mode, bool assigned, s32 direction,
   case DigitalAxisMode::Immediate:
     resetDigital(mode, currentTime);
     return direction * 32767;
-  case DigitalAxisMode::Spring:
+  case DigitalAxisMode::GradualReturn:
     if(direction > 0) return moveDigital(+32767, currentTime);
     if(direction < 0) return moveDigital(-32767, currentTime);
     return moveDigital(0, currentTime);
-  case DigitalAxisMode::Hold:
+  case DigitalAxisMode::GradualHold:
     if(direction > 0) return moveDigital(+32767, currentTime);
     if(direction < 0) return moveDigital(-32767, currentTime);
     return moveDigital(digital.position, currentTime);
