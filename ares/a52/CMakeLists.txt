@@ -27,6 +27,8 @@ ares_add_sources(
     controller/port.hpp
     controller/standard/standard.cpp
     controller/standard/standard.hpp
+    controller/trak-ball/trak-ball.cpp
+    controller/trak-ball/trak-ball.hpp
     cartridge/cartridge.hpp
     cartridge/slot.cpp
     cartridge/slot.hpp
