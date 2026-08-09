@@ -15,7 +15,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setDisconnect([&] { device.reset(); });
-  port->setSupported({"Controller"});
+  port->setSupported({"Controller", "Trak-Ball"});
 }
 
 auto ControllerPort::unload() -> void {
@@ -25,6 +25,7 @@ auto ControllerPort::unload() -> void {
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
   if(name == "Controller") device = std::make_unique<StandardController>(port);
+  if(name == "Trak-Ball") device = std::make_unique<TrakBall>(port);
   if(device) return device->node;
   return {};
 }

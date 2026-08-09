@@ -66,5 +66,6 @@ auto Controller::bottomFire() -> bool {
 
 #include "port.cpp"
 #include "standard/standard.cpp"
+#include "trak-ball/trak-ball.cpp"
 
 }

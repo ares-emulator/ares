@@ -44,6 +44,28 @@ Atari5200::Atari5200() {
     device.digital("Reset",      virtualPorts[id].pad.north);
     port.append(device); }
 
+  { InputDevice device{"Trak-Ball"};
+    device.relative("X-Axis",      virtualPorts[id].mouse.x);
+    device.relative("Y-Axis",      virtualPorts[id].mouse.y);
+    device.digital ("Top Fire",    virtualPorts[id].pad.east);
+    device.digital ("Bottom Fire", virtualPorts[id].pad.south);
+    device.digital ("1",           virtualPorts[id].pad.one);
+    device.digital ("2",           virtualPorts[id].pad.two);
+    device.digital ("3",           virtualPorts[id].pad.three);
+    device.digital ("4",           virtualPorts[id].pad.four);
+    device.digital ("5",           virtualPorts[id].pad.five);
+    device.digital ("6",           virtualPorts[id].pad.six);
+    device.digital ("7",           virtualPorts[id].pad.seven);
+    device.digital ("8",           virtualPorts[id].pad.eight);
+    device.digital ("9",           virtualPorts[id].pad.nine);
+    device.digital ("*",           virtualPorts[id].pad.star);
+    device.digital ("0",           virtualPorts[id].pad.zero);
+    device.digital ("#",           virtualPorts[id].pad.pound);
+    device.digital ("Start",       virtualPorts[id].pad.start);
+    device.digital ("Pause",       virtualPorts[id].pad.select);
+    device.digital ("Reset",       virtualPorts[id].pad.north);
+    port.append(device); }
+
     ports.push_back(port);
   }
 }
