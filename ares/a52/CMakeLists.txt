@@ -40,5 +40,14 @@ ares_add_sources(
     antic/playfield.cpp
     antic/timing.cpp
     gtia/gtia.hpp
+    gtia/collision.cpp
+    gtia/color.cpp
+    gtia/console.cpp
+    gtia/io.cpp
+    gtia/player-missile.cpp
+    gtia/playfield.cpp
+    gtia/priority.cpp
+    gtia/timing.cpp
+    gtia/video.cpp
     pokey/pokey.hpp
 )
