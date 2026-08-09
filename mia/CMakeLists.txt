@@ -16,6 +16,7 @@ target_sources(
     resource/resource.hpp
     medium/arcade.cpp
     medium/atari-2600.cpp
+    medium/atari-5200.cpp
     medium/bs-memory.cpp
     medium/colecovision.cpp
     medium/famicom-disk-system.cpp
@@ -81,6 +82,7 @@ target_sources(
   PRIVATE
     system/arcade.cpp
     system/atari-2600.cpp
+    system/atari-5200.cpp
     system/colecovision.cpp
     system/famicom.cpp
     system/game-boy-advance.cpp
