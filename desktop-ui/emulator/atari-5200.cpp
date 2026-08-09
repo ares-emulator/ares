@@ -14,6 +14,38 @@ Atari5200::Atari5200() {
     "NTSC-U Four-port",
     "06b250f18983d058c0f156ce7ee88ae48b6eaf11e6f10f21dccf6ac7ffb6a6af"
   });
+
+  for(auto id : range(4)) {
+    InputPort port{string{"Controller Port ", 1 + id}};
+
+  { InputDevice device{"Controller"};
+    device.analog ("L-Up",       virtualPorts[id].pad.lstick_up);
+    device.analog ("L-Down",     virtualPorts[id].pad.lstick_down);
+    device.analog ("L-Left",     virtualPorts[id].pad.lstick_left);
+    device.analog ("L-Right",    virtualPorts[id].pad.lstick_right);
+    device.analog ("X-Axis",     virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    device.analog ("Y-Axis",     virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
+    device.digital("Top Fire",   virtualPorts[id].pad.east);
+    device.digital("Bottom Fire", virtualPorts[id].pad.south);
+    device.digital("1",          virtualPorts[id].pad.one);
+    device.digital("2",          virtualPorts[id].pad.two);
+    device.digital("3",          virtualPorts[id].pad.three);
+    device.digital("4",          virtualPorts[id].pad.four);
+    device.digital("5",          virtualPorts[id].pad.five);
+    device.digital("6",          virtualPorts[id].pad.six);
+    device.digital("7",          virtualPorts[id].pad.seven);
+    device.digital("8",          virtualPorts[id].pad.eight);
+    device.digital("9",          virtualPorts[id].pad.nine);
+    device.digital("*",          virtualPorts[id].pad.star);
+    device.digital("0",          virtualPorts[id].pad.zero);
+    device.digital("#",          virtualPorts[id].pad.pound);
+    device.digital("Start",      virtualPorts[id].pad.start);
+    device.digital("Pause",      virtualPorts[id].pad.select);
+    device.digital("Reset",      virtualPorts[id].pad.north);
+    port.append(device); }
+
+    ports.push_back(port);
+  }
 }
 
 auto Atari5200::load() -> LoadResult {
@@ -38,6 +70,13 @@ auto Atari5200::load() -> LoadResult {
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
+  }
+
+  for(auto id : range(4)) {
+    if(auto port = root->find<ares::Node::Port>(string{"Controller Port ", 1 + id})) {
+      port->allocate("Controller");
+      port->connect();
+    }
   }
 
   return successful;
