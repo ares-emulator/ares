@@ -4,42 +4,46 @@ namespace ares::Atari5200 {
 
 GTIA gtia;
 
+#include "io.cpp"
+#include "timing.cpp"
+#include "console.cpp"
+#include "player-missile.cpp"
+#include "playfield.cpp"
+#include "priority.cpp"
+#include "collision.cpp"
+#include "video.cpp"
+#include "color.cpp"
+
 auto GTIA::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("GTIA");
+
+  screen = node->append<Node::Video::Screen>(
+    "Screen", Timing::SamplesPerScanline, Timing::ScanlinesPerFrame
+  );
+  screen->colors(1 << 8, std::bind_front(&GTIA::color, this));
+  screen->setSize(Timing::SamplesPerScanline, Timing::ScanlinesPerFrame);
+  screen->setScale(1.0, 1.0);
+  screen->setAspect(20.0, 21.0);
+  screen->refreshRateHint(system.frequency(), Timing::ColorClocksPerScanline, Timing::ScanlinesPerFrame);
 }
 
 auto GTIA::unload() -> void {
+  if(screen) screen->quit();
+  if(node && screen) node->remove(screen);
+  screen.reset();
   node = {};
 }
 
 auto GTIA::power() -> void {
-}
-
-auto GTIA::read(n8 address) -> n8 {
-  return peek(address);
-}
-
-auto GTIA::peek(n8 address) const -> n8 {
-  address &= 0x1f;
-  if(address <= 0x13) return 0x00;
-  return 0x0f;
-}
-
-auto GTIA::write(n8 address, n8 data) -> void {
-  // Register side effects arrive with the GTIA implementation.
-}
-
-auto GTIA::clock(n3 an) -> void {
-}
-
-auto GTIA::loadPlayerDMA(u8 player, n8 data, u32 scanline) -> void {
-}
-
-auto GTIA::loadMissileDMA(n8 data, u32 scanline) -> void {
-}
-
-auto GTIA::frame() -> void {
-  scheduler.exit(Event::Frame);
+  if(screen) screen->power();
+  playerMissile = {};
+  priority = {};
+  console.power();
+  colors.power();
+  collision.clear();
+  playfield.power();
+  counter.power();
+  graphicsControl = 0;
 }
 
 }
