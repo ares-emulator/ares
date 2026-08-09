@@ -26,6 +26,7 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   scheduler.enter();
+  for(auto& port : controllerPorts) port.poll();
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -65,6 +66,7 @@ auto System::load(Node::System& root, string name) -> bool {
   gtia.load(node);
   pokey.load(node);
   cartridgeSlot.load(node);
+  for(auto& port : controllerPorts) port.load(node);
   return true;
 }
 
@@ -81,6 +83,7 @@ auto System::unload() -> void {
   gtia.unload();
   pokey.unload();
   cartridgeSlot.unload();
+  for(auto& port : controllerPorts) port.unload();
   ram.reset();
   bios.reset();
   pak.reset();

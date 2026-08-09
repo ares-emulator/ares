@@ -7,6 +7,7 @@ ares_add_sources(
     a52.cpp
   PRIMARY #
     system/system.cpp
+    controller/controller.cpp
     cartridge/cartridge.cpp
     cpu/cpu.cpp
     antic/antic.cpp
@@ -21,6 +22,11 @@ ares_add_sources(
     a52.hpp
     CMakeLists.txt
     system/system.hpp
+    controller/controller.hpp
+    controller/port.cpp
+    controller/port.hpp
+    controller/standard/standard.cpp
+    controller/standard/standard.hpp
     cartridge/cartridge.hpp
     cartridge/slot.cpp
     cartridge/slot.hpp
@@ -49,5 +55,15 @@ ares_add_sources(
     gtia/priority.cpp
     gtia/timing.cpp
     gtia/video.cpp
+    pokey/audio.cpp
+    pokey/clock.cpp
+    pokey/dac.cpp
+    pokey/io.cpp
+    pokey/irq.cpp
+    pokey/keyboard.cpp
+    pokey/output.cpp
     pokey/pokey.hpp
+    pokey/pots.cpp
+    pokey/serial.cpp
+    pokey/status.cpp
 )

@@ -28,6 +28,7 @@ namespace ares::Atari5200 {
 
   #include <a52/system/system.hpp>
   #include <a52/cartridge/cartridge.hpp>
+  #include <a52/controller/controller.hpp>
   #include <a52/antic/antic.hpp>
   #include <a52/gtia/gtia.hpp>
   #include <a52/pokey/pokey.hpp>

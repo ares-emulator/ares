@@ -9,8 +9,7 @@ auto GTIA::Console::clock(n3 graphicsControl) -> void {
   // GTIA latches T0-T3 whenever an input goes low, independently of CPU reads.
   // Source: Atari GTIA Chip (NTSC) data sheet, section 7.0, Trigger Inputs.
   for(u32 index = 0; index < 4; index++) {
-    // Controller ports are connected by the standard-controller commit.
-    auto state = true;
+    auto state = !controllerPorts[index].bottomFire();
     if(graphicsControl.bit(2)) trigger[index] &= state;
     else trigger[index] = state;
   }
