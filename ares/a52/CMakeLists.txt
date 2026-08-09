@@ -26,6 +26,7 @@ ares_add_sources(
     cartridge/slot.hpp
     cartridge/board/board.cpp
     cartridge/board/board.hpp
+    cartridge/board/dual-window.cpp
     cartridge/board/linear.cpp
     cpu/cpu.hpp
     cpu/debugger.cpp
