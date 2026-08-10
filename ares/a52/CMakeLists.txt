@@ -22,6 +22,7 @@ ares_add_sources(
     a52.hpp
     CMakeLists.txt
     system/system.hpp
+    system/serialization.cpp
     controller/controller.hpp
     controller/port.cpp
     controller/port.hpp
@@ -30,6 +31,7 @@ ares_add_sources(
     controller/trak-ball/trak-ball.cpp
     controller/trak-ball/trak-ball.hpp
     cartridge/cartridge.hpp
+    cartridge/serialization.cpp
     cartridge/slot.cpp
     cartridge/slot.hpp
     cartridge/board/board.cpp
@@ -39,6 +41,7 @@ ares_add_sources(
     cpu/cpu.hpp
     cpu/debugger.cpp
     cpu/memory.cpp
+    cpu/serialization.cpp
     cpu/timing.cpp
     antic/antic.hpp
     antic/display-list.cpp
@@ -46,6 +49,7 @@ ares_add_sources(
     antic/interrupt.cpp
     antic/io.cpp
     antic/playfield.cpp
+    antic/serialization.cpp
     antic/timing.cpp
     gtia/gtia.hpp
     gtia/collision.cpp
@@ -55,6 +59,7 @@ ares_add_sources(
     gtia/player-missile.cpp
     gtia/playfield.cpp
     gtia/priority.cpp
+    gtia/serialization.cpp
     gtia/timing.cpp
     gtia/video.cpp
     pokey/audio.cpp
@@ -67,5 +72,6 @@ ares_add_sources(
     pokey/pokey.hpp
     pokey/pots.cpp
     pokey/serial.cpp
+    pokey/serialization.cpp
     pokey/status.cpp
 )

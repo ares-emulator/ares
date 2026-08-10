@@ -14,6 +14,7 @@ POKEY pokey;
 #include "serial.cpp"
 #include "output.cpp"
 #include "io.cpp"
+#include "serialization.cpp"
 
 auto POKEY::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("POKEY");

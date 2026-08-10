@@ -31,6 +31,11 @@ struct DualWindow40K : Interface {
     return select(address);
   }
 
+  auto serialize(serializer& s) -> void override {
+    s(bank0);
+    s(bank1);
+  }
+
 private:
   auto select(n16 address) -> bool {
     if(address >= 0x0ff6 && address <= 0x0ff9) {

@@ -46,6 +46,9 @@ struct CPU : MOS6502, Thread {
   auto irqLine(bool line) -> void;
   auto rdyLine(bool line) -> void;
 
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
 private:
   //memory.cpp
   auto peekBus(n16 address) const -> n8;

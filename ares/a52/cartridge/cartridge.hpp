@@ -19,6 +19,9 @@ struct Cartridge {
   auto peek(n16 address, n8 data) const -> n8;
   auto write(n16 address, n8 data) -> bool;
 
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
   std::unique_ptr<Board::Interface> board;
 
 private:

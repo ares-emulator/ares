@@ -15,6 +15,11 @@ struct System {
   auto unload() -> void;
   auto power(bool reset) -> void;
 
+  //serialization.cpp
+  auto serialize(bool synchronize) -> serializer;
+  auto unserialize(serializer&) -> bool;
+  auto serialize(serializer&, bool synchronize) -> void;
+
   Memory::Writable<n8> ram;
   Memory::Readable<n8> bios;
 

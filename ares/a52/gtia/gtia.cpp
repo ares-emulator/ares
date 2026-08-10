@@ -13,6 +13,7 @@ GTIA gtia;
 #include "collision.cpp"
 #include "video.cpp"
 #include "color.cpp"
+#include "serialization.cpp"
 
 auto GTIA::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("GTIA");
