@@ -10,6 +10,7 @@ ANTIC antic;
 #include "dma.cpp"
 #include "playfield.cpp"
 #include "interrupt.cpp"
+#include "serialization.cpp"
 
 auto ANTIC::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("ANTIC");

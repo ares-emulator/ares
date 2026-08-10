@@ -16,6 +16,9 @@ struct POKEY : Thread {
   //dac.cpp
   auto output() const -> f64;
 
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
 //private:
   struct KeyboardLines {
     n1 kr1;
@@ -67,6 +70,9 @@ struct POKEY : Thread {
     auto sample9(u32 phase) const -> bool;
     auto sample17(u32 phase) const -> bool;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
   private:
     friend struct POKEY;
 
@@ -111,6 +117,9 @@ struct POKEY : Thread {
     auto resetSerialTimer34() -> void;
     auto scheduleTwoToneResynchronization(u32 timerEvents) -> void;
     auto levels() const -> Levels;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
   private:
     friend struct POKEY;
@@ -177,6 +186,9 @@ struct POKEY : Thread {
     auto status() const -> n8;
     auto line() const -> bool;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
   private:
     friend struct POKEY;
 
@@ -194,6 +206,9 @@ struct POKEY : Thread {
     auto clock15() -> void;
     auto read(u32 index) const -> n8;
     auto all() const -> n8;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
   private:
     friend struct POKEY;
@@ -226,6 +241,9 @@ struct POKEY : Thread {
     auto setSerialFrameError() -> void;
     auto read() const -> n8;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
   private:
     friend struct POKEY;
 
@@ -241,6 +259,9 @@ struct POKEY : Thread {
     auto disable() -> void;
     auto clock(bool debounce) -> void;
     auto code() const -> n8;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
   private:
     friend struct POKEY;
@@ -273,6 +294,9 @@ struct POKEY : Thread {
     auto reset() -> void;
     auto input() const -> n8;
     auto holdsTimer34() const -> bool;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
   //private:
     friend struct POKEY;

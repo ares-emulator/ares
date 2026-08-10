@@ -5,6 +5,7 @@ namespace ares::Atari5200 {
 Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "board/board.cpp"
 #include "slot.cpp"
+#include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
   return node = parent->append<Node::Peripheral>("Atari 5200 Cartridge");

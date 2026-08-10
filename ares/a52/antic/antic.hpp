@@ -12,6 +12,9 @@ struct ANTIC : Thread {
   auto peek(n8 address) const -> n8;
   auto write(n8 address, n8 data) -> void;
 
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
 //private:
 
   struct ModeProperties {
@@ -116,6 +119,9 @@ struct ANTIC : Thread {
     auto arbitrate(Requests& requests) -> void;
     auto consume(const Request& request, n8 data) -> void;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n1 refreshPending;
   } dma{*this};
 
@@ -134,6 +140,9 @@ struct ANTIC : Thread {
     auto queueDMA(DMA::Requests& requests) -> void;
     auto consumeInstruction(n8 data) -> void;
     auto consumeOperand(u8 index, n8 data) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
     n8 instruction;
     n16 memoryScan;
@@ -183,6 +192,9 @@ struct ANTIC : Thread {
     auto consumeBitmap(n6 writePhase, n6 readPhase, n8 data) -> void;
     auto consumeCharacter(n8 character, n8 data) -> void;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n8 dmaClock;
     n8 dmaName[8];
     n6 lineWrite;
@@ -211,6 +223,9 @@ struct ANTIC : Thread {
     auto clock() -> void;
     auto wait() -> void;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n1 active;
     n9 scanline;
   } wsync{*this};
@@ -223,6 +238,9 @@ struct ANTIC : Thread {
     auto power() -> void;
     auto schedule(n8 source) -> void;
     auto clock() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
     n8 pending;
     n8 enable;

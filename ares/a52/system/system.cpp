@@ -3,6 +3,8 @@
 
 namespace ares::Atari5200 {
 
+#include "serialization.cpp"
+
 auto enumerate() -> std::vector<string> {
   return {
     "[Atari] Atari 5200 (NTSC)",
@@ -40,6 +42,8 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setPower(std::bind_front(&System::power, this));
   node->setSave(std::bind_front(&System::save, this));
   node->setUnload(std::bind_front(&System::unload, this));
+  node->setSerialize([this](bool synchronize) { return serialize(synchronize); });
+  node->setUnserialize([this](serializer& s) { return unserialize(s); });
   root = node;
 
   if(!node->setPak(pak = platform->pak(node))) {

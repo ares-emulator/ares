@@ -42,6 +42,9 @@ struct GTIA {
     OverscanViewportX + (OverscanViewportWidth - NominalViewportWidth) / 2;
   static constexpr u32 NominalViewportY = OverscanViewportY;
 
+  //serialization.cpp
+  auto serialize(serializer&) -> void;
+
 private:
   struct Sample {
     n3 an;
@@ -65,6 +68,9 @@ private:
     auto writePlayerSize(u8 index, n2 data) -> void;
     auto writeMissileSize(n8 data) -> void;
     auto writeVerticalDelay(n8 data) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
   private:
     //player-missile.cpp
@@ -133,6 +139,9 @@ private:
     auto fifthPlayer() const -> bool;
     auto multicolor() const -> bool;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n8 control;
     n6 pendingLow;
     n2 lowDelay;
@@ -159,6 +168,9 @@ private:
     auto signals(Sample sample, u8 special, u8 mode) const -> Signals;
     auto clearHighResolution() -> void;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     struct Special {
       Sample sample[4];
       n4 players[4];
@@ -182,6 +194,9 @@ private:
     auto releaseTriggers() -> void;
     auto write(n8 data) -> void;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n4 output;
     n4 pinSense;
     n1 trigger[4];
@@ -196,6 +211,9 @@ private:
     auto playfield(u8 index) const -> n8;
     auto background() const -> n8;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n8 playerColor[4];
     n8 playfieldColor[4];
     n8 backgroundColor;
@@ -209,6 +227,9 @@ private:
     auto read(u8 address) const -> n8;
     auto clear() -> void;
 
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n4 missilePlayfield[4];
     n4 playerPlayfield[4];
     n4 missilePlayer[4];
@@ -220,6 +241,9 @@ private:
     auto power() -> void;
     auto synchronizeHorizontalBlank() -> void;
     auto advance() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
     n8 horizontal;
     n9 vertical;

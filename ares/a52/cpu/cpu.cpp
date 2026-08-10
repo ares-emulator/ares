@@ -6,6 +6,7 @@ CPU cpu;
 #include "memory.cpp"
 #include "timing.cpp"
 #include "debugger.cpp"
+#include "serialization.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("CPU");
