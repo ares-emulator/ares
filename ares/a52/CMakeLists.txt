@@ -33,6 +33,12 @@ ares_add_sources(
     cpu/memory.cpp
     cpu/timing.cpp
     antic/antic.hpp
+    antic/display-list.cpp
+    antic/dma.cpp
+    antic/interrupt.cpp
+    antic/io.cpp
+    antic/playfield.cpp
+    antic/timing.cpp
     gtia/gtia.hpp
     pokey/pokey.hpp
 )

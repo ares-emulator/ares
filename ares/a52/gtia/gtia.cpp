@@ -26,6 +26,20 @@ auto GTIA::peek(n8 address) const -> n8 {
 }
 
 auto GTIA::write(n8 address, n8 data) -> void {
+  // Register side effects arrive with the GTIA implementation.
+}
+
+auto GTIA::clock(n3 an) -> void {
+}
+
+auto GTIA::loadPlayerDMA(u8 player, n8 data, u32 scanline) -> void {
+}
+
+auto GTIA::loadMissileDMA(n8 data, u32 scanline) -> void {
+}
+
+auto GTIA::frame() -> void {
+  scheduler.exit(Event::Frame);
 }
 
 }

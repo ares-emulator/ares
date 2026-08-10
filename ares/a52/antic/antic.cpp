@@ -4,6 +4,13 @@ namespace ares::Atari5200 {
 
 ANTIC antic;
 
+#include "io.cpp"
+#include "timing.cpp"
+#include "display-list.cpp"
+#include "dma.cpp"
+#include "playfield.cpp"
+#include "interrupt.cpp"
+
 auto ANTIC::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("ANTIC");
 }
@@ -14,28 +21,20 @@ auto ANTIC::unload() -> void {
 }
 
 auto ANTIC::main() -> void {
-  Thread::step(Timing::ColorClocksPerScanline);
-  Thread::synchronize(cpu);
-  if(++scanline == Timing::ScanlinesPerFrame) {
-    scanline = 0;
-    scheduler.exit(Event::Frame);
-  }
+  scanline();
 }
 
 auto ANTIC::power() -> void {
   Thread::create(system.frequency(), std::bind_front(&ANTIC::main, this));
-  scanline = 0;
-}
-
-auto ANTIC::read(n8 address) -> n8 {
-  return peek(address);
-}
-
-auto ANTIC::peek(n8 address) const -> n8 {
-  return 0xff;
-}
-
-auto ANTIC::write(n8 address, n8 data) -> void {
+  io = {};
+  counter = {};
+  displayList.power();
+  dma.power();
+  playfield.power();
+  wsync.power();
+  interrupt.power();
+  cpu.rdyLine(1);
+  cpu.nmiLine(0);
 }
 
 }

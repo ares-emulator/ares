@@ -18,6 +18,8 @@ struct CPU : MOS6502, Thread {
     } tracer;
   } debugger;
 
+  auto dataBus() const -> n8 { return io.openBus; }
+
   //cpu.cpp
   auto load(Node::Object parent) -> void;
   auto unload() -> void;
@@ -32,6 +34,7 @@ struct CPU : MOS6502, Thread {
 
   //timing.cpp
   auto read(n16 address) -> n8 override;
+  auto readDMA(n16 address) -> n8;
   auto write(n16 address, n8 data) -> void override;
   auto lastCycle() -> void override;
   auto cancelNmi() -> void override;

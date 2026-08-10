@@ -6,6 +6,12 @@ auto CPU::read(n16 address) -> n8 {
   return data;
 }
 
+auto CPU::readDMA(n16 address) -> n8 {
+  // ANTIC DMA shares the physical data bus, but must not advance CPU time or
+  // trigger CPU-facing debugger, cheat, or acknowledge side effects.
+  return io.openBus = peekBus(address);
+}
+
 auto CPU::write(n16 address, n8 data) -> void {
   writeBus(address, data);
   io.openBus = data;

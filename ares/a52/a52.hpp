@@ -19,6 +19,11 @@ namespace ares::Atari5200 {
     static constexpr u32 SamplesPerMachineCycle = ColorClocksPerMachineCycle * SamplesPerColorClock;
     static constexpr u32 SamplesPerScanline = ColorClocksPerScanline * SamplesPerColorClock;
     static constexpr u32 ScanlinesPerFrame = 262;
+    static constexpr u32 DisplayListFirstScanline = 8;
+    static constexpr u32 DisplayListLastScanline = 247;
+    static constexpr u32 VisibleFirstColorClock = 0x22;
+    static constexpr u32 VisibleLastColorClock = 0xdd;
+    static constexpr u32 WSYNCReleaseCycle = 105;
   };
 
   #include <a52/system/system.hpp>
