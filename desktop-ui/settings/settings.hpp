@@ -113,6 +113,7 @@ struct Settings : Markup::Node {
     bool expansionPak = true;
     u8 controllerPakBankCount = 1;
     string controllerPakBankString = "32KiB (Default)";
+    f64 overclock = 1.0;
     string quality = "SD";
     bool supersampling = false;
     bool disableVideoInterfaceProcessing = false;
@@ -381,6 +382,11 @@ struct CoreSettings : VerticalLayout {
       Label nintendo64ControllerPakBankLabel{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
       ComboButton nintendo64ControllerPakBankOption{&nintendo64ControllerPakBankLayout, Size{0, 0}};
       Label nintendo64ControllerPakBankHint{&nintendo64ControllerPakBankLayout, Size{0, layoutVertSize}};
+    HorizontalLayout nintendo64OverclockLayout{this, Size{~0, 0}, 5};
+      Label nintendo64OverclockLabel{&nintendo64OverclockLayout, Size{0, layoutVertSize}};
+      HorizontalSlider nintendo64OverclockSlider{&nintendo64OverclockLayout, Size{~0, 0}};
+      Label nintendo64OverclockValue{&nintendo64OverclockLayout, Size{45, layoutVertSize}};
+      Label nintendo64OverclockHint{&nintendo64OverclockLayout, Size{0, layoutVertSize}};
     HorizontalLayout disableVideoInterfaceProcessingLayout{this, Size{~0, 0}, 5};
       CheckLabel disableVideoInterfaceProcessingOption{&disableVideoInterfaceProcessingLayout, Size{0, 0}, 5};
       Label disableVideoInterfaceProcessingHint{&disableVideoInterfaceProcessingLayout, Size{0, layoutVertSize}};

@@ -36,6 +36,7 @@ auto option(string name, string value) -> bool {
   #endif
   if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
   if(name == "Deterministic Entropy") system.deterministicEntropy = value.boolean();
+  if(name == "Overclock") system.setOverclock(value.real());
   if(name == "Recompiler") {
     if constexpr(Accuracy::CPU::Recompiler) {
       cpu.recompiler.enabled = value.boolean();
@@ -426,6 +427,13 @@ auto System::save() -> void {
   if(_DD()) dd.save();
 
   if(model() == Model::Aleck64) aleck64.save();
+}
+
+auto System::setOverclock(f64 multiplier) -> void {
+  overclock = max(0.3, min(4.0, multiplier));
+  if(ai.node && ai.dac.frequency) {
+    ai.dac.period = frequency() / ai.dac.frequency;
+  }
 }
 
 auto System::power(bool reset) -> void {

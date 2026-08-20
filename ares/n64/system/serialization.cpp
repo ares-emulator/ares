@@ -33,6 +33,7 @@ auto System::unserialize(serializer& s) -> bool {
 
   if(synchronize) power(/* reset = */ false);
   serialize(s, synchronize);
+  setOverclock(overclock);
   return true;
 }
 
