@@ -32,6 +32,7 @@ enum ResultEnum {
   romNotFoundInDatabase,
   romNotFound,
   invalidROM,
+  unsupportedMedia,
   wrongMediaType,
   couldNotParseManifest,
   noFirmware,

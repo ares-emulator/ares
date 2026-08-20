@@ -14,8 +14,10 @@ struct System {
     auto poll() -> void;
   } controls;
 
+  enum class Model : u32 { Famicom, VsUniSystem };
   enum class Region : u32 { NTSCJ, NTSCU, PAL, Dendy };
 
+  auto model()     const -> Model  { return information.model;     }
   auto name()      const -> string { return information.name;      }
   auto region()    const -> Region { return information.region;    }
   auto frequency() const -> f64    { return information.frequency; }
@@ -36,6 +38,7 @@ struct System {
 
 private:
   struct Information {
+    Model  model      = Model::Famicom;
     string name       = "Famicom";
     Region region     = Region::NTSCJ;
     f64    frequency  = Constants::Colorburst::NTSC * 6.0;

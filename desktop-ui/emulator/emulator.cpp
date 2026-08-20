@@ -72,6 +72,10 @@ auto Emulator::handleLoadResult(LoadResult result) -> void {
       errorText = { "There was an error trying to parse the selected ROM. \n",
                     "Your ROM may be corrupt or contain a bad dump. " };
       break;
+    case unsupportedMedia:
+      errorText = { "This title was recognized, but its hardware configuration \n",
+                    "is not currently supported by ares. " };
+      break;
     case wrongMediaType:
       errorText = { "The selected ROM media type is ", result.mediaType, " \n",
                     "which is not supported by this system. Please select \n",
