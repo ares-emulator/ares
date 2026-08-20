@@ -90,6 +90,9 @@ auto Settings::process(bool load) -> void {
   bind(real,    "Audio/Balance", audio.balance);
 
   bind(string,  "Input/Defocus", input.defocus);
+  bind(string,  "Input/DigitalToAnalog", input.digitalToAnalog);
+  bind(natural, "Input/DigitalToAnalogTime", input.digitalToAnalogTime);
+  input.digitalToAnalogTime = max(100u, min(1000u, input.digitalToAnalogTime));
 
   bind(boolean, "Boot/Fast", boot.fast);
   bind(boolean, "Boot/Debugger", boot.debugger);

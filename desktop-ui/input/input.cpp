@@ -9,6 +9,12 @@ static auto inputAssignment(std::shared_ptr<HID::Device> device, u32 groupID, u3
   return {"0x", hex(device->id()), "/", groupID, "/", inputID};
 }
 
+auto digitalAxisMode(const string& name) -> DigitalAxisMode {
+  if(name == "GradualReturn") return DigitalAxisMode::GradualReturn;
+  if(name == "GradualHold") return DigitalAxisMode::GradualHold;
+  return DigitalAxisMode::Immediate;
+}
+
 auto InputMapping::bind() -> void {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   for(auto& binding : bindings) binding = {};
@@ -280,9 +286,11 @@ auto InputAnalog::bind(u32 binding, std::shared_ptr<HID::Device> device, u32 gro
   return false;
 }
 
-auto InputAnalog::value() -> s16 {
+auto InputAnalog::sample() -> Sample {
   lock_guard<recursive_mutex> inputLock(program.inputMutex);
   s32 result = 0;
+  bool digitalAssigned = false;
+  bool digitalPressed = false;
 
   for(auto& binding : bindings) {
     if(!binding.device) continue;  //unbound
@@ -295,11 +303,13 @@ auto InputAnalog::value() -> s16 {
     s16 value = device->group(groupID).input(inputID).value();
 
     if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
-      result += value != 0 ? 32767 : 0;
+      digitalAssigned = true;
+      digitalPressed |= value != 0;
     }
 
     if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button) {
-      result += value != 0 ? 32767 : 0;
+      digitalAssigned = true;
+      digitalPressed |= value != 0;
     }
 
     if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button) {
@@ -308,7 +318,71 @@ auto InputAnalog::value() -> s16 {
     }
   }
 
-  return sclamp<16>(result);
+
+  return {(s16)sclamp<16>(result), digitalAssigned, digitalPressed};
+}
+
+auto InputAnalog::value() -> s16 {
+  auto input = sample();
+  return sclamp<16>((s32)input.value + (input.pressed ? 32767 : 0));
+}
+
+auto InputPair::moveDigital(s32 target, u64 currentTime) -> s16 {
+  if(!digital.timestamp) digital.timestamp = currentTime;
+  constexpr u64 MaximumUpdateInterval = 50;
+  auto elapsed = min(currentTime - digital.timestamp, MaximumUpdateInterval);
+  digital.timestamp = currentTime;
+
+  auto centerToEdgeTime = max(100u, min(1000u, settings.input.digitalToAnalogTime));
+  auto distance = 32767 * elapsed + digital.remainder;
+  auto step = distance / centerToEdgeTime;
+  digital.remainder = distance % centerToEdgeTime;
+
+  if(digital.position < target) digital.position = min(target, digital.position + (s32)step);
+  if(digital.position > target) digital.position = max(target, digital.position - (s32)step);
+  if(digital.position == target) digital.remainder = 0;
+  return digital.position;
+}
+
+auto InputPair::resetDigital(DigitalAxisMode mode, u64 currentTime) -> void {
+  digital.mode = mode;
+  digital.position = 0;
+  digital.remainder = 0;
+  digital.timestamp = currentTime;
+}
+
+auto InputPair::clockDigital(DigitalAxisMode mode, bool assigned, s32 direction, u64 currentTime) -> s16 {
+  if(mode != digital.mode) resetDigital(mode, currentTime);
+  if(!assigned) {
+    resetDigital(mode, currentTime);
+    return 0;
+  }
+
+  switch(mode) {
+  case DigitalAxisMode::Immediate:
+    resetDigital(mode, currentTime);
+    return direction * 32767;
+  case DigitalAxisMode::GradualReturn:
+    if(direction > 0) return moveDigital(+32767, currentTime);
+    if(direction < 0) return moveDigital(-32767, currentTime);
+    return moveDigital(0, currentTime);
+  case DigitalAxisMode::GradualHold:
+    if(direction > 0) return moveDigital(+32767, currentTime);
+    if(direction < 0) return moveDigital(-32767, currentTime);
+    return moveDigital(digital.position, currentTime);
+  }
+
+  return 0;
+}
+
+auto InputPair::value() -> s16 {
+  auto lo = effectiveMappingLo().sample();
+  auto hi = effectiveMappingHi().sample();
+  s32 analog = hi.value - lo.value;
+  bool digitalAssigned = lo.digital || hi.digital;
+  s32 direction = (hi.pressed ? 1 : 0) - (lo.pressed ? 1 : 0);
+  auto digital = clockDigital(digitalAxisMode(settings.input.digitalToAnalog), digitalAssigned, direction, chrono::millisecond());
+  return sclamp<16>(analog + digital);
 }
 
 auto InputAnalog::pressed() -> bool {

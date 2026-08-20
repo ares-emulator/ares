@@ -311,7 +311,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
       for(auto& inputPair : inputDevice.pairs) {
         if(inputPair.name != input->name()) continue;
         if(auto axis = input->cast<ares::Node::Input::Axis>()) {
-          auto value = inputPair.effectiveMappingHi().value() - inputPair.effectiveMappingLo().value();
+          auto value = inputPair.value();
           return axis->setValue(value);
         }
       }

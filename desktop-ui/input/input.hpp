@@ -1,6 +1,9 @@
 enum : u32 { BindingLimit = 3 };
 
 enum class MappingMode : u32 { Direct, VirtualPad };
+enum class DigitalAxisMode : u32 { Immediate, GradualReturn, GradualHold };
+
+auto digitalAxisMode(const string& name) -> DigitalAxisMode;
 
 struct InputMapping {
   enum class Qualifier : u32 { None, Lo, Hi, Rumble };
@@ -45,6 +48,16 @@ struct InputAnalog : InputMapping {
   auto bind(u32 binding, std::shared_ptr<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
   auto pressed() -> bool override;
+
+private:
+  struct Sample {
+    s16 value = 0;
+    bool digital = false;
+    bool pressed = false;
+  };
+
+  auto sample() -> Sample;
+  friend struct InputPair;
 };
 
 //-32768 ... +32767
@@ -124,44 +137,57 @@ struct InputNode {
 };
 
 struct InputPair {
-  enum class Type : u32 { Analog };
-  Type type;
-  string name;
-  InputMapping* mappingLo;
-  InputMapping* mappingHi;
-  std::shared_ptr<InputMapping> directMappingLo;
-  std::shared_ptr<InputMapping> directMappingHi;
+  InputPair(string name, InputAnalog& mappingLo, InputAnalog& mappingHi)
+  : name(name), mappingLo(&mappingLo), mappingHi(&mappingHi) {}
 
-  auto configuredMappingLo() -> InputMapping& {
+  string name;
+  InputAnalog* mappingLo;
+  InputAnalog* mappingHi;
+  std::shared_ptr<InputAnalog> directMappingLo;
+  std::shared_ptr<InputAnalog> directMappingHi;
+
+  auto configuredMappingLo() -> InputAnalog& {
     if(directMappingLo) return *directMappingLo;
     return *mappingLo;
   }
 
-  auto configuredMappingHi() -> InputMapping& {
+  auto configuredMappingHi() -> InputAnalog& {
     if(directMappingHi) return *directMappingHi;
     return *mappingHi;
   }
 
-  auto effectiveMappingLo() -> InputMapping& {
+  auto effectiveMappingLo() -> InputAnalog& {
     if(directMappingLo && directMappingLo->assigned()) return *directMappingLo;
     return *mappingLo;
   }
 
-  auto effectiveMappingHi() -> InputMapping& {
+  auto effectiveMappingHi() -> InputAnalog& {
     if(directMappingHi && directMappingHi->assigned()) return *directMappingHi;
     return *mappingHi;
   }
 
+  auto value() -> s16;
+
   auto setMappingMode(MappingMode mode) -> void {
     mappingMode = mode;
     if(mode != MappingMode::VirtualPad) return;
-    if(type == Type::Analog) {
-      if(!directMappingLo) directMappingLo = std::make_shared<InputAnalog>();
-      if(!directMappingHi) directMappingHi = std::make_shared<InputAnalog>();
-    }
+    if(!directMappingLo) directMappingLo = std::make_shared<InputAnalog>();
+    if(!directMappingHi) directMappingHi = std::make_shared<InputAnalog>();
   }
 
   MappingMode mappingMode = MappingMode::VirtualPad;
+
+private:
+  auto clockDigital(DigitalAxisMode mode, bool assigned, s32 direction, u64 currentTime) -> s16;
+  auto moveDigital(s32 target, u64 currentTime) -> s16;
+  auto resetDigital(DigitalAxisMode mode, u64 currentTime) -> void;
+
+  struct Digital {
+    DigitalAxisMode mode = DigitalAxisMode::Immediate;
+    s32 position = 0;
+    u32 remainder = 0;
+    u64 timestamp = 0;
+  } digital;
 };
 
 struct InputDevice {
@@ -195,12 +221,16 @@ struct InputDevice {
     if(mappingModeConfigured) inputs.back().setMappingMode(mappingMode);
   }
 
-  auto analog(string name, InputMapping& mappingLo, InputMapping& mappingHi) -> void {
-    pairs.push_back({InputPair::Type::Analog, name, &mappingLo, &mappingHi});
+  auto analog(string name, InputAnalog& mappingLo, InputAnalog& mappingHi) -> void {
+    pairs.emplace_back(name, mappingLo, mappingHi);
     if(mappingModeConfigured) pairs.back().setMappingMode(mappingMode);
     for(auto& input : inputs) {
-      if(input.mapping == &mappingLo && input.directMapping) pairs.back().directMappingLo = input.directMapping;
-      if(input.mapping == &mappingHi && input.directMapping) pairs.back().directMappingHi = input.directMapping;
+      if(input.mapping == &mappingLo && input.directMapping) {
+        pairs.back().directMappingLo = std::static_pointer_cast<InputAnalog>(input.directMapping);
+      }
+      if(input.mapping == &mappingHi && input.directMapping) {
+        pairs.back().directMappingHi = std::static_pointer_cast<InputAnalog>(input.directMapping);
+      }
     }
   }
 
