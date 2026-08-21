@@ -267,11 +267,11 @@ auto f64repr(f64 f) -> n64 {
   return n64(v);
 }
 
-auto qnan(f32 f) -> bool {
+auto snan(f32 f) -> bool {
   return f32repr(f).bit(22); 
 }
 
-auto qnan(f64 f) -> bool {
+auto snan(f64 f) -> bool {
   return f64repr(f).bit(51); 
 }
 
@@ -289,7 +289,7 @@ auto CPU::fpuCheckInput(T& f) -> bool {
     if(fpeUnimplemented()) return exception.floatingPoint(), false;
     return true;
   case FP_NAN:
-    if(qnan(f) ? fpeInvalidOperation() : fpeUnimplemented())
+    if(snan(f) ? fpeInvalidOperation() : fpeUnimplemented())
       return exception.floatingPoint(), false;
     return true;
   }
@@ -300,13 +300,13 @@ template <typename T>
 auto CPU::fpuCheckInputs(T& f1, T& f2) -> bool {
   static_assert(std::is_same_v<T, f32> || std::is_same_v<T, f64>);
   int cl1 = fpclassify(f1), cl2 = fpclassify(f2);
-  if((cl1 == FP_NAN && !qnan(f1)) || (cl2 == FP_NAN && !qnan(f2))) {
+  if((cl1 == FP_NAN && !snan(f1)) || (cl2 == FP_NAN && !snan(f2))) {
     if(fpeUnimplemented()) return exception.floatingPoint(), false;
   }
   if(cl1 == FP_SUBNORMAL || cl2 == FP_SUBNORMAL) {
     if(fpeUnimplemented()) return exception.floatingPoint(), false;
   }
-  if((cl1 == FP_NAN && qnan(f1)) || (cl2 == FP_NAN && qnan(f2))) {
+  if((cl1 == FP_NAN && snan(f1)) || (cl2 == FP_NAN && snan(f2))) {
     if(fpeInvalidOperation()) return exception.floatingPoint(), false;
   }
   return true;
@@ -518,9 +518,9 @@ auto CPU::FCEIL_W_D(u8 fd, u8 fs) -> void {
 
 #define  XORDERED(type, value, quiet) \
   if(isnan(FS(type)) || isnan(FT(type))) { \
-    if(isnan(FS(type)) && (!quiet || qnan(FS(type))) && fpeInvalidOperation()) \
+    if(isnan(FS(type)) && (!quiet || snan(FS(type))) && fpeInvalidOperation()) \
       return exception.floatingPoint(); \
-    if(isnan(FT(type)) && (!quiet || qnan(FT(type))) && fpeInvalidOperation()) \
+    if(isnan(FT(type)) && (!quiet || snan(FT(type))) && fpeInvalidOperation()) \
       return exception.floatingPoint(); \
     CF = value; \
     return; \
