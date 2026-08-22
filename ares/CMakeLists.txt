@@ -104,6 +104,7 @@ target_sources(
   PRIVATE
     ares/node/debugger/debugger.hpp
     ares/node/debugger/graphics.hpp
+    ares/node/debugger/graphics-frame.hpp
     ares/node/debugger/memory.hpp
     ares/node/debugger/properties.hpp
     ares/node/debugger/tracer/tracer.hpp
