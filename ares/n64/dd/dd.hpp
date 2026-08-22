@@ -59,6 +59,7 @@ struct DD : PIDeviceMemory {
   enum class IRQ : u32 { MECHA, BM };
   auto raise(IRQ) -> void;
   auto lower(IRQ) -> void;
+  auto irqLine() const -> bool;
   auto poll() -> void;
 
   //controller.cpp
