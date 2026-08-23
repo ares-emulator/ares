@@ -1,5 +1,9 @@
 #include <n64/n64.hpp>
 
+//included here rather than in vulkan.hpp so that parallel-rdp headers are only
+//parsed in this translation unit
+#include "rdp_device.hpp"
+
 namespace ares::Nintendo64 {
 
 Vulkan vulkan;

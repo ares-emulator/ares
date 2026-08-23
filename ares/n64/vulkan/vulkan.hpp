@@ -1,5 +1,3 @@
-#include "rdp_device.hpp"
-
 namespace ares::Nintendo64 {
 
 struct Vulkan {
