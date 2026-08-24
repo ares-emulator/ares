@@ -980,6 +980,8 @@ static int generate_transitions(struct compiler_common *compiler_common)
 	struct stack_item *item;
 
 	stack_init(depth);
+	if (compiler_common->dfa_size > (~(sljit_uw)0) / sizeof(struct stack_item))
+		return REGEX_MEMORY_ERROR;
 	compiler_common->dfa_transitions = (struct stack_item *)SLJIT_MALLOC(sizeof(struct stack_item) * compiler_common->dfa_size, NULL);
 	if (!compiler_common->dfa_transitions)
 		return REGEX_MEMORY_ERROR;
@@ -1874,6 +1876,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 	}
 
 	/* Step 2: generating branches (Right->Left). */
+	compiler_common.dfa_transitions = NULL;
 	error_code = generate_transitions(&compiler_common);
 	stack_destroy(&compiler_common.stack);
 	stack_destroy(&compiler_common.depth);
@@ -2269,7 +2272,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 #ifndef SLJIT_INDIRECT_CALL
 		compiler_common.machine->u.init_match = (void*)(sljit_sw)sljit_get_label_addr(label);
 #else
-		sljit_set_function_context(&compiler_common.machine->u.init_match, &compiler_common.machine->context, sljit_get_label_addr(label), regex_compile);
+		sljit_set_function_context(&compiler_common.machine->u.init_match, &compiler_common.machine->context, sljit_get_label_addr(label), (void (*)(void))regex_compile);
 #endif
 #ifdef REGEX_MATCH_VERBOSE
 		if (compiler_common.flags & REGEX_MATCH_VERBOSE)

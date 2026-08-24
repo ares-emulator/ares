@@ -1,5 +1,17 @@
 This file is the short summary of the API changes:
 
+05.02.2025 - Non-backward compatible
+    Rename sljit_emit_mov_addr to sljit_emit_op_addr
+    and SLJIT_LABEL_ALIGN_SW to SLJIT_LABEL_ALIGN_W
+
+11.02.2025 - Non-backward compatible
+    An operation argument is added to
+    sljit_emit_mov_addr function.
+
+31.01.2025 - Non-backward compatible
+    The sljit_emit_const and sljit_set_const
+    functions can specify the operation type.
+
 17.07.2024 - Non-backward compatible
     Passing float scratch or saved register count
     to emit_enter / set_context is reworked.

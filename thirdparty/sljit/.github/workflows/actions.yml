@@ -2,278 +2,181 @@ name: Actions
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
-  build-test-on-x86:
+  build-test-on-arches-with-qemu:
+    name: Build and test on ${{ matrix.arch.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - name: armt2
+            toolchain:
+              url: https://toolchains.bootlin.com/downloads/releases/toolchains/armv7-eabihf/tarballs/armv7-eabihf--glibc--stable-2024.05-1.tar.xz
+              name: armv7-eabihf--glibc--stable-2024.05-1.tar.xz
+              CC: arm-buildroot-linux-gnueabihf-gcc-13.3.0.br_real
+              CFLAGS: -mthumb
+            qemu:
+              target: arm-linux-user
+              name: qemu-arm
+          - name: armv7
+            toolchain:
+              url: https://toolchains.bootlin.com/downloads/releases/toolchains/armv7-eabihf/tarballs/armv7-eabihf--glibc--stable-2024.05-1.tar.xz
+              name: armv7-eabihf--glibc--stable-2024.05-1.tar.xz
+              CC: arm-buildroot-linux-gnueabihf-gcc-13.3.0.br_real
+              CFLAGS: -marm
+            qemu:
+              target: arm-linux-user
+              name: qemu-arm
+          - name: aarch64
+            toolchain:
+              url: https://toolchains.bootlin.com/downloads/releases/toolchains/aarch64/tarballs/aarch64--glibc--stable-2024.05-1.tar.xz
+              name: aarch64--glibc--stable-2024.05-1.tar.xz
+              CC: aarch64-buildroot-linux-gnu-gcc-13.3.0.br_real
+            qemu:
+              target: aarch64-linux-user
+              name: qemu-aarch64
+          - name: riscv64 with extensions
+            toolchain:
+              url: https://toolchains.bootlin.com/downloads/releases/toolchains/riscv64-lp64d/tarballs/riscv64-lp64d--glibc--stable-2024.05-1.tar.xz
+              name: riscv64-lp64d--glibc--stable-2024.05-1.tar.xz
+              CC: riscv64-buildroot-linux-gnu-gcc-13.3.0.br_real
+              CFLAGS: -march=rv64gv_zba_zbb_zicond
+            qemu:
+              target: riscv64-linux-user
+              name: qemu-riscv64
+          - name: riscv64
+            toolchain:
+              url: https://toolchains.bootlin.com/downloads/releases/toolchains/riscv64-lp64d/tarballs/riscv64-lp64d--glibc--stable-2024.05-1.tar.xz
+              name: riscv64-lp64d--glibc--stable-2024.05-1.tar.xz
+              CC: riscv64-buildroot-linux-gnu-gcc-13.3.0.br_real
+              CFLAGS: -march=rv64g
+            qemu:
+              target: riscv64-linux-user
+              name: qemu-riscv64
+          - name: riscv32 with extensions
+            toolchain:
+              url: https://toolchains.bootlin.com/downloads/releases/toolchains/riscv32-ilp32d/tarballs/riscv32-ilp32d--glibc--stable-2024.05-1.tar.xz
+              name: riscv32-ilp32d--glibc--stable-2024.05-1.tar.xz
+              CC: riscv32-buildroot-linux-gnu-gcc-13.3.0.br_real
+              CFLAGS: -march=rv32gcv_zba_zbb_zicond
+            qemu:
+              target: riscv32-linux-user
+              name: qemu-riscv32
+          - name: riscv32
+            toolchain:
+              url: https://toolchains.bootlin.com/downloads/releases/toolchains/riscv32-ilp32d/tarballs/riscv32-ilp32d--glibc--stable-2024.05-1.tar.xz
+              name: riscv32-ilp32d--glibc--stable-2024.05-1.tar.xz
+              CC: riscv32-buildroot-linux-gnu-gcc-13.3.0.br_real
+              CFLAGS: -march=rv32g
+            qemu:
+              target: riscv32-linux-user
+              name: qemu-riscv32
+          - name: loongarch64
+            toolchain:
+              url: https://github.com/loongson/build-tools/releases/download/2025.02.21/x86_64-cross-tools-loongarch64-binutils_2.44-gcc_14.2.0-glibc_2.41.tar.xz
+              name: x86_64-cross-tools-loongarch64-binutils_2.44-gcc_14.2.0-glibc_2.41.tar.xz
+              CC: loongarch64-unknown-linux-gnu-gcc-14.2.0
+              CFLAGS: -march=la464
+            qemu:
+              target: loongarch64-linux-user
+              name: qemu-loongarch64
+          - name: s390x
+            toolchain:
+              url: https://toolchains.bootlin.com/downloads/releases/toolchains/s390x-z13/tarballs/s390x-z13--glibc--stable-2024.05-1.tar.xz
+              name: s390x-z13--glibc--stable-2024.05-1.tar.xz
+              CC: s390x-buildroot-linux-gnu-gcc-13.3.0.br_real
+            qemu:
+              target: s390x-linux-user
+              name: qemu-s390x
+
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Install Packages
-      run: |
-        sudo apt update
-        sudo apt install -y gcc-multilib g++-multilib make
-    - name: Build x86
-      env:
-        CFLAGS: -m32
-        CXXFLAGS: -m32
-      run: |
-        make all
-    - name: Run Tests
-      run: |
-        ./bin/sljit_test -v
-
-  build-test-on-x64:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Install Packages
-      run: |
-        sudo apt update
-        sudo apt install -y gcc g++ make
-    - name: Build x64
-      run: |
-        make all
-    - name: Run Tests
-      run: |
-        ./bin/sljit_test -v
-
-  build-test-on-armt2:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Build in armt2 container
-      uses: uraimo/run-on-arch-action@v2.7.2
-      with:
-        arch: armv7
-        distro: ubuntu_latest
-
-        # Install deps into the container. With the token, the container will be cached
-        # The image is cached publically like a package
-        githubToken: ${{ github.token }}
-
-        install: |
-          apt-get update
-          apt-get install -y gcc g++ make
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install compiler
+        run: |
+          sudo apt update
+          sudo apt install -y make wget gcc g++ ninja-build libglib2.0-dev
+          wget ${{ matrix.arch.toolchain.url }}
+          mkdir toolchain
+          tar -xvf ${{ matrix.arch.toolchain.name }} -C toolchain --strip-components=1
+      - name: Install qemu
+        run: |
+          wget https://download.qemu.org/qemu-9.0.2.tar.xz
+          tar -xvf qemu-9.0.2.tar.xz
+          cd qemu-9.0.2
+          ./configure --target-list="${{ matrix.arch.qemu.target }}"
+          make -j4
+      - name: Build
+        env:
+          CROSS_COMPILER: ./toolchain/bin/${{ matrix.arch.toolchain.CC }}
+          CFLAGS: ${{ matrix.arch.toolchain.CFLAGS }}
+          EXTRA_LDFLAGS: -static
         run: |
           make all
-          ./bin/sljit_test -v
+      - name: Run tests
+        run: |
+          ./qemu-9.0.2/build/${{ matrix.arch.qemu.name }} ./bin/sljit_test -v
 
-  build-test-on-arm32:
+  build-test-on-alpha:
+    name: Build and test on alpha (${{ matrix.cpu }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # The backend selects instructions at runtime with AMASK, so one CPU
+        # per extension set is enough to cover every path.  EV4 and EV5 (no
+        # BWX) are not covered because the distribution libc requires BWX.
+        cpu:
+          - ev56 # BWX
+          - ev6 # BWX + FIX
+          - ev67 # BWX + FIX + CIX
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Build in arm32 container
-      uses: uraimo/run-on-arch-action@v2.7.2
-      with:
-        arch: armv7
-        distro: ubuntu_latest
-
-        # Install deps into the container. With the token, the container will be cached
-        # The image is cached publically like a package
-        githubToken: ${{ github.token }}
-        env: |
-          CFLAGS: -marm
-          CXXFLAGS: -marm
-        install: |
-          apt-get update
-          apt-get install -y gcc g++ make
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install compiler and qemu
+        run: |
+          sudo apt update
+          sudo apt install -y make gcc-alpha-linux-gnu qemu-user
+      - name: Build
+        env:
+          CROSS_COMPILER: alpha-linux-gnu-gcc
+          EXTRA_LDFLAGS: -static
         run: |
           make all
-          ./bin/sljit_test -v
+      - name: Run tests
+        run: |
+          qemu-alpha -cpu ${{ matrix.cpu }} ./bin/sljit_test -v
 
-  build-test-on-aarch64:
+  build-test-on-x86_x64:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - name: x86
+            CFLAGS: -m32
+          - name: x64
+    name: Build and test on ${{ matrix.arch.name }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Build in arm64 container
-      uses: uraimo/run-on-arch-action@v2.7.2
-
-      with:
-        arch: aarch64
-        distro: ubuntu22.04
-
-        # Install deps into the container. With the token, the container will be cached
-        # The image is cached publically like a package
-        githubToken: ${{ github.token }}
-
-        install: |
-          apt-get update
-          apt-get install -y gcc g++ make
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install Packages
+        run: |
+          sudo apt update
+          sudo apt install -y gcc-multilib make
+      - name: Build
+        env:
+          CFLAGS: ${{ matrix.arch.CFLAGS }}
         run: |
           make all
-          ./bin/sljit_test -v
-
-  build-test-on-riscv32:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Install compiler
-      run: |
-          sudo apt update
-          sudo apt install -y make wget ninja-build
-          wget https://toolchains.bootlin.com/downloads/releases/toolchains/riscv32-ilp32d/tarballs/riscv32-ilp32d--glibc--bleeding-edge-2024.02-1.tar.bz2
-          tar -xvf riscv32-ilp32d--glibc--bleeding-edge-2024.02-1.tar.bz2
-    - name: Install qemu
-      run: |
-          wget https://download.qemu.org/qemu-9.0.2.tar.xz
-          tar -xvf qemu-9.0.2.tar.xz
-          cd qemu-9.0.2
-          ./configure --target-list="riscv32-linux-user"
-          make -j4
-    - name: Build and test in riscv32
-      env:
-        CROSS_COMPILER: ./riscv32-ilp32d--glibc--bleeding-edge-2024.02-1/bin/riscv32-buildroot-linux-gnu-gcc-13.2.0.br_real
-        CFLAGS: -march=rv32g
-        EXTRA_LDFLAGS: -static
-      run: |
-        make all
-        ./qemu-9.0.2/build/qemu-riscv32 ./bin/sljit_test -v
-
-  build-test-on-riscv32-extensions:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Install compiler
-      run: |
-          sudo apt update
-          sudo apt install -y make wget ninja-build
-          wget https://toolchains.bootlin.com/downloads/releases/toolchains/riscv32-ilp32d/tarballs/riscv32-ilp32d--glibc--bleeding-edge-2024.02-1.tar.bz2
-          tar -xvf riscv32-ilp32d--glibc--bleeding-edge-2024.02-1.tar.bz2
-    - name: Install qemu
-      run: |
-          wget https://download.qemu.org/qemu-9.0.2.tar.xz
-          tar -xvf qemu-9.0.2.tar.xz
-          cd qemu-9.0.2
-          ./configure --target-list="riscv32-linux-user"
-          make -j4
-    - name: Build and test
-      env:
-        CROSS_COMPILER: ./riscv32-ilp32d--glibc--bleeding-edge-2024.02-1/bin/riscv32-buildroot-linux-gnu-gcc-13.2.0.br_real
-        CFLAGS: -march=rv32gv_zba_zbb
-        EXTRA_LDFLAGS: -static
-      run: |
-        make all
-        ./qemu-9.0.2/build/qemu-riscv32 ./bin/sljit_test -v
-  build-test-on-riscv64:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Install compiler
-      run: |
-          sudo apt update
-          sudo apt install -y make wget ninja-build
-          wget https://toolchains.bootlin.com/downloads/releases/toolchains/riscv64-lp64d/tarballs/riscv64-lp64d--glibc--stable-2024.02-1.tar.bz2
-          tar -xvf riscv64-lp64d--glibc--stable-2024.02-1.tar.bz2
-    - name: Install qemu
-      run: |
-          wget https://download.qemu.org/qemu-9.0.2.tar.xz
-          tar -xvf qemu-9.0.2.tar.xz
-          cd qemu-9.0.2
-          ./configure --target-list="riscv64-linux-user"
-          make -j4
-    - name: Build and test
-      env:
-        CROSS_COMPILER: ./riscv64-lp64d--glibc--stable-2024.02-1/bin/riscv64-buildroot-linux-gnu-gcc-12.3.0.br_real
-        CFLAGS: -march=rv64g
-        EXTRA_LDFLAGS: -static
-      run: |
-        make all
-        ./qemu-9.0.2/build/qemu-riscv64 ./bin/sljit_test -v
-
-  build-test-on-riscv64-extensions:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Install compiler
-      run: |
-          sudo apt update
-          sudo apt install -y make wget ninja-build
-          wget https://toolchains.bootlin.com/downloads/releases/toolchains/riscv64-lp64d/tarballs/riscv64-lp64d--glibc--stable-2024.02-1.tar.bz2
-          tar -xvf riscv64-lp64d--glibc--stable-2024.02-1.tar.bz2
-    - name: Install qemu
-      run: |
-          wget https://download.qemu.org/qemu-9.0.2.tar.xz
-          tar -xvf qemu-9.0.2.tar.xz
-          cd qemu-9.0.2
-          ./configure --target-list="riscv64-linux-user"
-          make -j4
-    - name: Build and test
-      env:
-        CROSS_COMPILER: ./riscv64-lp64d--glibc--stable-2024.02-1/bin/riscv64-buildroot-linux-gnu-gcc-12.3.0.br_real
-        CFLAGS: -march=rv64gv_zba_zbb
-        EXTRA_LDFLAGS: -static
-      run: |
-        make all
-        ./qemu-9.0.2/build/qemu-riscv64 ./bin/sljit_test -v
-
-  build-test-on-loongarch64:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Install compiler
-      run: |
-          sudo apt update
-          sudo apt install -y make wget ninja-build
-          wget https://github.com/loongson/build-tools/releases/download/2024.06.01/x86_64-cross-tools-loongarch64-binutils_2.42-gcc_14.1.0-glibc_2.39.tar.xz
-          tar -xvf x86_64-cross-tools-loongarch64-binutils_2.42-gcc_14.1.0-glibc_2.39.tar.xz
-    - name: Install qemu
-      run: |
-          wget https://download.qemu.org/qemu-9.0.2.tar.xz
-          tar -xvf qemu-9.0.2.tar.xz
-          cd qemu-9.0.2
-          ./configure --target-list="loongarch64-linux-user"
-          make -j4
-    - name: Build and test
-      env:
-        CROSS_COMPILER: ./cross-tools/bin/loongarch64-unknown-linux-gnu-gcc-14.1.0
-        CFLAGS: -march=la464
-        EXTRA_LDFLAGS: -static
-      run: |
-        make all
-        ./qemu-9.0.2/build/qemu-loongarch64 ./bin/sljit_test -v
-
-  build-test-on-s390x:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Build in s390x container
-      uses: uraimo/run-on-arch-action@v2.7.2
-      with:
-        arch: s390x
-        distro: ubuntu_latest
-
-        # Install deps into the container. With the token, the container will be cached
-        # The image is cached publically like a package
-        githubToken: ${{ github.token }}
-
-        install: |
-          apt-get update
-          apt-get install -y gcc g++ make
+      - name: Run Tests
         run: |
-          make all
           ./bin/sljit_test -v
