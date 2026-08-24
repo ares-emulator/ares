@@ -327,6 +327,24 @@ int main(int argc, char* argv[])
 
 	run_tests(tests, has_arg && argv[1][1] == 'v', has_arg && argv[1][1] == 's');
 
+	/* Regression: overflow guard in generate_transitions() before the
+	   dfa_transitions allocation.  A pattern producing many DFA states must
+	   either compile successfully or fail with REGEX_MEMORY_ERROR -- never
+	   wrap the multiplication and corrupt the heap. */
+	{
+		struct regex_machine *machine;
+		int err = REGEX_NO_ERROR;
+		machine = regex_compile(
+			"(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z){1000}",
+			64, 0, &err);
+		if (machine)
+			regex_free_machine(machine);
+		else if (err != REGEX_MEMORY_ERROR) {
+			printf("FAIL: overflow regression returned unexpected error %d\n", err);
+			return 1;
+		}
+	}
+
 #if !(defined SLJIT_CONFIG_UNSUPPORTED && SLJIT_CONFIG_UNSUPPORTED)
 	sljit_free_unused_memory_exec();
 #endif /* !SLJIT_CONFIG_UNSUPPORTED */
