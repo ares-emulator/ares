@@ -13,6 +13,9 @@
     set_sle = SLJIT_SET_SIG_LESS_EQUAL,
     set_o = SLJIT_SET_OVERFLOW,
     set_c = SLJIT_SET_CARRY,
+    set_feq = SLJIT_SET_F_EQUAL,
+    set_flt = SLJIT_SET_F_LESS,
+    set_fle = SLJIT_SET_F_LESS_EQUAL,
   };
 
   enum flags {
