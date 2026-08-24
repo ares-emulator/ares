@@ -804,14 +804,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> EmitExecute
       if(isDouble) {
         mov64(freg(0), reg(0));
         mov64(freg(1), reg(1));
-        fcmp64(freg(0), freg(1));
+        fcmp64(freg(0), freg(1), set_feq);
         mov32(reg(2), imm(0));
         mov32(reg(3), imm(1));
         cmov32(reg(2), reg(3), reg(2), flag_feq);
       } else {
         mov32(freg(0), reg(0));
         mov32(freg(1), reg(1));
-        fcmp32(freg(0), freg(1));
+        fcmp32(freg(0), freg(1), set_feq);
         mov32(reg(2), imm(0));
         mov32(reg(3), imm(1));
         cmov32(reg(2), reg(3), reg(2), flag_feq);
@@ -822,14 +822,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> EmitExecute
       if(isDouble) {
         mov64(freg(0), reg(0));
         mov64(freg(1), reg(1));
-        fcmp64(freg(0), freg(1));
+        fcmp64(freg(0), freg(1), set_flt);
         mov32(reg(2), imm(0));
         mov32(reg(3), imm(1));
         cmov32(reg(2), reg(3), reg(2), flag_flt);
       } else {
         mov32(freg(0), reg(0));
         mov32(freg(1), reg(1));
-        fcmp32(freg(0), freg(1));
+        fcmp32(freg(0), freg(1), set_flt);
         mov32(reg(2), imm(0));
         mov32(reg(3), imm(1));
         cmov32(reg(2), reg(3), reg(2), flag_flt);
@@ -840,14 +840,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction, EmitPcMode pcMode) -> EmitExecute
       if(isDouble) {
         mov64(freg(0), reg(0));
         mov64(freg(1), reg(1));
-        fcmp64(freg(0), freg(1));
+        fcmp64(freg(0), freg(1), set_fle);
         mov32(reg(2), imm(0));
         mov32(reg(3), imm(1));
         cmov32(reg(2), reg(3), reg(2), flag_fle);
       } else {
         mov32(freg(0), reg(0));
         mov32(freg(1), reg(1));
-        fcmp32(freg(0), freg(1));
+        fcmp32(freg(0), freg(1), set_fle);
         mov32(reg(2), imm(0));
         mov32(reg(3), imm(1));
         cmov32(reg(2), reg(3), reg(2), flag_fle);
