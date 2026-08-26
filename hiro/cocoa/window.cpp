@@ -78,10 +78,12 @@
 
 -(void)windowDidEnterFullScreen:(NSNotification *)notification {
   window->state.fullScreen = true;
+  if(auto p = window->self()) p->sizeEvent();
 }
 
 -(void)windowDidExitFullScreen:(NSNotification *)notification {
   window->state.fullScreen = false;
+  if(auto p = window->self()) p->sizeEvent();
 }
 
 @end
@@ -262,15 +264,22 @@ auto pWindow::moveEvent() -> void {
 }
 
 auto pWindow::sizeEvent() -> void {
-  if(!locked() && !self().fullScreen() && self().visible()) {
+  auto geometry = self().geometry();
+  if(!locked() && self().visible()) {
     NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
     area.size.height -= statusBarHeight();
-    state().geometry.setWidth(area.size.width);
-    state().geometry.setHeight(area.size.height);
+    if(!self().fullScreen()) {
+      state().geometry.setWidth(area.size.width);
+      state().geometry.setHeight(area.size.height);
+      geometry = self().geometry();
+    } else {
+      geometry.setWidth(area.size.width);
+      geometry.setHeight(area.size.height);
+    }
   }
 
   if(auto& sizable = state().sizable) {
-    sizable->setGeometry(self().geometry().setPosition());
+    sizable->setGeometry(geometry.setPosition());
   }
 
   statusBarReposition();
