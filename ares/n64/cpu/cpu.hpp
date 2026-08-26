@@ -38,6 +38,9 @@ struct CPU : Thread {
   auto main() -> void;
   auto synchronize() -> void;
   auto stepCount(u64 clocks) -> void;
+  auto flushCount() -> void;
+  auto pendingCount() const -> u64 { return (Thread::clock - countClock) >> 1; }
+  auto effectiveCount() const -> u64 { return (scc.count + pendingCount()) & CountMask; }
   auto forceSynchronize() -> void;
   auto setInterruptPending(u32 bit, bool value) -> void;
   auto interruptPoll() -> void;
@@ -1248,6 +1251,7 @@ struct CPU : Thread {
     std::vector<u8> sectionDirty;
   } recompiler{*this};
   s64 jitClockTarget = 0;
+  s64 countClock = 0;
 
   struct Disassembler {
     CPU& self;
