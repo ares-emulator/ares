@@ -33,8 +33,11 @@ struct CPU : Thread {
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
+  static constexpr u64 CountMask = (1ull << 33) - 1;
+
   auto main() -> void;
   auto synchronize() -> void;
+  auto stepCount(u64 clocks) -> void;
   auto forceSynchronize() -> void;
   auto setInterruptPending(u32 bit, bool value) -> void;
   auto interruptPoll() -> void;

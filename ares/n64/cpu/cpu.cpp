@@ -65,6 +65,15 @@ auto CPU::forceSynchronize() -> void {
   jitClockTarget = 0;
 }
 
+auto CPU::stepCount(u64 clocks) -> void {
+  if(!clocks) return;
+  u64 remaining = (u64)(scc.compare - scc.count) & CountMask;
+  if(remaining && clocks >= remaining) setInterruptPending(Interrupt::Timer, 1);
+  scc.count += clocks;
+  profile.cpuCycles += clocks;
+  if(scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
+}
+
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock;
   Thread::clock = 0;
@@ -100,13 +109,7 @@ auto CPU::synchronize() -> void {
     }
   });
 
-  clocks >>= 1;
-  if(scc.count < scc.compare && scc.count + clocks >= scc.compare) {
-    setInterruptPending(Interrupt::Timer, 1);
-  }
-  scc.count += clocks;
-  profile.cpuCycles += clocks;
-  if (scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
+  stepCount(clocks >> 1);
 }
 
 auto CPU::setInterruptPending(u32 bit, bool value) -> void {
