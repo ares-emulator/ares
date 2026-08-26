@@ -26,13 +26,25 @@ struct MBC3 : Interface {
       for(u32 index : range(8)) {
         timestamp.byte(index) = rtc[5 + index];
       }
-      n64 diff = chrono::timestamp() - timestamp;
-      if(diff < 32 * 365 * 24 * 60 * 60) {
-        while(diff >= 24 * 60 * 60) { tickDay(); diff -= 24 * 60 * 60; }
-        while(diff >= 60 * 60) { tickHour(); diff -= 60 * 60; }
-        while(diff >= 60) { tickMinute(); diff -= 60; }
-        while(diff) { tickSecond(); diff -= 1; }
+      if(!timestamp || !(timestamp + 1)) {
+        time_t t = time(0);
+        struct tm tmm = *localtime(&t);
+        io.rtc.second = tmm.tm_sec;
+        io.rtc.minute = tmm.tm_min;
+        io.rtc.hour = tmm.tm_hour;
+        io.rtc.day = (n9)((t / 86400) % 512);
+        io.rtc.halt = 0;
+        io.rtc.dayCarry = 0;
+        return;
       }
+      time_t now = chrono::timestamp();
+      time_t saved = (time_t)timestamp;
+      if(now <= saved) return;
+      n64 diff = now - saved;
+      while(diff >= 24 * 60 * 60) { tickDay(); diff -= 24 * 60 * 60; }
+      while(diff >= 60 * 60) { tickHour(); diff -= 60 * 60; }
+      while(diff >= 60) { tickMinute(); diff -= 60; }
+      while(diff) { tickSecond(); diff -= 1; }
     }
   }
 

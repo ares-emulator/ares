@@ -155,7 +155,16 @@ auto EpsonRTC::load(const n8* data) -> void {
     timestamp |= (n64)(data[8 + byte]) << (byte * 8);
   }
 
-  n64 diff = (n64)time(0) - timestamp;
+  if(!timestamp || !(timestamp + 1)) {
+    synchronize(time(0));
+    return;
+  }
+
+  time_t now = time(0);
+  time_t saved = (time_t)timestamp;
+  if(now <= saved) return;
+
+  n64 diff = now - saved;
   while(diff >= 60 * 60 * 24) { tickDay(); diff -= 60 * 60 * 24; }
   while(diff >= 60 * 60) { tickHour(); diff -= 60 * 60; }
   while(diff >= 60) { tickMinute(); diff -= 60; }
