@@ -74,9 +74,17 @@ auto CPU::stepCount(u64 clocks) -> void {
   if(scc.status.exceptionLevel) profile.cpuCyclesExc += clocks;
 }
 
+auto CPU::flushCount() -> void {
+  auto clocks = pendingCount();
+  countClock += clocks << 1;
+  stepCount(clocks);
+}
+
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock;
+  auto counted = countClock;
   Thread::clock = 0;
+  countClock = 0;
   jitClockTarget = 0;
 
    vi.clock -= clocks;
@@ -109,7 +117,7 @@ auto CPU::synchronize() -> void {
     }
   });
 
-  stepCount(clocks >> 1);
+  stepCount((clocks - counted) >> 1);
 }
 
 auto CPU::setInterruptPending(u32 bit, bool value) -> void {
@@ -154,7 +162,7 @@ auto CPU::instruction() -> bool {
     auto block = recompiler.block(ipu.pc, access.paddr);
     if(block) {
       if(Thread::clock >= jitClockTarget) {
-        s64 timerDelta = (s64)scc.compare - (s64)scc.count;
+        s64 timerDelta = (s64)scc.compare - (s64)effectiveCount();
         if(timerDelta < 0) timerDelta = 0;
         s64 queueDelta = queue.timeToNextEvent();
         if(queueDelta < 0) queueDelta = 0;

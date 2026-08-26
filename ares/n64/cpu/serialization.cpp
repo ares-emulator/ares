@@ -70,6 +70,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.badVirtualAddress);
   s(scc.count);
   s(scc.compare);
+  s(countClock);
   s(scc.status.interruptEnable);
   s(scc.status.exceptionLevel);
   s(scc.status.errorLevel);
