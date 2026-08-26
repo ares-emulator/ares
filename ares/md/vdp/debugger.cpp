@@ -31,6 +31,13 @@ auto VDP::Debugger::load(Node::Object parent) -> void {
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "VDP");
   tracer.dma = parent->append<Node::Debugger::Tracer::Notification>("DMA", "VDP");
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "VDP");
+
+  //Off until asked for, like every other tracer here: `enabled()` is
+  //`file() || terminal()`, so setting either of them here would have this one
+  //channel printing from boot for every user. The line break is suppressed
+  //because a message arrives a character at a time and ends on a zero write.
+  tracer.message = parent->append<Node::Debugger::Tracer::Notification>("Message", "VDP");
+  tracer.message->setAutoLineBreak(false);
 }
 
 auto VDP::Debugger::unload() -> void {
@@ -100,9 +107,9 @@ auto VDP::Debugger::io(n5 register, n8 data) -> void {
       /* $1a */ "",
       /* $1b */ "",
       /* $1c */ "",
-      /* $1d */ "",
-      /* $1e */ "",
-      /* $1f */ "",
+      /* $1d */ "KMod control",
+      /* $1e */ "KMod message",
+      /* $1f */ "KMod timer",
     };
     tracer.io->notify({
       "$", hex(register, 2L), " = #$", hex(data, 2L),
@@ -110,4 +117,10 @@ auto VDP::Debugger::io(n5 register, n8 data) -> void {
       "  ", name[register]
     });
   }
+}
+
+auto VDP::Debugger::messageChar(n8 data) -> void {
+  //Gens KMod convention: characters accumulate until a zero write ends the message
+  if(!tracer.message->enabled()) return;
+  tracer.message->notify(data ? (char)data : '\n');
 }

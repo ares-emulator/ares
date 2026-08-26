@@ -18,6 +18,7 @@ struct VDP : Thread {
     auto dmaFill(n4 target, n17 address, n16 data) -> void;
     auto dmaCopy(n22 source, n4 target, n17 address, n16 data) -> void;
     auto io(n5 register, n8 data) -> void;
+    auto messageChar(n8 data) -> void;
 
     struct Memory {
       Node::Debugger::Memory vram;
@@ -29,6 +30,7 @@ struct VDP : Thread {
       Node::Debugger::Tracer::Notification interrupt;
       Node::Debugger::Tracer::Notification dma;
       Node::Debugger::Tracer::Notification io;
+      Node::Debugger::Tracer::Notification message;
     } tracer;
   } debugger{*this};
 
