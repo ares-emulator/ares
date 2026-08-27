@@ -166,6 +166,7 @@ auto pWindow::setDroppable(bool droppable) -> void {
 
 auto pWindow::setFocused() -> void {
   [cocoaWindow makeKeyAndOrderFront:nil];
+  pApplication::_activateApplication();
 }
 
 auto pWindow::setFullScreen(bool fullScreen) -> void {
@@ -246,7 +247,10 @@ auto pWindow::setAssociatedFile(const string& filename) -> void {
 }
 
 auto pWindow::setVisible(bool visible) -> void {
-  if(visible) [cocoaWindow makeKeyAndOrderFront:nil];
+  if(visible) {
+    [cocoaWindow makeKeyAndOrderFront:nil];
+    pApplication::_activateApplication();
+  }
   else [cocoaWindow orderOut:nil];
 }
 
