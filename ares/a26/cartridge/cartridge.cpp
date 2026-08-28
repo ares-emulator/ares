@@ -30,7 +30,7 @@ auto Cartridge::connect() -> void {
   if(!board) board = std::make_unique<Board::Interface>(*this);
   board->pak = pak;
   board->load();
-  power();
+  power(false);
 }
 
 auto Cartridge::disconnect() -> void {
@@ -46,21 +46,21 @@ auto Cartridge::save() -> void {
   if(board) board->save();
 }
 
-auto Cartridge::power() -> void {
-  if(board) board->power();
+auto Cartridge::power(bool reset) -> void {
+  if(board) board->power(reset);
 }
 
-auto Cartridge::read(n16 address) -> n8 {
-  if(!node) return 0xff;
-  if(board) return board->read(address);
+auto Cartridge::read(n16 address, n8 data) -> n8 {
+  if(!node) return data;
+  if(board) return board->read(address, data);
 
-  return 0xff;
+  return data;
 }
 
-auto Cartridge::write(n16 address, n8 data) -> bool {
-  if(!node) return false;
+auto Cartridge::write(n16 address, n8 data) -> n8 {
+  if(!node) return data;
   if(board) return board->write(address, data);
-  return false;
+  return data;
 }
 
 }

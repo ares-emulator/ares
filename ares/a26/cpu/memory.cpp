@@ -2,26 +2,22 @@ inline auto CPU::readBus(n16 address) -> n8 {
   address &= 0x1fff;
   if(auto result = platform->cheat(address)) return *result;
 
-  n8 data = cartridge.read(address);
+  n8 data = io.openBus;
 
   if(address.bit(12) == 0 && address.bit(7) == 0) {
-    return tia.read(address & 0xf, data);
+    data = tia.read(address & 0xf, data);
+  } else if(address.bit(12) == 0 && address.bit(9) == 0 && address.bit(7) == 1) {
+    data = riot.readRam(address & 0x7f);
+  } else if(address.bit(12) == 0 && address.bit(9) == 1 && address.bit(7) == 1) {
+    data = riot.readIo((address - 0x80) & 0x1f);
   }
 
-  if(address.bit(12) == 0 && address.bit(9) == 0 && address.bit(7) == 1) {
-    return riot.readRam(address & 0x7f);
-  }
-
-  if(address.bit(12) == 0 && address.bit(9) == 1 && address.bit(7) == 1) {
-    return riot.readIo((address - 0x80) & 0x1f);
-  }
-
-  return data;
+  return cartridge.read(address, data);
 }
 
 inline auto CPU::writeBus(n16 address, n8 data) -> void {
   address &= 0x1fff;
-  cartridge.write(address, data);
+  data = cartridge.write(address, data);
 
   if(address.bit(12) == 0 && address.bit(7) == 0) {
     return tia.write(address & 0x3f, data);
@@ -34,7 +30,6 @@ inline auto CPU::writeBus(n16 address, n8 data) -> void {
  if(address.bit(12) == 0 && address.bit(9) == 1 && address.bit(7) == 1) {
    return riot.writeIo((address - 0x80) & 0x1f, data);
  }
-
 }
 
 auto CPU::readDebugger(n16 address) -> n8 {
