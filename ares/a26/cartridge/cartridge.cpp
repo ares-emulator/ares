@@ -47,6 +47,7 @@ auto Cartridge::connect() -> void {
   if(information.board == "DPC+")           board = std::make_unique<Board::DPCPlus>(*this);
   if(information.board == "CDF")            board = std::make_unique<Board::CDF>(*this);
   if(information.board == "BUS")            board = std::make_unique<Board::BUS>(*this);
+  if(information.board == "Chetiry")        board = std::make_unique<Board::Chetiry>(*this);
   if(information.board == "4KSC")           board = std::make_unique<Board::CPUWiz4KSC>(*this);
   if(information.board == "3E")             board = std::make_unique<Board::ThreeE>(*this);
   if(information.board == "3EX")            board = std::make_unique<Board::ThreeEX>(*this);
