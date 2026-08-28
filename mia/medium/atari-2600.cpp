@@ -12,24 +12,44 @@ private:
   auto identify12KiBBoard(std::vector<u8>& rom) -> string;
   auto identify16KiBBoard(std::vector<u8>& rom) -> string;
   auto identify32KiBBoard(std::vector<u8>& rom) -> string;
+  auto identify64KiBBoard(std::vector<u8>& rom) -> string;
+  auto identify128KiBBoard(std::vector<u8>& rom) -> string;
+  auto identify256KiBBoard(std::vector<u8>& rom) -> string;
+  auto identify512KiBBoard(std::vector<u8>& rom) -> string;
 
   auto hasCommavidSignature(std::vector<u8>& rom) -> bool;
   auto hasAtariF8Signature(std::vector<u8>& rom) -> bool;
   auto hasActivisionFESignature(std::vector<u8>& rom) -> bool;
   auto hasParkerBrosE0Signature(std::vector<u8>& rom) -> bool;
+  auto has3EPlusSignature(std::vector<u8>& rom) -> bool;
+  auto has3EXSignature(std::vector<u8>& rom) -> bool;
+  auto has3ESignature(std::vector<u8>& rom) -> bool;
   auto has3FSignature(std::vector<u8>& rom) -> bool;
   auto hasMNetwork8KiBSignature(std::vector<u8>& rom) -> bool;
   auto hasMNetworkSignature(std::vector<u8>& rom) -> bool;
   auto hasUASignature(std::vector<u8>& rom) -> bool;
   auto hasJVPSignature(std::vector<u8>& rom) -> bool;
+  auto hasEconoBanking0840Signature(std::vector<u8>& rom) -> bool;
   auto hasWicksteadSignature(std::vector<u8>& rom) -> bool;
   auto hasJaneSignature(std::vector<u8>& rom) -> bool;
   auto hasParkerBros03E0Signature(std::vector<u8>& rom) -> bool;
+  auto hasCPUWiz4KSCSignature(std::vector<u8>& rom) -> bool;
   auto hasAmigaFCSignature(std::vector<u8>& rom) -> bool;
+  auto has4A50Signature(std::vector<u8>& rom) -> bool;
+  auto hasEFSCSignature(std::vector<u8>& rom) -> bool;
+  auto hasEFSignature(std::vector<u8>& rom) -> bool;
+  auto hasDFSCSignature(std::vector<u8>& rom) -> bool;
+  auto hasDFSignature(std::vector<u8>& rom) -> bool;
+  auto hasBFSCSignature(std::vector<u8>& rom) -> bool;
+  auto hasBFSignature(std::vector<u8>& rom) -> bool;
+  auto hasMDMSignature(std::vector<u8>& rom) -> bool;
+  auto hasX07Signature(std::vector<u8>& rom) -> bool;
+  auto hasSuperbankingSignature(std::vector<u8>& rom) -> bool;
 
   auto matchAny(std::vector<u8>& rom, std::initializer_list<std::vector<u8>> patterns,
     u8 targetMatches = 1) -> bool;
   auto match(std::vector<u8>& rom, std::vector<u8> pattern, u8 target_matches = 1) -> bool;
+  auto hasTailMarker(std::vector<u8>& rom, std::vector<u8> marker) -> bool;
   auto hasRepeatedRamWindow(std::vector<u8>& rom) -> bool;
   auto hasSaraRamLayout(std::vector<u8>& rom) -> bool;
   auto normalizeWDSW(std::vector<u8>& rom) -> void;
@@ -94,24 +114,34 @@ auto Atari2600::analyze(std::vector<u8>& rom) -> string {
 
 auto Atari2600::identifyBoard(std::vector<u8>& rom) -> string {
   auto size = rom.size();
+  if(size >= 8_KiB && size <= 64_KiB && size % 1_KiB == 0 && has3EPlusSignature(rom)) return "3E+";
+  if(size >= 8_KiB && size <= 512_KiB && size % 4_KiB == 0 && hasMDMSignature(rom)) return "MDM";
   if(size == 10_KiB + 255 || size == 10_KiB + 256) return "DPC";
-  if(size == 2_KiB && hasCommavidSignature(rom)) return "Commavid";
-  if(size == 4_KiB && hasCommavidSignature(rom)) return "Commavid";
-  if(size == 4_KiB && hasAmigaFCSignature(rom))  return "AmigaFC";
-  if(size == 8_KiB)                              return identify8KiBBoard(rom);
-  if(size == 12_KiB)                             return identify12KiBBoard(rom);
-  if(size == 16_KiB)                             return identify16KiBBoard(rom);
-  if(size == 32_KiB)                             return identify32KiBBoard(rom);
+  if(size == 2_KiB && hasCommavidSignature(rom))   return "Commavid";
+  if(size == 4_KiB && hasCommavidSignature(rom))   return "Commavid";
+  if(size == 4_KiB && hasCPUWiz4KSCSignature(rom)) return "4KSC";
+  if(size == 4_KiB && hasAmigaFCSignature(rom))    return "AmigaFC";
+  if(size == 8_KiB)                                return identify8KiBBoard(rom);
+  if(size == 12_KiB)                               return identify12KiBBoard(rom);
+  if(size == 16_KiB)                               return identify16KiBBoard(rom);
+  if(size == 32_KiB)                               return identify32KiBBoard(rom);
+  if(size == 64_KiB)                               return identify64KiBBoard(rom);
+  if(size == 128_KiB)                              return identify128KiBBoard(rom);
+  if(size == 256_KiB)                              return identify256KiBBoard(rom);
+  if(size == 512_KiB)                              return identify512KiBBoard(rom);
   return "Linear";
 }
 
 auto Atari2600::identify8KiBBoard(std::vector<u8>& rom) -> string {
   if(hasSaraRamLayout(rom))                                      return "Atari8kSC";
   if(hasParkerBrosE0Signature(rom))                              return "ParkerBros8k";
+  if(has3EXSignature(rom))                                       return "3EX";
+  if(has3ESignature(rom))                                        return "3E";
   if(has3FSignature(rom))                                        return "Tigervision";
   if(hasUASignature(rom))                                        return "UA8k";
   if(hasJVPSignature(rom))                                       return "JVP";
   if(hasActivisionFESignature(rom) && !hasAtariF8Signature(rom)) return "Activision8k";
+  if(hasEconoBanking0840Signature(rom))                          return "EconoBanking";
   if(hasMNetwork8KiBSignature(rom))                              return "MNetwork";
   if(hasWicksteadSignature(rom))                                 return "Wickstead";
   if(hasAmigaFCSignature(rom))                                   return "AmigaFC";
@@ -128,15 +158,58 @@ auto Atari2600::identify16KiBBoard(std::vector<u8>& rom) -> string {
   if(hasSaraRamLayout(rom))     return "Atari16kSC";
   if(hasMNetworkSignature(rom)) return "MNetwork";
   if(hasAmigaFCSignature(rom))  return "AmigaFC";
+  if(has3EXSignature(rom))      return "3EX";
+  if(has3ESignature(rom))       return "3E";
   if(hasJaneSignature(rom))     return "Jane";
                                 return "Atari16k";
 }
 
 auto Atari2600::identify32KiBBoard(std::vector<u8>& rom) -> string {
-  if(hasSaraRamLayout(rom))    return "Atari32kSC";
-  if(has3FSignature(rom))      return "Tigervision";
-  if(hasAmigaFCSignature(rom)) return "AmigaFC";
-                               return "Atari32k";
+  if(hasSaraRamLayout(rom))          return "Atari32kSC";
+  if(has3EXSignature(rom))           return "3EX";
+  if(has3ESignature(rom))            return "3E";
+  if(has3FSignature(rom))            return "Enhanced3F";
+  if(hasAmigaFCSignature(rom))       return "AmigaFC";
+                                     return "Atari32k";
+}
+
+auto Atari2600::identify64KiBBoard(std::vector<u8>& rom) -> string {
+  if(has3EXSignature(rom)) return "3EX";
+  if(has3ESignature(rom))  return "3E";
+  if(has3FSignature(rom))  return "Enhanced3F";
+  if(has4A50Signature(rom)) return "4A50";
+  if(hasEFSCSignature(rom)) return "EFSC";
+  if(hasEFSignature(rom))   return "EF";
+  if(hasX07Signature(rom))  return "X07";
+                            return "Linear";
+}
+
+auto Atari2600::identify128KiBBoard(std::vector<u8>& rom) -> string {
+  if(has3EXSignature(rom))          return "3EX";
+  if(has3ESignature(rom))           return "3E";
+  if(hasDFSCSignature(rom))         return "DFSC";
+  if(hasDFSignature(rom))           return "DF";
+  if(has3FSignature(rom))           return "Enhanced3F";
+  if(has4A50Signature(rom))         return "4A50";
+  if(hasSuperbankingSignature(rom)) return "Superbanking";
+                                    return "Linear";
+}
+
+auto Atari2600::identify256KiBBoard(std::vector<u8>& rom) -> string {
+  if(has3EXSignature(rom))          return "3EX";
+  if(has3ESignature(rom))           return "3E";
+  if(hasBFSCSignature(rom))         return "BFSC";
+  if(hasBFSignature(rom))           return "BF";
+  if(has3FSignature(rom))           return "Enhanced3F";
+  if(hasSuperbankingSignature(rom)) return "Superbanking";
+                                    return "Linear";
+}
+
+auto Atari2600::identify512KiBBoard(std::vector<u8>& rom) -> string {
+  if(has3EXSignature(rom)) return "3EX";
+  if(has3ESignature(rom))  return "3E";
+  if(has3FSignature(rom))  return "Enhanced3F";
+                           return "Linear";
 }
 
 auto Atari2600::hasCommavidSignature(std::vector<u8>& rom) -> bool {
@@ -176,7 +249,22 @@ auto Atari2600::hasParkerBrosE0Signature(std::vector<u8>& rom) -> bool {
   });
 }
 
+auto Atari2600::has3EPlusSignature(std::vector<u8>& rom) -> bool {
+  return match(rom, { 'T', 'J', '3', 'E' });
+}
+
+auto Atari2600::has3EXSignature(std::vector<u8>& rom) -> bool {
+  return match(rom, { '3', 'E', 'X' }, 2);
+}
+
+auto Atari2600::has3ESignature(std::vector<u8>& rom) -> bool {
+  if(has3EPlusSignature(rom) || has3EXSignature(rom)) return false;
+  return match(rom, { 0x85, 0x3e })      //STA $3E
+      && match(rom, { 0x85, 0x3f }, 2);  //STA $3F
+}
+
 auto Atari2600::has3FSignature(std::vector<u8>& rom) -> bool {
+  if(has3EPlusSignature(rom) || has3EXSignature(rom)) return false;
   return match(rom, { 0x85, 0x3f }, 2);  //STA $3F
 }
 
@@ -221,6 +309,16 @@ auto Atari2600::hasJVPSignature(std::vector<u8>& rom) -> bool {
   });
 }
 
+auto Atari2600::hasEconoBanking0840Signature(std::vector<u8>& rom) -> bool {
+  return matchAny(rom, {
+    { 0xad, 0x00, 0x08 },        //LDA $0800
+    { 0xad, 0x40, 0x08 },        //LDA $0840
+    { 0x2c, 0x00, 0x08 },        //BIT $0800
+    { 0x0c, 0x00, 0x08, 0x4c },  //NOP $0800; JMP ...
+    { 0x0c, 0xff, 0x0f, 0x4c },  //NOP $0FFF; JMP ...
+  }, 2);
+}
+
 auto Atari2600::hasWicksteadSignature(std::vector<u8>& rom) -> bool {
   return match(rom, { 0xa5, 0x39, 0x4c });  //LDA $39; JMP ...
 }
@@ -236,6 +334,15 @@ auto Atari2600::hasParkerBros03E0Signature(std::vector<u8>& rom) -> bool {
   });
 }
 
+auto Atari2600::hasCPUWiz4KSCSignature(std::vector<u8>& rom) -> bool {
+  if(rom.size() != 4_KiB) return false;
+  if(std::equal(rom.begin(), rom.begin() + 2_KiB, rom.begin() + 2_KiB)) return false;
+  for(u32 offset : range(1, 256)) {
+    if(rom[offset] != rom[0]) return false;
+  }
+  return rom[0x0ffa] == 'S' && rom[0x0ffb] == 'C';
+}
+
 auto Atari2600::hasAmigaFCSignature(std::vector<u8>& rom) -> bool {
   return matchAny(rom, {
     { 0x8d, 0xf8, 0x1f, 0x4a, 0x4a, 0x8d },  //STA $1FF8; LSR A; LSR A; STA ...
@@ -244,10 +351,94 @@ auto Atari2600::hasAmigaFCSignature(std::vector<u8>& rom) -> bool {
   });
 }
 
+auto Atari2600::has4A50Signature(std::vector<u8>& rom) -> bool {
+  if(rom.size() != 64_KiB && rom.size() != 128_KiB) return false;
+  if(rom[rom.size() - 6] == 0x50 && rom[rom.size() - 5] == 0x4a) return true;
+
+  auto target = rom[0xfffc] | rom[0xfffd] << 8;
+  return (rom[0xfffd] & 0x1f) == 0x1f && target + 2 < rom.size()
+      && rom[target] == 0x0c && (rom[target + 2] & 0xfe) == 0x6e;
+}
+
+auto Atari2600::hasEFSCSignature(std::vector<u8>& rom) -> bool {
+  if(hasTailMarker(rom, {'E', 'F', 'S', 'C'})) return true;
+  return hasRepeatedRamWindow(rom) && matchAny(rom, {
+    { 0x0c, 0xe0, 0xff },  //NOP $FFE0
+    { 0xad, 0xe0, 0xff },  //LDA $FFE0
+    { 0x0c, 0xe0, 0x1f },  //NOP $1FE0
+    { 0xad, 0xe0, 0x1f },  //LDA $1FE0
+  });
+}
+
+auto Atari2600::hasEFSignature(std::vector<u8>& rom) -> bool {
+  if(hasTailMarker(rom, {'E', 'F', 'S', 'C'})) return false;
+  if(hasTailMarker(rom, {'E', 'F', 'F', 'B'})) return false;
+  if(hasTailMarker(rom, {'E', 'F', 'E', 'F'})) return true;
+  if(hasRepeatedRamWindow(rom)) return false;
+  return matchAny(rom, {
+    { 0x0c, 0xe0, 0xff },  //NOP $FFE0
+    { 0xad, 0xe0, 0xff },  //LDA $FFE0
+    { 0x0c, 0xe0, 0x1f },  //NOP $1FE0
+    { 0xad, 0xe0, 0x1f },  //LDA $1FE0
+  });
+}
+
+auto Atari2600::hasDFSignature(std::vector<u8>& rom) -> bool {
+  if(hasTailMarker(rom, {'D', 'F', 'S', 'C'})) return false;
+  if(hasTailMarker(rom, {'D', 'F', 'D', 'F'})) return true;
+  return false;
+}
+
+auto Atari2600::hasDFSCSignature(std::vector<u8>& rom) -> bool {
+  return hasTailMarker(rom, {'D', 'F', 'S', 'C'});
+}
+
+auto Atari2600::hasBFSignature(std::vector<u8>& rom) -> bool {
+  if(hasTailMarker(rom, {'B', 'F', 'S', 'C'})) return false;
+  if(hasTailMarker(rom, {'B', 'F', 'B', 'F'})) return true;
+  return false;
+}
+
+auto Atari2600::hasBFSCSignature(std::vector<u8>& rom) -> bool {
+  return hasTailMarker(rom, {'B', 'F', 'S', 'C'});
+}
+
+auto Atari2600::hasMDMSignature(std::vector<u8>& rom) -> bool {
+  static const std::vector<u8> marker{'M', 'D', 'M', 'C'};
+  auto end = rom.begin() + std::min<u32>(rom.size(), 8_KiB);
+  return std::search(rom.begin(), end, marker.begin(), marker.end()) != end;
+}
+
+auto Atari2600::hasX07Signature(std::vector<u8>& rom) -> bool {
+  return matchAny(rom, {
+    { 0xad, 0x0d, 0x08 },  //LDA $080D
+    { 0xad, 0x1d, 0x08 },  //LDA $081D
+    { 0xad, 0x2d, 0x08 },  //LDA $082D
+    { 0x0c, 0x0d, 0x08 },  //NOP $080D
+    { 0x0c, 0x1d, 0x08 },  //NOP $081D
+    { 0x0c, 0x2d, 0x08 },  //NOP $082D
+  });
+}
+
+auto Atari2600::hasSuperbankingSignature(std::vector<u8>& rom) -> bool {
+  return matchAny(rom, {
+    { 0xbd, 0x00, 0x08 },  //LDA $0800,X
+    { 0xad, 0x00, 0x08 },  //LDA $0800
+  });
+}
+
 auto Atari2600::matchAny(std::vector<u8>& rom, std::initializer_list<std::vector<u8>> patterns,
   u8 targetMatches) -> bool {
   for(auto& pattern : patterns) {
     if(match(rom, pattern, targetMatches)) return true;
+  }
+  return false;
+}
+
+auto Atari2600::hasTailMarker(std::vector<u8>& rom, std::vector<u8> marker) -> bool {
+  if(rom.size() < 8 || marker.empty() || marker.size() > 8) return false;
+  for(u32 offset = rom.size() - 8; offset + marker.size() <= rom.size(); offset++) {
+    if(std::equal(marker.begin(), marker.end(), rom.begin() + offset)) return true;
   }
   return false;
 }

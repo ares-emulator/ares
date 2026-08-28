@@ -21,6 +21,19 @@ namespace Board {
 #include "mega-boy.cpp"
 #include "atari-32-in-1.cpp"
 
+//Homebrew
+#include "cpuwiz-4ksc.cpp"
+#include "three-e.cpp"
+#include "three-ex.cpp"
+#include "three-e-plus.cpp"
+#include "enhanced-3f.cpp"
+#include "four-a50.cpp"
+#include "ef.cpp"
+#include "mdm.cpp"
+#include "x07.cpp"
+#include "econo-banking.cpp"
+#include "superbanking.cpp"
+
 auto Interface::load(Memory::Readable<n8>& memory, string name) -> bool {
   if(auto fp = pak->read(name)) {
     memory.allocate(fp->size());
