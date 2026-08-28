@@ -14,10 +14,10 @@ struct Cartridge {
   auto disconnect() -> void;
 
   auto save() -> void;
-  auto power() -> void;
+  auto power(bool reset) -> void;
 
-  auto read(n16 address) -> n8;
-  auto write(n16 address, n8 data) -> bool;
+  auto read(n16 address, n8 data) -> n8;
+  auto write(n16 address, n8 data) -> n8;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

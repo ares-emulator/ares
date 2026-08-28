@@ -102,7 +102,7 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   random.entropy(Random::Entropy::Low);
-  cartridge.power();
+  cartridge.power(reset);
   riot.power(reset);
   cpu.power(reset);
   tia.power(reset);

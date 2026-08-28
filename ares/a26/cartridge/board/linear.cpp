@@ -14,26 +14,25 @@ struct Linear : Interface {
   auto unload() -> void override {
   }
 
-  auto read(n16 address) -> n8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address.bit(12)) {
       if(hasRam && address >= 0x1080 && address <= 0x10ff) return ram.read(address & 0x7f);
       return rom.read(address & 0xfff);
     }
 
-    return 0xff;
+    return data;
   }
    
-  auto write(n16 address, n8 data) -> bool override {
+  auto write(n16 address, n8 data) -> n8 override {
     if(address >= 0x1000 && address <= 0x107f) {
       hasRam = true;
       ram.write(address & 0x7f, data);
-      return true;
     }
 
-    return false;
+    return data;
   }
 
-  auto power() -> void override {
+  auto power(bool reset) -> void override {
     hasRam = 0;
     ram.allocate(128);
   }

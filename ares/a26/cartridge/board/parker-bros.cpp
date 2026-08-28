@@ -13,7 +13,7 @@ struct ParkerBros : Interface {
   auto unload() -> void override {
   }
 
-  auto read(n16 address) -> n8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     bankswitch(address);
 
     if(address.bit(12)) {
@@ -23,12 +23,12 @@ struct ParkerBros : Interface {
       if(address >= 0x1c00 && address <= 0x1fff) return rom.read((      7  * 0x400) + (address & 0x3ff));
     }
 
-    return 0xff;
+    return data;
   }
    
-  auto write(n16 address, n8 data) -> bool override {
+  auto write(n16 address, n8 data) -> n8 override {
     bankswitch(address);
-    return false;
+    return data;
   }
 
   auto bankswitch(n16 address) -> void {
@@ -37,7 +37,7 @@ struct ParkerBros : Interface {
     if(address >= 0x1ff0 && address <= 0x1ff7) banks[2] = address - 0x1ff0;
   }
 
-  auto power() -> void override {
+  auto power(bool reset) -> void override {
     banks[0] = 0;
     banks[1] = 1;
     banks[2] = 2;

@@ -8,9 +8,9 @@ struct Interface {
   virtual auto load() -> void {}
   virtual auto save() -> void {}
   virtual auto unload() -> void {}
-  virtual auto read(n16 address) -> n8 { return 0xff; }
-  virtual auto write(n16 address, n8 data) -> bool { return false; }
-  virtual auto power() -> void {}
+  virtual auto read(n16 address, n8 data) -> n8 { return data; }
+  virtual auto write(n16 address, n8 data) -> n8 { return data; }
+  virtual auto power(bool reset) -> void {}
   virtual auto serialize(serializer&) -> void {}
 
   auto load(Memory::Readable<n8>&, string name) -> bool;
