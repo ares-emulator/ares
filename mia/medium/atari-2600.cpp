@@ -92,6 +92,7 @@ auto Atari2600::analyze(std::vector<u8>& rom) -> string {
 
 auto Atari2600::identifyBoard(std::vector<u8>& rom) -> string {
   auto size = rom.size();
+  if(size == 10_KiB + 255 || size == 10_KiB + 256) return "DPC";
   if(size == 2_KiB && hasCommavidSignature(rom)) return "Commavid";
   if(size == 4_KiB && hasCommavidSignature(rom)) return "Commavid";
   if(size == 4_KiB && hasAmigaFCSignature(rom))  return "AmigaFC";

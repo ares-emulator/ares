@@ -38,6 +38,7 @@ auto Cartridge::connect() -> void {
   if(information.board == "AmigaFC") board = std::make_unique<Board::AmigaFC>(*this);
   if(information.board == "Wickstead") board = std::make_unique<Board::Wickstead>(*this);
   if(information.board == "Jane") board = std::make_unique<Board::Jane>(*this);
+  if(information.board == "DPC") board = std::make_unique<Board::DPC>(*this);
   if(information.board == "MegaBoy") board = std::make_unique<Board::MegaBoy>(*this);
   if(information.board == "Atari32In1") board = std::make_unique<Board::Atari32In1>(*this);
 
