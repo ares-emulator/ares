@@ -17,6 +17,7 @@ private:
   auto identify256KiBBoard(std::vector<u8>& rom) -> string;
   auto identify512KiBBoard(std::vector<u8>& rom) -> string;
 
+  auto hasChetirySignature(std::vector<u8>& rom) -> bool;
   auto hasCommavidSignature(std::vector<u8>& rom) -> bool;
   auto hasAtariF8Signature(std::vector<u8>& rom) -> bool;
   auto hasActivisionFESignature(std::vector<u8>& rom) -> bool;
@@ -82,12 +83,22 @@ auto Atari2600::load(string location) -> LoadResult {
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
 
+  auto loadPersistent = [&](string name, u32 size, u8 fill, string extension) {
+    pak->append(name, size);
+    if(auto fp = pak->write(name)) memory::fill<u8>(fp->data(), fp->size(), fill);
+    Pak::load(name, extension);
+  };
+  auto board = document["game/board"].string();
+  if(board == "Chetiry") loadPersistent("save.eeprom", 256, 0x00, ".eeprom");
+
   return successful;
 }
 
 auto Atari2600::save(string location) -> bool {
   auto document = BML::unserialize(manifest);
-
+  if(!document) return false;
+  auto board = document["game/board"].string();
+  if(board == "Chetiry") return Pak::save("save.eeprom", ".eeprom", location);
   return true;
 }
 
@@ -111,6 +122,12 @@ auto Atari2600::analyze(std::vector<u8>& rom) -> string {
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};
   s += "      content: Program\n";
+  if(board == "Chetiry") {
+    s += "    memory\n";
+    s += "      type: EEPROM\n";
+    s += "      size: 0x100\n";
+    s += "      content: Save\n";
+  }
 
   return s;
 }
@@ -129,6 +146,7 @@ auto Atari2600::identifyBoard(std::vector<u8>& rom) -> string {
   if(size == 12_KiB)                               return identify12KiBBoard(rom);
   if(size == 16_KiB)                               return identify16KiBBoard(rom);
   if(size == 32_KiB)                               return identify32KiBBoard(rom);
+  if(size == 60_KiB && hasChetirySignature(rom))   return "Chetiry";
   if(size == 64_KiB)                               return identify64KiBBoard(rom);
   if(size == 128_KiB)                              return identify128KiBBoard(rom);
   if(size == 256_KiB)                              return identify256KiBBoard(rom);
@@ -169,6 +187,7 @@ auto Atari2600::identify16KiBBoard(std::vector<u8>& rom) -> string {
 }
 
 auto Atari2600::identify32KiBBoard(std::vector<u8>& rom) -> string {
+  if(hasChetirySignature(rom))       return "Chetiry";
   if(hasCDFSignature(rom))           return "CDF";
   if(hasDPCPlusSignature(rom))       return "DPC+";
   if(hasSaraRamLayout(rom))          return "Atari32kSC";
@@ -190,6 +209,10 @@ auto Atari2600::identify64KiBBoard(std::vector<u8>& rom) -> string {
   if(hasEFSignature(rom))   return "EF";
   if(hasX07Signature(rom))  return "X07";
                             return "Linear";
+}
+
+auto Atari2600::hasChetirySignature(std::vector<u8>& rom) -> bool {
+  return match(rom, {'L', 'E', 'N', 'I', 'N'});
 }
 
 auto Atari2600::identify128KiBBoard(std::vector<u8>& rom) -> string {

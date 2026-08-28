@@ -25,6 +25,7 @@ namespace Board {
 #include "dpc-plus.cpp"
 #include "cdf.cpp"
 #include "bus.cpp"
+#include "chetiry.cpp"
 #include "cpuwiz-4ksc.cpp"
 #include "three-e.cpp"
 #include "three-ex.cpp"
