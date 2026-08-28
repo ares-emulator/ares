@@ -18,6 +18,7 @@ private:
   auto identify512KiBBoard(std::vector<u8>& rom) -> string;
 
   auto hasChetirySignature(std::vector<u8>& rom) -> bool;
+  auto hasEFFSignature(std::vector<u8>& rom) -> bool;
   auto hasCommavidSignature(std::vector<u8>& rom) -> bool;
   auto hasAtariF8Signature(std::vector<u8>& rom) -> bool;
   auto hasActivisionFESignature(std::vector<u8>& rom) -> bool;
@@ -90,6 +91,7 @@ auto Atari2600::load(string location) -> LoadResult {
   };
   auto board = document["game/board"].string();
   if(board == "Chetiry") loadPersistent("save.eeprom", 256, 0x00, ".eeprom");
+  if(board == "EFF") loadPersistent("save.eeprom", 2_KiB, 0xff, ".eeprom");
 
   return successful;
 }
@@ -98,7 +100,7 @@ auto Atari2600::save(string location) -> bool {
   auto document = BML::unserialize(manifest);
   if(!document) return false;
   auto board = document["game/board"].string();
-  if(board == "Chetiry") return Pak::save("save.eeprom", ".eeprom", location);
+  if(board == "Chetiry" || board == "EFF") return Pak::save("save.eeprom", ".eeprom", location);
   return true;
 }
 
@@ -126,6 +128,12 @@ auto Atari2600::analyze(std::vector<u8>& rom) -> string {
     s += "    memory\n";
     s += "      type: EEPROM\n";
     s += "      size: 0x100\n";
+    s += "      content: Save\n";
+  }
+  if(board == "EFF") {
+    s += "    memory\n";
+    s += "      type: EEPROM\n";
+    s += "      size: 0x800\n";
     s += "      content: Save\n";
   }
 
@@ -200,6 +208,7 @@ auto Atari2600::identify32KiBBoard(std::vector<u8>& rom) -> string {
 }
 
 auto Atari2600::identify64KiBBoard(std::vector<u8>& rom) -> string {
+  if(hasEFFSignature(rom))  return "EFF";
   if(hasCDFSignature(rom))  return "CDF";
   if(has3EXSignature(rom))  return "3EX";
   if(has3ESignature(rom))   return "3E";
@@ -213,6 +222,13 @@ auto Atari2600::identify64KiBBoard(std::vector<u8>& rom) -> string {
 
 auto Atari2600::hasChetirySignature(std::vector<u8>& rom) -> bool {
   return match(rom, {'L', 'E', 'N', 'I', 'N'});
+}
+
+auto Atari2600::hasEFFSignature(std::vector<u8>& rom) -> bool {
+  if(hasTailMarker(rom, {'E', 'F', 'F', 'B'})) return true;
+  return match(rom, {0x0c, 0xe0, 0xff})
+      && match(rom, {0x0c, 0xf0, 0x1f})
+      && match(rom, {0xad, 0xf4, 0x1f});
 }
 
 auto Atari2600::identify128KiBBoard(std::vector<u8>& rom) -> string {
