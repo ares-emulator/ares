@@ -39,7 +39,7 @@ private:
   struct Information {
     string name = "Atari 2600";
     Region region = Region::NTSC;
-    f64 frequency = Constants::Colorburst::NTSC;
+    f64 frequency = 3579575;
   } information;
 
   //serialization.cpp

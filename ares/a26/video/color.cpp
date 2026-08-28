@@ -1,5 +1,4 @@
-auto TIA::color(n32 color) -> n64 {
-  u64 ntscColors[128] = {
+static constexpr u64 ntscColors[128] = {
     0x0000'0000'0000ull, 0x4040'4040'4040ull, 0x6c6c'6c6c'6c6cull, 0x9090'9090'9090ull, 0xb0b0'b0b0'b0b0ull, 0xc8c8'c8c8'c8c8ull, 0xdcdc'dcdc'dcdcull, 0xecec'ecec'ececull,
     0x4444'4444'0000ull, 0x6464'6464'1010ull, 0x8484'8484'2424ull, 0xa0a0'a0a0'3434ull, 0xb8b8'b8b8'4040ull, 0xd0d0'd0d0'5050ull, 0xe8e8'e8e8'5c5cull, 0xfcfc'fcfc'6868ull,
     0x7070'2828'0000ull, 0x8484'4444'1414ull, 0x9898'5c5c'2828ull, 0xacac'7878'3c4cull, 0xbcbc'8c8c'4c4cull, 0xcccc'a0a0'5c5cull, 0xdcdc'b4b4'6868ull, 0xecec'c8c8'7878ull,
@@ -15,10 +14,10 @@ auto TIA::color(n32 color) -> n64 {
     0x0000'3c3c'0000ull, 0x2020'5c5c'2020ull, 0x4040'7c7c'4040ull, 0x5c5c'9c9c'5c5cull, 0x7474'b4b4'7474ull, 0x8c8c'd0d0'8c8cull, 0xa4a4'e4e4'a4a4ull, 0xb8b8'fcfc'b8b8ull,
     0x1414'3838'0000ull, 0x3434'5c5c'1c1cull, 0x5050'7c7c'3838ull, 0x6c6c'9898'5050ull, 0x8484'b4b4'6868ull, 0x9c9c'cccc'7c7cull, 0xb4b4'e4e4'9090ull, 0xc8c8'fcfc'a4a4ull,
     0x2c2c'3030'0000ull, 0x4c4c'5050'1c1cull, 0x6868'7070'3434ull, 0x8484'8c8c'4c4cull, 0x9c9c'a8a8'6464ull, 0xb4b4'c0c0'7878ull, 0xcccc'd4d4'8888ull, 0xe0e0'ecec'9c9cull,
-    0x4444'2828'0000ull, 0x6464'4848'1818ull, 0x8484'6868'3030ull, 0xa0a0'8484'4444ull, 0xb8b8'9c9c'5858ull, 0xd0d0'b4b4'6c6cull, 0x8e8c'cccc'7c7cull, 0xfcfc'c0c0'8c8cull,
+    0x4444'2828'0000ull, 0x6464'4848'1818ull, 0x8484'6868'3030ull, 0xa0a0'8484'4444ull, 0xb8b8'9c9c'5858ull, 0xd0d0'b4b4'6c6cull, 0xe8e8'cccc'7c7cull, 0xfcfc'e0e0'8c8cull,
   };
 
-  u64 palColors[128] = {
+static constexpr u64 palColors[128] = {
     0x0000'0000'0000ull, 0x2828'2828'2828ull, 0x5050'5050'5050ull, 0x7474'7474'7474ull, 0x9494'9494'9494ull, 0xb4b4'b4b4'b4b4ull, 0xd0d0'd0d0'd0d0ull, 0xecec'ecec'ececull,
     0x0000'0000'0000ull, 0x2828'2828'2828ull, 0x5050'5050'5050ull, 0x7474'7474'7474ull, 0x9494'9494'9494ull, 0xb4b4'b4b4'b4b4ull, 0xd0d0'd0d0'd0d0ull, 0xecec'ecec'ececull,
     0x8080'5858'0000ull, 0x9494'7070'2020ull, 0xa8a8'8484'3c3cull, 0xbcbc'9c9c'5858ull, 0xcccc'acac'7070ull, 0xdcdc'c0c0'8484ull, 0xecec'd0d0'9c9cull, 0xfcfc'e0e0'b0b0ull,
@@ -37,6 +36,15 @@ auto TIA::color(n32 color) -> n64 {
     0x0000'0000'0000ull, 0x2828'2828'2828ull, 0x5050'5050'5050ull, 0x7474'7474'7474ull, 0x9494'9494'9494ull, 0xb4b4'b4b4'b4b4ull, 0xd0d0'd0d0'd0d0ull, 0xecec'ecec'ececull,
   };
 
-  return Region::PAL() ? palColors[color & 0x7f] : ntscColors[color & 0x7f];
-}
+static constexpr u64 secamColors[8] = {
+  0x0000'0000'0000ull, 0x2121'2121'ffffull, 0xf0f0'3c3c'7979ull, 0xffff'5050'ffffull, 0x7f7f'ffff'0000ull, 0x7f7f'ffff'ffffull, 0xffff'ffff'3f3full, 0xffff'ffff'ffffull,
+};
 
+auto Video::color(n32 color) -> n64 {
+  switch(system.region()) {
+  case System::Region::NTSC:  return ntscColors[color & 0x7f];
+  case System::Region::PAL:   return palColors[color & 0x7f];
+  case System::Region::SECAM: return secamColors[color & 7];
+  }
+  unreachable;
+}

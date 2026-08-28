@@ -20,6 +20,7 @@ namespace ares::Atari2600 {
   #include <a26/system/system.hpp>
   #include <a26/cartridge/cartridge.hpp>
   #include <a26/cpu/cpu.hpp>
+  #include <a26/video/video.hpp>
   #include <a26/tia/tia.hpp>
   #include <a26/riot/riot.hpp>
 }

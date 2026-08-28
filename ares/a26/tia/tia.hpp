@@ -1,11 +1,13 @@
 struct TIA : Thread {
   Node::Object node;
-  Node::Video::Screen screen;
-  Node::Audio::Stream stream;
 
-  auto vlines() const -> u32 { return Region::NTSC() ? 262 : 312; }
-  auto displayHeight() const -> u32 { return Region::PAL() ? 243 : 228; }
-  auto voffset() const -> s32 { return Region::PAL() ? 40 : 20; }
+  struct ObjectSignals {
+    n1 player[2];
+    n1 missile[2];
+    n1 ball;
+  };
+
+  auto horizontalCounter() const -> u8 { return timing.hcounter; }
 
   //tia.cpp
   auto load(Node::Object) -> void;
@@ -14,129 +16,222 @@ struct TIA : Thread {
   auto main() -> void;
   auto step(u32 clocks = 1) -> void;
   auto power(bool reset) -> void;
-  auto frame() -> void;
   auto scanline() -> void;
-  auto pixel(n8 x) -> void;
+  auto clock() -> bool;
+  auto objectResetCounter() const -> u8;
 
-  auto runPlayfield(n8 x) -> n1;
-  auto runPlayer(n8 x, n1 index) -> n1;
-  auto runMissile(n8 x, n1 index) -> n1;
-  auto runCollision() -> void;
+  //write-queue.cpp
+  auto queueWrite(u8 address, n8 data, i8 delay) -> void;
+  auto clockWrites() -> void;
+  auto commitWrite(u8 address, n8 data) -> void;
+
+  //analog.cpp
+  auto updateAnalogInput(n2 index) -> void;
+
+  //trigger.cpp
+  auto updateTriggerInput(n1 index) -> void;
+  auto readTrigger(n1 index) -> n1;
 
   //io.cpp
-  auto read(n8 address) -> n8;
+  auto read(n8 address, n8 data) -> n8;
   auto write(n8 address, n8 data) -> void;
-  auto vsync(n1 state) -> void;
+  auto writeVblank(n8 data) -> void;
+  auto setVsync(n1 state) -> void;
+  auto rsync() -> void;
   auto ctrlpf(n8 data) -> void;
-  auto cxclr() -> void;
   auto hmove() -> void;
-  auto hmclr() -> void;
   auto grp(n1 index, n8 data) -> void;
   auto resp(n1 index) -> void;
   auto resm(n1 index) -> void;
   auto resmp(n1 index, n8 data) -> void;
   auto resbl() -> void;
 
-  // audio.cpp
-  auto runAudio() -> void;
-
-  //color.cpp
-  auto color(n32) -> n64;
-
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  // write-queue.cpp
-  struct WriteQueue {
-    inline auto add(u8 address, n8 data, i8 delay) -> void;
-    inline auto step() -> void;
+  struct Timing {
+    auto position() const -> i16 { return (i16)hcounter - hcounterDelta; }
+    auto horizontalBlank() const -> n1 {
+      return (extendedHblank && position() < 76) || position() < 68;
+    }
 
-    struct QueueItem {
-      inline auto commit() -> void;
-      n1 active;
-      i8 address;
-      n8 data;
-      i8 delay;
+    //timing.cpp
+    auto rsync() -> void;
+    auto advance() -> bool;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    u8 hcounter;
+    i16 hcounterDelta;
+    n1 extendedHblank;
+  } timing;
+
+  struct DelayedWrite {
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n1 active;
+    u8 address;
+    n8 data;
+    i8 delay;
+  } writes[16];
+
+  n1 vsync;
+  n1 vblank;
+
+  struct ObjectPipeline {
+    using Signals = ObjectSignals;
+
+    struct Missile {
+      //missile.cpp
+      auto clock(u8 cycles = 1, n1 regularClock = 1, u8 hcounter = 0) -> void;
+      auto latchOutput() -> void;
+      auto start(n2 copy) -> void;
+      auto reset(u8 counter, n1 hblank) -> void;
+      auto nusiz(n8 data) -> void;
+      auto width() -> u8;
+
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
+
+      n1 enable;
+      n1 lockedToPlayer;
+      n3 copies;
+      n2 size;
+      n4 offset;
+      n1 moving;
+      i9 counter;
+      i8 renderCounter;
+      u8 effectiveWidth;
+      n1 rendering;
+      n1 output;
+      n2 copy;
     };
 
-    QueueItem items[16];
-    const int maxItems = 16;
-  } writeQueue;
+    struct Player {
+      //player.cpp
+      auto clock(u8 cycles = 1) -> n1;
+      auto latchOutput() -> void;
+      auto start(n2 copy) -> void;
+      auto reset(u8 counter) -> void;
+      auto nusiz(n3 size, n1 hblank) -> void;
+      auto setDivider(u8 divider) -> void;
+      auto missileResetCounter() const -> u8;
+      auto width() -> u8;
 
-  struct {
-    u9 vcounter;
-    u8 hcounter;
-    n1 hmoveTriggered;
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
 
-    n1 vsync;
-    n1 vblank;
+      n8 graphics[2];
+      n1 reflect;
+      n3 size;
+      n4 offset;
+      n1 moving;
+      n1 delay;
+      i9 counter;
+      i8 renderCounter;
+      i8 renderCounterTripPoint;
+      u8 sampleCounter;
+      i8 dividerChangeCounter;
+      u8 divider;
+      u8 dividerPending;
+      n1 rendering;
+      n1 output;
+      n2 copy;
+    };
 
-    n7 bgColor;
-    n7 p0Color;
-    n7 p1Color;
-    n7 fgColor;
-  } io;
+    struct Ball {
+      //ball.cpp
+      auto clock(u8 cycles = 1, n1 regularClock = 1) -> void;
+      auto latchOutput() -> void;
+      auto reset(u8 counter) -> void;
 
-  struct {
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
+
+      n1 enable[2];
+      n2 size;
+      n4 offset;
+      n1 moving;
+      n1 delay;
+      i9 counter;
+      i8 renderCounter;
+      u8 effectiveWidth;
+      i9 lastMovementCounter;
+      n1 rendering;
+      n1 output;
+    };
+
+    struct Pair {
+      Player player;
+      Missile missile;
+    } pair[2];
+
+    //objects.cpp
+    auto player(n1 index) -> Player& { return pair[index].player; }
+    auto missile(n1 index) -> Missile& { return pair[index].missile; }
+    auto player(n1 index) const -> const Player& { return pair[index].player; }
+    auto missile(n1 index) const -> const Missile& { return pair[index].missile; }
+    auto clock(n1 hblank, u8 hcounter) -> Signals;
+    auto movementClock(u32 phase, n1 hblank, u8 hcounter) -> void;
+    auto runMovement(n1 hblank, u8 hcounter) -> void;
+    auto movementActive() const -> n1;
+    auto hmove() -> void;
+    auto hmclr() -> void;
+    static auto decode(n3 mode, u8 counter) -> u8;
+    auto signals() const -> Signals;
+    auto nusiz(n1 index, n8 data, n1 hblank) -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n5 movementPhase;
+    Ball ball;
+  } objects;
+
+  struct Playfield {
+    //playfield.cpp
+    auto clock(i16 x) -> n1;
+    auto nextLine() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n20 graphics;
     n1 pixel;
     n1 mirror;
-    n1 scoreMode;
-    n1 priority;
+    n1 mirrorActive;
   } playfield;
 
-  struct Missile {
-    auto step(u8 cycles = 1) -> void;
-    auto start() -> void;
-    auto reset() -> void;
-    auto width() -> u8;
-    auto stepPixelCounter() -> void;
-    n1 enable;
-    n1 lockedToPlayer;
-    n2 size;
-    n4 offset;
-    i9 counter;
-    u8 startCounter;
-    u8 pixelCounter;
-    u8 widthCounter;
-    n1 starting;
-    n1 output;
-  } missile[2];
+  struct Priority {
+    enum class Source : u32 { Background, Playfield, Ball, Player0, Player1 };
 
-  struct Player {
-    Missile& missile;
-    auto step(u8 cycles = 1) -> void;
-    auto start(n1 copy) -> void;
-    auto reset() -> void;
-    auto width() -> u8;
-    auto stepPixelCounter() -> void;
-    n8 graphics[2];
-    n1 reflect;
-    n3 size;
-    n4 offset;
-    n1 delay;
-    i9 counter;
-    u8 startCounter;
-    u8 pixelCounter;
-    u8 widthCounter;
-    n1 starting;
-    n1 output;
-    n1 copy;
-  } player[2] {{missile[0]}, {missile[1]}};
+    //priority.cpp
+    auto resolveSource(n1 playfield, const ObjectSignals&) const -> Source;
+    auto resolveColor(Source, i16 x) const -> n7;
 
-  struct Ball {
-    auto step(u8 cycles = 1) -> void;
-    auto reset() -> void;
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
-    n1 enable[2];
-    n2 size;
-    n4 offset;
-    n1 delay;
-    i9 counter;
-    n1 output;
-  } ball;
+    n7 backgroundColor;
+    n7 playerColor[2];
+    n7 playfieldColor;
+    n1 scoreMode;
+    n1 playfieldPriority;
+  } priority;
 
-  struct {
+  struct Collision {
+    //collision.cpp
+    auto clock(n1 playfield, const ObjectSignals&, n1 vblank) -> void;
+    auto read(n8 address, n8 data) const -> n8;
+    auto clear() -> void;
+    auto power() -> void { clear(); }
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n1 M0P0;
     n1 M0P1;
     n1 M1P0;
@@ -154,22 +249,100 @@ struct TIA : Thread {
     n1 M0M1;
   } collision;
 
-  struct AudioChannel {
-    auto phase0() -> void;
-    auto phase1() -> u8;
-    n1 enable;
-    n8 divCounter;
-    n8 noiseCounter;
-    n1 noiseFeedback;
-    n8 pulseCounter;
-    n1 pulseCounterPaused;
-    n1 pulseFeedback;
-    n4 volume;
-    n4 control;
-    n5 frequency;
-  } audio[2];
+  struct Audio {
+    Node::Audio::Stream stream;
 
-  f64 volume[16];
+    //audio.cpp
+    auto load(Node::Object parent, f64 frequency) -> void;
+    auto unload(Node::Object parent) -> void;
+    auto clock() -> void;
+    auto advance() -> void { if(++phase == 228) phase = 0; }
+    auto dacConductance(u8 code) const -> f64;
+    auto loadedOutput(f64 conductance) const -> f64;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct Channel {
+      //audio.cpp
+      auto phase0() -> void;
+      auto phase1() -> void;
+      auto output() const -> u8;
+
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
+
+      n1 enable;
+      n8 divCounter;
+      n8 noiseCounter;
+      n1 noiseFeedback;
+      n8 pulseCounter;
+      n1 pulseCounterPaused;
+      n1 pulseFeedback;
+      n4 volume;
+      n4 control;
+      n5 frequency;
+    } channel[2];
+
+    u8 phase;
+    f64 sum;
+    u8 clocks;
+  } audio;
+
+  struct TriggerInputs {
+    struct Input {
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
+
+      n1 mode;
+      n1 value;
+    } input[2];
+
+    //trigger.cpp
+    auto sample(n1 index, n1 value) -> void;
+    auto read(n1 index, n1 value) -> n1;
+    auto vblank(n1 latch) -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+  } triggers;
+
+  struct AnalogInputs {
+    struct Input {
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
+
+      f64 voltage;
+      u64 timestamp;
+      Controller::AnalogConnection connection;
+    } input[4];
+
+    //analog.cpp
+    auto power(f64 frequency) -> void;
+    auto advance() -> void;
+    auto update(n2 index, Controller::AnalogConnection connection) -> void;
+    auto vblank(n1 dumped) -> void;
+    auto read(n2 index) -> n1;
+    auto advance(Input& input) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    static constexpr f64 SeriesResistance = 1'800.0;
+    static constexpr f64 Capacitance = 68e-9;
+    static constexpr f64 DumpResistance = 50.0;
+    static constexpr f64 SupplyVoltage = 5.0;
+    static constexpr f64 CalibrationResistance = 1'000'000.0;
+    //Stella calibrates 1 Mohm to 379 scanlines.
+    static constexpr f64 TripClocks = 379.0 * 228.0;
+
+    u64 time;
+    n1 dumped;
+    f64 frequency;
+    f64 tripVoltage;
+  } analog;
 };
 
 extern TIA tia;

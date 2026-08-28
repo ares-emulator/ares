@@ -42,6 +42,7 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cartridge);
   s(cpu);
   s(tia);
+  s(video);
   s(riot);
   s(controllerPort1);
   s(controllerPort2);
