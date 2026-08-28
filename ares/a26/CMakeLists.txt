@@ -47,8 +47,16 @@ ares_add_sources(
     cartridge/board/dpc-plus.cpp
     cartridge/board/elf.cpp
     cartridge/board/linear.cpp
+    cartridge/board/movie-cart.cpp
     cartridge/board/parker-bros.cpp
     cartridge/board/tigervision.cpp
+)
+
+ares_add_sources(
+  CORE #
+    a26
+  INCLUDED #
+    movie-cart/format.hpp
 )
 
 ares_add_sources(

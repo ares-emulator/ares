@@ -1,6 +1,6 @@
 struct Atari2600 : Cartridge {
   auto name() -> string override { return "Atari 2600"; }
-  auto extensions() -> std::vector<string> override { return {"a26", "bin", "elf"}; }
+  auto extensions() -> std::vector<string> override { return {"a26", "bin", "elf", "mvc"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 
@@ -64,7 +64,131 @@ private:
   auto isELF(std::span<const u8> image) const -> bool;
 };
 
+namespace MovieCart {
+
+static constexpr u32 FieldSize = 4_KiB;
+static constexpr u32 MinimumSize = 2 * FieldSize;
+
+auto signatureOffset(std::span<const u8> field) -> i32 {
+  for(u32 offset : range(2)) {
+    if(field.size() < offset + 4) continue;
+    if(field[offset + 0] == 'M' && field[offset + 1] == 'V'
+      && field[offset + 2] == 'C' && field[offset + 3] == 0) return offset;
+  }
+  return -1;
+}
+
+auto validField(std::span<const u8> field) -> bool {
+  if(field.size() != FieldSize) return false;
+  auto base = signatureOffset(field);
+  if(base < 0) return false;
+
+  auto formatOffset = (u32)base + 4;
+  if(formatOffset >= field.size()) return false;
+  auto extended = field[formatOffset] & 0x80;
+
+  u32 vsync = 3;
+  u32 vblank = 37;
+  u32 overscan = 30;
+  u32 visible = 192;
+  u32 rate = 60;
+  u32 cursor = base + 7;
+  if(extended) {
+    if((field[formatOffset] & 0x7f) != 0 || (u32)base + 15 > field.size()) return false;
+    vsync = field[base + 9];
+    vblank = field[base + 10];
+    overscan = field[base + 11];
+    visible = field[base + 12];
+    rate = field[base + 13];
+    cursor = base + 14;
+  }
+
+  auto totalLines = vsync + vblank + overscan + visible;
+  if(!vsync || !visible || !rate || totalLines > 512) return false;
+  auto payloadSize = totalLines + 11 * visible + 60;
+  return cursor <= field.size() && payloadSize <= field.size() - cursor;
+}
+
+auto fingerprint(u64 size, std::span<const u8> field0, std::span<const u8> field1,
+  std::span<const u8> finalField) -> string {
+  Hash::SHA256 hash;
+  for(auto byte : std::span<const u8>{(const u8*)"ares-mvc-v1", 11}) hash.input(byte);
+  for(u32 byte : range(8)) hash.input(size >> byte * 8);
+  for(auto byte : field0) hash.input(byte);
+  for(auto byte : field1) hash.input(byte);
+  for(auto byte : finalField) hash.input(byte);
+  return hash.digest();
+}
+
+}
+
+auto loadMovieCartFields(string location, std::array<u8, MovieCart::MinimumSize>& first,
+  std::array<u8, MovieCart::FieldSize>& last, u64& size) -> bool {
+  size = file::size(location);
+  if(size < MovieCart::MinimumSize || size % MovieCart::FieldSize) return false;
+  if(size / MovieCart::FieldSize > 0xffffffffull) return false;
+  auto fp = file::open(location, file::mode::read);
+  if(!fp) return false;
+  fp.read(first);
+  fp.seek(size - MovieCart::FieldSize);
+  fp.read(last);
+  if(!MovieCart::validField({first.data(), MovieCart::FieldSize})) return false;
+  if(!MovieCart::validField({first.data() + MovieCart::FieldSize, MovieCart::FieldSize})) return false;
+  return MovieCart::validField(last);
+}
+
+auto movieCartFingerprint(u64 size, const std::array<u8, MovieCart::MinimumSize>& first,
+  const std::array<u8, MovieCart::FieldSize>& last) -> string {
+  return MovieCart::fingerprint(size, {first.data(), MovieCart::FieldSize},
+    {first.data() + MovieCart::FieldSize, MovieCart::FieldSize}, last);
+}
+
 auto Atari2600::load(string location) -> LoadResult {
+  auto movieCartDirectory = string{location, location.endsWith("/") ? "" : "/"};
+  auto directoryMVC = directory::exists(location) && file::exists({movieCartDirectory, "program.mvc"});
+  auto standaloneMVC = !directory::exists(location) && location.iendsWith(".mvc");
+  auto suffix = Location::suffix(location);
+  auto probeMVC = !suffix || suffix.iequals(".bin");
+  if(!directory::exists(location) && probeMVC && file::size(location) >= 5) {
+    u8 prefix[5] = {};
+    if(auto fp = file::open(location, file::mode::read)) fp.read(prefix);
+    standaloneMVC |= MovieCart::signatureOffset(prefix) >= 0;
+  }
+  if(directoryMVC || standaloneMVC) {
+    auto streamLocation = directoryMVC ? string{movieCartDirectory, "program.mvc"} : location;
+    std::array<u8, MovieCart::MinimumSize> first{};
+    std::array<u8, MovieCart::FieldSize> last{};
+    u64 size = 0;
+    if(!loadMovieCartFields(streamLocation, first, last, size)) return invalidROM;
+    auto fingerprint = movieCartFingerprint(size, first, last);
+
+    this->sha256 = fingerprint;
+    this->location = location;
+    string region = "NTSC";
+    if(location.ifind("(Europe)") || location.ifind("(PAL)")) region = "PAL";
+    manifest = "game\n";
+    manifest += {"  name:   ", Medium::name(location), "\n"};
+    manifest += {"  title:  ", Medium::name(location), "\n"};
+    manifest += {"  region: ", region, "\n"};
+    manifest += {"  fingerprint: ", fingerprint, "\n"};
+    manifest += "  board:  MovieCart\n";
+    manifest += "    stream\n";
+    manifest += "      type: MovieCart\n";
+    manifest += {"      size: 0x", hex(size), "\n"};
+    manifest += "      content: Program\n";
+
+    auto disk = vfs::disk::open(streamLocation, vfs::read);
+    if(!disk) return invalidROM;
+    pak = std::make_shared<vfs::directory>();
+    pak->setAttribute("title", Medium::name(location));
+    pak->setAttribute("region", region);
+    pak->setAttribute("board", "MovieCart");
+    pak->setAttribute("fingerprint", fingerprint);
+    pak->append("manifest.bml", manifest);
+    pak->append("stream.mvc", disk);
+    return successful;
+  }
+
   auto directoryELF = directory::exists(location) && file::exists({location, "program.elf"});
   auto standaloneELF = !directory::exists(location) && location.iendsWith(".elf");
   if(!directory::exists(location) && file::size(location) >= 4) {
