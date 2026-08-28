@@ -5,7 +5,7 @@ inline auto CPU::readBus(n16 address) -> n8 {
   n8 data = cartridge.read(address);
 
   if(address.bit(12) == 0 && address.bit(7) == 0) {
-    return tia.read(address & 0xf);
+    return tia.read(address & 0xf, data);
   }
 
   if(address.bit(12) == 0 && address.bit(9) == 0 && address.bit(7) == 1) {

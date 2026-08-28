@@ -44,7 +44,7 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.find("NTSC")) {
     information.name = "Atari 2600";
     information.region = Region::NTSC;
-    information.frequency = 3579546;
+    information.frequency = 3579575;
   }
   if(name.find("PAL")) {
     information.name = "Atari 2600";
@@ -73,6 +73,7 @@ auto System::load(Node::System& root, string name) -> bool {
   riot.load(node);
   cpu.load(node);
   tia.load(node);
+  video.load(tia.node);
   cartridgeSlot.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
@@ -89,6 +90,7 @@ auto System::unload() -> void {
   save();
   riot.unload();
   cpu.unload();
+  video.unload();
   tia.unload();
   cartridgeSlot.unload();
   controllerPort1.unload();
@@ -104,6 +106,7 @@ auto System::power(bool reset) -> void {
   riot.power(reset);
   cpu.power(reset);
   tia.power(reset);
+  video.power();
   scheduler.power(cpu);
 }
 

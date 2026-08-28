@@ -2,95 +2,161 @@
 auto TIA::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  for(auto n : range(writeQueue.maxItems)) {
-    s(writeQueue.items[n].active);
-    s(writeQueue.items[n].address);
-    s(writeQueue.items[n].data);
-    s(writeQueue.items[n].delay);
-  }
+  timing.serialize(s);
+  for(auto& write : writes) write.serialize(s);
+  s(vsync);
+  s(vblank);
+  objects.serialize(s);
+  playfield.serialize(s);
+  priority.serialize(s);
+  collision.serialize(s);
+  audio.serialize(s);
+  triggers.serialize(s);
+  analog.serialize(s);
+}
 
-  s(io.vcounter);
-  s(io.hcounter);
-  s(io.hmoveTriggered);
-  s(io.vsync);
-  s(io.vblank);
-  s(io.bgColor);
-  s(io.p0Color);
-  s(io.p1Color);
-  s(io.fgColor);
+auto TIA::Timing::serialize(serializer& s) -> void {
+  s(hcounter);
+  s(hcounterDelta);
+  s(extendedHblank);
+}
 
-  s(playfield.graphics);
-  s(playfield.mirror);
-  s(playfield.scoreMode);
-  s(playfield.priority);
+auto TIA::DelayedWrite::serialize(serializer& s) -> void {
+  s(active);
+  s(address);
+  s(data);
+  s(delay);
+}
 
-  for(auto n : range(2)) {
-    s(player[n].graphics[0]);
-    s(player[n].graphics[1]);
-    s(player[n].reflect);
-    s(player[n].size);
-    s(player[n].offset);
-    s(player[n].delay);
-    s(player[n].counter);
-    s(player[n].startCounter);
-    s(player[n].pixelCounter);
-    s(player[n].widthCounter);
-    s(player[n].starting);
-    s(player[n].output);
-    s(player[n].copy);
-  }
+auto TIA::ObjectPipeline::Player::serialize(serializer& s) -> void {
+  s(graphics[0]);
+  s(graphics[1]);
+  s(reflect);
+  s(size);
+  s(offset);
+  s(moving);
+  s(delay);
+  s(counter);
+  s(renderCounter);
+  s(renderCounterTripPoint);
+  s(sampleCounter);
+  s(dividerChangeCounter);
+  s(divider);
+  s(dividerPending);
+  s(rendering);
+  s(output);
+  s(copy);
+}
 
-  for(auto n : range(2)) {
-    s(missile[n].enable);
-    s(missile[n].lockedToPlayer);
-    s(missile[n].size);
-    s(missile[n].offset);
-    s(missile[n].counter);
-    s(missile[n].startCounter);
-    s(missile[n].pixelCounter);
-    s(missile[n].widthCounter);
-    s(missile[n].starting);
-    s(missile[n].output);
-  }
+auto TIA::ObjectPipeline::Missile::serialize(serializer& s) -> void {
+  s(enable);
+  s(lockedToPlayer);
+  s(copies);
+  s(size);
+  s(offset);
+  s(moving);
+  s(counter);
+  s(renderCounter);
+  s(effectiveWidth);
+  s(rendering);
+  s(output);
+  s(copy);
+}
 
-  s(ball.enable[0]);
-  s(ball.enable[1]);
-  s(ball.delay);
-  s(ball.size);
-  s(ball.offset);
-  s(ball.counter);
-  s(ball.output);
+auto TIA::ObjectPipeline::Ball::serialize(serializer& s) -> void {
+  s(enable[0]);
+  s(enable[1]);
+  s(delay);
+  s(size);
+  s(offset);
+  s(moving);
+  s(counter);
+  s(renderCounter);
+  s(effectiveWidth);
+  s(lastMovementCounter);
+  s(rendering);
+  s(output);
+}
 
-  s(collision.M0P0);
-  s(collision.M0P1);
-  s(collision.M1P0);
-  s(collision.M1P1);
-  s(collision.P0PF);
-  s(collision.P0BL);
-  s(collision.P1PF);
-  s(collision.P1BL);
-  s(collision.M0PF);
-  s(collision.M0BL);
-  s(collision.M1PF);
-  s(collision.M1BL);
-  s(collision.BLPF);
-  s(collision.P0P1);
-  s(collision.M0M1);
+auto TIA::ObjectPipeline::serialize(serializer& s) -> void {
+  for(auto n : range(2)) player(n).serialize(s);
+  for(auto n : range(2)) missile(n).serialize(s);
+  ball.serialize(s);
+  s(movementPhase);
+}
 
-  for(auto n : range(26)) {
-    s(volume[n]);
-  }
+auto TIA::Playfield::serialize(serializer& s) -> void {
+  s(graphics);
+  s(pixel);
+  s(mirror);
+  s(mirrorActive);
+}
 
-  for(auto n : range(2)) {
-    s(audio[n].enable);
-    s(audio[n].divCounter);
-    s(audio[n].noiseCounter);
-    s(audio[n].noiseFeedback);
-    s(audio[n].pulseCounter);
-    s(audio[n].pulseCounterPaused);
-    s(audio[n].pulseFeedback);
-    s(audio[n].volume);
-    s(audio[n].control);
-    s(audio[n].frequency);
-  }
+auto TIA::Priority::serialize(serializer& s) -> void {
+  s(backgroundColor);
+  s(playerColor[0]);
+  s(playerColor[1]);
+  s(playfieldColor);
+  s(scoreMode);
+  s(playfieldPriority);
+}
+
+auto TIA::Collision::serialize(serializer& s) -> void {
+  s(M0P0);
+  s(M0P1);
+  s(M1P0);
+  s(M1P1);
+  s(P0PF);
+  s(P0BL);
+  s(P1PF);
+  s(P1BL);
+  s(M0PF);
+  s(M0BL);
+  s(M1PF);
+  s(M1BL);
+  s(BLPF);
+  s(P0P1);
+  s(M0M1);
+}
+
+auto TIA::Audio::Channel::serialize(serializer& s) -> void {
+  s(enable);
+  s(divCounter);
+  s(noiseCounter);
+  s(noiseFeedback);
+  s(pulseCounter);
+  s(pulseCounterPaused);
+  s(pulseFeedback);
+  s(volume);
+  s(control);
+  s(frequency);
+}
+
+auto TIA::Audio::serialize(serializer& s) -> void {
+  for(auto& item : channel) item.serialize(s);
+  s(phase);
+  s(sum);
+  s(clocks);
+}
+
+auto TIA::TriggerInputs::Input::serialize(serializer& s) -> void {
+  s(mode);
+  s(value);
+}
+
+auto TIA::TriggerInputs::serialize(serializer& s) -> void {
+  for(auto& item : input) item.serialize(s);
+}
+
+auto TIA::AnalogInputs::Input::serialize(serializer& s) -> void {
+  s(voltage);
+  s(timestamp);
+  s(connection.type);
+  s(connection.resistance);
+}
+
+auto TIA::AnalogInputs::serialize(serializer& s) -> void {
+  s(time);
+  s(dumped);
+  for(auto& item : input) item.serialize(s);
 }

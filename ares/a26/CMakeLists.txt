@@ -10,6 +10,7 @@ ares_add_sources(
     controller/controller.cpp
     cartridge/cartridge.cpp
     cpu/cpu.cpp
+    video/video.cpp
     tia/tia.cpp
     riot/riot.cpp
 )
@@ -85,14 +86,29 @@ ares_add_sources(
   CORE #
     a26
   INCLUDED #
+    video/color.cpp
+    video/receiver.cpp
+    video/serialization.cpp
+    video/video.hpp
+)
+
+ares_add_sources(
+  CORE #
+    a26
+  INCLUDED #
     tia/audio.cpp
+    tia/analog.cpp
     tia/ball.cpp
-    tia/color.cpp
+    tia/collision.cpp
     tia/io.cpp
     tia/missile.cpp
+    tia/objects.cpp
     tia/player.cpp
     tia/playfield.cpp
+    tia/priority.cpp
     tia/serialization.cpp
+    tia/timing.cpp
     tia/tia.hpp
+    tia/trigger.cpp
     tia/write-queue.cpp
 )
