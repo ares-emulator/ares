@@ -20,12 +20,26 @@ auto Cartridge::connect() -> void {
   information.board  = pak->attribute("board");
 
   if(information.board == "Linear") board = std::make_unique<Board::Linear>(*this);
+  if(information.board == "Activision8k") board = std::make_unique<Board::Activision8k>(*this);
   if(information.board == "Atari8k") board = std::make_unique<Board::Atari8k>(*this);
+  if(information.board == "Atari8kSC") board = std::make_unique<Board::Atari8k>(*this, true);
   if(information.board == "Atari16k") board = std::make_unique<Board::Atari16k>(*this);
+  if(information.board == "Atari16kSC") board = std::make_unique<Board::Atari16k>(*this, true);
   if(information.board == "Atari32k") board = std::make_unique<Board::Atari32k>(*this);
+  if(information.board == "Atari32kSC") board = std::make_unique<Board::Atari32k>(*this, true);
   if(information.board == "Commavid") board = std::make_unique<Board::Commavid>(*this);
   if(information.board == "ParkerBros8k") board = std::make_unique<Board::ParkerBros>(*this);
+  if(information.board == "ParkerBros03E0") board = std::make_unique<Board::ParkerBros03E0>(*this);
+  if(information.board == "JVP") board = std::make_unique<Board::JVP>(*this);
   if(information.board == "Tigervision") board = std::make_unique<Board::Tigervision>(*this);
+  if(information.board == "UA8k") board = std::make_unique<Board::UA8k>(*this);
+  if(information.board == "CbsRamPlus") board = std::make_unique<Board::CbsRamPlus>(*this);
+  if(information.board == "MNetwork") board = std::make_unique<Board::MNetwork>(*this);
+  if(information.board == "AmigaFC") board = std::make_unique<Board::AmigaFC>(*this);
+  if(information.board == "Wickstead") board = std::make_unique<Board::Wickstead>(*this);
+  if(information.board == "Jane") board = std::make_unique<Board::Jane>(*this);
+  if(information.board == "MegaBoy") board = std::make_unique<Board::MegaBoy>(*this);
+  if(information.board == "Atari32In1") board = std::make_unique<Board::Atari32In1>(*this);
 
   if(!board) board = std::make_unique<Board::Interface>(*this);
   board->pak = pak;

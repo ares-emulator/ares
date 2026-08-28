@@ -1,6 +1,7 @@
-struct Linear : Interface {
+struct UA8k : Interface {
   using Interface::Interface;
   Memory::Readable<n8> rom;
+  n1 bank;
 
   auto load() -> void override {
     Interface::load(rom, "program.rom");
@@ -13,18 +14,27 @@ struct Linear : Interface {
   }
 
   auto read(n16 address, n8 data) -> n8 override {
-    if(address.bit(12)) return rom.read(address & 0xfff);
-
+    bankswitch(address);
+    if(address.bit(12)) return rom.read((bank * 0x1000) + (address & 0x0fff));
     return data;
   }
-   
+
   auto write(n16 address, n8 data) -> n8 override {
+    bankswitch(address);
     return data;
   }
 
   auto power(bool reset) -> void override {
+    bank = 0;
   }
 
   auto serialize(serializer& s) -> void override {
+    s(bank);
+  }
+
+private:
+  auto bankswitch(n16 address) -> void {
+    if((address & 0x1260) == 0x0220) bank = 0;
+    if((address & 0x1260) == 0x0240) bank = 1;
   }
 };
