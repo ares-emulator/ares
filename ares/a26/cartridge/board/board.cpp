@@ -60,4 +60,35 @@ auto Interface::save(Memory::Writable<n8>& memory, string name) -> bool {
   return false;
 }
 
+auto Interface::readARMMemory(Memory::Readable<n8>& rom, Memory::Writable<n8>& ram,
+  u32 mode, n32 address, u32 romBase, u32 ramLimit, n32& data) -> Harmony::Access {
+  u32 size = mode & ARM7TDMI::Byte ? 1 : mode & ARM7TDMI::Half ? 2 : 4;
+  u32 location = address;
+  auto read = [&](auto& memory, u32 offset) -> Harmony::Access {
+    if(offset > memory.size() || size > memory.size() - offset) return Harmony::Access::Fault;
+    data = 0;
+    for(u32 byte : range(size)) data |= memory.read(offset + byte) << byte * 8;
+    return Harmony::Access::Granted;
+  };
+
+  if(location >= romBase && location < rom.size()) return read(rom, location);
+  if(location >= 0x40000000 && location - 0x40000000 < ramLimit) {
+    return read(ram, location - 0x40000000);
+  }
+  return Harmony::Access::Unmapped;
+}
+
+auto Interface::writeARMMemory(Memory::Writable<n8>& ram, u32 mode, n32 address,
+  u32 ramLimit, n32 data) -> Harmony::Access {
+  u32 size = mode & ARM7TDMI::Byte ? 1 : mode & ARM7TDMI::Half ? 2 : 4;
+  u32 location = address;
+  if(location < 0x40000000 || location - 0x40000000 >= ramLimit) return Harmony::Access::Unmapped;
+  auto offset = location - 0x40000000;
+  if(offset > ram.size() || size > ram.size() - offset || size > ramLimit - offset) {
+    return Harmony::Access::Fault;
+  }
+  for(u32 byte : range(size)) ram.write(offset + byte, data >> byte * 8);
+  return Harmony::Access::Granted;
+}
+
 }
