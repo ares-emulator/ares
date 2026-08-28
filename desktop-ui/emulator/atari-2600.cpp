@@ -1,5 +1,6 @@
 struct Atari2600 : Emulator {
   Atari2600();
+  auto load(Menu) -> void override;
   auto load() -> LoadResult override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
@@ -67,6 +68,18 @@ Atari2600::Atari2600() {
     port.append(device); }
 
     ports.push_back(port);
+  }
+}
+
+auto Atari2600::load(Menu menu) -> void {
+  if(auto phosphor = root->find<ares::Node::Setting::Boolean>("TIA/Screen/Phosphor")) {
+    MenuCheckItem phosphorItem{&menu};
+    phosphorItem.setText("Phosphor").setChecked(phosphor->value()).onToggle([=, this] {
+      Program::Guard guard;
+      if(auto phosphor = root->find<ares::Node::Setting::Boolean>("TIA/Screen/Phosphor")) {
+        phosphor->setValue(phosphorItem.checked());
+      }
+    });
   }
 }
 

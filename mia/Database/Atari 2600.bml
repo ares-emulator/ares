@@ -4274,6 +4274,7 @@ game
   name:   Miner 2049er Volume II (USA)
   title:  Miner 2049er Volume II (USA)
   region: NTSC
+  phosphor: true
   board:  Tigervision
     memory
       type: ROM

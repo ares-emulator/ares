@@ -55,6 +55,7 @@ auto Screen::power() -> void {
   memory::fill<u32>(_rotate.get(), _canvasWidth * _canvasHeight, _fillColor);
   memory::fill<n1>(_lineOverrideActive.data(), _canvasWidth * _canvasHeight, false);
   memory::fill<const u32*>(_lineOverride.data(), _canvasWidth * _canvasHeight, nullptr);
+  _phosphorHistoryValid = false;
 }
 
 auto Screen::pixels(bool frame) -> std::span<u32> {
@@ -67,6 +68,7 @@ auto Screen::resetPalette() -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _palette.reset();
   refreshPalette();
+  _phosphorHistoryValid = false;
 }
 
 auto Screen::resetSprites() -> void {
@@ -105,6 +107,7 @@ auto Screen::setSize(u32 width, u32 height) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _width  = width;
   _height = height;
+  _phosphorHistoryValid = false;
 }
 
 auto Screen::setScale(f64 scaleX, f64 scaleY) -> void {
@@ -124,6 +127,7 @@ auto Screen::setSaturation(f64 saturation) -> void {
   _saturation = saturation;
   _palette.reset();
   refreshPalette();
+  _phosphorHistoryValid = false;
 }
 
 auto Screen::setGamma(f64 gamma) -> void {
@@ -131,6 +135,7 @@ auto Screen::setGamma(f64 gamma) -> void {
   _gamma = gamma;
   _palette.reset();
   refreshPalette();
+  _phosphorHistoryValid = false;
 }
 
 auto Screen::setLuminance(f64 luminance) -> void {
@@ -138,11 +143,13 @@ auto Screen::setLuminance(f64 luminance) -> void {
   _luminance = luminance;
   _palette.reset();
   refreshPalette();
+  _phosphorHistoryValid = false;
 }
 
 auto Screen::setFillColor(u32 fillColor) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _fillColor = fillColor;
+  _phosphorHistoryValid = false;
 }
 
 auto Screen::setColorBleed(bool colorBleed) -> void {
@@ -153,6 +160,12 @@ auto Screen::setColorBleed(bool colorBleed) -> void {
 auto Screen::setColorBleedWidth(u32 width) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _colorBleedWidth = width;
+}
+
+auto Screen::setPhosphor(bool phosphor) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _phosphor = phosphor;
+  _phosphorHistoryValid = false;
 }
 
 auto Screen::setInterframeBlending(bool interframeBlending) -> void {
@@ -197,6 +210,7 @@ auto Screen::colors(u32 colors, std::function<n64 (n32)> color) -> void {
   _color = color;
   _palette.reset();
   refreshPalette();
+  _phosphorHistoryValid = false;
 }
 
 auto Screen::frame() -> void {
@@ -255,6 +269,23 @@ auto Screen::refresh() -> void {
         auto color = _palette[*source++];
         *target++ = color;
       }
+    } else if(_phosphor) {
+      for(u32 x : range(width)) {
+        auto current = _palette[*source++];
+        if(!_phosphorHistoryValid) {
+          *target++ = current;
+          continue;
+        }
+
+        auto previous = *target;
+        u32 color = current & 0xff000000;
+        for(u32 shift : {0, 8, 16}) {
+          auto rise = current >> shift & 0xff;
+          auto decay = (previous >> shift & 0xff) >> 1;
+          color |= max(rise, decay) << shift;
+        }
+        *target++ = color;
+      }
     } else if(_interframeBlending) {
       n32 mask = 1 << 24 | 1 << 16 | 1 << 8 | 1 << 0;
       for(u32 x : range(width)) {
@@ -269,6 +300,8 @@ auto Screen::refresh() -> void {
       }
     }
   }
+
+  if(_phosphor) _phosphorHistoryValid = true;
 
   if (_colorBleed) {
     n32 mask = 1 << 24 | 1 << 16 | 1 << 8 | 1 << 0;
@@ -421,6 +454,7 @@ auto Screen::serialize(string& output, string depth) -> void {
   output.append(depth, "  fillColor: ", _fillColor, "\n");
   output.append(depth, "  colorBleed: ", _colorBleed, "\n");
   output.append(depth, "  interlace: ", _interlace, "\n");
+  output.append(depth, "  phosphor: ", _phosphor, "\n");
   output.append(depth, "  interframeBlending: ", _interframeBlending, "\n");
   output.append(depth, "  rotation: ", _rotation, "\n");
 }
@@ -440,6 +474,7 @@ auto Screen::unserialize(Markup::Node node) -> void {
   _fillColor = node["fillColor"].natural();
   _colorBleed = node["colorBleed"].boolean();
   _interlace = node["interlace"].natural();
+  _phosphor = node["phosphor"].boolean();
   _interframeBlending = node["interframeBlending"].boolean();
   _rotation = node["rotation"].natural();
   resetPalette();

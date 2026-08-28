@@ -1,6 +1,7 @@
 struct Video {
   Node::Object node;
   Node::Video::Screen screen;
+  Node::Setting::Boolean phosphor;
 
   enum class Sync : u32 { Waiting, Pending, Qualified };
 
@@ -14,6 +15,7 @@ struct Video {
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto power() -> void;
+  auto setPhosphor(bool) -> void;
 
   //receiver.cpp
   auto clock(i16 x, n7 pixel, n1 hblank, n1 vblank) -> void;
