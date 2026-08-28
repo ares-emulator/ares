@@ -1,6 +1,7 @@
 struct UA8k : Interface {
-  using Interface::Interface;
+  UA8k(Cartridge& cartridge, bool swapped = false) : Interface(cartridge), swapped(swapped) {}
   Memory::Readable<n8> rom;
+  const bool swapped;
   n1 bank;
 
   auto load() -> void override {
@@ -34,7 +35,7 @@ struct UA8k : Interface {
 
 private:
   auto bankswitch(n16 address) -> void {
-    if((address & 0x1260) == 0x0220) bank = 0;
-    if((address & 0x1260) == 0x0240) bank = 1;
+    if((address & 0x1260) == 0x0220) bank = swapped ? 1 : 0;
+    if((address & 0x1260) == 0x0240) bank = swapped ? 0 : 1;
   }
 };

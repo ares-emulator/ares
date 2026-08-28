@@ -32,6 +32,7 @@ private:
   auto match(std::vector<u8>& rom, std::vector<u8> pattern, u8 target_matches = 1) -> bool;
   auto hasRepeatedRamWindow(std::vector<u8>& rom) -> bool;
   auto hasSaraRamLayout(std::vector<u8>& rom) -> bool;
+  auto normalizeWDSW(std::vector<u8>& rom) -> void;
 };
 
 auto Atari2600::load(string location) -> LoadResult {
@@ -41,6 +42,7 @@ auto Atari2600::load(string location) -> LoadResult {
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
   }
+  normalizeWDSW(rom);
   if(rom.empty()) return romNotFound;
 
   this->sha256   = Hash::SHA256(rom).digest();
@@ -263,6 +265,12 @@ auto Atari2600::hasRepeatedRamWindow(std::vector<u8>& rom) -> bool {
 auto Atari2600::hasSaraRamLayout(std::vector<u8>& rom) -> bool {
   if(rom.size() != 8_KiB && rom.size() != 16_KiB && rom.size() != 32_KiB) return false;
   return hasRepeatedRamWindow(rom);
+}
+
+auto Atari2600::normalizeWDSW(std::vector<u8>& rom) -> void {
+  if(rom.size() != 8195 || !match(rom, { 0xa5, 0x39, 0x4c })) return;
+  rom.resize(8_KiB);
+  std::swap_ranges(rom.begin() + 0x0800, rom.begin() + 0x0c00, rom.begin() + 0x0c00);
 }
 
 auto Atari2600::match(std::vector<u8>& rom, std::vector<u8> pattern, u8 target_matches) -> bool {
