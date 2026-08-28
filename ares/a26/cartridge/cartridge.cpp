@@ -33,6 +33,7 @@ auto Cartridge::connect() -> void {
   if(information.board == "JVP") board = std::make_unique<Board::JVP>(*this);
   if(information.board == "Tigervision") board = std::make_unique<Board::Tigervision>(*this);
   if(information.board == "UA8k") board = std::make_unique<Board::UA8k>(*this);
+  if(information.board == "UASW") board = std::make_unique<Board::UA8k>(*this, true);
   if(information.board == "CbsRamPlus") board = std::make_unique<Board::CbsRamPlus>(*this);
   if(information.board == "MNetwork") board = std::make_unique<Board::MNetwork>(*this);
   if(information.board == "AmigaFC") board = std::make_unique<Board::AmigaFC>(*this);
