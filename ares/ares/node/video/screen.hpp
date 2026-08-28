@@ -26,6 +26,7 @@ struct Screen : Video {
 
   auto fillColor() const -> u32 { return _fillColor; }
   auto colorBleed() const -> bool { return _colorBleed; }
+  auto phosphor() const -> bool { return _phosphor; }
   auto interframeBlending() const -> bool { return _interframeBlending; }
   auto rotation() const -> u32 { return _rotation; }
 
@@ -49,6 +50,7 @@ struct Screen : Video {
   auto setFillColor(u32 fillColor) -> void;
   auto setColorBleed(bool colorBleed) -> void;
   auto setColorBleedWidth(u32 width) -> void;
+  auto setPhosphor(bool phosphor) -> void;
   auto setInterframeBlending(bool interframeBlending) -> void;
   auto setRotation(u32 rotation) -> void;
 
@@ -87,6 +89,7 @@ protected:
   u32  _fillColor = 0;
   bool _colorBleed = false;
   u32  _colorBleedWidth = 1;
+  bool _phosphor = false;
   bool _interframeBlending = false;
   bool _overscan = true;
   u32  _rotation = 0;  //counter-clockwise (90 = left, 270 = right)
@@ -117,4 +120,5 @@ protected:
   u32  _viewportY = 0;
   u32  _viewportWidth = 0;
   u32  _viewportHeight = 0;
+  bool _phosphorHistoryValid = false;
 };

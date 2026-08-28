@@ -35,6 +35,7 @@ struct Cartridge {
     string title;
     string region;
     string board;
+    bool phosphor;
   } information;
 };
 

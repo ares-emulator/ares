@@ -248,6 +248,7 @@ auto Atari2600::load(string location) -> LoadResult {
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("board",  document["game/board"].string());
+  pak->setAttribute("phosphor", (bool)document["game/phosphor"]);
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
 

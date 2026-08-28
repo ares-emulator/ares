@@ -18,6 +18,7 @@ auto Cartridge::connect() -> void {
   information.title  = pak->attribute("title");
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
+  information.phosphor = pak->attribute("phosphor").boolean();
 
   if(information.board == "Linear")         board = std::make_unique<Board::Linear>(*this);
   if(information.board == "Activision8k")   board = std::make_unique<Board::Activision8k>(*this);
@@ -72,12 +73,14 @@ auto Cartridge::connect() -> void {
   if(!board) board = std::make_unique<Board::Interface>(*this);
   board->pak = pak;
   board->load();
+  video.setPhosphor(information.phosphor);
   power(false);
 }
 
 auto Cartridge::disconnect() -> void {
   if(!node || !board) return;
   board->unload();
+  video.setPhosphor(false);
   board->pak.reset();
   board.reset();
   node.reset();
