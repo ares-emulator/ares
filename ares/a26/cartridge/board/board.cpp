@@ -28,6 +28,7 @@ namespace Board {
 #include "chetiry.cpp"
 #include "fa2.cpp"
 #include "elf.cpp"
+#include "movie-cart.cpp"
 #include "cpuwiz-4ksc.cpp"
 #include "three-e.cpp"
 #include "three-ex.cpp"

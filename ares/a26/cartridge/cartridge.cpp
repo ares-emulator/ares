@@ -50,6 +50,7 @@ auto Cartridge::connect() -> void {
   if(information.board == "Chetiry")        board = std::make_unique<Board::Chetiry>(*this);
   if(information.board == "FA2")            board = std::make_unique<Board::FA2>(*this);
   if(information.board == "ELF")            board = std::make_unique<Board::ELFCartridge>(*this);
+  if(information.board == "MovieCart")      board = std::make_unique<Board::MovieCart>(*this);
   if(information.board == "4KSC")           board = std::make_unique<Board::CPUWiz4KSC>(*this);
   if(information.board == "3E")             board = std::make_unique<Board::ThreeE>(*this);
   if(information.board == "3EX")            board = std::make_unique<Board::ThreeEX>(*this);

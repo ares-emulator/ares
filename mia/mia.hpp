@@ -1,3 +1,4 @@
+#include <array>
 #include <span>
 
 #include <nall/nall.hpp>
