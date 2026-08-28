@@ -1,6 +1,6 @@
 struct Atari2600 : Cartridge {
   auto name() -> string override { return "Atari 2600"; }
-  auto extensions() -> std::vector<string> override { return {"a26", "bin"}; }
+  auto extensions() -> std::vector<string> override { return {"a26", "bin", "elf"}; }
   auto load(string location) -> LoadResult override;
   auto save(string location) -> bool override;
 
@@ -61,9 +61,49 @@ private:
   auto hasRepeatedRamWindow(std::vector<u8>& rom) -> bool;
   auto hasSaraRamLayout(std::vector<u8>& rom) -> bool;
   auto normalizeWDSW(std::vector<u8>& rom) -> void;
+  auto isELF(std::span<const u8> image) const -> bool;
 };
 
 auto Atari2600::load(string location) -> LoadResult {
+  auto directoryELF = directory::exists(location) && file::exists({location, "program.elf"});
+  auto standaloneELF = !directory::exists(location) && location.iendsWith(".elf");
+  if(!directory::exists(location) && file::size(location) >= 4) {
+    u8 magic[4] = {};
+    if(auto fp = file::open(location, file::mode::read)) fp.read(magic);
+    standaloneELF |= magic[0] == 0x7f && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F';
+  }
+  if(directoryELF || standaloneELF) {
+    auto elfLocation = directoryELF ? string{location, "program.elf"} : location;
+    if(file::size(elfLocation) > 16_MiB) return invalidROM;
+    std::vector<u8> image;
+    if(directoryELF) append(image, elfLocation);
+    else image = Cartridge::read(location);
+    if(!isELF(image)) return invalidROM;
+
+    this->sha256 = Hash::SHA256(image).digest();
+    this->location = location;
+    string region = "NTSC";
+    if(location.ifind("(Europe)") || location.ifind("(PAL)")) region = "PAL";
+    manifest = "game\n";
+    manifest += {"  name:   ", Medium::name(location), "\n"};
+    manifest += {"  title:  ", Medium::name(location), "\n"};
+    manifest += {"  region: ", region, "\n"};
+    manifest += {"  sha256: ", sha256, "\n"};
+    manifest += "  board:  ELF\n";
+    manifest += "    memory\n";
+    manifest += "      type: Executable\n";
+    manifest += {"      size: 0x", hex(image.size()), "\n"};
+    manifest += "      content: Program\n";
+
+    pak = std::make_shared<vfs::directory>();
+    pak->setAttribute("title", Medium::name(location));
+    pak->setAttribute("region", region);
+    pak->setAttribute("board", "ELF");
+    pak->append("manifest.bml", manifest);
+    pak->append("program.elf", image);
+    return successful;
+  }
+
   std::vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
@@ -557,6 +597,25 @@ auto Atari2600::normalizeWDSW(std::vector<u8>& rom) -> void {
   if(rom.size() != 8195 || !match(rom, { 0xa5, 0x39, 0x4c })) return;
   rom.resize(8_KiB);
   std::swap_ranges(rom.begin() + 0x0800, rom.begin() + 0x0c00, rom.begin() + 0x0c00);
+}
+
+auto Atari2600::isELF(std::span<const u8> image) const -> bool {
+  if(image.size() < 52 || image.size() > 16_MiB) return false;
+  if(image[0] != 0x7f || image[1] != 'E' || image[2] != 'L' || image[3] != 'F') return false;
+  if(image[4] != 1 || image[5] != 1 || image[6] != 1) return false;
+  auto read16 = [&](u32 offset) { return (u16)image[offset] | (u16)image[offset + 1] << 8; };
+  auto read32 = [&](u32 offset) {
+    return (u32)image[offset] | (u32)image[offset + 1] << 8
+      | (u32)image[offset + 2] << 16 | (u32)image[offset + 3] << 24;
+  };
+  if(read16(0x10) != 1 || read16(0x12) != 40 || read32(0x14) != 1) return false;
+  if(read16(0x28) != 52 || read16(0x2e) != 40) return false;
+  auto sectionOffset = read32(0x20);
+  auto sectionCount = read16(0x30);
+  auto namesIndex = read16(0x32);
+  if(!sectionCount || sectionCount > 4096 || namesIndex >= sectionCount) return false;
+  auto sectionBytes = (u64)sectionCount * 40;
+  return sectionOffset <= image.size() && sectionBytes <= image.size() - sectionOffset;
 }
 
 auto Atari2600::match(std::vector<u8>& rom, std::vector<u8> pattern, u8 target_matches) -> bool {

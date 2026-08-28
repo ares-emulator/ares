@@ -1,4 +1,4 @@
-ares_components(arm7tdmi m24c mos6502)
+ares_components(arm7tdmi armv6m m24c mos6502)
 
 ares_add_sources(
   CORE #
@@ -10,6 +10,7 @@ ares_add_sources(
     controller/controller.cpp
     cartridge/cartridge.cpp
     cpu/cpu.cpp
+    elf/elf.cpp
     harmony/harmony.cpp
     video/video.cpp
     tia/tia.cpp
@@ -44,9 +45,23 @@ ares_add_sources(
     cartridge/board/chetiry.cpp
     cartridge/board/fa2.cpp
     cartridge/board/dpc-plus.cpp
+    cartridge/board/elf.cpp
     cartridge/board/linear.cpp
     cartridge/board/parker-bros.cpp
     cartridge/board/tigervision.cpp
+)
+
+ares_add_sources(
+  CORE #
+    a26
+  INCLUDED #
+    elf/elf.hpp
+    elf/queue.cpp
+    elf/parser.cpp
+    elf/linker.cpp
+    elf/memory.cpp
+    elf/vcslib.cpp
+    elf/runtime.cpp
 )
 
 ares_add_sources(
