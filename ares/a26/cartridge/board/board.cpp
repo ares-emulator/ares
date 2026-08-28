@@ -22,6 +22,7 @@ namespace Board {
 #include "atari-32-in-1.cpp"
 
 //Homebrew
+#include "dpc-plus.cpp"
 #include "cpuwiz-4ksc.cpp"
 #include "three-e.cpp"
 #include "three-ex.cpp"
