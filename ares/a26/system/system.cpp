@@ -33,6 +33,8 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   scheduler.enter();
+  controllerPort1.poll();
+  controllerPort2.poll();
 }
 
 auto System::load(Node::System& root, string name) -> bool {
