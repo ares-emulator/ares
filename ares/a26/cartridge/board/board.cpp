@@ -24,6 +24,7 @@ namespace Board {
 //Homebrew
 #include "dpc-plus.cpp"
 #include "cdf.cpp"
+#include "bus.cpp"
 #include "cpuwiz-4ksc.cpp"
 #include "three-e.cpp"
 #include "three-ex.cpp"
