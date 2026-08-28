@@ -31,7 +31,39 @@ Atari2600::Atari2600() {
     device.digital("Left",       virtualPorts[id].pad.left);
     device.digital("Right",      virtualPorts[id].pad.right);
     device.digital("Fire",       virtualPorts[id].pad.south);
+    port.append(device); }
 
+  { InputDevice device{"Paddles"};
+    device.analog ("Paddle 1 Left",  virtualPorts[id].pad.lstick_left);
+    device.analog ("Paddle 1 Right", virtualPorts[id].pad.lstick_right);
+    device.analog ("Paddle 2 Left",  virtualPorts[id].pad.rstick_left);
+    device.analog ("Paddle 2 Right", virtualPorts[id].pad.rstick_right);
+    device.digital("Paddle 1 Fire",  virtualPorts[id].pad.south);
+    device.digital("Paddle 2 Fire",  virtualPorts[id].pad.east);
+    device.analog ("Paddle 1",       virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    device.analog ("Paddle 2",       virtualPorts[id].pad.rstick_left, virtualPorts[id].pad.rstick_right);
+    port.append(device); }
+
+  { InputDevice device{"Driving"};
+    device.analog ("Wheel Left",  virtualPorts[id].pad.lstick_left);
+    device.analog ("Wheel Right", virtualPorts[id].pad.lstick_right);
+    device.digital("Fire",        virtualPorts[id].pad.south);
+    device.analog ("Wheel",       virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    port.append(device); }
+
+  { InputDevice device{"Keyboard"};
+    device.digital("1", virtualPorts[id].pad.one);
+    device.digital("2", virtualPorts[id].pad.two);
+    device.digital("3", virtualPorts[id].pad.three);
+    device.digital("4", virtualPorts[id].pad.four);
+    device.digital("5", virtualPorts[id].pad.five);
+    device.digital("6", virtualPorts[id].pad.six);
+    device.digital("7", virtualPorts[id].pad.seven);
+    device.digital("8", virtualPorts[id].pad.eight);
+    device.digital("9", virtualPorts[id].pad.nine);
+    device.digital("*", virtualPorts[id].pad.star);
+    device.digital("0", virtualPorts[id].pad.zero);
+    device.digital("#", virtualPorts[id].pad.pound);
     port.append(device); }
 
     ports.push_back(port);

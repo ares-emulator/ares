@@ -15,23 +15,11 @@ auto Gamepad::read() -> n8 {
   platform->input(right);
   platform->input(fire);
 
-  if(!(up->value() & down->value())) {
-    yHold = 0, upLatch = up->value(), downLatch = down->value();
-  } else if(!yHold) {
-    yHold = 1, swap(upLatch, downLatch);
-  }
-
-  if(!(left->value() & right->value())) {
-    xHold = 0, leftLatch = left->value(), rightLatch = right->value();
-  } else if(!xHold) {
-    xHold = 1, swap(leftLatch, rightLatch);
-  }
-
   n8 data = 0xff;
-  data.bit(0) = !upLatch;
-  data.bit(1) = !downLatch;
-  data.bit(2) = !leftLatch;
-  data.bit(3) = !rightLatch;
+  data.bit(0) = !up->value();
+  data.bit(1) = !down->value();
+  data.bit(2) = !left->value();
+  data.bit(3) = !right->value();
   data.bit(4) = !fire->value();
   return data;
 }
