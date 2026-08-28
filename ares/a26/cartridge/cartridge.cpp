@@ -55,6 +55,7 @@ auto Cartridge::connect() -> void {
   if(information.board == "Enhanced3F")     board = std::make_unique<Board::Enhanced3F>(*this);
   if(information.board == "4A50")           board = std::make_unique<Board::FourA50>(*this);
   if(information.board == "EF")             board = std::make_unique<Board::EF>(*this);
+  if(information.board == "EFF")            board = std::make_unique<Board::EFF>(*this);
   if(information.board == "DF")             board = std::make_unique<Board::DF>(*this);
   if(information.board == "BF")             board = std::make_unique<Board::BF>(*this);
   if(information.board == "EFSC")           board = std::make_unique<Board::EFSC>(*this);
