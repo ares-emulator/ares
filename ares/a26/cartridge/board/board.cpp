@@ -17,6 +17,7 @@ namespace Board {
 #include "amiga-fc.cpp"
 #include "wickstead.cpp"
 #include "jane.cpp"
+#include "dpc.cpp"
 #include "mega-boy.cpp"
 #include "atari-32-in-1.cpp"
 
