@@ -42,6 +42,7 @@ ares_add_sources(
     cartridge/board/cdf.cpp
     cartridge/board/bus.cpp
     cartridge/board/chetiry.cpp
+    cartridge/board/fa2.cpp
     cartridge/board/dpc-plus.cpp
     cartridge/board/linear.cpp
     cartridge/board/parker-bros.cpp
