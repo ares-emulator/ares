@@ -35,6 +35,7 @@ private:
   auto hasParkerBros03E0Signature(std::vector<u8>& rom) -> bool;
   auto hasCPUWiz4KSCSignature(std::vector<u8>& rom) -> bool;
   auto hasDPCPlusSignature(std::vector<u8>& rom) -> bool;
+  auto hasCDFSignature(std::vector<u8>& rom) -> bool;
   auto hasAmigaFCSignature(std::vector<u8>& rom) -> bool;
   auto has4A50Signature(std::vector<u8>& rom) -> bool;
   auto hasEFSCSignature(std::vector<u8>& rom) -> bool;
@@ -167,6 +168,7 @@ auto Atari2600::identify16KiBBoard(std::vector<u8>& rom) -> string {
 }
 
 auto Atari2600::identify32KiBBoard(std::vector<u8>& rom) -> string {
+  if(hasCDFSignature(rom))           return "CDF";
   if(hasDPCPlusSignature(rom))       return "DPC+";
   if(hasSaraRamLayout(rom))          return "Atari32kSC";
   if(has3EXSignature(rom))           return "3EX";
@@ -177,6 +179,7 @@ auto Atari2600::identify32KiBBoard(std::vector<u8>& rom) -> string {
 }
 
 auto Atari2600::identify64KiBBoard(std::vector<u8>& rom) -> string {
+  if(hasCDFSignature(rom))  return "CDF";
   if(has3EXSignature(rom))  return "3EX";
   if(has3ESignature(rom))   return "3E";
   if(has3FSignature(rom))   return "Enhanced3F";
@@ -188,6 +191,7 @@ auto Atari2600::identify64KiBBoard(std::vector<u8>& rom) -> string {
 }
 
 auto Atari2600::identify128KiBBoard(std::vector<u8>& rom) -> string {
+  if(hasCDFSignature(rom))          return "CDF";
   if(has3EXSignature(rom))          return "3EX";
   if(has3ESignature(rom))           return "3E";
   if(hasDFSCSignature(rom))         return "DFSC";
@@ -199,6 +203,7 @@ auto Atari2600::identify128KiBBoard(std::vector<u8>& rom) -> string {
 }
 
 auto Atari2600::identify256KiBBoard(std::vector<u8>& rom) -> string {
+  if(hasCDFSignature(rom))          return "CDF";
   if(has3EXSignature(rom))          return "3EX";
   if(has3ESignature(rom))           return "3E";
   if(hasBFSCSignature(rom))         return "BFSC";
@@ -209,6 +214,7 @@ auto Atari2600::identify256KiBBoard(std::vector<u8>& rom) -> string {
 }
 
 auto Atari2600::identify512KiBBoard(std::vector<u8>& rom) -> string {
+  if(hasCDFSignature(rom)) return "CDF";
   if(has3EXSignature(rom)) return "3EX";
   if(has3ESignature(rom))  return "3E";
   if(has3FSignature(rom))  return "Enhanced3F";
@@ -348,6 +354,11 @@ auto Atari2600::hasCPUWiz4KSCSignature(std::vector<u8>& rom) -> bool {
 
 auto Atari2600::hasDPCPlusSignature(std::vector<u8>& rom) -> bool {
   return match(rom, { 'D', 'P', 'C', '+' }, 2);
+}
+
+auto Atari2600::hasCDFSignature(std::vector<u8>& rom) -> bool {
+  return match(rom, { 'C', 'D', 'F' }, 3)
+      || match(rom, { 'P', 'L', 'U', 'S', 'C', 'D', 'F', 'J' });
 }
 
 auto Atari2600::hasAmigaFCSignature(std::vector<u8>& rom) -> bool {

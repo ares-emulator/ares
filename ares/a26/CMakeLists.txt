@@ -38,6 +38,7 @@ ares_add_sources(
     cartridge/board/board.cpp
     cartridge/board/board.hpp
     cartridge/board/commavid.cpp
+    cartridge/board/cdf.cpp
     cartridge/board/dpc-plus.cpp
     cartridge/board/linear.cpp
     cartridge/board/parker-bros.cpp
