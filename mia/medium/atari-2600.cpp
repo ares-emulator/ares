@@ -17,8 +17,11 @@ private:
   auto identify256KiBBoard(std::vector<u8>& rom) -> string;
   auto identify512KiBBoard(std::vector<u8>& rom) -> string;
 
+  auto hasARMSignature(std::vector<u8>& rom) -> bool;
   auto hasChetirySignature(std::vector<u8>& rom) -> bool;
+  auto hasDEVCSignature(std::vector<u8>& rom) -> bool;
   auto hasEFFSignature(std::vector<u8>& rom) -> bool;
+  auto hasFA2Signature(std::vector<u8>& rom) -> bool;
   auto hasCommavidSignature(std::vector<u8>& rom) -> bool;
   auto hasAtariF8Signature(std::vector<u8>& rom) -> bool;
   auto hasActivisionFESignature(std::vector<u8>& rom) -> bool;
@@ -92,6 +95,7 @@ auto Atari2600::load(string location) -> LoadResult {
   auto board = document["game/board"].string();
   if(board == "Chetiry") loadPersistent("save.eeprom", 256, 0x00, ".eeprom");
   if(board == "EFF") loadPersistent("save.eeprom", 2_KiB, 0xff, ".eeprom");
+  if(board == "FA2") loadPersistent("save.flash", 256, 0x00, ".flash");
 
   return successful;
 }
@@ -101,6 +105,7 @@ auto Atari2600::save(string location) -> bool {
   if(!document) return false;
   auto board = document["game/board"].string();
   if(board == "Chetiry" || board == "EFF") return Pak::save("save.eeprom", ".eeprom", location);
+  if(board == "FA2") return Pak::save("save.flash", ".flash", location);
   return true;
 }
 
@@ -136,6 +141,12 @@ auto Atari2600::analyze(std::vector<u8>& rom) -> string {
     s += "      size: 0x800\n";
     s += "      content: Save\n";
   }
+  if(board == "FA2") {
+    s += "    memory\n";
+    s += "      type: Flash\n";
+    s += "      size: 0x100\n";
+    s += "      content: Save\n";
+  }
 
   return s;
 }
@@ -145,6 +156,8 @@ auto Atari2600::identifyBoard(std::vector<u8>& rom) -> string {
   if(size >= 8_KiB && size <= 64_KiB && size % 1_KiB == 0 && has3EPlusSignature(rom)) return "3E+";
   if(size >= 8_KiB && size <= 512_KiB && size % 4_KiB == 0 && hasMDMSignature(rom)) return "MDM";
   if(size == 10_KiB + 255 || size == 10_KiB + 256) return "DPC";
+  if((size == 24_KiB || size == 28_KiB) && !hasDEVCSignature(rom)) return "FA2";
+  if(size == 29_KiB && hasARMSignature(rom))       return "FA2";
   if(size == 29_KiB && hasDPCPlusSignature(rom))   return "DPC+";
   if(size == 2_KiB && hasCommavidSignature(rom))   return "Commavid";
   if(size == 4_KiB && hasCommavidSignature(rom))   return "Commavid";
@@ -203,6 +216,7 @@ auto Atari2600::identify32KiBBoard(std::vector<u8>& rom) -> string {
   if(has3ESignature(rom))            return "3E";
   if(has3FSignature(rom))            return "Enhanced3F";
   if(hasBUSSignature(rom))           return "BUS";
+  if(hasFA2Signature(rom))           return "FA2";
   if(hasAmigaFCSignature(rom))       return "AmigaFC";
                                      return "Atari32k";
 }
@@ -220,8 +234,21 @@ auto Atari2600::identify64KiBBoard(std::vector<u8>& rom) -> string {
                             return "Linear";
 }
 
+auto Atari2600::hasARMSignature(std::vector<u8>& rom) -> bool {
+  auto limit = min<u32>(rom.size(), 1_KiB);
+  std::vector<u8> prefix(rom.begin(), rom.begin() + limit);
+  return matchAny(prefix, {
+    {0xa0, 0xc1, 0x1f, 0xe0},
+    {0x00, 0x80, 0x02, 0xe0},
+  });
+}
+
 auto Atari2600::hasChetirySignature(std::vector<u8>& rom) -> bool {
   return match(rom, {'L', 'E', 'N', 'I', 'N'});
+}
+
+auto Atari2600::hasDEVCSignature(std::vector<u8>& rom) -> bool {
+  return match(rom, {0xa9, 0xfd, 0x85, 0x08});
 }
 
 auto Atari2600::hasEFFSignature(std::vector<u8>& rom) -> bool {
@@ -229,6 +256,11 @@ auto Atari2600::hasEFFSignature(std::vector<u8>& rom) -> bool {
   return match(rom, {0x0c, 0xe0, 0xff})
       && match(rom, {0x0c, 0xf0, 0x1f})
       && match(rom, {0xad, 0xf4, 0x1f});
+}
+
+auto Atari2600::hasFA2Signature(std::vector<u8>& rom) -> bool {
+  if(rom.size() != 32_KiB) return false;
+  return std::all_of(rom.begin() + 29_KiB, rom.end(), [](u8 data) { return data == 0; });
 }
 
 auto Atari2600::identify128KiBBoard(std::vector<u8>& rom) -> string {

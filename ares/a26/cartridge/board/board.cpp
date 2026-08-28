@@ -26,6 +26,7 @@ namespace Board {
 #include "cdf.cpp"
 #include "bus.cpp"
 #include "chetiry.cpp"
+#include "fa2.cpp"
 #include "cpuwiz-4ksc.cpp"
 #include "three-e.cpp"
 #include "three-ex.cpp"
