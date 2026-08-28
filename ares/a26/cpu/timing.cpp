@@ -1,15 +1,6 @@
 auto CPU::read(n16 address) -> n8 {
+  while(io.rdyLine == 0) step(1);
   step(1);
-
-  if(io.rdyLine == 0) {
-    while(io.rdyLine == 0) {
-      step(1);
-    }
-
-    io.openBus = readBus(address);
-    return io.openBus;
-  }
-
   io.openBus = readBus(address);
   return io.openBus;
 }
