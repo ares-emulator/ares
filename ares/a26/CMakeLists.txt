@@ -1,4 +1,4 @@
-ares_components(arm7tdmi mos6502)
+ares_components(arm7tdmi m24c mos6502)
 
 ares_add_sources(
   CORE #
@@ -21,6 +21,7 @@ ares_add_sources(
     a26
   INCLUDED #
     a26.hpp
+    persistent-memory.hpp
     CMakeLists.txt
 )
 

@@ -1,4 +1,4 @@
-auto M24C::serialize(serializer& s) -> void {
+auto M24C::serialize(serializer& s, bool serializeMemory) -> void {
   if(type == Type::None) return;
   s((u32&)type);
   s((u32&)mode);
@@ -15,7 +15,9 @@ auto M24C::serialize(serializer& s) -> void {
   s(output);
   s(response);
   s(writable);
-  s(std::span<n8>{memory, size()});
-  if(type >= Type::M24C32) s(idpage);
-  s(locked);
+  if(serializeMemory) {
+    s(std::span<n8>{memory, size()});
+    if(type >= Type::M24C32) s(idpage);
+    s(locked);
+  }
 }
