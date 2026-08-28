@@ -1,4 +1,4 @@
-ares_components(mos6502)
+ares_components(arm7tdmi mos6502)
 
 ares_add_sources(
   CORE #
@@ -10,6 +10,7 @@ ares_add_sources(
     controller/controller.cpp
     cartridge/cartridge.cpp
     cpu/cpu.cpp
+    harmony/harmony.cpp
     video/video.cpp
     tia/tia.cpp
     riot/riot.cpp
@@ -40,6 +41,16 @@ ares_add_sources(
     cartridge/board/linear.cpp
     cartridge/board/parker-bros.cpp
     cartridge/board/tigervision.cpp
+)
+
+ares_add_sources(
+  CORE #
+    a26
+  INCLUDED #
+    harmony/harmony.hpp
+    harmony/memory.cpp
+    harmony/serialization.cpp
+    harmony/timing.cpp
 )
 
 ares_add_sources(

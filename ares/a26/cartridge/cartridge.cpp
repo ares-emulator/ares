@@ -87,7 +87,6 @@ auto Cartridge::power(bool reset) -> void {
 auto Cartridge::read(n16 address, n8 data) -> n8 {
   if(!node) return data;
   if(board) return board->read(address, data);
-
   return data;
 }
 
@@ -95,6 +94,30 @@ auto Cartridge::write(n16 address, n8 data) -> n8 {
   if(!node) return data;
   if(board) return board->write(address, data);
   return data;
+}
+
+auto Cartridge::armInvocation() const -> Harmony::Invocation {
+  if(board) return board->armInvocation();
+  return {};
+}
+
+auto Cartridge::readARM(u32 mode, n32 address, n32& data) -> Harmony::Access {
+  if(board) return board->readARM(mode, address, data);
+  return Harmony::Access::Unmapped;
+}
+
+auto Cartridge::writeARM(u32 mode, n32 address, n32 data) -> Harmony::Access {
+  if(board) return board->writeARM(mode, address, data);
+  return Harmony::Access::Unmapped;
+}
+
+auto Cartridge::trapARM(u32 address, n32& value, n32 argument) -> bool {
+  if(board) return board->trapARM(address, value, argument);
+  return false;
+}
+
+auto Cartridge::stepARM(u32 clocks) -> void {
+  if(board) board->stepARM(clocks);
 }
 
 }
