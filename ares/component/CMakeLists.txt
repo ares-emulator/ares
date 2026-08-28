@@ -150,6 +150,19 @@ component_sources(
 
 component_sources(
   COMPONENT
+    armv6m
+  PRIMARY
+    processor/armv6m/armv6m.cpp
+  INCLUDED
+    processor/armv6m/armv6m.hpp
+    processor/armv6m/decoder.cpp
+    processor/armv6m/disassembler.cpp
+    processor/armv6m/instruction.cpp
+    processor/armv6m/serialization.cpp
+)
+
+component_sources(
+  COMPONENT
     gsu
   PRIMARY
     processor/gsu/gsu.cpp
