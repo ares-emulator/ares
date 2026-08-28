@@ -31,14 +31,14 @@ auto CPU::main() -> void {
 
 auto CPU::step(u32 clocks) -> void {
   if(io.rdyLine == 1) io.scanlineCycles += clocks;
-  Thread::step(clocks);
+  Thread::step(clocks * 3);
   Thread::synchronize();
 }
 
 auto CPU::power(bool reset) -> void {
   MOS6502::BCD = 1;
   if(!reset) MOS6502::power();
-  Thread::create(system.frequency() / 3, std::bind_front(&CPU::main, this));
+  Thread::create(system.frequency(), std::bind_front(&CPU::main, this));
 
   io = {};
   io.resetPending = 1;
