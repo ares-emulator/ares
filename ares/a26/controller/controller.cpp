@@ -10,5 +10,9 @@ namespace ares::Atari2600 {
 #include "paddles/paddles.cpp"
 #include "driving/driving.cpp"
 #include "keyboard/keyboard.cpp"
+#include "relative-pointing/relative-pointing.cpp"
+#include "trak-ball/trak-ball.cpp"
+#include "atari-mouse/atari-mouse.cpp"
+#include "amiga-mouse/amiga-mouse.cpp"
 
 }

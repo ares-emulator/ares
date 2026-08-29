@@ -29,3 +29,7 @@ struct Controller {
 #include "paddles/paddles.hpp"
 #include "driving/driving.hpp"
 #include "keyboard/keyboard.hpp"
+#include "relative-pointing/relative-pointing.hpp"
+#include "trak-ball/trak-ball.hpp"
+#include "atari-mouse/atari-mouse.hpp"
+#include "amiga-mouse/amiga-mouse.hpp"

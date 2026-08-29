@@ -14,6 +14,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setSupported({
     "Gamepad", "Paddles", "Driving", "Keyboard",
     "Booster Grip", "Sega Genesis", "Joy 2B+",
+    "CX-22 Trak-Ball", "CX-80 Trak-Ball", "Atari Mouse", "Amiga Mouse",
   });
   output = 0x0f;
 }
@@ -41,6 +42,10 @@ auto ControllerPort::create(Node::Port port, string name) -> std::unique_ptr<Con
   if(name == "Booster Grip")        return std::make_unique<BoosterGrip>(port);
   if(name == "Sega Genesis")        return std::make_unique<SegaGenesis>(port);
   if(name == "Joy 2B+")             return std::make_unique<Joy2BPlus>  (port);
+  if(name == "CX-22 Trak-Ball")     return std::make_unique<TrakBall>   (port, name);
+  if(name == "CX-80 Trak-Ball")     return std::make_unique<TrakBall>   (port, name);
+  if(name == "Atari Mouse")         return std::make_unique<AtariMouse> (port);
+  if(name == "Amiga Mouse")         return std::make_unique<AmigaMouse> (port);
   return {};
 }
 
