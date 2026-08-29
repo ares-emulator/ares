@@ -83,7 +83,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
       continue;
     }
 
-    bool defocused = settings.input.defocus == "Pause" && !ruby::video.fullScreen() && !presentation.focused();
+    bool defocused = settings.input.defocus == "Pause" && !presentation.focused();
 
     if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
       ruby::audio.clear();
