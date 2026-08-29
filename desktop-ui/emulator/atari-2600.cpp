@@ -34,6 +34,35 @@ Atari2600::Atari2600() {
     device.digital("Fire",       virtualPorts[id].pad.south);
     port.append(device); }
 
+  { InputDevice device{"Booster Grip"};
+    device.digital("Up",      virtualPorts[id].pad.up);
+    device.digital("Down",    virtualPorts[id].pad.down);
+    device.digital("Left",    virtualPorts[id].pad.left);
+    device.digital("Right",   virtualPorts[id].pad.right);
+    device.digital("Fire",    virtualPorts[id].pad.south);
+    device.digital("Booster", virtualPorts[id].pad.east);
+    device.digital("Trigger", virtualPorts[id].pad.west);
+    port.append(device); }
+
+  { InputDevice device{"Sega Genesis"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("Fire",  virtualPorts[id].pad.south);
+    device.digital("C",     virtualPorts[id].pad.east);
+    port.append(device); }
+
+  { InputDevice device{"Joy 2B+"};
+    device.digital("Up",       virtualPorts[id].pad.up);
+    device.digital("Down",     virtualPorts[id].pad.down);
+    device.digital("Left",     virtualPorts[id].pad.left);
+    device.digital("Right",    virtualPorts[id].pad.right);
+    device.digital("Fire",     virtualPorts[id].pad.south);
+    device.digital("C",        virtualPorts[id].pad.east);
+    device.digital("Button 3", virtualPorts[id].pad.west);
+    port.append(device); }
+
   { InputDevice device{"Paddles"};
     device.analog ("Paddle 1 Left",  virtualPorts[id].pad.lstick_left);
     device.analog ("Paddle 1 Right", virtualPorts[id].pad.lstick_right);

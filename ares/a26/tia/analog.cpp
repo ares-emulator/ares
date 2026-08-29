@@ -50,6 +50,5 @@ auto TIA::AnalogInputs::advance(Input& input) -> void {
 
 auto TIA::updateAnalogInput(n2 index) -> void {
   auto& port = index < 2 ? controllerPort1 : controllerPort2;
-  auto connection = index.bit(0) ? port.readAnalogB() : port.readAnalogA();
-  analog.update(index, connection);
+  analog.update(index, port.readAnalog(index.bit(0)));
 }

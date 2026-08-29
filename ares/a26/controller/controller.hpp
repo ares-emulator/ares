@@ -17,13 +17,15 @@ struct Controller {
   virtual auto poll() -> void {}
   virtual auto read() -> n8 { return 0xff; }
   virtual auto write(n8 data) -> void {}
-  virtual auto readAnalogA() -> AnalogConnection { return AnalogConnection::disconnected(); }
-  virtual auto readAnalogB() -> AnalogConnection { return AnalogConnection::disconnected(); }
+  virtual auto readAnalog(n1 index) -> AnalogConnection { return AnalogConnection::disconnected(); }
   virtual auto serialize(serializer&) -> void {}
 };
 
 #include "port.hpp"
 #include "gamepad/gamepad.hpp"
+#include "booster-grip/booster-grip.hpp"
+#include "sega-genesis/sega-genesis.hpp"
+#include "joy2b-plus/joy2b-plus.hpp"
 #include "paddles/paddles.hpp"
 #include "driving/driving.hpp"
 #include "keyboard/keyboard.hpp"

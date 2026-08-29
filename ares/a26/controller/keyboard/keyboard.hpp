@@ -5,14 +5,12 @@ struct Keyboard : Controller {
 
   auto read() -> n8 override;
   auto write(n8 data) -> void override;
-  auto readAnalogA() -> AnalogConnection override;
-  auto readAnalogB() -> AnalogConnection override;
+  auto readAnalog(n1 index) -> AnalogConnection override;
 
 private:
   enum class ColumnState : u32 { Pullup, Ground, Vcc };
 
   auto readColumn(u32 column) -> ColumnState;
-  auto readAnalog(u32 column) -> AnalogConnection;
 
   n4 rows = 0x0f;
 };

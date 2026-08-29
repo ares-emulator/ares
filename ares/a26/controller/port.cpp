@@ -11,7 +11,10 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setDisconnect([&] { device.reset(); });
-  port->setSupported({"Gamepad", "Paddles", "Driving", "Keyboard"});
+  port->setSupported({
+    "Gamepad", "Paddles", "Driving", "Keyboard",
+    "Booster Grip", "Sega Genesis", "Joy 2B+",
+  });
   output = 0x0f;
 }
 
@@ -22,15 +25,22 @@ auto ControllerPort::unload() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  device = {};
-  if(name == "Gamepad") device = std::make_unique<Gamepad>(port);
-  if(name == "Paddles") device = std::make_unique<Paddles>(port);
-  if(name == "Driving") device = std::make_unique<Driving>(port);
-  if(name == "Keyboard") device = std::make_unique<Keyboard>(port);
+  device = create(port, name);
   if(device) {
     device->write(output);
     return device->node;
   }
+  return {};
+}
+
+auto ControllerPort::create(Node::Port port, string name) -> std::unique_ptr<Controller> {
+  if(name == "Gamepad")             return std::make_unique<Gamepad>    (port);
+  if(name == "Paddles")             return std::make_unique<Paddles>    (port);
+  if(name == "Driving")             return std::make_unique<Driving>    (port);
+  if(name == "Keyboard")            return std::make_unique<Keyboard>   (port);
+  if(name == "Booster Grip")        return std::make_unique<BoosterGrip>(port);
+  if(name == "Sega Genesis")        return std::make_unique<SegaGenesis>(port);
+  if(name == "Joy 2B+")             return std::make_unique<Joy2BPlus>  (port);
   return {};
 }
 

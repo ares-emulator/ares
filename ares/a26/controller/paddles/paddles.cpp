@@ -17,15 +17,7 @@ auto Paddles::read() -> n8 {
   return data;
 }
 
-auto Paddles::readAnalogA() -> AnalogConnection {
-  return readAxis(0);
-}
-
-auto Paddles::readAnalogB() -> AnalogConnection {
-  return readAxis(1);
-}
-
-auto Paddles::readAxis(n1 index) -> AnalogConnection {
+auto Paddles::readAnalog(n1 index) -> AnalogConnection {
   platform->input(axis[index]);
   auto value = std::clamp<s64>(axis[index]->value(), -32768, 32767);
   auto resistance = (u64)(32767 - value) * MaximumResistance / 65535;
