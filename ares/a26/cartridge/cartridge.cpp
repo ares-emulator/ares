@@ -19,6 +19,9 @@ auto Cartridge::connect() -> void {
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
   information.phosphor = pak->attribute("phosphor").boolean();
+  if(auto fp = pak->read("program.rom")) {
+    information.sha256 = Hash::SHA256({fp->data(), fp->size()}).digest();
+  }
 
   if(information.board == "Linear")         board = std::make_unique<Board::Linear>(*this);
   if(information.board == "Activision8k")   board = std::make_unique<Board::Activision8k>(*this);

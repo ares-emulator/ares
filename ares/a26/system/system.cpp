@@ -103,6 +103,8 @@ auto System::power(bool reset) -> void {
 
   random.entropy(Random::Entropy::Low);
   cartridge.power(reset);
+  controllerPort1.power(reset);
+  controllerPort2.power(reset);
   riot.power(reset);
   cpu.power(reset);
   tia.power(reset);

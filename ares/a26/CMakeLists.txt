@@ -97,6 +97,11 @@ ares_add_sources(
     controller/sega-genesis/sega-genesis.hpp
     controller/joy2b-plus/joy2b-plus.cpp
     controller/joy2b-plus/joy2b-plus.hpp
+    controller/kidvid/audio.cpp
+    controller/kidvid/audio.hpp
+    controller/kidvid/kidvid.cpp
+    controller/kidvid/kidvid.hpp
+    controller/kidvid/tables.hpp
 )
 
 ares_add_sources(

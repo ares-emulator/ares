@@ -100,6 +100,15 @@ Atari2600::Atari2600() {
     device.digital ("Trigger", virtualPorts[id].mouse.left);
     port.append(device); }
 
+  if(id == 1) {
+    InputDevice device{"KidVid Voice Module"};
+    device.digital("Game 1", virtualPorts[id].pad.one);
+    device.digital("Game 2", virtualPorts[id].pad.two);
+    device.digital("Game 3", virtualPorts[id].pad.three);
+    device.digital("Skip",   virtualPorts[id].pad.six);
+    port.append(device);
+  }
+
   { InputDevice device{"Keyboard"};
     device.digital("1", virtualPorts[id].pad.one);
     device.digital("2", virtualPorts[id].pad.two);
@@ -173,5 +182,6 @@ auto Atari2600::save() -> bool {
 auto Atari2600::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> {
   if(node->name() == "Atari 2600") return system->pak;
   if(node->name() == "Atari 2600 Cartridge") return game->pak;
+  if(node->name() == "KidVid Voice Module") return system->pak;
   return {};
 }
