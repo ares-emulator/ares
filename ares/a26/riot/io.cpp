@@ -73,6 +73,9 @@ auto RIOT::readPortA() -> n8 {
 auto RIOT::writePortA(n8 data) -> void {
   port[0].data = data;
   drivePortA();
+  //MindLink clocks from the raw SWCHA latch, not the DDRA-resolved pin level.
+  controllerPort1.controlWrite(data.bit(4, 7));
+  controllerPort2.controlWrite(data.bit(0, 3));
   samplePA7(readPortA().bit(7));
 }
 

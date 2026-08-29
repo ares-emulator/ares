@@ -95,6 +95,11 @@ Atari2600::Atari2600() {
     device.digital ("Trigger", virtualPorts[id].mouse.left);
     port.append(device); }
 
+  { InputDevice device{"MindLink"};
+    device.relative("X",       virtualPorts[id].mouse.x);
+    device.digital ("Trigger", virtualPorts[id].mouse.left);
+    port.append(device); }
+
   { InputDevice device{"Keyboard"};
     device.digital("1", virtualPorts[id].pad.one);
     device.digital("2", virtualPorts[id].pad.two);
