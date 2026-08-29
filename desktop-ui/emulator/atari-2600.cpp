@@ -81,6 +81,14 @@ Atari2600::Atari2600() {
     device.analog ("Wheel",       virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
     port.append(device); }
 
+  for(auto name : {"CX-22 Trak-Ball", "CX-80 Trak-Ball", "Atari Mouse", "Amiga Mouse"}) {
+    InputDevice device{name};
+    device.relative("X", virtualPorts[id].mouse.x);
+    device.relative("Y", virtualPorts[id].mouse.y);
+    device.digital ("Fire", virtualPorts[id].mouse.left);
+    port.append(device);
+  }
+
   { InputDevice device{"Keyboard"};
     device.digital("1", virtualPorts[id].pad.one);
     device.digital("2", virtualPorts[id].pad.two);
