@@ -18,6 +18,8 @@ namespace ares::Atari2600 {
 #include "xg1-light-gun/xg1-light-gun.cpp"
 #include "mindlink/mindlink.cpp"
 #include "savekey/savekey.cpp"
+#include "atarivox/speakjet.cpp"
+#include "atarivox/atarivox.cpp"
 #include "kidvid/audio.cpp"
 #include "kidvid/kidvid.cpp"
 

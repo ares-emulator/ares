@@ -40,4 +40,5 @@ struct Controller {
 #include "xg1-light-gun/xg1-light-gun.hpp"
 #include "mindlink/mindlink.hpp"
 #include "savekey/savekey.hpp"
+#include "atarivox/atarivox.hpp"
 #include "kidvid/kidvid.hpp"

@@ -99,6 +99,10 @@ ares_add_sources(
     controller/joy2b-plus/joy2b-plus.hpp
     controller/savekey/savekey.cpp
     controller/savekey/savekey.hpp
+    controller/atarivox/atarivox.cpp
+    controller/atarivox/atarivox.hpp
+    controller/atarivox/speakjet.cpp
+    controller/atarivox/speakjet.hpp
     controller/kidvid/audio.cpp
     controller/kidvid/audio.hpp
     controller/kidvid/kidvid.cpp

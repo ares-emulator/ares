@@ -18,6 +18,7 @@ auto Atari2600::load(string location) -> LoadResult {
     }
   };
   loadEeprom("savekey.eeprom");
+  loadEeprom("atarivox.eeprom");
 
   static constexpr std::array<const char*, 7> KidVidFiles = {
     "KVSHARED.WAV", "KVS1.WAV", "KVS2.WAV", "KVS3.WAV",
@@ -49,5 +50,6 @@ auto Atari2600::load(string location) -> LoadResult {
 
 auto Atari2600::save(string location) -> bool {
   Pak::save("savekey.eeprom", ".eeprom");
+  Pak::save("atarivox.eeprom", ".eeprom");
   return true;
 }

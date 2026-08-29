@@ -183,6 +183,7 @@ auto Atari2600::pak(ares::Node::Object node) -> std::shared_ptr<vfs::directory> 
   if(node->name() == "Atari 2600") return system->pak;
   if(node->name() == "Atari 2600 Cartridge") return game->pak;
   if(node->name() == "SaveKey") return system->pak;
+  if(node->name() == "AtariVox") return system->pak;
   if(node->name() == "KidVid Voice Module") return system->pak;
   return {};
 }
