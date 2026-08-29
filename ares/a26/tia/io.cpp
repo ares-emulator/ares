@@ -69,6 +69,8 @@ auto TIA::writeVblank(n8 data) -> void {
     updateAnalogInput(index);
   }
   analog.vblank(data.bit(7));
+  controllerPort1.vblank(data.bit(7));
+  controllerPort2.vblank(data.bit(7));
   triggers.vblank(data.bit(6));
   queueWrite(0x01, data, 1);
 }

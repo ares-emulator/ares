@@ -64,6 +64,8 @@ auto TIA::clock() -> bool {
 
   audio.clock();
   analog.advance();
+  controllerPort1.clock();
+  controllerPort2.clock();
 
   if(!timing.advance()) return false;
   playfield.nextLine();

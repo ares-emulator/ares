@@ -126,6 +126,37 @@ Atari2600::Atari2600() {
 
     ports.push_back(port);
   }
+
+  auto appendQuadTariPort = [&](string name, u32 id) {
+    InputPort port{name};
+
+    { InputDevice device{"Gamepad"};
+      device.digital("Up",    virtualPorts[id].pad.up);
+      device.digital("Down",  virtualPorts[id].pad.down);
+      device.digital("Left",  virtualPorts[id].pad.left);
+      device.digital("Right", virtualPorts[id].pad.right);
+      device.digital("Fire",  virtualPorts[id].pad.south);
+      port.append(device); }
+
+    { InputDevice device{"Paddles"};
+      device.digital("Paddle 1 Fire", virtualPorts[id].pad.south);
+      device.digital("Paddle 2 Fire", virtualPorts[id].pad.east);
+      port.append(device); }
+
+    { InputDevice device{"Driving"};
+      device.analog ("Wheel Left",  virtualPorts[id].pad.lstick_left);
+      device.analog ("Wheel Right", virtualPorts[id].pad.lstick_right);
+      device.digital("Fire",        virtualPorts[id].pad.south);
+      device.analog ("Wheel",       virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+      port.append(device); }
+
+    ports.push_back(port);
+  };
+
+  appendQuadTariPort("QuadTari Player 1", 0);
+  appendQuadTariPort("QuadTari Player 2", 1);
+  appendQuadTariPort("QuadTari Player 3", 2);
+  appendQuadTariPort("QuadTari Player 4", 3);
 }
 
 auto Atari2600::load(Menu menu) -> void {

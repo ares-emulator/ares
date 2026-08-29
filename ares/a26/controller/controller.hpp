@@ -18,6 +18,8 @@ struct Controller {
   virtual auto power(bool reset) -> void {}
   virtual auto poll() -> void {}
   virtual auto frame() -> void {}
+  virtual auto clock() -> void {}
+  virtual auto vblank(n1 dumped) -> void {}
   virtual auto read() -> n8 { return 0xff; }
   virtual auto write(n8 data) -> void {}
   virtual auto controlWrite(n8 data) -> void {}
@@ -42,3 +44,4 @@ struct Controller {
 #include "savekey/savekey.hpp"
 #include "atarivox/atarivox.hpp"
 #include "kidvid/kidvid.hpp"
+#include "quadtari/quadtari.hpp"

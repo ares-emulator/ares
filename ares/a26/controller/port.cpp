@@ -18,7 +18,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
     "Gamepad", "Paddles", "Driving", "Keyboard",
     "Booster Grip", "Sega Genesis", "Joy 2B+",
     "CX-22 Trak-Ball", "CX-80 Trak-Ball", "Atari Mouse", "Amiga Mouse",
-    "XG-1 Light Gun", "MindLink", "SaveKey", "AtariVox",
+    "XG-1 Light Gun", "MindLink", "SaveKey", "AtariVox", "QuadTari",
   };
   if(name == "Controller Port 2") supported.push_back("KidVid Voice Module");
   port->setSupported(supported);
@@ -32,8 +32,8 @@ auto ControllerPort::unload() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  if(name == "KidVid Voice Module" && this != &controllerPort2) device = {};
-  else device = create(port, name);
+  auto role = this == &controllerPort2 ? Role::ConsoleRight : Role::ConsoleLeft;
+  device = create(port, name, role);
   if(device) {
     device->write(output);
     return device->node;
@@ -41,9 +41,10 @@ auto ControllerPort::allocate(string name) -> Node::Peripheral {
   return {};
 }
 
-auto ControllerPort::create(Node::Port port, string name) -> std::unique_ptr<Controller> {
+auto ControllerPort::create(Node::Port port, string name, Role role) -> std::unique_ptr<Controller> {
+  auto quadTariChild = role == Role::QuadTariChild;
   if(name == "Gamepad")             return std::make_unique<Gamepad>    (port);
-  if(name == "Paddles")             return std::make_unique<Paddles>    (port);
+  if(name == "Paddles")             return std::make_unique<Paddles>    (port, !quadTariChild);
   if(name == "Driving")             return std::make_unique<Driving>    (port);
   if(name == "Keyboard")            return std::make_unique<Keyboard>   (port);
   if(name == "Booster Grip")        return std::make_unique<BoosterGrip>(port);
@@ -57,7 +58,10 @@ auto ControllerPort::create(Node::Port port, string name) -> std::unique_ptr<Con
   if(name == "MindLink")            return std::make_unique<MindLink>   (port);
   if(name == "SaveKey")             return std::make_unique<SaveKey>    (port);
   if(name == "AtariVox")            return std::make_unique<AtariVox>   (port);
-  if(name == "KidVid Voice Module") return std::make_unique<KidVid>(port);
+  if(name == "KidVid Voice Module")
+    if(role == Role::ConsoleRight)  return std::make_unique<KidVid>     (port);
+  if(name == "QuadTari")
+    if(!quadTariChild)              return std::make_unique<QuadTari>   (port);
   return {};
 }
 
