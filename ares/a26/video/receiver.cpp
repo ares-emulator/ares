@@ -38,16 +38,22 @@ auto Video::vsync(n1 level) -> void {
   if(accepted) accept();
 }
 
+auto Video::frame() -> void {
+  controllerPort1.frame();
+  controllerPort2.frame();
+  scheduler.exit(Event::Frame);
+}
+
 auto Video::accept() -> void {
   auto frameLines = lineCounter;
   lineCounter = 0;
   linesSinceReturn = 0;
   screen->refreshRateHint(system.frequency(), 228, frameLines);
   screen->frame();
-  scheduler.exit(Event::Frame);
+  frame();
 }
 
 auto Video::fallback() -> void {
   linesSinceReturn = 0;
-  scheduler.exit(Event::Frame);
+  frame();
 }

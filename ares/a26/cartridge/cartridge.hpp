@@ -7,6 +7,7 @@ struct Cartridge {
 
   auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
+  auto sha256() const -> string { return information.sha256; }
 
   //cartridge.cpp
   auto allocate(Node::Port) -> Node::Peripheral;
@@ -35,6 +36,7 @@ struct Cartridge {
     string title;
     string region;
     string board;
+    string sha256;
     bool phosphor;
   } information;
 };

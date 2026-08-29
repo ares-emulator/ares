@@ -8,8 +8,15 @@ struct ControllerPort {
   auto unload() -> void;
   auto allocate(string name) -> Node::Peripheral;
   static auto create(Node::Port, string name) -> std::unique_ptr<Controller>;
+  auto power(bool reset) -> void {
+    if(device) {
+      device->power(reset);
+      device->write(output);
+    }
+  }
 
   auto poll() -> void { if(device) device->poll(); }
+  auto frame() -> void { if(device) device->frame(); }
   auto read() -> n8 { if(device) return device->read(); return 0xff; }
   auto write(n8 data) -> void {
     output = data;

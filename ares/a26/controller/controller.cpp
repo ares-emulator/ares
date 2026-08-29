@@ -17,5 +17,7 @@ namespace ares::Atari2600 {
 #include "amiga-mouse/amiga-mouse.cpp"
 #include "xg1-light-gun/xg1-light-gun.cpp"
 #include "mindlink/mindlink.cpp"
+#include "kidvid/audio.cpp"
+#include "kidvid/kidvid.cpp"
 
 }

@@ -22,6 +22,7 @@ struct Video {
   auto fill(i16 x, n7 pixel) -> void;
   auto endScanline() -> void;
   auto vsync(n1 level) -> void;
+  auto frame() -> void;
   auto accept() -> void;
   auto fallback() -> void;
 
