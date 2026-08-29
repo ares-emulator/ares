@@ -49,7 +49,7 @@ auto DSP::write(n7 address, n8 data) -> void {
     for(u32 n : range(8)) voice[n].echo = data.bit(n);
     break;
   case 0x5d:  //DIR
-    brr.bank = data;
+    brr.page = data;
     break;
   case 0x6d:  //ESA
     echo.page = data;
