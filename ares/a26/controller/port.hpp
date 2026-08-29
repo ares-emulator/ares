@@ -15,6 +15,9 @@ struct ControllerPort {
     output = data;
     if(device) device->write(data);
   }
+  auto controlWrite(n4 data) -> void {
+    if(device) device->controlWrite(data);
+  }
   auto readAnalog(n1 index) -> Controller::AnalogConnection {
     if(device) return device->readAnalog(index);
     return Controller::AnalogConnection::disconnected();

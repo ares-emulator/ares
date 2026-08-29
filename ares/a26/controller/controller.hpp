@@ -17,6 +17,7 @@ struct Controller {
   virtual auto poll() -> void {}
   virtual auto read() -> n8 { return 0xff; }
   virtual auto write(n8 data) -> void {}
+  virtual auto controlWrite(n8 data) -> void {}
   virtual auto readAnalog(n1 index) -> AnalogConnection { return AnalogConnection::disconnected(); }
   virtual auto serialize(serializer&) -> void {}
 };
@@ -34,3 +35,4 @@ struct Controller {
 #include "atari-mouse/atari-mouse.hpp"
 #include "amiga-mouse/amiga-mouse.hpp"
 #include "xg1-light-gun/xg1-light-gun.hpp"
+#include "mindlink/mindlink.hpp"
