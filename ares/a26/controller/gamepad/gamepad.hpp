@@ -5,7 +5,7 @@ struct Gamepad : Controller {
   Node::Input::Button right;
   Node::Input::Button fire;
 
-  Gamepad(Node::Port);
+  Gamepad(Node::Port, string name = "Gamepad");
 
   auto read() -> n8 override;
 };

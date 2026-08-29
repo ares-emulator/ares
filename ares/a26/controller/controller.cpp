@@ -4,6 +4,9 @@ namespace ares::Atari2600 {
 
 #include "port.cpp"
 #include "gamepad/gamepad.cpp"
+#include "booster-grip/booster-grip.cpp"
+#include "sega-genesis/sega-genesis.cpp"
+#include "joy2b-plus/joy2b-plus.cpp"
 #include "paddles/paddles.cpp"
 #include "driving/driving.cpp"
 #include "keyboard/keyboard.cpp"

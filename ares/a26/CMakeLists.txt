@@ -91,6 +91,12 @@ ares_add_sources(
     controller/port.hpp
     controller/gamepad/gamepad.cpp
     controller/gamepad/gamepad.hpp
+    controller/booster-grip/booster-grip.cpp
+    controller/booster-grip/booster-grip.hpp
+    controller/sega-genesis/sega-genesis.cpp
+    controller/sega-genesis/sega-genesis.hpp
+    controller/joy2b-plus/joy2b-plus.cpp
+    controller/joy2b-plus/joy2b-plus.hpp
 )
 
 ares_add_sources(

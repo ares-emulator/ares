@@ -5,9 +5,7 @@ struct Paddles : Controller {
   Paddles(Node::Port);
 
   auto read() -> n8 override;
-  auto readAnalogA() -> AnalogConnection override;
-  auto readAnalogB() -> AnalogConnection override;
-  auto readAxis(n1 index) -> AnalogConnection;
+  auto readAnalog(n1 index) -> AnalogConnection override;
 
   static constexpr u32 MaximumResistance = 1'000'000;
 };

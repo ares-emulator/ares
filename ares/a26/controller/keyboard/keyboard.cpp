@@ -17,12 +17,13 @@ auto Keyboard::write(n8 data) -> void {
   rows = data.bit(0, 3);
 }
 
-auto Keyboard::readAnalogA() -> AnalogConnection {
-  return readAnalog(0);
-}
-
-auto Keyboard::readAnalogB() -> AnalogConnection {
-  return readAnalog(1);
+auto Keyboard::readAnalog(n1 index) -> AnalogConnection {
+  switch(readColumn(index)) {
+  case ColumnState::Pullup: return AnalogConnection::vcc(4700);
+  case ColumnState::Ground: return AnalogConnection::ground();
+  case ColumnState::Vcc:    return AnalogConnection::vcc();
+  }
+  unreachable;
 }
 
 auto Keyboard::readColumn(u32 column) -> ColumnState {
@@ -35,13 +36,4 @@ auto Keyboard::readColumn(u32 column) -> ColumnState {
     vcc = true;
   }
   return vcc ? ColumnState::Vcc : ColumnState::Pullup;
-}
-
-auto Keyboard::readAnalog(u32 column) -> AnalogConnection {
-  switch(readColumn(column)) {
-  case ColumnState::Pullup: return AnalogConnection::vcc(4700);
-  case ColumnState::Ground: return AnalogConnection::ground();
-  case ColumnState::Vcc:    return AnalogConnection::vcc();
-  }
-  unreachable;
 }
