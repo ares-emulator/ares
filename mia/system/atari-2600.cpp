@@ -7,6 +7,17 @@ struct Atari2600 : System {
 auto Atari2600::load(string location) -> LoadResult {
   this->location = locate();
   pak = std::make_shared<vfs::directory>();
+  auto loadEeprom = [&](string name) {
+    auto location = saveLocation(this->location, name, ".eeprom");
+    if(!file::exists(location)) return;
+    auto memory = file::read(location);
+    pak->append(name, memory.size());
+    if(auto fp = pak->write(name)) {
+      fp->write({memory.data(), memory.size()});
+      fp->setAttribute("loaded", true);
+    }
+  };
+  loadEeprom("savekey.eeprom");
 
   static constexpr std::array<const char*, 7> KidVidFiles = {
     "KVSHARED.WAV", "KVS1.WAV", "KVS2.WAV", "KVS3.WAV",
@@ -37,5 +48,6 @@ auto Atari2600::load(string location) -> LoadResult {
 }
 
 auto Atari2600::save(string location) -> bool {
+  Pak::save("savekey.eeprom", ".eeprom");
   return true;
 }

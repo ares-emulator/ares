@@ -8,6 +8,7 @@ struct ControllerPort {
   auto unload() -> void;
   auto allocate(string name) -> Node::Peripheral;
   static auto create(Node::Port, string name) -> std::unique_ptr<Controller>;
+  auto save() -> void { if(device) device->save(); }
   auto power(bool reset) -> void {
     if(device) {
       device->power(reset);

@@ -83,6 +83,8 @@ auto System::load(Node::System& root, string name) -> bool {
 auto System::save() -> void {
   if(!node) return;
   cartridge.save();
+  controllerPort1.save();
+  controllerPort2.save();
 }
 
 auto System::unload() -> void {
