@@ -1,0 +1,8120 @@
+database
+  revision: 2026-08-23
+
+game
+  sha256: 66a542dd883a3ba5d5b0b890653224efab5469fa87ee9b396c72e1b569bb0f90
+  name:   3-D Genesis (prototype) (NTSC)
+  title:  3-D Genesis (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 76b6a64a71f869f26133cc6cfdb93ae93579e328e4e43331731ff45a4c7646ca
+  name:   3-D Ghost Attack (prototype) (NTSC)
+  title:  3-D Ghost Attack (prototype)
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 11a486ccc36d81d435d97d50331cebbe7d62e3cfcdd582fed6e5c5b7cc5e0607
+  name:   3-D Tic-Tac-Toe (NTSC)
+  title:  3-D Tic-Tac-Toe
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: db41f00e4dfc7bd0e1ed2b8cb76e278589436fe87d5f6afa0678edf12b7fd7cb
+  name:   3-D Tic-Tac-Toe (PAL)
+  title:  3-D Tic-Tac-Toe
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: bfeb823234eaf3063b0d5a476388e01d3c7cbb00c93a68e0fdb93801b4574cff
+  name:   3-D Zapper (prototype) (NTSC)
+  title:  3-D Zapper (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 67a72189863776cd4ba9f00c9920578e86e5dbfa8d04f3a528b6d37d541f5253
+  name:   32 in 1 Game Cartridge (Europe, Australia)
+  title:  32 in 1 Game Cartridge
+  region: PAL
+  board:  Atari32In1
+    memory
+      type: ROM
+      size: 0x10000
+      content: Program
+
+game
+  sha256: 2c3d17e6982cd7b71ceb562fe1d2f04e0e0e4ed6f7b9bbc68ae283eab7107367
+  name:   A Mysterious Thief (prototype) (NTSC)
+  title:  A Mysterious Thief (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2555b94f493c8f55a3039f6ab431ecccbfe908d6e37e27978e070897e6ed97ce
+  name:   Abre-te, Sesamo! (NTSC)
+  title:  Abre-te, Sesamo!
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c9dfed23d2f3c23735b51d55d609179b686187669d458ffbb4f5960627e028d8
+  name:   Acid Drop (PAL)
+  title:  Acid Drop
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: f7dfe0d2deab3dedb62832d4648dae7159f7e2080ccec200333a63e2ab3659c4
+  name:   Action Force (PAL)
+  title:  Action Force
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0121280f89a351d4e62b616cbc046287806b4be2b767941c1b6ba75913306f9d
+  name:   Actionauts (NTSC)
+  title:  Actionauts
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b0326b45e5cab066b2d03f1e683708d82de3ffe60b2e968bf88c5494237f0a96
+  name:   Adventure (NTSC)
+  title:  Adventure
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 64cd3bf23a617fc7c14e3b2075297ae045c712c6218c42564ae77dab672e2826
+  name:   Adventure (PAL)
+  title:  Adventure
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8e8a322feff2cf56e95d161eab5aa7be562546e8103730a813c3d7ef422d708b
+  name:   Adventures of Tron (NTSC)
+  title:  Adventures of Tron
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 037630a2598161abaf5cd31818a41af3b9ae733072b4e9394833cb068c83cc57
+  name:   Adventures on GX-12 (PAL)
+  title:  Adventures on GX-12
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 923d70463882d05c39c2e6711f9de1e07d8f417be59f9ffbbd6f3c4ee2a3241a
+  name:   Air Raiders (NTSC)
+  title:  Air Raiders
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9ab191e99ef7edc3205e2fb6a09edba4fedb19e44a911dae8dd2942938eeec47
+  name:   Air Raiders (PAL)
+  title:  Air Raiders
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 55e2685100ad11c587b2c247f08e109f7e7d92035c0eb41e4a6cc6f98b34de25
+  name:   Air-Sea Battle (NTSC)
+  title:  Air-Sea Battle
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 09de8ac78875c2b9f9d55d92a1357f31def5e4394070b344eecde684285e5682
+  name:   Air-Sea Battle (PAL)
+  title:  Air-Sea Battle
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: f8ef7208b0e7227b8b93aff21bfdec6e1d963029157ee913f3b6a44d8d622c36
+  name:   Airlock (NTSC)
+  title:  Airlock
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 42939112a1b2dd14e0604a0f9af65d5764d9ea2ce27ddce0282a1d96ceb3c496
+  name:   Airlock (prototype) (NTSC)
+  title:  Airlock (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9cd556c7d7f55aeb78fc5add45d74ce889c6e22cba6bb535ef1e8bd6b6c764c1
+  name:   Alien (20th Century Fox) (NTSC)
+  title:  Alien (20th Century Fox)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7d1a2d57f99df374bf4320a92274521c02b274b4766d57d6cf0b9b729f7f62ae
+  name:   Alien (CCE) (NTSC)
+  title:  Alien (CCE)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5a8ed1aaa54c2a4634d50b09ff708e888124b136715b1bec0f13b35317da40b1
+  name:   Alpha Beam with Ernie (NTSC)
+  title:  Alpha Beam with Ernie
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: c5108992294982fa7cefbaf9adee4bdde44f0d548e9f1d6e54833d4a4462d971
+  name:   Alpha Beam with Ernie (PAL)
+  title:  Alpha Beam with Ernie
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 01f20e688bda055a9346dc915391ff2edfa607773d9f53cff30690768def0e74
+  name:   Alpha Beam with Ernie (PAL) (prototype 19830603)
+  title:  Alpha Beam with Ernie (prototype 19830603)
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 75f28e4e8901dfa8f2b6c7b3fe3068251d76215b0086979d8d30b8b7663f308b
+  name:   Alpha Beam with Ernie (prototype 19831222) (NTSC)
+  title:  Alpha Beam with Ernie (prototype 19831222)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: da5b760d3adaeba2cb8fc2367ae96e2b8add4da44cd47199b57ff4d54e682d9f
+  name:   Amidar (NTSC)
+  title:  Amidar
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 47fe06e14a63ac2e7a365ddab97dd766726454f922d3a122282a01fdb38d8fbe
+  name:   Amidar (PAL)
+  title:  Amidar
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 48f2bb99e2c3361e7cbea7d9df8844efd1876fcdc54264a698d8215ee6d02bf7
+  name:   AndroMan on the Moon (prototype) (NTSC)
+  title:  AndroMan on the Moon (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: df70086ba8d815d2c7871aabf3468e78274d57879dd05bb9fa9243521c34a9fd
+  name:   Angeln I (PAL)
+  title:  Angeln I
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 20c0551e215986209fc402b4702a73f442c845d9cc3d813a630c26d48b2cfe10
+  name:   Angriff der Luftflotten (PAL)
+  title:  Angriff der Luftflotten
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 223cb548f5a60cda290a6825a5d2d60db92fa7fed4255122ccf68f7bbc764afc
+  name:   Apples and Dolls (NTSC)
+  title:  Apples and Dolls
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5f4d4bf23aa6b36b8c9c4d6cb078edd64f0ba8f636f4b9de79b1fb9428061d06
+  name:   Aquatak (PAL)
+  title:  Aquatak
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 24f25d84fb0ac37a1d142c3c8c20cf27ede4a6341fb91ec50673ee39de6d54db
+  name:   Aquaventure (NTSC)
+  title:  Aquaventure
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3e03d3cc8a100ef737415ee602cca7f6a4ae58ff72861104d43e6439f84df478
+  name:   Aquaventure (prototype) (NTSC)
+  title:  Aquaventure (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: df62a4a4f8a61fb4339be0c29b88201266c4dd473f00d92f61f6eca1fca05647
+  name:   Armor Ambush (NTSC)
+  title:  Armor Ambush
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b7a7a309eb2cf91c958c65d07bce613783c71471720b9d8d27d85c8906c36133
+  name:   Armor Ambush (PAL)
+  title:  Armor Ambush
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 748d9f8c8142e1ddd5fa16fe8f720755d7f5fc3a3c7fec14afa4610645c98a4f
+  name:   Artillery Duel (NTSC)
+  title:  Artillery Duel
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 9dbae9a0d4403e2899ff01f1656e98b955fcbf9a140583ef5f84a2ecc0905d19
+  name:   Artillery Duel (PAL)
+  title:  Artillery Duel
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: d32ca4dd9e849af7b776bc73bf464468839ddab66d7e6efacf877fe6eb841dc2
+  name:   Assault (NTSC)
+  title:  Assault
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4da0b8cdafcd2d66c498732de57c84912217f43ad0e3dc145039ef64bd7c7ec8
+  name:   Asteroid Fire (PAL)
+  title:  Asteroid Fire
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d1a6e808412b4535c7e54fc25414943a9418b1095b4d4969dc33290f7eaa72a4
+  name:   Asteroids (NTSC)
+  title:  Asteroids
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 5ba6f91851b2331a37a3fe6a950c9b464fd764cb035a3d25d4b4388e9b26768f
+  name:   Asteroids (older?) (NTSC)
+  title:  Asteroids (older?)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 4d422819bc55b97dcccac6be38d0e66f9a8b59117ccac8220a11dea64da74107
+  name:   Asteroids (PAL, older)
+  title:  Asteroids
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 6d525a63c79533bfeea1114ba9b595f76aac29c7f178a3573e24270d272dc2a4
+  name:   Astroblast (NTSC)
+  title:  Astroblast
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: da7bee06aabd03ebed2f41f7159cc3a45edd9eb1a1c38c87c4022825f962fa68
+  name:   Astroblast (PAL)
+  title:  Astroblast
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: bf4706dd1a3b2c8dab2a0cf14ae67c9084ded61b38ba337c5263c58eea3ed7da
+  name:   Astrowar (PAL)
+  title:  Astrowar
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 141adf0b7c8916ab616eecbc14ef05333382eb236fa061926ecaea344f1eae98
+  name:   Atari Video Cube (NTSC)
+  title:  Atari Video Cube
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: cef4b7b91ea245f7827604a1c620a5ca7f94288c2c6b54d90a931de8eeb5227d
+  name:   Atlantis (Imagic) (NTSC)
+  title:  Atlantis (Imagic)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 065d4a8a838637acdbe61c7dfa90a0cd86fde42ef1cad3d92f8de0be1863f685
+  name:   Atlantis (PAL) (Imagic)
+  title:  Atlantis (Imagic)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 40d430eddfd294e56fc8ddd4956509244b2902cd14edf23ec0064f9ed5bd73c1
+  name:   Atlantis II (NTSC)
+  title:  Atlantis II
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a7ebf66b28ced0262179a69ff06513efe7626a146ed4adf1121dd7c56e77252b
+  name:   Bachelor Party (NTSC)
+  title:  Bachelor Party
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 17ac61b9ccb8e53c3bd114034977d5e7e6edf0e0f39e3d2981a702f3a00c4b3c
+  name:   Bachelorette Party (NTSC)
+  title:  Bachelorette Party
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2abc8727fe44481528167291d85504c601241fdaa18f7f8038980fc55cce0ed3
+  name:   Backgammon (NTSC)
+  title:  Backgammon
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a22e5b8fc0a9c64635f87d984c9552a3f73c0aedb7c0c4c3023839b3238ad635
+  name:   Backgammon (PAL)
+  title:  Backgammon
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c32daffdb926afaa0b11948c85b0b059e26d29af5f9ce213c439727ccf3f3a8f
+  name:   Bank Heist (NTSC)
+  title:  Bank Heist
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 71e5d5abd3f285fa2b0a8a8caac792ecc2f7afbc99f20173c04d34ead2bbcb35
+  name:   Barnstorming (CCE) (NTSC)
+  title:  Barnstorming (CCE)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d03aab997edd6ea7583638fae469250a5c9ed8edbfb337e8963ead51357e524c
+  name:   Barnstorming (NTSC)
+  title:  Barnstorming
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fa58a0ffd5d5fd49f7dbbc2effb18f0953d82d4f3b87e1593f87ab4d1ae0c8f8
+  name:   Barnstorming (PAL)
+  title:  Barnstorming
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c1b72d0c1f083aea57c7a5f3fcaf5b7cf3af9b5c834555eeb2f072a0a51b875b
+  name:   Base Attack (PAL)
+  title:  Base Attack
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3f69ffbb400fd703458b50c74086372d52de7242d2052a846deff2faa539b81c
+  name:   Baseball (PAL)
+  title:  Baseball
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2b2a5c6c44254d1b33434970a06ff73e0f7c09ec585c172a8b46772c02381538
+  name:   BASIC Programming (NTSC)
+  title:  BASIC Programming
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 80132c97c5cf821d3e0db7b275c032dcdae2519af8e67bae7ee1af46c10fdde4
+  name:   BASIC Programming (PAL)
+  title:  BASIC Programming
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f76b59f6c9c41b9a38ae5b1f2eebbef46991c2487811ebcb72ae892fd2bfa4ae
+  name:   Basketball (PAL)
+  title:  Basketball
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: efd6f639e724a771a8331d7f408609d0dc0854533b3163b602720754267943ee
+  name:   Battlezone (NTSC)
+  title:  Battlezone
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 56e4e4b4826df137442419af051d101385e2f06190e663638288ef4393d0596c
+  name:   Battlezone (PAL)
+  title:  Battlezone
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 6cdfb1bd4697c9f9c269daceb0779489c32dbc71b048865fc8cab694ef95872c
+  name:   Battlezone (prototype 19830502) (NTSC)
+  title:  Battlezone (prototype 19830502)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 4058a89b7d24de6eb41146667e50c5fa99d2b06e3950e5876925b7e3a6a473cd
+  name:   Battlezone (prototype 19830512) (NTSC)
+  title:  Battlezone (prototype 19830512)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: cc97546ab0168ef40c7b7a3a3e750fdbc3cadd338bc7478ad76e8e001f6231a2
+  name:   Beamrider (1984) (Digivision)
+  title:  Beamrider (1984) (Digivision)
+  region: NTSC
+  board:  UASW
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 83b30cb52649ddf7a5dd6c3336722421aa435e81e0f85913a1011d81e4e6bb38
+  name:   Beamrider (NTSC)
+  title:  Beamrider
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 28855147a341e46a21db56c7da5bc2c5e7d5d42ace43d292aac2d846eab54f39
+  name:   Beamrider (PAL)
+  title:  Beamrider
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: c1bd22c6b84c59a00af425a35f43a65f5e64f0fa401bdf277db4106d35170763
+  name:   Beany Bopper (20th Century Fox) (NTSC)
+  title:  Beany Bopper (20th Century Fox)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ff32237e53d3872d1d8410fcb44e9ab38a47276aef146c86a0e922461256a48b
+  name:   Beany Bopper (CCE) (NTSC)
+  title:  Beany Bopper (CCE)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8408af60edca2a2322999b932144436f857b7bc8438476296bbf632319508e50
+  name:   Beat'Em and Eat'Em (Dynacom) (NTSC)
+  title:  Beat'Em and Eat'Em (Dynacom)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0b38e3f9b10c53f24e384bc2d209a6e8d49919d2afe21eec3e08f8d6f848144c
+  name:   Beat'Em and Eat'Em (Mystique) (NTSC)
+  title:  Beat'Em and Eat'Em (Mystique)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f5bbb20f84a37da2c9e5cde0ff56621d7d902fc640b0e09dfe01b7f1957bbe4b
+  name:   Beat'Em and Eat'Em (PAL) (Mystique)
+  title:  Beat'Em and Eat'Em (Mystique)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6161ac39cddfe7773c553f1b7a5925b703025ebe6ac18e934b8eb94465ed4548
+  name:   Berenstain Bears (NTSC)
+  title:  Berenstain Bears
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 32f8b5f56ef327d99d27fa3dbbaa917ae13d8d858828a11f2654a4e7ca7dac30
+  name:   Bermuda Triangle (NTSC)
+  title:  Bermuda Triangle
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c4c216eed562344944025aaf67ddcdc73b14c450ecafd6b8b8813a94824dc79a
+  name:   Bermuda Triangle (PAL)
+  title:  Bermuda Triangle
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 86353e9f900f590105ad0e21a1d6f96cacc00702dff37f65c1ce68a6fbfb7ee6
+  name:   Berzerk (CCE) (NTSC)
+  title:  Berzerk (CCE)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: cdff0422329de6bdf4ab59176e050fd3fa47d329bc0f065768c4d268838a5fd2
+  name:   Berzerk (NTSC)
+  title:  Berzerk
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 188df78a4b02b04a217f3b2d641c3c2d58d1304282537985319c0dc1a55106a1
+  name:   Berzerk (PAL)
+  title:  Berzerk
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 73a273997549d3fffde5170e52fcff35496dfdbd76bbc28fcabfea73bd83490a
+  name:   Big Bird's Egg Catch (NTSC)
+  title:  Big Bird's Egg Catch
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: cd726a917c5197d47c4bb8311c490380cc6827d11677682c2a7752d4c59fccc3
+  name:   Big Bird's Egg Catch (PAL)
+  title:  Big Bird's Egg Catch
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 9a3a9646b2643378e7f83697b0b2d8026ead0925722b55e9c7b33f92e2b7ba67
+  name:   Big Bird's Egg Catch (prototype 19821208) (NTSC)
+  title:  Big Bird's Egg Catch (prototype 19821208)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 9435e8ee443af9a2afc2eb4e929719fc65bc69a5f3cf6648909e73383a5f1abd
+  name:   Big Bird's Egg Catch (prototype 19830502) (NTSC)
+  title:  Big Bird's Egg Catch (prototype 19830502)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 578ffb147c2a56b450133a4035b3c60aae4e4bacf5deacc3fadc826b70678f80
+  name:   Big Bird's Egg Catch (prototype 19830517) (NTSC)
+  title:  Big Bird's Egg Catch (prototype 19830517)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: cc2761a74d6a988c9c09818053ab9d5abe9910077b4e7e7cdd68e6fe576d0b78
+  name:   Bionic Breakthrough (prototype 1984xxxx) (NTSC)
+  title:  Bionic Breakthrough (prototype 1984xxxx)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3ff8f02ef0e6051533e015ce4a2d62cdbdf7d0277ab814f446aa6b90a0b623dc
+  name:   Black Hole (PAL)
+  title:  Black Hole
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d0a82e24ab26a7e8d71ac07fdae615ec8824cf0dda6f1a6eaee092543c78a4a2
+  name:   Blackjack (PAL)
+  title:  Blackjack
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 8333eb40ab694f123f4d3335df8fdde4ea0aa1cf2b35ad89a1aa526ec1ae5163
+  name:   Blackjack - Black Jack (NTSC)
+  title:  Blackjack - Black Jack
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 648937914a57b1f5288d8f5d8c4ef26fbb8e42c7168f7f0179854f2a7a6a3b9c
+  name:   Bloody Human Freeway (prototype) (NTSC)
+  title:  Bloody Human Freeway (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: f3788950dfb236ad06525ebd5a8b9884fb5edc3c73ab7e0a99b9b082bae90a95
+  name:   Blueprint (NTSC)
+  title:  Blueprint
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 24b4bbfbfdb065aad98ef4f06b7d762530460eb00529da494e3a0f2b1859fc4c
+  name:   Blueprint (PAL)
+  title:  Blueprint
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: b2647d5894130bef25672b5fda311b8dbe920adcc78b521db2a9c269128f76d7
+  name:   Blueprint (prototype) (NTSC)
+  title:  Blueprint (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: b6150f76d4a5e722a5dc5d368bc26b842cb00754514f7b896ec264360c58216a
+  name:   BMX Air Master (Atari) (NTSC)
+  title:  BMX Air Master (Atari)
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 0df5fa56c2a93608fe705a780f7203b19db4a04e3e562b10e0f196767d1cd643
+  name:   BMX Air Master (PAL) (Atari)
+  title:  BMX Air Master (Atari)
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 74fd272233defef6c9b20ed2321f72530f0251a87ba1cee5ecbf08c56bc214bf
+  name:   BMX Air Master (PAL) (TNT Games)
+  title:  BMX Air Master (TNT Games)
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: a968bc445705f3791d102c482161cf703a793c895067e617c7a9d1abcc2562b1
+  name:   Bobby Is Going Home - Bobby geht Heim (PAL)
+  title:  Bobby Is Going Home - Bobby geht Heim
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ca3feb61073ba71f372bcdd088ce988273fa34b8609c1097009c4bedde8f9832
+  name:   Bobby Is Going Home - Bobby geht Heim (PAL)
+  title:  Bobby Is Going Home - Bobby geht Heim
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4886d95392fb2146c220b02fbfc7f6530cf8e38244e15b6f494573136ebe562c
+  name:   Bobby Is Going Home - Bobby geht Heim Demo (PAL)
+  title:  Bobby Is Going Home - Bobby geht Heim Demo
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 689c696a5ca22010a2762f195bcd9d3d2bcda9c27c8f1ad1ae1240f392f57c14
+  name:   Bobby Is Going Home - Bobby Vai Para Casa (CCE) (NTSC)
+  title:  Bobby Is Going Home - Bobby Vai Para Casa (CCE)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 36290b861cdf19befa994ffa0c33a30be3bb8d1ce6cd63dbbd5d63cfd52b39fc
+  name:   Bobby Is Going Home - Bobby Vai Para Casa (PAL) (CCE)
+  title:  Bobby Is Going Home - Bobby Vai Para Casa (CCE)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fa96401005d79911c48c798f09fd3b3b5950b92d262642879cc1595349dadcb7
+  name:   Boggle (prototype 19780807) (NTSC)
+  title:  Boggle (prototype 19780807)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 53f0b9f5ebfe0790460eb87b83f86285d4490a041f9b2636ea6a04370a5cc10f
+  name:   Boing! (NTSC)
+  title:  Boing!
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0e0925f396d5d01c91fdda1454e12b3bfc3ab18d463ea9ae7b5092e7465fade4
+  name:   Boing! (PAL)
+  title:  Boing!
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e3d921831bc70f586ccb9c2747bdaab35e3c00831aa0f5b3424e92de974652d4
+  name:   Boom Bang (PAL) (Suntek)
+  title:  Boom Bang (Suntek)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4b02699df4c2f94a7bb7165d6b634406c1aea5fbe710e653c08c271ec48bd872
+  name:   Bouncin' Baby Bunnies (prototype) (NTSC)
+  title:  Bouncin' Baby Bunnies (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: dff44a85289f5e9f760254e4806d09038326cdfc42eba3e1cd7c64ed6e0b4dce
+  name:   Bowling (NTSC)
+  title:  Bowling
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 0e6cf7b2bfe854100353687c89ad97cda86ebb2d10d0d004c77b454825755de2
+  name:   Bowling (PAL)
+  title:  Bowling
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: cee660465ac3a34c8b505c17ead6024f190aaa2b1e7ae178e6157ce6c749d639
+  name:   Boxen (PAL)
+  title:  Boxen
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: e30c045e2bc18de761482eab0427e27a8b69ab9a5dc7ceab6ba550a693f89cab
+  name:   Boxing - Box-Champion (PAL)
+  title:  Boxing - Box-Champion
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 462ab7dae012a175763c4ce88ac7a20d23e8fb68b7125e97c474e0696ed40d95
+  name:   Boxing - La Boxe (NTSC)
+  title:  Boxing - La Boxe
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 7265a736d0bf337224897a2f6340d1d9c91d96254bde77ce2474a7d196be357a
+  name:   Brain Games (NTSC)
+  title:  Brain Games
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 609684fcd92b3a588dc8cc015fcd828deb5218e945b30fa815ad17567965ae65
+  name:   Brain Games (PAL)
+  title:  Brain Games
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 83d44a7c088999ff16356a9949ef954de0116ec82ddd6c09c4de01902fdcea00
+  name:   Breakout (PAL)
+  title:  Breakout
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 376323f051c3c373c887fd83abead39d87d844ff283d435f4addbfc1710c6fd5
+  name:   Breakout - Breakaway IV (NTSC)
+  title:  Breakout - Breakaway IV
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 289d9d3f3c6fa753d7cb1e54c0f0dce613344a983ba74289dddf794c74782ac4
+  name:   Bridge (fixed?) (NTSC)
+  title:  Bridge (fixed?)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 530296fcfac9a2b8f206120fd6484e8051c93b67dfa4a33bf09a1b5d664206fb
+  name:   Bridge (NTSC)
+  title:  Bridge
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 31ca728156cd6805e44e808d25a349fef2cb07b9727131049a7140220d064354
+  name:   Buck Rogers - Planet of Zoom (NTSC)
+  title:  Buck Rogers - Planet of Zoom
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: ef8b79dd7565b208e513c12c63a9c526c8604c4eabfabafdee9b51e89141dee3
+  name:   Buck Rogers - Planet of Zoom (PAL)
+  title:  Buck Rogers - Planet of Zoom
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: b399b5292f084ff89dbae6acc8f1e1a6125c59fa66f8815ad8861868d2a13e4a
+  name:   Bugs (NTSC)
+  title:  Bugs
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 19ecb78fc6d6f832872c6727330837c3e4860ced138832a6cd6d00d8aa0d2548
+  name:   Bugs (PAL)
+  title:  Bugs
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 17e3d5e15a34f82e655b64bec37086470ab6ec1d829fb5a6bb2f36e683885312
+  name:   Bugs Bunny (prototype 19830804) (NTSC)
+  title:  Bugs Bunny (prototype 19830804)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 935c3814987b520e887aeef2f484d7fb43b9d6bc9c9b9bdc988a8a19e9f4d0ba
+  name:   Bugs Bunny (prototype 1983xxxx) (NTSC)
+  title:  Bugs Bunny (prototype 1983xxxx)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: bc16d9049043e18ed49f197519909fd1a870843beef005b5505d01f543d8e2bb
+  name:   Bump 'n' Jump (PAL)
+  title:  Bump 'n' Jump
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: d1f607705fba63fd7331cc1706119f71fb0fe2604805b73a3150db0e610f2d70
+  name:   Bumper Bash (NTSC)
+  title:  Bumper Bash
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8261c2bbe11074a60c8bdfe9143813cae4ead1da31bddfce5bce619b3bce57ee
+  name:   BurgerTime (NTSC)
+  title:  BurgerTime
+  region: NTSC
+  board:  MNetwork
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 1117bde396b73d68818aee96a70fe9234629da876dba7cc2bbfa74761ed51583
+  name:   Burning Desire (NTSC)
+  title:  Burning Desire
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: bb9917d7a4b7b71cd2befaa5ca0f18125efc7eaf5b4fec940db815faee0777bf
+  name:   Burning Desire (PAL)
+  title:  Burning Desire
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b36020d1ddb16c80b20129d5d17a24d9679197f04c8dd1f7075ac60509aa065d
+  name:   Cabbage Patch Kids - Adventures in the Park (prototype 19840913) (NTSC)
+  title:  Cabbage Patch Kids - Adventures in the Park (prototype 19840913)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3cca55ac63ab80a8b30f12c66608cd773aa04dbef3fd5f977dfc6a080ed7a015
+  name:   Cakewalk (NTSC)
+  title:  Cakewalk
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 88a5b3f70ec451f2a9a4f29f4c8bc49a365255cfa333dbbd72a08fa97bd3a6b8
+  name:   Cakewalk - Alarm in der Backstube (PAL)
+  title:  Cakewalk - Alarm in der Backstube
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f4f9dd3e8dfe78db4faa88b4497011f175a2fa246a4fd6133f6008cb3717c889
+  name:   California Games (NTSC)
+  title:  California Games
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 4190fef91c62fa02e19f79b6f224820e5b05a29a1c71a3a04d8e019ce5cdf2ae
+  name:   California Games (PAL)
+  title:  California Games
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 4b373f33bae6fe75f2dcd0d98db0ff805f4e3a72e1258b7430bc1dea253ea593
+  name:   Canyon Bomber (NTSC)
+  title:  Canyon Bomber
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 756df7e4be683e43aff14edc348584dcfbe93e029dc78e833deb8d745f8c3c4f
+  name:   Care Bears (prototype) (NTSC)
+  title:  Care Bears (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 80eab759b6bd4fb59e98d4db1295ad89b128a97d2e20ccb212c744ae642c2f76
+  name:   Carnival (NTSC)
+  title:  Carnival
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6c95e3edac2bf4ad3852579596213eee14963ad0eef999d6f040c6ea5bf310ee
+  name:   Carnival (PAL)
+  title:  Carnival
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3510d76382b1c44d7d8fdcdcfe44dcabc9f700d39d5c6e74580ae23b47df483a
+  name:   Casino (PAL)
+  title:  Casino
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 66f671f9bf2df3c970633f8bb59fcccc7d37d1b76febbfeb52ca158fdfb3351d
+  name:   Casino - Poker Plus (NTSC)
+  title:  Casino - Poker Plus
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c9369d02ba1461852caf9924b07127bb9836aaf5f0ef6f9629358258f290b4c8
+  name:   Cat Trax (prototype) (NTSC)
+  title:  Cat Trax (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fdbc69d4a8f7e9d9a52f549a6441049a66f44cddcd17c4e2a32cd97e0f3d7e94
+  name:   Cathouse Blues (NTSC)
+  title:  Cathouse Blues
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6def669f54bd886f43026e7fc7f82b9acb92680bb3e3aa68da3767f8797c8cbe
+  name:   Centipede (NTSC)
+  title:  Centipede
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 759c0008f742c2d25313e5fdda66bbb4f7a546078b6447b112400687c3b00a5e
+  name:   Centipede (PAL)
+  title:  Centipede
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 4409fc329d1e2d2360919cbaae6616a5ba52db25d3ee2ef40d559c07cc9fc632
+  name:   Centipede (PAL) (prototype)
+  title:  Centipede (prototype)
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: ac6c235194f204f44fdbac0925b773a5b86a6842b0b2e0f836062a566e75fdfb
+  name:   Challenge (Zellers) (NTSC)
+  title:  Challenge (Zellers)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 78f0dee6e9bc6796fc9cd39bff1898083b7b10de32ae7fb927a381e373617f7c
+  name:   Championship Soccer (PAL)
+  title:  Championship Soccer
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6b558304ab8438572214a990d1ada3dd0a4ef13dd820511783cca5277571f985
+  name:   Championship Soccer - Soccer (NTSC)
+  title:  Championship Soccer - Soccer
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 64d924a5b5c52924d4cd2aa4c6bc86242d99f7ad4147778c78cd680dbaac167d
+  name:   Chase the Chuckwagon (NTSC)
+  title:  Chase the Chuckwagon
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 140615d6873181e3a9f23338c623b62ee7f8a0c9da78766f7444b846c44201cf
+  name:   Checkers (NTSC)
+  title:  Checkers
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: e0a22d78b3bad4cffa2461bf41b54897a4a197ae3ca215437733dc8ecf197e1c
+  name:   China Syndrome (NTSC)
+  title:  China Syndrome
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7d4bee6b008e272d1a57fa6a0c024dc86b01050dddd3cfddd7ebe08acd54d9a9
+  name:   China Syndrome (PAL)
+  title:  China Syndrome
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 055637282252b5378a2b7df573726e85afa91264ffb7243d23fab9518b3c207d
+  name:   Chopper Command (NTSC)
+  title:  Chopper Command
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 208edcd63f25bfa507d6760c9c3601849e194d7cad525ce459cd168f4b5f0f47
+  name:   Chopper Command - Captain Helicopter (PAL)
+  title:  Chopper Command - Captain Helicopter
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7221f484469c1126ee8800f0a0d5c7cad2cc4c5a509786ca8709e5c22420bb9f
+  name:   Chuck Norris Superkicks (NTSC)
+  title:  Chuck Norris Superkicks
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 2301c25d5f317e5ca24ac1338462c9bef4779e2ff64df91981e39cf2538098d4
+  name:   Circus Atari (PAL)
+  title:  Circus Atari
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: cc1e51048e1cec1c196e823c66435543c7c442272679b0dcc4ea26aae1a6dc9e
+  name:   Circus Atari - Circus (NTSC)
+  title:  Circus Atari - Circus
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5ff7811b67d962714501e789830b643a131144dd3513e9d8b2617c5d2e8b8111
+  name:   Coco Nuts (NTSC)
+  title:  Coco Nuts
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c64c19446d5885d9493c7b214ffa133d339458dab5e92394c17786a4944fa4a1
+  name:   Codebreaker (PAL)
+  title:  Codebreaker
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 9e76b7066338aae57a0d2ddd4c383cb3149fa8af6dcf474c9dccb9b5030d58cc
+  name:   Codebreaker - Code Breaker (NTSC)
+  title:  Codebreaker - Code Breaker
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 7d05370d92fd15f7a1ea0233b33b03e304390dbebdd8b5e6e36d1dd522bf5d56
+  name:   Color Bar Generator (NTSC)
+  title:  Color Bar Generator
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: cef5f8c36e1fc99061d44fca53361a4e5269bf011420ded3d23e83cc8aec28e1
+  name:   Colors (PAL) (prototype)
+  title:  Colors (prototype)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: b02b038597ca7598112312bd5d68690c1a235c3258795208ad7495fc181a83dc
+  name:   Combat (PAL)
+  title:  Combat
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 509e845d17bb192ba7587cc977411bd43b8ee31385eeefc3fef8c16e249f4820
+  name:   Combat - Tank-Plus (NTSC)
+  title:  Combat - Tank-Plus
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 2f06583d9d91924fa475b5ed5ce827146e52ea5d4d05a13128c30eaa309074ca
+  name:   Combat Two (prototype) (NTSC)
+  title:  Combat Two (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 06a2173830c6ed4d384d1dc493db1a2f121e1fa5b263f8db4940bfb6fb61faea
+  name:   Commando (NTSC)
+  title:  Commando
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 2435890b9d9034f7079382ffe1c429e5901e5d3b7acb52459565c0c4d85ab062
+  name:   Commando (PAL)
+  title:  Commando
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: e072554c7b6843a94b47a2d880dc7ff6a26964fdeaf7aa7e452510957ec2b763
+  name:   Commando Raid (NTSC)
+  title:  Commando Raid
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 417a1345a9d3094ec7fc4c5eb03ef6fec5fe6fbcece32b7bed1e3f1d7e43d6f6
+  name:   Computer Chess (prototype 19780707) (NTSC)
+  title:  Computer Chess (prototype 19780707)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fabdbcbada37f60142d3f9d3c5df40ca0b3a3c2137c72cc1ab9b440a922a7f9c
+  name:   Condor Attack (NTSC)
+  title:  Condor Attack
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1f9402d77d0393e031ffe63570bc9bc358bbecafbd041acd45ca3621223ff797
+  name:   Confrontation (prototype) (NTSC)
+  title:  Confrontation (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: dfbfe77cec6b876c9f8f995123ce1e35bdfd7499487c805f10cf85b496a555d0
+  name:   Congo Bongo (NTSC)
+  title:  Congo Bongo
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 5d10cd2b7e5f536e572f65c1b290095bbfa1b0480f5c9031d145099196f505a2
+  name:   Cookie Monster Munch (NTSC)
+  title:  Cookie Monster Munch
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 11d050edc88f7d541c401533652f21608a9562578a1ed43328f2e9f2549847bc
+  name:   Cosmic Ark (Imagic) (NTSC)
+  title:  Cosmic Ark (Imagic)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ba90fe141393aed24f28881100da72073a476e82af5c97acae88379c6e8d3db6
+  name:   Cosmic Ark (Imagic, Selectable Starfield) (NTSC)
+  title:  Cosmic Ark (Imagic, Selectable Starfield)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: cc9c909a6f50e4fb639b937b246ac986e887e8cb4c612a9c63b658b9f729bd12
+  name:   Cosmic Commuter (NTSC)
+  title:  Cosmic Commuter
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6469775e167cc9df6e902ecafc17f366a83bc38495220b1926533d0076fc60ed
+  name:   Cosmic Creeps (NTSC)
+  title:  Cosmic Creeps
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d2bab9a424280b53a34de5b4325874ddc4cec4d29a1f07399300d414560ad2d2
+  name:   Cosmic Swarm (NTSC)
+  title:  Cosmic Swarm
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: bb56a729563e5d6c9d7a134c8fab1c64e7ff6842fca031c1132e6dbf17d342eb
+  name:   Crack'ed (prototype 19881128) (NTSC)
+  title:  Crack'ed (prototype 19881128)
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: df9fc6dbc9e004d505f945d7167eb08c43ca747cb5559e450302f1914ae527e5
+  name:   Crackpots (PAL)
+  title:  Crackpots
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1effca7e27efca791a0d2265c5051c7c5ed4728cb0406292d9df03775b0eafc9
+  name:   Crash Dive (NTSC)
+  title:  Crash Dive
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 486ad4cc89569d797dc5feff6e95d1d5f5f8e78331a4925ef3126bd2aa1bcf09
+  name:   Crazy Climber (NTSC)
+  title:  Crazy Climber
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: ac7eabd1dd40af955a7c6f17cb91ed7f77b188ce44b2925a6bb1a19ae84a8e41
+  name:   Criminal Persuit (PAL)
+  title:  Criminal Persuit
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 35508b1e0367596f395316f6e7295d53e4edab229806c8182c1935e125a06996
+  name:   Cross Force (NTSC)
+  title:  Cross Force
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: da6d809f2b0600134b561bc8f7e0f379fef88c924a7ab667442e7e234d388be7
+  name:   Cross Force - Kreuzfeuer (PAL)
+  title:  Cross Force - Kreuzfeuer
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c9213e2af893dfc58ef99eb9b82dfbdd4c1cdcf81065db46ab83089a6dbb8683
+  name:   Crossbow (NTSC)
+  title:  Crossbow
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 88a4fe906973cbbbfe5bc0bcd4acb889188a3fc6cc5cf89607dae44b9f343c3f
+  name:   Cruise Missile (NTSC)
+  title:  Cruise Missile
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c3e6c0171017a78d25f8f6752a621c603e8808780717c094594207ed2eb4fef5
+  name:   Crypts of Chaos (NTSC)
+  title:  Crypts of Chaos
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 87c2d9f621a734031ebdb7ec5886c4d3f8e038525354c057573aee662a19eefa
+  name:   Crystal Castles (NTSC)
+  title:  Crystal Castles
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 288e3d6be6e66932ca469f7d68bfbb6b69228954cdf21a663fabe9366ba957bd
+  name:   Crystal Castles (PAL)
+  title:  Crystal Castles
+  region: PAL
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 1fecc9eb6b58642b7f2e34e12c75f4dbf5c47041c93be098372237f9216df5bb
+  name:   Cubicolor (prototype) (NTSC)
+  title:  Cubicolor (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a0b00221c5c9e292b940e01af91f448c30881162beab329b53cccc4c24b77a85
+  name:   Custer's Revenge (NTSC)
+  title:  Custer's Revenge
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ef3f230ad3d48d8b0770b946a5c70162c01338c055e30bdeca681a488f0b73c1
+  name:   Dancing Plate (PAL) (Puzzy)
+  title:  Dancing Plate (Puzzy)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 632a4bc7d7ee3375f41cb4f0acdcf13f89cf302ca1f8053cc18385cec7195c01
+  name:   Dark Cavern (NTSC)
+  title:  Dark Cavern
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 40888877f273b7d6781f2dd6e019fa2e5b811a4adea2ae281a04b36b9e5657a4
+  name:   Dark Chambers (NTSC)
+  title:  Dark Chambers
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 640e29f56f44ef1bdd742f73a17f9696b7fe8e3baa8342c8b6f0e843ddaa866e
+  name:   Deadly Duck (NTSC)
+  title:  Deadly Duck
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6a76fe0bdd7d7e1ed284c381c6728c022d6d9abe91f463c2ce54443feb246483
+  name:   Death Trap (NTSC)
+  title:  Death Trap
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e3c7ed7a073fe8f4b2711bebd624d0b249957daa0ebb93d78823fe36b235ba8c
+  name:   Defender (NTSC)
+  title:  Defender
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 50cd2155396cb088cada4cc881df8dc50e1fbb5c091acf156733e4b1bb7c58a4
+  name:   Defender (PAL)
+  title:  Defender
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d5b9351be7d430a5b9d3111b29f6cea531e10811e9b3e494f2716c7c8337d2cd
+  name:   Defender II (NTSC)
+  title:  Defender II
+  region: NTSC
+  board:  Atari8kSC
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 964f66d95ab37afe86633dd02f3888eb7fc8277dd151522c849efc8ee0371a9c
+  name:   Demolition Herby (NTSC)
+  title:  Demolition Herby
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a181c5368dd648973b1f270999edaa6cb7ef80eaeb442ce72b4a9232a6eee301
+  name:   Demon Attack (fixed?) (NTSC)
+  title:  Demon Attack (fixed?)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f9902b6dcc560e84aff3209094037c4bf80b5f58687fa1f5f584f8eb7cefd5e2
+  name:   Demons to Diamonds (NTSC)
+  title:  Demons to Diamonds
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ffe9e4120bf0dc71219048b5b3d4ec13a18295758067d819b433db091e65afa8
+  name:   Depth Charge (prototype) (NTSC)
+  title:  Depth Charge (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8f2e6ec54d1e0f02a1a8ef1f63bf80372020de54ae6d9ce8903e27a911d8ade8
+  name:   Der kleine Baer (PAL)
+  title:  Der kleine Baer
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c0c89b8f8900ffacbaf1941317602f3e2f533716597f51cd62e1ab18b49b6a1b
+  name:   Der moderne Ritter - Mr. T (PAL)
+  title:  Der moderne Ritter - Mr. T
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e244b45f2ebe5bf424d7444ed99fdeed3c8454b587b097e02ed8a26019bdba52
+  name:   Desert Falcon (NTSC)
+  title:  Desert Falcon
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: b8dfa4a273f675d52a30252aa7732ca85115fe97d99e44accd2372920ef4cb41
+  name:   Dice Puzzle (NTSC)
+  title:  Dice Puzzle
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 864ee1d87a5df4ee416affc3d19cc235a428b16b30d98dce06761a3c009df176
+  name:   Dice Puzzle (PAL)
+  title:  Dice Puzzle
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 004ec2d356f44dca69082788517dce3fcdb44558d9b6bcf351c6ed7385f9ddc2
+  name:   Die Ente und der Wolf (PAL)
+  title:  Die Ente und der Wolf
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6bc4a9cac205650447a461c5d0bcc99d9baf93edf0d745dd75e147963bcaaaf3
+  name:   Dig Dug (NTSC)
+  title:  Dig Dug
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 139dbb5b9667fcaf3a19afa85257454ba9f68ed74b1c05f01a3549a422241c1a
+  name:   Dishaster (NTSC)
+  title:  Dishaster
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c57d60b6bb9ae207524201294507a19b2ecfb3f85915fd2e0e5184e87a419681
+  name:   Dodge 'Em (PAL, Earlier)
+  title:  Dodge 'Em
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 70ec380e2ce9dce93cdaa3eb7aa1415edb79f9f6a31b1540f1d670e3386404eb
+  name:   Dodge 'Em (PAL, Later)
+  title:  Dodge 'Em
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f8346a6cab02d88fcffa92a5aa96a77ab0aa25b559a1c21095041032e9e69f37
+  name:   Dodge 'Em - Dodger Cars (fixed?) (NTSC)
+  title:  Dodge 'Em - Dodger Cars (fixed?)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4a1c97d3b3aa2150ae61488ab0d27df747a04bd7454c4a0ba45f593bd9369cde
+  name:   Dolphin (NTSC)
+  title:  Dolphin
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c9e3217ed0ba5053ffdca1cbccfbf92b9d6d719c20577b429bf3380254f15d86
+  name:   Donald Duck's Speedboat (prototype 19830412) (NTSC)
+  title:  Donald Duck's Speedboat (prototype 19830412)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 538e271407e649e18634d30d136b452ccbf6741fa800e7af8d46d4bdd57aead1
+  name:   Donkey Kong (NTSC)
+  title:  Donkey Kong
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3c6f3b5f0d0a5707de1a263a44d6edb49d91fef352fd863e2a9818f427d129bd
+  name:   Donkey Kong Junior (NTSC)
+  title:  Donkey Kong Junior
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: b10eba4e6710d58532b0e35ea28b733a8a154496acfc49c86566d224a893e66b
+  name:   Donkey Kong Junior (PAL)
+  title:  Donkey Kong Junior
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 9fcacba921c1bcbefeaf272448a24e634f936027edbc2ebf5ea7e35defe0ad0d
+  name:   Double Dragon (NTSC)
+  title:  Double Dragon
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: c0ea53a91a396638662e2d37261407d6bc9d1b1f660e3101b2098d7ef2bc3190
+  name:   Double Dunk (NTSC)
+  title:  Double Dunk
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 60f467685a45e7c9b750edafa6fb49dd066887d0142c91caca9ed07bb9c5abcf
+  name:   Double Dunk (PAL)
+  title:  Double Dunk
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 688022071decab13a08033a71d66cb750af409d7c71f3469eea19947a07bb0a2
+  name:   Dragon Defender (PAL) (Suntek)
+  title:  Dragon Defender (Suntek)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 65b2f8f5597e9f00ee5ab34bfecb5efba386e5322092bd465639687aa10b8031
+  name:   Dragonfire (NTSC)
+  title:  Dragonfire
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fa48295f4b171323363cae75d008713d52cd9d3d296863ca1edcfceec6d54abe
+  name:   Dragster (NTSC)
+  title:  Dragster
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 33c719ba9e42c18005bc616b38999b920535e2b4bc3bd63f12d1ab1cc87b7c03
+  name:   Dragster - Dragster Rennen (PAL)
+  title:  Dragster - Dragster Rennen
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 4c07ba23d94a1392bddd3e2773e483fc546f7a0c4df44996a8bd5181bbc7b7a5
+  name:   Dukes of Hazzard (NTSC)
+  title:  Dukes of Hazzard
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 9db5e037acb2fe93fa16ee674b752967af79b016abb7dd0829d465e57c535904
+  name:   Dumbo's Flying Circus (prototype 19850505) (NTSC)
+  title:  Dumbo's Flying Circus (prototype 19850505)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 5d196314cff50c7a22e7d56769b23fbb47500ba4a3e8b70ff235fc13008c13ef
+  name:   Dune (prototype 19840710) (NTSC)
+  title:  Dune (prototype 19840710)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: e9539483b4f51853888cc5db075eb0155bbb2e6c016a3e6eadd6f19fc1fa0947
+  name:   E.T. - The Extra-Terrestrial (NTSC)
+  title:  E.T. - The Extra-Terrestrial
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: addf6186403581ca2b51054824d4977ea4b3bd7ef22a5074bbf60da21e3da7cc
+  name:   Eggomania (NTSC)
+  title:  Eggomania
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f3b3ad03fd8cf9f348d31c1343580a7a9220d1f06c193165df277e47757a8846
+  name:   Elevator Action (prototype) (NTSC)
+  title:  Elevator Action (prototype)
+  region: NTSC
+  board:  Atari8kSC
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 2432d5ab72aec25af6ae0d3735c11b64721fbdd770e3fd9ebc78bc688e82caa9
+  name:   Elf Adventure (prototype 19830525) (NTSC)
+  title:  Elf Adventure (prototype 19830525)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d1ca837c616124cd58e0353fc6ba381bc164c015da09a8027fad23e1403c1d94
+  name:   Eli's Ladder (NTSC)
+  title:  Eli's Ladder
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e418da9e1f77e0fc53bb0fc1f38c85cc69d44bdfd5d29d6e648089e39a53bd97
+  name:   Elk Attack (prototype) (NTSC)
+  title:  Elk Attack (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: f727e606ef4ba7c6b3672c1dad9e26d013b9d137fbbf1a90c48078945e50cafe
+  name:   Encounter at L-5 (NTSC)
+  title:  Encounter at L-5
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6045c8be78c7d0bec29040022543a8c0b9e3672b50005a94bf0166f0f73be3d9
+  name:   Enduro (NTSC)
+  title:  Enduro
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 80f68e734bf03f20cbeeca7bf779b408c16dfbdde4be7ba181e9ae5e73f1d810
+  name:   Enduro - Transamerika-Rennen (PAL)
+  title:  Enduro - Transamerika-Rennen
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0df632c6ceaab13047770d68c65a7e8375cbaedda12b70574d14ca908bb7210b
+  name:   Entombed (NTSC)
+  title:  Entombed
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 378285177a1ba670ff1de07aafeddcb183eba1bfc0f942e658b4123d7389ae70
+  name:   Espial (NTSC)
+  title:  Espial
+  region: NTSC
+  board:  Tigervision
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 60209eeb0820843cf137106cfe9a8a63cd7d9c127a086f24dca4f42cc818ef71
+  name:   Exocet (PAL)
+  title:  Exocet
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ce811664feabfdd4777e97ef7013987e18ed103bd31271475a95a1c006449047
+  name:   F-14 Tomcat (PAL)
+  title:  F-14 Tomcat
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 47739550719f69693a946f2ea3c858765863c18f2b049277763c0ea5b4aafd2e
+  name:   Fantastic Voyage (NTSC)
+  title:  Fantastic Voyage
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b2a39e6ce1e308e2ce089fe17ce300781260089e111f89e257d03e02f89d9840
+  name:   Fast Eddie (NTSC)
+  title:  Fast Eddie
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5cffef3e621571c96416477fb98279baaaedddcec2339325bda78208e2b8f74e
+  name:   Fast Food (NTSC)
+  title:  Fast Food
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 93a93dc5d85279178b9da237828205195ed4dbb9f74604c976c36adf18c6c79f
+  name:   Fatal Run (PAL)
+  title:  Fatal Run
+  region: PAL
+  board:  Atari32kSC
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: 57dfbfcb1de7cf122fb9d1844ca634c6843e5b1548dda590526e0fabed4809ba
+  name:   Fatal Run (prototype) (NTSC)
+  title:  Fatal Run (prototype)
+  region: NTSC
+  board:  Atari32kSC
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+
+game
+  sha256: b49c113edf576b9bf074c15279a0bf2b17b0e0f29cad43234e0c0701da461294
+  name:   Fathom (NTSC)
+  title:  Fathom
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 0f953f1e53187e99f2f441f1b26b36d3efa16317b329fea15aafa77172fe6052
+  name:   Feuerwehr im Einsatz (PAL)
+  title:  Feuerwehr im Einsatz
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e62b876795480a00cc5a1f176325000606c33901ff31518ca56c224dcac643e5
+  name:   Final Approach (NTSC)
+  title:  Final Approach
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 440e2f9a7f2d565179d88df388c4edfeaf655367807c9ebab625f01b55dfe942
+  name:   Fire Birds (PAL)
+  title:  Fire Birds
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2f4568ac6d3742531f5fe5b7abe753fb15b0c75e34debf72b6e9be5e615f57ad
+  name:   Fire Fighter (NTSC)
+  title:  Fire Fighter
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 651e04c9edfe6f205c0fcf85a68b6e1b705d296309cb157bf802e78c8039b41f
+  name:   Fire Fighter (PAL)
+  title:  Fire Fighter
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0fc0dcccc506de37baf09f78e29af0f984ebdc1e3508f650f2ee377fb5cec623
+  name:   Fire Fly (NTSC)
+  title:  Fire Fly
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 84753bc6ecb4dd9f47cd267f1fb15e16b18f7b2b54fbb4ea8207750009171cc1
+  name:   Fishing Derby (NTSC)
+  title:  Fishing Derby
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 715f5a01788d83a8ae5e5d11959fdbfbf7e94cc156b1a58979a54269b35f3a0b
+  name:   Flag Capture - Capture (NTSC)
+  title:  Flag Capture - Capture
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 82089f56f14c63887dbf02a755e6d84ab71258a46cda7dbae3b67c0b116bd6d3
+  name:   Football (NTSC)
+  title:  Football
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: aa62f98c53218c5c5275dcce01adf8b7c5cd423fada7d0a147a5aa4a9a6f8240
+  name:   Forest (PAL)
+  title:  Forest
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f46537b38a7301691e52514af7adfc2d60e461fe2e86d29fe736e790b0a18461
+  name:   Fox & Goat (PAL)
+  title:  Fox & Goat
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1bebe4cf0e225c069c2858dbf59652abe7a53eac4aeccc1855f4a1af88a12abf
+  name:   Frankenstein's Monster (NTSC)
+  title:  Frankenstein's Monster
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3ef620234b98f22bfd7c06d2467bac9d208e763c9f4309452384d59a741ba893
+  name:   Freeway (NTSC)
+  title:  Freeway
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 6d57096fd343237366afb0a62da37d0fbda4a6e52c276e810f8d31834d99ddc4
+  name:   Freeway - Das verrueckte Huhn (PAL)
+  title:  Freeway - Das verrueckte Huhn
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 8d35141eb18dccdf33da52cda03b7e374042622666efb6c0dc114fca981c83b1
+  name:   Frog Demo (PAL)
+  title:  Frog Demo
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 5291acb8acadc8e5982bbba9ac00fc418c78d74743340232eb0d5a7ef3ad657f
+  name:   Frog Pond (prototype 19820827) (NTSC)
+  title:  Frog Pond (prototype 19820827)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 63e0229b80f871c6fdda8ba389583451cd5cd54be07ca32560edb752280ae04b
+  name:   Frogger (NTSC)
+  title:  Frogger
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7ef94dc64e495a2a7445aea9feb3d8bcc5551650976a03288e9765063043ab46
+  name:   Frogger (PAL)
+  title:  Frogger
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fd4c43d5246fa17a162c0a09d8be88331f8d408e8e86651609d126e5f9ca385e
+  name:   Frogger II - Threeedeep! (NTSC)
+  title:  Frogger II - Threeedeep!
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: f82653b88b9a5634c35560bc6cf236d68df002b1effc4677837dbb485b771a55
+  name:   Frogs and Flies - Frogs 'n' Flies (NTSC)
+  title:  Frogs and Flies - Frogs 'n' Flies
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 62383e6484a3759d81f27fafce42a8b6c6531439665f201ac1847cc908e80cf7
+  name:   Front Line (NTSC)
+  title:  Front Line
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: cbfdad89480def69d922adf16a1d89d55a6cb515929edf74e5bea884c9fb7834
+  name:   Frostbite (NTSC)
+  title:  Frostbite
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 53ac8db49b0d25b406226fb294acf97027e6d258c7696de90883f708fcb8c66b
+  name:   Fun with Numbers (NTSC)
+  title:  Fun with Numbers
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 9254719bc0ef68837d2d01d3d7b0e62750cdc6f426ec7fc1206213a9e2755605
+  name:   Fun with Numbers (PAL)
+  title:  Fun with Numbers
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: e6e6f86f8a9f5b6af74f60048ff9a04afb600e30847a0c47e0c98bda1a77be8a
+  name:   Funky Fish (prototype) (NTSC)
+  title:  Funky Fish (prototype)
+  region: NTSC
+  board:  UA8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 74d04f3f3fb42d4f4c7cf46653e77a29590a1cd1d84cd8d1ae82f61c9143bbdc
+  name:   Fussball (PAL)
+  title:  Fussball
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 85601c749c176542d1d1d6c259aa79bcc8fc3ea295373f16881a35c88dc49151
+  name:   G.I. Joe - Cobra Strike (NTSC)
+  title:  G.I. Joe - Cobra Strike
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 157835de83ddfb0008d96ea50ed2d143cbece4ab1b10cfd5050ab91adf34be47
+  name:   Galaxian (NTSC)
+  title:  Galaxian
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: f048a313a976be3bd84b828ca64240a68d925a09c855b0f4910ea97b64f70354
+  name:   Gamma-Attack (NTSC)
+  title:  Gamma-Attack
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 4e7550f90d20c4773162345a1a88cd8ccb6bd131dc288b8bcb61d42963999d80
+  name:   Gangster Alley (NTSC)
+  title:  Gangster Alley
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d20c76d734804b24c712474ca4fe7e651f350662f5c72254ef660b7ecf82ee5e
+  name:   Gangster Alley - Gangster Ruine (PAL)
+  title:  Gangster Alley - Gangster Ruine
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f34256ede657dedbb060bc22ce48931c42b5cebe3ebdfa489b7afa71780334ec
+  name:   Garfield (prototype 19840621) (NTSC)
+  title:  Garfield (prototype 19840621)
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: c8379798a20a19cd1de0dd65e918482f5d254bf66e90115e50e13a9b576e4b64
+  name:   Gas Hog (fixed?) (NTSC)
+  title:  Gas Hog (fixed?)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fcf74945c9c79c0037e92e9a5c4443325188b594c23a4320c57c1937cf13c9da
+  name:   Gauntlet (NTSC)
+  title:  Gauntlet
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2a12672674a2b60c0fdbbf0d431953c3fac18edc587d268402fa8cfa495e0704
+  name:   Ghost Manor (NTSC)
+  title:  Ghost Manor
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: cf9ae300893c7c4d16c81693a3d82de90c6398815855a28229c3941e40919d89
+  name:   Ghostbusters (NTSC)
+  title:  Ghostbusters
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 73fb3045f6e86ad26222b17ea6dfb14f1926d2338723ecbbc0cc0cd5473df46f
+  name:   Ghostbusters II (PAL)
+  title:  Ghostbusters II
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 8e56281d3591ef94f5687a44d26b9317dfe4068afd34647165f1935f98a4d1e3
+  name:   Gigolo (NTSC)
+  title:  Gigolo
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e63d596abf69cb96aa4ba258e5761d8eed79e48240e4640b4542603e6afb6932
+  name:   Glacier Patrol (NTSC)
+  title:  Glacier Patrol
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c6c0a2fb0e0ea61975ceb0a0b12475b7b05f6d0e730153947f00c5f3829c5992
+  name:   Glib - Video Word Game (NTSC)
+  title:  Glib - Video Word Game
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 895c743da5c6ab585103414420b169995851caea80ff902d645da0374e45cb98
+  name:   Go Go Home Monster (PAL)
+  title:  Go Go Home Monster
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 80a2045195b03bde0b9f5dbb48167df373968fe3d3cd60af6785cd9ec44bd27e
+  name:   Golf (NTSC)
+  title:  Golf
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: b4aff03aeb0fb1c8f4914b5a329f51430f00a2d9350aba24573ad78032dd4697
+  name:   Gopher (NTSC)
+  title:  Gopher
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 426a27d193b27ab95a69df6e91aa63e56206d13800b3d20e0efd7409745d351e
+  name:   Gorf (NTSC)
+  title:  Gorf
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 569e504c01f99f3b32f0d0e62aac008532c4655b2b5e7c3603c805a2cb23ff96
+  name:   Gorf (PAL)
+  title:  Gorf
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c0d2d12f6e4a8c25af3f007ab040c4c4a6351933157f3e77ec210c4e202505cf
+  name:   Grand Prix (NTSC)
+  title:  Grand Prix
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 17a19cd7b5cae2b85f3a51fd10e92e141341f3e4238e9ea641cb97656a3ed0a0
+  name:   Gravitar (NTSC)
+  title:  Gravitar
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: cada899b496603370f1b98a6ed68d340c68f0b9db215342a53fe14c7056ee0bc
+  name:   Gremlins (NTSC)
+  title:  Gremlins
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: c4063f822513246e20970378e052a3a85551e88d73a0614a3eb2bbf27833b6c1
+  name:   Grover's Music Maker (prototype 19830118) (NTSC)
+  title:  Grover's Music Maker (prototype 19830118)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 9cb785255f064ac76643e9fd540f61f01e74ee80abfc925c92fe97bbf3845d19
+  name:   Guardian (NTSC)
+  title:  Guardian
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0ddbefb56007127d38f8e261f27a4b1cc33c6476d5a48ac994c64a85d0e30172
+  name:   Gyruss (NTSC)
+  title:  Gyruss
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 75bd02ec75458ea4bc2cba9b85bb281c3f9da106123e4600b054f0934e36b81f
+  name:   H.E.R.O. (NTSC)
+  title:  H.E.R.O.
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: eee9a72aa4f0d230973cdbbff836048cd698ba00ad5f586969847d3a92a24be5
+  name:   Halloween (NTSC)
+  title:  Halloween
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 412d5491cf02946e49139e4a435faea14c1678c1c53db1c5def224193be47ad5
+  name:   Hangman - Spelling (NTSC)
+  title:  Hangman - Spelling
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d2695c4540fc0dd85ecb2934059a5450d9432eb292858736de8b1a37371ed505
+  name:   Hard-Head (NTSC, prototype)
+  title:  Hard-Head
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1e9d5796eaec837c2668fe4a1ff4a24d74d23c60232efcaa617e115e57734479
+  name:   Harem (NTSC)
+  title:  Harem
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c70550e8bcf6322259104a7e7f7147598a7ed5915f23af05bf78aefb842c06cf
+  name:   Haunted House (NTSC)
+  title:  Haunted House
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0be527feb2b847ff9e87b9c0f88a9ebc50ffed25cdd836788d430455158580ab
+  name:   Haunted House (PAL)
+  title:  Haunted House
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 61d85c553e91f04685b661906ddb0a2141450586b04716bf8503389c21a9b018
+  name:   Hole Hunter (NTSC)
+  title:  Hole Hunter
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3fc3c8579b823915e80f18024cb6807d25cd2e11a61d4da10c71b6ddb9d83f74
+  name:   Holey Moley (prototype 19840229) (NTSC)
+  title:  Holey Moley (prototype 19840229)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 213f3b12201b3d21e8515603cae231438eeac3b67dbb23e88d59aae07191eb2d
+  name:   Home Run - Baseball (NTSC)
+  title:  Home Run - Baseball
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: fd6a367a69046ac14f89c6dbd78fc9076666528844735184a59f0def0843f0a7
+  name:   Human Cannonball - Cannon Man (NTSC)
+  title:  Human Cannonball - Cannon Man
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 472d41631263349b31c101a46265a0b5b1a3a1080452e58dc6298c60796b5e21
+  name:   Hunt & Score (PAL)
+  title:  Hunt & Score
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 64ab9b2eb2ae0de5ba078dc28f6f431603dfcb70289534a152cbeab0efa51ae1
+  name:   Hunt & Score - Memory Match (NTSC)
+  title:  Hunt & Score - Memory Match
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: c4e12f1c2600547033adf776d94a85d51401752fe487954a2f84ad7d670962c4
+  name:   I Want My Mommy (NTSC)
+  title:  I Want My Mommy
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7fd94ecc7bb2c3356da13e545ed9f8fd95fdfc4bea2e8d1fe4fde7b0a9316424
+  name:   I.Q. Memory Teaser (PAL)
+  title:  I.Q. Memory Teaser
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fc8b861d9cf9c9d5f7f7677f22b39d512d249697b69c1e7dcf238c5dc8f44b60
+  name:   Ice Hockey - Le Hockey Sur Glace (NTSC)
+  title:  Ice Hockey - Le Hockey Sur Glace
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 58997c353bc5afddf86639740d20eef4cc8275eabd7472350581a0cf9da79831
+  name:   Ikari Warriors (NTSC)
+  title:  Ikari Warriors
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 138d6cda0309cc4aa25410754c6b249e318d1ccad377e1f163b79e84644cd1e6
+  name:   Immies & Aggies - Immies and Aggies (prototype) (NTSC)
+  title:  Immies & Aggies - Immies and Aggies (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 706e269801400a549d87bd57cef8a27dfc90ee76272899726957db4dfc74144c
+  name:   Indy 500 (PAL)
+  title:  Indy 500
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: a91dde2f9f989a0ced14a2c5ea1999dac2cf09b5af8c49d0739c048e4670087a
+  name:   Indy 500 - Race (NTSC)
+  title:  Indy 500 - Race
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 5e76b40e130c43778db2ed4f50dfbf6684ee027b8f707e2cf008756c35f28ec6
+  name:   Infiltrate (NTSC)
+  title:  Infiltrate
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7519c929f270e873d0394055a6e50b67fa4af7684d8b7366d7552c309f766b85
+  name:   Infiltrate - Nid d'espions (PAL)
+  title:  Infiltrate - Nid d'espions
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e9e29d67af9b8e6b508ab23d97edd4b6549e396ef9069f4ee76394d43019d6a4
+  name:   International Soccer (NTSC)
+  title:  International Soccer
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 18b62fed5752092bdf7f3f68ee289a5105d69b4aa53adca8e56b80f8382c95f1
+  name:   Ixion (prototype) (NTSC)
+  title:  Ixion (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 995253f0d3a2fac712c6ee3518f19fc5e6a8c800e2fd8dbfe49d45ad367a231f
+  name:   James Bond 007 (NTSC)
+  title:  James Bond 007
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: ac81ffd6a75437c65da604e705da723c252ce3e9957387412982a1f184223419
+  name:   Jawbreaker (NTSC)
+  title:  Jawbreaker
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 963e2d3da52b6ccaff08c833b2d2cb0329a9b9d5f6b3265fcfd7e0830b914df0
+  name:   Journey Escape (NTSC)
+  title:  Journey Escape
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4155df902912f18904dce1054d88d14e2533844836db11d92931774fe1224954
+  name:   Joust (NTSC)
+  title:  Joust
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 4faa16c4820cde015dfe9a261787f9ee86904d427bf4aab2bf661acdd0235497
+  name:   Jr. Pac-Man (NTSC)
+  title:  Jr. Pac-Man
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 651b1915420f0398423899c10587959d37db957409cd8c017743f1b409e0eb19
+  name:   Jungle Fever (NTSC)
+  title:  Jungle Fever
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8b95e99dcec70be036720f2b0c0c3c54e3ef023f2e4685e1588116ccd88a3de9
+  name:   Jungle Hunt (NTSC)
+  title:  Jungle Hunt
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: c2d35dc8301ed5499985f2b4a8abbf443f21b280e514f0bebd50149e4f4193df
+  name:   Kabobber (prototype 19830725) (NTSC)
+  title:  Kabobber (prototype 19830725)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 21363eb5ea5ce8fde85942948212f0ebca62ddd75d9d92238f989ddf8e8de308
+  name:   Kaboom! (NTSC)
+  title:  Kaboom!
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: d1a629da219292394abbdad85d81b966c8d28c8e2ab2d491eea054b9ffc5d2e0
+  name:   Kamikaze Saucers (prototype) (NTSC)
+  title:  Kamikaze Saucers (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a2826eaea3a854b63b4ca1d7423f1b3347311e0552c6b1f35065e50b2cbca523
+  name:   Kangaroo (NTSC)
+  title:  Kangaroo
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 31337507b0bc8b2802ac52385353ca2ddbda5b640d9fb2eb2d3bce99619cad02
+  name:   Karate (NTSC)
+  title:  Karate
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fd37636d7a0941154e1e97221b8595caa5d002c5a0e092d08291ed16d2226682
+  name:   Katastrophen-Einsatz (PAL)
+  title:  Katastrophen-Einsatz
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 10fc464822fcc94d5573a772a9a4fdaf17c4d08a2e73015ab010f08ed124b02d
+  name:   Keystone Kapers (NTSC)
+  title:  Keystone Kapers
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 237207088afebf7d98ef6a18b4a7186adfca9ce8213172569d434fdb6c2dd0a1
+  name:   King Kong (NTSC)
+  title:  King Kong
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8022285aa992939bca47939ea762aeaae10dba898697017b80fa91096750566b
+  name:   Klax (prototype 19900818) (NTSC)
+  title:  Klax (prototype 19900818)
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 819a8d60dee5922dda5091b2c48e4c9eae3f29474c37b989a9d69de0d29535ea
+  name:   Knight on the Town (NTSC)
+  title:  Knight on the Town
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 727593fbc0813d563b29bac8712b7b40386db1c372fca3696125bdb6f0f137bd
+  name:   Kool-Aid Man (NTSC)
+  title:  Kool-Aid Man
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b40f10d14217093082b00b302bff8c6faa0d64c5221e9be36ea0ceb12477517a
+  name:   Krull (NTSC)
+  title:  Krull
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 814fabee2cfd544002a0cc184a9ec8a09cba7dd7ca79e8ea452623cca3c63927
+  name:   Kung Fu Superkicks - Pursuit of the Ninja (PAL)
+  title:  Kung Fu Superkicks - Pursuit of the Ninja
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3f6501a649ad83e970a25827bd492c56128c36535ae2c96f94bab39b27f939ac
+  name:   Kung-Fu Master (NTSC)
+  title:  Kung-Fu Master
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3fa6044168d06d883c6fc6809410b7c5312f2abc5c261813c3dfd60fc72ced82
+  name:   Kyphus (prototype) (NTSC)
+  title:  Kyphus (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8533208a328ad34657b104a6eec7e7973ef44810790b538e976114ac403f70fb
+  name:   Labyrinth (PAL)
+  title:  Labyrinth
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 16cd3cf7621fc770a277f86c0926df7103c57c26a8bb4cfff61fb911c1c0232a
+  name:   Lady in Wading (NTSC)
+  title:  Lady in Wading
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9c7ef463fda147fd9711e9a1bacce2080d0323b9d6128885183487bdfc977d8c
+  name:   Laser Blast (NTSC)
+  title:  Laser Blast
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: b64a3732a9a6cf68d40c99374a3d7fe23287598c020aba69fed4747d470d1b5c
+  name:   Laser Gates (NTSC)
+  title:  Laser Gates
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: af693433df2eca90648b7015dafe9f9c72d603c5c91d980bf196fe3091903619
+  name:   Laser Gates (PAL)
+  title:  Laser Gates
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 970973851f0c513cae2c9b22d03c0ba66a740c9c0865d72e506ac2fec753bc9e
+  name:   Lasercade (prototype) (NTSC)
+  title:  Lasercade (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6431a0ef0586e411304782da34ddc7d10f3d0028daeb95a6181d2860d1c028e3
+  name:   Lilly Adventure (PAL)
+  title:  Lilly Adventure
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9f22641d54f4fe8b555c58bd30a9a117a86d5ebbad9b473bbe4aa6dbb8ad2781
+  name:   Lochjaw (NTSC)
+  title:  Lochjaw
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8e3bbcc3e0c5aed55a9cfa01e53b42fd55858d7a0a9619c84e10c56400278a68
+  name:   Lock 'n' Chase (NTSC)
+  title:  Lock 'n' Chase
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b767a55b69a9ddb14c722a794506a195717e7268d841a1978ff1b6e159d6e2e2
+  name:   Lock 'n' Chase (PAL)
+  title:  Lock 'n' Chase
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c3a8849a605f294975cee4758b3178fa42b7217991bfaf14b112c6510f7d430c
+  name:   London Blitz (NTSC)
+  title:  London Blitz
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 65961646e6c8181bcf5f99aa37f31297d25bbdeb7b22cbab7c207a3c9255ec5e
+  name:   Looping (prototype) (NTSC)
+  title:  Looping (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: a112959fa85c9b0654db82f20f434ba733f72407e69442f24ef37776baae1f3a
+  name:   Lost Luggage (NTSC)
+  title:  Lost Luggage
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: be74dfaffb5d62a85101c3a02cb3c49596f7a9bc84326f67840e30a60c73ca7a
+  name:   M*A*S*H (NTSC)
+  title:  M*A*S*H
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 40016dafe9b032c4e56caa3d07c01623503677c41c316000bf6f5ec5b7f52453
+  name:   M.A.D. (NTSC)
+  title:  M.A.D.
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b63b7945ef4be1a7cb777dc854f88bb578a289b90fe2cdb04a8eb56393af871a
+  name:   MagiCard (NTSC)
+  title:  MagiCard
+  region: NTSC
+  board:  Commavid
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 581cff8a71cd20611e74d631d4aa7c0699806df169e1309c11c8739de37b26c1
+  name:   Malagai (NTSC)
+  title:  Malagai
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 68fdbb7d2df0064f44957276c6e2e8e414909de66cac69a0c91a5501d84f3147
+  name:   Mangia' (NTSC)
+  title:  Mangia'
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2c613d0ef1670d0fd07e119ab50371ad8b9c73486634301d021b26c3291e7361
+  name:   Marauder (NTSC)
+  title:  Marauder
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 12fcea0a9f325c25b58af3e85a85dd271a700efc8c2d83f996246d16fde2eac6
+  name:   Marine Wars (NTSC)
+  title:  Marine Wars
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 617313182d593c6d011db42e27022006440b87d632d31804ebcc7d2a58277ea4
+  name:   Marineflieger - River Raid II (PAL)
+  title:  Marineflieger - River Raid II
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: dc6d9c67879275520a914901e9bd135ac5b4da80ae949ac5333789267348e307
+  name:   Mario Bros. (NTSC)
+  title:  Mario Bros.
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 2ec765753f1562a11424f4fd29fcc1bd9fbd2e09c804c617362a8eac768e3f8b
+  name:   Master Builder (NTSC)
+  title:  Master Builder
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 970c6a37cce56db2c2a4b676240dff4298598da129c3e0b70ee9e07b5262d17a
+  name:   Masters of the Universe - The Power of He-Man (NTSC)
+  title:  Masters of the Universe - The Power of He-Man
+  region: NTSC
+  board:  MNetwork
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: a5ed46b56192432211d5fed390cf74b6effe5ab544a7d27a486c2f40e503cebe
+  name:   Math Gran Prix (NTSC)
+  title:  Math Gran Prix
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5a0026eca6620e1b4214b49d3b194a62151342e545cc19a6b6efa9febaa2eb82
+  name:   Math Gran Prix (PAL)
+  title:  Math Gran Prix
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3c6b01041b1788d582f7b5b526d20457c46a2b080c8126f23b6892b02a16932d
+  name:   Maze Craze - A Game of Cops 'n Robbers (PAL)
+  title:  Maze Craze - A Game of Cops 'n Robbers
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a2d841d1a8c6c3e2da06606dbd897fa062410457414e5bf865b0c7701ca8615d
+  name:   Maze Craze - A Game of Cops 'n Robbers - Maze Mania - A Game of Cops 'n Robbers (NTSC)
+  title:  Maze Craze - A Game of Cops 'n Robbers - Maze Mania - A Game of Cops 'n Robbers
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1ebd8ad31bd975cb7f15d7b104fc3ea059d2b400a50a5934fb97f7a7b45f9dd1
+  name:   McDonald's - Golden Arches Adventure (prototype 19830606) (NTSC)
+  title:  McDonald's - Golden Arches Adventure (prototype 19830606)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: cd5b8ae212f3a0112f186dea0144cd160a18709508f58b20ff6cb1c5f1dd1cfc
+  name:   Mega Force (NTSC)
+  title:  Mega Force
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1bbbaff7f1f20c077623f7e4052a5ae23e844ad5b96084137a39b3b8e71a4d93
+  name:   MegaBoy (USA)
+  title:  MegaBoy (USA)
+  region: NTSC
+  board:  MegaBoy
+    memory
+      type: ROM
+      size: 0x10000
+      content: Program
+
+game
+  sha256: 78e755782a00ac960afbf818f9446918f4938841a91b5d0fe47623b13e62feb1
+  name:   MegaMania - A Space Nightmare (NTSC)
+  title:  MegaMania - A Space Nightmare
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 87e0d6db2a82988c91318c8f883834833f51f92368783759350e6d3af983873d
+  name:   Mein Weg - My Way (PAL)
+  title:  Mein Weg - My Way
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 023982896eda3bf7853c3b4ca5ba4c5604338e6866148fa8fead36036b545cdf
+  name:   Meltdown (prototype) (PAL)
+  title:  Meltdown (prototype)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a1c053f3265271160502d06c2a69537c88c584c782d78855bc8db21c4855db76
+  name:   Mickey (1984) (Digivision)
+  title:  Mickey (1984) (Digivision)
+  region: NTSC
+  board:  UASW
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: fe6493171a94abd7d43724f8865f8500152d568580a084e769dd2811dd618277
+  name:   Midnight Magic (NTSC)
+  title:  Midnight Magic
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: c71e0a6109c58e2e2185ebaa305ebcbd43b97117e5bd2cb7b4b6f437396360f8
+  name:   Midnight Magic (PAL)
+  title:  Midnight Magic
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: f11db0cee34f2ccd7490275954fa0fb2e88ffadeb1031a15d1d9be3e94000bdf
+  name:   Millipede (NTSC)
+  title:  Millipede
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: a32beea483f90cbccf0dadda2a3fe894902155c91995f1b98f5b67fb28ce71ff
+  name:   Mind Maze (prototype 19841010) (NTSC)
+  title:  Mind Maze (prototype 19841010)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 7a19ef5a2cc78cf020f310488d81891dc5ed3df145ca13909b3a21a3b3c1c49f
+  name:   Miner 2049er - Starring Bounty Bob (PAL)
+  title:  Miner 2049er - Starring Bounty Bob
+  region: PAL
+  board:  Tigervision
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: d85fbf692981248475a67bf4a805a048cfa1ee6763984984709e6260e8388cda
+  name:   Miner 2049er Volume II (USA)
+  title:  Miner 2049er Volume II (USA)
+  region: NTSC
+  board:  Tigervision
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 4037aa5de115361f6df98a66eca42d7ee8faa039c2ee9b7c61761bb3592cab69
+  name:   Mines of Minos (NTSC)
+  title:  Mines of Minos
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ccf1d8ced562e75e847579da2806867749c9e59f454ecdc1ca44a949031b4180
+  name:   Miniature Golf (PAL)
+  title:  Miniature Golf
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 08c03c9ff0b188c20cd0c9d902c5af1c15a3ae1f39a8978f69ab697ae3e63be4
+  name:   Miniature Golf - Arcade Golf (NTSC)
+  title:  Miniature Golf - Arcade Golf
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 2860450e287df3a8101d5e3ebbff8c1ecba8706207fd9564df267c5a850db60b
+  name:   Miss Piggy's Wedding (prototype 19830624) (NTSC)
+  title:  Miss Piggy's Wedding (prototype 19830624)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 46c444b91854e3652cc00facf52101d3c9fa3528eaba7674cc790acc3ad59086
+  name:   Missile Command (NTSC)
+  title:  Missile Command
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7af8862d37fadedfb931efebf2b9305bf9b56642259323d6ca595f67e77a1ab3
+  name:   Missile Command (PAL)
+  title:  Missile Command
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ea1d120615427b489fe8c99d7d2a6bb91adce0d686036af393a5beb69ce4d5e7
+  name:   Missile Control (PAL) (Video Gems)
+  title:  Missile Control (Video Gems)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5e955b2134243b928311c47ebcfcbb6e20f41eb0dc0c23cba7932a19e7b0f073
+  name:   Mission 3,000 A.D. - Mission 3000 (NTSC)
+  title:  Mission 3,000 A.D. - Mission 3000
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: df0570f6a1204a0537f0182fd3b772ddbb9378a1c180749e28e18f2b704ab578
+  name:   Mission 3,000 A.D. - Mission 3000 (PAL)
+  title:  Mission 3,000 A.D. - Mission 3000
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d44072ecbcaf96ce26922082137a5da63e7d55dd52829d252b446e240c9ce037
+  name:   Mission Survive (PAL)
+  title:  Mission Survive
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ccb92936fedff331520af14d5728730099b4ed5b5d0117a402566f09bfaef036
+  name:   Mogul Maniac (NTSC)
+  title:  Mogul Maniac
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 09adf7281dd28f6c249b569e82b32e1bd0728186ac732c710fea8305000046d1
+  name:   Monkey Music (prototype 19820818) (NTSC)
+  title:  Monkey Music (prototype 19820818)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 289be9be5cb1a0e69207382f02b81b33e7a08ae3bd8708cc7fa20fd04dec8a46
+  name:   Monster Cise (prototype) (NTSC)
+  title:  Monster Cise (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 69d363a747549817599cace65572700dab9ea33f3a5f91979454fdfbeaa837c0
+  name:   Montezuma's Revenge - Featuring Panama Joe (NTSC)
+  title:  Montezuma's Revenge - Featuring Panama Joe
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: da012153f38b49a69abd65dd39bbcb0aa9697d323b413186f02ba628486ecb88
+  name:   Moon Patrol (NTSC)
+  title:  Moon Patrol
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 16ff2ab329443e9148661938723f2def0d6933bc3ac64cf3acde155e72d06fa6
+  name:   Moonsweeper (NTSC)
+  title:  Moonsweeper
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: d78be95b575f5d26ccef39078915141402020e1cb1bdb0b91344d8a374034dd8
+  name:   Motocross (PAL) (Suntek)
+  title:  Motocross (Suntek)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: cca85beed6c3b61cb1cb4c9a6ad467743eedfb5c0bb5614c5c49e5d99da1c244
+  name:   Motocross - Motorcross - Motocross (PAL)
+  title:  Motocross - Motorcross - Motocross
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c2bff31e87cbc67f7a4303cfd8a332778eeff2f8722a382f315898fa0b3bad8c
+  name:   Motocross Racer (NTSC)
+  title:  Motocross Racer
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: d5110a77b3b1679a4d3b8176fc68b625f8ac1cbc79c6b2529a3a31844799c008
+  name:   MotoRodeo (NTSC)
+  title:  MotoRodeo
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 67719a9641620bdd99a62d1cef858f45ab4656283e8e4df4446385f6a50fad8d
+  name:   Mountain King (NTSC)
+  title:  Mountain King
+  region: NTSC
+  board:  CbsRamPlus
+    memory
+      type: ROM
+      size: 0x3000
+      content: Program
+
+game
+  sha256: a415e358737724bad837dbcf6bd563d064c1f98605d4063db6df8718c0a72a3d
+  name:   Mouse Trap (NTSC)
+  title:  Mouse Trap
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4b2480f3204d6b37d919e42a1ffb026419e8cab073b001e885930a869fd11dcb
+  name:   Mouse Trap (PAL)
+  title:  Mouse Trap
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3f7953011c5163f7c687d62831d026208f376f1b63b65650f25f375a3a6767f8
+  name:   Mr. Do! (NTSC)
+  title:  Mr. Do!
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 02b1881fe22b4023eb0354900c8e29275624471511c8b3d047cb7144a8132b82
+  name:   Mr. Postman - Der Postmann (PAL)
+  title:  Mr. Postman - Der Postmann
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: dde0b43c5dee7ce1a35ac8e2f625b32a16118512d9be4064115053b972280b14
+  name:   Ms. Pac-Man (NTSC)
+  title:  Ms. Pac-Man
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 63e340019efc55912b8f2529fec8de66f58a7119458069dc0366e331b08e636a
+  name:   My Golf (PAL) (fixed?)
+  title:  My Golf (fixed?)
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: cc219a7246e8f9454f3bd77345b388fbc2c7343e4ea0c4c864a2eb9b0481882a
+  name:   Name This Game (NTSC)
+  title:  Name This Game
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 19b9d0d0adbdb452ad7eb24b47017d92dd1d7cdd7b492fb67ab6dfc5a0f5324b
+  name:   Night Driver (NTSC)
+  title:  Night Driver
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 705ddc635aa6a48fb1feea9648a9f334ebcb0acfef43b070825ff7e5694cf8fb
+  name:   Night Driver (PAL)
+  title:  Night Driver
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 6abc145905e16885678b11c70342433242e34f9cef17c2af40f972f7047a2983
+  name:   Nightmare (PAL)
+  title:  Nightmare
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e316aa27e0a9f5dfdf4fad3c73cd2805264d73013527becb933dc9c6c1daa7fe
+  name:   No Escape! (NTSC)
+  title:  No Escape!
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8a7f128221a993297b6eada3bc496e31ebd3663e0268ac35b2557fe917d054a6
+  name:   Nuts (PAL)
+  title:  Nuts
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ca688cce576e347a2b588bdd1761823cea3d44a3e358f086be72998df0acd8ea
+  name:   Obelix (NTSC)
+  title:  Obelix
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 54aa13b4ac9c0f9a74e7faae8d0e1461f5025d1d0b13f2fd9a00992440624f6e
+  name:   Off the Wall (NTSC)
+  title:  Off the Wall
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 833558fed85863fdfcd9ee2fa28e810ce5695470c3b80ef561460577399dbd9c
+  name:   Off Your Rocker (prototype) (NTSC)
+  title:  Off Your Rocker (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 16c0c373238d0886c442a713f61883e1bbaf00769d190bf42c33f229c08695d6
+  name:   Oink! (NTSC)
+  title:  Oink!
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 03421b617b273c0f59df7792d7194537aef66f672e031acd7ca20e4e4dfd6eb7
+  name:   Omega Race (NTSC)
+  title:  Omega Race
+  region: NTSC
+  board:  CbsRamPlus
+    memory
+      type: ROM
+      size: 0x3000
+      content: Program
+
+game
+  sha256: 1e87f6dc5cdb5c0cdd6461cfc5a0b8b1d1117373c827feec751425bcc1ac3afc
+  name:   Open, Sesame! (PAL)
+  title:  Open, Sesame!
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5e6ced11534f557c512792cacc95b52270dc97c8c27c4f7d07bba24ca2aaee02
+  name:   Open, Sesame! - Sesam, Oeffne Dich (PAL)
+  title:  Open, Sesame! - Sesam, Oeffne Dich
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ad96fb92c12f3695b907045ea6ca1880fb7ddcd381c651fd262cae0f23c1b28b
+  name:   Oscar's Trash Race (NTSC)
+  title:  Oscar's Trash Race
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 4b6874f3543a5dc1030c9c8e5a65c4eaf9b976e38e53bf1b21158212e4a61213
+  name:   Othello (NTSC)
+  title:  Othello
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 995bee5fed501f98ece6998cf70c51f025969a11a8cd3c3e26eb24607fd3d99a
+  name:   Out of Control (NTSC)
+  title:  Out of Control
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7915605c9ec33fe108f64abf80865ab6a12c90c104854ecadf1e25547f2374db
+  name:   Outlaw (PAL)
+  title:  Outlaw
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 63d022736f4f6310fc64837a85b6f2d7f3a4c0ca32af735c316c0ca5a0b8a51e
+  name:   Outlaw - Gunslinger (NTSC)
+  title:  Outlaw - Gunslinger
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 59bdc2ae068503b7a865e5b79a3ee3d758b945c6bbc8ff4726bc763338136473
+  name:   Pac-Kong (PAL) (Suntek)
+  title:  Pac-Kong (Suntek)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 58e781b472e0583b851b7e56cbfe87bd8294a291e6d39d49d7c999107ed5b918
+  name:   Pac-Man (NTSC)
+  title:  Pac-Man
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e80f4cab17f835b2227a4ce19d3560b10007d2527f6c75e2e31e486a89a1fa07
+  name:   Pac-Man (PAL)
+  title:  Pac-Man
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2e0bb70aef57defdf5666d28f3651d7f3c99fd6bdf9abf1c527257a8d6e4791b
+  name:   Panda Chase (PAL)
+  title:  Panda Chase
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8d583309f231702edcaec30890f6913b8707ecba42deb413210eb77e45c3df67
+  name:   Parachute (PAL)
+  title:  Parachute
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 021cb6ecc16a127e0c217c7f25fcaefe21515ae96d25734c2af3ea8fe7e6f8c5
+  name:   Peek-A-Boo (prototype) (NTSC)
+  title:  Peek-A-Boo (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e810f5b5ce6d8a4fac09a2a4f962817da0315708812b942d9c11f501de5ede65
+  name:   Pengo (NTSC)
+  title:  Pengo
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: b349896222344b416ce58bb9686af972e313e6ef5e48c8f4cb0eebbe13eb868f
+  name:   Pete Rose Baseball (NTSC)
+  title:  Pete Rose Baseball
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 82ef295ab2455b7ec7be2d04de0038b71ffef85b61f6bbcf02667b21c0c84565
+  name:   Peter Penguin (PAL)
+  title:  Peter Penguin
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b849cf392ced370bbb01b4ad775d77640dc607069891f46ce4f53a3ece5995cc
+  name:   Phantom Tank (PAL) (Puzzy)
+  title:  Phantom Tank (Puzzy)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 51e83f7917be801392f52dcc54e821cbbc0afe0d86c953fe6a06e3755eab8efc
+  name:   Phantom Tank - Phantom-Panzer (PAL)
+  title:  Phantom Tank - Phantom-Panzer
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 628403f991e856566794d154023e0d0e735698675a725738305024cb13c862bd
+  name:   Phantom UFO (PAL)
+  title:  Phantom UFO
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9c26788ed3001394e13413c6ddb93b02500b556b8b8b47d3eb18a32590754ca5
+  name:   Pharaoh's Curse (PAL)
+  title:  Pharaoh's Curse
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b01085bc5227a04b974846fe06b4018da84fd3e40ac6d1368f7f6bc07c336dfd
+  name:   Phoenix (NTSC)
+  title:  Phoenix
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 68c7a1bf57915cd270f9a587d541e24a27584d4b073229334c2aa9d17062cdc2
+  name:   Pick 'n' Pile (PAL)
+  title:  Pick 'n' Pile
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 0706f57afa2b3d93af22100b936bb72a4e3de3a1d107f37549e9f6de305ea38c
+  name:   Pick Up (prototype) (NTSC)
+  title:  Pick Up (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 29553e77ca40836574ef7674dad9919091360897638bfd938035f78fa47b6b40
+  name:   Picnic (NTSC)
+  title:  Picnic
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7dd60d116913bbdcc9d509b967188cde2c2d413bb0b32c3ee3ab8d456289e823
+  name:   Piece o' Cake (NTSC)
+  title:  Piece o' Cake
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1ad34d874970d246fa033d5085656132d0a69791c2b59aba3a10ee55c4bcb631
+  name:   Pigs in Space - Starring Miss Piggy (NTSC)
+  title:  Pigs in Space - Starring Miss Piggy
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 6755784f8f526e33b155e2c3e99e5da14ada6c53e3f203b21a8bb140118d8251
+  name:   Pitfall II - Lost Caverns (NTSC)
+  title:  Pitfall II - Lost Caverns
+  region: NTSC
+  board:  DPC
+    memory
+      type: ROM
+      size: 0x28ff
+      content: Program
+
+game
+  sha256: c56c99d9e00136a015a485851e0e925c6327ea2b20aa7d3daecfbd7f9afcfdf0
+  name:   Pitfall! - Pitfall Harry's Jungle Adventure (NTSC)
+  title:  Pitfall! - Pitfall Harry's Jungle Adventure
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0df171e4bb0cc3b987d5dc0408ff11b703cad2bc4b6b8ba6fdf125a8845efa3e
+  name:   Pizza Chef - Pizza Time (prototype) (NTSC)
+  title:  Pizza Chef - Pizza Time (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 99568dd9d8359df44293d5a2f2c783ceb985f1e9cccc6edae78ab818e45584fb
+  name:   Planet of the Apes (prototype) (NTSC)
+  title:  Planet of the Apes (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a24c77075df4949bcd6e53dec6d00eb5c841e0fcaa2520da8f8071acc61687c0
+  name:   Planet Patrol (NTSC)
+  title:  Planet Patrol
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: bcb7d5be3bc206e39b300cb9caa7a77def6dc8da9e75c8a2de0b6414ba79a570
+  name:   Plaque Attack (NTSC)
+  title:  Plaque Attack
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c4b7e4369ba2b4549e401227971cd637c1036b5f69c4d2deba1586abb3b0f26d
+  name:   Pleiades (prototype) (NTSC)
+  title:  Pleiades (prototype)
+  region: NTSC
+  board:  UA8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 07aeaa39381cb08f681039c148534d85af74843c8a70eb9342f5b1e11d619e7e
+  name:   Polaris (NTSC)
+  title:  Polaris
+  region: NTSC
+  board:  Tigervision
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: fa147e3c5b9a908f4fc187dedd189d27573d427d95c30b5dd676bc905c5b4bb9
+  name:   Pole Position (NTSC)
+  title:  Pole Position
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: b1583302a0d914984276dea3f3d2920ddca2f2f663fee5edce8265361a61bc2c
+  name:   Polo (prototype) (NTSC)
+  title:  Polo (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 5bf23d0292af4d6ad012ff611ba3961470b5b9a9860bf142e602bdfca71f84ca
+  name:   Pompeii (prototype) (NTSC)
+  title:  Pompeii (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ac9abbfc272deb0305451afa3d5cd58849684691cfa25cede01251fab36c131b
+  name:   Pooyan (NTSC)
+  title:  Pooyan
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5bafbfbe339890462b3adc20b90d540accd21e2e29d71e767f0bf9f6c852d644
+  name:   Pooyan (PAL)
+  title:  Pooyan
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 88d846d9b091676f28ed82c7fe66fc69afa5f76732b6fc9645ccaa3ab5cda4b2
+  name:   Popeye (NTSC)
+  title:  Popeye
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: e520c10b78dfb45f3597c5894cc9da5a159090226341c3bea94388437ea65b37
+  name:   Popeye (PAL)
+  title:  Popeye
+  region: PAL
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 31e6efc749a7f6091f576384fe4dac77d6a61e8dc1695c1d55ff077158adac50
+  name:   Porky's (NTSC)
+  title:  Porky's
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: aaf338d13a082921865159f7b99a4f0dec4bb30d809107d9ef15dd3d7b1fe209
+  name:   Pressure Cooker (NTSC)
+  title:  Pressure Cooker
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: c8f9ce1b2e804b6778dbc20da0c935b2af7d7e998ad372d44df66f16eb4b98ce
+  name:   Private Eye (NTSC)
+  title:  Private Eye
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3257221832a7607696b06b9985103c12a4c24c61b0c655e8f52aed8e38194b76
+  name:   Q*bert (NTSC)
+  title:  Q*bert
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 07886ee67ca91287d25d1a22179e77be2a00b334a983baa0d95f62c9f77ecb47
+  name:   Q*bert (PAL)
+  title:  Q*bert
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c8f1964e569183550ca749d8b84a2947f0ab0bac02acfe3d0d6da1c3475cf301
+  name:   Q*bert's Qubes (NTSC)
+  title:  Q*bert's Qubes
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 22fc11ab11f0c348f50643e01ca24bba319b0e40065afe36fd6fd9f81ae67ee9
+  name:   Quadrun (NTSC)
+  title:  Quadrun
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 4537bc83d85d4345d06c1867d82ea510f804aa647c9f3cec2936cbbcfb606b05
+  name:   Quadrun (prototype 1983xxxx) (NTSC)
+  title:  Quadrun (prototype 1983xxxx)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: a41b9162d4ad4b9f6366a63e7381b76638b0b7d70a15674a7e7484be898144bb
+  name:   Quest for Quintana Roo (NTSC)
+  title:  Quest for Quintana Roo
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3f2f32ed65aba73f235b7fb53e24e396f2778e57ad708bf05e3a629376f83d36
+  name:   Quick Step! (NTSC)
+  title:  Quick Step!
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9ab7fe54d3dda8ebf554db937918e0e1b88ff0787c4bac6796687f86ee17b820
+  name:   Quick Step! (PAL)
+  title:  Quick Step!
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5ad2761fe37ea97a632a05817ea41dfe09a604850124b848fa62ebe2ed5acbe7
+  name:   R2D Tank (prototype) (NTSC)
+  title:  R2D Tank (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 027d739cc272e0dfb2a2d1a2a083eddc7a31251696fecaec1a58b71a080e53a5
+  name:   Racing Car (PAL)
+  title:  Racing Car
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f1a33b5c82e7e1194049defcfa88aa104f712c8f8585705f3648c706f5638821
+  name:   Racquetball (NTSC)
+  title:  Racquetball
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c7939275b69ea76c605aaa83be69e07d771ad00f5ab6099e8afbcf0d3b845aec
+  name:   Radar Lock (NTSC)
+  title:  Radar Lock
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: c9618ac98ae18f00abf211c658ce10a45ea7ecdace6752a54d338fd7b321dd6c
+  name:   Raft Rider (NTSC)
+  title:  Raft Rider
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ec9752755bff1896ce16d90d9219fa73aec45033db4da20ac878528eb2fb459c
+  name:   Raiders of the Lost Ark (NTSC)
+  title:  Raiders of the Lost Ark
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 83c20d0e6697d7073ed6e6bddb2e2c0a752aa06b2327c25b239e3744241f86b7
+  name:   Ram It (NTSC)
+  title:  Ram It
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b8aaf537da127ec2dbc51449b8ccfc5bcee5574b6d62ff3e2420098addd6752f
+  name:   Rampage! (NTSC)
+  title:  Rampage!
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 1a6b9aeaf867bdfd9f317355fa6ee42bbdeebb60fc2ac2e90ca82815345bd7f8
+  name:   Reactor (NTSC)
+  title:  Reactor
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 701ed6ccb844565c09fe24fbcd94ab3e512469e147fd4bf5ed5af7c5e20b160b
+  name:   RealSports Baseball (NTSC)
+  title:  RealSports Baseball
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: e99de83a134ae363e2aea1ec934ac7ee0f71e5ee1801620222013ad1bd39996f
+  name:   RealSports Boxing (NTSC)
+  title:  RealSports Boxing
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 937d0ce035220fbe8c8ba4bc8e7a239f0ae42c6cc1e86493cd094414d4a7f42e
+  name:   RealSports Boxing (PAL)
+  title:  RealSports Boxing
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: f0f352f82192c9c60963fb0a36104122c9f55e16b935f1729462fa9546cd16ec
+  name:   RealSports Football (NTSC)
+  title:  RealSports Football
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 143944d9d0a3aaedfe0c1bd3d825185d53fad007288b6f1cf51701dd7cd4c187
+  name:   RealSports Soccer - Football - RealSports Soccer (NTSC)
+  title:  RealSports Soccer - Football - RealSports Soccer
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 5eb4089fde823a5cf4da04f2dc36460aa9242fa3488ec9588c684de552cf5921
+  name:   RealSports Volleyball (NTSC)
+  title:  RealSports Volleyball
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6d4b3a1a80afdd2d17d16ebf173a346f6e5915d5d9643b33f959ef46cad97fe6
+  name:   RealSports Volleyball (PAL)
+  title:  RealSports Volleyball
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a6129aebad71a329d67a33d3d5701391677614aeb50c1e1159c0c15bedef5fd0
+  name:   Rescue Terra I (NTSC)
+  title:  Rescue Terra I
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5d287ac1bf8ca272fb4344469ae023ac6b2291a3b2a7ea93fb38b3d99bde335e
+  name:   Revenge of the Beefsteak Tomatoes (NTSC)
+  title:  Revenge of the Beefsteak Tomatoes
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8951c2884e7893e4c5f9d5060bbb8ec10e2f59fa2d2032f11762016908f71d2b
+  name:   Riddle of the Sphinx (NTSC)
+  title:  Riddle of the Sphinx
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b439ef6df05498df0fe6435fab2e7e38d4a58eb542beb70bc9cc0975725a146c
+  name:   Riddle of the Sphinx (PAL)
+  title:  Riddle of the Sphinx
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 77bc40fb3bab7494d98b3ac9100411e1d51e6e66e8d41ebb7cf93555fdd9e37e
+  name:   River Patrol (NTSC)
+  title:  River Patrol
+  region: NTSC
+  board:  Tigervision
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 4c6842b8af64fc75e599b773821b3e6bee8e5028f5d63414821b0d63f0b2dfe9
+  name:   River Raid (NTSC)
+  title:  River Raid
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6715a2a0cb2db46665b139dbd5c5224238a3df143465334ad873f3ef9c5d4ee5
+  name:   River Raid II (NTSC)
+  title:  River Raid II
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 4b6c2e68d6933b8bc79983f6a3bb11bda695b5dfbeeb8fd63d84406ba3f27b5a
+  name:   Road Runner (NTSC)
+  title:  Road Runner
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 067ae01085efdc55297cb8d92fd649ecc42a3e36caf971259846637b44b406d4
+  name:   Robin Hood (NTSC)
+  title:  Robin Hood
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: c186409481e688401c8a7a9d5f0387ed448d18e297e287fd7c409752fa9a2a0d
+  name:   Robot Tank (NTSC)
+  title:  Robot Tank
+  region: NTSC
+  board:  Activision8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: d2b2f426e7d0f1657cf4b0b28aed038f215b4ff69ba81038e513cbdb9d0e7bd7
+  name:   Roc 'n Rope (NTSC)
+  title:  Roc 'n Rope
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 14545da2e1575e9f19a4821cb8b58d750267cd766e1e306fcc21e3ef8400a774
+  name:   Rocky & Bullwinkle (prototype 19830420) (NTSC)
+  title:  Rocky & Bullwinkle (prototype 19830420)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 675d4c2aab0d756bc974fe1cd55c7895cf002c53ebf20bef931d01509e4a2dbd
+  name:   Room of Doom (NTSC)
+  title:  Room of Doom
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: bd4dff60bb94428ddf903edaa3781b4adb822bf62e8e0303064dab3e954f30e8
+  name:   Room of Doom - Raum ohne Ausweg (PAL)
+  title:  Room of Doom - Raum ohne Ausweg
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: cf0742afef66e5c2bd2ffbe34f19605bfe46a127933056b736464ec06ee75872
+  name:   Rubik's Cube (NTSC)
+  title:  Rubik's Cube
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d6fc2185ee9956f070d8105e79fc291bd9404a49f11cbfb56f65cd58cc59de36
+  name:   Rubik's Cube 3-D (prototype) (NTSC)
+  title:  Rubik's Cube 3-D (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6826debc43082f186ef6ad7b9b4bcaf7bc04f42f3013a72b21fc5d07dcb8d2b7
+  name:   Rush Hour (prototype, alt 3) (NTSC)
+  title:  Rush Hour (prototype, alt 3)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a1db38acf46222e8def7a636e8078798a0a8e712525db19d2ff9dbfb04b2f122
+  name:   Saboteur (prototype 19830902) (NTSC)
+  title:  Saboteur (prototype 19830902)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: fac84d14993ad6bb2a3facbcdafc1cd2d35615918d5d924a2cd085cf229b4d71
+  name:   Saboteur (prototype 19831220) (NTSC)
+  title:  Saboteur (prototype 19831220)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3779cf4c5b0bd05b4eb43eeb9c95d1db95bbc92c2f47a5808daad4c94779f936
+  name:   Save Mary! (prototype 19891121) (NTSC)
+  title:  Save Mary! (prototype 19891121)
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 836151a65055a926484baa5f1a15597bca0e4c70d2d4dc185fbeaec81e80a8af
+  name:   Save Our Ship (PAL)
+  title:  Save Our Ship
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4ab4167ed747d299bd3cf06b9b9a04280f0e11c9018a20fa729a83846926922b
+  name:   Save the Whales (prototype) (NTSC)
+  title:  Save the Whales (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 197a10be2aaf993351bbac002e415c0c0df58d72ab588cb6268ae99dbb3dfd7e
+  name:   Sea Battle (NTSC)
+  title:  Sea Battle
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 874a15c0007e73f8e0bc6470188780a973918b812f3f765d57dd7089bf75aedc
+  name:   Sea Monster (PAL) (Puzzy)
+  title:  Sea Monster (Puzzy)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0af02f4cc3642e486937d00c2fdd152042a32d2d2f1c72d0c2ff9b2031d85116
+  name:   Sea Monster - O Monstro Marinho (CCE) (NTSC)
+  title:  Sea Monster - O Monstro Marinho (CCE)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0e07225a921242acd429f6d09cf981f1674087f21e301a99f037457878a2323a
+  name:   Seahawk (PAL)
+  title:  Seahawk
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fbc29f4678f69ac27fe46da298c8c22f98cba2a3e5491e6b308fd9bf68d2ee43
+  name:   Seaquest (NTSC)
+  title:  Seaquest
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b3b10bf2fdfa6db4511832fb581fe24411bc16995a349d182b74e059da8036a8
+  name:   Seaquest - Rettung aus der Tiefe (PAL)
+  title:  Seaquest - Rettung aus der Tiefe
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6ccf1adb3a7721f15673e40d190b19761f687e007fa333f7996c43fcd7bbeb3b
+  name:   Secret Agent (prototype) (NTSC)
+  title:  Secret Agent (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 13f260a5d1e8de5f7b02deb981163152a3a6c7892abf87e23ab0e80938868946
+  name:   Secret Quest (NTSC)
+  title:  Secret Quest
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 02ed3e55e723cb4a88492c31b3cd05f73cf03133fe66780a0ec0ed964f5f8b24
+  name:   See Saw (PAL)
+  title:  See Saw
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b8c649ec20e99a2376e9ad59327fe185e38dc3a683799619fc79b906dc14475e
+  name:   Sentinel (NTSC)
+  title:  Sentinel
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 7a34cd5a8825351908e6cc7ffe214e803f8a1cc5474e5c418e7e78369886c00b
+  name:   Shootin' Gallery (NTSC)
+  title:  Shootin' Gallery
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b3fb8eb54144c7e9ec13fb848f385d659b8863a190090df443b7c611afab4702
+  name:   Shootin' Gallery (PAL, prototype)
+  title:  Shootin' Gallery
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7ba010fded9d405c3592f7bd9c17b60ef6b736c1ad65eadcc4e7ccb86576cf14
+  name:   Shooting Arcade (prototype 19890919) (NTSC)
+  title:  Shooting Arcade (prototype 19890919)
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 41ffbea5a850e108a950d60f7379dbea40c342b289a625d605a4f92037b3c8aa
+  name:   Shuttle Orbiter (NTSC)
+  title:  Shuttle Orbiter
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a496a45091e8badaf828d0045e53edb81a7593d64cbf07f40721357edc3937a0
+  name:   Sinistar (prototype 19840213) (NTSC)
+  title:  Sinistar (prototype 19840213)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 60130cb241ad5edaf57db4f002076b9b264dade397b0b3aa2b71920a420b84cb
+  name:   Sir Lancelot (NTSC)
+  title:  Sir Lancelot
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: a0387e796553b0abf0e171f249ec36f0f17dded4a443a45ccecd20cea8e94fe4
+  name:   Sir Lancelot (PAL)
+  title:  Sir Lancelot
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: de3748c917b71fb246ae3f4c424c47ed87a4ad2666ec82a020bc9b5963fddfb6
+  name:   Skate Boardin' (NTSC)
+  title:  Skate Boardin'
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 8a9c7487818b115194d0f0fa02a351772d915b3d1ebc8339315cbdd00f623e6b
+  name:   Skeet Shoot (NTSC)
+  title:  Skeet Shoot
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 02aa7f7c4fe1ecbe14b95d86d72074fbe3c3f71a45ed9163c2ae79184df73f1f
+  name:   Ski Hunt (PAL)
+  title:  Ski Hunt
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8936b985252b9303372893af8a1b26b917a277817460859a309d13b3d2170952
+  name:   Ski Run (PAL)
+  title:  Ski Run
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e8a96a74c05493c5394a097deb7dc339a0cf37fe373d93e4c19f9e6884eff36c
+  name:   Skiing - Le Ski (NTSC)
+  title:  Skiing - Le Ski
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: c31000b9480484ab35935061710a8c91b35fba18ecf3a24b5334cca21459bb08
+  name:   Sky Alien (PAL)
+  title:  Sky Alien
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 24b1e67b4746afc668d1c1515114460bb70cf8b84d58f981b24e23c848d5563f
+  name:   Sky Diver (PAL)
+  title:  Sky Diver
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 56be53f13a144851357e17a221b544fcc61d4f12ffcbd96138dcda311e88657f
+  name:   Sky Diver - Dare Diver (NTSC)
+  title:  Sky Diver - Dare Diver
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: e91792db1413928eb07e4b623d803c3abec5357e3edb9a7303c91963407ec3e2
+  name:   Sky Jinks (NTSC)
+  title:  Sky Jinks
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: d534a43208b74b50861328b54f126ea3a6b3b758ea4d1a14d72e3d0d101269d8
+  name:   Sky Patrol (prototype) (NTSC)
+  title:  Sky Patrol (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 16ebfbfe633133cc10ba0fc608895fcd5de1246309aab5f3df93b4589ec6615d
+  name:   Sky Skipper (NTSC)
+  title:  Sky Skipper
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 94ee45de9ebea83d5ee255cc5e0f36c52074ea5708c998aa18a2d2a1252e9eef
+  name:   Sky Skipper (PAL)
+  title:  Sky Skipper
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 427133af515ebdee1cd302dba18e68051dcca54444172a40ac2b4221043dda25
+  name:   Slot Machine - Slots (NTSC)
+  title:  Slot Machine - Slots
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 6908440721b4f7dc36b3ac5bebd7fc34b196ac6aac79bc4a07a3d34196cbf402
+  name:   Slot Racers (PAL)
+  title:  Slot Racers
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: c18762339eb7b0748ea57b33914e900269fc80a9243890f14d06700fd74ab3fb
+  name:   Slot Racers - Maze (NTSC)
+  title:  Slot Racers - Maze
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 4b38b0e1be5f12f72cecc685eae27e5bd243420288cd8d7a3be9e9b50d8a4452
+  name:   Smurf - Rescue in Gargamel's Castle (NTSC)
+  title:  Smurf - Rescue in Gargamel's Castle
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: bbe0f1d952aab334de82db18cd84feb49a7fd9beb60a39c52658483564af78be
+  name:   Smurfs Save the Day (NTSC)
+  title:  Smurfs Save the Day
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 67964ceba94888866286b23fb9d5fea68b7a162808c6e5e3b024aa5d6d740b6a
+  name:   Snail Against Squirrel - Schnecke gegen Eichhoernchen (PAL)
+  title:  Snail Against Squirrel - Schnecke gegen Eichhoernchen
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: aeb440951a9168881f291a170ff01bb06816c7b34c0e90f1654b09bdbc45d01a
+  name:   Sneak 'n Peek (NTSC)
+  title:  Sneak 'n Peek
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8e85c8968dc0a3692f5df6e8dfb59c0890e1f7ba2cdf7a3485f0c9a32bc27c38
+  name:   Snoopy and the Red Baron (NTSC)
+  title:  Snoopy and the Red Baron
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 240c1d43d729b987b922d84008ae4c7b4a9210e7dfbc05d247f4c375a1a9a54d
+  name:   Snow White and the Seven Dwarfs (prototype 19821109) (NTSC)
+  title:  Snow White and the Seven Dwarfs (prototype 19821109)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: d6f4a93f089256810123581f3d7b9039c641d14a2f9ecd7efd5d86f5517c1b6d
+  name:   Solar Fox (NTSC)
+  title:  Solar Fox
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 7fb7de6d8d2f723d1dabd90b1538e3df85ab6612899bd548c654d7bc6ca82c8d
+  name:   Solar Storm (NTSC)
+  title:  Solar Storm
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0afa36e5f4d8d77e38716673c96cda3ad11d421283f5a5ae77ec7a01e7718a4e
+  name:   Solaris (NTSC)
+  title:  Solaris
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 303a0929ffcf8cebed7bbbd928bffbbc0c7744f7e8e178f8387d1de491e7e984
+  name:   Sorcerer (NTSC)
+  title:  Sorcerer
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c66996f41f8f8d8a276db6c52dee161f6787b4a99d1cf125f2260869a60b1aab
+  name:   Sorcerer's Apprentice (NTSC)
+  title:  Sorcerer's Apprentice
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: fe1509f2781b30156ae2888c9a38c47bb15cedaee1711463e8f92ec102fb1490
+  name:   Space Adventure (NTSC)
+  title:  Space Adventure
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a56696902a19932eca54ebcb8f82cdfc5fdb47e0185a25ad332e914be7b7f3b3
+  name:   Space Attack (NTSC)
+  title:  Space Attack
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 667c7b2b55faac69c2ac9d52e62181d0146d38db0151883bcd316e2179c760f9
+  name:   Space Cavern (NTSC)
+  title:  Space Cavern
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7224b17462b992d67f4e06a3c85f269c9822b06df6015bf038b55f384ced0301
+  name:   Space Invaders (NTSC)
+  title:  Space Invaders
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: bda9652131a4332b12bebb540d462ecf53523ed013d3a63b7c677383f588cbab
+  name:   Space Jockey (NTSC)
+  title:  Space Jockey
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 6b83cc89b5324d7b8e36d151029375a383b7b17ceb0a31713745b5804c69caff
+  name:   Space Shuttle - A Journey Into Space (NTSC)
+  title:  Space Shuttle - A Journey Into Space
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 5f0ede744edcbc6b9e1410a7c85cdc8fdc5d2bf1f2824670e52835c7e9bf15ff
+  name:   Space Tunnel (PAL) (Puzzy)
+  title:  Space Tunnel (Puzzy)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f58ab5b8a56c4dc475744b37fd8403e1e4e1c26ff710b83b4d10fb58a1f19b0d
+  name:   Space Tunnel - Le Tunnel de l'Espace (Puzzy) (NTSC)
+  title:  Space Tunnel - Le Tunnel de l'Espace (Puzzy)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 120f627e9ee0e80703c15c1315226a644bdfd833909fea5f0cf05946cc387c97
+  name:   Space Tunnel - Weltraum-Tunnel (PAL)
+  title:  Space Tunnel - Weltraum-Tunnel
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0458ccecd6092f12f012965cafd6cc4ad4d8df18c0774915384b33a41dacab5a
+  name:   Space War (PAL)
+  title:  Space War
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: bb7f70cba7386752e19a52ea96c639b5215df89b52fdaae34078cff148306708
+  name:   Space War - Space Combat (NTSC)
+  title:  Space War - Space Combat
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: d0def2adbf84157dfa7225d61cdff440b16ca7756574cbfb62db914f5b83f5fd
+  name:   Spacechase (NTSC)
+  title:  Spacechase
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9bd0a5348de5a5be3a51ff35c104ffad699333c5608b1f28375c71845cc9a8d4
+  name:   SpaceMaster X-7 (NTSC)
+  title:  SpaceMaster X-7
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 423277fa64aad16916e6992ed82d8cd72dabdda080b625cb169abbcceb14f203
+  name:   Spider Fighter (NTSC)
+  title:  Spider Fighter
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0a60f456cbf3dec6f223c2103e337b950e29c68104b54e2625e425fb8e5b35fe
+  name:   Spider Maze (NTSC)
+  title:  Spider Maze
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 624b40ecb1e07794cf0a9cb33a6c217ca9f86b78ba9e9efb09f6ca3de63dac89
+  name:   Spider-Man (NTSC)
+  title:  Spider-Man
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a29e55736db16b073f1c6a895f9a2eb0d9a5b102684c558cdca6524be1f3baf1
+  name:   Spider-Man (PAL)
+  title:  Spider-Man
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 78eb572afe80d4f57c210a25fbf0561982121005f1813b6f22a6079198ca8010
+  name:   Spiders (prototype) (NTSC)
+  title:  Spiders (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1bdc3a059674963f94dc5d999bcc1e0f97843dc7a21484111b27ad972016c252
+  name:   Spike's Peak (NTSC)
+  title:  Spike's Peak
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 8eace8c08f0ab73a6483d2692005178e434c7eebab813d6a640f36e83eaa3b9c
+  name:   Spinning Fireball - Fire Spinner - Fireball Spinner (prototype) (NTSC)
+  title:  Spinning Fireball - Fire Spinner - Fireball Spinner (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7c8264996ae4a6616b70c055770144b573bad742f8c9a1fea93be072617d64f7
+  name:   Spinning Fireball - Fire Spinner - Fireball Spinner (prototype, alt) (NTSC)
+  title:  Spinning Fireball - Fire Spinner - Fireball Spinner (prototype, alt)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d96358674b875842cd226c67e1cd7ec62e0b51e51baa2b3336c9f86247673659
+  name:   Spitfire Attack (NTSC)
+  title:  Spitfire Attack
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 8058f632e7fd57c40e607732cd037298c13764849c5d5dd4ae23d8d35cccc9f9
+  name:   Springer (NTSC)
+  title:  Springer
+  region: NTSC
+  board:  Tigervision
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: db62b8f0e50e39919c9634644adb5cf25304cbb32e0827de2a3fbac982660823
+  name:   Sprint Master (NTSC)
+  title:  Sprint Master
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: ef139ae2d81098f03e2145f5ffefd7e055264fb7f5be3c209b2d5d0107542cd9
+  name:   Squeeze Box (NTSC)
+  title:  Squeeze Box
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 04b0e8d78e49f0d1ce02837bd73639a1436d1588a74f6b865332c553f7937421
+  name:   Squoosh (prototype) (NTSC)
+  title:  Squoosh (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0e4df01aae4853889d93427567e9e072af6871c0d9981f380a7b2e39fcab7574
+  name:   Sssnake (NTSC)
+  title:  Sssnake
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1cd2b3e7477ae563048e1f55261f80a05aa7d7a9610097f33ee951192531a18c
+  name:   Stampede (NTSC)
+  title:  Stampede
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 49cdab93b05be9b32711f28b8f0849fa7d7fd914932bef1757e6ee0b5e5740ac
+  name:   Star Fox (NTSC)
+  title:  Star Fox
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 09d2dc1512889713da8e9cacdfcfe9d3eab122eb538fe7c0bbb8e97968533e6a
+  name:   Star Raiders (NTSC)
+  title:  Star Raiders
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: b3e83b4217054fc4047467858606e14f733798be8232255167b5d8e504c3c11e
+  name:   Star Ship - Outer Space (NTSC)
+  title:  Star Ship - Outer Space
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 927c51187ea1bad9e7a9608ee71a6277c38771baf8c0746bc91819c930310440
+  name:   Star Strike (NTSC)
+  title:  Star Strike
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: bb0b13bc047b91640f371d995fcb278f104061a81a66f6eaa709e5ec51fb2745
+  name:   Star Trek - Strategic Operations Simulator (NTSC)
+  title:  Star Trek - Strategic Operations Simulator
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: c24e5be9fd94163530925e01228d7a03cfa26c3170b7c83bcaafc5046d7b68a6
+  name:   Star Voyager (NTSC)
+  title:  Star Voyager
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3383c784c23d455d8cb9236b98b533d4bbf6ae233917385c69981f542c2622b2
+  name:   Star Voyager (PAL)
+  title:  Star Voyager
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7c7bbf95720bdc77b4ec5467086caab4aa3264b40d28502b0e990858b44c3b77
+  name:   Star Wars - Jedi Arena (NTSC)
+  title:  Star Wars - Jedi Arena
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9de7fa3a2ae163903670e0e1069ea28092255fad6795a46f51893dbe9b3d4961
+  name:   Star Wars - Return of the Jedi - Death Star Battle (NTSC)
+  title:  Star Wars - Return of the Jedi - Death Star Battle
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 4f949e383c282aa8fe064fbbc864f5ad793ad7f47641b6b493dc820108c574a6
+  name:   Star Wars - Return of the Jedi - Death Star Battle (PAL)
+  title:  Star Wars - Return of the Jedi - Death Star Battle
+  region: PAL
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 2900d7e144837c93753e588693615bdbe284e0248f6de250b23b886e564f7bdc
+  name:   Star Wars - Return of the Jedi - Ewok Adventure (prototype) (NTSC)
+  title:  Star Wars - Return of the Jedi - Ewok Adventure (prototype)
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 723756025960c713bd0bc42bd6320c2c5959a2578a4d2194f8343b8d73b8aa67
+  name:   Star Wars - The Arcade Game (NTSC)
+  title:  Star Wars - The Arcade Game
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 250f37b16769764a51157e2a4d5ef534e9bc28447610ea13d12390192c5f91a4
+  name:   Star Wars - The Empire Strikes Back (NTSC)
+  title:  Star Wars - The Empire Strikes Back
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 596d73fd1f204176d57e900d6a4270eaad2ee8ed3b706a37cae2fc86267c7b83
+  name:   Star Wars - The Empire Strikes Back (PAL)
+  title:  Star Wars - The Empire Strikes Back
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d42116de7e4133b718304d0c16acf1f915a8f204730f01e88b4eb4b9645d60cb
+  name:   Stargate (NTSC)
+  title:  Stargate
+  region: NTSC
+  board:  Atari8kSC
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: bb044366be7f2cc108d9de358fbe6086740ee629575a4b7f4f3b365ee42a837a
+  name:   Stargate (PAL)
+  title:  Stargate
+  region: PAL
+  board:  Atari8kSC
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3ad501a39280de82bd604c6d8ae915fe93c1e6ebfd97685ab097c5dbef9822c3
+  name:   Stargunner (NTSC)
+  title:  Stargunner
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: df86952c1b3e6bc13edf38256d51fc596ee8af34fa770741275eeabc33a95d5e
+  name:   StarMaster (NTSC)
+  title:  StarMaster
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4a4a39ec6bcfad25650e436875bb2d1e3f2b3e1e1050c15bf857f7fcf12b9bf1
+  name:   StarMaster - Kommando Galaxis (PAL)
+  title:  StarMaster - Kommando Galaxis
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 94a0092ad511f2a443e99c09310e258b2a0bc06269da3e8d99b773bbaf4df413
+  name:   Steeplechase (NTSC)
+  title:  Steeplechase
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 16331e338ee6a15e2aeef73cd9e5e0f532c38cc23a2f6c11b2220c38c31b76f2
+  name:   Steeplechase (PAL)
+  title:  Steeplechase
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7dfe92738c0aa56d9d422591ace93247ccb728d7b1539393b1ef56b39d8bb78e
+  name:   Stellar Track (NTSC)
+  title:  Stellar Track
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4b8d698225d493b6af0f752638f0bc7d85b788ae75d140192f36c31a0210e17a
+  name:   Stone Age (NTSC)
+  title:  Stone Age
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6730a9fd6a480ff2ebeca4a1630aa0192a57222d6c8f6b266c2d4724416e9ee7
+  name:   Strahlen der Teufelsvoegel (PAL)
+  title:  Strahlen der Teufelsvoegel
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7b1b63f0c9224991f84894635c48de14386129ea4b63b679a4bceeda90594768
+  name:   Strategy X (NTSC)
+  title:  Strategy X
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ba6cc0a0d341531b4543ab5db808cf5f9983b43e448871de87aabe7b8c4b916d
+  name:   Strawberry Shortcake - Musical Match-Ups (NTSC)
+  title:  Strawberry Shortcake - Musical Match-Ups
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 62b34da850557a887ea48b6610ac21ba7e83efe6b690b28700b850abdc048a7c
+  name:   Street Racer (PAL)
+  title:  Street Racer
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: e0f132c146221a403af1b992c1278a3b77e67d1996266b4386361b5c18b050a5
+  name:   Street Racer - Speedway II (NTSC)
+  title:  Street Racer - Speedway II
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 044bb33d67893395d7799e10cde760bed60c74b3ed10d66126de27a9b04201f7
+  name:   Stronghold (NTSC)
+  title:  Stronghold
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2e4542300d84e1ad1ab3c571f99c36d0fbea4a0aa2c3035ccbee7eb5fa16f87b
+  name:   Stunt Cycle (prototype 19800721) (NTSC)
+  title:  Stunt Cycle (prototype 19800721)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 38ec2eb0b4a08116875c70749ff1fe0c3015d12e4bbc4a4bea6403c636514a37
+  name:   Sub-Scan (NTSC)
+  title:  Sub-Scan
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9b75916122f23bccf83bc7d824f4d04ed2caa3dce85da18114c71768dc2f8e08
+  name:   Submarine Commander (NTSC)
+  title:  Submarine Commander
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5021fec18443817f379de13e42484de61f08a0077a452b5250df7671043279ba
+  name:   Subterranea (NTSC)
+  title:  Subterranea
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: f74161f6aacd10afbb18dbc9d42eae253d96f867810ec724116d55a6b2fa2872
+  name:   Summer Games (NTSC)
+  title:  Summer Games
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: cb5827e9ef2a55d1b980ab080c5c53b5c2949cbc4dd5e52006f805bedf4af709
+  name:   Summer Games (PAL)
+  title:  Summer Games
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 8adddb6d3ca6dd691b1974674e6cb51b6f8e6e6b3c92d983a3f1e5ccc5e8e8c4
+  name:   Super Baseball (NTSC)
+  title:  Super Baseball
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: c817edb45bde15a553a3fc42495142b99ea2d0b041105f8a55382f8a6b52315b
+  name:   Super Baseball (PAL)
+  title:  Super Baseball
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 1a52cdf8d3426b5872ffb9616dfa5d9e6e35aeb6db32c8a58da972980fe69f71
+  name:   Super Breakout (NTSC)
+  title:  Super Breakout
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1adaf254a61c3a616e3f6b04c8b0cb0d93ad0ddf5957deb2129a8d1e1702bbb5
+  name:   Super Breakout (PAL)
+  title:  Super Breakout
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: eb856da77d0449d6f26ab3bde1f96f5f6a4b8b569d32b99d3b9080ab00de2c42
+  name:   Super Challenge Baseball (Mattel) (NTSC)
+  title:  Super Challenge Baseball (Mattel)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c3843a2b397935673e2b6768794b580b9153443ca439c731d77cb66a45472c36
+  name:   Super Challenge Football - Football (NTSC)
+  title:  Super Challenge Football - Football
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 66eb4dbe78a6792bbdea5ae928e2ea1869577da355d62bae501c7ebdf435a539
+  name:   Super Cobra (NTSC)
+  title:  Super Cobra
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 8ac21e321badef8f9b7f295577d7de5175f318d4c59837ab45d14ec262454a67
+  name:   Super Football (NTSC)
+  title:  Super Football
+  region: NTSC
+  board:  Atari16kSC
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 0d4078117af08a235d7332daa299365f5e41d403efcd0fa57fb31131ed2ab871
+  name:   Super-Ferrari (PAL) (Quelle)
+  title:  Super-Ferrari (Quelle)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e4a7b640f5d4684d39fd811abcfb28160603e93a5bac66d52f58bc7bb943d9b0
+  name:   Superman (fixed?) (NTSC)
+  title:  Superman (fixed?)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0dfcccfb4ff84f1fac97585f8f0185a1de6d4e0c7c0bd4a6840fcf767cd7413a
+  name:   Surf's Up (prototype) (NTSC)
+  title:  Surf's Up (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 30485bf102b44cef52436e8e83375a181f183c1abbdc10bbe6f15b2dcfee4c32
+  name:   Surfer's Paradise - But Danger Below! (PAL)
+  title:  Surfer's Paradise - But Danger Below!
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c6864f5c9f43f0590226b4f2943d00fb8a90a2c6f799963de75016d5c07affc3
+  name:   Surround (PAL)
+  title:  Surround
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 4f157433275f3ffe451617f2dbae1141bf601b018162c80217efb543268af6c5
+  name:   Surround - Chase (NTSC)
+  title:  Surround - Chase
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 35295bd13eb87c1a7594e51f7539c2ac6e9b7487d672b0848a88ad500cf0f58c
+  name:   Survival Run (NTSC)
+  title:  Survival Run
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 421d843e7c9e07d82907d5928112c79613e01b5abc4bc2d9ba6c50404cb0d3e3
+  name:   Survival Run (prototype) (NTSC)
+  title:  Survival Run (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: cc1345893413b54c1cd654deb904dd56dc82d0b81ffe40ffa53ebd17f1a38089
+  name:   Swordfight (NTSC)
+  title:  Swordfight
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5c39844ffcdbe0cb1765277d3479a0ec4f5d86a995d9c73101d53c151e822481
+  name:   SwordQuest - EarthWorld (NTSC)
+  title:  SwordQuest - EarthWorld
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 969b811403d49d04858cd74472e0dd54751803d1c5a707696ac1420f2845ff26
+  name:   SwordQuest - FireWorld (NTSC)
+  title:  SwordQuest - FireWorld
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: cf051fc6e291f674d6ba2c5ab63d80e7c069057d7650a5364301678b6d02b35f
+  name:   SwordQuest - WaterWorld (NTSC)
+  title:  SwordQuest - WaterWorld
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 3af8ede3480dccc89f516cedb3687e7a5648cead3d8fa6c14d0ff87e49496467
+  name:   Tac-Scan (NTSC)
+  title:  Tac-Scan
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: bc2457432e87382f389a19ec7f90145a043345b0af111d8eaacece21e7a530e9
+  name:   Tanks But No Tanks (NTSC)
+  title:  Tanks But No Tanks
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3f7d629e24d593e539391fa1b0a52104b28b226bf5ce28e3972949087d08bc95
+  name:   Tapeworm (NTSC)
+  title:  Tapeworm
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 624d94bad127cbe0cd446bd3fc7ee23b8d5b852cb02f999178728fae19c9d8e1
+  name:   Tapper (NTSC)
+  title:  Tapper
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 0475164583ee7ad37b5cbceb201e47071110a612c40aae9320595db3c6b6e12d
+  name:   Tax Avoiders (NTSC)
+  title:  Tax Avoiders
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 29eb85e410c9f1d6732bdc0a8aae8d049ae692d5b79e905e59f925cdada76cb8
+  name:   Taz (NTSC)
+  title:  Taz
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: afcca1af5b8ca7d88da9f6e35cc866661ee01016d428b22026efc86f887eb0ec
+  name:   Telepathy (prototype) (NTSC)
+  title:  Telepathy (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 10b1890bd0d32ef5c89a94116dd100d47aaf3b3057471b13fe93a3f0323b1972
+  name:   Teller-Jonglieren! (PAL)
+  title:  Teller-Jonglieren!
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0fb6ede5c6a8c3cdbe24d308926b25eac4982083cf68262ae6de21aaaf019088
+  name:   Tempest (prototype 19840105) (NTSC)
+  title:  Tempest (prototype 19840105)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: ced48ec57d97a0c2eaf9bce20b550506af6383cb6736624face3c1120467261c
+  name:   Tennis (PAL)
+  title:  Tennis
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: b829e42751fcbc93ad7be8c6bd41e00083aad74d1f9f869f40898d21fb34133b
+  name:   Tennis - Le Tennis (NTSC)
+  title:  Tennis - Le Tennis
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 1015650ea42b10aa5eb46e0a3140df87c134dc949271bf5a477737804f09a181
+  name:   The Activision Decathlon (NTSC)
+  title:  The Activision Decathlon
+  region: NTSC
+  board:  Activision8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 30497cf359fe91e2556a337d73a480fb96588cdae1fe19bf66f2c7ddcaff2a70
+  name:   The Activision Decathlon - Zehnkampf (PAL)
+  title:  The Activision Decathlon - Zehnkampf
+  region: PAL
+  board:  Activision8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 5add4f483e3c97b6cd555ec54438a48df9533df0cf66174c31059df2ee3f40a6
+  name:   The Alligator People (prototype) (NTSC)
+  title:  The Alligator People (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0803ed2a148665aeb3499d9a810e4f739585c4f204859c79eb67a8ba5f639a44
+  name:   The Challenge of.... Nexar (NTSC)
+  title:  The Challenge of.... Nexar
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ae40bebe70d7a012e807c1a0726f8fdbcdf07ef216d28e2322cf84b2b18a05d1
+  name:   The Challenge of.... Nexar (PAL)
+  title:  The Challenge of.... Nexar
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: abf3ef4dca0327df2f4b98a8099d7fac294b877fedd8e900ff58e33921658dae
+  name:   The Earth Dies Screaming (NTSC)
+  title:  The Earth Dies Screaming
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 16a6d8719eedb795e70678829ff5adcb185346c0c9ec9a228bfab6216dec5d8d
+  name:   The Entity (prototype) (NTSC)
+  title:  The Entity (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 30f00bb3373ade3cb032a352a806a597a3a060c5677d9f5a8ec2b1d02e35cdf4
+  name:   The Lord of the Rings - Journey to Rivendell (prototype) (NTSC)
+  title:  The Lord of the Rings - Journey to Rivendell (prototype)
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 0f0eb1a0dd86b2d21d8d9ca11cc1ba217d189add1d1350e8b41c763ee255c674
+  name:   The Music Machine (NTSC)
+  title:  The Music Machine
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fbac0f9bcfbe050225836d938be2dc085b27492ef2968193af154963bdc3a9fc
+  name:   The Texas Chainsaw Massacre (NTSC)
+  title:  The Texas Chainsaw Massacre
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 37b3c28ddba8e17c091376cbeb2582f9985392763c69c258066c52e558cfb8a7
+  name:   Thunderground (NTSC)
+  title:  Thunderground
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1eeac0099d432c02f4820ae0a620c4148f30c2c02f570885097d5396219b1f17
+  name:   Thwocker (prototype 19840409) (NTSC)
+  title:  Thwocker (prototype 19840409)
+  region: NTSC
+  board:  Activision8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 8ea97e335a2fb122faa591a86e695de1eddb88e9370d3ead6e82d308f6e81c7d
+  name:   Time Pilot (NTSC)
+  title:  Time Pilot
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 7680a08c5ab6ceecf0521c7902cb4c69d0c12304c31e576d1196e9d31a132dcc
+  name:   Time Warp (NTSC)
+  title:  Time Warp
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7149ab7a468da6cebd14da8c4b62a841dadfb0875af78d830ff7a4e101631c3e
+  name:   Time Warp (PAL)
+  title:  Time Warp
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e08c4704e88befbb97bff1d02a9dfdd78782ad1385cc61b51f5afd78e70514e6
+  name:   Title Match Pro Wrestling (NTSC)
+  title:  Title Match Pro Wrestling
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: b95123210da5fb34df33110919882594e3624813b8c287491918ea6f7cfc1ba7
+  name:   Title Match Pro Wrestling - Pro Wrestling (PAL)
+  title:  Title Match Pro Wrestling - Pro Wrestling
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 7bcbc7767a04b90d8a2b515860c42a0d24b1bd786a0756d53d5e7602e2f1b1c9
+  name:   Tom Boy (PAL)
+  title:  Tom Boy
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ae6f4dad43ae598a5c2acd5e2dfb083a197f8b911014f36ab6d952f8e33a2506
+  name:   Tomarc the Barbarian (NTSC)
+  title:  Tomarc the Barbarian
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 83a66cf9127689f64897c0e8847ac7c7f4296a8c15f262c37419d0406584e863
+  name:   Tomcat - The F-14 Fighter Simulator (NTSC)
+  title:  Tomcat - The F-14 Fighter Simulator
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 793d6ccb5381e8622933437efb6b933c87bb813b00e161fc4dd7dd288753a049
+  name:   Tooth Protectors (NTSC)
+  title:  Tooth Protectors
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 6e3c8c5c35410ea86f8149395c2edefdf11b2e8014faaed910c92b1a563cabb4
+  name:   Top Gun - Air Patrol (PAL)
+  title:  Top Gun - Air Patrol
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 3fdd7a686e7536388eef2b55cd85d170baa7cbf4a1f49808d95cbb572de86faa
+  name:   Towering Inferno (NTSC)
+  title:  Towering Inferno
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 5f7602b28f37ac2cd0070d4bafe5553f9254fdfaaa9bb146288ab8674a823ce5
+  name:   Track and Field (NTSC)
+  title:  Track and Field
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 65823252951bda6460e50f301db8a667497aed768bba5411e3f133ebcf3dfbe5
+  name:   Treasure Below (PAL)
+  title:  Treasure Below
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 64f12f4065e8633c61a46b4d388fd459ea8cbfff77bce70ee424fc73f5eb5c40
+  name:   Treasure Island (PAL)
+  title:  Treasure Island
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7476b18de6d2e8f811419bcd53f6e39f1d634742831d37390bea72247a9607e8
+  name:   Trick Shot (NTSC)
+  title:  Trick Shot
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 0c0a8a09941f3937933bdaca7e7b52b19662d447460aad30b588813137f345eb
+  name:   Trick Shot (PAL)
+  title:  Trick Shot
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ec88c49e99749628990f07e03452032f8e0b405a26ca6ab3edcb4d4e12d6f1fb
+  name:   TRON - Deadly Discs (NTSC)
+  title:  TRON - Deadly Discs
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 277d6971b455ec1795d27743e4bfdef35ef649857d7b06b361561722a1f0940f
+  name:   Tuby Bird (PAL)
+  title:  Tuby Bird
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9c6c22528937f96e754bb85d5c5ab6f8a35eb103acabb3c6351f34b887f71033
+  name:   Tunnel Runner (NTSC)
+  title:  Tunnel Runner
+  region: NTSC
+  board:  CbsRamPlus
+    memory
+      type: ROM
+      size: 0x3000
+      content: Program
+
+game
+  sha256: a45bc90a4213d1cd1ab4ffb6e253e7b6eaa739d99f5adbfc88ee580096e8171f
+  name:   Turmoil (NTSC)
+  title:  Turmoil
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 403397fe85838ebc94bf063e63756b7656b9c962b9c6392b991d37ef4ad4a3d4
+  name:   Tutankham (NTSC)
+  title:  Tutankham
+  region: NTSC
+  board:  ParkerBros8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 0e65754e0d7faf45160fa5623169a62150c5fa38515f7815a1fd598f83890614
+  name:   UFO Patrol (PAL)
+  title:  UFO Patrol
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d44bf756d4aba79c9238270f42a81ec6233440375c5c399332c455a8963f377d
+  name:   Universal Chaos (NTSC)
+  title:  Universal Chaos
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 987f4167138f8c8f101237fe07d65d952abdd279758d4def2710ec1096f460ba
+  name:   Universal Chaos (PAL)
+  title:  Universal Chaos
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 93b847d38637d4c8e31c1c51aeecbfcd951a6f48d2e636738b05b0ae9f9212f5
+  name:   Unknown Activision Game #1 (prototype 19821029) (NTSC)
+  title:  Unknown Activision Game #1 (prototype 19821029)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ae42ad9c6316b711bde774a6010e24106722efce872afc08cd69a70e041ba1ac
+  name:   Unknown Universal Game (prototype) (NTSC)
+  title:  Unknown Universal Game (prototype)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 74890a43e59134ea88e0a3aa6cae91615299cc41d74a464e0e31070d5d36062c
+  name:   Up 'n Down (NTSC)
+  title:  Up 'n Down
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 88f258677b039905c0f37c4a72285c3fad31063479e4af8552c6912f958b89f7
+  name:   Vanguard (NTSC)
+  title:  Vanguard
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 8032b300f5382c4dd182637834d6879941733c124e701aac431c723dcda3d933
+  name:   Venetian Blinds Demo (NTSC)
+  title:  Venetian Blinds Demo
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 5cdd323b8f817cc5d953910db97c20d9b7203316a8996663fdc953f2e29ee80e
+  name:   Venture (NTSC)
+  title:  Venture
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 1b8df87556ff05573c24149700802ec9e009a7f4506e815b8f0e0dc4532bdf58
+  name:   Venture (PAL)
+  title:  Venture
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f69513587548df47060f670c2be8f268942cd673e7de87f2a66c09460276a80b
+  name:   Video Checkers - Checkers - Atari Video Checkers (NTSC)
+  title:  Video Checkers - Checkers - Atari Video Checkers
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: d44f2a115393b0a6cbcd5398d62369e652f3670a9ee585883d183e740edad0f7
+  name:   Video Chess (NTSC)
+  title:  Video Chess
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4b08c204ec409cc18328e38c1a8021013ab547be5fcd089814080f919bed7ddf
+  name:   Video Chess (PAL)
+  title:  Video Chess
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 743f37dd43f9fa8a64c17d3444ea4042c849583c78cfeead571e61750527d99c
+  name:   Video Jogger (NTSC)
+  title:  Video Jogger
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 68d1af65ac22b88b13d58110e3b9d5b7440eaa8ab7c2554806b037145b14a467
+  name:   Video Life (NTSC)
+  title:  Video Life
+  region: NTSC
+  board:  Commavid
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: eb850455da8a38ef0c0c9d16cb7bfd3c91d1198ce4f28dde834193dd19ffd0d6
+  name:   Video Olympics (PAL)
+  title:  Video Olympics
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: 41623e3c26148f96cbe77d56512845d224a63c8fe5bf90e38527155e39ec96d3
+  name:   Video Olympics - Pong Sports (NTSC)
+  title:  Video Olympics - Pong Sports
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: ddd755f728271d602860734f144b697f6d8f751f125e9561bf9ac1295639c9b7
+  name:   Video Pinball (PAL)
+  title:  Video Pinball
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6385d230348f137232ff1ec9722261a9b4d91af89ae68c68036d3f4d0bfee19c
+  name:   Video Pinball - Arcade Pinball (NTSC)
+  title:  Video Pinball - Arcade Pinball
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 15fbde3f12e71178993cb667a3d7d01b049ea8f2bac3af301c8ce53daae2b06f
+  name:   Video Reflex (NTSC)
+  title:  Video Reflex
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c6311823013a147fcc89b17997acc45a3557e268102625049d2f670a22714148
+  name:   Vom Himmel durch die Hoelle (PAL)
+  title:  Vom Himmel durch die Hoelle
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: fe957ebfdfcfcb2aed19d48cd4c96eda1805f4f757a5dac820ad1fb9bb120592
+  name:   Wabbit (NTSC)
+  title:  Wabbit
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: b06c2340d441567936040e90a186a02d446bffde9551a8e1f6b398af749d0745
+  name:   Walker (PAL)
+  title:  Walker
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7f1d10c0d08a82e643cbf6a2f3842076abd89515db0be16f58b7724d65e9253f
+  name:   Wall Ball (NTSC)
+  title:  Wall Ball
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 85d3bb27f5fdd81a2441b60a1e03b17838b4045c3f5e121c99ec3dbc3ba55fa5
+  name:   Wall Break (PAL)
+  title:  Wall Break
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f47093257607c120b41e1d0f0f7fde1810c763a35285a10fff833607626861be
+  name:   Wall-Defender (NTSC)
+  title:  Wall-Defender
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 6e1a3835efc114490c8173234a21818a5952ef469002c1db33f864d17e8c093b
+  name:   War 2000 (PAL)
+  title:  War 2000
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 9baaaa1fda31bfb5a307ed8b8e14ed7972f6f2a01e188edccae65fbf80c0433a
+  name:   Warlords (NTSC)
+  title:  Warlords
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: f8f8c30361078ac233a7ae1a67b29ff085dc2d13a7e5ffa1855eeed31e81bca8
+  name:   Warplock (NTSC)
+  title:  Warplock
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 81c9709716d97c858a4bce20970f527c57bd01a7497b963e52644ec6792a6d0e
+  name:   Weltraumtunnel (PAL)
+  title:  Weltraumtunnel
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 90e3514c4a362ba018aca2a5a1a4cda75442bdf8dc3141cfdbee964074c53dce
+  name:   Wing War (PAL)
+  title:  Wing War
+  region: PAL
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: e0305165b7ead1531e1ac1ff46dd1452794015a46eb043f7d8840b7c9290736c
+  name:   Wings (prototype 19830603) (NTSC)
+  title:  Wings (prototype 19830603)
+  region: NTSC
+  board:  CbsRamPlus
+    memory
+      type: ROM
+      size: 0x3000
+      content: Program
+
+game
+  sha256: d50542dce15b2a14180fe1db9d03cf546e6cd2c2065fb4a2c477e41d24e6cd71
+  name:   Winter Games (NTSC)
+  title:  Winter Games
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 55a7d2aa33a04953d9738f3275014b040bdfff2aa17432073b6e64dbb5994f88
+  name:   Winter Games (PAL)
+  title:  Winter Games
+  region: PAL
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: 5abc6364f0a2fea70f2a8bbf1c83dd3f624aabebeb403c21b4d1c1356aaaf170
+  name:   Wizard (prototype) (NTSC)
+  title:  Wizard (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
+
+game
+  sha256: d69ee89e65c34cd3152d98d778de913dd7f59e7309f2bcbd3ebead585065e747
+  name:   Wizard of Wor (NTSC)
+  title:  Wizard of Wor
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 4d5bd188607efc33dd6377514bcefbbeb19757dfe76ecdcc47c526216d82361c
+  name:   Wizard of Wor (PAL)
+  title:  Wizard of Wor
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 214d9eb42bcd0a7430c8f41f5c1db26fb23015e09c70650e7c461854e63d30d3
+  name:   Word Zapper (NTSC)
+  title:  Word Zapper
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 431b0914009deae555dca15a2fd8126cbf6467cc471ab2da1faf0a3e5849acac
+  name:   Words-Attack (PAL) (prototype)
+  title:  Words-Attack (prototype)
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: c7e54ca2661e9fee66849eb1dcc764a712d31107d6ed699a141927fe3d553f66
+  name:   World End (PAL)
+  title:  World End
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: ad2300540e4913903953994c6ed59ce157f0b3c0b71d0d961ccc72568c92b66d
+  name:   Worm War I (NTSC)
+  title:  Worm War I
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7ebbbe67f5a26056cc5c19578a82038fbfdb504640a169201be5d9a66a7ce15b
+  name:   X-Man (NTSC)
+  title:  X-Man
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 2b647bb4526110aafe23fcc757135948a86fd77786dcb319f7259bba5441c07e
+  name:   Xenophobe (NTSC)
+  title:  Xenophobe
+  region: NTSC
+  board:  Atari16k
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+
+game
+  sha256: ce168f18f82f6d4b1120ed9f672f5c86a68467bf531bf41199f7673301b9ca3e
+  name:   Xevious (prototype 19830802) (NTSC)
+  title:  Xevious (prototype 19830802)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: 59de98677eb994ee6c615352538749caf959fc2d1f522d71715a3528673042bd
+  name:   Xevious (prototype 19840118) (NTSC)
+  title:  Xevious (prototype 19840118)
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: ff777c8d4ea06569156fcb2f5ba0e00eebaf2c2c509e5829109e5aefed199c66
+  name:   Yars' Revenge (NTSC)
+  title:  Yars' Revenge
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 7ed651ac949648a86d78bea2fb774defd47153df6d4f2eb8ac222e0a44d04b23
+  name:   Yars' Revenge (PAL)
+  title:  Yars' Revenge
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: a4d72e40716c4dc6242b1b14955bfa5d821f778fd0a9a06623f37fdf38abb2e2
+  name:   Z-Tack (NTSC)
+  title:  Z-Tack
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: e1c323ce00cccdd4bc737fd44abcef35b24fee04fd90bf9c9374e18b3b2ae6bf
+  name:   Zaxxon (NTSC)
+  title:  Zaxxon
+  region: NTSC
+  board:  Atari8k
+    memory
+      type: ROM
+      size: 0x2000
+      content: Program
+
+game
+  sha256: c7bbd36e1ec6c162bc5c2865722c202b4819a6a77f58eba413a7a2c88ad821b7
+  name:   Zoo Fun (PAL)
+  title:  Zoo Fun
+  region: PAL
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x1000
+      content: Program
+
+game
+  sha256: 979b91068ca88622793e419e8092395e020db5db8cb42ca433682479cdf95f0e
+  name:   Zoo Keeper Sounds (prototype) (NTSC)
+  title:  Zoo Keeper Sounds (prototype)
+  region: NTSC
+  board:  Linear
+    memory
+      type: ROM
+      size: 0x800
+      content: Program
