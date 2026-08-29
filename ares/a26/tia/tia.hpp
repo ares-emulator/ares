@@ -8,6 +8,7 @@ struct TIA : Thread {
   };
 
   auto horizontalCounter() const -> u8 { return timing.hcounter; }
+  auto displayPosition() const -> i16 { return timing.position(); }
 
   //tia.cpp
   auto load(Node::Object) -> void;

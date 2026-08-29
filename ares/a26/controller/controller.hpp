@@ -33,3 +33,4 @@ struct Controller {
 #include "trak-ball/trak-ball.hpp"
 #include "atari-mouse/atari-mouse.hpp"
 #include "amiga-mouse/amiga-mouse.hpp"
+#include "xg1-light-gun/xg1-light-gun.hpp"

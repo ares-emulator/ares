@@ -1,4 +1,5 @@
 #include <a26/a26.hpp>
+#include <ares/resource/resource.hpp>
 
 namespace ares::Atari2600 {
 
@@ -14,5 +15,6 @@ namespace ares::Atari2600 {
 #include "trak-ball/trak-ball.cpp"
 #include "atari-mouse/atari-mouse.cpp"
 #include "amiga-mouse/amiga-mouse.cpp"
+#include "xg1-light-gun/xg1-light-gun.cpp"
 
 }
