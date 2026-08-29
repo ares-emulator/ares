@@ -22,5 +22,6 @@ namespace ares::Atari2600 {
 #include "atarivox/atarivox.cpp"
 #include "kidvid/audio.cpp"
 #include "kidvid/kidvid.cpp"
+#include "quadtari/quadtari.cpp"
 
 }

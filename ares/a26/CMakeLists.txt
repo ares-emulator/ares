@@ -108,6 +108,8 @@ ares_add_sources(
     controller/kidvid/kidvid.cpp
     controller/kidvid/kidvid.hpp
     controller/kidvid/tables.hpp
+    controller/quadtari/quadtari.cpp
+    controller/quadtari/quadtari.hpp
 )
 
 ares_add_sources(
