@@ -14,6 +14,7 @@ struct Controller {
 
   virtual ~Controller() = default;
 
+  virtual auto save() -> void {}
   virtual auto power(bool reset) -> void {}
   virtual auto poll() -> void {}
   virtual auto frame() -> void {}
@@ -38,4 +39,5 @@ struct Controller {
 #include "amiga-mouse/amiga-mouse.hpp"
 #include "xg1-light-gun/xg1-light-gun.hpp"
 #include "mindlink/mindlink.hpp"
+#include "savekey/savekey.hpp"
 #include "kidvid/kidvid.hpp"

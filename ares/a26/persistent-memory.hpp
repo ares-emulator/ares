@@ -50,6 +50,7 @@ struct PersistentMemory {
   auto flush(VFS::Pak pak) -> bool {
     if(!dirty) return true;
     if(!pak) return false;
+    if(!pak->read(name)) pak->append(name, memory.size());
     auto fp = pak->write(name);
     if(!fp) return false;
     fp->resize(memory.size());
