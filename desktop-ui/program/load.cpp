@@ -82,7 +82,9 @@ auto Program::load(string location) -> bool {
 
   if(!emulator->load(location)) {
     emulator.reset();
-    if(settings.video.adaptiveSizing) presentation.resizeWindow();
+    if(settings.video.adaptiveSizing && !ruby::video.fullScreen() && !presentation.fullScreen()) {
+      presentation.resizeWindow();
+    }
     presentation.showIcon(true);
     return false;
   }
@@ -109,7 +111,9 @@ auto Program::load(string location) -> bool {
   runAheadUpdate();
   presentation.loadEmulator();
   presentation.showIcon(false);
-  if(settings.video.adaptiveSizing  && !startPseudoFullScreen) presentation.resizeWindow();
+  if(settings.video.adaptiveSizing && !ruby::video.fullScreen() && !presentation.fullScreen()) {
+    presentation.resizeWindow();
+  }
   if(toolsWindowConstructed) {
     manifestViewer.reload();
     cheatEditor.reload();
