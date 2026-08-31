@@ -376,6 +376,12 @@ auto VDP::writeControlPort(n16 data) -> void {
     return;
   }
 
+  //KMod message (an emulator debug extension; not a register on real hardware)
+  case 0x1e: {
+    debugger.messageChar(data.bit(0,7));
+    return;
+  }
+
   //unused
   default: {
     return;
