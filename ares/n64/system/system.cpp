@@ -36,6 +36,10 @@ auto option(string name, string value) -> bool {
   #endif
   if(name == "Homebrew Mode") system.homebrewMode = value.boolean();
   if(name == "Deterministic Entropy") system.deterministicEntropy = value.boolean();
+  if(name == "SC64") system.sc64Enabled = value.boolean();
+  if(name == "SC64 SD Image") system.sc64SDImage = value;
+  if(name == "SC64 SD Image Read Only") system.sc64SDImageReadOnly = value.boolean();
+  if(name == "SC64 USB Host Port") system.sc64USBHostPort = value.integer();
   if(name == "Recompiler") {
     if constexpr(Accuracy::CPU::Recompiler) {
       cpu.recompiler.enabled = value.boolean();
@@ -63,6 +67,12 @@ auto option(string name, string value) -> bool {
   return true;
 }
 
+//the cart INT line is open-drain: it stays active while any cartridge bus
+//device (the 64DD or the cartridge slot) drives it
+auto pollCartridgeInterrupt() -> void {
+  cpu.setInterruptPending(CPU::Interrupt::Cartridge, dd.irqLine() || sc64.irqLine());
+}
+
 System system;
 Queue queue;
 Random random;
@@ -86,6 +96,7 @@ auto System::run() -> void {
     _vulkanNeedsLoad = false;
   }
   cpu.main();
+  sc64.pollHost();
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -445,6 +456,7 @@ auto System::power(bool reset) -> void {
   }
   queue.reset();
   cartridge.power(reset);
+  sc64.power(reset);
   rdram.power(reset);
   if(_DD()) dd.power(reset);
   mi.power(reset);

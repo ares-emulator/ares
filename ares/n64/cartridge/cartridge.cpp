@@ -55,10 +55,18 @@ auto Cartridge::connect() -> void {
     isviewer.tracer->setTerminal(true);
   }
 
-  pi.attach(romDevice, 0);
+  if(system.sc64Enabled) {
+    sc64.open(system.sc64SDImage, system.sc64SDImageReadOnly, system.sc64USBHostPort);
+  }
+
+  // SC64's SDRAM covers the ROM window; the plain ROM device must not shadow it.
+  if(!system.sc64Enabled) pi.attach(romDevice, 0);
+  // SC64 SRAM and FlashRAM emulation are not implemented; always use standard PI save devices.
   if(ram) pi.attach(ramDevice, 1);
   if(flash) pi.attach(flash, 1);
-  if(isviewer.enabled()) pi.attach(isviewer, 1);
+  // The ISViewer window is inside SC64's SDRAM; disable ISViewer if SC64 is enabled.
+  if(isviewer.enabled() && !system.sc64Enabled) pi.attach(isviewer, 1);
+  if(system.sc64Enabled) pi.attach(sc64, 1);
 
   debugger.load(node);
 
@@ -72,12 +80,14 @@ auto Cartridge::disconnect() -> void {
   pi.detach(ramDevice);
   pi.detach(flash);
   pi.detach(isviewer);
+  pi.detach(sc64);
   debugger.unload(node);
   rom.reset();
   ram.reset();
   eeprom.reset();
   flash.reset();
   isviewer.ram.reset();
+  sc64.close();
   pak.reset();
   node.reset();
 }
