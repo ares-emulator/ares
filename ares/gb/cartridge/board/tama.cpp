@@ -33,13 +33,26 @@ struct TAMA : Interface {
       for(u32 index : range(8)) {
         timestamp.byte(index) = rtc[7 + index];
       }
-      n64 diff = chrono::timestamp() - timestamp;
-      if(diff < 32 * 365 * 24 * 60 * 60) {
-        while(diff >= 24 * 60 * 60) { tickDay(); diff -= 24 * 60 * 60; }
-        while(diff >= 60 * 60) { tickHour(); diff -= 60 * 60; }
-        while(diff >= 60) { tickMinute(); diff -= 60; }
-        while(diff) { tickSecond(); diff -= 1; }
+      if(!timestamp || !(timestamp + 1)) {
+        time_t t = time(0);
+        struct tm tmm = *localtime(&t);
+        io.rtc.year = tmm.tm_year % 100;
+        io.rtc.month = tmm.tm_mon + 1;
+        io.rtc.day = tmm.tm_mday;
+        io.rtc.hour = tmm.tm_hour;
+        io.rtc.minute = tmm.tm_min;
+        io.rtc.second = tmm.tm_sec;
+        io.rtc.meridian = tmm.tm_hour >= 12;
+        return;
       }
+      time_t now = chrono::timestamp();
+      time_t saved = (time_t)timestamp;
+      if(now <= saved) return;
+      n64 diff = now - saved;
+      while(diff >= 24 * 60 * 60) { tickDay(); diff -= 24 * 60 * 60; }
+      while(diff >= 60 * 60) { tickHour(); diff -= 60 * 60; }
+      while(diff >= 60) { tickMinute(); diff -= 60; }
+      while(diff) { tickSecond(); diff -= 1; }
     }
   }
 
