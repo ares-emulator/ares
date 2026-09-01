@@ -174,8 +174,22 @@ auto Vulkan::scanoutAsync(bool field) -> bool {
   ::RDP::ScanoutOptions options;
   options.downscale_steps = supersampleScanout ? 16 : 0;
   options.persist_frame_on_invalid_input = true;  //this is a compatibility hack, but I'm not sure what for ...
+  options.crop_rect = {
+      .left = overscanCropLeft,
+      .right = overscanCropRight,
+      .top = overscanCropTop,
+      .bottom = overscanCropBottom,
+      .enable = enableOverscanCrop
+  };
   if(disableVideoInterfaceProcessing) {
-    options.vi = {false, false, true, false, false, false};
+    options.vi = {
+        .aa = false,
+        .scale =false,
+        .serrate = true,
+        .dither_filter = false,
+        .divot_filter = false,
+        .gamma_dither = false
+    };
   }
   if(!supersampleScanout){
     options.blend_previous_frame = weaveDeinterlacing;
