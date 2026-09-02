@@ -202,6 +202,7 @@ auto Arcade::load() -> LoadResult {
     ares::Nintendo64::option("Homebrew Mode", settings.developer.homebrewMode);
     ares::Nintendo64::option("Deterministic Entropy", settings.developer.deterministicEntropy);
     ares::Nintendo64::option("Recompiler", !settings.developer.forceInterpreter);
+    ares::Nintendo64::option("Overclock", settings.nintendo64.overclock);
 
     return successful;
   }
