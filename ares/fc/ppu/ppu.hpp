@@ -53,6 +53,7 @@ struct PPU : Thread {
   auto rendering() const -> bool;
   auto loadCHR(n16 address) -> n8;
 
+  auto bgShift() -> u32;
   auto renderPixel() -> void;
   auto renderScanline() -> void;
 
@@ -162,11 +163,13 @@ struct PPU : Thread {
 
     n8 tiledataLo;
     n8 tiledataHi;
+
+    bool counting;
   };
 
   struct Latches {
-    n16 nametable;
-    n16 attribute;
+    n16 attributeLo;
+    n16 attributeHi;
     n16 tiledataLo;
     n16 tiledataHi;
 
