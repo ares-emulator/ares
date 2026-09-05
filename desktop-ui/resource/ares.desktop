@@ -1,8 +1,9 @@
 [Desktop Entry]
 Name=ares
 Comment=Emulator
-Exec=ares
+Exec=ares "%f"
 Icon=ares
 Terminal=false
 Type=Application
 Categories=Game;Emulator;
+MimeType=application/x-nes-rom;application/x-fds-disk;application/vnd.nintendo.snes.rom;application/x-n64-rom;application/x-gameboy-rom;application/x-gameboy-color-rom;application/x-gba-rom;application/x-gamegear-rom;application/x-sms-rom;application/x-genesis-32x-rom;application/x-genesis-rom;application/x-sega-cd-rom;application/x-msx-rom;application/x-neo-geo-pocket-rom;application/x-neo-geo-pocket-color-rom;application/x-pc-engine-rom;application/x-sg1000-rom;application/x-wonderswan-rom;application/x-wonderswan-color-rom;application/x-spectrum-tzx;application/x-spectrum-tap;
