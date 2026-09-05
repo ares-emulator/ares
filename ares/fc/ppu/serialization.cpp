@@ -31,8 +31,8 @@ auto PPU::serialize(serializer& s) -> void {
   s(io.spriteEnable);
   s(io.emphasis);
   s(io.spriteZeroHit);
-  s(latch.nametable);
-  s(latch.attribute);
+  s(latch.attributeLo);
+  s(latch.attributeHi);
   s(latch.tiledataLo);
   s(latch.tiledataHi);
   s(latch.oamId);
@@ -54,4 +54,5 @@ auto PPU::OAM::serialize(serializer& s) -> void {
   s(x);
   s(tiledataLo);
   s(tiledataHi);
+  s(counting);
 }
