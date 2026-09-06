@@ -1,12 +1,20 @@
 #pragma once
 //started: 2017-01-11
 
+#if !defined(USE_ATOMIC_FLAG_NOTIFY_FALLBACK) && !defined(_MSC_VER) && defined(_WIN32)
+#define USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+#endif
+
 #include <ares/ares.hpp>
 #include <nall/decode/mmi.hpp>
 #include <vector>
 #include <cmath>
 #include <thread>
 #include <atomic>
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+#include <mutex>
+#include <condition_variable>
+#endif
 #include <functional>
 
 #include <qon/qon.h>

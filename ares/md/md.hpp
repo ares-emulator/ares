@@ -1,6 +1,10 @@
 #pragma once
 //started: 2016-07-08
 
+#if !defined(USE_ATOMIC_FLAG_NOTIFY_FALLBACK) && !defined(_MSC_VER) && defined(_WIN32)
+#define USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+#endif
+
 #include <ares/ares.hpp>
 #include <nall/decode/mmi.hpp>
 #include <nall/dsp/iir/dc-removal.hpp>
@@ -8,6 +12,10 @@
 #include <cmath>
 #include <thread>
 #include <atomic>
+#ifdef USE_ATOMIC_FLAG_NOTIFY_FALLBACK
+#include <mutex>
+#include <condition_variable>
+#endif
 #include <functional>
 
 #include <qon/qon.h>
