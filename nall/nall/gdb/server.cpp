@@ -55,7 +55,7 @@ namespace nall::GDB {
 
   auto Server::reportMemRead(u64 address, u32 size) -> void {
     if(watchpointRead.empty())return;
-    
+
     if(hooks.normalizeAddress) {
       address = hooks.normalizeAddress(address);
     }
@@ -230,7 +230,7 @@ namespace nall::GDB {
         if(hooks.regWrite) {
           auto sepIdxMaybe = cmdName.find("=");
           u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
-          
+
           u32 regIdx = static_cast<u32>(cmdName.slice(1, sepIdx-1).hex());
           u64 regValue = cmdName.slice(sepIdx+1).hex();
 
@@ -262,7 +262,7 @@ namespace nall::GDB {
         if(cmdName == "qTsP")return "";
 
         // extended target features (gdb extension), most return XML data
-        if(cmdName == "qXfer" && cmdParts.size() > 4) 
+        if(cmdName == "qXfer" && cmdParts.size() > 4)
         {
           if(cmdParts[1] == "features" && cmdParts[2] == "read") {
             // informs the client about arch/registers (https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format)
@@ -373,21 +373,21 @@ namespace nall::GDB {
         switch(cmdName(1)) {
           case '0': // (hardware/software breakpoints are the same for us)
           case '1': addOrRemoveEntry(breakpoints, address, isInsert); break;
-          
+
           case '2':
             wp.type = WatchpointType::WRITE;
-            addOrRemoveEntry(watchpointWrite, wp, isInsert); 
+            addOrRemoveEntry(watchpointWrite, wp, isInsert);
             break;
 
-          case '3': 
+          case '3':
             wp.type = WatchpointType::READ;
-            addOrRemoveEntry(watchpointRead, wp, isInsert); 
+            addOrRemoveEntry(watchpointRead, wp, isInsert);
             break;
 
           case '4':
             wp.type = WatchpointType::ACCESS;
-            addOrRemoveEntry(watchpointRead,  wp, isInsert); 
-            addOrRemoveEntry(watchpointWrite, wp, isInsert); 
+            addOrRemoveEntry(watchpointRead,  wp, isInsert);
+            addOrRemoveEntry(watchpointWrite, wp, isInsert);
             break;
           default: return "E00";
         }
@@ -409,9 +409,9 @@ namespace nall::GDB {
       cmdBuffer.reserve(text.size());
     }
 
-    for(char c : text) 
+    for(char c : text)
     {
-      switch(c) 
+      switch(c)
       {
         case '$':
           insideCommand = true;
@@ -446,7 +446,7 @@ namespace nall::GDB {
             cmdBuffer.append(c);
           }
       }
-    }  
+    }
   }
 
   auto Server::updateLoop() -> void {
@@ -480,11 +480,11 @@ namespace nall::GDB {
         if(wasHalted && !isHalted())return;
 
         if(messageCount > 0 && maxLoopResets > 0) {
-          i = loopCount; // reset loop here to keep a fast chain of messages going (reduces latency)
+          i = 0; // reset loop here to keep a fast chain of messages going (reduces latency)
           --maxLoopResets;
         }
       }
-      
+
       if(wasHalted)usleep(1);
     }
   }
