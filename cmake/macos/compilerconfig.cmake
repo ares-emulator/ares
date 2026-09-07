@@ -30,6 +30,15 @@ function(check_sdk_requirements)
     RESULT_VARIABLE result
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
+  # Fallback when --show-sdk-platform-version fails but the SDK is installed
+  if(NOT result EQUAL 0)
+    execute_process(
+      COMMAND xcrun --sdk macosx --show-sdk-version
+      OUTPUT_VARIABLE ares_macos_current_sdk
+      RESULT_VARIABLE result
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  endif()
   if(NOT result EQUAL 0)
     message(
       FATAL_ERROR
