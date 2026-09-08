@@ -64,8 +64,8 @@ Nintendo64::Nintendo64() {
     device.digital("R",         virtualPorts[id].pad.r_bumper);
     device.digital("Z",         virtualPorts[id].pad.r_trigger);
     device.digital("Start",     virtualPorts[id].pad.start);
-    device.analog ("L-Analog",  virtualPorts[id].pad.l_trigger);
-    device.analog ("R-Analog",  virtualPorts[id].pad.r_trigger);
+    device.absolute("L-Analog", virtualPorts[id].pad.l_trigger);
+    device.absolute("R-Analog", virtualPorts[id].pad.r_trigger);
     device.rumble ("Rumble",    virtualPorts[id].pad.rumble);
     device.analog ("X-Axis",    virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
     device.analog ("Y-Axis",    virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);

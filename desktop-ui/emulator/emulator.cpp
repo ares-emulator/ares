@@ -302,6 +302,11 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
           auto value = inputNode.effectiveMapping().value();
           return axis->setValue(value);
         }
+        if(auto trigger = input->cast<ares::Node::Input::Trigger>()) {
+          //normalise the full span of a host axis onto the trigger's own range
+          auto value = inputNode.effectiveMapping().value();
+          return trigger->setValue((value + 32768) >> 1);
+        }
         if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
           if(auto target = dynamic_cast<InputRumble*>(&inputNode.effectiveMapping())) {
             return target->rumble(rumble->strongValue(), rumble->weakValue());
