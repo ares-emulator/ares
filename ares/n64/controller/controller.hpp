@@ -11,5 +11,6 @@ struct Controller {
 
 #include "port.hpp"
 #include "gamepad/gamepad.hpp"
+#include "gamepad-gcn/gamepad-gcn.hpp"
 #include "mouse/mouse.hpp"
 #include "aleck64/aleck64.hpp"

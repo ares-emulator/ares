@@ -4,6 +4,7 @@ namespace ares::Nintendo64 {
 
 #include "port.cpp"
 #include "gamepad/gamepad.cpp"
+#include "gamepad-gcn/gamepad-gcn.cpp"
 #include "mouse/mouse.cpp"
 #include "aleck64/aleck64.cpp"
 
