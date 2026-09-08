@@ -12,8 +12,8 @@ struct GamepadGCN : Controller {
   Node::Input::Axis y;
   Node::Input::Axis cx;
   Node::Input::Axis cy;
-  Node::Input::Axis lAnalog;
-  Node::Input::Axis rAnalog;
+  Node::Input::Trigger lAnalog;
+  Node::Input::Trigger rAnalog;
   Node::Input::Button up;
   Node::Input::Button down;
   Node::Input::Button left;

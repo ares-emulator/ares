@@ -8,8 +8,8 @@ GamepadGCN::GamepadGCN(Node::Port parent) {
   y       = node->append<Node::Input::Axis>  ("Y-Axis");
   cx      = node->append<Node::Input::Axis>  ("C-X-Axis");
   cy      = node->append<Node::Input::Axis>  ("C-Y-Axis");
-  lAnalog = node->append<Node::Input::Axis>  ("L-Analog");
-  rAnalog = node->append<Node::Input::Axis>  ("R-Analog");
+  lAnalog = node->append<Node::Input::Trigger>("L-Analog");
+  rAnalog = node->append<Node::Input::Trigger>("R-Analog");
   up      = node->append<Node::Input::Button>("Up");
   down    = node->append<Node::Input::Button>("Down");
   left    = node->append<Node::Input::Button>("Left");
@@ -130,10 +130,9 @@ auto GamepadGCN::poll() -> void {
   bx = cstickAxis->counteractPrecisionError(bx);
   by = cstickAxis->counteractPrecisionError(by);
 
-  //triggers rest at the origin and travel in one direction only; the host
-  //reports them released at zero and fully depressed at the positive maximum
-  auto triggerValue = [&](Node::Input::Axis axis) -> u8 {
-    f64 position = axis->value() / 32767.0 * RangeTrigger;
+  //triggers rest at the origin and travel in one direction only
+  auto triggerValue = [&](Node::Input::Trigger trigger) -> u8 {
+    f64 position = trigger->value() / 32767.0 * RangeTrigger;
     if(position < 0.0) position = 0.0;
     if(position > RangeTrigger) position = RangeTrigger;
     return u8(OriginTrigger + position);
