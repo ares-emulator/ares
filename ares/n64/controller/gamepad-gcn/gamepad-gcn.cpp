@@ -167,7 +167,9 @@ auto GamepadGCN::poll() -> void {
   if(state.l) state.analogL = u8(OriginTrigger + RangeTrigger);
   if(state.r) state.analogR = u8(OriginTrigger + RangeTrigger);
 
-  //opposing directions cannot be held at once on real hardware
+  //a keyboard or a remapped pad can report opposing directions at once, which
+  //a d-pad in working order does not; suppress the pair for consistency with
+  //the N64 Gamepad, which already filters them the same way
   state.up    = up->value()    & !down->value();
   state.down  = down->value()  & !up->value();
   state.left  = left->value()  & !right->value();
