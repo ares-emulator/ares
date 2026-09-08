@@ -43,6 +43,36 @@ Nintendo64::Nintendo64() {
     device.analog ("Y-Axis",  virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
     port.append(device); }
 
+  { InputDevice device{"GameCube Gamepad"};
+    device.analog ("L-Up",      virtualPorts[id].pad.lstick_up);
+    device.analog ("L-Down",    virtualPorts[id].pad.lstick_down);
+    device.analog ("L-Left",    virtualPorts[id].pad.lstick_left);
+    device.analog ("L-Right",   virtualPorts[id].pad.lstick_right);
+    device.analog ("C-Up",      virtualPorts[id].pad.rstick_up);
+    device.analog ("C-Down",    virtualPorts[id].pad.rstick_down);
+    device.analog ("C-Left",    virtualPorts[id].pad.rstick_left);
+    device.analog ("C-Right",   virtualPorts[id].pad.rstick_right);
+    device.digital("Up",        virtualPorts[id].pad.up);
+    device.digital("Down",      virtualPorts[id].pad.down);
+    device.digital("Left",      virtualPorts[id].pad.left);
+    device.digital("Right",     virtualPorts[id].pad.right);
+    device.digital("A",         virtualPorts[id].pad.south);
+    device.digital("B",         virtualPorts[id].pad.west);
+    device.digital("X",         virtualPorts[id].pad.east);
+    device.digital("Y",         virtualPorts[id].pad.north);
+    device.digital("L",         virtualPorts[id].pad.l_bumper);
+    device.digital("R",         virtualPorts[id].pad.r_bumper);
+    device.digital("Z",         virtualPorts[id].pad.r_trigger);
+    device.digital("Start",     virtualPorts[id].pad.start);
+    device.analog ("L-Analog",  virtualPorts[id].pad.l_trigger);
+    device.analog ("R-Analog",  virtualPorts[id].pad.r_trigger);
+    device.rumble ("Rumble",    virtualPorts[id].pad.rumble);
+    device.analog ("X-Axis",    virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    device.analog ("Y-Axis",    virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
+    device.analog ("C-X-Axis",  virtualPorts[id].pad.rstick_left, virtualPorts[id].pad.rstick_right);
+    device.analog ("C-Y-Axis",  virtualPorts[id].pad.rstick_up,   virtualPorts[id].pad.rstick_down);
+    port.append(device); }
+
   { InputDevice device{"Mouse"};
     device.relative("X",     virtualPorts[id].mouse.x);
     device.relative("Y",     virtualPorts[id].mouse.y);

@@ -16,7 +16,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
     port->setSupported({"Aleck64"});
   } else {
     port->setHotSwappable(true);
-    port->setSupported({"Gamepad", "Mouse"});
+    port->setSupported({"Gamepad", "GameCube Gamepad", "Mouse"});
   }
 
   port->setAllocate([&](auto name) { return allocate(name); });
@@ -33,9 +33,10 @@ auto ControllerPort::save() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  if(name == "Gamepad") device = std::make_unique<Gamepad>(port);
-  if(name == "Mouse"  ) device = std::make_unique<Mouse>(port);
-  if(name == "Aleck64") device = std::make_unique<Aleck64Controls>(port);
+  if(name == "Gamepad"         ) device = std::make_unique<Gamepad>(port);
+  if(name == "GameCube Gamepad") device = std::make_unique<GamepadGCN>(port);
+  if(name == "Mouse"           ) device = std::make_unique<Mouse>(port);
+  if(name == "Aleck64"         ) device = std::make_unique<Aleck64Controls>(port);
   if(device) return device->node;
   return {};
 }
