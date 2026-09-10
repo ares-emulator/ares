@@ -35,10 +35,12 @@ struct Bus {
 
   //memory.cpp
   auto reset() -> void;
+  auto peek(n24 address) const -> maybe<n8>;
   auto map(
     const std::function<n8   (n24, n8)>& read,
     const std::function<void (n24, n8)>& write,
-    const string& address, u32 size = 0, u32 base = 0, u32 mask = 0
+    const string& address, u32 size = 0, u32 base = 0, u32 mask = 0,
+    const std::function<maybe<n8> (n24)>& peek = {}
   ) -> u32;
   auto unmap(const string& address) -> void;
 
@@ -48,6 +50,7 @@ private:
 
   std::function<n8   (n24, n8)> reader[256];
   std::function<void (n24, n8)> writer[256];
+  std::function<maybe<n8> (n24)> peeker[256];
   n24 counter[256];
 };
 

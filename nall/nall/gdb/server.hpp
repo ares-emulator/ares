@@ -73,12 +73,15 @@ class Server : public nall::TCPText::Server {
       std::function<u64(u64 address)> normalizeAddress{};
 
       // Registers
+      bool registersLittleEndian = false;
       std::function<string()> regReadGeneral{};
       std::function<void(const string &regData)> regWriteGeneral{};
       std::function<string(u32 regIdx)> regRead{};
       std::function<bool(u32 regIdx, u64 regValue)> regWrite{};
 
       // Emulator
+      bool instructionBoundaryStop = false;
+      std::function<void()> emuReset{};
       std::function<void(u64 address)> emuCacheInvalidate{};
       std::function<string()> targetXML{};
 
@@ -91,12 +94,13 @@ class Server : public nall::TCPText::Server {
     auto reportSignal(Signal sig, u64 originPC) -> bool;
 
     // PC / Memory State Updates
-    auto reportPC(u64 pc) -> bool;
+    auto reportPC(u64 pc, bool instruction = true) -> bool;
     auto reportMemRead(u64 address, u32 size) -> void;
     auto reportMemWrite(u64 address, u32 size) -> void;
 
     // Breakpoints / Watchpoints
     auto isHalted() const { return forceHalt && haltSignalSent; }
+    auto isStopPending() const { return forceHalt && !haltSignalSent; }
     auto hasBreakpoints() const { 
       return !breakpoints.empty() || singleStepActive || !watchpointRead.empty() || !watchpointWrite.empty();
     }
@@ -120,6 +124,9 @@ class Server : public nall::TCPText::Server {
     bool haltSignalSent{false}; // marks if a signal as been sent for new halts (force-halt and breakpoints)
     bool forceHalt{false}; // forces a halt despite no breakpoints being hit
     bool singleStepActive{false};
+    bool stoppedAtInstructionBoundary{false};
+    bool skipBreakpointOnce{false};
+    bool pendingResetReply{false};
 
     bool noAckMode{false}; // gets set if lldb prefers no acknowledgements
     bool nonStopMode{false}; // (NOTE: Not working for now), gets set if gdb wants to switch over to async-messaging
