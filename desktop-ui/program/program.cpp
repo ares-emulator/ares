@@ -77,6 +77,17 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
       continue;
     }
 
+    if(awaitGdbHandshake) {
+      nall::GDB::server.updateLoop();
+      if(nall::GDB::server.hasClient()
+      && (nall::GDB::server.isHalted() || nall::GDB::server.isStopPending())) {
+        awaitGdbHandshake = false;
+      } else {
+        usleep(20 * 1000);
+        continue;
+      }
+    }
+
     if(emulator && nall::GDB::server.isHalted()) {
       ruby::audio.clear();
       nall::GDB::server.updateLoop(); // sleeps internally
@@ -85,7 +96,9 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
 
     bool defocused = settings.input.defocus == "Pause" && !ruby::video.fullScreen() && !presentation.focused();
 
-    if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
+    // A pending stop needs to reach the next CPU boundary, even if the desktop is paused / lost focus.
+    // Once there the ordinary pause state remains unchanged.
+    if(!nall::GDB::server.isStopPending() && ((paused && !program.requestFrameAdvance) || defocused)) {
       ruby::audio.clear();
       nall::GDB::server.updateLoop();
       usleep(20 * 1000);
@@ -97,7 +110,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
     nall::GDB::server.updateLoop();
 
     program.requestFrameAdvance = false;
-    if(!runAhead || fastForwarding || rewinding) {
+    if(!runAhead || fastForwarding || rewinding || nall::GDB::server.hasClient()) {
       emulator->root->run();
     } else {
       ares::setRunAhead(true);
@@ -138,7 +151,7 @@ auto Program::main() -> void {
     quit();
     return;
   }
-  
+
   inputManager.poll();
   inputManager.pollHotkeys();
 
@@ -146,7 +159,7 @@ auto Program::main() -> void {
 
   //If Platform::video() changed the screen resolution, resize the presentation window here.
   //Window operations must be performed from the main thread.
-  
+
   if(_needsResize) {
     if(settings.video.adaptiveSizing && !startPseudoFullScreen) presentation.resizeWindow();
     _needsResize = false;

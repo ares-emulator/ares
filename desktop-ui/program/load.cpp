@@ -63,7 +63,7 @@ auto Program::load(std::shared_ptr<Emulator> emulator, string location) -> bool 
   // For arcade systems, show the game browser dialog as we're using MAME-compatible roms
   if(emulator->arcade() && !location) {
     gameBrowserWindow.show(emulator);
-    
+
     // Temporarily pretend that the load failed to prevent crash
     // The browser dialog will call load() again when necessary
     ::emulator.reset();
@@ -121,12 +121,14 @@ auto Program::load(string location) -> bool {
     tapeViewer.reload();
   }
   state = {};  //reset hotkey state slot to 1
+  awaitGdbHandshake = settings.developer.debugServerEnabled && settings.boot.awaitGDBClient;
   if(settings.boot.debugger) {
     pause(true);
     if(toolsWindowConstructed) toolsWindow.show("Tracer");
     presentation.setFocused();
-  } else if (settings.boot.awaitGDBClient) {
-    pause(true);
+  } else if(awaitGdbHandshake) {
+    // The handshake gate is separate from a user triggered pause
+    pause(false);
   } else {
     pause(false);
   }
@@ -135,10 +137,8 @@ auto Program::load(string location) -> bool {
 
   if(settings.developer.debugServerEnabled) {
     nall::GDB::server.open(settings.developer.debugServerPort, settings.developer.debugServerUseIPv4);
-    nall::GDB::server.onClientConnectCallback = []() {
-      if (settings.boot.awaitGDBClient)
-        program.pause(false);
-    };
+    // A TCP connection alone must not release the first instruction.
+    nall::GDB::server.onClientConnectCallback = {};
   }
 
   //update recent games list
@@ -163,6 +163,7 @@ auto Program::unload() -> void {
   Program::Guard guard;
   if(!emulator) return;
 
+  awaitGdbHandshake = false;
   nall::GDB::server.close();
   nall::GDB::server.reset();
 
