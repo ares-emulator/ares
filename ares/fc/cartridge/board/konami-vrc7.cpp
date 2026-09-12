@@ -72,7 +72,7 @@ struct KonamiVRC7 : Interface {
 
   auto readPRG(n32 address, n8 data) -> n8 override {
     if(address < 0x6000) return data;
-    if(address < 0x8000 && !programRAM) return data;
+    if(address < 0x8000 && (!programRAM || !ramEnable)) return data;
     if(address < 0x8000) return programRAM.read(address);
 
     n8 bank;
@@ -88,7 +88,7 @@ struct KonamiVRC7 : Interface {
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
-    if(address < 0x8000 && !programRAM) return;
+    if(address < 0x8000 && (!programRAM || !ramEnable)) return;
     if(address < 0x8000) return programRAM.write(address, data);
 
     bool a0 = address & pinA0;
@@ -113,7 +113,7 @@ struct KonamiVRC7 : Interface {
       if(disableFM && !data.bit(6)) ym2413.power(1);
       mirror = data.bit(0,1);
       disableFM = data.bit(6);
-      ramWritable = data.bit(7);
+      ramEnable = data.bit(7);
       break;
     case 0xe001:
       irqLatch = data;
@@ -165,7 +165,7 @@ struct KonamiVRC7 : Interface {
   auto power() -> void override {
     ym2413.power();
     disableFM = 1;
-    ramWritable = 1;
+    ramEnable = 1;
   }
 
   auto serialize(serializer& s) -> void override {
@@ -176,7 +176,7 @@ struct KonamiVRC7 : Interface {
     s(characterBank);
     s(mirror);
     s(disableFM);
-    s(ramWritable);
+    s(ramEnable);
     s(irqLatch);
     s(irqMode);
     s(irqEnable);
@@ -191,7 +191,7 @@ struct KonamiVRC7 : Interface {
   n8  characterBank[8];
   n2  mirror;
   n1  disableFM;
-  n1  ramWritable;
+  n1  ramEnable;
   n8  irqLatch;
   n1  irqMode;
   n1  irqEnable;
