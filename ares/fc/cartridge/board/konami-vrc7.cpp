@@ -163,7 +163,7 @@ struct KonamiVRC7 : Interface {
   }
 
   auto power() -> void override {
-    ym2413.power();
+    ym2413.power(1);
     disableFM = 1;
     ramWritable = 1;
   }
