@@ -16417,9 +16417,9 @@ game
   sha256:   40c08a3c84f46919eb34e5396037d9a942d892ddf7da7882855dc333f7195809
   name:     DREAM
   title:    DREAM
-  label:    
-  region:   PAL
-  revision: 1.255
+  label:    Project Dream
+  region:   NTSC
+  revision: 1.0
   board:    SHVC-1J0N-01
     memory
       type: ROM
