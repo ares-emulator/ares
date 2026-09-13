@@ -101,8 +101,7 @@ auto Famicom::analyze(std::vector<u8>& data) -> string {
   string manifest = Medium::manifestDatabase(digest);
   if(manifest) return manifest;
 
-  //Check for Famicom Disk System copyright string (identifies BIOS)
-  if(data.size() == 8_KiB && Hash::SHA256({data.data() + 0xd37, 224}).digest() == "0ff60f81f193b001ecccc6a280cddba4b99830755aa658c089d566046adfb034") {
+  if(data.size() == 8_KiB) {
     return analyzeFDS(data);
   }
 
