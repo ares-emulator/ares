@@ -6,6 +6,7 @@ struct Nintendo64 : Emulator {
   auto unload() -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> override;
+  auto configure() -> void override;
 
   std::shared_ptr<mia::Pak> disk;
   u32 regionID = 0;
@@ -84,6 +85,11 @@ Nintendo64::Nintendo64() {
   }
 }
 
+auto Nintendo64::configure() -> void {
+  Program::Guard guard;
+  ares::Nintendo64::option("Overclock", settings.nintendo64.overclock);
+}
+
 auto Nintendo64::load() -> LoadResult {
   game = mia::Medium::create("Nintendo 64");
   string location = Emulator::load(game, configuration.game);
@@ -146,6 +152,7 @@ auto Nintendo64::load() -> LoadResult {
   ares::Nintendo64::option("Homebrew Mode", settings.developer.homebrewMode);
   ares::Nintendo64::option("Deterministic Entropy", settings.developer.deterministicEntropy);
   ares::Nintendo64::option("Recompiler", !settings.developer.forceInterpreter);
+  ares::Nintendo64::option("Overclock", settings.nintendo64.overclock);
   ares::Nintendo64::option("Expansion Pak", settings.nintendo64.expansionPak);
   ares::Nintendo64::option("Controller Pak Banks", settings.nintendo64.controllerPakBankString);
 

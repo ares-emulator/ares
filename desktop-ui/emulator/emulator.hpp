@@ -36,6 +36,7 @@ struct Emulator {
   virtual auto save() -> bool { return true; }
   virtual auto pak(ares::Node::Object) -> std::shared_ptr<vfs::directory> = 0;
   virtual auto notify(const string& message) -> void {}
+  virtual auto configure() -> void {}
   virtual auto arcade() -> bool { return false; }
   virtual auto group() -> string { return manufacturer; }
   virtual auto gameBrowserCategories() -> std::vector<GameBrowserCategory> { return {}; }

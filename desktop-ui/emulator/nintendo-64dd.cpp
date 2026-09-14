@@ -91,6 +91,7 @@ auto Nintendo64DD::load() -> LoadResult {
   ares::Nintendo64::option("Homebrew Mode", settings.developer.homebrewMode);
   ares::Nintendo64::option("Deterministic Entropy", settings.developer.deterministicEntropy);
   ares::Nintendo64::option("Recompiler", !settings.developer.forceInterpreter);
+  ares::Nintendo64::option("Overclock", settings.nintendo64.overclock);
   ares::Nintendo64::option("Expansion Pak", settings.nintendo64.expansionPak);
   ares::Nintendo64::option("Controller Pak Banks", settings.nintendo64.controllerPakBankString);
 
