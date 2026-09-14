@@ -7,11 +7,7 @@ auto CPU::sleep() -> void {
 
 template <bool IsDMA, bool UseDebugger>
 inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
-  if constexpr(!IsDMA) dmac.runPending();
-  if constexpr(!UseDebugger) {
-    ARM7TDMI::irq = irq.synchronizer;
-    context.romAccess = false;
-  }
+  if constexpr(!UseDebugger) context.romAccess = false;
   u32 word = mdr;
 
   if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
@@ -87,6 +83,8 @@ inline auto CPU::getBus(u32 mode, n32 address) -> n32 {
 }
 
 auto CPU::get(u32 mode, n32 address) -> n32 {
+  dmac.runPending();
+  ARM7TDMI::irq = irq.synchronizer;
   u32 word = getBus<false, false>(mode, address);
   if(!context.romAccess) cartridge.mrom.burst = false;
   return word;
@@ -102,8 +100,6 @@ auto CPU::getDebugger(u32 mode, n32 address) -> n32 {
 
 template <bool IsDMA>
 auto CPU::setBus(u32 mode, n32 address, n32 word) -> void {
-  if constexpr(!IsDMA) dmac.runPending();
-  ARM7TDMI::irq = irq.synchronizer;
   context.romAccess = false;
 
   if(memory.biosSwap && address < 0x0400'0000) address ^= 0x0200'0000;
@@ -155,14 +151,13 @@ auto CPU::setBus(u32 mode, n32 address, n32 word) -> void {
     break;
 
   }
-
-  if constexpr(!IsDMA) {
-    if(!context.romAccess) cartridge.mrom.burst = false;
-  }
 }
 
 auto CPU::set(u32 mode, n32 address, n32 word) -> void {
+  dmac.runPending();
+  ARM7TDMI::irq = irq.synchronizer;
   setBus<false>(mode, address, word);
+  if(!context.romAccess) cartridge.mrom.burst = false;
 }
 
 auto CPU::setDMA(u32 mode, n32 address, n32 word) -> void {
