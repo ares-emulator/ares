@@ -34,19 +34,23 @@ auto FamicomDiskSystem::load(string location) -> LoadResult {
     if(view.size() % 65500 == 16) view = view.subspan(16);  //skip iNES / fwNES header
     u32 index = 0;
 
-    auto output = transform(view);
-    do {
+    while(true) {
+      auto output = transform(view);
+      if(output.empty()) break;
+
       string name;
       name.append("disk", (char)('1' + index / 2), ".");
       name.append("side", (char)('A' + index % 2));
       pak->append(name, output);
+
+      if(view.size() <= 65500) break;
       view = view.subspan(65500);
       index++;
-      output = transform(view);
-    } while (!output.empty());
+    }
   }
 
   if(!pak) return romNotFound;
+  if(!pak->read("disk1.sideA")) return invalidROM;
 
   Pak::load("disk1.sideA", ".d1a");
   Pak::load("disk1.sideB", ".d1b");
