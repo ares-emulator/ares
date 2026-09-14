@@ -1036,6 +1036,14 @@ void *CommandProcessor::get_tmem()
 	return device.map_host_buffer(*tmem, MEMORY_ACCESS_READ_BIT);
 }
 
+void CommandProcessor::set_tmem(const void *data, size_t size)
+{
+	size = std::min(size, size_t(0x1000));
+	auto *mapped = device.map_host_buffer(*tmem, MEMORY_ACCESS_WRITE_BIT);
+	memcpy(mapped, data, size);
+	device.unmap_host_buffer(*tmem, MEMORY_ACCESS_WRITE_BIT);
+}
+
 void CommandProcessor::idle()
 {
 	flush();
