@@ -10,6 +10,7 @@
 #include "paths.cpp"
 #include "cores.cpp"
 #include "developer.cpp"
+#include "nci.cpp"
 #include "importexport.cpp"
 #include "home.cpp"
 
@@ -26,6 +27,7 @@ FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
 DeveloperSettings& developerSettings = settingsWindow.developerSettings;
 CoreSettings& coreSettings = settingsWindow.coreSettings;
+NCISettings& nciSettings = settingsWindow.nciSettings;
 ImportExportSettings& importExportSettings = settingsWindow.importExportSettings;
 
 auto Settings::load() -> void {
@@ -125,6 +127,10 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Developer/HomebrewMode", developer.homebrewMode);
   bind(boolean, "Developer/DeterministicEntropy", developer.deterministicEntropy);
   bind(boolean, "Developer/ForceInterpreter", developer.forceInterpreter);
+
+  bind(natural, "NCI/Port", nci.port);
+  bind(boolean, "NCI/Enabled", nci.enabled);
+  bind(boolean, "NCI/UseIPv4", nci.useIPv4);
 
   bind(boolean, "Nintendo64/ExpansionPak", nintendo64.expansionPak);
   bind(string,  "Nintendo64/ControllerPakBankString", nintendo64.controllerPakBankString);
@@ -263,6 +269,7 @@ auto SettingsWindow::initialize() -> void {
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Cores").setIcon(Icon::Place::Settings));
   panelList.append(ListViewItem().setText("Developer").setIcon(Icon::Device::Network));
+  panelList.append(ListViewItem().setText("NCI").setIcon(Icon::Device::Network));
   panelList.append(ListViewItem().setText("Settings File").setIcon(Icon::Action::Save));
   panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
@@ -277,6 +284,7 @@ auto SettingsWindow::initialize() -> void {
   panelContainer.append(pathSettings, Size{~0, ~0});
   panelContainer.append(coreSettings, Size{~0, ~0});
   panelContainer.append(developerSettings, Size{~0, ~0});
+  panelContainer.append(nciSettings, Size{~0, ~0});
   panelContainer.append(importExportSettings, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
@@ -290,6 +298,7 @@ auto SettingsWindow::initialize() -> void {
   pathSettings.construct();
   coreSettings.construct();
   developerSettings.construct();
+  nciSettings.construct();
   importExportSettings.construct();
   homePanel.construct();
 
@@ -329,6 +338,7 @@ auto SettingsWindow::eventChange() -> void {
   pathSettings.setVisible(false);
   coreSettings.setVisible(false);
   developerSettings.setVisible(false);
+  nciSettings.setVisible(false);
   importExportSettings.setVisible(false);
   homePanel.setVisible(false);
 
@@ -344,7 +354,8 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
     if(item.text() == "Cores"    ) found = true, coreSettings.setVisible();
     if(item.text() == "Developer"    ) found = true, developerSettings.setVisible();
-    if(item.text() == "Settings File") found = true, importExportSettings.setVisible(); 
+    if(item.text() == "NCI"     ) found = true, nciSettings.setVisible();
+    if(item.text() == "Settings File") found = true, importExportSettings.setVisible();
   }
   if(!found) homePanel.setVisible();
 

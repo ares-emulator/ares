@@ -6,6 +6,7 @@
 #include "status.cpp"
 #include "utility.cpp"
 #include "drivers.cpp"
+#include "nci.cpp"
 
 Program program;
 thread worker;
@@ -21,6 +22,8 @@ auto Program::create() -> void {
     if(startFullScreen) videoFullScreenToggle();
     if(startPseudoFullScreen) videoPseudoFullScreenToggle();
   }
+
+  nci.open();
 
   _isRunning = true;
   worker = thread::create(std::bind_front(&Program::emulatorRunLoop, this));
@@ -73,6 +76,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
       continue;
     }
     if(!emulator) {
+      nci.updateLoop();
       usleep(20 * 1000);
       continue;
     }
@@ -80,6 +84,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
     if(emulator && nall::GDB::server.isHalted()) {
       ruby::audio.clear();
       nall::GDB::server.updateLoop(); // sleeps internally
+      nci.updateLoop();
       continue;
     }
 
@@ -88,6 +93,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
     if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
       ruby::audio.clear();
       nall::GDB::server.updateLoop();
+      nci.updateLoop();
       usleep(20 * 1000);
       continue;
     }
@@ -110,6 +116,7 @@ auto Program::emulatorRunLoop(uintptr_t) -> void {
     }
 
     nall::GDB::server.updateLoop();
+    nci.updateLoop();
 
     if(settings.general.autoSaveMemory) {
       static u64 previousTime = chrono::timestamp();
@@ -139,6 +146,49 @@ auto Program::main() -> void {
     return;
   }
   
+  if(requestFullscreenToggle) {
+    requestFullscreenToggle = false;
+    videoFullScreenToggle();
+  }
+
+  if(requestQuit) {
+    requestQuit = false;
+    quit();
+    return;
+  }
+
+  if(requestUnload) {
+    requestUnload = false;
+    if(emulator) {
+      Program::Guard guard;
+      unload();
+      if(settings.video.adaptiveSizing) presentation.resizeWindow();
+      presentation.showIcon(true);
+    }
+  }
+
+  if(requestLoad) {
+    requestLoad = false;
+    Program::Guard guard;
+    string path = requestLoadPath;
+    string system = requestLoadSystem;
+    requestLoadPath = "";
+    requestLoadSystem = "";
+
+    std::shared_ptr<Emulator> emu;
+    if(system) {
+      for(auto& e : emulators) {
+        if(e->name == system) { emu = e; break; }
+      }
+    } else {
+      emu = identify(path);
+    }
+
+    if(emu) {
+      load(emu, path);
+    }
+  }
+
   inputManager.poll();
   inputManager.pollHotkeys();
 
@@ -168,6 +218,7 @@ auto Program::quit() -> void {
     _quitRequested = true;
     return;
   }
+  nci.close();
   Program::Guard guard;
   _quitRequested = false;
   _quitting = true;
