@@ -1,5 +1,4 @@
 namespace Board {
-#include "ic/bandai-24c01.hpp"
 #include "ic/jv001.hpp"
 #include "ic/txc05-00002-010.hpp"
 
