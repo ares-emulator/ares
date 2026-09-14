@@ -175,7 +175,12 @@ auto Emulator::load(std::shared_ptr<mia::Pak> pak, string& path) -> string {
     filters.trimRight(":", 1L);
     filters.prepend(pak->name(), "|");
     dialog.setFilters({filters, "All|*"});
+#if defined (PLATFORM_LINUX) || defined (PLATFORM_BSD)
+    //leave resolving symlinks to the OS on linux
+    location = program.openFile(dialog);
+#else
     location = directory::resolveSymLink(program.openFile(dialog));
+#endif
   }
 
   if(location) {
