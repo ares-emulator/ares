@@ -45,6 +45,8 @@ auto M24C::power() -> void {
   output   = 0;
   response = Acknowledge;
   writable = 1;
+  pending  = 0;
+  for(auto& byte : page) byte = 0;
 }
 
 auto M24C::read() const -> bool {
@@ -57,9 +59,17 @@ auto M24C::write() -> void {
 
   if(clock.hi()) {
     if(data.fall()) {
+      pending = 0;
       counter = 0;
       mode = (type == Type::X24C01) ? Mode::Address : Mode::Device;
     } else if(data.rise()) {
+      if(type == Type::X24C01) {
+        //Program the buffered page on STOP; programming is instantaneous.
+        for(u32 index : range(4)) {
+          if(pending.bit(index)) memory[(offset() & 0x7c) | index] = page[index];
+        }
+        pending = 0;
+      }
       counter = 0;
       mode = Mode::Standby;
     }
@@ -123,8 +133,11 @@ auto M24C::write() -> void {
       input = input << 1 | data();
     } else {
       response = store();
-      address += (type == Type::X24C01) ? 2 : 1;
-      if(!address) bank++;
+      if(type == Type::X24C01) {
+        address.bit(1,2)++;  //increment within the four-byte page, preserving R/W
+      } else {
+        if(!++address) bank++;
+      }
     }
     break;
   }
@@ -134,6 +147,8 @@ auto M24C::erase(u8 fill) -> void {
   for(auto& byte : memory) byte = fill;
   for(auto& byte : idpage) byte = fill;
   locked = 0;
+  pending = 0;
+  for(auto& byte : page) byte = 0;
 }
 
 //
@@ -185,6 +200,12 @@ auto M24C::store() -> bool {
   switch(device >> 4) {
   case Area::Memory:
     if(!writable) return !Acknowledge;
+    if(type == Type::X24C01) {
+      auto index = offset() & 3;
+      page[index] = input;
+      pending.bit(index) = 1;
+      return Acknowledge;
+    }
     memory[offset() & size() - 1] = input;
     return Acknowledge;
 

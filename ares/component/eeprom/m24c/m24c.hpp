@@ -100,6 +100,8 @@ private:
   n8   input;
   n8   output;
   n1   response;
+  n8   page[4];
+  n4   pending;
 };
 
 }

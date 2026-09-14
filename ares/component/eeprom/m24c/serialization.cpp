@@ -15,6 +15,10 @@ auto M24C::serialize(serializer& s, bool serializeMemory) -> void {
   s(output);
   s(response);
   s(writable);
+  if(type == Type::X24C01) {
+    s(page);
+    s(pending);
+  }
   if(serializeMemory) {
     s(std::span<n8>{memory, size()});
     if(type >= Type::M24C32) s(idpage);
