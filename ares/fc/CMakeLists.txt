@@ -157,7 +157,6 @@ ares_add_sources(
   CORE #
     fc
   INCLUDED #
-    cartridge/board/ic/bandai-24c01.hpp
     cartridge/board/ic/jv001.hpp
     cartridge/board/ic/txc05-00002-010.hpp
 )

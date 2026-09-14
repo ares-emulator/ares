@@ -5,20 +5,20 @@ struct BandaiDatach : BandaiLZ93D50 {
     return nullptr;
   }
 
-  Bandai24C01 external;
-  bool hasExternal = false;
+  M24C external;
 
   auto load() -> void override {
     BandaiLZ93D50::load();
     if(auto fp = pak->read("external.eeprom")) {
-      if(hasExternal = fp->size() == 128) fp->read(external.memory, 128);
+      if(fp->size() == 128) external.load(M24C::Type::X24C01);
+      if(external) fp->read(external.memory, external.size());
     }
   }
 
   auto save() -> void override {
     BandaiLZ93D50::save();
-    if(hasExternal) {
-      if(auto fp = pak->write("external.eeprom")) fp->write(external.memory, 128);
+    if(external) {
+      if(auto fp = pak->write("external.eeprom")) fp->write(external.memory, external.size());
     }
   }
 
@@ -26,7 +26,7 @@ struct BandaiDatach : BandaiLZ93D50 {
     data = BandaiLZ93D50::readPRG(address, data);
     if(address >= 0x6000 && address < 0x8000) {
       data.bit(3) = 0;  //idle barcode signal
-      if(hasExternal) data.bit(4) = data.bit(4) && external.read();
+      if(external) data.bit(4) = data.bit(4) && external.read();
     }
     return data;
   }
@@ -35,11 +35,19 @@ struct BandaiDatach : BandaiLZ93D50 {
     if(address < 0x8000) return;
     auto reg = address & 15;
     if(reg <= 7) {
-      if(reg <= 3 && hasExternal) external.write(data.bit(3), external.data);
+      if(reg <= 3 && external) {
+        external.clock = data.bit(3);
+        external.data  = external.data();
+        external.write();
+      }
       return;
     }
     BandaiLZ93D50::writePRG(address, data);
-    if(reg == 13 && hasExternal) external.write(external.clock, data.bit(6));
+    if(reg == 13 && external) {
+      external.clock = external.clock();
+      external.data  = data.bit(6);
+      external.write();
+    }
   }
 
   auto power() -> void override {
@@ -49,6 +57,6 @@ struct BandaiDatach : BandaiLZ93D50 {
 
   auto serialize(serializer& s) -> void override {
     BandaiLZ93D50::serialize(s);
-    if(hasExternal) s(external);
+    s(external);
   }
 };
