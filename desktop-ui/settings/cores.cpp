@@ -4,6 +4,8 @@ auto CoreSettings::construct() -> void {
 
   settingsHint.setText("Note: Settings changes require a game reload to take effect").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  // N64 Core Settings
+
   nintendo64SettingsLabel.setText("Nintendo 64 Settings").setFont(Font().setBold());
 
   nintendo64ExpansionPakOption.setText("4MB Expansion Pak").setChecked(settings.nintendo64.expansionPak).onToggle([&] {
@@ -103,13 +105,86 @@ auto CoreSettings::construct() -> void {
   renderSupersamplingLayout.setAlignment(1).setPadding(12_sx, 0);
   renderSupersamplingHint.setText("Scales 2x and 4x resolutions back down to native.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  parallelOverscanCropLayout.setAlignment(0.5).setPadding(12_sx, 0);
+  parallelOverscanCropOption.setText("Enable Overscan Crop")
+      .setChecked(settings.nintendo64.enableOverscanCrop)
+      .onToggle([&] {
+          Program::Guard guard;
+          settings.nintendo64.enableOverscanCrop = parallelOverscanCropOption.checked();
+          if (emulator) emulator->setBoolean("Enable Overscan Crop", settings.nintendo64.enableOverscanCrop);
+      });
+  parallelOverscanCropHint.setText("Crops the overscan area from the rendered image.")
+      .setFont(Font().setSize(7.0))
+      .setForegroundColor(SystemColor::Sublabel);
+
+  parallelOverscanCropSettingsLayout.setAlignment(0.5).setPadding(12_sx, 0);
+  parallelOverscanCropTopLabel.setText("Top:");
+  parallelOverscanCropTopValue.setText(integer(settings.nintendo64.overscanCropTop))
+      .setEditable(true)
+      .onChange([&] {
+          if (parallelOverscanCropTopValue.text() == "") return;
+
+          Program::Guard guard;
+          int newValue = parallelOverscanCropTopValue.text().integer();
+          int clamped = std::clamp(newValue, 0, 120);
+          settings.nintendo64.overscanCropTop = clamped;
+          if (newValue != clamped)
+          {
+              // FIXME: This creates an object that looks strange in the debugger and crashes if you try to compare it with ==. Thankfully, we can just not do that but it hints at a structural problem with the code that should be fixed in the future.
+              string valueStr = string(clamped);
+              parallelOverscanCropTopValue.setText(valueStr);
+          }
+      });
+  parallelOverscanCropBottomLabel.setText("Bottom:");
+  parallelOverscanCropBottomValue.setText(integer(settings.nintendo64.overscanCropBottom))
+      .setEditable(true)
+      .onChange([&] {
+          if (parallelOverscanCropBottomValue.text() == "") return;
+
+          Program::Guard guard;
+          int newValue = parallelOverscanCropBottomValue.text().integer();
+          int clamped = std::clamp(newValue, 0, 120);
+          settings.nintendo64.overscanCropBottom = clamped;
+          if (newValue != clamped) parallelOverscanCropBottomValue.setText(string(clamped));
+      });
+  parallelOverscanCropLeftLabel.setText("Left:");
+  parallelOverscanCropLeftValue.setText(integer(settings.nintendo64.overscanCropLeft))
+      .setEditable(true)
+      .onChange([&] {
+          if (parallelOverscanCropLeftValue.text() == "") return;
+
+          Program::Guard guard;
+          int newValue = parallelOverscanCropLeftValue.text().integer();
+          int clamped = std::clamp(newValue, 0, 160);
+          settings.nintendo64.overscanCropLeft = clamped;
+          if (newValue != clamped) parallelOverscanCropLeftValue.setText(string(clamped));
+      });
+  parallelOverscanCropRightLabel.setText("Right:");
+  parallelOverscanCropRightValue.setText(integer(settings.nintendo64.overscanCropRight))
+      .setEditable(true)
+      .onChange([&] {
+          if (parallelOverscanCropRightValue.text() == "") return;
+
+          Program::Guard guard;
+          int newValue = parallelOverscanCropRightValue.text().integer();
+          int clamped = std::clamp(newValue, 0, 160);
+          settings.nintendo64.overscanCropRight = clamped;
+          if (newValue != clamped) parallelOverscanCropRightValue.setText(string(clamped));
+      });
+  parallelOverscanCropSettingsHint.setText("Top / Bottom values are implicitly doubled if image is interlaced.")
+      .setFont(Font().setSize(7.0))
+      .setForegroundColor(SystemColor::Sublabel);
+
   #if !defined(VULKAN)
   //hide Vulkan-specific options if Vulkan is not available
   renderQualityLayout.setCollapsible(true).setVisible(false);
   renderSupersamplingLayout.setCollapsible(true).setVisible(false);
   disableVideoInterfaceProcessingLayout.setCollapsible(true).setVisible(false);
   weaveDeinterlacingLayout.setCollapsible(true).setVisible(false);
+  parallelOverscanCropLayout.setCollapsible(true).setVisible(false);
   #endif
+
+  // GameBoy Core Settings
 
   gameBoyAdvanceSettingsLabel.setText("Game Boy Advance Settings").setFont(Font().setBold());
   gameBoyPlayerOption.setText("Game Boy Player").setChecked(settings.gameBoyAdvance.player).onToggle([&] {
