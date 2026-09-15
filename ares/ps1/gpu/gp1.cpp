@@ -21,15 +21,15 @@ auto GPU::readGP1() -> u32 {
   data.bit(23)    = io.displayDisable;
   data.bit(24)    = io.interrupt;
   data.bit(25)    = 0;
-  data.bit(26)    = io.pcounter == 0;  //ready to receive command
+  data.bit(26)    = io.mode == Mode::Normal && io.pcounter == 0 && !input.size && queue.gp0.empty();
   data.bit(27)    = io.mode == Mode::CopyFromVRAM;
-  data.bit(28)    = io.pcounter == 0;  //ready to receive DMA block
+  data.bit(28)    = receiveDMA();
   data.bit(29,30) = io.dmaDirection;
-  data.bit(31)    = !vblank() && (interlace() ? !io.field : io.vcounter & 1);
+  data.bit(31)    = (io.displayStartY + (interlace() ? (!vblank() && io.activeField) : u32(io.vcounter))) & 1;
 
   switch(io.dmaDirection) {
     case 0: data.bit(25) = 0; break;
-    case 1: data.bit(25) = queue.gp0.length < 16; break;
+    case 1: data.bit(25) = data.bit(28); break;
     case 2: data.bit(25) = data.bit(28); break;
     case 3: data.bit(25) = data.bit(27); break;
   }
@@ -40,7 +40,7 @@ auto GPU::readGP1() -> u32 {
 auto GPU::writeGP1(u32 value) -> void {
 //thread.fifo.await_empty();
 
-  n8  command = value >> 24;
+  n8  command = value >> 24 & 0x3f;
   n24 data    = value >>  0;
 
 //print("* GP1(", hex(command, 2L), ") = ", hex(data, 6L), "\n");
@@ -82,6 +82,10 @@ auto GPU::writeGP1(u32 value) -> void {
 
     //GP1(01)
     queue.gp0.reset();
+    input = {};
+    io.pcounter = 0;
+    io.mode = Mode::Normal;
+    io.copy = {};
 
     //GP1(02)
     io.interrupt = 0;
@@ -111,6 +115,7 @@ auto GPU::writeGP1(u32 value) -> void {
     io.videoMode = 0;
     io.colorDepth = 0;
     io.interlace = 0;
+    io.activeField = 0;
     io.reverseFlag = 0;
 
     return;
@@ -119,6 +124,10 @@ auto GPU::writeGP1(u32 value) -> void {
   //reset command buffer
   if(command == 0x01) {
     queue.gp0.reset();
+    input = {};
+    io.pcounter = 0;
+    io.mode = Mode::Normal;
+    io.copy = {};
     return;
   }
 
@@ -177,6 +186,7 @@ auto GPU::writeGP1(u32 value) -> void {
   //get GPU information
   if(command >= 0x10 && command <= 0x1f) {
     data &= 0xf;
+    if(data >= 2 && data <= 5) io.status = 0;
 
     //GP1(e2)
     if(data == 0x2) {

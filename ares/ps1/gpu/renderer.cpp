@@ -89,46 +89,32 @@ auto GPU::Render::dither(Point p, Color c) const -> Color {
   return c;
 }
 
-auto GPU::Render::modulate(Color above, Color below) const -> Color {
-  below.r >>= 3;
-  below.g >>= 3;
-  below.b >>= 3;
-
-  above.r = std::min(255, ((u16)below.r * (u16)above.r) >> 4);
-  above.g = std::min(255, ((u16)below.g * (u16)above.g) >> 4);
-  above.b = std::min(255, ((u16)below.b * (u16)above.b) >> 4);
-
-  return above;
+auto GPU::Render::modulate(Color texture, Color color) const -> Color {
+  return Color::fromRGB(
+    std::min(255, ((texture.r >> 3) * color.r) >> 4),
+    std::min(255, ((texture.g >> 3) * color.g) >> 4),
+    std::min(255, ((texture.b >> 3) * color.b) >> 4)
+  );
 }
 
 auto GPU::Render::alpha(Color above, Color below) const -> Color {
-  switch(semiTransparency) {
-  case 0:
-    above.r = below.r + above.r >> 1;
-    above.g = below.g + above.g >> 1;
-    above.b = below.b + above.b >> 1;
-    break;
-  case 1:
-    above.r = min(255, below.r + above.r);
-    above.g = min(255, below.g + above.g);
-    above.b = min(255, below.b + above.b);
-    break;
-  case 2:
-    above.r = max(0, (s32)below.r - above.r);
-    above.g = max(0, (s32)below.g - above.g);
-    above.b = max(0, (s32)below.b - above.b);
-    break;
-  case 3:
-    above.r = min(255, below.r + (above.r >> 2));
-    above.g = min(255, below.g + (above.g >> 2));
-    above.b = min(255, below.b + (above.b >> 2));
-    break;
-  }
-  return above;
+  auto blend = [&](s32 foreground, s32 background) -> s32 {
+    foreground >>= 3;
+    background >>= 3;
+    switch(semiTransparency) {
+    case 0: return (background + foreground) / 2;
+    case 1: return std::min(31, background + foreground);
+    case 2: return std::max(0, background - foreground);
+    case 3: return std::min(31, background + foreground / 4);
+    }
+    return foreground;
+  };
+  return Color::fromRGB(blend(above.r, below.r) << 3, blend(above.g, below.g) << 3, blend(above.b, below.b) << 3);
 }
 
 template<u32 Flags>
 auto GPU::Render::pixel(Point point, Color rgb, Point uv) -> void {
+  if(interlaced && (point.y & 1) == activeLine) return;
   Color above;
   bool transparent;
   bool maskBit = forceMaskBit;
@@ -148,7 +134,7 @@ auto GPU::Render::pixel(Point point, Color rgb, Point uv) -> void {
     transparent = true;
     above = rgb;
   }
-  if constexpr(Flags & Dither) {
+  if constexpr((Flags & Dither) && !((Flags & Texture) && (Flags & Raw))) {
     above = dither(point, above);
   }
 
@@ -165,46 +151,45 @@ auto GPU::Render::pixel(Point point, Color rgb, Point uv) -> void {
 
 template<u32 Flags>
 auto GPU::Render::line() -> void {
-  v0.x += drawingAreaOffsetX, v0.y += drawingAreaOffsetY;
-  v1.x += drawingAreaOffsetX, v1.y += drawingAreaOffsetY;
-
-  v0.x = clip(v0.x, drawingAreaOriginX1, drawingAreaOriginX2);
-  v0.y = clip(v0.y, drawingAreaOriginY1, drawingAreaOriginY2);
-  v1.x = clip(v1.x, drawingAreaOriginX1, drawingAreaOriginX2);
-  v1.y = clip(v1.y, drawingAreaOriginY1, drawingAreaOriginY2);
-
-  Point d = {v1.x - v0.x, v1.y - v0.y};
-  s32 steps = abs(d.x) > abs(d.y) ? abs(d.x) : abs(d.y);
-  if(steps == 0) {
-    if(v0.x == v1.x && v0.y == v1.y) {
-      return pixel<Flags>(v0, v0);
-    } else {
-      debug(unimplemented, "GPU::renderLine(steps=0)");
-      return;
+  auto a = v0, b = v1;
+  a.x += drawingAreaOffsetX, a.y += drawingAreaOffsetY;
+  b.x += drawingAreaOffsetX, b.y += drawingAreaOffsetY;
+  s32 width = abs((s32)b.x - a.x), height = abs((s32)b.y - a.y);
+  if(width >= 1024 || height >= 512) return;
+  s32 steps = std::max(width, height);
+  if(steps && a.x >= b.x) std::swap(a, b);
+  // Reference-derived 32.32 position and 20.12 colour DDA. Round position
+  // increments away from zero; the small tie bias matches the software reference.
+  constexpr s64 unit = s64(1) << 32;
+  auto increment = [&](s32 delta) -> s64 {
+    if(!steps) return 0;
+    return (delta * unit + (delta > 0 ? steps - 1 : delta < 0 ? 1 - steps : 0)) / steps;
+  };
+  s64 dx = increment((s32)b.x - a.x), dy = increment((s32)b.y - a.y);
+  s64 x = (s32)a.x * unit + unit / 2 - 1024;
+  s64 y = (s32)a.y * unit + unit / 2 - (dy < 0 ? 1024 : 0);
+  s32 red = a.r * 4096 + 2048, green = a.g * 4096 + 2048, blue = a.b * 4096 + 2048;
+  s32 dr = steps ? ((s32)b.r - a.r) * 4096 / steps : 0;
+  s32 dg = steps ? ((s32)b.g - a.g) * 4096 / steps : 0;
+  s32 db = steps ? ((s32)b.b - a.b) * 4096 / steps : 0;
+  for(s32 n = 0; n <= steps; n++) {
+    Point p = {(i11)(x >> 32), (i11)(y >> 32)};
+    if(p.x >= drawingAreaOriginX1 && p.x <= drawingAreaOriginX2
+    && p.y >= drawingAreaOriginY1 && p.y <= drawingAreaOriginY2) {
+      Color color = a;
+      if constexpr(Flags & Shade) color = Color::fromRGB(red >> 12, green >> 12, blue >> 12);
+      pixel<Flags | Dither>(p, color);
     }
-  }
-
-  Point s = {(d.x << 16) / steps, (d.y << 16) / steps};
-  Point p = {v0.x << 16, v0.y << 16};
-
-  u32 pixels = 0;
-  for(u16 step : range(steps)) {
-    pixel<Flags | Dither>({p.x >> 16, p.y >> 16}, v0);
-    p.x += s.x, p.y += s.y;
-    pixels++;
-  }
-
-//io.pcounter += cost<Flags | Line>(pixels);
-
-  if constexpr(Flags & Shade) {
-    debug(unimplemented, "ShadedLine");
+    x += dx, y += dy;
+    red += dr, green += dg, blue += db;
   }
 }
 
 template<u32 Flags>
 auto GPU::Render::triangle() -> void {
+  if(drawingAreaOriginX1 > drawingAreaOriginX2 || drawingAreaOriginY1 > drawingAreaOriginY2) return;
   static constexpr u32 Dithering = ((
-    (Flags & Shade) || ((Flags & Texture) && (Flags & Alpha))
+    (Flags & Shade) || ((Flags & Texture) && !(Flags & Raw))
   ) && !(Flags & Rectangle)) ? Dither : 0;
 
   v0.x += drawingAreaOffsetX, v0.y += drawingAreaOffsetY;
@@ -215,7 +200,7 @@ auto GPU::Render::triangle() -> void {
   Point vmax{max(v0.x, v1.x, v2.x), max(v0.y, v1.y, v2.y)};
 
   //reject triangles larger than the VRAM size
-  if(vmax.x - vmin.x > 1024 || vmax.y - vmin.y > 512) return;
+  if(vmax.x - vmin.x >= 1024 || vmax.y - vmin.y >= 512) return;
 
   //clip rendering to drawing area
   vmin.x = clip(vmin.x, drawingAreaOriginX1, drawingAreaOriginX2);
@@ -308,6 +293,8 @@ auto GPU::Render::quadrilateral() -> void {
 
 template<u32 Flags>
 auto GPU::Render::rectangle() -> void {
+  size.w &= 1023;
+  size.h &= 511;
   v1 = Vertex(v0).setPoint(v0.x + size.w, v0.y).setTexel(v0.u + size.w, v0.v);
   v2 = Vertex(v0).setPoint(v0.x, v0.y + size.h).setTexel(v0.u, v0.v + size.h);
   v3 = Vertex(v0).setPoint(v0.x + size.w, v0.y + size.h).setTexel(v0.u + size.w, v0.v + size.h);
@@ -318,6 +305,7 @@ template<u32 Flags>
 auto GPU::Render::fill() -> void {
   auto color = v0.to16();
   for(u32 y : range(size.h)) {
+    if(interlaced && ((y + v0.y) & 1) == activeLine) continue;
     for(u32 x : range(size.w)) {
       gpu.vram2D[y + v0.y & 511][x + v0.x & 1023] = color;
     }
@@ -423,6 +411,8 @@ auto GPU::Render::execute() -> void {
 }
 
 auto GPU::Renderer::queue(Render& render) -> void {
+  // Account on the emulation thread, never on the host renderer worker.
+  if(render.command < 0x100) self.io.pcounter += render.clocks();
   if constexpr(Accuracy::GPU::Threaded) {
     fifo.await_write(render);
   } else if constexpr(true) {
@@ -433,6 +423,10 @@ auto GPU::Renderer::queue(Render& render) -> void {
 auto GPU::Renderer::main(uintptr_t) -> void {
   while(true) {
     auto render = fifo.await_read();
+    if(render.command == 0x101) {
+      fence = false;
+      continue;
+    }
     self.vram.mutex.lock();
     render.execute();
     self.vram.mutex.unlock();
@@ -442,10 +436,12 @@ auto GPU::Renderer::main(uintptr_t) -> void {
 
 auto GPU::Renderer::kill() -> void {
   if constexpr(Accuracy::GPU::Threaded) {
+    if(!running) return;
     Render kill;
     kill.command = 0x100;
     queue(kill);
     handle.join();
+    running = false;
   }
 }
 
@@ -453,6 +449,21 @@ auto GPU::Renderer::power() -> void {
   if constexpr(Accuracy::GPU::Threaded) {
     kill();
     fifo.flush();
+    fence = false;
+    running = true;
     handle = thread::create(std::bind_front(&GPU::Renderer::main, &self.renderer));
+  }
+}
+
+// Queue-empty alone is insufficient: the worker removes an item before drawing.
+// This marker is acknowledged only after all preceding VRAM writes complete.
+auto GPU::Renderer::synchronize() -> void {
+  if constexpr(Accuracy::GPU::Threaded) {
+    if(!running) return;
+    Render marker{};
+    marker.command = 0x101;
+    fence = true;
+    fifo.await_write(marker);
+    while(fence) spinloop();
   }
 }

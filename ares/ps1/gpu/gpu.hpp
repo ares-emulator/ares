@@ -25,7 +25,7 @@ struct GPU : Thread, Memory::Interface {
   auto vblank() const -> bool { return io.vcounter < vstart() || io.vcounter >= vend(); }
   auto interlace() const -> bool { return io.verticalResolution && io.interlace; }
   auto htotal() const -> u32 { return io.videoMode ? 3406 : 3413; }
-  auto hblankStart() const -> u32 { return io.displayRangeX2; }
+  auto hblankStart() const -> u32 { return std::min<u32>(io.displayRangeX2, htotal()); }
   auto displayWidth() const -> u32 { return io.horizontalResolution < 4 ? displayWidths[io.horizontalResolution] : displayWidths[4]; }
   auto dotclockDivider() const -> u32 { return io.horizontalResolution < 4 ? dotclockDividers[io.horizontalResolution] : dotclockDividers[4]; }
 
@@ -34,9 +34,15 @@ struct GPU : Thread, Memory::Interface {
   auto unload() -> void;
 
   auto main() -> void;
+  auto advanceVerticalCounter() -> bool;
+  auto advanceScanline() -> bool;
   auto frame() -> void;
   auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
+  auto advanceCommands(u32 clocks) -> void;
+  auto receiveDMA() const -> bool;
+  auto commandWords(u32 command) const -> u32;
+  auto drainCommands() -> void;
 
   //io.cpp
   auto canReadDMA() -> bool;
@@ -53,7 +59,8 @@ struct GPU : Thread, Memory::Interface {
 
   //gp0.cpp
   auto readGP0() -> u32;
-  auto writeGP0(u32 data, bool isThread = false) -> void;
+  auto writeGP0(u32 data) -> void;
+  auto executeGP0(u32 data) -> void;
 
   //gp1.cpp
   auto readGP1() -> u32;
@@ -98,6 +105,8 @@ struct GPU : Thread, Memory::Interface {
   struct IO {
     Mode mode = Mode::Normal;
 
+    n1  activeField;
+    bool inVblank = true;
     n1  field;      //even or odd scanline
     n16 hcounter;   //horizontal counter
     n16 vcounter;   //vertical counter
@@ -179,18 +188,27 @@ struct GPU : Thread, Memory::Interface {
     n1 reverseFlag;
 
     //GP1(10): get GPU information
-    n24 status;
+    n32 status;
 
     //internal:
     n6 texturePaletteX;
     n9 texturePaletteY;
   } io;
 
+  struct Input {
+    // Storage for an accepted DMA burst; the request threshold remains 16 words.
+    static constexpr u32 Capacity = 256;
+    u32 data[Capacity] = {};
+    u32 read = 0;
+    u32 size = 0;
+  } input;
+
   struct Queue {
-    auto reset() -> void { length = counterX = counterY = 0; }
+    auto reset() -> void { length = counterX = counterY = 0; polyline = false; }
     auto empty() const -> bool { return length == 0; }
     auto write(n32 value) -> n8 { data[length++] = value; return length; }
 
+    bool polyline = false;
     n8  command;
     n8  length;
     n32 data[256];
@@ -321,9 +339,13 @@ struct GPU : Thread, Memory::Interface {
     template<u32 Flags> auto fill() -> void;
     template<u32 Flags> auto cost(u32 pixels) const -> u32;
     auto execute() -> void;
+    auto clocks() const -> u32;
 
     u32  command;
     u32  flags;
+    bool interlaced = false;
+    bool activeLine = false;
+    bool continuation = false;
     bool dithering;
     u32  semiTransparency;
     bool checkMaskBit;
@@ -358,12 +380,15 @@ struct GPU : Thread, Memory::Interface {
     Renderer(GPU& self) : self(self) {}
 
     auto queue(Render& render) -> void;
+    auto synchronize() -> void;
     auto main(uintptr_t) -> void;
     auto kill() -> void;
     auto power() -> void;
 
     nall::thread handle;
     queue_spsc<Render[65536]> fifo;
+    bool running = false;
+    atomic<bool> fence = false;
   } renderer{*this};
 
   //blitter.cpp

@@ -16,13 +16,24 @@ auto MDEC::unload() -> void {
   node.reset();
 }
 
-  auto MDEC::main() -> void {
+auto MDEC::main() -> void {
   if(io.mode == Mode::Idle) { step(128); return; }
 
-  if (io.mode == Mode::DecodeMacroblock) {
-    if(!decodeMacroblock()) {
-      io.mode = Mode::Idle;
+  while(io.mode == Mode::DecodeMacroblock) {
+    if(io.phaseClocks) {
+      u32 clocks = io.phaseClocks;
+      io.phaseClocks = 0;
+      return step(clocks);
     }
+
+    DecodePhase phase = io.decodePhase;
+    advanceDecode();
+    if(io.mode != Mode::DecodeMacroblock) break;
+
+    bool decodedBlock = phase >= DecodeCr && phase <= DecodeY3 && io.decodePhase != phase;
+    bool convertedBlock = phase == Convert && io.decodePhase == Publish;
+    if(decodedBlock || convertedBlock) continue;
+    break;
   }
 
   step(128);
@@ -39,7 +50,15 @@ auto MDEC::power(bool reset) -> void {
   fifo.output.flush();
   status = {};
   io.mode = Mode::Idle;
+  io.decodePhase = DecodeIdle;
+  io.blockPhase = BlockStart;
   io.offset = 0;
+  io.outputOffset = 0;
+  io.outputBlock = 0;
+  io.outputWriteOffset = 0;
+  io.coefficient = 0;
+  io.qfactor = 0;
+  io.phaseClocks = 0;
   for(auto& v : block.luma) v = 0;
   for(auto& v : block.chroma) v = 0;
   for(auto& v : block.scale) v = 0;

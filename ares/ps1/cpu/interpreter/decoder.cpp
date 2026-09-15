@@ -6,6 +6,7 @@
 #define jp(   id, name, ...) case id: return decoder##name(__VA_ARGS__)
 #define op(   id, name, ...) case id: return name(__VA_ARGS__)
 #define br(id, name, ...) case id: return name(__VA_ARGS__)
+#define gte(id, name, ...) case id: gte.name(__VA_ARGS__); break
 
 #define SA     (OPCODE >>  6 & 31)
 #define RDn    (OPCODE >> 11 & 31)
@@ -191,6 +192,10 @@ auto CPU::decoderREGIMM() -> void {
 }
 
 auto CPU::decoderSCC() -> void {
+  if(statusUserMode() && !statusCoprocessorEnabled(0)) {
+    return exception.coprocessor(0);
+  }
+
   switch(OPCODE >> 21 & 0x1f) {
   op(0x00, MFC0, RT, RDn);
   op(0x01, INVALID);
@@ -216,6 +221,8 @@ auto CPU::decoderSCC() -> void {
 }
 
 auto CPU::decoderGTE() -> void {
+  if(!coprocessor2Enabled()) return exception.coprocessor(2);
+
   switch(OPCODE >> 21 & 0x1f) {
   op(0x00, MFC2, RT, RDn);
   op(0x01, INVALID);
@@ -240,32 +247,36 @@ auto CPU::decoderGTE() -> void {
   #define MV OPCODE >> 15 & 3
   #define MM OPCODE >> 17 & 3
   #define SF OPCODE >> 19 & 1 ? 12 : 0
+  u32 cycles = gte.commandCycles(OPCODE & 0x3f);
+  if(!cycles) return;
+  stallGTE();
   switch(OPCODE & 0x3f) {
-  op(0x00, RTPS, LM, SF);  //0x01 mirror?
-  op(0x01, RTPS, LM, SF);
-  op(0x06, NCLIP);
-  op(0x0c, OP, LM, SF);
-  op(0x10, DPCS, LM, SF);
-  op(0x11, INTPL, LM, SF);
-  op(0x12, MVMVA, LM, TV, MV, MM, SF);
-  op(0x13, NCDS, LM, SF);
-  op(0x14, CDP, LM, SF);
-  op(0x16, NCDT, LM, SF);
-  op(0x1a, DCPL, LM, SF);  //0x29 mirror?
-  op(0x1b, NCCS, LM, SF);
-  op(0x1c, CC, LM, SF);
-  op(0x1e, NCS, LM, SF);
-  op(0x20, NCT, LM, SF);
-  op(0x28, SQR, LM, SF);
-  op(0x29, DCPL, LM, SF);
-  op(0x2a, DPCT, LM, SF);
-  op(0x2d, AVSZ3);
-  op(0x2e, AVSZ4);
-  op(0x30, RTPT, LM, SF);
-  op(0x3d, GPF, LM, SF);
-  op(0x3e, GPL, LM, SF);
-  op(0x3f, NCCT, LM, SF);
+  gte(0x00, RTPS, LM, SF);  //0x01 mirror?
+  gte(0x01, RTPS, LM, SF);
+  gte(0x06, NCLIP);
+  gte(0x0c, OP, LM, SF);
+  gte(0x10, DPCS, LM, SF);
+  gte(0x11, INTPL, LM, SF);
+  gte(0x12, MVMVA, LM, TV, MV, MM, SF);
+  gte(0x13, NCDS, LM, SF);
+  gte(0x14, CDP, LM, SF);
+  gte(0x16, NCDT, LM, SF);
+  gte(0x1a, DCPL, LM, SF);  //0x29 mirror?
+  gte(0x1b, NCCS, LM, SF);
+  gte(0x1c, CC, LM, SF);
+  gte(0x1e, NCS, LM, SF);
+  gte(0x20, NCT, LM, SF);
+  gte(0x28, SQR, LM, SF);
+  gte(0x29, DCPL, LM, SF);
+  gte(0x2a, DPCT, LM, SF);
+  gte(0x2d, AVSZ3);
+  gte(0x2e, AVSZ4);
+  gte(0x30, RTPT, LM, SF);
+  gte(0x3d, GPF, LM, SF);
+  gte(0x3e, GPL, LM, SF);
+  gte(0x3f, NCCT, LM, SF);
   }
+  scheduleGTE(cycles);
   #undef LM
   #undef TV
   #undef MV
@@ -274,40 +285,40 @@ auto CPU::decoderGTE() -> void {
 }
 
 auto CPU::COP1() -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor();
+  if(!statusCoprocessorEnabled(1)) return exception.coprocessor(1);
 }
 
 auto CPU::COP3() -> void {
-  if(!scc.status.enable.coprocessor3) return exception.coprocessor();
+  if(!statusCoprocessorEnabled(3)) return exception.coprocessor(3);
 }
 
 auto CPU::LWC0(u8 rt, cu32& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor0) return exception.coprocessor();
-  read<Word>(rs + imm);  //write target unknown
+  if(!statusCoprocessorEnabled(0)) return exception.coprocessor(0);
+  read<Word>(rs + imm);  //LWC0 performs the read but discards the result
 }
 
 auto CPU::LWC1(u8 rt, cu32& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor();
+  if(!statusCoprocessorEnabled(1)) return exception.coprocessor(1);
   read<Word>(rs + imm);  //write target unknown
 }
 
 auto CPU::LWC3(u8 rt, cu32& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor3) return exception.coprocessor();
+  if(!statusCoprocessorEnabled(3)) return exception.coprocessor(3);
   read<Word>(rs + imm);  //write target unknown
 }
 
 auto CPU::SWC0(u8 rt, cu32& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor0) return exception.coprocessor();
-  write<Word>(rs + imm, 0);  //read source unknown
+  if(!statusCoprocessorEnabled(0)) return exception.coprocessor(0);
+  write<Word>(rs + imm, 0);  //hardware writes stale bus data; zero remains an approximation
 }
 
 auto CPU::SWC1(u8 rt, cu32& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor();
+  if(!statusCoprocessorEnabled(1)) return exception.coprocessor(1);
   write<Word>(rs + imm, 0);  //read source unknown
 }
 
 auto CPU::SWC3(u8 rt, cu32& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor3) return exception.coprocessor();
+  if(!statusCoprocessorEnabled(3)) return exception.coprocessor(3);
   write<Word>(rs + imm, 0);  //read source unknown
 }
 
@@ -326,6 +337,7 @@ auto CPU::INVALID() -> void {
 #undef jp
 #undef op
 #undef br
+#undef gte
 
 #undef OPCODE
 #undef RD

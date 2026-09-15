@@ -17,6 +17,13 @@ struct file : node {
   virtual auto write(u8 data) -> void = 0;
   virtual auto flush() -> void {}
 
+  virtual auto readExact(std::span<u8> bytes) -> bool {
+    u64 start = offset();
+    if(!readable() || start > size() || bytes.size() > size() - start) return false;
+    read(bytes);
+    return offset() == start + bytes.size();
+  }
+
   auto end() const -> bool {
     return offset() >= size();
   }

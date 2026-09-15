@@ -8,7 +8,7 @@ struct PlayStation : Emulator {
 
   std::shared_ptr<mia::Pak> memoryCard;
   u32 regionID = 0;
-  sTimer discTrayTimer;
+  sTimer lidMenuTimer;
 };
 
 PlayStation::PlayStation() {
@@ -130,12 +130,38 @@ auto PlayStation::load() -> LoadResult {
     port->connect();
   }
 
-  discTrayTimer = Timer{};
-
   return successful;
 }
 
 auto PlayStation::load(Menu menu) -> void {
+  lidMenuTimer.reset();
+  if(auto lid = root->find<ares::Node::Setting::String>("PlayStation/CD-ROM Lid")) {
+    Menu lidMenu{&menu};
+    lidMenu.setText(lid->name()).setIcon(Icon::Device::Optical);
+    Group lidGroup;
+    for(auto mode : lid->readAllowedValues()) {
+      MenuRadioItem item{&lidMenu};
+      item.setText(mode).onActivate([lid, mode] {
+        Program::Guard guard;
+        lid->setValue(mode);
+      });
+      lidGroup.append(item);
+    }
+
+    auto refreshLid = [this, lid, items = lidGroup.objects<MenuRadioItem>()] {
+      Program::Guard guard;
+      if(!root) return;
+      auto mode = lid->value();
+      for(auto item : items) {
+        if(item.text() == mode && !item.checked()) item.setChecked();
+      }
+    };
+    refreshLid();
+    // Only refresh GUI checkmarks after state loads/rewind; the core owns all lid timing.
+    lidMenuTimer = Timer{};
+    lidMenuTimer->onActivate(refreshLid).setInterval(100).setEnabled();
+  }
+
   MenuItem changeDisc{&menu};
   changeDisc.setIcon(Icon::Device::Optical);
   changeDisc.setText("Change Disc").onActivate([&] {
@@ -148,20 +174,15 @@ auto PlayStation::load(Menu menu) -> void {
       return;
     }
 
-    //give the emulator core a few seconds to notice an empty drive state before reconnecting
-    discTrayTimer->onActivate([&] {
-      Program::Guard guard;
-      discTrayTimer->setEnabled(false);
-      auto tray = root->find<ares::Node::Port>("PlayStation/Disc Tray");
-      tray->allocate();
-      tray->connect();
-    }).setInterval(3000).setEnabled();
+    // The core owns the emulated shell-opening and spin-up deadlines, including save-state continuation.
+    tray->allocate();
+    tray->connect();
   });
 }
 
 auto PlayStation::unload() -> void {
+  lidMenuTimer.reset();
   Emulator::unload();
-  discTrayTimer.reset();
 }
 
 auto PlayStation::save() -> bool {

@@ -1,94 +1,6 @@
-auto CPU::Debugger::load(Node::Object parent) -> void {
-  memory.ram = parent->append<Node::Debugger::Memory>("CPU RAM");
-  memory.ram->setSize(cpu.ram.size);
-  memory.ram->setRead([&](u32 address) -> u8 {
-    return cpu.ram.readByte(address);
-  });
-  memory.ram->setWrite([&](u32 address, u8 data) -> void {
-    return cpu.ram.writeByte(address, data);
-  });
-
-  memory.scratchpad = parent->append<Node::Debugger::Memory>("CPU Scratchpad");
-  memory.scratchpad->setSize(cpu.scratchpad.size);
-  memory.scratchpad->setRead([&](u32 address) -> u8 {
-    return cpu.scratchpad.readByte(address);
-  });
-  memory.scratchpad->setWrite([&](u32 address, u8 data) -> void {
-    return cpu.scratchpad.writeByte(address, data);
-  });
-
-  tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "CPU");
-  tracer.instruction->setAddressBits(32, 2);
-  tracer.instruction->setDepth(32);
-
-  tracer.exception = parent->append<Node::Debugger::Tracer::Notification>("Exception", "CPU");
-  tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "CPU");
-  tracer.message = parent->append<Node::Debugger::Tracer::Notification>("Message", "CPU");
-  tracer.function = parent->append<Node::Debugger::Tracer::Notification>("Function", "CPU");
-
-  tracer.message->setAutoLineBreak(false);
-  tracer.message->setTerminal(true);
-}
-
-auto CPU::Debugger::instruction() -> void {
-  if(!tracer.instruction->enabled()) return;
-
-  u32 address = cpu.pipeline.address;
-  u32 instruction = cpu.pipeline.instruction;
-  if(tracer.instruction->address(address)) {
-    cpu.disassembler.showColors = 0;
-    tracer.instruction->notify(cpu.disassembler.disassemble(address, instruction), {});
-    cpu.disassembler.showColors = 1;
-  }
-}
-
-auto CPU::Debugger::exception(u8 code) -> void {
-  if(!tracer.exception->enabled()) return;
-
-  string type;
-  if(code ==  0) type = "Interrupt";
-  if(code ==  4) type = "AddressLoad";
-  if(code ==  5) type = "AddressStore";
-  if(code ==  6) type = "BusInstruction";
-  if(code ==  7) type = "BusData";
-  if(code ==  8) type = "SystemCall";
-  if(code ==  9) type = "Breakpoint";
-  if(code == 10) type = "ReservedInstruction";
-  if(code == 11) type = "CoprocessorDisabled";
-  if(code == 12) type = "ArithmeticOverflow";
-  if(code == 13) type = "Trap";
-
-  if(code ==  0) return;  //interrupt exceptions are logged by interrupt() instead
-  if(code ==  8) return;  //ignore SYSCALL exceptions (they are used often to call BIOS functions)
-
-  tracer.exception->notify({type, " PC:", hex(cpu.ipu.pc, 8L)});
-}
-
-auto CPU::Debugger::interrupt(u8 mask) -> void {
-  if(!tracer.interrupt->enabled()) return;
-
-  string source;
-  if(mask & 0x01) {
-    source.append("Software0,");
-  }
-  if(mask & 0x02) {
-    source.append("Software1,");
-  }
-  if(mask & 0x04) {
-    if(PlayStation::interrupt.vblank.poll()) source.append("Vblank,");
-    if(PlayStation::interrupt.gpu.poll()) source.append("GPU,");
-    if(PlayStation::interrupt.cdrom.poll()) source.append("CDROM,");
-    if(PlayStation::interrupt.dma.poll()) source.append("DMA,");
-    if(PlayStation::interrupt.timer0.poll()) source.append("Timer0,");
-    if(PlayStation::interrupt.timer1.poll()) source.append("Timer1,");
-    if(PlayStation::interrupt.timer2.poll()) source.append("Timer2,");
-    if(PlayStation::interrupt.peripheral.poll()) source.append("Peripheral,");
-    if(PlayStation::interrupt.sio.poll()) source.append("SIO,");
-    if(PlayStation::interrupt.spu.poll()) source.append("SPU,");
-    if(PlayStation::interrupt.pio.poll()) source.append("PIO,");
-  }
-  source.trimRight(",", 1L);
-  tracer.interrupt->notify(source);
+auto CPU::Debugger::branch() -> void {
+  message();
+  function();
 }
 
 auto CPU::Debugger::messageChar(char c) -> void {
@@ -109,20 +21,20 @@ auto CPU::Debugger::messageText(u32 address) -> void {
 auto CPU::Debugger::message() -> void {
   if(!tracer.message->enabled()) return;
 
-  if(cpu.ipu.pc == 0xa0 && cpu.ipu.r[9] == 0x3c) messageChar((char)cpu.ipu.r[4]);
-  if(cpu.ipu.pc == 0xb0 && cpu.ipu.r[9] == 0x3d) messageChar((char)cpu.ipu.r[4]);
-  if(cpu.ipu.pc == 0xa0 && cpu.ipu.r[9] == 0x3e) messageText(cpu.ipu.r[4]);
-  if(cpu.ipu.pc == 0xb0 && cpu.ipu.r[9] == 0x3f) messageText(cpu.ipu.r[4]);
+  if(self.ipu.pc == 0xa0 && self.ipu.r[9] == 0x3c) messageChar((char)self.ipu.r[4]);
+  if(self.ipu.pc == 0xb0 && self.ipu.r[9] == 0x3d) messageChar((char)self.ipu.r[4]);
+  if(self.ipu.pc == 0xa0 && self.ipu.r[9] == 0x3e) messageText(self.ipu.r[4]);
+  if(self.ipu.pc == 0xb0 && self.ipu.r[9] == 0x3f) messageText(self.ipu.r[4]);
 }
 
 auto CPU::Debugger::function() -> void {
   if(!tracer.function->enabled()) return;
 
-  u32 pc = cpu.ipu.pc & 0x1fff'ffff;
-  u32 p0 = cpu.ipu.r[4];
-  u32 p1 = cpu.ipu.r[5];
-  u32 p2 = cpu.ipu.r[6];
-  u32 p3 = cpu.ipu.r[7];
+  u32 pc = self.ipu.pc & 0x1fff'ffff;
+  u32 p0 = self.ipu.r[4];
+  u32 p1 = self.ipu.r[5];
+  u32 p2 = self.ipu.r[6];
+  u32 p3 = self.ipu.r[7];
   string call;
 
   auto hex8 = [](u32 value) -> string {
@@ -221,7 +133,7 @@ auto CPU::Debugger::function() -> void {
   #define op3(id, fn, p0, p1, p2) case id: call = {fn, "(", p0, ",", p1, ",", p2, ")"}; break;
   #define op4(id, fn, p0, p1, p2, p3) case id: call = {fn, "(", p0, ",", p1, ",", p2, ",", p3, ")"}; break;
 
-  if(pc == 0x80) switch(cpu.ipu.r[4]) {
+  if(pc == 0x80) switch(self.ipu.r[4]) {
   op0(0x00, "NoFunction");
   op0(0x01, "EnterCriticalSection");
   op0(0x02, "ExitCriticalSection");
@@ -229,7 +141,7 @@ auto CPU::Debugger::function() -> void {
   op2(0x04, "DeliverEvent", event(p0), spec(p1));
   }
 
-  if(pc == 0xa0) switch(cpu.ipu.r[9]) {
+  if(pc == 0xa0) switch(self.ipu.r[9]) {
   op2(0x00, "FileOpen", text(p0), hex32(p1));
   op3(0x01, "FileSeek", hex8(p0), hex32(p1), hex8(p2));
   op3(0x02, "FileRead", hex8(p0), hex32(p1), hex32(p2));
@@ -381,7 +293,7 @@ auto CPU::Debugger::function() -> void {
   op_(0xb4, "GetSystemInfo");
   }
 
-  if(pc == 0xb0) switch(cpu.ipu.r[9]) {
+  if(pc == 0xb0) switch(self.ipu.r[9]) {
   op_(0x00, "alloc_kernel_memory");
   op_(0x01, "free_kernel_memory");
   op_(0x02, "init_timer");
@@ -452,7 +364,7 @@ auto CPU::Debugger::function() -> void {
   op_(0x5d, "wait_card_status");
   }
 
-  if(pc == 0xc0) switch(cpu.ipu.r[9]) {
+  if(pc == 0xc0) switch(self.ipu.r[9]) {
   op_(0x00, "EnqueueTimerAndVblankIrqs");
   op_(0x01, "EnqueueSyscallHandler");
   op_(0x02, "SysEnqIntRP");

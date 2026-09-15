@@ -1,7 +1,11 @@
 auto MemoryControl::serialize(serializer& s) -> void {
+  bus.serialize(s);
+
   s(ram.value);
   s(ram.delay);
   s(ram.window);
+  s(ram.bankSize[0]);
+  s(ram.bankSize[1]);
 
   s(cache.lock);
   s(cache.invalidate);
@@ -42,6 +46,9 @@ auto MemoryControl::serialize(serializer& s) -> void {
     s(p.dmaSelect);
     s(p.wideDMA);
     s(p.wait);
+    s(p.activeValue);
+    s(p.activation);
+    s(p.configured);
   };
 
   port(exp1);

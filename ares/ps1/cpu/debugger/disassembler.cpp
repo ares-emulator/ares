@@ -1,4 +1,4 @@
-auto CPU::Disassembler::disassemble(u32 address, u32 instruction) -> string {
+auto CPU::Debugger::Disassembler::disassemble(u32 address, u32 instruction) -> string {
   this->address = address;
   this->instruction = instruction;
 
@@ -12,7 +12,7 @@ auto CPU::Disassembler::disassemble(u32 address, u32 instruction) -> string {
   return {s, rest};
 }
 
-auto CPU::Disassembler::EXECUTE() -> std::vector<string> {
+auto CPU::Debugger::Disassembler::EXECUTE() -> std::vector<string> {
   auto rtName  = [&] { return ipuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
@@ -115,7 +115,7 @@ auto CPU::Disassembler::EXECUTE() -> std::vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::SPECIAL() -> std::vector<string> {
+auto CPU::Debugger::Disassembler::SPECIAL() -> std::vector<string> {
   auto shift   = [&] { return string{instruction >> 6 & 31}; };
   auto rdName  = [&] { return ipuRegisterName (instruction >> 11 & 31); };
   auto rdValue = [&] { return ipuRegisterValue(instruction >> 11 & 31); };
@@ -209,7 +209,7 @@ auto CPU::Disassembler::SPECIAL() -> std::vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::REGIMM() -> std::vector<string> {
+auto CPU::Debugger::Disassembler::REGIMM() -> std::vector<string> {
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
   auto branch  = [&] { return immediate(address + 4 + (s16(instruction) << 2)); };
 
@@ -255,7 +255,7 @@ auto CPU::Disassembler::REGIMM() -> std::vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::SCC() -> std::vector<string> {
+auto CPU::Debugger::Disassembler::SCC() -> std::vector<string> {
   auto rtName  = [&] { return ipuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto sdName  = [&] { return sccRegisterName (instruction >> 11 & 31); };
@@ -273,7 +273,7 @@ auto CPU::Disassembler::SCC() -> std::vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::GTE() -> std::vector<string> {
+auto CPU::Debugger::Disassembler::GTE() -> std::vector<string> {
   auto rtName  = [&] { return ipuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return ipuRegisterValue(instruction >> 16 & 31); };
   auto drName  = [&] { return gteDataRegisterName (instruction >> 11 & 31); };
@@ -323,12 +323,12 @@ auto CPU::Disassembler::GTE() -> std::vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::immediate(s64 value, u8 bits) const -> string {
+auto CPU::Debugger::Disassembler::immediate(s64 value, u8 bits) const -> string {
   if(value < 0) return {"-$", hex(-value, bits >> 2)};
   return {"$", hex(value, bits >> 2)};
 }
 
-auto CPU::Disassembler::ipuRegisterName(u8 index) const -> string {
+auto CPU::Debugger::Disassembler::ipuRegisterName(u8 index) const -> string {
   static const string registers[32] = {
      "0", "at", "v0", "v1", "a0", "a1", "a2", "a3",
     "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
@@ -338,12 +338,12 @@ auto CPU::Disassembler::ipuRegisterName(u8 index) const -> string {
   return registers[index];
 }
 
-auto CPU::Disassembler::ipuRegisterValue(u8 index) const -> string {
+auto CPU::Debugger::Disassembler::ipuRegisterValue(u8 index) const -> string {
   if(index && showValues) return {ipuRegisterName(index), hint("{$", hex(self.ipu.r[index], 8L), "}")};
   return ipuRegisterName(index);
 }
 
-auto CPU::Disassembler::ipuRegisterIndex(u8 index, s16 offset) const -> string {
+auto CPU::Debugger::Disassembler::ipuRegisterIndex(u8 index, s16 offset) const -> string {
   string adjust;
   if(offset >= 0) adjust = {"+$", hex( offset)};
   if(offset <  0) adjust = {"-$", hex(-offset)};
@@ -351,7 +351,7 @@ auto CPU::Disassembler::ipuRegisterIndex(u8 index, s16 offset) const -> string {
   return {ipuRegisterName(index), adjust};
 }
 
-auto CPU::Disassembler::sccRegisterName(u8 index) const -> string {
+auto CPU::Debugger::Disassembler::sccRegisterName(u8 index) const -> string {
   static const string registers[32] = {
     "scc0", "scc1", "scc2",  "bpc",  "scc4", "bda",   "tar", "dcic",
     "bada", "bdam", "scc10", "bpcm", "sr",   "cause", "epc", "prid",
@@ -361,12 +361,12 @@ auto CPU::Disassembler::sccRegisterName(u8 index) const -> string {
   return registers[index];
 }
 
-auto CPU::Disassembler::sccRegisterValue(u8 index) const -> string {
+auto CPU::Debugger::Disassembler::sccRegisterValue(u8 index) const -> string {
   if(showValues) return {sccRegisterName(index), hint("{$", hex(self.getControlRegisterSCC(index), 8L), "}")};
   return sccRegisterName(index);
 }
 
-auto CPU::Disassembler::gteDataRegisterName(u8 index) const -> string {
+auto CPU::Debugger::Disassembler::gteDataRegisterName(u8 index) const -> string {
   static const string registers[32] = {
     "vxy0", "vz0", "vxy1", "vz2", "vxy2", "vz2", "rgbc", "otz",
     "ir0", "ir1", "ir2", "ir3", "sxy0", "sxy1", "sxy2", "sxyp",
@@ -376,12 +376,12 @@ auto CPU::Disassembler::gteDataRegisterName(u8 index) const -> string {
   return registers[index];
 }
 
-auto CPU::Disassembler::gteDataRegisterValue(u8 index) const -> string {
+auto CPU::Debugger::Disassembler::gteDataRegisterValue(u8 index) const -> string {
   if(showValues) return {gteDataRegisterName(index)};  //todo
   return gteDataRegisterName(index);
 }
 
-auto CPU::Disassembler::gteControlRegisterName(u8 index) const -> string {
+auto CPU::Debugger::Disassembler::gteControlRegisterName(u8 index) const -> string {
   static const string registers[32] = {
     "rt11+rt12", "rt13+rt21", "rt22+rt23", "rt31+rt32", "rt33", "trx", "try", "trz",
     "l11+l12", "l13+l21", "l22+l23", "l31+l32", "l33", "rbk", "gbk", "bbk",
@@ -391,13 +391,13 @@ auto CPU::Disassembler::gteControlRegisterName(u8 index) const -> string {
   return registers[index];
 }
 
-auto CPU::Disassembler::gteControlRegisterValue(u8 index) const -> string {
+auto CPU::Debugger::Disassembler::gteControlRegisterValue(u8 index) const -> string {
   if(showValues) return {gteControlRegisterName(index)};  //todo
   return gteControlRegisterName(index);
 }
 
 template<typename... P>
-auto CPU::Disassembler::hint(P&&... p) const -> string {
+auto CPU::Debugger::Disassembler::hint(P&&... p) const -> string {
   if(showColors) return {terminal::csi, "0m", terminal::csi, "37m", std::forward<P>(p)..., terminal::csi, "0m"};
   return {std::forward<P>(p)...};
 }

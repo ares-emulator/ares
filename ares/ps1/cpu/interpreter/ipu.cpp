@@ -69,24 +69,30 @@ auto CPU::BREAK() -> void {
 }
 
 auto CPU::DIV(cs32& rs, cs32& rt) -> void {
+  u32 lo;
+  u32 hi;
   if(rt) {
     //cast to s64 to prevent exception on INT32_MIN / -1
-    LO = s64(rs) / s64(rt);
-    HI = s64(rs) % s64(rt);
+    lo = s64(rs) / s64(rt);
+    hi = s64(rs) % s64(rt);
   } else {
-    LO = rs < 0 ? +1 : -1;
-    HI = rs;
+    lo = rs < 0 ? +1 : -1;
+    hi = rs;
   }
+  scheduleMultiplyDivide(hi, lo, 36);
 }
 
 auto CPU::DIVU(cu32& rs, cu32& rt) -> void {
+  u32 lo;
+  u32 hi;
   if(rt) {
-    LO = rs / rt;
-    HI = rs % rt;
+    lo = rs / rt;
+    hi = rs % rt;
   } else {
-    LO = -1;
-    HI = rs;
+    lo = -1;
+    hi = rs;
   }
+  scheduleMultiplyDivide(hi, lo, 36);
 }
 
 auto CPU::J(u32 imm) -> void {
@@ -109,11 +115,13 @@ auto CPU::JR(cu32& rs) -> void {
 
 auto CPU::LB(u32& rt, cu32& rs, s16 imm) -> void {
   auto data = read<Byte>(rs + imm);
+  if(exception()) return;
   load(rt, s8(data));
 }
 
 auto CPU::LBU(u32& rt, cu32& rs, s16 imm) -> void {
   auto data = read<Byte>(rs + imm);
+  if(exception()) return;
   load(rt, u8(data));
 }
 
@@ -170,51 +178,53 @@ auto CPU::LWR(u32& rt, cu32& rs, s16 imm) -> void {
   switch(address & 3) {
   case 0:
     data &= 0x00000000;
-    data |= read<Word>(address & ~3 | 0) <<  0; if(exception()) break;
+    data |= read<Word>(address & ~3 | 0) <<  0; if(exception()) return;
     break;
   case 1:
     data &= 0xff000000;
-    data |= read<Byte>(address & ~3 | 1) <<  0; if(exception()) break;
-    data |= read<Half>(address & ~3 | 2) <<  8; if(exception()) break;
+    data |= read<Byte>(address & ~3 | 1) <<  0; if(exception()) return;
+    data |= read<Half>(address & ~3 | 2) <<  8; if(exception()) return;
     break;
   case 2:
     data &= 0xffff0000;
-    data |= read<Half>(address & ~3 | 2) <<  0; if(exception()) break;
+    data |= read<Half>(address & ~3 | 2) <<  0; if(exception()) return;
     break;
   case 3:
     data &= 0xffffff00;
-    data |= read<Byte>(address & ~3 | 3) <<  0; if(exception()) break;
+    data |= read<Byte>(address & ~3 | 3) <<  0; if(exception()) return;
     break;
   }
   load(rt, data);
 }
 
 auto CPU::MFHI(u32& rd) -> void {
+  stallMultiplyDivide();
   store(rd, HI);
 }
 
 auto CPU::MFLO(u32& rd) -> void {
+  stallMultiplyDivide();
   store(rd, LO);
 }
 
 auto CPU::MTHI(cu32& rs) -> void {
+  execution.multiplyDivide = {};
   HI = rs;
 }
 
 auto CPU::MTLO(cu32& rs) -> void {
+  execution.multiplyDivide = {};
   LO = rs;
 }
 
 auto CPU::MULT(cs32& rs, cs32& rt) -> void {
   u64 result = s64(rs) * s64(rt);
-  LO = result >>  0;
-  HI = result >> 32;
+  scheduleMultiplyDivide(result >> 32, result >> 0, multiplyCycles(rs));
 }
 
 auto CPU::MULTU(cu32& rs, cu32& rt) -> void {
   u64 result = u64(rs) * u64(rt);
-  LO = result >>  0;
-  HI = result >> 32;
+  scheduleMultiplyDivide(result >> 32, result >> 0, multiplyCycles(rs));
 }
 
 auto CPU::NOR(u32& rd, cu32& rs, cu32& rt) -> void {

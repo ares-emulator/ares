@@ -48,24 +48,7 @@ auto MemoryControl::readWord(u32 address) -> u32 {
   }
 
   auto readPort = [&](const MemPort& port) -> n32 {
-    n32 value = 0;
-    value.bit( 0, 3) = port.writeDelay;
-    value.bit( 4, 7) = port.readDelay;
-    value.bit( 8)     = port.recovery;
-    value.bit( 9)     = port.hold;
-    value.bit(10)     = port.floating;
-    value.bit(11)     = port.preStrobe;
-    value.bit(12)     = port.dataWidth;
-    value.bit(13)     = port.autoIncrement;
-    value.bit(14,15) = port.unknown14_15;
-    value.bit(16,20) = port.addrBits;
-    value.bit(21,23) = port.reserved21_23;
-    value.bit(24,27) = port.dmaTiming;
-    value.bit(28)     = port.addrError;
-    value.bit(29)     = port.dmaSelect;
-    value.bit(30)     = port.wideDMA;
-    value.bit(31)     = port.wait;
-    return value;
+    return port.value();
   };
 
   if(address == 0x1f80'1008) return data = readPort(exp1);
@@ -130,27 +113,11 @@ auto MemoryControl::writeWord(u32 address, u32 value) -> void {
     cache.noStreaming       = data.bit(17);  //should be 0
     cache.reserved          = data.bit(18,31);
 
-    cpu.icache.enable(cache.codeEnable);
     return;
   }
 
   auto writePort = [&](MemPort& port) {
-    port.writeDelay     = data.bit(0,3);
-    port.readDelay      = data.bit(4,7);
-    port.recovery       = data.bit(8);
-    port.hold           = data.bit(9);
-    port.floating       = data.bit(10);
-    port.preStrobe      = data.bit(11);
-    port.dataWidth      = data.bit(12);
-    port.autoIncrement  = data.bit(13);
-    port.unknown14_15   = data.bit(14,15);
-    port.addrBits       = data.bit(16,20);
-    port.reserved21_23  = data.bit(21,23);
-    port.dmaTiming      = data.bit(24,27);
-    port.addrError      = data.bit(28);
-    port.dmaSelect      = data.bit(29);
-    port.wideDMA        = data.bit(30);
-    port.wait           = data.bit(31);
+    port.write(data);
   };
 
   if(address == 0x1f80'1008) return writePort(exp1);

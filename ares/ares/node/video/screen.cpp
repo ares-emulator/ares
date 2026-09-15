@@ -213,9 +213,13 @@ auto Screen::colors(u32 colors, std::function<n64 (n32)> color) -> void {
   _phosphorHistoryValid = false;
 }
 
+auto Screen::synchronize() -> void {
+  while(_frame) spinloop();
+}
+
 auto Screen::frame() -> void {
   if(runAhead()) return;
-  while(_frame) spinloop();
+  synchronize();
 
   lock_guard<recursive_mutex> lock(_mutex);
   _inputA.swap(_inputB);

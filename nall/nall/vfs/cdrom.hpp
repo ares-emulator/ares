@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/cd.hpp>
+#include <nall/cd/subchannel-patch.hpp>
 #include <nall/file.hpp>
 #include <nall/string.hpp>
 #include <nall/decode/cue.hpp>
@@ -16,6 +17,7 @@ namespace nall::vfs {
 
 struct cdrom : file {
   ~cdrom() {
+    _stopLoading = true;
     _thread.join();
   }
 
@@ -35,13 +37,12 @@ struct cdrom : file {
   }
 
   static auto open(const string& location) -> std::shared_ptr<cdrom> {
-    struct enable_make_shared : cdrom { using cdrom::cdrom; };
-    auto instance = std::make_shared<enable_make_shared>();
-    if(location.iendsWith(".cue") && instance->loadCue(location, nullptr, nullptr)) return instance;
-#if defined(ARES_ENABLE_CHD)
-    if(location.iendsWith(".chd") && instance->loadChd(location)) return instance;
-#endif
-    return {};
+    return openImage(location, false);
+  }
+
+  // Opt-in for PS1: ordinary optical loaders keep their existing subchannel policy.
+  static auto openWithSubQ(const string& location) -> std::shared_ptr<cdrom> {
+    return openImage(location, true);
   }
 
   auto writable() const -> bool override { return false; }
@@ -66,6 +67,30 @@ struct cdrom : file {
     return _image[_offset++];
   }
 
+  auto readExact(std::span<u8> bytes) -> bool override {
+    if(_offset > size() || bytes.size() > size() - _offset) return false;
+    u64 end = _offset + bytes.size();
+    for(u64 start = _offset; start < end;) {
+      u64 sector = start / 2448;
+      if(start % 2448 < 2352) {
+        // The loader publishes this byte's data and validity together through _loadOffset.
+        wait(sector * 2448 + 2351);
+        if(!_sectorReadable[sector]) return false;
+      }
+      u64 partEnd = std::min(end, (sector + 1) * 2448);
+      if(_nativeSubchannel[sector] && partEnd > sector * 2448 + 2352) {
+        wait(sector * 2448 + 2447);
+        if(!_subchannelReadable[sector]) {
+          for(u64 byte = std::max(start, sector * 2448 + 2352); byte < partEnd; byte++) {
+            if(!hasSubchannelOverride(byte)) return false;
+          }
+        }
+      }
+      start = std::min(end, (sector + 1) * 2448);
+    }
+    return file::readExact(bytes);
+  }
+
   auto write(u8 data) -> void override {
     //CD-ROMs are read-only; but allow writing anyway if needed, since the image is in memory
     if(_offset >= _image.size()) return;
@@ -74,18 +99,75 @@ struct cdrom : file {
   }
 
   auto wait(u64 offset) const -> void {
+    if(_image.empty()) return;
     bool force = false;
     if(offset >= _image.size()) {
       offset = _image.size() - 1;
       force = true;
     }
-    //subchannel data is always loaded
-    if(offset % 2448 < 2352 || force) {
+    // Native CHD subchannels are published by the same worker as their user-data sector.
+    if(offset % 2448 < 2352 || force || _nativeSubchannel[offset / 2448]) {
       while(offset + 1 > _loadOffset) usleep(1);
     }
   }
 
 private:
+  static auto openImage(const string& location, bool subq) -> std::shared_ptr<cdrom> {
+    struct enable_make_shared : cdrom { using cdrom::cdrom; };
+    auto instance = std::make_shared<enable_make_shared>();
+    instance->_loadSubchannels = subq;
+    if(location.iendsWith(".cue") && instance->loadCue(location, nullptr, nullptr)) return instance;
+#if defined(ARES_ENABLE_CHD)
+    if(location.iendsWith(".chd") && instance->loadChd(location)) return instance;
+#endif
+    return {};
+  }
+
+  auto hasSubchannelOverride(u64 byte) const -> bool {
+    u64 sector = byte / 2448;
+    if(sector < CD::LeadInSectors) return false;
+    u64 address = sector - CD::LeadInSectors;
+    u32 offset = byte % 2448 - 2352;
+    if(address >= CD::Track1Pregap && (address - CD::Track1Pregap) * 96 + offset < _subchannelOverlay.size()) {
+      return true;
+    }
+    return offset >= 12 && offset < 24 && _subchannelPatch.sectors.contains(address);
+  }
+
+  auto applySubchannelOverrides(u64 sector) -> void {
+    if(sector < CD::LeadInSectors) return;
+    u64 address = sector - CD::LeadInSectors;
+    auto target = _image.data() + sector * 2448 + 2352;
+    if(address >= CD::Track1Pregap) {
+      u64 offset = (address - CD::Track1Pregap) * 96;
+      if(offset < _subchannelOverlay.size()) {
+        u64 length = std::min<u64>(96, _subchannelOverlay.size() - offset);
+        memory::copy(target, length, _subchannelOverlay.data() + offset, length);
+      }
+    }
+    auto found = _subchannelPatch.sectors.find(address);
+    if(found != _subchannelPatch.sectors.end()) memory::copy(target + 12, 12, found->second.data(), 12);
+  }
+
+  auto loadSubQ(const string& location) -> bool {
+    if(!_loadSubchannels || _hasSubchannel) return true;
+    for(auto extension : {".sbi", ".lsd"}) {
+      string path = {Location::notsuffix(location), extension};
+      if(!nall::file::exists(path)) continue;
+      auto bytes = nall::file::read(path);
+      auto format = extension[1] == 's' ? CD::SubchannelPatch::Format::SBI : CD::SubchannelPatch::Format::LSD;
+      if(!_subchannelPatch.decode(bytes, format)) return false;
+      for(auto& [address, q] : _subchannelPatch.sectors) {
+        u64 offset = (u64(CD::LeadInSectors) + address) * 2448 + 2352 + 12;
+        if(offset > _image.size() || _image.size() - offset < 12) continue;
+        // The immutable map is also applied by the worker after any native subchannel read.
+        memory::copy(_image.data() + offset, 12, q.data(), 12);
+      }
+      return true;  // Existing SBI, including an empty one, takes priority over LSD.
+    }
+    return true;
+  }
+
   auto loadCue(const string& cueLocation, const Decode::ZIP* archive, const Decode::ZIP::File* compressedFile) -> bool {
     auto cuesheet = std::make_shared<Decode::CUE>();
     if(!cuesheet->load(cueLocation, archive, compressedFile)) return false;
@@ -99,6 +181,7 @@ private:
     for(auto& file : cuesheet->files) {
       for(auto& track : file.tracks) {
         session.tracks[track.number].control = track.type == "audio" ? 0b0000 : 0b0100;
+        if(track.type == "mode2/2352") session.format = 0x20;
         if(track.pregap) lbaFileBase += track.pregap();
         for(auto& index : track.indices) {
           if(index.lba >= 0) {
@@ -144,6 +227,9 @@ private:
     }
 
     _image.resize(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lbaFileBase) + CD::LeadOutSectors));
+    _sectorReadable.assign(_image.size() / 2448, 1);
+    _nativeSubchannel.assign(_image.size() / 2448, 0);
+    _subchannelReadable.assign(_image.size() / 2448, 1);
 
     //preload subchannel data
     if (compressedFile != nullptr) {
@@ -156,6 +242,8 @@ private:
     } else {
       loadSub({ Location::notsuffix(cueLocation), ".sub" }, archive, compressedFile, session);
     }
+
+    if(!loadSubQ(cueLocation)) return false;
 
     //load user data on separate thread
     _thread = thread::create(
@@ -186,9 +274,22 @@ private:
         usingFileBuffer = true;
       }
       if(file.type == "wave") {
-        if(usingFileBuffer) fileBuffer.seek(44); //skip RIFF header
-        else fileDataReadPos = 44;
+        fileDataReadPos = 44;
       }
+      auto readData = [&](u8* target, u32 length) -> bool {
+        bool valid;
+        if(usingFileBuffer) {
+          valid = fileBuffer && fileDataReadPos <= fileBuffer.size()
+            && length <= fileBuffer.size() - fileDataReadPos
+            && std::fseek(fileBuffer.handle(), fileDataReadPos, SEEK_SET) == 0
+            && std::fread(target, 1, length, fileBuffer.handle()) == length;
+        } else {
+          valid = fileDataReadPos <= rawDataView.size() && length <= rawDataView.size() - fileDataReadPos;
+          if(valid) memcpy(target, rawDataView.data() + fileDataReadPos, length);
+        }
+        fileDataReadPos += length;
+        return valid;
+      };
       for(auto& track : file.tracks) {
         if(track.pregap) lbaFileBase += track.pregap();
         for(auto& index : track.indices) {
@@ -207,22 +308,12 @@ private:
               target[13] = BCD::encode(msf.second);
               target[14] = BCD::encode(msf.frame);
               target[15] = 0x01;  // mode
-              if(usingFileBuffer) {
-                fileBuffer.read({ target + 16, length });
-              } else {
-                memcpy(target + 16, rawDataView.data() + fileDataReadPos, length);
-                fileDataReadPos += length;
-              }
+              _sectorReadable[offset / 2448] = readData(target + 16, length);
               CD::RSPC::encodeMode1({target, 2352});
             }
             if(length == 2352) {
               //BIN + WAV: direct copy
-              if(usingFileBuffer) {
-                fileBuffer.read({target, length});
-              } else {
-                memcpy(target, rawDataView.data() + fileDataReadPos, length);
-                fileDataReadPos += length;
-              }
+              _sectorReadable[offset / 2448] = readData(target, length);
             }
             _loadOffset = offset + 2448;
           }
@@ -249,6 +340,7 @@ private:
     s32 lbaIndex = 0;
     for(auto& track : chd->tracks) {
       session.tracks[track.number].control = track.type == "AUDIO" ? 0b0000 : 0b0100;
+      if(track.type.beginsWith("MODE2")) session.format = 0x20;
       for(auto& index : track.indices) {
         session.tracks[track.number].indices[index.number].lba = index.lba;
         session.tracks[track.number].indices[index.number].end = index.end;
@@ -278,22 +370,43 @@ private:
     }
 
     _image.resize(2448ull * (CD::LeadInSectors + CD::LBAtoABA(lbaIndex) + CD::LeadOutSectors));
+    _sectorReadable.assign(_image.size() / 2448, 1);
+    _nativeSubchannel.assign(_image.size() / 2448, 0);
+    _subchannelReadable.assign(_image.size() / 2448, 1);
+    if(_loadSubchannels) {
+      // Reference replacement-file eligibility follows the first track's native subchannel mode.
+      _hasSubchannel = !chd->tracks.empty() && chd->tracks.front().subchannel != Decode::CHD::Subchannel::None;
+      for(auto& track : chd->tracks) {
+        if(track.subchannel == Decode::CHD::Subchannel::None) continue;
+        for(auto& index : track.indices) {
+          if(index.chd_lba < 0) continue;
+          for(s32 sector : range(index.sectorCount())) {
+            _nativeSubchannel[CD::LeadInSectors + CD::LBAtoABA(index.lba + sector)] = 1;
+          }
+        }
+      }
+    }
 
     //preload subchannel data
     loadSub({Location::notsuffix(location), ".sub"}, nullptr, nullptr, session);
+    if(!loadSubQ(location)) return false;
 
     //load user data on separate thread
     _thread = thread::create(
     [this, chd = std::move(chd)](uintptr) -> void {
 
-    s32 lbaFileBase = 0;
     for(auto& track : chd->tracks) {
       for(auto& index : track.indices) {
         for(s32 sector : range(index.sectorCount())) {
+          // Identification releases temporary images before their preload completes.
+          // Stop between sectors; join keeps decoder and image storage alive until exit.
+          if(_stopLoading) return;
           auto lba = index.lba + sector;
           auto offset = 2448ull * (CD::LeadInSectors + (u64)CD::LBAtoABA(lba));
           auto target = _image.data() + offset;
-          auto sectorData = chd->read(lbaFileBase);
+          // Gaps absent from the CHD are synthesized silence, not failed reads.
+          auto sectorData = index.chd_lba < 0 ? std::vector<u8>(2352) : chd->read(lba);
+          _sectorReadable[offset / 2448] = sectorData.size() == 2048 || sectorData.size() == 2352;
           if(sectorData.size() == 2048) {
             //ISO: generate header + parity data
             memory::assign(target + 0,  0x00, 0xff, 0xff, 0xff, 0xff, 0xff);  //sync
@@ -308,7 +421,14 @@ private:
           } else {
             memory::copy(target, 2352, sectorData.data(), sectorData.size());
           }
-          lbaFileBase++;
+          u64 imageSector = offset / 2448;
+          if(_nativeSubchannel[imageSector]) {
+            auto subchannel = sectorData.empty() ? std::vector<u8>{} : chd->readSubchannel(lba);
+            _subchannelReadable[imageSector] = subchannel.size() == 96;
+            if(subchannel.size() == 96) memory::copy(target + 2352, 96, subchannel.data(), 96);
+            else std::fill(target + 2352, target + 2448, 0);
+            applySubchannelOverrides(imageSector);
+          }
           _loadOffset = offset + 2448;
         }
       }
@@ -328,18 +448,22 @@ private:
     if(archive != nullptr && compressedFile != nullptr) {
       auto rawDataBuffer = archive->extract(*compressedFile);
       if(!rawDataBuffer.empty() && overlayStartBytes < subchannel.size()) {
+        _hasSubchannel = true;
         auto target = subchannel.data() + overlayStartBytes;
         auto maxLen = subchannel.size() - overlayStartBytes;
         auto length = std::min<u64>(maxLen, rawDataBuffer.size());
         memory::copy(target, (s64)length, rawDataBuffer.data(), length);
+        _subchannelOverlay = std::move(rawDataBuffer);
       }
     } else {
       auto overlay = nall::file::read(location);
       if(!overlay.empty() && overlayStartBytes < subchannel.size()) {
+        _hasSubchannel = true;
         auto target = subchannel.data() + overlayStartBytes;
         auto maxLen = subchannel.size() - overlayStartBytes;
         auto length = std::min<u64>(maxLen, overlay.size());
         memory::copy(target, length, overlay.data(), length);
+        _subchannelOverlay = std::move(overlay);
       }
     }
 
@@ -357,8 +481,16 @@ private:
   }
 
   std::vector<u8> _image;
+  std::vector<u8> _sectorReadable;
+  std::vector<u8> _nativeSubchannel;
+  std::vector<u8> _subchannelReadable;
+  std::vector<u8> _subchannelOverlay;
+  CD::SubchannelPatch _subchannelPatch;
+  bool _loadSubchannels = false;
+  bool _hasSubchannel = false;
   u64 _offset = 0;
   atomic<u64> _loadOffset = 0;
+  atomic<bool> _stopLoading = false;
   thread _thread;
   std::unique_ptr<Decode::ZIP> _archive;
 };

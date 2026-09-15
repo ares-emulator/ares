@@ -7,6 +7,36 @@ namespace Memory {
 
 //System Bus
 struct Bus {
+  enum : u8 {
+    Idle,
+    CPUAccess,
+    InstructionRefill,
+    WriteBuffer,
+    DMA0,
+    DMA1,
+    DMA2,
+    DMA3,
+    DMA4,
+    DMA5,
+    DMA6,
+  };
+
+  static constexpr auto dmaOwner(u32 channel) -> u8 { return DMA0 + channel; }
+
+  struct Arbiter {
+    u8 owner = Idle;
+    u64 sequence = 0;
+    u64 grant = 0;
+    u8 cpuPending = 0;
+    bool cpuHandoff = false;
+  } arbiter;
+
+  //bus.cpp
+  auto acquire(u8 owner) -> bool;
+  auto release(u8 owner, bool dmaBoundary = true) -> void;
+  auto power() -> void;
+  auto serialize(serializer&) -> void;
+
   //bus.hpp
   auto mmio(u32 address) -> Memory::Interface&;
   template<bool isWrite, bool isDMA> auto calcAccessTime(u32 address, u32 bytesCount = 0) -> u32 const;
@@ -30,6 +60,15 @@ struct MemoryControl : Memory::Interface {
   auto writeHalf(u32 address, u32 data) -> void;
   auto writeWord(u32 address, u32 data) -> void;
 
+  struct RAMAccess {
+    enum : u8 { NotRAM, Mapped, HighZ, Unmapped } type = NotRAM;
+    u32 offset = 0;
+
+    explicit operator bool() const { return type == Mapped; }
+  };
+
+  auto decodeRAM(u32 address) const -> RAMAccess;
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
@@ -37,6 +76,7 @@ struct MemoryControl : Memory::Interface {
     n32 value;
     n1  delay;   //1 = add one cycle on simultaneous code+data fetches
     n3  window;  //size and mirroring/access control
+    u32 bankSize[2] = {2_MiB, 0};
   } ram;
 
   struct Cache {
@@ -74,8 +114,12 @@ struct MemoryControl : Memory::Interface {
     n1  dmaSelect;        // 0=normal, 1=use dmaTiming
     n1  wideDMA;          // 0=use dataWidth, 1=force 32-bit
     n1  wait;             // wait for external device
+    mutable u32 activeValue = 0x0000'00ff;
+    mutable u8 activation = 0;
+    bool configured = false;
 
-
+    auto value() const -> u32;
+    auto write(u32 value) -> void;
     template<bool isWrite, bool isDMA> auto calcAccessTime(u32 bytesCount = 0) -> u32 const;
   };
 

@@ -5,15 +5,12 @@ auto GPU::readGP0() -> u32 {
   if(io.mode == Mode::CopyFromVRAM) {
     vram.mutex.lock();
 
-    auto isOdd = (io.copy.width * io.copy.height) & 1;
-    auto lastLine = io.copy.py == io.copy.height - 1;
-
     for(u32 loop : range(2)) {
       n10 x = io.copy.x + io.copy.px;
       n9  y = io.copy.y + io.copy.py;
       u16 pixel = vram2D[y & 511][x & 1023];
       data |= (loop == 0) ? pixel : pixel << 16;
-      if(++io.copy.px >= io.copy.width + (isOdd && lastLine ? 1 : 0)) {
+      if(++io.copy.px >= io.copy.width) {
         io.copy.px = 0;
         if(++io.copy.py >= io.copy.height) {
           io.copy.py = 0;
@@ -23,6 +20,8 @@ auto GPU::readGP0() -> u32 {
       }
     }
     vram.mutex.unlock();
+    if(io.mode == Mode::Normal) drainCommands();
+    io.status = data;
     return data;
   }
 
@@ -30,7 +29,7 @@ auto GPU::readGP0() -> u32 {
   return data;
 }
 
-auto GPU::writeGP0(u32 value, bool isThread) -> void {
+auto GPU::executeGP0(u32 value) -> void {
   if(io.mode == Mode::CopyToVRAM) {
     vram.mutex.lock();
     for(u32 loop : range(2)) {
@@ -67,8 +66,10 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
   //print("* GP0(", hex(command, 2L), ") = ", hex(value, 8L), " [", queue.length, "]\n");
   }
 
-  Render render;
+  Render render{};
   render.command = command;
+  render.interlaced = interlace() && !io.drawToDisplay;
+  render.activeLine = (io.displayStartY + io.activeField) & 1;
   render.dithering = io.dithering;
   render.semiTransparency = io.semiTransparency;
   render.checkMaskBit = io.checkMaskBit;
@@ -124,7 +125,9 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
   if(command == 0x02) {
     if(queue.write(value) < 3) return;
     render.v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
-    render.size = Size().setSize(queue.data[2]);
+    render.v0.x = queue.data[1].bit(0,9) & ~15;
+    render.v0.y = queue.data[1].bit(16,24);
+    render.size = Size().setSize((queue.data[2].bit(0,9) + 15) & ~15, queue.data[2].bit(16,24));
     renderer.queue(render);
     return queue.reset();
   }
@@ -261,17 +264,23 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
     return queue.reset();
   }
 
-  //monochrome poly-line
-  if(command == 0x48 || command == 0x49 || command == 0x4a || command == 0x4b
-  || command == 0x4c || command == 0x4d || command == 0x4e || command == 0x4f) {
-    if((value & 0xf000f000) != 0x50005000) return (void)queue.write(value);
-    render.v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
-    for(u32 n = 2; n < queue.length; n += 1) {
-      render.v1 = Vertex().setColor(queue.data[0]).setPoint(queue.data[n]);
-      renderer.queue(render);
-      render.v0 = render.v1;
+  // A polyline retains only the last vertex. Its terminator occupies the
+  // first word of the next vertex (a colour word for shaded polylines).
+  if(command >= 0x48 && command <= 0x5f && (command & 8)) {
+    bool shaded = command & 16;
+    if(queue.polyline && queue.length == 2 && (value & 0xf000f000) == 0x50005000) {
+      return queue.reset();
     }
-    return queue.reset();
+    if(queue.write(value) < (shaded ? 4 : 3)) return;
+    render.v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
+    render.v1 = Vertex().setColor(queue.data[shaded ? 2 : 0]).setPoint(queue.data[shaded ? 3 : 2]);
+    render.continuation = queue.polyline;
+    renderer.queue(render);
+    if(shaded) queue.data[0] = queue.data[2];
+    queue.data[1] = queue.data[shaded ? 3 : 2];
+    queue.length = 2;
+    queue.polyline = true;
+    return;
   }
 
   //shaded line
@@ -281,19 +290,6 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
     render.v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     render.v1 = Vertex().setColor(queue.data[2]).setPoint(queue.data[3]);
     renderer.queue(render);
-    return queue.reset();
-  }
-
-  //shaded poly-line
-  if(command == 0x58 || command == 0x59 || command == 0x5a || command == 0x5b
-  || command == 0x5c || command == 0x5d || command == 0x5e || command == 0x5f) {
-    if((value & 0xf000f000) != 0x50005000) return (void)queue.write(value);
-    render.v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
-    for(u32 n = 2; n + 1 < queue.length; n += 2) {
-      render.v1 = Vertex().setColor(queue.data[n + 0]).setPoint(queue.data[n + 1]);
-      renderer.queue(render);
-      render.v0 = render.v1;
-    }
     return queue.reset();
   }
 
@@ -382,19 +378,35 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
   //copy rectangle (VRAM to VRAM)
   if(command >= 0x80 && command <= 0x9f) {
     if(queue.write(value) < 4) return;
-    u16 sourceX = queue.data[1].bit( 0,15);
-    u16 sourceY = queue.data[1].bit(16,31);
-    u16 targetX = queue.data[2].bit( 0,15);
-    u16 targetY = queue.data[2].bit(16,31);
-    u16 width   = queue.data[3].bit( 0,15);
-    u16 height  = queue.data[3].bit(16,31);
-    for(u32 y : range(height)) {
-      for(u32 x : range(width)) {
-        u16 pixel = vram2D[n9(y + sourceY) & 511][n10(x + sourceX) & 1023];
-        if((pixel >> 15 & io.checkMaskBit) == 0) {
-          vram2D[n9(y + targetY) & 511][n10(x + targetX) & 1023] = pixel | io.forceMaskBit << 15;
+    renderer.synchronize();
+    lock_guard<nall::mutex> lock(vram.mutex);
+    u32 sourceX = queue.data[1].bit(0,9);
+    u32 sourceY = queue.data[1].bit(16,24);
+    u32 targetX = queue.data[2].bit(0,9);
+    u32 targetY = queue.data[2].bit(16,24);
+    u32 width = ((queue.data[3].bit(0,15) - 1) & 1023) + 1;
+    u32 height = ((queue.data[3].bit(16,31) - 1) & 511) + 1;
+    io.pcounter += width * height * 2;
+    // Reference-derived wrap subdivision; exact wrapped overlap is not verified
+    // on hardware. Within each span, rightward copies read from right to left.
+    for(u32 y = 0; y < height;) {
+      u32 sy = (sourceY + y) & 511, dy = (targetY + y) & 511;
+      u32 rows = std::min({height - y, 512 - sy, 512 - dy});
+      for(u32 x = 0; x < width;) {
+        u32 sx = (sourceX + x) & 1023, dx = (targetX + x) & 1023;
+        u32 columns = std::min({width - x, 1024 - sx, 1024 - dx});
+        for(u32 row = 0; row < rows; row++) {
+          for(u32 n = 0; n < columns; n++) {
+            u32 column = sx < dx ? columns - 1 - n : n;
+            auto& target = vram2D[dy + row][dx + column];
+            if(!(io.checkMaskBit && (target & 0x8000))) {
+              target = vram2D[sy + row][sx + column] | io.forceMaskBit << 15;
+            }
+          }
         }
+        x += columns;
       }
+      y += rows;
     }
     return queue.reset();
   }
@@ -402,6 +414,7 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
   //copy rectangle (CPU to VRAM)
   if(command >= 0xa0 && command <= 0xbf) {
     if(queue.write(value) < 3) return;
+    renderer.synchronize();
     io.copy.x      = (queue.data[1].bit( 0,15) & 1023);
     io.copy.y      = (queue.data[1].bit(16,31) &  511);
     io.copy.width  = (queue.data[2].bit( 0,15) - 1 & 1023) + 1;
@@ -415,6 +428,7 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
   //copy rectangle (VRAM to CPU)
   if(command >= 0xc0 && command <= 0xdf) {
     if(queue.write(value) < 3) return;
+    renderer.synchronize();
     io.copy.x      = (queue.data[1].bit( 0,15) & 1023);
     io.copy.y      = (queue.data[1].bit(16,31) &  511);
     io.copy.width  = (queue.data[2].bit( 0,15) - 1 & 1023) + 1;

@@ -4,7 +4,7 @@ auto MDEC::serialize(serializer& s) -> void {
   s(fifo.input);
   s(fifo.output);
 
-  s(status.remaining);
+  s(status.remaining.value);
   s(status.currentBlock);
   s(status.outputMaskBit);
   s(status.outputSigned);
@@ -13,7 +13,15 @@ auto MDEC::serialize(serializer& s) -> void {
   s(status.inputRequest);
 
   s((u32&)io.mode);
+  s((u32&)io.decodePhase);
+  s((u32&)io.blockPhase);
   s(io.offset);
+  s(io.outputOffset);
+  s(io.outputBlock);
+  s(io.outputWriteOffset);
+  s(io.coefficient);
+  s(io.qfactor);
+  s(io.phaseClocks);
 
   s(block.luma);
   s(block.chroma);
