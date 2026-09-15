@@ -40,6 +40,9 @@ auto DD::unload() -> void {
   if(!node) return;
   disconnect();
 
+  //the 64DD shares the cart INT line: clear drive state on unload
+  irq = {};
+  poll();
   pi.detach(dd);
   debugger = {};
   iplrom.reset();
@@ -174,11 +177,15 @@ auto DD::lower(IRQ source) -> void {
   poll();
 }
 
-auto DD::poll() -> void {
+auto DD::irqLine() const -> bool {
   bool line = 0;
   line |= irq.mecha.line & irq.mecha.mask;
   line |= irq.bm.line & irq.bm.mask;
-  cpu.setInterruptPending(CPU::Interrupt::Cartridge, line);
+  return line;
+}
+
+auto DD::poll() -> void {
+  pollCartridgeInterrupt();
 }
 
 }
