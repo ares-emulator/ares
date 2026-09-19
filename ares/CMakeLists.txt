@@ -243,6 +243,13 @@ else()
   disable_core("My Vision")
 endif()
 
+if(gamate IN_LIST ARES_CORES)
+  enable_core("Gamate")
+  add_subdirectory(gamate)
+else()
+  disable_core("Gamate")
+endif()
+
 if(gb IN_LIST ARES_CORES)
   enable_core("Game Boy / Game Boy Color")
   add_subdirectory(gb)
