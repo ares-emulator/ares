@@ -13,6 +13,11 @@ auto Bus::read(u32 cycle, n16 address, n8 data) -> n8 {
     auto translated = megaDuckAddress(address);
     if(!translated) return data;
     target = *translated;
+    //CPU::read calls this once per cycle and ands the results together, so
+    //data already went out in Mega Duck layout - translate it back before
+    //the components see it, or LCDC's bit order (a five-cycle) compounds
+    //across all five passes back to a no-op
+    data = megaDuckWriteData(address, data);
   }
 
   data &= cpu.readIO(cycle, target, data);

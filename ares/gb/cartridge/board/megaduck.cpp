@@ -1,15 +1,9 @@
-//Mega Duck cartridges larger than 32KB carry a mapper with two independent
-//windows: 0x0000-0x3fff shows the first half of a 32KB page, and 0x4000-0x7fff
-//shows any 16KB page.
-//
-//  write 0x0001  select the 16KB page at 0x4000-0x7fff
-//  write 0xb000  select a 32KB page: the low window takes it, and the high
-//                window takes its upper half, so the whole page reads flat
-//
-//at reset the two windows show pages 0 and 1, which is the first 32KB laid out
-//flat, so a cartridge that never writes either register behaves like a plain
-//linear board. MAME cannot tell from a dump whether the low window is fixed or
-//banked and installs both handlers; the same is done here.
+//fallback for a Mega Duck dump too big for mia/medium/mega-duck.cpp to size-
+//or hash-guess as MD1 (megaduck1.cpp) or MD2 (megaduck2.cpp). Both registers
+//are wired as MAME's raw-file heuristic does: 0xb000 sets the low page and
+//the high page to its upper half, 0x0001 overrides the high page. At reset
+//the low and high windows show pages 0 and 1, the first 32KB laid out flat,
+//so a cartridge that never writes either register still boots fine.
 
 struct MegaDuck : Interface {
   using Interface::Interface;
@@ -63,7 +57,7 @@ struct MegaDuck : Interface {
 private:
   //sizes are not always a power of two, so wrap by the page count rather than
   //masking, which is what MAME's map_non_power_of_two ends up doing
-  auto lowPages() const -> u32 { return max(1, rom.size() / 0x8000); }
+  auto lowPages()  const -> u32 { return max(1, rom.size() / 0x8000); }
   auto highPages() const -> u32 { return max(1, rom.size() / 0x4000); }
 
   auto romRead(u32 offset) -> n8 {

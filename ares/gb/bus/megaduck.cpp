@@ -11,14 +11,18 @@
 //  ff40-ff46   ff20-ff26  noise channel and master volume, reordered
 //  ff47-ff7f   unmapped
 //
-//taken from MAME's megaduck_state, and corroborated against the cartridges:
-//brckwall writes 0xe4 to ff1b during setup, which is the standard background
-//palette value, and ff1b is where the table below puts BGP.
+//taken from MAME's megaduck_state, corroborated against the cartridges
+//(brckwall writes 0xe4 to ff1b during setup, which is the standard background
+//palette value, and ff1b is where the table below puts BGP), and cross-checked
+//against bbbbbr/megaduck-info and the MiSTer core's megaduck_swizzle.sv.
 
-//sound registers are swapped in pairs: 1<->2 and 5<->6 within each window
+//sound registers are swapped in pairs: 1<->2, 5<->6 and d<->e within each
+//window. MAME's megaduck_sound_offsets omits the d<->e swap (NR33/NR34), but
+//the MiSTer core's megaduck_swizzle.sv has it, and MAME's own driver carries
+//a MACHINE_IMPERFECT_SOUND flag - MiSTer is followed here.
 static const n8 MegaDuckSoundOffsets[16] = {
   0x0, 0x2, 0x1, 0x3, 0x4, 0x6, 0x5, 0x7,
-  0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
+  0x8, 0x9, 0xa, 0xb, 0xc, 0xe, 0xd, 0xf,
 };
 
 auto Bus::megaDuckAddress(n16 address) -> maybe<n16> {
@@ -65,6 +69,12 @@ auto Bus::megaDuckWriteData(n16 address, n8 data) -> n8 {
   if(address == 0xff21 || address == 0xff27) return data >> 4 | data << 4;
   if(address == 0xff41 || address == 0xff42) return data >> 4 | data << 4;
 
+  //NR32's volume bits are swizzled: Game Boy 01/11 (100%/25%) become Mega
+  //Duck 11/01, with 00 (mute) and 10 (50%) unchanged. That's bit 6 flipped
+  //whenever bit 5 is set, which is its own inverse, so the same operation
+  //also serves the read direction below
+  if(address == 0xff2c) { data.bit(6) = data.bit(6) ^ data.bit(5); return data; }
+
   return data;
 }
 
@@ -84,6 +94,8 @@ auto Bus::megaDuckReadData(n16 address, n8 data) -> n8 {
 
   if(address == 0xff21 || address == 0xff27) return data >> 4 | data << 4;
   if(address == 0xff41 || address == 0xff42) return data >> 4 | data << 4;
+
+  if(address == 0xff2c) { data.bit(6) = data.bit(6) ^ data.bit(5); return data; }
 
   return data;
 }

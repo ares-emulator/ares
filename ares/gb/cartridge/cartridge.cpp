@@ -26,7 +26,12 @@ auto Cartridge::connect() -> void {
   if(information.board == "HuC3"  ) board = std::make_unique<Board::HuC3>(*this);
   if(information.board == "MBC1"  ) board = std::make_unique<Board::MBC1>(*this);
   if(information.board == "MBC1#M") board = std::make_unique<Board::MBC1M>(*this);
-  if(information.board == "MegaDuck") board = std::make_unique<Board::MegaDuck>(*this);
+  if(information.board == "MegaDuck"      ) board = std::make_unique<Board::MegaDuck>(*this);
+  if(information.board == "MegaDuck-MD0"  ) board = std::make_unique<Board::MegaDuck0>(*this);
+  if(information.board == "MegaDuck-MD1"  ) board = std::make_unique<Board::MegaDuck1>(*this);
+  if(information.board == "MegaDuck-MD2"  ) board = std::make_unique<Board::MegaDuck2>(*this);
+  if(information.board == "MegaDuck-MD20S") board = std::make_unique<Board::MegaDuck20S>(*this);
+  if(information.board == "MegaDuck-MD25S") board = std::make_unique<Board::MegaDuck25S>(*this);
   if(information.board == "MBC2"  ) board = std::make_unique<Board::MBC2>(*this);
   if(information.board == "MBC3"  ) board = std::make_unique<Board::MBC3>(*this);
   if(information.board == "MBC30" ) board = std::make_unique<Board::MBC3>(*this);
