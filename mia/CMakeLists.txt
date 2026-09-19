@@ -36,6 +36,7 @@ target_sources(
     medium/msx.cpp
     medium/msx2.cpp
     medium/myvision.cpp
+    medium/krokha.cpp
     medium/neo-geo-crypt.hpp
     medium/neo-geo-pocket-color.cpp
     medium/neo-geo-pocket.cpp
@@ -98,6 +99,7 @@ target_sources(
     system/msx.cpp
     system/msx2.cpp
     system/myvision.cpp
+    system/krokha.cpp
     system/neo-geo-aes.cpp
     system/neo-geo-mvs.cpp
     system/neo-geo-pocket-color.cpp
