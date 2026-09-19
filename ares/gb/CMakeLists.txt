@@ -55,6 +55,7 @@ ares_add_sources(
     gb
   INCLUDED #
     bus/bus.hpp
+    bus/megaduck.cpp
 )
 
 ares_add_sources(
@@ -78,6 +79,7 @@ ares_add_sources(
     cartridge/board/huc3.cpp
     cartridge/board/linear.cpp
     cartridge/board/mbc1.cpp
+    cartridge/board/megaduck.cpp
     cartridge/board/mbc1m.cpp
     cartridge/board/mbc2.cpp
     cartridge/board/mbc3.cpp

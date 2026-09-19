@@ -15,6 +15,7 @@ namespace ares::GameBoy {
     inline static auto GameBoy() -> bool;
     inline static auto GameBoyColor() -> bool;
     inline static auto SuperGameBoy() -> bool;
+    inline static auto MegaDuck() -> bool;
   };
 
   struct SuperGameBoyInterface {

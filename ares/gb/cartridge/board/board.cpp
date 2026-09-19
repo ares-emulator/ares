@@ -5,6 +5,7 @@ namespace Board {
 #include "huc3.cpp"
 #include "linear.cpp"
 #include "mbc1.cpp"
+#include "megaduck.cpp"
 #include "mbc1m.cpp"
 #include "mbc2.cpp"
 #include "mbc3.cpp"
