@@ -33,6 +33,7 @@ auto Cartridge::connect() -> void {
   if(information.board == "MBC6"  ) board = std::make_unique<Board::MBC6>(*this);
   if(information.board == "MBC7"  ) board = std::make_unique<Board::MBC7>(*this);
   if(information.board == "MMM01" ) board = std::make_unique<Board::MMM01>(*this);
+  if(information.board == "PocketVoice") board = std::make_unique<Board::PocketVoice>(*this);
   if(information.board == "TAMA"  ) board = std::make_unique<Board::TAMA>(*this);
   if(!board) board = std::make_unique<Board::Linear>(*this);
   board->pak = pak;
