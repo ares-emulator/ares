@@ -480,6 +480,10 @@ struct PPU : PPUBase::Implementation, PPUcounter {
 
     struct {
       u32 x;
+      bool oneActive;
+      bool oneStopped;
+      bool twoActive;
+      bool twoStopped;
     };
   } window{*this, bg1, bg2, bg3, bg4, obj};
 
