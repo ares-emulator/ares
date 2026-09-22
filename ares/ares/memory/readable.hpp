@@ -33,7 +33,9 @@ struct Readable {
 
   auto load(VFS::File fp) -> void {
     if(!self.size) allocate(fp->size());
-    fp->read({(u8*)self.data, min(fp->size(), self.size * sizeof(T))});
+    u64 sz = min(fp->size(), self.size * sizeof(T));
+    // On 32-bit, size_t!=u64
+    fp->read({(u8*)self.data, static_cast<size_t>(sz)});
     for(u32 address = self.size; address <= self.mask; address++) {
       self.data[address] = self.data[mirror(address, self.size)];
     }
