@@ -62,7 +62,7 @@ jobs:
           target-cmake-preset: ubuntu-ci-qt
         - name: freebsd
           os: ubuntu-24.04
-          shell: bash
+          shell: cpa.sh {0}
           target-cmake-preset: ubuntu-ci-clang
     name: ${{ matrix.program }}-${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.os }}
@@ -106,18 +106,23 @@ jobs:
         CROSS_COMPILE: ${{ matrix.platform.native-cmake-preset != '' }}
         NATIVE_PRESET: ${{ matrix.platform.native-cmake-preset }}
         TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
-    - name: "Build: FreeBSD"
+    - name: "Start FreeBSD VM"
       if: matrix.platform.name == 'freebsd'
-      uses: cross-platform-actions/action@492b0c80085400348c599edace11141a4ee73524
-      env:
-        TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
+      uses: cross-platform-actions/action@e0b9770014ba65d5e0815f15b74031c3a635f641
       with:
         operating_system: freebsd
-        version: '15.0'
-        environment_variables: TARGET_PRESET
-        run: |
-          sudo pkg install -y cmake pkgconf ccache ninja gtk3 sdl3 librashader
-          .github/scripts/build_ubuntu.sh
+        version: '15.1'
+    - name: "Install FreeBSD Dependencies"
+      if: matrix.platform.name == 'freebsd'
+      run: |
+        sudo pkg upgrade -y
+        sudo pkg install -y cmake pkgconf ccache ninja gtk3 sdl3 librashader
+    - name: "Build: FreeBSD"
+      if: matrix.platform.name == 'freebsd'
+      env:
+        TARGET_PRESET: ${{ matrix.platform.target-cmake-preset }}
+      shell: cpa.sh {0} --environment-variables TARGET_PRESET
+      run: .github/scripts/build_ubuntu.sh
     - name: "Compress Build Artifacts (Windows)"
       if: runner.os != 'macOS' && runner.os != 'Linux'
       run: |
