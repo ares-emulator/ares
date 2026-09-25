@@ -7,6 +7,11 @@ struct Random {
   struct Init { u64 seed, sequence; };
 
   static constexpr Init Default { 0x853c49e6748fea9b, 0xda3e39cb94b95bdb };
+  static inline maybe<Init> Override = nothing;
+
+  static auto setOverride(maybe<Init> init = nothing) -> void {
+    Override = init;
+  }
 
   auto operator()() -> n64 {
     return random();
@@ -18,6 +23,8 @@ struct Random {
   }
 
   auto seed(maybe<n64> seed = nothing, maybe<n64> sequence = nothing) -> void {
+    if(!seed && Override) seed = (n64)Override().seed;
+    if(!sequence && Override) sequence = (n64)Override().sequence;
     if(!seed) seed = (n64)clock();
     if(!sequence) sequence = 0;
 
