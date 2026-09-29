@@ -38,6 +38,7 @@ auto option(string name, string value) -> bool {
   if(name == "Deterministic Entropy") system.deterministicEntropy = value.boolean();
   if(name == "SC64 SD Image") system.sc64SDImage = value;
   if(name == "SC64 SD Image Read Only") system.sc64SDImageReadOnly = value.boolean();
+  if(name == "SC64 USB Host Port") system.sc64USBHostPort = value.integer();
   if(name == "Recompiler") {
     if constexpr(Accuracy::CPU::Recompiler) {
       cpu.recompiler.enabled = value.boolean();
@@ -88,6 +89,7 @@ auto System::run() -> void {
     _vulkanNeedsLoad = false;
   }
   cpu.main();
+  cartridge.pollSc64Host();
 }
 
 auto System::load(Node::System& root, string name) -> bool {

@@ -23,6 +23,7 @@ auto PI::unload() -> void {
 
 auto PI::power(bool reset) -> void {
   io = {};
+  sc64Interrupt = 0;
   bsd1 = {};
   bsd2 = {};
   busDevice = -1;

@@ -176,6 +176,7 @@ struct Cartridge {
   auto disconnect() -> void;
   auto save() -> void;
   auto power(bool reset) -> void;
+  auto pollSc64Host() -> void;
 
   //joybus.cpp
   auto joybusComm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2;

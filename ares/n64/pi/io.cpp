@@ -1,3 +1,8 @@
+auto PI::updateInterrupt() -> void {
+  if(io.interrupt || sc64Interrupt) mi.raise(MI::IRQ::PI);
+  else mi.lower(MI::IRQ::PI);
+}
+
 auto PI::ioRead(u32 address) -> u32 {
   address = (address & 0x3f) >> 2;
   n32 data;
@@ -130,7 +135,7 @@ auto PI::ioWrite(u32 address, u32 data_) -> void {
     }
     if(data.bit(1)) {
       io.interrupt = 0;
-      mi.lower(MI::IRQ::PI);
+      updateInterrupt();
     }
   }
 
