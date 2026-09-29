@@ -257,7 +257,6 @@ struct SC64 : PIDevice {
   u64 usbInputDeadline = 0;
   u32 configs[15] = {};
   u32 settings[1] = {};
-  bool enabled = false;
   bool sdInserted = false;
   bool readOnly = false;
   bool unlocked = false;
@@ -272,7 +271,7 @@ struct SC64 : PIDevice {
 
   SC64(Cartridge& self) : self(self), host(*this) {}
 
-  auto open(string location, bool readOnly, u32 hostPort = 0) -> bool;
+  auto open(string location, bool readOnly, u32 hostPort = 0) -> void;
   auto close() -> void;
   auto power(bool reset) -> void;
   auto flush() -> void;

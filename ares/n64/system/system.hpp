@@ -3,6 +3,7 @@ struct System {
   VFS::Pak pak;
   bool homebrewMode = false;
   bool deterministicEntropy = false;
+  bool sc64Enabled = false;
   string sc64SDImage;
   bool sc64SDImageReadOnly = false;
   u32 sc64USBHostPort = 0;

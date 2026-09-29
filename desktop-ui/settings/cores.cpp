@@ -6,33 +6,6 @@ auto CoreSettings::construct() -> void {
 
   nintendo64SettingsLabel.setText("Nintendo 64 Settings").setFont(Font().setBold());
 
-  nintendo64SC64ImageLabel.setText("SC64 SD image:");
-  nintendo64SC64Image.setEditable(true).setText(settings.nintendo64.sc64SDImage).onChange([&] {
-    settings.nintendo64.sc64SDImage = nintendo64SC64Image.text();
-  });
-  nintendo64SC64ImageAssign.setText("Assign" ELLIPSIS).onActivate([&] {
-    BrowserDialog dialog;
-    dialog.setTitle("Select SC64 SD Image");
-    dialog.setPath(settings.nintendo64.sc64SDImage ? Location::path(settings.nintendo64.sc64SDImage) : Path::desktop());
-    dialog.setAlignment(settingsWindow);
-    dialog.setFilters({"SD Image|*.img", "All|*"});
-    if(auto location = program.openFile(dialog)) {
-      settings.nintendo64.sc64SDImage = location;
-      nintendo64SC64Image.setText(location);
-    }
-  });
-  nintendo64SC64ImageReset.setText("Reset").onActivate([&] {
-    settings.nintendo64.sc64SDImage = "";
-    nintendo64SC64Image.setText("");
-  });
-  nintendo64SC64ReadOnly.setText("SC64 SD image read-only").setChecked(settings.nintendo64.sc64SDImageReadOnly).onToggle([&] {
-    settings.nintendo64.sc64SDImageReadOnly = nintendo64SC64ReadOnly.checked();
-  });
-  nintendo64SC64HostPortLabel.setText("SC64 USB host port (0 = disabled):");
-  nintendo64SC64HostPort.setEditable(true).setText(integer(settings.nintendo64.sc64USBHostPort)).onChange([&] {
-    settings.nintendo64.sc64USBHostPort = nintendo64SC64HostPort.text().integer();
-  });
-
   nintendo64ExpansionPakOption.setText("4MB Expansion Pak").setChecked(settings.nintendo64.expansionPak).onToggle([&] {
     settings.nintendo64.expansionPak = nintendo64ExpansionPakOption.checked();
   });
@@ -130,6 +103,53 @@ auto CoreSettings::construct() -> void {
   renderSupersamplingLayout.setAlignment(1).setPadding(12_sx, 0);
   renderSupersamplingHint.setText("Scales 2x and 4x resolutions back down to native.").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  nintendo64SC64LabelLayout.setAlignment(1).setPadding(12_sx, 0);
+  nintendo64SC64Enable.setText("SummerCart64/SC64 Flashcart").setFont(Font().setBold()).setChecked(settings.nintendo64.sc64Enabled).onToggle([&] {
+    settings.nintendo64.sc64Enabled = nintendo64SC64Enable.checked();
+    nintendo64SC64Refresh();
+  });
+  nintendo64SC64EnableHint.setText("Emulate a SummerCart64 flashcart in the cartridge slot").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  nintendo64SC64TableLayout.setPadding(24_sx, 0);
+  nintendo64SC64Layout.setSize({2, 5});
+  nintendo64SC64Layout.column(0).setAlignment(1.0);
+  //keep each hint tucked under the control it describes, with wider gaps between the controls
+  nintendo64SC64Layout.row(0).setSpacing(8_sy);
+  nintendo64SC64Layout.row(1).setSpacing(2_sy);
+  nintendo64SC64Layout.row(2).setSpacing(8_sy);
+  nintendo64SC64Layout.row(3).setSpacing(2_sy);
+  nintendo64SC64ImageLabel.setText("SD card image:");
+  nintendo64SC64Image.setEditable(true).setText(settings.nintendo64.sc64SDImage).onChange([&] {
+    settings.nintendo64.sc64SDImage = nintendo64SC64Image.text();
+    nintendo64SC64Refresh();
+  });
+  nintendo64SC64ImageAssign.setText("Assign" ELLIPSIS).onActivate([&] {
+    BrowserDialog dialog;
+    dialog.setTitle("Select SC64 SD Image");
+    dialog.setPath(settings.nintendo64.sc64SDImage ? Location::path(settings.nintendo64.sc64SDImage) : Path::desktop());
+    dialog.setAlignment(settingsWindow);
+    dialog.setFilters({"SD Image|*.img", "All|*"});
+    if(auto location = program.openFile(dialog)) {
+      settings.nintendo64.sc64SDImage = location;
+      nintendo64SC64Image.setText(location);
+      nintendo64SC64Refresh();
+    }
+  });
+  nintendo64SC64ImageReset.setText("Reset").onActivate([&] {
+    settings.nintendo64.sc64SDImage = "";
+    nintendo64SC64Image.setText("");
+    nintendo64SC64Refresh();
+  });
+  nintendo64SC64ReadOnly.setText("Read-only").setChecked(settings.nintendo64.sc64SDImageReadOnly).onToggle([&] {
+    settings.nintendo64.sc64SDImageReadOnly = nintendo64SC64ReadOnly.checked();
+  });
+  nintendo64SC64ReadOnlyHint.setText("Prevent the game from writing to the SD card image").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  nintendo64SC64HostPortLabel.setText("USB host port:");
+  nintendo64SC64HostPort.setEditable(true).setText(integer(settings.nintendo64.sc64USBHostPort)).onChange([&] {
+    settings.nintendo64.sc64USBHostPort = nintendo64SC64HostPort.text().integer();
+  });
+  nintendo64SC64HostPortHint.setText("TCP port for USB send/receive; 0 disables the USB host").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  nintendo64SC64Refresh();
+
   #if !defined(VULKAN)
   //hide Vulkan-specific options if Vulkan is not available
   renderQualityLayout.setCollapsible(true).setVisible(false);
@@ -160,4 +180,19 @@ auto CoreSettings::construct() -> void {
   });
   megaDriveTmssLayout.setAlignment(1).setPadding(12_sx, 0);
     megaDriveTmssHint.setText("Enable/Disable the TMSS Boot Rom at system initialization").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+}
+
+auto CoreSettings::nintendo64SC64Refresh() -> void {
+  //the sc64 settings only matter if the sc64 itself is enabled
+  auto enabled = settings.nintendo64.sc64Enabled;
+  nintendo64SC64ImageLabel.setEnabled(enabled);
+  nintendo64SC64Image.setEnabled(enabled);
+  nintendo64SC64ImageAssign.setEnabled(enabled);
+  nintendo64SC64ImageReset.setEnabled(enabled);
+  //the read-only flag only applies to an assigned SD card image
+  nintendo64SC64ReadOnly.setEnabled(enabled && (bool)settings.nintendo64.sc64SDImage);
+  nintendo64SC64ReadOnlyHint.setEnabled(enabled);
+  nintendo64SC64HostPortLabel.setEnabled(enabled);
+  nintendo64SC64HostPort.setEnabled(enabled);
+  nintendo64SC64HostPortHint.setEnabled(enabled);
 }
