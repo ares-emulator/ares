@@ -199,8 +199,8 @@ auto SC64::open(string location, bool readOnly_, u32 hostPort_) -> bool {
 }
 
 auto SC64::close() -> void {
-  pi.sc64Interrupt = 0;
-  pi.updateInterrupt();
+  registers = {};
+  updateInterrupt();
   hostConnected = false;
   host.close(false);
   flush();
@@ -532,14 +532,20 @@ auto SC64::usbRead(u32 address_, u32 length) -> bool {
   return true;
 }
 
-auto SC64::updateInterrupt() -> void {
+auto SC64::irqLine() const -> bool {
   // SCR stores each pending bit immediately above its corresponding mask
   // bit.  They cannot be intersected directly: USB pending is bit 25 while
   // USB enable is bit 24, for example.
   auto interrupt = ((registers.scr >> 1) & registers.scr)
                 & ((1u << 28) | (1u << 26) | (1u << 24) | (1u << 22));
-  pi.sc64Interrupt = interrupt != 0;
-  pi.updateInterrupt();
+  return interrupt != 0;
+}
+
+auto SC64::updateInterrupt() -> void {
+  // n64_cfg.sv's irq output drives the cart INT pin, which the FPGA shares
+  // with its 64DD interrupt source (n64_top.sv:34); ares models that pin as
+  // the wired-OR polled by pollCartridgeInterrupt.
+  pollCartridgeInterrupt();
 }
 
 auto SC64::hostResponse(u8 command, bool error, const std::vector<u8>& data) -> void {

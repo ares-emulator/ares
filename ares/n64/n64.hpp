@@ -43,6 +43,7 @@ namespace ares::Nintendo64 {
   auto enumerate() -> std::vector<string>;
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
+  auto pollCartridgeInterrupt() -> void;
 
   enum : u32 { Read, Write };
   enum : u32 { Byte = 1, Half = 2, Word = 4, Dual = 8, DCache = 16, ICache = 32 };
