@@ -84,6 +84,8 @@ ares_add_sources(
     n64
   INCLUDED #
     cartridge/cartridge.hpp
+    cartridge/sc64.cpp
+    cartridge/sc64.hpp
     cartridge/debugger.cpp
     cartridge/flash.cpp
     cartridge/isviewer.cpp
