@@ -40,7 +40,7 @@ struct SC64 : PIDevice {
   // sides of the SD card interface.
   enum class SdLock : u32 { None, N64, USB };
 
-  enum class Target : u32 { None, Buffer, USBMemory, Registers };
+  enum class Target : u32 { None, Buffer, Sdram, Registers };
   Target target = Target::None;
   u32 offset = 0;
   u32 pendingRegister = 0;
@@ -86,6 +86,7 @@ struct SC64 : PIDevice {
 
 private:
   auto resetConfigs() -> void;
+  auto pollIsViewer() -> void;
   auto registerRead(u32 address) -> u32;
   auto registerWrite(u32 address, u32 data) -> void;
   auto hostData(const std::vector<u8>& data) -> void;
@@ -100,7 +101,6 @@ private:
   auto hostConfigSet(u32 id, u32 value, u32& previous) -> bool;
   auto hostMemoryAddress(u32 address, u32 length) -> u8*;
   auto piMemoryAddress(u32 address, u32 length) -> u8*;
-  auto piAddressValid(u32 address, u32 length) -> bool;
   auto readPiMemory(u32 address, u8* data, u32 length) -> bool;
   auto writePiMemory(u32 address, const u8* data, u32 length) -> bool;
   auto hostTransfer(bool write, u32 address, u32 sector, u32 count) -> u32;
@@ -121,7 +121,6 @@ private:
   auto complete() -> void;
   auto error(ErrorType type, u32 code) -> void;
   auto updateInterrupt() -> void;
-  auto address(u32 value, u32 length) -> u8*;
   auto transfer(bool write, u32 piAddress, u32 count) -> u32;
   auto setByteSwap(u8* data, u32 size) -> void;
 };

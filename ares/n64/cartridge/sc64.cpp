@@ -1,4 +1,8 @@
 auto SC64::Host::sendPacket(u8 id, const std::vector<u8>& data) -> void {
+  // With no host attached the firmware flushes packets instead of queuing
+  // them (usb_flush_packet, usb.c:751-759); queue only in the window between
+  // a client connecting and its transport framing being identified.
+  if(!self.hostConnected) return;
   if(self.hostMode == HostMode::Unknown) {
     self.hostPendingPackets.push_back({id, data});
     return;
@@ -79,6 +83,57 @@ auto SC64::pollHost() -> void {
     updateInterrupt();
     hostDataDispatch();
   }
+
+  pollIsViewer();
+}
+
+// The SC64 has no bus-level ISViewer hardware: the microcontroller polls an
+// IS64 ring buffer in plain SDRAM at the address configured by
+// CFG_ID_ISV_ADDRESS and forwards new bytes over USB (isv.c).
+auto SC64::pollIsViewer() -> void {
+  auto address = configs[4];
+  if(!address) return;
+  // The firmware reads past the buffer into flash space for addresses near
+  // the end of SDRAM; ares has no flash region to spill into.
+  if(u64(address) + 64 * 1024 > sdram.size) return;
+
+  auto get = [&](u32 offset) -> u32 {
+    return (u32(sdram.data[offset + 0]) << 24) | (u32(sdram.data[offset + 1]) << 16)
+         | (u32(sdram.data[offset + 2]) << 8) | u32(sdram.data[offset + 3]);
+  };
+  auto set = [&](u32 offset, u32 value) -> void {
+    sdram.data[offset + 0] = value >> 24;
+    sdram.data[offset + 1] = value >> 16;
+    sdram.data[offset + 2] = value >> 8;
+    sdram.data[offset + 3] = value >> 0;
+  };
+
+  // isv.c:66-71: answer the game's setup token with the PI-visible buffer
+  // address and a ready marker.
+  if(get(0x100) == 0x4953'3634) {
+    set(0x100, 0);
+    set(0x104, address | 0x1000'0000);
+    set(0x10c, 0x4953'3634);
+    return;
+  }
+
+  if(get(address + 0x00) != 0x4953'3634) return;
+  constexpr u32 bufferSize = 64 * 1024 - 0x20;
+  auto readPointer = get(address + 0x04);
+  auto writePointer = get(address + 0x14);
+  if(readPointer >= bufferSize || writePointer >= bufferSize) return;
+  if(readPointer == writePointer) return;
+
+  bool wrap = writePointer < readPointer;
+  auto length = (wrap ? bufferSize : writePointer) - readPointer;
+  // usb.c:751-759: with no USB host listening the firmware flushes the
+  // packet, which still advances the read pointer; the bytes are dropped.
+  if(hostConnected && hostMode != HostMode::Unknown) {
+    std::vector<u8> payload(length);
+    memcpy(payload.data(), sdram.data + address + 0x20 + readPointer, length);
+    host.sendPacket('I', payload);
+  }
+  set(address + 0x04, wrap ? 0 : writePointer);
 }
 
 auto SC64::resetConfigs() -> void {
@@ -214,15 +269,20 @@ auto SC64::piAddress(u32 address_, PIDeviceTiming timing) -> bool {
   if(!enabled || !timing.fasterThan({0, 0, 0})) return false;
   address_ &= ~1;
 
-  if(unlocked && address_ >= 0x1ffe'0000 && address_ < 0x1ffe'2000) {
+  // Data buffer/EEPROM/64DD-MCU buffer/FlashRAM
+  // buffer (0x1FFE0000-0x1FFE2C80) map linearly to BlockRAM when unlocked.
+  if(unlocked && address_ >= 0x1ffe'0000 && address_ < 0x1ffe'2c80) {
     target = Target::Buffer;
     offset = address_ - 0x1ffe'0000;
     return true;
   }
 
-  if(address_ >= 0x1380'0000 && address_ < 0x1400'0000) {
-    target = Target::USBMemory;
-    offset = address_ - 0x1380'0000;
+  // with the bootloader disabled, the entire PI ROM window
+  // maps directly to SDRAM; reads are always allowed, writes require
+  // ROM_WRITE_ENABLE (config 1, enforced in piWriteHalf).
+  if(address_ >= 0x1000'0000 && address_ < 0x1400'0000) {
+    target = Target::Sdram;
+    offset = address_ - 0x1000'0000;
     return true;
   }
 
@@ -243,17 +303,17 @@ auto SC64::piAddress(u32 address_, PIDeviceTiming timing) -> bool {
 
 auto SC64::piReadHalf(PIDeviceTiming) -> maybe<u16> {
   if(target == Target::Buffer) {
-    if(offset >= 0x2000) return nothing;
+    if(offset >= 0x2c80) return nothing;
     auto data = (u16(buffer.data[offset + 0]) << 8)
               | (u16(buffer.data[offset + 1]) << 0);
     offset += 2;
     return data;
   }
 
-  if(target == Target::USBMemory) {
-    if(u64(0x0380'0000) + offset + 2 > sdram.size) return nothing;
-    auto data = (u16(sdram.data[0x0380'0000 + offset + 0]) << 8)
-              | (u16(sdram.data[0x0380'0000 + offset + 1]) << 0);
+  if(target == Target::Sdram) {
+    if(u64(offset) + 2 > sdram.size) return nothing;
+    auto data = (u16(sdram.data[offset + 0]) << 8)
+              | (u16(sdram.data[offset + 1]) << 0);
     offset += 2;
     return data;
   }
@@ -271,7 +331,9 @@ auto SC64::piReadHalf(PIDeviceTiming) -> maybe<u16> {
 
 auto SC64::piWriteHalf(u16 data, PIDeviceTiming) -> void {
   if(target == Target::Buffer) {
-    if(offset < 0x2000) {
+    // the FlashRAM buffer section (0x1FFE2C00-0x1FFE2C80) is read-only;
+    // the rest of BlockRAM is read/write.
+    if(offset < 0x2c00) {
       buffer.data[offset + 0] = data >> 8;
       buffer.data[offset + 1] = data >> 0;
     }
@@ -279,12 +341,12 @@ auto SC64::piWriteHalf(u16 data, PIDeviceTiming) -> void {
     return;
   }
 
-  if(target == Target::USBMemory) {
-    // The debug window is readable at all times, but writes are enabled by
-    // CONFIG_ROM_WRITE (config 1) on the real SC64.
-    if(romWriteEnabled() && u64(0x0380'0000) + offset + 2 <= sdram.size) {
-      sdram.data[0x0380'0000 + offset + 0] = data >> 8;
-      sdram.data[0x0380'0000 + offset + 1] = data >> 0;
+  if(target == Target::Sdram) {
+    // the whole ROM window is readable at all times,
+    // but writes are enabled only by ROM_WRITE_ENABLE
+    if(romWriteEnabled() && u64(offset) + 2 <= sdram.size) {
+      sdram.data[offset + 0] = data >> 8;
+      sdram.data[offset + 1] = data >> 0;
     }
     offset += 2;
     return;
@@ -386,65 +448,34 @@ auto SC64::usbReadStatus() const -> u32 {
   return usbInput.front().type;
 }
 
+// cfg_translate_address's SDRAM|BRAM set (cfg.c:187-241), minus the unmodeled
+// flash ranges: the PI ROM window maps onto SDRAM, and the low two BlockRAM
+// sections (data buffer, EEPROM/64DD-MCU buffer) map onto buffer.
 auto SC64::piMemoryAddress(u32 address_, u32 length) -> u8* {
   if(u64(address_) + length <= 0x1ffe'2000 && address_ >= 0x1ffe'0000)
     return buffer.data + (address_ - 0x1ffe'0000);
   if(u64(address_) + length <= 0x1ffe'2800 && address_ >= 0x1ffe'2000)
     return buffer.data + (address_ - 0x1ffe'2000) + 0x2000;
-  if(u64(address_) + length <= 0x1400'0000 && address_ >= 0x1380'0000)
-    return sdram.data + 0x0380'0000 + (address_ - 0x1380'0000);
+  if(u64(address_) + length <= 0x1400'0000 && address_ >= 0x1000'0000)
+    return sdram.data + (address_ - 0x1000'0000);
   return nullptr;
-}
-
-// Address-validity check matching writePiMemory's accepted ranges, without
-// its side effects; used to validate SD_CARD_OP_GET_INFO's address ahead of
-// the lock check (cfg.c:662-670).
-auto SC64::piAddressValid(u32 address_, u32 length) -> bool {
-  if(piMemoryAddress(address_, length)) return true;
-  return address_ >= 0x1000'0000 && u64(address_) + length <= u64(0x1000'0000) + self.rom.size;
 }
 
 auto SC64::readPiMemory(u32 address_, u8* data, u32 size) -> bool {
   auto source = piMemoryAddress(address_, size);
-  if(source) {
-    memcpy(data, source, size);
-    return true;
-  }
-  // The debug/BlockRAM windows checked above take priority over the general
-  // ROM window (matching writePiMemory), since they can overlap its tail end
-  // for the largest cartridges.
-  if(u64(address_) + size <= u64(0x1000'0000) + self.rom.size && address_ >= 0x1000'0000) {
-    auto offset = address_ - 0x1000'0000;
-    for(u32 index : range(size)) data[index] = self.rom.read<Byte>(offset + index);
-    return true;
-  }
-  return false;
+  if(!source) return false;
+  memcpy(data, source, size);
+  return true;
 }
 
 auto SC64::writePiMemory(u32 address_, const u8* data, u32 size) -> bool {
-  if(address_ >= 0x1380'0000 && u64(address_) + size <= 0x1400'0000) {
-    memcpy(sdram.data + 0x0380'0000 + (address_ - 0x1380'0000), data, size);
-    return true;
-  }
-  if(address_ >= 0x1ffe'0000 && u64(address_) + size <= 0x1ffe'2000) {
-    memcpy(buffer.data + (address_ - 0x1ffe'0000), data, size);
-    return true;
-  }
-  if(address_ >= 0x1ffe'2000 && u64(address_) + size <= 0x1ffe'2800) {
-    memcpy(buffer.data + 0x2000 + (address_ - 0x1ffe'2000), data, size);
-    return true;
-  }
-  if(address_ >= 0x1000'0000 && u64(address_) + size <= u64(0x1000'0000) + self.rom.size) {
-    auto offset = address_ - 0x1000'0000;
-    for(u32 index : range(size)) self.rom.poke<Byte>(offset + index, data[index]);
-    return true;
-  }
-  return false;
+  auto target = piMemoryAddress(address_, size);
+  if(!target) return false;
+  memcpy(target, data, size);
+  return true;
 }
 
 auto SC64::hostMemoryAddress(u32 address_, u32 length) -> u8* {
-  if(u64(address_) + length <= 0x0400'0000 && address_ >= 0x0380'0000)
-    return sdram.data + address_;
   if(u64(address_) + length <= 0x0500'2c80 && address_ >= 0x0500'0000)
     return buffer.data + (address_ - 0x0500'0000);
   if(u64(address_) + length <= sdram.size && address_ < sdram.size)
@@ -462,7 +493,6 @@ auto SC64::readMemory(u32 address_, u8* data, u32 size) -> bool {
 auto SC64::writeMemory(u32 address_, const u8* data, u32 size) -> bool {
   auto target = hostMemoryAddress(address_, size);
   if(!target) return false;
-  if(address_ >= 0x04e0'0000 && address_ < 0x04fe'0000) return false;
   memcpy(target, data, size);
   return true;
 }
@@ -1111,7 +1141,7 @@ auto SC64::execute(u8 command) -> void {
       registers.data1 = sdStatus();
       break;
     case 3:
-      if(!piAddressValid(registers.data0, 32)) { result = 4; break; }
+      if(!piMemoryAddress(registers.data0, 32)) { result = 4; break; }
       result = sdGetLock(SdLock::N64);
       if(!result && !sdInitialized) result = 2;
       if(!result && !writeSdInfo(registers.data0)) result = 4;
@@ -1208,14 +1238,6 @@ auto SC64::execute(u8 command) -> void {
   }
 }
 
-auto SC64::address(u32 value, u32 length) -> u8* {
-  if(u64(value) + length <= 0x1ffe'2000 && value >= 0x1ffe'0000)
-    return buffer.data + (value - 0x1ffe'0000);
-  if(u64(value) + length <= 0x1ffe'2800 && value >= 0x1ffe'2000)
-    return buffer.data + 0x2000 + (value - 0x1ffe'2000);
-  return nullptr;
-}
-
 auto SC64::setByteSwap(u8* data, u32 size) -> void {
   if(!byteSwap) return;
   for(u32 address_ = 0; address_ < size; address_ += 2)
@@ -1225,32 +1247,29 @@ auto SC64::setByteSwap(u8* data, u32 size) -> void {
 auto SC64::transfer(bool write, u32 piAddress, u32 count) -> u32 {
   if(count > 0x7fffff) return 3;
   auto bytes = u64(count) * 512;
-  auto target = address(piAddress, bytes);
-  bool romTarget = piAddress >= 0x1000'0000 && u64(piAddress) + bytes <= u64(0x1000'0000) + self.rom.size;
-  if(!count || (!target && !romTarget)) return 4;
+  auto target = piMemoryAddress(piAddress, bytes);
+  if(!count || !target) return 4;
   if(auto lock = sdGetLock(SdLock::N64)) return lock;
   if(!sdInserted) return 1;
   if(!sdInitialized) return 2;
   if(write && readOnly) return 23;
   if(sdSector >= sectorCount || count > sectorCount - sdSector) return 4;
 
+  // sd.c:8,215-216: BYTE_SWAP_ADDRESS_END gates the read byte-swap to the
+  // SDRAM/ROM window; the BlockRAM buffer sits above that internal address
+  // and is never swapped.
+  bool swapEligible = piAddress >= 0x1000'0000 && piAddress < 0x1400'0000;
+
   u8 sector[512];
   for(u32 n : range(count)) {
     image.seek((u64(sdSector) + n) * 512);
     if(write) {
-      for(u32 index : range(512)) {
-        auto address_ = piAddress + n * 512 + index;
-        sector[index] = romTarget ? self.rom.read<Byte>(address_ - 0x1000'0000) : target[n * 512 + index];
-      }
+      memcpy(sector, target + n * 512, sizeof(sector));
       for(auto byte : sector) image.write(byte);
     } else {
       for(auto& byte : sector) byte = image.read();
-      if(romTarget) setByteSwap(sector, sizeof sector);
-      for(u32 index : range(512)) {
-        auto address_ = piAddress + n * 512 + index;
-        if(romTarget) self.rom.poke<Byte>(address_ - 0x1000'0000, sector[index]);
-        else target[n * 512 + index] = sector[index];
-      }
+      if(swapEligible) setByteSwap(sector, sizeof(sector));
+      memcpy(target + n * 512, sector, sizeof(sector));
     }
   }
   if(write) flush();
@@ -1276,6 +1295,11 @@ auto SC64::serialize(serializer& s) -> void {
   s(offset);
   s(pendingRegister);
   s(buffer);
+
+  // sdram is deliberately absent: like the SD image, it acts as durable
+  // external cart storage, and the USB host link cannot be rewound either.
+  // A state load keeps its live contents; a cross-session load starts from
+  // open()'s ROM seed without any SD or host writes.
 
   if(s.reading()) {
     usbInput.clear();
