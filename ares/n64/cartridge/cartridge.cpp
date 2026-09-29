@@ -1,12 +1,6 @@
 #include <n64/n64.hpp>
-#include <nall/tcptext/tcp-socket.hpp>
-#include <deque>
-#include <vector>
 
 namespace ares::Nintendo64 {
-
-#include "sc64.hpp"
-#include "sc64.cpp"
 
 Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "slot.cpp"
@@ -62,19 +56,17 @@ auto Cartridge::connect() -> void {
   }
 
   if(system.sc64Enabled) {
-    sc64 = std::make_unique<SC64>(*this);
-    sc64->open(system.sc64SDImage, system.sc64SDImageReadOnly, system.sc64USBHostPort);
+    sc64.open(system.sc64SDImage, system.sc64SDImageReadOnly, system.sc64USBHostPort);
   }
 
-  // SC64 maps all of the PI ROM window through its SDRAM.
-  // When SC64 is present, the plain ROM device must not shadow that window.
-  if(!sc64) pi.attach(romDevice, 0);
+  // SC64's SDRAM covers the ROM window; the plain ROM device must not shadow it.
+  if(!system.sc64Enabled) pi.attach(romDevice, 0);
+  // SC64 SRAM and FlashRAM emulation are not implemented; always use standard PI save devices.
   if(ram) pi.attach(ramDevice, 1);
   if(flash) pi.attach(flash, 1);
-  // For SC64, 0x13FF0000 is SDRAM. Bus hardware does not capture it.
-  // A poll (SC64::pollIsViewer) sends the ISViewer output. 
-  if(isviewer.enabled() && !sc64) pi.attach(isviewer, 1);
-  if(sc64) pi.attach(*sc64, 1);
+  // The ISViewer window is inside SC64's SDRAM; disable ISViewer if SC64 is enabled.
+  if(isviewer.enabled() && !system.sc64Enabled) pi.attach(isviewer, 1);
+  if(system.sc64Enabled) pi.attach(sc64, 1);
 
   debugger.load(node);
 
@@ -88,15 +80,14 @@ auto Cartridge::disconnect() -> void {
   pi.detach(ramDevice);
   pi.detach(flash);
   pi.detach(isviewer);
-  if(sc64) pi.detach(*sc64);
+  pi.detach(sc64);
   debugger.unload(node);
   rom.reset();
   ram.reset();
   eeprom.reset();
   flash.reset();
   isviewer.ram.reset();
-  if(sc64) sc64->close();
-  sc64.reset();
+  sc64.close();
   pak.reset();
   node.reset();
 }
@@ -123,15 +114,6 @@ auto Cartridge::power(bool reset) -> void {
   flash.power(reset);
   isviewer.ram.fill(0);
   rtc.power(reset);
-  if(sc64) sc64->power(reset);
-}
-
-auto Cartridge::pollSc64Host() -> void {
-  if(sc64) sc64->pollHost();
-}
-
-auto Cartridge::irqLine() const -> bool {
-  return sc64 && sc64->irqLine();
 }
 
 }

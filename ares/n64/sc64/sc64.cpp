@@ -1,3 +1,12 @@
+#include <n64/n64.hpp>
+#include <nall/tcptext/tcp-socket.hpp>
+#include <deque>
+#include <vector>
+
+namespace ares::Nintendo64 {
+
+SC64 sc64;
+
 auto SC64::Host::sendPacket(PacketId id, const std::vector<u8>& data) -> void {
   // If no client is attached, drop the packet.
   // Queue packets only while a client is connected
@@ -138,9 +147,15 @@ auto SC64::resetConfigState() -> void {
   config(Config::DdMode) = 0;
   config(Config::IsvAddress) = 0;
   config(Config::BootMode) = 0;
-  // No bootloader stage exists that can find the save type again.
-  // Keep the save type of the loaded cartridge. Do not set it to none.
-  config(Config::SaveType) = self.ram ? 3 : 0;  // SRAM
+  // The save type is already known from the loaded cartridge's save hardware.
+  SaveType saveType = SaveType::None;
+  if(cartridge.eeprom.size == 512) saveType = SaveType::Eeprom4k;
+  else if(cartridge.eeprom.size == 2048) saveType = SaveType::Eeprom16k;
+  else if(cartridge.ram.size == 32_KiB) saveType = SaveType::Sram;
+  else if(cartridge.flash) saveType = SaveType::Flashram;
+  else if(cartridge.ram.size == 96_KiB) saveType = SaveType::SramBanked;
+  else if(cartridge.ram.size >= 128_KiB) saveType = SaveType::Sram1M;
+  config(Config::SaveType) = (u32)saveType;
   config(Config::CicSeed) = 0xffff;  // automatic
   config(Config::TvType) = 3;  // passthrough
   config(Config::DdSdEnable) = 0;
@@ -170,9 +185,9 @@ auto SC64::open(string location, bool readOnly_, u32 hostPort_) -> void {
   if(hostPort) host.open(hostPort, true);
 
   sdram.allocate(SdramSize, 0);
-  if(self.rom.size) {
-    auto length = min<u32>(self.rom.size, sdram.size);
-    for(u32 index : range(length)) sdram.data[index] = self.rom.read<Byte>(index);
+  if(cartridge.rom.size) {
+    auto length = min<u32>(cartridge.rom.size, sdram.size);
+    for(u32 index : range(length)) sdram.data[index] = cartridge.rom.read<Byte>(index);
   }
   buffer.allocate(BlockRamSize, 0);
   sdInitialized = false;
@@ -213,6 +228,9 @@ auto SC64::close() -> void {
 }
 
 auto SC64::power(bool reset) -> void {
+  // BlockRAM is serialized unconditionally, so keep it allocated even when the cart is disabled.
+  if(!buffer) buffer.allocate(BlockRamSize, 0);
+
   unlocked = false;
   keySequence = 0;
   registers.scr &= ~(Scr::BtnIrqPending | Scr::CmdIrqPending | Scr::UsbIrqPending
@@ -1258,4 +1276,6 @@ auto SC64::serialize(serializer& s) -> void {
     registers.scr &= ~Scr::UsbIrqPending;
     updateInterrupt();
   }
+}
+
 }

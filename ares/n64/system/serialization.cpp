@@ -1,4 +1,4 @@
-static const string SerializerVersion = "v153";
+static const string SerializerVersion = "v154";
 
 auto System::serialize(bool synchronize) -> serializer {
   serializer s;
@@ -40,6 +40,7 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(random);
   s(queue);
   s(cartridge);
+  s(sc64);
   s(controllerPort1);
   s(controllerPort2);
   s(controllerPort3);
