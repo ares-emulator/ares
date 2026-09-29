@@ -142,8 +142,8 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
           }
           std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
         } else {
-          // Advance the generation before publishing the descriptor. Worker
-          // threads must never mistake a new client for the old one.
+          // Increase the generation before the descriptor becomes visible.
+          // Worker threads must not confuse a new client with the old one.
           clientGeneration++;
           fdClient = client;
         }
@@ -201,7 +201,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
         }
       }
 
-      // Do not busy-poll an idle connection.
+      // Do not poll an idle connection in a tight loop.
       if(localSendBuffer.empty()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         continue;
@@ -339,9 +339,9 @@ NALL_HEADER_INLINE auto Socket::invalidateClient() -> void {
 }
 
 NALL_HEADER_INLINE auto Socket::update() -> void {
-  // Claim the notification before taking the buffer lock. A receive can
-  // arrive between the old flag check and the later clear, which would leave
-  // bytes queued with no subsequent update notification.
+  // Take the notification flag before the buffer lock. Data can arrive
+  // between a flag check and a later clear. Then bytes stay in the queue
+  // and no new notification comes.
   if(!receivePending.exchange(false)) return;
 
   std::vector<u8> data{};

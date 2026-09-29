@@ -61,7 +61,8 @@ auto Cartridge::connect() -> void {
     isviewer.tracer->setTerminal(true);
   }
 
-  // The SC64 is a cartridge-slot device; Aleck64 hardware has no such slot.
+  // Aleck64 cartridges are not compatible with console cartridges. A
+  // console flashcart cannot be present.
   if(Model::Nintendo64() && (system.sc64SDImage || system.sc64USBHostPort)) {
     auto device = std::make_unique<SC64>(*this);
     if(device->open(system.sc64SDImage, system.sc64SDImageReadOnly, system.sc64USBHostPort)) {
@@ -69,13 +70,13 @@ auto Cartridge::connect() -> void {
     }
   }
 
-  // The SC64 maps the entire PI ROM window through its SDRAM, so the plain
-  // ROM device must not shadow it.
+  // The SC64 maps all of the PI ROM window through its SDRAM. The plain
+  // ROM device must not shadow that window.
   if(!sc64) pi.attach(romDevice, 0);
   if(ram) pi.attach(ramDevice, 1);
   if(flash) pi.attach(flash, 1);
-  // With an SC64, 0x13FF0000 is SDRAM: ISViewer output is forwarded by
-  // polling (SC64::pollIsViewer), not captured by bus hardware.
+  // With an SC64, 0x13FF0000 is SDRAM. A poll (SC64::pollIsViewer) sends
+  // the ISViewer output. Bus hardware does not capture it.
   if(isviewer.enabled() && !sc64) pi.attach(isviewer, 1);
   if(sc64) pi.attach(*sc64, 1);
 

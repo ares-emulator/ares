@@ -4,8 +4,7 @@ struct SC64 : PIDevice {
   Memory::Writable sdram;
   Memory::Writable buffer;
 
-  // BlockRAM layout: data buffer, EEPROM, 64DD/MCU buffer, then a read-only
-  // FlashRAM buffer.
+  // BlockRAM sections
   static constexpr u32 DataBufferSize      = 0x2000;
   static constexpr u32 EepromOffset        = 0x2000;
   static constexpr u32 McuBufferOffset     = 0x2800;
@@ -13,7 +12,8 @@ struct SC64 : PIDevice {
   static constexpr u32 BlockRamSize        = 0x2c80;
   static constexpr u32 FlashEraseBlockSize = 128 * 1024;
 
-  // PI bus windows, and the equivalent bases in the host's address space.
+  // Address windows on the PI bus, and the bases for the same regions in
+  // the host address space.
   static constexpr u32 SdramSize        = 0x0400'0000;
   static constexpr u32 PiSdramBase      = 0x1000'0000;
   static constexpr u32 PiBlockRamBase   = 0x1ffe'0000;
@@ -23,7 +23,7 @@ struct SC64 : PIDevice {
 
   static constexpr u32 SectorSize     = 512;
   static constexpr u32 SdInfoSize     = 32;           // CSD + CID
-  static constexpr u32 MaxSectorCount = 0x007f'ffff;  // count * SectorSize fits in 32 bits
+  static constexpr u32 MaxSectorCount = 0x007f'ffff;  // count * SectorSize must fit in 32 bits
   static constexpr u32 UsbLengthMask  = 0x00ff'ffff;  // 24-bit length field
   static constexpr u32 MaxHostPayload = 16 * 1024 * 1024;
 
@@ -33,7 +33,7 @@ struct SC64 : PIDevice {
   static constexpr u32 FirmwareVersion  = (2 << 16) | 20;  // v2.20
   static constexpr u32 FirmwareRevision = 2;
 
-  // SCR bits: each IRQ pending flag sits one above its mask (enable) bit.
+  // SCR bits. Each IRQ pending bit is one position above its mask (enable) bit.
   struct Scr {
     static constexpr u32 CmdBusy       = 1u << 31;
     static constexpr u32 CmdError      = 1u << 30;
@@ -61,7 +61,7 @@ struct SC64 : PIDevice {
     static constexpr u32 AuxEnable  = 1u << 8;
   };
 
-  // Key register values: the unlock sequence, and the relock command.
+  // Key register values: the unlock sequence and the lock command.
   static constexpr u32 KeyReset   = 0x0000'0000;
   static constexpr u32 KeyUnlock1 = 0x5f55'4e4c;  // "_UNL"
   static constexpr u32 KeyUnlock2 = 0x4f43'4b5f;  // "OCK_"
@@ -78,7 +78,7 @@ struct SC64 : PIDevice {
     Aux        = 0x18,
   };
 
-  // IS64 protocol: a token-marked ring buffer polled in SDRAM.
+  // IS64 protocol: a ring buffer in SDRAM that starts with a token.
   static constexpr u32 IsvToken        = 0x4953'3634;  // "IS64"
   static constexpr u32 IsvReadPointer  = 0x04;
   static constexpr u32 IsvWritePointer = 0x14;
@@ -88,7 +88,7 @@ struct SC64 : PIDevice {
   static constexpr u32 IsvSetupAddress = 0x104;
   static constexpr u32 IsvSetupReady   = 0x10c;
 
-  // Frame types of the deployer's remote transport.
+  // Frame types of the remote transport protocol.
   enum class RemoteType : u32 {
     Command = 1,
     Response = 2,
@@ -96,7 +96,7 @@ struct SC64 : PIDevice {
     KeepAlive = 0xcafe'beef,
   };
 
-  // Identifiers of packets sent to the USB host.
+  // Identifiers for packets that go to the USB host.
   enum class PacketId : u8 {
     ButtonTrigger = 'B',
     DataFlushed   = 'G',
@@ -135,7 +135,7 @@ struct SC64 : PIDevice {
 
   enum class HostMode : u8 { Unknown, Direct, Remote };
 
-  // Commands issued by the N64 through the register interface.
+  // Commands that the N64 sends through the register interface.
   enum class Command : u8 {
     IdentifierGet    = 'v',
     VersionGet       = 'V',
@@ -162,8 +162,8 @@ struct SC64 : PIDevice {
     DiagnosticGet    = '%',
   };
 
-  // Commands issued by the USB host. Some letters carry a different meaning
-  // than on the N64 side.
+  // Commands that the USB host sends.
+  // Some letters have a different meaning on each side.
   enum class HostCommand : u8 {
     IdentifierGet   = 'v',
     VersionGet      = 'V',
@@ -210,7 +210,8 @@ struct SC64 : PIDevice {
     RomExtendedEnable,
   };
 
-  // Sub-operations of the SdCardOp command (shared by both sides).
+  // Sub-operations of the SdCardOp command.
+  // Both sides use the same set.
   enum class SdOp : u32 {
     Deinit,
     Init,
@@ -220,7 +221,7 @@ struct SC64 : PIDevice {
     ByteSwapOff,
   };
 
-  // Command failures pack the error type and a code into DATA0.
+  // When a command fails, DATA0 holds the error type and an error code.
   enum class ErrorType : u32 { Cfg = 1, Sd = 2 };
   enum class CfgError : u32 {
     UnknownCommand  = 1,
@@ -238,7 +239,6 @@ struct SC64 : PIDevice {
     Cmd25Io          = 23,
     Locked           = 30,
   };
-  // Mutual exclusion between the N64 and USB-host sides of the SD interface.
   enum class SdLock : u32 { None, N64, USB };
 
   enum class Target : u32 { None, Buffer, Sdram, Registers };
