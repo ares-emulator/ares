@@ -121,6 +121,7 @@ auto Cartridge::power(bool reset) -> void {
   flash.power(reset);
   isviewer.ram.fill(0);
   rtc.power(reset);
+  if(sc64) sc64->power(reset);
 }
 
 auto Cartridge::pollSc64Host() -> void {
